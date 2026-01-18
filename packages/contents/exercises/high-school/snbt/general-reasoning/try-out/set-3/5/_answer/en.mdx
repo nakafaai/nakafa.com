@@ -1,0 +1,32 @@
+export const metadata = {
+  title: "Explanation for Problem 5",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/17/2026",
+};
+
+To arrange a card number consisting of <InlineMath math="12" /> digits, we need to understand the structure of the number.
+
+Given:
+1.  **Prefix (first 4 digits)**: Fixed, which is <InlineMath math="0844" />.
+2.  **Suffix (last 4 digits)**: Fixed, which is <InlineMath math="1221" />.
+3.  **Middle Digits**: The part that needs to be arranged.
+
+The number of digits to be arranged is:
+
+<MathContainer>
+  <BlockMath math="\text{Total Digits} - \text{Prefix} - \text{Suffix} = 12 - 4 - 4 = 4\ \text{digits}" />
+</MathContainer>
+
+The digits available to fill these <InlineMath math="4" /> middle digits are <InlineMath math="\{2, 3, 4, 5, 7, 8, 9\}" />.
+The total number of available digits is <InlineMath math="7" />.
+
+Since there is no rule prohibiting the repetition of digits in a phone number, each of the <InlineMath math="4" /> positions can be filled by any of the <InlineMath math="7" /> available digits.
+
+The calculation is as follows:
+
+<MathContainer>
+  <BlockMath math="\text{Total Arrangements} = 7 \times 7 \times 7 \times 7 = 7^4" />
+  <BlockMath math="7^4 = 2401" />
+</MathContainer>
+
+Thus, the number of card numbers that can be created is <InlineMath math="2401" />.

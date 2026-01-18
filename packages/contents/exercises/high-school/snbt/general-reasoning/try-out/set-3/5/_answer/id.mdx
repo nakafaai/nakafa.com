@@ -1,0 +1,32 @@
+export const metadata = {
+  title: "Pembahasan Soal 5",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/17/2026",
+};
+
+Untuk menyusun nomor kartu yang terdiri dari <InlineMath math="12" /> digit, kita perlu mengetahui struktur nomor tersebut.
+
+Diketahui:
+1.  **Prefix (4 digit awal)**: Tetap, yaitu <InlineMath math="0844" />.
+2.  **Suffix (4 digit akhir)**: Tetap, yaitu <InlineMath math="1221" />.
+3.  **Digit Tengah**: Bagian yang harus disusun.
+
+Jumlah digit yang harus disusun adalah:
+
+<MathContainer>
+  <BlockMath math="\text{Total Digit} - \text{Prefix} - \text{Suffix} = 12 - 4 - 4 = 4\ \text{digit}" />
+</MathContainer>
+
+Angka yang tersedia untuk mengisi <InlineMath math="4" /> digit tengah tersebut adalah <InlineMath math="\{2, 3, 4, 5, 7, 8, 9\}" />.
+Jumlah angka yang tersedia adalah <InlineMath math="7" /> angka.
+
+Karena tidak ada aturan yang melarang pengulangan angka dalam nomor telepon, maka setiap posisi dari <InlineMath math="4" /> digit tersebut dapat diisi oleh salah satu dari <InlineMath math="7" /> angka yang tersedia.
+
+Perhitungannya adalah sebagai berikut:
+
+<MathContainer>
+  <BlockMath math="\text{Total Susunan} = 7 \times 7 \times 7 \times 7 = 7^4" />
+  <BlockMath math="7^4 = 2401" />
+</MathContainer>
+
+Jadi, banyak nomor kartu yang dapat dibuat adalah <InlineMath math="2401" />.

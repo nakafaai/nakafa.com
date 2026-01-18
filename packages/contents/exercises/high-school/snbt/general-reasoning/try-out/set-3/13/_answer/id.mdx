@@ -1,0 +1,40 @@
+export const metadata = {
+  title: "Pembahasan Soal 13",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/18/2026",
+};
+
+Mari kita analisis pola penjualan setiap jenis kerudung untuk memprediksi penjualan di minggu ke-5.
+
+#### Pola Penjualan Segiempat
+
+Data: <InlineMath math="12, 15, 21, 30" />. Mari kita lihat selisih antar minggunya:
+-   Minggu 1 ke 2: <InlineMath math="15 - 12 = 3" />
+-   Minggu 2 ke 3: <InlineMath math="21 - 15 = 6" />
+-   Minggu 3 ke 4: <InlineMath math="30 - 21 = 9" />
+
+Pola selisihnya adalah kelipatan <InlineMath math="3" /> (<InlineMath math="3, 6, 9" />). Maka selisih berikutnya adalah <InlineMath math="12" />. Prediksi Minggu 5: <InlineMath math="30 + 12 = 42" />.
+
+#### Pola Penjualan Bergo
+
+Data: <InlineMath math="14, 16, 18, 20" />. Selisih antar minggunya konstan yaitu <InlineMath math="+2" />. Prediksi Minggu 5: <InlineMath math="20 + 2 = 22" />.
+
+#### Pola Penjualan Pasmina
+
+Data: <InlineMath math="9, 14, 20, 27" />. Mari kita lihat selisih antar minggunya:
+-   Minggu 1 ke 2: <InlineMath math="14 - 9 = 5" />
+-   Minggu 2 ke 3: <InlineMath math="20 - 14 = 6" />
+-   Minggu 3 ke 4: <InlineMath math="27 - 20 = 7" />
+
+Pola selisihnya berurutan (<InlineMath math="5, 6, 7" />). Maka selisih berikutnya adalah <InlineMath math="8" />. Prediksi Minggu 5: <InlineMath math="27 + 8 = 35" />.
+
+#### Analisis Pernyataan
+
+Mari kita periksa kebenaran setiap pernyataan berdasarkan hasil prediksi:
+
+-   **Penjualan Bergo**: Prediksi penjualan adalah <InlineMath math="22" />, bukan <InlineMath math="24" />.
+-   **Penjualan Terbanyak**: Segiempat (<InlineMath math="42" />) adalah yang terbanyak, bukan Pasmina (<InlineMath math="35" />) ataupun Bergo (<InlineMath math="22" />).
+-   **Perbandingan Pasmina dan Bergo**: Penjualan Pasmina (<InlineMath math="35" />) lebih banyak dibandingkan Bergo (<InlineMath math="22" />), bukan lebih sedikit.
+-   **Penjualan Segiempat**: Prediksi penjualan adalah <InlineMath math="42" />. Pernyataan ini **Benar**.
+
+Jadi, prediksi yang tepat adalah penjualan kerudung segiempat sebanyak <InlineMath math="42" /> buah.

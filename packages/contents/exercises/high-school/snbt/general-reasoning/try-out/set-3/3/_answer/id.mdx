@@ -1,0 +1,70 @@
+export const metadata = {
+  title: "Pembahasan Soal 3",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/17/2026",
+};
+
+Untuk memecahkan kode ini, kita perlu mencari pola hubungan antara huruf-huruf tersebut dengan nama bilangan dalam bahasa Indonesia.
+
+#### Analisis Pola Kata Pertama
+
+Diketahui:
+
+<BlockMath math="ABQBO - APNH = 4" />
+
+Perhatikan kata <InlineMath math="ABQBO" />:
+- Terdiri dari 5 huruf.
+- Huruf ke-2 dan ke-4 sama (huruf <InlineMath math="B" />).
+
+Cari nama bilangan yang memiliki pola serupa (5 huruf, huruf ke-2 dan ke-4 sama):
+- <InlineMath math="\text{TUJUH}" /> (5 huruf, huruf <InlineMath math="U" /> ada di posisi ke-2 dan ke-4).
+
+Jika kita asumsikan <InlineMath math="ABQBO = \text{TUJUH}" />, maka nilainya adalah <InlineMath math="7" />.
+Mapping huruf:
+- <InlineMath math="A = T" />
+- <InlineMath math="B = U" />
+- <InlineMath math="Q = J" />
+- <InlineMath math="O = H" />
+
+#### Analisis Pola Kata Kedua
+
+Dari persamaan:
+
+<MathContainer>
+  <BlockMath math="7 - APNH = 4" />
+  <BlockMath math="APNH = 3" />
+</MathContainer>
+
+Kita cari nama bilangan yang bernilai <InlineMath math="3" /> (<InlineMath math="\text{TIGA}" />):
+- Terdiri dari 4 huruf.
+- Huruf pertama <InlineMath math="T" /> (cocok dengan <InlineMath math="A = T" />).
+- Huruf terakhir <InlineMath math="A" /> (cocok dengan <InlineMath math="H = A" />).
+
+Mapping huruf tambahan dari <InlineMath math="APNH = \text{TIGA}" />:
+- <InlineMath math="P = I" />
+- <InlineMath math="N = G" />
+- <InlineMath math="H = A" /> (Konsisten dengan <InlineMath math="ABQBO" /> dimana <InlineMath math="O = H" />, dan di sini <InlineMath math="H" /> adalah huruf baru yang mewakili <InlineMath math="A" />)
+
+#### Menghitung Pertanyaan
+
+Ditanya:
+
+<BlockMath math="KBH - SPTH" />
+
+1. **Mencari Nilai KBH**
+   - Pola: <InlineMath math="K - B - H" />
+   - Substitusi huruf yang diketahui: <InlineMath math="K - U - A" /> (karena <InlineMath math="B = U" />, <InlineMath math="H = A" />)
+   - Bilangan 3 huruf yang berakhiran "<InlineMath math="\text{UA}" />" adalah <InlineMath math="\text{DUA}" /> (<InlineMath math="2" />).
+   - Jadi, <InlineMath math="KBH = 2" />.
+
+2. **Mencari Nilai SPTH**
+   - Pola: <InlineMath math="S - P - T - H" />
+   - Substitusi huruf yang diketahui: <InlineMath math="S - I - T - A" /> (karena <InlineMath math="P = I" />, <InlineMath math="H = A" />)
+   - Bilangan 4 huruf dengan pola "<InlineMath math="\_ \ I \ \_ \ A" />" adalah <InlineMath math="\text{LIMA}" /> (<InlineMath math="5" />).
+   - Jadi, <InlineMath math="SPTH = 5" />.
+
+#### Hasil Akhir
+
+<BlockMath math="KBH - SPTH = 2 - 5 = -3" />
+
+Jadi, jawabannya adalah <InlineMath math="-3" />.

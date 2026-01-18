@@ -194,9 +194,10 @@ export const submitAnswer = mutation({
     }
 
     if (args.exerciseNumber > attempt.totalExercises) {
-      throw new ConvexError({
-        code: "INVALID_ARGUMENT",
-        message: "exerciseNumber exceeds totalExercises.",
+      // Need to patch the attempt, it might that the totalExercises is increased
+      // by the admin.
+      await ctx.db.patch("exerciseAttempts", args.attemptId, {
+        totalExercises: args.exerciseNumber,
       });
     }
 

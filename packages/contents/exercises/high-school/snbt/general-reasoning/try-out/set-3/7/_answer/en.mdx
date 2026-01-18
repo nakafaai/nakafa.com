@@ -1,0 +1,27 @@
+export const metadata = {
+  title: "Explanation for Problem 7",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/17/2026",
+};
+
+This question asks us to find the conclusion that is most incorrect, which in mathematical logic is equivalent to finding the **negation** of the implication found in the text.
+
+The main statement in the text is:
+
+"A number of articles in the RKUHP are lighter than the Corruption Law, **so** it will make corruption in Indonesia more rampant."
+
+We can model this statement as an implication <InlineMath math="p \rightarrow q" />:
+
+- <InlineMath math="p" />: A number of articles in the RKUHP are lighter than the Corruption Law.
+- <InlineMath math="q" />: Corruption in Indonesia is becoming more rampant.
+
+The negation of the implication <InlineMath math="p \rightarrow q" /> is <InlineMath math="p \land \sim q" /> (p **and** not q).
+
+<MathContainer>
+  <BlockMath math="\sim(p \rightarrow q) \equiv p \land \sim q" />
+</MathContainer>
+
+Therefore, the conclusion that is most incorrect is:
+"A number of articles in the RKUHP are lighter than the Corruption Law **and** corruption in Indonesia is **not** becoming more rampant (decreasing)."
+
+This statement corresponds to the option stating: "Some articles of the RKUHP are lighter than the Corruption Law and corruption in Indonesia is decreasing."

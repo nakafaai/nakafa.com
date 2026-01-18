@@ -53,10 +53,10 @@ export const components = {
     <Heading className="text-lg" Tag="h4" {...props} />
   ),
   h5: (props: HeadingProps) => (
-    <Heading className="text-base" Tag="h5" {...props} />
+    <Heading className="text-lg" Tag="h5" {...props} />
   ),
   h6: (props: HeadingProps) => (
-    <Heading className="text-sm" Tag="h6" {...props} />
+    <Heading className="text-lg" Tag="h6" {...props} />
   ),
   p: (props: ParagraphProps) => <Paragraph {...props} />,
   ol: (props: ListProps) => (

@@ -1,0 +1,40 @@
+export const metadata = {
+  title: "Explanation for Problem 13",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/18/2026",
+};
+
+Let's analyze the sales pattern for each type of veil to predict sales in the 5th week.
+
+#### Square Veil Sales Pattern
+
+Data: <InlineMath math="12, 15, 21, 30" />. Let's look at the differences between weeks:
+-   Week 1 to 2: <InlineMath math="15 - 12 = 3" />
+-   Week 2 to 3: <InlineMath math="21 - 15 = 6" />
+-   Week 3 to 4: <InlineMath math="30 - 21 = 9" />
+
+The difference pattern is multiples of <InlineMath math="3" /> (<InlineMath math="3, 6, 9" />). So the next difference is <InlineMath math="12" />. Week 5 Prediction: <InlineMath math="30 + 12 = 42" />.
+
+#### Bergo Veil Sales Pattern
+
+Data: <InlineMath math="14, 16, 18, 20" />. The difference between weeks is constant at <InlineMath math="+2" />. Week 5 Prediction: <InlineMath math="20 + 2 = 22" />.
+
+#### Pashmina Veil Sales Pattern
+
+Data: <InlineMath math="9, 14, 20, 27" />. Let's look at the differences between weeks:
+-   Week 1 to 2: <InlineMath math="14 - 9 = 5" />
+-   Week 2 to 3: <InlineMath math="20 - 14 = 6" />
+-   Week 3 to 4: <InlineMath math="27 - 20 = 7" />
+
+The difference pattern is sequential (<InlineMath math="5, 6, 7" />). So the next difference is <InlineMath math="8" />. Week 5 Prediction: <InlineMath math="27 + 8 = 35" />.
+
+#### Statement Analysis
+
+Let's verify each statement based on the prediction results:
+
+-   **Bergo Sales**: The sales prediction is <InlineMath math="22" />, not <InlineMath math="24" />.
+-   **Best Selling Type**: Square veils (<InlineMath math="42" />) are the best selling, not Pashmina (<InlineMath math="35" />) or Bergo (<InlineMath math="22" />).
+-   **Pashmina vs Bergo**: Pashmina sales (<InlineMath math="35" />) are higher than Bergo (<InlineMath math="22" />), not lower.
+-   **Square Veil Sales**: The sales prediction is <InlineMath math="42" />. This statement is **Correct**.
+
+Therefore, the correct prediction is that square veil sales are <InlineMath math="42" /> pieces.

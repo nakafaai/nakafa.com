@@ -18,8 +18,8 @@ importers:
         specifier: ^2.29.8
         version: 2.29.8(@types/node@25.0.9)
       '@effect/language-service':
-        specifier: ^0.67.0
-        version: 0.67.0
+        specifier: ^0.69.1
+        version: 0.69.1
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:packages/typescript-config
@@ -270,11 +270,11 @@ importers:
         specifier: ^4.1.18
         version: 4.1.18
       '@takumi-rs/core':
-        specifier: ^0.63.1
-        version: 0.63.1
+        specifier: ^0.63.2
+        version: 0.63.2
       '@takumi-rs/image-response':
-        specifier: ^0.63.1
-        version: 0.63.1
+        specifier: ^0.63.2
+        version: 0.63.2
       '@tanstack/react-form':
         specifier: ^1.27.7
         version: 1.27.7(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -327,8 +327,8 @@ importers:
         specifier: ^1.14.2
         version: 1.14.2
       motion:
-        specifier: ^12.26.2
-        version: 12.26.2(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        specifier: ^12.27.0
+        version: 12.27.0(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       nanoid:
         specifier: ^5.1.6
         version: 5.1.6
@@ -488,8 +488,8 @@ importers:
         specifier: ^1.6.1
         version: 1.6.1(next@16.1.3(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)
       posthog-js:
-        specifier: ^1.327.0
-        version: 1.327.0
+        specifier: ^1.328.0
+        version: 1.328.0
       posthog-node:
         specifier: ^5.21.1
         version: 5.21.1
@@ -632,8 +632,8 @@ importers:
         specifier: ^1.14.2
         version: 1.14.2
       motion:
-        specifier: ^12.26.2
-        version: 12.26.2(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        specifier: ^12.27.0
+        version: 12.27.0(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       next-intl:
         specifier: ^4.7.0
         version: 4.7.0(@swc/helpers@0.5.18)(next@16.1.3(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)(typescript@5.9.3)
@@ -810,8 +810,8 @@ importers:
         specifier: 11.12.2
         version: 11.12.2
       motion:
-        specifier: ^12.26.2
-        version: 12.26.2(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        specifier: ^12.27.0
+        version: 12.27.0(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       nanoid:
         specifier: ^5.1.6
         version: 5.1.6
@@ -1682,8 +1682,8 @@ packages:
     resolution: {integrity: sha512-NKBGBSIKUG584qrS1tyxVpX/AKJKQw5HgjYEnPLC0QsTw79JrGn+qUr8CXFb955Iy7GUdiiUv1rJ6JBGvaKb6w==}
     engines: {node: '>=18'}
 
-  '@effect/language-service@0.67.0':
-    resolution: {integrity: sha512-8yTlGnKbayq37sM523A98tZzxXmLaizAa/sNN2BpqnXz9aa0DgVN9gon5xmvWSb6jNbK8J6xNtOYrFFKSJRpIg==}
+  '@effect/language-service@0.69.1':
+    resolution: {integrity: sha512-i/o3I/+vJYhL6Vm8LTkdgps+BkbgFXKUT/ESq4SySGfxbfLf5+w3Oqh0EnTC7BNJ/0Hevk0H+qJeuGd+fAR7jQ==}
     hasBin: true
 
   '@egjs/agent@2.4.4':
@@ -3018,8 +3018,8 @@ packages:
   '@posthog/core@1.10.0':
     resolution: {integrity: sha512-Xk3JQ+cdychsvftrV3G9ZrN9W329lbyFW0pGJXFGKFQf8qr4upw2SgNg9BVorjSrfhoXZRnJGt/uNF4nGFBL5A==}
 
-  '@posthog/types@1.327.0':
-    resolution: {integrity: sha512-nVXKK5c/pzJfYOAHQzmsk0SOSzugGmJvXNC2GIQMAD2V076p8C4nVBy5gnPG5iA2wHEyKXyZ8qeIKvb8TQZS1g==}
+  '@posthog/types@1.328.0':
+    resolution: {integrity: sha512-T8RPYpgPxwtAMqtfj8+3VSw3Xca2hIYb3BN3ohPAZhN8eQOtkC00jEKy+bOcniy1BJCbbhpmGtxqQCpzr4/EXQ==}
 
   '@primer/octicons@19.21.1':
     resolution: {integrity: sha512-7tgtBkCNcg75YJnckinzvES+uxysYQCe+CHSEnzr3VYgxttzKRvfmrnVogl3aEuHCQP4xhiE9k2lFDhYwGtTzQ==}
@@ -5450,66 +5450,66 @@ packages:
     peerDependencies:
       tailwindcss: '>=3.0.0 || insiders || >=4.0.0-alpha.20 || >=4.0.0-beta.1'
 
-  '@takumi-rs/core-darwin-arm64@0.63.1':
-    resolution: {integrity: sha512-0KVx6zTZjoPBi4q/9CMFQJoVsM8mVwBmvNn/s8k/6BOCiNAPzqBibI+20BPW3NdccVrlxdZPmDZoTsRkdBpleg==}
+  '@takumi-rs/core-darwin-arm64@0.63.2':
+    resolution: {integrity: sha512-PWLoihFJAVQrc5hUQhjshA5KvzKcADCV8HQduLlkVE2H9Vu0lda1jFHfC5n9m0dK6AR9aJCBMkwgnesRDlXSoA==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [arm64]
     os: [darwin]
 
-  '@takumi-rs/core-darwin-x64@0.63.1':
-    resolution: {integrity: sha512-OM3XVLABu/Y8wXVzQ9vlKSivg7zjb7NmCJa+pBt3vxdZlLPVFyZ0UN32mWYMINN0UQtdMwruR4W1N+y+0CgDdA==}
+  '@takumi-rs/core-darwin-x64@0.63.2':
+    resolution: {integrity: sha512-Wq84anj+xMGEybGvcMyxFRKKIPPSLdsVIzRZufzMlK4GW7ht14LnlJH6jdvDws6vBRjo548Ncnie1R2ScmtGPQ==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [x64]
     os: [darwin]
 
-  '@takumi-rs/core-linux-arm64-gnu@0.63.1':
-    resolution: {integrity: sha512-u0r6I6QI3nTylLUjV3DVGNL7aj04gnrw2notfwR+VsTqXbfABJLASEBH4t9Sd2b5gXipkVgscLji2Q92+40nsQ==}
+  '@takumi-rs/core-linux-arm64-gnu@0.63.2':
+    resolution: {integrity: sha512-cJP3bdDWZAQvPpzevTrtanf0jGRpxc3GkWF6mvzyyDs6fwevDI+g4ZUzhmgfgA97t5hhokSy0hF0hlgqJVrwdg==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [arm64]
     os: [linux]
 
-  '@takumi-rs/core-linux-arm64-musl@0.63.1':
-    resolution: {integrity: sha512-6KNYjdy1coAnnHlVkNMBOFNkeYCpUAaF/mHyl32I/KyvzG0LKzUcicupKnf94EEdlnuuRqVmNOplCkejyj3+oA==}
+  '@takumi-rs/core-linux-arm64-musl@0.63.2':
+    resolution: {integrity: sha512-yAPFTVvsYIZ1v4oXIBMMNjFAUyKp4zPJgUJGNNjuv5p1anS5052MjCnI7XO3dkqCshO7J/pxsz/80vNAtMwcGA==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [arm64]
     os: [linux]
 
-  '@takumi-rs/core-linux-x64-gnu@0.63.1':
-    resolution: {integrity: sha512-qVUwP4mbzhmsTMPBtREhEXx6tRlNzkj27sRyOG/JLhLuA0Z5aKOk2nDC3LDsofpfwXGmjPOZJGBoB6TgGanG7g==}
+  '@takumi-rs/core-linux-x64-gnu@0.63.2':
+    resolution: {integrity: sha512-T35bgKETyEgGuIJyca6lqarxWtsMOrYcdno+Jr/zzAxoAgfiX2FMkKG8puk9yOxAZxD9f+1WTIrkyNxmDGWVlw==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [x64]
     os: [linux]
 
-  '@takumi-rs/core-linux-x64-musl@0.63.1':
-    resolution: {integrity: sha512-t9+XOX0ub5nQ16m1z1l+Oj7YJ+cBKjyaxIdca6phH5NLwl+aKhvBPszIWQpjlKTs1P59aFQj9ua1U6ZN1yQNMA==}
+  '@takumi-rs/core-linux-x64-musl@0.63.2':
+    resolution: {integrity: sha512-ilz1EZVUffHLN6Gn4vB8CJyPnseEFdFJz8vMVTBwQ7W/X9hFNs7J0mcH5Ut2I6V+ETE8+5rt7/1LLq7vuXRheQ==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [x64]
     os: [linux]
 
-  '@takumi-rs/core-win32-arm64-msvc@0.63.1':
-    resolution: {integrity: sha512-S0iHLiksSDppj/ZDh/YXG7iUGbNJhWpFTe5JD3pfvf0djt+Y1I3tOSexZZx+gB7Vd2wxHFHxrdkHW4+B/FKm8w==}
+  '@takumi-rs/core-win32-arm64-msvc@0.63.2':
+    resolution: {integrity: sha512-v/yvoH7w1nY4vmH89tguvHNS621UVgtLibIgkF2lpuCbbmhIwJx725toSoE5nYWWHx1KjwiUuLtjzb3BojNI/w==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [arm64]
     os: [win32]
 
-  '@takumi-rs/core-win32-x64-msvc@0.63.1':
-    resolution: {integrity: sha512-LUPvKDvkanyu4pI1bPaSPm3DBNNOwzZL6TRMmH7lWJXhaWgkLRDHypefw0dkUSeZLCcViJ7+YfV8CqOHGEpdKQ==}
+  '@takumi-rs/core-win32-x64-msvc@0.63.2':
+    resolution: {integrity: sha512-bm7+Z8g3WC+9VN+fLoXRkLN4pao/BS5D0MBikDnhp04HjJFserD9ALFDae6yGlm4ah5zkN3LtyvuuEohPdswyw==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [x64]
     os: [win32]
 
-  '@takumi-rs/core@0.63.1':
-    resolution: {integrity: sha512-5s63b6u3zUO4EGAAjqWGyvKmoOyqzvhVv50HQN0jSm4Bn/rxJvyDSWWOiQBR5AKPo6tQCAWlbiYMUiecqG/LOA==}
+  '@takumi-rs/core@0.63.2':
+    resolution: {integrity: sha512-Vo/nRgFDOFm9lSslWMnZbpONFt94ztkWNnOmr/zyqg94BCpBIlpTcWLCP57WbbP32y8TJjYxFlg6TV91Gd3xPA==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
 
-  '@takumi-rs/helpers@0.63.1':
-    resolution: {integrity: sha512-0YaCxifCWgyFNQtfQyD8qelyVvKuzC++tyVxkcmfxCl4RCPXhrkwqok8++0HflhhEm3wX+CReBRYhzCW+oiQVQ==}
+  '@takumi-rs/helpers@0.63.2':
+    resolution: {integrity: sha512-BuCTBAB/HCe5DW+Q3xvwzAStQyi4QfAHgnPV1HZ9jc3L+jrSQqU0ZyqSQC/qgH76y1VzEsTyi+TsihIfvoKI0w==}
 
-  '@takumi-rs/image-response@0.63.1':
-    resolution: {integrity: sha512-DV/NgY6stWYcV1fDqcHs+mJXPq5SOoYNhuX1Ith1jiLWuHE0HixikRNTyQTACIygyoLo9ZiG9aDbWDMROBAMUQ==}
+  '@takumi-rs/image-response@0.63.2':
+    resolution: {integrity: sha512-5qkdkQmeb/OgIcl/tbt0hRiigMCPuiWgDRgbs9e68DGSSSOROb38udZBk0ivDNKCLurj2YU8GZT8i06F3tuHkA==}
 
-  '@takumi-rs/wasm@0.63.1':
-    resolution: {integrity: sha512-grJJhwkpZv5xCwqQiyJQHj59SvMjKcanPAZYJoMvWdAospu8l2jCogDvApFPGkQz5yLKkFUCYRJW/7JNSg4Bfw==}
+  '@takumi-rs/wasm@0.63.2':
+    resolution: {integrity: sha512-ZR6JW7kz4OCswwrCCAAy2YwwlLitq3+PY10Ti+XanQu4DIOn2K87eLOeBCP4YQ2nhCq46l29Ezv4UyK8hKjBXA==}
 
   '@tanstack/devtools-event-client@0.4.0':
     resolution: {integrity: sha512-RPfGuk2bDZgcu9bAJodvO2lnZeHuz4/71HjZ0bGb/SPg8+lyTA+RLSKQvo7fSmPSi8/vcH3aKQ8EM9ywf1olaw==}
@@ -7709,8 +7709,8 @@ packages:
   fraction.js@5.3.4:
     resolution: {integrity: sha512-1X1NTtiJphryn/uLQz3whtY6jK3fTqoE3ohKs0tT+Ujr1W59oopxmoEh7Lu5p6vBaPbgoM0bzveAW4Qi5RyWDQ==}
 
-  framer-motion@12.26.2:
-    resolution: {integrity: sha512-lflOQEdjquUi9sCg5Y1LrsZDlsjrHw7m0T9Yedvnk7Bnhqfkc89/Uha10J3CFhkL+TCZVCRw9eUGyM/lyYhXQA==}
+  framer-motion@12.27.0:
+    resolution: {integrity: sha512-gJtqOKEDJH/jrn0PpsWp64gdOjBvGX8hY6TWstxjDot/85daIEtJHl1UsiwHSXiYmJF2QXUoXP6/3gGw5xY2YA==}
     peerDependencies:
       '@emotion/is-prop-valid': '*'
       react: ^18.0.0 || ^19.0.0
@@ -9135,14 +9135,14 @@ packages:
   mlly@1.8.0:
     resolution: {integrity: sha512-l8D9ODSRWLe2KHJSifWGwBqpTZXIXTeo8mlKjY+E2HAakaTeNpqAyBZ8GSqLzHgw4XmHmC8whvpjJNMbFZN7/g==}
 
-  motion-dom@12.26.2:
-    resolution: {integrity: sha512-KLMT1BroY8oKNeliA3JMNJ+nbCIsTKg6hJpDb4jtRAJ7nCKnnpg/LTq/NGqG90Limitz3kdAnAVXecdFVGlWTw==}
+  motion-dom@12.27.0:
+    resolution: {integrity: sha512-oDjl0WoAsWIWKl3GCDxmh7GITrNjmLX+w5+jwk4+pzLu3VnFvsOv2E6+xCXeH72O65xlXsr84/otiOYQKW/nQA==}
 
   motion-utils@12.24.10:
     resolution: {integrity: sha512-x5TFgkCIP4pPsRLpKoI86jv/q8t8FQOiM/0E8QKBzfMozWHfkKap2gA1hOki+B5g3IsBNpxbUnfOum1+dgvYww==}
 
-  motion@12.26.2:
-    resolution: {integrity: sha512-2Q6g0zK1gUJKhGT742DAe42LgietcdiJ3L3OcYAHCQaC1UkLnn6aC8S/obe4CxYTLAgid2asS1QdQ/blYfo5dw==}
+  motion@12.27.0:
+    resolution: {integrity: sha512-5/WbUMUV0QPOlgimOKJRhKwE+/pIHBI38SVgEpsfadOa5lYDgkgJAEav7KqNahdX3i3xkvogD5JR4K41w+9Hzw==}
     peerDependencies:
       '@emotion/is-prop-valid': '*'
       react: ^18.0.0 || ^19.0.0
@@ -9643,8 +9643,8 @@ packages:
     resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
     engines: {node: ^10 || ^12 || >=14}
 
-  posthog-js@1.327.0:
-    resolution: {integrity: sha512-vu6lp9UMelxSxqEdHvzQho1aA/57vWX4rM79Df4/HzkfDRV3w7NG+rVbKQUQq/8fVmvtSMpOpUMh+aeVo+jkXw==}
+  posthog-js@1.328.0:
+    resolution: {integrity: sha512-1TzO1WOq53vnn+4W7Evda4QyBOcLI1svoMJy1x4CyiR1RgCHh2hhcmCcKeRJh8CAUV8H69qLo6dGvjMY8ENkrg==}
 
   posthog-node@5.21.1:
     resolution: {integrity: sha512-xFRlaZTrVfIVrRfEZsI/DM6pdJqeX6iaRlo46nexhB1wfRcuIy1mtp76nkZSw3DDRXBczTo41K7raO2yS3dxzA==}
@@ -12449,7 +12449,7 @@ snapshots:
     dependencies:
       '@edge-runtime/primitives': 6.0.0
 
-  '@effect/language-service@0.67.0': {}
+  '@effect/language-service@0.69.1': {}
 
   '@egjs/agent@2.4.4': {}
 
@@ -13135,7 +13135,7 @@ snapshots:
 
   '@lobehub/icons@4.0.3(@lobehub/ui@4.17.0)(@types/react@19.2.8)(antd@6.1.4(date-fns@4.1.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
-      '@lobehub/ui': 4.17.0(@lobehub/fluent-emoji@4.1.0(@types/react@19.2.8)(antd@6.1.4(date-fns@4.1.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@lobehub/icons@4.0.3)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.8))(@types/react@19.2.8)(antd@6.1.4(date-fns@4.1.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(micromark-util-types@2.0.2)(micromark@4.0.2)(motion@12.26.2(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@lobehub/ui': 4.17.0(@lobehub/fluent-emoji@4.1.0(@types/react@19.2.8)(antd@6.1.4(date-fns@4.1.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@lobehub/icons@4.0.3)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.8))(@types/react@19.2.8)(antd@6.1.4(date-fns@4.1.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(micromark-util-types@2.0.2)(micromark@4.0.2)(motion@12.27.0(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       antd: 6.1.4(date-fns@4.1.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       antd-style: 4.1.0(@types/react@19.2.8)(antd@6.1.4(date-fns@4.1.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       lucide-react: 0.469.0(react@19.2.3)
@@ -13146,7 +13146,7 @@ snapshots:
       - '@types/react'
       - supports-color
 
-  '@lobehub/ui@4.17.0(@lobehub/fluent-emoji@4.1.0(@types/react@19.2.8)(antd@6.1.4(date-fns@4.1.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@lobehub/icons@4.0.3)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.8))(@types/react@19.2.8)(antd@6.1.4(date-fns@4.1.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(micromark-util-types@2.0.2)(micromark@4.0.2)(motion@12.26.2(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
+  '@lobehub/ui@4.17.0(@lobehub/fluent-emoji@4.1.0(@types/react@19.2.8)(antd@6.1.4(date-fns@4.1.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@lobehub/icons@4.0.3)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.8))(@types/react@19.2.8)(antd@6.1.4(date-fns@4.1.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(micromark-util-types@2.0.2)(micromark@4.0.2)(motion@12.27.0(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
       '@ant-design/cssinjs': 2.0.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@base-ui/react': 1.1.0(@types/react@19.2.8)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -13183,7 +13183,7 @@ snapshots:
       lucide-react: 0.562.0(react@19.2.3)
       marked: 17.0.1
       mermaid: 11.12.2
-      motion: 12.26.2(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      motion: 12.27.0(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       numeral: 2.0.6
       polished: 4.3.1
       query-string: 9.3.1
@@ -13694,7 +13694,7 @@ snapshots:
     dependencies:
       cross-spawn: 7.0.6
 
-  '@posthog/types@1.327.0': {}
+  '@posthog/types@1.328.0': {}
 
   '@primer/octicons@19.21.1':
     dependencies:
@@ -16610,50 +16610,50 @@ snapshots:
       postcss-selector-parser: 6.0.10
       tailwindcss: 4.1.18
 
-  '@takumi-rs/core-darwin-arm64@0.63.1':
+  '@takumi-rs/core-darwin-arm64@0.63.2':
     optional: true
 
-  '@takumi-rs/core-darwin-x64@0.63.1':
+  '@takumi-rs/core-darwin-x64@0.63.2':
     optional: true
 
-  '@takumi-rs/core-linux-arm64-gnu@0.63.1':
+  '@takumi-rs/core-linux-arm64-gnu@0.63.2':
     optional: true
 
-  '@takumi-rs/core-linux-arm64-musl@0.63.1':
+  '@takumi-rs/core-linux-arm64-musl@0.63.2':
     optional: true
 
-  '@takumi-rs/core-linux-x64-gnu@0.63.1':
+  '@takumi-rs/core-linux-x64-gnu@0.63.2':
     optional: true
 
-  '@takumi-rs/core-linux-x64-musl@0.63.1':
+  '@takumi-rs/core-linux-x64-musl@0.63.2':
     optional: true
 
-  '@takumi-rs/core-win32-arm64-msvc@0.63.1':
+  '@takumi-rs/core-win32-arm64-msvc@0.63.2':
     optional: true
 
-  '@takumi-rs/core-win32-x64-msvc@0.63.1':
+  '@takumi-rs/core-win32-x64-msvc@0.63.2':
     optional: true
 
-  '@takumi-rs/core@0.63.1':
+  '@takumi-rs/core@0.63.2':
     optionalDependencies:
-      '@takumi-rs/core-darwin-arm64': 0.63.1
-      '@takumi-rs/core-darwin-x64': 0.63.1
-      '@takumi-rs/core-linux-arm64-gnu': 0.63.1
-      '@takumi-rs/core-linux-arm64-musl': 0.63.1
-      '@takumi-rs/core-linux-x64-gnu': 0.63.1
-      '@takumi-rs/core-linux-x64-musl': 0.63.1
-      '@takumi-rs/core-win32-arm64-msvc': 0.63.1
-      '@takumi-rs/core-win32-x64-msvc': 0.63.1
+      '@takumi-rs/core-darwin-arm64': 0.63.2
+      '@takumi-rs/core-darwin-x64': 0.63.2
+      '@takumi-rs/core-linux-arm64-gnu': 0.63.2
+      '@takumi-rs/core-linux-arm64-musl': 0.63.2
+      '@takumi-rs/core-linux-x64-gnu': 0.63.2
+      '@takumi-rs/core-linux-x64-musl': 0.63.2
+      '@takumi-rs/core-win32-arm64-msvc': 0.63.2
+      '@takumi-rs/core-win32-x64-msvc': 0.63.2
 
-  '@takumi-rs/helpers@0.63.1': {}
+  '@takumi-rs/helpers@0.63.2': {}
 
-  '@takumi-rs/image-response@0.63.1':
+  '@takumi-rs/image-response@0.63.2':
     dependencies:
-      '@takumi-rs/core': 0.63.1
-      '@takumi-rs/helpers': 0.63.1
-      '@takumi-rs/wasm': 0.63.1
+      '@takumi-rs/core': 0.63.2
+      '@takumi-rs/helpers': 0.63.2
+      '@takumi-rs/wasm': 0.63.2
 
-  '@takumi-rs/wasm@0.63.1': {}
+  '@takumi-rs/wasm@0.63.2': {}
 
   '@tanstack/devtools-event-client@0.4.0': {}
 
@@ -19072,9 +19072,9 @@ snapshots:
 
   fraction.js@5.3.4: {}
 
-  framer-motion@12.26.2(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
+  framer-motion@12.27.0(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
-      motion-dom: 12.26.2
+      motion-dom: 12.27.0
       motion-utils: 12.24.10
       tslib: 2.8.1
     optionalDependencies:
@@ -21052,15 +21052,15 @@ snapshots:
       pkg-types: 1.3.1
       ufo: 1.6.2
 
-  motion-dom@12.26.2:
+  motion-dom@12.27.0:
     dependencies:
       motion-utils: 12.24.10
 
   motion-utils@12.24.10: {}
 
-  motion@12.26.2(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
+  motion@12.27.0(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
-      framer-motion: 12.26.2(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      framer-motion: 12.27.0(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       tslib: 2.8.1
     optionalDependencies:
       '@emotion/is-prop-valid': 1.4.0
@@ -21567,7 +21567,7 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  posthog-js@1.327.0:
+  posthog-js@1.328.0:
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/api-logs': 0.208.0
@@ -21575,7 +21575,7 @@ snapshots:
       '@opentelemetry/resources': 2.3.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-logs': 0.208.0(@opentelemetry/api@1.9.0)
       '@posthog/core': 1.10.0
-      '@posthog/types': 1.327.0
+      '@posthog/types': 1.328.0
       core-js: 3.47.0
       dompurify: 3.3.1
       fflate: 0.4.8

@@ -1,0 +1,70 @@
+export const metadata = {
+   title: "Explanation for Problem 3",
+   authors: [{ name: "Nabil Akbarazzima Fatih" }],
+   date: "01/17/2026",
+};
+
+To solve this code, we need to find the pattern linking these letters to the names of numbers in the **Indonesian language**.
+
+#### First Word Pattern Analysis
+
+Given:
+
+<BlockMath math="ABQBO - APNH = 4" />
+
+Observe the word <InlineMath math="ABQBO" />:
+- Consists of 5 letters.
+- The 2nd and 4th letters are the same (letter <InlineMath math="B" />).
+
+Look for an Indonesian number name with a similar pattern (5 letters, 2nd and 4th letters are the same):
+- <InlineMath math="\text{TUJUH}" /> (7) -> 5 letters, letter <InlineMath math="U" /> is at positions 2 and 4.
+
+If we assume <InlineMath math="ABQBO = \text{TUJUH}" />, then its value is <InlineMath math="7" />.
+Letter mapping:
+- <InlineMath math="A = T" />
+- <InlineMath math="B = U" />
+- <InlineMath math="Q = J" />
+- <InlineMath math="O = H" />
+
+#### Second Word Pattern Analysis
+
+From the equation:
+
+<MathContainer>
+  <BlockMath math="7 - APNH = 4" />
+  <BlockMath math="APNH = 3" />
+</MathContainer>
+
+We look for the Indonesian number name for <InlineMath math="3" />, which is <InlineMath math="\text{TIGA}" />:
+- Consists of 4 letters.
+- First letter is <InlineMath math="T" /> (matches <InlineMath math="A = T" />).
+- Last letter is <InlineMath math="A" /> (matches <InlineMath math="H = A" />).
+
+Additional letter mapping from <InlineMath math="APNH = \text{TIGA}" />:
+- <InlineMath math="P = I" />
+- <InlineMath math="N = G" />
+- <InlineMath math="H = A" />
+
+#### Calculating the Question
+
+Question:
+
+<BlockMath math="KBH - SPTH" />
+
+1. **Finding the Value of KBH**
+   - Pattern: <InlineMath math="K - B - H" />
+   - Substitute known letters: <InlineMath math="K - U - A" /> (since <InlineMath math="B = U" />, <InlineMath math="H = A" />)
+   - The 3-letter Indonesian number ending in "<InlineMath math="\text{UA}" />" is <InlineMath math="\text{DUA}" /> (<InlineMath math="2" />).
+   - So, <InlineMath math="KBH = 2" />.
+
+2. **Finding the Value of SPTH**
+   - Pattern: <InlineMath math="S - P - T - H" />
+   - Substitute known letters: <InlineMath math="S - I - T - A" /> (since <InlineMath math="P = I" />, <InlineMath math="H = A" />)
+   - The 4-letter Indonesian number with the pattern "<InlineMath math="\_ \ I \ \_ \ A" />" is <InlineMath math="\text{LIMA}" /> (<InlineMath math="5" />).
+   - So, <InlineMath math="SPTH = 5" />.
+
+#### Final Result
+
+<BlockMath math="KBH - SPTH = 2 - 5 = -3" />
+
+Thus, the answer is <InlineMath math="-3" />.

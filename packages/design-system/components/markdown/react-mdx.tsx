@@ -122,7 +122,7 @@ export const reactMdxComponents: Options["components"] = {
   h5: memo(
     ({ ...props }) => (
       <Heading
-        className="mt-6 mb-4 text-sm"
+        className="mt-6 mb-4 text-base"
         data-nakafa="heading-5"
         Tag="h5"
         {...props}
@@ -134,7 +134,7 @@ export const reactMdxComponents: Options["components"] = {
   h6: memo(
     ({ ...props }) => (
       <Heading
-        className="mt-6 mb-4 text-xs"
+        className="mt-6 mb-4 text-base"
         data-nakafa="heading-6"
         Tag="h6"
         {...props}
