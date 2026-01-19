@@ -6,7 +6,7 @@ import {
   EqualSignIcon,
   Sad02Icon,
 } from "@hugeicons/core-free-icons";
-import type { DataPart } from "@repo/ai/types/data-parts";
+import type { DataPart } from "@repo/ai/schema/data-parts";
 import { BlockMathKatex } from "@repo/design-system/components/markdown/math";
 import {
   Collapsible,

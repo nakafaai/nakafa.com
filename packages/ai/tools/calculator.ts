@@ -1,9 +1,9 @@
 import { dedentString } from "@repo/ai/lib/utils";
-import { nakafaCalculator } from "@repo/ai/prompt/calculator";
+import { nakafaCalculator } from "@repo/ai/prompt/tools/calculator";
 import {
   type CalculatorOutput,
   calculatorInputSchema,
-} from "@repo/ai/schema/tools";
+} from "@repo/ai/schema/tools/calculator";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { tool, type UIMessageStreamWriter } from "ai";
 import * as math from "mathjs";

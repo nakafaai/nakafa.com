@@ -4,7 +4,7 @@ import {
   News01Icon,
   Sad02Icon,
 } from "@hugeicons/core-free-icons";
-import type { DataPart } from "@repo/ai/types/data-parts";
+import type { DataPart } from "@repo/ai/schema/data-parts";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import {
   Button,

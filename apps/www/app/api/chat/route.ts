@@ -1,14 +1,17 @@
 import {
+  DEFAULT_LATITUDE,
+  DEFAULT_LONGITUDE,
+} from "@repo/ai/clients/weather/client";
+import {
   type GatewayProvider,
   type GoogleProvider,
   type ModelId,
   model,
   type OpenAIProvider,
   order,
-} from "@repo/ai/lib/providers";
-import { generateTitle } from "@repo/ai/lib/title";
+} from "@repo/ai/config/providers";
+import { generateTitle } from "@repo/ai/features/title-generation";
 import { compressMessages } from "@repo/ai/lib/utils";
-import { DEFAULT_LATITUDE, DEFAULT_LONGITUDE } from "@repo/ai/lib/weather";
 import { nakafaSuggestions } from "@repo/ai/prompt/suggestions";
 import { nakafaPrompt } from "@repo/ai/prompt/system";
 import { tools } from "@repo/ai/tools";

@@ -1,9 +1,9 @@
 import { dedentString } from "@repo/ai/lib/utils";
-import { nakafaContent } from "@repo/ai/prompt/content";
+import { nakafaContent } from "@repo/ai/prompt/tools/content";
 import {
   type GetContentOutput,
   getContentInputSchema,
-} from "@repo/ai/schema/tools";
+} from "@repo/ai/schema/tools/nakafa-content";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { api } from "@repo/connection/routes";
 import {

@@ -2,7 +2,7 @@ import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
   getWeather,
-} from "@repo/ai/lib/weather";
+} from "@repo/ai/clients/weather/client";
 import { CorsValidator } from "@repo/security/lib/cors-validator";
 import {
   createServiceLogger,

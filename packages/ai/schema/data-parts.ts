@@ -1,9 +1,12 @@
-import * as z from "zod";
 import {
   getArticlesInputSchema,
   getSubjectsInputSchema,
-} from "../schema/tools";
+} from "@repo/ai/schema/tools/nakafa-content";
+import * as z from "zod";
 
+/**
+ * Schema for content items (articles or subjects)
+ */
 export const contentsSchema = z.object({
   title: z.string(),
   url: z.string(),
@@ -11,6 +14,9 @@ export const contentsSchema = z.object({
   locale: z.string(),
 });
 
+/**
+ * Schema for data parts used in UI messages
+ */
 export const dataPartSchema = z.object({
   suggestions: z.object({
     data: z.array(z.string()),

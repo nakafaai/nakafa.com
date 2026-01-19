@@ -11,7 +11,7 @@ import {
   XAI,
   ZAI,
 } from "@lobehub/icons";
-import type { ModelId } from "@repo/ai/lib/providers";
+import type { ModelId } from "@repo/ai/config/providers";
 import type { ComponentType } from "react";
 
 interface Model {

@@ -1,11 +1,11 @@
+import { firecrawlApp } from "@repo/ai/clients/firecrawl";
 import { selectRelevantContent } from "@repo/ai/lib/content-selection";
-import { firecrawlApp } from "@repo/ai/lib/firecrawl";
 import { dedentString, extractDomain } from "@repo/ai/lib/utils";
-import { nakafaWebSearch } from "@repo/ai/prompt/web-search";
+import { nakafaWebSearch } from "@repo/ai/prompt/tools/web-search";
 import {
   type WebSearchOutput,
   webSearchInputSchema,
-} from "@repo/ai/schema/tools";
+} from "@repo/ai/schema/tools/web";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { tool, type UIMessageStreamWriter } from "ai";
 import * as z from "zod";

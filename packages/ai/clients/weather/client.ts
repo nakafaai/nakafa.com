@@ -1,3 +1,9 @@
+import {
+  airPollutionResponseSchema,
+  type GeoData,
+  reverseGeocodeSchema,
+  weatherResponseSchema,
+} from "@repo/ai/clients/weather/schema";
 import { keys } from "@repo/ai/keys";
 import {
   createChildLogger,
@@ -6,12 +12,6 @@ import {
   logError,
 } from "@repo/utilities/logging";
 import ky from "ky";
-import {
-  airPollutionResponseSchema,
-  type GeoData,
-  reverseGeocodeSchema,
-  weatherResponseSchema,
-} from "./weather-schema";
 
 const apiKey = keys().OPENWEATHER_API_KEY;
 const GEO_BASE_URL = "https://api.openweathermap.org/geo/1.0";

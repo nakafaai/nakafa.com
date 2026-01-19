@@ -1,7 +1,7 @@
 "use client";
 
 import { Add01Icon, QuoteDownIcon } from "@hugeicons/core-free-icons";
-import type { DataPart } from "@repo/ai/types/data-parts";
+import type { DataPart } from "@repo/ai/schema/data-parts";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 import { memo } from "react";

@@ -1,4 +1,4 @@
-import type { getWeather } from "@repo/ai/lib/weather";
+import type { getWeather } from "@repo/ai/clients/weather/client";
 import { useQuery } from "@tanstack/react-query";
 import ky from "ky";
 

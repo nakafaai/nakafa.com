@@ -1,9 +1,9 @@
 import { buildContentSlug, dedentString } from "@repo/ai/lib/utils";
-import { nakafaArticles } from "@repo/ai/prompt/articles";
+import { nakafaArticles } from "@repo/ai/prompt/tools/articles";
 import {
   type GetArticlesOutput,
   getArticlesInputSchema,
-} from "@repo/ai/schema/tools";
+} from "@repo/ai/schema/tools/nakafa-content";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { api } from "@repo/connection/routes";
 import { tool, type UIMessageStreamWriter } from "ai";
