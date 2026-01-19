@@ -54,8 +54,7 @@ import type { FunctionReturnType } from "convex/server";
 import { formatDistanceToNow, startOfDay } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
-import type { ComponentProps } from "react";
-import { Activity, useState, useTransition } from "react";
+import { Activity, type ComponentProps, useState, useTransition } from "react";
 import { toast } from "sonner";
 import {
   getMaterialStatus,
@@ -82,6 +81,26 @@ type MaterialGroup = FunctionReturnType<
 >["page"][number];
 
 const DEBOUNCE_TIME = 500;
+
+/**
+ * Get the badge variant based on material group status
+ */
+function getBadgeVariant(
+  status: MaterialGroup["status"]
+): ComponentProps<typeof Badge>["variant"] {
+  switch (status) {
+    case "published":
+      return "secondary";
+    case "draft":
+      return "muted";
+    case "scheduled":
+      return "muted";
+    case "archived":
+      return "destructive";
+    default:
+      return "muted";
+  }
+}
 
 export function SchoolClassesMaterialsList() {
   const t = useTranslations("School.Classes");
@@ -151,21 +170,6 @@ function MaterialGroupCard({
   const statusInfo = getMaterialStatus(group.status);
   const StatusIcon = statusInfo.icon;
 
-  function getBadgeVariant(): ComponentProps<typeof Badge>["variant"] {
-    switch (group.status) {
-      case "published":
-        return "secondary";
-      case "draft":
-        return "muted";
-      case "scheduled":
-        return "muted";
-      case "archived":
-        return "destructive";
-      default:
-        return "muted";
-    }
-  }
-
   return (
     <div className="group relative">
       <NavigationLink
@@ -189,7 +193,7 @@ function MaterialGroupCard({
         )}
       >
         <Activity mode={canManage ? "visible" : "hidden"}>
-          <Badge className="w-fit" variant={getBadgeVariant()}>
+          <Badge className="w-fit" variant={getBadgeVariant(group.status)}>
             <HugeIcons className="size-3" icon={StatusIcon} />
             {group.status === "scheduled" && group.scheduledAt
               ? formatScheduledAt(group.scheduledAt, locale)

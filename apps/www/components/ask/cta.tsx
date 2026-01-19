@@ -21,8 +21,8 @@ export function AskCta({ title }: Props) {
 
   const setText = useAi((state) => state.setText);
 
-  const handleGoogleSignIn = async () => {
-    await authClient.signIn.social({
+  const handleGoogleSignIn = () => {
+    authClient.signIn.social({
       provider: "google",
     });
   };
