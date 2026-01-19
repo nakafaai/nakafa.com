@@ -273,7 +273,6 @@ async function PageContent({
                   <ExerciseArticle
                     exercise={exercise}
                     id={id}
-                    key={exercise.number}
                     locale={locale}
                     srLabel={t("number-count", { count: exercise.number })}
                   />
