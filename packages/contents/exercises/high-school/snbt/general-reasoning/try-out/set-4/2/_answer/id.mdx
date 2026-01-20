@@ -1,0 +1,40 @@
+export const metadata = {
+  title: "Pembahasan Soal 2",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/19/2026",
+};
+
+Untuk menentukan kombinasi mana yang paling mungkin didapatkan, kita perlu menghitung peluang dari setiap pilihan jawaban.
+
+Pertama, mari kita hitung total mainan di setiap kotak:
+
+<MathContainer>
+  <BlockMath math="\text{Total Kotak 1} = 3 + 4 + 5 + 4 = 16" />
+  <BlockMath math="\text{Total Kotak 2} = 4 + 3 + 4 + 4 = 15" />
+</MathContainer>
+
+Peluang mengambil satu mainan tertentu adalah jumlah mainan tersebut dibagi dengan total mainan di kotaknya. Karena pengambilan dari Kotak <InlineMath math="1" /> dan Kotak <InlineMath math="2" /> adalah kejadian yang saling bebas, kita mengalikan peluangnya.
+
+Mari kita analisis setiap pilihan:
+
+#### Analisis Peluang
+
+| Pilihan | Perhitungan Peluang | Hasil |
+| :--- | :--- | :---: |
+| **2 Boneka Beruang** | <InlineMath math="\frac{3}{16} \times \frac{4}{15}" /> | <InlineMath math="\frac{12}{240}" /> |
+| **2 Kelereng** | <InlineMath math="\frac{4}{16} \times \frac{4}{15}" /> | <InlineMath math="\frac{16}{240}" /> |
+| **1 Bola & 1 Barbie** | <InlineMath math="(\frac{5}{16} \times \frac{3}{15}) + (\frac{4}{16} \times \frac{4}{15})" /> | <InlineMath math="\frac{15+16}{240} = \frac{31}{240}" /> |
+| **1 Barbie & 1 Kelereng** | <InlineMath math="(\frac{4}{16} \times \frac{4}{15}) + (\frac{4}{16} \times \frac{3}{15})" /> | <InlineMath math="\frac{16+12}{240} = \frac{28}{240}" /> |
+| **1 Beruang & 1 Bola** | <InlineMath math="(\frac{3}{16} \times \frac{4}{15}) + (\frac{5}{16} \times \frac{4}{15})" /> | <InlineMath math="\frac{12+20}{240} = \frac{32}{240}" /> |
+
+> Untuk kombinasi dua jenis mainan berbeda (misalnya Bola dan Barbie), ada dua kemungkinan: Bola dari Kotak 1 & Barbie dari Kotak 2, ATAU Barbie dari Kotak 1 & Bola dari Kotak 2.
+
+#### Kesimpulan
+
+Dari perhitungan di atas, kita membandingkan pembilangnya karena penyebutnya sama (<InlineMath math="240" />):
+
+<MathContainer>
+  <BlockMath math="12 < 16 < 28 < 31 < 32" />
+</MathContainer>
+
+Peluang terbesar adalah **<InlineMath math="\frac{32}{240}" />**, yaitu untuk kombinasi **1 boneka beruang dan 1 bola**.

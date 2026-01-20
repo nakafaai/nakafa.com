@@ -8,5 +8,6 @@ onlyBuiltDependencies:
   - core-js
   - core-js-pure
   - esbuild
+  - msw
   - protobufjs
   - sharp

@@ -27,7 +27,7 @@ export default function NotFound() {
             <Particles className="pointer-events-none absolute inset-0 opacity-80" />
             <div className="mx-6 rounded-xl border bg-card/30 p-6 shadow-sm backdrop-blur-xs">
               <div className="space-y-4 text-center">
-                <h1 className="font-bold font-mono text-6xl text-primary">
+                <h1 className="font-bold font-mono text-6xl text-destructive">
                   404
                 </h1>
 

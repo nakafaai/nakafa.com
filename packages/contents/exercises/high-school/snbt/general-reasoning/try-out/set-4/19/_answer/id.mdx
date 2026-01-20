@@ -1,0 +1,34 @@
+export const metadata = {
+  title: "Pembahasan Soal 19",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/20/2026",
+};
+
+Soal ini meminta kita untuk mencari simpulan yang **tidak benar** atau negasi dari pernyataan yang ada di dalam teks.
+
+Perhatikan kalimat berikut:
+
+"Nasi merah memiliki kandungan serat lebih tinggi... Sehingga membuat lebih cepat kenyang dan tidak makan berlebihan."
+
+Pernyataan ini merupakan bentuk implikasi (<InlineMath math="p \rightarrow q" />):
+- <InlineMath math="p" />: Nasi merah memiliki kandungan serat tinggi.
+- <InlineMath math="q" />: Membuat lebih cepat kenyang dan tidak makan berlebihan.
+
+Simpulan tidak benar berarti kita mencari **negasi** dari implikasi tersebut. Negasi dari <InlineMath math="p \rightarrow q" /> adalah <InlineMath math="p \land \sim q" /> (p dan tidak q).
+
+Mari kita analisis komponennya:
+- <InlineMath math="p" />: Nasi merah memiliki serat tinggi.
+- <InlineMath math="q" />: Membuat cepat kenyang **dan** tidak makan berlebihan.
+- <InlineMath math="\sim q" />: **Tidak** membuat cepat kenyang **atau** makan berlebihan (Hukum De Morgan: negasi dari "dan" adalah "atau").
+
+Maka, negasinya adalah:
+
+"Nasi merah memiliki serat tinggi **dan** (tidak membuat cepat kenyang **atau** makan berlebihan)."
+
+Mari kita cek pilihan jawaban:
+
+- **Pilihan yang sesuai**: "Nasi merah memiliki serat tinggi dan tidak membuat cepat kenyang atau makan berlebihan."
+
+Pilihan ini sesuai dengan bentuk logika <InlineMath math="p \land \sim q" />.
+
+Jadi, simpulan yang tidak benar adalah **Nasi merah memiliki serat tinggi dan tidak membuat cepat kenyang atau makan berlebihan**.

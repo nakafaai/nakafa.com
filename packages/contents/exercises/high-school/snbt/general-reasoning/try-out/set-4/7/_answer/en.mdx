@@ -1,0 +1,69 @@
+export const metadata = {
+  title: "Explanation for Problem 7",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/19/2026",
+};
+
+We can simplify the statements into mathematical logic forms.
+
+#### Variable Definitions
+
+Let:
+*   <InlineMath math="p" />: <InlineMath math="A = B" />
+*   <InlineMath math="q" />: <InlineMath math="C \neq D" />
+*   <InlineMath math="r" />: <InlineMath math="E = F" />
+*   <InlineMath math="s" />: <InlineMath math="G = H" />
+
+#### Translating Statements
+
+1.  **Statement 1**: <InlineMath math="A = B" /> or <InlineMath math="C \neq D" />
+
+    <MathContainer>
+      <BlockMath math="p \lor q" />
+    </MathContainer>
+
+    This form is equivalent to the implication: <InlineMath math="\sim p \to q" />.
+
+2.  **Statement 2**: If <InlineMath math="E = F" /> then <InlineMath math="G = H" />
+
+    <MathContainer>
+      <BlockMath math="r \to s" />
+    </MathContainer>
+
+    This form is equivalent to the contrapositive: <InlineMath math="\sim s \to \sim r" />.
+
+3.  **Statement 3**: <InlineMath math="C = D" /> or <InlineMath math="G \neq H" />
+
+    Note that <InlineMath math="C = D" /> is the negation of <InlineMath math="q" /> (<InlineMath math="\sim q" />), and <InlineMath math="G \neq H" /> is the negation of <InlineMath math="s" /> (<InlineMath math="\sim s" />).
+
+    <MathContainer>
+      <BlockMath math="\sim q \lor \sim s" />
+    </MathContainer>
+
+    This form is equivalent to the implication: <InlineMath math="q \to \sim s" />.
+
+#### Drawing Conclusion
+
+We have the following logical chain:
+1.  From Statement 1: <InlineMath math="\sim p \to q" />
+2.  From Statement 3: <InlineMath math="q \to \sim s" />
+3.  From Statement 2: <InlineMath math="\sim s \to \sim r" />
+
+Using syllogism, we can combine all three:
+
+<MathContainer>
+  <BlockMath math="(\sim p \to q) \land (q \to \sim s) \land (\sim s \to \sim r) \implies \sim p \to \sim r" />
+</MathContainer>
+
+The final result is <InlineMath math="\sim p \to \sim r" />. This implication form is equivalent to a disjunction (or):
+
+<MathContainer>
+  <BlockMath math="\sim p \to \sim r \equiv p \lor \sim r" />
+</MathContainer>
+
+#### Translating Back to Sentences
+
+*   <InlineMath math="p" /> is <InlineMath math="A = B" />
+*   <InlineMath math="\sim r" /> is <InlineMath math="E \neq F" />
+
+So the conclusion is: **<InlineMath math="A = B" /> or <InlineMath math="E \neq F" />**.

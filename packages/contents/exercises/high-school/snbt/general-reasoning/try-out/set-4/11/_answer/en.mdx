@@ -1,0 +1,33 @@
+export const metadata = {
+  title: "Explanation for Problem 11",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/19/2026",
+};
+
+Let's translate the statements into mathematical logic.
+
+Let:
+
+*   <InlineMath math="p" />: Nakafa students work on conditional empathy questions.
+*   <InlineMath math="q" />: Nakafa students can work on TOBK questions in the Nakafa application.
+*   <InlineMath math="r" />: Nakafa students get Learning Achievement Evaluation (EPB) results.
+
+The given statements are:
+
+1.  If Nakafa students work on conditional empathy questions, then they can work on TOBK questions in the Nakafa application (<InlineMath math="p \rightarrow q" />).
+2.  If Nakafa students work on TOBK questions in the Nakafa application, then they get Learning Achievement Evaluation (EPB) results (<InlineMath math="q \rightarrow r" />).
+3.  Dito does not get Learning Achievement Evaluation (EPB) results (<InlineMath math="\sim r" />).
+
+From premises 1 and 2, we can use syllogism:
+
+<MathContainer>
+  <BlockMath math="\begin{align*} & p \rightarrow q \\ & q \rightarrow r \\ \hline \therefore \ & p \rightarrow r \end{align*}" />
+</MathContainer>
+
+Next, we use that conclusion (<InlineMath math="p \rightarrow r" />) with premise 3 (<InlineMath math="\sim r" />) using the Modus Tollens rule:
+
+<MathContainer>
+  <BlockMath math="\begin{align*} & p \rightarrow r \\ & \sim r \\ \hline \therefore \ & \sim p \end{align*}" />
+</MathContainer>
+
+The conclusion is <InlineMath math="\sim p" />, which means **Dito does not work on conditional empathy questions**.

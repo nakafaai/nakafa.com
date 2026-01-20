@@ -1,0 +1,29 @@
+export const metadata = {
+  title: "Explanation for Problem 10",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/19/2026",
+};
+
+Let's translate the statements into mathematical logic.
+
+Let:
+
+*   <InlineMath math="p" />: Nakafa students work on conditional empathy questions.
+*   <InlineMath math="q" />: Nakafa students can work on TOBK questions on the Nakafa app.
+*   <InlineMath math="r" />: Nakafa students get Learning Achievement Evaluation (EPB) results.
+
+The given statements are:
+
+1.  If Nakafa students work on conditional empathy questions, then they can work on TOBK questions on the Nakafa app (<InlineMath math="p \rightarrow q" />).
+2.  If Nakafa students work on TOBK questions on the Nakafa app, then they get Learning Achievement Evaluation (EPB) results (<InlineMath math="q \rightarrow r" />).
+3.  Fact: Dito works on TOBK questions on the Nakafa app (<InlineMath math="q" />).
+
+We have the premise <InlineMath math="q \rightarrow r" /> and the fact <InlineMath math="q" />. Based on the **Modus Ponens** rule of inference:
+
+<MathContainer>
+  <BlockMath math="\begin{align*} & q \rightarrow r \\ & q \\ \hline \therefore \ & r \end{align*}" />
+</MathContainer>
+
+Therefore, the conclusion is <InlineMath math="r" />, which is Dito gets Learning Achievement Evaluation (EPB) results.
+
+Note that the first premise (<InlineMath math="p \rightarrow q" />) is not directly used to draw this conclusion because the fact we have is <InlineMath math="q" />, not <InlineMath math="p" />. Even though <InlineMath math="q" /> occurs, we cannot conclude <InlineMath math="p" /> (affirming the consequent is a fallacy). The main focus is the implication from <InlineMath math="q" /> to <InlineMath math="r" />.

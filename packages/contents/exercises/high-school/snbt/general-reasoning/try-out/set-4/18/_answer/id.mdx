@@ -1,0 +1,74 @@
+export const metadata = {
+  title: "Pembahasan Soal 18",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/20/2026",
+};
+
+Kita perlu menghitung peluang untuk setiap skenario yang diberikan dalam pilihan jawaban.
+
+Total buku di setiap rak:
+- Rak A = <InlineMath math="5 + 3 + 4 = 12" />.
+- Rak B = <InlineMath math="3 + 3 + 6 = 12" />.
+
+Total kemungkinan pasangan buku yang diambil adalah <InlineMath math="12 \times 12 = 144" />.
+
+#### Analisis Setiap Pilihan
+
+Kita akan menghitung peluang (<InlineMath math="P" />) untuk masing-masing kejadian.
+
+1. 2 buku fiksi
+
+   Mengambil 1 fiksi dari Rak A dan 1 fiksi dari Rak B.
+
+   <MathContainer>
+     <BlockMath math="P(\text{2 Fiksi}) = \frac{5}{12} \times \frac{3}{12} = \frac{15}{144}" />
+   </MathContainer>
+
+2. 1 buku fiksi dan 1 buku sains
+
+   Ada dua kemungkinan:
+   - Fiksi dari Rak A dan Sains dari Rak B: <InlineMath math="\frac{5}{12} \times \frac{3}{12} = \frac{15}{144}" />
+   - Sains dari Rak A dan Fiksi dari Rak B: <InlineMath math="\frac{3}{12} \times \frac{3}{12} = \frac{9}{144}" />
+
+   <MathContainer>
+     <BlockMath math="P(\text{1 Fiksi, 1 Sains}) = \frac{15}{144} + \frac{9}{144} = \frac{24}{144}" />
+   </MathContainer>
+
+3. 1 buku sains dan 1 buku sejarah
+
+   Ada dua kemungkinan:
+   - Sains dari Rak A dan Sejarah dari Rak B: <InlineMath math="\frac{3}{12} \times \frac{6}{12} = \frac{18}{144}" />
+   - Sejarah dari Rak A dan Sains dari Rak B: <InlineMath math="\frac{4}{12} \times \frac{3}{12} = \frac{12}{144}" />
+
+   <MathContainer>
+     <BlockMath math="P(\text{1 Sains, 1 Sejarah}) = \frac{18}{144} + \frac{12}{144} = \frac{30}{144}" />
+   </MathContainer>
+
+4. 2 buku sejarah
+
+   Mengambil 1 sejarah dari Rak A dan 1 sejarah dari Rak B.
+
+   <MathContainer>
+     <BlockMath math="P(\text{2 Sejarah}) = \frac{4}{12} \times \frac{6}{12} = \frac{24}{144}" />
+   </MathContainer>
+
+5. 2 buku sains
+
+   Mengambil 1 sains dari Rak A dan 1 sains dari Rak B.
+
+   <MathContainer>
+     <BlockMath math="P(\text{2 Sains}) = \frac{3}{12} \times \frac{3}{12} = \frac{9}{144}" />
+   </MathContainer>
+
+#### Kesimpulan
+
+Mari kita bandingkan hasil peluangnya (semua penyebut adalah 144):
+- 2 buku fiksi: 15
+- 1 buku fiksi dan 1 buku sains: 24
+- 1 buku sains dan 1 buku sejarah: 30
+- 2 buku sejarah: 24
+- 2 buku sains: 9
+
+Nilai terkecil adalah 9.
+
+Jadi, peluang terkecil anak dapat mengambil **2 buku sains**.

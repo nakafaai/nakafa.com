@@ -1,0 +1,74 @@
+export const metadata = {
+  title: "Problem 18 Explanation",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/20/2026",
+};
+
+We need to calculate the probability for each scenario given in the options.
+
+Total books in each shelf:
+- Shelf A = <InlineMath math="5 + 3 + 4 = 12" />.
+- Shelf B = <InlineMath math="3 + 3 + 6 = 12" />.
+
+The total possible pairs of books taken is <InlineMath math="12 \times 12 = 144" />.
+
+#### Analysis of Each Option
+
+We will calculate the probability (<InlineMath math="P" />) for each event.
+
+1. 2 fiction books
+
+   Taking 1 fiction from Shelf A and 1 fiction from Shelf B.
+
+   <MathContainer>
+     <BlockMath math="P(\text{2 Fiction}) = \frac{5}{12} \times \frac{3}{12} = \frac{15}{144}" />
+   </MathContainer>
+
+2. 1 fiction book and 1 science book
+
+   There are two possibilities:
+   - Fiction from Shelf A and Science from Shelf B: <InlineMath math="\frac{5}{12} \times \frac{3}{12} = \frac{15}{144}" />
+   - Science from Shelf A and Fiction from Shelf B: <InlineMath math="\frac{3}{12} \times \frac{3}{12} = \frac{9}{144}" />
+
+   <MathContainer>
+     <BlockMath math="P(\text{1 Fiction, 1 Science}) = \frac{15}{144} + \frac{9}{144} = \frac{24}{144}" />
+   </MathContainer>
+
+3. 1 science book and 1 history book
+
+   There are two possibilities:
+   - Science from Shelf A and History from Shelf B: <InlineMath math="\frac{3}{12} \times \frac{6}{12} = \frac{18}{144}" />
+   - History from Shelf A and Science from Shelf B: <InlineMath math="\frac{4}{12} \times \frac{3}{12} = \frac{12}{144}" />
+
+   <MathContainer>
+     <BlockMath math="P(\text{1 Science, 1 History}) = \frac{18}{144} + \frac{12}{144} = \frac{30}{144}" />
+   </MathContainer>
+
+4. 2 history books
+
+   Taking 1 history from Shelf A and 1 history from Shelf B.
+
+   <MathContainer>
+     <BlockMath math="P(\text{2 History}) = \frac{4}{12} \times \frac{6}{12} = \frac{24}{144}" />
+   </MathContainer>
+
+5. 2 science books
+
+   Taking 1 science from Shelf A and 1 science from Shelf B.
+
+   <MathContainer>
+     <BlockMath math="P(\text{2 Science}) = \frac{3}{12} \times \frac{3}{12} = \frac{9}{144}" />
+   </MathContainer>
+
+#### Conclusion
+
+Let's compare the probability results (all denominators are 144):
+- 2 fiction books: 15
+- 1 fiction book and 1 science book: 24
+- 1 science book and 1 history book: 30
+- 2 history books: 24
+- 2 science books: 9
+
+The smallest value is 9.
+
+Thus, the smallest probability is for the child to get **2 science books**.

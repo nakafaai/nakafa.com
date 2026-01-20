@@ -1,0 +1,33 @@
+export const metadata = {
+  title: "Pembahasan Soal 11",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/19/2026",
+};
+
+Mari kita terjemahkan pernyataan-pernyataan tersebut ke dalam logika matematika.
+
+Misalkan:
+
+*   <InlineMath math="p" />: Siswa Nakafa mengerjakan soal empati bersyarat.
+*   <InlineMath math="q" />: Siswa Nakafa dapat mengerjakan soal TOBK di aplikasi Nakafa.
+*   <InlineMath math="r" />: Siswa Nakafa mendapatkan hasil Evaluasi Prestasi Belajar (EPB).
+
+Pernyataan-pernyataan yang diberikan adalah:
+
+1.  Jika siswa Nakafa mengerjakan soal empati bersyarat, maka dapat mengerjakan soal TOBK di aplikasi Nakafa (<InlineMath math="p \rightarrow q" />).
+2.  Jika siswa Nakafa mengerjakan soal TOBK di aplikasi Nakafa maka mendapatkan hasil Evaluasi Prestasi Belajar (EPB) (<InlineMath math="q \rightarrow r" />).
+3.  Dito tidak mendapatkan hasil Evaluasi Prestasi Belajar (EPB) (<InlineMath math="\sim r" />).
+
+Dari premis 1 dan 2, kita dapat menggunakan silogisme:
+
+<MathContainer>
+  <BlockMath math="\begin{align*} & p \rightarrow q \\ & q \rightarrow r \\ \hline \therefore \ & p \rightarrow r \end{align*}" />
+</MathContainer>
+
+Selanjutnya, kita gunakan kesimpulan tersebut (<InlineMath math="p \rightarrow r" />) dengan premis 3 (<InlineMath math="\sim r" />) menggunakan aturan Modus Tollens:
+
+<MathContainer>
+  <BlockMath math="\begin{align*} & p \rightarrow r \\ & \sim r \\ \hline \therefore \ & \sim p \end{align*}" />
+</MathContainer>
+
+Kesimpulannya adalah <InlineMath math="\sim p" />, yang berarti **Dito tidak mengerjakan soal empati bersyarat**.

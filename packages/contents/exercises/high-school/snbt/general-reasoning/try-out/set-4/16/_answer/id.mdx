@@ -1,0 +1,40 @@
+export const metadata = {
+  title: "Pembahasan Soal 16",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/20/2026",
+};
+
+Kita dapat menyelesaikan masalah ini dengan metode pengisian tempat (*filling slots*) untuk 4 digit kode sandi.
+
+Angka yang tersedia adalah bilangan asli kurang dari 7, yaitu:
+
+<MathContainer>
+  <BlockMath math="S = \{1, 2, 3, 4, 5, 6\}" />
+</MathContainer>
+
+Berikut analisis kemungkinan untuk setiap posisi digit:
+
+| Posisi | Syarat | Pilihan | Banyak Cara |
+| :--- | :--- | :--- | :--- |
+| **Digit 1** | Faktor dari 7 | Hanya angka **1** (karena 7 tidak masuk dalam <InlineMath math="S" />) | **1** |
+| **Digit 3** | Angka 3 atau 4 | <InlineMath math="\{3, 4\}" /> | **2** |
+| **Digit 4** | Huruf konsonan "Dito" | <InlineMath math="\{\text{D}, \text{T}\}" /> | **2** |
+| **Digit 2** | Angka tersisa | Dari 6 angka, sudah terpakai 2 angka (di Digit 1 dan 3) | **4** |
+
+#### Penjelasan Tambahan untuk Digit 2
+
+Karena kode harus terdiri dari kombinasi angka yang **berbeda**, maka kita harus mengurangi total angka yang tersedia dengan angka yang sudah digunakan di posisi lain.
+- Total angka tersedia: 6
+- Terpakai di Digit 1: 1 angka
+- Terpakai di Digit 3: 1 angka
+- Sisa pilihan: <InlineMath math="6 - 1 - 1 = 4" /> angka.
+
+#### Perhitungan Total
+
+Banyaknya kode sandi maksimum adalah hasil perkalian dari banyak cara di setiap posisi:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} \text{Total} &= (\text{Digit 1}) \times (\text{Digit 2}) \times (\text{Digit 3}) \times (\text{Digit 4}) \\ &= 1 \times 4 \times 2 \times 2 \\ &= 16 \end{aligned}" />
+</MathContainer>
+
+Jadi, Dito harus mencoba maksimum **16** kode sandi.

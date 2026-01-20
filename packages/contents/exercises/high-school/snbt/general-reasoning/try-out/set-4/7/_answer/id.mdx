@@ -1,0 +1,69 @@
+export const metadata = {
+  title: "Pembahasan Soal 7",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/19/2026",
+};
+
+Kita dapat menyederhanakan pernyataan-pernyataan tersebut ke dalam bentuk logika matematika.
+
+#### Definisi Variabel
+
+Misalkan:
+*   <InlineMath math="p" />: <InlineMath math="A = B" />
+*   <InlineMath math="q" />: <InlineMath math="C \neq D" />
+*   <InlineMath math="r" />: <InlineMath math="E = F" />
+*   <InlineMath math="s" />: <InlineMath math="G = H" />
+
+#### Menerjemahkan Pernyataan
+
+1.  **Pernyataan 1**: <InlineMath math="A = B" /> atau <InlineMath math="C \neq D" />
+
+    <MathContainer>
+      <BlockMath math="p \lor q" />
+    </MathContainer>
+
+    Bentuk ini setara dengan implikasi: <InlineMath math="\sim p \to q" />.
+
+2.  **Pernyataan 2**: Jika <InlineMath math="E = F" /> maka <InlineMath math="G = H" />
+
+    <MathContainer>
+      <BlockMath math="r \to s" />
+    </MathContainer>
+
+    Bentuk ini setara dengan kontraposisi: <InlineMath math="\sim s \to \sim r" />.
+
+3.  **Pernyataan 3**: <InlineMath math="C = D" /> atau <InlineMath math="G \neq H" />
+
+    Perhatikan bahwa <InlineMath math="C = D" /> adalah negasi dari <InlineMath math="q" /> (<InlineMath math="\sim q" />), dan <InlineMath math="G \neq H" /> adalah negasi dari <InlineMath math="s" /> (<InlineMath math="\sim s" />).
+
+    <MathContainer>
+      <BlockMath math="\sim q \lor \sim s" />
+    </MathContainer>
+
+    Bentuk ini setara dengan implikasi: <InlineMath math="q \to \sim s" />.
+
+#### Penarikan Kesimpulan
+
+Kita memiliki rantai logika sebagai berikut:
+1.  Dari Pernyataan 1: <InlineMath math="\sim p \to q" />
+2.  Dari Pernyataan 3: <InlineMath math="q \to \sim s" />
+3.  Dari Pernyataan 2: <InlineMath math="\sim s \to \sim r" />
+
+Dengan menggunakan silogisme, kita dapat menggabungkan ketiganya:
+
+<MathContainer>
+  <BlockMath math="(\sim p \to q) \land (q \to \sim s) \land (\sim s \to \sim r) \implies \sim p \to \sim r" />
+</MathContainer>
+
+Hasil akhirnya adalah <InlineMath math="\sim p \to \sim r" />. Bentuk implikasi ini setara dengan disjungsi (atau):
+
+<MathContainer>
+  <BlockMath math="\sim p \to \sim r \equiv p \lor \sim r" />
+</MathContainer>
+
+#### Mengembalikan ke Kalimat
+
+*   <InlineMath math="p" /> adalah <InlineMath math="A = B" />
+*   <InlineMath math="\sim r" /> adalah <InlineMath math="E \neq F" />
+
+Maka kesimpulannya adalah: **<InlineMath math="A = B" /> atau <InlineMath math="E \neq F" />**.

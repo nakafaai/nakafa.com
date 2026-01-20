@@ -1,0 +1,30 @@
+export const metadata = {
+  title: "Pembahasan Soal 1",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/19/2026",
+};
+
+Untuk menentukan banyaknya susunan *password* yang mungkin, kita dapat menggunakan aturan perkalian (*filling slots*). *Password* terdiri dari <InlineMath math="5" /> digit dengan pola: **Angka - Angka - Huruf - Angka - Huruf**.
+
+Mari kita analisis banyaknya kemungkinan untuk setiap posisi menggunakan tabel berikut:
+
+#### Analisis Posisi
+
+| Posisi | Deskripsi Syarat | Himpunan yang Memenuhi | Banyak Kemungkinan |
+| :--- | :--- | :--- | :---: |
+| <InlineMath math="1" /> (Angka) | Angka prima satu digit | <InlineMath math="\{2, 3, 5, 7\}" /> | <InlineMath math="4" /> |
+| <InlineMath math="2" /> (Angka) | Angka ganjil kurang dari <InlineMath math="7" /> | <InlineMath math="\{1, 3, 5\}" /> | <InlineMath math="3" /> |
+| <InlineMath math="3" /> (Huruf) | Huruf vokal dari nama "Faza" | <InlineMath math="\{A\}" /> | <InlineMath math="1" /> |
+| <InlineMath math="4" /> (Angka) | Dipilih dari himpunan <InlineMath math="\{0, 4, 6\}" /> | <InlineMath math="\{0, 4, 6\}" /> | <InlineMath math="3" /> |
+| <InlineMath math="5" /> (Huruf) | Huruf konsonan dari nama "Faza" | <InlineMath math="\{F, Z\}" /> | <InlineMath math="2" /> |
+
+#### Perhitungan Total
+
+Berdasarkan aturan perkalian, total susunan *password* adalah hasil kali dari kemungkinan di setiap posisi:
+
+<MathContainer>
+  <BlockMath math="\text{Total} = 4 \times 3 \times 1 \times 3 \times 2" />
+  <BlockMath math="\text{Total} = 72" />
+</MathContainer>
+
+Jadi, banyak susunan *password* yang bisa dibentuk adalah **<InlineMath math="72" />**.

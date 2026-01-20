@@ -1,0 +1,40 @@
+export const metadata = {
+  title: "Problem 16 Explanation",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/20/2026",
+};
+
+We can solve this problem using the filling slots method for the 4-digit passcode.
+
+The available numbers are natural numbers less than 7, which are:
+
+<MathContainer>
+  <BlockMath math="S = \{1, 2, 3, 4, 5, 6\}" />
+</MathContainer>
+
+Here is the analysis of possibilities for each digit position:
+
+| Position | Condition | Choices | Count |
+| :--- | :--- | :--- | :--- |
+| **Digit 1** | Factor of 7 | Only number **1** (since 7 is not in <InlineMath math="S" />) | **1** |
+| **Digit 3** | Number 3 or 4 | <InlineMath math="\{3, 4\}" /> | **2** |
+| **Digit 4** | Consonant in "Dito" | <InlineMath math="\{\text{D}, \text{T}\}" /> | **2** |
+| **Digit 2** | Remaining numbers | From 6 numbers, 2 are already used (in Digit 1 and 3) | **4** |
+
+#### Additional Explanation for Digit 2
+
+Since the passcode must consist of **distinct** numbers, we must subtract the numbers already used in other positions from the total available numbers.
+- Total available numbers: 6
+- Used in Digit 1: 1 number
+- Used in Digit 3: 1 number
+- Remaining choices: <InlineMath math="6 - 1 - 1 = 4" /> numbers.
+
+#### Total Calculation
+
+The maximum number of passcodes is the product of the possibilities for each position:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} \text{Total} &= (\text{Digit 1}) \times (\text{Digit 2}) \times (\text{Digit 3}) \times (\text{Digit 4}) \\ &= 1 \times 4 \times 2 \times 2 \\ &= 16 \end{aligned}" />
+</MathContainer>
+
+Thus, Dito has to try a maximum of **16** passcodes.

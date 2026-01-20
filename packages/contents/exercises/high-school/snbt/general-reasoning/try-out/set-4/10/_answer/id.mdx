@@ -1,0 +1,29 @@
+export const metadata = {
+  title: "Pembahasan Soal 10",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/19/2026",
+};
+
+Mari kita terjemahkan pernyataan-pernyataan tersebut ke dalam logika matematika.
+
+Misalkan:
+
+*   <InlineMath math="p" />: Siswa Nakafa mengerjakan soal empati bersyarat.
+*   <InlineMath math="q" />: Siswa Nakafa dapat mengerjakan soal TOBK di aplikasi Nakafa.
+*   <InlineMath math="r" />: Siswa Nakafa mendapatkan hasil Evaluasi Prestasi Belajar (EPB).
+
+Pernyataan yang diberikan adalah:
+
+1.  Jika siswa Nakafa mengerjakan soal empati bersyarat, maka dapat mengerjakan soal TOBK di aplikasi Nakafa (<InlineMath math="p \rightarrow q" />).
+2.  Jika siswa Nakafa mengerjakan soal TOBK di aplikasi Nakafa, maka mendapatkan hasil Evaluasi Prestasi Belajar (EPB) (<InlineMath math="q \rightarrow r" />).
+3.  Fakta: Dito mengerjakan soal TOBK di aplikasi Nakafa (<InlineMath math="q" />).
+
+Kita memiliki premis <InlineMath math="q \rightarrow r" /> dan fakta <InlineMath math="q" />. Berdasarkan aturan penarikan kesimpulan **Modus Ponens**:
+
+<MathContainer>
+  <BlockMath math="\begin{align*} & q \rightarrow r \\ & q \\ \hline \therefore \ & r \end{align*}" />
+</MathContainer>
+
+Jadi, kesimpulannya adalah <InlineMath math="r" />, yaitu Dito mendapatkan hasil Evaluasi Prestasi Belajar (EPB).
+
+Perhatikan bahwa premis pertama (<InlineMath math="p \rightarrow q" />) tidak digunakan secara langsung untuk menarik kesimpulan ini karena fakta yang kita miliki adalah <InlineMath math="q" />, bukan <InlineMath math="p" />. Meskipun <InlineMath math="q" /> terjadi, kita tidak bisa menyimpulkan <InlineMath math="p" /> (karena <InlineMath math="q" /> bisa disebabkan oleh hal lain, atau Dito bisa mengerjakan TOBK tanpa mengerjakan soal empati bersyarat jika aturan tidak melarangnya secara eksklusif, namun logika formal hanya melihat implikasi ke depan). Fokus utama adalah implikasi dari <InlineMath math="q" /> ke <InlineMath math="r" />.

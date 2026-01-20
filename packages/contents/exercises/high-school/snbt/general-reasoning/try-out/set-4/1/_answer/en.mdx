@@ -1,0 +1,30 @@
+export const metadata = {
+  title: "Explanation for Problem 1",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/19/2026",
+};
+
+To determine the number of possible password arrangements, we can use the multiplication rule (filling slots). The password consists of <InlineMath math="5" /> digits with the pattern: **Number - Number - Letter - Number - Letter**.
+
+Let's analyze the number of possibilities for each position using the following table:
+
+#### Position Analysis
+
+| Position | Condition Description | Satisfying Set | Number of Possibilities |
+| :--- | :--- | :--- | :---: |
+| <InlineMath math="1" /> (Number) | Single-digit prime number | <InlineMath math="\{2, 3, 5, 7\}" /> | <InlineMath math="4" /> |
+| <InlineMath math="2" /> (Number) | Odd number less than <InlineMath math="7" /> | <InlineMath math="\{1, 3, 5\}" /> | <InlineMath math="3" /> |
+| <InlineMath math="3" /> (Letter) | Vowel from the name "Faza" | <InlineMath math="\{A\}" /> | <InlineMath math="1" /> |
+| <InlineMath math="4" /> (Number) | Chosen from set <InlineMath math="\{0, 4, 6\}" /> | <InlineMath math="\{0, 4, 6\}" /> | <InlineMath math="3" /> |
+| <InlineMath math="5" /> (Letter) | Consonant from the name "Faza" | <InlineMath math="\{F, Z\}" /> | <InlineMath math="2" /> |
+
+#### Total Calculation
+
+Based on the multiplication rule, the total number of password arrangements is the product of the possibilities at each position:
+
+<MathContainer>
+  <BlockMath math="\text{Total} = 4 \times 3 \times 1 \times 3 \times 2" />
+  <BlockMath math="\text{Total} = 72" />
+</MathContainer>
+
+Thus, the number of password arrangements that can be formed is **<InlineMath math="72" />**.

@@ -1,0 +1,40 @@
+export const metadata = {
+  title: "Explanation for Problem 2",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/19/2026",
+};
+
+To determine which combination is most likely to be obtained, we need to calculate the probability of each option.
+
+First, let's calculate the total number of toys in each box:
+
+<MathContainer>
+  <BlockMath math="\text{Total Box 1} = 3 + 4 + 5 + 4 = 16" />
+  <BlockMath math="\text{Total Box 2} = 4 + 3 + 4 + 4 = 15" />
+</MathContainer>
+
+The probability of taking a specific toy is the number of those toys divided by the total number of toys in that box. Since taking from Box <InlineMath math="1" /> and Box <InlineMath math="2" /> are independent events, we multiply their probabilities.
+
+Let's analyze each option:
+
+#### Probability Analysis
+
+| Option | Probability Calculation | Result |
+| :--- | :--- | :---: |
+| **2 Teddy Bears** | <InlineMath math="\frac{3}{16} \times \frac{4}{15}" /> | <InlineMath math="\frac{12}{240}" /> |
+| **2 Marbles** | <InlineMath math="\frac{4}{16} \times \frac{4}{15}" /> | <InlineMath math="\frac{16}{240}" /> |
+| **1 Ball & 1 Barbie** | <InlineMath math="(\frac{5}{16} \times \frac{3}{15}) + (\frac{4}{16} \times \frac{4}{15})" /> | <InlineMath math="\frac{15+16}{240} = \frac{31}{240}" /> |
+| **1 Barbie & 1 Marble** | <InlineMath math="(\frac{4}{16} \times \frac{4}{15}) + (\frac{4}{16} \times \frac{3}{15})" /> | <InlineMath math="\frac{16+12}{240} = \frac{28}{240}" /> |
+| **1 Bear & 1 Ball** | <InlineMath math="(\frac{3}{16} \times \frac{4}{15}) + (\frac{5}{16} \times \frac{4}{15})" /> | <InlineMath math="\frac{12+20}{240} = \frac{32}{240}" /> |
+
+> For combinations of two different types of toys (e.g., Ball and Barbie), there are two possibilities: Ball from Box 1 & Barbie from Box 2, OR Barbie from Box 1 & Ball from Box 2.
+
+#### Conclusion
+
+From the calculations above, we compare the numerators since the denominators are the same (<InlineMath math="240" />):
+
+<MathContainer>
+  <BlockMath math="12 < 16 < 28 < 31 < 32" />
+</MathContainer>
+
+The largest probability is **<InlineMath math="\frac{32}{240}" />**, which corresponds to the combination of **1 teddy bear and 1 ball**.

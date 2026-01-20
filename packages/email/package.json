@@ -7,7 +7,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@react-email/components": "1.0.4",
+    "@react-email/components": "1.0.6",
     "@t3-oss/env-nextjs": "^0.13.10",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -17,7 +17,7 @@
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@types/node": "25.0.9",
-    "@types/react": "19.2.8",
+    "@types/react": "19.2.9",
     "@types/react-dom": "19.2.3",
     "typescript": "^5.9.3"
   }
