@@ -57,12 +57,9 @@ const possibleVerifiedUrls = [
 ] as const;
 
 export async function POST(req: Request) {
-  // Only allow requests from allowed domain
   if (!corsValidator.isRequestFromAllowedDomain(req)) {
     return corsValidator.createForbiddenResponse();
   }
-
-  const t = await getTranslations("Ai");
 
   const {
     message,
@@ -79,24 +76,23 @@ export async function POST(req: Request) {
   } = await req.json();
 
   const url = `/${locale}/${cleanSlug(slug)}`;
-
-  let verified = false;
-  let token: string | undefined;
-
-  // Early return optimization with parallel execution when needed
-  // Check if URL contains any of the verified URL segments (e.g., /en/subject/... matches "subject")
   const shouldVerify = possibleVerifiedUrls.some((segment) =>
     url.includes(segment)
   );
 
-  if (shouldVerify) {
-    [verified, token] = await Promise.all([getVerified(url), getToken()]);
-  } else {
-    token = await getToken();
+  const [t, verified, token] = await Promise.all([
+    getTranslations("Ai"),
+    shouldVerify ? getVerified(url) : Promise.resolve(false),
+    getToken(),
+  ]);
+
+  if (!token) {
+    return new Response("Unauthorized", { status: 401 });
   }
 
-  // Get user role after token is available
-  const userRole = token ? await getUserRole(token) : undefined;
+  if (!message) {
+    return new Response("Bad Request", { status: 400 });
+  }
 
   const currentDate = new Date().toLocaleString("en-US", {
     year: "numeric",
@@ -108,10 +104,17 @@ export async function POST(req: Request) {
     timeZoneName: "short",
   });
 
-  const { latitude, longitude, city, countryRegion, country } =
-    geolocation(req);
+  const geo = geolocation(req);
+  const userLocation = {
+    latitude: geo.latitude ?? DEFAULT_LATITUDE,
+    longitude: geo.longitude ?? DEFAULT_LONGITUDE,
+    city: geo.city ?? "Unknown",
+    countryRegion: geo.countryRegion ?? "Unknown",
+    country: geo.country ?? "Unknown",
+  };
 
-  // Create logger with context for this chat session
+  const userRole = await getUserRole(token);
+
   const sessionLogger = createChildLogger({
     service: "chat-api",
     currentPage: {
@@ -121,26 +124,10 @@ export async function POST(req: Request) {
       verified,
     },
     currentDate,
-    userLocation: {
-      latitude: latitude ?? DEFAULT_LATITUDE,
-      longitude: longitude ?? DEFAULT_LONGITUDE,
-      city: city ?? "Unknown",
-      countryRegion: countryRegion ?? "Unknown",
-      country: country ?? "Unknown",
-    },
+    userLocation,
     userRole,
     url,
   });
-
-  if (!token) {
-    sessionLogger.error("Token is not found");
-    return new Response("Unauthorized", { status: 401 });
-  }
-
-  if (!message) {
-    sessionLogger.error("Message is not provided");
-    return new Response("Bad Request", { status: 400 });
-  }
 
   let chatIdToUse: Id<"chats"> | undefined = chatId;
 
@@ -268,13 +255,7 @@ export async function POST(req: Request) {
             verified,
           },
           currentDate,
-          userLocation: {
-            latitude: latitude ?? DEFAULT_LATITUDE,
-            longitude: longitude ?? DEFAULT_LONGITUDE,
-            city: city ?? "Unknown",
-            countryRegion: countryRegion ?? "Unknown",
-            country: country ?? "Unknown",
-          },
+          userLocation,
           userRole,
         }),
         messages: finalMessages,

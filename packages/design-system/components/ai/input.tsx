@@ -968,11 +968,13 @@ export const PromptInputSubmit = ({
   ...props
 }: PromptInputSubmitProps) => {
   let Icon = <HugeIcons className="size-4" icon={ArrowUp02Icon} />;
+  let statusVariant = variant;
 
   if (status === "submitted" || isPending) {
     Icon = <Spinner />;
   } else if (status === "streaming") {
     Icon = <HugeIcons className="size-4" icon={StopIcon} />;
+    statusVariant = "destructive";
   }
 
   return (
@@ -981,7 +983,7 @@ export const PromptInputSubmit = ({
       className={cn(className)}
       size={size}
       type="submit"
-      variant={variant}
+      variant={statusVariant}
       {...props}
     >
       {children ?? Icon}
