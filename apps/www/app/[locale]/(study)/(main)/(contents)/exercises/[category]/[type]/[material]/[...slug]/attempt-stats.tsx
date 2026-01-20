@@ -75,7 +75,7 @@ function StatsResult({ attempt }: { attempt: Doc<"exerciseAttempts"> }) {
         <div className="flex flex-col gap-1">
           <div className="text-muted-foreground text-sm">{t("answered")}</div>
           <NumberFormatGroup>
-            <div className="flex items-baseline text-lg tabular-nums">
+            <div className="flex items-baseline font-medium text-lg tabular-nums">
               <NumberFormat value={attempt.answeredCount} />
               <span className="mx-2 text-muted-foreground">/</span>
               <NumberFormat value={attempt.totalExercises} />
