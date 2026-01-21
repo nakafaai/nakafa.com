@@ -101,7 +101,7 @@
     "@repo/typescript-config": "workspace:*",
     "@tailwindcss/typography": "^0.5.19",
     "@types/lodash.throttle": "^4.1.9",
-    "@types/node": "^25.0.9",
+    "@types/node": "^25.0.10",
     "@types/react": "^19.2.9",
     "@types/react-katex": "^3.0.4",
     "@types/react-syntax-highlighter": "^15.5.13",

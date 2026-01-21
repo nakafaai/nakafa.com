@@ -18,6 +18,7 @@
     "google-index": "node --env-file=.env.local --import tsx scripts/google-index.ts"
   },
   "dependencies": {
+    "@ai-sdk/devtools": "^0.0.6",
     "@ai-sdk/react": "^3.0.46",
     "@convex-dev/better-auth": "^0.10.10",
     "@hugeicons/core-free-icons": "^3.1.1",
@@ -34,10 +35,10 @@
     "@repo/contents": "workspace:*",
     "@repo/design-system": "workspace:*",
     "@repo/internationalization": "workspace:*",
-    "@repo/utilities": "workspace:*",
     "@repo/next-config": "workspace:*",
     "@repo/security": "workspace:*",
     "@repo/seo": "workspace:*",
+    "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.10",
     "@tabler/icons-react": "^3.36.1",
     "@tailwindcss/postcss": "^4.1.18",
@@ -80,7 +81,7 @@
   "devDependencies": {
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "25.0.9",
+    "@types/node": "25.0.10",
     "@types/react": "19.2.9",
     "@types/react-dom": "19.2.3",
     "@vitest/coverage-istanbul": "^4.0.17",
