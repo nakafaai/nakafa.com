@@ -54,7 +54,9 @@ export const CalculatorPart = memo(({ message }: Props) => {
       <CollapsibleContent className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 border-t bg-muted/40 px-4 text-sm">
         <BlockMathKatex>{message.original.latex}</BlockMathKatex>
 
-        <HugeIcons className="size-4" icon={EqualSignIcon} />
+        <div className="flex items-center justify-center">
+          <HugeIcons className="size-4" icon={EqualSignIcon} />
+        </div>
 
         <BlockMathKatex>{message.result.latex}</BlockMathKatex>
       </CollapsibleContent>
