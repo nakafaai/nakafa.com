@@ -1,0 +1,28 @@
+export const metadata = {
+  title: "Pembahasan Soal 13",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/21/2026",
+};
+
+Untuk menentukan banyaknya susunan password yang mungkin, kita dapat memecah masalah ini dengan menganalisis kemungkinan untuk setiap posisi digit password secara terpisah.
+
+#### Analisis Kemungkinan Posisi
+
+Setiap posisi memiliki kriteria khusus yang membatasi pilihan karakter yang dapat digunakan. Berikut adalah rincian kemungkinan untuk setiap posisi:
+
+| Posisi | Syarat | Pilihan yang Memenuhi | Banyak Kemungkinan |
+| :--- | :--- | :--- | :---: |
+| **Ke-1** | Huruf pembentuk nama "ZIVA" | Z, I, V, A | <InlineMath math="4" /> |
+| **Ke-2** | Faktor dari angka <InlineMath math="9" /> | 1, 3, 9 | <InlineMath math="3" /> |
+| **Ke-3** | Angka prima ganjil (1 digit) | 3, 5, 7 | <InlineMath math="3" /> |
+| **Ke-4** | Anggota himpunan <InlineMath math="\{2, 3, 4\}" /> | 2, 3, 4 | <InlineMath math="3" /> |
+
+#### Perhitungan Total Susunan
+
+Berdasarkan prinsip perkalian (aturan counting slot), total susunan password adalah hasil kali dari banyaknya kemungkinan di setiap posisi.
+
+<MathContainer>
+  <BlockMath math="\text{Total} = 4 \times 3 \times 3 \times 3 = 108" />
+</MathContainer>
+
+Jadi, terdapat <InlineMath math="108" /> susunan password yang bisa dibentuk.

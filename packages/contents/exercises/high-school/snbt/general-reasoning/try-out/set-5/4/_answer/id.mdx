@@ -1,0 +1,111 @@
+export const metadata = {
+  title: "Pembahasan Soal 4",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/21/2026",
+};
+
+Kita perlu menganalisis setiap pernyataan untuk menemukan mana yang paling tidak sesuai (salah) berdasarkan data tabel.
+
+#### Analisis Kenaikan Penjualan Pabrik Y
+
+**Kenaikan penjualan sepeda motor di pabrik Y membentuk suatu barisan aritmatika tingkat dua.**
+
+Data penjualan Pabrik Y: <InlineMath math="4,0; 4,6; 5,0; 5,2" />.
+
+Mari kita hitung selisih (kenaikan) antar tahun:
+
+<MathContainer>
+  <BlockMath math="4,6 - 4,0 = 0,6" />
+  <BlockMath math="5,0 - 4,6 = 0,4" />
+  <BlockMath math="5,2 - 5,0 = 0,2" />
+</MathContainer>
+
+Barisan kenaikan tingkat pertama adalah <InlineMath math="0,6; 0,4; 0,2" />. Selanjutnya, kita hitung selisih tingkat kedua:
+
+<MathContainer>
+  <BlockMath math="0,4 - 0,6 = -0,2" />
+  <BlockMath math="0,2 - 0,4 = -0,2" />
+</MathContainer>
+
+Karena selisih tingkat kedua konstan (<InlineMath math="-0,2" />), maka benar bahwa data penjualan Pabrik Y membentuk barisan aritmatika tingkat dua.
+
+**(Pernyataan Sesuai)**
+
+#### Analisis Pola Penjualan Pabrik Z
+
+**Kenaikan penjualan sepeda motor di Pabrik Z membentuk pola barisan geometri.**
+
+Data penjualan Pabrik Z: <InlineMath math="0,4; 0,2; 0,1; 0,05" />.
+
+Mari kita cek rasionya:
+
+<MathContainer>
+  <BlockMath math="\frac{0,2}{0,4} = \frac{1}{2}" />
+  <BlockMath math="\frac{0,1}{0,2} = \frac{1}{2}" />
+  <BlockMath math="\frac{0,05}{0,1} = \frac{1}{2}" />
+</MathContainer>
+
+Karena rasionya konstan (<InlineMath math="\frac{1}{2}" />), maka benar data tersebut membentuk barisan geometri.
+
+**(Pernyataan Sesuai)**
+
+#### Analisis Persentase Penurunan Pabrik Z
+
+**Persentase penurunan penjualan sepeda motor tertinggi salah satunya di pabrik Z pada tahun 2015-2016.**
+
+Penurunan Pabrik Z (2015-2016):
+
+<MathContainer>
+  <BlockMath math="\frac{0,1 - 0,05}{0,1} \times 100\% = 50\%" />
+</MathContainer>
+
+Penurunan tertinggi lainnya (misal Pabrik X 2015-2016):
+
+<MathContainer>
+  <BlockMath math="\frac{1,9 - 1,3}{1,9} \times 100\% \approx 31,6\%" />
+</MathContainer>
+
+Karena <InlineMath math="50\% > 31,6\%" />, maka penurunan Pabrik Z sebesar <InlineMath math="50\%" /> adalah salah satu yang tertinggi (bahkan tertinggi di antara perbandingan ini).
+
+**(Pernyataan Sesuai)**
+
+#### Perbandingan Penjualan Pabrik Y dengan X dan Z
+
+**Penjualan sepeda motor di pabrik Y lebih dari dua kali lipat jumlah penjualan sepeda motor di pabrik X dan Z.**
+
+Mari kita hitung total penjualan masing-masing pabrik:
+
+<MathContainer>
+  <BlockMath math="\text{Total Y} = 4,0 + 4,6 + 5,0 + 5,2 = 18,8 \text{ juta}" />
+  <BlockMath math="\text{Total X} = 2,5 + 2,3 + 1,9 + 1,3 = 8,0 \text{ juta}" />
+  <BlockMath math="\text{Total Z} = 0,4 + 0,2 + 0,1 + 0,05 = 0,75 \text{ juta}" />
+</MathContainer>
+
+Jumlah X + Z dan dua kali lipatnya:
+
+<MathContainer>
+  <BlockMath math="\text{X} + \text{Z} = 8,0 + 0,75 = 8,75 \text{ juta}" />
+  <BlockMath math="2 \times (\text{X} + \text{Z}) = 2 \times 8,75 = 17,5 \text{ juta}" />
+</MathContainer>
+
+Karena <InlineMath math="18,8 > 17,5" />, pernyataan ini benar.
+
+**(Pernyataan Sesuai)**
+
+#### Analisis Penurunan Penjualan Pabrik X
+
+**Persentase penurunan penjualan sepeda motor di pabrik X tertinggi pada tahun 2014-2015.**
+
+Mari kita hitung persentase penurunan Pabrik X setiap tahun:
+
+<MathContainer>
+  <BlockMath math="2013-2014: \frac{2,5 - 2,3}{2,5} \times 100\% = \frac{0,2}{2,5} \times 100\% = 8\%" />
+  <BlockMath math="2014-2015: \frac{2,3 - 1,9}{2,3} \times 100\% = \frac{0,4}{2,3} \times 100\% \approx 17,4\%" />
+  <BlockMath math="2015-2016: \frac{1,9 - 1,3}{1,9} \times 100\% = \frac{0,6}{1,9} \times 100\% \approx 31,6\%" />
+</MathContainer>
+
+Dari perhitungan di atas, persentase penurunan tertinggi terjadi pada periode **2015-2016** (sekitar <InlineMath math="31,6\%" />), bukan 2014-2015.
+
+**(Pernyataan TIDAK Sesuai)**
+
+Jadi, pernyataan yang paling tidak sesuai dengan tabel adalah persentase penurunan penjualan sepeda motor di pabrik X tertinggi pada tahun 2014-2015.

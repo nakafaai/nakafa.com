@@ -1,0 +1,87 @@
+export const metadata = {
+  title: "Explanation for Problem 5",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/21/2026",
+};
+
+We need to analyze the sales pattern of each factory to predict sales for 2017 and find the incorrect statement.
+
+#### Analysis of Factory X Sales Trend
+
+Factory X sales data: <InlineMath math="2.5, 2.3, 1.9, 1.3" />.
+
+Let's look at the decrease differences:
+
+<MathContainer>
+  <BlockMath math="2.3 - 2.5 = -0.2" />
+  <BlockMath math="1.9 - 2.3 = -0.4" />
+  <BlockMath math="1.3 - 1.9 = -0.6" />
+</MathContainer>
+
+The decrease grows larger by <InlineMath math="-0.2" /> each year. Thus, the decrease for 2017 is predicted to be <InlineMath math="-0.8" />.
+
+Predicted X sales for 2017:
+
+<MathContainer>
+  <BlockMath math="1.3 - 0.8 = 0.5 \text{ million} = 500,000 \text{ units}" />
+</MathContainer>
+
+Difference in sales between 2016 and 2017:
+
+<MathContainer>
+  <BlockMath math="1.3 - 0.5 = 0.8 \text{ million} = 800,000 \text{ units}" />
+</MathContainer>
+
+The statements regarding X sales being 500,000 units and the difference being 800,000 units are **TRUE**.
+
+#### Analysis of Factory Y Sales Trend
+
+Factory Y sales data: <InlineMath math="4.0, 4.6, 5.0, 5.2" />.
+
+Let's look at the increase differences:
+
+<MathContainer>
+  <BlockMath math="4.6 - 4.0 = +0.6" />
+  <BlockMath math="5.0 - 4.6 = +0.4" />
+  <BlockMath math="5.2 - 5.0 = +0.2" />
+</MathContainer>
+
+The increase diminishes by <InlineMath math="0.2" /> each year. Thus, the increase for 2017 is predicted to be <InlineMath math="0" />.
+
+Predicted Y sales for 2017:
+
+<MathContainer>
+  <BlockMath math="5.2 + 0 = 5.2 \text{ million} = 5,200,000 \text{ units}" />
+</MathContainer>
+
+The statement that Y sales are 5,200,000 units is **TRUE**.
+
+Let's check the comparison with X sales in 2016 (<InlineMath math="1.3" /> million):
+
+<MathContainer>
+  <BlockMath math="4 \times 1.3 = 5.2 \text{ million}" />
+</MathContainer>
+
+The statement that Y sales are four times X sales in 2016 is **TRUE**.
+
+#### Analysis of Factory Z Sales Trend
+
+Factory Z sales data: <InlineMath math="0.4, 0.2, 0.1, 0.05" />.
+
+This pattern is a geometric sequence with a ratio of <InlineMath math="\frac{1}{2}" /> (halved each year).
+
+<MathContainer>
+  <BlockMath math="0.4 \div 2 = 0.2" />
+  <BlockMath math="0.2 \div 2 = 0.1" />
+  <BlockMath math="0.1 \div 2 = 0.05" />
+</MathContainer>
+
+Predicted Z sales for 2017:
+
+<MathContainer>
+  <BlockMath math="0.05 \div 2 = 0.025 \text{ million} = 25,000 \text{ units}" />
+</MathContainer>
+
+The statement that Z sales are <InlineMath math="250,000" /> units is **FALSE** (it should be <InlineMath math="25,000" /> units).
+
+Since the question asks for the statement that is **incorrect**, the prediction about Z sales is the answer.

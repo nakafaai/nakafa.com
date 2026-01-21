@@ -80,7 +80,7 @@ export function StartExerciseButton({
   const startAttempt = useMutation(api.exercises.mutations.startAttempt);
 
   const form = useForm({
-    defaultValues: defaultValues({ timeLimit: totalExercises * 60 }),
+    defaultValues: defaultValues({ timeLimit: totalExercises * 90 }),
     validators: {
       onChange: modeSchema,
     },
@@ -93,7 +93,7 @@ export function StartExerciseButton({
       const mode = value.mode;
 
       const timeLimit =
-        mode === "simulation" ? totalExercises * 60 : value.timeLimit;
+        mode === "simulation" ? totalExercises * 90 : value.timeLimit;
 
       try {
         await startAttempt({

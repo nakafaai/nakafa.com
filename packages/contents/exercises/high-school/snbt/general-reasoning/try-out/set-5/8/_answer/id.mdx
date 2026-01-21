@@ -1,0 +1,23 @@
+export const metadata = {
+  title: "Pembahasan Soal 8",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/21/2026",
+};
+
+Mari kita bedah premis-premis logika ini ke dalam tabel kepemilikan dokumen:
+
+| Kelompok Warga | Memiliki AKTA? | Memiliki KTP? |
+| :--- | :--- | :--- |
+| **WNI (Umum)** | **Ya** (Semua) | Tergantung Usia |
+| **WNI <InlineMath math="> 17" /> Tahun** | **Ya** | **Ya** |
+| **WNI <InlineMath math="< 17" /> Tahun** | **Ya** | Tidak |
+
+**Analisis Warga Jakarta:**
+1.  **Warga Jakarta adalah WNI**: Maka, *semua* warga Jakarta pasti punya **AKTA**.
+2.  **Usia Warga Jakarta**:
+    *   Ada yang **<InlineMath math="< 17" /> tahun** (hanya punya AKTA).
+    *   Ada yang **<InlineMath math="> 17" /> tahun** (punya AKTA **dan** KTP).
+
+Karena ada sebagian warga Jakarta yang berusia di atas <InlineMath math="17" /> tahun, maka kelompok ini pasti memiliki kedua dokumen tersebut.
+
+Oleh karena itu, kesimpulan yang valid adalah **sebagian warga Jakarta memiliki AKTA kelahiran dan KTP**.

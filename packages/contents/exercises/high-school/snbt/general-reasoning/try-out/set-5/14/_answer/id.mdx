@@ -1,0 +1,48 @@
+export const metadata = {
+  title: "Pembahasan Soal 14",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/21/2026",
+};
+
+Untuk mengetahui berapa lama air akan habis, kita perlu menghitung volume air dalam penampungan terlebih dahulu, kemudian membaginya dengan debit kebocoran.
+
+#### Data yang Diketahui
+
+Berikut adalah data dimensi penampungan air (tabung) yang telah dikonversi ke satuan desimeter (dm) agar sesuai dengan satuan debit (<InlineMath math="\text{dm}^3" />):
+
+| Variabel | Nilai Awal | Konversi (dm) |
+| :--- | :--- | :--- |
+| Tinggi (<InlineMath math="t" />) | <InlineMath math="4,2\text{ m}" /> | <InlineMath math="42\text{ dm}" /> |
+| Diameter (<InlineMath math="d" />) | <InlineMath math="3\text{ m}" /> | <InlineMath math="30\text{ dm}" /> |
+| Jari-jari (<InlineMath math="r" />) | <InlineMath math="1,5\text{ m}" /> | <InlineMath math="15\text{ dm}" /> |
+| Debit (<InlineMath math="Q" />) | <InlineMath math="12\text{ dm}^3/\text{menit}" /> | - |
+
+#### Perhitungan Volume
+
+Volume tabung dihitung dengan rumus <InlineMath math="V = \pi r^2 t" />.
+
+<MathContainer>
+  <BlockMath math="V = \frac{22}{7} \times 15^2 \times 42" />
+  <BlockMath math="V = \frac{22}{7} \times 225 \times 42" />
+  <BlockMath math="V = 22 \times 225 \times 6" />
+  <BlockMath math="V = 29.700\text{ dm}^3" />
+</MathContainer>
+
+#### Perhitungan Waktu
+
+Waktu yang dibutuhkan hingga air habis adalah volume dibagi dengan debit kebocoran.
+
+<MathContainer>
+  <BlockMath math="t = \frac{V}{Q} = \frac{29.700}{12} = 2.475\text{ menit}" />
+</MathContainer>
+
+Selanjutnya, kita konversikan waktu dari menit ke jam dan menit:
+
+<MathContainer>
+  <BlockMath math="2.475\text{ menit} = \frac{2.475}{60}\text{ jam}" />
+  <BlockMath math="2.475\text{ menit} = 41,25\text{ jam}" />
+  <BlockMath math="2.475\text{ menit} = 41\text{ jam} + (0,25 \times 60)\text{ menit}" />
+  <BlockMath math="2.475\text{ menit} = 41\text{ jam } 15\text{ menit}" />
+</MathContainer>
+
+Jadi, air akan habis dalam waktu <InlineMath math="41\text{ jam } 15\text{ menit}" />.

@@ -1,0 +1,23 @@
+export const metadata = {
+  title: "Solution Question 8",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/21/2026",
+};
+
+Let's break down the logic premises into a document ownership table:
+
+| Citizen Group | Has Birth Certificate? | Has ID Card (KTP)? |
+| :--- | :--- | :--- |
+| **WNI (General)** | **Yes** (All) | Depends on Age |
+| **WNI <InlineMath math="> 17" /> Years** | **Yes** | **Yes** |
+| **WNI <InlineMath math="< 17" /> Years** | **Yes** | No |
+
+**Analysis of Jakarta Residents:**
+1.  **Jakarta Residents are WNI**: Therefore, *all* Jakarta residents must have a **Birth Certificate**.
+2.  **Age of Jakarta Residents**:
+    *   Some are **<InlineMath math="< 17" /> years old** (only have a Birth Certificate).
+    *   Some are **<InlineMath math="> 17" /> years old** (have a Birth Certificate **and** an ID Card).
+
+Since there are Jakarta residents who are over <InlineMath math="17" /> years old (implied by "Some are under <InlineMath math="17" />", meaning the rest are over or equal to <InlineMath math="17" />), this group must possess both documents.
+
+Therefore, the valid conclusion is that **some Jakarta residents have a birth certificate and ID card (KTP)**.

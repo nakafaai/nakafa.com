@@ -1,0 +1,48 @@
+export const metadata = {
+  title: "Answer Explanation 14",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/21/2026",
+};
+
+To determine how long it will take for the water to run out, we first need to calculate the volume of water in the tank and then divide it by the leakage rate.
+
+#### Known Data
+
+Here are the dimensions of the water tank (cylinder) converted to decimeters (dm) to match the flow rate unit (<InlineMath math="\text{dm}^3" />):
+
+| Variable | Initial Value | Conversion (dm) |
+| :--- | :--- | :--- |
+| Height (<InlineMath math="h" />) | <InlineMath math="4.2\text{ m}" /> | <InlineMath math="42\text{ dm}" /> |
+| Diameter (<InlineMath math="d" />) | <InlineMath math="3\text{ m}" /> | <InlineMath math="30\text{ dm}" /> |
+| Radius (<InlineMath math="r" />) | <InlineMath math="1.5\text{ m}" /> | <InlineMath math="15\text{ dm}" /> |
+| Rate (<InlineMath math="Q" />) | <InlineMath math="12\text{ dm}^3/\text{minute}" /> | - |
+
+#### Volume Calculation
+
+The volume of a cylinder is calculated using the formula <InlineMath math="V = \pi r^2 h" />.
+
+<MathContainer>
+  <BlockMath math="V = \frac{22}{7} \times 15^2 \times 42" />
+  <BlockMath math="V = \frac{22}{7} \times 225 \times 42" />
+  <BlockMath math="V = 22 \times 225 \times 6" />
+  <BlockMath math="V = 29,700\text{ dm}^3" />
+</MathContainer>
+
+#### Time Calculation
+
+The time required for the water to run out is the volume divided by the leakage rate.
+
+<MathContainer>
+  <BlockMath math="t = \frac{V}{Q} = \frac{29,700}{12} = 2,475\text{ minutes}" />
+</MathContainer>
+
+Next, we convert the time from minutes to hours and minutes:
+
+<MathContainer>
+  <BlockMath math="2,475\text{ minutes} = \frac{2,475}{60}\text{ hours}" />
+  <BlockMath math="2,475\text{ minutes} = 41.25\text{ hours}" />
+  <BlockMath math="2,475\text{ minutes} = 41\text{ hours} + (0.25 \times 60)\text{ minutes}" />
+  <BlockMath math="2,475\text{ minutes} = 41\text{ hours } 15\text{ minutes}" />
+</MathContainer>
+
+So, the water will run out in <InlineMath math="41\text{ hours } 15\text{ minutes}" />.

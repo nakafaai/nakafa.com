@@ -15,8 +15,6 @@ export const config: NextConfig = {
   serverExternalPackages: ["shiki", "pino"],
   experimental: {
     optimizePackageImports: ["three"],
-    turbopackFileSystemCacheForBuild: true,
-    turbopackFileSystemCacheForDev: true,
   },
   images: {
     contentDispositionType: "inline",

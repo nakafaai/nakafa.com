@@ -1,0 +1,111 @@
+export const metadata = {
+  title: "Explanation for Problem 4",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/21/2026",
+};
+
+We need to analyze each statement to find the one that is least consistent (false) based on the table data.
+
+#### Analysis of Factory Y Sales Increase
+
+**The increase in motorcycle sales at factory Y forms a second-level arithmetic sequence.**
+
+Factory Y sales data: <InlineMath math="4.0, 4.6, 5.0, 5.2" />.
+
+Let's calculate the difference (increase) between years:
+
+<MathContainer>
+  <BlockMath math="4.6 - 4.0 = 0.6" />
+  <BlockMath math="5.0 - 4.6 = 0.4" />
+  <BlockMath math="5.2 - 5.0 = 0.2" />
+</MathContainer>
+
+The first-level difference sequence is <InlineMath math="0.6, 0.4, 0.2" />. Next, let's calculate the second-level difference:
+
+<MathContainer>
+  <BlockMath math="0.4 - 0.6 = -0.2" />
+  <BlockMath math="0.2 - 0.4 = -0.2" />
+</MathContainer>
+
+Since the second-level difference is constant (<InlineMath math="-0.2" />), it is true that Factory Y's sales data forms a second-level arithmetic sequence.
+
+**(Statement Consistent)**
+
+#### Analysis of Factory Z Sales Pattern
+
+**The increase in motorcycle sales at Factory Z forms a geometric sequence pattern.**
+
+Factory Z sales data: <InlineMath math="0.4, 0.2, 0.1, 0.05" />.
+
+Let's check the ratio:
+
+<MathContainer>
+  <BlockMath math="\frac{0.2}{0.4} = \frac{1}{2}" />
+  <BlockMath math="\frac{0.1}{0.2} = \frac{1}{2}" />
+  <BlockMath math="\frac{0.05}{0.1} = \frac{1}{2}" />
+</MathContainer>
+
+Since the ratio is constant (<InlineMath math="\frac{1}{2}" />), it is true that the data forms a geometric sequence.
+
+**(Statement Consistent)**
+
+#### Analysis of Factory Z Sales Decrease
+
+**One of the highest percentage decreases in motorcycle sales occurred at factory Z in 2015-2016.**
+
+Factory Z Decrease (2015-2016):
+
+<MathContainer>
+  <BlockMath math="\frac{0.1 - 0.05}{0.1} \times 100\% = 50\%" />
+</MathContainer>
+
+Other high decreases (e.g., Factory X 2015-2016):
+
+<MathContainer>
+  <BlockMath math="\frac{1.9 - 1.3}{1.9} \times 100\% \approx 31.6\%" />
+</MathContainer>
+
+Since <InlineMath math="50\% > 31.6\%" />, Factory Z's decrease of 50% is indeed one of the highest (the highest in this comparison).
+
+**(Statement Consistent)**
+
+#### Comparison of Factory Y Sales with X and Z
+
+**Motorcycle sales at factory Y are more than double the total sales of factory X and Z.**
+
+Let's calculate the total sales for each factory:
+
+<MathContainer>
+  <BlockMath math="\text{Total Y} = 4.0 + 4.6 + 5.0 + 5.2 = 18.8 \text{ million}" />
+  <BlockMath math="\text{Total X} = 2.5 + 2.3 + 1.9 + 1.3 = 8.0 \text{ million}" />
+  <BlockMath math="\text{Total Z} = 0.4 + 0.2 + 0.1 + 0.05 = 0.75 \text{ million}" />
+</MathContainer>
+
+Sum of X + Z and its double:
+
+<MathContainer>
+  <BlockMath math="\text{X} + \text{Z} = 8.0 + 0.75 = 8.75 \text{ million}" />
+  <BlockMath math="2 \times (\text{X} + \text{Z}) = 2 \times 8.75 = 17.5 \text{ million}" />
+</MathContainer>
+
+Since <InlineMath math="18.8 > 17.5" />, this statement is correct.
+
+**(Statement Consistent)**
+
+#### Analysis of Factory X Sales Decrease
+
+**The highest percentage decrease in motorcycle sales at factory X occurred in 2014-2015.**
+
+Let's calculate Factory X's percentage decrease for each year:
+
+<MathContainer>
+  <BlockMath math="2013-2014: \frac{2.5 - 2.3}{2.5} \times 100\% = \frac{0.2}{2.5} \times 100\% = 8\%" />
+  <BlockMath math="2014-2015: \frac{2.3 - 1.9}{2.3} \times 100\% = \frac{0.4}{2.3} \times 100\% \approx 17.4\%" />
+  <BlockMath math="2015-2016: \frac{1.9 - 1.3}{1.9} \times 100\% = \frac{0.6}{1.9} \times 100\% \approx 31.6\%" />
+</MathContainer>
+
+From the calculations above, the highest percentage decrease occurred in **2015-2016** (approx. <InlineMath math="31.6\%" />), not 2014-2015.
+
+**(Statement NOT Consistent)**
+
+Therefore, the statement that is least consistent with the table is that the highest percentage decrease in motorcycle sales at factory X occurred in 2014-2015.
