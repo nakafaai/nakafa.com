@@ -53,13 +53,5 @@
     "node": ">=22"
   },
   "packageManager": "pnpm@10.28.1",
-  "pnpm": {
-    "overrides": {
-      "react": "19.2.3",
-      "react-dom": "19.2.3",
-      "@types/react": "19.2.9",
-      "@types/react-dom": "19.2.3"
-    }
-  },
   "type": "module"
 }
