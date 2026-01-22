@@ -128,7 +128,7 @@ export function StartExerciseButton({
       <ButtonGroup className="divide-x divide-primary-foreground/20">
         <Button onClick={() => setOpen(true)} type="button">
           <HugeIcons icon={StartUp02Icon} />
-          {t("start-exercise-title")}
+          {t("start")}
         </Button>
         {attempt && (
           <Button
