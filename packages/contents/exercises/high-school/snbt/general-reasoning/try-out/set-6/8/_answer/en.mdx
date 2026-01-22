@@ -1,0 +1,28 @@
+export const metadata = {
+  title: "Question 8 Explanation",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/22/2026",
+};
+
+We need to determine how many card number combinations can be made based on the given rules.
+
+The card number consists of <InlineMath math="12" /> digits with the following format:
+1.  **First 4 digits (Prefix)**: Fixed, which is <InlineMath math="0844" />.
+2.  **Last 4 digits (Suffix)**: Fixed, which is <InlineMath math="1221" />.
+3.  **Middle 4 digits**: The part that needs to be arranged.
+
+Since the first 4 and last 4 digits are already determined, we only need to fill the <InlineMath math="12 - 4 - 4 = 4" /> empty positions in the middle.
+
+The available digits to fill these positions are <InlineMath math="\{2, 3, 4, 5, 7, 8, 9\}" />. The number of available digit choices is <InlineMath math="7" />.
+
+Since there is no restriction on repeating digits in arranging phone numbers, each of the 4 middle positions can be filled by any of the <InlineMath math="7" /> available digits.
+
+The calculation is as follows:
+
+<MathContainer>
+  <BlockMath math="\text{Total Combinations} = 7 \times 7 \times 7 \times 7" />
+  <BlockMath math="\text{Total Combinations} = 7^4" />
+  <BlockMath math="\text{Total Combinations} = 2401" />
+</MathContainer>
+
+Thus, the number of card numbers that can be created is <InlineMath math="2401" />.

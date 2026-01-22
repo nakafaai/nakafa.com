@@ -1,0 +1,38 @@
+export const metadata = {
+  title: "Question 1 Explanation",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/22/2026",
+};
+
+Let's analyze the cooking time information for each type of meat based on the statements in the problem. Let <InlineMath math="T(x)" /> be the cooking time for meat <InlineMath math="x" />.
+
+| Statement | Mathematical Analysis |
+| :--- | :--- |
+| Beef cooks longer than lamb | <InlineMath math="T(\text{Beef}) > T(\text{Lamb})" /> |
+| Beef cooks not longer than duck | <InlineMath math="T(\text{Beef}) \le T(\text{Duck})" /> |
+| Rabbit cooks faster than chicken | <InlineMath math="T(\text{Rabbit}) < T(\text{Chicken})" /> |
+| Rabbit cooks longer than duck | <InlineMath math="T(\text{Rabbit}) > T(\text{Duck})" /> |
+
+Based on the table above, we can arrange the cooking order from the **fastest** (least time) to the **slowest**:
+
+1.  From the first and second points, we get the order:
+
+    <MathContainer>
+      <BlockMath math="T(\text{Lamb}) < T(\text{Beef}) \le T(\text{Duck})" />
+    </MathContainer>
+
+2.  From the third and fourth points, we get the order:
+
+    <MathContainer>
+      <BlockMath math="T(\text{Duck}) < T(\text{Rabbit}) < T(\text{Chicken})" />
+    </MathContainer>
+
+If we combine both sequences, we get the complete order as follows:
+
+<MathContainer>
+  <BlockMath math="\text{Lamb} \xrightarrow{\text{slower}} \text{Beef} \xrightarrow{\text{slower}} \text{Duck} \xrightarrow{\text{slower}} \text{Rabbit} \xrightarrow{\text{slower}} \text{Chicken}" />
+</MathContainer>
+
+> **Conclusion:** The meat that cooks the fastest is the one at the very beginning of the sequence, which is **Lamb**.
+
+Therefore, the correct answer is **Lamb**.

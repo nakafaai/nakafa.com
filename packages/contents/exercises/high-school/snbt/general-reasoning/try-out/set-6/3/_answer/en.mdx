@@ -1,0 +1,31 @@
+export const metadata = {
+  title: "Question 3 Explanation",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/22/2026",
+};
+
+Let's analyze the given information using mathematical logic.
+
+The problem states that the activity to be held is either **cleaning the gutters** (<InlineMath math="p" />) **or** **collecting used goods** (<InlineMath math="q" />). This can be written as a disjunction:
+
+<MathContainer>
+  <BlockMath math="p \lor q" />
+</MathContainer>
+
+Then, it is known as a fact that **cleaning the gutters could not be carried out** (<InlineMath math="\sim p" />) because it rained.
+
+<MathContainer>
+  <BlockMath math="\sim p" />
+</MathContainer>
+
+In logic, this is called a **Disjunctive Syllogism**. Since one option (cleaning gutters) did not happen, the other option (collecting used goods) **must happen** for the plan to remain valid.
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} & p \lor q \\ & \sim p \\ \hline \therefore \ & q \end{aligned}" />
+</MathContainer>
+
+Therefore, the conclusion is <InlineMath math="q" />: **On Sunday, community service to collect used goods is held.**
+
+> Options stating that "community service is not held" are incorrect because the option to "collect used goods" can (and must) still be carried out according to the initial plan.
+
+Therefore, the correct answer is **Community service to collect used goods is held on Sunday**.

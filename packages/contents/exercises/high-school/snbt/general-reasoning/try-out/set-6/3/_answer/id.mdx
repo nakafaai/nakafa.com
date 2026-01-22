@@ -1,0 +1,31 @@
+export const metadata = {
+  title: "Pembahasan Soal 3",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/22/2026",
+};
+
+Mari kita analisis informasi yang diberikan menggunakan logika matematika.
+
+Pada soal disebutkan bahwa kegiatan yang akan dilaksanakan adalah **membersihkan selokan** (<InlineMath math="p" />) **atau** **mengumpulkan barang bekas** (<InlineMath math="q" />). Ini dapat ditulis sebagai disjungsi:
+
+<MathContainer>
+  <BlockMath math="p \lor q" />
+</MathContainer>
+
+Kemudian, diketahui fakta bahwa **membersihkan selokan tidak dapat dilaksanakan** (<InlineMath math="\sim p" />) karena turun hujan.
+
+<MathContainer>
+  <BlockMath math="\sim p" />
+</MathContainer>
+
+Dalam logika, kondisi ini disebut **Silogisme Disjungtif**. Karena salah satu pilihan (membersihkan selokan) tidak terjadi, maka pilihan lainnya (mengumpulkan barang bekas) **harus terjadi** agar rencana kegiatan tetap terlaksana.
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} & p \lor q \\ & \sim p \\ \hline \therefore \ & q \end{aligned}" />
+</MathContainer>
+
+Maka, simpulannya adalah <InlineMath math="q" />: **Pada hari Minggu dilaksanakan kerja bakti mengumpulkan barang bekas.**
+
+> Pilihan yang menyatakan "kerja bakti tidak jadi dilaksanakan" salah karena opsi "mengumpulkan barang bekas" masih bisa (dan harus) dilakukan sesuai rencana awal.
+
+Jadi, jawaban yang tepat adalah **Pada hari Minggu dilaksanakan kerja bakti mengumpulkan barang bekas**.

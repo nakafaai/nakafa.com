@@ -1,0 +1,38 @@
+export const metadata = {
+  title: "Pembahasan Soal 1",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/22/2026",
+};
+
+Mari kita analisis informasi waktu memasak setiap jenis daging berdasarkan pernyataan pada soal. Misalkan <InlineMath math="T(x)" /> adalah waktu memasak untuk daging <InlineMath math="x" />.
+
+| Pernyataan | Analisis Matematis |
+| :--- | :--- |
+| Daging sapi matang lebih lama dibandingkan daging domba | <InlineMath math="T(\text{Sapi}) > T(\text{Domba})" /> |
+| Sapi tidak lebih lama daripada daging bebek | <InlineMath math="T(\text{Sapi}) \le T(\text{Bebek})" /> |
+| Daging kelinci matang lebih cepat dibandingkan daging ayam | <InlineMath math="T(\text{Kelinci}) < T(\text{Ayam})" /> |
+| Kelinci lebih lama daripada daging bebek | <InlineMath math="T(\text{Kelinci}) > T(\text{Bebek})" /> |
+
+Berdasarkan tabel di atas, kita dapat menyusun urutan waktu memasak dari yang **paling cepat** (waktu paling sedikit) ke yang **paling lama**:
+
+1.  Dari poin pertama dan kedua, kita dapatkan urutan:
+
+    <MathContainer>
+      <BlockMath math="T(\text{Domba}) < T(\text{Sapi}) \le T(\text{Bebek})" />
+    </MathContainer>
+
+2.  Dari poin ketiga dan keempat, kita dapatkan urutan:
+
+    <MathContainer>
+      <BlockMath math="T(\text{Bebek}) < T(\text{Kelinci}) < T(\text{Ayam})" />
+    </MathContainer>
+
+Jika kita gabungkan kedua urutan tersebut, maka didapatkan urutan lengkap sebagai berikut:
+
+<MathContainer>
+  <BlockMath math="\text{Domba} \xrightarrow{\text{lebih lama}} \text{Sapi} \xrightarrow{\text{lebih lama}} \text{Bebek} \xrightarrow{\text{lebih lama}} \text{Kelinci} \xrightarrow{\text{lebih lama}} \text{Ayam}" />
+</MathContainer>
+
+> **Kesimpulan:** Daging yang matang paling cepat adalah daging yang berada di urutan paling awal, yaitu **Domba**.
+
+Jadi, jawaban yang tepat adalah **Domba**.

@@ -11,7 +11,7 @@
     "next-intl": "^4.7.0",
     "react": "^19.2.3",
     "schema-dts": "^1.1.5",
-    "zod": "^4.3.5"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

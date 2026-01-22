@@ -34,9 +34,7 @@ export default function ErrorPage({
           <h1 className="font-bold font-mono text-6xl text-destructive">5XX</h1>
 
           <div className="space-y-2">
-            <h2 className="font-mono font-semibold text-lg tracking-tight">
-              {t("title")}
-            </h2>
+            <h2 className="font-medium text-lg tracking-tight">{t("title")}</h2>
 
             <p className="mx-auto max-w-md text-muted-foreground text-sm">
               {t("description")}

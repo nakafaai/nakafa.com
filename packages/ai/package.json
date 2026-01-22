@@ -13,7 +13,7 @@
     "@ai-sdk/google-vertex": "^4.0.28",
     "@ai-sdk/openai": "^3.0.18",
     "@ai-sdk/react": "^3.0.50",
-    "@mendable/firecrawl-js": "^4.11.2",
+    "@mendable/firecrawl-js": "^4.11.3",
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.10",
     "ai": "^6.0.48",
@@ -23,7 +23,7 @@
     "ky": "^1.14.2",
     "mathjs": "^15.1.0",
     "parse-domain": "^8.2.2",
-    "zod": "^4.3.5"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

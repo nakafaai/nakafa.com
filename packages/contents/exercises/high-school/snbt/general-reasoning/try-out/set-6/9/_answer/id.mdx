@@ -1,0 +1,37 @@
+export const metadata = {
+  title: "Pembahasan Soal 9",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/22/2026",
+};
+
+Kita perlu menemukan pola pergeseran huruf dari kode **LXMKWKBZ** menjadi **TESPANDA** untuk memecahkan kode **MMVFOBPT**.
+
+Mari kita analisis pola pergeserannya:
+
+| Kode Awal | Kode Akhir | Pergeseran |
+| :--- | :--- | :--- |
+| **L** (<InlineMath math="12" />) | **T** (<InlineMath math="20" />) | <InlineMath math="+8" /> |
+| **X** (<InlineMath math="24" />) | **E** (<InlineMath math="5" />) | <InlineMath math="+7" /> (<InlineMath math="24+7=31 \rightarrow 5" />) |
+| **M** (<InlineMath math="13" />) | **S** (<InlineMath math="19" />) | <InlineMath math="+6" /> |
+| **K** (<InlineMath math="11" />) | **P** (<InlineMath math="16" />) | <InlineMath math="+5" /> |
+| **W** (<InlineMath math="23" />) | **A** (<InlineMath math="1" />) | <InlineMath math="+4" /> (<InlineMath math="23+4=27 \rightarrow 1" />) |
+| **K** (<InlineMath math="11" />) | **N** (<InlineMath math="14" />) | <InlineMath math="+3" /> |
+| **B** (<InlineMath math="2" />) | **D** (<InlineMath math="4" />) | <InlineMath math="+2" /> |
+| **Z** (<InlineMath math="26" />) | **A** (<InlineMath math="1" />) | <InlineMath math="+1" /> (<InlineMath math="26+1=27 \rightarrow 1" />) |
+
+Pola yang ditemukan adalah pergeseran maju yang dimulai dari <InlineMath math="+8" /> dan berkurang <InlineMath math="1" /> setiap langkahnya: <InlineMath math="+8, +7, +6, +5, +4, +3, +2, +1" />.
+
+Sekarang kita terapkan pola ini pada kode **MMVFOBPT**:
+
+| Kode | Posisi Awal | Pergeseran | Posisi Akhir | Hasil |
+| :--- | :--- | :--- | :--- | :--- |
+| **M** | <InlineMath math="13" /> | <InlineMath math="+8" /> | <InlineMath math="21" /> | **U** |
+| **M** | <InlineMath math="13" /> | <InlineMath math="+7" /> | <InlineMath math="20" /> | **T** |
+| **V** | <InlineMath math="22" /> | <InlineMath math="+6" /> | <InlineMath math="28 \rightarrow 2" /> | **B** |
+| **F** | <InlineMath math="6" /> | <InlineMath math="+5" /> | <InlineMath math="11" /> | **K** |
+| **O** | <InlineMath math="15" /> | <InlineMath math="+4" /> | <InlineMath math="19" /> | **S** |
+| **B** | <InlineMath math="2" /> | <InlineMath math="+3" /> | <InlineMath math="5" /> | **E** |
+| **P** | <InlineMath math="16" /> | <InlineMath math="+2" /> | <InlineMath math="18" /> | **R** |
+| **T** | <InlineMath math="20" /> | <InlineMath math="+1" /> | <InlineMath math="21" /> | **U** |
+
+Jadi, arti kode tersebut adalah **UTBKSERU**.

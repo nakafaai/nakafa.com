@@ -32,7 +32,7 @@ export default function NotFound() {
                 </h1>
 
                 <div className="space-y-2">
-                  <h2 className="font-mono font-semibold text-lg tracking-tight">
+                  <h2 className="font-medium text-lg tracking-tight">
                     Page Not Found
                   </h2>
 

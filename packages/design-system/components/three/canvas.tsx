@@ -25,22 +25,21 @@ function ErrorFallback({
   error,
   resetErrorBoundary,
 }: {
-  error: Error;
+  error: unknown;
   resetErrorBoundary: () => void;
 }) {
   const t = useTranslations("Error");
+  const errorMessage = error instanceof Error ? error.message : String(error);
   return (
     <div className="flex h-full w-full flex-col items-center justify-center p-4 text-center">
       <div className="space-y-4 text-center">
         <h1 className="font-bold font-mono text-2xl text-primary">5XX</h1>
 
         <div className="space-y-2">
-          <h2 className="font-mono font-semibold tracking-tight">
-            {t("title")}
-          </h2>
+          <h2 className="font-medium tracking-tight">{t("title")}</h2>
 
           <p className="mx-auto max-w-md text-muted-foreground text-sm">
-            {error.message}
+            {errorMessage}
           </p>
         </div>
 
@@ -93,8 +92,10 @@ function ThreeCanvasComponent({
         <ErrorFallback error={error} resetErrorBoundary={resetErrorBoundary} />
       )}
       onError={(error) => {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
         analytics.capture("webgl_error", {
-          error: error.message,
+          error: errorMessage,
           component: "ThreeCanvas",
           supported: checkWebGL2Support(),
           ...deviceInfo,

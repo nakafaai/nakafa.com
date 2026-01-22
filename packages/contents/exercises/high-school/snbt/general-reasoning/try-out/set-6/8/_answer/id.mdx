@@ -1,0 +1,28 @@
+export const metadata = {
+  title: "Pembahasan Soal 8",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/22/2026",
+};
+
+Kita perlu menentukan berapa banyak kombinasi nomor kartu yang mungkin dibuat berdasarkan aturan yang diberikan.
+
+Nomor kartu terdiri dari <InlineMath math="12" /> digit dengan format sebagai berikut:
+1.  **4 digit pertama (Prefix)**: Tetap, yaitu <InlineMath math="0844" />.
+2.  **4 digit terakhir (Suffix)**: Tetap, yaitu <InlineMath math="1221" />.
+3.  **4 digit tengah**: Bagian yang harus disusun.
+
+Karena 4 digit awal dan 4 digit akhir sudah ditentukan, kita hanya perlu mengisi <InlineMath math="12 - 4 - 4 = 4" /> posisi kosong di tengah.
+
+Angka yang tersedia untuk mengisi posisi tersebut adalah <InlineMath math="\{2, 3, 4, 5, 7, 8, 9\}" />. Jumlah pilihan angka yang tersedia adalah <InlineMath math="7" /> angka.
+
+Karena tidak ada larangan pengulangan angka dalam penyusunan nomor telepon, maka setiap posisi dari 4 digit tengah tersebut dapat diisi oleh salah satu dari <InlineMath math="7" /> angka yang tersedia.
+
+Perhitungannya adalah sebagai berikut:
+
+<MathContainer>
+  <BlockMath math="\text{Total Kombinasi} = 7 \times 7 \times 7 \times 7" />
+  <BlockMath math="\text{Total Kombinasi} = 7^4" />
+  <BlockMath math="\text{Total Kombinasi} = 2401" />
+</MathContainer>
+
+Jadi, banyak nomor kartu yang dapat dibuat adalah <InlineMath math="2401" />.

@@ -15,14 +15,14 @@
     "@mantine/hooks": "^8.3.13",
     "@repo/internationalization": "workspace:*",
     "date-fns": "^4.1.0",
-    "effect": "^3.19.14",
+    "effect": "^3.19.15",
     "ky": "^1.14.2",
     "motion": "^12.29.0",
     "next-intl": "^4.7.0",
     "react": "19.2.3",
     "react-aria-components": "^1.14.0",
     "recharts": "^2.15.4",
-    "zod": "^4.3.5"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

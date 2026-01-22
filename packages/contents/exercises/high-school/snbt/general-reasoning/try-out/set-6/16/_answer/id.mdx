@@ -1,0 +1,25 @@
+export const metadata = {
+  title: "Pembahasan Soal 16",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/22/2026",
+};
+
+Mari kita uraikan teka-teki pembagian tiket ini. Kita memiliki 5 anak (A, B, C, D, E) dan 5 kota tujuan. Syarat utamanya adalah setiap kota harus dikunjungi oleh tepat satu anak (korespondensi satu-satu).
+
+Pertama, mari kita cari anak yang memiliki pilihan "eksklusif" atau unik:
+1.  **Bali**: Hanya muncul di daftar keinginan **B**. Maka, **B harus ke Bali**.
+2.  **Manado**: Hanya muncul di daftar keinginan **C**. Maka, **C harus ke Manado**.
+
+Sekarang tersisa 3 anak (A, D, E) dan 3 kota (Yogyakarta, Lombok, Padang).
+-   A ingin: Yogyakarta atau Lombok.
+-   D ingin: Yogyakarta atau Padang.
+-   E ingin: Padang, Lombok, atau Yogyakarta.
+
+Berdasarkan informasi tambahan pada soal, diketahui bahwa **E pergi ke Lombok**.
+
+Karena **Lombok** sudah diambil oleh E, mari kita lihat pilihan A:
+-   A awalnya ingin Yogyakarta atau Lombok.
+-   Opsi Lombok sudah tertutup (karena E di sana).
+-   Maka, satu-satunya pilihan yang tersisa bagi A adalah **Yogyakarta**.
+
+Dengan demikian, Bapak memberikan tiket **Yogyakarta** kepada A. (Sebagai pelengkap, D otomatis akan mendapatkan tiket ke Padang).

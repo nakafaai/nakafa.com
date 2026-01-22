@@ -1,0 +1,45 @@
+export const metadata = {
+  title: "Question 2 Explanation",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/22/2026",
+};
+
+Let's analyze the shipping traffic volume for each month based on the given information. We will use inequality signs to compare the busyness between months.
+
+| Statement | Mathematical Analysis |
+| :--- | :--- |
+| December is busier than November | <InlineMath math="\text{December} > \text{November}" /> |
+| October is busier than December | <InlineMath math="\text{October} > \text{December}" /> |
+| January is not busier than November | <InlineMath math="\text{January} \le \text{November}" /> |
+| January is busier than February | <InlineMath math="\text{January} > \text{February}" /> |
+
+Based on the points above, we can arrange the order of busyness from the **busiest** to the **quietest**:
+
+1.  From the first two points, we get the order:
+
+    <MathContainer>
+      <BlockMath math="\text{October} > \text{December} > \text{November}" />
+    </MathContainer>
+
+2.  From the last two points, we know that January is below or equal to November, and February is below January:
+
+    <MathContainer>
+      <BlockMath math="\text{November} \ge \text{January} > \text{February}" />
+    </MathContainer>
+
+If we combine all this information, the complete order is:
+
+<MathContainer>
+  <BlockMath math="\text{October} \xrightarrow{\text{busier}} \text{December} \xrightarrow{\text{busier}} \text{November} \xrightarrow{\text{busier/equal}} \text{January} \xrightarrow{\text{busier}} \text{February}" />
+</MathContainer>
+
+From this sequence, we can determine the ranking of busyness:
+1.  **Busiest:** October
+2.  **Second busiest:** December
+3.  Third: November
+4.  Fourth: January
+5.  Fifth: February
+
+> **Conclusion:** The shipping traffic estimated to be the **second busiest** occurs in the month of **December**.
+
+Therefore, the correct answer is **December**.

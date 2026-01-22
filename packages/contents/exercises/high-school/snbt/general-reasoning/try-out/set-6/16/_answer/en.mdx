@@ -1,0 +1,25 @@
+export const metadata = {
+  title: "Question 16 Explanation",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/22/2026",
+};
+
+Let's unravel this ticket distribution puzzle. We have 5 children (A, B, C, D, E) and 5 destinations. The main condition is that each city must be visited by exactly one child (one-to-one correspondence).
+
+First, let's identify children with "exclusive" or unique choices:
+1.  **Bali**: Only appears in **B**'s wish list. Thus, **B must go to Bali**.
+2.  **Manado**: Only appears in **C**'s wish list. Thus, **C must go to Manado**.
+
+Now we are left with 3 children (A, D, E) and 3 cities (Yogyakarta, Lombok, Padang).
+-   A wants: Yogyakarta or Lombok.
+-   D wants: Yogyakarta or Padang.
+-   E wants: Padang, Lombok, or Yogyakarta.
+
+Based on the additional information in the question, we know that **E goes to Lombok**.
+
+Since **Lombok** is taken by E, let's look at A's options:
+-   A originally wanted Yogyakarta or Lombok.
+-   The Lombok option is closed (since E is there).
+-   Therefore, the only remaining choice for A is **Yogyakarta**.
+
+Thus, the father gives the **Yogyakarta** ticket to A. (As a completion, D will automatically get the ticket to Padang).
