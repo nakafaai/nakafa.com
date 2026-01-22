@@ -36,7 +36,7 @@ export function ChatProvider({
     messages: initialMessages,
     transport: new DefaultChatTransport({
       api: apiUrl,
-      prepareSendMessagesRequest: ({ messages }) => {
+      prepareSendMessagesRequest: ({ id, messages }) => {
         // send only the last message and chat id
         // we will then fetch message history (for our chatId) on server
         // and append this message for the full context to send to the model
@@ -44,8 +44,8 @@ export function ChatProvider({
 
         return {
           body: {
+            id,
             message: lastMessage,
-            chatId,
             locale: getLocale(),
             slug: getPathname(),
             model: getModel(),

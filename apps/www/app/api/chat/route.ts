@@ -63,13 +63,13 @@ export async function POST(req: Request) {
 
   const {
     message,
-    chatId,
+    id,
     locale,
     slug,
     model: selectedModel,
   }: {
     message: MyUIMessage | undefined;
-    chatId: Id<"chats"> | undefined;
+    id: Id<"chats"> | undefined;
     locale: string;
     slug: string;
     model: ModelId;
@@ -129,7 +129,7 @@ export async function POST(req: Request) {
     url,
   });
 
-  let chatIdToUse: Id<"chats"> | undefined = chatId;
+  let chatIdToUse: Id<"chats"> | undefined = id;
 
   const dbParts = mapUIMessagePartsToDBParts({
     messageParts: message.parts,
