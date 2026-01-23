@@ -8,13 +8,35 @@
           "class",
           "className",
           "classList",
-          "containerClassName"
+          "containerClassName",
+          "classNames"
+        ],
+        "classFunctions": [
+          "cn",
+          "cva",
+          "cx",
+          "clsx",
+          "twMerge"
         ],
         "experimental": {
+          "configFile": "packages/design-system/styles/globals.css",
           "classRegex": [
-            ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
-            ["cx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"],
-            ["cn\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
+            [
+              "cn\\(([^)]*)\\)",
+              "[\"'`]([^\"'`]*)[\"'`]"
+            ],
+            [
+              "cva\\(([^)]*)\\)",
+              "[\"'`]([^\"'`]*)[\"'`]"
+            ],
+            [
+              "cx\\(([^)]*)\\)",
+              "[\"'`]([^\"'`]*)[\"'`]"
+            ],
+            [
+              "clsx\\(([^)]*)\\)",
+              "[\"'`]([^\"'`]*)[\"'`]"
+            ]
           ]
         }
       }
