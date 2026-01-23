@@ -6,7 +6,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const config = defineConfig({
   test: {
-    environment: "node",
+    environment: "jsdom",
     coverage: {
       enabled: true,
       provider: "istanbul",

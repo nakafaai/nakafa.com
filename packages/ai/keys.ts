@@ -7,7 +7,7 @@ export const keys = () =>
       AI_GATEWAY_API_KEY: z.string(),
       FIRECRAWL_API_KEY: z.string(),
       OPENWEATHER_API_KEY: z.string(),
-      NODE_ENV: z.enum(["development", "production"]),
+      NODE_ENV: z.enum(["development", "production"]).optional(),
     },
     runtimeEnv: {
       AI_GATEWAY_API_KEY: process.env.AI_GATEWAY_API_KEY,
