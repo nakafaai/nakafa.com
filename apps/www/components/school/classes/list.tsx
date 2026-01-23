@@ -94,7 +94,7 @@ function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
   const [imageError, setImageError] = useState(false);
   const imageSrc = imageError
     ? getClassImageUrl(getRandomClassImage(`${cls._id}`))
-    : cls.image;
+    : getClassImageUrl(cls.image);
 
   const t = useTranslations("School.Classes");
 
