@@ -68,6 +68,7 @@ import {
   memo,
   useCallback,
   useEffect,
+  useEffectEvent,
   useRef,
   useTransition,
 } from "react";
@@ -377,22 +378,24 @@ const AiSheetMainContent = memo(() => {
 
   const sendMessage = useChat((state) => state.chat.sendMessage);
 
-  const hasProcessedQuery = useRef(false);
+  const lastProcessedQuery = useRef<string | null>(null);
 
   const handleClearQuery = useCallback(() => {
     setQuery("");
     setText("");
   }, [setQuery, setText]);
 
+  const handleQuery = useEffectEvent((text: string) => {
+    sendMessage({ text });
+    handleClearQuery();
+  });
+
   useEffect(() => {
-    if (query && !hasProcessedQuery.current) {
-      hasProcessedQuery.current = true;
-      sendMessage({
-        text: query,
-      });
-      handleClearQuery();
+    if (query && query !== lastProcessedQuery.current) {
+      lastProcessedQuery.current = query;
+      handleQuery(query);
     }
-  }, [query, sendMessage, handleClearQuery]);
+  }, [query]);
 
   return <AiSheetContent />;
 });

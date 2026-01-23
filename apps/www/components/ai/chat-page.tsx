@@ -4,7 +4,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { Authenticated } from "convex/react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useEffectEvent, useRef } from "react";
 import { useAi } from "@/lib/context/use-ai";
 import { ChatProvider, useChat } from "@/lib/context/use-chat";
 import { AiChat } from "./chat";
@@ -60,22 +60,24 @@ function AiChatPageContent() {
 
   const sendMessage = useChat((state) => state.chat.sendMessage);
 
-  const hasProcessedQuery = useRef(false);
+  const lastProcessedQuery = useRef<string | null>(null);
 
   const handleClearQuery = useCallback(() => {
     setQuery("");
     setText("");
   }, [setQuery, setText]);
 
+  const handleQuery = useEffectEvent((text: string) => {
+    sendMessage({ text });
+    handleClearQuery();
+  });
+
   useEffect(() => {
-    if (query && !hasProcessedQuery.current) {
-      hasProcessedQuery.current = true;
-      sendMessage({
-        text: query,
-      });
-      handleClearQuery();
+    if (query && query !== lastProcessedQuery.current) {
+      lastProcessedQuery.current = query;
+      handleQuery(query);
     }
-  }, [query, sendMessage, handleClearQuery]);
+  }, [query]);
 
   return <AiChat />;
 }

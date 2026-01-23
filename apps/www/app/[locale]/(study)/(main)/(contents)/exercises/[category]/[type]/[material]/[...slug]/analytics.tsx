@@ -2,7 +2,7 @@
 
 import { useIntersection, useInterval } from "@mantine/hooks";
 import type { ReactNode } from "react";
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 import { useAttempt } from "@/lib/context/use-attempt";
 import { useExercise } from "@/lib/context/use-exercise";
 
@@ -23,11 +23,15 @@ export function QuestionAnalytics({
 
   const hasActiveAttempt = attempt?.status === "in-progress";
 
-  const interval = useInterval(() => {
+  const handleTick = useEffectEvent(() => {
     if (isActive && hasActiveAttempt) {
       timeCounterRef.current += 1;
       setTimeSpent(exerciseNumber, timeCounterRef.current);
     }
+  });
+
+  const interval = useInterval(() => {
+    handleTick();
   }, 1000);
 
   useEffect(() => {
