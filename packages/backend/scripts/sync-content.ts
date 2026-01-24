@@ -2220,6 +2220,240 @@ async function syncFull(
   }
 }
 
+interface BatchDeleteResult {
+  deleted: number;
+  hasMore: boolean;
+}
+
+/**
+ * Delete all items from a table using batched mutations.
+ * Keeps calling the mutation until hasMore is false.
+ */
+async function deleteAllBatched(
+  config: ConvexConfig,
+  mutationPath: string,
+  label: string
+): Promise<number> {
+  let totalDeleted = 0;
+  let batchNum = 1;
+  let hasMore = true;
+
+  while (hasMore) {
+    const result = await runConvexMutationGeneric<BatchDeleteResult>(
+      config,
+      mutationPath,
+      {}
+    );
+    totalDeleted += result.deleted;
+    hasMore = result.hasMore;
+
+    if (result.deleted > 0) {
+      process.stdout.write(
+        `\r  Batch ${batchNum}: deleted ${totalDeleted} ${label}...`
+      );
+      batchNum++;
+    }
+  }
+
+  if (totalDeleted > 0) {
+    process.stdout.write("\n");
+  }
+
+  return totalDeleted;
+}
+
+/**
+ * Reset (delete all) synced content from the database.
+ *
+ * This is useful for:
+ * - Testing the full sync workflow
+ * - Starting fresh after major content restructuring
+ * - Debugging sync issues
+ *
+ * Safety features:
+ * - Dry run by default (use --force to actually delete)
+ * - Extra warning for production database
+ * - Proper cascade deletion order
+ * - Batched deletes to avoid timeout
+ */
+async function reset(
+  config: ConvexConfig,
+  options: SyncOptions
+): Promise<void> {
+  log("=== RESET CONTENT ===\n");
+  log("This will DELETE ALL synced content from the database.\n");
+
+  if (options.prod) {
+    logWarning("PRODUCTION DATABASE SELECTED!");
+    logWarning("This will permanently delete all content from production.\n");
+  }
+
+  if (!options.force) {
+    log("DRY RUN MODE (use --force to actually delete)\n");
+  }
+
+  // Get current counts
+  log("Current database contents:\n");
+  const counts = await runConvexQuery<ContentCounts>(
+    config,
+    "contentSync/queries:getContentCounts"
+  );
+
+  log(`  Content Authors:      ${counts.contentAuthors}`);
+  log(`  Article References:   ${counts.articleReferences}`);
+  log(`  Exercise Choices:     ${counts.exerciseChoices}`);
+  log(`  Exercise Questions:   ${counts.exerciseQuestions}`);
+  log(`  Exercise Sets:        ${counts.exerciseSets}`);
+  log(`  Subject Sections:     ${counts.subjectSections}`);
+  log(`  Subject Topics:       ${counts.subjectTopics}`);
+  log(`  Articles:             ${counts.articles}`);
+  log(`  Authors:              ${counts.authors}`);
+
+  const totalContent =
+    counts.articles +
+    counts.subjectTopics +
+    counts.subjectSections +
+    counts.exerciseSets +
+    counts.exerciseQuestions;
+
+  const totalRelated =
+    counts.contentAuthors + counts.articleReferences + counts.exerciseChoices;
+
+  log(`\n  Total content items:  ${totalContent}`);
+  log(`  Total related items:  ${totalRelated}`);
+
+  if (totalContent === 0 && totalRelated === 0) {
+    logSuccess("\nDatabase is already empty. Nothing to delete.");
+    return;
+  }
+
+  if (!options.force) {
+    log("\nTo delete all content, run:");
+    if (options.prod) {
+      log("  pnpm --filter backend sync:reset --prod --force");
+    } else {
+      log("  pnpm --filter backend sync:reset --force");
+    }
+    if (!options.authors) {
+      log("\nTo also delete authors, add --authors flag");
+    }
+    return;
+  }
+
+  // Actually delete - order matters for referential integrity
+  log("\nDeleting content (in dependency order)...\n");
+
+  const startTime = performance.now();
+  let totalDeleted = 0;
+
+  // 1. Delete join tables first
+  log("1/9 Deleting content authors...");
+  const contentAuthorsDeleted = await deleteAllBatched(
+    config,
+    "contentSync/mutations:deleteContentAuthorsBatch",
+    "content authors"
+  );
+  logSuccess(`  Deleted ${contentAuthorsDeleted} content authors`);
+  totalDeleted += contentAuthorsDeleted;
+
+  log("2/9 Deleting article references...");
+  const referencesDeleted = await deleteAllBatched(
+    config,
+    "contentSync/mutations:deleteArticleReferencesBatch",
+    "article references"
+  );
+  logSuccess(`  Deleted ${referencesDeleted} article references`);
+  totalDeleted += referencesDeleted;
+
+  log("3/9 Deleting exercise choices...");
+  const choicesDeleted = await deleteAllBatched(
+    config,
+    "contentSync/mutations:deleteExerciseChoicesBatch",
+    "exercise choices"
+  );
+  logSuccess(`  Deleted ${choicesDeleted} exercise choices`);
+  totalDeleted += choicesDeleted;
+
+  // 2. Delete child content
+  log("4/9 Deleting exercise questions...");
+  const questionsDeleted = await deleteAllBatched(
+    config,
+    "contentSync/mutations:deleteExerciseQuestionsBatch",
+    "exercise questions"
+  );
+  logSuccess(`  Deleted ${questionsDeleted} exercise questions`);
+  totalDeleted += questionsDeleted;
+
+  log("5/9 Deleting subject sections...");
+  const sectionsDeleted = await deleteAllBatched(
+    config,
+    "contentSync/mutations:deleteSubjectSectionsBatch",
+    "subject sections"
+  );
+  logSuccess(`  Deleted ${sectionsDeleted} subject sections`);
+  totalDeleted += sectionsDeleted;
+
+  // 3. Delete parent content
+  log("6/9 Deleting exercise sets...");
+  const setsDeleted = await deleteAllBatched(
+    config,
+    "contentSync/mutations:deleteExerciseSetsBatch",
+    "exercise sets"
+  );
+  logSuccess(`  Deleted ${setsDeleted} exercise sets`);
+  totalDeleted += setsDeleted;
+
+  log("7/9 Deleting subject topics...");
+  const topicsDeleted = await deleteAllBatched(
+    config,
+    "contentSync/mutations:deleteSubjectTopicsBatch",
+    "subject topics"
+  );
+  logSuccess(`  Deleted ${topicsDeleted} subject topics`);
+  totalDeleted += topicsDeleted;
+
+  log("8/9 Deleting articles...");
+  const articlesDeleted = await deleteAllBatched(
+    config,
+    "contentSync/mutations:deleteArticlesBatch",
+    "articles"
+  );
+  logSuccess(`  Deleted ${articlesDeleted} articles`);
+  totalDeleted += articlesDeleted;
+
+  // 4. Optionally delete authors
+  if (options.authors) {
+    log("9/9 Deleting authors...");
+    const authorsDeleted = await deleteAllBatched(
+      config,
+      "contentSync/mutations:deleteAuthorsBatch",
+      "authors"
+    );
+    logSuccess(`  Deleted ${authorsDeleted} authors`);
+    totalDeleted += authorsDeleted;
+  } else {
+    log("9/9 Skipping authors (use --authors to include)");
+  }
+
+  const durationMs = performance.now() - startTime;
+
+  log("\n=== RESET COMPLETE ===\n");
+  logSuccess(`Deleted ${totalDeleted} items in ${formatDuration(durationMs)}`);
+
+  // Clear sync state since database is now empty
+  if (fs.existsSync(SYNC_STATE_FILE)) {
+    fs.unlinkSync(SYNC_STATE_FILE);
+    log("Cleared sync state file");
+  }
+
+  log("\nTo re-sync content, run:");
+  if (options.prod) {
+    log("  pnpm --filter backend sync:prod");
+  } else {
+    log("  pnpm --filter backend sync:full");
+  }
+}
+
 async function main() {
   const { type, options } = parseArgs();
 
@@ -2270,6 +2504,9 @@ async function main() {
     case "full":
       await syncFull(config, options);
       break;
+    case "reset":
+      await reset(config, options);
+      break;
     default:
       logError(`Unknown command: ${type}`);
       log("\nUsage:");
@@ -2292,12 +2529,13 @@ async function main() {
       log(
         "  sync:full             - Full sync: sync, clean, and verify (recommended)"
       );
+      log("  sync:reset            - Delete ALL synced content (use --force)");
       log("\nOptions:");
       log("  --locale en|id  - Sync specific locale only");
-      log("  --force         - Actually delete stale content (for clean)");
-      log("  --authors       - Also clean unused authors (for clean)");
+      log("  --force         - Actually delete content (for clean/reset)");
+      log("  --authors       - Also delete authors (for clean/reset)");
       log("  --sequential    - Run sync phases sequentially (for debugging)");
-      log("  --prod          - Sync to production database");
+      log("  --prod          - Target production database");
       log("\nEnvironment variables:");
       log("  CONVEX_URL      - Development deployment URL");
       log(
@@ -2306,6 +2544,7 @@ async function main() {
       log("\nExamples:");
       log("  pnpm --filter backend sync:full           # Sync to development");
       log("  pnpm --filter backend sync:prod           # Sync to production");
+      log("  pnpm --filter backend sync:reset --force  # Delete all content");
       process.exit(1);
   }
 }

@@ -19,10 +19,12 @@
     "sync:full": "tsx scripts/sync-content.ts full",
     "sync:verify": "tsx scripts/sync-content.ts verify",
     "sync:clean": "tsx scripts/sync-content.ts clean",
+    "sync:reset": "tsx scripts/sync-content.ts reset",
     "sync:prod": "tsx scripts/sync-content.ts full --prod",
     "sync:prod:incremental": "tsx scripts/sync-content.ts incremental --prod",
     "sync:prod:verify": "tsx scripts/sync-content.ts verify --prod",
-    "sync:prod:clean": "tsx scripts/sync-content.ts clean --prod"
+    "sync:prod:clean": "tsx scripts/sync-content.ts clean --prod",
+    "sync:prod:reset": "tsx scripts/sync-content.ts reset --prod"
   },
   "dependencies": {
     "@convex-dev/better-auth": "^0.10.10",

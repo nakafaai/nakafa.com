@@ -947,3 +947,193 @@ export const deleteUnusedAuthors = internalMutation({
     return { deleted };
   },
 });
+
+/**
+ * Batch size for delete operations.
+ * Keep small to stay within Convex mutation time limits (1 second).
+ */
+const DELETE_BATCH_SIZE = 500;
+
+/**
+ * Delete a batch of content authors (join table).
+ * Returns remaining count for pagination.
+ */
+export const deleteContentAuthorsBatch = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const contentAuthors = await ctx.db
+      .query("contentAuthors")
+      .take(DELETE_BATCH_SIZE);
+    let deleted = 0;
+
+    for (const link of contentAuthors) {
+      await ctx.db.delete(link._id);
+      deleted++;
+    }
+
+    const remaining = await ctx.db.query("contentAuthors").first();
+    return { deleted, hasMore: remaining !== null };
+  },
+});
+
+/**
+ * Delete a batch of article references.
+ */
+export const deleteArticleReferencesBatch = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const references = await ctx.db
+      .query("articleReferences")
+      .take(DELETE_BATCH_SIZE);
+    let deleted = 0;
+
+    for (const ref of references) {
+      await ctx.db.delete(ref._id);
+      deleted++;
+    }
+
+    const remaining = await ctx.db.query("articleReferences").first();
+    return { deleted, hasMore: remaining !== null };
+  },
+});
+
+/**
+ * Delete a batch of exercise choices.
+ */
+export const deleteExerciseChoicesBatch = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const choices = await ctx.db
+      .query("exerciseChoices")
+      .take(DELETE_BATCH_SIZE);
+    let deleted = 0;
+
+    for (const choice of choices) {
+      await ctx.db.delete(choice._id);
+      deleted++;
+    }
+
+    const remaining = await ctx.db.query("exerciseChoices").first();
+    return { deleted, hasMore: remaining !== null };
+  },
+});
+
+/**
+ * Delete a batch of exercise questions.
+ */
+export const deleteExerciseQuestionsBatch = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const questions = await ctx.db
+      .query("exerciseQuestions")
+      .take(DELETE_BATCH_SIZE);
+    let deleted = 0;
+
+    for (const question of questions) {
+      await ctx.db.delete(question._id);
+      deleted++;
+    }
+
+    const remaining = await ctx.db.query("exerciseQuestions").first();
+    return { deleted, hasMore: remaining !== null };
+  },
+});
+
+/**
+ * Delete a batch of exercise sets.
+ */
+export const deleteExerciseSetsBatch = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const sets = await ctx.db.query("exerciseSets").take(DELETE_BATCH_SIZE);
+    let deleted = 0;
+
+    for (const set of sets) {
+      await ctx.db.delete(set._id);
+      deleted++;
+    }
+
+    const remaining = await ctx.db.query("exerciseSets").first();
+    return { deleted, hasMore: remaining !== null };
+  },
+});
+
+/**
+ * Delete a batch of subject sections.
+ */
+export const deleteSubjectSectionsBatch = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const sections = await ctx.db
+      .query("subjectSections")
+      .take(DELETE_BATCH_SIZE);
+    let deleted = 0;
+
+    for (const section of sections) {
+      await ctx.db.delete(section._id);
+      deleted++;
+    }
+
+    const remaining = await ctx.db.query("subjectSections").first();
+    return { deleted, hasMore: remaining !== null };
+  },
+});
+
+/**
+ * Delete a batch of subject topics.
+ */
+export const deleteSubjectTopicsBatch = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const topics = await ctx.db.query("subjectTopics").take(DELETE_BATCH_SIZE);
+    let deleted = 0;
+
+    for (const topic of topics) {
+      await ctx.db.delete(topic._id);
+      deleted++;
+    }
+
+    const remaining = await ctx.db.query("subjectTopics").first();
+    return { deleted, hasMore: remaining !== null };
+  },
+});
+
+/**
+ * Delete a batch of article contents.
+ */
+export const deleteArticlesBatch = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const articles = await ctx.db
+      .query("articleContents")
+      .take(DELETE_BATCH_SIZE);
+    let deleted = 0;
+
+    for (const article of articles) {
+      await ctx.db.delete(article._id);
+      deleted++;
+    }
+
+    const remaining = await ctx.db.query("articleContents").first();
+    return { deleted, hasMore: remaining !== null };
+  },
+});
+
+/**
+ * Delete a batch of authors.
+ */
+export const deleteAuthorsBatch = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const authors = await ctx.db.query("authors").take(DELETE_BATCH_SIZE);
+    let deleted = 0;
+
+    for (const author of authors) {
+      await ctx.db.delete(author._id);
+      deleted++;
+    }
+
+    const remaining = await ctx.db.query("authors").first();
+    return { deleted, hasMore: remaining !== null };
+  },
+});

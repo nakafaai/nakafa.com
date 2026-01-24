@@ -53,10 +53,12 @@ npx convex deploy
 | `sync:all` | Sync all content |
 | `sync:verify` | Verify database matches filesystem |
 | `sync:clean` | Find/remove stale content |
+| `sync:reset` | Delete ALL synced content (requires --force) |
 | `sync:prod` | Full sync to production |
 | `sync:prod:incremental` | Incremental sync to production |
 | `sync:prod:verify` | Verify production database |
 | `sync:prod:clean` | Clean stale content in production |
+| `sync:prod:reset` | Delete ALL content in production (requires --force) |
 
 ### Options
 
@@ -64,8 +66,8 @@ npx convex deploy
 |--------|-------------|
 | `--prod` | Target production database |
 | `--locale en\|id` | Sync specific locale only |
-| `--force` | Delete stale content (for clean) |
-| `--authors` | Also clean unused authors |
+| `--force` | Actually delete content (for clean/reset) |
+| `--authors` | Also delete authors (for clean/reset) |
 | `--sequential` | Run phases sequentially (debugging) |
 
 ## Development Workflow
@@ -95,6 +97,34 @@ pnpm --filter backend sync:prod
 
 # 4. Verify production data
 pnpm --filter backend sync:prod:verify
+```
+
+## Reset Workflow
+
+Use reset to delete all synced content and start fresh:
+
+```bash
+# See what would be deleted (dry run)
+pnpm --filter backend sync:reset
+
+# Actually delete all content
+pnpm --filter backend sync:reset --force
+
+# Delete including authors
+pnpm --filter backend sync:reset --force --authors
+
+# Re-sync after reset
+pnpm --filter backend sync:full
+```
+
+For production (use with caution):
+
+```bash
+# Preview deletion
+pnpm --filter backend sync:prod:reset
+
+# Actually delete production content
+pnpm --filter backend sync:prod:reset --force
 ```
 
 ## Content Structure

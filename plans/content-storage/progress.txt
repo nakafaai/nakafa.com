@@ -230,6 +230,59 @@ Total content synced: 1,540 items
 
 ---
 
+### Phase 1.10: Reset/Delete All Content (COMPLETE)
+
+**1. Reset Command**
+- Added `sync:reset` command to delete all synced content
+- Dry run by default (shows counts, requires --force to delete)
+- Extra warning for production database
+- Proper cascade deletion order to maintain referential integrity
+
+**2. Batched Deletes**
+- Implemented batch processing (500 items per batch) to avoid Convex timeout
+- Each table has a `delete*Batch` mutation that returns `{deleted, hasMore}`
+- Script loops until all items deleted
+
+**3. Safety Features**
+- `--force` flag required to actually delete
+- `--authors` flag to include author deletion (optional)
+- Production warning when `--prod` flag is used
+- Clears sync state file after reset
+
+**4. Deletion Order (Referential Integrity)**
+1. contentAuthors (join table)
+2. articleReferences (FK to articles)
+3. exerciseChoices (FK to questions)
+4. exerciseQuestions (FK to sets)
+5. subjectSections (FK to topics)
+6. exerciseSets (parent table)
+7. subjectTopics (parent table)
+8. articleContents (parent table)
+9. authors (optional, shared table)
+
+**Files modified:**
+- packages/backend/convex/contentSync/mutations.ts (+batch delete mutations)
+- packages/backend/scripts/sync-content.ts (+reset command)
+- packages/backend/package.json (+sync:reset, +sync:prod:reset)
+- plans/content-storage/SYNC.md (updated documentation)
+- plans/content-storage/RESET.md (new plan document)
+
+**NPM Scripts:**
+- `sync:reset` - Preview deletion (dry run)
+- `sync:reset --force` - Delete all content in dev
+- `sync:reset --force --authors` - Delete all including authors
+- `sync:prod:reset --force` - Delete all content in production
+
+**Verification:**
+- pnpm lint: PASSED (1468 files)
+- TypeScript check: PASSED
+- sync:reset (dry run): Shows counts correctly
+- sync:reset --force: Deleted 6452 items in ~13s
+- sync:verify: Shows empty database
+- sync:full: Re-synced all 1850 items successfully
+
+---
+
 ### Phase 2: API Layer (NEXT)
 - Create public query functions for content retrieval
 - Add authentication/rate limiting
@@ -242,4 +295,4 @@ Total content synced: 1,540 items
 ---
 
 **Last Updated**: January 24, 2026
-**Status**: Phase 1.9 Complete - Incremental sync & validation ready
+**Status**: Phase 1.10 Complete - Reset functionality ready
