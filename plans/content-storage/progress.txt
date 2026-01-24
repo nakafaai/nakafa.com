@@ -1,0 +1,41 @@
+# Content Storage Progress
+
+## Status: Planning Complete
+
+---
+
+[2025-01-24 00:00] Planning phase completed
+
+Key decisions:
+- Full normalization approach chosen
+- Shared authors table with N:M join
+- Normalized article references (can exceed 5-10 limit)
+- Normalized exercise choices (each gets _id for tracking)
+- Date stored as number (epoch millis) for sorting
+
+Files planned:
+- packages/backend/convex/lib/contentValidators.ts
+- packages/backend/convex/authors/schema.ts
+- packages/backend/convex/articleContents/schema.ts
+- packages/backend/convex/subjectContents/schema.ts
+- packages/backend/convex/exerciseContents/schema.ts
+- packages/backend/convex/schema.ts (update)
+
+Tables to create (7):
+1. authors
+2. contentAuthors
+3. articleContents
+4. articleReferences
+5. subjectContents
+6. exerciseContents
+7. exerciseChoices
+
+Blockers/notes:
+- Ready for implementation
+- Run `pnpm lint && pnpm typecheck` after each task
+
+---
+
+## Implementation Log
+
+(Tasks will be logged here as completed)
