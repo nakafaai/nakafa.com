@@ -1514,7 +1514,10 @@ async function validateExercises(): Promise<ValidationResult> {
   return result;
 }
 
-async function verify(config: ConvexConfig): Promise<void> {
+async function verify(
+  config: ConvexConfig,
+  options: SyncOptions = {}
+): Promise<void> {
   log("=== VERIFY CONTENT ===\n");
 
   const articleFiles = await globFiles("articles/**/*.mdx");
@@ -1715,7 +1718,11 @@ async function verify(config: ConvexConfig): Promise<void> {
       }
     } else {
       logError("Content mismatch detected!");
-      log("\nRun 'pnpm --filter backend sync:all' to fix");
+      if (options.prod) {
+        log("\nRun 'pnpm --filter backend sync:prod' to fix");
+      } else {
+        log("\nRun 'pnpm --filter backend sync:full' to fix");
+      }
       process.exit(1);
     }
   } catch (error) {
@@ -1870,7 +1877,7 @@ async function runConvexMutationGeneric<T>(
  */
 async function cleanUnusedAuthors(
   config: ConvexConfig,
-  force: boolean | undefined
+  options: SyncOptions
 ): Promise<void> {
   log("\n--- UNUSED AUTHORS ---\n");
   log("Unused authors = authors with no linked content\n");
@@ -1893,7 +1900,7 @@ async function cleanUnusedAuthors(
     log(`  ... and ${authorsResult.unusedAuthors.length - 10} more`);
   }
 
-  if (force) {
+  if (options.force) {
     const authorIds = authorsResult.unusedAuthors.map((a) => a.id);
     const result = await runConvexMutationGeneric<DeleteResult>(
       config,
@@ -1903,7 +1910,11 @@ async function cleanUnusedAuthors(
     logSuccess(`Deleted ${result.deleted} unused authors`);
   } else {
     log("\nTo delete unused authors, run:");
-    log("  pnpm --filter backend sync:clean --force --authors");
+    if (options.prod) {
+      log("  pnpm --filter backend sync:prod:clean --force --authors");
+    } else {
+      log("  pnpm --filter backend sync:clean --force --authors");
+    }
   }
 }
 
@@ -2014,12 +2025,16 @@ async function clean(
       );
     } else {
       log("\nTo delete stale content, run:");
-      log("  pnpm --filter backend sync:clean --force");
+      if (options.prod) {
+        log("  pnpm --filter backend sync:prod:clean --force");
+      } else {
+        log("  pnpm --filter backend sync:clean --force");
+      }
     }
   }
 
   if (options.authors) {
-    await cleanUnusedAuthors(config, options.force);
+    await cleanUnusedAuthors(config, options);
   }
 
   log("\n=== CLEAN COMPLETE ===");
@@ -2202,7 +2217,7 @@ async function syncFull(
     }
 
     log("\n");
-    await verify(config);
+    await verify(config, options);
 
     saveSyncState({
       lastSyncTimestamp: Date.now(),
@@ -2496,7 +2511,7 @@ async function main() {
       await syncIncremental(config, options);
       break;
     case "verify":
-      await verify(config);
+      await verify(config, options);
       break;
     case "clean":
       await clean(config, options);
