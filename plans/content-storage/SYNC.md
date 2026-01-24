@@ -2,6 +2,13 @@
 
 Sync MDX content from filesystem to Convex database.
 
+## Quick Start
+
+```bash
+# Full sync (recommended) - syncs, cleans, verifies
+pnpm --filter backend sync:full
+```
+
 ## Prerequisites
 
 Before running sync, you must be authenticated with Convex:
@@ -35,6 +42,9 @@ This single command:
 # Sync all content (articles, subjects, exercises)
 pnpm --filter backend sync:all
 
+# Sync in sequential mode (for debugging interleaved logs)
+pnpm --filter backend sync:all --sequential
+
 # Sync specific content type
 pnpm --filter backend sync:articles
 pnpm --filter backend sync:subjects
@@ -59,6 +69,76 @@ pnpm --filter backend sync:clean -- --force
 pnpm --filter backend sync:clean -- --authors
 pnpm --filter backend sync:clean -- --force --authors
 ```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--locale en\|id` | Sync specific locale only |
+| `--force` | Actually delete stale content (for clean) |
+| `--authors` | Also clean unused authors (for clean) |
+| `--sequential` | Run sync phases sequentially (for debugging) |
+
+## Performance Features
+
+### Timing & Metrics
+
+Every sync shows detailed performance metrics:
+- Duration per content type (human-readable: ms/s/min)
+- Items per second throughput
+- Overall sync summary
+
+Example output:
+```
+=== PERFORMANCE METRICS ===
+
+  Articles: 14 items in 2.03s (6.9/sec)
+  Subject Topics: 260 items in 2.70s (96.4/sec)
+  Subject Sections: 606 items in 12.41s (48.8/sec)
+  Exercise Sets: 50 items in 807ms (62.0/sec)
+  Exercise Questions: 920 items in 11.64s (79.0/sec)
+---
+  Total: 1850 items in 15.13s
+  Overall rate: 122.3 items/sec
+```
+
+### Benchmark Results
+
+| Content Type | Items | Duration | Rate |
+|--------------|-------|----------|------|
+| Articles | 14 | ~2s | ~7/sec |
+| Subject Topics | 260 | ~3s | ~96/sec |
+| Subject Sections | 606 | ~12s | ~49/sec |
+| Exercise Sets | 50 | ~0.8s | ~62/sec |
+| Exercise Questions | 920 | ~12s | ~79/sec |
+| **Total** | **1850** | **~15s** | **~122/sec** |
+
+*Measured on Apple M2 with parallel sync (default mode)*
+
+### Progress Indicators
+
+Each batch shows progress with ETA:
+```
+Batch 15/31 (20 items) [48%] ETA: 6.23s
+```
+
+### Parallel Processing
+
+Parallel sync is **enabled by default** for faster performance:
+- Phase 1: Articles, Subject Topics, Exercise Sets (run in parallel)
+- Phase 2: Subject Sections, Exercise Questions (run in parallel after phase 1)
+
+Use `--sequential` for debugging when you need cleaner, non-interleaved logs:
+
+```bash
+pnpm --filter backend sync:all --sequential
+```
+
+Note: Sequential mode is slower but produces cleaner output for debugging.
+
+### Author Caching
+
+Author lookups are cached per batch to avoid redundant database queries. This is automatic and requires no configuration.
 
 ## Terminology
 
@@ -121,11 +201,12 @@ packages/contents/exercises/{category}/{type}/{material}/
 | Content Type | Items | Batches | Batch Size |
 |--------------|-------|---------|------------|
 | Articles | 14 | 1 | 50 |
-| Subjects | 606 | 31 | 20 |
+| Subject Topics | 260 | 6 | 50 |
+| Subject Sections | 606 | 31 | 20 |
 | Exercise Sets | 50 | 1 | 50 |
 | Exercise Questions | 920 | 31 | 30 |
 
-**Total: 1,590 content items**
+**Total: ~1,850 content items**
 
 ## How It Works
 

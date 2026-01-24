@@ -12,6 +12,7 @@ import {
   parseDateToEpoch,
   parseExerciseMaterialFile,
   parseExercisePath,
+  parseSubjectMaterialFile,
   parseSubjectPath,
   readArticleReferences,
   readExerciseChoices,
@@ -41,22 +42,188 @@ function loadEnvFile() {
 
 loadEnvFile();
 
-const BATCH_SIZE_ARTICLES = 50;
-const BATCH_SIZE_SUBJECTS = 20;
-const BATCH_SIZE_EXERCISE_SETS = 50;
-const BATCH_SIZE_EXERCISE_QUESTIONS = 30;
+/**
+ * Batch sizes for Convex mutations.
+ * Smaller batches = more reliable, larger batches = faster.
+ * Adjust based on content complexity and Convex limits.
+ */
+const BATCH_SIZES = {
+  articles: 50,
+  subjectTopics: 50,
+  subjectSections: 20,
+  exerciseSets: 50,
+  exerciseQuestions: 30,
+} as const;
+
+/** Regex to extract locale from material file paths (e.g., "en-material.ts" -> "en") */
 const LOCALE_MATERIAL_FILE_REGEX = /\/([a-z]{2})-material\.ts$/;
 
 interface SyncOptions {
   locale?: Locale;
   force?: boolean;
   authors?: boolean;
+  sequential?: boolean;
+}
+
+interface PhaseMetrics {
+  phase: string;
+  itemCount: number;
+  startTime: number;
+  endTime?: number;
+  durationMs?: number;
+  itemsPerSecond?: number;
+}
+
+interface SyncMetrics {
+  phases: PhaseMetrics[];
+  totalStartTime: number;
+  totalEndTime?: number;
+  totalDurationMs?: number;
+  totalItems?: number;
+}
+
+function createMetrics(): SyncMetrics {
+  return {
+    phases: [],
+    totalStartTime: performance.now(),
+  };
+}
+
+function startPhase(metrics: SyncMetrics, phase: string): PhaseMetrics {
+  const phaseMetrics: PhaseMetrics = {
+    phase,
+    itemCount: 0,
+    startTime: performance.now(),
+  };
+  metrics.phases.push(phaseMetrics);
+  return phaseMetrics;
+}
+
+function endPhase(phase: PhaseMetrics, itemCount: number): void {
+  phase.endTime = performance.now();
+  phase.itemCount = itemCount;
+  phase.durationMs = phase.endTime - phase.startTime;
+  phase.itemsPerSecond =
+    phase.durationMs > 0 ? (itemCount / phase.durationMs) * 1000 : 0;
+}
+
+function addPhaseMetrics(
+  metrics: SyncMetrics,
+  phaseName: string,
+  result: SyncResult
+): void {
+  const itemCount = result.created + result.updated + result.unchanged;
+  metrics.phases.push({
+    phase: phaseName,
+    startTime: 0,
+    itemCount,
+    durationMs: result.durationMs,
+    itemsPerSecond: result.itemsPerSecond,
+  });
+}
+
+function finalizeMetrics(metrics: SyncMetrics): void {
+  metrics.totalEndTime = performance.now();
+  metrics.totalDurationMs = metrics.totalEndTime - metrics.totalStartTime;
+  metrics.totalItems = metrics.phases.reduce((sum, p) => sum + p.itemCount, 0);
+}
+
+function formatDuration(ms: number): string {
+  if (ms < 1000) {
+    return `${ms.toFixed(0)}ms`;
+  }
+  if (ms < 60_000) {
+    return `${(ms / 1000).toFixed(2)}s`;
+  }
+  const minutes = Math.floor(ms / 60_000);
+  const seconds = ((ms % 60_000) / 1000).toFixed(1);
+  return `${minutes}m ${seconds}s`;
+}
+
+function logPhaseMetrics(phase: PhaseMetrics): void {
+  const duration = phase.durationMs ? formatDuration(phase.durationMs) : "N/A";
+  const rate = phase.itemsPerSecond ? phase.itemsPerSecond.toFixed(1) : "N/A";
+  log(
+    `  ${phase.phase}: ${phase.itemCount} items in ${duration} (${rate}/sec)`
+  );
+}
+
+function logSyncMetrics(metrics: SyncMetrics): void {
+  log("\n=== PERFORMANCE METRICS ===\n");
+  for (const phase of metrics.phases) {
+    logPhaseMetrics(phase);
+  }
+  if (metrics.totalDurationMs && metrics.totalItems !== undefined) {
+    log("---");
+    log(
+      `  Total: ${metrics.totalItems} items in ${formatDuration(metrics.totalDurationMs)}`
+    );
+    const overallRate =
+      metrics.totalDurationMs > 0
+        ? ((metrics.totalItems / metrics.totalDurationMs) * 1000).toFixed(1)
+        : "N/A";
+    log(`  Overall rate: ${overallRate} items/sec`);
+  }
+}
+
+interface BatchProgress {
+  totalItems: number;
+  processedItems: number;
+  batchSize: number;
+  startTime: number;
+}
+
+function createBatchProgress(
+  totalItems: number,
+  batchSize: number
+): BatchProgress {
+  return {
+    totalItems,
+    processedItems: 0,
+    batchSize,
+    startTime: performance.now(),
+  };
+}
+
+function updateBatchProgress(
+  progress: BatchProgress,
+  batchItemCount: number
+): void {
+  progress.processedItems += batchItemCount;
+}
+
+function formatBatchProgress(
+  progress: BatchProgress,
+  batchNum: number,
+  totalBatches: number,
+  batchItemCount: number
+): string {
+  const percentage = (
+    (progress.processedItems / progress.totalItems) *
+    100
+  ).toFixed(0);
+  const elapsed = performance.now() - progress.startTime;
+
+  let etaStr = "";
+  if (
+    progress.processedItems > 0 &&
+    progress.processedItems < progress.totalItems
+  ) {
+    const rate = progress.processedItems / elapsed;
+    const remaining = progress.totalItems - progress.processedItems;
+    const etaMs = remaining / rate;
+    etaStr = ` ETA: ${formatDuration(etaMs)}`;
+  }
+
+  return `Batch ${batchNum}/${totalBatches} (${batchItemCount} items) [${percentage}%]${etaStr}`;
 }
 
 interface SyncResult {
   created: number;
   updated: number;
   unchanged: number;
+  durationMs?: number;
+  itemsPerSecond?: number;
 }
 
 interface ConvexConfig {
@@ -66,7 +233,8 @@ interface ConvexConfig {
 
 interface ContentCounts {
   articles: number;
-  subjects: number;
+  subjectTopics: number;
+  subjectSections: number;
   exerciseSets: number;
   exerciseQuestions: number;
   authors: number;
@@ -79,13 +247,16 @@ interface DataIntegrity {
   questionsWithoutChoices: string[];
   questionsWithoutAuthors: string[];
   articlesWithoutReferences: string[];
+  sectionsWithoutTopics: string[];
   totalQuestions: number;
   totalArticles: number;
+  totalSections: number;
 }
 
 interface StaleContent {
   staleArticles: Array<{ id: string; slug: string; locale: string }>;
-  staleSubjects: Array<{ id: string; slug: string; locale: string }>;
+  staleSubjectTopics: Array<{ id: string; slug: string; locale: string }>;
+  staleSubjectSections: Array<{ id: string; slug: string; locale: string }>;
   staleExerciseSets: Array<{ id: string; slug: string; locale: string }>;
   staleExerciseQuestions: Array<{ id: string; slug: string; locale: string }>;
 }
@@ -108,6 +279,55 @@ function logError(message: string) {
 
 function logSuccess(message: string) {
   console.log(`OK: ${message}`);
+}
+
+interface StaleItem {
+  id: string;
+  slug: string;
+  locale: string;
+}
+
+/**
+ * Logs a list of stale items with truncation for large lists.
+ * Shows up to maxItems entries, with a "... and X more" message for the rest.
+ */
+function logStaleItems(label: string, items: StaleItem[], maxItems = 10): void {
+  if (items.length === 0) {
+    return;
+  }
+
+  log(`${label} (${items.length}):`);
+  for (const item of items.slice(0, maxItems)) {
+    log(`  - ${item.slug} (${item.locale})`);
+  }
+  if (items.length > maxItems) {
+    log(`  ... and ${items.length - maxItems} more`);
+  }
+}
+
+/**
+ * Deletes stale content of a specific type by calling the appropriate mutation.
+ * Returns whether any content was deleted.
+ */
+async function deleteStaleItems(
+  config: ConvexConfig,
+  mutationPath: string,
+  paramName: string,
+  items: StaleItem[],
+  successLabel: string
+): Promise<boolean> {
+  if (items.length === 0) {
+    return false;
+  }
+
+  const ids = items.map((item) => item.id);
+  const result = await runConvexMutationGeneric<DeleteResult>(
+    config,
+    mutationPath,
+    { [paramName]: ids }
+  );
+  logSuccess(`Deleted ${result.deleted} ${successLabel}`);
+  return true;
 }
 
 function getConvexConfig(): ConvexConfig {
@@ -159,6 +379,9 @@ function parseArgs(): { type: string; options: SyncOptions } {
     }
     if (arg === "--authors") {
       options.authors = true;
+    }
+    if (arg === "--sequential") {
+      options.sequential = true;
     }
   }
 
@@ -236,6 +459,7 @@ async function syncArticles(
   config: ConvexConfig,
   options: SyncOptions
 ): Promise<SyncResult> {
+  const startTime = performance.now();
   log("\n--- ARTICLES ---\n");
 
   const pattern = options.locale
@@ -306,11 +530,13 @@ async function syncArticles(
     }
   }
 
-  const totalBatches = Math.ceil(articles.length / BATCH_SIZE_ARTICLES);
-  for (let i = 0; i < articles.length; i += BATCH_SIZE_ARTICLES) {
-    const batch = articles.slice(i, i + BATCH_SIZE_ARTICLES);
-    const batchNum = Math.floor(i / BATCH_SIZE_ARTICLES) + 1;
-    log(`Batch ${batchNum}/${totalBatches} (${batch.length} items)`);
+  const totalBatches = Math.ceil(articles.length / BATCH_SIZES.articles);
+  const progress = createBatchProgress(articles.length, BATCH_SIZES.articles);
+
+  for (let i = 0; i < articles.length; i += BATCH_SIZES.articles) {
+    const batch = articles.slice(i, i + BATCH_SIZES.articles);
+    const batchNum = Math.floor(i / BATCH_SIZES.articles) + 1;
+    log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
 
     const result = await runConvexMutation(
       config,
@@ -321,11 +547,18 @@ async function syncArticles(
     totals.created += result.created;
     totals.updated += result.updated;
     totals.unchanged += result.unchanged;
+    updateBatchProgress(progress, batch.length);
   }
 
   const processed = totals.created + totals.updated + totals.unchanged;
+  const durationMs = performance.now() - startTime;
+  const itemsPerSecond = durationMs > 0 ? (processed / durationMs) * 1000 : 0;
+
   log(
     `\nResult: ${totals.created} created, ${totals.updated} updated, ${totals.unchanged} unchanged`
+  );
+  log(
+    `Time: ${formatDuration(durationMs)} (${itemsPerSecond.toFixed(1)} items/sec)`
   );
 
   if (processed === articles.length) {
@@ -334,14 +567,128 @@ async function syncArticles(
     logError(`Mismatch: ${processed} processed vs ${articles.length} parsed`);
   }
 
-  return totals;
+  return { ...totals, durationMs, itemsPerSecond };
 }
 
-async function syncSubjects(
+const LOCALE_SUBJECT_MATERIAL_FILE_REGEX = /\/([a-z]{2})-material\.ts$/;
+
+async function syncSubjectTopics(
   config: ConvexConfig,
   options: SyncOptions
 ): Promise<SyncResult> {
-  log("\n--- SUBJECTS ---\n");
+  const startTime = performance.now();
+  log("\n--- SUBJECT TOPICS ---\n");
+
+  const pattern = options.locale
+    ? `subject/**/_data/${options.locale}-material.ts`
+    : "subject/**/_data/*-material.ts";
+
+  const materialFiles = await globFiles(pattern);
+  log(`Material files found: ${materialFiles.length}`);
+
+  const totals: SyncResult = { created: 0, updated: 0, unchanged: 0 };
+  const topics: Array<{
+    locale: Locale;
+    slug: string;
+    category: string;
+    grade: string;
+    material: string;
+    topic: string;
+    title: string;
+    description?: string;
+    sectionCount: number;
+  }> = [];
+  const errors: string[] = [];
+
+  for (const materialFile of materialFiles) {
+    try {
+      const localeMatch = materialFile.match(
+        LOCALE_SUBJECT_MATERIAL_FILE_REGEX
+      );
+      if (!localeMatch) {
+        continue;
+      }
+
+      const locale = localeMatch[1] as Locale;
+      const parsedTopics = await parseSubjectMaterialFile(materialFile, locale);
+
+      for (const topic of parsedTopics) {
+        topics.push({
+          locale: topic.locale,
+          slug: topic.slug,
+          category: topic.category,
+          grade: topic.grade,
+          material: topic.material,
+          topic: topic.topic,
+          title: topic.title,
+          description: topic.description,
+          sectionCount: topic.sectionCount,
+        });
+      }
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      errors.push(`${materialFile}: ${msg}`);
+    }
+  }
+
+  if (errors.length > 0) {
+    log(`Parse errors: ${errors.length}`);
+    for (const err of errors) {
+      logError(err);
+    }
+  }
+
+  log(`Topics parsed: ${topics.length}`);
+
+  const totalBatches = Math.ceil(topics.length / BATCH_SIZES.subjectTopics);
+  const progress = createBatchProgress(
+    topics.length,
+    BATCH_SIZES.subjectTopics
+  );
+
+  for (let i = 0; i < topics.length; i += BATCH_SIZES.subjectTopics) {
+    const batch = topics.slice(i, i + BATCH_SIZES.subjectTopics);
+    const batchNum = Math.floor(i / BATCH_SIZES.subjectTopics) + 1;
+    log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
+
+    const result = await runConvexMutation(
+      config,
+      "contentSync/mutations:bulkSyncSubjectTopics",
+      { topics: batch }
+    );
+
+    totals.created += result.created;
+    totals.updated += result.updated;
+    totals.unchanged += result.unchanged;
+    updateBatchProgress(progress, batch.length);
+  }
+
+  const processed = totals.created + totals.updated + totals.unchanged;
+  const durationMs = performance.now() - startTime;
+  const itemsPerSecond = durationMs > 0 ? (processed / durationMs) * 1000 : 0;
+
+  log(
+    `\nResult: ${totals.created} created, ${totals.updated} updated, ${totals.unchanged} unchanged`
+  );
+  log(
+    `Time: ${formatDuration(durationMs)} (${itemsPerSecond.toFixed(1)} items/sec)`
+  );
+
+  if (processed === topics.length) {
+    logSuccess(`${processed} subject topics synced`);
+  } else {
+    logError(`Mismatch: ${processed} processed vs ${topics.length} parsed`);
+  }
+
+  return { ...totals, durationMs, itemsPerSecond };
+}
+
+async function syncSubjectSections(
+  config: ConvexConfig,
+  options: SyncOptions
+): Promise<SyncResult> {
+  const startTime = performance.now();
+  log("\n--- SUBJECT SECTIONS ---\n");
 
   const pattern = options.locale
     ? `subject/**/${options.locale}.mdx`
@@ -351,9 +698,10 @@ async function syncSubjects(
   log(`Files found: ${files.length}`);
 
   const totals: SyncResult = { created: 0, updated: 0, unchanged: 0 };
-  const subjects: Array<{
+  const sections: Array<{
     locale: Locale;
     slug: string;
+    topicSlug: string;
     category: string;
     grade: string;
     material: string;
@@ -377,9 +725,12 @@ async function syncSubjects(
       const combinedContent = body + JSON.stringify(metadata.authors);
       const contentHash = computeHash(combinedContent);
 
-      subjects.push({
+      const topicSlug = `subject/${pathInfo.category}/${pathInfo.grade}/${pathInfo.material}/${pathInfo.topic}`;
+
+      sections.push({
         locale: pathInfo.locale,
         slug: pathInfo.slug,
+        topicSlug,
         category: pathInfo.category,
         grade: pathInfo.grade,
         material: pathInfo.material,
@@ -406,41 +757,54 @@ async function syncSubjects(
     }
   }
 
-  const totalBatches = Math.ceil(subjects.length / BATCH_SIZE_SUBJECTS);
-  for (let i = 0; i < subjects.length; i += BATCH_SIZE_SUBJECTS) {
-    const batch = subjects.slice(i, i + BATCH_SIZE_SUBJECTS);
-    const batchNum = Math.floor(i / BATCH_SIZE_SUBJECTS) + 1;
-    log(`Batch ${batchNum}/${totalBatches} (${batch.length} items)`);
+  const totalBatches = Math.ceil(sections.length / BATCH_SIZES.subjectSections);
+  const progress = createBatchProgress(
+    sections.length,
+    BATCH_SIZES.subjectSections
+  );
+
+  for (let i = 0; i < sections.length; i += BATCH_SIZES.subjectSections) {
+    const batch = sections.slice(i, i + BATCH_SIZES.subjectSections);
+    const batchNum = Math.floor(i / BATCH_SIZES.subjectSections) + 1;
+    log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
 
     const result = await runConvexMutation(
       config,
-      "contentSync/mutations:bulkSyncSubjects",
-      { subjects: batch }
+      "contentSync/mutations:bulkSyncSubjectSections",
+      { sections: batch }
     );
 
     totals.created += result.created;
     totals.updated += result.updated;
     totals.unchanged += result.unchanged;
+    updateBatchProgress(progress, batch.length);
   }
 
   const processed = totals.created + totals.updated + totals.unchanged;
+  const durationMs = performance.now() - startTime;
+  const itemsPerSecond = durationMs > 0 ? (processed / durationMs) * 1000 : 0;
+
   log(
     `\nResult: ${totals.created} created, ${totals.updated} updated, ${totals.unchanged} unchanged`
   );
+  log(
+    `Time: ${formatDuration(durationMs)} (${itemsPerSecond.toFixed(1)} items/sec)`
+  );
 
-  if (processed === subjects.length) {
+  if (processed === sections.length) {
     logSuccess(`${processed}/${files.length} files synced`);
   } else {
-    logError(`Mismatch: ${processed} processed vs ${subjects.length} parsed`);
+    logError(`Mismatch: ${processed} processed vs ${sections.length} parsed`);
   }
 
-  return totals;
+  return { ...totals, durationMs, itemsPerSecond };
 }
 
 async function syncExerciseSets(
   config: ConvexConfig,
   options: SyncOptions
 ): Promise<SyncResult> {
+  const startTime = performance.now();
   log("\n--- EXERCISE SETS ---\n");
 
   const pattern = options.locale
@@ -518,11 +882,13 @@ async function syncExerciseSets(
 
   log(`Sets parsed: ${sets.length}`);
 
-  const totalBatches = Math.ceil(sets.length / BATCH_SIZE_EXERCISE_SETS);
-  for (let i = 0; i < sets.length; i += BATCH_SIZE_EXERCISE_SETS) {
-    const batch = sets.slice(i, i + BATCH_SIZE_EXERCISE_SETS);
-    const batchNum = Math.floor(i / BATCH_SIZE_EXERCISE_SETS) + 1;
-    log(`Batch ${batchNum}/${totalBatches} (${batch.length} items)`);
+  const totalBatches = Math.ceil(sets.length / BATCH_SIZES.exerciseSets);
+  const progress = createBatchProgress(sets.length, BATCH_SIZES.exerciseSets);
+
+  for (let i = 0; i < sets.length; i += BATCH_SIZES.exerciseSets) {
+    const batch = sets.slice(i, i + BATCH_SIZES.exerciseSets);
+    const batchNum = Math.floor(i / BATCH_SIZES.exerciseSets) + 1;
+    log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
 
     const result = await runConvexMutation(
       config,
@@ -533,11 +899,18 @@ async function syncExerciseSets(
     totals.created += result.created;
     totals.updated += result.updated;
     totals.unchanged += result.unchanged;
+    updateBatchProgress(progress, batch.length);
   }
 
   const processed = totals.created + totals.updated + totals.unchanged;
+  const durationMs = performance.now() - startTime;
+  const itemsPerSecond = durationMs > 0 ? (processed / durationMs) * 1000 : 0;
+
   log(
     `\nResult: ${totals.created} created, ${totals.updated} updated, ${totals.unchanged} unchanged`
+  );
+  log(
+    `Time: ${formatDuration(durationMs)} (${itemsPerSecond.toFixed(1)} items/sec)`
   );
 
   if (processed === sets.length) {
@@ -546,13 +919,14 @@ async function syncExerciseSets(
     logError(`Mismatch: ${processed} processed vs ${sets.length} parsed`);
   }
 
-  return totals;
+  return { ...totals, durationMs, itemsPerSecond };
 }
 
 async function syncExerciseQuestions(
   config: ConvexConfig,
   options: SyncOptions
 ): Promise<SyncResult> {
+  const startTime = performance.now();
   log("\n--- EXERCISE QUESTIONS ---\n");
 
   const pattern = options.locale
@@ -656,12 +1030,17 @@ async function syncExerciseQuestions(
   }
 
   const totalBatches = Math.ceil(
-    questions.length / BATCH_SIZE_EXERCISE_QUESTIONS
+    questions.length / BATCH_SIZES.exerciseQuestions
   );
-  for (let i = 0; i < questions.length; i += BATCH_SIZE_EXERCISE_QUESTIONS) {
-    const batch = questions.slice(i, i + BATCH_SIZE_EXERCISE_QUESTIONS);
-    const batchNum = Math.floor(i / BATCH_SIZE_EXERCISE_QUESTIONS) + 1;
-    log(`Batch ${batchNum}/${totalBatches} (${batch.length} items)`);
+  const progress = createBatchProgress(
+    questions.length,
+    BATCH_SIZES.exerciseQuestions
+  );
+
+  for (let i = 0; i < questions.length; i += BATCH_SIZES.exerciseQuestions) {
+    const batch = questions.slice(i, i + BATCH_SIZES.exerciseQuestions);
+    const batchNum = Math.floor(i / BATCH_SIZES.exerciseQuestions) + 1;
+    log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
 
     const result = await runConvexMutation(
       config,
@@ -672,11 +1051,18 @@ async function syncExerciseQuestions(
     totals.created += result.created;
     totals.updated += result.updated;
     totals.unchanged += result.unchanged;
+    updateBatchProgress(progress, batch.length);
   }
 
   const processed = totals.created + totals.updated + totals.unchanged;
+  const durationMs = performance.now() - startTime;
+  const itemsPerSecond = durationMs > 0 ? (processed / durationMs) * 1000 : 0;
+
   log(
     `\nResult: ${totals.created} created, ${totals.updated} updated, ${totals.unchanged} unchanged`
+  );
+  log(
+    `Time: ${formatDuration(durationMs)} (${itemsPerSecond.toFixed(1)} items/sec)`
   );
 
   if (processed === questions.length) {
@@ -687,38 +1073,129 @@ async function syncExerciseQuestions(
     logError(`Mismatch: ${processed} processed vs ${questions.length} parsed`);
   }
 
-  return totals;
+  return { ...totals, durationMs, itemsPerSecond };
 }
 
 async function syncAll(
   config: ConvexConfig,
   options: SyncOptions
 ): Promise<void> {
+  const metrics = createMetrics();
   log("=== CONTENT SYNC ===\n");
   if (options.locale) {
     log(`Locale filter: ${options.locale}`);
   }
+  if (options.sequential) {
+    log("Mode: sequential (for debugging)\n");
+  }
 
-  const articleResult = await syncArticles(config, options);
-  const subjectResult = await syncSubjects(config, options);
-  const exerciseSetResult = await syncExerciseSets(config, options);
-  const exerciseQuestionResult = await syncExerciseQuestions(config, options);
+  let articleResult: SyncResult;
+  let subjectTopicResult: SyncResult;
+  let subjectSectionResult: SyncResult;
+  let exerciseSetResult: SyncResult;
+  let exerciseQuestionResult: SyncResult;
+
+  if (options.sequential) {
+    const articlePhase = startPhase(metrics, "Articles");
+    articleResult = await syncArticles(config, options);
+    endPhase(
+      articlePhase,
+      articleResult.created + articleResult.updated + articleResult.unchanged
+    );
+
+    const topicPhase = startPhase(metrics, "Subject Topics");
+    subjectTopicResult = await syncSubjectTopics(config, options);
+    endPhase(
+      topicPhase,
+      subjectTopicResult.created +
+        subjectTopicResult.updated +
+        subjectTopicResult.unchanged
+    );
+
+    const sectionPhase = startPhase(metrics, "Subject Sections");
+    subjectSectionResult = await syncSubjectSections(config, options);
+    endPhase(
+      sectionPhase,
+      subjectSectionResult.created +
+        subjectSectionResult.updated +
+        subjectSectionResult.unchanged
+    );
+
+    const setPhase = startPhase(metrics, "Exercise Sets");
+    exerciseSetResult = await syncExerciseSets(config, options);
+    endPhase(
+      setPhase,
+      exerciseSetResult.created +
+        exerciseSetResult.updated +
+        exerciseSetResult.unchanged
+    );
+
+    const questionPhase = startPhase(metrics, "Exercise Questions");
+    exerciseQuestionResult = await syncExerciseQuestions(config, options);
+    endPhase(
+      questionPhase,
+      exerciseQuestionResult.created +
+        exerciseQuestionResult.updated +
+        exerciseQuestionResult.unchanged
+    );
+  } else {
+    log("Phase 1: Syncing independent content (articles, topics, sets)...\n");
+    const phase1Start = performance.now();
+
+    const [articles, topics, sets] = await Promise.all([
+      syncArticles(config, options),
+      syncSubjectTopics(config, options),
+      syncExerciseSets(config, options),
+    ]);
+
+    articleResult = articles;
+    subjectTopicResult = topics;
+    exerciseSetResult = sets;
+
+    const phase1Duration = performance.now() - phase1Start;
+    log(`\nPhase 1 complete in ${formatDuration(phase1Duration)}`);
+
+    log("\nPhase 2: Syncing dependent content (sections, questions)...\n");
+    const phase2Start = performance.now();
+
+    const [sections, questions] = await Promise.all([
+      syncSubjectSections(config, options),
+      syncExerciseQuestions(config, options),
+    ]);
+
+    subjectSectionResult = sections;
+    exerciseQuestionResult = questions;
+
+    const phase2Duration = performance.now() - phase2Start;
+    log(`\nPhase 2 complete in ${formatDuration(phase2Duration)}`);
+
+    addPhaseMetrics(metrics, "Articles", articleResult);
+    addPhaseMetrics(metrics, "Subject Topics", subjectTopicResult);
+    addPhaseMetrics(metrics, "Subject Sections", subjectSectionResult);
+    addPhaseMetrics(metrics, "Exercise Sets", exerciseSetResult);
+    addPhaseMetrics(metrics, "Exercise Questions", exerciseQuestionResult);
+  }
+
+  finalizeMetrics(metrics);
 
   log("\n=== SUMMARY ===\n");
 
   const totalCreated =
     articleResult.created +
-    subjectResult.created +
+    subjectTopicResult.created +
+    subjectSectionResult.created +
     exerciseSetResult.created +
     exerciseQuestionResult.created;
   const totalUpdated =
     articleResult.updated +
-    subjectResult.updated +
+    subjectTopicResult.updated +
+    subjectSectionResult.updated +
     exerciseSetResult.updated +
     exerciseQuestionResult.updated;
   const totalUnchanged =
     articleResult.unchanged +
-    subjectResult.unchanged +
+    subjectTopicResult.unchanged +
+    subjectSectionResult.unchanged +
     exerciseSetResult.unchanged +
     exerciseQuestionResult.unchanged;
   const total = totalCreated + totalUpdated + totalUnchanged;
@@ -727,7 +1204,10 @@ async function syncAll(
     `Articles:           ${articleResult.created + articleResult.updated + articleResult.unchanged} (${articleResult.created} new, ${articleResult.updated} updated)`
   );
   log(
-    `Subjects:           ${subjectResult.created + subjectResult.updated + subjectResult.unchanged} (${subjectResult.created} new, ${subjectResult.updated} updated)`
+    `Subject Topics:     ${subjectTopicResult.created + subjectTopicResult.updated + subjectTopicResult.unchanged} (${subjectTopicResult.created} new, ${subjectTopicResult.updated} updated)`
+  );
+  log(
+    `Subject Sections:   ${subjectSectionResult.created + subjectSectionResult.updated + subjectSectionResult.unchanged} (${subjectSectionResult.created} new, ${subjectSectionResult.updated} updated)`
   );
   log(
     `Exercise Sets:      ${exerciseSetResult.created + exerciseSetResult.updated + exerciseSetResult.unchanged} (${exerciseSetResult.created} new, ${exerciseSetResult.updated} updated)`
@@ -743,6 +1223,8 @@ async function syncAll(
   } else {
     log("\nNo changes (all content up to date)");
   }
+
+  logSyncMetrics(metrics);
 }
 
 async function verify(config: ConvexConfig): Promise<void> {
@@ -750,7 +1232,12 @@ async function verify(config: ConvexConfig): Promise<void> {
 
   const articleFiles = await globFiles("articles/**/*.mdx");
   const subjectFiles = await globFiles("subject/**/*.mdx");
-  const materialFiles = await globFiles("exercises/**/_data/*-material.ts");
+  const subjectMaterialFiles = await globFiles(
+    "subject/**/_data/*-material.ts"
+  );
+  const exerciseMaterialFiles = await globFiles(
+    "exercises/**/_data/*-material.ts"
+  );
   const questionFiles = await globFiles("exercises/**/_question/*.mdx");
   const answerFiles = await globFiles("exercises/**/_answer/*.mdx");
   const choicesFiles = await globFiles("exercises/**/choices.ts");
@@ -772,12 +1259,13 @@ async function verify(config: ConvexConfig): Promise<void> {
   log(`  Reference files:     ${refFiles.length} (ref.ts)`);
 
   log("\nSubjects:");
+  log(`  Material files:      ${subjectMaterialFiles.length} (*-material.ts)`);
   log(`  Total MDX files:     ${subjectFiles.length}`);
   log(`    - English (en):    ${subjectFilesEn.length}`);
   log(`    - Indonesian (id): ${subjectFilesId.length}`);
 
   log("\nExercises:");
-  log(`  Material files:      ${materialFiles.length} (*-material.ts)`);
+  log(`  Material files:      ${exerciseMaterialFiles.length} (*-material.ts)`);
   log(`  Question files:      ${questionFiles.length} (_question/*.mdx)`);
   log(`    - English (en):    ${questionFilesEn.length}`);
   log(`    - Indonesian (id): ${questionFilesId.length}`);
@@ -793,7 +1281,8 @@ async function verify(config: ConvexConfig): Promise<void> {
 
     log("Content tables:");
     log(`  articleContents:     ${counts.articles}`);
-    log(`  subjectContents:     ${counts.subjects}`);
+    log(`  subjectTopics:       ${counts.subjectTopics}`);
+    log(`  subjectSections:     ${counts.subjectSections}`);
     log(`  exerciseSets:        ${counts.exerciseSets}`);
     log(`  exerciseQuestions:   ${counts.exerciseQuestions}`);
 
@@ -821,13 +1310,13 @@ async function verify(config: ConvexConfig): Promise<void> {
       allMatch = false;
     }
 
-    if (counts.subjects === subjectFiles.length) {
+    if (counts.subjectSections === subjectFiles.length) {
       logSuccess(
-        `Subjects: ${counts.subjects} in DB = ${subjectFiles.length} files`
+        `Subject Sections: ${counts.subjectSections} in DB = ${subjectFiles.length} files`
       );
     } else {
       logError(
-        `Subjects: ${counts.subjects} in DB != ${subjectFiles.length} files`
+        `Subject Sections: ${counts.subjectSections} in DB != ${subjectFiles.length} files`
       );
       allMatch = false;
     }
@@ -900,6 +1389,21 @@ async function verify(config: ConvexConfig): Promise<void> {
       logSuccess(`All ${integrity.totalQuestions} questions have authors`);
     }
 
+    if (integrity.sectionsWithoutTopics.length > 0) {
+      logError(
+        `${integrity.sectionsWithoutTopics.length} sections without topics:`
+      );
+      for (const slug of integrity.sectionsWithoutTopics.slice(0, 5)) {
+        log(`  - ${slug}`);
+      }
+      if (integrity.sectionsWithoutTopics.length > 5) {
+        log(`  ... and ${integrity.sectionsWithoutTopics.length - 5} more`);
+      }
+      allMatch = false;
+    } else {
+      logSuccess(`All ${integrity.totalSections} sections have topics`);
+    }
+
     const articlesWithRefs =
       integrity.totalArticles - integrity.articlesWithoutReferences.length;
     log(
@@ -911,7 +1415,8 @@ async function verify(config: ConvexConfig): Promise<void> {
     if (allMatch) {
       logSuccess("All primary content synced correctly!");
       log(`  - ${counts.articles} articles`);
-      log(`  - ${counts.subjects} subjects`);
+      log(`  - ${counts.subjectTopics} subject topics`);
+      log(`  - ${counts.subjectSections} subject sections`);
       log(`  - ${counts.exerciseSets} exercise sets`);
       log(`  - ${counts.exerciseQuestions} exercise questions`);
       log(`  - ${counts.articleReferences} references`);
@@ -935,13 +1440,19 @@ async function verify(config: ConvexConfig): Promise<void> {
 
 async function collectFilesystemSlugs(): Promise<{
   articleSlugs: string[];
-  subjectSlugs: string[];
+  subjectTopicSlugs: string[];
+  subjectSectionSlugs: string[];
   exerciseSetSlugs: string[];
   exerciseQuestionSlugs: string[];
 }> {
   const articleFiles = await globFiles("articles/**/*.mdx");
   const subjectFiles = await globFiles("subject/**/*.mdx");
-  const materialFiles = await globFiles("exercises/**/_data/*-material.ts");
+  const subjectMaterialFiles = await globFiles(
+    "subject/**/_data/*-material.ts"
+  );
+  const exerciseMaterialFiles = await globFiles(
+    "exercises/**/_data/*-material.ts"
+  );
   const questionFiles = await globFiles("exercises/**/_question/*.mdx");
 
   const articleSlugs = articleFiles.map((file) => {
@@ -949,13 +1460,31 @@ async function collectFilesystemSlugs(): Promise<{
     return pathInfo.slug;
   });
 
-  const subjectSlugs = subjectFiles.map((file) => {
+  const subjectSectionSlugs = subjectFiles.map((file) => {
     const pathInfo = parseSubjectPath(file);
     return pathInfo.slug;
   });
 
+  const subjectTopicSlugs: string[] = [];
+  for (const materialFile of subjectMaterialFiles) {
+    const localeMatch = materialFile.match(LOCALE_SUBJECT_MATERIAL_FILE_REGEX);
+    if (!localeMatch) {
+      continue;
+    }
+
+    const locale = localeMatch[1] as Locale;
+    try {
+      const topics = await parseSubjectMaterialFile(materialFile, locale);
+      for (const topic of topics) {
+        subjectTopicSlugs.push(topic.slug);
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }
+
   const exerciseSetSlugs: string[] = [];
-  for (const materialFile of materialFiles) {
+  for (const materialFile of exerciseMaterialFiles) {
     const localeMatch = materialFile.match(LOCALE_MATERIAL_FILE_REGEX);
     if (!localeMatch) {
       continue;
@@ -979,7 +1508,8 @@ async function collectFilesystemSlugs(): Promise<{
 
   return {
     articleSlugs,
-    subjectSlugs,
+    subjectTopicSlugs,
+    subjectSectionSlugs,
     exerciseSetSlugs,
     exerciseQuestionSlugs,
   };
@@ -1047,6 +1577,49 @@ async function runConvexMutationGeneric<T>(
   return result.value as T;
 }
 
+/**
+ * Finds and optionally deletes authors that have no linked content.
+ * Separated from main clean() to reduce cognitive complexity.
+ */
+async function cleanUnusedAuthors(
+  config: ConvexConfig,
+  force: boolean | undefined
+): Promise<void> {
+  log("\n--- UNUSED AUTHORS ---\n");
+  log("Unused authors = authors with no linked content\n");
+
+  const authorsResult = await runConvexQuery<UnusedAuthors>(
+    config,
+    "contentSync/queries:findUnusedAuthors"
+  );
+
+  if (authorsResult.unusedAuthors.length === 0) {
+    logSuccess("No unused authors found!");
+    return;
+  }
+
+  log(`Found ${authorsResult.unusedAuthors.length} unused authors:\n`);
+  for (const author of authorsResult.unusedAuthors.slice(0, 10)) {
+    log(`  - ${author.name} (@${author.username})`);
+  }
+  if (authorsResult.unusedAuthors.length > 10) {
+    log(`  ... and ${authorsResult.unusedAuthors.length - 10} more`);
+  }
+
+  if (force) {
+    const authorIds = authorsResult.unusedAuthors.map((a) => a.id);
+    const result = await runConvexMutationGeneric<DeleteResult>(
+      config,
+      "contentSync/mutations:deleteUnusedAuthors",
+      { authorIds }
+    );
+    logSuccess(`Deleted ${result.deleted} unused authors`);
+  } else {
+    log("\nTo delete unused authors, run:");
+    log("  pnpm --filter backend sync:clean --force --authors");
+  }
+}
+
 async function clean(
   config: ConvexConfig,
   options: SyncOptions
@@ -1061,13 +1634,15 @@ async function clean(
   log("Scanning filesystem...");
   const {
     articleSlugs,
-    subjectSlugs,
+    subjectTopicSlugs,
+    subjectSectionSlugs,
     exerciseSetSlugs,
     exerciseQuestionSlugs,
   } = await collectFilesystemSlugs();
 
   log(`  Articles on disk: ${articleSlugs.length}`);
-  log(`  Subjects on disk: ${subjectSlugs.length}`);
+  log(`  Subject topics on disk: ${subjectTopicSlugs.length}`);
+  log(`  Subject sections on disk: ${subjectSectionSlugs.length}`);
   log(`  Exercise sets on disk: ${exerciseSetSlugs.length}`);
   log(`  Exercise questions on disk: ${exerciseQuestionSlugs.length}`);
 
@@ -1075,12 +1650,19 @@ async function clean(
   const stale = await runConvexQueryWithArgs<StaleContent>(
     config,
     "contentSync/queries:findStaleContent",
-    { articleSlugs, subjectSlugs, exerciseSetSlugs, exerciseQuestionSlugs }
+    {
+      articleSlugs,
+      subjectTopicSlugs,
+      subjectSectionSlugs,
+      exerciseSetSlugs,
+      exerciseQuestionSlugs,
+    }
   );
 
   const totalStale =
     stale.staleArticles.length +
-    stale.staleSubjects.length +
+    stale.staleSubjectTopics.length +
+    stale.staleSubjectSections.length +
     stale.staleExerciseSets.length +
     stale.staleExerciseQuestions.length;
 
@@ -1093,93 +1675,56 @@ async function clean(
     hasStale = true;
     log(`\nFound ${totalStale} stale items:\n`);
 
-    if (stale.staleArticles.length > 0) {
-      log(`Stale articles (${stale.staleArticles.length}):`);
-      for (const item of stale.staleArticles.slice(0, 10)) {
-        log(`  - ${item.slug} (${item.locale})`);
-      }
-      if (stale.staleArticles.length > 10) {
-        log(`  ... and ${stale.staleArticles.length - 10} more`);
-      }
-    }
-
-    if (stale.staleSubjects.length > 0) {
-      log(`\nStale subjects (${stale.staleSubjects.length}):`);
-      for (const item of stale.staleSubjects.slice(0, 10)) {
-        log(`  - ${item.slug} (${item.locale})`);
-      }
-      if (stale.staleSubjects.length > 10) {
-        log(`  ... and ${stale.staleSubjects.length - 10} more`);
-      }
-    }
-
-    if (stale.staleExerciseSets.length > 0) {
-      log(`\nStale exercise sets (${stale.staleExerciseSets.length}):`);
-      for (const item of stale.staleExerciseSets.slice(0, 10)) {
-        log(`  - ${item.slug} (${item.locale})`);
-      }
-      if (stale.staleExerciseSets.length > 10) {
-        log(`  ... and ${stale.staleExerciseSets.length - 10} more`);
-      }
-    }
-
-    if (stale.staleExerciseQuestions.length > 0) {
-      log(
-        `\nStale exercise questions (${stale.staleExerciseQuestions.length}):`
-      );
-      for (const item of stale.staleExerciseQuestions.slice(0, 10)) {
-        log(`  - ${item.slug} (${item.locale})`);
-      }
-      if (stale.staleExerciseQuestions.length > 10) {
-        log(`  ... and ${stale.staleExerciseQuestions.length - 10} more`);
-      }
-    }
+    // Log all stale items by category
+    logStaleItems("Stale articles", stale.staleArticles);
+    logStaleItems("\nStale subject topics", stale.staleSubjectTopics);
+    logStaleItems("\nStale subject sections", stale.staleSubjectSections);
+    logStaleItems("\nStale exercise sets", stale.staleExerciseSets);
+    logStaleItems("\nStale exercise questions", stale.staleExerciseQuestions);
 
     if (options.force) {
       log("\nDeleting stale content...");
       deleted = true;
 
-      if (stale.staleArticles.length > 0) {
-        const articleIds = stale.staleArticles.map((a) => a.id);
-        const result = await runConvexMutationGeneric<DeleteResult>(
-          config,
-          "contentSync/mutations:deleteStaleArticles",
-          { articleIds }
-        );
-        logSuccess(`Deleted ${result.deleted} stale articles`);
-      }
+      await deleteStaleItems(
+        config,
+        "contentSync/mutations:deleteStaleArticles",
+        "articleIds",
+        stale.staleArticles,
+        "stale articles"
+      );
 
-      if (stale.staleSubjects.length > 0) {
-        const subjectIds = stale.staleSubjects.map((s) => s.id);
-        const result = await runConvexMutationGeneric<DeleteResult>(
-          config,
-          "contentSync/mutations:deleteStaleSubjects",
-          { subjectIds }
-        );
-        logSuccess(`Deleted ${result.deleted} stale subjects`);
-      }
+      await deleteStaleItems(
+        config,
+        "contentSync/mutations:deleteStaleSubjectTopics",
+        "topicIds",
+        stale.staleSubjectTopics,
+        "stale subject topics (and their sections)"
+      );
 
-      if (stale.staleExerciseSets.length > 0) {
-        const setIds = stale.staleExerciseSets.map((s) => s.id);
-        const result = await runConvexMutationGeneric<DeleteResult>(
-          config,
-          "contentSync/mutations:deleteStaleExerciseSets",
-          { setIds }
-        );
-        logSuccess(
-          `Deleted ${result.deleted} stale exercise sets (and their questions)`
-        );
-      }
+      await deleteStaleItems(
+        config,
+        "contentSync/mutations:deleteStaleSubjectSections",
+        "sectionIds",
+        stale.staleSubjectSections,
+        "stale subject sections"
+      );
 
-      if (stale.staleExerciseQuestions.length > 0) {
-        const questionIds = stale.staleExerciseQuestions.map((q) => q.id);
-        const result = await runConvexMutationGeneric<DeleteResult>(
-          config,
-          "contentSync/mutations:deleteStaleExerciseQuestions",
-          { questionIds }
-        );
-        logSuccess(`Deleted ${result.deleted} stale exercise questions`);
-      }
+      await deleteStaleItems(
+        config,
+        "contentSync/mutations:deleteStaleExerciseSets",
+        "setIds",
+        stale.staleExerciseSets,
+        "stale exercise sets (and their questions)"
+      );
+
+      await deleteStaleItems(
+        config,
+        "contentSync/mutations:deleteStaleExerciseQuestions",
+        "questionIds",
+        stale.staleExerciseQuestions,
+        "stale exercise questions"
+      );
     } else {
       log("\nTo delete stale content, run:");
       log("  pnpm --filter backend sync:clean --force");
@@ -1187,38 +1732,7 @@ async function clean(
   }
 
   if (options.authors) {
-    log("\n--- UNUSED AUTHORS ---\n");
-    log("Unused authors = authors with no linked content\n");
-
-    const authorsResult = await runConvexQuery<UnusedAuthors>(
-      config,
-      "contentSync/queries:findUnusedAuthors"
-    );
-
-    if (authorsResult.unusedAuthors.length === 0) {
-      logSuccess("No unused authors found!");
-    } else {
-      log(`Found ${authorsResult.unusedAuthors.length} unused authors:\n`);
-      for (const author of authorsResult.unusedAuthors.slice(0, 10)) {
-        log(`  - ${author.name} (@${author.username})`);
-      }
-      if (authorsResult.unusedAuthors.length > 10) {
-        log(`  ... and ${authorsResult.unusedAuthors.length - 10} more`);
-      }
-
-      if (options.force) {
-        const authorIds = authorsResult.unusedAuthors.map((a) => a.id);
-        const result = await runConvexMutationGeneric<DeleteResult>(
-          config,
-          "contentSync/mutations:deleteUnusedAuthors",
-          { authorIds }
-        );
-        logSuccess(`Deleted ${result.deleted} unused authors`);
-      } else {
-        log("\nTo delete unused authors, run:");
-        log("  pnpm --filter backend sync:clean --force --authors");
-      }
-    }
+    await cleanUnusedAuthors(config, options.force);
   }
 
   log("\n=== CLEAN COMPLETE ===");
@@ -1264,7 +1778,14 @@ async function main() {
       await syncArticles(config, options);
       break;
     case "subjects":
-      await syncSubjects(config, options);
+      await syncSubjectTopics(config, options);
+      await syncSubjectSections(config, options);
+      break;
+    case "subject-topics":
+      await syncSubjectTopics(config, options);
+      break;
+    case "subject-sections":
+      await syncSubjectSections(config, options);
       break;
     case "exercise-sets":
       await syncExerciseSets(config, options);
@@ -1293,7 +1814,9 @@ async function main() {
       log("\nUsage:");
       log("  sync:all              - Sync all content");
       log("  sync:articles         - Sync articles only");
-      log("  sync:subjects         - Sync subjects only");
+      log("  sync:subjects         - Sync subject topics and sections");
+      log("  sync:subject-topics   - Sync subject topics only");
+      log("  sync:subject-sections - Sync subject sections only");
       log("  sync:exercises        - Sync exercise sets and questions");
       log("  sync:exercise-sets    - Sync exercise sets only");
       log("  sync:exercise-questions - Sync exercise questions only");
@@ -1306,6 +1829,7 @@ async function main() {
       log("  --locale en|id  - Sync specific locale only");
       log("  --force         - Actually delete stale content (for clean)");
       log("  --authors       - Also clean unused authors (for clean)");
+      log("  --sequential    - Run sync phases sequentially (for debugging)");
       process.exit(1);
   }
 }

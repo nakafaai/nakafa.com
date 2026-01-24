@@ -54,7 +54,7 @@ import type * as routes_v1_index from "../routes/v1/index.js";
 import type * as schools_mutations from "../schools/mutations.js";
 import type * as schools_queries from "../schools/queries.js";
 import type * as schools_utils from "../schools/utils.js";
-import type * as subjectContents_mutations from "../subjectContents/mutations.js";
+import type * as subjectSections_mutations from "../subjectSections/mutations.js";
 import type * as subscriptions_mutations from "../subscriptions/mutations.js";
 import type * as subscriptions_queries from "../subscriptions/queries.js";
 import type * as subscriptions_utils from "../subscriptions/utils.js";
@@ -120,7 +120,7 @@ declare const fullApi: ApiFromModules<{
   "schools/mutations": typeof schools_mutations;
   "schools/queries": typeof schools_queries;
   "schools/utils": typeof schools_utils;
-  "subjectContents/mutations": typeof subjectContents_mutations;
+  "subjectSections/mutations": typeof subjectSections_mutations;
   "subscriptions/mutations": typeof subscriptions_mutations;
   "subscriptions/queries": typeof subscriptions_queries;
   "subscriptions/utils": typeof subscriptions_utils;

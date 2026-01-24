@@ -9,20 +9,23 @@ import {
 
 const tables = {
   /**
-   * Subject/lesson content storage.
+   * Subject section storage (individual lessons within a topic).
    * URL structure: /subject/{category}/{grade}/{material}/{topic}/{section}
    * Authors are linked via contentAuthors join table.
    */
-  subjectContents: defineTable({
+  subjectSections: defineTable({
+    /** Reference to parent subject topic */
+    topicId: v.id("subjectTopics"),
     locale: localeValidator,
-    /** Full URL path: "subject/high-school/12/mathematics/limit/concept-of-limit" */
+    /** Full URL path: "subject/high-school/12/mathematics/integral/riemann-sum" */
     slug: v.string(),
+    /** Denormalized for query performance */
     category: subjectCategoryValidator,
     grade: gradeValidator,
     material: materialValidator,
-    /** Topic slug: "limit", "integral", "derivative" */
+    /** Topic slug: "integral", "derivative-function" */
     topic: v.string(),
-    /** Section slug: "concept-of-limit", "limit-theorems" */
+    /** Section slug: "riemann-sum", "definite-integral" */
     section: v.string(),
     title: v.string(),
     description: v.optional(v.string()),
@@ -38,6 +41,7 @@ const tables = {
     syncedAt: v.number(),
   })
     .index("locale_slug", ["locale", "slug"])
+    .index("topicId", ["topicId"])
     .index("locale_category_grade_material", [
       "locale",
       "category",

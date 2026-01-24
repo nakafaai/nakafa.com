@@ -147,6 +147,55 @@ Total content synced: 1,540 items
 
 ---
 
+### Phase 1.7: Schema Refactor (COMPLETE)
+
+**Subject Schema Hierarchy**
+- Split flat `subjectContents` into parent/child relationship
+- Created `subjectTopics` (parent) with metadata
+- Created `subjectSections` (child) with content body
+- Added `topicId` foreign key on sections
+
+**Code Quality**
+- Eliminated all lint warnings in sync script
+- Extracted helper functions to reduce cognitive complexity
+- Consolidated batch size constants into single `BATCH_SIZES` object
+
+---
+
+### Phase 1.8: Performance Optimization (COMPLETE)
+
+**1. Performance Metrics**
+- Added timing per content type (duration, items/sec)
+- Added overall sync summary with total throughput
+- Human-readable duration formatting (ms/s/min)
+
+**2. Author Caching**
+- Added `buildAuthorCache()` to query unique authors once per batch
+- Added `syncContentAuthorsWithCache()` to use pre-built cache
+- Reduces N author lookups to just unique author count per batch
+
+**3. Parallel Processing**
+- Added `--parallel` flag for concurrent sync
+- Phase 1: Articles, Topics, Sets run in parallel
+- Phase 2: Sections, Questions run in parallel (after Phase 1)
+
+**4. Progress Indicators**
+- Batch progress shows percentage complete
+- ETA calculated from throughput after first batch
+- Format: `Batch 15/31 (20 items) [48%] ETA: 6.23s`
+
+**Files modified:**
+- packages/backend/scripts/sync-content.ts (metrics, parallel, progress)
+- packages/backend/convex/contentSync/mutations.ts (author caching)
+- plans/content-storage/SYNC.md (updated documentation)
+
+**Verification:**
+- pnpm lint: PASSED (0 errors, 0 warnings)
+- pnpm test: PASSED (908+ tests)
+- TypeScript check: PASSED
+
+---
+
 ### Phase 2: API Layer (NEXT)
 - Create public query functions for content retrieval
 - Add authentication/rate limiting
@@ -159,4 +208,4 @@ Total content synced: 1,540 items
 ---
 
 **Last Updated**: January 24, 2026
-**Status**: Phase 1.6 Complete - All content synced with references and authors
+**Status**: Phase 1.8 Complete - Performance optimizations implemented

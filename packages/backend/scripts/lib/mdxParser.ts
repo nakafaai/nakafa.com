@@ -3,13 +3,39 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import type { Locale } from "@repo/backend/convex/lib/contentValidators";
 import {
+  type ArticleCategory,
+  ArticleCategorySchema,
+} from "@repo/contents/_types/articles/category";
+import {
   type ContentMetadata,
   ContentMetadataSchema,
   type Reference,
   ReferenceSchema,
 } from "@repo/contents/_types/content";
+import {
+  type ExercisesCategory,
+  ExercisesCategorySchema,
+} from "@repo/contents/_types/exercises/category";
 import { ExercisesChoicesSchema } from "@repo/contents/_types/exercises/choices";
-import { ExercisesMaterialListSchema } from "@repo/contents/_types/exercises/material";
+import {
+  type ExercisesMaterial,
+  ExercisesMaterialListSchema,
+  ExercisesMaterialSchema,
+} from "@repo/contents/_types/exercises/material";
+import {
+  type ExercisesType,
+  ExercisesTypeSchema,
+} from "@repo/contents/_types/exercises/type";
+import {
+  type SubjectCategory,
+  SubjectCategorySchema,
+} from "@repo/contents/_types/subject/category";
+import { type Grade, GradeSchema } from "@repo/contents/_types/subject/grade";
+import {
+  type Material,
+  MaterialListSchema,
+  MaterialSchema,
+} from "@repo/contents/_types/subject/material";
 
 interface ParsedMdx {
   metadata: ContentMetadata;
@@ -20,7 +46,7 @@ interface ParsedMdx {
 interface ArticleParsedPath {
   type: "article";
   locale: Locale;
-  category: string;
+  category: ArticleCategory;
   articleSlug: string;
   slug: string;
 }
@@ -28,9 +54,9 @@ interface ArticleParsedPath {
 interface SubjectParsedPath {
   type: "subject";
   locale: Locale;
-  category: string;
-  grade: string;
-  material: string;
+  category: SubjectCategory;
+  grade: Grade;
+  material: Material;
   topic: string;
   section: string;
   slug: string;
@@ -39,9 +65,9 @@ interface SubjectParsedPath {
 interface ExerciseParsedPath {
   type: "exercise";
   locale: Locale;
-  category: string;
-  examType: string;
-  material: string;
+  category: ExercisesCategory;
+  examType: ExercisesType;
+  material: ExercisesMaterial;
   exerciseType: string;
   setName: string;
   number: number;
@@ -52,13 +78,25 @@ interface ExerciseParsedPath {
 interface ParsedExerciseSet {
   locale: Locale;
   slug: string;
-  category: string;
-  type: string;
-  material: string;
+  category: ExercisesCategory;
+  type: ExercisesType;
+  material: ExercisesMaterial;
   exerciseType: string;
   setName: string;
   title: string;
   description?: string;
+}
+
+interface ParsedSubjectTopic {
+  locale: Locale;
+  slug: string;
+  category: SubjectCategory;
+  grade: Grade;
+  material: Material;
+  topic: string;
+  title: string;
+  description?: string;
+  sectionCount: number;
 }
 
 export type {
@@ -67,6 +105,7 @@ export type {
   SubjectParsedPath,
   ExerciseParsedPath,
   ParsedExerciseSet,
+  ParsedSubjectTopic,
 };
 
 export type { Locale } from "@repo/backend/convex/lib/contentValidators";
@@ -87,6 +126,92 @@ const CONST_CHOICES_REGEX = /const\s+choices[^=]*=\s*(\{[\s\S]*\})\s*;/;
 const REFERENCES_REGEX =
   /export\s+const\s+references[^=]*=\s*(\[[\s\S]*?\]);?\s*$/;
 const MULTIPLE_NEWLINES_REGEX = /\n{3,}/g;
+
+/**
+ * Validation helpers for parsed path segments.
+ * These ensure type-safe parsing and fail fast on invalid paths.
+ */
+function validateArticleCategory(
+  value: string,
+  filePath: string
+): ArticleCategory {
+  const result = ArticleCategorySchema.safeParse(value);
+  if (!result.success) {
+    throw new Error(
+      `Invalid article category "${value}" in ${filePath}. Expected: politics`
+    );
+  }
+  return result.data;
+}
+
+function validateSubjectCategory(
+  value: string,
+  filePath: string
+): SubjectCategory {
+  const result = SubjectCategorySchema.safeParse(value);
+  if (!result.success) {
+    throw new Error(
+      `Invalid subject category "${value}" in ${filePath}. Expected: elementary-school, middle-school, high-school, university`
+    );
+  }
+  return result.data;
+}
+
+function validateGrade(value: string, filePath: string): Grade {
+  const result = GradeSchema.safeParse(value);
+  if (!result.success) {
+    throw new Error(
+      `Invalid grade "${value}" in ${filePath}. Expected: 1-12, bachelor, master, phd`
+    );
+  }
+  return result.data;
+}
+
+function validateMaterial(value: string, filePath: string): Material {
+  const result = MaterialSchema.safeParse(value);
+  if (!result.success) {
+    throw new Error(
+      `Invalid material "${value}" in ${filePath}. Check MaterialSchema for valid values.`
+    );
+  }
+  return result.data;
+}
+
+function validateExercisesCategory(
+  value: string,
+  filePath: string
+): ExercisesCategory {
+  const result = ExercisesCategorySchema.safeParse(value);
+  if (!result.success) {
+    throw new Error(
+      `Invalid exercises category "${value}" in ${filePath}. Expected: high-school, middle-school`
+    );
+  }
+  return result.data;
+}
+
+function validateExercisesType(value: string, filePath: string): ExercisesType {
+  const result = ExercisesTypeSchema.safeParse(value);
+  if (!result.success) {
+    throw new Error(
+      `Invalid exercises type "${value}" in ${filePath}. Expected: grade-9, tka, snbt`
+    );
+  }
+  return result.data;
+}
+
+function validateExercisesMaterial(
+  value: string,
+  filePath: string
+): ExercisesMaterial {
+  const result = ExercisesMaterialSchema.safeParse(value);
+  if (!result.success) {
+    throw new Error(
+      `Invalid exercises material "${value}" in ${filePath}. Check ExercisesMaterialSchema for valid values.`
+    );
+  }
+  return result.data;
+}
 
 /**
  * Normalize whitespace in content.
@@ -169,13 +294,14 @@ export function parseArticlePath(filePath: string): ArticleParsedPath {
     throw new Error(`Invalid article path: ${filePath}`);
   }
 
-  const [, category, articleSlug, locale] = match;
+  const [, rawCategory, articleSlug, locale] = match;
+  const category = validateArticleCategory(rawCategory.toLowerCase(), filePath);
   const slug = `articles/${category}/${articleSlug}`;
 
   return {
     type: "article",
     locale: locale as Locale,
-    category: category.toLowerCase(),
+    category,
     articleSlug,
     slug,
   };
@@ -193,7 +319,10 @@ export function parseSubjectPath(filePath: string): SubjectParsedPath {
     throw new Error(`Invalid subject path: ${filePath}`);
   }
 
-  const [, category, grade, material, topic, section, locale] = match;
+  const [, rawCategory, rawGrade, rawMaterial, topic, section, locale] = match;
+  const category = validateSubjectCategory(rawCategory, filePath);
+  const grade = validateGrade(rawGrade, filePath);
+  const material = validateMaterial(rawMaterial, filePath);
   const slug = `subject/${category}/${grade}/${material}/${topic}/${section}`;
 
   return {
@@ -222,9 +351,9 @@ export function parseExercisePath(filePath: string): ExerciseParsedPath {
 
   const [
     ,
-    category,
-    examType,
-    material,
+    rawCategory,
+    rawExamType,
+    rawMaterial,
     exerciseType,
     setName,
     numberStr,
@@ -232,6 +361,9 @@ export function parseExercisePath(filePath: string): ExerciseParsedPath {
     questionOrAnswer,
     locale,
   ] = match;
+  const category = validateExercisesCategory(rawCategory, filePath);
+  const examType = validateExercisesType(rawExamType, filePath);
+  const material = validateExercisesMaterial(rawMaterial, filePath);
   const number = Number.parseInt(numberStr, 10);
   const slug = `exercises/${category}/${examType}/${material}/${exerciseType}/${setName}/${number}`;
 
@@ -360,13 +492,15 @@ export async function readArticleReferences(
   }
 }
 
-const MATERIAL_CONST_REGEX =
-  /const\s+\w+Materials[^=]*=\s*(\[[\s\S]*?\])\s*as\s+const/;
 const BASE_PATH_REGEX = /export\s+const\s+BASE_PATH\s*=\s*["']([^"']+)["']/;
-const MATERIAL_PATH_REGEX = /exercises\/([^/]+)\/([^/]+)\/([^/]+)\/_data/;
 const LEADING_SLASH_REGEX = /^\//;
 const LAST_PATH_SEGMENT_REGEX = /\/([^/]+)$/;
 const BASE_PATH_TEMPLATE_REGEX = /\$\{BASE_PATH\}/g;
+
+const EXERCISE_MATERIAL_PATH_REGEX =
+  /exercises\/([^/]+)\/([^/]+)\/([^/]+)\/_data/;
+const EXERCISE_MATERIAL_CONST_REGEX =
+  /const\s+\w+Materials[^=]*=\s*(\[[\s\S]*?\])\s*as\s+const/;
 
 /**
  * Parse a material file to extract exercise set information.
@@ -377,16 +511,25 @@ export async function parseExerciseMaterialFile(
   locale: Locale
 ): Promise<ParsedExerciseSet[]> {
   const normalized = materialFilePath.replace(BACKSLASH_REGEX, "/");
-  const pathMatch = normalized.match(MATERIAL_PATH_REGEX);
+  const pathMatch = normalized.match(EXERCISE_MATERIAL_PATH_REGEX);
 
   if (!pathMatch) {
     throw new Error(`Invalid material file path: ${materialFilePath}`);
   }
 
-  const [, category, type, material] = pathMatch;
+  const [, rawCategory, rawType, rawMaterial] = pathMatch;
+  const validCategory = validateExercisesCategory(
+    rawCategory,
+    materialFilePath
+  );
+  const validType = validateExercisesType(rawType, materialFilePath);
+  const validMaterial = validateExercisesMaterial(
+    rawMaterial,
+    materialFilePath
+  );
 
   const indexPath = path.join(path.dirname(materialFilePath), "index.ts");
-  let basePath = `exercises/${category}/${type}/${material}`;
+  let basePath = `exercises/${validCategory}/${validType}/${validMaterial}`;
 
   try {
     const indexContent = await fs.readFile(indexPath, "utf8");
@@ -399,7 +542,7 @@ export async function parseExerciseMaterialFile(
   }
 
   const content = await fs.readFile(materialFilePath, "utf8");
-  const constMatch = content.match(MATERIAL_CONST_REGEX);
+  const constMatch = content.match(EXERCISE_MATERIAL_CONST_REGEX);
 
   if (!constMatch) {
     return [];
@@ -438,9 +581,9 @@ export async function parseExerciseMaterialFile(
       sets.push({
         locale,
         slug,
-        category,
-        type,
-        material,
+        category: validCategory,
+        type: validType,
+        material: validMaterial,
         exerciseType,
         setName,
         title: setItem.title,
@@ -450,4 +593,89 @@ export async function parseExerciseMaterialFile(
   }
 
   return sets;
+}
+
+const SUBJECT_MATERIAL_PATH_REGEX = /subject\/([^/]+)\/([^/]+)\/([^/]+)\/_data/;
+const SUBJECT_MATERIAL_CONST_REGEX =
+  /const\s+\w+Materials[^=]*=\s*(\[[\s\S]*\])(?:\s*as\s+const)?;\s*export\s+default/;
+
+/**
+ * Parse a subject material file to extract topic information.
+ * Returns all topics defined in the material file.
+ * Path: subject/{category}/{grade}/{material}/_data/{locale}-material.ts
+ */
+export async function parseSubjectMaterialFile(
+  materialFilePath: string,
+  locale: Locale
+): Promise<ParsedSubjectTopic[]> {
+  const normalized = materialFilePath.replace(BACKSLASH_REGEX, "/");
+  const pathMatch = normalized.match(SUBJECT_MATERIAL_PATH_REGEX);
+
+  if (!pathMatch) {
+    throw new Error(`Invalid subject material file path: ${materialFilePath}`);
+  }
+
+  const [, rawCategory, rawGrade, rawMaterial] = pathMatch;
+  const validCategory = validateSubjectCategory(rawCategory, materialFilePath);
+  const validGrade = validateGrade(rawGrade, materialFilePath);
+  const validMaterial = validateMaterial(rawMaterial, materialFilePath);
+
+  const indexPath = path.join(path.dirname(materialFilePath), "index.ts");
+  let basePath = `subject/${validCategory}/${validGrade}/${validMaterial}`;
+
+  try {
+    const indexContent = await fs.readFile(indexPath, "utf8");
+    const basePathMatch = indexContent.match(BASE_PATH_REGEX);
+    if (basePathMatch) {
+      basePath = basePathMatch[1].replace(LEADING_SLASH_REGEX, "");
+    }
+  } catch {
+    // Use default basePath
+  }
+
+  const content = await fs.readFile(materialFilePath, "utf8");
+  const constMatch = content.match(SUBJECT_MATERIAL_CONST_REGEX);
+
+  if (!constMatch) {
+    return [];
+  }
+
+  const arrayWithBasePath = constMatch[1].replace(
+    BASE_PATH_TEMPLATE_REGEX,
+    `/${basePath}`
+  );
+
+  const materialsArray = new Function(
+    `return ${arrayWithBasePath}`
+  )() as unknown;
+  const parseResult = MaterialListSchema.safeParse(materialsArray);
+
+  if (!parseResult.success) {
+    console.warn(
+      `Invalid subject material file ${materialFilePath}: ${parseResult.error.message}`
+    );
+    return [];
+  }
+
+  const topics: ParsedSubjectTopic[] = [];
+
+  for (const topicGroup of parseResult.data) {
+    const topicMatch = topicGroup.href.match(LAST_PATH_SEGMENT_REGEX);
+    const topic = topicMatch ? topicMatch[1] : "";
+    const slug = `${basePath}/${topic}`;
+
+    topics.push({
+      locale,
+      slug,
+      category: validCategory,
+      grade: validGrade,
+      material: validMaterial,
+      topic,
+      title: topicGroup.title,
+      description: topicGroup.description,
+      sectionCount: topicGroup.items.length,
+    });
+  }
+
+  return topics;
 }

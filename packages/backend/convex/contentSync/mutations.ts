@@ -1,3 +1,5 @@
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
 import {
   articleCategoryValidator,
@@ -16,6 +18,83 @@ function slugifyName(name: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+type ContentType = "article" | "subject" | "exercise";
+
+type AuthorCache = Map<string, Id<"authors">>;
+
+/**
+ * Builds an author cache for a batch of content items.
+ * Queries for all unique author names once and caches their IDs.
+ * Creates new author records for any names not found.
+ */
+async function buildAuthorCache(
+  ctx: MutationCtx,
+  allAuthorNames: string[]
+): Promise<AuthorCache> {
+  const cache: AuthorCache = new Map();
+  const uniqueNames = [...new Set(allAuthorNames)];
+
+  for (const name of uniqueNames) {
+    const author = await ctx.db
+      .query("authors")
+      .withIndex("name", (q) => q.eq("name", name))
+      .first();
+
+    if (author) {
+      cache.set(name, author._id);
+    } else {
+      const username = slugifyName(name);
+      const authorId = await ctx.db.insert("authors", {
+        name,
+        username,
+      });
+      cache.set(name, authorId);
+    }
+  }
+
+  return cache;
+}
+
+/**
+ * Syncs content authors using a pre-built cache for efficiency.
+ * Removes existing author links and creates new ones with correct ordering.
+ */
+async function syncContentAuthorsWithCache(
+  ctx: MutationCtx,
+  contentId:
+    | Id<"articleContents">
+    | Id<"subjectSections">
+    | Id<"exerciseQuestions">,
+  contentType: ContentType,
+  authors: Array<{ name: string }>,
+  authorCache: AuthorCache
+): Promise<void> {
+  const existingLinks = await ctx.db
+    .query("contentAuthors")
+    .withIndex("contentId_contentType", (q) =>
+      q.eq("contentId", contentId).eq("contentType", contentType)
+    )
+    .collect();
+
+  for (const link of existingLinks) {
+    await ctx.db.delete(link._id);
+  }
+
+  for (let i = 0; i < authors.length; i++) {
+    const authorName = authors[i].name;
+    const authorId = authorCache.get(authorName);
+
+    if (authorId) {
+      await ctx.db.insert("contentAuthors", {
+        contentId,
+        contentType,
+        authorId,
+        order: i,
+      });
+    }
+  }
 }
 
 export const bulkSyncArticles = internalMutation({
@@ -52,6 +131,11 @@ export const bulkSyncArticles = internalMutation({
     let updated = 0;
     let unchanged = 0;
 
+    const allAuthorNames = args.articles.flatMap((a) =>
+      a.authors.map((author) => author.name)
+    );
+    const authorCache = await buildAuthorCache(ctx, allAuthorNames);
+
     for (const article of args.articles) {
       const existing = await ctx.db
         .query("articleContents")
@@ -77,49 +161,18 @@ export const bulkSyncArticles = internalMutation({
           syncedAt: now,
         });
 
-        const articleId = existing._id;
+        await syncContentAuthorsWithCache(
+          ctx,
+          existing._id,
+          "article",
+          article.authors,
+          authorCache
+        );
 
-        const existingAuthors = await ctx.db
-          .query("contentAuthors")
-          .withIndex("contentId_contentType", (q) =>
-            q.eq("contentId", articleId).eq("contentType", "article")
-          )
-          .collect();
-
-        for (const link of existingAuthors) {
-          await ctx.db.delete(link._id);
-        }
-
-        for (let i = 0; i < article.authors.length; i++) {
-          const authorName = article.authors[i].name;
-
-          let author = await ctx.db
-            .query("authors")
-            .withIndex("name", (q) => q.eq("name", authorName))
-            .first();
-
-          if (!author) {
-            const username = slugifyName(authorName);
-            const authorId = await ctx.db.insert("authors", {
-              name: authorName,
-              username,
-            });
-            author = await ctx.db.get(authorId);
-          }
-
-          if (author) {
-            await ctx.db.insert("contentAuthors", {
-              contentId: articleId,
-              contentType: "article",
-              authorId: author._id,
-              order: i,
-            });
-          }
-        }
-
+        // Sync references: delete existing and insert new
         const existingRefs = await ctx.db
           .query("articleReferences")
-          .withIndex("articleId", (q) => q.eq("articleId", articleId))
+          .withIndex("articleId", (q) => q.eq("articleId", existing._id))
           .collect();
 
         for (const ref of existingRefs) {
@@ -129,7 +182,7 @@ export const bulkSyncArticles = internalMutation({
         for (let i = 0; i < article.references.length; i++) {
           const ref = article.references[i];
           await ctx.db.insert("articleReferences", {
-            articleId,
+            articleId: existing._id,
             title: ref.title,
             authors: ref.authors,
             year: ref.year,
@@ -156,32 +209,13 @@ export const bulkSyncArticles = internalMutation({
           syncedAt: now,
         });
 
-        for (let i = 0; i < article.authors.length; i++) {
-          const authorName = article.authors[i].name;
-
-          let author = await ctx.db
-            .query("authors")
-            .withIndex("name", (q) => q.eq("name", authorName))
-            .first();
-
-          if (!author) {
-            const username = slugifyName(authorName);
-            const newAuthorId = await ctx.db.insert("authors", {
-              name: authorName,
-              username,
-            });
-            author = await ctx.db.get(newAuthorId);
-          }
-
-          if (author) {
-            await ctx.db.insert("contentAuthors", {
-              contentId: articleId,
-              contentType: "article",
-              authorId: author._id,
-              order: i,
-            });
-          }
-        }
+        await syncContentAuthorsWithCache(
+          ctx,
+          articleId,
+          "article",
+          article.authors,
+          authorCache
+        );
 
         for (let i = 0; i < article.references.length; i++) {
           const ref = article.references[i];
@@ -206,12 +240,88 @@ export const bulkSyncArticles = internalMutation({
   },
 });
 
-export const bulkSyncSubjects = internalMutation({
+export const bulkSyncSubjectTopics = internalMutation({
   args: {
-    subjects: v.array(
+    topics: v.array(
       v.object({
         locale: localeValidator,
         slug: v.string(),
+        category: subjectCategoryValidator,
+        grade: gradeValidator,
+        material: materialValidator,
+        topic: v.string(),
+        title: v.string(),
+        description: v.optional(v.string()),
+        sectionCount: v.number(),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    let created = 0;
+    let updated = 0;
+    let unchanged = 0;
+
+    for (const topic of args.topics) {
+      const existing = await ctx.db
+        .query("subjectTopics")
+        .withIndex("locale_slug", (q) =>
+          q.eq("locale", topic.locale).eq("slug", topic.slug)
+        )
+        .first();
+
+      if (existing) {
+        const hasChanges =
+          existing.title !== topic.title ||
+          existing.description !== topic.description ||
+          existing.sectionCount !== topic.sectionCount;
+
+        if (!hasChanges) {
+          unchanged++;
+          continue;
+        }
+
+        await ctx.db.patch(existing._id, {
+          category: topic.category,
+          grade: topic.grade,
+          material: topic.material,
+          topic: topic.topic,
+          title: topic.title,
+          description: topic.description,
+          sectionCount: topic.sectionCount,
+          syncedAt: now,
+        });
+
+        updated++;
+      } else {
+        await ctx.db.insert("subjectTopics", {
+          locale: topic.locale,
+          slug: topic.slug,
+          category: topic.category,
+          grade: topic.grade,
+          material: topic.material,
+          topic: topic.topic,
+          title: topic.title,
+          description: topic.description,
+          sectionCount: topic.sectionCount,
+          syncedAt: now,
+        });
+
+        created++;
+      }
+    }
+
+    return { created, updated, unchanged };
+  },
+});
+
+export const bulkSyncSubjectSections = internalMutation({
+  args: {
+    sections: v.array(
+      v.object({
+        locale: localeValidator,
+        slug: v.string(),
+        topicSlug: v.string(),
         category: subjectCategoryValidator,
         grade: gradeValidator,
         material: materialValidator,
@@ -233,120 +343,88 @@ export const bulkSyncSubjects = internalMutation({
     let updated = 0;
     let unchanged = 0;
 
-    for (const subject of args.subjects) {
-      const existing = await ctx.db
-        .query("subjectContents")
+    const allAuthorNames = args.sections.flatMap((s) =>
+      s.authors.map((author) => author.name)
+    );
+    const authorCache = await buildAuthorCache(ctx, allAuthorNames);
+
+    for (const section of args.sections) {
+      const topicDoc = await ctx.db
+        .query("subjectTopics")
         .withIndex("locale_slug", (q) =>
-          q.eq("locale", subject.locale).eq("slug", subject.slug)
+          q.eq("locale", section.locale).eq("slug", section.topicSlug)
+        )
+        .first();
+
+      if (!topicDoc) {
+        console.warn(`Topic not found for section: ${section.slug}`);
+        continue;
+      }
+
+      const existing = await ctx.db
+        .query("subjectSections")
+        .withIndex("locale_slug", (q) =>
+          q.eq("locale", section.locale).eq("slug", section.slug)
         )
         .first();
 
       if (existing) {
-        if (existing.contentHash === subject.contentHash) {
+        if (existing.contentHash === section.contentHash) {
           unchanged++;
           continue;
         }
 
         await ctx.db.patch(existing._id, {
-          category: subject.category,
-          grade: subject.grade,
-          material: subject.material,
-          topic: subject.topic,
-          section: subject.section,
-          title: subject.title,
-          description: subject.description,
-          date: subject.date,
-          subject: subject.subject,
-          body: subject.body,
-          contentHash: subject.contentHash,
+          topicId: topicDoc._id,
+          category: section.category,
+          grade: section.grade,
+          material: section.material,
+          topic: section.topic,
+          section: section.section,
+          title: section.title,
+          description: section.description,
+          date: section.date,
+          subject: section.subject,
+          body: section.body,
+          contentHash: section.contentHash,
           syncedAt: now,
         });
 
-        const contentId = existing._id;
-
-        const existingAuthors = await ctx.db
-          .query("contentAuthors")
-          .withIndex("contentId_contentType", (q) =>
-            q.eq("contentId", contentId).eq("contentType", "subject")
-          )
-          .collect();
-
-        for (const link of existingAuthors) {
-          await ctx.db.delete(link._id);
-        }
-
-        for (let i = 0; i < subject.authors.length; i++) {
-          const authorName = subject.authors[i].name;
-
-          let author = await ctx.db
-            .query("authors")
-            .withIndex("name", (q) => q.eq("name", authorName))
-            .first();
-
-          if (!author) {
-            const username = slugifyName(authorName);
-            const authorId = await ctx.db.insert("authors", {
-              name: authorName,
-              username,
-            });
-            author = await ctx.db.get(authorId);
-          }
-
-          if (author) {
-            await ctx.db.insert("contentAuthors", {
-              contentId,
-              contentType: "subject",
-              authorId: author._id,
-              order: i,
-            });
-          }
-        }
+        await syncContentAuthorsWithCache(
+          ctx,
+          existing._id,
+          "subject",
+          section.authors,
+          authorCache
+        );
 
         updated++;
       } else {
-        const contentId = await ctx.db.insert("subjectContents", {
-          locale: subject.locale,
-          slug: subject.slug,
-          category: subject.category,
-          grade: subject.grade,
-          material: subject.material,
-          topic: subject.topic,
-          section: subject.section,
-          title: subject.title,
-          description: subject.description,
-          date: subject.date,
-          subject: subject.subject,
-          body: subject.body,
-          contentHash: subject.contentHash,
+        const contentId = await ctx.db.insert("subjectSections", {
+          topicId: topicDoc._id,
+          locale: section.locale,
+          slug: section.slug,
+          category: section.category,
+          grade: section.grade,
+          material: section.material,
+          topic: section.topic,
+          section: section.section,
+          title: section.title,
+          description: section.description,
+          date: section.date,
+          subject: section.subject,
+          body: section.body,
+          contentHash: section.contentHash,
           syncedAt: now,
         });
 
-        for (let i = 0; i < subject.authors.length; i++) {
-          const authorName = subject.authors[i].name;
-
-          let author = await ctx.db
-            .query("authors")
-            .withIndex("name", (q) => q.eq("name", authorName))
-            .first();
-
-          if (!author) {
-            const username = slugifyName(authorName);
-            const newAuthorId = await ctx.db.insert("authors", {
-              name: authorName,
-              username,
-            });
-            author = await ctx.db.get(newAuthorId);
-          }
-
-          if (author) {
-            await ctx.db.insert("contentAuthors", {
-              contentId,
-              contentType: "subject",
-              authorId: author._id,
-              order: i,
-            });
-          }
-        }
+        await syncContentAuthorsWithCache(
+          ctx,
+          contentId,
+          "subject",
+          section.authors,
+          authorCache
+        );
 
         created++;
       }
@@ -471,6 +549,11 @@ export const bulkSyncExerciseQuestions = internalMutation({
     let updated = 0;
     let unchanged = 0;
 
+    const allAuthorNames = args.questions.flatMap((q) =>
+      q.authors.map((author) => author.name)
+    );
+    const authorCache = await buildAuthorCache(ctx, allAuthorNames);
+
     for (const question of args.questions) {
       const set = await ctx.db
         .query("exerciseSets")
@@ -514,50 +597,19 @@ export const bulkSyncExerciseQuestions = internalMutation({
           syncedAt: now,
         });
 
-        const questionId = existing._id;
+        await syncContentAuthorsWithCache(
+          ctx,
+          existing._id,
+          "exercise",
+          question.authors,
+          authorCache
+        );
 
-        const existingAuthors = await ctx.db
-          .query("contentAuthors")
-          .withIndex("contentId_contentType", (q) =>
-            q.eq("contentId", questionId).eq("contentType", "exercise")
-          )
-          .collect();
-
-        for (const link of existingAuthors) {
-          await ctx.db.delete(link._id);
-        }
-
-        for (let i = 0; i < question.authors.length; i++) {
-          const authorName = question.authors[i].name;
-
-          let author = await ctx.db
-            .query("authors")
-            .withIndex("name", (q) => q.eq("name", authorName))
-            .first();
-
-          if (!author) {
-            const username = slugifyName(authorName);
-            const authorId = await ctx.db.insert("authors", {
-              name: authorName,
-              username,
-            });
-            author = await ctx.db.get(authorId);
-          }
-
-          if (author) {
-            await ctx.db.insert("contentAuthors", {
-              contentId: questionId,
-              contentType: "exercise",
-              authorId: author._id,
-              order: i,
-            });
-          }
-        }
-
+        // Sync choices: delete existing and insert new
         const existingChoices = await ctx.db
           .query("exerciseChoices")
           .withIndex("questionId_locale", (q) =>
-            q.eq("questionId", questionId).eq("locale", question.locale)
+            q.eq("questionId", existing._id).eq("locale", question.locale)
           )
           .collect();
 
@@ -567,7 +619,7 @@ export const bulkSyncExerciseQuestions = internalMutation({
 
         for (const choice of question.choices) {
           await ctx.db.insert("exerciseChoices", {
-            questionId,
+            questionId: existing._id,
             locale: question.locale,
             optionKey: choice.optionKey,
             label: choice.label,
@@ -597,32 +649,13 @@ export const bulkSyncExerciseQuestions = internalMutation({
           syncedAt: now,
         });
 
-        for (let i = 0; i < question.authors.length; i++) {
-          const authorName = question.authors[i].name;
-
-          let author = await ctx.db
-            .query("authors")
-            .withIndex("name", (q) => q.eq("name", authorName))
-            .first();
-
-          if (!author) {
-            const username = slugifyName(authorName);
-            const newAuthorId = await ctx.db.insert("authors", {
-              name: authorName,
-              username,
-            });
-            author = await ctx.db.get(newAuthorId);
-          }
-
-          if (author) {
-            await ctx.db.insert("contentAuthors", {
-              contentId: questionId,
-              contentType: "exercise",
-              authorId: author._id,
-              order: i,
-            });
-          }
-        }
+        await syncContentAuthorsWithCache(
+          ctx,
+          questionId,
+          "exercise",
+          question.authors,
+          authorCache
+        );
 
         for (const choice of question.choices) {
           await ctx.db.insert("exerciseChoices", {
@@ -689,28 +722,74 @@ export const deleteStaleArticles = internalMutation({
   },
 });
 
-export const deleteStaleSubjects = internalMutation({
+export const deleteStaleSubjectTopics = internalMutation({
   args: {
-    subjectIds: v.array(v.string()),
+    topicIds: v.array(v.string()),
   },
   handler: async (ctx, args) => {
     let deleted = 0;
 
-    for (const idStr of args.subjectIds) {
-      const subjectId = ctx.db.normalizeId("subjectContents", idStr);
-      if (!subjectId) {
+    for (const idStr of args.topicIds) {
+      const topicId = ctx.db.normalizeId("subjectTopics", idStr);
+      if (!topicId) {
         continue;
       }
 
-      const subject = await ctx.db.get(subjectId);
-      if (!subject) {
+      const topic = await ctx.db.get(topicId);
+      if (!topic) {
+        continue;
+      }
+
+      const sections = await ctx.db
+        .query("subjectSections")
+        .withIndex("topicId", (q) => q.eq("topicId", topicId))
+        .collect();
+
+      for (const section of sections) {
+        const contentAuthors = await ctx.db
+          .query("contentAuthors")
+          .withIndex("contentId_contentType", (q) =>
+            q.eq("contentId", section._id).eq("contentType", "subject")
+          )
+          .collect();
+
+        for (const link of contentAuthors) {
+          await ctx.db.delete(link._id);
+        }
+
+        await ctx.db.delete(section._id);
+      }
+
+      await ctx.db.delete(topicId);
+      deleted++;
+    }
+
+    return { deleted };
+  },
+});
+
+export const deleteStaleSubjectSections = internalMutation({
+  args: {
+    sectionIds: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    let deleted = 0;
+
+    for (const idStr of args.sectionIds) {
+      const sectionId = ctx.db.normalizeId("subjectSections", idStr);
+      if (!sectionId) {
+        continue;
+      }
+
+      const section = await ctx.db.get(sectionId);
+      if (!section) {
         continue;
       }
 
       const contentAuthors = await ctx.db
         .query("contentAuthors")
         .withIndex("contentId_contentType", (q) =>
-          q.eq("contentId", subjectId).eq("contentType", "subject")
+          q.eq("contentId", sectionId).eq("contentType", "subject")
         )
         .collect();
 
@@ -718,7 +797,7 @@ export const deleteStaleSubjects = internalMutation({
         await ctx.db.delete(link._id);
       }
 
-      await ctx.db.delete(subjectId);
+      await ctx.db.delete(sectionId);
       deleted++;
     }
 

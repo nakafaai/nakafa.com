@@ -8,12 +8,14 @@ import {
 import { v } from "convex/values";
 
 /**
- * Upsert a subject content document.
+ * Upsert a subject section document.
  * Creates if not exists, updates if contentHash changed.
+ * Requires topicId to be provided (FK to subjectTopics).
  * Returns: { id, action: "created" | "updated" | "unchanged" }
  */
-export const upsertSubjectContent = internalMutation({
+export const upsertSubjectSection = internalMutation({
   args: {
+    topicId: v.id("subjectTopics"),
     locale: localeValidator,
     slug: v.string(),
     category: subjectCategoryValidator,
@@ -32,7 +34,7 @@ export const upsertSubjectContent = internalMutation({
     const now = Date.now();
 
     const existing = await ctx.db
-      .query("subjectContents")
+      .query("subjectSections")
       .withIndex("locale_slug", (q) =>
         q.eq("locale", args.locale).eq("slug", args.slug)
       )
@@ -44,6 +46,7 @@ export const upsertSubjectContent = internalMutation({
       }
 
       await ctx.db.patch(existing._id, {
+        topicId: args.topicId,
         category: args.category,
         grade: args.grade,
         material: args.material,
@@ -61,7 +64,8 @@ export const upsertSubjectContent = internalMutation({
       return { id: existing._id, action: "updated" as const };
     }
 
-    const id = await ctx.db.insert("subjectContents", {
+    const id = await ctx.db.insert("subjectSections", {
+      topicId: args.topicId,
       locale: args.locale,
       slug: args.slug,
       category: args.category,
