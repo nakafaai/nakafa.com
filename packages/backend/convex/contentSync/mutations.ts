@@ -24,17 +24,24 @@ type ContentType = "article" | "subject" | "exercise";
 
 type AuthorCache = Map<string, Id<"authors">>;
 
+interface AuthorCacheResult {
+  cache: AuthorCache;
+  authorsCreated: number;
+}
+
 /**
  * Builds an author cache for a batch of content items.
  * Queries for all unique author names in parallel and caches their IDs.
  * Creates new author records for any names not found.
+ * Returns both the cache and count of new authors created.
  */
 async function buildAuthorCache(
   ctx: MutationCtx,
   allAuthorNames: string[]
-): Promise<AuthorCache> {
+): Promise<AuthorCacheResult> {
   const cache: AuthorCache = new Map();
   const uniqueNames = [...new Set(allAuthorNames)];
+  let authorsCreated = 0;
 
   const authorLookups = await Promise.all(
     uniqueNames.map((name) =>
@@ -56,15 +63,17 @@ async function buildAuthorCache(
         username,
       });
       cache.set(name, authorId);
+      authorsCreated++;
     }
   }
 
-  return cache;
+  return { cache, authorsCreated };
 }
 
 /**
  * Syncs content authors using a pre-built cache for efficiency.
  * Removes existing author links and creates new ones with correct ordering.
+ * Returns the number of author links created.
  */
 async function syncContentAuthorsWithCache(
   ctx: MutationCtx,
@@ -75,7 +84,7 @@ async function syncContentAuthorsWithCache(
   contentType: ContentType,
   authors: Array<{ name: string }>,
   authorCache: AuthorCache
-): Promise<void> {
+): Promise<number> {
   const existingLinks = await ctx.db
     .query("contentAuthors")
     .withIndex("contentId_contentType", (q) =>
@@ -87,6 +96,7 @@ async function syncContentAuthorsWithCache(
     await ctx.db.delete(link._id);
   }
 
+  let linksCreated = 0;
   for (let i = 0; i < authors.length; i++) {
     const authorName = authors[i].name;
     const authorId = authorCache.get(authorName);
@@ -98,8 +108,11 @@ async function syncContentAuthorsWithCache(
         authorId,
         order: i,
       });
+      linksCreated++;
     }
   }
+
+  return linksCreated;
 }
 
 export const bulkSyncArticles = internalMutation({
@@ -135,11 +148,16 @@ export const bulkSyncArticles = internalMutation({
     let created = 0;
     let updated = 0;
     let unchanged = 0;
+    let referencesCreated = 0;
+    let authorLinksCreated = 0;
 
     const allAuthorNames = args.articles.flatMap((a) =>
       a.authors.map((author) => author.name)
     );
-    const authorCache = await buildAuthorCache(ctx, allAuthorNames);
+    const { cache: authorCache, authorsCreated } = await buildAuthorCache(
+      ctx,
+      allAuthorNames
+    );
 
     for (const article of args.articles) {
       const existing = await ctx.db
@@ -166,7 +184,7 @@ export const bulkSyncArticles = internalMutation({
           syncedAt: now,
         });
 
-        await syncContentAuthorsWithCache(
+        authorLinksCreated += await syncContentAuthorsWithCache(
           ctx,
           existing._id,
           "article",
@@ -174,7 +192,6 @@ export const bulkSyncArticles = internalMutation({
           authorCache
         );
 
-        // Sync references: delete existing and insert new
         const existingRefs = await ctx.db
           .query("articleReferences")
           .withIndex("articleId", (q) => q.eq("articleId", existing._id))
@@ -197,6 +214,7 @@ export const bulkSyncArticles = internalMutation({
             details: ref.details,
             order: i,
           });
+          referencesCreated++;
         }
 
         updated++;
@@ -214,7 +232,7 @@ export const bulkSyncArticles = internalMutation({
           syncedAt: now,
         });
 
-        await syncContentAuthorsWithCache(
+        authorLinksCreated += await syncContentAuthorsWithCache(
           ctx,
           articleId,
           "article",
@@ -235,13 +253,21 @@ export const bulkSyncArticles = internalMutation({
             details: ref.details,
             order: i,
           });
+          referencesCreated++;
         }
 
         created++;
       }
     }
 
-    return { created, updated, unchanged };
+    return {
+      created,
+      updated,
+      unchanged,
+      referencesCreated,
+      authorLinksCreated,
+      authorsCreated,
+    };
   },
 });
 
@@ -347,11 +373,15 @@ export const bulkSyncSubjectSections = internalMutation({
     let created = 0;
     let updated = 0;
     let unchanged = 0;
+    let authorLinksCreated = 0;
 
     const allAuthorNames = args.sections.flatMap((s) =>
       s.authors.map((author) => author.name)
     );
-    const authorCache = await buildAuthorCache(ctx, allAuthorNames);
+    const { cache: authorCache, authorsCreated } = await buildAuthorCache(
+      ctx,
+      allAuthorNames
+    );
 
     for (const section of args.sections) {
       const topicDoc = await ctx.db
@@ -395,7 +425,7 @@ export const bulkSyncSubjectSections = internalMutation({
           syncedAt: now,
         });
 
-        await syncContentAuthorsWithCache(
+        authorLinksCreated += await syncContentAuthorsWithCache(
           ctx,
           existing._id,
           "subject",
@@ -423,7 +453,7 @@ export const bulkSyncSubjectSections = internalMutation({
           syncedAt: now,
         });
 
-        await syncContentAuthorsWithCache(
+        authorLinksCreated += await syncContentAuthorsWithCache(
           ctx,
           contentId,
           "subject",
@@ -435,7 +465,7 @@ export const bulkSyncSubjectSections = internalMutation({
       }
     }
 
-    return { created, updated, unchanged };
+    return { created, updated, unchanged, authorLinksCreated, authorsCreated };
   },
 });
 
@@ -553,11 +583,16 @@ export const bulkSyncExerciseQuestions = internalMutation({
     let created = 0;
     let updated = 0;
     let unchanged = 0;
+    let choicesCreated = 0;
+    let authorLinksCreated = 0;
 
     const allAuthorNames = args.questions.flatMap((q) =>
       q.authors.map((author) => author.name)
     );
-    const authorCache = await buildAuthorCache(ctx, allAuthorNames);
+    const { cache: authorCache, authorsCreated } = await buildAuthorCache(
+      ctx,
+      allAuthorNames
+    );
 
     for (const question of args.questions) {
       const set = await ctx.db
@@ -602,7 +637,7 @@ export const bulkSyncExerciseQuestions = internalMutation({
           syncedAt: now,
         });
 
-        await syncContentAuthorsWithCache(
+        authorLinksCreated += await syncContentAuthorsWithCache(
           ctx,
           existing._id,
           "exercise",
@@ -610,7 +645,6 @@ export const bulkSyncExerciseQuestions = internalMutation({
           authorCache
         );
 
-        // Sync choices: delete existing and insert new
         const existingChoices = await ctx.db
           .query("exerciseChoices")
           .withIndex("questionId_locale", (q) =>
@@ -631,6 +665,7 @@ export const bulkSyncExerciseQuestions = internalMutation({
             isCorrect: choice.isCorrect,
             order: choice.order,
           });
+          choicesCreated++;
         }
 
         updated++;
@@ -654,7 +689,7 @@ export const bulkSyncExerciseQuestions = internalMutation({
           syncedAt: now,
         });
 
-        await syncContentAuthorsWithCache(
+        authorLinksCreated += await syncContentAuthorsWithCache(
           ctx,
           questionId,
           "exercise",
@@ -671,13 +706,21 @@ export const bulkSyncExerciseQuestions = internalMutation({
             isCorrect: choice.isCorrect,
             order: choice.order,
           });
+          choicesCreated++;
         }
 
         created++;
       }
     }
 
-    return { created, updated, unchanged };
+    return {
+      created,
+      updated,
+      unchanged,
+      choicesCreated,
+      authorLinksCreated,
+      authorsCreated,
+    };
   },
 });
 

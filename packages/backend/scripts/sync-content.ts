@@ -90,6 +90,8 @@ interface SyncOptions {
   sequential?: boolean;
   incremental?: boolean;
   prod?: boolean;
+  /** Suppress per-batch logging (used during parallel execution) */
+  quiet?: boolean;
 }
 
 /**
@@ -237,6 +239,43 @@ function formatDuration(ms: number): string {
   return `${minutes}m ${seconds}s`;
 }
 
+/**
+ * Format sync result for clean summary output.
+ * Example: "14 synced (14 new) + 232 refs, 28 authors"
+ */
+function formatSyncResult(result: SyncResult): string {
+  const total = result.created + result.updated + result.unchanged;
+  const parts: string[] = [];
+  if (result.created > 0) {
+    parts.push(`${result.created} new`);
+  }
+  if (result.updated > 0) {
+    parts.push(`${result.updated} updated`);
+  }
+  if (parts.length === 0) {
+    parts.push("up to date");
+  }
+
+  let output = `${total} synced (${parts.join(", ")})`;
+
+  const related: string[] = [];
+  if (result.referencesCreated && result.referencesCreated > 0) {
+    related.push(`${result.referencesCreated} refs`);
+  }
+  if (result.choicesCreated && result.choicesCreated > 0) {
+    related.push(`${result.choicesCreated} choices`);
+  }
+  if (result.authorLinksCreated && result.authorLinksCreated > 0) {
+    related.push(`${result.authorLinksCreated} author links`);
+  }
+
+  if (related.length > 0) {
+    output += ` + ${related.join(", ")}`;
+  }
+
+  return output;
+}
+
 function logPhaseMetrics(phase: PhaseMetrics): void {
   const duration = phase.durationMs ? formatDuration(phase.durationMs) : "N/A";
   const rate = phase.itemsPerSecond ? phase.itemsPerSecond.toFixed(1) : "N/A";
@@ -321,6 +360,10 @@ interface SyncResult {
   unchanged: number;
   durationMs?: number;
   itemsPerSecond?: number;
+  referencesCreated?: number;
+  choicesCreated?: number;
+  authorLinksCreated?: number;
+  authorsCreated?: number;
 }
 
 interface ConvexConfig {
@@ -574,16 +617,27 @@ async function syncArticles(
   options: SyncOptions
 ): Promise<SyncResult> {
   const startTime = performance.now();
-  log("\n--- ARTICLES ---\n");
+  if (!options.quiet) {
+    log("\n--- ARTICLES ---\n");
+  }
 
   const pattern = options.locale
     ? `articles/**/${options.locale}.mdx`
     : "articles/**/*.mdx";
 
   const files = await globFiles(pattern);
-  log(`Files found: ${files.length}`);
+  if (!options.quiet) {
+    log(`Files found: ${files.length}`);
+  }
 
-  const totals: SyncResult = { created: 0, updated: 0, unchanged: 0 };
+  const totals: SyncResult = {
+    created: 0,
+    updated: 0,
+    unchanged: 0,
+    referencesCreated: 0,
+    authorLinksCreated: 0,
+    authorsCreated: 0,
+  };
   const articles: Array<{
     locale: Locale;
     slug: string;
@@ -637,7 +691,7 @@ async function syncArticles(
     }
   }
 
-  if (errors.length > 0) {
+  if (errors.length > 0 && !options.quiet) {
     log(`Parse errors: ${errors.length}`);
     for (const err of errors) {
       logError(err);
@@ -650,7 +704,9 @@ async function syncArticles(
   for (let i = 0; i < articles.length; i += BATCH_SIZES.articles) {
     const batch = articles.slice(i, i + BATCH_SIZES.articles);
     const batchNum = Math.floor(i / BATCH_SIZES.articles) + 1;
-    log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
+    if (!options.quiet) {
+      log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
+    }
 
     const result = await runConvexMutation(
       config,
@@ -661,6 +717,12 @@ async function syncArticles(
     totals.created += result.created;
     totals.updated += result.updated;
     totals.unchanged += result.unchanged;
+    totals.referencesCreated =
+      (totals.referencesCreated || 0) + (result.referencesCreated || 0);
+    totals.authorLinksCreated =
+      (totals.authorLinksCreated || 0) + (result.authorLinksCreated || 0);
+    totals.authorsCreated =
+      (totals.authorsCreated || 0) + (result.authorsCreated || 0);
     updateBatchProgress(progress, batch.length);
   }
 
@@ -668,17 +730,24 @@ async function syncArticles(
   const durationMs = performance.now() - startTime;
   const itemsPerSecond = durationMs > 0 ? (processed / durationMs) * 1000 : 0;
 
-  log(
-    `\nResult: ${totals.created} created, ${totals.updated} updated, ${totals.unchanged} unchanged`
-  );
-  log(
-    `Time: ${formatDuration(durationMs)} (${itemsPerSecond.toFixed(1)} items/sec)`
-  );
+  if (!options.quiet) {
+    log(
+      `\nResult: ${totals.created} created, ${totals.updated} updated, ${totals.unchanged} unchanged`
+    );
+    if (totals.referencesCreated || totals.authorLinksCreated) {
+      log(
+        `Related: ${totals.referencesCreated || 0} references, ${totals.authorLinksCreated || 0} author links`
+      );
+    }
+    log(
+      `Time: ${formatDuration(durationMs)} (${itemsPerSecond.toFixed(1)} items/sec)`
+    );
 
-  if (processed === articles.length) {
-    logSuccess(`${processed}/${files.length} files synced`);
-  } else {
-    logError(`Mismatch: ${processed} processed vs ${articles.length} parsed`);
+    if (processed === articles.length) {
+      logSuccess(`${processed}/${files.length} files synced`);
+    } else {
+      logError(`Mismatch: ${processed} processed vs ${articles.length} parsed`);
+    }
   }
 
   return { ...totals, durationMs, itemsPerSecond };
@@ -691,14 +760,18 @@ async function syncSubjectTopics(
   options: SyncOptions
 ): Promise<SyncResult> {
   const startTime = performance.now();
-  log("\n--- SUBJECT TOPICS ---\n");
+  if (!options.quiet) {
+    log("\n--- SUBJECT TOPICS ---\n");
+  }
 
   const pattern = options.locale
     ? `subject/**/_data/${options.locale}-material.ts`
     : "subject/**/_data/*-material.ts";
 
   const materialFiles = await globFiles(pattern);
-  log(`Material files found: ${materialFiles.length}`);
+  if (!options.quiet) {
+    log(`Material files found: ${materialFiles.length}`);
+  }
 
   const totals: SyncResult = { created: 0, updated: 0, unchanged: 0 };
   const topics: Array<{
@@ -745,14 +818,16 @@ async function syncSubjectTopics(
     }
   }
 
-  if (errors.length > 0) {
+  if (errors.length > 0 && !options.quiet) {
     log(`Parse errors: ${errors.length}`);
     for (const err of errors) {
       logError(err);
     }
   }
 
-  log(`Topics parsed: ${topics.length}`);
+  if (!options.quiet) {
+    log(`Topics parsed: ${topics.length}`);
+  }
 
   const totalBatches = Math.ceil(topics.length / BATCH_SIZES.subjectTopics);
   const progress = createBatchProgress(
@@ -763,7 +838,9 @@ async function syncSubjectTopics(
   for (let i = 0; i < topics.length; i += BATCH_SIZES.subjectTopics) {
     const batch = topics.slice(i, i + BATCH_SIZES.subjectTopics);
     const batchNum = Math.floor(i / BATCH_SIZES.subjectTopics) + 1;
-    log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
+    if (!options.quiet) {
+      log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
+    }
 
     const result = await runConvexMutation(
       config,
@@ -781,17 +858,19 @@ async function syncSubjectTopics(
   const durationMs = performance.now() - startTime;
   const itemsPerSecond = durationMs > 0 ? (processed / durationMs) * 1000 : 0;
 
-  log(
-    `\nResult: ${totals.created} created, ${totals.updated} updated, ${totals.unchanged} unchanged`
-  );
-  log(
-    `Time: ${formatDuration(durationMs)} (${itemsPerSecond.toFixed(1)} items/sec)`
-  );
+  if (!options.quiet) {
+    log(
+      `\nResult: ${totals.created} created, ${totals.updated} updated, ${totals.unchanged} unchanged`
+    );
+    log(
+      `Time: ${formatDuration(durationMs)} (${itemsPerSecond.toFixed(1)} items/sec)`
+    );
 
-  if (processed === topics.length) {
-    logSuccess(`${processed} subject topics synced`);
-  } else {
-    logError(`Mismatch: ${processed} processed vs ${topics.length} parsed`);
+    if (processed === topics.length) {
+      logSuccess(`${processed} subject topics synced`);
+    } else {
+      logError(`Mismatch: ${processed} processed vs ${topics.length} parsed`);
+    }
   }
 
   return { ...totals, durationMs, itemsPerSecond };
@@ -802,16 +881,26 @@ async function syncSubjectSections(
   options: SyncOptions
 ): Promise<SyncResult> {
   const startTime = performance.now();
-  log("\n--- SUBJECT SECTIONS ---\n");
+  if (!options.quiet) {
+    log("\n--- SUBJECT SECTIONS ---\n");
+  }
 
   const pattern = options.locale
     ? `subject/**/${options.locale}.mdx`
     : "subject/**/*.mdx";
 
   const files = await globFiles(pattern);
-  log(`Files found: ${files.length}`);
+  if (!options.quiet) {
+    log(`Files found: ${files.length}`);
+  }
 
-  const totals: SyncResult = { created: 0, updated: 0, unchanged: 0 };
+  const totals: SyncResult = {
+    created: 0,
+    updated: 0,
+    unchanged: 0,
+    authorLinksCreated: 0,
+    authorsCreated: 0,
+  };
   const sections: Array<{
     locale: Locale;
     slug: string;
@@ -864,7 +953,7 @@ async function syncSubjectSections(
     }
   }
 
-  if (errors.length > 0) {
+  if (errors.length > 0 && !options.quiet) {
     log(`Parse errors: ${errors.length}`);
     for (const err of errors) {
       logError(err);
@@ -880,7 +969,9 @@ async function syncSubjectSections(
   for (let i = 0; i < sections.length; i += BATCH_SIZES.subjectSections) {
     const batch = sections.slice(i, i + BATCH_SIZES.subjectSections);
     const batchNum = Math.floor(i / BATCH_SIZES.subjectSections) + 1;
-    log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
+    if (!options.quiet) {
+      log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
+    }
 
     const result = await runConvexMutation(
       config,
@@ -891,6 +982,10 @@ async function syncSubjectSections(
     totals.created += result.created;
     totals.updated += result.updated;
     totals.unchanged += result.unchanged;
+    totals.authorLinksCreated =
+      (totals.authorLinksCreated || 0) + (result.authorLinksCreated || 0);
+    totals.authorsCreated =
+      (totals.authorsCreated || 0) + (result.authorsCreated || 0);
     updateBatchProgress(progress, batch.length);
   }
 
@@ -898,17 +993,22 @@ async function syncSubjectSections(
   const durationMs = performance.now() - startTime;
   const itemsPerSecond = durationMs > 0 ? (processed / durationMs) * 1000 : 0;
 
-  log(
-    `\nResult: ${totals.created} created, ${totals.updated} updated, ${totals.unchanged} unchanged`
-  );
-  log(
-    `Time: ${formatDuration(durationMs)} (${itemsPerSecond.toFixed(1)} items/sec)`
-  );
+  if (!options.quiet) {
+    log(
+      `\nResult: ${totals.created} created, ${totals.updated} updated, ${totals.unchanged} unchanged`
+    );
+    if (totals.authorLinksCreated) {
+      log(`Related: ${totals.authorLinksCreated} author links`);
+    }
+    log(
+      `Time: ${formatDuration(durationMs)} (${itemsPerSecond.toFixed(1)} items/sec)`
+    );
 
-  if (processed === sections.length) {
-    logSuccess(`${processed}/${files.length} files synced`);
-  } else {
-    logError(`Mismatch: ${processed} processed vs ${sections.length} parsed`);
+    if (processed === sections.length) {
+      logSuccess(`${processed}/${files.length} files synced`);
+    } else {
+      logError(`Mismatch: ${processed} processed vs ${sections.length} parsed`);
+    }
   }
 
   return { ...totals, durationMs, itemsPerSecond };
@@ -919,14 +1019,18 @@ async function syncExerciseSets(
   options: SyncOptions
 ): Promise<SyncResult> {
   const startTime = performance.now();
-  log("\n--- EXERCISE SETS ---\n");
+  if (!options.quiet) {
+    log("\n--- EXERCISE SETS ---\n");
+  }
 
   const pattern = options.locale
     ? `exercises/**/_data/${options.locale}-material.ts`
     : "exercises/**/_data/*-material.ts";
 
   const materialFiles = await globFiles(pattern);
-  log(`Material files found: ${materialFiles.length}`);
+  if (!options.quiet) {
+    log(`Material files found: ${materialFiles.length}`);
+  }
 
   const totals: SyncResult = { created: 0, updated: 0, unchanged: 0 };
   const sets: Array<{
@@ -987,14 +1091,16 @@ async function syncExerciseSets(
     }
   }
 
-  if (errors.length > 0) {
+  if (errors.length > 0 && !options.quiet) {
     log(`Parse errors: ${errors.length}`);
     for (const err of errors) {
       logError(err);
     }
   }
 
-  log(`Sets parsed: ${sets.length}`);
+  if (!options.quiet) {
+    log(`Sets parsed: ${sets.length}`);
+  }
 
   const totalBatches = Math.ceil(sets.length / BATCH_SIZES.exerciseSets);
   const progress = createBatchProgress(sets.length, BATCH_SIZES.exerciseSets);
@@ -1002,7 +1108,9 @@ async function syncExerciseSets(
   for (let i = 0; i < sets.length; i += BATCH_SIZES.exerciseSets) {
     const batch = sets.slice(i, i + BATCH_SIZES.exerciseSets);
     const batchNum = Math.floor(i / BATCH_SIZES.exerciseSets) + 1;
-    log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
+    if (!options.quiet) {
+      log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
+    }
 
     const result = await runConvexMutation(
       config,
@@ -1020,17 +1128,19 @@ async function syncExerciseSets(
   const durationMs = performance.now() - startTime;
   const itemsPerSecond = durationMs > 0 ? (processed / durationMs) * 1000 : 0;
 
-  log(
-    `\nResult: ${totals.created} created, ${totals.updated} updated, ${totals.unchanged} unchanged`
-  );
-  log(
-    `Time: ${formatDuration(durationMs)} (${itemsPerSecond.toFixed(1)} items/sec)`
-  );
+  if (!options.quiet) {
+    log(
+      `\nResult: ${totals.created} created, ${totals.updated} updated, ${totals.unchanged} unchanged`
+    );
+    log(
+      `Time: ${formatDuration(durationMs)} (${itemsPerSecond.toFixed(1)} items/sec)`
+    );
 
-  if (processed === sets.length) {
-    logSuccess(`${processed} exercise sets synced`);
-  } else {
-    logError(`Mismatch: ${processed} processed vs ${sets.length} parsed`);
+    if (processed === sets.length) {
+      logSuccess(`${processed} exercise sets synced`);
+    } else {
+      logError(`Mismatch: ${processed} processed vs ${sets.length} parsed`);
+    }
   }
 
   return { ...totals, durationMs, itemsPerSecond };
@@ -1041,16 +1151,27 @@ async function syncExerciseQuestions(
   options: SyncOptions
 ): Promise<SyncResult> {
   const startTime = performance.now();
-  log("\n--- EXERCISE QUESTIONS ---\n");
+  if (!options.quiet) {
+    log("\n--- EXERCISE QUESTIONS ---\n");
+  }
 
   const pattern = options.locale
     ? `exercises/**/_question/${options.locale}.mdx`
     : "exercises/**/_question/*.mdx";
 
   const questionFiles = await globFiles(pattern);
-  log(`Files found: ${questionFiles.length} (question files only)`);
+  if (!options.quiet) {
+    log(`Files found: ${questionFiles.length} (question files only)`);
+  }
 
-  const totals: SyncResult = { created: 0, updated: 0, unchanged: 0 };
+  const totals: SyncResult = {
+    created: 0,
+    updated: 0,
+    unchanged: 0,
+    choicesCreated: 0,
+    authorLinksCreated: 0,
+    authorsCreated: 0,
+  };
   const questions: Array<{
     locale: Locale;
     slug: string;
@@ -1136,7 +1257,7 @@ async function syncExerciseQuestions(
     }
   }
 
-  if (errors.length > 0) {
+  if (errors.length > 0 && !options.quiet) {
     log(`Parse errors: ${errors.length}`);
     for (const err of errors) {
       logError(err);
@@ -1154,7 +1275,9 @@ async function syncExerciseQuestions(
   for (let i = 0; i < questions.length; i += BATCH_SIZES.exerciseQuestions) {
     const batch = questions.slice(i, i + BATCH_SIZES.exerciseQuestions);
     const batchNum = Math.floor(i / BATCH_SIZES.exerciseQuestions) + 1;
-    log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
+    if (!options.quiet) {
+      log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
+    }
 
     const result = await runConvexMutation(
       config,
@@ -1165,6 +1288,12 @@ async function syncExerciseQuestions(
     totals.created += result.created;
     totals.updated += result.updated;
     totals.unchanged += result.unchanged;
+    totals.choicesCreated =
+      (totals.choicesCreated || 0) + (result.choicesCreated || 0);
+    totals.authorLinksCreated =
+      (totals.authorLinksCreated || 0) + (result.authorLinksCreated || 0);
+    totals.authorsCreated =
+      (totals.authorsCreated || 0) + (result.authorsCreated || 0);
     updateBatchProgress(progress, batch.length);
   }
 
@@ -1172,19 +1301,28 @@ async function syncExerciseQuestions(
   const durationMs = performance.now() - startTime;
   const itemsPerSecond = durationMs > 0 ? (processed / durationMs) * 1000 : 0;
 
-  log(
-    `\nResult: ${totals.created} created, ${totals.updated} updated, ${totals.unchanged} unchanged`
-  );
-  log(
-    `Time: ${formatDuration(durationMs)} (${itemsPerSecond.toFixed(1)} items/sec)`
-  );
-
-  if (processed === questions.length) {
-    logSuccess(
-      `${processed}/${questionFiles.length} exercise questions synced`
+  if (!options.quiet) {
+    log(
+      `\nResult: ${totals.created} created, ${totals.updated} updated, ${totals.unchanged} unchanged`
     );
-  } else {
-    logError(`Mismatch: ${processed} processed vs ${questions.length} parsed`);
+    if (totals.choicesCreated || totals.authorLinksCreated) {
+      log(
+        `Related: ${totals.choicesCreated || 0} choices, ${totals.authorLinksCreated || 0} author links`
+      );
+    }
+    log(
+      `Time: ${formatDuration(durationMs)} (${itemsPerSecond.toFixed(1)} items/sec)`
+    );
+
+    if (processed === questions.length) {
+      logSuccess(
+        `${processed}/${questionFiles.length} exercise questions synced`
+      );
+    } else {
+      logError(
+        `Mismatch: ${processed} processed vs ${questions.length} parsed`
+      );
+    }
   }
 
   return { ...totals, durationMs, itemsPerSecond };
@@ -1253,13 +1391,16 @@ async function syncAll(
         exerciseQuestionResult.unchanged
     );
   } else {
-    log("Phase 1: Syncing independent content (articles, topics, sets)...\n");
+    // Parallel execution with quiet mode to avoid interleaved output
+    const quietOptions = { ...options, quiet: true };
+
+    log("Phase 1: Syncing articles, topics, and sets...");
     const phase1Start = performance.now();
 
     const [articles, topics, sets] = await Promise.all([
-      syncArticles(config, options),
-      syncSubjectTopics(config, options),
-      syncExerciseSets(config, options),
+      syncArticles(config, quietOptions),
+      syncSubjectTopics(config, quietOptions),
+      syncExerciseSets(config, quietOptions),
     ]);
 
     articleResult = articles;
@@ -1267,21 +1408,30 @@ async function syncAll(
     exerciseSetResult = sets;
 
     const phase1Duration = performance.now() - phase1Start;
-    log(`\nPhase 1 complete in ${formatDuration(phase1Duration)}`);
 
-    log("\nPhase 2: Syncing dependent content (sections, questions)...\n");
+    // Print Phase 1 results cleanly
+    log(`  Articles:       ${formatSyncResult(articleResult)}`);
+    log(`  Subject Topics: ${formatSyncResult(subjectTopicResult)}`);
+    log(`  Exercise Sets:  ${formatSyncResult(exerciseSetResult)}`);
+    log(`  Duration: ${formatDuration(phase1Duration)}\n`);
+
+    log("Phase 2: Syncing sections and questions...");
     const phase2Start = performance.now();
 
     const [sections, questions] = await Promise.all([
-      syncSubjectSections(config, options),
-      syncExerciseQuestions(config, options),
+      syncSubjectSections(config, quietOptions),
+      syncExerciseQuestions(config, quietOptions),
     ]);
 
     subjectSectionResult = sections;
     exerciseQuestionResult = questions;
 
     const phase2Duration = performance.now() - phase2Start;
-    log(`\nPhase 2 complete in ${formatDuration(phase2Duration)}`);
+
+    // Print Phase 2 results cleanly
+    log(`  Subject Sections:   ${formatSyncResult(subjectSectionResult)}`);
+    log(`  Exercise Questions: ${formatSyncResult(exerciseQuestionResult)}`);
+    log(`  Duration: ${formatDuration(phase2Duration)}`);
 
     addPhaseMetrics(metrics, "Articles", articleResult);
     addPhaseMetrics(metrics, "Subject Topics", subjectTopicResult);
