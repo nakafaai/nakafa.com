@@ -1,192 +1,87 @@
-# Content Sync Guide
+# Content Sync - Planning Document
 
-Sync MDX content from filesystem to Convex database.
+> **Main Documentation**: See `packages/backend/scripts/README.md` for the authoritative sync guide.
 
-## Quick Start
+This document contains planning notes and implementation details for the content sync system.
+
+## Architecture Overview
+
+```
+packages/contents/           # Source MDX files
+    |
+    v
+packages/backend/scripts/
+    sync-content.ts          # Sync orchestration
+    lib/mdxParser.ts         # MDX parsing
+    |
+    v
+packages/backend/convex/
+    contentSync/
+        mutations.ts         # Bulk sync mutations (internal)
+        queries.ts           # Verification queries (internal)
+    |
+    v
+Convex Database
+    articleContents          # Article storage
+    articleReferences        # Normalized citations
+    subjectTopics            # Topic metadata
+    subjectSections          # Section content
+    exerciseSets             # Exercise set metadata
+    exerciseQuestions        # Question content
+    exerciseChoices          # Answer options
+    authors                  # Shared author profiles
+    contentAuthors           # N:M content-author links
+```
+
+## Design Decisions
+
+### 1. Normalized Schema
+- **Why**: Articles can have 50+ references, exercises have 5 choices each
+- **Trade-off**: More joins vs. Convex array limits
+- **Result**: Separate tables for references, choices, and author links
+
+### 2. Polymorphic contentAuthors
+- **Why**: Single join table for all content types (articles, subjects, exercises)
+- **Trade-off**: String contentId vs. typed ID
+- **Result**: Simpler schema, compound index for efficient lookups
+
+### 3. Internal Mutations Only
+- **Why**: Sync is admin-only, not exposed to clients
+- **Security**: All mutations use `internalMutation`
+- **Access**: Only via CLI scripts with Convex auth token
+
+### 4. Hash-based Change Detection
+- **Why**: Skip unchanged content during sync
+- **Implementation**: SHA-256 of body + authors + references/choices
+- **Result**: Incremental syncs are fast
+
+### 5. Batched Operations
+- **Why**: Convex has 1-second mutation limit, 16K document write limit
+- **Batch sizes**: 50 articles, 20 sections, 30 questions per mutation
+- **Delete batches**: 500 items per batch
+
+## Quick Reference
 
 ```bash
-# Sync to development (default)
-pnpm --filter backend sync:full
+# Development
+pnpm --filter backend sync:full        # Full sync
+pnpm --filter backend sync:incremental # Changed files only
+pnpm --filter backend sync:verify      # Check database
 
-# Sync to production
-pnpm --filter backend sync:prod
+# Production
+npx convex deploy                      # Deploy functions first
+pnpm --filter backend sync:prod        # Sync content
+
+# Reset
+pnpm --filter backend sync:reset --force  # Delete all content
 ```
 
-## Setup
+## Related Documents
 
-### 1. Authenticate with Convex
-
-```bash
-cd packages/backend
-npx convex dev
-```
-
-This stores your access token in `~/.convex/config.json`.
-
-### 2. Configure Environment
-
-Add to `packages/backend/.env.local`:
-
-```bash
-# Development (created by npx convex dev)
-CONVEX_URL=https://your-dev-project.convex.cloud
-
-# Production (find in Convex Dashboard → Settings → Deployment URL)
-CONVEX_PROD_URL=https://your-prod-project.convex.cloud
-```
-
-### 3. Deploy Functions to Production
-
-Before syncing to production, deploy the sync functions:
-
-```bash
-npx convex deploy
-```
-
-## Commands
-
-| Command | Description |
-|---------|-------------|
-| `sync:full` | Full sync + clean + verify (recommended) |
-| `sync:incremental` | Sync only changed files (fast) |
-| `sync:validate` | Validate without syncing (for CI) |
-| `sync:all` | Sync all content |
-| `sync:verify` | Verify database matches filesystem |
-| `sync:clean` | Find/remove stale content |
-| `sync:reset` | Delete ALL synced content (requires --force) |
-| `sync:prod` | Full sync to production |
-| `sync:prod:incremental` | Incremental sync to production |
-| `sync:prod:verify` | Verify production database |
-| `sync:prod:clean` | Clean stale content in production |
-| `sync:prod:reset` | Delete ALL content in production (requires --force) |
-
-### Options
-
-| Option | Description |
-|--------|-------------|
-| `--prod` | Target production database |
-| `--locale en\|id` | Sync specific locale only |
-| `--force` | Actually delete content (for clean/reset) |
-| `--authors` | Also delete authors (for clean/reset) |
-| `--sequential` | Run phases sequentially (debugging) |
-
-## Development Workflow
-
-```bash
-# First time: full sync
-pnpm --filter backend sync:full
-
-# Daily: incremental sync (only changed files)
-pnpm --filter backend sync:incremental
-
-# Before commit: validate content
-pnpm --filter backend sync:validate
-```
-
-## Production Workflow
-
-```bash
-# 1. Validate content
-pnpm --filter backend sync:validate
-
-# 2. Deploy functions to production
-cd packages/backend && npx convex deploy
-
-# 3. Sync content to production
-pnpm --filter backend sync:prod
-
-# 4. Verify production data
-pnpm --filter backend sync:prod:verify
-```
-
-## Reset Workflow
-
-Use reset to delete all synced content and start fresh:
-
-```bash
-# See what would be deleted (dry run)
-pnpm --filter backend sync:reset
-
-# Actually delete all content
-pnpm --filter backend sync:reset --force
-
-# Delete including authors
-pnpm --filter backend sync:reset --force --authors
-
-# Re-sync after reset
-pnpm --filter backend sync:full
-```
-
-For production (use with caution):
-
-```bash
-# Preview deletion
-pnpm --filter backend sync:prod:reset
-
-# Actually delete production content
-pnpm --filter backend sync:prod:reset --force
-```
-
-## Content Structure
-
-### Articles
-```
-packages/contents/articles/{category}/{slug}/
-├── en.mdx    # English
-├── id.mdx    # Indonesian
-└── ref.ts    # References
-```
-
-### Subjects
-```
-packages/contents/subject/{category}/{grade}/{material}/{topic}/{section}/
-├── en.mdx
-└── id.mdx
-```
-
-### Exercises
-```
-packages/contents/exercises/{category}/{type}/{material}/
-├── _data/
-│   ├── en-material.ts    # Set metadata
-│   └── id-material.ts
-└── {exerciseType}/{set}/{number}/
-    ├── _question/en.mdx
-    ├── _question/id.mdx
-    ├── _answer/en.mdx
-    ├── _answer/id.mdx
-    └── choices.ts
-```
-
-## Performance
-
-| Content | Items | Time | Rate |
-|---------|-------|------|------|
-| Articles | 14 | ~2s | ~7/sec |
-| Subject Topics | 260 | ~3s | ~96/sec |
-| Subject Sections | 606 | ~12s | ~49/sec |
-| Exercise Sets | 50 | ~0.8s | ~62/sec |
-| Exercise Questions | 920 | ~12s | ~79/sec |
-| **Total** | **1850** | **~15s** | **~122/sec** |
-
-Incremental sync is much faster when only a few files changed.
-
-## Troubleshooting
-
-### "CONVEX_URL not set"
-Run `npx convex dev` to create `.env.local`.
-
-### "CONVEX_PROD_URL not set"
-Add production URL from Convex Dashboard → Settings → Deployment URL.
-
-### "No access token"
-Run `npx convex dev` to authenticate.
-
-### "Could not find function"
-Deploy functions first: `npx convex deploy`
-
-### Sync shows 0 changes
-Content hash unchanged. This is normal.
+- `packages/backend/scripts/README.md` - Main documentation
+- `plans/content-storage/RESET.md` - Reset feature planning
+- `plans/content-storage/progress.txt` - Implementation log
+- `plans/content-storage/overview.md` - Original planning
 
 ---
 
