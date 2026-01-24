@@ -83,9 +83,6 @@ const BATCH_SIZES = {
 /** Regex to extract locale from material file paths (e.g., "en-material.ts" -> "en") */
 const LOCALE_MATERIAL_FILE_REGEX = /\/([a-z]{2})-material\.ts$/;
 
-/** Regex to parse deploy key format: "prod:project-name|key" or "dev:project-name|key" */
-const DEPLOY_KEY_REGEX = /^(prod|dev):([^|]+)\|/;
-
 interface SyncOptions {
   locale?: Locale;
   force?: boolean;
@@ -437,59 +434,20 @@ async function deleteStaleItems(
 function getConvexConfig(options: SyncOptions = {}): ConvexConfig {
   const isProd = options.prod;
 
-  // Check for deploy key first (CI/CD environments)
-  const deployKey = process.env.CONVEX_DEPLOY_KEY;
-  if (deployKey) {
-    // Deploy key format: "prod:project-name|key"
-    // Extract the deployment URL from the key
-    const match = deployKey.match(DEPLOY_KEY_REGEX);
-    if (!match) {
-      throw new Error("Invalid CONVEX_DEPLOY_KEY format");
-    }
-    const [, env, projectName] = match;
-    const url = `https://${projectName}.convex.cloud`;
-
-    log(`Using deploy key for ${env} environment: ${projectName}`);
-    return { url, accessToken: deployKey };
-  }
-
-  // For --prod flag, use production URL from environment
-  if (isProd) {
-    const prodUrl = process.env.CONVEX_PROD_URL;
-    if (!prodUrl) {
-      throw new Error(
-        "CONVEX_PROD_URL not set. Add your production Convex URL to .env.local\n" +
-          "Example: CONVEX_PROD_URL=https://your-prod-project.convex.cloud"
-      );
-    }
-
-    // Use access token from ~/.convex/config.json
-    const convexConfigPath = path.join(os.homedir(), ".convex", "config.json");
-    if (!fs.existsSync(convexConfigPath)) {
-      throw new Error("Not authenticated. Run: npx convex dev");
-    }
-
-    const convexConfig = JSON.parse(
-      fs.readFileSync(convexConfigPath, "utf8")
-    ) as { accessToken?: string };
-
-    if (!convexConfig.accessToken) {
-      throw new Error("No access token. Run: npx convex dev");
-    }
-
-    logWarning(`PRODUCTION MODE: Syncing to ${prodUrl}`);
-    return { url: prodUrl, accessToken: convexConfig.accessToken };
-  }
-
-  // Default: use development URL from .env.local
-  const url = process.env.CONVEX_URL;
+  // Determine which URL to use
+  const url = isProd ? process.env.CONVEX_PROD_URL : process.env.CONVEX_URL;
 
   if (!url) {
-    throw new Error(
-      "CONVEX_URL not set. Add it to packages/backend/.env.local"
-    );
+    if (isProd) {
+      throw new Error(
+        "CONVEX_PROD_URL not set. Add your production Convex URL to .env.local\n" +
+          "Find it in Convex Dashboard → Settings → Deployment URL"
+      );
+    }
+    throw new Error("CONVEX_URL not set. Run: npx convex dev");
   }
 
+  // Get access token from ~/.convex/config.json
   const convexConfigPath = path.join(os.homedir(), ".convex", "config.json");
   if (!fs.existsSync(convexConfigPath)) {
     throw new Error("Not authenticated. Run: npx convex dev");
@@ -497,18 +455,17 @@ function getConvexConfig(options: SyncOptions = {}): ConvexConfig {
 
   const convexConfig = JSON.parse(
     fs.readFileSync(convexConfigPath, "utf8")
-  ) as {
-    accessToken?: string;
-  };
+  ) as { accessToken?: string };
 
   if (!convexConfig.accessToken) {
     throw new Error("No access token. Run: npx convex dev");
   }
 
-  return {
-    url,
-    accessToken: convexConfig.accessToken,
-  };
+  if (isProd) {
+    logWarning(`PRODUCTION MODE: Syncing to ${url}`);
+  }
+
+  return { url, accessToken: convexConfig.accessToken };
 }
 
 function parseArgs(): { type: string; options: SyncOptions } {
@@ -2341,12 +2298,14 @@ async function main() {
       log("  --authors       - Also clean unused authors (for clean)");
       log("  --sequential    - Run sync phases sequentially (for debugging)");
       log("  --prod          - Sync to production database");
-      log("\nProduction sync:");
-      log("  pnpm --filter backend sync:full -- --prod");
       log("\nEnvironment variables:");
-      log("  CONVEX_URL      - Development deployment URL (default)");
-      log("  CONVEX_PROD_URL - Production deployment URL (for --prod)");
-      log("  CONVEX_DEPLOY_KEY - Deploy key for CI/CD (overrides other auth)");
+      log("  CONVEX_URL      - Development deployment URL");
+      log(
+        "  CONVEX_PROD_URL - Production deployment URL (required for --prod)"
+      );
+      log("\nExamples:");
+      log("  pnpm --filter backend sync:full           # Sync to development");
+      log("  pnpm --filter backend sync:prod           # Sync to production");
       process.exit(1);
   }
 }
