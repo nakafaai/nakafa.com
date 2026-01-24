@@ -17,13 +17,15 @@ pnpm --filter backend sync:prod
 | Command | Description |
 |---------|-------------|
 | `sync:full` | Full sync + clean + verify |
-| `sync:prod` | Full sync to production |
-| `sync:prod:verify` | Verify production database |
 | `sync:incremental` | Sync only changed files |
 | `sync:validate` | Validate without syncing |
 | `sync:all` | Sync all content |
 | `sync:verify` | Verify database |
 | `sync:clean` | Find/remove stale content |
+| `sync:prod` | Full sync to production |
+| `sync:prod:incremental` | Incremental sync to production |
+| `sync:prod:verify` | Verify production database |
+| `sync:prod:clean` | Clean stale in production |
 
 ## Options
 

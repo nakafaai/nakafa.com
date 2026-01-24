@@ -48,13 +48,15 @@ npx convex deploy
 | Command | Description |
 |---------|-------------|
 | `sync:full` | Full sync + clean + verify (recommended) |
-| `sync:prod` | Full sync to production |
-| `sync:prod:verify` | Verify production database |
 | `sync:incremental` | Sync only changed files (fast) |
 | `sync:validate` | Validate without syncing (for CI) |
 | `sync:all` | Sync all content |
 | `sync:verify` | Verify database matches filesystem |
 | `sync:clean` | Find/remove stale content |
+| `sync:prod` | Full sync to production |
+| `sync:prod:incremental` | Incremental sync to production |
+| `sync:prod:verify` | Verify production database |
+| `sync:prod:clean` | Clean stale content in production |
 
 ### Options
 
