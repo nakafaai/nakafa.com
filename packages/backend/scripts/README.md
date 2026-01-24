@@ -5,10 +5,10 @@ Sync MDX content from filesystem to Convex database.
 ## Quick Start
 
 ```bash
-# Sync to development (default)
-pnpm --filter backend sync:full
+# Development (syncs all content, cleans stale, verifies)
+pnpm --filter backend sync
 
-# Sync to production
+# Production
 pnpm --filter backend sync:prod
 ```
 
@@ -45,16 +45,22 @@ npx convex deploy
 
 ## Commands
 
+### Development
+
 | Command | Description |
 |---------|-------------|
-| `sync:full` | Full sync + clean + verify (recommended) |
-| `sync:incremental` | Sync only changed files (fast) |
-| `sync:validate` | Validate without syncing (for CI) |
-| `sync:all` | Sync all content |
+| `sync` | Full sync + clean + verify (recommended) |
+| `sync:incremental` | Sync only changed files since last sync (fast) |
+| `sync:validate` | Validate content without syncing (for CI) |
 | `sync:verify` | Verify database matches filesystem |
-| `sync:clean` | Find/remove stale content |
+| `sync:clean` | Find and remove stale content |
 | `sync:reset` | Delete ALL synced content (requires --force) |
-| `sync:prod` | Full sync to production |
+
+### Production
+
+| Command | Description |
+|---------|-------------|
+| `sync:prod` | Full sync + clean + verify to production |
 | `sync:prod:incremental` | Incremental sync to production |
 | `sync:prod:verify` | Verify production database |
 | `sync:prod:clean` | Clean stale content in production |
@@ -64,7 +70,6 @@ npx convex deploy
 
 | Flag | Description |
 |------|-------------|
-| `--prod` | Target production database |
 | `--locale en\|id` | Sync specific locale only |
 | `--force` | Actually delete content (for clean/reset) |
 | `--authors` | Also delete authors (for clean/reset) |
@@ -75,13 +80,13 @@ npx convex deploy
 ### Development
 
 ```bash
-# First time: full sync
-pnpm --filter backend sync:full
+# First time or after major changes
+pnpm --filter backend sync
 
-# Daily: incremental sync (only changed files)
+# Daily (only syncs changed files)
 pnpm --filter backend sync:incremental
 
-# Before commit: validate content
+# Before commit (validates without syncing)
 pnpm --filter backend sync:validate
 ```
 
@@ -114,7 +119,7 @@ pnpm --filter backend sync:reset --force
 pnpm --filter backend sync:reset --force --authors
 
 # Re-sync after reset
-pnpm --filter backend sync:full
+pnpm --filter backend sync
 ```
 
 For production (use with caution):
@@ -186,7 +191,7 @@ Run `npx convex dev` to authenticate.
 Deploy functions first: `npx convex deploy`
 
 ### Sync shows 0 changes
-Content hash unchanged. This is normal.
+Content hash unchanged. This is normal for `sync:incremental`.
 
 ## Files
 

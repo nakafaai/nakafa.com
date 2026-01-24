@@ -1721,7 +1721,7 @@ async function verify(
       if (options.prod) {
         log("\nRun 'pnpm --filter backend sync:prod' to fix");
       } else {
-        log("\nRun 'pnpm --filter backend sync:full' to fix");
+        log("\nRun 'pnpm --filter backend sync' to fix");
       }
       process.exit(1);
     }
@@ -2465,7 +2465,7 @@ async function reset(
   if (options.prod) {
     log("  pnpm --filter backend sync:prod");
   } else {
-    log("  pnpm --filter backend sync:full");
+    log("  pnpm --filter backend sync");
   }
 }
 
@@ -2524,42 +2524,37 @@ async function main() {
       break;
     default:
       logError(`Unknown command: ${type}`);
-      log("\nUsage:");
-      log("  sync:all              - Sync all content (full scan)");
+      log("\nUsage: pnpm --filter backend sync[:<command>] [options]");
+      log("\nCommands:");
+      log("  sync                  - Full sync + clean + verify (recommended)");
       log(
-        "  sync:incremental      - Sync only changed files since last sync (fast)"
+        "  sync:incremental      - Sync only changed files (fast, for daily use)"
       );
       log(
         "  sync:validate         - Validate content without syncing (for CI)"
       );
-      log("  sync:articles         - Sync articles only");
-      log("  sync:subjects         - Sync subject topics and sections");
-      log("  sync:subject-topics   - Sync subject topics only");
-      log("  sync:subject-sections - Sync subject sections only");
-      log("  sync:exercises        - Sync exercise sets and questions");
-      log("  sync:exercise-sets    - Sync exercise sets only");
-      log("  sync:exercise-questions - Sync exercise questions only");
-      log("  sync:verify           - Verify DB matches filesystem");
+      log("  sync:verify           - Verify database matches filesystem");
       log("  sync:clean            - Find and remove stale content");
       log(
-        "  sync:full             - Full sync: sync, clean, and verify (recommended)"
+        "  sync:reset            - Delete ALL synced content (requires --force)"
       );
-      log("  sync:reset            - Delete ALL synced content (use --force)");
+      log("\nProduction commands:");
+      log("  sync:prod             - Full sync to production");
+      log("  sync:prod:incremental - Incremental sync to production");
+      log("  sync:prod:verify      - Verify production database");
+      log("  sync:prod:clean       - Clean stale content in production");
+      log("  sync:prod:reset       - Delete ALL content in production");
       log("\nOptions:");
       log("  --locale en|id  - Sync specific locale only");
       log("  --force         - Actually delete content (for clean/reset)");
       log("  --authors       - Also delete authors (for clean/reset)");
       log("  --sequential    - Run sync phases sequentially (for debugging)");
       log("  --prod          - Target production database");
-      log("\nEnvironment variables:");
-      log("  CONVEX_URL      - Development deployment URL");
-      log(
-        "  CONVEX_PROD_URL - Production deployment URL (required for --prod)"
-      );
       log("\nExamples:");
-      log("  pnpm --filter backend sync:full           # Sync to development");
-      log("  pnpm --filter backend sync:prod           # Sync to production");
-      log("  pnpm --filter backend sync:reset --force  # Delete all content");
+      log("  pnpm --filter backend sync                 # Full sync to dev");
+      log("  pnpm --filter backend sync:incremental     # Fast daily sync");
+      log("  pnpm --filter backend sync:prod            # Full sync to prod");
+      log("  pnpm --filter backend sync:reset --force   # Delete all content");
       process.exit(1);
   }
 }

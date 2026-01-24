@@ -64,8 +64,8 @@ Convex Database
 
 ```bash
 # Development
-pnpm --filter backend sync:full        # Full sync
-pnpm --filter backend sync:incremental # Changed files only
+pnpm --filter backend sync             # Full sync (recommended)
+pnpm --filter backend sync:incremental # Changed files only (daily)
 pnpm --filter backend sync:verify      # Check database
 
 # Production
