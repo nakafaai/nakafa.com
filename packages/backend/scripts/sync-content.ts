@@ -46,6 +46,8 @@ const BATCH_SIZE_EXERCISES = 30;
 
 interface SyncOptions {
   locale?: Locale;
+  force?: boolean;
+  authors?: boolean;
 }
 
 interface SyncResult {
@@ -75,6 +77,20 @@ interface DataIntegrity {
   articlesWithoutReferences: string[];
   totalExercises: number;
   totalArticles: number;
+}
+
+interface StaleContent {
+  staleArticles: Array<{ id: string; slug: string; locale: string }>;
+  staleSubjects: Array<{ id: string; slug: string; locale: string }>;
+  staleExercises: Array<{ id: string; slug: string; locale: string }>;
+}
+
+interface UnusedAuthors {
+  unusedAuthors: Array<{ id: string; name: string; username: string }>;
+}
+
+interface DeleteResult {
+  deleted: number;
 }
 
 function log(message: string) {
@@ -132,6 +148,12 @@ function parseArgs(): { type: string; options: SyncOptions } {
         options.locale = locale;
         i++;
       }
+    }
+    if (arg === "--force") {
+      options.force = true;
+    }
+    if (arg === "--authors") {
+      options.authors = true;
     }
   }
 
@@ -787,6 +809,272 @@ async function verify(config: ConvexConfig): Promise<void> {
   }
 }
 
+async function collectFilesystemSlugs(): Promise<{
+  articleSlugs: string[];
+  subjectSlugs: string[];
+  exerciseSlugs: string[];
+}> {
+  const articleFiles = await globFiles("articles/**/*.mdx");
+  const subjectFiles = await globFiles("subject/**/*.mdx");
+  const questionFiles = await globFiles("exercises/**/_question/*.mdx");
+
+  const articleSlugs = articleFiles.map((file) => {
+    const pathInfo = parseArticlePath(file);
+    return pathInfo.slug;
+  });
+
+  const subjectSlugs = subjectFiles.map((file) => {
+    const pathInfo = parseSubjectPath(file);
+    return pathInfo.slug;
+  });
+
+  const exerciseSlugs = questionFiles.map((file) => {
+    const pathInfo = parseExercisePath(file);
+    return pathInfo.slug;
+  });
+
+  return { articleSlugs, subjectSlugs, exerciseSlugs };
+}
+
+async function runConvexQueryWithArgs<T>(
+  config: ConvexConfig,
+  functionPath: string,
+  args: Record<string, unknown>
+): Promise<T> {
+  const response = await fetch(`${config.url}/api/query`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Convex ${config.accessToken}`,
+    },
+    body: JSON.stringify({
+      path: functionPath,
+      args,
+      format: "json",
+    }),
+  });
+
+  const result = (await response.json()) as {
+    status: string;
+    value?: unknown;
+    errorMessage?: string;
+  };
+
+  if (result.status === "error") {
+    throw new Error(result.errorMessage || "Unknown Convex error");
+  }
+
+  return result.value as T;
+}
+
+async function runConvexMutationGeneric<T>(
+  config: ConvexConfig,
+  functionPath: string,
+  args: Record<string, unknown>
+): Promise<T> {
+  const response = await fetch(`${config.url}/api/mutation`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Convex ${config.accessToken}`,
+    },
+    body: JSON.stringify({
+      path: functionPath,
+      args,
+      format: "json",
+    }),
+  });
+
+  const result = (await response.json()) as {
+    status: string;
+    value?: unknown;
+    errorMessage?: string;
+  };
+
+  if (result.status === "error") {
+    throw new Error(result.errorMessage || "Unknown Convex error");
+  }
+
+  return result.value as T;
+}
+
+async function clean(
+  config: ConvexConfig,
+  options: SyncOptions
+): Promise<{ hasStale: boolean; deleted: boolean }> {
+  log("=== CLEAN STALE CONTENT ===\n");
+  log("Stale content = exists in database but source file was deleted\n");
+
+  if (!options.force) {
+    log("DRY RUN MODE (use --force to actually delete)\n");
+  }
+
+  log("Scanning filesystem...");
+  const { articleSlugs, subjectSlugs, exerciseSlugs } =
+    await collectFilesystemSlugs();
+
+  log(`  Articles on disk: ${articleSlugs.length}`);
+  log(`  Subjects on disk: ${subjectSlugs.length}`);
+  log(`  Exercises on disk: ${exerciseSlugs.length}`);
+
+  log("\nQuerying database for stale content...");
+  const stale = await runConvexQueryWithArgs<StaleContent>(
+    config,
+    "contentSync/queries:findStaleContent",
+    { articleSlugs, subjectSlugs, exerciseSlugs }
+  );
+
+  const totalStale =
+    stale.staleArticles.length +
+    stale.staleSubjects.length +
+    stale.staleExercises.length;
+
+  let hasStale = false;
+  let deleted = false;
+
+  if (totalStale === 0) {
+    logSuccess("No stale content found!");
+  } else {
+    hasStale = true;
+    log(`\nFound ${totalStale} stale items:\n`);
+
+    if (stale.staleArticles.length > 0) {
+      log(`Stale articles (${stale.staleArticles.length}):`);
+      for (const item of stale.staleArticles.slice(0, 10)) {
+        log(`  - ${item.slug} (${item.locale})`);
+      }
+      if (stale.staleArticles.length > 10) {
+        log(`  ... and ${stale.staleArticles.length - 10} more`);
+      }
+    }
+
+    if (stale.staleSubjects.length > 0) {
+      log(`\nStale subjects (${stale.staleSubjects.length}):`);
+      for (const item of stale.staleSubjects.slice(0, 10)) {
+        log(`  - ${item.slug} (${item.locale})`);
+      }
+      if (stale.staleSubjects.length > 10) {
+        log(`  ... and ${stale.staleSubjects.length - 10} more`);
+      }
+    }
+
+    if (stale.staleExercises.length > 0) {
+      log(`\nStale exercises (${stale.staleExercises.length}):`);
+      for (const item of stale.staleExercises.slice(0, 10)) {
+        log(`  - ${item.slug} (${item.locale})`);
+      }
+      if (stale.staleExercises.length > 10) {
+        log(`  ... and ${stale.staleExercises.length - 10} more`);
+      }
+    }
+
+    if (options.force) {
+      log("\nDeleting stale content...");
+      deleted = true;
+
+      if (stale.staleArticles.length > 0) {
+        const articleIds = stale.staleArticles.map((a) => a.id);
+        const result = await runConvexMutationGeneric<DeleteResult>(
+          config,
+          "contentSync/mutations:deleteStaleArticles",
+          { articleIds }
+        );
+        logSuccess(`Deleted ${result.deleted} stale articles`);
+      }
+
+      if (stale.staleSubjects.length > 0) {
+        const subjectIds = stale.staleSubjects.map((s) => s.id);
+        const result = await runConvexMutationGeneric<DeleteResult>(
+          config,
+          "contentSync/mutations:deleteStaleSubjects",
+          { subjectIds }
+        );
+        logSuccess(`Deleted ${result.deleted} stale subjects`);
+      }
+
+      if (stale.staleExercises.length > 0) {
+        const exerciseIds = stale.staleExercises.map((e) => e.id);
+        const result = await runConvexMutationGeneric<DeleteResult>(
+          config,
+          "contentSync/mutations:deleteStaleExercises",
+          { exerciseIds }
+        );
+        logSuccess(`Deleted ${result.deleted} stale exercises`);
+      }
+    } else {
+      log("\nTo delete stale content, run:");
+      log("  pnpm --filter backend sync:clean --force");
+    }
+  }
+
+  if (options.authors) {
+    log("\n--- UNUSED AUTHORS ---\n");
+    log("Unused authors = authors with no linked content\n");
+
+    const authorsResult = await runConvexQuery<UnusedAuthors>(
+      config,
+      "contentSync/queries:findUnusedAuthors"
+    );
+
+    if (authorsResult.unusedAuthors.length === 0) {
+      logSuccess("No unused authors found!");
+    } else {
+      log(`Found ${authorsResult.unusedAuthors.length} unused authors:\n`);
+      for (const author of authorsResult.unusedAuthors.slice(0, 10)) {
+        log(`  - ${author.name} (@${author.username})`);
+      }
+      if (authorsResult.unusedAuthors.length > 10) {
+        log(`  ... and ${authorsResult.unusedAuthors.length - 10} more`);
+      }
+
+      if (options.force) {
+        const authorIds = authorsResult.unusedAuthors.map((a) => a.id);
+        const result = await runConvexMutationGeneric<DeleteResult>(
+          config,
+          "contentSync/mutations:deleteUnusedAuthors",
+          { authorIds }
+        );
+        logSuccess(`Deleted ${result.deleted} unused authors`);
+      } else {
+        log("\nTo delete unused authors, run:");
+        log("  pnpm --filter backend sync:clean --force --authors");
+      }
+    }
+  }
+
+  log("\n=== CLEAN COMPLETE ===");
+
+  return { hasStale, deleted };
+}
+
+async function syncFull(config: ConvexConfig): Promise<void> {
+  log("=== FULL SYNC ===\n");
+  log(
+    "This command will: sync all content, clean stale content, verify data\n"
+  );
+
+  try {
+    await syncAll(config, {});
+
+    log("\n");
+    const cleanResult = await clean(config, { force: true, authors: true });
+
+    if (cleanResult.hasStale && cleanResult.deleted) {
+      log("\nStale content was found and deleted.");
+    }
+
+    log("\n");
+    await verify(config);
+
+    log("\n=== FULL SYNC COMPLETE ===");
+    logSuccess("All operations completed successfully!");
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    logError(`Full sync failed: ${msg}`);
+    process.exit(1);
+  }
+}
+
 async function main() {
   const { type, options } = parseArgs();
 
@@ -808,6 +1096,12 @@ async function main() {
     case "verify":
       await verify(config);
       break;
+    case "clean":
+      await clean(config, options);
+      break;
+    case "full":
+      await syncFull(config);
+      break;
     default:
       logError(`Unknown command: ${type}`);
       log("\nUsage:");
@@ -816,8 +1110,14 @@ async function main() {
       log("  sync:subjects   - Sync subjects only");
       log("  sync:exercises  - Sync exercises only");
       log("  sync:verify     - Verify DB matches filesystem");
+      log("  sync:clean      - Find and remove stale content");
+      log(
+        "  sync:full       - Full sync: sync, clean, and verify (recommended)"
+      );
       log("\nOptions:");
       log("  --locale en|id  - Sync specific locale only");
+      log("  --force         - Actually delete stale content (for clean)");
+      log("  --authors       - Also clean unused authors (for clean)");
       process.exit(1);
   }
 }

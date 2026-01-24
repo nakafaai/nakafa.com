@@ -14,7 +14,9 @@
     "sync:subjects": "tsx scripts/sync-content.ts subjects",
     "sync:exercises": "tsx scripts/sync-content.ts exercises",
     "sync:all": "tsx scripts/sync-content.ts all",
-    "sync:verify": "tsx scripts/sync-content.ts verify"
+    "sync:full": "tsx scripts/sync-content.ts full",
+    "sync:verify": "tsx scripts/sync-content.ts verify",
+    "sync:clean": "tsx scripts/sync-content.ts clean"
   },
   "dependencies": {
     "@convex-dev/better-auth": "^0.10.10",

@@ -15,6 +15,22 @@ This creates `~/.convex/config.json` with your access token.
 
 ## Commands
 
+### Recommended: Full Sync
+
+```bash
+# Full sync: syncs all content, cleans stale, verifies (recommended)
+pnpm --filter backend sync:full
+```
+
+This single command:
+1. Syncs all content (articles, subjects, exercises)
+2. Cleans stale content (content in DB but deleted from filesystem)
+3. Cleans unused authors (authors with no linked content)
+4. Verifies database matches filesystem
+5. Exits with error if any step fails
+
+### Individual Commands
+
 ```bash
 # Sync all content (articles, subjects, exercises)
 pnpm --filter backend sync:all
@@ -30,7 +46,25 @@ pnpm --filter backend sync:exercises -- --locale id
 
 # Verify database matches filesystem (no changes)
 pnpm --filter backend sync:verify
+
+# Find stale content (dry-run, no changes)
+pnpm --filter backend sync:clean
+
+# Delete stale content
+pnpm --filter backend sync:clean -- --force
+
+# Also check/delete unused authors
+pnpm --filter backend sync:clean -- --authors
+pnpm --filter backend sync:clean -- --force --authors
 ```
+
+## Terminology
+
+| Term | Meaning |
+|------|---------|
+| **Stale content** | Content in database but source file was deleted from filesystem |
+| **Unused author** | Author in database with no linked content |
+| **Cascade delete** | Deleting parent also deletes children (e.g., article + its references) |
 
 ## Content Structure
 
@@ -133,8 +167,8 @@ packages/backend/
 │       └── mdxParser.ts     # MDX parsing utilities
 ├── convex/
 │   └── contentSync/
-│       ├── mutations.ts     # Bulk sync mutations
-│       └── queries.ts       # Verify queries
+│       ├── mutations.ts     # Bulk sync + delete mutations
+│       └── queries.ts       # Verify + stale detection queries
 └── package.json             # npm scripts
 ```
 
@@ -155,6 +189,49 @@ Each content table has `locale_slug` index for fast lookups during upsert.
 - Choices in separate table
 
 This follows Convex recommendation to keep arrays small (< 10 elements).
+
+### Cascade Deletes
+When deleting stale content, related records are deleted in the same transaction:
+- **Article**: contentAuthors + articleReferences
+- **Subject**: contentAuthors
+- **Exercise**: contentAuthors + exerciseChoices
+
+## Clean Command Details
+
+The `sync:clean` command handles content that exists in the database but no longer exists on the filesystem.
+
+### How It Works
+
+1. **Scan filesystem** - Collect all slugs from MDX files
+2. **Query database** - Find content where slug is not in filesystem slugs
+3. **Report** - Show stale content (dry-run mode)
+4. **Delete** - With `--force`, delete stale content + related records
+
+### Safety Features
+
+- **Dry-run by default** - Shows what would be deleted without making changes
+- **Requires --force** - No accidental deletions
+- **Atomic transactions** - Parent + children deleted together or not at all
+- **Author preservation** - Authors kept by default, use `--authors` to include
+
+### Example Output
+
+```
+=== CLEAN STALE CONTENT ===
+Stale content = exists in database but source file was deleted
+
+DRY RUN MODE (use --force to actually delete)
+
+Scanning filesystem...
+  Articles on disk: 14
+  Subjects on disk: 606
+  Exercises on disk: 920
+
+Querying database for stale content...
+OK: No stale content found!
+
+=== CLEAN COMPLETE ===
+```
 
 ## Troubleshooting
 

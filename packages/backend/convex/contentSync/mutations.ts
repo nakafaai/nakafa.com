@@ -549,3 +549,167 @@ export const bulkSyncExercises = internalMutation({
     return { created, updated, unchanged };
   },
 });
+
+export const deleteStaleArticles = internalMutation({
+  args: {
+    articleIds: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    let deleted = 0;
+
+    for (const idStr of args.articleIds) {
+      const articleId = ctx.db.normalizeId("articleContents", idStr);
+      if (!articleId) {
+        continue;
+      }
+
+      const article = await ctx.db.get(articleId);
+      if (!article) {
+        continue;
+      }
+
+      const contentAuthors = await ctx.db
+        .query("contentAuthors")
+        .withIndex("contentId_contentType", (q) =>
+          q.eq("contentId", articleId).eq("contentType", "article")
+        )
+        .collect();
+
+      for (const link of contentAuthors) {
+        await ctx.db.delete(link._id);
+      }
+
+      const references = await ctx.db
+        .query("articleReferences")
+        .withIndex("articleId", (q) => q.eq("articleId", articleId))
+        .collect();
+
+      for (const ref of references) {
+        await ctx.db.delete(ref._id);
+      }
+
+      await ctx.db.delete(articleId);
+      deleted++;
+    }
+
+    return { deleted };
+  },
+});
+
+export const deleteStaleSubjects = internalMutation({
+  args: {
+    subjectIds: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    let deleted = 0;
+
+    for (const idStr of args.subjectIds) {
+      const subjectId = ctx.db.normalizeId("subjectContents", idStr);
+      if (!subjectId) {
+        continue;
+      }
+
+      const subject = await ctx.db.get(subjectId);
+      if (!subject) {
+        continue;
+      }
+
+      const contentAuthors = await ctx.db
+        .query("contentAuthors")
+        .withIndex("contentId_contentType", (q) =>
+          q.eq("contentId", subjectId).eq("contentType", "subject")
+        )
+        .collect();
+
+      for (const link of contentAuthors) {
+        await ctx.db.delete(link._id);
+      }
+
+      await ctx.db.delete(subjectId);
+      deleted++;
+    }
+
+    return { deleted };
+  },
+});
+
+export const deleteStaleExercises = internalMutation({
+  args: {
+    exerciseIds: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    let deleted = 0;
+
+    for (const idStr of args.exerciseIds) {
+      const exerciseId = ctx.db.normalizeId("exerciseContents", idStr);
+      if (!exerciseId) {
+        continue;
+      }
+
+      const exercise = await ctx.db.get(exerciseId);
+      if (!exercise) {
+        continue;
+      }
+
+      const contentAuthors = await ctx.db
+        .query("contentAuthors")
+        .withIndex("contentId_contentType", (q) =>
+          q.eq("contentId", exerciseId).eq("contentType", "exercise")
+        )
+        .collect();
+
+      for (const link of contentAuthors) {
+        await ctx.db.delete(link._id);
+      }
+
+      const choices = await ctx.db
+        .query("exerciseChoices")
+        .withIndex("exerciseId_locale", (q) => q.eq("exerciseId", exerciseId))
+        .collect();
+
+      for (const choice of choices) {
+        await ctx.db.delete(choice._id);
+      }
+
+      await ctx.db.delete(exerciseId);
+      deleted++;
+    }
+
+    return { deleted };
+  },
+});
+
+export const deleteUnusedAuthors = internalMutation({
+  args: {
+    authorIds: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    let deleted = 0;
+
+    for (const idStr of args.authorIds) {
+      const authorId = ctx.db.normalizeId("authors", idStr);
+      if (!authorId) {
+        continue;
+      }
+
+      const author = await ctx.db.get(authorId);
+      if (!author) {
+        continue;
+      }
+
+      const linkedContent = await ctx.db
+        .query("contentAuthors")
+        .withIndex("authorId", (q) => q.eq("authorId", authorId))
+        .first();
+
+      if (linkedContent) {
+        continue;
+      }
+
+      await ctx.db.delete(authorId);
+      deleted++;
+    }
+
+    return { deleted };
+  },
+});
