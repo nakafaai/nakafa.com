@@ -9,7 +9,11 @@
     "deploy": "convex deploy",
     "generate-schema": "pnpm dlx @better-auth/cli generate --config convex/betterAuth/auth.ts --output convex/betterAuth/generatedSchema.ts -y",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
-    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false",
+    "sync:articles": "tsx scripts/sync-content.ts articles",
+    "sync:subjects": "tsx scripts/sync-content.ts subjects",
+    "sync:exercises": "tsx scripts/sync-content.ts exercises",
+    "sync:all": "tsx scripts/sync-content.ts all"
   },
   "dependencies": {
     "@convex-dev/better-auth": "^0.10.10",
@@ -34,6 +38,8 @@
     "@edge-runtime/vm": "^5.0.0",
     "@repo/typescript-config": "workspace:*",
     "convex-test": "^0.0.41",
+    "glob": "^11.0.0",
+    "tsx": "^4.19.2",
     "vitest": "^4.0.18"
   }
 }

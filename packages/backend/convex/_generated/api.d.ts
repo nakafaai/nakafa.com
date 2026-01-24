@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as articleContents_mutations from "../articleContents/mutations.js";
 import type * as auth from "../auth.js";
 import type * as chats_mutations from "../chats/mutations.js";
 import type * as chats_queries from "../chats/queries.js";
@@ -24,18 +25,21 @@ import type * as classes_utils from "../classes/utils.js";
 import type * as comments_mutations from "../comments/mutations.js";
 import type * as comments_queries from "../comments/queries.js";
 import type * as comments_utils from "../comments/utils.js";
+import type * as contentSync_actions from "../contentSync/actions.js";
 import type * as customers_actions from "../customers/actions.js";
 import type * as customers_mutations from "../customers/mutations.js";
 import type * as customers_polar from "../customers/polar.js";
 import type * as customers_queries from "../customers/queries.js";
 import type * as customers_utils from "../customers/utils.js";
 import type * as emails_mutations from "../emails/mutations.js";
+import type * as exerciseContents_mutations from "../exerciseContents/mutations.js";
 import type * as exercises_mutations from "../exercises/mutations.js";
 import type * as exercises_queries from "../exercises/queries.js";
 import type * as exercises_utils from "../exercises/utils.js";
 import type * as functions from "../functions.js";
 import type * as http from "../http.js";
 import type * as lib_authHelpers from "../lib/authHelpers.js";
+import type * as lib_contentValidators from "../lib/contentValidators.js";
 import type * as lib_images from "../lib/images.js";
 import type * as lib_permissions from "../lib/permissions.js";
 import type * as lib_relationships from "../lib/relationships.js";
@@ -50,6 +54,7 @@ import type * as routes_v1_index from "../routes/v1/index.js";
 import type * as schools_mutations from "../schools/mutations.js";
 import type * as schools_queries from "../schools/queries.js";
 import type * as schools_utils from "../schools/utils.js";
+import type * as subjectContents_mutations from "../subjectContents/mutations.js";
 import type * as subscriptions_mutations from "../subscriptions/mutations.js";
 import type * as subscriptions_queries from "../subscriptions/queries.js";
 import type * as subscriptions_utils from "../subscriptions/utils.js";
@@ -69,6 +74,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "articleContents/mutations": typeof articleContents_mutations;
   auth: typeof auth;
   "chats/mutations": typeof chats_mutations;
   "chats/queries": typeof chats_queries;
@@ -85,18 +91,21 @@ declare const fullApi: ApiFromModules<{
   "comments/mutations": typeof comments_mutations;
   "comments/queries": typeof comments_queries;
   "comments/utils": typeof comments_utils;
+  "contentSync/actions": typeof contentSync_actions;
   "customers/actions": typeof customers_actions;
   "customers/mutations": typeof customers_mutations;
   "customers/polar": typeof customers_polar;
   "customers/queries": typeof customers_queries;
   "customers/utils": typeof customers_utils;
   "emails/mutations": typeof emails_mutations;
+  "exerciseContents/mutations": typeof exerciseContents_mutations;
   "exercises/mutations": typeof exercises_mutations;
   "exercises/queries": typeof exercises_queries;
   "exercises/utils": typeof exercises_utils;
   functions: typeof functions;
   http: typeof http;
   "lib/authHelpers": typeof lib_authHelpers;
+  "lib/contentValidators": typeof lib_contentValidators;
   "lib/images": typeof lib_images;
   "lib/permissions": typeof lib_permissions;
   "lib/relationships": typeof lib_relationships;
@@ -111,6 +120,7 @@ declare const fullApi: ApiFromModules<{
   "schools/mutations": typeof schools_mutations;
   "schools/queries": typeof schools_queries;
   "schools/utils": typeof schools_utils;
+  "subjectContents/mutations": typeof subjectContents_mutations;
   "subscriptions/mutations": typeof subscriptions_mutations;
   "subscriptions/queries": typeof subscriptions_queries;
   "subscriptions/utils": typeof subscriptions_utils;

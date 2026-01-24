@@ -1,6 +1,6 @@
 # Content Storage Progress
 
-## Status: Planning Complete
+## Status: Phase 1 Complete (CLI Ready)
 
 ---
 
@@ -13,29 +13,87 @@ Key decisions:
 - Normalized exercise choices (each gets _id for tracking)
 - Date stored as number (epoch millis) for sorting
 
-Files planned:
+---
+
+## Implementation Log
+
+[2025-01-24] Phase 0: Schema Foundation - COMPLETE
+
+Tasks completed:
+- [x] Task 0.1: contentValidators.ts
+- [x] Task 0.2: authors/schema.ts
+- [x] Task 0.3: articleContents/schema.ts
+- [x] Task 0.4: subjectContents/schema.ts
+- [x] Task 0.5: exerciseContents/schema.ts
+- [x] Task 0.6: Update main schema.ts
+
+Files created:
 - packages/backend/convex/lib/contentValidators.ts
 - packages/backend/convex/authors/schema.ts
 - packages/backend/convex/articleContents/schema.ts
 - packages/backend/convex/subjectContents/schema.ts
 - packages/backend/convex/exerciseContents/schema.ts
-- packages/backend/convex/schema.ts (update)
+- packages/backend/convex/schema.ts (updated)
 
-Tables to create (7):
-1. authors
-2. contentAuthors
-3. articleContents
-4. articleReferences
-5. subjectContents
-6. exerciseContents
-7. exerciseChoices
-
-Blockers/notes:
-- Ready for implementation
-- Run `pnpm lint && pnpm typecheck` after each task
+Tables created (7):
+1. authors - Shared author profiles
+2. contentAuthors - N:M join table
+3. articleContents - Article body storage
+4. articleReferences - Article citations
+5. subjectContents - Subject lesson content
+6. exerciseContents - Exercise questions
+7. exerciseChoices - Answer options
 
 ---
 
-## Implementation Log
+[2025-01-24] Phase 1: Content Sync - COMPLETE
 
-(Tasks will be logged here as completed)
+Tasks completed:
+- [x] Task 1.0: Phase 1 planning document
+- [x] Task 1.1: MDX parser utilities
+- [x] Task 1.2: Sync mutations for each content type
+- [x] Task 1.3: Sync CLI script
+- [x] Task 1.4: Test with dry-run
+
+Files created:
+- plans/content-storage/tasks/1.0-phase-1-overview.md
+- packages/backend/scripts/lib/mdxParser.ts
+- packages/backend/convex/articleContents/mutations.ts
+- packages/backend/convex/subjectContents/mutations.ts
+- packages/backend/convex/exerciseContents/mutations.ts
+- packages/backend/convex/contentSync/actions.ts
+- packages/backend/scripts/sync-content.ts
+
+NPM scripts added:
+- pnpm --filter backend sync:articles [--locale en|id] [--dry-run]
+- pnpm --filter backend sync:subjects [--locale en|id] [--dry-run]
+- pnpm --filter backend sync:exercises [--locale en|id] [--dry-run]
+- pnpm --filter backend sync:all [--dry-run]
+
+Content discovered:
+- Articles: 14 files (7 articles × 2 locales)
+- Subjects: 606 files (303 subjects × 2 locales)
+- Exercises: 920 files (460 exercises × 2 locales)
+
+Verification:
+- pnpm lint: PASSED
+- TypeScript check: PASSED
+- Dry-run tests: PASSED
+
+---
+
+## Next Steps
+
+Phase 1.5: Live Sync Testing
+- Run actual sync against dev Convex deployment
+- Verify data in Convex dashboard
+- Test idempotency (re-run should show all "unchanged")
+
+Phase 2: API Layer
+- Create public query functions for content retrieval
+- Add authentication/rate limiting
+- Implement API monetization tiers
+
+Phase 3: Embedding Generation
+- Add vector embeddings for semantic search
+- Index content for AI-powered search

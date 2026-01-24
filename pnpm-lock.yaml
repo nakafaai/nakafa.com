@@ -585,6 +585,12 @@ importers:
       convex-test:
         specifier: ^0.0.41
         version: 0.0.41(convex@1.31.6(react@19.2.3))
+      glob:
+        specifier: ^11.0.0
+        version: 11.1.0
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
       vitest:
         specifier: ^4.0.18
         version: 4.0.18(@edge-runtime/vm@5.0.0)(@opentelemetry/api@1.9.0)(@types/node@25.0.10)(@vitest/ui@4.0.18)(jiti@2.6.1)(jsdom@27.4.0)(lightningcss@1.30.2)(msw@2.12.7(@types/node@25.0.10)(typescript@5.9.3))(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
