@@ -26,7 +26,7 @@ type AuthorCache = Map<string, Id<"authors">>;
 
 /**
  * Builds an author cache for a batch of content items.
- * Queries for all unique author names once and caches their IDs.
+ * Queries for all unique author names in parallel and caches their IDs.
  * Creates new author records for any names not found.
  */
 async function buildAuthorCache(
@@ -36,12 +36,17 @@ async function buildAuthorCache(
   const cache: AuthorCache = new Map();
   const uniqueNames = [...new Set(allAuthorNames)];
 
-  for (const name of uniqueNames) {
-    const author = await ctx.db
-      .query("authors")
-      .withIndex("name", (q) => q.eq("name", name))
-      .first();
+  const authorLookups = await Promise.all(
+    uniqueNames.map((name) =>
+      ctx.db
+        .query("authors")
+        .withIndex("name", (q) => q.eq("name", name))
+        .first()
+        .then((author) => ({ name, author }))
+    )
+  );
 
+  for (const { name, author } of authorLookups) {
     if (author) {
       cache.set(name, author._id);
     } else {

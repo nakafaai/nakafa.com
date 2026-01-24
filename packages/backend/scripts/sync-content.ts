@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+import { execSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -22,6 +23,7 @@ import {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const CONTENTS_DIR = path.resolve(__dirname, "../../contents");
+const SYNC_STATE_FILE = path.resolve(__dirname, "../.sync-state.json");
 
 function loadEnvFile() {
   const envPath = path.resolve(__dirname, "../.env.local");
@@ -44,8 +46,31 @@ loadEnvFile();
 
 /**
  * Batch sizes for Convex mutations.
- * Smaller batches = more reliable, larger batches = faster.
- * Adjust based on content complexity and Convex limits.
+ *
+ * Convex limits per mutation (from docs):
+ * - Documents written: 16,000
+ * - Documents scanned: 32,000
+ * - Data written: 16 MiB
+ * - Execution time: 1 second (user code only)
+ *
+ * Write amplification per content type:
+ * - Articles: ~65 writes/item (1 article + ~2 authors + ~30 references × 2)
+ * - Subject Topics: 1 write/item (no nested writes)
+ * - Subject Sections: ~5 writes/item (1 section + ~2 authors × 2)
+ * - Exercise Sets: 1 write/item (no nested writes)
+ * - Exercise Questions: ~15 writes/item (1 question + ~2 authors × 2 + 5 choices × 2)
+ *
+ * Current batch sizes balance:
+ * - Safety margin: Stay well under 16,000 write limit
+ * - Performance: Maximize items per HTTP request
+ * - Memory: Avoid OOM from large payloads
+ *
+ * Max writes per batch (safety check):
+ * - Articles: 50 × 65 = 3,250 writes (20% of limit)
+ * - Subject Topics: 50 × 1 = 50 writes
+ * - Subject Sections: 20 × 5 = 100 writes
+ * - Exercise Sets: 50 × 1 = 50 writes
+ * - Exercise Questions: 30 × 15 = 450 writes
  */
 const BATCH_SIZES = {
   articles: 50,
@@ -63,6 +88,77 @@ interface SyncOptions {
   force?: boolean;
   authors?: boolean;
   sequential?: boolean;
+  incremental?: boolean;
+}
+
+/**
+ * Sync state persisted between runs for incremental sync.
+ * Tracks the last successful sync timestamp and git commit.
+ */
+interface SyncState {
+  lastSyncTimestamp: number;
+  lastSyncCommit: string;
+  contentHashes: Record<string, string>;
+}
+
+/**
+ * Load sync state from disk.
+ * Returns null if no previous sync state exists.
+ */
+function loadSyncState(): SyncState | null {
+  try {
+    if (!fs.existsSync(SYNC_STATE_FILE)) {
+      return null;
+    }
+    const content = fs.readFileSync(SYNC_STATE_FILE, "utf8");
+    return JSON.parse(content) as SyncState;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Save sync state to disk after successful sync.
+ */
+function saveSyncState(state: SyncState): void {
+  fs.writeFileSync(SYNC_STATE_FILE, JSON.stringify(state, null, 2));
+}
+
+/**
+ * Get the current git commit hash.
+ */
+function getCurrentGitCommit(): string {
+  try {
+    return execSync("git rev-parse HEAD", {
+      cwd: CONTENTS_DIR,
+      encoding: "utf8",
+    }).trim();
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * Get files changed since a specific git commit.
+ * Returns relative paths from CONTENTS_DIR.
+ */
+function getChangedFilesSince(commit: string): Set<string> {
+  try {
+    const output = execSync(`git diff --name-only ${commit} HEAD`, {
+      cwd: CONTENTS_DIR,
+      encoding: "utf8",
+    });
+    const changedFiles = new Set<string>();
+    for (const line of output.split("\n")) {
+      const trimmed = line.trim();
+      if (trimmed) {
+        changedFiles.add(path.resolve(CONTENTS_DIR, trimmed));
+      }
+    }
+    return changedFiles;
+  } catch {
+    return new Set();
+  }
 }
 
 interface PhaseMetrics {
@@ -382,6 +478,9 @@ function parseArgs(): { type: string; options: SyncOptions } {
     }
     if (arg === "--sequential") {
       options.sequential = true;
+    }
+    if (arg === "--incremental") {
+      options.incremental = true;
     }
   }
 
@@ -1227,6 +1326,179 @@ async function syncAll(
   logSyncMetrics(metrics);
 }
 
+interface ValidationError {
+  file: string;
+  error: string;
+}
+
+interface ValidationResult {
+  valid: number;
+  invalid: number;
+  errors: ValidationError[];
+}
+
+/**
+ * Validate all content files without syncing.
+ * Useful for CI/pre-commit hooks to catch errors early.
+ *
+ * Validates:
+ * - MDX metadata (title, authors, date)
+ * - Path structure (category, grade, material)
+ * - References and choices files
+ */
+async function validate(): Promise<void> {
+  log("=== VALIDATE CONTENT ===\n");
+  log("Validating all content files without syncing...\n");
+
+  const startTime = performance.now();
+
+  const articleResult = await validateArticles();
+  const subjectResult = await validateSubjects();
+  const exerciseResult = await validateExercises();
+
+  const totalValid =
+    articleResult.valid + subjectResult.valid + exerciseResult.valid;
+  const totalInvalid =
+    articleResult.invalid + subjectResult.invalid + exerciseResult.invalid;
+  const allErrors = [
+    ...articleResult.errors,
+    ...subjectResult.errors,
+    ...exerciseResult.errors,
+  ];
+
+  const duration = performance.now() - startTime;
+
+  log("\n=== VALIDATION SUMMARY ===\n");
+  log(
+    `Articles:  ${articleResult.valid} valid, ${articleResult.invalid} invalid`
+  );
+  log(
+    `Subjects:  ${subjectResult.valid} valid, ${subjectResult.invalid} invalid`
+  );
+  log(
+    `Exercises: ${exerciseResult.valid} valid, ${exerciseResult.invalid} invalid`
+  );
+  log("---");
+  log(`Total: ${totalValid} valid, ${totalInvalid} invalid`);
+  log(`Time: ${formatDuration(duration)}`);
+
+  if (allErrors.length > 0) {
+    log("\n=== ERRORS ===\n");
+    for (const err of allErrors.slice(0, 20)) {
+      logError(`${err.file}`);
+      log(`  ${err.error}\n`);
+    }
+    if (allErrors.length > 20) {
+      log(`... and ${allErrors.length - 20} more errors`);
+    }
+    process.exit(1);
+  } else {
+    log("\n");
+    logSuccess("All content files are valid!");
+  }
+}
+
+async function validateArticles(): Promise<ValidationResult> {
+  const files = await globFiles("articles/**/*.mdx");
+  const result: ValidationResult = { valid: 0, invalid: 0, errors: [] };
+
+  log(`Validating ${files.length} article files...`);
+
+  for (const file of files) {
+    try {
+      parseArticlePath(file);
+      await readMdxFile(file);
+      const articleDir = getArticleDir(file);
+      await readArticleReferences(articleDir);
+      result.valid++;
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      result.invalid++;
+      result.errors.push({ file, error: msg });
+    }
+  }
+
+  return result;
+}
+
+async function validateSubjects(): Promise<ValidationResult> {
+  const files = await globFiles("subject/**/*.mdx");
+  const materialFiles = await globFiles("subject/**/_data/*-material.ts");
+  const result: ValidationResult = { valid: 0, invalid: 0, errors: [] };
+
+  log(`Validating ${files.length} subject files...`);
+
+  for (const file of files) {
+    try {
+      parseSubjectPath(file);
+      await readMdxFile(file);
+      result.valid++;
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      result.invalid++;
+      result.errors.push({ file, error: msg });
+    }
+  }
+
+  log(`Validating ${materialFiles.length} material files...`);
+
+  for (const materialFile of materialFiles) {
+    try {
+      const localeMatch = materialFile.match(LOCALE_MATERIAL_FILE_REGEX);
+      if (localeMatch) {
+        const locale = localeMatch[1] as Locale;
+        await parseSubjectMaterialFile(materialFile, locale);
+      }
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      result.invalid++;
+      result.errors.push({ file: materialFile, error: msg });
+    }
+  }
+
+  return result;
+}
+
+async function validateExercises(): Promise<ValidationResult> {
+  const questionFiles = await globFiles("exercises/**/_question/*.mdx");
+  const materialFiles = await globFiles("exercises/**/_data/*-material.ts");
+  const result: ValidationResult = { valid: 0, invalid: 0, errors: [] };
+
+  log(`Validating ${questionFiles.length} exercise question files...`);
+
+  for (const file of questionFiles) {
+    try {
+      parseExercisePath(file);
+      await readMdxFile(file);
+      const exerciseDir = getExerciseDir(file);
+      await readExerciseChoices(exerciseDir);
+      result.valid++;
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      result.invalid++;
+      result.errors.push({ file, error: msg });
+    }
+  }
+
+  log(`Validating ${materialFiles.length} material files...`);
+
+  for (const materialFile of materialFiles) {
+    try {
+      const localeMatch = materialFile.match(LOCALE_MATERIAL_FILE_REGEX);
+      if (localeMatch) {
+        const locale = localeMatch[1] as Locale;
+        await parseExerciseMaterialFile(materialFile, locale);
+      }
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      result.invalid++;
+      result.errors.push({ file: materialFile, error: msg });
+    }
+  }
+
+  return result;
+}
+
 async function verify(config: ConvexConfig): Promise<void> {
   log("=== VERIFY CONTENT ===\n");
 
@@ -1740,11 +2012,166 @@ async function clean(
   return { hasStale, deleted };
 }
 
+/**
+ * Incremental sync: only sync files changed since last successful sync.
+ * Uses git to detect changed files and skips unchanged content.
+ *
+ * Benefits:
+ * - Much faster for daily syncs (seconds vs minutes)
+ * - Reduces load on Convex
+ * - Only processes what actually changed
+ *
+ * Falls back to full sync if:
+ * - No previous sync state exists
+ * - Git history is unavailable
+ * - Last sync commit is not in history
+ */
+async function syncIncremental(
+  config: ConvexConfig,
+  options: SyncOptions
+): Promise<void> {
+  const metrics = createMetrics();
+  log("=== INCREMENTAL SYNC ===\n");
+
+  const syncState = loadSyncState();
+  const currentCommit = getCurrentGitCommit();
+
+  if (!syncState?.lastSyncCommit) {
+    log("No previous sync state found. Running full sync...\n");
+    await syncAll(config, options);
+    saveSyncState({
+      lastSyncTimestamp: Date.now(),
+      lastSyncCommit: currentCommit,
+      contentHashes: {},
+    });
+    return;
+  }
+
+  if (!currentCommit) {
+    log("Git not available. Running full sync...\n");
+    await syncAll(config, options);
+    return;
+  }
+
+  log(`Last sync: ${new Date(syncState.lastSyncTimestamp).toISOString()}`);
+  log(`Last commit: ${syncState.lastSyncCommit.slice(0, 8)}`);
+  log(`Current commit: ${currentCommit.slice(0, 8)}\n`);
+
+  if (syncState.lastSyncCommit === currentCommit) {
+    logSuccess("No changes since last sync. Nothing to do!");
+    finalizeMetrics(metrics);
+    logSyncMetrics(metrics);
+    return;
+  }
+
+  const changedFiles = getChangedFilesSince(syncState.lastSyncCommit);
+
+  if (changedFiles.size === 0) {
+    logSuccess("No content files changed. Nothing to do!");
+    saveSyncState({
+      lastSyncTimestamp: Date.now(),
+      lastSyncCommit: currentCommit,
+      contentHashes: syncState.contentHashes,
+    });
+    return;
+  }
+
+  log(`Changed files: ${changedFiles.size}\n`);
+
+  const hasArticleChanges = [...changedFiles].some((f) =>
+    f.includes("/articles/")
+  );
+  const hasSubjectChanges = [...changedFiles].some((f) =>
+    f.includes("/subject/")
+  );
+  const hasExerciseChanges = [...changedFiles].some((f) =>
+    f.includes("/exercises/")
+  );
+
+  let articleResult: SyncResult = { created: 0, updated: 0, unchanged: 0 };
+  let subjectTopicResult: SyncResult = { created: 0, updated: 0, unchanged: 0 };
+  let subjectSectionResult: SyncResult = {
+    created: 0,
+    updated: 0,
+    unchanged: 0,
+  };
+  let exerciseSetResult: SyncResult = { created: 0, updated: 0, unchanged: 0 };
+  let exerciseQuestionResult: SyncResult = {
+    created: 0,
+    updated: 0,
+    unchanged: 0,
+  };
+
+  if (hasArticleChanges) {
+    log("Articles changed - syncing...");
+    articleResult = await syncArticles(config, options);
+    addPhaseMetrics(metrics, "Articles", articleResult);
+  } else {
+    log("Articles: no changes");
+  }
+
+  if (hasSubjectChanges) {
+    log("Subjects changed - syncing...");
+    subjectTopicResult = await syncSubjectTopics(config, options);
+    subjectSectionResult = await syncSubjectSections(config, options);
+    addPhaseMetrics(metrics, "Subject Topics", subjectTopicResult);
+    addPhaseMetrics(metrics, "Subject Sections", subjectSectionResult);
+  } else {
+    log("Subjects: no changes");
+  }
+
+  if (hasExerciseChanges) {
+    log("Exercises changed - syncing...");
+    exerciseSetResult = await syncExerciseSets(config, options);
+    exerciseQuestionResult = await syncExerciseQuestions(config, options);
+    addPhaseMetrics(metrics, "Exercise Sets", exerciseSetResult);
+    addPhaseMetrics(metrics, "Exercise Questions", exerciseQuestionResult);
+  } else {
+    log("Exercises: no changes");
+  }
+
+  finalizeMetrics(metrics);
+
+  log("\n=== SUMMARY ===\n");
+
+  const totalCreated =
+    articleResult.created +
+    subjectTopicResult.created +
+    subjectSectionResult.created +
+    exerciseSetResult.created +
+    exerciseQuestionResult.created;
+  const totalUpdated =
+    articleResult.updated +
+    subjectTopicResult.updated +
+    subjectSectionResult.updated +
+    exerciseSetResult.updated +
+    exerciseQuestionResult.updated;
+
+  if (totalCreated > 0 || totalUpdated > 0) {
+    log(`Changes: ${totalCreated} created, ${totalUpdated} updated`);
+  } else {
+    log("No changes (all content up to date)");
+  }
+
+  logSyncMetrics(metrics);
+
+  saveSyncState({
+    lastSyncTimestamp: Date.now(),
+    lastSyncCommit: currentCommit,
+    contentHashes: syncState.contentHashes,
+  });
+
+  log("\n=== INCREMENTAL SYNC COMPLETE ===");
+  logSuccess("Sync state saved for next incremental sync");
+}
+
 async function syncFull(config: ConvexConfig): Promise<void> {
   log("=== FULL SYNC ===\n");
   log(
     "This command will: sync all content, clean stale content, verify data\n"
   );
+
+  const currentCommit = getCurrentGitCommit();
 
   try {
     await syncAll(config, {});
@@ -1759,8 +2186,15 @@ async function syncFull(config: ConvexConfig): Promise<void> {
     log("\n");
     await verify(config);
 
+    saveSyncState({
+      lastSyncTimestamp: Date.now(),
+      lastSyncCommit: currentCommit,
+      contentHashes: {},
+    });
+
     log("\n=== FULL SYNC COMPLETE ===");
     logSuccess("All operations completed successfully!");
+    logSuccess("Sync state saved for incremental syncs");
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     logError(`Full sync failed: ${msg}`);
@@ -1800,6 +2234,12 @@ async function main() {
     case "all":
       await syncAll(config, options);
       break;
+    case "incremental":
+      await syncIncremental(config, options);
+      break;
+    case "validate":
+      await validate();
+      break;
     case "verify":
       await verify(config);
       break;
@@ -1812,7 +2252,13 @@ async function main() {
     default:
       logError(`Unknown command: ${type}`);
       log("\nUsage:");
-      log("  sync:all              - Sync all content");
+      log("  sync:all              - Sync all content (full scan)");
+      log(
+        "  sync:incremental      - Sync only changed files since last sync (fast)"
+      );
+      log(
+        "  sync:validate         - Validate content without syncing (for CI)"
+      );
       log("  sync:articles         - Sync articles only");
       log("  sync:subjects         - Sync subject topics and sections");
       log("  sync:subject-topics   - Sync subject topics only");

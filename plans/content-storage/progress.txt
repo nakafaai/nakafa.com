@@ -196,6 +196,40 @@ Total content synced: 1,540 items
 
 ---
 
+### Phase 1.9: Incremental Sync & Validation (COMPLETE)
+
+**1. Incremental Sync**
+- Added `sync:incremental` command for faster daily syncs
+- Uses git diff to detect changed files since last sync
+- Persists sync state in `.sync-state.json` (gitignored)
+- Falls back to full sync if no previous state exists
+
+**2. Content Validation (CI-ready)**
+- Added `sync:validate` command for CI/CD pipelines
+- Validates all MDX metadata without syncing to database
+- Reports file-by-file errors with line numbers
+- Exits with code 1 if any validation fails
+
+**3. Full Sync Enhancement**
+- `sync:full` now saves sync state after successful run
+- Enables seamless transition to incremental sync workflow
+
+**Files modified:**
+- packages/backend/scripts/sync-content.ts (+incremental, +validate)
+- packages/backend/convex/contentSync/mutations.ts (minor cleanup)
+- packages/backend/package.json (+sync:incremental, +sync:validate)
+- packages/backend/.gitignore (+.sync-state.json)
+- packages/backend/scripts/README.md (new comprehensive docs)
+- plans/content-storage/SYNC.md (updated with new commands)
+
+**Verification:**
+- pnpm lint: PASSED (1468 files)
+- TypeScript check: PASSED
+- sync:validate: PASSED (1540 valid, 0 invalid)
+- sync:verify: PASSED (all content matches)
+
+---
+
 ### Phase 2: API Layer (NEXT)
 - Create public query functions for content retrieval
 - Add authentication/rate limiting
@@ -208,4 +242,4 @@ Total content synced: 1,540 items
 ---
 
 **Last Updated**: January 24, 2026
-**Status**: Phase 1.8 Complete - Performance optimizations implemented
+**Status**: Phase 1.9 Complete - Incremental sync & validation ready

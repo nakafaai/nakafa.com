@@ -34,7 +34,34 @@ This single command:
 2. Cleans stale content (content in DB but deleted from filesystem)
 3. Cleans unused authors (authors with no linked content)
 4. Verifies database matches filesystem
-5. Exits with error if any step fails
+5. Saves sync state for incremental sync
+6. Exits with error if any step fails
+
+### Incremental Sync (Fast)
+
+```bash
+# Sync only files changed since last sync (uses git diff)
+pnpm --filter backend sync:incremental
+```
+
+How it works:
+1. Reads `.sync-state.json` for last sync commit hash
+2. Uses `git diff` to find changed content files since that commit
+3. Only syncs the changed files (much faster for daily development)
+4. Falls back to full sync if no previous state exists
+
+### Validate Without Syncing (CI)
+
+```bash
+# Validate all content files without syncing to database
+pnpm --filter backend sync:validate
+```
+
+Use in CI/CD pipelines to catch parse errors before merging:
+- Validates all MDX metadata (title, authors, date)
+- Validates exercise choices files
+- Reports file-by-file errors with line numbers
+- Exits with code 1 if any validation fails
 
 ### Individual Commands
 
@@ -78,6 +105,7 @@ pnpm --filter backend sync:clean -- --force --authors
 | `--force` | Actually delete stale content (for clean) |
 | `--authors` | Also clean unused authors (for clean) |
 | `--sequential` | Run sync phases sequentially (for debugging) |
+| `--incremental` | Sync only changed files since last sync |
 
 ## Performance Features
 

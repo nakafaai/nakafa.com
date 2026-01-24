@@ -14,6 +14,8 @@
     "sync:subjects": "tsx scripts/sync-content.ts subjects",
     "sync:exercises": "tsx scripts/sync-content.ts exercises",
     "sync:all": "tsx scripts/sync-content.ts all",
+    "sync:incremental": "tsx scripts/sync-content.ts incremental",
+    "sync:validate": "tsx scripts/sync-content.ts validate",
     "sync:full": "tsx scripts/sync-content.ts full",
     "sync:verify": "tsx scripts/sync-content.ts verify",
     "sync:clean": "tsx scripts/sync-content.ts clean"
