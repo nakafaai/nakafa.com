@@ -18,7 +18,9 @@
     "sync:validate": "tsx scripts/sync-content.ts validate",
     "sync:full": "tsx scripts/sync-content.ts full",
     "sync:verify": "tsx scripts/sync-content.ts verify",
-    "sync:clean": "tsx scripts/sync-content.ts clean"
+    "sync:clean": "tsx scripts/sync-content.ts clean",
+    "sync:prod": "tsx scripts/sync-content.ts full --prod",
+    "sync:prod:verify": "tsx scripts/sync-content.ts verify --prod"
   },
   "dependencies": {
     "@convex-dev/better-auth": "^0.10.10",

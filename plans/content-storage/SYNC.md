@@ -106,6 +106,81 @@ pnpm --filter backend sync:clean -- --force --authors
 | `--authors` | Also clean unused authors (for clean) |
 | `--sequential` | Run sync phases sequentially (for debugging) |
 | `--incremental` | Sync only changed files since last sync |
+| `--prod` | Sync to production database |
+
+## Production Sync
+
+### Quick Start (Production)
+
+```bash
+# Full sync to production
+pnpm --filter backend sync:prod
+
+# Verify production database
+pnpm --filter backend sync:prod:verify
+```
+
+### Setup
+
+1. **Add production URL to `.env.local`:**
+
+```bash
+# packages/backend/.env.local
+CONVEX_URL=https://your-dev-project.convex.cloud      # Development (default)
+CONVEX_PROD_URL=https://your-prod-project.convex.cloud # Production
+```
+
+2. **Authenticate with Convex** (if not already):
+
+```bash
+cd packages/backend
+npx convex dev
+```
+
+Your access token is stored in `~/.convex/config.json` and works for both dev and prod.
+
+### Manual Production Commands
+
+```bash
+# Any sync command with --prod flag
+pnpm --filter backend sync:full -- --prod
+pnpm --filter backend sync:all -- --prod
+pnpm --filter backend sync:verify -- --prod
+pnpm --filter backend sync:clean -- --prod --force
+```
+
+### CI/CD with Deploy Key
+
+For automated deployments without user authentication:
+
+1. **Create a deploy key** in Convex Dashboard → Settings → Deploy Keys
+2. **Set environment variable:**
+
+```bash
+export CONVEX_DEPLOY_KEY="prod:your-project|your-key-here"
+```
+
+3. **Run sync** (deploy key is auto-detected):
+
+```bash
+pnpm --filter backend sync:full
+```
+
+The script automatically detects `CONVEX_DEPLOY_KEY` and uses it for authentication, extracting the deployment URL from the key format.
+
+### Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `CONVEX_URL` | Development deployment URL (default target) |
+| `CONVEX_PROD_URL` | Production deployment URL (used with `--prod`) |
+| `CONVEX_DEPLOY_KEY` | Deploy key for CI/CD (overrides all other auth) |
+
+### Safety Notes
+
+- **`--prod` shows a warning** before syncing to confirm you're targeting production
+- **Validate first** with `sync:validate` before production sync
+- **Verify after sync** with `sync:prod:verify` to confirm data integrity
 
 ## Performance Features
 

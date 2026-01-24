@@ -13,6 +13,9 @@ pnpm --filter backend sync:incremental
 
 # Validate content without syncing (for CI/pre-commit)
 pnpm --filter backend sync:validate
+
+# Sync to production
+pnpm --filter backend sync:prod
 ```
 
 ## Commands
@@ -25,6 +28,8 @@ pnpm --filter backend sync:validate
 | `sync:validate` | Validate content without syncing | Pre-commit hook, CI |
 | `sync:verify` | Verify DB matches filesystem | Debugging |
 | `sync:clean` | Find/remove stale content | Manual cleanup |
+| `sync:prod` | Full sync to production | Production deployment |
+| `sync:prod:verify` | Verify production DB | Production verification |
 
 ### Content-Specific Commands
 
@@ -42,6 +47,64 @@ pnpm --filter backend sync:exercises        # Exercise sets + questions
 | `--force` | Actually delete stale content |
 | `--authors` | Also clean unused authors |
 | `--sequential` | Run phases sequentially (debugging) |
+| `--prod` | Sync to production database |
+
+## Production Sync
+
+### Setup
+
+1. Add production URL to `.env.local`:
+
+```bash
+# packages/backend/.env.local
+CONVEX_URL=https://your-dev-project.convex.cloud      # Development
+CONVEX_PROD_URL=https://your-prod-project.convex.cloud # Production
+```
+
+2. Authenticate with Convex (works for both dev and prod):
+
+```bash
+npx convex dev
+```
+
+### Commands
+
+```bash
+# Full sync to production
+pnpm --filter backend sync:prod
+
+# Verify production data
+pnpm --filter backend sync:prod:verify
+
+# Any command with --prod flag
+pnpm --filter backend sync:all -- --prod
+pnpm --filter backend sync:clean -- --prod --force
+```
+
+### CI/CD with Deploy Key
+
+For automated deployments:
+
+1. Create deploy key in Convex Dashboard → Settings → Deploy Keys
+2. Set environment variable:
+
+```bash
+export CONVEX_DEPLOY_KEY="prod:your-project|your-key"
+```
+
+3. Run sync (deploy key auto-detected):
+
+```bash
+pnpm --filter backend sync:full
+```
+
+### Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `CONVEX_URL` | Development URL (default) |
+| `CONVEX_PROD_URL` | Production URL (with `--prod`) |
+| `CONVEX_DEPLOY_KEY` | Deploy key for CI/CD |
 
 ## Incremental Sync
 
