@@ -113,7 +113,7 @@ Example output:
 | Exercise Questions | 920 | ~12s | ~79/sec |
 | **Total** | **1850** | **~15s** | **~122/sec** |
 
-*Measured on Apple M2 with parallel sync (default mode)*
+*Measured with parallel sync (default mode). Results may vary based on network latency and system load.*
 
 ### Progress Indicators
 
