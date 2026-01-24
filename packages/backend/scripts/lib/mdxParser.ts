@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
+import type { Locale } from "@repo/backend/convex/lib/contentValidators";
 import {
   type ContentMetadata,
   ContentMetadataSchema,
@@ -8,8 +9,6 @@ import {
   ReferenceSchema,
 } from "@repo/contents/_types/content";
 import { ExercisesChoicesSchema } from "@repo/contents/_types/exercises/choices";
-
-type Locale = "en" | "id";
 
 interface ParsedMdx {
   metadata: ContentMetadata;
@@ -50,12 +49,13 @@ interface ExerciseParsedPath {
 }
 
 export type {
-  Locale,
   ParsedMdx,
   ArticleParsedPath,
   SubjectParsedPath,
   ExerciseParsedPath,
 };
+
+export type { Locale } from "@repo/backend/convex/lib/contentValidators";
 
 const METADATA_REGEX = /export\s+const\s+metadata\s*=\s*({[\s\S]*?});/;
 
@@ -68,9 +68,8 @@ const EXERCISE_DIR_REGEX =
   /(.*\/exercises\/[^/]+\/[^/]+\/[^/]+\/[^/]+\/[^/]+\/\d+)\//;
 
 const BACKSLASH_REGEX = /\\/g;
-const DEFAULT_EXPORT_REGEX = /export\s+default\s+({[\s\S]*?})\s*;?\s*$/;
-const CONST_CHOICES_REGEX =
-  /const\s+choices[^=]*=\s*({[\s\S]*?})\s*(?:satisfies|as|;)/;
+const DEFAULT_EXPORT_REGEX = /export\s+default\s+(\{[\s\S]*\})\s*;?\s*$/;
+const CONST_CHOICES_REGEX = /const\s+choices[^=]*=\s*(\{[\s\S]*\})\s*;/;
 const REFERENCES_REGEX =
   /export\s+const\s+references[^=]*=\s*(\[[\s\S]*?\]);?\s*$/;
 const MULTIPLE_NEWLINES_REGEX = /\n{3,}/g;

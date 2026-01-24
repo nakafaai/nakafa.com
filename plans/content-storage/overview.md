@@ -11,9 +11,9 @@ Store MDX content (articles, subjects, exercises) in Convex database with fully 
 ## Current State
 
 ### Content Sources (MDX Files)
-- `packages/contents/articles/**/*.mdx` (~50 files)
-- `packages/contents/subject/**/*.mdx` (~2,000 files)
-- `packages/contents/exercises/**/*.mdx` (~400 files)
+- `packages/contents/articles/**/*.mdx` (14 articles, 2 locales each)
+- `packages/contents/subject/**/*.mdx` (606 subjects, 2 locales each)
+- `packages/contents/exercises/**/*.mdx` (920 exercises, with question + answer per locale)
 
 ### Existing Type Definitions
 - `packages/contents/_types/content.ts` - ContentMetadata, Reference schemas
@@ -73,11 +73,11 @@ Following Convex best practices:
 |-------|---------|-----------|---------------|
 | `authors` | Shared author profiles | ~10 | Referenced by contentAuthors |
 | `contentAuthors` | N:M join table | ~5,000 | Links content to authors |
-| `articleContents` | Article body storage | ~50 | Has references via 1:N |
-| `articleReferences` | Article citations | ~500 | Belongs to articleContents |
-| `subjectContents` | Subject lesson content | ~2,000 | Has authors via join |
-| `exerciseContents` | Exercise questions | ~400 | Has choices via 1:N |
-| `exerciseChoices` | Answer options | ~4,000 | Belongs to exerciseContents |
+| `articleContents` | Article body storage | 14 | Has references via 1:N |
+| `articleReferences` | Article citations | ~100 | Belongs to articleContents |
+| `subjectContents` | Subject lesson content | 606 | Has authors via join |
+| `exerciseContents` | Exercise questions | 920 | Has choices via 1:N |
+| `exerciseChoices` | Answer options | ~4,600 | Belongs to exerciseContents |
 
 ## Phases
 
@@ -92,22 +92,40 @@ Following Convex best practices:
 | 0.5 | Create exerciseContents schema | `convex/exerciseContents/schema.ts` |
 | 0.6 | Update main schema.ts | `convex/schema.ts` |
 
-### Phase 1: Content Sync (Future)
+### Phase 1: Content Sync ✅
+
+| Task | Description | File |
+|------|-------------|------|
+| 1.1 | Create MDX parser | `scripts/lib/mdxParser.ts` |
+| 1.2 | Create bulk sync mutations | `convex/contentSync/mutations.ts` |
+| 1.3 | Create sync script | `scripts/sync-content.ts` |
+| 1.4 | Add content hash validation | Built into sync |
+| 1.5 | Add verify command | `convex/contentSync/queries.ts` |
+
+### Phase 2: Query Functions (Future)
 
 | Task | Description |
 |------|-------------|
-| 1.1 | Create MDX parser action |
-| 1.2 | Create sync mutation |
-| 1.3 | Create sync script |
-| 1.4 | Add content hash validation |
+| 2.1 | Article queries (getBySlug, listByCategory) |
+| 2.2 | Subject queries (getBySlug, listByMaterial) |
+| 2.3 | Exercise queries (getBySlug, listBySet) |
+| 2.4 | Author queries (getById, getByUsername) |
 
-### Phase 2: Content Helpers (Future)
+### Phase 3: API Endpoints (Future)
 
 | Task | Description |
 |------|-------------|
-| 2.1 | Create contentHelpers.ts |
-| 2.2 | Create authorHelpers.ts |
-| 2.3 | Add query functions |
+| 3.1 | Create HTTP API routes for content |
+| 3.2 | Add rate limiting and API key validation |
+| 3.3 | Implement tiered access levels |
+
+### Phase 4: Embeddings (Future)
+
+| Task | Description |
+|------|-------------|
+| 4.1 | Add embedding field to content tables |
+| 4.2 | Create embedding generation action |
+| 4.3 | Implement semantic search queries |
 
 ## Key Design Decisions
 
@@ -154,11 +172,13 @@ All validators match existing Zod schemas in `packages/contents/_types/`:
 
 ## Success Criteria
 
-- [ ] All 7 tables created with proper indexes
-- [ ] Validators match existing Zod schemas
-- [ ] Schema compiles without errors
-- [ ] Lint passes
-- [ ] Types are exported and usable
+- [x] All 7 tables created with proper indexes
+- [x] Validators match existing Zod schemas
+- [x] Schema compiles without errors
+- [x] Lint passes
+- [x] Types are exported and usable
+- [x] Content sync working (14 articles, 606 subjects, 920 exercises)
+- [ ] Query functions for all content types
 
 ## Commands
 
@@ -171,20 +191,31 @@ pnpm typecheck
 ## File Structure After Completion
 
 ```
-packages/backend/convex/
-├── lib/
-│   ├── authHelpers.ts (existing)
-│   ├── contentValidators.ts (NEW)
-│   └── ...
-├── authors/
-│   └── schema.ts (NEW)
-├── articleContents/
-│   └── schema.ts (NEW)
-├── subjectContents/
-│   └── schema.ts (NEW)
-├── exerciseContents/
-│   └── schema.ts (NEW)
-└── schema.ts (UPDATED)
+packages/backend/
+├── convex/
+│   ├── lib/
+│   │   ├── authHelpers.ts (existing)
+│   │   ├── contentValidators.ts
+│   │   └── ...
+│   ├── authors/
+│   │   └── schema.ts
+│   ├── articleContents/
+│   │   ├── schema.ts
+│   │   └── mutations.ts
+│   ├── subjectContents/
+│   │   ├── schema.ts
+│   │   └── mutations.ts
+│   ├── exerciseContents/
+│   │   ├── schema.ts
+│   │   └── mutations.ts
+│   ├── contentSync/
+│   │   ├── mutations.ts
+│   │   └── queries.ts
+│   └── schema.ts
+└── scripts/
+    ├── sync-content.ts
+    └── lib/
+        └── mdxParser.ts
 ```
 
 ## Dependencies
@@ -205,4 +236,4 @@ packages/backend/convex/
 ---
 
 **Last Updated**: January 24, 2026
-**Status**: Planning complete, ready for implementation
+**Status**: Phase 1 complete - Content sync working, all data verified

@@ -2,10 +2,21 @@
 
 Sync MDX content from filesystem to Convex database.
 
-## Quick Start
+## Prerequisites
+
+Before running sync, you must be authenticated with Convex:
 
 ```bash
-# Sync everything
+cd packages/backend
+npx convex dev
+```
+
+This creates `~/.convex/config.json` with your access token.
+
+## Commands
+
+```bash
+# Sync all content (articles, subjects, exercises)
 pnpm --filter backend sync:all
 
 # Sync specific content type
@@ -13,148 +24,104 @@ pnpm --filter backend sync:articles
 pnpm --filter backend sync:subjects
 pnpm --filter backend sync:exercises
 
-# Preview changes without syncing
-pnpm --filter backend sync:all -- --dry-run
-
 # Sync specific locale only
 pnpm --filter backend sync:subjects -- --locale en
+pnpm --filter backend sync:exercises -- --locale id
+
+# Verify database matches filesystem (no changes)
+pnpm --filter backend sync:verify
 ```
+
+## Content Structure
+
+### Articles
+```
+packages/contents/articles/{category}/{articleSlug}/
+├── en.mdx          # English content
+├── id.mdx          # Indonesian content
+└── ref.ts          # References/citations
+```
+
+### Subjects
+```
+packages/contents/subject/{category}/{grade}/{material}/{topic}/{section}/
+├── en.mdx          # English content
+└── id.mdx          # Indonesian content
+```
+
+### Exercises
+```
+packages/contents/exercises/{category}/{type}/{material}/{exerciseType}/{set}/{number}/
+├── _question/
+│   ├── en.mdx      # Question in English
+│   └── id.mdx      # Question in Indonesian
+├── _answer/
+│   ├── en.mdx      # Answer in English
+│   └── id.mdx      # Answer in Indonesian
+└── choices.ts      # Multiple choice options
+```
+
+**Important:** Each exercise has 2 MDX files per locale (question + answer), but counts as 1 exercise in the database. The sync finds `_question/*.mdx` files and loads the corresponding `_answer/*.mdx` automatically.
+
+## Current Stats
+
+| Content Type | Items | Batches | Batch Size |
+|--------------|-------|---------|------------|
+| Articles | 14 | 1 | 50 |
+| Subjects | 606 | 31 | 20 |
+| Exercises | 920 | 31 | 30 |
+
+**Total: 1,540 content items**
 
 ## How It Works
 
-```mermaid
-flowchart TB
-    subgraph "1. Parse MDX Files"
-        A[Read MDX files] --> B[Extract metadata]
-        B --> C[Extract body content]
-        C --> D[Normalize whitespace]
-        D --> E[Compute content hash]
-    end
+### 1. Parse MDX Files
 
-    subgraph "2. Batch Processing"
-        E --> F{Group into batches}
-        F --> G[Articles: 50/batch]
-        F --> H[Subjects: 30/batch]
-        F --> I[Exercises: 40/batch]
-    end
+Each MDX file contains:
+```typescript
+export const metadata = {
+  title: "...",
+  description: "...",
+  date: "MM/DD/YYYY",
+  authors: [{ name: "..." }]
+};
 
-    subgraph "3. Convex Bulk Mutation"
-        G --> J[bulkSyncArticles]
-        H --> K[bulkSyncSubjects]
-        I --> L[bulkSyncExercises]
-        
-        J --> M[(Convex DB)]
-        K --> M
-        L --> M
-    end
-
-    subgraph "4. Skip Unchanged"
-        M --> N{Hash changed?}
-        N -->|No| O[Skip - unchanged]
-        N -->|Yes| P[Upsert content]
-        P --> Q[Update authors]
-        P --> R[Update references/choices]
-    end
+// MDX body content below...
 ```
 
-## Architecture
+The sync script:
+1. Reads the MDX file
+2. Extracts metadata using regex
+3. Validates with Zod schema
+4. Normalizes whitespace in body
+5. Computes SHA-256 hash for change detection
 
-### Content Hash Strategy
+### 2. Batch Processing
 
-Each content item has a `contentHash` computed from:
+Content is processed in batches to stay within Convex limits:
+- Articles: 50 per batch (small files)
+- Subjects: 20 per batch (medium files)
+- Exercises: 30 per batch (includes choices)
+
+### 3. Upsert to Convex
+
+Each batch calls a bulk mutation that:
+1. Checks if content exists (by locale + slug)
+2. Compares content hash
+3. Skips unchanged content
+4. Creates or updates as needed
+5. Updates author relationships
+6. Updates references/choices
+
+### 4. Hash-Based Change Detection
 
 | Content Type | Hash Includes |
-|-------------|---------------|
-| Articles | `body + references + authors` |
-| Subjects | `body + authors` |
-| Exercises | `questionBody + answerBody + choices + authors` |
+|--------------|---------------|
+| Articles | body + references + authors |
+| Subjects | body + authors |
+| Exercises | questionBody + answerBody + choices + authors |
 
-This ensures:
-- Body changes trigger re-sync
-- Author changes trigger re-sync
-- Reference/choice changes trigger re-sync
-- Unchanged content is skipped (fast!)
-
-### Bulk Mutations (Single Transaction)
-
-Each batch runs as a single Convex mutation, handling:
-
-```mermaid
-flowchart LR
-    subgraph "One Mutation = One Transaction"
-        A[Upsert Content] --> B[Clear Old Authors]
-        B --> C[Link New Authors]
-        C --> D[Sync References/Choices]
-    end
-```
-
-Benefits:
-- Atomic: all-or-nothing per batch
-- Fast: single round-trip to database
-- Consistent: no partial updates
-
-## Scalability
-
-### Current Stats
-
-| Content Type | Files | Batches | Time |
-|-------------|-------|---------|------|
-| Articles | 14 | 1 | ~2s |
-| Subjects | 606 | 21 | ~30s |
-| Exercises | 920 | 23 | ~35s |
-
-### Scaling to 100,000+ Items
-
-The system is designed to scale:
-
-```mermaid
-flowchart TB
-    subgraph "Scaling Strategy"
-        A[100k items] --> B[Split into batches]
-        B --> C[30-50 items per batch]
-        C --> D[~2,000-3,000 batches]
-        D --> E[Sequential processing]
-    end
-    
-    subgraph "Convex Limits"
-        F[16,000 docs/mutation]
-        G[16 MiB data/mutation]
-        H[10 min action timeout]
-    end
-    
-    E --> I{Within limits?}
-    F --> I
-    G --> I
-    H --> I
-    I -->|Yes| J[Success]
-```
-
-**Why it scales:**
-
-1. **Batch size is conservative**
-   - 30-50 items per batch
-   - Well under 16,000 doc limit
-   - Well under 16 MiB data limit
-
-2. **Hash-based skipping**
-   - Only changed content syncs
-   - 100k items with 1% changes = only 1k syncs
-
-3. **Sequential batches**
-   - No memory explosion
-   - Predictable progress
-   - Can resume from failure
-
-### Estimated Time at Scale
-
-| Items | Changed | Batches | Est. Time |
-|-------|---------|---------|-----------|
-| 10,000 | 100% | 300 | ~5 min |
-| 10,000 | 10% | 30 | ~30 sec |
-| 100,000 | 100% | 3,000 | ~50 min |
-| 100,000 | 1% | 30 | ~30 sec |
-
-Daily incremental syncs (1-5% changes) stay fast even at scale.
+Unchanged content is skipped, making incremental syncs fast.
 
 ## File Structure
 
@@ -164,99 +131,86 @@ packages/backend/
 │   ├── sync-content.ts      # CLI entry point
 │   └── lib/
 │       └── mdxParser.ts     # MDX parsing utilities
-└── convex/
-    └── contentSync/
-        └── mutations.ts     # Bulk sync mutations
+├── convex/
+│   └── contentSync/
+│       ├── mutations.ts     # Bulk sync mutations
+│       └── queries.ts       # Verify queries
+└── package.json             # npm scripts
 ```
 
-## Convex Best Practices Applied
+## Convex Best Practices
 
-### 1. Bulk Operations in Single Mutation
+### Bulk Operations
+All items in a batch are processed in a single Convex mutation (atomic transaction). Either all succeed or all fail.
 
-From [Convex Best Practices](https://docs.convex.dev/understanding/best-practices):
+### Internal Mutations
+Sync mutations use `internalMutation` - they're not exposed to clients, only callable from backend scripts.
 
-> "Perform batch inserts via a single mutation"
+### Efficient Indexes
+Each content table has `locale_slug` index for fast lookups during upsert.
 
-Our bulk mutations handle entire batches in one transaction:
-
-```typescript
-// Good: Single mutation for batch
-export const bulkSyncSubjects = internalMutation({
-  handler: async (ctx, { subjects }) => {
-    for (const subject of subjects) {
-      // All operations in same transaction
-      await ctx.db.insert(...);
-      await ctx.db.insert(...); // authors
-    }
-  }
-});
-```
-
-### 2. Internal Mutations for Scripts
-
-> "Use internal functions for backend-only operations"
-
-All sync mutations are `internalMutation` - not exposed to clients:
-
-```typescript
-import { internalMutation } from "@repo/backend/convex/functions";
-
-export const bulkSyncArticles = internalMutation({
-  // Only callable via CLI or scheduled jobs
-});
-```
-
-### 3. Efficient Indexes
-
-Each content table has `locale_slug` index for fast lookups:
-
-```typescript
-.index("locale_slug", ["locale", "slug"])
-```
-
-### 4. Normalized Schema
-
-Following Convex recommendation to keep arrays small:
-- Authors in separate table (not embedded array)
+### Normalized Schema
+- Authors in separate table (not embedded)
 - References in separate table
 - Choices in separate table
 
+This follows Convex recommendation to keep arrays small (< 10 elements).
+
 ## Troubleshooting
 
-### Sync is slow
+### "CONVEX_URL environment variable is not set"
 
-Check how many items are being updated vs unchanged:
-
-```bash
-pnpm --filter backend sync:all
-# Look for "Updated: X, Unchanged: Y"
+Make sure `.env.local` exists in `packages/backend/`:
+```
+CONVEX_URL=https://your-deployment.convex.cloud
 ```
 
-If most items update every time:
-- Check if `contentHash` is computed consistently
-- Verify metadata isn't changing unexpectedly
+### "No access token found"
 
-### Memory issues with large batches
+Run `npx convex dev` to authenticate.
 
-Reduce batch size in `sync-content.ts`:
+### Sync shows 0 created, 0 updated
 
-```typescript
-const BATCH_SIZE_SUBJECTS = 20; // Reduce from 30
+Content is unchanged (hash matches). This is normal for incremental syncs.
+
+### Parse errors
+
+Check the error message for file path. Common issues:
+- Missing metadata export
+- Invalid date format (must be MM/DD/YYYY)
+- Missing required fields (title, authors)
+
+### Verify fails with "Content mismatch"
+
+Run `pnpm --filter backend sync:all` to resync all content.
+
+## Verified Data
+
+Run `pnpm --filter backend sync:verify` to check:
+
 ```
+=== DATABASE ===
+articleContents:     14
+subjectContents:     606
+exerciseContents:    920
+authors:             2
+contentAuthors:      1540
+articleReferences:   232
+exerciseChoices:     4600
 
-### CLI argument too large
-
-If you see `SIGSEGV` or argument errors:
-- Batch size is too large for CLI args
-- Content bodies are very large
-- Reduce batch size
+=== DATA INTEGRITY ===
+OK: All 920 exercises have choices
+OK: All 920 exercises have authors
+Articles with references: 14/14
+```
 
 ## Adding New Content Types
 
-1. Create schema in `convex/<type>/schema.ts`
+1. Create schema in `convex/{type}Contents/schema.ts`
 2. Add bulk mutation in `convex/contentSync/mutations.ts`
 3. Add sync function in `scripts/sync-content.ts`
 4. Add npm script in `package.json`
+5. Update this documentation
 
 ---
 

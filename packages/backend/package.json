@@ -13,7 +13,8 @@
     "sync:articles": "tsx scripts/sync-content.ts articles",
     "sync:subjects": "tsx scripts/sync-content.ts subjects",
     "sync:exercises": "tsx scripts/sync-content.ts exercises",
-    "sync:all": "tsx scripts/sync-content.ts all"
+    "sync:all": "tsx scripts/sync-content.ts all",
+    "sync:verify": "tsx scripts/sync-content.ts verify"
   },
   "dependencies": {
     "@convex-dev/better-auth": "^0.10.10",

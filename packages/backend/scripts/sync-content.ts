@@ -46,7 +46,6 @@ const BATCH_SIZE_EXERCISES = 30;
 
 interface SyncOptions {
   locale?: Locale;
-  dryRun: boolean;
 }
 
 interface SyncResult {
@@ -60,20 +59,48 @@ interface ConvexConfig {
   accessToken: string;
 }
 
+interface ContentCounts {
+  articles: number;
+  subjects: number;
+  exercises: number;
+  authors: number;
+  contentAuthors: number;
+  articleReferences: number;
+  exerciseChoices: number;
+}
+
+interface DataIntegrity {
+  exercisesWithoutChoices: string[];
+  exercisesWithoutAuthors: string[];
+  articlesWithoutReferences: string[];
+  totalExercises: number;
+  totalArticles: number;
+}
+
+function log(message: string) {
+  console.log(message);
+}
+
+function logError(message: string) {
+  console.error(`ERROR: ${message}`);
+}
+
+function logSuccess(message: string) {
+  console.log(`OK: ${message}`);
+}
+
 function getConvexConfig(): ConvexConfig {
   const url = process.env.CONVEX_URL;
 
   if (!url) {
     throw new Error(
-      "CONVEX_URL environment variable is not set. Run 'npx convex dev' first or set it manually."
+      "CONVEX_URL not set. Add it to packages/backend/.env.local"
     );
   }
 
   const convexConfigPath = path.join(os.homedir(), ".convex", "config.json");
   if (!fs.existsSync(convexConfigPath)) {
-    throw new Error(
-      `Convex config not found at ${convexConfigPath}. Run 'npx convex dev' to authenticate.`
-    );
+    throw new Error("Not authenticated. Run: npx convex dev");
   }
 
   const convexConfig = JSON.parse(
@@ -83,9 +110,7 @@ function getConvexConfig(): ConvexConfig {
   };
 
   if (!convexConfig.accessToken) {
-    throw new Error(
-      "No access token found in Convex config. Run 'npx convex dev' to authenticate."
-    );
+    throw new Error("No access token. Run: npx convex dev");
   }
 
   return {
@@ -97,15 +122,11 @@ function getConvexConfig(): ConvexConfig {
 function parseArgs(): { type: string; options: SyncOptions } {
   const args = process.argv.slice(2);
   const type = args[0] || "all";
-  const options: SyncOptions = {
-    dryRun: false,
-  };
+  const options: SyncOptions = {};
 
   for (let i = 1; i < args.length; i++) {
     const arg = args[i];
-    if (arg === "--dry-run") {
-      options.dryRun = true;
-    } else if (arg === "--locale" && args[i + 1]) {
+    if (arg === "--locale" && args[i + 1]) {
       const locale = args[i + 1];
       if (locale === "en" || locale === "id") {
         options.locale = locale;
@@ -148,34 +169,54 @@ async function runConvexMutation(
   };
 
   if (result.status === "error") {
-    console.error("Convex error logs:", result.logLines?.join("\n"));
-    throw new Error(`Convex mutation error: ${result.errorMessage}`);
+    throw new Error(result.errorMessage || "Unknown Convex error");
   }
 
   return result.value as SyncResult;
+}
+
+async function runConvexQuery<T>(
+  config: ConvexConfig,
+  functionPath: string
+): Promise<T> {
+  const response = await fetch(`${config.url}/api/query`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Convex ${config.accessToken}`,
+    },
+    body: JSON.stringify({
+      path: functionPath,
+      args: {},
+      format: "json",
+    }),
+  });
+
+  const result = (await response.json()) as {
+    status: string;
+    value?: unknown;
+    errorMessage?: string;
+  };
+
+  if (result.status === "error") {
+    throw new Error(result.errorMessage || "Unknown Convex error");
+  }
+
+  return result.value as T;
 }
 
 async function syncArticles(
   config: ConvexConfig,
   options: SyncOptions
 ): Promise<SyncResult> {
-  console.log("\n📚 Syncing articles...\n");
+  log("\n--- ARTICLES ---\n");
 
   const pattern = options.locale
     ? `articles/**/${options.locale}.mdx`
     : "articles/**/*.mdx";
 
   const files = await globFiles(pattern);
-  console.log(`Found ${files.length} article files`);
-
-  if (options.dryRun) {
-    console.log("[DRY RUN] Would sync the following articles:");
-    for (const file of files) {
-      const pathInfo = parseArticlePath(file);
-      console.log(`  - ${pathInfo.slug} (${pathInfo.locale})`);
-    }
-    return { created: 0, updated: 0, unchanged: 0 };
-  }
+  log(`Files found: ${files.length}`);
 
   const totals: SyncResult = { created: 0, updated: 0, unchanged: 0 };
   const articles: Array<{
@@ -199,39 +240,50 @@ async function syncArticles(
       details?: string;
     }>;
   }> = [];
+  const errors: string[] = [];
 
   for (const file of files) {
-    const pathInfo = parseArticlePath(file);
-    const { metadata, body } = await readMdxFile(file);
-    const articleDir = getArticleDir(file);
-    const references = await readArticleReferences(articleDir);
+    try {
+      const pathInfo = parseArticlePath(file);
+      const { metadata, body } = await readMdxFile(file);
+      const articleDir = getArticleDir(file);
+      const references = await readArticleReferences(articleDir);
 
-    const combinedContent =
-      body + JSON.stringify(references) + JSON.stringify(metadata.authors);
-    const contentHash = computeHash(combinedContent);
+      const combinedContent =
+        body + JSON.stringify(references) + JSON.stringify(metadata.authors);
+      const contentHash = computeHash(combinedContent);
 
-    articles.push({
-      locale: pathInfo.locale,
-      slug: pathInfo.slug,
-      category: pathInfo.category,
-      articleSlug: pathInfo.articleSlug,
-      title: metadata.title,
-      description: metadata.description,
-      date: parseDateToEpoch(metadata.date),
-      body,
-      contentHash,
-      authors: metadata.authors,
-      references,
-    });
+      articles.push({
+        locale: pathInfo.locale,
+        slug: pathInfo.slug,
+        category: pathInfo.category,
+        articleSlug: pathInfo.articleSlug,
+        title: metadata.title,
+        description: metadata.description,
+        date: parseDateToEpoch(metadata.date),
+        body,
+        contentHash,
+        authors: metadata.authors,
+        references,
+      });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      errors.push(`${file}: ${msg}`);
+    }
+  }
+
+  if (errors.length > 0) {
+    log(`Parse errors: ${errors.length}`);
+    for (const err of errors) {
+      logError(err);
+    }
   }
 
   const totalBatches = Math.ceil(articles.length / BATCH_SIZE_ARTICLES);
   for (let i = 0; i < articles.length; i += BATCH_SIZE_ARTICLES) {
     const batch = articles.slice(i, i + BATCH_SIZE_ARTICLES);
     const batchNum = Math.floor(i / BATCH_SIZE_ARTICLES) + 1;
-    console.log(
-      `Processing batch ${batchNum}/${totalBatches} (${batch.length} articles)`
-    );
+    log(`Batch ${batchNum}/${totalBatches} (${batch.length} items)`);
 
     const result = await runConvexMutation(
       config,
@@ -244,17 +296,15 @@ async function syncArticles(
     totals.unchanged += result.unchanged;
   }
 
-  console.log("\n✅ Articles sync complete:");
-  console.log(`   Created: ${totals.created}`);
-  console.log(`   Updated: ${totals.updated}`);
-  console.log(`   Unchanged: ${totals.unchanged}`);
-  console.log(
-    `   Total processed: ${totals.created + totals.updated + totals.unchanged}`
+  const processed = totals.created + totals.updated + totals.unchanged;
+  log(
+    `\nResult: ${totals.created} created, ${totals.updated} updated, ${totals.unchanged} unchanged`
   );
-  console.log(`   Expected: ${files.length}`);
 
-  if (totals.created + totals.updated + totals.unchanged !== files.length) {
-    console.error("⚠️  WARNING: Processed count does not match file count!");
+  if (processed === articles.length) {
+    logSuccess(`${processed}/${files.length} files synced`);
+  } else {
+    logError(`Mismatch: ${processed} processed vs ${articles.length} parsed`);
   }
 
   return totals;
@@ -264,26 +314,14 @@ async function syncSubjects(
   config: ConvexConfig,
   options: SyncOptions
 ): Promise<SyncResult> {
-  console.log("\n📖 Syncing subjects...\n");
+  log("\n--- SUBJECTS ---\n");
 
   const pattern = options.locale
     ? `subject/**/${options.locale}.mdx`
     : "subject/**/*.mdx";
 
   const files = await globFiles(pattern);
-  console.log(`Found ${files.length} subject files`);
-
-  if (options.dryRun) {
-    console.log("[DRY RUN] Would sync the following subjects:");
-    for (const file of files.slice(0, 20)) {
-      const pathInfo = parseSubjectPath(file);
-      console.log(`  - ${pathInfo.slug} (${pathInfo.locale})`);
-    }
-    if (files.length > 20) {
-      console.log(`  ... and ${files.length - 20} more`);
-    }
-    return { created: 0, updated: 0, unchanged: 0 };
-  }
+  log(`Files found: ${files.length}`);
 
   const totals: SyncResult = { created: 0, updated: 0, unchanged: 0 };
   const subjects: Array<{
@@ -302,7 +340,7 @@ async function syncSubjects(
     contentHash: string;
     authors: Array<{ name: string }>;
   }> = [];
-  let parseErrors = 0;
+  const errors: string[] = [];
 
   for (const file of files) {
     try {
@@ -329,22 +367,23 @@ async function syncSubjects(
         authors: metadata.authors,
       });
     } catch (error) {
-      parseErrors++;
-      console.error(`Error parsing ${file}:`, error);
+      const msg = error instanceof Error ? error.message : String(error);
+      errors.push(`${file}: ${msg}`);
     }
   }
 
-  if (parseErrors > 0) {
-    console.warn(`⚠️  ${parseErrors} files failed to parse`);
+  if (errors.length > 0) {
+    log(`Parse errors: ${errors.length}`);
+    for (const err of errors) {
+      logError(err);
+    }
   }
 
   const totalBatches = Math.ceil(subjects.length / BATCH_SIZE_SUBJECTS);
   for (let i = 0; i < subjects.length; i += BATCH_SIZE_SUBJECTS) {
     const batch = subjects.slice(i, i + BATCH_SIZE_SUBJECTS);
     const batchNum = Math.floor(i / BATCH_SIZE_SUBJECTS) + 1;
-    console.log(
-      `Processing batch ${batchNum}/${totalBatches} (${batch.length} subjects)`
-    );
+    log(`Batch ${batchNum}/${totalBatches} (${batch.length} items)`);
 
     const result = await runConvexMutation(
       config,
@@ -357,19 +396,15 @@ async function syncSubjects(
     totals.unchanged += result.unchanged;
   }
 
-  console.log("\n✅ Subjects sync complete:");
-  console.log(`   Created: ${totals.created}`);
-  console.log(`   Updated: ${totals.updated}`);
-  console.log(`   Unchanged: ${totals.unchanged}`);
-  console.log(
-    `   Total processed: ${totals.created + totals.updated + totals.unchanged}`
-  );
-  console.log(
-    `   Expected: ${subjects.length} (${files.length} files, ${parseErrors} parse errors)`
+  const processed = totals.created + totals.updated + totals.unchanged;
+  log(
+    `\nResult: ${totals.created} created, ${totals.updated} updated, ${totals.unchanged} unchanged`
   );
 
-  if (totals.created + totals.updated + totals.unchanged !== subjects.length) {
-    console.error("⚠️  WARNING: Processed count does not match parsed count!");
+  if (processed === subjects.length) {
+    logSuccess(`${processed}/${files.length} files synced`);
+  } else {
+    logError(`Mismatch: ${processed} processed vs ${subjects.length} parsed`);
   }
 
   return totals;
@@ -379,26 +414,14 @@ async function syncExercises(
   config: ConvexConfig,
   options: SyncOptions
 ): Promise<SyncResult> {
-  console.log("\n🎯 Syncing exercises...\n");
+  log("\n--- EXERCISES ---\n");
 
   const pattern = options.locale
     ? `exercises/**/_question/${options.locale}.mdx`
     : "exercises/**/_question/*.mdx";
 
   const questionFiles = await globFiles(pattern);
-  console.log(`Found ${questionFiles.length} exercise files`);
-
-  if (options.dryRun) {
-    console.log("[DRY RUN] Would sync the following exercises:");
-    for (const file of questionFiles.slice(0, 20)) {
-      const pathInfo = parseExercisePath(file);
-      console.log(`  - ${pathInfo.slug} (${pathInfo.locale})`);
-    }
-    if (questionFiles.length > 20) {
-      console.log(`  ... and ${questionFiles.length - 20} more`);
-    }
-    return { created: 0, updated: 0, unchanged: 0 };
-  }
+  log(`Files found: ${questionFiles.length} (question files only)`);
 
   const totals: SyncResult = { created: 0, updated: 0, unchanged: 0 };
   const exercises: Array<{
@@ -424,7 +447,7 @@ async function syncExercises(
       order: number;
     }>;
   }> = [];
-  let parseErrors = 0;
+  const errors: string[] = [];
 
   for (const questionFile of questionFiles) {
     try {
@@ -477,22 +500,23 @@ async function syncExercises(
         choices,
       });
     } catch (error) {
-      parseErrors++;
-      console.error(`Error parsing ${questionFile}:`, error);
+      const msg = error instanceof Error ? error.message : String(error);
+      errors.push(`${questionFile}: ${msg}`);
     }
   }
 
-  if (parseErrors > 0) {
-    console.warn(`⚠️  ${parseErrors} files failed to parse`);
+  if (errors.length > 0) {
+    log(`Parse errors: ${errors.length}`);
+    for (const err of errors) {
+      logError(err);
+    }
   }
 
   const totalBatches = Math.ceil(exercises.length / BATCH_SIZE_EXERCISES);
   for (let i = 0; i < exercises.length; i += BATCH_SIZE_EXERCISES) {
     const batch = exercises.slice(i, i + BATCH_SIZE_EXERCISES);
     const batchNum = Math.floor(i / BATCH_SIZE_EXERCISES) + 1;
-    console.log(
-      `Processing batch ${batchNum}/${totalBatches} (${batch.length} exercises)`
-    );
+    log(`Batch ${batchNum}/${totalBatches} (${batch.length} items)`);
 
     const result = await runConvexMutation(
       config,
@@ -505,19 +529,15 @@ async function syncExercises(
     totals.unchanged += result.unchanged;
   }
 
-  console.log("\n✅ Exercises sync complete:");
-  console.log(`   Created: ${totals.created}`);
-  console.log(`   Updated: ${totals.updated}`);
-  console.log(`   Unchanged: ${totals.unchanged}`);
-  console.log(
-    `   Total processed: ${totals.created + totals.updated + totals.unchanged}`
-  );
-  console.log(
-    `   Expected: ${exercises.length} (${questionFiles.length} files, ${parseErrors} parse errors)`
+  const processed = totals.created + totals.updated + totals.unchanged;
+  log(
+    `\nResult: ${totals.created} created, ${totals.updated} updated, ${totals.unchanged} unchanged`
   );
 
-  if (totals.created + totals.updated + totals.unchanged !== exercises.length) {
-    console.error("⚠️  WARNING: Processed count does not match parsed count!");
+  if (processed === exercises.length) {
+    logSuccess(`${processed}/${questionFiles.length} exercises synced`);
+  } else {
+    logError(`Mismatch: ${processed} processed vs ${exercises.length} parsed`);
   }
 
   return totals;
@@ -527,51 +547,250 @@ async function syncAll(
   config: ConvexConfig,
   options: SyncOptions
 ): Promise<void> {
-  console.log("🔄 Starting full content sync...\n");
-  console.log(`Options: ${JSON.stringify(options)}`);
+  log("=== CONTENT SYNC ===\n");
+  if (options.locale) {
+    log(`Locale filter: ${options.locale}`);
+  }
 
   const articleResult = await syncArticles(config, options);
   const subjectResult = await syncSubjects(config, options);
   const exerciseResult = await syncExercises(config, options);
 
-  console.log(`\n${"=".repeat(50)}`);
-  console.log("FULL SYNC SUMMARY");
-  console.log("=".repeat(50));
-  console.log("\nArticles:");
-  console.log(`  Created: ${articleResult.created}`);
-  console.log(`  Updated: ${articleResult.updated}`);
-  console.log(`  Unchanged: ${articleResult.unchanged}`);
-  console.log("\nSubjects:");
-  console.log(`  Created: ${subjectResult.created}`);
-  console.log(`  Updated: ${subjectResult.updated}`);
-  console.log(`  Unchanged: ${subjectResult.unchanged}`);
-  console.log("\nExercises:");
-  console.log(`  Created: ${exerciseResult.created}`);
-  console.log(`  Updated: ${exerciseResult.updated}`);
-  console.log(`  Unchanged: ${exerciseResult.unchanged}`);
-  console.log("\nTotals:");
-  console.log(
-    `  Created: ${articleResult.created + subjectResult.created + exerciseResult.created}`
+  log("\n=== SUMMARY ===\n");
+
+  const totalCreated =
+    articleResult.created + subjectResult.created + exerciseResult.created;
+  const totalUpdated =
+    articleResult.updated + subjectResult.updated + exerciseResult.updated;
+  const totalUnchanged =
+    articleResult.unchanged +
+    subjectResult.unchanged +
+    exerciseResult.unchanged;
+  const total = totalCreated + totalUpdated + totalUnchanged;
+
+  log(
+    `Articles:  ${articleResult.created + articleResult.updated + articleResult.unchanged} (${articleResult.created} new, ${articleResult.updated} updated)`
   );
-  console.log(
-    `  Updated: ${articleResult.updated + subjectResult.updated + exerciseResult.updated}`
+  log(
+    `Subjects:  ${subjectResult.created + subjectResult.updated + subjectResult.unchanged} (${subjectResult.created} new, ${subjectResult.updated} updated)`
   );
-  console.log(
-    `  Unchanged: ${articleResult.unchanged + subjectResult.unchanged + exerciseResult.unchanged}`
+  log(
+    `Exercises: ${exerciseResult.created + exerciseResult.updated + exerciseResult.unchanged} (${exerciseResult.created} new, ${exerciseResult.updated} updated)`
   );
+  log("---");
+  log(`Total:     ${total} items synced`);
+
+  if (totalCreated > 0 || totalUpdated > 0) {
+    log(`\nChanges: ${totalCreated} created, ${totalUpdated} updated`);
+  } else {
+    log("\nNo changes (all content up to date)");
+  }
+}
+
+async function verify(config: ConvexConfig): Promise<void> {
+  log("=== VERIFY CONTENT ===\n");
+
+  // Count all files on disk
+  const articleFiles = await globFiles("articles/**/*.mdx");
+  const subjectFiles = await globFiles("subject/**/*.mdx");
+  const questionFiles = await globFiles("exercises/**/_question/*.mdx");
+  const answerFiles = await globFiles("exercises/**/_answer/*.mdx");
+  const choicesFiles = await globFiles("exercises/**/choices.ts");
+  const refFiles = await globFiles("articles/**/ref.ts");
+
+  // Count locales
+  const articleFilesEn = articleFiles.filter((f) => f.endsWith("/en.mdx"));
+  const articleFilesId = articleFiles.filter((f) => f.endsWith("/id.mdx"));
+  const subjectFilesEn = subjectFiles.filter((f) => f.endsWith("/en.mdx"));
+  const subjectFilesId = subjectFiles.filter((f) => f.endsWith("/id.mdx"));
+  const questionFilesEn = questionFiles.filter((f) => f.endsWith("/en.mdx"));
+  const questionFilesId = questionFiles.filter((f) => f.endsWith("/id.mdx"));
+
+  log("=== FILESYSTEM ===\n");
+
+  log("Articles:");
+  log(`  Total MDX files:     ${articleFiles.length}`);
+  log(`    - English (en):    ${articleFilesEn.length}`);
+  log(`    - Indonesian (id): ${articleFilesId.length}`);
+  log(`  Reference files:     ${refFiles.length} (ref.ts)`);
+
+  log("\nSubjects:");
+  log(`  Total MDX files:     ${subjectFiles.length}`);
+  log(`    - English (en):    ${subjectFilesEn.length}`);
+  log(`    - Indonesian (id): ${subjectFilesId.length}`);
+
+  log("\nExercises:");
+  log(`  Question files:      ${questionFiles.length} (_question/*.mdx)`);
+  log(`    - English (en):    ${questionFilesEn.length}`);
+  log(`    - Indonesian (id): ${questionFilesId.length}`);
+  log(`  Answer files:        ${answerFiles.length} (_answer/*.mdx)`);
+  log(`  Choices files:       ${choicesFiles.length} (choices.ts)`);
+  log(
+    `  Unique exercises:    ${choicesFiles.length} (1 choices.ts per exercise)`
+  );
+
+  // Get counts from database
+  log("\n=== DATABASE ===\n");
+  try {
+    const counts = await runConvexQuery<ContentCounts>(
+      config,
+      "contentSync/queries:getContentCounts"
+    );
+
+    log("Content tables:");
+    log(`  articleContents:     ${counts.articles}`);
+    log(`  subjectContents:     ${counts.subjects}`);
+    log(`  exerciseContents:    ${counts.exercises}`);
+
+    log("\nRelated tables:");
+    log(`  authors:             ${counts.authors}`);
+    log(
+      `  contentAuthors:      ${counts.contentAuthors} (content-author links)`
+    );
+    log(`  articleReferences:   ${counts.articleReferences}`);
+    log(`  exerciseChoices:     ${counts.exerciseChoices}`);
+
+    log("\n=== VERIFICATION ===\n");
+
+    let allMatch = true;
+    let hasWarnings = false;
+
+    // Articles check
+    if (counts.articles === articleFiles.length) {
+      logSuccess(
+        `Articles: ${counts.articles} in DB = ${articleFiles.length} files`
+      );
+    } else {
+      logError(
+        `Articles: ${counts.articles} in DB != ${articleFiles.length} files`
+      );
+      allMatch = false;
+    }
+
+    // Subjects check
+    if (counts.subjects === subjectFiles.length) {
+      logSuccess(
+        `Subjects: ${counts.subjects} in DB = ${subjectFiles.length} files`
+      );
+    } else {
+      logError(
+        `Subjects: ${counts.subjects} in DB != ${subjectFiles.length} files`
+      );
+      allMatch = false;
+    }
+
+    // Exercises check
+    if (counts.exercises === questionFiles.length) {
+      logSuccess(
+        `Exercises: ${counts.exercises} in DB = ${questionFiles.length} question files`
+      );
+    } else {
+      logError(
+        `Exercises: ${counts.exercises} in DB != ${questionFiles.length} question files`
+      );
+      allMatch = false;
+    }
+
+    // References check (each article locale has its own references)
+    // 7 ref.ts files × 2 locales = 14 articles with references
+    log(
+      `\nReferences: ${counts.articleReferences} in DB (from ${refFiles.length} ref.ts files × 2 locales)`
+    );
+
+    // Choices check
+    // Each exercise (per locale) has choices from choices.ts
+    // 460 unique exercises × ~5 choices × 2 locales ≈ 4600
+    const avgChoicesPerExercise = counts.exerciseChoices / counts.exercises;
+    log(
+      `Choices: ${counts.exerciseChoices} in DB (~${avgChoicesPerExercise.toFixed(1)} per exercise)`
+    );
+
+    // Content authors check
+    log(`Content-Author links: ${counts.contentAuthors} in DB`);
+
+    // Answer files check
+    if (answerFiles.length !== questionFiles.length) {
+      log(
+        `\nWARNING: Answer files (${answerFiles.length}) != Question files (${questionFiles.length})`
+      );
+      hasWarnings = true;
+    }
+
+    // Data integrity check
+    log("\n=== DATA INTEGRITY ===\n");
+    const integrity = await runConvexQuery<DataIntegrity>(
+      config,
+      "contentSync/queries:getDataIntegrity"
+    );
+
+    if (integrity.exercisesWithoutChoices.length > 0) {
+      logError(
+        `${integrity.exercisesWithoutChoices.length} exercises without choices:`
+      );
+      for (const slug of integrity.exercisesWithoutChoices.slice(0, 5)) {
+        log(`  - ${slug}`);
+      }
+      if (integrity.exercisesWithoutChoices.length > 5) {
+        log(`  ... and ${integrity.exercisesWithoutChoices.length - 5} more`);
+      }
+      allMatch = false;
+    } else {
+      logSuccess(`All ${integrity.totalExercises} exercises have choices`);
+    }
+
+    if (integrity.exercisesWithoutAuthors.length > 0) {
+      logError(
+        `${integrity.exercisesWithoutAuthors.length} exercises without authors:`
+      );
+      for (const slug of integrity.exercisesWithoutAuthors.slice(0, 5)) {
+        log(`  - ${slug}`);
+      }
+      if (integrity.exercisesWithoutAuthors.length > 5) {
+        log(`  ... and ${integrity.exercisesWithoutAuthors.length - 5} more`);
+      }
+      allMatch = false;
+    } else {
+      logSuccess(`All ${integrity.totalExercises} exercises have authors`);
+    }
+
+    // Note: Not all articles have references, so this is informational only
+    const articlesWithRefs =
+      integrity.totalArticles - integrity.articlesWithoutReferences.length;
+    log(
+      `Articles with references: ${articlesWithRefs}/${integrity.totalArticles}`
+    );
+
+    // Summary
+    log("\n=== SUMMARY ===\n");
+
+    if (allMatch) {
+      logSuccess("All primary content synced correctly!");
+      log(`  - ${counts.articles} articles`);
+      log(`  - ${counts.subjects} subjects`);
+      log(`  - ${counts.exercises} exercises`);
+      log(`  - ${counts.articleReferences} references`);
+      log(`  - ${counts.exerciseChoices} choices`);
+      log(`  - ${counts.authors} authors`);
+
+      if (hasWarnings) {
+        log("\nSome warnings found (see above)");
+      }
+    } else {
+      logError("Content mismatch detected!");
+      log("\nRun 'pnpm --filter backend sync:all' to fix");
+      process.exit(1);
+    }
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    logError(`Failed to query database: ${msg}`);
+    process.exit(1);
+  }
 }
 
 async function main() {
   const { type, options } = parseArgs();
 
-  console.log("🚀 Content Sync CLI");
-  console.log(`Type: ${type}`);
-  console.log(`Locale: ${options.locale || "all"}`);
-  console.log(`Dry Run: ${options.dryRun}`);
-
   const config = getConvexConfig();
-  console.log(`Convex URL: ${config.url}`);
-  console.log("Mode: HTTP API (using user token)");
 
   switch (type) {
     case "articles":
@@ -586,15 +805,24 @@ async function main() {
     case "all":
       await syncAll(config, options);
       break;
+    case "verify":
+      await verify(config);
+      break;
     default:
-      console.error(
-        `Unknown type: ${type}. Use: articles, subjects, exercises, or all`
-      );
+      logError(`Unknown command: ${type}`);
+      log("\nUsage:");
+      log("  sync:all        - Sync all content");
+      log("  sync:articles   - Sync articles only");
+      log("  sync:subjects   - Sync subjects only");
+      log("  sync:exercises  - Sync exercises only");
+      log("  sync:verify     - Verify DB matches filesystem");
+      log("\nOptions:");
+      log("  --locale en|id  - Sync specific locale only");
       process.exit(1);
   }
 }
 
 main().catch((error) => {
-  console.error("Fatal error:", error);
+  logError(error instanceof Error ? error.message : String(error));
   process.exit(1);
 });
