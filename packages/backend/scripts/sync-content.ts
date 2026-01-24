@@ -1,29 +1,18 @@
 #!/usr/bin/env tsx
-/**
- * Content Sync CLI Script
- *
- * Syncs MDX content from packages/contents to Convex database.
- *
- * Usage:
- *   pnpm --filter backend sync:articles [--locale en|id] [--dry-run]
- *   pnpm --filter backend sync:subjects [--locale en|id] [--dry-run]
- *   pnpm --filter backend sync:exercises [--locale en|id] [--dry-run]
- *   pnpm --filter backend sync:all [--dry-run]
- *
- * Or directly:
- *   tsx scripts/sync-content.ts articles [--locale en|id] [--dry-run]
- */
-import { execSync } from "node:child_process";
+import * as fs from "node:fs";
+import * as os from "node:os";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   computeHash,
+  getArticleDir,
   getExerciseDir,
   type Locale,
   parseArticlePath,
   parseDateToEpoch,
   parseExercisePath,
   parseSubjectPath,
+  readArticleReferences,
   readExerciseChoices,
   readMdxFile,
 } from "./lib/mdxParser";
@@ -31,7 +20,29 @@ import {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const CONTENTS_DIR = path.resolve(__dirname, "../../contents");
-const BATCH_SIZE = 20;
+
+function loadEnvFile() {
+  const envPath = path.resolve(__dirname, "../.env.local");
+  if (fs.existsSync(envPath)) {
+    const content = fs.readFileSync(envPath, "utf8");
+    for (const line of content.split("\n")) {
+      const trimmed = line.trim();
+      if (trimmed && !trimmed.startsWith("#")) {
+        const [key, ...valueParts] = trimmed.split("=");
+        const value = valueParts.join("=");
+        if (key && value && !process.env[key]) {
+          process.env[key] = value;
+        }
+      }
+    }
+  }
+}
+
+loadEnvFile();
+
+const BATCH_SIZE_ARTICLES = 50;
+const BATCH_SIZE_SUBJECTS = 20;
+const BATCH_SIZE_EXERCISES = 30;
 
 interface SyncOptions {
   locale?: Locale;
@@ -42,6 +53,45 @@ interface SyncResult {
   created: number;
   updated: number;
   unchanged: number;
+}
+
+interface ConvexConfig {
+  url: string;
+  accessToken: string;
+}
+
+function getConvexConfig(): ConvexConfig {
+  const url = process.env.CONVEX_URL;
+
+  if (!url) {
+    throw new Error(
+      "CONVEX_URL environment variable is not set. Run 'npx convex dev' first or set it manually."
+    );
+  }
+
+  const convexConfigPath = path.join(os.homedir(), ".convex", "config.json");
+  if (!fs.existsSync(convexConfigPath)) {
+    throw new Error(
+      `Convex config not found at ${convexConfigPath}. Run 'npx convex dev' to authenticate.`
+    );
+  }
+
+  const convexConfig = JSON.parse(
+    fs.readFileSync(convexConfigPath, "utf8")
+  ) as {
+    accessToken?: string;
+  };
+
+  if (!convexConfig.accessToken) {
+    throw new Error(
+      "No access token found in Convex config. Run 'npx convex dev' to authenticate."
+    );
+  }
+
+  return {
+    url,
+    accessToken: convexConfig.accessToken,
+  };
 }
 
 function parseArgs(): { type: string; options: SyncOptions } {
@@ -72,33 +122,43 @@ async function globFiles(pattern: string): Promise<string[]> {
   return glob(pattern, { cwd: CONTENTS_DIR, absolute: true });
 }
 
-function runConvexFunction(
+async function runConvexMutation(
+  config: ConvexConfig,
   functionPath: string,
   args: Record<string, unknown>
-): SyncResult {
-  const argsJson = JSON.stringify(args);
-  const cmd = `npx convex run "${functionPath}" '${argsJson}'`;
+): Promise<SyncResult> {
+  const response = await fetch(`${config.url}/api/mutation`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Convex ${config.accessToken}`,
+    },
+    body: JSON.stringify({
+      path: functionPath,
+      args,
+      format: "json",
+    }),
+  });
 
-  try {
-    const result = execSync(cmd, {
-      cwd: path.resolve(__dirname, ".."),
-      encoding: "utf8",
-      stdio: ["pipe", "pipe", "pipe"],
-    });
+  const result = (await response.json()) as {
+    status: string;
+    value?: SyncResult;
+    errorMessage?: string;
+    logLines?: string[];
+  };
 
-    const parsed = JSON.parse(result.trim()) as SyncResult;
-    return parsed;
-  } catch (error) {
-    const execError = error as { stderr?: string; stdout?: string };
-    console.error(`Error running ${functionPath}:`);
-    if (execError.stderr) {
-      console.error(execError.stderr);
-    }
-    throw error;
+  if (result.status === "error") {
+    console.error("Convex error logs:", result.logLines?.join("\n"));
+    throw new Error(`Convex mutation error: ${result.errorMessage}`);
   }
+
+  return result.value as SyncResult;
 }
 
-async function syncArticles(options: SyncOptions): Promise<SyncResult> {
+async function syncArticles(
+  config: ConvexConfig,
+  options: SyncOptions
+): Promise<SyncResult> {
   console.log("\n📚 Syncing articles...\n");
 
   const pattern = options.locale
@@ -129,11 +189,26 @@ async function syncArticles(options: SyncOptions): Promise<SyncResult> {
     body: string;
     contentHash: string;
     authors: Array<{ name: string }>;
+    references: Array<{
+      title: string;
+      authors: string;
+      year: number;
+      url?: string;
+      citation?: string;
+      publication?: string;
+      details?: string;
+    }>;
   }> = [];
 
   for (const file of files) {
     const pathInfo = parseArticlePath(file);
-    const { metadata, body, contentHash } = await readMdxFile(file);
+    const { metadata, body } = await readMdxFile(file);
+    const articleDir = getArticleDir(file);
+    const references = await readArticleReferences(articleDir);
+
+    const combinedContent =
+      body + JSON.stringify(references) + JSON.stringify(metadata.authors);
+    const contentHash = computeHash(combinedContent);
 
     articles.push({
       locale: pathInfo.locale,
@@ -146,20 +221,22 @@ async function syncArticles(options: SyncOptions): Promise<SyncResult> {
       body,
       contentHash,
       authors: metadata.authors,
+      references,
     });
   }
 
-  for (let i = 0; i < articles.length; i += BATCH_SIZE) {
-    const batch = articles.slice(i, i + BATCH_SIZE);
+  const totalBatches = Math.ceil(articles.length / BATCH_SIZE_ARTICLES);
+  for (let i = 0; i < articles.length; i += BATCH_SIZE_ARTICLES) {
+    const batch = articles.slice(i, i + BATCH_SIZE_ARTICLES);
+    const batchNum = Math.floor(i / BATCH_SIZE_ARTICLES) + 1;
     console.log(
-      `Processing batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(articles.length / BATCH_SIZE)} (${batch.length} articles)`
+      `Processing batch ${batchNum}/${totalBatches} (${batch.length} articles)`
     );
 
-    const result = runConvexFunction(
-      "internal.contentSync.actions:syncArticles",
-      {
-        articles: batch,
-      }
+    const result = await runConvexMutation(
+      config,
+      "contentSync/mutations:bulkSyncArticles",
+      { articles: batch }
     );
 
     totals.created += result.created;
@@ -171,11 +248,22 @@ async function syncArticles(options: SyncOptions): Promise<SyncResult> {
   console.log(`   Created: ${totals.created}`);
   console.log(`   Updated: ${totals.updated}`);
   console.log(`   Unchanged: ${totals.unchanged}`);
+  console.log(
+    `   Total processed: ${totals.created + totals.updated + totals.unchanged}`
+  );
+  console.log(`   Expected: ${files.length}`);
+
+  if (totals.created + totals.updated + totals.unchanged !== files.length) {
+    console.error("⚠️  WARNING: Processed count does not match file count!");
+  }
 
   return totals;
 }
 
-async function syncSubjects(options: SyncOptions): Promise<SyncResult> {
+async function syncSubjects(
+  config: ConvexConfig,
+  options: SyncOptions
+): Promise<SyncResult> {
   console.log("\n📖 Syncing subjects...\n");
 
   const pattern = options.locale
@@ -214,11 +302,15 @@ async function syncSubjects(options: SyncOptions): Promise<SyncResult> {
     contentHash: string;
     authors: Array<{ name: string }>;
   }> = [];
+  let parseErrors = 0;
 
   for (const file of files) {
     try {
       const pathInfo = parseSubjectPath(file);
-      const { metadata, body, contentHash } = await readMdxFile(file);
+      const { metadata, body } = await readMdxFile(file);
+
+      const combinedContent = body + JSON.stringify(metadata.authors);
+      const contentHash = computeHash(combinedContent);
 
       subjects.push({
         locale: pathInfo.locale,
@@ -237,21 +329,27 @@ async function syncSubjects(options: SyncOptions): Promise<SyncResult> {
         authors: metadata.authors,
       });
     } catch (error) {
+      parseErrors++;
       console.error(`Error parsing ${file}:`, error);
     }
   }
 
-  for (let i = 0; i < subjects.length; i += BATCH_SIZE) {
-    const batch = subjects.slice(i, i + BATCH_SIZE);
+  if (parseErrors > 0) {
+    console.warn(`⚠️  ${parseErrors} files failed to parse`);
+  }
+
+  const totalBatches = Math.ceil(subjects.length / BATCH_SIZE_SUBJECTS);
+  for (let i = 0; i < subjects.length; i += BATCH_SIZE_SUBJECTS) {
+    const batch = subjects.slice(i, i + BATCH_SIZE_SUBJECTS);
+    const batchNum = Math.floor(i / BATCH_SIZE_SUBJECTS) + 1;
     console.log(
-      `Processing batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(subjects.length / BATCH_SIZE)} (${batch.length} subjects)`
+      `Processing batch ${batchNum}/${totalBatches} (${batch.length} subjects)`
     );
 
-    const result = runConvexFunction(
-      "internal.contentSync.actions:syncSubjects",
-      {
-        subjects: batch,
-      }
+    const result = await runConvexMutation(
+      config,
+      "contentSync/mutations:bulkSyncSubjects",
+      { subjects: batch }
     );
 
     totals.created += result.created;
@@ -263,11 +361,24 @@ async function syncSubjects(options: SyncOptions): Promise<SyncResult> {
   console.log(`   Created: ${totals.created}`);
   console.log(`   Updated: ${totals.updated}`);
   console.log(`   Unchanged: ${totals.unchanged}`);
+  console.log(
+    `   Total processed: ${totals.created + totals.updated + totals.unchanged}`
+  );
+  console.log(
+    `   Expected: ${subjects.length} (${files.length} files, ${parseErrors} parse errors)`
+  );
+
+  if (totals.created + totals.updated + totals.unchanged !== subjects.length) {
+    console.error("⚠️  WARNING: Processed count does not match parsed count!");
+  }
 
   return totals;
 }
 
-async function syncExercises(options: SyncOptions): Promise<SyncResult> {
+async function syncExercises(
+  config: ConvexConfig,
+  options: SyncOptions
+): Promise<SyncResult> {
   console.log("\n🎯 Syncing exercises...\n");
 
   const pattern = options.locale
@@ -313,6 +424,7 @@ async function syncExercises(options: SyncOptions): Promise<SyncResult> {
       order: number;
     }>;
   }> = [];
+  let parseErrors = 0;
 
   for (const questionFile of questionFiles) {
     try {
@@ -327,7 +439,7 @@ async function syncExercises(options: SyncOptions): Promise<SyncResult> {
         const answerParsed = await readMdxFile(answerFile);
         answerBody = answerParsed.body;
       } catch {
-        console.warn(`No answer file found for ${pathInfo.slug}`);
+        // Answer file is optional
       }
 
       const choicesData = await readExerciseChoices(exerciseDir);
@@ -339,7 +451,12 @@ async function syncExercises(options: SyncOptions): Promise<SyncResult> {
         order: index,
       }));
 
-      const combinedHash = computeHash(questionParsed.body + answerBody);
+      const combinedContent =
+        questionParsed.body +
+        answerBody +
+        JSON.stringify(choices) +
+        JSON.stringify(questionParsed.metadata.authors);
+      const combinedHash = computeHash(combinedContent);
 
       exercises.push({
         locale: pathInfo.locale,
@@ -360,21 +477,27 @@ async function syncExercises(options: SyncOptions): Promise<SyncResult> {
         choices,
       });
     } catch (error) {
+      parseErrors++;
       console.error(`Error parsing ${questionFile}:`, error);
     }
   }
 
-  for (let i = 0; i < exercises.length; i += BATCH_SIZE) {
-    const batch = exercises.slice(i, i + BATCH_SIZE);
+  if (parseErrors > 0) {
+    console.warn(`⚠️  ${parseErrors} files failed to parse`);
+  }
+
+  const totalBatches = Math.ceil(exercises.length / BATCH_SIZE_EXERCISES);
+  for (let i = 0; i < exercises.length; i += BATCH_SIZE_EXERCISES) {
+    const batch = exercises.slice(i, i + BATCH_SIZE_EXERCISES);
+    const batchNum = Math.floor(i / BATCH_SIZE_EXERCISES) + 1;
     console.log(
-      `Processing batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(exercises.length / BATCH_SIZE)} (${batch.length} exercises)`
+      `Processing batch ${batchNum}/${totalBatches} (${batch.length} exercises)`
     );
 
-    const result = runConvexFunction(
-      "internal.contentSync.actions:syncExercises",
-      {
-        exercises: batch,
-      }
+    const result = await runConvexMutation(
+      config,
+      "contentSync/mutations:bulkSyncExercises",
+      { exercises: batch }
     );
 
     totals.created += result.created;
@@ -386,17 +509,30 @@ async function syncExercises(options: SyncOptions): Promise<SyncResult> {
   console.log(`   Created: ${totals.created}`);
   console.log(`   Updated: ${totals.updated}`);
   console.log(`   Unchanged: ${totals.unchanged}`);
+  console.log(
+    `   Total processed: ${totals.created + totals.updated + totals.unchanged}`
+  );
+  console.log(
+    `   Expected: ${exercises.length} (${questionFiles.length} files, ${parseErrors} parse errors)`
+  );
+
+  if (totals.created + totals.updated + totals.unchanged !== exercises.length) {
+    console.error("⚠️  WARNING: Processed count does not match parsed count!");
+  }
 
   return totals;
 }
 
-async function syncAll(options: SyncOptions): Promise<void> {
+async function syncAll(
+  config: ConvexConfig,
+  options: SyncOptions
+): Promise<void> {
   console.log("🔄 Starting full content sync...\n");
   console.log(`Options: ${JSON.stringify(options)}`);
 
-  const articleResult = await syncArticles(options);
-  const subjectResult = await syncSubjects(options);
-  const exerciseResult = await syncExercises(options);
+  const articleResult = await syncArticles(config, options);
+  const subjectResult = await syncSubjects(config, options);
+  const exerciseResult = await syncExercises(config, options);
 
   console.log(`\n${"=".repeat(50)}`);
   console.log("FULL SYNC SUMMARY");
@@ -433,18 +569,22 @@ async function main() {
   console.log(`Locale: ${options.locale || "all"}`);
   console.log(`Dry Run: ${options.dryRun}`);
 
+  const config = getConvexConfig();
+  console.log(`Convex URL: ${config.url}`);
+  console.log("Mode: HTTP API (using user token)");
+
   switch (type) {
     case "articles":
-      await syncArticles(options);
+      await syncArticles(config, options);
       break;
     case "subjects":
-      await syncSubjects(options);
+      await syncSubjects(config, options);
       break;
     case "exercises":
-      await syncExercises(options);
+      await syncExercises(config, options);
       break;
     case "all":
-      await syncAll(options);
+      await syncAll(config, options);
       break;
     default:
       console.error(

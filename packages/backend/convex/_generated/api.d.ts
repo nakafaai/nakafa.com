@@ -25,7 +25,7 @@ import type * as classes_utils from "../classes/utils.js";
 import type * as comments_mutations from "../comments/mutations.js";
 import type * as comments_queries from "../comments/queries.js";
 import type * as comments_utils from "../comments/utils.js";
-import type * as contentSync_actions from "../contentSync/actions.js";
+import type * as contentSync_mutations from "../contentSync/mutations.js";
 import type * as customers_actions from "../customers/actions.js";
 import type * as customers_mutations from "../customers/mutations.js";
 import type * as customers_polar from "../customers/polar.js";
@@ -91,7 +91,7 @@ declare const fullApi: ApiFromModules<{
   "comments/mutations": typeof comments_mutations;
   "comments/queries": typeof comments_queries;
   "comments/utils": typeof comments_utils;
-  "contentSync/actions": typeof contentSync_actions;
+  "contentSync/mutations": typeof contentSync_mutations;
   "customers/actions": typeof customers_actions;
   "customers/mutations": typeof customers_mutations;
   "customers/polar": typeof customers_polar;

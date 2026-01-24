@@ -1,6 +1,6 @@
 # Content Storage Progress
 
-## Status: Phase 1 Complete (CLI Ready)
+## Status: Phase 1 Complete (Ready for Live Sync)
 
 ---
 
@@ -46,34 +46,44 @@ Tables created (7):
 
 ---
 
-[2025-01-24] Phase 1: Content Sync - COMPLETE
+[2025-01-24] Phase 1: Content Sync - COMPLETE (Revised)
+
+**Key insight**: We don't need MDX parsing or React components. We just store raw text.
 
 Tasks completed:
 - [x] Task 1.0: Phase 1 planning document
-- [x] Task 1.1: MDX parser utilities
+- [x] Task 1.1: MDX parser utilities (created)
 - [x] Task 1.2: Sync mutations for each content type
-- [x] Task 1.3: Sync CLI script
-- [x] Task 1.4: Test with dry-run
+- [x] Task 1.3: Simplified mdxParser.ts to use Zod schemas from @repo/contents/_types
+- [x] Task 1.4: Added @repo/contents dependency to backend
+- [x] Dry-run tests all pass
 
-Files created:
-- plans/content-storage/tasks/1.0-phase-1-overview.md
-- packages/backend/scripts/lib/mdxParser.ts
+Files created/modified:
+- plans/content-storage/tasks/1.0-phase-1-revised.md (new plan)
+- packages/backend/scripts/lib/mdxParser.ts (simplified)
 - packages/backend/convex/articleContents/mutations.ts
 - packages/backend/convex/subjectContents/mutations.ts
 - packages/backend/convex/exerciseContents/mutations.ts
 - packages/backend/convex/contentSync/actions.ts
 - packages/backend/scripts/sync-content.ts
+- packages/backend/package.json (added @repo/contents, glob, tsx)
 
-NPM scripts added:
+NPM scripts:
 - pnpm --filter backend sync:articles [--locale en|id] [--dry-run]
 - pnpm --filter backend sync:subjects [--locale en|id] [--dry-run]
 - pnpm --filter backend sync:exercises [--locale en|id] [--dry-run]
 - pnpm --filter backend sync:all [--dry-run]
 
-Content discovered:
-- Articles: 14 files (7 articles × 2 locales)
-- Subjects: 606 files (303 subjects × 2 locales)
-- Exercises: 920 files (460 exercises × 2 locales)
+Content discovered (dry-run):
+- Articles: 14 files (7 articles x 2 locales)
+- Subjects: 606 files (303 subjects x 2 locales)
+- Exercises: 920 files (460 exercises x 2 locales)
+
+Key changes in revision:
+1. Removed custom TypeScript interfaces for metadata
+2. Import Zod schemas from @repo/contents/_types/content
+3. Use `new Function()` pattern for safe metadata eval (matches existing codebase)
+4. Validate with ContentMetadataSchema and ExercisesChoicesSchema
 
 Verification:
 - pnpm lint: PASSED
@@ -84,16 +94,69 @@ Verification:
 
 ## Next Steps
 
-Phase 1.5: Live Sync Testing
-- Run actual sync against dev Convex deployment
-- Verify data in Convex dashboard
-- Test idempotency (re-run should show all "unchanged")
+### Phase 1.5: Live Sync Testing (COMPLETE)
 
-Phase 2: API Layer
+Run actual sync against Convex dev deployment:
+```bash
+# Start Convex dev server first
+pnpm --filter backend dev
+
+# Then in another terminal:
+pnpm --filter backend sync:articles     # 14 files - DONE
+pnpm --filter backend sync:subjects     # 606 files - DONE
+pnpm --filter backend sync:exercises    # 920 files - DONE
+```
+
+Results:
+- [x] Articles: 14 created, idempotency verified (re-run shows 14 unchanged)
+- [x] Subjects: 606 created
+- [x] Exercises: 920 created
+- [x] Authors correctly linked via contentAuthors
+- [x] Data visible in Convex dashboard
+
+Total content synced: 1,540 items
+
+---
+
+### Phase 1.6: Bug Fixes (COMPLETE)
+
+**Bug 1: articleReferences not synced**
+- Root cause: ref.ts files not being processed
+- Fix: Added `readArticleReferences()` to mdxParser.ts
+- Fix: Updated syncArticles action to call syncArticleReferences mutation
+- Verified: All 14 articles updated with references
+
+**Bug 2: Content hash didn't include references/authors**
+- Root cause: Hash only included body content
+- Fix: Updated hash to include body + references + authors (for articles)
+- Fix: Updated hash to include body + authors (for subjects)
+- Fix: Updated hash to include body + answer + choices + authors (for exercises)
+- Result: All content re-synced:
+  - Articles: 14 updated (now with references)
+  - Subjects: 606 updated (with author linking)
+  - Exercises: 920 updated (with author + choices linking)
+
+**Tables to verify in Convex dashboard:**
+- [x] articleContents: 14 items
+- [x] articleReferences: references for each article
+- [x] subjectContents: 606 items
+- [x] exerciseContents: 920 items
+- [x] exerciseChoices: choices for each exercise
+- [x] authors: unique author entries
+- [x] contentAuthors: N:M links (article/subject/exercise -> author)
+
+---
+
+### Phase 2: API Layer (NEXT)
 - Create public query functions for content retrieval
 - Add authentication/rate limiting
 - Implement API monetization tiers
 
-Phase 3: Embedding Generation
+### Phase 3: Embedding Generation
 - Add vector embeddings for semantic search
 - Index content for AI-powered search
+
+---
+
+**Last Updated**: January 24, 2026
+**Status**: Phase 1.6 Complete - All content synced with references and authors

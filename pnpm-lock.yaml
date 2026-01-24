@@ -579,6 +579,9 @@ importers:
       '@edge-runtime/vm':
         specifier: ^5.0.0
         version: 5.0.0
+      '@repo/contents':
+        specifier: workspace:*
+        version: link:../contents
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config

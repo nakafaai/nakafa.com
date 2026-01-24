@@ -1,20 +1,18 @@
 import { createHash } from "node:crypto";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
+import {
+  type ContentMetadata,
+  ContentMetadataSchema,
+  type Reference,
+  ReferenceSchema,
+} from "@repo/contents/_types/content";
+import { ExercisesChoicesSchema } from "@repo/contents/_types/exercises/choices";
 
 type Locale = "en" | "id";
 
-interface ParsedMetadata {
-  title: string;
-  description?: string;
-  authors: Array<{ name: string }>;
-  date: string;
-  subject?: string;
-  category?: string;
-}
-
 interface ParsedMdx {
-  metadata: ParsedMetadata;
+  metadata: ContentMetadata;
   body: string;
   contentHash: string;
 }
@@ -53,22 +51,13 @@ interface ExerciseParsedPath {
 
 export type {
   Locale,
-  ParsedMetadata,
   ParsedMdx,
   ArticleParsedPath,
   SubjectParsedPath,
   ExerciseParsedPath,
 };
 
-const METADATA_EXPORT_REGEX =
-  /export\s+const\s+metadata\s*=\s*(\{[\s\S]*?\n\});?\s*\n/;
-const TITLE_REGEX = /title:\s*["'`]([^"'`]+)["'`]/;
-const DESCRIPTION_REGEX = /description:\s*["'`]([^"'`]+)["'`]/;
-const DATE_REGEX = /date:\s*["'`]([^"'`]+)["'`]/;
-const SUBJECT_REGEX = /subject:\s*["'`]([^"'`]+)["'`]/;
-const CATEGORY_REGEX = /category:\s*["'`]([^"'`]+)["'`]/;
-const AUTHORS_ARRAY_REGEX = /authors:\s*\[([\s\S]*?)\]/;
-const AUTHOR_NAME_REGEX = /name:\s*["'`]([^"'`]+)["'`]/g;
+const METADATA_REGEX = /export\s+const\s+metadata\s*=\s*({[\s\S]*?});/;
 
 const ARTICLE_PATH_REGEX = /articles\/([^/]+)\/([^/]+)\/([^/]+)\.mdx$/;
 const SUBJECT_PATH_REGEX =
@@ -78,98 +67,54 @@ const EXERCISE_PATH_REGEX =
 const EXERCISE_DIR_REGEX =
   /(.*\/exercises\/[^/]+\/[^/]+\/[^/]+\/[^/]+\/[^/]+\/\d+)\//;
 
-const CHOICE_ITEM_REGEX =
-  /\{\s*label:\s*["'`]([^"'`]+)["'`],\s*value:\s*(true|false)\s*,?\s*\}/g;
 const BACKSLASH_REGEX = /\\/g;
+const DEFAULT_EXPORT_REGEX = /export\s+default\s+({[\s\S]*?})\s*;?\s*$/;
+const CONST_CHOICES_REGEX =
+  /const\s+choices[^=]*=\s*({[\s\S]*?})\s*(?:satisfies|as|;)/;
+const REFERENCES_REGEX =
+  /export\s+const\s+references[^=]*=\s*(\[[\s\S]*?\]);?\s*$/;
+const MULTIPLE_NEWLINES_REGEX = /\n{3,}/g;
 
 /**
- * Extract metadata export and body from MDX file content.
+ * Normalize whitespace in content.
+ * - Replace 3+ consecutive newlines with 2 (proper paragraph spacing)
+ * - Trim leading/trailing whitespace
+ */
+function normalizeWhitespace(content: string): string {
+  return content.replace(MULTIPLE_NEWLINES_REGEX, "\n\n").trim();
+}
+
+/**
+ * Extract metadata and body from MDX file content.
  *
- * MDX files export metadata as:
- * ```
- * export const metadata = { ... };
- * ```
- *
- * We need to parse this without executing the code.
+ * Uses the same pattern as packages/contents/_lib/content.ts:
+ * - Regex to find `export const metadata = {...};`
+ * - Safe eval via `new Function()`
+ * - Zod validation with ContentMetadataSchema
  */
 export function parseMdxContent(content: string): ParsedMdx {
-  const match = content.match(METADATA_EXPORT_REGEX);
+  const match = content.match(METADATA_REGEX);
 
   if (!match) {
     throw new Error("No metadata export found in MDX file");
   }
 
   const metadataStr = match[1];
-  const metadataStartIndex = match.index ?? 0;
-  const metadataEndIndex = metadataStartIndex + match[0].length;
 
-  const metadata = parseMetadataObject(metadataStr);
-  const beforeMetadata = content.slice(0, metadataStartIndex);
-  const afterMetadata = content.slice(metadataEndIndex);
-  const body = (beforeMetadata + afterMetadata).trim();
+  const metadataObject = new Function(`return ${metadataStr}`)() as unknown;
+  const parseResult = ContentMetadataSchema.safeParse(metadataObject);
+
+  if (!parseResult.success) {
+    throw new Error(`Invalid metadata: ${parseResult.error.message}`);
+  }
+
+  const body = normalizeWhitespace(content.replace(METADATA_REGEX, ""));
   const contentHash = computeHash(body);
 
-  return { metadata, body, contentHash };
-}
-
-/**
- * Parse metadata object string into typed object.
- * Uses a simplified parser that handles common patterns.
- */
-function parseMetadataObject(str: string): ParsedMetadata {
-  const result: Partial<ParsedMetadata> = {};
-
-  const titleMatch = str.match(TITLE_REGEX);
-  if (titleMatch) {
-    result.title = titleMatch[1];
-  }
-
-  const descMatch = str.match(DESCRIPTION_REGEX);
-  if (descMatch) {
-    result.description = descMatch[1];
-  }
-
-  const dateMatch = str.match(DATE_REGEX);
-  if (dateMatch) {
-    result.date = dateMatch[1];
-  }
-
-  const subjectMatch = str.match(SUBJECT_REGEX);
-  if (subjectMatch) {
-    result.subject = subjectMatch[1];
-  }
-
-  const categoryMatch = str.match(CATEGORY_REGEX);
-  if (categoryMatch) {
-    result.category = categoryMatch[1];
-  }
-
-  const authorsMatch = str.match(AUTHORS_ARRAY_REGEX);
-  if (authorsMatch) {
-    const authorsContent = authorsMatch[1];
-    const authorNames: Array<{ name: string }> = [];
-    const authorMatches = authorsContent.matchAll(AUTHOR_NAME_REGEX);
-    for (const match of authorMatches) {
-      authorNames.push({ name: match[1] });
-    }
-    result.authors = authorNames;
-  }
-
-  if (!result.title) {
-    throw new Error("Missing required field: title");
-  }
-
-  if (!result.date) {
-    throw new Error("Missing required field: date");
-  }
-
   return {
-    title: result.title,
-    description: result.description,
-    authors: result.authors ?? [],
-    date: result.date,
-    subject: result.subject,
-    category: result.category,
+    metadata: parseResult.data,
+    body,
+    contentHash,
   };
 }
 
@@ -193,7 +138,7 @@ export function parseDateToEpoch(dateStr: string): number {
 }
 
 /**
- * Compute SHA-256 hash of content.
+ * Compute SHA-256 hash of content for change detection.
  */
 export function computeHash(content: string): string {
   return createHash("sha256").update(content, "utf8").digest("hex");
@@ -201,7 +146,7 @@ export function computeHash(content: string): string {
 
 /**
  * Parse article path to extract metadata.
- * Path: packages/contents/articles/{category}/{articleSlug}/{locale}.mdx
+ * Path: articles/{category}/{articleSlug}/{locale}.mdx
  */
 export function parseArticlePath(filePath: string): ArticleParsedPath {
   const normalized = filePath.replace(BACKSLASH_REGEX, "/");
@@ -225,7 +170,7 @@ export function parseArticlePath(filePath: string): ArticleParsedPath {
 
 /**
  * Parse subject path to extract metadata.
- * Path: packages/contents/subject/{category}/{grade}/{material}/{topic}/{section}/{locale}.mdx
+ * Path: subject/{category}/{grade}/{material}/{topic}/{section}/{locale}.mdx
  */
 export function parseSubjectPath(filePath: string): SubjectParsedPath {
   const normalized = filePath.replace(BACKSLASH_REGEX, "/");
@@ -252,7 +197,7 @@ export function parseSubjectPath(filePath: string): SubjectParsedPath {
 
 /**
  * Parse exercise path to extract metadata.
- * Path: packages/contents/exercises/{category}/{type}/{material}/{exerciseType}/{set}/{number}/(_question|_answer)/{locale}.mdx
+ * Path: exercises/{category}/{type}/{material}/{exerciseType}/{set}/{number}/(_question|_answer)/{locale}.mdx
  */
 export function parseExercisePath(filePath: string): ExerciseParsedPath {
   const normalized = filePath.replace(BACKSLASH_REGEX, "/");
@@ -307,6 +252,7 @@ export function getExerciseDir(filePath: string): string {
 
 /**
  * Read and parse choices.ts file for an exercise.
+ * Uses Zod validation with ExercisesChoicesSchema.
  */
 export async function readExerciseChoices(exerciseDir: string): Promise<{
   en: Array<{ label: string; value: boolean }>;
@@ -316,52 +262,29 @@ export async function readExerciseChoices(exerciseDir: string): Promise<{
 
   try {
     const content = await fs.readFile(choicesPath, "utf8");
-    return parseChoicesFile(content);
+
+    const defaultExportMatch = content.match(DEFAULT_EXPORT_REGEX);
+    const constExportMatch = content.match(CONST_CHOICES_REGEX);
+
+    const objectMatch = defaultExportMatch || constExportMatch;
+    if (!objectMatch) {
+      return null;
+    }
+
+    const choicesObject = new Function(`return ${objectMatch[1]}`)() as unknown;
+    const parseResult = ExercisesChoicesSchema.safeParse(choicesObject);
+
+    if (!parseResult.success) {
+      console.warn(
+        `Invalid choices at ${choicesPath}: ${parseResult.error.message}`
+      );
+      return null;
+    }
+
+    return parseResult.data;
   } catch {
     return null;
   }
-}
-
-/**
- * Create locale-specific regex for matching choice arrays.
- */
-function createLocaleChoicesRegex(locale: string): RegExp {
-  return new RegExp(`${locale}:\\s*\\[([\\s\\S]*?)\\]`, "g");
-}
-
-/**
- * Parse choices.ts file content without executing it.
- */
-function parseChoicesFile(content: string): {
-  en: Array<{ label: string; value: boolean }>;
-  id: Array<{ label: string; value: boolean }>;
-} {
-  const result: {
-    en: Array<{ label: string; value: boolean }>;
-    id: Array<{ label: string; value: boolean }>;
-  } = {
-    en: [],
-    id: [],
-  };
-
-  for (const locale of ["en", "id"] as const) {
-    const localeRegex = createLocaleChoicesRegex(locale);
-    const localeMatch = content.match(localeRegex);
-
-    if (localeMatch?.[0]) {
-      const choicesContent = localeMatch[0];
-      const choiceMatches = choicesContent.matchAll(CHOICE_ITEM_REGEX);
-
-      for (const match of choiceMatches) {
-        result[locale].push({
-          label: match[1],
-          value: match[2] === "true",
-        });
-      }
-    }
-  }
-
-  return result;
 }
 
 /**
@@ -373,4 +296,53 @@ export async function readMdxFile(
   const content = await fs.readFile(filePath, "utf8");
   const parsed = parseMdxContent(content);
   return { ...parsed, filePath };
+}
+
+/**
+ * Get the directory containing an article (for finding ref.ts).
+ * Path: articles/{category}/{articleSlug}/{locale}.mdx -> articles/{category}/{articleSlug}
+ */
+export function getArticleDir(filePath: string): string {
+  return path.dirname(filePath);
+}
+
+/**
+ * Read and parse ref.ts file for an article.
+ * Uses Zod validation with ReferenceSchema.
+ */
+export async function readArticleReferences(
+  articleDir: string
+): Promise<Reference[]> {
+  const refPath = path.join(articleDir, "ref.ts");
+
+  try {
+    const content = await fs.readFile(refPath, "utf8");
+    const match = content.match(REFERENCES_REGEX);
+
+    if (!match) {
+      return [];
+    }
+
+    const referencesArray = new Function(`return ${match[1]}`)() as unknown;
+
+    if (!Array.isArray(referencesArray)) {
+      return [];
+    }
+
+    const validRefs: Reference[] = [];
+    for (const ref of referencesArray) {
+      const parseResult = ReferenceSchema.safeParse(ref);
+      if (parseResult.success) {
+        validRefs.push(parseResult.data);
+      } else {
+        console.warn(
+          `Invalid reference in ${refPath}: ${parseResult.error.message}`
+        );
+      }
+    }
+
+    return validRefs;
+  } catch {
+    return [];
+  }
 }
