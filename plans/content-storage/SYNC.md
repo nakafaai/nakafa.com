@@ -38,7 +38,9 @@ pnpm --filter backend sync:all
 # Sync specific content type
 pnpm --filter backend sync:articles
 pnpm --filter backend sync:subjects
-pnpm --filter backend sync:exercises
+pnpm --filter backend sync:exercises        # Syncs both sets and questions
+pnpm --filter backend sync:exercise-sets    # Syncs sets only
+pnpm --filter backend sync:exercise-questions # Syncs questions only
 
 # Sync specific locale only
 pnpm --filter backend sync:subjects -- --locale en
@@ -84,18 +86,35 @@ packages/contents/subject/{category}/{grade}/{material}/{topic}/{section}/
 ```
 
 ### Exercises
+
+Exercise content follows a hierarchical structure: **Sets** contain **Questions**.
+
 ```
-packages/contents/exercises/{category}/{type}/{material}/{exerciseType}/{set}/{number}/
-├── _question/
-│   ├── en.mdx      # Question in English
-│   └── id.mdx      # Question in Indonesian
-├── _answer/
-│   ├── en.mdx      # Answer in English
-│   └── id.mdx      # Answer in Indonesian
-└── choices.ts      # Multiple choice options
+packages/contents/exercises/{category}/{type}/{material}/
+├── _data/
+│   ├── index.ts          # BASE_PATH export
+│   ├── en-material.ts    # Exercise set metadata (English)
+│   └── id-material.ts    # Exercise set metadata (Indonesian)
+└── {exerciseType}/{set}/{number}/
+    ├── _question/
+    │   ├── en.mdx        # Question in English
+    │   └── id.mdx        # Question in Indonesian
+    ├── _answer/
+    │   ├── en.mdx        # Answer in English
+    │   └── id.mdx        # Answer in Indonesian
+    └── choices.ts        # Multiple choice options
 ```
 
-**Important:** Each exercise has 2 MDX files per locale (question + answer), but counts as 1 exercise in the database. The sync finds `_question/*.mdx` files and loads the corresponding `_answer/*.mdx` automatically.
+**Database Schema:**
+- `exerciseSets` - Parent table for exercise set metadata (title, description)
+- `exerciseQuestions` - Questions with foreign key `setId` pointing to parent set
+- `exerciseChoices` - Choices with foreign key `questionId` pointing to question
+
+**Slug Format:**
+- Set: `exercises/{category}/{type}/{material}/{exerciseType}/{setName}`
+- Question: `exercises/{category}/{type}/{material}/{exerciseType}/{setName}/{number}`
+
+**Important:** Each question has 2 MDX files per locale (question + answer), but counts as 1 question in the database. Sets are parsed from `*-material.ts` files, then questions are synced with reference to their parent set.
 
 ## Current Stats
 
@@ -103,9 +122,10 @@ packages/contents/exercises/{category}/{type}/{material}/{exerciseType}/{set}/{n
 |--------------|-------|---------|------------|
 | Articles | 14 | 1 | 50 |
 | Subjects | 606 | 31 | 20 |
-| Exercises | 920 | 31 | 30 |
+| Exercise Sets | 50 | 1 | 50 |
+| Exercise Questions | 920 | 31 | 30 |
 
-**Total: 1,540 content items**
+**Total: 1,590 content items**
 
 ## How It Works
 
@@ -146,6 +166,7 @@ Each batch calls a bulk mutation that:
 4. Creates or updates as needed
 5. Updates author relationships
 6. Updates references/choices
+7. For questions: looks up parent `setId` by setSlug
 
 ### 4. Hash-Based Change Detection
 
@@ -153,7 +174,8 @@ Each batch calls a bulk mutation that:
 |--------------|---------------|
 | Articles | body + references + authors |
 | Subjects | body + authors |
-| Exercises | questionBody + answerBody + choices + authors |
+| Exercise Sets | title + description |
+| Exercise Questions | questionBody + answerBody + choices + authors |
 
 Unchanged content is skipped, making incremental syncs fast.
 
@@ -181,12 +203,13 @@ All items in a batch are processed in a single Convex mutation (atomic transacti
 Sync mutations use `internalMutation` - they're not exposed to clients, only callable from backend scripts.
 
 ### Efficient Indexes
-Each content table has `locale_slug` index for fast lookups during upsert.
+Each content table has `locale_slug` index for fast lookups during upsert. Exercise questions also have a `setId` index for querying by parent set.
 
 ### Normalized Schema
 - Authors in separate table (not embedded)
 - References in separate table
 - Choices in separate table
+- Exercise sets as parent table for questions
 
 This follows Convex recommendation to keep arrays small (< 10 elements).
 
@@ -194,7 +217,8 @@ This follows Convex recommendation to keep arrays small (< 10 elements).
 When deleting stale content, related records are deleted in the same transaction:
 - **Article**: contentAuthors + articleReferences
 - **Subject**: contentAuthors
-- **Exercise**: contentAuthors + exerciseChoices
+- **Exercise Set**: exerciseQuestions + their contentAuthors + exerciseChoices
+- **Exercise Question**: contentAuthors + exerciseChoices
 
 ## Clean Command Details
 
@@ -202,10 +226,10 @@ The `sync:clean` command handles content that exists in the database but no long
 
 ### How It Works
 
-1. **Scan filesystem** - Collect all slugs from MDX files
+1. **Scan filesystem** - Collect all slugs from MDX files and material files
 2. **Query database** - Find content where slug is not in filesystem slugs
 3. **Report** - Show stale content (dry-run mode)
-4. **Delete** - With `--force`, delete stale content + related records
+4. **Delete** - With `--force`, delete stale content + related records (sets delete their questions too)
 
 ### Safety Features
 
@@ -225,7 +249,8 @@ DRY RUN MODE (use --force to actually delete)
 Scanning filesystem...
   Articles on disk: 14
   Subjects on disk: 606
-  Exercises on disk: 920
+  Exercise sets on disk: 50
+  Exercise questions on disk: 920
 
 Querying database for stale content...
 OK: No stale content found!
@@ -269,21 +294,22 @@ Run `pnpm --filter backend sync:verify` to check:
 === DATABASE ===
 articleContents:     14
 subjectContents:     606
-exerciseContents:    920
+exerciseSets:        50
+exerciseQuestions:   920
 authors:             2
-contentAuthors:      1540
+contentAuthors:      934
 articleReferences:   232
 exerciseChoices:     4600
 
 === DATA INTEGRITY ===
-OK: All 920 exercises have choices
-OK: All 920 exercises have authors
+OK: All 920 questions have choices
+OK: All 920 questions have authors
 Articles with references: 14/14
 ```
 
 ## Adding New Content Types
 
-1. Create schema in `convex/{type}Contents/schema.ts`
+1. Create schema in `convex/{type}/schema.ts`
 2. Add bulk mutation in `convex/contentSync/mutations.ts`
 3. Add sync function in `scripts/sync-content.ts`
 4. Add npm script in `package.json`

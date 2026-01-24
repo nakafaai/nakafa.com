@@ -9,6 +9,7 @@ import {
   ReferenceSchema,
 } from "@repo/contents/_types/content";
 import { ExercisesChoicesSchema } from "@repo/contents/_types/exercises/choices";
+import { ExercisesMaterialListSchema } from "@repo/contents/_types/exercises/material";
 
 interface ParsedMdx {
   metadata: ContentMetadata;
@@ -48,11 +49,24 @@ interface ExerciseParsedPath {
   isQuestion: boolean;
 }
 
+interface ParsedExerciseSet {
+  locale: Locale;
+  slug: string;
+  category: string;
+  type: string;
+  material: string;
+  exerciseType: string;
+  setName: string;
+  title: string;
+  description?: string;
+}
+
 export type {
   ParsedMdx,
   ArticleParsedPath,
   SubjectParsedPath,
   ExerciseParsedPath,
+  ParsedExerciseSet,
 };
 
 export type { Locale } from "@repo/backend/convex/lib/contentValidators";
@@ -344,4 +358,96 @@ export async function readArticleReferences(
   } catch {
     return [];
   }
+}
+
+const MATERIAL_CONST_REGEX =
+  /const\s+\w+Materials[^=]*=\s*(\[[\s\S]*?\])\s*as\s+const/;
+const BASE_PATH_REGEX = /export\s+const\s+BASE_PATH\s*=\s*["']([^"']+)["']/;
+const MATERIAL_PATH_REGEX = /exercises\/([^/]+)\/([^/]+)\/([^/]+)\/_data/;
+const LEADING_SLASH_REGEX = /^\//;
+const LAST_PATH_SEGMENT_REGEX = /\/([^/]+)$/;
+const BASE_PATH_TEMPLATE_REGEX = /\$\{BASE_PATH\}/g;
+
+/**
+ * Parse a material file to extract exercise set information.
+ * Returns all sets defined in the material file.
+ */
+export async function parseExerciseMaterialFile(
+  materialFilePath: string,
+  locale: Locale
+): Promise<ParsedExerciseSet[]> {
+  const normalized = materialFilePath.replace(BACKSLASH_REGEX, "/");
+  const pathMatch = normalized.match(MATERIAL_PATH_REGEX);
+
+  if (!pathMatch) {
+    throw new Error(`Invalid material file path: ${materialFilePath}`);
+  }
+
+  const [, category, type, material] = pathMatch;
+
+  const indexPath = path.join(path.dirname(materialFilePath), "index.ts");
+  let basePath = `exercises/${category}/${type}/${material}`;
+
+  try {
+    const indexContent = await fs.readFile(indexPath, "utf8");
+    const basePathMatch = indexContent.match(BASE_PATH_REGEX);
+    if (basePathMatch) {
+      basePath = basePathMatch[1].replace(LEADING_SLASH_REGEX, "");
+    }
+  } catch {
+    // Use default basePath
+  }
+
+  const content = await fs.readFile(materialFilePath, "utf8");
+  const constMatch = content.match(MATERIAL_CONST_REGEX);
+
+  if (!constMatch) {
+    return [];
+  }
+
+  const arrayWithBasePath = constMatch[1].replace(
+    BASE_PATH_TEMPLATE_REGEX,
+    `/${basePath}`
+  );
+
+  const materialsArray = new Function(
+    `return ${arrayWithBasePath}`
+  )() as unknown;
+  const parseResult = ExercisesMaterialListSchema.safeParse(materialsArray);
+
+  if (!parseResult.success) {
+    console.warn(
+      `Invalid material file ${materialFilePath}: ${parseResult.error.message}`
+    );
+    return [];
+  }
+
+  const sets: ParsedExerciseSet[] = [];
+
+  for (const exerciseTypeGroup of parseResult.data) {
+    const exerciseTypeMatch = exerciseTypeGroup.href.match(
+      LAST_PATH_SEGMENT_REGEX
+    );
+    const exerciseType = exerciseTypeMatch ? exerciseTypeMatch[1] : "";
+
+    for (const setItem of exerciseTypeGroup.items) {
+      const setNameMatch = setItem.href.match(LAST_PATH_SEGMENT_REGEX);
+      const setName = setNameMatch ? setNameMatch[1] : "";
+      const slug = `${basePath}/${exerciseType}/${setName}`;
+
+      sets.push({
+        locale,
+        slug,
+        category,
+        type,
+        material,
+        exerciseType,
+        setName,
+        title: setItem.title,
+        description: exerciseTypeGroup.description,
+      });
+    }
+  }
+
+  return sets;
 }

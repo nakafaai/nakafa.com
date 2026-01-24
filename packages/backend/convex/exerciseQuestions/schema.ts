@@ -9,14 +9,18 @@ import {
 
 const tables = {
   /**
-   * Exercise content storage.
+   * Exercise question storage.
+   * Each row is a single question within an exercise set.
    * URL structure: /exercises/{category}/{type}/{material}/{exerciseType}/{setName}/{number}
    * Authors are linked via contentAuthors join table.
    */
-  exerciseContents: defineTable({
+  exerciseQuestions: defineTable({
+    /** Reference to parent exercise set */
+    setId: v.id("exerciseSets"),
     locale: localeValidator,
     /** Full URL path: "exercises/high-school/tka/mathematics/try-out/set-1/12" */
     slug: v.string(),
+    /** Denormalized for query performance */
     category: exercisesCategoryValidator,
     /** Exam type: "grade-9", "tka", "snbt" */
     type: exercisesTypeValidator,
@@ -25,7 +29,7 @@ const tables = {
     exerciseType: v.string(),
     /** Set identifier: "set-1", "set-2" */
     setName: v.string(),
-    /** Exercise number within the set (1-based) */
+    /** Question number within the set (1-based) */
     number: v.number(),
     title: v.string(),
     description: v.optional(v.string()),
@@ -41,6 +45,7 @@ const tables = {
     syncedAt: v.number(),
   })
     .index("locale_slug", ["locale", "slug"])
+    .index("setId", ["setId"])
     .index("locale_category_type_material", [
       "locale",
       "category",
@@ -59,10 +64,10 @@ const tables = {
 
   /**
    * Normalized multiple choice options.
-   * Separate table so each choice has an _id (useful for tracking in exerciseAnswers).
+   * Separate table so each choice has an _id (useful for tracking user answers).
    */
   exerciseChoices: defineTable({
-    exerciseId: v.id("exerciseContents"),
+    questionId: v.id("exerciseQuestions"),
     locale: localeValidator,
     /** Option letter: "A", "B", "C", "D", "E" */
     optionKey: v.string(),
@@ -71,7 +76,7 @@ const tables = {
     isCorrect: v.boolean(),
     /** Display order (0-based) */
     order: v.number(),
-  }).index("exerciseId_locale", ["exerciseId", "locale"]),
+  }).index("questionId_locale", ["questionId", "locale"]),
 };
 
 export default tables;

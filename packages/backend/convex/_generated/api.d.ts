@@ -33,7 +33,6 @@ import type * as customers_polar from "../customers/polar.js";
 import type * as customers_queries from "../customers/queries.js";
 import type * as customers_utils from "../customers/utils.js";
 import type * as emails_mutations from "../emails/mutations.js";
-import type * as exerciseContents_mutations from "../exerciseContents/mutations.js";
 import type * as exercises_mutations from "../exercises/mutations.js";
 import type * as exercises_queries from "../exercises/queries.js";
 import type * as exercises_utils from "../exercises/utils.js";
@@ -100,7 +99,6 @@ declare const fullApi: ApiFromModules<{
   "customers/queries": typeof customers_queries;
   "customers/utils": typeof customers_utils;
   "emails/mutations": typeof emails_mutations;
-  "exerciseContents/mutations": typeof exerciseContents_mutations;
   "exercises/mutations": typeof exercises_mutations;
   "exercises/queries": typeof exercises_queries;
   "exercises/utils": typeof exercises_utils;

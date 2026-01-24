@@ -356,12 +356,91 @@ export const bulkSyncSubjects = internalMutation({
   },
 });
 
-export const bulkSyncExercises = internalMutation({
+export const bulkSyncExerciseSets = internalMutation({
   args: {
-    exercises: v.array(
+    sets: v.array(
       v.object({
         locale: localeValidator,
         slug: v.string(),
+        category: exercisesCategoryValidator,
+        type: exercisesTypeValidator,
+        material: exercisesMaterialValidator,
+        exerciseType: v.string(),
+        setName: v.string(),
+        title: v.string(),
+        description: v.optional(v.string()),
+        questionCount: v.number(),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    let created = 0;
+    let updated = 0;
+    let unchanged = 0;
+
+    for (const set of args.sets) {
+      const existing = await ctx.db
+        .query("exerciseSets")
+        .withIndex("locale_slug", (q) =>
+          q.eq("locale", set.locale).eq("slug", set.slug)
+        )
+        .first();
+
+      if (existing) {
+        const hasChanges =
+          existing.title !== set.title ||
+          existing.description !== set.description ||
+          existing.questionCount !== set.questionCount;
+
+        if (!hasChanges) {
+          unchanged++;
+          continue;
+        }
+
+        await ctx.db.patch(existing._id, {
+          category: set.category,
+          type: set.type,
+          material: set.material,
+          exerciseType: set.exerciseType,
+          setName: set.setName,
+          title: set.title,
+          description: set.description,
+          questionCount: set.questionCount,
+          syncedAt: now,
+        });
+
+        updated++;
+      } else {
+        await ctx.db.insert("exerciseSets", {
+          locale: set.locale,
+          slug: set.slug,
+          category: set.category,
+          type: set.type,
+          material: set.material,
+          exerciseType: set.exerciseType,
+          setName: set.setName,
+          title: set.title,
+          description: set.description,
+          questionCount: set.questionCount,
+          syncedAt: now,
+        });
+
+        created++;
+      }
+    }
+
+    return { created, updated, unchanged };
+  },
+});
+
+export const bulkSyncExerciseQuestions = internalMutation({
+  args: {
+    questions: v.array(
+      v.object({
+        locale: localeValidator,
+        slug: v.string(),
+        setSlug: v.string(),
         category: exercisesCategoryValidator,
         type: exercisesTypeValidator,
         material: exercisesMaterialValidator,
@@ -392,42 +471,55 @@ export const bulkSyncExercises = internalMutation({
     let updated = 0;
     let unchanged = 0;
 
-    for (const exercise of args.exercises) {
-      const existing = await ctx.db
-        .query("exerciseContents")
+    for (const question of args.questions) {
+      const set = await ctx.db
+        .query("exerciseSets")
         .withIndex("locale_slug", (q) =>
-          q.eq("locale", exercise.locale).eq("slug", exercise.slug)
+          q.eq("locale", question.locale).eq("slug", question.setSlug)
+        )
+        .first();
+
+      if (!set) {
+        console.warn(`Set not found for question: ${question.slug}`);
+        continue;
+      }
+
+      const existing = await ctx.db
+        .query("exerciseQuestions")
+        .withIndex("locale_slug", (q) =>
+          q.eq("locale", question.locale).eq("slug", question.slug)
         )
         .first();
 
       if (existing) {
-        if (existing.contentHash === exercise.contentHash) {
+        if (existing.contentHash === question.contentHash) {
           unchanged++;
           continue;
         }
 
         await ctx.db.patch(existing._id, {
-          category: exercise.category,
-          type: exercise.type,
-          material: exercise.material,
-          exerciseType: exercise.exerciseType,
-          setName: exercise.setName,
-          number: exercise.number,
-          title: exercise.title,
-          description: exercise.description,
-          date: exercise.date,
-          questionBody: exercise.questionBody,
-          answerBody: exercise.answerBody,
-          contentHash: exercise.contentHash,
+          setId: set._id,
+          category: question.category,
+          type: question.type,
+          material: question.material,
+          exerciseType: question.exerciseType,
+          setName: question.setName,
+          number: question.number,
+          title: question.title,
+          description: question.description,
+          date: question.date,
+          questionBody: question.questionBody,
+          answerBody: question.answerBody,
+          contentHash: question.contentHash,
           syncedAt: now,
         });
 
-        const exerciseId = existing._id;
+        const questionId = existing._id;
 
         const existingAuthors = await ctx.db
           .query("contentAuthors")
           .withIndex("contentId_contentType", (q) =>
-            q.eq("contentId", exerciseId).eq("contentType", "exercise")
+            q.eq("contentId", questionId).eq("contentType", "exercise")
           )
           .collect();
 
@@ -435,8 +527,8 @@ export const bulkSyncExercises = internalMutation({
           await ctx.db.delete(link._id);
         }
 
-        for (let i = 0; i < exercise.authors.length; i++) {
-          const authorName = exercise.authors[i].name;
+        for (let i = 0; i < question.authors.length; i++) {
+          const authorName = question.authors[i].name;
 
           let author = await ctx.db
             .query("authors")
@@ -454,7 +546,7 @@ export const bulkSyncExercises = internalMutation({
 
           if (author) {
             await ctx.db.insert("contentAuthors", {
-              contentId: exerciseId,
+              contentId: questionId,
               contentType: "exercise",
               authorId: author._id,
               order: i,
@@ -464,8 +556,8 @@ export const bulkSyncExercises = internalMutation({
 
         const existingChoices = await ctx.db
           .query("exerciseChoices")
-          .withIndex("exerciseId_locale", (q) =>
-            q.eq("exerciseId", exerciseId).eq("locale", exercise.locale)
+          .withIndex("questionId_locale", (q) =>
+            q.eq("questionId", questionId).eq("locale", question.locale)
           )
           .collect();
 
@@ -473,10 +565,10 @@ export const bulkSyncExercises = internalMutation({
           await ctx.db.delete(choice._id);
         }
 
-        for (const choice of exercise.choices) {
+        for (const choice of question.choices) {
           await ctx.db.insert("exerciseChoices", {
-            exerciseId,
-            locale: exercise.locale,
+            questionId,
+            locale: question.locale,
             optionKey: choice.optionKey,
             label: choice.label,
             isCorrect: choice.isCorrect,
@@ -486,26 +578,27 @@ export const bulkSyncExercises = internalMutation({
 
         updated++;
       } else {
-        const exerciseId = await ctx.db.insert("exerciseContents", {
-          locale: exercise.locale,
-          slug: exercise.slug,
-          category: exercise.category,
-          type: exercise.type,
-          material: exercise.material,
-          exerciseType: exercise.exerciseType,
-          setName: exercise.setName,
-          number: exercise.number,
-          title: exercise.title,
-          description: exercise.description,
-          date: exercise.date,
-          questionBody: exercise.questionBody,
-          answerBody: exercise.answerBody,
-          contentHash: exercise.contentHash,
+        const questionId = await ctx.db.insert("exerciseQuestions", {
+          setId: set._id,
+          locale: question.locale,
+          slug: question.slug,
+          category: question.category,
+          type: question.type,
+          material: question.material,
+          exerciseType: question.exerciseType,
+          setName: question.setName,
+          number: question.number,
+          title: question.title,
+          description: question.description,
+          date: question.date,
+          questionBody: question.questionBody,
+          answerBody: question.answerBody,
+          contentHash: question.contentHash,
           syncedAt: now,
         });
 
-        for (let i = 0; i < exercise.authors.length; i++) {
-          const authorName = exercise.authors[i].name;
+        for (let i = 0; i < question.authors.length; i++) {
+          const authorName = question.authors[i].name;
 
           let author = await ctx.db
             .query("authors")
@@ -523,7 +616,7 @@ export const bulkSyncExercises = internalMutation({
 
           if (author) {
             await ctx.db.insert("contentAuthors", {
-              contentId: exerciseId,
+              contentId: questionId,
               contentType: "exercise",
               authorId: author._id,
               order: i,
@@ -531,10 +624,10 @@ export const bulkSyncExercises = internalMutation({
           }
         }
 
-        for (const choice of exercise.choices) {
+        for (const choice of question.choices) {
           await ctx.db.insert("exerciseChoices", {
-            exerciseId,
-            locale: exercise.locale,
+            questionId,
+            locale: question.locale,
             optionKey: choice.optionKey,
             label: choice.label,
             isCorrect: choice.isCorrect,
@@ -633,28 +726,85 @@ export const deleteStaleSubjects = internalMutation({
   },
 });
 
-export const deleteStaleExercises = internalMutation({
+export const deleteStaleExerciseSets = internalMutation({
   args: {
-    exerciseIds: v.array(v.string()),
+    setIds: v.array(v.string()),
   },
   handler: async (ctx, args) => {
     let deleted = 0;
 
-    for (const idStr of args.exerciseIds) {
-      const exerciseId = ctx.db.normalizeId("exerciseContents", idStr);
-      if (!exerciseId) {
+    for (const idStr of args.setIds) {
+      const setId = ctx.db.normalizeId("exerciseSets", idStr);
+      if (!setId) {
         continue;
       }
 
-      const exercise = await ctx.db.get(exerciseId);
-      if (!exercise) {
+      const set = await ctx.db.get(setId);
+      if (!set) {
+        continue;
+      }
+
+      const questions = await ctx.db
+        .query("exerciseQuestions")
+        .withIndex("setId", (q) => q.eq("setId", setId))
+        .collect();
+
+      for (const question of questions) {
+        const contentAuthors = await ctx.db
+          .query("contentAuthors")
+          .withIndex("contentId_contentType", (q) =>
+            q.eq("contentId", question._id).eq("contentType", "exercise")
+          )
+          .collect();
+
+        for (const link of contentAuthors) {
+          await ctx.db.delete(link._id);
+        }
+
+        const choices = await ctx.db
+          .query("exerciseChoices")
+          .withIndex("questionId_locale", (q) =>
+            q.eq("questionId", question._id)
+          )
+          .collect();
+
+        for (const choice of choices) {
+          await ctx.db.delete(choice._id);
+        }
+
+        await ctx.db.delete(question._id);
+      }
+
+      await ctx.db.delete(setId);
+      deleted++;
+    }
+
+    return { deleted };
+  },
+});
+
+export const deleteStaleExerciseQuestions = internalMutation({
+  args: {
+    questionIds: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    let deleted = 0;
+
+    for (const idStr of args.questionIds) {
+      const questionId = ctx.db.normalizeId("exerciseQuestions", idStr);
+      if (!questionId) {
+        continue;
+      }
+
+      const question = await ctx.db.get(questionId);
+      if (!question) {
         continue;
       }
 
       const contentAuthors = await ctx.db
         .query("contentAuthors")
         .withIndex("contentId_contentType", (q) =>
-          q.eq("contentId", exerciseId).eq("contentType", "exercise")
+          q.eq("contentId", questionId).eq("contentType", "exercise")
         )
         .collect();
 
@@ -664,14 +814,14 @@ export const deleteStaleExercises = internalMutation({
 
       const choices = await ctx.db
         .query("exerciseChoices")
-        .withIndex("exerciseId_locale", (q) => q.eq("exerciseId", exerciseId))
+        .withIndex("questionId_locale", (q) => q.eq("questionId", questionId))
         .collect();
 
       for (const choice of choices) {
         await ctx.db.delete(choice._id);
       }
 
-      await ctx.db.delete(exerciseId);
+      await ctx.db.delete(questionId);
       deleted++;
     }
 

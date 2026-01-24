@@ -10,6 +10,7 @@ import {
   type Locale,
   parseArticlePath,
   parseDateToEpoch,
+  parseExerciseMaterialFile,
   parseExercisePath,
   parseSubjectPath,
   readArticleReferences,
@@ -42,7 +43,9 @@ loadEnvFile();
 
 const BATCH_SIZE_ARTICLES = 50;
 const BATCH_SIZE_SUBJECTS = 20;
-const BATCH_SIZE_EXERCISES = 30;
+const BATCH_SIZE_EXERCISE_SETS = 50;
+const BATCH_SIZE_EXERCISE_QUESTIONS = 30;
+const LOCALE_MATERIAL_FILE_REGEX = /\/([a-z]{2})-material\.ts$/;
 
 interface SyncOptions {
   locale?: Locale;
@@ -64,7 +67,8 @@ interface ConvexConfig {
 interface ContentCounts {
   articles: number;
   subjects: number;
-  exercises: number;
+  exerciseSets: number;
+  exerciseQuestions: number;
   authors: number;
   contentAuthors: number;
   articleReferences: number;
@@ -72,17 +76,18 @@ interface ContentCounts {
 }
 
 interface DataIntegrity {
-  exercisesWithoutChoices: string[];
-  exercisesWithoutAuthors: string[];
+  questionsWithoutChoices: string[];
+  questionsWithoutAuthors: string[];
   articlesWithoutReferences: string[];
-  totalExercises: number;
+  totalQuestions: number;
   totalArticles: number;
 }
 
 interface StaleContent {
   staleArticles: Array<{ id: string; slug: string; locale: string }>;
   staleSubjects: Array<{ id: string; slug: string; locale: string }>;
-  staleExercises: Array<{ id: string; slug: string; locale: string }>;
+  staleExerciseSets: Array<{ id: string; slug: string; locale: string }>;
+  staleExerciseQuestions: Array<{ id: string; slug: string; locale: string }>;
 }
 
 interface UnusedAuthors {
@@ -432,11 +437,123 @@ async function syncSubjects(
   return totals;
 }
 
-async function syncExercises(
+async function syncExerciseSets(
   config: ConvexConfig,
   options: SyncOptions
 ): Promise<SyncResult> {
-  log("\n--- EXERCISES ---\n");
+  log("\n--- EXERCISE SETS ---\n");
+
+  const pattern = options.locale
+    ? `exercises/**/_data/${options.locale}-material.ts`
+    : "exercises/**/_data/*-material.ts";
+
+  const materialFiles = await globFiles(pattern);
+  log(`Material files found: ${materialFiles.length}`);
+
+  const totals: SyncResult = { created: 0, updated: 0, unchanged: 0 };
+  const sets: Array<{
+    locale: Locale;
+    slug: string;
+    category: string;
+    type: string;
+    material: string;
+    exerciseType: string;
+    setName: string;
+    title: string;
+    description?: string;
+    questionCount: number;
+  }> = [];
+  const errors: string[] = [];
+
+  const questionFiles = await globFiles("exercises/**/_question/*.mdx");
+  const questionCountBySetSlug = new Map<string, number>();
+  for (const qFile of questionFiles) {
+    try {
+      const pathInfo = parseExercisePath(qFile);
+      const setSlug = `exercises/${pathInfo.category}/${pathInfo.examType}/${pathInfo.material}/${pathInfo.exerciseType}/${pathInfo.setName}`;
+      const count = questionCountBySetSlug.get(setSlug) || 0;
+      questionCountBySetSlug.set(setSlug, count + 1);
+    } catch {
+      // ignore parse errors here
+    }
+  }
+
+  for (const materialFile of materialFiles) {
+    try {
+      const localeMatch = materialFile.match(LOCALE_MATERIAL_FILE_REGEX);
+      if (!localeMatch) {
+        continue;
+      }
+
+      const locale = localeMatch[1] as Locale;
+      const parsedSets = await parseExerciseMaterialFile(materialFile, locale);
+
+      for (const set of parsedSets) {
+        const questionCount = questionCountBySetSlug.get(set.slug) || 0;
+        sets.push({
+          locale: set.locale,
+          slug: set.slug,
+          category: set.category,
+          type: set.type,
+          material: set.material,
+          exerciseType: set.exerciseType,
+          setName: set.setName,
+          title: set.title,
+          description: set.description,
+          questionCount,
+        });
+      }
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      errors.push(`${materialFile}: ${msg}`);
+    }
+  }
+
+  if (errors.length > 0) {
+    log(`Parse errors: ${errors.length}`);
+    for (const err of errors) {
+      logError(err);
+    }
+  }
+
+  log(`Sets parsed: ${sets.length}`);
+
+  const totalBatches = Math.ceil(sets.length / BATCH_SIZE_EXERCISE_SETS);
+  for (let i = 0; i < sets.length; i += BATCH_SIZE_EXERCISE_SETS) {
+    const batch = sets.slice(i, i + BATCH_SIZE_EXERCISE_SETS);
+    const batchNum = Math.floor(i / BATCH_SIZE_EXERCISE_SETS) + 1;
+    log(`Batch ${batchNum}/${totalBatches} (${batch.length} items)`);
+
+    const result = await runConvexMutation(
+      config,
+      "contentSync/mutations:bulkSyncExerciseSets",
+      { sets: batch }
+    );
+
+    totals.created += result.created;
+    totals.updated += result.updated;
+    totals.unchanged += result.unchanged;
+  }
+
+  const processed = totals.created + totals.updated + totals.unchanged;
+  log(
+    `\nResult: ${totals.created} created, ${totals.updated} updated, ${totals.unchanged} unchanged`
+  );
+
+  if (processed === sets.length) {
+    logSuccess(`${processed} exercise sets synced`);
+  } else {
+    logError(`Mismatch: ${processed} processed vs ${sets.length} parsed`);
+  }
+
+  return totals;
+}
+
+async function syncExerciseQuestions(
+  config: ConvexConfig,
+  options: SyncOptions
+): Promise<SyncResult> {
+  log("\n--- EXERCISE QUESTIONS ---\n");
 
   const pattern = options.locale
     ? `exercises/**/_question/${options.locale}.mdx`
@@ -446,9 +563,10 @@ async function syncExercises(
   log(`Files found: ${questionFiles.length} (question files only)`);
 
   const totals: SyncResult = { created: 0, updated: 0, unchanged: 0 };
-  const exercises: Array<{
+  const questions: Array<{
     locale: Locale;
     slug: string;
+    setSlug: string;
     category: string;
     type: string;
     material: string;
@@ -503,9 +621,12 @@ async function syncExercises(
         JSON.stringify(questionParsed.metadata.authors);
       const combinedHash = computeHash(combinedContent);
 
-      exercises.push({
+      const setSlug = `exercises/${pathInfo.category}/${pathInfo.examType}/${pathInfo.material}/${pathInfo.exerciseType}/${pathInfo.setName}`;
+
+      questions.push({
         locale: pathInfo.locale,
         slug: pathInfo.slug,
+        setSlug,
         category: pathInfo.category,
         type: pathInfo.examType,
         material: pathInfo.material,
@@ -534,16 +655,18 @@ async function syncExercises(
     }
   }
 
-  const totalBatches = Math.ceil(exercises.length / BATCH_SIZE_EXERCISES);
-  for (let i = 0; i < exercises.length; i += BATCH_SIZE_EXERCISES) {
-    const batch = exercises.slice(i, i + BATCH_SIZE_EXERCISES);
-    const batchNum = Math.floor(i / BATCH_SIZE_EXERCISES) + 1;
+  const totalBatches = Math.ceil(
+    questions.length / BATCH_SIZE_EXERCISE_QUESTIONS
+  );
+  for (let i = 0; i < questions.length; i += BATCH_SIZE_EXERCISE_QUESTIONS) {
+    const batch = questions.slice(i, i + BATCH_SIZE_EXERCISE_QUESTIONS);
+    const batchNum = Math.floor(i / BATCH_SIZE_EXERCISE_QUESTIONS) + 1;
     log(`Batch ${batchNum}/${totalBatches} (${batch.length} items)`);
 
     const result = await runConvexMutation(
       config,
-      "contentSync/mutations:bulkSyncExercises",
-      { exercises: batch }
+      "contentSync/mutations:bulkSyncExerciseQuestions",
+      { questions: batch }
     );
 
     totals.created += result.created;
@@ -556,10 +679,12 @@ async function syncExercises(
     `\nResult: ${totals.created} created, ${totals.updated} updated, ${totals.unchanged} unchanged`
   );
 
-  if (processed === exercises.length) {
-    logSuccess(`${processed}/${questionFiles.length} exercises synced`);
+  if (processed === questions.length) {
+    logSuccess(
+      `${processed}/${questionFiles.length} exercise questions synced`
+    );
   } else {
-    logError(`Mismatch: ${processed} processed vs ${exercises.length} parsed`);
+    logError(`Mismatch: ${processed} processed vs ${questions.length} parsed`);
   }
 
   return totals;
@@ -576,31 +701,42 @@ async function syncAll(
 
   const articleResult = await syncArticles(config, options);
   const subjectResult = await syncSubjects(config, options);
-  const exerciseResult = await syncExercises(config, options);
+  const exerciseSetResult = await syncExerciseSets(config, options);
+  const exerciseQuestionResult = await syncExerciseQuestions(config, options);
 
   log("\n=== SUMMARY ===\n");
 
   const totalCreated =
-    articleResult.created + subjectResult.created + exerciseResult.created;
+    articleResult.created +
+    subjectResult.created +
+    exerciseSetResult.created +
+    exerciseQuestionResult.created;
   const totalUpdated =
-    articleResult.updated + subjectResult.updated + exerciseResult.updated;
+    articleResult.updated +
+    subjectResult.updated +
+    exerciseSetResult.updated +
+    exerciseQuestionResult.updated;
   const totalUnchanged =
     articleResult.unchanged +
     subjectResult.unchanged +
-    exerciseResult.unchanged;
+    exerciseSetResult.unchanged +
+    exerciseQuestionResult.unchanged;
   const total = totalCreated + totalUpdated + totalUnchanged;
 
   log(
-    `Articles:  ${articleResult.created + articleResult.updated + articleResult.unchanged} (${articleResult.created} new, ${articleResult.updated} updated)`
+    `Articles:           ${articleResult.created + articleResult.updated + articleResult.unchanged} (${articleResult.created} new, ${articleResult.updated} updated)`
   );
   log(
-    `Subjects:  ${subjectResult.created + subjectResult.updated + subjectResult.unchanged} (${subjectResult.created} new, ${subjectResult.updated} updated)`
+    `Subjects:           ${subjectResult.created + subjectResult.updated + subjectResult.unchanged} (${subjectResult.created} new, ${subjectResult.updated} updated)`
   );
   log(
-    `Exercises: ${exerciseResult.created + exerciseResult.updated + exerciseResult.unchanged} (${exerciseResult.created} new, ${exerciseResult.updated} updated)`
+    `Exercise Sets:      ${exerciseSetResult.created + exerciseSetResult.updated + exerciseSetResult.unchanged} (${exerciseSetResult.created} new, ${exerciseSetResult.updated} updated)`
+  );
+  log(
+    `Exercise Questions: ${exerciseQuestionResult.created + exerciseQuestionResult.updated + exerciseQuestionResult.unchanged} (${exerciseQuestionResult.created} new, ${exerciseQuestionResult.updated} updated)`
   );
   log("---");
-  log(`Total:     ${total} items synced`);
+  log(`Total:              ${total} items synced`);
 
   if (totalCreated > 0 || totalUpdated > 0) {
     log(`\nChanges: ${totalCreated} created, ${totalUpdated} updated`);
@@ -612,15 +748,14 @@ async function syncAll(
 async function verify(config: ConvexConfig): Promise<void> {
   log("=== VERIFY CONTENT ===\n");
 
-  // Count all files on disk
   const articleFiles = await globFiles("articles/**/*.mdx");
   const subjectFiles = await globFiles("subject/**/*.mdx");
+  const materialFiles = await globFiles("exercises/**/_data/*-material.ts");
   const questionFiles = await globFiles("exercises/**/_question/*.mdx");
   const answerFiles = await globFiles("exercises/**/_answer/*.mdx");
   const choicesFiles = await globFiles("exercises/**/choices.ts");
   const refFiles = await globFiles("articles/**/ref.ts");
 
-  // Count locales
   const articleFilesEn = articleFiles.filter((f) => f.endsWith("/en.mdx"));
   const articleFilesId = articleFiles.filter((f) => f.endsWith("/id.mdx"));
   const subjectFilesEn = subjectFiles.filter((f) => f.endsWith("/en.mdx"));
@@ -642,16 +777,13 @@ async function verify(config: ConvexConfig): Promise<void> {
   log(`    - Indonesian (id): ${subjectFilesId.length}`);
 
   log("\nExercises:");
+  log(`  Material files:      ${materialFiles.length} (*-material.ts)`);
   log(`  Question files:      ${questionFiles.length} (_question/*.mdx)`);
   log(`    - English (en):    ${questionFilesEn.length}`);
   log(`    - Indonesian (id): ${questionFilesId.length}`);
   log(`  Answer files:        ${answerFiles.length} (_answer/*.mdx)`);
   log(`  Choices files:       ${choicesFiles.length} (choices.ts)`);
-  log(
-    `  Unique exercises:    ${choicesFiles.length} (1 choices.ts per exercise)`
-  );
 
-  // Get counts from database
   log("\n=== DATABASE ===\n");
   try {
     const counts = await runConvexQuery<ContentCounts>(
@@ -662,7 +794,8 @@ async function verify(config: ConvexConfig): Promise<void> {
     log("Content tables:");
     log(`  articleContents:     ${counts.articles}`);
     log(`  subjectContents:     ${counts.subjects}`);
-    log(`  exerciseContents:    ${counts.exercises}`);
+    log(`  exerciseSets:        ${counts.exerciseSets}`);
+    log(`  exerciseQuestions:   ${counts.exerciseQuestions}`);
 
     log("\nRelated tables:");
     log(`  authors:             ${counts.authors}`);
@@ -677,7 +810,6 @@ async function verify(config: ConvexConfig): Promise<void> {
     let allMatch = true;
     let hasWarnings = false;
 
-    // Articles check
     if (counts.articles === articleFiles.length) {
       logSuccess(
         `Articles: ${counts.articles} in DB = ${articleFiles.length} files`
@@ -689,7 +821,6 @@ async function verify(config: ConvexConfig): Promise<void> {
       allMatch = false;
     }
 
-    // Subjects check
     if (counts.subjects === subjectFiles.length) {
       logSuccess(
         `Subjects: ${counts.subjects} in DB = ${subjectFiles.length} files`
@@ -701,36 +832,31 @@ async function verify(config: ConvexConfig): Promise<void> {
       allMatch = false;
     }
 
-    // Exercises check
-    if (counts.exercises === questionFiles.length) {
+    if (counts.exerciseQuestions === questionFiles.length) {
       logSuccess(
-        `Exercises: ${counts.exercises} in DB = ${questionFiles.length} question files`
+        `Questions: ${counts.exerciseQuestions} in DB = ${questionFiles.length} question files`
       );
     } else {
       logError(
-        `Exercises: ${counts.exercises} in DB != ${questionFiles.length} question files`
+        `Questions: ${counts.exerciseQuestions} in DB != ${questionFiles.length} question files`
       );
       allMatch = false;
     }
 
-    // References check (each article locale has its own references)
-    // 7 ref.ts files × 2 locales = 14 articles with references
     log(
-      `\nReferences: ${counts.articleReferences} in DB (from ${refFiles.length} ref.ts files × 2 locales)`
+      `\nReferences: ${counts.articleReferences} in DB (from ${refFiles.length} ref.ts files x 2 locales)`
     );
 
-    // Choices check
-    // Each exercise (per locale) has choices from choices.ts
-    // 460 unique exercises × ~5 choices × 2 locales ≈ 4600
-    const avgChoicesPerExercise = counts.exerciseChoices / counts.exercises;
+    const avgChoicesPerQuestion =
+      counts.exerciseQuestions > 0
+        ? counts.exerciseChoices / counts.exerciseQuestions
+        : 0;
     log(
-      `Choices: ${counts.exerciseChoices} in DB (~${avgChoicesPerExercise.toFixed(1)} per exercise)`
+      `Choices: ${counts.exerciseChoices} in DB (~${avgChoicesPerQuestion.toFixed(1)} per question)`
     );
 
-    // Content authors check
     log(`Content-Author links: ${counts.contentAuthors} in DB`);
 
-    // Answer files check
     if (answerFiles.length !== questionFiles.length) {
       log(
         `\nWARNING: Answer files (${answerFiles.length}) != Question files (${questionFiles.length})`
@@ -738,58 +864,56 @@ async function verify(config: ConvexConfig): Promise<void> {
       hasWarnings = true;
     }
 
-    // Data integrity check
     log("\n=== DATA INTEGRITY ===\n");
     const integrity = await runConvexQuery<DataIntegrity>(
       config,
       "contentSync/queries:getDataIntegrity"
     );
 
-    if (integrity.exercisesWithoutChoices.length > 0) {
+    if (integrity.questionsWithoutChoices.length > 0) {
       logError(
-        `${integrity.exercisesWithoutChoices.length} exercises without choices:`
+        `${integrity.questionsWithoutChoices.length} questions without choices:`
       );
-      for (const slug of integrity.exercisesWithoutChoices.slice(0, 5)) {
+      for (const slug of integrity.questionsWithoutChoices.slice(0, 5)) {
         log(`  - ${slug}`);
       }
-      if (integrity.exercisesWithoutChoices.length > 5) {
-        log(`  ... and ${integrity.exercisesWithoutChoices.length - 5} more`);
+      if (integrity.questionsWithoutChoices.length > 5) {
+        log(`  ... and ${integrity.questionsWithoutChoices.length - 5} more`);
       }
       allMatch = false;
     } else {
-      logSuccess(`All ${integrity.totalExercises} exercises have choices`);
+      logSuccess(`All ${integrity.totalQuestions} questions have choices`);
     }
 
-    if (integrity.exercisesWithoutAuthors.length > 0) {
+    if (integrity.questionsWithoutAuthors.length > 0) {
       logError(
-        `${integrity.exercisesWithoutAuthors.length} exercises without authors:`
+        `${integrity.questionsWithoutAuthors.length} questions without authors:`
       );
-      for (const slug of integrity.exercisesWithoutAuthors.slice(0, 5)) {
+      for (const slug of integrity.questionsWithoutAuthors.slice(0, 5)) {
         log(`  - ${slug}`);
       }
-      if (integrity.exercisesWithoutAuthors.length > 5) {
-        log(`  ... and ${integrity.exercisesWithoutAuthors.length - 5} more`);
+      if (integrity.questionsWithoutAuthors.length > 5) {
+        log(`  ... and ${integrity.questionsWithoutAuthors.length - 5} more`);
       }
       allMatch = false;
     } else {
-      logSuccess(`All ${integrity.totalExercises} exercises have authors`);
+      logSuccess(`All ${integrity.totalQuestions} questions have authors`);
     }
 
-    // Note: Not all articles have references, so this is informational only
     const articlesWithRefs =
       integrity.totalArticles - integrity.articlesWithoutReferences.length;
     log(
       `Articles with references: ${articlesWithRefs}/${integrity.totalArticles}`
     );
 
-    // Summary
     log("\n=== SUMMARY ===\n");
 
     if (allMatch) {
       logSuccess("All primary content synced correctly!");
       log(`  - ${counts.articles} articles`);
       log(`  - ${counts.subjects} subjects`);
-      log(`  - ${counts.exercises} exercises`);
+      log(`  - ${counts.exerciseSets} exercise sets`);
+      log(`  - ${counts.exerciseQuestions} exercise questions`);
       log(`  - ${counts.articleReferences} references`);
       log(`  - ${counts.exerciseChoices} choices`);
       log(`  - ${counts.authors} authors`);
@@ -812,10 +936,12 @@ async function verify(config: ConvexConfig): Promise<void> {
 async function collectFilesystemSlugs(): Promise<{
   articleSlugs: string[];
   subjectSlugs: string[];
-  exerciseSlugs: string[];
+  exerciseSetSlugs: string[];
+  exerciseQuestionSlugs: string[];
 }> {
   const articleFiles = await globFiles("articles/**/*.mdx");
   const subjectFiles = await globFiles("subject/**/*.mdx");
+  const materialFiles = await globFiles("exercises/**/_data/*-material.ts");
   const questionFiles = await globFiles("exercises/**/_question/*.mdx");
 
   const articleSlugs = articleFiles.map((file) => {
@@ -828,12 +954,35 @@ async function collectFilesystemSlugs(): Promise<{
     return pathInfo.slug;
   });
 
-  const exerciseSlugs = questionFiles.map((file) => {
+  const exerciseSetSlugs: string[] = [];
+  for (const materialFile of materialFiles) {
+    const localeMatch = materialFile.match(LOCALE_MATERIAL_FILE_REGEX);
+    if (!localeMatch) {
+      continue;
+    }
+
+    const locale = localeMatch[1] as Locale;
+    try {
+      const sets = await parseExerciseMaterialFile(materialFile, locale);
+      for (const set of sets) {
+        exerciseSetSlugs.push(set.slug);
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }
+
+  const exerciseQuestionSlugs = questionFiles.map((file) => {
     const pathInfo = parseExercisePath(file);
     return pathInfo.slug;
   });
 
-  return { articleSlugs, subjectSlugs, exerciseSlugs };
+  return {
+    articleSlugs,
+    subjectSlugs,
+    exerciseSetSlugs,
+    exerciseQuestionSlugs,
+  };
 }
 
 async function runConvexQueryWithArgs<T>(
@@ -910,24 +1059,30 @@ async function clean(
   }
 
   log("Scanning filesystem...");
-  const { articleSlugs, subjectSlugs, exerciseSlugs } =
-    await collectFilesystemSlugs();
+  const {
+    articleSlugs,
+    subjectSlugs,
+    exerciseSetSlugs,
+    exerciseQuestionSlugs,
+  } = await collectFilesystemSlugs();
 
   log(`  Articles on disk: ${articleSlugs.length}`);
   log(`  Subjects on disk: ${subjectSlugs.length}`);
-  log(`  Exercises on disk: ${exerciseSlugs.length}`);
+  log(`  Exercise sets on disk: ${exerciseSetSlugs.length}`);
+  log(`  Exercise questions on disk: ${exerciseQuestionSlugs.length}`);
 
   log("\nQuerying database for stale content...");
   const stale = await runConvexQueryWithArgs<StaleContent>(
     config,
     "contentSync/queries:findStaleContent",
-    { articleSlugs, subjectSlugs, exerciseSlugs }
+    { articleSlugs, subjectSlugs, exerciseSetSlugs, exerciseQuestionSlugs }
   );
 
   const totalStale =
     stale.staleArticles.length +
     stale.staleSubjects.length +
-    stale.staleExercises.length;
+    stale.staleExerciseSets.length +
+    stale.staleExerciseQuestions.length;
 
   let hasStale = false;
   let deleted = false;
@@ -958,13 +1113,25 @@ async function clean(
       }
     }
 
-    if (stale.staleExercises.length > 0) {
-      log(`\nStale exercises (${stale.staleExercises.length}):`);
-      for (const item of stale.staleExercises.slice(0, 10)) {
+    if (stale.staleExerciseSets.length > 0) {
+      log(`\nStale exercise sets (${stale.staleExerciseSets.length}):`);
+      for (const item of stale.staleExerciseSets.slice(0, 10)) {
         log(`  - ${item.slug} (${item.locale})`);
       }
-      if (stale.staleExercises.length > 10) {
-        log(`  ... and ${stale.staleExercises.length - 10} more`);
+      if (stale.staleExerciseSets.length > 10) {
+        log(`  ... and ${stale.staleExerciseSets.length - 10} more`);
+      }
+    }
+
+    if (stale.staleExerciseQuestions.length > 0) {
+      log(
+        `\nStale exercise questions (${stale.staleExerciseQuestions.length}):`
+      );
+      for (const item of stale.staleExerciseQuestions.slice(0, 10)) {
+        log(`  - ${item.slug} (${item.locale})`);
+      }
+      if (stale.staleExerciseQuestions.length > 10) {
+        log(`  ... and ${stale.staleExerciseQuestions.length - 10} more`);
       }
     }
 
@@ -992,14 +1159,26 @@ async function clean(
         logSuccess(`Deleted ${result.deleted} stale subjects`);
       }
 
-      if (stale.staleExercises.length > 0) {
-        const exerciseIds = stale.staleExercises.map((e) => e.id);
+      if (stale.staleExerciseSets.length > 0) {
+        const setIds = stale.staleExerciseSets.map((s) => s.id);
         const result = await runConvexMutationGeneric<DeleteResult>(
           config,
-          "contentSync/mutations:deleteStaleExercises",
-          { exerciseIds }
+          "contentSync/mutations:deleteStaleExerciseSets",
+          { setIds }
         );
-        logSuccess(`Deleted ${result.deleted} stale exercises`);
+        logSuccess(
+          `Deleted ${result.deleted} stale exercise sets (and their questions)`
+        );
+      }
+
+      if (stale.staleExerciseQuestions.length > 0) {
+        const questionIds = stale.staleExerciseQuestions.map((q) => q.id);
+        const result = await runConvexMutationGeneric<DeleteResult>(
+          config,
+          "contentSync/mutations:deleteStaleExerciseQuestions",
+          { questionIds }
+        );
+        logSuccess(`Deleted ${result.deleted} stale exercise questions`);
       }
     } else {
       log("\nTo delete stale content, run:");
@@ -1087,8 +1266,15 @@ async function main() {
     case "subjects":
       await syncSubjects(config, options);
       break;
+    case "exercise-sets":
+      await syncExerciseSets(config, options);
+      break;
+    case "exercise-questions":
+      await syncExerciseQuestions(config, options);
+      break;
     case "exercises":
-      await syncExercises(config, options);
+      await syncExerciseSets(config, options);
+      await syncExerciseQuestions(config, options);
       break;
     case "all":
       await syncAll(config, options);
@@ -1105,14 +1291,16 @@ async function main() {
     default:
       logError(`Unknown command: ${type}`);
       log("\nUsage:");
-      log("  sync:all        - Sync all content");
-      log("  sync:articles   - Sync articles only");
-      log("  sync:subjects   - Sync subjects only");
-      log("  sync:exercises  - Sync exercises only");
-      log("  sync:verify     - Verify DB matches filesystem");
-      log("  sync:clean      - Find and remove stale content");
+      log("  sync:all              - Sync all content");
+      log("  sync:articles         - Sync articles only");
+      log("  sync:subjects         - Sync subjects only");
+      log("  sync:exercises        - Sync exercise sets and questions");
+      log("  sync:exercise-sets    - Sync exercise sets only");
+      log("  sync:exercise-questions - Sync exercise questions only");
+      log("  sync:verify           - Verify DB matches filesystem");
+      log("  sync:clean            - Find and remove stale content");
       log(
-        "  sync:full       - Full sync: sync, clean, and verify (recommended)"
+        "  sync:full             - Full sync: sync, clean, and verify (recommended)"
       );
       log("\nOptions:");
       log("  --locale en|id  - Sync specific locale only");

@@ -6,7 +6,8 @@ export const getContentCounts = internalQuery({
   handler: async (ctx) => {
     const articles = await ctx.db.query("articleContents").collect();
     const subjects = await ctx.db.query("subjectContents").collect();
-    const exercises = await ctx.db.query("exerciseContents").collect();
+    const exerciseSets = await ctx.db.query("exerciseSets").collect();
+    const exerciseQuestions = await ctx.db.query("exerciseQuestions").collect();
     const authors = await ctx.db.query("authors").collect();
     const contentAuthors = await ctx.db.query("contentAuthors").collect();
     const articleReferences = await ctx.db.query("articleReferences").collect();
@@ -15,7 +16,8 @@ export const getContentCounts = internalQuery({
     return {
       articles: articles.length,
       subjects: subjects.length,
-      exercises: exercises.length,
+      exerciseSets: exerciseSets.length,
+      exerciseQuestions: exerciseQuestions.length,
       authors: authors.length,
       contentAuthors: contentAuthors.length,
       articleReferences: articleReferences.length,
@@ -27,29 +29,29 @@ export const getContentCounts = internalQuery({
 export const getDataIntegrity = internalQuery({
   args: {},
   handler: async (ctx) => {
-    const exercises = await ctx.db.query("exerciseContents").collect();
+    const exerciseQuestions = await ctx.db.query("exerciseQuestions").collect();
     const exerciseChoices = await ctx.db.query("exerciseChoices").collect();
     const contentAuthors = await ctx.db.query("contentAuthors").collect();
     const articleReferences = await ctx.db.query("articleReferences").collect();
     const articles = await ctx.db.query("articleContents").collect();
 
-    const exercisesWithoutChoices: string[] = [];
-    const exercisesWithoutAuthors: string[] = [];
+    const questionsWithoutChoices: string[] = [];
+    const questionsWithoutAuthors: string[] = [];
     const articlesWithoutReferences: string[] = [];
 
-    for (const exercise of exercises) {
+    for (const question of exerciseQuestions) {
       const choices = exerciseChoices.filter(
-        (c) => c.exerciseId === exercise._id
+        (c) => c.questionId === question._id
       );
       if (choices.length === 0) {
-        exercisesWithoutChoices.push(`${exercise.slug} (${exercise.locale})`);
+        questionsWithoutChoices.push(`${question.slug} (${question.locale})`);
       }
 
       const authors = contentAuthors.filter(
-        (a) => a.contentId === exercise._id && a.contentType === "exercise"
+        (a) => a.contentId === question._id && a.contentType === "exercise"
       );
       if (authors.length === 0) {
-        exercisesWithoutAuthors.push(`${exercise.slug} (${exercise.locale})`);
+        questionsWithoutAuthors.push(`${question.slug} (${question.locale})`);
       }
     }
 
@@ -61,10 +63,10 @@ export const getDataIntegrity = internalQuery({
     }
 
     return {
-      exercisesWithoutChoices,
-      exercisesWithoutAuthors,
+      questionsWithoutChoices,
+      questionsWithoutAuthors,
       articlesWithoutReferences,
-      totalExercises: exercises.length,
+      totalQuestions: exerciseQuestions.length,
       totalArticles: articles.length,
     };
   },
@@ -74,16 +76,19 @@ export const findStaleContent = internalQuery({
   args: {
     articleSlugs: v.array(v.string()),
     subjectSlugs: v.array(v.string()),
-    exerciseSlugs: v.array(v.string()),
+    exerciseSetSlugs: v.array(v.string()),
+    exerciseQuestionSlugs: v.array(v.string()),
   },
   handler: async (ctx, args) => {
     const articleSlugSet = new Set(args.articleSlugs);
     const subjectSlugSet = new Set(args.subjectSlugs);
-    const exerciseSlugSet = new Set(args.exerciseSlugs);
+    const exerciseSetSlugSet = new Set(args.exerciseSetSlugs);
+    const exerciseQuestionSlugSet = new Set(args.exerciseQuestionSlugs);
 
     const articles = await ctx.db.query("articleContents").collect();
     const subjects = await ctx.db.query("subjectContents").collect();
-    const exercises = await ctx.db.query("exerciseContents").collect();
+    const exerciseSets = await ctx.db.query("exerciseSets").collect();
+    const exerciseQuestions = await ctx.db.query("exerciseQuestions").collect();
 
     const staleArticles = articles
       .filter((a) => !articleSlugSet.has(a.slug))
@@ -93,14 +98,19 @@ export const findStaleContent = internalQuery({
       .filter((s) => !subjectSlugSet.has(s.slug))
       .map((s) => ({ id: s._id, slug: s.slug, locale: s.locale }));
 
-    const staleExercises = exercises
-      .filter((e) => !exerciseSlugSet.has(e.slug))
-      .map((e) => ({ id: e._id, slug: e.slug, locale: e.locale }));
+    const staleExerciseSets = exerciseSets
+      .filter((s) => !exerciseSetSlugSet.has(s.slug))
+      .map((s) => ({ id: s._id, slug: s.slug, locale: s.locale }));
+
+    const staleExerciseQuestions = exerciseQuestions
+      .filter((q) => !exerciseQuestionSlugSet.has(q.slug))
+      .map((q) => ({ id: q._id, slug: q.slug, locale: q.locale }));
 
     return {
       staleArticles,
       staleSubjects,
-      staleExercises,
+      staleExerciseSets,
+      staleExerciseQuestions,
     };
   },
 });
