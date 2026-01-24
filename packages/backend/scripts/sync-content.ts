@@ -1442,8 +1442,9 @@ async function syncAll(
 
   finalizeMetrics(metrics);
 
-  log("\n=== SUMMARY ===\n");
+  log("\n=== SYNC SUMMARY ===\n");
 
+  // Calculate totals for primary content
   const totalCreated =
     articleResult.created +
     subjectTopicResult.created +
@@ -1464,28 +1465,58 @@ async function syncAll(
     exerciseQuestionResult.unchanged;
   const total = totalCreated + totalUpdated + totalUnchanged;
 
-  log(
-    `Articles:           ${articleResult.created + articleResult.updated + articleResult.unchanged} (${articleResult.created} new, ${articleResult.updated} updated)`
-  );
-  log(
-    `Subject Topics:     ${subjectTopicResult.created + subjectTopicResult.updated + subjectTopicResult.unchanged} (${subjectTopicResult.created} new, ${subjectTopicResult.updated} updated)`
-  );
-  log(
-    `Subject Sections:   ${subjectSectionResult.created + subjectSectionResult.updated + subjectSectionResult.unchanged} (${subjectSectionResult.created} new, ${subjectSectionResult.updated} updated)`
-  );
-  log(
-    `Exercise Sets:      ${exerciseSetResult.created + exerciseSetResult.updated + exerciseSetResult.unchanged} (${exerciseSetResult.created} new, ${exerciseSetResult.updated} updated)`
-  );
-  log(
-    `Exercise Questions: ${exerciseQuestionResult.created + exerciseQuestionResult.updated + exerciseQuestionResult.unchanged} (${exerciseQuestionResult.created} new, ${exerciseQuestionResult.updated} updated)`
-  );
-  log("---");
-  log(`Total:              ${total} items synced`);
+  // Calculate totals for related items
+  const totalReferencesCreated = articleResult.referencesCreated || 0;
+  const totalChoicesCreated = exerciseQuestionResult.choicesCreated || 0;
+  const totalAuthorLinksCreated =
+    (articleResult.authorLinksCreated || 0) +
+    (subjectSectionResult.authorLinksCreated || 0) +
+    (exerciseQuestionResult.authorLinksCreated || 0);
+  const totalAuthorsCreated =
+    (articleResult.authorsCreated || 0) +
+    (subjectSectionResult.authorsCreated || 0) +
+    (exerciseQuestionResult.authorsCreated || 0);
 
+  // Primary content summary
+  log("Primary Content:");
+  log(
+    `  Articles:           ${articleResult.created + articleResult.updated + articleResult.unchanged} (${articleResult.created} new, ${articleResult.updated} updated)`
+  );
+  log(
+    `  Subject Topics:     ${subjectTopicResult.created + subjectTopicResult.updated + subjectTopicResult.unchanged} (${subjectTopicResult.created} new, ${subjectTopicResult.updated} updated)`
+  );
+  log(
+    `  Subject Sections:   ${subjectSectionResult.created + subjectSectionResult.updated + subjectSectionResult.unchanged} (${subjectSectionResult.created} new, ${subjectSectionResult.updated} updated)`
+  );
+  log(
+    `  Exercise Sets:      ${exerciseSetResult.created + exerciseSetResult.updated + exerciseSetResult.unchanged} (${exerciseSetResult.created} new, ${exerciseSetResult.updated} updated)`
+  );
+  log(
+    `  Exercise Questions: ${exerciseQuestionResult.created + exerciseQuestionResult.updated + exerciseQuestionResult.unchanged} (${exerciseQuestionResult.created} new, ${exerciseQuestionResult.updated} updated)`
+  );
+
+  // Related items summary
+  log("\nRelated Items:");
+  if (totalReferencesCreated > 0) {
+    log(`  Article References: ${totalReferencesCreated} created`);
+  }
+  if (totalChoicesCreated > 0) {
+    log(`  Exercise Choices:   ${totalChoicesCreated} created`);
+  }
+  if (totalAuthorLinksCreated > 0) {
+    log(`  Content-Author Links: ${totalAuthorLinksCreated} created`);
+  }
+  if (totalAuthorsCreated > 0) {
+    log(`  New Authors:         ${totalAuthorsCreated} created`);
+  }
+
+  // Overall summary
+  log("\nOverall:");
+  log(`  Total Items: ${total} synced`);
   if (totalCreated > 0 || totalUpdated > 0) {
-    log(`\nChanges: ${totalCreated} created, ${totalUpdated} updated`);
+    log(`  Changes: ${totalCreated} created, ${totalUpdated} updated`);
   } else {
-    log("\nNo changes (all content up to date)");
+    log("  Changes: No changes (all content up to date)");
   }
 
   logSyncMetrics(metrics);
