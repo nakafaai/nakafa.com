@@ -1,5 +1,4 @@
-import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
-import { getFolderChildNames, getNestedSlugs } from "@repo/contents/_lib/fs";
+import { generateSlugOnlyParams } from "@repo/contents/_lib/static-params";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import type { NextRequest } from "next/server";
@@ -10,48 +9,9 @@ import { getMetadataFromSlug } from "@/lib/utils/system";
 export const revalidate = false;
 
 export function generateStaticParams() {
-  const topDirs = Effect.runSync(
-    Effect.match(getFolderChildNames("."), {
-      onFailure: () => [],
-      onSuccess: (names) => names,
-    })
-  );
-  const result: { slug: string[] }[] = [];
-  const locales = routing.locales;
-
-  for (const locale of locales) {
-    result.push({ slug: [locale, "image.png"] });
-    const slugs = getMDXSlugsForLocale(locale);
-    const localeCache = new Set(slugs);
-
-    if (!localeCache) {
-      continue;
-    }
-
-    for (const topDir of topDirs) {
-      if (localeCache.has(topDir)) {
-        result.push(
-          { slug: [locale, topDir] },
-          { slug: [locale, topDir, "image.png"] }
-        );
-      }
-
-      const nestedPaths = getNestedSlugs(topDir);
-
-      for (const path of nestedPaths) {
-        const fullPath = `${topDir}/${path.join("/")}`;
-
-        if (localeCache.has(fullPath)) {
-          result.push(
-            { slug: [locale, topDir, ...path] },
-            { slug: [locale, topDir, ...path, "image.png"] }
-          );
-        }
-      }
-    }
-  }
-
-  return result;
+  return generateSlugOnlyParams({
+    includeOGVariants: true,
+  });
 }
 
 export async function GET(

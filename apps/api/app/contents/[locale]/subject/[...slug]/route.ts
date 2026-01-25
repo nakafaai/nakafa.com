@@ -1,4 +1,5 @@
 import { getContents } from "@repo/contents/_lib/content";
+import { generateContentParams } from "@repo/contents/_lib/static-params";
 import {
   FileReadError,
   GitHubFetchError,
@@ -8,14 +9,13 @@ import {
 import { createServiceLogger, logError } from "@repo/utilities/logging";
 import { Effect } from "effect";
 import { NextResponse } from "next/server";
-import { generateStaticParamsForContent } from "@/lib/static-params";
 
 export const revalidate = false;
 
 const logger = createServiceLogger("api-contents");
 
 export function generateStaticParams() {
-  return generateStaticParamsForContent({
+  return generateContentParams({
     basePath: "subject",
   });
 }
