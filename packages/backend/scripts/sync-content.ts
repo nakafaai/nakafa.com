@@ -23,7 +23,11 @@ import {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const CONTENTS_DIR = path.resolve(__dirname, "../../contents");
-const SYNC_STATE_FILE = path.resolve(__dirname, "../.sync-state.json");
+/** Returns sync state file path based on environment (separate for dev/prod) */
+function getSyncStateFile(isProd: boolean): string {
+  const filename = isProd ? ".sync-state.prod.json" : ".sync-state.json";
+  return path.resolve(__dirname, `../${filename}`);
+}
 
 function loadEnvFile() {
   const envPath = path.resolve(__dirname, "../.env.local");
@@ -83,16 +87,16 @@ interface SyncOptions {
 interface SyncState {
   lastSyncTimestamp: number;
   lastSyncCommit: string;
-  contentHashes: Record<string, string>;
 }
 
 /** Loads sync state from disk, returns null if no previous state exists */
-function loadSyncState(): SyncState | null {
+function loadSyncState(isProd: boolean): SyncState | null {
   try {
-    if (!fs.existsSync(SYNC_STATE_FILE)) {
+    const stateFile = getSyncStateFile(isProd);
+    if (!fs.existsSync(stateFile)) {
       return null;
     }
-    const content = fs.readFileSync(SYNC_STATE_FILE, "utf8");
+    const content = fs.readFileSync(stateFile, "utf8");
     return JSON.parse(content) as SyncState;
   } catch {
     return null;
@@ -100,8 +104,9 @@ function loadSyncState(): SyncState | null {
 }
 
 /** Saves sync state to disk after successful sync */
-function saveSyncState(state: SyncState): void {
-  fs.writeFileSync(SYNC_STATE_FILE, JSON.stringify(state, null, 2));
+function saveSyncState(state: SyncState, isProd: boolean): void {
+  const stateFile = getSyncStateFile(isProd);
+  fs.writeFileSync(stateFile, JSON.stringify(state, null, 2));
 }
 
 /** Gets the current git commit hash, empty string if git unavailable */
@@ -2254,17 +2259,16 @@ async function syncIncremental(
   const metrics = createMetrics();
   log("=== INCREMENTAL SYNC ===\n");
 
-  const syncState = loadSyncState();
+  const syncState = loadSyncState(options.prod ?? false);
   const currentCommit = getCurrentGitCommit();
 
   if (!syncState?.lastSyncCommit) {
     log("No previous sync state found. Running full sync...\n");
     await syncAll(config, options);
-    saveSyncState({
-      lastSyncTimestamp: Date.now(),
-      lastSyncCommit: currentCommit,
-      contentHashes: {},
-    });
+    saveSyncState(
+      { lastSyncTimestamp: Date.now(), lastSyncCommit: currentCommit },
+      options.prod ?? false
+    );
     return;
   }
 
@@ -2289,11 +2293,10 @@ async function syncIncremental(
 
   if (changedFiles.size === 0) {
     logSuccess("No content files changed. Nothing to do!");
-    saveSyncState({
-      lastSyncTimestamp: Date.now(),
-      lastSyncCommit: currentCommit,
-      contentHashes: syncState.contentHashes,
-    });
+    saveSyncState(
+      { lastSyncTimestamp: Date.now(), lastSyncCommit: currentCommit },
+      options.prod ?? false
+    );
     return;
   }
 
@@ -2376,11 +2379,10 @@ async function syncIncremental(
 
   logSyncMetrics(metrics);
 
-  saveSyncState({
-    lastSyncTimestamp: Date.now(),
-    lastSyncCommit: currentCommit,
-    contentHashes: syncState.contentHashes,
-  });
+  saveSyncState(
+    { lastSyncTimestamp: Date.now(), lastSyncCommit: currentCommit },
+    options.prod ?? false
+  );
 
   log("\n=== INCREMENTAL SYNC COMPLETE ===");
   logSuccess("Sync state saved for next incremental sync");
@@ -2414,11 +2416,10 @@ async function syncFull(
     log("\n");
     await verify(config, options);
 
-    saveSyncState({
-      lastSyncTimestamp: Date.now(),
-      lastSyncCommit: currentCommit,
-      contentHashes: {},
-    });
+    saveSyncState(
+      { lastSyncTimestamp: Date.now(), lastSyncCommit: currentCommit },
+      options.prod ?? false
+    );
 
     log("\n=== FULL SYNC COMPLETE ===");
     logSuccess("All operations completed successfully!");
@@ -2638,8 +2639,9 @@ async function reset(
   logSuccess(`Deleted ${totalDeleted} items in ${formatDuration(durationMs)}`);
 
   // Clear sync state since database is now empty
-  if (fs.existsSync(SYNC_STATE_FILE)) {
-    fs.unlinkSync(SYNC_STATE_FILE);
+  const stateFile = getSyncStateFile(options.prod ?? false);
+  if (fs.existsSync(stateFile)) {
+    fs.unlinkSync(stateFile);
     log("Cleared sync state file");
   }
 

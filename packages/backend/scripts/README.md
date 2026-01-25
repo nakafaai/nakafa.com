@@ -201,4 +201,23 @@ Content hash unchanged. This is normal for `sync:incremental`.
 | `lib/mdxParser.ts` | MDX parsing utilities |
 | `../convex/contentSync/mutations.ts` | Convex sync mutations |
 | `../convex/contentSync/queries.ts` | Convex verification queries |
-| `../.sync-state.json` | Incremental sync state (gitignored) |
+| `../.sync-state.json` | Dev incremental sync state (gitignored) |
+| `../.sync-state.prod.json` | Prod incremental sync state (gitignored) |
+
+## How Incremental Sync Works
+
+The incremental sync tracks the last successful sync using separate state files:
+- **Dev**: `.sync-state.json` - tracks dev database syncs
+- **Prod**: `.sync-state.prod.json` - tracks prod database syncs
+
+This ensures syncing to dev doesn't affect prod's incremental state and vice versa.
+
+Each state file contains:
+- `lastSyncTimestamp` - when the last sync completed
+- `lastSyncCommit` - git commit hash at last sync
+
+When you run `sync:incremental`, it:
+1. Loads the state file for the target environment
+2. Uses `git diff` to find files changed since `lastSyncCommit`
+3. Only syncs content types that have changes (articles, subjects, exercises)
+4. Saves the new commit hash after successful sync
