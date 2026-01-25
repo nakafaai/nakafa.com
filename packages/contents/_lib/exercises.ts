@@ -1,14 +1,28 @@
+import { promises as fsPromises } from "node:fs";
+import nodePath from "node:path";
+import { fileURLToPath } from "node:url";
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import { getContent } from "@repo/contents/_lib/content";
 import {
   type ChoicesValidationError,
   ExerciseLoadError,
 } from "@repo/contents/_shared/error";
-import { ExercisesChoicesSchema } from "@repo/contents/_types/exercises/choices";
+import {
+  type ExercisesChoices,
+  ExercisesChoicesSchema,
+} from "@repo/contents/_types/exercises/choices";
 import type { Exercise } from "@repo/contents/_types/exercises/shared";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, Option } from "effect";
+import ky from "ky";
 import type { Locale } from "next-intl";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = nodePath.dirname(__filename);
+const contentsDir = nodePath.dirname(__dirname);
+
+const CHOICES_REGEX =
+  /const\s+choices\s*(?::\s*ExercisesChoices\s*)?=\s*({[\s\S]*?});/;
 
 const NUMBER_REGEX = /^\d+$/;
 
@@ -85,6 +99,57 @@ export function getExercisesContent(
   });
 }
 
+/**
+ * Fetches and parses choices from a choices.ts file without dynamic imports.
+ * Reads from filesystem first, falls back to GitHub raw content.
+ */
+function getRawChoices(
+  choicesPath: string
+): Effect.Effect<ExercisesChoices | null, ExerciseLoadError> {
+  const fullPath = nodePath.join(contentsDir, choicesPath);
+
+  const readFromFile = Effect.tryPromise({
+    try: () => fsPromises.readFile(fullPath, "utf8"),
+    catch: () =>
+      new ExerciseLoadError({
+        path: choicesPath,
+        reason: "Failed to read choices file",
+      }),
+  });
+
+  const fetchFromGitHub = Effect.tryPromise({
+    try: () =>
+      ky
+        .get(
+          `https://raw.githubusercontent.com/nakafaai/nakafa.com/refs/heads/main/packages/contents/${choicesPath}`,
+          { cache: "force-cache" }
+        )
+        .text(),
+    catch: () =>
+      new ExerciseLoadError({
+        path: choicesPath,
+        reason: "Failed to fetch choices from GitHub",
+      }),
+  });
+
+  const getRawContent = Effect.catchAll(readFromFile, () => fetchFromGitHub);
+
+  return Effect.map(getRawContent, (raw) => {
+    const match = raw.match(CHOICES_REGEX);
+    if (!match?.[1]) {
+      return null;
+    }
+
+    try {
+      const choicesObject: unknown = new Function(`return ${match[1]}`)();
+      const parsed = ExercisesChoicesSchema.safeParse(choicesObject);
+      return parsed.success ? parsed.data : null;
+    } catch {
+      return null;
+    }
+  });
+}
+
 function loadExercise(
   numberStr: string,
   cleanPath: string,
@@ -102,8 +167,9 @@ function loadExercise(
 
     const questionPath = `${cleanPath}/${numberStr}/_question`;
     const answerPath = `${cleanPath}/${numberStr}/_answer`;
+    const choicesPath = `${cleanPath}/${numberStr}/choices.ts`;
 
-    const [questionContent, answerContent, choicesModule] = yield* Effect.all(
+    const [questionContent, answerContent, choicesData] = yield* Effect.all(
       [
         Effect.mapError(
           getContent(locale, questionPath, { includeMDX }),
@@ -121,33 +187,18 @@ function loadExercise(
               reason: "Failed to load answer",
             })
         ),
-        Effect.tryPromise({
-          try: () =>
-            import(`@repo/contents/${cleanPath}/${numberStr}/choices.ts`),
-          catch: () =>
-            new ExerciseLoadError({
-              path: `${cleanPath}/${numberStr}/choices.ts`,
-              reason: "Failed to load choices",
-            }),
-        }),
+        getRawChoices(choicesPath),
       ],
       { concurrency: "unbounded" }
     );
 
-    if (!(questionContent && answerContent && choicesModule?.default)) {
-      return Option.none();
-    }
-
-    const parsedChoices = ExercisesChoicesSchema.safeParse(
-      choicesModule.default
-    );
-    if (!parsedChoices.success) {
+    if (!(questionContent && answerContent && choicesData)) {
       return Option.none();
     }
 
     return Option.some({
       number,
-      choices: parsedChoices.data,
+      choices: choicesData,
       question: {
         metadata: questionContent.metadata,
         default: questionContent.default,

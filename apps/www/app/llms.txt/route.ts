@@ -5,9 +5,18 @@ import {
 } from "@repo/contents/_lib/exercises/material";
 import { getFolderChildNames } from "@repo/contents/_lib/fs";
 import { getAllSurah, getSurahName } from "@repo/contents/_lib/quran";
-import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
-import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
-import type { ExercisesType } from "@repo/contents/_types/exercises/type";
+import {
+  type ExercisesCategory,
+  ExercisesCategorySchema,
+} from "@repo/contents/_types/exercises/category";
+import {
+  type ExercisesMaterial,
+  ExercisesMaterialSchema,
+} from "@repo/contents/_types/exercises/material";
+import {
+  type ExercisesType,
+  ExercisesTypeSchema,
+} from "@repo/contents/_types/exercises/type";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 
@@ -150,11 +159,21 @@ function getAllExerciseMaterials(): {
         })
       );
       for (const material of materials) {
-        result.push({
-          category: category as ExercisesCategory,
-          type: type as ExercisesType,
-          material: material as ExercisesMaterial,
-        });
+        const parsedCategory = ExercisesCategorySchema.safeParse(category);
+        const parsedType = ExercisesTypeSchema.safeParse(type);
+        const parsedMaterial = ExercisesMaterialSchema.safeParse(material);
+
+        if (
+          parsedCategory.success &&
+          parsedType.success &&
+          parsedMaterial.success
+        ) {
+          result.push({
+            category: parsedCategory.data,
+            type: parsedType.data,
+            material: parsedMaterial.data,
+          });
+        }
       }
     }
   }

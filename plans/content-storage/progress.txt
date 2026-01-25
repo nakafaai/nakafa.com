@@ -1,0 +1,298 @@
+# Content Storage Progress
+
+## Status: Phase 1 Complete (Ready for Live Sync)
+
+---
+
+[2025-01-24 00:00] Planning phase completed
+
+Key decisions:
+- Full normalization approach chosen
+- Shared authors table with N:M join
+- Normalized article references (can exceed 5-10 limit)
+- Normalized exercise choices (each gets _id for tracking)
+- Date stored as number (epoch millis) for sorting
+
+---
+
+## Implementation Log
+
+[2025-01-24] Phase 0: Schema Foundation - COMPLETE
+
+Tasks completed:
+- [x] Task 0.1: contentValidators.ts
+- [x] Task 0.2: authors/schema.ts
+- [x] Task 0.3: articleContents/schema.ts
+- [x] Task 0.4: subjectContents/schema.ts
+- [x] Task 0.5: exerciseContents/schema.ts
+- [x] Task 0.6: Update main schema.ts
+
+Files created:
+- packages/backend/convex/lib/contentValidators.ts
+- packages/backend/convex/authors/schema.ts
+- packages/backend/convex/articleContents/schema.ts
+- packages/backend/convex/subjectContents/schema.ts
+- packages/backend/convex/exerciseContents/schema.ts
+- packages/backend/convex/schema.ts (updated)
+
+Tables created (7):
+1. authors - Shared author profiles
+2. contentAuthors - N:M join table
+3. articleContents - Article body storage
+4. articleReferences - Article citations
+5. subjectContents - Subject lesson content
+6. exerciseContents - Exercise questions
+7. exerciseChoices - Answer options
+
+---
+
+[2025-01-24] Phase 1: Content Sync - COMPLETE (Revised)
+
+**Key insight**: We don't need MDX parsing or React components. We just store raw text.
+
+Tasks completed:
+- [x] Task 1.0: Phase 1 planning document
+- [x] Task 1.1: MDX parser utilities (created)
+- [x] Task 1.2: Sync mutations for each content type
+- [x] Task 1.3: Simplified mdxParser.ts to use Zod schemas from @repo/contents/_types
+- [x] Task 1.4: Added @repo/contents dependency to backend
+- [x] Dry-run tests all pass
+
+Files created/modified:
+- plans/content-storage/tasks/1.0-phase-1-revised.md (new plan)
+- packages/backend/scripts/lib/mdxParser.ts (simplified)
+- packages/backend/convex/articleContents/mutations.ts
+- packages/backend/convex/subjectContents/mutations.ts
+- packages/backend/convex/exerciseContents/mutations.ts
+- packages/backend/convex/contentSync/actions.ts
+- packages/backend/scripts/sync-content.ts
+- packages/backend/package.json (added @repo/contents, glob, tsx)
+
+NPM scripts:
+- pnpm --filter backend sync:articles [--locale en|id] [--dry-run]
+- pnpm --filter backend sync:subjects [--locale en|id] [--dry-run]
+- pnpm --filter backend sync:exercises [--locale en|id] [--dry-run]
+- pnpm --filter backend sync:all [--dry-run]
+
+Content discovered (dry-run):
+- Articles: 14 files (7 articles x 2 locales)
+- Subjects: 606 files (303 subjects x 2 locales)
+- Exercises: 920 files (460 exercises x 2 locales)
+
+Key changes in revision:
+1. Removed custom TypeScript interfaces for metadata
+2. Import Zod schemas from @repo/contents/_types/content
+3. Use `new Function()` pattern for safe metadata eval (matches existing codebase)
+4. Validate with ContentMetadataSchema and ExercisesChoicesSchema
+
+Verification:
+- pnpm lint: PASSED
+- TypeScript check: PASSED
+- Dry-run tests: PASSED
+
+---
+
+## Next Steps
+
+### Phase 1.5: Live Sync Testing (COMPLETE)
+
+Run actual sync against Convex dev deployment:
+```bash
+# Start Convex dev server first
+pnpm --filter backend dev
+
+# Then in another terminal:
+pnpm --filter backend sync:articles     # 14 files - DONE
+pnpm --filter backend sync:subjects     # 606 files - DONE
+pnpm --filter backend sync:exercises    # 920 files - DONE
+```
+
+Results:
+- [x] Articles: 14 created, idempotency verified (re-run shows 14 unchanged)
+- [x] Subjects: 606 created
+- [x] Exercises: 920 created
+- [x] Authors correctly linked via contentAuthors
+- [x] Data visible in Convex dashboard
+
+Total content synced: 1,540 items
+
+---
+
+### Phase 1.6: Bug Fixes (COMPLETE)
+
+**Bug 1: articleReferences not synced**
+- Root cause: ref.ts files not being processed
+- Fix: Added `readArticleReferences()` to mdxParser.ts
+- Fix: Updated syncArticles action to call syncArticleReferences mutation
+- Verified: All 14 articles updated with references
+
+**Bug 2: Content hash didn't include references/authors**
+- Root cause: Hash only included body content
+- Fix: Updated hash to include body + references + authors (for articles)
+- Fix: Updated hash to include body + authors (for subjects)
+- Fix: Updated hash to include body + answer + choices + authors (for exercises)
+- Result: All content re-synced:
+  - Articles: 14 updated (now with references)
+  - Subjects: 606 updated (with author linking)
+  - Exercises: 920 updated (with author + choices linking)
+
+**Tables to verify in Convex dashboard:**
+- [x] articleContents: 14 items
+- [x] articleReferences: references for each article
+- [x] subjectContents: 606 items
+- [x] exerciseContents: 920 items
+- [x] exerciseChoices: choices for each exercise
+- [x] authors: unique author entries
+- [x] contentAuthors: N:M links (article/subject/exercise -> author)
+
+---
+
+### Phase 1.7: Schema Refactor (COMPLETE)
+
+**Subject Schema Hierarchy**
+- Split flat `subjectContents` into parent/child relationship
+- Created `subjectTopics` (parent) with metadata
+- Created `subjectSections` (child) with content body
+- Added `topicId` foreign key on sections
+
+**Code Quality**
+- Eliminated all lint warnings in sync script
+- Extracted helper functions to reduce cognitive complexity
+- Consolidated batch size constants into single `BATCH_SIZES` object
+
+---
+
+### Phase 1.8: Performance Optimization (COMPLETE)
+
+**1. Performance Metrics**
+- Added timing per content type (duration, items/sec)
+- Added overall sync summary with total throughput
+- Human-readable duration formatting (ms/s/min)
+
+**2. Author Caching**
+- Added `buildAuthorCache()` to query unique authors once per batch
+- Added `syncContentAuthorsWithCache()` to use pre-built cache
+- Reduces N author lookups to just unique author count per batch
+
+**3. Parallel Processing**
+- Added `--parallel` flag for concurrent sync
+- Phase 1: Articles, Topics, Sets run in parallel
+- Phase 2: Sections, Questions run in parallel (after Phase 1)
+
+**4. Progress Indicators**
+- Batch progress shows percentage complete
+- ETA calculated from throughput after first batch
+- Format: `Batch 15/31 (20 items) [48%] ETA: 6.23s`
+
+**Files modified:**
+- packages/backend/scripts/sync-content.ts (metrics, parallel, progress)
+- packages/backend/convex/contentSync/mutations.ts (author caching)
+- plans/content-storage/SYNC.md (updated documentation)
+
+**Verification:**
+- pnpm lint: PASSED (0 errors, 0 warnings)
+- pnpm test: PASSED (908+ tests)
+- TypeScript check: PASSED
+
+---
+
+### Phase 1.9: Incremental Sync & Validation (COMPLETE)
+
+**1. Incremental Sync**
+- Added `sync:incremental` command for faster daily syncs
+- Uses git diff to detect changed files since last sync
+- Persists sync state in `.sync-state.json` (gitignored)
+- Falls back to full sync if no previous state exists
+
+**2. Content Validation (CI-ready)**
+- Added `sync:validate` command for CI/CD pipelines
+- Validates all MDX metadata without syncing to database
+- Reports file-by-file errors with line numbers
+- Exits with code 1 if any validation fails
+
+**3. Full Sync Enhancement**
+- `sync:full` now saves sync state after successful run
+- Enables seamless transition to incremental sync workflow
+
+**Files modified:**
+- packages/backend/scripts/sync-content.ts (+incremental, +validate)
+- packages/backend/convex/contentSync/mutations.ts (minor cleanup)
+- packages/backend/package.json (+sync:incremental, +sync:validate)
+- packages/backend/.gitignore (+.sync-state.json)
+- packages/backend/scripts/README.md (new comprehensive docs)
+- plans/content-storage/SYNC.md (updated with new commands)
+
+**Verification:**
+- pnpm lint: PASSED (1468 files)
+- TypeScript check: PASSED
+- sync:validate: PASSED (1540 valid, 0 invalid)
+- sync:verify: PASSED (all content matches)
+
+---
+
+### Phase 1.10: Reset/Delete All Content (COMPLETE)
+
+**1. Reset Command**
+- Added `sync:reset` command to delete all synced content
+- Dry run by default (shows counts, requires --force to delete)
+- Extra warning for production database
+- Proper cascade deletion order to maintain referential integrity
+
+**2. Batched Deletes**
+- Implemented batch processing (500 items per batch) to avoid Convex timeout
+- Each table has a `delete*Batch` mutation that returns `{deleted, hasMore}`
+- Script loops until all items deleted
+
+**3. Safety Features**
+- `--force` flag required to actually delete
+- `--authors` flag to include author deletion (optional)
+- Production warning when `--prod` flag is used
+- Clears sync state file after reset
+
+**4. Deletion Order (Referential Integrity)**
+1. contentAuthors (join table)
+2. articleReferences (FK to articles)
+3. exerciseChoices (FK to questions)
+4. exerciseQuestions (FK to sets)
+5. subjectSections (FK to topics)
+6. exerciseSets (parent table)
+7. subjectTopics (parent table)
+8. articleContents (parent table)
+9. authors (optional, shared table)
+
+**Files modified:**
+- packages/backend/convex/contentSync/mutations.ts (+batch delete mutations)
+- packages/backend/scripts/sync-content.ts (+reset command)
+- packages/backend/package.json (+sync:reset, +sync:prod:reset)
+- plans/content-storage/SYNC.md (updated documentation)
+- plans/content-storage/RESET.md (new plan document)
+
+**NPM Scripts:**
+- `sync:reset` - Preview deletion (dry run)
+- `sync:reset --force` - Delete all content in dev
+- `sync:reset --force --authors` - Delete all including authors
+- `sync:prod:reset --force` - Delete all content in production
+
+**Verification:**
+- pnpm lint: PASSED (1468 files)
+- TypeScript check: PASSED
+- sync:reset (dry run): Shows counts correctly
+- sync:reset --force: Deleted 6452 items in ~13s
+- sync:verify: Shows empty database
+- sync:full: Re-synced all 1850 items successfully
+
+---
+
+### Phase 2: API Layer (NEXT)
+- Create public query functions for content retrieval
+- Add authentication/rate limiting
+- Implement API monetization tiers
+
+### Phase 3: Embedding Generation
+- Add vector embeddings for semantic search
+- Index content for AI-powered search
+
+---
+
+**Last Updated**: January 24, 2026
+**Status**: Phase 1.10 Complete - Reset functionality ready

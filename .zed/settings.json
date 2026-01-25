@@ -1,0 +1,71 @@
+{
+  "formatter": "language_server",
+  "format_on_save": "on",
+  "lsp": {
+    "tailwindcss-language-server": {
+      "settings": {
+        "classAttributes": [
+          "class",
+          "className",
+          "classList",
+          "containerClassName",
+          "classNames"
+        ],
+        "classFunctions": ["cn", "cva", "cx", "clsx", "twMerge"],
+        "experimental": {
+          "configFile": "packages/design-system/styles/globals.css",
+          "classRegex": [
+            ["cn\\(([^)]*)\\)", "[\"'`]([^\"'`]*)[\"'`]"],
+            ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*)[\"'`]"],
+            ["cx\\(([^)]*)\\)", "[\"'`]([^\"'`]*)[\"'`]"],
+            ["clsx\\(([^)]*)\\)", "[\"'`]([^\"'`]*)[\"'`]"]
+          ]
+        }
+      }
+    },
+    "typescript-language-server": {
+      "settings": {
+        "typescript": {
+          "preferences": {
+            "includePackageJsonAutoImports": "on"
+          }
+        }
+      }
+    }
+  },
+  "languages": {
+    "JavaScript": {
+      "formatter": {
+        "language_server": {
+          "name": "biome"
+        }
+      },
+      "code_actions_on_format": {
+        "source.fixAll.biome": true,
+        "source.organizeImports.biome": true
+      }
+    },
+    "TypeScript": {
+      "formatter": {
+        "language_server": {
+          "name": "biome"
+        }
+      },
+      "code_actions_on_format": {
+        "source.fixAll.biome": true,
+        "source.organizeImports.biome": true
+      }
+    },
+    "TSX": {
+      "formatter": {
+        "language_server": {
+          "name": "biome"
+        }
+      },
+      "code_actions_on_format": {
+        "source.fixAll.biome": true,
+        "source.organizeImports.biome": true
+      }
+    }
+  }
+}
