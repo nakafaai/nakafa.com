@@ -46,8 +46,8 @@
     "@repo/contents": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "convex-test": "^0.0.41",
-    "glob": "^11.0.0",
-    "tsx": "^4.19.2",
+    "glob": "^13.0.0",
+    "tsx": "^4.21.0",
     "vitest": "^4.0.18"
   }
 }
