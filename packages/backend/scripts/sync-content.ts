@@ -45,32 +45,10 @@ function loadEnvFile() {
 loadEnvFile();
 
 /**
- * Batch sizes for Convex mutations.
+ * Batch sizes for Convex mutations, tuned to stay under Convex limits.
  *
- * Convex limits per mutation (from docs):
- * - Documents written: 16,000
- * - Documents scanned: 32,000
- * - Data written: 16 MiB
- * - Execution time: 1 second (user code only)
- *
- * Write amplification per content type:
- * - Articles: ~65 writes/item (1 article + ~2 authors + ~30 references × 2)
- * - Subject Topics: 1 write/item (no nested writes)
- * - Subject Sections: ~5 writes/item (1 section + ~2 authors × 2)
- * - Exercise Sets: 1 write/item (no nested writes)
- * - Exercise Questions: ~15 writes/item (1 question + ~2 authors × 2 + 5 choices × 2)
- *
- * Current batch sizes balance:
- * - Safety margin: Stay well under 16,000 write limit
- * - Performance: Maximize items per HTTP request
- * - Memory: Avoid OOM from large payloads
- *
- * Max writes per batch (safety check):
- * - Articles: 50 × 65 = 3,250 writes (20% of limit)
- * - Subject Topics: 50 × 1 = 50 writes
- * - Subject Sections: 20 × 5 = 100 writes
- * - Exercise Sets: 50 × 1 = 50 writes
- * - Exercise Questions: 30 × 15 = 450 writes
+ * Convex limits: 16K docs written, 1 second execution time.
+ * Sizes account for write amplification (nested authors, references, choices).
  */
 const BATCH_SIZES = {
   articles: 50,
@@ -80,34 +58,35 @@ const BATCH_SIZES = {
   exerciseQuestions: 30,
 } as const;
 
-/** Regex to extract locale from material file paths (e.g., "en-material.ts" -> "en") */
+/** Extracts locale from material file paths like "en-material.ts" -> "en" */
 const LOCALE_MATERIAL_FILE_REGEX = /\/([a-z]{2})-material\.ts$/;
 
+/** CLI options for sync commands */
 interface SyncOptions {
+  /** Filter sync to specific locale (en/id) */
   locale?: Locale;
+  /** Actually delete content (for clean/reset commands) */
   force?: boolean;
+  /** Include authors in clean/reset operations */
   authors?: boolean;
+  /** Run sync phases sequentially instead of parallel (for debugging) */
   sequential?: boolean;
+  /** Use incremental sync based on git changes */
   incremental?: boolean;
+  /** Target production database instead of dev */
   prod?: boolean;
   /** Suppress per-batch logging (used during parallel execution) */
   quiet?: boolean;
 }
 
-/**
- * Sync state persisted between runs for incremental sync.
- * Tracks the last successful sync timestamp and git commit.
- */
+/** Persisted state for incremental sync between runs */
 interface SyncState {
   lastSyncTimestamp: number;
   lastSyncCommit: string;
   contentHashes: Record<string, string>;
 }
 
-/**
- * Load sync state from disk.
- * Returns null if no previous sync state exists.
- */
+/** Loads sync state from disk, returns null if no previous state exists */
 function loadSyncState(): SyncState | null {
   try {
     if (!fs.existsSync(SYNC_STATE_FILE)) {
@@ -120,16 +99,12 @@ function loadSyncState(): SyncState | null {
   }
 }
 
-/**
- * Save sync state to disk after successful sync.
- */
+/** Saves sync state to disk after successful sync */
 function saveSyncState(state: SyncState): void {
   fs.writeFileSync(SYNC_STATE_FILE, JSON.stringify(state, null, 2));
 }
 
-/**
- * Get the current git commit hash.
- */
+/** Gets the current git commit hash, empty string if git unavailable */
 function getCurrentGitCommit(): string {
   try {
     return execSync("git rev-parse HEAD", {
@@ -141,10 +116,7 @@ function getCurrentGitCommit(): string {
   }
 }
 
-/**
- * Get files changed since a specific git commit.
- * Returns relative paths from CONTENTS_DIR.
- */
+/** Gets files changed since a git commit as absolute paths */
 function getChangedFilesSince(commit: string): Set<string> {
   try {
     const output = execSync(`git diff --name-only ${commit} HEAD`, {
@@ -164,6 +136,7 @@ function getChangedFilesSince(commit: string): Set<string> {
   }
 }
 
+/** Metrics for a single sync phase (articles, topics, etc.) */
 interface PhaseMetrics {
   phase: string;
   itemCount: number;
@@ -173,6 +146,7 @@ interface PhaseMetrics {
   itemsPerSecond?: number;
 }
 
+/** Aggregated metrics for the entire sync operation */
 interface SyncMetrics {
   phases: PhaseMetrics[];
   totalStartTime: number;
@@ -181,6 +155,7 @@ interface SyncMetrics {
   totalItems?: number;
 }
 
+/** Creates a new metrics tracker for a sync operation */
 function createMetrics(): SyncMetrics {
   return {
     phases: [],
@@ -188,6 +163,7 @@ function createMetrics(): SyncMetrics {
   };
 }
 
+/** Starts tracking a new phase, returns the phase metrics object */
 function startPhase(metrics: SyncMetrics, phase: string): PhaseMetrics {
   const phaseMetrics: PhaseMetrics = {
     phase,
@@ -198,6 +174,7 @@ function startPhase(metrics: SyncMetrics, phase: string): PhaseMetrics {
   return phaseMetrics;
 }
 
+/** Ends a phase and calculates duration and throughput */
 function endPhase(phase: PhaseMetrics, itemCount: number): void {
   phase.endTime = performance.now();
   phase.itemCount = itemCount;
@@ -206,6 +183,7 @@ function endPhase(phase: PhaseMetrics, itemCount: number): void {
     phase.durationMs > 0 ? (itemCount / phase.durationMs) * 1000 : 0;
 }
 
+/** Adds phase metrics from a completed sync result */
 function addPhaseMetrics(
   metrics: SyncMetrics,
   phaseName: string,
@@ -221,12 +199,14 @@ function addPhaseMetrics(
   });
 }
 
+/** Finalizes metrics by calculating totals */
 function finalizeMetrics(metrics: SyncMetrics): void {
   metrics.totalEndTime = performance.now();
   metrics.totalDurationMs = metrics.totalEndTime - metrics.totalStartTime;
   metrics.totalItems = metrics.phases.reduce((sum, p) => sum + p.itemCount, 0);
 }
 
+/** Formats milliseconds as human-readable duration (e.g., "1.23s", "2m 30.5s") */
 function formatDuration(ms: number): string {
   if (ms < 1000) {
     return `${ms.toFixed(0)}ms`;
@@ -239,10 +219,7 @@ function formatDuration(ms: number): string {
   return `${minutes}m ${seconds}s`;
 }
 
-/**
- * Format sync result for clean summary output.
- * Example: "14 synced (14 new) + 232 refs, 28 authors"
- */
+/** Formats sync result for summary output (e.g., "14 synced (14 new) + 232 refs") */
 function formatSyncResult(result: SyncResult): string {
   const total = result.created + result.updated + result.unchanged;
   const parts: string[] = [];
@@ -302,6 +279,7 @@ function logSyncMetrics(metrics: SyncMetrics): void {
   }
 }
 
+/** Progress tracker for batched operations with ETA calculation */
 interface BatchProgress {
   totalItems: number;
   processedItems: number;
@@ -309,6 +287,7 @@ interface BatchProgress {
   startTime: number;
 }
 
+/** Creates a progress tracker for batched sync operations */
 function createBatchProgress(
   totalItems: number,
   batchSize: number
@@ -321,6 +300,7 @@ function createBatchProgress(
   };
 }
 
+/** Updates progress after a batch completes */
 function updateBatchProgress(
   progress: BatchProgress,
   batchItemCount: number
@@ -328,6 +308,7 @@ function updateBatchProgress(
   progress.processedItems += batchItemCount;
 }
 
+/** Formats batch progress with percentage and ETA */
 function formatBatchProgress(
   progress: BatchProgress,
   batchNum: number,
@@ -354,6 +335,7 @@ function formatBatchProgress(
   return `Batch ${batchNum}/${totalBatches} (${batchItemCount} items) [${percentage}%]${etaStr}`;
 }
 
+/** Result of a sync operation with counts and optional metrics */
 interface SyncResult {
   created: number;
   updated: number;
@@ -366,11 +348,13 @@ interface SyncResult {
   authorsCreated?: number;
 }
 
+/** Convex API configuration for HTTP requests */
 interface ConvexConfig {
   url: string;
   accessToken: string;
 }
 
+/** Database content counts returned by verification queries */
 interface ContentCounts {
   articles: number;
   subjectTopics: number;
@@ -383,6 +367,7 @@ interface ContentCounts {
   exerciseChoices: number;
 }
 
+/** Data integrity check results for verification */
 interface DataIntegrity {
   questionsWithoutChoices: string[];
   questionsWithoutAuthors: string[];
@@ -393,6 +378,7 @@ interface DataIntegrity {
   totalSections: number;
 }
 
+/** Content in database that no longer exists in filesystem */
 interface StaleContent {
   staleArticles: Array<{ id: string; slug: string; locale: string }>;
   staleSubjectTopics: Array<{ id: string; slug: string; locale: string }>;
@@ -401,14 +387,17 @@ interface StaleContent {
   staleExerciseQuestions: Array<{ id: string; slug: string; locale: string }>;
 }
 
+/** Authors with no linked content */
 interface UnusedAuthors {
   unusedAuthors: Array<{ id: string; name: string; username: string }>;
 }
 
+/** Result of a delete operation */
 interface DeleteResult {
   deleted: number;
 }
 
+/** Logs message to console */
 function log(message: string) {
   console.log(message);
 }
@@ -425,16 +414,14 @@ function logSuccess(message: string) {
   console.log(`OK: ${message}`);
 }
 
+/** Stale item info for clean operations */
 interface StaleItem {
   id: string;
   slug: string;
   locale: string;
 }
 
-/**
- * Logs a list of stale items with truncation for large lists.
- * Shows up to maxItems entries, with a "... and X more" message for the rest.
- */
+/** Logs stale items with truncation (shows first maxItems, then "... and X more") */
 function logStaleItems(label: string, items: StaleItem[], maxItems = 10): void {
   if (items.length === 0) {
     return;
@@ -449,10 +436,7 @@ function logStaleItems(label: string, items: StaleItem[], maxItems = 10): void {
   }
 }
 
-/**
- * Deletes stale content of a specific type by calling the appropriate mutation.
- * Returns whether any content was deleted.
- */
+/** Deletes stale items via mutation, returns true if any were deleted */
 async function deleteStaleItems(
   config: ConvexConfig,
   mutationPath: string,
@@ -474,10 +458,12 @@ async function deleteStaleItems(
   return true;
 }
 
+/**
+ * Gets Convex configuration from environment and auth file.
+ * @throws Error if URL not set or not authenticated
+ */
 function getConvexConfig(options: SyncOptions = {}): ConvexConfig {
   const isProd = options.prod;
-
-  // Determine which URL to use
   const url = isProd ? process.env.CONVEX_PROD_URL : process.env.CONVEX_URL;
 
   if (!url) {
@@ -511,6 +497,7 @@ function getConvexConfig(options: SyncOptions = {}): ConvexConfig {
   return { url, accessToken: convexConfig.accessToken };
 }
 
+/** Parses CLI arguments into command type and options */
 function parseArgs(): { type: string; options: SyncOptions } {
   const args = process.argv.slice(2);
   const type = args[0] || "all";
@@ -545,11 +532,13 @@ function parseArgs(): { type: string; options: SyncOptions } {
   return { type, options };
 }
 
+/** Finds files matching glob pattern relative to CONTENTS_DIR */
 async function globFiles(pattern: string): Promise<string[]> {
   const { glob } = await import("glob");
   return glob(pattern, { cwd: CONTENTS_DIR, absolute: true });
 }
 
+/** Runs a Convex sync mutation and returns the SyncResult */
 async function runConvexMutation(
   config: ConvexConfig,
   functionPath: string,
@@ -582,6 +571,7 @@ async function runConvexMutation(
   return result.value as SyncResult;
 }
 
+/** Runs a Convex query with no arguments */
 async function runConvexQuery<T>(
   config: ConvexConfig,
   functionPath: string
@@ -612,6 +602,10 @@ async function runConvexQuery<T>(
   return result.value as T;
 }
 
+/**
+ * Syncs article content from filesystem to Convex.
+ * Includes article body, metadata, references, and author links.
+ */
 async function syncArticles(
   config: ConvexConfig,
   options: SyncOptions
@@ -755,6 +749,10 @@ async function syncArticles(
 
 const LOCALE_SUBJECT_MATERIAL_FILE_REGEX = /\/([a-z]{2})-material\.ts$/;
 
+/**
+ * Syncs subject topics from material files to Convex.
+ * Topics are parent containers for sections.
+ */
 async function syncSubjectTopics(
   config: ConvexConfig,
   options: SyncOptions
@@ -876,6 +874,10 @@ async function syncSubjectTopics(
   return { ...totals, durationMs, itemsPerSecond };
 }
 
+/**
+ * Syncs subject sections from MDX files to Convex.
+ * Sections contain the actual educational content.
+ */
 async function syncSubjectSections(
   config: ConvexConfig,
   options: SyncOptions
@@ -1014,6 +1016,10 @@ async function syncSubjectSections(
   return { ...totals, durationMs, itemsPerSecond };
 }
 
+/**
+ * Syncs exercise sets from material files to Convex.
+ * Sets are parent containers for questions.
+ */
 async function syncExerciseSets(
   config: ConvexConfig,
   options: SyncOptions
@@ -1146,6 +1152,10 @@ async function syncExerciseSets(
   return { ...totals, durationMs, itemsPerSecond };
 }
 
+/**
+ * Syncs exercise questions from MDX files to Convex.
+ * Includes question/answer bodies, choices, and author links.
+ */
 async function syncExerciseQuestions(
   config: ConvexConfig,
   options: SyncOptions
@@ -1328,6 +1338,10 @@ async function syncExerciseQuestions(
   return { ...totals, durationMs, itemsPerSecond };
 }
 
+/**
+ * Syncs all content types to Convex.
+ * Runs in parallel by default, sequential with --sequential flag.
+ */
 async function syncAll(
   config: ConvexConfig,
   options: SyncOptions
@@ -1534,13 +1548,8 @@ interface ValidationResult {
 }
 
 /**
- * Validate all content files without syncing.
+ * Validates all content files without syncing.
  * Useful for CI/pre-commit hooks to catch errors early.
- *
- * Validates:
- * - MDX metadata (title, authors, date)
- * - Path structure (category, grade, material)
- * - References and choices files
  */
 async function validate(): Promise<void> {
   log("=== VALIDATE CONTENT ===\n");
@@ -1594,6 +1603,7 @@ async function validate(): Promise<void> {
   }
 }
 
+/** Validates article MDX files and references */
 async function validateArticles(): Promise<ValidationResult> {
   const files = await globFiles("articles/**/*.mdx");
   const result: ValidationResult = { valid: 0, invalid: 0, errors: [] };
@@ -1617,6 +1627,7 @@ async function validateArticles(): Promise<ValidationResult> {
   return result;
 }
 
+/** Validates subject MDX and material files */
 async function validateSubjects(): Promise<ValidationResult> {
   const files = await globFiles("subject/**/*.mdx");
   const materialFiles = await globFiles("subject/**/_data/*-material.ts");
@@ -1655,6 +1666,7 @@ async function validateSubjects(): Promise<ValidationResult> {
   return result;
 }
 
+/** Validates exercise MDX, choices, and material files */
 async function validateExercises(): Promise<ValidationResult> {
   const questionFiles = await globFiles("exercises/**/_question/*.mdx");
   const materialFiles = await globFiles("exercises/**/_data/*-material.ts");
@@ -1695,6 +1707,10 @@ async function validateExercises(): Promise<ValidationResult> {
   return result;
 }
 
+/**
+ * Verifies database content matches filesystem.
+ * Checks counts, data integrity, and reports mismatches.
+ */
 async function verify(
   config: ConvexConfig,
   options: SyncOptions = {}
@@ -1913,6 +1929,7 @@ async function verify(
   }
 }
 
+/** Collects all content slugs from filesystem for stale content detection */
 async function collectFilesystemSlugs(): Promise<{
   articleSlugs: string[];
   subjectTopicSlugs: string[];
@@ -1990,6 +2007,7 @@ async function collectFilesystemSlugs(): Promise<{
   };
 }
 
+/** Runs a Convex query with arguments */
 async function runConvexQueryWithArgs<T>(
   config: ConvexConfig,
   functionPath: string,
@@ -2021,6 +2039,7 @@ async function runConvexQueryWithArgs<T>(
   return result.value as T;
 }
 
+/** Runs a Convex mutation with generic return type */
 async function runConvexMutationGeneric<T>(
   config: ConvexConfig,
   functionPath: string,
@@ -2052,10 +2071,7 @@ async function runConvexMutationGeneric<T>(
   return result.value as T;
 }
 
-/**
- * Finds and optionally deletes authors that have no linked content.
- * Separated from main clean() to reduce cognitive complexity.
- */
+/** Finds and optionally deletes authors with no linked content */
 async function cleanUnusedAuthors(
   config: ConvexConfig,
   options: SyncOptions
@@ -2099,6 +2115,10 @@ async function cleanUnusedAuthors(
   }
 }
 
+/**
+ * Finds and removes stale content (exists in DB but not filesystem).
+ * Dry run by default, use --force to delete.
+ */
 async function clean(
   config: ConvexConfig,
   options: SyncOptions
@@ -2224,18 +2244,8 @@ async function clean(
 }
 
 /**
- * Incremental sync: only sync files changed since last successful sync.
- * Uses git to detect changed files and skips unchanged content.
- *
- * Benefits:
- * - Much faster for daily syncs (seconds vs minutes)
- * - Reduces load on Convex
- * - Only processes what actually changed
- *
- * Falls back to full sync if:
- * - No previous sync state exists
- * - Git history is unavailable
- * - Last sync commit is not in history
+ * Incremental sync: only syncs content types with git changes since last sync.
+ * Falls back to full sync if no previous state or git unavailable.
  */
 async function syncIncremental(
   config: ConvexConfig,
@@ -2376,6 +2386,10 @@ async function syncIncremental(
   logSuccess("Sync state saved for next incremental sync");
 }
 
+/**
+ * Full sync workflow: sync all content, clean stale items, verify data.
+ * This is the recommended command for development.
+ */
 async function syncFull(
   config: ConvexConfig,
   options: SyncOptions = {}
@@ -2421,10 +2435,7 @@ interface BatchDeleteResult {
   hasMore: boolean;
 }
 
-/**
- * Delete all items from a table using batched mutations.
- * Keeps calling the mutation until hasMore is false.
- */
+/** Deletes all items from a table in batches until hasMore is false */
 async function deleteAllBatched(
   config: ConvexConfig,
   mutationPath: string,
@@ -2459,18 +2470,8 @@ async function deleteAllBatched(
 }
 
 /**
- * Reset (delete all) synced content from the database.
- *
- * This is useful for:
- * - Testing the full sync workflow
- * - Starting fresh after major content restructuring
- * - Debugging sync issues
- *
- * Safety features:
- * - Dry run by default (use --force to actually delete)
- * - Extra warning for production database
- * - Proper cascade deletion order
- * - Batched deletes to avoid timeout
+ * Resets (deletes all) synced content from database.
+ * Dry run by default, use --force to delete. Deletes in proper cascade order.
  */
 async function reset(
   config: ConvexConfig,
@@ -2536,7 +2537,7 @@ async function reset(
     return;
   }
 
-  // Actually delete - order matters for referential integrity
+  // Delete in dependency order: join tables -> children -> parents
   log("\nDeleting content (in dependency order)...\n");
 
   const startTime = performance.now();
@@ -2650,6 +2651,7 @@ async function reset(
   }
 }
 
+/** Main entry point - parses args and runs the appropriate command */
 async function main() {
   const { type, options } = parseArgs();
 

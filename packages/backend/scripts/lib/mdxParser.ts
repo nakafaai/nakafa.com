@@ -37,20 +37,24 @@ import {
   MaterialSchema,
 } from "@repo/contents/_types/subject/material";
 
+/** Parsed MDX file with extracted metadata and content hash for change detection */
 interface ParsedMdx {
   metadata: ContentMetadata;
   body: string;
   contentHash: string;
 }
 
+/** Parsed path info for article files: articles/{category}/{articleSlug}/{locale}.mdx */
 interface ArticleParsedPath {
   type: "article";
   locale: Locale;
   category: ArticleCategory;
   articleSlug: string;
+  /** Full slug: articles/{category}/{articleSlug} */
   slug: string;
 }
 
+/** Parsed path info for subject files: subject/{category}/{grade}/{material}/{topic}/{section}/{locale}.mdx */
 interface SubjectParsedPath {
   type: "subject";
   locale: Locale;
@@ -59,9 +63,11 @@ interface SubjectParsedPath {
   material: Material;
   topic: string;
   section: string;
+  /** Full slug: subject/{category}/{grade}/{material}/{topic}/{section} */
   slug: string;
 }
 
+/** Parsed path info for exercise files: exercises/{category}/{type}/{material}/{exerciseType}/{set}/{number}/(_question|_answer)/{locale}.mdx */
 interface ExerciseParsedPath {
   type: "exercise";
   locale: Locale;
@@ -71,10 +77,12 @@ interface ExerciseParsedPath {
   exerciseType: string;
   setName: string;
   number: number;
+  /** Full slug: exercises/{category}/{type}/{material}/{exerciseType}/{set}/{number} */
   slug: string;
   isQuestion: boolean;
 }
 
+/** Parsed exercise set from material file */
 interface ParsedExerciseSet {
   locale: Locale;
   slug: string;
@@ -87,6 +95,7 @@ interface ParsedExerciseSet {
   description?: string;
 }
 
+/** Parsed subject topic from material file */
 interface ParsedSubjectTopic {
   locale: Locale;
   slug: string;
@@ -110,6 +119,7 @@ export type {
 
 export type { Locale } from "@repo/backend/convex/lib/contentValidators";
 
+// Regex patterns for parsing MDX content and file paths
 const METADATA_REGEX = /export\s+const\s+metadata\s*=\s*({[\s\S]*?});/;
 
 const ARTICLE_PATH_REGEX = /articles\/([^/]+)\/([^/]+)\/([^/]+)\.mdx$/;
@@ -128,8 +138,8 @@ const REFERENCES_REGEX =
 const MULTIPLE_NEWLINES_REGEX = /\n{3,}/g;
 
 /**
- * Validation helpers for parsed path segments.
- * These ensure type-safe parsing and fail fast on invalid paths.
+ * Validates article category from path segment.
+ * @throws Error if category is invalid
  */
 function validateArticleCategory(
   value: string,
@@ -144,6 +154,10 @@ function validateArticleCategory(
   return result.data;
 }
 
+/**
+ * Validates subject category from path segment.
+ * @throws Error if category is invalid
+ */
 function validateSubjectCategory(
   value: string,
   filePath: string
@@ -157,6 +171,10 @@ function validateSubjectCategory(
   return result.data;
 }
 
+/**
+ * Validates grade from path segment.
+ * @throws Error if grade is invalid
+ */
 function validateGrade(value: string, filePath: string): Grade {
   const result = GradeSchema.safeParse(value);
   if (!result.success) {
@@ -167,6 +185,10 @@ function validateGrade(value: string, filePath: string): Grade {
   return result.data;
 }
 
+/**
+ * Validates material from path segment.
+ * @throws Error if material is invalid
+ */
 function validateMaterial(value: string, filePath: string): Material {
   const result = MaterialSchema.safeParse(value);
   if (!result.success) {
@@ -177,6 +199,10 @@ function validateMaterial(value: string, filePath: string): Material {
   return result.data;
 }
 
+/**
+ * Validates exercises category from path segment.
+ * @throws Error if category is invalid
+ */
 function validateExercisesCategory(
   value: string,
   filePath: string
@@ -190,6 +216,10 @@ function validateExercisesCategory(
   return result.data;
 }
 
+/**
+ * Validates exercises type from path segment.
+ * @throws Error if type is invalid
+ */
 function validateExercisesType(value: string, filePath: string): ExercisesType {
   const result = ExercisesTypeSchema.safeParse(value);
   if (!result.success) {
@@ -200,6 +230,10 @@ function validateExercisesType(value: string, filePath: string): ExercisesType {
   return result.data;
 }
 
+/**
+ * Validates exercises material from path segment.
+ * @throws Error if material is invalid
+ */
 function validateExercisesMaterial(
   value: string,
   filePath: string
@@ -214,21 +248,26 @@ function validateExercisesMaterial(
 }
 
 /**
- * Normalize whitespace in content.
- * - Replace 3+ consecutive newlines with 2 (proper paragraph spacing)
- * - Trim leading/trailing whitespace
+ * Normalizes whitespace in content by collapsing 3+ newlines to 2.
+ * @returns Trimmed content with proper paragraph spacing
  */
 function normalizeWhitespace(content: string): string {
   return content.replace(MULTIPLE_NEWLINES_REGEX, "\n\n").trim();
 }
 
 /**
- * Extract metadata and body from MDX file content.
+ * Extracts metadata and body from MDX file content.
  *
- * Uses the same pattern as packages/contents/_lib/content.ts:
- * - Regex to find `export const metadata = {...};`
- * - Safe eval via `new Function()`
- * - Zod validation with ContentMetadataSchema
+ * Parses `export const metadata = {...}` using the same approach as
+ * packages/contents/_lib/content.ts for consistency.
+ *
+ * @param content - Raw MDX file content
+ * @returns Parsed metadata, body, and content hash
+ * @throws Error if metadata export is missing or invalid
+ *
+ * @example
+ * const { metadata, body, contentHash } = parseMdxContent(fileContent);
+ * console.log(metadata.title); // "My Article"
  */
 export function parseMdxContent(content: string): ParsedMdx {
   const match = content.match(METADATA_REGEX);
@@ -239,6 +278,7 @@ export function parseMdxContent(content: string): ParsedMdx {
 
   const metadataStr = match[1];
 
+  // Safe eval via Function constructor (same as packages/contents/_lib/content.ts)
   const metadataObject = new Function(`return ${metadataStr}`)() as unknown;
   const parseResult = ContentMetadataSchema.safeParse(metadataObject);
 
@@ -257,7 +297,14 @@ export function parseMdxContent(content: string): ParsedMdx {
 }
 
 /**
- * Parse MM/DD/YYYY date string to epoch milliseconds.
+ * Parses MM/DD/YYYY date string to epoch milliseconds.
+ *
+ * @param dateStr - Date in MM/DD/YYYY format
+ * @returns Unix timestamp in milliseconds
+ * @throws Error if date format is invalid
+ *
+ * @example
+ * parseDateToEpoch("01/15/2024"); // Returns 1705276800000
  */
 export function parseDateToEpoch(dateStr: string): number {
   const parts = dateStr.split("/");
@@ -276,15 +323,25 @@ export function parseDateToEpoch(dateStr: string): number {
 }
 
 /**
- * Compute SHA-256 hash of content for change detection.
+ * Computes SHA-256 hash for change detection.
+ *
+ * @param content - Content to hash
+ * @returns Hex-encoded SHA-256 hash
  */
 export function computeHash(content: string): string {
   return createHash("sha256").update(content, "utf8").digest("hex");
 }
 
 /**
- * Parse article path to extract metadata.
- * Path: articles/{category}/{articleSlug}/{locale}.mdx
+ * Parses article file path to extract metadata.
+ *
+ * @param filePath - Path like: articles/{category}/{articleSlug}/{locale}.mdx
+ * @returns Parsed path info with category, slug, and locale
+ * @throws Error if path doesn't match expected pattern
+ *
+ * @example
+ * const info = parseArticlePath("articles/politics/climate-change/en.mdx");
+ * // { type: "article", locale: "en", category: "politics", articleSlug: "climate-change", slug: "articles/politics/climate-change" }
  */
 export function parseArticlePath(filePath: string): ArticleParsedPath {
   const normalized = filePath.replace(BACKSLASH_REGEX, "/");
@@ -308,8 +365,14 @@ export function parseArticlePath(filePath: string): ArticleParsedPath {
 }
 
 /**
- * Parse subject path to extract metadata.
- * Path: subject/{category}/{grade}/{material}/{topic}/{section}/{locale}.mdx
+ * Parses subject file path to extract metadata.
+ *
+ * @param filePath - Path like: subject/{category}/{grade}/{material}/{topic}/{section}/{locale}.mdx
+ * @returns Parsed path info with all path segments
+ * @throws Error if path doesn't match expected pattern
+ *
+ * @example
+ * const info = parseSubjectPath("subject/high-school/10/mathematics/algebra/linear-equations/en.mdx");
  */
 export function parseSubjectPath(filePath: string): SubjectParsedPath {
   const normalized = filePath.replace(BACKSLASH_REGEX, "/");
@@ -338,8 +401,14 @@ export function parseSubjectPath(filePath: string): SubjectParsedPath {
 }
 
 /**
- * Parse exercise path to extract metadata.
- * Path: exercises/{category}/{type}/{material}/{exerciseType}/{set}/{number}/(_question|_answer)/{locale}.mdx
+ * Parses exercise file path to extract metadata.
+ *
+ * @param filePath - Path like: exercises/{category}/{type}/{material}/{exerciseType}/{set}/{number}/(_question|_answer)/{locale}.mdx
+ * @returns Parsed path info with all path segments and isQuestion flag
+ * @throws Error if path doesn't match expected pattern
+ *
+ * @example
+ * const info = parseExercisePath("exercises/high-school/snbt/mathematics/multiple-choice/set-1/1/_question/en.mdx");
  */
 export function parseExercisePath(filePath: string): ExerciseParsedPath {
   const normalized = filePath.replace(BACKSLASH_REGEX, "/");
@@ -382,7 +451,12 @@ export function parseExercisePath(filePath: string): ExerciseParsedPath {
 }
 
 /**
- * Get the directory containing an exercise (for finding choices.ts).
+ * Extracts the exercise directory from a question/answer file path.
+ * Used to locate the choices.ts file.
+ *
+ * @param filePath - Full path to question or answer MDX file
+ * @returns Directory containing the exercise (one level above _question/_answer)
+ * @throws Error if path doesn't match expected pattern
  */
 export function getExerciseDir(filePath: string): string {
   const normalized = filePath.replace(BACKSLASH_REGEX, "/");
@@ -396,8 +470,16 @@ export function getExerciseDir(filePath: string): string {
 }
 
 /**
- * Read and parse choices.ts file for an exercise.
- * Uses Zod validation with ExercisesChoicesSchema.
+ * Reads and parses choices.ts for an exercise question.
+ *
+ * @param exerciseDir - Directory containing choices.ts
+ * @returns Parsed choices per locale, or null if file doesn't exist
+ *
+ * @example
+ * const choices = await readExerciseChoices("/path/to/exercise/1");
+ * if (choices) {
+ *   console.log(choices.en); // [{ label: "Option A", value: true }, ...]
+ * }
  */
 export async function readExerciseChoices(exerciseDir: string): Promise<{
   en: Array<{ label: string; value: boolean }>;
@@ -408,6 +490,7 @@ export async function readExerciseChoices(exerciseDir: string): Promise<{
   try {
     const content = await fs.readFile(choicesPath, "utf8");
 
+    // Support both `export default {...}` and `const choices = {...}`
     const defaultExportMatch = content.match(DEFAULT_EXPORT_REGEX);
     const constExportMatch = content.match(CONST_CHOICES_REGEX);
 
@@ -433,7 +516,10 @@ export async function readExerciseChoices(exerciseDir: string): Promise<{
 }
 
 /**
- * Read and parse an MDX file.
+ * Reads and parses an MDX file.
+ *
+ * @param filePath - Path to MDX file
+ * @returns Parsed content with metadata, body, hash, and original path
  */
 export async function readMdxFile(
   filePath: string
@@ -444,16 +530,24 @@ export async function readMdxFile(
 }
 
 /**
- * Get the directory containing an article (for finding ref.ts).
- * Path: articles/{category}/{articleSlug}/{locale}.mdx -> articles/{category}/{articleSlug}
+ * Gets the directory containing an article (for finding ref.ts).
+ *
+ * @param filePath - Path like: articles/{category}/{slug}/{locale}.mdx
+ * @returns Parent directory: articles/{category}/{slug}
  */
 export function getArticleDir(filePath: string): string {
   return path.dirname(filePath);
 }
 
 /**
- * Read and parse ref.ts file for an article.
- * Uses Zod validation with ReferenceSchema.
+ * Reads and parses ref.ts references for an article.
+ *
+ * @param articleDir - Directory containing ref.ts
+ * @returns Array of validated references, empty if file missing or invalid
+ *
+ * @example
+ * const refs = await readArticleReferences("/path/to/articles/politics/my-article");
+ * // [{ title: "Study", authors: "Smith et al.", year: 2024, url: "..." }]
  */
 export async function readArticleReferences(
   articleDir: string
@@ -492,6 +586,7 @@ export async function readArticleReferences(
   }
 }
 
+// Regex for material file parsing
 const BASE_PATH_REGEX = /export\s+const\s+BASE_PATH\s*=\s*["']([^"']+)["']/;
 const LEADING_SLASH_REGEX = /^\//;
 const LAST_PATH_SEGMENT_REGEX = /\/([^/]+)$/;
@@ -503,8 +598,21 @@ const EXERCISE_MATERIAL_CONST_REGEX =
   /const\s+\w+Materials[^=]*=\s*(\[[\s\S]*?\])\s*as\s+const/;
 
 /**
- * Parse a material file to extract exercise set information.
- * Returns all sets defined in the material file.
+ * Parses exercise material file to extract set information.
+ *
+ * Material files define exercise sets with their titles and descriptions.
+ * Located at: exercises/{category}/{type}/{material}/_data/{locale}-material.ts
+ *
+ * @param materialFilePath - Path to material file
+ * @param locale - Locale for the material (en/id)
+ * @returns Array of exercise sets defined in the file
+ * @throws Error if path doesn't match expected pattern
+ *
+ * @example
+ * const sets = await parseExerciseMaterialFile(
+ *   "exercises/high-school/snbt/mathematics/_data/en-material.ts",
+ *   "en"
+ * );
  */
 export async function parseExerciseMaterialFile(
   materialFilePath: string,
@@ -528,6 +636,7 @@ export async function parseExerciseMaterialFile(
     materialFilePath
   );
 
+  // Try to read BASE_PATH from index.ts, fallback to constructed path
   const indexPath = path.join(path.dirname(materialFilePath), "index.ts");
   let basePath = `exercises/${validCategory}/${validType}/${validMaterial}`;
 
@@ -548,6 +657,7 @@ export async function parseExerciseMaterialFile(
     return [];
   }
 
+  // Replace ${BASE_PATH} template with actual path
   const arrayWithBasePath = constMatch[1].replace(
     BASE_PATH_TEMPLATE_REGEX,
     `/${basePath}`
@@ -600,9 +710,21 @@ const SUBJECT_MATERIAL_CONST_REGEX =
   /const\s+\w+Materials[^=]*=\s*(\[[\s\S]*\])(?:\s*as\s+const)?;\s*export\s+default/;
 
 /**
- * Parse a subject material file to extract topic information.
- * Returns all topics defined in the material file.
- * Path: subject/{category}/{grade}/{material}/_data/{locale}-material.ts
+ * Parses subject material file to extract topic information.
+ *
+ * Material files define topics with their titles, descriptions, and section counts.
+ * Located at: subject/{category}/{grade}/{material}/_data/{locale}-material.ts
+ *
+ * @param materialFilePath - Path to material file
+ * @param locale - Locale for the material (en/id)
+ * @returns Array of topics defined in the file
+ * @throws Error if path doesn't match expected pattern
+ *
+ * @example
+ * const topics = await parseSubjectMaterialFile(
+ *   "subject/high-school/10/mathematics/_data/en-material.ts",
+ *   "en"
+ * );
  */
 export async function parseSubjectMaterialFile(
   materialFilePath: string,
@@ -620,6 +742,7 @@ export async function parseSubjectMaterialFile(
   const validGrade = validateGrade(rawGrade, materialFilePath);
   const validMaterial = validateMaterial(rawMaterial, materialFilePath);
 
+  // Try to read BASE_PATH from index.ts, fallback to constructed path
   const indexPath = path.join(path.dirname(materialFilePath), "index.ts");
   let basePath = `subject/${validCategory}/${validGrade}/${validMaterial}`;
 
@@ -640,6 +763,7 @@ export async function parseSubjectMaterialFile(
     return [];
   }
 
+  // Replace ${BASE_PATH} template with actual path
   const arrayWithBasePath = constMatch[1].replace(
     BASE_PATH_TEMPLATE_REGEX,
     `/${basePath}`
