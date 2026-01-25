@@ -33,6 +33,19 @@ Convex Database
     contentAuthors           # N:M content-author links
 ```
 
+## Sync Phases
+
+The sync process runs in three phases to prevent write conflicts:
+
+1. **Phase 0 (Authors)**: Pre-sync all unique authors before content
+2. **Phase 1 (Parents)**: Sync articles, subject topics, exercise sets (parallel)
+3. **Phase 2 (Children)**: Sync subject sections, exercise questions (parallel)
+
+This ordering ensures:
+- Authors exist before content-author links are created
+- Parent records (topics, sets) exist before children reference them
+- Parallel execution within phases for maximum performance
+
 ## Design Decisions
 
 ### 1. Normalized Schema
@@ -60,6 +73,12 @@ Convex Database
 - **Batch sizes**: 50 articles, 20 sections, 30 questions per mutation
 - **Delete batches**: 500 items per batch
 
+### 6. Author Pre-sync (OCC Fix)
+- **Why**: Prevent write conflicts when parallel mutations create the same authors
+- **Problem**: `bulkSyncSubjectSections` and `bulkSyncExerciseQuestions` running in parallel would race to create shared authors
+- **Solution**: Pre-sync all authors in Phase 0 before content sync
+- **Result**: Content mutations only read authors (no inserts), eliminating conflicts
+
 ## Quick Reference
 
 ```bash
@@ -85,4 +104,4 @@ pnpm --filter backend sync:reset --force  # Delete all content
 
 ---
 
-**Last Updated**: January 24, 2026
+**Last Updated**: January 25, 2026

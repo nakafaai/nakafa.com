@@ -13,6 +13,9 @@ import {
 } from "@repo/backend/convex/lib/contentValidators";
 import { v } from "convex/values";
 
+type ContentType = "article" | "subject" | "exercise";
+type AuthorCache = Map<string, Id<"authors">>;
+
 function slugifyName(name: string): string {
   return name
     .toLowerCase()
@@ -20,30 +23,18 @@ function slugifyName(name: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-type ContentType = "article" | "subject" | "exercise";
-
-type AuthorCache = Map<string, Id<"authors">>;
-
-interface AuthorCacheResult {
-  cache: AuthorCache;
-  authorsCreated: number;
-}
-
 /**
- * Builds an author cache for a batch of content items.
- * Queries for all unique author names in parallel and caches their IDs.
- * Creates new author records for any names not found.
- * Returns both the cache and count of new authors created.
+ * Builds a read-only author cache by querying existing authors.
+ * Authors must be pre-synced via bulkSyncAuthors before content sync.
  */
 async function buildAuthorCache(
   ctx: MutationCtx,
-  allAuthorNames: string[]
-): Promise<AuthorCacheResult> {
+  authorNames: string[]
+): Promise<AuthorCache> {
   const cache: AuthorCache = new Map();
-  const uniqueNames = [...new Set(allAuthorNames)];
-  let authorsCreated = 0;
+  const uniqueNames = [...new Set(authorNames)];
 
-  const authorLookups = await Promise.all(
+  const results = await Promise.all(
     uniqueNames.map((name) =>
       ctx.db
         .query("authors")
@@ -53,22 +44,59 @@ async function buildAuthorCache(
     )
   );
 
-  for (const { name, author } of authorLookups) {
+  for (const { name, author } of results) {
     if (author) {
       cache.set(name, author._id);
-    } else {
-      const username = slugifyName(name);
-      const authorId = await ctx.db.insert("authors", {
-        name,
-        username,
-      });
-      cache.set(name, authorId);
-      authorsCreated++;
     }
   }
 
-  return { cache, authorsCreated };
+  return cache;
 }
+
+/**
+ * Pre-sync authors before content sync to avoid write conflicts.
+ * Run this once before syncing articles, subjects, and exercises.
+ *
+ * Uses parallel reads for performance at scale, then sequential inserts
+ * (Convex batches all writes in a single transaction automatically).
+ */
+export const bulkSyncAuthors = internalMutation({
+  args: {
+    authorNames: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const uniqueNames = [...new Set(args.authorNames)];
+
+    // Parallel reads: check which authors already exist
+    const existingAuthors = await Promise.all(
+      uniqueNames.map((name) =>
+        ctx.db
+          .query("authors")
+          .withIndex("name", (q) => q.eq("name", name))
+          .first()
+          .then((author) => ({ name, exists: author !== null }))
+      )
+    );
+
+    // Identify new authors to create
+    const newAuthorNames = existingAuthors
+      .filter((a) => !a.exists)
+      .map((a) => a.name);
+
+    // Sequential inserts (Convex batches these in one transaction)
+    for (const name of newAuthorNames) {
+      await ctx.db.insert("authors", {
+        name,
+        username: slugifyName(name),
+      });
+    }
+
+    return {
+      created: newAuthorNames.length,
+      existing: uniqueNames.length - newAuthorNames.length,
+    };
+  },
+});
 
 /**
  * Syncs content authors using a pre-built cache for efficiency.
@@ -154,10 +182,7 @@ export const bulkSyncArticles = internalMutation({
     const allAuthorNames = args.articles.flatMap((a) =>
       a.authors.map((author) => author.name)
     );
-    const { cache: authorCache, authorsCreated } = await buildAuthorCache(
-      ctx,
-      allAuthorNames
-    );
+    const authorCache = await buildAuthorCache(ctx, allAuthorNames);
 
     for (const article of args.articles) {
       const existing = await ctx.db
@@ -266,7 +291,6 @@ export const bulkSyncArticles = internalMutation({
       unchanged,
       referencesCreated,
       authorLinksCreated,
-      authorsCreated,
     };
   },
 });
@@ -378,10 +402,7 @@ export const bulkSyncSubjectSections = internalMutation({
     const allAuthorNames = args.sections.flatMap((s) =>
       s.authors.map((author) => author.name)
     );
-    const { cache: authorCache, authorsCreated } = await buildAuthorCache(
-      ctx,
-      allAuthorNames
-    );
+    const authorCache = await buildAuthorCache(ctx, allAuthorNames);
 
     for (const section of args.sections) {
       const topicDoc = await ctx.db
@@ -465,7 +486,7 @@ export const bulkSyncSubjectSections = internalMutation({
       }
     }
 
-    return { created, updated, unchanged, authorLinksCreated, authorsCreated };
+    return { created, updated, unchanged, authorLinksCreated };
   },
 });
 
@@ -589,10 +610,7 @@ export const bulkSyncExerciseQuestions = internalMutation({
     const allAuthorNames = args.questions.flatMap((q) =>
       q.authors.map((author) => author.name)
     );
-    const { cache: authorCache, authorsCreated } = await buildAuthorCache(
-      ctx,
-      allAuthorNames
-    );
+    const authorCache = await buildAuthorCache(ctx, allAuthorNames);
 
     for (const question of args.questions) {
       const set = await ctx.db
@@ -719,7 +737,6 @@ export const bulkSyncExerciseQuestions = internalMutation({
       unchanged,
       choicesCreated,
       authorLinksCreated,
-      authorsCreated,
     };
   },
 });

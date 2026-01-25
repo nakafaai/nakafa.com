@@ -4,6 +4,7 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
+import * as z from "zod";
 import {
   computeHash,
   getArticleDir,
@@ -65,6 +66,139 @@ const BATCH_SIZES = {
 /** Extracts locale from material file paths like "en-material.ts" -> "en" */
 const LOCALE_MATERIAL_FILE_REGEX = /\/([a-z]{2})-material\.ts$/;
 
+/** Zod schema for locale validation */
+const LocaleSchema = z.union([z.literal("en"), z.literal("id")]);
+
+/** Parses and validates locale string, throws on invalid */
+function parseLocale(value: string, context: string): Locale {
+  const result = LocaleSchema.safeParse(value);
+  if (!result.success) {
+    throw new Error(
+      `Invalid locale "${value}" in ${context}. Expected: en, id`
+    );
+  }
+  return result.data;
+}
+
+/** Zod schema for sync state file */
+const SyncStateSchema = z.object({
+  lastSyncTimestamp: z.number(),
+  lastSyncCommit: z.string(),
+});
+
+/** Zod schema for Convex config file */
+const ConvexAuthConfigSchema = z.object({
+  accessToken: z.string().optional(),
+});
+
+/** Zod schema for Convex API response wrapper */
+const ConvexResponseSchema = z.object({
+  status: z.string(),
+  value: z.unknown().optional(),
+  errorMessage: z.string().optional(),
+  logLines: z.array(z.string()).optional(),
+});
+
+/** Zod schema for SyncResult from Convex mutations */
+const SyncResultSchema = z.object({
+  created: z.number(),
+  updated: z.number(),
+  unchanged: z.number(),
+  referencesCreated: z.number().optional(),
+  choicesCreated: z.number().optional(),
+  authorLinksCreated: z.number().optional(),
+});
+
+/** Zod schema for AuthorSyncResult from bulkSyncAuthors */
+const AuthorSyncResultSchema = z.object({
+  created: z.number(),
+  existing: z.number(),
+});
+
+/** Zod schema for ContentCounts query result */
+const ContentCountsSchema = z.object({
+  articles: z.number(),
+  subjectTopics: z.number(),
+  subjectSections: z.number(),
+  exerciseSets: z.number(),
+  exerciseQuestions: z.number(),
+  authors: z.number(),
+  contentAuthors: z.number(),
+  articleReferences: z.number(),
+  exerciseChoices: z.number(),
+});
+
+/** Zod schema for DataIntegrity query result */
+const DataIntegritySchema = z.object({
+  questionsWithoutChoices: z.array(z.string()),
+  questionsWithoutAuthors: z.array(z.string()),
+  articlesWithoutReferences: z.array(z.string()),
+  sectionsWithoutTopics: z.array(z.string()),
+  totalQuestions: z.number(),
+  totalArticles: z.number(),
+  totalSections: z.number(),
+});
+
+/** Zod schema for stale content item */
+const StaleItemSchema = z.object({
+  id: z.string(),
+  slug: z.string(),
+  locale: z.string(),
+});
+
+/** Zod schema for StaleContent query result */
+const StaleContentSchema = z.object({
+  staleArticles: z.array(StaleItemSchema),
+  staleSubjectTopics: z.array(StaleItemSchema),
+  staleSubjectSections: z.array(StaleItemSchema),
+  staleExerciseSets: z.array(StaleItemSchema),
+  staleExerciseQuestions: z.array(StaleItemSchema),
+});
+
+/** Zod schema for UnusedAuthors query result */
+const UnusedAuthorsSchema = z.object({
+  unusedAuthors: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      username: z.string(),
+    })
+  ),
+});
+
+/** Zod schema for DeleteResult */
+const DeleteResultSchema = z.object({
+  deleted: z.number(),
+});
+
+/** Zod schema for batch delete result */
+const BatchDeleteResultSchema = z.object({
+  deleted: z.number(),
+  hasMore: z.boolean(),
+});
+
+/**
+ * Parses Convex API response with error handling.
+ * @throws Error if response indicates failure or parsing fails
+ */
+function parseConvexResponse<T>(json: unknown, valueSchema: z.ZodType<T>): T {
+  const response = ConvexResponseSchema.safeParse(json);
+  if (!response.success) {
+    throw new Error(`Invalid Convex response: ${response.error.message}`);
+  }
+
+  if (response.data.status === "error") {
+    throw new Error(response.data.errorMessage || "Unknown Convex error");
+  }
+
+  const value = valueSchema.safeParse(response.data.value);
+  if (!value.success) {
+    throw new Error(`Invalid Convex value: ${value.error.message}`);
+  }
+
+  return value.data;
+}
+
 /** CLI options for sync commands */
 interface SyncOptions {
   /** Filter sync to specific locale (en/id) */
@@ -97,7 +231,8 @@ function loadSyncState(isProd: boolean): SyncState | null {
       return null;
     }
     const content = fs.readFileSync(stateFile, "utf8");
-    return JSON.parse(content) as SyncState;
+    const parsed = SyncStateSchema.safeParse(JSON.parse(content));
+    return parsed.success ? parsed.data : null;
   } catch {
     return null;
   }
@@ -340,7 +475,7 @@ function formatBatchProgress(
   return `Batch ${batchNum}/${totalBatches} (${batchItemCount} items) [${percentage}%]${etaStr}`;
 }
 
-/** Result of a sync operation with counts and optional metrics */
+/** Result of a content sync operation */
 interface SyncResult {
   created: number;
   updated: number;
@@ -350,56 +485,19 @@ interface SyncResult {
   referencesCreated?: number;
   choicesCreated?: number;
   authorLinksCreated?: number;
-  authorsCreated?: number;
+}
+
+/** Result of author pre-sync operation */
+interface AuthorSyncResult {
+  created: number;
+  existing: number;
+  durationMs?: number;
 }
 
 /** Convex API configuration for HTTP requests */
 interface ConvexConfig {
   url: string;
   accessToken: string;
-}
-
-/** Database content counts returned by verification queries */
-interface ContentCounts {
-  articles: number;
-  subjectTopics: number;
-  subjectSections: number;
-  exerciseSets: number;
-  exerciseQuestions: number;
-  authors: number;
-  contentAuthors: number;
-  articleReferences: number;
-  exerciseChoices: number;
-}
-
-/** Data integrity check results for verification */
-interface DataIntegrity {
-  questionsWithoutChoices: string[];
-  questionsWithoutAuthors: string[];
-  articlesWithoutReferences: string[];
-  sectionsWithoutTopics: string[];
-  totalQuestions: number;
-  totalArticles: number;
-  totalSections: number;
-}
-
-/** Content in database that no longer exists in filesystem */
-interface StaleContent {
-  staleArticles: Array<{ id: string; slug: string; locale: string }>;
-  staleSubjectTopics: Array<{ id: string; slug: string; locale: string }>;
-  staleSubjectSections: Array<{ id: string; slug: string; locale: string }>;
-  staleExerciseSets: Array<{ id: string; slug: string; locale: string }>;
-  staleExerciseQuestions: Array<{ id: string; slug: string; locale: string }>;
-}
-
-/** Authors with no linked content */
-interface UnusedAuthors {
-  unusedAuthors: Array<{ id: string; name: string; username: string }>;
-}
-
-/** Result of a delete operation */
-interface DeleteResult {
-  deleted: number;
 }
 
 /** Logs message to console */
@@ -454,10 +552,11 @@ async function deleteStaleItems(
   }
 
   const ids = items.map((item) => item.id);
-  const result = await runConvexMutationGeneric<DeleteResult>(
+  const result = await runConvexMutationGeneric(
     config,
     mutationPath,
-    { [paramName]: ids }
+    { [paramName]: ids },
+    DeleteResultSchema
   );
   logSuccess(`Deleted ${result.deleted} ${successLabel}`);
   return true;
@@ -487,11 +586,16 @@ function getConvexConfig(options: SyncOptions = {}): ConvexConfig {
     throw new Error("Not authenticated. Run: npx convex dev");
   }
 
-  const convexConfig = JSON.parse(
-    fs.readFileSync(convexConfigPath, "utf8")
-  ) as { accessToken?: string };
+  const configContent = fs.readFileSync(convexConfigPath, "utf8");
+  const configParsed = ConvexAuthConfigSchema.safeParse(
+    JSON.parse(configContent)
+  );
 
-  if (!convexConfig.accessToken) {
+  if (!configParsed.success) {
+    throw new Error("Invalid Convex config. Run: npx convex dev");
+  }
+
+  if (!configParsed.data.accessToken) {
     throw new Error("No access token. Run: npx convex dev");
   }
 
@@ -499,7 +603,7 @@ function getConvexConfig(options: SyncOptions = {}): ConvexConfig {
     logWarning(`PRODUCTION MODE: Syncing to ${url}`);
   }
 
-  return { url, accessToken: convexConfig.accessToken };
+  return { url, accessToken: configParsed.data.accessToken };
 }
 
 /** Parses CLI arguments into command type and options */
@@ -562,24 +666,15 @@ async function runConvexMutation(
     }),
   });
 
-  const result = (await response.json()) as {
-    status: string;
-    value?: SyncResult;
-    errorMessage?: string;
-    logLines?: string[];
-  };
-
-  if (result.status === "error") {
-    throw new Error(result.errorMessage || "Unknown Convex error");
-  }
-
-  return result.value as SyncResult;
+  const json = await response.json();
+  return parseConvexResponse(json, SyncResultSchema);
 }
 
-/** Runs a Convex query with no arguments */
+/** Runs a Convex query with schema validation */
 async function runConvexQuery<T>(
   config: ConvexConfig,
-  functionPath: string
+  functionPath: string,
+  schema: z.ZodType<T>
 ): Promise<T> {
   const response = await fetch(`${config.url}/api/query`, {
     method: "POST",
@@ -594,17 +689,104 @@ async function runConvexQuery<T>(
     }),
   });
 
-  const result = (await response.json()) as {
-    status: string;
-    value?: unknown;
-    errorMessage?: string;
-  };
+  const json = await response.json();
+  return parseConvexResponse(json, schema);
+}
 
-  if (result.status === "error") {
-    throw new Error(result.errorMessage || "Unknown Convex error");
+/**
+ * Collects all unique author names from content files.
+ */
+async function collectAllAuthorNames(options: SyncOptions): Promise<string[]> {
+  const authorNames: string[] = [];
+
+  const articlePattern = options.locale
+    ? `articles/**/${options.locale}.mdx`
+    : "articles/**/*.mdx";
+  const articleFiles = await globFiles(articlePattern);
+
+  for (const file of articleFiles) {
+    try {
+      const { metadata } = await readMdxFile(file);
+      authorNames.push(...metadata.authors.map((a) => a.name));
+    } catch {
+      // Skip files that fail to parse
+    }
   }
 
-  return result.value as T;
+  const subjectPattern = options.locale
+    ? `subject/**/${options.locale}.mdx`
+    : "subject/**/*.mdx";
+  const subjectFiles = await globFiles(subjectPattern);
+
+  for (const file of subjectFiles) {
+    try {
+      const { metadata } = await readMdxFile(file);
+      authorNames.push(...metadata.authors.map((a) => a.name));
+    } catch {
+      // Skip files that fail to parse
+    }
+  }
+
+  const exercisePattern = options.locale
+    ? `exercises/**/_question/${options.locale}.mdx`
+    : "exercises/**/_question/*.mdx";
+  const exerciseFiles = await globFiles(exercisePattern);
+
+  for (const file of exerciseFiles) {
+    try {
+      const { metadata } = await readMdxFile(file);
+      authorNames.push(...metadata.authors.map((a) => a.name));
+    } catch {
+      // Skip files that fail to parse
+    }
+  }
+
+  return [...new Set(authorNames)];
+}
+
+/**
+ * Pre-syncs authors before content sync to prevent write conflicts.
+ * Must run before syncing articles, subjects, or exercises.
+ */
+async function syncAuthors(
+  config: ConvexConfig,
+  options: SyncOptions
+): Promise<AuthorSyncResult> {
+  const startTime = performance.now();
+
+  if (!options.quiet) {
+    log("Collecting author names from content files...");
+  }
+
+  const authorNames = await collectAllAuthorNames(options);
+
+  if (!options.quiet) {
+    log(`Unique authors found: ${authorNames.length}`);
+  }
+
+  if (authorNames.length === 0) {
+    return {
+      created: 0,
+      existing: 0,
+      durationMs: performance.now() - startTime,
+    };
+  }
+
+  const result = await runConvexMutationGeneric(
+    config,
+    "contentSync/mutations:bulkSyncAuthors",
+    { authorNames },
+    AuthorSyncResultSchema
+  );
+
+  const durationMs = performance.now() - startTime;
+
+  if (!options.quiet) {
+    log(`Authors: ${result.created} created, ${result.existing} existing`);
+    log(`Duration: ${formatDuration(durationMs)}`);
+  }
+
+  return { ...result, durationMs };
 }
 
 /**
@@ -635,7 +817,6 @@ async function syncArticles(
     unchanged: 0,
     referencesCreated: 0,
     authorLinksCreated: 0,
-    authorsCreated: 0,
   };
   const articles: Array<{
     locale: Locale;
@@ -720,8 +901,6 @@ async function syncArticles(
       (totals.referencesCreated || 0) + (result.referencesCreated || 0);
     totals.authorLinksCreated =
       (totals.authorLinksCreated || 0) + (result.authorLinksCreated || 0);
-    totals.authorsCreated =
-      (totals.authorsCreated || 0) + (result.authorsCreated || 0);
     updateBatchProgress(progress, batch.length);
   }
 
@@ -799,7 +978,7 @@ async function syncSubjectTopics(
         continue;
       }
 
-      const locale = localeMatch[1] as Locale;
+      const locale = parseLocale(localeMatch[1], materialFile);
       const parsedTopics = await parseSubjectMaterialFile(materialFile, locale);
 
       for (const topic of parsedTopics) {
@@ -906,7 +1085,6 @@ async function syncSubjectSections(
     updated: 0,
     unchanged: 0,
     authorLinksCreated: 0,
-    authorsCreated: 0,
   };
   const sections: Array<{
     locale: Locale;
@@ -991,8 +1169,6 @@ async function syncSubjectSections(
     totals.unchanged += result.unchanged;
     totals.authorLinksCreated =
       (totals.authorLinksCreated || 0) + (result.authorLinksCreated || 0);
-    totals.authorsCreated =
-      (totals.authorsCreated || 0) + (result.authorsCreated || 0);
     updateBatchProgress(progress, batch.length);
   }
 
@@ -1078,7 +1254,7 @@ async function syncExerciseSets(
         continue;
       }
 
-      const locale = localeMatch[1] as Locale;
+      const locale = parseLocale(localeMatch[1], materialFile);
       const parsedSets = await parseExerciseMaterialFile(materialFile, locale);
 
       for (const set of parsedSets) {
@@ -1185,7 +1361,6 @@ async function syncExerciseQuestions(
     unchanged: 0,
     choicesCreated: 0,
     authorLinksCreated: 0,
-    authorsCreated: 0,
   };
   const questions: Array<{
     locale: Locale;
@@ -1307,8 +1482,6 @@ async function syncExerciseQuestions(
       (totals.choicesCreated || 0) + (result.choicesCreated || 0);
     totals.authorLinksCreated =
       (totals.authorLinksCreated || 0) + (result.authorLinksCreated || 0);
-    totals.authorsCreated =
-      (totals.authorsCreated || 0) + (result.authorsCreated || 0);
     updateBatchProgress(progress, batch.length);
   }
 
@@ -1345,7 +1518,7 @@ async function syncExerciseQuestions(
 
 /**
  * Syncs all content types to Convex.
- * Runs in parallel by default, sequential with --sequential flag.
+ * Phases: Authors (pre-sync) -> Content (parallel or sequential)
  */
 async function syncAll(
   config: ConvexConfig,
@@ -1353,12 +1526,21 @@ async function syncAll(
 ): Promise<void> {
   const metrics = createMetrics();
   log("=== CONTENT SYNC ===\n");
+
   if (options.locale) {
-    log(`Locale filter: ${options.locale}`);
+    log(`Locale: ${options.locale}`);
   }
   if (options.sequential) {
-    log("Mode: sequential (for debugging)\n");
+    log("Mode: sequential\n");
   }
+
+  // Phase 0: Pre-sync authors to avoid write conflicts
+  log("Phase 0: Pre-syncing authors...");
+  const authorResult = await syncAuthors(config, { ...options, quiet: true });
+  log(
+    `  Authors: ${authorResult.created} new, ${authorResult.existing} existing`
+  );
+  log(`  Duration: ${formatDuration(authorResult.durationMs || 0)}\n`);
 
   let articleResult: SyncResult;
   let subjectTopicResult: SyncResult;
@@ -1410,9 +1592,9 @@ async function syncAll(
         exerciseQuestionResult.unchanged
     );
   } else {
-    // Parallel execution with quiet mode to avoid interleaved output
     const quietOptions = { ...options, quiet: true };
 
+    // Phase 1: Sync articles, topics, and sets (no FK dependencies)
     log("Phase 1: Syncing articles, topics, and sets...");
     const phase1Start = performance.now();
 
@@ -1427,13 +1609,12 @@ async function syncAll(
     exerciseSetResult = sets;
 
     const phase1Duration = performance.now() - phase1Start;
-
-    // Print Phase 1 results cleanly
     log(`  Articles:       ${formatSyncResult(articleResult)}`);
     log(`  Subject Topics: ${formatSyncResult(subjectTopicResult)}`);
     log(`  Exercise Sets:  ${formatSyncResult(exerciseSetResult)}`);
     log(`  Duration: ${formatDuration(phase1Duration)}\n`);
 
+    // Phase 2: Sync sections and questions (depend on topics/sets from Phase 1)
     log("Phase 2: Syncing sections and questions...");
     const phase2Start = performance.now();
 
@@ -1446,8 +1627,6 @@ async function syncAll(
     exerciseQuestionResult = questions;
 
     const phase2Duration = performance.now() - phase2Start;
-
-    // Print Phase 2 results cleanly
     log(`  Subject Sections:   ${formatSyncResult(subjectSectionResult)}`);
     log(`  Exercise Questions: ${formatSyncResult(exerciseQuestionResult)}`);
     log(`  Duration: ${formatDuration(phase2Duration)}`);
@@ -1461,9 +1640,9 @@ async function syncAll(
 
   finalizeMetrics(metrics);
 
+  // Summary
   log("\n=== SYNC SUMMARY ===\n");
 
-  // Calculate totals for primary content
   const totalCreated =
     articleResult.created +
     subjectTopicResult.created +
@@ -1484,19 +1663,13 @@ async function syncAll(
     exerciseQuestionResult.unchanged;
   const total = totalCreated + totalUpdated + totalUnchanged;
 
-  // Calculate totals for related items
   const totalReferencesCreated = articleResult.referencesCreated || 0;
   const totalChoicesCreated = exerciseQuestionResult.choicesCreated || 0;
   const totalAuthorLinksCreated =
     (articleResult.authorLinksCreated || 0) +
     (subjectSectionResult.authorLinksCreated || 0) +
     (exerciseQuestionResult.authorLinksCreated || 0);
-  const totalAuthorsCreated =
-    (articleResult.authorsCreated || 0) +
-    (subjectSectionResult.authorsCreated || 0) +
-    (exerciseQuestionResult.authorsCreated || 0);
 
-  // Primary content summary
   log("Primary Content:");
   log(
     `  Articles:           ${articleResult.created + articleResult.updated + articleResult.unchanged} (${articleResult.created} new, ${articleResult.updated} updated)`
@@ -1514,28 +1687,26 @@ async function syncAll(
     `  Exercise Questions: ${exerciseQuestionResult.created + exerciseQuestionResult.updated + exerciseQuestionResult.unchanged} (${exerciseQuestionResult.created} new, ${exerciseQuestionResult.updated} updated)`
   );
 
-  // Related items summary
   log("\nRelated Items:");
+  if (authorResult.created > 0) {
+    log(`  Authors:              ${authorResult.created} new`);
+  }
   if (totalReferencesCreated > 0) {
-    log(`  Article References: ${totalReferencesCreated} created`);
+    log(`  Article References:   ${totalReferencesCreated}`);
   }
   if (totalChoicesCreated > 0) {
-    log(`  Exercise Choices:   ${totalChoicesCreated} created`);
+    log(`  Exercise Choices:     ${totalChoicesCreated}`);
   }
   if (totalAuthorLinksCreated > 0) {
-    log(`  Content-Author Links: ${totalAuthorLinksCreated} created`);
-  }
-  if (totalAuthorsCreated > 0) {
-    log(`  New Authors:         ${totalAuthorsCreated} created`);
+    log(`  Content-Author Links: ${totalAuthorLinksCreated}`);
   }
 
-  // Overall summary
   log("\nOverall:");
-  log(`  Total Items: ${total} synced`);
+  log(`  Total: ${total} items synced`);
   if (totalCreated > 0 || totalUpdated > 0) {
     log(`  Changes: ${totalCreated} created, ${totalUpdated} updated`);
   } else {
-    log("  Changes: No changes (all content up to date)");
+    log("  All content up to date");
   }
 
   logSyncMetrics(metrics);
@@ -1658,7 +1829,7 @@ async function validateSubjects(): Promise<ValidationResult> {
     try {
       const localeMatch = materialFile.match(LOCALE_MATERIAL_FILE_REGEX);
       if (localeMatch) {
-        const locale = localeMatch[1] as Locale;
+        const locale = parseLocale(localeMatch[1], materialFile);
         await parseSubjectMaterialFile(materialFile, locale);
       }
     } catch (error) {
@@ -1699,7 +1870,7 @@ async function validateExercises(): Promise<ValidationResult> {
     try {
       const localeMatch = materialFile.match(LOCALE_MATERIAL_FILE_REGEX);
       if (localeMatch) {
-        const locale = localeMatch[1] as Locale;
+        const locale = parseLocale(localeMatch[1], materialFile);
         await parseExerciseMaterialFile(materialFile, locale);
       }
     } catch (error) {
@@ -1766,9 +1937,10 @@ async function verify(
 
   log("\n=== DATABASE ===\n");
   try {
-    const counts = await runConvexQuery<ContentCounts>(
+    const counts = await runConvexQuery(
       config,
-      "contentSync/queries:getContentCounts"
+      "contentSync/queries:getContentCounts",
+      ContentCountsSchema
     );
 
     log("Content tables:");
@@ -1846,9 +2018,10 @@ async function verify(
     }
 
     log("\n=== DATA INTEGRITY ===\n");
-    const integrity = await runConvexQuery<DataIntegrity>(
+    const integrity = await runConvexQuery(
       config,
-      "contentSync/queries:getDataIntegrity"
+      "contentSync/queries:getDataIntegrity",
+      DataIntegritySchema
     );
 
     if (integrity.questionsWithoutChoices.length > 0) {
@@ -1969,8 +2142,8 @@ async function collectFilesystemSlugs(): Promise<{
       continue;
     }
 
-    const locale = localeMatch[1] as Locale;
     try {
+      const locale = parseLocale(localeMatch[1], materialFile);
       const topics = await parseSubjectMaterialFile(materialFile, locale);
       for (const topic of topics) {
         subjectTopicSlugs.push(topic.slug);
@@ -1987,8 +2160,8 @@ async function collectFilesystemSlugs(): Promise<{
       continue;
     }
 
-    const locale = localeMatch[1] as Locale;
     try {
+      const locale = parseLocale(localeMatch[1], materialFile);
       const sets = await parseExerciseMaterialFile(materialFile, locale);
       for (const set of sets) {
         exerciseSetSlugs.push(set.slug);
@@ -2012,11 +2185,12 @@ async function collectFilesystemSlugs(): Promise<{
   };
 }
 
-/** Runs a Convex query with arguments */
+/** Runs a Convex query with arguments and schema validation */
 async function runConvexQueryWithArgs<T>(
   config: ConvexConfig,
   functionPath: string,
-  args: Record<string, unknown>
+  args: Record<string, unknown>,
+  schema: z.ZodType<T>
 ): Promise<T> {
   const response = await fetch(`${config.url}/api/query`, {
     method: "POST",
@@ -2031,24 +2205,16 @@ async function runConvexQueryWithArgs<T>(
     }),
   });
 
-  const result = (await response.json()) as {
-    status: string;
-    value?: unknown;
-    errorMessage?: string;
-  };
-
-  if (result.status === "error") {
-    throw new Error(result.errorMessage || "Unknown Convex error");
-  }
-
-  return result.value as T;
+  const json = await response.json();
+  return parseConvexResponse(json, schema);
 }
 
-/** Runs a Convex mutation with generic return type */
+/** Runs a Convex mutation with schema validation */
 async function runConvexMutationGeneric<T>(
   config: ConvexConfig,
   functionPath: string,
-  args: Record<string, unknown>
+  args: Record<string, unknown>,
+  schema: z.ZodType<T>
 ): Promise<T> {
   const response = await fetch(`${config.url}/api/mutation`, {
     method: "POST",
@@ -2063,17 +2229,8 @@ async function runConvexMutationGeneric<T>(
     }),
   });
 
-  const result = (await response.json()) as {
-    status: string;
-    value?: unknown;
-    errorMessage?: string;
-  };
-
-  if (result.status === "error") {
-    throw new Error(result.errorMessage || "Unknown Convex error");
-  }
-
-  return result.value as T;
+  const json = await response.json();
+  return parseConvexResponse(json, schema);
 }
 
 /** Finds and optionally deletes authors with no linked content */
@@ -2084,9 +2241,10 @@ async function cleanUnusedAuthors(
   log("\n--- UNUSED AUTHORS ---\n");
   log("Unused authors = authors with no linked content\n");
 
-  const authorsResult = await runConvexQuery<UnusedAuthors>(
+  const authorsResult = await runConvexQuery(
     config,
-    "contentSync/queries:findUnusedAuthors"
+    "contentSync/queries:findUnusedAuthors",
+    UnusedAuthorsSchema
   );
 
   if (authorsResult.unusedAuthors.length === 0) {
@@ -2104,10 +2262,11 @@ async function cleanUnusedAuthors(
 
   if (options.force) {
     const authorIds = authorsResult.unusedAuthors.map((a) => a.id);
-    const result = await runConvexMutationGeneric<DeleteResult>(
+    const result = await runConvexMutationGeneric(
       config,
       "contentSync/mutations:deleteUnusedAuthors",
-      { authorIds }
+      { authorIds },
+      DeleteResultSchema
     );
     logSuccess(`Deleted ${result.deleted} unused authors`);
   } else {
@@ -2151,7 +2310,7 @@ async function clean(
   log(`  Exercise questions on disk: ${exerciseQuestionSlugs.length}`);
 
   log("\nQuerying database for stale content...");
-  const stale = await runConvexQueryWithArgs<StaleContent>(
+  const stale = await runConvexQueryWithArgs(
     config,
     "contentSync/queries:findStaleContent",
     {
@@ -2160,7 +2319,8 @@ async function clean(
       subjectSectionSlugs,
       exerciseSetSlugs,
       exerciseQuestionSlugs,
-    }
+    },
+    StaleContentSchema
   );
 
   const totalStale =
@@ -2431,11 +2591,6 @@ async function syncFull(
   }
 }
 
-interface BatchDeleteResult {
-  deleted: number;
-  hasMore: boolean;
-}
-
 /** Deletes all items from a table in batches until hasMore is false */
 async function deleteAllBatched(
   config: ConvexConfig,
@@ -2447,10 +2602,11 @@ async function deleteAllBatched(
   let hasMore = true;
 
   while (hasMore) {
-    const result = await runConvexMutationGeneric<BatchDeleteResult>(
+    const result = await runConvexMutationGeneric(
       config,
       mutationPath,
-      {}
+      {},
+      BatchDeleteResultSchema
     );
     totalDeleted += result.deleted;
     hasMore = result.hasMore;
@@ -2492,9 +2648,10 @@ async function reset(
 
   // Get current counts
   log("Current database contents:\n");
-  const counts = await runConvexQuery<ContentCounts>(
+  const counts = await runConvexQuery(
     config,
-    "contentSync/queries:getContentCounts"
+    "contentSync/queries:getContentCounts",
+    ContentCountsSchema
   );
 
   log(`  Content Authors:      ${counts.contentAuthors}`);

@@ -36,6 +36,7 @@ import {
   MaterialListSchema,
   MaterialSchema,
 } from "@repo/contents/_types/subject/material";
+import * as z from "zod";
 
 /** Parsed MDX file with extracted metadata and content hash for change detection */
 interface ParsedMdx {
@@ -136,6 +137,23 @@ const CONST_CHOICES_REGEX = /const\s+choices[^=]*=\s*(\{[\s\S]*\})\s*;/;
 const REFERENCES_REGEX =
   /export\s+const\s+references[^=]*=\s*(\[[\s\S]*?\]);?\s*$/;
 const MULTIPLE_NEWLINES_REGEX = /\n{3,}/g;
+
+/** Zod schema for validating locale from file paths */
+const LocaleSchema = z.union([z.literal("en"), z.literal("id")]);
+
+/**
+ * Validates locale from path segment.
+ * @throws Error if locale is invalid
+ */
+function validateLocale(value: string, filePath: string): Locale {
+  const result = LocaleSchema.safeParse(value);
+  if (!result.success) {
+    throw new Error(
+      `Invalid locale "${value}" in ${filePath}. Expected: en, id`
+    );
+  }
+  return result.data;
+}
 
 /**
  * Validates article category from path segment.
@@ -351,13 +369,14 @@ export function parseArticlePath(filePath: string): ArticleParsedPath {
     throw new Error(`Invalid article path: ${filePath}`);
   }
 
-  const [, rawCategory, articleSlug, locale] = match;
+  const [, rawCategory, articleSlug, rawLocale] = match;
   const category = validateArticleCategory(rawCategory.toLowerCase(), filePath);
+  const locale = validateLocale(rawLocale, filePath);
   const slug = `articles/${category}/${articleSlug}`;
 
   return {
     type: "article",
-    locale: locale as Locale,
+    locale,
     category,
     articleSlug,
     slug,
@@ -382,15 +401,17 @@ export function parseSubjectPath(filePath: string): SubjectParsedPath {
     throw new Error(`Invalid subject path: ${filePath}`);
   }
 
-  const [, rawCategory, rawGrade, rawMaterial, topic, section, locale] = match;
+  const [, rawCategory, rawGrade, rawMaterial, topic, section, rawLocale] =
+    match;
   const category = validateSubjectCategory(rawCategory, filePath);
   const grade = validateGrade(rawGrade, filePath);
   const material = validateMaterial(rawMaterial, filePath);
+  const locale = validateLocale(rawLocale, filePath);
   const slug = `subject/${category}/${grade}/${material}/${topic}/${section}`;
 
   return {
     type: "subject",
-    locale: locale as Locale,
+    locale,
     category,
     grade,
     material,
@@ -428,17 +449,18 @@ export function parseExercisePath(filePath: string): ExerciseParsedPath {
     numberStr,
     ,
     questionOrAnswer,
-    locale,
+    rawLocale,
   ] = match;
   const category = validateExercisesCategory(rawCategory, filePath);
   const examType = validateExercisesType(rawExamType, filePath);
   const material = validateExercisesMaterial(rawMaterial, filePath);
+  const locale = validateLocale(rawLocale, filePath);
   const number = Number.parseInt(numberStr, 10);
   const slug = `exercises/${category}/${examType}/${material}/${exerciseType}/${setName}/${number}`;
 
   return {
     type: "exercise",
-    locale: locale as Locale,
+    locale,
     category,
     examType,
     material,
