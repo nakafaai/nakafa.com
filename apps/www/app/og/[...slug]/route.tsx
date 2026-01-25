@@ -1,4 +1,4 @@
-import { generateAllContentParams } from "@repo/contents/_lib/static-params";
+import { generateSlugOnlyParams } from "@repo/contents/_lib/static-params";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import type { NextRequest } from "next/server";
@@ -9,8 +9,7 @@ import { getMetadataFromSlug } from "@/lib/utils/system";
 export const revalidate = false;
 
 export function generateStaticParams() {
-  return generateAllContentParams({
-    localeInSlug: true,
+  return generateSlugOnlyParams({
     includeOGVariants: true,
   });
 }

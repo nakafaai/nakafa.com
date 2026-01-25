@@ -1,4 +1,4 @@
-import { generateAllContentParams } from "@repo/contents/_lib/static-params";
+import { generateLocaleParams } from "@repo/contents/_lib/static-params";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import type { NextRequest } from "next/server";
@@ -9,7 +9,7 @@ import { generateOGImage } from "./og";
 export const revalidate = false;
 
 export function generateStaticParams() {
-  return generateAllContentParams({
+  return generateLocaleParams({
     includeOGVariants: true,
   });
 }

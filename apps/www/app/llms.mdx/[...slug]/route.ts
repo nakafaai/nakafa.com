@@ -6,7 +6,7 @@ import {
   getMaterials,
 } from "@repo/contents/_lib/exercises/material";
 import { getAllSurah, getSurah, getSurahName } from "@repo/contents/_lib/quran";
-import { generateAllContentParams } from "@repo/contents/_lib/static-params";
+import { generateSlugOnlyParams } from "@repo/contents/_lib/static-params";
 import { ExercisesCategorySchema } from "@repo/contents/_types/exercises/category";
 import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
 import { ExercisesTypeSchema } from "@repo/contents/_types/exercises/type";
@@ -386,8 +386,7 @@ function buildMdxResponse({
 }
 
 export function generateStaticParams() {
-  return generateAllContentParams({
-    localeInSlug: true,
+  return generateSlugOnlyParams({
     includeQuran: true,
     includeExerciseSets: true,
     includeExerciseNumbers: true,

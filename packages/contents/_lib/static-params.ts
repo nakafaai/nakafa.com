@@ -25,12 +25,15 @@ interface ContentPathsConfig extends BaseConfig {
   basePath: string;
 }
 
-interface AllPathsConfig extends BaseConfig {
+interface SlugOnlyConfig extends BaseConfig {
   includeQuran?: boolean;
   includeExerciseSets?: boolean;
   includeExerciseNumbers?: boolean;
   includeOGVariants?: boolean;
-  localeInSlug?: boolean;
+}
+
+interface LocaleParamsConfig extends BaseConfig {
+  includeOGVariants?: boolean;
 }
 
 /**
@@ -168,53 +171,37 @@ export function generateContentParams(
 }
 
 /**
- * Generates static params for all content paths.
- * Supports multiple output formats and optional features.
+ * Generates static params with locale embedded in slug array.
+ * Used by routes like /llms.mdx/[...slug] and /og/[...slug] where locale is part of the path.
  *
  * @example
  * ```ts
- * // For llms.mdx route (locale in slug)
+ * // For llms.mdx route
  * export function generateStaticParams() {
- *   return generateAllContentParams({
- *     localeInSlug: true,
+ *   return generateSlugOnlyParams({
  *     includeQuran: true,
  *     includeExerciseSets: true,
+ *     includeExerciseNumbers: true,
  *   });
  * }
  *
- * // For OG routes (locale in slug with image.png variants)
+ * // For /og route (locale in slug with image.png variants)
  * export function generateStaticParams() {
- *   return generateAllContentParams({
- *     localeInSlug: true,
- *     includeOGVariants: true,
- *   });
- * }
- *
- * // For localized OG routes (locale as separate param)
- * export function generateStaticParams() {
- *   return generateAllContentParams({
- *     localeInSlug: false,
+ *   return generateSlugOnlyParams({
  *     includeOGVariants: true,
  *   });
  * }
  * ```
  */
-export function generateAllContentParams(
-  config: AllPathsConfig & { localeInSlug: true }
-): StaticParamsSlugOnly[];
-export function generateAllContentParams(
-  config: AllPathsConfig & { localeInSlug?: false }
-): StaticParamsWithLocale[];
-export function generateAllContentParams(
-  config: AllPathsConfig
-): StaticParamsSlugOnly[] | StaticParamsWithLocale[] {
+export function generateSlugOnlyParams(
+  config: SlugOnlyConfig = {}
+): StaticParamsSlugOnly[] {
   const {
     locales = routing.locales,
     includeQuran = false,
     includeExerciseSets = false,
     includeExerciseNumbers = false,
     includeOGVariants = false,
-    localeInSlug = false,
   } = config;
 
   const topDirs = Effect.runSync(
@@ -224,31 +211,18 @@ export function generateAllContentParams(
     })
   );
 
-  const resultWithLocale: StaticParamsWithLocale[] = [];
-  const resultSlugOnly: StaticParamsSlugOnly[] = [];
+  const result: StaticParamsSlugOnly[] = [];
 
   const addPath = (locale: string, slugParts: string[]) => {
-    if (localeInSlug) {
-      resultSlugOnly.push({ slug: [locale, ...slugParts] });
-      if (includeOGVariants && slugParts.length > 0) {
-        resultSlugOnly.push({ slug: [locale, ...slugParts, "image.png"] });
-      }
-    } else {
-      resultWithLocale.push({ locale, slug: slugParts });
-      if (includeOGVariants && slugParts.length > 0) {
-        resultWithLocale.push({ locale, slug: [...slugParts, "image.png"] });
-      }
+    result.push({ slug: [locale, ...slugParts] });
+    if (includeOGVariants && slugParts.length > 0) {
+      result.push({ slug: [locale, ...slugParts, "image.png"] });
     }
   };
 
   for (const locale of locales) {
-    // For OG routes, add root image.png path directly (since addPath skips empty slugParts for OG)
     if (includeOGVariants) {
-      if (localeInSlug) {
-        resultSlugOnly.push({ slug: [locale, "image.png"] });
-      } else {
-        resultWithLocale.push({ locale, slug: ["image.png"] });
-      }
+      result.push({ slug: [locale, "image.png"] });
     }
 
     const slugs = getMDXSlugsForLocale(locale as Locale);
@@ -293,5 +267,68 @@ export function generateAllContentParams(
     }
   }
 
-  return localeInSlug ? resultSlugOnly : resultWithLocale;
+  return result;
+}
+
+/**
+ * Generates static params with locale as separate param.
+ * Used by routes like /[locale]/og/[...slug] where locale is a route param.
+ *
+ * @example
+ * ```ts
+ * // For /[locale]/og route
+ * export function generateStaticParams() {
+ *   return generateLocaleParams({
+ *     includeOGVariants: true,
+ *   });
+ * }
+ * ```
+ */
+export function generateLocaleParams(
+  config: LocaleParamsConfig = {}
+): StaticParamsWithLocale[] {
+  const { locales = routing.locales, includeOGVariants = false } = config;
+
+  const topDirs = Effect.runSync(
+    Effect.match(getFolderChildNames("."), {
+      onFailure: () => [],
+      onSuccess: (names) => names,
+    })
+  );
+
+  const result: StaticParamsWithLocale[] = [];
+
+  const addPath = (locale: string, slugParts: string[]) => {
+    result.push({ locale, slug: slugParts });
+    if (includeOGVariants && slugParts.length > 0) {
+      result.push({ locale, slug: [...slugParts, "image.png"] });
+    }
+  };
+
+  for (const locale of locales) {
+    if (includeOGVariants) {
+      result.push({ locale, slug: ["image.png"] });
+    }
+
+    const slugs = getMDXSlugsForLocale(locale as Locale);
+    const localeCache = new Set(slugs);
+
+    for (const topDir of topDirs) {
+      if (localeCache.has(topDir)) {
+        addPath(locale, [topDir]);
+      }
+
+      const nestedPaths = getNestedSlugs(topDir);
+
+      for (const pathParts of nestedPaths) {
+        const fullPath = `${topDir}/${pathParts.join("/")}`;
+
+        if (localeCache.has(fullPath)) {
+          addPath(locale, [topDir, ...pathParts]);
+        }
+      }
+    }
+  }
+
+  return result;
 }
