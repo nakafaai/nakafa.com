@@ -1,68 +1,109 @@
 # Security Policy
 
-_Last Updated: October 23, 2025_
+Last updated: January 25, 2026
 
-## 1. Introduction
+This Security Policy describes the security measures PT. Nakafa Tekno Kreatif ("Nakafa," "we," "us," or "our") uses, and the measures we expect users to take, to help protect the confidentiality, integrity, and availability of the Services and related data.
 
-This Security Policy outlines the measures we take to protect the security of our platform and your data. At Nakafa, we are committed to ensuring the confidentiality, integrity, and availability of our systems and the information entrusted to us.
+For information about how we collect and use Personal Data, please review our [Privacy Policy](/en/privacy-policy).
 
-## 2. Data Security
+## Scope
 
-We implement a variety of security measures to maintain the safety of your personal information. These measures include:
+This Security Policy applies to the Services operated by Nakafa, including websites and applications hosted and supported through third-party providers.
 
-- **Encryption:** All data transmitted between your browser and our servers is encrypted using SSL/TLS. Data at rest is also encrypted to protect it from unauthorized access.
-- **Access Control:** Access to personal information is strictly limited to employees who need it to perform their job functions. We use the principle of least privilege to ensure that individuals only have access to the data necessary for their roles.
-- **Secure Infrastructure:** Our platform is hosted on Vercel, which provides a secure and resilient infrastructure. Our database is managed by Convex, which offers robust security features to protect your data.
+This Security Policy does not cover the security practices of third parties you interact with directly outside the Services, even if those third parties are linked from the Services.
 
-## 3. Vulnerability Management
+## Security model and responsibilities
 
-We regularly scan our systems for vulnerabilities and apply patches in a timely manner. We also encourage responsible disclosure of security vulnerabilities by security researchers. If you believe you have found a security vulnerability in our platform, please contact us at [nakafaai@gmail.com](mailto:nakafaai@gmail.com).
+Security is a shared responsibility:
 
-## 4. Incident Response
+- We are responsible for security measures within our control, including application design, access controls, monitoring, and incident response processes.
+- You are responsible for maintaining the security of your devices, accounts, and any credentials you use to access the Services.
 
-In the event of a security breach, we have an incident response plan in place to promptly address the issue. Our plan includes steps to contain the breach, assess the impact, and notify affected users as required by law.
+## Technical and organizational measures
 
-## 5. Employee Training
+We maintain a security program designed to reduce risk. Measures include the following categories.
 
-All our employees receive regular security training to ensure they are aware of the latest threats and best practices for protecting user data. This training covers topics such as phishing, social engineering, and secure coding practices.
+### Encryption in transit
 
-## 6. Compliance
+We use HTTPS/TLS for data transmitted between your browser or client and the Services.
 
-### GDPR Compliance (EU/EEA Users)
+### Access controls
 
-For users in the European Union and European Economic Area, we comply with the General Data Protection Regulation (GDPR). Our security measures are designed to protect your rights under GDPR, including:
+We restrict access to production systems and data to authorized personnel and service accounts. We use access control practices designed to limit access based on job function and operational need.
 
-- Data Protection Impact Assessments for high-risk processing activities
-- Data Protection by Design and by Default principles
-- Appropriate technical and organizational measures to ensure data security
-- Breach notification procedures in compliance with GDPR requirements (within 72 hours)
+### Data storage and processing
 
-### Indonesian PDP Law Compliance
+We store and process data using managed infrastructure providers. Storage and processing protections depend on the provider and service configuration. We use provider security features and operational controls designed to protect stored data from unauthorized access.
 
-We comply with Indonesia's Personal Data Protection Law (UU PDP), which includes:
+### Logging and monitoring
 
-- Implementing appropriate security safeguards for personal data
-- Notifying relevant authorities and affected individuals in case of data breaches
-- Ensuring data processors meet security requirements
-- Regular security audits and assessments
+We collect logs and events necessary to operate and secure the Services. We use these logs to:
 
-## 7. Data Breach Notification
+- Detect abuse, suspicious activity, and operational incidents.
+- Debug reliability issues and respond to outages.
+- Investigate and remediate suspected security incidents.
 
-In accordance with GDPR and Indonesian PDP Law requirements:
+### Secure development and change management
 
-- **EU Users:** We will notify the relevant supervisory authority within 72 hours of becoming aware of a data breach, and affected users without undue delay if the breach poses a high risk to their rights and freedoms.
-- **Indonesian Users:** We will notify relevant authorities and affected individuals in accordance with Indonesian PDP Law requirements.
+We maintain development and deployment practices designed to reduce the risk of vulnerabilities, including reviewing changes, applying updates, and responding to security advisories for dependencies.
 
-## 8. Policy Updates
+## Third-party service security
 
-We may update this Security Policy from time to time to reflect changes in our security practices or legal requirements. We will notify you of any significant changes by posting the new policy on our platform.
+The Services rely on third-party services. Their security practices and controls are important to the overall security of the Services. Our core third-party services include:
 
-## 9. Contact Us
+- Vercel (hosting and delivery)
+- Convex (database and backend infrastructure)
+- Polar (payments and subscription management)
+- Resend (email delivery)
+- PostHog and Vercel Analytics (analytics)
+- Vercel AI Gateway (AI request routing)
 
-If you have any questions or concerns about our Security Policy, please contact us at:
+Each third party may process data as part of providing the Services. For details about categories of data shared and purposes, review our [Privacy Policy](/en/privacy-policy).
+
+## Vulnerability reporting
+
+We encourage responsible disclosure of security vulnerabilities.
+
+If you believe you have found a security vulnerability, contact us at [nakafaai@gmail.com](mailto:nakafaai@gmail.com) with the subject line “Security Report”.
+
+To help us triage and respond, include:
+
+- A clear description of the issue and the affected area of the Services.
+- Steps to reproduce the issue.
+- Any proof-of-concept code or screenshots (if safe to share).
+- Your contact information for follow-up.
+
+Do not include sensitive Personal Data in your report. Do not exploit the vulnerability beyond what is necessary to demonstrate it. Do not attempt to access data that is not your own.
+
+## Incident response and breach notifications
+
+We maintain an incident response process designed to:
+
+- Contain and mitigate suspected incidents.
+- Assess scope and impact.
+- Restore service integrity and availability.
+- Notify affected users and relevant authorities when required by applicable law.
+
+Notification timelines vary by jurisdiction and the nature of the incident. For example, if a security incident qualifies as a personal data breach under GDPR and notification is required, notification obligations may include reporting to a supervisory authority without undue delay and, where applicable, within 72 hours of becoming aware of the breach.
+
+## Account and user security
+
+You can help protect your account by:
+
+- Using strong, unique credentials and keeping them confidential.
+- Keeping your devices and browsers updated.
+- Logging out of shared devices.
+- Reporting suspected compromise or unauthorized access promptly.
+
+We may use security controls designed to reduce account compromise risk, such as tracking account sessions and device activity, and applying access restrictions when suspicious activity is detected.
+
+## Security updates
+
+We may update this Security Policy from time to time to reflect changes in our security practices or legal requirements. Updates will be posted on this page with a revised “Last updated” date.
+
+## Contact
 
 PT. Nakafa Tekno Kreatif  
-Indonesia  
+Taman Sukahati Permai H6  
+Kabupaten Bogor, Indonesia  
 Email: [nakafaai@gmail.com](mailto:nakafaai@gmail.com)
-
-For security vulnerability reports or GDPR-related security inquiries, please mark your communication as "Security" or "GDPR Security" in the subject line.
