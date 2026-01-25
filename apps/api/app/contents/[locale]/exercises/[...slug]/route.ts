@@ -1,5 +1,6 @@
 import { getContent } from "@repo/contents/_lib/content";
 import { getExercisesContent } from "@repo/contents/_lib/exercises";
+import { generateContentParams } from "@repo/contents/_lib/static-params";
 import {
   ChoicesValidationError,
   ExerciseLoadError,
@@ -11,14 +12,13 @@ import {
 import { createServiceLogger, logError } from "@repo/utilities/logging";
 import { Effect } from "effect";
 import { NextResponse } from "next/server";
-import { generateStaticParamsForContent } from "@/lib/static-params";
 
 export const revalidate = false;
 
 const logger = createServiceLogger("api-exercises");
 
 export function generateStaticParams() {
-  return generateStaticParamsForContent({
+  return generateContentParams({
     basePath: "exercises",
   });
 }

@@ -1,4 +1,3 @@
-import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import { getContent } from "@repo/contents/_lib/content";
 import { getExercisesContent } from "@repo/contents/_lib/exercises";
 import {
@@ -6,8 +5,8 @@ import {
   getMaterialPath,
   getMaterials,
 } from "@repo/contents/_lib/exercises/material";
-import { getFolderChildNames, getNestedSlugs } from "@repo/contents/_lib/fs";
 import { getAllSurah, getSurah, getSurahName } from "@repo/contents/_lib/quran";
+import { generateAllContentParams } from "@repo/contents/_lib/static-params";
 import { ExercisesCategorySchema } from "@repo/contents/_types/exercises/category";
 import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
 import { ExercisesTypeSchema } from "@repo/contents/_types/exercises/type";
@@ -18,7 +17,6 @@ import type { NextRequest } from "next/server";
 import { hasLocale, type Locale } from "next-intl";
 import { getRawGithubUrl } from "@/lib/utils/github";
 
-const TOTAL_SURAH = 114;
 const BASE_URL = "https://nakafa.com";
 
 export const revalidate = false;
@@ -388,62 +386,10 @@ function buildMdxResponse({
 }
 
 export function generateStaticParams() {
-  // Top level directories in contents
-  const topDirs = Effect.runSync(
-    Effect.match(getFolderChildNames("."), {
-      onFailure: () => [],
-      onSuccess: (names) => names,
-    })
-  );
-  const result: { slug: string[] }[] = [];
-  const locales = routing.locales;
-
-  // For each locale
-  for (const locale of locales) {
-    result.push({
-      slug: [locale],
-    });
-
-    const slugs = getMDXSlugsForLocale(locale);
-    const localeCache = new Set(slugs);
-
-    if (!localeCache) {
-      continue;
-    }
-
-    // For each top directory (articles, subject, etc)
-    for (const topDir of topDirs) {
-      if (localeCache.has(topDir)) {
-        result.push({
-          slug: [locale, topDir],
-        });
-      }
-
-      const nestedPaths = getNestedSlugs(topDir);
-
-      // Add each nested path if it exists in locale
-      for (const path of nestedPaths) {
-        const fullPath = `${topDir}/${path.join("/")}`;
-
-        if (localeCache.has(fullPath)) {
-          result.push({
-            slug: [locale, topDir, ...path],
-          });
-        }
-      }
-    }
-
-    // Add Quran pages
-    result.push({
-      slug: [locale, "quran"],
-    });
-
-    // Add all surah pages (1-114)
-    const surahParams = Array.from({ length: TOTAL_SURAH }, (_, i) => ({
-      slug: [locale, "quran", (i + 1).toString()],
-    }));
-    result.push(...surahParams);
-  }
-
-  return result;
+  return generateAllContentParams({
+    localeInSlug: true,
+    includeQuran: true,
+    includeExerciseSets: true,
+    includeExerciseNumbers: true,
+  });
 }
