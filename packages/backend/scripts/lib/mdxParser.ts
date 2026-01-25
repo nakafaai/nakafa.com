@@ -297,7 +297,7 @@ export function parseMdxContent(content: string): ParsedMdx {
   const metadataStr = match[1];
 
   // Safe eval via Function constructor (same as packages/contents/_lib/content.ts)
-  const metadataObject = new Function(`return ${metadataStr}`)() as unknown;
+  const metadataObject = new Function(`return ${metadataStr}`)();
   const parseResult = ContentMetadataSchema.safeParse(metadataObject);
 
   if (!parseResult.success) {
@@ -521,7 +521,7 @@ export async function readExerciseChoices(exerciseDir: string): Promise<{
       return null;
     }
 
-    const choicesObject = new Function(`return ${objectMatch[1]}`)() as unknown;
+    const choicesObject = new Function(`return ${objectMatch[1]}`)();
     const parseResult = ExercisesChoicesSchema.safeParse(choicesObject);
 
     if (!parseResult.success) {
@@ -584,7 +584,7 @@ export async function readArticleReferences(
       return [];
     }
 
-    const referencesArray = new Function(`return ${match[1]}`)() as unknown;
+    const referencesArray = new Function(`return ${match[1]}`)();
 
     if (!Array.isArray(referencesArray)) {
       return [];
@@ -685,9 +685,7 @@ export async function parseExerciseMaterialFile(
     `/${basePath}`
   );
 
-  const materialsArray = new Function(
-    `return ${arrayWithBasePath}`
-  )() as unknown;
+  const materialsArray = new Function(`return ${arrayWithBasePath}`)();
   const parseResult = ExercisesMaterialListSchema.safeParse(materialsArray);
 
   if (!parseResult.success) {
@@ -791,9 +789,7 @@ export async function parseSubjectMaterialFile(
     `/${basePath}`
   );
 
-  const materialsArray = new Function(
-    `return ${arrayWithBasePath}`
-  )() as unknown;
+  const materialsArray = new Function(`return ${arrayWithBasePath}`)();
   const parseResult = MaterialListSchema.safeParse(materialsArray);
 
   if (!parseResult.success) {
