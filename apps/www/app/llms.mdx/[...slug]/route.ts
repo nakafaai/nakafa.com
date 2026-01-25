@@ -8,9 +8,9 @@ import {
 } from "@repo/contents/_lib/exercises/material";
 import { getFolderChildNames, getNestedSlugs } from "@repo/contents/_lib/fs";
 import { getAllSurah, getSurah, getSurahName } from "@repo/contents/_lib/quran";
-import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
-import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
-import type { ExercisesType } from "@repo/contents/_types/exercises/type";
+import { ExercisesCategorySchema } from "@repo/contents/_types/exercises/category";
+import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
+import { ExercisesTypeSchema } from "@repo/contents/_types/exercises/type";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect, Option } from "effect";
 import ky from "ky";
@@ -240,9 +240,15 @@ async function handleExercisesContent({
     }
   }
 
-  // Fetch exercises
+  // Fetch exercises without MDX components (raw content only for LLM output)
   const exercises = await Effect.runPromise(
-    getExercisesContent({ locale, filePath: path })
+    Effect.match(
+      getExercisesContent({ locale, filePath: path, includeMDX: false }),
+      {
+        onFailure: () => [],
+        onSuccess: (data) => data,
+      }
+    )
   );
 
   if (exercises.length === 0) {
@@ -266,11 +272,15 @@ async function handleExercisesContent({
   const type = pathParts.at(2);
   const material = pathParts.at(3);
 
-  if (category && type && material) {
+  const parsedCategory = ExercisesCategorySchema.safeParse(category);
+  const parsedType = ExercisesTypeSchema.safeParse(type);
+  const parsedMaterial = ExercisesMaterialSchema.safeParse(material);
+
+  if (parsedCategory.success && parsedType.success && parsedMaterial.success) {
     const materialPath = getMaterialPath(
-      category as ExercisesCategory,
-      type as ExercisesType,
-      material as ExercisesMaterial
+      parsedCategory.data,
+      parsedType.data,
+      parsedMaterial.data
     );
     const materialsList = await getMaterials(materialPath, locale);
     const { currentMaterial, currentMaterialItem } = getCurrentMaterial(
