@@ -34,8 +34,8 @@ export default function Page({ params }: Props) {
             <HomeSearch />
 
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-              <Weather />
               <Videos />
+              <Weather />
             </div>
           </div>
         </div>
