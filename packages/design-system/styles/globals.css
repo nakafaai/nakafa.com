@@ -159,6 +159,7 @@
     from {
       height: 0;
     }
+
     to {
       height: var(--radix-accordion-content-height);
     }
@@ -168,6 +169,7 @@
     from {
       height: var(--radix-accordion-content-height);
     }
+
     to {
       height: 0;
     }
@@ -175,9 +177,14 @@
 }
 
 @layer base {
+  html {
+    @apply scroll-smooth;
+  }
+
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground selection:bg-primary/10 selection:text-primary overscroll-y-none;
   }
@@ -245,6 +252,7 @@
     transform: translateY(0);
     opacity: 0.5;
   }
+
   50% {
     transform: translateY(-2px);
     opacity: 1;
