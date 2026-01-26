@@ -19,12 +19,16 @@ export function ExerciseAnswerAction({ exerciseNumber }: Props) {
     (state) => state.visibleExplanations[exerciseNumber] ?? false
   );
 
-  const mode = useAttempt((state) => state.attempt?.mode);
+  const mustDisable = useAttempt(
+    (state) =>
+      state.attempt?.status === "in-progress" &&
+      state.attempt?.mode === "simulation"
+  );
 
   return (
     <div className="flex items-center gap-2">
       <Button
-        disabled={mode && mode === "simulation"}
+        disabled={mustDisable}
         onClick={() => {
           const isClosing = showAnswer;
           toggleAnswer(exerciseNumber);

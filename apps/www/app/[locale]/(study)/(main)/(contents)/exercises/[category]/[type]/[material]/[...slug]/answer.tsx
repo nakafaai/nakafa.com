@@ -19,7 +19,11 @@ export function ExerciseAnswer({ children, exerciseNumber }: Props) {
     (state) => state.visibleExplanations[exerciseNumber] ?? false
   );
 
-  const mode = useAttempt((state) => state.attempt?.mode);
+  const mustHide = useAttempt(
+    (state) =>
+      state.attempt?.status === "in-progress" &&
+      state.attempt?.mode === "simulation"
+  );
 
   const id = slugify(`${t("explanation")}-${exerciseNumber}`);
 
@@ -28,7 +32,7 @@ export function ExerciseAnswer({ children, exerciseNumber }: Props) {
       className={cn(
         "space-y-6",
         showAnswer ? "visible" : "hidden",
-        mode === "simulation" && "hidden"
+        mustHide && "hidden"
       )}
     >
       <Separator orientation="horizontal" />

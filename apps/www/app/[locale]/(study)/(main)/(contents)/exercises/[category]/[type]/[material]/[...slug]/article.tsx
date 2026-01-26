@@ -13,7 +13,7 @@ interface Props {
 
 export function ExerciseArticle({ exercise, locale, id, srLabel }: Props) {
   return (
-    <article aria-labelledby={`exercise-${id}-title`}>
+    <article aria-labelledby={`exercise-${id}-title`} className="scroll-smooth">
       <div className="flex items-center gap-4">
         <a
           className="flex w-full flex-1 shrink-0 scroll-mt-44 outline-none ring-0"
