@@ -1,114 +1,22 @@
-name: ❓ Question / Help Needed
-description: 🤝 Need help or have a question? We're here to assist!
-title: "❓ [QUESTION] "
-labels: ["❓ question", "🆘 help-wanted", "🔍 needs-triage"]
-assignees: []
+name: General Question
+description: Ask a question or request help
+title: "[QUESTION] "
+labels: ["question"]
 body:
-  - type: markdown
-    attributes:
-      value: |
-        ## 👋 Welcome to our Q&A space!
-        
-        🤔 **Got a question?** You're in the right place! Our community loves helping each other.
-        💡 **Pro tip:** The more specific your question, the better help we can provide.
-        
-  - type: dropdown
-    id: question-type
-    attributes:
-      label: 🎯 What type of help do you need?
-      description: This helps us route your question to the right people
-      options:
-        - 🎓 Learning Content - Questions about educational materials
-        - 💻 Technical Issue - Something's not working as expected
-        - 🛠️ How-to Guide - Need help using a feature
-        - 🔧 Development - Code or setup questions
-        - 📱 Mobile/Device - Platform-specific questions
-        - 🌍 Accessibility - Making content more accessible
-        - 🗣️ Language/Translation - Content language questions
-        - 🤷 General - Not sure where this fits
-      default: 7
-    validations:
-      required: true
-      
   - type: textarea
-    id: question-description
+    id: question
     attributes:
-      label: 🤔 What's your question?
-      description: Ask away! Be as detailed as you'd like.
-      placeholder: "Example: I'm trying to understand the quadratic formula explanation in Grade 10 math, but the visualization isn't showing up on my mobile device..."
+      label: Your question
+      description: What do you need help with?
     validations:
       required: true
-      
   - type: textarea
     id: context
     attributes:
-      label: 📍 Context & Background
-      description: Help us understand your situation better
-      placeholder: |
-        🎯 What are you trying to achieve?
-        📚 What subject/topic are you working with?
-        👤 Are you a student, teacher, parent, or contributor?
-        🔄 Have you tried anything already?
-    validations:
-      required: false
-      
+      label: Additional context (optional)
+      description: Any relevant details, code snippets, or background information
   - type: textarea
-    id: environment-info
+    id: attempts
     attributes:
-      label: 🖥️ Your Setup (if relevant)
-      description: Technical details that might help us assist you
-      placeholder: |
-        📱 Device: iPhone, MacBook, Windows PC, etc.
-        🌐 Browser: Chrome, Safari, Firefox, etc.
-        📍 Specific page: https://nakafa.com/...
-        🌍 Language: English, Indonesian, etc.
-      value: |
-        📱 Device: 
-        🌐 Browser: 
-        📍 Page: 
-        🌍 Language: 
-    validations:
-      required: false
-      
-  - type: textarea
-    id: screenshots
-    attributes:
-      label: 📸 Screenshots or Examples
-      description: Visual aids help us understand your question better!
-      placeholder: "🖼️ Drop screenshots, links to examples, or anything visual that helps explain your question"
-    validations:
-      required: false
-      
-  - type: dropdown
-    id: urgency
-    attributes:
-      label: ⏰ How urgent is this?
-      description: Help us prioritize our response
-      options:
-        - 🚨 Urgent - Blocking my work/study right now
-        - ⚡ High - Need answer within a day or two  
-        - 📅 Medium - Can wait a few days
-        - 🌱 Low - Just curious, no rush
-      default: 2
-    validations:
-      required: true
-      
-  - type: textarea
-    id: additional-info
-    attributes:
-      label: 💬 Anything else?
-      description: Any other details that might help us give you a great answer?
-      placeholder: "✨ Error messages, links to related discussions, or any other helpful context..."
-    validations:
-      required: false
-      
-  - type: checkboxes
-    id: terms
-    attributes:
-      label: ✅ Quick Check
-      description: Just to make sure we're on the same page
-      options:
-        - label: 🔍 I've searched existing issues and discussions for my question
-          required: true
-        - label: 🤝 I understand this is a community-driven project and responses may take time
-          required: true 
+      label: What have you tried? (optional)
+      description: Solutions or approaches you've already attempted

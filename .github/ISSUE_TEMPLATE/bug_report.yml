@@ -1,105 +1,59 @@
-name: 🐛 Bug Report
-description: 🔍 Help us squash bugs and improve nakafa!
-title: "🐛 [BUG] "
-labels: ["🐛 bug", "🔍 needs-triage"]
-assignees: []
+name: Bug Report
+description: Report a bug to help us fix it
+title: "[BUG] "
+labels: ["bug", "needs-triage"]
 body:
-  - type: markdown
-    attributes:
-      value: |
-        ## 👋 Thanks for helping us improve nakafa!
-        
-        🔍 **Before you start:** Please search existing issues to avoid duplicates.
-        📝 **Pro tip:** The more details you provide, the faster we can fix it!
-        
   - type: textarea
-    id: bug-description
+    id: description
     attributes:
-      label: 🐛 What's the bug?
-      description: Tell us what went wrong in a clear and simple way.
-      placeholder: "Example: The search function crashes when I type special characters like @#$%"
+      label: Bug description
+      description: What went wrong?
+      placeholder: The search function crashes when I type special characters
     validations:
       required: true
-      
   - type: textarea
     id: reproduction
     attributes:
-      label: 🔄 How can we reproduce it?
-      description: Give us the exact steps to recreate the problem.
+      label: Steps to reproduce
+      description: How to recreate the issue
       placeholder: |
-        1. 🌐 Go to the search page
-        2. 🔤 Type "@#$%" in the search box
-        3. ⌨️ Press Enter
-        4. 💥 Page crashes with error message
+        1. Go to the search page
+        2. Type "@#$%" in the search box
+        3. Press Enter
     validations:
       required: true
-      
   - type: textarea
-    id: expected-behavior
+    id: expected
     attributes:
-      label: ✅ What should happen instead?
-      description: Describe what you expected to see.
-      placeholder: "The search should handle special characters gracefully and show relevant results"
+      label: Expected behavior
+      description: What should happen instead
+      placeholder: The search should handle special characters gracefully
     validations:
       required: true
-      
   - type: textarea
     id: screenshots
     attributes:
-      label: 📸 Screenshots or Videos
-      description: Show us what you're seeing! Drag & drop images or paste URLs.
-      placeholder: "🖼️ Drop your screenshots here or paste image URLs"
-    validations:
-      required: false
-      
+      label: Screenshots (optional)
+      description: Drag & drop images or paste URLs
   - type: dropdown
     id: severity
     attributes:
-      label: 🚨 How severe is this bug?
-      description: Help us prioritize the fix
+      label: Severity
       options:
-        - 🔥 Critical - Breaks core functionality
-        - ⚠️ High - Major feature doesn't work
-        - 📋 Medium - Minor feature issue
-        - 💡 Low - Cosmetic or enhancement
-      default: 2
+        - Critical
+        - High
+        - Medium
+        - Low
+      default: 1
     validations:
       required: true
-      
   - type: textarea
     id: environment
     attributes:
-      label: 🖥️ Your Environment
-      description: Help us understand your setup
+      label: Environment
+      description: Device, browser, OS, page URL
       placeholder: |
-        📱 Device: MacBook Pro / iPhone 13 / etc.
-        🌐 Browser: Chrome 120, Safari 17, etc.
-        💻 OS: macOS 14, Windows 11, etc.
-        📍 Page: https://nakafa.com/specific-page
-      value: |
-        📱 Device: 
-        🌐 Browser: 
-        💻 OS: 
-        📍 Page: 
-    validations:
-      required: false
-      
-  - type: textarea
-    id: additional-context
-    attributes:
-      label: 💬 Anything else?
-      description: Any extra details, error messages, or context that might help.
-      placeholder: "🤔 Error messages, console logs, or anything else that might be relevant..."
-    validations:
-      required: false
-      
-  - type: checkboxes
-    id: terms
-    attributes:
-      label: ✅ Final Check
-      description: Just a quick confirmation before submitting
-      options:
-        - label: 🔍 I've searched existing issues and this is a new bug
-          required: true
-        - label: 📝 I've provided clear steps to reproduce the issue
-          required: true 
+        Device: MacBook Pro
+        Browser: Chrome 120
+        OS: macOS 14
+        Page URL:
