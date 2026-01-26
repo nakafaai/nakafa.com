@@ -113,7 +113,7 @@ export function OpenContent({
               className="cursor-pointer"
               key={item.title}
             >
-              <Link href={item.href} target="_blank">
+              <Link href={item.href} rel="noopener noreferrer" target="_blank">
                 <item.icon />
                 {item.title}
                 <HugeIcons

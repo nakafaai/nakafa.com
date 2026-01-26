@@ -33,6 +33,7 @@ export function Youtube({ videoId }: Props) {
         <Button asChild variant="outline">
           <Link
             href={`https://www.youtube.com/watch?v=${videoId}`}
+            rel="noopener noreferrer"
             target="_blank"
           >
             {t("see-on-youtube")}
@@ -42,6 +43,7 @@ export function Youtube({ videoId }: Props) {
         <Button asChild>
           <Link
             href="https://www.youtube.com/@nakafaa?sub_confirmation=1"
+            rel="noopener noreferrer"
             target="_blank"
           >
             {t("subscribe")}

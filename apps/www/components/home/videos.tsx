@@ -25,6 +25,7 @@ function VideoCard({ children }: { children: React.ReactNode }) {
     <Link
       className="group relative flex aspect-square overflow-hidden rounded-md border p-3 text-card-foreground shadow-xs"
       href="https://www.youtube.com/@nakafaa"
+      rel="noopener noreferrer"
       target="_blank"
     >
       <Image

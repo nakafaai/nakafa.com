@@ -195,6 +195,7 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
                     buttonVariants({ variant: "ghost", size: "icon-sm" })
                   )}
                   href={comment.slug}
+                  rel="noopener noreferrer"
                   target="_blank"
                 >
                   <HugeIcons icon={ArrowUpRight01Icon} />

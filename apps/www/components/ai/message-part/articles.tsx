@@ -109,6 +109,7 @@ const ArticlesPartPreview = memo(
             className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
             href={`/${article.slug}`}
             key={article.url}
+            rel="noopener noreferrer"
             target="_blank"
           >
             {article.title}
@@ -166,6 +167,7 @@ const ArticlesPartSheet = memo(
                       className="group flex items-center gap-2 px-4 py-3 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
                       href={`/${article.slug}`}
                       key={article.url}
+                      rel="noopener noreferrer"
                       target="_blank"
                     >
                       {article.title}

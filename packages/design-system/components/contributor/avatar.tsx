@@ -76,7 +76,7 @@ export function Avatar({ contributor, size = "md" }: Props) {
                     size: "icon",
                   })}
                   href={contributor.social.twitter}
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   target="_blank"
                   title="Twitter"
                 >
@@ -91,7 +91,7 @@ export function Avatar({ contributor, size = "md" }: Props) {
                     size: "icon",
                   })}
                   href={contributor.social.github}
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   target="_blank"
                   title="GitHub"
                 >
@@ -106,7 +106,7 @@ export function Avatar({ contributor, size = "md" }: Props) {
                     size: "icon",
                   })}
                   href={contributor.social.linkedin}
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   target="_blank"
                   title="LinkedIn"
                 >

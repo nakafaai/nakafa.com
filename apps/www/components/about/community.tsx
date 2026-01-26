@@ -21,13 +21,21 @@ export function Community() {
 
         <div className="flex w-full items-center justify-center gap-4">
           <Button asChild variant="secondary">
-            <Link href="https://github.com/nakafaai/nakafa.com" target="_blank">
+            <Link
+              href="https://github.com/nakafaai/nakafa.com"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
               <HugeIcons icon={LoveKoreanFingerIcon} />
               {t("contribute")}
             </Link>
           </Button>
           <Button asChild>
-            <Link href="https://discord.gg/CPCSfKhvfQ" target="_blank">
+            <Link
+              href="https://discord.gg/CPCSfKhvfQ"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
               <HugeIcons icon={DiscordIcon} />
               {t("join-community")}
             </Link>

@@ -57,14 +57,22 @@ function PageFooter() {
         {tLegal.rich("legal-description", {
           "terms-of-service": (chunks) => (
             <Button asChild className="h-auto p-0" size="sm" variant="link">
-              <NavigationLink href="/terms-of-service" target="_blank">
+              <NavigationLink
+                href="/terms-of-service"
+                rel="noopener noreferrer"
+                target="_blank"
+              >
                 {chunks}
               </NavigationLink>
             </Button>
           ),
           "privacy-policy": (chunks) => (
             <Button asChild className="h-auto p-0" size="sm" variant="link">
-              <NavigationLink href="/privacy-policy" target="_blank">
+              <NavigationLink
+                href="/privacy-policy"
+                rel="noopener noreferrer"
+                target="_blank"
+              >
                 {chunks}
               </NavigationLink>
             </Button>

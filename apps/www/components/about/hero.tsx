@@ -24,7 +24,11 @@ export function Hero() {
         </p>
         <div className="flex w-full max-w-lg items-center gap-4">
           <Button asChild variant="secondary">
-            <Link href="https://github.com/nakafaai/nakafa.com" target="_blank">
+            <Link
+              href="https://github.com/nakafaai/nakafa.com"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
               <HugeIcons icon={LoveKoreanFingerIcon} />
               {t("contribute")}
             </Link>

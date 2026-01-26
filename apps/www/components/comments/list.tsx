@@ -133,6 +133,7 @@ function CommentContent({
               <NavigationLink
                 className="min-w-0 max-w-36 truncate font-medium text-sm transition-colors ease-out hover:text-primary"
                 href={`/user/${userId}`}
+                rel="noopener noreferrer"
                 target="_blank"
                 title={userName}
               >

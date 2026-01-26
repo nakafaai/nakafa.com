@@ -113,6 +113,7 @@ const SubjectsPartPreview = memo(
             className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
             href={`/${subject.slug}`}
             key={subject.url}
+            rel="noopener noreferrer"
             target="_blank"
           >
             {subject.title}
@@ -180,6 +181,7 @@ const SubjectsPartSheet = memo(
                       className="group flex items-center gap-2 px-4 py-3 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
                       href={`/${subject.slug}`}
                       key={subject.url}
+                      rel="noopener noreferrer"
                       target="_blank"
                     >
                       {subject.title}
