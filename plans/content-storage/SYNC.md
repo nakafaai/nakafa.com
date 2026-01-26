@@ -83,13 +83,14 @@ This ordering ensures:
 
 ```bash
 # Development
-pnpm --filter backend sync             # Full sync (recommended)
-pnpm --filter backend sync:incremental # Changed files only (daily)
-pnpm --filter backend sync:verify      # Check database
+pnpm --filter backend sync                # Full sync (recommended)
+pnpm --filter backend sync:incremental    # Changed files only (daily)
+pnpm --filter backend sync:validate       # Validate without syncing (CI)
+pnpm --filter backend sync:verify         # Check database integrity
 
 # Production
-npx convex deploy                      # Deploy functions first
-pnpm --filter backend sync:prod        # Sync content
+npx convex deploy                         # Deploy functions first
+pnpm --filter backend sync:prod           # Sync content
 
 # Reset
 pnpm --filter backend sync:reset --force  # Delete all content
@@ -104,4 +105,4 @@ pnpm --filter backend sync:reset --force  # Delete all content
 
 ---
 
-**Last Updated**: January 25, 2026
+**Last Updated**: January 26, 2026

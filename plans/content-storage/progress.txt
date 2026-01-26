@@ -4,7 +4,7 @@
 
 ---
 
-[2025-01-24 00:00] Planning phase completed
+[2026-01-24 00:00] Planning phase completed
 
 Key decisions:
 - Full normalization approach chosen
@@ -17,7 +17,7 @@ Key decisions:
 
 ## Implementation Log
 
-[2025-01-24] Phase 0: Schema Foundation - COMPLETE
+[2026-01-24] Phase 0: Schema Foundation - COMPLETE
 
 Tasks completed:
 - [x] Task 0.1: contentValidators.ts
@@ -46,7 +46,7 @@ Tables created (7):
 
 ---
 
-[2025-01-24] Phase 1: Content Sync - COMPLETE (Revised)
+[2026-01-24] Phase 1: Content Sync - COMPLETE (Revised)
 
 **Key insight**: We don't need MDX parsing or React components. We just store raw text.
 
@@ -69,10 +69,10 @@ Files created/modified:
 - packages/backend/package.json (added @repo/contents, glob, tsx)
 
 NPM scripts:
-- pnpm --filter backend sync:articles [--locale en|id] [--dry-run]
-- pnpm --filter backend sync:subjects [--locale en|id] [--dry-run]
-- pnpm --filter backend sync:exercises [--locale en|id] [--dry-run]
-- pnpm --filter backend sync:all [--dry-run]
+- pnpm --filter backend sync [--locale en|id]
+- pnpm --filter backend sync:incremental [--locale en|id]
+- pnpm --filter backend sync:validate
+- pnpm --filter backend sync:verify
 
 Content discovered (dry-run):
 - Articles: 14 files (7 articles x 2 locales)
@@ -283,6 +283,28 @@ Total content synced: 1,540 items
 
 ---
 
+### Phase 1.11: Bug Fixes (COMPLETE)
+
+**Bug: Exercise Set questionCount doubled**
+- **Issue**: GitHub #42 - Question count stored all locales combined instead of per locale
+- **Root cause**: Question counting used locale-agnostic key, counting both en.mdx and id.mdx
+- **Example**: Set with 40 questions showed questionCount: 80 (40 en + 40 id)
+- **Fix**: Changed map key to include locale: `${locale}:${setSlug}`
+- **Verified**: Test showed correct counts (en=40, id=40) instead of combined (80)
+
+**Files modified:**
+- packages/backend/scripts/sync-content.ts (locale-aware question counting)
+- plans/content-storage/SYNC.md (updated commands)
+- plans/content-storage/RESET.md (updated commands)
+- plans/content-storage/progress.txt (added bug fix entry)
+
+**Verification:**
+- TypeScript check: PASSED
+- Lint check: PASSED (sync-content.ts)
+- Test script: Confirmed fix works correctly
+
+---
+
 ### Phase 2: API Layer (NEXT)
 - Create public query functions for content retrieval
 - Add authentication/rate limiting
@@ -294,5 +316,5 @@ Total content synced: 1,540 items
 
 ---
 
-**Last Updated**: January 24, 2026
-**Status**: Phase 1.10 Complete - Reset functionality ready
+**Last Updated**: January 26, 2026
+**Status**: Phase 1.11 Complete - Question count bug fixed

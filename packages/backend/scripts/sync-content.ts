@@ -1235,13 +1235,14 @@ async function syncExerciseSets(
   const errors: string[] = [];
 
   const questionFiles = await globFiles("exercises/**/_question/*.mdx");
-  const questionCountBySetSlug = new Map<string, number>();
+  const questionCountByLocaleSlug = new Map<string, number>();
   for (const qFile of questionFiles) {
     try {
       const pathInfo = parseExercisePath(qFile);
       const setSlug = `exercises/${pathInfo.category}/${pathInfo.examType}/${pathInfo.material}/${pathInfo.exerciseType}/${pathInfo.setName}`;
-      const count = questionCountBySetSlug.get(setSlug) || 0;
-      questionCountBySetSlug.set(setSlug, count + 1);
+      const countKey = `${pathInfo.locale}:${setSlug}`;
+      const count = questionCountByLocaleSlug.get(countKey) || 0;
+      questionCountByLocaleSlug.set(countKey, count + 1);
     } catch {
       // ignore parse errors here
     }
@@ -1258,7 +1259,8 @@ async function syncExerciseSets(
       const parsedSets = await parseExerciseMaterialFile(materialFile, locale);
 
       for (const set of parsedSets) {
-        const questionCount = questionCountBySetSlug.get(set.slug) || 0;
+        const countKey = `${set.locale}:${set.slug}`;
+        const questionCount = questionCountByLocaleSlug.get(countKey) || 0;
         sets.push({
           locale: set.locale,
           slug: set.slug,
