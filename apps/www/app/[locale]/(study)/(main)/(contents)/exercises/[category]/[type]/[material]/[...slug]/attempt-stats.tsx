@@ -9,8 +9,8 @@ import {
   NumberFormatGroup,
 } from "@repo/design-system/components/ui/number-flow";
 import { Progress } from "@repo/design-system/components/ui/progress";
+import { cn } from "@repo/design-system/lib/utils";
 import { intervalToDuration } from "date-fns";
-import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useAttempt } from "@/lib/context/use-attempt";
 import { useExercise } from "@/lib/context/use-exercise";
@@ -25,23 +25,22 @@ export function ExerciseStats() {
   }
 
   return (
-    <AnimatePresence>
-      {showStats && (
-        <motion.div
-          animate={{ height: "auto", opacity: 1 }}
-          className="overflow-hidden pt-2"
-          exit={{ height: 0, opacity: 0 }}
-          initial={{ height: 0, opacity: 0 }}
-          transition={{ ease: "easeOut" }}
-        >
+    <div
+      className={cn(
+        "grid transition-[grid-template-rows,opacity] duration-200 ease-out",
+        showStats ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+      )}
+    >
+      <div className="overflow-hidden">
+        <div className="pt-2">
           {attempt.status === "in-progress" ? (
             <StatsProgress answers={answers} attempt={attempt} />
           ) : (
             <StatsResult attempt={attempt} />
           )}
-        </motion.div>
-      )}
-    </AnimatePresence>
+        </div>
+      </div>
+    </div>
   );
 }
 
