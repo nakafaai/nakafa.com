@@ -12,14 +12,15 @@ export const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://unpkg.com https://eu-assets.i.posthog.com https://va.vercel-scripts.com",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' blob: data: https:",
       "font-src 'self'",
-      "connect-src 'self' https://*.convex.cloud https://*.convex.site https://*.vercel-analytics.com https://*.posthog.com",
+      "connect-src 'self' https://*.convex.cloud https://*.convex.site https://*.vercel-analytics.com https://*.posthog.com https://eu.i.posthog.com https://eu-assets.i.posthog.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
+      "manifest-src 'self'",
     ].join("; "),
   },
   {
