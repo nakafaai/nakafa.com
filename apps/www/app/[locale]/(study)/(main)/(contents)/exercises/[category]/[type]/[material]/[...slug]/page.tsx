@@ -248,6 +248,7 @@ async function PageContent({
         description={description}
         headline={currentMaterialItem.title}
         image={getOgUrl(locale, FilePath)}
+        url={`/${locale}${FilePath}`}
       />
       <LayoutMaterial>
         <LayoutMaterialContent showAskButton>
@@ -397,6 +398,7 @@ async function SingleExerciseContent({
         description={description}
         headline={exercise.question.metadata.title}
         image={getOgUrl(locale, exerciseFilePath)}
+        url={`/${locale}${exerciseFilePath}`}
       />
       <LayoutMaterial>
         <LayoutMaterialContent showAskButton>

@@ -179,6 +179,7 @@ async function PageContent({
         description={metadata.description ?? ""}
         headline={metadata.title}
         image={getOgUrl(locale, FilePath)}
+        url={`/${locale}${FilePath}`}
       />
       <LearningResourceJsonLd
         author={metadata.authors.map((author: { name: string }) => ({

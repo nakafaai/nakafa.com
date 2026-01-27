@@ -1,10 +1,10 @@
 import type { Thing, WithContext } from "schema-dts";
 
-interface JsonLdProps {
-  jsonLd: WithContext<Thing>;
+interface JsonLdProps<T extends Thing = Thing> {
+  jsonLd: WithContext<T>;
 }
 
-export function JsonLd({ jsonLd }: JsonLdProps) {
+export function JsonLd<T extends Thing>({ jsonLd }: JsonLdProps<T>) {
   return (
     <script
       // biome-ignore lint/security/noDangerouslySetInnerHtml: This is a JSON-LD script, not user-generated content.

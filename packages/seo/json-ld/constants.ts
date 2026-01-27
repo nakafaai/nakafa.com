@@ -1,4 +1,8 @@
-import type { Organization, Person } from "schema-dts";
+import {
+  createPerson,
+  OrganizationSchema,
+  type Person,
+} from "@repo/seo/json-ld/schemas";
 
 export const ORGANIZATION_URL = "https://nakafa.com";
 export const ORGANIZATION_LOGO = "https://nakafa.com/logo.svg";
@@ -10,15 +14,12 @@ export const SAME_AS_LINKS = [
   "https://www.instagram.com/nakafa.tv/",
 ] as const;
 
-export const ORGANIZATION: Organization = {
+export const ORGANIZATION = OrganizationSchema.parse({
   "@type": "Organization",
   name: ORGANIZATION_NAME,
-  logo: ORGANIZATION_LOGO,
   url: ORGANIZATION_URL,
+  logo: ORGANIZATION_LOGO,
   sameAs: SAME_AS_LINKS,
-};
+});
 
-export const FOUNDER: Person = {
-  "@type": "Person",
-  name: "Nabil Akbarazzima Fatih",
-};
+export const FOUNDER: Person = createPerson("Nabil Akbarazzima Fatih");
