@@ -7,71 +7,9 @@ const withNextIntl = createNextIntlPlugin(
   "../../packages/internationalization/src/request.ts"
 );
 
-/**
- * Security headers configuration
- * Implements best practices for web security
- * @see https://nextjs.org/docs/app/api-reference/config/next-config-js/headers
- */
-const securityHeaders = [
-  {
-    key: "Content-Security-Policy",
-    value: [
-      "default-src 'self'",
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
-      "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' blob: data: https:",
-      "font-src 'self'",
-      "connect-src 'self' https://*.convex.cloud https://*.convex.site https://*.vercel-analytics.com",
-      "frame-ancestors 'none'",
-      "base-uri 'self'",
-      "form-action 'self'",
-    ].join("; "),
-  },
-  {
-    key: "X-Frame-Options",
-    value: "DENY",
-  },
-  {
-    key: "X-Content-Type-Options",
-    value: "nosniff",
-  },
-  {
-    key: "Referrer-Policy",
-    value: "strict-origin-when-cross-origin",
-  },
-  {
-    key: "Strict-Transport-Security",
-    value: "max-age=31536000; includeSubDomains; preload",
-  },
-  {
-    key: "Permissions-Policy",
-    value: [
-      "camera=()",
-      "microphone=()",
-      "geolocation=()",
-      "payment=()",
-      "usb=()",
-      "magnetometer=()",
-      "gyroscope=()",
-      "speaker=()",
-      "sync-xhr=()",
-    ].join(", "),
-  },
-];
-
 let nextConfig: NextConfig = {
   ...config,
   serverExternalPackages: ["@takumi-rs/image-response"],
-
-  async headers() {
-    return [
-      {
-        source: "/:path*",
-        headers: securityHeaders,
-      },
-    ];
-  },
-
   async rewrites() {
     await Promise.resolve();
     const llmSource = [
