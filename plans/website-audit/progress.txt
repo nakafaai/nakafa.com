@@ -4,7 +4,7 @@
 
 **Overall Score**: 42/100 (Grade F) → Target: >80/100
 
-### Phase 1: Critical Fixes (Week 1)
+### Phase 1: Critical Fixes (Week 1) ✅ COMPLETED
 
 #### Task 1.1: Enable User Zoom (Accessibility) ✅ COMPLETED
 - **Status**: ✅ COMPLETED
@@ -18,52 +18,61 @@
 - **Priority**: High
 - **Impact**: Security score 73→90+
 - **Completed**: 2026-01-27
-- **Files**: `apps/www/next.config.ts`
+- **Files**: `packages/next-config/index.ts`
 
-### Phase 2: Performance (Week 2)
+---
 
-#### Task 2.1: Optimize TTFB
+### Phase 2: SEO & Structured Data (Week 2) ⏳ CURRENT
+
+#### Task 2.1: Article Structured Data
+- **Status**: 📝 Planned
+- **Priority**: High
+- **Impact**: Structured Data 46→80+
+- **Estimated Time**: 3 hours
+- **Files**: `packages/seo/src/json-ld/article.tsx`
+
+#### Task 2.2: Author Information
+- **Status**: 📝 Planned
+- **Priority**: High
+- **Impact**: E-E-A-T 49→80+
+- **Estimated Time**: 2 hours
+- **Files**: `apps/www/components/contents/author-card.tsx`
+
+#### Task 2.3: About Page
+- **Status**: 📝 Planned
+- **Priority**: Medium
+- **Impact**: Trust signals
+- **Estimated Time**: 3 hours
+- **Files**: `apps/www/app/[locale]/(study)/(main)/about/page.tsx`
+
+---
+
+### Phase 3: Performance Optimization (Week 3)
+
+#### Task 3.1: Preload Critical Resources
+- **Status**: 📝 Planned
+- **Priority**: Medium
+- **Impact**: LCP improvement
+- **Estimated Time**: 1 hour
+- **Files**: `apps/www/app/[locale]/layout.tsx`
+
+#### Task 3.2: Optimize TTFB
 - **Status**: 📝 Planned
 - **Priority**: High
 - **Impact**: Performance 84→90+
 - **Estimated Time**: 4 hours
 - **Files**: Content pages, Convex queries
 
-#### Task 2.2: Reduce DOM Size
+#### Task 3.3: Reduce DOM Size
 - **Status**: 📝 Planned
 - **Priority**: High
 - **Impact**: Mobile performance
 - **Estimated Time**: 6 hours
 - **Files**: Content renderer, math components
 
-#### Task 2.3: Preload Critical Resources
-- **Status**: 📝 Planned
-- **Priority**: Medium
-- **Impact**: LCP improvement
-- **Estimated Time**: 1 hour
-- **Files**: Layout
+---
 
-### Phase 3: SEO (Week 3)
-
-#### Task 3.1: Article Structured Data
-- **Status**: 📝 Planned
-- **Priority**: High
-- **Impact**: Rich snippets
-- **Estimated Time**: 3 hours
-
-#### Task 3.2: Author Information
-- **Status**: 📝 Planned
-- **Priority**: High
-- **Impact**: E-E-A-T signals
-- **Estimated Time**: 2 hours
-
-#### Task 3.3: About Page
-- **Status**: 📝 Planned
-- **Priority**: Medium
-- **Impact**: Trust signals
-- **Estimated Time**: 3 hours
-
-### Phase 4: Accessibility (Week 4)
+### Phase 4: Accessibility Improvements (Week 4)
 
 #### Task 4.1: Skip Navigation
 - **Status**: 📝 Planned
@@ -83,7 +92,9 @@
 - **Impact**: Keyboard navigation
 - **Estimated Time**: 1 hour
 
-### Phase 5: Polish (Week 5)
+---
+
+### Phase 5: Content & Polish (Week 5)
 
 #### Task 5.1: Publication Dates
 - **Status**: 📝 Planned
@@ -107,7 +118,7 @@
 
 ## Completed Tasks
 
-[2026-01-27 21:18] Task 1.1 completed - Enable User Zoom
+### [2026-01-27 21:18] Task 1.1 completed - Enable User Zoom
 
 Key decisions:
 - Removed userScalable: false to comply with WCAG 2.1
@@ -126,7 +137,43 @@ Verification:
 Blockers/notes:
 - None - straightforward change
 - All checks passed successfully
-- Ready for next task
+
+---
+
+### [2026-01-27 22:00] Task 1.2 completed - Add Security Headers
+
+Key decisions:
+- Implemented CSP with strict defaults but allowed necessary exceptions
+- Added all 6 recommended security headers
+- Used 'unsafe-inline' and 'unsafe-eval' for Next.js compatibility
+- Added HSTS with preload directive for future submission
+- Centralized in @repo/next-config for all apps
+
+Files changed:
+- packages/next-config/index.ts (added headers() function)
+- apps/www/next.config.ts (simplified to use shared config)
+- apps/mcp/next.config.ts (fixed to use shared config)
+- apps/api/next.config.ts (already using shared config)
+
+Security headers added:
+- Content-Security-Policy
+- X-Frame-Options: DENY
+- X-Content-Type-Options: nosniff
+- Referrer-Policy: strict-origin-when-cross-origin
+- Strict-Transport-Security (HSTS)
+- Permissions-Policy
+
+Verification:
+- pnpm lint: Passed
+- All apps typecheck successfully
+- All tests passing (www: 472, api: 15)
+- Login works (Google OAuth)
+- Convex works (WebSocket connections)
+- No CSP violations in console
+
+Blockers/notes:
+- None
+- Ready for Phase 2 (SEO)
 
 ---
 
@@ -145,3 +192,4 @@ Blockers/notes:
 - Use axe DevTools for accessibility testing
 - Use Google Rich Results Test for structured data
 - Monitor Core Web Vitals in Search Console after deployment
+- **SEO Phase prioritized** to improve search visibility first
