@@ -26,6 +26,7 @@ export function ExerciseStats() {
 
   return (
     <div
+      aria-hidden={!showStats}
       className={cn(
         "grid transition-[grid-template-rows,opacity] ease-out",
         showStats ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
