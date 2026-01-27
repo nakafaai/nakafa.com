@@ -23,22 +23,14 @@ This plan addresses the critical issues identified in the website audit for naka
 
 ## Phase 1: Critical Fixes (Week 1)
 
-### Task 1.1: Enable User Zoom (Accessibility)
+### Task 1.1: Enable User Zoom (Accessibility) ✅ COMPLETED
 **Impact**: Critical - WCAG violation blocking low-vision users
 **Effort**: 5 minutes
 **File**: `apps/www/app/[locale]/layout.tsx`
 
-**Current Issue**:
-```typescript
-userScalable: false,  // Line 139 - BLOCKS zoom!
-```
-
-**Fix**: Remove `userScalable: false` and `maximumScale: 5` to allow natural zooming
-
-**Verification**:
-- [ ] Can zoom to 200%+ on mobile
-- [ ] No console warnings about viewport
-- [ ] Layout remains functional at all zoom levels
+**Status**: ✅ Completed on 2026-01-27
+- Removed `userScalable: false`, `minimumScale: 1`, `maximumScale: 5`
+- All tests passing
 
 ---
 
@@ -58,30 +50,6 @@ userScalable: false,  // Line 139 - BLOCKS zoom!
 - [ ] All security headers present in response
 - [ ] CSP doesn't break existing functionality
 - [ ] HSTS header with 1 year max-age
-
----
-
-### Task 1.3: Implement Cookie Consent Banner
-**Impact**: High - Legal compliance (GDPR)
-**Effort**: 4 hours
-**Files**: 
-- New: `apps/www/components/legal/cookie-consent.tsx`
-- New: `apps/www/hooks/use-cookie-consent.ts`
-- Modify: `apps/www/app/[locale]/layout.tsx`
-
-**Features**:
-- Granular consent (necessary, analytics, marketing)
-- Persist consent in cookie
-- Respect Do Not Track
-- Accessible (keyboard navigation, screen readers)
-- Mobile-friendly
-
-**Verification**:
-- [ ] Banner appears on first visit
-- [ ] Can accept/reject cookies
-- [ ] Preferences persist across sessions
-- [ ] Analytics only loads after consent
-- [ ] Passes axe accessibility audit
 
 ---
 
@@ -348,7 +316,8 @@ userScalable: false,  // Line 139 - BLOCKS zoom!
 ### Week 1: Critical
 1. ✅ Task 1.1: Enable User Zoom (5 min)
 2. Task 1.2: Add Security Headers (2 hrs)
-3. Task 1.3: Cookie Consent Banner (4 hrs)
+
+**Note**: Cookie consent banner (Task 1.3) removed from plan - not needed for current phase.
 
 ### Week 2: Performance
 4. Task 2.1: Optimize TTFB (4 hrs)
@@ -379,7 +348,6 @@ After all tasks complete:
 - [ ] Accessibility score > 90/100
 - [ ] Performance score > 90/100
 - [ ] Security score > 90/100
-- [ ] Legal Compliance score > 80/100
 - [ ] All 474 audit failures resolved
 - [ ] Lighthouse Performance > 90
 - [ ] Lighthouse Accessibility > 95

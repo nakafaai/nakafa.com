@@ -6,11 +6,11 @@
 
 ### Phase 1: Critical Fixes (Week 1)
 
-#### Task 1.1: Enable User Zoom (Accessibility)
-- **Status**: 📝 Planned
+#### Task 1.1: Enable User Zoom (Accessibility) ✅ COMPLETED
+- **Status**: ✅ COMPLETED
 - **Priority**: Critical
 - **Impact**: WCAG compliance
-- **Estimated Time**: 5 minutes
+- **Completed**: 2026-01-27
 - **Files**: `apps/www/app/[locale]/layout.tsx`
 
 #### Task 1.2: Add Security Headers
@@ -19,13 +19,6 @@
 - **Impact**: Security score 73→90+
 - **Estimated Time**: 2 hours
 - **Files**: `apps/www/next.config.ts`
-
-#### Task 1.3: Cookie Consent Banner
-- **Status**: 📝 Planned
-- **Priority**: High
-- **Impact**: Legal compliance 44→80+
-- **Estimated Time**: 4 hours
-- **Files**: New components + layout
 
 ### Phase 2: Performance (Week 2)
 
