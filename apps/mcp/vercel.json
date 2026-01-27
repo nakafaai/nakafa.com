@@ -3,7 +3,8 @@
   "git": {
     "deploymentEnabled": {
       "changeset-release/main": false,
-      "preview": false
+      "preview": false,
+      "audit-website": true
     }
   }
 }

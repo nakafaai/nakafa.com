@@ -16,10 +16,10 @@ This plan addresses the critical issues identified in the website audit for naka
 
 **Top Priorities:**
 1. **Critical Accessibility** - Zoom disabled (blocking users)
-2. **Performance** - Slow TTFB, excessive DOM size
-3. **Legal** - Missing cookie consent
-4. **Security** - Missing security headers
-5. **SEO** - Missing structured data for articles
+2. **Security** - Missing security headers
+3. **SEO** - Missing structured data for articles
+4. **Performance** - Slow TTFB, excessive DOM size
+5. **E-E-A-T** - Missing author information
 
 ## Phase 1: Critical Fixes (Week 1)
 
@@ -34,28 +34,112 @@ This plan addresses the critical issues identified in the website audit for naka
 
 ---
 
-### Task 1.2: Add Security Headers
+### Task 1.2: Add Security Headers ✅ COMPLETED
 **Impact**: High - Security hardening, SEO boost
 **Effort**: 2 hours
 **File**: `apps/www/next.config.ts`
 
-**Missing Headers**:
-- Content-Security-Policy
-- X-Frame-Options
-- X-Content-Type-Options
-- Referrer-Policy
-- Strict-Transport-Security (HSTS)
+**Status**: ✅ Completed on 2026-01-27
+- Implemented CSP with all required directives
+- Added X-Frame-Options, X-Content-Type-Options, Referrer-Policy, HSTS
+- All tests passing, no CSP violations
 
-**Verification**:
-- [ ] All security headers present in response
-- [ ] CSP doesn't break existing functionality
-- [ ] HSTS header with 1 year max-age
+**Security Headers Added:**
+- Content-Security-Policy (CSP)
+- X-Frame-Options: DENY
+- X-Content-Type-Options: nosniff
+- Referrer-Policy: strict-origin-when-cross-origin
+- Strict-Transport-Security (HSTS)
+- Permissions-Policy
 
 ---
 
-## Phase 2: Performance Optimization (Week 2)
+## Phase 2: SEO & Structured Data (Week 2) ⏳ CURRENT
 
-### Task 2.1: Optimize Server Response Time (TTFB)
+### Task 2.1: Add Article Structured Data
+**Impact**: High - Rich snippets, better indexing
+**Effort**: 3 hours
+**Files**:
+- New: `packages/seo/src/json-ld/article.tsx`
+- Modify: `apps/www/app/[locale]/(study)/(main)/(contents)/[...slug]/page.tsx`
+
+**Schema Types**:
+- Article (for educational content)
+- EducationalOccupationalCredential (for courses)
+- BreadcrumbList (for navigation)
+- Author (for E-E-A-T)
+
+**Verification**:
+- [ ] Rich Results Test passes
+- [ ] Schema.org validator shows no errors
+- [ ] Google Search Console shows enhancements
+
+---
+
+### Task 2.2: Add Author Information to Content Pages
+**Impact**: High - E-E-A-T signals
+**Effort**: 2 hours
+**Files**:
+- Modify: `apps/www/app/[locale]/(study)/(main)/(contents)/[...slug]/page.tsx`
+- Modify: Content metadata types
+
+**Requirements**:
+- Display author name and bio
+- Link to author profile
+- Show publication and update dates
+- Add author structured data
+
+**Verification**:
+- [ ] Author info visible on all content pages
+- [ ] Author schema validates
+- [ ] Dates are accurate and formatted correctly
+
+---
+
+### Task 2.3: Create About Page with Team Information
+**Impact**: Medium - E-E-A-T, trust signals
+**Effort**: 3 hours
+**Files**:
+- New: `apps/www/app/[locale]/(study)/(main)/about/page.tsx`
+- New: `apps/www/components/about/team-section.tsx`
+
+**Content**:
+- Company mission and values
+- Team members with photos and bios
+- Contact information
+- Credentials and expertise
+
+**Verification**:
+- [ ] Page linked in footer
+- [ ] Team schema validates
+- [ ] Mobile-responsive layout
+
+---
+
+## Phase 3: Performance Optimization (Week 3)
+
+### Task 3.1: Preload Critical Resources
+**Impact**: Medium - LCP improvement
+**Effort**: 1 hour
+**File**: `apps/www/app/[locale]/layout.tsx`
+
+**Issues**:
+- Logo.svg and stars.png not preloaded
+- LCP images lack `fetchpriority="high"`
+
+**Fix**:
+1. Add `<link rel="preload">` for logo.svg
+2. Add `fetchpriority="high"` to hero images
+3. Remove `loading="lazy"` from above-fold images
+
+**Verification**:
+- [ ] LCP < 2.5s on mobile
+- [ ] No render-blocking warnings in Lighthouse
+- [ ] Logo loads before first paint
+
+---
+
+### Task 3.2: Optimize Server Response Time (TTFB)
 **Impact**: High - Core Web Vitals, user experience
 **Effort**: 4 hours
 **Files**:
@@ -80,7 +164,7 @@ This plan addresses the critical issues identified in the website audit for naka
 
 ---
 
-### Task 2.2: Reduce DOM Size
+### Task 3.3: Reduce DOM Size
 **Impact**: High - Mobile performance, rendering speed
 **Effort**: 6 hours
 **Files**:
@@ -103,89 +187,6 @@ This plan addresses the critical issues identified in the website audit for naka
 - [ ] DOM depth < 32 levels
 - [ ] Mobile scrolling remains smooth
 - [ ] All content still accessible
-
----
-
-### Task 2.3: Preload Critical Resources
-**Impact**: Medium - LCP improvement
-**Effort**: 1 hour
-**File**: `apps/www/app/[locale]/layout.tsx`
-
-**Issues**:
-- Logo.svg and stars.png not preloaded
-- LCP images lack `fetchpriority="high"`
-
-**Fix**:
-1. Add `<link rel="preload">` for logo.svg
-2. Add `fetchpriority="high"` to hero images
-3. Remove `loading="lazy"` from above-fold images
-
-**Verification**:
-- [ ] LCP < 2.5s on mobile
-- [ ] No render-blocking warnings in Lighthouse
-- [ ] Logo loads before first paint
-
----
-
-## Phase 3: SEO & Structured Data (Week 3)
-
-### Task 3.1: Add Article Structured Data
-**Impact**: High - Rich snippets, better indexing
-**Effort**: 3 hours
-**Files**:
-- New: `packages/seo/src/json-ld/article.tsx`
-- Modify: `apps/www/app/[locale]/(study)/(main)/(contents)/[...slug]/page.tsx`
-
-**Schema Types**:
-- Article (for educational content)
-- EducationalOccupationalCredential (for courses)
-- BreadcrumbList (for navigation)
-- Author (for E-E-A-T)
-
-**Verification**:
-- [ ] Rich Results Test passes
-- [ ] Schema.org validator shows no errors
-- [ ] Google Search Console shows enhancements
-
----
-
-### Task 3.2: Add Author Information to Content Pages
-**Impact**: High - E-E-A-T signals
-**Effort**: 2 hours
-**Files**:
-- Modify: `apps/www/app/[locale]/(study)/(main)/(contents)/[...slug]/page.tsx`
-- Modify: Content metadata types
-
-**Requirements**:
-- Display author name and bio
-- Link to author profile
-- Show publication and update dates
-- Add author structured data
-
-**Verification**:
-- [ ] Author info visible on all content pages
-- [ ] Author schema validates
-- [ ] Dates are accurate and formatted correctly
-
----
-
-### Task 3.3: Create About Page with Team Information
-**Impact**: Medium - E-E-A-T, trust signals
-**Effort**: 3 hours
-**Files**:
-- New: `apps/www/app/[locale]/(study)/(main)/about/page.tsx`
-- New: `apps/www/components/about/team-section.tsx`
-
-**Content**:
-- Company mission and values
-- Team members with photos and bios
-- Contact information
-- Credentials and expertise
-
-**Verification**:
-- [ ] Page linked in footer
-- [ ] Team schema validates
-- [ ] Mobile-responsive layout
 
 ---
 
@@ -313,31 +314,29 @@ This plan addresses the critical issues identified in the website audit for naka
 
 ## Implementation Order
 
-### Week 1: Critical
+### Week 1: Critical ✅ COMPLETED
 1. ✅ Task 1.1: Enable User Zoom (5 min)
-2. Task 1.2: Add Security Headers (2 hrs)
+2. ✅ Task 1.2: Add Security Headers (2 hrs)
 
-**Note**: Cookie consent banner (Task 1.3) removed from plan - not needed for current phase.
+### Week 2: SEO ⏳ CURRENT
+3. Task 2.1: Article Structured Data (3 hrs)
+4. Task 2.2: Author Information (2 hrs)
+5. Task 2.3: About Page (3 hrs)
 
-### Week 2: Performance
-4. Task 2.1: Optimize TTFB (4 hrs)
-5. Task 2.2: Reduce DOM Size (6 hrs)
-6. Task 2.3: Preload Critical Resources (1 hr)
-
-### Week 3: SEO
-7. Task 3.1: Article Structured Data (3 hrs)
-8. Task 3.2: Author Information (2 hrs)
-9. Task 3.3: About Page (3 hrs)
+### Week 3: Performance
+6. Task 3.1: Preload Critical Resources (1 hr)
+7. Task 3.2: Optimize TTFB (4 hrs)
+8. Task 3.3: Reduce DOM Size (6 hrs)
 
 ### Week 4: Accessibility
-10. Task 4.1: Skip Navigation (1 hr)
-11. Task 4.2: Form Labels & ARIA (2 hrs)
-12. Task 4.3: Focus Indicators (1 hr)
+9. Task 4.1: Skip Navigation (1 hr)
+10. Task 4.2: Form Labels & ARIA (2 hrs)
+11. Task 4.3: Focus Indicators (1 hr)
 
 ### Week 5: Polish
-13. Task 5.1: Publication Dates (2 hrs)
-14. Task 5.2: Meta Descriptions (2 hrs)
-15. Task 5.3: Breadcrumb Navigation (3 hrs)
+12. Task 5.1: Publication Dates (2 hrs)
+13. Task 5.2: Meta Descriptions (2 hrs)
+14. Task 5.3: Breadcrumb Navigation (3 hrs)
 
 ---
 
@@ -348,6 +347,8 @@ After all tasks complete:
 - [ ] Accessibility score > 90/100
 - [ ] Performance score > 90/100
 - [ ] Security score > 90/100
+- [ ] Structured Data score > 80/100
+- [ ] E-E-A-T score > 80/100
 - [ ] All 474 audit failures resolved
 - [ ] Lighthouse Performance > 90
 - [ ] Lighthouse Accessibility > 95
@@ -363,3 +364,4 @@ After all tasks complete:
 - Use axe DevTools for accessibility testing
 - Use Google Rich Results Test for structured data
 - Monitor Core Web Vitals in Search Console
+- **SEO Phase prioritized** to improve search visibility first
