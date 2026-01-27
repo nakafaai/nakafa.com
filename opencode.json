@@ -10,7 +10,7 @@
     },
     "ultracite": {
       "type": "remote",
-      "url": "https://www.ultracite.ai/api/mcp/mcp"
+      "url": "https://docs.ultracite.ai/mcp"
     }
   }
 }
