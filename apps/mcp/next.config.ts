@@ -4,7 +4,7 @@ import { env } from "@/env";
 
 let nextConfig: NextConfig = {
   ...config,
-  serverExternalPackages: ["express"],
+  serverExternalPackages: [...(config.serverExternalPackages ?? []), "express"],
 };
 
 if (env.ANALYZE === "true") {
