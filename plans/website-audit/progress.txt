@@ -168,6 +168,37 @@ Create About page with company info and team information.
 
 ---
 
+## Critical Next Steps
+
+### 1. Deploy to Production ⏳ HIGH PRIORITY
+**Why:** Localhost audit results are misleading
+- Security score 57/100 (fails HTTPS check on localhost)
+- Structured Data validation unclear on localhost
+- Need real-world testing
+
+**Action:** Merge audit-website branch to preview, then deploy to production
+
+### 2. Fix Performance Issues 🔴
+**Current:** 74/100 (was 89/100 on production)
+
+**Issues:**
+- LCP images not preloaded (logo.svg, stars.png)
+- 2 images missing width/height attributes
+
+**Action:** Complete Task 3.3 (Preload Critical Resources)
+
+### 3. Debug Structured Data 🔴
+**Current:** 46/100 (no change)
+
+**Status:** 
+- ✅ Implementation is correct (verified)
+- ❌ Audit tool not providing specific errors
+- ❌ Need to test with Google Rich Results Test
+
+**Action:** Deploy first, then validate with Google's tools
+
+---
+
 ## Blockers
 
 *None currently*
