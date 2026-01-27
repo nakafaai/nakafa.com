@@ -19,7 +19,7 @@
     "@react-email/preview-server": "^5.2.5",
     "@repo/typescript-config": "workspace:*",
     "@types/node": "25.0.10",
-    "@types/react": "19.2.9",
+    "@types/react": "19.2.10",
     "typescript": "^5.9.3"
   }
 }
