@@ -1,0 +1,154 @@
+# Website Audit Fix Progress
+
+## Current Status
+
+**Overall Score**: 42/100 (Grade F) → Target: >80/100
+
+### Phase 1: Critical Fixes (Week 1)
+
+#### Task 1.1: Enable User Zoom (Accessibility)
+- **Status**: 📝 Planned
+- **Priority**: Critical
+- **Impact**: WCAG compliance
+- **Estimated Time**: 5 minutes
+- **Files**: `apps/www/app/[locale]/layout.tsx`
+
+#### Task 1.2: Add Security Headers
+- **Status**: 📝 Planned
+- **Priority**: High
+- **Impact**: Security score 73→90+
+- **Estimated Time**: 2 hours
+- **Files**: `apps/www/next.config.ts`
+
+#### Task 1.3: Cookie Consent Banner
+- **Status**: 📝 Planned
+- **Priority**: High
+- **Impact**: Legal compliance 44→80+
+- **Estimated Time**: 4 hours
+- **Files**: New components + layout
+
+### Phase 2: Performance (Week 2)
+
+#### Task 2.1: Optimize TTFB
+- **Status**: 📝 Planned
+- **Priority**: High
+- **Impact**: Performance 84→90+
+- **Estimated Time**: 4 hours
+- **Files**: Content pages, Convex queries
+
+#### Task 2.2: Reduce DOM Size
+- **Status**: 📝 Planned
+- **Priority**: High
+- **Impact**: Mobile performance
+- **Estimated Time**: 6 hours
+- **Files**: Content renderer, math components
+
+#### Task 2.3: Preload Critical Resources
+- **Status**: 📝 Planned
+- **Priority**: Medium
+- **Impact**: LCP improvement
+- **Estimated Time**: 1 hour
+- **Files**: Layout
+
+### Phase 3: SEO (Week 3)
+
+#### Task 3.1: Article Structured Data
+- **Status**: 📝 Planned
+- **Priority**: High
+- **Impact**: Rich snippets
+- **Estimated Time**: 3 hours
+
+#### Task 3.2: Author Information
+- **Status**: 📝 Planned
+- **Priority**: High
+- **Impact**: E-E-A-T signals
+- **Estimated Time**: 2 hours
+
+#### Task 3.3: About Page
+- **Status**: 📝 Planned
+- **Priority**: Medium
+- **Impact**: Trust signals
+- **Estimated Time**: 3 hours
+
+### Phase 4: Accessibility (Week 4)
+
+#### Task 4.1: Skip Navigation
+- **Status**: 📝 Planned
+- **Priority**: High
+- **Impact**: Keyboard accessibility
+- **Estimated Time**: 1 hour
+
+#### Task 4.2: Form Labels
+- **Status**: 📝 Planned
+- **Priority**: High
+- **Impact**: Screen reader support
+- **Estimated Time**: 2 hours
+
+#### Task 4.3: Focus Indicators
+- **Status**: 📝 Planned
+- **Priority**: Medium
+- **Impact**: Keyboard navigation
+- **Estimated Time**: 1 hour
+
+### Phase 5: Polish (Week 5)
+
+#### Task 5.1: Publication Dates
+- **Status**: 📝 Planned
+- **Priority**: Medium
+- **Impact**: Content freshness
+- **Estimated Time**: 2 hours
+
+#### Task 5.2: Meta Descriptions
+- **Status**: 📝 Planned
+- **Priority**: Medium
+- **Impact**: CTR improvement
+- **Estimated Time**: 2 hours
+
+#### Task 5.3: Breadcrumb Navigation
+- **Status**: 📝 Planned
+- **Priority**: Low
+- **Impact**: UX + SEO
+- **Estimated Time**: 3 hours
+
+---
+
+## Completed Tasks
+
+[2026-01-27 21:18] Task 1.1 completed - Enable User Zoom
+
+Key decisions:
+- Removed userScalable: false to comply with WCAG 2.1
+- Also removed minimumScale: 1 and maximumScale: 5 as they're unnecessary
+- Kept all other viewport settings (themeColor, viewportFit, etc.)
+- Not setting userScalable allows default browser zoom behavior (always enabled)
+
+Files changed:
+- apps/www/app/[locale]/layout.tsx (lines 130-139)
+
+Verification:
+- pnpm lint: Passed (1470 files checked, no issues)
+- pnpm --filter www exec tsc --noEmit: Passed (no errors)
+- pnpm --filter www test: Passed (472 tests passed)
+
+Blockers/notes:
+- None - straightforward change
+- All checks passed successfully
+- Ready for next task
+
+---
+
+## Blockers
+
+*None currently*
+
+---
+
+## Notes
+
+- All tasks follow the TEMPLATE.md format
+- Each task includes verification steps
+- Run `pnpm lint && pnpm typecheck && pnpm test` after each task
+- Test on mobile devices for accessibility and performance
+- Use axe DevTools for accessibility testing
+- Use Google Rich Results Test for structured data
+- Monitor Core Web Vitals in Search Console after deployment
