@@ -353,6 +353,11 @@ Total content synced: 1,540 items
 2. Individual commands use full `syncAuthors()` (correctness over speed)
 3. No changes to `syncAll()` - already had author pre-sync at line 1541
 4. Clean logs with "Phase 0: Pre-syncing authors" indicator
+5. Added warning log in `syncContentAuthorsWithCache()` for missing authors (defensive programming)
+   - Collects all missing author names before logging
+   - Provides clear warning with content type and ID
+   - Suggests solution: "Ensure authors are pre-synced via bulkSyncAuthors"
+   - Zero performance impact (only runs when authors are missing)
 
 ---
 

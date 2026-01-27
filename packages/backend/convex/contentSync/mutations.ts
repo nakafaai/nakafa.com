@@ -125,6 +125,8 @@ async function syncContentAuthorsWithCache(
   }
 
   let linksCreated = 0;
+  const missingAuthors: string[] = [];
+
   for (let i = 0; i < authors.length; i++) {
     const authorName = authors[i].name;
     const authorId = authorCache.get(authorName);
@@ -137,7 +139,17 @@ async function syncContentAuthorsWithCache(
         order: i,
       });
       linksCreated++;
+    } else {
+      missingAuthors.push(authorName);
     }
+  }
+
+  // Log warning for missing authors to aid debugging
+  if (missingAuthors.length > 0) {
+    console.warn(
+      `[contentSync] Warning: ${missingAuthors.length} author(s) not found in cache for ${contentType} ${contentId}: ${missingAuthors.join(", ")}. ` +
+        "Ensure authors are pre-synced via bulkSyncAuthors before content sync."
+    );
   }
 
   return linksCreated;
