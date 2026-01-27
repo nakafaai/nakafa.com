@@ -49,7 +49,6 @@ export const securityHeaders = [
       "usb=()",
       "magnetometer=()",
       "gyroscope=()",
-      "speaker=()",
       "sync-xhr=()",
     ].join(", "),
   },
