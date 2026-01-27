@@ -12,11 +12,11 @@ export const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://unpkg.com https://eu-assets.i.posthog.com https://va.vercel-scripts.com https://accounts.google.com",
+      "script-src 'self' 'unsafe-eval' 'unsafe-inline' blob: https://unpkg.com https://eu-assets.i.posthog.com https://va.vercel-scripts.com https://accounts.google.com",
       "style-src 'self' 'unsafe-inline' https://accounts.google.com",
       "img-src 'self' blob: data: https: https://*.googleusercontent.com",
       "font-src 'self'",
-      "connect-src 'self' https://*.convex.cloud https://*.convex.site https://*.vercel-analytics.com https://*.posthog.com https://eu.i.posthog.com https://eu-assets.i.posthog.com https://accounts.google.com",
+      "connect-src 'self' wss://*.convex.cloud https://*.convex.cloud https://*.convex.site https://*.vercel-analytics.com https://*.posthog.com https://eu.i.posthog.com https://eu-assets.i.posthog.com https://accounts.google.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self' https://accounts.google.com",
