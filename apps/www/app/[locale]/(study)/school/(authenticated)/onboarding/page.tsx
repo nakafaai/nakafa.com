@@ -44,7 +44,6 @@ export default function Page({ params }: Props) {
               fetchPriority="high"
               height={IMAGE_HEIGHT}
               loading="eager"
-              preload
               src={SchoolCreateImage}
               title="Nakafa School Create"
               width={IMAGE_WIDTH}
@@ -71,7 +70,6 @@ export default function Page({ params }: Props) {
               fetchPriority="high"
               height={IMAGE_HEIGHT}
               loading="eager"
-              preload
               src={SchoolJoinImage}
               title="Nakafa School Join"
               width={IMAGE_WIDTH}

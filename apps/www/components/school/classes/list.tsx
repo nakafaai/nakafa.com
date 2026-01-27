@@ -113,7 +113,6 @@ function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
             fill
             loading="eager"
             onError={() => setImageError(true)}
-            preload
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             src={imageSrc}
             title={cls.name}
