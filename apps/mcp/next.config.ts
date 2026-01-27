@@ -5,10 +5,6 @@ import { env } from "@/env";
 let nextConfig: NextConfig = {
   ...config,
   serverExternalPackages: ["express"],
-  experimental: {
-    turbopackFileSystemCacheForBuild: true,
-    turbopackFileSystemCacheForDev: true,
-  },
 };
 
 if (env.ANALYZE === "true") {
