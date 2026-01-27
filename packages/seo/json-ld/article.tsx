@@ -1,14 +1,7 @@
 import { getAppUrl } from "@repo/design-system/lib/utils";
 import { JsonLd } from "@repo/seo/json-ld";
 import { ORGANIZATION } from "@repo/seo/json-ld/constants";
-import {
-  type Article,
-  ArticleSchema,
-  type ImageObject,
-  ImageObjectSchema,
-  type Person,
-  PersonSchema,
-} from "@repo/seo/json-ld/schemas";
+import type { ImageObject, Person } from "schema-dts";
 
 interface ArticleJsonLdProps {
   headline: string;
@@ -54,40 +47,33 @@ export function ArticleJsonLd({
   let imageObject: ImageObject | undefined;
   if (image) {
     const imageUrl = image.startsWith("http") ? image : `${appUrl}${image}`;
-    imageObject = ImageObjectSchema.parse({
+    imageObject = {
       "@type": "ImageObject",
       url: imageUrl,
-    });
+    };
   }
 
   // Ensure authors are properly formatted
   const authors = Array.isArray(author) ? author : [author];
-  const formattedAuthors = authors.map((a) =>
-    PersonSchema.parse({
-      "@type": "Person",
-      name: a.name,
-      url: a.url,
-    })
-  );
 
-  // Build and validate Article structured data
-  const article: Article = ArticleSchema.parse({
-    "@context": "https://schema.org",
-    "@type": "Article",
+  // Build Article structured data
+  const article = {
+    "@context": "https://schema.org" as const,
+    "@type": "Article" as const,
     name: headline,
     headline,
     url: absoluteUrl,
     mainEntityOfPage: {
-      "@type": "WebPage",
+      "@type": "WebPage" as const,
       "@id": absoluteUrl,
     },
     datePublished,
     dateModified: dateModified || datePublished,
-    author: formattedAuthors,
+    author: authors,
     image: imageObject ? [imageObject] : undefined,
     description,
     publisher: ORGANIZATION,
-  });
+  };
 
   return <JsonLd jsonLd={article} />;
 }
