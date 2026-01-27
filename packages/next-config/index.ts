@@ -20,7 +20,7 @@ export const securityHeaders = [
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self' https://accounts.google.com",
-      "manifest-src 'self'",
+      "manifest-src 'self' https://nakafa.com",
     ].join("; "),
   },
   {
