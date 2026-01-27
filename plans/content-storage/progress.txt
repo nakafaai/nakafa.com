@@ -316,5 +316,56 @@ Total content synced: 1,540 items
 
 ---
 
-**Last Updated**: January 26, 2026
-**Status**: Phase 1.11 Complete - Question count bug fixed
+---
+
+### Phase 1.12: Critical Bug Fix - Author Pre-Sync (COMPLETE)
+
+**Bug Identified**: Devin AI Review (PR #43)
+- **Issue**: `sync:incremental` and individual sync commands (`sync:articles`, `sync:subjects`, `sync:exercises`) did NOT pre-sync authors
+- **Impact**: Silent data loss when new authors added to existing content
+- **Root cause**: `buildAuthorCache()` only reads EXISTING authors; new authors skipped silently
+
+**Fix Implementation**:
+1. Added `collectAuthorNamesFromFiles()` helper for incremental sync efficiency
+2. Added author pre-sync phase to `syncIncremental()` - only syncs authors from changed files
+3. Added `syncAuthors()` call to all individual sync commands:
+   - `sync:articles`
+   - `sync:subjects` / `sync:subject-topics` / `sync:subject-sections`
+   - `sync:exercises` / `sync:exercise-sets` / `sync:exercise-questions`
+
+**Files modified:**
+- packages/backend/scripts/sync-content.ts
+  - Added `collectAuthorNamesFromFiles()` function (lines 747-764)
+  - Added Phase 0 author pre-sync to `syncIncremental()` (lines 2488-2504)
+  - Added `syncAuthors()` calls to individual command handlers (lines 2867-2890)
+- plans/content-storage/tasks/1.1-fix-author-pre-sync.md (new plan document)
+
+**Verification:**
+- pnpm lint: PASSED (1470 files)
+- TypeScript check: PASSED
+- pnpm test: PASSED (487 tests)
+- sync:validate: PASSED (1542 valid, 0 invalid)
+- sync:articles: Shows author pre-sync in logs
+- sync:incremental: Works correctly with author phase
+
+**Key Design Decisions:**
+1. Incremental sync only collects authors from CHANGED files (performance)
+2. Individual commands use full `syncAuthors()` (correctness over speed)
+3. No changes to `syncAll()` - already had author pre-sync at line 1541
+4. Clean logs with "Phase 0: Pre-syncing authors" indicator
+
+---
+
+### Phase 2: API Layer (NEXT)
+- Create public query functions for content retrieval
+- Add authentication/rate limiting
+- Implement API monetization tiers
+
+### Phase 3: Embedding Generation
+- Add vector embeddings for semantic search
+- Index content for AI-powered search
+
+---
+
+**Last Updated**: January 27, 2026
+**Status**: Phase 1.12 Complete - Author pre-sync bug fixed

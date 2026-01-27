@@ -745,6 +745,27 @@ async function collectAllAuthorNames(options: SyncOptions): Promise<string[]> {
 }
 
 /**
+ * Collects author names from specific files (for incremental sync).
+ * Only reads metadata from the provided file paths.
+ */
+async function collectAuthorNamesFromFiles(
+  filePaths: string[]
+): Promise<string[]> {
+  const authorNames: string[] = [];
+
+  for (const file of filePaths) {
+    try {
+      const { metadata } = await readMdxFile(file);
+      authorNames.push(...metadata.authors.map((a) => a.name));
+    } catch {
+      // Skip files that fail to parse
+    }
+  }
+
+  return [...new Set(authorNames)];
+}
+
+/**
  * Pre-syncs authors before content sync to prevent write conflicts.
  * Must run before syncing articles, subjects, or exercises.
  */
@@ -2464,13 +2485,31 @@ async function syncIncremental(
 
   log(`Changed files: ${changedFiles.size}\n`);
 
-  const hasArticleChanges = [...changedFiles].some((f) =>
+  // Phase 0: Pre-sync authors from changed files to prevent data loss
+  const changedFilesArray = [...changedFiles];
+  const changedAuthorNames =
+    await collectAuthorNamesFromFiles(changedFilesArray);
+
+  if (changedAuthorNames.length > 0) {
+    log("Phase 0: Pre-syncing authors from changed files...");
+    const authorResult = await runConvexMutationGeneric(
+      config,
+      "contentSync/mutations:bulkSyncAuthors",
+      { authorNames: changedAuthorNames },
+      AuthorSyncResultSchema
+    );
+    log(
+      `  Authors: ${authorResult.created} new, ${authorResult.existing} existing\n`
+    );
+  }
+
+  const hasArticleChanges = changedFilesArray.some((f) =>
     f.includes("/articles/")
   );
-  const hasSubjectChanges = [...changedFiles].some((f) =>
+  const hasSubjectChanges = changedFilesArray.some((f) =>
     f.includes("/subject/")
   );
-  const hasExerciseChanges = [...changedFiles].some((f) =>
+  const hasExerciseChanges = changedFilesArray.some((f) =>
     f.includes("/exercises/")
   );
 
@@ -2826,25 +2865,32 @@ async function main() {
 
   switch (type) {
     case "articles":
+      await syncAuthors(config, options);
       await syncArticles(config, options);
       break;
     case "subjects":
+      await syncAuthors(config, options);
       await syncSubjectTopics(config, options);
       await syncSubjectSections(config, options);
       break;
     case "subject-topics":
+      await syncAuthors(config, options);
       await syncSubjectTopics(config, options);
       break;
     case "subject-sections":
+      await syncAuthors(config, options);
       await syncSubjectSections(config, options);
       break;
     case "exercise-sets":
+      await syncAuthors(config, options);
       await syncExerciseSets(config, options);
       break;
     case "exercise-questions":
+      await syncAuthors(config, options);
       await syncExerciseQuestions(config, options);
       break;
     case "exercises":
+      await syncAuthors(config, options);
       await syncExerciseSets(config, options);
       await syncExerciseQuestions(config, options);
       break;
