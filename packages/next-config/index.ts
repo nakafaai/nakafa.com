@@ -16,7 +16,7 @@ export const securityHeaders = [
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' blob: data: https:",
       "font-src 'self'",
-      "connect-src 'self' https://*.convex.cloud https://*.convex.site https://*.vercel-analytics.com",
+      "connect-src 'self' https://*.convex.cloud https://*.convex.site https://*.vercel-analytics.com https://*.posthog.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
