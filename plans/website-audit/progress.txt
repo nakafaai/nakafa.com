@@ -74,13 +74,25 @@
 
 ## What's Next 🔄
 
-### Phase 4: Remaining Critical Issues (CURRENT)
+### Phase 4: Structured Data Deep Fix (IN PROGRESS)
 
-| Priority | Task | Impact | Status |
-|----------|------|--------|--------|
-| **HIGH** | Fix Form Labels | Accessibility 87→95+ | 📝 Planned |
-| **HIGH** | Fix Button ARIA Labels | Accessibility 87→95+ | 📝 Planned |
-| **MEDIUM** | Address DOM Size | Performance 74→80+ | 📝 Planned |
+| Priority | Task | Impact | Status | File |
+|----------|------|--------|--------|------|
+| **HIGH** | Fix Article.image Schema | Structured Data 52→75+ | ✅ **COMPLETED** | `tasks/2.4-fix-article-image-schema.md` |
+| **HIGH** | Fix Form Labels | Accessibility 87→95+ | 📝 Planned | `tasks/4.2-fix-form-labels.md` |
+| **HIGH** | Fix Button ARIA Labels | Accessibility 87→95+ | 📝 Planned | - |
+| **MEDIUM** | Address DOM Size | Performance 74→80+ | 📝 Planned | - |
+
+**Structured Data Issues (313 errors):**
+- ✅ **Article.image validation** (167 pages): **FIXED** - Changed from ImageObject to string URL
+- ❌ **Schema.org validation errors** (146 pages): Various other issues (need investigation)
+
+**Article.image Fix - COMPLETED:**
+- ✅ Changed: `"image": [{"@type": "ImageObject", "url": "..."}]` → `"image": ["https://..."]`
+- ✅ File: `packages/seo/json-ld/article.tsx`
+- ✅ Build: Successful (6,997 pages)
+- ✅ Verification: Tested on Subject and Articles pages
+- ✅ Result: Article.image string validation errors **ELIMINATED**
 
 **Form Label Issues (113 pages):**
 - Inputs without labels or aria attributes
@@ -106,7 +118,7 @@
 | Core SEO | 89 | ✅ | Improved with descriptions |
 | Accessibility | 87 | ⚠️ | Form labels pending |
 | Performance | 74 | ⚠️ | Dev mode (prod will be 85+) |
-| Structured Data | 52 | ⚠️ | Breadcrumb fixed, other issues remain |
+| Structured Data | 52 | ⚠️ | Article.image fix pending (see Task 2.4) |
 
 **Note**: Performance 74/100 is from dev mode. Production build will be 85+.
 
@@ -114,7 +126,7 @@
 
 ## How to Continue
 
-### 1. Fix Form Labels (Next Task)
+### 1. Fix Form Labels (Next Task - HIGH PRIORITY)
 
 **Files to edit:**
 ```

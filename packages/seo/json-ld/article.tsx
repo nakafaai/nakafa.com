@@ -1,7 +1,7 @@
 import { getAppUrl } from "@repo/design-system/lib/utils";
 import { JsonLd } from "@repo/seo/json-ld";
 import { ORGANIZATION } from "@repo/seo/json-ld/constants";
-import type { ImageObject, Person } from "schema-dts";
+import type { Person } from "schema-dts";
 
 interface ArticleJsonLdProps {
   headline: string;
@@ -15,6 +15,9 @@ interface ArticleJsonLdProps {
 
 /**
  * ArticleJsonLd component generates Schema.org Article structured data
+ *
+ * Uses string URLs for images (not ImageObject) for better validator compatibility
+ * per Schema.org and Google Rich Results guidelines.
  *
  * @example
  * ```tsx
@@ -43,14 +46,11 @@ export function ArticleJsonLd({
   // Build absolute URL
   const absoluteUrl = url.startsWith("http") ? url : `${appUrl}${url}`;
 
-  // Build image object if image is provided
-  let imageObject: ImageObject | undefined;
+  // Build absolute image URL if provided
+  // Using string URL format for better Schema.org validator compatibility
+  let absoluteImageUrl: string | undefined;
   if (image) {
-    const imageUrl = image.startsWith("http") ? image : `${appUrl}${image}`;
-    imageObject = {
-      "@type": "ImageObject",
-      url: imageUrl,
-    };
+    absoluteImageUrl = image.startsWith("http") ? image : `${appUrl}${image}`;
   }
 
   // Ensure authors are properly formatted
@@ -70,7 +70,7 @@ export function ArticleJsonLd({
     datePublished,
     dateModified: dateModified || datePublished,
     author: authors,
-    image: imageObject ? [imageObject] : undefined,
+    image: absoluteImageUrl ? [absoluteImageUrl] : undefined,
     description,
     publisher: ORGANIZATION,
   };
