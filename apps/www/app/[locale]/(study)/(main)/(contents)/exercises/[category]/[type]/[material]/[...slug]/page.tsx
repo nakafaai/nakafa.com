@@ -233,7 +233,6 @@ async function PageContent({
           name: heading.label,
           item: `https://nakafa.com/${locale}${FilePath}${heading.href}`,
         }))}
-        locale={locale}
       />
       <LearningResourceJsonLd
         author={FOUNDER}
@@ -383,7 +382,6 @@ async function SingleExerciseContent({
             item: `https://nakafa.com/${locale}${exerciseFilePath}`,
           },
         ]}
-        locale={locale}
       />
       <LearningResourceJsonLd
         author={FOUNDER}

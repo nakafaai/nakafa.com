@@ -220,9 +220,6 @@ async function PageContent({
           name: heading.label,
           item: `https://nakafa.com/${locale}${FilePath}${heading.href}`,
         }))}
-        locale={locale}
-        // this will only work for the first heading, not for the nested headings
-        name={metadata.title}
       />
       <ArticleJsonLd
         author={metadata.authors.map((author: { name: string }) => ({

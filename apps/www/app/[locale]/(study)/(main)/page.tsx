@@ -80,7 +80,6 @@ function PageBreadcrumb({ locale }: { locale: Locale }) {
           item: `https://nakafa.com/${locale}/contributor`,
         },
       ]}
-      locale={locale}
     />
   );
 }

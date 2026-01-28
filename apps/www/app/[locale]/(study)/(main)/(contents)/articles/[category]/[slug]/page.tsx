@@ -165,9 +165,6 @@ async function PageContent({
           name: heading.label,
           item: `https://nakafa.com/${locale}${FilePath}${heading.href}`,
         }))}
-        description={metadata.description ?? ""}
-        locale={locale}
-        name={metadata.title}
       />
       <ArticleJsonLd
         author={metadata.authors.map((author: { name: string }) => ({

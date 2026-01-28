@@ -153,7 +153,6 @@ async function PageContent({
           name: mat.title,
           item: `https://nakafa.com/${locale}${mat.href}`,
         }))}
-        locale={locale}
       />
       <CollectionPageJsonLd
         description={t(type)}

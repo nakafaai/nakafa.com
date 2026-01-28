@@ -120,7 +120,6 @@ async function PageContent({
           name: t(subject.label),
           item: `https://nakafa.com/${locale}${subject.href}`,
         }))}
-        locale={locale}
       />
       <HeaderContent
         description={t("type-description")}

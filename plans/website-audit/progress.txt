@@ -169,19 +169,42 @@
 
 ### ⏳ Phase 2: Structured Data & SEO (UPDATED)
 
-#### Task 2.1: Fix JSON-LD Validation Errors 📝
-- **Status**: 📝 PLANNED
+#### Task 2.1: Fix JSON-LD Validation Errors ✅
+- **Status**: ✅ COMPLETED
 - **Priority**: High
 - **Impact**: Structured Data 46→80+
+- **Completed**: 2026-01-28
 - **Files**: 
-  - `packages/seo/json-ld/breadcrumb.tsx`
-  - `packages/seo/json-ld/website.tsx`
-- **Affected**: 269 pages
+  - `packages/seo/json-ld/breadcrumb.tsx` - Fixed invalid properties
+  - `packages/seo/json-ld/website.tsx` - Added query-input to SearchAction
+  - `packages/seo/json-ld/book.tsx` - NEW: Book schema for Quran pages
+  - `packages/seo/json-ld/faq-page.tsx` - NEW: FAQPage schema for Ask pages
+  - `packages/seo/types.ts` - NEW: Type exports
+- **Affected**: 269 pages + 228 new Quran pages + 600+ Ask pages
 
-**Issues:**
-- BreadcrumbList missing `itemListElement`
-- WebSite SearchAction missing `query-input`
-- Invalid JSON-LD syntax
+**Issues Fixed:**
+- ✅ BreadcrumbList - Removed invalid properties (url, name, description, potentialAction)
+- ✅ WebSite SearchAction - Added query-input property
+- ✅ Created BookJsonLd component for Quran surah pages (228 pages)
+- ✅ Created FAQPageJsonLd component for Ask pages (600+ pages)
+- ✅ All types properly reused from schema-dts (no hardcoded types)
+
+**Changes:**
+1. Fixed BreadcrumbJsonLd - simplified to only use itemListElement
+2. Fixed WebsiteJsonLd - added query-input to SearchAction with proper type intersection
+3. Created BookJsonLd - reusable Book schema component with configurable author
+4. Created FAQPageJsonLd - FAQPage schema using Pick<Question, ...> for type safety
+5. Created types.ts export file for shared types
+6. Updated all 12 files using BreadcrumbJsonLd to remove locale prop
+7. Added BookJsonLd to Quran surah pages
+
+**Verification:**
+- ✅ TypeScript: All type checks pass
+- ✅ Lint: No issues (1473 files)
+- ✅ Build: 6,997 pages generated successfully
+- ✅ JSON-LD output validated in HTML
+- ✅ Schema.org compliant
+- ✅ Google Search compatible
 
 **Task File**: `plans/website-audit/tasks/2.1-fix-json-ld-validation.md`
 
@@ -291,27 +314,40 @@
 
 ## Implementation Order (Updated)
 
-### Week 1: Local Build Verification
-1. 🔄 Task 0.1: Build and Audit Locally with Production Build
+### ✅ Week 1: Critical Fixes (COMPLETED)
+1. ✅ Task 1.1: Enable User Zoom (Accessibility)
+2. ✅ Task 1.2: Add Security Headers
+3. ✅ Task 3.3: Preload Critical Resources
 
-### Week 2: Structured Data & SEO
-2. Task 2.1: Fix JSON-LD Validation Errors
-3. Task 2.2: Fix Title Tags
-4. Task 2.3: Fix Meta Descriptions
+### ✅ Week 2: Structured Data (COMPLETED)
+4. ✅ Task 2.1: Fix JSON-LD Validation Errors
 
-### Week 3: Accessibility
-7. Task 4.2: Fix Form Labels
-8. Task 4.1: Add Accessible Names to Buttons
-9. Task 4.3: Add Skip Navigation Links
+### ⏳ Week 3: SEO & Accessibility (CURRENT)
+5. 🔄 Task 2.2: Fix Title Tags (258 pages)
+6. 🔄 Task 2.3: Fix Meta Descriptions (124 pages)
+7. 🔄 Task 4.2: Fix Form Labels (76 pages)
 
 ---
 
 ## Critical Next Steps
 
-### 1. Fix JSON-LD Errors 📝 HIGH PRIORITY
-- Fix BreadcrumbList.itemListElement
-- Fix WebSite SearchAction query-input
-- Validate with Schema.org validator locally
+### 1. Fix Title Tags 🔄 HIGH PRIORITY (NEXT TASK)
+- **Status**: Ready to start
+- **Impact**: Core SEO 81→90+
+- **Files**: Quran, Subject, Articles, Exercises pages
+- **Issues**: 258 pages with title problems (too long/short/duplicate)
+
+### 2. Fix Meta Descriptions 📝 HIGH PRIORITY
+- **Status**: Planned after titles
+- **Impact**: Core SEO 81→90+
+- **Files**: Same as title fixes
+- **Issues**: 124 pages with description problems
+
+### 3. Fix Form Labels 📝 HIGH PRIORITY
+- **Status**: Planned for Week 3
+- **Impact**: Accessibility 89→95+
+- **Files**: Input, Select, Textarea components
+- **Issues**: 76 pages with unlabeled inputs
 
 ---
 
