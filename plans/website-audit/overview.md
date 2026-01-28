@@ -133,10 +133,21 @@ const description = createSEODescription(
   "@type": "EducationalOrganization",
   "@id": "https://nakafa.com/#educational-organization",
   "name": "Nakafa: Free High-Quality Learning Platform",
-  "educationalCredentialAwarded": ["High School Diploma", "University Degree"],
-  "teaches": ["Mathematics", "Physics", "Computer Science", "AI"],
-  "hasCourse": [...],
-  // ... more educational-specific properties
+  "alternateName": "Nakafa",
+  "description": "...",
+  "logo": "https://nakafa.com/logo.svg",
+  "image": "https://nakafa.com/logo.svg",
+  "url": "https://nakafa.com",
+  "sameAs": [...],
+  "email": "contact@nakafa.com",
+  "foundingDate": "2021",
+  "founder": {
+    "@type": "Person",
+    "name": "Nabil Akbarazzima Fatih",
+    "url": "https://nakafa.com/en/contributor"
+  },
+  "areaServed": "Indonesia",
+  "knowsAbout": ["Education", "Mathematics", "Science", "AI", ...]
 }
 ```
 

@@ -53,8 +53,8 @@
 - ✅ Fixed WebSite SearchAction (added query-input)
 - ✅ Created BookJsonLd for Quran pages
 - ✅ Created FAQPageJsonLd for Ask pages
-- ✅ Enhanced Organization schema with @id, alternateName, email, foundingDate, areaServed, knowsAbout
-- ✅ Enhanced EducationalOrganization schema with educationalCredentialAwarded, teaches, hasCourse
+- ✅ Enhanced Organization schema with @id, alternateName, description, image, email, foundingDate, areaServed, knowsAbout, additional social links
+- ✅ Enhanced EducationalOrganization schema with @id, alternateName, description, image, email, foundingDate, areaServed, knowsAbout, founder URL, additional social links
 - ✅ Both Organization and EducationalOrganization now active on all pages
 - ✅ All 6,997 pages build successfully
 
