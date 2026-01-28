@@ -202,7 +202,8 @@
     "quran-description": "Blessed is the one who reads the Quran and follows its guidance.",
     "verse": "Verse",
     "verse-count": "Verse {count}",
-    "interpretation": "Interpretation"
+    "interpretation": "Interpretation",
+    "surah-title": "Surah {number}: {name} ({translation}) - {quran}"
   },
   "Exercises": {
     "exercises": "Exercises",

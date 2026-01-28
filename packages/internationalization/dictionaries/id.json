@@ -202,7 +202,8 @@
     "quran-description": "Barokah bagi orang yang membaca Al Quran dan mengikuti petunjuknya.",
     "verse": "Ayat",
     "verse-count": "Ayat {count}",
-    "interpretation": "Tafsir"
+    "interpretation": "Tafsir",
+    "surah-title": "Surat {number}: {name} ({translation}) - {quran}"
   },
   "Exercises": {
     "exercises": "Latihan",

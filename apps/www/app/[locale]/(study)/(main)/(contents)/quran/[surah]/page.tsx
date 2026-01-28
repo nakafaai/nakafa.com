@@ -89,13 +89,22 @@ export async function generateMetadata({
     };
   }
 
-  const title = getSurahName({ locale, name: surahData.name });
+  const surahName = getSurahName({ locale, name: surahData.name });
+  const surahTranslation = surahData.name.translation[locale];
 
-  const description = surahData.name.translation[locale];
+  // SEO-optimized title with rich translation key for i18n scalability
+  const title = t("surah-title", {
+    number: surahData.number,
+    name: surahName,
+    translation: surahTranslation,
+    quran: t("quran"),
+  });
+
+  const description = `${surahTranslation} - ${t("quran")} ${surahData.number}`;
 
   return {
     title: {
-      absolute: `${title} - ${t("quran")}`,
+      absolute: title,
     },
     alternates,
     category: t("quran"),
