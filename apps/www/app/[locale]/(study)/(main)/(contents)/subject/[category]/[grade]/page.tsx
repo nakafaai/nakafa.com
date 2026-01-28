@@ -21,6 +21,7 @@ import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
+import { createSEOTitle } from "@/lib/utils/seo/titles";
 import { getStaticParams } from "@/lib/utils/system";
 
 export const revalidate = false;
@@ -41,7 +42,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const FilePath = getGradePath(category, grade);
 
-  const title = `${t(getGradeNonNumeric(grade) ?? "grade", { grade })} - ${t(category)}`;
+  const title = createSEOTitle([
+    t(getGradeNonNumeric(grade) ?? "grade", { grade }),
+    t(category),
+  ]);
   const path = `/${locale}${FilePath}`;
 
   let ogUrl: string = getOgUrl(locale, FilePath);

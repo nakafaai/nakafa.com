@@ -31,6 +31,7 @@ import {
 import { RefContent } from "@/components/shared/ref-content";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
+import { createSEOTitle } from "@/lib/utils/seo/titles";
 import { getStaticParams } from "@/lib/utils/system";
 
 export const revalidate = false;
@@ -66,7 +67,7 @@ export async function generateMetadata({
     ogUrl = publicPath;
   }
 
-  const title = `${t(material)} - ${t(type)} - ${t(category)}`;
+  const title = createSEOTitle([t(material), t(type), t(category)]);
   const urlPath = `/${locale}${FilePath}`;
   const image = {
     url: ogUrl,
