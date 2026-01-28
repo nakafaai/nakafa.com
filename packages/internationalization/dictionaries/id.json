@@ -185,7 +185,8 @@
     "international-relations": "Hubungan Internasional",
     "bachelor": "Sarjana",
     "master": "Magister",
-    "phd": "Doktor"
+    "phd": "Doktor",
+    "learn-with-nakafa": "Belajar dengan Nakafa"
   },
   "Articles": {
     "description": "Penelitian akademik dan publikasi berdasarkan metode ilmiah.",
@@ -194,7 +195,8 @@
     "official-description": "Dibuat oleh Nakafa",
     "contributor": "Kontributor",
     "contributor-description": "Dibuat oleh kontributor",
-    "articles": "Artikel"
+    "articles": "Artikel",
+    "read-article-on-nakafa": "Baca artikel di Nakafa"
   },
   "Holy": {
     "holy": "Suci",
@@ -203,7 +205,9 @@
     "verse": "Ayat",
     "verse-count": "Ayat {count}",
     "interpretation": "Tafsir",
-    "surah-title": "Surat {number}: {name} ({translation}) - {quran}"
+    "surah-title": "Surat {number}: {name} ({translation}) - {quran}",
+    "verses": "ayat",
+    "read-quran-description": "Baca Al Quran dengan terjemahan dan tafsir di Nakafa"
   },
   "Exercises": {
     "exercises": "Latihan",
@@ -247,7 +251,8 @@
     "time": "Waktu",
     "answered": "Dijawab",
     "attempt-not-in-progress": "Mulai sesi baru dulu ya untuk lanjut latihan.",
-    "attempt-not-found": "Mulai latihan terlebih dahulu ya."
+    "attempt-not-found": "Mulai latihan terlebih dahulu ya.",
+    "practice-exercises": "Latihan soal untuk menguasai materi"
   },
   "Utils": {
     "search": "Cari",

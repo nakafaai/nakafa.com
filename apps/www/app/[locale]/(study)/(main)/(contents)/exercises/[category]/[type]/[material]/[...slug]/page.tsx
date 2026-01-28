@@ -40,6 +40,7 @@ import {
   fetchExerciseContext,
   fetchExerciseMetadataContext,
 } from "@/lib/utils/pages/exercises";
+import { createSEODescription } from "@/lib/utils/seo/descriptions";
 import { createSEOTitle } from "@/lib/utils/seo/titles";
 import { getStaticParams } from "@/lib/utils/system";
 import { QuestionAnalytics } from "./analytics";
@@ -108,10 +109,25 @@ export async function generateMetadata({
     height: 630,
   };
 
+  // SEO-optimized description with fallback chain
+  const description = createSEODescription([
+    isSpecificExercise && exerciseTitle
+      ? `${exerciseTitle}. ${t("practice-exercises")}`
+      : undefined,
+    currentMaterialItem?.title
+      ? `${currentMaterialItem.title}. ${t("practice-exercises")}`
+      : undefined,
+    currentMaterial?.title
+      ? `${currentMaterial.title}. ${t("practice-exercises")}`
+      : undefined,
+    `${t(material)} ${t(type)}. ${t("practice-exercises")}`,
+  ]);
+
   return {
     title: {
       absolute: finalTitle,
     },
+    description,
     alternates: {
       canonical: urlPath,
     },

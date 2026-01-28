@@ -27,6 +27,7 @@ import {
   fetchSurahMetadataContext,
   getQuranPagination,
 } from "@/lib/utils/pages/quran";
+import { createSEODescription } from "@/lib/utils/seo/descriptions";
 
 export const revalidate = false;
 
@@ -100,7 +101,11 @@ export async function generateMetadata({
     quran: t("quran"),
   });
 
-  const description = `${surahTranslation} - ${t("quran")} ${surahData.number}`;
+  // SEO-optimized description with fallback chain
+  const description = createSEODescription([
+    `${surahTranslation} (${surahName}) - ${surahData.numberOfVerses} ${t("verses")}. ${t("read-quran-description")}`,
+    `${surahTranslation} - ${t("quran")} ${surahData.number}`,
+  ]);
 
   return {
     title: {

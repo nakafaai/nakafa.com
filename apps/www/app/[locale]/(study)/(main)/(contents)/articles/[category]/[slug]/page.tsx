@@ -27,6 +27,7 @@ import {
   fetchArticleContext,
   fetchArticleMetadataContext,
 } from "@/lib/utils/pages/article";
+import { createSEODescription } from "@/lib/utils/seo/descriptions";
 import { createSEOTitle } from "@/lib/utils/seo/titles";
 import { getStaticParams } from "@/lib/utils/system";
 
@@ -95,11 +96,17 @@ export async function generateMetadata({
 
   const { metadata } = content;
 
+  // SEO-optimized description with fallback chain
+  const description = createSEODescription([
+    metadata.description,
+    `${metadata.title}. ${t("read-article-on-nakafa")}`,
+  ]);
+
   return {
     title: {
       absolute: title,
     },
-    description: metadata.description,
+    description,
     alternates,
     authors: metadata.authors,
     category: t(category),

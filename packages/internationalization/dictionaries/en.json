@@ -185,7 +185,8 @@
     "international-relations": "International Relations",
     "bachelor": "Bachelor",
     "master": "Master",
-    "phd": "PhD"
+    "phd": "PhD",
+    "learn-with-nakafa": "Learn with Nakafa"
   },
   "Articles": {
     "description": "Academic research and publications based on scientific methods.",
@@ -194,7 +195,8 @@
     "official-description": "Made by Nakafa",
     "contributor": "Contributor",
     "contributor-description": "Made by contributor",
-    "articles": "Articles"
+    "articles": "Articles",
+    "read-article-on-nakafa": "Read article on Nakafa"
   },
   "Holy": {
     "holy": "Holy",
@@ -203,7 +205,9 @@
     "verse": "Verse",
     "verse-count": "Verse {count}",
     "interpretation": "Interpretation",
-    "surah-title": "Surah {number}: {name} ({translation}) - {quran}"
+    "surah-title": "Surah {number}: {name} ({translation}) - {quran}",
+    "verses": "verses",
+    "read-quran-description": "Read the Quran with translation and interpretation on Nakafa"
   },
   "Exercises": {
     "exercises": "Exercises",
@@ -247,7 +251,8 @@
     "time": "Time",
     "answered": "Answered",
     "attempt-not-in-progress": "Please start a new session to continue practicing.",
-    "attempt-not-found": "Please start the exercise first."
+    "attempt-not-found": "Please start the exercise first.",
+    "practice-exercises": "Practice exercises to master the material"
   },
   "Utils": {
     "search": "Search",
