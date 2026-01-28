@@ -3,7 +3,7 @@ domains = []
 name = "nakafa"
 
 [crawler]
-max_pages = 500
+max_pages = 5000
 delay_ms = 100
 timeout_ms = 30000
 user_agent = ""
