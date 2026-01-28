@@ -109,18 +109,18 @@ export async function generateMetadata({
     height: 630,
   };
 
-  // SEO-optimized description with fallback chain
+  // Build SEO description from content parts
   const description = createSEODescription([
     isSpecificExercise && exerciseTitle
-      ? `${exerciseTitle}. ${t("practice-exercises")}`
+      ? `${exerciseTitle} - ${t("practice-exercises")}`
       : undefined,
     currentMaterialItem?.title
-      ? `${currentMaterialItem.title}. ${t("practice-exercises")}`
+      ? `${currentMaterialItem.title} - ${t("practice-exercises")}`
       : undefined,
     currentMaterial?.title
-      ? `${currentMaterial.title}. ${t("practice-exercises")}`
+      ? `${currentMaterial.title} - ${t("practice-exercises")}`
       : undefined,
-    `${t(material)} ${t(type)}. ${t("practice-exercises")}`,
+    `${t(material)} ${t(type)} - ${t("practice-exercises")}`,
   ]);
 
   return {

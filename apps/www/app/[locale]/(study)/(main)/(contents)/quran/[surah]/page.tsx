@@ -101,10 +101,10 @@ export async function generateMetadata({
     quran: t("quran"),
   });
 
-  // SEO-optimized description with fallback chain
+  // Build SEO description from content parts
   const description = createSEODescription([
     `${surahTranslation} (${surahName}) - ${surahData.numberOfVerses} ${t("verses")}. ${t("read-quran-description")}`,
-    `${surahTranslation} - ${t("quran")} ${surahData.number}`,
+    `${t("quran")} ${surahData.number}`,
   ]);
 
   return {

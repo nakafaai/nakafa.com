@@ -121,11 +121,10 @@ export async function generateMetadata({
     };
   }
 
-  // SEO-optimized description with fallback chain
+  // Build SEO description from content parts
   const description = createSEODescription([
     metadata.description,
-    metadata.subject,
-    `${metadata.title}. ${t("learn-with-nakafa")}`,
+    `${metadata.title} - ${t("learn-with-nakafa")}`,
   ]);
 
   return {

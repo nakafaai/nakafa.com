@@ -96,10 +96,10 @@ export async function generateMetadata({
 
   const { metadata } = content;
 
-  // SEO-optimized description with fallback chain
+  // Build SEO description from content parts
   const description = createSEODescription([
     metadata.description,
-    `${metadata.title}. ${t("read-article-on-nakafa")}`,
+    `${metadata.title} - ${t("read-article-on-nakafa")}`,
   ]);
 
   return {
