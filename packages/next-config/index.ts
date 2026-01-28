@@ -17,6 +17,7 @@ export const securityHeaders = [
       "img-src 'self' blob: data: https: https://*.googleusercontent.com",
       "font-src 'self'",
       "connect-src 'self' wss://*.convex.cloud https://*.convex.cloud https://*.convex.site https://*.vercel-analytics.com https://*.posthog.com https://eu.i.posthog.com https://eu-assets.i.posthog.com https://accounts.google.com",
+      "frame-src 'self' https://accounts.google.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self' https://accounts.google.com",
