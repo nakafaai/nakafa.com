@@ -27,50 +27,39 @@ This plan addresses the critical issues identified in the comprehensive 500-page
 
 **Total Issues:** 653 failures, 3,131 warnings, 15,036 passed checks
 
-**Top Priorities (Reordered based on impact):**
-1. **Critical Security** - HTTPS not enforced (269 pages), exposed secrets in build output (false positive but needs verification)
-2. **Structured Data** - JSON-LD validation errors on all pages
-3. **Performance** - Excessive DOM size (3,000-13,000+ nodes), large CSS files
-4. **SEO** - Title/description issues on 258+ pages
-5. **Accessibility** - Missing labels, skip links
+**Top Priorities (Focused on SEO & Accessibility):**
+1. **Structured Data** - JSON-LD validation errors on all pages (46/100)
+2. **SEO** - Title/description issues on 258+ pages (81/100)
+3. **Accessibility** - Missing form labels on 76 pages (89/100)
 
 ---
 
-## Phase 0: Critical Security & Infrastructure (Week 1) ⏳ NEW
+## Phase 0: Local Production Build Verification (Week 1) ⏳ NEW
 
-### Task 0.1: Verify Security Headers in Production
-**Impact**: Critical - Security score 57/100, HTTPS not enforced
+### Task 0.1: Build and Audit Locally with Production Build
+**Impact**: High - Localhost dev scores are misleading
 **Effort**: 30 minutes
-**Files**: Already implemented in `packages/next-config/index.ts`
+**Files**: N/A - Build process only
 
-**Status**: 🔄 Verification needed
-- Security headers ARE implemented (CSP, HSTS, X-Frame-Options, etc.)
-- HTTPS enforcement needs production deployment to verify
-- The "exposed secrets" in audit are false positives from `.next/` build output
+**Status**: 🔄 Ready to start
+- Build locally with `pnpm build` to simulate production
+- Run audit against local production build
+- Verify fixes work in optimized build environment
+- Security headers are already implemented (CSP, HSTS, etc.)
+- "Exposed secrets" in audit are false positives from build output
+
+**Why Build Locally:**
+- Production deployment is expensive - defer until all fixes complete
+- Local production build gives accurate performance metrics
+- Structured Data can be validated locally with proper tooling
+- 21 commits ready - need to verify in optimized build first
 
 **Verification**:
-- [ ] Deploy to production
-- [ ] Verify HTTPS redirects working
-- [ ] Confirm security headers present
-- [ ] Re-run audit on production URL
-
----
-
-### Task 0.2: Production Deployment
-**Impact**: Critical - All localhost scores are misleading
-**Effort**: 1 hour
-**Branch**: `audit-website` → `preview` → `main`
-
-**Why Deploy Now:**
-- Security score 57/100 is artificially low (no HTTPS on localhost)
-- Performance score 75/100 includes dev mode overhead
-- Structured Data validation needs public URLs for Google testing
-- 21 commits ready to merge
-
-**Expected Production Scores:**
-- Security: 57 → 85+ (CSP + HTTPS working)
-- Performance: 75 → 85+ (optimized build)
-- Structured Data: 46 → 70+ (proper validation possible)
+- [ ] Run `pnpm build` successfully
+- [ ] Start production build with `pnpm start`
+- [ ] Run audit on http://localhost:3000
+- [ ] Verify Performance score improves (75 → 85+)
+- [ ] Verify no console errors in production build
 
 ---
 
@@ -184,93 +173,7 @@ This plan addresses the critical issues identified in the comprehensive 500-page
 
 ---
 
-## Phase 3: Performance Optimization (Week 3)
-
-### Task 3.1: Reduce DOM Size 🔴 CRITICAL
-**Impact**: High - Performance 75/100, 34 errors, 1,183 warnings
-**Effort**: 8 hours
-**Files**:
-- `apps/www/components/contents/content-renderer.tsx`
-- `apps/www/components/math/math-display.tsx`
-- MDX content components
-
-**Issues:**
-- Pages with 3,000-13,000+ DOM nodes (recommended: <1,500)
-- Worst offenders: 13,030 nodes, 12,128 nodes, 10,920 nodes
-- DOM depth up to 48 levels (excessive)
-
-**Solutions:**
-1. **Virtualize long content lists** - Use react-window or similar
-2. **Lazy render below-fold content** - Intersection Observer for math components
-3. **Flatten wrapper elements** - Remove unnecessary div nesting
-4. **Optimize math rendering** - Reduce KaTeX/MathJax DOM output
-5. **Use CSS instead of DOM** - Move visual effects to CSS
-
-**Verification**:
-- [ ] No page exceeds 1,500 DOM nodes
-- [ ] DOM depth < 32 levels
-- [ ] Mobile scrolling remains smooth
-- [ ] All content still accessible
-
----
-
-### Task 3.2: Optimize CSS Bundle Size
-**Impact**: Medium-High - Performance 75/100
-**Effort**: 4 hours
-**Files**:
-- `apps/www/styles/globals.css`
-- Tailwind configuration
-- Component styles
-
-**Issues:**
-- 2 CSS files exceed 100KB:
-  - `a21565a981753cea.css`: 260.7 KB
-  - `f93a037cbbc1e9cc.css`: 166.4 KB
-
-**Solutions:**
-1. **Purge unused Tailwind classes** - Review safelist configuration
-2. **Split CSS by route** - Use Next.js CSS splitting
-3. **Remove unused CSS** - Audit and delete dead styles
-4. **Minify and compress** - Ensure gzip/brotli compression
-5. **Critical CSS inlining** - Inline above-fold styles
-
-**Verification**:
-- [ ] No CSS file exceeds 100KB
-- [ ] Total CSS < 200KB
-- [ ] Lighthouse CSS score > 90
-
----
-
-### Task 3.3: Fix Render-Blocking Resources
-**Impact**: Medium - Performance 75/100
-**Effort**: 2 hours
-**Files**:
-- `apps/www/app/[locale]/layout.tsx`
-
-**Issues:**
-- 4 render-blocking resources on 269 pages
-- Includes react-scan script from unpkg.com
-
-**Solutions:**
-1. **Defer non-critical scripts** - Add `defer` or `async` attributes
-2. **Preconnect to CDNs** - Add `<link rel="preconnect">` for unpkg.com
-3. **Inline critical CSS** - Move critical styles to `<style>` tag
-4. **Lazy load analytics** - Defer PostHog and other analytics
-
-**Verification**:
-- [ ] No render-blocking warnings in Lighthouse
-- [ ] LCP < 2.5s on mobile
-
----
-
-### Task 3.4: Preload Critical Resources ✅ COMPLETED
-**Status**: ✅ Completed on 2026-01-27
-- Fixed 8 files with conflicting Image props
-- LCP images properly optimized
-
----
-
-## Phase 4: Accessibility Improvements (Week 4)
+## Phase 3: Accessibility Improvements (Week 3)
 
 ### Task 4.1: Add Accessible Names to Buttons
 **Impact**: Medium - Accessibility 89/100
@@ -360,192 +263,37 @@ This plan addresses the critical issues identified in the comprehensive 500-page
 
 ---
 
-## Phase 5: Content & Links (Week 5)
+## Implementation Order (Focused on SEO & Accessibility)
 
-### Task 5.1: Expand Thin Content
-**Impact**: Medium - Content 75/100, 100 pages affected
-**Effort**: 6 hours
-**Files**:
-- Content pages with <300 words
-
-**Issues:**
-- 37 pages with under 300 words
-- Worst offenders: 17-36 words
-
-**Fix:**
-1. Identify thin content pages
-2. Expand with relevant information
-3. Add examples, explanations, context
-4. Target 500+ words per page
-
-**Verification**:
-- [ ] All pages have 300+ words
-- [ ] Content is valuable and relevant
-
----
-
-### Task 5.2: Fix Duplicate Content
-**Impact**: Medium - Content 75/100
-**Effort**: 2 hours
-**Files**:
-- Content metadata
-
-**Issues:**
-- 3 duplicate title sets affecting 64 pages
-- 5 duplicate description sets affecting 84 pages
-
-**Fix:**
-1. Generate unique titles for all pages
-2. Generate unique descriptions for all pages
-3. Use content-specific metadata
-
-**Verification**:
-- [ ] No duplicate titles
-- [ ] No duplicate descriptions
-
----
-
-### Task 5.3: Fix Keyword Stuffing Warnings
-**Impact**: Low - Content 75/100, 188 pages affected
-**Effort**: 1 hour
-**Files**:
-- Content pages
-
-**Issues:**
-- Mathematical terms flagged as keyword stuffing (false positives)
-- "log" at 28.4%, "frac" at 11.4% (LaTeX/math notation)
-
-**Note:** These are false positives from math content. No action needed unless actual keyword stuffing exists.
-
----
-
-### Task 5.4: Fix Long URLs
-**Impact**: Low - URL Structure 93/100, 90 pages affected
-**Effort**: 2 hours
-**Files**:
-- URL routing configuration
-
-**Issues:**
-- URLs exceeding 100 characters (up to 131 chars)
-- Affects deeply nested subject pages
-
-**Fix:**
-1. Review URL structure
-2. Consider shorter slugs where possible
-3. Ensure URLs remain descriptive
-
-**Verification**:
-- [ ] URLs under 100 characters where possible
-
----
-
-### Task 5.5: Fix Numeric URL Slugs
-**Impact**: Low - URL Structure 93/100, 118 pages affected
-**Effort**: 3 hours
-**Files**:
-- Quran page routing
-
-**Issues:**
-- Quran pages use numeric IDs (`/quran/1`, `/quran/2`)
-
-**Fix:**
-1. Add descriptive slugs (e.g., `/quran/1-al-fatihah`)
-2. Implement redirects from old URLs
-3. Update internal links
-
-**Verification**:
-- [ ] Descriptive slugs for all Quran pages
-- [ ] Redirects working
-
----
-
-## Phase 6: Crawlability & Links (Week 6)
-
-### Task 6.1: Fix Sitemap Domain Mismatch
-**Impact**: Medium - Crawlability 68/100
-**Effort**: 30 minutes
-**Files**:
-- `apps/www/app/sitemap.ts`
-
-**Issues:**
-- 117,446 URLs in sitemap point to `nakafa.com` but audit ran on `localhost:3000`
-- This is expected behavior for development
-
-**Note:** This will resolve automatically in production. No action needed for localhost.
-
----
-
-### Task 6.2: Fix Broken Links
-**Impact**: Medium - Links 61/100
-**Effort**: 2 hours
-**Files**:
-- Various content pages
-
-**Issues:**
-- Broken internal links
-- Broken external links
-
-**Fix:**
-1. Run link checker
-2. Fix or remove broken internal links
-3. Update or remove broken external links
-
-**Verification**:
-- [ ] All internal links working
-- [ ] All external links working or removed
-
----
-
-## Implementation Order (Updated)
-
-### Week 1: Deploy & Verify
-1. 🔄 Task 0.1: Verify Security Headers
-2. 🔄 Task 0.2: Production Deployment
+### Week 1: Local Build Verification
+1. 🔄 Task 0.1: Build and Audit Locally with Production Build
 
 ### Week 2: Structured Data & SEO
-3. Task 2.1: Fix JSON-LD Validation Errors
-4. Task 2.2: Fix Title Tags
-5. Task 2.3: Fix Meta Descriptions
-6. Task 2.4: Add Missing H1 Tags
+2. Task 2.1: Fix JSON-LD Validation Errors
+3. Task 2.2: Fix Title Tags
+4. Task 2.3: Fix Meta Descriptions
+5. Task 2.4: Add Missing H1 Tags
 
-### Week 3: Performance
-7. Task 3.1: Reduce DOM Size
-8. Task 3.2: Optimize CSS Bundle Size
-9. Task 3.3: Fix Render-Blocking Resources
-
-### Week 4: Accessibility
-10. Task 4.1: Add Accessible Names to Buttons
-11. Task 4.2: Fix Form Labels
-12. Task 4.3: Add Skip Navigation Links
-13. Task 4.4: Fix Multiple Main Landmarks
-
-### Week 5: Content
-14. Task 5.1: Expand Thin Content
-15. Task 5.2: Fix Duplicate Content
-16. Task 5.3: Fix Long URLs
-17. Task 5.4: Fix Numeric URL Slugs
-
-### Week 6: Crawlability
-18. Task 6.1: Fix Sitemap Domain Mismatch
-19. Task 6.2: Fix Broken Links
+### Week 3: Accessibility
+6. Task 4.1: Add Accessible Names to Buttons
+7. Task 4.2: Fix Form Labels
+8. Task 4.3: Add Skip Navigation Links
+9. Task 4.4: Fix Multiple Main Landmarks
 
 ---
 
-## Success Metrics (Updated)
+## Success Metrics (Focused on SEO & Accessibility)
 
-After all tasks complete:
-- [ ] Overall audit score > 80/100 (currently 41)
-- [ ] Accessibility score > 95/100 (currently 89)
-- [ ] Performance score > 90/100 (currently 75)
-- [ ] Security score > 90/100 (currently 57)
-- [ ] Structured Data score > 80/100 (currently 46)
-- [ ] E-E-A-T score > 80/100 (currently 62)
+After completing focused tasks:
+- [ ] Overall audit score > 60/100 (currently 41)
+- [ ] Structured Data score > 70/100 (currently 46)
 - [ ] Core SEO score > 90/100 (currently 81)
-- [ ] Content score > 85/100 (currently 75)
-- [ ] All 653 audit failures resolved
-- [ ] Lighthouse Performance > 90
+- [ ] Accessibility score > 95/100 (currently 89)
+- [ ] All JSON-LD validation errors resolved
+- [ ] All titles 30-60 characters, no duplicates
+- [ ] All descriptions 120-160 characters
+- [ ] All form inputs have proper labels
 - [ ] Lighthouse Accessibility > 95
-- [ ] Core Web Vitals: LCP < 2.5s, INP < 200ms, CLS < 0.1
 
 ---
 
@@ -557,4 +305,6 @@ After all tasks complete:
 - **Keyword stuffing warnings** are false positives from math notation
 - Each task has its own detailed plan in `tasks/` directory
 - Run `pnpm lint && pnpm typecheck && pnpm test` after each task
-- **Deploy to production ASAP** to get accurate scores and validate fixes
+- **Build locally with `pnpm build && pnpm start`** to verify fixes in optimized build
+- **Focus on SEO and accessibility** - these have highest impact for users
+- **Defer production deployment** until after all fixes complete

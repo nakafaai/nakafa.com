@@ -2,28 +2,45 @@
 
 ## Current Status
 
-**Overall Score**: 43/100 (Grade F) → Target: >80/100
-**Last Updated**: 2026-01-27
+**Overall Score**: 41/100 (Grade F) → Target: >80/100
+**Last Updated**: 2026-01-28
 **Branch**: audit-website
-**Tested On**: localhost:3000
+**Tested On**: http://localhost:3000 (500 pages crawled)
 
 ### Score Comparison (Production vs Localhost)
 
 | Category | Production | Localhost (Our Changes) | Status |
 |----------|-----------|------------------------|---------|
-| **Accessibility** | 49 | **94** | ✅ **+45** |
+| **Social Media** | 100 | **100** | ✅ |
+| **Internationalization** | 100 | **100** | ✅ |
+| **Local SEO** | 100 | **100** | ✅ |
 | **Mobile** | 67 | **100** | ✅ **+33** |
-| **E-E-A-T** | 49 | **72** | ✅ **+23** |
-| **Links** | 85 | **90** | ✅ **+5** |
-| **Social Media** | 100 | **99** | ⚠️ -1 |
-| **Structured Data** | 46 | **46** | 🔴 **No change** |
+| **URL Structure** | 93 | **93** | ✅ |
+| **Images** | 85 | **85** | ✅ |
+| **Core SEO** | 81 | **81** | ⚠️ |
+| **Legal Compliance** | 81 | **81** | ⚠️ |
+| **Accessibility** | 49 | **89** | ✅ **+40** |
+| **Content** | 75 | **75** | ⚠️ |
+| **Performance** | 89 | **75** | 🔴 **-14** (dev mode) |
+| **Crawlability** | 68 | **68** | 🔴 |
+| **Links** | 61 | **61** | 🔴 |
+| **E-E-A-T** | 49 | **62** | ✅ **+13** |
 | **Security** | 72 | **57** | 🔴 **-15** (localhost limitation) |
-| **Performance** | 89 | **74** | 🔴 **-15** (dev mode) |
+| **Structured Data** | 46 | **46** | 🔴 |
+| **Overall** | **42** | **41** | 🔴 |
 
 **Key Wins:**
-- ✅ Accessibility: 94/100 (Zoom fix working!)
+- ✅ Accessibility: 89/100 (Zoom fix working!)
 - ✅ Mobile: 100/100 (Perfect mobile score!)
-- ✅ E-E-A-T: 72/100 (Author info helping!)
+- ✅ E-E-A-T: 62/100 (Author info helping!)
+
+**Critical Issues Discovered (500-page audit):**
+- 🔴 **DOM Size**: Pages with 3,000-13,000+ nodes (should be <1,500)
+- 🔴 **CSS Bundle**: 260KB CSS file (should be <100KB)
+- 🔴 **JSON-LD**: Validation errors on all 269 pages
+- 🔴 **Titles**: 258 pages with title issues
+- 🔴 **Descriptions**: 124 pages with description issues
+- 🔴 **Form Labels**: 76 pages with unlabeled inputs
 
 ---
 
@@ -34,7 +51,7 @@
 #### Task 1.1: Enable User Zoom (Accessibility) ✅
 - **Status**: ✅ COMPLETED
 - **Priority**: Critical
-- **Impact**: Accessibility 49→94 (+45 points)
+- **Impact**: Accessibility 49→89 (+40 points)
 - **Completed**: 2026-01-27
 - **Files**: `apps/www/app/[locale]/layout.tsx`
 
@@ -47,7 +64,7 @@
 - pnpm lint: Passed (1470 files)
 - TypeScript: No errors
 - Tests: 472 passed
-- Accessibility score: 94/100
+- Accessibility score: 89/100
 
 ---
 
@@ -81,79 +98,9 @@
 
 ---
 
-### ⏳ Phase 2: SEO & Structured Data (IN PROGRESS)
+### ✅ Phase 3: Performance (PARTIALLY COMPLETED)
 
-#### Task 2.1: Article Structured Data 🔄
-- **Status**: 🔄 IN PROGRESS (Code ready, validation issues remain)
-- **Priority**: High
-- **Impact**: Structured Data 46→80+
-- **Estimated Time**: 3 hours
-- **Files**: 
-  - `packages/seo/json-ld/article.tsx`
-  - `packages/seo/json-ld/schemas.ts`
-  - `packages/seo/json-ld/constants.ts`
-
-**Changes Made:**
-- Refactored ArticleJsonLd with Zod validation
-- Added required `url` and `mainEntityOfPage` fields
-- Fixed ImageObject format
-- Created Zod schemas for type safety
-- Updated all pages using ArticleJsonLd
-
-**Remaining Issues:**
-- Schema.org validation errors still detected
-- Need to investigate specific validation failures
-- Audit shows: "Schema.org validation errors detected" on all pages
-
-**Next Steps:**
-- Debug specific structured data validation errors
-- Check Google Rich Results Test for detailed errors
-- Verify all required Article schema fields are present
-
----
-
-#### Task 2.2: Author Information 📝
-- **Status**: 📝 PLANNED
-- **Priority**: High
-- **Impact**: E-E-A-T 49→80+
-- **Estimated Time**: 2 hours
-- **Files**: `apps/www/components/contents/author-card.tsx`
-
-**Description:**
-Create AuthorCard component to display author information on content pages.
-
-**Requirements:**
-- Display author name and bio
-- Show author avatar/image
-- Link to author profile
-- Show publication and update dates
-- Mobile-responsive design
-
----
-
-#### Task 2.3: About Page 📝
-- **Status**: 📝 PLANNED
-- **Priority**: Medium
-- **Impact**: Trust signals
-- **Estimated Time**: 3 hours
-- **Files**: `apps/www/app/[locale]/(study)/(main)/about/page.tsx`
-
-**Description:**
-Create About page with company info and team information.
-
-**Requirements:**
-- Company mission and values
-- Team member cards with photos
-- Contact information
-- Organization structured data
-
----
-
-## Remaining Phases
-
-### Phase 3: Performance Optimization
-
-#### Task 3.3: Preload Critical Resources ✅ COMPLETED
+#### Task 3.3: Preload Critical Resources ✅
 - **Status**: ✅ COMPLETED
 - **Priority**: Medium
 - **Impact**: LCP improvement
@@ -173,10 +120,9 @@ Create About page with company info and team information.
 - Removed `preload` from non-LCP images
 - Used `fetchPriority="high"` + `loading="eager"` for important images
 - Used `preload` only for LCP images (logo.svg, stars.png)
-- Removed redundant manual `<link rel="preload">` from layout
 
 **Next.js Best Practices Applied:**
-- Use `preload` ONLY for LCP images (don't mix with fetchPriority/loading)
+- Use `preload` ONLY for LCP images
 - Use `fetchPriority="high"` + `loading="eager"` for other important images
 - Let Next.js Image component handle preloading automatically
 
@@ -186,69 +132,186 @@ Create About page with company info and team information.
 - All TypeScript checks pass
 - No conflicting props remaining
 
-**Note:** Audit still shows LCP warnings but implementation is correct. Need production deployment to verify.
+---
+
+## New Tasks (Based on 500-Page Audit)
+
+### ⏳ Phase 0: Local Production Build (NEW - HIGHEST PRIORITY)
+
+#### Task 0.1: Build and Audit Locally with Production Build 🔄
+- **Status**: 🔄 READY TO START
+- **Priority**: High
+- **Impact**: Accurate performance metrics without deployment cost
+- **Files**: N/A - Build process only
+
+**Why Build Locally:**
+- Production deployment is expensive - defer until all fixes complete
+- Local production build (`pnpm build && pnpm start`) gives accurate metrics
+- Performance score 75/100 is from dev mode - production build will be higher
+- Security score 57/100 is from localhost - production build won't have HTTPS check
+- Structured Data validation needs public URLs
+- 21 commits ready to merge
+
+**Expected Improvements (Local Production Build):**
+- Performance: 75 → 85+ (optimized build vs dev mode)
+- Security: 57 → 70+ (no HTTPS check on localhost)
+- Structured Data: Can validate JSON-LD syntax locally
+
+**Steps:**
+1. Run `pnpm build` to create production build
+2. Run `pnpm start` to serve production build locally
+3. Run audit on http://localhost:3000
+4. Compare scores with dev mode
+
+**Note**: Production deployment deferred until all fixes complete to minimize costs
 
 ---
 
-#### Task 3.1: Optimize TTFB 📝
+### ⏳ Phase 2: Structured Data & SEO (UPDATED)
+
+#### Task 2.1: Fix JSON-LD Validation Errors 📝
 - **Status**: 📝 PLANNED
 - **Priority**: High
-- **Impact**: Performance 74→90+
-- **Estimated Time**: 4 hours
+- **Impact**: Structured Data 46→80+
+- **Files**: 
+  - `packages/seo/json-ld/breadcrumb.tsx`
+  - `packages/seo/json-ld/website.tsx`
+- **Affected**: 269 pages
 
-#### Task 3.2: Reduce DOM Size 📝
+**Issues:**
+- BreadcrumbList missing `itemListElement`
+- WebSite SearchAction missing `query-input`
+- Invalid JSON-LD syntax
+
+**Task File**: `plans/website-audit/tasks/2.1-fix-json-ld-validation.md`
+
+---
+
+#### Task 2.2: Fix Title Tags (258 pages) 📝
 - **Status**: 📝 PLANNED
 - **Priority**: High
-- **Impact**: Mobile performance
-- **Estimated Time**: 6 hours
+- **Impact**: Core SEO 81→90+
+- **Files**: 
+  - `apps/www/app/[locale]/(study)/(main)/(contents)/quran/[surah]/page.tsx`
+  - `apps/www/app/[locale]/(study)/(main)/(contents)/subject/[...slug]/page.tsx`
+  - `apps/www/app/[locale]/(study)/(main)/(contents)/articles/[...slug]/page.tsx`
+  - `apps/www/app/[locale]/(study)/(main)/(contents)/exercises/[...slug]/page.tsx`
 
-### Phase 4: Accessibility Improvements
-- Task 4.1: Skip Navigation (Keyboard accessibility)
-- Task 4.2: Form Labels (Screen reader support)
-- Task 4.3: Focus Indicators (Keyboard navigation)
+**Issues:**
+- Titles too long (70-113 chars): Many content pages
+- Titles too short (11-23 chars): Quran surah pages
+- 3 duplicate title patterns affecting 64 pages
 
-### Phase 5: Content & Polish
-- Task 5.1: Publication Dates (Content freshness)
-- Task 5.2: Meta Descriptions (CTR improvement)
-- Task 5.3: Breadcrumb Navigation (UX + SEO)
+**Task File**: `plans/website-audit/tasks/2.2-fix-title-tags.md`
+
+---
+
+#### Task 2.3: Fix Meta Descriptions (124 pages) 📝
+- **Status**: 📝 PLANNED
+- **Priority**: High
+- **Impact**: Core SEO 81→90+
+- **Files**: Same as Task 2.2
+
+**Issues:**
+- Descriptions too short (3-26 chars): Quran pages
+- Descriptions too long (161-171 chars): Some content pages
+
+**Task File**: `plans/website-audit/tasks/2.3-fix-meta-descriptions.md`
+
+---
+
+### ⏳ Phase 3: Performance (NEW TASKS)
+
+#### Task 3.1: Reduce DOM Size 📝
+- **Status**: 📝 PLANNED
+- **Priority**: High
+- **Impact**: Performance 75→90+
+- **Files**: 
+  - `apps/www/components/contents/content-renderer.tsx`
+  - `apps/www/components/math/math-display.tsx`
+
+**Issues:**
+- Pages with 3,000-13,000+ DOM nodes (should be <1,500)
+- Worst offenders: 13,030 nodes, 12,128 nodes
+- DOM depth up to 48 levels
+
+**Solutions:**
+- Virtualize long content lists
+- Lazy render below-fold math
+- Flatten wrapper elements
+- Optimize KaTeX output
+
+**Task File**: `plans/website-audit/tasks/3.1-reduce-dom-size.md`
+
+---
+
+#### Task 3.2: Optimize CSS Bundle Size 📝
+- **Status**: 📝 PLANNED
+- **Priority**: High
+- **Impact**: Performance 75→90+
+- **Files**: 
+  - `apps/www/tailwind.config.ts`
+  - `apps/www/postcss.config.mjs`
+  - `apps/www/styles/globals.css`
+
+**Issues:**
+- 2 CSS files exceed 100KB:
+  - `a21565a981753cea.css`: 260.7 KB
+  - `f93a037cbbc1e9cc.css`: 166.4 KB
+
+**Solutions:**
+- Optimize Tailwind safelist
+- Remove unused CSS
+- Enable CSS minification
+- Inline critical CSS
+
+**Task File**: `plans/website-audit/tasks/3.2-optimize-css-bundle.md`
+
+---
+
+### ⏳ Phase 4: Accessibility (NEW TASKS)
+
+#### Task 4.2: Fix Form Labels (76 pages) 📝
+- **Status**: 📝 PLANNED
+- **Priority**: High
+- **Impact**: Accessibility 89→95+
+- **Files**: 
+  - `apps/www/components/ui/input.tsx`
+  - `apps/www/components/ui/select.tsx`
+  - `apps/www/components/ui/textarea.tsx`
+
+**Issues:**
+- Form inputs without associated labels
+- Missing `aria-label`, `aria-labelledby`
+- Missing `aria-describedby` for errors
+
+**Task File**: `plans/website-audit/tasks/4.2-fix-form-labels.md`
+
+---
+
+## Implementation Order (Updated)
+
+### Week 1: Local Build Verification
+1. 🔄 Task 0.1: Build and Audit Locally with Production Build
+
+### Week 2: Structured Data & SEO
+2. Task 2.1: Fix JSON-LD Validation Errors
+3. Task 2.2: Fix Title Tags
+4. Task 2.3: Fix Meta Descriptions
+
+### Week 3: Accessibility
+7. Task 4.2: Fix Form Labels
+8. Task 4.1: Add Accessible Names to Buttons
+9. Task 4.3: Add Skip Navigation Links
 
 ---
 
 ## Critical Next Steps
 
-### 1. Deploy to Production ⏳ HIGH PRIORITY
-**Why:** Localhost audit results are misleading
-- Security score 57/100 (fails HTTPS check on localhost)
-- Structured Data validation unclear on localhost
-- Need real-world testing to see actual improvements
-
-**Action:** 
-1. Commit all changes in audit-website branch
-2. Create PR to merge audit-website → preview
-3. Test on preview deployment
-4. Merge to main and deploy to production
-5. Run audit on production to see real scores
-
-**Expected Improvements After Deploy:**
-- Accessibility: 49→94 (+45 points) ✅
-- Mobile: 67→100 (+33 points) ✅
-- Security: 57→85+ (CSP headers working)
-- Performance: 74→85+ (LCP preloads working)
-
-### 2. Continue with Phase 2 (SEO) 📝
-**Current:** Structured Data 46/100
-
-**Next Tasks:**
-- Task 2.2: Author Information (2 hours)
-- Task 2.3: About Page (3 hours)
-
-**Note:** Structured data implementation is correct. Need production deployment + Google Rich Results Test to verify.
-
-### 3. Plan Phase 4 (Accessibility) 📝
-After SEO phase, continue with:
-- Task 4.1: Skip Navigation
-- Task 4.2: Form Labels
-- Task 4.3: Focus Indicators
+### 1. Fix JSON-LD Errors 📝 HIGH PRIORITY
+- Fix BreadcrumbList.itemListElement
+- Fix WebSite SearchAction query-input
+- Validate with Schema.org validator locally
 
 ---
 
@@ -260,12 +323,14 @@ After SEO phase, continue with:
 
 ## Notes
 
-- **Testing Strategy**: Use `npx squirrelscan audit http://localhost:3000` to test local changes
-- **Single Audit File**: Only `audit-results.json` is kept (others cleaned up)
-- **All tasks follow TEMPLATE.md format**
-- **Run `pnpm lint && pnpm typecheck && pnpm test` after each task**
-- **SEO Phase prioritized** to improve search visibility first
-- **Current focus**: Fix remaining Structured Data validation errors
+- **Security "exposed secrets" are FALSE POSITIVES** from `.next/` build output
+- **All environment variables properly managed** with `@t3-oss/env-nextjs`
+- **Sitemap domain mismatch** is expected on localhost
+- **Keyword stuffing warnings** are false positives from math notation
+- Each task has detailed implementation plan in `tasks/` directory
+- Run `pnpm lint && pnpm typecheck && pnpm test` after each task
+- **Build locally with `pnpm build && pnpm start`** to get accurate scores without deployment cost
+- **Defer production deployment** until all fixes complete to minimize costs
 
 ---
 
@@ -273,5 +338,8 @@ After SEO phase, continue with:
 
 ```bash
 # Test local changes
-npx squirrelscan audit http://localhost:3000 --format json --output audit-results.json --max-pages 50
+npx squirrelscan audit http://localhost:3000 --format json --output audit-results.json --max-pages 500
+
+# Test production (after deploy)
+npx squirrelscan audit https://nakafa.com --format json --output audit-results.json --max-pages 500
 ```
