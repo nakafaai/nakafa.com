@@ -95,6 +95,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
         <div className="flex items-center gap-1">
           {!!closeButton && (
             <Button
+              aria-label={tCommon("cancel")}
               className="rounded-lg"
               onClick={closeButton.onClick}
               size="icon"
@@ -106,6 +107,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
             </Button>
           )}
           <Button
+            aria-label={t("comment")}
             className="rounded-lg"
             disabled={isPending || !user}
             size="icon"

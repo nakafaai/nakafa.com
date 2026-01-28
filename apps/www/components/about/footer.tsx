@@ -140,6 +140,7 @@ export function Footer() {
             <div className="flex flex-wrap items-center">
               {socialMedia.map((social) => (
                 <a
+                  aria-label={social.label}
                   className={cn(
                     buttonVariants({ variant: "ghost", size: "icon" })
                   )}
