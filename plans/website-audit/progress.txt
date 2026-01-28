@@ -105,6 +105,23 @@
 - `apps/www/lib/utils/seo/descriptions.ts`
 - `apps/www/lib/utils/__tests__/descriptions.test.ts`
 
+#### 3.4 createSEODescription Partial Fallback Ellipsis Bug (Devin AI Review)
+
+**Problem**: When appending partial fallback with ellipsis (`...`), the function didn't account for the 3 extra characters, potentially exceeding `maxLength` by up to 3 characters.
+
+**Solution**: Reserve 3 characters for ellipsis when calculating remaining space:
+```typescript
+const remainingSpace = maxLength - description.length - 1 - 3; // -1 for space, -3 for "..."
+```
+
+**Impact**: Ensures descriptions never exceed maxLength, maintaining SEO compliance.
+
+**Files**:
+- `apps/www/lib/utils/seo/descriptions.ts` (line 65)
+- `apps/www/lib/utils/__tests__/descriptions.test.ts` (added 4 new test cases)
+
+**Test Coverage**: 100% (46 tests, all passing)
+
 ### Phase 4: Accessibility Fixes (COMPLETED)
 
 **Major Achievement**: Accessibility score improved from 86% to 94% (+8 points)

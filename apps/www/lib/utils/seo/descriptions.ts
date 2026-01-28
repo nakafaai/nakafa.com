@@ -7,11 +7,12 @@
  * - Google typically shows ~155-160 characters
  * - Should include primary keyword naturally
  * - Compelling call-to-action improves CTR
+ * - NO ellipsis (...) - Google prefers complete, natural descriptions
  *
  * Strategy:
  * 1. Use the first valid part from the priority chain
  * 2. Ensure minimum length (expand with fallbacks if needed)
- * 3. Truncate to maximum length at sentence boundary when possible
+ * 3. Truncate to maximum length at sentence/word boundary (clean cut, no ellipsis)
  * 4. Always return a meaningful description (no empty strings)
  *
  * @example
@@ -27,7 +28,7 @@
  * @param options - Optional configuration for length limits
  * @param options.maxLength - Maximum length (default: 160)
  * @param options.minLength - Minimum length (default: 120)
- * @returns Optimized description string (120-160 characters)
+ * @returns Optimized description string (120-160 characters), clean without ellipsis
  */
 export function createSEODescription(
   parts: (string | null | undefined)[],
@@ -61,27 +62,25 @@ export function createSEODescription(
       description = combined;
     } else {
       // If combined exceeds maxLength, try to add partial fallback
+      // No ellipsis - just clean word boundary truncation
       const remainingSpace = maxLength - description.length - 1; // -1 for space
       if (remainingSpace > 10) {
         // Only add if we can add meaningful content
         const partialFallback = nextPart.slice(0, remainingSpace);
-        // Try to end at word boundary
+        // Try to end at word boundary for clean cut
         const lastSpace = partialFallback.lastIndexOf(" ");
         if (lastSpace > 5) {
-          description = `${description} ${partialFallback.slice(0, lastSpace)}...`;
+          description = `${description} ${partialFallback.slice(0, lastSpace)}`;
         }
       }
       break;
     }
   }
 
-  // If too long, truncate intelligently
+  // If too long, truncate intelligently at sentence or word boundary
   if (description.length > maxLength) {
-    // Account for "..." when truncating (3 characters)
-    const effectiveMaxLength = maxLength - 3;
-
-    // Try to truncate at sentence boundary within the effective maxLength limit
-    const truncated = description.slice(0, effectiveMaxLength);
+    // Try to truncate at sentence boundary within maxLength
+    const truncated = description.slice(0, maxLength);
     const lastPeriod = truncated.lastIndexOf(".");
     const lastExclamation = truncated.lastIndexOf("!");
     const lastQuestion = truncated.lastIndexOf("?");
@@ -93,13 +92,13 @@ export function createSEODescription(
     if (lastSentenceEnd > 10) {
       description = truncated.slice(0, lastSentenceEnd + 1);
     } else {
-      // Truncate at word boundary
+      // Truncate at word boundary for clean cut (no ellipsis)
       const lastSpace = truncated.lastIndexOf(" ");
       if (lastSpace > 10) {
-        description = `${truncated.slice(0, lastSpace).trim()}...`;
+        description = truncated.slice(0, lastSpace).trim();
       } else {
-        // Hard truncate if no good boundary
-        description = `${truncated.slice(0, effectiveMaxLength).trim()}...`;
+        // Hard truncate at maxLength if no good boundary
+        description = truncated.trim();
       }
     }
   }

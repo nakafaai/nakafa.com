@@ -71,7 +71,8 @@ describe("createSEODescription", () => {
         "ThisIsAVeryLongWordWithoutAnySentenceBreaksOrSpacesThatNeedsToBeTruncated";
       const result = createSEODescription([longWord], { maxLength: 30 });
       expect(result.length).toBeLessThanOrEqual(30);
-      expect(result.endsWith("...")).toBe(true);
+      // Clean cut - no ellipsis
+      expect(result.endsWith("...")).toBe(false);
     });
 
     it("handles description at exact max length", () => {
@@ -126,14 +127,15 @@ describe("createSEODescription", () => {
         maxLength: 30,
         minLength: 10,
       });
-      expect(result.endsWith("...")).toBe(true);
+      // Clean cut - no ellipsis
+      expect(result.endsWith("...")).toBe(false);
       expect(result.length).toBeLessThanOrEqual(30);
     });
 
     it("does not cut words in half", () => {
       const text = "The quick brown fox jumps over the lazy dog";
       const result = createSEODescription([text], { maxLength: 25 });
-      const words = result.replace("...", "").trim().split(" ");
+      const words = result.trim().split(" ");
       // All words should be complete (no partial words)
       for (const word of words) {
         expect(word).not.toBe("");
@@ -277,10 +279,11 @@ describe("createSEODescription", () => {
         ],
         { minLength: 20, maxLength: 50 }
       );
-      // Should include partial fallback with ellipsis
+      // Should include partial fallback with clean word boundary (no ellipsis)
       expect(result.length).toBeLessThanOrEqual(50);
       expect(result).toContain("Short title here");
-      expect(result.endsWith("...")).toBe(true);
+      // Clean cut - no ellipsis
+      expect(result.endsWith("...")).toBe(false);
     });
 
     it("skips partial fallback when remaining space is too small", () => {
@@ -306,11 +309,11 @@ describe("createSEODescription", () => {
         ["First part here", "Second part with multiple words"],
         { minLength: 20, maxLength: 40 }
       );
-      // Should end at word boundary
+      // Should end at word boundary with clean cut (no ellipsis)
       expect(result.length).toBeLessThanOrEqual(40);
-      // Result should end with "..." since we're adding partial fallback
-      expect(result.endsWith("...")).toBe(true);
-      // Should contain both parts
+      // Clean cut - no ellipsis
+      expect(result.endsWith("...")).toBe(false);
+      // Should contain first part
       expect(result).toContain("First part here");
     });
 
@@ -328,6 +331,59 @@ describe("createSEODescription", () => {
       expect(result.length).toBeLessThanOrEqual(45);
       // Should just be the first part
       expect(result).toBe("Short title here");
+    });
+
+    it("never exceeds maxLength when adding partial fallback", () => {
+      // This test verifies the bug fix: partial fallback must not exceed maxLength
+      // First part is 27 chars (under minLength 35), so it will try to add fallback
+      // Combined would be 27 + 1 + 50 = 78 > 60 (maxLength), so partial fallback is used
+      const result = createSEODescription(
+        [
+          "Short title that needs more",
+          "Additional context that extends the description significantly for testing",
+        ],
+        { minLength: 35, maxLength: 60 }
+      );
+      // Must never exceed maxLength
+      expect(result.length).toBeLessThanOrEqual(60);
+      // Should contain the first part
+      expect(result).toContain("Short title that needs more");
+      // Clean cut - no ellipsis
+      expect(result.endsWith("...")).toBe(false);
+    });
+
+    it("handles edge case where remaining space is limited", () => {
+      // Test the boundary where remainingSpace is tight
+      const result = createSEODescription(
+        [
+          "This is fifty chars exactly for test purposes",
+          "Additional content here",
+        ],
+        { minLength: 60, maxLength: 70 }
+      );
+      // Should handle the boundary correctly
+      expect(result.length).toBeLessThanOrEqual(70);
+      expect(result).toContain("This is fifty chars exactly for test purposes");
+    });
+
+    it("accounts for all characters in partial fallback", () => {
+      // Create a precise test case to verify the math
+      // First part: 26 chars, maxLength: 50
+      // remainingSpace = 50 - 26 - 1 = 23 chars available for partial
+      // With word boundary, we might get less, but total must be <= 50
+      const result = createSEODescription(
+        [
+          "Twenty six character text",
+          "Additional words to extend this description significantly",
+        ],
+        { minLength: 35, maxLength: 50 }
+      );
+      // Verify strict maxLength compliance
+      expect(result.length).toBeLessThanOrEqual(50);
+      // Verify structure: first part + space + partial
+      expect(result.startsWith("Twenty six character text")).toBe(true);
+      // Clean cut - no ellipsis
+      expect(result.endsWith("...")).toBe(false);
     });
   });
 
@@ -353,7 +409,8 @@ describe("createSEODescription", () => {
       const longWord = "a".repeat(200);
       const result = createSEODescription([longWord]);
       expect(result.length).toBeLessThanOrEqual(160);
-      expect(result.endsWith("...")).toBe(true);
+      // Clean cut - no ellipsis
+      expect(result.endsWith("...")).toBe(false);
     });
 
     it("handles multiple sentences at boundary", () => {
@@ -397,6 +454,30 @@ describe("createSEODescription", () => {
       const result = createSEODescription([text], { maxLength: 50 });
       // Should keep "Learn Vertical Translation" if possible
       expect(result).toContain("Learn");
+    });
+
+    it("produces clean descriptions without ellipsis", () => {
+      // Google prefers complete, natural descriptions without ellipsis
+      const testCases = [
+        {
+          parts: [
+            "Short",
+            "Additional context that extends the description significantly",
+          ],
+          opts: { minLength: 20, maxLength: 50 },
+        },
+        {
+          parts: ["A".repeat(200)],
+          opts: { maxLength: 100 },
+        },
+      ];
+
+      for (const testCase of testCases) {
+        const result = createSEODescription(testCase.parts, testCase.opts);
+        // Should never have ellipsis
+        expect(result.endsWith("...")).toBe(false);
+        expect(result.includes("...")).toBe(false);
+      }
     });
   });
 });
