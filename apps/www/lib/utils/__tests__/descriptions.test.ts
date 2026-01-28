@@ -3,12 +3,24 @@ import { createSEODescription } from "../seo/descriptions";
 
 describe("createSEODescription", () => {
   describe("basic functionality", () => {
-    it("returns first valid part", () => {
+    it("returns first valid part when it meets minLength", () => {
+      const longDescription =
+        "Primary description that is long enough to meet the minimum length requirement of one hundred twenty characters or more.";
       const result = createSEODescription([
-        "Primary description",
+        longDescription,
         "Fallback description",
       ]);
-      expect(result).toBe("Primary description");
+      expect(result).toBe(longDescription);
+    });
+
+    it("combines parts to reach minLength when first part is too short", () => {
+      const result = createSEODescription(
+        ["Short", "Additional context to extend the description"],
+        { minLength: 30, maxLength: 100 }
+      );
+      expect(result).toContain("Short");
+      expect(result).toContain("Additional");
+      expect(result.length).toBeGreaterThanOrEqual(30);
     });
 
     it("skips null and undefined values", () => {
@@ -131,15 +143,17 @@ describe("createSEODescription", () => {
   });
 
   describe("fallback chain", () => {
-    it("uses first valid part from chain", () => {
+    it("uses first valid part from chain when it meets minLength", () => {
+      const longPart =
+        "First valid part that is definitely long enough to meet the minimum length requirement of one hundred twenty characters or more.";
       const result = createSEODescription([
         null,
         undefined,
         "",
-        "First valid",
+        longPart,
         "Second valid",
       ]);
-      expect(result).toBe("First valid");
+      expect(result).toBe(longPart);
     });
 
     it("handles all nulls then valid", () => {
@@ -147,14 +161,25 @@ describe("createSEODescription", () => {
       expect(result).toBe("Finally valid");
     });
 
-    it("handles mixed valid and invalid", () => {
+    it("combines multiple valid parts to reach minLength", () => {
+      const result = createSEODescription(
+        ["Short", "Additional context to extend"],
+        { minLength: 30, maxLength: 100 }
+      );
+      expect(result).toContain("Short");
+      expect(result).toContain("Additional");
+      expect(result.length).toBeGreaterThanOrEqual(30);
+    });
+
+    it("uses single part when it already meets minLength", () => {
+      const longDescription =
+        "This is a comprehensive description that easily meets the minimum length requirement of one hundred twenty characters or more.";
       const result = createSEODescription([
         "",
-        "Valid",
-        null,
-        "Also valid but ignored",
+        longDescription,
+        "Also valid but not needed",
       ]);
-      expect(result).toBe("Valid");
+      expect(result).toBe(longDescription);
     });
   });
 
@@ -206,6 +231,103 @@ describe("createSEODescription", () => {
         minLength: 20,
       });
       expect(result.length).toBeGreaterThanOrEqual(20);
+    });
+
+    it("combines fallbacks to reach minLength", () => {
+      const result = createSEODescription(
+        ["Short title", "Additional context that extends the description"],
+        { minLength: 30, maxLength: 100 }
+      );
+      expect(result.length).toBeGreaterThanOrEqual(30);
+      expect(result).toContain("Short title");
+      expect(result).toContain("Additional context");
+    });
+
+    it("uses multiple fallbacks if needed", () => {
+      const result = createSEODescription(
+        ["A", "B", "C", "D is a longer piece of text"],
+        { minLength: 10, maxLength: 50 }
+      );
+      expect(result.length).toBeGreaterThanOrEqual(10);
+    });
+
+    it("stops adding fallbacks when maxLength reached", () => {
+      const result = createSEODescription(
+        ["First part", "Second part", "Third part that is very long"],
+        { minLength: 20, maxLength: 35 }
+      );
+      expect(result.length).toBeLessThanOrEqual(35);
+      expect(result.length).toBeGreaterThanOrEqual(20);
+    });
+
+    it("handles case where no combination can reach minLength", () => {
+      const result = createSEODescription(["A", "B", "C"], {
+        minLength: 100,
+        maxLength: 160,
+      });
+      // Should return what we have even if under minLength
+      expect(result.length).toBeGreaterThan(0);
+    });
+
+    it("adds partial fallback when combined exceeds maxLength", () => {
+      const result = createSEODescription(
+        [
+          "Short title here",
+          "Additional context that extends the description significantly",
+        ],
+        { minLength: 20, maxLength: 50 }
+      );
+      // Should include partial fallback with ellipsis
+      expect(result.length).toBeLessThanOrEqual(50);
+      expect(result).toContain("Short title here");
+      expect(result.endsWith("...")).toBe(true);
+    });
+
+    it("skips partial fallback when remaining space is too small", () => {
+      // Create a scenario where:
+      // - First part is 56 chars (under minLength of 60, so we try to add more)
+      // - Second part is "Tiny" (4 chars)
+      // - Combined would be 56 + 1 + 4 = 61 > 60 (maxLength), so we enter else branch
+      // - remainingSpace = 60 - 56 - 1 = 3 <= 10, so we skip partial fallback
+      const result = createSEODescription(
+        ["This is a very long first part that takes most of the sp", "Tiny"],
+        { minLength: 60, maxLength: 60 }
+      );
+      // Should not add partial fallback if remaining space <= 10
+      expect(result.length).toBeLessThanOrEqual(60);
+      // Should just be the first part without any addition
+      expect(result).toBe(
+        "This is a very long first part that takes most of the sp"
+      );
+    });
+
+    it("handles partial fallback with word boundary", () => {
+      const result = createSEODescription(
+        ["First part here", "Second part with multiple words"],
+        { minLength: 20, maxLength: 40 }
+      );
+      // Should end at word boundary
+      expect(result.length).toBeLessThanOrEqual(40);
+      // Result should end with "..." since we're adding partial fallback
+      expect(result.endsWith("...")).toBe(true);
+      // Should contain both parts
+      expect(result).toContain("First part here");
+    });
+
+    it("skips partial fallback when no good word boundary found", () => {
+      // Create a scenario where remaining space > 10 but lastSpace <= 5
+      // This happens when the next part starts with a very long word
+      const result = createSEODescription(
+        [
+          "Short title here",
+          "Supercalifragilisticexpialidocious is a very long word",
+        ],
+        { minLength: 20, maxLength: 45 }
+      );
+      // Should not add partial fallback if no good word boundary
+      expect(result.length).toBeLessThanOrEqual(45);
+      // Should just be the first part
+      expect(result).toBe("Short title here");
     });
   });
 

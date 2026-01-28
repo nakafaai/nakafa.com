@@ -33,16 +33,47 @@ export function createSEODescription(
   parts: (string | null | undefined)[],
   options: { maxLength?: number; minLength?: number } = {}
 ): string {
-  const { maxLength = 160 } = options;
+  const { maxLength = 160, minLength = 120 } = options;
 
-  // Find first valid part
-  const validPart = parts.find((part) => part?.trim());
+  // Filter out invalid parts
+  const validParts = parts.filter((part): part is string =>
+    Boolean(part?.trim())
+  );
 
-  if (!validPart) {
+  if (validParts.length === 0) {
     return "";
   }
 
-  let description = validPart.trim();
+  // Build description by combining parts until we reach minLength
+  let description = validParts[0].trim();
+
+  // Add fallback parts if description is too short
+  for (
+    let i = 1;
+    i < validParts.length && description.length < minLength;
+    i++
+  ) {
+    const nextPart = validParts[i].trim();
+    const combined = `${description} ${nextPart}`;
+
+    // If combined is still under maxLength, use it
+    if (combined.length <= maxLength) {
+      description = combined;
+    } else {
+      // If combined exceeds maxLength, try to add partial fallback
+      const remainingSpace = maxLength - description.length - 1; // -1 for space
+      if (remainingSpace > 10) {
+        // Only add if we can add meaningful content
+        const partialFallback = nextPart.slice(0, remainingSpace);
+        // Try to end at word boundary
+        const lastSpace = partialFallback.lastIndexOf(" ");
+        if (lastSpace > 5) {
+          description = `${description} ${partialFallback.slice(0, lastSpace)}...`;
+        }
+      }
+      break;
+    }
+  }
 
   // If too long, truncate intelligently
   if (description.length > maxLength) {
