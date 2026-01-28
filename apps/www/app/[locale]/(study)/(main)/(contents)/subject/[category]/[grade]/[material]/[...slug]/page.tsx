@@ -39,6 +39,7 @@ import {
   getContentContext,
   getContentMetadataContext,
 } from "@/lib/utils/pages/subject";
+import { createSEOTitle } from "@/lib/utils/seo/titles";
 import { getStaticParams } from "@/lib/utils/system";
 
 export const revalidate = false;
@@ -98,12 +99,19 @@ export async function generateMetadata({
     locale,
   };
 
-  const defaultTitle = `${t(material)} - ${t(getGradeNonNumeric(grade) ?? "grade", { grade })} - ${t(category)}`;
+  // Build SEO-optimized title with smart truncation
+  // Priority: content title > subject > material > grade > category
+  const title = createSEOTitle([
+    metadata?.title,
+    metadata?.subject,
+    t(material),
+    t(getGradeNonNumeric(grade) ?? "grade", { grade }),
+  ]);
 
   if (!metadata) {
     return {
       title: {
-        absolute: defaultTitle,
+        absolute: title,
       },
       alternates,
       openGraph,
@@ -113,7 +121,7 @@ export async function generateMetadata({
 
   return {
     title: {
-      absolute: `${metadata.title} - ${metadata.subject} - ${defaultTitle}`,
+      absolute: title,
     },
     description: metadata.description ?? metadata.subject ?? "",
     alternates,

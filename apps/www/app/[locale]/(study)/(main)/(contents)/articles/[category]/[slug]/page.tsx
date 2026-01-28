@@ -27,6 +27,7 @@ import {
   fetchArticleContext,
   fetchArticleMetadataContext,
 } from "@/lib/utils/pages/article";
+import { createSEOTitle } from "@/lib/utils/seo/titles";
 import { getStaticParams } from "@/lib/utils/system";
 
 export const revalidate = false;
@@ -77,9 +78,15 @@ export async function generateMetadata({
     locale,
   };
 
+  // Build SEO-optimized title with smart truncation
+  // Priority: content title > category
+  const title = createSEOTitle([content?.metadata.title, t(category)]);
+
   if (!content) {
     return {
-      title: t(category),
+      title: {
+        absolute: title,
+      },
       alternates,
       openGraph,
       twitter,
@@ -90,7 +97,7 @@ export async function generateMetadata({
 
   return {
     title: {
-      absolute: `${metadata.title} - ${t(category)}`,
+      absolute: title,
     },
     description: metadata.description,
     alternates,

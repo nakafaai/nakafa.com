@@ -40,6 +40,7 @@ import {
   fetchExerciseContext,
   fetchExerciseMetadataContext,
 } from "@/lib/utils/pages/exercises";
+import { createSEOTitle } from "@/lib/utils/seo/titles";
 import { getStaticParams } from "@/lib/utils/system";
 import { QuestionAnalytics } from "./analytics";
 import { ExerciseArticle } from "./article";
@@ -89,18 +90,15 @@ export async function generateMetadata({
     )
   );
 
-  const title = `${t(material)} - ${t(type)} - ${t(category)}`;
-  let finalTitle = currentMaterial
-    ? `${currentMaterial.title} - ${title}`
-    : title;
-
-  if (currentMaterialItem) {
-    finalTitle = `${currentMaterialItem.title} - ${finalTitle}`;
-  }
-
-  if (isSpecificExercise && exerciseTitle) {
-    finalTitle = `${exerciseTitle} - ${finalTitle}`;
-  }
+  // Build SEO-optimized title with smart truncation
+  // Priority: exercise title > material item > material > type > category
+  const finalTitle = createSEOTitle([
+    isSpecificExercise && exerciseTitle ? exerciseTitle : undefined,
+    currentMaterialItem?.title,
+    currentMaterial?.title,
+    t(material),
+    t(type),
+  ]);
 
   const urlPath = `/${locale}${FilePath}`;
   const image = {
