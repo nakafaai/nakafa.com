@@ -2,10 +2,10 @@
 
 ## Quick Summary
 
-**Overall Score**: 41/100 (Grade F) → Target: >80/100  
+**Overall Score**: 44/100 (Grade F) → Target: >80/100  
 **Last Updated**: 2026-01-28  
 **Branch**: audit-website  
-**Commits**: 28 commits ahead of preview  
+**Commits**: 29 commits ahead of preview  
 
 ## What's Done ✅
 
@@ -21,12 +21,14 @@
 
 | Task | Status | Impact | Files Changed |
 |------|--------|--------|---------------|
-| Fix JSON-LD | ✅ | Structured Data 46→80+ | 12 JSON-LD files |
-| Fix Title Tags | ✅ | Core SEO 81→90+ | 3 content pages |
+| Fix JSON-LD | ✅ | Structured Data 46→52+ | 12 JSON-LD files |
+| Fix Title Tags | ✅ | Core SEO 81→89 | 3 content pages |
+| Fix Meta Descriptions | ✅ | Core SEO 81→89 | 4 content pages |
 | Build SEO Title Utility | ✅ | Smart truncation | `utils/seo/titles.ts` |
+| Build SEO Description Utility | ✅ | Smart truncation | `utils/seo/descriptions.ts` |
 
 **JSON-LD Fixes:**
-- ✅ Fixed BreadcrumbList (removed invalid props)
+- ✅ Fixed BreadcrumbList empty array issue (258 errors resolved)
 - ✅ Fixed WebSite SearchAction (added query-input)
 - ✅ Created BookJsonLd for Quran pages
 - ✅ Created FAQPageJsonLd for Ask pages
@@ -39,74 +41,99 @@
 - ✅ Smart truncation at word boundaries
 - ✅ All titles now 30-60 characters
 
-**SEO Title Builder:**
-- ✅ Smart truncation at word boundaries
-- ✅ Filters whitespace-only strings
-- ✅ 100% test coverage (41 tests)
+**Meta Description Fixes:**
+- ✅ Quran pages: Descriptions include surah name, translation, verse count
+- ✅ Subject pages: Fallback chain from metadata
+- ✅ Articles pages: Fallback chain from metadata
+- ✅ Exercises pages: Added missing descriptions entirely
+- ✅ Smart truncation at word boundaries (120-160 chars)
+- ✅ Bilingual support (English and Indonesian)
+
+**SEO Utilities:**
+- ✅ `createSEOTitle()`: Smart truncation, 41 tests, 100% coverage
+- ✅ `createSEODescription()`: Smart truncation, 33 tests, 100% coverage
+
+### Phase 3: BreadcrumbList Fix (COMPLETED)
+
+**Problem**: Pages without content (e.g., `/informatics`, `/geospatial`) had empty `itemListElement: []` which is invalid JSON-LD per Schema.org specification.
+
+**Root Cause**: Subject pages with no materials passed empty `headings` array to `BreadcrumbJsonLd`, creating invalid structured data.
+
+**Solution**: Modified `BreadcrumbJsonLd` component to return `null` when `breadcrumbItems` array is empty, preventing invalid JSON-LD from being rendered.
+
+**Verification**:
+- ✅ Pages with empty content no longer render BreadcrumbList
+- ✅ Pages with content still render valid BreadcrumbList
+- ✅ Build successful (6,997 pages)
+- ✅ All tests passing (546 tests)
+
+**File Changed**:
+- `packages/seo/json-ld/breadcrumb.tsx` - Added empty array check
 
 ---
 
 ## What's Next 🔄
 
-### Phase 3: Meta Descriptions & Accessibility (CURRENT)
+### Phase 4: Remaining Critical Issues (CURRENT)
 
 | Priority | Task | Impact | Status |
 |----------|------|--------|--------|
-| **HIGH** | Fix Meta Descriptions | Core SEO 81→90+ | 🔄 Ready |
-| **HIGH** | Fix Form Labels | Accessibility 89→95+ | 📝 Planned |
+| **HIGH** | Fix Form Labels | Accessibility 87→95+ | 📝 Planned |
+| **HIGH** | Fix Button ARIA Labels | Accessibility 87→95+ | 📝 Planned |
+| **MEDIUM** | Address DOM Size | Performance 74→80+ | 📝 Planned |
 
-**Description Issues (124 pages):**
-- Too short (3-26 chars): Quran pages
-- Too long (161-171 chars): Content pages
+**Form Label Issues (113 pages):**
+- Inputs without labels or aria attributes
+- Chat input in AI components
 
-**Form Label Issues (76 pages):**
-- Inputs without labels
-- Missing aria attributes
+**Button ARIA Issues (16 buttons on /en/about):**
+- Buttons without accessible names
+
+**DOM Size Issues:**
+- Excessive DOM nodes on math-heavy pages (up to 13,030 nodes)
+- Need virtualization for long content
 
 ---
 
 ## Current Scores
 
-| Category | Score | Status |
-|----------|-------|--------|
-| Social Media | 100 | ✅ |
-| Internationalization | 100 | ✅ |
-| Local SEO | 100 | ✅ |
-| Mobile | 100 | ✅ |
-| Accessibility | 89 | ✅ |
-| Core SEO | 81 | ⚠️ Needs descriptions |
-| Performance | 75 | 🔴 (dev mode) |
-| Structured Data | 46 | 🔴 (being validated) |
+| Category | Score | Status | Notes |
+|----------|-------|--------|-------|
+| Social Media | 100 | ✅ | Perfect |
+| Internationalization | 100 | ✅ | Perfect |
+| Local SEO | 100 | ✅ | Perfect |
+| Mobile | 100 | ✅ | Perfect |
+| Core SEO | 89 | ✅ | Improved with descriptions |
+| Accessibility | 87 | ⚠️ | Form labels pending |
+| Performance | 74 | ⚠️ | Dev mode (prod will be 85+) |
+| Structured Data | 52 | ⚠️ | Breadcrumb fixed, other issues remain |
 
-**Note**: Performance 75/100 is from dev mode. Production build will be 85+.
+**Note**: Performance 74/100 is from dev mode. Production build will be 85+.
 
 ---
 
 ## How to Continue
 
-### 1. Fix Meta Descriptions (Next Task)
+### 1. Fix Form Labels (Next Task)
 
 **Files to edit:**
 ```
-apps/www/app/[locale]/(study)/(main)/(contents)/quran/[surah]/page.tsx
-apps/www/app/[locale]/(study)/(main)/(contents)/subject/[...slug]/page.tsx
-apps/www/app/[locale]/(study)/(main)/(contents)/articles/[...slug]/page.tsx
-apps/www/app/[locale]/(study)/(main)/(contents)/exercises/[...slug]/page.tsx
+components/ui/input.tsx
+components/ui/select.tsx
+components/ui/textarea.tsx
 ```
 
 **Issues:**
-- Descriptions too short (3-26 chars): Quran pages
-- Descriptions too long (161-171 chars): Content pages
+- Chat input lacks labels
+- Missing aria-label attributes
 
 **Fix:**
-- Expand short descriptions to 120-160 characters
-- Truncate long descriptions to 160 characters
-- Include primary keyword naturally
+- Add aria-label to all inputs
+- Ensure form controls have associated labels
 
 ### 2. Test Your Changes
 ```bash
 pnpm lint              # Check code style
-pnpm typecheck         # Check TypeScript
 pnpm test              # Run tests
 pnpm build && pnpm start   # Test production build
 ```
@@ -122,15 +149,12 @@ npx squirrelscan audit http://localhost:3000 --max-pages 500
 
 **SEO Utilities:**
 - `apps/www/lib/utils/seo/titles.ts` - Title builder with smart truncation
+- `apps/www/lib/utils/seo/descriptions.ts` - Description builder with smart truncation
 - `apps/www/lib/utils/__tests__/titles.test.ts` - 41 tests
-
-**Content Pages (Title Tags Fixed):**
-- `apps/www/app/[locale]/(study)/(main)/(contents)/subject/[...slug]/page.tsx`
-- `apps/www/app/[locale]/(study)/(main)/(contents)/articles/[...slug]/page.tsx`
-- `apps/www/app/[locale]/(study)/(main)/(contents)/exercises/[...slug]/page.tsx`
+- `apps/www/lib/utils/__tests__/descriptions.test.ts` - 33 tests
 
 **JSON-LD Components:**
-- `packages/seo/json-ld/breadcrumb.tsx`
+- `packages/seo/json-ld/breadcrumb.tsx` - Fixed empty array handling
 - `packages/seo/json-ld/website.tsx`
 - `packages/seo/json-ld/book.tsx`
 - `packages/seo/json-ld/faq-page.tsx`
@@ -143,8 +167,8 @@ npx squirrelscan audit http://localhost:3000 --max-pages 500
 ## Important Notes
 
 - **Security "exposed secrets"** are FALSE POSITIVES from build output
-- **Performance 75/100** is from dev mode (production will be 85+)
-- **All tests passing**: 513 tests, 100% coverage on utils
+- **Performance 74/100** is from dev mode (production will be 85+)
+- **All tests passing**: 546 tests, 100% coverage on utils
 - **Build successful**: 6,997 pages generated
 - **Defer production deploy** until all fixes complete (cost savings)
 
@@ -152,4 +176,4 @@ npx squirrelscan audit http://localhost:3000 --max-pages 500
 
 ## Blockers
 
-None. Ready to continue with meta descriptions.
+None. Ready to continue with form labels.
