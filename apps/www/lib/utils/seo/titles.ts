@@ -44,17 +44,38 @@ export function createSEOTitle(
   let title = "";
 
   for (const part of parts) {
-    // Skip null/undefined/empty values
-    if (!part) {
+    // Skip null/undefined/empty values and whitespace-only strings
+    // Check type first since trim() only exists on strings
+    if (typeof part !== "string") {
+      continue;
+    }
+    const trimmedPart = part.trim();
+    if (!trimmedPart) {
       continue;
     }
 
     if (title === "") {
-      // First valid part
-      title = part;
+      // First valid part - apply smart truncation if needed
+      const maxFirstPartLength =
+        MAX_LENGTH - SEPARATOR.length - siteName.length;
+
+      if (trimmedPart.length > maxFirstPartLength) {
+        // Smart truncation: find last space before limit to preserve whole words
+        const truncated = trimmedPart.slice(0, maxFirstPartLength);
+        const lastSpaceIndex = truncated.lastIndexOf(" ");
+
+        if (lastSpaceIndex > 0) {
+          title = truncated.slice(0, lastSpaceIndex).trim();
+        } else {
+          // No space found, truncate at limit
+          title = truncated.trim();
+        }
+      } else {
+        title = trimmedPart;
+      }
     } else {
       // Check if adding this part would exceed limit
-      const potentialTitle = `${title}${SEPARATOR}${part}`;
+      const potentialTitle = `${title}${SEPARATOR}${trimmedPart}`;
       const totalLength =
         potentialTitle.length + SEPARATOR.length + siteName.length;
 
