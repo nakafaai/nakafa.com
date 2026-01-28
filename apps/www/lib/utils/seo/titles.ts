@@ -16,11 +16,12 @@
  * ```typescript
  * createSEOTitle([
  *   "Vertical Translation",      // 20 chars - kept
- *   "Function Transformation",   // would make 48 chars - kept
- *   "Grade 12",                  // would exceed 60 - skipped
+ *   "Function Transformation",   // 23 chars - kept
+ *   "Grade 12",                  // skipped (would exceed 55 char limit)
  *   "Mathematics"                // skipped
  * ], "Nakafa")
- * // Result: "Vertical Translation - Function Transformation - Nakafa" (51 chars)
+ * // Result: "Vertical Translation - Function Transformation - Nakafa"
+ * // Length: 20 + 3 + 23 + 3 + 6 = 55 chars (exactly at MAX_LENGTH)
  * ```
  *
  * @param parts - Title parts in order of importance (most important first), null/undefined values are filtered out
@@ -31,7 +32,12 @@ export function createSEOTitle(
   parts: (string | null | undefined)[],
   siteName = "Nakafa"
 ): string {
-  const MAX_LENGTH = 55; // Leave room for " - {siteName}"
+  // MAX_LENGTH calculation:
+  // Google truncates titles at ~60 chars. We use 55 to stay safely under.
+  // Final format: "{parts} - {siteName}"
+  // Overhead: " - " (3 chars) + "Nakafa" (6 chars) = 9 chars
+  // So MAX_LENGTH = 55 means parts can use up to 46 chars (55 - 9)
+  const MAX_LENGTH = 55;
   const SEPARATOR = " - ";
 
   // Build title by iterating and skipping null/undefined values
@@ -67,25 +73,4 @@ export function createSEOTitle(
   }
 
   return `${title}${SEPARATOR}${siteName}`;
-}
-
-/**
- * Validates if a title is within SEO-optimal length
- *
- * @param title - Title to check
- * @returns Object with validation results
- */
-export function validateTitleLength(title: string): {
-  length: number;
-  isOptimal: boolean;
-  isTooShort: boolean;
-  isTooLong: boolean;
-} {
-  const length = title.length;
-  return {
-    length,
-    isOptimal: length >= 30 && length <= 60,
-    isTooShort: length < 30,
-    isTooLong: length > 60,
-  };
 }

@@ -106,6 +106,7 @@ export async function generateMetadata({
     metadata?.subject,
     t(material),
     t(getGradeNonNumeric(grade) ?? "grade", { grade }),
+    t(category),
   ]);
 
   if (!metadata) {

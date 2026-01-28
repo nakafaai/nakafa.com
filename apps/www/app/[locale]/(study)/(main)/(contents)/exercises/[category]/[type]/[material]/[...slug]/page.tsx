@@ -98,6 +98,7 @@ export async function generateMetadata({
     currentMaterial?.title,
     t(material),
     t(type),
+    t(category),
   ]);
 
   const urlPath = `/${locale}${FilePath}`;
