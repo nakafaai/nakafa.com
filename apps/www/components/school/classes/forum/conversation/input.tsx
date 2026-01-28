@@ -219,6 +219,7 @@ export const ForumPostInput = memo(
                       />
                     </InputGroupAddon>
                     <InputGroupTextarea
+                      aria-label={t("send-message-placeholder")}
                       autoFocus
                       className="scrollbar-hide max-h-36 min-h-0"
                       disabled={isSubmitting}
@@ -238,6 +239,7 @@ export const ForumPostInput = memo(
                       <Popover onOpenChange={setEmojiOpen} open={emojiOpen}>
                         <PopoverTrigger asChild>
                           <InputGroupButton
+                            aria-label={t("emoji")}
                             disabled={isSubmitting}
                             size="icon"
                             type="button"
