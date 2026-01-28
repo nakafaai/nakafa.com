@@ -109,18 +109,32 @@
 
 **Problem**: When appending partial fallback with ellipsis (`...`), the function didn't account for the 3 extra characters, potentially exceeding `maxLength` by up to 3 characters.
 
-**Solution**: Reserve 3 characters for ellipsis when calculating remaining space:
-```typescript
-const remainingSpace = maxLength - description.length - 1 - 3; // -1 for space, -3 for "..."
-```
+**Solution**: Removed all ellipsis from descriptions. Google prefers complete, natural descriptions without truncation indicators. Now truncates at word/sentence boundaries with clean cuts.
 
-**Impact**: Ensures descriptions never exceed maxLength, maintaining SEO compliance.
+**Impact**: Ensures descriptions never exceed maxLength, maintaining SEO compliance with clean output.
 
 **Files**:
-- `apps/www/lib/utils/seo/descriptions.ts` (line 65)
-- `apps/www/lib/utils/__tests__/descriptions.test.ts` (added 4 new test cases)
+- `apps/www/lib/utils/seo/descriptions.ts` (removed all ellipsis logic)
+- `apps/www/lib/utils/__tests__/descriptions.test.ts` (47 tests, updated for clean output)
 
-**Test Coverage**: 100% (46 tests, all passing)
+**Test Coverage**: 100% (47 tests, all passing)
+
+#### 3.5 createSEOTitle Site Name Length Bug (Devin AI Review)
+
+**Problem**: If `siteName.length >= MAX_LENGTH` (55), the function returned `siteName` directly without truncating, breaking the function's contract.
+
+**Solution**: Added siteName truncation at the beginning of the function:
+1. Truncate siteName if it exceeds MAX_LENGTH
+2. Handle edge case where siteName takes up all space
+3. Ensure final title never exceeds MAX_LENGTH
+
+**Impact**: Titles now strictly enforce MAX_LENGTH even with very long site names.
+
+**Files**:
+- `apps/www/lib/utils/seo/titles.ts` (added siteName truncation logic)
+- `apps/www/lib/utils/__tests__/titles.test.ts` (47 tests, added 6 new test cases for edge cases)
+
+**Test Coverage**: 100% (47 tests, all passing)
 
 ### Phase 4: Accessibility Fixes (COMPLETED)
 

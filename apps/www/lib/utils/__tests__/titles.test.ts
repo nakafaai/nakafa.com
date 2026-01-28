@@ -245,6 +245,67 @@ describe("createSEOTitle", () => {
       expect(result).toContain(longSiteName);
     });
 
+    it("truncates site name when it exceeds MAX_LENGTH (Devin AI bug fix)", () => {
+      // Edge case: siteName itself is longer than MAX_LENGTH (55)
+      const veryLongSiteName =
+        "Very Long Site Name That Exceeds The Maximum Length";
+      const result = createSEOTitle(["Hello"], veryLongSiteName);
+      // Result should never exceed MAX_LENGTH
+      expect(result.length).toBeLessThanOrEqual(55);
+      // Should contain truncated site name
+      expect(result).toContain("Very Long Site Name");
+    });
+
+    it("returns truncated site name only when siteName exceeds MAX_LENGTH and no parts", () => {
+      const veryLongSiteName =
+        "ThisIsAVeryLongSiteNameThatExceedsTheMaximumLengthOfFiftyFive";
+      const result = createSEOTitle([], veryLongSiteName);
+      // Should return truncated site name
+      expect(result.length).toBeLessThanOrEqual(55);
+      expect(result.endsWith("...")).toBe(false); // Clean cut, no ellipsis
+    });
+
+    it("handles site name exactly at MAX_LENGTH", () => {
+      const exactLengthSiteName = "A".repeat(55);
+      const result = createSEOTitle(["Hello"], exactLengthSiteName);
+      // Should truncate site name to make room for parts
+      expect(result.length).toBeLessThanOrEqual(55);
+    });
+
+    it("enforces MAX_LENGTH even with extremely long site name", () => {
+      // Site name of 100 characters
+      const extremelyLongSiteName = "A".repeat(100);
+      const result = createSEOTitle(["Short"], extremelyLongSiteName);
+      // Must never exceed MAX_LENGTH
+      expect(result.length).toBeLessThanOrEqual(55);
+      // Should be truncated
+      expect(result).not.toBe(extremelyLongSiteName);
+    });
+
+    it("truncates site name at word boundary when possible", () => {
+      // Site name with spaces - should truncate at word boundary
+      // "Very Long Site Name That Exceeds The Maximum Length Of Fifty Five" is 66 chars
+      // Truncated to 55: "Very Long Site Name That Exceeds The Maximum Length Of" (54 chars)
+      const siteNameWithSpaces =
+        "Very Long Site Name That Exceeds The Maximum Length Of Fifty Five";
+      const result = createSEOTitle([], siteNameWithSpaces);
+      // Should be truncated at word boundary (not mid-word)
+      expect(result.length).toBeLessThanOrEqual(55);
+      // Should end at a word boundary (not mid-word)
+      expect(result).not.toContain("Fifty");
+      // Should contain the beginning
+      expect(result).toContain("Very Long Site Name");
+    });
+
+    it("truncates site name at MAX_LENGTH when no spaces found", () => {
+      // Site name without spaces - should truncate at MAX_LENGTH
+      const siteNameNoSpaces = "A".repeat(100);
+      const result = createSEOTitle([], siteNameNoSpaces);
+      // Should be truncated at exactly MAX_LENGTH (no spaces to find)
+      expect(result.length).toBeLessThanOrEqual(55);
+      expect(result).toBe("A".repeat(55));
+    });
+
     it("filters out whitespace-only strings", () => {
       const result = createSEOTitle(["Hello", "   ", "World"]);
       // Whitespace-only strings should be filtered out to prevent malformed titles
