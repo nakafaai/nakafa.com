@@ -1,0 +1,31 @@
+export const metadata = {
+  title: "Explanation for Question 3",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/26/2026",
+};
+
+Based on the passage, we can construct a chain of cause and effect (implication) from the events described. Let's define the following statements:
+
+- <InlineMath math="P" />: Not brushing teeth regularly every day.
+- <InlineMath math="Q" />: Food debris remains in the mouth.
+- <InlineMath math="R" />: Bacteria grow on the debris.
+- <InlineMath math="S" />: Releasing unpleasant-smelling compounds causing bad breath.
+- <InlineMath math="T" />: Forming dental plaque.
+
+The logical flow in the text is sequential: <InlineMath math="P \rightarrow Q \rightarrow R \rightarrow S \rightarrow T" />.
+
+Using the principle of Hypothetical Syllogism, we can deduce a direct relationship between the initial cause and the final effect:
+
+<MathContainer>
+  <BlockMath math="P \rightarrow T" />
+</MathContainer>
+
+This means, "If one does not brush teeth regularly every day (<InlineMath math="P" />), then dental plaque will form (<InlineMath math="T" />)."
+
+The question asks for the conclusion if **dental plaque is not formed** (<InlineMath math="\sim T" />). We can use the **Modus Tollens** rule:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} &P \rightarrow T \\ &\sim T \\ \hline &\therefore \sim P \end{aligned}" />
+</MathContainer>
+
+The conclusion is <InlineMath math="\sim P" /> (the negation of <InlineMath math="P" />). Since <InlineMath math="P" /> is "Not brushing teeth regularly every day", then <InlineMath math="\sim P" /> is **"Brushing teeth regularly every day"**.
