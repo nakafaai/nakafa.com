@@ -1,0 +1,26 @@
+export const metadata = {
+  title: "Pembahasan Soal 14",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/26/2026",
+};
+
+Kita analisis pola perubahan antar suku pada barisan bilangan <InlineMath math="1001, 995, 991, 985, 981, \dots" />
+
+Pola yang terbentuk adalah sebagai berikut:
+
+<MathContainer>
+  <BlockMath math="1001 \xrightarrow{-6} 995" />
+  <BlockMath math="995 \xrightarrow{-4} 991" />
+  <BlockMath math="991 \xrightarrow{-6} 985" />
+  <BlockMath math="985 \xrightarrow{-4} 981" />
+</MathContainer>
+
+Terlihat pola yang berulang adalah **dikurang 6** dan **dikurang 4** (<InlineMath math="-6, -4" />).
+
+Maka, operasi selanjutnya setelah <InlineMath math="-4" /> adalah **dikurang 6**:
+
+<MathContainer>
+  <BlockMath math="981 - 6 = 975" />
+</MathContainer>
+
+Jadi, nilai yang tepat untuk mengisi barisan tersebut adalah **<InlineMath math="975" />**.
