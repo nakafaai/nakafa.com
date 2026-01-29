@@ -204,8 +204,8 @@ importers:
         specifier: ^0.0.9
         version: 0.0.9
       '@ai-sdk/react':
-        specifier: ^3.0.61
-        version: 3.0.61(react@19.2.4)(zod@4.3.6)
+        specifier: ^3.0.62
+        version: 3.0.62(react@19.2.4)(zod@4.3.6)
       '@convex-dev/better-auth':
         specifier: ^0.10.10
         version: 0.10.10(@better-auth/core@1.4.9(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.7(zod@4.3.6))(jose@6.1.3)(kysely@0.28.9)(nanostores@1.1.0))(@better-auth/utils@0.3.0)(@standard-schema/spec@1.1.0)(better-auth@1.4.9(next@16.1.6(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.0.18))(better-call@1.1.7(zod@4.3.6))(convex@1.31.6(react@19.2.4))(hono@4.11.7)(nanostores@1.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
@@ -291,8 +291,8 @@ importers:
         specifier: ^3.4.0
         version: 3.4.0
       ai:
-        specifier: ^6.0.59
-        version: 6.0.59(zod@4.3.6)
+        specifier: ^6.0.60
+        version: 6.0.60(zod@4.3.6)
       any-ascii:
         specifier: ^0.3.3
         version: 0.3.3
@@ -436,8 +436,8 @@ importers:
         specifier: ^3.0.21
         version: 3.0.21(zod@4.3.6)
       '@ai-sdk/react':
-        specifier: ^3.0.61
-        version: 3.0.61(react@19.2.4)(zod@4.3.6)
+        specifier: ^3.0.62
+        version: 3.0.62(react@19.2.4)(zod@4.3.6)
       '@mendable/firecrawl-js':
         specifier: ^4.11.5
         version: 4.11.5
@@ -448,8 +448,8 @@ importers:
         specifier: ^0.13.10
         version: 0.13.10(typescript@5.9.3)(zod@4.3.6)
       ai:
-        specifier: ^6.0.59
-        version: 6.0.59(zod@4.3.6)
+        specifier: ^6.0.60
+        version: 6.0.60(zod@4.3.6)
       convex:
         specifier: ^1.31.6
         version: 1.31.6(react@19.2.4)
@@ -497,8 +497,8 @@ importers:
         specifier: ^1.336.1
         version: 1.336.1
       posthog-node:
-        specifier: ^5.24.4
-        version: 5.24.4
+        specifier: ^5.24.5
+        version: 5.24.5
       react:
         specifier: ^19.2.4
         version: 19.2.4
@@ -546,8 +546,8 @@ importers:
         specifier: ^0.13.10
         version: 0.13.10(typescript@5.9.3)(zod@4.3.6)
       ai:
-        specifier: ^6.0.59
-        version: 6.0.59(zod@4.3.6)
+        specifier: ^6.0.60
+        version: 6.0.60(zod@4.3.6)
       better-auth:
         specifier: 1.4.9
         version: 1.4.9(next@16.1.6(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.0.18)
@@ -774,8 +774,8 @@ importers:
         specifier: ^2.0.13
         version: 2.0.13
       ai:
-        specifier: ^6.0.59
-        version: 6.0.59(zod@4.3.6)
+        specifier: ^6.0.60
+        version: 6.0.60(zod@4.3.6)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -1161,8 +1161,8 @@ packages:
     resolution: {integrity: sha512-2Xmoq6DBJqmSl80U6V9z5jJSJP7ehaJJQMy2iFUqTay06wdCqTnPVBBQbtEL8RCChenL+q5DC5H5WzU3vV3v8w==}
     engines: {node: '>=18'}
 
-  '@ai-sdk/react@3.0.61':
-    resolution: {integrity: sha512-vCjZBnY2+TawFBXamSKt6elAt9n1MXMfcjSd9DSgT9peCJN27qNGVSXgaGNh/B3cUgeOktFfhB2GVmIqOjvmLQ==}
+  '@ai-sdk/react@3.0.62':
+    resolution: {integrity: sha512-kbUwJ1Bp9DyqGNw9JqxKKLmYzkPz2k7K4XdVHy2mnjo3sr41lAO7UzYY/Zb38KgBXFUpSmj/2tWXEazCwGg2cg==}
     engines: {node: '>=18'}
     peerDependencies:
       react: ^18 || ~19.0.1 || ~19.1.2 || ^19.2.1
@@ -6447,8 +6447,8 @@ packages:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  ai@6.0.59:
-    resolution: {integrity: sha512-9SfCvcr4kVk4t8ZzIuyHpuL1hFYKsYMQfBSbBq3dipXPa+MphARvI8wHEjNaRqYl3JOsJbWxEBIMqHL0L92mUA==}
+  ai@6.0.60:
+    resolution: {integrity: sha512-VktLBtM6mNIHPZ1W04DA8N3c/POXLUhfeZE4oS2fIPFYYqjDzK6WBh+NlFR2fGJ010IKO3VFklCJlaBdJOrsdg==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -10133,8 +10133,8 @@ packages:
   posthog-js@1.336.1:
     resolution: {integrity: sha512-YphbVhXnImmZoALvf2oh129Cxu6IRQ9P9sWhuyY+dGe7jqt1jBp6Dg7QEK39stB4rzxmT/N3OLFcWZM7ZYQzCg==}
 
-  posthog-node@5.24.4:
-    resolution: {integrity: sha512-U90zdez3jbqAZ4HNxCM/n6SK9h2W59DPS0l2rboWiaKiBi47rN+YJmFQqx1rQsQA47JhNsmAAh2iwqYQ+VTjow==}
+  posthog-node@5.24.5:
+    resolution: {integrity: sha512-FCo0k7OJPYohXIVD2yLuyHSm7nGN+kHIGLnOalDIZYhhsojy9XQXADqq6i+3emcr8wz6Vc0n4IkmLkCFa0Uoyw==}
     engines: {node: ^20.20.0 || >=22.22.0}
 
   potpack@1.0.2:
@@ -12307,10 +12307,10 @@ snapshots:
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/react@3.0.61(react@19.2.4)(zod@4.3.6)':
+  '@ai-sdk/react@3.0.62(react@19.2.4)(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider-utils': 4.0.10(zod@4.3.6)
-      ai: 6.0.59(zod@4.3.6)
+      ai: 6.0.60(zod@4.3.6)
       react: 19.2.4
       swr: 2.3.8(react@19.2.4)
       throttleit: 2.1.0
@@ -18280,7 +18280,7 @@ snapshots:
       screenfull: 5.2.0
       tslib: 2.8.1
 
-  ai@6.0.59(zod@4.3.6):
+  ai@6.0.60(zod@4.3.6):
     dependencies:
       '@ai-sdk/gateway': 3.0.27(zod@4.3.6)
       '@ai-sdk/provider': 3.0.5
@@ -22667,7 +22667,7 @@ snapshots:
       query-selector-shadow-dom: 1.0.1
       web-vitals: 5.1.0
 
-  posthog-node@5.24.4:
+  posthog-node@5.24.5:
     dependencies:
       '@posthog/core': 1.15.0
 
