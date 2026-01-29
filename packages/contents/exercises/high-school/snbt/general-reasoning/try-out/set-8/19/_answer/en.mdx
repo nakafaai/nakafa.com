@@ -1,0 +1,43 @@
+export const metadata = {
+  title: "Explanation for Problem 19",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/29/2026",
+};
+
+To determine the number of visitors on the sixth day, we need to analyze the pattern of visitor increases for tourist spot <InlineMath math="\text{A}" /> and zoo <InlineMath math="\text{B}" /> separately.
+
+#### Visitor Pattern Analysis for Tourist Spot A
+
+The visitor data for tourist spot <InlineMath math="\text{A}" /> over five days is: <InlineMath math="41, 44, 49, 52, 57" />. Let's observe the difference between terms:
+
+<MathContainer>
+  <BlockMath math="41 \xrightarrow{+3} 44 \xrightarrow{+5} 49 \xrightarrow{+3} 52 \xrightarrow{+5} 57" />
+</MathContainer>
+
+The addition pattern repeats alternately: <InlineMath math="+3, +5, +3, +5" />. Thus, the next pattern is <InlineMath math="+3" />.
+
+The number of visitors to tourist spot <InlineMath math="\text{A}" /> on the sixth day is:
+
+<MathContainer>
+  <BlockMath math="57 + 3 = 60" />
+</MathContainer>
+
+#### Visitor Pattern Analysis for Zoo B
+
+The visitor data for zoo <InlineMath math="\text{B}" /> over five days is: <InlineMath math="110, 115, 125, 130, 140" />. Let's observe the difference between terms:
+
+<MathContainer>
+  <BlockMath math="110 \xrightarrow{+5} 115 \xrightarrow{+10} 125 \xrightarrow{+5} 130 \xrightarrow{+10} 140" />
+</MathContainer>
+
+The addition pattern repeats alternately: <InlineMath math="+5, +10, +5, +10" />. Thus, the next pattern is <InlineMath math="+5" />.
+
+The number of visitors to zoo <InlineMath math="\text{B}" /> on the sixth day is:
+
+<MathContainer>
+  <BlockMath math="140 + 5 = 145" />
+</MathContainer>
+
+#### Conclusion
+
+Therefore, the number of visitors to tourist spot <InlineMath math="\text{A}" /> and zoo <InlineMath math="\text{B}" /> on the sixth day are <InlineMath math="60" /> and <InlineMath math="145" /> people, respectively.

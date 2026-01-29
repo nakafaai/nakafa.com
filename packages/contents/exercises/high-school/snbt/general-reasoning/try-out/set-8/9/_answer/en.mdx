@@ -1,0 +1,42 @@
+export const metadata = {
+  title: "Question 9 Explanation",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/29/2026",
+};
+
+We can solve this problem using syllogistic logic. Let's first define the premises:
+
+*   <InlineMath math="P" />: Students manage their time well.
+*   <InlineMath math="Q" />: Students study very hard.
+*   <InlineMath math="R" />: Students achieve high exam scores.
+
+#### Analyzing Premises
+
+Based on the text, we derive the following implications:
+
+1.  "Students will achieve high exam scores if they study very hard" can be written as <InlineMath math="Q \rightarrow R" />.
+2.  "This condition (studying hard) occurs when students can manage their time well" can be written as <InlineMath math="P \rightarrow Q" />.
+
+#### Drawing a Conclusion
+
+By combining these two premises, we get a logical chain:
+
+<MathContainer>
+  <BlockMath math="P \rightarrow Q \rightarrow R \implies P \rightarrow R" />
+</MathContainer>
+
+The initial conclusion is: **"If students can manage their time well, then they will achieve high exam scores."**
+
+#### Logical Equivalence (Contrapositive)
+
+In mathematical logic, an implication statement <InlineMath math="P \rightarrow R" /> is equivalent to its contrapositive, which is <InlineMath math="\sim R \rightarrow \sim P" />.
+
+<MathContainer>
+  <BlockMath math="\sim R \rightarrow \sim P" />
+</MathContainer>
+
+This translates to: **"If students do NOT achieve high exam scores, then they can NOT manage their time well."**
+
+This statement matches the option stating that students who do not achieve high exam scores mean they cannot manage their time well.
+
+> Remember the principles of Modus Tollens and Contrapositive: If <InlineMath math="A \rightarrow B" /> is true, then <InlineMath math="\sim B \rightarrow \sim A" /> must also be true.

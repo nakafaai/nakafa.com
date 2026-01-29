@@ -1,0 +1,42 @@
+export const metadata = {
+  title: "Pembahasan Soal 9",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/29/2026",
+};
+
+Kita dapat menyelesaikan soal ini dengan menggunakan logika silogisme. Mari kita definisikan premis-premisnya terlebih dahulu:
+
+*   <InlineMath math="P" />: Mahasiswa mengatur waktunya dengan baik.
+*   <InlineMath math="Q" />: Mahasiswa belajar dengan sangat tekun.
+*   <InlineMath math="R" />: Mahasiswa meraih nilai ujian tinggi.
+
+#### Menganalisis Premis
+
+Berdasarkan teks soal, kita mendapatkan hubungan implikasi sebagai berikut:
+
+1.  "Mahasiswa akan meraih nilai ujian yang tinggi jika mereka belajar dengan sangat tekun" dapat ditulis sebagai <InlineMath math="Q \rightarrow R" />.
+2.  "Kondisi tersebut (belajar tekun) terjadi ketika mahasiswa dapat mengatur waktunya dengan baik" dapat ditulis sebagai <InlineMath math="P \rightarrow Q" />.
+
+#### Menarik Kesimpulan
+
+Dengan menggabungkan kedua premis tersebut, kita mendapatkan rantai logika:
+
+<MathContainer>
+  <BlockMath math="P \rightarrow Q \rightarrow R \implies P \rightarrow R" />
+</MathContainer>
+
+Kesimpulan awalnya adalah: **"Jika mahasiswa dapat mengatur waktunya dengan baik, maka mereka akan meraih nilai ujian tinggi."**
+
+#### Ekuivalensi Logika (Kontraposisi)
+
+Dalam logika matematika, sebuah pernyataan implikasi <InlineMath math="P \rightarrow R" /> setara dengan kontraposisinya, yaitu <InlineMath math="\sim R \rightarrow \sim P" />.
+
+<MathContainer>
+  <BlockMath math="\sim R \rightarrow \sim P" />
+</MathContainer>
+
+Artinya: **"Jika mahasiswa TIDAK meraih nilai ujian tinggi, maka mereka TIDAK dapat mengatur waktunya dengan baik."**
+
+Pernyataan ini sesuai dengan opsi yang menyatakan bahwa mahasiswa yang tidak meraih nilai ujian tinggi berarti tidak dapat mengatur waktunya dengan baik.
+
+> Ingat prinsip Modus Tollens dan Kontraposisi: Jika <InlineMath math="A \rightarrow B" /> benar, maka <InlineMath math="\sim B \rightarrow \sim A" /> juga pasti benar.

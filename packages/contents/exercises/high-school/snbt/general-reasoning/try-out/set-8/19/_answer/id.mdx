@@ -1,0 +1,43 @@
+export const metadata = {
+  title: "Pembahasan Soal 19",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/29/2026",
+};
+
+Untuk menentukan jumlah pengunjung pada hari keenam, kita perlu menganalisis pola penambahan jumlah pengunjung pada wisata <InlineMath math="\text{A}" /> dan kebun binatang <InlineMath math="\text{B}" /> secara terpisah.
+
+#### Analisis Pola Pengunjung Wisata A
+
+Data pengunjung wisata <InlineMath math="\text{A}" /> selama lima hari adalah: <InlineMath math="41, 44, 49, 52, 57" />. Mari kita perhatikan selisih antar suku:
+
+<MathContainer>
+  <BlockMath math="41 \xrightarrow{+3} 44 \xrightarrow{+5} 49 \xrightarrow{+3} 52 \xrightarrow{+5} 57" />
+</MathContainer>
+
+Pola penambahannya berulang secara bergantian: <InlineMath math="+3, +5, +3, +5" />. Maka, pola selanjutnya adalah <InlineMath math="+3" />.
+
+Jumlah pengunjung wisata <InlineMath math="\text{A}" /> pada hari keenam adalah:
+
+<MathContainer>
+  <BlockMath math="57 + 3 = 60" />
+</MathContainer>
+
+#### Analisis Pola Pengunjung Kebun Binatang B
+
+Data pengunjung kebun binatang <InlineMath math="\text{B}" /> selama lima hari adalah: <InlineMath math="110, 115, 125, 130, 140" />. Mari kita perhatikan selisih antar suku:
+
+<MathContainer>
+  <BlockMath math="110 \xrightarrow{+5} 115 \xrightarrow{+10} 125 \xrightarrow{+5} 130 \xrightarrow{+10} 140" />
+</MathContainer>
+
+Pola penambahannya berulang secara bergantian: <InlineMath math="+5, +10, +5, +10" />. Maka, pola selanjutnya adalah <InlineMath math="+5" />.
+
+Jumlah pengunjung kebun binatang <InlineMath math="\text{B}" /> pada hari keenam adalah:
+
+<MathContainer>
+  <BlockMath math="140 + 5 = 145" />
+</MathContainer>
+
+#### Kesimpulan
+
+Jadi, jumlah pengunjung wisata <InlineMath math="\text{A}" /> dan <InlineMath math="\text{B}" /> pada hari keenam berturut-turut adalah <InlineMath math="60" /> dan <InlineMath math="145" /> orang.

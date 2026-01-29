@@ -1,0 +1,27 @@
+export const metadata = {
+  title: "Question 4 Explanation",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/29/2026",
+};
+
+To find the missing value, let's analyze the summation pattern between terms (Fibonacci Pattern):
+
+<MathContainer>
+  <BlockMath math="\begin{array}{rclcl} \text{3rd Term} & : & 1 + 4 & = & 5 \\ \text{4th Term} & : & 4 + 5 & = & 9 \\ \text{5th Term} & : & 5 + 9 & = & 14 \\ \end{array}" />
+</MathContainer>
+
+The pattern formed is that each term is the sum of the two preceding terms (**<InlineMath math="U_n = U_{n-1} + U_{n-2}" />**).
+
+Based on this pattern, the value of the 6th term is:
+
+<MathContainer>
+  <BlockMath math="U_6 = U_5 + U_4 = 14 + 9 = 23" />
+</MathContainer>
+
+Let's verify this pattern for the subsequent terms:
+
+<MathContainer>
+  <BlockMath math="\begin{array}{rclcl} \text{7th Term} & : & 23 + 14 & = & 37 \quad \checkmark \\ \text{8th Term} & : & 37 + 23 & = & 60 \quad \checkmark \\ \text{9th Term} & : & 60 + 37 & = & 97 \quad \checkmark \\ \end{array}" />
+</MathContainer>
+
+Since the pattern is consistent through the end of the sequence, the correct value is **<InlineMath math="23" />**.
