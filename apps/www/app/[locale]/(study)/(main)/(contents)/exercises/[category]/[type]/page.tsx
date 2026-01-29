@@ -20,6 +20,8 @@ import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
+import { createSEODescription } from "@/lib/utils/seo/descriptions";
+import { createSEOTitle } from "@/lib/utils/seo/titles";
 import { getStaticParams } from "@/lib/utils/system";
 
 export const revalidate = false;
@@ -40,7 +42,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const FilePath = getExercisesPath(category, type);
 
-  const title = `${t(type)} - ${t(category)}`;
+  const title = createSEOTitle([t(type), t(category)]);
   const path = `/${locale}${FilePath}`;
 
   let ogUrl: string = getOgUrl(locale, FilePath);
@@ -56,11 +58,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     height: 630,
   };
 
+  const description = createSEODescription([
+    t(type),
+    t(category),
+    t("type-description"),
+    t("practice-exercises"),
+  ]);
+
   return {
     title: {
       absolute: title,
     },
-    description: t("type-description"),
+    description,
     alternates: {
       canonical: path,
     },
@@ -120,7 +129,6 @@ async function PageContent({
           name: t(subject.label),
           item: `https://nakafa.com/${locale}${subject.href}`,
         }))}
-        locale={locale}
       />
       <HeaderContent
         description={t("type-description")}

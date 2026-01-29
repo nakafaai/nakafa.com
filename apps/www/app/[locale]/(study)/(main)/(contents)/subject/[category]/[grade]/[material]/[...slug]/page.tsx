@@ -39,6 +39,8 @@ import {
   getContentContext,
   getContentMetadataContext,
 } from "@/lib/utils/pages/subject";
+import { createSEODescription } from "@/lib/utils/seo/descriptions";
+import { createSEOTitle } from "@/lib/utils/seo/titles";
 import { getStaticParams } from "@/lib/utils/system";
 
 export const revalidate = false;
@@ -98,12 +100,20 @@ export async function generateMetadata({
     locale,
   };
 
-  const defaultTitle = `${t(material)} - ${t(getGradeNonNumeric(grade) ?? "grade", { grade })} - ${t(category)}`;
+  // Build SEO-optimized title with smart truncation
+  // Priority: content title > subject > material > grade > category
+  const title = createSEOTitle([
+    metadata?.title,
+    metadata?.subject,
+    t(material),
+    t(getGradeNonNumeric(grade) ?? "grade", { grade }),
+    t(category),
+  ]);
 
   if (!metadata) {
     return {
       title: {
-        absolute: defaultTitle,
+        absolute: title,
       },
       alternates,
       openGraph,
@@ -111,11 +121,17 @@ export async function generateMetadata({
     };
   }
 
+  // Build SEO description from content parts
+  const description = createSEODescription([
+    metadata.description,
+    `${metadata.title} - ${t("learn-with-nakafa")}`,
+  ]);
+
   return {
     title: {
-      absolute: `${metadata.title} - ${metadata.subject} - ${defaultTitle}`,
+      absolute: title,
     },
-    description: metadata.description ?? metadata.subject ?? "",
+    description,
     alternates,
     authors: metadata.authors,
     category: t(material),
@@ -220,9 +236,6 @@ async function PageContent({
           name: heading.label,
           item: `https://nakafa.com/${locale}${FilePath}${heading.href}`,
         }))}
-        locale={locale}
-        // this will only work for the first heading, not for the nested headings
-        name={metadata.title}
       />
       <ArticleJsonLd
         author={metadata.authors.map((author: { name: string }) => ({
@@ -234,6 +247,7 @@ async function PageContent({
         description={metadata.description ?? metadata.subject ?? ""}
         headline={metadata.title}
         image={getOgUrl(locale, FilePath)}
+        url={`/${locale}${FilePath}`}
       />
       <LearningResourceJsonLd
         author={metadata.authors.map((author: { name: string }) => ({

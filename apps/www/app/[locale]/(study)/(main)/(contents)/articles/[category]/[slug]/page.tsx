@@ -27,6 +27,8 @@ import {
   fetchArticleContext,
   fetchArticleMetadataContext,
 } from "@/lib/utils/pages/article";
+import { createSEODescription } from "@/lib/utils/seo/descriptions";
+import { createSEOTitle } from "@/lib/utils/seo/titles";
 import { getStaticParams } from "@/lib/utils/system";
 
 export const revalidate = false;
@@ -77,9 +79,15 @@ export async function generateMetadata({
     locale,
   };
 
+  // Build SEO-optimized title with smart truncation
+  // Priority: content title > category
+  const title = createSEOTitle([content?.metadata.title, t(category)]);
+
   if (!content) {
     return {
-      title: t(category),
+      title: {
+        absolute: title,
+      },
       alternates,
       openGraph,
       twitter,
@@ -88,11 +96,17 @@ export async function generateMetadata({
 
   const { metadata } = content;
 
+  // Build SEO description from content parts
+  const description = createSEODescription([
+    metadata.description,
+    `${metadata.title} - ${t("read-article-on-nakafa")}`,
+  ]);
+
   return {
     title: {
-      absolute: `${metadata.title} - ${t(category)}`,
+      absolute: title,
     },
-    description: metadata.description,
+    description,
     alternates,
     authors: metadata.authors,
     category: t(category),
@@ -165,9 +179,6 @@ async function PageContent({
           name: heading.label,
           item: `https://nakafa.com/${locale}${FilePath}${heading.href}`,
         }))}
-        description={metadata.description ?? ""}
-        locale={locale}
-        name={metadata.title}
       />
       <ArticleJsonLd
         author={metadata.authors.map((author: { name: string }) => ({
@@ -179,6 +190,7 @@ async function PageContent({
         description={metadata.description ?? ""}
         headline={metadata.title}
         image={getOgUrl(locale, FilePath)}
+        url={`/${locale}${FilePath}`}
       />
       <LearningResourceJsonLd
         author={metadata.authors.map((author: { name: string }) => ({

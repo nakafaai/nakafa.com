@@ -13,9 +13,9 @@ export const SAME_AS_LINKS = [
 export const ORGANIZATION: Organization = {
   "@type": "Organization",
   name: ORGANIZATION_NAME,
-  logo: ORGANIZATION_LOGO,
   url: ORGANIZATION_URL,
-  sameAs: SAME_AS_LINKS,
+  logo: ORGANIZATION_LOGO,
+  sameAs: [...SAME_AS_LINKS],
 };
 
 export const FOUNDER: Person = {

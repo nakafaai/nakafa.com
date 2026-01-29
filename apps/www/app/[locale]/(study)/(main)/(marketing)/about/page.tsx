@@ -1,6 +1,7 @@
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import { EducationalOrgJsonLd } from "@repo/seo/json-ld/educational-org";
+import type { ListItem } from "@repo/seo/types";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -81,7 +82,7 @@ async function AboutPageContent({ locale }: { locale: Locale }) {
     getTranslations({ locale, namespace: "Exercises" }),
   ]);
 
-  const breadcrumbItems = [
+  const breadcrumbItems: ListItem[] = [
     {
       "@type": "ListItem",
       "@id": `https://nakafa.com/${locale}`,
@@ -128,7 +129,7 @@ async function AboutPageContent({ locale }: { locale: Locale }) {
 
   return (
     <>
-      <BreadcrumbJsonLd breadcrumbItems={breadcrumbItems} locale={locale} />
+      <BreadcrumbJsonLd breadcrumbItems={breadcrumbItems} />
       <EducationalOrgJsonLd />
       <CollectionPageJsonLd
         description={t("description")}

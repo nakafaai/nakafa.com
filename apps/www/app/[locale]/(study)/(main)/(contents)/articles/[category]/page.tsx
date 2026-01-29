@@ -114,7 +114,6 @@ async function PageArticles({
           name: article.title,
           item: `https://nakafa.com/${locale}${FilePath}/${article.slug}`,
         }))}
-        locale={locale}
       />
       <CollectionPageJsonLd
         description={t("description")}

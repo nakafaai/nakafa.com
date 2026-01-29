@@ -86,7 +86,6 @@ function PageContent({ locale }: { locale: Locale }) {
           name: getSurahName({ locale, name: surah.name }),
           item: `https://nakafa.com/${locale}/quran/${surah.number}`,
         }))}
-        locale={locale}
       />
       <HeaderContent
         description={t("quran-description")}

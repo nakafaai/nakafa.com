@@ -395,6 +395,7 @@ export const CodeBlockCopyButton = ({
 
   return (
     <Button
+      aria-label={isCopied ? "Copied" : "Copy to clipboard"}
       className={cn("shrink-0", className)}
       onClick={copyToClipboard}
       size="icon"
@@ -402,6 +403,9 @@ export const CodeBlockCopyButton = ({
       {...props}
     >
       {children ?? <HugeIcons className="text-muted-foreground" icon={icon} />}
+      <span className="sr-only">
+        {isCopied ? "Copied" : "Copy to clipboard"}
+      </span>
     </Button>
   );
 };

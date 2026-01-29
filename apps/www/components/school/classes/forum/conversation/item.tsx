@@ -227,7 +227,6 @@ const PostAttachments = memo(
               fetchPriority="high"
               fill
               loading="eager"
-              preload
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               src={attachment.url ?? ""}
             />

@@ -91,6 +91,7 @@ export function OpenContent({
       <DropdownMenu onOpenChange={setOpen} open={open}>
         <DropdownMenuTrigger asChild>
           <Button
+            aria-label={t("open")}
             className="rounded-none shadow-none first:rounded-s-md last:rounded-e-md focus-visible:z-10"
             size="icon"
             variant="secondary"

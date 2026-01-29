@@ -1,13 +1,10 @@
-import { withAnalyzer } from "@repo/next-config";
+import { config, withAnalyzer } from "@repo/next-config";
 import type { NextConfig } from "next";
 import { env } from "@/env";
 
 let nextConfig: NextConfig = {
-  serverExternalPackages: ["express"],
-  experimental: {
-    turbopackFileSystemCacheForBuild: true,
-    turbopackFileSystemCacheForDev: true,
-  },
+  ...config,
+  serverExternalPackages: [...(config.serverExternalPackages ?? []), "express"],
 };
 
 if (env.ANALYZE === "true") {

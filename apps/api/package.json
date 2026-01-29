@@ -23,7 +23,7 @@
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.10",
     "effect": "^3.19.15",
-    "next": "16.1.5",
+    "next": "16.1.6",
     "pino": "^10.3.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
@@ -31,7 +31,7 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "25.0.10",
+    "@types/node": "25.1.0",
     "@types/react": "19.2.10",
     "@vitest/coverage-istanbul": "^4.0.18",
     "typescript": "^5.9.3",

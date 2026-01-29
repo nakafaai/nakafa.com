@@ -482,6 +482,7 @@ const AiSheetInput = memo(
       <div className="grid shrink-0 px-2 pb-2">
         <PromptInput onSubmit={onSubmit}>
           <PromptInputTextarea
+            aria-label={t("text-placeholder")}
             onChange={(e) => setText(e.target.value)}
             placeholder={t("text-placeholder")}
             value={text}

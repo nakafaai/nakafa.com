@@ -77,6 +77,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
       onSubmit={handleSubmit}
     >
       <Textarea
+        aria-label={t("add-comment-placeholder")}
         className={cn(
           "w-full resize-none rounded-none border-none p-4 shadow-none outline-none ring-0",
           "field-sizing-content bg-transparent dark:bg-transparent",
@@ -95,6 +96,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
         <div className="flex items-center gap-1">
           {!!closeButton && (
             <Button
+              aria-label={tCommon("cancel")}
               className="rounded-lg"
               onClick={closeButton.onClick}
               size="icon"
@@ -106,6 +108,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
             </Button>
           )}
           <Button
+            aria-label={t("comment")}
             className="rounded-lg"
             disabled={isPending || !user}
             size="icon"

@@ -40,6 +40,8 @@ import {
   fetchExerciseContext,
   fetchExerciseMetadataContext,
 } from "@/lib/utils/pages/exercises";
+import { createSEODescription } from "@/lib/utils/seo/descriptions";
+import { createSEOTitle } from "@/lib/utils/seo/titles";
 import { getStaticParams } from "@/lib/utils/system";
 import { QuestionAnalytics } from "./analytics";
 import { ExerciseArticle } from "./article";
@@ -89,18 +91,16 @@ export async function generateMetadata({
     )
   );
 
-  const title = `${t(material)} - ${t(type)} - ${t(category)}`;
-  let finalTitle = currentMaterial
-    ? `${currentMaterial.title} - ${title}`
-    : title;
-
-  if (currentMaterialItem) {
-    finalTitle = `${currentMaterialItem.title} - ${finalTitle}`;
-  }
-
-  if (isSpecificExercise && exerciseTitle) {
-    finalTitle = `${exerciseTitle} - ${finalTitle}`;
-  }
+  // Build SEO-optimized title with smart truncation
+  // Priority: exercise title > material item > material > type > category
+  const finalTitle = createSEOTitle([
+    isSpecificExercise && exerciseTitle ? exerciseTitle : undefined,
+    currentMaterialItem?.title,
+    currentMaterial?.title,
+    t(material),
+    t(type),
+    t(category),
+  ]);
 
   const urlPath = `/${locale}${FilePath}`;
   const image = {
@@ -109,10 +109,25 @@ export async function generateMetadata({
     height: 630,
   };
 
+  // Build SEO description from content parts
+  const description = createSEODescription([
+    isSpecificExercise && exerciseTitle
+      ? `${exerciseTitle} - ${t("practice-exercises")}`
+      : undefined,
+    currentMaterialItem?.title
+      ? `${currentMaterialItem.title} - ${t("practice-exercises")}`
+      : undefined,
+    currentMaterial?.title
+      ? `${currentMaterial.title} - ${t("practice-exercises")}`
+      : undefined,
+    `${t(material)} ${t(type)} - ${t("practice-exercises")}`,
+  ]);
+
   return {
     title: {
       absolute: finalTitle,
     },
+    description,
     alternates: {
       canonical: urlPath,
     },
@@ -233,7 +248,6 @@ async function PageContent({
           name: heading.label,
           item: `https://nakafa.com/${locale}${FilePath}${heading.href}`,
         }))}
-        locale={locale}
       />
       <LearningResourceJsonLd
         author={FOUNDER}
@@ -248,6 +262,7 @@ async function PageContent({
         description={description}
         headline={currentMaterialItem.title}
         image={getOgUrl(locale, FilePath)}
+        url={`/${locale}${FilePath}`}
       />
       <LayoutMaterial>
         <LayoutMaterialContent showAskButton>
@@ -382,7 +397,6 @@ async function SingleExerciseContent({
             item: `https://nakafa.com/${locale}${exerciseFilePath}`,
           },
         ]}
-        locale={locale}
       />
       <LearningResourceJsonLd
         author={FOUNDER}
@@ -397,6 +411,7 @@ async function SingleExerciseContent({
         description={description}
         headline={exercise.question.metadata.title}
         image={getOgUrl(locale, exerciseFilePath)}
+        url={`/${locale}${exerciseFilePath}`}
       />
       <LayoutMaterial>
         <LayoutMaterialContent showAskButton>

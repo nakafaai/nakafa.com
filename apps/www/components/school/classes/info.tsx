@@ -47,7 +47,6 @@ export function SchoolClassesHeaderInfo() {
           fetchPriority="high"
           fill
           loading="eager"
-          preload
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           src={getClassImageUrl(classInfo.image)}
           title={classInfo.name}
@@ -145,7 +144,6 @@ function InfoCustomizeButton() {
                   fetchPriority="high"
                   fill
                   loading="eager"
-                  preload
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   src={image.src}
                 />

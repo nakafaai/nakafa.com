@@ -79,7 +79,6 @@ function OnboardingContent({ user }: { user: AppUser }) {
             fetchPriority="high"
             height={216}
             loading="eager"
-            preload
             src="/og.png"
             title="Nakafa"
             width={382}

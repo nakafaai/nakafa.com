@@ -1,20 +1,13 @@
-import type { CollectionPage, WithContext } from "schema-dts";
+import type { CollectionPage, CreativeWork, WithContext } from "schema-dts";
 import { JsonLd } from ".";
 import { ORGANIZATION } from "./constants";
-
-interface CollectionItem {
-  url: string;
-  name: string;
-  description?: string;
-}
 
 interface Props {
   name: string;
   description: string;
   url: string;
-  items: CollectionItem[];
+  items: Pick<CreativeWork, "name" | "url" | "description">[];
   datePublished?: string;
-  numberOfItems?: number;
 }
 
 export function CollectionPageJsonLd({

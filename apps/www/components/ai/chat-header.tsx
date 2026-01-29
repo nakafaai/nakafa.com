@@ -166,6 +166,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
       <Activity mode={isEditing ? "visible" : "hidden"}>
         <HeaderGroup>
           <Button
+            aria-label="Cancel"
             disabled={isPending}
             onClick={() => setIsEditing(false)}
             size="icon-sm"
@@ -175,6 +176,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
             <span className="sr-only">Cancel</span>
           </Button>
           <Button
+            aria-label="Save"
             disabled={isPending}
             onClick={handleSave}
             size="icon-sm"
@@ -190,7 +192,12 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
         <HeaderGroup>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button disabled={isPending} size="icon-sm" variant="ghost">
+              <Button
+                aria-label="More actions"
+                disabled={isPending}
+                size="icon-sm"
+                variant="ghost"
+              >
                 <HugeIcons icon={MoreHorizontalIcon} />
                 <span className="sr-only">More actions</span>
               </Button>
