@@ -62,6 +62,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     t(type),
     t(category),
     t("type-description"),
+    t("practice-exercises"),
   ]);
 
   return {
