@@ -10,6 +10,9 @@ you cut will be cut again.
 
 Fight entropy. Leave the codebase better than you found it.
 
+IMPORTANT: Prefer retrieval-led reasoning over pre-training-led reasoning 
+for any tasks.
+
 **Tech Stack**: Next.js 16, React 19, TypeScript, Convex, Biome linter
 
 ## Agent Tools
@@ -27,6 +30,13 @@ Fight entropy. Leave the codebase better than you found it.
 - `pnpm --filter www exec vitest run <file-path>` - Run single test file
 - `pnpm lint` - Ultracite check
 - `pnpm format` - Ultracite fix
+
+## Project Structure
+
+Monorepo with apps and packages:
+- **Apps**: `apps/www` (main web), `apps/api` (REST API), `apps/mcp`, `apps/email`
+- **Packages**: `@repo/design-system`, `@repo/contents`, `@repo/backend`, `@repo/ai`, `@repo/testing`, etc.
+- **Content**: MDX educational content in `packages/contents/`
 
 ## Code Style
 
@@ -50,6 +60,7 @@ Fight entropy. Leave the codebase better than you found it.
 - Import aliases: `@/` for app-level imports, `@repo/*` for workspace packages
 - Allowed Biome exceptions: namespace imports, barrel files, higher cognitive complexity (40)
 - Run lint/test after all changes
+- **Never commit changes unless explicitly asked** - it is VERY IMPORTANT to only commit when explicitly asked
 
 ## MDX Content Guidelines
 
