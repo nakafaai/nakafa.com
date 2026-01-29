@@ -31,6 +31,7 @@ import {
 import { RefContent } from "@/components/shared/ref-content";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
+import { createSEODescription } from "@/lib/utils/seo/descriptions";
 import { createSEOTitle } from "@/lib/utils/seo/titles";
 import { getStaticParams } from "@/lib/utils/system";
 
@@ -75,10 +76,19 @@ export async function generateMetadata({
     height: 630,
   };
 
+  const description = createSEODescription([
+    t(material),
+    t(type),
+    t(category),
+    t("type-description"),
+    t("practice-exercises"),
+  ]);
+
   return {
     title: {
       absolute: title,
     },
+    description,
     alternates: {
       canonical: urlPath,
     },
