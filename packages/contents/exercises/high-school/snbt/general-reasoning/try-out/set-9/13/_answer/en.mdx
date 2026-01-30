@@ -1,0 +1,25 @@
+export const metadata = {
+  title: "Explanation for Question 13",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/30/2026",
+};
+
+The number sequence follows a combination of two alternating addition patterns. Observing the differences between terms reveals a repeating cycle:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} 3 \xrightarrow{+2} 5 \xrightarrow{+4} 9 \xrightarrow{+6} 15 \\ 15 \xrightarrow{+1} 16 \xrightarrow{+3} 19 \xrightarrow{+5} 24 \\ 24 \xrightarrow{+2} 26 \xrightarrow{+4} 30 \xrightarrow{+6} 36 \end{aligned}" />
+</MathContainer>
+
+The pattern consists of two groups of differences:
+1.  First group: <InlineMath math="+2" />, <InlineMath math="+4" />, <InlineMath math="+6" />
+2.  Second group: <InlineMath math="+1" />, <InlineMath math="+3" />, <InlineMath math="+5" />
+
+After the term <InlineMath math="36" />, the cycle returns to the second group pattern, starting with <InlineMath math="+1" />.
+
+Thus, the next term is:
+
+<MathContainer>
+  <BlockMath math="36 + 1 = 37" />
+</MathContainer>
+
+Therefore, the correct number to complete the sequence is <InlineMath math="37" />.

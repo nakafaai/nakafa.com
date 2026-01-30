@@ -1,0 +1,25 @@
+export const metadata = {
+  title: "Pembahasan Soal 13",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/30/2026",
+};
+
+Pola bilangan pada barisan ini menggunakan kombinasi dua pola pertambahan yang berulang secara bergantian. Jika kita perhatikan selisih antar suku, terdapat siklus pertambahan sebagai berikut:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} 3 \xrightarrow{+2} 5 \xrightarrow{+4} 9 \xrightarrow{+6} 15 \\ 15 \xrightarrow{+1} 16 \xrightarrow{+3} 19 \xrightarrow{+5} 24 \\ 24 \xrightarrow{+2} 26 \xrightarrow{+4} 30 \xrightarrow{+6} 36 \end{aligned}" />
+</MathContainer>
+
+Pola tersebut terdiri dari dua kelompok selisih:
+1.  Kelompok pertama: <InlineMath math="+2" />, <InlineMath math="+4" />, <InlineMath math="+6" />
+2.  Kelompok kedua: <InlineMath math="+1" />, <InlineMath math="+3" />, <InlineMath math="+5" />
+
+Setelah suku <InlineMath math="36" />, siklus kembali ke pola kelompok kedua, dimulai dengan <InlineMath math="+1" />.
+
+Maka, suku berikutnya adalah:
+
+<MathContainer>
+  <BlockMath math="36 + 1 = 37" />
+</MathContainer>
+
+Jadi, bilangan yang tepat untuk mengisi titik-titik tersebut adalah <InlineMath math="37" />.
