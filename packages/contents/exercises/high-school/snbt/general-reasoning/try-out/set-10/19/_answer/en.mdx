@@ -1,0 +1,19 @@
+export const metadata = {
+  title: "Solution to Question 19",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/30/2026",
+};
+
+The student visitation data forms a number sequence: <InlineMath math="7, 10, 12, 15, 17, 20" />. We will analyze the difference between terms to find the pattern.
+
+<MathContainer>
+  <BlockMath math="7 \xrightarrow{+3} 10 \xrightarrow{+2} 12 \xrightarrow{+3} 15 \xrightarrow{+2} 17 \xrightarrow{+3} 20" />
+</MathContainer>
+
+It appears that the addition pattern alternates between <InlineMath math="+3" /> and <InlineMath math="+2" />. Since the last term (<InlineMath math="20" />) was obtained by adding <InlineMath math="+3" />, the next step to find the 7th day is to add <InlineMath math="+2" />.
+
+<MathContainer>
+  <BlockMath math="\text{7th Day} = 20 + 2 = 22 \text{ students}" />
+</MathContainer>
+
+Thus, the number of students visiting on the 7th day is predicted to be <InlineMath math="22" /> people.
