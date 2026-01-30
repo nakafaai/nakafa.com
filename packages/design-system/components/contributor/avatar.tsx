@@ -1,5 +1,5 @@
 import {
-  Github01Icon,
+  GithubIcon,
   Linkedin02Icon,
   NewTwitterIcon,
 } from "@hugeicons/core-free-icons";
@@ -95,7 +95,7 @@ export function Avatar({ contributor, size = "md" }: Props) {
                   target="_blank"
                   title="GitHub"
                 >
-                  <HugeIcons className="size-4" icon={Github01Icon} />
+                  <HugeIcons className="size-4" icon={GithubIcon} />
                   <span className="sr-only">GitHub</span>
                 </a>
               )}

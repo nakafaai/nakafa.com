@@ -5,7 +5,7 @@ import {
   BookOpen02Icon,
   Calendar03Icon,
   DiscordIcon,
-  Github01Icon,
+  GithubIcon,
   Globe02Icon,
   LayerIcon,
   QuillWrite01Icon,
@@ -111,7 +111,7 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
                     title={t("source-code")}
                   >
                     <span className="sr-only">{t("source-code")}</span>
-                    <HugeIcons className="size-4" icon={Github01Icon} />
+                    <HugeIcons className="size-4" icon={GithubIcon} />
                   </a>
                 </Button>
               }

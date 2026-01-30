@@ -1,6 +1,6 @@
 import {
   DiscordIcon,
-  Github01Icon,
+  GithubIcon,
   InstagramIcon,
   Linkedin02Icon,
   YoutubeIcon,
@@ -189,7 +189,7 @@ const socialMedia = [
   },
   {
     href: "https://github.com/nakafaai",
-    icon: Github01Icon,
+    icon: GithubIcon,
     label: "GitHub",
   },
   {
