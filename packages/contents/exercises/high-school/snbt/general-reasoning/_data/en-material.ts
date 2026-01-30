@@ -44,6 +44,10 @@ const enMaterials: ExercisesMaterialList = [
         title: "Set 9",
         href: `${BASE_PATH}/try-out/set-9`,
       },
+      {
+        title: "Set 10",
+        href: `${BASE_PATH}/try-out/set-10`,
+      },
     ],
   },
 ] as const;

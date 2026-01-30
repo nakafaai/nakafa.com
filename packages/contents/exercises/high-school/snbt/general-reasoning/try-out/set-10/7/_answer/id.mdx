@@ -1,0 +1,54 @@
+export const metadata = {
+  title: "Pembahasan Soal 7",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/30/2026",
+};
+
+Barisan ini sebenarnya terdiri dari **dua pola berbeda** yang diselang-seling. Mari kita pisahkan suku-sukunya berdasarkan posisi ganjil dan genap untuk melihat polanya dengan lebih jelas.
+
+**Pola Pertama (Suku Ganjil)**
+
+Kita ambil suku ke-1, ke-3, ke-5, ke-7, dan seterusnya:
+
+<MathContainer>
+  <BlockMath math="1, 6, 11, 16, \dots, 26" />
+</MathContainer>
+
+Terlihat bahwa setiap suku bertambah <InlineMath math="5" />:
+- <InlineMath math="1 + 5 = 6" />
+- <InlineMath math="6 + 5 = 11" />
+- <InlineMath math="11 + 5 = 16" />
+
+Maka suku berikutnya dalam pola ini adalah:
+
+<MathContainer>
+  <BlockMath math="16 + 5 = 21" />
+</MathContainer>
+
+Kita bisa memverifikasinya dengan suku terakhir: <InlineMath math="21 + 5 = 26" />. Cocok.
+
+**Pola Kedua (Suku Genap)**
+
+Sekarang kita ambil suku ke-2, ke-4, ke-6, dan seterusnya:
+
+<MathContainer>
+  <BlockMath math="3, 5, 7, \dots, 11" />
+</MathContainer>
+
+Terlihat bahwa setiap suku bertambah <InlineMath math="2" />:
+- <InlineMath math="3 + 2 = 5" />
+- <InlineMath math="5 + 2 = 7" />
+
+Maka suku berikutnya (yang mengisi titik-titik pertama) adalah:
+
+<MathContainer>
+  <BlockMath math="7 + 2 = 9" />
+</MathContainer>
+
+Verifikasi dengan suku selanjutnya: <InlineMath math="9 + 2 = 11" />. Cocok.
+
+**Kesimpulan**
+
+Titik-titik pertama adalah kelanjutan dari Pola Kedua (<InlineMath math="9" />), dan titik-titik kedua adalah kelanjutan dari Pola Pertama (<InlineMath math="21" />).
+
+Jadi, pasangan bilangan yang tepat adalah <InlineMath math="9, 21" />.

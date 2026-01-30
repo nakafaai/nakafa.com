@@ -1,0 +1,25 @@
+export const metadata = {
+  title: "Explanation for Question 9",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/30/2026",
+};
+
+Let's analyze the statements above using mathematical logic by defining the following variables:
+
+- <InlineMath math="P" />: Increase in fuel (BBM) prices.
+- <InlineMath math="Q" />: Increase in public transportation fares.
+- <InlineMath math="R" />: Increase in the prices of basic needs.
+
+From the text, we derive two main premises:
+1. "Every increase in fuel prices is surely followed by an increase in public transportation fares" can be written as <InlineMath math="P \rightarrow Q" />.
+2. "An increase in public transportation fares is always followed by an increase in the prices of basic needs" can be written as <InlineMath math="Q \rightarrow R" />.
+
+The most appropriate statement can be found using the **Modus Tollens** principle or **Contrapositive** equivalence on the first premise. An implication <InlineMath math="P \rightarrow Q" /> has the same truth value as its contrapositive, <InlineMath math="\sim Q \rightarrow \sim P" />.
+
+<MathContainer>
+  <BlockMath math="\begin{align*} \text{Implication} &: P \rightarrow Q \\ \text{Contrapositive} &: \sim Q \rightarrow \sim P \end{align*}" />
+</MathContainer>
+
+This means that if there is **no increase in public transportation fares** (<InlineMath math="\sim Q" />), then it is certain that **no increase in fuel prices occurred** (<InlineMath math="\sim P" />). This aligns with the option stating that the absence of an increase in public transportation fares indicates no increase in fuel prices.
+
+Thus, the correct statement is **if there is no increase in public transportation fares, then there is no increase in fuel (BBM) prices**.

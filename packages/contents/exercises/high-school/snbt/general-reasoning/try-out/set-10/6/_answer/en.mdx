@@ -1,0 +1,37 @@
+export const metadata = {
+  title: "Explanation for Question 6",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/30/2026",
+};
+
+To find the pattern of this sequence, we need to look at the difference between consecutive terms. Let's dissect the changes one by one.
+
+Our initial sequence is:
+
+<MathContainer>
+  <BlockMath math="2, 3, 5, 9, 17, \dots" />
+</MathContainer>
+
+Now, observe the jump in addition from one number to the next:
+- From <InlineMath math="2" /> to <InlineMath math="3" />, it increases by <InlineMath math="1" />.
+- From <InlineMath math="3" /> to <InlineMath math="5" />, it increases by <InlineMath math="2" />.
+- From <InlineMath math="5" /> to <InlineMath math="9" />, it increases by <InlineMath math="4" />.
+- From <InlineMath math="9" /> to <InlineMath math="17" />, it increases by <InlineMath math="8" />.
+
+If we write down the addition pattern, we get a new series:
+
+<MathContainer>
+  <BlockMath math="+1, +2, +4, +8" />
+</MathContainer>
+
+It is clear that each addition is **double** the previous addition (or powers of 2: <InlineMath math="2^0, 2^1, 2^2, 2^3" />).
+
+Therefore, the next addition must be double of <InlineMath math="8" />, which is <InlineMath math="16" />.
+
+Let's calculate the next term:
+
+<MathContainer>
+  <BlockMath math="17 + 16 = 33" />
+</MathContainer>
+
+So, the correct number to fill the sequence is **33**.
