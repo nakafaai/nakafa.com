@@ -49,7 +49,7 @@ importers:
     dependencies:
       '@convex-dev/better-auth':
         specifier: ^0.10.10
-        version: 0.10.10(@better-auth/core@1.4.9(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.7(zod@4.3.5))(jose@6.1.3)(kysely@0.28.9)(nanostores@1.1.0))(@better-auth/utils@0.3.0)(@standard-schema/spec@1.1.0)(better-auth@1.4.9(next@16.1.6(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.0.18))(better-call@1.1.7(zod@4.3.5))(convex@1.31.6(react@19.2.4))(hono@4.11.7)(nanostores@1.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
+        version: 0.10.10(@better-auth/core@1.4.9(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.7(zod@4.3.5))(jose@6.1.3)(kysely@0.28.9)(nanostores@1.1.0))(@better-auth/utils@0.3.0)(@standard-schema/spec@1.1.0)(better-auth@1.4.9(next@16.1.6(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.0.18))(better-call@1.1.7(zod@4.3.5))(convex@1.31.7(react@19.2.4))(hono@4.11.7)(nanostores@1.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
       '@repo/backend':
         specifier: workspace:*
         version: link:../../packages/backend
@@ -208,7 +208,7 @@ importers:
         version: 3.0.64(react@19.2.4)(zod@4.3.6)
       '@convex-dev/better-auth':
         specifier: ^0.10.10
-        version: 0.10.10(@better-auth/core@1.4.9(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.7(zod@4.3.6))(jose@6.1.3)(kysely@0.28.9)(nanostores@1.1.0))(@better-auth/utils@0.3.0)(@standard-schema/spec@1.1.0)(better-auth@1.4.9(next@16.1.6(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.0.18))(better-call@1.1.7(zod@4.3.6))(convex@1.31.6(react@19.2.4))(hono@4.11.7)(nanostores@1.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
+        version: 0.10.10(@better-auth/core@1.4.9(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.7(zod@4.3.6))(jose@6.1.3)(kysely@0.28.9)(nanostores@1.1.0))(@better-auth/utils@0.3.0)(@standard-schema/spec@1.1.0)(better-auth@1.4.9(next@16.1.6(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.0.18))(better-call@1.1.7(zod@4.3.6))(convex@1.31.7(react@19.2.4))(hono@4.11.7)(nanostores@1.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
       '@hugeicons/core-free-icons':
         specifier: ^3.1.1
         version: 3.1.1
@@ -273,11 +273,11 @@ importers:
         specifier: ^4.1.18
         version: 4.1.18
       '@takumi-rs/core':
-        specifier: ^0.66.7
-        version: 0.66.7
+        specifier: ^0.66.9
+        version: 0.66.9
       '@takumi-rs/image-response':
-        specifier: ^0.66.7
-        version: 0.66.7
+        specifier: ^0.66.9
+        version: 0.66.9
       '@tanstack/react-form':
         specifier: ^1.28.0
         version: 1.28.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -285,8 +285,8 @@ importers:
         specifier: ^5.90.20
         version: 5.90.20(react@19.2.4)
       '@tanstack/react-query-devtools':
-        specifier: ^5.91.2
-        version: 5.91.2(@tanstack/react-query@5.90.20(react@19.2.4))(react@19.2.4)
+        specifier: ^5.91.3
+        version: 5.91.3(@tanstack/react-query@5.90.20(react@19.2.4))(react@19.2.4)
       '@vercel/functions':
         specifier: ^3.4.0
         version: 3.4.0
@@ -303,8 +303,8 @@ importers:
         specifier: 1.4.9
         version: 1.4.9(next@16.1.6(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.0.18)
       convex:
-        specifier: ^1.31.6
-        version: 1.31.6(react@19.2.4)
+        specifier: ^1.31.7
+        version: 1.31.7(react@19.2.4)
       country-flag-icons:
         specifier: ^1.6.12
         version: 1.6.12
@@ -439,8 +439,8 @@ importers:
         specifier: ^3.0.64
         version: 3.0.64(react@19.2.4)(zod@4.3.6)
       '@mendable/firecrawl-js':
-        specifier: ^4.11.5
-        version: 4.11.5
+        specifier: ^4.12.0
+        version: 4.12.0
       '@repo/utilities':
         specifier: workspace:*
         version: link:../utilities
@@ -451,8 +451,8 @@ importers:
         specifier: ^6.0.62
         version: 6.0.62(zod@4.3.6)
       convex:
-        specifier: ^1.31.6
-        version: 1.31.6(react@19.2.4)
+        specifier: ^1.31.7
+        version: 1.31.7(react@19.2.4)
       dedent:
         specifier: ^1.7.1
         version: 1.7.1(babel-plugin-macros@3.1.0)
@@ -526,16 +526,16 @@ importers:
     dependencies:
       '@convex-dev/better-auth':
         specifier: ^0.10.10
-        version: 0.10.10(@better-auth/core@1.4.9(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.7(zod@4.3.6))(jose@6.1.3)(kysely@0.28.9)(nanostores@1.1.0))(@better-auth/utils@0.3.0)(@standard-schema/spec@1.1.0)(better-auth@1.4.9(next@16.1.6(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.0.18))(better-call@1.1.7(zod@4.3.6))(convex@1.31.6(react@19.2.4))(hono@4.11.7)(nanostores@1.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
+        version: 0.10.10(@better-auth/core@1.4.9(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.7(zod@4.3.6))(jose@6.1.3)(kysely@0.28.9)(nanostores@1.1.0))(@better-auth/utils@0.3.0)(@standard-schema/spec@1.1.0)(better-auth@1.4.9(next@16.1.6(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.0.18))(better-call@1.1.7(zod@4.3.6))(convex@1.31.7(react@19.2.4))(hono@4.11.7)(nanostores@1.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
       '@convex-dev/migrations':
         specifier: ^0.3.1
-        version: 0.3.1(convex@1.31.6(react@19.2.4))
+        version: 0.3.1(convex@1.31.7(react@19.2.4))
       '@convex-dev/resend':
         specifier: ^0.2.3
-        version: 0.2.3(@react-email/render@2.0.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(convex-helpers@0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.6(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.31.6(react@19.2.4))(react@19.2.4)
+        version: 0.2.3(@react-email/render@2.0.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(convex-helpers@0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.7(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.31.7(react@19.2.4))(react@19.2.4)
       '@convex-dev/workflow':
         specifier: ^0.3.4
-        version: 0.3.4(@convex-dev/workpool@0.3.0(convex-helpers@0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.6(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.31.6(react@19.2.4)))(convex-helpers@0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.6(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.31.6(react@19.2.4))
+        version: 0.3.4(@convex-dev/workpool@0.3.0(convex-helpers@0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.7(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.31.7(react@19.2.4)))(convex-helpers@0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.7(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.31.7(react@19.2.4))
       '@polar-sh/sdk':
         specifier: ^0.42.5
         version: 0.42.5
@@ -555,11 +555,11 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
       convex:
-        specifier: ^1.31.6
-        version: 1.31.6(react@19.2.4)
+        specifier: ^1.31.7
+        version: 1.31.7(react@19.2.4)
       convex-helpers:
         specifier: ^0.1.111
-        version: 0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.6(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6)
+        version: 0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.7(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6)
       hono:
         specifier: ^4.11.7
         version: 4.11.7
@@ -587,7 +587,7 @@ importers:
         version: link:../typescript-config
       convex-test:
         specifier: ^0.0.41
-        version: 0.0.41(convex@1.31.6(react@19.2.4))
+        version: 0.0.41(convex@1.31.7(react@19.2.4))
       glob:
         specifier: ^13.0.0
         version: 13.0.0
@@ -879,8 +879,8 @@ importers:
         specifier: ^3.4.14
         version: 3.4.14(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react-resizable-panels:
-        specifier: ^4.5.4
-        version: 4.5.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        specifier: ^4.5.5
+        version: 4.5.5(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react-spring:
         specifier: ^10.0.3
         version: 10.0.3(@react-three/fiber@9.5.0(@types/react@19.2.10)(immer@11.1.3)(react-dom@19.2.4(react@19.2.4))(react-native@0.83.1(@babel/core@7.28.6)(@types/react@19.2.10)(react@19.2.4))(react@19.2.4)(three@0.182.0))(konva@10.0.12)(react-dom@19.2.4(react@19.2.4))(react-konva@19.2.1(@types/react@19.2.10)(konva@10.0.12)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-native@0.83.1(@babel/core@7.28.6)(@types/react@19.2.10)(react@19.2.4))(react-zdog@1.2.2)(react@19.2.4)(three@0.182.0)(zdog@1.1.3)
@@ -2790,8 +2790,8 @@ packages:
   '@mediapipe/tasks-vision@0.10.17':
     resolution: {integrity: sha512-CZWV/q6TTe8ta61cZXjfnnHsfWIdFhms03M9T7Cnd5y2mdpylJM0rF1qRq+wsQVRMLz1OYPVEBU9ph2Bx8cxrg==}
 
-  '@mendable/firecrawl-js@4.11.5':
-    resolution: {integrity: sha512-x4o3ZSzFw6l3ospqEMKU1nXJNzE97ix/+TsUiZNjNLQh8dygXCnhfcYNb6MFrVQmdUxoTJX3IXWGhPVdev0jBQ==}
+  '@mendable/firecrawl-js@4.12.0':
+    resolution: {integrity: sha512-Jjawuumet+3htp39PwwhkZhSj2ORR8Tz/HqORoFGngrB3HadMBKoX6SSPIhayRTXwNnDkaU0PWm1SUtRvPdoPw==}
     engines: {node: '>=22.0.0'}
 
   '@mermaid-js/parser@0.6.3':
@@ -5696,70 +5696,70 @@ packages:
     peerDependencies:
       tailwindcss: '>=3.0.0 || insiders || >=4.0.0-alpha.20 || >=4.0.0-beta.1'
 
-  '@takumi-rs/core-darwin-arm64@0.66.7':
-    resolution: {integrity: sha512-Yf8in7MFPhMWlpQdBwIpujE4E5AIZSJ/rb61Jy6yGBXssQMMJidfrVv/gJP6Osf1vgw1g4TtSdvs+78uaAIktQ==}
+  '@takumi-rs/core-darwin-arm64@0.66.9':
+    resolution: {integrity: sha512-ucEGjZKdPPkX1aZZHKtL2MOgo+Ucpmf3IJlFFwCPlpB3nJNrgAEWSb9DgNcwNAYBt11H8D4u1Df6Zx5eEyXe8g==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [arm64]
     os: [darwin]
 
-  '@takumi-rs/core-darwin-x64@0.66.7':
-    resolution: {integrity: sha512-FcCS9gVbHI7Og87oBhP5KyqhUjxIiLgYPI+pSB6f814RT30y3+I38QgqSNxc/sxqQJW1dAzLeSlToc87dyA45Q==}
+  '@takumi-rs/core-darwin-x64@0.66.9':
+    resolution: {integrity: sha512-M7Xj1bdj6V79NxvjwiQrI7WVD3GHW5cSV0bCpU3nPoF8EUO7a13iqgWpJq5ARn7rZl0VS2b4Ui2VhxEeOKHWEQ==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [x64]
     os: [darwin]
 
-  '@takumi-rs/core-linux-arm64-gnu@0.66.7':
-    resolution: {integrity: sha512-dhyZc40XV52e55Hoe28SmA9tcm/jjDj5bFMwNrZxcSW3t0Wt7p3FTHLJIvwfbsq7ucfvrWx44NixKttp4n1UNg==}
+  '@takumi-rs/core-linux-arm64-gnu@0.66.9':
+    resolution: {integrity: sha512-y5NnkXHxKZRkK5rBvYbD2sOmPoWW9mv9UVyFXEagDs0pxZKaWlkZczk+QbrSaYRUd98yNyscH2VJLhhM69WWww==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@takumi-rs/core-linux-arm64-musl@0.66.7':
-    resolution: {integrity: sha512-0Uvh1LVT3v2SM87mQVmn+ZNFMT0B/yaLGpjCbHW/f1r2iJGgdXM0j1R1uuME6/ynMpOkT/XNgZXb5Q8zgAQkqw==}
+  '@takumi-rs/core-linux-arm64-musl@0.66.9':
+    resolution: {integrity: sha512-DjuUMOCP7Q9JBSEYb7nY+qo9fiHo080QgFgtUG+Fj95o3aHrKviZAer9MHOdg4nk4a/4t+Ul3uAxDyUoS8Hl+w==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@takumi-rs/core-linux-x64-gnu@0.66.7':
-    resolution: {integrity: sha512-M0bjBQDx1PVq3whp/Zg6GYSCXlAKzSuWfsM4WYAzlZl93Dx7H6O2PorsfvuRtv8SPBekT5AIAcRSmebwYt1W0w==}
+  '@takumi-rs/core-linux-x64-gnu@0.66.9':
+    resolution: {integrity: sha512-QECQT3IYPPbUio3JODMOuohupS4ei8KFtJVGqzZjn/G3FcV/9ePyldpRF1PNHDONT+6IlZw6k+YtOChqTwzKgA==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@takumi-rs/core-linux-x64-musl@0.66.7':
-    resolution: {integrity: sha512-tr7pD/ps2BUUBk13SyW08Aca4MNfx6Ym18ndAudPWUhKmqaaagRrgrqEo8Fa32+5lnC1c9KlA8j+LIFjTix/JQ==}
+  '@takumi-rs/core-linux-x64-musl@0.66.9':
+    resolution: {integrity: sha512-y2HCeWdKpKSLnmb0HCo/Wat8P2fcRs9ys4Yy2NcU5NZznRINX4WGko075DBfJLO+nFrN9DyfxEVeiQxsBIHUZw==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@takumi-rs/core-win32-arm64-msvc@0.66.7':
-    resolution: {integrity: sha512-dHrp0RApK7Sb3qE08VVhiE0t+pE1XoSgyBXwDP2w8qIM6ERjJhJI+h9c3LE+prSvsiI99zzfH7hWgDN+UTg2jg==}
+  '@takumi-rs/core-win32-arm64-msvc@0.66.9':
+    resolution: {integrity: sha512-55UUOMjD/zzhvDjY0KidAvths7bnGIkHhYy5yzbZG/zRaQ2Gx68444GFzMa4fCXkqqZw5akobgfV4XJ4PhMcVw==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [arm64]
     os: [win32]
 
-  '@takumi-rs/core-win32-x64-msvc@0.66.7':
-    resolution: {integrity: sha512-9R2VQISxyIPwklDrkopvPiC73JhjZpYF/+bTjwAkEPxO242MreLrnlNjiRAs8AH3sjV3S3ctHVr+VmpIjaFIgw==}
+  '@takumi-rs/core-win32-x64-msvc@0.66.9':
+    resolution: {integrity: sha512-rjiCA/NGHSeMO05hY7Z9qefIQi3lZx3oTemMJQ/9RD7rzRyVzmYxiA3oa+vQHJtzMGXIENlfEFK8NJYPsKUQ5w==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [x64]
     os: [win32]
 
-  '@takumi-rs/core@0.66.7':
-    resolution: {integrity: sha512-ZASdSljSe+PI5MzSKPjhW2x/ccA8DsJVe3SW7cYKG8ZxwPNFl7W6ILIWgPNgtMjSQfJjevKzW+WGU5u65EJWaQ==}
+  '@takumi-rs/core@0.66.9':
+    resolution: {integrity: sha512-LziKeShyc1kUyKoFhUqODfmtDjYPRNr27DWlh+fxQjVHcDJ3qnlQXQZ0u64Yt+boaD39ZFlaWZsGmFMlohnHdQ==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
 
-  '@takumi-rs/helpers@0.66.7':
-    resolution: {integrity: sha512-6w0uxT2t7hJVY6Se4XbWHSKlBKrBuflzejZDsgdtSfZaKXtPJrW7VNU4r5xLEft4Xb4jnVwpgbOe6OmKr7DpRw==}
+  '@takumi-rs/helpers@0.66.9':
+    resolution: {integrity: sha512-dVSZiAEHytZJqLMLO0YqULm6OwbQPzktMP90/0WwqKuTLW/SUe9vyhbtbn4Mq/gYmHVV+vJX/eWPSi8zVYmUkA==}
 
-  '@takumi-rs/image-response@0.66.7':
-    resolution: {integrity: sha512-ngQtinWcrL1EV5mGb49IDGROgmhvkhE9Fl8pAU0/U3yKlUW8rpBTK+FZ0FyV7w0cM2ouwfm4kTRGZbgG7PWWNw==}
+  '@takumi-rs/image-response@0.66.9':
+    resolution: {integrity: sha512-TaiFMtEMqlDV/WT0bE3yNKdnANi3frRTDgpP5UtDhpG+yxy+n1zPrAJLJpbbA+m8dxzoLYiTv8rgUZIP8i1ATg==}
 
-  '@takumi-rs/wasm@0.66.7':
-    resolution: {integrity: sha512-DD4yQnhHoIdMilPcJsS1jhd3zC+KlYzZyB+cdLGUAjOfiJ55b2+3vNmhgaFrwajKiX017GOc9v97NYCUGBLVsg==}
+  '@takumi-rs/wasm@0.66.9':
+    resolution: {integrity: sha512-cMt+JWVPn2YQCBMa6FzDyL/gT2xK04YG790PNDbnZqdig3DAOM/pvI79923xMudT4Pxac5cIELIVZNQKIgYLjQ==}
 
   '@tanstack/devtools-event-client@0.4.0':
     resolution: {integrity: sha512-RPfGuk2bDZgcu9bAJodvO2lnZeHuz4/71HjZ0bGb/SPg8+lyTA+RLSKQvo7fSmPSi8/vcH3aKQ8EM9ywf1olaw==}
@@ -5775,8 +5775,8 @@ packages:
   '@tanstack/query-core@5.90.20':
     resolution: {integrity: sha512-OMD2HLpNouXEfZJWcKeVKUgQ5n+n3A2JFmBaScpNDUqSrQSjiveC7dKMe53uJUg1nDG16ttFPz2xfilz6i2uVg==}
 
-  '@tanstack/query-devtools@5.92.0':
-    resolution: {integrity: sha512-N8D27KH1vEpVacvZgJL27xC6yPFUy0Zkezn5gnB3L3gRCxlDeSuiya7fKge8Y91uMTnC8aSxBQhcK6ocY7alpQ==}
+  '@tanstack/query-devtools@5.93.0':
+    resolution: {integrity: sha512-+kpsx1NQnOFTZsw6HAFCW3HkKg0+2cepGtAWXjiiSOJJ1CtQpt72EE2nyZb+AjAbLRPoeRmPJ8MtQd8r8gsPdg==}
 
   '@tanstack/react-form@1.28.0':
     resolution: {integrity: sha512-ibLcf5QkTogV0Ly944CuqGxWTpHyreNA4Cy8Wtky7zE9wtE3HVapQt4/hUuXo51zihfTkv5URiXpoTSKF5Xosg==}
@@ -5787,10 +5787,10 @@ packages:
       '@tanstack/react-start':
         optional: true
 
-  '@tanstack/react-query-devtools@5.91.2':
-    resolution: {integrity: sha512-ZJ1503ay5fFeEYFUdo7LMNFzZryi6B0Cacrgr2h1JRkvikK1khgIq6Nq2EcblqEdIlgB/r7XDW8f8DQ89RuUgg==}
+  '@tanstack/react-query-devtools@5.91.3':
+    resolution: {integrity: sha512-nlahjMtd/J1h7IzOOfqeyDh5LNfG0eULwlltPEonYy0QL+nqrBB+nyzJfULV+moL7sZyxc2sHdNJki+vLA9BSA==}
     peerDependencies:
-      '@tanstack/react-query': ^5.90.14
+      '@tanstack/react-query': ^5.90.20
       react: ^18 || ^19
 
   '@tanstack/react-query@5.90.20':
@@ -7141,8 +7141,8 @@ packages:
     peerDependencies:
       convex: ^1.16.4
 
-  convex@1.31.6:
-    resolution: {integrity: sha512-9cIsOzepa3s9DURRF+fZHxbNuzLgilg9XGQCc45v0Xx4FemqeIezpPFSJF9WHC9ckk43TDUUXLecvLVt9djPkw==}
+  convex@1.31.7:
+    resolution: {integrity: sha512-PtNMe1mAIOvA8Yz100QTOaIdgt2rIuWqencVXrb4McdhxBHZ8IJ1eXTnrgCC9HydyilGT1pOn+KNqT14mqn9fQ==}
     engines: {node: '>=18.0.0', npm: '>=7.0.0'}
     hasBin: true
     peerDependencies:
@@ -10568,8 +10568,8 @@ packages:
       '@types/react':
         optional: true
 
-  react-resizable-panels@4.5.4:
-    resolution: {integrity: sha512-zK+Tz+73MBZKDtBUUcKjezaq+in8K10TJ8+slH/LNza5IL2CRFMKm0GbKyMPAGDPKY1x8G7sWx3Wu9inFRZGFA==}
+  react-resizable-panels@4.5.5:
+    resolution: {integrity: sha512-C1N+mcHF5lOkELEx8QpFsiHCibOCu82LVqULp2q00/88Mcofqp1oy4tZv0H4eArzWJsCo6RZ0jeTb0/4tpVlNg==}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
       react-dom: ^18.0.0 || ^19.0.0
@@ -12981,14 +12981,14 @@ snapshots:
       picocolors: 1.1.1
       sisteransi: 1.0.5
 
-  '@convex-dev/better-auth@0.10.10(@better-auth/core@1.4.9(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.7(zod@4.3.5))(jose@6.1.3)(kysely@0.28.9)(nanostores@1.1.0))(@better-auth/utils@0.3.0)(@standard-schema/spec@1.1.0)(better-auth@1.4.9(next@16.1.6(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.0.18))(better-call@1.1.7(zod@4.3.5))(convex@1.31.6(react@19.2.4))(hono@4.11.7)(nanostores@1.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)':
+  '@convex-dev/better-auth@0.10.10(@better-auth/core@1.4.9(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.7(zod@4.3.5))(jose@6.1.3)(kysely@0.28.9)(nanostores@1.1.0))(@better-auth/utils@0.3.0)(@standard-schema/spec@1.1.0)(better-auth@1.4.9(next@16.1.6(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.0.18))(better-call@1.1.7(zod@4.3.5))(convex@1.31.7(react@19.2.4))(hono@4.11.7)(nanostores@1.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)':
     dependencies:
       '@better-auth/passkey': 1.4.9(@better-auth/core@1.4.9(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.7(zod@4.3.5))(jose@6.1.3)(kysely@0.28.9)(nanostores@1.1.0))(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-auth@1.4.9(next@16.1.6(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.0.18))(better-call@1.1.7(zod@4.3.5))(nanostores@1.1.0)
       '@better-fetch/fetch': 1.1.21
       better-auth: 1.4.9(next@16.1.6(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.0.18)
       common-tags: 1.8.2
-      convex: 1.31.6(react@19.2.4)
-      convex-helpers: 0.1.109(@standard-schema/spec@1.1.0)(convex@1.31.6(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.5)
+      convex: 1.31.7(react@19.2.4)
+      convex-helpers: 0.1.109(@standard-schema/spec@1.1.0)(convex@1.31.7(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.5)
       jose: 6.1.3
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
@@ -13005,14 +13005,14 @@ snapshots:
       - nanostores
       - typescript
 
-  '@convex-dev/better-auth@0.10.10(@better-auth/core@1.4.9(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.7(zod@4.3.6))(jose@6.1.3)(kysely@0.28.9)(nanostores@1.1.0))(@better-auth/utils@0.3.0)(@standard-schema/spec@1.1.0)(better-auth@1.4.9(next@16.1.6(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.0.18))(better-call@1.1.7(zod@4.3.6))(convex@1.31.6(react@19.2.4))(hono@4.11.7)(nanostores@1.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)':
+  '@convex-dev/better-auth@0.10.10(@better-auth/core@1.4.9(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.7(zod@4.3.6))(jose@6.1.3)(kysely@0.28.9)(nanostores@1.1.0))(@better-auth/utils@0.3.0)(@standard-schema/spec@1.1.0)(better-auth@1.4.9(next@16.1.6(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.0.18))(better-call@1.1.7(zod@4.3.6))(convex@1.31.7(react@19.2.4))(hono@4.11.7)(nanostores@1.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)':
     dependencies:
       '@better-auth/passkey': 1.4.9(@better-auth/core@1.4.9(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.7(zod@4.3.6))(jose@6.1.3)(kysely@0.28.9)(nanostores@1.1.0))(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-auth@1.4.9(next@16.1.6(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.0.18))(better-call@1.1.7(zod@4.3.6))(nanostores@1.1.0)
       '@better-fetch/fetch': 1.1.21
       better-auth: 1.4.9(next@16.1.6(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.0.18)
       common-tags: 1.8.2
-      convex: 1.31.6(react@19.2.4)
-      convex-helpers: 0.1.109(@standard-schema/spec@1.1.0)(convex@1.31.6(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.5)
+      convex: 1.31.7(react@19.2.4)
+      convex-helpers: 0.1.109(@standard-schema/spec@1.1.0)(convex@1.31.7(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.5)
       jose: 6.1.3
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
@@ -13029,22 +13029,22 @@ snapshots:
       - nanostores
       - typescript
 
-  '@convex-dev/migrations@0.3.1(convex@1.31.6(react@19.2.4))':
+  '@convex-dev/migrations@0.3.1(convex@1.31.7(react@19.2.4))':
     dependencies:
-      convex: 1.31.6(react@19.2.4)
+      convex: 1.31.7(react@19.2.4)
 
-  '@convex-dev/rate-limiter@0.3.2(convex@1.31.6(react@19.2.4))(react@19.2.4)':
+  '@convex-dev/rate-limiter@0.3.2(convex@1.31.7(react@19.2.4))(react@19.2.4)':
     dependencies:
-      convex: 1.31.6(react@19.2.4)
+      convex: 1.31.7(react@19.2.4)
     optionalDependencies:
       react: 19.2.4
 
-  '@convex-dev/resend@0.2.3(@react-email/render@2.0.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(convex-helpers@0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.6(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.31.6(react@19.2.4))(react@19.2.4)':
+  '@convex-dev/resend@0.2.3(@react-email/render@2.0.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(convex-helpers@0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.7(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.31.7(react@19.2.4))(react@19.2.4)':
     dependencies:
-      '@convex-dev/rate-limiter': 0.3.2(convex@1.31.6(react@19.2.4))(react@19.2.4)
-      '@convex-dev/workpool': 0.3.0(convex-helpers@0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.6(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.31.6(react@19.2.4))
-      convex: 1.31.6(react@19.2.4)
-      convex-helpers: 0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.6(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6)
+      '@convex-dev/rate-limiter': 0.3.2(convex@1.31.7(react@19.2.4))(react@19.2.4)
+      '@convex-dev/workpool': 0.3.0(convex-helpers@0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.7(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.31.7(react@19.2.4))
+      convex: 1.31.7(react@19.2.4)
+      convex-helpers: 0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.7(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6)
       remeda: 2.33.1
       resend: 6.7.0(@react-email/render@2.0.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4))
       svix: 1.84.1
@@ -13052,17 +13052,17 @@ snapshots:
       - '@react-email/render'
       - react
 
-  '@convex-dev/workflow@0.3.4(@convex-dev/workpool@0.3.0(convex-helpers@0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.6(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.31.6(react@19.2.4)))(convex-helpers@0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.6(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.31.6(react@19.2.4))':
+  '@convex-dev/workflow@0.3.4(@convex-dev/workpool@0.3.0(convex-helpers@0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.7(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.31.7(react@19.2.4)))(convex-helpers@0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.7(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.31.7(react@19.2.4))':
     dependencies:
-      '@convex-dev/workpool': 0.3.0(convex-helpers@0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.6(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.31.6(react@19.2.4))
+      '@convex-dev/workpool': 0.3.0(convex-helpers@0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.7(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.31.7(react@19.2.4))
       async-channel: 0.2.0
-      convex: 1.31.6(react@19.2.4)
-      convex-helpers: 0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.6(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6)
+      convex: 1.31.7(react@19.2.4)
+      convex-helpers: 0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.7(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6)
 
-  '@convex-dev/workpool@0.3.0(convex-helpers@0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.6(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.31.6(react@19.2.4))':
+  '@convex-dev/workpool@0.3.0(convex-helpers@0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.7(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.31.7(react@19.2.4))':
     dependencies:
-      convex: 1.31.6(react@19.2.4)
-      convex-helpers: 0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.6(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6)
+      convex: 1.31.7(react@19.2.4)
+      convex-helpers: 0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.7(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6)
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
@@ -14066,7 +14066,7 @@ snapshots:
 
   '@mediapipe/tasks-vision@0.10.17': {}
 
-  '@mendable/firecrawl-js@4.11.5':
+  '@mendable/firecrawl-js@4.12.0':
     dependencies:
       axios: 1.13.2
       typescript-event-target: 1.1.2
@@ -17447,50 +17447,50 @@ snapshots:
       postcss-selector-parser: 6.0.10
       tailwindcss: 4.1.18
 
-  '@takumi-rs/core-darwin-arm64@0.66.7':
+  '@takumi-rs/core-darwin-arm64@0.66.9':
     optional: true
 
-  '@takumi-rs/core-darwin-x64@0.66.7':
+  '@takumi-rs/core-darwin-x64@0.66.9':
     optional: true
 
-  '@takumi-rs/core-linux-arm64-gnu@0.66.7':
+  '@takumi-rs/core-linux-arm64-gnu@0.66.9':
     optional: true
 
-  '@takumi-rs/core-linux-arm64-musl@0.66.7':
+  '@takumi-rs/core-linux-arm64-musl@0.66.9':
     optional: true
 
-  '@takumi-rs/core-linux-x64-gnu@0.66.7':
+  '@takumi-rs/core-linux-x64-gnu@0.66.9':
     optional: true
 
-  '@takumi-rs/core-linux-x64-musl@0.66.7':
+  '@takumi-rs/core-linux-x64-musl@0.66.9':
     optional: true
 
-  '@takumi-rs/core-win32-arm64-msvc@0.66.7':
+  '@takumi-rs/core-win32-arm64-msvc@0.66.9':
     optional: true
 
-  '@takumi-rs/core-win32-x64-msvc@0.66.7':
+  '@takumi-rs/core-win32-x64-msvc@0.66.9':
     optional: true
 
-  '@takumi-rs/core@0.66.7':
+  '@takumi-rs/core@0.66.9':
     optionalDependencies:
-      '@takumi-rs/core-darwin-arm64': 0.66.7
-      '@takumi-rs/core-darwin-x64': 0.66.7
-      '@takumi-rs/core-linux-arm64-gnu': 0.66.7
-      '@takumi-rs/core-linux-arm64-musl': 0.66.7
-      '@takumi-rs/core-linux-x64-gnu': 0.66.7
-      '@takumi-rs/core-linux-x64-musl': 0.66.7
-      '@takumi-rs/core-win32-arm64-msvc': 0.66.7
-      '@takumi-rs/core-win32-x64-msvc': 0.66.7
+      '@takumi-rs/core-darwin-arm64': 0.66.9
+      '@takumi-rs/core-darwin-x64': 0.66.9
+      '@takumi-rs/core-linux-arm64-gnu': 0.66.9
+      '@takumi-rs/core-linux-arm64-musl': 0.66.9
+      '@takumi-rs/core-linux-x64-gnu': 0.66.9
+      '@takumi-rs/core-linux-x64-musl': 0.66.9
+      '@takumi-rs/core-win32-arm64-msvc': 0.66.9
+      '@takumi-rs/core-win32-x64-msvc': 0.66.9
 
-  '@takumi-rs/helpers@0.66.7': {}
+  '@takumi-rs/helpers@0.66.9': {}
 
-  '@takumi-rs/image-response@0.66.7':
+  '@takumi-rs/image-response@0.66.9':
     dependencies:
-      '@takumi-rs/core': 0.66.7
-      '@takumi-rs/helpers': 0.66.7
-      '@takumi-rs/wasm': 0.66.7
+      '@takumi-rs/core': 0.66.9
+      '@takumi-rs/helpers': 0.66.9
+      '@takumi-rs/wasm': 0.66.9
 
-  '@takumi-rs/wasm@0.66.7': {}
+  '@takumi-rs/wasm@0.66.9': {}
 
   '@tanstack/devtools-event-client@0.4.0': {}
 
@@ -17504,7 +17504,7 @@ snapshots:
 
   '@tanstack/query-core@5.90.20': {}
 
-  '@tanstack/query-devtools@5.92.0': {}
+  '@tanstack/query-devtools@5.93.0': {}
 
   '@tanstack/react-form@1.28.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
@@ -17514,9 +17514,9 @@ snapshots:
     transitivePeerDependencies:
       - react-dom
 
-  '@tanstack/react-query-devtools@5.91.2(@tanstack/react-query@5.90.20(react@19.2.4))(react@19.2.4)':
+  '@tanstack/react-query-devtools@5.91.3(@tanstack/react-query@5.90.20(react@19.2.4))(react@19.2.4)':
     dependencies:
-      '@tanstack/query-devtools': 5.92.0
+      '@tanstack/query-devtools': 5.93.0
       '@tanstack/react-query': 5.90.20(react@19.2.4)
       react: 19.2.4
 
@@ -18966,9 +18966,9 @@ snapshots:
 
   convert-source-map@2.0.0: {}
 
-  convex-helpers@0.1.109(@standard-schema/spec@1.1.0)(convex@1.31.6(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.5):
+  convex-helpers@0.1.109(@standard-schema/spec@1.1.0)(convex@1.31.7(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.5):
     dependencies:
-      convex: 1.31.6(react@19.2.4)
+      convex: 1.31.7(react@19.2.4)
     optionalDependencies:
       '@standard-schema/spec': 1.1.0
       hono: 4.11.7
@@ -18976,9 +18976,9 @@ snapshots:
       typescript: 5.9.3
       zod: 4.3.5
 
-  convex-helpers@0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.6(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6):
+  convex-helpers@0.1.111(@standard-schema/spec@1.1.0)(convex@1.31.7(react@19.2.4))(hono@4.11.7)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6):
     dependencies:
-      convex: 1.31.6(react@19.2.4)
+      convex: 1.31.7(react@19.2.4)
     optionalDependencies:
       '@standard-schema/spec': 1.1.0
       hono: 4.11.7
@@ -18986,11 +18986,11 @@ snapshots:
       typescript: 5.9.3
       zod: 4.3.6
 
-  convex-test@0.0.41(convex@1.31.6(react@19.2.4)):
+  convex-test@0.0.41(convex@1.31.7(react@19.2.4)):
     dependencies:
-      convex: 1.31.6(react@19.2.4)
+      convex: 1.31.7(react@19.2.4)
 
-  convex@1.31.6(react@19.2.4):
+  convex@1.31.7(react@19.2.4):
     dependencies:
       esbuild: 0.27.0
       prettier: 3.7.4
@@ -23396,7 +23396,7 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.10
 
-  react-resizable-panels@4.5.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  react-resizable-panels@4.5.5(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
