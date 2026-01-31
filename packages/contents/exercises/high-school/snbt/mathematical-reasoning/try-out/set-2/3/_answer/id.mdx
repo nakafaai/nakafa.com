@@ -1,0 +1,44 @@
+export const metadata = {
+  title: "Pembahasan Soal 3",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/31/2026",
+};
+
+Kita diberikan informasi mengenai harga asli motor, persentase diskon, dan pajak yang dikenakan terhadap diskon tersebut.
+
+Diketahui:
+- Harga asli motor = <InlineMath math="\text{Rp}75.000.000,00" />
+- Diskon = <InlineMath math="10\%" />
+- Pajak atas diskon = <InlineMath math="2,5\%" />
+
+Pertama, kita hitung besar nominal diskon yang didapatkan:
+
+<MathContainer>
+  <BlockMath math="\text{Nominal Diskon} = 10\% \times 75.000.000" />
+  <BlockMath math="\text{Nominal Diskon} = 7.500.000" />
+</MathContainer>
+
+Selanjutnya, kita hitung harga motor setelah dikurangi diskon (sebelum pajak):
+
+<MathContainer>
+  <BlockMath math="\text{Harga Setelah Diskon} = 75.000.000 - 7.500.000" />
+  <BlockMath math="\text{Harga Setelah Diskon} = 67.500.000" />
+</MathContainer>
+
+Soal menyatakan bahwa terdapat pajak sebesar <InlineMath math="2,5\%" /> yang dikenakan **atas diskon tersebut**. Artinya, kita harus menghitung <InlineMath math="2,5\%" /> dari nominal diskon (<InlineMath math="\text{Rp}7.500.000,00" />), lalu menambahkannya ke harga yang harus dibayar.
+
+<MathContainer>
+  <BlockMath math="\text{Pajak} = 2,5\% \times 7.500.000" />
+  <BlockMath math="\text{Pajak} = \frac{2,5}{100} \times 7.500.000" />
+  <BlockMath math="\text{Pajak} = 187.500" />
+</MathContainer>
+
+Terakhir, kita hitung total harga yang harus dibayar Ayah dengan menjumlahkan harga setelah diskon dan pajak:
+
+<MathContainer>
+  <BlockMath math="\text{Total Bayar} = \text{Harga Setelah Diskon} + \text{Pajak}" />
+  <BlockMath math="\text{Total Bayar} = 67.500.000 + 187.500" />
+  <BlockMath math="\text{Total Bayar} = 67.687.500" />
+</MathContainer>
+
+Jadi, harga sepeda motor akhir yang harus dibayar Ayah adalah <InlineMath math="\text{Rp}67.687.500,00" />.

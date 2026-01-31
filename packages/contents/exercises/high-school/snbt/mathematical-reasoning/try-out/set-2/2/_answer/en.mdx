@@ -1,0 +1,50 @@
+export const metadata = {
+  title: "Solution to Question 2",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/31/2026",
+};
+
+Our goal is to find the area of each plot in three locations (A, B, and C) with the condition that the **number of plots** in each location must be the **same** and **maximized**.
+
+Since the number of plots must be the same and maximized, we need to find the **Greatest Common Divisor (GCD)** of the land areas: <InlineMath math="120" />, <InlineMath math="180" />, and <InlineMath math="240" />. This GCD value will represent the number of plots to be created.
+
+Let's perform prime factorization for the three numbers:
+
+<MathContainer>
+  <BlockMath math="120 = 2^3 \times 3 \times 5" />
+  <BlockMath math="180 = 2^2 \times 3^2 \times 5" />
+  <BlockMath math="240 = 2^4 \times 3 \times 5" />
+</MathContainer>
+
+The GCD is obtained by multiplying the common prime factors with the lowest exponent:
+- Factor 2: the lowest exponent is <InlineMath math="2^2" />.
+- Factor 3: the lowest exponent is <InlineMath math="3^1" /> (or 3).
+- Factor 5: the lowest exponent is <InlineMath math="5^1" /> (or 5).
+
+<MathContainer>
+  <BlockMath math="\text{GCD} = 2^2 \times 3 \times 5 = 4 \times 3 \times 5 = 60" />
+</MathContainer>
+
+So, the number of plots to be created in each location is **60 plots**.
+
+Next, we calculate the area of each plot for each location by dividing the total land area by the number of plots (<InlineMath math="60" />):
+
+**Location A:**
+
+<MathContainer>
+  <BlockMath math="\frac{120\text{ m}^2}{60} = 2\text{ m}^2" />
+</MathContainer>
+
+**Location B:**
+
+<MathContainer>
+  <BlockMath math="\frac{180\text{ m}^2}{60} = 3\text{ m}^2" />
+</MathContainer>
+
+**Location C:**
+
+<MathContainer>
+  <BlockMath math="\frac{240\text{ m}^2}{60} = 4\text{ m}^2" />
+</MathContainer>
+
+Thus, the area of each plot from each location respectively is <InlineMath math="2\text{ m}^2" />, <InlineMath math="3\text{ m}^2" />, and <InlineMath math="4\text{ m}^2" />.
