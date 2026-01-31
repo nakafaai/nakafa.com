@@ -229,9 +229,12 @@ export async function getEntries(
   return routing.locales.map((locale) => ({
     url: getUrl(href, locale, domain),
     alternates: {
-      languages: Object.fromEntries(
-        routing.locales.map((cur) => [cur, getUrl(href, cur, domain)])
-      ),
+      languages: {
+        ...Object.fromEntries(
+          routing.locales.map((cur) => [cur, getUrl(href, cur, domain)])
+        ),
+        "x-default": getUrl(href, "en", domain),
+      },
     },
     changeFrequency,
     lastModified,
