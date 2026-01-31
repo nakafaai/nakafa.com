@@ -261,7 +261,9 @@
     "search-not-found": "We couldn't find anything matching that.",
     "search-loading": "Finding results...",
     "search-help": "Type to start searching...",
-    "search-error": "An error occurred while searching."
+    "search-error": "An error occurred while searching.",
+    "search-title": "Search Learning Materials",
+    "search-description": "Search thousands of free learning materials, educational articles, practice exercises, and study resources. Find exactly what you need to master any subject."
   },
   "Home": {
     "title": "What do you want to learn?",
@@ -307,6 +309,9 @@
     "account": "Account",
     "settings": "Settings",
     "profile": "Profile",
+    "profile-description": "Explore user learning profiles featuring educational contributions, insightful comments, study progress tracking, and community engagement in collaborative learning.",
+    "chat": "Chat",
+    "chat-description": "Connect with our AI learning assistant for personalized tutoring, homework help, concept explanations, and interactive educational conversations tailored to your needs.",
     "subscriptions": "Subscriptions",
     "subscriptions-description": "Unlock the most powerful learning experience with Nakafa Pro.",
     "get-pro": "Get Pro",
@@ -324,7 +329,6 @@
     "parent": "Parent",
     "administrator": "Administrator",
     "save": "Save",
-    "chat": "Chat",
     "developers": "Developers",
     "api-key": "API Key",
     "api-key-description": "Manage your API keys to authenticate with Nakafa API.",

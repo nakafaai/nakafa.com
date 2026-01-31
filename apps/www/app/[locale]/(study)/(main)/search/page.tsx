@@ -1,5 +1,6 @@
+import type { Metadata } from "next";
 import type { Locale } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Suspense, use } from "react";
 import { HomeTitle } from "@/components/home/title";
 import { InputSearch } from "@/components/search/input";
@@ -9,6 +10,23 @@ import { RefContent } from "@/components/shared/ref-content";
 import { getGithubUrl } from "@/lib/utils/github";
 
 export const revalidate = false;
+
+interface Props {
+  params: Promise<{ locale: Locale }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Utils" });
+
+  return {
+    title: t("search-title"),
+    description: t("search-description"),
+    alternates: {
+      canonical: `/${locale}/search`,
+    },
+  };
+}
 
 export default function Page({
   params,

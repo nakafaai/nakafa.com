@@ -261,7 +261,9 @@
     "search-not-found": "Yah, nggak nemu apa-apa nih.",
     "search-loading": "Lagi nyari...",
     "search-help": "Ketik untuk mencari...",
-    "search-error": "Ada masalah saat mencari. Coba lagi ya."
+    "search-error": "Ada masalah saat mencari. Coba lagi ya.",
+    "search-title": "Cari Materi Belajar",
+    "search-description": "Cari ribuan materi pembelajaran gratis, artikel edukasi, latihan soal, dan sumber belajar. Temukan persis apa yang kamu butuhkan untuk menguasai pelajaran."
   },
   "Home": {
     "title": "Mau belajar apa hari ini?",
@@ -307,6 +309,9 @@
     "account": "Akun",
     "settings": "Pengaturan",
     "profile": "Profil",
+    "profile-description": "Jelajahi profil belajar pengguna dengan kontribusi edukasi, komentar bermakna, pelacakan progres belajar, dan keterlibatan komunitas dalam pembelajaran kolaboratif.",
+    "chat": "Obrolan",
+    "chat-description": "Terhubung dengan asisten AI belajar untuk bimbingan personal, bantuan PR, penjelasan konsep, dan percakapan edukasi interaktif yang disesuaikan dengan kebutuhan belajarmu.",
     "subscriptions": "Langganan",
     "subscriptions-description": "Nikmati pengalaman belajar terbaik dengan Nakafa Pro.",
     "get-pro": "Dapatkan Pro",
@@ -324,7 +329,6 @@
     "parent": "Orang tua",
     "administrator": "Administrator",
     "save": "Simpan",
-    "chat": "Obrolan",
     "developers": "Developer",
     "api-key": "API Key",
     "api-key-description": "Kelola API keys untuk autentikasi dengan API Nakafa.",

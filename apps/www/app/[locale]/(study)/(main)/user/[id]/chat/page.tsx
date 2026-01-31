@@ -1,6 +1,7 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Metadata } from "next";
 import type { Locale } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
 import { UserChats } from "@/components/user/chats";
 
@@ -9,6 +10,19 @@ interface Props {
     locale: Locale;
     id: Id<"users">;
   }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Auth" });
+
+  return {
+    title: t("chat"),
+    description: t("chat-description"),
+    alternates: {
+      canonical: `/${locale}/user/chat`,
+    },
+  };
 }
 
 export default function Page({ params }: Props) {
