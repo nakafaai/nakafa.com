@@ -52,9 +52,11 @@ export async function generateMetadata({
   };
 
   const title = t("quran");
+  const description = t("quran-description");
 
   return {
     title,
+    description,
     alternates,
     category: t("quran"),
     twitter,

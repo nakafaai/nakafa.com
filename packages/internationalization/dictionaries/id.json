@@ -442,7 +442,8 @@
     "company": "Perusahaan",
     "community": "Komunitas",
     "about-us": "Tentang Kami",
-    "events": "Acara"
+    "events": "Acara",
+    "events-description": "Temukan acara edukasi mendatang, workshop, webinar, dan pertemuan komunitas. Bergabunglah dengan kami untuk belajar, terhubung, dan berkembang bersama."
   },
   "File": {
     "exceeds-max-size": "{fileName} kegedean nih, maksimal {maxSizeFormatted} ya.",

@@ -442,7 +442,8 @@
     "company": "Company",
     "community": "Community",
     "about-us": "About Us",
-    "events": "Events"
+    "events": "Events",
+    "events-description": "Discover upcoming educational events, workshops, webinars, and community gatherings. Join us to learn, connect, and grow together."
   },
   "File": {
     "exceeds-max-size": "{fileName} exceeds maximum size of {maxSizeFormatted}.",

@@ -13,14 +13,14 @@ interface Props {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { locale } = await params;
+  const { locale, id } = await params;
   const t = await getTranslations({ locale, namespace: "Auth" });
 
   return {
     title: t("profile"),
     description: t("profile-description"),
     alternates: {
-      canonical: `/${locale}/user`,
+      canonical: `/${locale}/user/${id}`,
     },
   };
 }
