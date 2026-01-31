@@ -1,0 +1,66 @@
+export const metadata = {
+  title: "Solution to Question 8",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/31/2026",
+};
+
+**Identifying Production Patterns**
+
+This problem applies the concept of an **Arithmetic Sequence**, where pan production increases by a constant amount each month. We have information about production in the <InlineMath math="3\text{rd}" /> month and the <InlineMath math="6\text{th}" /> month.
+
+Given:
+
+<MathContainer>
+  <BlockMath math="U_3 = 1,500" />
+  <BlockMath math="U_6 = 2,250" />
+</MathContainer>
+
+**Determining Production Increase and Initial Production**
+
+In an arithmetic sequence, the <InlineMath math="n\text{-th}" /> term is given by <InlineMath math="U_n = a + (n-1)b" />. We can form two linear equations to find the initial value <InlineMath math="a" /> and the common difference <InlineMath math="b" />.
+
+<MathContainer>
+  <BlockMath math="a + 2b = 1,500 \quad \dots (1)" />
+  <BlockMath math="a + 5b = 2,250 \quad \dots (2)" />
+</MathContainer>
+
+The difference between these two equations gives the value of <InlineMath math="b" />:
+
+<MathContainer>
+  <BlockMath math="(a + 5b) - (a + 2b) = 2,250 - 1,500" />
+  <BlockMath math="3b = 750" />
+  <BlockMath math="b = 250" />
+</MathContainer>
+
+So, production increases by <InlineMath math="250" /> units each month. Next, substitute the value of <InlineMath math="b" /> into equation <InlineMath math="(1)" /> to find <InlineMath math="a" />:
+
+<MathContainer>
+  <BlockMath math="a + 2(250) = 1,500" />
+  <BlockMath math="a + 500 = 1,500" />
+  <BlockMath math="a = 1,000" />
+</MathContainer>
+
+Production in the first month is <InlineMath math="1,000" /> units.
+
+**Determining the Target Month**
+
+We need to find the <InlineMath math="n\text{-th}" /> month where production **exceeds** <InlineMath math="10,000" /> units.
+
+<MathContainer>
+  <BlockMath math="U_n > 10,000" />
+  <BlockMath math="a + (n-1)b > 10,000" />
+  <BlockMath math="1,000 + (n-1)250 > 10,000" />
+</MathContainer>
+
+Simplify the inequality:
+
+<MathContainer>
+  <BlockMath math="(n-1)250 > 9,000" />
+  <BlockMath math="n-1 > \frac{9,000}{250}" />
+  <BlockMath math="n-1 > 36" />
+  <BlockMath math="n > 37" />
+</MathContainer>
+
+Since <InlineMath math="n" /> must be an integer greater than <InlineMath math="37" />, the first month that satisfies the condition is the <InlineMath math="38\text{th}" /> month.
+
+Note that in the <InlineMath math="37\text{th}" /> month, production exactly reaches <InlineMath math="10,000" /> units, so it has not yet exceeded the target.

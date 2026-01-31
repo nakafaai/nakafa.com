@@ -1,0 +1,66 @@
+export const metadata = {
+  title: "Pembahasan Soal 8",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/31/2026",
+};
+
+**Identifikasi Pola Produksi**
+
+Permasalahan ini merupakan aplikasi dari **Barisan Aritmatika**, di mana produksi panci meningkat dengan jumlah yang tetap setiap bulannya. Kita memiliki informasi produksi pada bulan ke-<InlineMath math="3" /> dan bulan ke-<InlineMath math="6" />.
+
+Diketahui:
+
+<MathContainer>
+  <BlockMath math="U_3 = 1.500" />
+  <BlockMath math="U_6 = 2.250" />
+</MathContainer>
+
+**Menentukan Kenaikan Produksi dan Produksi Awal**
+
+Dalam barisan aritmatika, suku ke-<InlineMath math="n" /> dirumuskan sebagai <InlineMath math="U_n = a + (n-1)b" />. Kita dapat membentuk dua persamaan linear untuk mencari nilai awal <InlineMath math="a" /> dan beda <InlineMath math="b" />.
+
+<MathContainer>
+  <BlockMath math="a + 2b = 1.500 \quad \dots (1)" />
+  <BlockMath math="a + 5b = 2.250 \quad \dots (2)" />
+</MathContainer>
+
+Selisih antara kedua persamaan tersebut memberikan nilai <InlineMath math="b" />:
+
+<MathContainer>
+  <BlockMath math="(a + 5b) - (a + 2b) = 2.250 - 1.500" />
+  <BlockMath math="3b = 750" />
+  <BlockMath math="b = 250" />
+</MathContainer>
+
+Jadi, produksi meningkat sebesar <InlineMath math="250" /> unit setiap bulan. Selanjutnya, kita substitusi nilai <InlineMath math="b" /> ke persamaan <InlineMath math="(1)" /> untuk mendapatkan <InlineMath math="a" />:
+
+<MathContainer>
+  <BlockMath math="a + 2(250) = 1.500" />
+  <BlockMath math="a + 500 = 1.500" />
+  <BlockMath math="a = 1.000" />
+</MathContainer>
+
+Produksi pada bulan pertama adalah <InlineMath math="1.000" /> unit.
+
+**Menentukan Bulan Target**
+
+Kita diminta mencari bulan ke-<InlineMath math="n" /> di mana produksi **melebihi** <InlineMath math="10.000" /> unit.
+
+<MathContainer>
+  <BlockMath math="U_n > 10.000" />
+  <BlockMath math="a + (n-1)b > 10.000" />
+  <BlockMath math="1.000 + (n-1)250 > 10.000" />
+</MathContainer>
+
+Sederhanakan pertidaksamaan tersebut:
+
+<MathContainer>
+  <BlockMath math="(n-1)250 > 9.000" />
+  <BlockMath math="n-1 > \frac{9.000}{250}" />
+  <BlockMath math="n-1 > 36" />
+  <BlockMath math="n > 37" />
+</MathContainer>
+
+Karena <InlineMath math="n" /> harus bilangan bulat lebih besar dari <InlineMath math="37" />, maka bulan pertama yang memenuhi kondisi tersebut adalah bulan ke-<InlineMath math="38" />.
+
+Perhatikan bahwa pada bulan ke-<InlineMath math="37" />, produksi tepat mencapai <InlineMath math="10.000" /> unit, sehingga belum melebihi target.

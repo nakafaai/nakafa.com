@@ -1,0 +1,70 @@
+export const metadata = {
+  title: "Solution to Question 16",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/01/2026",
+};
+
+**Modeling the Problem into Equations**
+
+Let <InlineMath math="x" /> be the daily wage and <InlineMath math="y" /> be the overtime wage. Based on the given information, we can form a system of linear equations with two variables:
+
+<MathContainer>
+  <BlockMath math="6x + 4y = 74,000 \quad \dots (1)" />
+  <BlockMath math="5x + 2y = 55,000 \quad \dots (2)" />
+</MathContainer>
+
+Equation <InlineMath math="(1)" /> comes from Mr. Budi working <InlineMath math="6" /> days with <InlineMath math="4" /> overtime days, while equation <InlineMath math="(2)" /> comes from Mr. Agus working <InlineMath math="5" /> days with <InlineMath math="2" /> overtime days.
+
+**Solving the System of Equations**
+
+First, simplify equation <InlineMath math="(1)" /> by dividing both sides by <InlineMath math="2" />:
+
+<MathContainer>
+  <BlockMath math="3x + 2y = 37,000 \quad \dots (3)" />
+</MathContainer>
+
+Now we have two simpler equations:
+
+<MathContainer>
+  <BlockMath math="5x + 2y = 55,000 \quad \dots (2)" />
+  <BlockMath math="3x + 2y = 37,000 \quad \dots (3)" />
+</MathContainer>
+
+We can eliminate variable <InlineMath math="y" /> by subtracting equation <InlineMath math="(3)" /> from equation <InlineMath math="(2)" />:
+
+<MathContainer>
+  <BlockMath math="(5x + 2y) - (3x + 2y) = 55,000 - 37,000" />
+  <BlockMath math="2x = 18,000" />
+  <BlockMath math="x = 9,000" />
+</MathContainer>
+
+After finding <InlineMath math="x = 9,000" />, substitute it into equation <InlineMath math="(3)" /> to find <InlineMath math="y" />:
+
+<MathContainer>
+  <BlockMath math="3(9,000) + 2y = 37,000" />
+  <BlockMath math="27,000 + 2y = 37,000" />
+  <BlockMath math="2y = 10,000" />
+  <BlockMath math="y = 5,000" />
+</MathContainer>
+
+So, the daily wage is <InlineMath math="\text{Rp}9,000.00" /> and the overtime wage is <InlineMath math="\text{Rp}5,000.00" />.
+
+**Calculating Mr. Dani's Wage**
+
+Mr. Dani works for <InlineMath math="5" /> days and does overtime continuously, which means he has <InlineMath math="5" /> regular work days and <InlineMath math="5" /> overtime days. The wage he earns is:
+
+<MathContainer>
+  <BlockMath math="5x + 5y = 5(9,000) + 5(5,000)" />
+  <BlockMath math="= 45,000 + 25,000" />
+  <BlockMath math="= 70,000" />
+</MathContainer>
+
+Alternatively, we can factor the equation:
+
+<MathContainer>
+  <BlockMath math="5(x + y) = 5(9,000 + 5,000)" />
+  <BlockMath math="= 5(14,000)" />
+  <BlockMath math="= 70,000" />
+</MathContainer>
+
+Thus, the wage Mr. Dani will earn is <InlineMath math="\text{Rp}70,000.00" />.

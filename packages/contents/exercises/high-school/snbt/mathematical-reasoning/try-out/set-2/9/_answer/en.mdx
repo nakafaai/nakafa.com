@@ -1,0 +1,36 @@
+export const metadata = {
+  title: "Solution to Question 9",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/31/2026",
+};
+
+**Collision Condition**
+
+A collision between the rocket and the aircraft carrier occurs when both are at the same position at the same time. Therefore, we must equate the rocket's position function with the aircraft carrier's position function.
+
+<MathContainer>
+  <BlockMath math="s_{\text{rocket}}(t) = s_{\text{carrier}}(t)" />
+  <BlockMath math="4000 - t^2 = 60t" />
+</MathContainer>
+
+**Determining the Collision Time**
+
+We rearrange the quadratic equation into standard form to solve for <InlineMath math="t" />.
+
+<MathContainer>
+  <BlockMath math="t^2 + 60t - 4000 = 0" />
+</MathContainer>
+
+Next, we factorize this quadratic equation. We need to find two numbers that multiply to <InlineMath math="-4000" /> and add up to <InlineMath math="60" />. These numbers are <InlineMath math="100" /> and <InlineMath math="-40" />.
+
+<MathContainer>
+  <BlockMath math="(t + 100)(t - 40) = 0" />
+</MathContainer>
+
+From this factorization, we obtain two possible values for <InlineMath math="t" />:
+
+<MathContainer>
+  <BlockMath math="t = -100 \quad \text{or} \quad t = 40" />
+</MathContainer>
+
+Since time (<InlineMath math="t" />) cannot be negative, the valid value is <InlineMath math="40" /> seconds. Thus, the collision occurs exactly at <InlineMath math="40" /> seconds.

@@ -1,0 +1,63 @@
+export const metadata = {
+  title: "Pembahasan Soal 15",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/31/2026",
+};
+
+**Analisis Masalah**
+
+Kita dapat memodelkan masalah ini sebagai sistem persamaan linear dua variabel. Misalkan harga daging per kg adalah <InlineMath math="x" /> dan harga ikan per kg adalah <InlineMath math="y" /> (dalam satuan ribu rupiah).
+
+**Membentuk Persamaan**
+
+Dari data Toko A, penjualan <InlineMath math="80" /> kg daging dan <InlineMath math="20" /> kg ikan menghasilkan <InlineMath math="2960" /> ribu rupiah:
+
+<MathContainer>
+  <BlockMath math="80x + 20y = 2960" />
+</MathContainer>
+
+Sederhanakan persamaan ini dengan membagi kedua ruas dengan <InlineMath math="20" />:
+
+<MathContainer>
+  <BlockMath math="4x + y = 148 \quad \dots (1)" />
+</MathContainer>
+
+Dari data Toko B, penjualan <InlineMath math="70" /> kg daging dan <InlineMath math="40" /> kg ikan menghasilkan <InlineMath math="3040" /> ribu rupiah:
+
+<MathContainer>
+  <BlockMath math="70x + 40y = 3040" />
+</MathContainer>
+
+Sederhanakan persamaan ini dengan membagi kedua ruas dengan <InlineMath math="10" />:
+
+<MathContainer>
+  <BlockMath math="7x + 4y = 304 \quad \dots (2)" />
+</MathContainer>
+
+**Menyelesaikan Sistem Persamaan**
+
+Kita akan mengeliminasi variabel <InlineMath math="y" /> untuk mencari nilai <InlineMath math="x" />. Kalikan persamaan <InlineMath math="(1)" /> dengan <InlineMath math="4" /> agar koefisien <InlineMath math="y" /> sama dengan persamaan <InlineMath math="(2)" />:
+
+<MathContainer>
+  <BlockMath math="16x + 4y = 592" />
+</MathContainer>
+
+Kurangkan persamaan hasil perkalian ini dengan persamaan <InlineMath math="(2)" />:
+
+<MathContainer>
+  <BlockMath math="(16x + 4y) - (7x + 4y) = 592 - 304" />
+  <BlockMath math="9x = 288" />
+  <BlockMath math="x = 32" />
+</MathContainer>
+
+**Menentukan Harga Ikan**
+
+Substitusikan nilai <InlineMath math="x = 32" /> ke persamaan (1) untuk mencari <InlineMath math="y" />:
+
+<MathContainer>
+  <BlockMath math="4(32) + y = 148" />
+  <BlockMath math="128 + y = 148" />
+  <BlockMath math="y = 20" />
+</MathContainer>
+
+Nilai <InlineMath math="y = 20" /> berarti harga ikan adalah <InlineMath math="20" /> ribu rupiah atau <InlineMath math="\text{Rp}20.000,00" />.

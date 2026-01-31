@@ -1,0 +1,33 @@
+export const metadata = {
+  title: "Solution to Question 10",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/31/2026",
+};
+
+**Analyzing Probability for the First Box**
+
+In the first box, there are a total of <InlineMath math="4 + 3 = 7" /> balls. We want to draw a red ball, of which there are <InlineMath math="4" />. The probability of drawing a red ball from the first box is:
+
+<MathContainer>
+  <BlockMath math="P(\text{Red}_1) = \frac{n(\text{Red}_1)}{n(S_1)} = \frac{4}{7}" />
+</MathContainer>
+
+**Analyzing Probability for the Second Box**
+
+In the second box, there are a total of <InlineMath math="7 + 3 = 10" /> balls. We want to draw a white ball, of which there are <InlineMath math="3" />. The probability of drawing a white ball from the second box is:
+
+<MathContainer>
+  <BlockMath math="P(\text{White}_2) = \frac{n(\text{White}_2)}{n(S_2)} = \frac{3}{10}" />
+</MathContainer>
+
+**Calculating the Combined Probability**
+
+Since drawing balls from the two boxes are **independent events** (the event in the first box does not affect the second box), the probability of both events occurring together is calculated by multiplying their individual probabilities.
+
+<MathContainer>
+  <BlockMath math="P(\text{Total}) = P(\text{Red}_1) \times P(\text{White}_2)" />
+  <BlockMath math="P(\text{Total}) = \frac{4}{7} \times \frac{3}{10}" />
+  <BlockMath math="P(\text{Total}) = \frac{12}{70}" />
+</MathContainer>
+
+Thus, the probability of drawing a red ball from the first box and a white ball from the second box is <InlineMath math="\frac{12}{70}" />.

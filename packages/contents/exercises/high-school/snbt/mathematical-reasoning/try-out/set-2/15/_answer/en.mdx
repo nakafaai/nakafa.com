@@ -1,0 +1,63 @@
+export const metadata = {
+  title: "Solution to Question 15",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/31/2026",
+};
+
+**Problem Analysis**
+
+We can model this problem as a system of linear equations with two variables. Let the price of meat per kg be <InlineMath math="x" /> and the price of fish per kg be <InlineMath math="y" /> (in thousands of rupiah).
+
+**Formulating the Equations**
+
+From the data of Shop A, the sale of <InlineMath math="80" /> kg of meat and <InlineMath math="20" /> kg of fish results in <InlineMath math="2960" /> thousand rupiah:
+
+<MathContainer>
+  <BlockMath math="80x + 20y = 2960" />
+</MathContainer>
+
+Simplify this equation by dividing both sides by <InlineMath math="20" />:
+
+<MathContainer>
+  <BlockMath math="4x + y = 148 \quad \dots (1)" />
+</MathContainer>
+
+From the data of Shop B, the sale of <InlineMath math="70" /> kg of meat and <InlineMath math="40" /> kg of fish results in <InlineMath math="3040" /> thousand rupiah:
+
+<MathContainer>
+  <BlockMath math="70x + 40y = 3040" />
+</MathContainer>
+
+Simplify this equation by dividing both sides by <InlineMath math="10" />:
+
+<MathContainer>
+  <BlockMath math="7x + 4y = 304 \quad \dots (2)" />
+</MathContainer>
+
+**Solving the System of Equations**
+
+We will eliminate variable <InlineMath math="y" /> to find the value of <InlineMath math="x" />. Multiply equation <InlineMath math="(1)" /> by <InlineMath math="4" /> so that the coefficient of <InlineMath math="y" /> matches equation <InlineMath math="(2)" />:
+
+<MathContainer>
+  <BlockMath math="16x + 4y = 592" />
+</MathContainer>
+
+Subtract this resulting equation by equation <InlineMath math="(2)" />:
+
+<MathContainer>
+  <BlockMath math="(16x + 4y) - (7x + 4y) = 592 - 304" />
+  <BlockMath math="9x = 288" />
+  <BlockMath math="x = 32" />
+</MathContainer>
+
+**Determining the Price of Fish**
+
+Substitute the value <InlineMath math="x = 32" /> into equation <InlineMath math="(1)" /> to find <InlineMath math="y" />:
+
+<MathContainer>
+  <BlockMath math="4(32) + y = 148" />
+  <BlockMath math="128 + y = 148" />
+  <BlockMath math="y = 20" />
+</MathContainer>
+
+The value <InlineMath math="y = 20" /> means the price of fish is <InlineMath math="20" /> thousand rupiah or Rp20,000.00.

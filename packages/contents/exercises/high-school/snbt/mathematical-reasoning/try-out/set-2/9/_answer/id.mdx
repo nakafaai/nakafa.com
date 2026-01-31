@@ -1,0 +1,36 @@
+export const metadata = {
+  title: "Pembahasan Soal 9",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/31/2026",
+};
+
+**Syarat Terjadinya Benturan**
+
+Benturan antara roket dan kapal induk akan terjadi ketika keduanya berada pada posisi yang sama pada waktu yang sama. Oleh karena itu, kita harus menyamakan fungsi posisi roket dengan fungsi posisi kapal induk.
+
+<MathContainer>
+  <BlockMath math="s_{\text{roket}}(t) = s_{\text{kapal}}(t)" />
+  <BlockMath math="4000 - t^2 = 60t" />
+</MathContainer>
+
+**Menentukan Waktu Benturan**
+
+Kita susun persamaan kuadrat tersebut ke dalam bentuk umum untuk mencari nilai <InlineMath math="t" />.
+
+<MathContainer>
+  <BlockMath math="t^2 + 60t - 4000 = 0" />
+</MathContainer>
+
+Selanjutnya, kita faktorkan persamaan kuadrat ini. Kita perlu mencari dua bilangan yang jika dikalikan menghasilkan <InlineMath math="-4000" /> dan jika dijumlahkan menghasilkan <InlineMath math="60" />. Bilangan tersebut adalah <InlineMath math="100" /> dan <InlineMath math="-40" />.
+
+<MathContainer>
+  <BlockMath math="(t + 100)(t - 40) = 0" />
+</MathContainer>
+
+Dari pemfaktoran tersebut, diperoleh dua kemungkinan nilai <InlineMath math="t" />:
+
+<MathContainer>
+  <BlockMath math="t = -100 \quad \text{atau} \quad t = 40" />
+</MathContainer>
+
+Karena waktu (<InlineMath math="t" />) tidak mungkin bernilai negatif, maka nilai yang memenuhi adalah <InlineMath math="40" /> detik. Jadi, benturan terjadi tepat pada detik ke-<InlineMath math="40" />.
