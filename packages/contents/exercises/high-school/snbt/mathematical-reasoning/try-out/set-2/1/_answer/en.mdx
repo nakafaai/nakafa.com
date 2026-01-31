@@ -1,0 +1,32 @@
+export const metadata = {
+  title: "Solution to Question 1",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/31/2026",
+};
+
+We are given three different land areas: <InlineMath math="120\text{ m}^2" />, <InlineMath math="180\text{ m}^2" />, and <InlineMath math="240\text{ m}^2" />. The goal is to divide these lands into plots of equal size, maximizing the area of each plot.
+
+This problem can be solved by finding the **Greatest Common Divisor (GCD)** of the three numbers. The GCD will give us the largest value that evenly divides all three land areas.
+
+First, we perform prime factorization for each area:
+
+<MathContainer>
+  <BlockMath math="120 = 2^3 \times 3 \times 5" />
+  <BlockMath math="180 = 2^2 \times 3^2 \times 5" />
+  <BlockMath math="240 = 2^4 \times 3 \times 5" />
+</MathContainer>
+
+To determine the GCD, we take the common prime factors with the **lowest exponent**:
+- Factor 2: the lowest exponent is <InlineMath math="2^2" />.
+- Factor 3: the lowest exponent is <InlineMath math="3^1" /> (or 3).
+- Factor 5: the lowest exponent is <InlineMath math="5^1" /> (or 5).
+
+Thus, the GCD is:
+
+<MathContainer>
+  <BlockMath math="\text{GCD} = 2^2 \times 3 \times 5" />
+  <BlockMath math="\text{GCD} = 4 \times 3 \times 5" />
+  <BlockMath math="\text{GCD} = 60" />
+</MathContainer>
+
+Therefore, the largest possible area for each plot of land is <InlineMath math="60\text{ m}^2" />.
