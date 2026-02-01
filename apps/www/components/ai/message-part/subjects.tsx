@@ -109,14 +109,14 @@ const SubjectsPartPreview = memo(
             key={subject.url}
             nativeButton={false}
             render={
-              <NavigationLink
+              <a
                 href={`/${subject.slug}`}
                 rel="noopener noreferrer"
                 target="_blank"
               >
                 {subject.title}
                 <HugeIcons icon={ArrowUpRight01Icon} />
-              </NavigationLink>
+              </a>
             }
             size="sm"
             variant="outline"

@@ -20,7 +20,6 @@ import {
   buttonVariants,
 } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import {
   Tooltip,
@@ -190,7 +189,7 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
           <Tooltip>
             <TooltipTrigger
               render={
-                <NavigationLink
+                <a
                   className={cn(
                     buttonVariants({ variant: "ghost", size: "icon-sm" })
                   )}
@@ -200,7 +199,7 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
                 >
                   <HugeIcons icon={ArrowUpRight01Icon} />
                   <span className="sr-only">{t("see")}</span>
-                </NavigationLink>
+                </a>
               }
             />
             <TooltipContent side="bottom">{t("see")}</TooltipContent>

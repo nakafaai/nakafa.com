@@ -5,7 +5,6 @@ import {
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { HeroArt } from "./hero-art";
 
@@ -26,14 +25,14 @@ export function Hero() {
           <Button
             nativeButton={false}
             render={
-              <Link
+              <a
                 href="https://github.com/nakafaai/nakafa.com"
                 rel="noopener noreferrer"
                 target="_blank"
               >
                 <HugeIcons icon={LoveKoreanFingerIcon} />
                 {t("contribute")}
-              </Link>
+              </a>
             }
             variant="secondary"
           />

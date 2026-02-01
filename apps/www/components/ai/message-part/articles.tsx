@@ -105,14 +105,14 @@ const ArticlesPartPreview = memo(
             key={article.url}
             nativeButton={false}
             render={
-              <NavigationLink
+              <a
                 href={`/${article.slug}`}
                 rel="noopener noreferrer"
                 target="_blank"
               >
                 {article.title}
                 <HugeIcons icon={ArrowUpRight01Icon} />
-              </NavigationLink>
+              </a>
             }
             size="sm"
             variant="outline"

@@ -2,7 +2,6 @@ import { DiscordIcon, LoveKoreanFingerIcon } from "@hugeicons/core-free-icons";
 import { Avatar } from "@repo/design-system/components/contributor/avatar";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { contributors } from "@/lib/data/contributor";
 
@@ -23,28 +22,28 @@ export function Community() {
           <Button
             nativeButton={false}
             render={
-              <Link
+              <a
                 href="https://github.com/nakafaai/nakafa.com"
                 rel="noopener noreferrer"
                 target="_blank"
               >
                 <HugeIcons icon={LoveKoreanFingerIcon} />
                 {t("contribute")}
-              </Link>
+              </a>
             }
             variant="secondary"
           />
           <Button
             nativeButton={false}
             render={
-              <Link
+              <a
                 href="https://discord.gg/CPCSfKhvfQ"
                 rel="noopener noreferrer"
                 target="_blank"
               >
                 <HugeIcons icon={DiscordIcon} />
                 {t("join-community")}
-              </Link>
+              </a>
             }
           />
         </div>

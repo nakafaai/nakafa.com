@@ -1,5 +1,4 @@
 import { Button } from "@repo/design-system/components/ui/button";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Particles } from "@repo/design-system/components/ui/particles";
 import { type Locale, useTranslations } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
@@ -60,13 +59,13 @@ function PageFooter() {
               className="h-auto p-0"
               nativeButton={false}
               render={
-                <NavigationLink
+                <a
                   href="/terms-of-service"
                   rel="noopener noreferrer"
                   target="_blank"
                 >
                   {chunks}
-                </NavigationLink>
+                </a>
               }
               size="sm"
               variant="link"
@@ -77,13 +76,13 @@ function PageFooter() {
               className="h-auto p-0"
               nativeButton={false}
               render={
-                <NavigationLink
+                <a
                   href="/privacy-policy"
                   rel="noopener noreferrer"
                   target="_blank"
                 >
                   {chunks}
-                </NavigationLink>
+                </a>
               }
               size="sm"
               variant="link"
