@@ -1,0 +1,40 @@
+export const metadata = {
+  title: "Pembahasan Soal 20",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/01/2026",
+};
+
+**Analisis Jadwal Pengiriman**
+
+Kita perlu mencari interval waktu agar ketiga pemasok mengirim barang secara bersamaan. Konsep yang digunakan adalah Kelipatan Persekutuan Terkecil (KPK).
+
+Diketahui jadwal pengiriman:
+*   Minyak A: setiap <InlineMath math="3" /> hari.
+*   Minyak B: setiap <InlineMath math="4" /> hari.
+*   Minyak C: setiap <InlineMath math="x" /> hari.
+
+Pertemuan pertama terjadi pada <InlineMath math="1" /> April <InlineMath math="2023" />. Pertemuan ke-<InlineMath math="11" /> terjadi <InlineMath math="120" /> hari kemudian.
+
+**Menghitung Interval Pertemuan**
+
+Karena pertemuan pertama sudah terjadi, pertemuan ke-<InlineMath math="11" /> berarti ada selisih <InlineMath math="11 - 1 = 10" /> kali interval pertemuan. Total waktu yang berlalu adalah <InlineMath math="120" /> hari.
+
+<MathContainer>
+  <BlockMath math="\text{Interval} = \frac{\text{Total Hari}}{\text{Jumlah Interval}} = \frac{120}{10} = 12 \text{ hari}" />
+</MathContainer>
+
+Artinya, ketiga pemasok mengirim barang bersamaan setiap <InlineMath math="12" /> hari sekali. Ini adalah nilai KPK dari jadwal pengiriman mereka.
+
+<MathContainer>
+  <BlockMath math="\text{KPK}(3, 4, x) = 12" />
+</MathContainer>
+
+**Menentukan Nilai x**
+
+Kita tahu bahwa <InlineMath math="\text{KPK}(3, 4) = 12" />. Agar <InlineMath math="\text{KPK}(12, x) = 12" />, maka <InlineMath math="x" /> haruslah faktor dari <InlineMath math="12" /> (bilangan yang dapat membagi habis <InlineMath math="12" />).
+
+Dari pilihan jawaban yang tersedia:
+*   <InlineMath math="5, 7, 8, 9" /> bukan faktor dari <InlineMath math="12" />.
+*   <InlineMath math="6" /> adalah faktor dari <InlineMath math="12" />.
+
+Jadi, nilai <InlineMath math="x" /> yang memenuhi adalah <InlineMath math="6" />.

@@ -1,0 +1,40 @@
+export const metadata = {
+  title: "Solution to Question 20",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/01/2026",
+};
+
+**Delivery Schedule Analysis**
+
+We need to find the time interval for all three suppliers to deliver goods simultaneously. The concept used is the Least Common Multiple (LCM).
+
+Given delivery schedules:
+*   Oil A: every <InlineMath math="3" /> days.
+*   Oil B: every <InlineMath math="4" /> days.
+*   Oil C: every <InlineMath math="x" /> days.
+
+The first meeting occurred on April <InlineMath math="1" />, <InlineMath math="2023" />. The <InlineMath math="11" />th meeting occurs <InlineMath math="120" /> days later.
+
+**Calculating Meeting Interval**
+
+Since the first meeting has already occurred, the <InlineMath math="11" />th meeting means there is a difference of <InlineMath math="11 - 1 = 10" /> meeting intervals. The total elapsed time is <InlineMath math="120" /> days.
+
+<MathContainer>
+  <BlockMath math="\text{Interval} = \frac{\text{Total Days}}{\text{Number of Intervals}} = \frac{120}{10} = 12 \text{ days}" />
+</MathContainer>
+
+This means all three suppliers deliver goods simultaneously every <InlineMath math="12" /> days. This is the LCM value of their delivery schedules.
+
+<MathContainer>
+  <BlockMath math="\text{LCM}(3, 4, x) = 12" />
+</MathContainer>
+
+**Determining the Value of x**
+
+We know that <InlineMath math="\text{LCM}(3, 4) = 12" />. For <InlineMath math="\text{LCM}(12, x) = 12" />, <InlineMath math="x" /> must be a factor of <InlineMath math="12" /> (a number that divides <InlineMath math="12" /> without a remainder).
+
+Checking the available options:
+*   <InlineMath math="5, 7, 8, 9" /> are not factors of <InlineMath math="12" />.
+*   <InlineMath math="6" /> is a factor of <InlineMath math="12" />.
+
+Thus, the value of <InlineMath math="x" /> that satisfies the condition is <InlineMath math="6" />.
