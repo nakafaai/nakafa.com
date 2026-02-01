@@ -1,5 +1,4 @@
 import { Button } from "@repo/design-system/components/ui/button";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Particles } from "@repo/design-system/components/ui/particles";
 import { type Locale, useTranslations } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
@@ -56,26 +55,38 @@ function PageFooter() {
       <p className="text-balance text-center text-muted-foreground text-sm">
         {tLegal.rich("legal-description", {
           "terms-of-service": (chunks) => (
-            <Button asChild className="h-auto p-0" size="sm" variant="link">
-              <NavigationLink
-                href="/terms-of-service"
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                {chunks}
-              </NavigationLink>
-            </Button>
+            <Button
+              className="h-auto p-0"
+              nativeButton={false}
+              render={
+                <a
+                  href="/terms-of-service"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  {chunks}
+                </a>
+              }
+              size="sm"
+              variant="link"
+            />
           ),
           "privacy-policy": (chunks) => (
-            <Button asChild className="h-auto p-0" size="sm" variant="link">
-              <NavigationLink
-                href="/privacy-policy"
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                {chunks}
-              </NavigationLink>
-            </Button>
+            <Button
+              className="h-auto p-0"
+              nativeButton={false}
+              render={
+                <a
+                  href="/privacy-policy"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  {chunks}
+                </a>
+              }
+              size="sm"
+              variant="link"
+            />
           ),
         })}
       </p>

@@ -2,7 +2,6 @@ import { DiscordIcon, LoveKoreanFingerIcon } from "@hugeicons/core-free-icons";
 import { Avatar } from "@repo/design-system/components/contributor/avatar";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { contributors } from "@/lib/data/contributor";
 
@@ -20,26 +19,33 @@ export function Community() {
         </p>
 
         <div className="flex w-full items-center justify-center gap-4">
-          <Button asChild variant="secondary">
-            <Link
-              href="https://github.com/nakafaai/nakafa.com"
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              <HugeIcons icon={LoveKoreanFingerIcon} />
-              {t("contribute")}
-            </Link>
-          </Button>
-          <Button asChild>
-            <Link
-              href="https://discord.gg/CPCSfKhvfQ"
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              <HugeIcons icon={DiscordIcon} />
-              {t("join-community")}
-            </Link>
-          </Button>
+          <Button
+            nativeButton={false}
+            render={
+              <a
+                href="https://github.com/nakafaai/nakafa.com"
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                <HugeIcons icon={LoveKoreanFingerIcon} />
+                {t("contribute")}
+              </a>
+            }
+            variant="secondary"
+          />
+          <Button
+            nativeButton={false}
+            render={
+              <a
+                href="https://discord.gg/CPCSfKhvfQ"
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                <HugeIcons icon={DiscordIcon} />
+                {t("join-community")}
+              </a>
+            }
+          />
         </div>
       </div>
 

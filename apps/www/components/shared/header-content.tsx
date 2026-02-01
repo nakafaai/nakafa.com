@@ -1,9 +1,7 @@
 import { Calendar03Icon, QuillWrite01Icon } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
-import { buttonVariants } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { cn } from "@repo/design-system/lib/utils";
-import { Link } from "@repo/internationalization/src/navigation";
+import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { format } from "date-fns";
 import { OpenContent } from "@/components/shared/open-content";
 
@@ -53,17 +51,17 @@ export function HeaderContent({
   return (
     <header className="relative py-20" data-pagefind-ignore>
       <div className="z-10 mx-auto max-w-3xl space-y-6 px-6">
-        <div className="space-y-3">
+        <div className="flex flex-col gap-3">
           {!!link && (
-            <Link
+            <NavigationLink
               aria-label={link.label}
-              className={cn(buttonVariants({ variant: "link" }), "h-auto p-0")}
+              className="w-fit font-medium text-primary text-sm underline-offset-4 hover:underline"
               href={link.href}
               prefetch
               title={link.label}
             >
               {link.label}
-            </Link>
+            </NavigationLink>
           )}
           <div className="flex items-start gap-2">
             {!!Icon && (
