@@ -1,0 +1,59 @@
+export const metadata = {
+  title: "Solution to Question 19",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/01/2026",
+};
+
+import { Graph } from "../graph";
+
+**Geometric Analysis of Plane Movement**
+
+This problem can be modeled using basic trigonometry on right-angled triangles. We have two different plane positions relative to the stationary ATC tower.
+
+<Graph />
+
+Given:
+*   Plane altitude (opposite side) remains constant: <InlineMath math="h = 3000\text{ m}" />.
+*   Initial elevation angle: <InlineMath math="\theta_1 = 30^\circ" />.
+*   Final elevation angle: <InlineMath math="\theta_2 = 45^\circ" />.
+*   Time interval: <InlineMath math="t = 30\text{ s}" />.
+
+The plane is moving towards the tower because the elevation angle increases from <InlineMath math="30^\circ" /> to <InlineMath math="45^\circ" />. We need to find the horizontal distance of the plane from the tower at both positions.
+
+**Calculating Horizontal Distances**
+
+The relationship between altitude, horizontal distance (<InlineMath math="x" />), and elevation angle (<InlineMath math="\theta" />) is given by:
+
+<MathContainer>
+  <BlockMath math="\tan(\theta) = \frac{\text{opposite}}{\text{adjacent}} = \frac{h}{x} \Rightarrow x = \frac{h}{\tan(\theta)}" />
+</MathContainer>
+
+1.  **Initial Distance (<InlineMath math="x_1" />)** when <InlineMath math="\theta_1 = 30^\circ" />:
+
+    <MathContainer>
+      <BlockMath math="x_1 = \frac{3000}{\tan(30^\circ)} = \frac{3000}{\frac{1}{\sqrt{3}}} = 3000\sqrt{3}\text{ m}" />
+    </MathContainer>
+
+2.  **Final Distance (<InlineMath math="x_2" />)** when <InlineMath math="\theta_2 = 45^\circ" />:
+
+    <MathContainer>
+      <BlockMath math="x_2 = \frac{3000}{\tan(45^\circ)} = \frac{3000}{1} = 3000\text{ m}" />
+    </MathContainer>
+
+**Calculating Plane Speed**
+
+The distance traveled by the plane (<InlineMath math="\Delta x" />) is the difference between the initial and final horizontal distances:
+
+<MathContainer>
+  <BlockMath math="\Delta x = x_1 - x_2 = 3000\sqrt{3} - 3000 = 3000(\sqrt{3} - 1)\text{ m}" />
+</MathContainer>
+
+Speed (<InlineMath math="v" />) is defined as distance traveled divided by time:
+
+<MathContainer>
+  <BlockMath math="v = \frac{\Delta x}{t}" />
+  <BlockMath math="v = \frac{3000(\sqrt{3} - 1)}{30}" />
+  <BlockMath math="v = 100(\sqrt{3} - 1)\text{ m/s}" />
+</MathContainer>
+
+Thus, the estimated speed of the plane is <InlineMath math="100(\sqrt{3} - 1)\text{ m/s}" />.

@@ -1,0 +1,59 @@
+export const metadata = {
+  title: "Pembahasan Soal 19",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/01/2026",
+};
+
+import { Graph } from "../graph";
+
+**Analisis Geometri Pergerakan Pesawat**
+
+Soal ini dapat dimodelkan menggunakan konsep trigonometri dasar pada segitiga siku-siku. Kita memiliki dua posisi pesawat yang berbeda terhadap menara ATC yang diam.
+
+<Graph />
+
+Diketahui:
+*   Ketinggian pesawat (sisi depan sudut) tetap konstan: <InlineMath math="h = 3000\text{ m}" />.
+*   Sudut elevasi awal: <InlineMath math="\theta_1 = 30^\circ" />.
+*   Sudut elevasi akhir: <InlineMath math="\theta_2 = 45^\circ" />.
+*   Selang waktu: <InlineMath math="t = 30\text{ s}" />.
+
+Pesawat bergerak mendekati menara karena sudut elevasi bertambah dari <InlineMath math="30^\circ" /> menjadi <InlineMath math="45^\circ" />. Kita perlu mencari jarak horizontal pesawat dari menara pada kedua posisi tersebut.
+
+**Menghitung Jarak Horizontal**
+
+Hubungan antara ketinggian, jarak horizontal (<InlineMath math="x" />), dan sudut elevasi (<InlineMath math="\theta" />) diberikan oleh:
+
+<MathContainer>
+  <BlockMath math="\tan(\theta) = \frac{\text{depan}}{\text{samping}} = \frac{h}{x} \Rightarrow x = \frac{h}{\tan(\theta)}" />
+</MathContainer>
+
+1.  **Jarak Awal (<InlineMath math="x_1" />)** saat <InlineMath math="\theta_1 = 30^\circ" />:
+
+    <MathContainer>
+      <BlockMath math="x_1 = \frac{3000}{\tan(30^\circ)} = \frac{3000}{\frac{1}{\sqrt{3}}} = 3000\sqrt{3}\text{ m}" />
+    </MathContainer>
+
+2.  **Jarak Akhir (<InlineMath math="x_2" />)** saat <InlineMath math="\theta_2 = 45^\circ" />:
+
+    <MathContainer>
+      <BlockMath math="x_2 = \frac{3000}{\tan(45^\circ)} = \frac{3000}{1} = 3000\text{ m}" />
+    </MathContainer>
+
+**Menghitung Kecepatan Pesawat**
+
+Jarak yang ditempuh pesawat (<InlineMath math="\Delta x" />) adalah selisih antara jarak awal dan jarak akhir:
+
+<MathContainer>
+  <BlockMath math="\Delta x = x_1 - x_2 = 3000\sqrt{3} - 3000 = 3000(\sqrt{3} - 1)\text{ m}" />
+</MathContainer>
+
+Kecepatan (<InlineMath math="v" />) didefinisikan sebagai jarak tempuh dibagi waktu:
+
+<MathContainer>
+  <BlockMath math="v = \frac{\Delta x}{t}" />
+  <BlockMath math="v = \frac{3000(\sqrt{3} - 1)}{30}" />
+  <BlockMath math="v = 100(\sqrt{3} - 1)\text{ m/s}" />
+</MathContainer>
+
+Jadi, perkiraan kecepatan pesawat tersebut adalah <InlineMath math="100(\sqrt{3} - 1)\text{ m/s}" />.
