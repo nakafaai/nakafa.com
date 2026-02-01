@@ -30,26 +30,33 @@ export function Youtube({ videoId }: Props) {
         <YouTubeEmbed videoid={videoId} />
       </div>
       <CardFooter className="flex-wrap gap-2 border-t pb-6">
-        <Button asChild variant="outline">
-          <Link
-            href={`https://www.youtube.com/watch?v=${videoId}`}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            {t("see-on-youtube")}
-            <HugeIcons icon={ArrowUpRight01Icon} />
-          </Link>
-        </Button>
-        <Button asChild>
-          <Link
-            href="https://www.youtube.com/@nakafaa?sub_confirmation=1"
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            {t("subscribe")}
-            <HugeIcons icon={InLoveIcon} />
-          </Link>
-        </Button>
+        <Button
+          nativeButton={false}
+          render={
+            <Link
+              href={`https://www.youtube.com/watch?v=${videoId}`}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              {t("see-on-youtube")}
+              <HugeIcons icon={ArrowUpRight01Icon} />
+            </Link>
+          }
+          variant="outline"
+        />
+        <Button
+          nativeButton={false}
+          render={
+            <Link
+              href="https://www.youtube.com/@nakafaa?sub_confirmation=1"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              {t("subscribe")}
+              <HugeIcons icon={InLoveIcon} />
+            </Link>
+          }
+        />
       </CardFooter>
     </Card>
   );

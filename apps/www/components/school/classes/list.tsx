@@ -133,11 +133,16 @@ function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
           <Tooltip>
             <TooltipTrigger
               render={
-                <Button asChild size="icon-sm" variant="ghost">
-                  <NavigationLink href={`${pathname}/${cls._id}/materials`}>
-                    <HugeIcons icon={BookOpen02Icon} />
-                  </NavigationLink>
-                </Button>
+                <Button
+                  nativeButton={false}
+                  render={
+                    <NavigationLink href={`${pathname}/${cls._id}/materials`}>
+                      <HugeIcons icon={BookOpen02Icon} />
+                    </NavigationLink>
+                  }
+                  size="icon-sm"
+                  variant="ghost"
+                />
               }
             />
             <TooltipContent side="bottom">{t("materials")}</TooltipContent>

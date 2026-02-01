@@ -23,22 +23,29 @@ export function Hero() {
           {t("description")}
         </p>
         <div className="flex w-full max-w-lg items-center gap-4">
-          <Button asChild variant="secondary">
-            <Link
-              href="https://github.com/nakafaai/nakafa.com"
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              <HugeIcons icon={LoveKoreanFingerIcon} />
-              {t("contribute")}
-            </Link>
-          </Button>
-          <Button asChild>
-            <NavigationLink href="/">
-              <HugeIcons icon={ArrowUpRight01Icon} />
-              {t("start-learning")}
-            </NavigationLink>
-          </Button>
+          <Button
+            nativeButton={false}
+            render={
+              <Link
+                href="https://github.com/nakafaai/nakafa.com"
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                <HugeIcons icon={LoveKoreanFingerIcon} />
+                {t("contribute")}
+              </Link>
+            }
+            variant="secondary"
+          />
+          <Button
+            nativeButton={false}
+            render={
+              <NavigationLink href="/">
+                <HugeIcons icon={ArrowUpRight01Icon} />
+                {t("start-learning")}
+              </NavigationLink>
+            }
+          />
         </div>
       </div>
 

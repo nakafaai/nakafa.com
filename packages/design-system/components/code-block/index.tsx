@@ -24,13 +24,8 @@ import {
   transformerNotationWordHighlight,
 } from "@shikijs/transformers";
 import { useTranslations } from "next-intl";
-import type {
-  ComponentProps,
-  HTMLAttributes,
-  ReactElement,
-  ReactNode,
-} from "react";
-import { cloneElement, useEffect, useState } from "react";
+import type { ComponentProps, HTMLAttributes, ReactNode } from "react";
+import { useEffect, useState } from "react";
 import {
   type BundledLanguage,
   type CodeOptionsMultipleThemes,
@@ -56,14 +51,14 @@ const lineNumberClassNames = cn(
 );
 
 const darkModeClassNames = cn(
-  "dark:[&_.shiki]:!text-[var(--shiki-dark)]",
-  "dark:[&_.shiki]:![font-style:var(--shiki-dark-font-style)]",
-  "dark:[&_.shiki]:![font-weight:var(--shiki-dark-font-weight)]",
-  "dark:[&_.shiki]:![text-decoration:var(--shiki-dark-text-decoration)]",
-  "dark:[&_.shiki_span]:!text-[var(--shiki-dark)]",
-  "dark:[&_.shiki_span]:![font-style:var(--shiki-dark-font-style)]",
-  "dark:[&_.shiki_span]:![font-weight:var(--shiki-dark-font-weight)]",
-  "dark:[&_.shiki_span]:![text-decoration:var(--shiki-dark-text-decoration)]"
+  "dark:[&_.shiki]:text-(--shiki-dark)!",
+  "dark:[&_.shiki]:[font-style:var(--shiki-dark-font-style)]!",
+  "dark:[&_.shiki]:font-(--shiki-dark-font-weight)!",
+  "dark:[&_.shiki]:[text-decoration:var(--shiki-dark-text-decoration)]!",
+  "dark:[&_.shiki_span]:text-(--shiki-dark)!",
+  "dark:[&_.shiki_span]:[font-style:var(--shiki-dark-font-style)]!",
+  "dark:[&_.shiki_span]:font-(--shiki-dark-font-weight)!",
+  "dark:[&_.shiki_span]:[text-decoration:var(--shiki-dark-text-decoration)]!"
 );
 
 const lineHighlightClassNames = cn(
@@ -74,7 +69,7 @@ const lineHighlightClassNames = cn(
   "[&_.line.highlighted]:after:top-0",
   "[&_.line.highlighted]:after:bottom-0",
   "[&_.line.highlighted]:after:w-0.5",
-  "dark:[&_.line.highlighted]:!bg-blue-500/10"
+  "dark:[&_.line.highlighted]:bg-blue-500/10!"
 );
 
 const lineDiffClassNames = cn(
@@ -87,8 +82,8 @@ const lineDiffClassNames = cn(
   "[&_.line.diff.add]:after:bg-emerald-500",
   "[&_.line.diff.remove]:bg-rose-50",
   "[&_.line.diff.remove]:after:bg-rose-500",
-  "dark:[&_.line.diff.add]:!bg-emerald-500/10",
-  "dark:[&_.line.diff.remove]:!bg-rose-500/10"
+  "dark:[&_.line.diff.add]:bg-emerald-500/10!",
+  "dark:[&_.line.diff.remove]:bg-rose-500/10!"
 );
 
 const lineFocusedClassNames = cn(
@@ -98,14 +93,14 @@ const lineFocusedClassNames = cn(
 
 const wordHighlightClassNames = cn(
   "[&_.highlighted-word]:bg-blue-50",
-  "dark:[&_.highlighted-word]:!bg-blue-500/10"
+  "dark:[&_.highlighted-word]:bg-blue-500/10!"
 );
 
 const codeBlockClassName = cn(
   "mt-0 bg-muted/40 text-sm",
   "[&_pre]:py-4",
   "[&_pre]:overflow-x-auto",
-  "[&_.shiki]:!bg-[var(--shiki-bg)]",
+  "[&_.shiki]:bg-(--shiki-bg)!",
   "[&_code]:w-full",
   "[&_code]:grid",
   "[&_code]:bg-transparent",
@@ -353,7 +348,6 @@ export type CodeBlockCopyButtonProps = ComponentProps<typeof Button> & {
 };
 
 export const CodeBlockCopyButton = ({
-  asChild,
   onCopy,
   onError,
   timeout = 2000,
@@ -383,12 +377,6 @@ export const CodeBlockCopyButton = ({
 
       setTimeout(() => setIsCopied(false), timeout);
     }, onError);
-  }
-
-  if (asChild) {
-    return cloneElement(children as ReactElement<{ onClick?: () => void }>, {
-      onClick: copyToClipboard,
-    });
   }
 
   const icon = isCopied ? Tick01Icon : Copy01Icon;

@@ -1,7 +1,7 @@
 import { ArrowLeft02Icon, ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 import type { ContentPagination } from "@repo/contents/_types/content";
-import { buttonVariants } from "@repo/design-system/components/ui/button";
+import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cn } from "@repo/design-system/lib/utils";
@@ -28,34 +28,36 @@ function PaginationButton({
   iconPosition?: "left" | "right";
 }) {
   return (
-    <NavigationLink
+    <Button
       className={cn(
-        buttonVariants({ variant: "outline" }),
         "group flex h-auto flex-col whitespace-normal py-3 shadow-xs",
         !href && "pointer-events-none hidden opacity-50 sm:flex",
         className
       )}
-      href={href}
-      title={title}
-    >
-      <div className="flex items-center gap-2 font-normal text-muted-foreground text-sm transition-colors group-hover:text-accent-foreground">
-        {iconPosition === "left" && (
-          <HugeIcons className="size-4 shrink-0" icon={icon} />
-        )}
-        {label}
-        {iconPosition === "right" && (
-          <HugeIcons className="size-4 shrink-0" icon={icon} />
-        )}
-      </div>
-      <p
-        className={cn(
-          "w-full font-medium text-foreground transition-colors group-hover:text-accent-foreground",
-          iconPosition === "right" ? "text-right" : ""
-        )}
-      >
-        {title}
-      </p>
-    </NavigationLink>
+      nativeButton={false}
+      render={
+        <NavigationLink href={href} title={title}>
+          <div className="flex items-center gap-2 font-normal text-muted-foreground text-sm transition-colors group-hover:text-accent-foreground">
+            {iconPosition === "left" && (
+              <HugeIcons className="size-4 shrink-0" icon={icon} />
+            )}
+            {label}
+            {iconPosition === "right" && (
+              <HugeIcons className="size-4 shrink-0" icon={icon} />
+            )}
+          </div>
+          <p
+            className={cn(
+              "w-full font-medium text-foreground transition-colors group-hover:text-accent-foreground",
+              iconPosition === "right" ? "text-right" : ""
+            )}
+          >
+            {title}
+          </p>
+        </NavigationLink>
+      }
+      variant="outline"
+    />
   );
 }
 

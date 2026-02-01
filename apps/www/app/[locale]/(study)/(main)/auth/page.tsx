@@ -56,26 +56,38 @@ function PageFooter() {
       <p className="text-balance text-center text-muted-foreground text-sm">
         {tLegal.rich("legal-description", {
           "terms-of-service": (chunks) => (
-            <Button asChild className="h-auto p-0" size="sm" variant="link">
-              <NavigationLink
-                href="/terms-of-service"
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                {chunks}
-              </NavigationLink>
-            </Button>
+            <Button
+              className="h-auto p-0"
+              nativeButton={false}
+              render={
+                <NavigationLink
+                  href="/terms-of-service"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  {chunks}
+                </NavigationLink>
+              }
+              size="sm"
+              variant="link"
+            />
           ),
           "privacy-policy": (chunks) => (
-            <Button asChild className="h-auto p-0" size="sm" variant="link">
-              <NavigationLink
-                href="/privacy-policy"
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                {chunks}
-              </NavigationLink>
-            </Button>
+            <Button
+              className="h-auto p-0"
+              nativeButton={false}
+              render={
+                <NavigationLink
+                  href="/privacy-policy"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  {chunks}
+                </NavigationLink>
+              }
+              size="sm"
+              variant="link"
+            />
           ),
         })}
       </p>

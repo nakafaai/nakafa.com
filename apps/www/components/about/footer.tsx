@@ -5,10 +5,9 @@ import {
   Linkedin02Icon,
   YoutubeIcon,
 } from "@hugeicons/core-free-icons";
-import { buttonVariants } from "@repo/design-system/components/ui/button";
+import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 import { holyMenu } from "@/components/sidebar/_data/holy";
 import { subjectMenu } from "@/components/sidebar/_data/subject";
@@ -139,19 +138,23 @@ export function Footer() {
           <div className="flex flex-col items-center justify-between gap-2 md:flex-row">
             <div className="flex flex-wrap items-center">
               {socialMedia.map((social) => (
-                <a
-                  aria-label={social.label}
-                  className={cn(
-                    buttonVariants({ variant: "ghost", size: "icon" })
-                  )}
-                  href={social.href}
+                <Button
                   key={social.label}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  <HugeIcons className="size-4" icon={social.icon} />
-                  <span className="sr-only">{social.label}</span>
-                </a>
+                  nativeButton={false}
+                  render={
+                    <a
+                      aria-label={social.label}
+                      href={social.href}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      <HugeIcons className="size-4" icon={social.icon} />
+                      <span className="sr-only">{social.label}</span>
+                    </a>
+                  }
+                  size="icon"
+                  variant="ghost"
+                />
               ))}
             </div>
 

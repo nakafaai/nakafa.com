@@ -78,18 +78,19 @@ export function UserHeader({ userId }: { userId: Id<"users"> }) {
       </section>
 
       <Button
-        asChild
         className={cn(
           "w-9 sm:w-auto",
           currentUser?.appUser._id !== appUser._id && "hidden"
         )}
+        nativeButton={false}
+        render={
+          <NavigationLink href="/user/settings">
+            <HugeIcons icon={Settings01Icon} />
+            <span className="hidden sm:inline">{t("settings")}</span>
+          </NavigationLink>
+        }
         variant="outline"
-      >
-        <NavigationLink href="/user/settings">
-          <HugeIcons icon={Settings01Icon} />
-          <span className="hidden sm:inline">{t("settings")}</span>
-        </NavigationLink>
-      </Button>
+      />
     </header>
   );
 }
