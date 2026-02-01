@@ -66,6 +66,14 @@ pnpm --filter backend dev
 
 ## 📝 Subtasks
 
+### Phase 0: Prerequisites
+
+**Task 0.1**: QRIS.id merchant registration (1-14 days lead time)
+**Task 0.2**: Polar pricing update ($49 → $8.99)
+**Task 0.3**: Update unified subscription check (hasActiveSubscription)
+
+### Phase 1: Implementation
+
 ### Subtask 1.1: Competitor Pricing Analysis
 
 Analyze verified competitor pricing to determine optimal price points.
@@ -433,10 +441,31 @@ After completing this plan:
 
 1. **Immediate**: Register QRIS.id account (starts 1-14 day approval)
 2. **Day 1-2**: Update Polar pricing to $8.99
-3. **Day 3-5**: Implement QRIS.id backend
-4. **Day 6-7**: Implement frontend checkout
-5. **Day 8**: Test and soft launch
-6. **Week 2+**: Execute Phase 1 GTM
+3. **Day 1-2**: Update hasActiveSubscription query for unified check
+4. **Day 3-5**: Implement QRIS.id backend (schema + cron jobs)
+5. **Day 6-7**: Implement frontend checkout
+6. **Day 8**: Test and soft launch
+7. **Week 2+**: Execute Phase 1 GTM
+
+## 🗂️ Task Files
+
+All tasks follow the same format with PRD JSON, success criteria, and subtasks:
+
+### Phase 0: Prerequisites
+- `tasks/0.1-qris-merchant-registration.md` - QRIS.id setup
+- `tasks/0.2-polar-pricing-update.md` - Polar $8.99 pricing
+- `tasks/0.3-unified-subscription-check.md` - Update hasActiveSubscription
+
+### Phase 1: Implementation
+- `tasks/1.1-competitor-pricing-analysis.md` - Market research
+- `tasks/1.2-final-pricing-decision.md` - Pricing finalization
+- `tasks/1.3-qris-backend-integration.md` - QRIS.id backend
+- `tasks/1.4-frontend-checkout.md` - Unified checkout UI
+- `tasks/1.5-testing-soft-launch.md` - Testing & beta launch
+- `tasks/1.6-phase1-gtm-execution.md` - SNBT season marketing
+
+### Phase 2-4: GTM Execution
+- Additional tasks will be created as needed
 
 ## 🔗 Related Tasks
 
