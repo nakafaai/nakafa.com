@@ -9,7 +9,6 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Link } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
 
 interface Props {
@@ -20,7 +19,7 @@ export function Youtube({ videoId }: Props) {
   const t = useTranslations("Common");
   return (
     <Card className="my-4 grid gap-0 overflow-hidden pb-0">
-      <CardHeader className="border-b">
+      <CardHeader className="gap-0 border-b">
         <CardTitle className="flex items-center gap-2">
           <SiYoutube />
           YouTube
@@ -33,28 +32,28 @@ export function Youtube({ videoId }: Props) {
         <Button
           nativeButton={false}
           render={
-            <Link
+            <a
               href={`https://www.youtube.com/watch?v=${videoId}`}
               rel="noopener noreferrer"
               target="_blank"
             >
               {t("see-on-youtube")}
               <HugeIcons icon={ArrowUpRight01Icon} />
-            </Link>
+            </a>
           }
           variant="outline"
         />
         <Button
           nativeButton={false}
           render={
-            <Link
+            <a
               href="https://www.youtube.com/@nakafaa?sub_confirmation=1"
               rel="noopener noreferrer"
               target="_blank"
             >
               {t("subscribe")}
               <HugeIcons icon={InLoveIcon} />
-            </Link>
+            </a>
           }
         />
       </CardFooter>
