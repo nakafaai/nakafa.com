@@ -1,7 +1,6 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import type { MessageWithPartsDoc } from "@repo/backend/convex/chats/schema";
 import {
-  chatDocValidator,
   chatTypeValidator,
   chatVisibilityValidator,
   messageWithPartsDocValidator,
@@ -24,7 +23,7 @@ export const getChat = query({
   args: {
     chatId: vv.id("chats"),
   },
-  returns: chatDocValidator,
+  returns: vv.doc("chats"),
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
 

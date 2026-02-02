@@ -2,7 +2,12 @@ import { tables as betterAuthTables } from "@repo/backend/convex/betterAuth/gene
 import { defineTable } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
-import { literals, nullable } from "convex-helpers/validators";
+import {
+  addFieldsToValidator,
+  literals,
+  nullable,
+  systemFields,
+} from "convex-helpers/validators";
 
 /**
  * User role options (non-null) - for mutations that set a role
@@ -37,10 +42,10 @@ export const userValidator = v.object({
  * User document validator (with system fields)
  * Used for return types in queries/mutations
  */
-export const userDocValidator = userValidator.extend({
-  _id: v.id("users"),
-  _creationTime: v.number(),
-});
+export const userDocValidator = addFieldsToValidator(
+  userValidator,
+  systemFields("users")
+);
 export type UserDoc = Infer<typeof userDocValidator>;
 
 /**
@@ -57,10 +62,10 @@ export const userDeviceValidator = v.object({
 /**
  * User device document validator
  */
-export const userDeviceDocValidator = userDeviceValidator.extend({
-  _id: v.id("userDevices"),
-  _creationTime: v.number(),
-});
+export const userDeviceDocValidator = addFieldsToValidator(
+  userDeviceValidator,
+  systemFields("userDevices")
+);
 export type UserDeviceDoc = Infer<typeof userDeviceDocValidator>;
 
 /**

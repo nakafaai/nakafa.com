@@ -3,9 +3,6 @@ import {
   classInfoValidator,
   paginatedClassesValidator,
   paginatedPeopleValidator,
-  schoolClassDocValidator,
-  schoolClassInviteCodeDocValidator,
-  schoolClassMemberDocValidator,
   schoolClassVisibilityValidator,
 } from "@repo/backend/convex/classes/schema";
 import { loadClass } from "@repo/backend/convex/classes/utils";
@@ -16,7 +13,6 @@ import {
 } from "@repo/backend/convex/lib/helpers/class";
 import { getUserMap } from "@repo/backend/convex/lib/helpers/user";
 import { vv } from "@repo/backend/convex/lib/validators";
-import { schoolMemberDocValidator } from "@repo/backend/convex/schools/schema";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
@@ -148,9 +144,9 @@ export const getClass = query({
     classId: vv.id("schoolClasses"),
   },
   returns: v.object({
-    class: schoolClassDocValidator,
-    classMembership: nullable(schoolClassMemberDocValidator),
-    schoolMembership: schoolMemberDocValidator,
+    class: vv.doc("schoolClasses"),
+    classMembership: nullable(vv.doc("schoolClassMembers")),
+    schoolMembership: vv.doc("schoolMembers"),
   }),
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
@@ -240,7 +236,7 @@ export const getInviteCodes = query({
   args: {
     classId: vv.id("schoolClasses"),
   },
-  returns: v.array(schoolClassInviteCodeDocValidator),
+  returns: v.array(vv.doc("schoolClassInviteCodes")),
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
     const classData = await loadClass(ctx, args.classId);

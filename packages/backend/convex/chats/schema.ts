@@ -8,7 +8,11 @@ import {
 import { defineTable, paginationResultValidator } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
-import { literals } from "convex-helpers/validators";
+import {
+  addFieldsToValidator,
+  literals,
+  systemFields,
+} from "convex-helpers/validators";
 
 /**
  * Re-export content validators for backward compatibility.
@@ -47,10 +51,10 @@ export const chatValidator = v.object({
 /**
  * Chat document validator (with system fields)
  */
-export const chatDocValidator = chatValidator.extend({
-  _id: v.id("chats"),
-  _creationTime: v.number(),
-});
+export const chatDocValidator = addFieldsToValidator(
+  chatValidator,
+  systemFields("chats")
+);
 export type ChatDoc = Infer<typeof chatDocValidator>;
 
 /**
@@ -77,10 +81,10 @@ export const messageValidator = v.object({
 /**
  * Message document validator (with system fields)
  */
-export const messageDocValidator = messageValidator.extend({
-  _id: v.id("messages"),
-  _creationTime: v.number(),
-});
+export const messageDocValidator = addFieldsToValidator(
+  messageValidator,
+  systemFields("messages")
+);
 export type MessageDoc = Infer<typeof messageDocValidator>;
 
 /**
@@ -267,10 +271,10 @@ export const partValidator = v.object({
 /**
  * Part document validator (with system fields)
  */
-export const partDocValidator = partValidator.extend({
-  _id: v.id("parts"),
-  _creationTime: v.number(),
-});
+export const partDocValidator = addFieldsToValidator(
+  partValidator,
+  systemFields("parts")
+);
 export type PartDoc = Infer<typeof partDocValidator>;
 
 /**

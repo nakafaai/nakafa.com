@@ -1,7 +1,12 @@
 import { defineTable, paginationResultValidator } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
-import { literals, nullable } from "convex-helpers/validators";
+import {
+  addFieldsToValidator,
+  literals,
+  nullable,
+  systemFields,
+} from "convex-helpers/validators";
 
 /**
  * School class member role validator
@@ -141,10 +146,10 @@ export const schoolClassValidator = v.object({
 /**
  * School class document validator (with system fields)
  */
-export const schoolClassDocValidator = schoolClassValidator.extend({
-  _id: v.id("schoolClasses"),
-  _creationTime: v.number(),
-});
+export const schoolClassDocValidator = addFieldsToValidator(
+  schoolClassValidator,
+  systemFields("schoolClasses")
+);
 export type SchoolClassDoc = Infer<typeof schoolClassDocValidator>;
 
 /**
@@ -174,10 +179,10 @@ export const schoolClassMemberValidator = v.object({
 /**
  * School class member document validator (with system fields)
  */
-export const schoolClassMemberDocValidator = schoolClassMemberValidator.extend({
-  _id: v.id("schoolClassMembers"),
-  _creationTime: v.number(),
-});
+export const schoolClassMemberDocValidator = addFieldsToValidator(
+  schoolClassMemberValidator,
+  systemFields("schoolClassMembers")
+);
 export type SchoolClassMemberDoc = Infer<typeof schoolClassMemberDocValidator>;
 
 /**
@@ -201,11 +206,10 @@ export const schoolClassInviteCodeValidator = v.object({
 /**
  * School class invite code document validator (with system fields)
  */
-export const schoolClassInviteCodeDocValidator =
-  schoolClassInviteCodeValidator.extend({
-    _id: v.id("schoolClassInviteCodes"),
-    _creationTime: v.number(),
-  });
+export const schoolClassInviteCodeDocValidator = addFieldsToValidator(
+  schoolClassInviteCodeValidator,
+  systemFields("schoolClassInviteCodes")
+);
 export type SchoolClassInviteCodeDoc = Infer<
   typeof schoolClassInviteCodeDocValidator
 >;
@@ -233,10 +237,10 @@ export const schoolClassForumValidator = v.object({
 /**
  * School class forum document validator (with system fields)
  */
-export const schoolClassForumDocValidator = schoolClassForumValidator.extend({
-  _id: v.id("schoolClassForums"),
-  _creationTime: v.number(),
-});
+export const schoolClassForumDocValidator = addFieldsToValidator(
+  schoolClassForumValidator,
+  systemFields("schoolClassForums")
+);
 export type SchoolClassForumDoc = Infer<typeof schoolClassForumDocValidator>;
 
 /**
@@ -261,11 +265,10 @@ export const schoolClassForumPostValidator = v.object({
 /**
  * School class forum post document validator (with system fields)
  */
-export const schoolClassForumPostDocValidator =
-  schoolClassForumPostValidator.extend({
-    _id: v.id("schoolClassForumPosts"),
-    _creationTime: v.number(),
-  });
+export const schoolClassForumPostDocValidator = addFieldsToValidator(
+  schoolClassForumPostValidator,
+  systemFields("schoolClassForumPosts")
+);
 export type SchoolClassForumPostDoc = Infer<
   typeof schoolClassForumPostDocValidator
 >;
@@ -294,11 +297,10 @@ export const schoolClassMaterialGroupValidator = v.object({
 /**
  * School class material group document validator (with system fields)
  */
-export const schoolClassMaterialGroupDocValidator =
-  schoolClassMaterialGroupValidator.extend({
-    _id: v.id("schoolClassMaterialGroups"),
-    _creationTime: v.number(),
-  });
+export const schoolClassMaterialGroupDocValidator = addFieldsToValidator(
+  schoolClassMaterialGroupValidator,
+  systemFields("schoolClassMaterialGroups")
+);
 export type SchoolClassMaterialGroupDoc = Infer<
   typeof schoolClassMaterialGroupDocValidator
 >;
