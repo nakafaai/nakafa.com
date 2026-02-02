@@ -5,7 +5,10 @@ import {
 } from "@repo/backend/convex/comments/utils";
 import { vv } from "@repo/backend/convex/lib/validators";
 import { cleanSlug } from "@repo/backend/convex/utils/helper";
-import { paginationOptsValidator } from "convex/server";
+import {
+  paginationOptsValidator,
+  paginationResultValidator,
+} from "convex/server";
 import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
 
@@ -31,19 +34,7 @@ export const getCommentsBySlug = query({
     slug: v.string(),
     paginationOpts: paginationOptsValidator,
   },
-  returns: v.object({
-    page: v.array(commentWithUserValidator),
-    isDone: v.boolean(),
-    continueCursor: v.string(),
-    splitCursor: v.optional(v.union(v.string(), v.null())),
-    pageStatus: v.optional(
-      v.union(
-        v.literal("SplitRecommended"),
-        v.literal("SplitRequired"),
-        v.null()
-      )
-    ),
-  }),
+  returns: paginationResultValidator(commentWithUserValidator),
   handler: async (ctx, args) => {
     const comments = await ctx.db
       .query("comments")
@@ -74,19 +65,7 @@ export const getCommentsByUserId = query({
     userId: vv.id("users"),
     paginationOpts: paginationOptsValidator,
   },
-  returns: v.object({
-    page: v.array(vv.doc("comments")),
-    isDone: v.boolean(),
-    continueCursor: v.string(),
-    splitCursor: v.optional(v.union(v.string(), v.null())),
-    pageStatus: v.optional(
-      v.union(
-        v.literal("SplitRecommended"),
-        v.literal("SplitRequired"),
-        v.null()
-      )
-    ),
-  }),
+  returns: paginationResultValidator(vv.doc("comments")),
   handler: async (ctx, args) =>
     ctx.db
       .query("comments")
