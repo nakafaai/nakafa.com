@@ -201,7 +201,7 @@ const socialMedia = [
     label: "LinkedIn",
   },
   {
-    href: "https://www.instagram.com/nakafa.tv/",
+    href: "https://www.instagram.com/nakafa.ai/",
     icon: InstagramIcon,
     label: "Instagram",
   },

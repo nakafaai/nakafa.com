@@ -7,7 +7,7 @@ export const ORGANIZATION_NAME = "PT. Nakafa Tekno Kreatif";
 export const SAME_AS_LINKS = [
   "https://twitter.com/nabilfatih_",
   "https://www.linkedin.com/company/nakafa",
-  "https://www.instagram.com/nakafa.tv/",
+  "https://www.instagram.com/nakafa.ai/",
 ] as const;
 
 export const ORGANIZATION: Organization = {
