@@ -1,5 +1,6 @@
 import { internalMutation } from "@repo/backend/convex/_generated/server";
 import tables from "@repo/backend/convex/customers/schema";
+import { vv } from "@repo/backend/convex/lib/validators";
 import { ConvexError, v } from "convex/values";
 
 /**
@@ -10,6 +11,7 @@ export const deleteCustomerById = internalMutation({
   args: v.object({
     id: v.string(),
   }),
+  returns: v.null(),
   handler: async (ctx, args) => {
     const customer = await ctx.db
       .query("customers")
@@ -38,7 +40,7 @@ export const upsertCustomer = internalMutation({
   args: {
     customer: tables.customers.validator,
   },
-  returns: v.id("customers"),
+  returns: vv.id("customers"),
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("customers")

@@ -9,6 +9,7 @@ import {
   requireAuth,
   requireAuthWithSession,
 } from "@repo/backend/convex/lib/authHelpers";
+import { vv } from "@repo/backend/convex/lib/validators";
 import { ConvexError, v } from "convex/values";
 
 /**
@@ -61,7 +62,7 @@ export const createChat = mutation({
     title: v.optional(v.string()),
     type: chatTypeValidator,
   },
-  returns: v.id("chats"),
+  returns: vv.id("chats"),
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
 
@@ -82,10 +83,10 @@ export const createChat = mutation({
  */
 export const updateChatTitle = mutation({
   args: {
-    chatId: v.id("chats"),
+    chatId: vv.id("chats"),
     title: v.string(),
   },
-  returns: v.id("chats"),
+  returns: vv.id("chats"),
   handler: async (ctx, args) => {
     // We need fast access, so we use requireAuth instead of requireAuthWithSession
     const user = await requireAuth(ctx);
@@ -117,10 +118,10 @@ export const updateChatTitle = mutation({
  */
 export const updateChatVisibility = mutation({
   args: {
-    chatId: v.id("chats"),
+    chatId: vv.id("chats"),
     visibility: chatVisibilityValidator,
   },
-  returns: v.id("chats"),
+  returns: vv.id("chats"),
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
 
@@ -158,13 +159,13 @@ export const replaceMessageWithParts = mutation({
     parts: v.array(
       v.object({
         ...tables.parts.validator.fields,
-        messageId: v.optional(v.id("messages")), // make it optional here to allow for upserting parts without a messageId
+        messageId: v.optional(vv.id("messages")), // make it optional here to allow for upserting parts without a messageId
       })
     ),
   },
   returns: v.object({
-    messageId: v.id("messages"),
-    partIds: v.array(v.id("parts")),
+    messageId: vv.id("messages"),
+    partIds: v.array(vv.id("parts")),
   }),
   handler: async (ctx, args) => {
     const { message, parts } = args;
@@ -235,19 +236,19 @@ export const createChatWithMessage = mutation({
     type: chatTypeValidator,
     message: v.object({
       ...tables.messages.validator.fields,
-      chatId: v.optional(v.id("chats")), // make it optional here to allow for creating a chat with a message without a chatId
+      chatId: v.optional(vv.id("chats")), // make it optional here to allow for creating a chat with a message without a chatId
     }),
     parts: v.array(
       v.object({
         ...tables.parts.validator.fields,
-        messageId: v.optional(v.id("messages")), // make it optional here to allow for creating a chat with a message without a messageId
+        messageId: v.optional(vv.id("messages")), // make it optional here to allow for creating a chat with a message without a messageId
       })
     ),
   },
   returns: v.object({
-    chatId: v.id("chats"),
-    messageId: v.id("messages"),
-    partIds: v.array(v.id("parts")),
+    chatId: vv.id("chats"),
+    messageId: vv.id("messages"),
+    partIds: v.array(vv.id("parts")),
   }),
   handler: async (ctx, args) => {
     // We need fast access, so we use requireAuth instead of requireAuthWithSession
@@ -289,7 +290,7 @@ export const createChatWithMessage = mutation({
  */
 export const deleteChat = mutation({
   args: {
-    chatId: v.id("chats"),
+    chatId: vv.id("chats"),
   },
   returns: v.null(),
   handler: async (ctx, args) => {

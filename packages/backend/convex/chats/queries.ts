@@ -12,7 +12,7 @@ import {
   requireChatAccess,
 } from "@repo/backend/convex/lib/authHelpers";
 import { asyncMap, getManyFrom } from "@repo/backend/convex/lib/relationships";
-import { nullable } from "@repo/backend/convex/lib/validators";
+import { nullable, vv } from "@repo/backend/convex/lib/validators";
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 
@@ -23,7 +23,7 @@ import { ConvexError, v } from "convex/values";
  */
 export const getChat = query({
   args: {
-    chatId: v.id("chats"),
+    chatId: vv.id("chats"),
   },
   returns: chatDocValidator,
   handler: async (ctx, args) => {
@@ -51,7 +51,7 @@ export const getChat = query({
  */
 export const getChats = query({
   args: {
-    userId: v.id("users"),
+    userId: vv.id("users"),
     q: v.optional(v.string()),
     visibility: v.optional(chatVisibilityValidator),
     type: v.optional(chatTypeValidator),
@@ -129,7 +129,7 @@ export const getChats = query({
  */
 export const getChatTitle = query({
   args: {
-    chatId: v.id("chats"),
+    chatId: vv.id("chats"),
   },
   returns: nullable(v.string()),
   handler: async (ctx, args) => {
@@ -152,7 +152,7 @@ export const getChatTitle = query({
  */
 export const loadMessages = query({
   args: {
-    chatId: v.id("chats"),
+    chatId: vv.id("chats"),
   },
   returns: v.array(messageWithPartsDocValidator),
   handler: async (ctx, args): Promise<MessageWithPartsDoc[]> => {

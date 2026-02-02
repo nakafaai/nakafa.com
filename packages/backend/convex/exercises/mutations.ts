@@ -2,10 +2,12 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import {
   exerciseAttemptModeValidator,
   exerciseAttemptScopeValidator,
+  exerciseAttemptStatusValidator,
 } from "@repo/backend/convex/exercises/schema";
 import { computeAttemptDurationSeconds } from "@repo/backend/convex/exercises/utils";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/authHelpers";
+import { vv } from "@repo/backend/convex/lib/validators";
 import { ConvexError, v } from "convex/values";
 
 /**
@@ -29,6 +31,7 @@ export const startAttempt = mutation({
     timeLimit: v.number(),
     perQuestionTimeLimit: v.optional(v.number()),
   },
+  returns: vv.id("exerciseAttempts"),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);
     const userId = appUser._id;
@@ -145,13 +148,14 @@ export const startAttempt = mutation({
  */
 export const submitAnswer = mutation({
   args: {
-    attemptId: v.id("exerciseAttempts"),
+    attemptId: vv.id("exerciseAttempts"),
     exerciseNumber: v.number(),
     selectedOptionId: v.optional(v.string()),
     textAnswer: v.optional(v.string()),
     isCorrect: v.boolean(),
     timeSpent: v.number(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);
     const userId = appUser._id;
@@ -257,6 +261,8 @@ export const submitAnswer = mutation({
         updatedAt: now,
       });
     }
+
+    return null;
   },
 });
 
@@ -275,8 +281,12 @@ export const submitAnswer = mutation({
  */
 export const completeAttempt = mutation({
   args: {
-    attemptId: v.id("exerciseAttempts"),
+    attemptId: vv.id("exerciseAttempts"),
   },
+  returns: v.object({
+    status: exerciseAttemptStatusValidator,
+    expiredAtMs: v.optional(v.number()),
+  }),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);
     const userId = appUser._id;
@@ -359,9 +369,10 @@ export const completeAttempt = mutation({
  */
 export const expireAttemptInternal = internalMutation({
   args: {
-    attemptId: v.id("exerciseAttempts"),
+    attemptId: vv.id("exerciseAttempts"),
     expiresAtMs: v.number(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const now = Date.now();
     const attempt = await ctx.db.get("exerciseAttempts", args.attemptId);
@@ -392,6 +403,8 @@ export const expireAttemptInternal = internalMutation({
       updatedAt: now,
       totalTime: finalTotalTime,
     });
+
+    return null;
   },
 });
 
@@ -404,8 +417,9 @@ export const expireAttemptInternal = internalMutation({
  */
 export const abandonAttempt = mutation({
   args: {
-    attemptId: v.id("exerciseAttempts"),
+    attemptId: vv.id("exerciseAttempts"),
   },
+  returns: v.object({ status: exerciseAttemptStatusValidator }),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);
     const userId = appUser._id;

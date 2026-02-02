@@ -46,6 +46,7 @@ export const ensureCustomer = internalAction({
     name: v.string(),
     metadata: polarMetadataArgsValidator,
   },
+  returns: v.any(),
   handler: async (_ctx, args) => {
     // 1. If we have a local customer ID, verify it exists in Polar
     if (args.localCustomerId) {
@@ -120,6 +121,7 @@ export const updateCustomerMetadata = internalAction({
     id: v.string(),
     metadata: v.record(v.string(), v.any()), // Polar SDK metadata - shape defined by Polar
   },
+  returns: v.any(),
   handler: async (_ctx, args) => {
     const result = await customersUpdate(polarClient, {
       id: args.id,
@@ -149,6 +151,7 @@ export const createCheckoutSession = internalAction({
     embedOrigin: v.optional(v.string()),
     subscriptionId: v.optional(v.string()),
   },
+  returns: v.any(),
   handler: async (_ctx, args) => {
     const result = await checkoutsCreate(polarClient, {
       allowDiscountCodes: true,
@@ -176,6 +179,7 @@ export const createCustomerPortalSession = internalAction({
   args: {
     customerId: v.string(),
   },
+  returns: v.object({ url: v.string() }),
   handler: async (_ctx, args) => {
     const result = await customerSessionsCreate(polarClient, {
       customerId: args.customerId,
@@ -199,6 +203,7 @@ export const deleteCustomer = internalAction({
   args: {
     id: v.string(),
   },
+  returns: v.null(),
   handler: async (_ctx, args) => {
     const result = await customersDelete(polarClient, { id: args.id });
     if (!result.ok) {

@@ -1,7 +1,13 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/authHelpers";
 import { getManyFrom } from "@repo/backend/convex/lib/relationships";
+import { nullable, vv } from "@repo/backend/convex/lib/validators";
 import { ConvexError, v } from "convex/values";
+
+const attemptWithAnswersValidator = v.object({
+  attempt: vv.doc("exerciseAttempts"),
+  answers: v.array(vv.doc("exerciseAnswers")),
+});
 
 /**
  * Get the latest attempt for a specific exercise/set.
@@ -15,6 +21,7 @@ export const getLatestAttemptBySlug = query({
   args: {
     slug: v.string(),
   },
+  returns: nullable(attemptWithAnswersValidator),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
@@ -55,8 +62,9 @@ export const getLatestAttemptBySlug = query({
  */
 export const getAttempt = query({
   args: {
-    attemptId: v.id("exerciseAttempts"),
+    attemptId: vv.id("exerciseAttempts"),
   },
+  returns: attemptWithAnswersValidator,
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
