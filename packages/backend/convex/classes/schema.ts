@@ -3,31 +3,33 @@ import type { Infer } from "convex/values";
 import { v } from "convex/values";
 
 /**
- * Class member role validator
+ * School class member role validator
+ * Defines the role a user has within a specific class
  */
-export const classMemberRoleValidator = v.union(
+export const schoolClassMemberRoleValidator = v.union(
   v.literal("teacher"),
   v.literal("student")
 );
-export type ClassMemberRole = Infer<typeof classMemberRoleValidator>;
+export type SchoolClassMemberRole = Infer<
+  typeof schoolClassMemberRoleValidator
+>;
 
 /**
- * Alias for ClassMemberRole (used in some app components)
+ * School class teacher role validator
+ * Defines the specific teacher role within a class (only for teachers)
  */
-export type SchoolClassMemberRole = ClassMemberRole;
-
-/**
- * Teacher role validator (for teachers in a class)
- */
-export const classTeacherRoleValidator = v.optional(
+export const schoolClassTeacherRoleValidator = v.optional(
   v.union(v.literal("primary"), v.literal("co-teacher"), v.literal("assistant"))
 );
-export type ClassTeacherRole = Infer<typeof classTeacherRoleValidator>;
+export type SchoolClassTeacherRole = Infer<
+  typeof schoolClassTeacherRoleValidator
+>;
 
 /**
- * Enroll method validator
+ * School class enroll method validator
+ * Defines how a user joined the class
  */
-export const classEnrollMethodValidator = v.optional(
+export const schoolClassEnrollMethodValidator = v.optional(
   v.union(
     v.literal("code"),
     v.literal("teacher"),
@@ -36,32 +38,38 @@ export const classEnrollMethodValidator = v.optional(
     v.literal("public")
   )
 );
-export type ClassEnrollMethod = Infer<typeof classEnrollMethodValidator>;
+export type SchoolClassEnrollMethod = Infer<
+  typeof schoolClassEnrollMethodValidator
+>;
 
 /**
- * Class visibility validator
+ * School class visibility validator
  */
-export const schoolClassVisibility = v.union(
+export const schoolClassVisibilityValidator = v.union(
   v.literal("private"),
   v.literal("public")
 );
-export type SchoolClassVisibility = Infer<typeof schoolClassVisibility>;
+export type SchoolClassVisibility = Infer<
+  typeof schoolClassVisibilityValidator
+>;
 
 /**
  * Class material status validator
  */
-export const schoolClassMaterialStatus = v.union(
+export const schoolClassMaterialStatusValidator = v.union(
   v.literal("draft"),
   v.literal("published"),
   v.literal("scheduled"),
   v.literal("archived")
 );
-export type SchoolClassMaterialStatus = Infer<typeof schoolClassMaterialStatus>;
+export type SchoolClassMaterialStatus = Infer<
+  typeof schoolClassMaterialStatusValidator
+>;
 
 /**
  * Class images validator
  */
-export const schoolClassImages = v.union(
+export const schoolClassImageValidator = v.union(
   v.literal("retro"),
   v.literal("time"),
   v.literal("stars"),
@@ -90,34 +98,36 @@ export const schoolClassImages = v.union(
   v.literal("stamp"),
   v.literal("vintage")
 );
-export type SchoolClassImage = Infer<typeof schoolClassImages>;
+export type SchoolClassImage = Infer<typeof schoolClassImageValidator>;
 
 /**
  * Forum tag validator
  */
-export const forumTagValidator = v.union(
+export const schoolClassForumTagValidator = v.union(
   v.literal("general"),
   v.literal("question"),
   v.literal("announcement"),
   v.literal("assignment"),
   v.literal("resource")
 );
-export type ForumTag = Infer<typeof forumTagValidator>;
+export type SchoolClassForumTag = Infer<typeof schoolClassForumTagValidator>;
 
 /**
  * Forum status validator
  */
-export const forumStatusValidator = v.union(
+export const schoolClassForumStatusValidator = v.union(
   v.literal("open"),
   v.literal("locked"),
   v.literal("archived")
 );
-export type ForumStatus = Infer<typeof forumStatusValidator>;
+export type SchoolClassForumStatus = Infer<
+  typeof schoolClassForumStatusValidator
+>;
 
 /**
  * Reaction count validator
  */
-export const reactionCountValidator = v.object({
+export const schoolClassReactionCountValidator = v.object({
   emoji: v.string(),
   count: v.number(),
 });
@@ -130,9 +140,9 @@ export const schoolClassValidator = v.object({
   name: v.string(),
   subject: v.string(),
   year: v.string(),
-  image: schoolClassImages,
+  image: schoolClassImageValidator,
   isArchived: v.boolean(),
-  visibility: schoolClassVisibility,
+  visibility: schoolClassVisibilityValidator,
   studentCount: v.number(),
   teacherCount: v.number(),
   updatedAt: v.number(),
@@ -165,9 +175,9 @@ export const schoolClassMemberValidator = v.object({
   classId: v.id("schoolClasses"),
   userId: v.id("users"),
   schoolId: v.id("schools"),
-  role: classMemberRoleValidator,
-  teacherRole: classTeacherRoleValidator,
-  enrollMethod: classEnrollMethodValidator,
+  role: schoolClassMemberRoleValidator,
+  teacherRole: schoolClassTeacherRoleValidator,
+  enrollMethod: schoolClassEnrollMethodValidator,
   inviteCodeId: v.optional(v.id("schoolClassInviteCodes")),
   updatedAt: v.number(),
   addedBy: v.optional(v.id("users")),
@@ -190,7 +200,7 @@ export type SchoolClassMemberDoc = Infer<typeof schoolClassMemberDocValidator>;
 export const schoolClassInviteCodeValidator = v.object({
   classId: v.id("schoolClasses"),
   schoolId: v.id("schools"),
-  role: classMemberRoleValidator,
+  role: schoolClassMemberRoleValidator,
   code: v.string(),
   enabled: v.boolean(),
   expiresAt: v.optional(v.number()),
@@ -222,12 +232,12 @@ export const schoolClassForumValidator = v.object({
   schoolId: v.id("schools"),
   title: v.string(),
   body: v.string(),
-  tag: forumTagValidator,
-  status: forumStatusValidator,
+  tag: schoolClassForumTagValidator,
+  status: schoolClassForumStatusValidator,
   isPinned: v.boolean(),
   postCount: v.number(),
   participantCount: v.number(),
-  reactionCounts: v.array(reactionCountValidator),
+  reactionCounts: v.array(schoolClassReactionCountValidator),
   lastPostAt: v.number(),
   lastPostBy: v.optional(v.id("users")),
   createdBy: v.id("users"),
@@ -255,7 +265,7 @@ export const schoolClassForumPostValidator = v.object({
   replyToUserId: v.optional(v.id("users")),
   replyToBody: v.optional(v.string()),
   replyCount: v.number(),
-  reactionCounts: v.array(reactionCountValidator),
+  reactionCounts: v.array(schoolClassReactionCountValidator),
   isDeleted: v.boolean(),
   createdBy: v.id("users"),
   updatedAt: v.number(),
@@ -284,7 +294,7 @@ export const schoolClassMaterialGroupValidator = v.object({
   description: v.string(),
   parentId: v.optional(v.id("schoolClassMaterialGroups")),
   order: v.number(),
-  status: schoolClassMaterialStatus,
+  status: schoolClassMaterialStatusValidator,
   scheduledAt: v.optional(v.number()),
   scheduledJobId: v.optional(v.id("_scheduled_functions")),
   materialCount: v.number(),
@@ -316,8 +326,8 @@ export const classInfoValidator = v.union(
     name: v.string(),
     subject: v.string(),
     year: v.string(),
-    image: schoolClassImages,
-    visibility: schoolClassVisibility,
+    image: schoolClassImageValidator,
+    visibility: schoolClassVisibilityValidator,
   })
 );
 
@@ -435,7 +445,7 @@ const tables = {
     body: v.optional(v.string()),
     bodyPlainText: v.optional(v.string()),
     order: v.number(),
-    status: schoolClassMaterialStatus,
+    status: schoolClassMaterialStatusValidator,
     scheduledAt: v.optional(v.number()),
     isPinned: v.boolean(),
     attachmentCount: v.number(),

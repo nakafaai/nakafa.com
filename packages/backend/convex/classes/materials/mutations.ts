@@ -3,7 +3,7 @@ import {
   loadMaterialGroup,
   validateScheduledStatus,
 } from "@repo/backend/convex/classes/materials/utils";
-import { schoolClassMaterialStatus } from "@repo/backend/convex/classes/schema";
+import { schoolClassMaterialStatusValidator } from "@repo/backend/convex/classes/schema";
 import { loadActiveClass } from "@repo/backend/convex/classes/utils";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/authHelpers";
@@ -18,7 +18,7 @@ export const createMaterialGroup = mutation({
     classId: v.id("schoolClasses"),
     name: v.string(),
     description: v.string(),
-    status: schoolClassMaterialStatus,
+    status: schoolClassMaterialStatusValidator,
     scheduledAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -87,7 +87,7 @@ export const updateMaterialGroup = mutation({
     groupId: v.id("schoolClassMaterialGroups"),
     name: v.optional(v.string()),
     description: v.optional(v.string()),
-    status: v.optional(schoolClassMaterialStatus),
+    status: v.optional(schoolClassMaterialStatusValidator),
     scheduledAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {

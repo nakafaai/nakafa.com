@@ -1,6 +1,6 @@
 import {
-  schoolClassImages,
-  schoolClassVisibility,
+  schoolClassImageValidator,
+  schoolClassVisibilityValidator,
 } from "@repo/backend/convex/classes/schema";
 import { loadActiveClass } from "@repo/backend/convex/classes/utils";
 import { mutation } from "@repo/backend/convex/functions";
@@ -22,7 +22,7 @@ export const createClass = mutation({
     name: v.string(),
     subject: v.string(),
     year: v.string(),
-    visibility: schoolClassVisibility,
+    visibility: schoolClassVisibilityValidator,
   },
   returns: v.id("schoolClasses"),
   handler: async (ctx, args) => {
@@ -201,7 +201,7 @@ export const joinClass = mutation({
 export const updateClassVisibility = mutation({
   args: {
     classId: v.id("schoolClasses"),
-    visibility: schoolClassVisibility,
+    visibility: schoolClassVisibilityValidator,
   },
   returns: v.null(),
   handler: async (ctx, args) => {
@@ -292,7 +292,7 @@ export const joinPublicClass = mutation({
 export const updateClassImage = mutation({
   args: {
     classId: v.id("schoolClasses"),
-    image: schoolClassImages,
+    image: schoolClassImageValidator,
   },
   returns: v.null(),
   handler: async (ctx, args) => {

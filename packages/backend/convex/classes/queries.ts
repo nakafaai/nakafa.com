@@ -6,7 +6,7 @@ import {
   schoolClassDocValidator,
   schoolClassInviteCodeDocValidator,
   schoolClassMemberDocValidator,
-  schoolClassVisibility,
+  schoolClassVisibilityValidator,
 } from "@repo/backend/convex/classes/schema";
 import { loadClass } from "@repo/backend/convex/classes/utils";
 import {
@@ -24,7 +24,7 @@ export const getClasses = query({
     schoolId: v.id("schools"),
     q: v.optional(v.string()),
     isArchived: v.optional(v.boolean()),
-    visibility: v.optional(schoolClassVisibility),
+    visibility: v.optional(schoolClassVisibilityValidator),
     paginationOpts: paginationOptsValidator,
   },
   returns: paginatedClassesValidator,
