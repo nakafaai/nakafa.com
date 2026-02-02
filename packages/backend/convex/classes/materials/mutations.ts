@@ -11,7 +11,13 @@ import {
   PERMISSIONS,
   requirePermission,
 } from "@repo/backend/convex/lib/permissions";
+import { literals } from "@repo/backend/convex/lib/validators";
 import { v } from "convex/values";
+
+/**
+ * Reorder direction validator
+ */
+const reorderDirectionValidator = literals("up", "down");
 
 export const createMaterialGroup = mutation({
   args: {
@@ -206,7 +212,7 @@ export const deleteMaterialGroup = mutation({
 export const reorderMaterialGroup = mutation({
   args: {
     groupId: v.id("schoolClassMaterialGroups"),
-    direction: v.union(v.literal("up"), v.literal("down")),
+    direction: reorderDirectionValidator,
   },
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);

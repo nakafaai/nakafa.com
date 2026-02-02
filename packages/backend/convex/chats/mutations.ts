@@ -1,6 +1,9 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import tables, { chatVisibility } from "@repo/backend/convex/chats/schema";
+import tables, {
+  chatTypeValidator,
+  chatVisibility,
+} from "@repo/backend/convex/chats/schema";
 import { mutation } from "@repo/backend/convex/functions";
 import {
   requireAuth,
@@ -56,7 +59,7 @@ async function deleteMessagesFromPoint(
 export const createChat = mutation({
   args: {
     title: v.optional(v.string()),
-    type: v.union(v.literal("study"), v.literal("finance")),
+    type: chatTypeValidator,
   },
   returns: v.id("chats"),
   handler: async (ctx, args) => {
@@ -229,7 +232,7 @@ export const replaceMessageWithParts = mutation({
 export const createChatWithMessage = mutation({
   args: {
     title: v.optional(v.string()),
-    type: v.union(v.literal("study"), v.literal("finance")),
+    type: chatTypeValidator,
     message: v.object({
       ...tables.messages.validator.fields,
       chatId: v.optional(v.id("chats")), // make it optional here to allow for creating a chat with a message without a chatId

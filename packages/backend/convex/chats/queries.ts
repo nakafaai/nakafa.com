@@ -2,6 +2,8 @@ import { query } from "@repo/backend/convex/_generated/server";
 import type { MessageWithPartsDoc } from "@repo/backend/convex/chats/schema";
 import {
   chatDocValidator,
+  chatTypeValidator,
+  chatVisibility,
   messageWithPartsDocValidator,
   paginatedChatsValidator,
 } from "@repo/backend/convex/chats/schema";
@@ -50,8 +52,8 @@ export const getChats = query({
   args: {
     userId: v.id("users"),
     q: v.optional(v.string()),
-    visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
-    type: v.optional(v.union(v.literal("study"), v.literal("finance"))),
+    visibility: v.optional(chatVisibility),
+    type: v.optional(chatTypeValidator),
     paginationOpts: paginationOptsValidator,
   },
   returns: paginatedChatsValidator,

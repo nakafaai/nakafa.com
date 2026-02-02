@@ -1,3 +1,5 @@
+import { tables as betterAuthTables } from "@repo/backend/convex/betterAuth/generatedSchema";
+import { literals, nullable } from "@repo/backend/convex/lib/validators";
 import { defineTable } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
@@ -5,24 +7,18 @@ import { v } from "convex/values";
 /**
  * User role options (non-null) - for mutations that set a role
  */
-export const userRoleOptionsValidator = v.union(
-  v.literal("teacher"),
-  v.literal("student"),
-  v.literal("parent"),
-  v.literal("administrator")
+export const userRoleOptionsValidator = literals(
+  "teacher",
+  "student",
+  "parent",
+  "administrator"
 );
 export type UserRoleOption = Infer<typeof userRoleOptionsValidator>;
 
 /**
  * User role validator (nullable) - for return types
  */
-export const userRoleValidator = v.union(
-  v.null(),
-  v.literal("teacher"),
-  v.literal("student"),
-  v.literal("parent"),
-  v.literal("administrator")
-);
+export const userRoleValidator = nullable(userRoleOptionsValidator);
 export type UserRole = Infer<typeof userRoleValidator>;
 
 /**
@@ -68,42 +64,24 @@ export const userDeviceDocValidator = userDeviceValidator.extend({
 export type UserDeviceDoc = Infer<typeof userDeviceDocValidator>;
 
 /**
- * API key validator (from Better Auth component)
- * Matches the return type of betterAuth.queries.getApiKeysByUserId
+ * API key validator for cross-component use.
+ * When calling betterAuth component queries, IDs are serialized as strings.
+ * Derived from betterAuthTables.apikey - single source of truth.
  */
-export const apiKeyValidator = v.object({
-  _creationTime: v.number(),
+export const apiKeyDocValidator = v.object({
+  ...betterAuthTables.apikey.validator.fields,
   _id: v.string(),
-  createdAt: v.number(),
-  enabled: v.optional(v.union(v.null(), v.boolean())),
-  expiresAt: v.optional(v.union(v.null(), v.number())),
-  key: v.string(),
-  lastRefillAt: v.optional(v.union(v.null(), v.number())),
-  lastRequest: v.optional(v.union(v.null(), v.number())),
-  metadata: v.optional(v.union(v.null(), v.string())),
-  name: v.optional(v.union(v.null(), v.string())),
-  permissions: v.optional(v.union(v.null(), v.string())),
-  prefix: v.optional(v.union(v.null(), v.string())),
-  rateLimitEnabled: v.optional(v.union(v.null(), v.boolean())),
-  rateLimitMax: v.optional(v.union(v.null(), v.number())),
-  rateLimitTimeWindow: v.optional(v.union(v.null(), v.number())),
-  refillAmount: v.optional(v.union(v.null(), v.number())),
-  refillInterval: v.optional(v.union(v.null(), v.number())),
-  remaining: v.optional(v.union(v.null(), v.number())),
-  requestCount: v.optional(v.union(v.null(), v.number())),
-  start: v.optional(v.union(v.null(), v.string())),
-  updatedAt: v.number(),
-  userId: v.string(),
+  _creationTime: v.number(),
 });
-export type ApiKey = Infer<typeof apiKeyValidator>;
+export type ApiKeyDoc = Infer<typeof apiKeyDocValidator>;
 
 /**
  * API key verification result validator
  * Matches the return type of betterAuth.mutations.verifyApiKey
  */
 export const apiKeyVerifyResultValidator = v.object({
-  error: v.union(v.null(), v.object({ code: v.string(), message: v.string() })),
-  userId: v.union(v.null(), v.string()),
+  error: nullable(v.object({ code: v.string(), message: v.string() })),
+  userId: nullable(v.string()),
   valid: v.boolean(),
 });
 export type ApiKeyVerifyResult = Infer<typeof apiKeyVerifyResultValidator>;

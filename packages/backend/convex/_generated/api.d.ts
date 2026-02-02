@@ -44,6 +44,7 @@ import type * as lib_images from "../lib/images.js";
 import type * as lib_permissions from "../lib/permissions.js";
 import type * as lib_relationships from "../lib/relationships.js";
 import type * as lib_userHelpers from "../lib/userHelpers.js";
+import type * as lib_validators from "../lib/validators.js";
 import type * as migrations from "../migrations.js";
 import type * as polyfills from "../polyfills.js";
 import type * as routes_constants from "../routes/constants.js";
@@ -110,6 +111,7 @@ declare const fullApi: ApiFromModules<{
   "lib/permissions": typeof lib_permissions;
   "lib/relationships": typeof lib_relationships;
   "lib/userHelpers": typeof lib_userHelpers;
+  "lib/validators": typeof lib_validators;
   migrations: typeof migrations;
   polyfills: typeof polyfills;
   "routes/constants": typeof routes_constants;

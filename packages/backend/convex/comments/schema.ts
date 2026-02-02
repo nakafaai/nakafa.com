@@ -1,5 +1,11 @@
+import { literals } from "@repo/backend/convex/lib/validators";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
+
+/**
+ * Vote value validator: -1 = downvote, 1 = upvote
+ */
+export const commentVoteValidator = literals(-1, 1);
 
 const tables = {
   comments: defineTable({
@@ -21,7 +27,7 @@ const tables = {
   commentVotes: defineTable({
     commentId: v.id("comments"),
     userId: v.id("users"),
-    vote: v.union(v.literal(-1), v.literal(1)),
+    vote: commentVoteValidator,
   }).index("commentId_userId", ["commentId", "userId"]),
 };
 

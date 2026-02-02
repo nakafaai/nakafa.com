@@ -1,23 +1,36 @@
+import {
+  articleCategoryValidator,
+  gradeValidator,
+  localeValidator,
+  materialValidator,
+  subjectCategoryValidator,
+} from "@repo/backend/convex/lib/contentValidators";
+import { literals } from "@repo/backend/convex/lib/validators";
 import { defineTable, paginationResultValidator } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
 
 /**
+ * Re-export content validators for backward compatibility.
+ * Import from lib/contentValidators directly in new code.
+ */
+export {
+  gradeValidator,
+  localeValidator,
+  materialValidator,
+  subjectCategoryValidator as categoryValidator,
+} from "@repo/backend/convex/lib/contentValidators";
+
+/**
  * Chat visibility validator
  */
-export const chatVisibility = v.union(
-  v.literal("private"),
-  v.literal("public")
-);
+export const chatVisibility = literals("private", "public");
 export type ChatVisibility = Infer<typeof chatVisibility>;
 
 /**
  * Chat type validator
  */
-export const chatTypeValidator = v.union(
-  v.literal("study"),
-  v.literal("finance")
-);
+export const chatTypeValidator = literals("study", "finance");
 export type ChatType = Infer<typeof chatTypeValidator>;
 
 /**
@@ -49,11 +62,7 @@ export const paginatedChatsValidator =
 /**
  * Message role validator
  */
-export const messageRoleValidator = v.union(
-  v.literal("user"),
-  v.literal("assistant"),
-  v.literal("system")
-);
+export const messageRoleValidator = literals("user", "assistant", "system");
 export type MessageRole = Infer<typeof messageRoleValidator>;
 
 /**
@@ -75,100 +84,43 @@ export const messageDocValidator = messageValidator.extend({
 export type MessageDoc = Infer<typeof messageDocValidator>;
 
 /**
- * Shared validators for reuse across parts
+ * Chat-specific validators
  */
-export const localeValidator = v.union(v.literal("en"), v.literal("id"));
+export const dataStatusValidator = literals("loading", "done", "error");
 
-export const categoryValidator = v.union(
-  v.literal("elementary-school"),
-  v.literal("middle-school"),
-  v.literal("high-school"),
-  v.literal("university")
+export const streamStateValidator = literals("streaming", "done");
+
+export const toolStateValidator = literals(
+  "input-streaming",
+  "input-available",
+  "output-available",
+  "output-error",
+  "output-denied",
+  "approval-requested",
+  "approval-responded"
 );
 
-export const gradeValidator = v.union(
-  v.literal("1"),
-  v.literal("2"),
-  v.literal("3"),
-  v.literal("4"),
-  v.literal("5"),
-  v.literal("6"),
-  v.literal("7"),
-  v.literal("8"),
-  v.literal("9"),
-  v.literal("10"),
-  v.literal("11"),
-  v.literal("12"),
-  v.literal("bachelor"),
-  v.literal("master"),
-  v.literal("phd")
-);
-
-export const materialValidator = v.union(
-  v.literal("mathematics"),
-  v.literal("physics"),
-  v.literal("chemistry"),
-  v.literal("biology"),
-  v.literal("geography"),
-  v.literal("economy"),
-  v.literal("history"),
-  v.literal("informatics"),
-  v.literal("geospatial"),
-  v.literal("sociology"),
-  v.literal("ai-ds"),
-  v.literal("game-engineering"),
-  v.literal("computer-science"),
-  v.literal("technology-electro-medical"),
-  v.literal("political-science"),
-  v.literal("informatics-engineering"),
-  v.literal("international-relations")
-);
-
-export const dataStatusValidator = v.union(
-  v.literal("loading"),
-  v.literal("done"),
-  v.literal("error")
-);
-
-export const streamStateValidator = v.union(
-  v.literal("streaming"),
-  v.literal("done")
-);
-
-export const toolStateValidator = v.union(
-  v.literal("input-streaming"),
-  v.literal("input-available"),
-  v.literal("output-available"),
-  v.literal("output-error"),
-  v.literal("output-denied"),
-  v.literal("approval-requested"),
-  v.literal("approval-responded")
-);
-
-export const partTypeValidator = v.union(
-  // Default part types
-  v.literal("text"),
-  v.literal("reasoning"),
-  v.literal("source-url"),
-  v.literal("source-document"),
-  v.literal("file"),
-  v.literal("step-start"),
-  // Tool Part types (matches AI SDK tool names)
-  v.literal("tool-getArticles"),
-  v.literal("tool-getSubjects"),
-  v.literal("tool-getContent"),
-  v.literal("tool-calculator"),
-  v.literal("tool-scrape"),
-  v.literal("tool-webSearch"),
-  v.literal("dynamic-tool"),
-  // Data Part types
-  v.literal("data-suggestions"),
-  v.literal("data-get-articles"),
-  v.literal("data-get-subjects"),
-  v.literal("data-get-content"),
-  v.literal("data-calculator"),
-  v.literal("data-scrape-url"),
-  v.literal("data-web-search")
+export const partTypeValidator = literals(
+  "text",
+  "reasoning",
+  "source-url",
+  "source-document",
+  "file",
+  "step-start",
+  "tool-getArticles",
+  "tool-getSubjects",
+  "tool-getContent",
+  "tool-calculator",
+  "tool-scrape",
+  "tool-webSearch",
+  "dynamic-tool",
+  "data-suggestions",
+  "data-get-articles",
+  "data-get-subjects",
+  "data-get-content",
+  "data-calculator",
+  "data-scrape-url",
+  "data-web-search"
 );
 export type PartType = Infer<typeof partTypeValidator>;
 
@@ -217,89 +169,73 @@ export const partValidator = v.object({
   type: partTypeValidator,
   order: v.number(),
 
-  // Text fields
   textText: v.optional(v.string()),
   textState: v.optional(streamStateValidator),
 
-  // Reasoning fields
   reasoningText: v.optional(v.string()),
   reasoningState: v.optional(streamStateValidator),
 
-  // File fields
   fileMediaType: v.optional(v.string()),
   fileFilename: v.optional(v.string()),
   fileUrl: v.optional(v.string()),
 
-  // Source URL fields
   sourceUrlSourceId: v.optional(v.string()),
   sourceUrlUrl: v.optional(v.string()),
   sourceUrlTitle: v.optional(v.string()),
 
-  // Source document fields
   sourceDocumentSourceId: v.optional(v.string()),
   sourceDocumentMediaType: v.optional(v.string()),
   sourceDocumentTitle: v.optional(v.string()),
   sourceDocumentFilename: v.optional(v.string()),
 
-  // Shared tool call columns
   toolToolCallId: v.optional(v.string()),
   toolState: v.optional(toolStateValidator),
   toolErrorText: v.optional(v.string()),
 
-  // tool-getArticles fields
   toolGetArticlesInputLocale: v.optional(localeValidator),
-  toolGetArticlesInputCategory: v.optional(v.literal("politics")),
+  toolGetArticlesInputCategory: v.optional(articleCategoryValidator),
   toolGetArticlesOutput: v.optional(v.string()),
 
-  // tool-getSubjects fields
   toolGetSubjectsInputLocale: v.optional(localeValidator),
-  toolGetSubjectsInputCategory: v.optional(categoryValidator),
+  toolGetSubjectsInputCategory: v.optional(subjectCategoryValidator),
   toolGetSubjectsInputGrade: v.optional(gradeValidator),
   toolGetSubjectsInputMaterial: v.optional(materialValidator),
   toolGetSubjectsOutput: v.optional(v.string()),
 
-  // tool-getContent fields
   toolGetContentInputLocale: v.optional(localeValidator),
   toolGetContentInputSlug: v.optional(v.string()),
   toolGetContentOutput: v.optional(v.string()),
 
-  // tool-calculator fields
   toolCalculatorInputExpression: v.optional(v.string()),
   toolCalculatorOutput: v.optional(v.string()),
 
-  // tool-scrape fields
   toolScrapeUrlInputUrlToCrawl: v.optional(v.string()),
   toolScrapeUrlOutput: v.optional(v.string()),
 
-  // tool-webSearch fields
   toolWebSearchInputQuery: v.optional(v.string()),
   toolWebSearchOutput: v.optional(v.string()),
 
-  // data-suggestions fields
   dataSuggestionsId: v.optional(v.string()),
   dataSuggestionsData: v.optional(v.array(v.string())),
 
-  // data-get-articles fields
   dataGetArticlesId: v.optional(v.string()),
   dataGetArticlesBaseUrl: v.optional(v.string()),
   dataGetArticlesInputLocale: v.optional(localeValidator),
-  dataGetArticlesInputCategory: v.optional(v.literal("politics")),
+  dataGetArticlesInputCategory: v.optional(articleCategoryValidator),
   dataGetArticlesArticles: v.optional(v.array(contentItemValidator)),
   dataGetArticlesStatus: v.optional(dataStatusValidator),
   dataGetArticlesError: v.optional(v.string()),
 
-  // data-get-subjects fields
   dataGetSubjectsId: v.optional(v.string()),
   dataGetSubjectsBaseUrl: v.optional(v.string()),
   dataGetSubjectsInputLocale: v.optional(localeValidator),
-  dataGetSubjectsInputCategory: v.optional(categoryValidator),
+  dataGetSubjectsInputCategory: v.optional(subjectCategoryValidator),
   dataGetSubjectsInputGrade: v.optional(gradeValidator),
   dataGetSubjectsInputMaterial: v.optional(materialValidator),
   dataGetSubjectsSubjects: v.optional(v.array(contentItemValidator)),
   dataGetSubjectsStatus: v.optional(dataStatusValidator),
   dataGetSubjectsError: v.optional(v.string()),
 
-  // data-get-content fields
   dataGetContentId: v.optional(v.string()),
   dataGetContentUrl: v.optional(v.string()),
   dataGetContentTitle: v.optional(v.string()),
@@ -307,30 +243,24 @@ export const partValidator = v.object({
   dataGetContentStatus: v.optional(dataStatusValidator),
   dataGetContentError: v.optional(v.string()),
 
-  // data-calculator fields
   dataCalculatorId: v.optional(v.string()),
   dataCalculatorOriginal: v.optional(calculatorExpressionValidator),
   dataCalculatorResult: v.optional(calculatorResultValidator),
-  dataCalculatorStatus: v.optional(
-    v.union(v.literal("done"), v.literal("error"))
-  ),
+  dataCalculatorStatus: v.optional(literals("done", "error")),
   dataCalculatorError: v.optional(v.string()),
 
-  // data-scrape-url fields
   dataScrapeUrlId: v.optional(v.string()),
   dataScrapeUrlUrl: v.optional(v.string()),
   dataScrapeUrlContent: v.optional(v.string()),
   dataScrapeUrlStatus: v.optional(dataStatusValidator),
   dataScrapeUrlError: v.optional(v.string()),
 
-  // data-web-search fields
   dataWebSearchId: v.optional(v.string()),
   dataWebSearchQuery: v.optional(v.string()),
   dataWebSearchSources: v.optional(v.array(webSearchSourceValidator)),
   dataWebSearchStatus: v.optional(dataStatusValidator),
   dataWebSearchError: v.optional(v.string()),
 
-  // Provider metadata (external AI SDK data)
   providerMetadata: providerMetadataValidator,
 });
 
@@ -354,11 +284,6 @@ export type MessageWithPartsDoc = Infer<typeof messageWithPartsDocValidator>;
 
 export const tables = {
   chats: defineTable(chatValidator)
-    // Each index needed for different filter + _creationTime sorting:
-    // - userId: all chats sorted by _creationTime
-    // - userId_visibility: filter visibility, sort by _creationTime
-    // - userId_type: filter type, sort by _creationTime
-    // - userId_visibility_type: filter both, sort by _creationTime
     .index("userId", ["userId"])
     .index("userId_visibility", ["userId", "visibility"])
     .index("userId_type", ["userId", "type"])
@@ -372,9 +297,10 @@ export const tables = {
     .index("chatId", ["chatId"])
     .index("identifier", ["identifier"]),
 
-  parts: defineTable(partValidator)
-    // Single index covers: eq("messageId") OR eq("messageId").eq("order")
-    .index("messageId_order", ["messageId", "order"]),
+  parts: defineTable(partValidator).index("messageId_order", [
+    "messageId",
+    "order",
+  ]),
 };
 
 export default tables;

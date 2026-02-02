@@ -1,3 +1,4 @@
+import { literals } from "@repo/backend/convex/lib/validators";
 import { defineTable } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
@@ -5,35 +6,35 @@ import { v } from "convex/values";
 /**
  * School type validator
  */
-export const schoolTypeValidator = v.union(
-  v.literal("elementary-school"),
-  v.literal("middle-school"),
-  v.literal("high-school"),
-  v.literal("vocational-school"),
-  v.literal("university"),
-  v.literal("other")
+export const schoolTypeValidator = literals(
+  "elementary-school",
+  "middle-school",
+  "high-school",
+  "vocational-school",
+  "university",
+  "other"
 );
 export type SchoolType = Infer<typeof schoolTypeValidator>;
 
 /**
  * School member role validator
  */
-export const schoolMemberRoleValidator = v.union(
-  v.literal("admin"),
-  v.literal("teacher"),
-  v.literal("student"),
-  v.literal("parent"),
-  v.literal("demo")
+export const schoolMemberRoleValidator = literals(
+  "admin",
+  "teacher",
+  "student",
+  "parent",
+  "demo"
 );
 export type SchoolMemberRole = Infer<typeof schoolMemberRoleValidator>;
 
 /**
  * School member status validator
  */
-export const schoolMemberStatusValidator = v.union(
-  v.literal("active"),
-  v.literal("invited"),
-  v.literal("removed")
+export const schoolMemberStatusValidator = literals(
+  "active",
+  "invited",
+  "removed"
 );
 export type SchoolMemberStatus = Infer<typeof schoolMemberStatusValidator>;
 
@@ -95,65 +96,65 @@ export type SchoolMemberDoc = Infer<typeof schoolMemberDocValidator>;
 /**
  * Parent-student relationship validator
  */
-export const parentStudentRelationshipValidator = v.union(
-  v.literal("father"),
-  v.literal("mother"),
-  v.literal("guardian"),
-  v.literal("other")
+export const parentStudentRelationshipValidator = literals(
+  "father",
+  "mother",
+  "guardian",
+  "other"
 );
 
 /**
  * Parent-student status validator
  */
-export const parentStudentStatusValidator = v.union(
-  v.literal("pending"),
-  v.literal("verified"),
-  v.literal("inactive")
+export const parentStudentStatusValidator = literals(
+  "pending",
+  "verified",
+  "inactive"
 );
 
 /**
  * School activity action validator
  */
-export const schoolActivityActionValidator = v.union(
-  v.literal("school_created"),
-  v.literal("school_updated"),
-  v.literal("school_deleted"),
-  v.literal("school_code_regenerated"),
-  v.literal("member_invited"),
-  v.literal("member_joined"),
-  v.literal("member_removed"),
-  v.literal("member_role_changed"),
-  v.literal("class_created"),
-  v.literal("class_updated"),
-  v.literal("class_archived"),
-  v.literal("class_deleted"),
-  v.literal("class_code_regenerated"),
-  v.literal("class_member_added"),
-  v.literal("class_member_removed"),
-  v.literal("class_member_role_changed"),
-  v.literal("class_member_permissions_changed"),
-  v.literal("parent_linked"),
-  v.literal("parent_unlinked"),
-  v.literal("parent_permissions_changed"),
-  v.literal("assignment_created"),
-  v.literal("assignment_updated"),
-  v.literal("assignment_deleted"),
-  v.literal("assignment_published"),
-  v.literal("progress_updated"),
-  v.literal("assignment_completed")
+export const schoolActivityActionValidator = literals(
+  "school_created",
+  "school_updated",
+  "school_deleted",
+  "school_code_regenerated",
+  "member_invited",
+  "member_joined",
+  "member_removed",
+  "member_role_changed",
+  "class_created",
+  "class_updated",
+  "class_archived",
+  "class_deleted",
+  "class_code_regenerated",
+  "class_member_added",
+  "class_member_removed",
+  "class_member_role_changed",
+  "class_member_permissions_changed",
+  "parent_linked",
+  "parent_unlinked",
+  "parent_permissions_changed",
+  "assignment_created",
+  "assignment_updated",
+  "assignment_deleted",
+  "assignment_published",
+  "progress_updated",
+  "assignment_completed"
 );
 
 /**
  * School activity entity type validator
  */
-export const schoolActivityEntityTypeValidator = v.union(
-  v.literal("schools"),
-  v.literal("schoolMembers"),
-  v.literal("classes"),
-  v.literal("classMembers"),
-  v.literal("parentStudents"),
-  v.literal("assignments"),
-  v.literal("progresses")
+export const schoolActivityEntityTypeValidator = literals(
+  "schools",
+  "schoolMembers",
+  "classes",
+  "classMembers",
+  "parentStudents",
+  "assignments",
+  "progresses"
 );
 
 /**

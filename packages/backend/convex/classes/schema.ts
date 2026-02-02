@@ -1,25 +1,21 @@
+import { literals, nullable } from "@repo/backend/convex/lib/validators";
 import { defineTable, paginationResultValidator } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
 
 /**
  * School class member role validator
- * Defines the role a user has within a specific class
  */
-export const schoolClassMemberRoleValidator = v.union(
-  v.literal("teacher"),
-  v.literal("student")
-);
+export const schoolClassMemberRoleValidator = literals("teacher", "student");
 export type SchoolClassMemberRole = Infer<
   typeof schoolClassMemberRoleValidator
 >;
 
 /**
  * School class teacher role validator
- * Defines the specific teacher role within a class (only for teachers)
  */
 export const schoolClassTeacherRoleValidator = v.optional(
-  v.union(v.literal("primary"), v.literal("co-teacher"), v.literal("assistant"))
+  literals("primary", "co-teacher", "assistant")
 );
 export type SchoolClassTeacherRole = Infer<
   typeof schoolClassTeacherRoleValidator
@@ -27,16 +23,9 @@ export type SchoolClassTeacherRole = Infer<
 
 /**
  * School class enroll method validator
- * Defines how a user joined the class
  */
 export const schoolClassEnrollMethodValidator = v.optional(
-  v.union(
-    v.literal("code"),
-    v.literal("teacher"),
-    v.literal("admin"),
-    v.literal("invite"),
-    v.literal("public")
-  )
+  literals("code", "teacher", "admin", "invite", "public")
 );
 export type SchoolClassEnrollMethod = Infer<
   typeof schoolClassEnrollMethodValidator
@@ -45,10 +34,7 @@ export type SchoolClassEnrollMethod = Infer<
 /**
  * School class visibility validator
  */
-export const schoolClassVisibilityValidator = v.union(
-  v.literal("private"),
-  v.literal("public")
-);
+export const schoolClassVisibilityValidator = literals("private", "public");
 export type SchoolClassVisibility = Infer<
   typeof schoolClassVisibilityValidator
 >;
@@ -56,11 +42,11 @@ export type SchoolClassVisibility = Infer<
 /**
  * Class material status validator
  */
-export const schoolClassMaterialStatusValidator = v.union(
-  v.literal("draft"),
-  v.literal("published"),
-  v.literal("scheduled"),
-  v.literal("archived")
+export const schoolClassMaterialStatusValidator = literals(
+  "draft",
+  "published",
+  "scheduled",
+  "archived"
 );
 export type SchoolClassMaterialStatus = Infer<
   typeof schoolClassMaterialStatusValidator
@@ -69,56 +55,56 @@ export type SchoolClassMaterialStatus = Infer<
 /**
  * Class images validator
  */
-export const schoolClassImageValidator = v.union(
-  v.literal("retro"),
-  v.literal("time"),
-  v.literal("stars"),
-  v.literal("chill"),
-  v.literal("puzzle"),
-  v.literal("line"),
-  v.literal("shoot"),
-  v.literal("virus"),
-  v.literal("bacteria"),
-  v.literal("cooking"),
-  v.literal("disco"),
-  v.literal("logic"),
-  v.literal("ball"),
-  v.literal("duck"),
-  v.literal("music"),
-  v.literal("nightly"),
-  v.literal("writer"),
-  v.literal("barbie"),
-  v.literal("fun"),
-  v.literal("lamp"),
-  v.literal("lemon"),
-  v.literal("nighty"),
-  v.literal("rocket"),
-  v.literal("sakura"),
-  v.literal("sky"),
-  v.literal("stamp"),
-  v.literal("vintage")
+export const schoolClassImageValidator = literals(
+  "retro",
+  "time",
+  "stars",
+  "chill",
+  "puzzle",
+  "line",
+  "shoot",
+  "virus",
+  "bacteria",
+  "cooking",
+  "disco",
+  "logic",
+  "ball",
+  "duck",
+  "music",
+  "nightly",
+  "writer",
+  "barbie",
+  "fun",
+  "lamp",
+  "lemon",
+  "nighty",
+  "rocket",
+  "sakura",
+  "sky",
+  "stamp",
+  "vintage"
 );
 export type SchoolClassImage = Infer<typeof schoolClassImageValidator>;
 
 /**
  * Forum tag validator
  */
-export const schoolClassForumTagValidator = v.union(
-  v.literal("general"),
-  v.literal("question"),
-  v.literal("announcement"),
-  v.literal("assignment"),
-  v.literal("resource")
+export const schoolClassForumTagValidator = literals(
+  "general",
+  "question",
+  "announcement",
+  "assignment",
+  "resource"
 );
 export type SchoolClassForumTag = Infer<typeof schoolClassForumTagValidator>;
 
 /**
  * Forum status validator
  */
-export const schoolClassForumStatusValidator = v.union(
-  v.literal("open"),
-  v.literal("locked"),
-  v.literal("archived")
+export const schoolClassForumStatusValidator = literals(
+  "open",
+  "locked",
+  "archived"
 );
 export type SchoolClassForumStatus = Infer<
   typeof schoolClassForumStatusValidator
@@ -320,8 +306,7 @@ export type SchoolClassMaterialGroupDoc = Infer<
 /**
  * Class info validator (for public info without auth)
  */
-export const classInfoValidator = v.union(
-  v.null(),
+export const classInfoValidator = nullable(
   v.object({
     name: v.string(),
     subject: v.string(),
@@ -338,7 +323,7 @@ export const classMemberUserValidator = v.object({
   _id: v.id("users"),
   name: v.string(),
   email: v.string(),
-  image: v.optional(v.union(v.string(), v.null())),
+  image: v.optional(nullable(v.string())),
 });
 
 /**
@@ -482,7 +467,7 @@ const tables = {
     name: v.string(),
     mimeType: v.string(),
     size: v.number(),
-    type: v.union(v.literal("inline"), v.literal("download")),
+    type: literals("inline", "download"),
     order: v.number(),
     downloadCount: v.number(),
     uploadedBy: v.id("users"),

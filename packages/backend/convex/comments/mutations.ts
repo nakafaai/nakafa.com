@@ -1,7 +1,13 @@
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/authHelpers";
+import { literals } from "@repo/backend/convex/lib/validators";
 import { cleanSlug, truncateText } from "@repo/backend/convex/utils/helper";
 import { ConvexError, v } from "convex/values";
+
+/**
+ * Vote action validator: -1 = downvote, 0 = remove vote, 1 = upvote
+ */
+const voteActionValidator = literals(-1, 0, 1);
 
 /**
  * Add a comment to a slug (article, post, etc.).
@@ -49,7 +55,7 @@ export const addComment = mutation({
 export const voteOnComment = mutation({
   args: {
     commentId: v.id("comments"),
-    vote: v.union(v.literal(-1), v.literal(0), v.literal(1)),
+    vote: voteActionValidator,
   },
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
