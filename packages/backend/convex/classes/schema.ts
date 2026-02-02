@@ -316,6 +316,32 @@ export const classInfoValidator = v.union(
   })
 );
 
+/**
+ * User data validator (for joined user info in class members)
+ */
+export const classMemberUserValidator = v.object({
+  _id: v.id("users"),
+  name: v.string(),
+  email: v.string(),
+  image: v.optional(v.union(v.string(), v.null())),
+});
+
+/**
+ * Class member with user data validator (for getPeople)
+ */
+export const classMemberWithUserValidator =
+  schoolClassMemberDocValidator.extend({
+    user: classMemberUserValidator,
+  });
+export type ClassMemberWithUser = Infer<typeof classMemberWithUserValidator>;
+
+/**
+ * Paginated people validator (for getPeople query)
+ */
+export const paginatedPeopleValidator = paginationResultValidator(
+  classMemberWithUserValidator
+);
+
 const tables = {
   schoolClasses: defineTable(schoolClassValidator)
     .index("schoolId_isArchived_visibility", [

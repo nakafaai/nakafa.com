@@ -27,6 +27,13 @@ function sanitize<T>(data: T): T {
 }
 
 /**
+ * Polar metadata validator for action args.
+ * Uses v.any() because this is passed directly to Polar's SDK.
+ * The shape is defined by Polar's API, not by us.
+ */
+const polarMetadataArgsValidator = v.optional(v.record(v.string(), v.any()));
+
+/**
  * Get or create customer in Polar.
  * Idempotent: handles race conditions by checking for existing customer on create failure.
  * Single action that combines get + create logic to reduce runAction overhead.
@@ -37,7 +44,7 @@ export const ensureCustomer = internalAction({
     externalId: v.string(),
     email: v.string(),
     name: v.string(),
-    metadata: v.optional(v.record(v.string(), v.any())),
+    metadata: polarMetadataArgsValidator,
   },
   handler: async (_ctx, args) => {
     // 1. If we have a local customer ID, verify it exists in Polar
@@ -111,7 +118,7 @@ export const ensureCustomer = internalAction({
 export const updateCustomerMetadata = internalAction({
   args: {
     id: v.string(),
-    metadata: v.record(v.string(), v.any()),
+    metadata: v.record(v.string(), v.any()), // Polar SDK metadata - shape defined by Polar
   },
   handler: async (_ctx, args) => {
     const result = await customersUpdate(polarClient, {

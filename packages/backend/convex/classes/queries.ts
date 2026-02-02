@@ -2,6 +2,7 @@ import { query } from "@repo/backend/convex/_generated/server";
 import {
   classInfoValidator,
   paginatedClassesValidator,
+  paginatedPeopleValidator,
   schoolClassDocValidator,
   schoolClassInviteCodeDocValidator,
   schoolClassMemberDocValidator,
@@ -174,7 +175,7 @@ export const getPeople = query({
     q: v.optional(v.string()),
     paginationOpts: paginationOptsValidator,
   },
-  returns: v.any(),
+  returns: paginatedPeopleValidator,
   handler: async (ctx, args) => {
     const { classId, q, paginationOpts } = args;
 

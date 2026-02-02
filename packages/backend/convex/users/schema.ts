@@ -67,6 +67,47 @@ export const userDeviceDocValidator = userDeviceValidator.extend({
 });
 export type UserDeviceDoc = Infer<typeof userDeviceDocValidator>;
 
+/**
+ * API key validator (from Better Auth component)
+ * Matches the return type of betterAuth.queries.getApiKeysByUserId
+ */
+export const apiKeyValidator = v.object({
+  _creationTime: v.number(),
+  _id: v.string(),
+  createdAt: v.number(),
+  enabled: v.optional(v.union(v.null(), v.boolean())),
+  expiresAt: v.optional(v.union(v.null(), v.number())),
+  key: v.string(),
+  lastRefillAt: v.optional(v.union(v.null(), v.number())),
+  lastRequest: v.optional(v.union(v.null(), v.number())),
+  metadata: v.optional(v.union(v.null(), v.string())),
+  name: v.optional(v.union(v.null(), v.string())),
+  permissions: v.optional(v.union(v.null(), v.string())),
+  prefix: v.optional(v.union(v.null(), v.string())),
+  rateLimitEnabled: v.optional(v.union(v.null(), v.boolean())),
+  rateLimitMax: v.optional(v.union(v.null(), v.number())),
+  rateLimitTimeWindow: v.optional(v.union(v.null(), v.number())),
+  refillAmount: v.optional(v.union(v.null(), v.number())),
+  refillInterval: v.optional(v.union(v.null(), v.number())),
+  remaining: v.optional(v.union(v.null(), v.number())),
+  requestCount: v.optional(v.union(v.null(), v.number())),
+  start: v.optional(v.union(v.null(), v.string())),
+  updatedAt: v.number(),
+  userId: v.string(),
+});
+export type ApiKey = Infer<typeof apiKeyValidator>;
+
+/**
+ * API key verification result validator
+ * Matches the return type of betterAuth.mutations.verifyApiKey
+ */
+export const apiKeyVerifyResultValidator = v.object({
+  error: v.union(v.null(), v.object({ code: v.string(), message: v.string() })),
+  userId: v.union(v.null(), v.string()),
+  valid: v.boolean(),
+});
+export type ApiKeyVerifyResult = Infer<typeof apiKeyVerifyResultValidator>;
+
 const tables = {
   users: defineTable(userValidator)
     .index("email", ["email"])

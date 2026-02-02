@@ -2,7 +2,7 @@ import { components } from "@repo/backend/convex/_generated/api";
 import { internalQuery, query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/authHelpers";
 import { v } from "convex/values";
-import { userDocValidator, userRoleValidator } from "./schema";
+import { apiKeyValidator, userDocValidator, userRoleValidator } from "./schema";
 
 /**
  * Get app user by Better Auth user ID.
@@ -44,7 +44,7 @@ export const getUserByEmail = internalQuery({
  */
 export const getCurrentUserApiKeys = query({
   args: {},
-  returns: v.array(v.any()),
+  returns: v.array(apiKeyValidator),
   handler: async (ctx) => {
     const user = await requireAuth(ctx);
     return await ctx.runQuery(

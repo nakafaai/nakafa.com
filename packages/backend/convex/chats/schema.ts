@@ -46,6 +46,32 @@ export type ChatDoc = Infer<typeof chatDocValidator>;
 export const paginatedChatsValidator =
   paginationResultValidator(chatDocValidator);
 
+/**
+ * Message role validator
+ */
+export const messageRoleValidator = v.union(
+  v.literal("user"),
+  v.literal("assistant"),
+  v.literal("system")
+);
+
+/**
+ * UI Message validator for loadMessages return type.
+ *
+ * Note: The `parts` field uses v.array(v.any()) because the AI SDK's UIMessagePart
+ * type has 20+ variants with complex conditional fields (text, reasoning, file,
+ * source-url, source-document, step-start, tool-*, data-*). Creating explicit
+ * validators for all variants would add ~500 lines with minimal benefit since:
+ * 1. TypeScript already ensures type safety via mapDBPartToUIMessagePart
+ * 2. The data originates from our own DB with validated schema
+ * 3. Runtime validation happens in the mapping functions
+ */
+export const uiMessageValidator = v.object({
+  id: v.string(),
+  role: messageRoleValidator,
+  parts: v.array(v.any()),
+});
+
 export const tables = {
   chats: defineTable({
     updatedAt: v.number(), // Unix timestamp for last message
@@ -373,7 +399,14 @@ export const tables = {
     ),
     dataWebSearchError: v.optional(v.string()),
 
-    // Provider metadata (flexible for AI provider-specific data)
+    /**
+     * Provider metadata for AI provider-specific data.
+     * Uses v.any() because this comes from the AI SDK and varies by provider:
+     * - OpenAI: { openai: { logprobs, ... } }
+     * - Anthropic: { anthropic: { cacheCreationInputTokens, ... } }
+     * - etc.
+     * The shape is defined by each AI provider's SDK, not by us.
+     */
     providerMetadata: v.optional(
       v.record(v.string(), v.record(v.string(), v.any()))
     ),

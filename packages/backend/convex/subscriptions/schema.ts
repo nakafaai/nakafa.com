@@ -13,6 +13,13 @@ export type SubscriptionRecurringInterval = Infer<
   typeof SubscriptionRecurringInterval
 >;
 
+/**
+ * Polar metadata validator.
+ * Uses v.any() because Polar's SDK defines the metadata structure externally.
+ * We sync this from Polar webhooks and cannot control their schema changes.
+ */
+const polarMetadataValidator = v.record(v.string(), v.any());
+
 const tables = {
   subscriptions: defineTable({
     id: v.string(),
@@ -32,7 +39,7 @@ const tables = {
     productId: v.string(),
     priceId: v.optional(v.string()),
     checkoutId: v.union(v.string(), v.null()),
-    metadata: v.record(v.string(), v.any()),
+    metadata: polarMetadataValidator,
     customerCancellationReason: v.optional(v.union(v.string(), v.null())),
     customerCancellationComment: v.optional(v.union(v.string(), v.null())),
   })

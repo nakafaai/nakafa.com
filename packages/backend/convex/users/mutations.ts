@@ -2,7 +2,10 @@ import { components } from "@repo/backend/convex/_generated/api";
 import { mutation } from "@repo/backend/convex/_generated/server";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/authHelpers";
 import { v } from "convex/values";
-import { userRoleOptionsValidator } from "./schema";
+import {
+  apiKeyVerifyResultValidator,
+  userRoleOptionsValidator,
+} from "./schema";
 
 /**
  * Update the app user's role.
@@ -58,7 +61,7 @@ export const verifyApiKey = mutation({
     key: v.string(),
     permissions: v.optional(v.string()),
   },
-  returns: v.any(),
+  returns: apiKeyVerifyResultValidator,
   handler: async (ctx, args) =>
     await ctx.runMutation(components.betterAuth.mutations.verifyApiKey, {
       key: args.key,

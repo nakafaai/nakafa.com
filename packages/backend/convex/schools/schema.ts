@@ -156,6 +156,17 @@ export const schoolActivityEntityTypeValidator = v.union(
   v.literal("progresses")
 );
 
+/**
+ * Activity log metadata validator.
+ * Uses v.any() because metadata varies by action type (polymorphic):
+ * - member_role_changed: { oldRole, newRole }
+ * - member_invited: { email, role }
+ * - class_created: { className, subject }
+ * - etc.
+ * Full typing would require discriminated unions per action type.
+ */
+const activityMetadataValidator = v.optional(v.any());
+
 const tables = {
   schools: defineTable(schoolValidator)
     .index("slug", ["slug"])
@@ -216,7 +227,7 @@ const tables = {
     action: schoolActivityActionValidator,
     entityType: schoolActivityEntityTypeValidator,
     entityId: v.string(),
-    metadata: v.optional(v.any()),
+    metadata: activityMetadataValidator,
     ipAddress: v.optional(v.string()),
     userAgent: v.optional(v.string()),
   })

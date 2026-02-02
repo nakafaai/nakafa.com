@@ -3,6 +3,7 @@ import { query } from "@repo/backend/convex/_generated/server";
 import {
   chatDocValidator,
   paginatedChatsValidator,
+  uiMessageValidator,
 } from "@repo/backend/convex/chats/schema";
 import { mapDBPartToUIMessagePart } from "@repo/backend/convex/chats/utils";
 import {
@@ -143,15 +144,12 @@ export const getChatTitle = query({
  *
  * Note: If you have chats with 100+ messages, consider implementing pagination
  * to avoid loading all messages at once.
- *
- * Return type is MyUIMessage[] - a complex type with many part variants.
- * Using v.array(v.any()) for pragmatic validation while TypeScript ensures type safety.
  */
 export const loadMessages = query({
   args: {
     chatId: v.id("chats"),
   },
-  returns: v.array(v.any()),
+  returns: v.array(uiMessageValidator),
   handler: async (ctx, args): Promise<MyUIMessage[]> => {
     const user = await requireAuth(ctx);
 
