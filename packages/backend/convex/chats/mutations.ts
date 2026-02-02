@@ -192,10 +192,12 @@ export const replaceMessageWithParts = mutation({
     if (message.identifier) {
       const targetMessage = await ctx.db
         .query("messages")
-        .withIndex("identifier", (q) => q.eq("identifier", message.identifier))
+        .withIndex("chatId_identifier", (q) =>
+          q.eq("chatId", message.chatId).eq("identifier", message.identifier)
+        )
         .unique();
 
-      if (targetMessage) {
+      if (targetMessage && targetMessage.chatId === message.chatId) {
         await deleteMessagesFromPoint(
           ctx,
           targetMessage.chatId,

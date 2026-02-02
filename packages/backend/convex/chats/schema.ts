@@ -295,7 +295,7 @@ export const tables = {
 
   messages: defineTable(messageValidator)
     .index("chatId", ["chatId"])
-    .index("identifier", ["identifier"]),
+    .index("chatId_identifier", ["chatId", "identifier"]),
 
   parts: defineTable(partValidator).index("messageId_order", [
     "messageId",
