@@ -58,6 +58,7 @@ export const createChat = mutation({
     title: v.optional(v.string()),
     type: v.union(v.literal("study"), v.literal("finance")),
   },
+  returns: v.id("chats"),
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
 
@@ -81,6 +82,7 @@ export const updateChatTitle = mutation({
     chatId: v.id("chats"),
     title: v.string(),
   },
+  returns: v.id("chats"),
   handler: async (ctx, args) => {
     // We need fast access, so we use requireAuth instead of requireAuthWithSession
     const user = await requireAuth(ctx);
@@ -115,6 +117,7 @@ export const updateChatVisibility = mutation({
     chatId: v.id("chats"),
     visibility: chatVisibility,
   },
+  returns: v.id("chats"),
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
 
@@ -156,6 +159,10 @@ export const replaceMessageWithParts = mutation({
       })
     ),
   },
+  returns: v.object({
+    messageId: v.id("messages"),
+    partIds: v.array(v.id("parts")),
+  }),
   handler: async (ctx, args) => {
     const { message, parts } = args;
 
@@ -234,6 +241,11 @@ export const createChatWithMessage = mutation({
       })
     ),
   },
+  returns: v.object({
+    chatId: v.id("chats"),
+    messageId: v.id("messages"),
+    partIds: v.array(v.id("parts")),
+  }),
   handler: async (ctx, args) => {
     // We need fast access, so we use requireAuth instead of requireAuthWithSession
     const user = await requireAuth(ctx);
@@ -276,6 +288,7 @@ export const deleteChat = mutation({
   args: {
     chatId: v.id("chats"),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
 
@@ -295,5 +308,6 @@ export const deleteChat = mutation({
     }
 
     await ctx.db.delete("chats", args.chatId);
+    return null;
   },
 });

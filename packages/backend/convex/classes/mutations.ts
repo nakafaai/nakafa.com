@@ -24,6 +24,7 @@ export const createClass = mutation({
     year: v.string(),
     visibility: schoolClassVisibility,
   },
+  returns: v.id("schoolClasses"),
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
@@ -98,6 +99,7 @@ export const joinClass = mutation({
   args: {
     code: v.string(),
   },
+  returns: v.object({ classId: v.id("schoolClasses") }),
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
@@ -201,6 +203,7 @@ export const updateClassVisibility = mutation({
     classId: v.id("schoolClasses"),
     visibility: schoolClassVisibility,
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);
     const userId = appUser._id;
@@ -218,6 +221,7 @@ export const updateClassVisibility = mutation({
       updatedBy: userId,
       updatedAt: Date.now(),
     });
+    return null;
   },
 });
 
@@ -225,6 +229,7 @@ export const joinPublicClass = mutation({
   args: {
     classId: v.id("schoolClasses"),
   },
+  returns: v.object({ classId: v.id("schoolClasses") }),
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
@@ -289,6 +294,7 @@ export const updateClassImage = mutation({
     classId: v.id("schoolClasses"),
     image: schoolClassImages,
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);
     const userId = appUser._id;
@@ -313,5 +319,6 @@ export const updateClassImage = mutation({
       updatedBy: userId,
       updatedAt: Date.now(),
     });
+    return null;
   },
 });

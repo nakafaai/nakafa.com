@@ -1,5 +1,9 @@
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { query } from "@repo/backend/convex/_generated/server";
+import {
+  chatDocValidator,
+  paginatedChatsValidator,
+} from "@repo/backend/convex/chats/schema";
 import { mapDBPartToUIMessagePart } from "@repo/backend/convex/chats/utils";
 import {
   requireAuth,
@@ -18,6 +22,7 @@ export const getChat = query({
   args: {
     chatId: v.id("chats"),
   },
+  returns: chatDocValidator,
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
 
@@ -49,6 +54,7 @@ export const getChats = query({
     type: v.optional(v.union(v.literal("study"), v.literal("finance"))),
     paginationOpts: paginationOptsValidator,
   },
+  returns: paginatedChatsValidator,
   handler: async (ctx, args) => {
     const { userId, q: searchQuery, visibility, type, paginationOpts } = args;
 
@@ -122,9 +128,10 @@ export const getChatTitle = query({
   args: {
     chatId: v.id("chats"),
   },
+  returns: v.union(v.string(), v.null()),
   handler: async (ctx, args) => {
     const chat = await ctx.db.get("chats", args.chatId);
-    return chat?.title;
+    return chat?.title ?? null;
   },
 });
 
@@ -136,11 +143,15 @@ export const getChatTitle = query({
  *
  * Note: If you have chats with 100+ messages, consider implementing pagination
  * to avoid loading all messages at once.
+ *
+ * Return type is MyUIMessage[] - a complex type with many part variants.
+ * Using v.array(v.any()) for pragmatic validation while TypeScript ensures type safety.
  */
 export const loadMessages = query({
   args: {
     chatId: v.id("chats"),
   },
+  returns: v.array(v.any()),
   handler: async (ctx, args): Promise<MyUIMessage[]> => {
     const user = await requireAuth(ctx);
 

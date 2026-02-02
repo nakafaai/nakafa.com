@@ -1,10 +1,50 @@
-import { defineTable } from "convex/server";
+import { defineTable, paginationResultValidator } from "convex/server";
+import type { Infer } from "convex/values";
 import { v } from "convex/values";
 
+/**
+ * Chat visibility validator
+ */
 export const chatVisibility = v.union(
   v.literal("private"),
   v.literal("public")
 );
+export type ChatVisibility = Infer<typeof chatVisibility>;
+
+/**
+ * Chat type validator
+ */
+export const chatTypeValidator = v.union(
+  v.literal("study"),
+  v.literal("finance")
+);
+export type ChatType = Infer<typeof chatTypeValidator>;
+
+/**
+ * Chat base validator (without system fields)
+ */
+export const chatValidator = v.object({
+  updatedAt: v.number(),
+  title: v.optional(v.string()),
+  userId: v.id("users"),
+  visibility: chatVisibility,
+  type: chatTypeValidator,
+});
+
+/**
+ * Chat document validator (with system fields)
+ */
+export const chatDocValidator = chatValidator.extend({
+  _id: v.id("chats"),
+  _creationTime: v.number(),
+});
+export type ChatDoc = Infer<typeof chatDocValidator>;
+
+/**
+ * Paginated chats validator
+ */
+export const paginatedChatsValidator =
+  paginationResultValidator(chatDocValidator);
 
 export const tables = {
   chats: defineTable({
