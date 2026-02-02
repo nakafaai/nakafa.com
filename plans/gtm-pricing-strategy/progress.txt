@@ -1,0 +1,22 @@
+[2026-02-01 00:00] Project initialized
+
+Key decisions:
+- Single-tier pricing: Rp 89K (Indonesia) / $8.99 (International)
+- Monthly only (no annual plans)
+- Dual payment: QRIS.id (Indonesia) + Polar (International)
+- Server-side polling for QRIS (not frontend)
+- 4-phase GTM strategy (Feb 2026 - Jan 2027)
+
+Files created:
+- plans/gtm-pricing-strategy/overview.md
+- plans/gtm-pricing-strategy/tasks/1.1-qris-merchant-registration.md
+- plans/gtm-pricing-strategy/tasks/1.2-polar-pricing-update.md
+- plans/gtm-pricing-strategy/tasks/1.3-qris-backend-integration.md
+- plans/gtm-pricing-strategy/tasks/1.4-frontend-checkout.md
+- plans/gtm-pricing-strategy/tasks/1.5-testing-soft-launch.md
+- plans/gtm-pricing-strategy/tasks/1.6-phase1-gtm-execution.md
+
+Blockers/notes:
+- QRIS.id registration takes 1-14 days (start immediately)
+- SNBT exam April 21-30, 2026 (time-sensitive)
+- No existing paying customers (clean slate for pricing)
