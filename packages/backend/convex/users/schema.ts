@@ -2,12 +2,7 @@ import { tables as betterAuthTables } from "@repo/backend/convex/betterAuth/gene
 import { defineTable } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
-import {
-  addFieldsToValidator,
-  literals,
-  nullable,
-  systemFields,
-} from "convex-helpers/validators";
+import { literals, nullable } from "convex-helpers/validators";
 
 /**
  * User role options (non-null) - for mutations that set a role
@@ -28,7 +23,7 @@ export type UserRole = Infer<typeof userRoleValidator>;
 
 /**
  * User base validator (without system fields)
- * Used for table definition and as base for document validator
+ * Used for table definition
  */
 export const userValidator = v.object({
   email: v.string(),
@@ -37,16 +32,6 @@ export const userValidator = v.object({
   image: v.optional(v.string()),
   role: v.optional(userRoleOptionsValidator),
 });
-
-/**
- * User document validator (with system fields)
- * Used for return types in queries/mutations
- */
-export const userDocValidator = addFieldsToValidator(
-  userValidator,
-  systemFields("users")
-);
-export type UserDoc = Infer<typeof userDocValidator>;
 
 /**
  * User device base validator
@@ -60,15 +45,6 @@ export const userDeviceValidator = v.object({
 });
 
 /**
- * User device document validator
- */
-export const userDeviceDocValidator = addFieldsToValidator(
-  userDeviceValidator,
-  systemFields("userDevices")
-);
-export type UserDeviceDoc = Infer<typeof userDeviceDocValidator>;
-
-/**
  * API key validator for cross-component use.
  * When calling betterAuth component queries, IDs are serialized as strings.
  * Derived from betterAuthTables.apikey - single source of truth.
@@ -78,7 +54,6 @@ export const apiKeyDocValidator = v.object({
   _id: v.string(),
   _creationTime: v.number(),
 });
-export type ApiKeyDoc = Infer<typeof apiKeyDocValidator>;
 
 /**
  * API key verification result validator
@@ -89,7 +64,6 @@ export const apiKeyVerifyResultValidator = v.object({
   userId: nullable(v.string()),
   valid: v.boolean(),
 });
-export type ApiKeyVerifyResult = Infer<typeof apiKeyVerifyResultValidator>;
 
 const tables = {
   users: defineTable(userValidator)

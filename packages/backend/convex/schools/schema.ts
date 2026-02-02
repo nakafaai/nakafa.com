@@ -1,11 +1,7 @@
 import { defineTable } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
-import {
-  addFieldsToValidator,
-  literals,
-  systemFields,
-} from "convex-helpers/validators";
+import { literals } from "convex-helpers/validators";
 
 /**
  * School type validator
@@ -62,15 +58,6 @@ export const schoolValidator = v.object({
 });
 
 /**
- * School document validator (with system fields)
- */
-export const schoolDocValidator = addFieldsToValidator(
-  schoolValidator,
-  systemFields("schools")
-);
-export type SchoolDoc = Infer<typeof schoolDocValidator>;
-
-/**
  * School member base validator (without system fields)
  */
 export const schoolMemberValidator = v.object({
@@ -87,15 +74,6 @@ export const schoolMemberValidator = v.object({
   removedBy: v.optional(v.id("users")),
   removedAt: v.optional(v.number()),
 });
-
-/**
- * School member document validator (with system fields)
- */
-export const schoolMemberDocValidator = addFieldsToValidator(
-  schoolMemberValidator,
-  systemFields("schoolMembers")
-);
-export type SchoolMemberDoc = Infer<typeof schoolMemberDocValidator>;
 
 /**
  * Parent-student relationship validator

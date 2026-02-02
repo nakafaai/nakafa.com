@@ -204,17 +204,6 @@ export const schoolClassInviteCodeValidator = v.object({
 });
 
 /**
- * School class invite code document validator (with system fields)
- */
-export const schoolClassInviteCodeDocValidator = addFieldsToValidator(
-  schoolClassInviteCodeValidator,
-  systemFields("schoolClassInviteCodes")
-);
-export type SchoolClassInviteCodeDoc = Infer<
-  typeof schoolClassInviteCodeDocValidator
->;
-
-/**
  * School class forum base validator (without system fields)
  */
 export const schoolClassForumValidator = v.object({
@@ -233,15 +222,6 @@ export const schoolClassForumValidator = v.object({
   createdBy: v.id("users"),
   updatedAt: v.number(),
 });
-
-/**
- * School class forum document validator (with system fields)
- */
-export const schoolClassForumDocValidator = addFieldsToValidator(
-  schoolClassForumValidator,
-  systemFields("schoolClassForums")
-);
-export type SchoolClassForumDoc = Infer<typeof schoolClassForumDocValidator>;
 
 /**
  * School class forum post base validator (without system fields)
@@ -263,17 +243,6 @@ export const schoolClassForumPostValidator = v.object({
 });
 
 /**
- * School class forum post document validator (with system fields)
- */
-export const schoolClassForumPostDocValidator = addFieldsToValidator(
-  schoolClassForumPostValidator,
-  systemFields("schoolClassForumPosts")
-);
-export type SchoolClassForumPostDoc = Infer<
-  typeof schoolClassForumPostDocValidator
->;
-
-/**
  * School class material group base validator (without system fields)
  */
 export const schoolClassMaterialGroupValidator = v.object({
@@ -293,17 +262,6 @@ export const schoolClassMaterialGroupValidator = v.object({
   publishedAt: v.optional(v.number()),
   publishedBy: v.optional(v.id("users")),
 });
-
-/**
- * School class material group document validator (with system fields)
- */
-export const schoolClassMaterialGroupDocValidator = addFieldsToValidator(
-  schoolClassMaterialGroupValidator,
-  systemFields("schoolClassMaterialGroups")
-);
-export type SchoolClassMaterialGroupDoc = Infer<
-  typeof schoolClassMaterialGroupDocValidator
->;
 
 /**
  * Class info validator (for public info without auth)
