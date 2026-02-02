@@ -5,11 +5,9 @@ import {
 import { schoolClassForumTagValidator } from "@repo/backend/convex/classes/schema";
 import { loadActiveClass } from "@repo/backend/convex/classes/utils";
 import { mutation } from "@repo/backend/convex/functions";
-import {
-  isAdmin,
-  requireAuthWithSession,
-  requireClassAccess,
-} from "@repo/backend/convex/lib/authHelpers";
+import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
+import { requireClassAccess } from "@repo/backend/convex/lib/helpers/class";
+import { isAdmin } from "@repo/backend/convex/lib/helpers/school";
 import { vv } from "@repo/backend/convex/lib/validators";
 import { truncateText } from "@repo/backend/convex/utils/helper";
 import { ConvexError, type Infer, v } from "convex/values";

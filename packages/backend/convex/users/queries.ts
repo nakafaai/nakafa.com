@@ -1,6 +1,6 @@
 import { components } from "@repo/backend/convex/_generated/api";
 import { internalQuery, query } from "@repo/backend/convex/_generated/server";
-import { requireAuth } from "@repo/backend/convex/lib/authHelpers";
+import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators";
 import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";

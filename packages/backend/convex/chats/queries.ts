@@ -7,10 +7,8 @@ import {
   messageWithPartsDocValidator,
   paginatedChatsValidator,
 } from "@repo/backend/convex/chats/schema";
-import {
-  requireAuth,
-  requireChatAccess,
-} from "@repo/backend/convex/lib/authHelpers";
+import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
+import { requireChatAccess } from "@repo/backend/convex/lib/helpers/chat";
 import { asyncMap, getManyFrom } from "@repo/backend/convex/lib/relationships";
 import { vv } from "@repo/backend/convex/lib/validators";
 import { paginationOptsValidator } from "convex/server";

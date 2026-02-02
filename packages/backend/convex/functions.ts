@@ -39,7 +39,7 @@ import {
   mutation as rawMutation,
 } from "@repo/backend/convex/_generated/server";
 import { applyAttemptAggregatesDelta } from "@repo/backend/convex/exercises/utils";
-import { isAdmin } from "@repo/backend/convex/lib/authHelpers";
+import { isAdmin } from "@repo/backend/convex/lib/helpers/school";
 import { truncateText } from "@repo/backend/convex/utils/helper";
 import type { WithoutSystemFields } from "convex/server";
 import {

@@ -3,8 +3,8 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
-import { requireClassAccess } from "@repo/backend/convex/lib/authHelpers";
-import { getUserMap } from "@repo/backend/convex/lib/userHelpers";
+import { requireClassAccess } from "@repo/backend/convex/lib/helpers/class";
+import { getUserMap } from "@repo/backend/convex/lib/helpers/user";
 import { ConvexError } from "convex/values";
 import { asyncMap } from "convex-helpers";
 

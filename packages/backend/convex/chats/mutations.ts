@@ -8,7 +8,7 @@ import { mutation } from "@repo/backend/convex/functions";
 import {
   requireAuth,
   requireAuthWithSession,
-} from "@repo/backend/convex/lib/authHelpers";
+} from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators";
 import { ConvexError, v } from "convex/values";
 

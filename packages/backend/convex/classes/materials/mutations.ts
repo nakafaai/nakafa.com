@@ -6,11 +6,11 @@ import {
 import { schoolClassMaterialStatusValidator } from "@repo/backend/convex/classes/schema";
 import { loadActiveClass } from "@repo/backend/convex/classes/utils";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
-import { requireAuthWithSession } from "@repo/backend/convex/lib/authHelpers";
+import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
 import {
   PERMISSIONS,
   requirePermission,
-} from "@repo/backend/convex/lib/permissions";
+} from "@repo/backend/convex/lib/helpers/permissions";
 import { vv } from "@repo/backend/convex/lib/validators";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";

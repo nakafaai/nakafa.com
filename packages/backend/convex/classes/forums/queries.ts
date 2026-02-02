@@ -10,11 +10,9 @@ import {
   loadForumWithAccess,
 } from "@repo/backend/convex/classes/forums/utils";
 import { loadClass } from "@repo/backend/convex/classes/utils";
-import {
-  requireAuth,
-  requireClassAccess,
-} from "@repo/backend/convex/lib/authHelpers";
-import { getUserMap } from "@repo/backend/convex/lib/userHelpers";
+import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
+import { requireClassAccess } from "@repo/backend/convex/lib/helpers/class";
+import { getUserMap } from "@repo/backend/convex/lib/helpers/user";
 import { vv } from "@repo/backend/convex/lib/validators";
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";

@@ -9,12 +9,12 @@ import {
   schoolClassVisibilityValidator,
 } from "@repo/backend/convex/classes/schema";
 import { loadClass } from "@repo/backend/convex/classes/utils";
+import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import {
   checkClassAccess,
-  requireAuth,
   requireClassAccess,
-} from "@repo/backend/convex/lib/authHelpers";
-import { getUserMap } from "@repo/backend/convex/lib/userHelpers";
+} from "@repo/backend/convex/lib/helpers/class";
+import { getUserMap } from "@repo/backend/convex/lib/helpers/user";
 import { vv } from "@repo/backend/convex/lib/validators";
 import { schoolMemberDocValidator } from "@repo/backend/convex/schools/schema";
 import { paginationOptsValidator } from "convex/server";

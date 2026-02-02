@@ -1,6 +1,6 @@
 import { components } from "@repo/backend/convex/_generated/api";
 import { mutation } from "@repo/backend/convex/_generated/server";
-import { requireAuthWithSession } from "@repo/backend/convex/lib/authHelpers";
+import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
 import { v } from "convex/values";
 import {
   apiKeyVerifyResultValidator,

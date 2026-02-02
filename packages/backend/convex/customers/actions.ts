@@ -5,7 +5,7 @@ import {
   convertToDatabaseCustomer,
   requireCustomer,
 } from "@repo/backend/convex/customers/utils";
-import { requireAuthForAction } from "@repo/backend/convex/lib/authHelpers";
+import { requireAuthForAction } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators";
 import { ConvexError, v } from "convex/values";
 

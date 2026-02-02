@@ -1,5 +1,5 @@
 import { mutation } from "@repo/backend/convex/_generated/server";
-import { requireAuthWithSession } from "@repo/backend/convex/lib/authHelpers";
+import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators";
 import { generateUniqueSlug } from "@repo/backend/convex/schools/utils";
 import { generateNanoId, slugify } from "@repo/backend/convex/utils/helper";

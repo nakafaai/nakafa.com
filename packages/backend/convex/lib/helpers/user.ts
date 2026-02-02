@@ -1,3 +1,8 @@
+/**
+ * User data utilities.
+ *
+ * Batch fetch and map user data for efficient lookups.
+ */
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { getAll } from "@repo/backend/convex/lib/relationships";

@@ -1,4 +1,4 @@
-import { polarMetadataValidator } from "@repo/backend/convex/lib/contentValidators";
+import { polarMetadataValidator } from "@repo/backend/convex/customers/schema";
 import { defineTable } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";

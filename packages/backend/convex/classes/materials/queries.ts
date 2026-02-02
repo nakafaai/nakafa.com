@@ -2,11 +2,9 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { query } from "@repo/backend/convex/_generated/server";
 import { enrichMaterialGroups } from "@repo/backend/convex/classes/materials/utils";
 import { loadClass } from "@repo/backend/convex/classes/utils";
-import {
-  isAdmin,
-  requireAuth,
-  requireClassAccess,
-} from "@repo/backend/convex/lib/authHelpers";
+import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
+import { requireClassAccess } from "@repo/backend/convex/lib/helpers/class";
+import { isAdmin } from "@repo/backend/convex/lib/helpers/school";
 import { vv } from "@repo/backend/convex/lib/validators";
 import type { PaginationResult } from "convex/server";
 import { paginationOptsValidator } from "convex/server";

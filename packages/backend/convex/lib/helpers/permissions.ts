@@ -1,3 +1,9 @@
+/**
+ * Role-based permission system.
+ *
+ * Defines permissions for school roles, class roles, and teacher roles.
+ * Use requirePermission() to enforce access control in mutations.
+ */
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type {
   MutationCtx,
@@ -40,7 +46,7 @@ export const PERMISSIONS = {
   FORUM_MODERATE: "forum:moderate",
 } as const;
 
-export const ROLE_PERMISSIONS: Record<
+const ROLE_PERMISSIONS: Record<
   SchoolRole | ClassRole | TeacherRole,
   Permission[]
 > = {
@@ -96,7 +102,11 @@ export const ROLE_PERMISSIONS: Record<
   ],
 };
 
-async function checkPermission(
+/**
+ * Check if user has a specific permission.
+ * Checks both school-level and class-level roles.
+ */
+export async function checkPermission(
   ctx: QueryCtx | MutationCtx,
   permission: Permission,
   options: {
@@ -151,6 +161,10 @@ async function checkPermission(
   return false;
 }
 
+/**
+ * Require permission or throw.
+ * Throws FORBIDDEN if user lacks the required permission.
+ */
 export async function requirePermission(
   ctx: QueryCtx | MutationCtx,
   permission: Permission,
@@ -168,5 +182,3 @@ export async function requirePermission(
     });
   }
 }
-
-export { checkPermission };

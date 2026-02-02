@@ -4,15 +4,15 @@ import {
 } from "@repo/backend/convex/classes/schema";
 import { loadActiveClass } from "@repo/backend/convex/classes/utils";
 import { mutation } from "@repo/backend/convex/functions";
-import { requireAuthWithSession } from "@repo/backend/convex/lib/authHelpers";
+import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
+import {
+  PERMISSIONS,
+  requirePermission,
+} from "@repo/backend/convex/lib/helpers/permissions";
 import {
   getRandomClassImage,
   isValidClassImage,
 } from "@repo/backend/convex/lib/images";
-import {
-  PERMISSIONS,
-  requirePermission,
-} from "@repo/backend/convex/lib/permissions";
 import { vv } from "@repo/backend/convex/lib/validators";
 import { generateNanoId } from "@repo/backend/convex/utils/helper";
 import { ConvexError, v } from "convex/values";
