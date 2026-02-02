@@ -105,5 +105,7 @@ export const cleanupUserData = internalAction({
         id: customer.id,
       });
     }
+
+    return null;
   },
 });

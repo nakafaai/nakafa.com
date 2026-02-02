@@ -377,18 +377,18 @@ export const expireAttemptInternal = internalMutation({
     const now = Date.now();
     const attempt = await ctx.db.get("exerciseAttempts", args.attemptId);
     if (!attempt) {
-      return;
+      return null;
     }
 
     if (attempt.status !== "in-progress") {
-      return;
+      return null;
     }
 
     const computedExpiresAtMs = attempt.startedAt + attempt.timeLimit * 1000;
     const expiresAtMs = Math.max(args.expiresAtMs, computedExpiresAtMs);
 
     if (now < expiresAtMs) {
-      return;
+      return null;
     }
 
     const finalTotalTime = computeAttemptDurationSeconds({

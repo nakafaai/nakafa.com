@@ -213,5 +213,7 @@ export const deleteCustomer = internalAction({
         detail: String(result.error),
       });
     }
+
+    return null;
   },
 });

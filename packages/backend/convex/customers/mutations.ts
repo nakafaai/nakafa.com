@@ -26,6 +26,8 @@ export const deleteCustomerById = internalMutation({
     }
 
     await ctx.db.delete("customers", customer._id);
+
+    return null;
   },
 });
 
