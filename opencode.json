@@ -11,6 +11,16 @@
     "ultracite": {
       "type": "remote",
       "url": "https://docs.ultracite.ai/mcp"
+    },
+    "convex": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "convex@latest",
+        "mcp",
+        "start"
+      ],
     }
   }
 }

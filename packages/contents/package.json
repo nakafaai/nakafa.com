@@ -18,7 +18,7 @@
     "effect": "^3.19.15",
     "ky": "^1.14.3",
     "motion": "^12.29.2",
-    "next-intl": "^4.8.1",
+    "next-intl": "^4.8.2",
     "react": "19.2.4",
     "react-aria-components": "^1.14.0",
     "recharts": "^2.15.4",
