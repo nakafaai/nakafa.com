@@ -17,7 +17,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
-import { PERMISSIONS } from "@repo/backend/convex/lib/permissions";
+import { PERMISSIONS } from "@repo/backend/convex/lib/helpers/permissions";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Calendar } from "@repo/design-system/components/ui/calendar";

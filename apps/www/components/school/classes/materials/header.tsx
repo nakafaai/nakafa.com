@@ -1,6 +1,6 @@
 "use client";
 
-import { PERMISSIONS } from "@repo/backend/convex/lib/permissions";
+import { PERMISSIONS } from "@repo/backend/convex/lib/helpers/permissions";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { SchoolClassesMaterialsNew } from "@/components/school/classes/materials/new";
 import { SchoolClassesMaterialsSearch } from "@/components/school/classes/materials/search";
