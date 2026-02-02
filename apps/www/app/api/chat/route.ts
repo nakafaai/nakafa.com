@@ -18,7 +18,10 @@ import { tools } from "@repo/ai/tools";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/utils";
+import {
+  mapDBMessagesToUIMessages,
+  mapUIMessagePartsToDBParts,
+} from "@repo/backend/convex/chats/utils";
 import { api } from "@repo/connection/routes";
 import { CorsValidator } from "@repo/security/lib/cors-validator";
 import { cleanSlug } from "@repo/utilities/helper";
@@ -166,13 +169,16 @@ export async function POST(req: Request) {
     chatIdToUse = result.chatId;
   }
 
-  const messages = await fetchQuery(
+  const rawMessages = await fetchQuery(
     convexApi.chats.queries.loadMessages,
     {
       chatId: chatIdToUse,
     },
     { token }
   );
+
+  // Transform raw DB messages to UI messages
+  const messages = mapDBMessagesToUIMessages(rawMessages);
 
   // Use smart message compression to stay within token limits
   const originalMessageCount = messages.length;

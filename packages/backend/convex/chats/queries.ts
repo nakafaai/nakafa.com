@@ -1,13 +1,19 @@
-import type { MyUIMessage } from "@repo/ai/types/message";
 import { query } from "@repo/backend/convex/_generated/server";
-import { mapDBPartToUIMessagePart } from "@repo/backend/convex/chats/utils";
+import type { MessageWithPartsDoc } from "@repo/backend/convex/chats/schema";
 import {
-  requireAuth,
-  requireChatAccess,
-} from "@repo/backend/convex/lib/authHelpers";
-import { asyncMap, getManyFrom } from "@repo/backend/convex/lib/relationships";
+  chatTypeValidator,
+  chatVisibilityValidator,
+  messageWithPartsDocValidator,
+  paginatedChatsValidator,
+} from "@repo/backend/convex/chats/schema";
+import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
+import { requireChatAccess } from "@repo/backend/convex/lib/helpers/chat";
+import { vv } from "@repo/backend/convex/lib/validators";
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
+import { asyncMap } from "convex-helpers";
+import { getManyFrom } from "convex-helpers/server/relationships";
+import { nullable } from "convex-helpers/validators";
 
 /**
  * Get a chat by its ID.
@@ -16,8 +22,9 @@ import { ConvexError, v } from "convex/values";
  */
 export const getChat = query({
   args: {
-    chatId: v.id("chats"),
+    chatId: vv.id("chats"),
   },
+  returns: vv.doc("chats"),
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
 
@@ -43,12 +50,13 @@ export const getChat = query({
  */
 export const getChats = query({
   args: {
-    userId: v.id("users"),
+    userId: vv.id("users"),
     q: v.optional(v.string()),
-    visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
-    type: v.optional(v.union(v.literal("study"), v.literal("finance"))),
+    visibility: v.optional(chatVisibilityValidator),
+    type: v.optional(chatTypeValidator),
     paginationOpts: paginationOptsValidator,
   },
+  returns: paginatedChatsValidator,
   handler: async (ctx, args) => {
     const { userId, q: searchQuery, visibility, type, paginationOpts } = args;
 
@@ -120,11 +128,12 @@ export const getChats = query({
  */
 export const getChatTitle = query({
   args: {
-    chatId: v.id("chats"),
+    chatId: vv.id("chats"),
   },
+  returns: nullable(v.string()),
   handler: async (ctx, args) => {
     const chat = await ctx.db.get("chats", args.chatId);
-    return chat?.title;
+    return chat?.title ?? null;
   },
 });
 
@@ -134,14 +143,18 @@ export const getChatTitle = query({
  * Requires authentication. Public chats are accessible by any logged-in user.
  * Private chats are only accessible by the owner.
  *
+ * Returns raw DB documents. Use mapDBMessagesToUIMessages from chats/utils
+ * to transform to UI messages on the client side.
+ *
  * Note: If you have chats with 100+ messages, consider implementing pagination
  * to avoid loading all messages at once.
  */
 export const loadMessages = query({
   args: {
-    chatId: v.id("chats"),
+    chatId: vv.id("chats"),
   },
-  handler: async (ctx, args): Promise<MyUIMessage[]> => {
+  returns: v.array(messageWithPartsDocValidator),
+  handler: async (ctx, args): Promise<MessageWithPartsDoc[]> => {
     const user = await requireAuth(ctx);
 
     const chat = await ctx.db.get("chats", args.chatId);
@@ -175,10 +188,6 @@ export const loadMessages = query({
       return { ...message, parts };
     });
 
-    return messagesWithParts.map((message) => ({
-      id: message.identifier,
-      role: message.role,
-      parts: message.parts.map((part) => mapDBPartToUIMessagePart({ part })),
-    }));
+    return messagesWithParts;
   },
 });

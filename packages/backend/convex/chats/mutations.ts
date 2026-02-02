@@ -1,11 +1,15 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import tables, { chatVisibility } from "@repo/backend/convex/chats/schema";
+import tables, {
+  chatTypeValidator,
+  chatVisibilityValidator,
+} from "@repo/backend/convex/chats/schema";
 import { mutation } from "@repo/backend/convex/functions";
 import {
   requireAuth,
   requireAuthWithSession,
-} from "@repo/backend/convex/lib/authHelpers";
+} from "@repo/backend/convex/lib/helpers/auth";
+import { vv } from "@repo/backend/convex/lib/validators";
 import { ConvexError, v } from "convex/values";
 
 /**
@@ -56,8 +60,9 @@ async function deleteMessagesFromPoint(
 export const createChat = mutation({
   args: {
     title: v.optional(v.string()),
-    type: v.union(v.literal("study"), v.literal("finance")),
+    type: chatTypeValidator,
   },
+  returns: vv.id("chats"),
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
 
@@ -78,9 +83,10 @@ export const createChat = mutation({
  */
 export const updateChatTitle = mutation({
   args: {
-    chatId: v.id("chats"),
+    chatId: vv.id("chats"),
     title: v.string(),
   },
+  returns: vv.id("chats"),
   handler: async (ctx, args) => {
     // We need fast access, so we use requireAuth instead of requireAuthWithSession
     const user = await requireAuth(ctx);
@@ -112,9 +118,10 @@ export const updateChatTitle = mutation({
  */
 export const updateChatVisibility = mutation({
   args: {
-    chatId: v.id("chats"),
-    visibility: chatVisibility,
+    chatId: vv.id("chats"),
+    visibility: chatVisibilityValidator,
   },
+  returns: vv.id("chats"),
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
 
@@ -152,10 +159,14 @@ export const replaceMessageWithParts = mutation({
     parts: v.array(
       v.object({
         ...tables.parts.validator.fields,
-        messageId: v.optional(v.id("messages")), // make it optional here to allow for upserting parts without a messageId
+        messageId: v.optional(vv.id("messages")), // make it optional here to allow for upserting parts without a messageId
       })
     ),
   },
+  returns: v.object({
+    messageId: vv.id("messages"),
+    partIds: v.array(vv.id("parts")),
+  }),
   handler: async (ctx, args) => {
     const { message, parts } = args;
 
@@ -181,10 +192,12 @@ export const replaceMessageWithParts = mutation({
     if (message.identifier) {
       const targetMessage = await ctx.db
         .query("messages")
-        .withIndex("identifier", (q) => q.eq("identifier", message.identifier))
+        .withIndex("chatId_identifier", (q) =>
+          q.eq("chatId", message.chatId).eq("identifier", message.identifier)
+        )
         .unique();
 
-      if (targetMessage) {
+      if (targetMessage && targetMessage.chatId === message.chatId) {
         await deleteMessagesFromPoint(
           ctx,
           targetMessage.chatId,
@@ -222,18 +235,23 @@ export const replaceMessageWithParts = mutation({
 export const createChatWithMessage = mutation({
   args: {
     title: v.optional(v.string()),
-    type: v.union(v.literal("study"), v.literal("finance")),
+    type: chatTypeValidator,
     message: v.object({
       ...tables.messages.validator.fields,
-      chatId: v.optional(v.id("chats")), // make it optional here to allow for creating a chat with a message without a chatId
+      chatId: v.optional(vv.id("chats")), // make it optional here to allow for creating a chat with a message without a chatId
     }),
     parts: v.array(
       v.object({
         ...tables.parts.validator.fields,
-        messageId: v.optional(v.id("messages")), // make it optional here to allow for creating a chat with a message without a messageId
+        messageId: v.optional(vv.id("messages")), // make it optional here to allow for creating a chat with a message without a messageId
       })
     ),
   },
+  returns: v.object({
+    chatId: vv.id("chats"),
+    messageId: vv.id("messages"),
+    partIds: v.array(vv.id("parts")),
+  }),
   handler: async (ctx, args) => {
     // We need fast access, so we use requireAuth instead of requireAuthWithSession
     const user = await requireAuth(ctx);
@@ -274,8 +292,9 @@ export const createChatWithMessage = mutation({
  */
 export const deleteChat = mutation({
   args: {
-    chatId: v.id("chats"),
+    chatId: vv.id("chats"),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
 
@@ -295,5 +314,6 @@ export const deleteChat = mutation({
     }
 
     await ctx.db.delete("chats", args.chatId);
+    return null;
   },
 });

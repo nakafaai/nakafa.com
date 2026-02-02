@@ -3,11 +3,11 @@
 import { Cancel01Icon, PaintBrush04Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { SchoolClassImage } from "@repo/backend/convex/classes/schema";
+import { PERMISSIONS } from "@repo/backend/convex/lib/helpers/permissions";
 import {
   CLASS_IMAGES,
   getClassImageUrl,
 } from "@repo/backend/convex/lib/images";
-import { PERMISSIONS } from "@repo/backend/convex/lib/permissions";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {

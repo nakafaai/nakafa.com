@@ -1,25 +1,26 @@
 import { components } from "@repo/backend/convex/_generated/api";
 import { mutation } from "@repo/backend/convex/_generated/server";
-import { requireAuthWithSession } from "@repo/backend/convex/lib/authHelpers";
+import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
 import { v } from "convex/values";
+import {
+  apiKeyVerifyResultValidator,
+  userRoleOptionsValidator,
+} from "./schema";
 
 /**
  * Update the app user's role.
  */
 export const updateUserRole = mutation({
   args: {
-    role: v.union(
-      v.literal("teacher"),
-      v.literal("student"),
-      v.literal("parent"),
-      v.literal("administrator")
-    ),
+    role: userRoleOptionsValidator,
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
     await ctx.db.patch("users", user.appUser._id, {
       role: args.role,
     });
+    return null;
   },
 });
 
@@ -34,6 +35,7 @@ export const updateUserName = mutation({
   args: {
     name: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
 
@@ -47,6 +49,7 @@ export const updateUserName = mutation({
     await ctx.db.patch("users", user.appUser._id, {
       name: args.name,
     });
+    return null;
   },
 });
 
@@ -58,6 +61,7 @@ export const verifyApiKey = mutation({
     key: v.string(),
     permissions: v.optional(v.string()),
   },
+  returns: apiKeyVerifyResultValidator,
   handler: async (ctx, args) =>
     await ctx.runMutation(components.betterAuth.mutations.verifyApiKey, {
       key: args.key,

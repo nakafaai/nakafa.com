@@ -14,13 +14,7 @@
     },
     "convex": {
       "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "convex@latest",
-        "mcp",
-        "start"
-      ],
+      "command": ["npx", "-y", "convex@latest", "mcp", "start"]
     }
   }
 }

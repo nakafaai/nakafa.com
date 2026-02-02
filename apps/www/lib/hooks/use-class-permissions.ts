@@ -1,7 +1,7 @@
 import {
   type Permission,
   ROLE_PERMISSIONS,
-} from "@repo/backend/convex/lib/permissions";
+} from "@repo/backend/convex/lib/helpers/permissions";
 import { useClass } from "@/lib/context/use-class";
 
 export function useClassPermissions() {

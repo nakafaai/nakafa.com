@@ -1,6 +1,6 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { PostAttachment } from "@repo/backend/convex/classes/forums/utils";
-import type { UserData } from "@repo/backend/convex/lib/userHelpers";
+import type { UserData } from "@repo/backend/convex/lib/helpers/user";
 import * as z from "zod/mini";
 import { createStore } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";

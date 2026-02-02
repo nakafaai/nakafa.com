@@ -1,29 +1,31 @@
 import {
-  schoolClassImages,
-  schoolClassVisibility,
+  schoolClassImageValidator,
+  schoolClassVisibilityValidator,
 } from "@repo/backend/convex/classes/schema";
 import { loadActiveClass } from "@repo/backend/convex/classes/utils";
 import { mutation } from "@repo/backend/convex/functions";
-import { requireAuthWithSession } from "@repo/backend/convex/lib/authHelpers";
+import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
+import {
+  PERMISSIONS,
+  requirePermission,
+} from "@repo/backend/convex/lib/helpers/permissions";
 import {
   getRandomClassImage,
   isValidClassImage,
 } from "@repo/backend/convex/lib/images";
-import {
-  PERMISSIONS,
-  requirePermission,
-} from "@repo/backend/convex/lib/permissions";
+import { vv } from "@repo/backend/convex/lib/validators";
 import { generateNanoId } from "@repo/backend/convex/utils/helper";
 import { ConvexError, v } from "convex/values";
 
 export const createClass = mutation({
   args: {
-    schoolId: v.id("schools"),
+    schoolId: vv.id("schools"),
     name: v.string(),
     subject: v.string(),
     year: v.string(),
-    visibility: schoolClassVisibility,
+    visibility: schoolClassVisibilityValidator,
   },
+  returns: vv.id("schoolClasses"),
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
@@ -98,6 +100,7 @@ export const joinClass = mutation({
   args: {
     code: v.string(),
   },
+  returns: v.object({ classId: vv.id("schoolClasses") }),
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
@@ -198,9 +201,10 @@ export const joinClass = mutation({
 
 export const updateClassVisibility = mutation({
   args: {
-    classId: v.id("schoolClasses"),
-    visibility: schoolClassVisibility,
+    classId: vv.id("schoolClasses"),
+    visibility: schoolClassVisibilityValidator,
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);
     const userId = appUser._id;
@@ -218,13 +222,15 @@ export const updateClassVisibility = mutation({
       updatedBy: userId,
       updatedAt: Date.now(),
     });
+    return null;
   },
 });
 
 export const joinPublicClass = mutation({
   args: {
-    classId: v.id("schoolClasses"),
+    classId: vv.id("schoolClasses"),
   },
+  returns: v.object({ classId: vv.id("schoolClasses") }),
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
@@ -286,9 +292,10 @@ export const joinPublicClass = mutation({
 
 export const updateClassImage = mutation({
   args: {
-    classId: v.id("schoolClasses"),
-    image: schoolClassImages,
+    classId: vv.id("schoolClasses"),
+    image: schoolClassImageValidator,
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);
     const userId = appUser._id;
@@ -313,5 +320,6 @@ export const updateClassImage = mutation({
       updatedBy: userId,
       updatedAt: Date.now(),
     });
+    return null;
   },
 });

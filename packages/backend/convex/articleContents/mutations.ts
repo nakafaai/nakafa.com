@@ -1,8 +1,10 @@
 import { internalMutation } from "@repo/backend/convex/functions";
 import {
   articleCategoryValidator,
+  contentTypeValidator,
   localeValidator,
 } from "@repo/backend/convex/lib/contentValidators";
+import { vv } from "@repo/backend/convex/lib/validators";
 import { v } from "convex/values";
 
 /**
@@ -74,7 +76,7 @@ export const upsertArticleContent = internalMutation({
  */
 export const syncArticleReferences = internalMutation({
   args: {
-    articleId: v.id("articleContents"),
+    articleId: vv.id("articleContents"),
     references: v.array(
       v.object({
         title: v.string(),
@@ -124,11 +126,7 @@ export const syncArticleReferences = internalMutation({
 export const linkContentAuthor = internalMutation({
   args: {
     contentId: v.string(),
-    contentType: v.union(
-      v.literal("article"),
-      v.literal("subject"),
-      v.literal("exercise")
-    ),
+    contentType: contentTypeValidator,
     authorName: v.string(),
     order: v.number(),
   },
@@ -199,11 +197,7 @@ function slugifyName(name: string): string {
 export const clearContentAuthors = internalMutation({
   args: {
     contentId: v.string(),
-    contentType: v.union(
-      v.literal("article"),
-      v.literal("subject"),
-      v.literal("exercise")
-    ),
+    contentType: contentTypeValidator,
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db

@@ -964,3 +964,23 @@ export function mapDBPartToUIMessagePart({
     }
   }
 }
+
+/**
+ * Maps raw DB messages (with parts) to UI messages.
+ * Use this on the client side after receiving data from loadMessages query.
+ *
+ * @example
+ * ```ts
+ * const rawMessages = useQuery(api.chats.queries.loadMessages, { chatId });
+ * const messages = rawMessages ? mapDBMessagesToUIMessages(rawMessages) : [];
+ * ```
+ */
+export function mapDBMessagesToUIMessages(
+  messages: Array<Doc<"messages"> & { parts: Doc<"parts">[] }>
+): MyUIMessage[] {
+  return messages.map((message) => ({
+    id: message.identifier,
+    role: message.role,
+    parts: message.parts.map((part) => mapDBPartToUIMessagePart({ part })),
+  }));
+}

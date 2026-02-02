@@ -9,6 +9,7 @@ import type { DataModel, Id } from "@repo/backend/convex/_generated/dataModel";
 import { type QueryCtx, query } from "@repo/backend/convex/_generated/server";
 import authConfig from "@repo/backend/convex/auth.config";
 import authSchema from "@repo/backend/convex/betterAuth/schema";
+import { vv } from "@repo/backend/convex/lib/validators";
 import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
 import {
   anonymous,
@@ -17,7 +18,6 @@ import {
   organization,
   username,
 } from "better-auth/plugins";
-import { v } from "convex/values";
 
 const siteUrl = process.env.SITE_URL ?? "http://localhost:3000";
 
@@ -227,7 +227,7 @@ export const getCurrentUser = query({
  * Query to get any user by ID.
  */
 export const getUserById = query({
-  args: { userId: v.id("users") },
+  args: { userId: vv.id("users") },
   handler: (ctx, args) => getAnyAppUserById(ctx, args.userId),
 });
 

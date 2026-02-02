@@ -1,6 +1,6 @@
 import { internalMutation } from "@repo/backend/convex/_generated/server";
+import { vv } from "@repo/backend/convex/lib/validators";
 import tables from "@repo/backend/convex/subscriptions/schema";
-import { v } from "convex/values";
 
 /**
  * Create a new subscription record.
@@ -11,7 +11,7 @@ export const createSubscription = internalMutation({
   args: {
     subscription: tables.subscriptions.validator,
   },
-  returns: v.id("subscriptions"),
+  returns: vv.id("subscriptions"),
   handler: async (ctx, args) => {
     const existingSubscription = await ctx.db
       .query("subscriptions")

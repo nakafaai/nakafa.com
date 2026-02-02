@@ -6,7 +6,7 @@ import type {
 import {
   getUserMap,
   type UserData,
-} from "@repo/backend/convex/lib/userHelpers";
+} from "@repo/backend/convex/lib/helpers/user";
 import { ConvexError } from "convex/values";
 
 /**

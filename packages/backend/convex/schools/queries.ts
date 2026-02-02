@@ -1,15 +1,17 @@
 import { query } from "@repo/backend/convex/_generated/server";
-import { requireAuth } from "@repo/backend/convex/lib/authHelpers";
-import { getAll } from "@repo/backend/convex/lib/relationships";
+import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
+import { vv } from "@repo/backend/convex/lib/validators";
 import { ConvexError, v } from "convex/values";
+import { getAll } from "convex-helpers/server/relationships";
 
 /**
  * Get a school by its ID. Requires authentication.
  */
 export const getSchool = query({
   args: {
-    schoolId: v.id("schools"),
+    schoolId: vv.id("schools"),
   },
+  returns: vv.doc("schools"),
   handler: async (ctx, args) => {
     await requireAuth(ctx);
 
@@ -29,6 +31,7 @@ export const getSchoolInfoBySlug = query({
   args: {
     slug: v.string(),
   },
+  returns: v.object({ name: v.string() }),
   handler: async (ctx, args) => {
     const school = await ctx.db
       .query("schools")
@@ -52,6 +55,10 @@ export const getSchoolBySlug = query({
   args: {
     slug: v.string(),
   },
+  returns: v.object({
+    school: vv.doc("schools"),
+    membership: vv.doc("schoolMembers"),
+  }),
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
 
@@ -94,6 +101,7 @@ export const getSchoolBySlug = query({
  */
 export const getSchoolMemberships = query({
   args: {},
+  returns: v.array(vv.doc("schoolMembers")),
   handler: async (ctx) => {
     const user = await requireAuth(ctx);
 
@@ -111,6 +119,7 @@ export const getSchoolMemberships = query({
 
 export const getMySchools = query({
   args: {},
+  returns: v.array(vv.doc("schools")),
   handler: async (ctx) => {
     const user = await requireAuth(ctx);
 

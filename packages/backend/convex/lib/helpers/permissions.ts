@@ -1,3 +1,9 @@
+/**
+ * Role-based permission system.
+ *
+ * Defines permissions for school roles, class roles, and teacher roles.
+ * Use requirePermission() to enforce access control in mutations.
+ */
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type {
   MutationCtx,
@@ -96,6 +102,11 @@ export const ROLE_PERMISSIONS: Record<
   ],
 };
 
+/**
+ * Check if user has a specific permission.
+ * Checks both school-level and class-level roles.
+ * Internal helper - use requirePermission for public API.
+ */
 async function checkPermission(
   ctx: QueryCtx | MutationCtx,
   permission: Permission,
@@ -116,8 +127,7 @@ async function checkPermission(
       .unique();
 
     if (schoolMember) {
-      const schoolPerms =
-        ROLE_PERMISSIONS[schoolMember.role as SchoolRole] ?? [];
+      const schoolPerms = ROLE_PERMISSIONS[schoolMember.role] ?? [];
       if (schoolPerms.includes(permission)) {
         return true;
       }
@@ -133,14 +143,13 @@ async function checkPermission(
       .unique();
 
     if (classMember) {
-      const classPerms = ROLE_PERMISSIONS[classMember.role as ClassRole] ?? [];
+      const classPerms = ROLE_PERMISSIONS[classMember.role] ?? [];
       if (classPerms.includes(permission)) {
         return true;
       }
 
       if (classMember.role === "teacher" && classMember.teacherRole) {
-        const teacherPerms =
-          ROLE_PERMISSIONS[classMember.teacherRole as TeacherRole] ?? [];
+        const teacherPerms = ROLE_PERMISSIONS[classMember.teacherRole] ?? [];
         if (teacherPerms.includes(permission)) {
           return true;
         }
@@ -151,6 +160,10 @@ async function checkPermission(
   return false;
 }
 
+/**
+ * Require permission or throw.
+ * Throws FORBIDDEN if user lacks the required permission.
+ */
 export async function requirePermission(
   ctx: QueryCtx | MutationCtx,
   permission: Permission,
@@ -168,5 +181,3 @@ export async function requirePermission(
     });
   }
 }
-
-export { checkPermission };

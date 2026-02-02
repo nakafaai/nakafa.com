@@ -1,6 +1,6 @@
 import { defineTable } from "convex/server";
-import type { Infer } from "convex/values";
 import { v } from "convex/values";
+import { literals } from "convex-helpers/validators";
 
 /**
  * Notification types - all possible notification triggers in Nakafa
@@ -8,38 +8,32 @@ import { v } from "convex/values";
  * Naming convention: {entity}_{action}
  * Extensible: Add new types as features are added
  */
-export const notificationTypes = v.union(
+export const notificationTypesValidator = literals(
   // Forum thread related
-  v.literal("forum_mention"),
-  v.literal("forum_reply"),
-  v.literal("forum_reaction"),
-
+  "forum_mention",
+  "forum_reply",
+  "forum_reaction",
   // Forum post related
-  v.literal("post_mention"),
-  v.literal("post_reply"),
-  v.literal("post_reaction"),
-
+  "post_mention",
+  "post_reply",
+  "post_reaction",
   // Comment related (content pages like /subject/...)
-  v.literal("comment_reply"),
-  v.literal("comment_mention"),
-  v.literal("comment_upvote"),
-
+  "comment_reply",
+  "comment_mention",
+  "comment_upvote",
   // Class related
-  v.literal("class_joined"),
-  v.literal("class_announcement"),
-  v.literal("class_assignment"),
-  v.literal("class_removed"),
-
+  "class_joined",
+  "class_announcement",
+  "class_assignment",
+  "class_removed",
   // School related
-  v.literal("school_invite"),
-  v.literal("school_joined"),
-  v.literal("school_role_changed"),
-  v.literal("school_removed"),
-
+  "school_invite",
+  "school_joined",
+  "school_role_changed",
+  "school_removed",
   // System
-  v.literal("system")
+  "system"
 );
-export type NotificationType = Infer<typeof notificationTypes>;
 
 /**
  * Entity types for polymorphic references
@@ -47,30 +41,30 @@ export type NotificationType = Infer<typeof notificationTypes>;
  * Generic: Works for any entity type in the app
  * Extensible: Add new types as features are added
  */
-export const notificationEntityTypes = v.union(
-  v.literal("schoolClassForums"),
-  v.literal("schoolClassForumPosts"),
-  v.literal("schoolClasses"),
-  v.literal("schools"),
-  v.literal("comments"),
-  v.literal("system")
+export const notificationEntityTypesValidator = literals(
+  "schoolClassForums",
+  "schoolClassForumPosts",
+  "schoolClasses",
+  "schools",
+  "comments",
+  "system"
 );
-export type NotificationEntityType = Infer<typeof notificationEntityTypes>;
 
 /**
  * Type-safe entity ID union
  *
  * Using v.id() for compile-time validation
  * Extensible: Add new table IDs as features are added
+ *
+ * NOTE: Keep as v.union(v.id(...)) - these are polymorphic ID references, not string literals
  */
-export const notificationEntityId = v.union(
+export const notificationEntityIdValidator = v.union(
   v.id("schoolClassForums"),
   v.id("schoolClassForumPosts"),
   v.id("schoolClasses"),
   v.id("schools"),
   v.id("comments")
 );
-export type NotificationEntityId = Infer<typeof notificationEntityId>;
 
 /**
  * Email digest frequency options
@@ -78,12 +72,11 @@ export type NotificationEntityId = Infer<typeof notificationEntityId>;
  * No "realtime" option - too expensive for email (use in-app for realtime)
  * Email is batched to reduce costs (Resend, SendGrid, etc.)
  */
-export const emailDigestTypes = v.union(
-  v.literal("daily"), // Send digest once per day
-  v.literal("weekly"), // Send digest once per week
-  v.literal("never") // Don't send email
+export const emailDigestTypesValidator = literals(
+  "daily", // Send digest once per day
+  "weekly", // Send digest once per week
+  "never" // Don't send email
 );
-export type EmailDigestType = Infer<typeof emailDigestTypes>;
 
 const tables = {
   /**
@@ -117,12 +110,12 @@ const tables = {
     actorId: v.optional(v.id("users")),
 
     // Notification type (determines display text)
-    type: notificationTypes,
+    type: notificationTypesValidator,
 
     // Entity reference (what the notification is about)
     // Navigation URL is built at read time by fetching the entity
-    entityType: notificationEntityTypes,
-    entityId: v.optional(notificationEntityId),
+    entityType: notificationEntityTypesValidator,
+    entityId: v.optional(notificationEntityIdValidator),
 
     // Read status (null = unread, timestamp = when marked read)
     readAt: v.optional(v.number()),
@@ -160,18 +153,18 @@ const tables = {
 
     // Email settings (batched digest only, no realtime - too expensive)
     emailEnabled: v.boolean(),
-    emailDigest: emailDigestTypes, // "daily" | "weekly" | "never"
+    emailDigest: emailDigestTypesValidator, // "daily" | "weekly" | "never"
 
     // Type-level controls (opt-out)
     // e.g., ["post_reaction", "comment_upvote"] - disable noisy notifications
-    disabledTypes: v.array(notificationTypes),
+    disabledTypes: v.array(notificationTypesValidator),
 
     // Entity-level mutes (muted threads, classes, etc.)
     // e.g., mute a specific noisy forum thread
     mutedEntities: v.array(
       v.object({
-        entityType: notificationEntityTypes,
-        entityId: notificationEntityId,
+        entityType: notificationEntityTypesValidator,
+        entityId: notificationEntityIdValidator,
         mutedAt: v.number(),
       })
     ),

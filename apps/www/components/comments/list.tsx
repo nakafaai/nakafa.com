@@ -9,7 +9,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { UserData } from "@repo/backend/convex/lib/userHelpers";
+import type { UserData } from "@repo/backend/convex/lib/helpers/user";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
   Avatar,

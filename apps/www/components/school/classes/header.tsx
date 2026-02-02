@@ -1,6 +1,6 @@
 "use client";
 
-import { PERMISSIONS } from "@repo/backend/convex/lib/permissions";
+import { PERMISSIONS } from "@repo/backend/convex/lib/helpers/permissions";
 import { SchoolClassesHeaderAdd } from "@/components/school/classes/header-add";
 import { SchoolClassesHeaderJoin } from "@/components/school/classes/header-join";
 import { SchoolClassesHeaderSearch } from "@/components/school/classes/header-search";

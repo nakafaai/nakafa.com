@@ -1,23 +1,31 @@
 import { query } from "@repo/backend/convex/_generated/server";
-import { schoolClassVisibility } from "@repo/backend/convex/classes/schema";
+import {
+  classInfoValidator,
+  paginatedClassesValidator,
+  paginatedPeopleValidator,
+  schoolClassVisibilityValidator,
+} from "@repo/backend/convex/classes/schema";
 import { loadClass } from "@repo/backend/convex/classes/utils";
+import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import {
   checkClassAccess,
-  requireAuth,
   requireClassAccess,
-} from "@repo/backend/convex/lib/authHelpers";
-import { getUserMap } from "@repo/backend/convex/lib/userHelpers";
+} from "@repo/backend/convex/lib/helpers/class";
+import { getUserMap } from "@repo/backend/convex/lib/helpers/user";
+import { vv } from "@repo/backend/convex/lib/validators";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
+import { nullable } from "convex-helpers/validators";
 
 export const getClasses = query({
   args: {
-    schoolId: v.id("schools"),
+    schoolId: vv.id("schools"),
     q: v.optional(v.string()),
     isArchived: v.optional(v.boolean()),
-    visibility: v.optional(schoolClassVisibility),
+    visibility: v.optional(schoolClassVisibilityValidator),
     paginationOpts: paginationOptsValidator,
   },
+  returns: paginatedClassesValidator,
   handler: async (ctx, args) => {
     const {
       schoolId,
@@ -87,8 +95,9 @@ export const getClasses = query({
 
 export const getClassInfo = query({
   args: {
-    classId: v.id("schoolClasses"),
+    classId: vv.id("schoolClasses"),
   },
+  returns: classInfoValidator,
   handler: async (ctx, args) => {
     const classData = await ctx.db.get("schoolClasses", args.classId);
 
@@ -108,8 +117,9 @@ export const getClassInfo = query({
 
 export const verifyClassMembership = query({
   args: {
-    classId: v.id("schoolClasses"),
+    classId: vv.id("schoolClasses"),
   },
+  returns: v.object({ allow: v.boolean() }),
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
 
@@ -131,8 +141,13 @@ export const verifyClassMembership = query({
 
 export const getClass = query({
   args: {
-    classId: v.id("schoolClasses"),
+    classId: vv.id("schoolClasses"),
   },
+  returns: v.object({
+    class: vv.doc("schoolClasses"),
+    classMembership: nullable(vv.doc("schoolClassMembers")),
+    schoolMembership: vv.doc("schoolMembers"),
+  }),
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
 
@@ -154,10 +169,11 @@ export const getClass = query({
 
 export const getPeople = query({
   args: {
-    classId: v.id("schoolClasses"),
+    classId: vv.id("schoolClasses"),
     q: v.optional(v.string()),
     paginationOpts: paginationOptsValidator,
   },
+  returns: paginatedPeopleValidator,
   handler: async (ctx, args) => {
     const { classId, q, paginationOpts } = args;
 
@@ -218,8 +234,9 @@ export const getPeople = query({
 
 export const getInviteCodes = query({
   args: {
-    classId: v.id("schoolClasses"),
+    classId: vv.id("schoolClasses"),
   },
+  returns: v.array(vv.doc("schoolClassInviteCodes")),
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
     const classData = await loadClass(ctx, args.classId);
