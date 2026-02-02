@@ -1,5 +1,5 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { UserData } from "@repo/backend/convex/lib/userHelpers";
+import type { UserData } from "@repo/backend/convex/lib/helpers/user";
 import type { ForumPost } from "@/lib/store/forum";
 
 // Re-export ForumPost for convenience

@@ -7,7 +7,7 @@ import {
 import { useDebouncedValue } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { UserData } from "@repo/backend/convex/lib/userHelpers";
+import type { UserData } from "@repo/backend/convex/lib/helpers/user";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";

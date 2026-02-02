@@ -46,7 +46,7 @@ export const PERMISSIONS = {
   FORUM_MODERATE: "forum:moderate",
 } as const;
 
-const ROLE_PERMISSIONS: Record<
+export const ROLE_PERMISSIONS: Record<
   SchoolRole | ClassRole | TeacherRole,
   Permission[]
 > = {
@@ -126,8 +126,7 @@ export async function checkPermission(
       .unique();
 
     if (schoolMember) {
-      const schoolPerms =
-        ROLE_PERMISSIONS[schoolMember.role as SchoolRole] ?? [];
+      const schoolPerms = ROLE_PERMISSIONS[schoolMember.role] ?? [];
       if (schoolPerms.includes(permission)) {
         return true;
       }
@@ -143,14 +142,13 @@ export async function checkPermission(
       .unique();
 
     if (classMember) {
-      const classPerms = ROLE_PERMISSIONS[classMember.role as ClassRole] ?? [];
+      const classPerms = ROLE_PERMISSIONS[classMember.role] ?? [];
       if (classPerms.includes(permission)) {
         return true;
       }
 
       if (classMember.role === "teacher" && classMember.teacherRole) {
-        const teacherPerms =
-          ROLE_PERMISSIONS[classMember.teacherRole as TeacherRole] ?? [];
+        const teacherPerms = ROLE_PERMISSIONS[classMember.teacherRole] ?? [];
         if (teacherPerms.includes(permission)) {
           return true;
         }
