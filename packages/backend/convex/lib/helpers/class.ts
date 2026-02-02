@@ -14,8 +14,9 @@ import { getSchoolMembership, isAdmin } from "./school";
 /**
  * Get class membership for a user.
  * Returns null if user is not a class member.
+ * Internal helper - use checkClassAccess or requireClassAccess for public API.
  */
-export async function getClassMembership(
+async function getClassMembership(
   ctx: QueryCtx | MutationCtx,
   classId: Id<"schoolClasses">,
   userId: Id<"users">

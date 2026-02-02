@@ -1,8 +1,8 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
-import { getManyFrom } from "@repo/backend/convex/lib/relationships";
 import { vv } from "@repo/backend/convex/lib/validators";
-import { ConvexError, v } from "convex/values";
+import { v } from "convex/values";
+import { getManyFrom } from "convex-helpers/server/relationships";
 import { nullable } from "convex-helpers/validators";
 
 const attemptWithAnswersValidator = v.object({
@@ -52,47 +52,5 @@ export const getLatestAttemptBySlug = query({
       attempt,
       answers,
     };
-  },
-});
-
-/**
- * Get an attempt by ID for result/review screens.
- *
- * Unlike `getLatestAttemptBySlug(slug)`, this fetches by ID
- * and supports attempts in any status (completed/expired/etc.).
- */
-export const getAttempt = query({
-  args: {
-    attemptId: vv.id("exerciseAttempts"),
-  },
-  returns: attemptWithAnswersValidator,
-  handler: async (ctx, args) => {
-    const { appUser } = await requireAuth(ctx);
-    const userId = appUser._id;
-
-    const attempt = await ctx.db.get("exerciseAttempts", args.attemptId);
-    if (!attempt) {
-      throw new ConvexError({
-        code: "ATTEMPT_NOT_FOUND",
-        message: "Attempt not found.",
-      });
-    }
-
-    if (attempt.userId !== userId) {
-      throw new ConvexError({
-        code: "FORBIDDEN",
-        message: "You do not have access to this attempt.",
-      });
-    }
-
-    const answers = await getManyFrom(
-      ctx.db,
-      "exerciseAnswers",
-      "attemptId_exerciseNumber",
-      attempt._id,
-      "attemptId"
-    );
-
-    return { attempt, answers };
   },
 });

@@ -105,8 +105,9 @@ export const ROLE_PERMISSIONS: Record<
 /**
  * Check if user has a specific permission.
  * Checks both school-level and class-level roles.
+ * Internal helper - use requirePermission for public API.
  */
-export async function checkPermission(
+async function checkPermission(
   ctx: QueryCtx | MutationCtx,
   permission: Permission,
   options: {

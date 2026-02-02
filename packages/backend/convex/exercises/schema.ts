@@ -1,5 +1,4 @@
 import { defineTable } from "convex/server";
-import type { Infer } from "convex/values";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
@@ -8,14 +7,12 @@ import { literals } from "convex-helpers/validators";
  * How the attempt is intended to be used (affects timer + UX).
  */
 export const exerciseAttemptModeValidator = literals("practice", "simulation");
-export type ExerciseAttemptMode = Infer<typeof exerciseAttemptModeValidator>;
 
 /**
  * Exercise attempt scope validator.
  * "set" = whole set attempt; "single" = one exercise inside a set.
  */
 export const exerciseAttemptScopeValidator = literals("set", "single");
-export type ExerciseAttemptScope = Infer<typeof exerciseAttemptScopeValidator>;
 
 /**
  * Exercise attempt status validator.
@@ -27,9 +24,6 @@ export const exerciseAttemptStatusValidator = literals(
   "expired",
   "abandoned"
 );
-export type ExerciseAttemptStatus = Infer<
-  typeof exerciseAttemptStatusValidator
->;
 
 const tables = {
   exerciseAttempts: defineTable({

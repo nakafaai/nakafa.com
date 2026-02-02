@@ -1,17 +1,16 @@
 import { PolarCore } from "@polar-sh/sdk/core.js";
 
 /** Polar API Access Token from environment */
-export const polarAccessToken = process.env.POLAR_ACCESS_TOKEN ?? "";
+const polarAccessToken = process.env.POLAR_ACCESS_TOKEN ?? "";
 
 /** Webhook secret for verifying Polar events */
 export const polarWebhookSecret = process.env.POLAR_WEBHOOK_SECRET ?? "";
 
 /** Whether running in production mode */
-export const isProduction =
-  process.env.NEXT_PUBLIC_POLAR_SERVER === "production";
+const isProduction = process.env.NEXT_PUBLIC_POLAR_SERVER === "production";
 
 /** Polar API environment (production or sandbox) */
-export const server = isProduction ? "production" : "sandbox";
+const server = isProduction ? "production" : "sandbox";
 
 /**
  * Shared Polar SDK client instance.

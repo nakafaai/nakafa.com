@@ -57,19 +57,6 @@ export const getCurrentUserApiKeys = query({
 });
 
 /**
- * Get all user IDs.
- * Useful for generating static params for user pages.
- */
-export const getAllUserIds = query({
-  args: {},
-  returns: v.array(vv.id("users")),
-  handler: async (ctx) => {
-    const users = await ctx.db.query("users").collect();
-    return users.map((user) => user._id);
-  },
-});
-
-/**
  * Get user role.
  * Requires authentication.
  * Returns null if role is not set.

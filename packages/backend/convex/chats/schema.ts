@@ -22,7 +22,7 @@ export {
   gradeValidator,
   localeValidator,
   materialValidator,
-  subjectCategoryValidator as categoryValidator,
+  subjectCategoryValidator,
 } from "@repo/backend/convex/lib/contentValidators";
 
 /**
@@ -35,7 +35,6 @@ export type ChatVisibility = Infer<typeof chatVisibilityValidator>;
  * Chat type validator
  */
 export const chatTypeValidator = literals("study", "finance");
-export type ChatType = Infer<typeof chatTypeValidator>;
 
 /**
  * Chat base validator (without system fields)
@@ -50,12 +49,12 @@ export const chatValidator = v.object({
 
 /**
  * Chat document validator (with system fields)
+ * Used internally for paginatedChatsValidator
  */
-export const chatDocValidator = addFieldsToValidator(
+const chatDocValidator = addFieldsToValidator(
   chatValidator,
   systemFields("chats")
 );
-export type ChatDoc = Infer<typeof chatDocValidator>;
 
 /**
  * Paginated chats validator
@@ -67,7 +66,6 @@ export const paginatedChatsValidator =
  * Message role validator
  */
 export const messageRoleValidator = literals("user", "assistant", "system");
-export type MessageRole = Infer<typeof messageRoleValidator>;
 
 /**
  * Message base validator (without system fields)
@@ -80,12 +78,12 @@ export const messageValidator = v.object({
 
 /**
  * Message document validator (with system fields)
+ * Used internally for messageWithPartsDocValidator
  */
-export const messageDocValidator = addFieldsToValidator(
+const messageDocValidator = addFieldsToValidator(
   messageValidator,
   systemFields("messages")
 );
-export type MessageDoc = Infer<typeof messageDocValidator>;
 
 /**
  * Chat-specific validators
@@ -126,7 +124,6 @@ export const partTypeValidator = literals(
   "data-scrape-url",
   "data-web-search"
 );
-export type PartType = Infer<typeof partTypeValidator>;
 
 export const contentItemValidator = v.object({
   title: v.string(),
@@ -270,12 +267,12 @@ export const partValidator = v.object({
 
 /**
  * Part document validator (with system fields)
+ * Used internally for messageWithPartsDocValidator
  */
-export const partDocValidator = addFieldsToValidator(
+const partDocValidator = addFieldsToValidator(
   partValidator,
   systemFields("parts")
 );
-export type PartDoc = Infer<typeof partDocValidator>;
 
 /**
  * Message with parts document validator

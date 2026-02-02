@@ -14,7 +14,6 @@ export const schoolTypeValidator = literals(
   "university",
   "other"
 );
-export type SchoolType = Infer<typeof schoolTypeValidator>;
 
 /**
  * School member role validator
@@ -36,7 +35,6 @@ export const schoolMemberStatusValidator = literals(
   "invited",
   "removed"
 );
-export type SchoolMemberStatus = Infer<typeof schoolMemberStatusValidator>;
 
 /**
  * School base validator (without system fields)

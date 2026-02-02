@@ -8,10 +8,11 @@ import {
 } from "@repo/backend/convex/chats/schema";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { requireChatAccess } from "@repo/backend/convex/lib/helpers/chat";
-import { asyncMap, getManyFrom } from "@repo/backend/convex/lib/relationships";
 import { vv } from "@repo/backend/convex/lib/validators";
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
+import { asyncMap } from "convex-helpers";
+import { getManyFrom } from "convex-helpers/server/relationships";
 import { nullable } from "convex-helpers/validators";
 
 /**

@@ -91,4 +91,3 @@ class Logger {
 export const logger = new Logger();
 
 export { REQUEST_ID_HEADER };
-export type { LogContext };

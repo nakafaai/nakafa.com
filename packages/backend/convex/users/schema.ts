@@ -13,7 +13,6 @@ export const userRoleOptionsValidator = literals(
   "parent",
   "administrator"
 );
-export type UserRoleOption = Infer<typeof userRoleOptionsValidator>;
 
 /**
  * User role validator (nullable) - for return types

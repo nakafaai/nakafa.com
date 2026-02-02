@@ -1,8 +1,8 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
-import { getAll } from "@repo/backend/convex/lib/relationships";
 import { vv } from "@repo/backend/convex/lib/validators";
 import { ConvexError, v } from "convex/values";
+import { getAll } from "convex-helpers/server/relationships";
 
 /**
  * Get a school by its ID. Requires authentication.

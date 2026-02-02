@@ -46,7 +46,6 @@ import type * as lib_helpers_permissions from "../lib/helpers/permissions.js";
 import type * as lib_helpers_school from "../lib/helpers/school.js";
 import type * as lib_helpers_user from "../lib/helpers/user.js";
 import type * as lib_images from "../lib/images.js";
-import type * as lib_relationships from "../lib/relationships.js";
 import type * as lib_validators from "../lib/validators.js";
 import type * as migrations from "../migrations.js";
 import type * as polyfills from "../polyfills.js";
@@ -116,7 +115,6 @@ declare const fullApi: ApiFromModules<{
   "lib/helpers/school": typeof lib_helpers_school;
   "lib/helpers/user": typeof lib_helpers_user;
   "lib/images": typeof lib_images;
-  "lib/relationships": typeof lib_relationships;
   "lib/validators": typeof lib_validators;
   migrations: typeof migrations;
   polyfills: typeof polyfills;

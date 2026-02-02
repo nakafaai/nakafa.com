@@ -1,5 +1,4 @@
 import { defineTable } from "convex/server";
-import type { Infer } from "convex/values";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
@@ -35,7 +34,6 @@ export const notificationTypesValidator = literals(
   // System
   "system"
 );
-export type NotificationType = Infer<typeof notificationTypesValidator>;
 
 /**
  * Entity types for polymorphic references
@@ -51,9 +49,6 @@ export const notificationEntityTypesValidator = literals(
   "comments",
   "system"
 );
-export type NotificationEntityType = Infer<
-  typeof notificationEntityTypesValidator
->;
 
 /**
  * Type-safe entity ID union
@@ -70,7 +65,6 @@ export const notificationEntityIdValidator = v.union(
   v.id("schools"),
   v.id("comments")
 );
-export type NotificationEntityId = Infer<typeof notificationEntityIdValidator>;
 
 /**
  * Email digest frequency options
@@ -83,7 +77,6 @@ export const emailDigestTypesValidator = literals(
   "weekly", // Send digest once per week
   "never" // Don't send email
 );
-export type EmailDigestType = Infer<typeof emailDigestTypesValidator>;
 
 const tables = {
   /**

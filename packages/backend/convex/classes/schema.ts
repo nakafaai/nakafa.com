@@ -22,9 +22,6 @@ export type SchoolClassMemberRole = Infer<
 export const schoolClassTeacherRoleValidator = v.optional(
   literals("primary", "co-teacher", "assistant")
 );
-export type SchoolClassTeacherRole = Infer<
-  typeof schoolClassTeacherRoleValidator
->;
 
 /**
  * School class enroll method validator
@@ -32,9 +29,6 @@ export type SchoolClassTeacherRole = Infer<
 export const schoolClassEnrollMethodValidator = v.optional(
   literals("code", "teacher", "admin", "invite", "public")
 );
-export type SchoolClassEnrollMethod = Infer<
-  typeof schoolClassEnrollMethodValidator
->;
 
 /**
  * School class visibility validator
@@ -53,9 +47,6 @@ export const schoolClassMaterialStatusValidator = literals(
   "scheduled",
   "archived"
 );
-export type SchoolClassMaterialStatus = Infer<
-  typeof schoolClassMaterialStatusValidator
->;
 
 /**
  * Class images validator
@@ -101,7 +92,6 @@ export const schoolClassForumTagValidator = literals(
   "assignment",
   "resource"
 );
-export type SchoolClassForumTag = Infer<typeof schoolClassForumTagValidator>;
 
 /**
  * Forum status validator
@@ -111,9 +101,6 @@ export const schoolClassForumStatusValidator = literals(
   "locked",
   "archived"
 );
-export type SchoolClassForumStatus = Infer<
-  typeof schoolClassForumStatusValidator
->;
 
 /**
  * Reaction count validator
@@ -145,12 +132,12 @@ export const schoolClassValidator = v.object({
 
 /**
  * School class document validator (with system fields)
+ * Used internally for paginatedClassesValidator
  */
-export const schoolClassDocValidator = addFieldsToValidator(
+const schoolClassDocValidator = addFieldsToValidator(
   schoolClassValidator,
   systemFields("schoolClasses")
 );
-export type SchoolClassDoc = Infer<typeof schoolClassDocValidator>;
 
 /**
  * Paginated classes validator
@@ -178,12 +165,12 @@ export const schoolClassMemberValidator = v.object({
 
 /**
  * School class member document validator (with system fields)
+ * Used internally for classMemberWithUserValidator
  */
-export const schoolClassMemberDocValidator = addFieldsToValidator(
+const schoolClassMemberDocValidator = addFieldsToValidator(
   schoolClassMemberValidator,
   systemFields("schoolClassMembers")
 );
-export type SchoolClassMemberDoc = Infer<typeof schoolClassMemberDocValidator>;
 
 /**
  * School class invite code base validator (without system fields)
@@ -279,7 +266,7 @@ export const classInfoValidator = nullable(
 /**
  * User data validator (for joined user info in class members)
  */
-export const classMemberUserValidator = v.object({
+const classMemberUserValidator = v.object({
   _id: v.id("users"),
   name: v.string(),
   email: v.string(),
@@ -288,12 +275,11 @@ export const classMemberUserValidator = v.object({
 
 /**
  * Class member with user data validator (for getPeople)
+ * Used internally for paginatedPeopleValidator
  */
-export const classMemberWithUserValidator =
-  schoolClassMemberDocValidator.extend({
-    user: classMemberUserValidator,
-  });
-export type ClassMemberWithUser = Infer<typeof classMemberWithUserValidator>;
+const classMemberWithUserValidator = schoolClassMemberDocValidator.extend({
+  user: classMemberUserValidator,
+});
 
 /**
  * Paginated people validator (for getPeople query)
