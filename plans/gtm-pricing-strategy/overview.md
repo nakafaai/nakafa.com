@@ -74,9 +74,46 @@ pnpm --filter backend dev
 
 ### Phase 1: Implementation
 
-### Subtask 1.1: Competitor Pricing Analysis
+#### 1.1 QRIS Backend Integration
 
-Analyze verified competitor pricing to determine optimal price points.
+**Task 1.3**: QRIS.id payment backend
+- Create qrisPayments table
+- Implement invoice creation
+- Server-side polling with cron jobs
+- Payment status checking
+
+#### 1.2 Frontend Checkout
+
+**Task 1.4**: Unified checkout UI
+- Regional pricing detection
+- QRIS checkout with QR code
+- Polar checkout for international
+- Real-time status updates
+
+#### 1.3 QRIS Subscription Renewal (Split into 3 focused tasks)
+
+**Task 1.8**: QRIS Reminders Schema
+- Create subscriptionReminders table (scalable design)
+- Separate from qrisPayments table
+- Flexible reminder types without schema changes
+
+**Task 1.9**: QRIS Reminder Scheduler
+- Daily cron job for reminder checks
+- Schedule reminders on payment
+- Send reminder emails
+
+**Task 1.10**: QRIS Reminder Email Templates
+- Day 25, 29, 30 reminder templates
+- Indonesian language content
+- Professional HTML styling
+
+#### 1.4 Testing & Launch
+
+**Task 1.5**: Testing & soft launch
+- Test Indonesia flow (QRIS)
+- Test International flow (Polar)
+- Test edge cases
+- Soft launch to 150 beta users
 
 **Research Sources (Verified):**
 - Zenius: https://www.zenius.net/payment/package
@@ -457,12 +494,14 @@ All tasks follow the same format with PRD JSON, success criteria, and subtasks:
 - `tasks/0.3-unified-subscription-check.md` - Update hasActiveSubscription
 
 ### Phase 1: Implementation
-- `tasks/1.1-competitor-pricing-analysis.md` - Market research
-- `tasks/1.2-final-pricing-decision.md` - Pricing finalization
+
 - `tasks/1.3-qris-backend-integration.md` - QRIS.id backend
 - `tasks/1.4-frontend-checkout.md` - Unified checkout UI
 - `tasks/1.5-testing-soft-launch.md` - Testing & beta launch
 - `tasks/1.6-phase1-gtm-execution.md` - SNBT season marketing
+- `tasks/1.8-qris-reminders-schema.md` - Reminders schema (scalable)
+- `tasks/1.9-qris-reminder-scheduler.md` - Reminder scheduler
+- `tasks/1.10-qris-reminder-templates.md` - Email templates
 
 ### Phase 2-4: GTM Execution
 - Additional tasks will be created as needed
