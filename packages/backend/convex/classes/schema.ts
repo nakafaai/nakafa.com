@@ -12,6 +12,11 @@ export const classMemberRoleValidator = v.union(
 export type ClassMemberRole = Infer<typeof classMemberRoleValidator>;
 
 /**
+ * Alias for ClassMemberRole (used in some app components)
+ */
+export type SchoolClassMemberRole = ClassMemberRole;
+
+/**
  * Teacher role validator (for teachers in a class)
  */
 export const classTeacherRoleValidator = v.optional(

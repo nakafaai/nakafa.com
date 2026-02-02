@@ -1,11 +1,10 @@
-import type { MyUIMessage } from "@repo/ai/types/message";
 import { query } from "@repo/backend/convex/_generated/server";
+import type { MessageWithPartsDoc } from "@repo/backend/convex/chats/schema";
 import {
   chatDocValidator,
+  messageWithPartsDocValidator,
   paginatedChatsValidator,
-  uiMessageValidator,
 } from "@repo/backend/convex/chats/schema";
-import { mapDBPartToUIMessagePart } from "@repo/backend/convex/chats/utils";
 import {
   requireAuth,
   requireChatAccess,
@@ -142,6 +141,9 @@ export const getChatTitle = query({
  * Requires authentication. Public chats are accessible by any logged-in user.
  * Private chats are only accessible by the owner.
  *
+ * Returns raw DB documents. Use mapDBMessagesToUIMessages from chats/utils
+ * to transform to UI messages on the client side.
+ *
  * Note: If you have chats with 100+ messages, consider implementing pagination
  * to avoid loading all messages at once.
  */
@@ -149,8 +151,8 @@ export const loadMessages = query({
   args: {
     chatId: v.id("chats"),
   },
-  returns: v.array(uiMessageValidator),
-  handler: async (ctx, args): Promise<MyUIMessage[]> => {
+  returns: v.array(messageWithPartsDocValidator),
+  handler: async (ctx, args): Promise<MessageWithPartsDoc[]> => {
     const user = await requireAuth(ctx);
 
     const chat = await ctx.db.get("chats", args.chatId);
@@ -184,10 +186,6 @@ export const loadMessages = query({
       return { ...message, parts };
     });
 
-    return messagesWithParts.map((message) => ({
-      id: message.identifier,
-      role: message.role,
-      parts: message.parts.map((part) => mapDBPartToUIMessagePart({ part })),
-    }));
+    return messagesWithParts;
   },
 });
