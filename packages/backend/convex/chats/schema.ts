@@ -5,10 +5,10 @@ import {
   materialValidator,
   subjectCategoryValidator,
 } from "@repo/backend/convex/lib/contentValidators";
-import { literals } from "@repo/backend/convex/lib/validators";
 import { defineTable, paginationResultValidator } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
+import { literals } from "convex-helpers/validators";
 
 /**
  * Re-export content validators for backward compatibility.

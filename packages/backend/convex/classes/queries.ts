@@ -15,14 +15,15 @@ import {
   requireClassAccess,
 } from "@repo/backend/convex/lib/authHelpers";
 import { getUserMap } from "@repo/backend/convex/lib/userHelpers";
-import { nullable } from "@repo/backend/convex/lib/validators";
+import { vv } from "@repo/backend/convex/lib/validators";
 import { schoolMemberDocValidator } from "@repo/backend/convex/schools/schema";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
+import { nullable } from "convex-helpers/validators";
 
 export const getClasses = query({
   args: {
-    schoolId: v.id("schools"),
+    schoolId: vv.id("schools"),
     q: v.optional(v.string()),
     isArchived: v.optional(v.boolean()),
     visibility: v.optional(schoolClassVisibilityValidator),
@@ -98,7 +99,7 @@ export const getClasses = query({
 
 export const getClassInfo = query({
   args: {
-    classId: v.id("schoolClasses"),
+    classId: vv.id("schoolClasses"),
   },
   returns: classInfoValidator,
   handler: async (ctx, args) => {
@@ -120,7 +121,7 @@ export const getClassInfo = query({
 
 export const verifyClassMembership = query({
   args: {
-    classId: v.id("schoolClasses"),
+    classId: vv.id("schoolClasses"),
   },
   returns: v.object({ allow: v.boolean() }),
   handler: async (ctx, args) => {
@@ -144,7 +145,7 @@ export const verifyClassMembership = query({
 
 export const getClass = query({
   args: {
-    classId: v.id("schoolClasses"),
+    classId: vv.id("schoolClasses"),
   },
   returns: v.object({
     class: schoolClassDocValidator,
@@ -172,7 +173,7 @@ export const getClass = query({
 
 export const getPeople = query({
   args: {
-    classId: v.id("schoolClasses"),
+    classId: vv.id("schoolClasses"),
     q: v.optional(v.string()),
     paginationOpts: paginationOptsValidator,
   },
@@ -237,7 +238,7 @@ export const getPeople = query({
 
 export const getInviteCodes = query({
   args: {
-    classId: v.id("schoolClasses"),
+    classId: vv.id("schoolClasses"),
   },
   returns: v.array(schoolClassInviteCodeDocValidator),
   handler: async (ctx, args) => {

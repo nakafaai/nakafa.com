@@ -15,12 +15,13 @@ import {
   requireClassAccess,
 } from "@repo/backend/convex/lib/authHelpers";
 import { getUserMap } from "@repo/backend/convex/lib/userHelpers";
+import { vv } from "@repo/backend/convex/lib/validators";
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 
 export const getForums = query({
   args: {
-    classId: v.id("schoolClasses"),
+    classId: vv.id("schoolClasses"),
     q: v.optional(v.string()),
     paginationOpts: paginationOptsValidator,
   },
@@ -73,7 +74,7 @@ export const getForums = query({
 
 export const getForum = query({
   args: {
-    forumId: v.id("schoolClassForums"),
+    forumId: vv.id("schoolClassForums"),
   },
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
@@ -115,7 +116,7 @@ export const getForum = query({
 
 export const getForumPosts = query({
   args: {
-    forumId: v.id("schoolClassForums"),
+    forumId: vv.id("schoolClassForums"),
     paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, args) => {
@@ -145,8 +146,8 @@ export const getForumPosts = query({
 
 export const getForumPostsAround = query({
   args: {
-    forumId: v.id("schoolClassForums"),
-    targetPostId: v.id("schoolClassForumPosts"),
+    forumId: vv.id("schoolClassForums"),
+    targetPostId: vv.id("schoolClassForumPosts"),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -209,7 +210,7 @@ export const getForumPostsAround = query({
 
 export const getForumPostsOlder = query({
   args: {
-    forumId: v.id("schoolClassForums"),
+    forumId: vv.id("schoolClassForums"),
     beforeTime: v.number(),
     limit: v.optional(v.number()),
   },
@@ -246,7 +247,7 @@ export const getForumPostsOlder = query({
 
 export const getForumPostsNewer = query({
   args: {
-    forumId: v.id("schoolClassForums"),
+    forumId: vv.id("schoolClassForums"),
     afterTime: v.number(),
     limit: v.optional(v.number()),
   },

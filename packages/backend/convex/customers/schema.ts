@@ -1,7 +1,7 @@
 import { polarMetadataValidator } from "@repo/backend/convex/lib/contentValidators";
-import { nullable } from "@repo/backend/convex/lib/validators";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
+import { nullable } from "convex-helpers/validators";
 
 const tables = {
   customers: defineTable({

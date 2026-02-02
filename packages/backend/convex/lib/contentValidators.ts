@@ -7,7 +7,7 @@
  */
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
-import { literals } from "./validators";
+import { literals } from "convex-helpers/validators";
 
 /** Supported content languages */
 export const localeValidator = literals("en", "id");

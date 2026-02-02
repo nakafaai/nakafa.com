@@ -1,8 +1,9 @@
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/authHelpers";
-import { literals, vv } from "@repo/backend/convex/lib/validators";
+import { vv } from "@repo/backend/convex/lib/validators";
 import { cleanSlug, truncateText } from "@repo/backend/convex/utils/helper";
 import { ConvexError, v } from "convex/values";
+import { literals } from "convex-helpers/validators";
 
 /**
  * Vote action validator: -1 = downvote, 0 = remove vote, 1 = upvote

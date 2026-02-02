@@ -1,7 +1,7 @@
-import { literals, nullable } from "@repo/backend/convex/lib/validators";
 import { defineTable, paginationResultValidator } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
+import { literals, nullable } from "convex-helpers/validators";
 
 /**
  * School class member role validator

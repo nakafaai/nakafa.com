@@ -13,18 +13,19 @@ import {
   PERMISSIONS,
   requirePermission,
 } from "@repo/backend/convex/lib/permissions";
+import { vv } from "@repo/backend/convex/lib/validators";
 import { generateNanoId } from "@repo/backend/convex/utils/helper";
 import { ConvexError, v } from "convex/values";
 
 export const createClass = mutation({
   args: {
-    schoolId: v.id("schools"),
+    schoolId: vv.id("schools"),
     name: v.string(),
     subject: v.string(),
     year: v.string(),
     visibility: schoolClassVisibilityValidator,
   },
-  returns: v.id("schoolClasses"),
+  returns: vv.id("schoolClasses"),
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
@@ -99,7 +100,7 @@ export const joinClass = mutation({
   args: {
     code: v.string(),
   },
-  returns: v.object({ classId: v.id("schoolClasses") }),
+  returns: v.object({ classId: vv.id("schoolClasses") }),
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
@@ -200,7 +201,7 @@ export const joinClass = mutation({
 
 export const updateClassVisibility = mutation({
   args: {
-    classId: v.id("schoolClasses"),
+    classId: vv.id("schoolClasses"),
     visibility: schoolClassVisibilityValidator,
   },
   returns: v.null(),
@@ -227,9 +228,9 @@ export const updateClassVisibility = mutation({
 
 export const joinPublicClass = mutation({
   args: {
-    classId: v.id("schoolClasses"),
+    classId: vv.id("schoolClasses"),
   },
-  returns: v.object({ classId: v.id("schoolClasses") }),
+  returns: v.object({ classId: vv.id("schoolClasses") }),
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
@@ -291,7 +292,7 @@ export const joinPublicClass = mutation({
 
 export const updateClassImage = mutation({
   args: {
-    classId: v.id("schoolClasses"),
+    classId: vv.id("schoolClasses"),
     image: schoolClassImageValidator,
   },
   returns: v.null(),

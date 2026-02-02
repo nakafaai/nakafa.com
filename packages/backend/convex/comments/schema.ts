@@ -1,6 +1,6 @@
-import { literals } from "@repo/backend/convex/lib/validators";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
+import { literals } from "convex-helpers/validators";
 
 /**
  * Vote value validator: -1 = downvote, 1 = upvote

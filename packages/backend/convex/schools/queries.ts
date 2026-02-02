@@ -1,6 +1,7 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/authHelpers";
 import { getAll } from "@repo/backend/convex/lib/relationships";
+import { vv } from "@repo/backend/convex/lib/validators";
 import { ConvexError, v } from "convex/values";
 import { schoolDocValidator, schoolMemberDocValidator } from "./schema";
 
@@ -9,7 +10,7 @@ import { schoolDocValidator, schoolMemberDocValidator } from "./schema";
  */
 export const getSchool = query({
   args: {
-    schoolId: v.id("schools"),
+    schoolId: vv.id("schools"),
   },
   returns: schoolDocValidator,
   handler: async (ctx, args) => {

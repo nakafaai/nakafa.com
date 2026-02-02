@@ -12,9 +12,10 @@ import {
   requireChatAccess,
 } from "@repo/backend/convex/lib/authHelpers";
 import { asyncMap, getManyFrom } from "@repo/backend/convex/lib/relationships";
-import { nullable, vv } from "@repo/backend/convex/lib/validators";
+import { vv } from "@repo/backend/convex/lib/validators";
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
+import { nullable } from "convex-helpers/validators";
 
 /**
  * Get a chat by its ID.

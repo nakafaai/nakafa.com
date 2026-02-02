@@ -11,8 +11,9 @@ import {
   PERMISSIONS,
   requirePermission,
 } from "@repo/backend/convex/lib/permissions";
-import { literals } from "@repo/backend/convex/lib/validators";
+import { vv } from "@repo/backend/convex/lib/validators";
 import { v } from "convex/values";
+import { literals } from "convex-helpers/validators";
 
 /**
  * Reorder direction validator
@@ -21,7 +22,7 @@ const reorderDirectionValidator = literals("up", "down");
 
 export const createMaterialGroup = mutation({
   args: {
-    classId: v.id("schoolClasses"),
+    classId: vv.id("schoolClasses"),
     name: v.string(),
     description: v.string(),
     status: schoolClassMaterialStatusValidator,
@@ -90,7 +91,7 @@ export const createMaterialGroup = mutation({
 
 export const updateMaterialGroup = mutation({
   args: {
-    groupId: v.id("schoolClassMaterialGroups"),
+    groupId: vv.id("schoolClassMaterialGroups"),
     name: v.optional(v.string()),
     description: v.optional(v.string()),
     status: v.optional(schoolClassMaterialStatusValidator),
@@ -164,8 +165,8 @@ export const updateMaterialGroup = mutation({
 
 export const publishMaterialGroup = internalMutation({
   args: {
-    groupId: v.id("schoolClassMaterialGroups"),
-    publishedBy: v.id("users"),
+    groupId: vv.id("schoolClassMaterialGroups"),
+    publishedBy: vv.id("users"),
   },
   handler: async (ctx, args) => {
     const group = await ctx.db.get("schoolClassMaterialGroups", args.groupId);
@@ -188,7 +189,7 @@ export const publishMaterialGroup = internalMutation({
 
 export const deleteMaterialGroup = mutation({
   args: {
-    groupId: v.id("schoolClassMaterialGroups"),
+    groupId: vv.id("schoolClassMaterialGroups"),
   },
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);
@@ -211,7 +212,7 @@ export const deleteMaterialGroup = mutation({
 
 export const reorderMaterialGroup = mutation({
   args: {
-    groupId: v.id("schoolClassMaterialGroups"),
+    groupId: vv.id("schoolClassMaterialGroups"),
     direction: reorderDirectionValidator,
   },
   handler: async (ctx, args) => {

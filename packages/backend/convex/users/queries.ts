@@ -1,8 +1,9 @@
 import { components } from "@repo/backend/convex/_generated/api";
 import { internalQuery, query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/authHelpers";
-import { nullable } from "@repo/backend/convex/lib/validators";
+import { vv } from "@repo/backend/convex/lib/validators";
 import { v } from "convex/values";
+import { nullable } from "convex-helpers/validators";
 import {
   apiKeyDocValidator,
   userDocValidator,
@@ -65,7 +66,7 @@ export const getCurrentUserApiKeys = query({
  */
 export const getAllUserIds = query({
   args: {},
-  returns: v.array(v.id("users")),
+  returns: v.array(vv.id("users")),
   handler: async (ctx) => {
     const users = await ctx.db.query("users").collect();
     return users.map((user) => user._id);

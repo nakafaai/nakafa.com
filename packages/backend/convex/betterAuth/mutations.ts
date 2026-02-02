@@ -1,7 +1,7 @@
 import { mutation } from "@repo/backend/convex/betterAuth/_generated/server";
 import { validatePermissions } from "@repo/backend/convex/betterAuth/utils";
-import { nullable } from "@repo/backend/convex/lib/validators";
 import { v } from "convex/values";
+import { nullable } from "convex-helpers/validators";
 
 /**
  * Link Better Auth user to app user.

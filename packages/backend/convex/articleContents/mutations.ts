@@ -4,6 +4,7 @@ import {
   contentTypeValidator,
   localeValidator,
 } from "@repo/backend/convex/lib/contentValidators";
+import { vv } from "@repo/backend/convex/lib/validators";
 import { v } from "convex/values";
 
 /**
@@ -75,7 +76,7 @@ export const upsertArticleContent = internalMutation({
  */
 export const syncArticleReferences = internalMutation({
   args: {
-    articleId: v.id("articleContents"),
+    articleId: vv.id("articleContents"),
     references: v.array(
       v.object({
         title: v.string(),

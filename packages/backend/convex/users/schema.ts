@@ -1,8 +1,8 @@
 import { tables as betterAuthTables } from "@repo/backend/convex/betterAuth/generatedSchema";
-import { literals, nullable } from "@repo/backend/convex/lib/validators";
 import { defineTable } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
+import { literals, nullable } from "convex-helpers/validators";
 
 /**
  * User role options (non-null) - for mutations that set a role

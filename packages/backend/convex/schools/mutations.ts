@@ -1,5 +1,6 @@
 import { mutation } from "@repo/backend/convex/_generated/server";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/authHelpers";
+import { vv } from "@repo/backend/convex/lib/validators";
 import { generateUniqueSlug } from "@repo/backend/convex/schools/utils";
 import { generateNanoId, slugify } from "@repo/backend/convex/utils/helper";
 import { ConvexError, v } from "convex/values";
@@ -20,7 +21,7 @@ export const createSchool = mutation({
     type: schoolTypeValidator,
   },
   returns: v.object({
-    schoolId: v.id("schools"),
+    schoolId: vv.id("schools"),
     slug: v.string(),
   }),
   handler: async (ctx, args) => {
@@ -97,7 +98,7 @@ export const joinSchool = mutation({
     code: v.string(),
   },
   returns: v.object({
-    schoolId: v.id("schools"),
+    schoolId: vv.id("schools"),
     slug: v.string(),
   }),
   handler: async (ctx, args) => {

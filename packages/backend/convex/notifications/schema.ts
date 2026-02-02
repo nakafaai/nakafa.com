@@ -1,7 +1,7 @@
-import { literals } from "@repo/backend/convex/lib/validators";
 import { defineTable } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
+import { literals } from "convex-helpers/validators";
 
 /**
  * Notification types - all possible notification triggers in Nakafa

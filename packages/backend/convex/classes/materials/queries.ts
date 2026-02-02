@@ -7,6 +7,7 @@ import {
   requireAuth,
   requireClassAccess,
 } from "@repo/backend/convex/lib/authHelpers";
+import { vv } from "@repo/backend/convex/lib/validators";
 import type { PaginationResult } from "convex/server";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
@@ -18,8 +19,8 @@ import { v } from "convex/values";
  */
 export const getMaterialGroups = query({
   args: {
-    classId: v.id("schoolClasses"),
-    parentId: v.optional(v.id("schoolClassMaterialGroups")),
+    classId: vv.id("schoolClasses"),
+    parentId: v.optional(vv.id("schoolClassMaterialGroups")),
     q: v.optional(v.string()),
     paginationOpts: paginationOptsValidator,
   },
