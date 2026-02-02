@@ -1,6 +1,7 @@
 import { components } from "@repo/backend/convex/_generated/api";
 import { internalQuery, query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/authHelpers";
+import { nullable } from "@repo/backend/convex/lib/validators";
 import { v } from "convex/values";
 import {
   apiKeyDocValidator,
@@ -16,7 +17,7 @@ export const getUserByAuthId = internalQuery({
   args: {
     authId: v.string(),
   },
-  returns: v.union(userDocValidator, v.null()),
+  returns: nullable(userDocValidator),
   handler: async (ctx, args) => {
     return await ctx.db
       .query("users")
@@ -33,7 +34,7 @@ export const getUserByEmail = internalQuery({
   args: {
     email: v.string(),
   },
-  returns: v.union(userDocValidator, v.null()),
+  returns: nullable(userDocValidator),
   handler: async (ctx, args) => {
     return await ctx.db
       .query("users")

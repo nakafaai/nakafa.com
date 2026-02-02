@@ -1,16 +1,17 @@
+import { literals, nullable } from "@repo/backend/convex/lib/validators";
 import { defineTable } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
 
-const SubscriptionRecurringInterval = v.union(
-  v.literal("day"),
-  v.literal("week"),
-  v.literal("month"),
-  v.literal("year"),
-  v.null()
+/**
+ * Subscription recurring interval validator.
+ * Nullable because some subscriptions (one-time purchases) don't have intervals.
+ */
+export const subscriptionRecurringIntervalValidator = nullable(
+  literals("day", "week", "month", "year")
 );
 export type SubscriptionRecurringInterval = Infer<
-  typeof SubscriptionRecurringInterval
+  typeof subscriptionRecurringIntervalValidator
 >;
 
 /**
@@ -24,28 +25,28 @@ const tables = {
   subscriptions: defineTable({
     id: v.string(),
     customerId: v.string(),
-    schoolId: v.optional(v.id("schools")), // For school subscriptions only (null = personal subscription)
+    schoolId: v.optional(v.id("schools")),
     createdAt: v.string(),
-    modifiedAt: v.union(v.string(), v.null()),
-    amount: v.union(v.number(), v.null()),
-    currency: v.union(v.string(), v.null()),
-    recurringInterval: SubscriptionRecurringInterval,
+    modifiedAt: nullable(v.string()),
+    amount: nullable(v.number()),
+    currency: nullable(v.string()),
+    recurringInterval: subscriptionRecurringIntervalValidator,
     status: v.string(),
     currentPeriodStart: v.string(),
-    currentPeriodEnd: v.union(v.string(), v.null()),
+    currentPeriodEnd: nullable(v.string()),
     cancelAtPeriodEnd: v.boolean(),
-    startedAt: v.union(v.string(), v.null()),
-    endedAt: v.union(v.string(), v.null()),
+    startedAt: nullable(v.string()),
+    endedAt: nullable(v.string()),
     productId: v.string(),
     priceId: v.optional(v.string()),
-    checkoutId: v.union(v.string(), v.null()),
+    checkoutId: nullable(v.string()),
     metadata: polarMetadataValidator,
-    customerCancellationReason: v.optional(v.union(v.string(), v.null())),
-    customerCancellationComment: v.optional(v.union(v.string(), v.null())),
+    customerCancellationReason: v.optional(nullable(v.string())),
+    customerCancellationComment: v.optional(nullable(v.string())),
   })
-    .index("id", ["id"]) // Lookup by Polar subscription ID (webhooks)
-    .index("customerId_status", ["customerId", "status"]) // Query by customer (omit status for all)
-    .index("schoolId_status", ["schoolId", "status"]), // Query by school (omit status for all)
+    .index("id", ["id"])
+    .index("customerId_status", ["customerId", "status"])
+    .index("schoolId_status", ["schoolId", "status"]),
 };
 
 export default tables;

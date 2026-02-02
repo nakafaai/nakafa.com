@@ -15,6 +15,7 @@ import {
   requireClassAccess,
 } from "@repo/backend/convex/lib/authHelpers";
 import { getUserMap } from "@repo/backend/convex/lib/userHelpers";
+import { nullable } from "@repo/backend/convex/lib/validators";
 import { schoolMemberDocValidator } from "@repo/backend/convex/schools/schema";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
@@ -147,7 +148,7 @@ export const getClass = query({
   },
   returns: v.object({
     class: schoolClassDocValidator,
-    classMembership: v.union(schoolClassMemberDocValidator, v.null()),
+    classMembership: nullable(schoolClassMemberDocValidator),
     schoolMembership: schoolMemberDocValidator,
   }),
   handler: async (ctx, args) => {

@@ -1,7 +1,7 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import {
-  exerciseAttemptMode,
-  exerciseAttemptScope,
+  exerciseAttemptModeValidator,
+  exerciseAttemptScopeValidator,
 } from "@repo/backend/convex/exercises/schema";
 import { computeAttemptDurationSeconds } from "@repo/backend/convex/exercises/utils";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
@@ -22,8 +22,8 @@ import { ConvexError, v } from "convex/values";
 export const startAttempt = mutation({
   args: {
     slug: v.string(),
-    mode: exerciseAttemptMode,
-    scope: exerciseAttemptScope,
+    mode: exerciseAttemptModeValidator,
+    scope: exerciseAttemptScopeValidator,
     exerciseNumber: v.optional(v.number()),
     totalExercises: v.number(),
     timeLimit: v.number(),

@@ -12,6 +12,7 @@ import {
   requireChatAccess,
 } from "@repo/backend/convex/lib/authHelpers";
 import { asyncMap, getManyFrom } from "@repo/backend/convex/lib/relationships";
+import { nullable } from "@repo/backend/convex/lib/validators";
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 
@@ -130,7 +131,7 @@ export const getChatTitle = query({
   args: {
     chatId: v.id("chats"),
   },
-  returns: v.union(v.string(), v.null()),
+  returns: nullable(v.string()),
   handler: async (ctx, args) => {
     const chat = await ctx.db.get("chats", args.chatId);
     return chat?.title ?? null;
