@@ -1,3 +1,4 @@
+import { polarMetadataValidator } from "@repo/backend/convex/lib/contentValidators";
 import { literals, nullable } from "@repo/backend/convex/lib/validators";
 import { defineTable } from "convex/server";
 import type { Infer } from "convex/values";
@@ -13,13 +14,6 @@ export const subscriptionRecurringIntervalValidator = nullable(
 export type SubscriptionRecurringInterval = Infer<
   typeof subscriptionRecurringIntervalValidator
 >;
-
-/**
- * Polar metadata validator.
- * Uses v.any() because Polar's SDK defines the metadata structure externally.
- * We sync this from Polar webhooks and cannot control their schema changes.
- */
-const polarMetadataValidator = v.record(v.string(), v.any());
 
 const tables = {
   subscriptions: defineTable({

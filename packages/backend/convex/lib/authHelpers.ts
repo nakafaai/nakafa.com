@@ -120,42 +120,6 @@ export function isAdmin(
 }
 
 /**
- * Check if user is a teacher in school.
- */
-export function isTeacher(
-  membership: Doc<"schoolMembers"> | null | undefined
-): boolean {
-  return membership?.role === "teacher";
-}
-
-/**
- * Check if user is a student in school.
- */
-export function isStudent(
-  membership: Doc<"schoolMembers"> | null | undefined
-): boolean {
-  return membership?.role === "student";
-}
-
-/**
- * Check if user is a teacher in a class.
- */
-export function isClassTeacher(
-  membership: Doc<"schoolClassMembers"> | null | undefined
-): boolean {
-  return membership?.role === "teacher";
-}
-
-/**
- * Check if user is a student in a class.
- */
-export function isClassStudent(
-  membership: Doc<"schoolClassMembers"> | null | undefined
-): boolean {
-  return membership?.role === "student";
-}
-
-/**
  * Get active school membership for a user.
  * Returns null if user is not a member.
  */
@@ -170,25 +134,6 @@ export async function getSchoolMembership(
       q.eq("schoolId", schoolId).eq("userId", userId).eq("status", "active")
     )
     .unique();
-}
-
-/**
- * Require active school membership.
- * Throws ACCESS_DENIED error if user is not a member.
- */
-export async function requireSchoolMembership(
-  ctx: QueryCtx | MutationCtx,
-  schoolId: Id<"schools">,
-  userId: Id<"users">
-) {
-  const membership = await getSchoolMembership(ctx, schoolId, userId);
-  if (!membership) {
-    throw new ConvexError({
-      code: "ACCESS_DENIED",
-      message: "You must be a member of this school.",
-    });
-  }
-  return membership;
 }
 
 // ============================================================================

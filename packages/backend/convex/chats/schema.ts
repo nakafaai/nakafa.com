@@ -24,8 +24,8 @@ export {
 /**
  * Chat visibility validator
  */
-export const chatVisibility = literals("private", "public");
-export type ChatVisibility = Infer<typeof chatVisibility>;
+export const chatVisibilityValidator = literals("private", "public");
+export type ChatVisibility = Infer<typeof chatVisibilityValidator>;
 
 /**
  * Chat type validator
@@ -40,7 +40,7 @@ export const chatValidator = v.object({
   updatedAt: v.number(),
   title: v.optional(v.string()),
   userId: v.id("users"),
-  visibility: chatVisibility,
+  visibility: chatVisibilityValidator,
   type: chatTypeValidator,
 });
 

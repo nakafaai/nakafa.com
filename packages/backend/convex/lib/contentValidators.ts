@@ -6,6 +6,7 @@
  * Import from here instead of duplicating in other schema files.
  */
 import type { Infer } from "convex/values";
+import { v } from "convex/values";
 import { literals } from "./validators";
 
 /** Supported content languages */
@@ -92,3 +93,16 @@ export const exercisesMaterialValidator = literals(
   "reading-and-writing-skills"
 );
 export type ExercisesMaterial = Infer<typeof exercisesMaterialValidator>;
+
+// ============================================================================
+// External SDK Validators (Polar)
+// ============================================================================
+
+/**
+ * Polar metadata validator.
+ * Uses v.any() because Polar's SDK defines the metadata structure externally.
+ * We sync this from Polar webhooks and cannot control their schema changes.
+ *
+ * Used in: customers, subscriptions tables
+ */
+export const polarMetadataValidator = v.record(v.string(), v.any());

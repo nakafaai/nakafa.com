@@ -2,7 +2,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import tables, {
   chatTypeValidator,
-  chatVisibility,
+  chatVisibilityValidator,
 } from "@repo/backend/convex/chats/schema";
 import { mutation } from "@repo/backend/convex/functions";
 import {
@@ -118,7 +118,7 @@ export const updateChatTitle = mutation({
 export const updateChatVisibility = mutation({
   args: {
     chatId: v.id("chats"),
-    visibility: chatVisibility,
+    visibility: chatVisibilityValidator,
   },
   returns: v.id("chats"),
   handler: async (ctx, args) => {

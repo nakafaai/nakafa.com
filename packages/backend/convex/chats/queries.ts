@@ -3,7 +3,7 @@ import type { MessageWithPartsDoc } from "@repo/backend/convex/chats/schema";
 import {
   chatDocValidator,
   chatTypeValidator,
-  chatVisibility,
+  chatVisibilityValidator,
   messageWithPartsDocValidator,
   paginatedChatsValidator,
 } from "@repo/backend/convex/chats/schema";
@@ -53,7 +53,7 @@ export const getChats = query({
   args: {
     userId: v.id("users"),
     q: v.optional(v.string()),
-    visibility: v.optional(chatVisibility),
+    visibility: v.optional(chatVisibilityValidator),
     type: v.optional(chatTypeValidator),
     paginationOpts: paginationOptsValidator,
   },
