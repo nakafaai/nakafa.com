@@ -32,6 +32,7 @@ import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { useUser } from "@/lib/context/use-user";
 import { getInitialName } from "@/lib/utils/helper";
+import { getCleanHref } from "@/lib/utils/link";
 
 export function UserComments({ userId }: { userId: Id<"users"> }) {
   const t = useTranslations("Comments");
@@ -51,7 +52,7 @@ export function UserComments({ userId }: { userId: Id<"users"> }) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col divide-y rounded-xl border bg-card text-card-foreground shadow-sm">
       {results.map((comment) => (
         <CommentThread comment={comment} key={comment._id} />
       ))}
@@ -99,7 +100,7 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
   }
 
   return (
-    <div className="flex items-start gap-3 text-left">
+    <div className="flex items-start gap-3 p-4 text-left">
       <Avatar className="size-10">
         <AvatarImage alt={userName} role="presentation" src={userImage} />
         <AvatarFallback>{getInitialName(userName)}</AvatarFallback>
@@ -191,7 +192,7 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
                   className={cn(
                     buttonVariants({ variant: "ghost", size: "icon-sm" })
                   )}
-                  href={comment.slug}
+                  href={getCleanHref(comment.slug)}
                   rel="noopener noreferrer"
                   target="_blank"
                 >
