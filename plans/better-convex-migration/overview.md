@@ -4,13 +4,6 @@
 
 Migrate from `@convex-dev/better-auth` (component pattern) to `better-convex` (direct integration) for production with real users.
 
-## Author's Instructions
-
-From zbeyens (better-convex author):
-1. **Follow migration docs**: https://www.better-convex.com/docs/auth/migration
-2. **Run the official migration script** to copy component tables (see `migrate.txt`)
-3. **Test locally first!**
-
 ## Current State
 
 - Using `@convex-dev/better-auth@0.10.10` with component pattern
@@ -18,6 +11,7 @@ From zbeyens (better-convex author):
 - Real users in production
 - Custom triggers for user sync
 - API key verification in component
+- Already have `@convex-dev/migrations` component installed
 
 ## Migration Steps
 
@@ -39,30 +33,30 @@ From zbeyens (better-convex author):
 11. Replace provider with ConvexAuthProvider
 
 ### Phase 4: Data Migration (CRITICAL - Day 3)
-12. **Test locally first** (per author)
-13. Run official migration script locally
+12. Create migrations using @convex-dev/migrations component
+13. Run migrations locally
 14. Deploy to staging
-15. Run migration script in staging
+15. Run migrations in staging
 16. Test in staging
 
 ### Phase 5: Production Deploy (Day 4)
 17. Deploy to production
-18. Run migration script in production
+18. Run migrations in production
 19. Monitor for 24 hours
 
 ### Phase 6: Cleanup (After 1 week)
 20. Remove component directory
 
-## Data Migration Script
+## Data Migration Approach
 
-The official script (`migrate.txt`):
-1. Exports Convex snapshot (`snapshot.zip`)
-2. Extracts Better Auth tables from `_components/betterAuth/`
-3. Converts table IDs from component to main app
-4. Creates `migration.zip`
-5. Imports: `npx convex import migration.zip --replace -y`
+Since the author's script has missing dependencies, we'll use the **@convex-dev/migrations component** that you already have installed.
 
-**Run this script AFTER code migration but BEFORE removing component.**
+How it works:
+1. Define migrations for each auth table (user, apikey, organization, member, invitation)
+2. Migrations read from component tables using `ctx.db.query`
+3. Write to main schema tables using `ctx.db.insert`
+4. Track progress automatically (can resume if interrupted)
+5. Run in batches (safe for production)
 
 ## Key Changes
 
@@ -83,10 +77,10 @@ The official script (`migrate.txt`):
 
 ## Risk Mitigation
 
-- **Data**: Uses official migration script from author
+- **Data**: Uses @convex-dev/migrations component (production-tested)
 - **Rollback**: Can revert code, component tables remain
 - **Sessions**: Users re-login (acceptable)
-- **API Keys**: Preserved exactly by script
+- **API Keys**: Preserved exactly by migrations
 - **Testing**: Local + staging before production
 
 ## Next
