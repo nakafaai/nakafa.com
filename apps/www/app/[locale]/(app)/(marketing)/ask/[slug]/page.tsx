@@ -3,9 +3,9 @@ import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { use } from "react";
-import { Footer } from "@/components/about/footer";
 import { AskCta } from "@/components/ask/cta";
 import { AskListItems } from "@/components/ask/results";
+import { Footer } from "@/components/marketing/about/footer";
 import {
   LayoutMaterial,
   LayoutMaterialContent,

@@ -6,10 +6,10 @@ import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
-import { Community } from "@/components/about/community";
-import { Curriculum } from "@/components/about/curriculum";
-import { Footer } from "@/components/about/footer";
-import { Hero } from "@/components/about/hero";
+import { Community } from "@/components/marketing/about/community";
+import { Curriculum } from "@/components/marketing/about/curriculum";
+import { Footer } from "@/components/marketing/about/footer";
+import { Hero } from "@/components/marketing/about/hero";
 import { exercisesMenu } from "@/components/sidebar/_data/exercises";
 import { subjectMenu } from "@/components/sidebar/_data/subject";
 
@@ -138,13 +138,15 @@ async function AboutPageContent({ locale }: { locale: Locale }) {
         url={`https://nakafa.com/${locale}/about`}
       />
       <main
-        className="relative mx-auto grid max-w-5xl gap-24 px-6 py-16 sm:gap-32"
+        className="relative grid gap-24 py-16 sm:gap-32"
         data-pagefind-ignore
       >
         <Hero />
-        <Curriculum />
-        <Community />
-        <Footer />
+        <div className="mx-auto grid w-full max-w-7xl gap-24 px-6 sm:gap-32">
+          <Curriculum />
+          <Community />
+          <Footer />
+        </div>
       </main>
     </>
   );

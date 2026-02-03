@@ -12,7 +12,7 @@ export function Hero() {
   const t = useTranslations("About");
   return (
     <section className="grid scroll-mt-28 items-center gap-12" id="hero">
-      <div className="grid gap-6">
+      <div className="mx-auto grid w-full max-w-7xl gap-6 px-6">
         <h1 className="mb-0 max-w-2xl text-balance font-semibold text-4xl tracking-tighter md:text-5xl">
           {t.rich("title", {
             mark: (chunks) => <mark>{chunks}</mark>,
@@ -48,7 +48,7 @@ export function Hero() {
         </div>
       </div>
 
-      <div className="relative">
+      <div className="relative left-1/2 w-screen -translate-x-1/2">
         <HeroArt />
       </div>
     </section>

@@ -18,11 +18,11 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import type { ComponentProps, ReactNode } from "react";
-import { CommentsButton } from "../sidebar/comments-button";
-import { GithubButton } from "../sidebar/github-button";
-import { ReferenceButton } from "../sidebar/reference-button";
-import { ReportButton } from "../sidebar/report-button";
-import { ShareButton } from "../sidebar/share-button";
+import { CommentsButton } from "@/components/sidebar/comments-button";
+import { GithubButton } from "@/components/sidebar/github-button";
+import { ReferenceButton } from "@/components/sidebar/reference-button";
+import { ReportButton } from "@/components/sidebar/report-button";
+import { ShareButton } from "@/components/sidebar/share-button";
 
 export type SidebarRightProps = {
   children: ReactNode;
