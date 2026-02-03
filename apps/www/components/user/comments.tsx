@@ -100,11 +100,9 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
 
   return (
     <div className="flex items-start gap-3 text-left">
-      <Avatar className="size-10 rounded-full">
+      <Avatar className="size-10">
         <AvatarImage alt={userName} role="presentation" src={userImage} />
-        <AvatarFallback className="rounded-lg">
-          {getInitialName(userName)}
-        </AvatarFallback>
+        <AvatarFallback>{getInitialName(userName)}</AvatarFallback>
       </Avatar>
       <div className="grid w-full gap-2">
         <div className="grid gap-1">

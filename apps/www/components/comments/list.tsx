@@ -120,11 +120,9 @@ function CommentContent({
         !!isReplyToMe && "rounded-l-none border-primary border-l bg-primary/5"
       )}
     >
-      <Avatar className="size-10 rounded-full">
+      <Avatar className="size-10">
         <AvatarImage alt={userName} role="presentation" src={userImage} />
-        <AvatarFallback className="rounded-lg">
-          {getInitialName(userName)}
-        </AvatarFallback>
+        <AvatarFallback>{getInitialName(userName)}</AvatarFallback>
       </Avatar>
       <div className="grid min-w-0 flex-1 gap-2">
         <div className="grid gap-1">

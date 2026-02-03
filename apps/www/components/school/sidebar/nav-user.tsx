@@ -67,13 +67,13 @@ export function SchoolSidebarNavUser() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <SidebarMenuButton className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
-            <Avatar className="size-6 rounded-lg">
+            <Avatar className="size-6">
               <AvatarImage
                 alt={user.authUser.name}
                 role="presentation"
                 src={user.authUser.image ?? ""}
               />
-              <AvatarFallback className="rounded-lg text-xs">
+              <AvatarFallback className="text-xs">
                 {getInitialName(user.authUser.name)}
               </AvatarFallback>
             </Avatar>
@@ -91,13 +91,13 @@ export function SchoolSidebarNavUser() {
         >
           <DropdownMenuLabel className="p-0 font-normal">
             <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-              <Avatar className="size-8 rounded-lg">
+              <Avatar className="size-8">
                 <AvatarImage
                   alt={user.authUser.name}
                   role="presentation"
                   src={user.authUser.image ?? ""}
                 />
-                <AvatarFallback className="rounded-lg">
+                <AvatarFallback>
                   {getInitialName(user.authUser.name)}
                 </AvatarFallback>
               </Avatar>
