@@ -12,8 +12,8 @@ const config = defineConfig({
   },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./"),
-      "@repo": path.resolve(__dirname, "../../packages"),
+      "@": path.resolve(import.meta.dirname, "./"),
+      "@repo": path.resolve(import.meta.dirname, "../../packages"),
     },
   },
 });
