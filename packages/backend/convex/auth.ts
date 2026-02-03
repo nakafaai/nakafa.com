@@ -6,7 +6,11 @@ import {
 import { convex } from "@convex-dev/better-auth/plugins";
 import { components, internal } from "@repo/backend/convex/_generated/api";
 import type { DataModel, Id } from "@repo/backend/convex/_generated/dataModel";
-import { type QueryCtx, query } from "@repo/backend/convex/_generated/server";
+import {
+  internalAction,
+  type QueryCtx,
+  query,
+} from "@repo/backend/convex/_generated/server";
 import authConfig from "@repo/backend/convex/auth.config";
 import authSchema from "@repo/backend/convex/betterAuth/schema";
 import { vv } from "@repo/backend/convex/lib/validators";
@@ -150,6 +154,7 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
       openAPI(),
       convex({
         authConfig,
+        jwks: process.env.JWKS,
         jwksRotateOnTokenGenerationError: true,
       }),
     ],
@@ -229,6 +234,19 @@ export const getCurrentUser = query({
 export const getUserById = query({
   args: { userId: vv.id("users") },
   handler: (ctx, args) => getAnyAppUserById(ctx, args.userId),
+});
+
+/**
+ * https://labs.convex.dev/better-auth/experimental#static-jwks
+ */
+export const getLatestJwks = internalAction({
+  args: {},
+  handler: async (ctx) => {
+    const auth = createAuth(ctx);
+    // This method is added by the Convex Better Auth plugin and is
+    // available via `auth.api` only, not exposed as a route.
+    return await auth.api.getLatestJwks();
+  },
 });
 
 export const { onCreate, onUpdate, onDelete } = authComponent.triggersApi();
