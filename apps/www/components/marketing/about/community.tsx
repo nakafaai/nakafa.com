@@ -10,7 +10,7 @@ export function Community() {
 
   return (
     <section className="scroll-mt-28 py-24" id="community">
-      <div className="grid gap-12" id="community">
+      <div className="mx-auto grid w-full max-w-7xl gap-12 px-6">
         <div className="grid justify-center gap-6 text-center">
           <h2 className="font-semibold text-3xl tracking-tight sm:text-4xl">
             {t("join-our-community")}

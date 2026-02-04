@@ -27,7 +27,7 @@ export function Footer() {
   const tArticles = useTranslations("Articles");
 
   return (
-    <footer className="mx-auto w-full max-w-7xl py-6" id="footer">
+    <footer className="mx-auto w-full max-w-7xl p-6" id="footer">
       <div className="grid scroll-mt-28 rounded-xl border shadow-sm">
         <div className="grid">
           <section className="flex flex-col justify-between gap-6 p-6 md:flex-row">
