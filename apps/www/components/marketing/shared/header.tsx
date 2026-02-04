@@ -24,6 +24,9 @@ export function Header() {
 
         <nav className="hidden items-center gap-1 md:flex">
           <Button variant="ghost">
+            <Link href="/about">{t("about")}</Link>
+          </Button>
+          <Button variant="ghost">
             <Link href="/features">{t("features")}</Link>
           </Button>
           <Button variant="ghost">
