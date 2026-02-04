@@ -57,7 +57,7 @@ const BlockCell = memo(function BlockCell({
   return (
     <div
       className={cn(
-        "size-full bg-background transition-[transform,background-color,box-shadow] ease-out",
+        "size-full bg-background transition-[transform,background-color,box-shadow,color] ease-out",
         "hover:bg-primary hover:transition-none"
       )}
       data-cell-index={index}
