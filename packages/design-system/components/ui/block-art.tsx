@@ -46,11 +46,11 @@ const DEFAULT_ANIMATION_COLOR = "bg-secondary";
 const DEFAULT_ANIMATED_CELL_COUNT = 15;
 const DEFAULT_ANIMATION_INTERVAL = 1000;
 const DEFAULT_WAVE_COLOR = "bg-primary";
-const DEFAULT_WAVE_DURATION = 1500;
+const DEFAULT_WAVE_DURATION = 2000;
 const MAX_CONCURRENT_RIPPLES = 3;
 
-const RIPPLE_RADIUS_MULTIPLIER = 1.2;
-const RIPPLE_WAVE_WIDTH = 2.5;
+const RIPPLE_RADIUS_MULTIPLIER = 1.5;
+const RIPPLE_WAVE_WIDTH = 2;
 
 const BlockCell = memo(function BlockCell({
   index,
@@ -63,7 +63,7 @@ const BlockCell = memo(function BlockCell({
   return (
     <div
       className={cn(
-        "size-full bg-background transition-colors duration-500",
+        "size-full bg-background transition-[transform,background-color,box-shadow] ease-out",
         "hover:bg-primary hover:transition-none",
         isActive && animationColor
       )}
@@ -117,6 +117,7 @@ export function BlockArt({
   const cellRefsMap = useRef<Map<number, HTMLDivElement | null>>(new Map());
   const ripplesRef = useRef<Ripple[]>([]);
   const isThrottledRef = useRef(false);
+  const lastAffectedCellsRef = useRef<Set<number>>(new Set());
 
   useEffect(() => {
     ripplesRef.current = ripples;
@@ -168,7 +169,7 @@ export function BlockArt({
 
       const normalizedDistance = distanceFromWave / waveHalfWidth;
       const waveIntensity = 1 - normalizedDistance ** 2;
-      const fadeOut = 1 - progress ** 1.5;
+      const fadeOut = 1 - progress;
 
       return waveIntensity * fadeOut;
     },
@@ -184,18 +185,17 @@ export function BlockArt({
 
       if (intensity > 0.01) {
         const scale = 1 + intensity * 0.08;
-        const waveOpacity = Math.round(intensity * 85);
         const glowBlur = Math.round(6 + intensity * 10);
         const glowOpacity = Math.round(intensity * 50);
 
         cell.style.transform = `scale(${scale})`;
-        cell.style.backgroundColor = `color-mix(in oklch, var(--primary) ${waveOpacity}%, transparent)`;
+        cell.style.backgroundColor = "var(--primary)";
         cell.style.boxShadow = `0 0 ${glowBlur}px color-mix(in oklch, var(--primary) ${glowOpacity}%, transparent)`;
         cell.style.zIndex = "10";
       } else {
-        cell.style.transform = "scale(1)";
+        cell.style.transform = "";
         cell.style.backgroundColor = "";
-        cell.style.boxShadow = "none";
+        cell.style.boxShadow = "";
         cell.style.zIndex = "";
       }
     },
@@ -251,24 +251,19 @@ export function BlockArt({
       updateCellRippleStyle(cellIndex, intensity);
     }
 
-    const previouslyAffected = new Set<number>();
-    cellRefsMap.current.forEach((_, cellIndex) => {
-      previouslyAffected.add(cellIndex);
-    });
-
-    for (const cellIndex of previouslyAffected) {
+    for (const cellIndex of lastAffectedCellsRef.current) {
       if (!affectedCells.has(cellIndex)) {
-        const cell = cellRefsMap.current.get(cellIndex);
-        if (cell) {
-          updateCellRippleStyle(cellIndex, 0);
-        }
+        updateCellRippleStyle(cellIndex, 0);
       }
     }
+
+    lastAffectedCellsRef.current = new Set(affectedCells.keys());
 
     if (limitedRipples.length > 0) {
       animationFrameRef.current = requestAnimationFrame(animateRipples);
     } else {
       isAnimatingRef.current = false;
+      lastAffectedCellsRef.current.clear();
     }
 
     if (hasExpiredRipples) {
