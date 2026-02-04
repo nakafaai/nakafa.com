@@ -6,6 +6,20 @@ export interface School {
 }
 
 export const schools: School[] = [
+  // International Universities
+  {
+    name: "Technische Universität München",
+    href: "https://www.tum.de/",
+    logo: "/logos/tum.png",
+    alt: "TUM Logo",
+  },
+  {
+    name: "Ostbayerische Technische Hochschule Regensburg",
+    href: "https://www.oth-regensburg.de/",
+    logo: "/logos/oth.png",
+    alt: "OTH Logo",
+  },
+  // Indonesian Universities
   {
     name: "Institut Teknologi Bandung",
     href: "https://itb.ac.id/",
@@ -66,16 +80,11 @@ export const schools: School[] = [
     logo: "/logos/upi.png",
     alt: "UPI Logo",
   },
+  // Schools
   {
-    name: "Technische Universität München",
-    href: "https://www.tum.de/",
-    logo: "/logos/tum.png",
-    alt: "TUM Logo",
-  },
-  {
-    name: "Ostbayerische Technische Hochschule Regensburg",
-    href: "https://www.oth-regensburg.de/",
-    logo: "/logos/oth.png",
-    alt: "OTH Logo",
+    name: "Nurul Fikri Boarding School Bogor",
+    href: "https://nfbs-bogor.sch.id/id/",
+    logo: "/logos/nfbs.png",
+    alt: "NFBS Logo",
   },
 ];
