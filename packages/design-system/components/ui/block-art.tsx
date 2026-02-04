@@ -113,7 +113,10 @@ export function BlockArt({
       return;
     }
 
-    const effectiveAnimatedCellCount = Math.min(animatedCellCount, totalCells);
+    const effectiveAnimatedCellCount = Math.max(
+      3,
+      Math.min(Math.floor(totalCells * 0.12), animatedCellCount)
+    );
 
     const updateIdleAnimation = () => {
       for (const index of idleAnimatedIndicesRef.current) {
