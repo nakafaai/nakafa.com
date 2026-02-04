@@ -443,7 +443,10 @@
     "community": "Community",
     "about-us": "About Us",
     "events": "Events",
-    "events-description": "Discover upcoming educational events, workshops, webinars, and community gatherings. Join us to learn, connect, and grow together."
+    "events-description": "Discover upcoming educational events, workshops, webinars, and community gatherings. Join us to learn, connect, and grow together.",
+    "trusted-badge": "Trusted by educators",
+    "trusted-headline": "Trusted by <mark>thousands of students</mark> and <mark>teachers</mark> from leading schools and universities",
+    "trusted-description": "Join the growing community of learners and educators who choose Nakafa for quality education."
   },
   "File": {
     "exceeds-max-size": "{fileName} exceeds maximum size of {maxSizeFormatted}.",

@@ -443,7 +443,10 @@
     "community": "Komunitas",
     "about-us": "Tentang Kami",
     "events": "Acara",
-    "events-description": "Temukan acara edukasi mendatang, workshop, webinar, dan pertemuan komunitas. Bergabunglah dengan kami untuk belajar, terhubung, dan berkembang bersama."
+    "events-description": "Temukan acara edukasi mendatang, workshop, webinar, dan pertemuan komunitas. Bergabunglah dengan kami untuk belajar, terhubung, dan berkembang bersama.",
+    "trusted-badge": "Dipercaya oleh pendidik",
+    "trusted-headline": "Dipercaya oleh <mark>ribuan siswa</mark> dan <mark>guru</mark> dari sekolah dan universitas terkemuka",
+    "trusted-description": "Bergabunglah dengan komunitas yang terus berkembang dari pembelajar dan pendidik yang memilih Nakafa untuk pendidikan berkualitas."
   },
   "File": {
     "exceeds-max-size": "{fileName} kegedean nih, maksimal {maxSizeFormatted} ya.",

@@ -11,8 +11,8 @@ import { HeroArt } from "./hero-art";
 export function Hero() {
   const t = useTranslations("About");
   return (
-    <section className="grid scroll-mt-28 items-center gap-12" id="hero">
-      <div className="mx-auto grid w-full max-w-7xl gap-6 px-6">
+    <section className="grid scroll-mt-28 items-center" id="hero">
+      <div className="mx-auto grid w-full max-w-7xl gap-6 px-6 py-12">
         <h1 className="mb-0 max-w-2xl text-balance font-semibold text-4xl tracking-tighter md:text-5xl">
           {t.rich("title", {
             mark: (chunks) => <mark>{chunks}</mark>,

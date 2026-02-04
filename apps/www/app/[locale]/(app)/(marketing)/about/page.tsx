@@ -10,6 +10,7 @@ import { Community } from "@/components/marketing/about/community";
 import { Curriculum } from "@/components/marketing/about/curriculum";
 import { Footer } from "@/components/marketing/about/footer";
 import { Hero } from "@/components/marketing/about/hero";
+import { Logos } from "@/components/marketing/about/logos";
 import { exercisesMenu } from "@/components/sidebar/_data/exercises";
 import { subjectMenu } from "@/components/sidebar/_data/subject";
 
@@ -137,16 +138,12 @@ async function AboutPageContent({ locale }: { locale: Locale }) {
         name={t("meta-title")}
         url={`https://nakafa.com/${locale}/about`}
       />
-      <main
-        className="relative grid gap-24 py-16 sm:gap-32"
-        data-pagefind-ignore
-      >
+      <main className="relative grid" data-pagefind-ignore>
         <Hero />
-        <div className="mx-auto grid w-full max-w-7xl gap-24 px-6 sm:gap-32">
-          <Curriculum />
-          <Community />
-          <Footer />
-        </div>
+        <Logos />
+        <Curriculum />
+        <Community />
+        <Footer />
       </main>
     </>
   );
