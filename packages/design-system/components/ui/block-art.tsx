@@ -11,7 +11,6 @@ import {
   useEffect,
   useMemo,
   useRef,
-  useState,
 } from "react";
 
 interface BlockArtProps {
@@ -89,7 +88,6 @@ export function BlockArt({
   const Rows = Math.max(1, Math.floor(gridRows ?? (isMobile ? 4 : 8)));
   const totalCells = Cols * Rows;
 
-  const [ripples, setRipples] = useState<Ripple[]>([]);
   const containerRef = useRef<HTMLButtonElement>(null);
   const animationFrameRef = useRef<number>(0);
   const isAnimatingRef = useRef(false);
@@ -101,10 +99,6 @@ export function BlockArt({
   const lastAffectedCellsRef = useRef<Set<number>>(new Set());
   const idleIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const idleAnimatedIndicesRef = useRef<Set<number>>(new Set());
-
-  useEffect(() => {
-    ripplesRef.current = ripples;
-  }, [ripples]);
 
   const cellData = useMemo(() => {
     return Array.from({ length: totalCells }, (_, i) => ({
@@ -190,11 +184,12 @@ export function BlockArt({
 
       if (intensity > 0.01) {
         const scale = 1 + intensity * 0.08;
+        const colorOpacity = Math.round(intensity * 85);
         const glowBlur = Math.round(6 + intensity * 10);
         const glowOpacity = Math.round(intensity * 50);
 
         cell.style.transform = `scale(${scale})`;
-        cell.style.backgroundColor = "var(--primary)";
+        cell.style.backgroundColor = `color-mix(in oklch, var(--primary) ${colorOpacity}%, transparent)`;
         cell.style.boxShadow = `0 0 ${glowBlur}px color-mix(in oklch, var(--primary) ${glowOpacity}%, transparent)`;
         cell.style.zIndex = "10";
       } else {
@@ -272,7 +267,7 @@ export function BlockArt({
     }
 
     if (hasExpiredRipples) {
-      setRipples(activeRipples);
+      ripplesRef.current = activeRipples;
     }
   }, [Cols, Rows, waveDuration, getWaveIntensity, updateCellRippleStyle]);
 
@@ -282,14 +277,12 @@ export function BlockArt({
   }, [animateRipples]);
 
   useEffect(() => {
-    if (ripples.length > 0 && !isAnimatingRef.current) {
-      startAnimation();
-    }
-  }, [ripples, startAnimation]);
-
-  useEffect(() => {
     const handleVisibilityChange = () => {
-      if (!document.hidden && ripplesRef.current.length > 0) {
+      if (
+        !document.hidden &&
+        ripplesRef.current.length > 0 &&
+        !isAnimatingRef.current
+      ) {
         startAnimation();
       }
     };
@@ -308,20 +301,25 @@ export function BlockArt({
     };
   }, []);
 
-  const handleRipple = useCallback((x: number, y: number) => {
-    setRipples((prev) => {
+  const handleRipple = useCallback(
+    (x: number, y: number) => {
       const currentId = rippleIdRef.current;
       rippleIdRef.current += 1;
 
-      if (prev.length >= MAX_CONCURRENT_RIPPLES) {
-        return [
-          ...prev.slice(1),
-          { x, y, startTime: performance.now(), id: currentId },
-        ];
+      const newRipple = { x, y, startTime: performance.now(), id: currentId };
+
+      if (ripplesRef.current.length >= MAX_CONCURRENT_RIPPLES) {
+        ripplesRef.current = [...ripplesRef.current.slice(1), newRipple];
+      } else {
+        ripplesRef.current = [...ripplesRef.current, newRipple];
       }
-      return [...prev, { x, y, startTime: performance.now(), id: currentId }];
-    });
-  }, []);
+
+      if (!isAnimatingRef.current) {
+        startAnimation();
+      }
+    },
+    [startAnimation]
+  );
 
   const throttledHandleRipple = useCallback(
     (x: number, y: number) => {
