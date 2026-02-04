@@ -270,6 +270,13 @@
     "contribute": "Kontribusi",
     "videos": "Video"
   },
+  "Marketing": {
+    "features": "Fitur",
+    "pricing": "Harga",
+    "sign-in": "Masuk",
+    "sign-up": "Daftar",
+    "try-nakafa": "Coba Nakafa"
+  },
   "Weather": {
     "loading": "Lagi muat cuaca...",
     "error": "Gagal muat data cuaca",

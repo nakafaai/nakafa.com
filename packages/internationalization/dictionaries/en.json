@@ -270,6 +270,13 @@
     "contribute": "Contribute",
     "videos": "Videos"
   },
+  "Marketing": {
+    "features": "Features",
+    "pricing": "Pricing",
+    "sign-in": "Sign in",
+    "sign-up": "Sign up",
+    "try-nakafa": "Try Nakafa"
+  },
   "Weather": {
     "loading": "Loading weather...",
     "error": "Couldn't load weather data",
