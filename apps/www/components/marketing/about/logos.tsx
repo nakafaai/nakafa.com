@@ -12,6 +12,8 @@ function SchoolLogo({ school }: SchoolLogoProps) {
       aria-label={school.name}
       className="group/logo relative flex h-28 w-56 shrink-0 items-center justify-center border-border/50 border-x-[0.5px] px-6 transition-opacity duration-300 hover:opacity-100"
       href={school.href}
+      rel="noopener noreferrer"
+      target="_blank"
     >
       <div className="flex items-center gap-3">
         <div className="relative size-12 shrink-0">
