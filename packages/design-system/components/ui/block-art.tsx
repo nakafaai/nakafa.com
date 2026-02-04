@@ -1,5 +1,6 @@
 "use client";
 
+import { useMediaQuery } from "@mantine/hooks";
 import { createSeededRandom } from "@repo/design-system/lib/random";
 import { cn } from "@repo/design-system/lib/utils";
 import {
@@ -36,19 +37,14 @@ interface BlockCellProps {
   index: number;
   row: number;
   col: number;
-  isActive: boolean;
-  animationColor: string;
-  waveColor: string;
   ref?: React.Ref<HTMLDivElement>;
 }
 
 const DEFAULT_ANIMATION_COLOR = "bg-secondary";
 const DEFAULT_ANIMATED_CELL_COUNT = 15;
 const DEFAULT_ANIMATION_INTERVAL = 1000;
-const DEFAULT_WAVE_COLOR = "bg-primary";
 const DEFAULT_WAVE_DURATION = 2000;
 const MAX_CONCURRENT_RIPPLES = 3;
-
 const RIPPLE_RADIUS_MULTIPLIER = 1.5;
 const RIPPLE_WAVE_WIDTH = 2;
 
@@ -56,16 +52,13 @@ const BlockCell = memo(function BlockCell({
   index,
   row,
   col,
-  isActive,
-  animationColor,
   ref,
 }: BlockCellProps) {
   return (
     <div
       className={cn(
         "size-full bg-background transition-[transform,background-color,box-shadow] ease-out",
-        "hover:bg-primary hover:transition-none",
-        isActive && animationColor
+        "hover:bg-primary hover:transition-none"
       )}
       data-cell-index={index}
       data-col={col}
@@ -87,27 +80,15 @@ export function BlockArt({
   animationColor = DEFAULT_ANIMATION_COLOR,
   animatedCellCount = DEFAULT_ANIMATED_CELL_COUNT,
   animationInterval = DEFAULT_ANIMATION_INTERVAL,
-  waveColor = DEFAULT_WAVE_COLOR,
   waveDuration = DEFAULT_WAVE_DURATION,
   onCellClick,
 }: BlockArtProps) {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+  const isMobile = useMediaQuery("(max-width: 1024px)");
 
   const Cols = Math.max(1, Math.floor(gridCols ?? (isMobile ? 8 : 16)));
   const Rows = Math.max(1, Math.floor(gridRows ?? (isMobile ? 4 : 8)));
   const totalCells = Cols * Rows;
 
-  const [activeIndices, setActiveIndices] = useState<Set<number>>(new Set());
   const [ripples, setRipples] = useState<Ripple[]>([]);
   const containerRef = useRef<HTMLButtonElement>(null);
   const animationFrameRef = useRef<number>(0);
@@ -118,6 +99,8 @@ export function BlockArt({
   const ripplesRef = useRef<Ripple[]>([]);
   const isThrottledRef = useRef(false);
   const lastAffectedCellsRef = useRef<Set<number>>(new Set());
+  const idleIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const idleAnimatedIndicesRef = useRef<Set<number>>(new Set());
 
   useEffect(() => {
     ripplesRef.current = ripples;
@@ -133,30 +116,52 @@ export function BlockArt({
 
   useEffect(() => {
     if (totalCells === 0 || animatedCellCount === 0) {
-      setActiveIndices(new Set());
       return;
     }
 
     const effectiveAnimatedCellCount = Math.min(animatedCellCount, totalCells);
 
-    const intervalId = setInterval(() => {
-      const newActiveIndices = new Set<number>();
+    const updateIdleAnimation = () => {
+      for (const index of idleAnimatedIndicesRef.current) {
+        const cell = cellRefsMap.current.get(index);
+        if (cell) {
+          cell.classList.remove(animationColor);
+        }
+      }
+      idleAnimatedIndicesRef.current.clear();
+
       const availableIndices = Array.from({ length: totalCells }, (_, i) => i);
       const shuffledIndices = rngRef.current.shuffle(availableIndices);
 
       for (let i = 0; i < effectiveAnimatedCellCount; i += 1) {
-        newActiveIndices.add(shuffledIndices[i]);
+        const index = shuffledIndices[i];
+        idleAnimatedIndicesRef.current.add(index);
+        const cell = cellRefsMap.current.get(index);
+        if (cell) {
+          cell.classList.add(animationColor);
+        }
       }
-      setActiveIndices(newActiveIndices);
-    }, animationInterval);
+    };
 
-    return () => clearInterval(intervalId);
-  }, [totalCells, animatedCellCount, animationInterval]);
+    updateIdleAnimation();
 
-  const activeIndicesRef = useRef(activeIndices);
-  useEffect(() => {
-    activeIndicesRef.current = activeIndices;
-  }, [activeIndices]);
+    idleIntervalRef.current = setInterval(
+      updateIdleAnimation,
+      animationInterval
+    );
+
+    return () => {
+      if (idleIntervalRef.current) {
+        clearInterval(idleIntervalRef.current);
+      }
+      for (const index of idleAnimatedIndicesRef.current) {
+        const cell = cellRefsMap.current.get(index);
+        if (cell) {
+          cell.classList.remove(animationColor);
+        }
+      }
+    };
+  }, [totalCells, animatedCellCount, animationInterval, animationColor]);
 
   const getWaveIntensity = useCallback(
     (distance: number, radius: number, progress: number) => {
@@ -403,14 +408,11 @@ export function BlockArt({
       >
         {cellData.map(({ index, row, col }) => (
           <BlockCell
-            animationColor={animationColor}
             col={col}
             index={index}
-            isActive={activeIndices.has(index)}
             key={`${row}-${col}`}
             ref={setCellRef(index)}
             row={row}
-            waveColor={waveColor}
           />
         ))}
       </button>
