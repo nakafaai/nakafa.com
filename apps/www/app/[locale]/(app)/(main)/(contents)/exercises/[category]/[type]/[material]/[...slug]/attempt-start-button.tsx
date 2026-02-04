@@ -10,7 +10,10 @@ import {
 } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
-import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
+import {
+  ButtonGroup,
+  ButtonGroupSeparator,
+} from "@repo/design-system/components/ui/button-group";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -125,26 +128,30 @@ export function StartExerciseButton({
         form.handleSubmit();
       }}
     >
-      <ButtonGroup className="divide-x divide-primary-foreground/20">
+      <ButtonGroup>
         <Button onClick={() => setOpen(true)} type="button">
           <HugeIcons icon={StartUp02Icon} />
           {t("start")}
         </Button>
+
         {attempt && (
-          <Button
-            aria-label="stats action"
-            onClick={() => setShowStats(!showStats)}
-            size="icon"
-            type="button"
-          >
-            <HugeIcons
-              className={cn(
-                "transition-transform ease-out",
-                !!showStats && "rotate-180"
-              )}
-              icon={ArrowDown01Icon}
-            />
-          </Button>
+          <>
+            <ButtonGroupSeparator />
+            <Button
+              aria-label="stats action"
+              onClick={() => setShowStats(!showStats)}
+              size="icon"
+              type="button"
+            >
+              <HugeIcons
+                className={cn(
+                  "transition-transform ease-out",
+                  !!showStats && "rotate-180"
+                )}
+                icon={ArrowDown01Icon}
+              />
+            </Button>
+          </>
         )}
       </ButtonGroup>
 

@@ -5,11 +5,9 @@ import { setRequestLocale } from "next-intl/server";
 import { use } from "react";
 import { AskCta } from "@/components/ask/cta";
 import { AskListItems } from "@/components/ask/results";
-import { Footer } from "@/components/marketing/about/footer";
 import {
   LayoutMaterial,
   LayoutMaterialContent,
-  LayoutMaterialFooter,
   LayoutMaterialMain,
 } from "@/components/shared/layout-material";
 import { convertSlugToTitle } from "@/lib/utils/helper";
@@ -96,10 +94,6 @@ export default function Page({ params }: Props) {
           <LayoutMaterialMain>
             <AskListItems query={title} />
           </LayoutMaterialMain>
-
-          <LayoutMaterialFooter childrenClassName="max-w-5xl">
-            <Footer />
-          </LayoutMaterialFooter>
         </LayoutMaterialContent>
       </LayoutMaterial>
     </div>
