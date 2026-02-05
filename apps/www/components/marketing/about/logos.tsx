@@ -63,7 +63,7 @@ export function Logos() {
         <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-linear-to-r from-background to-transparent" />
         <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-linear-to-l from-background to-transparent" />
 
-        <div className="group/logos hover:paused flex w-max animate-marquee">
+        <div className="group/logos hover:paused flex w-max mx-auto animate-marquee">
           {duplicatedSchools.map((school, index) => (
             <div
               className="shrink-0 transition-opacity duration-300 ease-out hover:opacity-100! group-hover/logos:opacity-60"

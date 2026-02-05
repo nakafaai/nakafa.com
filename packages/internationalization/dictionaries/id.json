@@ -440,6 +440,22 @@
     "title": "Harga",
     "description": "Jelajahi paket harga Nakafa. Mulai gratis dengan akses tak terbatas ke materi SD-Universitas. Upgrade ke Pro untuk tutor AI dan fitur lanjutan."
   },
+  "Bento": {
+    "title": "Semua yang kamu butuhkan untuk belajar",
+    "description": "Sumber belajar lengkap mencakup semua jenjang dan mata pelajaran, didukung AI",
+    "materials-label": "Materi Belajar",
+    "materials-description": "Panduan belajar dan sumber lengkap",
+    "exercises-label": "Soal Latihan",
+    "exercises-description": "Latihan dengan feedback instan",
+    "ai-title": "Asisten Belajar AI",
+    "ai-description": "Dapatkan bantuan personal kapan saja, di mana saja",
+    "subjects-label": "Mata Pelajaran",
+    "subjects-description": "Dari SD sampai Universitas",
+    "performance-title": "Performa",
+    "performance-description": "Platform paling cepat",
+    "quality-title": "Kualitas",
+    "quality-description": "Konten kurasi ahli"
+  },
   "About": {
     "meta-title": "Fck Pendidikan Tertutup, Nikmati Pendidikan Terbuka Gratis",
     "title": "Fck pendidikan tertutup, nikmati <mark>pendidikan terbuka gratis</mark>",
