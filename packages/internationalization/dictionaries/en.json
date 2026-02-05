@@ -436,6 +436,10 @@
     "search-models-placeholder": "Search model...",
     "change-model-error": "Oops, something went wrong! Please contact us."
   },
+  "Pricing": {
+    "title": "Pricing",
+    "description": "Explore Nakafa's pricing plans. Start free with unlimited access to K-12 and university materials. Upgrade to Pro for AI tutoring and advanced features."
+  },
   "About": {
     "meta-title": "Fck Closed Education, Enjoy Free Open Education",
     "title": "Fck closed education, enjoy <mark>free open education</mark>",
