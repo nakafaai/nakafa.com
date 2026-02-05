@@ -2,6 +2,7 @@ import {
   Dithering,
   GrainGradient,
   SimplexNoise,
+  Swirl,
   Voronoi,
   Warp,
 } from "@paper-design/shaders-react";
@@ -20,10 +21,7 @@ export function Bento() {
   const t = useTranslations("Bento");
 
   return (
-    <section
-      className="scroll-mt-28 border-y bg-linear-to-t from-secondary/20 to-background py-24"
-      id="features"
-    >
+    <section className="scroll-mt-28 border-y py-24" id="features">
       <div className="mx-auto grid w-full max-w-7xl gap-12 px-6">
         <div className="grid gap-6">
           <h2 className="max-w-3xl text-balance font-semibold text-3xl tracking-tight sm:text-4xl">
@@ -143,20 +141,18 @@ export function Bento() {
 
             <BentoCard>
               <BentoVisual>
-                <Voronoi
+                <Swirl
+                  bandCount={4}
+                  center={0.2}
                   className="absolute inset-0"
-                  colorGap="#1a0f00"
-                  colorGlow="#ffe53d"
-                  colors={["#ff8247", "#ffb347"]}
-                  distortion={0.3}
-                  fit="cover"
-                  gap={0.02}
-                  glow={0.2}
-                  maxPixelCount={1920 * 1080}
-                  minPixelRatio={1}
-                  scale={0.6}
-                  speed={0.3}
-                  stepsPerColor={2}
+                  colorBack="#1a0f00"
+                  colors={["#ff8247", "#ffb347", "#ffe53d"]}
+                  noise={0.2}
+                  noiseFrequency={0.4}
+                  proportion={0.5}
+                  softness={0}
+                  speed={0.32}
+                  twist={0.1}
                 />
               </BentoVisual>
               <BentoContent>
