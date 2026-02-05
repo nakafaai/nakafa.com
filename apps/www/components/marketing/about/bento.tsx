@@ -62,25 +62,27 @@ export function Bento() {
             </BentoContent>
           </BentoCard>
 
-          <BentoCard>
-            <BentoVisual />
-            <BentoContent>
-              <BentoFeature
-                description={t("performance-description")}
-                title={t("performance-title")}
-              />
-            </BentoContent>
-          </BentoCard>
+          <div className="col-span-full grid grid-cols-1 gap-4 md:grid-cols-2">
+            <BentoCard>
+              <BentoVisual />
+              <BentoContent>
+                <BentoFeature
+                  description={t("performance-description")}
+                  title={t("performance-title")}
+                />
+              </BentoContent>
+            </BentoCard>
 
-          <BentoCard>
-            <BentoVisual />
-            <BentoContent>
-              <BentoFeature
-                description={t("quality-description")}
-                title={t("quality-title")}
-              />
-            </BentoContent>
-          </BentoCard>
+            <BentoCard>
+              <BentoVisual />
+              <BentoContent>
+                <BentoFeature
+                  description={t("quality-description")}
+                  title={t("quality-title")}
+                />
+              </BentoContent>
+            </BentoCard>
+          </div>
         </BentoGrid>
       </div>
     </section>
