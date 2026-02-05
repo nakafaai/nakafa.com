@@ -47,7 +47,7 @@ export function Logos() {
             </span>
           </div>
 
-          <h2 className="max-w-3xl text-balance font-semibold text-3xl tracking-tight sm:text-4xl">
+          <h2 className="max-w-4xl text-balance font-semibold text-3xl tracking-tight sm:text-4xl">
             {t.rich("trusted-headline", {
               mark: (chunks) => <mark>{chunks}</mark>,
             })}
@@ -60,10 +60,10 @@ export function Logos() {
       </div>
 
       <div className="group relative w-full overflow-hidden">
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-linear-to-r from-background to-transparent" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-linear-to-l from-background to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-1 w-24 bg-linear-to-r from-background to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-1 w-24 bg-linear-to-l from-background to-transparent" />
 
-        <div className="group/logos hover:paused flex w-max animate-marquee">
+        <div className="group/logos hover:paused mx-auto flex w-max animate-marquee">
           {duplicatedSchools.map((school, index) => (
             <div
               className="shrink-0 transition-opacity duration-300 ease-out hover:opacity-100! group-hover/logos:opacity-60"
