@@ -33,7 +33,7 @@ export function BentoCard({
   return (
     <article
       className={cn(
-        "group relative flex flex-col overflow-hidden rounded-xl shadow-sm border bg-card text-card-foreground",
+        "group relative flex flex-col overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm",
         sizeClasses[size],
         className
       )}
@@ -44,9 +44,18 @@ export function BentoCard({
 
 type BentoVisualProps = ComponentProps<"div">;
 
-export function BentoVisual({ className, ...props }: BentoVisualProps) {
+export function BentoVisual({
+  className,
+  children,
+  ...props
+}: BentoVisualProps) {
   return (
-    <div className={cn("h-32 relative bg-muted/30 lg:h-40", className)} {...props} />
+    <div
+      className={cn("relative h-48 overflow-hidden bg-muted/30", className)}
+      {...props}
+    >
+      {children}
+    </div>
   );
 }
 

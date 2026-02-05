@@ -171,7 +171,7 @@ function SearchListItems({
   return results.map((result, index) => (
     <Fragment key={result.url}>
       <CommandGroup heading={result.meta.title}>
-        {result.sub_results.map((subResult,index) => (
+        {result.sub_results.map((subResult, index) => (
           <CommandItem
             className="group cursor-pointer flex-col items-start"
             disabled={isPending}

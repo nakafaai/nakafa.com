@@ -1,3 +1,10 @@
+import {
+  Dithering,
+  GrainGradient,
+  SimplexNoise,
+  Voronoi,
+  Warp,
+} from "@paper-design/shaders-react";
 import { useTranslations } from "next-intl";
 import {
   BentoCard,
@@ -29,23 +36,59 @@ export function Bento() {
 
         <BentoGrid>
           <BentoCard>
-            <BentoVisual />
+            <BentoVisual>
+              <Voronoi
+                className="absolute inset-0"
+                colorGap="#2e0000"
+                colorGlow="#ffffff"
+                colors={["#ff8247", "#ffe53d"]}
+                distortion={0.4}
+                fit="cover"
+                gap={0.01}
+                glow={0}
+                maxPixelCount={1920 * 1080}
+                minPixelRatio={1}
+                scale={0.5}
+                speed={0.5}
+                stepsPerColor={3}
+              />
+            </BentoVisual>
             <BentoContent>
-              <BentoStat label={t("materials-label")} value="5,000+" />
+              <BentoStat label={t("materials-label")} value="5000+" />
               <BentoDescription>{t("materials-description")}</BentoDescription>
             </BentoContent>
           </BentoCard>
 
           <BentoCard>
-            <BentoVisual />
+            <BentoVisual>
+              <SimplexNoise
+                className="absolute inset-0"
+                colors={["#4449cf", "#ffd1e0", "#f94346", "#ffd36b", "#ffffff"]}
+                scale={0.6}
+                softness={0}
+                speed={0.5}
+                stepsPerColor={2}
+              />
+            </BentoVisual>
             <BentoContent>
-              <BentoStat label={t("exercises-label")} value="2,000+" />
+              <BentoStat label={t("exercises-label")} value="2000+" />
               <BentoDescription>{t("exercises-description")}</BentoDescription>
             </BentoContent>
           </BentoCard>
 
           <BentoCard size="tall">
-            <BentoVisual className="flex-1" />
+            <BentoVisual className="flex-1">
+              <GrainGradient
+                className="absolute inset-0"
+                colorBack="#000000"
+                colors={["#7300ff", "#eba8ff", "#00bfff", "#2b00ff"]}
+                intensity={0.5}
+                noise={0.25}
+                shape="corners"
+                softness={0.5}
+                speed={1}
+              />
+            </BentoVisual>
             <BentoContent>
               <BentoFeature
                 description={t("ai-description")}
@@ -55,7 +98,22 @@ export function Bento() {
           </BentoCard>
 
           <BentoCard size="wide">
-            <BentoVisual />
+            <BentoVisual>
+              <Warp
+                className="absolute inset-0"
+                colors={["#101213", "#9fadaa", "#f3fee7", "#f3fee7"]}
+                distortion={0.25}
+                proportion={0.05}
+                rotation={44}
+                scale={1.2}
+                shape="checks"
+                shapeScale={0.28}
+                softness={0}
+                speed={0.5}
+                swirl={0.8}
+                swirlIterations={10}
+              />
+            </BentoVisual>
             <BentoContent>
               <BentoStat label={t("subjects-label")} value="100+" />
               <BentoDescription>{t("subjects-description")}</BentoDescription>
@@ -64,7 +122,17 @@ export function Bento() {
 
           <div className="col-span-full grid grid-cols-1 gap-4 md:grid-cols-2">
             <BentoCard>
-              <BentoVisual />
+              <BentoVisual>
+                <Dithering
+                  className="absolute inset-0"
+                  colorBack="#301c2a"
+                  colorFront="#56ae6c"
+                  shape="warp"
+                  size={2.5}
+                  speed={0.2}
+                  type="4x4"
+                />
+              </BentoVisual>
               <BentoContent>
                 <BentoFeature
                   description={t("performance-description")}
@@ -74,7 +142,22 @@ export function Bento() {
             </BentoCard>
 
             <BentoCard>
-              <BentoVisual />
+              <BentoVisual>
+                <Warp
+                  className="absolute inset-0"
+                  colors={["#a7e58b", "#324471", "#0b190e"]}
+                  distortion={0.2}
+                  proportion={0.64}
+                  rotation={160}
+                  scale={0.9}
+                  shape="edge"
+                  shapeScale={0.6}
+                  softness={1}
+                  speed={2}
+                  swirl={0.86}
+                  swirlIterations={7}
+                />
+              </BentoVisual>
               <BentoContent>
                 <BentoFeature
                   description={t("quality-description")}
