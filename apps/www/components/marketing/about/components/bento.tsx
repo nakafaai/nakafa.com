@@ -72,7 +72,7 @@ export function BentoContent({ className, ...props }: BentoContentProps) {
   return (
     <div
       className={cn(
-        "absolute inset-x-0 bottom-0 rounded-t-xl bg-card p-5",
+        "absolute inset-x-0 bottom-0 rounded-t-xl border-t bg-card p-5",
         className
       )}
       {...props}

@@ -84,7 +84,7 @@ export function BlockArt({
 }: BlockArtProps) {
   const isMobile = useMediaQuery("(max-width: 1024px)");
 
-  const Cols = Math.max(1, Math.floor(gridCols ?? (isMobile ? 8 : 16)));
+  const Cols = Math.max(1, Math.floor(gridCols ?? (isMobile ? 8 : 18)));
   const Rows = Math.max(1, Math.floor(gridRows ?? (isMobile ? 4 : 8)));
   const totalCells = Cols * Rows;
 
