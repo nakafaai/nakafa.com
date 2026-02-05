@@ -9,6 +9,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { useTranslations } from "next-intl";
+import { FooterArt } from "@/components/marketing/shared/footer-art";
 import { articlesMenu } from "@/components/sidebar/_data/articles";
 import { holyMenu } from "@/components/sidebar/_data/holy";
 import { subjectMenu } from "@/components/sidebar/_data/subject";
@@ -27,11 +28,11 @@ export function Footer() {
   const tArticles = useTranslations("Articles");
 
   return (
-    <footer className="mx-auto w-full max-w-7xl p-6" id="footer">
-      <div className="grid scroll-mt-28 rounded-xl border shadow-sm">
-        <div className="grid">
-          <section className="flex flex-col justify-between gap-6 p-6 md:flex-row">
-            <div className="flex flex-col gap-2">
+    <footer className="w-full border-t" id="footer">
+      <div className="mx-auto w-full max-w-7xl px-6">
+        <div className="grid scroll-mt-28 pt-16">
+          <section className="flex flex-col justify-between gap-8 md:flex-row">
+            <div className="flex flex-col gap-3">
               <span className="font-medium text-muted-foreground text-sm">
                 {tCommon("subject")}
               </span>
@@ -56,7 +57,7 @@ export function Footer() {
               </ul>
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-3">
               <span className="font-medium text-muted-foreground text-sm">
                 {tHoly("holy")}
               </span>
@@ -69,7 +70,7 @@ export function Footer() {
               </ul>
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-3">
               <span className="font-medium text-muted-foreground text-sm">
                 {tCommon("articles")}
               </span>
@@ -85,7 +86,7 @@ export function Footer() {
               </ul>
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-3">
               <span className="font-medium text-muted-foreground text-sm">
                 {t("company")}
               </span>
@@ -105,7 +106,7 @@ export function Footer() {
               </ul>
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-3">
               <span className="font-medium text-muted-foreground text-sm">
                 {tLegal("terms-and-policies")}
               </span>
@@ -131,38 +132,46 @@ export function Footer() {
               </ul>
             </div>
           </section>
-
-          <section className="mx-2 mb-2 rounded-md border bg-muted/20 py-4 md:p-2">
-            <div className="flex flex-col items-center justify-between gap-2 md:flex-row">
-              <div className="flex flex-wrap items-center">
-                {socialMedia.map((social) => (
-                  <Button
-                    key={social.label}
-                    nativeButton={false}
-                    render={
-                      <a
-                        aria-label={social.label}
-                        href={social.href}
-                        rel="noopener noreferrer"
-                        target="_blank"
-                      >
-                        <HugeIcons className="size-4" icon={social.icon} />
-                        <span className="sr-only">{social.label}</span>
-                      </a>
-                    }
-                    size="icon"
-                    variant="ghost"
-                  />
-                ))}
-              </div>
-
-              <p className="text-balance px-2 text-center text-sm">
-                {tCommon("copyright", { year: "2025" })}
-              </p>
-            </div>
-          </section>
         </div>
       </div>
+
+      <NavigationLink
+        className="mx-auto flex w-full max-w-7xl px-6 py-16 transition-colors ease-out hover:text-primary"
+        href="/"
+      >
+        <span className="mx-auto font-bold text-7xl sm:text-8xl md:text-9xl lg:text-[12rem] xl:text-[18rem]">
+          Nakafa
+        </span>
+      </NavigationLink>
+
+      <section className="w-full border-t">
+        <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-4 px-6 py-6 md:flex-row">
+          <p className="text-sm">{tCommon("copyright", { year: "2025" })}</p>
+          <div className="flex items-center gap-1">
+            {socialMedia.map((social) => (
+              <Button
+                key={social.label}
+                nativeButton={false}
+                render={
+                  <a
+                    aria-label={social.label}
+                    href={social.href}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    <HugeIcons className="size-4" icon={social.icon} />
+                    <span className="sr-only">{social.label}</span>
+                  </a>
+                }
+                size="icon"
+                variant="ghost"
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <FooterArt />
     </footer>
   );
 }
