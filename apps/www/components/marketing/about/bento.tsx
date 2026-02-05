@@ -16,14 +16,11 @@ export function Bento() {
   return (
     <section className="scroll-mt-28 border-y py-24" id="features">
       <div className="mx-auto grid w-full max-w-7xl gap-12 px-6">
-        <div className="grid gap-6">
-          <h2 className="max-w-3xl text-balance font-semibold text-3xl tracking-tight sm:text-4xl">
-            {t("title")}
-          </h2>
-          <p className="max-w-xl text-pretty text-lg text-muted-foreground md:text-xl">
-            {t("description")}
-          </p>
-        </div>
+        <h2 className="max-w-5xl text-pretty font-medium text-3xl tracking-tight sm:text-4xl">
+          {t.rich("headline", {
+            mark: (chunks) => <mark>{chunks}</mark>,
+          })}
+        </h2>
 
         <BentoGrid>
           <BentoCard>

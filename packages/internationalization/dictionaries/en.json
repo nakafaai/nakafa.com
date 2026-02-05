@@ -441,8 +441,7 @@
     "description": "Explore Nakafa's pricing plans. Start free with unlimited access to K-12 and university materials. Upgrade to Pro for AI tutoring and advanced features."
   },
   "Bento": {
-    "title": "Everything you need to learn",
-    "description": "Comprehensive resources covering all levels and subjects, powered by AI.",
+    "headline": "<mark>Stuck on a lesson at 2am with no one to ask. We have been there.</mark> That is why we built this. Complete materials from elementary to university, practice problems with explanations, and AI ready to help whenever you need it. <mark>Free, no strings attached.</mark>",
     "materials-label": "Learning Materials",
     "materials-description": "Thousands of materials from basic to advanced concepts, ready to learn anytime you want.",
     "exercises-label": "Practice Questions",
