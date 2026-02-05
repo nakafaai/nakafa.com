@@ -1,27 +1,26 @@
 import { cn } from "@repo/design-system/lib/utils";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
-interface BentoGridProps {
+interface BentoGridProps extends ComponentProps<"div"> {
   children: ReactNode;
-  className?: string;
 }
 
-export function BentoGrid({ children, className }: BentoGridProps) {
+export function BentoGrid({ children, className, ...props }: BentoGridProps) {
   return (
     <div
       className={cn(
         "grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3",
         className
       )}
+      {...props}
     >
       {children}
     </div>
   );
 }
 
-interface BentoCardProps {
+interface BentoCardProps extends ComponentProps<"article"> {
   children: ReactNode;
-  className?: string;
   size?: "default" | "wide" | "tall";
 }
 
@@ -29,6 +28,7 @@ export function BentoCard({
   children,
   className,
   size = "default",
+  ...props
 }: BentoCardProps) {
   const sizeClasses = {
     default: "",
@@ -43,27 +43,35 @@ export function BentoCard({
         sizeClasses[size],
         className
       )}
+      {...props}
     >
       {children}
     </article>
   );
 }
 
-interface BentoVisualProps {
-  className?: string;
+interface BentoVisualProps extends ComponentProps<"div"> {}
+
+export function BentoVisual({ className, ...props }: BentoVisualProps) {
+  return (
+    <div className={cn("h-32 bg-muted/30 lg:h-40", className)} {...props} />
+  );
 }
 
-export function BentoVisual({ className }: BentoVisualProps) {
-  return <div className={cn("h-32 bg-muted/30 lg:h-40", className)} />;
-}
-
-interface BentoContentProps {
+interface BentoContentProps extends ComponentProps<"div"> {
   children: ReactNode;
-  className?: string;
 }
 
-export function BentoContent({ children, className }: BentoContentProps) {
-  return <div className={cn("p-5", className)}>{children}</div>;
+export function BentoContent({
+  children,
+  className,
+  ...props
+}: BentoContentProps) {
+  return (
+    <div className={cn("p-5", className)} {...props}>
+      {children}
+    </div>
+  );
 }
 
 interface BentoStatProps {
@@ -100,14 +108,14 @@ export function BentoFeature({ title, description }: BentoFeatureProps) {
   );
 }
 
-interface BentoDescriptionProps {
+interface BentoDescriptionProps extends ComponentProps<"p"> {
   children: ReactNode;
-  className?: string;
 }
 
 export function BentoDescription({
   children,
   className,
+  ...props
 }: BentoDescriptionProps) {
   return (
     <p
@@ -115,6 +123,7 @@ export function BentoDescription({
         "mt-1.5 text-muted-foreground text-sm leading-relaxed",
         className
       )}
+      {...props}
     >
       {children}
     </p>
