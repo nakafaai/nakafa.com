@@ -26,9 +26,7 @@ function SchoolLogo({ school }: SchoolLogoProps) {
             title={school.name}
           />
         </div>
-        <span className="text-balance font-medium text-sm tracking-tight">
-          {school.name}
-        </span>
+        <span className="text-balance font-medium text-sm">{school.name}</span>
       </div>
     </a>
   );
