@@ -1,4 +1,5 @@
 import { Button } from "@repo/design-system/components/ui/button";
+import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Link } from "@repo/internationalization/src/navigation";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
@@ -23,15 +24,22 @@ export function Header() {
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">
-          <Button variant="ghost">
-            <Link href="/about">{t("about")}</Link>
-          </Button>
-          <Button variant="ghost">
-            <Link href="/features">{t("features")}</Link>
-          </Button>
-          <Button variant="ghost">
-            <Link href="/pricing">{t("pricing")}</Link>
-          </Button>
+          <Button
+            render={<NavigationLink href="/about">{t("about")}</NavigationLink>}
+            variant="ghost"
+          />
+          <Button
+            render={
+              <NavigationLink href="#features">{t("features")}</NavigationLink>
+            }
+            variant="ghost"
+          />
+          <Button
+            render={
+              <NavigationLink href="#pricing">{t("pricing")}</NavigationLink>
+            }
+            variant="ghost"
+          />
         </nav>
 
         <HeaderCta />

@@ -10,8 +10,8 @@ import {
   BentoVisual,
 } from "@/components/marketing/about/components/bento";
 
-export function Bento() {
-  const t = useTranslations("Bento");
+export function Features() {
+  const t = useTranslations("Features");
 
   return (
     <section className="scroll-mt-28 border-y py-24" id="features">

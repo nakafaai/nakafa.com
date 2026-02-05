@@ -37,7 +37,7 @@ export function Community() {
           </p>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-2">
+        <div className="flex flex-wrap justify-center gap-4">
           {contributors.map((contributor) => (
             <Avatar
               contributor={contributor}

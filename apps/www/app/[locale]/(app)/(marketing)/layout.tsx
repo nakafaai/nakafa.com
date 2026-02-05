@@ -18,7 +18,10 @@ export default function Layout(props: LayoutProps<"/[locale]">) {
   setRequestLocale(locale);
 
   return (
-    <main className="flex min-h-screen w-full flex-1 flex-col">
+    <main
+      className="flex min-h-screen w-full flex-1 flex-col"
+      data-marketing-page
+    >
       <Header />
       {children}
       <Footer />

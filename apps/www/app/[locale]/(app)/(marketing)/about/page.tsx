@@ -6,8 +6,8 @@ import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
-import { Bento } from "@/components/marketing/about/bento";
 import { Community } from "@/components/marketing/about/community";
+import { Features } from "@/components/marketing/about/features";
 import { Hero } from "@/components/marketing/about/hero";
 import { Logos } from "@/components/marketing/about/logos";
 import { exercisesMenu } from "@/components/sidebar/_data/exercises";
@@ -140,7 +140,7 @@ async function AboutPageContent({ locale }: { locale: Locale }) {
       <main className="relative grid" data-pagefind-ignore>
         <Hero />
         <Logos />
-        <Bento />
+        <Features />
         <Community />
       </main>
     </>
