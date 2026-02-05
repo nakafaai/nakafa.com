@@ -68,7 +68,7 @@ export function Logos() {
         <div className="group/logos hover:paused flex w-max animate-marquee">
           {duplicatedSchools.map((school, index) => (
             <div
-              className="shrink-0 transition-opacity duration-300 hover:opacity-100! group-hover/logos:opacity-40"
+              className="shrink-0 transition-opacity duration-300 ease-out hover:opacity-100! group-hover/logos:opacity-60"
               key={`${school.href}-${index}`}
             >
               <SchoolLogo school={school} />
