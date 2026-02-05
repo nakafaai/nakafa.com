@@ -63,9 +63,9 @@ export function Bento() {
             <BentoVisual>
               <SimplexNoise
                 className="absolute inset-0"
-                colors={["#4449cf", "#ffd1e0", "#f94346", "#ffd36b", "#ffffff"]}
+                colors={["#ff8247", "#ffb347", "#ffe53d", "#ff6b35"]}
                 scale={0.6}
-                softness={0}
+                softness={0.3}
                 speed={0.5}
                 stepsPerColor={2}
               />
@@ -80,13 +80,13 @@ export function Bento() {
             <BentoVisual className="flex-1">
               <GrainGradient
                 className="absolute inset-0"
-                colorBack="#000000"
-                colors={["#7300ff", "#eba8ff", "#00bfff", "#2b00ff"]}
-                intensity={0.5}
-                noise={0.25}
+                colorBack="#1a0f00"
+                colors={["#ff8247", "#ffb347", "#ffe53d", "#ff6b35"]}
+                intensity={0.6}
+                noise={0.2}
                 shape="corners"
-                softness={0.5}
-                speed={1}
+                softness={0.4}
+                speed={0.8}
               />
             </BentoVisual>
             <BentoContent>
@@ -101,14 +101,14 @@ export function Bento() {
             <BentoVisual>
               <Warp
                 className="absolute inset-0"
-                colors={["#101213", "#9fadaa", "#f3fee7", "#f3fee7"]}
+                colors={["#ff8247", "#ffb347", "#ffe53d", "#ff6b35"]}
                 distortion={0.25}
                 proportion={0.05}
                 rotation={44}
                 scale={1.2}
                 shape="checks"
                 shapeScale={0.28}
-                softness={0}
+                softness={0.2}
                 speed={0.5}
                 swirl={0.8}
                 swirlIterations={10}
@@ -125,9 +125,9 @@ export function Bento() {
               <BentoVisual>
                 <Dithering
                   className="absolute inset-0"
-                  colorBack="#301c2a"
-                  colorFront="#56ae6c"
-                  shape="warp"
+                  colorBack="#1a0f00"
+                  colorFront="#ff8247"
+                  shape="sphere"
                   size={2.5}
                   speed={0.2}
                   type="4x4"
@@ -143,19 +143,20 @@ export function Bento() {
 
             <BentoCard>
               <BentoVisual>
-                <Warp
+                <Voronoi
                   className="absolute inset-0"
-                  colors={["#a7e58b", "#324471", "#0b190e"]}
-                  distortion={0.2}
-                  proportion={0.64}
-                  rotation={160}
-                  scale={0.9}
-                  shape="edge"
-                  shapeScale={0.6}
-                  softness={1}
-                  speed={2}
-                  swirl={0.86}
-                  swirlIterations={7}
+                  colorGap="#1a0f00"
+                  colorGlow="#ffe53d"
+                  colors={["#ff8247", "#ffb347"]}
+                  distortion={0.3}
+                  fit="cover"
+                  gap={0.02}
+                  glow={0.2}
+                  maxPixelCount={1920 * 1080}
+                  minPixelRatio={1}
+                  scale={0.6}
+                  speed={0.3}
+                  stepsPerColor={2}
                 />
               </BentoVisual>
               <BentoContent>
