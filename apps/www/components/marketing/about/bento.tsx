@@ -14,7 +14,7 @@ export function Bento() {
 
   return (
     <section
-      className="scroll-mt-28 border-border border-y py-24"
+      className="scroll-mt-28 border-border border-y bg-muted py-24"
       id="features"
     >
       <div className="mx-auto w-full max-w-7xl px-6">
@@ -45,7 +45,7 @@ export function Bento() {
           </BentoCard>
 
           <BentoCard size="tall">
-            <BentoVisual className="h-48 lg:h-auto lg:flex-1" />
+            <BentoVisual className="lg:flex-1" />
             <BentoContent className="flex flex-col justify-center">
               <BentoFeature
                 description={t("ai-description")}

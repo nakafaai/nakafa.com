@@ -10,7 +10,7 @@ export function BentoGrid({ children, className }: BentoGridProps) {
   return (
     <div
       className={cn(
-        "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3",
+        "grid grid-cols-1 gap-3 md:grid-cols-2 lg:auto-rows-fr lg:grid-cols-3",
         className
       )}
     >
@@ -39,7 +39,7 @@ export function BentoCard({
   return (
     <article
       className={cn(
-        "group relative overflow-hidden rounded-xl border border-border bg-card transition-all duration-200 hover:shadow-sm",
+        "group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all duration-200 hover:shadow-sm",
         sizeClasses[size],
         className
       )}
@@ -54,7 +54,7 @@ interface BentoVisualProps {
 }
 
 export function BentoVisual({ className }: BentoVisualProps) {
-  return <div className={cn("aspect-4/3 bg-muted/30", className)} />;
+  return <div className={cn("h-32 shrink-0 bg-muted/30 lg:h-40", className)} />;
 }
 
 interface BentoContentProps {
@@ -63,7 +63,7 @@ interface BentoContentProps {
 }
 
 export function BentoContent({ children, className }: BentoContentProps) {
-  return <div className={cn("p-6", className)}>{children}</div>;
+  return <div className={cn("flex flex-col p-5", className)}>{children}</div>;
 }
 
 interface BentoStatProps {
@@ -73,11 +73,11 @@ interface BentoStatProps {
 
 export function BentoStat({ value, label }: BentoStatProps) {
   return (
-    <div className="space-y-1">
-      <p className="font-semibold text-3xl text-foreground tracking-tight">
+    <div className="space-y-0.5">
+      <p className="font-semibold text-2xl text-foreground tracking-tight">
         {value}
       </p>
-      <p className="font-medium text-foreground">{label}</p>
+      <p className="font-medium text-foreground text-sm">{label}</p>
     </div>
   );
 }
@@ -89,11 +89,13 @@ interface BentoFeatureProps {
 
 export function BentoFeature({ title, description }: BentoFeatureProps) {
   return (
-    <div className="space-y-2">
-      <h3 className="font-semibold text-foreground text-xl tracking-tight">
+    <div className="space-y-1.5">
+      <h3 className="font-semibold text-foreground text-lg tracking-tight">
         {title}
       </h3>
-      <p className="text-muted-foreground">{description}</p>
+      <p className="text-muted-foreground text-sm leading-relaxed">
+        {description}
+      </p>
     </div>
   );
 }
@@ -108,7 +110,12 @@ export function BentoDescription({
   className,
 }: BentoDescriptionProps) {
   return (
-    <p className={cn("mt-2 text-muted-foreground text-sm", className)}>
+    <p
+      className={cn(
+        "mt-1.5 text-muted-foreground text-sm leading-relaxed",
+        className
+      )}
+    >
       {children}
     </p>
   );
