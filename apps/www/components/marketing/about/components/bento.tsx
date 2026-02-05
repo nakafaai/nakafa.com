@@ -33,7 +33,7 @@ export function BentoCard({
   return (
     <article
       className={cn(
-        "group relative flex flex-col overflow-hidden rounded-xl border bg-card",
+        "group relative flex flex-col overflow-hidden rounded-xl border bg-card text-card-foreground",
         sizeClasses[size],
         className
       )}
@@ -64,10 +64,8 @@ interface BentoStatProps {
 export function BentoStat({ value, label }: BentoStatProps) {
   return (
     <div className="space-y-0.5">
-      <p className="font-semibold text-2xl text-foreground tracking-tight">
-        {value}
-      </p>
-      <p className="font-medium text-foreground text-sm">{label}</p>
+      <p className="font-semibold text-2xl tracking-tight">{value}</p>
+      <p className="font-medium">{label}</p>
     </div>
   );
 }
@@ -80,9 +78,7 @@ interface BentoFeatureProps {
 export function BentoFeature({ title, description }: BentoFeatureProps) {
   return (
     <div className="space-y-1.5">
-      <h3 className="font-semibold text-foreground text-lg tracking-tight">
-        {title}
-      </h3>
+      <h3 className="font-semibold text-lg tracking-tight">{title}</h3>
       <p className="text-muted-foreground text-sm leading-relaxed">
         {description}
       </p>

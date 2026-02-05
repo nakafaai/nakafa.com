@@ -14,15 +14,15 @@ export function Bento() {
 
   return (
     <section
-      className="scroll-mt-28 border-border border-y bg-linear-to-br from-primary/10 to-secondary/10 py-24"
+      className="scroll-mt-28 border-y bg-linear-to-t from-secondary/50 to-background py-24"
       id="features"
     >
-      <div className="mx-auto w-full max-w-7xl px-6">
-        <div className="mb-12 text-center">
-          <h2 className="font-semibold text-3xl tracking-tight sm:text-4xl">
+      <div className="mx-auto grid w-full max-w-7xl gap-12 px-6">
+        <div className="grid gap-6">
+          <h2 className="max-w-3xl text-balance font-semibold text-3xl tracking-tight sm:text-4xl">
             {t("title")}
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-balance text-lg text-muted-foreground">
+          <p className="max-w-xl text-pretty text-lg text-muted-foreground md:text-xl">
             {t("description")}
           </p>
         </div>
