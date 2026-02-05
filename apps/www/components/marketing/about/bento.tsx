@@ -14,7 +14,7 @@ export function Bento() {
 
   return (
     <section
-      className="scroll-mt-28 border-border border-y bg-muted py-24"
+      className="scroll-mt-28 border-border border-y py-24"
       id="features"
     >
       <div className="mx-auto w-full max-w-7xl px-6">

@@ -10,7 +10,7 @@ export function BentoGrid({ children, className }: BentoGridProps) {
   return (
     <div
       className={cn(
-        "grid grid-cols-1 gap-3 md:grid-cols-2 lg:auto-rows-fr lg:grid-cols-3",
+        "grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3",
         className
       )}
     >
@@ -39,7 +39,7 @@ export function BentoCard({
   return (
     <article
       className={cn(
-        "group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all duration-200 hover:shadow-sm",
+        "group relative overflow-hidden rounded-xl border border-border bg-card transition-all duration-200 hover:shadow-sm",
         sizeClasses[size],
         className
       )}
@@ -54,7 +54,7 @@ interface BentoVisualProps {
 }
 
 export function BentoVisual({ className }: BentoVisualProps) {
-  return <div className={cn("h-32 shrink-0 bg-muted/30 lg:h-40", className)} />;
+  return <div className={cn("h-32 bg-muted/30 lg:h-40", className)} />;
 }
 
 interface BentoContentProps {
@@ -63,7 +63,7 @@ interface BentoContentProps {
 }
 
 export function BentoContent({ children, className }: BentoContentProps) {
-  return <div className={cn("flex flex-col p-5", className)}>{children}</div>;
+  return <div className={cn("p-5", className)}>{children}</div>;
 }
 
 interface BentoStatProps {
