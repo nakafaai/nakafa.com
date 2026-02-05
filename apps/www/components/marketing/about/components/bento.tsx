@@ -25,9 +25,9 @@ export function BentoCard({
   ...props
 }: BentoCardProps) {
   const sizeClasses = {
-    default: "",
-    wide: "md:col-span-2",
-    tall: "row-span-2 md:col-span-2 lg:col-span-1 lg:row-span-2",
+    default: "min-h-[280px]",
+    wide: "md:col-span-2 min-h-[240px]",
+    tall: "row-span-2 md:col-span-2 lg:col-span-1 lg:row-span-2 min-h-[400px]",
   };
 
   return (
@@ -51,7 +51,7 @@ export function BentoVisual({
 }: BentoVisualProps) {
   return (
     <div
-      className={cn("relative h-48 overflow-hidden bg-muted/30", className)}
+      className={cn("absolute inset-0 overflow-hidden", className)}
       {...props}
     >
       {children}
@@ -62,7 +62,15 @@ export function BentoVisual({
 type BentoContentProps = ComponentProps<"div">;
 
 export function BentoContent({ className, ...props }: BentoContentProps) {
-  return <div className={cn("p-5", className)} {...props} />;
+  return (
+    <div
+      className={cn(
+        "absolute inset-x-0.5 bottom-0.5 rounded-xl border-t bg-card p-5",
+        className
+      )}
+      {...props}
+    />
+  );
 }
 
 interface BentoStatProps {

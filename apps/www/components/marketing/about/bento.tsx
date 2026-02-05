@@ -1,11 +1,4 @@
-import {
-  Dithering,
-  GrainGradient,
-  SimplexNoise,
-  Swirl,
-  Voronoi,
-  Warp,
-} from "@paper-design/shaders-react";
+import { Dithering } from "@paper-design/shaders-react";
 import { useTranslations } from "next-intl";
 import {
   BentoCard,
@@ -35,20 +28,16 @@ export function Bento() {
         <BentoGrid>
           <BentoCard>
             <BentoVisual>
-              <Voronoi
+              <Dithering
                 className="absolute inset-0"
-                colorGap="#2e0000"
-                colorGlow="#ffffff"
-                colors={["#ff8247", "#ffe53d"]}
-                distortion={0.4}
-                fit="cover"
-                gap={0.01}
-                glow={0}
-                maxPixelCount={1920 * 1080}
-                minPixelRatio={1}
-                scale={0.5}
-                speed={0.5}
-                stepsPerColor={3}
+                colorBack="#18181b"
+                colorFront="#f97316"
+                originY={0.7}
+                scale={0.9}
+                shape="wave"
+                size={3}
+                speed={0.2}
+                type="4x4"
               />
             </BentoVisual>
             <BentoContent>
@@ -59,13 +48,15 @@ export function Bento() {
 
           <BentoCard>
             <BentoVisual>
-              <SimplexNoise
+              <Dithering
                 className="absolute inset-0"
-                colors={["#ff8247", "#ffb347", "#ffe53d", "#ff6b35"]}
+                colorBack="#18181b"
+                colorFront="#14b8a6"
                 scale={0.6}
-                softness={0.3}
-                speed={0.5}
-                stepsPerColor={2}
+                shape="ripple"
+                size={4}
+                speed={0.25}
+                type="8x8"
               />
             </BentoVisual>
             <BentoContent>
@@ -75,16 +66,16 @@ export function Bento() {
           </BentoCard>
 
           <BentoCard size="tall">
-            <BentoVisual className="flex-1">
-              <GrainGradient
+            <BentoVisual>
+              <Dithering
                 className="absolute inset-0"
-                colorBack="#1a0f00"
-                colors={["#ff8247", "#ffb347", "#ffe53d", "#ff6b35"]}
-                intensity={0.6}
-                noise={0.2}
-                shape="corners"
-                softness={0.4}
-                speed={0.8}
+                colorBack="#18181b"
+                colorFront="#f97316"
+                scale={0.8}
+                shape="swirl"
+                size={2}
+                speed={0.15}
+                type="4x4"
               />
             </BentoVisual>
             <BentoContent>
@@ -97,19 +88,15 @@ export function Bento() {
 
           <BentoCard size="wide">
             <BentoVisual>
-              <Warp
+              <Dithering
                 className="absolute inset-0"
-                colors={["#ff8247", "#ffb347", "#ffe53d", "#ff6b35"]}
-                distortion={0.25}
-                proportion={0.05}
-                rotation={44}
-                scale={1.2}
-                shape="checks"
-                shapeScale={0.28}
-                softness={0.2}
-                speed={0.5}
-                swirl={0.8}
-                swirlIterations={10}
+                colorBack="#18181b"
+                colorFront="#f59e0b"
+                scale={1.1}
+                shape="warp"
+                size={2}
+                speed={0.3}
+                type="2x2"
               />
             </BentoVisual>
             <BentoContent>
@@ -123,10 +110,12 @@ export function Bento() {
               <BentoVisual>
                 <Dithering
                   className="absolute inset-0"
-                  colorBack="#1a0f00"
-                  colorFront="#ff8247"
+                  colorBack="#18181b"
+                  colorFront="#14b8a6"
+                  originY={1}
+                  scale={0.7}
                   shape="sphere"
-                  size={2.5}
+                  size={3}
                   speed={0.2}
                   type="4x4"
                 />
@@ -141,18 +130,15 @@ export function Bento() {
 
             <BentoCard>
               <BentoVisual>
-                <Swirl
-                  bandCount={4}
-                  center={0.2}
+                <Dithering
                   className="absolute inset-0"
-                  colorBack="#1a0f00"
-                  colors={["#ff8247", "#ffb347", "#ffe53d"]}
-                  noise={0.2}
-                  noiseFrequency={0.4}
-                  proportion={0.5}
-                  softness={0}
-                  speed={0.32}
-                  twist={0.1}
+                  colorBack="#18181b"
+                  colorFront="#f97316"
+                  scale={0.8}
+                  shape="simplex"
+                  size={2}
+                  speed={0.18}
+                  type="8x8"
                 />
               </BentoVisual>
               <BentoContent>
