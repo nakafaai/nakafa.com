@@ -1,11 +1,9 @@
 import { cn } from "@repo/design-system/lib/utils";
-import type { ComponentProps, ReactNode } from "react";
+import type { ComponentProps } from "react";
 
-interface BentoGridProps extends ComponentProps<"div"> {
-  children: ReactNode;
-}
+type BentoGridProps = ComponentProps<"div">;
 
-export function BentoGrid({ children, className, ...props }: BentoGridProps) {
+export function BentoGrid({ className, ...props }: BentoGridProps) {
   return (
     <div
       className={cn(
@@ -13,19 +11,15 @@ export function BentoGrid({ children, className, ...props }: BentoGridProps) {
         className
       )}
       {...props}
-    >
-      {children}
-    </div>
+    />
   );
 }
 
 interface BentoCardProps extends ComponentProps<"article"> {
-  children: ReactNode;
   size?: "default" | "wide" | "tall";
 }
 
 export function BentoCard({
-  children,
   className,
   size = "default",
   ...props
@@ -44,13 +38,11 @@ export function BentoCard({
         className
       )}
       {...props}
-    >
-      {children}
-    </article>
+    />
   );
 }
 
-interface BentoVisualProps extends ComponentProps<"div"> {}
+type BentoVisualProps = ComponentProps<"div">;
 
 export function BentoVisual({ className, ...props }: BentoVisualProps) {
   return (
@@ -58,20 +50,10 @@ export function BentoVisual({ className, ...props }: BentoVisualProps) {
   );
 }
 
-interface BentoContentProps extends ComponentProps<"div"> {
-  children: ReactNode;
-}
+type BentoContentProps = ComponentProps<"div">;
 
-export function BentoContent({
-  children,
-  className,
-  ...props
-}: BentoContentProps) {
-  return (
-    <div className={cn("p-5", className)} {...props}>
-      {children}
-    </div>
-  );
+export function BentoContent({ className, ...props }: BentoContentProps) {
+  return <div className={cn("p-5", className)} {...props} />;
 }
 
 interface BentoStatProps {
@@ -108,12 +90,9 @@ export function BentoFeature({ title, description }: BentoFeatureProps) {
   );
 }
 
-interface BentoDescriptionProps extends ComponentProps<"p"> {
-  children: ReactNode;
-}
+type BentoDescriptionProps = ComponentProps<"p">;
 
 export function BentoDescription({
-  children,
   className,
   ...props
 }: BentoDescriptionProps) {
@@ -124,8 +103,6 @@ export function BentoDescription({
         className
       )}
       {...props}
-    >
-      {children}
-    </p>
+    />
   );
 }
