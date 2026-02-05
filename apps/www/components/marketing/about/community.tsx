@@ -32,7 +32,7 @@ export function Community() {
               />
             </div>
           </div>
-          <p className="max-w-xl text-pretty text-lg text-muted-foreground lg:pt-2">
+          <p className="max-w-xl text-pretty text-lg text-muted-foreground">
             {t("community-description")}
           </p>
         </div>
