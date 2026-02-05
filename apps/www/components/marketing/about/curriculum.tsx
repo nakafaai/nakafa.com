@@ -16,7 +16,7 @@ export function Curriculum() {
   const t = useTranslations("About");
 
   return (
-    <section className="scroll-mt-28 border-y py-24" id="curriculum">
+    <section className="scroll-mt-28 py-24" id="curriculum">
       <div className="mx-auto grid w-full max-w-7xl gap-12 px-6">
         <div className="grid gap-6">
           <h2 className="font-semibold text-3xl tracking-tight sm:text-4xl">

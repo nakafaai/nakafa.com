@@ -6,6 +6,7 @@ import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
+import { Bento } from "@/components/marketing/about/bento";
 import { Community } from "@/components/marketing/about/community";
 import { Curriculum } from "@/components/marketing/about/curriculum";
 import { Hero } from "@/components/marketing/about/hero";
@@ -140,6 +141,7 @@ async function AboutPageContent({ locale }: { locale: Locale }) {
       <main className="relative grid" data-pagefind-ignore>
         <Hero />
         <Logos />
+        <Bento />
         <Curriculum />
         <Community />
       </main>
