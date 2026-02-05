@@ -33,7 +33,7 @@ export function BentoCard({
   return (
     <article
       className={cn(
-        "group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all duration-200 hover:shadow-sm",
+        "group relative flex flex-col overflow-hidden rounded-xl border bg-card",
         sizeClasses[size],
         className
       )}
