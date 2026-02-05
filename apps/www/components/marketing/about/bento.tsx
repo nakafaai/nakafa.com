@@ -45,8 +45,8 @@ export function Bento() {
           </BentoCard>
 
           <BentoCard size="tall">
-            <BentoVisual className="lg:flex-1" />
-            <BentoContent className="flex flex-col justify-center">
+            <BentoVisual className="flex-1" />
+            <BentoContent>
               <BentoFeature
                 description={t("ai-description")}
                 title={t("ai-title")}
