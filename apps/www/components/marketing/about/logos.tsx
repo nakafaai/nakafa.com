@@ -47,7 +47,7 @@ export function Logos() {
             </span>
           </div>
 
-          <h2 className="max-w-3xl text-balance font-semibold text-3xl tracking-tight sm:text-4xl">
+          <h2 className="max-w-4xl text-balance font-semibold text-3xl tracking-tight sm:text-4xl">
             {t.rich("trusted-headline", {
               mark: (chunks) => <mark>{chunks}</mark>,
             })}

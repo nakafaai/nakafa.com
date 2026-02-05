@@ -7,14 +7,14 @@ import {
   BentoGrid,
   BentoStat,
   BentoVisual,
-} from "./components/bento";
+} from "@/components/marketing/about/components/bento";
 
 export function Bento() {
   const t = useTranslations("Bento");
 
   return (
     <section
-      className="scroll-mt-28 border-y bg-linear-to-t from-secondary/50 to-background py-24"
+      className="scroll-mt-28 border-y bg-linear-to-t from-secondary/20 to-background py-24"
       id="features"
     >
       <div className="mx-auto grid w-full max-w-7xl gap-12 px-6">
