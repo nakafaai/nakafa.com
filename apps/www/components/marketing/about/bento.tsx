@@ -96,7 +96,7 @@ export function Bento() {
                 shape="warp"
                 size={2}
                 speed={0.3}
-                type="2x2"
+                type="4x4"
               />
             </BentoVisual>
             <BentoContent>

@@ -1,5 +1,22 @@
 import { cn } from "@repo/design-system/lib/utils";
+import { cva, type VariantProps } from "class-variance-authority";
 import type { ComponentProps } from "react";
+
+const bentoCardVariants = cva(
+  "group relative flex flex-col overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm",
+  {
+    variants: {
+      size: {
+        default: "min-h-96",
+        wide: "min-h-80 md:col-span-2",
+        tall: "row-span-2 min-h-112 md:col-span-2 lg:col-span-1 lg:row-span-2",
+      },
+    },
+    defaultVariants: {
+      size: "default",
+    },
+  }
+);
 
 type BentoGridProps = ComponentProps<"div">;
 
@@ -15,28 +32,18 @@ export function BentoGrid({ className, ...props }: BentoGridProps) {
   );
 }
 
-interface BentoCardProps extends ComponentProps<"article"> {
-  size?: "default" | "wide" | "tall";
-}
+interface BentoCardProps
+  extends ComponentProps<"article">,
+    VariantProps<typeof bentoCardVariants> {}
 
 export function BentoCard({
   className,
   size = "default",
   ...props
 }: BentoCardProps) {
-  const sizeClasses = {
-    default: "min-h-[280px]",
-    wide: "md:col-span-2 min-h-[240px]",
-    tall: "row-span-2 md:col-span-2 lg:col-span-1 lg:row-span-2 min-h-[400px]",
-  };
-
   return (
     <article
-      className={cn(
-        "group relative flex flex-col overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm",
-        sizeClasses[size],
-        className
-      )}
+      className={cn(bentoCardVariants({ size }), className)}
       {...props}
     />
   );
@@ -65,7 +72,7 @@ export function BentoContent({ className, ...props }: BentoContentProps) {
   return (
     <div
       className={cn(
-        "absolute inset-x-0.5 bottom-0.5 rounded-xl border-t bg-card p-5",
+        "absolute inset-x-0 bottom-0 rounded-t-xl bg-card p-5",
         className
       )}
       {...props}
