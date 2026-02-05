@@ -10,7 +10,7 @@ export function Header() {
 
   return (
     <HeaderContainer>
-      <div className="mx-auto flex w-full items-center justify-between gap-2 px-6 lg:px-12">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-2 px-6">
         <Link className="flex items-center gap-2" href="/">
           <Image
             alt="Nakafa"
