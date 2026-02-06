@@ -18,7 +18,7 @@ export function Hero() {
             mark: (chunks) => <mark>{chunks}</mark>,
           })}
         </h1>
-        <p className="max-w-xl text-pretty text-lg text-muted-foreground md:text-xl">
+        <p className="max-w-2xl text-pretty text-lg text-muted-foreground md:text-xl">
           {t("description")}
         </p>
         <div className="flex w-full max-w-lg items-center gap-4">
