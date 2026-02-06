@@ -6,6 +6,7 @@ import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
+import { Ai } from "@/components/marketing/about/ai";
 import { Community } from "@/components/marketing/about/community";
 import { Features } from "@/components/marketing/about/features";
 import { Hero } from "@/components/marketing/about/hero";
@@ -141,6 +142,7 @@ async function AboutPageContent({ locale }: { locale: Locale }) {
         <Hero />
         <Logos />
         <Features />
+        <Ai />
         <Community />
       </main>
     </>
