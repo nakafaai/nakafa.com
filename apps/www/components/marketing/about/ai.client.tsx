@@ -15,7 +15,7 @@ export function AiNeuroNoise() {
       colorBack="#00000000"
       colorFront={themeColor}
       colorMid={themeColor}
-      contrast={0.4}
+      contrast={0.2}
       scale={1.5}
       speed={0.3}
     />

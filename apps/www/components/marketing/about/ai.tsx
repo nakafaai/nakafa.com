@@ -31,7 +31,7 @@ function AudienceCard({
       </div>
       <div className="grid gap-2">
         <h3 className="font-medium text-lg">{title}</h3>
-        <p className="text-muted-foreground">{description}</p>
+        <p className="text-pretty text-muted-foreground">{description}</p>
       </div>
       <div className="mt-auto pt-2">
         <Button
@@ -83,11 +83,11 @@ export function Ai() {
               <h3 className="font-medium text-2xl tracking-tight">
                 {t("feature-title")}
               </h3>
-              <p className="text-muted-foreground">
+              <p className="text-pretty text-muted-foreground">
                 {t("feature-description")}
               </p>
             </div>
-            <div className="relative overflow-hidden rounded-md border bg-background">
+            <div className="relative overflow-hidden rounded-lg border bg-background">
               <div className="absolute inset-0">
                 <AiNeuroNoise />
               </div>
@@ -102,7 +102,7 @@ export function Ai() {
                   <div className="mt-2 space-y-0.5 text-muted-foreground">
                     <div className="text-primary"># Nakafa Framework: LLM</div>
                     <div>## What Is a Vector?</div>
-                    <div className="text-muted-foreground/70">
+                    <div className="text-muted-foreground">
                       Imagine a weather map...
                     </div>
                   </div>
