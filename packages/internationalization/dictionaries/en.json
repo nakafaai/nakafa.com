@@ -442,18 +442,18 @@
   },
   "Features": {
     "headline": "<mark>Stuck on a lesson at 2am with no one to ask. We have been there.</mark> That is why we built this. Complete materials from elementary to university, practice problems with explanations, and AI ready to help whenever you need it. <mark>Free, no strings attached.</mark>",
+    "materials-value": "5000+",
     "materials-label": "Learning Materials",
-    "materials-description": "Thousands of materials from basic to advanced concepts, ready to learn anytime you want.",
+    "materials-description": "From basic concepts to advanced topics",
+    "exercises-value": "2000+",
     "exercises-label": "Practice Questions",
-    "exercises-description": "Practice with detailed explanations. Immediately know which answers are right and wrong.",
-    "ai-title": "AI Learning Assistant",
-    "ai-description": "Ask anything, anytime. Our AI is ready to help explain materials that confuse you.",
+    "exercises-description": "With detailed explanations",
+    "subjects-value": "100+",
     "subjects-label": "Subjects",
-    "subjects-description": "Mathematics, physics, chemistry, biology, and more. From elementary school to university.",
-    "performance-title": "Built for speed",
-    "performance-description": "Access materials without long loading. Search what you need and immediately get the answers.",
-    "quality-title": "Open by design",
-    "quality-description": "All content can be seen by anyone. Created by expert teams and continuously updated to stay relevant."
+    "subjects-description": "Elementary to university",
+    "ai-value": "AI",
+    "ai-label": "Assistant",
+    "ai-description": "Ask anything, anytime"
   },
   "About": {
     "meta-title": "Fck Closed Education, Enjoy Free Open Education",

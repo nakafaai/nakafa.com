@@ -442,18 +442,18 @@
   },
   "Features": {
     "headline": "<mark>Stuck di materi tengah malam, bingung mau nanya siapa. Kita pernah ngalamin juga.</mark> Makanya kita bikin platform ini. Ada materi lengkap dari SD sampai kuliah, latihan soal dengan pembahasan, dan AI yang siap bantu. <mark>Gratis, gak ada syarat.</mark>",
+    "materials-value": "5000+",
     "materials-label": "Materi Belajar",
-    "materials-description": "Ribuan materi lengkap dari konsep dasar hingga lanjut, siap dipelajari kapan saja.",
+    "materials-description": "Dari konsep dasar hingga lanjut",
+    "exercises-value": "2000+",
     "exercises-label": "Soal Latihan",
-    "exercises-description": "Latihan soal dengan pembahasan detail. Langsung tahu jawaban benar dan salahnya.",
-    "ai-title": "Asisten Belajar AI",
-    "ai-description": "Tanya apa saja, kapan saja. AI kami siap bantu jelaskan materi yang bikin kamu bingung.",
+    "exercises-description": "Dengan pembahasan detail",
+    "subjects-value": "100+",
     "subjects-label": "Mata Pelajaran",
-    "subjects-description": "Matematika, fisika, kimia, biologi, dan masih banyak lagi. Dari SD sampai kuliah.",
-    "performance-title": "Dibangun untuk kecepatan",
-    "performance-description": "Akses materi tanpa loading lama. Cari apa yang kamu butuhkan dan langsung dapatkan jawabannya.",
-    "quality-title": "Terbuka secara desain",
-    "quality-description": "Semua konten bisa dilihat siapa saja. Dibuat oleh tim ahli dan terus diperbarui supaya selalu relevan."
+    "subjects-description": "SD sampai kuliah",
+    "ai-value": "AI",
+    "ai-label": "Asisten",
+    "ai-description": "Tanya apa saja, kapan saja"
   },
   "About": {
     "meta-title": "Fck Pendidikan Tertutup, Nikmati Pendidikan Terbuka Gratis",
