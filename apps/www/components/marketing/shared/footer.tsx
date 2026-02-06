@@ -9,6 +9,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { useTranslations } from "next-intl";
+import { FooterAction } from "@/components/marketing/shared/footer-action";
 import { FooterArt } from "@/components/marketing/shared/footer-art";
 import { articlesMenu } from "@/components/sidebar/_data/articles";
 import { holyMenu } from "@/components/sidebar/_data/holy";
@@ -145,30 +146,33 @@ export function Footer() {
       </NavigationLink>
 
       <section className="w-full border-t">
-        <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-4 px-6 py-6 md:flex-row">
+        <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-4 px-6 py-6 lg:flex-row">
           <p className="text-center text-sm">
             {tCommon("copyright", { year: "2025" })}
           </p>
-          <div className="flex items-center gap-1">
-            {socialMedia.map((social) => (
-              <Button
-                key={social.label}
-                nativeButton={false}
-                render={
-                  <a
-                    aria-label={social.label}
-                    href={social.href}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                  >
-                    <HugeIcons className="size-4" icon={social.icon} />
-                    <span className="sr-only">{social.label}</span>
-                  </a>
-                }
-                size="icon"
-                variant="ghost"
-              />
-            ))}
+          <div className="flex flex-col items-center gap-4 lg:flex-row">
+            <div className="flex items-center gap-1">
+              {socialMedia.map((social) => (
+                <Button
+                  key={social.label}
+                  nativeButton={false}
+                  render={
+                    <a
+                      aria-label={social.label}
+                      href={social.href}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      <HugeIcons className="size-4" icon={social.icon} />
+                      <span className="sr-only">{social.label}</span>
+                    </a>
+                  }
+                  size="icon"
+                  variant="ghost"
+                />
+              ))}
+            </div>
+            <FooterAction />
           </div>
         </div>
       </section>
