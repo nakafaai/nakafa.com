@@ -1,5 +1,5 @@
-import { Dithering } from "@paper-design/shaders-react";
 import { useTranslations } from "next-intl";
+import { FeaturesDithering } from "@/components/marketing/about/features.client";
 
 function FeatureStat({
   value,
@@ -70,16 +70,7 @@ export function Features() {
           </div>
 
           <div className="h-120 w-full overflow-hidden">
-            <Dithering
-              className="size-full"
-              colorBack="#00000000"
-              colorFront="#f97316"
-              scale={1.2}
-              shape="warp"
-              size={2}
-              speed={0.15}
-              type="4x4"
-            />
+            <FeaturesDithering />
           </div>
         </div>
       </div>
