@@ -1,10 +1,10 @@
 "use client";
 
-import { Dithering } from "@paper-design/shaders-react";
+import { Dithering, type DitheringProps } from "@paper-design/shaders-react";
 import type { Theme } from "@repo/design-system/types/theme";
 import { useTheme } from "next-themes";
 
-function getColorFront(theme: Theme | string | undefined) {
+export function getColorFront(theme: Theme | string | undefined) {
   switch (theme) {
     case "light":
       return "#d87943";
@@ -73,7 +73,7 @@ function getColorFront(theme: Theme | string | undefined) {
   }
 }
 
-export function FeaturesDithering() {
+export function FeaturesDithering({ ...props }: DitheringProps) {
   const { theme } = useTheme();
 
   const colorFront = getColorFront(theme);
@@ -88,6 +88,7 @@ export function FeaturesDithering() {
       size={2}
       speed={0.15}
       type="4x4"
+      {...props}
     />
   );
 }

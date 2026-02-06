@@ -455,6 +455,24 @@
     "ai-label": "Assistant",
     "ai-description": "Ask anything, anytime"
   },
+  "AiSection": {
+    "headline": "Built for humans. <mark>Optimized for AI.</mark>",
+    "description": "Study on your phone at midnight. Learn with an AI tutor. Integrate content into your LMS. Every lesson on Nakafa is accessible instantly, in any format you need.",
+    "feature-label": "AI-Native",
+    "feature-title": "Your content, your format. Just add .md",
+    "feature-description": "Every page on Nakafa can be accessed as clean, structured markdown. Perfect for AI agents, developers, or anyone who wants content their way.",
+    "stat-pages": "pages available",
+    "stat-markdown": "structured markdown",
+    "students-title": "For Students",
+    "students-description": "Study with Nina. Choose GPT, Claude, Gemini, or DeepSeek. Get personalized explanations and practice.",
+    "cta-students": "Start learning",
+    "developers-title": "For Developers",
+    "developers-description": "Build on our content. Access via llms.txt, parse markdown, or integrate educational materials into your platform.",
+    "cta-developers": "Explore llms.txt",
+    "schools-title": "For Schools",
+    "schools-description": "Integrate with your LMS. Connect Nakafa content to your classroom tools without friction.",
+    "cta-schools": "Contact founders"
+  },
   "About": {
     "meta-title": "Fck Closed Education, Enjoy Free Open Education",
     "title": "Fck closed education, enjoy <mark>free open education</mark>",

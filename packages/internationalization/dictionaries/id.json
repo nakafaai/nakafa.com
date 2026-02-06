@@ -455,6 +455,24 @@
     "ai-label": "Asisten",
     "ai-description": "Tanya apa saja, kapan saja"
   },
+  "AiSection": {
+    "headline": "Dibuat untuk manusia. <mark>Dioptimalkan untuk AI.</mark>",
+    "description": "Belajar di HP tengah malam. Bimbingan AI. Integrasi ke LMS. Setiap materi di Nakafa langsung bisa diakses dalam format apa saja.",
+    "feature-label": "AI-Native",
+    "feature-title": "Kontenmu, formatmu. Tinggal tambah .md",
+    "feature-description": "Setiap halaman di Nakafa bisa diakses sebagai markdown yang bersih dan terstruktur. Sempurna untuk agen AI, developer, atau siapa pun yang mau konten sesuai kebutuhan.",
+    "stat-pages": "halaman tersedia",
+    "stat-markdown": "markdown terstruktur",
+    "students-title": "Untuk Siswa",
+    "students-description": "Belajar bareng Nina. Pilih GPT, Claude, Gemini, atau DeepSeek. Penjelasan dan latihan yang personal.",
+    "cta-students": "Mulai belajar",
+    "developers-title": "Untuk Developer",
+    "developers-description": "Bangun di atas konten kami. Akses via llms.txt, parsing markdown, atau integrasikan ke platformmu.",
+    "cta-developers": "Jelajahi llms.txt",
+    "schools-title": "Untuk Sekolah",
+    "schools-description": "Integrasikan ke LMS. Hubungkan konten Nakafa ke alat kelasmu tanpa hambatan.",
+    "cta-schools": "Hubungi founder"
+  },
   "About": {
     "meta-title": "Fck Pendidikan Tertutup, Nikmati Pendidikan Terbuka Gratis",
     "title": "Fck pendidikan tertutup, nikmati <mark>pendidikan terbuka gratis</mark>",
