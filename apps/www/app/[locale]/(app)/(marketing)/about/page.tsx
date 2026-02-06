@@ -11,6 +11,7 @@ import { Community } from "@/components/marketing/about/community";
 import { Features } from "@/components/marketing/about/features";
 import { Hero } from "@/components/marketing/about/hero";
 import { Logos } from "@/components/marketing/about/logos";
+import { Pricing } from "@/components/marketing/about/pricing";
 import { exercisesMenu } from "@/components/sidebar/_data/exercises";
 import { subjectMenu } from "@/components/sidebar/_data/subject";
 
@@ -143,6 +144,7 @@ async function AboutPageContent({ locale }: { locale: Locale }) {
         <Logos />
         <Features />
         <Ai />
+        <Pricing />
         <Community />
       </main>
     </>

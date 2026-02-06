@@ -58,7 +58,7 @@ export function Ai() {
       id="ai"
     >
       <div className="mx-auto w-full max-w-7xl border-x">
-        <div className="grid gap-6 px-6 pt-24 pb-12 lg:grid-cols-2 lg:gap-12">
+        <div className="grid gap-6 bg-card px-6 pt-24 pb-12 text-card-foreground lg:grid-cols-2 lg:gap-12">
           <h2 className="max-w-3xl text-balance font-medium text-3xl tracking-tight sm:text-4xl">
             {t.rich("headline", {
               mark: (chunks) => <mark>{chunks}</mark>,
@@ -97,7 +97,7 @@ export function Ai() {
                 <div className="rounded-md bg-background p-4 font-mono text-sm shadow-sm">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <span className="text-primary">$</span>
-                    <span className="truncate">
+                    <span className="truncate text-foreground">
                       curl nakafa.com/en/subject/math/vector.md
                     </span>
                   </div>
