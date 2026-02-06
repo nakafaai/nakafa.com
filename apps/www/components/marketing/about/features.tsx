@@ -62,7 +62,7 @@ export function Features() {
 
   return (
     <section
-      className="scroll-mt-28 border-y bg-linear-to-t from-primary/10 to-background"
+      className="scroll-mt-28 border-y bg-linear-to-t from-card to-background"
       id="features"
     >
       <div className="mx-auto w-full max-w-7xl px-6 py-24">
@@ -111,7 +111,7 @@ export function Features() {
           <div className="h-112 w-full overflow-hidden">
             <Dithering
               className="size-full"
-              colorBack="#f8fafc"
+              colorBack="#00000000"
               colorFront="#f97316"
               scale={1.2}
               shape="warp"
