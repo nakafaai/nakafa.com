@@ -20,7 +20,6 @@ interface BlockArtProps {
   animationColor?: string;
   animatedCellCount?: number;
   animationInterval?: number;
-  waveColor?: string;
   waveDuration?: number;
   onCellClick?: () => void;
 }

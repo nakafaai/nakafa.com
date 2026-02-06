@@ -13,7 +13,7 @@ export function getColorFront(theme: Theme | string | undefined) {
       return "#e78a53";
     case "system":
       return "#d87943";
-    case "cladue":
+    case "claude":
       return "#cb6441";
     case "tree":
       return "#8e9f4c";
