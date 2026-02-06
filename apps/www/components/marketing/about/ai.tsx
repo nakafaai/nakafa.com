@@ -80,7 +80,7 @@ export function Ai() {
                   {t("feature-label")}
                 </span>
               </div>
-              <h3 className="font-medium text-2xl tracking-tight">
+              <h3 className="font-medium text-2xl">
                 {t.rich("feature-title", {
                   mark: (chunks) => <mark>{chunks}</mark>,
                 })}
