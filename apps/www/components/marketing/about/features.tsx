@@ -69,7 +69,7 @@ export function Features() {
             ))}
           </div>
 
-          <div className="h-112 w-full overflow-hidden">
+          <div className="h-120 w-full overflow-hidden">
             <Dithering
               className="size-full"
               colorBack="#00000000"
