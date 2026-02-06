@@ -111,7 +111,7 @@ export function Ai() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 border-t lg:grid-cols-3">
+          <div className="grid grid-cols-1 divide-y border-t lg:grid-cols-3 lg:divide-x lg:divide-y-0">
             <AudienceCard
               ctaHref="/"
               ctaText={t("cta-students")}
