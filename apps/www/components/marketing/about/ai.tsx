@@ -25,7 +25,7 @@ function AudienceCard({
   ctaHref,
 }: AudienceCardProps) {
   return (
-    <div className="flex flex-col gap-4 p-6 first:pt-12 last:pb-12 lg:py-12">
+    <div className="flex flex-col gap-4 p-6 first:pt-18 last:pb-18 lg:py-18">
       <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10">
         <HugeIcons className="text-primary" icon={icon} />
       </div>
@@ -58,7 +58,7 @@ export function Ai() {
       id="ai"
     >
       <div className="mx-auto w-full max-w-7xl border-x">
-        <div className="grid gap-6 bg-card px-6 pt-24 pb-12 text-card-foreground lg:grid-cols-2 lg:gap-12">
+        <div className="grid gap-6 bg-card px-6 py-18 text-card-foreground lg:grid-cols-2 lg:gap-12">
           <h2 className="max-w-3xl text-balance font-medium text-3xl tracking-tight sm:text-4xl">
             {t.rich("headline", {
               mark: (chunks) => <mark>{chunks}</mark>,
@@ -70,7 +70,7 @@ export function Ai() {
         </div>
 
         <div className="flex flex-col overflow-hidden border-t bg-card text-card-foreground">
-          <div className="grid gap-6 px-6 py-12 lg:grid-cols-2">
+          <div className="grid gap-6 px-6 py-18 lg:grid-cols-2">
             <div className="flex flex-col justify-center gap-4">
               <div className="flex items-center gap-2">
                 <div className="flex size-10 items-center justify-center rounded-md bg-primary/10">
@@ -113,7 +113,7 @@ export function Ai() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 divide-y border-t lg:grid-cols-3 lg:divide-x lg:divide-y-0">
+          <div className="grid grid-cols-1 border-t lg:grid-cols-3 lg:divide-x">
             <AudienceCard
               ctaHref="/"
               ctaText={t("cta-students")}
