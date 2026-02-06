@@ -50,14 +50,14 @@ export function Features() {
       className="scroll-mt-28 border-y bg-linear-to-t from-card to-background"
       id="features"
     >
-      <div className="mx-auto w-full max-w-7xl px-6 py-24">
-        <h2 className="mb-16 max-w-5xl text-pretty font-medium text-3xl tracking-tight sm:text-4xl">
+      <div className="mx-auto w-full max-w-7xl border-x">
+        <h2 className="mb-16 max-w-5xl text-pretty px-6 pt-24 font-medium text-3xl tracking-tight sm:text-4xl">
           {t.rich("headline", {
             mark: (chunks) => <mark>{chunks}</mark>,
           })}
         </h2>
 
-        <div className="flex flex-col overflow-hidden rounded-xl border bg-card text-card-foreground">
+        <div className="flex flex-col overflow-hidden border-t bg-card text-card-foreground">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
             {stats.map((stat) => (
               <FeatureStat
