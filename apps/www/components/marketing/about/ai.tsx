@@ -25,8 +25,8 @@ function AudienceCard({
   ctaHref,
 }: AudienceCardProps) {
   return (
-    <div className="flex flex-col gap-4 p-6">
-      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+    <div className="flex flex-col gap-4 p-6 first:pt-12 last:pb-12 lg:py-12">
+      <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10">
         <HugeIcons className="text-primary" icon={icon} />
       </div>
       <div className="grid gap-2">
@@ -70,13 +70,13 @@ export function Ai() {
         </div>
 
         <div className="flex flex-col overflow-hidden border-t bg-card text-card-foreground">
-          <div className="grid gap-6 p-6 lg:grid-cols-2 lg:p-12">
+          <div className="grid gap-6 px-6 py-12 lg:grid-cols-2">
             <div className="flex flex-col justify-center gap-4">
               <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded bg-primary/10">
+                <div className="flex size-10 items-center justify-center rounded-md bg-primary/10">
                   <HugeIcons className="text-primary" icon={CpuIcon} />
                 </div>
-                <span className="font-medium text-muted-foreground text-sm">
+                <span className="font-medium text-muted-foreground">
                   {t("feature-label")}
                 </span>
               </div>
@@ -87,20 +87,20 @@ export function Ai() {
                 {t("feature-description")}
               </p>
             </div>
-            <div className="relative overflow-hidden rounded-lg border bg-background">
-              <div className="absolute inset-0 opacity-60">
+            <div className="relative overflow-hidden rounded-md border bg-background">
+              <div className="absolute inset-0">
                 <AiNeuroNoise />
               </div>
               <div className="relative p-6">
-                <div className="rounded-md bg-background/90 p-4 font-mono text-sm shadow-sm backdrop-blur-sm">
+                <div className="rounded-md bg-background p-4 font-mono text-sm shadow-sm">
                   <div className="flex items-center gap-2 text-muted-foreground">
-                    <span className="text-green-500">$</span>
+                    <span className="text-primary">$</span>
                     <span className="truncate">
                       curl nakafa.com/en/subject/math/vector.md
                     </span>
                   </div>
                   <div className="mt-2 space-y-0.5 text-muted-foreground">
-                    <div className="text-blue-500"># Nakafa Framework: LLM</div>
+                    <div className="text-primary"># Nakafa Framework: LLM</div>
                     <div>## What Is a Vector?</div>
                     <div className="text-muted-foreground/70">
                       Imagine a weather map...
@@ -111,7 +111,7 @@ export function Ai() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 border-t md:grid-cols-3">
+          <div className="grid grid-cols-1 border-t lg:grid-cols-3">
             <AudienceCard
               ctaHref="/"
               ctaText={t("cta-students")}
