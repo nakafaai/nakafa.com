@@ -14,7 +14,7 @@ function FeatureStat({
     <div className="flex flex-col gap-1 p-6">
       <span className="font-semibold text-4xl tracking-tight">{value}</span>
       <span className="font-medium text-lg">{label}</span>
-      <p className="text-muted-foreground text-sm">{description}</p>
+      <p className="text-muted-foreground">{description}</p>
     </div>
   );
 }
