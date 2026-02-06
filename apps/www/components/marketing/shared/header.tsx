@@ -32,14 +32,18 @@ export function Header() {
           <Button
             nativeButton={false}
             render={
-              <NavigationLink href="#features">{t("features")}</NavigationLink>
+              <NavigationLink href="/about#features">
+                {t("features")}
+              </NavigationLink>
             }
             variant="ghost"
           />
           <Button
             nativeButton={false}
             render={
-              <NavigationLink href="#pricing">{t("pricing")}</NavigationLink>
+              <NavigationLink href="/about#pricing">
+                {t("pricing")}
+              </NavigationLink>
             }
             variant="ghost"
           />
