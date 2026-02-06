@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@ai-sdk/devtools": "^0.0.11",
-    "@ai-sdk/react": "^3.0.75",
+    "@ai-sdk/react": "^3.0.76",
     "@convex-dev/better-auth": "^0.10.10",
     "@hugeicons/core-free-icons": "^3.1.1",
     "@hugeicons/react": "^1.1.4",
@@ -49,7 +49,7 @@
     "@tanstack/react-query": "^5.90.20",
     "@tanstack/react-query-devtools": "^5.91.3",
     "@vercel/functions": "^3.4.1",
-    "ai": "^6.0.73",
+    "ai": "^6.0.74",
     "any-ascii": "^0.3.3",
     "babel-plugin-react-compiler": "^1.0.0",
     "better-auth": "1.4.9",
