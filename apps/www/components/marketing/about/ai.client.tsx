@@ -2,7 +2,7 @@
 
 import { NeuroNoise } from "@paper-design/shaders-react";
 import { useTheme } from "next-themes";
-import { getColorFront } from "./features.client";
+import { getColorFront } from "@/components/marketing/about/utils";
 
 export function AiNeuroNoise() {
   const { theme } = useTheme();
