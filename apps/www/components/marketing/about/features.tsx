@@ -11,7 +11,7 @@ function FeatureStat({
   description: string;
 }) {
   return (
-    <div className="flex flex-col gap-1 p-6">
+    <div className="flex flex-col gap-1 px-6 py-12">
       <span className="font-semibold text-3xl tracking-tight sm:text-4xl">
         {value}
       </span>
@@ -53,7 +53,7 @@ export function Features() {
       id="features"
     >
       <div className="mx-auto w-full max-w-7xl border-x">
-        <h2 className="mb-16 max-w-5xl text-pretty px-6 pt-24 font-medium text-3xl tracking-tight sm:text-4xl">
+        <h2 className="mb-12 max-w-5xl text-pretty px-6 pt-24 font-medium text-3xl tracking-tight sm:text-4xl">
           {t.rich("headline", {
             mark: (chunks) => <mark>{chunks}</mark>,
           })}
