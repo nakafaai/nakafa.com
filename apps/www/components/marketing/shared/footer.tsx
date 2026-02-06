@@ -139,7 +139,7 @@ export function Footer() {
         className="mx-auto flex w-full max-w-7xl px-6 py-16 transition-colors ease-out hover:text-primary"
         href="/"
       >
-        <span className="mx-auto font-bold text-7xl sm:text-8xl md:text-9xl lg:text-[12rem] xl:text-[18rem]">
+        <span className="mx-auto font-bold text-7xl transition-colors duration-300 ease-out hover:text-primary sm:text-8xl md:text-9xl lg:text-[12rem] xl:text-[18rem]">
           Nakafa
         </span>
       </NavigationLink>
