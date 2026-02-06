@@ -1,7 +1,6 @@
 import {
   BookOpen02Icon,
   CodeIcon,
-  CpuIcon,
   StudentIcon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -58,7 +57,7 @@ export function Ai() {
       id="ai"
     >
       <div className="mx-auto w-full max-w-7xl border-x">
-        <div className="grid gap-6 bg-card px-6 py-18 text-card-foreground lg:grid-cols-2 lg:gap-12">
+        <div className="grid items-center gap-6 bg-card px-6 pt-18 pb-9 text-card-foreground lg:grid-cols-2 lg:gap-12">
           <h2 className="max-w-3xl text-balance font-medium text-3xl tracking-tight sm:text-4xl">
             {t.rich("headline", {
               mark: (chunks) => <mark>{chunks}</mark>,
@@ -69,32 +68,21 @@ export function Ai() {
           </p>
         </div>
 
-        <div className="flex flex-col overflow-hidden border-t bg-card text-card-foreground">
-          <div className="grid gap-6 px-6 py-18 lg:grid-cols-2">
-            <div className="flex flex-col justify-center gap-4">
-              <div className="flex items-center gap-2">
-                <div className="flex size-10 items-center justify-center rounded-md bg-primary/10">
-                  <HugeIcons className="text-primary" icon={CpuIcon} />
-                </div>
-                <span className="font-medium text-muted-foreground">
-                  {t("feature-label")}
-                </span>
-              </div>
-              <h3 className="font-medium text-2xl">
-                {t.rich("feature-title", {
+        <div className="flex flex-col overflow-hidden bg-card text-card-foreground">
+          <div className="grid gap-6 px-6 pt-9 pb-18 lg:grid-cols-2">
+            <div className="flex flex-col justify-center">
+              <p className="text-pretty text-lg text-muted-foreground">
+                {t.rich("feature-description", {
                   mark: (chunks) => <mark>{chunks}</mark>,
                 })}
-              </h3>
-              <p className="text-pretty text-muted-foreground">
-                {t("feature-description")}
               </p>
             </div>
             <div className="relative overflow-hidden rounded-lg border bg-background">
               <div className="absolute inset-0">
                 <AiNeuroNoise />
               </div>
-              <div className="relative p-6">
-                <div className="rounded-md bg-background p-4 font-mono text-sm shadow-sm">
+              <div className="relative size-full p-6">
+                <div className="flex size-full flex-col justify-between rounded-md bg-background p-4 font-mono text-sm shadow-sm">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <span className="text-primary">$</span>
                     <span className="truncate text-foreground">
