@@ -1,3 +1,5 @@
+import { GraduationScrollIcon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { schools } from "./constants/logos";
@@ -41,8 +43,8 @@ export function Logos() {
       <div className="mx-auto grid w-full max-w-7xl gap-6 px-6">
         <div className="grid gap-6">
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1.5 font-medium text-xs">
-              <span className="size-2 animate-pulse rounded-full bg-primary" />
+            <span className="inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1.5 text-sm">
+              <HugeIcons className="size-4" icon={GraduationScrollIcon} />
               {t("trusted-badge")}
             </span>
           </div>
