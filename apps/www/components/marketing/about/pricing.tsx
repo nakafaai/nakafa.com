@@ -1,6 +1,5 @@
 import {
   ArrowUpRight01Icon,
-  Diamond02Icon,
   Mail01Icon,
   Rocket01Icon,
   Tick01Icon,
@@ -14,6 +13,7 @@ import type { ComponentProps } from "react";
 import {
   EnterpriseDithering,
   PricingDithering,
+  ProButton,
 } from "@/components/marketing/about/pricing.client";
 
 const PRO_PRICE = 8.99;
@@ -140,10 +140,7 @@ export function Pricing() {
               </div>
 
               <div className="mt-auto pt-4">
-                <Button className="w-full">
-                  <HugeIcons icon={Diamond02Icon} />
-                  {t("pro-cta")}
-                </Button>
+                <ProButton />
               </div>
             </div>
           </div>
