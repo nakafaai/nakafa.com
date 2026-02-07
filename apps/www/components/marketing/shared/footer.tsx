@@ -31,7 +31,7 @@ export function Footer() {
   return (
     <footer className="w-full border-t" id="footer">
       <div className="mx-auto w-full max-w-7xl px-6">
-        <div className="grid scroll-mt-28 pt-16">
+        <div className="grid scroll-mt-28 pt-24">
           <section className="flex flex-col justify-between gap-8 md:flex-row">
             <div className="flex flex-col gap-3">
               <span className="font-medium text-muted-foreground text-sm">

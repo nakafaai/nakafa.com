@@ -12,6 +12,7 @@ import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { useTransition } from "react";
 import { getColorFront } from "@/components/marketing/about/utils";
+import { useUser } from "@/lib/context/use-user";
 
 export function PricingDithering({ ...props }: DitheringProps) {
   const { resolvedTheme } = useTheme();
@@ -59,9 +60,11 @@ export function ProButton() {
 
   const [isPending, startTransition] = useTransition();
 
+  const currentUser = useUser((state) => state.user);
+
   const { data: hasSubscription } = useQueryWithStatus(
     api.subscriptions.queries.hasActiveSubscription,
-    { productId: products.pro.id }
+    currentUser ? { productId: products.pro.id } : "skip"
   );
   const generateCheckoutLink = useAction(
     api.customers.actions.generateCheckoutLink

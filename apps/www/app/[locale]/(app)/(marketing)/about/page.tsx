@@ -8,6 +8,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
 import { Ai } from "@/components/marketing/about/ai";
 import { Community } from "@/components/marketing/about/community";
+import { Faq } from "@/components/marketing/about/faq";
 import { Features } from "@/components/marketing/about/features";
 import { Hero } from "@/components/marketing/about/hero";
 import { Logos } from "@/components/marketing/about/logos";
@@ -145,6 +146,7 @@ async function AboutPageContent({ locale }: { locale: Locale }) {
         <Features />
         <Ai />
         <Pricing />
+        <Faq />
         <Community />
       </div>
     </>

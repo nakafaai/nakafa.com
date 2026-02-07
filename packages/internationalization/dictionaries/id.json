@@ -463,6 +463,26 @@
     "enterprise-feature-4": "Branding custom dan support dedicated",
     "enterprise-cta": "Hubungi founder"
   },
+  "Faq": {
+    "badge": "Bantuan",
+    "headline": "Masih ada <mark>pertanyaan?</mark>",
+    "description": "Tidak menemukan yang kamu cari? Hubungi kami langsung.",
+    "cta-contact": "Hubungi founder",
+    "q1": "Apakah Nakafa benar-benar gratis?",
+    "a1": "Ya. Konten inti gratis selamanya. Kami mengenakan biaya untuk fitur Pro seperti AI tanpa batas dan unduhan PDF, tapi kamu tidak akan menemukan paywall di materi pembelajaran dasar.",
+    "q2": "Model AI apa yang bisa saya gunakan?",
+    "a2": "Pengguna gratis mendapat akses ke model dasar dengan 10 pesan per hari. Pro membuka GPT, Claude, Gemini, dan 15+ model premium lainnya dengan penggunaan tanpa batas.",
+    "q3": "Bisakah saya mengunduh pelajaran untuk offline?",
+    "a3": "Unduhan PDF adalah fitur Pro. Kamu bisa menyimpan pelajaran apa pun sebagai PDF untuk belajar offline atau mencetak. Pengguna gratis selalu bisa mengakses konten online.",
+    "q4": "Mata pelajaran dan kelas apa yang tercakup?",
+    "a4": "Kami mencakup SD hingga universitas. Matematika, Fisika, Kimia, Biologi, Ilmu Komputer, dan lainnya. Dari konsep dasar SD hingga kursus universitas tingkat lanjut.",
+    "q5": "Apakah data saya pribadi?",
+    "a5": "Ya. Kami tidak menjual data kamu. Percakapan AI diproses dengan aman. Kamu bisa menghapus riwayat chat kapan saja. Kami mengutamakan privasi.",
+    "q6": "Bisakah sekolah menggunakan Nakafa?",
+    "a6": "Tentu saja. Kami menawarkan solusi kustom untuk kelas dan institusi pendidikan. Hubungi founder untuk integrasi LMS, manajemen siswa, dan branding kustom.",
+    "q7": "Bagaimana Nakafa memastikan akurasi konten?",
+    "a7": "Semua konten dibuat oleh kontributor yang berkualifikasi dan ditinjau oleh komunitas. Pendekatan open-source kami berarti siapa pun bisa mengaudit dan meningkatkan materi. Latihan soal mencakup penjelasan detail sehingga kamu belajar dari kesalahan, bukan hanya skor."
+  },
   "Features": {
     "headline": "<mark>Stuck di materi tengah malam, bingung mau nanya siapa. Kita pernah ngalamin juga.</mark> Makanya kita bikin platform ini. Ada materi lengkap dari SD sampai kuliah, latihan soal dengan pembahasan, dan AI yang siap bantu. <mark>Gratis, gak ada syarat.</mark>",
     "materials-value": "5000+",

@@ -463,6 +463,26 @@
     "enterprise-feature-4": "Custom branding and dedicated support",
     "enterprise-cta": "Contact founder"
   },
+  "Faq": {
+    "badge": "Support",
+    "headline": "Still have <mark>questions?</mark>",
+    "description": "Cannot find what you need? Reach out to us directly.",
+    "cta-contact": "Contact founder",
+    "q1": "Is Nakafa really free?",
+    "a1": "Yes. Core content is free forever. We charge for Pro features like unlimited AI and PDF downloads, but you will never hit a paywall on basic learning materials.",
+    "q2": "What AI models can I use?",
+    "a2": "Free users get access to basic models with 10 messages per day. Pro unlocks GPT, Claude, Gemini, and 15+ other premium models with unlimited usage.",
+    "q3": "Can I download lessons for offline use?",
+    "a3": "PDF downloads are a Pro feature. You can save any lesson as a PDF to study offline or print. Free users can always access content online.",
+    "q4": "What subjects and grades do you cover?",
+    "a4": "We cover K-12 through university. Mathematics, Physics, Chemistry, Biology, Computer Science, and more. From elementary basics to advanced university courses.",
+    "q5": "Is my data private?",
+    "a5": "Yes. We do not sell your data. AI conversations are processed securely. You can delete your chat history anytime. We are privacy-first by design.",
+    "q6": "Can schools use Nakafa?",
+    "a6": "Absolutely. We offer custom solutions for classrooms and institutions. Contact founder for LMS integration, student management, and custom branding.",
+    "q7": "How does Nakafa ensure content accuracy?",
+    "a7": "All content is created by qualified contributors and reviewed by the community. Our open-source approach means anyone can audit and improve materials. Practice exercises include detailed explanations so you learn from mistakes, not just scores."
+  },
   "Features": {
     "headline": "<mark>Stuck on a lesson at 2am with no one to ask. We have been there.</mark> That is why we built this. Complete materials from elementary to university, practice problems with explanations, and AI ready to help whenever you need it. <mark>Free, no strings attached.</mark>",
     "materials-value": "5000+",
@@ -490,7 +510,7 @@
     "cta-developers": "Explore llms.txt",
     "schools-title": "For Schools",
     "schools-description": "Integrate with your LMS. Connect Nakafa content to your classroom tools without friction.",
-    "cta-schools": "Contact founders"
+    "cta-schools": "Contact founder"
   },
   "About": {
     "meta-title": "Fck Closed Education, Enjoy Free Open Education",
