@@ -3,6 +3,7 @@
 import { Settings01Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import {
   Avatar,
   AvatarFallback,
@@ -12,7 +13,6 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cn } from "@repo/design-system/lib/utils";
-import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useUser } from "@/lib/context/use-user";
 import { getInitialName } from "@/lib/utils/helper";
@@ -21,7 +21,7 @@ export function UserHeader({ userId }: { userId: Id<"users"> }) {
   const t = useTranslations("Auth");
   const tCommon = useTranslations("Common");
 
-  const user = useQuery(api.auth.getUserById, { userId });
+  const { data: user } = useQueryWithStatus(api.auth.getUserById, { userId });
   const currentUser = useUser((state) => state.user);
 
   const authUser = user?.authUser;

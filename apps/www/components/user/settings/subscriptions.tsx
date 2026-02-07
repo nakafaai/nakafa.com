@@ -3,9 +3,10 @@
 import { PartyIcon, Settings01Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { products } from "@repo/backend/convex/utils/polar";
+import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { useAction, useQuery } from "convex/react";
+import { useAction } from "convex/react";
 import { useTranslations } from "next-intl";
 import { Activity, useTransition } from "react";
 import { FormBlock } from "@/components/shared/form-block";
@@ -15,7 +16,7 @@ export function UserSettingsSubscriptions() {
 
   const [isPending, startTransition] = useTransition();
 
-  const hasSubscription = useQuery(
+  const { data: hasSubscription } = useQueryWithStatus(
     api.subscriptions.queries.hasActiveSubscription,
     { productId: products.pro.id }
   );
