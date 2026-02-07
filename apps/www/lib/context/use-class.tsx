@@ -2,7 +2,7 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import { useQuery } from "convex/react";
+import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { createContext, useContextSelector } from "use-context-selector";
 
 interface ClassContextValue {
@@ -20,7 +20,7 @@ export function ClassContextProvider({
   children: React.ReactNode;
   classId: Id<"schoolClasses">;
 }) {
-  const results = useQuery(api.classes.queries.getClass, {
+  const { data: results } = useQueryWithStatus(api.classes.queries.getClass, {
     classId,
   });
 
