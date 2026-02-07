@@ -5,8 +5,8 @@ import { useTheme } from "next-themes";
 import { getColorFront } from "@/components/marketing/about/utils";
 
 export function AiNeuroNoise() {
-  const { theme } = useTheme();
-  const themeColor = getColorFront(theme);
+  const { resolvedTheme } = useTheme();
+  const themeColor = getColorFront(resolvedTheme);
 
   return (
     <NeuroNoise

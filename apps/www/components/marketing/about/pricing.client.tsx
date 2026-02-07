@@ -5,9 +5,9 @@ import { useTheme } from "next-themes";
 import { getColorFront } from "@/components/marketing/about/utils";
 
 export function PricingDithering({ ...props }: DitheringProps) {
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
 
-  const colorFront = getColorFront(theme);
+  const colorFront = getColorFront(resolvedTheme);
 
   return (
     <Dithering
@@ -26,9 +26,9 @@ export function PricingDithering({ ...props }: DitheringProps) {
 }
 
 export function EnterpriseDithering({ ...props }: DitheringProps) {
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
 
-  const colorFront = getColorFront(theme);
+  const colorFront = getColorFront(resolvedTheme);
 
   return (
     <Dithering
