@@ -49,7 +49,6 @@ export function Pricing() {
     t("pro-feature-3"),
     t("pro-feature-4"),
     t("pro-feature-5"),
-    t("pro-feature-6"),
   ];
 
   return (
