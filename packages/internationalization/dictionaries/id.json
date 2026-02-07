@@ -454,14 +454,7 @@
     "pro-feature-3": "Download materi apa pun sebagai PDF untuk dibaca offline",
     "pro-feature-4": "Materi audio untuk belajar di mana saja",
     "pro-feature-5": "Support prioritas saat kamu stuck",
-    "pro-cta": "Dapatkan Pro",
-    "enterprise-title": "Untuk Sekolah",
-    "enterprise-description": "Solusi custom untuk kelas dan institusi pendidikan.",
-    "enterprise-feature-1": "Kelola siswa dan kelas tanpa batas",
-    "enterprise-feature-2": "Tracking progress belajar di seluruh organisasi",
-    "enterprise-feature-3": "Integrasi dengan LMS yang sudah ada",
-    "enterprise-feature-4": "Branding custom dan support dedicated",
-    "enterprise-cta": "Hubungi founder"
+    "pro-cta": "Dapatkan Pro"
   },
   "Faq": {
     "badge": "Bantuan",
@@ -497,6 +490,12 @@
     "ai-value": "AI",
     "ai-label": "Asisten",
     "ai-description": "Tanya apa saja, kapan saja"
+  },
+  "SchoolsSection": {
+    "badge": "Untuk Sekolah",
+    "headline": "Setiap sekolah punya kebutuhan <mark>berbeda</mark>. Kami <mark>mengerti</mark>.",
+    "description": "Mau LMS lengkap? Integrasi konten? Atau solusi custom? Pilih yang cocok untuk sekolahmu.",
+    "cta": "Diskusikan kebutuhanmu"
   },
   "AiSection": {
     "headline": "Dibuat untuk manusia. <mark>Dioptimalkan untuk AI.</mark>",

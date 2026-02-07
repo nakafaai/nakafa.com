@@ -454,14 +454,7 @@
     "pro-feature-3": "Download any lesson as PDF for offline reading",
     "pro-feature-4": "Audio lessons for learning on the go",
     "pro-feature-5": "Priority support when you get stuck",
-    "pro-cta": "Get Pro",
-    "enterprise-title": "For Schools",
-    "enterprise-description": "Custom solutions for classrooms and educational institutions.",
-    "enterprise-feature-1": "Manage unlimited students and classes",
-    "enterprise-feature-2": "Track learning progress across your organization",
-    "enterprise-feature-3": "Integrate with your existing LMS",
-    "enterprise-feature-4": "Custom branding and dedicated support",
-    "enterprise-cta": "Contact founder"
+    "pro-cta": "Get Pro"
   },
   "Faq": {
     "badge": "Support",
@@ -497,6 +490,12 @@
     "ai-value": "AI",
     "ai-label": "Assistant",
     "ai-description": "Ask anything, anytime"
+  },
+  "SchoolsSection": {
+    "badge": "For Schools",
+    "headline": "Every school has <mark>different</mark> needs. We <mark>get it</mark>.",
+    "description": "Want a full LMS? Content integration? Or custom solutions? Pick what works for your school.",
+    "cta": "Discuss your needs"
   },
   "AiSection": {
     "headline": "Built for humans. <mark>Optimized for AI.</mark>",

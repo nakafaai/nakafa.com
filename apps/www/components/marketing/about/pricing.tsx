@@ -1,6 +1,5 @@
 import {
   ArrowUpRight01Icon,
-  Mail01Icon,
   Rocket01Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
@@ -141,32 +140,6 @@ export function Pricing() {
               <ProButton />
             </div>
           </div>
-        </div>
-      </div>
-
-      <div className="border-t bg-card text-card-foreground">
-        <div className="flex flex-col justify-center gap-4 px-6 py-12 lg:py-24">
-          <h3 className="font-semibold text-xl lg:text-2xl">
-            {t("enterprise-title")}
-          </h3>
-          <p className="max-w-xl text-muted-foreground">
-            {t("enterprise-description")}
-          </p>
-
-          <Button
-            className="w-fit"
-            nativeButton={false}
-            render={
-              <a
-                href="mailto:nakafaai@gmail.com"
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                <HugeIcons icon={Mail01Icon} />
-                {t("enterprise-cta")}
-              </a>
-            }
-          />
         </div>
       </div>
     </section>

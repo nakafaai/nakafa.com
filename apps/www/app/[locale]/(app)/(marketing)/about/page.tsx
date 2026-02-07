@@ -13,6 +13,7 @@ import { Features } from "@/components/marketing/about/features";
 import { Hero } from "@/components/marketing/about/hero";
 import { Logos } from "@/components/marketing/about/logos";
 import { Pricing } from "@/components/marketing/about/pricing";
+import { Schools } from "@/components/marketing/about/schools";
 import { Blocker } from "@/components/marketing/shared/blocker";
 import { exercisesMenu } from "@/components/sidebar/_data/exercises";
 import { subjectMenu } from "@/components/sidebar/_data/subject";
@@ -147,6 +148,7 @@ async function AboutPageContent({ locale }: { locale: Locale }) {
         <Features />
         <Ai />
         <Pricing />
+        <Schools />
         <Blocker />
         <Faq />
         <Blocker />
