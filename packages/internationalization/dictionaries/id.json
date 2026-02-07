@@ -437,7 +437,32 @@
     "change-model-error": "Waduh, ada kesalahan! Silakan hubungi kami."
   },
   "Pricing": {
-    "headline": "<mark>Kita juga pernah jadi pelajar.</mark> Ngerti rasanya milih antara belajar atau makan. Akses dasar gratis. Selamanya."
+    "headline": "<mark>Kita juga pernah jadi pelajar.</mark> Ngerti rasanya milih antara belajar atau makan. Akses dasar gratis. Selamanya.",
+    "free-title": "Gratis",
+    "free-description": "Pembelajaran inti untuk semua orang",
+    "free-feature-1": "Akses ke 5.000+ materi",
+    "free-feature-2": "2.000+ latihan soal dengan pembahasan",
+    "free-feature-3": "Tutor AI dasar (10 pesan per hari)",
+    "free-feature-4": "Waktu respons standar",
+    "free-feature-5": "Akses komunitas di Discord",
+    "free-cta": "Mulai Belajar",
+    "pro-title": "Pro",
+    "pro-description": "Semua fitur Gratis, plus AI tanpa batas dan fitur premium",
+    "pro-period": "/bulan",
+    "pro-feature-1": "Semua fitur Gratis, plus:",
+    "pro-feature-2": "Tutor AI tanpa batas dengan Nina (GPT, Claude, Gemini, 15+ model)",
+    "pro-feature-3": "Download materi apa pun sebagai PDF untuk dibaca offline",
+    "pro-feature-4": "Materi audio untuk belajar di mana saja",
+    "pro-feature-5": "Rencana belajar personal dengan tracking progress",
+    "pro-feature-6": "Support prioritas saat kamu stuck",
+    "pro-cta": "Dapatkan Pro",
+    "enterprise-title": "Untuk Sekolah",
+    "enterprise-description": "Solusi custom untuk kelas dan institusi pendidikan.",
+    "enterprise-feature-1": "Kelola siswa dan kelas tanpa batas",
+    "enterprise-feature-2": "Tracking progress belajar di seluruh organisasi",
+    "enterprise-feature-3": "Integrasi dengan LMS yang sudah ada",
+    "enterprise-feature-4": "Branding custom dan support dedicated",
+    "enterprise-cta": "Hubungi Sales"
   },
   "Features": {
     "headline": "<mark>Stuck di materi tengah malam, bingung mau nanya siapa. Kita pernah ngalamin juga.</mark> Makanya kita bikin platform ini. Ada materi lengkap dari SD sampai kuliah, latihan soal dengan pembahasan, dan AI yang siap bantu. <mark>Gratis, gak ada syarat.</mark>",
