@@ -63,7 +63,7 @@ export function Pricing() {
           </h2>
         </div>
 
-        <div className="border-t bg-card">
+        <div className="border-t bg-card text-card-foreground">
           <div className="grid lg:grid-cols-2 lg:divide-x">
             <div className="flex flex-col gap-6 px-6 py-12">
               <div className="grid gap-2">
