@@ -2,6 +2,7 @@ import {
   ArrowUpRight01Icon,
   Diamond02Icon,
   Mail01Icon,
+  Rocket01Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -116,7 +117,7 @@ export function Pricing() {
               </div>
 
               <div className="grid gap-3">
-                <PricingFeature text={proFeatures[0]} />
+                <PricingFeature icon={Rocket01Icon} text={proFeatures[0]} />
                 <div className="grid gap-3 border-t pt-3">
                   {proFeatures.slice(1).map((feature) => (
                     <PricingFeature key={feature} text={feature} />
