@@ -439,7 +439,7 @@
   "Pricing": {
     "headline": "<mark>We were students too.</mark> We know what it is like to choose between learning and eating. Core access is free. Always.",
     "free-title": "Free",
-    "free-description": "Core learning for everyone",
+    "free-description": "Start learning at your own pace",
     "free-feature-1": "Access to 5,000+ lessons",
     "free-feature-2": "2,000+ practice exercises with explanations",
     "free-feature-3": "Basic AI tutor (10 messages per day)",
@@ -447,7 +447,7 @@
     "free-feature-5": "Community access on Discord",
     "free-cta": "Start Learning",
     "pro-title": "Pro",
-    "pro-description": "Everything in Free, plus unlimited AI and premium features",
+    "pro-description": "Study smarter with unlimited AI help",
     "pro-period": "/month",
     "pro-feature-1": "Everything in Free, plus:",
     "pro-feature-2": "Unlimited AI tutoring with Nina (GPT, Claude, Gemini, 15+ models)",
@@ -462,7 +462,7 @@
     "enterprise-feature-2": "Track learning progress across your organization",
     "enterprise-feature-3": "Integrate with your existing LMS",
     "enterprise-feature-4": "Custom branding and dedicated support",
-    "enterprise-cta": "Contact Sales"
+    "enterprise-cta": "Contact founder"
   },
   "Features": {
     "headline": "<mark>Stuck on a lesson at 2am with no one to ask. We have been there.</mark> That is why we built this. Complete materials from elementary to university, practice problems with explanations, and AI ready to help whenever you need it. <mark>Free, no strings attached.</mark>",

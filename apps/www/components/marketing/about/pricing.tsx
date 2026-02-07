@@ -64,13 +64,13 @@ export function Pricing() {
 
         <div className="border-t bg-card">
           <div className="grid lg:grid-cols-2 lg:divide-x">
-            <div className="flex flex-col gap-6 p-6">
+            <div className="flex flex-col gap-6 px-6 py-12">
               <div className="grid gap-2">
                 <h3 className="font-semibold text-3xl">{t("free-title")}</h3>
                 <p className="text-muted-foreground">{t("free-description")}</p>
                 <div className="pt-2">
                   <NumberFormat
-                    className="font-bold text-4xl tracking-tight"
+                    className="font-semibold text-4xl tracking-tight"
                     format={{
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
@@ -95,13 +95,13 @@ export function Pricing() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-6 p-6">
+            <div className="flex flex-col gap-6 px-6 py-12">
               <div className="grid gap-2">
                 <h3 className="font-semibold text-3xl">{t("pro-title")}</h3>
                 <p className="text-muted-foreground">{t("pro-description")}</p>
                 <div className="flex items-baseline gap-1 pt-2">
                   <NumberFormat
-                    className="font-bold text-4xl tracking-tight"
+                    className="font-semibold text-4xl tracking-tight"
                     format={{
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
@@ -144,10 +144,19 @@ export function Pricing() {
                 {t("enterprise-description")}
               </p>
             </div>
-            <Button>
-              <HugeIcons icon={Mail01Icon} />
-              {t("enterprise-cta")}
-            </Button>
+            <Button
+              nativeButton={false}
+              render={
+                <a
+                  href="mailto:nakafaai@gmail.com"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  <HugeIcons icon={Mail01Icon} />
+                  {t("enterprise-cta")}
+                </a>
+              }
+            />
           </div>
         </div>
       </div>
