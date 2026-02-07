@@ -139,14 +139,14 @@ async function AboutPageContent({ locale }: { locale: Locale }) {
         name={t("meta-title")}
         url={`https://nakafa.com/${locale}/about`}
       />
-      <main className="relative grid" data-pagefind-ignore>
+      <div className="relative grid" data-pagefind-ignore>
         <Hero />
         <Logos />
         <Features />
         <Ai />
         <Pricing />
         <Community />
-      </main>
+      </div>
     </>
   );
 }

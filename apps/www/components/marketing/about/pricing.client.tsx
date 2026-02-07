@@ -24,3 +24,23 @@ export function PricingDithering({ ...props }: DitheringProps) {
     />
   );
 }
+
+export function EnterpriseDithering({ ...props }: DitheringProps) {
+  const { theme } = useTheme();
+
+  const colorFront = getColorFront(theme);
+
+  return (
+    <Dithering
+      className="size-full"
+      colorBack="#00000000"
+      colorFront={colorFront}
+      scale={1}
+      shape="dots"
+      size={8}
+      speed={0.1}
+      type="4x4"
+      {...props}
+    />
+  );
+}

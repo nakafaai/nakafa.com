@@ -7,10 +7,14 @@ import {
 } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
-import { PricingDithering } from "@/components/marketing/about/pricing.client";
+import {
+  EnterpriseDithering,
+  PricingDithering,
+} from "@/components/marketing/about/pricing.client";
 
 const PRO_PRICE = 8.99;
 
@@ -89,10 +93,21 @@ export function Pricing() {
               </div>
 
               <div className="mt-auto pt-4">
-                <Button className="w-full" variant="outline">
-                  <HugeIcons icon={ArrowUpRight01Icon} />
-                  {t("free-cta")}
-                </Button>
+                <Button
+                  className="w-full"
+                  nativeButton={false}
+                  render={
+                    <NavigationLink
+                      href="/"
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      <HugeIcons icon={ArrowUpRight01Icon} />
+                      {t("free-cta")}
+                    </NavigationLink>
+                  }
+                  variant="outline"
+                />
               </div>
             </div>
 
@@ -135,29 +150,32 @@ export function Pricing() {
           </div>
         </div>
 
-        <div className="border-t px-6 py-12">
-          <div className="space-y-6">
-            <div className="grid gap-2">
-              <h3 className="font-semibold text-xl lg:text-2xl">
-                {t("enterprise-title")}
-              </h3>
-              <p className="max-w-xl text-muted-foreground">
-                {t("enterprise-description")}
-              </p>
+        <div className="border-t bg-card text-card-foreground lg:grid lg:grid-cols-3">
+          <div className="flex flex-col justify-center gap-4 px-6 py-12 lg:col-span-1 lg:py-24">
+            <h3 className="font-semibold text-xl lg:text-2xl">
+              {t("enterprise-title")}
+            </h3>
+            <p className="max-w-xl text-muted-foreground">
+              {t("enterprise-description")}
+            </p>
+            <div className="pt-2">
+              <Button
+                nativeButton={false}
+                render={
+                  <a
+                    href="mailto:nakafaai@gmail.com"
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    <HugeIcons icon={Mail01Icon} />
+                    {t("enterprise-cta")}
+                  </a>
+                }
+              />
             </div>
-            <Button
-              nativeButton={false}
-              render={
-                <a
-                  href="mailto:nakafaai@gmail.com"
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  <HugeIcons icon={Mail01Icon} />
-                  {t("enterprise-cta")}
-                </a>
-              }
-            />
+          </div>
+          <div className="h-64 lg:col-span-2 lg:h-full">
+            <EnterpriseDithering />
           </div>
         </div>
       </div>
