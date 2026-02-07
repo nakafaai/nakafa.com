@@ -42,8 +42,8 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
       ultracite:
-        specifier: ^7.1.4
-        version: 7.1.4
+        specifier: ^7.1.5
+        version: 7.1.5
 
   apps/api:
     dependencies:
@@ -11485,8 +11485,8 @@ packages:
     resolution: {integrity: sha512-rvKSBiC5zqCCiDZ9kAOszZcDvdAHwwIKJG33Ykj43OKcWsnmcBRL09YTU4nOeHZ8Y2a7l1MgTd08SBe9A8Qj6A==}
     engines: {node: '>=18'}
 
-  ultracite@7.1.4:
-    resolution: {integrity: sha512-f7Uu7nxirLlTzINKL1L8huvZS1AGhav9V7g9jAfGQJv0qlAZWwZSLfMwVBsZbn0Vf0mWIXX4zvWoJY2APK9oVw==}
+  ultracite@7.1.5:
+    resolution: {integrity: sha512-bT1Gr32b3tSUbN2fIl4ZpYc/wH+lZnurw6yqobXlfZEkq7+nNVRsoGJuXVhIu1sPo+BEoLfx/RA0ENMBOzMeyQ==}
     hasBin: true
     peerDependencies:
       oxlint: ^1.0.0
@@ -24472,7 +24472,7 @@ snapshots:
 
   uint8array-extras@1.5.0: {}
 
-  ultracite@7.1.4:
+  ultracite@7.1.5:
     dependencies:
       '@clack/prompts': 1.0.0
       commander: 14.0.2
