@@ -50,94 +50,96 @@ export function Pricing() {
   ];
 
   return (
-    <section className="mx-auto w-full max-w-7xl border-x">
-      <div className="h-120 w-full overflow-hidden">
-        <PricingDithering />
-      </div>
+    <section className="border-b">
+      <div className="mx-auto w-full max-w-7xl border-x">
+        <div className="h-120 w-full overflow-hidden">
+          <PricingDithering />
+        </div>
 
-      <div className="scroll-mt-28 px-6 pb-12" id="pricing">
-        <h2 className="max-w-3xl text-balance font-medium text-3xl tracking-tight sm:text-4xl">
-          {t.rich("headline", {
-            mark: (chunks) => <mark>{chunks}</mark>,
-          })}
-        </h2>
-      </div>
+        <div className="scroll-mt-28 px-6 pb-12" id="pricing">
+          <h2 className="max-w-3xl text-balance font-medium text-3xl tracking-tight sm:text-4xl">
+            {t.rich("headline", {
+              mark: (chunks) => <mark>{chunks}</mark>,
+            })}
+          </h2>
+        </div>
 
-      <div className="border-t bg-card text-card-foreground">
-        <div className="grid lg:grid-cols-2 lg:divide-x">
-          <div className="flex flex-col gap-6 px-6 py-12">
-            <div className="grid gap-2">
-              <h3 className="font-semibold text-3xl">{t("free-title")}</h3>
-              <p className="text-muted-foreground">{t("free-description")}</p>
-              <div className="pt-2">
-                <NumberFormat
-                  className="font-semibold text-4xl tracking-tight"
-                  format={{
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }}
-                  prefix="$"
-                  value={0}
-                />
+        <div className="border-t bg-card text-card-foreground">
+          <div className="grid lg:grid-cols-2 lg:divide-x">
+            <div className="flex flex-col gap-6 px-6 py-12">
+              <div className="grid gap-2">
+                <h3 className="font-semibold text-3xl">{t("free-title")}</h3>
+                <p className="text-muted-foreground">{t("free-description")}</p>
+                <div className="pt-2">
+                  <NumberFormat
+                    className="font-semibold text-4xl tracking-tight"
+                    format={{
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    }}
+                    prefix="$"
+                    value={0}
+                  />
+                </div>
               </div>
-            </div>
 
-            <div className="grid gap-3">
-              {freeFeatures.map((feature) => (
-                <PricingFeature key={feature} text={feature} />
-              ))}
-            </div>
-
-            <div className="mt-auto pt-4">
-              <Button
-                className="w-full"
-                nativeButton={false}
-                render={
-                  <NavigationLink
-                    href="/"
-                    rel="noopener noreferrer"
-                    target="_blank"
-                  >
-                    <HugeIcons icon={ArrowUpRight01Icon} />
-                    {t("free-cta")}
-                  </NavigationLink>
-                }
-                variant="outline"
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-6 px-6 py-12">
-            <div className="grid gap-2">
-              <h3 className="font-semibold text-3xl">{t("pro-title")}</h3>
-              <p className="text-muted-foreground">{t("pro-description")}</p>
-              <div className="flex items-baseline gap-1 pt-2">
-                <NumberFormat
-                  className="font-semibold text-4xl tracking-tight"
-                  format={{
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }}
-                  prefix="$"
-                  value={PRO_PRICE}
-                />
-                <span className="ml-1 text-muted-foreground">
-                  {t("pro-period")}
-                </span>
-              </div>
-            </div>
-
-            <div className="grid gap-3">
-              <PricingFeature icon={Rocket01Icon} text={proFeatures[0]} />
-              <div className="grid gap-3 border-t pt-3">
-                {proFeatures.slice(1).map((feature) => (
+              <div className="grid gap-3">
+                {freeFeatures.map((feature) => (
                   <PricingFeature key={feature} text={feature} />
                 ))}
               </div>
+
+              <div className="mt-auto pt-4">
+                <Button
+                  className="w-full"
+                  nativeButton={false}
+                  render={
+                    <NavigationLink
+                      href="/"
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      <HugeIcons icon={ArrowUpRight01Icon} />
+                      {t("free-cta")}
+                    </NavigationLink>
+                  }
+                  variant="outline"
+                />
+              </div>
             </div>
 
-            <div className="mt-auto pt-4">
-              <ProButton />
+            <div className="flex flex-col gap-6 px-6 py-12">
+              <div className="grid gap-2">
+                <h3 className="font-semibold text-3xl">{t("pro-title")}</h3>
+                <p className="text-muted-foreground">{t("pro-description")}</p>
+                <div className="flex items-baseline gap-1 pt-2">
+                  <NumberFormat
+                    className="font-semibold text-4xl tracking-tight"
+                    format={{
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    }}
+                    prefix="$"
+                    value={PRO_PRICE}
+                  />
+                  <span className="ml-1 text-muted-foreground">
+                    {t("pro-period")}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid gap-3">
+                <PricingFeature icon={Rocket01Icon} text={proFeatures[0]} />
+                <div className="grid gap-3 border-t pt-3">
+                  {proFeatures.slice(1).map((feature) => (
+                    <PricingFeature key={feature} text={feature} />
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-auto pt-4">
+                <ProButton />
+              </div>
             </div>
           </div>
         </div>

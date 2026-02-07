@@ -1,4 +1,4 @@
-import { Building02Icon, Mail01Icon } from "@hugeicons/core-free-icons";
+import { Mail01Icon, School01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
@@ -7,12 +7,12 @@ export function Schools() {
   const t = useTranslations("SchoolsSection");
 
   return (
-    <section className="scroll-mt-28 border-y bg-card" id="schools">
+    <section className="scroll-mt-28" id="schools">
       <div className="mx-auto w-full max-w-7xl border-x">
-        <div className="flex flex-col gap-8 px-6 py-24 lg:py-32">
+        <div className="flex flex-col gap-6 px-6 py-24">
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1.5 text-sm">
-              <HugeIcons className="size-4" icon={Building02Icon} />
+              <HugeIcons className="size-4" icon={School01Icon} />
               {t("badge")}
             </span>
           </div>
