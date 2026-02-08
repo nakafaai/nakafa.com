@@ -8,12 +8,13 @@ interface GraphProps {
 }
 
 export function Graph({ title, description }: GraphProps) {
-  // Dimensions based on problem: p = 2l, l = l, t = l
+  // Dimensions based on problem: p = 2l, t = l, l = l
+  // DF (space diagonal) = 9
   // We use a scale factor for visualization
   const l_scale = 2;
-  const p = 2 * l_scale; // 4
-  const t = l_scale; // 2
-  const l = l_scale; // 2
+  const p = 2 * l_scale;
+  const t = l_scale;
+  const l = l_scale;
 
   // Center the box at (0,0,0)
   const xMin = -p / 2;
@@ -36,8 +37,7 @@ export function Graph({ title, description }: GraphProps) {
 
   const common = { showPoints: false, color: getColor("INDIGO") };
   const labelColor = getColor("INDIGO");
-  const highlightColor = getColor("ORANGE");
-  const auxColor = getColor("TEAL");
+  const highlightColor = getColor("CYAN"); // Using CYAN for the plane as in the image (light blue)
 
   const getMidpoint = (
     p1: { x: number; y: number; z: number },
@@ -119,39 +119,53 @@ export function Graph({ title, description }: GraphProps) {
         },
 
         // Vertical Edges
+        { ...common, points: [A, E] },
+        { ...common, points: [D, H] },
         {
           ...common,
-          points: [A, E],
-        },
-        {
-          ...common,
-          points: [B, getMidpoint(B, F), F],
+          points: [B, F],
           labels: [
-            { text: "t = l", at: 1, offset: [0.4, 0, 0], color: labelColor },
+            { text: "t", at: 0.5, offset: [0.2, 0, 0], color: labelColor },
           ],
         },
         {
           ...common,
           points: [C, G],
-        },
-        {
-          ...common,
-          points: [D, H],
-        },
-
-        // Diagonal DF (Space Diagonal)
-        {
-          points: [D, getMidpoint(D, F), F],
-          color: highlightColor,
-          showPoints: false,
           labels: [
-            { text: "9", at: 1, offset: [0, 0.5, 0], color: highlightColor },
+            { text: "t", at: 0.5, offset: [0.2, 0, 0], color: labelColor },
           ],
         },
-        // Diagonal DB (Base Diagonal)
+
+        // Plane ADFG (Diagonal Plane) - Highlighted
         {
-          points: [D, B],
-          color: auxColor,
+          points: [A, F],
+          color: highlightColor,
+          showPoints: false,
+        },
+        {
+          points: [F, G],
+          color: highlightColor,
+          showPoints: false,
+        },
+        {
+          points: [G, D],
+          color: highlightColor,
+          showPoints: false,
+        },
+        {
+          points: [D, A],
+          color: highlightColor,
+          showPoints: false,
+        },
+        // Fill diagonals for visual effect of the plane
+        {
+          points: [A, G],
+          color: highlightColor,
+          showPoints: false,
+        },
+        {
+          points: [D, F],
+          color: highlightColor,
           showPoints: false,
         },
       ]}
