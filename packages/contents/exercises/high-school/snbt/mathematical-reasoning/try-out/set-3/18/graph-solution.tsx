@@ -5,9 +5,16 @@ import type { ReactNode } from "react";
 interface GraphSolutionProps {
   title: ReactNode;
   description: ReactNode;
+  helicopterLabel: string;
+  observerLabel: string;
 }
 
-export function GraphSolution({ title, description }: GraphSolutionProps) {
+export function GraphSolution({
+  title,
+  description,
+  helicopterLabel,
+  observerLabel,
+}: GraphSolutionProps) {
   const scale = 4;
   const buildingHeight = 16 / scale; // AD
   const distanceAB = (16 * Math.sqrt(3)) / scale; // AB
@@ -106,7 +113,7 @@ export function GraphSolution({ title, description }: GraphSolutionProps) {
           showPoints: false,
           labels: [
             {
-              text: "Helikopter",
+              text: helicopterLabel,
               at: 1,
               offset: [labelOffsetX * 0.3, labelOffsetY * 0.4, 0],
               color: getColor("ORANGE"),
@@ -165,7 +172,7 @@ export function GraphSolution({ title, description }: GraphSolutionProps) {
           showPoints: false,
           labels: [
             {
-              text: "Pengamat",
+              text: observerLabel,
               at: 1,
               offset: [0, labelOffsetY * 0.3, 0],
               color: getColor("CYAN"),
