@@ -1,0 +1,54 @@
+export const metadata = {
+  title: "Solution to Question 2",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/08/2026",
+};
+
+First, let's identify the problem constraints:
+
+1.  Total budget: **Rp<InlineMath math="400.000,00" />**.
+2.  Total items: **<InlineMath math="4" /> bouquets**.
+3.  Mandatory purchase: At least **<InlineMath math="1" /> Snack Bouquet** (Rp<InlineMath math="70.000,00" />).
+
+The first step is to subtract the price of the mandatory item from the total budget to find the remaining funds.
+
+<MathContainer>
+  <BlockMath math="\text{Remaining Budget} = \text{Total Budget} - \text{Price of Snack}" />
+  <BlockMath math="\text{Remaining Budget} = 400.000 - 70.000 = 330.000" />
+</MathContainer>
+
+Now we have a remaining budget of **Rp<InlineMath math="330.000,00" />** to buy **<InlineMath math="3" /> more bouquets** (since the desired total is <InlineMath math="4" /> items, and <InlineMath math="1" /> is already accounted for).
+
+Let's check possible combinations to spend Rp<InlineMath math="330.000,00" /> on <InlineMath math="3" /> items. Looking at the price list, a **Money Bouquet** costs Rp<InlineMath math="130.000,00" />.
+
+If we buy **<InlineMath math="2" /> Money Bouquets**:
+
+<MathContainer>
+  <BlockMath math="2 \times 130.000 = 260.000" />
+</MathContainer>
+
+The remaining money after buying 2 Money Bouquets is:
+
+<MathContainer>
+  <BlockMath math="330.000 - 260.000 = 70.000" />
+</MathContainer>
+
+This remaining **Rp<InlineMath math="70.000,00" />** is exactly enough to buy **<InlineMath math="1" /> more Snack Bouquet**.
+
+So, the breakdown of our total purchase is:
+
+| Item | Quantity | Unit Price | Total Price |
+| :--- | :---: | :--- | :--- |
+| **Snack Bouquet (Mandatory)** | <InlineMath math="1" /> | Rp<InlineMath math="70.000" /> | Rp<InlineMath math="70.000" /> |
+| **Money Bouquet** | <InlineMath math="2" /> | Rp<InlineMath math="130.000" /> | Rp<InlineMath math="260.000" /> |
+| **Snack Bouquet (Additional)** | <InlineMath math="1" /> | Rp<InlineMath math="70.000" /> | Rp<InlineMath math="70.000" /> |
+| **Total** | **<InlineMath math="4" />** | | **Rp<InlineMath math="400.000" />** |
+
+The total items purchased are:
+
+<MathContainer>
+  <BlockMath math="(1 \text{ Mandatory Snack} + 1 \text{ Additional Snack}) + 2 \text{ Money}" />
+  <BlockMath math="= 2 \text{ Snack Bouquets} + 2 \text{ Money Bouquets}" />
+</MathContainer>
+
+This combination fits both the budget and the item count requirement.

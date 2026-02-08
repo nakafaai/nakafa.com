@@ -1,4 +1,3 @@
-"use client";
 
 import { LineEquation } from "@repo/design-system/components/contents/line-equation";
 import { getColor } from "@repo/design-system/lib/color";

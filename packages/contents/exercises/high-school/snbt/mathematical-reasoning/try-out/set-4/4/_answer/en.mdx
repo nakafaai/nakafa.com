@@ -1,0 +1,60 @@
+import { Graph } from "../graph";
+
+export const metadata = {
+  title: "Solution to Question 4",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/08/2026",
+};
+
+**Problem Visualization**
+
+<Graph
+  title={
+    <>
+      Rectangular Prism <InlineMath math="ABCD.EFGH" />
+    </>
+  }
+  description={
+    <>
+      Prism <InlineMath math="ABCD.EFGH" /> with length <InlineMath math="p=2l" />, width <InlineMath math="l" />, and height <InlineMath math="t=l" />. Space diagonal <InlineMath math="DF=9" />.
+    </>
+  }
+/>
+
+**Dimension Analysis**
+
+Given the prism dimensions:
+- Length <InlineMath math="p = 2l" />
+- Height <InlineMath math="t = l" />
+- Width <InlineMath math="l" />
+- Space diagonal <InlineMath math="DF = 9" /> cm
+
+**Calculation**
+
+The formula for the space diagonal is <InlineMath math="d^2 = p^2 + l^2 + t^2" />.
+
+Substitute the known values:
+
+<MathContainer>
+  <BlockMath math="DF^2 = p^2 + l^2 + t^2" />
+  <BlockMath math="9^2 = (2l)^2 + l^2 + l^2" />
+  <BlockMath math="81 = 4l^2 + l^2 + l^2" />
+  <BlockMath math="81 = 6l^2" />
+</MathContainer>
+
+Solve for <InlineMath math="l" />:
+
+<MathContainer>
+  <BlockMath math="l^2 = \frac{81}{6} = \frac{27}{2}" />
+  <BlockMath math="l = \sqrt{\frac{27}{2}}" />
+  <BlockMath math="l = \frac{\sqrt{27}}{\sqrt{2}} = \frac{3\sqrt{3}}{\sqrt{2}}" />
+</MathContainer>
+
+Rationalize the denominator:
+
+<MathContainer>
+  <BlockMath math="l = \frac{3\sqrt{3}}{\sqrt{2}} \times \frac{\sqrt{2}}{\sqrt{2}}" />
+  <BlockMath math="l = \frac{3\sqrt{6}}{2}" />
+</MathContainer>
+
+Thus, the width of the prism is <InlineMath math="\frac{3\sqrt{6}}{2}" /> cm.
