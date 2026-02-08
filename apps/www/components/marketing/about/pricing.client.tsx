@@ -12,6 +12,7 @@ import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { useTransition } from "react";
 import { getColorFront } from "@/components/marketing/about/utils";
+import { authClient } from "@/lib/auth/client";
 import { useUser } from "@/lib/context/use-user";
 
 export function PricingDithering({ ...props }: DitheringProps) {
@@ -55,6 +56,14 @@ export function ProButton() {
 
   const handleCheckout = () => {
     startTransition(async () => {
+      if (!currentUser) {
+        await authClient.signIn.social({
+          provider: "google",
+          callbackURL: "/about",
+        });
+        return;
+      }
+
       const { url } = await generateCheckoutLink({
         productIds: [products.pro.id],
         successUrl: window.location.href,

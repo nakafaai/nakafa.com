@@ -25,7 +25,7 @@ export function Faq() {
   return (
     <section className="mx-auto w-full max-w-7xl border-x">
       <div className="scroll-mt-28 px-6 py-24" id="faq">
-        <div className="grid gap-12 lg:grid-cols-3 lg:gap-12">
+        <div className="grid gap-12 lg:grid-cols-3">
           <div className="grid content-start gap-6 lg:col-span-1">
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1.5 text-sm">
