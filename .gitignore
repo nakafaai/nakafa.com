@@ -13,9 +13,6 @@ audit-results*.json
 # Icon must end with two \r
 Icon
 
-# marketing
-marketing
-
 # ai sdk
 .devtools
 

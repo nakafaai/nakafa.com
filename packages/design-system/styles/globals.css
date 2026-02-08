@@ -107,6 +107,11 @@
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-pixel-square: var(--font-geist-pixel-square);
+  --font-pixel-grid: var(--font-geist-pixel-grid);
+  --font-pixel-circle: var(--font-geist-pixel-circle);
+  --font-pixel-triangle: var(--font-geist-pixel-triangle);
+  --font-pixel-line: var(--font-geist-pixel-line);
   --font-quran: var(--font-quran);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -154,6 +159,17 @@
   --shadow-2xl: var(--shadow-2xl);
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-marquee: marquee 60s linear infinite;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+
+    to {
+      transform: translateX(-50%);
+    }
+  }
 
   @keyframes accordion-down {
     from {
@@ -261,5 +277,5 @@
 
 /* Search result highlighting */
 mark {
-  @apply bg-primary/10 text-primary rounded-sm px-1 py-0.5;
+  @apply bg-transparent text-primary;
 }

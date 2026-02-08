@@ -2,7 +2,7 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import { useQuery } from "convex/react";
+import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { createContext, useContextSelector } from "use-context-selector";
 import { SchoolLoader } from "@/components/school/loader";
 
@@ -20,7 +20,10 @@ export function SchoolContextProvider({
   children: React.ReactNode;
   slug: string;
 }) {
-  const results = useQuery(api.schools.queries.getSchoolBySlug, { slug });
+  const { data: results } = useQueryWithStatus(
+    api.schools.queries.getSchoolBySlug,
+    { slug }
+  );
 
   const school = results?.school;
   const schoolMembership = results?.membership;

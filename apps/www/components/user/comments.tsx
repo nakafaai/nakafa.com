@@ -9,6 +9,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
   Avatar,
@@ -27,7 +28,7 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { cn } from "@repo/design-system/lib/utils";
-import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
+import { useMutation, usePaginatedQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { useUser } from "@/lib/context/use-user";
@@ -63,7 +64,9 @@ export function UserComments({ userId }: { userId: Id<"users"> }) {
 function CommentThread({ comment }: { comment: Doc<"comments"> }) {
   const t = useTranslations("Common");
 
-  const user = useQuery(api.auth.getUserById, { userId: comment.userId });
+  const { data: user } = useQueryWithStatus(api.auth.getUserById, {
+    userId: comment.userId,
+  });
   const currentUser = useUser((state) => state.user);
 
   const userName = user?.authUser.name ?? t("anonymous");

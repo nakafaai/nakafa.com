@@ -25,13 +25,13 @@ import { useRouter } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
 import type { ReactElement, ReactNode } from "react";
 import { Fragment, useEffect, useTransition } from "react";
+import { articlesMenu } from "@/components/sidebar/_data/articles";
+import { holyMenu } from "@/components/sidebar/_data/holy";
+import { subjectMenu } from "@/components/sidebar/_data/subject";
 import { getErrorMessage, usePagefind } from "@/lib/context/use-pagefind";
 import { useSearch } from "@/lib/context/use-search";
 import { useSearchQuery } from "@/lib/react-query/use-search";
 import type { PagefindResult } from "@/types/pagefind";
-import { articlesMenu } from "../sidebar/_data/articles";
-import { holyMenu } from "../sidebar/_data/holy";
-import { subjectMenu } from "../sidebar/_data/subject";
 
 const DEBOUNCE_TIME = 500;
 
@@ -171,11 +171,11 @@ function SearchListItems({
   return results.map((result, index) => (
     <Fragment key={result.url}>
       <CommandGroup heading={result.meta.title}>
-        {result.sub_results.map((subResult) => (
+        {result.sub_results.map((subResult, index) => (
           <CommandItem
             className="group cursor-pointer flex-col items-start"
             disabled={isPending}
-            key={`${subResult.url}-${subResult.title}`}
+            key={`${subResult.url}-${subResult.title}-${index}`}
             onSelect={() => {
               startTransition(() => {
                 setOpen(false);
