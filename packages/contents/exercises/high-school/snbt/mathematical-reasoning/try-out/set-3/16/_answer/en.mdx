@@ -1,0 +1,32 @@
+export const metadata = {
+  title: "Solution for Problem 16",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/08/2026",
+};
+
+We define the variables based on the given information:
+
+- <InlineMath math="n_A = 20" /> (Number of food agents)
+- <InlineMath math="n_B = 40" /> (Number of beverage agents)
+- <InlineMath math="\bar{x}_A" /> (Average profit of food agents)
+- <InlineMath math="\bar{x}_B" /> (Average profit of beverage agents)
+
+It is known that the average profit of food agents is twice that of beverage agents, so we have the relationship:
+
+<MathContainer>
+  <BlockMath math="\bar{x}_A = 2\bar{x}_B \iff \bar{x}_B = \frac{1}{2}\bar{x}_A" />
+</MathContainer>
+
+We substitute this relationship into the total profit equation to find the value of <InlineMath math="\bar{x}_A" /> directly:
+
+<MathContainer>
+  <BlockMath math="\begin{align*} \text{Total Profit} &= (n_A \cdot \bar{x}_A) + (n_B \cdot \bar{x}_B) \\ 360,000,000 &= 20\bar{x}_A + 40\left(\frac{1}{2}\bar{x}_A\right) \\ 360,000,000 &= 20\bar{x}_A + 20\bar{x}_A \\ 360,000,000 &= 40\bar{x}_A \end{align*}" />
+</MathContainer>
+
+Thus, the average profit of food agents is:
+
+<MathContainer>
+  <BlockMath math="\bar{x}_A = \frac{360,000,000}{40} = \text{Rp}9,000,000.00" />
+</MathContainer>
+
+Therefore, the average profit of agents selling food products is **Rp9,000,000.00**.

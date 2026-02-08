@@ -1,0 +1,65 @@
+export const metadata = {
+  title: "Solution for Problem 17",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/08/2026",
+};
+
+Let the four sorted natural numbers be <InlineMath math="x_1, x_2, x_3, x_4" /> where <InlineMath math="x_1 \le x_2 \le x_3 \le x_4" />.
+
+Based on the problem information, we can form the following equations:
+
+1.  **Median**: Since there are an even number of data points (4), the median is the average of the two middle values.
+
+    <MathContainer>
+      <BlockMath math="\frac{x_2 + x_3}{2} = 8 \implies x_2 + x_3 = 16" />
+    </MathContainer>
+
+2.  **Range**: The difference between the largest and smallest datum is 10.
+
+    <MathContainer>
+      <BlockMath math="x_4 - x_1 = 10 \implies x_1 = x_4 - 10" />
+    </MathContainer>
+
+3.  **Mean**: The sum of all data divided by 4 is 8.
+
+    <MathContainer>
+      <BlockMath math="\frac{x_1 + x_2 + x_3 + x_4}{4} = 8 \implies x_1 + x_2 + x_3 + x_4 = 32" />
+    </MathContainer>
+
+We substitute the value <InlineMath math="x_2 + x_3 = 16" /> into the mean equation to find the relationship between <InlineMath math="x_1" /> and <InlineMath math="x_4" />:
+
+<MathContainer>
+  <BlockMath math="\begin{align*} x_1 + (x_2 + x_3) + x_4 &= 32 \\ x_1 + 16 + x_4 &= 32 \\ x_1 + x_4 &= 16 \end{align*}" />
+</MathContainer>
+
+Now we have a system of two equations for <InlineMath math="x_1" /> and <InlineMath math="x_4" />:
+
+<MathContainer>
+  <BlockMath math="\begin{cases} x_4 - x_1 = 10 \\ x_4 + x_1 = 16 \end{cases}" />
+</MathContainer>
+
+By adding both equations, we get:
+
+<MathContainer>
+  <BlockMath math="2x_4 = 26 \implies x_4 = 13" />
+</MathContainer>
+
+Substituting the value of <InlineMath math="x_4" /> to get <InlineMath math="x_1" />:
+
+<MathContainer>
+  <BlockMath math="x_1 = 13 - 10 = 3" />
+</MathContainer>
+
+Finally, we determine the values of <InlineMath math="x_2" /> and <InlineMath math="x_3" />. We know <InlineMath math="x_2 + x_3 = 16" /> and <InlineMath math="3 \le x_2 \le x_3 \le 13" />. Since the mode is unique, there must be one value that appears more than once. The only possibility satisfying the median condition and the order is if <InlineMath math="x_2" /> and <InlineMath math="x_3" /> are equal.
+
+<MathContainer>
+  <BlockMath math="x_2 = x_3 = 8" />
+</MathContainer>
+
+The complete data set is: <InlineMath math="3, 8, 8, 13" />. The mode of this data is <InlineMath math="8" /> (unique), which satisfies the problem condition.
+
+Thus, the product of the second and fourth datum is:
+
+<MathContainer>
+  <BlockMath math="x_2 \cdot x_4 = 8 \cdot 13 = 104" />
+</MathContainer>
