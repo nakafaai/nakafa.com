@@ -1,0 +1,38 @@
+export const metadata = {
+  title: "Solution to Question 3",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/08/2026",
+};
+
+**Net Weight Analysis (Netto)**
+
+First, we calculate how much watermelon is actually sold by subtracting the tare (packaging weight) from the gross weight (bruto).
+
+<MathContainer>
+  <BlockMath math="\text{Tare} = 5\% \times 100 \text{ kg} = 5 \text{ kg}" />
+  <BlockMath math="\text{Netto} = 100 \text{ kg} - 5 \text{ kg} = 95 \text{ kg}" />
+</MathContainer>
+
+**Total Revenue (Selling Price)**
+
+Next, we calculate the total revenue from the watermelon sales. The remaining weight of the watermelons is <InlineMath math="95 - 60 - 20 = 15 \text{ kg}" />.
+
+<MathContainer>
+  <BlockMath math="\text{Sale}_1 = 60 \times 5,000 = \text{Rp}300,000.00" />
+  <BlockMath math="\text{Sale}_2 = 20 \times 4,000 = \text{Rp}80,000.00" />
+  <BlockMath math="\text{Sale}_3 = 15 \times 3,000 = \text{Rp}45,000.00" />
+  <BlockMath math="\text{Total Revenue} = 300,000 + 80,000 + 45,000 = \text{Rp}425,000.00" />
+</MathContainer>
+
+**Calculating Purchase Price**
+
+The merchant makes a <InlineMath math="70\%" /> profit, meaning the Selling Price is <InlineMath math="170\%" /> of the Purchase Price.
+
+<MathContainer>
+  <BlockMath math="\text{Selling Price} = \text{Purchase Price} + \text{Profit}" />
+  <BlockMath math="425,000 = \text{HB} + 0.7 \text{HB}" />
+  <BlockMath math="425,000 = 1.7 \text{HB}" />
+  <BlockMath math="\text{HB} = \frac{425,000}{1.7} = \text{Rp}250,000.00" />
+</MathContainer>
+
+Thus, the purchase price for one crate of watermelons is <InlineMath math="\text{Rp}250,000.00" />.
