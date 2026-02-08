@@ -1,7 +1,13 @@
 import { LineEquation } from "@repo/design-system/components/contents/line-equation";
 import { getColor } from "@repo/design-system/lib/color";
+import type { ReactNode } from "react";
 
-export function Graph() {
+interface GraphProps {
+  title: ReactNode;
+  description: ReactNode;
+}
+
+export function Graph({ title, description }: GraphProps) {
   // Scaling factor: 1 unit = 666.67 meters
   const SCALE = 1.5 / 1000;
   const HEIGHT = 3000 * SCALE; // y = 4.5
@@ -114,9 +120,9 @@ export function Graph() {
           showPoints: false,
         },
       ]}
-      description="Visualisasi posisi pesawat relatif terhadap menara ATC."
+      description={description}
       showZAxis={false}
-      title="Ilustrasi Pergerakan Pesawat"
+      title={title}
     />
   );
 }
