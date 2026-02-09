@@ -1,0 +1,34 @@
+export const metadata = {
+  title: "Pembahasan Soal 10",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/09/2026",
+};
+
+Untuk menentukan banyaknya kemungkinan nomor rumah, kita dapat menggunakan aturan pengisian tempat (*filling slots*) atau perkalian.
+
+**Langkah 1: Identifikasi Angka yang Tersedia**
+
+Angka yang tersedia adalah bilangan cacah kurang dari <InlineMath math="10" />, yaitu <InlineMath math="\{0, 1, 2, 3, 4, 5, 6, 7, 8, 9\}" />.
+
+Dari himpunan tersebut, kita kelompokkan menjadi:
+
+*   **Angka Ganjil**: <InlineMath math="\{1, 3, 5, 7, 9\}" /> (ada <InlineMath math="5" /> angka).
+*   **Angka Genap**: <InlineMath math="\{0, 2, 4, 6, 8\}" /> (ada <InlineMath math="5" /> angka).
+
+**Langkah 2: Mengisi Posisi Digit**
+
+Nomor rumah terdiri dari dua digit dengan ketentuan:
+
+1.  **Digit Pertama (Ganjil)**: Kita harus memilih salah satu dari <InlineMath math="5" /> angka ganjil yang tersedia.
+2.  **Digit Kedua (Genap)**: Kita harus memilih salah satu dari <InlineMath math="5" /> angka genap yang tersedia.
+
+**Langkah 3: Perhitungan Total Kemungkinan**
+
+Banyaknya cara menyusun nomor rumah adalah hasil kali dari banyaknya pilihan untuk setiap posisi:
+
+<MathContainer>
+  <BlockMath math="\text{Total} = (\text{Pilihan Ganjil}) \times (\text{Pilihan Genap})" />
+  <BlockMath math="\text{Total} = 5 \times 5 = 25" />
+</MathContainer>
+
+Jadi, terdapat <InlineMath math="25" /> kemungkinan nomor rumah yang dapat dibuat.

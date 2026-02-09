@@ -1,0 +1,15 @@
+export const metadata = {
+  title: "Pembahasan Soal 5",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/09/2026",
+};
+
+Jumlah bakteri pada hari pertama adalah <InlineMath math="10" />. Setiap hari jumlahnya dikalikan <InlineMath math="2" />, sedangkan setiap <InlineMath math="120" /> jam (setiap <InlineMath math="5" /> hari) setengah dari total bakteri dibunuh sebelum siklus pertumbuhan berikutnya berjalan.
+
+Setelah <InlineMath math="4" /> hari pertama, jumlahnya menjadi <InlineMath math="10 \times 2^4 = 160" />. Pada hari ke-<InlineMath math="5" />, jumlahnya dibunuh setengah menjadi <InlineMath math="80" />. Dari hari ke-<InlineMath math="6" /> sampai hari ke-<InlineMath math="9" />, jumlahnya berlipat dua setiap hari sehingga menjadi <InlineMath math="80 \times 2^4 = 1280" />. Pada hari ke-<InlineMath math="10" />, jumlahnya kembali dibunuh setengah menjadi <InlineMath math="640" />. Setelah itu, selama dua hari berikutnya jumlahnya kembali berlipat dua menjadi <InlineMath math="640 \times 2^2 = 1280" />.
+
+<MathContainer>
+  <BlockMath math="10 \rightarrow 160 \rightarrow 80 \rightarrow 1280 \rightarrow 640 \rightarrow 1280" />
+</MathContainer>
+
+Jadi, banyaknya bakteri pada hari ke-<InlineMath math="12" /> adalah <InlineMath math="1280" />.

@@ -1,0 +1,15 @@
+export const metadata = {
+  title: "Answer to Question 5",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/09/2026",
+};
+
+The initial number of bacteria on day one is <InlineMath math="10" />. The population doubles every day, while every <InlineMath math="120" /> hours (every <InlineMath math="5" /> days) half of the total is killed before the next growth cycle continues.
+
+After the first <InlineMath math="4" /> days, the count becomes <InlineMath math="10 \times 2^4 = 160" />. On day <InlineMath math="5" />, half are killed, leaving <InlineMath math="80" />. From day <InlineMath math="6" /> to day <InlineMath math="9" />, the population doubles each day, giving <InlineMath math="80 \times 2^4 = 1280" />. On day <InlineMath math="10" />, half are killed again, leaving <InlineMath math="640" />. Over the next two days, the population doubles back to <InlineMath math="640 \times 2^2 = 1280" />.
+
+<MathContainer>
+  <BlockMath math="10 \rightarrow 160 \rightarrow 80 \rightarrow 1280 \rightarrow 640 \rightarrow 1280" />
+</MathContainer>
+
+Thus, the number of bacteria on day <InlineMath math="12" /> is <InlineMath math="1280" />.

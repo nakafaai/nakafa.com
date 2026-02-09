@@ -1,0 +1,34 @@
+export const metadata = {
+  title: "Answer to Question 10",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/09/2026",
+};
+
+To determine the number of possible house numbers, we can use the multiplication rule (*filling slots*).
+
+**Step 1: Identifying Available Digits**
+
+The available digits are whole numbers less than <InlineMath math="10" />, which are <InlineMath math="\{0, 1, 2, 3, 4, 5, 6, 7, 8, 9\}" />.
+
+From this set, we categorize them into:
+
+*   **Odd Digits**: <InlineMath math="\{1, 3, 5, 7, 9\}" /> (there are <InlineMath math="5" /> digits).
+*   **Even Digits**: <InlineMath math="\{0, 2, 4, 6, 8\}" /> (there are <InlineMath math="5" /> digits).
+
+**Step 2: Filling the Digit Positions**
+
+The house number consists of two digits with the following conditions:
+
+1.  **First Digit (Odd)**: We must choose one of the <InlineMath math="5" /> available odd digits.
+2.  **Second Digit (Even)**: We must choose one of the <InlineMath math="5" /> available even digits.
+
+**Step 3: Calculating Total Possibilities**
+
+The total number of ways to form the house number is the product of the choices for each position:
+
+<MathContainer>
+  <BlockMath math="\text{Total} = (\text{Odd Choices}) \times (\text{Even Choices})" />
+  <BlockMath math="\text{Total} = 5 \times 5 = 25" />
+</MathContainer>
+
+So, there are <InlineMath math="25" /> possible house numbers that can be formed.
