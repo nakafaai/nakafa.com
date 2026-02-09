@@ -5,9 +5,14 @@ import type { ReactNode } from "react";
 interface GraphProps {
   title: ReactNode;
   description: ReactNode;
+  labels: {
+    building: string;
+    helicopter: string;
+    observer: string;
+  };
 }
 
-export function Graph({ title, description }: GraphProps) {
+export function Graph({ title, description, labels }: GraphProps) {
   const scale = 4;
   const buildingHeight = 16 / scale;
   const observationDistance = (16 * Math.sqrt(3)) / scale;
@@ -76,7 +81,7 @@ export function Graph({ title, description }: GraphProps) {
               color: getColor("INDIGO"),
             },
             {
-              text: "Gedung",
+              text: labels.building,
               at: 1,
               offset: [-labelOffsetX * 1.5, -labelOffsetY * 0.3, 0],
               color: getColor("INDIGO"),
@@ -89,7 +94,7 @@ export function Graph({ title, description }: GraphProps) {
           showPoints: false,
           labels: [
             {
-              text: "Helikopter",
+              text: labels.helicopter,
               at: 1,
               offset: [labelOffsetX * 0.3, labelOffsetY * 0.4, 0],
               color: getColor("ORANGE"),
@@ -145,7 +150,7 @@ export function Graph({ title, description }: GraphProps) {
           showPoints: false,
           labels: [
             {
-              text: "Pengamat",
+              text: labels.observer,
               at: 1,
               offset: [0, labelOffsetY * 0.3, 0],
               color: getColor("CYAN"),
