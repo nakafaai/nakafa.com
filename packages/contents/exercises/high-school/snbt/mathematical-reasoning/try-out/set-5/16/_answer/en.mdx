@@ -1,0 +1,34 @@
+export const metadata = {
+  title: "Solution to Problem 16",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/09/2026",
+};
+
+We need to find the number of days in April <InlineMath math="2024" /> where Pak Saiful does **not** receive shipments from either Supplier B or C.
+
+First, let's identify the time parameters. April has a total of <InlineMath math="30" /> days.
+
+Next, we determine the delivery dates for each supplier, starting from April <InlineMath math="1" />:
+
+<MathContainer>
+  <BlockMath math="B = \{1, 5, 9, 13, 17, 21, 25, 29\}" />
+  <BlockMath math="C = \{1, 8, 15, 22, 29\}" />
+</MathContainer>
+
+The days where Pak Saiful receives a shipment from one or both suppliers are the union of sets <InlineMath math="B" /> and <InlineMath math="C" />:
+
+<MathContainer>
+  <BlockMath math="B \cup C = \{1, 5, 8, 9, 13, 15, 17, 21, 22, 25, 29\}" />
+</MathContainer>
+
+The number of days with shipments is <InlineMath math="11" /> days.
+
+To find the days **without** shipments, we subtract the number of shipment days from the total days in April:
+
+<MathContainer>
+  <BlockMath math="\text{Days Without Shipment} = \text{Total Days} - |B \cup C|" />
+  <BlockMath math="= 30 - 11" />
+  <BlockMath math="= 19 \text{ days}" />
+</MathContainer>
+
+Thus, there are <InlineMath math="19" /> days where Pak Saiful receives no shipments from B or C.

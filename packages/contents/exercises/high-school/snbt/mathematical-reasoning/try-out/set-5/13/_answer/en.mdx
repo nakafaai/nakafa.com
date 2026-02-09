@@ -1,0 +1,33 @@
+export const metadata = {
+  title: "Answer to Question 13",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/09/2026",
+};
+
+The core of this problem lies in the principle of **fair transaction**: we only pay for what we actually consume (the soybeans), not the packaging (the sack). In social arithmetic, this concept is known as **Net Weight (Netto)**.
+
+Netto is the clean weight of the goods without packaging. Since the price of soybeans is calculated per kilogram, we must first find the net weight of the soybeans by subtracting the packaging weight (tare) from the gross weight (bruto).
+
+<MathContainer>
+  <BlockMath math="\text{Netto} = \text{Bruto} \times (100\% - \% \text{Tare})" />
+  <BlockMath math="\text{Netto} = 100 \times (1 - 0.015)" />
+  <BlockMath math="\text{Netto} = 100 \times 0.985 = 98.5 \text{ kg}" />
+</MathContainer>
+
+After knowing the actual net weight of the soybeans we are buying, we calculate the total price before the discount.
+
+<MathContainer>
+  <BlockMath math="\text{Gross Price} = \text{Netto} \times \text{Price per kg}" />
+  <BlockMath math="\text{Gross Price} = 98.5 \times 4,000 = 394,000" />
+</MathContainer>
+
+The entrepreneur receives a discount of <InlineMath math="5\%" />. This means they only need to pay <InlineMath math="95\%" /> of the total price. Let's calculate the final amount:
+
+<MathContainer>
+  <BlockMath math="\text{Payment} = \text{Gross Price} \times (1 - \% \text{Discount})" />
+  <BlockMath math="\text{Payment} = 394,000 \times (1 - 0.05)" />
+  <BlockMath math="\text{Payment} = 394,000 \times 0.95" />
+  <BlockMath math="\text{Payment} = 374,300" />
+</MathContainer>
+
+Thus, the money that must be paid by the entrepreneur is <InlineMath math="\text{Rp374,300.00}" />.

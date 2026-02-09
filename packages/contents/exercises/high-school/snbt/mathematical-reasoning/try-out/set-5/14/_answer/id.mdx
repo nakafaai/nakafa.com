@@ -1,0 +1,56 @@
+export const metadata = {
+  title: "Pembahasan Soal 14",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/09/2026",
+};
+
+Persoalan ini dapat diselesaikan dengan memodelkannya ke dalam Sistem Persamaan Linear Tiga Variabel (SPLTV). Mari kita definisikan variabelnya terlebih dahulu agar lebih mudah:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} x &= \text{harga 1 bungkus kecap asin} \\ y &= \text{harga 1 bungkus saus} \\ z &= \text{harga 1 bungkus lada} \end{aligned}" />
+</MathContainer>
+
+Berdasarkan informasi belanja Angga, Bimo, dan Cinta, kita dapat menyusun tiga persamaan sebagai berikut:
+
+<MathContainer>
+  <BlockMath math="\begin{cases} 3x + y + 2z = 20.000 & \text{(Angga)} \\ x + 2y + z = 12.500 & \text{(Bimo)} \\ 2x + y + 2z = 16.000 & \text{(Cinta)} \end{cases}" />
+</MathContainer>
+
+Target kita adalah mencari berapa yang harus dibayar Rizal jika ia membeli masing-masing satu barang, yang berarti kita mencari nilai <InlineMath math="x + y + z" />.
+
+Perhatikan persamaan milik Angga dan Cinta. Keduanya memiliki jumlah saus (<InlineMath math="y" />) dan lada (<InlineMath math="2z" />) yang sama persis. Ini adalah celah untuk menemukan nilai <InlineMath math="x" /> dengan sangat cepat! Kita cukup kurangkan persamaan Angga dengan persamaan Cinta:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} (3x + y + 2z) - (2x + y + 2z) &= 20.000 - 16.000 \\ x &= 4.000 \end{aligned}" />
+</MathContainer>
+
+Sekarang kita tahu harga kecap asin adalah <InlineMath math="\text{Rp4.000,00}" />. Mari kita substitusikan nilai ini ke persamaan Bimo dan Cinta untuk menyederhanakan sistem:
+
+<MathContainer>
+  <BlockMath math="\text{Dari Bimo: } 4.000 + 2y + z = 12.500 \implies 2y + z = 8.500" />
+  <BlockMath math="\text{Dari Cinta: } 2(4.000) + y + 2z = 16.000 \implies y + 2z = 8.000" />
+</MathContainer>
+
+Kita mendapatkan sistem baru dengan dua variabel. Dari persamaan <InlineMath math="y + 2z = 8.000" />, kita bisa ubah menjadi <InlineMath math="y = 8.000 - 2z" />. Substitusikan ini ke persamaan <InlineMath math="2y + z = 8.500" />:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} 2(8.000 - 2z) + z &= 8.500 \\ 16.000 - 4z + z &= 8.500 \\ 16.000 - 3z &= 8.500 \\ 3z &= 7.500 \\ z &= 2.500 \end{aligned}" />
+</MathContainer>
+
+Setelah mendapatkan <InlineMath math="z = 2.500" />, kita bisa mencari <InlineMath math="y" />:
+
+<MathContainer>
+  <BlockMath math="y = 8.000 - 2(2.500) = 8.000 - 5.000 = 3.000" />
+</MathContainer>
+
+Kini semua harga satuan telah diketahui: <InlineMath math="x = 4.000" /> (kecap asin), <InlineMath math="y = 3.000" /> (saus), dan <InlineMath math="z = 2.500" /> (lada).
+
+Maka, total yang harus dibayar Rizal adalah:
+
+<MathContainer>
+  <BlockMath math="\text{Total} = x + y + z" />
+  <BlockMath math="\text{Total} = 4.000 + 3.000 + 2.500" />
+  <BlockMath math="\text{Total} = 9.500" />
+</MathContainer>
+
+Jadi, Rizal harus membayar sebesar <InlineMath math="\text{Rp9.500,00}" />.

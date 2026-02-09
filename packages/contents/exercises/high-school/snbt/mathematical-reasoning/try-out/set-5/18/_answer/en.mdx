@@ -1,0 +1,55 @@
+export const metadata = {
+  title: "Solution to Problem 18",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/09/2026",
+};
+
+We will determine the ratio of the number of male to female employees using the concept of combined average (weighted average).
+
+Let:
+- <InlineMath math="n_L" /> = number of male employees
+- <InlineMath math="n_P" /> = number of female employees
+- <InlineMath math="\bar{x}_L = 320.000" /> (average income of males)
+- <InlineMath math="\bar{x}_P = 285.000" /> (average income of females)
+- <InlineMath math="\bar{x}_{comb} = 300.000" /> (combined average income)
+
+The formula for the combined average is:
+
+<MathContainer>
+  <BlockMath math="\bar{x}_{comb} = \frac{n_L \cdot \bar{x}_L + n_P \cdot \bar{x}_P}{n_L + n_P}" />
+</MathContainer>
+
+Substitute the known values into the formula:
+
+<MathContainer>
+  <BlockMath math="300.000 = \frac{320.000 n_L + 285.000 n_P}{n_L + n_P}" />
+</MathContainer>
+
+To simplify the calculation, divide all numbers by <InlineMath math="1.000" />:
+
+<MathContainer>
+  <BlockMath math="300 = \frac{320 n_L + 285 n_P}{n_L + n_P}" />
+</MathContainer>
+
+Cross-multiply the denominator to the left side:
+
+<MathContainer>
+  <BlockMath math="300(n_L + n_P) = 320 n_L + 285 n_P" />
+  <BlockMath math="300 n_L + 300 n_P = 320 n_L + 285 n_P" />
+</MathContainer>
+
+Group like terms:
+
+<MathContainer>
+  <BlockMath math="300 n_P - 285 n_P = 320 n_L - 300 n_L" />
+  <BlockMath math="15 n_P = 20 n_L" />
+</MathContainer>
+
+Find the ratio <InlineMath math="n_L : n_P" />:
+
+<MathContainer>
+  <BlockMath math="\frac{n_L}{n_P} = \frac{15}{20}" />
+  <BlockMath math="\frac{n_L}{n_P} = \frac{3}{4}" />
+</MathContainer>
+
+Thus, the ratio of the number of male to female employees is <InlineMath math="3:4" />.

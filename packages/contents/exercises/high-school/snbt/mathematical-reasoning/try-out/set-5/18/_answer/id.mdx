@@ -1,0 +1,55 @@
+export const metadata = {
+  title: "Pembahasan Soal 18",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/09/2026",
+};
+
+Kita akan mencari perbandingan jumlah karyawan laki-laki dan perempuan menggunakan konsep rata-rata gabungan.
+
+Misalkan:
+- <InlineMath math="n_L" /> = jumlah karyawan laki-laki
+- <InlineMath math="n_P" /> = jumlah karyawan perempuan
+- <InlineMath math="\bar{x}_L = 320.000" /> (rata-rata laki-laki)
+- <InlineMath math="\bar{x}_P = 285.000" /> (rata-rata perempuan)
+- <InlineMath math="\bar{x}_{gab} = 300.000" /> (rata-rata gabungan)
+
+Rumus rata-rata gabungan adalah:
+
+<MathContainer>
+  <BlockMath math="\bar{x}_{gab} = \frac{n_L \cdot \bar{x}_L + n_P \cdot \bar{x}_P}{n_L + n_P}" />
+</MathContainer>
+
+Substitusikan nilai yang diketahui ke dalam rumus:
+
+<MathContainer>
+  <BlockMath math="300.000 = \frac{320.000 n_L + 285.000 n_P}{n_L + n_P}" />
+</MathContainer>
+
+Untuk mempermudah perhitungan, kita bagi semua angka dengan <InlineMath math="1.000" />:
+
+<MathContainer>
+  <BlockMath math="300 = \frac{320 n_L + 285 n_P}{n_L + n_P}" />
+</MathContainer>
+
+Kalikan silang penyebut ke ruas kiri:
+
+<MathContainer>
+  <BlockMath math="300(n_L + n_P) = 320 n_L + 285 n_P" />
+  <BlockMath math="300 n_L + 300 n_P = 320 n_L + 285 n_P" />
+</MathContainer>
+
+Kumpulkan suku sejenis:
+
+<MathContainer>
+  <BlockMath math="300 n_P - 285 n_P = 320 n_L - 300 n_L" />
+  <BlockMath math="15 n_P = 20 n_L" />
+</MathContainer>
+
+Cari perbandingan <InlineMath math="n_L : n_P" />:
+
+<MathContainer>
+  <BlockMath math="\frac{n_L}{n_P} = \frac{15}{20}" />
+  <BlockMath math="\frac{n_L}{n_P} = \frac{3}{4}" />
+</MathContainer>
+
+Jadi, perbandingan jumlah karyawan laki-laki dan perempuan adalah <InlineMath math="3:4" />.

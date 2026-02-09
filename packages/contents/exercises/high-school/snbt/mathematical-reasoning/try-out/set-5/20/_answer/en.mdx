@@ -1,0 +1,33 @@
+export const metadata = {
+  title: "Solution to Problem 20",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/09/2026",
+};
+
+We need to calculate the total loan amount after interest, then divide it by the repayment period to find the monthly installment.
+
+First, calculate the total interest percentage for the loan period. Since the interest is given per year (<InlineMath math="12" /> months) and the loan duration is <InlineMath math="15" /> months, the time proportion is:
+
+<MathContainer>
+  <BlockMath math="\frac{15}{12} \times 16\% = 1.25 \times 16\% = 20\%" />
+</MathContainer>
+
+Next, calculate the nominal interest in Rupiah based on the principal loan of <InlineMath math="Rp4,500,000.00" />:
+
+<MathContainer>
+  <BlockMath math="\text{Interest} = 20\% \times 4,500,000 = 900,000" />
+</MathContainer>
+
+The total amount to be repaid is the sum of the principal and the interest:
+
+<MathContainer>
+  <BlockMath math="\text{Total} = 4,500,000 + 900,000 = 5,400,000" />
+</MathContainer>
+
+Finally, divide the total loan by the repayment period (<InlineMath math="15" /> months) to get the monthly installment:
+
+<MathContainer>
+  <BlockMath math="\text{Installment} = \frac{5,400,000}{15} = 360,000" />
+</MathContainer>
+
+Thus, Zul must pay <InlineMath math="Rp360,000.00" /> each month.
