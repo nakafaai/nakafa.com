@@ -5,15 +5,17 @@ import type { ReactNode } from "react";
 interface GraphSolutionProps {
   title: ReactNode;
   description: ReactNode;
-  helicopterLabel: string;
-  observerLabel: string;
+  labels: {
+    helicopter: string;
+    observer: string;
+    building: string;
+  };
 }
 
 export function GraphSolution({
   title,
   description,
-  helicopterLabel,
-  observerLabel,
+  labels,
 }: GraphSolutionProps) {
   const scale = 4;
   const buildingHeight = 16 / scale; // AD
@@ -94,7 +96,7 @@ export function GraphSolution({
               color: getColor("INDIGO"),
             },
             {
-              text: "Gedung",
+              text: labels.building,
               at: 1,
               offset: [-labelOffsetX * 1.8, -labelOffsetY * 0.3, 0],
               color: getColor("INDIGO"),
@@ -113,7 +115,7 @@ export function GraphSolution({
           showPoints: false,
           labels: [
             {
-              text: helicopterLabel,
+              text: labels.helicopter,
               at: 1,
               offset: [labelOffsetX * 0.3, labelOffsetY * 0.4, 0],
               color: getColor("ORANGE"),
@@ -172,7 +174,7 @@ export function GraphSolution({
           showPoints: false,
           labels: [
             {
-              text: observerLabel,
+              text: labels.observer,
               at: 1,
               offset: [0, labelOffsetY * 0.3, 0],
               color: getColor("CYAN"),
