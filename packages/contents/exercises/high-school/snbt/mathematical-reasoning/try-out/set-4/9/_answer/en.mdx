@@ -1,0 +1,33 @@
+export const metadata = {
+  title: "Solution Question 9",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/26/2025",
+};
+
+Given the total length of the wire is <InlineMath math="20\text{ m}" />. This length represents the perimeter of the rectangular chicken coop. Let the length be <InlineMath math="p" /> and the width be <InlineMath math="l" />, we can write the perimeter equation:
+
+<MathContainer>
+  <BlockMath math="2(p + l) = 20" />
+  <BlockMath math="p + l = 10 \implies l = 10 - p" />
+</MathContainer>
+
+Next, we want to maximize the area of the coop (<InlineMath math="L" />). The area of a rectangle is <InlineMath math="L = p \times l" />. Substitute the equation <InlineMath math="l = 10 - p" /> into the area formula:
+
+<MathContainer>
+  <BlockMath math="L(p) = p(10 - p)" />
+  <BlockMath math="L(p) = 10p - p^2" />
+</MathContainer>
+
+This equation is a quadratic function whose curve is a downward-opening parabola (since the coefficient of <InlineMath math="p^2" /> is negative), meaning it has a maximum value at its vertex. The coordinate of the vertex (<InlineMath math="p_{max}" />) can be found using the formula <InlineMath math="-\frac{b}{2a}" />:
+
+<MathContainer>
+  <BlockMath math="p_{max} = -\frac{10}{2(-1)} = -\frac{10}{-2} = 5\text{ m}" />
+</MathContainer>
+
+After finding the length <InlineMath math="p = 5\text{ m}" />, we can determine the width <InlineMath math="l" />:
+
+<MathContainer>
+  <BlockMath math="l = 10 - 5 = 5\text{ m}" />
+</MathContainer>
+
+Thus, for the area to be maximum, the length and width of the coop must be **<InlineMath math="5\text{ m}" /> and <InlineMath math="5\text{ m}" />** respectively.

@@ -1,0 +1,33 @@
+export const metadata = {
+  title: "Pembahasan Soal 9",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/26/2025",
+};
+
+Diketahui panjang total kawat adalah <InlineMath math="20\text{ m}" />. Panjang kawat ini akan menjadi keliling dari persegi panjang kandang ayam. Jika kita misalkan panjang kandang adalah <InlineMath math="p" /> dan lebarnya adalah <InlineMath math="l" />, maka kita dapat menuliskan persamaan kelilingnya:
+
+<MathContainer>
+  <BlockMath math="2(p + l) = 20" />
+  <BlockMath math="p + l = 10 \implies l = 10 - p" />
+</MathContainer>
+
+Selanjutnya, kita ingin memaksimumkan luas kandang (<InlineMath math="L" />). Luas persegi panjang dirumuskan sebagai <InlineMath math="L = p \times l" />. Substitusikan persamaan <InlineMath math="l = 10 - p" /> ke dalam rumus luas:
+
+<MathContainer>
+  <BlockMath math="L(p) = p(10 - p)" />
+  <BlockMath math="L(p) = 10p - p^2" />
+</MathContainer>
+
+Persamaan ini merupakan fungsi kuadrat yang kurvanya berbentuk parabola terbuka ke bawah (karena koefisien <InlineMath math="p^2" /> negatif), sehingga memiliki nilai maksimum di titik puncaknya. Absis titik puncak (<InlineMath math="p_{maks}" />) dapat dicari dengan rumus <InlineMath math="-\frac{b}{2a}" />:
+
+<MathContainer>
+  <BlockMath math="p_{maks} = -\frac{10}{2(-1)} = -\frac{10}{-2} = 5\text{ m}" />
+</MathContainer>
+
+Setelah mendapatkan panjang <InlineMath math="p = 5\text{ m}" />, kita dapat mencari lebar <InlineMath math="l" />:
+
+<MathContainer>
+  <BlockMath math="l = 10 - 5 = 5\text{ m}" />
+</MathContainer>
+
+Jadi, agar luasnya maksimum, panjang dan lebar kandang haruslah masing-masing **<InlineMath math="5\text{ m}" /> dan <InlineMath math="5\text{ m}" />**.

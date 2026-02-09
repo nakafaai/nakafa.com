@@ -1,0 +1,29 @@
+export const metadata = {
+  title: "Solution for Question 10",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/26/2025",
+};
+
+Since each married couple must ride in the same car, we can treat each couple as a single unit. There are a total of <InlineMath math="5" /> couple units to be distributed into <InlineMath math="2" /> cars.
+
+The capacity of each car is <InlineMath math="6" /> passengers, which is equivalent to <InlineMath math="3" /> married couples. Therefore, the number of couples in a single car cannot exceed <InlineMath math="3" />. The possible distributions of couples for Car A and Car B that satisfy the capacity constraint are:
+1. Car A carries <InlineMath math="3" /> couples, Car B carries <InlineMath math="2" /> couples.
+2. Car A carries <InlineMath math="2" /> couples, Car B carries <InlineMath math="3" /> couples.
+
+For the first case, we choose <InlineMath math="3" /> couples out of the <InlineMath math="5" /> available to go into Car A. The remaining couples automatically go to Car B.
+
+<MathContainer>
+  <BlockMath math="C(5, 3) = \frac{5!}{3!(5-3)!} = \frac{5 \times 4 \times 3!}{3! \times 2 \times 1} = 10 \text{ ways}" />
+</MathContainer>
+
+For the second case, we choose <InlineMath math="2" /> couples out of the <InlineMath math="5" /> available to go into Car A.
+
+<MathContainer>
+  <BlockMath math="C(5, 2) = \frac{5!}{2!(5-2)!} = \frac{5 \times 4 \times 3!}{2 \times 1 \times 3!} = 10 \text{ ways}" />
+</MathContainer>
+
+The total number of ways to arrange the passengers is the sum of both possibilities.
+
+<MathContainer>
+  <BlockMath math="10 + 10 = 20 \text{ ways}" />
+</MathContainer>
