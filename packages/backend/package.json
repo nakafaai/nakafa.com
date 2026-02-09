@@ -35,7 +35,7 @@
     "buffer": "^6.0.3",
     "convex": "^1.31.7",
     "convex-helpers": "^0.1.111",
-    "hono": "^4.11.8",
+    "hono": "^4.11.9",
     "jsonrepair": "^3.13.2",
     "nanoid": "^5.1.6",
     "strip-ansi": "^7.1.2",
