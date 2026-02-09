@@ -1,0 +1,27 @@
+export const metadata = {
+  title: "Solution Question 19",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/08/2026",
+};
+
+import { Graph } from "../graph";
+
+<Graph
+  title="Ship Position Illustration"
+  description={
+    <>
+      Positions of ships <InlineMath math="A" />, <InlineMath math="B" />, and
+      <InlineMath math="C" /> with a <InlineMath math="60^\circ" /> angle.
+    </>
+  }
+/>
+
+Triangle <InlineMath math="ABC" /> is right-angled at <InlineMath math="A" />, so <InlineMath math="BC" /> is the hypotenuse. The included angle at <InlineMath math="C" /> is <InlineMath math="60^\circ" />, so the sine ratio gives <InlineMath math="AB" /> directly.
+
+<MathContainer>
+  <BlockMath math="\sin 60^\circ = \frac{AB}{BC}" />
+  <BlockMath math="\frac{\sqrt{3}}{2} = \frac{AB}{500}" />
+  <BlockMath math="AB = 500 \cdot \frac{\sqrt{3}}{2} = 250\sqrt{3}" />
+</MathContainer>
+
+Thus, the distance from ship <InlineMath math="A" /> to ship <InlineMath math="B" /> is <InlineMath math="250\sqrt{3}\text{ meter}" />.
