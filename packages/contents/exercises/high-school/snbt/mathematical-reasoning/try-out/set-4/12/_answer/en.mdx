@@ -1,0 +1,28 @@
+export const metadata = {
+  title: "Solution Question 12",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/26/2025",
+};
+
+The first step is to determine the total daily allowance budget for all children. We need to calculate the total monthly allowance based on the salary percentage, then divide it by the number of effective school days.
+
+**Total daily allowance:**
+
+<MathContainer>
+  <BlockMath math="\text{Monthly Allowance} = 10\% \times 4,800,000 = 480,000" />
+  <BlockMath math="\text{School Days} = 30 - 6 = 24 \text{ days}" />
+  <BlockMath math="\text{Total Daily} = \frac{480,000}{24} = 20,000" />
+</MathContainer>
+
+Next, we use the allowance proportion ratio. It is known that child <InlineMath math="A" /> receives Rp<InlineMath math="4,000" /> with a proportion of <InlineMath math="4" />, while the total allowance is Rp<InlineMath math="20,000" /> with a total proportion of <InlineMath math="4 + 3 + x" />.
+
+**Determining the value of <InlineMath math="x" />:**
+
+<MathContainer>
+  <BlockMath math="\frac{\text{Allowance } A}{\text{Total Allowance}} = \frac{\text{Proportion } A}{\text{Total Proportion}}" />
+  <BlockMath math="\frac{4,000}{20,000} = \frac{4}{4 + 3 + x}" />
+  <BlockMath math="\frac{1}{5} = \frac{4}{7 + x}" />
+  <BlockMath math="7 + x = 20 \Rightarrow x = 13" />
+</MathContainer>
+
+Therefore, the value of <InlineMath math="x" /> is <InlineMath math="13" />.

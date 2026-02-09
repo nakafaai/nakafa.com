@@ -1,0 +1,24 @@
+export const metadata = {
+  title: "Solution Question 16",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/26/2025",
+};
+
+To solve this problem easily, we use the principle of **Sum of Values Balance**. The combined total score must equal the sum of the total scores of each group.
+
+Let <InlineMath math="n" /> be the initial number of students. We can set up an equation based on the total values as follows:
+
+<MathContainer>
+  <BlockMath math="\text{Initial Total} + \text{New Total} = \text{Combined Total}" />
+  <BlockMath math="59n + (70 \times 4) = 60(n + 4)" />
+</MathContainer>
+
+Next, we solve this simple linear equation. Notice how we group the terms containing <InlineMath math="n" />.
+
+<MathContainer>
+  <BlockMath math="59n + 280 = 60n + 240" />
+  <BlockMath math="280 - 240 = 60n - 59n" />
+  <BlockMath math="40 = n" />
+</MathContainer>
+
+Thus, the number of students before being combined is <InlineMath math="40" />.
