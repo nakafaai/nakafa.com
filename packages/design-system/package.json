@@ -14,7 +14,7 @@
     "@floating-ui/react": "^0.27.17",
     "@hugeicons/core-free-icons": "^3.1.1",
     "@hugeicons/react": "^1.1.5",
-    "@icons-pack/react-simple-icons": "^13.8.0",
+    "@icons-pack/react-simple-icons": "^13.11.1",
     "@lobehub/icons-static-svg": "^1.78.0",
     "@mantine/hooks": "^8.3.14",
     "@next/third-parties": "16.1.6",
