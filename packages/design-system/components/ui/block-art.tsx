@@ -52,7 +52,10 @@ const MotionBlockCell = memo(function MotionBlockCell({
 }: BlockCellProps) {
   return (
     <motion.div
-      className={cn("size-full bg-background", "hover:bg-primary")}
+      className={cn(
+        "size-full bg-background transition-[transform,background-color,box-shadow,color] duration-500 ease-out",
+        "hover:bg-primary hover:transition-none"
+      )}
       data-cell-index={index}
       data-col={col}
       data-row={row}
@@ -60,10 +63,6 @@ const MotionBlockCell = memo(function MotionBlockCell({
       style={{
         aspectRatio: "1 / 1",
         contain: "layout style paint",
-      }}
-      transition={{
-        duration: 0.5,
-        ease: "easeOut",
       }}
     />
   );
@@ -115,9 +114,17 @@ export function BlockArt({
     );
 
     const updateIdleAnimation = () => {
+      if (!containerRef.current) {
+        return;
+      }
+
       for (const index of idleAnimatedIndicesRef.current) {
-        const selector = `[data-cell-index="${index}"]`;
-        animate(selector, { backgroundColor: "" }, { duration: 0.5 });
+        const cell = containerRef.current.querySelector<HTMLElement>(
+          `[data-cell-index="${index}"]`
+        );
+        if (cell) {
+          cell.classList.remove("bg-secondary");
+        }
       }
       idleAnimatedIndicesRef.current.clear();
 
@@ -127,12 +134,12 @@ export function BlockArt({
       for (let i = 0; i < effectiveAnimatedCellCount; i += 1) {
         const index = shuffledIndices[i];
         idleAnimatedIndicesRef.current.add(index);
-        const selector = `[data-cell-index="${index}"]`;
-        animate(
-          selector,
-          { backgroundColor: "var(--secondary)" },
-          { duration: 0.5 }
+        const cell = containerRef.current.querySelector<HTMLElement>(
+          `[data-cell-index="${index}"]`
         );
+        if (cell) {
+          cell.classList.add("bg-secondary");
+        }
       }
     };
 
@@ -147,12 +154,18 @@ export function BlockArt({
       if (idleIntervalRef.current) {
         clearInterval(idleIntervalRef.current);
       }
-      for (const index of idleAnimatedIndicesRef.current) {
-        const selector = `[data-cell-index="${index}"]`;
-        animate(selector, { backgroundColor: "" }, { duration: 0.5 });
+      if (containerRef.current) {
+        for (const index of idleAnimatedIndicesRef.current) {
+          const cell = containerRef.current.querySelector<HTMLElement>(
+            `[data-cell-index="${index}"]`
+          );
+          if (cell) {
+            cell.classList.remove("bg-secondary");
+          }
+        }
       }
     };
-  }, [totalCells, animatedCellCount, animationInterval, animate]);
+  }, [totalCells, animatedCellCount, animationInterval, containerRef]);
 
   const getWaveIntensity = useCallback(
     (distance: number, radius: number, progress: number) => {
