@@ -29,6 +29,7 @@
 // Environment variables loaded via Node.js --env-file flag
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { JWT } from "google-auth-library";
 import {
   baseRoutes,
@@ -63,9 +64,10 @@ const SUCCESS_RATE_THRESHOLD = 50;
 const host = "https://nakafa.com";
 
 // Data folder and file paths
-const DATA_FOLDER = path.join(import.meta.dirname, "_data");
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const DATA_FOLDER = path.join(__dirname, "_data");
 const GOOGLE_INDEX_HISTORY_FILE = path.join(DATA_FOLDER, "google-index.json");
-const GOOGLE_KEY_FILE = path.join(import.meta.dirname, "google-key.json");
+const GOOGLE_KEY_FILE = path.join(__dirname, "google-key.json");
 
 // Ensure data folder exists
 if (!fs.existsSync(DATA_FOLDER)) {
