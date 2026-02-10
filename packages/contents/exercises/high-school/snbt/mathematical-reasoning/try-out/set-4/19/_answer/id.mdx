@@ -1,0 +1,27 @@
+export const metadata = {
+  title: "Pembahasan Soal 19",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/08/2026",
+};
+
+import { Graph } from "../graph";
+
+<Graph
+  title="Ilustrasi Posisi Kapal"
+  description={
+    <>
+      Posisi kapal <InlineMath math="A" />, <InlineMath math="B" />, dan
+      <InlineMath math="C" /> dengan sudut <InlineMath math="60^\circ" />.
+    </>
+  }
+/>
+
+Segitiga <InlineMath math="ABC" /> siku-siku di <InlineMath math="A" />, sehingga sisi miringnya adalah <InlineMath math="BC" />. Sudut apit di <InlineMath math="C" /> bernilai <InlineMath math="60^\circ" />, jadi perbandingan sinus langsung memberi panjang <InlineMath math="AB" />.
+
+<MathContainer>
+  <BlockMath math="\sin 60^\circ = \frac{AB}{BC}" />
+  <BlockMath math="\frac{\sqrt{3}}{2} = \frac{AB}{500}" />
+  <BlockMath math="AB = 500 \cdot \frac{\sqrt{3}}{2} = 250\sqrt{3}" />
+</MathContainer>
+
+Jadi, jarak kapal <InlineMath math="A" /> ke kapal <InlineMath math="B" /> adalah <InlineMath math="250\sqrt{3}\text{ meter}" />.

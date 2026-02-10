@@ -6,12 +6,7 @@ import {
   LinkSquare02Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
-import {
-  SiClaude,
-  SiGithub,
-  SiGooglegemini,
-  SiOpenai,
-} from "@icons-pack/react-simple-icons";
+import { Claude, Gemini, Github, OpenAI } from "@lobehub/icons";
 import { useClipboard } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -58,21 +53,21 @@ export function OpenContent({
   });
 
   const links = [
-    { title: t("open-in-github"), href: githubUrl, icon: SiGithub },
+    { title: t("open-in-github"), href: githubUrl, icon: Github },
     {
       title: t("open-in-chatgpt"),
       href: `https://chatgpt.com/?${new URLSearchParams({ hints: "search", q })}`,
-      icon: SiOpenai,
+      icon: OpenAI,
     },
     {
       title: t("open-in-gemini"),
       href: `https://gemini.google.com/app?${new URLSearchParams({ q })}`,
-      icon: SiGooglegemini,
+      icon: Gemini,
     },
     {
       title: t("open-in-claude"),
       href: `https://claude.ai/new?${new URLSearchParams({ q })}`,
-      icon: SiClaude,
+      icon: Claude,
     },
   ];
 
@@ -91,6 +86,7 @@ export function OpenContent({
       <DropdownMenu onOpenChange={setOpen} open={open}>
         <DropdownMenuTrigger asChild>
           <Button
+            aria-label={t("open")}
             className="rounded-none shadow-none first:rounded-s-md last:rounded-e-md focus-visible:z-10"
             size="icon"
             variant="secondary"
@@ -113,7 +109,7 @@ export function OpenContent({
               className="cursor-pointer"
               key={item.title}
             >
-              <Link href={item.href} target="_blank">
+              <Link href={item.href} rel="noopener noreferrer" target="_blank">
                 <item.icon />
                 {item.title}
                 <HugeIcons

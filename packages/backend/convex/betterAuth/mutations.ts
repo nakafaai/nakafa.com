@@ -1,6 +1,7 @@
 import { mutation } from "@repo/backend/convex/betterAuth/_generated/server";
 import { validatePermissions } from "@repo/backend/convex/betterAuth/utils";
 import { v } from "convex/values";
+import { nullable } from "convex-helpers/validators";
 
 /**
  * Link Better Auth user to app user.
@@ -53,9 +54,8 @@ export const verifyApiKey = mutation({
   },
   returns: v.object({
     valid: v.boolean(),
-    userId: v.union(v.null(), v.string()),
-    error: v.union(
-      v.null(),
+    userId: nullable(v.string()),
+    error: nullable(
       v.object({
         message: v.string(),
         code: v.string(),

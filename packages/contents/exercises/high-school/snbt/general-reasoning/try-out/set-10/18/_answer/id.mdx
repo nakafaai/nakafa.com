@@ -1,0 +1,41 @@
+export const metadata = {
+  title: "Pembahasan Soal 18",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/30/2026",
+};
+
+Kita akan menganalisis pola penambahan jumlah pengunjung untuk masing-masing toko secara terpisah untuk menentukan jumlah pengunjung pada hari kedelapan.
+
+#### Analisis Pola Toko A
+
+Data pengunjung toko A adalah <InlineMath math="30, 33, 35, 36, 39, 41, 42" />. Jika kita perhatikan selisih antar suku, terdapat pola penambahan yang berulang sebagai berikut:
+
+<MathContainer>
+  <BlockMath math="30 \xrightarrow{+3} 33 \xrightarrow{+2} 35 \xrightarrow{+1} 36 \xrightarrow{+3} 39 \xrightarrow{+2} 41 \xrightarrow{+1} 42" />
+</MathContainer>
+
+Pola penambahannya adalah <InlineMath math="+3, +2, +1" /> yang berulang secara konstan. Berdasarkan pola tersebut, untuk mendapatkan jumlah pengunjung pada hari kedelapan, kita harus menambahkan <InlineMath math="3" /> pada suku terakhir (melanjutkan urutan pola setelah <InlineMath math="+1" />).
+
+<MathContainer>
+  <BlockMath math="\text{Pengunjung A} = 42 + 3 = 45 \text{ orang}" />
+</MathContainer>
+
+#### Analisis Pola Toko B
+
+Data pengunjung toko B adalah <InlineMath math="7, 10, 17, 27, 44, 71, 115" />. Pola ini mengikuti aturan barisan Fibonacci, di mana suku berikutnya diperoleh dari penjumlahan dua suku sebelumnya.
+
+<MathContainer>
+  <BlockMath math="7 + 10 = 17" />
+  <BlockMath math="10 + 17 = 27" />
+  <BlockMath math="17 + 27 = 44" />
+  <BlockMath math="27 + 44 = 71" />
+  <BlockMath math="44 + 71 = 115" />
+</MathContainer>
+
+Oleh karena itu, jumlah pengunjung pada hari kedelapan adalah hasil penjumlahan dari dua suku terakhir, yaitu <InlineMath math="71" /> dan <InlineMath math="115" />.
+
+<MathContainer>
+  <BlockMath math="\text{Pengunjung B} = 71 + 115 = 186 \text{ orang}" />
+</MathContainer>
+
+Jadi, jumlah pengunjung toko A dan B pada hari kedelapan berturut-turut adalah <InlineMath math="45" /> dan <InlineMath math="186" /> orang.

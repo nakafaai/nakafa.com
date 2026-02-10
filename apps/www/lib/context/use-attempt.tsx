@@ -2,7 +2,7 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import { useQuery } from "convex/react";
+import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { createContext, useContextSelector } from "use-context-selector";
 import { useUser } from "@/lib/context/use-user";
 
@@ -22,7 +22,7 @@ export function AttemptContextProvider({
   slug: string;
 }) {
   const user = useUser((state) => state.user);
-  const results = useQuery(
+  const { data: results } = useQueryWithStatus(
     api.exercises.queries.getLatestAttemptBySlug,
     user ? { slug } : "skip"
   );

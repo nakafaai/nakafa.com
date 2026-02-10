@@ -3,15 +3,38 @@ import {
   attachReplyToUsers,
   attachUsers,
 } from "@repo/backend/convex/comments/utils";
+import { vv } from "@repo/backend/convex/lib/validators";
 import { cleanSlug } from "@repo/backend/convex/utils/helper";
-import { paginationOptsValidator } from "convex/server";
+import {
+  paginationOptsValidator,
+  paginationResultValidator,
+} from "convex/server";
 import { v } from "convex/values";
+import { nullable } from "convex-helpers/validators";
+
+/**
+ * Validator for UserData (subset of user doc used in attachUsers).
+ * Matches the UserData interface in lib/userHelpers.ts
+ */
+const userDataValidator = v.object({
+  _id: vv.id("users"),
+  name: v.string(),
+  email: v.string(),
+  image: v.optional(v.union(v.string(), v.null())),
+});
+
+const commentWithUserValidator = v.object({
+  ...vv.doc("comments").fields,
+  user: nullable(userDataValidator),
+  replyToUser: nullable(userDataValidator),
+});
 
 export const getCommentsBySlug = query({
   args: {
     slug: v.string(),
     paginationOpts: paginationOptsValidator,
   },
+  returns: paginationResultValidator(commentWithUserValidator),
   handler: async (ctx, args) => {
     const comments = await ctx.db
       .query("comments")
@@ -39,9 +62,10 @@ export const getCommentsBySlug = query({
 
 export const getCommentsByUserId = query({
   args: {
-    userId: v.id("users"),
+    userId: vv.id("users"),
     paginationOpts: paginationOptsValidator,
   },
+  returns: paginationResultValidator(vv.doc("comments")),
   handler: async (ctx, args) =>
     ctx.db
       .query("comments")

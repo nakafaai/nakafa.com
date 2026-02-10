@@ -1,0 +1,53 @@
+export const metadata = {
+  title: "Explanation for Question 7",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/30/2026",
+};
+
+This sequence actually consists of **two different patterns** interleaved. Let's separate the terms based on odd and even positions to see the patterns more clearly.
+
+**First Pattern (Odd Terms)**
+
+We take the 1st, 3rd, 5th, 7th terms, and so on:
+
+<MathContainer>
+  <BlockMath math="1, 6, 11, 16, \dots, 26" />
+</MathContainer>
+
+It is evident that each term increases by <InlineMath math="5" />:
+- <InlineMath math="1 + 5 = 6" />
+- <InlineMath math="6 + 5 = 11" />
+- <InlineMath math="11 + 5 = 16" />
+
+So the next term in this pattern is:
+
+<MathContainer>
+  <BlockMath math="16 + 5 = 21" />
+</MathContainer>
+
+We can verify this with the last term: <InlineMath math="21 + 5 = 26" />. It matches.
+
+**Second Pattern (Even Terms)**
+
+Now we take the 2nd, 4th, 6th terms, and so on:
+
+<MathContainer>
+  <BlockMath math="3, 5, 7, \dots, 11" />
+</MathContainer>
+
+It appears that each term increases by <InlineMath math="2" />:
+- <InlineMath math="3 + 2 = 5" />
+- <InlineMath math="5 + 2 = 7" />
+
+So the next term (filling the first blank) is:
+<MathContainer>
+  <BlockMath math="7 + 2 = 9" />
+</MathContainer>
+
+Verify with the next term: <InlineMath math="9 + 2 = 11" />. It matches.
+
+**Conclusion**
+
+The first blank corresponds to the continuation of the Second Pattern (<InlineMath math="9" />), and the second blank corresponds to the continuation of the First Pattern (<InlineMath math="21" />).
+
+Thus, the correct pair of numbers is <InlineMath math="9, 21" />.

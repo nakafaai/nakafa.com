@@ -1,0 +1,56 @@
+export const metadata = {
+  title: "Answer to Question 14",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/09/2026",
+};
+
+This problem can be solved by modeling it into a System of Linear Equations with Three Variables. Let's define the variables first for clarity:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} x &= \text{price of 1 pack of soy sauce} \\ y &= \text{price of 1 pack of sauce} \\ z &= \text{price of 1 pack of pepper} \end{aligned}" />
+</MathContainer>
+
+Based on the shopping information of Angga, Bimo, and Cinta, we can set up three equations as follows:
+
+<MathContainer>
+  <BlockMath math="\begin{cases} 3x + y + 2z = 20,000 & \text{(Angga)} \\ x + 2y + z = 12,500 & \text{(Bimo)} \\ 2x + y + 2z = 16,000 & \text{(Cinta)} \end{cases}" />
+</MathContainer>
+
+Our target is to find out how much Rizal has to pay if he buys one of each item, which means we are looking for the value of <InlineMath math="x + y + z" />.
+
+Notice Angga's and Cinta's equations. Both have the exact same amount of sauce (<InlineMath math="y" />) and pepper (<InlineMath math="2z" />). This is a shortcut to finding the value of <InlineMath math="x" /> very quickly! We simply subtract Cinta's equation from Angga's equation:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} (3x + y + 2z) - (2x + y + 2z) &= 20,000 - 16,000 \\ x &= 4,000 \end{aligned}" />
+</MathContainer>
+
+Now we know the price of soy sauce is <InlineMath math="\text{Rp4,000.00}" />. Let's substitute this value into Bimo's and Cinta's equations to simplify the system:
+
+<MathContainer>
+  <BlockMath math="\text{From Bimo: } 4,000 + 2y + z = 12,500 \implies 2y + z = 8,500" />
+  <BlockMath math="\text{From Cinta: } 2(4,000) + y + 2z = 16,000 \implies y + 2z = 8,000" />
+</MathContainer>
+
+We get a new system with two variables. From the equation <InlineMath math="y + 2z = 8,000" />, we can rewrite it as <InlineMath math="y = 8,000 - 2z" />. Substitute this into the equation <InlineMath math="2y + z = 8,500" />:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} 2(8,000 - 2z) + z &= 8,500 \\ 16,000 - 4z + z &= 8,500 \\ 16,000 - 3z &= 8,500 \\ 3z &= 7,500 \\ z &= 2,500 \end{aligned}" />
+</MathContainer>
+
+After getting <InlineMath math="z = 2,500" />, we can find <InlineMath math="y" />:
+
+<MathContainer>
+  <BlockMath math="y = 8,000 - 2(2,500) = 8,000 - 5,000 = 3,000" />
+</MathContainer>
+
+Now all unit prices are known: <InlineMath math="x = 4,000" /> (soy sauce), <InlineMath math="y = 3,000" /> (sauce), and <InlineMath math="z = 2,500" /> (pepper).
+
+Thus, the total amount Rizal must pay is:
+
+<MathContainer>
+  <BlockMath math="\text{Total} = x + y + z" />
+  <BlockMath math="\text{Total} = 4,000 + 3,000 + 2,500" />
+  <BlockMath math="\text{Total} = 9,500" />
+</MathContainer>
+
+So, Rizal must pay <InlineMath math="\text{Rp9,500.00}" />.

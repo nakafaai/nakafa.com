@@ -1,0 +1,66 @@
+export const metadata = {
+  title: "Solution to Question 7",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/08/2026",
+};
+
+**Forming Equations**
+
+The profit increases by a constant amount, so this is an arithmetic progression. The total profit up to the <InlineMath math="n" />-th day is denoted as <InlineMath math="S_n" />.
+
+Given:
+1. Total profit up to the <InlineMath math="4" />th day (<InlineMath math="S_4" />) is <InlineMath math="\text{Rp}700,000.00" />.
+2. Total profit up to the <InlineMath math="10" />th day (<InlineMath math="S_{10}" />) is <InlineMath math="\text{Rp}2,200,000.00" />.
+
+Formula for the sum of <InlineMath math="n" /> terms:
+
+<MathContainer>
+  <BlockMath math="S_n = \frac{n}{2}(2a + (n-1)b)" />
+</MathContainer>
+
+From <InlineMath math="S_4 = 700,000" />:
+
+<MathContainer>
+  <BlockMath math="\frac{4}{2}(2a + 3b) = 700,000" />
+  <BlockMath math="2(2a + 3b) = 700,000" />
+  <BlockMath math="2a + 3b = 350,000 \quad \dots (1)" />
+</MathContainer>
+
+From <InlineMath math="S_{10} = 2,200,000" />:
+
+<MathContainer>
+  <BlockMath math="\frac{10}{2}(2a + 9b) = 2,200,000" />
+  <BlockMath math="5(2a + 9b) = 2,200,000" />
+  <BlockMath math="2a + 9b = 440,000 \quad \dots (2)" />
+</MathContainer>
+
+**Elimination and Substitution**
+
+Eliminating equations <InlineMath math="(1)" /> and <InlineMath math="(2)" />:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} 2a + 9b &= 440,000 \\ 2a + 3b &= 350,000 \\ \hline 6b &= 90,000 \\ b &= 15,000 \end{aligned}" />
+</MathContainer>
+
+Substituting <InlineMath math="b = 15,000" /> into equation <InlineMath math="(1)" />:
+
+<MathContainer>
+  <BlockMath math="2a + 3(15,000) = 350,000" />
+  <BlockMath math="2a + 45,000 = 350,000" />
+  <BlockMath math="2a = 305,000" />
+  <BlockMath math="a = 152,500" />
+</MathContainer>
+
+**Calculating Total Profit for Day <InlineMath math="20" />**
+
+We calculate <InlineMath math="S_{20}" />:
+
+<MathContainer>
+  <BlockMath math="S_{20} = \frac{20}{2}(2a + 19b)" />
+  <BlockMath math="S_{20} = 10(305,000 + 19(15,000))" />
+  <BlockMath math="S_{20} = 10(305,000 + 285,000)" />
+  <BlockMath math="S_{20} = 10(590,000)" />
+  <BlockMath math="S_{20} = \text{Rp}5,900,000.00" />
+</MathContainer>
+
+Thus, the total profit up to the <InlineMath math="20" />th day is <InlineMath math="\text{Rp}5,900,000.00" />.

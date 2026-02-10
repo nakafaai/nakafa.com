@@ -1,80 +1,295 @@
-import { defineTable } from "convex/server";
+import { defineTable, paginationResultValidator } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
+import {
+  addFieldsToValidator,
+  literals,
+  nullable,
+  systemFields,
+} from "convex-helpers/validators";
 
-const schoolClassMemberRoles = v.union(
-  v.literal("teacher"),
-  v.literal("student")
+/**
+ * School class member role validator
+ */
+export const schoolClassMemberRoleValidator = literals("teacher", "student");
+export type SchoolClassMemberRole = Infer<
+  typeof schoolClassMemberRoleValidator
+>;
+
+/**
+ * School class teacher role validator
+ */
+export const schoolClassTeacherRoleValidator = v.optional(
+  literals("primary", "co-teacher", "assistant")
 );
-export type SchoolClassMemberRole = Infer<typeof schoolClassMemberRoles>;
 
-export const schoolClassVisibility = v.union(
-  v.literal("private"),
-  v.literal("public")
+/**
+ * School class enroll method validator
+ */
+export const schoolClassEnrollMethodValidator = v.optional(
+  literals("code", "teacher", "admin", "invite", "public")
 );
-export type SchoolClassVisibility = Infer<typeof schoolClassVisibility>;
 
-export const schoolClassMaterialStatus = v.union(
-  v.literal("draft"),
-  v.literal("published"),
-  v.literal("scheduled"),
-  v.literal("archived")
+/**
+ * School class visibility validator
+ */
+export const schoolClassVisibilityValidator = literals("private", "public");
+export type SchoolClassVisibility = Infer<
+  typeof schoolClassVisibilityValidator
+>;
+
+/**
+ * Class material status validator
+ */
+export const schoolClassMaterialStatusValidator = literals(
+  "draft",
+  "published",
+  "scheduled",
+  "archived"
 );
-export type SchoolClassMaterialStatus = Infer<typeof schoolClassMaterialStatus>;
 
-export const schoolClassImages = v.union(
-  v.literal("retro"),
-  v.literal("time"),
-  v.literal("stars"),
-  v.literal("chill"),
-  v.literal("puzzle"),
-  v.literal("line"),
-  v.literal("shoot"),
-  v.literal("virus"),
-  v.literal("bacteria"),
-  v.literal("cooking"),
-  v.literal("disco"),
-  v.literal("logic"),
-  v.literal("ball"),
-  v.literal("duck"),
-  v.literal("music"),
-  v.literal("nightly"),
-  v.literal("writer"),
-  v.literal("barbie"),
-  v.literal("fun"),
-  v.literal("lamp"),
-  v.literal("lemon"),
-  v.literal("nighty"),
-  v.literal("rocket"),
-  v.literal("sakura"),
-  v.literal("sky"),
-  v.literal("stamp"),
-  v.literal("vintage")
+/**
+ * Class images validator
+ */
+export const schoolClassImageValidator = literals(
+  "retro",
+  "time",
+  "stars",
+  "chill",
+  "puzzle",
+  "line",
+  "shoot",
+  "virus",
+  "bacteria",
+  "cooking",
+  "disco",
+  "logic",
+  "ball",
+  "duck",
+  "music",
+  "nightly",
+  "writer",
+  "barbie",
+  "fun",
+  "lamp",
+  "lemon",
+  "nighty",
+  "rocket",
+  "sakura",
+  "sky",
+  "stamp",
+  "vintage"
 );
-export type SchoolClassImage = Infer<typeof schoolClassImages>;
+export type SchoolClassImage = Infer<typeof schoolClassImageValidator>;
 
-const tables = {
-  schoolClasses: defineTable({
-    schoolId: v.id("schools"),
+/**
+ * Forum tag validator
+ */
+export const schoolClassForumTagValidator = literals(
+  "general",
+  "question",
+  "announcement",
+  "assignment",
+  "resource"
+);
+
+/**
+ * Forum status validator
+ */
+export const schoolClassForumStatusValidator = literals(
+  "open",
+  "locked",
+  "archived"
+);
+
+/**
+ * Reaction count validator
+ */
+export const schoolClassReactionCountValidator = v.object({
+  emoji: v.string(),
+  count: v.number(),
+});
+
+/**
+ * School class base validator (without system fields)
+ */
+export const schoolClassValidator = v.object({
+  schoolId: v.id("schools"),
+  name: v.string(),
+  subject: v.string(),
+  year: v.string(),
+  image: schoolClassImageValidator,
+  isArchived: v.boolean(),
+  visibility: schoolClassVisibilityValidator,
+  studentCount: v.number(),
+  teacherCount: v.number(),
+  updatedAt: v.number(),
+  createdBy: v.id("users"),
+  updatedBy: v.optional(v.id("users")),
+  archivedBy: v.optional(v.id("users")),
+  archivedAt: v.optional(v.number()),
+});
+
+/**
+ * School class document validator (with system fields)
+ * Used internally for paginatedClassesValidator
+ */
+const schoolClassDocValidator = addFieldsToValidator(
+  schoolClassValidator,
+  systemFields("schoolClasses")
+);
+
+/**
+ * Paginated classes validator
+ */
+export const paginatedClassesValidator = paginationResultValidator(
+  schoolClassDocValidator
+);
+
+/**
+ * School class member base validator (without system fields)
+ */
+export const schoolClassMemberValidator = v.object({
+  classId: v.id("schoolClasses"),
+  userId: v.id("users"),
+  schoolId: v.id("schools"),
+  role: schoolClassMemberRoleValidator,
+  teacherRole: schoolClassTeacherRoleValidator,
+  enrollMethod: schoolClassEnrollMethodValidator,
+  inviteCodeId: v.optional(v.id("schoolClassInviteCodes")),
+  updatedAt: v.number(),
+  addedBy: v.optional(v.id("users")),
+  removedBy: v.optional(v.id("users")),
+  removedAt: v.optional(v.number()),
+});
+
+/**
+ * School class member document validator (with system fields)
+ * Used internally for classMemberWithUserValidator
+ */
+const schoolClassMemberDocValidator = addFieldsToValidator(
+  schoolClassMemberValidator,
+  systemFields("schoolClassMembers")
+);
+
+/**
+ * School class invite code base validator (without system fields)
+ */
+export const schoolClassInviteCodeValidator = v.object({
+  classId: v.id("schoolClasses"),
+  schoolId: v.id("schools"),
+  role: schoolClassMemberRoleValidator,
+  code: v.string(),
+  enabled: v.boolean(),
+  expiresAt: v.optional(v.number()),
+  maxUsage: v.optional(v.number()),
+  currentUsage: v.number(),
+  description: v.optional(v.string()),
+  createdBy: v.id("users"),
+  updatedBy: v.optional(v.id("users")),
+  updatedAt: v.number(),
+});
+
+/**
+ * School class forum base validator (without system fields)
+ */
+export const schoolClassForumValidator = v.object({
+  classId: v.id("schoolClasses"),
+  schoolId: v.id("schools"),
+  title: v.string(),
+  body: v.string(),
+  tag: schoolClassForumTagValidator,
+  status: schoolClassForumStatusValidator,
+  isPinned: v.boolean(),
+  postCount: v.number(),
+  participantCount: v.number(),
+  reactionCounts: v.array(schoolClassReactionCountValidator),
+  lastPostAt: v.number(),
+  lastPostBy: v.optional(v.id("users")),
+  createdBy: v.id("users"),
+  updatedAt: v.number(),
+});
+
+/**
+ * School class forum post base validator (without system fields)
+ */
+export const schoolClassForumPostValidator = v.object({
+  forumId: v.id("schoolClassForums"),
+  classId: v.id("schoolClasses"),
+  body: v.string(),
+  mentions: v.array(v.id("users")),
+  parentId: v.optional(v.id("schoolClassForumPosts")),
+  replyToUserId: v.optional(v.id("users")),
+  replyToBody: v.optional(v.string()),
+  replyCount: v.number(),
+  reactionCounts: v.array(schoolClassReactionCountValidator),
+  isDeleted: v.boolean(),
+  createdBy: v.id("users"),
+  updatedAt: v.number(),
+  editedAt: v.optional(v.number()),
+});
+
+/**
+ * School class material group base validator (without system fields)
+ */
+export const schoolClassMaterialGroupValidator = v.object({
+  classId: v.id("schoolClasses"),
+  schoolId: v.id("schools"),
+  name: v.string(),
+  description: v.string(),
+  parentId: v.optional(v.id("schoolClassMaterialGroups")),
+  order: v.number(),
+  status: schoolClassMaterialStatusValidator,
+  scheduledAt: v.optional(v.number()),
+  scheduledJobId: v.optional(v.id("_scheduled_functions")),
+  materialCount: v.number(),
+  childGroupCount: v.number(),
+  createdBy: v.id("users"),
+  updatedAt: v.number(),
+  publishedAt: v.optional(v.number()),
+  publishedBy: v.optional(v.id("users")),
+});
+
+/**
+ * Class info validator (for public info without auth)
+ */
+export const classInfoValidator = nullable(
+  v.object({
     name: v.string(),
     subject: v.string(),
     year: v.string(),
-    image: schoolClassImages,
-    isArchived: v.boolean(),
-    // Visibility: "private" (invite code required) or "public" (anyone in school can join)
-    visibility: schoolClassVisibility,
-    studentCount: v.number(),
-    teacherCount: v.number(),
-    updatedAt: v.number(),
-    createdBy: v.id("users"),
-    updatedBy: v.optional(v.id("users")),
-    archivedBy: v.optional(v.id("users")),
-    archivedAt: v.optional(v.number()),
+    image: schoolClassImageValidator,
+    visibility: schoolClassVisibilityValidator,
   })
-    // Single compound index covers all query patterns:
-    // - eq("schoolId") - all classes in school
-    // - eq("schoolId").eq("isArchived", false) - non-archived classes
-    // - eq("schoolId").eq("isArchived", false).eq("visibility", "public") - public classes
+);
+
+/**
+ * User data validator (for joined user info in class members)
+ */
+const classMemberUserValidator = v.object({
+  _id: v.id("users"),
+  name: v.string(),
+  email: v.string(),
+  image: v.optional(nullable(v.string())),
+});
+
+/**
+ * Class member with user data validator (for getPeople)
+ * Used internally for paginatedPeopleValidator
+ */
+const classMemberWithUserValidator = schoolClassMemberDocValidator.extend({
+  user: classMemberUserValidator,
+});
+
+/**
+ * Paginated people validator (for getPeople query)
+ */
+export const paginatedPeopleValidator = paginationResultValidator(
+  classMemberWithUserValidator
+);
+
+const tables = {
+  schoolClasses: defineTable(schoolClassValidator)
     .index("schoolId_isArchived_visibility", [
       "schoolId",
       "isArchived",
@@ -85,132 +300,34 @@ const tables = {
       filterFields: ["schoolId", "isArchived", "visibility"],
     }),
 
-  schoolClassMembers: defineTable({
-    classId: v.id("schoolClasses"),
-    userId: v.id("users"),
-    schoolId: v.id("schools"),
-    role: schoolClassMemberRoles,
-    teacherRole: v.optional(
-      v.union(
-        v.literal("primary"),
-        v.literal("co-teacher"),
-        v.literal("assistant")
-      )
-    ),
-    enrollMethod: v.optional(
-      v.union(
-        v.literal("code"),
-        v.literal("teacher"),
-        v.literal("admin"),
-        v.literal("invite"),
-        v.literal("public") // Joined via public class listing
-      )
-    ),
-    inviteCodeId: v.optional(v.id("schoolClassInviteCodes")),
-    updatedAt: v.number(),
-    addedBy: v.optional(v.id("users")),
-    removedBy: v.optional(v.id("users")),
-    removedAt: v.optional(v.number()),
-  })
-    // For membership lookup: eq("classId") OR eq("classId").eq("userId")
+  schoolClassMembers: defineTable(schoolClassMemberValidator)
     .index("classId_userId", ["classId", "userId"])
     .index("userId", ["userId"])
     .index("schoolId", ["schoolId"]),
 
-  schoolClassInviteCodes: defineTable({
-    classId: v.id("schoolClasses"),
-    schoolId: v.id("schools"),
-    role: schoolClassMemberRoles,
-    code: v.string(),
-    enabled: v.boolean(),
-    expiresAt: v.optional(v.number()),
-    maxUsage: v.optional(v.number()),
-    currentUsage: v.number(),
-    description: v.optional(v.string()),
-    createdBy: v.id("users"),
-    updatedBy: v.optional(v.id("users")),
-    updatedAt: v.number(),
-  })
-    // Use classId_role for all classId queries (can omit role condition)
+  schoolClassInviteCodes: defineTable(schoolClassInviteCodeValidator)
     .index("classId_role", ["classId", "role"])
     .index("code", ["code"])
     .index("schoolId", ["schoolId"]),
 
-  // FORUM: Main Threads (Topics)
-  schoolClassForums: defineTable({
-    classId: v.id("schoolClasses"),
-    schoolId: v.id("schools"),
-    title: v.string(),
-    body: v.string(),
-    tag: v.union(
-      v.literal("general"),
-      v.literal("question"),
-      v.literal("announcement"),
-      v.literal("assignment"),
-      v.literal("resource")
-    ),
-    status: v.union(
-      v.literal("open"),
-      v.literal("locked"),
-      v.literal("archived")
-    ),
-    isPinned: v.boolean(),
-    postCount: v.number(),
-    participantCount: v.number(),
-    // Array of reactions - emoji as value (not key) to support non-ASCII characters
-    reactionCounts: v.array(
-      v.object({
-        emoji: v.string(),
-        count: v.number(),
-      })
-    ),
-    lastPostAt: v.number(),
-    lastPostBy: v.optional(v.id("users")),
-    createdBy: v.id("users"),
-    updatedAt: v.number(),
-  })
+  schoolClassForums: defineTable(schoolClassForumValidator)
     .index("classId_status_lastPostAt", ["classId", "status", "lastPostAt"])
     .searchIndex("search_title", {
       searchField: "title",
       filterFields: ["classId", "status"],
     }),
 
-  // FORUM: Reactions (Children of Forums/Threads) - Discord-style emoji reactions
   schoolClassForumReactions: defineTable({
     forumId: v.id("schoolClassForums"),
     userId: v.id("users"),
-    emoji: v.string(), // Any emoji: "👍", "🎉", "❤️", "🔥", etc.
-  })
-    // Single index covers both use cases:
-    // 1. Toggle: eq("forumId", x).eq("userId", y).eq("emoji", z)
-    // 2. Get my reactions: eq("forumId", x).eq("userId", y)
-    .index("forumId_userId_emoji", ["forumId", "userId", "emoji"]),
+    emoji: v.string(),
+  }).index("forumId_userId_emoji", ["forumId", "userId", "emoji"]),
 
-  // FORUM: Posts (Messages within a forum thread)
-  schoolClassForumPosts: defineTable({
-    forumId: v.id("schoolClassForums"),
-    classId: v.id("schoolClasses"),
-    body: v.string(),
-    mentions: v.array(v.id("users")),
-    parentId: v.optional(v.id("schoolClassForumPosts")),
-    replyToUserId: v.optional(v.id("users")),
-    // Denormalized preview of parent post (stored at reply time, like Discord)
-    replyToBody: v.optional(v.string()),
-    replyCount: v.number(),
-    // Array of reactions - emoji as value (not key) to support non-ASCII characters
-    reactionCounts: v.array(
-      v.object({
-        emoji: v.string(),
-        count: v.number(),
-      })
-    ),
-    isDeleted: v.boolean(),
-    createdBy: v.id("users"),
-    updatedAt: v.number(),
-    editedAt: v.optional(v.number()),
-  }).index("forumId", ["forumId"]),
+  schoolClassForumPosts: defineTable(schoolClassForumPostValidator).index(
+    "forumId",
+    ["forumId"]
+  ),
 
-  // FORUM: Attachments (Children of Posts)
   schoolClassForumPostAttachments: defineTable({
     postId: v.id("schoolClassForumPosts"),
     forumId: v.id("schoolClassForums"),
@@ -222,19 +339,12 @@ const tables = {
     createdBy: v.id("users"),
   }).index("postId", ["postId"]),
 
-  // FORUM: Reactions (Children of Posts) - Discord-style emoji reactions
   schoolClassForumPostReactions: defineTable({
     postId: v.id("schoolClassForumPosts"),
     userId: v.id("users"),
-    emoji: v.string(), // Any emoji: "👍", "🎉", "❤️", "🔥", etc.
-  })
-    // Single index covers both use cases:
-    // 1. Toggle: eq("postId", x).eq("userId", y).eq("emoji", z)
-    // 2. Get my reactions: eq("postId", x).eq("userId", y)
-    .index("postId_userId_emoji", ["postId", "userId", "emoji"]),
+    emoji: v.string(),
+  }).index("postId_userId_emoji", ["postId", "userId", "emoji"]),
 
-  // FORUM: Read States (Children of Forums/Threads)
-  // Note: Per-forum notification preferences use notificationPreferences.mutedEntities
   schoolClassForumReadStates: defineTable({
     forumId: v.id("schoolClassForums"),
     classId: v.id("schoolClasses"),
@@ -244,24 +354,7 @@ const tables = {
     .index("forumId_userId", ["forumId", "userId"])
     .index("classId_userId", ["classId", "userId"]),
 
-  // MATERIALS: Groups (folders/modules with unlimited nesting)
-  schoolClassMaterialGroups: defineTable({
-    classId: v.id("schoolClasses"),
-    schoolId: v.id("schools"),
-    name: v.string(),
-    description: v.string(),
-    parentId: v.optional(v.id("schoolClassMaterialGroups")),
-    order: v.number(),
-    status: schoolClassMaterialStatus,
-    scheduledAt: v.optional(v.number()),
-    scheduledJobId: v.optional(v.id("_scheduled_functions")),
-    materialCount: v.number(),
-    childGroupCount: v.number(),
-    createdBy: v.id("users"),
-    updatedAt: v.number(),
-    publishedAt: v.optional(v.number()),
-    publishedBy: v.optional(v.id("users")),
-  })
+  schoolClassMaterialGroups: defineTable(schoolClassMaterialGroupValidator)
     .index("classId_parentId_order", ["classId", "parentId", "order"])
     .index("classId_parentId_status_order", [
       "classId",
@@ -275,16 +368,15 @@ const tables = {
       filterFields: ["classId", "status"],
     }),
 
-  // MATERIALS: Content items
   schoolClassMaterials: defineTable({
     groupId: v.id("schoolClassMaterialGroups"),
     classId: v.id("schoolClasses"),
     schoolId: v.id("schools"),
     title: v.string(),
-    body: v.optional(v.string()), // Tiptap JSON (stringified)
-    bodyPlainText: v.optional(v.string()), // Plain text for search and preview
+    body: v.optional(v.string()),
+    bodyPlainText: v.optional(v.string()),
     order: v.number(),
-    status: schoolClassMaterialStatus,
+    status: schoolClassMaterialStatusValidator,
     scheduledAt: v.optional(v.number()),
     isPinned: v.boolean(),
     attachmentCount: v.number(),
@@ -313,7 +405,6 @@ const tables = {
       filterFields: ["classId", "groupId", "status"],
     }),
 
-  // MATERIALS: File attachments (inline media in content + downloadable files)
   schoolClassMaterialAttachments: defineTable({
     materialId: v.id("schoolClassMaterials"),
     groupId: v.id("schoolClassMaterialGroups"),
@@ -322,10 +413,7 @@ const tables = {
     name: v.string(),
     mimeType: v.string(),
     size: v.number(),
-    type: v.union(
-      v.literal("inline"), // Images in Tiptap content
-      v.literal("download") // Downloadable files in attachment list
-    ),
+    type: literals("inline", "download"),
     order: v.number(),
     downloadCount: v.number(),
     uploadedBy: v.id("users"),
@@ -333,7 +421,6 @@ const tables = {
     .index("materialId_type_order", ["materialId", "type", "order"])
     .index("classId", ["classId"]),
 
-  // MATERIALS: Per-user view tracking (upsert pattern)
   schoolClassMaterialViews: defineTable({
     materialId: v.id("schoolClassMaterials"),
     classId: v.id("schoolClasses"),
@@ -344,7 +431,6 @@ const tables = {
     hasDownloaded: v.boolean(),
     lastDownloadedAt: v.optional(v.number()),
   })
-    // eq("materialId").eq("userId") for unique lookup, eq("materialId") for analytics
     .index("materialId_userId", ["materialId", "userId"])
     .index("classId_userId", ["classId", "userId"]),
 };

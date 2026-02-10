@@ -7,15 +7,15 @@ export const ORGANIZATION_NAME = "PT. Nakafa Tekno Kreatif";
 export const SAME_AS_LINKS = [
   "https://twitter.com/nabilfatih_",
   "https://www.linkedin.com/company/nakafa",
-  "https://www.instagram.com/nakafa.tv/",
+  "https://www.instagram.com/nakafa.ai/",
 ] as const;
 
 export const ORGANIZATION: Organization = {
   "@type": "Organization",
   name: ORGANIZATION_NAME,
-  logo: ORGANIZATION_LOGO,
   url: ORGANIZATION_URL,
-  sameAs: SAME_AS_LINKS,
+  logo: ORGANIZATION_LOGO,
+  sameAs: [...SAME_AS_LINKS],
 };
 
 export const FOUNDER: Person = {

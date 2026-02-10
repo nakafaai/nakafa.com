@@ -1,11 +1,13 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import {
-  exerciseAttemptMode,
-  exerciseAttemptScope,
+  exerciseAttemptModeValidator,
+  exerciseAttemptScopeValidator,
+  exerciseAttemptStatusValidator,
 } from "@repo/backend/convex/exercises/schema";
 import { computeAttemptDurationSeconds } from "@repo/backend/convex/exercises/utils";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
-import { requireAuthWithSession } from "@repo/backend/convex/lib/authHelpers";
+import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
+import { vv } from "@repo/backend/convex/lib/validators";
 import { ConvexError, v } from "convex/values";
 
 /**
@@ -22,13 +24,14 @@ import { ConvexError, v } from "convex/values";
 export const startAttempt = mutation({
   args: {
     slug: v.string(),
-    mode: exerciseAttemptMode,
-    scope: exerciseAttemptScope,
+    mode: exerciseAttemptModeValidator,
+    scope: exerciseAttemptScopeValidator,
     exerciseNumber: v.optional(v.number()),
     totalExercises: v.number(),
     timeLimit: v.number(),
     perQuestionTimeLimit: v.optional(v.number()),
   },
+  returns: vv.id("exerciseAttempts"),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);
     const userId = appUser._id;
@@ -145,13 +148,14 @@ export const startAttempt = mutation({
  */
 export const submitAnswer = mutation({
   args: {
-    attemptId: v.id("exerciseAttempts"),
+    attemptId: vv.id("exerciseAttempts"),
     exerciseNumber: v.number(),
     selectedOptionId: v.optional(v.string()),
     textAnswer: v.optional(v.string()),
     isCorrect: v.boolean(),
     timeSpent: v.number(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);
     const userId = appUser._id;
@@ -257,6 +261,8 @@ export const submitAnswer = mutation({
         updatedAt: now,
       });
     }
+
+    return null;
   },
 });
 
@@ -275,8 +281,12 @@ export const submitAnswer = mutation({
  */
 export const completeAttempt = mutation({
   args: {
-    attemptId: v.id("exerciseAttempts"),
+    attemptId: vv.id("exerciseAttempts"),
   },
+  returns: v.object({
+    status: exerciseAttemptStatusValidator,
+    expiredAtMs: v.optional(v.number()),
+  }),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);
     const userId = appUser._id;
@@ -359,25 +369,26 @@ export const completeAttempt = mutation({
  */
 export const expireAttemptInternal = internalMutation({
   args: {
-    attemptId: v.id("exerciseAttempts"),
+    attemptId: vv.id("exerciseAttempts"),
     expiresAtMs: v.number(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const now = Date.now();
     const attempt = await ctx.db.get("exerciseAttempts", args.attemptId);
     if (!attempt) {
-      return;
+      return null;
     }
 
     if (attempt.status !== "in-progress") {
-      return;
+      return null;
     }
 
     const computedExpiresAtMs = attempt.startedAt + attempt.timeLimit * 1000;
     const expiresAtMs = Math.max(args.expiresAtMs, computedExpiresAtMs);
 
     if (now < expiresAtMs) {
-      return;
+      return null;
     }
 
     const finalTotalTime = computeAttemptDurationSeconds({
@@ -392,72 +403,7 @@ export const expireAttemptInternal = internalMutation({
       updatedAt: now,
       totalTime: finalTotalTime,
     });
-  },
-});
 
-/**
- * Abandons an in-progress attempt.
- *
- * Use cases:
- * - user explicitly quits
- * - client decides an attempt is stale (e.g. inactive for days) and wants to reset UX
- */
-export const abandonAttempt = mutation({
-  args: {
-    attemptId: v.id("exerciseAttempts"),
-  },
-  handler: async (ctx, args) => {
-    const { appUser } = await requireAuthWithSession(ctx);
-    const userId = appUser._id;
-    const now = Date.now();
-
-    const attempt = await ctx.db.get("exerciseAttempts", args.attemptId);
-    if (!attempt) {
-      throw new ConvexError({
-        code: "ATTEMPT_NOT_FOUND",
-        message: "Attempt not found.",
-      });
-    }
-
-    if (attempt.userId !== userId) {
-      throw new ConvexError({
-        code: "FORBIDDEN",
-        message: "You do not have access to this attempt.",
-      });
-    }
-
-    if (attempt.status === "abandoned") {
-      return { status: "abandoned" as const };
-    }
-
-    if (attempt.status === "completed") {
-      return { status: "completed" as const };
-    }
-
-    if (attempt.status === "expired") {
-      return { status: "expired" as const };
-    }
-
-    if (attempt.status !== "in-progress") {
-      throw new ConvexError({
-        code: "INVALID_ATTEMPT_STATUS",
-        message: "Attempt is not in progress.",
-      });
-    }
-
-    const finalTotalTime = computeAttemptDurationSeconds({
-      startedAtMs: attempt.startedAt,
-      completedAtMs: now,
-    });
-
-    await ctx.db.patch("exerciseAttempts", args.attemptId, {
-      status: "abandoned",
-      completedAt: now,
-      lastActivityAt: now,
-      updatedAt: now,
-      totalTime: finalTotalTime,
-    });
-
-    return { status: "abandoned" as const };
+    return null;
   },
 });

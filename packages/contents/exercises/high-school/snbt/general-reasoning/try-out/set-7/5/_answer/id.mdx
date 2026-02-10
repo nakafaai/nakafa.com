@@ -1,0 +1,26 @@
+export const metadata = {
+  title: "Pembahasan Soal 5",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/26/2026",
+};
+
+Mari kita analisis premis-premis yang diberikan dalam soal menggunakan logika matematika:
+
+- <InlineMath math="P" />: Budi rajin berlatih mengayuh sepeda.
+- <InlineMath math="Q" />: Budi bisa mengayuh sepeda untuk jarak yang jauh.
+- <InlineMath math="R" />: Budi bisa menang balap sepeda.
+
+Pernyataan yang diberikan adalah:
+1. Jika <InlineMath math="P" />, maka <InlineMath math="Q" /> (<InlineMath math="P \rightarrow Q" />).
+2. Jika <InlineMath math="Q" />, maka <InlineMath math="R" /> (<InlineMath math="Q \rightarrow R" />).
+3. Fakta: Hari ini Budi **tidak bisa** mengayuh sepeda untuk jarak yang jauh (<InlineMath math="\sim Q" />).
+
+Untuk menarik kesimpulan, kita fokus pada hubungan antara premis pertama (<InlineMath math="P \rightarrow Q" />) dan fakta yang ada (<InlineMath math="\sim Q" />). Kita dapat menggunakan aturan **Modus Tollens**:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} &P \rightarrow Q \\ &\sim Q \\ \hline &\therefore \sim P \end{aligned}" />
+</MathContainer>
+
+Kesimpulannya adalah <InlineMath math="\sim P" /> (negasi dari <InlineMath math="P" />). Karena <InlineMath math="P" /> adalah "Budi rajin berlatih mengayuh sepeda", maka <InlineMath math="\sim P" /> adalah **"Budi tidak rajin berlatih mengayuh sepeda"**.
+
+> Meskipun kita juga bisa menyimpulkan <InlineMath math="\sim R" /> (Budi tidak bisa menang) jika <InlineMath math="\sim Q" /> adalah syarat mutlak, namun dalam logika formal Modus Tollens pada premis pertama memberikan simpulan yang paling langsung dan pasti mengenai penyebabnya.

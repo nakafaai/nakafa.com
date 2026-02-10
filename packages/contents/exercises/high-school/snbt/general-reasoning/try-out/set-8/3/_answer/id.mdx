@@ -1,0 +1,23 @@
+export const metadata = {
+  title: "Pembahasan Soal 3",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/29/2026",
+};
+
+Untuk menemukan nilai selanjutnya, mari kita analisis pola antar suku pada barisan tersebut:
+
+<MathContainer>
+  <BlockMath math="\begin{array}{ccl} 4 \xrightarrow{+2} 6 & \quad & (\text{Suku ke-1 ke 2}) \\ 6 \xrightarrow{+4} 10 & \quad & (\text{Suku ke-2 ke 3}) \\ 10 \xrightarrow{-1} 9 & \quad & (\text{Suku ke-3 ke 4}) \\ 9 \xrightarrow{+2} 11 & \quad & (\text{Suku ke-4 ke 5}) \\ 11 \xrightarrow{+4} 15 & \quad & (\text{Suku ke-5 ke 6}) \\ 15 \xrightarrow{-1} 14 & \quad & (\text{Suku ke-6 ke 7}) \end{array}" />
+</MathContainer>
+
+Terlihat bahwa pola yang terbentuk adalah pengulangan operasi **<InlineMath math="+2, +4, -1" />**.
+
+Berdasarkan pola tersebut, operasi selanjutnya setelah **<InlineMath math="-1" />** adalah kembali ke **<InlineMath math="+2" />**.
+
+Maka, nilai suku berikutnya adalah:
+
+<MathContainer>
+  <BlockMath math="14 + 2 = 16" />
+</MathContainer>
+
+Jadi, nilai yang tepat untuk mengisi barisan tersebut adalah **<InlineMath math="16" />**.

@@ -1,0 +1,33 @@
+export const metadata = {
+  title: "Pembahasan Soal 10",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/31/2026",
+};
+
+**Analisis Peluang Kotak Pertama**
+
+Pada kotak pertama, terdapat total <InlineMath math="4 + 3 = 7" /> bola. Kita ingin mengambil bola merah yang berjumlah <InlineMath math="4" />. Peluang terambilnya bola merah dari kotak pertama adalah:
+
+<MathContainer>
+  <BlockMath math="P(\text{Merah}_1) = \frac{n(\text{Merah}_1)}{n(S_1)} = \frac{4}{7}" />
+</MathContainer>
+
+**Analisis Peluang Kotak Kedua**
+
+Pada kotak kedua, terdapat total <InlineMath math="7 + 3 = 10" /> bola. Kita ingin mengambil bola putih yang berjumlah <InlineMath math="3" />. Peluang terambilnya bola putih dari kotak kedua adalah:
+
+<MathContainer>
+  <BlockMath math="P(\text{Putih}_2) = \frac{n(\text{Putih}_2)}{n(S_2)} = \frac{3}{10}" />
+</MathContainer>
+
+**Menghitung Peluang Gabungan**
+
+Karena pengambilan bola dari kedua kotak adalah dua kejadian yang **saling bebas** (kejadian di kotak pertama tidak mempengaruhi kotak kedua), maka peluang terjadinya kedua peristiwa tersebut secara bersamaan dapat dihitung dengan mengalikan peluang masing-masing.
+
+<MathContainer>
+  <BlockMath math="P(\text{Total}) = P(\text{Merah}_1) \times P(\text{Putih}_2)" />
+  <BlockMath math="P(\text{Total}) = \frac{4}{7} \times \frac{3}{10}" />
+  <BlockMath math="P(\text{Total}) = \frac{12}{70}" />
+</MathContainer>
+
+Jadi, peluang terambilnya bola merah dari kotak pertama dan bola putih dari kotak kedua adalah <InlineMath math="\frac{12}{70}" />.

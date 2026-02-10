@@ -1,0 +1,26 @@
+export const metadata = {
+  title: "Explanation for Question 5",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/26/2026",
+};
+
+Let's analyze the premises provided in the problem using mathematical logic:
+
+- <InlineMath math="P" />: Budi diligently practices cycling.
+- <InlineMath math="Q" />: Budi can cycle for long distances.
+- <InlineMath math="R" />: Budi can win a bicycle race.
+
+The given statements are:
+1. If <InlineMath math="P" />, then <InlineMath math="Q" /> (<InlineMath math="P \rightarrow Q" />).
+2. If <InlineMath math="Q" />, then <InlineMath math="R" /> (<InlineMath math="Q \rightarrow R" />).
+3. Fact: Today Budi **cannot** cycle for long distances (<InlineMath math="\sim Q" />).
+
+To draw a conclusion, we focus on the relationship between the first premise (<InlineMath math="P \rightarrow Q" />) and the existing fact (<InlineMath math="\sim Q" />). We can use the **Modus Tollens** rule:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} &P \rightarrow Q \\ &\sim Q \\ \hline &\therefore \sim P \end{aligned}" />
+</MathContainer>
+
+The conclusion is <InlineMath math="\sim P" /> (the negation of <InlineMath math="P" />). Since <InlineMath math="P" /> is "Budi diligently practices cycling", then <InlineMath math="\sim P" /> is **"Budi does not diligently practice cycling"**.
+
+> Although one might argue for <InlineMath math="\sim R" /> (Budi cannot win) if <InlineMath math="\sim Q" /> were an absolute condition, in formal logic, Modus Tollens on the first premise provides the most direct and certain conclusion regarding the cause.

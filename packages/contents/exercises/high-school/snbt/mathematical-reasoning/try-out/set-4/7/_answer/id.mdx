@@ -1,0 +1,25 @@
+export const metadata = {
+  title: "Pembahasan Soal 7",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/26/2025",
+};
+
+Pola latihan lari Yanuar membentuk **barisan geometri** karena jarak tempuhnya selalu meningkat dua kali lipat setiap minggunya. Ini berarti rasio (<InlineMath math="r" />) barisan tersebut adalah <InlineMath math="2" />.
+
+Informasi kunci yang kita miliki adalah jarak pada minggu ke-<InlineMath math="3" /> (<InlineMath math="U_3" />) sebesar <InlineMath math="4\text{ km}" />. Dengan menggunakan rumus suku ke-<InlineMath math="n" /> barisan geometri, <InlineMath math="U_n = ar^{n-1}" />, kita dapat melacak balik untuk menemukan jarak awal pada minggu pertama (<InlineMath math="a" />):
+
+<MathContainer>
+  <BlockMath math="U_3 = a \cdot r^{3-1}" />
+  <BlockMath math="4 = a \cdot 2^2" />
+  <BlockMath math="4 = 4a \implies a = 1\text{ km}" />
+</MathContainer>
+
+Setelah mengetahui bahwa Yanuar mulai berlari sejauh <InlineMath math="1\text{ km}" /> pada minggu pertama, kita dapat menghitung total jarak selama <InlineMath math="5" /> minggu (<InlineMath math="S_5" />) menggunakan rumus jumlah deret geometri <InlineMath math="S_n = \frac{a(r^n - 1)}{r - 1}" />:
+
+<MathContainer>
+  <BlockMath math="S_5 = \frac{1(2^5 - 1)}{2 - 1}" />
+  <BlockMath math="S_5 = \frac{32 - 1}{1}" />
+  <BlockMath math="S_5 = 31\text{ km}" />
+</MathContainer>
+
+Jadi, total jarak yang ditempuh Yanuar selama latihan adalah **<InlineMath math="31\text{ km}" />**.

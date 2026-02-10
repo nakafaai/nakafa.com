@@ -1,0 +1,71 @@
+import { Graph } from "../graph";
+
+export const metadata = {
+  title: "Solution to Question 6",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/31/2026",
+};
+
+<Graph />
+
+To find the distance from point <InlineMath math="Q" /> to line <InlineMath math="BD" />, we will form triangle <InlineMath math="BDQ" /> and calculate its height from the vertex <InlineMath math="Q" />. The first step is to calculate the lengths of all three sides of this triangle.
+
+**Calculating Side <InlineMath math="BD" /> (Base Diagonal)**
+
+Line <InlineMath math="BD" /> is the diagonal of the cube's base with edge length <InlineMath math="s = 4" />.
+
+<MathContainer>
+  <BlockMath math="BD = \sqrt{AB^2 + AD^2} = \sqrt{4^2 + 4^2} = \sqrt{32} = 4\sqrt{2}" />
+</MathContainer>
+
+**Calculating Side <InlineMath math="DQ" />**
+
+Point <InlineMath math="Q" /> is at the midpoint of <InlineMath math="FG" />. We can find the length of <InlineMath math="DQ" /> by considering the right-angled triangle <InlineMath math="DHQ" />. First, we calculate the length of <InlineMath math="HQ" /> on the top face of the cube:
+
+<MathContainer>
+  <BlockMath math="HQ = \sqrt{HG^2 + GQ^2} = \sqrt{4^2 + 2^2} = \sqrt{20} = 2\sqrt{5}" />
+</MathContainer>
+
+Next, use the Pythagorean theorem on triangle <InlineMath math="DHQ" />:
+
+<MathContainer>
+  <BlockMath math="DQ = \sqrt{DH^2 + HQ^2} = \sqrt{4^2 + (2\sqrt{5})^2} = \sqrt{16 + 20} = \sqrt{36} = 6" />
+</MathContainer>
+
+**Calculating Side <InlineMath math="BQ" />**
+
+The length of <InlineMath math="BQ" /> can be calculated from the right-angled triangle <InlineMath math="BFQ" />, with <InlineMath math="BF = 4" /> and <InlineMath math="FQ = 2" />:
+
+<MathContainer>
+  <BlockMath math="BQ = \sqrt{BF^2 + FQ^2} = \sqrt{4^2 + 2^2} = \sqrt{20} = 2\sqrt{5}" />
+</MathContainer>
+
+**Calculating Distance from <InlineMath math="Q" /> to Line <InlineMath math="BD" />**
+
+Now we have triangle <InlineMath math="BDQ" /> with sides <InlineMath math="BD = 4\sqrt{2}" />, <InlineMath math="DQ = 6" />, and <InlineMath math="BQ = 2\sqrt{5}" />. Let <InlineMath math="O" /> be the perpendicular projection of <InlineMath math="Q" /> onto line <InlineMath math="BD" />.
+
+Let the length <InlineMath math="DO = x" />, then the length <InlineMath math="OB = 4\sqrt{2} - x" />. The height of the triangle <InlineMath math="QO" /> (let's call it <InlineMath math="y" />) is the distance we are looking for. Using the two formed right-angled triangles, we obtain the equation:
+
+<MathContainer>
+  <BlockMath math="QO^2 = DQ^2 - DO^2 = BQ^2 - OB^2" />
+</MathContainer>
+
+Substituting the side values:
+
+<MathContainer>
+  <BlockMath math="6^2 - x^2 = (2\sqrt{5})^2 - (4\sqrt{2} - x)^2" />
+  <BlockMath math="36 - x^2 = 20 - (32 - 8\sqrt{2}x + x^2)" />
+  <BlockMath math="36 - x^2 = 20 - 32 + 8\sqrt{2}x - x^2" />
+  <BlockMath math="36 = -12 + 8\sqrt{2}x" />
+  <BlockMath math="48 = 8\sqrt{2}x" />
+  <BlockMath math="x = \frac{48}{8\sqrt{2}} = \frac{6}{\sqrt{2}} = 3\sqrt{2}" />
+</MathContainer>
+
+After finding <InlineMath math="x = 3\sqrt{2}" />, we substitute it back to find <InlineMath math="y" />:
+
+<MathContainer>
+  <BlockMath math="y = \sqrt{DQ^2 - x^2} = \sqrt{6^2 - (3\sqrt{2})^2}" />
+  <BlockMath math="y = \sqrt{36 - 18} = \sqrt{18} = 3\sqrt{2}" />
+</MathContainer>
+
+Thus, the distance from point <InlineMath math="Q" /> to line <InlineMath math="BD" /> is <InlineMath math="3\sqrt{2}" /> units.

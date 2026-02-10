@@ -1,223 +1,221 @@
 import { defineTable } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
+import { literals } from "convex-helpers/validators";
 
-const schoolMemberRoles = v.union(
-  v.literal("admin"), // Can manage school settings
-  v.literal("teacher"), // Can create classes
-  v.literal("student"), // Can view assignments
-  v.literal("parent"), // Can monitor children
-  v.literal("demo") // Same like admin, but can't do destructive actions (demo purpose)
+/**
+ * School type validator
+ */
+export const schoolTypeValidator = literals(
+  "elementary-school",
+  "middle-school",
+  "high-school",
+  "vocational-school",
+  "university",
+  "other"
 );
-export type SchoolMemberRole = Infer<typeof schoolMemberRoles>;
+
+/**
+ * School member role validator
+ */
+export const schoolMemberRoleValidator = literals(
+  "admin",
+  "teacher",
+  "student",
+  "parent",
+  "demo"
+);
+export type SchoolMemberRole = Infer<typeof schoolMemberRoleValidator>;
+
+/**
+ * School member status validator
+ */
+export const schoolMemberStatusValidator = literals(
+  "active",
+  "invited",
+  "removed"
+);
+
+/**
+ * School base validator (without system fields)
+ */
+export const schoolValidator = v.object({
+  name: v.string(),
+  slug: v.string(),
+  email: v.string(),
+  phone: v.optional(v.string()),
+  address: v.optional(v.string()),
+  city: v.string(),
+  province: v.string(),
+  type: schoolTypeValidator,
+  currentStudents: v.number(),
+  currentTeachers: v.number(),
+  updatedAt: v.number(),
+  createdBy: v.id("users"),
+  updatedBy: v.optional(v.id("users")),
+});
+
+/**
+ * School member base validator (without system fields)
+ */
+export const schoolMemberValidator = v.object({
+  schoolId: v.id("schools"),
+  userId: v.id("users"),
+  role: schoolMemberRoleValidator,
+  status: schoolMemberStatusValidator,
+  invitedBy: v.optional(v.id("users")),
+  invitedAt: v.optional(v.number()),
+  inviteToken: v.optional(v.string()),
+  inviteCodeId: v.optional(v.id("schoolInviteCodes")),
+  updatedAt: v.number(),
+  joinedAt: v.number(),
+  removedBy: v.optional(v.id("users")),
+  removedAt: v.optional(v.number()),
+});
+
+/**
+ * Parent-student relationship validator
+ */
+export const parentStudentRelationshipValidator = literals(
+  "father",
+  "mother",
+  "guardian",
+  "other"
+);
+
+/**
+ * Parent-student status validator
+ */
+export const parentStudentStatusValidator = literals(
+  "pending",
+  "verified",
+  "inactive"
+);
+
+/**
+ * School activity action validator
+ */
+export const schoolActivityActionValidator = literals(
+  "school_created",
+  "school_updated",
+  "school_deleted",
+  "school_code_regenerated",
+  "member_invited",
+  "member_joined",
+  "member_removed",
+  "member_role_changed",
+  "class_created",
+  "class_updated",
+  "class_archived",
+  "class_deleted",
+  "class_code_regenerated",
+  "class_member_added",
+  "class_member_removed",
+  "class_member_role_changed",
+  "class_member_permissions_changed",
+  "parent_linked",
+  "parent_unlinked",
+  "parent_permissions_changed",
+  "assignment_created",
+  "assignment_updated",
+  "assignment_deleted",
+  "assignment_published",
+  "progress_updated",
+  "assignment_completed"
+);
+
+/**
+ * School activity entity type validator
+ */
+export const schoolActivityEntityTypeValidator = literals(
+  "schools",
+  "schoolMembers",
+  "classes",
+  "classMembers",
+  "parentStudents",
+  "assignments",
+  "progresses"
+);
+
+/**
+ * Activity log metadata validator.
+ * Uses v.any() because metadata varies by action type (polymorphic):
+ * - member_role_changed: { oldRole, newRole }
+ * - member_invited: { email, role }
+ * - class_created: { className, subject }
+ * - etc.
+ * Full typing would require discriminated unions per action type.
+ */
+const activityMetadataValidator = v.optional(v.any());
 
 const tables = {
-  schools: defineTable({
-    name: v.string(), // "SMA Negeri 1 Jakarta"
-    slug: v.string(), // "sma-negeri-1-jakarta" (unique, URL-friendly)
-    email: v.string(), // Contact email
-    phone: v.optional(v.string()),
-    address: v.optional(v.string()),
-    city: v.string(),
-    province: v.string(),
-    type: v.union(
-      v.literal("elementary-school"),
-      v.literal("middle-school"),
-      v.literal("high-school"),
-      v.literal("vocational-school"),
-      v.literal("university"),
-      v.literal("other")
-    ),
-
-    // Analytics (denormalized counts, updated via triggers)
-    currentStudents: v.number(),
-    currentTeachers: v.number(),
-
-    // Audit fields (use _creationTime for createdAt)
-    updatedAt: v.number(), // Last update time
-    createdBy: v.id("users"), // Who created this school
-    updatedBy: v.optional(v.id("users")), // Who last updated
-  })
-    .index("slug", ["slug"]) // GET /school/[slug] (unique lookup)
-    .index("createdBy", ["createdBy"]) // User's schools
+  schools: defineTable(schoolValidator)
+    .index("slug", ["slug"])
+    .index("createdBy", ["createdBy"])
     .index("email", ["email"]),
 
-  schoolMembers: defineTable({
-    schoolId: v.id("schools"),
-    userId: v.id("users"),
-
-    // Role in this school (can be different per school)
-    role: schoolMemberRoles,
-
-    status: v.union(
-      v.literal("active"), // Active member
-      v.literal("invited"), // Invited but not joined yet
-      v.literal("removed") // Soft delete
-    ),
-
-    // Invitation tracking
-    invitedBy: v.optional(v.id("users")),
-    invitedAt: v.optional(v.number()),
-    inviteToken: v.optional(v.string()), // For email invitation links
-    inviteCodeId: v.optional(v.id("schoolInviteCodes")), // Which invite code was used (for usage tracking)
-
-    // Audit fields (use _creationTime for createdAt)
-    updatedAt: v.number(), // Last update time
-    joinedAt: v.number(), // When user actually joined (can be same as _creationTime)
-    removedBy: v.optional(v.id("users")), // Who removed (if status="removed")
-    removedAt: v.optional(v.number()), // When removed (if status="removed")
-  })
-    .index("schoolId", ["schoolId"]) // All members of a school
-    .index("userId", ["userId"]) // All schools for a user
-    .index("userId_status", ["userId", "status"]) // User's memberships filtered by status
-    .index("schoolId_role", ["schoolId", "role"]) // All teachers/students in school
-    .index("schoolId_userId", ["schoolId", "userId"]) // Check membership (O(1), unique)
-    .index("schoolId_userId_status", ["schoolId", "userId", "status"]) // Check membership (O(1), unique)
-    .index("schoolId_status", ["schoolId", "status"]) // Filter by status
+  schoolMembers: defineTable(schoolMemberValidator)
+    .index("schoolId", ["schoolId"])
+    .index("userId", ["userId"])
+    .index("userId_status", ["userId", "status"])
+    .index("schoolId_role", ["schoolId", "role"])
+    .index("schoolId_userId", ["schoolId", "userId"])
+    .index("schoolId_userId_status", ["schoolId", "userId", "status"])
+    .index("schoolId_status", ["schoolId", "status"])
     .index("inviteToken", ["inviteToken"]),
 
   schoolParentStudents: defineTable({
     parentId: v.id("users"),
     studentId: v.id("users"),
     schoolId: v.id("schools"),
-
-    // Relationship
-    relationship: v.union(
-      v.literal("father"),
-      v.literal("mother"),
-      v.literal("guardian"),
-      v.literal("other")
-    ),
-
-    // Permissions (array for scalability)
-    permissions: v.array(v.string()), // ["view_grades", "view_progress", "receive_notifications"]
-
-    // Verification
-    status: v.union(
-      v.literal("pending"), // Invited but not verified
-      v.literal("verified"), // Email/phone verified
-      v.literal("inactive") // Disabled
-    ),
-
+    relationship: parentStudentRelationshipValidator,
+    permissions: v.array(v.string()),
+    status: parentStudentStatusValidator,
     verifiedEmail: v.optional(v.string()),
     verifiedPhone: v.optional(v.string()),
-
-    // Audit fields (use _creationTime for createdAt)
-    updatedAt: v.number(), // Last update time
+    updatedAt: v.number(),
     verifiedAt: v.optional(v.number()),
-    verifiedBy: v.optional(v.id("users")), // Who verified (admin/teacher)
+    verifiedBy: v.optional(v.id("users")),
   })
-    .index("parentId", ["parentId"]) // Get all children
-    .index("studentId", ["studentId"]) // Get all parents
-    .index("parentId_studentId", ["parentId", "studentId"]) // Prevent duplicates (unique)
-    .index("schoolId", ["schoolId"]) // Query by school
-    .index("status", ["status"]), // Filter by verification status
+    .index("parentId", ["parentId"])
+    .index("studentId", ["studentId"])
+    .index("parentId_studentId", ["parentId", "studentId"])
+    .index("schoolId", ["schoolId"])
+    .index("status", ["status"]),
 
   schoolInviteCodes: defineTable({
     schoolId: v.id("schools"),
-
-    // Role this code is for
-    role: schoolMemberRoles,
-
-    // The actual invite code
-    code: v.string(), // "ABC123XYZ"
-
-    // Code settings
-    enabled: v.boolean(), // Can this code be used?
-
-    // Optional limits
-    expiresAt: v.optional(v.number()), // When code expires (null = never)
-    maxUsage: v.optional(v.number()), // Max times code can be used (null = unlimited)
-    currentUsage: v.number(), // How many times used
-
-    // Metadata
-    description: v.optional(v.string()), // "Student intake 2024/2025"
-
-    // Audit fields
+    role: schoolMemberRoleValidator,
+    code: v.string(),
+    enabled: v.boolean(),
+    expiresAt: v.optional(v.number()),
+    maxUsage: v.optional(v.number()),
+    currentUsage: v.number(),
+    description: v.optional(v.string()),
     createdBy: v.id("users"),
     updatedBy: v.optional(v.id("users")),
     updatedAt: v.number(),
   })
-    .index("schoolId", ["schoolId"]) // All codes for a school
-    .index("schoolId_role", ["schoolId", "role"]) // Codes for specific role
-    .index("code", ["code"]) // Lookup by code (for joining)
-    .index("schoolId_code", ["schoolId", "code"]) // Unique code per school
-    .index("schoolId_enabled", ["schoolId", "enabled"]), // Active codes
+    .index("schoolId", ["schoolId"])
+    .index("schoolId_role", ["schoolId", "role"])
+    .index("code", ["code"])
+    .index("schoolId_code", ["schoolId", "code"])
+    .index("schoolId_enabled", ["schoolId", "enabled"]),
 
   schoolActivityLogs: defineTable({
     schoolId: v.id("schools"),
-    userId: v.id("users"), // Who did the action
-
-    // Type-safe actions
-    action: v.union(
-      // School actions
-      v.literal("school_created"),
-      v.literal("school_updated"),
-      v.literal("school_deleted"),
-      v.literal("school_code_regenerated"),
-
-      // Member actions
-      v.literal("member_invited"),
-      v.literal("member_joined"),
-      v.literal("member_removed"),
-      v.literal("member_role_changed"),
-
-      // Class actions
-      v.literal("class_created"),
-      v.literal("class_updated"),
-      v.literal("class_archived"),
-      v.literal("class_deleted"),
-      v.literal("class_code_regenerated"),
-
-      // Class member actions
-      v.literal("class_member_added"),
-      v.literal("class_member_removed"),
-      v.literal("class_member_role_changed"),
-      v.literal("class_member_permissions_changed"),
-
-      // Parent actions
-      v.literal("parent_linked"),
-      v.literal("parent_unlinked"),
-      v.literal("parent_permissions_changed"),
-
-      // Assignment actions (for future)
-      v.literal("assignment_created"),
-      v.literal("assignment_updated"),
-      v.literal("assignment_deleted"),
-      v.literal("assignment_published"),
-
-      // Progress actions (for future)
-      v.literal("progress_updated"),
-      v.literal("assignment_completed")
-    ),
-
-    // Type-safe entity types
-    entityType: v.union(
-      v.literal("schools"),
-      v.literal("schoolMembers"),
-      v.literal("classes"),
-      v.literal("classMembers"),
-      v.literal("parentStudents"),
-      v.literal("assignments"),
-      v.literal("progresses")
-    ),
-
-    entityId: v.string(), // ID of affected entity
-
-    // Context (type-safe based on action)
-    metadata: v.optional(v.any()), // Additional context (JSON)
-    // Structure depends on action type
-
-    // Security audit
+    userId: v.id("users"),
+    action: schoolActivityActionValidator,
+    entityType: schoolActivityEntityTypeValidator,
+    entityId: v.string(),
+    metadata: activityMetadataValidator,
     ipAddress: v.optional(v.string()),
     userAgent: v.optional(v.string()),
-
-    // Note: Use _creationTime for when action occurred
   })
-    .index("schoolId", ["schoolId"]) // All activities for a school
-    .index("userId", ["userId"]) // User's activities
-    .index("action", ["action"]) // Filter by action type
-    .index("entityType_entityId", ["entityType", "entityId"]), // Track specific entity changes
+    .index("schoolId", ["schoolId"])
+    .index("userId", ["userId"])
+    .index("action", ["action"])
+    .index("entityType_entityId", ["entityType", "entityId"]),
 };
 
 export default tables;

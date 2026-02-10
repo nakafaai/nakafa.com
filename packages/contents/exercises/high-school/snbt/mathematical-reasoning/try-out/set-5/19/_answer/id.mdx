@@ -1,0 +1,51 @@
+export const metadata = {
+  title: "Pembahasan Soal 19",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/09/2026",
+};
+
+Kita akan mencari nilai <InlineMath math="a" /> dan <InlineMath math="b" /> berdasarkan sifat perubahan rata-rata dan jangkauan pada transformasi linear data.
+
+Misalkan rata-rata awal adalah <InlineMath math="\bar{x}_1 = 5" /> dan jangkauan awal adalah <InlineMath math="J_1 = 4" />. Transformasi data dilakukan dengan mengalikan setiap nilai dengan <InlineMath math="a" /> lalu menambahkan <InlineMath math="b" />.
+
+**Analisis Perubahan Jangkauan**
+
+Jangkauan adalah selisih nilai terbesar dan terkecil. Penambahan konstanta <InlineMath math="b" /> tidak mengubah selisih ini, tetapi perkalian dengan <InlineMath math="a" /> akan mengubah skala jangkauan. Karena jangkauan selalu positif, maka:
+
+<MathContainer>
+  <BlockMath math="J_2 = |a| \cdot J_1" />
+</MathContainer>
+
+Diketahui jangkauan baru <InlineMath math="J_2 = 12" /> dan jangkauan lama <InlineMath math="J_1 = 4" />. Karena <InlineMath math="a" /> diasumsikan positif dalam konteks ini:
+
+<MathContainer>
+  <BlockMath math="12 = a \cdot 4" />
+  <BlockMath math="a = \frac{12}{4} = 3" />
+</MathContainer>
+
+**Analisis Perubahan Rata-rata**
+
+Rata-rata dipengaruhi oleh operasi perkalian maupun penjumlahan. Rumus transformasi rata-rata adalah:
+
+<MathContainer>
+  <BlockMath math="\bar{x}_2 = a \cdot \bar{x}_1 + b" />
+</MathContainer>
+
+Substitusikan nilai yang diketahui (<InlineMath math="\bar{x}_2 = 19" />, <InlineMath math="\bar{x}_1 = 5" />, dan <InlineMath math="a = 3" />):
+
+<MathContainer>
+  <BlockMath math="19 = 3(5) + b" />
+  <BlockMath math="19 = 15 + b" />
+  <BlockMath math="b = 19 - 15 = 4" />
+</MathContainer>
+
+**Menghitung Nilai Akhir**
+
+Nilai yang ditanyakan adalah <InlineMath math="3a - b" />:
+
+<MathContainer>
+  <BlockMath math="3a - b = 3(3) - 4" />
+  <BlockMath math="3a - b = 9 - 4 = 5" />
+</MathContainer>
+
+Jadi, nilai dari <InlineMath math="3a - b" /> adalah <InlineMath math="5" />.

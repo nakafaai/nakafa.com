@@ -1,24 +1,290 @@
-import { defineTable } from "convex/server";
+import {
+  articleCategoryValidator,
+  gradeValidator,
+  localeValidator,
+  materialValidator,
+  subjectCategoryValidator,
+} from "@repo/backend/convex/lib/contentValidators";
+import { defineTable, paginationResultValidator } from "convex/server";
+import type { Infer } from "convex/values";
 import { v } from "convex/values";
+import {
+  addFieldsToValidator,
+  literals,
+  systemFields,
+} from "convex-helpers/validators";
 
-export const chatVisibility = v.union(
-  v.literal("private"),
-  v.literal("public")
+/**
+ * Re-export content validators for backward compatibility.
+ * Import from lib/contentValidators directly in new code.
+ */
+export {
+  gradeValidator,
+  localeValidator,
+  materialValidator,
+  subjectCategoryValidator,
+} from "@repo/backend/convex/lib/contentValidators";
+
+/**
+ * Chat visibility validator
+ */
+export const chatVisibilityValidator = literals("private", "public");
+export type ChatVisibility = Infer<typeof chatVisibilityValidator>;
+
+/**
+ * Chat type validator
+ */
+export const chatTypeValidator = literals("study", "finance");
+
+/**
+ * Chat base validator (without system fields)
+ */
+export const chatValidator = v.object({
+  updatedAt: v.number(),
+  title: v.optional(v.string()),
+  userId: v.id("users"),
+  visibility: chatVisibilityValidator,
+  type: chatTypeValidator,
+});
+
+/**
+ * Chat document validator (with system fields)
+ * Used internally for paginatedChatsValidator
+ */
+const chatDocValidator = addFieldsToValidator(
+  chatValidator,
+  systemFields("chats")
 );
 
+/**
+ * Paginated chats validator
+ */
+export const paginatedChatsValidator =
+  paginationResultValidator(chatDocValidator);
+
+/**
+ * Message role validator
+ */
+export const messageRoleValidator = literals("user", "assistant", "system");
+
+/**
+ * Message base validator (without system fields)
+ */
+export const messageValidator = v.object({
+  identifier: v.string(),
+  chatId: v.id("chats"),
+  role: messageRoleValidator,
+});
+
+/**
+ * Message document validator (with system fields)
+ * Used internally for messageWithPartsDocValidator
+ */
+const messageDocValidator = addFieldsToValidator(
+  messageValidator,
+  systemFields("messages")
+);
+
+/**
+ * Chat-specific validators
+ */
+export const dataStatusValidator = literals("loading", "done", "error");
+
+export const streamStateValidator = literals("streaming", "done");
+
+export const toolStateValidator = literals(
+  "input-streaming",
+  "input-available",
+  "output-available",
+  "output-error",
+  "output-denied",
+  "approval-requested",
+  "approval-responded"
+);
+
+export const partTypeValidator = literals(
+  "text",
+  "reasoning",
+  "source-url",
+  "source-document",
+  "file",
+  "step-start",
+  "tool-getArticles",
+  "tool-getSubjects",
+  "tool-getContent",
+  "tool-calculator",
+  "tool-scrape",
+  "tool-webSearch",
+  "dynamic-tool",
+  "data-suggestions",
+  "data-get-articles",
+  "data-get-subjects",
+  "data-get-content",
+  "data-calculator",
+  "data-scrape-url",
+  "data-web-search"
+);
+
+export const contentItemValidator = v.object({
+  title: v.string(),
+  url: v.string(),
+  slug: v.string(),
+  locale: v.string(),
+});
+
+export const webSearchSourceValidator = v.object({
+  title: v.string(),
+  description: v.string(),
+  url: v.string(),
+  content: v.string(),
+  citation: v.string(),
+});
+
+export const calculatorExpressionValidator = v.object({
+  expression: v.string(),
+  latex: v.string(),
+});
+
+export const calculatorResultValidator = v.object({
+  expression: v.string(),
+  latex: v.string(),
+  value: v.string(),
+});
+
+/**
+ * Provider metadata validator.
+ * Uses v.any() for the innermost value because this comes from AI SDK
+ * and varies by provider (OpenAI, Anthropic, Google, etc.).
+ * The shape is defined externally by each AI provider's SDK, not by us.
+ */
+export const providerMetadataValidator = v.optional(
+  v.record(v.string(), v.record(v.string(), v.any()))
+);
+
+/**
+ * Part base validator (without system fields)
+ * Contains all fields for the parts table
+ */
+export const partValidator = v.object({
+  messageId: v.id("messages"),
+  type: partTypeValidator,
+  order: v.number(),
+
+  textText: v.optional(v.string()),
+  textState: v.optional(streamStateValidator),
+
+  reasoningText: v.optional(v.string()),
+  reasoningState: v.optional(streamStateValidator),
+
+  fileMediaType: v.optional(v.string()),
+  fileFilename: v.optional(v.string()),
+  fileUrl: v.optional(v.string()),
+
+  sourceUrlSourceId: v.optional(v.string()),
+  sourceUrlUrl: v.optional(v.string()),
+  sourceUrlTitle: v.optional(v.string()),
+
+  sourceDocumentSourceId: v.optional(v.string()),
+  sourceDocumentMediaType: v.optional(v.string()),
+  sourceDocumentTitle: v.optional(v.string()),
+  sourceDocumentFilename: v.optional(v.string()),
+
+  toolToolCallId: v.optional(v.string()),
+  toolState: v.optional(toolStateValidator),
+  toolErrorText: v.optional(v.string()),
+
+  toolGetArticlesInputLocale: v.optional(localeValidator),
+  toolGetArticlesInputCategory: v.optional(articleCategoryValidator),
+  toolGetArticlesOutput: v.optional(v.string()),
+
+  toolGetSubjectsInputLocale: v.optional(localeValidator),
+  toolGetSubjectsInputCategory: v.optional(subjectCategoryValidator),
+  toolGetSubjectsInputGrade: v.optional(gradeValidator),
+  toolGetSubjectsInputMaterial: v.optional(materialValidator),
+  toolGetSubjectsOutput: v.optional(v.string()),
+
+  toolGetContentInputLocale: v.optional(localeValidator),
+  toolGetContentInputSlug: v.optional(v.string()),
+  toolGetContentOutput: v.optional(v.string()),
+
+  toolCalculatorInputExpression: v.optional(v.string()),
+  toolCalculatorOutput: v.optional(v.string()),
+
+  toolScrapeUrlInputUrlToCrawl: v.optional(v.string()),
+  toolScrapeUrlOutput: v.optional(v.string()),
+
+  toolWebSearchInputQuery: v.optional(v.string()),
+  toolWebSearchOutput: v.optional(v.string()),
+
+  dataSuggestionsId: v.optional(v.string()),
+  dataSuggestionsData: v.optional(v.array(v.string())),
+
+  dataGetArticlesId: v.optional(v.string()),
+  dataGetArticlesBaseUrl: v.optional(v.string()),
+  dataGetArticlesInputLocale: v.optional(localeValidator),
+  dataGetArticlesInputCategory: v.optional(articleCategoryValidator),
+  dataGetArticlesArticles: v.optional(v.array(contentItemValidator)),
+  dataGetArticlesStatus: v.optional(dataStatusValidator),
+  dataGetArticlesError: v.optional(v.string()),
+
+  dataGetSubjectsId: v.optional(v.string()),
+  dataGetSubjectsBaseUrl: v.optional(v.string()),
+  dataGetSubjectsInputLocale: v.optional(localeValidator),
+  dataGetSubjectsInputCategory: v.optional(subjectCategoryValidator),
+  dataGetSubjectsInputGrade: v.optional(gradeValidator),
+  dataGetSubjectsInputMaterial: v.optional(materialValidator),
+  dataGetSubjectsSubjects: v.optional(v.array(contentItemValidator)),
+  dataGetSubjectsStatus: v.optional(dataStatusValidator),
+  dataGetSubjectsError: v.optional(v.string()),
+
+  dataGetContentId: v.optional(v.string()),
+  dataGetContentUrl: v.optional(v.string()),
+  dataGetContentTitle: v.optional(v.string()),
+  dataGetContentDescription: v.optional(v.string()),
+  dataGetContentStatus: v.optional(dataStatusValidator),
+  dataGetContentError: v.optional(v.string()),
+
+  dataCalculatorId: v.optional(v.string()),
+  dataCalculatorOriginal: v.optional(calculatorExpressionValidator),
+  dataCalculatorResult: v.optional(calculatorResultValidator),
+  dataCalculatorStatus: v.optional(literals("done", "error")),
+  dataCalculatorError: v.optional(v.string()),
+
+  dataScrapeUrlId: v.optional(v.string()),
+  dataScrapeUrlUrl: v.optional(v.string()),
+  dataScrapeUrlContent: v.optional(v.string()),
+  dataScrapeUrlStatus: v.optional(dataStatusValidator),
+  dataScrapeUrlError: v.optional(v.string()),
+
+  dataWebSearchId: v.optional(v.string()),
+  dataWebSearchQuery: v.optional(v.string()),
+  dataWebSearchSources: v.optional(v.array(webSearchSourceValidator)),
+  dataWebSearchStatus: v.optional(dataStatusValidator),
+  dataWebSearchError: v.optional(v.string()),
+
+  providerMetadata: providerMetadataValidator,
+});
+
+/**
+ * Part document validator (with system fields)
+ * Used internally for messageWithPartsDocValidator
+ */
+const partDocValidator = addFieldsToValidator(
+  partValidator,
+  systemFields("parts")
+);
+
+/**
+ * Message with parts document validator
+ * Used for loadMessages return type - returns raw DB documents
+ */
+export const messageWithPartsDocValidator = messageDocValidator.extend({
+  parts: v.array(partDocValidator),
+});
+export type MessageWithPartsDoc = Infer<typeof messageWithPartsDocValidator>;
+
 export const tables = {
-  chats: defineTable({
-    updatedAt: v.number(), // Unix timestamp for last message
-    title: v.optional(v.string()), // Optional chat title
-    userId: v.id("users"), // Optional user association
-    visibility: chatVisibility,
-    type: v.union(v.literal("study"), v.literal("finance")),
-  })
-    // Each index needed for different filter + _creationTime sorting:
-    // - userId: all chats sorted by _creationTime
-    // - userId_visibility: filter visibility, sort by _creationTime
-    // - userId_type: filter type, sort by _creationTime
-    // - userId_visibility_type: filter both, sort by _creationTime
+  chats: defineTable(chatValidator)
     .index("userId", ["userId"])
     .index("userId_visibility", ["userId", "visibility"])
     .index("userId_type", ["userId", "type"])
@@ -28,318 +294,14 @@ export const tables = {
       filterFields: ["userId", "visibility", "type"],
     }),
 
-  messages: defineTable({
-    identifier: v.string(), // Unique identifier for the message https://ai-sdk.dev/docs/reference/ai-sdk-core/ui-message#uimessage-interface
-    chatId: v.id("chats"), // Reference to chats table
-    role: v.union(
-      v.literal("user"),
-      v.literal("assistant"),
-      v.literal("system")
-    ),
-  })
+  messages: defineTable(messageValidator)
     .index("chatId", ["chatId"])
-    .index("identifier", ["identifier"]),
+    .index("chatId_identifier", ["chatId", "identifier"]),
 
-  parts: defineTable({
-    messageId: v.id("messages"), // Reference to messages table
-    type: v.union(
-      // Default part types
-      v.literal("text"),
-      v.literal("reasoning"),
-      v.literal("source-url"),
-      v.literal("source-document"),
-      v.literal("file"),
-      v.literal("step-start"),
-
-      // Tool Part type (matches AI SDK tool names)
-      v.literal("tool-getArticles"),
-      v.literal("tool-getSubjects"),
-      v.literal("tool-getContent"),
-      v.literal("tool-calculator"),
-      v.literal("tool-scrape"),
-      v.literal("tool-webSearch"),
-      v.literal("dynamic-tool"),
-
-      // Data Part type
-      v.literal("data-suggestions"),
-      v.literal("data-get-articles"),
-      v.literal("data-get-subjects"),
-      v.literal("data-get-content"),
-      v.literal("data-calculator"),
-      v.literal("data-scrape-url"),
-      v.literal("data-web-search")
-    ),
-    order: v.number(), // Order within message (0-based)
-
-    // Text fields
-    textText: v.optional(v.string()),
-    textState: v.optional(v.union(v.literal("streaming"), v.literal("done"))),
-
-    // Reasoning fields
-    reasoningText: v.optional(v.string()),
-    reasoningState: v.optional(
-      v.union(v.literal("streaming"), v.literal("done"))
-    ),
-
-    // File fields
-    fileMediaType: v.optional(v.string()),
-    fileFilename: v.optional(v.string()),
-    fileUrl: v.optional(v.string()),
-
-    // Source URL fields
-    sourceUrlSourceId: v.optional(v.string()),
-    sourceUrlUrl: v.optional(v.string()),
-    sourceUrlTitle: v.optional(v.string()),
-
-    // Source document fields
-    sourceDocumentSourceId: v.optional(v.string()),
-    sourceDocumentMediaType: v.optional(v.string()),
-    sourceDocumentTitle: v.optional(v.string()),
-    sourceDocumentFilename: v.optional(v.string()),
-
-    // Shared tool call columns
-    toolToolCallId: v.optional(v.string()),
-    toolState: v.optional(
-      v.union(
-        v.literal("input-streaming"),
-        v.literal("input-available"),
-        v.literal("output-available"),
-        v.literal("output-error"),
-        v.literal("output-denied"),
-        v.literal("approval-requested"),
-        v.literal("approval-responded")
-      )
-    ),
-    toolErrorText: v.optional(v.string()),
-
-    toolGetArticlesInputLocale: v.optional(
-      v.union(v.literal("en"), v.literal("id"))
-    ),
-    toolGetArticlesInputCategory: v.optional(v.literal("politics")),
-    toolGetArticlesOutput: v.optional(v.string()),
-
-    toolGetSubjectsInputLocale: v.optional(
-      v.union(v.literal("en"), v.literal("id"))
-    ),
-    toolGetSubjectsInputCategory: v.optional(
-      v.union(
-        v.literal("elementary-school"),
-        v.literal("middle-school"),
-        v.literal("high-school"),
-        v.literal("university")
-      )
-    ),
-    toolGetSubjectsInputGrade: v.optional(
-      v.union(
-        v.literal("1"),
-        v.literal("2"),
-        v.literal("3"),
-        v.literal("4"),
-        v.literal("5"),
-        v.literal("6"),
-        v.literal("7"),
-        v.literal("8"),
-        v.literal("9"),
-        v.literal("10"),
-        v.literal("11"),
-        v.literal("12"),
-        v.literal("bachelor"),
-        v.literal("master"),
-        v.literal("phd")
-      )
-    ),
-    toolGetSubjectsInputMaterial: v.optional(
-      v.union(
-        v.literal("mathematics"),
-        v.literal("physics"),
-        v.literal("chemistry"),
-        v.literal("biology"),
-        v.literal("geography"),
-        v.literal("economy"),
-        v.literal("history"),
-        v.literal("informatics"),
-        v.literal("geospatial"),
-        v.literal("sociology"),
-        v.literal("ai-ds"),
-        v.literal("game-engineering"),
-        v.literal("computer-science"),
-        v.literal("technology-electro-medical"),
-        v.literal("political-science"),
-        v.literal("informatics-engineering"),
-        v.literal("international-relations")
-      )
-    ),
-    toolGetSubjectsOutput: v.optional(v.string()),
-
-    toolGetContentInputLocale: v.optional(
-      v.union(v.literal("en"), v.literal("id"))
-    ),
-    toolGetContentInputSlug: v.optional(v.string()),
-    toolGetContentOutput: v.optional(v.string()),
-
-    toolCalculatorInputExpression: v.optional(v.string()),
-    toolCalculatorOutput: v.optional(v.string()),
-
-    toolScrapeUrlInputUrlToCrawl: v.optional(v.string()),
-    toolScrapeUrlOutput: v.optional(v.string()),
-
-    toolWebSearchInputQuery: v.optional(v.string()),
-    toolWebSearchOutput: v.optional(v.string()),
-
-    // Data part fields
-    dataSuggestionsId: v.optional(v.string()),
-    dataSuggestionsData: v.optional(v.array(v.string())),
-
-    dataGetArticlesId: v.optional(v.string()),
-    dataGetArticlesBaseUrl: v.optional(v.string()),
-    dataGetArticlesInputLocale: v.optional(
-      v.union(v.literal("en"), v.literal("id"))
-    ),
-    dataGetArticlesInputCategory: v.optional(v.literal("politics")),
-    dataGetArticlesArticles: v.optional(
-      v.array(
-        v.object({
-          title: v.string(),
-          url: v.string(),
-          slug: v.string(),
-          locale: v.string(),
-        })
-      )
-    ),
-    dataGetArticlesStatus: v.optional(
-      v.union(v.literal("loading"), v.literal("done"), v.literal("error"))
-    ),
-    dataGetArticlesError: v.optional(v.string()),
-
-    dataGetSubjectsId: v.optional(v.string()),
-    dataGetSubjectsBaseUrl: v.optional(v.string()),
-    dataGetSubjectsInputLocale: v.optional(
-      v.union(v.literal("en"), v.literal("id"))
-    ),
-    dataGetSubjectsInputCategory: v.optional(
-      v.union(
-        v.literal("elementary-school"),
-        v.literal("middle-school"),
-        v.literal("high-school"),
-        v.literal("university")
-      )
-    ),
-    dataGetSubjectsInputGrade: v.optional(
-      v.union(
-        v.literal("1"),
-        v.literal("2"),
-        v.literal("3"),
-        v.literal("4"),
-        v.literal("5"),
-        v.literal("6"),
-        v.literal("7"),
-        v.literal("8"),
-        v.literal("9"),
-        v.literal("10"),
-        v.literal("11"),
-        v.literal("12"),
-        v.literal("bachelor"),
-        v.literal("master"),
-        v.literal("phd")
-      )
-    ),
-    dataGetSubjectsInputMaterial: v.optional(
-      v.union(
-        v.literal("mathematics"),
-        v.literal("physics"),
-        v.literal("chemistry"),
-        v.literal("biology"),
-        v.literal("geography"),
-        v.literal("economy"),
-        v.literal("history"),
-        v.literal("informatics"),
-        v.literal("geospatial"),
-        v.literal("sociology"),
-        v.literal("ai-ds"),
-        v.literal("game-engineering"),
-        v.literal("computer-science"),
-        v.literal("technology-electro-medical"),
-        v.literal("political-science"),
-        v.literal("informatics-engineering"),
-        v.literal("international-relations")
-      )
-    ),
-    dataGetSubjectsSubjects: v.optional(
-      v.array(
-        v.object({
-          title: v.string(),
-          url: v.string(),
-          slug: v.string(),
-          locale: v.string(),
-        })
-      )
-    ),
-    dataGetSubjectsStatus: v.optional(
-      v.union(v.literal("loading"), v.literal("done"), v.literal("error"))
-    ),
-    dataGetSubjectsError: v.optional(v.string()),
-
-    dataGetContentId: v.optional(v.string()),
-    dataGetContentUrl: v.optional(v.string()),
-    dataGetContentTitle: v.optional(v.string()),
-    dataGetContentDescription: v.optional(v.string()),
-    dataGetContentStatus: v.optional(
-      v.union(v.literal("loading"), v.literal("done"), v.literal("error"))
-    ),
-    dataGetContentError: v.optional(v.string()),
-
-    dataCalculatorId: v.optional(v.string()),
-    dataCalculatorOriginal: v.optional(
-      v.object({
-        expression: v.string(),
-        latex: v.string(),
-      })
-    ),
-    dataCalculatorResult: v.optional(
-      v.object({
-        expression: v.string(),
-        latex: v.string(),
-        value: v.string(),
-      })
-    ),
-    dataCalculatorStatus: v.optional(
-      v.union(v.literal("done"), v.literal("error"))
-    ),
-    dataCalculatorError: v.optional(v.string()),
-
-    dataScrapeUrlId: v.optional(v.string()),
-    dataScrapeUrlUrl: v.optional(v.string()),
-    dataScrapeUrlContent: v.optional(v.string()),
-    dataScrapeUrlStatus: v.optional(
-      v.union(v.literal("loading"), v.literal("done"), v.literal("error"))
-    ),
-    dataScrapeUrlError: v.optional(v.string()),
-
-    dataWebSearchId: v.optional(v.string()),
-    dataWebSearchQuery: v.optional(v.string()),
-    dataWebSearchSources: v.optional(
-      v.array(
-        v.object({
-          title: v.string(),
-          description: v.string(),
-          url: v.string(),
-          content: v.string(),
-          citation: v.string(),
-        })
-      )
-    ),
-    dataWebSearchStatus: v.optional(
-      v.union(v.literal("loading"), v.literal("done"), v.literal("error"))
-    ),
-    dataWebSearchError: v.optional(v.string()),
-
-    // Provider metadata (flexible for AI provider-specific data)
-    providerMetadata: v.optional(
-      v.record(v.string(), v.record(v.string(), v.any()))
-    ),
-  })
-    // Single index covers: eq("messageId") OR eq("messageId").eq("order")
-    .index("messageId_order", ["messageId", "order"]),
+  parts: defineTable(partValidator).index("messageId_order", [
+    "messageId",
+    "order",
+  ]),
 };
 
 export default tables;

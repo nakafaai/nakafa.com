@@ -1,0 +1,37 @@
+export const metadata = {
+  title: "Pembahasan Soal 6",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/30/2026",
+};
+
+Untuk menemukan pola barisan ini, kita perlu melihat selisih antar suku yang berurutan. Mari kita bedah perubahannya satu per satu.
+
+Barisan awal kita adalah:
+
+<MathContainer>
+  <BlockMath math="2, 3, 5, 9, 17, \dots" />
+</MathContainer>
+
+Sekarang, perhatikan lompatan penambahan dari satu angka ke angka berikutnya:
+- Dari <InlineMath math="2" /> ke <InlineMath math="3" />, bertambah <InlineMath math="1" />.
+- Dari <InlineMath math="3" /> ke <InlineMath math="5" />, bertambah <InlineMath math="2" />.
+- Dari <InlineMath math="5" /> ke <InlineMath math="9" />, bertambah <InlineMath math="4" />.
+- Dari <InlineMath math="9" /> ke <InlineMath math="17" />, bertambah <InlineMath math="8" />.
+
+Jika kita tuliskan pola penambahannya, kita mendapatkan deret baru:
+
+<MathContainer>
+  <BlockMath math="+1, +2, +4, +8" />
+</MathContainer>
+
+Terlihat jelas bahwa setiap penambahan adalah **dua kali lipat** dari penambahan sebelumnya (atau perpangkatan bilangan 2: <InlineMath math="2^0, 2^1, 2^2, 2^3" />).
+
+Oleh karena itu, penambahan selanjutnya haruslah dua kali lipat dari <InlineMath math="8" />, yaitu <InlineMath math="16" />.
+
+Mari kita hitung suku berikutnya:
+
+<MathContainer>
+  <BlockMath math="17 + 16 = 33" />
+</MathContainer>
+
+Jadi, bilangan yang tepat untuk mengisi barisan tersebut adalah **33**.

@@ -3,8 +3,9 @@
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import { mapDBMessagesToUIMessages } from "@repo/backend/convex/chats/utils";
 import { useQuery } from "convex/react";
-import type { PropsWithChildren } from "react";
+import { type PropsWithChildren, useMemo } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 
 interface Props {
@@ -25,9 +26,15 @@ export function CurrentChatProvider({
   const chat = useQuery(api.chats.queries.getChat, {
     chatId,
   });
-  const messages = useQuery(api.chats.queries.loadMessages, {
+  const rawMessages = useQuery(api.chats.queries.loadMessages, {
     chatId,
   });
+
+  // Transform raw DB messages to UI messages
+  const messages = useMemo(
+    () => (rawMessages ? mapDBMessagesToUIMessages(rawMessages) : undefined),
+    [rawMessages]
+  );
 
   return (
     <CurrentChatContext.Provider value={{ chat, messages }}>

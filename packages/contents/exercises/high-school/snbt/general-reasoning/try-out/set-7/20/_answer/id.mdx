@@ -1,0 +1,46 @@
+export const metadata = {
+  title: "Pembahasan Soal 20",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/26/2026",
+};
+
+Mari kita bedah logika pernyataan di atas menggunakan simbol matematika agar lebih jelas strukturnya.
+
+Misalkan kita definisikan tiga pernyataan berikut:
+- <InlineMath math="P" />: Rutin lari pagi dan memiliki pola makan yang baik.
+- <InlineMath math="Q" />: Memiliki fisik yang kuat.
+- <InlineMath math="R" />: Tubuh lebih sehat.
+
+Berdasarkan teks soal, kita mendapatkan premis-premis logika sebagai berikut:
+
+**Premis 1**: Seseorang akan memiliki fisik yang kuat jika rutin lari pagi dan memiliki pola makan yang baik.
+
+<MathContainer>
+  <BlockMath math="P \rightarrow Q" />
+</MathContainer>
+
+**Premis 2**: Fisik yang kuat membuat tubuh lebih sehat.
+
+<MathContainer>
+  <BlockMath math="Q \rightarrow R" />
+</MathContainer>
+
+**Fakta**: Andi rutin lari pagi dan memiliki pola makan yang baik.
+
+<MathContainer>
+  <BlockMath math="\text{Andi} = P" />
+</MathContainer>
+
+**Analisis Penarikan Kesimpulan**
+
+Kita dapat menggabungkan Premis 1 dan Premis 2 menggunakan prinsip **Silogisme Hipotetik**:
+
+<MathContainer>
+  <BlockMath math="(P \rightarrow Q) \land (Q \rightarrow R) \Rightarrow (P \rightarrow R)" />
+</MathContainer>
+
+Artinya: **"Jika seseorang rutin lari pagi dan memiliki pola makan yang baik, maka tubuhnya akan lebih sehat."**
+
+Karena Andi memenuhi kondisi <InlineMath math="P" /> (rutin lari pagi dan makan baik), maka secara otomatis Andi juga memenuhi kondisi <InlineMath math="R" /> (memiliki tubuh yang sehat).
+
+Oleh karena itu, simpulan bahwa "Andi memiliki tubuh yang sehat" adalah **sah** dan **pasti benar** secara logika deduktif.

@@ -9,6 +9,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
   Avatar,
@@ -20,7 +21,6 @@ import {
   buttonVariants,
 } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import {
   Tooltip,
@@ -28,11 +28,12 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { cn } from "@repo/design-system/lib/utils";
-import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
+import { useMutation, usePaginatedQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { useUser } from "@/lib/context/use-user";
 import { getInitialName } from "@/lib/utils/helper";
+import { getCleanHref } from "@/lib/utils/link";
 
 export function UserComments({ userId }: { userId: Id<"users"> }) {
   const t = useTranslations("Comments");
@@ -52,7 +53,7 @@ export function UserComments({ userId }: { userId: Id<"users"> }) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col divide-y rounded-xl border bg-card text-card-foreground shadow-sm">
       {results.map((comment) => (
         <CommentThread comment={comment} key={comment._id} />
       ))}
@@ -63,7 +64,9 @@ export function UserComments({ userId }: { userId: Id<"users"> }) {
 function CommentThread({ comment }: { comment: Doc<"comments"> }) {
   const t = useTranslations("Common");
 
-  const user = useQuery(api.auth.getUserById, { userId: comment.userId });
+  const { data: user } = useQueryWithStatus(api.auth.getUserById, {
+    userId: comment.userId,
+  });
   const currentUser = useUser((state) => state.user);
 
   const userName = user?.authUser.name ?? t("anonymous");
@@ -100,12 +103,10 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
   }
 
   return (
-    <div className="flex items-start gap-3 text-left">
-      <Avatar className="size-10 rounded-full">
+    <div className="flex items-start gap-3 p-4 text-left">
+      <Avatar className="size-10">
         <AvatarImage alt={userName} role="presentation" src={userImage} />
-        <AvatarFallback className="rounded-lg">
-          {getInitialName(userName)}
-        </AvatarFallback>
+        <AvatarFallback>{getInitialName(userName)}</AvatarFallback>
       </Avatar>
       <div className="grid w-full gap-2">
         <div className="grid gap-1">
@@ -190,16 +191,17 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
           <Tooltip>
             <TooltipTrigger
               render={
-                <NavigationLink
+                <a
                   className={cn(
                     buttonVariants({ variant: "ghost", size: "icon-sm" })
                   )}
-                  href={comment.slug}
+                  href={getCleanHref(comment.slug)}
+                  rel="noopener noreferrer"
                   target="_blank"
                 >
                   <HugeIcons icon={ArrowUpRight01Icon} />
                   <span className="sr-only">{t("see")}</span>
-                </NavigationLink>
+                </a>
               }
             />
             <TooltipContent side="bottom">{t("see")}</TooltipContent>

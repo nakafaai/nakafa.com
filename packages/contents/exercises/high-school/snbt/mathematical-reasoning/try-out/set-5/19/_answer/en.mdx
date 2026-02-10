@@ -1,0 +1,51 @@
+export const metadata = {
+  title: "Solution to Question 19",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/09/2026",
+};
+
+We will determine the values of <InlineMath math="a" /> and <InlineMath math="b" /> based on how linear transformations affect the mean and range of a dataset.
+
+Let the initial mean be <InlineMath math="\bar{x}_1 = 5" /> and the initial range be <InlineMath math="R_1 = 4" />. The data transformation involves multiplying each value by <InlineMath math="a" /> and then adding <InlineMath math="b" />.
+
+**Analysis of Range Change**
+
+The range is the difference between the maximum and minimum values. Adding a constant <InlineMath math="b" /> shifts all data points equally, so the difference remains unchanged. However, multiplying by <InlineMath math="a" /> scales the range. Since the range is always positive:
+
+<MathContainer>
+  <BlockMath math="R_2 = |a| \cdot R_1" />
+</MathContainer>
+
+Given the new range <InlineMath math="R_2 = 12" /> and the old range <InlineMath math="R_1 = 4" />. Assuming <InlineMath math="a" /> is positive in this context:
+
+<MathContainer>
+  <BlockMath math="12 = a \cdot 4" />
+  <BlockMath math="a = \frac{12}{4} = 3" />
+</MathContainer>
+
+**Analysis of Mean Change**
+
+The mean is affected by both multiplication and addition. The transformation formula for the mean is:
+
+<MathContainer>
+  <BlockMath math="\bar{x}_2 = a \cdot \bar{x}_1 + b" />
+</MathContainer>
+
+Substitute the known values (<InlineMath math="\bar{x}_2 = 19" />, <InlineMath math="\bar{x}_1 = 5" />, and <InlineMath math="a = 3" />):
+
+<MathContainer>
+  <BlockMath math="19 = 3(5) + b" />
+  <BlockMath math="19 = 15 + b" />
+  <BlockMath math="b = 19 - 15 = 4" />
+</MathContainer>
+
+**Calculating the Final Value**
+
+The question asks for the value of <InlineMath math="3a - b" />:
+
+<MathContainer>
+  <BlockMath math="3a - b = 3(3) - 4" />
+  <BlockMath math="3a - b = 9 - 4 = 5" />
+</MathContainer>
+
+Thus, the value of <InlineMath math="3a - b" /> is <InlineMath math="5" />.

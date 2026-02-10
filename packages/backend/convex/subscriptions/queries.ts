@@ -1,5 +1,5 @@
 import { query } from "@repo/backend/convex/_generated/server";
-import { requireAuth } from "@repo/backend/convex/lib/authHelpers";
+import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { v } from "convex/values";
 
 export const hasActiveSubscription = query({

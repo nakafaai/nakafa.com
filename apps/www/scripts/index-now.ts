@@ -30,7 +30,7 @@ const keyLocation = `${host}/${keyFileName}`;
 const hardcodedKey = "e22d548f7fd2482a9022e3b84e944901";
 
 // Data folder and file paths
-const DATA_FOLDER = path.join(__dirname, "_data");
+const DATA_FOLDER = path.join(import.meta.dirname, "_data");
 const SUBMISSION_HISTORY_FILE = path.join(
   DATA_FOLDER,
   "submission-history.json"

@@ -1,11 +1,11 @@
 blank_issues_enabled: false
 contact_links:
-  - name: 💬 Questions & Discussions
-    url: https://github.com/nakafaai/nakafa.com/discussions 
-    about: 🤔 Got questions or ideas? Let's chat in our community discussions! Perfect for brainstorming and getting help.
-  - name: 💬 Community Chat
-    url: https://discord.gg/CPCSfKhvfQ
-    about: Join our community chat for quick questions and conversations.
-  - name: 🛡️ Security Issues
-    url: https://github.com/nakafaai/nakafa.com/security/advisories/new 
-    about: 🔒 Found a security vulnerability? Please report it privately here - we take security seriously! 
+  - name: Questions & Support
+    url: https://github.com/nakafaai/nakafa.com/discussions
+    about: Ask questions and get help from the community
+  - name: Community Chat
+    url: https://nakafa.com/discord
+    about: Quick questions and conversations
+  - name: Security Issues
+    url: https://github.com/nakafaai/nakafa.com/security/advisories/new
+    about: Report security vulnerabilities privately

@@ -1,0 +1,71 @@
+import { Graph } from "../graph";
+
+export const metadata = {
+  title: "Pembahasan Soal 6",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/31/2026",
+};
+
+<Graph />
+
+Untuk menentukan jarak dari titik <InlineMath math="Q" /> ke garis <InlineMath math="BD" />, kita akan membentuk segitiga <InlineMath math="BDQ" /> dan menghitung tinggi segitiga tersebut dari titik puncak <InlineMath math="Q" />. Langkah pertama adalah menghitung panjang ketiga sisi segitiga tersebut.
+
+**Menghitung Sisi <InlineMath math="BD" /> (Diagonal Alas)**
+
+Garis <InlineMath math="BD" /> merupakan diagonal sisi alas kubus dengan panjang rusuk <InlineMath math="s = 4" />.
+
+<MathContainer>
+  <BlockMath math="BD = \sqrt{AB^2 + AD^2} = \sqrt{4^2 + 4^2} = \sqrt{32} = 4\sqrt{2}" />
+</MathContainer>
+
+**Menghitung Sisi <InlineMath math="DQ" />**
+
+Titik <InlineMath math="Q" /> berada di tengah <InlineMath math="FG" />. Kita dapat mencari panjang <InlineMath math="DQ" /> dengan meninjau segitiga siku-siku <InlineMath math="DHQ" />. Sebelumnya, kita hitung dulu panjang <InlineMath math="HQ" /> pada bidang atas kubus:
+
+<MathContainer>
+  <BlockMath math="HQ = \sqrt{HG^2 + GQ^2} = \sqrt{4^2 + 2^2} = \sqrt{20} = 2\sqrt{5}" />
+</MathContainer>
+
+Selanjutnya, gunakan teorema Pythagoras pada segitiga <InlineMath math="DHQ" />:
+
+<MathContainer>
+  <BlockMath math="DQ = \sqrt{DH^2 + HQ^2} = \sqrt{4^2 + (2\sqrt{5})^2} = \sqrt{16 + 20} = \sqrt{36} = 6" />
+</MathContainer>
+
+**Menghitung Sisi <InlineMath math="BQ" />**
+
+Panjang <InlineMath math="BQ" /> dapat dihitung dari segitiga siku-siku <InlineMath math="BFQ" />, dengan <InlineMath math="BF = 4" /> dan <InlineMath math="FQ = 2" />:
+
+<MathContainer>
+  <BlockMath math="BQ = \sqrt{BF^2 + FQ^2} = \sqrt{4^2 + 2^2} = \sqrt{20} = 2\sqrt{5}" />
+</MathContainer>
+
+**Menghitung Jarak <InlineMath math="Q" /> ke Garis <InlineMath math="BD" />**
+
+Sekarang kita memiliki segitiga <InlineMath math="BDQ" /> dengan sisi <InlineMath math="BD = 4\sqrt{2}" />, <InlineMath math="DQ = 6" />, dan <InlineMath math="BQ = 2\sqrt{5}" />. Misalkan <InlineMath math="O" /> adalah proyeksi tegak lurus <InlineMath math="Q" /> pada garis <InlineMath math="BD" /> (titik yang membagi garis <InlineMath math="BD" />).
+
+Misalkan panjang <InlineMath math="DO = x" />, maka panjang <InlineMath math="OB = 4\sqrt{2} - x" />. Tinggi segitiga <InlineMath math="QO" /> (sebut saja <InlineMath math="y" />) adalah jarak yang kita cari. Dengan menggunakan dua segitiga siku-siku yang terbentuk, kita peroleh persamaan:
+
+<MathContainer>
+  <BlockMath math="QO^2 = DQ^2 - DO^2 = BQ^2 - OB^2" />
+</MathContainer>
+
+Substitusikan nilai sisi-sisinya:
+
+<MathContainer>
+  <BlockMath math="6^2 - x^2 = (2\sqrt{5})^2 - (4\sqrt{2} - x)^2" />
+  <BlockMath math="36 - x^2 = 20 - (32 - 8\sqrt{2}x + x^2)" />
+  <BlockMath math="36 - x^2 = 20 - 32 + 8\sqrt{2}x - x^2" />
+  <BlockMath math="36 = -12 + 8\sqrt{2}x" />
+  <BlockMath math="48 = 8\sqrt{2}x" />
+  <BlockMath math="x = \frac{48}{8\sqrt{2}} = \frac{6}{\sqrt{2}} = 3\sqrt{2}" />
+</MathContainer>
+
+Setelah mendapatkan nilai <InlineMath math="x = 3\sqrt{2}" />, kita substitusikan kembali untuk mencari <InlineMath math="y" />:
+
+<MathContainer>
+  <BlockMath math="y = \sqrt{DQ^2 - x^2} = \sqrt{6^2 - (3\sqrt{2})^2}" />
+  <BlockMath math="y = \sqrt{36 - 18} = \sqrt{18} = 3\sqrt{2}" />
+</MathContainer>
+
+Jadi, jarak dari titik <InlineMath math="Q" /> ke garis <InlineMath math="BD" /> adalah <InlineMath math="3\sqrt{2}" /> satuan panjang.

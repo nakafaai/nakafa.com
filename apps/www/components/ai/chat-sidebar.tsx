@@ -72,15 +72,16 @@ function AiChatSidebarContent({ ...props }: ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <Button
-              asChild
               className="w-full border border-sidebar-border shadow-none"
+              nativeButton={false}
+              render={
+                <NavigationLink href="/" title={t("new-chat")}>
+                  {t("new-chat")}
+                </NavigationLink>
+              }
               size="sm"
               variant="secondary"
-            >
-              <NavigationLink href="/" title={t("new-chat")}>
-                {t("new-chat")}
-              </NavigationLink>
-            </Button>
+            />
           </SidebarMenuItem>
         </SidebarMenu>
 

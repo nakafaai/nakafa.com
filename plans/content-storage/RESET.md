@@ -66,7 +66,7 @@ Delete in reverse dependency order to maintain referential integrity:
 ```json
 {
   "sync:reset": "tsx scripts/sync-content.ts reset",
-  "sync:prod:reset": "tsx scripts/sync-content.ts reset --prod --force"
+  "sync:prod:reset": "tsx scripts/sync-content.ts reset --prod"
 }
 ```
 
@@ -119,3 +119,4 @@ pnpm --filter backend sync:prod:reset --force
 ---
 
 **Created**: January 24, 2026
+**Last Updated**: January 26, 2026

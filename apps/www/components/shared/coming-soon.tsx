@@ -1,6 +1,6 @@
 import { Heading } from "@repo/design-system/components/markdown/heading";
 import { Paragraph } from "@repo/design-system/components/markdown/paragraph";
-import { buttonVariants } from "@repo/design-system/components/ui/button";
+import { Button } from "@repo/design-system/components/ui/button";
 import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 import { getGithubUrl } from "@/lib/utils/github";
@@ -16,15 +16,19 @@ export function ComingSoon({ className }: { className?: string }) {
 
       <Paragraph>{t("description")}</Paragraph>
 
-      <a
-        className={buttonVariants({ variant: "default" })}
-        href={getGithubUrl({ path: "" })}
-        rel="noopener noreferrer"
-        target="_blank"
-        title={t("contribute")}
-      >
-        {t("contribute")}
-      </a>
+      <Button
+        nativeButton={false}
+        render={
+          <a
+            href={getGithubUrl({ path: "" })}
+            rel="noopener noreferrer"
+            target="_blank"
+            title={t("contribute")}
+          >
+            {t("contribute")}
+          </a>
+        }
+      />
     </div>
   );
 }

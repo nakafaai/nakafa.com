@@ -1,0 +1,44 @@
+export const metadata = {
+  title: "Solution to Question 3",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/31/2026",
+};
+
+We are given information regarding the original price of the motorcycle, the discount percentage, and the tax applied to that discount.
+
+Given:
+- Original price = <InlineMath math="\text{Rp}75,000,000.00" />
+- Discount = <InlineMath math="10\%" />
+- Tax on discount = <InlineMath math="2.5\%" />
+
+First, we calculate the discount amount:
+
+<MathContainer>
+  <BlockMath math="\text{Discount Amount} = 10\% \times 75,000,000" />
+  <BlockMath math="\text{Discount Amount} = 7,500,000" />
+</MathContainer>
+
+Next, we calculate the price of the motorcycle after the discount (before tax):
+
+<MathContainer>
+  <BlockMath math="\text{Price After Discount} = 75,000,000 - 7,500,000" />
+  <BlockMath math="\text{Price After Discount} = 67,500,000" />
+</MathContainer>
+
+The problem states that there is a <InlineMath math="2.5\%" /> tax applied **on the discount**. This means we calculate <InlineMath math="2.5\%" /> of the discount amount (<InlineMath math="\text{Rp}7,500,000.00" />) and add it to the payable amount.
+
+<MathContainer>
+  <BlockMath math="\text{Tax} = 2.5\% \times 7,500,000" />
+  <BlockMath math="\text{Tax} = \frac{2.5}{100} \times 7,500,000" />
+  <BlockMath math="\text{Tax} = 187,500" />
+</MathContainer>
+
+Finally, we calculate the total price the Father has to pay by adding the price after discount and the tax:
+
+<MathContainer>
+  <BlockMath math="\text{Total Pay} = \text{Price After Discount} + \text{Tax}" />
+  <BlockMath math="\text{Total Pay} = 67,500,000 + 187,500" />
+  <BlockMath math="\text{Total Pay} = 67,687,500" />
+</MathContainer>
+
+Thus, the final motorcycle price the Father has to pay is <InlineMath math="\text{Rp}67,687,500.00" />.

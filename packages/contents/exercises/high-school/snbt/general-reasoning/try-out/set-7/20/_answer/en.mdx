@@ -1,0 +1,46 @@
+export const metadata = {
+  title: "Explanation for Question 20",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/26/2026",
+};
+
+Let's break down the logic of the statements using mathematical symbols to make the structure clearer.
+
+Suppose we define the following three statements:
+- <InlineMath math="P" />: Routinely jogs in the morning and has a good diet.
+- <InlineMath math="Q" />: Has a strong physique.
+- <InlineMath math="R" />: Healthier body.
+
+Based on the question text, we get the following logical premises:
+
+**Premise 1**: Someone will have a strong physique if they routinely jog in the morning and have a good diet.
+
+<MathContainer>
+  <BlockMath math="P \rightarrow Q" />
+</MathContainer>
+
+**Premise 2**: A strong physique makes the body healthier.
+
+<MathContainer>
+  <BlockMath math="Q \rightarrow R" />
+</MathContainer>
+
+**Fact**: Andi routinely jogs in the morning and has a good diet.
+
+<MathContainer>
+  <BlockMath math="\text{Andi} = P" />
+</MathContainer>
+
+**Conclusion Analysis**
+
+We can combine Premise 1 and Premise 2 using the **Hypothetical Syllogism** principle:
+
+<MathContainer>
+  <BlockMath math="(P \rightarrow Q) \land (Q \rightarrow R) \Rightarrow (P \rightarrow R)" />
+</MathContainer>
+
+This means: **"If someone routinely jogs in the morning and has a good diet, then their body will be healthier."**
+
+Since Andi satisfies condition <InlineMath math="P" /> (routinely jogs and eats well), he automatically satisfies condition <InlineMath math="R" /> (has a healthy body).
+
+Therefore, the conclusion that "Andi has a healthy body" is **valid** and **definitely true** based on deductive logic.

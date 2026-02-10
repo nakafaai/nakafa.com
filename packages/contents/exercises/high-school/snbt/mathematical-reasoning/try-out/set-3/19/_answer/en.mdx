@@ -1,0 +1,62 @@
+export const metadata = {
+  title: "Solution to Question 19",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/08/2026",
+};
+
+import { Graph } from "../graph";
+
+**Geometric Visualization**
+
+<Graph
+  title="Boat and Hill Position Illustration"
+  description={
+    <>
+      Visualization of boat movement from point <InlineMath math="C" /> to pier{" "}
+      <InlineMath math="D" /> with elevation angles relative to hill peak{" "}
+      <InlineMath math="A" />.
+    </>
+  }
+/>
+
+**Position Analysis**
+
+Let:
+- <InlineMath math="A" />: Top of the hill
+- <InlineMath math="B" />: Base of the hill (perpendicular to the ground)
+- <InlineMath math="C" />: Initial boat position
+- <InlineMath math="D" />: Pier position (final boat position)
+
+Given:
+- Boat travel distance <InlineMath math="CD = 2\text{ km}" />.
+- Initial line of sight distance <InlineMath math="AC = 12\text{ km}" />.
+- Initial elevation angle at <InlineMath math="C" /> is <InlineMath math="37^\circ" />.
+- Final elevation angle at <InlineMath math="D" /> is <InlineMath math="53^\circ" />.
+
+We need to find the distance from the base of the hill to the end of the pier, which is the length <InlineMath math="BD" />.
+
+**Distance Calculation**
+
+Consider the right-angled triangle <InlineMath math="ABC" />. We can use the cosine ratio for angle <InlineMath math="C" /> (<InlineMath math="37^\circ" />):
+
+<MathContainer>
+  <BlockMath math="\cos 37^\circ = \frac{\text{Adjacent}}{\text{Hypotenuse}} = \frac{BC}{AC}" />
+</MathContainer>
+
+The length <InlineMath math="BC" /> is the total distance from the base of the hill to the initial boat position, consisting of the distance from the pier to the hill base (<InlineMath math="BD" />) and the boat's travel distance (<InlineMath math="CD" />).
+
+<MathContainer>
+  <BlockMath math="BC = BD + CD = BD + 2" />
+</MathContainer>
+
+Substitute the known values into the cosine equation:
+
+<MathContainer>
+  <BlockMath math="0.8 = \frac{BD + 2}{12}" />
+  <BlockMath math="0.8 \times 12 = BD + 2" />
+  <BlockMath math="9.6 = BD + 2" />
+  <BlockMath math="BD = 9.6 - 2" />
+  <BlockMath math="BD = 7.6\text{ km}" />
+</MathContainer>
+
+Thus, the distance from the base of the hill to the end of the pier is <InlineMath math="7.6\text{ km}" />.

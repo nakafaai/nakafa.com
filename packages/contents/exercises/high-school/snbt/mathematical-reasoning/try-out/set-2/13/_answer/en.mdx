@@ -1,0 +1,45 @@
+export const metadata = {
+  title: "Solution to Question 13",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/31/2026",
+};
+
+**Analyzing the Track**
+
+The track is circular with the checkpoint sequence <InlineMath math="A \to B \to C \to D \to A" />. Since the distance between checkpoints is equal, we can count the number of segments the runner has traversed. Starting from <InlineMath math="A" />, the runner has passed checkpoint <InlineMath math="C" /> <InlineMath math="3" /> times.
+
+1.  Reaching <InlineMath math="C" /> for the 1st time: <InlineMath math="A \to B \to C" /> (<InlineMath math="2" /> segments).
+2.  Reaching <InlineMath math="C" /> for the 2nd time: <InlineMath math="C \to D \to A \to B \to C" /> (<InlineMath math="4" /> segments).
+3.  Reaching <InlineMath math="C" /> for the 3rd time: <InlineMath math="C \to D \to A \to B \to C" /> (<InlineMath math="4" /> segments).
+
+The total segments traversed is the sum of these stages.
+
+<MathContainer>
+  <BlockMath math="\text{Total Segments} = 2 + 4 + 4 = 10 \text{ segments}" />
+</MathContainer>
+
+**Calculating Time per Segment**
+
+It is known that the time required to cover <InlineMath math="10" /> segments is <InlineMath math="12" /> minutes. We can determine the time taken for one segment.
+
+<MathContainer>
+  <BlockMath math="\text{Time per segment} = \frac{12}{10} = 1.2 \text{ minutes}" />
+</MathContainer>
+
+**Calculating Total Time to Reach C for the 4th Time**
+
+To reach checkpoint <InlineMath math="C" /> for the fourth time, the runner must complete another full lap from their last position (at the 3rd <InlineMath math="C" />). The additional path is <InlineMath math="C \to D \to A \to B \to C" />, which consists of <InlineMath math="4" /> segments.
+
+The additional time required is:
+
+<MathContainer>
+  <BlockMath math="\text{Additional Time} = 4 \times 1.2 = 4.8 \text{ minutes}" />
+</MathContainer>
+
+Thus, the total time from the start to reaching checkpoint <InlineMath math="C" /> for the fourth time is the sum of the initial time and the additional time.
+
+<MathContainer>
+  <BlockMath math="\text{Total Time} = 12 + 4.8 = 16.8 \text{ minutes}" />
+</MathContainer>
+
+Therefore, the time required is <InlineMath math="16.8" /> minutes.

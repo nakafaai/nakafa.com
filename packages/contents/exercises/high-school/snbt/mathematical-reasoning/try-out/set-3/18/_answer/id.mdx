@@ -1,0 +1,54 @@
+import { GraphSolution } from "../graph-solution";
+
+export const metadata = {
+  title: "Pembahasan Soal 18",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/08/2026",
+};
+
+Kita akan mencari tinggi helikopter dari helipad (<InlineMath math="DC" />) dengan memanfaatkan perbandingan trigonometri pada segitiga siku-siku.
+
+Perhatikan sketsa solusi berikut:
+
+<GraphSolution
+  title="Sketsa Solusi"
+  description={
+    <>
+      Ilustrasi solusi dengan titik <InlineMath math="A" />,{" "}
+      <InlineMath math="B" />, <InlineMath math="C" />, <InlineMath math="D" />,{" "}
+      <InlineMath math="E" /> dan dimensi jarak.
+    </>
+  }
+  labels={{ helicopter: "Helikopter", observer: "Pengamat", building: "Gedung" }}
+/>
+
+Diketahui:
+- <InlineMath math="AD = 16" /> m (tinggi gedung).
+- <InlineMath math="AB" /> adalah jarak dari gedung ke ujung bayangan.
+- Sudut elevasi ke puncak gedung <InlineMath math="30^\circ" /> dan ke helikopter <InlineMath math="45^\circ" />.
+
+Pertama, kita hitung jarak <InlineMath math="AB" /> menggunakan <InlineMath math="\tan(30^\circ)" /> pada segitiga <InlineMath math="ABD" />.
+
+<MathContainer>
+  <BlockMath math="\tan(30^\circ) = \frac{AD}{AB}" />
+  <BlockMath math="\frac{1}{\sqrt{3}} = \frac{16}{AB}" />
+  <BlockMath math="AB = 16\sqrt{3}" />
+</MathContainer>
+
+Selanjutnya, gunakan jarak <InlineMath math="AB" /> tersebut untuk mencari tinggi total helikopter dari tanah (<InlineMath math="AC" />) menggunakan <InlineMath math="\tan(45^\circ)" /> pada segitiga <InlineMath math="ABC" />.
+
+<MathContainer>
+  <BlockMath math="\tan(45^\circ) = \frac{AC}{AB}" />
+  <BlockMath math="1 = \frac{AC}{16\sqrt{3}}" />
+  <BlockMath math="AC = 16\sqrt{3}" />
+</MathContainer>
+
+Tinggi helikopter dari helipad adalah selisih tinggi total dengan tinggi gedung.
+
+<MathContainer>
+  <BlockMath math="DC = AC - AD" />
+  <BlockMath math="DC = 16\sqrt{3} - 16" />
+  <BlockMath math="DC = 16(\sqrt{3} - 1)" />
+</MathContainer>
+
+Jadi, tinggi helikopter dari helipad adalah <InlineMath math="16(\sqrt{3} - 1)" /> meter.

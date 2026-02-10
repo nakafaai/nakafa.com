@@ -1,7 +1,14 @@
 import { query } from "@repo/backend/convex/_generated/server";
-import { requireAuth } from "@repo/backend/convex/lib/authHelpers";
-import { getManyFrom } from "@repo/backend/convex/lib/relationships";
-import { ConvexError, v } from "convex/values";
+import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
+import { vv } from "@repo/backend/convex/lib/validators";
+import { v } from "convex/values";
+import { getManyFrom } from "convex-helpers/server/relationships";
+import { nullable } from "convex-helpers/validators";
+
+const attemptWithAnswersValidator = v.object({
+  attempt: vv.doc("exerciseAttempts"),
+  answers: v.array(vv.doc("exerciseAnswers")),
+});
 
 /**
  * Get the latest attempt for a specific exercise/set.
@@ -15,6 +22,7 @@ export const getLatestAttemptBySlug = query({
   args: {
     slug: v.string(),
   },
+  returns: nullable(attemptWithAnswersValidator),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
@@ -44,46 +52,5 @@ export const getLatestAttemptBySlug = query({
       attempt,
       answers,
     };
-  },
-});
-
-/**
- * Get an attempt by ID for result/review screens.
- *
- * Unlike `getLatestAttemptBySlug(slug)`, this fetches by ID
- * and supports attempts in any status (completed/expired/etc.).
- */
-export const getAttempt = query({
-  args: {
-    attemptId: v.id("exerciseAttempts"),
-  },
-  handler: async (ctx, args) => {
-    const { appUser } = await requireAuth(ctx);
-    const userId = appUser._id;
-
-    const attempt = await ctx.db.get("exerciseAttempts", args.attemptId);
-    if (!attempt) {
-      throw new ConvexError({
-        code: "ATTEMPT_NOT_FOUND",
-        message: "Attempt not found.",
-      });
-    }
-
-    if (attempt.userId !== userId) {
-      throw new ConvexError({
-        code: "FORBIDDEN",
-        message: "You do not have access to this attempt.",
-      });
-    }
-
-    const answers = await getManyFrom(
-      ctx.db,
-      "exerciseAnswers",
-      "attemptId_exerciseNumber",
-      attempt._id,
-      "attemptId"
-    );
-
-    return { attempt, answers };
   },
 });

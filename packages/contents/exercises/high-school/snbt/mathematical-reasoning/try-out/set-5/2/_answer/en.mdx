@@ -1,0 +1,26 @@
+export const metadata = {
+  title: "Answer to Question 2",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/09/2026",
+};
+
+To determine when all three suppliers deliver vegetables simultaneously, we use the concept of the Least Common Multiple (LCM) of their delivery schedules, which are <InlineMath math="x" />, <InlineMath math="4" />, and <InlineMath math="7" />.
+
+It is given that the <InlineMath math="16" />-th simultaneous delivery occurs <InlineMath math="1260" /> days after the first delivery. This means that <InlineMath math="15" /> simultaneous delivery intervals have passed since the first meeting.
+
+We can calculate the LCM of the three numbers by dividing the total number of days by the number of intervals occurred:
+
+<MathContainer>
+  <BlockMath math="\text{LCM} = \frac{1260}{16 - 1} = \frac{1260}{15} = 84 \text{ days}" />
+</MathContainer>
+
+So, the LCM of <InlineMath math="x" />, <InlineMath math="4" />, and <InlineMath math="7" /> is <InlineMath math="84" />. We know that the LCM of <InlineMath math="4" /> and <InlineMath math="7" /> is <InlineMath math="28" />. Therefore, we must find the value of <InlineMath math="x" /> such that the LCM of <InlineMath math="x" /> and <InlineMath math="28" /> is <InlineMath math="84" />.
+
+Let's check the available options:
+- If <InlineMath math="x = 6" />, then LCM(<InlineMath math="6, 28" />) = <InlineMath math="84" />. (Correct)
+- If <InlineMath math="x = 8" />, then LCM(<InlineMath math="8, 28" />) = <InlineMath math="56" />. (Incorrect)
+- If <InlineMath math="x = 9" />, then LCM(<InlineMath math="9, 28" />) = <InlineMath math="252" />. (Incorrect)
+- If <InlineMath math="x = 10" />, then LCM(<InlineMath math="10, 28" />) = <InlineMath math="140" />. (Incorrect)
+- If <InlineMath math="x = 11" />, then LCM(<InlineMath math="11, 28" />) = <InlineMath math="308" />. (Incorrect)
+
+Thus, the value of <InlineMath math="x" /> that satisfies the condition is <InlineMath math="6" />.

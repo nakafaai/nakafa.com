@@ -110,7 +110,9 @@ export function ScatterDiagram({
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="x"
-              domain={xAxisDomain === "min-max" ? ["dataMin", "dataMax"] : null}
+              domain={
+                xAxisDomain === "min-max" ? ["dataMin", "dataMax"] : undefined
+              }
               label={{
                 value: xAxisLabel || "X",
                 position: "bottom",

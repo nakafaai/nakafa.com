@@ -1,0 +1,32 @@
+export const metadata = {
+  title: "Pembahasan Soal 1",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/31/2026",
+};
+
+Kita diberikan tiga luas tanah yang berbeda, yaitu <InlineMath math="120\text{ m}^2" />, <InlineMath math="180\text{ m}^2" />, dan <InlineMath math="240\text{ m}^2" />. Tujuannya adalah membagi ketiga tanah tersebut menjadi petak-petak dengan luas yang sama besar dan ukuran yang maksimal.
+
+Masalah ini dapat diselesaikan dengan mencari **Faktor Persekutuan Terbesar (FPB)** dari ketiga bilangan tersebut. FPB akan memberikan nilai terbesar yang dapat membagi habis ketiga luas tanah.
+
+Langkah pertama adalah melakukan faktorisasi prima untuk setiap luas tanah:
+
+<MathContainer>
+  <BlockMath math="120 = 2^3 \times 3 \times 5" />
+  <BlockMath math="180 = 2^2 \times 3^2 \times 5" />
+  <BlockMath math="240 = 2^4 \times 3 \times 5" />
+</MathContainer>
+
+Untuk menentukan FPB, kita ambil faktor prima yang **sama** dari ketiga bilangan dengan **pangkat terkecil**:
+- Faktor 2: pangkat terkecil adalah <InlineMath math="2^2" />.
+- Faktor 3: pangkat terkecil adalah <InlineMath math="3^1" /> (atau 3).
+- Faktor 5: pangkat terkecil adalah <InlineMath math="5^1" /> (atau 5).
+
+Maka, FPB-nya adalah:
+
+<MathContainer>
+  <BlockMath math="\text{FPB} = 2^2 \times 3 \times 5" />
+  <BlockMath math="\text{FPB} = 4 \times 3 \times 5" />
+  <BlockMath math="\text{FPB} = 60" />
+</MathContainer>
+
+Jadi, luas terbesar dari setiap petak tanah yang dapat dibuat adalah <InlineMath math="60\text{ m}^2" />.

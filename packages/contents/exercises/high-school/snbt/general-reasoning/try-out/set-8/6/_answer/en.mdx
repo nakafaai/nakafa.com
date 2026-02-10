@@ -1,0 +1,54 @@
+export const metadata = {
+  title: "Question 6 Explanation",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/29/2026",
+};
+
+To determine M's vote count, we must build equations connecting all variables. Let's analyze the dependency logic:
+
+#### Determining Total Votes
+
+To calculate the absolute value (exact number) of any candidate's votes, we need **Statement 4**, which gives the total votes:
+
+<MathContainer>
+  <BlockMath math="\text{Total Votes} = 480" />
+</MathContainer>
+
+#### Calculating O and P's Votes
+
+We know the relationship for the sum of all votes:
+
+<MathContainer>
+  <BlockMath math="M + N + O + P = \text{Total Votes}" />
+</MathContainer>
+
+We need to know the values of O and P to isolate M and N:
+
+*   **Statement 2** is needed to calculate O (using Total Votes from Statement 4).
+*   **Statement 3** is needed to calculate P (using the value of O derived from Statement 2).
+
+Without O and P, our equation still has too many unknown variables.
+
+#### Solving for M
+
+After knowing the values of Total, O, and P, the equation becomes:
+
+<MathContainer>
+  <BlockMath math="M + N = \text{Remaining Votes}" />
+</MathContainer>
+
+We still have two variables (M and N) in one equation. To get a specific value for M, we need the relationship between M and N.
+
+**Statement 1** provides this relationship:
+
+<MathContainer>
+  <BlockMath math="M = 2N \quad \text{or} \quad N = \frac{1}{2}M" />
+</MathContainer>
+
+By substituting N into the remaining votes equation, we can solve for M.
+
+#### Conclusion
+
+We need **Statement 4** (Total), **Statement 2** (for O), **Statement 3** (for P), and **Statement 1** (for the M and N relation) all together to find the solution.
+
+Therefore, the information needed is **1, 2, 3, and 4**.

@@ -70,7 +70,7 @@ export function UserChatsList({
   }
 
   return (
-    <div className="flex flex-col divide-y overflow-hidden rounded-xl border shadow-sm">
+    <div className="flex flex-col divide-y overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
       {results.map((chat) => {
         const isPrivate = chat.visibility === "private";
         return (

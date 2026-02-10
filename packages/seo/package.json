@@ -8,14 +8,14 @@
   },
   "dependencies": {
     "lodash.merge": "^4.6.2",
-    "next-intl": "^4.7.0",
-    "react": "^19.2.3",
+    "next-intl": "^4.8.2",
+    "react": "^19.2.4",
     "schema-dts": "^1.1.5",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@types/lodash.merge": "^4.6.9",
-    "next": "16.1.4"
+    "next": "16.1.6"
   }
 }

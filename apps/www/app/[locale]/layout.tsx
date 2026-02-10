@@ -48,10 +48,11 @@ export async function generateMetadata({
     classification: t("classification"),
     generator: "Next.js",
     alternates: {
-      canonical: "https://nakafa.com",
+      canonical: `/${locale}`,
       languages: {
         id: "https://nakafa.com/id",
         en: "https://nakafa.com/en",
+        "x-default": "https://nakafa.com/en",
       },
     },
     icons: {
@@ -134,9 +135,6 @@ export const viewport: Viewport = {
   ],
   width: "device-width",
   initialScale: 1,
-  minimumScale: 1,
-  maximumScale: 5,
-  userScalable: false,
   viewportFit: "cover",
   interactiveWidget: "resizes-visual",
 };

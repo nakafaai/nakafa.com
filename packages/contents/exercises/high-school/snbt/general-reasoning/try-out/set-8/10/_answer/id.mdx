@@ -1,0 +1,37 @@
+export const metadata = {
+  title: "Pembahasan Soal 10",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/29/2026",
+};
+
+Untuk menjawab soal ini dengan tepat, kita perlu membedah struktur logika sebab-akibat yang ada dalam teks. Mari kita definisikan premis-premisnya:
+
+*   <InlineMath math="P" />: Intensitas hujan di Arab meningkat secara ekstrem.
+*   <InlineMath math="Q" />: Terjadi banjir.
+*   <InlineMath math="R" />: Muncul vegetasi hijau di wilayah Arab.
+
+#### Analisis Alur Logika
+
+Berdasarkan teks, alur kejadiannya adalah:
+1.  Hujan ekstrem (<InlineMath math="P" />) menyebabkan banjir (<InlineMath math="Q" />).
+2.  Banjir (<InlineMath math="Q" />) menyebabkan munculnya vegetasi hijau (<InlineMath math="R" />).
+
+Secara matematis, ini bisa ditulis sebagai implikasi berantai:
+
+<MathContainer>
+  <BlockMath math="P \rightarrow Q \rightarrow R \implies P \rightarrow R" />
+</MathContainer>
+
+Artinya: **"Jika intensitas hujan meningkat ekstrem (P), maka akan muncul vegetasi hijau (R)."**
+
+#### Menguji Pertanyaan
+
+Soal menanyakan apa yang terjadi jika **intensitas hujan TIDAK meningkat secara ekstrem** (<InlineMath math="\sim P" />).
+
+Dalam logika formal, jika kita memiliki premis <InlineMath math="P \rightarrow R" /> dan kondisi <InlineMath math="\sim P" /> (negasi dari sebab), kita **TIDAK BISA** menyimpulkan <InlineMath math="\sim R" /> (negasi dari akibat). Ini dikenal sebagai kesesatan logika *Denying the Antecedent*.
+
+Mengapa? Karena teks hanya memberi tahu kita apa yang terjadi *jika* hujan ekstrem. Teks *tidak* mengatakan bahwa hujan ekstrem adalah **satu-satunya** penyebab vegetasi hijau. Mungkin saja ada faktor lain (seperti irigasi buatan) yang bisa memunculkan vegetasi meskipun tidak ada hujan ekstrem.
+
+Oleh karena itu, jika <InlineMath math="\sim P" /> terjadi, status <InlineMath math="R" /> (apakah ada vegetasi atau tidak) menjadi tidak pasti atau tidak diketahui berdasarkan informasi yang tersedia.
+
+> Karena kita tidak memiliki informasi tentang apa yang terjadi jika hujan tidak ekstrem, maka jawabannya adalah **tidak dapat disimpulkan**.

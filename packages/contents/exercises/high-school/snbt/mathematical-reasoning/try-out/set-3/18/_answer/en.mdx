@@ -1,0 +1,54 @@
+import { GraphSolution } from "../graph-solution";
+
+export const metadata = {
+  title: "Solution for Question 18",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/08/2026",
+};
+
+We will find the height of the helicopter from the helipad (<InlineMath math="DC" />) using trigonometric ratios in right-angled triangles.
+
+Observe the solution sketch:
+
+<GraphSolution
+  title="Solution Sketch"
+  description={
+    <>
+      Solution illustration with points <InlineMath math="A" />,{" "}
+      <InlineMath math="B" />, <InlineMath math="C" />, <InlineMath math="D" />,{" "}
+      <InlineMath math="E" /> and distance dimensions.
+    </>
+  }
+  labels={{ helicopter: "Helicopter", observer: "Observer", building: "Building" }}
+/>
+
+Observe the geometry:
+- <InlineMath math="AD = 16" /> m (building height).
+- <InlineMath math="AB" /> is the distance from the building to the tip of the shadow.
+- The angle of elevation to the top of the building is <InlineMath math="30^\circ" /> and to the helicopter is <InlineMath math="45^\circ" />.
+
+First, we calculate the distance <InlineMath math="AB" /> using <InlineMath math="\tan(30^\circ)" /> in triangle <InlineMath math="ABD" />.
+
+<MathContainer>
+  <BlockMath math="\tan(30^\circ) = \frac{AD}{AB}" />
+  <BlockMath math="\frac{1}{\sqrt{3}} = \frac{16}{AB}" />
+  <BlockMath math="AB = 16\sqrt{3}" />
+</MathContainer>
+
+Next, use this distance <InlineMath math="AB" /> to find the total height of the helicopter from the ground (<InlineMath math="AC" />) using <InlineMath math="\tan(45^\circ)" /> in triangle <InlineMath math="ABC" />.
+
+<MathContainer>
+  <BlockMath math="\tan(45^\circ) = \frac{AC}{AB}" />
+  <BlockMath math="1 = \frac{AC}{16\sqrt{3}}" />
+  <BlockMath math="AC = 16\sqrt{3}" />
+</MathContainer>
+
+The height of the helicopter from the helipad is the difference between the total height and the building height.
+
+<MathContainer>
+  <BlockMath math="DC = AC - AD" />
+  <BlockMath math="DC = 16\sqrt{3} - 16" />
+  <BlockMath math="DC = 16(\sqrt{3} - 1)" />
+</MathContainer>
+
+Thus, the height of the helicopter from the helipad is <InlineMath math="16(\sqrt{3} - 1)" /> meters.

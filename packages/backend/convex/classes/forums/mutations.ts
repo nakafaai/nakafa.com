@@ -2,19 +2,19 @@ import {
   loadForumWithAccess,
   loadOpenForumWithAccess,
 } from "@repo/backend/convex/classes/forums/utils";
+import { schoolClassForumTagValidator } from "@repo/backend/convex/classes/schema";
 import { loadActiveClass } from "@repo/backend/convex/classes/utils";
 import { mutation } from "@repo/backend/convex/functions";
-import {
-  isAdmin,
-  requireAuthWithSession,
-  requireClassAccess,
-} from "@repo/backend/convex/lib/authHelpers";
+import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
+import { requireClassAccess } from "@repo/backend/convex/lib/helpers/class";
+import { isAdmin } from "@repo/backend/convex/lib/helpers/school";
+import { vv } from "@repo/backend/convex/lib/validators";
 import { truncateText } from "@repo/backend/convex/utils/helper";
 import { ConvexError, type Infer, v } from "convex/values";
 
 export const generateUploadUrl = mutation({
   args: {
-    forumId: v.id("schoolClassForums"),
+    forumId: vv.id("schoolClassForums"),
   },
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
@@ -25,16 +25,10 @@ export const generateUploadUrl = mutation({
 
 export const createForum = mutation({
   args: {
-    classId: v.id("schoolClasses"),
+    classId: vv.id("schoolClasses"),
     title: v.string(),
     body: v.string(),
-    tag: v.union(
-      v.literal("general"),
-      v.literal("question"),
-      v.literal("announcement"),
-      v.literal("assignment"),
-      v.literal("resource")
-    ),
+    tag: schoolClassForumTagValidator,
   },
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
@@ -89,10 +83,10 @@ export type AttachmentArg = Infer<typeof attachmentArg>;
 
 export const createForumPost = mutation({
   args: {
-    forumId: v.id("schoolClassForums"),
+    forumId: vv.id("schoolClassForums"),
     body: v.string(),
-    mentions: v.optional(v.array(v.id("users"))),
-    parentId: v.optional(v.id("schoolClassForumPosts")),
+    mentions: v.optional(v.array(vv.id("users"))),
+    parentId: v.optional(vv.id("schoolClassForumPosts")),
     attachments: v.optional(v.array(attachmentArg)),
   },
   handler: async (ctx, args) => {
@@ -168,7 +162,7 @@ export const createForumPost = mutation({
 
 export const togglePostReaction = mutation({
   args: {
-    postId: v.id("schoolClassForumPosts"),
+    postId: vv.id("schoolClassForumPosts"),
     emoji: v.string(),
   },
   handler: async (ctx, args) => {
@@ -212,7 +206,7 @@ export const togglePostReaction = mutation({
 
 export const toggleForumReaction = mutation({
   args: {
-    forumId: v.id("schoolClassForums"),
+    forumId: vv.id("schoolClassForums"),
     emoji: v.string(),
   },
   handler: async (ctx, args) => {
@@ -248,7 +242,7 @@ export const toggleForumReaction = mutation({
 
 export const markForumRead = mutation({
   args: {
-    forumId: v.id("schoolClassForums"),
+    forumId: vv.id("schoolClassForums"),
   },
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);

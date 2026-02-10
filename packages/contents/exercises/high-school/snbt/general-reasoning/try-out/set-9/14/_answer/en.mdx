@@ -1,0 +1,27 @@
+export const metadata = {
+  title: "Explanation for Question 14",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/30/2026",
+};
+
+This sequence follows the Fibonacci pattern, where each term (starting from the third term) is the sum of the two preceding terms. Let's check the pattern:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} 3 + 6 &= 9 \\ 6 + 9 &= 15 \\ 9 + 15 &= 24 \\ 15 + 24 &= 39 \end{aligned}" />
+</MathContainer>
+
+To find the next term after <InlineMath math="39" />, we add the last two known terms:
+
+<MathContainer>
+  <BlockMath math="24 + 39 = 63" />
+</MathContainer>
+
+We can verify this result by calculating the subsequent terms:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} 39 + 63 &= 102 \\ 63 + 102 &= 165 \end{aligned}" />
+</MathContainer>
+
+Both verification results match the final terms in the given sequence.
+
+Thus, the correct number to complete the sequence is <InlineMath math="63" />.

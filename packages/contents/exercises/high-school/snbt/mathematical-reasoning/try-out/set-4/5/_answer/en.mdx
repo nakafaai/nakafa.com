@@ -1,0 +1,59 @@
+import { Graph } from "../graph";
+
+export const metadata = {
+  title: "Answer 5",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/08/2026",
+};
+
+**Problem Visualization**
+
+<Graph
+  title={
+    <>
+      Plane <InlineMath math="ADFG" />
+    </>
+  }
+  description={
+    <>
+      Diagonal plane <InlineMath math="ADFG" /> in a prism with <InlineMath math="p=2l" /> and <InlineMath math="t=l" />.
+    </>
+  }
+/>
+
+**Determining the Width**
+
+Use the space diagonal <InlineMath math="DF" /> to find <InlineMath math="l" /> with <InlineMath math="d^2 = p^2 + l^2 + t^2" />.
+
+<MathContainer>
+  <BlockMath math="DF^2 = (2l)^2 + l^2 + l^2" />
+  <BlockMath math="81 = 4l^2 + l^2 + l^2" />
+  <BlockMath math="81 = 6l^2" />
+</MathContainer>
+
+<MathContainer>
+  <BlockMath math="l^2 = \frac{81}{6} = \frac{27}{2}" />
+  <BlockMath math="l = \sqrt{\frac{27}{2}} = \frac{3\sqrt{6}}{2}" />
+</MathContainer>
+
+**Calculating Area of Plane <InlineMath math="ADFG" />**
+
+Plane <InlineMath math="ADFG" /> is a rectangle with sides <InlineMath math="AD = l" /> and the front-face diagonal <InlineMath math="AF" />.
+
+Compute <InlineMath math="AF" /> from the right triangle on the front face:
+
+<MathContainer>
+  <BlockMath math="AF^2 = AB^2 + BF^2" />
+  <BlockMath math="AF^2 = (2l)^2 + l^2 = 5l^2" />
+  <BlockMath math="AF = l\sqrt{5}" />
+</MathContainer>
+
+So the area is:
+
+<MathContainer>
+  <BlockMath math="L = AD \times AF" />
+  <BlockMath math="L = l \times l\sqrt{5} = l^2\sqrt{5}" />
+  <BlockMath math="L = \frac{27}{2}\sqrt{5}" />
+</MathContainer>
+
+Thus, the area of plane <InlineMath math="ADFG" /> is <InlineMath math="\frac{27\sqrt{5}}{2}" /> cm².

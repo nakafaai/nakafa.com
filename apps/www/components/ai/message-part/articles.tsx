@@ -6,10 +6,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import type { DataPart } from "@repo/ai/schema/data-parts";
 import { Badge } from "@repo/design-system/components/ui/badge";
-import {
-  Button,
-  buttonVariants,
-} from "@repo/design-system/components/ui/button";
+import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
@@ -22,7 +19,6 @@ import {
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 import { memo, useState } from "react";
 
@@ -105,15 +101,22 @@ const ArticlesPartPreview = memo(
     return (
       <div className="flex flex-wrap items-center gap-2">
         {articles.slice(0, MAX_SHOWN_ARTICLES).map((article) => (
-          <NavigationLink
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-            href={`/${article.slug}`}
+          <Button
             key={article.url}
-            target="_blank"
-          >
-            {article.title}
-            <HugeIcons icon={ArrowUpRight01Icon} />
-          </NavigationLink>
+            nativeButton={false}
+            render={
+              <a
+                href={`/${article.slug}`}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                {article.title}
+                <HugeIcons icon={ArrowUpRight01Icon} />
+              </a>
+            }
+            size="sm"
+            variant="outline"
+          />
         ))}
 
         {articles.length > MAX_SHOWN_ARTICLES && (
@@ -166,6 +169,7 @@ const ArticlesPartSheet = memo(
                       className="group flex items-center gap-2 px-4 py-3 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
                       href={`/${article.slug}`}
                       key={article.url}
+                      rel="noopener noreferrer"
                       target="_blank"
                     >
                       {article.title}

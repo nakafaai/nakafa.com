@@ -1,0 +1,23 @@
+export const metadata = {
+  title: "Question 3 Explanation",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/29/2026",
+};
+
+To find the next value, let's analyze the pattern between the terms in the sequence:
+
+<MathContainer>
+  <BlockMath math="\begin{array}{ccl} 4 \xrightarrow{+2} 6 & \quad & (\text{1st to 2nd term}) \\ 6 \xrightarrow{+4} 10 & \quad & (\text{2nd to 3rd term}) \\ 10 \xrightarrow{-1} 9 & \quad & (\text{3rd to 4th term}) \\ 9 \xrightarrow{+2} 11 & \quad & (\text{4th to 5th term}) \\ 11 \xrightarrow{+4} 15 & \quad & (\text{5th to 6th term}) \\ 15 \xrightarrow{-1} 14 & \quad & (\text{6th to 7th term}) \end{array}" />
+</MathContainer>
+
+We can see that the pattern is a repeating cycle of operations: **<InlineMath math="+2, +4, -1" />**.
+
+Based on this pattern, the operation following **<InlineMath math="-1" />** cycles back to **<InlineMath math="+2" />**.
+
+Therefore, the next term is:
+
+<MathContainer>
+  <BlockMath math="14 + 2 = 16" />
+</MathContainer>
+
+Thus, the correct value to complete the sequence is **<InlineMath math="16" />**.

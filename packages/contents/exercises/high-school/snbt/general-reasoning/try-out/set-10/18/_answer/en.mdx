@@ -1,0 +1,41 @@
+export const metadata = {
+  title: "Solution to Question 18",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/30/2026",
+};
+
+We will analyze the pattern of visitor increases for each store separately to determine the number of visitors on the eighth day.
+
+#### Store A Pattern Analysis
+
+The visitor data for store A is <InlineMath math="30, 33, 35, 36, 39, 41, 42" />. If we observe the differences between consecutive terms, there is a repeating addition pattern as follows:
+
+<MathContainer>
+  <BlockMath math="30 \xrightarrow{+3} 33 \xrightarrow{+2} 35 \xrightarrow{+1} 36 \xrightarrow{+3} 39 \xrightarrow{+2} 41 \xrightarrow{+1} 42" />
+</MathContainer>
+
+The addition pattern is a constantly repeating <InlineMath math="+3, +2, +1" />. Based on this pattern, to find the number of visitors on the eighth day, we must add <InlineMath math="3" /> to the last term (continuing the pattern sequence after <InlineMath math="+1" />).
+
+<MathContainer>
+  <BlockMath math="\text{Visitors A} = 42 + 3 = 45 \text{ people}" />
+</MathContainer>
+
+#### Store B Pattern Analysis
+
+The visitor data for store B is <InlineMath math="7, 10, 17, 27, 44, 71, 115" />. This pattern follows the Fibonacci sequence rule, where the next term is obtained by summing the two previous terms.
+
+<MathContainer>
+  <BlockMath math="7 + 10 = 17" />
+  <BlockMath math="10 + 17 = 27" />
+  <BlockMath math="17 + 27 = 44" />
+  <BlockMath math="27 + 44 = 71" />
+  <BlockMath math="44 + 71 = 115" />
+</MathContainer>
+
+Therefore, the number of visitors on the eighth day is the sum of the last two terms, which are <InlineMath math="71" /> and <InlineMath math="115" />.
+
+<MathContainer>
+  <BlockMath math="\text{Visitors B} = 71 + 115 = 186 \text{ people}" />
+</MathContainer>
+
+Thus, the number of visitors to store A and B on the eighth day is <InlineMath math="45" /> and <InlineMath math="186" /> people, respectively.

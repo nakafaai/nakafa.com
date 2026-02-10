@@ -23,7 +23,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import { Link, usePathname } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
-import { type FormEventHandler, useState, useTransition } from "react";
+import { type SubmitEventHandler, useState, useTransition } from "react";
 import { useUser } from "@/lib/context/use-user";
 import { getInitialName } from "@/lib/utils/helper";
 
@@ -47,7 +47,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
 
   const [isPending, startTransition] = useTransition();
 
-  const handleSubmit: FormEventHandler<HTMLFormElement> = (event) => {
+  const handleSubmit: SubmitEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();
 
     const text = event.currentTarget?.text?.value?.trim();
@@ -77,6 +77,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
       onSubmit={handleSubmit}
     >
       <Textarea
+        aria-label={t("add-comment-placeholder")}
         className={cn(
           "w-full resize-none rounded-none border-none p-4 shadow-none outline-none ring-0",
           "field-sizing-content bg-transparent dark:bg-transparent",
@@ -95,6 +96,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
         <div className="flex items-center gap-1">
           {!!closeButton && (
             <Button
+              aria-label={tCommon("cancel")}
               className="rounded-lg"
               onClick={closeButton.onClick}
               size="icon"
@@ -106,6 +108,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
             </Button>
           )}
           <Button
+            aria-label={t("comment")}
             className="rounded-lg"
             disabled={isPending || !user}
             size="icon"
@@ -144,13 +147,13 @@ function UserAvatar() {
       className="flex min-w-0 items-center gap-2 px-2"
       title={user.authUser.name}
     >
-      <Avatar className="size-8 rounded-lg">
+      <Avatar className="size-8">
         <AvatarImage
           alt={user.authUser.name}
           role="presentation"
           src={user.authUser.image ?? ""}
         />
-        <AvatarFallback className="rounded-lg text-xs">
+        <AvatarFallback className="text-xs">
           {getInitialName(user.authUser.name)}
         </AvatarFallback>
       </Avatar>

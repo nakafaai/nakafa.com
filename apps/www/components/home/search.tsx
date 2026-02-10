@@ -56,6 +56,7 @@ export function HomeSearch() {
   return (
     <PromptInput onSubmit={handleSubmit}>
       <PromptInputTextarea
+        aria-label={t("text-placeholder")}
         className="p-4"
         onChange={(e) => setText(e.target.value)}
         placeholder={t("text-placeholder")}

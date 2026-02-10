@@ -1,0 +1,49 @@
+export const metadata = {
+  title: "Solution to Question 5",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/31/2026",
+};
+
+The basic principle used here is Archimedes' principle. When balls are inserted into a cylinder full of water, water spills out. The volume of the spilled water is equal to the total volume of the balls inserted. Thus, the volume of water remaining in the cylinder is the difference between the initial volume of the cylinder and the total volume of the balls.
+
+**Volume of the Cylinder (Initial Water Volume):**
+
+<MathContainer>
+  <BlockMath math="V_{\text{cylinder}} = \pi r_1^2 t" />
+  <BlockMath math="= \pi (16)^2 (20)" />
+  <BlockMath math="= \pi (256) (20)" />
+  <BlockMath math="= 5120\pi \text{ cm}^3" />
+</MathContainer>
+
+**Volume of One Ball:**
+
+<MathContainer>
+  <BlockMath math="V_{\text{ball}} = \frac{4}{3} \pi r_2^3" />
+  <BlockMath math="= \frac{4}{3} \pi (6)^3" />
+  <BlockMath math="= \frac{4}{3} \pi (216)" />
+  <BlockMath math="= 4 \pi (72)" />
+  <BlockMath math="= 288\pi \text{ cm}^3" />
+</MathContainer>
+
+**Determining the Number of Balls (n):**
+
+It is given that the volume of water **remaining** is <InlineMath math="64\pi \text{ cm}^3" />. We use the equation:
+
+<MathContainer>
+  <BlockMath math="V_{\text{remaining}} = V_{\text{cylinder}} - (n \times V_{\text{ball}})" />
+  <BlockMath math="64\pi = 5120\pi - n(288\pi)" />
+</MathContainer>
+
+Dividing both sides by <InlineMath math="\pi" /> to simplify the calculation:
+
+<MathContainer>
+  <BlockMath math="64 = 5120 - 288n" />
+  <BlockMath math="288n = 5120 - 64" />
+  <BlockMath math="288n = 5056" />
+  <BlockMath math="n = \frac{5056}{288}" />
+  <BlockMath math="n \approx 17.55" />
+</MathContainer>
+
+Since the number of balls <InlineMath math="n" /> must be an integer and cannot exceed the cylinder's capacity, we take the nearest integer rounded down, which is <InlineMath math="17" />. If we were to insert <InlineMath math="18" /> balls, the total volume of the balls would exceed the volume of the cylinder (<InlineMath math="18 \times 288\pi = 5184\pi > 5120\pi" />), which is impossible.
+
+Thus, the number of balls inserted is <InlineMath math="17" /> balls.

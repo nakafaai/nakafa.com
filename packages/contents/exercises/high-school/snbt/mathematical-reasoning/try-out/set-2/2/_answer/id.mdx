@@ -1,0 +1,50 @@
+export const metadata = {
+  title: "Pembahasan Soal 2",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/31/2026",
+};
+
+Tujuan kita adalah mencari luas setiap petak di ketiga lokasi (A, B, dan C) dengan syarat **jumlah petak** di setiap lokasi harus **sama banyak** dan **maksimal**.
+
+Karena jumlah petak harus sama dan maksimal, kita perlu mencari **Faktor Persekutuan Terbesar (FPB)** dari luas tanah di ketiga lokasi: <InlineMath math="120" />, <InlineMath math="180" />, dan <InlineMath math="240" />. Nilai FPB ini akan menjadi jumlah petak yang akan dibuat.
+
+Mari kita lakukan faktorisasi prima untuk ketiga bilangan tersebut:
+
+<MathContainer>
+  <BlockMath math="120 = 2^3 \times 3 \times 5" />
+  <BlockMath math="180 = 2^2 \times 3^2 \times 5" />
+  <BlockMath math="240 = 2^4 \times 3 \times 5" />
+</MathContainer>
+
+FPB diperoleh dengan mengalikan faktor prima yang sama dengan pangkat terkecil:
+- Faktor 2: pangkat terkecil adalah <InlineMath math="2^2" />.
+- Faktor 3: pangkat terkecil adalah <InlineMath math="3^1" /> (atau 3).
+- Faktor 5: pangkat terkecil adalah <InlineMath math="5^1" /> (atau 5).
+
+<MathContainer>
+  <BlockMath math="\text{FPB} = 2^2 \times 3 \times 5 = 4 \times 3 \times 5 = 60" />
+</MathContainer>
+
+Jadi, jumlah petak tanah yang akan dibuat di setiap lokasi adalah **60 petak**.
+
+Selanjutnya, kita hitung luas setiap petak untuk masing-masing lokasi dengan membagi total luas tanah dengan jumlah petak (<InlineMath math="60" />):
+
+**Lokasi A:**
+
+<MathContainer>
+  <BlockMath math="\frac{120\text{ m}^2}{60} = 2\text{ m}^2" />
+</MathContainer>
+
+**Lokasi B:**
+
+<MathContainer>
+  <BlockMath math="\frac{180\text{ m}^2}{60} = 3\text{ m}^2" />
+</MathContainer>
+
+**Lokasi C:**
+
+<MathContainer>
+  <BlockMath math="\frac{240\text{ m}^2}{60} = 4\text{ m}^2" />
+</MathContainer>
+
+Dengan demikian, luas setiap petak dari masing-masing lokasi berturut-turut adalah <InlineMath math="2\text{ m}^2" />, <InlineMath math="3\text{ m}^2" />, dan <InlineMath math="4\text{ m}^2" />.

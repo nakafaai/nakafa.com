@@ -1,0 +1,33 @@
+export const metadata = {
+  title: "Pembahasan Soal 13",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/09/2026",
+};
+
+Inti dari permasalahan ini adalah prinsip **kejujuran dalam transaksi**: kita hanya membayar apa yang benar-benar kita dapatkan (isi kedelai), bukan bungkusnya (karung). Dalam aritmatika sosial, ini dikenal dengan konsep **Netto**.
+
+Netto adalah berat bersih barang tanpa kemasan. Karena harga kedelai dihitung per kilogram, kita harus mencari berat bersih kedelai terlebih dahulu dengan mengurangi berat kotor (bruto) dengan berat kemasan (tara).
+
+<MathContainer>
+  <BlockMath math="\text{Netto} = \text{Bruto} \times (100\% - \% \text{Tara})" />
+  <BlockMath math="\text{Netto} = 100 \times (1 - 0,015)" />
+  <BlockMath math="\text{Netto} = 100 \times 0,985 = 98,5 \text{ kg}" />
+</MathContainer>
+
+Setelah mengetahui berat bersih kedelai yang sebenarnya kita beli, kita hitung harga total sebelum diskon.
+
+<MathContainer>
+  <BlockMath math="\text{Harga Kotor} = \text{Netto} \times \text{Harga per kg}" />
+  <BlockMath math="\text{Harga Kotor} = 98,5 \times 4.000 = 394.000" />
+</MathContainer>
+
+Pengusaha tersebut mendapatkan potongan harga sebesar <InlineMath math="5\%" />. Artinya, ia cukup membayar <InlineMath math="95\%" /> dari harga total tersebut. Mari kita hitung harga akhirnya:
+
+<MathContainer>
+  <BlockMath math="\text{Bayar} = \text{Harga Kotor} \times (1 - \% \text{Diskon})" />
+  <BlockMath math="\text{Bayar} = 394.000 \times (1 - 0,05)" />
+  <BlockMath math="\text{Bayar} = 394.000 \times 0,95" />
+  <BlockMath math="\text{Bayar} = 374.300" />
+</MathContainer>
+
+Jadi, uang yang harus dibayarkan oleh pengusaha tersebut adalah <InlineMath math="\text{Rp374.300,00}" />.

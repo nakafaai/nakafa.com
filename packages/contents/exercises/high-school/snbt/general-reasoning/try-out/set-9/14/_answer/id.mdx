@@ -1,0 +1,27 @@
+export const metadata = {
+  title: "Pembahasan Soal 14",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "01/30/2026",
+};
+
+Barisan bilangan ini mengikuti pola Fibonacci, di mana setiap suku (mulai dari suku ketiga) merupakan hasil penjumlahan dari dua suku sebelumnya. Mari kita periksa polanya:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} 3 + 6 &= 9 \\ 6 + 9 &= 15 \\ 9 + 15 &= 24 \\ 15 + 24 &= 39 \end{aligned}" />
+</MathContainer>
+
+Untuk menentukan suku berikutnya setelah <InlineMath math="39" />, kita menjumlahkan dua suku terakhir yang diketahui:
+
+<MathContainer>
+  <BlockMath math="24 + 39 = 63" />
+</MathContainer>
+
+Kita dapat memverifikasi kebenaran jawaban ini dengan menghitung suku-suku berikutnya:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} 39 + 63 &= 102 \\ 63 + 102 &= 165 \end{aligned}" />
+</MathContainer>
+
+Kedua hasil verifikasi tersebut sesuai dengan suku-suku akhir pada barisan yang diberikan.
+
+Jadi, bilangan yang tepat untuk mengisi bagian yang kosong adalah <InlineMath math="63" />.

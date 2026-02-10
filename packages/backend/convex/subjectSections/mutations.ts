@@ -5,6 +5,7 @@ import {
   materialValidator,
   subjectCategoryValidator,
 } from "@repo/backend/convex/lib/contentValidators";
+import { vv } from "@repo/backend/convex/lib/validators";
 import { v } from "convex/values";
 
 /**
@@ -15,7 +16,7 @@ import { v } from "convex/values";
  */
 export const upsertSubjectSection = internalMutation({
   args: {
-    topicId: v.id("subjectTopics"),
+    topicId: vv.id("subjectTopics"),
     locale: localeValidator,
     slug: v.string(),
     category: subjectCategoryValidator,

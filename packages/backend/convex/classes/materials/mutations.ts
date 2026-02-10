@@ -3,22 +3,29 @@ import {
   loadMaterialGroup,
   validateScheduledStatus,
 } from "@repo/backend/convex/classes/materials/utils";
-import { schoolClassMaterialStatus } from "@repo/backend/convex/classes/schema";
+import { schoolClassMaterialStatusValidator } from "@repo/backend/convex/classes/schema";
 import { loadActiveClass } from "@repo/backend/convex/classes/utils";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
-import { requireAuthWithSession } from "@repo/backend/convex/lib/authHelpers";
+import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
 import {
   PERMISSIONS,
   requirePermission,
-} from "@repo/backend/convex/lib/permissions";
+} from "@repo/backend/convex/lib/helpers/permissions";
+import { vv } from "@repo/backend/convex/lib/validators";
 import { v } from "convex/values";
+import { literals } from "convex-helpers/validators";
+
+/**
+ * Reorder direction validator
+ */
+const reorderDirectionValidator = literals("up", "down");
 
 export const createMaterialGroup = mutation({
   args: {
-    classId: v.id("schoolClasses"),
+    classId: vv.id("schoolClasses"),
     name: v.string(),
     description: v.string(),
-    status: schoolClassMaterialStatus,
+    status: schoolClassMaterialStatusValidator,
     scheduledAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -84,10 +91,10 @@ export const createMaterialGroup = mutation({
 
 export const updateMaterialGroup = mutation({
   args: {
-    groupId: v.id("schoolClassMaterialGroups"),
+    groupId: vv.id("schoolClassMaterialGroups"),
     name: v.optional(v.string()),
     description: v.optional(v.string()),
-    status: v.optional(schoolClassMaterialStatus),
+    status: v.optional(schoolClassMaterialStatusValidator),
     scheduledAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -158,8 +165,8 @@ export const updateMaterialGroup = mutation({
 
 export const publishMaterialGroup = internalMutation({
   args: {
-    groupId: v.id("schoolClassMaterialGroups"),
-    publishedBy: v.id("users"),
+    groupId: vv.id("schoolClassMaterialGroups"),
+    publishedBy: vv.id("users"),
   },
   handler: async (ctx, args) => {
     const group = await ctx.db.get("schoolClassMaterialGroups", args.groupId);
@@ -182,7 +189,7 @@ export const publishMaterialGroup = internalMutation({
 
 export const deleteMaterialGroup = mutation({
   args: {
-    groupId: v.id("schoolClassMaterialGroups"),
+    groupId: vv.id("schoolClassMaterialGroups"),
   },
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);
@@ -205,8 +212,8 @@ export const deleteMaterialGroup = mutation({
 
 export const reorderMaterialGroup = mutation({
   args: {
-    groupId: v.id("schoolClassMaterialGroups"),
-    direction: v.union(v.literal("up"), v.literal("down")),
+    groupId: vv.id("schoolClassMaterialGroups"),
+    direction: reorderDirectionValidator,
   },
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);

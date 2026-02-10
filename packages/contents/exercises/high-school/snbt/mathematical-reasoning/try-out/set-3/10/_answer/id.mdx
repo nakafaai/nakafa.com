@@ -1,0 +1,42 @@
+export const metadata = {
+  title: "Pembahasan Soal 10",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/08/2026",
+};
+
+**Menghitung Total Bola**
+
+Dalam kantong terdapat <InlineMath math="4" /> bola hijau dan <InlineMath math="5" /> bola hitam.
+
+<MathContainer>
+  <BlockMath math="\text{Total Bola} = 4 + 5 = 9" />
+</MathContainer>
+
+**Peluang Pengambilan Bola Hijau Pertama**
+
+Peluang terambilnya bola hijau pada pengambilan pertama adalah jumlah bola hijau dibagi total bola.
+
+<MathContainer>
+  <BlockMath math="P(H_1) = \frac{4}{9}" />
+</MathContainer>
+
+**Peluang Pengambilan Bola Hijau Kedua**
+
+Karena pengambilan dilakukan **tanpa pengembalian**, jumlah bola hijau berkurang menjadi <InlineMath math="3" /> dan total bola berkurang menjadi <InlineMath math="8" />.
+
+<MathContainer>
+  <BlockMath math="P(H_2|H_1) = \frac{3}{8}" />
+</MathContainer>
+
+**Menghitung Peluang Total**
+
+Peluang terambilnya kedua bola berwarna hijau adalah hasil kali dari kedua peluang tersebut:
+
+<MathContainer>
+  <BlockMath math="P(Total) = P(H_1) \times P(H_2|H_1)" />
+  <BlockMath math="P(Total) = \frac{4}{9} \times \frac{3}{8}" />
+  <BlockMath math="P(Total) = \frac{12}{72}" />
+  <BlockMath math="P(Total) = \frac{1}{6}" />
+</MathContainer>
+
+Jadi, peluang terambilnya kedua bola berwarna hijau adalah <InlineMath math="\frac{1}{6}" />.

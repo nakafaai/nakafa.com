@@ -5,7 +5,8 @@ import {
   convertToDatabaseCustomer,
   requireCustomer,
 } from "@repo/backend/convex/customers/utils";
-import { requireAuthForAction } from "@repo/backend/convex/lib/authHelpers";
+import { requireAuthForAction } from "@repo/backend/convex/lib/helpers/auth";
+import { vv } from "@repo/backend/convex/lib/validators";
 import { ConvexError, v } from "convex/values";
 
 /**
@@ -14,7 +15,8 @@ import { ConvexError, v } from "convex/values";
  * Uses same logic as requireCustomer but returns local DB ID.
  */
 export const syncCustomer = internalAction({
-  args: { userId: v.id("users") },
+  args: { userId: vv.id("users") },
+  returns: vv.id("customers"),
   handler: async (ctx, args): Promise<Id<"customers">> => {
     const user = await ctx.runQuery(api.auth.getUserById, {
       userId: args.userId,
@@ -90,7 +92,8 @@ export const generateCustomerPortalUrl = action({
  * Deletes Polar customer to prevent orphaned customers that cause email conflicts.
  */
 export const cleanupUserData = internalAction({
-  args: { userId: v.id("users") },
+  args: { userId: vv.id("users") },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const customer = await ctx.runQuery(
       internal.customers.queries.getCustomerByUserId,
@@ -102,5 +105,7 @@ export const cleanupUserData = internalAction({
         id: customer.id,
       });
     }
+
+    return null;
   },
 });

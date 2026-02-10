@@ -1,0 +1,29 @@
+export const metadata = {
+  title: "Pembahasan Soal 10",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/26/2025",
+};
+
+Karena setiap pasang suami istri harus berada dalam satu mobil, kita dapat menganggap setiap pasangan sebagai satu kesatuan unit. Terdapat total <InlineMath math="5" /> unit pasangan yang akan didistribusikan ke dalam <InlineMath math="2" /> mobil.
+
+Kapasitas setiap mobil adalah <InlineMath math="6" /> orang, yang setara dengan <InlineMath math="3" /> pasang suami istri. Oleh karena itu, jumlah pasangan dalam satu mobil tidak boleh lebih dari <InlineMath math="3" />. Kombinasi distribusi jumlah pasangan yang mungkin untuk Mobil A dan Mobil B agar memenuhi kapasitas adalah:
+1. Mobil A membawa <InlineMath math="3" /> pasang, Mobil B membawa <InlineMath math="2" /> pasang.
+2. Mobil A membawa <InlineMath math="2" /> pasang, Mobil B membawa <InlineMath math="3" /> pasang.
+
+Untuk kasus pertama, kita memilih <InlineMath math="3" /> pasang dari <InlineMath math="5" /> pasang yang tersedia untuk masuk ke Mobil A. Sisanya otomatis masuk ke Mobil B.
+
+<MathContainer>
+  <BlockMath math="C(5, 3) = \frac{5!}{3!(5-3)!} = \frac{5 \times 4 \times 3!}{3! \times 2 \times 1} = 10 \text{ cara}" />
+</MathContainer>
+
+Untuk kasus kedua, kita memilih <InlineMath math="2" /> pasang dari <InlineMath math="5" /> pasang yang tersedia untuk masuk ke Mobil A.
+
+<MathContainer>
+  <BlockMath math="C(5, 2) = \frac{5!}{2!(5-2)!} = \frac{5 \times 4 \times 3!}{2 \times 1 \times 3!} = 10 \text{ cara}" />
+</MathContainer>
+
+Total cara pengaturan penumpang adalah jumlahan dari kedua kemungkinan tersebut.
+
+<MathContainer>
+  <BlockMath math="10 + 10 = 20 \text{ cara}" />
+</MathContainer>

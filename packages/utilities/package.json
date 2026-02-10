@@ -10,7 +10,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "pino": "^10.3.0"
+    "pino": "^10.3.1"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

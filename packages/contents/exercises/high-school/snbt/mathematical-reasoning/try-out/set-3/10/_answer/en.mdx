@@ -1,0 +1,42 @@
+export const metadata = {
+  title: "Solution to Question 10",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/08/2026",
+};
+
+**Calculating Total Balls**
+
+The bag contains <InlineMath math="4" /> green balls and <InlineMath math="5" /> black balls.
+
+<MathContainer>
+  <BlockMath math="\text{Total Balls} = 4 + 5 = 9" />
+</MathContainer>
+
+**Probability of First Green Ball**
+
+The probability of drawing a green ball on the first draw is the number of green balls divided by the total number of balls.
+
+<MathContainer>
+  <BlockMath math="P(G_1) = \frac{4}{9}" />
+</MathContainer>
+
+**Probability of Second Green Ball**
+
+Since the draw is **without replacement**, the number of green balls decreases to <InlineMath math="3" /> and the total number of balls decreases to <InlineMath math="8" />.
+
+<MathContainer>
+  <BlockMath math="P(G_2|G_1) = \frac{3}{8}" />
+</MathContainer>
+
+**Calculating Total Probability**
+
+The probability that both balls are green is the product of these two probabilities:
+
+<MathContainer>
+  <BlockMath math="P(Total) = P(G_1) \times P(G_2|G_1)" />
+  <BlockMath math="P(Total) = \frac{4}{9} \times \frac{3}{8}" />
+  <BlockMath math="P(Total) = \frac{12}{72}" />
+  <BlockMath math="P(Total) = \frac{1}{6}" />
+</MathContainer>
+
+Thus, the probability that both balls are green is <InlineMath math="\frac{1}{6}" />.

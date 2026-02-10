@@ -5,7 +5,7 @@ import {
   BookOpen02Icon,
   Calendar03Icon,
   DiscordIcon,
-  Github01Icon,
+  GithubIcon,
   Globe02Icon,
   LayerIcon,
   QuillWrite01Icon,
@@ -100,20 +100,23 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
               render={
                 <Button
                   aria-label={t("source-code")}
-                  asChild
+                  nativeButton={false}
+                  render={
+                    <a
+                      href={
+                        githubUrl ?? "https://github.com/nakafaai/nakafa.com"
+                      }
+                      rel="noopener noreferrer"
+                      target="_blank"
+                      title={t("source-code")}
+                    >
+                      <span className="sr-only">{t("source-code")}</span>
+                      <HugeIcons className="size-4" icon={GithubIcon} />
+                    </a>
+                  }
                   size="icon"
                   variant="outline"
-                >
-                  <a
-                    href={githubUrl ?? "https://github.com/nakafaai/nakafa.com"}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                    title={t("source-code")}
-                  >
-                    <span className="sr-only">{t("source-code")}</span>
-                    <HugeIcons className="size-4" icon={Github01Icon} />
-                  </a>
-                </Button>
+                />
               }
             />
             <TooltipContent side="bottom">
@@ -124,17 +127,22 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
           <Tooltip>
             <TooltipTrigger
               render={
-                <Button asChild size="icon" variant="outline">
-                  <a
-                    href="https://www.youtube.com/@nakafaa"
-                    rel="noopener noreferrer"
-                    target="_blank"
-                    title={t("videos")}
-                  >
-                    <span className="sr-only">{t("videos")}</span>
-                    <HugeIcons className="size-4" icon={YoutubeIcon} />
-                  </a>
-                </Button>
+                <Button
+                  nativeButton={false}
+                  render={
+                    <a
+                      href="https://www.youtube.com/@nakafaa"
+                      rel="noopener noreferrer"
+                      target="_blank"
+                      title={t("videos")}
+                    >
+                      <span className="sr-only">{t("videos")}</span>
+                      <HugeIcons className="size-4" icon={YoutubeIcon} />
+                    </a>
+                  }
+                  size="icon"
+                  variant="outline"
+                />
               }
             />
             <TooltipContent side="bottom">
@@ -145,17 +153,22 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
           <Tooltip>
             <TooltipTrigger
               render={
-                <Button asChild size="icon" variant="outline">
-                  <a
-                    href="https://discord.gg/CPCSfKhvfQ"
-                    rel="noopener noreferrer"
-                    target="_blank"
-                    title={t("community")}
-                  >
-                    <span className="sr-only">{t("community")}</span>
-                    <HugeIcons className="size-4" icon={DiscordIcon} />
-                  </a>
-                </Button>
+                <Button
+                  nativeButton={false}
+                  render={
+                    <a
+                      href="https://discord.gg/CPCSfKhvfQ"
+                      rel="noopener noreferrer"
+                      target="_blank"
+                      title={t("community")}
+                    >
+                      <span className="sr-only">{t("community")}</span>
+                      <HugeIcons className="size-4" icon={DiscordIcon} />
+                    </a>
+                  }
+                  size="icon"
+                  variant="outline"
+                />
               }
             />
             <TooltipContent side="bottom">

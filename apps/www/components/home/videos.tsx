@@ -25,14 +25,13 @@ function VideoCard({ children }: { children: React.ReactNode }) {
     <Link
       className="group relative flex aspect-square overflow-hidden rounded-md border p-3 text-card-foreground shadow-xs"
       href="https://www.youtube.com/@nakafaa"
+      rel="noopener noreferrer"
       target="_blank"
     >
       <Image
         alt="Nakafa YouTube Channel"
         className="absolute inset-0 object-cover transition-transform duration-300 group-hover:scale-105"
-        fetchPriority="high"
         fill
-        loading="eager"
         preload
         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
         src="/stars.png"

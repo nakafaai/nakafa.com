@@ -1,0 +1,44 @@
+export const metadata = {
+  title: "Pembahasan Soal 6",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/09/2026",
+};
+
+Diketahui bahwa usia anak-anak Pak Asep membentuk deret hitung (barisan aritmatika) dengan jumlah anak <InlineMath math="n = 6" />. Misalkan <InlineMath math="U_n" /> adalah usia anak ke-<InlineMath math="n" />.
+
+Dari informasi soal:
+- Usia anak ke-<InlineMath math="3" /> adalah <InlineMath math="18" /> tahun: <InlineMath math="U_3 = 18" />.
+- Usia anak ke-<InlineMath math="5" /> adalah <InlineMath math="16" /> tahun: <InlineMath math="U_5 = 16" />.
+
+Dalam barisan aritmatika, rumus suku ke-<InlineMath math="n" /> adalah <InlineMath math="U_n = a + (n-1)b" />. Maka kita dapat membentuk persamaan:
+
+<MathContainer>
+  <BlockMath math="\begin{cases} U_3 = a + 2b = 18 \\ U_5 = a + 4b = 16 \end{cases}" />
+</MathContainer>
+
+Kurangkan persamaan kedua dengan persamaan pertama untuk mencari beda (<InlineMath math="b" />):
+
+<MathContainer>
+  <BlockMath math="(a + 4b) - (a + 2b) = 16 - 18" />
+  <BlockMath math="2b = -2 \implies b = -1" />
+</MathContainer>
+
+Substitusikan nilai <InlineMath math="b = -1" /> ke persamaan <InlineMath math="U_3" /> untuk mencari suku pertama (<InlineMath math="a" />):
+
+<MathContainer>
+  <BlockMath math="a + 2(-1) = 18" />
+  <BlockMath math="a - 2 = 18 \implies a = 20" />
+</MathContainer>
+
+Jadi, usia anak pertama adalah <InlineMath math="20" /> tahun dan beda usianya adalah <InlineMath math="-1" /> tahun. Usia keenam anak tersebut adalah: <InlineMath math="20, 19, 18, 17, 16, 15" />.
+
+Jumlah usia semua anak (<InlineMath math="S_6" />) dapat dihitung dengan rumus deret aritmatika:
+
+<MathContainer>
+  <BlockMath math="S_n = \frac{n}{2} (2a + (n-1)b)" />
+  <BlockMath math="S_6 = \frac{6}{2} (2(20) + (6-1)(-1))" />
+  <BlockMath math="S_6 = 3 (40 - 5)" />
+  <BlockMath math="S_6 = 3 (35) = 105" />
+</MathContainer>
+
+Jadi, jumlah usia semua anak Pak Asep adalah <InlineMath math="105" /> tahun.

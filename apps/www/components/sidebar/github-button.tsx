@@ -1,4 +1,4 @@
-import { Github01Icon, LinkSquare02Icon } from "@hugeicons/core-free-icons";
+import { GithubIcon, LinkSquare02Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   SidebarMenuButton,
@@ -21,7 +21,7 @@ export function GithubButton({ githubUrl }: Props) {
           target="_blank"
           title={t("source-code")}
         >
-          <HugeIcons className="size-4 shrink-0" icon={Github01Icon} />
+          <HugeIcons className="size-4 shrink-0" icon={GithubIcon} />
           <span className="truncate">{t("source-code")}</span>
 
           <HugeIcons

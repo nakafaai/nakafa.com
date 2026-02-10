@@ -50,7 +50,6 @@ function AboutDialogContent({
           fetchPriority="high"
           fill
           loading="eager"
-          preload
           src="/logo.svg"
           title="Nakafa"
         />

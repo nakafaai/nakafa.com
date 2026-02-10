@@ -55,6 +55,7 @@ const languageModels = {
   // Moonshot
   "kimi-k2": createWrappedLanguageModel("moonshotai/kimi-k2-0905"),
   "kimi-k2-thinking": createWrappedLanguageModel("moonshotai/kimi-k2-thinking"),
+  "kimi-k2.5": createWrappedLanguageModel("moonshotai/kimi-k2.5"),
 
   // OpenAI
   "gpt-oss-120b": createWrappedLanguageModel("openai/gpt-oss-120b"),
@@ -95,7 +96,7 @@ export type ModelId = keyof typeof languageModels;
 
 export const MODELS = Object.keys(languageModels) as ModelId[];
 
-export const defaultModel: ModelId = "gemini-3-flash";
+export const defaultModel: ModelId = "kimi-k2.5";
 
 export const order = ["cerebras", "groq", "baseten", "azure", "vertex"];
 

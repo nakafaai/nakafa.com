@@ -17,9 +17,9 @@ export function AuthGoogle({ redirect }: Props) {
 
   const callbackURL = redirect ?? redirectQuery ?? "/";
 
-  async function handleGoogleSignIn() {
+  function handleGoogleSignIn() {
     const validCallbackURL = checkIfValidUrl(callbackURL) ? callbackURL : "/";
-    await authClient.signIn.social({
+    authClient.signIn.social({
       provider: "google",
       callbackURL: validCallbackURL,
     });

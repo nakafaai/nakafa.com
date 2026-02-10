@@ -1,0 +1,58 @@
+export const metadata = {
+  title: "Pembahasan Soal 1",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/08/2026",
+};
+
+**Analisis Periode Pengiriman**
+
+Bulan April <InlineMath math="2023" /> memiliki total <InlineMath math="30" /> hari. Pengiriman pertama dilakukan pada tanggal <InlineMath math="1" /> April, yang berarti hari ke-<InlineMath math="1" />. Kita perlu menghitung berapa kali pemasok A dan B mengirim barang dalam rentang <InlineMath math="30" /> hari tersebut.
+
+Jadwal pengiriman mengikuti pola Barisan Aritmatika dengan suku pertama <InlineMath math="a = 1" /> (tanggal pengiriman pertama) dan beda <InlineMath math="b" /> sesuai interval hari masing-masing pemasok. Syarat tanggal pengiriman adalah <InlineMath math="U_n \le 30" />.
+
+**Volume Minyak Goreng A**
+
+Pemasok A mengirim setiap <InlineMath math="3" /> hari sekali.
+
+<MathContainer>
+  <BlockMath math="1 + (n_A - 1)3 \le 30" />
+  <BlockMath math="(n_A - 1)3 \le 29" />
+  <BlockMath math="n_A - 1 \le 9,66..." />
+  <BlockMath math="n_A \le 10,66..." />
+</MathContainer>
+
+Jadi, pemasok A mengirim sebanyak <InlineMath math="10" /> kali.
+
+Total volume A:
+
+<MathContainer>
+  <BlockMath math="10 \times 10 = 100 \text{ liter}" />
+</MathContainer>
+
+**Volume Minyak Goreng B**
+
+Pemasok B mengirim setiap <InlineMath math="4" /> hari sekali.
+
+<MathContainer>
+  <BlockMath math="1 + (n_B - 1)4 \le 30" />
+  <BlockMath math="(n_B - 1)4 \le 29" />
+  <BlockMath math="n_B - 1 \le 7,25" />
+  <BlockMath math="n_B \le 8,25" />
+</MathContainer>
+
+Jadi, pemasok B mengirim sebanyak <InlineMath math="8" /> kali.
+
+Total volume B:
+
+<MathContainer>
+  <BlockMath math="8 \times 15 = 120 \text{ liter}" />
+</MathContainer>
+
+**Total Keseluruhan**
+
+<MathContainer>
+  <BlockMath math="\text{Total} = \text{Volume A} + \text{Volume B}" />
+  <BlockMath math="\text{Total} = 100 + 120 = 220 \text{ liter}" />
+</MathContainer>
+
+Jadi, total volume minyak goreng merk A dan B yang diterima adalah <InlineMath math="220" /> liter.

@@ -9,7 +9,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { UserData } from "@repo/backend/convex/lib/userHelpers";
+import type { UserData } from "@repo/backend/convex/lib/helpers/user";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
   Avatar,
@@ -120,11 +120,9 @@ function CommentContent({
         !!isReplyToMe && "rounded-l-none border-primary border-l bg-primary/5"
       )}
     >
-      <Avatar className="size-10 rounded-full">
+      <Avatar className="size-10">
         <AvatarImage alt={userName} role="presentation" src={userImage} />
-        <AvatarFallback className="rounded-lg">
-          {getInitialName(userName)}
-        </AvatarFallback>
+        <AvatarFallback>{getInitialName(userName)}</AvatarFallback>
       </Avatar>
       <div className="grid min-w-0 flex-1 gap-2">
         <div className="grid gap-1">
@@ -133,6 +131,7 @@ function CommentContent({
               <NavigationLink
                 className="min-w-0 max-w-36 truncate font-medium text-sm transition-colors ease-out hover:text-primary"
                 href={`/user/${userId}`}
+                rel="noopener noreferrer"
                 target="_blank"
                 title={userName}
               >

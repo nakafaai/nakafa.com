@@ -32,6 +32,7 @@ export function QuranAudio({ audio }: Props) {
 
   return (
     <Button
+      aria-label={isPlaying ? "Stop audio" : "Play audio"}
       onClick={handleToggle}
       size="icon"
       variant={isPlaying ? "destructive" : "outline"}

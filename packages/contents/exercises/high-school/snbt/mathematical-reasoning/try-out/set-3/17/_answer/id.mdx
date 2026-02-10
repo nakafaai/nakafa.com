@@ -1,0 +1,65 @@
+export const metadata = {
+    title: "Pembahasan Soal 17",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "02/08/2026",
+};
+
+Kita misalkan keempat bilangan asli yang telah diurutkan sebagai <InlineMath math="x_1, x_2, x_3, x_4" /> dengan <InlineMath math="x_1 \le x_2 \le x_3 \le x_4" />.
+
+Berdasarkan informasi soal, kita dapat menyusun persamaan-persamaan berikut:
+
+1.  **Median**: Karena data berjumlah genap (4), median adalah rata-rata dari dua data tengah.
+
+    <MathContainer>
+      <BlockMath math="\frac{x_2 + x_3}{2} = 8 \implies x_2 + x_3 = 16" />
+    </MathContainer>
+
+2.  **Jangkauan (Range)**: Selisih datum terbesar dan terkecil adalah 10.
+
+    <MathContainer>
+      <BlockMath math="x_4 - x_1 = 10 \implies x_1 = x_4 - 10" />
+    </MathContainer>
+
+3.  **Mean (Rata-rata)**: Jumlah seluruh data dibagi 4 adalah 8.
+
+    <MathContainer>
+      <BlockMath math="\frac{x_1 + x_2 + x_3 + x_4}{4} = 8 \implies x_1 + x_2 + x_3 + x_4 = 32" />
+    </MathContainer>
+
+Kita substitusikan nilai <InlineMath math="x_2 + x_3 = 16" /> ke dalam persamaan rata-rata untuk mencari hubungan antara <InlineMath math="x_1" /> dan <InlineMath math="x_4" />:
+
+<MathContainer>
+  <BlockMath math="\begin{align*} x_1 + (x_2 + x_3) + x_4 &= 32 \\ x_1 + 16 + x_4 &= 32 \\ x_1 + x_4 &= 16 \end{align*}" />
+</MathContainer>
+
+Sekarang kita memiliki sistem persamaan dua variabel untuk <InlineMath math="x_1" /> dan <InlineMath math="x_4" />:
+
+<MathContainer>
+  <BlockMath math="\begin{cases} x_4 - x_1 = 10 \\ x_4 + x_1 = 16 \end{cases}" />
+</MathContainer>
+
+Dengan menjumlahkan kedua persamaan tersebut, kita dapatkan:
+
+<MathContainer>
+  <BlockMath math="2x_4 = 26 \implies x_4 = 13" />
+</MathContainer>
+
+Substitusi nilai <InlineMath math="x_4" /> untuk mendapatkan <InlineMath math="x_1" />:
+
+<MathContainer>
+  <BlockMath math="x_1 = 13 - 10 = 3" />
+</MathContainer>
+
+Terakhir, kita tentukan nilai <InlineMath math="x_2" /> dan <InlineMath math="x_3" />. Kita tahu <InlineMath math="x_2 + x_3 = 16" /> dan <InlineMath math="3 \le x_2 \le x_3 \le 13" />. Karena modusnya tunggal, maka harus ada satu nilai yang muncul lebih dari sekali. Satu-satunya kemungkinan yang memenuhi syarat median dan urutan adalah jika <InlineMath math="x_2" /> dan <InlineMath math="x_3" /> bernilai sama.
+
+<MathContainer>
+  <BlockMath math="x_2 = x_3 = 8" />
+</MathContainer>
+
+Data lengkapnya adalah: <InlineMath math="3, 8, 8, 13" />. Modus dari data ini adalah <InlineMath math="8" /> (tunggal), yang sesuai dengan syarat soal.
+
+Maka, hasil kali datum kedua dan datum keempat adalah:
+
+<MathContainer>
+  <BlockMath math="x_2 \cdot x_4 = 8 \cdot 13 = 104" />
+</MathContainer>
