@@ -9,9 +9,11 @@ export function HeroArt() {
 
   function handleCellClick() {
     // randomize the theme, make sure it's not the current theme
-    const randomTheme = themes.filter((theme) => theme.value !== currentTheme)[
-      Math.floor(Math.random() * themes.length)
-    ];
+    const availableThemes = themes.filter(
+      (theme) => theme.value !== currentTheme
+    );
+    const randomTheme =
+      availableThemes[Math.floor(Math.random() * availableThemes.length)];
     if (randomTheme) {
       setTheme(randomTheme.value);
     }
