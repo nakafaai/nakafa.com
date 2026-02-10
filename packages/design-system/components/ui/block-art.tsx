@@ -120,6 +120,12 @@ export function BlockArt({
       hoveredCellsRef.current.add(index);
       const selector = `[data-cell-index="${index}"]`;
 
+      // Check if element exists before animating
+      const element = containerRef.current?.querySelector(selector);
+      if (!element) {
+        return;
+      }
+
       // Instant color change on hover
       animate(
         selector,
@@ -130,7 +136,7 @@ export function BlockArt({
         { duration: 0 }
       );
     },
-    [animate]
+    [animate, containerRef]
   );
 
   // Handle hover end with trail effect
@@ -141,6 +147,12 @@ export function BlockArt({
 
       // Don't reset if cell is currently in idle animation
       if (idleAnimatedIndicesRef.current.has(index)) {
+        return;
+      }
+
+      // Check if element exists before animating
+      const element = containerRef.current?.querySelector(selector);
+      if (!element) {
         return;
       }
 
@@ -157,7 +169,7 @@ export function BlockArt({
         }
       );
     },
-    [animate]
+    [animate, containerRef]
   );
 
   // Staggered idle animation with wave pattern from center
@@ -165,6 +177,12 @@ export function BlockArt({
     if (totalCells === 0 || animatedCellCount === 0) {
       return;
     }
+
+    // Clear previous state when dimensions change
+    if (idleIntervalRef.current) {
+      clearInterval(idleIntervalRef.current);
+    }
+    idleAnimatedIndicesRef.current.clear();
 
     const effectiveAnimatedCellCount = Math.max(
       3,
@@ -185,11 +203,23 @@ export function BlockArt({
 
         const selector = `[data-cell-index="${index}"]`;
         const cell = cellData[index];
+
+        // Skip if cell doesn't exist (e.g., during resize)
+        if (!cell) {
+          continue;
+        }
+
         const distanceFromCenter = Math.sqrt(
           (cell.col - centerCol) ** 2 + (cell.row - centerRow) ** 2
         );
 
         setTimeout(() => {
+          // Check if element still exists before animating
+          const element = containerRef.current?.querySelector(selector);
+          if (!element) {
+            return;
+          }
+
           animate(
             selector,
             {
@@ -240,6 +270,12 @@ export function BlockArt({
         // Stagger delay based on distance from center
         setTimeout(
           () => {
+            // Check if element still exists before animating
+            const element = containerRef.current?.querySelector(selector);
+            if (!element) {
+              return;
+            }
+
             animate(
               selector,
               {
@@ -278,6 +314,13 @@ export function BlockArt({
           continue;
         }
         const selector = `[data-cell-index="${index}"]`;
+
+        // Check if element still exists before animating
+        const element = containerRef.current?.querySelector(selector);
+        if (!element) {
+          continue;
+        }
+
         animate(
           selector,
           {
@@ -287,6 +330,7 @@ export function BlockArt({
           { duration: 0.4, ease: "easeOut" }
         );
       }
+      idleAnimatedIndicesRef.current.clear();
     };
   }, [
     totalCells,
@@ -296,6 +340,7 @@ export function BlockArt({
     cellData,
     Cols,
     Rows,
+    containerRef,
   ]);
 
   const getWaveIntensity = useCallback(
@@ -319,6 +364,12 @@ export function BlockArt({
   const updateCellRippleStyle = useCallback(
     (cellIndex: number, intensity: number) => {
       const selector = `[data-cell-index="${cellIndex}"]`;
+
+      // Check if element exists before animating
+      const element = containerRef.current?.querySelector(selector);
+      if (!element) {
+        return;
+      }
 
       if (intensity > 0.01) {
         const scale = 1 + intensity * 0.08;
@@ -355,7 +406,7 @@ export function BlockArt({
         );
       }
     },
-    [animate]
+    [animate, containerRef]
   );
 
   const animateRipples = useCallback(() => {
