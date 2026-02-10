@@ -2,10 +2,10 @@ import {
   Anthropic,
   DeepSeek,
   Gemini,
+  Kimi,
   LongCat,
   Meta,
   Minimax,
-  Moonshot,
   OpenAI,
   Qwen,
   XAI,
@@ -36,20 +36,20 @@ export const aiModels: Model[] = [
   },
   {
     icon: Gemini,
+    value: "gemini-3-pro",
+    label: "Gemini 3 Pro",
+    type: "premium",
+  },
+  {
+    icon: Gemini,
     value: "gemini-2.5-pro",
     label: "Gemini 2.5 Pro",
     type: "premium",
   },
   {
     icon: Gemini,
-    value: "gemini-3-pro",
-    label: "Gemini 3 Pro",
-    type: "premium",
-  },
-  {
-    icon: Moonshot,
-    value: "kimi-k2-thinking",
-    label: "Kimi K2 Thinking",
+    value: "gemini-3-flash",
+    label: "Gemini 3 Flash",
     type: "premium",
   },
   {
@@ -77,9 +77,15 @@ export const aiModels: Model[] = [
     type: "premium",
   },
   {
-    icon: Gemini,
-    value: "gemini-3-flash",
-    label: "Gemini 3 Flash",
+    icon: Kimi,
+    value: "kimi-k2.5",
+    label: "Kimi K2.5",
+    type: "free",
+  },
+  {
+    icon: Kimi,
+    value: "kimi-k2",
+    label: "Kimi K2",
     type: "free",
   },
   {
@@ -128,12 +134,6 @@ export const aiModels: Model[] = [
     icon: Meta,
     value: "llama-4-maverick",
     label: "Llama 4 Maverick",
-    type: "free",
-  },
-  {
-    icon: Moonshot,
-    value: "kimi-k2",
-    label: "Kimi K2",
     type: "free",
   },
   {

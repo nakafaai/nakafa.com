@@ -388,7 +388,7 @@ export async function POST(req: Request) {
       ).messages.filter((m) => m.role === "assistant");
 
       const suggestionsStream = streamText({
-        model: model.languageModel("xai/grok-4.1-fast-non-reasoning"),
+        model: model.languageModel("gemini-3-flash"),
         system: nakafaSuggestions(),
         messages: [...finalMessages, ...messagesFromResponse],
         output: Output.object({

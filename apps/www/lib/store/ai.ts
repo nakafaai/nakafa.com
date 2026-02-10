@@ -26,7 +26,7 @@ export type AiStore = State & Actions;
 const initialState: State = {
   open: false,
   text: "",
-  model: "gemini-3-flash",
+  model: "kimi-k2.5",
   query: "",
   activeChatId: null,
 };
