@@ -192,6 +192,7 @@ export function BlockArt({
       clearInterval(idleIntervalRef.current);
     }
     idleAnimatedIndicesRef.current.clear();
+    hoveredCellsRef.current.clear();
 
     const effectiveAnimatedCellCount = Math.max(
       3,
