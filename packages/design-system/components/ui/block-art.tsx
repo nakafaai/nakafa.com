@@ -167,6 +167,7 @@ export function BlockArt({
         selector,
         {
           backgroundColor: "var(--background)",
+          scale: 1,
         },
         { duration: 0.8, ease: "easeOut" }
       );
