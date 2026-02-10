@@ -72,7 +72,6 @@ const MotionBlockCell = memo(function MotionBlockCell({
       }}
       transition={{
         backgroundColor: { duration: 0.6, ease: "easeOut" },
-        scale: { type: "spring", stiffness: 300, damping: 20 },
       }}
     />
   );
@@ -132,7 +131,6 @@ export function BlockArt({
         selector,
         {
           backgroundColor: "var(--primary)",
-          scale: 1.02,
         },
         { duration: 0 }
       );
@@ -158,7 +156,6 @@ export function BlockArt({
           selector,
           {
             backgroundColor: "var(--secondary)",
-            scale: 1,
           },
           { duration: 0.4, ease: "easeOut" }
         );
@@ -170,12 +167,8 @@ export function BlockArt({
         selector,
         {
           backgroundColor: "var(--background)",
-          scale: 1,
         },
-        {
-          backgroundColor: { duration: 0.8, ease: "easeOut" },
-          scale: { type: "spring", stiffness: 300, damping: 20 },
-        }
+        { duration: 0.8, ease: "easeOut" }
       );
     },
     [animate, containerRef]
@@ -245,7 +238,6 @@ export function BlockArt({
             selector,
             {
               backgroundColor: "var(--background)",
-              scale: 1,
             },
             { duration: 0.4, ease: "easeOut" }
           );
@@ -307,15 +299,10 @@ export function BlockArt({
               selector,
               {
                 backgroundColor: "var(--secondary)",
-                scale: [1, 1.05, 1],
               },
               {
-                backgroundColor: { duration: 0.5, ease: "easeOut" },
-                scale: {
-                  duration: 0.75,
-                  ease: "easeInOut",
-                  times: [0, 0.5, 1],
-                },
+                duration: 0.5,
+                ease: "easeOut",
               }
             );
           },
@@ -358,7 +345,6 @@ export function BlockArt({
           selector,
           {
             backgroundColor: "var(--background)",
-            scale: 1,
           },
           { duration: 0.4, ease: "easeOut" }
         );
