@@ -1,0 +1,48 @@
+export const metadata = {
+  title: "Solution to Question 9",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/08/2026",
+};
+
+**Equating Inflow and Outflow Volumes**
+
+The required condition is when the volume of water entering equals the volume of water flowing out.
+
+<MathContainer>
+  <BlockMath math="V_1(t) = V_2(t)" />
+</MathContainer>
+
+Substitute the known functions:
+
+<MathContainer>
+  <BlockMath math="2t^2 - 198t + 4700 = 500 + 2t" />
+</MathContainer>
+
+**Solving the Quadratic Equation**
+
+Move all terms to the left side to get the standard quadratic form:
+
+<MathContainer>
+  <BlockMath math="2t^2 - 198t - 2t + 4700 - 500 = 0" />
+  <BlockMath math="2t^2 - 200t + 4200 = 0" />
+</MathContainer>
+
+Simplify the equation by dividing both sides by <InlineMath math="2" />:
+
+<MathContainer>
+  <BlockMath math="t^2 - 100t + 2100 = 0" />
+</MathContainer>
+
+Factor the equation. We look for two numbers that multiply to <InlineMath math="2100" /> and add up to <InlineMath math="-100" />. These numbers are <InlineMath math="-70" /> and <InlineMath math="-30" />.
+
+<MathContainer>
+  <BlockMath math="(t - 70)(t - 30) = 0" />
+</MathContainer>
+
+This gives the solutions:
+
+<MathContainer>
+  <BlockMath math="t = 70 \quad \text{or} \quad t = 30" />
+</MathContainer>
+
+Thus, the volume of entering water equals the outflowing water at <InlineMath math="70" /> minutes or <InlineMath math="30" /> minutes.

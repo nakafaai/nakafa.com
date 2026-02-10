@@ -1,0 +1,50 @@
+export const metadata = {
+  title: "Solution to Question 14",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/08/2026",
+};
+
+**Mathematical Model**
+
+Let the money of Amri, Beni, and Dimas be <InlineMath math="A, B," /> and <InlineMath math="D" /> respectively. Based on the problem, we can form a system of equations:
+
+<MathContainer>
+  <BlockMath math="\begin{cases} A = B + 2D + 20,000 & \text{(1)} \\ A + B + D = 100,000 & \text{(2)} \\ B - D = 5,000 & \text{(3)} \end{cases}" />
+</MathContainer>
+
+**Solving the System**
+
+We want to find the value of <InlineMath math="A" />. Substitute equation (1) into equation (2):
+
+<MathContainer>
+  <BlockMath math="(B + 2D + 20,000) + B + D = 100,000" />
+  <BlockMath math="2B + 3D = 80,000 \quad \text{(4)}" />
+</MathContainer>
+
+Next, we eliminate <InlineMath math="B" /> using equations (3) and (4). Multiply equation (3) by <InlineMath math="2" /> so the coefficients of <InlineMath math="B" /> match:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} 2B - 2D &= 10,000 \\ 2B + 3D &= 80,000 \end{aligned}" />
+</MathContainer>
+
+Subtract the two equations:
+
+<MathContainer>
+  <BlockMath math="-5D = -70,000 \implies D = 14,000" />
+</MathContainer>
+
+Substitute <InlineMath math="D = 14,000" /> into equation (3) to find <InlineMath math="B" />:
+
+<MathContainer>
+  <BlockMath math="B - 14,000 = 5,000 \implies B = 19,000" />
+</MathContainer>
+
+Finally, substitute the values of <InlineMath math="B" /> and <InlineMath math="D" /> into equation (1) to find <InlineMath math="A" />:
+
+<MathContainer>
+  <BlockMath math="A = 19,000 + 2(14,000) + 20,000" />
+  <BlockMath math="A = 19,000 + 28,000 + 20,000" />
+  <BlockMath math="A = 67,000" />
+</MathContainer>
+
+Thus, Amri's money is <InlineMath math="\text{Rp}67,000.00" />.

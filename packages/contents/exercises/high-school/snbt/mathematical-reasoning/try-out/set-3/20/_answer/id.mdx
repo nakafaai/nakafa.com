@@ -1,0 +1,26 @@
+export const metadata = {
+  title: "Pembahasan Soal 20",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/08/2026",
+};
+
+Kita cari jumlah hari **tanpa** pengiriman minyak <InlineMath math="A" /> maupun <InlineMath math="B" />. Langkah paling efisien adalah menghitung hari yang **ada** pengiriman, lalu mengurangkannya dari total hari bulan April (<InlineMath math="30" /> hari).
+
+Berikut rincian jadwal pengiriman yang terjadi:
+
+| Jenis Minyak | Tanggal Pengiriman (Deret Aritmatika) | Total Hari |
+| :--- | :--- | :---: |
+| **Minyak <InlineMath math="A" />** (<InlineMath math="3" /> hari) | <InlineMath math="1, 4, 7, 10, 13, 16, 19, 22, 25, 28" /> | <InlineMath math="10" /> |
+| **Minyak <InlineMath math="B" />** (<InlineMath math="4" /> hari) | <InlineMath math="1, 5, 9, 13, 17, 21, 25, 29" /> | <InlineMath math="8" /> |
+| **Gabungan** (<InlineMath math="A \cup B" />) | <InlineMath math="1, 4, 5, 7, 9, 10, 13, 16, 17, 19, 21, 22, 25, 28, 29" /> | **<InlineMath math="15" />** |
+
+Dari tabel di atas, terdapat **<InlineMath math="15" /> hari** di mana toko menerima kiriman (baik <InlineMath math="A" />, <InlineMath math="B" />, atau keduanya).
+
+Maka, jumlah hari **tanpa** pengiriman adalah:
+
+<MathContainer>
+  <BlockMath math="\text{Hari Kosong} = \text{Total April} - \text{Hari Ada Pengiriman}" />
+  <BlockMath math="\text{Hari Kosong} = 30 - 15 = 15" />
+</MathContainer>
+
+Jadi, terdapat **<InlineMath math="15" /> hari** di mana toko tidak menerima kiriman minyak <InlineMath math="A" /> ataupun <InlineMath math="B" />.

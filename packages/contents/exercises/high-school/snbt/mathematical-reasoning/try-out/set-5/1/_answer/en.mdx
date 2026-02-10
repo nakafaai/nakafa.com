@@ -1,0 +1,45 @@
+export const metadata = {
+  title: "Answer to Question 1",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/09/2026",
+};
+
+Let the price of one belt be <InlineMath math="x" /> and the price of one tie be <InlineMath math="y" />. Based on the information provided, we can form the following system of linear equations:
+
+<MathContainer>
+  <BlockMath math="3x + 2y = 100,000" />
+  <BlockMath math="x + 3y = 62,500" />
+</MathContainer>
+
+To find the values of <InlineMath math="x" /> and <InlineMath math="y" />, we can use the elimination method. We will eliminate the variable <InlineMath math="x" /> by multiplying the second equation by <InlineMath math="3" /> so that the coefficient of <InlineMath math="x" /> becomes the same in both equations.
+
+<MathContainer>
+  <BlockMath math="\begin{cases} 3x + 2y = 100,000 \\ x + 3y = 62,500 \quad (\times 3) \end{cases}" />
+  <BlockMath math="\Rightarrow \begin{cases} 3x + 2y = 100,000 \\ 3x + 9y = 187,500 \end{cases}" />
+</MathContainer>
+
+Next, we subtract the first equation from the modified second equation to solve for <InlineMath math="y" />.
+
+<MathContainer>
+  <BlockMath math="(3x + 9y) - (3x + 2y) = 187,500 - 100,000" />
+  <BlockMath math="7y = 87,500" />
+  <BlockMath math="y = \frac{87,500}{7}" />
+  <BlockMath math="y = 12,500" />
+</MathContainer>
+
+Having found <InlineMath math="y = 12,500" />, we substitute this value into one of the original equations, for example <InlineMath math="x + 3y = 62,500" />, to find <InlineMath math="x" />.
+
+<MathContainer>
+  <BlockMath math="x + 3(12,500) = 62,500" />
+  <BlockMath math="x + 37,500 = 62,500" />
+  <BlockMath math="x = 62,500 - 37,500" />
+  <BlockMath math="x = 25,000" />
+</MathContainer>
+
+Thus, the price of one belt is <InlineMath math="\text{Rp }25,000.00" /> and the price of one tie is <InlineMath math="\text{Rp }12,500.00" />. Since Yunus wants to buy <InlineMath math="1" /> of each, the total amount he needs to pay is the sum of both prices.
+
+<MathContainer>
+  <BlockMath math="x + y = 25,000 + 12,500 = 37,500" />
+</MathContainer>
+
+Therefore, Yunus has to pay <InlineMath math="\text{Rp }37,500.00" />.

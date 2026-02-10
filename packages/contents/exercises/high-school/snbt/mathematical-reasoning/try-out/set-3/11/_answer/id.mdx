@@ -1,0 +1,39 @@
+export const metadata = {
+  title: "Pembahasan Soal 11",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/08/2026",
+};
+
+**Metode Filling Slots (Pengisian Tempat)**
+
+Kita memiliki <InlineMath math="7" /> bendera dengan syarat khusus: **Armenia** dan **Belgia** wajib berada di ujung barisan. Kita dapat memvisualisasikan penyusunannya menggunakan kotak-kotak (slot) berikut.
+
+**Langkah 1: Tentukan Posisi Ujung**
+
+Hanya ada <InlineMath math="2" /> kemungkinan untuk posisi ujung: Armenia di kiri dan Belgia di kanan, atau sebaliknya. Maka, kita tulis angka <InlineMath math="2" /> pada kotak pertama sebagai faktor pengali untuk variasi ujung.
+
+**Langkah 2: Isi Posisi Tengah**
+
+Tersisa <InlineMath math="5" /> bendera (China, Denmark, Ekuador, Finlandia, Ghana) untuk mengisi <InlineMath math="5" /> posisi di tengah. Kita isi slot sisanya secara menurun (<InlineMath math="5, 4, 3, 2, 1" />) sesuai prinsip permutasi.
+
+Visualisasi pengisian kotaknya adalah sebagai berikut:
+
+<MathContainer>
+  <BlockMath math="\begin{array}{|c|c|c|c|c|c|} \hline 2 & 5 & 4 & 3 & 2 & 1 \\ \hline \end{array}" />
+</MathContainer>
+
+Angka <InlineMath math="2" /> mewakili cara menyusun posisi ujung.
+
+Angka <InlineMath math="5, 4, 3, 2, 1" /> mewakili cara menyusun <InlineMath math="5" /> bendera di tengah (<InlineMath math="5!" />).
+
+**Perhitungan Akhir**
+
+Total cara adalah hasil perkalian dari semua angka dalam kotak tersebut.
+
+<MathContainer>
+  <BlockMath math="\text{Total} = 2 \times (5 \times 4 \times 3 \times 2 \times 1)" />
+  <BlockMath math="\text{Total} = 2 \times 5!" />
+  <BlockMath math="\text{Total} = 2(5!)" />
+</MathContainer>
+
+Jadi, terdapat <InlineMath math="2(5!)" /> cara mengatur bendera tersebut.

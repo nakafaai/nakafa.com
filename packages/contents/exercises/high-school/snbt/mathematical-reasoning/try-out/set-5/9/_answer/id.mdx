@@ -1,0 +1,30 @@
+export const metadata = {
+  title: "Pembahasan Soal 9",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/09/2026",
+};
+
+Kita akan menggunakan aturan perkalian (*filling slots*) untuk menyusun nomor rumah dua digit tersebut.
+
+**Identifikasi Angka yang Tersedia**
+
+Bilangan cacah kurang dari <InlineMath math="10" /> adalah <InlineMath math="\{0, 1, 2, 3, 4, 5, 6, 7, 8, 9\}" />. Syarat soal adalah **semua digit ganjil**. Maka, angka yang boleh digunakan hanyalah:
+
+<MathContainer>
+  <BlockMath math="\{1, 3, 5, 7, 9\}" />
+</MathContainer>
+
+Terdapat <InlineMath math="5" /> angka ganjil yang tersedia. Karena nomor rumah terdiri dari dua digit, kita memiliki dua posisi yang harus diisi:
+
+1.  **Digit Pertama**: Dapat dipilih dari <InlineMath math="5" /> angka ganjil tersebut.
+2.  **Digit Kedua**: Juga dapat dipilih dari <InlineMath math="5" /> angka ganjil tersebut (boleh berulang).
+
+**Perhitungan Total Kemungkinan**
+
+Total kemungkinannya adalah hasil kali dari banyaknya pilihan untuk setiap posisi:
+
+<MathContainer>
+  <BlockMath math="\text{Total} = 5 \times 5 = 25" />
+</MathContainer>
+
+Jadi, terdapat <InlineMath math="25" /> kemungkinan nomor rumah.

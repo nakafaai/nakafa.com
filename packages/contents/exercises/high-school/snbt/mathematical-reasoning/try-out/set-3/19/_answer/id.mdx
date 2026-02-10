@@ -1,0 +1,62 @@
+export const metadata = {
+  title: "Pembahasan Soal 19",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/08/2026",
+};
+
+import { Graph } from "../graph";
+
+**Visualisasi Geometri**
+
+<Graph
+  title="Ilustrasi Posisi Kapal dan Bukit"
+  description={
+    <>
+      Visualisasi pergerakan kapal dari titik <InlineMath math="C" /> ke dermaga{" "}
+      <InlineMath math="D" /> dengan sudut elevasi terhadap puncak bukit{" "}
+      <InlineMath math="A" />.
+    </>
+  }
+/>
+
+**Analisis Posisi**
+
+Misalkan:
+- <InlineMath math="A" />: Puncak bukit
+- <InlineMath math="B" />: Dasar bukit (tegak lurus dengan tanah)
+- <InlineMath math="C" />: Posisi awal kapal
+- <InlineMath math="D" />: Posisi dermaga (posisi akhir kapal)
+
+Diketahui:
+- Jarak pergerakan kapal <InlineMath math="CD = 2\text{ km}" />.
+- Jarak pandang awal <InlineMath math="AC = 12\text{ km}" />.
+- Sudut elevasi awal di <InlineMath math="C" /> adalah <InlineMath math="37^\circ" />.
+- Sudut elevasi akhir di <InlineMath math="D" /> adalah <InlineMath math="53^\circ" />.
+
+Kita diminta mencari jarak dasar bukit ke ujung dermaga, yaitu panjang <InlineMath math="BD" />.
+
+**Perhitungan Jarak**
+
+Perhatikan segitiga siku-siku <InlineMath math="ABC" />. Kita dapat menggunakan perbandingan cosinus pada sudut <InlineMath math="C" /> (<InlineMath math="37^\circ" />):
+
+<MathContainer>
+  <BlockMath math="\cos 37^\circ = \frac{\text{Samping}}{\text{Miring}} = \frac{BC}{AC}" />
+</MathContainer>
+
+Panjang <InlineMath math="BC" /> adalah total jarak dari dasar bukit ke posisi awal kapal, yang terdiri dari jarak dermaga ke dasar bukit (<InlineMath math="BD" />) dan jarak tempuh kapal (<InlineMath math="CD" />).
+
+<MathContainer>
+  <BlockMath math="BC = BD + CD = BD + 2" />
+</MathContainer>
+
+Substitusikan nilai yang diketahui ke dalam persamaan cosinus:
+
+<MathContainer>
+  <BlockMath math="0,8 = \frac{BD + 2}{12}" />
+  <BlockMath math="0,8 \times 12 = BD + 2" />
+  <BlockMath math="9,6 = BD + 2" />
+  <BlockMath math="BD = 9,6 - 2" />
+  <BlockMath math="BD = 7,6\text{ km}" />
+</MathContainer>
+
+Jadi, jarak dari dasar bukit ke ujung dermaga adalah <InlineMath math="7,6\text{ km}" />.

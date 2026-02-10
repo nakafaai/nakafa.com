@@ -3,7 +3,7 @@
 import {
   ArrowDown01Icon,
   BookOpen02Icon,
-  StartUp02Icon,
+  Rocket01Icon,
   StopWatchIcon,
   Tick01Icon,
   Timer02Icon,
@@ -130,7 +130,7 @@ export function StartExerciseButton({
     >
       <ButtonGroup>
         <Button onClick={() => setOpen(true)} type="button">
-          <HugeIcons icon={StartUp02Icon} />
+          <HugeIcons icon={Rocket01Icon} />
           {t("start")}
         </Button>
 
@@ -167,7 +167,7 @@ export function StartExerciseButton({
                 form="exercise-attempt-form"
                 type="submit"
               >
-                <Spinner icon={StartUp02Icon} isLoading={isSubmitting} />
+                <Spinner icon={Rocket01Icon} isLoading={isSubmitting} />
                 {t("start")}
               </Button>
             )}

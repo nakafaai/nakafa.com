@@ -1,0 +1,44 @@
+export const metadata = {
+  title: "Pembahasan Soal 18",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/08/2026",
+};
+
+import { Graph } from "../graph";
+
+<Graph
+  title="Ilustrasi Posisi Kapal dan Bukit"
+  description={
+    <>
+      Visualisasi posisi titik <InlineMath math="A" />, <InlineMath math="B" />,{" "}
+      <InlineMath math="C" />, dan <InlineMath math="D" /> beserta sudut elevasi
+      pengamatan.
+    </>
+  }
+/>
+
+Misalkan <InlineMath math="A" /> puncak bukit, <InlineMath math="B" /> kaki bukit, <InlineMath math="C" /> posisi awal kapal, dan <InlineMath math="D" /> posisi dermaga. Tinggi bukit adalah <InlineMath math="AB = h" />. Gunakan segitiga siku-siku <InlineMath math="ABC" /> dan sudut elevasi di <InlineMath math="C" />.
+
+<MathContainer>
+  <BlockMath math="\cos 37^\circ = \frac{BC}{AC}" />
+  <BlockMath math="0,8 = \frac{BD + 2}{12}" />
+  <BlockMath math="BD = 7,6" />
+</MathContainer>
+
+Dengan sudut elevasi di <InlineMath math="D" />, gunakan cosinus untuk mendapatkan <InlineMath math="AD" />.
+
+<MathContainer>
+  <BlockMath math="\cos 53^\circ = \frac{BD}{AD}" />
+  <BlockMath math="0,6 = \frac{7,6}{AD}" />
+  <BlockMath math="AD = \frac{7,6}{0,6} = \frac{38}{3}" />
+</MathContainer>
+
+
+
+<MathContainer>
+  <BlockMath math="\sin 53^\circ = \frac{AB}{AD}" />
+  <BlockMath math="0,8 = \frac{AB}{\frac{38}{3}}" />
+  <BlockMath math="AB = \frac{152}{15} = 10\frac{2}{15}" />
+</MathContainer>
+
+Jadi, tinggi bukit adalah <InlineMath math="10\frac{2}{15}\text{ km}" />.

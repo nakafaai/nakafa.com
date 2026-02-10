@@ -1,0 +1,54 @@
+export const metadata = {
+  title: "Pembahasan Soal 2",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/08/2026",
+};
+
+Pertama, kita identifikasi batasan masalahnya:
+
+1.  Total budget: **Rp<InlineMath math="400.000,00" />**.
+2.  Total barang: **<InlineMath math="4" /> buah**.
+3.  Wajib beli: Minimal **<InlineMath math="1" /> Snack Bouquet** (Rp<InlineMath math="70.000,00" />).
+
+Langkah pertama adalah mengurangi total budget dengan harga barang wajib untuk mengetahui sisa uang yang tersedia.
+
+<MathContainer>
+  <BlockMath math="\text{Sisa Budget} = \text{Total Budget} - \text{Harga Snack}" />
+  <BlockMath math="\text{Sisa Budget} = 400.000 - 70.000 = 330.000" />
+</MathContainer>
+
+Sekarang kita memiliki sisa budget **Rp<InlineMath math="330.000,00" />** untuk membeli **<InlineMath math="3" /> buah bouquet** lagi (karena total yang diinginkan adalah <InlineMath math="4" /> buah, dan <InlineMath math="1" /> sudah dibeli).
+
+Mari kita cek kombinasi yang mungkin untuk menghabiskan Rp<InlineMath math="330.000,00" /> dengan <InlineMath math="3" /> barang. Jika kita melihat daftar harga, **Money Bouquet** berharga Rp<InlineMath math="130.000,00" />.
+
+Jika kita membeli **<InlineMath math="2" /> Money Bouquet**:
+
+<MathContainer>
+  <BlockMath math="2 \times 130.000 = 260.000" />
+</MathContainer>
+
+Sisa uang setelah membeli 2 Money Bouquet adalah:
+
+<MathContainer>
+  <BlockMath math="330.000 - 260.000 = 70.000" />
+</MathContainer>
+
+Sisa **Rp<InlineMath math="70.000,00" />** ini pas untuk membeli **<InlineMath math="1" /> Snack Bouquet** lagi.
+
+Jadi, rincian total pembelian kita adalah:
+
+| Item | Jumlah | Harga Satuan | Total Harga |
+| :--- | :---: | :--- | :--- |
+| **Snack Bouquet (Wajib)** | <InlineMath math="1" /> | Rp<InlineMath math="70.000" /> | Rp<InlineMath math="70.000" /> |
+| **Money Bouquet** | <InlineMath math="2" /> | Rp<InlineMath math="130.000" /> | Rp<InlineMath math="260.000" /> |
+| **Snack Bouquet (Tambahan)** | <InlineMath math="1" /> | Rp<InlineMath math="70.000" /> | Rp<InlineMath math="70.000" /> |
+| **Total** | **<InlineMath math="4" />** | | **Rp<InlineMath math="400.000" />** |
+
+Total item yang dibeli adalah:
+
+<MathContainer>
+  <BlockMath math="(1 \text{ Snack Wajib} + 1 \text{ Snack Tambahan}) + 2 \text{ Money}" />
+  <BlockMath math="= 2 \text{ Snack Bouquet} + 2 \text{ Money Bouquet}" />
+</MathContainer>
+
+Kombinasi ini sesuai dengan budget dan jumlah barang yang diminta.

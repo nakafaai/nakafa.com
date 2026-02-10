@@ -1,0 +1,45 @@
+export const metadata = {
+  title: "Pembahasan Soal 1",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/09/2026",
+};
+
+Misalkan harga satu ikat pinggang adalah <InlineMath math="x" /> dan harga satu dasi adalah <InlineMath math="y" />. Berdasarkan informasi pada soal, kita dapat menyusun sistem persamaan linear dua variabel sebagai berikut:
+
+<MathContainer>
+  <BlockMath math="3x + 2y = 100.000" />
+  <BlockMath math="x + 3y = 62.500" />
+</MathContainer>
+
+Untuk mencari nilai <InlineMath math="x" /> dan <InlineMath math="y" />, kita dapat menggunakan metode eliminasi. Kita akan mengeliminasi variabel <InlineMath math="x" /> terlebih dahulu dengan mengalikan persamaan kedua dengan <InlineMath math="3" /> agar koefisien <InlineMath math="x" /> pada kedua persamaan menjadi sama.
+
+<MathContainer>
+  <BlockMath math="\begin{cases} 3x + 2y = 100.000 \\ x + 3y = 62.500 \quad (\times 3) \end{cases}" />
+  <BlockMath math="\Rightarrow \begin{cases} 3x + 2y = 100.000 \\ 3x + 9y = 187.500 \end{cases}" />
+</MathContainer>
+
+Selanjutnya, kita kurangkan persamaan kedua yang telah dikalikan dengan persamaan pertama untuk mendapatkan nilai <InlineMath math="y" />.
+
+<MathContainer>
+  <BlockMath math="(3x + 9y) - (3x + 2y) = 187.500 - 100.000" />
+  <BlockMath math="7y = 87.500" />
+  <BlockMath math="y = \frac{87.500}{7}" />
+  <BlockMath math="y = 12.500" />
+</MathContainer>
+
+Setelah mendapatkan nilai <InlineMath math="y = 12.500" />, kita substitusikan nilai tersebut ke salah satu persamaan awal, misalnya persamaan <InlineMath math="x + 3y = 62.500" />, untuk mendapatkan nilai <InlineMath math="x" />.
+
+<MathContainer>
+  <BlockMath math="x + 3(12.500) = 62.500" />
+  <BlockMath math="x + 37.500 = 62.500" />
+  <BlockMath math="x = 62.500 - 37.500" />
+  <BlockMath math="x = 25.000" />
+</MathContainer>
+
+Jadi, harga satu ikat pinggang adalah <InlineMath math="\text{Rp }25.000,00" /> dan harga satu dasi adalah <InlineMath math="\text{Rp }12.500,00" />. Karena Yunus ingin membeli masing-masing <InlineMath math="1" /> buah, maka total yang harus dibayar adalah jumlah dari harga keduanya.
+
+<MathContainer>
+  <BlockMath math="x + y = 25.000 + 12.500 = 37.500" />
+</MathContainer>
+
+Dengan demikian, Yunus harus membayar sebesar <InlineMath math="\text{Rp }37.500,00" />.

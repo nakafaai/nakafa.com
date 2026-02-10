@@ -1,0 +1,39 @@
+export const metadata = {
+  title: "Solution to Question 11",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/08/2026",
+};
+
+**Filling Slots Method**
+
+We have <InlineMath math="7" /> flags with a specific condition: **Armenia** and **Belgium** must be at the ends of the row. We can visualize the arrangement using slots (boxes).
+
+**Step 1: Determine End Positions**
+
+There are only <InlineMath math="2" /> possibilities for the ends: Armenia on the left and Belgium on the right, or vice versa. Thus, we write the number <InlineMath math="2" /> in the first box as the multiplier for the end variations.
+
+**Step 2: Fill Middle Positions**
+
+There are <InlineMath math="5" /> remaining flags (China, Denmark, Ecuador, Finland, Ghana) to fill the <InlineMath math="5" /> middle positions. We fill the remaining slots in descending order (<InlineMath math="5, 4, 3, 2, 1" />) following the permutation principle.
+
+Here is the visualization of the filled slots:
+
+<MathContainer>
+  <BlockMath math="\begin{array}{|c|c|c|c|c|c|} \hline 2 & 5 & 4 & 3 & 2 & 1 \\ \hline \end{array}" />
+</MathContainer>
+
+The number <InlineMath math="2" /> represents the ways to arrange the ends.
+
+The numbers <InlineMath math="5, 4, 3, 2, 1" /> represent the ways to arrange the <InlineMath math="5" /> middle flags (<InlineMath math="5!" />).
+
+**Final Calculation**
+
+The total number of ways is the product of all numbers in the boxes.
+
+<MathContainer>
+  <BlockMath math="\text{Total} = 2 \times (5 \times 4 \times 3 \times 2 \times 1)" />
+  <BlockMath math="\text{Total} = 2 \times 5!" />
+  <BlockMath math="\text{Total} = 2(5!)" />
+</MathContainer>
+
+Thus, there are <InlineMath math="2(5!)" /> ways to arrange the flags.

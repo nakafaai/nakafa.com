@@ -1,0 +1,70 @@
+export const metadata = {
+  title: "Pembahasan Soal 15",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/09/2026",
+};
+
+Misalkan umur Bimo sekarang adalah <InlineMath math="B" /> dan umur Ayah sekarang adalah <InlineMath math="A" />. Kita akan menerjemahkan informasi verbal dari soal menjadi model matematika yang presisi.
+
+Pertama, kita analisis kondisi masa lalu: "Enam tahun lalu, umur Bimo <InlineMath math="4" /> tahun lebih muda dari seperenam umur Ayahnya." Kalimat ini dapat kita tuliskan dalam bentuk persamaan sebagai berikut:
+
+<MathContainer>
+  <BlockMath math="(B - 6) = \frac{1}{6}(A - 6) - 4" />
+</MathContainer>
+
+Kedua, kita analisis kondisi saat ini: "Umur Bimo sekarang <InlineMath math="3" /> tahun lebih tua dari seperdelapan umur Ayahnya." Pernyataan ini menghasilkan persamaan kedua:
+
+<MathContainer>
+  <BlockMath math="B = \frac{1}{8}A + 3" />
+</MathContainer>
+
+Kini kita memiliki sistem persamaan linear dua variabel. Langkah selanjutnya adalah menyederhanakan persamaan pertama agar lebih mudah dioperasikan. Kita akan menghilangkan pecahan dan mengelompokkan variabel:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned}
+B - 6 &= \frac{1}{6}(A - 6) - 4 \\
+B - 2 &= \frac{1}{6}(A - 6) \\
+6(B - 2) &= A - 6 \\
+6B - 12 &= A - 6 \\
+6B - A &= 6 \quad \dots(1)
+\end{aligned}" />
+</MathContainer>
+
+Selanjutnya, kita modifikasi persamaan kedua agar memiliki bentuk yang selaras dengan persamaan <InlineMath math="(1)" /> untuk memudahkan proses eliminasi:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned}
+B &= \frac{1}{8}A + 3 \\
+8B &= A + 24 \\
+8B - A &= 24 \quad \dots(2)
+\end{aligned}" />
+</MathContainer>
+
+Dengan dua persamaan linear yang rapi, kita dapat mengeliminasi variabel <InlineMath math="A" /> dengan mengurangkan persamaan <InlineMath math="(2)" /> dengan persamaan <InlineMath math="(1)" />:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned}
+(8B - A) - (6B - A) &= 24 - 6 \\
+2B &= 18 \\
+\therefore B &= 9
+\end{aligned}" />
+</MathContainer>
+
+Setelah mengetahui umur Bimo adalah 9 tahun, kita substitusikan nilai <InlineMath math="B" /> ke persamaan <InlineMath math="(1)" /> untuk mendapatkan umur Ayah:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned}
+6(9) - A &= 6 \\
+54 - A &= 6 \\
+A &= 54 - 6 \\
+\therefore A &= 48
+\end{aligned}" />
+</MathContainer>
+
+Terakhir, kita hitung jumlah umur Bimo dan Ayahnya sekarang:
+
+<MathContainer>
+  <BlockMath math="A + B = 48 + 9 = 57" />
+</MathContainer>
+
+Jadi, jumlah umur mereka saat ini adalah <InlineMath math="57" /> tahun.

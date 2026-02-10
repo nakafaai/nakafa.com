@@ -1,0 +1,26 @@
+export const metadata = {
+  title: "Solution Question 6",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/26/2025",
+};
+
+We can model this problem using the concept of a **Geometric Series**. The THR Bima receives each year forms a geometric sequence because each year the amount doubles from the previous year.
+
+Given Bima's monthly salary is <InlineMath math="Rp3.000.000,00" />. The first step is to determine the first term (<InlineMath math="a" />), which is the THR amount in the first year:
+
+<MathContainer>
+  <BlockMath math="a = 10\% \times 3,000,000 = 300,000" />
+</MathContainer>
+
+Since the THR always doubles from the previous year, the common ratio (<InlineMath math="r" />) of this sequence is <InlineMath math="2" />. We need to find the total THR over <InlineMath math="5" /> years, which corresponds to calculating the sum of the first <InlineMath math="5" /> terms (<InlineMath math="S_5" />) of this geometric series.
+
+The formula for the sum of the first <InlineMath math="n" /> terms of a geometric series is <InlineMath math="S_n = \frac{a(r^n - 1)}{r - 1}" />. Substituting the values <InlineMath math="a = 300,000" />, <InlineMath math="r = 2" />, and <InlineMath math="n = 5" /> into the formula:
+
+<MathContainer>
+  <BlockMath math="S_5 = \frac{300,000(2^5 - 1)}{2 - 1}" />
+  <BlockMath math="S_5 = \frac{300,000(32 - 1)}{1}" />
+  <BlockMath math="S_5 = 300,000 \times 31" />
+  <BlockMath math="S_5 = 9,300,000" />
+</MathContainer>
+
+Thus, the total THR Bima receives after working for <InlineMath math="5" /> years is **<InlineMath math="Rp9.300.000,00" />**.

@@ -1,0 +1,25 @@
+export const metadata = {
+  title: "Solution Question 7",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/26/2025",
+};
+
+Yanuar's running training pattern forms a **geometric sequence** because the distance doubles every week. This means the common ratio (<InlineMath math="r" />) of the sequence is <InlineMath math="2" />.
+
+The key information we have is the distance in the <InlineMath math="3\text{rd}" /> week (<InlineMath math="U_3" />), which is <InlineMath math="4\text{ km}" />. Using the formula for the <InlineMath math="n\text{-th}" /> term of a geometric sequence, <InlineMath math="U_n = ar^{n-1}" />, we can backtrack to find the initial distance in the first week (<InlineMath math="a" />):
+
+<MathContainer>
+  <BlockMath math="U_3 = a \cdot r^{3-1}" />
+  <BlockMath math="4 = a \cdot 2^2" />
+  <BlockMath math="4 = 4a \implies a = 1\text{ km}" />
+</MathContainer>
+
+Now that we know Yanuar started by running <InlineMath math="1\text{ km}" /> in the first week, we can calculate the total distance over <InlineMath math="5" /> weeks (<InlineMath math="S_5" />) using the geometric series sum formula <InlineMath math="S_n = \frac{a(r^n - 1)}{r - 1}" />:
+
+<MathContainer>
+  <BlockMath math="S_5 = \frac{1(2^5 - 1)}{2 - 1}" />
+  <BlockMath math="S_5 = \frac{32 - 1}{1}" />
+  <BlockMath math="S_5 = 31\text{ km}" />
+</MathContainer>
+
+Thus, the total distance covered by Yanuar during the training is **<InlineMath math="31\text{ km}" />**.

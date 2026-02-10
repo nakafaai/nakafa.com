@@ -1,0 +1,44 @@
+export const metadata = {
+  title: "Answer to Question 6",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/09/2026",
+};
+
+It is given that the ages of Pak Asep's children form an arithmetic progression with the number of children <InlineMath math="n = 6" />. Let <InlineMath math="U_n" /> be the age of the <InlineMath math="n" />-th child.
+
+From the problem information:
+- The age of the <InlineMath math="3" />rd child is <InlineMath math="18" /> years: <InlineMath math="U_3 = 18" />.
+- The age of the <InlineMath math="5" />th child is <InlineMath math="16" /> years: <InlineMath math="U_5 = 16" />.
+
+In an arithmetic progression, the formula for the <InlineMath math="n" />-th term is <InlineMath math="U_n = a + (n-1)b" />. We can form the equations:
+
+<MathContainer>
+  <BlockMath math="\begin{cases} U_3 = a + 2b = 18 \\ U_5 = a + 4b = 16 \end{cases}" />
+</MathContainer>
+
+Subtract the first equation from the second to find the common difference (<InlineMath math="b" />):
+
+<MathContainer>
+  <BlockMath math="(a + 4b) - (a + 2b) = 16 - 18" />
+  <BlockMath math="2b = -2 \implies b = -1" />
+</MathContainer>
+
+Substitute <InlineMath math="b = -1" /> into the equation for <InlineMath math="U_3" /> to find the first term (<InlineMath math="a" />):
+
+<MathContainer>
+  <BlockMath math="a + 2(-1) = 18" />
+  <BlockMath math="a - 2 = 18 \implies a = 20" />
+</MathContainer>
+
+So, the age of the first child is <InlineMath math="20" /> years, and the age difference is <InlineMath math="-1" /> year. The ages of the six children are: <InlineMath math="20, 19, 18, 17, 16, 15" />.
+
+The sum of all children's ages (<InlineMath math="S_6" />) can be calculated using the arithmetic series formula:
+
+<MathContainer>
+  <BlockMath math="S_n = \frac{n}{2} (2a + (n-1)b)" />
+  <BlockMath math="S_6 = \frac{6}{2} (2(20) + (6-1)(-1))" />
+  <BlockMath math="S_6 = 3 (40 - 5)" />
+  <BlockMath math="S_6 = 3 (35) = 105" />
+</MathContainer>
+
+Thus, the sum of the ages of all Pak Asep's children is <InlineMath math="105" /> years.

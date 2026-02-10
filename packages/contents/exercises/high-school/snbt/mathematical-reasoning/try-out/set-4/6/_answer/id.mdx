@@ -1,0 +1,26 @@
+export const metadata = {
+  title: "Pembahasan Soal 6",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/26/2025",
+};
+
+Kita dapat memodelkan masalah ini menggunakan konsep **Deret Geometri**. THR yang diterima Bima setiap tahunnya membentuk barisan geometri karena setiap tahunnya jumlah THR menjadi dua kali lipat dari tahun sebelumnya.
+
+Diketahui gaji bulanan Bima adalah <InlineMath math="Rp3.000.000,00" />. Langkah pertama adalah menentukan nilai suku pertama (<InlineMath math="a" />), yaitu besar THR pada tahun pertama:
+
+<MathContainer>
+  <BlockMath math="a = 10\% \times 3.000.000 = 300.000" />
+</MathContainer>
+
+Karena THR selalu menjadi dua kali lipat dari tahun sebelumnya, maka rasio (<InlineMath math="r" />) dari barisan ini adalah <InlineMath math="2" />. Kita diminta untuk mencari jumlah total THR selama <InlineMath math="5" /> tahun, yang berarti kita mencari jumlah <InlineMath math="5" /> suku pertama (<InlineMath math="S_5" />) dari deret geometri ini.
+
+Rumus jumlah <InlineMath math="n" /> suku pertama deret geometri adalah <InlineMath math="S_n = \frac{a(r^n - 1)}{r - 1}" />. Substitusikan nilai <InlineMath math="a = 300.000" />, <InlineMath math="r = 2" />, dan <InlineMath math="n = 5" /> ke dalam rumus tersebut:
+
+<MathContainer>
+  <BlockMath math="S_5 = \frac{300.000(2^5 - 1)}{2 - 1}" />
+  <BlockMath math="S_5 = \frac{300.000(32 - 1)}{1}" />
+  <BlockMath math="S_5 = 300.000 \times 31" />
+  <BlockMath math="S_5 = 9.300.000" />
+</MathContainer>
+
+Jadi, total THR yang diterima Bima selama <InlineMath math="5" /> tahun bekerja adalah **<InlineMath math="Rp9.300.000,00" />**.

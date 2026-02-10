@@ -1,0 +1,43 @@
+export const metadata = {
+  title: "Solution Question 18",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/08/2026",
+};
+
+import { Graph } from "../graph";
+
+<Graph
+  title="Boat and Hill Position Illustration"
+  description={
+    <>
+      Visualization of points <InlineMath math="A" />, <InlineMath math="B" />,{" "}
+      <InlineMath math="C" />, and <InlineMath math="D" /> with elevation angles.
+    </>
+  }
+/>
+
+Let <InlineMath math="A" /> be the hilltop, <InlineMath math="B" /> the base, <InlineMath math="C" /> the initial boat position, and <InlineMath math="D" /> the pier position. The height of the hill is <InlineMath math="AB = h" />. Use the right triangle <InlineMath math="ABC" /> with the elevation angle at <InlineMath math="C" />.
+
+<MathContainer>
+  <BlockMath math="\cos 37^\circ = \frac{BC}{AC}" />
+  <BlockMath math="0.8 = \frac{BD + 2}{12}" />
+  <BlockMath math="BD = 7.6" />
+</MathContainer>
+
+Using the elevation angle at <InlineMath math="D" />, apply cosine to find <InlineMath math="AD" />.
+
+<MathContainer>
+  <BlockMath math="\cos 53^\circ = \frac{BD}{AD}" />
+  <BlockMath math="0.6 = \frac{7.6}{AD}" />
+  <BlockMath math="AD = \frac{7.6}{0.6} = \frac{38}{3}" />
+</MathContainer>
+
+
+
+<MathContainer>
+  <BlockMath math="\sin 53^\circ = \frac{AB}{AD}" />
+  <BlockMath math="0.8 = \frac{AB}{\frac{38}{3}}" />
+  <BlockMath math="AB = \frac{152}{15} = 10\frac{2}{15}" />
+</MathContainer>
+
+Thus, the height of the hill is <InlineMath math="10\frac{2}{15}\text{ km}" />.

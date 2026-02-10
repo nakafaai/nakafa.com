@@ -1,0 +1,37 @@
+export const metadata = {
+  title: "Solution Question 14",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/26/2025",
+};
+
+To solve this efficiently, we use the concept of work rate, where rate is inversely proportional to time. Let the work rates of each person be <InlineMath math="v_A" />, <InlineMath math="v_B" />, and <InlineMath math="v_C" />.
+
+Based on the problem, we can set up three combined rate equations:
+
+<MathContainer>
+  <BlockMath math="v_A + v_B = \frac{1}{12}" />
+  <BlockMath math="v_A + v_C = \frac{1}{15}" />
+  <BlockMath math="v_B + v_C = \frac{1}{20}" />
+</MathContainer>
+
+Instead of finding each value individually, we can sum all three equations. Notice that each variable appears twice.
+
+<MathContainer>
+  <BlockMath math="(v_A + v_B) + (v_A + v_C) + (v_B + v_C) = \frac{1}{12} + \frac{1}{15} + \frac{1}{20}" />
+  <BlockMath math="2(v_A + v_B + v_C) = \frac{5}{60} + \frac{4}{60} + \frac{3}{60}" />
+  <BlockMath math="2(v_{total}) = \frac{12}{60} = \frac{1}{5}" />
+</MathContainer>
+
+From the equation above, we get their total combined work rate:
+
+<MathContainer>
+  <BlockMath math="v_{total} = \frac{1}{5} \div 2 = \frac{1}{10}" />
+</MathContainer>
+
+Since the total work rate is <InlineMath math="\frac{1}{10}" /> of the job per day, the time required to complete 1 full job is the reciprocal.
+
+<MathContainer>
+  <BlockMath math="t = \frac{1}{v_{total}} = 10" />
+</MathContainer>
+
+Thus, they need <InlineMath math="10" /> days.

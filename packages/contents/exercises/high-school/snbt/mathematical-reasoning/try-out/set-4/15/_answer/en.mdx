@@ -1,0 +1,41 @@
+export const metadata = {
+  title: "Solution Question 15",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "11/26/2025",
+};
+
+We start by defining variables for speed and time. Let <InlineMath math="v_1" /> be the speed of the first car, so the speed of the second car is <InlineMath math="v_2 = v_1 + 15" />. We know the difference in their travel times is 1 hour.
+
+Since time is distance divided by speed (<InlineMath math="t = \frac{s}{v}" />), we can set up an equation based on this time difference:
+
+<MathContainer>
+  <BlockMath math="t_1 - t_2 = 1" />
+  <BlockMath math="\frac{450}{v_1} - \frac{450}{v_1 + 15} = 1" />
+</MathContainer>
+
+Next, we solve this equation to find <InlineMath math="v_1" />. Multiply both sides by <InlineMath math="v_1(v_1 + 15)" /> to eliminate the denominators:
+
+<MathContainer>
+  <BlockMath math="450(v_1 + 15) - 450v_1 = v_1(v_1 + 15)" />
+  <BlockMath math="450v_1 + 6750 - 450v_1 = v_1^2 + 15v_1" />
+  <BlockMath math="6750 = v_1^2 + 15v_1" />
+  <BlockMath math="v_1^2 + 15v_1 - 6750 = 0" />
+</MathContainer>
+
+We factor the quadratic equation:
+
+<MathContainer>
+  <BlockMath math="(v_1 + 90)(v_1 - 75) = 0" />
+</MathContainer>
+
+Since speed cannot be negative, we take <InlineMath math="v_1 = 75" /> km/h. Thus, the speed of the second car is:
+
+<MathContainer>
+  <BlockMath math="v_2 = 75 + 15 = 90 \text{ km/h}" />
+</MathContainer>
+
+Finally, we calculate the average speed of the two cars:
+
+<MathContainer>
+  <BlockMath math="\bar{v} = \frac{v_1 + v_2}{2} = \frac{75 + 90}{2} = \frac{165}{2} = 82.5 \text{ km/h}" />
+</MathContainer>

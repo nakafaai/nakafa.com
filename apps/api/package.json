@@ -24,14 +24,14 @@
     "@t3-oss/env-nextjs": "^0.13.10",
     "effect": "^3.19.16",
     "next": "16.1.6",
-    "pino": "^10.3.0",
+    "pino": "^10.3.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "shiki": "^3.22.0"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "25.2.1",
+    "@types/node": "25.2.2",
     "@types/react": "19.2.13",
     "@vitest/coverage-istanbul": "^4.0.18",
     "typescript": "^5.9.3",

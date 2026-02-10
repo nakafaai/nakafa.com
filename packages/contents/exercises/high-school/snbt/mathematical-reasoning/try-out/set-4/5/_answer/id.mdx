@@ -1,0 +1,59 @@
+import { Graph } from "../graph";
+
+export const metadata = {
+  title: "Pembahasan Soal 5",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/08/2026",
+};
+
+**Visualisasi Masalah**
+
+<Graph
+  title={
+    <>
+      Bidang <InlineMath math="ADFG" />
+    </>
+  }
+  description={
+    <>
+      Bidang diagonal <InlineMath math="ADFG" /> pada balok dengan <InlineMath math="p=2l" /> dan <InlineMath math="t=l" />.
+    </>
+  }
+/>
+
+**Menentukan Lebar Balok**
+
+Gunakan diagonal ruang <InlineMath math="DF" /> untuk menentukan <InlineMath math="l" /> dengan rumus <InlineMath math="d^2 = p^2 + l^2 + t^2" />.
+
+<MathContainer>
+  <BlockMath math="DF^2 = (2l)^2 + l^2 + l^2" />
+  <BlockMath math="81 = 4l^2 + l^2 + l^2" />
+  <BlockMath math="81 = 6l^2" />
+</MathContainer>
+
+<MathContainer>
+  <BlockMath math="l^2 = \frac{81}{6} = \frac{27}{2}" />
+  <BlockMath math="l = \sqrt{\frac{27}{2}} = \frac{3\sqrt{6}}{2}" />
+</MathContainer>
+
+**Menentukan Luas Bidang <InlineMath math="ADFG" />**
+
+Bidang <InlineMath math="ADFG" /> berbentuk persegi panjang dengan sisi <InlineMath math="AD = l" /> dan diagonal sisi depan <InlineMath math="AF" />.
+
+Panjang <InlineMath math="AF" /> didapat dari segitiga siku-siku pada sisi depan:
+
+<MathContainer>
+  <BlockMath math="AF^2 = AB^2 + BF^2" />
+  <BlockMath math="AF^2 = (2l)^2 + l^2 = 5l^2" />
+  <BlockMath math="AF = l\sqrt{5}" />
+</MathContainer>
+
+Luas bidangnya:
+
+<MathContainer>
+  <BlockMath math="L = AD \times AF" />
+  <BlockMath math="L = l \times l\sqrt{5} = l^2\sqrt{5}" />
+  <BlockMath math="L = \frac{27}{2}\sqrt{5}" />
+</MathContainer>
+
+Jadi, luas bidang <InlineMath math="ADFG" /> adalah <InlineMath math="\frac{27\sqrt{5}}{2}" /> cm².

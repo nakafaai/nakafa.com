@@ -1,0 +1,66 @@
+export const metadata = {
+  title: "Pembahasan Soal 7",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/08/2026",
+};
+
+**Membentuk Persamaan**
+
+Keuntungan bertambah secara tetap, sehingga ini adalah barisan aritmetika. Total keuntungan sampai hari ke-<InlineMath math="n" /> dinyatakan sebagai <InlineMath math="S_n" />.
+
+Diketahui:
+1. Total keuntungan sampai hari ke-<InlineMath math="4" /> (<InlineMath math="S_4" />) adalah <InlineMath math="\text{Rp}700.000,00" />.
+2. Total keuntungan sampai hari ke-<InlineMath math="10" /> (<InlineMath math="S_{10}" />) adalah <InlineMath math="\text{Rp}2.200.000,00" />.
+
+Rumus jumlah suku ke-<InlineMath math="n" />:
+
+<MathContainer>
+  <BlockMath math="S_n = \frac{n}{2}(2a + (n-1)b)" />
+</MathContainer>
+
+Dari <InlineMath math="S_4 = 700.000" />:
+
+<MathContainer>
+  <BlockMath math="\frac{4}{2}(2a + 3b) = 700.000" />
+  <BlockMath math="2(2a + 3b) = 700.000" />
+  <BlockMath math="2a + 3b = 350.000 \quad \dots (1)" />
+</MathContainer>
+
+Dari <InlineMath math="S_{10} = 2.200.000" />:
+
+<MathContainer>
+  <BlockMath math="\frac{10}{2}(2a + 9b) = 2.200.000" />
+  <BlockMath math="5(2a + 9b) = 2.200.000" />
+  <BlockMath math="2a + 9b = 440.000 \quad \dots (2)" />
+</MathContainer>
+
+**Eliminasi dan Substitusi**
+
+Eliminasi persamaan <InlineMath math="(1)" /> dan <InlineMath math="(2)" />:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} 2a + 9b &= 440.000 \\ 2a + 3b &= 350.000 \\ \hline 6b &= 90.000 \\ b &= 15.000 \end{aligned}" />
+</MathContainer>
+
+Substitusi <InlineMath math="b = 15.000" /> ke persamaan <InlineMath math="(1)" />:
+
+<MathContainer>
+  <BlockMath math="2a + 3(15.000) = 350.000" />
+  <BlockMath math="2a + 45.000 = 350.000" />
+  <BlockMath math="2a = 305.000" />
+  <BlockMath math="a = 152.500" />
+</MathContainer>
+
+**Menghitung Total Keuntungan Hari ke-<InlineMath math="20" />**
+
+Kita hitung <InlineMath math="S_{20}" />:
+
+<MathContainer>
+  <BlockMath math="S_{20} = \frac{20}{2}(2a + 19b)" />
+  <BlockMath math="S_{20} = 10(305.000 + 19(15.000))" />
+  <BlockMath math="S_{20} = 10(305.000 + 285.000)" />
+  <BlockMath math="S_{20} = 10(590.000)" />
+  <BlockMath math="S_{20} = \text{Rp}5.900.000,00" />
+</MathContainer>
+
+Jadi, total keuntungan sampai hari ke-<InlineMath math="20" /> adalah <InlineMath math="\text{Rp}5.900.000,00" />.

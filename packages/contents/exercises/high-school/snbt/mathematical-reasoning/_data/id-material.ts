@@ -16,6 +16,18 @@ const idMaterials: ExercisesMaterialList = [
         title: "Set 2",
         href: `${BASE_PATH}/try-out/set-2`,
       },
+      {
+        title: "Set 3",
+        href: `${BASE_PATH}/try-out/set-3`,
+      },
+      {
+        title: "Set 4",
+        href: `${BASE_PATH}/try-out/set-4`,
+      },
+      {
+        title: "Set 5",
+        href: `${BASE_PATH}/try-out/set-5`,
+      },
     ],
   },
 ] as const;

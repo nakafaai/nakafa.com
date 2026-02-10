@@ -1,0 +1,34 @@
+export const metadata = {
+  title: "Pembahasan Soal 16",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/09/2026",
+};
+
+Kita diminta untuk mencari jumlah hari di bulan April <InlineMath math="2024" /> dimana Pak Saiful **tidak** menerima kiriman dari Supplier B maupun C.
+
+Langkah pertama, kita identifikasi parameter waktunya. Bulan April memiliki total <InlineMath math="30" /> hari.
+
+Selanjutnya, kita tentukan tanggal pengiriman untuk masing-masing supplier, dimulai dari tanggal <InlineMath math="1" /> April:
+
+<MathContainer>
+  <BlockMath math="B = \{1, 5, 9, 13, 17, 21, 25, 29\}" />
+  <BlockMath math="C = \{1, 8, 15, 22, 29\}" />
+</MathContainer>
+
+Hari dimana Pak Saiful menerima kiriman dari salah satu atau kedua supplier adalah gabungan dari himpunan <InlineMath math="B" /> dan <InlineMath math="C" />:
+
+<MathContainer>
+  <BlockMath math="B \cup C = \{1, 5, 8, 9, 13, 15, 17, 21, 22, 25, 29\}" />
+</MathContainer>
+
+Banyaknya hari dimana ada pengiriman adalah <InlineMath math="11" /> hari.
+
+Untuk mencari hari **tanpa** pengiriman, kita kurangi total hari di bulan April dengan jumlah hari pengiriman:
+
+<MathContainer>
+  <BlockMath math="\text{Hari Tanpa Pengiriman} = \text{Total Hari} - |B \cup C|" />
+  <BlockMath math="= 30 - 11" />
+  <BlockMath math="= 19 \text{ hari}" />
+</MathContainer>
+
+Jadi, terdapat <InlineMath math="19" /> hari dimana Pak Saiful tidak menerima kiriman dari B maupun C.
