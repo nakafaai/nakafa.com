@@ -4,12 +4,36 @@ export const metadata = {
   date: "02/09/2026",
 };
 
-Jumlah bakteri pada hari pertama adalah <InlineMath math="10" />. Setiap hari jumlahnya dikalikan <InlineMath math="2" />, sedangkan setiap <InlineMath math="120" /> jam (setiap <InlineMath math="5" /> hari) setengah dari total bakteri dibunuh sebelum siklus pertumbuhan berikutnya berjalan.
+Persoalan ini dapat diselesaikan dengan konsep barisan geometri, di mana bakteri membelah diri menjadi dua setiap <InlineMath math="24" /> jam (1 hari).
 
-Setelah <InlineMath math="4" /> hari pertama, jumlahnya menjadi <InlineMath math="10 \times 2^4 = 160" />. Pada hari ke-<InlineMath math="5" />, jumlahnya dibunuh setengah menjadi <InlineMath math="80" />. Dari hari ke-<InlineMath math="6" /> sampai hari ke-<InlineMath math="9" />, jumlahnya berlipat dua setiap hari sehingga menjadi <InlineMath math="80 \times 2^4 = 1280" />. Pada hari ke-<InlineMath math="10" />, jumlahnya kembali dibunuh setengah menjadi <InlineMath math="640" />. Setelah itu, selama dua hari berikutnya jumlahnya kembali berlipat dua menjadi <InlineMath math="640 \times 2^2 = 1280" />.
+Pada **5 hari pertama** (hari ke-1 sampai ke-5), jumlah bakteri mengikuti pola barisan geometri dengan suku awal <InlineMath math="a = 10" /> dan rasio <InlineMath math="r = 2" />. Jumlah bakteri pada hari ke-5 adalah:
 
 <MathContainer>
-  <BlockMath math="10 \rightarrow 160 \rightarrow 80 \rightarrow 1280 \rightarrow 640 \rightarrow 1280" />
+  <BlockMath math="U_5 = a \cdot r^{n-1} = 10 \cdot 2^{5-1} = 10 \cdot 16 = 160" />
 </MathContainer>
 
-Jadi, banyaknya bakteri pada hari ke-<InlineMath math="12" /> adalah <InlineMath math="1280" />.
+Setiap <InlineMath math="120" /> jam (5 hari), setengah dari total bakteri dibunuh. Maka sisa bakteri pada akhir hari ke-5 adalah:
+
+<MathContainer>
+  <BlockMath math="160 - \left(\frac{1}{2} \times 160\right) = 80" />
+</MathContainer>
+
+Untuk **5 hari kedua** (hari ke-6 sampai ke-10), siklus dimulai kembali dengan jumlah awal <InlineMath math="80" />. Pada hari ke-6, jumlah bakteri menjadi <InlineMath math="80 \times 2 = 160" />. Maka jumlah bakteri pada hari ke-10 (suku ke-5 dari fase kedua) adalah:
+
+<MathContainer>
+  <BlockMath math="U_5 = 160 \cdot 2^{5-1} = 160 \cdot 16 = 2560" />
+</MathContainer>
+
+Pada akhir hari ke-10, setengah bakteri kembali dibunuh:
+
+<MathContainer>
+  <BlockMath math="2560 \times \frac{1}{2} = 1280" />
+</MathContainer>
+
+Selanjutnya, kita hitung pertumbuhan untuk hari ke-11 dan ke-12:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} \text{Hari ke-11} &= 1280 \times 2 = 2560 \\ \text{Hari ke-12} &= 2560 \times 2 = 5120 \end{aligned}" />
+</MathContainer>
+
+Jadi, banyaknya bakteri pada hari ke-12 pengamatan adalah <InlineMath math="5120" />.

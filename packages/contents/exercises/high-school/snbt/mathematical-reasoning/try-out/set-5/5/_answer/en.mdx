@@ -1,15 +1,39 @@
 export const metadata = {
-  title: "Answer to Question 5",
+  title: "Solution to Question 5",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "02/09/2026",
 };
 
-The initial number of bacteria on day one is <InlineMath math="10" />. The population doubles every day, while every <InlineMath math="120" /> hours (every <InlineMath math="5" /> days) half of the total is killed before the next growth cycle continues.
+This problem can be solved using the concept of a geometric sequence, where bacteria divide into two every <InlineMath math="24" /> hours (1 day).
 
-After the first <InlineMath math="4" /> days, the count becomes <InlineMath math="10 \times 2^4 = 160" />. On day <InlineMath math="5" />, half are killed, leaving <InlineMath math="80" />. From day <InlineMath math="6" /> to day <InlineMath math="9" />, the population doubles each day, giving <InlineMath math="80 \times 2^4 = 1280" />. On day <InlineMath math="10" />, half are killed again, leaving <InlineMath math="640" />. Over the next two days, the population doubles back to <InlineMath math="640 \times 2^2 = 1280" />.
+For the **first 5 days** (day 1 to day 5), the number of bacteria follows a geometric sequence with an initial term <InlineMath math="a = 10" /> and a ratio <InlineMath math="r = 2" />. The number of bacteria on day 5 is:
 
 <MathContainer>
-  <BlockMath math="10 \rightarrow 160 \rightarrow 80 \rightarrow 1280 \rightarrow 640 \rightarrow 1280" />
+  <BlockMath math="U_5 = a \cdot r^{n-1} = 10 \cdot 2^{5-1} = 10 \cdot 16 = 160" />
 </MathContainer>
 
-Thus, the number of bacteria on day <InlineMath math="12" /> is <InlineMath math="1280" />.
+Every <InlineMath math="120" /> hours (5 days), half of the total bacteria are killed. Thus, the remaining bacteria at the end of day 5 is:
+
+<MathContainer>
+  <BlockMath math="160 - \left(\frac{1}{2} \times 160\right) = 80" />
+</MathContainer>
+
+For the **second 5 days** (day 6 to day 10), the cycle restarts with an initial count of <InlineMath math="80" />. On day 6, the number of bacteria becomes <InlineMath math="80 \times 2 = 160" />. Thus, the number of bacteria on day 10 (the 5th term of the second phase) is:
+
+<MathContainer>
+  <BlockMath math="U_5 = 160 \cdot 2^{5-1} = 160 \cdot 16 = 2560" />
+</MathContainer>
+
+At the end of day 10, half of the bacteria are killed again:
+
+<MathContainer>
+  <BlockMath math="2560 \times \frac{1}{2} = 1280" />
+</MathContainer>
+
+Next, we calculate the growth for day 11 and day 12:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} \text{Day 11} &= 1280 \times 2 = 2560 \\ \text{Day 12} &= 2560 \times 2 = 5120 \end{aligned}" />
+</MathContainer>
+
+Thus, the number of bacteria on the 12th day of observation is <InlineMath math="5120" />.
