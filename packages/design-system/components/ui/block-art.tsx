@@ -146,14 +146,22 @@ export function BlockArt({
       hoveredCellsRef.current.delete(index);
       const selector = `[data-cell-index="${index}"]`;
 
-      // Don't reset if cell is currently in idle animation
-      if (idleAnimatedIndicesRef.current.has(index)) {
-        return;
-      }
-
       // Check if element exists before animating
       const element = containerRef.current?.querySelector(selector);
       if (!element) {
+        return;
+      }
+
+      // If cell is in idle animation, restore to secondary color
+      if (idleAnimatedIndicesRef.current.has(index)) {
+        animate(
+          selector,
+          {
+            backgroundColor: "var(--secondary)",
+            scale: 1,
+          },
+          { duration: 0.4, ease: "easeOut" }
+        );
         return;
       }
 
