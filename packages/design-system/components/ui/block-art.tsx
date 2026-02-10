@@ -105,6 +105,7 @@ export function BlockArt({
   const idleIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const idleAnimatedIndicesRef = useRef<Set<number>>(new Set());
   const hoveredCellsRef = useRef<Set<number>>(new Set());
+  const timeoutIdsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
 
   const cellData = useMemo(() => {
     return Array.from({ length: totalCells }, (_, i) => ({
@@ -193,6 +194,12 @@ export function BlockArt({
     const centerRow = Math.floor(Rows / 2);
 
     const updateIdleAnimation = () => {
+      // Clear any pending timeouts from previous animation cycle
+      for (const timeoutId of timeoutIdsRef.current) {
+        clearTimeout(timeoutId);
+      }
+      timeoutIdsRef.current.clear();
+
       // Fade out previous animations with stagger
       const prevIndices = Array.from(idleAnimatedIndicesRef.current);
       for (const index of prevIndices) {
@@ -213,7 +220,7 @@ export function BlockArt({
           (cell.col - centerCol) ** 2 + (cell.row - centerRow) ** 2
         );
 
-        setTimeout(() => {
+        const timeoutId = setTimeout(() => {
           // Check if element still exists before animating
           const element = containerRef.current?.querySelector(selector);
           if (!element) {
@@ -229,6 +236,7 @@ export function BlockArt({
             { duration: 0.4, ease: "easeOut" }
           );
         }, distanceFromCenter * 40);
+        timeoutIdsRef.current.add(timeoutId);
       }
       idleAnimatedIndicesRef.current.clear();
 
@@ -268,7 +276,7 @@ export function BlockArt({
         const selector = `[data-cell-index="${index}"]`;
 
         // Stagger delay based on distance from center
-        setTimeout(
+        const timeoutId = setTimeout(
           () => {
             // Check if element still exists before animating
             const element = containerRef.current?.querySelector(selector);
@@ -294,6 +302,7 @@ export function BlockArt({
           },
           distanceFromCenter * 50 + i * 25
         );
+        timeoutIdsRef.current.add(timeoutId);
       });
     };
 
@@ -308,6 +317,11 @@ export function BlockArt({
       if (idleIntervalRef.current) {
         clearInterval(idleIntervalRef.current);
       }
+      // Clear all pending timeouts
+      for (const timeoutId of timeoutIdsRef.current) {
+        clearTimeout(timeoutId);
+      }
+      timeoutIdsRef.current.clear();
       // Reset all idle animated cells
       for (const index of idleAnimatedIndicesRef.current) {
         if (hoveredCellsRef.current.has(index)) {
