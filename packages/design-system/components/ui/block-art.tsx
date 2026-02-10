@@ -401,7 +401,12 @@ export function BlockArt({
           },
           { duration: 0 }
         );
-      } else if (!hoveredCellsRef.current.has(cellIndex)) {
+      } else if (
+        !(
+          hoveredCellsRef.current.has(cellIndex) ||
+          idleAnimatedIndicesRef.current.has(cellIndex)
+        )
+      ) {
         // Spring physics for natural settle back
         animate(
           selector,
