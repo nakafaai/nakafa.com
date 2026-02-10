@@ -230,6 +230,11 @@ export function BlockArt({
         );
 
         const timeoutId = setTimeout(() => {
+          // Re-check hover state before animating
+          if (hoveredCellsRef.current.has(index)) {
+            return;
+          }
+
           // Check if element still exists before animating
           const element = containerRef.current?.querySelector(selector);
           if (!element) {
@@ -287,6 +292,11 @@ export function BlockArt({
         // Stagger delay based on distance from center
         const timeoutId = setTimeout(
           () => {
+            // Re-check hover state before animating
+            if (hoveredCellsRef.current.has(index)) {
+              return;
+            }
+
             // Check if element still exists before animating
             const element = containerRef.current?.querySelector(selector);
             if (!element) {
@@ -410,12 +420,31 @@ export function BlockArt({
           },
           { duration: 0 }
         );
-      } else if (
-        !(
-          hoveredCellsRef.current.has(cellIndex) ||
-          idleAnimatedIndicesRef.current.has(cellIndex)
-        )
-      ) {
+      } else if (hoveredCellsRef.current.has(cellIndex)) {
+        // Restore hover state after ripple passes
+        animate(
+          selector,
+          {
+            scale: 1.02,
+            backgroundColor: "var(--primary)",
+            boxShadow: "0 0 0px transparent",
+            zIndex: 0,
+          },
+          { duration: 0 }
+        );
+      } else if (idleAnimatedIndicesRef.current.has(cellIndex)) {
+        // Restore idle state after ripple passes
+        animate(
+          selector,
+          {
+            scale: 1,
+            backgroundColor: "var(--secondary)",
+            boxShadow: "0 0 0px transparent",
+            zIndex: 0,
+          },
+          { duration: 0.4, ease: "easeOut" }
+        );
+      } else {
         // Spring physics for natural settle back
         animate(
           selector,
