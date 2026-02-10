@@ -3,6 +3,7 @@ import {
   DEFAULT_LONGITUDE,
 } from "@repo/ai/clients/weather/client";
 import {
+  defaultModel,
   type GatewayProvider,
   type GoogleProvider,
   type ModelId,
@@ -290,7 +291,7 @@ export async function POST(req: Request) {
             availableTools[toolCall.toolName as keyof typeof availableTools];
 
           const { output: repairedArgs } = await generateText({
-            model: model.languageModel("xai/grok-4.1-fast-non-reasoning"),
+            model: model.languageModel(defaultModel),
             output: Output.object({
               schema: tool.inputSchema,
             }),
@@ -383,12 +384,10 @@ export async function POST(req: Request) {
       await streamTextResult.consumeStream();
 
       // Return the messages from the response, to be used in the followup suggestions
-      const messagesFromResponse = (
-        await streamTextResult.response
-      ).messages.filter((m) => m.role === "assistant");
+      const messagesFromResponse = (await streamTextResult.response).messages;
 
       const suggestionsStream = streamText({
-        model: model.languageModel("gemini-3-flash"),
+        model: model.languageModel(defaultModel),
         system: nakafaSuggestions(),
         messages: [...finalMessages, ...messagesFromResponse],
         output: Output.object({
