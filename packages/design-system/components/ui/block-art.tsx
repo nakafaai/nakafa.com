@@ -52,17 +52,25 @@ const MotionBlockCell = memo(function MotionBlockCell({
 }: BlockCellProps) {
   return (
     <motion.div
-      className={cn(
-        "size-full bg-background transition-[transform,background-color,box-shadow,color] duration-500 ease-out",
-        "hover:bg-primary hover:transition-none"
-      )}
+      className="size-full"
       data-cell-index={index}
       data-col={col}
       data-row={row}
-      initial={false}
+      initial={{
+        backgroundColor: "var(--background)",
+        scale: 1,
+      }}
       style={{
         aspectRatio: "1 / 1",
         contain: "layout style paint",
+      }}
+      transition={{
+        duration: 0.5,
+        ease: "easeOut",
+      }}
+      whileHover={{
+        backgroundColor: "var(--primary)",
+        transition: { duration: 0 },
       }}
     />
   );
@@ -114,32 +122,30 @@ export function BlockArt({
     );
 
     const updateIdleAnimation = () => {
-      if (!containerRef.current) {
-        return;
-      }
-
+      // Remove previous idle animations
       for (const index of idleAnimatedIndicesRef.current) {
-        const cell = containerRef.current.querySelector<HTMLElement>(
-          `[data-cell-index="${index}"]`
+        const selector = `[data-cell-index="${index}"]`;
+        animate(
+          selector,
+          { backgroundColor: "var(--background)" },
+          { duration: 0.5, ease: "easeOut" }
         );
-        if (cell) {
-          cell.classList.remove("bg-secondary");
-        }
       }
       idleAnimatedIndicesRef.current.clear();
 
+      // Select new cells for idle animation
       const availableIndices = Array.from({ length: totalCells }, (_, i) => i);
       const shuffledIndices = rngRef.current.shuffle(availableIndices);
 
       for (let i = 0; i < effectiveAnimatedCellCount; i += 1) {
         const index = shuffledIndices[i];
         idleAnimatedIndicesRef.current.add(index);
-        const cell = containerRef.current.querySelector<HTMLElement>(
-          `[data-cell-index="${index}"]`
+        const selector = `[data-cell-index="${index}"]`;
+        animate(
+          selector,
+          { backgroundColor: "var(--secondary)" },
+          { duration: 0.5, ease: "easeOut" }
         );
-        if (cell) {
-          cell.classList.add("bg-secondary");
-        }
       }
     };
 
@@ -154,18 +160,17 @@ export function BlockArt({
       if (idleIntervalRef.current) {
         clearInterval(idleIntervalRef.current);
       }
-      if (containerRef.current) {
-        for (const index of idleAnimatedIndicesRef.current) {
-          const cell = containerRef.current.querySelector<HTMLElement>(
-            `[data-cell-index="${index}"]`
-          );
-          if (cell) {
-            cell.classList.remove("bg-secondary");
-          }
-        }
+      // Reset all idle animated cells
+      for (const index of idleAnimatedIndicesRef.current) {
+        const selector = `[data-cell-index="${index}"]`;
+        animate(
+          selector,
+          { backgroundColor: "var(--background)" },
+          { duration: 0.5, ease: "easeOut" }
+        );
       }
     };
-  }, [totalCells, animatedCellCount, animationInterval, containerRef]);
+  }, [totalCells, animatedCellCount, animationInterval, animate]);
 
   const getWaveIntensity = useCallback(
     (distance: number, radius: number, progress: number) => {
@@ -199,7 +204,7 @@ export function BlockArt({
           selector,
           {
             scale,
-            backgroundColor: `color-mix(in oklch, var(--primary) ${colorOpacity}%, transparent)`,
+            backgroundColor: `color-mix(in oklch, var(--primary) ${colorOpacity}%, var(--background))`,
             boxShadow: `0 0 ${glowBlur}px color-mix(in oklch, var(--primary) ${glowOpacity}%, transparent)`,
             zIndex: 10,
           },
@@ -210,9 +215,9 @@ export function BlockArt({
           selector,
           {
             scale: 1,
-            backgroundColor: "",
-            boxShadow: "",
-            zIndex: "auto",
+            backgroundColor: "var(--background)",
+            boxShadow: "0 0 0px transparent",
+            zIndex: 0,
           },
           { duration: 0.5, ease: "easeOut" }
         );
