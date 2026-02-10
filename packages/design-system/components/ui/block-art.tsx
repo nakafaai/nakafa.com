@@ -3,6 +3,7 @@
 import { useMediaQuery } from "@mantine/hooks";
 import { createSeededRandom } from "@repo/design-system/lib/random";
 import { cn } from "@repo/design-system/lib/utils";
+import { MotionConfig, motion, useAnimate } from "motion/react";
 import {
   type KeyboardEvent,
   type MouseEvent,
@@ -35,10 +36,10 @@ interface BlockCellProps {
   index: number;
   row: number;
   col: number;
-  ref?: React.Ref<HTMLDivElement>;
+  onHoverStart: (index: number) => void;
+  onHoverEnd: (index: number) => void;
 }
 
-const DEFAULT_ANIMATION_COLOR = "bg-secondary";
 const DEFAULT_ANIMATED_CELL_COUNT = 15;
 const DEFAULT_ANIMATION_INTERVAL = 2000;
 const DEFAULT_WAVE_DURATION = 2000;
@@ -46,26 +47,31 @@ const MAX_CONCURRENT_RIPPLES = 3;
 const RIPPLE_RADIUS_MULTIPLIER = 1.5;
 const RIPPLE_WAVE_WIDTH = 2;
 
-const BlockCell = memo(function BlockCell({
+const MotionBlockCell = memo(function MotionBlockCell({
   index,
   row,
   col,
-  ref,
+  onHoverStart,
+  onHoverEnd,
 }: BlockCellProps) {
   return (
-    <div
-      className={cn(
-        "size-full bg-background transition-[transform,background-color,box-shadow,color] duration-500 ease-out",
-        "hover:bg-primary hover:transition-none"
-      )}
+    <motion.div
+      className="size-full will-change-transform"
       data-cell-index={index}
       data-col={col}
       data-row={row}
-      ref={ref}
+      initial={{
+        backgroundColor: "var(--background)",
+        scale: 1,
+      }}
+      onHoverEnd={() => onHoverEnd(index)}
+      onHoverStart={() => onHoverStart(index)}
       style={{
         aspectRatio: "1 / 1",
         contain: "layout style paint",
-        willChange: "transform",
+      }}
+      transition={{
+        backgroundColor: { duration: 0.6, ease: "easeOut" },
       }}
     />
   );
@@ -75,7 +81,7 @@ export function BlockArt({
   gridCols,
   gridRows,
   className,
-  animationColor = DEFAULT_ANIMATION_COLOR,
+  animationColor: _animationColor,
   animatedCellCount = DEFAULT_ANIMATED_CELL_COUNT,
   animationInterval = DEFAULT_ANIMATION_INTERVAL,
   waveDuration = DEFAULT_WAVE_DURATION,
@@ -83,21 +89,22 @@ export function BlockArt({
 }: BlockArtProps) {
   const isMobile = useMediaQuery("(max-width: 1024px)");
 
-  const Cols = Math.max(1, Math.floor(gridCols ?? (isMobile ? 8 : 18)));
-  const Rows = Math.max(1, Math.floor(gridRows ?? (isMobile ? 4 : 8)));
+  const Cols = Math.max(1, Math.floor(gridCols ?? (isMobile ? 8 : 16)));
+  const Rows = Math.max(1, Math.floor(gridRows ?? (isMobile ? 4 : 7)));
   const totalCells = Cols * Rows;
 
-  const containerRef = useRef<HTMLButtonElement>(null);
+  const [containerRef, animate] = useAnimate<HTMLButtonElement>();
   const animationFrameRef = useRef<number>(0);
   const isAnimatingRef = useRef(false);
   const rippleIdRef = useRef(0);
   const rngRef = useRef(createSeededRandom(Cols, Rows, animatedCellCount));
-  const cellRefsMap = useRef<Map<number, HTMLDivElement | null>>(new Map());
   const ripplesRef = useRef<Ripple[]>([]);
   const isThrottledRef = useRef(false);
   const lastAffectedCellsRef = useRef<Set<number>>(new Set());
   const idleIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const idleAnimatedIndicesRef = useRef<Set<number>>(new Set());
+  const hoveredCellsRef = useRef<Set<number>>(new Set());
+  const timeoutIdsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
 
   const cellData = useMemo(() => {
     return Array.from({ length: totalCells }, (_, i) => ({
@@ -107,36 +114,203 @@ export function BlockArt({
     }));
   }, [totalCells, Cols]);
 
+  // Handle hover start with instant color change
+  const handleHoverStart = useCallback(
+    (index: number) => {
+      hoveredCellsRef.current.add(index);
+      const selector = `[data-cell-index="${index}"]`;
+
+      // Check if element exists before animating
+      const element = containerRef.current?.querySelector(selector);
+      if (!element) {
+        return;
+      }
+
+      // Instant color change on hover
+      animate(
+        selector,
+        {
+          backgroundColor: "var(--primary)",
+        },
+        { duration: 0 }
+      );
+    },
+    [animate, containerRef]
+  );
+
+  // Handle hover end with trail effect
+  const handleHoverEnd = useCallback(
+    (index: number) => {
+      hoveredCellsRef.current.delete(index);
+      const selector = `[data-cell-index="${index}"]`;
+
+      // Check if element exists before animating
+      const element = containerRef.current?.querySelector(selector);
+      if (!element) {
+        return;
+      }
+
+      // If cell is in idle animation, restore to secondary color
+      if (idleAnimatedIndicesRef.current.has(index)) {
+        animate(
+          selector,
+          {
+            backgroundColor: "var(--secondary)",
+          },
+          { duration: 0.4, ease: "easeOut" }
+        );
+        return;
+      }
+
+      // Trail effect - slow fade back to background
+      animate(
+        selector,
+        {
+          backgroundColor: "var(--background)",
+          scale: 1,
+        },
+        { duration: 0.8, ease: "easeOut" }
+      );
+    },
+    [animate, containerRef]
+  );
+
+  // Staggered idle animation with wave pattern from center
   useEffect(() => {
     if (totalCells === 0 || animatedCellCount === 0) {
       return;
     }
+
+    // Clear previous state when dimensions change
+    if (idleIntervalRef.current) {
+      clearInterval(idleIntervalRef.current);
+    }
+    idleAnimatedIndicesRef.current.clear();
+    hoveredCellsRef.current.clear();
 
     const effectiveAnimatedCellCount = Math.max(
       3,
       Math.min(Math.floor(totalCells * 0.12), animatedCellCount)
     );
 
+    const centerCol = Math.floor(Cols / 2);
+    const centerRow = Math.floor(Rows / 2);
+
     const updateIdleAnimation = () => {
-      for (const index of idleAnimatedIndicesRef.current) {
-        const cell = cellRefsMap.current.get(index);
-        if (cell) {
-          cell.classList.remove(animationColor);
+      // Clear any pending timeouts from previous animation cycle
+      for (const timeoutId of timeoutIdsRef.current) {
+        clearTimeout(timeoutId);
+      }
+      timeoutIdsRef.current.clear();
+
+      // Fade out previous animations with stagger
+      const prevIndices = Array.from(idleAnimatedIndicesRef.current);
+      for (const index of prevIndices) {
+        // Skip if currently hovered
+        if (hoveredCellsRef.current.has(index)) {
+          continue;
         }
+
+        const selector = `[data-cell-index="${index}"]`;
+        const cell = cellData[index];
+
+        // Skip if cell doesn't exist (e.g., during resize)
+        if (!cell) {
+          continue;
+        }
+
+        const distanceFromCenter = Math.sqrt(
+          (cell.col - centerCol) ** 2 + (cell.row - centerRow) ** 2
+        );
+
+        const timeoutId = setTimeout(() => {
+          // Re-check hover state before animating
+          if (hoveredCellsRef.current.has(index)) {
+            return;
+          }
+
+          // Check if element still exists before animating
+          const element = containerRef.current?.querySelector(selector);
+          if (!element) {
+            return;
+          }
+
+          animate(
+            selector,
+            {
+              backgroundColor: "var(--background)",
+            },
+            { duration: 0.4, ease: "easeOut" }
+          );
+        }, distanceFromCenter * 40);
+        timeoutIdsRef.current.add(timeoutId);
       }
       idleAnimatedIndicesRef.current.clear();
 
+      // Select new cells and animate with stagger from center
       const availableIndices = Array.from({ length: totalCells }, (_, i) => i);
       const shuffledIndices = rngRef.current.shuffle(availableIndices);
+      const selectedIndices = shuffledIndices.slice(
+        0,
+        effectiveAnimatedCellCount
+      );
 
-      for (let i = 0; i < effectiveAnimatedCellCount; i += 1) {
-        const index = shuffledIndices[i];
-        idleAnimatedIndicesRef.current.add(index);
-        const cell = cellRefsMap.current.get(index);
-        if (cell) {
-          cell.classList.add(animationColor);
+      // Sort by distance from center for wave effect
+      const sortedByDistance = selectedIndices.sort((a, b) => {
+        const cellA = cellData[a];
+        const cellB = cellData[b];
+        const distA = Math.sqrt(
+          (cellA.col - centerCol) ** 2 + (cellA.row - centerRow) ** 2
+        );
+        const distB = Math.sqrt(
+          (cellB.col - centerCol) ** 2 + (cellB.row - centerRow) ** 2
+        );
+        return distA - distB;
+      });
+
+      sortedByDistance.forEach((index, i) => {
+        // Skip if currently hovered
+        if (hoveredCellsRef.current.has(index)) {
+          return;
         }
-      }
+
+        const cell = cellData[index];
+        const distanceFromCenter = Math.sqrt(
+          (cell.col - centerCol) ** 2 + (cell.row - centerRow) ** 2
+        );
+
+        idleAnimatedIndicesRef.current.add(index);
+        const selector = `[data-cell-index="${index}"]`;
+
+        // Stagger delay based on distance from center
+        const timeoutId = setTimeout(
+          () => {
+            // Re-check hover state before animating
+            if (hoveredCellsRef.current.has(index)) {
+              return;
+            }
+
+            // Check if element still exists before animating
+            const element = containerRef.current?.querySelector(selector);
+            if (!element) {
+              return;
+            }
+
+            animate(
+              selector,
+              {
+                backgroundColor: "var(--secondary)",
+              },
+              {
+                duration: 0.5,
+                ease: "easeOut",
+              }
+            );
+          },
+          distanceFromCenter * 50 + i * 25
+        );
+        timeoutIdsRef.current.add(timeoutId);
+      });
     };
 
     updateIdleAnimation();
@@ -150,14 +324,44 @@ export function BlockArt({
       if (idleIntervalRef.current) {
         clearInterval(idleIntervalRef.current);
       }
-      for (const index of idleAnimatedIndicesRef.current) {
-        const cell = cellRefsMap.current.get(index);
-        if (cell) {
-          cell.classList.remove(animationColor);
-        }
+      // Clear all pending timeouts
+      for (const timeoutId of timeoutIdsRef.current) {
+        clearTimeout(timeoutId);
       }
+      timeoutIdsRef.current.clear();
+      // Reset all idle animated cells
+      for (const index of idleAnimatedIndicesRef.current) {
+        if (hoveredCellsRef.current.has(index)) {
+          continue;
+        }
+        const selector = `[data-cell-index="${index}"]`;
+
+        // Check if element still exists before animating
+        const element = containerRef.current?.querySelector(selector);
+        if (!element) {
+          continue;
+        }
+
+        animate(
+          selector,
+          {
+            backgroundColor: "var(--background)",
+          },
+          { duration: 0.4, ease: "easeOut" }
+        );
+      }
+      idleAnimatedIndicesRef.current.clear();
     };
-  }, [totalCells, animatedCellCount, animationInterval, animationColor]);
+  }, [
+    totalCells,
+    animatedCellCount,
+    animationInterval,
+    animate,
+    cellData,
+    Cols,
+    Rows,
+    containerRef,
+  ]);
 
   const getWaveIntensity = useCallback(
     (distance: number, radius: number, progress: number) => {
@@ -179,8 +383,11 @@ export function BlockArt({
 
   const updateCellRippleStyle = useCallback(
     (cellIndex: number, intensity: number) => {
-      const cell = cellRefsMap.current.get(cellIndex);
-      if (!cell) {
+      const selector = `[data-cell-index="${cellIndex}"]`;
+
+      // Check if element exists before animating
+      const element = containerRef.current?.querySelector(selector);
+      if (!element) {
         return;
       }
 
@@ -190,18 +397,60 @@ export function BlockArt({
         const glowBlur = Math.round(6 + intensity * 10);
         const glowOpacity = Math.round(intensity * 50);
 
-        cell.style.transform = `scale(${scale})`;
-        cell.style.backgroundColor = `color-mix(in oklch, var(--primary) ${colorOpacity}%, transparent)`;
-        cell.style.boxShadow = `0 0 ${glowBlur}px color-mix(in oklch, var(--primary) ${glowOpacity}%, transparent)`;
-        cell.style.zIndex = "10";
+        animate(
+          selector,
+          {
+            scale,
+            backgroundColor: `color-mix(in oklch, var(--primary) ${colorOpacity}%, var(--background))`,
+            boxShadow: `0 0 ${glowBlur}px color-mix(in oklch, var(--primary) ${glowOpacity}%, transparent)`,
+            zIndex: 10,
+          },
+          { duration: 0 }
+        );
+      } else if (hoveredCellsRef.current.has(cellIndex)) {
+        // Restore hover state after ripple passes
+        animate(
+          selector,
+          {
+            scale: 1.02,
+            backgroundColor: "var(--primary)",
+            boxShadow: "0 0 0px transparent",
+            zIndex: 0,
+          },
+          { duration: 0 }
+        );
+      } else if (idleAnimatedIndicesRef.current.has(cellIndex)) {
+        // Restore idle state after ripple passes
+        animate(
+          selector,
+          {
+            scale: 1,
+            backgroundColor: "var(--secondary)",
+            boxShadow: "0 0 0px transparent",
+            zIndex: 0,
+          },
+          { duration: 0.4, ease: "easeOut" }
+        );
       } else {
-        cell.style.transform = "";
-        cell.style.backgroundColor = "";
-        cell.style.boxShadow = "";
-        cell.style.zIndex = "";
+        // Spring physics for natural settle back
+        animate(
+          selector,
+          {
+            scale: 1,
+            backgroundColor: "var(--background)",
+            boxShadow: "0 0 0px transparent",
+            zIndex: 0,
+          },
+          {
+            type: "spring",
+            stiffness: 350,
+            damping: 28,
+            mass: 0.9,
+          }
+        );
       }
     },
-    []
+    [animate, containerRef]
   );
 
   const animateRipples = useCallback(() => {
@@ -368,7 +617,7 @@ export function BlockArt({
 
       throttledHandleRipple(col, row);
     },
-    [Cols, Rows, throttledHandleRipple]
+    [Cols, Rows, throttledHandleRipple, containerRef]
   );
 
   const handleKeyDown = useCallback(
@@ -383,39 +632,35 @@ export function BlockArt({
     [Cols, Rows, throttledHandleRipple]
   );
 
-  const setCellRef = useCallback(
-    (index: number) => (el: HTMLDivElement | null) => {
-      cellRefsMap.current.set(index, el);
-    },
-    []
-  );
-
   return (
-    <section className={cn("size-full bg-border p-px", className)}>
-      <button
-        aria-label="Interactive grid art with wave effect"
-        className="size-full cursor-pointer"
-        onClick={handleClick}
-        onKeyDown={handleKeyDown}
-        ref={containerRef}
-        style={{
-          display: "grid",
-          gridTemplateColumns: `repeat(${Cols}, minmax(0, 1fr))`,
-          gridTemplateRows: `repeat(${Rows}, auto)`,
-          gap: "1px",
-        }}
-        type="button"
-      >
-        {cellData.map(({ index, row, col }) => (
-          <BlockCell
-            col={col}
-            index={index}
-            key={`${row}-${col}`}
-            ref={setCellRef(index)}
-            row={row}
-          />
-        ))}
-      </button>
-    </section>
+    <MotionConfig reducedMotion="user">
+      <section className={cn("size-full bg-border p-px", className)}>
+        <button
+          aria-label="Interactive grid art with wave effect"
+          className="size-full cursor-pointer"
+          onClick={handleClick}
+          onKeyDown={handleKeyDown}
+          ref={containerRef}
+          style={{
+            display: "grid",
+            gridTemplateColumns: `repeat(${Cols}, minmax(0, 1fr))`,
+            gridTemplateRows: `repeat(${Rows}, auto)`,
+            gap: "1px",
+          }}
+          type="button"
+        >
+          {cellData.map(({ index, row, col }) => (
+            <MotionBlockCell
+              col={col}
+              index={index}
+              key={`${row}-${col}`}
+              onHoverEnd={handleHoverEnd}
+              onHoverStart={handleHoverStart}
+              row={row}
+            />
+          ))}
+        </button>
+      </section>
+    </MotionConfig>
   );
 }

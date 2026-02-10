@@ -9,7 +9,7 @@
   "dependencies": {
     "@t3-oss/env-nextjs": "^0.13.10",
     "@vercel/analytics": "^1.6.1",
-    "posthog-js": "^1.345.0",
+    "posthog-js": "^1.345.2",
     "posthog-node": "^5.24.14",
     "react": "^19.2.4",
     "server-only": "^0.0.1",
@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "25.2.2",
+    "@types/node": "25.2.3",
     "@types/react": "19.2.13",
     "@types/react-dom": "19.2.3"
   }
