@@ -3,6 +3,7 @@
 import { useMediaQuery } from "@mantine/hooks";
 import { createSeededRandom } from "@repo/design-system/lib/random";
 import { cn } from "@repo/design-system/lib/utils";
+import { motion, useAnimate } from "motion/react";
 import {
   type KeyboardEvent,
   type MouseEvent,
@@ -35,10 +36,8 @@ interface BlockCellProps {
   index: number;
   row: number;
   col: number;
-  ref?: React.Ref<HTMLDivElement>;
 }
 
-const DEFAULT_ANIMATION_COLOR = "bg-secondary";
 const DEFAULT_ANIMATED_CELL_COUNT = 15;
 const DEFAULT_ANIMATION_INTERVAL = 2000;
 const DEFAULT_WAVE_DURATION = 2000;
@@ -46,26 +45,25 @@ const MAX_CONCURRENT_RIPPLES = 3;
 const RIPPLE_RADIUS_MULTIPLIER = 1.5;
 const RIPPLE_WAVE_WIDTH = 2;
 
-const BlockCell = memo(function BlockCell({
+const MotionBlockCell = memo(function MotionBlockCell({
   index,
   row,
   col,
-  ref,
 }: BlockCellProps) {
   return (
-    <div
-      className={cn(
-        "size-full bg-background transition-[transform,background-color,box-shadow,color] duration-500 ease-out",
-        "hover:bg-primary hover:transition-none"
-      )}
+    <motion.div
+      className={cn("size-full bg-background", "hover:bg-primary")}
       data-cell-index={index}
       data-col={col}
       data-row={row}
-      ref={ref}
+      initial={false}
       style={{
         aspectRatio: "1 / 1",
         contain: "layout style paint",
-        willChange: "transform",
+      }}
+      transition={{
+        duration: 0.5,
+        ease: "easeOut",
       }}
     />
   );
@@ -75,7 +73,7 @@ export function BlockArt({
   gridCols,
   gridRows,
   className,
-  animationColor = DEFAULT_ANIMATION_COLOR,
+  animationColor: _animationColor,
   animatedCellCount = DEFAULT_ANIMATED_CELL_COUNT,
   animationInterval = DEFAULT_ANIMATION_INTERVAL,
   waveDuration = DEFAULT_WAVE_DURATION,
@@ -87,12 +85,11 @@ export function BlockArt({
   const Rows = Math.max(1, Math.floor(gridRows ?? (isMobile ? 4 : 8)));
   const totalCells = Cols * Rows;
 
-  const containerRef = useRef<HTMLButtonElement>(null);
+  const [containerRef, animate] = useAnimate<HTMLButtonElement>();
   const animationFrameRef = useRef<number>(0);
   const isAnimatingRef = useRef(false);
   const rippleIdRef = useRef(0);
   const rngRef = useRef(createSeededRandom(Cols, Rows, animatedCellCount));
-  const cellRefsMap = useRef<Map<number, HTMLDivElement | null>>(new Map());
   const ripplesRef = useRef<Ripple[]>([]);
   const isThrottledRef = useRef(false);
   const lastAffectedCellsRef = useRef<Set<number>>(new Set());
@@ -119,10 +116,8 @@ export function BlockArt({
 
     const updateIdleAnimation = () => {
       for (const index of idleAnimatedIndicesRef.current) {
-        const cell = cellRefsMap.current.get(index);
-        if (cell) {
-          cell.classList.remove(animationColor);
-        }
+        const selector = `[data-cell-index="${index}"]`;
+        animate(selector, { backgroundColor: "" }, { duration: 0.5 });
       }
       idleAnimatedIndicesRef.current.clear();
 
@@ -132,10 +127,12 @@ export function BlockArt({
       for (let i = 0; i < effectiveAnimatedCellCount; i += 1) {
         const index = shuffledIndices[i];
         idleAnimatedIndicesRef.current.add(index);
-        const cell = cellRefsMap.current.get(index);
-        if (cell) {
-          cell.classList.add(animationColor);
-        }
+        const selector = `[data-cell-index="${index}"]`;
+        animate(
+          selector,
+          { backgroundColor: "var(--secondary)" },
+          { duration: 0.5 }
+        );
       }
     };
 
@@ -151,13 +148,11 @@ export function BlockArt({
         clearInterval(idleIntervalRef.current);
       }
       for (const index of idleAnimatedIndicesRef.current) {
-        const cell = cellRefsMap.current.get(index);
-        if (cell) {
-          cell.classList.remove(animationColor);
-        }
+        const selector = `[data-cell-index="${index}"]`;
+        animate(selector, { backgroundColor: "" }, { duration: 0.5 });
       }
     };
-  }, [totalCells, animatedCellCount, animationInterval, animationColor]);
+  }, [totalCells, animatedCellCount, animationInterval, animate]);
 
   const getWaveIntensity = useCallback(
     (distance: number, radius: number, progress: number) => {
@@ -179,10 +174,7 @@ export function BlockArt({
 
   const updateCellRippleStyle = useCallback(
     (cellIndex: number, intensity: number) => {
-      const cell = cellRefsMap.current.get(cellIndex);
-      if (!cell) {
-        return;
-      }
+      const selector = `[data-cell-index="${cellIndex}"]`;
 
       if (intensity > 0.01) {
         const scale = 1 + intensity * 0.08;
@@ -190,18 +182,30 @@ export function BlockArt({
         const glowBlur = Math.round(6 + intensity * 10);
         const glowOpacity = Math.round(intensity * 50);
 
-        cell.style.transform = `scale(${scale})`;
-        cell.style.backgroundColor = `color-mix(in oklch, var(--primary) ${colorOpacity}%, transparent)`;
-        cell.style.boxShadow = `0 0 ${glowBlur}px color-mix(in oklch, var(--primary) ${glowOpacity}%, transparent)`;
-        cell.style.zIndex = "10";
+        animate(
+          selector,
+          {
+            scale,
+            backgroundColor: `color-mix(in oklch, var(--primary) ${colorOpacity}%, transparent)`,
+            boxShadow: `0 0 ${glowBlur}px color-mix(in oklch, var(--primary) ${glowOpacity}%, transparent)`,
+            zIndex: 10,
+          },
+          { duration: 0 }
+        );
       } else {
-        cell.style.transform = "";
-        cell.style.backgroundColor = "";
-        cell.style.boxShadow = "";
-        cell.style.zIndex = "";
+        animate(
+          selector,
+          {
+            scale: 1,
+            backgroundColor: "",
+            boxShadow: "",
+            zIndex: "auto",
+          },
+          { duration: 0.5, ease: "easeOut" }
+        );
       }
     },
-    []
+    [animate]
   );
 
   const animateRipples = useCallback(() => {
@@ -368,7 +372,7 @@ export function BlockArt({
 
       throttledHandleRipple(col, row);
     },
-    [Cols, Rows, throttledHandleRipple]
+    [Cols, Rows, throttledHandleRipple, containerRef]
   );
 
   const handleKeyDown = useCallback(
@@ -381,13 +385,6 @@ export function BlockArt({
       }
     },
     [Cols, Rows, throttledHandleRipple]
-  );
-
-  const setCellRef = useCallback(
-    (index: number) => (el: HTMLDivElement | null) => {
-      cellRefsMap.current.set(index, el);
-    },
-    []
   );
 
   return (
@@ -407,11 +404,10 @@ export function BlockArt({
         type="button"
       >
         {cellData.map(({ index, row, col }) => (
-          <BlockCell
+          <MotionBlockCell
             col={col}
             index={index}
             key={`${row}-${col}`}
-            ref={setCellRef(index)}
             row={row}
           />
         ))}
