@@ -3,7 +3,7 @@
 import { useMediaQuery } from "@mantine/hooks";
 import { createSeededRandom } from "@repo/design-system/lib/random";
 import { cn } from "@repo/design-system/lib/utils";
-import { motion, useAnimate } from "motion/react";
+import { MotionConfig, motion, useAnimate } from "motion/react";
 import {
   type KeyboardEvent,
   type MouseEvent,
@@ -36,6 +36,8 @@ interface BlockCellProps {
   index: number;
   row: number;
   col: number;
+  onHoverStart: (index: number) => void;
+  onHoverEnd: (index: number) => void;
 }
 
 const DEFAULT_ANIMATED_CELL_COUNT = 15;
@@ -49,10 +51,12 @@ const MotionBlockCell = memo(function MotionBlockCell({
   index,
   row,
   col,
+  onHoverStart,
+  onHoverEnd,
 }: BlockCellProps) {
   return (
     <motion.div
-      className="size-full"
+      className="size-full will-change-transform"
       data-cell-index={index}
       data-col={col}
       data-row={row}
@@ -60,17 +64,15 @@ const MotionBlockCell = memo(function MotionBlockCell({
         backgroundColor: "var(--background)",
         scale: 1,
       }}
+      onHoverEnd={() => onHoverEnd(index)}
+      onHoverStart={() => onHoverStart(index)}
       style={{
         aspectRatio: "1 / 1",
         contain: "layout style paint",
       }}
       transition={{
-        duration: 0.5,
-        ease: "easeOut",
-      }}
-      whileHover={{
-        backgroundColor: "var(--primary)",
-        transition: { duration: 0 },
+        backgroundColor: { duration: 0.6, ease: "easeOut" },
+        scale: { type: "spring", stiffness: 300, damping: 20 },
       }}
     />
   );
@@ -102,6 +104,7 @@ export function BlockArt({
   const lastAffectedCellsRef = useRef<Set<number>>(new Set());
   const idleIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const idleAnimatedIndicesRef = useRef<Set<number>>(new Set());
+  const hoveredCellsRef = useRef<Set<number>>(new Set());
 
   const cellData = useMemo(() => {
     return Array.from({ length: totalCells }, (_, i) => ({
@@ -111,6 +114,53 @@ export function BlockArt({
     }));
   }, [totalCells, Cols]);
 
+  // Handle hover start with instant color change
+  const handleHoverStart = useCallback(
+    (index: number) => {
+      hoveredCellsRef.current.add(index);
+      const selector = `[data-cell-index="${index}"]`;
+
+      // Instant color change on hover
+      animate(
+        selector,
+        {
+          backgroundColor: "var(--primary)",
+          scale: 1.02,
+        },
+        { duration: 0 }
+      );
+    },
+    [animate]
+  );
+
+  // Handle hover end with trail effect
+  const handleHoverEnd = useCallback(
+    (index: number) => {
+      hoveredCellsRef.current.delete(index);
+      const selector = `[data-cell-index="${index}"]`;
+
+      // Don't reset if cell is currently in idle animation
+      if (idleAnimatedIndicesRef.current.has(index)) {
+        return;
+      }
+
+      // Trail effect - slow fade back to background
+      animate(
+        selector,
+        {
+          backgroundColor: "var(--background)",
+          scale: 1,
+        },
+        {
+          backgroundColor: { duration: 0.8, ease: "easeOut" },
+          scale: { type: "spring", stiffness: 300, damping: 20 },
+        }
+      );
+    },
+    [animate]
+  );
+
+  // Staggered idle animation with wave pattern from center
   useEffect(() => {
     if (totalCells === 0 || animatedCellCount === 0) {
       return;
@@ -121,32 +171,94 @@ export function BlockArt({
       Math.min(Math.floor(totalCells * 0.12), animatedCellCount)
     );
 
+    const centerCol = Math.floor(Cols / 2);
+    const centerRow = Math.floor(Rows / 2);
+
     const updateIdleAnimation = () => {
-      // Remove previous idle animations
-      for (const index of idleAnimatedIndicesRef.current) {
+      // Fade out previous animations with stagger
+      const prevIndices = Array.from(idleAnimatedIndicesRef.current);
+      for (const index of prevIndices) {
+        // Skip if currently hovered
+        if (hoveredCellsRef.current.has(index)) {
+          continue;
+        }
+
         const selector = `[data-cell-index="${index}"]`;
-        animate(
-          selector,
-          { backgroundColor: "var(--background)" },
-          { duration: 0.5, ease: "easeOut" }
+        const cell = cellData[index];
+        const distanceFromCenter = Math.sqrt(
+          (cell.col - centerCol) ** 2 + (cell.row - centerRow) ** 2
         );
+
+        setTimeout(() => {
+          animate(
+            selector,
+            {
+              backgroundColor: "var(--background)",
+              scale: 1,
+            },
+            { duration: 0.4, ease: "easeOut" }
+          );
+        }, distanceFromCenter * 40);
       }
       idleAnimatedIndicesRef.current.clear();
 
-      // Select new cells for idle animation
+      // Select new cells and animate with stagger from center
       const availableIndices = Array.from({ length: totalCells }, (_, i) => i);
       const shuffledIndices = rngRef.current.shuffle(availableIndices);
+      const selectedIndices = shuffledIndices.slice(
+        0,
+        effectiveAnimatedCellCount
+      );
 
-      for (let i = 0; i < effectiveAnimatedCellCount; i += 1) {
-        const index = shuffledIndices[i];
+      // Sort by distance from center for wave effect
+      const sortedByDistance = selectedIndices.sort((a, b) => {
+        const cellA = cellData[a];
+        const cellB = cellData[b];
+        const distA = Math.sqrt(
+          (cellA.col - centerCol) ** 2 + (cellA.row - centerRow) ** 2
+        );
+        const distB = Math.sqrt(
+          (cellB.col - centerCol) ** 2 + (cellB.row - centerRow) ** 2
+        );
+        return distA - distB;
+      });
+
+      sortedByDistance.forEach((index, i) => {
+        // Skip if currently hovered
+        if (hoveredCellsRef.current.has(index)) {
+          return;
+        }
+
+        const cell = cellData[index];
+        const distanceFromCenter = Math.sqrt(
+          (cell.col - centerCol) ** 2 + (cell.row - centerRow) ** 2
+        );
+
         idleAnimatedIndicesRef.current.add(index);
         const selector = `[data-cell-index="${index}"]`;
-        animate(
-          selector,
-          { backgroundColor: "var(--secondary)" },
-          { duration: 0.5, ease: "easeOut" }
+
+        // Stagger delay based on distance from center
+        setTimeout(
+          () => {
+            animate(
+              selector,
+              {
+                backgroundColor: "var(--secondary)",
+                scale: [1, 1.05, 1],
+              },
+              {
+                backgroundColor: { duration: 0.5, ease: "easeOut" },
+                scale: {
+                  duration: 0.75,
+                  ease: "easeInOut",
+                  times: [0, 0.5, 1],
+                },
+              }
+            );
+          },
+          distanceFromCenter * 50 + i * 25
         );
-      }
+      });
     };
 
     updateIdleAnimation();
@@ -162,15 +274,29 @@ export function BlockArt({
       }
       // Reset all idle animated cells
       for (const index of idleAnimatedIndicesRef.current) {
+        if (hoveredCellsRef.current.has(index)) {
+          continue;
+        }
         const selector = `[data-cell-index="${index}"]`;
         animate(
           selector,
-          { backgroundColor: "var(--background)" },
-          { duration: 0.5, ease: "easeOut" }
+          {
+            backgroundColor: "var(--background)",
+            scale: 1,
+          },
+          { duration: 0.4, ease: "easeOut" }
         );
       }
     };
-  }, [totalCells, animatedCellCount, animationInterval, animate]);
+  }, [
+    totalCells,
+    animatedCellCount,
+    animationInterval,
+    animate,
+    cellData,
+    Cols,
+    Rows,
+  ]);
 
   const getWaveIntensity = useCallback(
     (distance: number, radius: number, progress: number) => {
@@ -210,7 +336,8 @@ export function BlockArt({
           },
           { duration: 0 }
         );
-      } else {
+      } else if (!hoveredCellsRef.current.has(cellIndex)) {
+        // Spring physics for natural settle back
         animate(
           selector,
           {
@@ -219,7 +346,12 @@ export function BlockArt({
             boxShadow: "0 0 0px transparent",
             zIndex: 0,
           },
-          { duration: 0.5, ease: "easeOut" }
+          {
+            type: "spring",
+            stiffness: 350,
+            damping: 28,
+            mass: 0.9,
+          }
         );
       }
     },
@@ -406,30 +538,34 @@ export function BlockArt({
   );
 
   return (
-    <section className={cn("size-full bg-border p-px", className)}>
-      <button
-        aria-label="Interactive grid art with wave effect"
-        className="size-full cursor-pointer"
-        onClick={handleClick}
-        onKeyDown={handleKeyDown}
-        ref={containerRef}
-        style={{
-          display: "grid",
-          gridTemplateColumns: `repeat(${Cols}, minmax(0, 1fr))`,
-          gridTemplateRows: `repeat(${Rows}, auto)`,
-          gap: "1px",
-        }}
-        type="button"
-      >
-        {cellData.map(({ index, row, col }) => (
-          <MotionBlockCell
-            col={col}
-            index={index}
-            key={`${row}-${col}`}
-            row={row}
-          />
-        ))}
-      </button>
-    </section>
+    <MotionConfig reducedMotion="user">
+      <section className={cn("size-full bg-border p-px", className)}>
+        <button
+          aria-label="Interactive grid art with wave effect"
+          className="size-full cursor-pointer"
+          onClick={handleClick}
+          onKeyDown={handleKeyDown}
+          ref={containerRef}
+          style={{
+            display: "grid",
+            gridTemplateColumns: `repeat(${Cols}, minmax(0, 1fr))`,
+            gridTemplateRows: `repeat(${Rows}, auto)`,
+            gap: "1px",
+          }}
+          type="button"
+        >
+          {cellData.map(({ index, row, col }) => (
+            <MotionBlockCell
+              col={col}
+              index={index}
+              key={`${row}-${col}`}
+              onHoverEnd={handleHoverEnd}
+              onHoverStart={handleHoverStart}
+              row={row}
+            />
+          ))}
+        </button>
+      </section>
+    </MotionConfig>
   );
 }
