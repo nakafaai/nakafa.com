@@ -1,163 +1,31 @@
 # Audio Studies Implementation Progress
 
 ## Overview
+Implementation plan for Audio Studies feature - AI-generated podcast audio for educational content.
 
-Implementation plan for Audio Studies feature - AI-generated podcast-style audio for educational content using ElevenLabs.
+## Tasks
 
-**Status**: Not started  
-**Started**: YYYY-MM-DD  
-**Last Updated**: YYYY-MM-DD
+### Setup Phase (0.x)
+1. ✅ **01-voice-config.md** - Voice configuration (5 voices)
+2. ✅ **02-schema.md** - Database schema (contentAudios, userContentAudios)
+3. ✅ **03-article-queries.md** - Add getById to articleContents
+4. ✅ **04-subject-queries.md** - Add getById to subjectSections
 
----
+### Core Implementation Phase (1.x)
+5. ✅ **1.1-create-actions.md** - AI actions (script + speech generation)
+6. ✅ **1.2-create-queries.md** - Queries (public + internal)
+7. ✅ **1.3-create-mutations.md** - Mutations (public + internal)
+8. ✅ **1.4-create-workflow.md** - Workflow orchestration
 
-## Phase 0: Setup & Configuration
+### Integration Phase (2.x)
+9. ✅ **2.1-integrate-content-sync.md** - Content update invalidation
 
-### Task 0.1: Define Voice Configuration
-- **Status**: Not started
-- **File**: `packages/ai/config/voices.ts`
-- **Depends**: None
-- **Description**: Create voice config with 5 predefined voices (Nina, Alex, Sarah, David, Maya)
+## Status
+- [x] All tasks created
+- [ ] Implementation pending
 
-### Task 0.2: Create contentAudios Schema
-- **Status**: Not started
-- **File**: `packages/backend/convex/audioStudies/schema.ts`
-- **Depends**: 0.1
-- **Description**: Define contentAudios and userContentAudios tables with proper indexes
-
-### Task 0.3: Generate Voice Preview Samples
-- **Status**: Not started
-- **File**: `packages/backend/convex/audioStudies/generateSamples.ts`
-- **Depends**: 0.1
-- **Description**: Generate 5-second audio samples for all voices
-
----
-
-## Phase 1: Backend Core (Workflow)
-
-### Task 1.1: Create Script Generation Action
-- **Status**: Not started
-- **File**: `packages/backend/convex/audioStudies/actions.ts`
-- **Depends**: 0.2, 0.1
-- **Description**: AI action to convert content to podcast script with intonation markers
-
-### Task 1.2: Create Speech Generation Action
-- **Status**: Not started
-- **File**: `packages/backend/convex/audioStudies/actions.ts`
-- **Depends**: 1.1
-- **Description**: ElevenLabs action to convert script to speech
-
-### Task 1.3: Create Workflow Orchestrator
-- **Status**: Not started
-- **File**: `packages/backend/convex/audioStudies/workflows.ts`
-- **Depends**: 1.1, 1.2
-- **Description**: Convex workflow to orchestrate script → speech pipeline
-
----
-
-## Phase 2: Database Operations
-
-### Task 2.1: Create contentAudios Queries
-- **Status**: Not started
-- **File**: `packages/backend/convex/audioStudies/queries.ts`
-- **Depends**: 0.2
-- **Description**: Query functions using proper indexes
-
-### Task 2.2: Create contentAudios Mutations
-- **Status**: Not started
-- **File**: `packages/backend/convex/audioStudies/mutations.ts`
-- **Depends**: 0.2
-- **Description**: Mutations for create, update, invalidate operations
-
-### Task 2.3: Create userContentAudios Mutations
-- **Status**: Not started
-- **File**: `packages/backend/convex/audioStudies/mutations.ts`
-- **Depends**: 2.2
-- **Description**: Mutations for user access tracking
-
----
-
-## Phase 3: Public API
-
-### Task 3.1: Create Request Audio Mutation (Public)
-- **Status**: Not started
-- **File**: `packages/backend/convex/audioStudies/api.ts`
-- **Depends**: 1.3, 2.1, 2.2, 2.3
-- **Description**: Public mutation with Pro check and caching logic
-
-### Task 3.2: Create Get Audio Queries (Public)
-- **Status**: Not started
-- **File**: `packages/backend/convex/audioStudies/api.ts`
-- **Depends**: 3.1, 0.3
-- **Description**: Public queries for status, URL, history, voices
-
----
-
-## Phase 4: Content Sync Integration
-
-### Task 4.1: Integrate with Article Content Sync
-- **Status**: Not started
-- **File**: `packages/backend/convex/articleContents/mutations.ts`
-- **Depends**: 2.2
-- **Description**: Invalidate audio when articles are updated
-
-### Task 4.2: Integrate with Subject Section Sync
-- **Status**: Not started
-- **File**: `packages/backend/convex/subjectSections/mutations.ts`
-- **Depends**: 4.1
-- **Description**: Invalidate audio when subject sections are updated
-
----
-
-## Phase 5: Testing
-
-### Task 5.1: Test Audio Generation Flow
-- **Status**: Not started
-- **File**: `packages/backend/convex/audioStudies/__tests__/audioGeneration.test.ts`
-- **Depends**: 1-4
-- **Description**: Test end-to-end audio generation workflow
-
-### Task 5.2: Test Cache Invalidation
-- **Status**: Not started
-- **File**: `packages/backend/convex/audioStudies/__tests__/cacheInvalidation.test.ts`
-- **Depends**: 5.1, 4.1, 4.2
-- **Description**: Test cache invalidation on content updates
-
----
-
-## Key Metrics
-
-- **Total Tasks**: 13
-- **Completed**: 0
-- **In Progress**: 0
-- **Blocked**: 0
-
----
-
-## Implementation Log
-
-### YYYY-MM-DD - Initial Setup
-- Created plan structure
-- Defined schema design
-- Documented workflow architecture
-
-### [Add entries as work progresses]
-
----
-
-## Notes
-
-### Voice IDs to Verify
-Before production deployment, verify these ElevenLabs voice IDs are correct:
-- Nina (Rachel): 21m00Tcm4TlvDq8ikWAM
-- Alex (Domi): AZnzlk1XvdvUeBnXmlld
-- Sarah (Bella): EXAVITQu4vr4xnSDxMaL
-- David (Elli): MF3mGyEYCl7XYWbV9V6O
-- Maya (Josh): TxGEqnHWrfWFTfGW9XjX
-
-### Cost Estimates
-- Script generation: ~$0.001 per content
-- ElevenLabs TTS: ~$0.01-0.02 per 5-min audio
-- Storage: Negligible (~$0.001 per audio/month)
-
-### Next Priority
-Start with Task 0.1 (Voice Config) → Task 0.2 (Schema) → Task 1.1 (Script Action)
+## Commands
+```bash
+pnpm typecheck
+pnpm lint
+```
