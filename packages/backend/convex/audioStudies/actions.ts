@@ -7,6 +7,10 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { internalAction } from "@repo/backend/convex/_generated/server";
+import type {
+  ContentId,
+  ContentType,
+} from "@repo/backend/convex/audioStudies/schema";
 import { vv } from "@repo/backend/convex/lib/validators";
 import {
   experimental_generateSpeech as aiGenerateSpeech,
@@ -146,11 +150,7 @@ export const generateSpeech = internalAction({
 /**
  * Fetch content (article or subject section) by ID.
  */
-async function fetchContent(
-  ctx: ActionCtx,
-  id: Id<"articleContents"> | Id<"subjectSections">,
-  type: "article" | "subject"
-) {
+async function fetchContent(ctx: ActionCtx, id: ContentId, type: ContentType) {
   if (type === "article") {
     const article = await ctx.runQuery(
       internal.articleContents.queries.getById,

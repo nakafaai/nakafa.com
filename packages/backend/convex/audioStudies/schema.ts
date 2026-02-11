@@ -4,8 +4,32 @@ import {
   voiceSettingsValidator,
 } from "@repo/backend/convex/lib/contentValidators";
 import { defineTable } from "convex/server";
+import type { Infer } from "convex/values";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
+
+/**
+ * Validator for content ID - polymorphic reference to article or subject section.
+ */
+export const contentIdValidator = v.union(
+  v.id("articleContents"),
+  v.id("subjectSections")
+);
+
+/**
+ * Validator for content type discriminator.
+ */
+export const contentTypeValidator = literals("article", "subject");
+
+/**
+ * Type for content ID.
+ */
+export type ContentId = Infer<typeof contentIdValidator>;
+
+/**
+ * Type for content type.
+ */
+export type ContentType = Infer<typeof contentTypeValidator>;
 
 const tables = {
   /**
@@ -14,9 +38,9 @@ const tables = {
    */
   contentAudios: defineTable({
     /** Polymorphic reference to article or subject section */
-    contentId: v.union(v.id("articleContents"), v.id("subjectSections")),
+    contentId: contentIdValidator,
     /** Discriminator for content type */
-    contentType: literals("article", "subject"),
+    contentType: contentTypeValidator,
     locale: localeValidator,
     /** SHA-256 hash of content body for cache invalidation */
     contentHash: v.string(),
@@ -54,8 +78,8 @@ const tables = {
     userId: v.id("users"),
     contentAudioId: v.id("contentAudios"),
     /** Denormalized for efficient history queries */
-    contentId: v.union(v.id("articleContents"), v.id("subjectSections")),
-    contentType: literals("article", "subject"),
+    contentId: contentIdValidator,
+    contentType: contentTypeValidator,
     playCount: v.number(),
     lastPlayedAt: v.optional(v.number()),
     updatedAt: v.number(),
