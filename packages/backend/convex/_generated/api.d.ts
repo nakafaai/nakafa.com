@@ -10,6 +10,7 @@
 
 import type * as articleContents_mutations from "../articleContents/mutations.js";
 import type * as articleContents_queries from "../articleContents/queries.js";
+import type * as audioStudies_actions from "../audioStudies/actions.js";
 import type * as auth from "../auth.js";
 import type * as chats_mutations from "../chats/mutations.js";
 import type * as chats_queries from "../chats/queries.js";
@@ -81,6 +82,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   "articleContents/mutations": typeof articleContents_mutations;
   "articleContents/queries": typeof articleContents_queries;
+  "audioStudies/actions": typeof audioStudies_actions;
   auth: typeof auth;
   "chats/mutations": typeof chats_mutations;
   "chats/queries": typeof chats_queries;
