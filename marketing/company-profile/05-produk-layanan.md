@@ -61,10 +61,10 @@ Nakafa dirancang untuk berbagai kebutuhan: siswa yang butuh bantuan PR, guru yan
 > "Beri contoh soal tentang turunan fungsi"
 
 **Cara pakai:**
-1. Klik ikon chat di pojok kanan bawah
-2. Tanya apa saja
-3. Nina akan menjawab dengan penjelasan langkah demi langkah
-4. Tanya lagi kalau masih bingung
+1. Klik tombol AI di toolbar bawah saat membaca materi atau mengerjakan soal
+2. Tanya langsung tentang materi/soal yang sedang dikerjakan
+3. Nina akan menjawab dengan konteks yang sesuai
+4. Diskusi bolak-balik sampai paham
 
 **Batasan (Gratis vs Pro):**
 - Gratis: 10 pesan per hari ke model dasar
