@@ -6,6 +6,7 @@
  * Import from here instead of duplicating in other schema files.
  */
 import type { Infer } from "convex/values";
+import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
 /** Supported content languages */
@@ -92,3 +93,22 @@ export const exercisesMaterialValidator = literals(
   "reading-and-writing-skills"
 );
 export type ExercisesMaterial = Infer<typeof exercisesMaterialValidator>;
+
+/** Audio generation status for contentAudios */
+export const audioStatusValidator = literals(
+  "pending",
+  "generating_script",
+  "generating_speech",
+  "completed",
+  "failed"
+);
+export type AudioStatus = Infer<typeof audioStatusValidator>;
+
+/** Voice settings for ElevenLabs */
+export const voiceSettingsValidator = v.optional(
+  v.object({
+    stability: v.optional(v.number()),
+    similarityBoost: v.optional(v.number()),
+    style: v.optional(v.number()),
+  })
+);
