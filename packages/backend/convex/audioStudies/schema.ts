@@ -5,6 +5,7 @@ import {
 } from "@repo/backend/convex/lib/contentValidators";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
+import { literals, nullable } from "convex-helpers/validators";
 
 const tables = {
   /**
@@ -15,27 +16,27 @@ const tables = {
     /** Polymorphic reference to article or subject section */
     contentId: v.union(v.id("articleContents"), v.id("subjectSections")),
     /** Discriminator for content type */
-    contentType: v.union(v.literal("article"), v.literal("subject")),
+    contentType: literals("article", "subject"),
     locale: localeValidator,
     /** SHA-256 hash of content body for cache invalidation */
     contentHash: v.string(),
     /** ElevenLabs voice ID */
     voiceId: v.string(),
     /** Voice settings stored per audio for future customization */
-    voiceSettings: v.optional(voiceSettingsValidator),
+    voiceSettings: nullable(voiceSettingsValidator),
     status: audioStatusValidator,
     /** Generated podcast script with ElevenLabs v3 tags */
-    script: v.optional(v.string()),
+    script: nullable(v.string()),
     /** Convex storage ID for the generated audio file */
-    audioStorageId: v.optional(v.id("_storage")),
+    audioStorageId: nullable(v.id("_storage")),
     /** Audio duration in seconds */
-    audioDuration: v.optional(v.number()),
+    audioDuration: nullable(v.number()),
     /** Audio file size in bytes */
-    audioSize: v.optional(v.number()),
+    audioSize: nullable(v.number()),
     /** Error message if generation failed */
-    errorMessage: v.optional(v.string()),
+    errorMessage: nullable(v.string()),
     /** Timestamp when generation failed */
-    failedAt: v.optional(v.number()),
+    failedAt: nullable(v.number()),
     /** Number of generation attempts (for retry logic) */
     generationAttempts: v.number(),
     /** Last update timestamp */
@@ -54,9 +55,9 @@ const tables = {
     contentAudioId: v.id("contentAudios"),
     /** Denormalized for efficient history queries */
     contentId: v.union(v.id("articleContents"), v.id("subjectSections")),
-    contentType: v.union(v.literal("article"), v.literal("subject")),
+    contentType: literals("article", "subject"),
     playCount: v.number(),
-    lastPlayedAt: v.optional(v.number()),
+    lastPlayedAt: nullable(v.number()),
     updatedAt: v.number(),
   })
     .index("user", ["userId"])
