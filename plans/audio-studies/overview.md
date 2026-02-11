@@ -29,8 +29,8 @@ Enable Pro users to generate podcast-style audio studies from educational conten
                     └─────────────────┘      └──────────────────┘  └──────────────────┘
                                     │                                                  │
                                     │  Real-time Subscription (No Polling!)            │
-                                    │  Status: pending → generating_script            │
-                                    │          → generating_speech → completed        │
+                                    │  Status: pending → generating-script            │
+                                    │          → generating-speech → completed        │
                                     │                                                  │
                                     ▼                                                  │
                     ┌──────────────────────────────────────────────────────────┐      │
@@ -55,7 +55,7 @@ Enable Pro users to generate podcast-style audio studies from educational conten
 - `contentHash`: For change detection
 - `voiceId`: ElevenLabs voice ID
 - `voiceSettings`: Stability, similarityBoost, style
-- `status`: pending | generating_script | generating_speech | completed | failed
+- `status`: pending | generating-script | generating-speech | completed | failed
 - `script`: Generated text with intonation markers
 - `audioStorageId`: Reference to Convex storage
 - `generationAttempts`: Prevent infinite retry loops
@@ -82,7 +82,7 @@ Enable Pro users to generate podcast-style audio studies from educational conten
 
 Convex automatically pushes status changes to all subscribed clients:
 - Frontend subscribes with `useQuery(api.audioStudies.getAudioStatus, { contentAudioId })`
-- UI instantly updates when workflow changes status (pending → generating_script → generating_speech → completed)
+- UI instantly updates when workflow changes status (pending → generating-script → generating-speech → completed)
 - No polling required - this is Convex's real-time subscription model
 - Multiple users see the same status simultaneously
 

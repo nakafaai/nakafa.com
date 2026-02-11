@@ -94,21 +94,27 @@ export const exercisesMaterialValidator = literals(
 );
 export type ExercisesMaterial = Infer<typeof exercisesMaterialValidator>;
 
-/** Audio generation status for contentAudios */
+/** Audio generation status for contentAudios - uses kebab-case convention */
 export const audioStatusValidator = literals(
   "pending",
-  "generating_script",
-  "generating_speech",
+  "generating-script",
+  "generating-speech",
   "completed",
   "failed"
 );
 export type AudioStatus = Infer<typeof audioStatusValidator>;
 
-/** Voice settings for ElevenLabs */
-export const voiceSettingsValidator = v.optional(
-  v.object({
-    stability: v.optional(v.number()),
-    similarityBoost: v.optional(v.number()),
-    style: v.optional(v.number()),
-  })
-);
+/** Voice settings for ElevenLabs - matches API exactly
+ * @see https://elevenlabs.io/docs/api-reference/text-to-speech/convert
+ *
+ * Note: This validator is NOT wrapped in v.optional().
+ * Consumers should wrap it if the field is optional in their schema.
+ */
+export const voiceSettingsValidator = v.object({
+  stability: v.optional(v.number()),
+  similarityBoost: v.optional(v.number()),
+  style: v.optional(v.number()),
+  speed: v.optional(v.number()),
+  useSpeakerBoost: v.optional(v.boolean()),
+});
+export type VoiceSettings = Infer<typeof voiceSettingsValidator>;
