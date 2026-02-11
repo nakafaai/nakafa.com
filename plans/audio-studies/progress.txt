@@ -14,8 +14,8 @@ Implementation plan for Audio Studies feature - AI-generated podcast audio for e
 ### Core Implementation Phase (1.x)
 - [ ] **1.1-create-actions.md** - AI actions (script + speech generation)
 - [ ] **1.2-create-queries.md** - Queries (public + internal)
-- [ ] **1.3-create-mutations.md** - Mutations (public + internal)
-- [ ] **1.4-create-workflow.md** - Workflow orchestration
+- [ ] **1.3-create-mutations.md** - Mutations with workflow integration
+- [ ] **1.4-create-workflow.md** - Durable workflow orchestration
 
 ### Integration Phase (2.x)
 - [ ] **2.1-integrate-content-sync.md** - Content update invalidation
@@ -28,13 +28,16 @@ Implementation plan for Audio Studies feature - AI-generated podcast audio for e
 ## Completed
 1. ✅ Task 0.1: Voice configuration
    - File: `packages/ai/config/voices.ts`
-   - Features: Nina voice only (free plan limitation)
+   - Features: Nina voice (free plan limitation)
    - Documentation includes all voice settings from official ElevenLabs API
 
-## Known Issues Fixed in Plans
-- ✅ Task file naming standardized (0.1, 0.2, 0.3, 0.4, 1.1, 1.2, 1.3, 1.4, 2.1)
-- ✅ Task 0.1 updated to show 1 voice (Nina) instead of 5 voices
-- ⚠️ Still need to fix: import paths, ConvexError syntax, workflow pattern
+## Plans Status
+All plans have been verified against Convex best practices:
+- ✅ Correct imports from `_generated/server`
+- ✅ Proper `ConvexError({ code, message })` pattern
+- ✅ Workflow uses `workflow.define()` and `step.runAction()`
+- ✅ Index usage for all queries
+- ✅ Return validators on all functions
 
 ## Next Task
 **Task 0.2: Database Schema**

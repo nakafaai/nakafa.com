@@ -6,7 +6,8 @@ Enable Pro users to generate podcast-style audio from educational content using 
 - **Shared cache**: One audio per content+voice (minimize costs)
 - **Auto-regeneration**: Content updates invalidate cache
 - **Real-time**: Convex subscriptions for status updates
-- **5 voices**: Nina (default), Alex, Sarah, David, Maya
+- **Durable workflows**: Uses Convex Workflow component for reliable generation
+- **Voice**: Nina (ElevenLabs free plan, easy to add more)
 
 ## End-to-End User Flow
 
@@ -27,12 +28,12 @@ flowchart TD
 
     subgraph Cache["2. Cache Check"]
         VoiceCheck -->|"Check cache"| CacheCheck{"Cached?"}
-        CacheCheck -->|"Yes + valid hash"| Cached["Return cached URL<br/>~100ms"]
+        CacheCheck -->|"Yes + valid hash"| Cached["Return cached URL\n~100ms"]
         CacheCheck -->|"Generating"| Queued["Return 'generating' status"]
         CacheCheck -->|"No/stale"| StartWorkflow["Start workflow"]
     end
 
-    subgraph Workflow["3. Workflow Pipeline"]
+    subgraph Workflow["3. Workflow Pipeline (Durable)"]
         StartWorkflow --> WorkflowMgr["workflow.start()"]
         WorkflowMgr --> Upsert["Upsert contentAudios record"]
         Upsert -->|"Status: pending"| GenScript["Action: generateScript"]
@@ -56,7 +57,7 @@ flowchart TD
         Track --> History["Update listening history"]
     end
 
-    subgraph Invalidation["6. Content Update (Future)"]
+    subgraph Invalidation["6. Content Update"]
         ContentUpdate["Content updated"]
         ContentUpdate --> Invalidate["audioStudies.mutations.invalidate"]
         Invalidate --> DeleteStorage["Delete old audio from storage"]
@@ -64,7 +65,7 @@ flowchart TD
     end
 
     User --> Selector
-    Selector -->|"Select voice (Nina/Alex/Sarah/David/Maya)"| RequestAPI
+    Selector -->|"Select voice (Nina)"| RequestAPI
 
     style Frontend fill:#e1f5ff
     style Workflow fill:#fff3cd
@@ -74,7 +75,7 @@ flowchart TD
 
 ## Implementation
 
-**See `IMPLEMENTATION.md` for complete implementation guide.**
+**See task files in `tasks/` folder for detailed implementation plans.**
 
 ## Files to Create
 
@@ -85,7 +86,7 @@ packages/backend/convex/audioStudies/             # Main feature folder
 ├── queries.ts                                    # Public + internal queries  
 ├── mutations.ts                                  # Public + internal mutations
 ├── actions.ts                                    # AI generation
-└── workflows.ts                                  # Orchestration
+└── workflows.ts                                  # Durable workflow orchestration
 packages/backend/convex/articleContents/queries.ts    # Add getById
 packages/backend/convex/subjectSections/queries.ts    # Add getById
 ```
@@ -101,9 +102,10 @@ pending → generating-script → generating-speech → completed
 - ✅ Kebab-case status values (`generating-script` not `generating_script`)
 - ✅ Store voice settings per audio (future-proof)
 - ✅ No api.ts - mix public/internal in queries/mutations
-- ✅ No unused functions - only what we need
 - ✅ Content queries in their respective folders
 - ✅ Uses AI SDK (not ElevenLabs SDK directly)
+- ✅ Uses Convex Workflow for durable execution
+- ✅ ConvexError with `{ code, message }` pattern
 
 ## Commands
 ```bash
