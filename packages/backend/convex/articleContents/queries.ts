@@ -1,20 +1,25 @@
 import { internalQuery } from "@repo/backend/convex/_generated/server";
+import { localeValidator } from "@repo/backend/convex/lib/contentValidators";
 import { vv } from "@repo/backend/convex/lib/validators";
 import { v } from "convex/values";
+import { nullable } from "convex-helpers/validators";
 
+/**
+ * Get article content by ID for audio script generation.
+ * Internal use only - not exposed to clients.
+ */
 export const getById = internalQuery({
   args: {
     id: vv.id("articleContents"),
   },
-  returns: v.union(
+  returns: nullable(
     v.object({
       title: v.string(),
       description: v.optional(v.string()),
       body: v.string(),
-      locale: v.union(v.literal("en"), v.literal("id")),
+      locale: localeValidator,
       contentHash: v.string(),
-    }),
-    v.null()
+    })
   ),
   handler: async (ctx, args) => {
     const article = await ctx.db.get(args.id);

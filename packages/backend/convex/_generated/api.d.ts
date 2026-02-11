@@ -9,6 +9,7 @@
  */
 
 import type * as articleContents_mutations from "../articleContents/mutations.js";
+import type * as articleContents_queries from "../articleContents/queries.js";
 import type * as auth from "../auth.js";
 import type * as chats_mutations from "../chats/mutations.js";
 import type * as chats_queries from "../chats/queries.js";
@@ -58,6 +59,7 @@ import type * as schools_mutations from "../schools/mutations.js";
 import type * as schools_queries from "../schools/queries.js";
 import type * as schools_utils from "../schools/utils.js";
 import type * as subjectSections_mutations from "../subjectSections/mutations.js";
+import type * as subjectSections_queries from "../subjectSections/queries.js";
 import type * as subscriptions_mutations from "../subscriptions/mutations.js";
 import type * as subscriptions_queries from "../subscriptions/queries.js";
 import type * as subscriptions_utils from "../subscriptions/utils.js";
@@ -78,6 +80,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   "articleContents/mutations": typeof articleContents_mutations;
+  "articleContents/queries": typeof articleContents_queries;
   auth: typeof auth;
   "chats/mutations": typeof chats_mutations;
   "chats/queries": typeof chats_queries;
@@ -127,6 +130,7 @@ declare const fullApi: ApiFromModules<{
   "schools/queries": typeof schools_queries;
   "schools/utils": typeof schools_utils;
   "subjectSections/mutations": typeof subjectSections_mutations;
+  "subjectSections/queries": typeof subjectSections_queries;
   "subscriptions/mutations": typeof subscriptions_mutations;
   "subscriptions/queries": typeof subscriptions_queries;
   "subscriptions/utils": typeof subscriptions_utils;
