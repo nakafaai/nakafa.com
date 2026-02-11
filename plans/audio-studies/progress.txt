@@ -12,7 +12,7 @@ Implementation plan for Audio Studies feature - AI-generated podcast audio for e
 - [x] **0.4-subject-queries.md** - Add getById to subjectSections
 
 ### Core Implementation Phase (1.x)
-- [ ] **1.1-create-actions.md** - AI actions (script + speech generation)
+- [x] **1.1-create-actions.md** - AI actions (script + speech generation)
 - [ ] **1.2-create-queries.md** - Queries (public + internal)
 - [ ] **1.3-create-mutations.md** - Mutations with workflow integration
 - [ ] **1.4-create-workflow.md** - Durable workflow orchestration
@@ -22,7 +22,7 @@ Implementation plan for Audio Studies feature - AI-generated podcast audio for e
 
 ## Current Status
 - Phase 0: 4/4 tasks completed ✅
-- Phase 1: 0/4 tasks completed
+- Phase 1: 1/4 tasks completed ⏳
 - Phase 2: 0/1 tasks completed
 
 ## Completed Setup Phase
@@ -54,6 +54,23 @@ Implementation plan for Audio Studies feature - AI-generated podcast audio for e
 - No explicit handler return types - Convex infers automatically
 - Typecheck: ✅ Passing
 
+## Completed Core Phase
+
+### ✅ Task 1.1: AI Actions
+- File: `packages/backend/convex/audioStudies/actions.ts`
+- Two internal actions:
+  - `generateScript` - Uses Gemini to create podcast script with ElevenLabs V3 tags
+  - `generateSpeech` - Uses ElevenLabs V3 to generate audio from script
+- Prompt file: `packages/ai/prompt/audio-studies.ts`
+  - Uses `createPrompt` utility
+  - Optimized for ElevenLabs V3 audio tags ([curious], [excited], etc.)
+  - Supports multiple languages via `LANGUAGE_GUIDELINES` record
+  - Dynamic script length based on content coverage
+- Proper error handling with `ConvexError`
+- Types reused from schema (`ContentId`, `ContentType`)
+- Exported validators from schema for reuse
+- Type assertions required for branded ID types (TypeScript limitation)
+
 ## Convex-Helpers Patterns Used
 
 ### In Schemas:
@@ -81,10 +98,10 @@ handler: async (ctx, args) => { ... }
 ```
 
 ## Next Task
-**Task 1.1: Create AI Actions**
-- File: `packages/backend/convex/audioStudies/actions.ts`
-- Create generateScript and generateSpeech internal actions
-- Uses AI SDK (Gemini) and ElevenLabs for audio generation
+**Task 1.2: Create Queries**
+- File: `packages/backend/convex/audioStudies/queries.ts`
+- Create public queries: `getStatus`, `getHistory`, `getAudio`
+- Create internal queries: `get`, `getWithScript`, `findByContentVoice`
 - Follow convex-helpers patterns established in Phase 0
 
 ## Commands
