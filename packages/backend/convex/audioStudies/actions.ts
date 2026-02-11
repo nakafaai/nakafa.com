@@ -56,6 +56,22 @@ export const generateScript = internalAction({
         audio.contentType
       );
 
+      // Verify content hasn't changed before generating (save money)
+      const hashStillValid = await ctx.runQuery(
+        internal.audioStudies.queries.verifyContentHash,
+        {
+          contentAudioId: args.contentAudioId,
+          expectedHash: audio.contentHash,
+        }
+      );
+
+      if (!hashStillValid) {
+        throw new ConvexError({
+          code: "CONTENT_CHANGED",
+          message: "Content changed during generation, aborting to save costs",
+        });
+      }
+
       const prompt = podcastScriptPrompt({
         title: content.title,
         description: content.description,
@@ -67,6 +83,23 @@ export const generateScript = internalAction({
         model: model.languageModel("gemini-3-flash"),
         prompt,
       });
+
+      // Double-check hash hasn't changed before saving
+      const hashStillValidAfter = await ctx.runQuery(
+        internal.audioStudies.queries.verifyContentHash,
+        {
+          contentAudioId: args.contentAudioId,
+          expectedHash: audio.contentHash,
+        }
+      );
+
+      if (!hashStillValidAfter) {
+        throw new ConvexError({
+          code: "CONTENT_CHANGED",
+          message:
+            "Content changed after generation, discarding result to save costs",
+        });
+      }
 
       await ctx.runMutation(internal.audioStudies.mutations.saveScript, {
         contentAudioId: args.contentAudioId,
@@ -110,6 +143,19 @@ export const generateSpeech = internalAction({
     });
 
     try {
+      // Get the audio record to check current hash
+      const audioRecord = await ctx.runQuery(
+        internal.audioStudies.queries.getById,
+        { contentAudioId: args.contentAudioId }
+      );
+
+      if (!audioRecord) {
+        throw new ConvexError({
+          code: "NOT_FOUND",
+          message: "Audio record not found",
+        });
+      }
+
       const result = await aiGenerateSpeech({
         model: elevenlabs.speech("eleven_v3"),
         text: audio.script,
@@ -120,6 +166,23 @@ export const generateSpeech = internalAction({
           },
         },
       });
+
+      // Verify hash hasn't changed before saving (ElevenLabs costs money!)
+      const hashStillValid = await ctx.runQuery(
+        internal.audioStudies.queries.verifyContentHash,
+        {
+          contentAudioId: args.contentAudioId,
+          expectedHash: audioRecord.contentHash,
+        }
+      );
+
+      if (!hashStillValid) {
+        throw new ConvexError({
+          code: "CONTENT_CHANGED",
+          message:
+            "Content changed after speech generation, discarding to save costs",
+        });
+      }
 
       const audioBlob = new Blob([new Uint8Array(result.audio.uint8Array)], {
         type: result.audio.mediaType,

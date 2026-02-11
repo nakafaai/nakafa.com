@@ -1,3 +1,4 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
@@ -220,6 +221,16 @@ export const bulkSyncArticles = internalMutation({
           contentHash: article.contentHash,
           syncedAt: now,
         });
+
+        // Invalidate cached audio since content changed
+        await ctx.runMutation(
+          internal.audioStudies.mutations.updateContentHash,
+          {
+            contentId: existing._id,
+            contentType: "article",
+            newHash: article.contentHash,
+          }
+        );
 
         authorLinksCreated += await syncContentAuthorsWithCache(
           ctx,
@@ -457,6 +468,16 @@ export const bulkSyncSubjectSections = internalMutation({
           contentHash: section.contentHash,
           syncedAt: now,
         });
+
+        // Invalidate cached audio since content changed
+        await ctx.runMutation(
+          internal.audioStudies.mutations.updateContentHash,
+          {
+            contentId: existing._id,
+            contentType: "subject",
+            newHash: section.contentHash,
+          }
+        );
 
         authorLinksCreated += await syncContentAuthorsWithCache(
           ctx,

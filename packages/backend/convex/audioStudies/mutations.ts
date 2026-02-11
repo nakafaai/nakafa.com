@@ -1,4 +1,8 @@
 import { internalMutation } from "@repo/backend/convex/_generated/server";
+import {
+  contentIdValidator,
+  contentTypeValidator,
+} from "@repo/backend/convex/audioStudies/schema";
 import { audioStatusValidator } from "@repo/backend/convex/lib/contentValidators";
 import { vv } from "@repo/backend/convex/lib/validators";
 import { ConvexError, v } from "convex/values";
@@ -124,5 +128,58 @@ export const markFailed = internalMutation({
     });
 
     return null;
+  },
+});
+
+/**
+ * Update content hash and clear outdated audio data.
+ * Called when content is updated to invalidate cached audio.
+ * Deletes old audio file from storage and resets for regeneration.
+ */
+export const updateContentHash = internalMutation({
+  args: {
+    contentId: contentIdValidator,
+    contentType: contentTypeValidator,
+    newHash: v.string(),
+  },
+  returns: v.object({ updatedCount: v.number() }),
+  handler: async (ctx, args) => {
+    const audios = await ctx.db
+      .query("contentAudios")
+      .withIndex("content", (q) =>
+        q.eq("contentId", args.contentId).eq("contentType", args.contentType)
+      )
+      .collect();
+
+    let updatedCount = 0;
+
+    for (const audio of audios) {
+      // Skip if hash already matches (idempotent)
+      if (audio.contentHash === args.newHash) {
+        continue;
+      }
+
+      // Delete old audio file from storage (save space)
+      if (audio.audioStorageId) {
+        await ctx.storage.delete(audio.audioStorageId);
+      }
+
+      // Update record with new hash and clear old data
+      await ctx.db.patch("contentAudios", audio._id, {
+        contentHash: args.newHash,
+        status: "pending",
+        script: undefined,
+        audioStorageId: undefined,
+        audioDuration: undefined,
+        audioSize: undefined,
+        errorMessage: undefined,
+        failedAt: undefined,
+        updatedAt: Date.now(),
+      });
+
+      updatedCount++;
+    }
+
+    return { updatedCount };
   },
 });

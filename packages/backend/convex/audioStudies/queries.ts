@@ -76,3 +76,25 @@ export const getWithScriptById = internalQuery({
     };
   },
 });
+
+/**
+ * Internal: Verify content hash matches expected value.
+ * Used by actions to check if content changed during generation.
+ * Returns true if hash matches, false otherwise.
+ */
+export const verifyContentHash = internalQuery({
+  args: {
+    contentAudioId: vv.id("contentAudios"),
+    expectedHash: v.string(),
+  },
+  returns: v.boolean(),
+  handler: async (ctx, args) => {
+    const audio = await ctx.db.get(args.contentAudioId);
+
+    if (!audio) {
+      return false;
+    }
+
+    return audio.contentHash === args.expectedHash;
+  },
+});
