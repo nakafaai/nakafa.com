@@ -87,10 +87,31 @@ export function BlockArt({
   waveDuration = DEFAULT_WAVE_DURATION,
   onCellClick,
 }: BlockArtProps) {
-  const isMobile = useMediaQuery("(max-width: 1024px)");
+  const isLaptop = useMediaQuery("(min-width: 1024px)");
+  const isDesktop = useMediaQuery("(min-width: 1280px)");
 
-  const Cols = Math.max(1, Math.floor(gridCols ?? (isMobile ? 8 : 16)));
-  const Rows = Math.max(1, Math.floor(gridRows ?? (isMobile ? 4 : 7)));
+  const getDefaultCols = () => {
+    if (isDesktop) {
+      return 18;
+    }
+    if (isLaptop) {
+      return 16;
+    }
+    return 8;
+  };
+
+  const getDefaultRows = () => {
+    if (isDesktop) {
+      return 8;
+    }
+    if (isLaptop) {
+      return 7;
+    }
+    return 4;
+  };
+
+  const Cols = Math.max(1, Math.floor(gridCols ?? getDefaultCols()));
+  const Rows = Math.max(1, Math.floor(gridRows ?? getDefaultRows()));
   const totalCells = Cols * Rows;
 
   const [containerRef, animate] = useAnimate<HTMLButtonElement>();
