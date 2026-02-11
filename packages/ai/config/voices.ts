@@ -119,5 +119,5 @@ export function getVoiceConfig(key: VoiceKey): VoiceConfig {
  * @returns True if the key is a valid VoiceKey
  */
 export function isValidVoiceKey(key: string): key is VoiceKey {
-  return key in PREDEFINED_VOICES;
+  return Object.hasOwn(PREDEFINED_VOICES, key);
 }

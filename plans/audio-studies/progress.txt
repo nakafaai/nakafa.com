@@ -29,13 +29,17 @@ Implementation plan for Audio Studies feature - AI-generated podcast audio for e
 
 ### ✅ Task 0.1: Voice configuration
 - File: `packages/ai/config/voices.ts`
-- Features: Nina voice with official ElevenLabs API docs
-- Type-safe with interfaces and helper functions
+- Features: Nina voice (free plan limitation)
+- Documentation includes all voice settings from official ElevenLabs API
+- Helper functions: `getVoiceConfig()`, `isValidVoiceKey()`
 
 ### ✅ Task 0.2: Database schema
 - File: `packages/backend/convex/audioStudies/schema.ts`
 - Tables: contentAudios, userContentAudios
 - Proper indexes for efficient queries
+- Uses convex-helpers `literals()` for contentType
+- Uses `v.optional()` for fields that don't exist until generated
+- Uses shared validators from contentValidators
 - Updated main schema.ts with import
 - Typecheck: ✅ Passing
 
@@ -43,27 +47,45 @@ Implementation plan for Audio Studies feature - AI-generated podcast audio for e
 - Files: 
   - `packages/backend/convex/articleContents/queries.ts`
   - `packages/backend/convex/subjectSections/queries.ts`
-- Both use convex-helpers validators (`vv.id()`)
-- Export reusable types with `Infer<typeof validator>`
+- Both use convex-helpers validators:
+  - `vv.id()` for type-safe table IDs
+  - `nullable()` for union with null return types
+- Uses shared `localeValidator` from contentValidators
+- No explicit handler return types - Convex infers automatically
 - Typecheck: ✅ Passing
 
 ## Convex-Helpers Patterns Used
+
+### In Schemas:
 ```typescript
-// Type-safe ID validation
+// Use literals() for string unions
+import { literals } from "convex-helpers/validators";
+contentType: literals("article", "subject")
+
+// Use v.optional() for unset fields (not nullable)
+script: v.optional(v.string())
+```
+
+### In Functions:
+```typescript
+// Use vv.id() for type-safe table references
 import { vv } from "@repo/backend/convex/lib/validators";
 args: { id: vv.id("articleContents") }
 
-// Reusable validators with exported types
-const contentValidator = v.object({...});
-export type ContentType = Infer<typeof contentValidator>;
-returns: v.union(contentValidator, v.null())
+// Use nullable() for return types
+import { nullable } from "convex-helpers/validators";
+returns: nullable(v.object({...}))
+
+// No explicit handler return type - let Convex infer
+handler: async (ctx, args) => { ... }
 ```
 
 ## Next Task
 **Task 1.1: Create AI Actions**
 - File: `packages/backend/convex/audioStudies/actions.ts`
 - Create generateScript and generateSpeech internal actions
-- Uses AI SDK and ElevenLabs for audio generation
+- Uses AI SDK (Gemini) and ElevenLabs for audio generation
+- Follow convex-helpers patterns established in Phase 0
 
 ## Commands
 ```bash
