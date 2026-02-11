@@ -1,9 +1,6 @@
-import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
+import { createElevenLabs } from "@ai-sdk/elevenlabs";
 import { keys } from "@repo/ai/keys";
 
-/**
- * ElevenLabs API client configured with API key
- */
-export const elevenlabs = new ElevenLabsClient({
+export const elevenlabs = createElevenLabs({
   apiKey: keys().ELEVENLABS_API_KEY,
 });
