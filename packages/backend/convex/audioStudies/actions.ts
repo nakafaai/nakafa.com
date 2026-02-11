@@ -32,8 +32,8 @@ export const generateScript = internalAction({
   args: { contentAudioId: vv.id("contentAudios") },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const audio = await ctx.runQuery(internal.audioStudies.queries.get, {
-      id: args.contentAudioId,
+    const audio = await ctx.runQuery(internal.audioStudies.queries.getById, {
+      contentAudioId: args.contentAudioId,
     });
 
     if (!audio) {
@@ -93,8 +93,8 @@ export const generateSpeech = internalAction({
   returns: v.null(),
   handler: async (ctx, args) => {
     const audio = await ctx.runQuery(
-      internal.audioStudies.queries.getWithScript,
-      { id: args.contentAudioId }
+      internal.audioStudies.queries.getWithScriptById,
+      { contentAudioId: args.contentAudioId }
     );
 
     if (!audio?.script) {
