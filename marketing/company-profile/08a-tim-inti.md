@@ -74,7 +74,6 @@ page_number: 12
 ✅ **Fokus** - Satu misi, tanpa distraksi  
 ✅ **Agility** - Decision making cepat  
 ✅ **Cost Efficiency** - Bootstrap, sustainable  
-✅ **Quality** - 2 passionate > 20 yang cuma cari gaji  
 ✅ **Community-Powered** - Tim inti + komunitas  
 
 ---
