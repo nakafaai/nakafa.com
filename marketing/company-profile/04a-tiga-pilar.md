@@ -29,22 +29,24 @@ page_number: 5
 ## Pilar 2: Tutor AI (Nina)
 
 **Apa itu Nina?**
-Asisten AI yang bisa:
-- Menjelaskan konsep dengan bahasa sederhana
-- Menjawab pertanyaan spesifik
-- Membantu PR (bukan mengerjakan untuk siswa)
-- Beradaptasi dengan gaya belajar masing-masing
+Asisten AI yang mengerti konteks belajar siswa secara real-time.
 
 **Cara Kerja:**
-1. Siswa foto soal
-2. Tanya ke Nina: "Cara ngerjain ini gimana?"
-3. Dapat penjelasan langkah demi langkah
-4. Belajar sampai paham
+1. **Siswa buka materi** di nakafa.com (misal: Hukum Newton)
+2. **Nina otomatis paham konteks** - tau siswa lagi belajar apa
+3. **Siswa tanya langsung**: "Bagian ini gimana ya?" atau "Contoh soalnya dong"
+4. **Nina jawab berdasarkan materi yang dibuka** - kontekstual dan relevan
+
+**Keunggulan:**
+- **Kontekstual** - Nina tau materi apa yang sedang dibaca siswa
+- **Personalized** - Menyesuaikan penjelasan dengan level siswa
+- **Interaktif** - Bisa diskusi bolak-balik sampai paham
+- **Multi-modal** - Bisa tanya teks, upload gambar soal, atau minta contoh
 
 **Teknologi:**
 - 15+ AI models (GPT, Claude, Gemini, Kimi, Llama)
 - RAG (Retrieval-Augmented Generation)
-- Diakses via nakafa.com
+- Context Memory - ingat percakapan
 - Streaming real-time
 
 ---
