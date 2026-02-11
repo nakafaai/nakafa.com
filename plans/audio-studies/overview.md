@@ -80,6 +80,17 @@ PREDEFINED_VOICES = {
 };
 ```
 
+## ElevenLabs v3 Audio Tags
+
+Scripts use ElevenLabs v3 audio tags for emotional context:
+
+**Emotional States**: `[excited]`, `[curious]`, `[calm]`, `[nervous]`, `[sorrowful]`
+**Reactions**: `[sigh]`, `[laughs]`, `[whispers]`, `[gasps]`
+**Cognitive Beats**: `[pauses]`, `[hesitates]`, `[stammers]`
+**Tone Modifiers**: `[cheerfully]`, `[flatly]`, `[deadpan]`
+
+Example: `"[excited] Today we're exploring something fascinating! [pauses] Did you know that [curious] every number has a unique story?"`
+
 ## Progress Tracking
 
 See `progress.txt` for detailed completion status.
