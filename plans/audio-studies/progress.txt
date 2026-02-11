@@ -14,7 +14,7 @@ Implementation plan for Audio Studies feature - AI-generated podcast audio for e
 ### Core Implementation Phase (1.x)
 - [x] **1.1-create-actions.md** - AI actions (script + speech generation)
 - [x] **1.2-create-queries.md** - Internal queries only (only what's needed)
-- [ ] **1.3-create-mutations.md** - Mutations with workflow integration
+- [x] **1.3-create-mutations.md** - Mutations with workflow integration
 - [ ] **1.4-create-workflow.md** - Durable workflow orchestration
 
 ### Integration Phase (2.x)
@@ -22,7 +22,7 @@ Implementation plan for Audio Studies feature - AI-generated podcast audio for e
 
 ## Current Status
 - Phase 0: 4/4 tasks completed ✅
-- Phase 1: 2/4 tasks completed ⏳
+- Phase 1: 3/4 tasks completed ⏳
 - Phase 2: 0/1 tasks completed
 
 ## Completed Setup Phase
@@ -81,6 +81,21 @@ Implementation plan for Audio Studies feature - AI-generated podcast audio for e
 - Reuses `voiceSettingsValidator` from shared validators
 - Follows convex-helpers patterns
 
+### ✅ Task 1.3: Mutations (Internal Only)
+- File: `packages/backend/convex/audioStudies/mutations.ts`
+- **Only created mutations actually used by actions:**
+  - `updateStatus` - Update generation status (used by both actions)
+  - `saveScript` - Save generated script, mark completed
+  - `saveAudio` - Save audio metadata, mark completed
+  - `markFailed` - Mark generation as failed with error message
+- All mutations are `internalMutation` (only callable from Convex)
+- Table names explicitly included in `ctx.db.get()` and `ctx.db.patch()`
+- Uses `ConvexError` for proper error handling
+- Timestamps updated on every mutation
+- Error handling helper moved to shared utils:
+  - `getErrorMessage()` in `packages/backend/convex/utils/helper.ts`
+  - Extracts `data.message` from `ConvexError`, falls back to `error.message`
+
 ## Convex-Helpers Patterns Used
 
 ### In Schemas:
@@ -107,19 +122,15 @@ returns: nullable(v.object({...}))
 handler: async (ctx, args) => { ... }
 ```
 
-## Next Tasks
-**Task 1.3: Create Mutations**
-- File: `packages/backend/convex/audioStudies/mutations.ts`
-- Required mutations for workflow:
-  - `updateStatus` - Update generation status
-  - `saveScript` - Save generated script
-  - `saveAudio` - Save audio metadata
-  - `markFailed` - Mark generation as failed
-
+## Next Task
 **Task 1.4: Create Workflow**
 - File: `packages/backend/convex/audioStudies/workflows.ts`
-- Orchestrate script generation and TTS generation
-- Error handling and retry logic
+- Orchestrate the generation pipeline:
+  1. Create audio record (pending status)
+  2. Trigger script generation action
+  3. Trigger speech generation action
+  4. Handle errors and retries
+- Use Convex durable workflows for reliability
 
 ## Commands
 ```bash
