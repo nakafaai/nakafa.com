@@ -19,7 +19,7 @@ Enable Pro users to generate podcast-style audio studies from educational conten
                     │  Return Cached  │      │  Start Workflow  │  │  Return      │
                     │  Audio URL      │      │  (Generate New)  │  │  "Generating"│
                     └─────────────────┘      └──────────────────┘  └──────────────┘
-                                                          │
+                                                           │
                               ┌───────────────────────────┼───────────────────┐
                               │                           │                   │
                               ▼                           ▼                   ▼
@@ -27,13 +27,23 @@ Enable Pro users to generate podcast-style audio studies from educational conten
                     │  AI Script Gen  │─────▶│  ElevenLabs TTS  │──▶│  Store in Convex │
                     │  (Action)       │      │  (Action)        │  │  Storage         │
                     └─────────────────┘      └──────────────────┘  └──────────────────┘
+                                    │                                                  │
+                                    │  Real-time Subscription (No Polling!)            │
+                                    │  Status: pending → generating_script            │
+                                    │          → generating_speech → completed        │
+                                    │                                                  │
+                                    ▼                                                  │
+                    ┌──────────────────────────────────────────────────────────┐      │
+                    │  UI Auto-Updates via Convex useQuery Subscription         │◀─────┘
+                    │  All connected clients see status changes instantly!      │
+                    └──────────────────────────────────────────────────────────┘
 ```
 
 ## Key Design Decisions
 
 1. **Shared Cache**: One audio file per content+voice, shared across all users
 2. **No Expiration**: Audio stays cached indefinitely (storage cheaper than regeneration)
-3. **Auto-Regeneration**: Content updates trigger cache invalidation via contentHash
+3. **Auto-Regeneration**: Content updates trigger cache invalidation via contentHash (old audio files deleted to prevent orphans)
 4. **Deduping**: Multiple simultaneous requests for same content queue behind one generation
 5. **5 Predefined Voices**: Nina (primary), Alex, Sarah, David, Maya
 
@@ -67,6 +77,14 @@ Enable Pro users to generate podcast-style audio studies from educational conten
    - Convert to speech using ElevenLabs
    - Store in Convex storage
    - Update database
+
+## Real-time Updates
+
+Convex automatically pushes status changes to all subscribed clients:
+- Frontend subscribes with `useQuery(api.audioStudies.getAudioStatus, { contentAudioId })`
+- UI instantly updates when workflow changes status (pending → generating_script → generating_speech → completed)
+- No polling required - this is Convex's real-time subscription model
+- Multiple users see the same status simultaneously
 
 ## Voice Configuration
 
