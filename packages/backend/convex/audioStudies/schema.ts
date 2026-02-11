@@ -5,7 +5,7 @@ import {
 } from "@repo/backend/convex/lib/contentValidators";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
-import { literals, nullable } from "convex-helpers/validators";
+import { literals } from "convex-helpers/validators";
 
 const tables = {
   /**
@@ -23,20 +23,20 @@ const tables = {
     /** ElevenLabs voice ID */
     voiceId: v.string(),
     /** Voice settings stored per audio for future customization */
-    voiceSettings: nullable(voiceSettingsValidator),
+    voiceSettings: v.optional(voiceSettingsValidator),
     status: audioStatusValidator,
     /** Generated podcast script with ElevenLabs v3 tags */
-    script: nullable(v.string()),
+    script: v.optional(v.string()),
     /** Convex storage ID for the generated audio file */
-    audioStorageId: nullable(v.id("_storage")),
+    audioStorageId: v.optional(v.id("_storage")),
     /** Audio duration in seconds */
-    audioDuration: nullable(v.number()),
+    audioDuration: v.optional(v.number()),
     /** Audio file size in bytes */
-    audioSize: nullable(v.number()),
+    audioSize: v.optional(v.number()),
     /** Error message if generation failed */
-    errorMessage: nullable(v.string()),
+    errorMessage: v.optional(v.string()),
     /** Timestamp when generation failed */
-    failedAt: nullable(v.number()),
+    failedAt: v.optional(v.number()),
     /** Number of generation attempts (for retry logic) */
     generationAttempts: v.number(),
     /** Last update timestamp */
@@ -57,7 +57,7 @@ const tables = {
     contentId: v.union(v.id("articleContents"), v.id("subjectSections")),
     contentType: literals("article", "subject"),
     playCount: v.number(),
-    lastPlayedAt: nullable(v.number()),
+    lastPlayedAt: v.optional(v.number()),
     updatedAt: v.number(),
   })
     .index("user", ["userId"])
