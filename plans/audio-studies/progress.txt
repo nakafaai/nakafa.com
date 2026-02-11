@@ -6,23 +6,41 @@ Implementation plan for Audio Studies feature - AI-generated podcast audio for e
 ## Tasks
 
 ### Setup Phase (0.x)
-1. ✅ **01-voice-config.md** - Voice configuration (5 voices)
-2. ✅ **02-schema.md** - Database schema (contentAudios, userContentAudios)
-3. ✅ **03-article-queries.md** - Add getById to articleContents
-4. ✅ **04-subject-queries.md** - Add getById to subjectSections
+- [x] **0.1-voice-config.md** - Voice configuration (Nina voice with ElevenLabs API docs)
+- [ ] **0.2-schema.md** - Database schema (contentAudios, userContentAudios)
+- [ ] **0.3-article-queries.md** - Add getById to articleContents
+- [ ] **0.4-subject-queries.md** - Add getById to subjectSections
 
 ### Core Implementation Phase (1.x)
-5. ✅ **1.1-create-actions.md** - AI actions (script + speech generation)
-6. ✅ **1.2-create-queries.md** - Queries (public + internal)
-7. ✅ **1.3-create-mutations.md** - Mutations (public + internal)
-8. ✅ **1.4-create-workflow.md** - Workflow orchestration
+- [ ] **1.1-create-actions.md** - AI actions (script + speech generation)
+- [ ] **1.2-create-queries.md** - Queries (public + internal)
+- [ ] **1.3-create-mutations.md** - Mutations (public + internal)
+- [ ] **1.4-create-workflow.md** - Workflow orchestration
 
 ### Integration Phase (2.x)
-9. ✅ **2.1-integrate-content-sync.md** - Content update invalidation
+- [ ] **2.1-integrate-content-sync.md** - Content update invalidation
 
-## Status
-- [x] All tasks created
-- [ ] Implementation pending
+## Current Status
+- Phase 0: 1/4 tasks completed
+- Phase 1: 0/4 tasks completed  
+- Phase 2: 0/1 tasks completed
+
+## Completed
+1. ✅ Task 0.1: Voice configuration
+   - File: `packages/ai/config/voices.ts`
+   - Features: Nina voice only (free plan limitation)
+   - Documentation includes all voice settings from official ElevenLabs API
+
+## Known Issues Fixed in Plans
+- ✅ Task file naming standardized (0.1, 0.2, 0.3, 0.4, 1.1, 1.2, 1.3, 1.4, 2.1)
+- ✅ Task 0.1 updated to show 1 voice (Nina) instead of 5 voices
+- ⚠️ Still need to fix: import paths, ConvexError syntax, workflow pattern
+
+## Next Task
+**Task 0.2: Database Schema**
+- Create `packages/backend/convex/audioStudies/schema.ts`
+- Update `packages/backend/convex/schema.ts`
+- Tables: contentAudios, userContentAudios
 
 ## Commands
 ```bash

@@ -36,6 +36,7 @@ export default defineSchema(
     ...subjectSectionsSchema,
     ...exerciseSetsSchema,
     ...exerciseQuestionsSchema,
+    ...audioStudiesSchema,
   },
   {
     schemaValidation: true,
