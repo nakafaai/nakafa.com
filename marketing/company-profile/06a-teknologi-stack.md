@@ -1,6 +1,6 @@
 ---
 layout: technology
-page_number: 7
+page_number: 8
 ---
 
 # Arsitektur Teknologi

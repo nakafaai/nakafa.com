@@ -11,37 +11,41 @@ page_number: 4
 
 ## Filosofi: Pendidikan Terbuka
 
-Pendidikan terbuka bukan hanya soal gratis. Tapi juga:
+Bukan hanya gratis, tapi juga:
 
-✅ **Open Access** - Konten bebas diakses tanpa syarat  
-✅ **Open Source** - Kode terbuka, komunitas bisa kontribusi  
-✅ **Open Format** - Materi bisa diunduh, dicetak, diintegrasikan  
-✅ **Open Time** - Belajar kapan saja, tidak terikat jadwal  
-✅ **Open AI** - Tutor AI 24/7 untuk setiap siswa  
-
----
-
-## Rencana 3 Fase
-
-| Fase | Target | Timeline |
-|------|--------|----------|
-| **1** | Digitalisasi buku pelajaran resmi | 2024-2025 |
-| **2** | Adaptasi untuk daerah dengan akses terbatas | 2025-2026 |
-| **3** | Integrasi penuh dengan kurikulum nasional | 2026+ |
+| Pilar | Deskripsi |
+|-------|-----------|
+| **Open Access** | Konten bebas diakses tanpa syarat |
+| **Open Source** | Kode terbuka, komunitas berkontribusi |
+| **Open Format** | Materi bisa diunduh dan diintegrasikan |
+| **Open Time** | Belajar kapan saja, 24/7 |
+| **Open AI** | Tutor AI untuk setiap siswa |
 
 ---
 
-## Impact Nyata
+## Target 2026
 
-### Testimoni Pengguna
+Fokus pada **3 prioritas utama** tahun ini:
 
-> *"Biasanya aku stuck di soal fisika sampai malem gara-gara nggak ada yang bisa ditanya. Sekarang tinggal chat Nina, langsung dapat penjelasan detail."*  
+| Prioritas | Target |
+|-----------|--------|
+| **1. Digitalisasi** | Buku pelajaran resmi dalam format AI-ready |
+| **2. Akses Universal** | Optimasi untuk daerah dengan koneksi terbatas |
+| **3. Integrasi Kurikulum** | Penyelarasan penuh dengan Kurikulum Merdeka |
+
+---
+
+## Impact Nyata (2026)
+
+### Testimoni
+
+> *"Biasanya stuck di soal fisika tengah malam. Sekarang chat Nina, langsung dapat penjelasan detail."*  
 > — Siswa SMA
 
-> *"Aku dari kampung di Sumatera, akses ke bimbel susah dan mahal. Dengan Nakafa, aku bisa belajar materi SBMPTN yang sama dengan teman-teman di Jakarta."*  
+> *"Aku dari kampung di Sumatera, akses ke bimbel susah. Dengan Nakafa, bisa belajar materi SBMPTN yang sama dengan teman di Jakarta."*  
 > — Calon Mahasiswa
 
-### Metrics Organik (2024)
+### Metrics Organik
 
 | Metrik | Nilai |
 |--------|-------|
@@ -52,15 +56,13 @@ Pendidikan terbuka bukan hanya soal gratis. Tapi juga:
 
 ---
 
-## Kenapa Penting untuk Indonesia?
+## Visi
 
-Pendidikan adalah fondasi pembangunan bangsa.
+**Setiap anak Indonesia** - di mana pun, berapapun penghasilan orang tuanya - punya akses ke pendidikan berkualitas.
 
-**Visi kami:** Setiap anak Indonesia - di mana pun, berapapun penghasilan orang tuanya - punya akses ke pendidikan berkualitas.
-
-**Nakafa bukan solusi sempurna. Tapi kami langkah konkret menuju sana.**
+**Nakafa: Langkah konkret menuju sana.**
 
 ---
 
 *PT. Nakafa Tekno Kreatif*  
-*Fck Pendidikan Tertutup, Nikmati Pendidikan Terbuka Gratis*
+*Pendidikan Terbuka untuk Semua*

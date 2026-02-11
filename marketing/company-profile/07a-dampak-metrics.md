@@ -1,6 +1,6 @@
 ---
 layout: impact
-page_number: 8
+page_number: 10
 ---
 
 # Metrics & Dampak
@@ -9,7 +9,7 @@ page_number: 8
 
 ---
 
-## Metrics Kunci (2024)
+## Metrics Kunci (2026)
 
 ### Pengguna
 

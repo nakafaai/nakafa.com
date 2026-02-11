@@ -1,6 +1,6 @@
 ---
 layout: products
-page_number: 6
+page_number: 7
 ---
 
 # Produk & Layanan

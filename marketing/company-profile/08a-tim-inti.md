@@ -1,6 +1,6 @@
 ---
 layout: team
-page_number: 9
+page_number: 12
 ---
 
 # Tim Inti
@@ -82,9 +82,9 @@ page_number: 9
 
 | Tahun | Target | Role Priority |
 |-------|--------|---------------|
-| **Now** | 2 orang | CEO + Creative Lead |
-| **2025** | 5-7 orang | + Content Lead, AI Engineer, Community Manager |
-| **2026** | 10-15 orang | + Business Dev, Mobile Dev, Data Analyst |
+| **Now (2026)** | 2 orang | CEO + Creative Lead |
+| **Target 2026** | 5-7 orang | + Content Lead, AI Engineer, Community Manager |
+| **2027** | 10-15 orang | + Business Dev, Mobile Dev, Data Analyst |
 
 ---
 
