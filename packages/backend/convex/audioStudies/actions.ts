@@ -12,6 +12,7 @@ import type {
   ContentType,
 } from "@repo/backend/convex/audioStudies/schema";
 import { vv } from "@repo/backend/convex/lib/validators";
+import { getErrorMessage } from "@repo/backend/convex/utils/helper";
 import {
   experimental_generateSpeech as aiGenerateSpeech,
   generateText,
@@ -74,8 +75,7 @@ export const generateScript = internalAction({
     } catch (error) {
       await ctx.runMutation(internal.audioStudies.mutations.markFailed, {
         contentAudioId: args.contentAudioId,
-        error:
-          error instanceof Error ? error.message : "Script generation failed",
+        error: getErrorMessage(error),
       });
       throw error;
     }
@@ -140,8 +140,7 @@ export const generateSpeech = internalAction({
     } catch (error) {
       await ctx.runMutation(internal.audioStudies.mutations.markFailed, {
         contentAudioId: args.contentAudioId,
-        error:
-          error instanceof Error ? error.message : "Speech generation failed",
+        error: getErrorMessage(error),
       });
       throw error;
     }
