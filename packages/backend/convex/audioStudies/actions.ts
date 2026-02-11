@@ -107,7 +107,7 @@ export const generateSpeech = internalAction({
 
     try {
       const result = await aiGenerateSpeech({
-        model: elevenlabs.speech("eleven_multilingual_v2"),
+        model: elevenlabs.speech("eleven_v3"),
         text: audio.script,
         voice: audio.voiceId,
         providerOptions: {
