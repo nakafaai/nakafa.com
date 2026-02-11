@@ -44,7 +44,7 @@ export const generateScript = internalAction({
     }
 
     await ctx.runMutation(internal.audioStudies.mutations.updateStatus, {
-      id: args.contentAudioId,
+      contentAudioId: args.contentAudioId,
       status: "generating-script",
     });
 
@@ -68,12 +68,12 @@ export const generateScript = internalAction({
       });
 
       await ctx.runMutation(internal.audioStudies.mutations.saveScript, {
-        id: args.contentAudioId,
+        contentAudioId: args.contentAudioId,
         script,
       });
     } catch (error) {
       await ctx.runMutation(internal.audioStudies.mutations.markFailed, {
-        id: args.contentAudioId,
+        contentAudioId: args.contentAudioId,
         error:
           error instanceof Error ? error.message : "Script generation failed",
       });
@@ -105,7 +105,7 @@ export const generateSpeech = internalAction({
     }
 
     await ctx.runMutation(internal.audioStudies.mutations.updateStatus, {
-      id: args.contentAudioId,
+      contentAudioId: args.contentAudioId,
       status: "generating-speech",
     });
 
@@ -125,18 +125,21 @@ export const generateSpeech = internalAction({
         type: result.audio.mediaType,
       });
       const storageId = await ctx.storage.store(audioBlob);
-      const wordCount = audio.script.split(WORD_SPLIT_REGEX).length;
+      const wordCount = audio.script
+        .trim()
+        .split(WORD_SPLIT_REGEX)
+        .filter(Boolean).length;
       const duration = Math.ceil((wordCount / 150) * 60);
 
       await ctx.runMutation(internal.audioStudies.mutations.saveAudio, {
-        id: args.contentAudioId,
+        contentAudioId: args.contentAudioId,
         storageId,
         duration,
         size: result.audio.uint8Array.byteLength,
       });
     } catch (error) {
       await ctx.runMutation(internal.audioStudies.mutations.markFailed, {
-        id: args.contentAudioId,
+        contentAudioId: args.contentAudioId,
         error:
           error instanceof Error ? error.message : "Speech generation failed",
       });

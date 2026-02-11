@@ -1,12 +1,15 @@
 import { internalQuery } from "@repo/backend/convex/_generated/server";
 import {
+  contentIdValidator,
+  contentTypeValidator,
+} from "@repo/backend/convex/audioStudies/schema";
+import {
   audioStatusValidator,
   voiceSettingsValidator,
 } from "@repo/backend/convex/lib/contentValidators";
 import { vv } from "@repo/backend/convex/lib/validators";
 import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
-import { contentIdValidator, contentTypeValidator } from "@repo/backend/convex/audioStudies/schema";
 
 /**
  * Internal: Get content audio metadata by ID.
