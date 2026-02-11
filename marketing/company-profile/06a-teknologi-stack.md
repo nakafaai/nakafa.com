@@ -42,7 +42,7 @@ page_number: 8
 
 ---
 
-## Open Source
+## Open Source & Integrasi
 
 **GitHub:** github.com/nakafaai/nakafa.com
 
@@ -51,27 +51,10 @@ page_number: 8
 - Kolaborasi - Komunitas bisa kontribusi
 - Sustainable - Kalau kami berhenti, komunitas lanjutkan
 
----
-
-## API untuk Developer
-
-**Endpoint tersedia:**
-- `GET /api/subjects` - Daftar mata pelajaran
-- `GET /api/exercises` - Soal latihan
-- `POST /api/ai/chat` - Chat dengan Nina
-
-**Format:** JSON, mudah di-integrasikan
-
----
-
-## Integrasi LMS
-
-Sedang dikembangkan:
-- Google Classroom
-- Moodle
-- Schoology
-
-**Benefit:** Tidak perlu pindah platform, SSO ready
+**Integrasi Eksternal:**
+- **API Tersedia** - Developer bisa akses konten dan AI
+- **MCP Server** - Model Context Protocol untuk koneksi ke tools pengguna
+- **Format Terbuka** - Markdown, JSON, mudah di-integrasikan
 
 ---
 

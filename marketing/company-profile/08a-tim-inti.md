@@ -41,17 +41,18 @@ page_number: 12
 
 **Background:**
 - Desain Komunikasi Visual
-- Spesialisasi UI/UX design
-- Visual branding
+- Spesialisasi visual branding dan marketing
+- Pengalaman desain untuk berbagai proyek digital
 
 **Role:**
-- Visual Design
-- Brand Identity
-- Content Visualization
-- Marketing Materials
-- User Experience
+- Visual Design - Desain elemen visual platform
+- Brand Identity - Membangun identitas brand Nakafa
+- Marketing Materials - Asset untuk promosi dan partnership
+- Content Visualization - Ilustrasi dan visual untuk materi belajar
+- Open Graph & Thumbnails - Optimasi visual untuk social media
 
-**Filosofi:**> *"Design bukan cuma soal cantik, tapi soal membuat informasi mudah dicerna. Setiap desain harus membantu siswa belajar lebih efektif."*
+**Filosofi:**
+> *"Design bukan cuma soal cantik, tapi soal membuat informasi mudah dicerna. Setiap desain harus membantu siswa belajar lebih efektif."*
 
 **Connect:**
 - LinkedIn: [Nur Sita Utami](https://www.linkedin.com/in/nursitautami)
@@ -62,7 +63,7 @@ page_number: 12
 
 **Flat Structure:**
 - CEO (Nabil) - Strategy, Tech, Content, Business
-- Creative Lead (Nur Sita) - Design, Brand, UX
+- Creative Lead (Nur Sita) - Design, Brand, Marketing
 
 **Extended Team:** 15+ Community Contributors
 
@@ -75,16 +76,6 @@ page_number: 12
 ✅ **Cost Efficiency** - Bootstrap, sustainable  
 ✅ **Quality** - 2 passionate > 20 yang cuma cari gaji  
 ✅ **Community-Powered** - Tim inti + komunitas  
-
----
-
-## Rencana Pengembangan Tim
-
-| Tahun | Target | Role Priority |
-|-------|--------|---------------|
-| **Now (2026)** | 2 orang | CEO + Creative Lead |
-| **Target 2026** | 5-7 orang | + Content Lead, AI Engineer, Community Manager |
-| **2027** | 10-15 orang | + Business Dev, Mobile Dev, Data Analyst |
 
 ---
 
