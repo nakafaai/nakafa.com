@@ -1,6 +1,6 @@
 ---
 layout: solution
-page_number: 4
+page_number: 5
 ---
 
 # Solusi Nakafa: Pendidikan Terbuka dengan AI
