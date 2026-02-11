@@ -7,6 +7,8 @@ page_number: 6
 
 ## Solusi untuk Pendidikan Seluruh Indonesia
 
+Berdasarkan tiga pilar Nakafa (Konten Berkualitas, Tutor AI Nina, dan Open Infrastructure), kami menawarkan kerjasama strategis untuk memperluas dampak pendidikan terbuka.
+
 ---
 
 ## Tiga Skenario Kerjasama

@@ -15,7 +15,7 @@ page_number: 8
 - **Next.js 16** - React framework, server-side rendering
 - **TypeScript** - Type-safe, reliable code
 - **Convex** - Real-time backend database
-- **Tailtailwind CSS** - Responsive styling
+- **Tailwind CSS** - Responsive styling
 
 **Keunggulan:** Cepat, skalabel, aman, maintainable
 
