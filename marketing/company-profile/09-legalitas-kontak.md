@@ -17,11 +17,6 @@ page_number: 14
 | **NIB** | 2710230144326 |
 | **NPWP** | 50.866.680.7-403.000 |
 
-**KBLI:**
-- 62011 - Aktivitas Pemrograman Komputer
-- 63122 - Portal Web dan/atau Platform Digital
-- 85499 - Aktivitas Pendidikan Lainnya
-
 ---
 
 ## Alamat Kantor
@@ -56,8 +51,7 @@ Jawa Barat, Indonesia
 
 ## Struktur Kepemilikan
 
-- Nabil Akbarazzima Fatih: 99%
-- [Partner/Investor]: 1%
+- Nabil Akbarazzima Fatih: 100%
 
 **Pengurus:**
 - Direktur Utama: Nabil Akbarazzima Fatih
