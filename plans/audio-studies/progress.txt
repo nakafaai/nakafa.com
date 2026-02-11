@@ -110,16 +110,16 @@ Implementation plan for Audio Studies feature - AI-generated podcast-style audio
 
 ## Phase 5: Testing
 
-### Task 6.1: Test Audio Generation Flow
+### Task 5.1: Test Audio Generation Flow
 - **Status**: Not started
 - **File**: `packages/backend/convex/audioStudies/__tests__/audioGeneration.test.ts`
-- **Depends**: 1-5
+- **Depends**: 1-4
 - **Description**: Test end-to-end audio generation workflow
 
-### Task 6.2: Test Cache Invalidation
+### Task 5.2: Test Cache Invalidation
 - **Status**: Not started
 - **File**: `packages/backend/convex/audioStudies/__tests__/cacheInvalidation.test.ts`
-- **Depends**: 6.1, 4.1, 4.2
+- **Depends**: 5.1, 4.1, 4.2
 - **Description**: Test cache invalidation on content updates
 
 ---
