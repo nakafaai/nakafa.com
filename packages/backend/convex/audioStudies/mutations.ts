@@ -124,6 +124,7 @@ export const markFailed = internalMutation({
       status: "failed",
       errorMessage: args.error,
       failedAt: Date.now(),
+      generationAttempts: audio.generationAttempts + 1,
       updatedAt: Date.now(),
     });
 
