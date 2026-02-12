@@ -1042,5 +1042,63 @@ But seriously [whispers], quantum mechanics is fascinating.
         expect(chunk.text.length).toBeLessThanOrEqual(100);
       }
     });
+
+    it("should protect SSML break tags from splitting", () => {
+      const script = `First paragraph with a break. <break time="1.5s" /> Second sentence.
+
+Third paragraph that is longer and might need splitting if it exceeds the limit but in this case it should be fine. <break time="0.5s" /> Fourth sentence here.`;
+
+      const result = chunkScriptWithContext(script, DEFAULT_V3_CHUNK_CONFIG);
+
+      // Verify SSML tags are preserved intact
+      const combined = result.map((c) => c.text).join("\n\n");
+      expect(combined).toContain('<break time="1.5s" />');
+      expect(combined).toContain('<break time="0.5s" />');
+      expect(combined).not.toContain("__SSML_"); // No placeholders should remain
+    });
+
+    it("should handle SSML tags when forced to split long text", () => {
+      // Create text with SSML that will need to be split
+      const longText = "word ".repeat(200); // ~1000 chars
+      const script = `${longText}<break time="1.0s" />${longText}`;
+
+      const result = chunkScriptWithContext(script, {
+        maxRequestChars: 1000,
+        previousContextChars: 0,
+        nextContextChars: 0,
+        safetyMargin: 50,
+      });
+
+      // Should have multiple chunks
+      expect(result.length).toBeGreaterThan(1);
+
+      // All chunks should have intact SSML
+      const combined = result.map((c) => c.text).join("");
+      expect(combined).toContain('<break time="1.0s" />');
+      expect(combined).not.toContain("__SSML_");
+    });
+
+    it("should preserve SSML in context (previousText/nextText)", () => {
+      const script = `Paragraph one with a break. <break time="1.0s" /> End of one.
+
+Paragraph two starts here and continues with more text to make it substantial. <break time="0.5s" /> Middle of two.
+
+Paragraph three ends the script. <break time="1.5s" /> Final words.`;
+
+      const result = chunkScriptWithContext(script, DEFAULT_V3_CHUNK_CONFIG);
+
+      // If multiple chunks, check context preserves SSML
+      if (result.length > 1) {
+        const middleChunk = result[1];
+        expect(middleChunk.previousText).not.toContain("__SSML_");
+        expect(middleChunk.nextText).not.toContain("__SSML_");
+      }
+
+      // Verify all SSML tags are intact
+      const combined = result.map((c) => c.text).join("");
+      expect(combined).toContain('<break time="1.0s" />');
+      expect(combined).toContain('<break time="0.5s" />');
+      expect(combined).toContain('<break time="1.5s" />');
+    });
   });
 });

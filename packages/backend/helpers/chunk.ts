@@ -155,6 +155,43 @@ export function truncateFromStart(text: string, maxLength: number): string {
 }
 
 /**
+ * SSML tag pattern to detect and protect during chunking.
+ * Matches: <break time="1.5s" />, <phoneme>, etc.
+ */
+const SSML_TAG_PATTERN = /<[^>]+>/g;
+
+/**
+ * Protects SSML tags by replacing them with placeholders.
+ * Returns the processed text and a map to restore tags later.
+ */
+function protectSSMLTags(text: string): {
+  protectedText: string;
+  tagMap: Map<string, string>;
+} {
+  const tagMap = new Map<string, string>();
+  let counter = 0;
+
+  const protectedText = text.replace(SSML_TAG_PATTERN, (match) => {
+    const placeholder = `__SSML_${counter++}__`;
+    tagMap.set(placeholder, match);
+    return placeholder;
+  });
+
+  return { protectedText, tagMap };
+}
+
+/**
+ * Restores SSML tags from placeholders.
+ */
+function restoreSSMLTags(text: string, tagMap: Map<string, string>): string {
+  let restored = text;
+  for (const [placeholder, tag] of tagMap) {
+    restored = restored.replace(placeholder, tag);
+  }
+  return restored;
+}
+
+/**
  * Adds text to current chunk with separator.
  */
 function addToChunk(current: string, text: string, separator: string): string {
@@ -348,10 +385,15 @@ export function chunkScriptWithContext(
 ): ElevenLabsChunk[] {
   const maxTextLength = getMaxChunkTextLength(config);
 
-  if (script.length <= maxTextLength) {
+  // Protect SSML tags to prevent splitting inside them
+  const { protectedText, tagMap } = protectSSMLTags(script);
+
+  if (protectedText.length <= maxTextLength) {
+    // Single chunk - restore SSML and return
+    const restoredText = restoreSSMLTags(protectedText, tagMap);
     return [
       {
-        text: script,
+        text: restoredText,
         index: 0,
         totalChunks: 1,
         previousText: "",
@@ -361,7 +403,7 @@ export function chunkScriptWithContext(
   }
 
   const chunks: string[] = [];
-  const paragraphs = script.split("\n\n");
+  const paragraphs = protectedText.split("\n\n");
 
   const currentChunk = processParagraphs(paragraphs, maxTextLength, chunks);
 
@@ -369,5 +411,14 @@ export function chunkScriptWithContext(
     chunks.push(currentChunk.trim());
   }
 
-  return createChunksWithContext(chunks, config);
+  // Create chunks with context, then restore SSML in all text
+  const chunksWithContext = createChunksWithContext(chunks, config);
+
+  // Restore SSML tags in all chunk text including context
+  return chunksWithContext.map((chunk) => ({
+    ...chunk,
+    text: restoreSSMLTags(chunk.text, tagMap),
+    previousText: restoreSSMLTags(chunk.previousText, tagMap),
+    nextText: restoreSSMLTags(chunk.nextText, tagMap),
+  }));
 }
