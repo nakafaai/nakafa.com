@@ -112,21 +112,54 @@ export function podcastScriptPrompt({
       - [slower] - Before important numbers or answers
       - [faster] - For excitement or listing
       
-      ## Tag Density Requirements
+      ## PARAGRAPH STRUCTURE - MAX 2 SENTENCES
       
-      **MANDATORY:** Use audio tags EVERY 2-3 SENTENCES, not just at paragraph starts.
+      **CRITICAL:** Every paragraph MUST contain maximum 2 sentences only. This creates natural breathing pauses and better audio pacing.
       
-      **Example of correct tag density:**
+      **CORRECT (2 sentences max per paragraph):**
       
       [curious] Okay... pernahkah kamu memperhatikan potongan pizza [whispers] yang ditarik dari tengah?
       
-      [thoughtful] So... di balik bentuk sederhana itu, ada rahasia matematika yang SANGAT menarik. [exhales]
+      [thoughtful] So... di balik bentuk sederhana itu, ada rahasia matematika yang SANGAT menarik.
       
-      Now, let's start with sudut pusat.
+      [exhales] Now, let's start with sudut pusat.
       
-      Bayangkan ada lingkaran di depanmu. Tepat di tengahnya ada titik pusat. Kalau kita tarik dua garis dari tengah ke tepi... [pauses] sudut yang terbentuk di tengah itulah yang disebut sudut pusat. [amused]
+      Bayangkan ada lingkaran di depanmu. Tepat di tengahnya ada titik pusat.
       
-      You know what? It's like cutting a cake from the center. [excited] The angle of that slice IS the central angle!
+      [pauses] Kalau kita tarik dua garis dari tengah ke tepi... sudut yang terbentuk di tengah itulah yang disebut sudut pusat.
+      
+      [amused] You know what? It's like cutting a cake from the center.
+      
+      [excited] The angle of that slice IS the central angle!
+      
+      **INCORRECT (too many sentences in one paragraph):**
+      ❌ Bayangkan ada lingkaran di depanmu. Tepat di tengahnya ada titik pusat. Kalau kita tarik dua garis dari tengah ke tepi, sudut yang terbentuk di tengah itulah yang disebut sudut pusat. Ini sangat penting untuk dipahami.
+      
+      ## RICH INTONATION - NAIK TURUN NADA
+      
+      **INTONASI HARUS RICH DAN DINAMIS** - Suara harus naik turun sesuai konteks:
+      
+      **Nada Naik (Rising Intonation):**
+      - [curious] + pertanyaan: "Apa jadinya kalau...?"
+      - [excited] + penemuan: "WOW! Ini dia rahasianya!"
+      - [surprised] + kejutan: "Nah! Sudut yang terbentuk..."
+      - [intrigued] + misteri: "Tapi tunggu... ada yang lebih menarik!"
+      - [questioning] + intonasi naik di akhir: "Kamu paham, kan?"
+      
+      **Nada Turun (Falling Intonation):**
+      - [thoughtful] + penjelasan: "Jadi... hubungannya adalah..."
+      - [reassuring] + keyakinan: "Tenang... kamu pasti bisa."
+      - [exhales] + selesai menjelaskan: "Itulah sudut pusat."
+      - [warmly] + penutup: "Kamu sudah menguasai ini dengan sangat baik."
+      - [confident] + fakta: "Besarnya pasti EMPAT PULUH derajat."
+      
+      **Nada Flat → Naik (Flat to Rising):**
+      - "Panjangnya adalah... [slower] EMPAT PULUH derajat?" (flat then up for emphasis)
+      - "Jawabannya adalah... [pauses] ENAM PULUH?" 
+      
+      **Tag Density Requirements**
+      
+      **MANDATORY:** Use audio tags EVERY 2-3 SENTENCES, not just at paragraph starts.
       
       ## Tag Combination Examples
       
@@ -167,7 +200,7 @@ export function podcastScriptPrompt({
     `,
 
     examples: `
-      ## Example Script - CORRECT TAG PLACEMENT (Based on ElevenLabs V3 Docs)
+      ## Example Script - MAX 2 SENTENCES PER PARAGRAPH (Based on ElevenLabs V3 Docs)
 
       [curious] Okay... pernahkah kamu memperhatikan potongan pizza yang ditarik dari tengah?
 
@@ -175,65 +208,69 @@ export function podcastScriptPrompt({
 
       [exhales] Now, let's start with sudut pusat.
 
-      Bayangkan ada lingkaran di depanmu. Tepat di tengahnya ada titik pusat. Kalau kita tarik dua garis dari tengah ke tepi... [pauses] sudut yang terbentuk di tengah itulah yang disebut sudut pusat.
+      Bayangkan ada lingkaran di depanmu. Tepat di tengahnya ada titik pusat.
 
-      [amused] You know what? It's like cutting a cake from the center. The angle of that slice IS the central angle!
+      [pauses] Kalau kita tarik dua garis dari tengah ke tepi... sudut yang terbentuk di tengah itulah yang disebut sudut pusat.
+
+      [amused] You know what? It's like cutting a cake from the center.
+
+      [excited] The angle of that slice IS the central angle!
 
       [thoughtful] Alright, now... how about sudut keliling?
 
-      Here's the thing... kalau sudut keliling, titik sudutnya ada di GARIS TEPI lingkaran. Not in the center, but on the edge.
+      Here's the thing... kalau sudut keliling, titik sudutnya ada di GARIS TEPI lingkaran.
+
+      [curious] Not in the center, but on the edge, right?
 
       [excited] But here's where it gets REALLY interesting!
 
-      Ada hubungan khusus antara sudut pusat dan sudut keliling. [whispers] And this is the key insight...
+      Ada hubungan khusus antara keduanya. [whispers] And this is the key insight...
 
-      [thoughtful] Sudut keliling itu SELALU setengah dari sudut pusat. Always! [exhales] So if the central angle is 80 degrees... [slower] the inscribed angle is 40 degrees. Simple, right?
+      [thoughtful] Sudut keliling itu SELALU setengah dari sudut pusat.
 
-      ---
-
-      ## Expressive Monologue Example (From ElevenLabs Docs)
-
-      [curious] Okay, you are NOT going to believe this.
-
-      You know how I've been totally stuck on that problem?
-
-      Like, staring at it for HOURS, just... nothing?
-
-      [frustrated] I was seriously about to just give up. Start over.
-
-      But then! Last night, it just... clicked!
-
-      [excited] And it was like... the FLOODGATES opened!
-
-      Suddenly, I knew exactly what to do!
-
-      [laughs] I stayed up till 3 AM just working on it!
-
-      [warmly] And it's... it's GOOD! Like, really good.
-
-      I am so incredibly PUMPED right now!
+      [confident] Always! So if central angle is 80 degrees... [slower] the inscribed angle is 40 degrees.
 
       ---
 
-      ## Educational with Maximum Emotion
+      ## Expressive Monologue Example - MAX 2 SENTENCES + RICH INTONATION
 
-      [curious] So... what do you think the answer is?
+      [curious] Okay, you are NOT going to believe this!
 
-      [thoughtful] Let's work through this together.
+      You know how I've been stuck on that problem? Like, staring for HOURS?
 
-      The formula is one-half times the central angle.
+      [frustrated] I was seriously about to give up. Start over completely.
+
+      [surprised] But then! Last night, it just... clicked!
+
+      [excited] And it was like... the FLOODGATES opened! Suddenly I knew exactly what to do!
+
+      [laughs] I stayed up till 3 AM working! Just typing like crazy!
+
+      [warmly] And it's... it's GOOD! Really good, you know?
+
+      [excited] I am so incredibly PUMPED right now! Can't wait to show you!
+
+      ---
+
+      ## Educational with Maximum Emotion - RICH INTONATION
+
+      [curious] So... what do you think the answer is? [questioning] Can you guess?
+
+      [thoughtful] Let's work through this together. Step by step, okay?
+
+      The formula is one-half times the central angle. Very simple, right?
 
       [excited] And that means... [slower] the answer is forty degrees!
 
-      [laughs] See? You got it!
+      [laughs] See? You got it! Knew you could do it!
 
       [whispers] Here's a secret... most students forget to divide by two.
 
-      [reassuring] Don't worry if you made that mistake. It's super common.
+      [reassuring] Don't worry if you made that mistake. It's super common, okay?
 
-      [mischievously] Now... are you ready for the next challenge?
+      [mischievously] Now... are you ready for the next challenge? Think you can handle it?
 
-      [warmly] I know you can do this!
+      [warmly] I know you can do this! You've got this!
     `,
 
     finalRequest: `
@@ -274,8 +311,12 @@ ${description}
       15. **NO markdown, NO headers in output** - Just the script text
       16. **NO SSML tags** - Only ElevenLabs V3 audio tags in square brackets
       17. **Language style**: ${languageGuideline}
+      18. **MAX 2 SENTENCES PER PARAGRAPH** - Every paragraph must be 1-2 sentences only, then line break
+      19. **RICH INTONATION** - Nada harus naik untuk pertanyaan/kejutan ([curious], [excited], [surprised]), turun untuk penjelasan/keyakinan ([thoughtful], [reassuring], [confident])
       
-      ## Tag Usage Checklist (VERIFY BEFORE OUTPUT):
+      ## Output Verification Checklist (MUST CHECK BEFORE OUTPUT):
+      - [ ] Every paragraph has MAXIMUM 2 sentences (critical!)
+      - [ ] Rich intonation variety: nada naik untuk pertanyaan/kejutan, turun untuk penjelasan
       - [ ] At least 15-20 emotion tags used ([curious], [excited], [thoughtful], etc.)
       - [ ] At least 10-15 delivery tags used ([laughs], [whispers], [sighs], etc.)
       - [ ] Tags appear every 2-3 sentences (not just paragraph starts)
