@@ -150,11 +150,13 @@ export const generateSpeech = internalAction({
       const voiceSettings = audio.voiceSettings ?? getDefaultVoiceSettings();
 
       // Generate each chunk sequentially using the stored model
+      // Using MP3 192kbps for universal browser compatibility and studio quality
       for (const chunk of chunks) {
         const result = await aiGenerateSpeech({
           model: elevenlabs.speech(audio.model),
           text: chunk.text,
           voice: audio.voiceId,
+          outputFormat: "mp3_44100_192",
           providerOptions: {
             elevenlabs: {
               voiceSettings,
