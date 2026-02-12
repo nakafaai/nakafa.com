@@ -134,75 +134,113 @@ export function podcastScriptPrompt({
          - Use [curious] or [intrigued] for transitions
          - Keep it flowing naturally
 
-      ## Writing Style
+      ## Writing Style - NATURAL SPEECH
 
       ### Language
       - ${languageGuideline}
       - Conversational, direct, friendly
       - Second person ("you", "your") to engage
       - Active voice
-      - Short, punchy sentences mixed with flowing explanations
+      - Mix short punchy sentences with flowing explanations
+
+      ### Natural Speech Patterns (CRITICAL for human-like audio)
+
+      Use these techniques to sound conversational, not robotic:
+
+      1. **Conversational Fillers** (use sparingly)
+         - "so...", "you know", "actually", "right?", "okay?"
+         - "now...", "here's the thing", "the thing is"
+         - "wait...", "hold on", "let me think"
+
+      2. **Self-Corrections & Rephrasing**
+         - "Actually, scratch that... let me rephrase."
+         - "Wait, that's not quite right. What I mean is..."
+         - "Or rather...", "I should say..."
+
+      3. **Thinking Aloud**
+         - "hmm...", "let's see...", "okay so..."
+         - "if we think about it..."
+         - Use ellipses (...) for natural thinking pauses
+
+      4. **Rhetorical Questions to Listener**
+         - "You following me?"
+         - "Make sense so far?"
+         - "See what I mean?"
+
+      5. **Verbal Signposts** (not rigid transitions)
+         - "Alright, moving on..."
+         - "Okay, here's where it gets interesting..."
+         - "Now check this out..."
+         - "But here's the kicker..."
+
+      6. **Breathing & Pausing**
+         - Use [exhales] after explaining something complex
+         - Use [inhales] before starting a new thought
+         - Use ellipses (...) liberally for natural pauses
+         - Break long sentences into shorter chunks
 
       ### Content Adaptation
       - Transform written content to spoken narrative
       - Remove: "in this article", "as shown above", "see the diagram"
       - Replace visuals with verbal descriptions
       - Describe diagrams in words
-      - Keep mathematical formulas but read them aloud
+      - Keep mathematical formulas but read them aloud conversationally
       - Use analogies for abstract concepts
+      - Occasionally acknowledge difficulty: "This part is tricky, but..."
 
       ### Audio-Friendly Formatting
       - Spell out numbers ("forty degrees" not "40°")
-      - Read formulas: "angle ACB equals half of angle AOB"
+      - Read formulas conversationally: "angle ACB equals half of angle AOB" or "so angle ACB is half of angle AOB"
       - Describe visual elements verbally
       - Use "and" not "&"
       - Write abbreviations on first use
+      - Use contractions ("it's", "don't", "we're") for natural flow
     `,
 
     examples: `
-      ## Example Script Structure (Indonesian)
+      ## Example Script - Natural & Conversational (Indonesian)
 
-      [curious] Pernahkah kamu memperhatikan potongan pizza atau busur panah yang sedang ditarik? 
+      [curious] Okay... pernahkah kamu memperhatikan potongan pizza atau busur panah? 
 
-      Ternyata... di balik bentuk sederhana itu, ada rahasia matematika tentang sudut yang sangat menarik untuk kita bongkar.
+      [thoughtful] So... di balik bentuk sederhana itu, ada rahasia matematika tentang sudut yang sangat menarik.
 
-      [thoughtful] Pertama-tama, mari kita pahami apa itu sudut pusat. 
+      [exhales] Now, let's start with sudut pusat.
 
-      Bayangkan sebuah lingkaran besar di depan kita. Di tengahnya ada titik pusat. Kalau kita menarik DUA garis dari pusat ke tepi lingkaran... sudut yang terbentuk di tengah inilah yang disebut sudut pusat.
+      Bayangkan ada lingkaran di depanmu. Tepat di tengahnya ada titik pusat. Kalau kita tarik dua garis dari tengah ke tepi lingkaran... [pauses] sudut yang terbentuk di tengah itulah yang disebut sudut pusat.
 
-      [intrigued] Sederhananya... seperti kamu memotong kue tart dari titik tengahnya. Sudut potongan kue yang kamu ambil itu adalah contoh nyata dari sudut pusat!
+      [amused] Actually, it's like cutting a cake from the center. You know what I mean? The angle of that slice IS the central angle.
 
-      [thoughtful] Sekarang, bagaimana dengan sudut keliling?
+      [thoughtful] Alright, now... how about sudut keliling?
 
-      Bedanya... kalau sudut keliling, titik sudutnya bukan di tengah, melainkan menempel di GARIS TEPI lingkaran. Kakinya dibentuk oleh dua garis yang kita sebut tali busur.
+      Here's the thing... kalau sudut keliling, titik sudutnya ada di GARIS TEPI lingkaran. Not in the center, but on the edge.
 
-      [excited] Dan ini yang PALING menarik...
+      [excited] But here's where it gets REALLY interesting...
 
-      Ada hubungan ISTIMEWA antara sudut pusat dan sudut keliling yang menghadap busur yang SAMA.
+      Ada hubungan khusus antara sudut pusat dan sudut keliling. [whispers] And this is the key insight...
 
-      [whispers] Perhatikan baik-baik ya...
-
-      [thoughtful] Besar sudut pusat itu SELALU dua kali lipat dari besar sudut kelilingnya. Atau sebaliknya, sudut keliling adalah SETENGAH dari sudut pusat.
-
-      [amused] Jadi kalau sudut pusatnya 80 derajat... tinggal bagi dua saja! Sudut kelilingnya adalah 40 derajat. Mudah, kan?
+      [thoughtful] Sudut keliling itu SELALU setengah dari sudut pusat. Always. [exhales] So if the central angle is 80 degrees... the inscribed angle is 40 degrees. Simple, right?
 
       ---
 
-      ## Pacing and Emphasis Examples
+      ## Natural Speech Patterns Example (English)
 
-      [curious] What if I told you that the heaviest thing in the universe... is also the smallest?
+      [curious] Okay, so... what if I told you that the heaviest thing in the universe... is also the smallest?
 
-      [thoughtful] It sounds contradictory, I know. But that's exactly what happens with black holes.
+      [thoughtful] Wait, that sounds contradictory, right? But... that's exactly what happens with black holes.
 
-      [excited] They are MASSIVE in weight... yet their physical size can be smaller than a city!
+      [excited] They're MASSIVE in weight... [exhales] yet their size can be smaller than a city! 
 
-      [reassuring] Don't worry if this feels mind-bending at first. Let's break it down step by step...
+      [reassuring] Now, I know this feels mind-bending at first. But let's break it down step by step, okay?
 
       [whispers] Here's the secret...
 
-      [intrigued] When a massive star collapses, it doesn't just shrink. It falls into itself. Gravity becomes SO strong that not even LIGHT can escape.
+      [thoughtful] When a massive star collapses... it doesn't just shrink. It actually falls into ITSELF. [pauses] The gravity becomes SO strong that not even LIGHT can escape.
 
-      [laughs] It's like the universe's ultimate prank — the heaviest thing is hiding in the tiniest space!
+      [laughs] It's like... the universe's ultimate prank, you know? The heaviest thing hiding in the tiniest space!
+
+      [intrigued] Actually, let me rephrase that. [exhales] It's not just heavy—it's infinitely dense. Every bit of that star's mass is squeezed into... well, basically a point.
+
+      [thoughtful] So... does that make sense? The mass is still there, but the space it occupies is... gone.
     `,
 
     finalRequest: `
@@ -222,14 +260,17 @@ export function podcastScriptPrompt({
 
       1. **NO HELLO/INTRODUCTION** - Start with content immediately
       2. **STRUCTURE MATCH** - Script sections align with content sections
-      3. **RICH EMOTIONS** - Use varied audio tags: [curious], [excited], [thoughtful], [intrigued], [amused], [reassuring], [surprised], [whispers], [laughs], [sighs], etc.
-      4. **CREATIVE PUNCTUATION** - Use ellipses (...) for pauses, CAPS for emphasis, em-dashes for interruptions
-      5. **Audio-friendly** - Spell out numbers, describe visuals verbally, no markdown
-      6. **Language**: ${locale}
-      7. **Title reference**: Use "${title}" naturally in the content
-      8. **Format**: Plain text with audio tags, suitable for direct TTS
-      9. **Line breaks**: Between major sections for natural pauses
-      10. **NO markdown, NO headers in output** - Just the script text
+      3. **RICH EMOTIONS** - Use varied audio tags throughout: [curious], [excited], [thoughtful], [intrigued], [amused], [reassuring], [surprised], [whispers], [laughs], [sighs], [exhales], [inhales], [pauses]
+      4. **NATURAL SPEECH PATTERNS** - Use conversational fillers ("so...", "you know", "actually", "okay?"), self-corrections, thinking aloud, rhetorical questions, verbal signposts
+      5. **CREATIVE PUNCTUATION** - Use ellipses (...) for thinking pauses, CAPS for emphasis, em-dashes for interruptions
+      6. **BREATHING** - Use [exhales] after complex explanations, [inhales] before new thoughts
+      7. **CONTRACTIONS** - Use "it's", "don't", "we're" for natural flow
+      8. **Audio-friendly** - Spell out numbers, describe visuals conversationally, no markdown
+      9. **Language**: ${locale}
+      10. **Title reference**: Use "${title}" naturally in the content
+      11. **Format**: Plain text with audio tags, suitable for direct TTS
+      12. **Line breaks**: Between major sections for natural pauses
+      13. **NO markdown, NO headers in output** - Just the script text
     `,
 
     outputFormatting: `

@@ -7,9 +7,9 @@
 export interface VoiceSettings {
   /**
    * Determines how stable the voice is and the randomness between each generation.
-   * Lower values introduce broader emotional range for the voice.
-   * Higher values can result in a monotonous voice with limited emotion.
-   * Range: 0.0 to 1.0
+   * For ElevenLabs V3: MUST be 0.0 (Creative), 0.5 (Natural), or 1.0 (Robust).
+   * Use 0.0 for maximum expressiveness with audio tags.
+   * Range: 0.0, 0.5, or 1.0 for V3. Any value 0.0-1.0 for V2.
    * @see https://elevenlabs.io/docs/api-reference/text-to-speech/convert
    */
   stability?: number;
@@ -39,15 +39,6 @@ export interface VoiceSettings {
    * @see https://elevenlabs.io/docs/api-reference/text-to-speech/convert
    */
   useSpeakerBoost?: boolean;
-
-  /**
-   * Adjusts the speed of the voice.
-   * A value of 1.0 is the default speed, while values less than 1.0
-   * slow down the speech, and values greater than 1.0 speed it up.
-   * Range: 0.7 to 1.2
-   * @see https://elevenlabs.io/docs/api-reference/text-to-speech/convert
-   */
-  speed?: number;
 }
 
 /**
@@ -80,6 +71,14 @@ export interface VoiceConfig {
 /**
  * Currently only Nina voice (ElevenLabs free plan limitation)
  * Easy to add more voices when upgrading plan
+ *
+ * ElevenLabs V3 Settings Guide:
+ * - stability: MUST be 0.0 (Creative), 0.5 (Natural), or 1.0 (Robust)
+ *   For rich emotions with audio tags, use 0.0 (Creative)
+ * - similarityBoost: 0.50-0.60 for natural variation
+ * - style: 0.60-0.80 for expressiveness
+ *
+ * @see https://elevenlabs.io/docs/overview/capabilities/text-to-speech/best-practices#prompting-eleven-v3
  */
 export const PREDEFINED_VOICES = {
   nina: {
@@ -88,8 +87,10 @@ export const PREDEFINED_VOICES = {
     description:
       "A warm, dynamic, mature female voice with emotional delivery.",
     settings: {
-      stability: 0.5,
-      similarityBoost: 0.75,
+      stability: 0.0, // Creative mode for maximum expressiveness with audio tags
+      similarityBoost: 0.55,
+      style: 0.65,
+      useSpeakerBoost: true,
     },
   },
 } as const satisfies Record<string, VoiceConfig>;

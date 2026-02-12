@@ -1,3 +1,4 @@
+import { DEFAULT_VOICE_KEY, getVoiceConfig } from "@repo/ai/config/voices";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
 import {
@@ -22,18 +23,16 @@ export const createTestRecord = internalMutation({
     // Generate a hash based on content ID and timestamp
     const testHash = `test-${Date.now()}`;
 
+    // Use the default voice config from the centralized voices config
+    const voiceConfig = getVoiceConfig(DEFAULT_VOICE_KEY);
+
     const audioId = await ctx.db.insert("contentAudios", {
       contentId: args.contentId,
       contentType: args.contentType,
       locale: args.locale as "en" | "id",
       contentHash: testHash,
-      voiceId: "LcvlyuBGMjj1h4uAtQjo", // Nina voice
-      voiceSettings: {
-        stability: 0.5,
-        similarityBoost: 0.75,
-        style: 0.3,
-        useSpeakerBoost: true,
-      },
+      voiceId: voiceConfig.id,
+      voiceSettings: voiceConfig.settings,
       status: "pending",
       generationAttempts: 0,
       updatedAt: Date.now(),

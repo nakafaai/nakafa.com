@@ -156,13 +156,20 @@ export const generateSpeech = internalAction({
         });
       }
 
+      // Generate speech using ElevenLabs V3 via AI SDK
+      // V3 supports audio tags ([curious], [excited], etc.) for rich emotions
       const result = await aiGenerateSpeech({
         model: elevenlabs.speech("eleven_v3"),
         text: audio.script,
         voice: audio.voiceId,
         providerOptions: {
           elevenlabs: {
-            voiceSettings: audio.voiceSettings,
+            voiceSettings: audio.voiceSettings ?? {
+              stability: 0.0, // Creative mode for maximum expressiveness
+              similarityBoost: 0.55,
+              style: 0.65,
+              useSpeakerBoost: true,
+            },
           },
         },
       });

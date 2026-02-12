@@ -114,7 +114,6 @@ export const voiceSettingsValidator = v.object({
   stability: v.optional(v.number()),
   similarityBoost: v.optional(v.number()),
   style: v.optional(v.number()),
-  speed: v.optional(v.number()),
   useSpeakerBoost: v.optional(v.boolean()),
 });
 export type VoiceSettings = Infer<typeof voiceSettingsValidator>;
