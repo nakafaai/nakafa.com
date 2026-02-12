@@ -199,8 +199,9 @@ export const generateSpeech = internalAction({
       });
       const storageId = await ctx.storage.store(audioBlob);
 
-      // Calculate duration based on word count
-      const wordCount = audio.script
+      // Calculate duration based on word count, excluding audio tags like [excited], [curious]
+      const scriptWithoutTags = audio.script.replace(/\[[^\]]+\]/g, "");
+      const wordCount = scriptWithoutTags
         .trim()
         .split(WORD_SPLIT_REGEX)
         .filter(Boolean).length;
