@@ -10,6 +10,9 @@
     "generate-schema": "pnpm dlx @better-auth/cli generate --config convex/betterAuth/auth.ts --output convex/betterAuth/generatedSchema.ts -y",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:coverage": "vitest run --coverage",
     "sync": "tsx scripts/sync-content.ts full",
     "sync:incremental": "tsx scripts/sync-content.ts incremental",
     "sync:validate": "tsx scripts/sync-content.ts validate",
@@ -48,6 +51,7 @@
     "convex-test": "^0.0.41",
     "glob": "^13.0.2",
     "tsx": "^4.21.0",
+    "@vitest/coverage-istanbul": "^4.0.18",
     "vitest": "^4.0.18"
   }
 }

@@ -594,6 +594,9 @@ importers:
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
+      '@vitest/coverage-istanbul':
+        specifier: ^4.0.18
+        version: 4.0.18(vitest@4.0.18)
       convex-test:
         specifier: ^0.0.41
         version: 0.0.41(convex@1.31.7(react@19.2.4))

@@ -1,14 +1,14 @@
 "use node";
 
-import { elevenlabs, V3_MAX_CHARS_PER_CHUNK } from "@repo/ai/config/elevenlabs";
+import { elevenlabs } from "@repo/ai/config/elevenlabs";
 import { model } from "@repo/ai/config/vercel";
 import { getDefaultVoiceSettings } from "@repo/ai/config/voices";
 import { podcastScriptPrompt } from "@repo/ai/prompt/audio-studies";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { internalAction } from "@repo/backend/convex/_generated/server";
-import { chunkScript } from "@repo/backend/convex/audioStudies/utils";
 import { vv } from "@repo/backend/convex/lib/validators";
 import { getErrorMessage } from "@repo/backend/convex/utils/helper";
+import { chunkScriptWithContext } from "@repo/backend/helpers/chunk";
 import {
   experimental_generateSpeech as aiGenerateSpeech,
   generateText,
@@ -111,8 +111,12 @@ export const generateScript = internalAction({
  *
  * V3 has a 5,000 character limit per request. To handle longer scripts:
  * 1. Split script into chunks at natural boundaries (paragraphs/sentences)
- * 2. Generate audio for each chunk sequentially
- * 3. Combine all audio buffers into a single file
+ * 2. Provide previous_text and next_text context for intonation continuity
+ * 3. Generate audio for each chunk sequentially
+ * 4. Combine all audio buffers into a single file
+ *
+ * Context parameters (previousText/nextText) ensure smooth intonation transitions
+ * between chunks, preventing the audio from sounding disjointed.
  *
  * @see https://elevenlabs.io/docs/overview/capabilities/text-to-speech/best-practices
  * @see https://elevenlabs.io/docs/api-reference/text-to-speech/convert
@@ -139,14 +143,13 @@ export const generateSpeech = internalAction({
     });
 
     try {
-      // Split script into chunks to respect V3's 5,000 character limit
-      const chunks = chunkScript(audio.script, V3_MAX_CHARS_PER_CHUNK);
+      // Split script into chunks with context for continuity
+      // Uses previous_text and next_text to maintain intonation across chunks
+      const chunks = chunkScriptWithContext(audio.script);
       const audioBuffers: Uint8Array[] = [];
       const voiceSettings = audio.voiceSettings ?? getDefaultVoiceSettings();
 
-      // Generate each chunk sequentially
-      // Note: V3 does NOT support previous_text or next_text parameters
-      // See: https://elevenlabs.io/docs/api-reference/text-to-speech/convert
+      // Generate each chunk sequentially with context for continuity
       for (const chunk of chunks) {
         const result = await aiGenerateSpeech({
           model: elevenlabs.speech("eleven_v3"),
@@ -154,8 +157,10 @@ export const generateSpeech = internalAction({
           voice: audio.voiceId,
           providerOptions: {
             elevenlabs: {
-              // Use voice settings from config (with defaults from getDefaultVoiceSettings)
               voiceSettings,
+              // Provide context from adjacent chunks for intonation continuity
+              previousText: chunk.previousText || undefined,
+              nextText: chunk.nextText || undefined,
             },
           },
         });
