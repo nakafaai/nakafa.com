@@ -1,11 +1,12 @@
 "use node";
 
-import { elevenlabs } from "@repo/ai/config/elevenlabs";
+import { elevenlabs, V3_MAX_CHARS_PER_CHUNK } from "@repo/ai/config/elevenlabs";
 import { model } from "@repo/ai/config/vercel";
 import { getDefaultVoiceSettings } from "@repo/ai/config/voices";
 import { podcastScriptPrompt } from "@repo/ai/prompt/audio-studies";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { internalAction } from "@repo/backend/convex/_generated/server";
+import { chunkScript } from "@repo/backend/convex/audioStudies/utils";
 import { vv } from "@repo/backend/convex/lib/validators";
 import { getErrorMessage } from "@repo/backend/convex/utils/helper";
 import {
@@ -29,7 +30,6 @@ export const generateScript = internalAction({
   args: { contentAudioId: vv.id("contentAudios") },
   returns: v.null(),
   handler: async (ctx, args) => {
-    // Consolidated: Get audio + content in single query (was 3 separate calls)
     const data = await ctx.runQuery(
       internal.audioStudies.queries.getAudioAndContentForScriptGeneration,
       { contentAudioId: args.contentAudioId }
@@ -44,15 +44,12 @@ export const generateScript = internalAction({
 
     const { contentAudio, content } = data;
 
-    // Update status: generating-script
     await ctx.runMutation(internal.audioStudies.mutations.updateStatus, {
       contentAudioId: args.contentAudioId,
       status: "generating-script",
     });
 
     try {
-      // Verify content hash inline (no extra query call)
-      // Hash verification is done by fetching fresh data from DB
       const currentAudio = await ctx.runQuery(
         internal.audioStudies.queries.getById,
         { contentAudioId: args.contentAudioId }
@@ -80,7 +77,6 @@ export const generateScript = internalAction({
         prompt,
       });
 
-      // Verify hash hasn't changed after generation
       const audioAfter = await ctx.runQuery(
         internal.audioStudies.queries.getById,
         { contentAudioId: args.contentAudioId }
@@ -94,7 +90,6 @@ export const generateScript = internalAction({
         });
       }
 
-      // Consolidated: Save script + update status in one mutation
       await ctx.runMutation(internal.audioStudies.mutations.saveScript, {
         contentAudioId: args.contentAudioId,
         script,
@@ -112,15 +107,20 @@ export const generateScript = internalAction({
 });
 
 /**
- * Generate speech from a script using ElevenLabs.
- * Stores the audio file in Convex storage.
- * Retrieves script and audio configuration in a single query for efficiency.
+ * Generate speech from a script using ElevenLabs V3 with automatic chunking.
+ *
+ * V3 has a 5,000 character limit per request. To handle longer scripts:
+ * 1. Split script into chunks at natural boundaries (paragraphs/sentences)
+ * 2. Generate audio for each chunk sequentially
+ * 3. Combine all audio buffers into a single file
+ *
+ * @see https://elevenlabs.io/docs/overview/capabilities/text-to-speech/best-practices
+ * @see https://elevenlabs.io/docs/api-reference/text-to-speech/convert
  */
 export const generateSpeech = internalAction({
   args: { contentAudioId: vv.id("contentAudios") },
   returns: v.null(),
   handler: async (ctx, args) => {
-    // Consolidated: Get audio with script + hash in single query
     const audio = await ctx.runQuery(
       internal.audioStudies.queries.getAudioForSpeechGeneration,
       { contentAudioId: args.contentAudioId }
@@ -133,31 +133,47 @@ export const generateSpeech = internalAction({
       });
     }
 
-    // Update status: generating-speech
     await ctx.runMutation(internal.audioStudies.mutations.updateStatus, {
       contentAudioId: args.contentAudioId,
       status: "generating-speech",
     });
 
     try {
-      // Generate speech using ElevenLabs V3 via AI SDK
-      // CRITICAL: V3 only supports 'stability' parameter!
-      // Other settings (similarityBoost, style, useSpeakerBoost) cause 400 Bad Request
+      // Split script into chunks to respect V3's 5,000 character limit
+      const chunks = chunkScript(audio.script, V3_MAX_CHARS_PER_CHUNK);
+      const audioBuffers: Uint8Array[] = [];
       const voiceSettings = audio.voiceSettings ?? getDefaultVoiceSettings();
 
-      const result = await aiGenerateSpeech({
-        model: elevenlabs.speech("eleven_v3"),
-        text: audio.script,
-        voice: audio.voiceId,
-        providerOptions: {
-          elevenlabs: {
-            // V3 only accepts stability parameter - filter out V2-only settings
-            voiceSettings: {
-              stability: voiceSettings.stability ?? 0.0,
+      // Generate each chunk sequentially
+      // Note: V3 does NOT support previous_text or next_text parameters
+      // See: https://elevenlabs.io/docs/api-reference/text-to-speech/convert
+      for (const chunk of chunks) {
+        const result = await aiGenerateSpeech({
+          model: elevenlabs.speech("eleven_v3"),
+          text: chunk.text,
+          voice: audio.voiceId,
+          providerOptions: {
+            elevenlabs: {
+              // Use voice settings from config (with defaults from getDefaultVoiceSettings)
+              voiceSettings,
             },
           },
-        },
-      });
+        });
+
+        audioBuffers.push(new Uint8Array(result.audio.uint8Array));
+      }
+
+      // Combine all audio buffers into one
+      const totalLength = audioBuffers.reduce(
+        (sum, buf) => sum + buf.length,
+        0
+      );
+      const combinedBuffer = new Uint8Array(totalLength);
+      let offset = 0;
+      for (const buffer of audioBuffers) {
+        combinedBuffer.set(buffer, offset);
+        offset += buffer.length;
+      }
 
       // Verify hash hasn't changed before saving
       const hashStillValid = await ctx.runQuery(
@@ -176,22 +192,23 @@ export const generateSpeech = internalAction({
         });
       }
 
-      const audioBlob = new Blob([new Uint8Array(result.audio.uint8Array)], {
-        type: result.audio.mediaType,
+      const audioBlob = new Blob([combinedBuffer], {
+        type: "audio/mpeg",
       });
       const storageId = await ctx.storage.store(audioBlob);
+
+      // Calculate duration based on word count
       const wordCount = audio.script
         .trim()
         .split(WORD_SPLIT_REGEX)
         .filter(Boolean).length;
       const duration = Math.ceil((wordCount / 150) * 60);
 
-      // Consolidated: Save audio metadata + update status in one mutation
       await ctx.runMutation(internal.audioStudies.mutations.saveAudio, {
         contentAudioId: args.contentAudioId,
         storageId,
         duration,
-        size: result.audio.uint8Array.byteLength,
+        size: combinedBuffer.byteLength,
       });
     } catch (error) {
       await ctx.runMutation(internal.audioStudies.mutations.markFailed, {
