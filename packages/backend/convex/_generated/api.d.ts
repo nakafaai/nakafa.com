@@ -13,6 +13,8 @@ import type * as articleContents_queries from "../articleContents/queries.js";
 import type * as audioStudies_actions from "../audioStudies/actions.js";
 import type * as audioStudies_mutations from "../audioStudies/mutations.js";
 import type * as audioStudies_queries from "../audioStudies/queries.js";
+import type * as audioStudies_testMutations from "../audioStudies/testMutations.js";
+import type * as audioStudies_testQueries from "../audioStudies/testQueries.js";
 import type * as audioStudies_workflows from "../audioStudies/workflows.js";
 import type * as auth from "../auth.js";
 import type * as chats_mutations from "../chats/mutations.js";
@@ -88,6 +90,8 @@ declare const fullApi: ApiFromModules<{
   "audioStudies/actions": typeof audioStudies_actions;
   "audioStudies/mutations": typeof audioStudies_mutations;
   "audioStudies/queries": typeof audioStudies_queries;
+  "audioStudies/testMutations": typeof audioStudies_testMutations;
+  "audioStudies/testQueries": typeof audioStudies_testQueries;
   "audioStudies/workflows": typeof audioStudies_workflows;
   auth: typeof auth;
   "chats/mutations": typeof chats_mutations;

@@ -193,12 +193,35 @@ Deploy functions first: `npx convex deploy`
 ### Sync shows 0 changes
 Content hash unchanged. This is normal for `sync:incremental`.
 
+## Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `sync-content.ts` | Sync MDX content to Convex database |
+| `audio-studies/` | Audio generation testing tools |
+
+### Audio Studies Testing
+
+Test audio generation quality before enabling auto-generation:
+
+```bash
+# See testing guide
+cat scripts/audio-studies/README.md
+
+# Quick test workflow:
+# 1. List content: npx convex run audioStudies/testQueries:listRecentArticles
+# 2. Create test record: npx convex run audioStudies/testMutations:createTestRecord '{...}'
+# 3. Generate script: npx convex run audioStudies/actions:generateScript '{...}'
+# 4. Generate speech: npx convex run audioStudies/actions:generateSpeech '{...}'
+```
+
 ## Files
 
 | File | Purpose |
 |------|---------|
 | `sync-content.ts` | Main sync script |
 | `lib/mdxParser.ts` | MDX parsing utilities |
+| `audio-studies/README.md` | Audio testing guide |
 | `../convex/contentSync/mutations.ts` | Convex sync mutations |
 | `../convex/contentSync/queries.ts` | Convex verification queries |
 | `../.sync-state.json` | Dev incremental sync state (gitignored) |
