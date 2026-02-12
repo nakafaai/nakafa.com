@@ -122,3 +122,20 @@ export function getVoiceConfig(key: VoiceKey): VoiceConfig {
 export function isValidVoiceKey(key: string): key is VoiceKey {
   return Object.hasOwn(PREDEFINED_VOICES, key);
 }
+
+/**
+ * Get the default voice settings.
+ * Used as fallback when no custom settings are provided.
+ * @returns The default VoiceSettings object
+ */
+export function getDefaultVoiceSettings(): VoiceSettings {
+  return PREDEFINED_VOICES[DEFAULT_VOICE_KEY].settings;
+}
+
+/**
+ * Get the default voice ID.
+ * @returns The default voice ID string
+ */
+export function getDefaultVoiceId(): string {
+  return PREDEFINED_VOICES[DEFAULT_VOICE_KEY].id;
+}

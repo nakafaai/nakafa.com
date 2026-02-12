@@ -2,6 +2,7 @@
 
 import { elevenlabs } from "@repo/ai/config/elevenlabs";
 import { model } from "@repo/ai/config/vercel";
+import { getDefaultVoiceSettings } from "@repo/ai/config/voices";
 import { podcastScriptPrompt } from "@repo/ai/prompt/audio-studies";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -164,12 +165,7 @@ export const generateSpeech = internalAction({
         voice: audio.voiceId,
         providerOptions: {
           elevenlabs: {
-            voiceSettings: audio.voiceSettings ?? {
-              stability: 0.0, // Creative mode for maximum expressiveness
-              similarityBoost: 0.55,
-              style: 0.65,
-              useSpeakerBoost: true,
-            },
+            voiceSettings: audio.voiceSettings ?? getDefaultVoiceSettings(),
           },
         },
       });
