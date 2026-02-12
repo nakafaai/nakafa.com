@@ -1,6 +1,6 @@
 import { internalQuery } from "@repo/backend/convex/_generated/server";
-import { vv } from "@repo/backend/convex/lib/validators";
 import { nullable } from "convex-helpers/validators";
+import { vv } from "@/convex/lib/validators/vv";
 
 /**
  * Get customer record by user ID.

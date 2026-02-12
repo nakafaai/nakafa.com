@@ -1,4 +1,5 @@
 import type { WorkflowId } from "@convex-dev/workflow";
+import { ACTIVE_MODEL } from "@repo/ai/config/elevenlabs";
 import { DEFAULT_VOICE_KEY, getVoiceConfig } from "@repo/ai/config/voices";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
@@ -6,9 +7,9 @@ import {
   contentIdValidator,
   contentTypeValidator,
 } from "@repo/backend/convex/audioStudies/schema";
-import { vv } from "@repo/backend/convex/lib/validators";
 import { workflow } from "@repo/backend/convex/workflow";
 import { v } from "convex/values";
+import { vv } from "@/convex/lib/validators/vv";
 
 /**
  * Create a test audio record for manual testing.
@@ -35,6 +36,7 @@ export const createTestRecord = internalMutation({
       contentHash: testHash,
       voiceId: voiceConfig.id,
       voiceSettings: voiceConfig.settings,
+      model: ACTIVE_MODEL,
       status: "pending",
       generationAttempts: 0,
       updatedAt: Date.now(),

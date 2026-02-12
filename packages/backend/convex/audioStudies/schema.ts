@@ -1,12 +1,13 @@
-import {
-  audioStatusValidator,
-  localeValidator,
-  voiceSettingsValidator,
-} from "@repo/backend/convex/lib/contentValidators";
+import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { defineTable } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
+import {
+  audioModelValidator,
+  audioStatusValidator,
+  voiceSettingsValidator,
+} from "@/convex/lib/validators/audio";
 
 /**
  * Validator for content ID - polymorphic reference to article or subject section.
@@ -48,6 +49,8 @@ const tables = {
     voiceId: v.string(),
     /** Voice settings stored per audio for future customization */
     voiceSettings: v.optional(voiceSettingsValidator),
+    /** ElevenLabs TTS model used for generation */
+    model: audioModelValidator,
     status: audioStatusValidator,
     /** Generated podcast script with ElevenLabs v3 tags */
     script: v.optional(v.string()),

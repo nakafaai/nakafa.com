@@ -5,10 +5,10 @@ import { loadClass } from "@repo/backend/convex/classes/utils";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { requireClassAccess } from "@repo/backend/convex/lib/helpers/class";
 import { isAdmin } from "@repo/backend/convex/lib/helpers/school";
-import { vv } from "@repo/backend/convex/lib/validators";
 import type { PaginationResult } from "convex/server";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
+import { vv } from "@/convex/lib/validators/vv";
 
 /**
  * Get paginated material groups for a class.

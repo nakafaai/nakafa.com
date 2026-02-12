@@ -2,6 +2,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
+import { v } from "convex/values";
 import {
   articleCategoryValidator,
   exercisesCategoryValidator,
@@ -11,8 +12,7 @@ import {
   localeValidator,
   materialValidator,
   subjectCategoryValidator,
-} from "@repo/backend/convex/lib/contentValidators";
-import { v } from "convex/values";
+} from "@/convex/lib/validators/contents";
 
 type ContentType = "article" | "subject" | "exercise";
 type AuthorCache = Map<string, Id<"authors">>;

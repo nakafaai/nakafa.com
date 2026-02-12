@@ -1,6 +1,7 @@
 import { internalQuery } from "@repo/backend/convex/_generated/server";
-import { vv } from "@repo/backend/convex/lib/validators";
 import { v } from "convex/values";
+import { audioModelValidator } from "@/convex/lib/validators/audio";
+import { vv } from "@/convex/lib/validators/vv";
 
 /**
  * List recent articles for testing audio generation.
@@ -77,6 +78,7 @@ export const getTestAudioStatus = internalQuery({
     script: v.optional(v.string()),
     error: v.optional(v.string()),
     hasAudio: v.boolean(),
+    model: v.optional(audioModelValidator),
   }),
   handler: async (ctx, args) => {
     const audio = await ctx.db.get(args.contentAudioId);
@@ -94,6 +96,7 @@ export const getTestAudioStatus = internalQuery({
       script: audio.script,
       error: audio.errorMessage,
       hasAudio: !!audio.audioStorageId,
+      model: audio.model,
     };
   },
 });

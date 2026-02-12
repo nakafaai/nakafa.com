@@ -3,7 +3,6 @@ import {
   attachReplyToUsers,
   attachUsers,
 } from "@repo/backend/convex/comments/utils";
-import { vv } from "@repo/backend/convex/lib/validators";
 import { cleanSlug } from "@repo/backend/convex/utils/helper";
 import {
   paginationOptsValidator,
@@ -11,6 +10,7 @@ import {
 } from "convex/server";
 import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
+import { vv } from "@/convex/lib/validators/vv";
 
 /**
  * Validator for UserData (subset of user doc used in attachUsers).

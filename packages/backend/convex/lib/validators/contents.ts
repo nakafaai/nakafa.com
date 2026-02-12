@@ -6,7 +6,6 @@
  * Import from here instead of duplicating in other schema files.
  */
 import type { Infer } from "convex/values";
-import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
 /** Supported content languages */
@@ -93,27 +92,3 @@ export const exercisesMaterialValidator = literals(
   "reading-and-writing-skills"
 );
 export type ExercisesMaterial = Infer<typeof exercisesMaterialValidator>;
-
-/** Audio generation status for contentAudios - uses kebab-case convention */
-export const audioStatusValidator = literals(
-  "pending",
-  "generating-script",
-  "script-generated",
-  "generating-speech",
-  "completed",
-  "failed"
-);
-export type AudioStatus = Infer<typeof audioStatusValidator>;
-
-/** Voice settings for ElevenLabs V3 model
- * Stores all voice customization parameters.
- * Note: V3 has a 5,000 character limit per request - long scripts are automatically chunked.
- * @see https://elevenlabs.io/docs/api-reference/text-to-speech/convert
- */
-export const voiceSettingsValidator = v.object({
-  stability: v.optional(v.number()),
-  similarityBoost: v.optional(v.number()),
-  style: v.optional(v.number()),
-  useSpeakerBoost: v.optional(v.boolean()),
-});
-export type VoiceSettings = Infer<typeof voiceSettingsValidator>;

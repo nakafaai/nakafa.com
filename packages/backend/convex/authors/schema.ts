@@ -1,6 +1,6 @@
+import { contentTypeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
-import { contentTypeValidator } from "../lib/contentValidators";
 
 const tables = {
   /** Shared author profiles, referenced by multiple content types */

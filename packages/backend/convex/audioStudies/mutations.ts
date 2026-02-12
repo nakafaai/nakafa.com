@@ -3,9 +3,9 @@ import {
   contentIdValidator,
   contentTypeValidator,
 } from "@repo/backend/convex/audioStudies/schema";
-import { audioStatusValidator } from "@repo/backend/convex/lib/contentValidators";
-import { vv } from "@repo/backend/convex/lib/validators";
 import { ConvexError, v } from "convex/values";
+import { audioStatusValidator } from "@/convex/lib/validators/audio";
+import { vv } from "@/convex/lib/validators/vv";
 
 /**
  * Update audio generation status.

@@ -1,8 +1,8 @@
 import { internalQuery } from "@repo/backend/convex/_generated/server";
-import { localeValidator } from "@repo/backend/convex/lib/contentValidators";
-import { vv } from "@repo/backend/convex/lib/validators";
 import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
+import { localeValidator } from "@/convex/lib/validators/contents";
+import { vv } from "@/convex/lib/validators/vv";
 
 /**
  * Get subject section content by ID for audio script generation.

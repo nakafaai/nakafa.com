@@ -4,13 +4,14 @@ import {
   contentTypeValidator,
 } from "@repo/backend/convex/audioStudies/schema";
 import { fetchContentForAudio } from "@repo/backend/convex/audioStudies/utils";
-import {
-  audioStatusValidator,
-  voiceSettingsValidator,
-} from "@repo/backend/convex/lib/contentValidators";
-import { vv } from "@repo/backend/convex/lib/validators";
 import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
+import {
+  audioModelValidator,
+  audioStatusValidator,
+  voiceSettingsValidator,
+} from "@/convex/lib/validators/audio";
+import { vv } from "@/convex/lib/validators/vv";
 
 /**
  * Internal: Get content audio metadata by ID.
@@ -27,6 +28,7 @@ export const getById = internalQuery({
       contentHash: v.string(),
       voiceId: v.string(),
       voiceSettings: v.optional(voiceSettingsValidator),
+      model: audioModelValidator,
       status: audioStatusValidator,
     })
   ),
@@ -43,6 +45,7 @@ export const getById = internalQuery({
       contentHash: audio.contentHash,
       voiceId: audio.voiceId,
       voiceSettings: audio.voiceSettings,
+      model: audio.model,
       status: audio.status,
     };
   },
@@ -133,7 +136,7 @@ export const getAudioAndContentForScriptGeneration = internalQuery({
 
 /**
  * Internal: Get audio metadata with script for speech generation.
- * Returns script, voice configuration, and content hash for verification.
+ * Returns script, voice configuration, content hash, and model for verification.
  */
 export const getAudioForSpeechGeneration = internalQuery({
   args: {
@@ -145,6 +148,7 @@ export const getAudioForSpeechGeneration = internalQuery({
       voiceId: v.string(),
       voiceSettings: v.optional(voiceSettingsValidator),
       contentHash: v.string(),
+      model: audioModelValidator,
     })
   ),
   handler: async (ctx, args) => {
@@ -159,6 +163,7 @@ export const getAudioForSpeechGeneration = internalQuery({
       voiceId: audio.voiceId,
       voiceSettings: audio.voiceSettings,
       contentHash: audio.contentHash,
+      model: audio.model,
     };
   },
 });

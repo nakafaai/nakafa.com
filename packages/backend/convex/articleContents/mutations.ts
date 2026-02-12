@@ -1,11 +1,11 @@
 import { internalMutation } from "@repo/backend/convex/functions";
+import { v } from "convex/values";
 import {
   articleCategoryValidator,
   contentTypeValidator,
   localeValidator,
-} from "@repo/backend/convex/lib/contentValidators";
-import { vv } from "@repo/backend/convex/lib/validators";
-import { v } from "convex/values";
+} from "@/convex/lib/validators/contents";
+import { vv } from "@/convex/lib/validators/vv";
 
 /**
  * Upsert an article content document.
