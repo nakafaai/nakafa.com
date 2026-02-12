@@ -141,13 +141,20 @@ export const generateSpeech = internalAction({
 
     try {
       // Generate speech using ElevenLabs V3 via AI SDK
+      // CRITICAL: V3 only supports 'stability' parameter!
+      // Other settings (similarityBoost, style, useSpeakerBoost) cause 400 Bad Request
+      const voiceSettings = audio.voiceSettings ?? getDefaultVoiceSettings();
+
       const result = await aiGenerateSpeech({
         model: elevenlabs.speech("eleven_v3"),
         text: audio.script,
         voice: audio.voiceId,
         providerOptions: {
           elevenlabs: {
-            voiceSettings: audio.voiceSettings ?? getDefaultVoiceSettings(),
+            // V3 only accepts stability parameter - filter out V2-only settings
+            voiceSettings: {
+              stability: voiceSettings.stability ?? 0.0,
+            },
           },
         },
       });

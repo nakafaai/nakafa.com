@@ -104,16 +104,11 @@ export const audioStatusValidator = literals(
 );
 export type AudioStatus = Infer<typeof audioStatusValidator>;
 
-/** Voice settings for ElevenLabs - matches API exactly
+/** Voice settings for ElevenLabs V3
+ * V3 ONLY supports 'stability' parameter. All other settings cause 400 errors.
  * @see https://elevenlabs.io/docs/api-reference/text-to-speech/convert
- *
- * Note: This validator is NOT wrapped in v.optional().
- * Consumers should wrap it if the field is optional in their schema.
  */
 export const voiceSettingsValidator = v.object({
   stability: v.optional(v.number()),
-  similarityBoost: v.optional(v.number()),
-  style: v.optional(v.number()),
-  useSpeakerBoost: v.optional(v.boolean()),
 });
 export type VoiceSettings = Infer<typeof voiceSettingsValidator>;
