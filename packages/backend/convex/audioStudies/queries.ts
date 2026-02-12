@@ -3,6 +3,7 @@ import {
   contentIdValidator,
   contentTypeValidator,
 } from "@repo/backend/convex/audioStudies/schema";
+import { fetchContentForAudio } from "@repo/backend/convex/audioStudies/utils";
 import {
   audioStatusValidator,
   voiceSettingsValidator,
@@ -30,7 +31,7 @@ export const getById = internalQuery({
     })
   ),
   handler: async (ctx, args) => {
-    const audio = await ctx.db.get(args.contentAudioId);
+    const audio = await ctx.db.get("contentAudios", args.contentAudioId);
 
     if (!audio) {
       return null;
@@ -63,7 +64,7 @@ export const getWithScriptById = internalQuery({
     })
   ),
   handler: async (ctx, args) => {
-    const audio = await ctx.db.get(args.contentAudioId);
+    const audio = await ctx.db.get("contentAudios", args.contentAudioId);
 
     if (!audio?.script) {
       return null;
@@ -73,6 +74,91 @@ export const getWithScriptById = internalQuery({
       script: audio.script,
       voiceId: audio.voiceId,
       voiceSettings: audio.voiceSettings,
+    };
+  },
+});
+
+/**
+ * Internal: Get audio metadata and content data for script generation.
+ * Returns both audio configuration and the associated content (article or subject section).
+ */
+export const getAudioAndContentForScriptGeneration = internalQuery({
+  args: {
+    contentAudioId: vv.id("contentAudios"),
+  },
+  returns: nullable(
+    v.object({
+      contentAudio: v.object({
+        contentId: contentIdValidator,
+        contentType: contentTypeValidator,
+        contentHash: v.string(),
+        voiceId: v.string(),
+        voiceSettings: v.optional(voiceSettingsValidator),
+        status: audioStatusValidator,
+      }),
+      content: v.object({
+        title: v.string(),
+        description: v.optional(v.string()),
+        body: v.string(),
+        locale: v.string(),
+      }),
+    })
+  ),
+  handler: async (ctx, args) => {
+    const audio = await ctx.db.get("contentAudios", args.contentAudioId);
+
+    if (!audio) {
+      return null;
+    }
+
+    // Fetch content based on type - returns null if content not found
+    const content = await fetchContentForAudio(ctx, audio);
+    if (!content) {
+      return null;
+    }
+
+    return {
+      contentAudio: {
+        contentId: audio.contentId,
+        contentType: audio.contentType,
+        contentHash: audio.contentHash,
+        voiceId: audio.voiceId,
+        voiceSettings: audio.voiceSettings,
+        status: audio.status,
+      },
+      content,
+    };
+  },
+});
+
+/**
+ * Internal: Get audio metadata with script for speech generation.
+ * Returns script, voice configuration, and content hash for verification.
+ */
+export const getAudioForSpeechGeneration = internalQuery({
+  args: {
+    contentAudioId: vv.id("contentAudios"),
+  },
+  returns: nullable(
+    v.object({
+      script: v.string(),
+      voiceId: v.string(),
+      voiceSettings: v.optional(voiceSettingsValidator),
+      contentHash: v.string(),
+    })
+  ),
+  handler: async (ctx, args) => {
+    const audio = await ctx.db.get("contentAudios", args.contentAudioId);
+
+    if (!audio?.script) {
+      return null;
+    }
+
+    return {
+      script: audio.script,
+      voiceId: audio.voiceId,
+      voiceSettings: audio.voiceSettings,
+      contentHash: audio.contentHash,
     };
   },
 });
@@ -89,7 +175,7 @@ export const verifyContentHash = internalQuery({
   },
   returns: v.boolean(),
   handler: async (ctx, args) => {
-    const audio = await ctx.db.get(args.contentAudioId);
+    const audio = await ctx.db.get("contentAudios", args.contentAudioId);
 
     if (!audio) {
       return false;

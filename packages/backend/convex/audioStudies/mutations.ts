@@ -37,7 +37,7 @@ export const updateStatus = internalMutation({
 });
 
 /**
- * Save generated script to content audio.
+ * Save generated script to content audio and update status.
  * Called after successful script generation.
  */
 export const saveScript = internalMutation({

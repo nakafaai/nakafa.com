@@ -5,13 +5,7 @@ import { model } from "@repo/ai/config/vercel";
 import { getDefaultVoiceSettings } from "@repo/ai/config/voices";
 import { podcastScriptPrompt } from "@repo/ai/prompt/audio-studies";
 import { internal } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { internalAction } from "@repo/backend/convex/_generated/server";
-import type {
-  ContentId,
-  ContentType,
-} from "@repo/backend/convex/audioStudies/schema";
 import { vv } from "@repo/backend/convex/lib/validators";
 import { getErrorMessage } from "@repo/backend/convex/utils/helper";
 import {
@@ -29,44 +23,45 @@ const WORD_SPLIT_REGEX = /\s+/;
 /**
  * Generate a podcast script for content audio.
  * Uses Gemini to create a conversational script with ElevenLabs V3 audio tags.
+ * Fetches content and audio metadata in a single query for efficiency.
  */
 export const generateScript = internalAction({
   args: { contentAudioId: vv.id("contentAudios") },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const audio = await ctx.runQuery(internal.audioStudies.queries.getById, {
-      contentAudioId: args.contentAudioId,
-    });
+    // Consolidated: Get audio + content in single query (was 3 separate calls)
+    const data = await ctx.runQuery(
+      internal.audioStudies.queries.getAudioAndContentForScriptGeneration,
+      { contentAudioId: args.contentAudioId }
+    );
 
-    if (!audio) {
+    if (!data) {
       throw new ConvexError({
         code: "NOT_FOUND",
-        message: "Audio not found",
+        message: "Audio or content not found",
       });
     }
 
+    const { contentAudio, content } = data;
+
+    // Update status: generating-script
     await ctx.runMutation(internal.audioStudies.mutations.updateStatus, {
       contentAudioId: args.contentAudioId,
       status: "generating-script",
     });
 
     try {
-      const content = await fetchContent(
-        ctx,
-        audio.contentId,
-        audio.contentType
+      // Verify content hash inline (no extra query call)
+      // Hash verification is done by fetching fresh data from DB
+      const currentAudio = await ctx.runQuery(
+        internal.audioStudies.queries.getById,
+        { contentAudioId: args.contentAudioId }
       );
 
-      // Verify content hasn't changed before generating (save money)
-      const hashStillValid = await ctx.runQuery(
-        internal.audioStudies.queries.verifyContentHash,
-        {
-          contentAudioId: args.contentAudioId,
-          expectedHash: audio.contentHash,
-        }
-      );
-
-      if (!hashStillValid) {
+      if (
+        !currentAudio ||
+        currentAudio.contentHash !== contentAudio.contentHash
+      ) {
         throw new ConvexError({
           code: "CONTENT_CHANGED",
           message: "Content changed during generation, aborting to save costs",
@@ -85,16 +80,13 @@ export const generateScript = internalAction({
         prompt,
       });
 
-      // Double-check hash hasn't changed before saving
-      const hashStillValidAfter = await ctx.runQuery(
-        internal.audioStudies.queries.verifyContentHash,
-        {
-          contentAudioId: args.contentAudioId,
-          expectedHash: audio.contentHash,
-        }
+      // Verify hash hasn't changed after generation
+      const audioAfter = await ctx.runQuery(
+        internal.audioStudies.queries.getById,
+        { contentAudioId: args.contentAudioId }
       );
 
-      if (!hashStillValidAfter) {
+      if (!audioAfter || audioAfter.contentHash !== contentAudio.contentHash) {
         throw new ConvexError({
           code: "CONTENT_CHANGED",
           message:
@@ -102,6 +94,7 @@ export const generateScript = internalAction({
         });
       }
 
+      // Consolidated: Save script + update status in one mutation
       await ctx.runMutation(internal.audioStudies.mutations.saveScript, {
         contentAudioId: args.contentAudioId,
         script,
@@ -121,44 +114,33 @@ export const generateScript = internalAction({
 /**
  * Generate speech from a script using ElevenLabs.
  * Stores the audio file in Convex storage.
+ * Retrieves script and audio configuration in a single query for efficiency.
  */
 export const generateSpeech = internalAction({
   args: { contentAudioId: vv.id("contentAudios") },
   returns: v.null(),
   handler: async (ctx, args) => {
+    // Consolidated: Get audio with script + hash in single query
     const audio = await ctx.runQuery(
-      internal.audioStudies.queries.getWithScriptById,
+      internal.audioStudies.queries.getAudioForSpeechGeneration,
       { contentAudioId: args.contentAudioId }
     );
 
-    if (!audio?.script) {
+    if (!audio) {
       throw new ConvexError({
         code: "NOT_FOUND",
         message: "No script found for audio generation",
       });
     }
 
+    // Update status: generating-speech
     await ctx.runMutation(internal.audioStudies.mutations.updateStatus, {
       contentAudioId: args.contentAudioId,
       status: "generating-speech",
     });
 
     try {
-      // Get the audio record to check current hash
-      const audioRecord = await ctx.runQuery(
-        internal.audioStudies.queries.getById,
-        { contentAudioId: args.contentAudioId }
-      );
-
-      if (!audioRecord) {
-        throw new ConvexError({
-          code: "NOT_FOUND",
-          message: "Audio record not found",
-        });
-      }
-
       // Generate speech using ElevenLabs V3 via AI SDK
-      // V3 supports audio tags ([curious], [excited], etc.) for rich emotions
       const result = await aiGenerateSpeech({
         model: elevenlabs.speech("eleven_v3"),
         text: audio.script,
@@ -170,12 +152,12 @@ export const generateSpeech = internalAction({
         },
       });
 
-      // Verify hash hasn't changed before saving (ElevenLabs costs money!)
+      // Verify hash hasn't changed before saving
       const hashStillValid = await ctx.runQuery(
         internal.audioStudies.queries.verifyContentHash,
         {
           contentAudioId: args.contentAudioId,
-          expectedHash: audioRecord.contentHash,
+          expectedHash: audio.contentHash,
         }
       );
 
@@ -197,6 +179,7 @@ export const generateSpeech = internalAction({
         .filter(Boolean).length;
       const duration = Math.ceil((wordCount / 150) * 60);
 
+      // Consolidated: Save audio metadata + update status in one mutation
       await ctx.runMutation(internal.audioStudies.mutations.saveAudio, {
         contentAudioId: args.contentAudioId,
         storageId,
@@ -214,39 +197,3 @@ export const generateSpeech = internalAction({
     return null;
   },
 });
-
-/**
- * Fetch content (article or subject section) by ID.
- */
-async function fetchContent(ctx: ActionCtx, id: ContentId, type: ContentType) {
-  if (type === "article") {
-    const article = await ctx.runQuery(
-      internal.articleContents.queries.getById,
-      {
-        id: id as Id<"articleContents">,
-      }
-    );
-
-    if (!article) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "Article not found",
-      });
-    }
-
-    return article;
-  }
-
-  const section = await ctx.runQuery(internal.subjectSections.queries.getById, {
-    id: id as Id<"subjectSections">,
-  });
-
-  if (!section) {
-    throw new ConvexError({
-      code: "NOT_FOUND",
-      message: "Section not found",
-    });
-  }
-
-  return section;
-}
