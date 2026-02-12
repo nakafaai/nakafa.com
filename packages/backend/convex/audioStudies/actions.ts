@@ -136,10 +136,12 @@ export const generateSpeech = internalAction({
       });
     }
 
-    await ctx.runMutation(internal.audioStudies.mutations.updateStatus, {
-      contentAudioId: args.contentAudioId,
-      status: "generating-speech",
-    });
+    await ctx.runMutation(
+      internal.audioStudies.mutations.startSpeechGeneration,
+      {
+        contentAudioId: args.contentAudioId,
+      }
+    );
 
     try {
       // Use default chunk config from @repo/ai/config/elevenlabs (V3: 5k limit, no context)

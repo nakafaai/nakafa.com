@@ -47,7 +47,7 @@ export const saveScript = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const audio = await ctx.db.get("contentAudios", args.contentAudioId);
+    const audio = await ctx.db.get(args.contentAudioId);
 
     if (!audio) {
       throw new ConvexError({
@@ -56,8 +56,36 @@ export const saveScript = internalMutation({
       });
     }
 
-    await ctx.db.patch("contentAudios", args.contentAudioId, {
+    await ctx.db.patch(args.contentAudioId, {
       script: args.script,
+      status: "script-generated",
+      updatedAt: Date.now(),
+    });
+
+    return null;
+  },
+});
+
+/**
+ * Mark speech generation as starting.
+ * Called at the beginning of speech generation.
+ */
+export const startSpeechGeneration = internalMutation({
+  args: {
+    contentAudioId: vv.id("contentAudios"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const audio = await ctx.db.get(args.contentAudioId);
+
+    if (!audio) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "Audio not found",
+      });
+    }
+
+    await ctx.db.patch(args.contentAudioId, {
       status: "generating-speech",
       updatedAt: Date.now(),
     });

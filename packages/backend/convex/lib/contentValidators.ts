@@ -98,6 +98,7 @@ export type ExercisesMaterial = Infer<typeof exercisesMaterialValidator>;
 export const audioStatusValidator = literals(
   "pending",
   "generating-script",
+  "script-generated",
   "generating-speech",
   "completed",
   "failed"
