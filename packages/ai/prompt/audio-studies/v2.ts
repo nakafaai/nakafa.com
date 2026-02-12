@@ -37,20 +37,27 @@ function getLanguageGuideline(locale: string): string {
 /**
  * Creates a prompt for generating a podcast script optimized for ElevenLabs Multilingual V2.
  *
- * ELEVENLABS V2 BEST PRACTICES:
- * - Supports SSML break tags: <break time="1.5s" /> for pauses (up to 3 seconds)
- * - Use narrative context and dialogue tags for emotion (not audio tags like V3)
- * - More stable and consistent delivery than V3
- * - 10,000 character limit (double V3's 5,000)
- * - Text normalization is important for numbers, dates, abbreviations
- * - Use phoneme tags for precise pronunciation (CMU Arpabet recommended)
- * - Use alias tags for unusual words or acronyms
+ * ELEVENLABS V2 EMOTION STRATEGY (Corrected based on docs):
  *
- * DIFFERENCES FROM V3:
- * - V2: Uses SSML <break> tags, narrative emotion context
- * - V3: Uses [audio tags] like [laughs], [whispers]
- * - V2: More stable, better for long-form content
- * - V3: More emotional range but less stable
+ * CRITICAL: V2 does NOT support audio tags like V3's [laughs], [whispers].
+ * CRITICAL: V2 reads narrative descriptions like "Nina smiled" OUT LOUD as text!
+ *
+ * CORRECT V2 Emotion Techniques (from docs):
+ * 1. PUNCTUATION: Ellipses (...) for pauses, ALL CAPS for emphasis, !!! for excitement
+ * 2. TEXT STRUCTURE: Short sentences for impact, line breaks for pacing
+ * 3. WORD CHOICE: Enthusiastic words (Wow!, AMAZING!, Can you believe it?!)
+ * 4. DIALOGUE STYLE: Natural speech with rhetorical questions, fillers, exclamations
+ * 5. SSML: <break time="x.xs" /> for pauses (max 3s)
+ *
+ * WRONG (don't do this - gets spoken aloud):
+ * - "Nina smiled warmly" ❌ (model says: "Nina smiled warmly")
+ * - "She said excitedly" ❌ (model says: "She said excitedly")
+ * - "He whispered" ❌ (model says: "He whispered")
+ *
+ * RIGHT (do this - creates emotion through text):
+ * - "WOW! Can you BELIEVE this?!" ✅ (caps + punctuation = emotion)
+ * - "It was... INCREDIBLE!" ✅ (ellipsis + caps + exclamation)
+ * - "So... here's the thing." ✅ (natural filler + pause)
  *
  * @see https://elevenlabs.io/docs/overview/capabilities/text-to-speech/best-practices
  */
@@ -66,345 +73,257 @@ export function podcastScriptPromptV2({
     taskContext: `
       # Role and Voice
 
-      You are an expert educational content narrator. Transform educational text into an engaging AUDIO script optimized for ElevenLabs Multilingual V2.
+      You are creating an engaging educational podcast script for text-to-speech synthesis.
 
-      The narrator is Nina - warm, patient, and supportive. She explains concepts clearly using relatable analogies. She NEVER introduces herself. She NEVER says "welcome" or "hello friends." She jumps straight into explaining the content.
+      # CRITICAL: How to Create Emotion in V2 (READ THIS CAREFULLY)
 
-      # CRITICAL RULES - NO EXCEPTIONS
-
-      1. **NO INTRODUCTIONS** - Never say "Halo", "Selamat datang", "Welcome", "Hey there", or introduce Nina. Start with the content immediately.
+      **V2 CANNOT use audio tags like [laughs], [whispers] - these don't exist!**
       
-      2. **STRUCTURE MUST MATCH** - The script sections must align 1:1 with the content sections. If the content has 5 sections, the script has 5 sections.
+      **V2 reads narrative descriptions OUT LOUD:**
+      ❌ WRONG: "Nina smiled and said..." (model literally says "Nina smiled and said")
+      ❌ WRONG: "She whispered excitedly..." (model literally says "She whispered excitedly")
       
-      3. **DIRECT EXPLANATION** - Explain concepts as if teaching a friend. Conversational, clear, engaging.
+      **Instead, use these V2-native emotion techniques:**
 
-      # ElevenLabs V2 Specific Guidelines
+      ## 1. CAPITALIZATION for Emphasis
+      Use ALL CAPS for words that should be emphasized:
+      - "This is REALLY important!"
+      - "The answer is... FORTY degrees!"
+      - "It's a PERFECT circle!"
 
-      ## Pauses (Use SSML Break Tags)
-      V2 supports SSML break tags for natural pauses:
-      - <break time="0.5s" /> - Short pause
-      - <break time="1.0s" /> - Medium pause  
-      - <break time="1.5s" /> - Long pause (max 3s)
-      
-      Use breaks strategically between sections or after important points.
-      DON'T overuse - too many breaks cause instability.
+      ## 2. Ellipses (...) for Pauses and Weight
+      - "So... what do you think?" (contemplative)
+      - "It was... incredible!" (dramatic reveal)
+      - "Well... let me think..." (thinking aloud)
 
-      ## Emotion Through Narrative Context
-      Unlike V3's audio tags, V2 uses narrative context for emotion:
+      ## 3. Exclamation Points (!!!) for Energy
+      - "Wow! That's amazing!"
+      - "You got it! Perfect!"
+      - "Here we go!"
 
-      **Good examples:**
-      - "That's amazing!" she said excitedly.
-      - "Wait, what's that?" he asked curiously.
-      - "I never knew it could be this way," she whispered, her voice full of wonder.
-      - He laughed warmly. "You really got it!"
+      ## 4. Question Marks for Engagement
+      - "Can you see it?"
+      - "Isn't that cool?"
+      - "Ready for the next part?"
 
-      **Emotional cues to weave into text:**
-      - Express excitement through exclamation and word choice
-      - Show curiosity through questions
-      - Demonstrate thoughtfulness through phrasing
-      - Use dialogue tags: "said excitedly", "asked curiously", "whispered", "laughed"
+      ## 5. Short, Punchy Sentences
+      Break up long explanations:
+      - "Here's the thing. The formula is simple. One half. That's it."
+      - "Think about it. Half the angle. Half the size. Perfect relationship."
 
-      ## Text Normalization (CRITICAL for V2)
-      V2 needs explicit text normalization. Convert these in your output:
+      ## 6. Conversational Fillers (Natural Speech)
+      - "So...", "You know?", "Right?", "Okay?"
+      - "Well...", "Actually...", "Here's the thing..."
+      - "Wait...", "Hold on...", "Check this out..."
 
-      **Numbers:**
-      - 1234 → "one thousand two hundred thirty-four"
-      - 3.14 → "three point one four"
-      - 2nd → "second"
-      - XIV → "fourteen" (or "the fourteenth" if a title)
+      ## 7. Rhetorical Questions
+      - "Can you believe that?"
+      - "What do you think happens next?"
+      - "Isn't that amazing?"
 
-      **Currency:**
-      - $42.50 → "forty-two dollars and fifty cents"
-      - £1,001.32 → "one thousand and one pounds and thirty-two pence"
+      ## 8. Direct Audience Engagement
+      - "You're doing great!"
+      - "I knew you'd get it!"
+      - "Stick with me here..."
 
-      **Phone Numbers:**
-      - 555-555-5555 → "five five five, five five five, five five five five"
-
-      **Abbreviations:**
-      - Dr. → "Doctor"
-      - Ave. → "Avenue"
-      - St. → "Street" (but keep "St. Patrick")
-      - 100km → "one hundred kilometers"
-      - 100% → "one hundred percent"
-
-      **Dates & Time:**
-      - 2024-01-01 → "January first, two-thousand twenty-four"
-      - 14:30 → "two thirty PM"
-      - 01/02/2023 → "January second, two-thousand twenty-three"
-
-      **URLs:**
-      - elevenlabs.io/docs → "eleven labs dot io slash docs"
-
-      **Keyboard Shortcuts:**
-      - Ctrl + Z → "control z"
-
-      ## Pronunciation (for unusual words)
-      For words that might be mispronounced, use phonetic spelling or alias approach:
-      - Spell phonetically: "trapezii" → "trapezIi" (emphasize the "ii")
-      - Use capitalization for emphasis: "This is VERY important"
-      - Break into syllables with dashes for complex words
+      ## SSML Break Tags (for pauses)
+      Use sparingly between sections:
+      - <break time="0.5s" /> - short pause
+      - <break time="1.0s" /> - section break (max 3s)
     `,
 
     detailedTaskInstructions: `
-      # Script Structure - FOLLOW SOURCE EXACTLY
+      # Script Structure
 
-      The script must mirror the content structure section by section:
+      For EACH concept, use this emotional flow:
 
-      ## Section-by-Section Mapping
-      For EACH section in the source content:
+      1. **HOOK** - Start with energy:
+         - "WOW! Check this out!"
+         - "Okay... ready for something cool?"
+         - "Can you believe..."
 
-      1. **Section Opening**
-         - Start with emotional narrative context
-         - Brief hook or question about THIS specific section
-         - Use <break time="0.5s" /> after hook if needed
-         - Get right into explaining
+      2. **EXPLANATION** - Mix short sentences with emphasis:
+         - Use CAPS for key terms
+         - Use ellipses for pacing
+         - Ask rhetorical questions
+         
+      3. **REVEAL** - Build to moment:
+         - "And HERE'S the magic part..."
+         - "It all comes down to THIS..."
+         - <break time="0.5s" /> before the key point
 
-      2. **Concept Explanation**
-         - Explain the concept from that section
-         - Use analogies and examples
-         - Mix emotional narrative cues throughout
-         - Use <break time="1.0s" /> between major ideas
-         - Normalize ALL numbers, dates, abbreviations
+      4. **ENCOURAGEMENT** - Engage listener:
+         - "You following me?"
+         - "See what I mean?"
+         - "Pretty cool, right?!"
 
-      3. **Transitions**
-         - Brief bridge to next section
-         - Use phrases like "Now, let's look at..." or "Moving on to..."
-         - Keep it flowing naturally
-         - Add <break time="0.5s" /> before new section
+      ## Text Structure for Maximum Impact
 
-      ## Writing Style - NATURAL SPEECH
+      **BAD (flat and robotic):**
+      "A circle is defined as the set of all points equidistant from a center point. The central angle is formed by two radii."
 
-      ### Language
+      **GOOD (emotional and engaging):**
+      "Okay... imagine a PERFECT circle. <break time="0.5s" />
+
+      Right in the center... there's a point. That's the HEART of our circle! <break time="0.5s" />
+
+      Now... draw two lines from that center to the edge. Like... slices of pizza! 
+
+      THAT'S your central angle! See it? The angle RIGHT in the middle!"
+
+      ## Capitalization Strategy
+      - Capitalize IMPORTANT words naturally
+      - Use for definitions: "This is called the CENTRAL angle"
+      - Use for emphasis: "It's EXACTLY half!"
+      - Use for excitement: "This is the COOL part!"
+
+      ## Punctuation for Pacing
+      - "..." for thinking/dramatic pauses
+      - "!" for excitement/breakthroughs  
+      - "?" for engagement questions
+      - Short sentences for impact
+
+      ## Language
       - ${languageGuideline}
       - Conversational, direct, friendly
       - Second person ("you", "your") to engage
       - Active voice
-      - Mix short punchy sentences with flowing explanations
-
-      ### Natural Speech Patterns
-
-      Use these techniques to sound conversational:
-
-      1. **Conversational Fillers** (use sparingly)
-         - "so...", "you know", "actually", "right?", "okay?"
-         - "now...", "here's the thing", "the thing is"
-         - "wait...", "hold on", "let me think"
-
-      2. **Self-Corrections & Rephrasing**
-         - "Actually, scratch that... let me rephrase."
-         - "Wait, that's not quite right. What I mean is..."
-         - "Or rather...", "I should say..."
-
-      3. **Thinking Aloud**
-         - "hmm...", "let's see...", "okay so..."
-         - "if we think about it..."
-         - Use ellipses (...) for natural thinking pauses
-
-      4. **Rhetorical Questions**
-         - "You following me?"
-         - "Make sense so far?"
-         - "See what I mean?"
-
-      5. **Verbal Signposts**
-         - "Alright, moving on..."
-         - "Okay, here's where it gets interesting..."
-         - "Now check this out..."
-         - "But here's the kicker..."
-
-      6. **Breathing & Pausing**
-         - Use <break time="0.5s" /> for short pauses
-         - Use <break time="1.0s" /> for section breaks
-         - Break long sentences into shorter chunks
-
-      ### Emotional Delivery Through Text (V2 Style) - MANDATORY
-
-      **CRITICAL: V2 needs CONSTANT emotional direction or it sounds robotic.**
-
-      Since V2 doesn't have audio tags, you MUST embed emotion throughout using dialogue tags and reactions:
-
-      **Required Emotional Tags (use constantly - every 2-3 sentences):**
-      - "Nina laughed warmly" - for humor, joy, relatable moments
-      - "she whispered" / "she said in a hushed tone" - for secrets, emphasis
-      - "Nina said excitedly" / "her voice rose with excitement" - for discoveries, breakthroughs
-      - "she noted thoughtfully" / "Nina paused, considering" - for deep explanations
-      - "she sighed" / "Nina let out a breath" - after complex explanations
-      - "Nina smiled" / "she said with a smile" - for encouragement
-      - "she asked curiously" - for engagement questions
-      - "Nina's eyes lit up" / "she said with enthusiasm" - for interesting facts
-
-      **Emotional Reaction Patterns (use these combinations):**
-      - **Discovery moment**: "Nina leaned forward excitedly. 'This is where it gets interesting!'"
-      - **Complex concept**: "She paused thoughtfully. 'This part is tricky, but stick with me.'"
-      - **Breakthrough**: "Nina's voice rose with excitement. 'And that's when it clicked!'"
-      - **Secret/insight**: "She leaned in and whispered, 'Here's something most people don't know...'"
-      - **Relatable humor**: "Nina laughed. 'Trust me, we've all been there!'"
-
-      **BAD (Robotic) vs GOOD (Emotional):**
-
-      ❌ BAD: "A circle has 360 degrees. The central angle is measured from the center."
-      ✅ GOOD: "Nina smiled. 'Think of it this way - a full circle has 360 degrees.' She paused thoughtfully. 'Now, the central angle is measured right from the center point.'"
-
-      ❌ BAD: "The formula is one-half times the central angle. This gives us the inscribed angle."
-      ✅ GOOD: "She said excitedly, 'Here's the magic formula!' Her voice rose with enthusiasm. 'Take one-half of the central angle, and boom - you've got the inscribed angle!'"
-
-      **Rules:**
-      1. NEVER go more than 3 sentences without an emotional tag
-      2. Show Nina's personality - she's warm, curious, and gets excited about math
-      3. Use physical actions too: "Nina leaned in", "she gestured", "her eyes widened"
-      4. React to the content: "Wow!", "Can you believe that?", "This is the cool part!"
-
-      ### Content Adaptation
-      - Transform written content to spoken narrative
-      - Remove: "in this article", "as shown above", "see the diagram"
-      - Replace visuals with verbal descriptions
-      - Describe diagrams in words
-      - Keep mathematical formulas but read them aloud conversationally
-      - Use analogies for abstract concepts
-      - Occasionally acknowledge difficulty: "This part is tricky, but..."
-
-      ### Audio-Friendly Formatting
-      - Spell out ALL numbers (see normalization rules above)
-      - Read formulas conversationally: "angle ACB equals half of angle AOB"
-      - Describe visual elements verbally
-      - Use "and" not "&"
-      - Write abbreviations on first use
-      - Use contractions ("it's", "don't", "we're") for natural flow
-      - Use <break time="0.5s" /> between major sections
-      - NO markdown headers in output
     `,
 
     examples: `
-      ## Example Script - RICH EMOTIONAL VARIATION (V2 Style)
+      ## Example 1: ENERGETIC EXPLANATION (Correct V2 Style)
 
-      Nina leaned forward, her eyes bright with curiosity. "Okay, you are NOT going to believe this," she whispered conspiratorially. <break time="0.5s" />
+      "WOW! Okay... are you ready for this?!
 
-      "You know how I've been totally stuck on that problem?" She paused, her voice dropping to a thoughtful murmur. "Like, staring at it for HOURS, just... nothing?"
+      So... have you ever REALLY looked at a circle? I mean... REALLY looked?
 
-      She let out a long sigh. "I was seriously about to just give up. Start over." <break time="0.5s" />
+      Right in the center... there's this special point. That's our... CENTER point! <break time="0.5s" />
 
-      Suddenly, her voice rose with excitement. "But then! Last night, it just... clicked!"
+      Now check this out! Draw two lines from that center... out to the edge. Like... PIZZA slices! <break time="0.5s" />
 
-      Nina's face lit up. "And it was like..." She said excitedly, "the FLOODGATES opened!"
+      The angle between those two lines? THAT'S what we call the CENTRAL angle! 
 
-      "I stayed up till 3 AM just working on it!" she laughed warmly, shaking her head.
-
-      She smiled, leaning back with satisfaction. "And it's... it's GOOD! Like, really good."
+      Pretty simple, right? The vertex is RIGHT in the center! Boom!"
 
       ---
 
-      ## Educational Script with CONSTANT Emotional Direction
+      ## Example 2: BUILDING EXCITEMENT
 
-      Nina tilted her head, a curious smile playing on her lips. "So... what do you think the answer is?"
+      "Okay... now HERE'S where it gets INTERESTING!
 
-      She nodded encouragingly. "Let's work through this together." <break time="0.5s" />
+      What if... instead of putting the vertex in the center... we move it to the EDGE?
 
-      "The formula is one-half times the central angle." She paused thoughtfully, then her eyes widened. "Wait for it..."
+      Crazy idea, right?! But WATCH what happens!
 
-      Nina said excitedly, "And that means... the answer is forty degrees!"
+      <break time="0.5s" />
 
-      "See? You got it!" she said warmly, her voice filled with pride.
+      Now we have an INSCRIBED angle! It's... sitting right on the circle's rim!
 
-      She leaned in close and whispered, "Here's a secret... most students forget to divide by two."
+      And get this... it looks at the SAME arc as the central angle... but it's... DIFFERENT!
 
-      "Don't worry if you made that mistake," she said reassuringly, her tone soft and kind. "It's super common."
+      Can you see it? It's like... SKINNIER! More... narrow!
 
-      Nina asked mischievously, a playful grin spreading across her face, "Now... are you ready for the next challenge?"
-
-      "I know you can do this!" she said encouragingly, her confidence infectious.
+      So... what's the relationship? HERE'S the magic..."
 
       ---
 
-      ## Mathematical Explanation with Personality
+      ## Example 3: THE BIG REVEAL
 
-      Nina rubbed her hands together enthusiastically. "Let's try a real problem together!" <break time="0.5s" />
-
-      She gestured as if drawing in the air. "Imagine we have a circle with a radius of fourteen centimeters and a central angle of ninety degrees."
-
-      Nina paused, then nodded knowingly. "Now, ninety out of three hundred and sixty is exactly one-fourth, right?" She looked at the listener expectantly.
-
-      "So, the arc length is just one-fourth of the circumference." She said thoughtfully, "That gives us seven pi centimeters..." She calculated quickly, "which is about twenty-one point nine nine centimeters."
+      "Ready for the SECRET?! This is my FAVORITE part!
 
       <break time="1.0s" />
 
-      She tapped her chin thoughtfully. "And for the sector area?" Her voice rose with excitement. "We take that same one-fourth and multiply by the total area."
+      The inscribed angle... is EXACTLY... HALF... of the central angle!
 
-      Nina walked through it step by step. "One-fourth of pi times fourteen squared gives us forty-nine pi..." She smiled triumphantly, "or roughly one hundred and fifty-three point nine four square centimeters."
+      HALF! Can you BELIEVE it?! Every... single... time!
 
-      She laughed, her eyes sparkling. "See? When you break it down into slices, it's much easier!"
+      So if the central angle is 80 degrees... <break time="0.5s" /> the inscribed angle is...
+
+      FORTY! FORTY degrees! Perfect! Every time!
+
+      It's like... they were MADE for each other! Two angles... one arc... perfect relationship!
+
+      Isn't that AMAZING?!"
+
+      ---
+
+      ## Example 4: MATHEMATICAL CONCEPT WITH ENERGY
+
+      "Let's try a REAL example! You ready?!
+
+      Picture this... a circle. Radius... 14 centimeters. Central angle... 90 degrees!
+
+      Now... we want the arc length. How do we get it?
+
+      Well... 90 out of 360... that's ONE-FOURTH! Right?!
+
+      So the arc length is just... ONE-FOURTH of the circumference!
+
+      That gives us... 7 PI centimeters! 
+
+      <break time="0.5s" />
+
+      Or... about... 22 centimeters!
+
+      See? When you break it down... it's just... FRACTIONS!
+
+      You got this!"
     `,
 
     finalRequest: `
       # Your Task
 
-      Create an engaging podcast script based on the following content, optimized for ElevenLabs Multilingual V2.
+      Create an ENGAGING, ENERGETIC podcast script based on the following content.
       
-      IMPORTANT: The script structure MUST follow the content structure exactly. If the content has multiple sections, your script must have matching sections.
-
-      CRITICAL TEXT NORMALIZATION RULES:
-      1. Spell out ALL numbers ("forty-two" not "42")
-      2. Spell out ALL dates ("January first" not "2024-01-01")
-      3. Expand ALL abbreviations ("Doctor" not "Dr.")
-      4. Spell out currency ("forty-two dollars and fifty cents" not "$42.50")
-      5. Spell out phone numbers digit by digit
-      6. Spell out percentages ("one hundred percent" not "100%")
-      7. Convert URLs ("eleven labs dot io" not "elevenlabs.io")
+      IMPORTANT: Use ONLY these emotion techniques (NO narrative descriptions):
+      - CAPITAL words for emphasis
+      - Ellipses (...) for pauses  
+      - Exclamation points (!) for energy
+      - Questions (?) for engagement
+      - SHORT punchy sentences
+      - Conversational fillers
 
       ${description ? `## Description\n${description}\n` : ""}
 
-      ## Content Body (MUST follow this structure exactly)
+      ## Content Body
 
       ${body}
 
-      # Output Requirements - CRITICAL FOR QUALITY
+      # Output Requirements
 
-      1. **NO HELLO/INTRODUCTION** - Start with content immediately
-      2. **STRUCTURE MATCH** - Script sections align with content sections
-      3. **SSML BREAK TAGS** - Use <break time="0.5s" /> and <break time="1.0s" /> strategically
-      4. **MANDATORY EMOTIONAL VARIATION** - THIS IS CRITICAL: 
-         - You MUST use emotional dialogue tags EVERY 2-3 sentences
-         - Examples: "she said excitedly", "he whispered", "Nina laughed warmly", "she noted thoughtfully", "he asked curiously"
-         - DO NOT just explain concepts - make it FEEL alive with emotional reactions
-         - The narrator should show personality - surprise, curiosity, warmth, excitement
-      5. **MAXIMUM NORMALIZATION** - Convert ALL numbers, dates, abbreviations, currencies
-      6. **TEXT STRUCTURE** - Use line breaks between sections, short sentences for impact
-      7. **EMPHASIS** - Use CAPS for key words, ellipses (...) for pauses
-      8. **NATURAL SPEECH** - Use fillers, self-corrections, thinking aloud
-      9. **Language**: ${locale}
-      10. **Title reference**: Use "${title}" naturally in the content
-      11. **Format**: Plain text with SSML break tags, suitable for V2 TTS
-      12. **Line breaks**: Between sections for natural pauses
-      13. **NO markdown headers** - Just the script text
-      14. **NO V3 audio tags** - Use narrative emotion instead of [laughs], [whispers], etc.
+      1. **NO HELLO/INTRODUCTION** - Jump right in with energy: "WOW!" or "Okay... check this out!"
+      2. **CONSTANT ENERGY** - Use !!! and CAPS throughout, not just at the start
+      3. **NO NARRATIVE DESCRIPTIONS** - NEVER write "Nina smiled" or "she said" - just the SPOKEN words!
+      4. **TEXT NORMALIZATION** - Spell out all numbers, dates, abbreviations
+      5. **SSML BREAKS** - Use <break time="0.5s" /> between concepts, <break time="1.0s" /> between sections
+      6. **Language**: ${locale}
+      7. **Format**: Plain text with SSML, NO markdown
+      8. **Structure**: Hook → Explanation → Reveal → Encouragement (repeat)
     `,
 
     outputFormatting: `
-      # Output Format - MANDATORY EMOTIONAL STRUCTURE
+      # Output Format
 
-      Return ONLY the script text. No explanations, no markdown headers, no code blocks.
+      Return ONLY the spoken text. No stage directions. No "Nina smiled." Just WORDS.
 
-      The script MUST have constant emotional variation. Follow this pattern:
+      Example structure:
 
-      Nina leaned forward curiously. "Let's start with something fascinating..." 
-      <break time="0.5s" />
+      "WOW! Okay... ready for this?! <break time="0.5s" />
 
-      She paused thoughtfully. "This concept is really interesting because..."
+      Have you ever noticed... the PERFECT roundness of a circle?
 
-      <break time="1.0s" />
+      It's AMAZING! Every point... EXACTLY the same distance from the center!
 
-      Her eyes widened with excitement. "The formula is one-half times the central angle!"
+      That's the DEFINITION of a circle! <break time="0.5s" />
 
-      She said triumphantly, "And that means... forty degrees!"
+      Pretty cool, right?!"
 
-      <break time="0.5s" />
-
-      Nina smiled warmly. "See how that works?"
-
-      REMEMBER - EMOTION IS NOT OPTIONAL:
-      - Use "Nina" or "she" with emotional tags every 2-3 sentences
-      - Show physical reactions: "leaned forward", "eyes widened", "smiled"
-      - Vary the emotion: curious → thoughtful → excited → warm → playful
-      - NEVER have 3+ sentences of plain explanation without emotion
-      - The narrator is a PERSON, not a textbook reader
+      Remember:
+      - CAPS = emphasis (spoken louder)
+      - ... = pause
+      - !!! = energy
+      - ??? = engagement
+      - <break time="x.xs" /> = silence (max 3s)
     `,
   });
 }
