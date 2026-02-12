@@ -148,6 +148,14 @@ export const markFailed = internalMutation({
       });
     }
 
+    // Idempotent: Skip if already reset to "pending" by updateContentHash.
+    // This handles the race condition where content changes during generation.
+    // updateContentHash sets status to "pending" for the new content version,
+    // so we should NOT overwrite it back to "failed".
+    if (audio.status === "pending") {
+      return null;
+    }
+
     await ctx.db.patch("contentAudios", args.contentAudioId, {
       status: "failed",
       errorMessage: args.error,
