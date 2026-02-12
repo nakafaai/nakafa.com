@@ -194,6 +194,7 @@ export const updateContentHash = internalMutation({
       }
 
       // Update record with new hash and clear old data
+      // Reset generationAttempts to 0 for new content version
       await ctx.db.patch("contentAudios", audio._id, {
         contentHash: args.newHash,
         status: "pending",
@@ -203,6 +204,7 @@ export const updateContentHash = internalMutation({
         audioSize: undefined,
         errorMessage: undefined,
         failedAt: undefined,
+        generationAttempts: 0,
         updatedAt: Date.now(),
       });
 
