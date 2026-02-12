@@ -141,6 +141,34 @@ export function podcastScriptPrompt({
       - Show genuine excitement about the content
       - Sometimes talk faster when excited, slower when explaining
       
+      ## PUNCTUATION MATTERS - COMMA PLACEMENT FOR EMOTION
+      
+      **CRITICAL: Comma placement changes intonation and meaning!**
+      
+      **Comma creates pause and emphasis:**
+      - ❌ "Inget rahasia tadi kan?" (flat, no pause)
+      - ✅ "Inget rahasia tadi, kan?" (pause before "kan", more natural)
+      
+      - ❌ "Gampang kan?" 
+      - ✅ "Gampang, kan?" (pause makes it warmer)
+      
+      - ❌ "Tinggal dibagi dua aja kan?"
+      - ✅ "Tinggal dibagi dua aja, kan?" (pause before question)
+      
+      **Use commas for natural speech patterns:**
+      - Before tag questions: "...jadi enam puluh derajat, kan?"
+      - Before conjunctions: "...jari-jari R, terus jarak ke pinggirnya..."
+      - For emphasis: "...besar sudut pusat ini, lho!"
+      - Before clarifications: "...sudut pusat, atau sudut yang di tengah..."
+      - For natural breathing: "...tali busur, yaitu garis lurus yang..."
+      
+      **Examples of good comma usage:**
+      - "Jadi, kalau sudut pusatnya delapan puluh derajat, berarti..."
+      - "Tau nggak, kalau busur itu ada jenisnya?"
+      - "Nah, dari konsep itu kita bisa lihat..."
+      - "Seru banget, kan?"
+      - "Gampang, kan?"
+      
       ## PARAGRAPH STRUCTURE - MAX 2 SENTENCES
       
       **CRITICAL:** Every paragraph MUST contain maximum 2 sentences only. This creates natural breathing pauses.
@@ -284,9 +312,9 @@ export function podcastScriptPrompt({
     examples: `
       ## Example: EXCITED NINA with CONTINUITY & VARIED BRIDGING
 
-      [excited] Kamu tau nggak sih? Lingkaran itu sebenarnya kumpulan titik-titik yang jaraknya sama persis ke satu titik di tengah!
+      [excited] Kamu tau nggak sih? Lingkaran itu sebenarnya kumpulan titik-titik yang jaraknya sama persis ke satu titik tetap di tengah!
 
-      [curious] Nah, titik tengah itu namanya pusat, terus jarak ke tepinya disebut jari-jari. Simpel kan?
+      [curious] Titik tetap itu namanya pusat lingkaran, terus jarak ke pinggirnya disebut jari-jari. Simpel banget, kan?
 
       [enthusiastic] Terus nih, bayangin kalau kita tarik dua garis dari pusat ke tepi lingkaran...
 
@@ -300,7 +328,7 @@ export function podcastScriptPrompt({
 
       [thrilled] Sudut keliling itu SELALU setengah dari sudut pusat! [faster] Jadi kalau pusatnya 80 derajat, yang di tepi cuma 40!
 
-      [delighted] Gampang banget kan? Tinggal dibagi dua! [warmly] Paham ya sampai sini?
+      [delighted] Gampang banget, kan? Tinggal dibagi dua! [warmly] Paham ya sampai sini?
 
       ---
 
@@ -318,7 +346,7 @@ export function podcastScriptPrompt({
 
       [thrilled] Yang di tepi itu SELALU setengahnya yang di tengah! [excited] Jadi kalau pusatnya 100 derajat, yang di tepi cuma 50!
 
-      [delighted] See? Matematika itu logis banget kan? [warmly] Yuk kita bahas lebih dalam!
+      [delighted] See? Matematika itu logis banget, kan? [warmly] Yuk kita bahas lebih dalam!
 
       ---
 
@@ -394,6 +422,9 @@ ${description}
       - [ ] NO random "Nah!", "WOW", or reactions without context
       - [ ] Reference back to previous content: "Jadi tadi...", "Nah dari situ...", "Berdasarkan konsep itu..."
       - [ ] NO flat robotic delivery at sentence ends - always keep energy up!
+      - [ ] PROPER COMMA USAGE for natural intonation: "Gampang, kan?" not "Gampang kan?"
+      - [ ] Comma before tag questions: "...jadi enam puluh derajat, kan?"
+      - [ ] Comma for natural pauses: "...jari-jari R, terus jarak ke pinggirnya..."
       - [ ] At least 25+ HIGH-ENERGY tags used ([excited], [enthusiastic], [cheerful], [thrilled], etc.)
       - [ ] At least 15+ warm/friendly tags used ([warmly], [laughs], [reassuring], etc.)
       - [ ] Tags appear EVERY 1-2 sentences (high density for energy!)
@@ -439,6 +470,9 @@ ${description}
       - Tags every 1-2 sentences for energy
       - Combine tags: [excited] [faster], [thrilled] [whispers]
       - Line breaks between emotional shifts
+      - PROPER COMMAS: "Gampang, kan?" "Inget, kan?" "...delapan puluh, kan?"
+      - Comma before tag questions creates natural pause
+      - Comma for emphasis: "Nah, dari situ..." "Jadi, kalau..."
     `,
   });
 }
