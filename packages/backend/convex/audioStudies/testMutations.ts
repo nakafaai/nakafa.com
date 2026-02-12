@@ -1,3 +1,4 @@
+import type { WorkflowId } from "@convex-dev/workflow";
 import { DEFAULT_VOICE_KEY, getVoiceConfig } from "@repo/ai/config/voices";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
@@ -6,6 +7,7 @@ import {
   contentTypeValidator,
 } from "@repo/backend/convex/audioStudies/schema";
 import { vv } from "@repo/backend/convex/lib/validators";
+import { workflow } from "@repo/backend/convex/workflow";
 import { v } from "convex/values";
 
 /**
@@ -111,5 +113,29 @@ export const scheduleGenerateSpeech = internalMutation({
       }
     );
     return { scheduled: true };
+  },
+});
+
+/**
+ * Start the full audio generation workflow.
+ * This workflow orchestrates both script and speech generation.
+ * Use this for end-to-end testing of the complete pipeline.
+ */
+export const startWorkflow = internalMutation({
+  args: {
+    contentAudioId: vv.id("contentAudios"),
+  },
+  returns: v.object({ workflowId: v.string() }),
+  handler: async (ctx, args) => {
+    // Start workflow using the workflow manager's start function
+    // This creates a durable workflow execution that survives crashes
+    const workflowId: WorkflowId = await workflow.start(
+      ctx,
+      internal.audioStudies.workflows.generateAudio,
+      {
+        contentAudioId: args.contentAudioId,
+      }
+    );
+    return { workflowId };
   },
 });

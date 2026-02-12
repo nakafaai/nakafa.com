@@ -1,17 +1,7 @@
-import { WorkflowManager } from "@convex-dev/workflow";
-import { components, internal } from "@repo/backend/convex/_generated/api";
+import { internal } from "@repo/backend/convex/_generated/api";
 import { vv } from "@repo/backend/convex/lib/validators";
+import { workflow } from "@repo/backend/convex/workflow";
 import { v } from "convex/values";
-
-/**
- * Workflow manager for audio studies.
- * Manages parallel execution of workflow steps.
- */
-const workflow = new WorkflowManager(components.workflow, {
-  workpoolOptions: {
-    maxParallelism: 10,
-  },
-});
 
 /**
  * Durable workflow for audio generation pipeline.
