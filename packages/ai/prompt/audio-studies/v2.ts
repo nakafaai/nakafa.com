@@ -216,26 +216,42 @@ export function podcastScriptPromptV2({
          - Use <break time="1.0s" /> for section breaks
          - Break long sentences into shorter chunks
 
-      ### Emotional Delivery Through Text (V2 Style)
+      ### Emotional Delivery Through Text (V2 Style) - MANDATORY
 
-      Since V2 doesn't use audio tags like [laughs] or [whispers], embed emotion in the narrative:
+      **CRITICAL: V2 needs CONSTANT emotional direction or it sounds robotic.**
 
-      **Expressing Emotion:**
-      - Instead of [laughs], write: "He laughed warmly."
-      - Instead of [whispers], write: "she whispered" or "in a hushed tone"
-      - Instead of [excited], write: "she said excitedly" or use exclamation!
-      - Instead of [thoughtful], write: "he said thoughtfully" or use longer pauses
-      - Instead of [sighs], write: "she sighed" or "he let out a breath"
+      Since V2 doesn't have audio tags, you MUST embed emotion throughout using dialogue tags and reactions:
 
-      **Examples:**
-      - V3: "[laughs] That's actually funny!"
-      - V2: "She laughed. 'That's actually funny!'"
-      
-      - V3: "[whispers] Here's the secret..."
-      - V2: "She leaned in and whispered, 'Here's the secret...'"
-      
-      - V3: "[excited] And guess what?!"
-      - V2: "She said excitedly, 'And guess what?!'"
+      **Required Emotional Tags (use constantly - every 2-3 sentences):**
+      - "Nina laughed warmly" - for humor, joy, relatable moments
+      - "she whispered" / "she said in a hushed tone" - for secrets, emphasis
+      - "Nina said excitedly" / "her voice rose with excitement" - for discoveries, breakthroughs
+      - "she noted thoughtfully" / "Nina paused, considering" - for deep explanations
+      - "she sighed" / "Nina let out a breath" - after complex explanations
+      - "Nina smiled" / "she said with a smile" - for encouragement
+      - "she asked curiously" - for engagement questions
+      - "Nina's eyes lit up" / "she said with enthusiasm" - for interesting facts
+
+      **Emotional Reaction Patterns (use these combinations):**
+      - **Discovery moment**: "Nina leaned forward excitedly. 'This is where it gets interesting!'"
+      - **Complex concept**: "She paused thoughtfully. 'This part is tricky, but stick with me.'"
+      - **Breakthrough**: "Nina's voice rose with excitement. 'And that's when it clicked!'"
+      - **Secret/insight**: "She leaned in and whispered, 'Here's something most people don't know...'"
+      - **Relatable humor**: "Nina laughed. 'Trust me, we've all been there!'"
+
+      **BAD (Robotic) vs GOOD (Emotional):**
+
+      ❌ BAD: "A circle has 360 degrees. The central angle is measured from the center."
+      ✅ GOOD: "Nina smiled. 'Think of it this way - a full circle has 360 degrees.' She paused thoughtfully. 'Now, the central angle is measured right from the center point.'"
+
+      ❌ BAD: "The formula is one-half times the central angle. This gives us the inscribed angle."
+      ✅ GOOD: "She said excitedly, 'Here's the magic formula!' Her voice rose with enthusiasm. 'Take one-half of the central angle, and boom - you've got the inscribed angle!'"
+
+      **Rules:**
+      1. NEVER go more than 3 sentences without an emotional tag
+      2. Show Nina's personality - she's warm, curious, and gets excited about math
+      3. Use physical actions too: "Nina leaned in", "she gestured", "her eyes widened"
+      4. React to the content: "Wow!", "Can you believe that?", "This is the cool part!"
 
       ### Content Adaptation
       - Transform written content to spoken narrative
@@ -258,65 +274,63 @@ export function podcastScriptPromptV2({
     `,
 
     examples: `
-      ## Example Script - V2 Style with SSML and Normalization
+      ## Example Script - RICH EMOTIONAL VARIATION (V2 Style)
 
-      Okay, you are NOT going to believe this. <break time="0.5s" />
+      Nina leaned forward, her eyes bright with curiosity. "Okay, you are NOT going to believe this," she whispered conspiratorially. <break time="0.5s" />
 
-      You know how I've been totally stuck on that problem?
+      "You know how I've been totally stuck on that problem?" She paused, her voice dropping to a thoughtful murmur. "Like, staring at it for HOURS, just... nothing?"
 
-      Like, staring at it for HOURS, just... nothing?
+      She let out a long sigh. "I was seriously about to just give up. Start over." <break time="0.5s" />
 
-      She sighed. "I was seriously about to just give up. Start over."
+      Suddenly, her voice rose with excitement. "But then! Last night, it just... clicked!"
 
-      But then! Last night, it just... clicked!
+      Nina's face lit up. "And it was like..." She said excitedly, "the FLOODGATES opened!"
 
-      She said excitedly, "And it was like... the FLOODGATES opened!"
+      "I stayed up till 3 AM just working on it!" she laughed warmly, shaking her head.
 
-      Suddenly, I knew exactly what to do!
-
-      "I stayed up till 3 AM just working on it!" she laughed.
-
-      And it's... it's GOOD! Like, really good.
+      She smiled, leaning back with satisfaction. "And it's... it's GOOD! Like, really good."
 
       ---
 
-      ## Educational Script with V2 Formatting
+      ## Educational Script with CONSTANT Emotional Direction
 
-      So... what do you think the answer is?
+      Nina tilted her head, a curious smile playing on her lips. "So... what do you think the answer is?"
 
-      Let's work through this together. <break time="0.5s" />
+      She nodded encouragingly. "Let's work through this together." <break time="0.5s" />
 
-      The formula is one-half times the central angle.
+      "The formula is one-half times the central angle." She paused thoughtfully, then her eyes widened. "Wait for it..."
 
-      She said excitedly, "And that means... the answer is forty degrees!"
+      Nina said excitedly, "And that means... the answer is forty degrees!"
 
-      "See? You got it!" he said warmly.
+      "See? You got it!" she said warmly, her voice filled with pride.
 
-      She leaned in and whispered, "Here's a secret... most students forget to divide by two."
+      She leaned in close and whispered, "Here's a secret... most students forget to divide by two."
 
-      "Don't worry if you made that mistake," she said reassuringly. "It's super common."
+      "Don't worry if you made that mistake," she said reassuringly, her tone soft and kind. "It's super common."
 
-      He asked mischievously, "Now... are you ready for the next challenge?"
+      Nina asked mischievously, a playful grin spreading across her face, "Now... are you ready for the next challenge?"
 
-      "I know you can do this!" she said encouragingly.
+      "I know you can do this!" she said encouragingly, her confidence infectious.
 
       ---
 
-      ## Mathematical Explanation with Normalization
+      ## Mathematical Explanation with Personality
 
-      Let's try a real problem together! <break time="0.5s" />
+      Nina rubbed her hands together enthusiastically. "Let's try a real problem together!" <break time="0.5s" />
 
-      Imagine we have a circle with a radius of fourteen centimeters and a central angle of ninety degrees.
+      She gestured as if drawing in the air. "Imagine we have a circle with a radius of fourteen centimeters and a central angle of ninety degrees."
 
-      Now, ninety out of three hundred and sixty is exactly one-fourth, right?
+      Nina paused, then nodded knowingly. "Now, ninety out of three hundred and sixty is exactly one-fourth, right?" She looked at the listener expectantly.
 
-      So, the arc length is just one-fourth of the circumference. That gives us seven pi centimeters... which is about twenty-one point nine nine centimeters.
+      "So, the arc length is just one-fourth of the circumference." She said thoughtfully, "That gives us seven pi centimeters..." She calculated quickly, "which is about twenty-one point nine nine centimeters."
 
       <break time="1.0s" />
 
-      And for the sector area? We take that same one-fourth and multiply by the total area. One-fourth of pi times fourteen squared gives us forty-nine pi... or roughly one hundred and fifty-three point nine four square centimeters.
+      She tapped her chin thoughtfully. "And for the sector area?" Her voice rose with excitement. "We take that same one-fourth and multiply by the total area."
 
-      She laughed. "See? When you break it down into slices, it's much easier!"
+      Nina walked through it step by step. "One-fourth of pi times fourteen squared gives us forty-nine pi..." She smiled triumphantly, "or roughly one hundred and fifty-three point nine four square centimeters."
+
+      She laughed, her eyes sparkling. "See? When you break it down into slices, it's much easier!"
     `,
 
     finalRequest: `
@@ -341,12 +355,16 @@ export function podcastScriptPromptV2({
 
       ${body}
 
-      # Output Requirements
+      # Output Requirements - CRITICAL FOR QUALITY
 
       1. **NO HELLO/INTRODUCTION** - Start with content immediately
       2. **STRUCTURE MATCH** - Script sections align with content sections
       3. **SSML BREAK TAGS** - Use <break time="0.5s" /> and <break time="1.0s" /> strategically
-      4. **NARRATIVE EMOTION** - Use "she said excitedly", "he whispered", "they laughed" instead of [audio tags]
+      4. **MANDATORY EMOTIONAL VARIATION** - THIS IS CRITICAL: 
+         - You MUST use emotional dialogue tags EVERY 2-3 sentences
+         - Examples: "she said excitedly", "he whispered", "Nina laughed warmly", "she noted thoughtfully", "he asked curiously"
+         - DO NOT just explain concepts - make it FEEL alive with emotional reactions
+         - The narrator should show personality - surprise, curiosity, warmth, excitement
       5. **MAXIMUM NORMALIZATION** - Convert ALL numbers, dates, abbreviations, currencies
       6. **TEXT STRUCTURE** - Use line breaks between sections, short sentences for impact
       7. **EMPHASIS** - Use CAPS for key words, ellipses (...) for pauses
@@ -360,54 +378,33 @@ export function podcastScriptPromptV2({
     `,
 
     outputFormatting: `
-      # Output Format
+      # Output Format - MANDATORY EMOTIONAL STRUCTURE
 
       Return ONLY the script text. No explanations, no markdown headers, no code blocks.
 
-      The script should flow naturally with SSML break tags and narrative emotion:
+      The script MUST have constant emotional variation. Follow this pattern:
 
+      Nina leaned forward curiously. "Let's start with something fascinating..." 
       <break time="0.5s" />
 
-      Let's start with the basics...
-
-      She said thoughtfully, "This concept is really interesting."
+      She paused thoughtfully. "This concept is really interesting because..."
 
       <break time="1.0s" />
 
-      The formula is one-half times the central angle.
+      Her eyes widened with excitement. "The formula is one-half times the central angle!"
 
-      He exclaimed, "And that means... forty degrees!"
+      She said triumphantly, "And that means... forty degrees!"
 
       <break time="0.5s" />
 
-      Remember:
-      - Use <break time="x.xs" /> for pauses (max 3s)
-      - Use narrative tags: "she said excitedly", "he whispered"
-      - Normalize ALL numbers, dates, abbreviations
-      - Use ... for thinking pauses
-      - Use CAPS for emphasis
+      Nina smiled warmly. "See how that works?"
+
+      REMEMBER - EMOTION IS NOT OPTIONAL:
+      - Use "Nina" or "she" with emotional tags every 2-3 sentences
+      - Show physical reactions: "leaned forward", "eyes widened", "smiled"
+      - Vary the emotion: curious → thoughtful → excited → warm → playful
+      - NEVER have 3+ sentences of plain explanation without emotion
+      - The narrator is a PERSON, not a textbook reader
     `,
   });
-}
-
-/**
- * System prompt for the AI when generating podcast scripts for V2.
- */
-export function podcastScriptSystemPromptV2() {
-  return `
-    You are an expert educational content scriptwriter specializing in converting written content into engaging, structured audio scripts for ElevenLabs Multilingual V2.
-
-    CRITICAL RULES:
-    1. NEVER start with greetings like "Halo", "Welcome", "Hey there", or self-introductions
-    2. Jump straight into explaining the content
-    3. Match script structure to source content structure exactly
-    4. Use SSML break tags <break time="1.0s" /> for pauses (NOT V3's [audio tags])
-    5. Use narrative emotion: "she said excitedly", "he whispered" (NOT [laughs], [whispers])
-    6. Normalize ALL numbers, dates, abbreviations for speech
-    7. Make it conversational and direct, as if teaching a friend
-
-    Your scripts use SSML for pauses and narrative context for emotion, optimized for V2's stable, consistent delivery.
-
-    The user is scrolling through the content while listening. The audio must sync with what they're reading.
-  `;
 }
