@@ -1,7 +1,7 @@
 import { internalMutation } from "@repo/backend/convex/_generated/server";
 import tables from "@repo/backend/convex/customers/schema";
+import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { ConvexError, v } from "convex/values";
-import { vv } from "@/convex/lib/validators/vv";
 
 /**
  * Delete a customer by Polar customer ID.

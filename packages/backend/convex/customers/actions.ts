@@ -6,8 +6,8 @@ import {
   requireCustomer,
 } from "@repo/backend/convex/customers/utils";
 import { requireAuthForAction } from "@repo/backend/convex/lib/helpers/auth";
+import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { ConvexError, v } from "convex/values";
-import { vv } from "@/convex/lib/validators/vv";
 
 /**
  * Sync customer between Polar and local database.

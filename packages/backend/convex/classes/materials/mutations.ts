@@ -11,9 +11,9 @@ import {
   PERMISSIONS,
   requirePermission,
 } from "@repo/backend/convex/lib/helpers/permissions";
+import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
-import { vv } from "@/convex/lib/validators/vv";
 
 /**
  * Reorder direction validator

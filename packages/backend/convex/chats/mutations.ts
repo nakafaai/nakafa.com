@@ -9,8 +9,8 @@ import {
   requireAuth,
   requireAuthWithSession,
 } from "@repo/backend/convex/lib/helpers/auth";
+import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { ConvexError, v } from "convex/values";
-import { vv } from "@/convex/lib/validators/vv";
 
 /**
  * Helper: Delete all parts for a message.

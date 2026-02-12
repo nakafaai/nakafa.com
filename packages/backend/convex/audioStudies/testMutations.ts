@@ -7,9 +7,9 @@ import {
   contentIdValidator,
   contentTypeValidator,
 } from "@repo/backend/convex/audioStudies/schema";
+import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { workflow } from "@repo/backend/convex/workflow";
 import { v } from "convex/values";
-import { vv } from "@/convex/lib/validators/vv";
 
 /**
  * Create a test audio record for manual testing.

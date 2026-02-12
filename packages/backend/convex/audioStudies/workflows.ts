@@ -1,7 +1,7 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { workflow } from "@repo/backend/convex/workflow";
 import { v } from "convex/values";
-import { vv } from "@/convex/lib/validators/vv";
 
 /**
  * Durable workflow for audio generation pipeline.

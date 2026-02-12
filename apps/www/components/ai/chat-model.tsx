@@ -5,7 +5,7 @@ import {
   BrainIcon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
-import type { ModelId } from "@repo/ai/config/providers";
+import type { ModelId } from "@repo/ai/config/vercel";
 import { api } from "@repo/backend/convex/_generated/api";
 import { products } from "@repo/backend/convex/utils/polar";
 import { Button } from "@repo/design-system/components/ui/button";

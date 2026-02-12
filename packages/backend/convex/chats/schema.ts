@@ -1,3 +1,10 @@
+import {
+  articleCategoryValidator,
+  gradeValidator,
+  localeValidator,
+  materialValidator,
+  subjectCategoryValidator,
+} from "@repo/backend/convex/lib/validators/contents";
 import { defineTable, paginationResultValidator } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
@@ -6,13 +13,6 @@ import {
   literals,
   systemFields,
 } from "convex-helpers/validators";
-import {
-  articleCategoryValidator,
-  gradeValidator,
-  localeValidator,
-  materialValidator,
-  subjectCategoryValidator,
-} from "@/convex/lib/validators/contents";
 
 /**
  * Re-export content validators for backward compatibility.
@@ -23,7 +23,7 @@ export {
   localeValidator,
   materialValidator,
   subjectCategoryValidator,
-} from "@/convex/lib/validators/contents";
+} from "@repo/backend/convex/lib/validators/contents";
 
 /**
  * Chat visibility validator

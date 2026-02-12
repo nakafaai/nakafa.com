@@ -12,10 +12,10 @@ import {
   requireClassAccess,
 } from "@repo/backend/convex/lib/helpers/class";
 import { getUserMap } from "@repo/backend/convex/lib/helpers/user";
+import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
-import { vv } from "@/convex/lib/validators/vv";
 
 export const getClasses = query({
   args: {

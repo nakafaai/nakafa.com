@@ -13,9 +13,9 @@ import { loadClass } from "@repo/backend/convex/classes/utils";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { requireClassAccess } from "@repo/backend/convex/lib/helpers/class";
 import { getUserMap } from "@repo/backend/convex/lib/helpers/user";
+import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
-import { vv } from "@/convex/lib/validators/vv";
 
 export const getForums = query({
   args: {

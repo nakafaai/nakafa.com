@@ -4,14 +4,14 @@ import {
   contentTypeValidator,
 } from "@repo/backend/convex/audioStudies/schema";
 import { fetchContentForAudio } from "@repo/backend/convex/audioStudies/utils";
-import { v } from "convex/values";
-import { nullable } from "convex-helpers/validators";
 import {
   audioModelValidator,
   audioStatusValidator,
   voiceSettingsValidator,
-} from "@/convex/lib/validators/audio";
-import { vv } from "@/convex/lib/validators/vv";
+} from "@repo/backend/convex/lib/validators/audio";
+import { vv } from "@repo/backend/convex/lib/validators/vv";
+import { v } from "convex/values";
+import { nullable } from "convex-helpers/validators";
 
 /**
  * Internal: Get content audio metadata by ID.

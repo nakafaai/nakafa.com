@@ -7,8 +7,8 @@ import {
 import { computeAttemptDurationSeconds } from "@repo/backend/convex/exercises/utils";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
+import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { ConvexError, v } from "convex/values";
-import { vv } from "@/convex/lib/validators/vv";
 
 /**
  * Starts a new exercise attempt for the authenticated user.

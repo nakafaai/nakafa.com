@@ -1,13 +1,13 @@
+import {
+  audioModelValidator,
+  audioStatusValidator,
+  voiceSettingsValidator,
+} from "@repo/backend/convex/lib/validators/audio";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { defineTable } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
-import {
-  audioModelValidator,
-  audioStatusValidator,
-  voiceSettingsValidator,
-} from "@/convex/lib/validators/audio";
 
 /**
  * Validator for content ID - polymorphic reference to article or subject section.

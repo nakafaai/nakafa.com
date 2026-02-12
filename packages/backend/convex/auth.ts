@@ -13,6 +13,7 @@ import {
 } from "@repo/backend/convex/_generated/server";
 import authConfig from "@repo/backend/convex/auth.config";
 import authSchema from "@repo/backend/convex/betterAuth/schema";
+import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
 import {
   anonymous,
@@ -21,7 +22,6 @@ import {
   organization,
   username,
 } from "better-auth/plugins";
-import { vv } from "@/convex/lib/validators/vv";
 
 const siteUrl = process.env.SITE_URL ?? "http://localhost:3000";
 

@@ -1,12 +1,12 @@
 import { internalMutation } from "@repo/backend/convex/functions";
-import { v } from "convex/values";
 import {
   gradeValidator,
   localeValidator,
   materialValidator,
   subjectCategoryValidator,
-} from "@/convex/lib/validators/contents";
-import { vv } from "@/convex/lib/validators/vv";
+} from "@repo/backend/convex/lib/validators/contents";
+import { vv } from "@repo/backend/convex/lib/validators/vv";
+import { v } from "convex/values";
 
 /**
  * Upsert a subject section document.
