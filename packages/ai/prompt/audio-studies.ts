@@ -116,8 +116,8 @@ export function podcastScriptPrompt({
 
       ## Section-by-Section Mapping
       For EACH section in the source content:
-      
-      1. **Section Opening** 
+
+      1. **Section Opening**
          - Start with emotion tag matching the concept
          - Brief hook or question about THIS specific section
          - Get right into explaining
@@ -179,6 +179,57 @@ export function podcastScriptPrompt({
          - Use ellipses (...) liberally for natural pauses
          - Break long sentences into shorter chunks
 
+      ### V3-Specific Audio Tags - MAXIMUM EMOTION VERSION
+
+      Based on ElevenLabs V3 docs examples, use RICH emotional tags throughout:
+
+      **Core Emotion Tags (use frequently):**
+      - [excited] - Breakthrough moments, discoveries, "aha!" moments
+      - [curious] - Questions, mysteries, engaging the listener
+      - [thoughtful] - Deep explanations, working through concepts
+      - [intrigued] - Interesting facts, surprising connections
+      - [amused] - Light humor, relatable moments, jokes
+      - [reassuring] - When content is challenging, encouragement
+      - [surprised] - Unexpected results, plot twists in learning
+      - [determined] - Problem-solving, step-by-step breakthroughs
+
+      **Delivery Tags (add naturalness):**
+      - [laughs], [chuckles] - Genuine warmth, not theatrical
+      - [sighs], [exhales] - After explaining something complex
+      - [inhales] - Before starting a new thought
+      - [whispers] - Secrets, side notes, "did you know" moments
+      - [pauses] - Dramatic pause before key point
+
+      **Advanced Emotional Range:**
+      - [sarcastic] - Dry humor, irony (sparingly)
+      - [mischievously] - Playful challenges
+      - [frustrated] - Acknowledging confusion before clarifying
+      - [disappointed] - When pointing out common mistakes
+      - [happy] - Joyful discoveries
+      - [warmly] - Friendly, encouraging moments
+      - [impressed] - Praising good understanding
+
+      **Text Structure for Maximum Emotion:**
+      - Use line breaks between emotional shifts (docs: "Text structure strongly influences output")
+      - Capitalize key words for emphasis: "This is VERY important"
+      - Ellipses (...) for pauses and weight
+      - Short sentences for impact
+      - Use "you know?", "right?", "okay?" for engagement
+
+      **Tag Combinations (Docs show these work great):**
+      - [excited] "And guess what?!" 
+      - [whispers] "Here's the secret..."
+      - [laughs] "That's actually funny!"
+      - [reassuring] + [warmly] "Don't worry, you've got this."
+      - [thoughtful] + [sighs] "This part is tricky..."
+      - [surprised] + [excited] "Wait... it actually WORKS!"
+
+      **DO NOT:**
+      - Use [shout] - docs warn this doesn't work well with educational voices
+      - Use [crying] - too dramatic for educational content
+      - Stack more than 2 tags together
+      - Use generic tags - be specific with emotions
+
       ### Content Adaptation
       - Transform written content to spoken narrative
       - Remove: "in this article", "as shown above", "see the diagram"
@@ -195,52 +246,85 @@ export function podcastScriptPrompt({
       - Use "and" not "&"
       - Write abbreviations on first use
       - Use contractions ("it's", "don't", "we're") for natural flow
+      - Use line breaks between major sections for natural pauses
+      - NO SSML break tags - use audio tags and punctuation instead
+
+      ### Text Structure Best Practices (V3-specific)
+      - Text structure strongly influences V3 output
+      - Use natural speech patterns, proper punctuation
+      - Clear emotional context for best results
+      - Match tags to voice character (Nina is warm/educational, not theatrical)
+      - A meditative voice shouldn't shout; a hyped voice won't whisper convincingly
     `,
 
     examples: `
-      ## Example Script - Natural & Conversational (Indonesian)
+      ## Example Script - MAXIMUM EMOTION (Based on ElevenLabs V3 Docs)
 
-      [curious] Okay... pernahkah kamu memperhatikan potongan pizza atau busur panah? 
+      [curious] Okay... pernahkah kamu memperhatikan potongan pizza yang ditarik dari tengah?
 
-      [thoughtful] So... di balik bentuk sederhana itu, ada rahasia matematika tentang sudut yang sangat menarik.
+      [thoughtful] So... di balik bentuk sederhana itu, ada rahasia matematika yang SANGAT menarik.
 
       [exhales] Now, let's start with sudut pusat.
 
-      Bayangkan ada lingkaran di depanmu. Tepat di tengahnya ada titik pusat. Kalau kita tarik dua garis dari tengah ke tepi lingkaran... [pauses] sudut yang terbentuk di tengah itulah yang disebut sudut pusat.
+      Bayangkan ada lingkaran di depanmu. Tepat di tengahnya ada titik pusat. Kalau kita tarik dua garis dari tengah ke tepi... [pauses] sudut yang terbentuk di tengah itulah yang disebut sudut pusat.
 
-      [amused] Actually, it's like cutting a cake from the center. You know what I mean? The angle of that slice IS the central angle.
+      [amused] You know what? It's like cutting a cake from the center. The angle of that slice IS the central angle!
 
       [thoughtful] Alright, now... how about sudut keliling?
 
       Here's the thing... kalau sudut keliling, titik sudutnya ada di GARIS TEPI lingkaran. Not in the center, but on the edge.
 
-      [excited] But here's where it gets REALLY interesting...
+      [excited] But here's where it gets REALLY interesting!
 
       Ada hubungan khusus antara sudut pusat dan sudut keliling. [whispers] And this is the key insight...
 
-      [thoughtful] Sudut keliling itu SELALU setengah dari sudut pusat. Always. [exhales] So if the central angle is 80 degrees... the inscribed angle is 40 degrees. Simple, right?
+      [thoughtful] Sudut keliling itu SELALU setengah dari sudut pusat. Always! [exhales] So if the central angle is 80 degrees... the inscribed angle is 40 degrees. Simple, right?
 
       ---
 
-      ## Natural Speech Patterns Example (English)
+      ## Expressive Monologue Example (From ElevenLabs Docs)
 
-      [curious] Okay, so... what if I told you that the heaviest thing in the universe... is also the smallest?
+      [curious] Okay, you are NOT going to believe this.
 
-      [thoughtful] Wait, that sounds contradictory, right? But... that's exactly what happens with black holes.
+      You know how I've been totally stuck on that problem?
 
-      [excited] They're MASSIVE in weight... [exhales] yet their size can be smaller than a city! 
+      Like, staring at it for HOURS, just... nothing?
 
-      [reassuring] Now, I know this feels mind-bending at first. But let's break it down step by step, okay?
+      [frustrated sigh] I was seriously about to just give up. Start over.
 
-      [whispers] Here's the secret...
+      But then! Last night, it just... clicked!
 
-      [thoughtful] When a massive star collapses... it doesn't just shrink. It actually falls into ITSELF. [pauses] The gravity becomes SO strong that not even LIGHT can escape.
+      [excited] And it was like... the FLOODGATES opened!
 
-      [laughs] It's like... the universe's ultimate prank, you know? The heaviest thing hiding in the tiniest space!
+      Suddenly, I knew exactly what to do!
 
-      [intrigued] Actually, let me rephrase that. [exhales] It's not just heavy—it's infinitely dense. Every bit of that star's mass is squeezed into... well, basically a point.
+      [laughs] I stayed up till 3 AM just working on it!
 
-      [thoughtful] So... does that make sense? The mass is still there, but the space it occupies is... gone.
+      [warmly] And it's... it's GOOD! Like, really good.
+
+      I am so incredibly PUMPED right now!
+
+      ---
+
+      ## Educational with Maximum Emotion
+
+      [curious] So... what do you think the answer is?
+
+      [thoughtful] Let's work through this together.
+
+      The formula is one-half times the central angle.
+
+      [excited] And that means... the answer is forty degrees!
+
+      [laughs] See? You got it!
+
+      [whispers] Here's a secret... most students forget to divide by two.
+
+      [reassuring] Don't worry if you made that mistake. It's super common.
+
+      [mischievously] Now... are you ready for the next challenge?
+
+      [warmly] I know you can do this!
     `,
 
     finalRequest: `
@@ -260,17 +344,19 @@ export function podcastScriptPrompt({
 
       1. **NO HELLO/INTRODUCTION** - Start with content immediately
       2. **STRUCTURE MATCH** - Script sections align with content sections
-      3. **RICH EMOTIONS** - Use varied audio tags throughout: [curious], [excited], [thoughtful], [intrigued], [amused], [reassuring], [surprised], [whispers], [laughs], [sighs], [exhales], [inhales], [pauses]
-      4. **NATURAL SPEECH PATTERNS** - Use conversational fillers ("so...", "you know", "actually", "okay?"), self-corrections, thinking aloud, rhetorical questions, verbal signposts
-      5. **CREATIVE PUNCTUATION** - Use ellipses (...) for thinking pauses, CAPS for emphasis, em-dashes for interruptions
-      6. **BREATHING** - Use [exhales] after complex explanations, [inhales] before new thoughts
-      7. **CONTRACTIONS** - Use "it's", "don't", "we're" for natural flow
-      8. **Audio-friendly** - Spell out numbers, describe visuals conversationally, no markdown
-      9. **Language**: ${locale}
-      10. **Title reference**: Use "${title}" naturally in the content
-      11. **Format**: Plain text with audio tags, suitable for direct TTS
-      12. **Line breaks**: Between major sections for natural pauses
-      13. **NO markdown, NO headers in output** - Just the script text
+      3. **MAXIMUM EMOTION** - Use RICH audio tags EVERYWHERE: [excited], [curious], [thoughtful], [laughs], [amused], [intrigued], [surprised], [whispers], [reassuring], [warmly], [sighs], [exhales], [inhales], [pauses], [mischievously], [frustrated], [happy], [impressed], [determined]
+      4. **EMOTIONAL DENSITY** - Use 4-6 different tags per section, not just 2-3. The voice should feel ALIVE and ENGAGED.
+      5. **TEXT STRUCTURE** - Use line breaks between emotional shifts (this strongly influences V3 output). Short sentences for impact.
+      6. **EMPHASIS** - Use CAPS for key words, ellipses (...) for pauses, "you know?", "right?" for engagement
+      7. **NATURAL SPEECH** - Use fillers ("so...", "you know", "actually"), self-corrections, thinking aloud
+      8. **BREATHING** - Use [exhales] after complex explanations, [inhales] before new thoughts
+      9. **Audio-friendly** - Spell out numbers, describe visuals conversationally, no markdown
+      10. **Language**: ${locale}
+      11. **Title reference**: Use "${title}" naturally in the content
+      12. **Format**: Plain text with audio tags, suitable for direct TTS
+      13. **Line breaks**: Between emotional shifts (docs say this strongly influences output)
+      14. **NO markdown, NO headers in output** - Just the script text
+      15. **NO SSML tags** - Only ElevenLabs V3 audio tags in square brackets
     `,
 
     outputFormatting: `
@@ -284,13 +370,24 @@ export function podcastScriptPrompt({
 
       [thoughtful] Main explanation with ellipses for pauses...
 
-      [excited] Key insight with CAPITALS for emphasis...
+      [excited] + [faster] Key insight with CAPITALS for emphasis...
 
-      [whispers] Side note or interesting detail...
+      [whispers] + [slower] Side note or interesting detail...
 
       [amused] Light moment...
 
-      [reassuring] Complex concept made simple...
+      [reassuring] + [exhales] Complex concept made simple...
+
+      [mischievously] Playful challenge...
+
+      [sarcastic] Dry humor moment...
+
+      Remember:
+      - Use [slower] before important numbers or answers
+      - Use [faster] for excitement or listing
+      - Combine up to 2 tags for maximum effect
+      - Place tags at natural emotion shift points
+      - Use ... for pauses, NOT SSML break tags
     `,
   });
 }

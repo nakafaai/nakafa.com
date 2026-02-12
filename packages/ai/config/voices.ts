@@ -72,11 +72,29 @@ export interface VoiceConfig {
  * Currently only Nina voice (ElevenLabs free plan limitation)
  * Easy to add more voices when upgrading plan
  *
- * ElevenLabs V3 Settings Guide:
- * - stability: MUST be 0.0 (Creative), 0.5 (Natural), or 1.0 (Robust)
- *   For rich emotions with audio tags, use 0.0 (Creative)
- * - similarityBoost: 0.50-0.60 for natural variation
- * - style: 0.60-0.80 for expressiveness
+ * ElevenLabs V3 Settings Guide for MAXIMUM EMOTION & HUMAN-LIKE DELIVERY:
+ *
+ * Based on https://elevenlabs.io/docs/overview/capabilities/text-to-speech/best-practices
+ *
+ * - stability: 0.0 (Creative mode)
+ *   Docs: "Creative: More emotional and expressive, but prone to hallucinations."
+ *   Docs: "For maximum expressiveness with audio tags, use Creative or Natural settings"
+ *   MUST be exactly 0.0, 0.5, or 1.0 for V3
+ *
+ * - similarityBoost: 0.75
+ *   HIGHER value = maintains voice consistency while allowing emotional range
+ *   Too low (0.40) = unstable, robotic voice
+ *   Too high = "stuck" to training samples
+ *   0.75 is sweet spot for natural + emotional
+ *
+ * - style: 0.80
+ *   MAXIMUM expressiveness for educational content
+ *   Docs: "Style exaggeration amplifies the original speaker's style"
+ *   Higher = more emotional delivery
+ *
+ * - useSpeakerBoost: true
+ *   Improves voice quality and naturalness
+ *   Docs recommended for better output quality
  *
  * @see https://elevenlabs.io/docs/overview/capabilities/text-to-speech/best-practices#prompting-eleven-v3
  */
@@ -85,12 +103,12 @@ export const PREDEFINED_VOICES = {
     id: "LcvlyuBGMjj1h4uAtQjo",
     name: "Nina",
     description:
-      "A warm, dynamic, mature female voice with emotional delivery.",
+      "A warm, dynamic, mature female voice optimized for maximum emotional delivery in educational content.",
     settings: {
-      stability: 0.0, // Creative mode for maximum expressiveness with audio tags
-      similarityBoost: 0.55,
-      style: 0.65,
-      useSpeakerBoost: true,
+      stability: 0.0, // Creative: Maximum expressiveness (docs: "More emotional and expressive")
+      similarityBoost: 0.75, // Higher for consistent voice quality while allowing emotion
+      style: 0.8, // Maximum expressiveness (docs: "amplifies the original speaker's style")
+      useSpeakerBoost: true, // Enhances voice naturalness and quality
     },
   },
 } as const satisfies Record<string, VoiceConfig>;
