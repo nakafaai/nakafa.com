@@ -441,6 +441,92 @@ But seriously [whispers], quantum mechanics is fascinating.
       expect(combined).toContain("X");
     });
 
+    it("should hit line 115 branch where remaining is empty", () => {
+      // Tests line 115: remaining.length === 0 branch (else)
+      // This happens when ALL text ends with punctuation
+
+      const customConfig = { maxRequestChars: 30, safetyMargin: 5 };
+      const maxLength = 25;
+
+      // Text that ends exactly with punctuation (no trailing text)
+      const text = "First sentence here. Second!";
+
+      expect(text.length).toBeGreaterThan(maxLength);
+
+      // Verify remaining is empty
+      const matches = text.match(/[^.!?]+[.!?]+/g);
+      const matchedLength = matches?.join("").length || 0;
+      const remaining = text.slice(matchedLength).trim();
+      expect(remaining).toBe(""); // This ensures we hit line 115 else branch
+
+      const result = chunkScript(text, customConfig);
+
+      const combined = result.map((c) => c.text).join(" ");
+      expect(combined).toContain("First sentence");
+      expect(combined).toContain("Second");
+    });
+
+    it("should hit line 121 where currentChunk is empty", () => {
+      // Tests line 121: currentChunk.length === 0 (false branch of if)
+      // This happens when processing a new sentence with empty currentChunk
+
+      const customConfig = { maxRequestChars: 40, safetyMargin: 5 };
+      const maxLength = 35; // 40 - 5
+
+      // Create text where:
+      // - First sentence fills chunk and gets pushed
+      // - Second sentence starts with empty currentChunk
+      // Both sentences together exceed maxLength to trigger processSentences
+
+      // "Short." = 6 chars
+      // "This is a longer second sentence." = 33 chars
+      // Total = 39 chars > 35
+      const text = "Short. This is a longer second sentence.";
+
+      expect(text.length).toBeGreaterThan(maxLength);
+
+      const result = chunkScript(text, customConfig);
+
+      const combined = result.map((c) => c.text).join(" ");
+      expect(combined).toContain("Short");
+      expect(combined).toContain("longer second");
+    });
+
+    it("should handle text with trailing content without punctuation", () => {
+      // Tests line 115: remaining.length > 0 branch (true - add remaining to sentences)
+      const customConfig = { maxRequestChars: 50, safetyMargin: 5 };
+
+      // Text with punctuation AND trailing text without punctuation
+      // Must exceed maxChars to enter processSentences
+      const script = "First sentence here. Second part no punctuation";
+
+      const result = chunkScript(script, customConfig);
+
+      // All content should be preserved including trailing text
+      const combined = result.map((c) => c.text).join(" ");
+      expect(combined).toContain("First sentence here");
+      expect(combined).toContain("Second part no punctuation");
+    });
+
+    it("should handle long first sentence that exceeds chunk with empty currentChunk", () => {
+      // Tests line 121 FALSE branch: currentChunk.length === 0 when sentence exceeds limit
+      // This happens when the very first sentence is too long for the chunk
+      const customConfig = { maxRequestChars: 30, safetyMargin: 5 };
+
+      // First sentence > maxLength (25), will trigger splitSentenceAtWords
+      // With currentChunk empty (line 121 false)
+      const script = "Thisisaverylongsentencethatexceedsthelimit. Short.";
+
+      const result = chunkScript(script, customConfig);
+
+      expect(result.length).toBeGreaterThanOrEqual(1);
+
+      // All content should be preserved
+      const combined = result.map((c) => c.text).join(" ");
+      expect(combined).toContain("Thisisaverylongsentence");
+      expect(combined).toContain("Short");
+    });
+
     it("should handle single word longer than chunk limit", () => {
       // Tests line 76 FALSE branch: word doesn't fit, currentChunk is empty
       const customConfig = { maxRequestChars: 20, safetyMargin: 5 };

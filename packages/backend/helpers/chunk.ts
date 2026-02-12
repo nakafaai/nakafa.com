@@ -87,6 +87,7 @@ function splitSentenceAtWords(
 
 /**
  * Processes sentences within a paragraph.
+ * Captures sentences ending with .!? and any trailing text without punctuation.
  */
 function processSentences(
   paragraph: string,
@@ -94,7 +95,24 @@ function processSentences(
   chunks: string[]
 ): string {
   let currentChunk = "";
-  const sentences = paragraph.match(/[^.!?]+[.!?]+/g) || [paragraph];
+  // Match sentences ending with punctuation
+  const sentenceMatches = paragraph.match(/[^.!?]+[.!?]+/g);
+
+  // Handle case with no punctuation at all
+  if (!sentenceMatches) {
+    // Paragraph has no punctuation - must split at word boundaries
+    // Note: paragraph.length is always > maxChars here because
+    // processSentences is only called for paragraphs exceeding maxChars
+    return splitSentenceAtWords(paragraph, maxChars, chunks);
+  }
+
+  // Calculate matched length and capture any remaining text
+  const matchedLength = sentenceMatches.join("").length;
+  const remaining = paragraph.slice(matchedLength).trim();
+
+  // Include remaining text if it exists
+  const sentences =
+    remaining.length > 0 ? [...sentenceMatches, remaining] : sentenceMatches;
 
   for (const sentence of sentences) {
     const trimmedSentence = sentence.trim();
