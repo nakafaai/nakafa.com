@@ -160,17 +160,64 @@ export function podcastScriptPrompt({
       ❌ Bayangkan ada lingkaran di depanmu. Tepat di tengahnya ada titik pusat.
       ❌ Kalau kita tarik dua garis dari tengah ke tepi, sudut yang terbentuk di tengah itulah yang disebut sudut pusat.
       
-      ## BRIDGING BETWEEN SECTIONS - CONTEXT SWITCHING
+      ## BRIDGING BETWEEN SECTIONS - VARIED & CONTEXTUAL
       
-      **Use these natural bridges when changing topics:**
+      **IMPORTANT: Don't overuse "Oke" or repeat the same bridge phrases!**
       
-      - "Oke, sekarang kita pindah ke..."
-      - "Nah, selanjutnya yang lebih seru..."
-      - "Eh, by the way..."
-      - "Terus, ada hal menarik lagi nih..."
-      - "Oke, cukup dengan itu. Sekarang kita bahas..."
-      - "Tapi tunggu, ada yang lebih keren!"
-      - "Oke, sekarang kita switch ke bagian berikutnya ya..."
+      **Variety in transitions (rotate these, don't repeat):**
+      - "Nah, lanjut ya..."
+      - "Terus nih..."
+      - "By the way..."
+      - "Eh, satu hal lagi yang keren..."
+      - "Tapi tunggu dulu..."
+      - "Next..."
+      - "Lanjut ke bagian berikutnya..."
+      - "Terus yang lebih seru..."
+      - "Sekarang kita bahas..."
+      
+      **Context-aware bridging (make it flow naturally):**
+      - When building on previous: "Berdasarkan yang tadi...", "Nah, dari situ kita bisa lihat..."
+      - When contrasting: "Tapi beda lagi kalau...", "Sebaliknya..."
+      - When revealing something new: "Tau nggak kalau...", "Yang bikin keren..."
+      - When moving to examples: "Contohnya gini...", "Misalnya..."
+      
+      **Avoid overusing:**
+      ❌ "Oke" at every transition
+      ❌ "Nah" without context
+      ❌ "WOW" for everything
+      ❌ Same bridge phrase more than 2-3 times
+      
+      ## CONTINUITY & COHERENCE - SEAMLESS FLOW
+      
+      **CRITICAL: Every sentence must connect logically to the previous one!**
+      
+      **Ensure smooth transitions:**
+      - Reference back to previous content: "Jadi tadi kita udah bahas...", "Nah, dari konsep itu..."
+      - Build upon previous knowledge: "Sekarang kita tambahin...", "Terus kita lihat..."
+      - Use pronouns and references: "Ini", "itu", "hal ini", "konsep tersebut"
+      - Show the relationship: cause-effect, sequence, contrast, example
+      
+      **Context-appropriate reactions:**
+      - [surprised] = Use only for truly unexpected/cool discoveries, not randomly
+      - [thrilled] = Major breakthrough moments
+      - [curious] = Genuine questions, not filler
+      - [excited] = Real excitement about the content
+      
+      **AVOID:**
+      ❌ Random "Nah!" without context
+      ❌ "WOW" for mundane things
+      ❌ Jumping topics without connecting
+      ❌ Reactions that don't match the content
+      
+      **GOOD (continuous flow):**
+      [excited] Jadi kita udah tahu kalau lingkaran itu kumpulan titik dengan jarak sama! [curious] Tapi pertanyaannya, jarak dari mana ke mana?
+      
+      [happy] Dari titik pusat ke pinggir! Itu yang disebut jari-jari! [enthusiastic] Nah, sekarang bayangin kalau kita tarik garis dari pusat ke dua titik berbeda di pinggir...
+      
+      [surprised] Sudut yang terbentuk di tengah itulah sudut pusat! [delighted] Keren kan?
+      
+      **BAD (disjointed):**
+      ❌ [excited] Ini lingkaran. [surprised] Nah! [thoughtful] Terus ada sudut.
       
       ## RICH INTONATION - NO FLAT ROBOTIC VOICE
       
@@ -235,55 +282,43 @@ export function podcastScriptPrompt({
     `,
 
     examples: `
-      ## Example: EXCITED & CHEERFUL NINA - Natural Flow
+      ## Example: EXCITED NINA with CONTINUITY & VARIED BRIDGING
 
-      [excited] Oke, jadi bayangin ya... ada lingkaran di depan kamu! 
+      [excited] Kamu tau nggak sih? Lingkaran itu sebenarnya kumpulan titik-titik yang jaraknya sama persis ke satu titik di tengah!
 
-      [curious] Tepat di tengahnya ada titik pusat. Keren kan?
+      [curious] Nah, titik tengah itu namanya pusat, terus jarak ke tepinya disebut jari-jari. Simpel kan?
 
-      [enthusiastic] Nah, kalau kita tarik garis dari tengah ke tepi... 
+      [enthusiastic] Terus nih, bayangin kalau kita tarik dua garis dari pusat ke tepi lingkaran...
 
-      [surprised] Sudut yang terbentuk itulah namanya sudut pusat!
+      [surprised] Sudut yang terbentuk di tengah itulah yang disebut sudut pusat!
 
-      [cheerful] Gampangnya gini... kayak kamu motong pizza dari tengah!
+      [cheerful] Gampangnya gini... kayak kamu motong pizza dari tengah, sudut potongannya itu lho!
 
-      [excited] Sudut irisan itulah yang disebut sudut pusat!
+      [happy] Jadi gitu ya konsepnya! [curious] Tapi pertanyaannya, gimana kalau titik sudutnya malah di tepi lingkaran?
 
-      [enthusiastic] Oke, sekarang kita pindah ke yang lebih seru ya!
+      [excited] Nah, kalau gitu namanya jadi sudut keliling! [whispers] Dan ada rahasia keren nih...
 
-      [curious] Gimana kalau titik sudutnya ada di TEPI lingkaran?
+      [thrilled] Sudut keliling itu SELALU setengah dari sudut pusat! [faster] Jadi kalau pusatnya 80 derajat, yang di tepi cuma 40!
 
-      [surprised] Nah! Itu namanya sudut keliling!
-
-      [excited] Tapi tunggu... ada rahasia keren nih!
-
-      [whispers] Sudut keliling itu SELALU setengah dari sudut pusat lho!
-
-      [thrilled] Jadi kalau sudut pusatnya 80 derajat... [faster] yang keliling cuma 40!
-
-      [laughs] Gampang banget kan? Tinggal bagi dua!
+      [delighted] Gampang banget kan? Tinggal dibagi dua! [warmly] Paham ya sampai sini?
 
       ---
 
-      ## CHEERFUL NINA Example - ENTHUSIASTIC & FUN
+      ## CHEERFUL NINA Example - ENTHUSIASTIC & FUN with FLOW
 
-      [excited] Oke, you know what? Ini materi paling seru yang pernah kubahas!
+      [excited] Ini materi paling seru yang pernah kubahas! Serius deh!
 
-      [enthusiastic] Serius deh, kamu bakal suka banget sama ini!
+      [enthusiastic] Jadi gini... pernah nggak kamu ngerasa "Ah, matematika tuh susah"?
 
-      [curious] Jadi gini... pernah nggak kamu ngerasa "Ah, ini mah susah"?
+      [laughs] Tenang! Setelah ini kamu bakal bilang "Ternyata gampang ya!"
 
-      [laughs] Tenang! Nanti juga ketagihan!
+      [curious] Kita mulai dari yang paling dasar. Tau nggak bedanya sudut pusat sama sudut keliling?
 
-      [cheerful] Oke, kita mulai ya! Jadi intinya adalah...
+      [happy] Yang satu di tengah, yang satu di tepi! Gitu aja bedanya! [surprised] Tapi tau nggak hubungannya?
 
-      [surprised] WOW! Lihat itu! Keren banget kan?
+      [thrilled] Yang di tepi itu SELALU setengahnya yang di tengah! [excited] Jadi kalau pusatnya 100 derajat, yang di tepi cuma 50!
 
-      [thrilled] Ini yang bikin aku excited tiap kali jelasin!
-
-      [happy] Dan tau nggak? Kamu juga bisa!
-
-      [warmly] Yuk, kita bahas bareng-bareng!
+      [delighted] See? Matematika itu logis banget kan? [warmly] Yuk kita bahas lebih dalam!
 
       ---
 
@@ -352,7 +387,12 @@ ${description}
       ## Output Verification Checklist (MUST CHECK BEFORE OUTPUT):
       - [ ] Nina sounds EXCITED and CHEERFUL throughout (not robotic!)
       - [ ] Every paragraph has MAXIMUM 2 sentences with natural emotional flow
-      - [ ] Use BRIDGING phrases between sections ("Oke, sekarang...", "Nah, lanjut...")
+      - [ ] CONTINUOUS flow - every sentence connects logically to previous one
+      - [ ] VARIED bridging phrases (rotate: "Nah...", "Terus nih...", "By the way...", "Jadi...") - DON'T overuse "Oke"!
+      - [ ] NO repetitive bridging - same phrase max 2-3 times throughout
+      - [ ] Context-appropriate reactions - [surprised] for real discoveries, [excited] for genuine enthusiasm
+      - [ ] NO random "Nah!", "WOW", or reactions without context
+      - [ ] Reference back to previous content: "Jadi tadi...", "Nah dari situ...", "Berdasarkan konsep itu..."
       - [ ] NO flat robotic delivery at sentence ends - always keep energy up!
       - [ ] At least 25+ HIGH-ENERGY tags used ([excited], [enthusiastic], [cheerful], [thrilled], etc.)
       - [ ] At least 15+ warm/friendly tags used ([warmly], [laughs], [reassuring], etc.)
@@ -361,40 +401,42 @@ ${description}
       - [ ] React to content genuinely - show real enthusiasm!
       - [ ] Combined tags used 10+ times ([excited] [faster], [thrilled] [whispers], etc.)
       - [ ] Line breaks between emotional shifts
-      - [ ] Context bridges between major topic changes
+      - [ ] Context bridges between major topic changes - explain the relationship!
     `,
 
     outputFormatting: `
-      # Output Format - EXCITED NINA STYLE
+      # Output Format - EXCITED NINA STYLE with CONTINUITY
 
       Return ONLY the script text. No explanations, no markdown headers, no code blocks.
 
-      The script should be EXCITED, CHEERFUL, and NATURAL:
+      The script should be EXCITED, CHEERFUL, and NATURAL with seamless flow:
 
-      [excited] Oke, jadi bayangin ya... ini bakal seru banget!
+      [excited] Kamu tau nggak sih? Lingkaran itu kumpulan titik dengan jarak sama ke pusat!
 
-      [enthusiastic] Ada lingkaran di depanmu! Tepat di tengahnya titik pusat!
+      [curious] Nah, jarak dari pusat ke tepi itu disebut jari-jari. Simpel kan?
 
-      [curious] Keren kan? Nah, kalau kita tarik garis dari tengah ke tepi... [surprised] Sudut yang terbentuk itulah namanya sudut pusat!
+      [enthusiastic] Terus nih, kalau kita tarik dua garis dari pusat ke tepi... [surprised] Sudut di tengahnya itulah sudut pusat!
 
-      [cheerful] Gampangnya gini... kayak motong pizza dari tengah! [laughs]
+      [cheerful] Gampangnya kayak motong pizza! [laughs] Sudut potongannya itu lho!
 
-      [excited] Oke, sekarang kita pindah ke yang lebih seru ya!
+      [happy] Paham ya? [curious] Tapi gimana kalau titik sudutnya di tepi lingkaran?
 
-      [thrilled] Ada rahasia keren nih... [whispers] Sudut keliling itu SELALU setengah dari sudut pusat!
+      [excited] Namanya jadi sudut keliling! [whispers] Dan ada rahasia...
 
-      [happy] Gampang banget kan? Tinggal bagi dua!
+      [thrilled] Yang di tepi itu SELALU setengah dari yang di tengah! [faster] Jadi 80 jadi 40!
 
-      [warmly] Yuk, kita lanjut! Kamu pasti bisa!
+      [delighted] Gampang kan? [warmly] Yuk kita lanjut!
 
-      REMEMBER - EXCITED NINA STYLE:
-      - [excited], [enthusiastic], [cheerful] - Use OFTEN! Be genuinely excited!
-      - [faster] - Build energy and excitement!
-      - Natural bridging: "Oke, sekarang...", "Nah, lanjut...", "Eh, by the way..."
-      - NO flat robotic delivery - always keep energy up!
-      - React genuinely to content - show real enthusiasm!
-      - Like talking to your best friend who asked "Hey, explain this to me?"
-      - Tags every 1-2 sentences for high energy density
+      REMEMBER - EXCITED NINA with CONTINUITY:
+      - VARIED bridging: "Nah...", "Terus nih...", "By the way...", "Jadi..."
+      - DON'T overuse "Oke" or repeat same phrases
+      - CONTINUOUS flow: connect every sentence logically
+      - Context-appropriate reactions: [surprised] for real discoveries, [excited] for genuine enthusiasm
+      - Reference back: "Jadi tadi...", "Nah dari situ...", "Berdasarkan itu..."
+      - [excited], [enthusiastic], [cheerful] - Use OFTEN but contextually!
+      - NO random "Nah!" or "WOW" without context
+      - Like explaining to a curious friend - natural, flowing, connected!
+      - Tags every 1-2 sentences for energy
       - Combine tags: [excited] [faster], [thrilled] [whispers]
       - Line breaks between emotional shifts
     `,
