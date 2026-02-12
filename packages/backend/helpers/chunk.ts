@@ -1,36 +1,29 @@
 /**
- * Configuration for ElevenLabs audio chunking with context support.
+ * ElevenLabs V3 maximum characters per request.
+ * V3 has a 5,000 character limit. Using 4,800 as safety margin.
+ * Defined locally to avoid env loading issues in tests.
+ */
+const V3_MAX_CHARS_PER_CHUNK = 4800;
+
+/**
+ * Simplified configuration for ElevenLabs V3 chunking.
+ * V3 does NOT support previous_text/next_text context parameters.
+ * Only max request size and safety margin matter.
  */
 export interface ChunkConfig {
   /**
    * Maximum characters allowed per ElevenLabs API request.
-   * @default 5000
    */
   maxRequestChars: number;
 
   /**
-   * Characters to reserve for previous_text context.
-   * This text helps maintain intonation continuity from the previous chunk.
-   * @default 500
-   */
-  previousContextChars: number;
-
-  /**
-   * Characters to reserve for next_text context.
-   * This text helps maintain intonation continuity to the next chunk.
-   * @default 500
-   */
-  nextContextChars: number;
-
-  /**
    * Safety margin to ensure we never exceed the limit.
-   * @default 100
    */
   safetyMargin: number;
 }
 
 /**
- * Represents a text chunk with context for ElevenLabs TTS generation.
+ * Represents a text chunk for ElevenLabs TTS generation.
  */
 export interface ElevenLabsChunk {
   /**
@@ -47,162 +40,28 @@ export interface ElevenLabsChunk {
    * Total number of chunks.
    */
   totalChunks: number;
-
-  /**
-   * Text from the previous chunk (truncated to fit context budget).
-   * Used for intonation continuity via previous_text parameter.
-   */
-  previousText: string;
-
-  /**
-   * Text from the next chunk (truncated to fit context budget).
-   * Used for intonation continuity via next_text parameter.
-   */
-  nextText: string;
 }
 
 /**
  * Default configuration for ElevenLabs V3 chunking.
- * Reserves space for context to maintain audio continuity.
+ * V3 has 5,000 char limit, no context support.
  */
-export const DEFAULT_V3_CHUNK_CONFIG: ChunkConfig = {
-  maxRequestChars: 5000,
-  previousContextChars: 500,
-  nextContextChars: 500,
-  safetyMargin: 100,
+export const DEFAULT_CHUNK_CONFIG: ChunkConfig = {
+  maxRequestChars: V3_MAX_CHARS_PER_CHUNK,
+  safetyMargin: 200,
 };
 
 /**
- * Calculates the maximum text length per chunk accounting for context overhead.
- *
- * Formula: maxRequestChars - previousContext - nextContext - safetyMargin
- *
- * @example
- * // With default config:
- * // 5000 - 500 - 500 - 100 = 3900 chars per chunk
- * getMaxChunkTextLength(DEFAULT_V3_CHUNK_CONFIG) // returns 3900
+ * Calculates the maximum text length per chunk accounting for safety margin.
  */
-export function getMaxChunkTextLength(config: ChunkConfig): number {
-  return (
-    config.maxRequestChars -
-    config.previousContextChars -
-    config.nextContextChars -
-    config.safetyMargin
-  );
-}
-
-/**
- * Truncates text from the end to fit within a character limit.
- * Tries to break at word boundaries if possible.
- *
- * @param text - The text to truncate
- * @param maxLength - Maximum length allowed
- * @returns Truncated text
- *
- * @example
- * truncateFromEnd("Hello world today", 10)
- * // Returns: "Hello worl" (word boundary not possible)
- *
- * truncateFromEnd("Hello world today", 11)
- * // Returns: "Hello world" (breaks at word boundary)
- */
-export function truncateFromEnd(text: string, maxLength: number): string {
-  if (text.length <= maxLength) {
-    return text;
-  }
-
-  // Try to find a word boundary
-  const truncated = text.slice(0, maxLength);
-  const lastSpace = truncated.lastIndexOf(" ");
-
-  if (lastSpace > maxLength * 0.8) {
-    // Break at word boundary if it's not cutting off too much
-    return truncated.slice(0, lastSpace);
-  }
-
-  return truncated;
-}
-
-/**
- * Truncates text from the start to fit within a character limit.
- * Tries to break at word boundaries if possible.
- *
- * @param text - The text to truncate
- * @param maxLength - Maximum length allowed
- * @returns Truncated text
- *
- * @example
- * truncateFromStart("Hello world today", 10)
- * // Returns: "ld today"
- */
-export function truncateFromStart(text: string, maxLength: number): string {
-  if (text.length <= maxLength) {
-    return text;
-  }
-
-  const startIndex = text.length - maxLength;
-  const truncated = text.slice(startIndex);
-
-  // Try to find a word boundary
-  const firstSpace = truncated.indexOf(" ");
-
-  if (firstSpace >= 0 && firstSpace < maxLength * 0.2) {
-    // Break at word boundary if it's not cutting off too much
-    return truncated.slice(firstSpace + 1);
-  }
-
-  return truncated;
-}
-
-/**
- * SSML tag pattern to detect and protect during chunking.
- * Matches: <break time="1.5s" />, <phoneme>, etc.
- */
-const SSML_TAG_PATTERN = /<[^>]+>/g;
-
-/**
- * Protects SSML tags by replacing them with placeholders.
- * Returns the processed text and a map to restore tags later.
- */
-function protectSSMLTags(text: string): {
-  protectedText: string;
-  tagMap: Map<string, string>;
-} {
-  const tagMap = new Map<string, string>();
-  let counter = 0;
-
-  const protectedText = text.replace(SSML_TAG_PATTERN, (match) => {
-    const placeholder = `__SSML_${counter++}__`;
-    tagMap.set(placeholder, match);
-    return placeholder;
-  });
-
-  return { protectedText, tagMap };
-}
-
-/**
- * Restores SSML tags from placeholders.
- */
-function restoreSSMLTags(text: string, tagMap: Map<string, string>): string {
-  let restored = text;
-  for (const [placeholder, tag] of tagMap) {
-    restored = restored.replace(placeholder, tag);
-  }
-  return restored;
-}
-
-/**
- * Adds text to current chunk with separator.
- */
-function addToChunk(current: string, text: string, separator: string): string {
-  return current ? `${current}${separator}${text}` : text;
+function getMaxChunkTextLength(config: ChunkConfig): number {
+  return config.maxRequestChars - config.safetyMargin;
 }
 
 /**
  * Splits a long sentence at word boundaries.
- * Exported for testing purposes.
  */
-export function splitSentenceAtWords(
+function splitSentenceAtWords(
   sentence: string,
   maxChars: number,
   chunks: string[]
@@ -211,13 +70,15 @@ export function splitSentenceAtWords(
   const words = sentence.split(" ");
 
   for (const word of words) {
-    if (currentChunk.length + word.length + 1 > maxChars) {
+    const withSpace = currentChunk ? ` ${word}` : word;
+
+    if (currentChunk.length + withSpace.length > maxChars) {
       if (currentChunk.length > 0) {
         chunks.push(currentChunk.trim());
       }
       currentChunk = word;
     } else {
-      currentChunk = addToChunk(currentChunk, word, " ");
+      currentChunk += withSpace;
     }
   }
 
@@ -226,9 +87,8 @@ export function splitSentenceAtWords(
 
 /**
  * Processes sentences within a paragraph.
- * Exported for testing purposes.
  */
-export function processSentences(
+function processSentences(
   paragraph: string,
   maxChars: number,
   chunks: string[]
@@ -251,7 +111,9 @@ export function processSentences(
         currentChunk = trimmedSentence;
       }
     } else {
-      currentChunk = addToChunk(currentChunk, trimmedSentence, " ");
+      currentChunk = currentChunk
+        ? `${currentChunk} ${trimmedSentence}`
+        : trimmedSentence;
     }
   }
 
@@ -260,14 +122,8 @@ export function processSentences(
 
 /**
  * Processes paragraphs and splits them as needed.
- * Exported for testing purposes.
- *
- * Logic flow:
- * 1. If adding paragraph would exceed limit, push current chunk and reset
- * 2. If paragraph itself exceeds limit, process its sentences
- * 3. Otherwise, add paragraph to current chunk
  */
-export function processParagraphs(
+function processParagraphs(
   paragraphs: string[],
   maxChars: number,
   chunks: string[]
@@ -275,7 +131,6 @@ export function processParagraphs(
   let currentChunk = "";
 
   for (const paragraph of paragraphs) {
-    // Check if we need to finalize current chunk before processing this paragraph
     const wouldExceedLimit =
       currentChunk.length > 0 &&
       currentChunk.length + paragraph.length + 2 > maxChars;
@@ -286,11 +141,11 @@ export function processParagraphs(
     }
 
     if (paragraph.length > maxChars) {
-      // Long paragraph: split into sentences
       currentChunk = processSentences(paragraph, maxChars, chunks);
     } else {
-      // Short paragraph: add to current chunk
-      currentChunk = addToChunk(currentChunk, paragraph, "\n\n");
+      currentChunk = currentChunk
+        ? `${currentChunk}\n\n${paragraph}`
+        : paragraph;
     }
   }
 
@@ -298,127 +153,54 @@ export function processParagraphs(
 }
 
 /**
- * Creates ElevenLabs chunks with context from a list of text segments.
+ * Splits a script into ElevenLabs-compatible chunks.
  *
- * @param textSegments - Array of text chunks (already split by size)
- * @param config - Chunking configuration
- * @returns Array of chunks with proper context
- */
-export function createChunksWithContext(
-  textSegments: string[],
-  config: ChunkConfig = DEFAULT_V3_CHUNK_CONFIG
-): ElevenLabsChunk[] {
-  if (textSegments.length === 0) {
-    return [];
-  }
-
-  if (textSegments.length === 1) {
-    return [
-      {
-        text: textSegments[0],
-        index: 0,
-        totalChunks: 1,
-        previousText: "",
-        nextText: "",
-      },
-    ];
-  }
-
-  return textSegments.map((text, index) => {
-    const isFirst = index === 0;
-    const isLast = index === textSegments.length - 1;
-
-    // Get previous chunk text (truncated from end to fit context budget)
-    const previousText = isFirst
-      ? ""
-      : truncateFromEnd(textSegments[index - 1], config.previousContextChars);
-
-    // Get next chunk text (truncated from start to fit context budget)
-    const nextText = isLast
-      ? ""
-      : truncateFromStart(textSegments[index + 1], config.nextContextChars);
-
-    return {
-      text,
-      index,
-      totalChunks: textSegments.length,
-      previousText,
-      nextText,
-    };
-  });
-}
-
-/**
- * Splits a script into ElevenLabs-compatible chunks with continuity context.
- *
- * This function properly accounts for the character limit by:
- * 1. Reserving space for previous_text and next_text context
- * 2. Splitting at natural boundaries (paragraphs → sentences → words)
- * 3. Providing context from adjacent chunks for intonation continuity
+ * V3 does NOT support previous_text/next_text context, so this function
+ * simply splits at natural boundaries (paragraphs → sentences → words).
  *
  * @param script - The full script text
- * @param config - Chunking configuration (defaults to V3 settings)
+ * @param config - Chunking configuration (defaults to V3 settings from @repo/ai/config)
  * @returns Array of chunks ready for ElevenLabs TTS
  *
  * @example
- * const chunks = chunkScriptWithContext(longScript);
- * // Each chunk has:
- * // - text: Main content (max ~3900 chars)
- * // - previousText: End of previous chunk (max 500 chars)
- * // - nextText: Start of next chunk (max 500 chars)
+ * import { chunkScript } from "@repo/backend/helpers/chunk";
+ * import { DEFAULT_CHUNK_CONFIG } from "@repo/backend/helpers/chunk";
+ *
+ * const chunks = chunkScript(longScript, DEFAULT_CHUNK_CONFIG);
  *
  * for (const chunk of chunks) {
- *   await generateSpeech({
- *     text: chunk.text,
- *     providerOptions: {
- *       elevenlabs: {
- *         previousText: chunk.previousText,
- *         nextText: chunk.nextText,
- *       },
- *     },
- *   });
+ *   await generateSpeech({ text: chunk.text });
  * }
  */
-export function chunkScriptWithContext(
+export function chunkScript(
   script: string,
-  config: ChunkConfig = DEFAULT_V3_CHUNK_CONFIG
+  config: ChunkConfig = DEFAULT_CHUNK_CONFIG
 ): ElevenLabsChunk[] {
   const maxTextLength = getMaxChunkTextLength(config);
 
-  // Protect SSML tags to prevent splitting inside them
-  const { protectedText, tagMap } = protectSSMLTags(script);
-
-  if (protectedText.length <= maxTextLength) {
-    // Single chunk - restore SSML and return
-    const restoredText = restoreSSMLTags(protectedText, tagMap);
+  if (script.length <= maxTextLength) {
     return [
       {
-        text: restoredText,
+        text: script,
         index: 0,
         totalChunks: 1,
-        previousText: "",
-        nextText: "",
       },
     ];
   }
 
   const chunks: string[] = [];
-  const paragraphs = protectedText.split("\n\n");
+  const paragraphs = script.split("\n\n");
 
   const currentChunk = processParagraphs(paragraphs, maxTextLength, chunks);
 
-  if (currentChunk.length > 0) {
-    chunks.push(currentChunk.trim());
-  }
+  // currentChunk always has content here because:
+  // 1. We passed the early return (script.length > maxTextLength)
+  // 2. processParagraphs always accumulates at least some text
+  chunks.push(currentChunk.trim());
 
-  // Create chunks with context, then restore SSML in all text
-  const chunksWithContext = createChunksWithContext(chunks, config);
-
-  // Restore SSML tags in all chunk text including context
-  return chunksWithContext.map((chunk) => ({
-    ...chunk,
-    text: restoreSSMLTags(chunk.text, tagMap),
-    previousText: restoreSSMLTags(chunk.previousText, tagMap),
-    nextText: restoreSSMLTags(chunk.nextText, tagMap),
+  return chunks.map((text, index) => ({
+    text,
+    index,
+    totalChunks: chunks.length,
   }));
 }

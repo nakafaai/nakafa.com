@@ -1,22 +1,14 @@
 "use node";
 
-import {
-  ACTIVE_MODEL,
-  elevenlabs,
-  getActiveModelConfig,
-} from "@repo/ai/config/elevenlabs";
+import { ACTIVE_MODEL, elevenlabs } from "@repo/ai/config/elevenlabs";
 import { model } from "@repo/ai/config/vercel";
 import { getDefaultVoiceSettings } from "@repo/ai/config/voices";
-import { podcastScriptPromptV2 } from "@repo/ai/prompt/audio-studies/v2";
 import { podcastScriptPrompt } from "@repo/ai/prompt/audio-studies/v3";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { internalAction } from "@repo/backend/convex/_generated/server";
 import { vv } from "@repo/backend/convex/lib/validators";
 import { getErrorMessage } from "@repo/backend/convex/utils/helper";
-import {
-  type ChunkConfig,
-  chunkScriptWithContext,
-} from "@repo/backend/helpers/chunk";
+import { chunkScript, DEFAULT_CHUNK_CONFIG } from "@repo/backend/helpers/chunk";
 import {
   experimental_generateSpeech as aiGenerateSpeech,
   generateText,
@@ -73,24 +65,13 @@ export const generateScript = internalAction({
         });
       }
 
-      // Select prompt based on active model
-      // V2 needs different prompt (SSML breaks, narrative emotion, text normalization)
-      // V3 uses audio tags like [laughs], [whispers]
-      const modelConfig = getActiveModelConfig();
-      const prompt =
-        modelConfig.id === "eleven_v3"
-          ? podcastScriptPrompt({
-              title: content.title,
-              description: content.description,
-              body: content.body,
-              locale: content.locale,
-            })
-          : podcastScriptPromptV2({
-              title: content.title,
-              description: content.description,
-              body: content.body,
-              locale: content.locale,
-            });
+      // Generate podcast script using V3 optimized prompt
+      const prompt = podcastScriptPrompt({
+        title: content.title,
+        description: content.description,
+        body: content.body,
+        locale: content.locale,
+      });
 
       const { text: script } = await generateText({
         model: model.languageModel("gemini-3-flash"),
@@ -131,15 +112,13 @@ export const generateScript = internalAction({
  *
  * V3 has a 5,000 character limit per request. To handle longer scripts:
  * 1. Split script into chunks at natural boundaries (paragraphs/sentences)
- * 2. Provide previous_text and next_text context for intonation continuity
- * 3. Generate audio for each chunk sequentially
- * 4. Combine all audio buffers into a single file
+ * 2. Generate audio for each chunk sequentially
+ * 3. Combine all audio buffers into a single file
  *
- * Context parameters (previousText/nextText) ensure smooth intonation transitions
- * between chunks, preventing the audio from sounding disjointed.
+ * Note: V3 does NOT support previous_text/next_text context parameters.
+ * Continuity is achieved through the audio tags in the script itself.
  *
- * @see https://elevenlabs.io/docs/overview/capabilities/text-to-speech/best-practices
- * @see https://elevenlabs.io/docs/api-reference/text-to-speech/convert
+ * @see https://elevenlabs.io/docs/overview/capabilities/text-to-speech/best-practices#prompting-eleven-v3
  */
 export const generateSpeech = internalAction({
   args: { contentAudioId: vv.id("contentAudios") },
@@ -163,49 +142,22 @@ export const generateSpeech = internalAction({
     });
 
     try {
-      // Get model config to check if context is supported
-      const modelConfig = getActiveModelConfig();
-
-      // Create chunk config based on model limits
-      const chunkConfig: ChunkConfig = {
-        maxRequestChars: modelConfig.maxChars,
-        previousContextChars: modelConfig.supportsContext ? 500 : 0,
-        nextContextChars: modelConfig.supportsContext ? 500 : 0,
-        safetyMargin: 100,
-      };
-
-      // Split script into chunks with context for continuity
-      const chunks = chunkScriptWithContext(audio.script, chunkConfig);
+      // Use default chunk config from @repo/ai/config/elevenlabs (V3: 5k limit, no context)
+      const chunks = chunkScript(audio.script, DEFAULT_CHUNK_CONFIG);
       const audioBuffers: Uint8Array[] = [];
       const voiceSettings = audio.voiceSettings ?? getDefaultVoiceSettings();
 
-      // Generate each chunk sequentially with context for continuity
+      // Generate each chunk sequentially
       for (const chunk of chunks) {
-        // Build provider options conditionally based on model support
-        const providerOptions: {
-          elevenlabs: {
-            voiceSettings: typeof voiceSettings;
-            previousText?: string;
-            nextText?: string;
-          };
-        } = {
-          elevenlabs: {
-            voiceSettings,
-          },
-        };
-
-        // Only add context if model supports it
-        if (modelConfig.supportsContext) {
-          providerOptions.elevenlabs.previousText =
-            chunk.previousText || undefined;
-          providerOptions.elevenlabs.nextText = chunk.nextText || undefined;
-        }
-
         const result = await aiGenerateSpeech({
           model: elevenlabs.speech(ACTIVE_MODEL),
           text: chunk.text,
           voice: audio.voiceId,
-          providerOptions,
+          providerOptions: {
+            elevenlabs: {
+              voiceSettings,
+            },
+          },
         });
 
         audioBuffers.push(new Uint8Array(result.audio.uint8Array));
