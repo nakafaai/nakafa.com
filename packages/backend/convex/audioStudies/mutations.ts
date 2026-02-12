@@ -58,7 +58,7 @@ export const saveScript = internalMutation({
 
     await ctx.db.patch("contentAudios", args.contentAudioId, {
       script: args.script,
-      status: "completed",
+      status: "generating-speech",
       updatedAt: Date.now(),
     });
 
