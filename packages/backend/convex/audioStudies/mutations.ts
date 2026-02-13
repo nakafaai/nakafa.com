@@ -7,12 +7,11 @@ import {
   DAILY_GENERATION_LIMITS,
   SUPPORTED_LOCALES,
 } from "@repo/backend/convex/audioStudies/constants";
-import { audioStatusValidator } from "@repo/backend/convex/lib/validators/audio";
 import {
-  contentIdValidator,
-  contentTypeValidator,
-  localeValidator,
-} from "@repo/backend/convex/lib/validators/contents";
+  audioContentRefValidator,
+  audioStatusValidator,
+} from "@repo/backend/convex/lib/validators/audio";
+import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { workflow } from "@repo/backend/convex/workflow";
 import { ConvexError, v } from "convex/values";
@@ -204,19 +203,26 @@ export const markFailed = internalMutation({
  * Update content hash and clear outdated audio data.
  * Called when content is updated to invalidate cached audio.
  * Idempotent: Skip if hash already matches.
+ *
+ * Type Safety:
+ * - Uses discriminated contentRef for type-safe lookups
+ * - TypeScript narrows the type automatically in the switch
+ * - No assertions needed
  */
 export const updateContentHash = internalMutation({
   args: {
-    contentId: contentIdValidator,
-    contentType: contentTypeValidator,
+    contentRef: audioContentRefValidator,
     newHash: v.string(),
   },
   returns: v.object({ updatedCount: v.number() }),
   handler: async (ctx, args) => {
+    // Query using discriminated ref fields
     const audios = await ctx.db
       .query("contentAudios")
-      .withIndex("content", (q) =>
-        q.eq("contentId", args.contentId).eq("contentType", args.contentType)
+      .withIndex("contentRef", (q) =>
+        q
+          .eq("contentRef.type", args.contentRef.type)
+          .eq("contentRef.id", args.contentRef.id)
       )
       .collect();
 
@@ -258,6 +264,8 @@ export const updateContentHash = internalMutation({
 /**
  * Atomically lock a queue item by marking it as processing.
  * Idempotent: Returns null if item is no longer pending.
+ *
+ * Returns discriminated contentRef for type-safe usage in workflow.
  */
 export const lockQueueItem = internalMutation({
   args: {
@@ -265,8 +273,7 @@ export const lockQueueItem = internalMutation({
   },
   returns: nullable(
     v.object({
-      contentId: contentIdValidator,
-      contentType: contentTypeValidator,
+      contentRef: audioContentRefValidator,
       locale: localeValidator,
     })
   ),
@@ -294,8 +301,7 @@ export const lockQueueItem = internalMutation({
     });
 
     return {
-      contentId: item.contentId,
-      contentType: item.contentType,
+      contentRef: item.contentRef,
       locale: item.locale,
     };
   },
@@ -304,22 +310,25 @@ export const lockQueueItem = internalMutation({
 /**
  * Create contentAudios record if it doesn't exist, or return existing.
  * Idempotent: Multiple calls with same content+locale return same ID.
+ * Requires contentHash to enable cost protection during generation.
+ *
+ * Uses discriminated contentRef for type-safe storage.
  */
 export const createOrGetAudioRecord = internalMutation({
   args: {
-    contentId: contentIdValidator,
-    contentType: contentTypeValidator,
+    contentRef: audioContentRefValidator,
     locale: localeValidator,
+    contentHash: v.string(),
   },
   returns: v.id("contentAudios"),
   handler: async (ctx, args) => {
-    // Check if record already exists
+    // Check if record already exists using discriminated ref
     const existing = await ctx.db
       .query("contentAudios")
-      .withIndex("content_locale", (q) =>
+      .withIndex("contentRef_locale", (q) =>
         q
-          .eq("contentId", args.contentId)
-          .eq("contentType", args.contentType)
+          .eq("contentRef.type", args.contentRef.type)
+          .eq("contentRef.id", args.contentRef.id)
           .eq("locale", args.locale)
       )
       .first();
@@ -331,13 +340,12 @@ export const createOrGetAudioRecord = internalMutation({
     // Get voice config for this locale
     const voiceConfig = getVoiceConfig(DEFAULT_VOICE_KEY);
 
-    // Create new record
+    // Create new record with discriminated contentRef
     const now = Date.now();
     const id = await ctx.db.insert("contentAudios", {
-      contentId: args.contentId,
-      contentType: args.contentType,
+      contentRef: args.contentRef,
       locale: args.locale,
-      contentHash: "pending", // Will be updated on first content sync
+      contentHash: args.contentHash,
       voiceId: voiceConfig.id,
       voiceSettings: voiceConfig.settings,
       model: ACTIVE_MODEL,

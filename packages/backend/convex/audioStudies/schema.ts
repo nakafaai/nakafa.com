@@ -1,27 +1,43 @@
 import {
+  audioContentRefValidator,
   audioModelValidator,
   audioStatusValidator,
   voiceSettingsValidator,
 } from "@repo/backend/convex/lib/validators/audio";
-import {
-  contentIdValidator,
-  contentTypeValidator,
-  localeValidator,
-} from "@repo/backend/convex/lib/validators/contents";
+import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
 const tables = {
   /**
-   * Audio content storage for articles, subject sections, and exercises.
-   * Shared cache - one audio file per content+voice combination.
+   * Unified audio storage for articles and subject sections.
+   *
+   * Design:
+   * - Uses discriminated union for type-safe content references
+   * - TypeScript automatically narrows id type based on discriminator
+   * - Zero type assertions needed in application code
+   * - Single table enables efficient cross-type queries (e.g., "all pending audio")
+   *
+   * Scalability:
+   * - One table = one set of indexes = O(log n) lookups
+   * - Easy to add new content types (extend the union)
+   * - Convex handles horizontal scaling automatically
+   *
+   * Note: Exercises are excluded - they don't generate audio.
    */
   contentAudios: defineTable({
-    /** Polymorphic reference to content */
-    contentId: contentIdValidator,
-    /** Discriminator for content type */
-    contentType: contentTypeValidator,
+    /**
+     * Discriminated content reference.
+     * { type: "article", id: Id<"articleContents"> } |
+     * { type: "subject", id: Id<"subjectSections"> }
+     *
+     * Benefits:
+     * - Type-safe: TypeScript knows exact id type in each branch
+     * - Self-documenting: relationship between type and id is explicit
+     * - No assertions: switch statement narrowing works automatically
+     */
+    contentRef: audioContentRefValidator,
     locale: localeValidator,
     /** SHA-256 hash of content body for cache invalidation */
     contentHash: v.string(),
@@ -49,36 +65,80 @@ const tables = {
     /** Last update timestamp */
     updatedAt: v.number(),
   })
-    .index("content_voice", ["contentId", "contentType", "voiceId"])
-    .index("content", ["contentId", "contentType"])
-    .index("content_locale", ["contentId", "contentType", "locale"])
-    .index("status", ["status"]),
+    /**
+     * Primary lookup by content reference and locale.
+     * Used to check if audio already exists for specific content.
+     */
+    .index("contentRef_locale", ["contentRef.type", "contentRef.id", "locale"])
+    /**
+     * Lookup by content type and id (without locale).
+     * Used for cross-locale queries.
+     */
+    .index("contentRef", ["contentRef.type", "contentRef.id"])
+    /**
+     * Status-based queries.
+     * Used for "get all pending audio" operations.
+     */
+    .index("status", ["status"])
+    /**
+     * Status + locale queries.
+     * Used for queue processing by locale.
+     */
+    .index("status_locale", ["status", "locale"]),
 
   /**
    * User listening history and access tracking.
-   * Tracks which users have accessed which audio content.
+   *
+   * Design:
+   * - Tracks which users have accessed which audio content
+   * - Uses discriminated contentRef for consistency with contentAudios
+   * - Enables efficient "user's listening history" queries
+   *
+   * Note: Exercises are excluded - they don't have audio.
    */
   userContentAudios: defineTable({
     userId: v.id("users"),
     contentAudioId: v.id("contentAudios"),
-    /** Denormalized for efficient history queries */
-    contentId: contentIdValidator,
-    contentType: contentTypeValidator,
+    /**
+     * Denormalized content reference for efficient history queries.
+     * Mirrors the contentRef structure from contentAudios.
+     */
+    contentRef: audioContentRefValidator,
     playCount: v.number(),
     lastPlayedAt: v.optional(v.number()),
     updatedAt: v.number(),
   })
+    /** User's listening history */
     .index("user", ["userId"])
-    .index("user_content", ["userId", "contentId", "contentType"])
+    /** Check if user has accessed specific content */
+    .index("user_contentRef", ["userId", "contentRef.type", "contentRef.id"])
+    /** Lookup by audio record */
     .index("contentAudio", ["contentAudioId"]),
 
   /**
-   * Audio generation queue for cron-based prioritized processing.
+   * Unified audio generation queue for cron-based prioritized processing.
+   *
+   * Design:
+   * - Single queue table handles all content types
+   * - Enables cross-type prioritization (e.g., most popular article vs subject)
+   * - Uses discriminated contentRef for type safety
+   *
+   * Processing:
+   * 1. Query by status_priority to get pending items
+   * 2. Lock item by updating status to "processing"
+   * 3. Generate audio via workflow
+   * 4. Mark as completed or failed
+   *
+   * Note: Exercises are excluded - they don't generate audio.
    */
   audioGenerationQueue: defineTable({
-    contentId: contentIdValidator,
-    contentType: contentTypeValidator,
+    contentRef: audioContentRefValidator,
     locale: localeValidator,
+    /**
+     * Priority score for queue ordering.
+     * Calculated from: viewCount × 10 + ageBoost
+     * Higher score = higher priority
+     */
     priorityScore: v.number(),
     status: literals("pending", "processing", "completed", "failed"),
     requestedAt: v.number(),
@@ -90,9 +150,25 @@ const tables = {
     lastErrorAt: v.optional(v.number()),
     updatedAt: v.number(),
   })
+    /**
+     * Primary queue processing index.
+     * Fetches pending items ordered by priority (descending).
+     */
     .index("status_priority", ["status", "priorityScore"])
-    .index("content", ["contentId", "contentType", "locale"])
+    /**
+     * Deduplication check.
+     * Ensures content isn't queued multiple times.
+     */
+    .index("contentRef_locale", ["contentRef.type", "contentRef.id", "locale"])
+    /**
+     * Cleanup queries.
+     * Removes old completed/failed items.
+     */
     .index("status_completedAt", ["status", "completedAt"])
+    /**
+     * Error tracking.
+     * Finds items with recent errors for retry.
+     */
     .index("status_updatedAt", ["status", "updatedAt"]),
 };
 

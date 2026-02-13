@@ -12,10 +12,11 @@ import { v } from "convex/values";
  *
  * This workflow orchestrates the complete pipeline:
  * 1. Lock queue item (atomically fetch and mark processing)
- * 2. Create or get existing audio record (idempotent)
- * 3. Generate script using AI (idempotent - skips if exists)
- * 4. Generate speech using ElevenLabs (idempotent - skips if exists)
- * 5. Mark queue item as completed
+ * 2. Fetch content hash for cost protection
+ * 3. Create or get existing audio record with content hash (idempotent)
+ * 4. Generate script using AI (idempotent - skips if exists)
+ * 5. Generate speech using ElevenLabs (idempotent - skips if exists)
+ * 6. Mark queue item as completed
  *
  * Benefits:
  * - Survives server restarts and crashes
@@ -24,13 +25,18 @@ import { v } from "convex/values";
  * - Content hash validation prevents wasted API calls
  * - Each queue item processed independently for parallelism
  * - Errors handled by onComplete handler (no manual try-catch needed)
+ *
+ * Type Safety:
+ * - Uses discriminated contentRef throughout
+ * - TypeScript narrows types automatically
+ * - No type assertions needed
  */
 export const generateAudioForQueueItem = workflow.define({
   args: {
     queueItemId: vv.id("audioGenerationQueue"),
   },
   returns: v.null(),
-  handler: async (step, args): Promise<null> => {
+  handler: async (step, args) => {
     // Step 1: Atomically lock queue item (pending -> processing)
     const queueItem = await step.runMutation(
       internal.audioStudies.mutations.lockQueueItem,
@@ -44,17 +50,36 @@ export const generateAudioForQueueItem = workflow.define({
       return null;
     }
 
-    // Step 2: Get or create audio record (idempotent)
-    const audioRecordId = await step.runMutation(
-      internal.audioStudies.mutations.createOrGetAudioRecord,
+    // Step 2: Fetch content hash for cost protection
+    // Uses discriminated contentRef for type-safe lookup
+    const contentHash = await step.runQuery(
+      internal.audioStudies.queries.getContentHash,
       {
-        contentId: queueItem.contentId,
-        contentType: queueItem.contentType,
-        locale: queueItem.locale,
+        contentRef: queueItem.contentRef,
       }
     );
 
-    // Step 3: Generate script (idempotent - skips if already exists)
+    // If content doesn't exist, mark as failed and exit
+    if (!contentHash) {
+      await step.runMutation(internal.audioStudies.mutations.markQueueFailed, {
+        queueItemId: args.queueItemId,
+        error: "Content not found",
+      });
+      return null;
+    }
+
+    // Step 3: Get or create audio record (idempotent)
+    // Pass discriminated contentRef for type-safe storage
+    const audioRecordId = await step.runMutation(
+      internal.audioStudies.mutations.createOrGetAudioRecord,
+      {
+        contentRef: queueItem.contentRef,
+        locale: queueItem.locale,
+        contentHash,
+      }
+    );
+
+    // Step 4: Generate script (idempotent - skips if already exists)
     // Automatic retries enabled for transient failures (rate limits, etc.)
     await step.runAction(
       internal.audioStudies.actions.generateScript,
@@ -66,7 +91,7 @@ export const generateAudioForQueueItem = workflow.define({
       }
     );
 
-    // Step 4: Generate speech (idempotent - skips if already exists)
+    // Step 5: Generate speech (idempotent - skips if already exists)
     // This is the expensive step (ElevenLabs API), so we verify hash before calling
     // Automatic retries enabled for transient failures
     await step.runAction(
@@ -79,7 +104,7 @@ export const generateAudioForQueueItem = workflow.define({
       }
     );
 
-    // Step 5: Mark queue item as completed
+    // Step 6: Mark queue item as completed
     await step.runMutation(internal.audioStudies.mutations.markQueueCompleted, {
       queueItemId: args.queueItemId,
     });

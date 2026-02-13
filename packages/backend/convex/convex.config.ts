@@ -10,6 +10,15 @@ app.use(betterAuth);
 app.use(migrations);
 app.use(workflow);
 app.use(resend);
-app.use(aggregate, { name: "contentPopularity" });
+
+// Separate aggregates for all content types
+// This provides:
+// - Type-safe simple ID keys (no tuples)
+// - Independent scaling (no cross-type contention)
+// - Zero type assertions
+// - Ready for trending features across all content types
+app.use(aggregate, { name: "articlePopularity" });
+app.use(aggregate, { name: "subjectPopularity" });
+app.use(aggregate, { name: "exercisePopularity" });
 
 export default app;

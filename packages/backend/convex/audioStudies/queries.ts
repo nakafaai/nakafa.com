@@ -1,14 +1,11 @@
 import { internalQuery } from "@repo/backend/convex/_generated/server";
 import { fetchContentForAudio } from "@repo/backend/convex/audioStudies/utils";
 import {
+  audioContentRefValidator,
   audioModelValidator,
   audioStatusValidator,
   voiceSettingsValidator,
 } from "@repo/backend/convex/lib/validators/audio";
-import {
-  contentIdValidator,
-  contentTypeValidator,
-} from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
@@ -23,8 +20,7 @@ export const getById = internalQuery({
   },
   returns: nullable(
     v.object({
-      contentId: contentIdValidator,
-      contentType: contentTypeValidator,
+      contentRef: audioContentRefValidator,
       contentHash: v.string(),
       voiceId: v.string(),
       voiceSettings: v.optional(voiceSettingsValidator),
@@ -40,8 +36,7 @@ export const getById = internalQuery({
     }
 
     return {
-      contentId: audio.contentId,
-      contentType: audio.contentType,
+      contentRef: audio.contentRef,
       contentHash: audio.contentHash,
       voiceId: audio.voiceId,
       voiceSettings: audio.voiceSettings,
@@ -54,6 +49,11 @@ export const getById = internalQuery({
 /**
  * Get audio metadata and content data for script generation.
  * Returns both audio configuration and the associated content.
+ *
+ * Type Safety:
+ * - Uses discriminated union (contentRef) for type-safe content fetching
+ * - TypeScript automatically narrows types in fetchContentForAudio
+ * - Zero type assertions needed
  */
 export const getAudioAndContentForScriptGeneration = internalQuery({
   args: {
@@ -62,8 +62,7 @@ export const getAudioAndContentForScriptGeneration = internalQuery({
   returns: nullable(
     v.object({
       contentAudio: v.object({
-        contentId: contentIdValidator,
-        contentType: contentTypeValidator,
+        contentRef: audioContentRefValidator,
         contentHash: v.string(),
         voiceId: v.string(),
         voiceSettings: v.optional(voiceSettingsValidator),
@@ -84,16 +83,16 @@ export const getAudioAndContentForScriptGeneration = internalQuery({
       return null;
     }
 
-    // Fetch content based on type - returns null if content not found
-    const content = await fetchContentForAudio(ctx, audio);
+    // Fetch content using discriminated union
+    // TypeScript automatically narrows the type - no assertions needed
+    const content = await fetchContentForAudio(ctx, audio.contentRef);
     if (!content) {
       return null;
     }
 
     return {
       contentAudio: {
-        contentId: audio.contentId,
-        contentType: audio.contentType,
+        contentRef: audio.contentRef,
         contentHash: audio.contentHash,
         voiceId: audio.voiceId,
         voiceSettings: audio.voiceSettings,
@@ -186,5 +185,42 @@ export const hasAudio = internalQuery({
   handler: async (ctx, args) => {
     const audio = await ctx.db.get("contentAudios", args.contentAudioId);
     return !!audio?.audioStorageId;
+  },
+});
+
+/**
+ * Get content hash for a content item by type and ID.
+ * Used by workflow to fetch hash before creating audio record.
+ * Returns null if content not found.
+ *
+ * Type Safety:
+ * - Uses discriminated union (contentRef) for type-safe lookups
+ * - TypeScript automatically narrows the id type based on the type discriminator
+ * - No type assertions needed - clean TypeScript like JavaScript
+ */
+export const getContentHash = internalQuery({
+  args: {
+    contentRef: audioContentRefValidator,
+  },
+  returns: nullable(v.string()),
+  handler: async (ctx, args) => {
+    // TypeScript automatically narrows the type based on the discriminator
+    // No assertions needed - this is the power of discriminated unions
+    switch (args.contentRef.type) {
+      case "article": {
+        // TypeScript knows args.contentRef.id is Id<"articleContents">
+        const article = await ctx.db.get("articleContents", args.contentRef.id);
+        return article?.contentHash ?? null;
+      }
+      case "subject": {
+        // TypeScript knows args.contentRef.id is Id<"subjectSections">
+        const section = await ctx.db.get("subjectSections", args.contentRef.id);
+        return section?.contentHash ?? null;
+      }
+      default: {
+        // Exhaustive check - TypeScript ensures we handle all cases
+        return null;
+      }
+    }
   },
 });

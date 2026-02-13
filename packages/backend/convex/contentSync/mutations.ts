@@ -226,8 +226,7 @@ export const bulkSyncArticles = internalMutation({
         await ctx.runMutation(
           internal.audioStudies.mutations.updateContentHash,
           {
-            contentId: existing._id,
-            contentType: "article",
+            contentRef: { type: "article", id: existing._id },
             newHash: article.contentHash,
           }
         );
@@ -473,8 +472,7 @@ export const bulkSyncSubjectSections = internalMutation({
         await ctx.runMutation(
           internal.audioStudies.mutations.updateContentHash,
           {
-            contentId: existing._id,
-            contentType: "subject",
+            contentRef: { type: "subject", id: existing._id },
             newHash: section.contentHash,
           }
         );

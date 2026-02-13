@@ -19,7 +19,8 @@ export type ContentType = Infer<typeof contentTypeValidator>;
 
 /**
  * Validator for content ID - polymorphic reference to all content types.
- * Used for statistics tracking (contentViews) and audio generation.
+ * Used for statistics tracking (contentViews) and content authors linking.
+ * Note: For audio generation, use audioContentIdValidator from audio.ts which excludes exercises.
  * Tracks: articles, subject sections, and exercise sets (not individual questions)
  */
 export const contentIdValidator = v.union(

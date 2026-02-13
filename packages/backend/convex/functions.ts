@@ -38,7 +38,11 @@ import {
   internalMutation as rawInternalMutation,
   mutation as rawMutation,
 } from "@repo/backend/convex/_generated/server";
-import { contentPopularity } from "@repo/backend/convex/contents/aggregate";
+import {
+  articlePopularity,
+  exercisePopularity,
+  subjectPopularity,
+} from "@repo/backend/convex/contents/aggregate";
 import { applyAttemptAggregatesDelta } from "@repo/backend/convex/exercises/utils";
 import { isAdmin } from "@repo/backend/convex/lib/helpers/school";
 import { truncateText } from "@repo/backend/convex/utils/helper";
@@ -100,7 +104,11 @@ triggers.register("notifications", async () => {
   // No-op: created by various triggers for user notifications
 });
 
-triggers.register("contentViews", contentPopularity.trigger());
+// Register triggers for separate content type aggregate tables
+// Each table has a specific ID type (not union), enabling zero-assertion type safety
+triggers.register("articleContentViews", articlePopularity.trigger());
+triggers.register("subjectContentViews", subjectPopularity.trigger());
+triggers.register("exerciseContentViews", exercisePopularity.trigger());
 
 triggers.register("notificationCounts", async () => {
   // No-op: updated atomically when notifications are created/read
