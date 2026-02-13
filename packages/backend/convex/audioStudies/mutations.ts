@@ -335,6 +335,14 @@ export const createOrGetAudioRecord = internalMutation({
       .first();
 
     if (existing) {
+      // Update contentHash if it changed (handles race with content updates)
+      // This ensures cost protection checks compare fresh hash with content hash
+      if (existing.contentHash !== args.contentHash) {
+        await ctx.db.patch("contentAudios", existing._id, {
+          contentHash: args.contentHash,
+          updatedAt: Date.now(),
+        });
+      }
       return existing._id;
     }
 
