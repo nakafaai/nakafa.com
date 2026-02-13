@@ -110,7 +110,9 @@ export const aggregatePopularity = internalMutation({
           contentRef = { type: "subject", id: item.id };
         }
 
-        // Check if already queued
+        // Check if already queued or being processed
+        // Only skip if status is "pending" or "processing"
+        // If "completed" or "failed", re-queue for regeneration (content may have updated)
         const existing = await ctx.db
           .query("audioGenerationQueue")
           .withIndex("contentRef_locale", (q) =>
@@ -122,7 +124,16 @@ export const aggregatePopularity = internalMutation({
           .first();
 
         if (existing) {
-          continue;
+          // Skip only if actively queued or processing
+          // Completed/failed entries should be re-queued for updated content
+          if (
+            existing.status === "pending" ||
+            existing.status === "processing"
+          ) {
+            continue;
+          }
+          // Delete old completed/failed entry and re-queue with new priority
+          await ctx.db.delete("audioGenerationQueue", existing._id);
         }
 
         // Calculate priority score
