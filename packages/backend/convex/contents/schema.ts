@@ -30,15 +30,6 @@ const tables = {
     .index("deviceId_lastViewedAt", ["deviceId", "lastViewedAt"])
     .index("contentId_locale", ["contentId", "locale"])
     .index("contentType_locale", ["contentType", "locale"]),
-
-  contentStats: defineTable({
-    userId: v.id("users"),
-    totalViewCount: v.number(),
-    totalUniqueContent: v.number(),
-    totalDurationSeconds: v.number(),
-    lastViewedAt: v.number(),
-    updatedAt: v.number(),
-  }).index("userId", ["userId"]),
 };
 
 export default tables;
