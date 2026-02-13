@@ -1,6 +1,7 @@
 import { internalMutation } from "@repo/backend/convex/_generated/server";
 import {
   MIN_VIEW_THRESHOLD,
+  RETRY_CONFIG,
   SUPPORTED_LOCALES,
 } from "@repo/backend/convex/audioStudies/constants";
 import { contentPopularity } from "@repo/backend/convex/contents/aggregate";
@@ -67,7 +68,7 @@ export const aggregatePopularity = internalMutation({
           status: "pending",
           requestedAt: Date.now(),
           retryCount: 0,
-          maxRetries: 3,
+          maxRetries: RETRY_CONFIG.maxRetries,
           updatedAt: Date.now(),
         });
 

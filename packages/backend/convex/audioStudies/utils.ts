@@ -1,6 +1,9 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import type { ContentType } from "@repo/backend/convex/lib/validators/contents";
+import type {
+  ContentId,
+  ContentType,
+} from "@repo/backend/convex/lib/validators/contents";
 
 /**
  * Content data structure for script generation.
@@ -11,15 +14,6 @@ export interface ContentData {
   body: string;
   locale: string;
 }
-
-  /**
-  * Content ID union type supporting all content types tracked for statistics.
-  * Note: Exercise questions are not tracked individually - only exercise sets.
-  */
-  type ContentId =
-    | Id<"articleContents">
-    | Id<"subjectSections">
-    | Id<"exerciseSets">;
 
 /**
  * Fetch content data based on audio content type and ID.

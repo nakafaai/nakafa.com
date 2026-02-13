@@ -24,12 +24,25 @@ const WORD_SPLIT_REGEX = /\s+/;
 /**
  * Generate a podcast script for content audio.
  * Uses Gemini to create a conversational script with ElevenLabs V3 audio tags.
- * Fetches content and audio metadata in a single query for efficiency.
+ *
+ * Idempotent: If script already exists, returns immediately without API call.
+ * Cost protection: Validates content hash before and after generation.
  */
 export const generateScript = internalAction({
   args: { contentAudioId: vv.id("contentAudios") },
   returns: v.null(),
   handler: async (ctx, args) => {
+    // Idempotency check: Skip if script already exists
+    const hasExistingScript = await ctx.runQuery(
+      internal.audioStudies.queries.hasScript,
+      { contentAudioId: args.contentAudioId }
+    );
+
+    if (hasExistingScript) {
+      // Script already generated, nothing to do
+      return null;
+    }
+
     const data = await ctx.runQuery(
       internal.audioStudies.queries.getAudioAndContentForScriptGeneration,
       { contentAudioId: args.contentAudioId }
@@ -44,12 +57,14 @@ export const generateScript = internalAction({
 
     const { contentAudio, content } = data;
 
+    // Update status to generating-script
     await ctx.runMutation(internal.audioStudies.mutations.updateStatus, {
       contentAudioId: args.contentAudioId,
       status: "generating-script",
     });
 
     try {
+      // Cost protection: Verify content hasn't changed before API call
       const currentAudio = await ctx.runQuery(
         internal.audioStudies.queries.getById,
         { contentAudioId: args.contentAudioId }
@@ -78,6 +93,7 @@ export const generateScript = internalAction({
         prompt,
       });
 
+      // Cost protection: Verify content hasn't changed after API call
       const audioAfter = await ctx.runQuery(
         internal.audioStudies.queries.getById,
         { contentAudioId: args.contentAudioId }
@@ -91,6 +107,7 @@ export const generateScript = internalAction({
         });
       }
 
+      // Save the generated script
       await ctx.runMutation(internal.audioStudies.mutations.saveScript, {
         contentAudioId: args.contentAudioId,
         script,
@@ -115,6 +132,9 @@ export const generateScript = internalAction({
  * 2. Generate audio for each chunk sequentially
  * 3. Combine all audio buffers into a single file
  *
+ * Idempotent: If audio already exists, returns immediately without API call.
+ * Cost protection: Validates content hash before expensive ElevenLabs API call.
+ *
  * Note: V3 does NOT support previous_text/next_text context parameters.
  * Continuity is achieved through the audio tags in the script itself.
  *
@@ -124,6 +144,17 @@ export const generateSpeech = internalAction({
   args: { contentAudioId: vv.id("contentAudios") },
   returns: v.null(),
   handler: async (ctx, args) => {
+    // Idempotency check: Skip if audio already exists
+    const hasExistingAudio = await ctx.runQuery(
+      internal.audioStudies.queries.hasAudio,
+      { contentAudioId: args.contentAudioId }
+    );
+
+    if (hasExistingAudio) {
+      // Audio already generated, nothing to do
+      return null;
+    }
+
     const audio = await ctx.runQuery(
       internal.audioStudies.queries.getAudioForSpeechGeneration,
       { contentAudioId: args.contentAudioId }
@@ -136,6 +167,7 @@ export const generateSpeech = internalAction({
       });
     }
 
+    // Update status to generating-speech
     await ctx.runMutation(
       internal.audioStudies.mutations.startSpeechGeneration,
       {
@@ -144,6 +176,23 @@ export const generateSpeech = internalAction({
     );
 
     try {
+      // Cost protection: Verify hash before expensive ElevenLabs API call
+      const hashStillValid = await ctx.runQuery(
+        internal.audioStudies.queries.verifyContentHash,
+        {
+          contentAudioId: args.contentAudioId,
+          expectedHash: audio.contentHash,
+        }
+      );
+
+      if (!hashStillValid) {
+        throw new ConvexError({
+          code: "CONTENT_CHANGED",
+          message:
+            "Content changed before speech generation, aborting to save costs",
+        });
+      }
+
       // Use default chunk config from @repo/ai/config/elevenlabs (V3: 5k limit, no context)
       const chunks = chunkScript(audio.script, DEFAULT_CHUNK_CONFIG);
       const audioBuffers: Uint8Array[] = [];
@@ -179,8 +228,8 @@ export const generateSpeech = internalAction({
         offset += buffer.length;
       }
 
-      // Verify hash hasn't changed before saving
-      const hashStillValid = await ctx.runQuery(
+      // Cost protection: Verify hash hasn't changed after generation
+      const hashValidAfter = await ctx.runQuery(
         internal.audioStudies.queries.verifyContentHash,
         {
           contentAudioId: args.contentAudioId,
@@ -188,7 +237,7 @@ export const generateSpeech = internalAction({
         }
       );
 
-      if (!hashStillValid) {
+      if (!hashValidAfter) {
         throw new ConvexError({
           code: "CONTENT_CHANGED",
           message:

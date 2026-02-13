@@ -22,7 +22,6 @@ export const CRON_CONFIG = {
 
   // Individual cron toggles for granular control
   aggregatePopularity: true, // Every 30 min
-  populateQueue: true, // Every hour
   processQueue: true, // Every 5 min
   cleanup: true, // Daily at 2 AM
 

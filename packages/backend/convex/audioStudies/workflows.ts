@@ -1,98 +1,121 @@
+import { vWorkflowId } from "@convex-dev/workflow";
+import { vResultValidator } from "@convex-dev/workpool";
 import { internal } from "@repo/backend/convex/_generated/api";
-import {
-  contentIdValidator,
-  contentTypeValidator,
-  localeValidator,
-} from "@repo/backend/convex/lib/validators/contents";
+import { internalMutation } from "@repo/backend/convex/_generated/server";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
+import { getErrorMessage } from "@repo/backend/convex/utils/helper";
 import { workflow } from "@repo/backend/convex/workflow";
 import { v } from "convex/values";
 
 /**
- * Durable workflow for audio generation pipeline.
+ * Single end-to-end workflow for audio generation.
  *
- * This workflow orchestrates:
- * 1. Generate podcast script using Gemini (AI SDK)
- * 2. Generate speech using ElevenLabs V3
+ * This workflow orchestrates the complete pipeline:
+ * 1. Lock queue item (atomically fetch and mark processing)
+ * 2. Create or get existing audio record (idempotent)
+ * 3. Generate script using AI (idempotent - skips if exists)
+ * 4. Generate speech using ElevenLabs (idempotent - skips if exists)
+ * 5. Mark queue item as completed
  *
- * Benefits of using workflow:
+ * Benefits:
  * - Survives server restarts and crashes
- * - Automatic retries on transient failures (e.g., API rate limits)
- * - Can be monitored, cancelled, or cleaned up
- * - Guaranteed exactly-once execution semantics
- * - Steps run in sequence (script must complete before speech generation)
+ * - Automatic retries on transient failures
+ * - Idempotent steps prevent double-work and double-cost
+ * - Content hash validation prevents wasted API calls
+ * - Each queue item processed independently for parallelism
+ * - Errors handled by onComplete handler (no manual try-catch needed)
  */
-export const generateAudio = workflow.define({
+export const generateAudioForQueueItem = workflow.define({
   args: {
-    contentAudioId: vv.id("contentAudios"),
+    queueItemId: vv.id("audioGenerationQueue"),
   },
   returns: v.null(),
-  handler: async (step, args) => {
-    /**
-     * Step 1: Generate podcast script.
-     * Uses Gemini to create a conversational script with ElevenLabs V3 audio tags.
-     * The script is saved to the database by the action.
-     */
+  handler: async (step, args): Promise<null> => {
+    // Step 1: Atomically lock queue item (pending -> processing)
+    const queueItem = await step.runMutation(
+      internal.audioStudies.mutations.lockQueueItem,
+      {
+        queueItemId: args.queueItemId,
+      }
+    );
+
+    // If item is no longer pending (another worker got it), exit early
+    if (!queueItem) {
+      return null;
+    }
+
+    // Step 2: Get or create audio record (idempotent)
+    const audioRecordId = await step.runMutation(
+      internal.audioStudies.mutations.createOrGetAudioRecord,
+      {
+        contentId: queueItem.contentId,
+        contentType: queueItem.contentType,
+        locale: queueItem.locale,
+      }
+    );
+
+    // Step 3: Generate script (idempotent - skips if already exists)
+    // Automatic retries enabled for transient failures (rate limits, etc.)
     await step.runAction(
       internal.audioStudies.actions.generateScript,
       {
-        contentAudioId: args.contentAudioId,
+        contentAudioId: audioRecordId,
       },
       {
         retry: true,
       }
     );
 
-    /**
-     * Step 2: Generate speech from script.
-     * Uses ElevenLabs V3 to convert the script to audio.
-     * This step only runs after script generation completes successfully.
-     * The audio file is stored in Convex storage by the action.
-     */
+    // Step 4: Generate speech (idempotent - skips if already exists)
+    // This is the expensive step (ElevenLabs API), so we verify hash before calling
+    // Automatic retries enabled for transient failures
     await step.runAction(
       internal.audioStudies.actions.generateSpeech,
       {
-        contentAudioId: args.contentAudioId,
+        contentAudioId: audioRecordId,
       },
       {
         retry: true,
       }
     );
+
+    // Step 5: Mark queue item as completed
+    await step.runMutation(internal.audioStudies.mutations.markQueueCompleted, {
+      queueItemId: args.queueItemId,
+    });
 
     return null;
   },
 });
 
 /**
- * End-to-end workflow for cron-based audio generation.
- * Creates contentAudios record if needed, then calls generateAudio.
+ * Handle workflow completion - success, error, or cancellation.
+ * This is called automatically when the workflow finishes.
+ *
+ * Note: We don't use try-catch in the workflow itself. Instead, we let
+ * errors bubble up naturally and handle cleanup here. This is the Convex
+ * best practice for durable workflows.
  */
-export const generateAudioForContent = workflow.define({
+export const handleWorkflowComplete = internalMutation({
   args: {
-    contentId: contentIdValidator,
-    contentType: contentTypeValidator,
-    locale: localeValidator,
+    workflowId: vWorkflowId,
+    result: vResultValidator,
+    context: v.object({ queueItemId: vv.id("audioGenerationQueue") }),
   },
   returns: v.null(),
-  handler: async (step, args) => {
-    const audioId = await step.runMutation(
-      internal.audioStudies.mutations.createOrGetAudioRecord,
-      {
-        contentId: args.contentId,
-        contentType: args.contentType,
-        locale: args.locale,
-      }
-    );
+  handler: async (ctx, args) => {
+    if (args.result.kind === "failed") {
+      // Workflow failed - mark queue item as failed
+      // Use getErrorMessage to properly extract error details
+      const errorMessage = getErrorMessage(args.result.error);
 
-    await step.runWorkflow(internal.audioStudies.workflows.generateAudio, {
-      contentAudioId: audioId,
-    });
-
-    await step.runMutation(internal.audioStudies.mutations.markQueueCompleted, {
-      contentId: args.contentId,
-      contentType: args.contentType,
-      locale: args.locale,
-    });
+      await ctx.runMutation(internal.audioStudies.mutations.markQueueFailed, {
+        queueItemId: args.context.queueItemId,
+        error: errorMessage,
+      });
+    }
+    // Success case: queue item already marked completed by the workflow
+    // Canceled case: workflow was manually canceled, leave queue item as-is
 
     return null;
   },

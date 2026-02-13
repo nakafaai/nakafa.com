@@ -14,7 +14,7 @@ import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
 
 /**
- * Internal: Get content audio metadata by ID.
+ * Get content audio metadata by ID.
  * Used by workflow and actions to retrieve audio configuration.
  */
 export const getById = internalQuery({
@@ -33,7 +33,7 @@ export const getById = internalQuery({
     })
   ),
   handler: async (ctx, args) => {
-    const audio = await ctx.db.get("contentAudios", args.contentAudioId);
+    const audio = await ctx.db.get(args.contentAudioId);
 
     if (!audio) {
       return null;
@@ -52,38 +52,8 @@ export const getById = internalQuery({
 });
 
 /**
- * Internal: Get content audio with script by ID.
- * Used by generateSpeech action to retrieve script for TTS.
- */
-export const getWithScriptById = internalQuery({
-  args: {
-    contentAudioId: vv.id("contentAudios"),
-  },
-  returns: nullable(
-    v.object({
-      script: v.string(),
-      voiceId: v.string(),
-      voiceSettings: v.optional(voiceSettingsValidator),
-    })
-  ),
-  handler: async (ctx, args) => {
-    const audio = await ctx.db.get("contentAudios", args.contentAudioId);
-
-    if (!audio?.script) {
-      return null;
-    }
-
-    return {
-      script: audio.script,
-      voiceId: audio.voiceId,
-      voiceSettings: audio.voiceSettings,
-    };
-  },
-});
-
-/**
- * Internal: Get audio metadata and content data for script generation.
- * Returns both audio configuration and the associated content (article or subject section).
+ * Get audio metadata and content data for script generation.
+ * Returns both audio configuration and the associated content.
  */
 export const getAudioAndContentForScriptGeneration = internalQuery({
   args: {
@@ -108,7 +78,7 @@ export const getAudioAndContentForScriptGeneration = internalQuery({
     })
   ),
   handler: async (ctx, args) => {
-    const audio = await ctx.db.get("contentAudios", args.contentAudioId);
+    const audio = await ctx.db.get(args.contentAudioId);
 
     if (!audio) {
       return null;
@@ -135,7 +105,7 @@ export const getAudioAndContentForScriptGeneration = internalQuery({
 });
 
 /**
- * Internal: Get audio metadata with script for speech generation.
+ * Get audio metadata with script for speech generation.
  * Returns script, voice configuration, content hash, and model for verification.
  */
 export const getAudioForSpeechGeneration = internalQuery({
@@ -152,7 +122,7 @@ export const getAudioForSpeechGeneration = internalQuery({
     })
   ),
   handler: async (ctx, args) => {
-    const audio = await ctx.db.get("contentAudios", args.contentAudioId);
+    const audio = await ctx.db.get(args.contentAudioId);
 
     if (!audio?.script) {
       return null;
@@ -169,9 +139,8 @@ export const getAudioForSpeechGeneration = internalQuery({
 });
 
 /**
- * Internal: Verify content hash matches expected value.
+ * Verify content hash matches expected value.
  * Used by actions to check if content changed during generation.
- * Returns true if hash matches, false otherwise.
  */
 export const verifyContentHash = internalQuery({
   args: {
@@ -180,12 +149,42 @@ export const verifyContentHash = internalQuery({
   },
   returns: v.boolean(),
   handler: async (ctx, args) => {
-    const audio = await ctx.db.get("contentAudios", args.contentAudioId);
+    const audio = await ctx.db.get(args.contentAudioId);
 
     if (!audio) {
       return false;
     }
 
     return audio.contentHash === args.expectedHash;
+  },
+});
+
+/**
+ * Check if script already exists for an audio record.
+ * Used for idempotency - skip generation if already exists.
+ */
+export const hasScript = internalQuery({
+  args: {
+    contentAudioId: vv.id("contentAudios"),
+  },
+  returns: v.boolean(),
+  handler: async (ctx, args) => {
+    const audio = await ctx.db.get(args.contentAudioId);
+    return !!audio?.script;
+  },
+});
+
+/**
+ * Check if audio already exists for an audio record.
+ * Used for idempotency - skip generation if already exists.
+ */
+export const hasAudio = internalQuery({
+  args: {
+    contentAudioId: vv.id("contentAudios"),
+  },
+  returns: v.boolean(),
+  handler: async (ctx, args) => {
+    const audio = await ctx.db.get(args.contentAudioId);
+    return !!audio?.audioStorageId;
   },
 });

@@ -14,8 +14,6 @@ import type * as audioStudies_actions from "../audioStudies/actions.js";
 import type * as audioStudies_constants from "../audioStudies/constants.js";
 import type * as audioStudies_mutations from "../audioStudies/mutations.js";
 import type * as audioStudies_queries from "../audioStudies/queries.js";
-import type * as audioStudies_testMutations from "../audioStudies/testMutations.js";
-import type * as audioStudies_testQueries from "../audioStudies/testQueries.js";
 import type * as audioStudies_utils from "../audioStudies/utils.js";
 import type * as audioStudies_workflows from "../audioStudies/workflows.js";
 import type * as auth from "../auth.js";
@@ -97,8 +95,6 @@ declare const fullApi: ApiFromModules<{
   "audioStudies/constants": typeof audioStudies_constants;
   "audioStudies/mutations": typeof audioStudies_mutations;
   "audioStudies/queries": typeof audioStudies_queries;
-  "audioStudies/testMutations": typeof audioStudies_testMutations;
-  "audioStudies/testQueries": typeof audioStudies_testQueries;
   "audioStudies/utils": typeof audioStudies_utils;
   "audioStudies/workflows": typeof audioStudies_workflows;
   auth: typeof auth;
