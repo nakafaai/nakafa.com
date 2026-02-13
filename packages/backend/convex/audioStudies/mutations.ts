@@ -29,7 +29,7 @@ export const updateStatus = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const audio = await ctx.db.get(args.contentAudioId);
+    const audio = await ctx.db.get("contentAudios", args.contentAudioId);
 
     if (!audio) {
       throw new ConvexError({
@@ -43,7 +43,7 @@ export const updateStatus = internalMutation({
       return null;
     }
 
-    await ctx.db.patch(args.contentAudioId, {
+    await ctx.db.patch("contentAudios", args.contentAudioId, {
       status: args.status,
       updatedAt: Date.now(),
     });
@@ -63,7 +63,7 @@ export const saveScript = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const audio = await ctx.db.get(args.contentAudioId);
+    const audio = await ctx.db.get("contentAudios", args.contentAudioId);
 
     if (!audio) {
       throw new ConvexError({
@@ -77,7 +77,7 @@ export const saveScript = internalMutation({
       return null;
     }
 
-    await ctx.db.patch(args.contentAudioId, {
+    await ctx.db.patch("contentAudios", args.contentAudioId, {
       script: args.script,
       status: "script-generated",
       updatedAt: Date.now(),
@@ -97,7 +97,7 @@ export const startSpeechGeneration = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const audio = await ctx.db.get(args.contentAudioId);
+    const audio = await ctx.db.get("contentAudios", args.contentAudioId);
 
     if (!audio) {
       throw new ConvexError({
@@ -111,7 +111,7 @@ export const startSpeechGeneration = internalMutation({
       return null;
     }
 
-    await ctx.db.patch(args.contentAudioId, {
+    await ctx.db.patch("contentAudios", args.contentAudioId, {
       status: "generating-speech",
       updatedAt: Date.now(),
     });
@@ -133,7 +133,7 @@ export const saveAudio = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const audio = await ctx.db.get(args.contentAudioId);
+    const audio = await ctx.db.get("contentAudios", args.contentAudioId);
 
     if (!audio) {
       throw new ConvexError({
@@ -150,7 +150,7 @@ export const saveAudio = internalMutation({
       return null;
     }
 
-    await ctx.db.patch(args.contentAudioId, {
+    await ctx.db.patch("contentAudios", args.contentAudioId, {
       audioStorageId: args.storageId,
       audioDuration: args.duration,
       audioSize: args.size,
@@ -173,7 +173,7 @@ export const markFailed = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const audio = await ctx.db.get(args.contentAudioId);
+    const audio = await ctx.db.get("contentAudios", args.contentAudioId);
 
     if (!audio) {
       throw new ConvexError({
@@ -188,7 +188,7 @@ export const markFailed = internalMutation({
       return null;
     }
 
-    await ctx.db.patch(args.contentAudioId, {
+    await ctx.db.patch("contentAudios", args.contentAudioId, {
       status: "failed",
       errorMessage: args.error,
       failedAt: Date.now(),
@@ -235,7 +235,7 @@ export const updateContentHash = internalMutation({
 
       // Update record with new hash and clear old data
       // Reset generationAttempts to 0 for new content version
-      await ctx.db.patch(audio._id, {
+      await ctx.db.patch("contentAudios", audio._id, {
         contentHash: args.newHash,
         status: "pending",
         script: undefined,
@@ -271,7 +271,7 @@ export const lockQueueItem = internalMutation({
     })
   ),
   handler: async (ctx, args) => {
-    const item = await ctx.db.get(args.queueItemId);
+    const item = await ctx.db.get("audioGenerationQueue", args.queueItemId);
 
     if (!item) {
       throw new ConvexError({
@@ -287,7 +287,7 @@ export const lockQueueItem = internalMutation({
     }
 
     const now = Date.now();
-    await ctx.db.patch(args.queueItemId, {
+    await ctx.db.patch("audioGenerationQueue", args.queueItemId, {
       status: "processing",
       processingStartedAt: now,
       updatedAt: now,
@@ -360,7 +360,7 @@ export const markQueueCompleted = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const item = await ctx.db.get(args.queueItemId);
+    const item = await ctx.db.get("audioGenerationQueue", args.queueItemId);
 
     if (!item) {
       // Item may have been cleaned up, treat as success
@@ -373,7 +373,7 @@ export const markQueueCompleted = internalMutation({
     }
 
     const now = Date.now();
-    await ctx.db.patch(args.queueItemId, {
+    await ctx.db.patch("audioGenerationQueue", args.queueItemId, {
       status: "completed",
       completedAt: now,
       updatedAt: now,
@@ -394,7 +394,7 @@ export const markQueueFailed = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const item = await ctx.db.get(args.queueItemId);
+    const item = await ctx.db.get("audioGenerationQueue", args.queueItemId);
 
     if (!item) {
       // Item may have been cleaned up, treat as success
@@ -409,7 +409,7 @@ export const markQueueFailed = internalMutation({
     const now = Date.now();
     const newRetryCount = item.retryCount + 1;
 
-    await ctx.db.patch(args.queueItemId, {
+    await ctx.db.patch("audioGenerationQueue", args.queueItemId, {
       status: "failed",
       errorMessage: args.error,
       lastErrorAt: now,
@@ -530,11 +530,11 @@ export const cleanup = internalMutation({
     // Delete all old items
     let deleted = 0;
     for (const item of completedOldItems) {
-      await ctx.db.delete(item._id);
+      await ctx.db.delete("audioGenerationQueue", item._id);
       deleted++;
     }
     for (const item of failedOldItems) {
-      await ctx.db.delete(item._id);
+      await ctx.db.delete("audioGenerationQueue", item._id);
       deleted++;
     }
 

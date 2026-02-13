@@ -33,7 +33,7 @@ export const getById = internalQuery({
     })
   ),
   handler: async (ctx, args) => {
-    const audio = await ctx.db.get(args.contentAudioId);
+    const audio = await ctx.db.get("contentAudios", args.contentAudioId);
 
     if (!audio) {
       return null;
@@ -78,7 +78,7 @@ export const getAudioAndContentForScriptGeneration = internalQuery({
     })
   ),
   handler: async (ctx, args) => {
-    const audio = await ctx.db.get(args.contentAudioId);
+    const audio = await ctx.db.get("contentAudios", args.contentAudioId);
 
     if (!audio) {
       return null;
@@ -122,7 +122,7 @@ export const getAudioForSpeechGeneration = internalQuery({
     })
   ),
   handler: async (ctx, args) => {
-    const audio = await ctx.db.get(args.contentAudioId);
+    const audio = await ctx.db.get("contentAudios", args.contentAudioId);
 
     if (!audio?.script) {
       return null;
@@ -149,7 +149,7 @@ export const verifyContentHash = internalQuery({
   },
   returns: v.boolean(),
   handler: async (ctx, args) => {
-    const audio = await ctx.db.get(args.contentAudioId);
+    const audio = await ctx.db.get("contentAudios", args.contentAudioId);
 
     if (!audio) {
       return false;
@@ -169,7 +169,7 @@ export const hasScript = internalQuery({
   },
   returns: v.boolean(),
   handler: async (ctx, args) => {
-    const audio = await ctx.db.get(args.contentAudioId);
+    const audio = await ctx.db.get("contentAudios", args.contentAudioId);
     return !!audio?.script;
   },
 });
@@ -184,7 +184,7 @@ export const hasAudio = internalQuery({
   },
   returns: v.boolean(),
   handler: async (ctx, args) => {
-    const audio = await ctx.db.get(args.contentAudioId);
+    const audio = await ctx.db.get("contentAudios", args.contentAudioId);
     return !!audio?.audioStorageId;
   },
 });
