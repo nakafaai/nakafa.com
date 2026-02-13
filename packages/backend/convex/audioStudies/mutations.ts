@@ -4,8 +4,8 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
 import {
   CLEANUP_CONFIG,
-  DAILY_GENERATION_LIMITS,
-  SUPPORTED_LOCALES,
+  isAudioGenerationEnabled,
+  MAX_CONTENT_PER_DAY,
 } from "@repo/backend/convex/audioStudies/constants";
 import {
   audioContentRefValidator,
@@ -13,6 +13,7 @@ import {
 } from "@repo/backend/convex/lib/validators/audio";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
+import { logger } from "@repo/backend/convex/utils/logger";
 import { workflow } from "@repo/backend/convex/workflow";
 import { ConvexError, v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
@@ -432,21 +433,35 @@ export const markQueueFailed = internalMutation({
 /**
  * Start workflows for pending queue items.
  * Called by cron every 5 minutes.
- * Respects daily limits per locale.
+ *
+ * Strategy: Process 1 content piece per day with ALL locales.
+ * This ensures complete multilingual coverage for popular content.
+ *
+ * Example: MAX_CONTENT_PER_DAY = 1, SUPPORTED_LOCALES = ["en", "id"]
+ * Result: 1 content × 2 locales = 2 audio files per day
  */
 export const startWorkflowsForPendingItems = internalMutation({
-  args: {
-    maxItems: v.number(),
-  },
+  args: {},
   returns: v.object({
     started: v.number(),
     skipped: v.number(),
+    contentRef: v.optional(audioContentRefValidator),
   }),
-  handler: async (ctx, args) => {
+  handler: async (ctx) => {
+    // Check if audio generation is enabled for this deployment
+    // Set ENABLE_AUDIO_GENERATION=true in Convex Dashboard to enable
+    if (!isAudioGenerationEnabled()) {
+      logger.info(
+        "Audio generation skipped - ENABLE_AUDIO_GENERATION not set in environment"
+      );
+      return { started: 0, skipped: 0 };
+    }
+
     const now = Date.now();
     const today = new Date(now).setHours(0, 0, 0, 0);
 
-    // Count today's completions per locale using index
+    // Count unique content pieces completed today
+    // We count by contentRef (type + id), not by locale
     const completedToday = await ctx.db
       .query("audioGenerationQueue")
       .withIndex("status_completedAt", (q) =>
@@ -454,32 +469,50 @@ export const startWorkflowsForPendingItems = internalMutation({
       )
       .collect();
 
-    const countsByLocale: Record<string, number> = {};
-    for (const locale of SUPPORTED_LOCALES) {
-      countsByLocale[locale] = 0;
-    }
+    // Use a Set to track unique content pieces (by contentRef)
+    const completedContentRefs = new Set<string>();
     for (const item of completedToday) {
-      countsByLocale[item.locale]++;
+      const contentRefKey = `${item.contentRef.type}:${item.contentRef.id}`;
+      completedContentRefs.add(contentRefKey);
     }
 
-    // Get pending items ordered by priority
-    const pending = await ctx.db
+    // Check if we've reached the daily limit for content pieces
+    if (completedContentRefs.size >= MAX_CONTENT_PER_DAY) {
+      logger.info(
+        `Daily content limit reached: ${completedContentRefs.size}/${MAX_CONTENT_PER_DAY} content pieces completed today`
+      );
+      return { started: 0, skipped: 0 };
+    }
+
+    // Get the highest priority pending item
+    // This determines which content piece to process today
+    const topItem = await ctx.db
       .query("audioGenerationQueue")
       .withIndex("status_priority", (q) => q.eq("status", "pending"))
       .order("desc")
-      .take(args.maxItems * 2); // Get more to filter by limits
+      .first();
+
+    if (!topItem) {
+      logger.info("No pending items in queue");
+      return { started: 0, skipped: 0 };
+    }
+
+    // Get ALL pending queue items for this content (all locales)
+    // We want to process all locales of the same content together
+    const contentItems = await ctx.db
+      .query("audioGenerationQueue")
+      .withIndex("contentRef_locale", (q) =>
+        q
+          .eq("contentRef.type", topItem.contentRef.type)
+          .eq("contentRef.id", topItem.contentRef.id)
+      )
+      .filter((q) => q.eq(q.field("status"), "pending"))
+      .collect();
 
     let started = 0;
-    let skipped = 0;
 
-    for (const item of pending) {
-      // Check daily limit for this locale
-      if (countsByLocale[item.locale] >= DAILY_GENERATION_LIMITS[item.locale]) {
-        skipped++;
-        continue;
-      }
-
-      // Start workflow for this queue item with onComplete handler
+    // Start workflows for all locales of this content
+    for (const item of contentItems) {
       await workflow.start(
         ctx,
         internal.audioStudies.workflows.generateAudioForQueueItem,
@@ -493,15 +526,17 @@ export const startWorkflowsForPendingItems = internalMutation({
       );
 
       started++;
-      countsByLocale[item.locale]++;
-
-      // Stop if we've reached max items
-      if (started >= args.maxItems) {
-        break;
-      }
     }
 
-    return { started, skipped };
+    logger.info(
+      `Started audio generation for ${started} locales of content ${topItem.contentRef.type}:${topItem.contentRef.id}`
+    );
+
+    return {
+      started,
+      skipped: 0,
+      contentRef: topItem.contentRef,
+    };
   },
 });
 
