@@ -22,7 +22,7 @@ export const getById = internalQuery({
     })
   ),
   handler: async (ctx, args) => {
-    const section = await ctx.db.get(args.id);
+    const section = await ctx.db.get("subjectSections", args.id);
     if (!section) {
       return null;
     }

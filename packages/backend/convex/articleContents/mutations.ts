@@ -39,7 +39,7 @@ export const upsertArticleContent = internalMutation({
         return { id: existing._id, action: "unchanged" as const };
       }
 
-      await ctx.db.patch(existing._id, {
+      await ctx.db.patch("articleContents", existing._id, {
         category: args.category,
         articleSlug: args.articleSlug,
         title: args.title,
@@ -97,7 +97,7 @@ export const syncArticleReferences = internalMutation({
       .collect();
 
     for (const ref of existing) {
-      await ctx.db.delete(ref._id);
+      await ctx.db.delete("articleReferences", ref._id);
     }
 
     for (const ref of args.references) {
@@ -142,7 +142,7 @@ export const linkContentAuthor = internalMutation({
         name: args.authorName,
         username,
       });
-      author = await ctx.db.get(authorId);
+      author = await ctx.db.get("authors", authorId);
     }
 
     if (!author) {
@@ -161,7 +161,9 @@ export const linkContentAuthor = internalMutation({
 
     if (existing) {
       if (existing.order !== args.order) {
-        await ctx.db.patch(existing._id, { order: args.order });
+        await ctx.db.patch("contentAuthors", existing._id, {
+          order: args.order,
+        });
       }
       return {
         authorId: author._id,
@@ -210,7 +212,7 @@ export const clearContentAuthors = internalMutation({
       .collect();
 
     for (const link of existing) {
-      await ctx.db.delete(link._id);
+      await ctx.db.delete("contentAuthors", link._id);
     }
 
     return { deleted: existing.length };
