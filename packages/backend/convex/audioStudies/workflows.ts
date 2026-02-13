@@ -1,4 +1,9 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import {
+  contentIdValidator,
+  contentTypeValidator,
+  localeValidator,
+} from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { workflow } from "@repo/backend/convex/workflow";
 import { v } from "convex/values";
@@ -53,6 +58,41 @@ export const generateAudio = workflow.define({
         retry: true,
       }
     );
+
+    return null;
+  },
+});
+
+/**
+ * End-to-end workflow for cron-based audio generation.
+ * Creates contentAudios record if needed, then calls generateAudio.
+ */
+export const generateAudioForContent = workflow.define({
+  args: {
+    contentId: contentIdValidator,
+    contentType: contentTypeValidator,
+    locale: localeValidator,
+  },
+  returns: v.null(),
+  handler: async (step, args) => {
+    const audioId = await step.runMutation(
+      internal.audioStudies.mutations.createOrGetAudioRecord,
+      {
+        contentId: args.contentId,
+        contentType: args.contentType,
+        locale: args.locale,
+      }
+    );
+
+    await step.runWorkflow(internal.audioStudies.workflows.generateAudio, {
+      contentAudioId: audioId,
+    });
+
+    await step.runMutation(internal.audioStudies.mutations.markQueueCompleted, {
+      contentId: args.contentId,
+      contentType: args.contentType,
+      locale: args.locale,
+    });
 
     return null;
   },

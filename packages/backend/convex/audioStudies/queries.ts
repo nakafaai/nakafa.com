@@ -1,14 +1,14 @@
 import { internalQuery } from "@repo/backend/convex/_generated/server";
-import {
-  contentIdValidator,
-  contentTypeValidator,
-} from "@repo/backend/convex/audioStudies/schema";
 import { fetchContentForAudio } from "@repo/backend/convex/audioStudies/utils";
 import {
   audioModelValidator,
   audioStatusValidator,
   voiceSettingsValidator,
 } from "@repo/backend/convex/lib/validators/audio";
+import {
+  contentIdValidator,
+  contentTypeValidator,
+} from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";

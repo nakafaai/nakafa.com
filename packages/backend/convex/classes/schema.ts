@@ -17,10 +17,22 @@ export type SchoolClassMemberRole = Infer<
 >;
 
 /**
- * School class teacher role validator
+ * School class teacher role validator (base type without optional wrapper)
+ */
+export const schoolClassTeacherRoleBaseValidator = literals(
+  "primary",
+  "co-teacher",
+  "assistant"
+);
+export type SchoolClassTeacherRole = Infer<
+  typeof schoolClassTeacherRoleBaseValidator
+>;
+
+/**
+ * School class teacher role validator (with optional wrapper for schema use)
  */
 export const schoolClassTeacherRoleValidator = v.optional(
-  literals("primary", "co-teacher", "assistant")
+  schoolClassTeacherRoleBaseValidator
 );
 
 /**
@@ -302,7 +314,6 @@ const tables = {
 
   schoolClassMembers: defineTable(schoolClassMemberValidator)
     .index("classId_userId", ["classId", "userId"])
-    .index("userId", ["userId"])
     .index("schoolId", ["schoolId"]),
 
   schoolClassInviteCodes: defineTable(schoolClassInviteCodeValidator)

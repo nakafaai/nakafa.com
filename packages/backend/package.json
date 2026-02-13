@@ -26,6 +26,7 @@
     "sync:prod:reset": "tsx scripts/sync-content.ts reset --prod"
   },
   "dependencies": {
+    "@convex-dev/aggregate": "^0.2.1",
     "@convex-dev/better-auth": "^0.10.10",
     "@convex-dev/migrations": "^0.3.1",
     "@convex-dev/resend": "^0.2.3",
@@ -33,7 +34,7 @@
     "@polar-sh/sdk": "^0.43.0",
     "@repo/ai": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.10",
-    "ai": "^6.0.84",
+    "ai": "^6.0.85",
     "better-auth": "1.4.9",
     "buffer": "^6.0.3",
     "convex": "^1.31.7",
@@ -48,10 +49,10 @@
     "@edge-runtime/vm": "^5.0.0",
     "@repo/contents": "workspace:*",
     "@repo/typescript-config": "workspace:*",
+    "@vitest/coverage-istanbul": "^4.0.18",
     "convex-test": "^0.0.41",
     "glob": "^13.0.3",
     "tsx": "^4.21.0",
-    "@vitest/coverage-istanbul": "^4.0.18",
     "vitest": "^4.0.18"
   }
 }

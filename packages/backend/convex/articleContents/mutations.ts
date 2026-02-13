@@ -151,10 +151,12 @@ export const linkContentAuthor = internalMutation({
 
     const existing = await ctx.db
       .query("contentAuthors")
-      .withIndex("contentId_contentType", (q) =>
-        q.eq("contentId", args.contentId).eq("contentType", args.contentType)
+      .withIndex("contentId_contentType_authorId", (q) =>
+        q
+          .eq("contentId", args.contentId)
+          .eq("contentType", args.contentType)
+          .eq("authorId", author._id)
       )
-      .filter((q) => q.eq(q.field("authorId"), author._id))
       .first();
 
     if (existing) {
@@ -202,7 +204,7 @@ export const clearContentAuthors = internalMutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("contentAuthors")
-      .withIndex("contentId_contentType", (q) =>
+      .withIndex("contentId_contentType_authorId", (q) =>
         q.eq("contentId", args.contentId).eq("contentType", args.contentType)
       )
       .collect();

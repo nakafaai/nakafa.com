@@ -4,6 +4,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
 import {
   articleCategoryValidator,
+  type ContentType,
   exercisesCategoryValidator,
   exercisesMaterialValidator,
   exercisesTypeValidator,
@@ -14,7 +15,6 @@ import {
 } from "@repo/backend/convex/lib/validators/contents";
 import { v } from "convex/values";
 
-type ContentType = "article" | "subject" | "exercise";
 type AuthorCache = Map<string, Id<"authors">>;
 
 function slugifyName(name: string): string {
@@ -116,7 +116,7 @@ async function syncContentAuthorsWithCache(
 ): Promise<number> {
   const existingLinks = await ctx.db
     .query("contentAuthors")
-    .withIndex("contentId_contentType", (q) =>
+    .withIndex("contentId_contentType_authorId", (q) =>
       q.eq("contentId", contentId).eq("contentType", contentType)
     )
     .collect();
@@ -794,7 +794,7 @@ export const deleteStaleArticles = internalMutation({
 
       const contentAuthors = await ctx.db
         .query("contentAuthors")
-        .withIndex("contentId_contentType", (q) =>
+        .withIndex("contentId_contentType_authorId", (q) =>
           q.eq("contentId", articleId).eq("contentType", "article")
         )
         .collect();
@@ -846,7 +846,7 @@ export const deleteStaleSubjectTopics = internalMutation({
       for (const section of sections) {
         const contentAuthors = await ctx.db
           .query("contentAuthors")
-          .withIndex("contentId_contentType", (q) =>
+          .withIndex("contentId_contentType_authorId", (q) =>
             q.eq("contentId", section._id).eq("contentType", "subject")
           )
           .collect();
@@ -886,7 +886,7 @@ export const deleteStaleSubjectSections = internalMutation({
 
       const contentAuthors = await ctx.db
         .query("contentAuthors")
-        .withIndex("contentId_contentType", (q) =>
+        .withIndex("contentId_contentType_authorId", (q) =>
           q.eq("contentId", sectionId).eq("contentType", "subject")
         )
         .collect();
@@ -929,7 +929,7 @@ export const deleteStaleExerciseSets = internalMutation({
       for (const question of questions) {
         const contentAuthors = await ctx.db
           .query("contentAuthors")
-          .withIndex("contentId_contentType", (q) =>
+          .withIndex("contentId_contentType_authorId", (q) =>
             q.eq("contentId", question._id).eq("contentType", "exercise")
           )
           .collect();
@@ -980,7 +980,7 @@ export const deleteStaleExerciseQuestions = internalMutation({
 
       const contentAuthors = await ctx.db
         .query("contentAuthors")
-        .withIndex("contentId_contentType", (q) =>
+        .withIndex("contentId_contentType_authorId", (q) =>
           q.eq("contentId", questionId).eq("contentType", "exercise")
         )
         .collect();

@@ -156,7 +156,7 @@ export const joinSchool = mutation({
     // Check if user is already a member
     const existingMember = await ctx.db
       .query("schoolMembers")
-      .withIndex("schoolId_userId", (q) =>
+      .withIndex("schoolId_userId_status", (q) =>
         q.eq("schoolId", school._id).eq("userId", userId)
       )
       .first();

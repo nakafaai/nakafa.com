@@ -41,7 +41,11 @@ const tables = {
     /** Author ordering: 0 = primary, 1 = secondary, etc. */
     order: v.number(),
   })
-    .index("contentId_contentType", ["contentId", "contentType"])
+    .index("contentId_contentType_authorId", [
+      "contentId",
+      "contentType",
+      "authorId",
+    ])
     .index("authorId", ["authorId"]),
 };
 

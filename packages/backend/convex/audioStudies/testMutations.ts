@@ -6,7 +6,7 @@ import { internalMutation } from "@repo/backend/convex/_generated/server";
 import {
   contentIdValidator,
   contentTypeValidator,
-} from "@repo/backend/convex/audioStudies/schema";
+} from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { workflow } from "@repo/backend/convex/workflow";
 import { v } from "convex/values";

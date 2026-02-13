@@ -3,42 +3,22 @@ import {
   audioStatusValidator,
   voiceSettingsValidator,
 } from "@repo/backend/convex/lib/validators/audio";
-import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
+import {
+  contentIdValidator,
+  contentTypeValidator,
+  localeValidator,
+} from "@repo/backend/convex/lib/validators/contents";
 import { defineTable } from "convex/server";
-import type { Infer } from "convex/values";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
-/**
- * Validator for content ID - polymorphic reference to article or subject section.
- */
-export const contentIdValidator = v.union(
-  v.id("articleContents"),
-  v.id("subjectSections")
-);
-
-/**
- * Validator for content type discriminator.
- */
-export const contentTypeValidator = literals("article", "subject");
-
-/**
- * Type for content ID.
- */
-export type ContentId = Infer<typeof contentIdValidator>;
-
-/**
- * Type for content type.
- */
-export type ContentType = Infer<typeof contentTypeValidator>;
-
 const tables = {
   /**
-   * Audio content storage for articles and subject sections.
+   * Audio content storage for articles, subject sections, and exercises.
    * Shared cache - one audio file per content+voice combination.
    */
   contentAudios: defineTable({
-    /** Polymorphic reference to article or subject section */
+    /** Polymorphic reference to content */
     contentId: contentIdValidator,
     /** Discriminator for content type */
     contentType: contentTypeValidator,
@@ -71,6 +51,7 @@ const tables = {
   })
     .index("content_voice", ["contentId", "contentType", "voiceId"])
     .index("content", ["contentId", "contentType"])
+    .index("content_locale", ["contentId", "contentType", "locale"])
     .index("status", ["status"]),
 
   /**
@@ -90,6 +71,29 @@ const tables = {
     .index("user", ["userId"])
     .index("user_content", ["userId", "contentId", "contentType"])
     .index("contentAudio", ["contentAudioId"]),
+
+  /**
+   * Audio generation queue for cron-based prioritized processing.
+   */
+  audioGenerationQueue: defineTable({
+    contentId: contentIdValidator,
+    contentType: contentTypeValidator,
+    locale: localeValidator,
+    priorityScore: v.number(),
+    status: literals("pending", "processing", "completed", "failed"),
+    requestedAt: v.number(),
+    processingStartedAt: v.optional(v.number()),
+    completedAt: v.optional(v.number()),
+    retryCount: v.number(),
+    maxRetries: v.number(),
+    errorMessage: v.optional(v.string()),
+    lastErrorAt: v.optional(v.number()),
+    updatedAt: v.number(),
+  })
+    .index("status_priority", ["status", "priorityScore"])
+    .index("content", ["contentId", "contentType", "locale"])
+    .index("status_completedAt", ["status", "completedAt"])
+    .index("status_updatedAt", ["status", "updatedAt"]),
 };
 
 export default tables;

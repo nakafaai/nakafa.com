@@ -20,7 +20,7 @@ const userDataValidator = v.object({
   _id: vv.id("users"),
   name: v.string(),
   email: v.string(),
-  image: v.optional(v.union(v.string(), v.null())),
+  image: v.optional(nullable(v.string())),
 });
 
 const commentWithUserValidator = v.object({
