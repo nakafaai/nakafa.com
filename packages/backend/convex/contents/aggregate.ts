@@ -9,8 +9,13 @@ import type { Locale } from "@repo/backend/convex/lib/validators/contents";
  * Design:
  * - Table: articleContentViews (specific ID type, no union!)
  * - Namespace: Locale type ("en" | "id") for type-safe locale handling
- * - Key: Id<"articleContents"> (simple ID, zero assertions!)
+ * - Key: [viewCount, contentId] - composite key for sorting by popularity
  * - Sum: viewCount (total views for priority calculation)
+ *
+ * Sort Strategy:
+ * - Primary sort: viewCount (descending = most popular first)
+ * - Tie-breaker: contentId (ensures uniqueness for composite key)
+ * - This enables paginate with order:"desc" to return most viewed items
  *
  * Benefits:
  * - Type-safe: Locale type prevents invalid namespace values
@@ -20,12 +25,12 @@ import type { Locale } from "@repo/backend/convex/lib/validators/contents";
  */
 export const articlePopularity = new TableAggregate<{
   Namespace: Locale;
-  Key: Id<"articleContents">;
+  Key: [number, Id<"articleContents">];
   DataModel: DataModel;
   TableName: "articleContentViews";
 }>(components.articlePopularity, {
   namespace: (doc) => doc.locale,
-  sortKey: (doc) => doc.contentId,
+  sortKey: (doc) => [doc.viewCount, doc.contentId],
   sumValue: (doc) => doc.viewCount,
 });
 
@@ -35,8 +40,13 @@ export const articlePopularity = new TableAggregate<{
  * Design:
  * - Table: subjectContentViews (specific ID type, no union!)
  * - Namespace: Locale type ("en" | "id") for type-safe locale handling
- * - Key: Id<"subjectSections"> (simple ID, zero assertions!)
+ * - Key: [viewCount, contentId] - composite key for sorting by popularity
  * - Sum: viewCount (total views for priority calculation)
+ *
+ * Sort Strategy:
+ * - Primary sort: viewCount (descending = most popular first)
+ * - Tie-breaker: contentId (ensures uniqueness for composite key)
+ * - This enables paginate with order:"desc" to return most viewed items
  *
  * Benefits:
  * - Type-safe: Locale type prevents invalid namespace values
@@ -46,12 +56,12 @@ export const articlePopularity = new TableAggregate<{
  */
 export const subjectPopularity = new TableAggregate<{
   Namespace: Locale;
-  Key: Id<"subjectSections">;
+  Key: [number, Id<"subjectSections">];
   DataModel: DataModel;
   TableName: "subjectContentViews";
 }>(components.subjectPopularity, {
   namespace: (doc) => doc.locale,
-  sortKey: (doc) => doc.contentId,
+  sortKey: (doc) => [doc.viewCount, doc.contentId],
   sumValue: (doc) => doc.viewCount,
 });
 
@@ -61,8 +71,13 @@ export const subjectPopularity = new TableAggregate<{
  * Design:
  * - Table: exerciseContentViews (specific ID type, no union!)
  * - Namespace: Locale type ("en" | "id") for type-safe locale handling
- * - Key: Id<"exerciseSets"> (simple ID, zero assertions!)
+ * - Key: [viewCount, contentId] - composite key for sorting by popularity
  * - Sum: viewCount (total views for popularity calculation)
+ *
+ * Sort Strategy:
+ * - Primary sort: viewCount (descending = most popular first)
+ * - Tie-breaker: contentId (ensures uniqueness for composite key)
+ * - This enables paginate with order:"desc" to return most viewed items
  *
  * Purpose:
  * - Enables trending exercises feature (frontend can query later)
@@ -74,11 +89,11 @@ export const subjectPopularity = new TableAggregate<{
  */
 export const exercisePopularity = new TableAggregate<{
   Namespace: Locale;
-  Key: Id<"exerciseSets">;
+  Key: [number, Id<"exerciseSets">];
   DataModel: DataModel;
   TableName: "exerciseContentViews";
 }>(components.exercisePopularity, {
   namespace: (doc) => doc.locale,
-  sortKey: (doc) => doc.contentId,
+  sortKey: (doc) => [doc.viewCount, doc.contentId],
   sumValue: (doc) => doc.viewCount,
 });

@@ -63,15 +63,16 @@ export const populateAudioQueue = internalMutation({
       ]);
 
       // Build unified list with inferred discriminated union types
+      // Extract contentId from composite key [viewCount, contentId]
       const items = [
         ...popularArticles.page.map((item) => ({
           type: "article" as const,
-          id: item.key,
+          id: item.key[1], // Extract contentId from [viewCount, contentId]
           sumValue: item.sumValue,
         })),
         ...popularSubjects.page.map((item) => ({
           type: "subject" as const,
-          id: item.key,
+          id: item.key[1], // Extract contentId from [viewCount, contentId]
           sumValue: item.sumValue,
         })),
       ];
