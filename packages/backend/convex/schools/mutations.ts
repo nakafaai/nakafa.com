@@ -1,4 +1,4 @@
-import { mutation } from "@repo/backend/convex/_generated/server";
+import { mutation } from "@repo/backend/convex/functions";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { generateUniqueSlug } from "@repo/backend/convex/schools/utils";

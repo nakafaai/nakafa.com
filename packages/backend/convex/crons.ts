@@ -10,9 +10,9 @@ const crons = cronJobs();
  * Note: This runs in ALL environments to maintain statistics for trending features
  */
 crons.interval(
-  "aggregate content popularity",
+  "populate audio generation queue",
   { minutes: 30 },
-  internal.contents.mutations.aggregatePopularity,
+  internal.contents.mutations.populateAudioQueue,
   {}
 );
 

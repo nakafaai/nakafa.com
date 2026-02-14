@@ -1,13 +1,13 @@
 import { ACTIVE_MODEL } from "@repo/ai/config/elevenlabs";
 import { DEFAULT_VOICE_KEY, getVoiceConfig } from "@repo/ai/config/voices";
 import { internal } from "@repo/backend/convex/_generated/api";
-import { internalMutation } from "@repo/backend/convex/_generated/server";
 import {
   CLEANUP_CONFIG,
   isAudioGenerationEnabled,
   MAX_CONTENT_PER_DAY,
 } from "@repo/backend/convex/audioStudies/constants";
 import { getResetAudioFields } from "@repo/backend/convex/audioStudies/utils";
+import { internalMutation } from "@repo/backend/convex/functions";
 import { audioContentRefValidator } from "@repo/backend/convex/lib/validators/audio";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";

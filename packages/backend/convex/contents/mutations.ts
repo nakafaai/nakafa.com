@@ -1,5 +1,3 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { internalMutation } from "@repo/backend/convex/_generated/server";
 import {
   MIN_VIEW_THRESHOLD,
   RETRY_CONFIG,
@@ -9,25 +7,29 @@ import {
   articlePopularity,
   subjectPopularity,
 } from "@repo/backend/convex/contents/aggregate";
-import type { AudioContentRef } from "@repo/backend/convex/lib/validators/audio";
+import { internalMutation } from "@repo/backend/convex/functions";
 import { v } from "convex/values";
 
 /**
- * Calculates priority scores from aggregate data and updates queue.
+ * Populates the audio generation queue with popular content.
  * Runs every 30 minutes via cron.
  *
+ * Purpose:
+ * - Reads popularity aggregates (articles and subjects only)
+ * - Queues top content for audio generation
+ * - Exercises are NOT queued (they don't have audio)
+ *
  * Type Safety:
- * - Uses two separate aggregates with simple ID keys (no tuples)
- * - TypeScript fully types the IDs without assertions
- * - Processes articles and subjects separately then merges
+ * - Uses discriminated union for type-safe content references
+ * - TypeScript infers exact ID types via as const pattern
+ * - No explicit interfaces or type annotations needed
  *
  * Scalability:
- * - Independent aggregates mean no cross-type contention
- * - Parallel query execution
- * - O(log n) lookups for each aggregate
- * - Separate tables enable maximum write throughput
+ * - Parallel query execution for all content types
+ * - O(log n) lookups via aggregate indexes
+ * - Batched processing (top 100 per locale)
  */
-export const aggregatePopularity = internalMutation({
+export const populateAudioQueue = internalMutation({
   args: {},
   returns: v.object({
     processed: v.number(),
@@ -38,7 +40,7 @@ export const aggregatePopularity = internalMutation({
     let totalQueued = 0;
 
     for (const locale of SUPPORTED_LOCALES) {
-      // Query both aggregates in parallel for this locale
+      // Query article and subject aggregates (exercises excluded - no audio)
       const [articleCount, subjectCount] = await Promise.all([
         articlePopularity.count(ctx, { namespace: locale }),
         subjectPopularity.count(ctx, { namespace: locale }),
@@ -46,7 +48,7 @@ export const aggregatePopularity = internalMutation({
 
       totalProcessed += articleCount + subjectCount;
 
-      // Get top content from both aggregates
+      // Get top content from articles and subjects
       const [popularArticles, popularSubjects] = await Promise.all([
         articlePopularity.paginate(ctx, {
           namespace: locale,
@@ -60,59 +62,36 @@ export const aggregatePopularity = internalMutation({
         }),
       ]);
 
-      // Build a unified list of items to process with proper types
-      // Zero assertions - TypeScript knows exact ID types from separate tables
-      interface ArticleItem {
-        type: "article";
-        id: Id<"articleContents">;
-        sumValue: number;
-      }
-      interface SubjectItem {
-        type: "subject";
-        id: Id<"subjectSections">;
-        sumValue: number;
-      }
-      type QueueItem = ArticleItem | SubjectItem;
-
-      const items: QueueItem[] = [
-        ...popularArticles.page.map(
-          (item): ArticleItem => ({
-            type: "article",
-            id: item.key, // TypeScript knows: Id<"articleContents">
-            sumValue: item.sumValue,
-          })
-        ),
-        ...popularSubjects.page.map(
-          (item): SubjectItem => ({
-            type: "subject",
-            id: item.key, // TypeScript knows: Id<"subjectSections">
-            sumValue: item.sumValue,
-          })
-        ),
+      // Build unified list with inferred discriminated union types
+      const items = [
+        ...popularArticles.page.map((item) => ({
+          type: "article" as const,
+          id: item.key,
+          sumValue: item.sumValue,
+        })),
+        ...popularSubjects.page.map((item) => ({
+          type: "subject" as const,
+          id: item.key,
+          sumValue: item.sumValue,
+        })),
       ];
 
-      // Sort by popularity (descending) to get cross-type popularity
+      // Sort by popularity (descending)
       items.sort((a, b) => b.sumValue - a.sumValue);
 
-      // Process top 100 items (already sorted by popularity)
+      // Process top 100 items
       for (const item of items.slice(0, 100)) {
-        // Minimum view threshold check
         if (item.sumValue < MIN_VIEW_THRESHOLD) {
           continue;
         }
 
-        // Build discriminated contentRef - TypeScript knows exact type
-        // Zero assertions needed!
-        let contentRef: AudioContentRef;
-        if (item.type === "article") {
-          contentRef = { type: "article", id: item.id };
-        } else {
-          contentRef = { type: "subject", id: item.id };
-        }
+        // Build discriminated contentRef
+        const contentRef =
+          item.type === "article"
+            ? { type: "article" as const, id: item.id }
+            : { type: "subject" as const, id: item.id };
 
-        // Check if already queued or being processed
-        // Only skip if status is "pending" or "processing"
-        // If "completed" or "failed", re-queue for regeneration (content may have updated)
+        // Check if already queued
         const existing = await ctx.db
           .query("audioGenerationQueue")
           .withIndex("contentRef_locale", (q) =>
@@ -124,26 +103,20 @@ export const aggregatePopularity = internalMutation({
           .first();
 
         if (existing) {
-          // Skip only if actively queued or processing
-          // Completed/failed entries should be re-queued for updated content
           if (
             existing.status === "pending" ||
             existing.status === "processing"
           ) {
             continue;
           }
-          // Delete old completed/failed entry and re-queue with new priority
           await ctx.db.delete("audioGenerationQueue", existing._id);
         }
 
-        // Calculate priority score
-        const priorityScore = item.sumValue * 10;
-
-        // Queue with discriminated contentRef
+        // Queue for audio generation
         await ctx.db.insert("audioGenerationQueue", {
           contentRef,
           locale,
-          priorityScore,
+          priorityScore: item.sumValue * 10,
           status: "pending",
           requestedAt: Date.now(),
           retryCount: 0,
