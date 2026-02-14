@@ -109,13 +109,18 @@ export const populateAudioQueue = internalMutation({
           .first();
 
         if (existing) {
+          // Skip if already in active or terminal state
+          // Failed items preserve their retryCount - don't reset by re-creating
+          // This prevents infinite retry loops on permanently failing content
           if (
             existing.status === "pending" ||
-            existing.status === "processing"
+            existing.status === "processing" ||
+            existing.status === "failed"
           ) {
             continue;
           }
 
+          // Only handle "completed" items below
           // Optimization: Check if content already has completed audio with matching hash
           // Prevents unnecessary workflow executions (Convex best practice: avoid unnecessary work)
           // Fetches current content hash and existing audio record in parallel for efficiency
@@ -144,6 +149,7 @@ export const populateAudioQueue = internalMutation({
             }
           }
 
+          // Only delete completed items that need re-processing (hash mismatch or missing audio)
           await ctx.db.delete("audioGenerationQueue", existing._id);
         }
 
