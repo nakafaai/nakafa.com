@@ -49,7 +49,8 @@ export function useRecordContentView({
   const markAsViewed = useContentViews((s) => s.markAsViewed);
   const isViewed = useContentViews((s) => s.isViewed);
   const startView = useContentViews((s) => s.startView);
-  const endView = useContentViews((s) => s.endView);
+  const getDuration = useContentViews((s) => s.getDuration);
+  const clearView = useContentViews((s) => s.clearView);
 
   // Track document visibility (pause when tab hidden)
   const documentState = useDocumentVisibility();
@@ -71,7 +72,8 @@ export function useRecordContentView({
         return;
       }
 
-      const duration = endView(slug);
+      // Calculate duration without deleting - preserves data on mutation failure
+      const duration = getDuration(slug);
 
       try {
         await recordView({
@@ -81,8 +83,11 @@ export function useRecordContentView({
           durationSeconds: duration ?? undefined,
         });
         markAsViewed(slug);
+        // Only clear after successful mutation
+        clearView(slug);
       } catch {
         // Silently fail - view tracking is non-critical
+        // Duration data preserved in store for potential retry
       }
     },
     delay,
@@ -96,12 +101,12 @@ export function useRecordContentView({
     }
 
     return () => {
-      // Record duration on unmount if not yet recorded
+      // Clear pending view on unmount if not yet recorded
       if (!isViewed(slug)) {
-        endView(slug);
+        clearView(slug);
       }
     };
-  }, [slug, isViewed, startView, endView]);
+  }, [slug, isViewed, startView, clearView]);
 
   // Control timer based on visibility and idle state
   useEffect(() => {

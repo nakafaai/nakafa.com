@@ -10,7 +10,8 @@ interface Actions {
   markAsViewed: (slug: string) => void;
   isViewed: (slug: string) => boolean;
   startView: (slug: string) => void;
-  endView: (slug: string) => number | null;
+  getDuration: (slug: string) => number | null;
+  clearView: (slug: string) => void;
 }
 
 export type ContentViewsStore = State & Actions;
@@ -38,17 +39,25 @@ export const createContentViewsStore = () =>
           state.pendingViews.set(slug, Date.now());
         }),
 
-      endView: (slug) => {
+      /**
+       * Calculate duration without deleting the pending view.
+       * Use this to get duration before attempting mutation.
+       */
+      getDuration: (slug) => {
         const startTime = get().pendingViews.get(slug);
         if (!startTime) {
           return null;
         }
+        return Math.floor((Date.now() - startTime) / 1000);
+      },
 
-        const duration = Math.floor((Date.now() - startTime) / 1000);
+      /**
+       * Clear the pending view after successful mutation.
+       * Separated from getDuration to handle mutation failures gracefully.
+       */
+      clearView: (slug) =>
         set((state) => {
           state.pendingViews.delete(slug);
-        });
-        return duration;
-      },
+        }),
     }))
   );

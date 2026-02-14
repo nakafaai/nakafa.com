@@ -214,6 +214,13 @@ export const recordContentView = mutation({
     const user = await safeGetAppUser(ctx);
     const userId = user?.appUser._id;
 
+    // Validate and clamp durationSeconds to non-negative integer
+    // Handles clock skew (Date.now() can go backward) and malicious negative values
+    const durationSeconds =
+      args.durationSeconds !== undefined
+        ? Math.max(0, Math.floor(args.durationSeconds))
+        : undefined;
+
     const result = await recordContentViewBySlug(
       ctx,
       args.contentRef.type,
@@ -222,7 +229,7 @@ export const recordContentView = mutation({
       {
         deviceId: args.deviceId,
         userId,
-        durationSeconds: args.durationSeconds,
+        durationSeconds,
       }
     );
     return result;
