@@ -110,6 +110,15 @@ triggers.register("articleContentViews", articlePopularity.trigger());
 triggers.register("subjectContentViews", subjectPopularity.trigger());
 triggers.register("exerciseContentViews", exercisePopularity.trigger());
 
+// Audio studies tables - no-op triggers required because mutations use wrapped ctx.db
+triggers.register("contentAudios", async () => {
+  // No-op: modified in audioStudies/mutations.ts via wrapped internalMutation
+});
+
+triggers.register("audioGenerationQueue", async () => {
+  // No-op: modified in audioStudies/mutations.ts and contents/mutations.ts via wrapped internalMutation
+});
+
 triggers.register("notificationCounts", async () => {
   // No-op: updated atomically when notifications are created/read
 });
