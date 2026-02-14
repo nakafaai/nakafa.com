@@ -686,5 +686,149 @@ But seriously [whispers], quantum mechanics is fascinating.
       expect(combined).toContain("Second paragraph");
       expect(combined).toContain("Third paragraph");
     });
+
+    it("should never push whitespace-only chunks that trim to empty", () => {
+      // CRITICAL REGRESSION TEST - Devin bug fix verification
+      // Bug path: currentChunk contains only whitespace ("   \n\n   ")
+      // After trim(), it becomes "" which gets pushed as empty chunk
+      // This can happen when processSentences returns accumulated whitespace
+      const customConfig = { maxRequestChars: 30, safetyMargin: 5 };
+
+      // This specific input pattern triggers the whitespace accumulation
+      // where currentChunk ends up with only paragraph separators
+      const script = "A.\n\nB.\n\nC.";
+
+      const result = chunkScript(script, customConfig);
+
+      // CRITICAL: No chunks should be empty or whitespace-only after trim
+      for (const chunk of result) {
+        const trimmed = chunk.text.trim();
+        expect(trimmed.length).toBeGreaterThan(0);
+        expect(trimmed).not.toBe("");
+      }
+
+      // All content preserved
+      const combined = result.map((c) => c.text).join("");
+      expect(combined).toContain("A.");
+      expect(combined).toContain("B.");
+      expect(combined).toContain("C.");
+    });
+
+    it("should filter out empty chunks at final push", () => {
+      // Direct test for line 217: chunks.push(currentChunk.trim())
+      // If currentChunk is "", trim() returns "" which gets pushed
+      // This test ensures we have a guard against pushing empty strings
+      const customConfig = { maxRequestChars: 50, safetyMargin: 5 };
+
+      // Input designed to potentially leave currentChunk empty
+      // after processParagraphs processes all paragraphs
+      const paragraphs = ["X", "Y", "Z"].map((char) => char.repeat(45));
+      const script = paragraphs.join("\n\n");
+
+      const result = chunkScript(script, customConfig);
+
+      // No empty chunks
+      const nonEmptyChunks = result.filter((c) => c.text.trim().length > 0);
+      expect(nonEmptyChunks.length).toBe(result.length);
+
+      // Content preserved
+      const combined = result.map((c) => c.text).join("");
+      expect(combined).toContain("X".repeat(10));
+      expect(combined).toContain("Y".repeat(10));
+      expect(combined).toContain("Z".repeat(10));
+    });
+
+    it("should cover false branch when finalChunk is empty", () => {
+      // Forces the false branch at line 218 (if condition fails)
+      // This requires processParagraphs to return an empty string
+      // which happens when wouldExceedLimit pushes the last accumulated content
+
+      const customConfig = { maxRequestChars: 50, safetyMargin: 5 };
+
+      // Create 2 paragraphs where:
+      // - Para 1 accumulates in currentChunk (length < maxChars)
+      // - Para 2 triggers wouldExceedLimit, pushing para 1
+      // - Para 2 is exactly maxChars, gets added to empty currentChunk
+      // - But wait, that wouldn't leave it empty...
+      //
+      // Alternative: Para 1 fills chunk, Para 2 triggers push of Para 1
+      // Then Para 2 is also pushed via wouldExceedLimit check
+      // Leaving currentChunk empty at end
+
+      // Actually, the issue is: after pushing due to wouldExceedLimit,
+      // the current paragraph always gets added (either to currentChunk or via processSentences)
+      // So currentChunk should never be empty at the end...
+      //
+      // UNLESS: The paragraph itself is empty or whitespace!
+      const para1 = "A".repeat(40); // Under maxChars, accumulates
+      const para2 = "   \n\n   "; // Whitespace-only paragraph!
+      const script = `${para1}\n\n${para2}`;
+
+      const result = chunkScript(script, customConfig);
+
+      // Should filter out the whitespace-only final chunk
+      expect(result.length).toBeGreaterThanOrEqual(1);
+
+      // All chunks should have actual content
+      for (const chunk of result) {
+        expect(chunk.text.trim().length).toBeGreaterThan(0);
+      }
+
+      // Para 1 content preserved
+      const combined = result.map((c) => c.text).join("");
+      expect(combined).toContain("A".repeat(10));
+    });
+
+    it("should never push empty chunks when all content is processed in paragraphs", () => {
+      // Regression test for: chunkScript can push empty string chunks
+      // When processParagraphs processes all content via processSentences,
+      // currentChunk can be empty but still gets pushed to chunks array
+      const customConfig = { maxRequestChars: 50, safetyMargin: 5 };
+
+      // Scenario: Multiple paragraphs where each paragraph exceeds maxChars
+      // and processSentences pushes all sentences, leaving currentChunk empty
+      const para1 = "X".repeat(42);
+      const para2 = "Y".repeat(42);
+      const script = `${para1}\n\n${para2}`;
+
+      const result = chunkScript(script, customConfig);
+
+      // CRITICAL: No empty chunks allowed - 100% coverage requirement
+      for (const chunk of result) {
+        expect(chunk.text).not.toBe("");
+        expect(chunk.text.trim().length).toBeGreaterThan(0);
+      }
+
+      // All content must still be preserved
+      const combined = result.map((c) => c.text).join("");
+      expect(combined).toContain("X".repeat(10));
+      expect(combined).toContain("Y".repeat(10));
+    });
+
+    it("should handle edge case where last paragraph pushes all content via sentences", () => {
+      // Specific test for the bug path: last paragraph exceeds maxChars,
+      // processSentences pushes all sentences to chunks, returns ""
+      const customConfig = { maxRequestChars: 45, safetyMargin: 5 };
+
+      // Create paragraphs that trigger the exact bug scenario
+      // First paragraph normal, second paragraph long with sentences that get pushed
+      const para1 = "Short.";
+      // Second paragraph: long text with sentences that will be pushed
+      // Must exceed maxChars (40) to trigger processSentences
+      const para2 = "A. ".repeat(20); // 60 chars, multiple short sentences
+      const script = `${para1}\n\n${para2}`;
+
+      const result = chunkScript(script, customConfig);
+
+      // Verify no empty chunks
+      for (const chunk of result) {
+        expect(chunk.text.trim().length).toBeGreaterThan(0);
+      }
+
+      // Content preserved
+      const combined = result.map((c) => c.text).join("");
+      expect(combined).toContain("Short");
+      expect(combined).toContain("A.");
+    });
   });
 });

@@ -211,10 +211,13 @@ export function chunkScript(
 
   const currentChunk = processParagraphs(paragraphs, maxTextLength, chunks);
 
-  // currentChunk always has content here because:
-  // 1. We passed the early return (script.length > maxTextLength)
-  // 2. processParagraphs always accumulates at least some text
-  chunks.push(currentChunk.trim());
+  // Defensive guard: Only push if there's actual content after trimming
+  // This prevents empty chunks when processParagraphs/processSentences
+  // push all content to chunks array during processing (Devin bug fix)
+  const finalChunk = currentChunk.trim();
+  if (finalChunk.length > 0) {
+    chunks.push(finalChunk);
+  }
 
   return chunks.map((text, index) => ({
     text,
