@@ -1,8 +1,14 @@
 "use client";
 
-import { useDocumentVisibility, useIdle, useTimeout } from "@mantine/hooks";
+import {
+  useDocumentVisibility,
+  useIdle,
+  useLocalStorage,
+  useTimeout,
+} from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import { generateNanoId } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
 import { useEffect } from "react";
 import { useContentViews } from "@/lib/context/use-content-views";
@@ -15,20 +21,6 @@ interface UseRecordContentViewOptions {
   idleTimeout?: number;
 }
 
-function getDeviceId(): string {
-  if (typeof window === "undefined") {
-    return "server";
-  }
-
-  const key = "nakafa-device-id";
-  let id = localStorage.getItem(key);
-  if (!id) {
-    id = `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
-    localStorage.setItem(key, id);
-  }
-  return id;
-}
-
 /**
  * Records content views for popularity tracking with smart engagement detection.
  *
@@ -36,6 +28,7 @@ function getDeviceId(): string {
  * - useTimeout: Delays recording by specified duration (default 3s engagement)
  * - useIdle: Pauses tracking when user is inactive
  * - useDocumentVisibility: Pauses when tab is hidden
+ * - useLocalStorage: Syncs device ID across browser tabs
  * - Deduplication: Prevents duplicate views in same session
  *
  * @param contentType - Type of content (article, subject, exercise)
@@ -65,6 +58,12 @@ export function useRecordContentView({
   // Track user idle state (pause when inactive)
   const isIdle = useIdle(idleTimeout);
 
+  // Device ID with cross-tab synchronization via Mantine useLocalStorage
+  const [deviceId] = useLocalStorage({
+    key: "nakafa-device-id",
+    defaultValue: `${Date.now()}-${generateNanoId(9)}`,
+  });
+
   // Setup timer for delayed recording
   const { start, clear } = useTimeout(
     async () => {
@@ -78,7 +77,7 @@ export function useRecordContentView({
         await recordView({
           contentRef: { type: contentType, slug },
           locale,
-          deviceId: getDeviceId(),
+          deviceId,
           durationSeconds: duration ?? undefined,
         });
         markAsViewed(slug);
