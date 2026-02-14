@@ -207,6 +207,7 @@ export const recordContentView = mutation({
   returns: v.object({
     success: v.boolean(),
     isNewView: v.boolean(),
+    rateLimited: v.optional(v.boolean()),
   }),
   handler: async (ctx, args) => {
     // Get authenticated user server-side

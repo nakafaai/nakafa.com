@@ -4,6 +4,13 @@ import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { ConvexError } from "convex/values";
 
 /**
+ * Rate limiting window in milliseconds.
+ * Prevents view count spam by limiting views per device/user per content.
+ * Current: 1 minute between view increments.
+ */
+const RATE_LIMIT_MS = 60_000;
+
+/**
  * Common arguments for recording a content view.
  */
 interface RecordViewArgs {
@@ -20,6 +27,7 @@ interface RecordViewArgs {
 interface RecordViewResult {
   success: boolean;
   isNewView: boolean;
+  rateLimited?: boolean;
 }
 
 /**
@@ -52,8 +60,15 @@ async function recordArticleView(
         .first();
 
   if (existingView) {
+    // Rate limiting: Check if last view was within the rate limit window
+    const timeSinceLastView = now - existingView.lastViewedAt;
+    if (timeSinceLastView < RATE_LIMIT_MS) {
+      return { success: false, isNewView: false, rateLimited: true };
+    }
+
     await ctx.db.patch(existingView._id, {
       viewCount: existingView.viewCount + 1,
+      lastViewedAt: now,
       totalDurationSeconds:
         existingView.totalDurationSeconds + (args.durationSeconds ?? 0),
     });
@@ -67,6 +82,7 @@ async function recordArticleView(
     deviceId: args.deviceId,
     userId: args.userId,
     firstViewedAt: now,
+    lastViewedAt: now,
     viewCount: 1,
     totalDurationSeconds: args.durationSeconds ?? 0,
     isIncognito: !args.userId,
@@ -105,8 +121,15 @@ async function recordSubjectView(
         .first();
 
   if (existingView) {
+    // Rate limiting: Check if last view was within the rate limit window
+    const timeSinceLastView = now - existingView.lastViewedAt;
+    if (timeSinceLastView < RATE_LIMIT_MS) {
+      return { success: false, isNewView: false, rateLimited: true };
+    }
+
     await ctx.db.patch(existingView._id, {
       viewCount: existingView.viewCount + 1,
+      lastViewedAt: now,
       totalDurationSeconds:
         existingView.totalDurationSeconds + (args.durationSeconds ?? 0),
     });
@@ -120,6 +143,7 @@ async function recordSubjectView(
     deviceId: args.deviceId,
     userId: args.userId,
     firstViewedAt: now,
+    lastViewedAt: now,
     viewCount: 1,
     totalDurationSeconds: args.durationSeconds ?? 0,
     isIncognito: !args.userId,
@@ -158,8 +182,15 @@ async function recordExerciseView(
         .first();
 
   if (existingView) {
+    // Rate limiting: Check if last view was within the rate limit window
+    const timeSinceLastView = now - existingView.lastViewedAt;
+    if (timeSinceLastView < RATE_LIMIT_MS) {
+      return { success: false, isNewView: false, rateLimited: true };
+    }
+
     await ctx.db.patch(existingView._id, {
       viewCount: existingView.viewCount + 1,
+      lastViewedAt: now,
       totalDurationSeconds:
         existingView.totalDurationSeconds + (args.durationSeconds ?? 0),
     });
@@ -173,6 +204,7 @@ async function recordExerciseView(
     deviceId: args.deviceId,
     userId: args.userId,
     firstViewedAt: now,
+    lastViewedAt: now,
     viewCount: 1,
     totalDurationSeconds: args.durationSeconds ?? 0,
     isIncognito: !args.userId,

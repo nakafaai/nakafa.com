@@ -14,6 +14,7 @@ const tables = {
     deviceId: v.string(),
     userId: v.optional(v.id("users")),
     firstViewedAt: v.number(),
+    lastViewedAt: v.number(), // For rate limiting
     viewCount: v.number(),
     totalDurationSeconds: v.number(),
     isIncognito: v.boolean(),
@@ -33,6 +34,7 @@ const tables = {
     deviceId: v.string(),
     userId: v.optional(v.id("users")),
     firstViewedAt: v.number(),
+    lastViewedAt: v.number(), // For rate limiting
     viewCount: v.number(),
     totalDurationSeconds: v.number(),
     isIncognito: v.boolean(),
@@ -52,6 +54,7 @@ const tables = {
     deviceId: v.string(),
     userId: v.optional(v.id("users")),
     firstViewedAt: v.number(),
+    lastViewedAt: v.number(), // For rate limiting
     viewCount: v.number(),
     totalDurationSeconds: v.number(),
     isIncognito: v.boolean(),
