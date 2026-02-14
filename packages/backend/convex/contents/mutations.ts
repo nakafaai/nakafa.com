@@ -39,6 +39,11 @@ import { recordContentViewBySlug } from "./utils";
  * Optimization:
  * - Skips re-queuing content that already has completed audio with matching hash
  * - Prevents unnecessary workflow executions (Convex best practice: avoid unnecessary work)
+ *
+ * DESIGN: Global Popularity
+ * - Popularity is tracked globally (all locales combined)
+ * - Popular content gets audio in ALL supported locales
+ * - This ensures popular content is accessible in every language
  */
 export const populateAudioQueue = internalMutation({
   args: {},
@@ -47,123 +52,127 @@ export const populateAudioQueue = internalMutation({
     queued: v.number(),
   }),
   handler: async (ctx) => {
-    let totalProcessed = 0;
+    // Query GLOBAL popularity (single namespace "global")
+    const [articleCount, subjectCount] = await Promise.all([
+      articlePopularity.count(ctx, { namespace: "global" }),
+      subjectPopularity.count(ctx, { namespace: "global" }),
+    ]);
+
+    const totalProcessed = articleCount + subjectCount;
     let totalQueued = 0;
 
-    for (const locale of SUPPORTED_LOCALES) {
-      // Query article and subject aggregates (exercises excluded - no audio)
-      const [articleCount, subjectCount] = await Promise.all([
-        articlePopularity.count(ctx, { namespace: locale }),
-        subjectPopularity.count(ctx, { namespace: locale }),
-      ]);
+    // Get top content globally (all locales combined)
+    const [popularArticles, popularSubjects] = await Promise.all([
+      articlePopularity.paginate(ctx, {
+        namespace: "global",
+        order: "desc",
+        pageSize: 100,
+      }),
+      subjectPopularity.paginate(ctx, {
+        namespace: "global",
+        order: "desc",
+        pageSize: 100,
+      }),
+    ]);
 
-      totalProcessed += articleCount + subjectCount;
+    // Build unified list with inferred discriminated union types
+    // Extract contentId from composite key [viewCount, contentId]
+    const items = [
+      ...popularArticles.page.map((item) => ({
+        type: "article" as const,
+        id: item.key[1], // Extract contentId from [viewCount, contentId]
+        sumValue: item.sumValue,
+      })),
+      ...popularSubjects.page.map((item) => ({
+        type: "subject" as const,
+        id: item.key[1], // Extract contentId from [viewCount, contentId]
+        sumValue: item.sumValue,
+      })),
+    ];
 
-      // Get top content from articles and subjects
-      const [popularArticles, popularSubjects] = await Promise.all([
-        articlePopularity.paginate(ctx, {
-          namespace: locale,
-          order: "desc",
-          pageSize: 50,
-        }),
-        subjectPopularity.paginate(ctx, {
-          namespace: locale,
-          order: "desc",
-          pageSize: 50,
-        }),
-      ]);
+    // Sort by global popularity (descending)
+    items.sort((a, b) => b.sumValue - a.sumValue);
 
-      // Build unified list with inferred discriminated union types
-      // Extract contentId from composite key [viewCount, contentId]
-      const items = [
-        ...popularArticles.page.map((item) => ({
-          type: "article" as const,
-          id: item.key[1], // Extract contentId from [viewCount, contentId]
-          sumValue: item.sumValue,
-        })),
-        ...popularSubjects.page.map((item) => ({
-          type: "subject" as const,
-          id: item.key[1], // Extract contentId from [viewCount, contentId]
-          sumValue: item.sumValue,
-        })),
-      ];
+    // Take top 100 overall
+    const topItems = items.slice(0, 100);
 
-      // Sort by popularity (descending)
-      items.sort((a, b) => b.sumValue - a.sumValue);
+    // Process each popular content
+    for (const item of topItems) {
+      if (item.sumValue < MIN_VIEW_THRESHOLD) {
+        continue;
+      }
 
-      // Process top 100 items
-      for (const item of items.slice(0, 100)) {
-        if (item.sumValue < MIN_VIEW_THRESHOLD) {
+      // Build discriminated contentRef
+      const contentRef =
+        item.type === "article"
+          ? { type: "article" as const, id: item.id }
+          : { type: "subject" as const, id: item.id };
+
+      // Get existing queue entries for this content (all locales)
+      const existingEntries = await ctx.db
+        .query("audioGenerationQueue")
+        .withIndex("contentRef_status", (q) =>
+          q
+            .eq("contentRef.type", contentRef.type)
+            .eq("contentRef.id", contentRef.id)
+            .eq("status", "pending")
+        )
+        .collect();
+
+      // Get content hash for deduplication check
+      const contentHash = await ctx.runQuery(
+        internal.audioStudies.queries.getContentHash,
+        { contentRef }
+      );
+
+      // Queue for EACH supported locale
+      for (const locale of SUPPORTED_LOCALES) {
+        // Check if already queued for this locale
+        const existingForLocale = existingEntries.find(
+          (e) => e.locale === locale
+        );
+
+        // Skip if already in active or terminal state
+        if (
+          existingForLocale &&
+          (existingForLocale.status === "pending" ||
+            existingForLocale.status === "processing" ||
+            existingForLocale.status === "failed")
+        ) {
           continue;
         }
 
-        // Build discriminated contentRef
-        const contentRef =
-          item.type === "article"
-            ? { type: "article" as const, id: item.id }
-            : { type: "subject" as const, id: item.id };
+        // Check if up-to-date audio already exists for this locale
+        if (contentHash) {
+          const existingAudio = await ctx.db
+            .query("contentAudios")
+            .withIndex("contentRef_locale", (q) =>
+              q
+                .eq("contentRef.type", contentRef.type)
+                .eq("contentRef.id", contentRef.id)
+                .eq("locale", locale)
+            )
+            .first();
 
-        // Check if already queued
-        const existing = await ctx.db
-          .query("audioGenerationQueue")
-          .withIndex("contentRef_locale", (q) =>
-            q
-              .eq("contentRef.type", contentRef.type)
-              .eq("contentRef.id", contentRef.id)
-              .eq("locale", locale)
-          )
-          .first();
-
-        if (existing) {
-          // Skip if already in active or terminal state
-          // Failed items preserve their retryCount - don't reset by re-creating
-          // This prevents infinite retry loops on permanently failing content
+          // Skip if audio exists, is completed, and hash matches
           if (
-            existing.status === "pending" ||
-            existing.status === "processing" ||
-            existing.status === "failed"
+            existingAudio?.status === "completed" &&
+            existingAudio.contentHash === contentHash
           ) {
             continue;
           }
 
-          // Only handle "completed" items below
-          // Optimization: Check if content already has completed audio with matching hash
-          // Prevents unnecessary workflow executions (Convex best practice: avoid unnecessary work)
-          // Fetches current content hash and existing audio record in parallel for efficiency
-          const contentHash = await ctx.runQuery(
-            internal.audioStudies.queries.getContentHash,
-            { contentRef }
-          );
-
-          if (contentHash) {
-            const existingAudio = await ctx.db
-              .query("contentAudios")
-              .withIndex("contentRef_locale", (q) =>
-                q
-                  .eq("contentRef.type", contentRef.type)
-                  .eq("contentRef.id", contentRef.id)
-                  .eq("locale", locale)
-              )
-              .first();
-
-            // Skip re-queuing if audio exists, is completed, and hash matches
-            if (
-              existingAudio?.status === "completed" &&
-              existingAudio.contentHash === contentHash
-            ) {
-              continue;
-            }
+          // Delete outdated completed entry if exists
+          if (existingForLocale) {
+            await ctx.db.delete("audioGenerationQueue", existingForLocale._id);
           }
-
-          // Only delete completed items that need re-processing (hash mismatch or missing audio)
-          await ctx.db.delete("audioGenerationQueue", existing._id);
         }
 
-        // Queue for audio generation
+        // Queue for audio generation in this locale
         await ctx.db.insert("audioGenerationQueue", {
           contentRef,
           locale,
-          priorityScore: item.sumValue * 10,
+          priorityScore: item.sumValue * 10, // Global popularity score
           status: "pending",
           requestedAt: Date.now(),
           retryCount: 0,
@@ -190,6 +199,11 @@ export const populateAudioQueue = internalMutation({
  * - Upsert pattern: Creates new or updates existing view record
  * - Deduplication: One record per user+slug or device+slug
  * - Duration tracking: Accumulates total time spent
+ * - Global popularity: Views from ALL locales count toward same content's ranking
+ *
+ * NOTE: Views are tracked per-locale in the database (for analytics), but the aggregate
+ * sums them globally. This allows per-locale analytics while using global popularity
+ * for audio prioritization. Popular content gets audio in ALL locales.
  *
  * @param contentRef - Discriminated union with type and slug
  * @param locale - Content locale
