@@ -80,27 +80,27 @@ export const generateAudioForQueueItem = workflow.define({
     );
 
     // Step 4: Generate script (idempotent - skips if already exists)
-    // Automatic retries enabled for transient failures (rate limits, etc.)
+    // Exponential backoff retries: 1s, 2s, 4s, 8s, 16s for transient failures (rate limits, etc.)
     await step.runAction(
       internal.audioStudies.actions.generateScript,
       {
         contentAudioId: audioRecordId,
       },
       {
-        retry: true,
+        retry: { maxAttempts: 5, initialBackoffMs: 1000, base: 2 },
       }
     );
 
     // Step 5: Generate speech (idempotent - skips if already exists)
     // This is the expensive step (ElevenLabs API), so we verify hash before calling
-    // Automatic retries enabled for transient failures
+    // Exponential backoff retries: 1s, 2s, 4s, 8s, 16s for transient failures
     await step.runAction(
       internal.audioStudies.actions.generateSpeech,
       {
         contentAudioId: audioRecordId,
       },
       {
-        retry: true,
+        retry: { maxAttempts: 5, initialBackoffMs: 1000, base: 2 },
       }
     );
 

@@ -74,46 +74,7 @@ const tables = {
      * Lookup by content type and id (without locale).
      * Used for cross-locale queries.
      */
-    .index("contentRef", ["contentRef.type", "contentRef.id"])
-    /**
-     * Status-based queries.
-     * Used for "get all pending audio" operations.
-     */
-    .index("status", ["status"])
-    /**
-     * Status + locale queries.
-     * Used for queue processing by locale.
-     */
-    .index("status_locale", ["status", "locale"]),
-
-  /**
-   * User listening history and access tracking.
-   *
-   * Design:
-   * - Tracks which users have accessed which audio content
-   * - Uses discriminated contentRef for consistency with contentAudios
-   * - Enables efficient "user's listening history" queries
-   *
-   * Note: Exercises are excluded - they don't have audio.
-   */
-  userContentAudios: defineTable({
-    userId: v.id("users"),
-    contentAudioId: v.id("contentAudios"),
-    /**
-     * Denormalized content reference for efficient history queries.
-     * Mirrors the contentRef structure from contentAudios.
-     */
-    contentRef: audioContentRefValidator,
-    playCount: v.number(),
-    lastPlayedAt: v.optional(v.number()),
-    updatedAt: v.number(),
-  })
-    /** User's listening history */
-    .index("user", ["userId"])
-    /** Check if user has accessed specific content */
-    .index("user_contentRef", ["userId", "contentRef.type", "contentRef.id"])
-    /** Lookup by audio record */
-    .index("contentAudio", ["contentAudioId"]),
+    .index("contentRef", ["contentRef.type", "contentRef.id"]),
 
   /**
    * Unified audio generation queue for cron-based prioritized processing.

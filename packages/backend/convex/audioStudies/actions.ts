@@ -22,6 +22,13 @@ import { ConvexError, v } from "convex/values";
 const WORD_SPLIT_REGEX = /\s+/;
 
 /**
+ * Audio duration calculation constants.
+ * Used for estimating audio duration from word count.
+ */
+const WORDS_PER_MINUTE = 150; // Average speaking rate
+const SECONDS_PER_MINUTE = 60;
+
+/**
  * Generate a podcast script for content audio.
  * Uses Gemini to create a conversational script with ElevenLabs V3 audio tags.
  *
@@ -32,14 +39,15 @@ export const generateScript = internalAction({
   args: { contentAudioId: vv.id("contentAudios") },
   returns: v.null(),
   handler: async (ctx, args) => {
-    // Idempotency check: Skip if script already exists
-    const hasExistingScript = await ctx.runQuery(
-      internal.audioStudies.queries.hasScript,
+    // Atomic claim: Check and update status in single mutation to prevent race conditions
+    // If another worker already claimed it, this returns false and we exit early
+    const claimed = await ctx.runMutation(
+      internal.audioStudies.mutations.claimScriptGeneration,
       { contentAudioId: args.contentAudioId }
     );
 
-    if (hasExistingScript) {
-      // Script already generated, nothing to do
+    if (!claimed) {
+      // Already claimed by another worker or already generated
       return null;
     }
 
@@ -57,23 +65,19 @@ export const generateScript = internalAction({
 
     const { contentAudio, content } = data;
 
-    // Update status to generating-script
-    await ctx.runMutation(internal.audioStudies.mutations.updateStatus, {
-      contentAudioId: args.contentAudioId,
-      status: "generating-script",
-    });
-
     try {
       // Cost protection: Verify content hasn't changed before API call
-      const currentAudio = await ctx.runQuery(
-        internal.audioStudies.queries.getById,
-        { contentAudioId: args.contentAudioId }
+      // Using verifyContentHash query (returns boolean) instead of getById (returns full object)
+      // for efficiency - we only need to check hash, not fetch all fields
+      const hashValidBefore = await ctx.runQuery(
+        internal.audioStudies.queries.verifyContentHash,
+        {
+          contentAudioId: args.contentAudioId,
+          expectedHash: contentAudio.contentHash,
+        }
       );
 
-      if (
-        !currentAudio ||
-        currentAudio.contentHash !== contentAudio.contentHash
-      ) {
+      if (!hashValidBefore) {
         throw new ConvexError({
           code: "CONTENT_CHANGED",
           message: "Content changed during generation, aborting to save costs",
@@ -94,12 +98,16 @@ export const generateScript = internalAction({
       });
 
       // Cost protection: Verify content hasn't changed after API call
-      const audioAfter = await ctx.runQuery(
-        internal.audioStudies.queries.getById,
-        { contentAudioId: args.contentAudioId }
+      // Using verifyContentHash query for efficiency
+      const hashValidAfter = await ctx.runQuery(
+        internal.audioStudies.queries.verifyContentHash,
+        {
+          contentAudioId: args.contentAudioId,
+          expectedHash: contentAudio.contentHash,
+        }
       );
 
-      if (!audioAfter || audioAfter.contentHash !== contentAudio.contentHash) {
+      if (!hashValidAfter) {
         throw new ConvexError({
           code: "CONTENT_CHANGED",
           message:
@@ -144,14 +152,15 @@ export const generateSpeech = internalAction({
   args: { contentAudioId: vv.id("contentAudios") },
   returns: v.null(),
   handler: async (ctx, args) => {
-    // Idempotency check: Skip if audio already exists
-    const hasExistingAudio = await ctx.runQuery(
-      internal.audioStudies.queries.hasAudio,
+    // Atomic claim: Check and update status in single mutation to prevent race conditions
+    // If another worker already claimed it, this returns false and we exit early
+    const claimed = await ctx.runMutation(
+      internal.audioStudies.mutations.claimSpeechGeneration,
       { contentAudioId: args.contentAudioId }
     );
 
-    if (hasExistingAudio) {
-      // Audio already generated, nothing to do
+    if (!claimed) {
+      // Already claimed by another worker or already completed
       return null;
     }
 
@@ -166,14 +175,6 @@ export const generateSpeech = internalAction({
         message: "No script found for audio generation",
       });
     }
-
-    // Update status to generating-speech
-    await ctx.runMutation(
-      internal.audioStudies.mutations.startSpeechGeneration,
-      {
-        contentAudioId: args.contentAudioId,
-      }
-    );
 
     try {
       // Cost protection: Verify hash before expensive ElevenLabs API call
@@ -256,7 +257,9 @@ export const generateSpeech = internalAction({
         .trim()
         .split(WORD_SPLIT_REGEX)
         .filter(Boolean).length;
-      const duration = Math.ceil((wordCount / 150) * 60);
+      const duration = Math.ceil(
+        (wordCount / WORDS_PER_MINUTE) * SECONDS_PER_MINUTE
+      );
 
       await ctx.runMutation(internal.audioStudies.mutations.saveAudio, {
         contentAudioId: args.contentAudioId,

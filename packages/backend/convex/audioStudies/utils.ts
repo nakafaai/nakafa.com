@@ -3,8 +3,9 @@ import type { AudioContentRef } from "@repo/backend/convex/lib/validators/audio"
 
 /**
  * Content data structure for script generation.
+ * Used internally within audioStudies module.
  */
-export interface ContentData {
+interface ContentData {
   title: string;
   description?: string;
   body: string;
@@ -73,4 +74,29 @@ export async function fetchContentForAudio(
       return null;
     }
   }
+}
+
+/**
+ * Get reset fields for content audio when content changes.
+ * Used by updateContentHash and createOrGetAudioRecord to reset all
+ * generated data and force regeneration with new content hash.
+ *
+ * This ensures consistency across all places that reset audio generation state.
+ *
+ * @param contentHash - The new content hash
+ * @returns Object with all fields to reset for regeneration
+ */
+export function getResetAudioFields(contentHash: string) {
+  return {
+    contentHash,
+    status: "pending" as const,
+    script: undefined,
+    audioStorageId: undefined,
+    audioDuration: undefined,
+    audioSize: undefined,
+    errorMessage: undefined,
+    failedAt: undefined,
+    generationAttempts: 0,
+    updatedAt: Date.now(),
+  };
 }

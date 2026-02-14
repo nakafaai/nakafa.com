@@ -159,36 +159,6 @@ export const verifyContentHash = internalQuery({
 });
 
 /**
- * Check if script already exists for an audio record.
- * Used for idempotency - skip generation if already exists.
- */
-export const hasScript = internalQuery({
-  args: {
-    contentAudioId: vv.id("contentAudios"),
-  },
-  returns: v.boolean(),
-  handler: async (ctx, args) => {
-    const audio = await ctx.db.get("contentAudios", args.contentAudioId);
-    return !!audio?.script;
-  },
-});
-
-/**
- * Check if audio already exists for an audio record.
- * Used for idempotency - skip generation if already exists.
- */
-export const hasAudio = internalQuery({
-  args: {
-    contentAudioId: vv.id("contentAudios"),
-  },
-  returns: v.boolean(),
-  handler: async (ctx, args) => {
-    const audio = await ctx.db.get("contentAudios", args.contentAudioId);
-    return !!audio?.audioStorageId;
-  },
-});
-
-/**
  * Get content hash for a content item by type and ID.
  * Used by workflow to fetch hash before creating audio record.
  * Returns null if content not found.

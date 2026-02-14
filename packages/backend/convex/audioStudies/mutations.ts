@@ -7,50 +7,14 @@ import {
   isAudioGenerationEnabled,
   MAX_CONTENT_PER_DAY,
 } from "@repo/backend/convex/audioStudies/constants";
-import {
-  audioContentRefValidator,
-  audioStatusValidator,
-} from "@repo/backend/convex/lib/validators/audio";
+import { getResetAudioFields } from "@repo/backend/convex/audioStudies/utils";
+import { audioContentRefValidator } from "@repo/backend/convex/lib/validators/audio";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { workflow } from "@repo/backend/convex/workflow";
 import { ConvexError, v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
-
-/**
- * Update audio generation status.
- * Idempotent: Setting to same status is a no-op.
- */
-export const updateStatus = internalMutation({
-  args: {
-    contentAudioId: vv.id("contentAudios"),
-    status: audioStatusValidator,
-  },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    const audio = await ctx.db.get("contentAudios", args.contentAudioId);
-
-    if (!audio) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "Audio record not found",
-      });
-    }
-
-    // Idempotent: Skip if status already matches
-    if (audio.status === args.status) {
-      return null;
-    }
-
-    await ctx.db.patch("contentAudios", args.contentAudioId, {
-      status: args.status,
-      updatedAt: Date.now(),
-    });
-
-    return null;
-  },
-});
 
 /**
  * Save generated script to content audio and update status.
@@ -88,14 +52,15 @@ export const saveScript = internalMutation({
 });
 
 /**
- * Mark speech generation as starting.
- * Idempotent: Setting to same status is a no-op.
+ * Atomically claim script generation to prevent race conditions.
+ * Returns true if successfully claimed (status was "pending"), false otherwise.
+ * This prevents duplicate script generation when multiple workers try simultaneously.
  */
-export const startSpeechGeneration = internalMutation({
+export const claimScriptGeneration = internalMutation({
   args: {
     contentAudioId: vv.id("contentAudios"),
   },
-  returns: v.null(),
+  returns: v.boolean(),
   handler: async (ctx, args) => {
     const audio = await ctx.db.get("contentAudios", args.contentAudioId);
 
@@ -106,9 +71,43 @@ export const startSpeechGeneration = internalMutation({
       });
     }
 
-    // Idempotent: Skip if already generating speech or completed
-    if (audio.status === "generating-speech" || audio.status === "completed") {
-      return null;
+    // Only claim if currently pending (not claimed by another worker)
+    if (audio.status !== "pending") {
+      return false;
+    }
+
+    await ctx.db.patch("contentAudios", args.contentAudioId, {
+      status: "generating-script",
+      updatedAt: Date.now(),
+    });
+
+    return true;
+  },
+});
+
+/**
+ * Atomically claim speech generation to prevent race conditions.
+ * Returns true if successfully claimed (status was "script-generated"), false otherwise.
+ * This prevents duplicate speech generation when multiple workers try simultaneously.
+ */
+export const claimSpeechGeneration = internalMutation({
+  args: {
+    contentAudioId: vv.id("contentAudios"),
+  },
+  returns: v.boolean(),
+  handler: async (ctx, args) => {
+    const audio = await ctx.db.get("contentAudios", args.contentAudioId);
+
+    if (!audio) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "Audio record not found",
+      });
+    }
+
+    // Only claim if script is generated but speech not started
+    if (audio.status !== "script-generated") {
+      return false;
     }
 
     await ctx.db.patch("contentAudios", args.contentAudioId, {
@@ -116,7 +115,7 @@ export const startSpeechGeneration = internalMutation({
       updatedAt: Date.now(),
     });
 
-    return null;
+    return true;
   },
 });
 
@@ -242,18 +241,11 @@ export const updateContentHash = internalMutation({
 
       // Update record with new hash and clear old data
       // Reset generationAttempts to 0 for new content version
-      await ctx.db.patch("contentAudios", audio._id, {
-        contentHash: args.newHash,
-        status: "pending",
-        script: undefined,
-        audioStorageId: undefined,
-        audioDuration: undefined,
-        audioSize: undefined,
-        errorMessage: undefined,
-        failedAt: undefined,
-        generationAttempts: 0,
-        updatedAt: Date.now(),
-      });
+      await ctx.db.patch(
+        "contentAudios",
+        audio._id,
+        getResetAudioFields(args.newHash)
+      );
 
       updatedCount++;
     }
@@ -291,6 +283,16 @@ export const lockQueueItem = internalMutation({
     // Idempotent: Only lock if still pending
     // If another worker already locked it, return null
     if (item.status !== "pending") {
+      return null;
+    }
+
+    // Enforce retry limits to prevent infinite loops on permanently failing content
+    if (item.retryCount >= item.maxRetries) {
+      await ctx.db.patch("audioGenerationQueue", args.queueItemId, {
+        status: "failed",
+        errorMessage: `Exceeded maximum retry attempts (${item.maxRetries})`,
+        updatedAt: Date.now(),
+      });
       return null;
     }
 
@@ -335,13 +337,15 @@ export const createOrGetAudioRecord = internalMutation({
       .first();
 
     if (existing) {
-      // Update contentHash if it changed (handles race with content updates)
-      // This ensures cost protection checks compare fresh hash with content hash
+      // Content changed - reset all generated data to force regeneration
+      // This handles race condition where content updates between queue population
+      // and workflow execution
       if (existing.contentHash !== args.contentHash) {
-        await ctx.db.patch("contentAudios", existing._id, {
-          contentHash: args.contentHash,
-          updatedAt: Date.now(),
-        });
+        await ctx.db.patch(
+          "contentAudios",
+          existing._id,
+          getResetAudioFields(args.contentHash)
+        );
       }
       return existing._id;
     }
@@ -350,6 +354,8 @@ export const createOrGetAudioRecord = internalMutation({
     const voiceConfig = getVoiceConfig(DEFAULT_VOICE_KEY);
 
     // Create new record with discriminated contentRef
+    // Convex handles race conditions automatically via OCC (Optimistic Concurrency Control)
+    // Per best practices: "you can simply write your mutation functions as if they will always succeed"
     const now = Date.now();
     const id = await ctx.db.insert("contentAudios", {
       contentRef: args.contentRef,
