@@ -8,8 +8,13 @@ import {
   articlePopularity,
   subjectPopularity,
 } from "@repo/backend/convex/contents/aggregate";
-import { internalMutation } from "@repo/backend/convex/functions";
+import { internalMutation, mutation } from "@repo/backend/convex/functions";
+import {
+  contentViewRefValidator,
+  localeValidator,
+} from "@repo/backend/convex/lib/validators/contents";
 import { v } from "convex/values";
+import { recordContentViewBySlug } from "./utils";
 
 /**
  * Populates the audio generation queue with popular content.
@@ -170,5 +175,51 @@ export const populateAudioQueue = internalMutation({
     }
 
     return { processed: totalProcessed, queued: totalQueued };
+  },
+});
+
+/**
+ * Records a content view for popularity tracking.
+ *
+ * Frontend sends slug + contentType + locale.
+ * Backend looks up contentId internally via indexed query.
+ *
+ * Design:
+ * - O(log n) lookup via locale_slug index
+ * - Upsert pattern: Creates new or updates existing view record
+ * - Deduplication: One record per user+slug or device+slug
+ * - Duration tracking: Accumulates total time spent
+ *
+ * @param contentRef - Discriminated union with type and slug
+ * @param locale - Content locale
+ * @param deviceId - Anonymous device identifier
+ * @param userId - Optional authenticated user
+ * @param durationSeconds - Optional time spent viewing
+ */
+export const recordContentView = mutation({
+  args: {
+    contentRef: contentViewRefValidator,
+    locale: localeValidator,
+    deviceId: v.string(),
+    userId: v.optional(v.id("users")),
+    durationSeconds: v.optional(v.number()),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    isNewView: v.boolean(),
+  }),
+  handler: async (ctx, args) => {
+    const result = await recordContentViewBySlug(
+      ctx,
+      args.contentRef.type,
+      args.locale,
+      args.contentRef.slug,
+      {
+        deviceId: args.deviceId,
+        userId: args.userId,
+        durationSeconds: args.durationSeconds,
+      }
+    );
+    return result;
   },
 });

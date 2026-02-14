@@ -36,6 +36,7 @@ import type * as contentSync_mutations from "../contentSync/mutations.js";
 import type * as contentSync_queries from "../contentSync/queries.js";
 import type * as contents_aggregate from "../contents/aggregate.js";
 import type * as contents_mutations from "../contents/mutations.js";
+import type * as contents_utils from "../contents/utils.js";
 import type * as crons from "../crons.js";
 import type * as customers_actions from "../customers/actions.js";
 import type * as customers_mutations from "../customers/mutations.js";
@@ -136,6 +137,7 @@ declare const fullApi: ApiFromModules<{
   "contentSync/queries": typeof contentSync_queries;
   "contents/aggregate": typeof contents_aggregate;
   "contents/mutations": typeof contents_mutations;
+  "contents/utils": typeof contents_utils;
   crons: typeof crons;
   "customers/actions": typeof customers_actions;
   "customers/mutations": typeof customers_mutations;

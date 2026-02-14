@@ -1,10 +1,3 @@
-/**
- * Shared validators for content storage schema.
- * These match Zod schemas in packages/contents/_types/.
- *
- * This is the SINGLE SOURCE OF TRUTH for content-related validators.
- * Import from here instead of duplicating in other schema files.
- */
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
@@ -16,6 +9,29 @@ export type Locale = Infer<typeof localeValidator>;
 /** Discriminator for polymorphic content references (used in contentAuthors join table) */
 export const contentTypeValidator = literals("article", "subject", "exercise");
 export type ContentType = Infer<typeof contentTypeValidator>;
+
+/**
+ * Discriminated union for content view references.
+ * Frontend sends slug + type, backend looks up contentId internally.
+ *
+ * TypeScript automatically narrows based on the type discriminator.
+ */
+export const contentViewRefValidator = v.union(
+  v.object({
+    type: v.literal("article"),
+    slug: v.string(),
+  }),
+  v.object({
+    type: v.literal("subject"),
+    slug: v.string(),
+  }),
+  v.object({
+    type: v.literal("exercise"),
+    slug: v.string(),
+  })
+);
+
+export type ContentViewRef = Infer<typeof contentViewRefValidator>;
 
 /**
  * Validator for content ID - polymorphic reference to all content types.
