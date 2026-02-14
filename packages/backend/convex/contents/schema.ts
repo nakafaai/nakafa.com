@@ -17,7 +17,6 @@ const tables = {
     lastViewedAt: v.number(), // For rate limiting
     viewCount: v.number(),
     totalDurationSeconds: v.number(),
-    isIncognito: v.boolean(),
   })
     .index("userId_slug", ["userId", "slug"])
     .index("deviceId_slug", ["deviceId", "slug"])
@@ -37,7 +36,6 @@ const tables = {
     lastViewedAt: v.number(), // For rate limiting
     viewCount: v.number(),
     totalDurationSeconds: v.number(),
-    isIncognito: v.boolean(),
   })
     .index("userId_slug", ["userId", "slug"])
     .index("deviceId_slug", ["deviceId", "slug"])
@@ -57,7 +55,6 @@ const tables = {
     lastViewedAt: v.number(), // For rate limiting
     viewCount: v.number(),
     totalDurationSeconds: v.number(),
-    isIncognito: v.boolean(),
   })
     .index("userId_slug", ["userId", "slug"])
     .index("deviceId_slug", ["deviceId", "slug"])

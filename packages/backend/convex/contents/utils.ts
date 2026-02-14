@@ -85,7 +85,6 @@ async function recordArticleView(
     lastViewedAt: now,
     viewCount: 1,
     totalDurationSeconds: args.durationSeconds ?? 0,
-    isIncognito: !args.userId,
   });
 
   return { success: true, isNewView: true };
@@ -146,7 +145,6 @@ async function recordSubjectView(
     lastViewedAt: now,
     viewCount: 1,
     totalDurationSeconds: args.durationSeconds ?? 0,
-    isIncognito: !args.userId,
   });
 
   return { success: true, isNewView: true };
@@ -207,7 +205,6 @@ async function recordExerciseView(
     lastViewedAt: now,
     viewCount: 1,
     totalDurationSeconds: args.durationSeconds ?? 0,
-    isIncognito: !args.userId,
   });
 
   return { success: true, isNewView: true };
