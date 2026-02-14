@@ -29,12 +29,16 @@ export default function Layout({ children, params }: Props) {
   const lastSlug = slug.at(-1);
   const baseSlug = lastSlug && isNumber(lastSlug) ? slug.slice(0, -1) : slug;
 
-  const FilePath = getSlugPath(category, type, material, baseSlug);
+  const filePath = getSlugPath(category, type, material, baseSlug);
 
-  const cleanedSlug = cleanSlug(FilePath);
+  const cleanedSlug = cleanSlug(filePath);
 
   return (
-    <ContentViewTracker contentType="exercise" locale={locale} slug={FilePath}>
+    <ContentViewTracker
+      contentType="exercise"
+      locale={locale}
+      slug={cleanedSlug}
+    >
       <ExerciseContextProvider slug={cleanedSlug}>
         <AttemptContextProvider slug={cleanedSlug}>
           {children}
