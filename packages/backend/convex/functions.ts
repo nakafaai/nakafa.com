@@ -60,6 +60,7 @@ triggers.register("schoolClassMaterialAttachments", noopHandler);
 triggers.register("schoolClassMaterialViews", noopHandler);
 triggers.register("contentAudios", noopHandler);
 triggers.register("audioGenerationQueue", noopHandler);
+triggers.register("exerciseAttempts", noopHandler);
 
 // Popularity aggregate triggers for trending content
 triggers.register("articleContentViews", articlePopularityTrigger);
