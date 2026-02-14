@@ -4,6 +4,7 @@ import {
   RETRY_CONFIG,
   SUPPORTED_LOCALES,
 } from "@repo/backend/convex/audioStudies/constants";
+import { safeGetAppUser } from "@repo/backend/convex/auth";
 import {
   articlePopularity,
   subjectPopularity,
@@ -201,7 +202,6 @@ export const recordContentView = mutation({
     contentRef: contentViewRefValidator,
     locale: localeValidator,
     deviceId: v.string(),
-    userId: v.optional(v.id("users")),
     durationSeconds: v.optional(v.number()),
   },
   returns: v.object({
@@ -209,6 +209,10 @@ export const recordContentView = mutation({
     isNewView: v.boolean(),
   }),
   handler: async (ctx, args) => {
+    // Get authenticated user server-side
+    const user = await safeGetAppUser(ctx);
+    const userId = user?.appUser._id;
+
     const result = await recordContentViewBySlug(
       ctx,
       args.contentRef.type,
@@ -216,7 +220,7 @@ export const recordContentView = mutation({
       args.contentRef.slug,
       {
         deviceId: args.deviceId,
-        userId: args.userId,
+        userId,
         durationSeconds: args.durationSeconds,
       }
     );

@@ -6,7 +6,6 @@ import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { useMutation } from "convex/react";
 import { useEffect } from "react";
 import { useContentViews } from "@/lib/context/use-content-views";
-import { useUser } from "@/lib/context/use-user";
 
 interface UseRecordContentViewOptions {
   contentType: "article" | "subject" | "exercise";
@@ -53,7 +52,6 @@ export function useRecordContentView({
   idleTimeout = 30_000, // 30 seconds of inactivity = idle
 }: UseRecordContentViewOptions) {
   const recordView = useMutation(api.contents.mutations.recordContentView);
-  const user = useUser((s) => s.user);
 
   const markAsViewed = useContentViews((s) => s.markAsViewed);
   const isViewed = useContentViews((s) => s.isViewed);
@@ -81,7 +79,6 @@ export function useRecordContentView({
           contentRef: { type: contentType, slug },
           locale,
           deviceId: getDeviceId(),
-          userId: user?.appUser._id,
           durationSeconds: duration ?? undefined,
         });
         markAsViewed(slug);
