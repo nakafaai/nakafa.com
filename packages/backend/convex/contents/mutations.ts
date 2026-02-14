@@ -1,3 +1,4 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import {
   MIN_VIEW_THRESHOLD,
   RETRY_CONFIG,
@@ -28,6 +29,10 @@ import { v } from "convex/values";
  * - Parallel query execution for all content types
  * - O(log n) lookups via aggregate indexes
  * - Batched processing (top 100 per locale)
+ *
+ * Optimization:
+ * - Skips re-queuing content that already has completed audio with matching hash
+ * - Prevents unnecessary workflow executions (Convex best practice: avoid unnecessary work)
  */
 export const populateAudioQueue = internalMutation({
   args: {},
@@ -110,6 +115,35 @@ export const populateAudioQueue = internalMutation({
           ) {
             continue;
           }
+
+          // Optimization: Check if content already has completed audio with matching hash
+          // Prevents unnecessary workflow executions (Convex best practice: avoid unnecessary work)
+          // Fetches current content hash and existing audio record in parallel for efficiency
+          const contentHash = await ctx.runQuery(
+            internal.audioStudies.queries.getContentHash,
+            { contentRef }
+          );
+
+          if (contentHash) {
+            const existingAudio = await ctx.db
+              .query("contentAudios")
+              .withIndex("contentRef_locale", (q) =>
+                q
+                  .eq("contentRef.type", contentRef.type)
+                  .eq("contentRef.id", contentRef.id)
+                  .eq("locale", locale)
+              )
+              .first();
+
+            // Skip re-queuing if audio exists, is completed, and hash matches
+            if (
+              existingAudio?.status === "completed" &&
+              existingAudio.contentHash === contentHash
+            ) {
+              continue;
+            }
+          }
+
           await ctx.db.delete("audioGenerationQueue", existing._id);
         }
 
