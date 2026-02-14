@@ -216,10 +216,10 @@ export const updateContentHash = internalMutation({
   },
   returns: v.object({ updatedCount: v.number() }),
   handler: async (ctx, args) => {
-    // Query using discriminated ref fields
+    // Query using contentRef_locale index (prefix works for all locales)
     const audios = await ctx.db
       .query("contentAudios")
-      .withIndex("contentRef", (q) =>
+      .withIndex("contentRef_locale", (q) =>
         q
           .eq("contentRef.type", args.contentRef.type)
           .eq("contentRef.id", args.contentRef.id)
@@ -513,14 +513,15 @@ export const startWorkflowsForPendingItems = internalMutation({
 
     // Get ALL pending queue items for this content (all locales)
     // We want to process all locales of the same content together
+    // Uses contentRef_status index for efficient filtering (per Convex best practices)
     const contentItems = await ctx.db
       .query("audioGenerationQueue")
-      .withIndex("contentRef_locale", (q) =>
+      .withIndex("contentRef_status", (q) =>
         q
           .eq("contentRef.type", topItem.contentRef.type)
           .eq("contentRef.id", topItem.contentRef.id)
+          .eq("status", "pending")
       )
-      .filter((q) => q.eq(q.field("status"), "pending"))
       .collect();
 
     let started = 0;

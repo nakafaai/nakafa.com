@@ -68,13 +68,9 @@ const tables = {
     /**
      * Primary lookup by content reference and locale.
      * Used to check if audio already exists for specific content.
+     * Also covers cross-locale queries via prefix (per Convex best practices).
      */
-    .index("contentRef_locale", ["contentRef.type", "contentRef.id", "locale"])
-    /**
-     * Lookup by content type and id (without locale).
-     * Used for cross-locale queries.
-     */
-    .index("contentRef", ["contentRef.type", "contentRef.id"]),
+    .index("contentRef_locale", ["contentRef.type", "contentRef.id", "locale"]),
 
   /**
    * Unified audio generation queue for cron-based prioritized processing.
@@ -121,6 +117,11 @@ const tables = {
      * Ensures content isn't queued multiple times.
      */
     .index("contentRef_locale", ["contentRef.type", "contentRef.id", "locale"])
+    /**
+     * Content + status queries.
+     * Finds all pending items for a specific content (all locales).
+     */
+    .index("contentRef_status", ["contentRef.type", "contentRef.id", "status"])
     /**
      * Cleanup queries.
      * Removes old completed/failed items.
