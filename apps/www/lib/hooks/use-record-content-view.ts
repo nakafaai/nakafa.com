@@ -4,7 +4,7 @@ import { useDocumentVisibility, useIdle, useTimeout } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { useMutation } from "convex/react";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useContentViews } from "@/lib/context/use-content-views";
 import { useUser } from "@/lib/context/use-user";
 
@@ -60,9 +60,6 @@ export function useRecordContentView({
   const startView = useContentViews((s) => s.startView);
   const endView = useContentViews((s) => s.endView);
 
-  // Track if we've already recorded this view
-  const hasRecordedRef = useRef(false);
-
   // Track document visibility (pause when tab hidden)
   const documentState = useDocumentVisibility();
   const isVisible = documentState === "visible";
@@ -73,7 +70,7 @@ export function useRecordContentView({
   // Setup timer for delayed recording
   const { start, clear } = useTimeout(
     async () => {
-      if (hasRecordedRef.current || isViewed(slug)) {
+      if (isViewed(slug)) {
         return;
       }
 
@@ -88,7 +85,6 @@ export function useRecordContentView({
           durationSeconds: duration ?? undefined,
         });
         markAsViewed(slug);
-        hasRecordedRef.current = true;
       } catch {
         // Silently fail - view tracking is non-critical
       }
@@ -99,13 +95,13 @@ export function useRecordContentView({
 
   // Start tracking when component mounts
   useEffect(() => {
-    if (!(isViewed(slug) || hasRecordedRef.current)) {
+    if (!isViewed(slug)) {
       startView(slug);
     }
 
     return () => {
       // Record duration on unmount if not yet recorded
-      if (!(isViewed(slug) || hasRecordedRef.current)) {
+      if (!isViewed(slug)) {
         endView(slug);
       }
     };
@@ -113,7 +109,7 @@ export function useRecordContentView({
 
   // Control timer based on visibility and idle state
   useEffect(() => {
-    if (isViewed(slug) || hasRecordedRef.current) {
+    if (isViewed(slug)) {
       clear();
       return;
     }
