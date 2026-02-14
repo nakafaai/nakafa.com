@@ -51,21 +51,21 @@ export const generateScript = internalAction({
       return null;
     }
 
-    const data = await ctx.runQuery(
-      internal.audioStudies.queries.getAudioAndContentForScriptGeneration,
-      { contentAudioId: args.contentAudioId }
-    );
-
-    if (!data) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "Audio or content not found",
-      });
-    }
-
-    const { contentAudio, content } = data;
-
     try {
+      // Query for data INSIDE try block so markFailed catches errors
+      const data = await ctx.runQuery(
+        internal.audioStudies.queries.getAudioAndContentForScriptGeneration,
+        { contentAudioId: args.contentAudioId }
+      );
+
+      if (!data) {
+        throw new ConvexError({
+          code: "NOT_FOUND",
+          message: "Audio or content not found",
+        });
+      }
+
+      const { contentAudio, content } = data;
       // Cost protection: Verify content hasn't changed before API call
       // Using verifyContentHash query (returns boolean) instead of getById (returns full object)
       // for efficiency - we only need to check hash, not fetch all fields
@@ -164,19 +164,19 @@ export const generateSpeech = internalAction({
       return null;
     }
 
-    const audio = await ctx.runQuery(
-      internal.audioStudies.queries.getAudioForSpeechGeneration,
-      { contentAudioId: args.contentAudioId }
-    );
-
-    if (!audio) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "No script found for audio generation",
-      });
-    }
-
     try {
+      // Query for data INSIDE try block so markFailed catches errors
+      const audio = await ctx.runQuery(
+        internal.audioStudies.queries.getAudioForSpeechGeneration,
+        { contentAudioId: args.contentAudioId }
+      );
+
+      if (!audio) {
+        throw new ConvexError({
+          code: "NOT_FOUND",
+          message: "No script found for audio generation",
+        });
+      }
       // Cost protection: Verify hash before expensive ElevenLabs API call
       const hashStillValid = await ctx.runQuery(
         internal.audioStudies.queries.verifyContentHash,
