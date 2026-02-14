@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useRef } from "react";
+import { type ReactNode, useState } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
@@ -17,16 +17,10 @@ export function ExerciseContextProvider({
   children: ReactNode;
   slug: string;
 }) {
-  const storeRef = useRef<ExerciseStoreApi>(undefined);
-
-  if (!storeRef.current) {
-    storeRef.current = createExerciseStore({
-      slug,
-    });
-  }
+  const [store] = useState(() => createExerciseStore({ slug }));
 
   return (
-    <ExerciseContext.Provider value={storeRef.current}>
+    <ExerciseContext.Provider value={store}>
       {children}
     </ExerciseContext.Provider>
   );

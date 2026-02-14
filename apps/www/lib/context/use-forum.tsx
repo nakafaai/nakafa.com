@@ -1,7 +1,7 @@
 "use client";
 
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { type ReactNode, useRef } from "react";
+import { type ReactNode, useState } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
@@ -18,16 +18,10 @@ export function ForumContextProvider({
   children: ReactNode;
   classId: Id<"schoolClasses">;
 }) {
-  const storeRef = useRef<ForumStoreApi>(undefined);
-
-  if (!storeRef.current) {
-    storeRef.current = createForumStore({ classId });
-  }
+  const [store] = useState(() => createForumStore({ classId }));
 
   return (
-    <ForumContext.Provider value={storeRef.current}>
-      {children}
-    </ForumContext.Provider>
+    <ForumContext.Provider value={store}>{children}</ForumContext.Provider>
   );
 }
 
