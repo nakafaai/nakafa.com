@@ -4,7 +4,7 @@ import {
   localeValidator,
   materialValidator,
   subjectCategoryValidator,
-} from "@repo/backend/convex/lib/contentValidators";
+} from "@repo/backend/convex/lib/validators/contents";
 import { defineTable, paginationResultValidator } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
@@ -23,7 +23,7 @@ export {
   localeValidator,
   materialValidator,
   subjectCategoryValidator,
-} from "@repo/backend/convex/lib/contentValidators";
+} from "@repo/backend/convex/lib/validators/contents";
 
 /**
  * Chat visibility validator

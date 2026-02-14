@@ -1,29 +1,64 @@
+import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
 
 const tables = {
-  contentViews: defineTable({
+  /**
+   * Content views for statistics tracking - articles only.
+   * Separate table enables type-safe aggregate with simple ID key.
+   */
+  articleContentViews: defineTable({
+    contentId: v.id("articleContents"),
+    locale: localeValidator,
     slug: v.string(),
     deviceId: v.string(),
     userId: v.optional(v.id("users")),
     firstViewedAt: v.number(),
-    lastViewedAt: v.number(),
     viewCount: v.number(),
     totalDurationSeconds: v.number(),
     isIncognito: v.boolean(),
   })
     .index("userId_slug", ["userId", "slug"])
     .index("deviceId_slug", ["deviceId", "slug"])
-    .index("userId_lastViewedAt", ["userId", "lastViewedAt"])
-    .index("deviceId_lastViewedAt", ["deviceId", "lastViewedAt"]),
-  contentStats: defineTable({
-    userId: v.id("users"),
-    totalViewCount: v.number(),
-    totalUniqueContent: v.number(),
+    .index("contentId_locale", ["contentId", "locale"]),
+
+  /**
+   * Content views for statistics tracking - subject sections only.
+   * Separate table enables type-safe aggregate with simple ID key.
+   */
+  subjectContentViews: defineTable({
+    contentId: v.id("subjectSections"),
+    locale: localeValidator,
+    slug: v.string(),
+    deviceId: v.string(),
+    userId: v.optional(v.id("users")),
+    firstViewedAt: v.number(),
+    viewCount: v.number(),
     totalDurationSeconds: v.number(),
-    lastViewedAt: v.number(),
-    updatedAt: v.number(),
-  }).index("userId", ["userId"]),
+    isIncognito: v.boolean(),
+  })
+    .index("userId_slug", ["userId", "slug"])
+    .index("deviceId_slug", ["deviceId", "slug"])
+    .index("contentId_locale", ["contentId", "locale"]),
+
+  /**
+   * Content views for statistics tracking - exercises only.
+   * Separate table for exercise tracking (not used for audio).
+   */
+  exerciseContentViews: defineTable({
+    contentId: v.id("exerciseSets"),
+    locale: localeValidator,
+    slug: v.string(),
+    deviceId: v.string(),
+    userId: v.optional(v.id("users")),
+    firstViewedAt: v.number(),
+    viewCount: v.number(),
+    totalDurationSeconds: v.number(),
+    isIncognito: v.boolean(),
+  })
+    .index("userId_slug", ["userId", "slug"])
+    .index("deviceId_slug", ["deviceId", "slug"])
+    .index("contentId_locale", ["contentId", "locale"]),
 };
 
 export default tables;

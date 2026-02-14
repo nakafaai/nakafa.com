@@ -1,6 +1,6 @@
-import { mutation } from "@repo/backend/convex/_generated/server";
+import { mutation } from "@repo/backend/convex/functions";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
-import { vv } from "@repo/backend/convex/lib/validators";
+import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { generateUniqueSlug } from "@repo/backend/convex/schools/utils";
 import { generateNanoId, slugify } from "@repo/backend/convex/utils/helper";
 import { ConvexError, v } from "convex/values";
@@ -156,7 +156,7 @@ export const joinSchool = mutation({
     // Check if user is already a member
     const existingMember = await ctx.db
       .query("schoolMembers")
-      .withIndex("schoolId_userId", (q) =>
+      .withIndex("schoolId_userId_status", (q) =>
         q.eq("schoolId", school._id).eq("userId", userId)
       )
       .first();

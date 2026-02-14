@@ -1,8 +1,10 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
 import {
   articleCategoryValidator,
+  type ContentType,
   exercisesCategoryValidator,
   exercisesMaterialValidator,
   exercisesTypeValidator,
@@ -10,10 +12,9 @@ import {
   localeValidator,
   materialValidator,
   subjectCategoryValidator,
-} from "@repo/backend/convex/lib/contentValidators";
+} from "@repo/backend/convex/lib/validators/contents";
 import { v } from "convex/values";
 
-type ContentType = "article" | "subject" | "exercise";
 type AuthorCache = Map<string, Id<"authors">>;
 
 function slugifyName(name: string): string {
@@ -115,13 +116,13 @@ async function syncContentAuthorsWithCache(
 ): Promise<number> {
   const existingLinks = await ctx.db
     .query("contentAuthors")
-    .withIndex("contentId_contentType", (q) =>
+    .withIndex("contentId_contentType_authorId", (q) =>
       q.eq("contentId", contentId).eq("contentType", contentType)
     )
     .collect();
 
   for (const link of existingLinks) {
-    await ctx.db.delete(link._id);
+    await ctx.db.delete("contentAuthors", link._id);
   }
 
   let linksCreated = 0;
@@ -210,7 +211,7 @@ export const bulkSyncArticles = internalMutation({
           continue;
         }
 
-        await ctx.db.patch(existing._id, {
+        await ctx.db.patch("articleContents", existing._id, {
           category: article.category,
           articleSlug: article.articleSlug,
           title: article.title,
@@ -220,6 +221,15 @@ export const bulkSyncArticles = internalMutation({
           contentHash: article.contentHash,
           syncedAt: now,
         });
+
+        // Invalidate cached audio since content changed
+        await ctx.runMutation(
+          internal.audioStudies.mutations.updateContentHash,
+          {
+            contentRef: { type: "article", id: existing._id },
+            newHash: article.contentHash,
+          }
+        );
 
         authorLinksCreated += await syncContentAuthorsWithCache(
           ctx,
@@ -235,7 +245,7 @@ export const bulkSyncArticles = internalMutation({
           .collect();
 
         for (const ref of existingRefs) {
-          await ctx.db.delete(ref._id);
+          await ctx.db.delete("articleReferences", ref._id);
         }
 
         for (let i = 0; i < article.references.length; i++) {
@@ -348,7 +358,7 @@ export const bulkSyncSubjectTopics = internalMutation({
           continue;
         }
 
-        await ctx.db.patch(existing._id, {
+        await ctx.db.patch("subjectTopics", existing._id, {
           category: topic.category,
           grade: topic.grade,
           material: topic.material,
@@ -442,7 +452,7 @@ export const bulkSyncSubjectSections = internalMutation({
           continue;
         }
 
-        await ctx.db.patch(existing._id, {
+        await ctx.db.patch("subjectSections", existing._id, {
           topicId: topicDoc._id,
           category: section.category,
           grade: section.grade,
@@ -457,6 +467,15 @@ export const bulkSyncSubjectSections = internalMutation({
           contentHash: section.contentHash,
           syncedAt: now,
         });
+
+        // Invalidate cached audio since content changed
+        await ctx.runMutation(
+          internal.audioStudies.mutations.updateContentHash,
+          {
+            contentRef: { type: "subject", id: existing._id },
+            newHash: section.contentHash,
+          }
+        );
 
         authorLinksCreated += await syncContentAuthorsWithCache(
           ctx,
@@ -544,7 +563,7 @@ export const bulkSyncExerciseSets = internalMutation({
           continue;
         }
 
-        await ctx.db.patch(existing._id, {
+        await ctx.db.patch("exerciseSets", existing._id, {
           category: set.category,
           type: set.type,
           material: set.material,
@@ -650,7 +669,7 @@ export const bulkSyncExerciseQuestions = internalMutation({
           continue;
         }
 
-        await ctx.db.patch(existing._id, {
+        await ctx.db.patch("exerciseQuestions", existing._id, {
           setId: set._id,
           category: question.category,
           type: question.type,
@@ -683,7 +702,7 @@ export const bulkSyncExerciseQuestions = internalMutation({
           .collect();
 
         for (const choice of existingChoices) {
-          await ctx.db.delete(choice._id);
+          await ctx.db.delete("exerciseChoices", choice._id);
         }
 
         for (const choice of question.choices) {
@@ -766,20 +785,20 @@ export const deleteStaleArticles = internalMutation({
         continue;
       }
 
-      const article = await ctx.db.get(articleId);
+      const article = await ctx.db.get("articleContents", articleId);
       if (!article) {
         continue;
       }
 
       const contentAuthors = await ctx.db
         .query("contentAuthors")
-        .withIndex("contentId_contentType", (q) =>
+        .withIndex("contentId_contentType_authorId", (q) =>
           q.eq("contentId", articleId).eq("contentType", "article")
         )
         .collect();
 
       for (const link of contentAuthors) {
-        await ctx.db.delete(link._id);
+        await ctx.db.delete("contentAuthors", link._id);
       }
 
       const references = await ctx.db
@@ -788,10 +807,10 @@ export const deleteStaleArticles = internalMutation({
         .collect();
 
       for (const ref of references) {
-        await ctx.db.delete(ref._id);
+        await ctx.db.delete("articleReferences", ref._id);
       }
 
-      await ctx.db.delete(articleId);
+      await ctx.db.delete("articleContents", articleId);
       deleted++;
     }
 
@@ -812,7 +831,7 @@ export const deleteStaleSubjectTopics = internalMutation({
         continue;
       }
 
-      const topic = await ctx.db.get(topicId);
+      const topic = await ctx.db.get("subjectTopics", topicId);
       if (!topic) {
         continue;
       }
@@ -825,19 +844,19 @@ export const deleteStaleSubjectTopics = internalMutation({
       for (const section of sections) {
         const contentAuthors = await ctx.db
           .query("contentAuthors")
-          .withIndex("contentId_contentType", (q) =>
+          .withIndex("contentId_contentType_authorId", (q) =>
             q.eq("contentId", section._id).eq("contentType", "subject")
           )
           .collect();
 
         for (const link of contentAuthors) {
-          await ctx.db.delete(link._id);
+          await ctx.db.delete("contentAuthors", link._id);
         }
 
-        await ctx.db.delete(section._id);
+        await ctx.db.delete("subjectSections", section._id);
       }
 
-      await ctx.db.delete(topicId);
+      await ctx.db.delete("subjectTopics", topicId);
       deleted++;
     }
 
@@ -858,23 +877,23 @@ export const deleteStaleSubjectSections = internalMutation({
         continue;
       }
 
-      const section = await ctx.db.get(sectionId);
+      const section = await ctx.db.get("subjectSections", sectionId);
       if (!section) {
         continue;
       }
 
       const contentAuthors = await ctx.db
         .query("contentAuthors")
-        .withIndex("contentId_contentType", (q) =>
+        .withIndex("contentId_contentType_authorId", (q) =>
           q.eq("contentId", sectionId).eq("contentType", "subject")
         )
         .collect();
 
       for (const link of contentAuthors) {
-        await ctx.db.delete(link._id);
+        await ctx.db.delete("contentAuthors", link._id);
       }
 
-      await ctx.db.delete(sectionId);
+      await ctx.db.delete("subjectSections", sectionId);
       deleted++;
     }
 
@@ -895,7 +914,7 @@ export const deleteStaleExerciseSets = internalMutation({
         continue;
       }
 
-      const set = await ctx.db.get(setId);
+      const set = await ctx.db.get("exerciseSets", setId);
       if (!set) {
         continue;
       }
@@ -908,13 +927,13 @@ export const deleteStaleExerciseSets = internalMutation({
       for (const question of questions) {
         const contentAuthors = await ctx.db
           .query("contentAuthors")
-          .withIndex("contentId_contentType", (q) =>
+          .withIndex("contentId_contentType_authorId", (q) =>
             q.eq("contentId", question._id).eq("contentType", "exercise")
           )
           .collect();
 
         for (const link of contentAuthors) {
-          await ctx.db.delete(link._id);
+          await ctx.db.delete("contentAuthors", link._id);
         }
 
         const choices = await ctx.db
@@ -925,13 +944,13 @@ export const deleteStaleExerciseSets = internalMutation({
           .collect();
 
         for (const choice of choices) {
-          await ctx.db.delete(choice._id);
+          await ctx.db.delete("exerciseChoices", choice._id);
         }
 
-        await ctx.db.delete(question._id);
+        await ctx.db.delete("exerciseQuestions", question._id);
       }
 
-      await ctx.db.delete(setId);
+      await ctx.db.delete("exerciseSets", setId);
       deleted++;
     }
 
@@ -952,20 +971,20 @@ export const deleteStaleExerciseQuestions = internalMutation({
         continue;
       }
 
-      const question = await ctx.db.get(questionId);
+      const question = await ctx.db.get("exerciseQuestions", questionId);
       if (!question) {
         continue;
       }
 
       const contentAuthors = await ctx.db
         .query("contentAuthors")
-        .withIndex("contentId_contentType", (q) =>
+        .withIndex("contentId_contentType_authorId", (q) =>
           q.eq("contentId", questionId).eq("contentType", "exercise")
         )
         .collect();
 
       for (const link of contentAuthors) {
-        await ctx.db.delete(link._id);
+        await ctx.db.delete("contentAuthors", link._id);
       }
 
       const choices = await ctx.db
@@ -974,10 +993,10 @@ export const deleteStaleExerciseQuestions = internalMutation({
         .collect();
 
       for (const choice of choices) {
-        await ctx.db.delete(choice._id);
+        await ctx.db.delete("exerciseChoices", choice._id);
       }
 
-      await ctx.db.delete(questionId);
+      await ctx.db.delete("exerciseQuestions", questionId);
       deleted++;
     }
 
@@ -998,7 +1017,7 @@ export const deleteUnusedAuthors = internalMutation({
         continue;
       }
 
-      const author = await ctx.db.get(authorId);
+      const author = await ctx.db.get("authors", authorId);
       if (!author) {
         continue;
       }
@@ -1012,7 +1031,7 @@ export const deleteUnusedAuthors = internalMutation({
         continue;
       }
 
-      await ctx.db.delete(authorId);
+      await ctx.db.delete("authors", authorId);
       deleted++;
     }
 
@@ -1039,7 +1058,7 @@ export const deleteContentAuthorsBatch = internalMutation({
     let deleted = 0;
 
     for (const link of contentAuthors) {
-      await ctx.db.delete(link._id);
+      await ctx.db.delete("contentAuthors", link._id);
       deleted++;
     }
 
@@ -1060,7 +1079,7 @@ export const deleteArticleReferencesBatch = internalMutation({
     let deleted = 0;
 
     for (const ref of references) {
-      await ctx.db.delete(ref._id);
+      await ctx.db.delete("articleReferences", ref._id);
       deleted++;
     }
 
@@ -1081,7 +1100,7 @@ export const deleteExerciseChoicesBatch = internalMutation({
     let deleted = 0;
 
     for (const choice of choices) {
-      await ctx.db.delete(choice._id);
+      await ctx.db.delete("exerciseChoices", choice._id);
       deleted++;
     }
 
@@ -1102,7 +1121,7 @@ export const deleteExerciseQuestionsBatch = internalMutation({
     let deleted = 0;
 
     for (const question of questions) {
-      await ctx.db.delete(question._id);
+      await ctx.db.delete("exerciseQuestions", question._id);
       deleted++;
     }
 
@@ -1121,7 +1140,7 @@ export const deleteExerciseSetsBatch = internalMutation({
     let deleted = 0;
 
     for (const set of sets) {
-      await ctx.db.delete(set._id);
+      await ctx.db.delete("exerciseSets", set._id);
       deleted++;
     }
 
@@ -1142,7 +1161,7 @@ export const deleteSubjectSectionsBatch = internalMutation({
     let deleted = 0;
 
     for (const section of sections) {
-      await ctx.db.delete(section._id);
+      await ctx.db.delete("subjectSections", section._id);
       deleted++;
     }
 
@@ -1161,7 +1180,7 @@ export const deleteSubjectTopicsBatch = internalMutation({
     let deleted = 0;
 
     for (const topic of topics) {
-      await ctx.db.delete(topic._id);
+      await ctx.db.delete("subjectTopics", topic._id);
       deleted++;
     }
 
@@ -1182,7 +1201,7 @@ export const deleteArticlesBatch = internalMutation({
     let deleted = 0;
 
     for (const article of articles) {
-      await ctx.db.delete(article._id);
+      await ctx.db.delete("articleContents", article._id);
       deleted++;
     }
 
@@ -1201,7 +1220,7 @@ export const deleteAuthorsBatch = internalMutation({
     let deleted = 0;
 
     for (const author of authors) {
-      await ctx.db.delete(author._id);
+      await ctx.db.delete("authors", author._id);
       deleted++;
     }
 

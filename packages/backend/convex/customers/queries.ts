@@ -1,5 +1,5 @@
 import { internalQuery } from "@repo/backend/convex/_generated/server";
-import { vv } from "@repo/backend/convex/lib/validators";
+import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { nullable } from "convex-helpers/validators";
 
 /**

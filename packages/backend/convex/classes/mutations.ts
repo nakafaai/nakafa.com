@@ -13,7 +13,7 @@ import {
   getRandomClassImage,
   isValidClassImage,
 } from "@repo/backend/convex/lib/images";
-import { vv } from "@repo/backend/convex/lib/validators";
+import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { generateNanoId } from "@repo/backend/convex/utils/helper";
 import { ConvexError, v } from "convex/values";
 

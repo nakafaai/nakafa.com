@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import type { Locale } from "@repo/backend/convex/lib/contentValidators";
+import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import {
   type ArticleCategory,
   ArticleCategorySchema,
@@ -118,7 +118,7 @@ export type {
   ParsedSubjectTopic,
 };
 
-export type { Locale } from "@repo/backend/convex/lib/contentValidators";
+export type { Locale } from "@repo/backend/convex/lib/validators/contents";
 
 // Regex patterns for parsing MDX content and file paths
 const METADATA_REGEX = /export\s+const\s+metadata\s*=\s*({[\s\S]*?});/;

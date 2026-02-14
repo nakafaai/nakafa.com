@@ -9,11 +9,16 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
+import type {
+  SchoolClassMemberRole,
+  SchoolClassTeacherRole,
+} from "@repo/backend/convex/classes/schema";
+import type { SchoolMemberRole } from "@repo/backend/convex/schools/schema";
 import { ConvexError } from "convex/values";
 
-type SchoolRole = "admin" | "teacher" | "student" | "parent" | "demo";
-type ClassRole = "teacher" | "student";
-type TeacherRole = "primary" | "co-teacher" | "assistant";
+type SchoolRole = SchoolMemberRole;
+type ClassRole = SchoolClassMemberRole;
+type TeacherRole = SchoolClassTeacherRole;
 
 export type Permission =
   | "class:create"

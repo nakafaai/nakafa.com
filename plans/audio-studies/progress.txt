@@ -1,0 +1,245 @@
+# Audio Studies Implementation Progress
+
+## Overview
+Implementation plan for Audio Studies feature - AI-generated podcast audio for educational content.
+
+## Tasks
+
+### Setup Phase (0.x) ✅ COMPLETE
+- [x] **0.1-voice-config.md** - Voice configuration (Nina voice with ElevenLabs API docs)
+- [x] **0.2-schema.md** - Database schema (contentAudios, userContentAudios)
+- [x] **0.3-article-queries.md** - Add getById to articleContents
+- [x] **0.4-subject-queries.md** - Add getById to subjectSections
+
+### Core Implementation Phase (1.x) ✅ COMPLETE
+- [x] **1.1-create-actions.md** - AI actions (script + speech generation)
+- [x] **1.2-create-queries.md** - Internal queries only (only what's needed)
+- [x] **1.3-create-mutations.md** - Mutations with workflow integration
+- [x] **1.4-create-workflow.md** - Durable workflow orchestration
+
+### Integration Phase (2.x) ✅ COMPLETE
+- [x] **2.1-integrate-content-sync.md** - Content update invalidation
+
+## Current Status
+- Phase 0: 4/4 tasks completed ✅
+- Phase 1: 4/4 tasks completed ✅
+- Phase 2: 1/1 tasks completed ✅
+- **ALL PHASES COMPLETE** 🎉
+
+## Completed Setup Phase
+
+### ✅ Task 0.1: Voice configuration
+- File: `packages/ai/config/voices.ts`
+- Features: Nina voice (free plan limitation)
+- Documentation includes all voice settings from official ElevenLabs API
+- Helper functions: `getVoiceConfig()`, `isValidVoiceKey()`
+
+### ✅ Task 0.2: Database schema
+- File: `packages/backend/convex/audioStudies/schema.ts`
+- Tables: contentAudios, userContentAudios
+- Proper indexes for efficient queries
+- Uses convex-helpers `literals()` for contentType
+- Uses `v.optional()` for fields that don't exist until generated
+- Uses shared validators from contentValidators
+- Updated main schema.ts with import
+- Typecheck: ✅ Passing
+
+### ✅ Task 0.3 & 0.4: Content queries
+- Files: 
+  - `packages/backend/convex/articleContents/queries.ts`
+  - `packages/backend/convex/subjectSections/queries.ts`
+- Both use convex-helpers validators:
+  - `vv.id()` for type-safe table IDs
+  - `nullable()` for union with null return types
+- Uses shared `localeValidator` from contentValidators
+- No explicit handler return types - Convex infers automatically
+- Typecheck: ✅ Passing
+
+## Completed Core Phase
+
+### ✅ Task 1.1: AI Actions
+- File: `packages/backend/convex/audioStudies/actions.ts`
+- Two internal actions:
+  - `generateScript` - Uses Gemini to create podcast script with ElevenLabs V3 tags
+  - `generateSpeech` - Uses ElevenLabs V3 to generate audio from script
+- Prompt file: `packages/ai/prompt/audio-studies.ts`
+  - Uses `createPrompt` utility
+  - Optimized for ElevenLabs V3 audio tags ([curious], [excited], etc.)
+  - Supports multiple languages via `LANGUAGE_GUIDELINES` record
+  - Dynamic script length based on content coverage
+- Proper error handling with `ConvexError`
+- Types reused from schema (`ContentId`, `ContentType`)
+- Exported validators from schema for reuse
+- Type assertions required for branded ID types (TypeScript limitation)
+
+### ✅ Task 1.2: Queries (Internal Only)
+- File: `packages/backend/convex/audioStudies/queries.ts`
+- **Only created internal queries actually used by actions:**
+  - `getById` - Used by `generateScript` action
+  - `getWithScriptById` - Used by `generateSpeech` action
+  - `verifyContentHash` - Verifies content hasn't changed during generation
+- **NO speculative public queries** (getStatusById, getListeningHistory)
+  - Will add public queries when UI is built
+- Reuses `voiceSettingsValidator` from shared validators
+- Follows convex-helpers patterns
+
+### ✅ Task 1.3: Mutations (Internal Only)
+- File: `packages/backend/convex/audioStudies/mutations.ts`
+- **Only created mutations actually used by actions:**
+  - `updateStatus` - Update generation status (used by both actions)
+  - `saveScript` - Save generated script, mark completed
+  - `saveAudio` - Save audio metadata, mark completed
+  - `markFailed` - Mark generation as failed with error message
+  - `updateContentHash` - Update hash when content changes, clear old audio
+- All mutations are `internalMutation` (only callable from Convex)
+- Table names explicitly included in `ctx.db.get()` and `ctx.db.patch()`
+- Uses `ConvexError` for proper error handling
+- Timestamps updated on every mutation
+- Error handling helper moved to shared utils:
+  - `getErrorMessage()` in `packages/backend/convex/utils/helper.ts`
+  - Extracts `data.message` from `ConvexError`, falls back to `error.message`
+
+### ✅ Task 1.4: Workflow
+- File: `packages/backend/convex/audioStudies/workflows.ts`
+- **Created durable workflow using Convex Workflow component:**
+  - `generateAudio` - Orchestrates the full pipeline
+- **Two sequential steps:**
+  1. `generateScript` - Creates podcast script using Gemini
+  2. `generateSpeech` - Converts script to audio using ElevenLabs V3
+- **Benefits:**
+  - Survives server restarts and crashes
+  - Automatic retries on transient failures (API rate limits)
+  - Can be monitored, cancelled, or cleaned up
+  - Guaranteed exactly-once execution semantics
+- **Configuration:**
+  - `maxParallelism: 10` (reasonable default)
+  - `retry: true` on both steps
+- Uses `WorkflowManager` from `@convex-dev/workflow`
+- Workflow component already configured in `convex.config.ts`
+
+## Completed Integration Phase
+
+### ✅ Task 2.1: Content Sync Integration
+- **Cost Protection Strategy:** Verify content hash before AND after AI generation
+  - Before generating script: Check hash matches
+  - After generating script: Verify hash still matches before saving
+  - Before generating speech: Check hash matches
+  - After generating speech: Verify hash still matches before saving
+  - If hash changed during generation, abort and don't save (saves API costs)
+- **Content Update Flow:**
+  1. Content changes in `contentSync/mutations.ts`
+  2. Call `updateContentHash` mutation
+  3. Delete old audio file from storage (saves space)
+  4. Update record with new hash and reset to "pending" status
+  5. Clear script and audio metadata
+  6. User clicks "Listen" → trigger new workflow generation
+- **Hooked into:**
+  - `contentSync/mutations.ts` - Article updates
+  - `contentSync/mutations.ts` - Subject section updates
+- **Files modified:**
+  - `packages/backend/convex/audioStudies/queries.ts` - Added `verifyContentHash`
+  - `packages/backend/convex/audioStudies/mutations.ts` - Added `updateContentHash`
+  - `packages/backend/convex/audioStudies/actions.ts` - Hash verification before/after generation
+  - `packages/backend/convex/contentSync/mutations.ts` - Hooked into bulk sync
+
+## Cost Protection Features
+
+### Before Spending Money (AI API Calls)
+```typescript
+// 1. Check hash before generating
+const hashStillValid = await ctx.runQuery(
+  internal.audioStudies.queries.verifyContentHash,
+  { contentAudioId, expectedHash }
+);
+
+if (!hashStillValid) {
+  throw new ConvexError({
+    code: "CONTENT_CHANGED",
+    message: "Content changed, aborting to save costs",
+  });
+}
+
+// 2. Generate (costs money)
+const result = await generateText(...);
+
+// 3. Verify hash still valid before saving
+const hashStillValidAfter = await ctx.runQuery(...);
+if (!hashStillValidAfter) {
+  throw new ConvexError({
+    code: "CONTENT_CHANGED", 
+    message: "Content changed after generation, discarding to save costs",
+  });
+}
+```
+
+### Storage Cleanup
+- Old audio files deleted immediately when content changes
+- No wasted storage space
+- Only most current data stored
+
+## Convex-Helpers Patterns Used
+
+### In Schemas:
+```typescript
+// Use literals() for string unions
+import { literals } from "convex-helpers/validators";
+contentType: literals("article", "subject")
+
+// Use v.optional() for unset fields (not nullable)
+script: v.optional(v.string())
+```
+
+### In Functions:
+```typescript
+// Use vv.id() for type-safe table references
+import { vv } from "@repo/backend/convex/lib/validators";
+args: { id: vv.id("articleContents") }
+
+// Use nullable() for return types
+import { nullable } from "convex-helpers/validators";
+returns: nullable(v.object({...}))
+
+// No explicit handler return type - let Convex infer
+handler: async (ctx, args) => { ... }
+```
+
+## Architecture Summary
+
+```
+User Clicks "Listen"
+       ↓
+[Create Audio Record] → status: "pending"
+       ↓
+[Start Workflow] via workflow.start()
+       ↓
+[Step 1: generateScript Action]
+   - Verify hash before generating
+   - Generate script (Gemini - costs money)
+   - Verify hash after generating
+   - Save script to DB
+       ↓
+[Step 2: generateSpeech Action]
+   - Verify hash before generating  
+   - Generate speech (ElevenLabs - costs money)
+   - Verify hash after generating
+   - Save audio to storage
+       ↓
+[Completed] → status: "completed"
+       ↓
+[User Plays Audio]
+
+If Content Changes During Generation:
+   - Hash verification fails
+   - Generation aborted
+   - Result discarded (money saved)
+   - Error recorded
+```
+
+## Commands
+```bash
+pnpm --filter @repo/backend typecheck
+pnpm lint
+```
+
+## Status: ✅ COMPLETE
+All phases implemented following Convex best practices with cost protection.

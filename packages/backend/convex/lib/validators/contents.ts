@@ -6,6 +6,7 @@
  * Import from here instead of duplicating in other schema files.
  */
 import type { Infer } from "convex/values";
+import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
 /** Supported content languages */
@@ -15,6 +16,21 @@ export type Locale = Infer<typeof localeValidator>;
 /** Discriminator for polymorphic content references (used in contentAuthors join table) */
 export const contentTypeValidator = literals("article", "subject", "exercise");
 export type ContentType = Infer<typeof contentTypeValidator>;
+
+/**
+ * Validator for content ID - polymorphic reference to all content types.
+ * Used for statistics tracking (contentViews) and content authors linking.
+ * Note: For audio generation, use audioContentIdValidator from audio.ts which excludes exercises.
+ * Tracks: articles, subject sections, and exercise sets (not individual questions)
+ */
+export const contentIdValidator = v.union(
+  v.id("articleContents"),
+  v.id("subjectSections"),
+  v.id("exerciseSets")
+);
+
+/** Type for content ID */
+export type ContentId = Infer<typeof contentIdValidator>;
 
 export const articleCategoryValidator = literals("politics");
 export type ArticleCategory = Infer<typeof articleCategoryValidator>;
