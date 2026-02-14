@@ -11,42 +11,6 @@ import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
 
 /**
- * Get content audio metadata by ID.
- * Used by workflow and actions to retrieve audio configuration.
- */
-export const getById = internalQuery({
-  args: {
-    contentAudioId: vv.id("contentAudios"),
-  },
-  returns: nullable(
-    v.object({
-      contentRef: audioContentRefValidator,
-      contentHash: v.string(),
-      voiceId: v.string(),
-      voiceSettings: v.optional(voiceSettingsValidator),
-      model: audioModelValidator,
-      status: audioStatusValidator,
-    })
-  ),
-  handler: async (ctx, args) => {
-    const audio = await ctx.db.get("contentAudios", args.contentAudioId);
-
-    if (!audio) {
-      return null;
-    }
-
-    return {
-      contentRef: audio.contentRef,
-      contentHash: audio.contentHash,
-      voiceId: audio.voiceId,
-      voiceSettings: audio.voiceSettings,
-      model: audio.model,
-      status: audio.status,
-    };
-  },
-});
-
-/**
  * Get audio metadata and content data for script generation.
  * Returns both audio configuration and the associated content.
  *
