@@ -8,13 +8,22 @@ import {
 } from "@repo/backend/convex/audioStudies/constants";
 import { getResetAudioFields } from "@repo/backend/convex/audioStudies/utils";
 import { internalMutation } from "@repo/backend/convex/functions";
-import { audioContentRefValidator } from "@repo/backend/convex/lib/validators/audio";
+import {
+  type AudioStatus,
+  audioContentRefValidator,
+} from "@repo/backend/convex/lib/validators/audio";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { workflow } from "@repo/backend/convex/workflow";
 import { ConvexError, v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
+
+/**
+ * Claimable statuses that allow workflow retries.
+ * Derived from AudioStatus to maintain single source of truth.
+ */
+type ClaimableStatus = Extract<AudioStatus, "pending" | "script-generated">;
 
 /**
  * Save generated script to content audio and update status.
@@ -162,8 +171,15 @@ export const saveAudio = internalMutation({
 });
 
 /**
- * Mark audio generation as failed.
- * Idempotent: Skip if already reset to pending by content change.
+ * Mark audio generation step as failed and reset status for workflow retries.
+ *
+ * CRITICAL: This resets the status to allow workflow retries to claim the work again.
+ * Convex workflows retry failed steps automatically, so we must reset to claimable state:
+ * - "generating-script" → "pending" (script generation can be retried)
+ * - "generating-speech" → "script-generated" (speech generation can be retried)
+ *
+ * Idempotent: Skip if already reset by updateContentHash (content changed during generation).
+ * Retry-safe: Multiple calls with same error are idempotent.
  */
 export const markFailed = internalMutation({
   args: {
@@ -187,8 +203,21 @@ export const markFailed = internalMutation({
       return null;
     }
 
+    // Reset to claimable state based on which phase failed.
+    // This enables workflow retries to claim and retry the work.
+    let resetStatus: ClaimableStatus;
+    if (audio.status === "generating-script") {
+      resetStatus = "pending";
+    } else if (audio.status === "generating-speech") {
+      resetStatus = "script-generated";
+    } else {
+      // Already in a terminal or unexpected state, nothing to reset
+      // This shouldn't happen in normal flow, but handle defensively
+      return null;
+    }
+
     await ctx.db.patch("contentAudios", args.contentAudioId, {
-      status: "failed",
+      status: resetStatus,
       errorMessage: args.error,
       failedAt: Date.now(),
       generationAttempts: audio.generationAttempts + 1,
