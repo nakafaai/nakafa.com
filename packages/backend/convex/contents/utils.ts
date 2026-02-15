@@ -1,6 +1,9 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import type {
+  ContentRef,
+  Locale,
+} from "@repo/backend/convex/lib/validators/contents";
 import { ConvexError } from "convex/values";
 
 interface RecordViewArgs {
@@ -20,124 +23,38 @@ interface RecordViewResult {
  * Records a unique content view per user/device.
  * Returns alreadyViewed=true if previously viewed.
  */
-async function recordArticleView(
+async function recordView(
   ctx: MutationCtx,
-  contentId: Id<"articleContents">,
+  contentRef: ContentRef,
   args: RecordViewArgs
 ): Promise<RecordViewResult> {
   const now = Date.now();
 
   const existingView = args.userId
     ? await ctx.db
-        .query("articleContentViews")
-        .withIndex("userId_contentId", (q) =>
-          q.eq("userId", args.userId).eq("contentId", contentId)
+        .query("contentViews")
+        .withIndex("userId_contentRefId", (q) =>
+          q.eq("userId", args.userId).eq("contentRef.id", contentRef.id)
         )
         .first()
     : await ctx.db
-        .query("articleContentViews")
-        .withIndex("deviceId_contentId", (q) =>
-          q.eq("deviceId", args.deviceId).eq("contentId", contentId)
+        .query("contentViews")
+        .withIndex("deviceId_contentRefId", (q) =>
+          q.eq("deviceId", args.deviceId).eq("contentRef.id", contentRef.id)
         )
         .first();
 
   if (existingView) {
-    await ctx.db.patch("articleContentViews", existingView._id, {
-      lastViewedAt: now,
-    });
     return { success: true, isNewView: false, alreadyViewed: true };
   }
 
-  await ctx.db.insert("articleContentViews", {
-    contentId,
+  await ctx.db.insert("contentViews", {
+    contentRef,
     locale: args.locale,
     slug: args.slug,
     deviceId: args.deviceId,
     userId: args.userId,
-    firstViewedAt: now,
-    lastViewedAt: now,
-  });
-
-  return { success: true, isNewView: true, alreadyViewed: false };
-}
-
-async function recordSubjectView(
-  ctx: MutationCtx,
-  contentId: Id<"subjectSections">,
-  args: RecordViewArgs
-): Promise<RecordViewResult> {
-  const now = Date.now();
-
-  const existingView = args.userId
-    ? await ctx.db
-        .query("subjectContentViews")
-        .withIndex("userId_contentId", (q) =>
-          q.eq("userId", args.userId).eq("contentId", contentId)
-        )
-        .first()
-    : await ctx.db
-        .query("subjectContentViews")
-        .withIndex("deviceId_contentId", (q) =>
-          q.eq("deviceId", args.deviceId).eq("contentId", contentId)
-        )
-        .first();
-
-  if (existingView) {
-    await ctx.db.patch("subjectContentViews", existingView._id, {
-      lastViewedAt: now,
-    });
-    return { success: true, isNewView: false, alreadyViewed: true };
-  }
-
-  await ctx.db.insert("subjectContentViews", {
-    contentId,
-    locale: args.locale,
-    slug: args.slug,
-    deviceId: args.deviceId,
-    userId: args.userId,
-    firstViewedAt: now,
-    lastViewedAt: now,
-  });
-
-  return { success: true, isNewView: true, alreadyViewed: false };
-}
-
-async function recordExerciseView(
-  ctx: MutationCtx,
-  contentId: Id<"exerciseSets">,
-  args: RecordViewArgs
-): Promise<RecordViewResult> {
-  const now = Date.now();
-
-  const existingView = args.userId
-    ? await ctx.db
-        .query("exerciseContentViews")
-        .withIndex("userId_contentId", (q) =>
-          q.eq("userId", args.userId).eq("contentId", contentId)
-        )
-        .first()
-    : await ctx.db
-        .query("exerciseContentViews")
-        .withIndex("deviceId_contentId", (q) =>
-          q.eq("deviceId", args.deviceId).eq("contentId", contentId)
-        )
-        .first();
-
-  if (existingView) {
-    await ctx.db.patch("exerciseContentViews", existingView._id, {
-      lastViewedAt: now,
-    });
-    return { success: true, isNewView: false, alreadyViewed: true };
-  }
-
-  await ctx.db.insert("exerciseContentViews", {
-    contentId,
-    locale: args.locale,
-    slug: args.slug,
-    deviceId: args.deviceId,
-    userId: args.userId,
-    firstViewedAt: now,
-    lastViewedAt: now,
+    viewedAt: now,
   });
 
   return { success: true, isNewView: true, alreadyViewed: false };
@@ -177,7 +94,7 @@ export async function recordContentViewBySlug(
         });
       }
 
-      return recordArticleView(ctx, article._id, viewArgs);
+      return recordView(ctx, { type: "article", id: article._id }, viewArgs);
     }
 
     case "subject": {
@@ -195,7 +112,7 @@ export async function recordContentViewBySlug(
         });
       }
 
-      return recordSubjectView(ctx, section._id, viewArgs);
+      return recordView(ctx, { type: "subject", id: section._id }, viewArgs);
     }
 
     case "exercise": {
@@ -213,7 +130,11 @@ export async function recordContentViewBySlug(
         });
       }
 
-      return recordExerciseView(ctx, exerciseSet._id, viewArgs);
+      return recordView(
+        ctx,
+        { type: "exercise", id: exerciseSet._id },
+        viewArgs
+      );
     }
 
     default: {

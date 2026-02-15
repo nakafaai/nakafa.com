@@ -1,14 +1,5 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { type Infer, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
-
-/**
- * Content types supported for audio generation.
- * Note: "exercise" is excluded - exercises don't generate audio.
- * For statistics tracking, all types including exercise are used.
- */
-export const audioContentTypeValidator = literals("article", "subject");
-export type AudioContentType = Infer<typeof audioContentTypeValidator>;
 
 /**
  * Discriminated union for audio content references.
@@ -46,24 +37,6 @@ export const audioContentRefValidator = v.union(
  * Use this type for function parameters and return types.
  */
 export type AudioContentRef = Infer<typeof audioContentRefValidator>;
-
-/**
- * Helper interface for article content references.
- * Useful when you need the specific type in function signatures.
- */
-export interface ArticleContentRef {
-  type: "article";
-  id: Id<"articleContents">;
-}
-
-/**
- * Helper interface for subject content references.
- * Useful when you need the specific type in function signatures.
- */
-export interface SubjectContentRef {
-  type: "subject";
-  id: Id<"subjectSections">;
-}
 
 /** Audio generation status for contentAudios - uses kebab-case convention */
 export const audioStatusValidator = literals(

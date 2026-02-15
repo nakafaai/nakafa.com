@@ -1,9 +1,5 @@
 /**
  * Central trigger registration for Convex database.
- *
- * When a table is modified by a trigger (cascading delete, count updates, etc.),
- * the target table MUST have a registered trigger (even if no-op) to prevent
- * "is not iterable" errors from the trigger wrapper.
  */
 
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
@@ -63,9 +59,9 @@ triggers.register("audioGenerationQueue", noopHandler);
 triggers.register("exerciseAttempts", noopHandler);
 
 // Popularity aggregate triggers for trending content
-triggers.register("articleContentViews", articlePopularityTrigger);
-triggers.register("subjectContentViews", subjectPopularityTrigger);
-triggers.register("exerciseContentViews", exercisePopularityTrigger);
+triggers.register("articlePopularity", articlePopularityTrigger);
+triggers.register("subjectPopularity", subjectPopularityTrigger);
+triggers.register("exercisePopularity", exercisePopularityTrigger);
 
 // Active triggers with custom logic
 triggers.register("exerciseAnswers", exerciseAnswersHandler);

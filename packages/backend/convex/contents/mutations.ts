@@ -18,7 +18,7 @@ import {
 } from "@repo/backend/convex/lib/validators/contents";
 import { v } from "convex/values";
 
-interface PopularContent {
+interface PopularItem {
   ref: AudioContentRef;
   viewCount: number;
 }
@@ -39,10 +39,10 @@ export const populateAudioQueue = internalMutation({
       subjectPopularity.count(ctx, { namespace: "global" }),
     ]);
 
-    const totalProcessed = articleCount + subjectCount;
+    const totalCount = articleCount + subjectCount;
     let totalQueued = 0;
 
-    const [popularArticles, popularSubjects] = await Promise.all([
+    const [articleResults, subjectResults] = await Promise.all([
       articlePopularity.paginate(ctx, {
         namespace: "global",
         order: "desc",
@@ -55,45 +55,21 @@ export const populateAudioQueue = internalMutation({
       }),
     ]);
 
-    const uniqueContent = new Map<string, PopularContent>();
+    const articleItems: PopularItem[] = articleResults.page.map((item) => ({
+      ref: { type: "article" as const, id: item.key[1] },
+      viewCount: item.sumValue,
+    }));
 
-    for (const item of popularArticles.page) {
-      const contentId = item.key[1];
-      const key = `article:${contentId}`;
-      const existing = uniqueContent.get(key);
+    const subjectItems: PopularItem[] = subjectResults.page.map((item) => ({
+      ref: { type: "subject" as const, id: item.key[1] },
+      viewCount: item.sumValue,
+    }));
 
-      if (existing) {
-        existing.viewCount++;
-      } else {
-        uniqueContent.set(key, {
-          ref: { type: "article", id: contentId },
-          viewCount: 1,
-        });
-      }
-    }
-
-    for (const item of popularSubjects.page) {
-      const contentId = item.key[1];
-      const key = `subject:${contentId}`;
-      const existing = uniqueContent.get(key);
-
-      if (existing) {
-        existing.viewCount++;
-      } else {
-        uniqueContent.set(key, {
-          ref: { type: "subject", id: contentId },
-          viewCount: 1,
-        });
-      }
-    }
-
-    const popularItems = [...uniqueContent.values()].sort(
+    const allItems: PopularItem[] = [...articleItems, ...subjectItems].sort(
       (a, b) => b.viewCount - a.viewCount
     );
 
-    const topItems = popularItems.slice(0, 100);
-
-    for (const item of topItems) {
+    for (const item of allItems) {
       if (item.viewCount < MIN_VIEW_THRESHOLD) {
         break;
       }
@@ -181,7 +157,7 @@ export const populateAudioQueue = internalMutation({
       }
     }
 
-    return { processed: totalProcessed, queued: totalQueued };
+    return { processed: totalCount, queued: totalQueued };
   },
 });
 

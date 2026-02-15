@@ -1,51 +1,59 @@
-import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
+import { contentRefValidator } from "@repo/backend/convex/lib/validators/contents";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
 
 const tables = {
   /**
-   * Unique content views - one record per user/device per content.
-   * View count = number of records (no viewCount field needed).
+   * Unified content views table.
+   * One record per user/device per content.
    */
-  articleContentViews: defineTable({
+  contentViews: defineTable({
+    contentRef: contentRefValidator,
+    locale: v.string(),
+    slug: v.string(),
+    deviceId: v.string(),
+    userId: v.optional(v.id("users")),
+    viewedAt: v.number(),
+  })
+    .index("userId_contentRefId", ["userId", "contentRef.id"])
+    .index("deviceId_contentRefId", ["deviceId", "contentRef.id"])
+    .index("contentRefId_locale", ["contentRef.id", "locale"]),
+
+  /**
+   * Article popularity counts.
+   * Updated via triggers when article views are recorded.
+   */
+  articlePopularity: defineTable({
     contentId: v.id("articleContents"),
-    locale: localeValidator,
-    slug: v.string(),
-    deviceId: v.string(),
-    userId: v.optional(v.id("users")),
-    firstViewedAt: v.number(),
-    lastViewedAt: v.number(),
-    // Note: No viewCount field - each record represents exactly 1 view
+    viewCount: v.number(),
+    updatedAt: v.number(),
   })
-    .index("userId_contentId", ["userId", "contentId"])
-    .index("deviceId_contentId", ["deviceId", "contentId"])
-    .index("contentId_locale", ["contentId", "locale"]),
+    .index("by_popularity", ["viewCount"])
+    .index("by_contentId", ["contentId"]),
 
-  subjectContentViews: defineTable({
+  /**
+   * Subject popularity counts.
+   * Updated via triggers when subject views are recorded.
+   */
+  subjectPopularity: defineTable({
     contentId: v.id("subjectSections"),
-    locale: localeValidator,
-    slug: v.string(),
-    deviceId: v.string(),
-    userId: v.optional(v.id("users")),
-    firstViewedAt: v.number(),
-    lastViewedAt: v.number(),
+    viewCount: v.number(),
+    updatedAt: v.number(),
   })
-    .index("userId_contentId", ["userId", "contentId"])
-    .index("deviceId_contentId", ["deviceId", "contentId"])
-    .index("contentId_locale", ["contentId", "locale"]),
+    .index("by_popularity", ["viewCount"])
+    .index("by_contentId", ["contentId"]),
 
-  exerciseContentViews: defineTable({
+  /**
+   * Exercise popularity counts.
+   * Updated via triggers when exercise views are recorded.
+   */
+  exercisePopularity: defineTable({
     contentId: v.id("exerciseSets"),
-    locale: localeValidator,
-    slug: v.string(),
-    deviceId: v.string(),
-    userId: v.optional(v.id("users")),
-    firstViewedAt: v.number(),
-    lastViewedAt: v.number(),
+    viewCount: v.number(),
+    updatedAt: v.number(),
   })
-    .index("userId_contentId", ["userId", "contentId"])
-    .index("deviceId_contentId", ["deviceId", "contentId"])
-    .index("contentId_locale", ["contentId", "locale"]),
+    .index("by_popularity", ["viewCount"])
+    .index("by_contentId", ["contentId"]),
 };
 
 export default tables;

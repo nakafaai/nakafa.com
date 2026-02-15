@@ -3,42 +3,43 @@ import { components } from "@repo/backend/convex/_generated/api";
 import type { DataModel, Id } from "@repo/backend/convex/_generated/dataModel";
 
 /**
- * Tracks global article popularity across all locales.
- * Each record represents 1 unique view.
+ * Tracks article popularity by view count.
  */
 export const articlePopularity = new TableAggregate<{
   Namespace: "global";
   Key: [number, Id<"articleContents">];
   DataModel: DataModel;
-  TableName: "articleContentViews";
+  TableName: "articlePopularity";
 }>(components.articlePopularity, {
   namespace: () => "global",
-  sortKey: (doc) => [0, doc.contentId],
+  sortKey: (doc) => [doc.viewCount, doc.contentId],
+  sumValue: (doc) => doc.viewCount,
 });
 
 /**
- * Tracks global subject section popularity across all locales.
+ * Tracks subject section popularity by view count.
  */
 export const subjectPopularity = new TableAggregate<{
   Namespace: "global";
   Key: [number, Id<"subjectSections">];
   DataModel: DataModel;
-  TableName: "subjectContentViews";
+  TableName: "subjectPopularity";
 }>(components.subjectPopularity, {
   namespace: () => "global",
-  sortKey: (doc) => [0, doc.contentId],
+  sortKey: (doc) => [doc.viewCount, doc.contentId],
+  sumValue: (doc) => doc.viewCount,
 });
 
 /**
- * Tracks global exercise popularity across all locales.
- * Not used for audio generation.
+ * Tracks exercise set popularity by view count.
  */
 export const exercisePopularity = new TableAggregate<{
   Namespace: "global";
   Key: [number, Id<"exerciseSets">];
   DataModel: DataModel;
-  TableName: "exerciseContentViews";
+  TableName: "exercisePopularity";
 }>(components.exercisePopularity, {
   namespace: () => "global",
-  sortKey: (doc) => [0, doc.contentId],
+  sortKey: (doc) => [doc.viewCount, doc.contentId],
+  sumValue: (doc) => doc.viewCount,
 });
