@@ -22,8 +22,10 @@ interface UseRecordContentViewOptions {
 }
 
 /**
- * Records content views with tab visibility tracking.
- * Delays recording until minimum engagement threshold is met.
+ * Records unique content views per user/device.
+ *
+ * Design: Once viewed, always viewed. No view count inflation.
+ * Uses tab visibility tracking with minimum engagement threshold.
  *
  * @param delay - Minimum engagement time before recording (default: 3000ms)
  */
@@ -36,7 +38,6 @@ export function useRecordContentView({
 
   const markAsViewed = useContentViews((s) => s.markAsViewed);
   const isViewed = useContentViews((s) => s.isViewed);
-  const clearExpired = useContentViews((s) => s.clearExpired);
 
   const documentState = useDocumentVisibility();
   const isVisible = documentState === "visible";
@@ -66,10 +67,6 @@ export function useRecordContentView({
     delay,
     { autoInvoke: false }
   );
-
-  useEffect(() => {
-    clearExpired();
-  }, [clearExpired]);
 
   useEffect(() => {
     if (isViewed(contentView.slug)) {

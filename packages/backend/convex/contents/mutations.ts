@@ -21,6 +21,9 @@ import { v } from "convex/values";
  * Queues popular content for audio generation. Runs every 30 minutes via cron.
  *
  * When content is popular in ANY locale, it gets audio in ALL locales.
+ *
+ * Note: Uses aggregate.count() to count unique views (each record = 1 view).
+ * Per Convex best practices, we count records rather than summing redundant fields.
  */
 export const populateAudioQueue = internalMutation({
   args: {},
@@ -29,6 +32,7 @@ export const populateAudioQueue = internalMutation({
     queued: v.number(),
   }),
   handler: async (ctx) => {
+    // Get total counts using aggregate.count() - counts records, not sum of fields
     const [articleCount, subjectCount] = await Promise.all([
       articlePopularity.count(ctx, { namespace: "global" }),
       subjectPopularity.count(ctx, { namespace: "global" }),
@@ -37,6 +41,8 @@ export const populateAudioQueue = internalMutation({
     const totalProcessed = articleCount + subjectCount;
     let totalQueued = 0;
 
+    // Paginate to get most viewed content
+    // Results ordered by insertion order in aggregate (sorted by contentId)
     const [popularArticles, popularSubjects] = await Promise.all([
       articlePopularity.paginate(ctx, {
         namespace: "global",
@@ -50,26 +56,44 @@ export const populateAudioQueue = internalMutation({
       }),
     ]);
 
-    // Extract contentId from [viewCount, contentId] composite key
+    // Build popularity map by counting views per contentId
+    // Since each record is 1 unique view, we count how many records per contentId
+    const contentViewCounts = new Map<string, number>();
+
+    for (const item of popularArticles.page) {
+      const contentId = item.key[1];
+      const key = `article:${contentId}`;
+      contentViewCounts.set(key, (contentViewCounts.get(key) || 0) + 1);
+    }
+
+    for (const item of popularSubjects.page) {
+      const contentId = item.key[1];
+      const key = `subject:${contentId}`;
+      contentViewCounts.set(key, (contentViewCounts.get(key) || 0) + 1);
+    }
+
+    // Convert to array and sort by view count (descending)
     const items = [
       ...popularArticles.page.map((item) => ({
         type: "article" as const,
         id: item.key[1],
-        sumValue: item.sumValue,
+        viewCount: contentViewCounts.get(`article:${item.key[1]}`) || 0,
       })),
       ...popularSubjects.page.map((item) => ({
         type: "subject" as const,
         id: item.key[1],
-        sumValue: item.sumValue,
+        viewCount: contentViewCounts.get(`subject:${item.key[1]}`) || 0,
       })),
     ];
 
-    items.sort((a, b) => b.sumValue - a.sumValue);
+    // Sort by view count (popularity) descending
+    items.sort((a, b) => b.viewCount - a.viewCount);
     const topItems = items.slice(0, 100);
 
     for (const item of topItems) {
-      if (item.sumValue < MIN_VIEW_THRESHOLD) {
-        break; // Remaining items also below threshold
+      // Skip if below minimum view threshold
+      if (item.viewCount < MIN_VIEW_THRESHOLD) {
+        break; // Remaining items also below threshold (sorted descending)
       }
 
       const popularContentRef =
@@ -151,11 +175,12 @@ export const populateAudioQueue = internalMutation({
           }
         }
 
+        // Priority based on view count (popularity)
         await ctx.db.insert("audioGenerationQueue", {
           contentRef: localeContentRef,
           locale,
           slug: contentSlug,
-          priorityScore: item.sumValue * 10,
+          priorityScore: item.viewCount * 10,
           status: "pending",
           requestedAt: Date.now(),
           retryCount: 0,
@@ -172,8 +197,10 @@ export const populateAudioQueue = internalMutation({
 });
 
 /**
- * Records a content view for popularity tracking.
- * Rate-limited per device/user per content (60 second window).
+ * Records a unique content view per user/device per content.
+ *
+ * Idempotent: Same user/device viewing same content multiple times
+ * will only count as 1 view. Returns alreadyViewed=true if previously viewed.
  */
 export const recordContentView = mutation({
   args: {
@@ -184,7 +211,7 @@ export const recordContentView = mutation({
   returns: v.object({
     success: v.boolean(),
     isNewView: v.boolean(),
-    rateLimited: v.optional(v.boolean()),
+    alreadyViewed: v.boolean(),
   }),
   handler: async (ctx, args) => {
     const user = await safeGetAppUser(ctx);

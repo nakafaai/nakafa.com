@@ -3,10 +3,11 @@ import { persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
 /**
- * Tracks content views to prevent duplicate recording within expiry window.
+ * Tracks content views to prevent duplicate recording.
+ *
+ * Design: Once a content is viewed, it's marked forever (no expiry).
+ * This prevents view count inflation and ensures 1 view = 1 person.
  */
-
-const VIEW_EXPIRY_MS = 24 * 60 * 60 * 1000;
 
 interface State {
   viewedSlugs: Record<string, number>;
@@ -15,7 +16,6 @@ interface State {
 interface Actions {
   markAsViewed: (slug: string) => void;
   isViewed: (slug: string) => boolean;
-  clearExpired: () => void;
 }
 
 export type ContentViewsStore = State & Actions;
@@ -35,23 +35,13 @@ export const createContentViewsStore = () =>
             state.viewedSlugs[slug] = Date.now();
           }),
 
+        /**
+         * Checks if content has been viewed.
+         * Returns true if viewed (no expiry - once viewed, always viewed).
+         */
         isViewed: (slug) => {
-          const timestamp = get().viewedSlugs[slug];
-          if (!timestamp) {
-            return false;
-          }
-          return Date.now() - timestamp < VIEW_EXPIRY_MS;
+          return slug in get().viewedSlugs;
         },
-
-        clearExpired: () =>
-          set((state) => {
-            const now = Date.now();
-            for (const [slug, timestamp] of Object.entries(state.viewedSlugs)) {
-              if (now - timestamp >= VIEW_EXPIRY_MS) {
-                delete state.viewedSlugs[slug];
-              }
-            }
-          }),
       })),
       {
         name: "nakafa-content-views",

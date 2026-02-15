@@ -3,8 +3,6 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { ConvexError } from "convex/values";
 
-const RATE_LIMIT_MS = 60_000;
-
 interface RecordViewArgs {
   locale: Locale;
   slug: string;
@@ -15,9 +13,21 @@ interface RecordViewArgs {
 interface RecordViewResult {
   success: boolean;
   isNewView: boolean;
-  rateLimited?: boolean;
+  alreadyViewed: boolean;
 }
 
+/**
+ * Records a unique view per user/device per content.
+ *
+ * Convex Best Practice - Idempotent Mutations:
+ * Same inputs always produce the same output. If view already exists,
+ * returns success without modifying data. Prevents inflated view counts.
+ *
+ * Tracking Strategy:
+ * - Logged-in users: Tracked by userId (1 view per account)
+ * - Anonymous users: Tracked by deviceId (1 view per device/browser)
+ * - No time limits: Once viewed, always counted as viewed
+ */
 async function recordArticleView(
   ctx: MutationCtx,
   contentId: Id<"articleContents">,
@@ -25,6 +35,7 @@ async function recordArticleView(
 ): Promise<RecordViewResult> {
   const now = Date.now();
 
+  // Check for existing view by userId (logged in) or deviceId (anonymous)
   const existingView = args.userId
     ? await ctx.db
         .query("articleContentViews")
@@ -39,18 +50,18 @@ async function recordArticleView(
         )
         .first();
 
+  // Idempotent: If already viewed, return without modification
+  // This ensures 1 view = 1 person forever (no inflation)
   if (existingView) {
-    if (now - existingView.lastViewedAt < RATE_LIMIT_MS) {
-      return { success: false, isNewView: false, rateLimited: true };
-    }
-
+    // Optionally update lastViewedAt for analytics, but don't increment count
     await ctx.db.patch("articleContentViews", existingView._id, {
-      viewCount: existingView.viewCount + 1,
       lastViewedAt: now,
     });
-    return { success: true, isNewView: false };
+    return { success: true, isNewView: false, alreadyViewed: true };
   }
 
+  // First view from this user/device - create record
+  // Each record represents exactly 1 unique view
   await ctx.db.insert("articleContentViews", {
     contentId,
     locale: args.locale,
@@ -59,10 +70,9 @@ async function recordArticleView(
     userId: args.userId,
     firstViewedAt: now,
     lastViewedAt: now,
-    viewCount: 1,
   });
 
-  return { success: true, isNewView: true };
+  return { success: true, isNewView: true, alreadyViewed: false };
 }
 
 async function recordSubjectView(
@@ -87,15 +97,10 @@ async function recordSubjectView(
         .first();
 
   if (existingView) {
-    if (now - existingView.lastViewedAt < RATE_LIMIT_MS) {
-      return { success: false, isNewView: false, rateLimited: true };
-    }
-
     await ctx.db.patch("subjectContentViews", existingView._id, {
-      viewCount: existingView.viewCount + 1,
       lastViewedAt: now,
     });
-    return { success: true, isNewView: false };
+    return { success: true, isNewView: false, alreadyViewed: true };
   }
 
   await ctx.db.insert("subjectContentViews", {
@@ -106,10 +111,9 @@ async function recordSubjectView(
     userId: args.userId,
     firstViewedAt: now,
     lastViewedAt: now,
-    viewCount: 1,
   });
 
-  return { success: true, isNewView: true };
+  return { success: true, isNewView: true, alreadyViewed: false };
 }
 
 async function recordExerciseView(
@@ -134,15 +138,10 @@ async function recordExerciseView(
         .first();
 
   if (existingView) {
-    if (now - existingView.lastViewedAt < RATE_LIMIT_MS) {
-      return { success: false, isNewView: false, rateLimited: true };
-    }
-
     await ctx.db.patch("exerciseContentViews", existingView._id, {
-      viewCount: existingView.viewCount + 1,
       lastViewedAt: now,
     });
-    return { success: true, isNewView: false };
+    return { success: true, isNewView: false, alreadyViewed: true };
   }
 
   await ctx.db.insert("exerciseContentViews", {
@@ -153,15 +152,16 @@ async function recordExerciseView(
     userId: args.userId,
     firstViewedAt: now,
     lastViewedAt: now,
-    viewCount: 1,
   });
 
-  return { success: true, isNewView: true };
+  return { success: true, isNewView: true, alreadyViewed: false };
 }
 
 /**
- * Records a content view after looking up by slug.
- * Rate limits per contentId (per-locale) to enable per-language trending.
+ * Records a unique content view per user/device.
+ *
+ * Idempotent Operation: Same user/device viewing same content multiple times
+ * will only count as 1 view. This ensures accurate view counts without inflation.
  *
  * @throws ConvexError if content not found
  */

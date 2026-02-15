@@ -4,8 +4,8 @@ import { v } from "convex/values";
 
 const tables = {
   /**
-   * Content views for statistics tracking - articles only.
-   * Separate table enables type-safe aggregate with simple ID key.
+   * Unique content views - one record per user/device per content.
+   * View count = number of records (no viewCount field needed).
    */
   articleContentViews: defineTable({
     contentId: v.id("articleContents"),
@@ -15,16 +15,12 @@ const tables = {
     userId: v.optional(v.id("users")),
     firstViewedAt: v.number(),
     lastViewedAt: v.number(),
-    viewCount: v.number(),
+    // Note: No viewCount field - each record represents exactly 1 view
   })
     .index("userId_contentId", ["userId", "contentId"])
     .index("deviceId_contentId", ["deviceId", "contentId"])
     .index("contentId_locale", ["contentId", "locale"]),
 
-  /**
-   * Content views for statistics tracking - subject sections only.
-   * Separate table enables type-safe aggregate with simple ID key.
-   */
   subjectContentViews: defineTable({
     contentId: v.id("subjectSections"),
     locale: localeValidator,
@@ -33,16 +29,11 @@ const tables = {
     userId: v.optional(v.id("users")),
     firstViewedAt: v.number(),
     lastViewedAt: v.number(),
-    viewCount: v.number(),
   })
     .index("userId_contentId", ["userId", "contentId"])
     .index("deviceId_contentId", ["deviceId", "contentId"])
     .index("contentId_locale", ["contentId", "locale"]),
 
-  /**
-   * Content views for statistics tracking - exercises only.
-   * Separate table for exercise tracking (not used for audio).
-   */
   exerciseContentViews: defineTable({
     contentId: v.id("exerciseSets"),
     locale: localeValidator,
@@ -51,7 +42,6 @@ const tables = {
     userId: v.optional(v.id("users")),
     firstViewedAt: v.number(),
     lastViewedAt: v.number(),
-    viewCount: v.number(),
   })
     .index("userId_contentId", ["userId", "contentId"])
     .index("deviceId_contentId", ["deviceId", "contentId"])
