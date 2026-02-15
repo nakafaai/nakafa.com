@@ -62,7 +62,6 @@ async function recordView(
 
 /**
  * Records a content view by slug.
- * Looks up content by slug, then records view by ID.
  * Throws ConvexError if content not found.
  */
 export async function recordContentViewBySlug(

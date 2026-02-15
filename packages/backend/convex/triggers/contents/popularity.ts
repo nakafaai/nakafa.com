@@ -4,20 +4,11 @@ import {
   subjectPopularity,
 } from "@repo/backend/convex/contents/aggregate";
 
-/**
- * Trigger for articlePopularity table.
- * Maintains article popularity aggregate for trending features.
- */
+/** Trigger for maintaining article popularity aggregate. */
 export const articlePopularityTrigger = articlePopularity.trigger();
 
-/**
- * Trigger for subjectPopularity table.
- * Maintains subject section popularity aggregate for trending features.
- */
+/** Trigger for maintaining subject section popularity aggregate. */
 export const subjectPopularityTrigger = subjectPopularity.trigger();
 
-/**
- * Trigger for exercisePopularity table.
- * Maintains exercise set popularity aggregate for trending features.
- */
+/** Trigger for maintaining exercise set popularity aggregate. */
 export const exercisePopularityTrigger = exercisePopularity.trigger();

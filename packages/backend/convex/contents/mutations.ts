@@ -24,8 +24,8 @@ interface PopularItem {
 }
 
 /**
- * Finds the most viewed content and queues it for audio generation.
- * When content is popular in any locale, audio is generated for all locales.
+ * Queues popular content for audio generation across all supported locales.
+ * Processes articles and subject sections only (exercises excluded).
  */
 export const populateAudioQueue = internalMutation({
   args: {},
@@ -163,7 +163,7 @@ export const populateAudioQueue = internalMutation({
 
 /**
  * Records a unique content view per user/device.
- * Idempotent - duplicate views return alreadyViewed=true.
+ * Idempotent - returns alreadyViewed=true for duplicate views.
  */
 export const recordContentView = mutation({
   args: {

@@ -3,7 +3,7 @@ import { components } from "@repo/backend/convex/_generated/api";
 import type { DataModel, Id } from "@repo/backend/convex/_generated/dataModel";
 
 /**
- * Tracks article popularity by view count.
+ * Aggregate for tracking article popularity by view count.
  */
 export const articlePopularity = new TableAggregate<{
   Namespace: "global";
@@ -17,7 +17,7 @@ export const articlePopularity = new TableAggregate<{
 });
 
 /**
- * Tracks subject section popularity by view count.
+ * Aggregate for tracking subject section popularity by view count.
  */
 export const subjectPopularity = new TableAggregate<{
   Namespace: "global";
@@ -31,7 +31,7 @@ export const subjectPopularity = new TableAggregate<{
 });
 
 /**
- * Tracks exercise set popularity by view count.
+ * Aggregate for tracking exercise set popularity by view count.
  */
 export const exercisePopularity = new TableAggregate<{
   Namespace: "global";
