@@ -441,6 +441,7 @@ export const markQueueFailed = internalMutation({
 
     // Check if max retries exceeded
     if (newRetryCount > item.maxRetries) {
+      // Permanent failure - max retries exhausted
       await ctx.db.patch("audioGenerationQueue", args.queueItemId, {
         status: "failed",
         errorMessage: `Max retries exceeded (${item.maxRetries}): ${args.error}`,
@@ -451,8 +452,9 @@ export const markQueueFailed = internalMutation({
       return null;
     }
 
+    // Retries remaining - set back to pending for retry on next cron run
     await ctx.db.patch("audioGenerationQueue", args.queueItemId, {
-      status: "failed",
+      status: "pending",
       errorMessage: args.error,
       lastErrorAt: now,
       retryCount: newRetryCount,
