@@ -21,7 +21,6 @@ import { v } from "convex/values";
  * Queues popular content for audio generation. Runs every 30 minutes via cron.
  *
  * When content is popular in ANY locale, it gets audio in ALL locales.
- * Per-locale popularity tracking enables language-specific trending analytics.
  */
 export const populateAudioQueue = internalMutation({
   args: {},

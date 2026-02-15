@@ -3,8 +3,8 @@ import { components } from "@repo/backend/convex/_generated/api";
 import type { DataModel, Id } from "@repo/backend/convex/_generated/dataModel";
 
 /**
- * Tracks article popularity per-locale (not globally combined).
- * Each locale version (e.g., en/matematika vs id/matematika) ranks independently.
+ * Tracks global article popularity across all locales.
+ * Used for audio generation queue prioritization.
  */
 export const articlePopularity = new TableAggregate<{
   Namespace: "global";
@@ -18,8 +18,8 @@ export const articlePopularity = new TableAggregate<{
 });
 
 /**
- * Tracks subject section popularity per-locale.
- * Each locale version ranks independently for language-specific trending.
+ * Tracks global subject section popularity across all locales.
+ * Used for audio generation queue prioritization.
  */
 export const subjectPopularity = new TableAggregate<{
   Namespace: "global";
@@ -33,7 +33,7 @@ export const subjectPopularity = new TableAggregate<{
 });
 
 /**
- * Tracks exercise popularity per-locale for trending analytics.
+ * Tracks global exercise popularity across all locales.
  * Not used for audio generation (exercises don't have audio).
  */
 export const exercisePopularity = new TableAggregate<{
