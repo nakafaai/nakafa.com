@@ -192,16 +192,7 @@ export const getContentSlug = internalQuery({
 });
 
 /**
- * Verify that an audio file exists in storage.
- * Used to detect orphaned records where storage file was deleted.
- *
- * Per Convex best practices:
- * - Use storage.getUrl() to verify file existence
- * - Returns false if storageId is null or file doesn't exist
- * - Used for integrity checks before serving audio to users
- *
- * @param contentAudioId - The audio record ID to verify
- * @returns true if audio file exists and is accessible
+ * Verifies audio file exists in storage.
  */
 export const verifyAudioFileExists = internalQuery({
   args: {
@@ -215,25 +206,17 @@ export const verifyAudioFileExists = internalQuery({
       return false;
     }
 
-    // Per Convex storage docs: getUrl() throws if file doesn't exist
     try {
       await ctx.storage.getUrl(audio.audioStorageId);
       return true;
     } catch {
-      // File doesn't exist or was deleted
       return false;
     }
   },
 });
 
 /**
- * Get content reference by slug and locale.
- * Maps a slug from one content version to the proper contentRef in a different locale.
- *
- * Type Safety:
- * - Returns discriminated union with proper ID typing
- * - TypeScript narrows automatically based on type discriminator
- * - Zero type assertions needed
+ * Gets content reference by slug and locale for cross-locale lookups.
  */
 export const getContentRefBySlugAndLocale = internalQuery({
   args: {

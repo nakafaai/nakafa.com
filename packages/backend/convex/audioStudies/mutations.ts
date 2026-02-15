@@ -215,6 +215,7 @@ export const updateContentHash = internalMutation({
   },
   returns: v.object({ updatedCount: v.number() }),
   handler: async (ctx, args) => {
+    // Bounded query: max 10 records (2 locales × safety margin)
     const audios = await ctx.db
       .query("contentAudios")
       .withIndex("contentRef_locale", (q) =>
@@ -222,7 +223,7 @@ export const updateContentHash = internalMutation({
           .eq("contentRef.type", args.contentRef.type)
           .eq("contentRef.id", args.contentRef.id)
       )
-      .collect();
+      .take(10);
 
     let updatedCount = 0;
 
@@ -276,7 +277,8 @@ export const lockQueueItem = internalMutation({
       return null;
     }
 
-    if (item.retryCount >= item.maxRetries) {
+    // Allow maxRetries attempts (retryCount 0 to maxRetries inclusive)
+    if (item.retryCount > item.maxRetries) {
       await ctx.db.patch("audioGenerationQueue", args.queueItemId, {
         status: "failed",
         errorMessage: `Exceeded maximum retry attempts (${item.maxRetries})`,
@@ -300,8 +302,7 @@ export const lockQueueItem = internalMutation({
 });
 
 /**
- * Creates or returns existing audio record. Idempotent.
- * Resets existing record if content hash changed.
+ * Creates or returns existing audio record. Handles race conditions by deduplicating.
  */
 export const createOrGetAudioRecord = internalMutation({
   args: {
@@ -311,6 +312,7 @@ export const createOrGetAudioRecord = internalMutation({
   },
   returns: v.id("contentAudios"),
   handler: async (ctx, args) => {
+    // First check for existing record
     const existing = await ctx.db
       .query("contentAudios")
       .withIndex("contentRef_locale", (q) =>
@@ -332,10 +334,13 @@ export const createOrGetAudioRecord = internalMutation({
       return existing._id;
     }
 
+    // No existing record found - create new one
+    // Note: Due to Convex's serializable isolation, concurrent calls could
+    // both reach this point and create duplicates. We handle this below.
     const voiceConfig = getVoiceConfig(DEFAULT_VOICE_KEY);
     const now = Date.now();
 
-    const id = await ctx.db.insert("contentAudios", {
+    await ctx.db.insert("contentAudios", {
       contentRef: args.contentRef,
       locale: args.locale,
       contentHash: args.contentHash,
@@ -347,7 +352,37 @@ export const createOrGetAudioRecord = internalMutation({
       updatedAt: now,
     });
 
-    return id;
+    // Query again to handle race conditions
+    // If concurrent calls created duplicates, get all and keep only one
+    // Per Convex best practices: Use take() to bound the query
+    // We expect 1-2 records max (normal case = 1, race condition = 2)
+    const allRecords = await ctx.db
+      .query("contentAudios")
+      .withIndex("contentRef_locale", (q) =>
+        q
+          .eq("contentRef.type", args.contentRef.type)
+          .eq("contentRef.id", args.contentRef.id)
+          .eq("locale", args.locale)
+      )
+      .take(10);
+
+    // Deduplicate: keep first, delete rest (expect 1-2 records max)
+    const [keeper, ...duplicates] = allRecords;
+
+    for (const duplicate of duplicates) {
+      await ctx.db.delete("contentAudios", duplicate._id);
+    }
+
+    // If hash changed on the keeper record, reset it
+    if (keeper.contentHash !== args.contentHash) {
+      await ctx.db.patch(
+        "contentAudios",
+        keeper._id,
+        getResetAudioFields(args.contentHash)
+      );
+    }
+
+    return keeper._id;
   },
 });
 
@@ -382,7 +417,7 @@ export const markQueueCompleted = internalMutation({
 });
 
 /**
- * Marks queue item as failed. Idempotent.
+ * Marks queue item as failed. Prevents infinite retries by checking maxRetries.
  */
 export const markQueueFailed = internalMutation({
   args: {
@@ -402,12 +437,25 @@ export const markQueueFailed = internalMutation({
     }
 
     const now = Date.now();
+    const newRetryCount = item.retryCount + 1;
+
+    // Check if max retries exceeded
+    if (newRetryCount > item.maxRetries) {
+      await ctx.db.patch("audioGenerationQueue", args.queueItemId, {
+        status: "failed",
+        errorMessage: `Max retries exceeded (${item.maxRetries}): ${args.error}`,
+        lastErrorAt: now,
+        retryCount: newRetryCount,
+        updatedAt: now,
+      });
+      return null;
+    }
 
     await ctx.db.patch("audioGenerationQueue", args.queueItemId, {
       status: "failed",
       errorMessage: args.error,
       lastErrorAt: now,
-      retryCount: item.retryCount + 1,
+      retryCount: newRetryCount,
       updatedAt: now,
     });
 
@@ -521,8 +569,7 @@ export const cleanup = internalMutation({
     const cutoffDate =
       Date.now() - CLEANUP_CONFIG.retentionDays * 24 * 60 * 60 * 1000;
 
-    // Use take() instead of collect() per Convex best practices
-    // Prevents loading unbounded number of records
+    // Bounded query: max 100 records per cleanup run
     const completedOldItems = await ctx.db
       .query("audioGenerationQueue")
       .withIndex("status_updatedAt", (q) =>
@@ -552,16 +599,7 @@ export const cleanup = internalMutation({
 });
 
 /**
- * Reset queue items stuck in "processing" state.
- * Called by cron job to recover from interrupted workflows.
- *
- * Per Convex best practices:
- * - Uses bounded query with take() to avoid loading large datasets
- * - Resets items stuck longer than QUEUE_TIMEOUT_MS (2 hours)
- * - Increments retryCount to prevent infinite loops
- * - Logs for monitoring but doesn't throw (cleanup is non-critical)
- *
- * @returns Number of stuck items reset
+ * Resets queue items stuck in "processing" state (interrupted workflows).
  */
 export const resetStuckQueueItems = internalMutation({
   args: {},
@@ -571,7 +609,7 @@ export const resetStuckQueueItems = internalMutation({
   handler: async (ctx) => {
     const stuckThreshold = Date.now() - QUEUE_TIMEOUT_MS;
 
-    // Find items stuck in processing state (bounded query per Convex best practices)
+    // Bounded query: max 50 stuck items per run
     const stuckItems = await ctx.db
       .query("audioGenerationQueue")
       .withIndex("status_updatedAt", (q) =>

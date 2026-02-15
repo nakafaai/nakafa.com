@@ -45,7 +45,7 @@ async function recordArticleView(
       return { success: false, isNewView: false, rateLimited: true };
     }
 
-    await ctx.db.patch(existingView._id, {
+    await ctx.db.patch("articleContentViews", existingView._id, {
       viewCount: existingView.viewCount + 1,
       lastViewedAt: now,
       totalDurationSeconds:
@@ -95,7 +95,7 @@ async function recordSubjectView(
       return { success: false, isNewView: false, rateLimited: true };
     }
 
-    await ctx.db.patch(existingView._id, {
+    await ctx.db.patch("subjectContentViews", existingView._id, {
       viewCount: existingView.viewCount + 1,
       lastViewedAt: now,
       totalDurationSeconds:
@@ -145,7 +145,7 @@ async function recordExerciseView(
       return { success: false, isNewView: false, rateLimited: true };
     }
 
-    await ctx.db.patch(existingView._id, {
+    await ctx.db.patch("exerciseContentViews", existingView._id, {
       viewCount: existingView.viewCount + 1,
       lastViewedAt: now,
       totalDurationSeconds:

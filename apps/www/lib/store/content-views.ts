@@ -74,7 +74,10 @@ export const createContentViewsStore = () =>
           if (!startTime) {
             return null;
           }
-          return Math.floor((Date.now() - startTime) / 1000);
+          // Protect against clock skew (Date.now() can jump backward)
+          // Per best practices: Never send negative durations to backend
+          const duration = Math.floor((Date.now() - startTime) / 1000);
+          return Math.max(0, duration);
         },
 
         clearView: (slug) =>

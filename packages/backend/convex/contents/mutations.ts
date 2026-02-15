@@ -116,15 +116,8 @@ export const populateAudioQueue = internalMutation({
           )
           .first();
 
-        if (
-          existingForLocale &&
-          (existingForLocale.status === "pending" ||
-            existingForLocale.status === "processing" ||
-            existingForLocale.status === "failed")
-        ) {
-          continue;
-        }
-
+        // Check if up-to-date audio already exists
+        let shouldSkip = false;
         if (contentHash) {
           const existingAudio = await ctx.db
             .query("contentAudios")
@@ -136,16 +129,24 @@ export const populateAudioQueue = internalMutation({
             )
             .first();
 
+          // Skip only if audio exists, is completed, AND hash matches
           if (
             existingAudio?.status === "completed" &&
             existingAudio.contentHash === contentHash
           ) {
-            continue;
+            shouldSkip = true;
           }
+        }
 
-          if (existingForLocale) {
-            await ctx.db.delete("audioGenerationQueue", existingForLocale._id);
-          }
+        // Clean up stale queue entry if exists (regardless of contentHash)
+        // This prevents orphaned queue items when contentHash is null
+        if (existingForLocale) {
+          await ctx.db.delete("audioGenerationQueue", existingForLocale._id);
+        }
+
+        // Skip queuing if up-to-date audio exists
+        if (shouldSkip) {
+          continue;
         }
 
         await ctx.db.insert("audioGenerationQueue", {
