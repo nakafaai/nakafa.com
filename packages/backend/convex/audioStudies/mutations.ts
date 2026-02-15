@@ -277,8 +277,8 @@ export const lockQueueItem = internalMutation({
       return null;
     }
 
-    // Allow maxRetries attempts (retryCount 0 to maxRetries inclusive)
-    if (item.retryCount > item.maxRetries) {
+    // Fail when maxRetries reached (allows attempts at counts 0 to maxRetries-1)
+    if (item.retryCount >= item.maxRetries) {
       await ctx.db.patch("audioGenerationQueue", args.queueItemId, {
         status: "failed",
         errorMessage: `Exceeded maximum retry attempts (${item.maxRetries})`,
