@@ -181,7 +181,6 @@ export const recordContentView = mutation({
     contentRef: contentViewRefValidator,
     locale: localeValidator,
     deviceId: v.string(),
-    durationSeconds: v.optional(v.number()),
   },
   returns: v.object({
     success: v.boolean(),
@@ -192,12 +191,6 @@ export const recordContentView = mutation({
     const user = await safeGetAppUser(ctx);
     const userId = user?.appUser._id;
 
-    // Clamp duration to non-negative integer (handles clock skew)
-    const durationSeconds =
-      args.durationSeconds !== undefined
-        ? Math.max(0, Math.floor(args.durationSeconds))
-        : undefined;
-
     return await recordContentViewBySlug(
       ctx,
       args.contentRef.type,
@@ -206,7 +199,6 @@ export const recordContentView = mutation({
       {
         deviceId: args.deviceId,
         userId,
-        durationSeconds,
       }
     );
   },

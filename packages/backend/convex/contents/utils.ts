@@ -10,7 +10,6 @@ interface RecordViewArgs {
   slug: string;
   deviceId: string;
   userId?: Id<"users">;
-  durationSeconds?: number;
 }
 
 interface RecordViewResult {
@@ -48,8 +47,6 @@ async function recordArticleView(
     await ctx.db.patch("articleContentViews", existingView._id, {
       viewCount: existingView.viewCount + 1,
       lastViewedAt: now,
-      totalDurationSeconds:
-        existingView.totalDurationSeconds + (args.durationSeconds ?? 0),
     });
     return { success: true, isNewView: false };
   }
@@ -63,7 +60,6 @@ async function recordArticleView(
     firstViewedAt: now,
     lastViewedAt: now,
     viewCount: 1,
-    totalDurationSeconds: args.durationSeconds ?? 0,
   });
 
   return { success: true, isNewView: true };
@@ -98,8 +94,6 @@ async function recordSubjectView(
     await ctx.db.patch("subjectContentViews", existingView._id, {
       viewCount: existingView.viewCount + 1,
       lastViewedAt: now,
-      totalDurationSeconds:
-        existingView.totalDurationSeconds + (args.durationSeconds ?? 0),
     });
     return { success: true, isNewView: false };
   }
@@ -113,7 +107,6 @@ async function recordSubjectView(
     firstViewedAt: now,
     lastViewedAt: now,
     viewCount: 1,
-    totalDurationSeconds: args.durationSeconds ?? 0,
   });
 
   return { success: true, isNewView: true };
@@ -148,8 +141,6 @@ async function recordExerciseView(
     await ctx.db.patch("exerciseContentViews", existingView._id, {
       viewCount: existingView.viewCount + 1,
       lastViewedAt: now,
-      totalDurationSeconds:
-        existingView.totalDurationSeconds + (args.durationSeconds ?? 0),
     });
     return { success: true, isNewView: false };
   }
@@ -163,7 +154,6 @@ async function recordExerciseView(
     firstViewedAt: now,
     lastViewedAt: now,
     viewCount: 1,
-    totalDurationSeconds: args.durationSeconds ?? 0,
   });
 
   return { success: true, isNewView: true };

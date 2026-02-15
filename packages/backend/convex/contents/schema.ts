@@ -14,9 +14,8 @@ const tables = {
     deviceId: v.string(),
     userId: v.optional(v.id("users")),
     firstViewedAt: v.number(),
-    lastViewedAt: v.number(), // For rate limiting
+    lastViewedAt: v.number(),
     viewCount: v.number(),
-    totalDurationSeconds: v.number(),
   })
     .index("userId_contentId", ["userId", "contentId"])
     .index("deviceId_contentId", ["deviceId", "contentId"])
@@ -33,9 +32,8 @@ const tables = {
     deviceId: v.string(),
     userId: v.optional(v.id("users")),
     firstViewedAt: v.number(),
-    lastViewedAt: v.number(), // For rate limiting
+    lastViewedAt: v.number(),
     viewCount: v.number(),
-    totalDurationSeconds: v.number(),
   })
     .index("userId_contentId", ["userId", "contentId"])
     .index("deviceId_contentId", ["deviceId", "contentId"])
@@ -52,9 +50,8 @@ const tables = {
     deviceId: v.string(),
     userId: v.optional(v.id("users")),
     firstViewedAt: v.number(),
-    lastViewedAt: v.number(), // For rate limiting
+    lastViewedAt: v.number(),
     viewCount: v.number(),
-    totalDurationSeconds: v.number(),
   })
     .index("userId_contentId", ["userId", "contentId"])
     .index("deviceId_contentId", ["deviceId", "contentId"])
