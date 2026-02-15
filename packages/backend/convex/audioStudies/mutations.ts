@@ -435,12 +435,16 @@ export const startWorkflowsForPendingItems = internalMutation({
     const now = Date.now();
     const today = new Date(now).setHours(0, 0, 0, 0);
 
+    // Fetch completed items with limit to avoid loading entire table
+    // Per Convex best practices: use take() instead of collect() for unbounded queries
+    // We only need maxContentPerDay + buffer to determine if limit is reached
+    const maxContentPerDay = getMaxContentPerDay();
     const completedToday = await ctx.db
       .query("audioGenerationQueue")
       .withIndex("status_completedAt", (q) =>
         q.eq("status", "completed").gte("completedAt", today)
       )
-      .collect();
+      .take(maxContentPerDay + 10);
 
     // Count by slug (cross-locale), not contentRef (locale-specific)
     // This ensures all locales of 1 content piece count as 1 toward daily limit
@@ -449,7 +453,6 @@ export const startWorkflowsForPendingItems = internalMutation({
       completedSlugs.add(item.slug);
     }
 
-    const maxContentPerDay = getMaxContentPerDay();
     if (completedSlugs.size >= maxContentPerDay) {
       logger.info(
         `Daily limit reached: ${completedSlugs.size}/${maxContentPerDay}`
