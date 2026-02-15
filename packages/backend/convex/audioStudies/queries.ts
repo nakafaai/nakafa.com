@@ -14,11 +14,6 @@ import { nullable } from "convex-helpers/validators";
 /**
  * Get audio metadata and content data for script generation.
  * Returns both audio configuration and the associated content.
- *
- * Type Safety:
- * - Uses discriminated union (contentRef) for type-safe content fetching
- * - TypeScript automatically narrows types in fetchContentForAudio
- * - Zero type assertions needed
  */
 export const getAudioAndContentForScriptGeneration = internalQuery({
   args: {
@@ -164,10 +159,6 @@ export const getContentHash = internalQuery({
  * Get content slug by type and ID.
  * Used to find content in different locales.
  * Returns null if content not found.
- *
- * Type Safety:
- * - Uses discriminated union for type-safe lookups
- * - Slugs are consistent across locales (same article, different locale = same slug)
  */
 export const getContentSlug = internalQuery({
   args: {

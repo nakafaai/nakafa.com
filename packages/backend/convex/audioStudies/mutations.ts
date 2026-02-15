@@ -439,8 +439,8 @@ export const markQueueFailed = internalMutation({
     const now = Date.now();
     const newRetryCount = item.retryCount + 1;
 
-    // Check if max retries exceeded
-    if (newRetryCount > item.maxRetries) {
+    // Check if max retries exceeded (consistent with lockQueueItem boundary)
+    if (newRetryCount >= item.maxRetries) {
       // Permanent failure - max retries exhausted
       await ctx.db.patch("audioGenerationQueue", args.queueItemId, {
         status: "failed",
@@ -621,8 +621,8 @@ export const resetStuckQueueItems = internalMutation({
 
     let reset = 0;
     for (const item of stuckItems) {
-      // Reset if retryCount hasn't exceeded maxRetries (allows final attempt reset)
-      if (item.retryCount <= item.maxRetries) {
+      // Reset if max retries not exceeded (consistent with lockQueueItem)
+      if (item.retryCount < item.maxRetries) {
         await ctx.db.patch("audioGenerationQueue", item._id, {
           status: "pending",
           retryCount: item.retryCount + 1,
