@@ -3,24 +3,8 @@ import { components } from "@repo/backend/convex/_generated/api";
 import type { DataModel, Id } from "@repo/backend/convex/_generated/dataModel";
 
 /**
- * Global aggregate for article content popularity tracking.
- *
- * Design:
- * - Table: articleContentViews (specific ID type, no union!)
- * - Namespace: "global" (single namespace combining all locales)
- * - Key: [viewCount, contentId] - composite key for sorting by popularity
- * - Sum: viewCount (total views across ALL locales for priority calculation)
- *
- * Sort Strategy:
- * - Primary sort: viewCount (descending = most popular first)
- * - Tie-breaker: contentId (ensures uniqueness for composite key)
- * - This enables paginate with order:"desc" to return most viewed items
- *
- * Benefits:
- * - Popular content gets audio in ALL locales, not just its primary locale
- * - Single global ranking regardless of where views come from
- * - No cross-type contention with subjects
- * - Zero type assertions anywhere in the codebase
+ * Tracks article popularity per-locale (not globally combined).
+ * Each locale version (e.g., en/matematika vs id/matematika) ranks independently.
  */
 export const articlePopularity = new TableAggregate<{
   Namespace: "global";
@@ -34,24 +18,8 @@ export const articlePopularity = new TableAggregate<{
 });
 
 /**
- * Global aggregate for subject section popularity tracking.
- *
- * Design:
- * - Table: subjectContentViews (specific ID type, no union!)
- * - Namespace: "global" (single namespace combining all locales)
- * - Key: [viewCount, contentId] - composite key for sorting by popularity
- * - Sum: viewCount (total views across ALL locales)
- *
- * Sort Strategy:
- * - Primary sort: viewCount (descending = most popular first)
- * - Tie-breaker: contentId (ensures uniqueness for composite key)
- * - This enables paginate with order:"desc" to return most viewed items
- *
- * Benefits:
- * - Popular content gets audio in ALL locales
- * - Single global ranking regardless of where views come from
- * - No cross-type contention with articles
- * - Zero type assertions anywhere in the codebase
+ * Tracks subject section popularity per-locale.
+ * Each locale version ranks independently for language-specific trending.
  */
 export const subjectPopularity = new TableAggregate<{
   Namespace: "global";
@@ -65,26 +33,8 @@ export const subjectPopularity = new TableAggregate<{
 });
 
 /**
- * Global aggregate for exercise popularity tracking.
- *
- * Design:
- * - Table: exerciseContentViews (specific ID type, no union!)
- * - Namespace: "global" (single namespace combining all locales)
- * - Key: [viewCount, contentId] - composite key for sorting by popularity
- * - Sum: viewCount (total views across ALL locales)
- *
- * Sort Strategy:
- * - Primary sort: viewCount (descending = most popular first)
- * - Tie-breaker: contentId (ensures uniqueness for composite key)
- * - This enables paginate with order:"desc" to return most viewed items
- *
- * Purpose:
- * - Enables trending exercises feature (frontend can query later)
- * - Statistics tracking for exercise engagement
- * - Future-proof: Ready for trending queries when needed
- *
- * Note: Exercises are NOT queued for audio generation (by design),
- * but we track global popularity for trending features.
+ * Tracks exercise popularity per-locale for trending analytics.
+ * Not used for audio generation (exercises don't have audio).
  */
 export const exercisePopularity = new TableAggregate<{
   Namespace: "global";

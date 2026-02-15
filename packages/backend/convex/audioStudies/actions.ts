@@ -6,6 +6,11 @@ import { getDefaultVoiceSettings } from "@repo/ai/config/voices";
 import { podcastScriptPrompt } from "@repo/ai/prompt/audio-studies/v3";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { internalAction } from "@repo/backend/convex/_generated/server";
+import {
+  SECONDS_PER_MINUTE,
+  WORD_SPLIT_REGEX,
+  WORDS_PER_MINUTE,
+} from "@repo/backend/convex/audioStudies/constants";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { getErrorMessage } from "@repo/backend/convex/utils/helper";
 import { chunkScript, DEFAULT_CHUNK_CONFIG } from "@repo/backend/helpers/chunk";
@@ -14,19 +19,6 @@ import {
   generateText,
 } from "ai";
 import { ConvexError, v } from "convex/values";
-
-/**
- * Regex for splitting text into words for word count estimation.
- * Defined at top level for performance.
- */
-const WORD_SPLIT_REGEX = /\s+/;
-
-/**
- * Audio duration calculation constants.
- * Used for estimating audio duration from word count.
- */
-const WORDS_PER_MINUTE = 150; // Average speaking rate
-const SECONDS_PER_MINUTE = 60;
 
 /**
  * Generate a podcast script for content audio.

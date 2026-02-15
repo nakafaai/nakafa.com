@@ -3,16 +3,8 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { ConvexError } from "convex/values";
 
-/**
- * Rate limiting window in milliseconds.
- * Prevents view count spam by limiting views per device/user per content.
- * Current: 1 minute between view increments.
- */
 const RATE_LIMIT_MS = 60_000;
 
-/**
- * Common arguments for recording a content view.
- */
 interface RecordViewArgs {
   locale: Locale;
   slug: string;
@@ -21,23 +13,12 @@ interface RecordViewArgs {
   durationSeconds?: number;
 }
 
-/**
- * Result of recording a content view.
- */
 interface RecordViewResult {
   success: boolean;
   isNewView: boolean;
   rateLimited?: boolean;
 }
 
-/**
- * Record a view for an article content.
- *
- * @param ctx - Convex mutation context
- * @param contentId - Article content ID
- * @param args - View record arguments
- * @returns Result indicating if view was recorded and if it was new
- */
 async function recordArticleView(
   ctx: MutationCtx,
   contentId: Id<"articleContents">,
@@ -48,21 +29,19 @@ async function recordArticleView(
   const existingView = args.userId
     ? await ctx.db
         .query("articleContentViews")
-        .withIndex("userId_slug", (q) =>
-          q.eq("userId", args.userId).eq("slug", args.slug)
+        .withIndex("userId_contentId", (q) =>
+          q.eq("userId", args.userId).eq("contentId", contentId)
         )
         .first()
     : await ctx.db
         .query("articleContentViews")
-        .withIndex("deviceId_slug", (q) =>
-          q.eq("deviceId", args.deviceId).eq("slug", args.slug)
+        .withIndex("deviceId_contentId", (q) =>
+          q.eq("deviceId", args.deviceId).eq("contentId", contentId)
         )
         .first();
 
   if (existingView) {
-    // Rate limiting: Check if last view was within the rate limit window
-    const timeSinceLastView = now - existingView.lastViewedAt;
-    if (timeSinceLastView < RATE_LIMIT_MS) {
+    if (now - existingView.lastViewedAt < RATE_LIMIT_MS) {
       return { success: false, isNewView: false, rateLimited: true };
     }
 
@@ -90,14 +69,6 @@ async function recordArticleView(
   return { success: true, isNewView: true };
 }
 
-/**
- * Record a view for a subject section.
- *
- * @param ctx - Convex mutation context
- * @param contentId - Subject section ID
- * @param args - View record arguments
- * @returns Result indicating if view was recorded and if it was new
- */
 async function recordSubjectView(
   ctx: MutationCtx,
   contentId: Id<"subjectSections">,
@@ -108,21 +79,19 @@ async function recordSubjectView(
   const existingView = args.userId
     ? await ctx.db
         .query("subjectContentViews")
-        .withIndex("userId_slug", (q) =>
-          q.eq("userId", args.userId).eq("slug", args.slug)
+        .withIndex("userId_contentId", (q) =>
+          q.eq("userId", args.userId).eq("contentId", contentId)
         )
         .first()
     : await ctx.db
         .query("subjectContentViews")
-        .withIndex("deviceId_slug", (q) =>
-          q.eq("deviceId", args.deviceId).eq("slug", args.slug)
+        .withIndex("deviceId_contentId", (q) =>
+          q.eq("deviceId", args.deviceId).eq("contentId", contentId)
         )
         .first();
 
   if (existingView) {
-    // Rate limiting: Check if last view was within the rate limit window
-    const timeSinceLastView = now - existingView.lastViewedAt;
-    if (timeSinceLastView < RATE_LIMIT_MS) {
+    if (now - existingView.lastViewedAt < RATE_LIMIT_MS) {
       return { success: false, isNewView: false, rateLimited: true };
     }
 
@@ -150,14 +119,6 @@ async function recordSubjectView(
   return { success: true, isNewView: true };
 }
 
-/**
- * Record a view for an exercise set.
- *
- * @param ctx - Convex mutation context
- * @param contentId - Exercise set ID
- * @param args - View record arguments
- * @returns Result indicating if view was recorded and if it was new
- */
 async function recordExerciseView(
   ctx: MutationCtx,
   contentId: Id<"exerciseSets">,
@@ -168,21 +129,19 @@ async function recordExerciseView(
   const existingView = args.userId
     ? await ctx.db
         .query("exerciseContentViews")
-        .withIndex("userId_slug", (q) =>
-          q.eq("userId", args.userId).eq("slug", args.slug)
+        .withIndex("userId_contentId", (q) =>
+          q.eq("userId", args.userId).eq("contentId", contentId)
         )
         .first()
     : await ctx.db
         .query("exerciseContentViews")
-        .withIndex("deviceId_slug", (q) =>
-          q.eq("deviceId", args.deviceId).eq("slug", args.slug)
+        .withIndex("deviceId_contentId", (q) =>
+          q.eq("deviceId", args.deviceId).eq("contentId", contentId)
         )
         .first();
 
   if (existingView) {
-    // Rate limiting: Check if last view was within the rate limit window
-    const timeSinceLastView = now - existingView.lastViewedAt;
-    if (timeSinceLastView < RATE_LIMIT_MS) {
+    if (now - existingView.lastViewedAt < RATE_LIMIT_MS) {
       return { success: false, isNewView: false, rateLimited: true };
     }
 
@@ -211,22 +170,9 @@ async function recordExerciseView(
 }
 
 /**
- * Record a content view after looking up the content by slug.
+ * Records a content view after looking up by slug.
+ * Rate limits per contentId (per-locale) to enable per-language trending.
  *
- * This helper eliminates duplication across content type-specific mutations
- * by handling the common view recording logic.
- *
- * Design:
- * - Each content type has its own dedicated function for type safety
- * - No type assertions needed - TypeScript narrows types automatically
- * - Follows the pattern established in audioStudies/utils.ts
- *
- * @param ctx - Convex mutation context
- * @param type - Content type discriminator
- * @param locale - Content locale
- * @param slug - Content slug for lookup
- * @param args - View record arguments (deviceId, userId, durationSeconds)
- * @returns Result indicating if view was recorded and if it was new
  * @throws ConvexError if content not found
  */
 export async function recordContentViewBySlug(

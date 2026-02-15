@@ -92,6 +92,12 @@ const tables = {
     contentRef: audioContentRefValidator,
     locale: localeValidator,
     /**
+     * Content slug (cross-locale identifier).
+     * Used to find all locale versions of the same content.
+     * Same slug across all locales enables per-content processing.
+     */
+    slug: v.string(),
+    /**
      * Priority score for queue ordering.
      * Calculated from: viewCount × 10 + ageBoost
      * Higher score = higher priority
@@ -114,14 +120,16 @@ const tables = {
     .index("status_priority", ["status", "priorityScore"])
     /**
      * Deduplication check.
-     * Ensures content isn't queued multiple times.
+     * Ensures content isn't queued multiple times per locale.
      */
     .index("contentRef_locale", ["contentRef.type", "contentRef.id", "locale"])
     /**
-     * Content + status queries.
-     * Finds all pending items for a specific content (all locales).
+     * Content + status queries by slug (cross-locale).
+     * Finds all pending items for a content across ALL locales.
+     * This enables processing all translations together as one content piece.
+     * Per Convex best practices: use specific index ranges for O(log n) performance.
      */
-    .index("contentRef_status", ["contentRef.type", "contentRef.id", "status"])
+    .index("slug_status", ["slug", "status"])
     /**
      * Cleanup queries.
      * Removes old completed/failed items.

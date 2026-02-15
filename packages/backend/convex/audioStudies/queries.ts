@@ -6,6 +6,7 @@ import {
   audioStatusValidator,
   voiceSettingsValidator,
 } from "@repo/backend/convex/lib/validators/audio";
+import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
@@ -153,6 +154,109 @@ export const getContentHash = internalQuery({
       }
       default: {
         // Exhaustive check - TypeScript ensures we handle all cases
+        return null;
+      }
+    }
+  },
+});
+
+/**
+ * Get content slug by type and ID.
+ * Used to find content in different locales.
+ * Returns null if content not found.
+ *
+ * Type Safety:
+ * - Uses discriminated union for type-safe lookups
+ * - Slugs are consistent across locales (same article, different locale = same slug)
+ */
+export const getContentSlug = internalQuery({
+  args: {
+    contentRef: audioContentRefValidator,
+  },
+  returns: nullable(v.string()),
+  handler: async (ctx, args) => {
+    switch (args.contentRef.type) {
+      case "article": {
+        const article = await ctx.db.get("articleContents", args.contentRef.id);
+        return article?.slug ?? null;
+      }
+      case "subject": {
+        const section = await ctx.db.get("subjectSections", args.contentRef.id);
+        return section?.slug ?? null;
+      }
+      default: {
+        return null;
+      }
+    }
+  },
+});
+
+/**
+ * Get content reference by slug and locale.
+ * Maps a slug from one content version to the proper contentRef in a different locale.
+ *
+ * Type Safety:
+ * - Returns discriminated union with proper ID typing
+ * - TypeScript narrows automatically based on type discriminator
+ * - Zero type assertions needed
+ */
+export const getContentRefBySlugAndLocale = internalQuery({
+  args: {
+    contentRef: audioContentRefValidator,
+    locale: localeValidator,
+  },
+  returns: nullable(audioContentRefValidator),
+  handler: async (ctx, args) => {
+    // First get the slug from the original content
+    let slug: string | null = null;
+    switch (args.contentRef.type) {
+      case "article": {
+        const article = await ctx.db.get("articleContents", args.contentRef.id);
+        slug = article?.slug ?? null;
+        break;
+      }
+      case "subject": {
+        const section = await ctx.db.get("subjectSections", args.contentRef.id);
+        slug = section?.slug ?? null;
+        break;
+      }
+      default: {
+        return null;
+      }
+    }
+
+    if (!slug) {
+      return null;
+    }
+
+    // Then find the content with matching slug in the target locale
+    // Return discriminated union - TypeScript infers correct types
+    switch (args.contentRef.type) {
+      case "article": {
+        const article = await ctx.db
+          .query("articleContents")
+          .withIndex("locale_slug", (q) =>
+            q.eq("locale", args.locale).eq("slug", slug)
+          )
+          .first();
+        if (!article) {
+          return null;
+        }
+        return { type: "article" as const, id: article._id };
+      }
+      case "subject": {
+        const section = await ctx.db
+          .query("subjectSections")
+          .withIndex("locale_slug", (q) =>
+            q.eq("locale", args.locale).eq("slug", slug)
+          )
+          .first();
+        if (!section) {
+          return null;
+        }
+        return { type: "subject" as const, id: section._id };
+      }
+      default: {
         return null;
       }
     }

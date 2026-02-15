@@ -18,8 +18,8 @@ const tables = {
     viewCount: v.number(),
     totalDurationSeconds: v.number(),
   })
-    .index("userId_slug", ["userId", "slug"])
-    .index("deviceId_slug", ["deviceId", "slug"])
+    .index("userId_contentId", ["userId", "contentId"])
+    .index("deviceId_contentId", ["deviceId", "contentId"])
     .index("contentId_locale", ["contentId", "locale"]),
 
   /**
@@ -37,8 +37,8 @@ const tables = {
     viewCount: v.number(),
     totalDurationSeconds: v.number(),
   })
-    .index("userId_slug", ["userId", "slug"])
-    .index("deviceId_slug", ["deviceId", "slug"])
+    .index("userId_contentId", ["userId", "contentId"])
+    .index("deviceId_contentId", ["deviceId", "contentId"])
     .index("contentId_locale", ["contentId", "locale"]),
 
   /**
@@ -56,8 +56,8 @@ const tables = {
     viewCount: v.number(),
     totalDurationSeconds: v.number(),
   })
-    .index("userId_slug", ["userId", "slug"])
-    .index("deviceId_slug", ["deviceId", "slug"])
+    .index("userId_contentId", ["userId", "contentId"])
+    .index("deviceId_contentId", ["deviceId", "contentId"])
     .index("contentId_locale", ["contentId", "locale"]),
 };
 
