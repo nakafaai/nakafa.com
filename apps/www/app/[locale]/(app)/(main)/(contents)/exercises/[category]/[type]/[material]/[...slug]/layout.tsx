@@ -35,9 +35,8 @@ export default function Layout({ children, params }: Props) {
 
   return (
     <ContentViewTracker
-      contentType="exercise"
+      contentView={{ type: "exercise", slug: cleanedSlug }}
       locale={locale}
-      slug={cleanedSlug}
     >
       <ExerciseContextProvider slug={cleanedSlug}>
         <AttemptContextProvider slug={cleanedSlug}>

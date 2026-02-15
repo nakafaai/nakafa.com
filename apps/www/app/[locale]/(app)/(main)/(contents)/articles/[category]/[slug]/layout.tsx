@@ -23,9 +23,8 @@ export default function Layout({ children, params }: Props) {
 
   return (
     <ContentViewTracker
-      contentType="article"
+      contentView={{ type: "article", slug: cleanedSlug }}
       locale={locale}
-      slug={cleanedSlug}
     >
       {children}
     </ContentViewTracker>
