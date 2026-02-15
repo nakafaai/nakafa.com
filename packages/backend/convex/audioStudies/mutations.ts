@@ -520,19 +520,21 @@ export const cleanup = internalMutation({
     const cutoffDate =
       Date.now() - CLEANUP_CONFIG.retentionDays * 24 * 60 * 60 * 1000;
 
+    // Use take() instead of collect() per Convex best practices
+    // Prevents loading unbounded number of records
     const completedOldItems = await ctx.db
       .query("audioGenerationQueue")
       .withIndex("status_updatedAt", (q) =>
         q.eq("status", "completed").lt("updatedAt", cutoffDate)
       )
-      .collect();
+      .take(100);
 
     const failedOldItems = await ctx.db
       .query("audioGenerationQueue")
       .withIndex("status_updatedAt", (q) =>
         q.eq("status", "failed").lt("updatedAt", cutoffDate)
       )
-      .collect();
+      .take(100);
 
     let deleted = 0;
     for (const item of completedOldItems) {
