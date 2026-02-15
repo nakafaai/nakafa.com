@@ -6,15 +6,17 @@ import {
   useTimeout,
 } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import type {
+  ContentViewRef,
+  Locale,
+} from "@repo/backend/convex/lib/validators/contents";
 import { generateNanoId } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
 import { useEffect } from "react";
 import { useContentViews } from "@/lib/context/use-content-views";
 
 interface UseRecordContentViewOptions {
-  contentType: "article" | "subject" | "exercise";
-  slug: string;
+  contentView: ContentViewRef;
   locale: Locale;
   delay?: number;
 }
@@ -26,8 +28,7 @@ interface UseRecordContentViewOptions {
  * @param delay - Minimum engagement time before recording (default: 3000ms)
  */
 export function useRecordContentView({
-  contentType,
-  slug,
+  contentView,
   locale,
   delay = 3000,
 }: UseRecordContentViewOptions) {
@@ -47,17 +48,17 @@ export function useRecordContentView({
 
   const { start, clear } = useTimeout(
     async () => {
-      if (isViewed(slug)) {
+      if (isViewed(contentView.slug)) {
         return;
       }
 
       try {
         await recordView({
-          contentRef: { type: contentType, slug },
+          contentRef: { type: contentView.type, slug: contentView.slug },
           locale,
           deviceId,
         });
-        markAsViewed(slug);
+        markAsViewed(contentView.slug);
       } catch {
         // View tracking is non-critical
       }
@@ -71,7 +72,7 @@ export function useRecordContentView({
   }, [clearExpired]);
 
   useEffect(() => {
-    if (isViewed(slug)) {
+    if (isViewed(contentView.slug)) {
       clear();
       return;
     }
@@ -85,5 +86,5 @@ export function useRecordContentView({
     return () => {
       clear();
     };
-  }, [isVisible, isViewed, slug, start, clear]);
+  }, [isVisible, isViewed, contentView.slug, start, clear]);
 }

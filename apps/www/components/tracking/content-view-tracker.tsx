@@ -20,8 +20,7 @@ export function ContentViewTracker({
   delay = 3000,
 }: PropsWithChildren<Props>) {
   useRecordContentView({
-    contentType: contentView.type,
-    slug: contentView.slug,
+    contentView,
     locale,
     delay,
   });
