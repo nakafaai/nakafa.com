@@ -619,8 +619,8 @@ export const resetStuckQueueItems = internalMutation({
 
     let reset = 0;
     for (const item of stuckItems) {
-      // Only reset if max retries not exceeded
-      if (item.retryCount < item.maxRetries) {
+      // Reset if retryCount hasn't exceeded maxRetries (allows final attempt reset)
+      if (item.retryCount <= item.maxRetries) {
         await ctx.db.patch("audioGenerationQueue", item._id, {
           status: "pending",
           retryCount: item.retryCount + 1,
