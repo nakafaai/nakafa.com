@@ -30,19 +30,23 @@ async function recordView(
 ): Promise<RecordViewResult> {
   const now = Date.now();
 
-  const existingView = args.userId
+  const existingByDevice = await ctx.db
+    .query("contentViews")
+    .withIndex("deviceId_contentRefId", (q) =>
+      q.eq("deviceId", args.deviceId).eq("contentRef.id", contentRef.id)
+    )
+    .first();
+
+  const existingByUser = args.userId
     ? await ctx.db
         .query("contentViews")
         .withIndex("userId_contentRefId", (q) =>
           q.eq("userId", args.userId).eq("contentRef.id", contentRef.id)
         )
         .first()
-    : await ctx.db
-        .query("contentViews")
-        .withIndex("deviceId_contentRefId", (q) =>
-          q.eq("deviceId", args.deviceId).eq("contentRef.id", contentRef.id)
-        )
-        .first();
+    : null;
+
+  const existingView = existingByDevice ?? existingByUser;
 
   if (existingView) {
     return { success: true, isNewView: false, alreadyViewed: true };
