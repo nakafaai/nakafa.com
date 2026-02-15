@@ -12,7 +12,7 @@ import type {
 } from "@repo/backend/convex/lib/validators/contents";
 import { generateNanoId } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useContentViews } from "@/lib/context/use-content-views";
 
 interface UseRecordContentViewOptions {
@@ -43,7 +43,7 @@ export function useRecordContentView({
 
   const [deviceId] = useLocalStorage({
     key: "nakafa-device-id",
-    defaultValue: `${Date.now()}-${generateNanoId(9)}`,
+    defaultValue: useMemo(() => `${Date.now()}-${generateNanoId(9)}`, []),
   });
 
   const { start, clear } = useTimeout(

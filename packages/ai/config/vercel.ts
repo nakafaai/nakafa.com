@@ -67,6 +67,7 @@ const languageModels = {
   "longcat-flash": createWrappedLanguageModel("meituan/longcat-flash-chat"),
 
   // Minimax
+  "minimax-m2.5": createWrappedLanguageModel("minimax/minimax-m2.5"),
   "minimax-m2.1": createWrappedLanguageModel("minimax/minimax-m2.1"),
   "minimax-m2": createWrappedLanguageModel("minimax/minimax-m2"),
 
@@ -84,6 +85,7 @@ const languageModels = {
   "grok-4": createWrappedLanguageModel("xai/grok-4"),
 
   // ZAI
+  "glm-5": createWrappedLanguageModel("zai/glm-5"),
   "glm-4.7": createWrappedLanguageModel("zai/glm-4.7"),
   "glm-4.6": createWrappedLanguageModel("zai/glm-4.6"),
 };
