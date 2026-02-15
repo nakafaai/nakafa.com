@@ -4,10 +4,7 @@ import type { DataModel, Id } from "@repo/backend/convex/_generated/dataModel";
 
 /**
  * Tracks global article popularity across all locales.
- * Used for audio generation queue prioritization.
- *
- * Note: Uses count() instead of sum() since each record represents 1 view.
- * Per Convex best practices: count records, don't sum redundant fields.
+ * Each record represents 1 unique view.
  */
 export const articlePopularity = new TableAggregate<{
   Namespace: "global";
@@ -16,13 +13,11 @@ export const articlePopularity = new TableAggregate<{
   TableName: "articleContentViews";
 }>(components.articlePopularity, {
   namespace: () => "global",
-  sortKey: (doc) => [0, doc.contentId], // Key format: [count placeholder, contentId]
-  // No sumValue - we use count() to count records, not sum a field
+  sortKey: (doc) => [0, doc.contentId],
 });
 
 /**
  * Tracks global subject section popularity across all locales.
- * Used for audio generation queue prioritization.
  */
 export const subjectPopularity = new TableAggregate<{
   Namespace: "global";
@@ -36,7 +31,7 @@ export const subjectPopularity = new TableAggregate<{
 
 /**
  * Tracks global exercise popularity across all locales.
- * Not used for audio generation (exercises don't have audio).
+ * Not used for audio generation.
  */
 export const exercisePopularity = new TableAggregate<{
   Namespace: "global";

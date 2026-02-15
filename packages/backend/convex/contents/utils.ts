@@ -17,16 +17,8 @@ interface RecordViewResult {
 }
 
 /**
- * Records a unique view per user/device per content.
- *
- * Convex Best Practice - Idempotent Mutations:
- * Same inputs always produce the same output. If view already exists,
- * returns success without modifying data. Prevents inflated view counts.
- *
- * Tracking Strategy:
- * - Logged-in users: Tracked by userId (1 view per account)
- * - Anonymous users: Tracked by deviceId (1 view per device/browser)
- * - No time limits: Once viewed, always counted as viewed
+ * Records a unique content view per user/device.
+ * Returns alreadyViewed=true if previously viewed.
  */
 async function recordArticleView(
   ctx: MutationCtx,
@@ -35,7 +27,6 @@ async function recordArticleView(
 ): Promise<RecordViewResult> {
   const now = Date.now();
 
-  // Check for existing view by userId (logged in) or deviceId (anonymous)
   const existingView = args.userId
     ? await ctx.db
         .query("articleContentViews")
@@ -50,18 +41,13 @@ async function recordArticleView(
         )
         .first();
 
-  // Idempotent: If already viewed, return without modification
-  // This ensures 1 view = 1 person forever (no inflation)
   if (existingView) {
-    // Optionally update lastViewedAt for analytics, but don't increment count
     await ctx.db.patch("articleContentViews", existingView._id, {
       lastViewedAt: now,
     });
     return { success: true, isNewView: false, alreadyViewed: true };
   }
 
-  // First view from this user/device - create record
-  // Each record represents exactly 1 unique view
   await ctx.db.insert("articleContentViews", {
     contentId,
     locale: args.locale,
@@ -158,12 +144,9 @@ async function recordExerciseView(
 }
 
 /**
- * Records a unique content view per user/device.
- *
- * Idempotent Operation: Same user/device viewing same content multiple times
- * will only count as 1 view. This ensures accurate view counts without inflation.
- *
- * @throws ConvexError if content not found
+ * Records a content view by slug.
+ * Looks up content by slug, then records view by ID.
+ * Throws ConvexError if content not found.
  */
 export async function recordContentViewBySlug(
   ctx: MutationCtx,
