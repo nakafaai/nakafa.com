@@ -77,6 +77,7 @@ import type * as subscriptions_utils from "../subscriptions/utils.js";
 import type * as triggers_chats_chats from "../triggers/chats/chats.js";
 import type * as triggers_comments_commentVotes from "../triggers/comments/commentVotes.js";
 import type * as triggers_comments_comments from "../triggers/comments/comments.js";
+import type * as triggers_contents_contentViews from "../triggers/contents/contentViews.js";
 import type * as triggers_contents_exerciseAnswers from "../triggers/contents/exerciseAnswers.js";
 import type * as triggers_contents_popularity from "../triggers/contents/popularity.js";
 import type * as triggers_forums_postReactions from "../triggers/forums/postReactions.js";
@@ -178,6 +179,7 @@ declare const fullApi: ApiFromModules<{
   "triggers/chats/chats": typeof triggers_chats_chats;
   "triggers/comments/commentVotes": typeof triggers_comments_commentVotes;
   "triggers/comments/comments": typeof triggers_comments_comments;
+  "triggers/contents/contentViews": typeof triggers_contents_contentViews;
   "triggers/contents/exerciseAnswers": typeof triggers_contents_exerciseAnswers;
   "triggers/contents/popularity": typeof triggers_contents_popularity;
   "triggers/forums/postReactions": typeof triggers_forums_postReactions;

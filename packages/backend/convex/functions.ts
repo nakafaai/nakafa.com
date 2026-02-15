@@ -11,6 +11,7 @@ import {
 import { chatsHandler } from "@repo/backend/convex/triggers/chats/chats";
 import { commentsHandler } from "@repo/backend/convex/triggers/comments/comments";
 import { commentVotesHandler } from "@repo/backend/convex/triggers/comments/commentVotes";
+import { contentViewsHandler } from "@repo/backend/convex/triggers/contents/contentViews";
 import { exerciseAnswersHandler } from "@repo/backend/convex/triggers/contents/exerciseAnswers";
 import {
   articlePopularityTrigger,
@@ -57,7 +58,7 @@ triggers.register("schoolClassMaterialViews", noopHandler);
 triggers.register("contentAudios", noopHandler);
 triggers.register("audioGenerationQueue", noopHandler);
 triggers.register("exerciseAttempts", noopHandler);
-triggers.register("contentViews", noopHandler);
+triggers.register("contentViews", contentViewsHandler);
 
 // Popularity aggregate triggers for trending content
 triggers.register("articlePopularity", articlePopularityTrigger);
