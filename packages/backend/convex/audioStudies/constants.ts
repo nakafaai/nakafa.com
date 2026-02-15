@@ -76,6 +76,19 @@ export const CLEANUP_CONFIG = {
 } as const;
 
 /**
+ * Queue item timeout configuration.
+ * Items stuck in "processing" state for longer than this are considered stale
+ * and will be reset to "pending" for reprocessing.
+ *
+ * Default: 2 hours - accounts for:
+ * - Script generation (fast, seconds)
+ * - Speech generation (slow, can be minutes for long content)
+ * - Network delays and retries
+ * - Workflow step overhead
+ */
+export const QUEUE_TIMEOUT_MS = 2 * 60 * 60 * 1000; // 2 hours
+
+/**
  * Check if audio generation is enabled for this deployment.
  * Set ENABLE_AUDIO_GENERATION=true in Convex Dashboard to enable.
  *

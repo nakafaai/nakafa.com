@@ -47,4 +47,20 @@ crons.cron(
   {}
 );
 
+/**
+ * Reset stuck queue items - runs every hour
+ * Recovers items stuck in "processing" state (interrupted workflows)
+ *
+ * Per Convex best practices:
+ * - Uses bounded query with take(50) to limit work per run
+ * - Non-critical: logs but doesn't throw on issues
+ * - Frequent enough to prevent long queue stalls (max 1 hour stuck time)
+ */
+crons.interval(
+  "reset stuck queue items",
+  { minutes: 60 },
+  internal.audioStudies.mutations.resetStuckQueueItems,
+  {}
+);
+
 export default crons;

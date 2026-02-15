@@ -5,6 +5,7 @@ import {
   CLEANUP_CONFIG,
   getMaxContentPerDay,
   isAudioGenerationEnabled,
+  QUEUE_TIMEOUT_MS,
 } from "@repo/backend/convex/audioStudies/constants";
 import { getResetAudioFields } from "@repo/backend/convex/audioStudies/utils";
 import { internalMutation } from "@repo/backend/convex/functions";
@@ -547,5 +548,54 @@ export const cleanup = internalMutation({
     }
 
     return { deleted };
+  },
+});
+
+/**
+ * Reset queue items stuck in "processing" state.
+ * Called by cron job to recover from interrupted workflows.
+ *
+ * Per Convex best practices:
+ * - Uses bounded query with take() to avoid loading large datasets
+ * - Resets items stuck longer than QUEUE_TIMEOUT_MS (2 hours)
+ * - Increments retryCount to prevent infinite loops
+ * - Logs for monitoring but doesn't throw (cleanup is non-critical)
+ *
+ * @returns Number of stuck items reset
+ */
+export const resetStuckQueueItems = internalMutation({
+  args: {},
+  returns: v.object({
+    reset: v.number(),
+  }),
+  handler: async (ctx) => {
+    const stuckThreshold = Date.now() - QUEUE_TIMEOUT_MS;
+
+    // Find items stuck in processing state (bounded query per Convex best practices)
+    const stuckItems = await ctx.db
+      .query("audioGenerationQueue")
+      .withIndex("status_updatedAt", (q) =>
+        q.eq("status", "processing").lt("updatedAt", stuckThreshold)
+      )
+      .take(50);
+
+    let reset = 0;
+    for (const item of stuckItems) {
+      // Only reset if max retries not exceeded
+      if (item.retryCount < item.maxRetries) {
+        await ctx.db.patch("audioGenerationQueue", item._id, {
+          status: "pending",
+          retryCount: item.retryCount + 1,
+          updatedAt: Date.now(),
+        });
+        reset++;
+      }
+    }
+
+    if (reset > 0) {
+      logger.info(`Reset ${reset} stuck queue items to pending`);
+    }
+
+    return { reset };
   },
 });
