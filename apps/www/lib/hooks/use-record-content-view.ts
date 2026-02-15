@@ -51,6 +51,7 @@ export function useRecordContentView({
   const startView = useContentViews((s) => s.startView);
   const getDuration = useContentViews((s) => s.getDuration);
   const clearView = useContentViews((s) => s.clearView);
+  const clearExpired = useContentViews((s) => s.clearExpired);
 
   // Track document visibility (pause when tab hidden)
   const documentState = useDocumentVisibility();
@@ -96,6 +97,9 @@ export function useRecordContentView({
 
   // Start tracking when component mounts
   useEffect(() => {
+    // Clean up expired viewed slugs on mount
+    clearExpired();
+
     if (!isViewed(slug)) {
       startView(slug);
     }
@@ -106,7 +110,7 @@ export function useRecordContentView({
         clearView(slug);
       }
     };
-  }, [slug, isViewed, startView, clearView]);
+  }, [slug, isViewed, startView, clearView, clearExpired]);
 
   // Control timer based on visibility and idle state
   useEffect(() => {
