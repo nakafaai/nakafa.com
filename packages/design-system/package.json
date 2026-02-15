@@ -18,7 +18,7 @@
     "@lobehub/icons-static-svg": "^1.79.0",
     "@mantine/hooks": "^8.3.14",
     "@next/third-parties": "16.1.6",
-    "@number-flow/react": "^0.5.11",
+    "@number-flow/react": "^0.5.12",
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-use-controllable-state": "^1.2.2",
     "@react-three/drei": "^10.7.7",
