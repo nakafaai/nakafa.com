@@ -171,7 +171,7 @@ export const saveAudio = internalMutation({
       await ctx.storage.delete(audio.audioStorageId);
     }
 
-    await ctx.db.patch(args.contentAudioId, {
+    await ctx.db.patch("contentAudios", args.contentAudioId, {
       audioStorageId: args.storageId,
       audioDuration: args.duration,
       audioSize: args.size,
