@@ -4,6 +4,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { getErrorMessage } from "@repo/backend/convex/utils/helper";
+import { logger } from "@repo/backend/convex/utils/logger";
 import { workflow } from "@repo/backend/convex/workflow";
 import { v } from "convex/values";
 
@@ -16,6 +17,8 @@ export const generateAudioForQueueItem = workflow.define({
   },
   returns: v.null(),
   handler: async (step, args) => {
+    logger.info("Audio workflow started", { queueItemId: args.queueItemId });
+
     // Step 1: Atomically lock queue item (pending -> processing)
     const queueItem = await step.runMutation(
       internal.audioStudies.mutations.lockQueueItem,
@@ -26,11 +29,20 @@ export const generateAudioForQueueItem = workflow.define({
 
     // If item is no longer pending (another worker got it), exit early
     if (!queueItem) {
+      logger.info("Queue item already locked or invalid", {
+        queueItemId: args.queueItemId,
+      });
       return null;
     }
 
+    logger.info("Queue item locked", {
+      queueItemId: args.queueItemId,
+      contentType: queueItem.contentRef.type,
+      contentId: queueItem.contentRef.id,
+      locale: queueItem.locale,
+    });
+
     // Step 2: Fetch content hash for cost protection
-    // Uses discriminated contentRef for type-safe lookup
     const contentHash = await step.runQuery(
       internal.audioStudies.queries.getContentHash,
       {
@@ -40,6 +52,11 @@ export const generateAudioForQueueItem = workflow.define({
 
     // If content doesn't exist, mark as failed and exit
     if (!contentHash) {
+      logger.warn("Content not found for queue item", {
+        queueItemId: args.queueItemId,
+        contentType: queueItem.contentRef.type,
+        contentId: queueItem.contentRef.id,
+      });
       await step.runMutation(internal.audioStudies.mutations.markQueueFailed, {
         queueItemId: args.queueItemId,
         error: "Content not found",
@@ -48,7 +65,6 @@ export const generateAudioForQueueItem = workflow.define({
     }
 
     // Step 3: Get or create audio record (idempotent)
-    // Pass discriminated contentRef for type-safe storage
     const audioRecordId = await step.runMutation(
       internal.audioStudies.mutations.createOrGetAudioRecord,
       {
@@ -58,8 +74,12 @@ export const generateAudioForQueueItem = workflow.define({
       }
     );
 
+    logger.info("Audio record ready", {
+      queueItemId: args.queueItemId,
+      audioRecordId,
+    });
+
     // Step 4: Generate script (idempotent - skips if already exists)
-    // Exponential backoff retries: 1s, 2s, 4s, 8s, 16s for transient failures (rate limits, etc.)
     await step.runAction(
       internal.audioStudies.actions.generateScript,
       {
@@ -70,9 +90,12 @@ export const generateAudioForQueueItem = workflow.define({
       }
     );
 
+    logger.info("Script generation completed", {
+      queueItemId: args.queueItemId,
+      audioRecordId,
+    });
+
     // Step 5: Generate speech (idempotent - skips if already exists)
-    // This is the expensive step (ElevenLabs API), so we verify hash before calling
-    // Exponential backoff retries: 1s, 2s, 4s, 8s, 16s for transient failures
     await step.runAction(
       internal.audioStudies.actions.generateSpeech,
       {
@@ -83,8 +106,11 @@ export const generateAudioForQueueItem = workflow.define({
       }
     );
 
-    // Note: Queue item completion is handled by handleWorkflowComplete
-    // This ensures proper state management for success/failure/cancellation cases
+    logger.info("Speech generation completed", {
+      queueItemId: args.queueItemId,
+      audioRecordId,
+    });
+
     return null;
   },
 });
@@ -101,6 +127,10 @@ export const handleWorkflowComplete = internalMutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     if (args.result.kind === "success") {
+      logger.info("Audio workflow completed successfully", {
+        queueItemId: args.context.queueItemId,
+        workflowId: args.workflowId,
+      });
       await ctx.runMutation(
         internal.audioStudies.mutations.markQueueCompleted,
         {
@@ -109,13 +139,25 @@ export const handleWorkflowComplete = internalMutation({
       );
     } else if (args.result.kind === "failed") {
       const errorMessage = getErrorMessage(args.result.error);
+      logger.error(
+        "Audio workflow failed",
+        {
+          queueItemId: args.context.queueItemId,
+          workflowId: args.workflowId,
+        },
+        args.result.error
+      );
 
       await ctx.runMutation(internal.audioStudies.mutations.markQueueFailed, {
         queueItemId: args.context.queueItemId,
         error: errorMessage,
       });
+    } else if (args.result.kind === "canceled") {
+      logger.info("Audio workflow canceled", {
+        queueItemId: args.context.queueItemId,
+        workflowId: args.workflowId,
+      });
     }
-    // Canceled: resetStuckQueueItems cron will requeue these
 
     return null;
   },

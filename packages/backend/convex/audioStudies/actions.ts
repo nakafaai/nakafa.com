@@ -13,6 +13,7 @@ import {
 } from "@repo/backend/convex/audioStudies/constants";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { getErrorMessage } from "@repo/backend/convex/utils/helper";
+import { logger } from "@repo/backend/convex/utils/logger";
 import { chunkScript, DEFAULT_CHUNK_CONFIG } from "@repo/backend/helpers/chunk";
 import {
   experimental_generateSpeech as aiGenerateSpeech,
@@ -31,20 +32,25 @@ export const generateScript = internalAction({
   args: { contentAudioId: vv.id("contentAudios") },
   returns: v.null(),
   handler: async (ctx, args) => {
-    // Atomic claim: Check and update status in single mutation to prevent race conditions
-    // If another worker already claimed it, this returns false and we exit early
+    logger.info("Generating script", { contentAudioId: args.contentAudioId });
+
     const claimed = await ctx.runMutation(
       internal.audioStudies.mutations.claimScriptGeneration,
       { contentAudioId: args.contentAudioId }
     );
 
     if (!claimed) {
-      // Already claimed by another worker or already generated
+      logger.info("Script already claimed or generated", {
+        contentAudioId: args.contentAudioId,
+      });
       return null;
     }
 
+    logger.info("Script generation claimed", {
+      contentAudioId: args.contentAudioId,
+    });
+
     try {
-      // Query for data INSIDE try block so markFailed catches errors
       const data = await ctx.runQuery(
         internal.audioStudies.queries.getAudioAndContentForScriptGeneration,
         { contentAudioId: args.contentAudioId }
@@ -58,9 +64,7 @@ export const generateScript = internalAction({
       }
 
       const { contentAudio, content } = data;
-      // Cost protection: Verify content hasn't changed before API call
-      // Using verifyContentHash query (returns boolean) instead of getById (returns full object)
-      // for efficiency - we only need to check hash, not fetch all fields
+
       const hashValidBefore = await ctx.runQuery(
         internal.audioStudies.queries.verifyContentHash,
         {
@@ -70,13 +74,21 @@ export const generateScript = internalAction({
       );
 
       if (!hashValidBefore) {
+        logger.warn("Content changed before script generation", {
+          contentAudioId: args.contentAudioId,
+          contentHash: contentAudio.contentHash,
+        });
         throw new ConvexError({
           code: "CONTENT_CHANGED",
           message: "Content changed during generation, aborting to save costs",
         });
       }
 
-      // Generate podcast script using V3 optimized prompt
+      logger.info("Generating script with AI", {
+        contentAudioId: args.contentAudioId,
+        contentType: contentAudio.contentRef.type,
+      });
+
       const prompt = podcastScriptPrompt({
         title: content.title,
         description: content.description,
@@ -89,8 +101,11 @@ export const generateScript = internalAction({
         prompt,
       });
 
-      // Cost protection: Verify content hasn't changed after API call
-      // Using verifyContentHash query for efficiency
+      logger.info("Script generated", {
+        contentAudioId: args.contentAudioId,
+        scriptLength: script.length,
+      });
+
       const hashValidAfter = await ctx.runQuery(
         internal.audioStudies.queries.verifyContentHash,
         {
@@ -100,6 +115,10 @@ export const generateScript = internalAction({
       );
 
       if (!hashValidAfter) {
+        logger.warn("Content changed after script generation", {
+          contentAudioId: args.contentAudioId,
+          contentHash: contentAudio.contentHash,
+        });
         throw new ConvexError({
           code: "CONTENT_CHANGED",
           message:
@@ -107,12 +126,18 @@ export const generateScript = internalAction({
         });
       }
 
-      // Save the generated script
       await ctx.runMutation(internal.audioStudies.mutations.saveScript, {
         contentAudioId: args.contentAudioId,
         script,
       });
+
+      logger.info("Script saved", { contentAudioId: args.contentAudioId });
     } catch (error) {
+      logger.error(
+        "Script generation failed",
+        { contentAudioId: args.contentAudioId },
+        error
+      );
       await ctx.runMutation(internal.audioStudies.mutations.markFailed, {
         contentAudioId: args.contentAudioId,
         error: getErrorMessage(error),
@@ -144,14 +169,23 @@ export const generateSpeech = internalAction({
   args: { contentAudioId: vv.id("contentAudios") },
   returns: v.null(),
   handler: async (ctx, args) => {
+    logger.info("Generating speech", { contentAudioId: args.contentAudioId });
+
     const claimed = await ctx.runMutation(
       internal.audioStudies.mutations.claimSpeechGeneration,
       { contentAudioId: args.contentAudioId }
     );
 
     if (!claimed) {
+      logger.info("Speech already claimed or generated", {
+        contentAudioId: args.contentAudioId,
+      });
       return null;
     }
+
+    logger.info("Speech generation claimed", {
+      contentAudioId: args.contentAudioId,
+    });
 
     try {
       const audio = await ctx.runQuery(
@@ -175,6 +209,10 @@ export const generateSpeech = internalAction({
       );
 
       if (!hashStillValid) {
+        logger.warn("Content changed before speech generation", {
+          contentAudioId: args.contentAudioId,
+          contentHash: audio.contentHash,
+        });
         throw new ConvexError({
           code: "CONTENT_CHANGED",
           message:
@@ -183,10 +221,24 @@ export const generateSpeech = internalAction({
       }
 
       const chunks = chunkScript(audio.script, DEFAULT_CHUNK_CONFIG);
+
+      logger.info("Generating speech with ElevenLabs", {
+        contentAudioId: args.contentAudioId,
+        chunkCount: chunks.length,
+        scriptLength: audio.script.length,
+      });
+
       const audioBuffers: Uint8Array[] = [];
       const voiceSettings = audio.voiceSettings ?? getDefaultVoiceSettings();
 
-      for (const chunk of chunks) {
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        logger.info(`Generating speech chunk ${i + 1}/${chunks.length}`, {
+          contentAudioId: args.contentAudioId,
+          chunkIndex: i + 1,
+          totalChunks: chunks.length,
+        });
+
         const result = await aiGenerateSpeech({
           model: elevenlabs.speech(audio.model),
           text: chunk.text,
@@ -202,7 +254,11 @@ export const generateSpeech = internalAction({
         audioBuffers.push(new Uint8Array(result.audio.uint8Array));
       }
 
-      // Combine all audio buffers into one
+      logger.info("All speech chunks generated", {
+        contentAudioId: args.contentAudioId,
+        chunkCount: chunks.length,
+      });
+
       const totalLength = audioBuffers.reduce(
         (sum, buf) => sum + buf.length,
         0
@@ -223,6 +279,10 @@ export const generateSpeech = internalAction({
       );
 
       if (!hashValidAfter) {
+        logger.warn("Content changed after speech generation", {
+          contentAudioId: args.contentAudioId,
+          contentHash: audio.contentHash,
+        });
         throw new ConvexError({
           code: "CONTENT_CHANGED",
           message:
@@ -235,7 +295,6 @@ export const generateSpeech = internalAction({
       });
       const storageId = await ctx.storage.store(audioBlob);
 
-      // Calculate duration based on word count, excluding audio tags like [excited], [curious]
       const scriptWithoutTags = audio.script.replace(/\[[^\]]+\]/g, "");
       const wordCount = scriptWithoutTags
         .trim()
@@ -251,7 +310,19 @@ export const generateSpeech = internalAction({
         duration,
         size: combinedBuffer.byteLength,
       });
+
+      logger.info("Speech saved", {
+        contentAudioId: args.contentAudioId,
+        storageId,
+        duration,
+        size: combinedBuffer.byteLength,
+      });
     } catch (error) {
+      logger.error(
+        "Speech generation failed",
+        { contentAudioId: args.contentAudioId },
+        error
+      );
       await ctx.runMutation(internal.audioStudies.mutations.markFailed, {
         contentAudioId: args.contentAudioId,
         error: getErrorMessage(error),

@@ -16,6 +16,7 @@ import {
   contentViewRefValidator,
   localeValidator,
 } from "@repo/backend/convex/lib/validators/contents";
+import { logger } from "@repo/backend/convex/utils/logger";
 import { v } from "convex/values";
 
 interface PopularItem {
@@ -34,12 +35,20 @@ export const populateAudioQueue = internalMutation({
     queued: v.number(),
   }),
   handler: async (ctx) => {
+    logger.info("Populating audio queue started");
+
     const [articleCount, subjectCount] = await Promise.all([
       articlePopularity.count(ctx, { namespace: "global" }),
       subjectPopularity.count(ctx, { namespace: "global" }),
     ]);
 
     const totalCount = articleCount + subjectCount;
+    logger.info("Fetched popularity counts", {
+      articles: articleCount,
+      subjects: subjectCount,
+      total: totalCount,
+    });
+
     let totalQueued = 0;
 
     const [articleResults, subjectResults] = await Promise.all([
@@ -69,8 +78,18 @@ export const populateAudioQueue = internalMutation({
       (a, b) => b.viewCount - a.viewCount
     );
 
+    logger.info("Processing popular content", {
+      articleItems: articleItems.length,
+      subjectItems: subjectItems.length,
+      threshold: MIN_VIEW_THRESHOLD,
+    });
+
     for (const item of allItems) {
       if (item.viewCount < MIN_VIEW_THRESHOLD) {
+        logger.info("Below threshold, stopping", {
+          viewCount: item.viewCount,
+          threshold: MIN_VIEW_THRESHOLD,
+        });
         break;
       }
 
@@ -80,6 +99,10 @@ export const populateAudioQueue = internalMutation({
       );
 
       if (!contentSlug) {
+        logger.warn("Content slug not found", {
+          contentType: item.ref.type,
+          contentId: item.ref.id,
+        });
         continue;
       }
 
@@ -93,6 +116,11 @@ export const populateAudioQueue = internalMutation({
         );
 
         if (!localeContentRef) {
+          logger.debug("Locale content not found", {
+            contentType: item.ref.type,
+            contentId: item.ref.id,
+            locale,
+          });
           continue;
         }
 
@@ -117,8 +145,19 @@ export const populateAudioQueue = internalMutation({
               existingForLocale.status
             )
           ) {
+            logger.debug("Already in queue", {
+              contentType: localeContentRef.type,
+              contentId: localeContentRef.id,
+              locale,
+              status: existingForLocale.status,
+            });
             continue;
           }
+          logger.info("Replacing completed queue item", {
+            contentType: localeContentRef.type,
+            contentId: localeContentRef.id,
+            locale,
+          });
           await ctx.db.delete("audioGenerationQueue", existingForLocale._id);
         }
 
@@ -137,6 +176,11 @@ export const populateAudioQueue = internalMutation({
             existingAudio?.status === "completed" &&
             existingAudio.contentHash === contentHash
           ) {
+            logger.debug("Audio already completed for hash", {
+              contentType: localeContentRef.type,
+              contentId: localeContentRef.id,
+              locale,
+            });
             continue;
           }
         }
@@ -153,9 +197,21 @@ export const populateAudioQueue = internalMutation({
           updatedAt: Date.now(),
         });
 
+        logger.info("Added to queue", {
+          contentType: localeContentRef.type,
+          contentId: localeContentRef.id,
+          locale,
+          priorityScore: item.viewCount * 10,
+        });
+
         totalQueued++;
       }
     }
+
+    logger.info("Populated audio queue completed", {
+      processed: totalCount,
+      queued: totalQueued,
+    });
 
     return { processed: totalCount, queued: totalQueued };
   },

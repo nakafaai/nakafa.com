@@ -620,6 +620,10 @@ export const cleanup = internalMutation({
       deleted++;
     }
 
+    if (deleted > 0) {
+      logger.info("Cleaned up old queue items", { deleted });
+    }
+
     return { deleted };
   },
 });
