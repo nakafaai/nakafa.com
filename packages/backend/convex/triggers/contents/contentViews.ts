@@ -26,7 +26,7 @@ export async function contentViewsHandler(
             .first();
 
           if (existing) {
-            await ctx.db.patch(existing._id, {
+            await ctx.db.patch("articlePopularity", existing._id, {
               viewCount: existing.viewCount + 1,
               updatedAt: now,
             });
@@ -47,7 +47,7 @@ export async function contentViewsHandler(
             .first();
 
           if (existing) {
-            await ctx.db.patch(existing._id, {
+            await ctx.db.patch("subjectPopularity", existing._id, {
               viewCount: existing.viewCount + 1,
               updatedAt: now,
             });
@@ -68,7 +68,7 @@ export async function contentViewsHandler(
             .first();
 
           if (existing) {
-            await ctx.db.patch(existing._id, {
+            await ctx.db.patch("exercisePopularity", existing._id, {
               viewCount: existing.viewCount + 1,
               updatedAt: now,
             });
