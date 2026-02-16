@@ -5,6 +5,7 @@ import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import { cleanSlug } from "@repo/utilities/helper";
 import type { Locale } from "next-intl";
 import { use } from "react";
+import { ContentViewTracker } from "@/components/tracking/content-view-tracker";
 import { AttemptContextProvider } from "@/lib/context/use-attempt";
 import { ExerciseContextProvider } from "@/lib/context/use-exercise";
 import { isNumber } from "@/lib/utils/number";
@@ -23,20 +24,25 @@ interface Props {
 }
 
 export default function Layout({ children, params }: Props) {
-  const { category, type, material, slug } = use(params);
+  const { locale, category, type, material, slug } = use(params);
 
   const lastSlug = slug.at(-1);
   const baseSlug = lastSlug && isNumber(lastSlug) ? slug.slice(0, -1) : slug;
 
-  const FilePath = getSlugPath(category, type, material, baseSlug);
+  const filePath = getSlugPath(category, type, material, baseSlug);
 
-  const cleanedSlug = cleanSlug(FilePath);
+  const cleanedSlug = cleanSlug(filePath);
 
   return (
-    <ExerciseContextProvider slug={cleanedSlug}>
-      <AttemptContextProvider slug={cleanedSlug}>
-        {children}
-      </AttemptContextProvider>
-    </ExerciseContextProvider>
+    <ContentViewTracker
+      contentView={{ type: "exercise", slug: cleanedSlug }}
+      locale={locale}
+    >
+      <ExerciseContextProvider slug={cleanedSlug}>
+        <AttemptContextProvider slug={cleanedSlug}>
+          {children}
+        </AttemptContextProvider>
+      </ExerciseContextProvider>
+    </ContentViewTracker>
   );
 }

@@ -4,35 +4,28 @@ import {
   RETRY_CONFIG,
   SUPPORTED_LOCALES,
 } from "@repo/backend/convex/audioStudies/constants";
+import { safeGetAppUser } from "@repo/backend/convex/auth";
 import {
   articlePopularity,
   subjectPopularity,
 } from "@repo/backend/convex/contents/aggregate";
-import { internalMutation } from "@repo/backend/convex/functions";
+import { recordContentViewBySlug } from "@repo/backend/convex/contents/utils";
+import { internalMutation, mutation } from "@repo/backend/convex/functions";
+import type { AudioContentRef } from "@repo/backend/convex/lib/validators/audio";
+import {
+  contentViewRefValidator,
+  localeValidator,
+} from "@repo/backend/convex/lib/validators/contents";
 import { v } from "convex/values";
 
+interface PopularItem {
+  ref: AudioContentRef;
+  viewCount: number;
+}
+
 /**
- * Populates the audio generation queue with popular content.
- * Runs every 30 minutes via cron.
- *
- * Purpose:
- * - Reads popularity aggregates (articles and subjects only)
- * - Queues top content for audio generation
- * - Exercises are NOT queued (they don't have audio)
- *
- * Type Safety:
- * - Uses discriminated union for type-safe content references
- * - TypeScript infers exact ID types via as const pattern
- * - No explicit interfaces or type annotations needed
- *
- * Scalability:
- * - Parallel query execution for all content types
- * - O(log n) lookups via aggregate indexes
- * - Batched processing (top 100 per locale)
- *
- * Optimization:
- * - Skips re-queuing content that already has completed audio with matching hash
- * - Prevents unnecessary workflow executions (Convex best practice: avoid unnecessary work)
+ * Queues popular content for audio generation across all supported locales.
+ * Processes articles and subject sections only (exercises excluded).
  */
 export const populateAudioQueue = internalMutation({
   args: {},
@@ -41,123 +34,118 @@ export const populateAudioQueue = internalMutation({
     queued: v.number(),
   }),
   handler: async (ctx) => {
-    let totalProcessed = 0;
+    const [articleCount, subjectCount] = await Promise.all([
+      articlePopularity.count(ctx, { namespace: "global" }),
+      subjectPopularity.count(ctx, { namespace: "global" }),
+    ]);
+
+    const totalCount = articleCount + subjectCount;
     let totalQueued = 0;
 
-    for (const locale of SUPPORTED_LOCALES) {
-      // Query article and subject aggregates (exercises excluded - no audio)
-      const [articleCount, subjectCount] = await Promise.all([
-        articlePopularity.count(ctx, { namespace: locale }),
-        subjectPopularity.count(ctx, { namespace: locale }),
-      ]);
+    const [articleResults, subjectResults] = await Promise.all([
+      articlePopularity.paginate(ctx, {
+        namespace: "global",
+        order: "desc",
+        pageSize: 100,
+      }),
+      subjectPopularity.paginate(ctx, {
+        namespace: "global",
+        order: "desc",
+        pageSize: 100,
+      }),
+    ]);
 
-      totalProcessed += articleCount + subjectCount;
+    const articleItems: PopularItem[] = articleResults.page.map((item) => ({
+      ref: { type: "article" as const, id: item.key[1] },
+      viewCount: item.sumValue,
+    }));
 
-      // Get top content from articles and subjects
-      const [popularArticles, popularSubjects] = await Promise.all([
-        articlePopularity.paginate(ctx, {
-          namespace: locale,
-          order: "desc",
-          pageSize: 50,
-        }),
-        subjectPopularity.paginate(ctx, {
-          namespace: locale,
-          order: "desc",
-          pageSize: 50,
-        }),
-      ]);
+    const subjectItems: PopularItem[] = subjectResults.page.map((item) => ({
+      ref: { type: "subject" as const, id: item.key[1] },
+      viewCount: item.sumValue,
+    }));
 
-      // Build unified list with inferred discriminated union types
-      // Extract contentId from composite key [viewCount, contentId]
-      const items = [
-        ...popularArticles.page.map((item) => ({
-          type: "article" as const,
-          id: item.key[1], // Extract contentId from [viewCount, contentId]
-          sumValue: item.sumValue,
-        })),
-        ...popularSubjects.page.map((item) => ({
-          type: "subject" as const,
-          id: item.key[1], // Extract contentId from [viewCount, contentId]
-          sumValue: item.sumValue,
-        })),
-      ];
+    const allItems: PopularItem[] = [...articleItems, ...subjectItems].sort(
+      (a, b) => b.viewCount - a.viewCount
+    );
 
-      // Sort by popularity (descending)
-      items.sort((a, b) => b.sumValue - a.sumValue);
+    for (const item of allItems) {
+      if (item.viewCount < MIN_VIEW_THRESHOLD) {
+        break;
+      }
 
-      // Process top 100 items
-      for (const item of items.slice(0, 100)) {
-        if (item.sumValue < MIN_VIEW_THRESHOLD) {
+      const contentSlug = await ctx.runQuery(
+        internal.audioStudies.queries.getContentSlug,
+        { contentRef: item.ref }
+      );
+
+      if (!contentSlug) {
+        continue;
+      }
+
+      for (const locale of SUPPORTED_LOCALES) {
+        const localeContentRef = await ctx.runQuery(
+          internal.audioStudies.queries.getContentRefBySlugAndLocale,
+          {
+            contentRef: item.ref,
+            locale,
+          }
+        );
+
+        if (!localeContentRef) {
           continue;
         }
 
-        // Build discriminated contentRef
-        const contentRef =
-          item.type === "article"
-            ? { type: "article" as const, id: item.id }
-            : { type: "subject" as const, id: item.id };
+        const contentHash = await ctx.runQuery(
+          internal.audioStudies.queries.getContentHash,
+          { contentRef: localeContentRef }
+        );
 
-        // Check if already queued
-        const existing = await ctx.db
+        const existingForLocale = await ctx.db
           .query("audioGenerationQueue")
           .withIndex("contentRef_locale", (q) =>
             q
-              .eq("contentRef.type", contentRef.type)
-              .eq("contentRef.id", contentRef.id)
+              .eq("contentRef.type", localeContentRef.type)
+              .eq("contentRef.id", localeContentRef.id)
               .eq("locale", locale)
           )
           .first();
 
-        if (existing) {
-          // Skip if already in active or terminal state
-          // Failed items preserve their retryCount - don't reset by re-creating
-          // This prevents infinite retry loops on permanently failing content
+        if (existingForLocale) {
           if (
-            existing.status === "pending" ||
-            existing.status === "processing" ||
-            existing.status === "failed"
+            ["pending", "processing", "failed"].includes(
+              existingForLocale.status
+            )
           ) {
             continue;
           }
-
-          // Only handle "completed" items below
-          // Optimization: Check if content already has completed audio with matching hash
-          // Prevents unnecessary workflow executions (Convex best practice: avoid unnecessary work)
-          // Fetches current content hash and existing audio record in parallel for efficiency
-          const contentHash = await ctx.runQuery(
-            internal.audioStudies.queries.getContentHash,
-            { contentRef }
-          );
-
-          if (contentHash) {
-            const existingAudio = await ctx.db
-              .query("contentAudios")
-              .withIndex("contentRef_locale", (q) =>
-                q
-                  .eq("contentRef.type", contentRef.type)
-                  .eq("contentRef.id", contentRef.id)
-                  .eq("locale", locale)
-              )
-              .first();
-
-            // Skip re-queuing if audio exists, is completed, and hash matches
-            if (
-              existingAudio?.status === "completed" &&
-              existingAudio.contentHash === contentHash
-            ) {
-              continue;
-            }
-          }
-
-          // Only delete completed items that need re-processing (hash mismatch or missing audio)
-          await ctx.db.delete("audioGenerationQueue", existing._id);
+          await ctx.db.delete("audioGenerationQueue", existingForLocale._id);
         }
 
-        // Queue for audio generation
+        if (contentHash) {
+          const existingAudio = await ctx.db
+            .query("contentAudios")
+            .withIndex("contentRef_locale", (q) =>
+              q
+                .eq("contentRef.type", localeContentRef.type)
+                .eq("contentRef.id", localeContentRef.id)
+                .eq("locale", locale)
+            )
+            .first();
+
+          if (
+            existingAudio?.status === "completed" &&
+            existingAudio.contentHash === contentHash
+          ) {
+            continue;
+          }
+        }
+
         await ctx.db.insert("audioGenerationQueue", {
-          contentRef,
+          contentRef: localeContentRef,
           locale,
-          priorityScore: item.sumValue * 10,
+          slug: contentSlug,
+          priorityScore: item.viewCount * 10,
           status: "pending",
           requestedAt: Date.now(),
           retryCount: 0,
@@ -169,6 +157,38 @@ export const populateAudioQueue = internalMutation({
       }
     }
 
-    return { processed: totalProcessed, queued: totalQueued };
+    return { processed: totalCount, queued: totalQueued };
+  },
+});
+
+/**
+ * Records a unique content view per user/device.
+ * Idempotent - returns alreadyViewed=true for duplicate views.
+ */
+export const recordContentView = mutation({
+  args: {
+    contentRef: contentViewRefValidator,
+    locale: localeValidator,
+    deviceId: v.string(),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    isNewView: v.boolean(),
+    alreadyViewed: v.boolean(),
+  }),
+  handler: async (ctx, args) => {
+    const user = await safeGetAppUser(ctx);
+    const userId = user?.appUser._id;
+
+    return await recordContentViewBySlug(
+      ctx,
+      args.contentRef.type,
+      args.locale,
+      args.contentRef.slug,
+      {
+        deviceId: args.deviceId,
+        userId,
+      }
+    );
   },
 });

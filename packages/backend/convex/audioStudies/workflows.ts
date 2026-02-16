@@ -8,28 +8,7 @@ import { workflow } from "@repo/backend/convex/workflow";
 import { v } from "convex/values";
 
 /**
- * Single end-to-end workflow for audio generation.
- *
- * This workflow orchestrates the complete pipeline:
- * 1. Lock queue item (atomically fetch and mark processing)
- * 2. Fetch content hash for cost protection
- * 3. Create or get existing audio record with content hash (idempotent)
- * 4. Generate script using AI (idempotent - skips if exists)
- * 5. Generate speech using ElevenLabs (idempotent - skips if exists)
- * 6. Mark queue item as completed
- *
- * Benefits:
- * - Survives server restarts and crashes
- * - Automatic retries on transient failures
- * - Idempotent steps prevent double-work and double-cost
- * - Content hash validation prevents wasted API calls
- * - Each queue item processed independently for parallelism
- * - Errors handled by onComplete handler (no manual try-catch needed)
- *
- * Type Safety:
- * - Uses discriminated contentRef throughout
- * - TypeScript narrows types automatically
- * - No type assertions needed
+ * Generates audio for a queue item. Idempotent steps, survives crashes.
  */
 export const generateAudioForQueueItem = workflow.define({
   args: {
@@ -104,22 +83,14 @@ export const generateAudioForQueueItem = workflow.define({
       }
     );
 
-    // Step 6: Mark queue item as completed
-    await step.runMutation(internal.audioStudies.mutations.markQueueCompleted, {
-      queueItemId: args.queueItemId,
-    });
-
+    // Note: Queue item completion is handled by handleWorkflowComplete
+    // This ensures proper state management for success/failure/cancellation cases
     return null;
   },
 });
 
 /**
- * Handle workflow completion - success, error, or cancellation.
- * This is called automatically when the workflow finishes.
- *
- * Note: We don't use try-catch in the workflow itself. Instead, we let
- * errors bubble up naturally and handle cleanup here. This is the Convex
- * best practice for durable workflows.
+ * Handles workflow completion (success, failure, cancellation).
  */
 export const handleWorkflowComplete = internalMutation({
   args: {
@@ -129,9 +100,14 @@ export const handleWorkflowComplete = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    if (args.result.kind === "failed") {
-      // Workflow failed - mark queue item as failed
-      // Use getErrorMessage to properly extract error details
+    if (args.result.kind === "success") {
+      await ctx.runMutation(
+        internal.audioStudies.mutations.markQueueCompleted,
+        {
+          queueItemId: args.context.queueItemId,
+        }
+      );
+    } else if (args.result.kind === "failed") {
       const errorMessage = getErrorMessage(args.result.error);
 
       await ctx.runMutation(internal.audioStudies.mutations.markQueueFailed, {
@@ -139,8 +115,7 @@ export const handleWorkflowComplete = internalMutation({
         error: errorMessage,
       });
     }
-    // Success case: queue item already marked completed by the workflow
-    // Canceled case: workflow was manually canceled, leave queue item as-is
+    // Canceled: resetStuckQueueItems cron will requeue these
 
     return null;
   },

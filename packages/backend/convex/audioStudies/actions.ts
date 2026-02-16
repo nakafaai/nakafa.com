@@ -6,6 +6,11 @@ import { getDefaultVoiceSettings } from "@repo/ai/config/voices";
 import { podcastScriptPrompt } from "@repo/ai/prompt/audio-studies/v3";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { internalAction } from "@repo/backend/convex/_generated/server";
+import {
+  SECONDS_PER_MINUTE,
+  WORD_SPLIT_REGEX,
+  WORDS_PER_MINUTE,
+} from "@repo/backend/convex/audioStudies/constants";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { getErrorMessage } from "@repo/backend/convex/utils/helper";
 import { chunkScript, DEFAULT_CHUNK_CONFIG } from "@repo/backend/helpers/chunk";
@@ -14,19 +19,6 @@ import {
   generateText,
 } from "ai";
 import { ConvexError, v } from "convex/values";
-
-/**
- * Regex for splitting text into words for word count estimation.
- * Defined at top level for performance.
- */
-const WORD_SPLIT_REGEX = /\s+/;
-
-/**
- * Audio duration calculation constants.
- * Used for estimating audio duration from word count.
- */
-const WORDS_PER_MINUTE = 150; // Average speaking rate
-const SECONDS_PER_MINUTE = 60;
 
 /**
  * Generate a podcast script for content audio.
@@ -152,20 +144,16 @@ export const generateSpeech = internalAction({
   args: { contentAudioId: vv.id("contentAudios") },
   returns: v.null(),
   handler: async (ctx, args) => {
-    // Atomic claim: Check and update status in single mutation to prevent race conditions
-    // If another worker already claimed it, this returns false and we exit early
     const claimed = await ctx.runMutation(
       internal.audioStudies.mutations.claimSpeechGeneration,
       { contentAudioId: args.contentAudioId }
     );
 
     if (!claimed) {
-      // Already claimed by another worker or already completed
       return null;
     }
 
     try {
-      // Query for data INSIDE try block so markFailed catches errors
       const audio = await ctx.runQuery(
         internal.audioStudies.queries.getAudioForSpeechGeneration,
         { contentAudioId: args.contentAudioId }
@@ -177,7 +165,7 @@ export const generateSpeech = internalAction({
           message: "No script found for audio generation",
         });
       }
-      // Cost protection: Verify hash before expensive ElevenLabs API call
+
       const hashStillValid = await ctx.runQuery(
         internal.audioStudies.queries.verifyContentHash,
         {
@@ -194,13 +182,10 @@ export const generateSpeech = internalAction({
         });
       }
 
-      // Use default chunk config from @repo/ai/config/elevenlabs (V3: 5k limit, no context)
       const chunks = chunkScript(audio.script, DEFAULT_CHUNK_CONFIG);
       const audioBuffers: Uint8Array[] = [];
       const voiceSettings = audio.voiceSettings ?? getDefaultVoiceSettings();
 
-      // Generate each chunk sequentially using the stored model
-      // Using MP3 192kbps for universal browser compatibility and studio quality
       for (const chunk of chunks) {
         const result = await aiGenerateSpeech({
           model: elevenlabs.speech(audio.model),
@@ -229,7 +214,6 @@ export const generateSpeech = internalAction({
         offset += buffer.length;
       }
 
-      // Cost protection: Verify hash hasn't changed after generation
       const hashValidAfter = await ctx.runQuery(
         internal.audioStudies.queries.verifyContentHash,
         {

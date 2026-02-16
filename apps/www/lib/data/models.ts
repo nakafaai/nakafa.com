@@ -77,6 +77,18 @@ export const aiModels: Model[] = [
     type: "premium",
   },
   {
+    icon: Minimax,
+    value: "minimax-m2.5",
+    label: "Minimax M2.5",
+    type: "premium",
+  },
+  {
+    icon: ZAI,
+    value: "glm-5",
+    label: "GLM 5",
+    type: "premium",
+  },
+  {
     icon: Kimi,
     value: "kimi-k2.5",
     label: "Kimi K2.5",

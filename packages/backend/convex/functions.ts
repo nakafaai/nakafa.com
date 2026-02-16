@@ -1,9 +1,5 @@
 /**
  * Central trigger registration for Convex database.
- *
- * When a table is modified by a trigger (cascading delete, count updates, etc.),
- * the target table MUST have a registered trigger (even if no-op) to prevent
- * "is not iterable" errors from the trigger wrapper.
  */
 
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
@@ -15,6 +11,7 @@ import {
 import { chatsHandler } from "@repo/backend/convex/triggers/chats/chats";
 import { commentsHandler } from "@repo/backend/convex/triggers/comments/comments";
 import { commentVotesHandler } from "@repo/backend/convex/triggers/comments/commentVotes";
+import { contentViewsHandler } from "@repo/backend/convex/triggers/contents/contentViews";
 import { exerciseAnswersHandler } from "@repo/backend/convex/triggers/contents/exerciseAnswers";
 import {
   articlePopularityTrigger,
@@ -61,11 +58,12 @@ triggers.register("schoolClassMaterialViews", noopHandler);
 triggers.register("contentAudios", noopHandler);
 triggers.register("audioGenerationQueue", noopHandler);
 triggers.register("exerciseAttempts", noopHandler);
+triggers.register("contentViews", contentViewsHandler);
 
 // Popularity aggregate triggers for trending content
-triggers.register("articleContentViews", articlePopularityTrigger);
-triggers.register("subjectContentViews", subjectPopularityTrigger);
-triggers.register("exerciseContentViews", exercisePopularityTrigger);
+triggers.register("articlePopularity", articlePopularityTrigger);
+triggers.register("subjectPopularity", subjectPopularityTrigger);
+triggers.register("exercisePopularity", exercisePopularityTrigger);
 
 // Active triggers with custom logic
 triggers.register("exerciseAnswers", exerciseAnswersHandler);

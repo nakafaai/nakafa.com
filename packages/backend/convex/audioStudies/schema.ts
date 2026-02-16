@@ -10,33 +10,8 @@ import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
 const tables = {
-  /**
-   * Unified audio storage for articles and subject sections.
-   *
-   * Design:
-   * - Uses discriminated union for type-safe content references
-   * - TypeScript automatically narrows id type based on discriminator
-   * - Zero type assertions needed in application code
-   * - Single table enables efficient cross-type queries (e.g., "all pending audio")
-   *
-   * Scalability:
-   * - One table = one set of indexes = O(log n) lookups
-   * - Easy to add new content types (extend the union)
-   * - Convex handles horizontal scaling automatically
-   *
-   * Note: Exercises are excluded - they don't generate audio.
-   */
+  /** Audio files for articles and subjects (exercises excluded). */
   contentAudios: defineTable({
-    /**
-     * Discriminated content reference.
-     * { type: "article", id: Id<"articleContents"> } |
-     * { type: "subject", id: Id<"subjectSections"> }
-     *
-     * Benefits:
-     * - Type-safe: TypeScript knows exact id type in each branch
-     * - Self-documenting: relationship between type and id is explicit
-     * - No assertions: switch statement narrowing works automatically
-     */
     contentRef: audioContentRefValidator,
     locale: localeValidator,
     /** SHA-256 hash of content body for cache invalidation */
@@ -72,25 +47,16 @@ const tables = {
      */
     .index("contentRef_locale", ["contentRef.type", "contentRef.id", "locale"]),
 
-  /**
-   * Unified audio generation queue for cron-based prioritized processing.
-   *
-   * Design:
-   * - Single queue table handles all content types
-   * - Enables cross-type prioritization (e.g., most popular article vs subject)
-   * - Uses discriminated contentRef for type safety
-   *
-   * Processing:
-   * 1. Query by status_priority to get pending items
-   * 2. Lock item by updating status to "processing"
-   * 3. Generate audio via workflow
-   * 4. Mark as completed or failed
-   *
-   * Note: Exercises are excluded - they don't generate audio.
-   */
+  /** Queue for audio generation jobs. */
   audioGenerationQueue: defineTable({
     contentRef: audioContentRefValidator,
     locale: localeValidator,
+    /**
+     * Content slug (cross-locale identifier).
+     * Used to find all locale versions of the same content.
+     * Same slug across all locales enables per-content processing.
+     */
+    slug: v.string(),
     /**
      * Priority score for queue ordering.
      * Calculated from: viewCount × 10 + ageBoost
@@ -114,14 +80,16 @@ const tables = {
     .index("status_priority", ["status", "priorityScore"])
     /**
      * Deduplication check.
-     * Ensures content isn't queued multiple times.
+     * Ensures content isn't queued multiple times per locale.
      */
     .index("contentRef_locale", ["contentRef.type", "contentRef.id", "locale"])
     /**
-     * Content + status queries.
-     * Finds all pending items for a specific content (all locales).
+     * Content + status queries by slug (cross-locale).
+     * Finds all pending items for a content across ALL locales.
+     * This enables processing all translations together as one content piece.
+     * Per Convex best practices: use specific index ranges for O(log n) performance.
      */
-    .index("contentRef_status", ["contentRef.type", "contentRef.id", "status"])
+    .index("slug_status", ["slug", "status"])
     /**
      * Cleanup queries.
      * Removes old completed/failed items.

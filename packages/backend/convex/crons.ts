@@ -4,10 +4,8 @@ import { cronJobs } from "convex/server";
 const crons = cronJobs();
 
 /**
- * Content aggregation cron - runs every 30 minutes
- * Populates audioGenerationQueue with high-priority content from aggregate data
- *
- * Note: This runs in ALL environments to maintain statistics for trending features
+ * Populates audio generation queue every 30 minutes.
+ * Runs in all environments for trending statistics.
  */
 crons.interval(
   "populate audio generation queue",
@@ -17,15 +15,8 @@ crons.interval(
 );
 
 /**
- * Audio generation queue processing - runs every 30 minutes
- * Starts workflows for pending queue items (respects daily limits)
- *
- * Note: 30 minutes is optimal for the 1-content-per-day strategy:
- * - Responsive enough when daily limit resets (max 30 min delay)
- * - Reduces wasted checks by 83% (48 runs/day vs 288 with 5-minute interval)
- * - The handler checks ENABLE_AUDIO_GENERATION env var at runtime.
- * Set ENABLE_AUDIO_GENERATION=true in prod deployment to enable audio generation.
- * In dev, the handler logs and returns early (no ElevenLabs costs).
+ * Processes audio generation queue every 30 minutes.
+ * Respects daily limits. Set ENABLE_AUDIO_GENERATION=true in prod.
  */
 crons.interval(
   "process audio generation queue",
@@ -35,15 +26,22 @@ crons.interval(
 );
 
 /**
- * Audio generation cleanup - runs daily at 2 AM UTC
- * Removes completed/failed queue items older than retention period
- *
- * Note: This runs in ALL environments for maintenance
+ * Cleans up old queue items daily at 2 AM UTC.
  */
 crons.cron(
   "cleanup audio generation",
   "0 2 * * *",
   internal.audioStudies.mutations.cleanup,
+  {}
+);
+
+/**
+ * Resets stuck queue items every hour.
+ */
+crons.interval(
+  "reset stuck queue items",
+  { minutes: 60 },
+  internal.audioStudies.mutations.resetStuckQueueItems,
   {}
 );
 

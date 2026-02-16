@@ -1,10 +1,3 @@
-/**
- * Shared validators for content storage schema.
- * These match Zod schemas in packages/contents/_types/.
- *
- * This is the SINGLE SOURCE OF TRUTH for content-related validators.
- * Import from here instead of duplicating in other schema files.
- */
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
@@ -13,29 +6,54 @@ import { literals } from "convex-helpers/validators";
 export const localeValidator = literals("en", "id");
 export type Locale = Infer<typeof localeValidator>;
 
-/** Discriminator for polymorphic content references (used in contentAuthors join table) */
+/** Content types for view tracking and popularity */
 export const contentTypeValidator = literals("article", "subject", "exercise");
 export type ContentType = Infer<typeof contentTypeValidator>;
 
 /**
- * Validator for content ID - polymorphic reference to all content types.
- * Used for statistics tracking (contentViews) and content authors linking.
- * Note: For audio generation, use audioContentIdValidator from audio.ts which excludes exercises.
- * Tracks: articles, subject sections, and exercise sets (not individual questions)
+ * Discriminated union for content references.
+ * Used in views and popularity tables.
  */
-export const contentIdValidator = v.union(
-  v.id("articleContents"),
-  v.id("subjectSections"),
-  v.id("exerciseSets")
+export const contentRefValidator = v.union(
+  v.object({
+    type: v.literal("article"),
+    id: v.id("articleContents"),
+  }),
+  v.object({
+    type: v.literal("subject"),
+    id: v.id("subjectSections"),
+  }),
+  v.object({
+    type: v.literal("exercise"),
+    id: v.id("exerciseSets"),
+  })
 );
 
-/** Type for content ID */
-export type ContentId = Infer<typeof contentIdValidator>;
+export type ContentRef = Infer<typeof contentRefValidator>;
+
+/**
+ * Content reference with slug for view tracking.
+ */
+export const contentViewRefValidator = v.union(
+  v.object({
+    type: v.literal("article"),
+    slug: v.string(),
+  }),
+  v.object({
+    type: v.literal("subject"),
+    slug: v.string(),
+  }),
+  v.object({
+    type: v.literal("exercise"),
+    slug: v.string(),
+  })
+);
+
+export type ContentViewRef = Infer<typeof contentViewRefValidator>;
 
 export const articleCategoryValidator = literals("politics");
 export type ArticleCategory = Infer<typeof articleCategoryValidator>;
 
-/** Subject categories (also used in chats for tools) */
 export const subjectCategoryValidator = literals(
   "elementary-school",
   "middle-school",
@@ -44,7 +62,6 @@ export const subjectCategoryValidator = literals(
 );
 export type SubjectCategory = Infer<typeof subjectCategoryValidator>;
 
-/** School grades (1-12) and university levels */
 export const gradeValidator = literals(
   "1",
   "2",
@@ -64,7 +81,6 @@ export const gradeValidator = literals(
 );
 export type Grade = Infer<typeof gradeValidator>;
 
-/** Subject materials (high school + university) */
 export const materialValidator = literals(
   "mathematics",
   "physics",
@@ -92,11 +108,9 @@ export const exercisesCategoryValidator = literals(
 );
 export type ExercisesCategory = Infer<typeof exercisesCategoryValidator>;
 
-/** Exam types: grade-9 (SMP), tka (old format), snbt (new format) */
 export const exercisesTypeValidator = literals("grade-9", "tka", "snbt");
 export type ExercisesType = Infer<typeof exercisesTypeValidator>;
 
-/** Exercise-specific materials (differs from subject materials) */
 export const exercisesMaterialValidator = literals(
   "mathematics",
   "quantitative-knowledge",

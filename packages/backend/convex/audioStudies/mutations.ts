@@ -3,8 +3,9 @@ import { DEFAULT_VOICE_KEY, getVoiceConfig } from "@repo/ai/config/voices";
 import { internal } from "@repo/backend/convex/_generated/api";
 import {
   CLEANUP_CONFIG,
+  getMaxContentPerDay,
   isAudioGenerationEnabled,
-  MAX_CONTENT_PER_DAY,
+  QUEUE_TIMEOUT_MS,
 } from "@repo/backend/convex/audioStudies/constants";
 import { getResetAudioFields } from "@repo/backend/convex/audioStudies/utils";
 import { internalMutation } from "@repo/backend/convex/functions";
@@ -19,15 +20,10 @@ import { workflow } from "@repo/backend/convex/workflow";
 import { ConvexError, v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
 
-/**
- * Claimable statuses that allow workflow retries.
- * Derived from AudioStatus to maintain single source of truth.
- */
 type ClaimableStatus = Extract<AudioStatus, "pending" | "script-generated">;
 
 /**
- * Save generated script to content audio and update status.
- * Idempotent: Saving same script is a no-op.
+ * Saves generated script. Idempotent.
  */
 export const saveScript = internalMutation({
   args: {
@@ -45,7 +41,6 @@ export const saveScript = internalMutation({
       });
     }
 
-    // Idempotent: Skip if script already exists and matches
     if (audio.script === args.script && audio.status === "script-generated") {
       return null;
     }
@@ -61,9 +56,8 @@ export const saveScript = internalMutation({
 });
 
 /**
- * Atomically claim script generation to prevent race conditions.
- * Returns true if successfully claimed (status was "pending"), false otherwise.
- * This prevents duplicate script generation when multiple workers try simultaneously.
+ * Claims script generation atomically to prevent race conditions.
+ * Returns true if claimed (status was "pending").
  */
 export const claimScriptGeneration = internalMutation({
   args: {
@@ -80,7 +74,6 @@ export const claimScriptGeneration = internalMutation({
       });
     }
 
-    // Only claim if currently pending (not claimed by another worker)
     if (audio.status !== "pending") {
       return false;
     }
@@ -95,9 +88,8 @@ export const claimScriptGeneration = internalMutation({
 });
 
 /**
- * Atomically claim speech generation to prevent race conditions.
- * Returns true if successfully claimed (status was "script-generated"), false otherwise.
- * This prevents duplicate speech generation when multiple workers try simultaneously.
+ * Claims speech generation atomically.
+ * Returns true if claimed (status was "script-generated").
  */
 export const claimSpeechGeneration = internalMutation({
   args: {
@@ -114,7 +106,6 @@ export const claimSpeechGeneration = internalMutation({
       });
     }
 
-    // Only claim if script is generated but speech not started
     if (audio.status !== "script-generated") {
       return false;
     }
@@ -129,8 +120,7 @@ export const claimSpeechGeneration = internalMutation({
 });
 
 /**
- * Save generated audio metadata.
- * Idempotent: Saving same storage ID is a no-op.
+ * Saves generated audio metadata. Idempotent.
  */
 export const saveAudio = internalMutation({
   args: {
@@ -150,7 +140,6 @@ export const saveAudio = internalMutation({
       });
     }
 
-    // Idempotent: Skip if already completed with same storage ID
     if (
       audio.status === "completed" &&
       audio.audioStorageId === args.storageId
@@ -171,15 +160,8 @@ export const saveAudio = internalMutation({
 });
 
 /**
- * Mark audio generation step as failed and reset status for workflow retries.
- *
- * CRITICAL: This resets the status to allow workflow retries to claim the work again.
- * Convex workflows retry failed steps automatically, so we must reset to claimable state:
- * - "generating-script" → "pending" (script generation can be retried)
- * - "generating-speech" → "script-generated" (speech generation can be retried)
- *
- * Idempotent: Skip if already reset by updateContentHash (content changed during generation).
- * Retry-safe: Multiple calls with same error are idempotent.
+ * Marks generation as failed and resets status for workflow retries.
+ * Resets "generating-script" → "pending" or "generating-speech" → "script-generated".
  */
 export const markFailed = internalMutation({
   args: {
@@ -197,22 +179,16 @@ export const markFailed = internalMutation({
       });
     }
 
-    // Idempotent: Skip if already reset to "pending" by updateContentHash.
-    // This handles the race condition where content changes during generation.
     if (audio.status === "pending") {
       return null;
     }
 
-    // Reset to claimable state based on which phase failed.
-    // This enables workflow retries to claim and retry the work.
     let resetStatus: ClaimableStatus;
     if (audio.status === "generating-script") {
       resetStatus = "pending";
     } else if (audio.status === "generating-speech") {
       resetStatus = "script-generated";
     } else {
-      // Already in a terminal or unexpected state, nothing to reset
-      // This shouldn't happen in normal flow, but handle defensively
       return null;
     }
 
@@ -229,14 +205,8 @@ export const markFailed = internalMutation({
 });
 
 /**
- * Update content hash and clear outdated audio data.
- * Called when content is updated to invalidate cached audio.
- * Idempotent: Skip if hash already matches.
- *
- * Type Safety:
- * - Uses discriminated contentRef for type-safe lookups
- * - TypeScript narrows the type automatically in the switch
- * - No assertions needed
+ * Updates content hash and clears outdated audio data when content changes.
+ * Idempotent: Skips if hash already matches.
  */
 export const updateContentHash = internalMutation({
   args: {
@@ -245,7 +215,7 @@ export const updateContentHash = internalMutation({
   },
   returns: v.object({ updatedCount: v.number() }),
   handler: async (ctx, args) => {
-    // Query using contentRef_locale index (prefix works for all locales)
+    // Bounded query: max 10 records (2 locales × safety margin)
     const audios = await ctx.db
       .query("contentAudios")
       .withIndex("contentRef_locale", (q) =>
@@ -253,23 +223,19 @@ export const updateContentHash = internalMutation({
           .eq("contentRef.type", args.contentRef.type)
           .eq("contentRef.id", args.contentRef.id)
       )
-      .collect();
+      .take(10);
 
     let updatedCount = 0;
 
     for (const audio of audios) {
-      // Idempotent: Skip if hash already matches
       if (audio.contentHash === args.newHash) {
         continue;
       }
 
-      // Delete old audio file from storage (save space)
       if (audio.audioStorageId) {
         await ctx.storage.delete(audio.audioStorageId);
       }
 
-      // Update record with new hash and clear old data
-      // Reset generationAttempts to 0 for new content version
       await ctx.db.patch(
         "contentAudios",
         audio._id,
@@ -284,10 +250,8 @@ export const updateContentHash = internalMutation({
 });
 
 /**
- * Atomically lock a queue item by marking it as processing.
- * Idempotent: Returns null if item is no longer pending.
- *
- * Returns discriminated contentRef for type-safe usage in workflow.
+ * Locks a queue item by marking it as processing. Idempotent.
+ * Returns null if item no longer pending or exceeded retry limit.
  */
 export const lockQueueItem = internalMutation({
   args: {
@@ -309,13 +273,11 @@ export const lockQueueItem = internalMutation({
       });
     }
 
-    // Idempotent: Only lock if still pending
-    // If another worker already locked it, return null
     if (item.status !== "pending") {
       return null;
     }
 
-    // Enforce retry limits to prevent infinite loops on permanently failing content
+    // Fail when maxRetries reached (allows attempts at counts 0 to maxRetries-1)
     if (item.retryCount >= item.maxRetries) {
       await ctx.db.patch("audioGenerationQueue", args.queueItemId, {
         status: "failed",
@@ -340,11 +302,7 @@ export const lockQueueItem = internalMutation({
 });
 
 /**
- * Create contentAudios record if it doesn't exist, or return existing.
- * Idempotent: Multiple calls with same content+locale return same ID.
- * Requires contentHash to enable cost protection during generation.
- *
- * Uses discriminated contentRef for type-safe storage.
+ * Creates or returns existing audio record. Handles race conditions by deduplicating.
  */
 export const createOrGetAudioRecord = internalMutation({
   args: {
@@ -354,7 +312,7 @@ export const createOrGetAudioRecord = internalMutation({
   },
   returns: v.id("contentAudios"),
   handler: async (ctx, args) => {
-    // Check if record already exists using discriminated ref
+    // First check for existing record
     const existing = await ctx.db
       .query("contentAudios")
       .withIndex("contentRef_locale", (q) =>
@@ -366,9 +324,6 @@ export const createOrGetAudioRecord = internalMutation({
       .first();
 
     if (existing) {
-      // Content changed - reset all generated data to force regeneration
-      // This handles race condition where content updates between queue population
-      // and workflow execution
       if (existing.contentHash !== args.contentHash) {
         await ctx.db.patch(
           "contentAudios",
@@ -379,14 +334,13 @@ export const createOrGetAudioRecord = internalMutation({
       return existing._id;
     }
 
-    // Get voice config for this locale
+    // No existing record found - create new one
+    // Note: Due to Convex's serializable isolation, concurrent calls could
+    // both reach this point and create duplicates. We handle this below.
     const voiceConfig = getVoiceConfig(DEFAULT_VOICE_KEY);
-
-    // Create new record with discriminated contentRef
-    // Convex handles race conditions automatically via OCC (Optimistic Concurrency Control)
-    // Per best practices: "you can simply write your mutation functions as if they will always succeed"
     const now = Date.now();
-    const id = await ctx.db.insert("contentAudios", {
+
+    await ctx.db.insert("contentAudios", {
       contentRef: args.contentRef,
       locale: args.locale,
       contentHash: args.contentHash,
@@ -398,13 +352,42 @@ export const createOrGetAudioRecord = internalMutation({
       updatedAt: now,
     });
 
-    return id;
+    // Query again to handle race conditions
+    // If concurrent calls created duplicates, get all and keep only one
+    // Per Convex best practices: Use take() to bound the query
+    // We expect 1-2 records max (normal case = 1, race condition = 2)
+    const allRecords = await ctx.db
+      .query("contentAudios")
+      .withIndex("contentRef_locale", (q) =>
+        q
+          .eq("contentRef.type", args.contentRef.type)
+          .eq("contentRef.id", args.contentRef.id)
+          .eq("locale", args.locale)
+      )
+      .take(10);
+
+    // Deduplicate: keep first, delete rest (expect 1-2 records max)
+    const [keeper, ...duplicates] = allRecords;
+
+    for (const duplicate of duplicates) {
+      await ctx.db.delete("contentAudios", duplicate._id);
+    }
+
+    // If hash changed on the keeper record, reset it
+    if (keeper.contentHash !== args.contentHash) {
+      await ctx.db.patch(
+        "contentAudios",
+        keeper._id,
+        getResetAudioFields(args.contentHash)
+      );
+    }
+
+    return keeper._id;
   },
 });
 
 /**
- * Mark queue item as completed.
- * Idempotent: Skip if already completed or item not found.
+ * Marks queue item as completed. Idempotent.
  */
 export const markQueueCompleted = internalMutation({
   args: {
@@ -415,11 +398,9 @@ export const markQueueCompleted = internalMutation({
     const item = await ctx.db.get("audioGenerationQueue", args.queueItemId);
 
     if (!item) {
-      // Item may have been cleaned up, treat as success
       return null;
     }
 
-    // Idempotent: Skip if already completed
     if (item.status === "completed") {
       return null;
     }
@@ -436,8 +417,7 @@ export const markQueueCompleted = internalMutation({
 });
 
 /**
- * Mark queue item as failed.
- * Idempotent: Skip if already failed or completed.
+ * Marks queue item as failed. Prevents infinite retries by checking maxRetries.
  */
 export const markQueueFailed = internalMutation({
   args: {
@@ -449,11 +429,9 @@ export const markQueueFailed = internalMutation({
     const item = await ctx.db.get("audioGenerationQueue", args.queueItemId);
 
     if (!item) {
-      // Item may have been cleaned up, treat as success
       return null;
     }
 
-    // Idempotent: Skip if already in a terminal state
     if (item.status === "completed" || item.status === "failed") {
       return null;
     }
@@ -461,8 +439,22 @@ export const markQueueFailed = internalMutation({
     const now = Date.now();
     const newRetryCount = item.retryCount + 1;
 
+    // Check if max retries exceeded (consistent with lockQueueItem boundary)
+    if (newRetryCount >= item.maxRetries) {
+      // Permanent failure - max retries exhausted
+      await ctx.db.patch("audioGenerationQueue", args.queueItemId, {
+        status: "failed",
+        errorMessage: `Max retries exceeded (${item.maxRetries}): ${args.error}`,
+        lastErrorAt: now,
+        retryCount: newRetryCount,
+        updatedAt: now,
+      });
+      return null;
+    }
+
+    // Retries remaining - set back to pending for retry on next cron run
     await ctx.db.patch("audioGenerationQueue", args.queueItemId, {
-      status: "failed",
+      status: "pending",
       errorMessage: args.error,
       lastErrorAt: now,
       retryCount: newRetryCount,
@@ -474,14 +466,9 @@ export const markQueueFailed = internalMutation({
 });
 
 /**
- * Start workflows for pending queue items.
- * Called by cron every 5 minutes.
- *
- * Strategy: Process 1 content piece per day with ALL locales.
- * This ensures complete multilingual coverage for popular content.
- *
- * Example: MAX_CONTENT_PER_DAY = 1, SUPPORTED_LOCALES = ["en", "id"]
- * Result: 1 content × 2 locales = 2 audio files per day
+ * Starts workflows for pending queue items. Called by cron every 30 minutes.
+ * Processes 1 content piece per day (all locales together).
+ * Respects LIMIT_AUDIO_GENERATION_PER_DAY env var.
  */
 export const startWorkflowsForPendingItems = internalMutation({
   args: {},
@@ -491,44 +478,39 @@ export const startWorkflowsForPendingItems = internalMutation({
     contentRef: v.optional(audioContentRefValidator),
   }),
   handler: async (ctx) => {
-    // Check if audio generation is enabled for this deployment
-    // Set ENABLE_AUDIO_GENERATION=true in Convex Dashboard to enable
     if (!isAudioGenerationEnabled()) {
-      logger.info(
-        "Audio generation skipped - ENABLE_AUDIO_GENERATION not set in environment"
-      );
+      logger.info("Audio generation skipped - ENABLE_AUDIO_GENERATION not set");
       return { started: 0, skipped: 0 };
     }
 
     const now = Date.now();
     const today = new Date(now).setHours(0, 0, 0, 0);
 
-    // Count unique content pieces completed today
-    // We count by contentRef (type + id), not by locale
+    // Fetch completed items with limit to avoid loading entire table
+    // Per Convex best practices: use take() instead of collect() for unbounded queries
+    // We only need maxContentPerDay + buffer to determine if limit is reached
+    const maxContentPerDay = getMaxContentPerDay();
     const completedToday = await ctx.db
       .query("audioGenerationQueue")
       .withIndex("status_completedAt", (q) =>
         q.eq("status", "completed").gte("completedAt", today)
       )
-      .collect();
+      .take(maxContentPerDay + 10);
 
-    // Use a Set to track unique content pieces (by contentRef)
-    const completedContentRefs = new Set<string>();
+    // Count by slug (cross-locale), not contentRef (locale-specific)
+    // This ensures all locales of 1 content piece count as 1 toward daily limit
+    const completedSlugs = new Set<string>();
     for (const item of completedToday) {
-      const contentRefKey = `${item.contentRef.type}:${item.contentRef.id}`;
-      completedContentRefs.add(contentRefKey);
+      completedSlugs.add(item.slug);
     }
 
-    // Check if we've reached the daily limit for content pieces
-    if (completedContentRefs.size >= MAX_CONTENT_PER_DAY) {
+    if (completedSlugs.size >= maxContentPerDay) {
       logger.info(
-        `Daily content limit reached: ${completedContentRefs.size}/${MAX_CONTENT_PER_DAY} content pieces completed today`
+        `Daily limit reached: ${completedSlugs.size}/${maxContentPerDay}`
       );
       return { started: 0, skipped: 0 };
     }
 
-    // Get the highest priority pending item
-    // This determines which content piece to process today
     const topItem = await ctx.db
       .query("audioGenerationQueue")
       .withIndex("status_priority", (q) => q.eq("status", "pending"))
@@ -536,26 +518,20 @@ export const startWorkflowsForPendingItems = internalMutation({
       .first();
 
     if (!topItem) {
-      logger.info("No pending items in queue");
+      logger.info("No pending items");
       return { started: 0, skipped: 0 };
     }
 
-    // Get ALL pending queue items for this content (all locales)
-    // We want to process all locales of the same content together
-    // Uses contentRef_status index for efficient filtering (per Convex best practices)
+    // Query all locales by slug (cross-locale processing)
     const contentItems = await ctx.db
       .query("audioGenerationQueue")
-      .withIndex("contentRef_status", (q) =>
-        q
-          .eq("contentRef.type", topItem.contentRef.type)
-          .eq("contentRef.id", topItem.contentRef.id)
-          .eq("status", "pending")
+      .withIndex("slug_status", (q) =>
+        q.eq("slug", topItem.slug).eq("status", "pending")
       )
       .collect();
 
     let started = 0;
 
-    // Start workflows for all locales of this content
     for (const item of contentItems) {
       await workflow.start(
         ctx,
@@ -572,9 +548,7 @@ export const startWorkflowsForPendingItems = internalMutation({
       started++;
     }
 
-    logger.info(
-      `Started audio generation for ${started} locales of content ${topItem.contentRef.type}:${topItem.contentRef.id}`
-    );
+    logger.info(`Started ${started} locales for content: ${topItem.slug}`);
 
     return {
       started,
@@ -585,9 +559,8 @@ export const startWorkflowsForPendingItems = internalMutation({
 });
 
 /**
- * Cleanup old queue records.
- * Removes completed/failed items older than retention period.
- * Idempotent: Safe to run multiple times.
+ * Cleans up old completed/failed queue records.
+ * Runs daily at 2 AM via cron.
  */
 export const cleanup = internalMutation({
   args: {},
@@ -598,23 +571,21 @@ export const cleanup = internalMutation({
     const cutoffDate =
       Date.now() - CLEANUP_CONFIG.retentionDays * 24 * 60 * 60 * 1000;
 
-    // Query completed items using index
+    // Bounded query: max 100 records per cleanup run
     const completedOldItems = await ctx.db
       .query("audioGenerationQueue")
       .withIndex("status_updatedAt", (q) =>
         q.eq("status", "completed").lt("updatedAt", cutoffDate)
       )
-      .collect();
+      .take(100);
 
-    // Query failed items using index
     const failedOldItems = await ctx.db
       .query("audioGenerationQueue")
       .withIndex("status_updatedAt", (q) =>
         q.eq("status", "failed").lt("updatedAt", cutoffDate)
       )
-      .collect();
+      .take(100);
 
-    // Delete all old items
     let deleted = 0;
     for (const item of completedOldItems) {
       await ctx.db.delete("audioGenerationQueue", item._id);
@@ -626,5 +597,45 @@ export const cleanup = internalMutation({
     }
 
     return { deleted };
+  },
+});
+
+/**
+ * Resets queue items stuck in "processing" state (interrupted workflows).
+ */
+export const resetStuckQueueItems = internalMutation({
+  args: {},
+  returns: v.object({
+    reset: v.number(),
+  }),
+  handler: async (ctx) => {
+    const stuckThreshold = Date.now() - QUEUE_TIMEOUT_MS;
+
+    // Bounded query: max 50 stuck items per run
+    const stuckItems = await ctx.db
+      .query("audioGenerationQueue")
+      .withIndex("status_updatedAt", (q) =>
+        q.eq("status", "processing").lt("updatedAt", stuckThreshold)
+      )
+      .take(50);
+
+    let reset = 0;
+    for (const item of stuckItems) {
+      // Reset if max retries not exceeded (consistent with lockQueueItem)
+      if (item.retryCount < item.maxRetries) {
+        await ctx.db.patch("audioGenerationQueue", item._id, {
+          status: "pending",
+          retryCount: item.retryCount + 1,
+          updatedAt: Date.now(),
+        });
+        reset++;
+      }
+    }
+
+    if (reset > 0) {
+      logger.info(`Reset ${reset} stuck queue items to pending`);
+    }
+
+    return { reset };
   },
 });

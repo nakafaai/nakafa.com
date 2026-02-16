@@ -1,64 +1,59 @@
-import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
+import { contentRefValidator } from "@repo/backend/convex/lib/validators/contents";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
 
 const tables = {
   /**
-   * Content views for statistics tracking - articles only.
-   * Separate table enables type-safe aggregate with simple ID key.
+   * Unified content views table.
+   * One record per user/device per content.
    */
-  articleContentViews: defineTable({
+  contentViews: defineTable({
+    contentRef: contentRefValidator,
+    locale: v.string(),
+    slug: v.string(),
+    deviceId: v.string(),
+    userId: v.optional(v.id("users")),
+    viewedAt: v.number(),
+  })
+    .index("userId_contentRefId", ["userId", "contentRef.id"])
+    .index("deviceId_contentRefId", ["deviceId", "contentRef.id"])
+    .index("contentRefId_locale", ["contentRef.id", "locale"]),
+
+  /**
+   * Article popularity counts.
+   * Updated via triggers when article views are recorded.
+   */
+  articlePopularity: defineTable({
     contentId: v.id("articleContents"),
-    locale: localeValidator,
-    slug: v.string(),
-    deviceId: v.string(),
-    userId: v.optional(v.id("users")),
-    firstViewedAt: v.number(),
     viewCount: v.number(),
-    totalDurationSeconds: v.number(),
-    isIncognito: v.boolean(),
+    updatedAt: v.number(),
   })
-    .index("userId_slug", ["userId", "slug"])
-    .index("deviceId_slug", ["deviceId", "slug"])
-    .index("contentId_locale", ["contentId", "locale"]),
+    .index("by_popularity", ["viewCount"])
+    .index("by_contentId", ["contentId"]),
 
   /**
-   * Content views for statistics tracking - subject sections only.
-   * Separate table enables type-safe aggregate with simple ID key.
+   * Subject popularity counts.
+   * Updated via triggers when subject views are recorded.
    */
-  subjectContentViews: defineTable({
+  subjectPopularity: defineTable({
     contentId: v.id("subjectSections"),
-    locale: localeValidator,
-    slug: v.string(),
-    deviceId: v.string(),
-    userId: v.optional(v.id("users")),
-    firstViewedAt: v.number(),
     viewCount: v.number(),
-    totalDurationSeconds: v.number(),
-    isIncognito: v.boolean(),
+    updatedAt: v.number(),
   })
-    .index("userId_slug", ["userId", "slug"])
-    .index("deviceId_slug", ["deviceId", "slug"])
-    .index("contentId_locale", ["contentId", "locale"]),
+    .index("by_popularity", ["viewCount"])
+    .index("by_contentId", ["contentId"]),
 
   /**
-   * Content views for statistics tracking - exercises only.
-   * Separate table for exercise tracking (not used for audio).
+   * Exercise popularity counts.
+   * Updated via triggers when exercise views are recorded.
    */
-  exerciseContentViews: defineTable({
+  exercisePopularity: defineTable({
     contentId: v.id("exerciseSets"),
-    locale: localeValidator,
-    slug: v.string(),
-    deviceId: v.string(),
-    userId: v.optional(v.id("users")),
-    firstViewedAt: v.number(),
     viewCount: v.number(),
-    totalDurationSeconds: v.number(),
-    isIncognito: v.boolean(),
+    updatedAt: v.number(),
   })
-    .index("userId_slug", ["userId", "slug"])
-    .index("deviceId_slug", ["deviceId", "slug"])
-    .index("contentId_locale", ["contentId", "locale"]),
+    .index("by_popularity", ["viewCount"])
+    .index("by_contentId", ["contentId"]),
 };
 
 export default tables;

@@ -1,10 +1,6 @@
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import type { AudioContentRef } from "@repo/backend/convex/lib/validators/audio";
 
-/**
- * Content data structure for script generation.
- * Used internally within audioStudies module.
- */
 interface ContentData {
   title: string;
   description?: string;
@@ -13,36 +9,15 @@ interface ContentData {
 }
 
 /**
- * Fetch content data based on discriminated content reference.
+ * Fetches content data for audio generation.
  * Returns null if content not found.
- *
- * Type Safety:
- * - Uses discriminated union (AudioContentRef) for type-safe lookups
- * - TypeScript automatically narrows the id type based on the type discriminator
- * - No type assertions needed - clean TypeScript like JavaScript
- * - Type narrowing works automatically in switch statement
- *
- * @param ctx - Convex query context
- * @param contentRef - Discriminated content reference { type: "article" | "subject", id: Id }
- * @returns Content data or null if not found
- *
- * @example
- * ```typescript
- * const content = await fetchContentForAudio(ctx, { type: "article", id: articleId });
- * if (content) {
- *   console.log(content.title); // TypeScript knows this is safe
- * }
- * ```
  */
 export async function fetchContentForAudio(
   ctx: QueryCtx,
   contentRef: AudioContentRef
 ): Promise<ContentData | null> {
-  // TypeScript automatically narrows the type based on the discriminator
-  // No assertions needed - this is the power of discriminated unions
   switch (contentRef.type) {
     case "article": {
-      // TypeScript knows contentRef.id is Id<"articleContents">
       const article = await ctx.db.get("articleContents", contentRef.id);
       if (!article) {
         return null;
@@ -56,7 +31,6 @@ export async function fetchContentForAudio(
     }
 
     case "subject": {
-      // TypeScript knows contentRef.id is Id<"subjectSections">
       const section = await ctx.db.get("subjectSections", contentRef.id);
       if (!section) {
         return null;
@@ -70,21 +44,14 @@ export async function fetchContentForAudio(
     }
 
     default: {
-      // Exhaustive check - TypeScript ensures we handle all cases
       return null;
     }
   }
 }
 
 /**
- * Get reset fields for content audio when content changes.
- * Used by updateContentHash and createOrGetAudioRecord to reset all
- * generated data and force regeneration with new content hash.
- *
- * This ensures consistency across all places that reset audio generation state.
- *
- * @param contentHash - The new content hash
- * @returns Object with all fields to reset for regeneration
+ * Returns fields to reset when content changes.
+ * Forces audio regeneration with new content hash.
  */
 export function getResetAudioFields(contentHash: string) {
   return {
