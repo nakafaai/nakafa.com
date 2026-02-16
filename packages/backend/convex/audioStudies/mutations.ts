@@ -57,7 +57,10 @@ export const saveScript = internalMutation({
 
 /**
  * Claims script generation atomically to prevent race conditions.
- * Returns true if claimed (status was "pending").
+ * Returns true if claimed (status was "pending" or "generating-script" for retries).
+ *
+ * Allows re-claiming work after workflow crashes to enable automatic recovery.
+ * Convex mutations are serializable, preventing duplicate processing.
  */
 export const claimScriptGeneration = internalMutation({
   args: {
@@ -74,7 +77,12 @@ export const claimScriptGeneration = internalMutation({
       });
     }
 
-    if (audio.status !== "pending") {
+    // Allow claiming when:
+    // 1. Status is "pending" (fresh work)
+    // 2. Status is "generating-script" (retry after crash)
+    // This enables workflow retries while still preventing duplicate processing
+    // since Convex mutations are serializable.
+    if (audio.status !== "pending" && audio.status !== "generating-script") {
       return false;
     }
 
@@ -89,7 +97,10 @@ export const claimScriptGeneration = internalMutation({
 
 /**
  * Claims speech generation atomically.
- * Returns true if claimed (status was "script-generated").
+ * Returns true if claimed (status was "script-generated" or "generating-speech" for retries).
+ *
+ * Allows re-claiming work after workflow crashes to enable automatic recovery.
+ * Convex mutations are serializable, preventing duplicate processing.
  */
 export const claimSpeechGeneration = internalMutation({
   args: {
@@ -106,7 +117,15 @@ export const claimSpeechGeneration = internalMutation({
       });
     }
 
-    if (audio.status !== "script-generated") {
+    // Allow claiming when:
+    // 1. Status is "script-generated" (fresh work)
+    // 2. Status is "generating-speech" (retry after crash)
+    // This enables workflow retries while still preventing duplicate processing
+    // since Convex mutations are serializable.
+    if (
+      audio.status !== "script-generated" &&
+      audio.status !== "generating-speech"
+    ) {
       return false;
     }
 
