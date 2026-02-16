@@ -1,25 +1,25 @@
-# Template Materi Pelajaran
+# Subject Content Template
 
-Template buat bikin materi pelajaran baru.
+Use this template to create new subject content materials.
 
-## Struktur File
+## File Structure
 
 ```
 {topic-name}/
-├── id.mdx          # Versi Indonesia (ini yang utama)
-├── en.mdx          # Versi English
-└── graph.tsx       # Komponen grafik bersama (optional)
+├── id.mdx          # Indonesian version (Source of Truth)
+├── en.mdx          # English translation
+└── graph.tsx       # Shared graph component (optional)
 ```
 
-## Cara Pake
+## Quick Start
 
-1. Bikin folder di lokasi yang sesuai:
+1. Create folder in appropriate location:
    - High school: `packages/contents/subject/high-school/{grade}/mathematics/{topic}/`
    - University: `packages/contents/subject/university/bachelor/{major}/{course}/{topic}/`
 
-2. Bikin `id.mdx` dengan konten Indonesia
-3. Bikin `en.mdx` dengan terjemahan English
-4. Tambahin `graph.tsx` kalo perlu grafik bersama
+2. Create `id.mdx` with Indonesian content
+3. Create `en.mdx` with English translation
+4. Add `graph.tsx` if shared graphs needed
 5. Run `pnpm lint`
 
 ## Template: id.mdx
@@ -34,9 +34,9 @@ export const metadata = {
 
 ## Pengertian
 
-Paragraf pembuka yang ngejelasin konsep secara umum.
+Paragraf pembuka yang menjelaskan konsep secara umum.
 
-{Penjelasan pake <InlineMath math="..." /> buat matematika}
+{Penjelasan dengan <InlineMath math="..." /> untuk matematika}
 
 <BlockMath math="..." />
 
@@ -76,7 +76,7 @@ Jadi, {kesimpulan}.
 
 ## Kesimpulan
 
-Ringkasan materi yang udah dipelajari.
+Ringkasan materi yang telah dipelajari.
 ```
 
 ## Template: en.mdx
@@ -136,7 +136,7 @@ Therefore, {conclusion}.
 Summary of the material learned.
 ```
 
-## Template dengan Grafik: graph.tsx
+## Template with Graph: graph.tsx
 
 ```tsx
 import { LineEquation } from "@repo/design-system/components/contents/line-equation";
@@ -166,9 +166,9 @@ export function QuadraticGraph() {
 }
 ```
 
-## Contoh Lengkap
+## Complete Example
 
-### Lokasi
+### Location
 `packages/contents/subject/high-school/10/mathematics/quadratic-function/concept/id.mdx`
 
 ### id.mdx
@@ -183,50 +183,50 @@ export const metadata = {
 
 ## Pengertian Fungsi Kuadrat
 
-Fungsi kuadrat adalah fungsi polinomial berderajat dua yang punya bentuk umum:
+Fungsi kuadrat adalah fungsi polinomial berderajat dua yang memiliki bentuk umum:
 
 <BlockMath math="f(x) = ax^2 + bx + c" />
-dengan <InlineMath math="a \\neq 0" /> dan <InlineMath math="a, b, c" /> adalah bilangan real.
+dengan <InlineMath math="a \neq 0" /> dan <InlineMath math="a, b, c" /> adalah bilangan real.
 
 ### Karakteristik Grafik
 
 Grafik fungsi kuadrat berbentuk parabola dengan ciri-ciri:
 
-- Membuka ke **atas** kalo <InlineMath math="a > 0" />
-- Membuka ke **bawah** kalo <InlineMath math="a < 0" />
-- Titik puncak (<em>vertex</em>) di <InlineMath math="x = -\\frac{b}{2a}" />
+- Membuka ke **atas** jika <InlineMath math="a > 0" />
+- Membuka ke **bawah** jika <InlineMath math="a < 0" />
+- Titik puncak (<em>vertex</em>) di <InlineMath math="x = -\frac{b}{2a}" />
 
-## Nyari Titik Puncak
+## Menentukan Titik Puncak
 
-Titik puncak parabola bisa ditentuin pake rumus:
+Titik puncak parabola dapat ditentukan dengan rumus:
 
 <MathContainer>
-  <BlockMath math="x_p = -\\frac{b}{2a}" />
+  <BlockMath math="x_p = -\frac{b}{2a}" />
   <BlockMath math="y_p = f(x_p) = a(x_p)^2 + b(x_p) + c" />
 </MathContainer>
 
-atau pake rumus:
+atau dengan rumus:
 
-<BlockMath math="y_p = -\\frac{D}{4a}" />
+<BlockMath math="y_p = -\frac{D}{4a}" />
 dengan <InlineMath math="D = b^2 - 4ac" /> adalah diskriminan.
 
 ## Contoh
 
-#### Contoh 1: Nyari Titik Puncak
+#### Contoh 1: Menentukan Titik Puncak
 
-Tentuin titik puncak dari fungsi <InlineMath math="f(x) = 2x^2 - 4x + 1" />.
+Tentukan titik puncak dari fungsi <InlineMath math="f(x) = 2x^2 - 4x + 1" />.
 
 **Penyelesaian:**
 
 Diketahui <InlineMath math="a = 2" />, <InlineMath math="b = -4" />, <InlineMath math="c = 1" />.
 
-Nyari <InlineMath math="x_p" />:
+Menentukan <InlineMath math="x_p" />:
 
 <MathContainer>
-  <BlockMath math="x_p = -\\frac{b}{2a} = -\\frac{-4}{2(2)} = \\frac{4}{4} = 1" />
+  <BlockMath math="x_p = -\frac{b}{2a} = -\frac{-4}{2(2)} = \frac{4}{4} = 1" />
 </MathContainer>
 
-Nyari <InlineMath math="y_p" />:
+Menentukan <InlineMath math="y_p" />:
 
 <MathContainer>
   <BlockMath math="y_p = f(1) = 2(1)^2 - 4(1) + 1" />
@@ -235,9 +235,9 @@ Nyari <InlineMath math="y_p" />:
 
 Jadi, titik puncaknya adalah <InlineMath math="(1, -1)" />.
 
-#### Contoh 2: Nyari Arah Parabola
+#### Contoh 2: Menentukan Arah Parabola
 
-Tentuin arah pembukaan parabola dari fungsi <InlineMath math="f(x) = -3x^2 + 6x - 2" />.
+Tentukan arah pembukaan parabola dari fungsi <InlineMath math="f(x) = -3x^2 + 6x - 2" />.
 
 **Penyelesaian:**
 
@@ -245,13 +245,13 @@ Karena <InlineMath math="a = -3 < 0" />, maka parabola membuka ke **bawah**.
 
 ## Kesimpulan
 
-Fungsi kuadrat <InlineMath math="f(x) = ax^2 + bx + c" /> punya grafik berbentuk parabola dengan:
+Fungsi kuadrat <InlineMath math="f(x) = ax^2 + bx + c" /> memiliki grafik berbentuk parabola dengan:
 
-- Titik puncak di <InlineMath math="\\left(-\\frac{b}{2a}, f\\left(-\\frac{b}{2a}\\right)\\right)" />
-- Membuka ke atas kalo <InlineMath math="a > 0" />, ke bawah kalo <InlineMath math="a < 0" />
+- Titik puncak di <InlineMath math="\left(-\frac{b}{2a}, f\left(-\frac{b}{2a}\right)\right)" />
+- Membuka ke atas jika <InlineMath math="a > 0" />, ke bawah jika <InlineMath math="a < 0" />
 ```
 
-## Pake Komponen di Konten
+## Using Components in Content
 
 ### InlineMath
 
@@ -275,7 +275,7 @@ Penyelesaian:
 <MathContainer>
   <BlockMath math="x^2 - 4 = 0" />
   <BlockMath math="x^2 = 4" />
-  <BlockMath math="x = \\pm 2" />
+  <BlockMath math="x = \pm 2" />
 </MathContainer>
 ```
 
@@ -299,7 +299,7 @@ Penyelesaian:
 />
 ```
 
-### LineEquation (Harus Import)
+### LineEquation (Imported)
 
 ```mdx
 import { LineEquation } from "@repo/design-system/components/contents/line-equation";
@@ -326,10 +326,10 @@ import { getColor } from "@repo/design-system/lib/color";
 
 ## Best Practices
 
-1. **Mulai dari h2**: Jangan pake h1 di konten
-2. **Judul deskriptif**: Pake "Konsep Dasar" bukan "Bab 1"
-3. **Ga ada math di heading**: Pake "Nilai x" bukan "Nilai <InlineMath math="x" />"
-4. **Bagian contoh**: Kasih contoh yang udah dikerjain
-5. **Kesimpulan**: Rangkum poin-poin penting
-6. **Terminologi konsisten**: Pake istilah matematika standar
-7. **Kompleksitas progresif**: Mulai dari yang gampang, naik perlahan
+1. **Start with h2**: Never use h1 in content
+2. **Descriptive headings**: Use "Konsep Dasar" not "Bab 1"
+3. **No math in headings**: Use "Nilai x" not "Nilai <InlineMath math="x" />"
+4. **Examples section**: Include worked examples
+5. **Conclusion**: Summarize key points
+6. **Consistent terminology**: Use standard mathematical terms
+7. **Progressive complexity**: Start simple, build up

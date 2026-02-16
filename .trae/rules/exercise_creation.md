@@ -5,13 +5,15 @@ alwaysApply: false
 
 When creating exercises, you are converting visual content (images of questions, choices, and explanations) into structured MDX and TypeScript code.
 
+**Note**: This documentation uses normal English. The actual content in MDX files should use proper grammar but natural, engaging tone.
+
 ## Core Principles
 
 1. **Source Fidelity**: Accurately transcribe questions, choices, and explanations from provided images.
-2. **Neutrality & Continuity**: The text must flow naturally. Avoid disjointed sentences.
+2. **Flow**: The text must flow naturally. Avoid disjointed sentences.
 3. **Conciseness**: Be direct and to the point, but ensure sufficient detail for understanding.
 4. **Structure**: Follow the strict file structure for exercises.
-5. **Ambiguity Resolution**: If the source image is unclear or ambiguous, you are authorized to clarify it. The goal is to make the content unambiguous.
+5. **Clarity**: If the source image is unclear or ambiguous, you are authorized to clarify it. The goal is to make the content unambiguous.
 
 ## File Structure
 
@@ -61,11 +63,11 @@ export const metadata = {
   date: "06/11/2025",
 };
 
-Diketahui <InlineMath math="a = \\frac{1}{2}" />, <InlineMath math="b = 2" />, <InlineMath math="c = 1" />
+Diketahui <InlineMath math="a = \frac{1}{2}" />, <InlineMath math="b = 2" />, <InlineMath math="c = 1" />
 
 Nilai dari
 
-<BlockMath math="\\frac{a^{-2}bc^3}{ab^2c^{-1}} = ...." />
+<BlockMath math="\frac{a^{-2}bc^3}{ab^2c^{-1}} = ...." />
 ```
 
 ## Answer/Explanation Guidelines (`_answer/`)
@@ -82,7 +84,7 @@ export const metadata = {
 
 ### Writing Style
 
-- **CRITICAL: No Ambiguity**: The explanation MUST be 100% clear and unambiguous. Even if the source is vague, elaborate and clarify so students understand the *why* and *how* completely.
+- **Critical: No Ambiguity**: The explanation MUST be clear and unambiguous. Even if the source is vague, elaborate and clarify so students understand the *why* and *how* completely.
 - **Continuous Flow**: Write as a coherent narrative.
 - **No "Step 1"**: Avoid generic step labels. Use descriptive text or H4 headings if absolutely necessary.
 - **Headings**: If used, start at **H4** (`####`), be concise, and **NO symbols or Math**. Use plain text only:
@@ -108,21 +110,21 @@ export const metadata = {
 
 #### Simplifikasi Ekspresi
 
-Diketahui: <InlineMath math="a = \\frac{1}{2}" />, <InlineMath math="b = 2" />, <InlineMath math="c = 1" />
+Diketahui: <InlineMath math="a = \frac{1}{2}" />, <InlineMath math="b = 2" />, <InlineMath math="c = 1" />
 
 Sederhanakan eksponen negatif terlebih dahulu:
 
 <MathContainer>
-  <BlockMath math="\\frac{a^{-2}bc^3}{ab^2c^{-1}} = \\frac{bc^3 \\cdot c}{ab^2 \\cdot a^2}" />
-  <BlockMath math="= \\frac{bc^4}{a^3b^2}" />
+  <BlockMath math="\frac{a^{-2}bc^3}{ab^2c^{-1}} = \frac{bc^3 \cdot c}{ab^2 \cdot a^2}" />
+  <BlockMath math="= \frac{bc^4}{a^3b^2}" />
 </MathContainer>
 
 Substitusi nilai-nilai yang diketahui:
 
 <MathContainer>
-  <BlockMath math="= \\frac{2 \\cdot 1^4}{\\left(\\frac{1}{2}\\right)^3 \\cdot 2^2}" />
-  <BlockMath math="= \\frac{2}{\\frac{1}{8} \\cdot 4}" />
-  <BlockMath math="= \\frac{2}{\\frac{1}{2}} = 4" />
+  <BlockMath math="= \frac{2 \cdot 1^4}{\left(\frac{1}{2}\right)^3 \cdot 2^2}" />
+  <BlockMath math="= \frac{2}{\frac{1}{8} \cdot 4}" />
+  <BlockMath math="= \frac{2}{\frac{1}{2}} = 4" />
 </MathContainer>
 
 Jadi, nilai dari ekspresi tersebut adalah <InlineMath math="4" />.
@@ -149,7 +151,7 @@ export const metadata = {
   description="Visualisasi parabola y = x²."
   showZAxis={false}
   cameraPosition={[0, 0, 15]}
-  data={[{
+  data={{
     points: Array.from({ length: 100 }, (_, i) => {
       const x = -5 + (i / 99) * 10;
       return { x, y: x * x, z: 0 };
@@ -157,7 +159,7 @@ export const metadata = {
     color: getColor("PURPLE"),
     smooth: true,
     showPoints: false,
-  }]}
+  }}
 />
 
 Jadi, titik puncaknya adalah <InlineMath math="(0, 0)" />.
@@ -200,6 +202,7 @@ export default choices;
 
 - **Math expression or number**: Use `$$...$$` delimiters
 - **Normal text**: Use plain text (no delimiters)
+- **Important**: In TypeScript strings, backslashes must be escaped as `\\`
 
 ### Examples
 

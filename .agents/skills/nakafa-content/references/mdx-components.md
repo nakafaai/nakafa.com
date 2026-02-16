@@ -1,46 +1,46 @@
-# Referensi MDX Components
+# MDX Components Reference
 
-Referensi lengkap buat semua komponen MDX yang tersedia.
+Complete reference for all available MDX components.
 
-## Komponen Auto-Import
+## Auto-Imported Components
 
-Komponen-komponen ini udah langsung bisa dipake di semua file MDX tanpa perlu import.
+These components are available in ALL MDX files without importing.
 
 ### BlockMath
 
-Nampilin persamaan math di baris sendiri.
+Display math equations on their own line.
 
 ```mdx
 <BlockMath math="x^2 + y^2 = r^2" />
 
-<BlockMath math="\\int_{a}^{b} f(x) \\, dx = F(b) - F(a)" />
+<BlockMath math="\int_{a}^{b} f(x) \, dx = F(b) - F(a)" />
 ```
 
 ### InlineMath
 
-Nampilin math di dalam teks.
+Display math within text flow.
 
 ```mdx
 Diketahui <InlineMath math="a = 5" /> dan <InlineMath math="b = 3" />.
 
-Nilai <InlineMath math="(1)" /> nunjukkan...
+Nilai <InlineMath math="(1)" /> menunjukkan...
 ```
 
 ### MathContainer
 
-Bungkus beberapa BlockMath buat persamaan yang berurutan.
+Wrap multiple BlockMath components for consecutive equations.
 
 ```mdx
 <MathContainer>
   <BlockMath math="x^2 - 4 = 0" />
   <BlockMath math="x^2 = 4" />
-  <BlockMath math="x = \\pm 2" />
+  <BlockMath math="x = \pm 2" />
 </MathContainer>
 ```
 
 ### CodeBlock
 
-Nampilin code multi-bahasa dengan tab.
+Multi-language code display with tabs.
 
 ```mdx
 <CodeBlock
@@ -64,7 +64,7 @@ Nampilin code multi-bahasa dengan tab.
 
 ### Mermaid
 
-Bikin diagram pake sintaks Mermaid.
+Create diagrams using Mermaid syntax.
 
 ```mdx
 <Mermaid
@@ -79,23 +79,23 @@ Bikin diagram pake sintaks Mermaid.
 
 ### Youtube
 
-Embed video YouTube.
+Embed YouTube videos.
 
 ```mdx
 <Youtube videoId="dQw4w9WgXcQ" />
 ```
 
-### Element Markdown Standar
+### Standard Markdown Elements
 
-Semua elemen Markdown standar tetep jalan dengan styling yang lebih bagus:
+All standard Markdown elements work with enhanced styling:
 
 ```mdx
 # Heading 1
 ## Heading 2
 ### Heading 3
 
-**Teks bold**
-*Teks miring*
+**Bold text**
+*Italic text*
 
 - List item 1
 - List item 2
@@ -107,26 +107,26 @@ Semua elemen Markdown standar tetep jalan dengan styling yang lebih bagus:
 
 > Blockquote
 
-| Tabel | Header |
+| Table | Header |
 |-------|--------|
 | Cell  | Cell   |
 ```
 
-## Komponen Konten (Harus Import)
+## Content Components (Require Import)
 
-Import dari `@repo/design-system/components/contents/*`.
+Import from `@repo/design-system/components/contents/*`.
 
 ### LineEquation
 
-Visualisasi garis/kurva 3D pake Three.js.
+3D line/curve visualization using Three.js.
 
 ```tsx
 import { LineEquation } from "@repo/design-system/components/contents/line-equation";
 import { getColor } from "@repo/design-system/lib/color";
 
 <LineEquation
-  title={<>Grafik f(x) = x²</>}
-  description="Parabola yang buka ke atas"
+  title={<>Graph of f(x) = x²</>}
+  description="Parabola opening upward"
   showZAxis={false}
   cameraPosition={[0, 0, 15]}
   data={[
@@ -147,22 +147,22 @@ import { getColor } from "@repo/design-system/lib/color";
 ```
 
 **Props:**
-- `title`: ReactNode - Judul card
-- `description`: ReactNode - Deskripsi card
-- `showZAxis`: boolean - Nampilin sumbu Z (default: true)
-- `cameraPosition`: [number, number, number] - Posisi kamera
-- `data`: LineData[] - Array data garis
+- `title`: ReactNode - Card title
+- `description`: ReactNode - Card description
+- `showZAxis`: boolean - Show Z axis (default: true)
+- `cameraPosition`: [number, number, number] - Camera position
+- `data`: LineData[] - Array of line data
 
 **LineData:**
-- `points`: { x, y, z }[] - Points buat garis
-- `color`: string - Warna garis
-- `smooth`: boolean - Kurva halus
-- `showPoints`: boolean - Nampilin marker point
-- `labels`: Label[] - Label di sepanjang garis
+- `points`: { x, y, z }[] - Points for the line
+- `color`: string - Line color
+- `smooth`: boolean - Smooth curve
+- `showPoints`: boolean - Show point markers
+- `labels`: Label[] - Labels along the line
 
 ### NumberLine
 
-Garis bilangan visual dengan segment.
+Visual number line with segments.
 
 ```tsx
 import { NumberLine } from "@repo/design-system/components/contents/number-line";
@@ -170,8 +170,8 @@ import { NumberLine } from "@repo/design-system/components/contents/number-line"
 <NumberLine
   min={-10}
   max={10}
-  title="Notasi Interval"
-  description="x ≥ 3 atau x < -2"
+  title="Interval Notation"
+  description="x ≥ 3 or x < -2"
   segments={[
     {
       start: -10,
@@ -194,35 +194,35 @@ import { NumberLine } from "@repo/design-system/components/contents/number-line"
 ```
 
 **Props:**
-- `min`: number - Nilai minimum
-- `max`: number - Nilai maksimum
-- `title`: ReactNode - Judul card
-- `description`: ReactNode - Deskripsi card
-- `segments`: Segment[] - Array segment
+- `min`: number - Minimum value
+- `max`: number - Maximum value
+- `title`: ReactNode - Card title
+- `description`: ReactNode - Card description
+- `segments`: Segment[] - Array of segments
 
 **Segment:**
-- `start`: number - Nilai awal
-- `end`: number - Nilai akhir
-- `startInclusive`: boolean - Include titik awal
-- `endInclusive`: boolean - Include titik akhir
-- `startLabel`: ReactNode - Label custom buat awal
-- `endLabel`: ReactNode - Label custom buat akhir
-- `label`: ReactNode - Label segment
-- `shaded`: boolean - Arsir segment
-- `showPoints`: boolean - Nampilin endpoint
-- `backgroundColor`: string - Warna background custom
+- `start`: number - Start value
+- `end`: number - End value
+- `startInclusive`: boolean - Include start point
+- `endInclusive`: boolean - Include end point
+- `startLabel`: ReactNode - Custom label for start
+- `endLabel`: ReactNode - Custom label for end
+- `label`: ReactNode - Segment label
+- `shaded`: boolean - Shade the segment
+- `showPoints`: boolean - Show endpoints
+- `backgroundColor`: string - Custom background color
 
 ### Triangle
 
-Segitiga siku-siku interaktif buat trigonometri.
+Interactive right triangle for trigonometry.
 
 ```tsx
 import { Triangle } from "@repo/design-system/components/contents/triangle";
 
 <Triangle
-  title="Segitiga Siku-Siku"
-  description="Segitiga dengan sudut θ"
-  angle={Math.PI / 6}  // 30 derajat
+  title="Right Triangle"
+  description="Triangle with angle θ"
+  angle={Math.PI / 6}  // 30 degrees
   showLabels={true}
   showValues={true}
 />
@@ -230,15 +230,15 @@ import { Triangle } from "@repo/design-system/components/contents/triangle";
 
 ### UnitCircle
 
-Lingkaran satuan interaktif buat trigonometri.
+Interactive unit circle for trigonometry.
 
 ```tsx
 import { UnitCircle } from "@repo/design-system/components/contents/unit-circle";
 
 <UnitCircle
-  title="Lingkaran Satuan"
-  description="Lingkaran satuan standar dengan sudut θ"
-  angle={Math.PI / 4}  // 45 derajat
+  title="Unit Circle"
+  description="Standard unit circle with angle θ"
+  angle={Math.PI / 4}  // 45 degrees
   showAngle={true}
   showCoordinates={true}
   showTriangle={true}
@@ -247,13 +247,13 @@ import { UnitCircle } from "@repo/design-system/components/contents/unit-circle"
 
 ### Vector3d
 
-Visualisasi vektor 3D.
+3D vector visualization.
 
 ```tsx
 import { Vector3d } from "@repo/design-system/components/contents/vector-3d";
 
 <Vector3d
-  title="Penjumlahan Vektor"
+  title="Vector Addition"
   description="u + v = w"
   vectors={[
     { x: 3, y: 2, z: 0, color: getColor("BLUE"), label: "u" },
@@ -265,14 +265,14 @@ import { Vector3d } from "@repo/design-system/components/contents/vector-3d";
 
 ### VectorChart
 
-Diagram vektor 2D.
+2D vector diagram.
 
 ```tsx
 import { VectorChart } from "@repo/design-system/components/contents/vector-chart";
 
 <VectorChart
-  title="Vektor 2D"
-  description="Representasi vektor di 2D"
+  title="2D Vectors"
+  description="Vector representation in 2D"
   vectors={[
     { x: 3, y: 4, label: "a" },
     { x: -2, y: 1, label: "b" },
@@ -282,13 +282,13 @@ import { VectorChart } from "@repo/design-system/components/contents/vector-char
 
 ### FunctionChart
 
-Line chart buat fungsi.
+Line chart for functions.
 
 ```tsx
 import { FunctionChart } from "@repo/design-system/components/contents/function-chart";
 
 <FunctionChart
-  title="Fungsi Linear"
+  title="Linear Function"
   description="y = 2x + 1"
   data={[
     { x: 0, y: 1 },
@@ -300,14 +300,14 @@ import { FunctionChart } from "@repo/design-system/components/contents/function-
 
 ### ScatterDiagram
 
-Scatter plot dengan garis regresi.
+Scatter plot with regression line.
 
 ```tsx
 import { ScatterDiagram } from "@repo/design-system/components/contents/scatter-diagram";
 
 <ScatterDiagram
-  title="Analisis Korelasi"
-  description="Scatter plot X vs Y"
+  title="Correlation Analysis"
+  description="Scatter plot of X vs Y"
   data={[
     { x: 1, y: 2 },
     { x: 2, y: 3 },
@@ -319,14 +319,14 @@ import { ScatterDiagram } from "@repo/design-system/components/contents/scatter-
 
 ### BarChart
 
-Chart batang atau histogram.
+Bar or histogram chart.
 
 ```tsx
 import { BarChart } from "@repo/design-system/components/contents/bar-chart";
 
 <BarChart
-  title="Distribusi Frekuensi"
-  description="Frekuensi data"
+  title="Frequency Distribution"
+  description="Data frequency"
   data={[
     { label: "A", value: 10 },
     { label: "B", value: 20 },
@@ -337,13 +337,13 @@ import { BarChart } from "@repo/design-system/components/contents/bar-chart";
 
 ### Inequality
 
-Visualisasi daerah pertidaksamaan.
+Inequality region visualization.
 
 ```tsx
 import { Inequality } from "@repo/design-system/components/contents/inequality";
 
 <Inequality
-  title="Pertidaksamaan Linear"
+  title="Linear Inequality"
   description="y > x + 1"
   inequality="y > x + 1"
   bounds={{ x: [-5, 5], y: [-5, 5] }}
@@ -352,42 +352,42 @@ import { Inequality } from "@repo/design-system/components/contents/inequality";
 
 ### AnimationBacterial
 
-Animasi pertumbuhan bakteri.
+Bacterial growth animation.
 
 ```tsx
 import { AnimationBacterial } from "@repo/design-system/components/contents/animation-bacterial";
 
 <AnimationBacterial
-  title="Pertumbuhan Bakteri"
-  description="Model pertumbuhan eksponensial"
+  title="Bacterial Growth"
+  description="Exponential growth model"
   initialCount={100}
   growthRate={0.5}
   timeSteps={10}
 />
 ```
 
-## Referensi Warna
+## Color Reference
 
-Warna yang tersedia dari `@repo/design-system/lib/color`:
+Available colors from `@repo/design-system/lib/color`:
 
-| Warna | Hex | Penggunaan |
-|-------|-----|------------|
-| RED | #dc2626 | Hindari buat garis |
-| ORANGE | #ea580c | Bagus buat penekanan |
-| AMBER | #d97706 | Peringatan |
-| YELLOW | #ca8a04 | Highlight |
-| LIME | #65a30d | Alternatif yang bagus |
-| GREEN | #16a34a | Hindari buat garis |
-| EMERALD | #059669 | Bagus buat garis |
-| TEAL | #0d9488 | Bagus buat garis |
-| CYAN | #0891b2 | Bagus buat garis |
-| SKY | #0284c7 | Bagus buat garis |
-| BLUE | #2563eb | Hindari buat garis |
-| INDIGO | #4f46e5 | Bagus buat garis |
-| VIOLET | #7c3aed | Bagus buat garis |
-| PURPLE | #9333ea | Bagus buat garis |
-| FUCHSIA | #c026d3 | Bagus buat garis |
-| PINK | #db2777 | Bagus buat garis |
-| ROSE | #e11d48 | Bagus buat garis |
+| Color | Hex | Usage |
+|-------|-----|-------|
+| RED | #dc2626 | Avoid for lines |
+| ORANGE | #ea580c | Good for emphasis |
+| AMBER | #d97706 | Warnings |
+| YELLOW | #ca8a04 | Highlights |
+| LIME | #65a30d | Good alternative |
+| GREEN | #16a34a | Avoid for lines |
+| EMERALD | #059669 | Good for lines |
+| TEAL | #0d9488 | Good for lines |
+| CYAN | #0891b2 | Good for lines |
+| SKY | #0284c7 | Good for lines |
+| BLUE | #2563eb | Avoid for lines |
+| INDIGO | #4f46e5 | Good for lines |
+| VIOLET | #7c3aed | Good for lines |
+| PURPLE | #9333ea | Good for lines |
+| FUCHSIA | #c026d3 | Good for lines |
+| PINK | #db2777 | Good for lines |
+| ROSE | #e11d48 | Good for lines |
 
-**Rekomendasi**: Pake `INDIGO`, `TEAL`, `EMERALD`, `VIOLET`, `ORANGE`, `CYAN`, atau `PURPLE` buat garis.
+**Recommendation**: Use `INDIGO`, `TEAL`, `EMERALD`, `VIOLET`, `ORANGE`, `CYAN`, or `PURPLE` for lines.

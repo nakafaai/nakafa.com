@@ -1,23 +1,32 @@
 ---
 name: nakafa-content
-description: Buat konten edukasi (MDX) dan latihan soal buat platform Nakafa. Dipake kalo kamu bikin atau edit materi pelajaran, soal, pembahasan, atau konten edukasi lainnya.
+description: Create educational content (MDX) and exercises for Nakafa platform. Use when creating or editing subject materials, exercises, questions, answers/explanations, or any educational content in MDX format.
 ---
 
 # Nakafa Content Creation
 
-Panduan bikin konten edukasi dan latihan soal di Nakafa.
+Guidelines for creating educational content and exercises for the Nakafa platform.
 
-## Bahasa
+## Language
 
-- **Utama**: Bahasa Indonesia (yang mudah dipahami)
-- **Kedua**: English (buat terjemahan)
-- **Tone**: Jelasin dengan jelas, ga usah terlalu formal, tapi tetep profesional
+### For This Skill (Documentation)
+Use normal English - clear and straightforward.
 
-## Jenis Konten
+### For Actual Content (MDX Files)
+- **Indonesian (id.mdx)**: Use proper Indonesian grammar with natural, engaging tone
+  - Use "kita" (we) and "kalian" (you all) to engage readers
+  - Write like you're explaining to a friend, but keep it educational
+  - Example: "Mari kita mulai dengan...", "Pernahkah kalian memperhatikan..."
+  
+- **English (en.mdx)**: Use proper English grammar with natural, engaging tone
+  - Write clearly and conversationally
+  - Keep it educational but not stiff
 
-### 1. Materi Pelajaran (`packages/contents/subject/`)
+## Content Types
 
-Materi edukasi berdasarkan jenjang:
+### 1. Subject Content (`packages/contents/subject/`)
+
+Educational materials organized by level:
 
 ```
 subject/
@@ -30,12 +39,12 @@ subject/
         └── ai-ds/
 ```
 
-Tiap topic punya:
-- `id.mdx`: Versi Indonesia (ini yang utama)
-- `en.mdx`: Versi English
-- `graph.tsx`: Komponen grafik (kalo perlu)
+Each topic contains:
+- `id.mdx`: Indonesian version (Source of Truth) - natural, engaging tone
+- `en.mdx`: English translation - natural, engaging tone
+- `graph.tsx`: Shared graph component (if needed)
 
-### 2. Latihan Soal (`packages/contents/exercises/`)
+### 2. Exercises (`packages/contents/exercises/`)
 
 ```
 exercises/
@@ -45,7 +54,7 @@ exercises/
 └── middle-school/
 ```
 
-Struktur tiap nomor:
+Exercise structure per number:
 ```
 {number}/
 ├── _question/
@@ -59,9 +68,9 @@ Struktur tiap nomor:
 
 ## MDX Components
 
-### Auto-Imported (Ga Perlu Import)
+### Auto-Imported (No Import Required)
 
-Udah langsung bisa dipake di semua file MDX:
+Available in all MDX files without importing:
 
 ```mdx
 <BlockMath math="x^2 + y^2 = r^2" />
@@ -82,9 +91,9 @@ Udah langsung bisa dipake di semua file MDX:
 <Mermaid chart="graph TD; A-->B;" />
 ```
 
-### Content Components (Harus Import Dulu)
+### Content Components (Import Required)
 
-Dari `@repo/design-system/components/contents/*`:
+From `@repo/design-system/components/contents/*`:
 
 ```typescript
 import { LineEquation } from "@repo/design-system/components/contents/line-equation";
@@ -100,14 +109,14 @@ import { BarChart } from "@repo/design-system/components/contents/bar-chart";
 import { AnimationBacterial } from "@repo/design-system/components/contents/animation-bacterial";
 ```
 
-### Sistem Warna
+### Color System
 
-Selalu pake `getColor()`:
+Always use `getColor()` for deterministic colors:
 
 ```typescript
 import { getColor } from "@repo/design-system/lib/color";
 
-// Warna yang tersedia: RED, ORANGE, AMBER, YELLOW, LIME, GREEN, EMERALD,
+// Available colors: RED, ORANGE, AMBER, YELLOW, LIME, GREEN, EMERALD,
 // TEAL, CYAN, SKY, BLUE, INDIGO, VIOLET, PURPLE, FUCHSIA, PINK, ROSE
 
 <LineEquation
@@ -123,86 +132,100 @@ import { getColor } from "@repo/design-system/lib/color";
 />
 ```
 
-**JANGAN pake RED, GREEN, BLUE buat garis.**
+**Never use default RED, GREEN, or BLUE for lines.**
 
-## Aturan Format Math
+## Math Formatting Rules
 
 ### Components
 
 - **Inline math**: `<InlineMath math="x + y" />`
 - **Block math**: `<BlockMath math="x^2 + y^2 = r^2" />`
-- **Banyak block**: Bungkus pake `<MathContainer>`
+- **Multiple blocks**: Wrap with `<MathContainer>`
 
-### Angka
+### Numbers
 
-- Pake `<InlineMath math="5" />` buat angka di teks (bukan `5`)
-- Pake `<InlineMath math="(1)" />` buat nomor referensi
-- Satuan: `<InlineMath math="5 \text{ cm}" />`
+- Use `<InlineMath math="5" />` for numbers in text (not plain `5`)
+- Use `<InlineMath math="(1)" />` for numbered references
+- Units: `<InlineMath math="5 \text{ cm}" />`
 
-### Variabel di Teks
+### Variables in Text
 
-Miringin variabel: *x*, *y*, *f(x)*
+Italicize variables: *x*, *y*, *f(x)*
 
-### Desimal (Bahasa Indonesia)
+### Decimals (Indonesian)
 
-Pake koma: `3,14` (bukan `3.14`)
+Use comma: `3,14` (not `3.14`)
 
-## Aturan Penulisan
+### Backslash Escaping
 
-### Heading
-
-- Mulai dari h2 (`##`), maksimal h4 (`####`)
-- Judul yang deskriptif (BUKAN "Langkah 1")
-- **JANGAN ada simbol atau math** di heading
-- **JANGAN pake kurung** di heading (pake "Analisis 1" bukan "Analisis (1)")
-
-**Bener:**
-```md
-## Nyari Nilai x
-
-#### Analisis 1
+**MDX files (InlineMath/BlockMath)**: Use single backslash
+```mdx
+<InlineMath math="\frac{a}{b}" />
+<BlockMath math="\sqrt{x}" />
 ```
 
-**Salah:**
-```md
-## Langkah 1: Nyari <InlineMath math="x" />
-
-#### Analisis (1)
+**choices.ts (TypeScript strings)**: Use escaped double backslash
+```typescript
+{ label: "$$\\frac{a}{b}$$", value: true }
 ```
 
-### List
+## Writing Guidelines
 
-Pake strip `-`:
+### Headings
 
+- Start at h2 (`##`)
+- Maximum depth: h4 (`####`)
+- Descriptive titles (NOT "Step 1")
+- **NO symbols or math** in headings
+- **NO parentheses** in headings (use "Analysis 1" not "Analysis (1)")
+
+**Correct:**
 ```md
-- Item 1
-- Item 2
-- Item 3
+## Finding the Value of x
+
+#### Analysis 1
 ```
 
-Ga usah bikin list bersarang. Ga usah kasih baris kosong antar item.
+**Incorrect:**
+```md
+## Step 1: Finding <InlineMath math="x" />
 
-### Paragraf dan Math
+#### Analysis (1)
+```
 
-Selalu kasih baris kosong antara teks dan math:
+### Lists
+
+Use hyphens `-`:
+
+```md
+- First item
+- Second item
+- Third item
+```
+
+No nested lists. No blank lines between items.
+
+### Paragraphs and Math
+
+Always add blank line between text and math:
 
 ```mdx
-Teks di sini.
+Some text here.
 
 <BlockMath math="x = 5" />
 
-Teks lagi di sini.
+More text here.
 ```
 
-## Bikin Latihan Soal
+## Exercise Creation
 
-### File Soal (`_question/id.mdx`)
+### Question File (`_question/id.mdx`)
 
 ```mdx
 export const metadata = {
   title: "Soal 1",
-  authors: [{ name: "Nama Author" }],
-  date: "06/11/2025",  // Format MM/DD/YYYY
+  authors: [{ name: "Author Name" }],
+  date: "06/11/2025",  // MM/DD/YYYY format
 };
 
 Diketahui <InlineMath math="a = 5" /> dan <InlineMath math="b = 3" />.
@@ -210,12 +233,12 @@ Diketahui <InlineMath math="a = 5" /> dan <InlineMath math="b = 3" />.
 Hitunglah nilai dari <InlineMath math="a + b" />.
 ```
 
-### File Pembahasan (`_answer/id.mdx`)
+### Answer File (`_answer/id.mdx`)
 
 ```mdx
 export const metadata = {
   title: "Pembahasan Soal 1",
-  authors: [{ name: "Nama Author" }],
+  authors: [{ name: "Author Name" }],
   date: "06/11/2025",
 };
 
@@ -231,7 +254,7 @@ Diketahui <InlineMath math="a = 5" /> dan <InlineMath math="b = 3" />.
 Jadi, nilai <InlineMath math="a + b" /> adalah <InlineMath math="8" />.
 ```
 
-### File Pilihan (`choices.ts`)
+### Choices File (`choices.ts`)
 
 ```typescript
 import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
@@ -239,10 +262,10 @@ import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 const choices: ExercisesChoices = {
   id: [
     { label: "$$7$$", value: false },
-    { label: "$$8$$", value: true },   // jawaban bener
+    { label: "$$8$$", value: true },   // correct answer
     { label: "$$9$$", value: false },
     { label: "$$10$$", value: false },
-    { label: "Tidak ada jawaban", value: false },  // teks biasa
+    { label: "Tidak ada jawaban", value: false },  // plain text
   ],
   en: [
     { label: "$$7$$", value: false },
@@ -256,31 +279,36 @@ const choices: ExercisesChoices = {
 export default choices;
 ```
 
-**Math di choices:** Pake `$$...$$` buat ekspresi math dan angka, teks biasa buat label normal.
+**Math in choices:** Use `$$...$$` for math expressions and numbers, plain text for normal labels.
 
-### Aturan Penting Buat Latihan
+**Important:** In TypeScript strings, backslashes must be escaped. For example:
+- `$$\frac{a}{b}$$` not `$$\frac{a}{b}$$`
+- `$$\infty$$` not `$$\infty$$`
+- `$$\sqrt{x}$$` not `$$\sqrt{x}$$`
 
-1. **Format Tanggal**: Harus `MM/DD/YYYY` (contoh: "06/11/2025")
-2. **Kejelasan**: Pembahasan harus jelas dan ga ambigu
-3. **JANGAN Pake Huruf Pilihan**: Jangan pernah nyebut (A), (B), (C) di pembahasan
-4. **Math Konsisten**: Pake notasi yang sama di soal dan pembahasan
-5. **Nomor Referensi**: Pake `<InlineMath math="(1)" />` bukan `(1)`
+### Key Rules for Exercises
 
-## Pattern Visualisasi 3D
+1. **Date Format**: Must be `MM/DD/YYYY` (e.g., "06/11/2025")
+2. **Clarity**: Explanations must be clear and unambiguous
+3. **NO Option Letters**: Never refer to (A), (B), (C) in explanations
+4. **Consistent Math**: Use same notation in question and answer
+5. **Numbered References**: Use `<InlineMath math="(1)" />` not `(1)`
 
-### Generate Points
+## 3D Visualization Patterns
 
-**JANGAN hard-code points**. Pake `Array.from()`:
+### Generating Points
+
+**Never hard-code points**. Use `Array.from()` with math calculations:
 
 ```typescript
-// Buat parabola y = x^2 dari x=-5 sampe x=5
+// For a parabola y = x^2 from x=-5 to x=5
 points: Array.from({ length: 100 }, (_, i) => {
-  const x = -5 + (i / 99) * 10;  // Range dari -5 sampe 5
+  const x = -5 + (i / 99) * 10;  // Range from -5 to 5
   const y = x * x;
   return { x, y, z: 0 };
 })
 
-// Buat lingkaran
+// For a circle
 points: Array.from({ length: 100 }, (_, i) => {
   const angle = (i / 99) * 2 * Math.PI;
   const x = Math.cos(angle);
@@ -289,28 +317,28 @@ points: Array.from({ length: 100 }, (_, i) => {
 })
 ```
 
-### Setting Grafik 2D
+### 2D Graph Settings
 
-Buat visualisasi 2D:
+For 2D visualizations:
 
 ```tsx
 <LineEquation
-  title={<>Grafik f(x)</>}
-  description="Visualisasi fungsi"
+  title={<>Graph of f(x)</>}
+  description="Visualization of the function"
   showZAxis={false}
-  cameraPosition={[0, 0, 15]}
-  data={[{
+  cameraPosition={[0, 0, 15]}  // Perpendicular to plane
+  data={{
     points: [...],
     color: getColor("TEAL"),
     smooth: true,
     showPoints: false,
-  }]}
+  }}
 />
 ```
 
-### Label
+### Labels
 
-Pastiin label ga numpuk:
+Ensure labels don't overlap:
 
 ```tsx
 labels: [
@@ -320,22 +348,22 @@ labels: [
 
 ## Code vs Math
 
-- **Code pemrograman**: Pake inline code (`` `const x = 5` ``)
-- **Nilai math**: Pake `<InlineMath math="5" />`
-- **Fungsi math**: Pake `<InlineMath math="f(x)" />`
-- **Fungsi pemrograman**: Pake inline code (`` `function()` ``)
+- **Programming code**: Use inline code (`` `const x = 5` ``)
+- **Math values**: Use `<InlineMath math="5" />`
+- **Math functions**: Use `<InlineMath math="f(x)" />`
+- **Programming functions**: Use inline code (`` `function()` ``)
 
-## Checklist Kualitas
+## Quality Checklist
 
-Sebelum submit konten:
+Before submitting content:
 
-- [ ] Notasi math konsisten antara soal dan pembahasan
-- [ ] Semua angka pake `<InlineMath />`
-- [ ] Heading ga ada math atau simbol
-- [ ] Format tanggal MM/DD/YYYY
-- [ ] Warna pake `getColor()` bukan hard-code
-- [ ] Points 3D di-generate pake `Array.from()`, bukan hard-code
-- [ ] Ga ada huruf pilihan (A, B, C) di pembahasan
-- [ ] Pembahasan jelas dan ga ambigu
-- [ ] Deskripsi grafik diakhiri titik
-- [ ] Run `pnpm lint` sebelum submit
+- [ ] Math notation consistent between question and answer
+- [ ] All numbers use `<InlineMath />`
+- [ ] Headings don't contain math or symbols
+- [ ] Date format is MM/DD/YYYY
+- [ ] Colors use `getColor()` not hard-coded values
+- [ ] 3D points generated via `Array.from()`, not hard-coded
+- [ ] No option letters (A, B, C) in explanations
+- [ ] Explanations are clear and unambiguous
+- [ ] Graph descriptions end with period
+- [ ] Run `pnpm lint` before submitting

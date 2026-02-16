@@ -3,8 +3,10 @@ alwaysApply: false
 ---
 # Content Creation Guidelines
 
-**Language**: Indonesian (Bahasa Indonesia Baku - formal/academic) is the primary language for content.
+**Language**: Indonesian (natural, engaging) or English (natural, engaging) for actual content.
 **Format**: MDX (Markdown + React Components).
+
+**Note**: This documentation uses normal English. The actual content in MDX files should use proper grammar but natural, engaging tone.
 
 ## MDX Components
 
@@ -58,16 +60,19 @@ Italicize variables: *x*, *y*, *f(x)*
 
 Use comma: `3,14` (not `3.14`)
 
-## Language Guidelines (Indonesian)
+## Language Guidelines
 
-1. **Formal Tone**: Use formal and academic Indonesian (Baku).
-   - Avoid slang or colloquialisms.
-2. **Terminology**: Use standard mathematical terms.
-   - "Equation" -> "Persamaan"
-   - "Function" -> "Fungsi"
-   - "Graph" -> "Grafik"
-   - "Therefore" -> "Jadi"
-   - "Given" -> "Diketahui"
+### Indonesian (id.mdx)
+Use proper Indonesian grammar with natural, engaging tone:
+- Use "kita" (we) and "kalian" (you all) to engage readers
+- Write like you're explaining to a friend
+- Keep it educational but not stiff
+- Example: "Mari kita mulai dengan...", "Pernahkah kalian memperhatikan..."
+
+### English (en.mdx)
+Use proper English grammar with natural, engaging tone:
+- Write clearly and conversationally
+- Keep it educational but approachable
 
 ## File Structure
 

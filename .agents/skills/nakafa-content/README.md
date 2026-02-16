@@ -1,48 +1,48 @@
 # Quick Reference
 
-## Lokasi Skill
+## Skill Location
 `.agents/skills/nakafa-content/`
 
-## Kapan Dipake
-- Bikin konten edukasi (MDX)
-- Bikin latihan soal (soal, pembahasan, pilihan)
-- Edit konten yang udah ada
-- Nambahin visualisasi/grafik
+## When to Use
+- Creating educational content (MDX)
+- Creating exercises (questions, answers, choices)
+- Editing existing content
+- Adding visualizations/graphs
 
-## File yang Dibuat
+## Files Created
 
-### Skill Utama
-- `SKILL.md` - Panduan lengkap bikin konten
+### Main Skill
+- `SKILL.md` - Complete guidelines for content creation
 
-### Referensi
-- `references/mdx-components.md` - Semua komponen yang tersedia
-- `references/exercise-patterns.md` - Pattern bikin latihan
+### References
+- `references/mdx-components.md` - All available components
+- `references/exercise-patterns.md` - Exercise creation patterns
 
-### Template
-- `templates/exercise-template.md` - Template folder latihan
-- `templates/subject-template.md` - Template konten materi
+### Templates
+- `templates/exercise-template.md` - Exercise folder template
+- `templates/subject-template.md` - Subject content template
 
-## File Rules yang Difix
-- `.trae/rules/content_creation.md` - Diupdate pake komponen yang bener
-- `.trae/rules/exercise_creation.md` - Ditambahin import dan pattern
-- `.trae/rules/project_structure.md` - Fix nama app dan nambahin packages
+## Updated Rules Files
+- `.trae/rules/content_creation.md` - Updated with correct component usage
+- `.trae/rules/exercise_creation.md` - Added imports and patterns
+- `.trae/rules/project_structure.md` - Fixed app names and added packages
 
-## Pattern Penting
+## Key Patterns
 
-### Komponen Math (BUKAN $ atau $$)
+### Math Components (NOT $ or $$)
 ```mdx
 <InlineMath math="x + y" />
 <BlockMath math="x^2 + y^2 = r^2" />
 <MathContainer>...</MathContainer>
 ```
 
-### Import Komponen Konten
+### Import Content Components
 ```typescript
 import { LineEquation } from "@repo/design-system/components/contents/line-equation";
 import { getColor } from "@repo/design-system/lib/color";
 ```
 
-### Generate Points (JANGAN hard-code)
+### Generate Points (NEVER hard-code)
 ```typescript
 points: Array.from({ length: 100 }, (_, i) => {
   const x = -5 + (i / 99) * 10;
@@ -50,24 +50,38 @@ points: Array.from({ length: 100 }, (_, i) => {
 })
 ```
 
-### Warna
-- Pake: `getColor("INDIGO")`, `getColor("TEAL")`, `getColor("PURPLE")`
-- JANGAN: RED, GREEN, BLUE buat garis
+### Colors
+- Use: `getColor("INDIGO")`, `getColor("TEAL")`, `getColor("PURPLE")`
+- NEVER: RED, GREEN, BLUE for lines
 
-### Heading
-- Mulai dari h2, maksimal h4
-- Ga ada math atau simbol: "Nyari Nilai x" (bukan "Nyari Nilai <InlineMath math='x' />")
-- Ga ada kurung: "Analisis 1" (bukan "Analisis (1)")
+### Headings
+- Start from h2, max h4
+- No math or symbols: "Finding Value x" (not "Finding <InlineMath math='x' />")
+- No parentheses: "Analysis 1" (not "Analysis (1)")
 
-### Format Tanggal
-Selalu `MM/DD/YYYY` (contoh: "06/11/2025")
+### Date Format
+Always `MM/DD/YYYY` (e.g., "06/11/2025")
 
 ### Choices.ts
 ```typescript
 import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 // Math: $$...$$
-// Teks: biasa
+// Text: plain
 ```
 
-## Verifikasi
-Semua file lolos `pnpm lint` ✅
+## Writing Style for Content
+
+### Indonesian (id.mdx)
+Use proper Indonesian grammar with natural, engaging tone:
+- Use "kita" (we) and "kalian" (you all) to engage readers
+- Write like you're explaining to a friend
+- Keep it educational but not stiff
+- Example: "Mari kita mulai dengan...", "Pernahkah kalian memperhatikan..."
+
+### English (en.mdx)
+Use proper English grammar with natural, engaging tone:
+- Write clearly and conversationally
+- Keep it educational but approachable
+
+## Verification
+All files pass `pnpm lint` ✅

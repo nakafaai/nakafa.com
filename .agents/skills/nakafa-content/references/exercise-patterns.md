@@ -1,27 +1,27 @@
-# Referensi Pattern Latihan Soal
+# Exercise Patterns Reference
 
-Pattern detail buat bikin latihan soal di Nakafa.
+Detailed patterns for creating exercises at Nakafa.
 
-## Kategori dan Tipe Latihan
+## Exercise Categories and Types
 
-### Kategori
+### Categories
 
-- `high-school`: Level SMA/SMK/MA
-- `middle-school`: Level SMP/MTs
+- `high-school`: SMA/SMK/MA level
+- `middle-school`: SMP/MTs level
 
-### Tipe
+### Types
 
 **High School:**
 - `tka`: Tes Kemampuan Akademik
 - `snbt`: Seleksi Nasional Berbasis Tes
 
 **Middle School:**
-- `grade-9`: Kelas 9 (persiapan masuk SMA)
+- `grade-9`: Kelas 9 (preparation for high school entrance)
 
-### Materi (Mapel)
+### Materials (Subjects)
 
 **TKA:**
-- `mathematics`: Matematika
+- `mathematics`: Mathematics
 
 **SNBT:**
 - `quantitative-knowledge`: Pengetahuan Kuantitatif
@@ -32,7 +32,7 @@ Pattern detail buat bikin latihan soal di Nakafa.
 - `general-knowledge`: Pengetahuan Umum
 - `reading-and-writing-skills`: Literasi Membaca dan Menulis
 
-## Pattern Struktur File
+## File Structure Pattern
 
 ```
 exercises/
@@ -50,23 +50,23 @@ exercises/
 │   │   │   │   │   └── choices.ts
 ```
 
-## Pattern File Soal
+## Question File Pattern
 
-### Struktur Dasar
+### Basic Structure
 
 ```mdx
 export const metadata = {
   title: "Soal {number}",
-  authors: [{ name: "Nama Author" }],
+  authors: [{ name: "Author Name" }],
   date: "MM/DD/YYYY",
 };
 
-{Teks soal pake <InlineMath math="..." /> buat semua math}
+{Question text with <InlineMath math="..." /> for all math}
 
 <BlockMath math="..." />
 ```
 
-### Contoh: Math Sederhana
+### Example: Simple Math
 
 ```mdx
 export const metadata = {
@@ -75,14 +75,14 @@ export const metadata = {
   date: "06/11/2025",
 };
 
-Diketahui <InlineMath math="a = \\frac{1}{2}" />, <InlineMath math="b = 2" />, <InlineMath math="c = 1" />
+Diketahui <InlineMath math="a = \frac{1}{2}" />, <InlineMath math="b = 2" />, <InlineMath math="c = 1" />
 
 Nilai dari
 
-<BlockMath math="\\frac{a^{-2}bc^3}{ab^2c^{-1}} = ...." />
+<BlockMath math="\frac{a^{-2}bc^3}{ab^2c^{-1}} = ...." />
 ```
 
-### Contoh: Dengan Grafik
+### Example: With Graph
 
 ```mdx
 export const metadata = {
@@ -94,42 +94,42 @@ export const metadata = {
 Diketahui persamaan lingkaran <InlineMath math="x^2 + y^2 + 2x - 6y + 2 = 0" />. Persamaan garis singgung pada lingkaran yang sejajar dengan garis <InlineMath math="x - y + 3 = 0" /> adalah ...
 ```
 
-### Poin Penting
+### Key Points
 
-1. **Format Tanggal**: Selalu `MM/DD/YYYY`
-2. **Math di Mana-mana**: Semua angka harus pake `<InlineMath math="..." />`
-3. **BlockMath**: Buat persamaan yang berdiri sendiri
-4. **Nomor Referensi**: `<InlineMath math="(1)" />` bukan `(1)`
-5. **List**: Pake list Markdown standar
+1. **Date Format**: Always `MM/DD/YYYY`
+2. **Math Everywhere**: All numbers must use `<InlineMath math="..." />`
+3. **BlockMath**: For equations that stand alone
+4. **Numbered References**: `<InlineMath math="(1)" />` not `(1)`
+5. **Lists**: Use standard Markdown lists
 
-## Pattern File Pembahasan
+## Answer File Pattern
 
-### Struktur
+### Structure
 
 ```mdx
 export const metadata = {
   title: "Pembahasan Soal {number}",
-  authors: [{ name: "Nama Author" }],
+  authors: [{ name: "Author Name" }],
   date: "MM/DD/YYYY",
 };
 
-#### {Judul Deskriptif 1}
+#### {Descriptive Heading 1}
 
-Teks penjelasan pake <InlineMath math="..." />.
+Explanation text with <InlineMath math="..." />.
 
 <MathContainer>
   <BlockMath math="..." />
   <BlockMath math="..." />
 </MathContainer>
 
-#### {Judul Deskriptif 2}
+#### {Descriptive Heading 2}
 
-Penjelasan lagi...
+More explanation...
 
-Jadi, {kesimpulan}.
+Jadi, {conclusion}.
 ```
 
-### Contoh: Penyelesaian Step-by-Step
+### Example: Step-by-Step Solution
 
 ```mdx
 export const metadata = {
@@ -138,20 +138,20 @@ export const metadata = {
   date: "06/11/2025",
 };
 
-Diketahui: <InlineMath math="a = \\frac{1}{2}" />; <InlineMath math="b = 2" />, <InlineMath math="c = 1" />
+Diketahui: <InlineMath math="a = \frac{1}{2}" />; <InlineMath math="b = 2" />, <InlineMath math="c = 1" />
 
 <MathContainer>
-<BlockMath math="\\frac{a^{-2}bc^3}{ab^2c^{-1}} = \\frac{bc^3}{ab^2} \\cdot \\frac{c^1}{a^2}" />
+<BlockMath math="\frac{a^{-2}bc^3}{ab^2c^{-1}} = \frac{bc^3}{ab^2} \cdot \frac{c^1}{a^2}" />
 
-<BlockMath math="= \\frac{2 \\cdot 1^3}{\\left(\\frac{1}{2}\\right) \\cdot 2^2} \\cdot \\frac{1^1}{\\left(\\frac{1}{2}\\right)^2}" />
+<BlockMath math="= \frac{2 \cdot 1^3}{\left(\frac{1}{2}\right) \cdot 2^2} \cdot \frac{1^1}{\left(\frac{1}{2}\right)^2}" />
 
-<BlockMath math="= \\frac{2 \\cdot 4}{2} = 4" />
+<BlockMath math="= \frac{2 \cdot 4}{2} = 4" />
 </MathContainer>
 
 Jadi, nilai dari ekspresi tersebut adalah <InlineMath math="4" />.
 ```
 
-### Contoh: Dengan Komponen Grafik
+### Example: With Graph Component
 
 ```mdx
 import { LineEquation } from "@repo/design-system/components/contents/line-equation";
@@ -165,9 +165,9 @@ export const metadata = {
 
 Diketahui lingkaran <InlineMath math="L = x^2 + y^2 + 2x - 6y + 2 = 0" /> sejajar dengan garis <InlineMath math="x - y + 3 = 0" />.
 
-#### Nyari Jari-Jari Lingkaran
+#### Menentukan Jari-Jari Lingkaran
 
-Bentuk umum lingkaran <InlineMath math="(x - a)^2 + (y - b)^2 = r^2" /> bisa ditentuin dari persamaan <InlineMath math="L" />
+Bentuk umum lingkaran <InlineMath math="(x - a)^2 + (y - b)^2 = r^2" /> dapat ditentukan dari persamaan <InlineMath math="L" />
 
 <MathContainer>
 <BlockMath math="x^2 + y^2 + 2x - 6y + 2 = 0" />
@@ -177,14 +177,14 @@ Bentuk umum lingkaran <InlineMath math="(x - a)^2 + (y - b)^2 = r^2" /> bisa dit
 <BlockMath math="(x + 1)^2 + (y - 3)^2 = 8" />
 </MathContainer>
 
-Jadi pusat lingkaran di <InlineMath math="(-1, 3)" /> dan jari-jari <InlineMath math="r = \\sqrt{8} = 2\\sqrt{2}" />.
+Sehingga pusat lingkaran di <InlineMath math="(-1, 3)" /> dan jari-jari <InlineMath math="r = \sqrt{8} = 2\sqrt{2}" />.
 
-#### Nyari Gradien
+#### Menentukan Gradien
 
 Karena <InlineMath math="y = mx + c" /> dan garis sejajar dengan garis singgung, maka gradiennya adalah
 
 <MathContainer>
-<BlockMath math="x - y + 3 = 0 \\Leftrightarrow y = x + 3" />
+<BlockMath math="x - y + 3 = 0 \Leftrightarrow y = x + 3" />
 
 <BlockMath math="m_g = m = 1" />
 </MathContainer>
@@ -193,55 +193,55 @@ Karena <InlineMath math="y = mx + c" /> dan garis sejajar dengan garis singgung,
 
 Rumus persamaan garis singgung lingkaran dengan gradien <InlineMath math="m" />
 
-<BlockMath math="y - b = m(x - a) \\pm r\\sqrt{1 + m^2}" />
+<BlockMath math="y - b = m(x - a) \pm r\sqrt{1 + m^2}" />
 
 Substitusi nilai yang diketahui
 
 <MathContainer>
-<BlockMath math="y - 3 = 1(x + 1) \\pm \\sqrt{8} \\cdot \\sqrt{1 + (1)^2}" />
+<BlockMath math="y - 3 = 1(x + 1) \pm \sqrt{8} \cdot \sqrt{1 + (1)^2}" />
 
-<BlockMath math="y - 3 = x + 1 \\pm \\sqrt{8} \\cdot \\sqrt{2}" />
+<BlockMath math="y - 3 = x + 1 \pm \sqrt{8} \cdot \sqrt{2}" />
 
-<BlockMath math="y - 3 = x + 1 \\pm 4" />
+<BlockMath math="y - 3 = x + 1 \pm 4" />
 </MathContainer>
 
-Dapet dua persamaan
+Diperoleh dua persamaan
 
 <MathContainer>
-<BlockMath math="y = x + 4 + 4 \\quad \\text{atau} \\quad y = x + 4 - 4" />
+<BlockMath math="y = x + 4 + 4 \quad \text{atau} \quad y = x + 4 - 4" />
 
-<BlockMath math="y = x + 8 \\quad \\text{atau} \\quad y = x" />
+<BlockMath math="y = x + 8 \quad \text{atau} \quad y = x" />
 </MathContainer>
 
 Bentuk umumnya
 
-<BlockMath math="x - y + 8 = 0 \\quad \\text{atau} \\quad x - y = 0" />
+<BlockMath math="x - y + 8 = 0 \quad \text{atau} \quad x - y = 0" />
 
 Jawaban yang paling tepat adalah <InlineMath math="x - y + 8 = 0" />.
 ```
 
-## Pattern File Choices
+## Choices File Pattern
 
-### Struktur
+### Structure
 
 ```typescript
 import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 
 const choices: ExercisesChoices = {
   id: [
-    // Pilihan Indonesia
+    // Indonesian choices
   ],
   en: [
-    // Pilihan English
+    // English choices
   ],
 };
 
 export default choices;
 ```
 
-### Contoh-contoh
+### Examples
 
-**Pilihan Angka:**
+**Numeric Choices:**
 
 ```typescript
 import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
@@ -266,7 +266,9 @@ const choices: ExercisesChoices = {
 export default choices;
 ```
 
-**Pilihan Pecahan:**
+**Fraction Choices:**
+
+**Important:** In TypeScript strings, backslashes must be escaped as `\\`.
 
 ```typescript
 const choices: ExercisesChoices = {
@@ -289,7 +291,7 @@ const choices: ExercisesChoices = {
 export default choices;
 ```
 
-**Campuran Math dan Teks:**
+**Mixed Math and Text:**
 
 ```typescript
 const choices: ExercisesChoices = {
@@ -312,68 +314,68 @@ const choices: ExercisesChoices = {
 export default choices;
 ```
 
-## Anti-Pattern yang Sering Terjadi
+## Common Anti-Patterns
 
-### SALAH: Pake (A), (B), (C) di pembahasan
+### WRONG: Using (A), (B), (C) in explanations
 
 ```mdx
-> Jadi jawabannya adalah (C).  // JANGAN BEGINI
+> Jadi jawabannya adalah (C).  // NEVER DO THIS
 ```
 
-### BENER: Refer ke konten
+### CORRECT: Refer to content
 
 ```mdx
 > Jadi, persamaan garis singgungnya adalah <InlineMath math="x - y + 8 = 0" />.
 ```
 
-### SALAH: Math di heading
+### WRONG: Using math in headings
 
 ```mdx
-#### Nyari Nilai <InlineMath math="x" />  // JANGAN BEGINI
+#### Mencari Nilai <InlineMath math="x" />  // NEVER DO THIS
 ```
 
-### BENER: Heading teks biasa
+### CORRECT: Plain text headings
 
 ```mdx
-#### Nyari Nilai x
+#### Mencari Nilai x
 ```
 
-### SALAH: Kurung di heading
+### WRONG: Using parentheses in headings
 
 ```mdx
-#### Analisis Pernyataan (1)  // JANGAN BEGINI
+#### Analisis Pernyataan (1)  // NEVER DO THIS
 ```
 
-### BENER: Angka biasa
+### CORRECT: Plain numbers in headings
 
 ```mdx
 #### Analisis Pernyataan 1
 ```
 
-### SALAH: Angka biasa di teks
+### WRONG: Plain numbers in text
 
 ```mdx
-Diketahui a = 5 dan b = 3.  // JANGAN BEGINI
+Diketahui a = 5 dan b = 3.  // NEVER DO THIS
 ```
 
-### BENER: InlineMath buat angka
+### CORRECT: InlineMath for numbers
 
 ```mdx
 Diketahui <InlineMath math="a = 5" /> dan <InlineMath math="b = 3" />.
 ```
 
-### SALAH: Hard-code points di grafik
+### WRONG: Hard-coded points in graphs
 
 ```tsx
 points: [
   { x: 0, y: 0, z: 0 },
   { x: 1, y: 1, z: 0 },
   { x: 2, y: 4, z: 0 },
-  // ... 97 points lagi  // JANGAN BEGINI
+  // ... 97 more points  // NEVER DO THIS
 ]
 ```
 
-### BENER: Generate points
+### CORRECT: Generated points
 
 ```tsx
 points: Array.from({ length: 100 }, (_, i) => {
@@ -382,45 +384,45 @@ points: Array.from({ length: 100 }, (_, i) => {
 })
 ```
 
-## Checklist Kualitas
+## Quality Checklist
 
-### Konten
+### Content
 
-- [ ] Soal jelas dan ga ambigu
-- [ ] Semua ekspresi math pake komponen yang bener
-- [ ] Angka pake `<InlineMath />`
-- [ ] Persamaan block pake `<BlockMath />`
-- [ ] Banyak persamaan dibungkus `<MathContainer />`
+- [ ] Question is clear and unambiguous
+- [ ] All math expressions use proper components
+- [ ] Numbers use `<InlineMath />`
+- [ ] Block equations use `<BlockMath />`
+- [ ] Multiple equations wrapped in `<MathContainer />`
 
-### Struktur
+### Structure
 
-- [ ] Metadata ada title, authors, date
-- [ ] Format tanggal MM/DD/YYYY
-- [ ] Heading deskriptif (bukan "Langkah 1")
-- [ ] Heading ga ada math atau simbol
-- [ ] Heading pake angka biasa (bukan kurung)
+- [ ] Metadata includes title, authors, date
+- [ ] Date format is MM/DD/YYYY
+- [ ] Headings are descriptive (no "Step 1")
+- [ ] Headings contain no math or symbols
+- [ ] Headings use plain numbers (not parentheses)
 
-### Pembahasan
+### Answer
 
-- [ ] Penjelasan lengkap dan ga ambigu
-- [ ] Ga ada referensi ke huruf pilihan (A, B, C)
-- [ ] Kesimpulan jelas nyebutin jawabannya
-- [ ] Notasi math sama kaya di soal
+- [ ] Explanation is complete and unambiguous
+- [ ] No reference to option letters (A, B, C)
+- [ ] Conclusion clearly states the answer
+- [ ] Math notation matches question
 
 ### Choices
 
-- [ ] Type di-import dari `@repo/contents/_types/exercises/choices`
-- [ ] Array `id` dan `en` ada
-- [ ] Math pake `$$...$$`
-- [ ] Teks pake string biasa
-- [ ] Cuma satu `value: true` per bahasa
+- [ ] Type imported from `@repo/contents/_types/exercises/choices`
+- [ ] Both `id` and `en` arrays present
+- [ ] Math uses `$$...$$`
+- [ ] Text uses plain strings
+- [ ] Exactly one `value: true` per language
 
-### Grafik (kalo ada)
+### Graphs (if applicable)
 
-- [ ] Komponen di-import dengan bener
-- [ ] `getColor()` dipake buat warna
-- [ ] Points di-generate pake `Array.from()`
-- [ ] `showZAxis={false}` buat grafik 2D
-- [ ] `cameraPosition={[0, 0, 15]}` buat 2D
-- [ ] Label ga numpuk
-- [ ] Deskripsi diakhiri titik
+- [ ] Components imported correctly
+- [ ] `getColor()` used for colors
+- [ ] Points generated with `Array.from()`
+- [ ] `showZAxis={false}` for 2D graphs
+- [ ] `cameraPosition={[0, 0, 15]}` for 2D
+- [ ] Labels don't overlap
+- [ ] Description ends with period

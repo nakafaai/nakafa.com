@@ -1,16 +1,16 @@
-# Template Latihan Soal
+# Exercise Template
 
-Template buat bikin latihan soal baru.
+Use this template to create a new exercise.
 
-## Cara Pake
+## Quick Start
 
-1. Copy folder template
-2. Rename jadi nomor soal
-3. Edit file-file MDX-nya
+1. Copy the template folder
+2. Rename to the exercise number
+3. Edit the MDX files
 4. Update choices.ts
-5. Run `pnpm lint` buat verifikasi
+5. Run `pnpm lint` to verify
 
-## Struktur File
+## File Structure
 
 ```
 {N}/
@@ -23,18 +23,18 @@ Template buat bikin latihan soal baru.
 └── choices.ts
 ```
 
-## File-file Template
+## Template Files
 
 ### _question/id.mdx
 
 ```mdx
 export const metadata = {
   title: "Soal {N}",
-  authors: [{ name: "Nama Kamu" }],
+  authors: [{ name: "Your Name" }],
   date: "MM/DD/YYYY",
 };
 
-{Teks soal di sini}
+{Question text here}
 
 <BlockMath math="..." />
 ```
@@ -44,7 +44,7 @@ export const metadata = {
 ```mdx
 export const metadata = {
   title: "Question {N}",
-  authors: [{ name: "Nama Kamu" }],
+  authors: [{ name: "Your Name" }],
   date: "MM/DD/YYYY",
 };
 
@@ -58,20 +58,20 @@ export const metadata = {
 ```mdx
 export const metadata = {
   title: "Pembahasan Soal {N}",
-  authors: [{ name: "Nama Kamu" }],
+  authors: [{ name: "Your Name" }],
   date: "MM/DD/YYYY",
 };
 
-#### {Judul Deskriptif}
+#### {Descriptive Heading}
 
-{Teks penjelasan}
+{Explanation text}
 
 <MathContainer>
   <BlockMath math="..." />
   <BlockMath math="..." />
 </MathContainer>
 
-Jadi, {kesimpulan}.
+Jadi, {conclusion}.
 ```
 
 ### _answer/en.mdx
@@ -79,7 +79,7 @@ Jadi, {kesimpulan}.
 ```mdx
 export const metadata = {
   title: "Solution to Question {N}",
-  authors: [{ name: "Nama Kamu" }],
+  authors: [{ name: "Your Name" }],
   date: "MM/DD/YYYY",
 };
 
@@ -120,7 +120,7 @@ const choices: ExercisesChoices = {
 export default choices;
 ```
 
-## Contoh: Latihan Soal Lengkap
+## Example: Complete Exercise
 
 ### _question/id.mdx
 
@@ -131,11 +131,11 @@ export const metadata = {
   date: "06/11/2025",
 };
 
-Diketahui <InlineMath math="a = \\frac{1}{2}" />, <InlineMath math="b = 2" />, <InlineMath math="c = 1" />
+Diketahui <InlineMath math="a = \frac{1}{2}" />, <InlineMath math="b = 2" />, <InlineMath math="c = 1" />
 
 Nilai dari
 
-<BlockMath math="\\frac{a^{-2}bc^3}{ab^2c^{-1}} = ...." />
+<BlockMath math="\frac{a^{-2}bc^3}{ab^2c^{-1}} = ...." />
 ```
 
 ### _question/en.mdx
@@ -147,11 +147,11 @@ export const metadata = {
   date: "06/11/2025",
 };
 
-Given <InlineMath math="a = \\frac{1}{2}" />, <InlineMath math="b = 2" />, <InlineMath math="c = 1" />
+Given <InlineMath math="a = \frac{1}{2}" />, <InlineMath math="b = 2" />, <InlineMath math="c = 1" />
 
 The value of
 
-<BlockMath math="\\frac{a^{-2}bc^3}{ab^2c^{-1}} = ...." />
+<BlockMath math="\frac{a^{-2}bc^3}{ab^2c^{-1}} = ...." />
 ```
 
 ### _answer/id.mdx
@@ -163,14 +163,14 @@ export const metadata = {
   date: "06/11/2025",
 };
 
-Diketahui: <InlineMath math="a = \\frac{1}{2}" />; <InlineMath math="b = 2" />, <InlineMath math="c = 1" />
+Diketahui: <InlineMath math="a = \frac{1}{2}" />; <InlineMath math="b = 2" />, <InlineMath math="c = 1" />
 
 <MathContainer>
-<BlockMath math="\\frac{a^{-2}bc^3}{ab^2c^{-1}} = \\frac{bc^3}{ab^2} \\cdot \\frac{c^1}{a^2}" />
+<BlockMath math="\frac{a^{-2}bc^3}{ab^2c^{-1}} = \frac{bc^3}{ab^2} \cdot \frac{c^1}{a^2}" />
 
-<BlockMath math="= \\frac{2 \\cdot 1^3}{\\left(\\frac{1}{2}\\right) \\cdot 2^2} \\cdot \\frac{1^1}{\\left(\\frac{1}{2}\\right)^2}" />
+<BlockMath math="= \frac{2 \cdot 1^3}{\left(\frac{1}{2}\right) \cdot 2^2} \cdot \frac{1^1}{\left(\frac{1}{2}\right)^2}" />
 
-<BlockMath math="= \\frac{2 \\cdot 4}{2} = 4" />
+<BlockMath math="= \frac{2 \cdot 4}{2} = 4" />
 </MathContainer>
 
 Jadi, nilai dari ekspresi tersebut adalah <InlineMath math="4" />.
@@ -185,14 +185,14 @@ export const metadata = {
   date: "06/11/2025",
 };
 
-Given: <InlineMath math="a = \\frac{1}{2}" />; <InlineMath math="b = 2" />, <InlineMath math="c = 1" />
+Given: <InlineMath math="a = \frac{1}{2}" />; <InlineMath math="b = 2" />, <InlineMath math="c = 1" />
 
 <MathContainer>
-<BlockMath math="\\frac{a^{-2}bc^3}{ab^2c^{-1}} = \\frac{bc^3}{ab^2} \\cdot \\frac{c^1}{a^2}" />
+<BlockMath math="\frac{a^{-2}bc^3}{ab^2c^{-1}} = \frac{bc^3}{ab^2} \cdot \frac{c^1}{a^2}" />
 
-<BlockMath math="= \\frac{2 \\cdot 1^3}{\\left(\\frac{1}{2}\\right) \\cdot 2^2} \\cdot \\frac{1^1}{\\left(\\frac{1}{2}\\right)^2}" />
+<BlockMath math="= \frac{2 \cdot 1^3}{\left(\frac{1}{2}\right) \cdot 2^2} \cdot \frac{1^1}{\left(\frac{1}{2}\right)^2}" />
 
-<BlockMath math="= \\frac{2 \\cdot 4}{2} = 4" />
+<BlockMath math="= \frac{2 \cdot 4}{2} = 4" />
 </MathContainer>
 
 Therefore, the value of the expression is <InlineMath math="4" />.
@@ -223,9 +223,14 @@ const choices: ExercisesChoices = {
 export default choices;
 ```
 
-## Template dengan Grafik
+**Note:** In TypeScript strings, backslashes must be escaped. For fractions and special symbols:
+- Use `$$\\frac{a}{b}$$` not `$$\frac{a}{b}$$`
+- Use `$$\\infty$$` not `$$\infty$$`
+- Use `$$\\sqrt{x}$$` not `$$\sqrt{x}$$`
 
-### _answer/id.mdx (dengan LineEquation)
+## Template with Graph
+
+### _answer/id.mdx (with LineEquation)
 
 ```mdx
 import { LineEquation } from "@repo/design-system/components/contents/line-equation";
@@ -237,15 +242,15 @@ export const metadata = {
   date: "06/11/2025",
 };
 
-#### Nyari Pusat Lingkaran
+#### Menentukan Pusat Lingkaran
 
-Dari persamaan lingkaran <InlineMath math="x^2 + y^2 + 2x - 6y + 2 = 0" />, bisa ditentuin pusat dan jari-jari.
+Dari persamaan lingkaran <InlineMath math="x^2 + y^2 + 2x - 6y + 2 = 0" />, dapat ditentukan pusat dan jari-jari.
 
 <MathContainer>
 <BlockMath math="(x + 1)^2 + (y - 3)^2 = 8" />
 </MathContainer>
 
-Pusat lingkaran di <InlineMath math="(-1, 3)" /> dengan jari-jari <InlineMath math="r = \\sqrt{8}" />.
+Pusat lingkaran di <InlineMath math="(-1, 3)" /> dengan jari-jari <InlineMath math="r = \sqrt{8}" />.
 
 #### Visualisasi
 
