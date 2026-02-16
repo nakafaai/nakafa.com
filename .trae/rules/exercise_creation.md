@@ -98,6 +98,11 @@ export const metadata = {
   - Use `MathContainer` to wrap consecutive `BlockMath` elements.
   - Use `BlockMath` for equations on their own lines.
   - Use `InlineMath` for math within text.
+- **Be Creative**: Use various Markdown and LaTeX syntax creatively to present content engagingly
+- **NO Bloated Lists**: Lists are okay but don't overuse them. **NEVER use nested lists**
+- **NO Verbose Preamble**: Get straight to the point. Avoid unnecessary introductory text (basa-basi)
+- **Images are Reference Only**: If you find errors in questions or calculations from the image, fix them directly in the content. The image is just a reference for the calculation method, not absolute truth
+- **Provide Context**: Explain the reasoning and context behind steps so students understand WHY, not just WHAT
 
 ### Example: Answer
 

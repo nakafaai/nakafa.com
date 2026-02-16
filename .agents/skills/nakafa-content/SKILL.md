@@ -205,6 +205,14 @@ Use hyphens `-`:
 
 No nested lists. No blank lines between items.
 
+### Be Creative and Concise
+
+- **Be Creative**: Use various Markdown formatting and LaTeX math syntax creatively to present content engagingly
+- **NO Bloated Explanations**: Get straight to the point. Avoid unnecessary introductory text
+- **NO Excessive Lists**: Lists are okay but don't overuse them. **NEVER use nested lists**
+- **Images are Reference Only**: If you find errors in questions or calculations from source images, fix them directly. The source is just a reference for the calculation method, not absolute truth
+- **Provide Context**: Explain the reasoning and context so students understand WHY, not just WHAT
+
 ### Paragraphs and Math
 
 Always add blank line between text and math:
