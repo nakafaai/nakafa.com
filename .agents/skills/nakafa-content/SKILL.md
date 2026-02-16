@@ -281,10 +281,17 @@ export default choices;
 
 **Math in choices:** Use `$$...$$` for math expressions and numbers, plain text for normal labels.
 
-**Important:** In TypeScript strings, backslashes must be escaped. For example:
-- `$$\frac{a}{b}$$` not `$$\frac{a}{b}$$`
-- `$$\infty$$` not `$$\infty$$`
-- `$$\sqrt{x}$$` not `$$\sqrt{x}$$`
+**Important:** In TypeScript strings, backslashes must be escaped with an additional backslash. For example:
+
+```typescript
+// CORRECT - escape the backslash
+{ label: "$$\\frac{a}{b}$$", value: true }
+{ label: "$$\\sqrt{x}$$", value: false }
+{ label: "$$\\infty$$", value: false }
+
+// WRONG - unescaped backslash causes error
+{ label: "$$\frac{a}{b}$$", value: true }
+```
 
 ### Key Rules for Exercises
 
@@ -327,12 +334,12 @@ For 2D visualizations:
   description="Visualization of the function"
   showZAxis={false}
   cameraPosition={[0, 0, 15]}  // Perpendicular to plane
-  data={{
+  data={[{
     points: [...],
     color: getColor("TEAL"),
     smooth: true,
     showPoints: false,
-  }}
+  }]}
 />
 ```
 

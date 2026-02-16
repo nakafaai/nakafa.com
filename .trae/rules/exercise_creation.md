@@ -151,7 +151,7 @@ export const metadata = {
   description="Visualisasi parabola y = x²."
   showZAxis={false}
   cameraPosition={[0, 0, 15]}
-  data={{
+  data={[{
     points: Array.from({ length: 100 }, (_, i) => {
       const x = -5 + (i / 99) * 10;
       return { x, y: x * x, z: 0 };
@@ -159,7 +159,7 @@ export const metadata = {
     color: getColor("PURPLE"),
     smooth: true,
     showPoints: false,
-  }}
+  }]}
 />
 
 Jadi, titik puncaknya adalah <InlineMath math="(0, 0)" />.
