@@ -1,0 +1,58 @@
+import { Graph } from "../graph";
+
+export const metadata = {
+  title: "Solution to Question 19",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/17/2026",
+};
+
+#### Problem Identification
+
+We have a situation where a sniper is at a certain height shooting at a target below. We need to find the tangent of the angle of depression (<InlineMath math="\tan \alpha" />).
+
+<Graph 
+  title={<>Illustration of Sniper and Target Position</>}
+  description={<>Right-angled triangle formed by the sniper, target, and building base.</>}
+/>
+
+#### Determining Effective Height (Opposite Side)
+
+The building height is <InlineMath math="61.73" /> meters. The target height is <InlineMath math="173" /> cm. We need to convert units first.
+
+<MathContainer>
+  <BlockMath math="173 \text{ cm} = 1.73 \text{ meters}" />
+</MathContainer>
+
+The height difference between the sniper (assumed at the top of the building) and the target's head is:
+
+<MathContainer>
+  <BlockMath math="\text{Effective Height} = \text{Building Height} - \text{Target Height}" />
+  <BlockMath math="opposite = 61.73 - 1.73 = 60 \text{ meters}" />
+</MathContainer>
+
+This is the opposite side (<InlineMath math="opposite" />) for the angle of elevation (which is equal to the angle of depression).
+
+#### Determining Horizontal Distance (Adjacent Side)
+
+The horizontal distance from the base of the building to the target is known to be <InlineMath math="180" /> meters. This is the adjacent side (<InlineMath math="adjacent" />).
+
+<MathContainer>
+  <BlockMath math="adjacent = 180 \text{ meters}" />
+</MathContainer>
+
+#### Calculating Tangent of Angle of Depression
+
+The angle of depression (<InlineMath math="\alpha" />) has a tangent value equal to the ratio of the opposite side to the adjacent side in the formed right-angled triangle.
+
+<MathContainer>
+  <BlockMath math="\tan \alpha = \frac{opposite}{adjacent}" />
+  <BlockMath math="\tan \alpha = \frac{60}{180}" />
+</MathContainer>
+
+Simplify the fraction:
+
+<MathContainer>
+  <BlockMath math="\tan \alpha = \frac{1}{3}" />
+</MathContainer>
+
+Thus, the tangent value of the angle of depression is <InlineMath math="\frac{1}{3}" />.

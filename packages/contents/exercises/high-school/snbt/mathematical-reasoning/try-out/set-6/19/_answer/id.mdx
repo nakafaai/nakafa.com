@@ -1,0 +1,58 @@
+import { Graph } from "../graph";
+
+export const metadata = {
+  title: "Pembahasan Soal 19",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/17/2026",
+};
+
+#### Identifikasi Masalah
+
+Kita memiliki situasi di mana penembak berada di ketinggian tertentu dan menembak ke arah target di bawah. Kita perlu mencari nilai tangen sudut depresi (<InlineMath math="\tan \alpha" />).
+
+<Graph 
+  title={<>Ilustrasi Posisi Penembak dan Target</>}
+  description={<>Segitiga siku-siku yang terbentuk dari posisi penembak, target, dan dasar gedung.</>}
+/>
+
+#### Menentukan Tinggi Efektif (Sisi Depan)
+
+Ketinggian gedung adalah <InlineMath math="61,73" /> meter. Tinggi target adalah <InlineMath math="173" /> cm. Kita perlu menyamakan satuan terlebih dahulu.
+
+<MathContainer>
+  <BlockMath math="173 \text{ cm} = 1,73 \text{ meter}" />
+</MathContainer>
+
+Selisih ketinggian antara mata penembak (asumsi di atas gedung) dan kepala target adalah:
+
+<MathContainer>
+  <BlockMath math="\text{Tinggi Efektif} = \text{Tinggi Gedung} - \text{Tinggi Target}" />
+  <BlockMath math="de = 61,73 - 1,73 = 60 \text{ meter}" />
+</MathContainer>
+
+Ini adalah sisi depan (<InlineMath math="de" />) dari sudut elevasi (yang besarnya sama dengan sudut depresi).
+
+#### Menentukan Jarak Horizontal (Sisi Samping)
+
+Jarak horizontal dari dasar gedung ke target diketahui sebesar <InlineMath math="180" /> meter. Ini adalah sisi samping (<InlineMath math="sa" />).
+
+<MathContainer>
+  <BlockMath math="sa = 180 \text{ meter}" />
+</MathContainer>
+
+#### Menghitung Tangen Sudut Depresi
+
+Sudut depresi (<InlineMath math="\alpha" />) memiliki nilai tangen yang sama dengan perbandingan sisi depan terhadap sisi samping pada segitiga siku-siku yang terbentuk.
+
+<MathContainer>
+  <BlockMath math="\tan \alpha = \frac{de}{sa}" />
+  <BlockMath math="\tan \alpha = \frac{60}{180}" />
+</MathContainer>
+
+Sederhanakan pecahan tersebut:
+
+<MathContainer>
+  <BlockMath math="\tan \alpha = \frac{1}{3}" />
+</MathContainer>
+
+Jadi, nilai tangen sudut depresi adalah <InlineMath math="\frac{1}{3}" />.
