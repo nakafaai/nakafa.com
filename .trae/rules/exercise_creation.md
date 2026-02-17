@@ -153,7 +153,7 @@ export const metadata = {
 
 <LineEquation
   title={<>Grafik Fungsi</>}
-  description={<>Visualisasi parabola <InlineMath math="y = x²" />.</>}
+  description={<>Visualisasi parabola <InlineMath math="y = x^2" />.</>}
   showZAxis={false}
   cameraPosition={[0, 0, 15]}
   data={[{
