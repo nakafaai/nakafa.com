@@ -70,7 +70,7 @@ export function Graph({ title, description }: GraphProps) {
 
   return (
     <LineEquation
-      cameraPosition={[8, 6, 12]}
+      cameraPosition={[6, 4, 8]}
       data={[
         // Cube Edges
         ...cubeEdges.map((edge) => ({
