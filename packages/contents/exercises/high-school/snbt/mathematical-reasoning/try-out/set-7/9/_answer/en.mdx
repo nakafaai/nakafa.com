@@ -1,0 +1,25 @@
+export const metadata = {
+  title: "Solution to Question 9",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/17/2026",
+};
+
+#### Position Equation
+
+The collision event occurs when the position function with respect to time, for both the rocket and the ship, has the same value.
+
+<MathContainer>
+  <BlockMath math="s(t) = s(t)" />
+  <BlockMath math="60t = 4000 - t^2" />
+  <BlockMath math="t^2 + 60t - 4000 = 0" />
+</MathContainer>
+
+Factor the quadratic equation:
+
+<MathContainer>
+  <BlockMath math="(t - 40)(t + 100) = 0" />
+  <BlockMath math="t - 40 = 0 \quad \text{or} \quad t + 100 = 0" />
+  <BlockMath math="t = 40 \quad \text{or} \quad t = -100" />
+</MathContainer>
+
+Since time cannot be negative, the positive value is used. This means they collide when <InlineMath math="t = 40" /> seconds.

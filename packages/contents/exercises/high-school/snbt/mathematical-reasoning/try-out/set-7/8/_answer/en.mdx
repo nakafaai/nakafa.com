@@ -1,0 +1,35 @@
+export const metadata = {
+  title: "Solution to Question 8",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/17/2026",
+};
+
+#### Mathematical Modeling
+
+Known:
+
+- Income (<InlineMath math="y" />) = UMR + (number of passengers <InlineMath math="\times" /> satisfaction index)
+- Number of passengers = <InlineMath math="x" />
+- Satisfaction index (<InlineMath math="z" />) = <InlineMath math="x - 100" />
+- UMR = <InlineMath math="\text{Rp}4.680.000,00" />
+
+So the mathematical model is:
+
+<MathContainer>
+  <BlockMath math="y = \text{UMR} + (x \cdot z)" />
+  <BlockMath math="y = 4.680.000 + x(x - 100)" />
+  <BlockMath math="y = x^2 - 100x + 4.680.000" />
+</MathContainer>
+
+#### Income Calculation
+
+If the number of passengers is <InlineMath math="x = 200" />, substitute it into the equation:
+
+<MathContainer>
+  <BlockMath math="y = (200)^2 - 100(200) + 4.680.000" />
+  <BlockMath math="y = 40.000 - 20.000 + 4.680.000" />
+  <BlockMath math="y = 20.000 + 4.680.000" />
+  <BlockMath math="y = 4.700.000" />
+</MathContainer>
+
+So, the driver's income is <InlineMath math="\text{Rp}4.700.000,00" />.
