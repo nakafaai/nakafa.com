@@ -1,0 +1,50 @@
+export const metadata = {
+  title: "Solution to Question 20",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/17/2026",
+};
+
+#### Calculating Track Length
+
+It is known that runner A takes <InlineMath math="12" /> minutes to complete <InlineMath math="1" /> full lap. Converting this to seconds:
+
+<BlockMath math="12 \text{ minutes} = 12 \times 60 = 720 \text{ seconds}" />
+
+Given that runner A's speed is <InlineMath math="v_A = 2" /> m/s. The track length (<InlineMath math="s_{track}" />) can be calculated using the distance formula <InlineMath math="s = v \times t" />:
+
+<MathContainer>
+  <BlockMath math="s_{track} = v_A \times t_A" />
+  <BlockMath math="s_{track} = 2 \times 720" />
+  <BlockMath math="s_{track} = 1440 \text{ meters}" />
+  <BlockMath math="s_{track} = 1.44 \text{ km}" />
+</MathContainer>
+
+#### Calculating Distance Covered by Runner A and C
+
+Given the running time is <InlineMath math="72" /> minutes. We calculate how many laps each runner has completed.
+
+For runner A (period <InlineMath math="12" /> minutes):
+
+<BlockMath math="\text{Laps}_A = \frac{72}{12} = 6 \text{ laps}" />
+
+For runner C (period <InlineMath math="9" /> minutes):
+
+<BlockMath math="\text{Laps}_C = \frac{72}{9} = 8 \text{ laps}" />
+
+#### Calculating Distance Difference
+
+The difference in distance covered (<InlineMath math="\Delta s" />) is the difference in the number of laps multiplied by the track length:
+
+<MathContainer>
+  <BlockMath math="\Delta s = (\text{Laps}_C - \text{Laps}_A) \times s_{track}" />
+  <BlockMath math="\Delta s = (8 - 6) \times 1.44" />
+  <BlockMath math="\Delta s = 2 \times 1.44" />
+  <BlockMath math="\Delta s = 2.88 \text{ km}" />
+</MathContainer>
+
+Alternative calculation of individual distances:
+- Distance A: <InlineMath math="6 \times 1.44 = 8.64" /> km
+- Distance C: <InlineMath math="8 \times 1.44 = 11.52" /> km
+- Difference: <InlineMath math="11.52 - 8.64 = 2.88" /> km
+
+So, the difference in the length of the track covered by runner A and C is <InlineMath math="2.88" /> km.
