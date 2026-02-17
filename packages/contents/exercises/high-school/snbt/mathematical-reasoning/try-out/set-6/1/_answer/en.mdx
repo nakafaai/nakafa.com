@@ -1,0 +1,40 @@
+export const metadata = {
+  title: "Solution to Question 1",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/16/2026",
+};
+
+Given the start time is <InlineMath math="07:00" /> and the observation ends at <InlineMath math="09:24" />. Let's calculate the total duration in minutes:
+
+<MathContainer>
+  <BlockMath math="\text{Duration} = 09:24 - 07:00 = 2 \text{ hours } 24 \text{ minutes}" />
+  <BlockMath math="= (2 \times 60) + 24 = 120 + 24 = 144 \text{ minutes}" />
+</MathContainer>
+
+It is stated that the three runners passed the start line together <InlineMath math="4" /> times during this interval. This means they meet every:
+
+<MathContainer>
+  <BlockMath math="\frac{144 \text{ minutes}}{4 \text{ times}} = 36 \text{ minutes}" />
+</MathContainer>
+
+This meeting interval corresponds to the Least Common Multiple (LCM) of the runners' lap times.
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} \text{Runner A} &= 12 \text{ minutes} \\ \text{Runner B} &= x \text{ minutes} \\ \text{Runner C} &= 9 \text{ minutes} \end{aligned}" />
+</MathContainer>
+
+We need to find the value of <InlineMath math="x" /> such that <InlineMath math="\text{LCM}(12, x, 9) = 36" />. First, find the LCM of <InlineMath math="12" /> and <InlineMath math="9" />:
+
+<MathContainer>
+  <BlockMath math="\text{LCM}(12, 9) = 36" />
+</MathContainer>
+
+Since <InlineMath math="\text{LCM}(12, 9)" /> is already <InlineMath math="36" />, for <InlineMath math="\text{LCM}(12, 9, x)" /> to remain <InlineMath math="36" />, <InlineMath math="x" /> must be a factor of <InlineMath math="36" /> or a number that, when combined with <InlineMath math="12" /> and <InlineMath math="9" />, results in an LCM of <InlineMath math="36" />. Let's check the options:
+
+- If <InlineMath math="x = 5" />: <InlineMath math="\text{LCM}(36, 5) = 180" /> (Incorrect)
+- If <InlineMath math="x = 6" />: <InlineMath math="\text{LCM}(36, 6) = 36" /> (Correct)
+- If <InlineMath math="x = 7" />: <InlineMath math="\text{LCM}(36, 7) = 252" /> (Incorrect)
+- If <InlineMath math="x = 10" />: <InlineMath math="\text{LCM}(36, 10) = 180" /> (Incorrect)
+- If <InlineMath math="x = 13" />: <InlineMath math="\text{LCM}(36, 13) = 468" /> (Incorrect)
+
+Thus, the satisfying value for <InlineMath math="x" /> is <InlineMath math="6" />.
