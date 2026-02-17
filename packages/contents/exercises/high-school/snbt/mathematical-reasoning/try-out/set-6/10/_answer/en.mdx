@@ -1,0 +1,36 @@
+export const metadata = {
+  title: "Solution to Question 10",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/17/2026",
+};
+
+#### Identifying the Concept
+
+This problem involves arranging <InlineMath math="3" /> people from <InlineMath math="7" /> candidates to fill specific positions (chairman, secretary, treasurer). Since the order or position matters (chairman <InlineMath math="\neq" /> secretary <InlineMath math="\neq" /> treasurer), we use the concept of **Permutation**.
+
+#### Calculating Permutation
+
+The formula for the permutation of <InlineMath math="r" /> objects from <InlineMath math="n" /> objects is:
+
+<BlockMath math="P^n_r = \frac{n!}{(n - r)!}" />
+
+Given:
+- Number of candidates (<InlineMath math="n" />) = <InlineMath math="7" />
+- Number of positions chosen (<InlineMath math="r" />) = <InlineMath math="3" />
+
+Substitute into the formula:
+
+<MathContainer>
+  <BlockMath math="P^7_3 = \frac{7!}{(7 - 3)!}" />
+  <BlockMath math="P^7_3 = \frac{7!}{4!}" />
+</MathContainer>
+
+Expand the factorials:
+
+<MathContainer>
+  <BlockMath math="P^7_3 = \frac{7 \times 6 \times 5 \times 4!}{4!}" />
+  <BlockMath math="P^7_3 = 7 \times 6 \times 5" />
+  <BlockMath math="P^7_3 = 210" />
+</MathContainer>
+
+Thus, the number of possible staff committee arrangements is <InlineMath math="210" /> ways.

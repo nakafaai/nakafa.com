@@ -1,0 +1,36 @@
+export const metadata = {
+  title: "Pembahasan Soal 9",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/17/2026",
+};
+
+#### Menyusun Model Matematika
+
+Diketahui rumus dasar tarif telepon (<InlineMath math="y" />) adalah:
+
+<BlockMath math="y = (\text{durasi} \times \text{tarif per menit}) + \text{biaya langganan}" />
+
+Dari soal, kita memiliki informasi berikut:
+1. Durasi telepon = <InlineMath math="x" /> menit.
+2. Biaya langganan (<InlineMath math="z" />) = <InlineMath math="60.000" />.
+3. Tarif per menit adalah <InlineMath math="150" /> lebihnya dari durasi telepon. Artinya:
+
+<MathContainer>
+  <BlockMath math="\text{Tarif per menit} = x + 150" />
+</MathContainer>
+
+#### Substitusi ke Rumus
+
+Kita substitusikan komponen-komponen tersebut ke dalam rumus awal:
+
+<MathContainer>
+  <BlockMath math="y = x(x + 150) + 60.000" />
+</MathContainer>
+
+Jabarkan perkaliannya:
+
+<MathContainer>
+  <BlockMath math="y = x^2 + 150x + 60.000" />
+</MathContainer>
+
+Jadi, fungsi tarif telepon rumah yang dibayarkan pelanggan adalah <InlineMath math="y = x^2 + 150x + 60.000" />.
