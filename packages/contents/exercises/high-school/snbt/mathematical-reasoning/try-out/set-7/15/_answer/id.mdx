@@ -1,0 +1,54 @@
+export const metadata = {
+  title: "Pembahasan Soal 15",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/17/2026",
+};
+
+#### Membuat Model Matematika
+
+Misalkan:
+- <InlineMath math="x" /> = harga daging per kg
+- <InlineMath math="y" /> = harga ikan per kg
+
+Berdasarkan tabel, kita dapat membuat sistem persamaan linear dua variabel.
+
+Untuk Toko A:
+
+<MathContainer>
+  <BlockMath math="80x + 20y = 2960" />
+  <BlockMath math="4x + y = 148 \quad ...(1)" />
+</MathContainer>
+
+Untuk Toko B:
+
+<MathContainer>
+  <BlockMath math="70x + 40y = 3040" />
+  <BlockMath math="7x + 4y = 304 \quad ...(2)" />
+</MathContainer>
+
+#### Mencari Harga Ikan
+
+Kita akan mencari nilai <InlineMath math="y" /> (harga ikan). Eliminasi variabel <InlineMath math="x" /> dari persamaan <InlineMath math="(1)" /> dan <InlineMath math="(2)" />.
+
+Kalikan persamaan <InlineMath math="(1)" /> dengan <InlineMath math="7" /> dan persamaan <InlineMath math="(2)" /> dengan <InlineMath math="4" /> agar koefisien <InlineMath math="x" /> sama:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} 4x + y &= 148 \quad |\times 7| \rightarrow 28x + 7y &= 1036 \\ 7x + 4y &= 304 \quad |\times 4| \rightarrow 28x + 16y &= 1216 \end{aligned}" />
+</MathContainer>
+
+Kurangkan kedua persamaan tersebut:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} 28x + 16y &= 1216 \\ 28x + 7y &= 1036 \\ \hline 9y &= 180 \end{aligned}" />
+</MathContainer>
+
+Maka:
+
+<MathContainer>
+  <BlockMath math="y = \frac{180}{9}" />
+  <BlockMath math="y = 20" />
+</MathContainer>
+
+Karena satuan dalam tabel adalah "ribu rupiah", maka harga ikan adalah <InlineMath math="20" /> ribu rupiah atau <InlineMath math="\text{Rp}20.000,00" />.
+
+Jadi, harga ikan per kilogram adalah <InlineMath math="\text{Rp}20.000,00" />.

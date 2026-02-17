@@ -1,0 +1,72 @@
+export const metadata = {
+  title: "Solution to Question 12",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/17/2026",
+};
+
+#### Calculating Actual Distances
+
+The map scale is <InlineMath math="1 : 2,000,000" />. The actual distance (<InlineMath math="J_s" />) can be calculated using the formula:
+
+<BlockMath math="J_s = J_p \times \text{Scale}" />
+
+**Actual Distance from City <InlineMath math="A" /> to City <InlineMath math="x" />:**
+
+<MathContainer>
+  <BlockMath math="J_s(A \to x) = 2.5 \text{ cm} \times 2,000,000" />
+  <BlockMath math="= 5,000,000 \text{ cm}" />
+  <BlockMath math="= 50 \text{ km}" />
+</MathContainer>
+
+**Actual Distance from City <InlineMath math="x" /> to City <InlineMath math="B" />:**
+
+<MathContainer>
+  <BlockMath math="J_s(x \to B) = 3 \text{ cm} \times 2,000,000" />
+  <BlockMath math="= 6,000,000 \text{ cm}" />
+  <BlockMath math="= 60 \text{ km}" />
+</MathContainer>
+
+**Actual Distance from City <InlineMath math="A" /> to City <InlineMath math="y" />:**
+
+<MathContainer>
+  <BlockMath math="J_s(A \to y) = 4 \text{ cm} \times 2,000,000" />
+  <BlockMath math="= 8,000,000 \text{ cm}" />
+  <BlockMath math="= 80 \text{ km}" />
+</MathContainer>
+
+**Actual Distance from City <InlineMath math="y" /> to City <InlineMath math="B" />:**
+
+<MathContainer>
+  <BlockMath math="J_s(y \to B) = 4.5 \text{ cm} \times 2,000,000" />
+  <BlockMath math="= 9,000,000 \text{ cm}" />
+  <BlockMath math="= 90 \text{ km}" />
+</MathContainer>
+
+#### Calculating Travel Distances
+
+**Benu's Journey (<InlineMath math="A \to x \to B" />):**
+
+<MathContainer>
+  <BlockMath math="J_{\text{Benu}} = J_s(A \to x) + J_s(x \to B)" />
+  <BlockMath math="= 50 \text{ km} + 60 \text{ km}" />
+  <BlockMath math="= 110 \text{ km}" />
+</MathContainer>
+
+**Mamang's Journey (<InlineMath math="A \to y \to B" />):**
+
+<MathContainer>
+  <BlockMath math="J_{\text{Mamang}} = J_s(A \to y) + J_s(y \to B)" />
+  <BlockMath math="= 80 \text{ km} + 90 \text{ km}" />
+  <BlockMath math="= 170 \text{ km}" />
+</MathContainer>
+
+#### Calculating Distance Difference
+
+The difference in travel distance between Benu and Mamang is:
+
+<MathContainer>
+  <BlockMath math="\text{Difference} = |170 \text{ km} - 110 \text{ km}|" />
+  <BlockMath math="= 60 \text{ km}" />
+</MathContainer>
+
+Thus, the difference in travel distance is <InlineMath math="60 \text{ km}" />.

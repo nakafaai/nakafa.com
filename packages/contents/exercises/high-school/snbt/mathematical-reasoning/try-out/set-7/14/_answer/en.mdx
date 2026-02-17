@@ -1,0 +1,46 @@
+export const metadata = {
+  title: "Solution to Question 14",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/17/2026",
+};
+
+#### Creating Mathematical Model
+
+Let:
+- <InlineMath math="A" /> = capital amount for product <InlineMath math="A" />
+- <InlineMath math="B" /> = capital amount for product <InlineMath math="B" />
+
+Given the total capital is <InlineMath math="\text{Rp}10,000,000.00" />:
+
+<BlockMath math="A + B = 10,000,000 \quad ...(1)" />
+
+Given the total profit is <InlineMath math="\text{Rp}904,000.00" /> with product <InlineMath math="A" /> profit of <InlineMath math="8\%" /> and product <InlineMath math="B" /> profit of <InlineMath math="10\%" />:
+
+<MathContainer>
+  <BlockMath math="8\% A + 10\% B = 904,000" />
+  <BlockMath math="0.08 A + 0.1 B = 904,000" />
+</MathContainer>
+
+Multiply both sides by <InlineMath math="10" /> to simplify the calculation:
+
+<BlockMath math="0.8 A + B = 9,040,000 \quad ...(2)" />
+
+#### Solving the System of Equations
+
+Eliminate variable <InlineMath math="B" /> from equations <InlineMath math="(1)" /> and <InlineMath math="(2)" />:
+
+<MathContainer>
+  <BlockMath math="A + B = 10,000,000" />
+  <BlockMath math="0.8 A + B = 9,040,000" />
+  <BlockMath math="\rule{5cm}{0.4pt} \, -" />
+  <BlockMath math="0.2 A = 960,000" />
+</MathContainer>
+
+Calculate the value of <InlineMath math="A" />:
+
+<MathContainer>
+  <BlockMath math="A = \frac{960,000}{0.2}" />
+  <BlockMath math="A = 4,800,000" />
+</MathContainer>
+
+Therefore, the capital for product <InlineMath math="A" /> is <InlineMath math="\text{Rp}4,800,000.00" />.
