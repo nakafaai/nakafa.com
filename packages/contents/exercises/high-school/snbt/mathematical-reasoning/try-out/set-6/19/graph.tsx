@@ -5,9 +5,12 @@ import type { ReactNode } from "react";
 interface GraphProps {
   title: ReactNode;
   description: ReactNode;
+  label: {
+    horizontal: string;
+  };
 }
 
-export function Graph({ title, description }: GraphProps) {
+export function Graph({ title, description, label }: GraphProps) {
   // Scaling factors
   // Real dimensions: Height = 60m, Width = 180m
   // We want to scale this down to reasonable graph coordinates
@@ -45,7 +48,7 @@ export function Graph({ title, description }: GraphProps) {
 
   // Person Height (173 cm = 1.73 m)
   // Use a fixed visual height because true scale (1.73/20 = 0.08) is too small to see
-  const H_PERSON_GRAPH = 3.0;
+  const H_PERSON_GRAPH = 2;
 
   const B_Ground = { x: B.x, y: B.y - H_PERSON_GRAPH, z: 0 };
   const B_Mid = { x: B.x, y: B.y - H_PERSON_GRAPH / 2, z: 0 };
@@ -96,7 +99,7 @@ export function Graph({ title, description }: GraphProps) {
           smooth: false,
           labels: [
             {
-              text: "Horizontal",
+              text: label.horizontal,
               at: 1,
               offset: [0, 0.5, 0],
               color: COLOR_SIGHT,
@@ -170,7 +173,7 @@ export function Graph({ title, description }: GraphProps) {
           smooth: false,
           labels: [
             {
-              text: "α",
+              text: "a",
               at: 0,
               offset: [0, 0, 0],
               color: COLOR_AUX,
@@ -190,7 +193,7 @@ export function Graph({ title, description }: GraphProps) {
           smooth: false,
           labels: [
             {
-              text: "α",
+              text: "a",
               at: 0,
               offset: [0, 0, 0],
               color: COLOR_AUX,
