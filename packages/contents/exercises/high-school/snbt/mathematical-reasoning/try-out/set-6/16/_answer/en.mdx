@@ -1,0 +1,46 @@
+export const metadata = {
+  title: "Solution to Question 16",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/17/2026",
+};
+
+#### Calculating Initial Total Weight
+
+The initial average weight <InlineMath math="(\bar{x}_1)" /> of ten players <InlineMath math="(n_1 = 10)" /> is <InlineMath math="60" /> kg. The initial total weight can be calculated as follows:
+
+<MathContainer>
+  <BlockMath math="\sum x_1 = \bar{x}_1 \cdot n_1" />
+  <BlockMath math="\sum x_1 = 60 \times 10 = 600 \text{ kg}" />
+</MathContainer>
+
+#### Calculating the Weight of the Replaced Player
+
+Let the weight of the replaced player be <InlineMath math="n" /> and Iksan's weight be <InlineMath math="x_i = 62" /> kg.
+
+After the replacement, the number of players remains <InlineMath math="10" />, but the average weight becomes <InlineMath math="\bar{x}_2 = 60.5" /> kg. The equation is:
+
+<MathContainer>
+  <BlockMath math="\bar{x}_2 = \frac{\sum x_1 - n + x_i}{n_1}" />
+</MathContainer>
+
+Substitute the known values:
+
+<MathContainer>
+  <BlockMath math="60.5 = \frac{600 - n + 62}{10}" />
+</MathContainer>
+
+Multiply both sides by <InlineMath math="10" />:
+
+<MathContainer>
+  <BlockMath math="605 = 600 - n + 62" />
+  <BlockMath math="605 = 662 - n" />
+</MathContainer>
+
+Move <InlineMath math="n" /> to the left side and <InlineMath math="605" /> to the right side:
+
+<MathContainer>
+  <BlockMath math="n = 662 - 605" />
+  <BlockMath math="n = 57" />
+</MathContainer>
+
+Thus, the weight of the futsal player replaced by Iksan is <InlineMath math="57" /> kg.

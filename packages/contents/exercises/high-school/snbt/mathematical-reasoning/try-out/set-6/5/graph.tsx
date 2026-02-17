@@ -1,5 +1,3 @@
-"use client";
-
 import { LineEquation } from "@repo/design-system/components/contents/line-equation";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
@@ -9,7 +7,7 @@ interface GraphProps {
   description: ReactNode;
 }
 
-export const Graph = ({ title, description }: GraphProps) => {
+export function Graph({ title, description }: GraphProps) {
   // Constants for Cone 1 (R1 = h1)
   const R1 = 3;
   const H1 = 3;
@@ -192,4 +190,4 @@ export const Graph = ({ title, description }: GraphProps) => {
       title={title}
     />
   );
-};
+}

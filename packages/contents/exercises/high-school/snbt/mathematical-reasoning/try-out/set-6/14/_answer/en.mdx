@@ -1,0 +1,54 @@
+export const metadata = {
+  title: "Solution to Question 14",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/17/2026",
+};
+
+#### Defining Variables
+
+Let:
+- Salary of Group <InlineMath math="A" /> be <InlineMath math="x" />.
+- Salary of Group <InlineMath math="B" /> be <InlineMath math="y" />.
+- Salary of Group <InlineMath math="C" /> be <InlineMath math="z" />.
+
+#### Forming Equations
+
+From the problem, we know:
+1. Salary of Group <InlineMath math="A" /> is one-third of Group <InlineMath math="B" />'s salary.
+
+   <MathContainer>
+     <BlockMath math="x = \frac{1}{3}y \quad \dots (1)" />
+   </MathContainer>
+
+2. Salary of Group <InlineMath math="C" /> is half of Group <InlineMath math="B" />'s salary.
+
+   <MathContainer>
+     <BlockMath math="z = \frac{1}{2}y \quad \dots (2)" />
+   </MathContainer>
+
+#### Solving the Problem
+
+Asked: Income of Group <InlineMath math="A" /> for <InlineMath math="6" /> months is equal to income of Group <InlineMath math="C" /> for <InlineMath math="n" /> months.
+
+The equation is:
+
+<MathContainer>
+  <BlockMath math="6x = n \cdot z" />
+</MathContainer>
+
+Substitute equations <InlineMath math="(1)" /> and <InlineMath math="(2)" /> into the equation above (express everything in terms of <InlineMath math="y" />):
+
+<MathContainer>
+  <BlockMath math="6\left(\frac{1}{3}y\right) = n\left(\frac{1}{2}y\right)" />
+  <BlockMath math="2y = \frac{n}{2}y" />
+</MathContainer>
+
+Since <InlineMath math="y \neq 0" />, we can divide both sides by <InlineMath math="y" />:
+
+<MathContainer>
+  <BlockMath math="2 = \frac{n}{2}" />
+  <BlockMath math="n = 2 \times 2" />
+  <BlockMath math="n = 4" />
+</MathContainer>
+
+Thus, the income will be equal to the income of Group <InlineMath math="C" /> employees for <InlineMath math="4" /> months.

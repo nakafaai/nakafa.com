@@ -1,0 +1,44 @@
+export const metadata = {
+  title: "Solution to Question 12",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/17/2026",
+};
+
+#### Identifying Proportions
+
+Given:
+- To charge from <InlineMath math="20\%" /> to <InlineMath math="100\%" /> takes <InlineMath math="2.5" /> hours.
+- The percentage charged is <InlineMath math="100\% - 20\% = 80\%" />.
+
+Now the battery condition is <InlineMath math="60\%" />.
+- The target charge is <InlineMath math="100\%" />.
+- The percentage needed to charge is <InlineMath math="100\% - 60\% = 40\%" />.
+
+#### Direct Proportion
+
+Since the charging power is constant, the time required is directly proportional to the percentage charged.
+
+<MathContainer>
+  <BlockMath math="\frac{t_1}{p_1} = \frac{t_2}{p_2}" />
+</MathContainer>
+
+Substitute the values:
+
+<MathContainer>
+  <BlockMath math="\frac{2.5}{80\%} = \frac{t_2}{40\%}" />
+  <BlockMath math="t_2 = \frac{2.5 \times 40\%}{80\%}" />
+  <BlockMath math="t_2 = \frac{2.5}{2}" />
+  <BlockMath math="t_2 = 1.25 \text{ hours}" />
+</MathContainer>
+
+#### Time Conversion
+
+Convert <InlineMath math="1.25" /> hours into hours and minutes:
+
+<MathContainer>
+  <BlockMath math="1.25 \text{ hours} = 1 \text{ hour} + 0.25 \text{ hours}" />
+  <BlockMath math="= 1 \text{ hour} + (0.25 \times 60) \text{ minutes}" />
+  <BlockMath math="= 1 \text{ hour} + 15 \text{ minutes}" />
+</MathContainer>
+
+Thus, the time required is 1 hour 15 minutes.

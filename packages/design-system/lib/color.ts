@@ -5,11 +5,6 @@
  * For example, RED is tailwind's red-500, BLUE is blue-500, etc.
  */
 export const COLORS = {
-  SLATE: "#64748b", // tailwind slate-500
-  GRAY: "#6b7280", // tailwind gray-500
-  ZINC: "#71717a", // tailwind zinc-500
-  NEUTRAL: "#737373", // tailwind neutral-500
-  STONE: "#78716c", // tailwind stone-500
   RED: "#dc2626", // tailwind red-500
   ORANGE: "#ea580c", // tailwind orange-500
   AMBER: "#d97706", // tailwind amber-500
@@ -27,6 +22,11 @@ export const COLORS = {
   FUCHSIA: "#c026d3", // tailwind fuchsia-500
   PINK: "#db2777", // tailwind pink-500
   ROSE: "#e11d48", // tailwind rose-500
+  SLATE: "#64748b", // tailwind slate-500
+  GRAY: "#6b7280", // tailwind gray-500
+  ZINC: "#71717a", // tailwind zinc-500
+  NEUTRAL: "#737373", // tailwind neutral-500
+  STONE: "#78716c", // tailwind stone-500
 };
 
 // Define a constant array of color keys at module level

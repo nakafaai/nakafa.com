@@ -1,0 +1,43 @@
+export const metadata = {
+  title: "Solution to Question 11",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/17/2026",
+};
+
+#### Identifying the Concept
+
+This problem asks us to select team members based on their expertise. Since the order of selection does not matter (who is chosen first or second does not change the team composition), we use the concept of **Combination**.
+
+The combination formula is:
+
+<BlockMath math="C^n_r = \frac{n!}{r!(n - r)!}" />
+
+#### Calculating Mathematician Combinations
+
+From <InlineMath math="3" /> mathematicians, <InlineMath math="2" /> will be chosen:
+
+<MathContainer>
+  <BlockMath math="C^3_2 = \frac{3!}{2!(3 - 2)!}" />
+  <BlockMath math="C^3_2 = \frac{3 \times 2!}{2! \times 1!} = 3" />
+</MathContainer>
+
+#### Calculating Physicist Combinations
+
+From <InlineMath math="5" /> physicists, <InlineMath math="3" /> will be chosen:
+
+<MathContainer>
+  <BlockMath math="C^5_3 = \frac{5!}{3!(5 - 3)!}" />
+  <BlockMath math="C^5_3 = \frac{5 \times 4 \times 3!}{3! \times 2!}" />
+  <BlockMath math="C^5_3 = \frac{20}{2} = 10" />
+</MathContainer>
+
+#### Calculating Total Ways
+
+Since the selection of mathematicians and physicists are independent events occurring together, we multiply the two results:
+
+<MathContainer>
+  <BlockMath math="\text{Total Ways} = C^3_2 \times C^5_3" />
+  <BlockMath math="\text{Total Ways} = 3 \times 10 = 30" />
+</MathContainer>
+
+Thus, there are <InlineMath math="30" /> ways to form the team.

@@ -1,0 +1,43 @@
+export const metadata = {
+  title: "Pembahasan Soal 11",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/17/2026",
+};
+
+#### Mengidentifikasi Konsep
+
+Soal ini meminta kita untuk memilih anggota tim berdasarkan keahliannya. Karena urutan pemilihan orang tidak diperhatikan (siapa yang terpilih pertama atau kedua tidak mengubah komposisi tim), maka kita menggunakan konsep **Kombinasi**.
+
+Rumus kombinasi adalah:
+
+<BlockMath math="C^n_r = \frac{n!}{r!(n - r)!}" />
+
+#### Menghitung Kombinasi Ahli Matematika
+
+Dari <InlineMath math="3" /> ahli matematika, akan dipilih <InlineMath math="2" /> orang:
+
+<MathContainer>
+  <BlockMath math="C^3_2 = \frac{3!}{2!(3 - 2)!}" />
+  <BlockMath math="C^3_2 = \frac{3 \times 2!}{2! \times 1!} = 3" />
+</MathContainer>
+
+#### Menghitung Kombinasi Ahli Fisika
+
+Dari <InlineMath math="5" /> ahli fisika, akan dipilih <InlineMath math="3" /> orang:
+
+<MathContainer>
+  <BlockMath math="C^5_3 = \frac{5!}{3!(5 - 3)!}" />
+  <BlockMath math="C^5_3 = \frac{5 \times 4 \times 3!}{3! \times 2!}" />
+  <BlockMath math="C^5_3 = \frac{20}{2} = 10" />
+</MathContainer>
+
+#### Menghitung Total Cara
+
+Karena pemilihan ahli matematika dan fisika adalah kejadian yang saling bebas dan terjadi bersamaan, kita kalikan kedua hasil tersebut:
+
+<MathContainer>
+  <BlockMath math="\text{Total Cara} = C^3_2 \times C^5_3" />
+  <BlockMath math="\text{Total Cara} = 3 \times 10 = 30" />
+</MathContainer>
+
+Jadi, ada <InlineMath math="30" /> cara untuk menyusun tim tersebut.
