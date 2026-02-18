@@ -1,0 +1,40 @@
+export const metadata = {
+  title: "Solution to Question 20",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+#### Determine Amplitude
+
+Amplitude (<InlineMath math="A" />) is half the vertical distance between the crest and trough of the wave.
+
+Given the distance from crest to trough is <InlineMath math="16 \text{ meters}" />.
+
+<MathContainer>
+  <BlockMath math="A = \frac{16}{2}" />
+  <BlockMath math="A = 8 \text{ meters}" />
+</MathContainer>
+
+#### Determine Period
+
+Period (<InlineMath math="T" />) is the time required for one full wave cycle (e.g., from crest to crest).
+
+Given the time from crest to crest is <InlineMath math="12 \text{ hours } 24 \text{ minutes}" />. We need to convert this to decimal hours.
+
+<MathContainer>
+  <BlockMath math="T = 12 \text{ hours } + \frac{24}{60} \text{ hours}" />
+  <BlockMath math="T = 12 + 0.4 \text{ hours}" />
+  <BlockMath math="T = 12.4 \text{ hours}" />
+</MathContainer>
+
+#### Determine Wave Function
+
+The wave height function can be modeled with a sine function:
+
+<BlockMath math="h(t) = A \sin\left(\frac{2\pi}{T} t\right)" />
+
+Substitute the values <InlineMath math="A = 8" /> and <InlineMath math="T = 12.4" />:
+
+<BlockMath math="h(t) = 8 \sin\left(\frac{2\pi}{12.4} t\right)" />
+
+Thus, a possible wave height function is <InlineMath math="h(t) = 8 \sin\left(\frac{2\pi}{12.4} t\right)" />.

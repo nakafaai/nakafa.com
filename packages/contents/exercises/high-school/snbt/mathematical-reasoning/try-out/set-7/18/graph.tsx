@@ -114,7 +114,6 @@ export function Graph({ title, description, labels }: GraphProps) {
           points: [SURFACE_START, SURFACE_MID, SURFACE_LABEL_POS, SURFACE_END],
           color: COLOR_WATER,
           showPoints: false,
-          lineWidth: 2,
           labels: [
             {
               text: labels.surface,
@@ -129,7 +128,6 @@ export function Graph({ title, description, labels }: GraphProps) {
           points: ARC_POINTS,
           color: COLOR_LABEL,
           showPoints: false,
-          lineWidth: 1.5,
           // Removed duplicate label logic, relying on separate point below
         },
         // Angle Label
@@ -151,7 +149,6 @@ export function Graph({ title, description, labels }: GraphProps) {
           points: [F, SIGHT_MID, E],
           color: COLOR_SIGHT,
           showPoints: false,
-          lineWidth: 2,
           labels: [
             {
               text: labels.sightDistance,
@@ -167,7 +164,6 @@ export function Graph({ title, description, labels }: GraphProps) {
           points: [F, FISH_DEPTH_MID, F_PROJ],
           color: COLOR_DEPTH,
           showPoints: false,
-          lineWidth: 1.5,
           labels: [
             {
               text: "3m",
@@ -182,12 +178,11 @@ export function Graph({ title, description, labels }: GraphProps) {
           points: [E, EAGLE_HEIGHT_MID, E_PROJ],
           color: COLOR_DEPTH,
           showPoints: false,
-          lineWidth: 1.5,
           labels: [
             {
               text: "h = ?",
               at: 1, // Midpoint
-              offset: [0.8, 0, 0], // Adjusted offset
+              offset: [1, 0, 0], // Adjusted offset
               color: COLOR_DEPTH,
             },
           ],
