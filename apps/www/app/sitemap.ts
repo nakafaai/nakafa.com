@@ -163,7 +163,8 @@ export async function getEntries(
   if (
     routeString !== "/" &&
     !baseRoutes.includes(routeString) &&
-    !routeString.startsWith("/quran")
+    !routeString.startsWith("/quran") &&
+    !routeString.startsWith("/ask/")
   ) {
     try {
       // This is likely educational content, get actual modification date
