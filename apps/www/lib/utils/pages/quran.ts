@@ -15,12 +15,12 @@ export interface FetchSurahContextInput {
  * Output data containing fetched Quran surah context.
  */
 export interface FetchSurahContextOutput {
-  /** The current surah data (guaranteed to be defined) */
-  surahData: Surah;
-  /** The previous surah data (can be null if this is the first surah) */
-  prevSurah: Surah | null;
   /** The next surah data (can be null if this is the last surah) */
   nextSurah: Surah | null;
+  /** The previous surah data (can be null if this is the first surah) */
+  prevSurah: Surah | null;
+  /** The current surah data (guaranteed to be defined) */
+  surahData: Surah;
 }
 
 /**

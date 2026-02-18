@@ -65,19 +65,19 @@ const STOP_WORDS = new Set([
 ]);
 
 interface ContentParagraph {
-  text: string;
-  score: number;
   index: number;
   length: number;
+  score: number;
+  text: string;
 }
 
 interface SelectRelevantContentParams {
   content: string;
-  query?: string;
   maxLength?: number;
-  preserveStructure?: boolean;
-  minRelevantParagraphs?: number;
   maxRelevantParagraphs?: number;
+  minRelevantParagraphs?: number;
+  preserveStructure?: boolean;
+  query?: string;
 }
 
 /**

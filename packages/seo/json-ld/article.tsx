@@ -4,12 +4,12 @@ import { ORGANIZATION } from "@repo/seo/json-ld/constants";
 import type { Person } from "schema-dts";
 
 interface ArticleJsonLdProps {
-  headline: string;
-  datePublished: string;
-  dateModified?: string;
   author: Person | Person[];
-  image?: string;
+  dateModified?: string;
+  datePublished: string;
   description: string;
+  headline: string;
+  image?: string;
   url: string;
 }
 

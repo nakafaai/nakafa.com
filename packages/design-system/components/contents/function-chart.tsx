@@ -23,11 +23,11 @@ const THRESHOLD_VALUE = 1000;
 const THRESHOLD_VALUE_DECIMAL_PLACES = 0;
 
 interface Props {
-  p: number;
   a: number;
-  title: ReactNode;
   description: ReactNode;
   n?: number;
+  p: number;
+  title: ReactNode;
 }
 
 export function FunctionChart({ p, a, title, description, n = 11 }: Props) {

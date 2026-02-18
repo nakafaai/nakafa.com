@@ -14,10 +14,10 @@ const DEFAULT_CAMERA_POSITION_Y = 6;
 const DEFAULT_CAMERA_POSITION_Z = 10;
 
 interface Props {
-  title: ReactNode;
-  description: ReactNode;
-  vectors: ComponentProps<typeof Vector>[];
   cameraPosition?: [number, number, number];
+  description: ReactNode;
+  title: ReactNode;
+  vectors: ComponentProps<typeof Vector>[];
 }
 
 export function Vector3d({

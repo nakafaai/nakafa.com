@@ -7,9 +7,9 @@ import { createContext, useContextSelector } from "use-context-selector";
 import { useUser } from "@/lib/context/use-user";
 
 interface AttemptContextValue {
-  slug: string;
-  attempt: Doc<"exerciseAttempts"> | null;
   answers: Doc<"exerciseAnswers">[];
+  attempt: Doc<"exerciseAttempts"> | null;
+  slug: string;
 }
 
 const AttemptContext = createContext<AttemptContextValue | null>(null);

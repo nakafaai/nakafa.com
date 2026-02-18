@@ -204,10 +204,9 @@
 
 @utility scrollbar-hide {
   /* Firefox */
-  scrollbar-width: none;
-
-  /* IE and Edge */
   -ms-overflow-style: none;
+  /* Firefox */
+  scrollbar-width: none;
 
   /* Chrome, Safari and Opera */
   &::-webkit-scrollbar {
@@ -217,10 +216,9 @@
 
 @utility scrollbar-default {
   /* Firefox */
-  scrollbar-width: auto;
-
-  /* IE and Edge */
   -ms-overflow-style: auto;
+  /* Firefox */
+  scrollbar-width: auto;
 
   /* Chrome, Safari and Opera */
   &::-webkit-scrollbar {
@@ -246,15 +244,15 @@
 
   ::-webkit-scrollbar-thumb {
     background: var(--border);
-    border-radius: 9999px;
-    border: 2px solid transparent;
     background-clip: padding-box;
+    border: 2px solid transparent;
+    border-radius: 9999px;
   }
 
   /* Style scrollbar for Firefox */
   * {
-    scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;
+    scrollbar-width: thin;
   }
 }
 

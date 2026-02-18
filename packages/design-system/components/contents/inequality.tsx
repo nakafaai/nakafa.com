@@ -10,9 +10,9 @@ import {
 import type { ComponentProps, ReactNode } from "react";
 
 interface Props {
-  title: ReactNode;
-  description: ReactNode;
   data: ComponentProps<typeof Inequality3D>[];
+  description: ReactNode;
+  title: ReactNode;
 }
 
 export function Inequality({ title, description, data }: Props) {

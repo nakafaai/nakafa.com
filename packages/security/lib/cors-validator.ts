@@ -3,10 +3,10 @@
  */
 
 export interface CorsValidatorConfig {
-  /** Primary domain to allow (e.g., "nakafa.com") */
-  allowedDomain?: string;
   /** Additional allowed origins (e.g., localhost for development) */
   additionalOrigins?: string[];
+  /** Primary domain to allow (e.g., "nakafa.com") */
+  allowedDomain?: string;
   /** Whether to allow all subdomains */
   allowSubdomains?: boolean;
   /** SEO domains that should be allowed */

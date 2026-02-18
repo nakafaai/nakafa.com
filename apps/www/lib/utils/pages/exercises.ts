@@ -16,24 +16,22 @@ import { isNumber } from "@/lib/utils/number";
  * Input parameters for fetching exercise context.
  */
 interface FetchExerciseContextInput {
-  /** The locale for localized content */
-  locale: Locale;
   /** The exercise category */
   category: ExercisesCategory;
-  /** The exercise type */
-  type: ExercisesType;
+  /** The locale for localized content */
+  locale: Locale;
   /** The exercise material */
   material: ExercisesMaterial;
   /** The slug path segments for the specific exercise */
   slug: string[];
+  /** The exercise type */
+  type: ExercisesType;
 }
 
 /**
  * Output data containing fetched exercise context.
  */
 interface FetchExerciseContextOutput {
-  /** All available materials for the given category/type/material */
-  materials: Awaited<ReturnType<typeof getMaterials>>;
   /** The current material being accessed (guaranteed to be defined) */
   currentMaterial: NonNullable<
     ReturnType<typeof getCurrentMaterial>["currentMaterial"]
@@ -42,26 +40,28 @@ interface FetchExerciseContextOutput {
   currentMaterialItem: NonNullable<
     ReturnType<typeof getCurrentMaterial>["currentMaterialItem"]
   >;
+  /** All available materials for the given category/type/material */
+  materials: Awaited<ReturnType<typeof getMaterials>>;
 }
 
 /**
  * Output data containing fetched exercise metadata context.
  */
 interface FetchExerciseMetadataContextOutput {
-  /** Whether this is a specific exercise page (numeric slug) */
-  isSpecificExercise: boolean;
-  /** The exercise title if it's a specific exercise, undefined otherwise */
-  exerciseTitle: string | undefined;
-  /** The full file path to the content file */
-  FilePath: ReturnType<typeof getSlugPath>;
-  /** All available materials for the given category/type/material */
-  materials: Awaited<ReturnType<typeof getMaterials>>;
   /** The current material being accessed (can be undefined for metadata generation) */
   currentMaterial: ReturnType<typeof getCurrentMaterial>["currentMaterial"];
   /** The specific item within the current material (can be undefined for metadata generation) */
   currentMaterialItem: ReturnType<
     typeof getCurrentMaterial
   >["currentMaterialItem"];
+  /** The exercise title if it's a specific exercise, undefined otherwise */
+  exerciseTitle: string | undefined;
+  /** The full file path to the content file */
+  FilePath: ReturnType<typeof getSlugPath>;
+  /** Whether this is a specific exercise page (numeric slug) */
+  isSpecificExercise: boolean;
+  /** All available materials for the given category/type/material */
+  materials: Awaited<ReturnType<typeof getMaterials>>;
 }
 
 /**

@@ -2,7 +2,6 @@ import { LineEquation } from "@repo/design-system/components/contents/line-equat
 import { getColor } from "@repo/design-system/lib/color";
 
 interface GraphProps {
-  title: string;
   description: React.ReactNode;
   labels: {
     atc: string;
@@ -10,6 +9,7 @@ interface GraphProps {
     finalPos: string;
     height: string;
   };
+  title: string;
 }
 
 export function Graph({ title, description, labels }: GraphProps) {

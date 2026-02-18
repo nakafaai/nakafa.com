@@ -59,9 +59,7 @@ const MEDIUM_LIGHTNESS = 0.7;
 const MEDIUM_CHROMA = 0.15;
 
 interface Props {
-  keyString: string;
   className?: HTMLAttributes<HTMLDivElement>["className"];
-  style?: CSSProperties;
   colorScheme?:
     | "complementary"
     | "analogous"
@@ -69,8 +67,10 @@ interface Props {
     | "monochromatic"
     | "split-complementary"
     | "vibrant";
-  intensity?: "soft" | "medium" | "bold";
   gradientType?: "linear" | "radial" | "conic";
+  intensity?: "soft" | "medium" | "bold";
+  keyString: string;
+  style?: CSSProperties;
 }
 
 // Helper function to convert our color to OKLCH string

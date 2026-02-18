@@ -131,8 +131,8 @@ async function getMyPostReactions(
 }
 
 interface ReactionDoc {
-  userId: Id<"users">;
   emoji: string;
+  userId: Id<"users">;
 }
 
 /**
@@ -239,10 +239,10 @@ export async function loadOpenForumWithAccess(
 
 export interface PostAttachment {
   _id: Id<"schoolClassForumPostAttachments">;
-  name: string;
-  url: string | null;
   mimeType: string;
+  name: string;
   size: number;
+  url: string | null;
 }
 
 /**

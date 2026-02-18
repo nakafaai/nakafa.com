@@ -2,10 +2,10 @@ import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import type { AudioContentRef } from "@repo/backend/convex/lib/validators/audio";
 
 interface ContentData {
-  title: string;
-  description?: string;
   body: string;
+  description?: string;
   locale: string;
+  title: string;
 }
 
 /**

@@ -46,9 +46,9 @@ import { getStaticParams } from "@/lib/utils/system";
 export const revalidate = false;
 
 interface Params {
-  locale: Locale;
   category: SubjectCategory;
   grade: Grade;
+  locale: Locale;
   material: Material;
   slug: string[];
 }

@@ -6,8 +6,8 @@ import { use } from "react";
 import { ContentViewTracker } from "@/components/tracking/content-view-tracker";
 
 interface Params {
-  locale: Locale;
   category: ArticleCategory;
+  locale: Locale;
   slug: string;
 }
 

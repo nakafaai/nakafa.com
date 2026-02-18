@@ -16,9 +16,9 @@ import type { ComponentType } from "react";
 
 interface Model {
   icon: ComponentType;
-  value: ModelId;
   label: string;
   type: "premium" | "free";
+  value: ModelId;
 }
 
 export const aiModels: Model[] = [

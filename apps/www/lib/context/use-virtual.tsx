@@ -5,8 +5,8 @@ import { createContext, useContextSelector } from "use-context-selector";
 import type { WindowVirtualizerHandle } from "virtua";
 
 interface VirtualContextType {
-  virtualRef: RefObject<WindowVirtualizerHandle | null>;
   scrollToIndex: (index: number) => void;
+  virtualRef: RefObject<WindowVirtualizerHandle | null>;
 }
 
 const VirtualContext = createContext<VirtualContextType | undefined>(undefined);

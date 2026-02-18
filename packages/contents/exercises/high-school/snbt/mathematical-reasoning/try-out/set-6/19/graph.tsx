@@ -3,11 +3,11 @@ import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
 interface GraphProps {
-  title: ReactNode;
   description: ReactNode;
   label: {
     horizontal: string;
   };
+  title: ReactNode;
 }
 
 export function Graph({ title, description, label }: GraphProps) {

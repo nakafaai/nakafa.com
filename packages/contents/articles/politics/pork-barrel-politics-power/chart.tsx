@@ -30,9 +30,9 @@ import {
 } from "recharts";
 
 interface Props {
-  title: string;
   description: string;
   footnote: string;
+  title: string;
   yLabel: string;
 }
 

@@ -6,8 +6,8 @@ import { ExerciseChoices } from "./choices";
 
 interface Props {
   exercise: Exercise;
-  locale: Locale;
   id: string;
+  locale: Locale;
   srLabel: string;
 }
 

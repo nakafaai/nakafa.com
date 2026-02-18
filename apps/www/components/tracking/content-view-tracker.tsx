@@ -9,8 +9,8 @@ import { useRecordContentView } from "@/lib/hooks/use-record-content-view";
 
 interface Props {
   contentView: ContentViewRef;
-  locale: Locale;
   delay?: number;
+  locale: Locale;
 }
 
 export function ContentViewTracker({

@@ -26,10 +26,10 @@ interface ContentPathsConfig extends BaseConfig {
 }
 
 interface SlugOnlyConfig extends BaseConfig {
-  includeQuran?: boolean;
-  includeExerciseSets?: boolean;
   includeExerciseNumbers?: boolean;
+  includeExerciseSets?: boolean;
   includeOGVariants?: boolean;
+  includeQuran?: boolean;
 }
 
 interface LocaleParamsConfig extends BaseConfig {

@@ -23,8 +23,8 @@ function useSourceContext() {
 }
 
 export interface SourceProps {
-  href: string;
   children: React.ReactNode;
+  href: string;
 }
 
 export function Source({ href, children }: SourceProps) {
@@ -45,9 +45,9 @@ export function Source({ href, children }: SourceProps) {
 }
 
 export interface SourceTriggerProps {
+  className?: string;
   label?: string | number;
   showFavicon?: boolean;
-  className?: string;
 }
 
 export function SourceTrigger({
@@ -91,9 +91,9 @@ export function SourceTrigger({
 }
 
 export interface SourceContentProps {
-  title: string;
-  description?: string;
   className?: string;
+  description?: string;
+  title: string;
 }
 
 export function SourceContent({

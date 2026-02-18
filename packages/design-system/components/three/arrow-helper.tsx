@@ -55,22 +55,22 @@ function getSharedMaterial(color: string | Color): MeshBasicMaterial {
 }
 
 interface Props {
-  /** Starting point of the vector [x, y, z] */
-  from?: [number, number, number];
-  /** End point of the vector [x, y, z] */
-  to: [number, number, number];
-  /** Color of the vector */
-  color?: string | Color;
-  /** Width of the vector line */
-  lineWidth?: number;
-  /** Show arrowhead */
-  showArrow?: boolean;
   /** Size of the arrowhead */
   arrowSize?: number;
+  /** Color of the vector */
+  color?: string | Color;
+  /** Starting point of the vector [x, y, z] */
+  from?: [number, number, number];
   /** Label for the vector */
   label?: string;
   /** Position of the label */
   labelPosition?: "start" | "middle" | "end";
+  /** Width of the vector line */
+  lineWidth?: number;
+  /** Show arrowhead */
+  showArrow?: boolean;
+  /** End point of the vector [x, y, z] */
+  to: [number, number, number];
   /** Use mono font for the label */
   useMonoFont?: boolean;
   /** Additional props */

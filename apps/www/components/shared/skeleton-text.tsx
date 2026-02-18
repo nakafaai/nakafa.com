@@ -7,8 +7,8 @@ const WIDTH_PERCENTAGE_MAX = 100;
 const WIDTH_PERCENTAGE_DIFFERENCE = 20;
 
 interface Props {
-  lines?: number;
   className?: string;
+  lines?: number;
 }
 
 export function SkeletonText({

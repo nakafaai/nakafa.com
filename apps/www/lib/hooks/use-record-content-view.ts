@@ -17,8 +17,8 @@ import { useContentViews } from "@/lib/context/use-content-views";
 
 interface UseRecordContentViewOptions {
   contentView: ContentViewRef;
-  locale: Locale;
   delay?: number;
+  locale: Locale;
 }
 
 /**

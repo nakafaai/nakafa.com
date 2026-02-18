@@ -20,31 +20,31 @@ const REMAP_EDGE_END = 20;
 const ALPHA_FADE_IN_SPEED = 0.02;
 
 interface Circle {
-  x: number;
-  y: number;
-  translateX: number;
-  translateY: number;
-  size: number;
   alpha: number;
-  targetAlpha: number;
   dx: number;
   dy: number;
   magnetism: number;
+  size: number;
+  targetAlpha: number;
+  translateX: number;
+  translateY: number;
+  x: number;
+  y: number;
 }
 
 interface ParticlesProps {
   className?: string;
+  ease?: number;
   quantity?: number;
   staticity?: number;
-  ease?: number;
 }
 
 interface RemapValueProps {
-  value: number;
-  start1: number;
   end1: number;
-  start2: number;
   end2: number;
+  start1: number;
+  start2: number;
+  value: number;
 }
 
 function ParticlesComponent({

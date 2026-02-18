@@ -8,9 +8,9 @@ import { use } from "react";
 import { ContentViewTracker } from "@/components/tracking/content-view-tracker";
 
 interface Params {
-  locale: Locale;
   category: SubjectCategory;
   grade: Grade;
+  locale: Locale;
   material: Material;
   slug: string[];
 }

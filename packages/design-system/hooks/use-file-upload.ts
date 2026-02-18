@@ -16,11 +16,11 @@ const RANDOM_STRING_START = 2;
 const RANDOM_STRING_END = 9;
 
 export interface FileMetadata {
+  id: string;
   name: string;
   size: number;
   type: string;
   url: string;
-  id: string;
 }
 
 export interface FileWithPreview {
@@ -30,38 +30,38 @@ export interface FileWithPreview {
 }
 
 export interface FileUploadOptions {
+  accept?: string;
+  initialFiles?: FileMetadata[];
   maxFiles?: number; // Only used when multiple is true, defaults to Infinity
   maxSize?: number; // in bytes
-  accept?: string;
   multiple?: boolean; // Defaults to false
-  initialFiles?: FileMetadata[];
-  onFilesChange?: (files: FileWithPreview[]) => void; // Callback when files change
-  onFilesAdded?: (addedFiles: FileWithPreview[]) => void; // Callback when new files are added
   onError?: (errors: string[]) => void; // Callback when errors occur
+  onFilesAdded?: (addedFiles: FileWithPreview[]) => void; // Callback when new files are added
+  onFilesChange?: (files: FileWithPreview[]) => void; // Callback when files change
 }
 
 export interface FileUploadState {
+  errors: string[];
   files: FileWithPreview[];
   isDragging: boolean;
-  errors: string[];
 }
 
 export interface FileUploadActions {
   addFiles: (files: FileList | File[]) => void;
-  removeFile: (id: string) => void;
-  clearFiles: () => void;
   clearErrors: () => void;
+  clearFiles: () => void;
+  getInputProps: (
+    props?: InputHTMLAttributes<HTMLInputElement>
+  ) => InputHTMLAttributes<HTMLInputElement> & {
+    ref: React.Ref<HTMLInputElement>;
+  };
   handleDragEnter: (e: DragEvent<HTMLElement>) => void;
   handleDragLeave: (e: DragEvent<HTMLElement>) => void;
   handleDragOver: (e: DragEvent<HTMLElement>) => void;
   handleDrop: (e: DragEvent<HTMLElement>) => void;
   handleFileChange: (e: ChangeEvent<HTMLInputElement>) => void;
   openFileDialog: () => void;
-  getInputProps: (
-    props?: InputHTMLAttributes<HTMLInputElement>
-  ) => InputHTMLAttributes<HTMLInputElement> & {
-    ref: React.Ref<HTMLInputElement>;
-  };
+  removeFile: (id: string) => void;
 }
 
 export const useFileUpload = (

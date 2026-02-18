@@ -32,8 +32,8 @@ interface Point {
 }
 
 interface Dataset {
-  name: string;
   color: string;
+  name: string;
   points: Point[];
 }
 
@@ -43,15 +43,15 @@ interface RegressionLineStyle {
 }
 
 interface Props {
-  title: ReactNode;
-  description: ReactNode;
-  xAxisLabel?: string;
-  yAxisLabel?: string;
-  xAxisDomain?: "min-max";
-  datasets: Dataset[];
   calculateRegressionLine?: boolean;
+  datasets: Dataset[];
+  description: ReactNode;
   regressionLineStyle?: RegressionLineStyle;
   showResiduals?: boolean;
+  title: ReactNode;
+  xAxisDomain?: "min-max";
+  xAxisLabel?: string;
+  yAxisLabel?: string;
 }
 
 export function ScatterDiagram({

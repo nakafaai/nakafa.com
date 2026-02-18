@@ -15,10 +15,10 @@ type LocaleCache = Set<FilePath>;
 type MDXCache = Map<Locale, LocaleCache>;
 
 interface MDXCacheConfig {
-  rootDir: string;
-  mdxExtension: string;
-  ignoreDirPrefixes: string[];
   exerciseSubdirectories: string[];
+  ignoreDirPrefixes: string[];
+  mdxExtension: string;
+  rootDir: string;
 }
 
 class MDXCacheRegistry {

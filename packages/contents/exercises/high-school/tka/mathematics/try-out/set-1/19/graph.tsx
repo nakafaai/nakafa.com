@@ -19,8 +19,8 @@ import {
 } from "recharts";
 
 interface Props {
-  title: string;
   description: string;
+  title: string;
 }
 
 export function Graph({ title, description }: Props) {

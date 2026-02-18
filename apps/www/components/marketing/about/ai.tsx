@@ -9,11 +9,11 @@ import { useTranslations } from "next-intl";
 import { AiNeuroNoise } from "./ai.client";
 
 interface AudienceCardProps {
+  ctaHref: string;
+  ctaText: string;
+  description: string;
   icon: React.ComponentProps<typeof HugeIcons>["icon"];
   title: string;
-  description: string;
-  ctaText: string;
-  ctaHref: string;
 }
 
 function AudienceCard({

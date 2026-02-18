@@ -42,14 +42,14 @@ const Q4 = 4;
 interface Props {
   /** Angle in degrees */
   angle?: number;
-  /** Size of the triangle (scale factor) */
-  size?: number;
   /** Labels for the triangle */
   labels?: {
     opposite: string;
     adjacent: string;
     hypotenuse: string;
   };
+  /** Size of the triangle (scale factor) */
+  size?: number;
   /** Use mono font for the labels */
   useMonoFont?: boolean;
   /** Additional props */

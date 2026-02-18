@@ -34,9 +34,9 @@ import {
 const CAMERA_Z_POSITION = 4;
 
 interface Props {
-  title: ReactNode;
-  description: ReactNode;
   angle?: number;
+  description: ReactNode;
+  title: ReactNode;
   /** Exact trigonometric values as fractions (e.g., "5/13", "12/13", "5/12") */
   trigValues?: {
     sin?: string;

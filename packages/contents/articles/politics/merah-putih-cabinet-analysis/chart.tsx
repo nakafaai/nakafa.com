@@ -29,9 +29,9 @@ import {
 const TICK_LABEL_CHAR_LIMIT = 3;
 
 interface Props {
-  title: string;
   description: string;
   footnote: string;
+  title: string;
 }
 
 const CabinetChartData = [

@@ -45,18 +45,18 @@ interface TableChairsProps {
 }
 
 interface TableItem {
+  height: number;
   id: number;
+  width: number;
   x: number;
   y: number;
-  width: number;
-  height: number;
 }
 
 interface ChairItem {
   id: number;
+  side: "left" | "right" | "top" | "bottom";
   x: number;
   y: number;
-  side: "left" | "right" | "top" | "bottom";
 }
 
 export default function TableChairsAnimation({

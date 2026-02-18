@@ -13,13 +13,13 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import type { ReactNode } from "react";
 
 interface Props {
-  title: ReactNode;
-  description: ReactNode;
-  machineLabel: string;
   content: {
     input: string;
     output: string;
   };
+  description: ReactNode;
+  machineLabel: string;
+  title: ReactNode;
 }
 
 export function FunctionIllustration({

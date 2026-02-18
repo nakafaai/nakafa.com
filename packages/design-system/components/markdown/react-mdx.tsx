@@ -27,12 +27,12 @@ import type { BundledLanguage } from "shiki";
 const LANGUAGE_REGEX = /language-([^\s]+)/;
 
 interface MarkdownPoint {
-  line?: number;
   column?: number;
+  line?: number;
 }
 interface MarkdownPosition {
-  start?: MarkdownPoint;
   end?: MarkdownPoint;
+  start?: MarkdownPoint;
 }
 interface MarkdownNode {
   position?: MarkdownPosition;
