@@ -28,10 +28,10 @@ export const baseRoutes = [
 const MONTHS_IN_FALLBACK_PERIOD = 6;
 const MONTHS_IN_CONTENT_FALLBACK = 3;
 
-// Constants for LLM route processing
-const LLM_EXTENSION_PATTERN = /\.(mdx?|txt)$/;
-const LLM_TXT_PATTERN = /\/llms\.txt$/;
-const LLM_ROUTE_PRIORITY_MULTIPLIER = 0.8;
+// Note: LLM routes (.md, .mdx, .txt, /llms.txt) are excluded from sitemap
+// as they are file downloads, not HTML pages for indexing
+// Per Google guidelines: sitemaps should only contain URLs you want indexed
+// https://www.sitemaps.org/protocol.html
 
 /**
  * Get actual last modified date for content based on metadata date
@@ -98,11 +98,6 @@ function getContentSeoSettings(route: string): {
     return { changeFrequency: "yearly", priority: 0.6 };
   }
 
-  // OG images never change once generated
-  if (route.includes("/og/") && route.endsWith("/image.png")) {
-    return { changeFrequency: "never", priority: 0.1 };
-  }
-
   // Educational content by level
   if (route.includes("/university/")) {
     return { changeFrequency: "monthly", priority: 0.9 }; // University content is high priority
@@ -130,29 +125,6 @@ export function getQuranRoutes(): string[] {
 
 export function getAskRoutes(): string[] {
   return askSeo().map((data) => `/ask/${data.slug}`);
-}
-
-// Generate LLM-friendly routes by adding .md, .mdx, .txt, and /llms.txt extensions
-export function getLlmRoutes(routes: string[]): string[] {
-  const llmRoutes: string[] = [];
-
-  for (const route of routes) {
-    // For homepage, handle specially to avoid double slashes
-    if (route === "/") {
-      llmRoutes.push("/.md");
-      llmRoutes.push("/.mdx");
-      llmRoutes.push("/.txt");
-      llmRoutes.push("/llms.txt");
-    } else {
-      // For other routes, add extensions normally
-      llmRoutes.push(`${route}.md`);
-      llmRoutes.push(`${route}.mdx`);
-      llmRoutes.push(`${route}.txt`);
-      llmRoutes.push(`${route}/llms.txt`);
-    }
-  }
-
-  return llmRoutes;
 }
 
 // Function to recursively get all directories
@@ -191,8 +163,8 @@ export async function getEntries(
   if (
     routeString !== "/" &&
     !baseRoutes.includes(routeString) &&
-    !routeString.includes("/og/") &&
-    !routeString.startsWith("/quran")
+    !routeString.startsWith("/quran") &&
+    !routeString.startsWith("/ask/")
   ) {
     try {
       // This is likely educational content, get actual modification date
@@ -211,9 +183,6 @@ export async function getEntries(
     }
   } else if (routeString.startsWith("/quran")) {
     // Quran content is very stable, set to founding date
-    lastModified = new Date("2025-01-01");
-  } else if (routeString.includes("/og/")) {
-    // OG images, set to a reasonable date after founding
     lastModified = new Date("2025-01-01");
   } else if (routeString.startsWith("/ask/")) {
     // Ask content is very stable, set to founding date
@@ -248,65 +217,8 @@ export function getUrl(href: Href, locale: Locale, domain?: string): string {
   return domainHost + pathname;
 }
 
-// Generate sitemap entries for LLM routes without locale prefix (main domain only)
-export async function getLlmEntries(
-  href: Href,
-  domain?: string
-): Promise<MetadataRoute.Sitemap> {
-  const routeString = typeof href === "string" ? href : href.pathname;
-  const { changeFrequency, priority } = getContentSeoSettings(routeString);
-
-  // For LLM routes, use a reasonable default date
-  let lastModified = new Date("2025-01-01");
-
-  // Try to get actual modification date for content routes
-  if (
-    routeString !== "/" &&
-    !baseRoutes.includes(routeString) &&
-    !routeString.includes("/og/") &&
-    !routeString.startsWith("/quran") &&
-    !routeString.startsWith("/ask/")
-  ) {
-    try {
-      const contentPath = routeString.startsWith("/")
-        ? routeString.substring(1)
-        : routeString;
-      // Remove LLM extensions to get actual content path
-      const cleanPath = contentPath
-        .replace(LLM_EXTENSION_PATTERN, "")
-        .replace(LLM_TXT_PATTERN, "");
-      lastModified = await getContentLastModified(cleanPath);
-    } catch {
-      lastModified = new Date("2025-01-01");
-    }
-  }
-
-  const domainHost = domain ? `https://${domain}` : host;
-  const url = `${domainHost}${routeString}`;
-
-  return [
-    {
-      url,
-      changeFrequency,
-      lastModified,
-      priority: priority * LLM_ROUTE_PRIORITY_MULTIPLIER, // Slightly lower priority for LLM routes
-    },
-  ];
-}
-
-// Return OG routes based on regular routes
-export function getOgRoutes(routes: string[]): string[] {
-  return routes.flatMap((route) => {
-    if (route === "/") {
-      return ["/og/image.png"];
-    }
-    return [`/og${route}`, `/og${route}/image.png`];
-  });
-}
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const contentRoutes = getContentRoutes(); // Get routes from 'contents' directory
-  const ogRoutes = getOgRoutes(contentRoutes);
   const quranRoutes = getQuranRoutes();
   const askRoutes = getAskRoutes();
 
@@ -319,51 +231,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]);
   const allBaseRoutes = Array.from(allBaseRoutesSet);
 
-  // Generate LLM-friendly routes for AI/LLM accessibility
-  const llmRoutes = getLlmRoutes(allBaseRoutes);
-
-  // Regular routes including OG images
-  const regularRoutesSet = new Set([...allBaseRoutes, ...ogRoutes]);
-  const regularRoutes = Array.from(regularRoutesSet);
-
-  // Generate sitemap entries for regular routes (with locale prefixes)
-  const regularWithLocalePromises = regularRoutes.map(
+  // Generate sitemap entries ONLY for routes with locale prefixes
+  // This follows Google's best practice for international sites
+  // Source: https://developers.google.com/search/docs/specialty/international/localized-versions
+  const routePromises = allBaseRoutes.map(
     async (route) => await getEntries(route, MAIN_DOMAIN)
   );
 
-  // Generate sitemap entries for regular routes (without locale prefixes)
-  const regularWithoutLocalePromises = allBaseRoutes.map(
-    async (route) => await getLlmEntries(route, MAIN_DOMAIN)
-  );
+  const routeArrays = await Promise.all(routePromises);
 
-  // Generate sitemap entries for LLM routes (with locale prefixes)
-  const llmWithLocalePromises = llmRoutes.map(
-    async (route) => await getEntries(route, MAIN_DOMAIN)
-  );
-
-  // Generate sitemap entries for LLM routes (without locale prefixes)
-  const llmWithoutLocalePromises = llmRoutes.map(
-    async (route) => await getLlmEntries(route, MAIN_DOMAIN)
-  );
-
-  const [
-    regularWithLocaleArrays,
-    regularWithoutLocaleArrays,
-    llmWithLocaleArrays,
-    llmWithoutLocaleArrays,
-  ] = await Promise.all([
-    Promise.all(regularWithLocalePromises),
-    Promise.all(regularWithoutLocalePromises),
-    Promise.all(llmWithLocalePromises),
-    Promise.all(llmWithoutLocalePromises),
-  ]);
-
-  const allEntries = [
-    ...regularWithLocaleArrays.flat(),
-    ...regularWithoutLocaleArrays.flat(),
-    ...llmWithLocaleArrays.flat(),
-    ...llmWithoutLocaleArrays.flat(),
-  ];
+  const allEntries = routeArrays.flat();
 
   // Deduplicate final URLs to ensure no duplicates in sitemap
   const uniqueUrlsMap = new Map<string, MetadataRoute.Sitemap[number]>();
