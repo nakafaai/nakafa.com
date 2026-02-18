@@ -1,0 +1,66 @@
+import { Graph } from "../graph";
+
+export const metadata = {
+  title: "Solution to Question 18",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/17/2026",
+};
+
+#### Triangle Identification
+
+The problem asks for the value of <InlineMath math="\sin \alpha" /> where <InlineMath math="\alpha = \angle HDF" />. We need to analyze the triangle <InlineMath math="HDF" />.
+
+<Graph 
+  title={<>Triangle <InlineMath math="HDF" /></>} 
+  description={<>Visualization of position inside the cube.</>} 
+/>
+
+#### Determining Side Lengths
+
+Given the cube edge length <InlineMath math="s = 4" />.
+
+1. **Opposite Side (<InlineMath math="HF" />)**: <InlineMath math="HF" /> is the face diagonal of the top face <InlineMath math="EFGH" />.
+   
+   <MathContainer>
+     <BlockMath math="HF = \sqrt{EH^2 + EF^2}" />
+     <BlockMath math="HF = \sqrt{4^2 + 4^2} = \sqrt{16 + 16} = \sqrt{32} = 4\sqrt{2}" />
+   </MathContainer>
+
+2. **Adjacent Side (<InlineMath math="HD" />)**: <InlineMath math="HD" /> is the vertical edge of the cube.
+   
+   <MathContainer>
+     <BlockMath math="HD = 4" />
+   </MathContainer>
+
+3. **Hypotenuse (<InlineMath math="DF" />)**: <InlineMath math="DF" /> is the space diagonal of the cube. Triangle <InlineMath math="HDF" /> is a right-angled triangle at <InlineMath math="H" /> (since <InlineMath math="HD \perp EFGH" />, then <InlineMath math="HD \perp HF" />).
+   
+   <MathContainer>
+     <BlockMath math="DF = \sqrt{HD^2 + HF^2}" />
+     <BlockMath math="DF = \sqrt{4^2 + (4\sqrt{2})^2} = \sqrt{16 + 32} = \sqrt{48} = 4\sqrt{3}" />
+   </MathContainer>
+
+#### Calculating Sine Alpha
+
+Angle <InlineMath math="\alpha" /> is at point <InlineMath math="D" />. Thus:
+- The side opposite to angle <InlineMath math="\alpha" /> is <InlineMath math="HF" />.
+- The hypotenuse is <InlineMath math="DF" />.
+
+<MathContainer>
+  <BlockMath math="\sin \alpha = \frac{\text{opposite}}{\text{hypotenuse}} = \frac{HF}{DF}" />
+</MathContainer>
+
+Substitute the calculated values:
+
+<MathContainer>
+  <BlockMath math="\sin \alpha = \frac{4\sqrt{2}}{4\sqrt{3}}" />
+  <BlockMath math="\sin \alpha = \frac{\sqrt{2}}{\sqrt{3}}" />
+</MathContainer>
+
+Rationalize the denominator by multiplying by <InlineMath math="\frac{\sqrt{3}}{\sqrt{3}}" />:
+
+<MathContainer>
+  <BlockMath math="\sin \alpha = \frac{\sqrt{2}}{\sqrt{3}} \cdot \frac{\sqrt{3}}{\sqrt{3}}" />
+  <BlockMath math="\sin \alpha = \frac{\sqrt{6}}{3} = \frac{1}{3}\sqrt{6}" />
+</MathContainer>
+
+Thus, the value of <InlineMath math="\sin \alpha" /> is <InlineMath math="\frac{1}{3}\sqrt{6}" />.

@@ -1,0 +1,50 @@
+export const metadata = {
+  title: "Pembahasan Soal 17",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+#### Identifikasi Informasi
+
+Diketahui:
+- Dua kelompok belajar, misal <InlineMath math="A" /> dan <InlineMath math="B" />.
+- Jumlah anggota sama: <InlineMath math="n_A = n_B = 4" />.
+- Rata-rata berat badan awal: <InlineMath math="\bar{x}_A = 30" /> dan <InlineMath math="\bar{x}_B = 33" />.
+- Total berat badan awal:
+
+  <MathContainer>
+    <BlockMath math="\sum x_A = n_A \cdot \bar{x}_A = 4 \cdot 30 = 120" />
+    <BlockMath math="\sum x_B = n_B \cdot \bar{x}_B = 4 \cdot 33 = 132" />
+  </MathContainer>
+
+#### Analisis Pertukaran
+
+Misalkan anak yang ditukar adalah <InlineMath math="x_A" /> dari kelompok <InlineMath math="A" /> dan <InlineMath math="x_B" /> dari kelompok <InlineMath math="B" />. Setelah pertukaran, jumlah anggota tetap sama (<InlineMath math="n = 4" />) dan rata-rata menjadi sama, yang berarti jumlah total berat badan kelompok baru juga sama.
+
+Total berat badan baru kelompok <InlineMath math="A" /> (<InlineMath math="\sum x_A'" />):
+
+<BlockMath math="\sum x_A' = \sum x_A - x_A + x_B = 120 - x_A + x_B" />
+
+Total berat badan baru kelompok <InlineMath math="B" /> (<InlineMath math="\sum x_B'" />):
+
+<BlockMath math="\sum x_B' = \sum x_B - x_B + x_A = 132 - x_B + x_A" />
+
+#### Menghitung Selisih Berat Badan
+
+Karena rata-rata baru sama, maka jumlah total baru juga sama:
+
+<MathContainer>
+  <BlockMath math="\sum x_A' = \sum x_B'" />
+  <BlockMath math="120 - x_A + x_B = 132 - x_B + x_A" />
+</MathContainer>
+
+Kelompokkan variabel yang sama:
+
+<MathContainer>
+  <BlockMath math="x_B + x_B - x_A - x_A = 132 - 120" />
+  <BlockMath math="2x_B - 2x_A = 12" />
+  <BlockMath math="2(x_B - x_A) = 12" />
+  <BlockMath math="x_B - x_A = 6" />
+</MathContainer>
+
+Jadi, selisih berat badan kedua anak yang ditukarkan adalah <InlineMath math="6 \text{ kg}" />.

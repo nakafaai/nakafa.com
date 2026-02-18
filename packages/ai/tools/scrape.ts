@@ -1,4 +1,4 @@
-import { firecrawlApp } from "@repo/ai/clients/firecrawl";
+import { firecrawlApp } from "@repo/ai/config/firecrawl";
 import { selectRelevantContent } from "@repo/ai/lib/content-selection";
 import { dedentString } from "@repo/ai/lib/utils";
 import { nakafaScrape } from "@repo/ai/prompt/tools/scrape";

@@ -4,8 +4,8 @@ import {
   localeValidator,
   materialValidator,
   subjectCategoryValidator,
-} from "@repo/backend/convex/lib/contentValidators";
-import { vv } from "@repo/backend/convex/lib/validators";
+} from "@repo/backend/convex/lib/validators/contents";
+import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
 
 /**
@@ -46,7 +46,7 @@ export const upsertSubjectSection = internalMutation({
         return { id: existing._id, action: "unchanged" as const };
       }
 
-      await ctx.db.patch(existing._id, {
+      await ctx.db.patch("subjectSections", existing._id, {
         topicId: args.topicId,
         category: args.category,
         grade: args.grade,

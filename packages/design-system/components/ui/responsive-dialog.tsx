@@ -19,12 +19,11 @@ import { cn } from "@repo/design-system/lib/utils";
 import type { ComponentProps, ReactNode } from "react";
 
 interface Props {
+  children?: ReactNode;
+  description?: ReactNode;
+  footer?: ReactNode;
   open: boolean;
   setOpen: (open: boolean) => void;
-  title: ReactNode;
-  description?: ReactNode;
-  children?: ReactNode;
-  footer?: ReactNode;
   styleClassName?: {
     dialog?: {
       header?: ComponentProps<typeof DialogHeader>["className"];
@@ -41,6 +40,7 @@ interface Props {
       content?: ComponentProps<typeof DrawerContent>["className"];
     };
   };
+  title: ReactNode;
 }
 
 export function ResponsiveDialog({

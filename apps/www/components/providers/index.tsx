@@ -1,6 +1,7 @@
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { ComponentProps, ReactNode } from "react";
 import { AiContextProvider } from "@/lib/context/use-ai";
+import { ContentViewsProvider } from "@/lib/context/use-content-views";
 import { PagefindProvider } from "@/lib/context/use-pagefind";
 import { SearchContextProvider } from "@/lib/context/use-search";
 import { UserContextProvider } from "@/lib/context/use-user";
@@ -21,7 +22,9 @@ export function AppProviders({
           <NuqsAdapter>
             <ReactQueryProviders>
               <PagefindProvider>
-                <AiContextProvider>{children}</AiContextProvider>
+                <ContentViewsProvider>
+                  <AiContextProvider>{children}</AiContextProvider>
+                </ContentViewsProvider>
               </PagefindProvider>
             </ReactQueryProviders>
           </NuqsAdapter>

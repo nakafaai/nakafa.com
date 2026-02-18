@@ -1,0 +1,41 @@
+export const metadata = {
+  title: "Solution to Question 2",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/17/2026",
+};
+
+#### Calculating Loan Interest
+
+Given:
+
+- Principal loan (<InlineMath math="M" />) = <InlineMath math="\text{Rp}3,000,000.00" />
+- Monthly interest (<InlineMath math="i" />) = <InlineMath math="2\%" />
+- Loan duration (<InlineMath math="n" />) = <InlineMath math="10" /> months
+
+The total interest amount is:
+
+<MathContainer>
+  <BlockMath math="\text{Interest} = M \times i \times n" />
+  <BlockMath math="\text{Interest} = 3,000,000 \times 2\% \times 10" />
+  <BlockMath math="\text{Interest} = 3,000,000 \times \frac{2}{100} \times 10" />
+  <BlockMath math="\text{Interest} = 600,000" />
+</MathContainer>
+
+#### Calculating Monthly Installment
+
+The total amount to be paid is the principal plus total interest:
+
+<MathContainer>
+  <BlockMath math="\text{Total} = 3,000,000 + 600,000" />
+  <BlockMath math="\text{Total} = 3,600,000" />
+</MathContainer>
+
+Since the repayment period is <InlineMath math="10" /> months, the monthly installment is:
+
+<MathContainer>
+  <BlockMath math="\text{Installment} = \frac{\text{Total}}{n}" />
+  <BlockMath math="\text{Installment} = \frac{3,600,000}{10}" />
+  <BlockMath math="\text{Installment} = 360,000" />
+</MathContainer>
+
+So, the money Panjul must deposit per month is <InlineMath math="\text{Rp}360,000.00" />.

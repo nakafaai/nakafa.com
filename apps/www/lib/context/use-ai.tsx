@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useRef } from "react";
+import { type ReactNode, useState } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
@@ -11,15 +11,9 @@ type AiStoreApi = ReturnType<typeof createAiStore>;
 export const AiContext = createContext<AiStoreApi | null>(null);
 
 export function AiContextProvider({ children }: { children: ReactNode }) {
-  const storeRef = useRef<AiStoreApi>(undefined);
+  const [store] = useState(() => createAiStore());
 
-  if (!storeRef.current) {
-    storeRef.current = createAiStore();
-  }
-
-  return (
-    <AiContext.Provider value={storeRef.current}>{children}</AiContext.Provider>
-  );
+  return <AiContext.Provider value={store}>{children}</AiContext.Provider>;
 }
 
 function useAiContext() {

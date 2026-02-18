@@ -1,6 +1,6 @@
 import { components } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { internalMutation } from "@repo/backend/convex/_generated/server";
+import { internalMutation } from "@repo/backend/convex/functions";
 
 // Migration to create app users from Better Auth users
 export const migrationCreateAppUsers = internalMutation({
@@ -312,8 +312,8 @@ export const migrationSyncUserData = internalMutation({
     // Build lookup map with explicit types
     interface AuthUser {
       _id: string;
-      name: string;
       image?: string | null;
+      name: string;
     }
     const authMap = new Map<string, AuthUser>(
       authUsers.page.map((u: AuthUser) => [u._id, u])

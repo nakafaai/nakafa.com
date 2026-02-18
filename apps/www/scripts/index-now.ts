@@ -1,14 +1,12 @@
 // Environment variables loaded via Node.js --env-file flag
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   baseRoutes,
   getAskRoutes,
   getContentRoutes,
   getEntries,
-  getLlmEntries,
-  getLlmRoutes,
-  getOgRoutes,
   getQuranRoutes,
 } from "../app/sitemap";
 import { logger } from "./utils";
@@ -30,7 +28,8 @@ const keyLocation = `${host}/${keyFileName}`;
 const hardcodedKey = "e22d548f7fd2482a9022e3b84e944901";
 
 // Data folder and file paths
-const DATA_FOLDER = path.join(import.meta.dirname, "_data");
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const DATA_FOLDER = path.join(__dirname, "_data");
 const SUBMISSION_HISTORY_FILE = path.join(
   DATA_FOLDER,
   "submission-history.json"
@@ -101,7 +100,6 @@ async function getUnsubmittedUrls(service: "indexNow" | "bing"): Promise<{
 
   // Get all URLs from sitemap
   const routes = getContentRoutes();
-  const ogRoutes = getOgRoutes(routes);
   const quranRoutes = getQuranRoutes();
   const askRoutes = getAskRoutes();
 
@@ -114,47 +112,14 @@ async function getUnsubmittedUrls(service: "indexNow" | "bing"): Promise<{
   ]);
   const allBaseRoutes = Array.from(allBaseRoutesSet);
 
-  // Generate LLM-friendly routes for AI/LLM accessibility
-  const llmRoutes = getLlmRoutes(allBaseRoutes);
+  // Get all entries asynchronously - simplified to only locale-prefixed routes
+  // Per Google best practices: sitemaps should only contain URLs you want indexed
+  // https://www.sitemaps.org/protocol.html
+  const routePromises = allBaseRoutes.map((route) => getEntries(route));
 
-  // Regular routes including OG images
-  const regularRoutesSet = new Set([...allBaseRoutes, ...ogRoutes]);
-  const regularRoutes = Array.from(regularRoutesSet);
+  const routeArrays = await Promise.all(routePromises);
 
-  // Get all entries asynchronously - 4 types for maximum GEO coverage
-  // 1. Regular routes WITH locale prefixes
-  const regularWithLocalePromises = regularRoutes.map((route) =>
-    getEntries(route)
-  );
-  // 2. Regular routes WITHOUT locale prefixes
-  const regularWithoutLocalePromises = allBaseRoutes.map((route) =>
-    getLlmEntries(route)
-  );
-  // 3. LLM routes WITH locale prefixes
-  const llmWithLocalePromises = llmRoutes.map((route) => getEntries(route));
-  // 4. LLM routes WITHOUT locale prefixes
-  const llmWithoutLocalePromises = llmRoutes.map((route) =>
-    getLlmEntries(route)
-  );
-
-  const [
-    regularWithLocaleArrays,
-    regularWithoutLocaleArrays,
-    llmWithLocaleArrays,
-    llmWithoutLocaleArrays,
-  ] = await Promise.all([
-    Promise.all(regularWithLocalePromises),
-    Promise.all(regularWithoutLocalePromises),
-    Promise.all(llmWithLocalePromises),
-    Promise.all(llmWithoutLocalePromises),
-  ]);
-
-  const allEntries = [
-    ...regularWithLocaleArrays.flat(),
-    ...regularWithoutLocaleArrays.flat(),
-    ...llmWithLocaleArrays.flat(),
-    ...llmWithoutLocaleArrays.flat(),
-  ];
+  const allEntries = routeArrays.flat();
 
   // Extract unique URLs
   const allUrls = new Set<string>();

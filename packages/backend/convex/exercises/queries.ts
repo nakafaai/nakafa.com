@@ -1,6 +1,6 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
-import { vv } from "@repo/backend/convex/lib/validators";
+import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
 import { getManyFrom } from "convex-helpers/server/relationships";
 import { nullable } from "convex-helpers/validators";

@@ -64,9 +64,9 @@ function Phone({ className, ...props }: React.ComponentProps<"input">) {
 
 interface CountrySelectProps {
   disabled?: boolean;
-  value: RpnInput.Country;
   onChange: (value: RpnInput.Country) => void;
   options: { label: string; value: RpnInput.Country | undefined }[];
+  value: RpnInput.Country;
 }
 
 const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {

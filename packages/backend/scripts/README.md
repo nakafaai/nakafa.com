@@ -193,6 +193,12 @@ Deploy functions first: `npx convex deploy`
 ### Sync shows 0 changes
 Content hash unchanged. This is normal for `sync:incremental`.
 
+## Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `sync-content.ts` | Sync MDX content to Convex database |
+
 ## Files
 
 | File | Purpose |

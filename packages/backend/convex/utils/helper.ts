@@ -1,3 +1,4 @@
+import { ConvexError } from "convex/values";
 import { nanoid } from "nanoid";
 
 /**
@@ -84,4 +85,24 @@ export function truncateText({
     return text;
   }
   return `${text.slice(0, maxLength).trim()}…`;
+}
+
+/**
+ * Extract error message from any error type.
+ * Handles ConvexError (extracts data.message), Error (uses message), and unknown types.
+ *
+ * @param error - The error to extract message from
+ * @returns The error message string
+ */
+export function getErrorMessage(error: unknown): string {
+  if (error instanceof ConvexError) {
+    const data = error.data as { message?: string; code?: string };
+    return data.message ?? JSON.stringify(data);
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return String(error);
 }

@@ -1,0 +1,105 @@
+import {
+  audioContentRefValidator,
+  audioModelValidator,
+  audioStatusValidator,
+  voiceSettingsValidator,
+} from "@repo/backend/convex/lib/validators/audio";
+import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
+import { defineTable } from "convex/server";
+import { v } from "convex/values";
+import { literals } from "convex-helpers/validators";
+
+const tables = {
+  /** Audio files for articles and subjects (exercises excluded). */
+  contentAudios: defineTable({
+    contentRef: audioContentRefValidator,
+    locale: localeValidator,
+    /** SHA-256 hash of content body for cache invalidation */
+    contentHash: v.string(),
+    /** ElevenLabs voice ID */
+    voiceId: v.string(),
+    /** Voice settings stored per audio for future customization */
+    voiceSettings: v.optional(voiceSettingsValidator),
+    /** ElevenLabs TTS model used for generation */
+    model: audioModelValidator,
+    status: audioStatusValidator,
+    /** Generated podcast script with ElevenLabs v3 tags */
+    script: v.optional(v.string()),
+    /** Convex storage ID for the generated audio file */
+    audioStorageId: v.optional(v.id("_storage")),
+    /** Audio duration in seconds */
+    audioDuration: v.optional(v.number()),
+    /** Audio file size in bytes */
+    audioSize: v.optional(v.number()),
+    /** Error message if generation failed */
+    errorMessage: v.optional(v.string()),
+    /** Timestamp when generation failed */
+    failedAt: v.optional(v.number()),
+    /** Number of generation attempts (for retry logic) */
+    generationAttempts: v.number(),
+    /** Last update timestamp */
+    updatedAt: v.number(),
+  })
+    /**
+     * Primary lookup by content reference and locale.
+     * Used to check if audio already exists for specific content.
+     * Also covers cross-locale queries via prefix (per Convex best practices).
+     */
+    .index("contentRef_locale", ["contentRef.type", "contentRef.id", "locale"]),
+
+  /** Queue for audio generation jobs. */
+  audioGenerationQueue: defineTable({
+    contentRef: audioContentRefValidator,
+    locale: localeValidator,
+    /**
+     * Content slug (cross-locale identifier).
+     * Used to find all locale versions of the same content.
+     * Same slug across all locales enables per-content processing.
+     */
+    slug: v.string(),
+    /**
+     * Priority score for queue ordering.
+     * Calculated from: viewCount × 10 + ageBoost
+     * Higher score = higher priority
+     */
+    priorityScore: v.number(),
+    status: literals("pending", "processing", "completed", "failed"),
+    requestedAt: v.number(),
+    processingStartedAt: v.optional(v.number()),
+    completedAt: v.optional(v.number()),
+    retryCount: v.number(),
+    maxRetries: v.number(),
+    errorMessage: v.optional(v.string()),
+    lastErrorAt: v.optional(v.number()),
+    updatedAt: v.number(),
+  })
+    /**
+     * Primary queue processing index.
+     * Fetches pending items ordered by priority (descending).
+     */
+    .index("status_priority", ["status", "priorityScore"])
+    /**
+     * Deduplication check.
+     * Ensures content isn't queued multiple times per locale.
+     */
+    .index("contentRef_locale", ["contentRef.type", "contentRef.id", "locale"])
+    /**
+     * Content + status queries by slug (cross-locale).
+     * Finds all pending items for a content across ALL locales.
+     * This enables processing all translations together as one content piece.
+     * Per Convex best practices: use specific index ranges for O(log n) performance.
+     */
+    .index("slug_status", ["slug", "status"])
+    /**
+     * Cleanup queries.
+     * Removes old completed/failed items.
+     */
+    .index("status_completedAt", ["status", "completedAt"])
+    /**
+     * Error tracking.
+     * Finds items with recent errors for retry.
+     */
+    .index("status_updatedAt", ["status", "updatedAt"]),
+};
+
+export default tables;

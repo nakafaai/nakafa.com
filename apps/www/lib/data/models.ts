@@ -11,14 +11,14 @@ import {
   XAI,
   ZAI,
 } from "@lobehub/icons";
-import type { ModelId } from "@repo/ai/config/providers";
+import type { ModelId } from "@repo/ai/config/vercel";
 import type { ComponentType } from "react";
 
 interface Model {
   icon: ComponentType;
-  value: ModelId;
   label: string;
   type: "premium" | "free";
+  value: ModelId;
 }
 
 export const aiModels: Model[] = [
@@ -74,6 +74,18 @@ export const aiModels: Model[] = [
     icon: Qwen,
     value: "qwen-3-max",
     label: "Qwen 3 Max",
+    type: "premium",
+  },
+  {
+    icon: Minimax,
+    value: "minimax-m2.5",
+    label: "Minimax M2.5",
+    type: "premium",
+  },
+  {
+    icon: ZAI,
+    value: "glm-5",
+    label: "GLM 5",
     type: "premium",
   },
   {

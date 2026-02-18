@@ -17,8 +17,8 @@ import { format } from "date-fns";
 import { useTranslations } from "next-intl";
 
 interface Props {
-  category: string;
   article: Article;
+  category: string;
 }
 
 export function CardArticle({ category, article }: Props) {

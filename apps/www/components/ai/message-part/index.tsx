@@ -17,9 +17,9 @@ import { SuggestionsPart } from "./suggestions";
 import { WebSearchPart } from "./web-search";
 
 interface Props {
+  messageId: string;
   part: MyUIMessage["parts"][number];
   partIndex: number;
-  messageId: string;
 }
 
 export const AiMessagePart = memo(({ part, partIndex, messageId }: Props) => {

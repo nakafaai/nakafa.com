@@ -1,0 +1,40 @@
+export const metadata = {
+  title: "Pembahasan Soal 1",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/16/2026",
+};
+
+Diketahui waktu mulai berlari adalah pukul <InlineMath math="07:00" /> dan waktu akhir pengamatan adalah pukul <InlineMath math="09:24" />. Kita hitung durasi totalnya dalam menit:
+
+<MathContainer>
+  <BlockMath math="\text{Durasi} = 09:24 - 07:00 = 2 \text{ jam } 24 \text{ menit}" />
+  <BlockMath math="= (2 \times 60) + 24 = 120 + 24 = 144 \text{ menit}" />
+</MathContainer>
+
+Diketahui mereka bertiga melewati garis *start* secara bersamaan sebanyak <InlineMath math="4" /> kali dalam rentang waktu tersebut. Ini berarti mereka bertemu setiap:
+
+<MathContainer>
+  <BlockMath math="\frac{144 \text{ menit}}{4 \text{ kali}} = 36 \text{ menit sekali}" />
+</MathContainer>
+
+Waktu pertemuan bersama ini merupakan Kelipatan Persekutuan Terkecil (KPK) dari waktu putaran masing-masing pelari.
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} \text{Pelari A} &= 12 \text{ menit} \\ \text{Pelari B} &= x \text{ menit} \\ \text{Pelari C} &= 9 \text{ menit} \end{aligned}" />
+</MathContainer>
+
+Kita harus mencari nilai <InlineMath math="x" /> sehingga <InlineMath math="\text{KPK}(12, x, 9) = 36" />. Pertama, kita cari KPK dari <InlineMath math="12" /> dan <InlineMath math="9" />:
+
+<MathContainer>
+  <BlockMath math="\text{KPK}(12, 9) = 36" />
+</MathContainer>
+
+Karena <InlineMath math="\text{KPK}(12, 9)" /> sudah bernilai <InlineMath math="36" />, maka agar <InlineMath math="\text{KPK}(12, 9, x)" /> tetap bernilai <InlineMath math="36" />, nilai <InlineMath math="x" /> haruslah faktor dari <InlineMath math="36" /> atau bilangan yang jika dikombinasikan dengan <InlineMath math="12" /> dan <InlineMath math="9" /> menghasilkan KPK <InlineMath math="36" />. Mari kita cek pilihan jawaban:
+
+- Jika <InlineMath math="x = 5" />: <InlineMath math="\text{KPK}(36, 5) = 180" /> (Salah)
+- Jika <InlineMath math="x = 6" />: <InlineMath math="\text{KPK}(36, 6) = 36" /> (Benar)
+- Jika <InlineMath math="x = 7" />: <InlineMath math="\text{KPK}(36, 7) = 252" /> (Salah)
+- Jika <InlineMath math="x = 10" />: <InlineMath math="\text{KPK}(36, 10) = 180" /> (Salah)
+- Jika <InlineMath math="x = 13" />: <InlineMath math="\text{KPK}(36, 13) = 468" /> (Salah)
+
+Jadi, nilai <InlineMath math="x" /> yang memenuhi adalah <InlineMath math="6" />.

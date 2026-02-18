@@ -1,6 +1,6 @@
+import { contentTypeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
-import { contentTypeValidator } from "../lib/contentValidators";
 
 const tables = {
   /** Shared author profiles, referenced by multiple content types */
@@ -41,7 +41,11 @@ const tables = {
     /** Author ordering: 0 = primary, 1 = secondary, etc. */
     order: v.number(),
   })
-    .index("contentId_contentType", ["contentId", "contentType"])
+    .index("contentId_contentType_authorId", [
+      "contentId",
+      "contentType",
+      "authorId",
+    ])
     .index("authorId", ["authorId"]),
 };
 

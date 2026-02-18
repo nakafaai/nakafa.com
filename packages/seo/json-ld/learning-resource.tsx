@@ -3,11 +3,11 @@ import { JsonLd } from ".";
 import { ORGANIZATION } from "./constants";
 
 interface Props {
-  name: string;
+  author: Person | Person[];
+  datePublished: string;
   description: string;
   educationalLevel: string;
-  datePublished: string;
-  author: Person | Person[];
+  name: string;
 }
 
 export function LearningResourceJsonLd({

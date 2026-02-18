@@ -11,7 +11,7 @@ import {
   PERMISSIONS,
   requirePermission,
 } from "@repo/backend/convex/lib/helpers/permissions";
-import { vv } from "@repo/backend/convex/lib/validators";
+import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 

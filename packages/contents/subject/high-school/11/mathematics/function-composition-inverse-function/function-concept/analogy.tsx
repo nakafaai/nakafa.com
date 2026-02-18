@@ -29,8 +29,8 @@ import {
 const DEFAULT_INPUT = 5;
 
 interface Props {
-  title: string;
   description: string;
+  title: string;
 }
 
 export function FunctionAnalogy({ title, description }: Props) {

@@ -1,5 +1,4 @@
 import { query } from "@repo/backend/convex/_generated/server";
-import type { MessageWithPartsDoc } from "@repo/backend/convex/chats/schema";
 import {
   chatTypeValidator,
   chatVisibilityValidator,
@@ -8,7 +7,7 @@ import {
 } from "@repo/backend/convex/chats/schema";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { requireChatAccess } from "@repo/backend/convex/lib/helpers/chat";
-import { vv } from "@repo/backend/convex/lib/validators";
+import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import { asyncMap } from "convex-helpers";
@@ -154,7 +153,7 @@ export const loadMessages = query({
     chatId: vv.id("chats"),
   },
   returns: v.array(messageWithPartsDocValidator),
-  handler: async (ctx, args): Promise<MessageWithPartsDoc[]> => {
+  handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
 
     const chat = await ctx.db.get("chats", args.chatId);

@@ -1,29 +1,59 @@
+import { contentRefValidator } from "@repo/backend/convex/lib/validators/contents";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
 
 const tables = {
+  /**
+   * Unified content views table.
+   * One record per user/device per content.
+   */
   contentViews: defineTable({
+    contentRef: contentRefValidator,
+    locale: v.string(),
     slug: v.string(),
     deviceId: v.string(),
     userId: v.optional(v.id("users")),
-    firstViewedAt: v.number(),
-    lastViewedAt: v.number(),
-    viewCount: v.number(),
-    totalDurationSeconds: v.number(),
-    isIncognito: v.boolean(),
+    viewedAt: v.number(),
   })
-    .index("userId_slug", ["userId", "slug"])
-    .index("deviceId_slug", ["deviceId", "slug"])
-    .index("userId_lastViewedAt", ["userId", "lastViewedAt"])
-    .index("deviceId_lastViewedAt", ["deviceId", "lastViewedAt"]),
-  contentStats: defineTable({
-    userId: v.id("users"),
-    totalViewCount: v.number(),
-    totalUniqueContent: v.number(),
-    totalDurationSeconds: v.number(),
-    lastViewedAt: v.number(),
+    .index("userId_contentRefId", ["userId", "contentRef.id"])
+    .index("deviceId_contentRefId", ["deviceId", "contentRef.id"])
+    .index("contentRefId_locale", ["contentRef.id", "locale"]),
+
+  /**
+   * Article popularity counts.
+   * Updated via triggers when article views are recorded.
+   */
+  articlePopularity: defineTable({
+    contentId: v.id("articleContents"),
+    viewCount: v.number(),
     updatedAt: v.number(),
-  }).index("userId", ["userId"]),
+  })
+    .index("by_popularity", ["viewCount"])
+    .index("by_contentId", ["contentId"]),
+
+  /**
+   * Subject popularity counts.
+   * Updated via triggers when subject views are recorded.
+   */
+  subjectPopularity: defineTable({
+    contentId: v.id("subjectSections"),
+    viewCount: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_popularity", ["viewCount"])
+    .index("by_contentId", ["contentId"]),
+
+  /**
+   * Exercise popularity counts.
+   * Updated via triggers when exercise views are recorded.
+   */
+  exercisePopularity: defineTable({
+    contentId: v.id("exerciseSets"),
+    viewCount: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_popularity", ["viewCount"])
+    .index("by_contentId", ["contentId"]),
 };
 
 export default tables;

@@ -3,7 +3,7 @@ import {
   attachReplyToUsers,
   attachUsers,
 } from "@repo/backend/convex/comments/utils";
-import { vv } from "@repo/backend/convex/lib/validators";
+import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { cleanSlug } from "@repo/backend/convex/utils/helper";
 import {
   paginationOptsValidator,
@@ -20,7 +20,7 @@ const userDataValidator = v.object({
   _id: vv.id("users"),
   name: v.string(),
   email: v.string(),
-  image: v.optional(v.union(v.string(), v.null())),
+  image: v.optional(nullable(v.string())),
 });
 
 const commentWithUserValidator = v.object({

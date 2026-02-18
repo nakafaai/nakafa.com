@@ -1,6 +1,6 @@
 export interface FetchError {
-  status: number;
   message: string;
+  status: number;
 }
 
 export interface FetchResult<T> {

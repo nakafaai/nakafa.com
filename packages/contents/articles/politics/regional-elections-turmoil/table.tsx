@@ -10,20 +10,20 @@ import {
 
 export interface TableRowData {
   category: string;
-  electionLaw: string;
   courtDecision: string;
   dprDecision: string;
+  electionLaw: string;
 }
 
 interface Props {
   caption: string;
-  tableData: TableRowData[];
   headers?: {
     category: string;
     electionLaw: string;
     courtDecision: string;
     dprDecision: string;
   };
+  tableData: TableRowData[];
 }
 
 export function RulingTable({

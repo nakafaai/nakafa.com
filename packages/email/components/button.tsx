@@ -16,11 +16,11 @@ export type ButtonSize = "default" | "sm" | "lg";
 
 interface ButtonProps {
   children: ReactNode;
-  variant?: ButtonVariant;
-  size?: ButtonSize;
   className?: string;
   href?: string;
+  size?: ButtonSize;
   target?: string;
+  variant?: ButtonVariant;
 }
 
 const BASE_STYLES =

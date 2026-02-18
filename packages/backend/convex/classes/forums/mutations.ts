@@ -8,7 +8,7 @@ import { mutation } from "@repo/backend/convex/functions";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
 import { requireClassAccess } from "@repo/backend/convex/lib/helpers/class";
 import { isAdmin } from "@repo/backend/convex/lib/helpers/school";
-import { vv } from "@repo/backend/convex/lib/validators";
+import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { truncateText } from "@repo/backend/convex/utils/helper";
 import { ConvexError, type Infer, v } from "convex/values";
 

@@ -5,27 +5,27 @@ import { useEffect, useState } from "react";
 
 export interface WindowSizeState {
   /**
-   * The width of the window's visual viewport in pixels.
-   */
-  width: number;
-  /**
    * The height of the window's visual viewport in pixels.
    */
   height: number;
+  /**
+   * The distance from the left of the visual viewport to the left of the layout viewport.
+   */
+  offsetLeft: number;
   /**
    * The distance from the top of the visual viewport to the top of the layout viewport.
    * Particularly useful for handling mobile keyboard appearance.
    */
   offsetTop: number;
   /**
-   * The distance from the left of the visual viewport to the left of the layout viewport.
-   */
-  offsetLeft: number;
-  /**
    * The scale factor of the visual viewport.
    * This is useful for scaling elements based on the current zoom level.
    */
   scale: number;
+  /**
+   * The width of the window's visual viewport in pixels.
+   */
+  width: number;
 }
 
 /**

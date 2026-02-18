@@ -40,14 +40,14 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 interface Props {
-  /** The URL of the GitHub repository. */
-  githubUrl?: string;
-  /** The title of the references (sheet title) */
-  title?: string;
-  /** The references to display (sheet content) */
-  references?: Reference[];
   /** The className of the references. */
   className?: string;
+  /** The URL of the GitHub repository. */
+  githubUrl?: string;
+  /** The references to display (sheet content) */
+  references?: Reference[];
+  /** The title of the references (sheet title) */
+  title?: string;
 }
 
 export function RefContent({ title, references, githubUrl, className }: Props) {

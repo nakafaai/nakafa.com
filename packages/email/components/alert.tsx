@@ -5,8 +5,8 @@ export type AlertVariant = "default" | "destructive";
 
 interface AlertProps {
   children: ReactNode;
-  variant?: AlertVariant;
   className?: string;
+  variant?: AlertVariant;
 }
 
 interface AlertTitleProps {

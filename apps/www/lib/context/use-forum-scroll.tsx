@@ -5,9 +5,9 @@ import type { ReactNode } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 
 interface ForumScrollContextValue {
-  scrollToPostId: (postId: Id<"schoolClassForumPosts">) => void;
   jumpToPostId: (postId: Id<"schoolClassForumPosts">) => void;
   scrollToBottom: () => void;
+  scrollToPostId: (postId: Id<"schoolClassForumPosts">) => void;
 }
 
 const ForumScrollContext = createContext<ForumScrollContextValue | null>(null);

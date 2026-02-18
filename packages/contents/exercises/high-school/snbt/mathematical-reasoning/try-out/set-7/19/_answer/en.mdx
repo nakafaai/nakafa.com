@@ -1,0 +1,68 @@
+import { Graph } from "../graph";
+
+export const metadata = {
+  title: "Solution to Question 19",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+#### Plane Movement Visualization
+
+<Graph
+  title="Plane and ATC Tower Positions"
+  description={<>Visualization of the plane's position change from <InlineMath math="30^\circ" /> to <InlineMath math="45^\circ" /> angle.</>}
+  labels={{
+    atc: "ATC Tower",
+    initialPos: "Initial Pos",
+    finalPos: "Final Pos",
+    height: "3000 m"
+  }}
+/>
+
+Given:
+- Plane altitude <InlineMath math="h = 3000 \text{ m}" />.
+- Initial elevation angle <InlineMath math="\alpha = 30^\circ" />.
+- Final elevation angle <InlineMath math="\beta = 45^\circ" />.
+- Time elapsed <InlineMath math="t = 30 \text{ seconds}" />.
+
+#### Calculate Initial Horizontal Distance
+
+The initial horizontal distance (<InlineMath math="x_1" />) can be calculated using the tangent of <InlineMath math="30^\circ" />:
+
+<MathContainer>
+  <BlockMath math="\tan 30^\circ = \frac{h}{x_1}" />
+  <BlockMath math="x_1 = \frac{h}{\tan 30^\circ} = \frac{3000}{\frac{1}{\sqrt{3}}}" />
+  <BlockMath math="x_1 = 3000\sqrt{3} \text{ m}" />
+</MathContainer>
+
+#### Calculate Final Horizontal Distance
+
+The final horizontal distance (<InlineMath math="x_2" />) can be calculated using the tangent of <InlineMath math="45^\circ" />:
+
+<MathContainer>
+  <BlockMath math="\tan 45^\circ = \frac{h}{x_2}" />
+  <BlockMath math="x_2 = \frac{h}{\tan 45^\circ} = \frac{3000}{1}" />
+  <BlockMath math="x_2 = 3000 \text{ m}" />
+</MathContainer>
+
+#### Calculate Horizontal Distance Traveled
+
+The horizontal displacement (<InlineMath math="\Delta x" />) is the difference between the initial and final distances:
+
+<MathContainer>
+  <BlockMath math="\Delta x = x_1 - x_2" />
+  <BlockMath math="\Delta x = 3000\sqrt{3} - 3000" />
+  <BlockMath math="\Delta x = 3000(\sqrt{3} - 1) \text{ m}" />
+</MathContainer>
+
+#### Calculate Speed
+
+Speed (<InlineMath math="v" />) is distance divided by time:
+
+<MathContainer>
+  <BlockMath math="v = \frac{\Delta x}{t}" />
+  <BlockMath math="v = \frac{3000(\sqrt{3} - 1)}{30}" />
+  <BlockMath math="v = 100(\sqrt{3} - 1) \text{ m/s}" />
+</MathContainer>
+
+Thus, the estimated speed of the plane is <InlineMath math="100(\sqrt{3} - 1) \text{ m/s}" />.

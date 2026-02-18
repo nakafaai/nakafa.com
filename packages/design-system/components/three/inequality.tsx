@@ -48,31 +48,19 @@ const DEFAULT_LABEL_FONT_SIZE = 0.5;
 type Point = [number, number, number];
 
 interface Props {
+  /** Color for the boundary line/plane */
+  boundaryColor?: string | Color;
   /** Function that determines the boundary of the inequality (where the inequality becomes equality) */
   boundaryFunction?: (x: number, y: number) => number;
-  /** Indicates if this is a 2D inequality (like x + y <= 10) that should be extruded along z-axis */
-  is2D?: boolean;
   /** For 2D inequalities, specifies the boundary line function where ax + by + c = 0
    * as [a, b, c]. For example, x + y = 10 would be [1, 1, -10] */
   boundaryLine2D?: [number, number, number];
-  /** Range for x coordinate to visualize */
-  xRange?: [number, number];
-  /** Range for y coordinate to visualize */
-  yRange?: [number, number];
-  /** Range for z coordinate to visualize */
-  zRange?: [number, number];
-  /** Granularity of the visualization (higher means more detailed) */
-  resolution?: number;
-  /** Color for the inequality region */
-  color?: string | Color;
-  /** Color for the boundary line/plane */
-  boundaryColor?: string | Color;
-  /** Opacity of the region */
-  opacity?: number;
   /** Width of the boundary line */
   boundaryLineWidth?: number;
-  /** Show boundary line/plane */
-  showBoundary?: boolean;
+  /** Color for the inequality region */
+  color?: string | Color;
+  /** Indicates if this is a 2D inequality (like x + y <= 10) that should be extruded along z-axis */
+  is2D?: boolean;
   /** Optional label for the inequality */
   label?: {
     /** Text to display */
@@ -84,8 +72,20 @@ interface Props {
     /** Font size of the label text */
     fontSize?: number;
   };
+  /** Opacity of the region */
+  opacity?: number;
+  /** Granularity of the visualization (higher means more detailed) */
+  resolution?: number;
+  /** Show boundary line/plane */
+  showBoundary?: boolean;
   /** Whether to use the mono font for the labels */
   useMonoFont?: boolean;
+  /** Range for x coordinate to visualize */
+  xRange?: [number, number];
+  /** Range for y coordinate to visualize */
+  yRange?: [number, number];
+  /** Range for z coordinate to visualize */
+  zRange?: [number, number];
 }
 
 // Performance optimization: Adaptive resolution based on device capabilities

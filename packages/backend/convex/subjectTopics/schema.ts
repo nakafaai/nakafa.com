@@ -1,11 +1,11 @@
-import { defineTable } from "convex/server";
-import { v } from "convex/values";
 import {
   gradeValidator,
   localeValidator,
   materialValidator,
   subjectCategoryValidator,
-} from "../lib/contentValidators";
+} from "@repo/backend/convex/lib/validators/contents";
+import { defineTable } from "convex/server";
+import { v } from "convex/values";
 
 const tables = {
   /**

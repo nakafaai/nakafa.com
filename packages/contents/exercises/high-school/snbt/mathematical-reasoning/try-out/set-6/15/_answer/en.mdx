@@ -1,0 +1,71 @@
+export const metadata = {
+  title: "Solution to Question 15",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/17/2026",
+};
+
+#### Defining Variables
+
+Let:
+- Number of type <InlineMath math="\text{I}" /> trucks be <InlineMath math="x" />.
+- Number of type <InlineMath math="\text{II}" /> trucks be <InlineMath math="y" />.
+- Number of type <InlineMath math="\text{III}" /> trucks be <InlineMath math="z" />.
+
+#### Forming System of Equations
+
+From the problem, we know:
+1. The total number of trucks rented is <InlineMath math="20" />.
+
+   <MathContainer>
+     <BlockMath math="x + y + z = 20 \quad \dots (1)" />
+   </MathContainer>
+
+2. The total carrying capacity is <InlineMath math="96" /> kg, with capacities for each type being <InlineMath math="3" />, <InlineMath math="4" />, and <InlineMath math="6" /> kg, respectively.
+
+   <MathContainer>
+     <BlockMath math="3x + 4y + 6z = 96 \quad \dots (2)" />
+   </MathContainer>
+
+3. It is known that the company rents <InlineMath math="4" /> type <InlineMath math="\text{I}" /> trucks.
+
+   <MathContainer>
+     <BlockMath math="x = 4" />
+   </MathContainer>
+
+#### Solving the System
+
+Substitute <InlineMath math="x = 4" /> into equation <InlineMath math="(1)" />:
+
+<MathContainer>
+  <BlockMath math="4 + y + z = 20" />
+  <BlockMath math="y + z = 16 \quad \dots (3)" />
+</MathContainer>
+
+Substitute <InlineMath math="x = 4" /> into equation <InlineMath math="(2)" />:
+
+<MathContainer>
+  <BlockMath math="3(4) + 4y + 6z = 96" />
+  <BlockMath math="12 + 4y + 6z = 96" />
+  <BlockMath math="4y + 6z = 84" />
+</MathContainer>
+
+Simplify the equation above by dividing both sides by <InlineMath math="2" />:
+
+<MathContainer>
+  <BlockMath math="2y + 3z = 42 \quad \dots (4)" />
+</MathContainer>
+
+Eliminate variable <InlineMath math="z" /> from equations <InlineMath math="(3)" /> and <InlineMath math="(4)" />. Multiply equation <InlineMath math="(3)" /> by <InlineMath math="3" />:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} 3(y + z) &= 3(16) \Rightarrow 3y + 3z = 48 \\ 2y + 3z &= 42 \end{aligned}" />
+</MathContainer>
+
+Subtract the second equation from the first:
+
+<MathContainer>
+  <BlockMath math="(3y + 3z) - (2y + 3z) = 48 - 42" />
+  <BlockMath math="y = 6" />
+</MathContainer>
+
+Thus, the number of type <InlineMath math="\text{II}" /> trucks rented is <InlineMath math="6" />.

@@ -18,15 +18,15 @@ import React, {
 import { VList, type VListHandle, type VListProps } from "virtua";
 
 export interface VirtualConversationHandle {
-  scrollToIndex: (index: number) => void;
-  scrollToBottom: () => void;
   isAtBottom: () => boolean;
+  scrollToBottom: () => void;
+  scrollToIndex: (index: number) => void;
 }
 
 interface VirtualConversationContextValue {
+  isAtBottom: boolean;
   scrollToBottom: () => void;
   scrollToIndex: (index: number) => void;
-  isAtBottom: boolean;
 }
 
 const VirtualConversationContext =

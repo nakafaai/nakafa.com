@@ -6,7 +6,7 @@ import {
   requireCustomer,
 } from "@repo/backend/convex/customers/utils";
 import { requireAuthForAction } from "@repo/backend/convex/lib/helpers/auth";
-import { vv } from "@repo/backend/convex/lib/validators";
+import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { ConvexError, v } from "convex/values";
 
 /**

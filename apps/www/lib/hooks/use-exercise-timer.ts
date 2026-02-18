@@ -8,12 +8,6 @@ export interface UseExerciseTimerProps {
 }
 
 export interface UseExerciseTimerReturn {
-  remainingSeconds: number;
-  totalSeconds: number;
-  progress: number;
-  isActive: boolean;
-  isExpired: boolean;
-  isLowTime: boolean;
   formatted: {
     hours: number;
     minutes: number;
@@ -24,6 +18,12 @@ export interface UseExerciseTimerReturn {
     hms: string;
     ms: string;
   };
+  isActive: boolean;
+  isExpired: boolean;
+  isLowTime: boolean;
+  progress: number;
+  remainingSeconds: number;
+  totalSeconds: number;
 }
 
 const LOW_TIME_THRESHOLD_SECONDS = 60;

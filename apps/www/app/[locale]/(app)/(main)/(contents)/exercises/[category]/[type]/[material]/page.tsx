@@ -38,10 +38,10 @@ import { getStaticParams } from "@/lib/utils/system";
 export const revalidate = false;
 
 interface Params {
-  locale: Locale;
   category: ExercisesCategory;
-  type: ExercisesType;
+  locale: Locale;
   material: ExercisesMaterial;
+  type: ExercisesType;
 }
 
 interface Props {

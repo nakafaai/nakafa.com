@@ -10,7 +10,7 @@ import {
   model,
   type OpenAIProvider,
   order,
-} from "@repo/ai/config/providers";
+} from "@repo/ai/config/vercel";
 import { generateTitle } from "@repo/ai/features/title-generation";
 import { compressMessages } from "@repo/ai/lib/utils";
 import { nakafaSuggestions } from "@repo/ai/prompt/suggestions";

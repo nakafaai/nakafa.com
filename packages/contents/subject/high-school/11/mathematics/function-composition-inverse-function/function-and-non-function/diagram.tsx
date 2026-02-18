@@ -19,9 +19,9 @@ const LINE_OFFSET = 0.3;
 const SLOT_CENTER_OFFSET = 0.5;
 
 interface DiagramProps {
-  title: string;
-  description: string;
   children: React.ReactNode;
+  description: string;
+  title: string;
 }
 
 export function Diagram({ title, description, children }: DiagramProps) {
@@ -47,11 +47,11 @@ interface Mapping {
 }
 
 interface RelationVisualizerProps {
-  domain: Element[];
   codomain: Element[];
-  mappings: Mapping[];
-  domainLabel?: string;
   codomainLabel?: string;
+  domain: Element[];
+  domainLabel?: string;
+  mappings: Mapping[];
 }
 
 // --- SVG Configuration ---

@@ -28,12 +28,12 @@ import { useUser } from "@/lib/context/use-user";
 import { getInitialName } from "@/lib/utils/helper";
 
 interface Props {
-  slug: string;
-  /* If comment is provided, the comment will be replied to */
-  comment?: Doc<"comments">;
   closeButton?: {
     onClick: () => void;
   };
+  /* If comment is provided, the comment will be replied to */
+  comment?: Doc<"comments">;
+  slug: string;
 }
 
 export function CommentsAdd({ slug, comment, closeButton }: Props) {

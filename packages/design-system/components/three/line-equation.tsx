@@ -79,22 +79,16 @@ function getSharedMaterial(color: string | Color): MeshBasicMaterial {
 }
 
 export interface Props {
-  points: {
-    x: number;
-    y: number;
-    z: number;
-  }[];
   color?: string | Color;
-  lineWidth?: number;
   /**
-   * Whether to use the mono font for the labels
+   * Optional cone arrowhead configuration.
    */
-  useMonoFont?: boolean;
-  showPoints?: boolean;
-  /**
-   * Whether to render the line as a smooth curve using CatmullRomCurve3
-   */
-  smooth?: boolean;
+  cone?: {
+    /** Position of the cone arrowhead */
+    position: "start" | "end" | "both";
+    /** Size of the arrowhead */
+    size?: number;
+  };
   /**
    * Number of points to use for the curve when smooth is true
    * Higher values will create a smoother curve but may impact performance
@@ -116,15 +110,21 @@ export interface Props {
     /** Font size of the label text */
     fontSize?: number;
   }>;
+  lineWidth?: number;
+  points: {
+    x: number;
+    y: number;
+    z: number;
+  }[];
+  showPoints?: boolean;
   /**
-   * Optional cone arrowhead configuration.
+   * Whether to render the line as a smooth curve using CatmullRomCurve3
    */
-  cone?: {
-    /** Position of the cone arrowhead */
-    position: "start" | "end" | "both";
-    /** Size of the arrowhead */
-    size?: number;
-  };
+  smooth?: boolean;
+  /**
+   * Whether to use the mono font for the labels
+   */
+  useMonoFont?: boolean;
 }
 
 export function LineEquation({

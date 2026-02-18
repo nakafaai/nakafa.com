@@ -1,4 +1,4 @@
-import { model } from "@repo/ai/config/providers";
+import { model } from "@repo/ai/config/vercel";
 import { createPrompt } from "@repo/ai/prompt/utils";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { generateText } from "ai";

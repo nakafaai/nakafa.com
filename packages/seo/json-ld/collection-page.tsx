@@ -3,11 +3,11 @@ import { JsonLd } from ".";
 import { ORGANIZATION } from "./constants";
 
 interface Props {
-  name: string;
-  description: string;
-  url: string;
-  items: Pick<CreativeWork, "name" | "url" | "description">[];
   datePublished?: string;
+  description: string;
+  items: Pick<CreativeWork, "name" | "url" | "description">[];
+  name: string;
+  url: string;
 }
 
 export function CollectionPageJsonLd({

@@ -1,143 +1,311 @@
 ---
-alwaysApply: false
+alwaysApply: true
 ---
 # Exercise Creation Guidelines
 
 When creating exercises, you are converting visual content (images of questions, choices, and explanations) into structured MDX and TypeScript code.
 
+**Note**: This documentation uses normal English. The actual content in MDX files should use proper grammar but natural, engaging tone.
+
 ## Core Principles
 
 1. **Source Fidelity**: Accurately transcribe questions, choices, and explanations from provided images.
-2. **Neatness & Continuity**: The text must flow naturally. Avoid disjointed sentences.
+2. **Flow**: The text must flow naturally. Avoid disjointed sentences.
 3. **Conciseness**: Be direct and to the point, but ensure sufficient detail for understanding.
 4. **Structure**: Follow the strict file structure for exercises.
-5. **Ambiguity Resolution**: If the source image (question, choices, or explanation) is unclear or ambiguous, you are authorized to clarify it. The goal is to make the content unambiguous.
+5. **Clarity**: If the source image is unclear or ambiguous, you are authorized to clarify it. The goal is to make the content unambiguous.
 
 ## File Structure
 
 For each exercise set (e.g., `set-4`), each number (e.g., `1`) has its own directory:
 
 ```text
-1/
-├── _answer/
-│   ├── en.mdx
-│   └── id.mdx
+{number}/
 ├── _question/
-│   ├── en.mdx
-│   └── id.mdx
-└── choices.ts
+│   ├── id.mdx        # Indonesian question
+│   └── en.mdx        # English question
+├── _answer/
+│   ├── id.mdx        # Indonesian explanation
+│   └── en.mdx        # English explanation
+└── choices.ts        # Answer choices (both languages)
 ```
 
 ## Question Guidelines (`_question/`)
 
-- **Metadata**:
-  - Include `title`, `authors`, and `date`.
-  - **Date Format**: MUST be `MM/DD/YYYY` (Month/Day/Year), e.g., "12/25/2025".
-- **Content**:
-  - Write the question clearly.
-  - Use `InlineMath` for all mathematical expressions, **including standalone numbers** in the text (e.g., use `<InlineMath math="2" />` instead of just `2` if it represents a value).
-  - Ensure variable names are consistent (e.g., if image uses $x_1$, use $x_1$).
-  - **Clarification**: If the question text in the image is ambiguous, rephrase it to be clear and precise.
-  - **Numbered References**: ALWAYS use `InlineMath` for numbered references with parentheses included.
-    - Correct: `<InlineMath math="(1)" />`, `<InlineMath math="(2)" />`
-    - Incorrect: `(1)`, `(2)`, `(<InlineMath math="1" />)`
-  - **Lists**: Use standard Markdown ordered lists (e.g., `1.`, `2.`) for numbered items instead of manual numbering like `(1)`.
-  - **Graph Descriptions**: If using a graph component, ensure the `description` prop always ends with a period `.`.
+### Metadata
 
-**Example:**
+```typescript
+export const metadata = {
+  title: "Soal {N}",           // or "Question {N}" for English
+  authors: [{ name: "Author Name" }],
+  date: "MM/DD/YYYY",          // Month/Day/Year format
+};
+```
+
+### Content
+
+- Write the question clearly and unambiguously.
+- Use `InlineMath` for **all** mathematical expressions, including standalone numbers.
+- Ensure variable names are consistent with the source.
+- If the question text is ambiguous, rephrase it to be clear and precise.
+- **Numbered References**: ALWAYS use `InlineMath` with parentheses included:
+  - Correct: `<InlineMath math="(1)" />`, `<InlineMath math="(2)" />`
+  - Incorrect: `(1)`, `(2)`, `(<InlineMath math="1" />)`
+- **Lists**: Use standard Markdown ordered lists (`1.`, `2.`) instead of manual numbering like `(1)`.
+- **Graph Descriptions**: If using a graph component, ensure the `description` prop always ends with a period `.`.
+
+### Example: Question
 
 ```mdx
 export const metadata = {
   title: "Soal 1",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
-  date: "11/26/2025",
+  date: "06/11/2025",
 };
 
-Jika <InlineMath math="f(x) = 2x - 1" /> dan nilai <InlineMath math="x = 5" /> ...
+Diketahui <InlineMath math="a = \frac{1}{2}" />, <InlineMath math="b = 2" />, <InlineMath math="c = 1" />
+
+Nilai dari
+
+<BlockMath math="\frac{a^{-2}bc^3}{ab^2c^{-1}} = ...." />
 ```
 
 ## Answer/Explanation Guidelines (`_answer/`)
 
-- **Metadata**:
-  - Include `title` (e.g., "Pembahasan Soal 1"), `authors`, and `date`.
-  - **Date Format**: MUST be `MM/DD/YYYY` (Month/Day/Year).
-- **Writing Style**:
-  - **CRITICAL: No Ambiguity**: The explanation MUST be 100% clear and unambiguous. Even if the source explanation is vague, you must elaborate and clarify it so the student understands the *why* and *how* completely.
-  - **Continuous Flow**: Write as a coherent narrative.
-  - **No "Step 1"**: Avoid generic step labels. Use descriptive text or H4 headings if absolutely necessary.
-  - **Headings**: If used, start at **H4** (`####`), be concise, and **NO symbols or Math**. MUST use plain text only (e.g., "Finding the Value of x", NOT "Finding `<InlineMath math='x' />`").
-    - **Numbered References in Headings**: Use plain text `1`, `2`. Do NOT use parentheses `(1)` or `InlineMath` in headings.
-      - Incorrect: "Analisis Pernyataan (1)"
-      - Correct: "Analisis Pernyataan 1"
-  - **No Option Letters**: NEVER refer to options as (A), (B), (C), etc. in the explanation text or conclusion. The UI does not display letter labels.
-    - Incorrect: "Therefore, the answer is (C)."
-    - Correct: "Therefore, **statement (1) is sufficient**."
-  - **Concise but Detailed**: Explain *why*, not just *what*. Make it easy for a student to follow.
-  - **Math Formatting**:
-    - Use `MathContainer` to wrap `BlockMath` elements.
-    - Use `BlockMath` for equations on their own lines.
-    - Use `InlineMath` for math within text.
+### Metadata
 
-**Example:**
+```typescript
+export const metadata = {
+  title: "Pembahasan Soal {N}",  // or "Solution to Question {N}" for English
+  authors: [{ name: "Author Name" }],
+  date: "MM/DD/YYYY",
+};
+```
+
+### Writing Style
+
+- **Critical: No Ambiguity**: The explanation MUST be clear and unambiguous. Even if the source is vague, elaborate and clarify so students understand the *why* and *how* completely.
+- **Continuous Flow**: Write as a coherent narrative.
+- **No "Step 1"**: Avoid generic step labels. Use descriptive text or H4 headings if absolutely necessary.
+- **Headings**: If used, start at **H4** (`####`), be concise, and **NO symbols or Math**. Use plain text only:
+  - Correct: "Mencari Nilai x", "Analisis Pernyataan 1"
+  - Incorrect: "Mencari Nilai <InlineMath math='x' />", "Analisis Pernyataan (1)"
+- **No Option Letters**: NEVER refer to options as (A), (B), (C), etc. in the explanation or conclusion. The UI does not display letter labels.
+  - Incorrect: "Jadi jawabannya adalah (C)."
+  - Correct: "Jadi, persamaan garis singgungnya adalah <InlineMath math='x - y + 8 = 0' />."
+- **Concise but Detailed**: Explain *why*, not just *what*. Make it easy for students to follow.
+- **Math Formatting**:
+  - Use `MathContainer` to wrap consecutive `BlockMath` elements.
+  - Use `BlockMath` for equations on their own lines.
+  - Use `InlineMath` for math within text.
+- **Be Creative**: Use various Markdown and LaTeX syntax creatively to present content engagingly
+- **NO Bloated Lists**: Lists are okay but don't overuse them. **NEVER use nested lists**
+- **NO Verbose Preamble**: Get straight to the point. Avoid unnecessary introductory text (basa-basi)
+- **Images are Reference Only**: If you find errors in questions or calculations from the image, fix them directly in the content. The image is just a reference for the calculation method, not absolute truth
+- **Provide Context**: Explain the reasoning and context behind steps so students understand WHY, not just WHAT
+
+### Example: Answer
 
 ```mdx
 export const metadata = {
   title: "Pembahasan Soal 1",
-  authors: [{ name: "Author Name" }],
-  date: "11/26/2025",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
 };
 
-Diketahui fungsi <InlineMath math="f(x) = ..." />. Kita akan mencari...
+#### Simplifikasi Ekspresi
+
+Diketahui: <InlineMath math="a = \frac{1}{2}" />, <InlineMath math="b = 2" />, <InlineMath math="c = 1" />
+
+Sederhanakan eksponen negatif terlebih dahulu:
 
 <MathContainer>
-  <BlockMath math="..." />
+  <BlockMath math="\frac{a^{-2}bc^3}{ab^2c^{-1}} = \frac{bc^3 \cdot c}{ab^2 \cdot a^2}" />
+  <BlockMath math="= \frac{bc^4}{a^3b^2}" />
 </MathContainer>
 
-Jadi, hasilnya adalah...
+Substitusi nilai-nilai yang diketahui:
+
+<MathContainer>
+  <BlockMath math="= \frac{2 \cdot 1^4}{\left(\frac{1}{2}\right)^3 \cdot 2^2}" />
+  <BlockMath math="= \frac{2}{\frac{1}{8} \cdot 4}" />
+  <BlockMath math="= \frac{2}{\frac{1}{2}} = 4" />
+</MathContainer>
+
+Jadi, nilai dari ekspresi tersebut adalah <InlineMath math="4" />.
 ```
+
+### Using Graph Components
+
+Import components when needed:
+
+```mdx
+import { LineEquation } from "@repo/design-system/components/contents/line-equation";
+import { getColor } from "@repo/design-system/lib/color";
+
+export const metadata = {
+  title: "Pembahasan Soal 25",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+#### Visualisasi Grafik
+
+<LineEquation
+  title={<>Grafik Fungsi</>}
+  description={<>Visualisasi parabola <InlineMath math="y = x^2" />.</>}
+  showZAxis={false}
+  cameraPosition={[0, 0, 15]}
+  data={[{
+    points: Array.from({ length: 100 }, (_, i) => {
+      const x = -5 + (i / 99) * 10;
+      return { x, y: x * x, z: 0 };
+    }),
+    color: getColor("PURPLE"),
+    smooth: true,
+    showPoints: false,
+  }]}
+/>
+
+Jadi, titik puncaknya adalah <InlineMath math="(0, 0)" />.
+```
+
+**Important for Graphs:**
+- Always use `getColor()` for colors (NOT hard-coded colors)
+- Generate points with `Array.from()` (NOT hard-coded arrays)
+- Use `showZAxis={false}` and `cameraPosition={[0, 0, 15]}` for 2D
+- Ensure description ends with a period
 
 ## Choices Guidelines (`choices.ts`)
 
-- **Type**: `ExercisesChoices`.
-- **Structure**: Object with `id` (Indonesian) and `en` (English) arrays.
-- **Math in Labels**:
-  - IF the label is a math expression or a number: Use standard LaTeX delimiters `$$...$$`.
-  - IF the label is normal text: Use plain text (no delimiters).
-- **Correctness**: Mark the correct answer with `value: true`.
-- **Clarification**: Ensure choices are distinct and clearly formatted.
-
-**Example:**
+### Structure
 
 ```typescript
 import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 
 const choices: ExercisesChoices = {
   id: [
-    { label: "$$-\\frac{5}{2}$$", value: true }, // Math expression -> use $$...$$
-    { label: "$$10$$", value: false },            // Number -> use $$...$$
-    { label: "Tidak ada solusi", value: false },  // Normal text -> plain text
+    { label: "...", value: false },
+    { label: "...", value: true },   // correct answer
+    { label: "...", value: false },
+    { label: "...", value: false },
+    { label: "...", value: false },
   ],
   en: [
-    // ... same for English
+    { label: "...", value: false },
+    { label: "...", value: true },
+    { label: "...", value: false },
+    { label: "...", value: false },
+    { label: "...", value: false },
   ],
 };
 
 export default choices;
 ```
 
+### Math in Labels
+
+- **Math expression or number**: Use `$$...$$` delimiters
+- **Normal text**: Use plain text (no delimiters)
+- **Important**: In TypeScript strings, backslashes must be escaped as `\\`
+
+### Examples
+
+**Numeric choices:**
+```typescript
+id: [
+  { label: "$$1$$", value: false },
+  { label: "$$2$$", value: false },
+  { label: "$$3$$", value: false },
+  { label: "$$4$$", value: true },
+  { label: "$$5$$", value: false },
+]
+```
+
+**Fraction choices:**
+```typescript
+id: [
+  { label: "$$-\\frac{5}{2}$$", value: true },
+  { label: "$$\\frac{5}{2}$$", value: false },
+  { label: "$$10$$", value: false },
+  { label: "Tidak ada solusi", value: false },  // plain text
+  { label: "$$\\infty$$", value: false },
+]
+```
+
+**Equation choices:**
+```typescript
+id: [
+  { label: "$$x - y = 0$$", value: false },
+  { label: "$$x - y + 8 = 0$$", value: true },
+  { label: "$$x + y - 8 = 0$$", value: false },
+  { label: "$$x + y = 0$$", value: false },
+  { label: "Tidak ada jawaban yang tepat", value: false },
+]
+```
+
 ## Consistency Checklist
 
-- [ ] Does the math notation in the Question match the Answer?
-- [ ] Are the choices consistent with the calculated result?
-- [ ] Is the language natural and grammatically correct (Indonesian/English)?
-- [ ] Are all math expressions properly componentized (`InlineMath`/`BlockMath`)?
-- [ ] Is the date format `MM/DD/YYYY`?
-- [ ] **Is the explanation completely unambiguous?**
+Before submitting, verify:
 
-## Graph/Illustration Guidelines
+- [ ] Math notation in Question matches Answer
+- [ ] Choices are consistent with calculated result
+- [ ] Language is natural and grammatically correct
+- [ ] All math expressions use `InlineMath`/`BlockMath`
+- [ ] Date format is `MM/DD/YYYY`
+- [ ] Explanation is completely unambiguous
+- [ ] No reference to option letters (A, B, C)
+- [ ] Headings don't contain math or symbols
+- [ ] Graph colors use `getColor()`
+- [ ] Points are generated with `Array.from()`
+- [ ] Run `pnpm lint` and fix any issues
 
-- **Color Palette**: NEVER use default `RED`, `GREEN`, or `BLUE` for lines or shapes.
-  - Use softer or more professional colors from `@repo/design-system/lib/color` like `INDIGO`, `TEAL`, `EMERALD`, `VIOLET`, `ORANGE`, or `CYAN`.
-  - Example: `color: getColor("INDIGO")`.
-- **Labels**: Ensure labels are clearly positioned and do not overlap with the curve or other elements.
-- **Perspective**: For 2D graphs, ensure the camera is positioned directly perpendicular to the plane (e.g., `[0, 0, 15]`) and `showZAxis={false}`.
+## Common Anti-Patterns to Avoid
+
+### WRONG: Using (A), (B), (C) in explanations
+
+```mdx
+> Jadi jawabannya adalah (C).  // NEVER DO THIS
+```
+
+### CORRECT: Refer to content
+
+```mdx
+> Jadi, persamaan garis singgungnya adalah <InlineMath math="x - y + 8 = 0" />.
+```
+
+### WRONG: Math in headings
+
+```mdx
+#### Mencari Nilai <InlineMath math="x" />  // NEVER DO THIS
+```
+
+### CORRECT: Plain text headings
+
+```mdx
+#### Mencari Nilai x
+```
+
+### WRONG: Parentheses in headings
+
+```mdx
+#### Analisis Pernyataan (1)  // NEVER DO THIS
+```
+
+### CORRECT: Plain numbers
+
+```mdx
+#### Analisis Pernyataan 1
+```
+
+### WRONG: Plain numbers in text
+
+```mdx
+Diketahui a = 5 dan b = 3.  // NEVER DO THIS
+```
+
+### CORRECT: InlineMath for numbers
+
+```mdx
+Diketahui <InlineMath math="a = 5" /> dan <InlineMath math="b = 3" />.
+```

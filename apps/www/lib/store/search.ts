@@ -3,13 +3,13 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
 interface State {
-  query: string;
   open: boolean;
+  query: string;
 }
 
 interface Actions {
-  setQuery: (query: string) => void;
   setOpen: (open: boolean) => void;
+  setQuery: (query: string) => void;
 }
 
 export type SearchStore = State & Actions;

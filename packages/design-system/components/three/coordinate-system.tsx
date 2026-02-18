@@ -33,37 +33,37 @@ const CAMERA_POSITION_Y = 8;
 const CAMERA_POSITION_Z = 12;
 
 interface Props {
-  /** Show the grid planes */
-  showGrid?: boolean;
-  /** Show the coordinate axes */
-  showAxes?: boolean;
-  /** Show the z-axis */
-  showZAxis?: boolean;
-  /** Show the origin point */
-  showOrigin?: boolean;
-  /** Show axis labels */
-  showLabels?: boolean;
-  /** Show the gizmo helper for orientation */
-  showGizmo?: boolean;
-  /** Size of the grid */
-  gridSize?: number;
-  /** Divisions of the grid */
-  gridDivisions?: number;
-  /** Size of the coordinate system */
-  size?: number;
   /** Background color of the canvas */
   backgroundColor?: CSSProperties["backgroundColor"];
   /** Custom camera position */
   cameraPosition?: [number, number, number];
+  /** Children elements to render inside the coordinate system */
+  children?: ReactNode;
+  /** Additional class name */
+  className?: string;
   /** Font to use for labels and text
    *
    * @default "mono"
    */
   font?: "mono" | "sans";
-  /** Children elements to render inside the coordinate system */
-  children?: ReactNode;
-  /** Additional class name */
-  className?: string;
+  /** Divisions of the grid */
+  gridDivisions?: number;
+  /** Size of the grid */
+  gridSize?: number;
+  /** Show the coordinate axes */
+  showAxes?: boolean;
+  /** Show the gizmo helper for orientation */
+  showGizmo?: boolean;
+  /** Show the grid planes */
+  showGrid?: boolean;
+  /** Show axis labels */
+  showLabels?: boolean;
+  /** Show the origin point */
+  showOrigin?: boolean;
+  /** Show the z-axis */
+  showZAxis?: boolean;
+  /** Size of the coordinate system */
+  size?: number;
 }
 
 export function CoordinateSystem({

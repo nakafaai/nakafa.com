@@ -110,9 +110,9 @@ function getRawContent(
 }
 
 export interface ContentOptions {
+  basePath?: string;
   includeMDX?: boolean;
   locale?: Locale;
-  basePath?: string;
 }
 
 /**

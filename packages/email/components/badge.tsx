@@ -13,8 +13,8 @@ export type BadgeVariant =
 
 interface BadgeProps {
   children: ReactNode;
-  variant?: BadgeVariant;
   className?: string;
+  variant?: BadgeVariant;
 }
 
 const BASE_STYLES =

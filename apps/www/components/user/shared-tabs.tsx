@@ -4,12 +4,12 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 
 interface Props {
+  defaultValue: string;
   tabs: {
     label: string;
     href: string;
     icon: IconSvgElement;
   }[];
-  defaultValue: string;
 }
 
 export function SharedTabs({ tabs, defaultValue }: Props) {

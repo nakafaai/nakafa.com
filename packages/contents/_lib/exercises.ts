@@ -27,9 +27,9 @@ const CHOICES_REGEX =
 const NUMBER_REGEX = /^\d+$/;
 
 export interface ExerciseContentOptions {
+  filePath: string;
   includeMDX?: boolean;
   locale: Locale;
-  filePath: string;
 }
 
 /**
