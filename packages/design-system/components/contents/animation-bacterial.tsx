@@ -35,26 +35,6 @@ type FormulaType = "geometric" | "exponential" | "custom";
 
 interface BacterialGrowthProps {
   /**
-   * The ratio of bacterial growth.
-   * @default 2
-   */
-  ratio?: number;
-  /**
-   * The initial count of bacteria.
-   * @default 1
-   */
-  initialCount?: number;
-  /**
-   * The maximum number of generations to display.
-   * @default 6
-   */
-  maxGenerations?: number;
-  /**
-   * The type of formula to use.
-   * @default "geometric"
-   */
-  formulaType?: FormulaType;
-  /**
    * The custom formula to use.
    */
   customFormula?: (
@@ -62,6 +42,34 @@ interface BacterialGrowthProps {
     ratio: number,
     generation: number
   ) => number;
+  /**
+   * The type of formula to use.
+   * @default "geometric"
+   */
+  formulaType?: FormulaType;
+  /**
+   * The initial count of bacteria.
+   * @default 1
+   */
+  initialCount?: number;
+  /**
+   * The labels to use for the animation.
+   */
+  labels?: {
+    title?: string;
+    bacterial?: string;
+    initialBacteria?: string;
+  };
+  /**
+   * The maximum number of generations to display.
+   * @default 6
+   */
+  maxGenerations?: number;
+  /**
+   * The ratio of bacterial growth.
+   * @default 2
+   */
+  ratio?: number;
   /**
    * The time interval in hours.
    * @default 1
@@ -72,14 +80,6 @@ interface BacterialGrowthProps {
    * @default "h"
    */
   timeUnit?: string;
-  /**
-   * The labels to use for the animation.
-   */
-  labels?: {
-    title?: string;
-    bacterial?: string;
-    initialBacteria?: string;
-  };
 }
 
 export function BacterialGrowth({

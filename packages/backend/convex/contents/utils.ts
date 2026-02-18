@@ -7,16 +7,16 @@ import type {
 import { ConvexError } from "convex/values";
 
 interface RecordViewArgs {
+  deviceId: string;
   locale: Locale;
   slug: string;
-  deviceId: string;
   userId?: Id<"users">;
 }
 
 interface RecordViewResult {
-  success: boolean;
-  isNewView: boolean;
   alreadyViewed: boolean;
+  isNewView: boolean;
+  success: boolean;
 }
 
 /**

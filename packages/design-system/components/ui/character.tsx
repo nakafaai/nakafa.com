@@ -5,8 +5,8 @@ import type { CSSProperties } from "react";
 import Avatar, { genConfig } from "react-nice-avatar";
 
 interface Props {
-  name: string;
   className?: string;
+  name: string;
   style?: CSSProperties;
 }
 

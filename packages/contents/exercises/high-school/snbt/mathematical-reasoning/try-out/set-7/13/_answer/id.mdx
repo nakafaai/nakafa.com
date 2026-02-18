@@ -1,0 +1,36 @@
+export const metadata = {
+  title: "Pembahasan Soal 13",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/17/2026",
+};
+
+#### Analisis Lintasan
+
+Lintasan berbentuk lingkaran dengan <InlineMath math="4" /> checkpoint: <InlineMath math="A, B, C, D" />. Satu putaran penuh terdiri dari <InlineMath math="4" /> segmen: <InlineMath math="A \to B" />, <InlineMath math="B \to C" />, <InlineMath math="C \to D" />, dan <InlineMath math="D \to A" />. Perjalanan dimulai dari <InlineMath math="A" />.
+
+#### Menghitung Jarak Tempuh Awal
+
+Pelari melewati checkpoint <InlineMath math="C" /> sebanyak <InlineMath math="3" /> kali.
+
+- **Kali ke-1:** <InlineMath math="A \to B \to C" /> (<InlineMath math="2" /> segmen).
+- **Kali ke-2:** Tambah 1 putaran penuh (<InlineMath math="4" /> segmen). Total: <InlineMath math="2 + 4 = 6" /> segmen.
+- **Kali ke-3:** Tambah 1 putaran penuh (<InlineMath math="4" /> segmen). Total: <InlineMath math="6 + 4 = 10" /> segmen.
+
+Diketahui waktu tempuh untuk <InlineMath math="10" /> segmen adalah <InlineMath math="12" /> menit. Waktu per segmen (<InlineMath math="t_s" />) adalah:
+
+<BlockMath math="t_s = \frac{12}{10} = 1,2 \text{ menit}" />
+
+#### Menghitung Waktu Total
+
+Untuk mencapai checkpoint <InlineMath math="C" /> ke-4 kalinya, pelari harus menempuh 1 putaran lagi (<InlineMath math="4" /> segmen). Total segmen yang ditempuh adalah:
+
+<BlockMath math="10 + 4 = 14 \text{ segmen}" />
+
+Maka waktu total yang dibutuhkan adalah:
+
+<MathContainer>
+  <BlockMath math="T = 14 \times 1,2 \text{ menit}" />
+  <BlockMath math="= 16,8 \text{ menit}" />
+</MathContainer>
+
+Jadi, waktu yang dibutuhkan pelari adalah <InlineMath math="16,8 \text{ menit}" />.

@@ -40,73 +40,73 @@ import * as z from "zod";
 
 /** Parsed MDX file with extracted metadata and content hash for change detection */
 interface ParsedMdx {
-  metadata: ContentMetadata;
   body: string;
   contentHash: string;
+  metadata: ContentMetadata;
 }
 
 /** Parsed path info for article files: articles/{category}/{articleSlug}/{locale}.mdx */
 interface ArticleParsedPath {
-  type: "article";
-  locale: Locale;
-  category: ArticleCategory;
   articleSlug: string;
+  category: ArticleCategory;
+  locale: Locale;
   /** Full slug: articles/{category}/{articleSlug} */
   slug: string;
+  type: "article";
 }
 
 /** Parsed path info for subject files: subject/{category}/{grade}/{material}/{topic}/{section}/{locale}.mdx */
 interface SubjectParsedPath {
-  type: "subject";
-  locale: Locale;
   category: SubjectCategory;
   grade: Grade;
+  locale: Locale;
   material: Material;
-  topic: string;
   section: string;
   /** Full slug: subject/{category}/{grade}/{material}/{topic}/{section} */
   slug: string;
+  topic: string;
+  type: "subject";
 }
 
 /** Parsed path info for exercise files: exercises/{category}/{type}/{material}/{exerciseType}/{set}/{number}/(_question|_answer)/{locale}.mdx */
 interface ExerciseParsedPath {
-  type: "exercise";
-  locale: Locale;
   category: ExercisesCategory;
   examType: ExercisesType;
-  material: ExercisesMaterial;
   exerciseType: string;
-  setName: string;
+  isQuestion: boolean;
+  locale: Locale;
+  material: ExercisesMaterial;
   number: number;
+  setName: string;
   /** Full slug: exercises/{category}/{type}/{material}/{exerciseType}/{set}/{number} */
   slug: string;
-  isQuestion: boolean;
+  type: "exercise";
 }
 
 /** Parsed exercise set from material file */
 interface ParsedExerciseSet {
-  locale: Locale;
-  slug: string;
   category: ExercisesCategory;
-  type: ExercisesType;
-  material: ExercisesMaterial;
-  exerciseType: string;
-  setName: string;
-  title: string;
   description?: string;
+  exerciseType: string;
+  locale: Locale;
+  material: ExercisesMaterial;
+  setName: string;
+  slug: string;
+  title: string;
+  type: ExercisesType;
 }
 
 /** Parsed subject topic from material file */
 interface ParsedSubjectTopic {
-  locale: Locale;
-  slug: string;
   category: SubjectCategory;
-  grade: Grade;
-  material: Material;
-  topic: string;
-  title: string;
   description?: string;
+  grade: Grade;
+  locale: Locale;
+  material: Material;
   sectionCount: number;
+  slug: string;
+  title: string;
+  topic: string;
 }
 
 export type {

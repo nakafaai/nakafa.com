@@ -16,10 +16,10 @@ import type { Locale } from "next-intl";
  * Input parameters for fetching article context.
  */
 export interface FetchArticleContextInput {
-  /** The locale for localized content */
-  locale: Locale;
   /** The article category */
   category: ArticleCategory;
+  /** The locale for localized content */
+  locale: Locale;
   /** The article slug */
   slug: string;
 }

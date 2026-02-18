@@ -17,8 +17,8 @@ import {
 const PRO_PRICE = 8.99;
 
 interface PricingFeatureProps {
-  text: string;
   icon?: ComponentProps<typeof HugeIcons>["icon"];
+  text: string;
 }
 
 function PricingFeature({ text, icon }: PricingFeatureProps) {

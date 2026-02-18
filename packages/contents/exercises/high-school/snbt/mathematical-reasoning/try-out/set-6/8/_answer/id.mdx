@@ -1,0 +1,57 @@
+export const metadata = {
+  title: "Pembahasan Soal 8",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/17/2026",
+};
+
+#### Menentukan Rasio Barisan
+
+Diketahui kayu dipotong menjadi 6 bagian, sehingga <InlineMath math="n = 6" />. Panjang potongan membentuk barisan geometri.
+
+Kita asumsikan suku pertama adalah yang terpanjang (bisa juga sebaliknya, hasilnya akan sama untuk jumlah total). Misalkan suku pertama <InlineMath math="a = 96" /> dan suku ke-6 adalah yang terpendek <InlineMath math="U_6 = 3" />.
+
+Rumus suku ke-<InlineMath math="n" /> barisan geometri adalah:
+
+<BlockMath math="U_n = ar^{n-1}" />
+
+Substitusi nilai yang diketahui:
+
+<MathContainer>
+  <BlockMath math="U_6 = 96 \cdot r^{6-1}" />
+  <BlockMath math="3 = 96 \cdot r^5" />
+</MathContainer>
+
+Sederhanakan persamaan untuk mencari rasio (<InlineMath math="r" />):
+
+<MathContainer>
+  <BlockMath math="r^5 = \frac{3}{96}" />
+  <BlockMath math="r^5 = \frac{1}{32}" />
+  <BlockMath math="r^5 = \left(\frac{1}{2}\right)^5" />
+  <BlockMath math="r = \frac{1}{2}" />
+</MathContainer>
+
+Jadi, rasio antar potongan kayu adalah <InlineMath math="\frac{1}{2}" />.
+
+#### Menghitung Total Panjang Kayu
+
+Total panjang kayu mula-mula adalah jumlah dari seluruh potongan (<InlineMath math="S_6" />). Karena <InlineMath math="r < 1" />, kita gunakan rumus:
+
+<BlockMath math="S_n = \frac{a(1 - r^n)}{1 - r}" />
+
+Substitusi <InlineMath math="a = 96" />, <InlineMath math="r = \frac{1}{2}" />, dan <InlineMath math="n = 6" />:
+
+<MathContainer>
+  <BlockMath math="S_6 = \frac{96\left(1 - \left(\frac{1}{2}\right)^6\right)}{1 - \frac{1}{2}}" />
+  <BlockMath math="S_6 = \frac{96\left(1 - \frac{1}{64}\right)}{\frac{1}{2}}" />
+</MathContainer>
+
+Hitung hasilnya:
+
+<MathContainer>
+  <BlockMath math="S_6 = 96 \cdot \left(\frac{63}{64}\right) \cdot 2" />
+  <BlockMath math="S_6 = 192 \cdot \frac{63}{64}" />
+  <BlockMath math="S_6 = 3 \cdot 63" />
+  <BlockMath math="S_6 = 189" />
+</MathContainer>
+
+Jadi, total panjang bilah kayu mula-mula adalah <InlineMath math="189" /> cm.

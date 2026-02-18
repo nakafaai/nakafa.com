@@ -10,34 +10,34 @@ import { cn } from "@repo/design-system/lib/utils";
 import type { ReactNode } from "react";
 
 interface NumberLineSegment {
-  /** The start value of the segment */
-  start: number;
+  /** The background color of the segment */
+  backgroundColor?: string;
   /** The end value of the segment */
   end: number;
-  /** Whether the start value is inclusive */
-  startInclusive?: boolean;
   /** Whether the end value is inclusive */
   endInclusive?: boolean;
-  /** The label of the segment */
-  label?: ReactNode;
-  /** Custom label for the start point (e.g., fraction in LaTeX) */
-  startLabel?: ReactNode;
   /** Custom label for the end point (e.g., fraction in LaTeX) */
   endLabel?: ReactNode;
+  /** The label of the segment */
+  label?: ReactNode;
   /** Whether the segment is shaded */
   shaded?: boolean;
   /** Whether the segment should show points */
   showPoints?: boolean;
-  /** The background color of the segment */
-  backgroundColor?: string;
+  /** The start value of the segment */
+  start: number;
+  /** Whether the start value is inclusive */
+  startInclusive?: boolean;
+  /** Custom label for the start point (e.g., fraction in LaTeX) */
+  startLabel?: ReactNode;
 }
 
 interface NumberLineProps {
-  min?: number;
+  description: ReactNode;
   max?: number;
+  min?: number;
   segments: NumberLineSegment[];
   title: ReactNode;
-  description: ReactNode;
 }
 
 export function NumberLine({

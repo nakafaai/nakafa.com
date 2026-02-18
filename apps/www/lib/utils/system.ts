@@ -16,9 +16,9 @@ class MetadataNotFoundError extends Data.TaggedError("MetadataNotFoundError")<{
 
 interface ParamConfig {
   basePath: string;
+  isDeep?: boolean;
   paramNames: string[];
   slugParam?: string;
-  isDeep?: boolean;
 }
 
 /**

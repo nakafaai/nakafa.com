@@ -14,8 +14,8 @@ interface State {
 }
 
 interface Actions {
-  markAsViewed: (slug: string) => void;
   isViewed: (slug: string) => boolean;
+  markAsViewed: (slug: string) => void;
 }
 
 export type ContentViewsStore = State & Actions;

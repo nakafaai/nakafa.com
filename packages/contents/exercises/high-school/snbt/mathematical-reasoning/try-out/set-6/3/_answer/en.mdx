@@ -1,0 +1,30 @@
+export const metadata = {
+  title: "Solution to Question 3",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/16/2026",
+};
+
+Given:
+- Initial capital (<InlineMath math="M_0" />) = <InlineMath math="\text{Rp}12,500,000.00" />
+- Final capital (<InlineMath math="M_t" />) = <InlineMath math="\text{Rp}15,000,000.00" />
+- Saving period (<InlineMath math="t" />) = <InlineMath math="1" /> year
+
+First, we calculate the interest amount earned:
+
+<MathContainer>
+  <BlockMath math="\text{Interest} = M_t - M_0" />
+  <BlockMath math="\text{Interest} = 15,000,000 - 12,500,000" />
+  <BlockMath math="\text{Interest} = 2,500,000" />
+</MathContainer>
+
+The interest percentage is the ratio of the interest amount to the initial capital multiplied by the saving period:
+
+<MathContainer>
+  <BlockMath math="\text{Percentage} = \frac{\text{Interest}}{M_0 \times t} \times 100\%" />
+  <BlockMath math="= \frac{2,500,000}{12,500,000 \times 1} \times 100\%" />
+  <BlockMath math="= \frac{25}{125} \times 100\%" />
+  <BlockMath math="= \frac{1}{5} \times 100\%" />
+  <BlockMath math="= 20\%" />
+</MathContainer>
+
+Thus, the money grew due to an interest of <InlineMath math="20\%" />.

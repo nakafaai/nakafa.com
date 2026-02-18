@@ -11,8 +11,8 @@ import {
 import { createContext, useContextSelector } from "use-context-selector";
 
 interface PagefindContextType {
-  ready: boolean;
   error: ReactElement | string;
+  ready: boolean;
 }
 
 const PagefindContext = createContext<PagefindContextType | undefined>(

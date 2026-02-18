@@ -14,8 +14,8 @@ import { useChat } from "@/lib/context/use-chat";
 
 interface Props {
   messageId: string;
-  text: string;
   showActions?: boolean;
+  text: string;
 }
 
 export const AIChatMessageActions = memo(

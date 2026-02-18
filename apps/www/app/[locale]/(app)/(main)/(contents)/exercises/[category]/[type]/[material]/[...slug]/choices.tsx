@@ -18,9 +18,9 @@ import { useAttempt } from "@/lib/context/use-attempt";
 import { useExercise } from "@/lib/context/use-exercise";
 
 interface Props {
-  id: string;
-  exerciseNumber: number;
   choices: ExercisesChoices[keyof ExercisesChoices];
+  exerciseNumber: number;
+  id: string;
 }
 
 export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {

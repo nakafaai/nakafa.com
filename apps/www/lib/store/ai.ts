@@ -5,20 +5,20 @@ import { persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
 interface State {
-  open: boolean;
-  text: string;
-  model: ModelId;
-  query: string;
   activeChatId: Id<"chats"> | null;
+  model: ModelId;
+  open: boolean;
+  query: string;
+  text: string;
 }
 
 interface Actions {
-  setOpen: (open: boolean) => void;
-  setText: (text: string) => void;
-  setModel: (model: ModelId) => void;
   getModel: () => ModelId;
-  setQuery: (query: string) => void;
   setActiveChatId: (activeChatId: Id<"chats"> | null) => void;
+  setModel: (model: ModelId) => void;
+  setOpen: (open: boolean) => void;
+  setQuery: (query: string) => void;
+  setText: (text: string) => void;
 }
 
 export type AiStore = State & Actions;

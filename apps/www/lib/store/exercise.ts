@@ -22,10 +22,10 @@ const initialState = ({ slug }: { slug: string }): State => ({
 });
 
 interface Actions {
-  toggleAnswer: (exerciseNumber: number) => void;
-  setTimeSpent: (exerciseNumber: number, time: number) => void;
-  setShowStats: (showStats: boolean) => void;
   resetTimeSpent: () => void;
+  setShowStats: (showStats: boolean) => void;
+  setTimeSpent: (exerciseNumber: number, time: number) => void;
+  toggleAnswer: (exerciseNumber: number) => void;
 }
 
 export type ExerciseStore = State & Actions;

@@ -141,15 +141,15 @@ function highlight(
 }
 
 export interface CodeBlockData {
-  language: string;
-  filename: string;
   code: string;
+  filename: string;
+  language: string;
 }
 
 interface CodeBlockContextType {
-  value: string | undefined;
-  onValueChange: ((value: string) => void) | undefined;
   data: CodeBlockData[];
+  onValueChange: ((value: string) => void) | undefined;
+  value: string | undefined;
 }
 
 const CodeBlockContext = createContext<CodeBlockContextType>({

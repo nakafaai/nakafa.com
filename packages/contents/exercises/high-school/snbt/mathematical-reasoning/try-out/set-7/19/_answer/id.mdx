@@ -1,0 +1,68 @@
+import { Graph } from "../graph";
+
+export const metadata = {
+  title: "Pembahasan Soal 19",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+#### Visualisasi Pergerakan Pesawat
+
+<Graph
+  title="Posisi Pesawat dan Menara ATC"
+  description={<>Visualisasi perubahan posisi pesawat dari sudut <InlineMath math="30^\circ" /> ke <InlineMath math="45^\circ" />.</>}
+  labels={{
+    atc: "Menara ATC",
+    initialPos: "Posisi Awal",
+    finalPos: "Posisi Akhir",
+    height: "3000 m"
+  }}
+/>
+
+Diketahui:
+- Ketinggian pesawat <InlineMath math="h = 3000 \text{ m}" />.
+- Sudut elevasi awal <InlineMath math="\alpha = 30^\circ" />.
+- Sudut elevasi akhir <InlineMath math="\beta = 45^\circ" />.
+- Waktu tempuh <InlineMath math="t = 30 \text{ detik}" />.
+
+#### Menghitung Jarak Horizontal Awal
+
+Jarak horizontal awal (<InlineMath math="x_1" />) dapat dihitung menggunakan tangen sudut <InlineMath math="30^\circ" />:
+
+<MathContainer>
+  <BlockMath math="\tan 30^\circ = \frac{h}{x_1}" />
+  <BlockMath math="x_1 = \frac{h}{\tan 30^\circ} = \frac{3000}{\frac{1}{\sqrt{3}}}" />
+  <BlockMath math="x_1 = 3000\sqrt{3} \text{ m}" />
+</MathContainer>
+
+#### Menghitung Jarak Horizontal Akhir
+
+Jarak horizontal akhir (<InlineMath math="x_2" />) dapat dihitung menggunakan tangen sudut <InlineMath math="45^\circ" />:
+
+<MathContainer>
+  <BlockMath math="\tan 45^\circ = \frac{h}{x_2}" />
+  <BlockMath math="x_2 = \frac{h}{\tan 45^\circ} = \frac{3000}{1}" />
+  <BlockMath math="x_2 = 3000 \text{ m}" />
+</MathContainer>
+
+#### Menghitung Jarak Tempuh Horizontal
+
+Perpindahan horizontal (<InlineMath math="\Delta x" />) adalah selisih jarak awal dan akhir:
+
+<MathContainer>
+  <BlockMath math="\Delta x = x_1 - x_2" />
+  <BlockMath math="\Delta x = 3000\sqrt{3} - 3000" />
+  <BlockMath math="\Delta x = 3000(\sqrt{3} - 1) \text{ m}" />
+</MathContainer>
+
+#### Menghitung Kecepatan
+
+Kecepatan (<InlineMath math="v" />) adalah jarak dibagi waktu:
+
+<MathContainer>
+  <BlockMath math="v = \frac{\Delta x}{t}" />
+  <BlockMath math="v = \frac{3000(\sqrt{3} - 1)}{30}" />
+  <BlockMath math="v = 100(\sqrt{3} - 1) \text{ m/s}" />
+</MathContainer>
+
+Jadi, perkiraan kecepatan pesawat tersebut adalah <InlineMath math="100(\sqrt{3} - 1) \text{ m/s}" />.

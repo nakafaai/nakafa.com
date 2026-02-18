@@ -1,0 +1,42 @@
+export const metadata = {
+  title: "Pembahasan Soal 7",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/17/2026",
+};
+
+#### Menentukan Beda Barisan
+
+Januari adalah bulan pertama (<InlineMath math="U_1" />), sehingga banyaknya mobil yang diproduksi adalah <InlineMath math="a = 100" /> unit. April adalah bulan ke-4 (<InlineMath math="U_4" />), dengan produksi <InlineMath math="160" /> unit.
+
+Kita dapat mencari beda (<InlineMath math="b" />) dari barisan aritmetika ini menggunakan rumus suku ke-<InlineMath math="n" />:
+
+<BlockMath math="U_n = a + (n - 1)b" />
+
+Substitusi nilai yang diketahui untuk bulan April (<InlineMath math="n=4" />):
+
+<MathContainer>
+  <BlockMath math="160 = 100 + (4 - 1)b" />
+  <BlockMath math="160 = 100 + 3b" />
+  <BlockMath math="60 = 3b" />
+  <BlockMath math="b = 20" />
+</MathContainer>
+
+Jadi, setiap bulan produksi bertambah sebanyak <InlineMath math="20" /> unit.
+
+#### Menghitung Total Produksi Setahun
+
+Total produksi hingga akhir tahun berarti jumlah produksi selama <InlineMath math="12" /> bulan (<InlineMath math="S_{12}" />). Kita gunakan rumus jumlah deret aritmetika:
+
+<BlockMath math="S_n = \frac{n}{2} \{2a + (n - 1)b\}" />
+
+Substitusi <InlineMath math="n = 12" />, <InlineMath math="a = 100" />, dan <InlineMath math="b = 20" />:
+
+<MathContainer>
+  <BlockMath math="S_{12} = \frac{12}{2} \{2(100) + (12 - 1)(20)\}" />
+  <BlockMath math="S_{12} = 6 \{200 + (11)(20)\}" />
+  <BlockMath math="S_{12} = 6 (200 + 220)" />
+  <BlockMath math="S_{12} = 6 (420)" />
+  <BlockMath math="S_{12} = 2520" />
+</MathContainer>
+
+Jadi, jumlah total mobil yang dapat diproduksi hingga akhir tahun adalah <InlineMath math="2.520" /> unit.

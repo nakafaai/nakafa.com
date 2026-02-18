@@ -81,8 +81,8 @@ export function BentoContent({ className, ...props }: BentoContentProps) {
 }
 
 interface BentoStatProps {
-  value: string;
   label: string;
+  value: string;
 }
 
 export function BentoStat({ value, label }: BentoStatProps) {
@@ -95,8 +95,8 @@ export function BentoStat({ value, label }: BentoStatProps) {
 }
 
 interface BentoFeatureProps {
-  title: string;
   description: string;
+  title: string;
 }
 
 export function BentoFeature({ title, description }: BentoFeatureProps) {

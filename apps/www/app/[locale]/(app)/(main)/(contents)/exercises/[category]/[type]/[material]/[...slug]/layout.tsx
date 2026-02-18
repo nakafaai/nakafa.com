@@ -11,11 +11,11 @@ import { ExerciseContextProvider } from "@/lib/context/use-exercise";
 import { isNumber } from "@/lib/utils/number";
 
 interface Params {
-  locale: Locale;
   category: ExercisesCategory;
-  type: ExercisesType;
+  locale: Locale;
   material: ExercisesMaterial;
   slug: string[];
+  type: ExercisesType;
 }
 
 interface Props {

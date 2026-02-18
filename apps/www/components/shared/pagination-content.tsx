@@ -8,8 +8,8 @@ import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 
 interface Props {
-  pagination: ContentPagination;
   className?: string;
+  pagination: ContentPagination;
 }
 
 function PaginationButton({

@@ -15,12 +15,12 @@ import type { Locale } from "next-intl";
  * Input parameters for fetching subject content context.
  */
 interface GetContentContextInput {
-  /** The locale for localized content */
-  locale: Locale;
   /** The subject category */
   category: SubjectCategory;
   /** The grade level */
   grade: Grade;
+  /** The locale for localized content */
+  locale: Locale;
   /** The material type */
   material: Material;
   /** The slug path segments for the specific content */
@@ -33,12 +33,12 @@ interface GetContentContextInput {
 interface GetContentContextOutput {
   /** The content data with MDX component (guaranteed to be defined) */
   content: ContentWithMDX;
-  /** All available materials for the given category/grade/material */
-  materials: Awaited<ReturnType<typeof getMaterials>>;
-  /** The file path to the material directory */
-  materialPath: string;
   /** The full file path to the content file */
   FilePath: ReturnType<typeof getSlugPath>;
+  /** The file path to the material directory */
+  materialPath: string;
+  /** All available materials for the given category/grade/material */
+  materials: Awaited<ReturnType<typeof getMaterials>>;
 }
 
 /**

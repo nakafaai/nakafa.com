@@ -84,8 +84,8 @@ const MAX_CANVAS_WIDTH = 500;
 
 interface Props {
   baseColor?: COBEOptions["baseColor"];
-  markerColor?: COBEOptions["markerColor"];
   glowColor?: COBEOptions["glowColor"];
+  markerColor?: COBEOptions["markerColor"];
   markers?: COBEOptions["markers"];
 }
 

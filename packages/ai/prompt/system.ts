@@ -2,9 +2,9 @@ import { createPrompt } from "@repo/ai/prompt/utils";
 
 interface SystemPromptProps {
   /**
-   * The URL of the current page.
+   * The current date.
    */
-  url: string;
+  currentDate: string;
   /**
    * Current page information including verification status.
    */
@@ -23,9 +23,9 @@ interface SystemPromptProps {
     verified: boolean;
   };
   /**
-   * The current date.
+   * The URL of the current page.
    */
-  currentDate: string;
+  url: string;
   /**
    * The current time.
    */

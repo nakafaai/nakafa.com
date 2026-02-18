@@ -35,15 +35,15 @@ import {
 const CAMERA_Z_POSITION = 4;
 
 interface Props {
-  title: ReactNode;
-  description: ReactNode;
   angle?: number;
-  size?: number;
+  description: ReactNode;
   labels?: {
     opposite: string;
     adjacent: string;
     hypotenuse: string;
   };
+  size?: number;
+  title: ReactNode;
 }
 
 export function Triangle({

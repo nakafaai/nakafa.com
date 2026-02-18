@@ -3,8 +3,8 @@ import { getColor } from "@repo/design-system/lib/color";
 import type { ComponentProps, ReactNode } from "react";
 
 interface Props {
-  title: ReactNode;
   description: ReactNode;
+  title: ReactNode;
 }
 
 export function Graph({ title, description }: Props) {

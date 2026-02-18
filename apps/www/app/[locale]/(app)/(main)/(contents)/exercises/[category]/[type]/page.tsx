@@ -27,8 +27,8 @@ import { getStaticParams } from "@/lib/utils/system";
 export const revalidate = false;
 
 interface Params {
-  locale: Locale;
   category: ExercisesCategory;
+  locale: Locale;
   type: ExercisesType;
 }
 

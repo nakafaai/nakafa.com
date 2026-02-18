@@ -22,13 +22,13 @@ import {
 } from "recharts";
 
 interface Props {
-  title: string;
-  description: string;
+  chartConfig: ChartConfig;
   data: {
     name: string;
     value: number;
   }[];
-  chartConfig: ChartConfig;
+  description: string;
+  title: string;
   yAxisLabel: string;
 }
 

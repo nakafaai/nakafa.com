@@ -3,8 +3,8 @@ import type { ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
-  className?: string;
   childrenClassName?: string;
+  className?: string;
 }
 
 export function FooterContent({

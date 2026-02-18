@@ -4,8 +4,8 @@ import { cn } from "@repo/design-system/lib/utils";
 
 interface SpinnerProps
   extends Omit<React.ComponentProps<typeof HugeIcons>, "icon"> {
-  isLoading?: boolean;
   icon?: React.ComponentProps<typeof HugeIcons>["icon"];
+  isLoading?: boolean;
 }
 
 function Spinner({ className, isLoading, icon, ...props }: SpinnerProps) {

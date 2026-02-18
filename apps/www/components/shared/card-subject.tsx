@@ -8,9 +8,9 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Link } from "@repo/internationalization/src/navigation";
 
 interface Props {
+  href: string;
   icon: IconSvgElement;
   label: string;
-  href: string;
 }
 
 export function CardSubject({ icon, label, href }: Props) {

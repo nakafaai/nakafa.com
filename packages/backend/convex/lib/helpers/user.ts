@@ -9,9 +9,9 @@ import { getAll } from "convex-helpers/server/relationships";
 
 export interface UserData {
   _id: Id<"users">;
-  name: string;
   email: string;
   image: string | null | undefined;
+  name: string;
 }
 
 /**

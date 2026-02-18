@@ -1,0 +1,31 @@
+export const metadata = {
+  title: "Solution to Question 6",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+#### Arithmetic Sequence Analysis
+
+The pattern of temperature decrease in the table forms an arithmetic sequence. For every <InlineMath math="100 \text{ m}" /> increase in altitude, the temperature drops by <InlineMath math="2^\circ\text{C}" />.
+
+Given:
+- The first term (<InlineMath math="U_1" />) at an altitude of <InlineMath math="100 \text{ m}" /> is <InlineMath math="32" />.
+- The common difference (<InlineMath math="b" />) is <InlineMath math="-2" />.
+
+An altitude of <InlineMath math="800 \text{ m}" /> corresponds to the 8th term (<InlineMath math="U_8" />), and an altitude of <InlineMath math="1200 \text{ m}" /> corresponds to the 12th term (<InlineMath math="U_{12}" />).
+
+The formula for the <InlineMath math="n" />-th term of an arithmetic sequence is:
+
+<BlockMath math="U_n = a + (n-1)b" />
+
+So, the ratio of the air temperature at the two altitudes is:
+
+<MathContainer>
+  <BlockMath math="\frac{U_8}{U_{12}} = \frac{32 + (8-1)(-2)}{32 + (12-1)(-2)}" />
+  <BlockMath math="\frac{U_8}{U_{12}} = \frac{32 + (7)(-2)}{32 + (11)(-2)}" />
+  <BlockMath math="\frac{U_8}{U_{12}} = \frac{32 - 14}{32 - 22}" />
+  <BlockMath math="\frac{U_8}{U_{12}} = \frac{18}{10}" />
+  <BlockMath math="\frac{U_8}{U_{12}} = \frac{9}{5}" />
+</MathContainer>
+
+Therefore, the temperature ratio is <InlineMath math="9:5" />.

@@ -1,0 +1,58 @@
+export const metadata = {
+  title: "Solution to Question 17",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/17/2026",
+};
+
+#### Defining Variables
+
+Let:
+- <InlineMath math="\bar{x} = 62" /> be the combined average.
+- <InlineMath math="\bar{x}_L = 50" /> be the average score of male students.
+- <InlineMath math="\bar{x}_P = 70" /> be the average score of female students.
+- <InlineMath math="n_L" /> be the number of male students.
+- <InlineMath math="n_P" /> be the number of female students.
+
+#### Using the Combined Average Formula
+
+The formula for the combined average is:
+
+<MathContainer>
+  <BlockMath math="\bar{x} = \frac{n_L \cdot \bar{x}_L + n_P \cdot \bar{x}_P}{n_L + n_P}" />
+</MathContainer>
+
+Substitute the known values:
+
+<MathContainer>
+  <BlockMath math="62 = \frac{50n_L + 70n_P}{n_L + n_P}" />
+</MathContainer>
+
+Multiply both sides by <InlineMath math="(n_L + n_P)" />:
+
+<MathContainer>
+  <BlockMath math="62(n_L + n_P) = 50n_L + 70n_P" />
+  <BlockMath math="62n_L + 62n_P = 50n_L + 70n_P" />
+</MathContainer>
+
+Group like terms:
+
+<MathContainer>
+  <BlockMath math="62n_L - 50n_L = 70n_P - 62n_P" />
+  <BlockMath math="12n_L = 8n_P" />
+</MathContainer>
+
+#### Determining the Ratio
+
+To find the ratio <InlineMath math="n_L : n_P" />, rearrange the equation:
+
+<MathContainer>
+  <BlockMath math="\frac{n_L}{n_P} = \frac{8}{12}" />
+</MathContainer>
+
+Simplify the fraction by dividing both numerator and denominator by <InlineMath math="4" />:
+
+<MathContainer>
+  <BlockMath math="\frac{n_L}{n_P} = \frac{2}{3}" />
+</MathContainer>
+
+Thus, the ratio of the number of male students to female students is <InlineMath math="2 : 3" />.

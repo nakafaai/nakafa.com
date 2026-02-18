@@ -6,8 +6,8 @@ import type { ForumPost } from "@/lib/store/forum";
 export type { ForumPost } from "@/lib/store/forum";
 
 interface ReactionWithUsers {
-  emoji: string;
   count: number;
+  emoji: string;
   reactors: string[];
 }
 

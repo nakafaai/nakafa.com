@@ -50,11 +50,11 @@ import { ExerciseAttempt } from "./attempt";
 export const revalidate = false;
 
 interface Params {
-  locale: Locale;
   category: ExercisesCategory;
-  type: ExercisesType;
+  locale: Locale;
   material: ExercisesMaterial;
   slug: string[];
+  type: ExercisesType;
 }
 
 interface Props {

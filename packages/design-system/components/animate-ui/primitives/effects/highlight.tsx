@@ -10,31 +10,31 @@ const RANDOM_KEY_RADIX = 36;
 type HighlightMode = "children" | "parent";
 
 interface Bounds {
-  top: number;
-  left: number;
-  width: number;
   height: number;
+  left: number;
+  top: number;
+  width: number;
 }
 
 interface HighlightContextType<T extends string> {
-  as?: keyof HTMLElementTagNameMap;
-  mode: HighlightMode;
-  activeValue: T | null;
-  setActiveValue: (value: T | null) => void;
-  setBounds: (bounds: DOMRect) => void;
-  clearBounds: () => void;
-  id: string;
-  hover: boolean;
-  click: boolean;
-  className?: string;
-  style?: React.CSSProperties;
   activeClassName?: string;
-  setActiveClassName: (className: string) => void;
-  transition?: Transition;
+  activeValue: T | null;
+  as?: keyof HTMLElementTagNameMap;
+  className?: string;
+  clearBounds: () => void;
+  click: boolean;
   disabled?: boolean;
   enabled?: boolean;
   exitDelay?: number;
   forceUpdateBounds?: boolean;
+  hover: boolean;
+  id: string;
+  mode: HighlightMode;
+  setActiveClassName: (className: string) => void;
+  setActiveValue: (value: T | null) => void;
+  setBounds: (bounds: DOMRect) => void;
+  style?: React.CSSProperties;
+  transition?: Transition;
 }
 
 const HighlightContext = React.createContext<
@@ -51,19 +51,19 @@ function useHighlight<T extends string>(): HighlightContextType<T> {
 
 interface BaseHighlightProps<T extends React.ElementType = "div"> {
   as?: T;
-  ref?: React.Ref<HTMLDivElement>;
-  mode?: HighlightMode;
-  value?: string | null;
-  defaultValue?: string | null;
-  onValueChange?: (value: string | null) => void;
   className?: string;
-  style?: React.CSSProperties;
-  transition?: Transition;
-  hover?: boolean;
   click?: boolean;
+  defaultValue?: string | null;
   disabled?: boolean;
   enabled?: boolean;
   exitDelay?: number;
+  hover?: boolean;
+  mode?: HighlightMode;
+  onValueChange?: (value: string | null) => void;
+  ref?: React.Ref<HTMLDivElement>;
+  style?: React.CSSProperties;
+  transition?: Transition;
+  value?: string | null;
 }
 
 interface ParentModeHighlightProps {

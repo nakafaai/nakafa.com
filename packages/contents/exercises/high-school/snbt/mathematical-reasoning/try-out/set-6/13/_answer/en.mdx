@@ -1,0 +1,33 @@
+export const metadata = {
+  title: "Solution to Question 13",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/17/2026",
+};
+
+#### Calculating Cost Components
+
+The total cost Bedu has to pay is the sum of the base fare (for the first kilometer) and the total fare for the subsequent kilometers.
+
+Given:
+- Total distance = <InlineMath math="18" /> km.
+- Base fare (first 1 km) = <InlineMath math="\text{Rp}2,500" />.
+- Additional fare per km = <InlineMath math="\text{Rp}1,000" />.
+
+Remaining distance subject to additional fare:
+
+<MathContainer>
+  <BlockMath math="\text{Remaining Distance} = 18 \text{ km} - 1 \text{ km} = 17 \text{ km}" />
+</MathContainer>
+
+#### Calculating Total Fare
+
+We calculate the total cost:
+
+<MathContainer>
+  <BlockMath math="\text{Total} = \text{Base Fare} + (\text{Remaining Distance} \times \text{Additional Fare})" />
+  <BlockMath math="\text{Total} = \text{Rp}2,500 + (17 \times \text{Rp}1,000)" />
+  <BlockMath math="\text{Total} = \text{Rp}2,500 + \text{Rp}17,000" />
+  <BlockMath math="\text{Total} = \text{Rp}19,500" />
+</MathContainer>
+
+Thus, the total fare Bedu has to pay is <InlineMath math="\text{Rp}19,500.00" />.

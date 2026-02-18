@@ -1,0 +1,34 @@
+import { Graph } from "../graph";
+
+export const metadata = {
+  title: "Pembahasan Soal 4",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+#### Visualisasi Masalah
+
+Berikut adalah ilustrasi posisi lampu sorot (di sudut atas) dan titik potong sinarnya.
+
+<Graph 
+  title={<>Visualisasi Studio Podcast</>} 
+  description={<>Titik potong sinar lampu sorot berada di tengah kubus.</>} 
+/>
+
+#### Analisis Geometri
+
+Lampu sorot dipasang di empat sudut atas ruangan (titik <InlineMath math="E" />, <InlineMath math="F" />, <InlineMath math="G" />, <InlineMath math="H" /> pada gambar). Sinar lampu bertemu di satu titik. Karena ruangan berbentuk kubus dan posisi lampu simetris, titik potong ini pasti berada tepat di tengah-tengah ruang kubus (perpotongan diagonal ruang).
+
+Jarak dari titik pusat kubus ke lantai (bidang <InlineMath math="ABCD" />) adalah setengah dari tinggi kubus (panjang rusuk).
+
+Diketahui panjang rusuk <InlineMath math="s = 5" /> meter.
+
+Maka jarak titik potong ke lantai adalah:
+
+<MathContainer>
+  <BlockMath math="d = \frac{1}{2} \times s" />
+  <BlockMath math="d = \frac{1}{2} \times 5" />
+  <BlockMath math="d = \frac{5}{2} = 2\frac{1}{2}" />
+</MathContainer>
+
+Jadi, jarak antara titik perpotongan tersebut ke lantai ruangan adalah <InlineMath math="2\frac{1}{2}" /> meter.

@@ -27,9 +27,9 @@ import {
 } from "recharts";
 
 interface Props {
-  title: string;
   description: string;
   footnote: string;
+  title: string;
 }
 
 export function ElectabilityChart({ title, description, footnote }: Props) {

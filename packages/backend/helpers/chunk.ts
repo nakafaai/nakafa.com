@@ -27,14 +27,13 @@ export interface ChunkConfig {
  */
 export interface ElevenLabsChunk {
   /**
-   * The main text content to be spoken in this chunk.
-   */
-  text: string;
-
-  /**
    * The index of this chunk (0-based).
    */
   index: number;
+  /**
+   * The main text content to be spoken in this chunk.
+   */
+  text: string;
 
   /**
    * Total number of chunks.

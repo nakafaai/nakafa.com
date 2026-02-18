@@ -1,0 +1,39 @@
+export const metadata = {
+  title: "Solution to Question 11",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/17/2026",
+};
+
+#### First Box Probability
+
+The first box contains <InlineMath math="4" /> red balls and <InlineMath math="3" /> blue balls.
+The total number of balls in the first box is:
+
+<BlockMath math="n(S_1) = 4 + 3 = 7" />
+
+The probability of drawing a red ball from the first box (<InlineMath math="M" />) is:
+
+<BlockMath math="P(M) = \frac{n(M)}{n(S_1)} = \frac{4}{7}" />
+
+#### Second Box Probability
+
+The second box contains <InlineMath math="7" /> red balls and <InlineMath math="3" /> white balls.
+The total number of balls in the second box is:
+
+<BlockMath math="n(S_2) = 7 + 3 = 10" />
+
+The probability of drawing a white ball from the second box (<InlineMath math="P" />) is:
+
+<BlockMath math="P(P) = \frac{n(P)}{n(S_2)} = \frac{3}{10}" />
+
+#### Combined Probability
+
+Since drawing balls from the two boxes are independent events, the probability of drawing a red ball from the first box **and** a white ball from the second box is:
+
+<MathContainer>
+  <BlockMath math="P(M \cap P) = P(M) \times P(P)" />
+  <BlockMath math="= \frac{4}{7} \times \frac{3}{10}" />
+  <BlockMath math="= \frac{12}{70}" />
+</MathContainer>
+
+Thus, the probability is <InlineMath math="\frac{12}{70}" />.

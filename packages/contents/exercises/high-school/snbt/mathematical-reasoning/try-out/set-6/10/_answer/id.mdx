@@ -1,0 +1,36 @@
+export const metadata = {
+  title: "Pembahasan Soal 10",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/17/2026",
+};
+
+#### Mengidentifikasi Konsep
+
+Soal ini berkaitan dengan menyusun <InlineMath math="3" /> orang dari <InlineMath math="7" /> kandidat untuk menempati posisi yang spesifik (ketua, sekretaris, bendahara). Karena urutan atau posisi jabatan diperhatikan (ketua <InlineMath math="\neq" /> sekretaris <InlineMath math="\neq" /> bendahara), maka kita menggunakan konsep **Permutasi**.
+
+#### Menghitung Permutasi
+
+Rumus permutasi <InlineMath math="r" /> objek dari <InlineMath math="n" /> objek adalah:
+
+<BlockMath math="P^n_r = \frac{n!}{(n - r)!}" />
+
+Diketahui:
+- Jumlah kandidat (<InlineMath math="n" />) = <InlineMath math="7" />
+- Jumlah posisi yang dipilih (<InlineMath math="r" />) = <InlineMath math="3" />
+
+Substitusi ke dalam rumus:
+
+<MathContainer>
+  <BlockMath math="P^7_3 = \frac{7!}{(7 - 3)!}" />
+  <BlockMath math="P^7_3 = \frac{7!}{4!}" />
+</MathContainer>
+
+Jabarkan faktorialnya:
+
+<MathContainer>
+  <BlockMath math="P^7_3 = \frac{7 \times 6 \times 5 \times 4!}{4!}" />
+  <BlockMath math="P^7_3 = 7 \times 6 \times 5" />
+  <BlockMath math="P^7_3 = 210" />
+</MathContainer>
+
+Jadi, banyaknya susunan staff pengurus yang mungkin adalah <InlineMath math="210" /> cara.

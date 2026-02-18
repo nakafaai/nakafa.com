@@ -4,12 +4,12 @@ import anyAscii from "any-ascii";
 import type { ReactNode } from "react";
 
 interface GenerateProps {
-  title: ReactNode;
   description?: ReactNode;
   icon?: ReactNode;
   primaryColor?: string;
   primaryTextColor?: string;
   site?: ReactNode;
+  title: ReactNode;
 }
 
 const [logo] = await Promise.all([

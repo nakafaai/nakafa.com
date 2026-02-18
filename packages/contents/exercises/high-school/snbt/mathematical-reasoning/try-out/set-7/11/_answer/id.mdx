@@ -1,0 +1,39 @@
+export const metadata = {
+  title: "Pembahasan Soal 11",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/17/2026",
+};
+
+#### Identifikasi Peluang Kotak Pertama
+
+Kotak pertama berisi <InlineMath math="4" /> bola merah dan <InlineMath math="3" /> bola biru.
+Total bola di kotak pertama adalah:
+
+<BlockMath math="n(S_1) = 4 + 3 = 7" />
+
+Peluang terambilnya bola merah dari kotak pertama (<InlineMath math="M" />) adalah:
+
+<BlockMath math="P(M) = \frac{n(M)}{n(S_1)} = \frac{4}{7}" />
+
+#### Identifikasi Peluang Kotak Kedua
+
+Kotak kedua berisi <InlineMath math="7" /> bola merah dan <InlineMath math="3" /> bola putih.
+Total bola di kotak kedua adalah:
+
+<BlockMath math="n(S_2) = 7 + 3 = 10" />
+
+Peluang terambilnya bola putih dari kotak kedua (<InlineMath math="P" />) adalah:
+
+<BlockMath math="P(P) = \frac{n(P)}{n(S_2)} = \frac{3}{10}" />
+
+#### Perhitungan Peluang Gabungan
+
+Karena pengambilan bola dari kedua kotak adalah kejadian saling bebas, maka peluang terambilnya bola merah dari kotak pertama **dan** bola putih dari kotak kedua adalah:
+
+<MathContainer>
+  <BlockMath math="P(M \cap P) = P(M) \times P(P)" />
+  <BlockMath math="= \frac{4}{7} \times \frac{3}{10}" />
+  <BlockMath math="= \frac{12}{70}" />
+</MathContainer>
+
+Jadi, peluangnya adalah <InlineMath math="\frac{12}{70}" />.

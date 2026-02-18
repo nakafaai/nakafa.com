@@ -4,8 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 
 interface UseResizableOptions {
   initialWidth: number;
-  minWidth: number;
   maxWidth: number;
+  minWidth: number;
   onResize?: (width: number) => void;
 }
 

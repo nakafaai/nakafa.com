@@ -201,26 +201,26 @@ function parseConvexResponse<T>(json: unknown, valueSchema: z.ZodType<T>): T {
 
 /** CLI options for sync commands */
 interface SyncOptions {
-  /** Filter sync to specific locale (en/id) */
-  locale?: Locale;
-  /** Actually delete content (for clean/reset commands) */
-  force?: boolean;
   /** Include authors in clean/reset operations */
   authors?: boolean;
-  /** Run sync phases sequentially instead of parallel (for debugging) */
-  sequential?: boolean;
+  /** Actually delete content (for clean/reset commands) */
+  force?: boolean;
   /** Use incremental sync based on git changes */
   incremental?: boolean;
+  /** Filter sync to specific locale (en/id) */
+  locale?: Locale;
   /** Target production database instead of dev */
   prod?: boolean;
   /** Suppress per-batch logging (used during parallel execution) */
   quiet?: boolean;
+  /** Run sync phases sequentially instead of parallel (for debugging) */
+  sequential?: boolean;
 }
 
 /** Persisted state for incremental sync between runs */
 interface SyncState {
-  lastSyncTimestamp: number;
   lastSyncCommit: string;
+  lastSyncTimestamp: number;
 }
 
 /** Loads sync state from disk, returns null if no previous state exists */
@@ -278,21 +278,21 @@ function getChangedFilesSince(commit: string): Set<string> {
 
 /** Metrics for a single sync phase (articles, topics, etc.) */
 interface PhaseMetrics {
-  phase: string;
-  itemCount: number;
-  startTime: number;
-  endTime?: number;
   durationMs?: number;
+  endTime?: number;
+  itemCount: number;
   itemsPerSecond?: number;
+  phase: string;
+  startTime: number;
 }
 
 /** Aggregated metrics for the entire sync operation */
 interface SyncMetrics {
   phases: PhaseMetrics[];
-  totalStartTime: number;
-  totalEndTime?: number;
   totalDurationMs?: number;
+  totalEndTime?: number;
   totalItems?: number;
+  totalStartTime: number;
 }
 
 /** Creates a new metrics tracker for a sync operation */
@@ -421,10 +421,10 @@ function logSyncMetrics(metrics: SyncMetrics): void {
 
 /** Progress tracker for batched operations with ETA calculation */
 interface BatchProgress {
-  totalItems: number;
-  processedItems: number;
   batchSize: number;
+  processedItems: number;
   startTime: number;
+  totalItems: number;
 }
 
 /** Creates a progress tracker for batched sync operations */
@@ -477,27 +477,27 @@ function formatBatchProgress(
 
 /** Result of a content sync operation */
 interface SyncResult {
+  authorLinksCreated?: number;
+  choicesCreated?: number;
   created: number;
-  updated: number;
-  unchanged: number;
   durationMs?: number;
   itemsPerSecond?: number;
   referencesCreated?: number;
-  choicesCreated?: number;
-  authorLinksCreated?: number;
+  unchanged: number;
+  updated: number;
 }
 
 /** Result of author pre-sync operation */
 interface AuthorSyncResult {
   created: number;
-  existing: number;
   durationMs?: number;
+  existing: number;
 }
 
 /** Convex API configuration for HTTP requests */
 interface ConvexConfig {
-  url: string;
   accessToken: string;
+  url: string;
 }
 
 /** Logs message to console */
@@ -520,8 +520,8 @@ function logSuccess(message: string) {
 /** Stale item info for clean operations */
 interface StaleItem {
   id: string;
-  slug: string;
   locale: string;
+  slug: string;
 }
 
 /** Logs stale items with truncation (shows first maxItems, then "... and X more") */
@@ -1736,14 +1736,14 @@ async function syncAll(
 }
 
 interface ValidationError {
-  file: string;
   error: string;
+  file: string;
 }
 
 interface ValidationResult {
-  valid: number;
-  invalid: number;
   errors: ValidationError[];
+  invalid: number;
+  valid: number;
 }
 
 /**

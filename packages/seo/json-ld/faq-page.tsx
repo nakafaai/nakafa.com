@@ -2,9 +2,9 @@ import type { Answer, FAQPage, Question, WithContext } from "schema-dts";
 import { JsonLd } from ".";
 
 interface FAQPageJsonLdProps {
+  inLanguage: string;
   mainEntity: Pick<Question, "name" | "acceptedAnswer">[];
   url: string;
-  inLanguage: string;
 }
 
 /**

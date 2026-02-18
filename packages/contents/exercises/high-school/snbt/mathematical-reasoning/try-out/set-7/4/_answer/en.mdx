@@ -1,0 +1,34 @@
+import { Graph } from "../graph";
+
+export const metadata = {
+  title: "Solution to Question 4",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+#### Problem Visualization
+
+Here is an illustration of the spotlight positions (at the top corners) and the intersection point of their beams.
+
+<Graph 
+  title={<>Podcast Studio Visualization</>} 
+  description={<>The intersection point of the spotlight beams is at the center of the cube.</>} 
+/>
+
+#### Geometric Analysis
+
+The spotlights are installed at the four top corners of the room (points <InlineMath math="E" />, <InlineMath math="F" />, <InlineMath math="G" />, <InlineMath math="H" /> in the figure). The beams meet at one point. Since the room is cube-shaped and the light positions are symmetrical, this intersection point must be exactly in the center of the cube (the intersection of the space diagonals).
+
+The distance from the center of the cube to the floor (plane <InlineMath math="ABCD" />) is half of the cube's height (edge length).
+
+Given the edge length <InlineMath math="s = 5" /> meters.
+
+Then the distance from the intersection point to the floor is:
+
+<MathContainer>
+  <BlockMath math="d = \frac{1}{2} \times s" />
+  <BlockMath math="d = \frac{1}{2} \times 5" />
+  <BlockMath math="d = \frac{5}{2} = 2\frac{1}{2}" />
+</MathContainer>
+
+So, the distance from the intersection point to the floor is <InlineMath math="2\frac{1}{2}" /> meters.

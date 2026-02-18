@@ -1,0 +1,63 @@
+export const metadata = {
+  title: "Solution to Question 16",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/17/2026",
+};
+
+#### Initial Data Analysis
+
+Given:
+- Initial number of participants: <InlineMath math="n_1 = 22" />
+- Initial average: <InlineMath math="\bar{x}_1 = 5" />
+- Range: <InlineMath math="R = 4" />
+
+Let the scores be sorted from smallest to largest as <InlineMath math="x_1, x_2, \dots, x_{22}" />.
+
+The sum of all initial scores is:
+
+<MathContainer>
+  <BlockMath math="\sum_{i=1}^{22} x_i = n_1 \cdot \bar{x}_1" />
+  <BlockMath math="\sum_{i=1}^{22} x_i = 22 \cdot 5 = 110 \quad \dots(1)" />
+</MathContainer>
+
+The range is defined as the difference between the largest and smallest values:
+
+<MathContainer>
+  <BlockMath math="x_{22} - x_1 = 4" />
+  <BlockMath math="x_{22} = x_1 + 4 \quad \dots(2)" />
+</MathContainer>
+
+#### Analysis After Removal
+
+If the lowest score (<InlineMath math="x_1" />) and the highest score (<InlineMath math="x_{22}" />) are excluded:
+- New number of participants: <InlineMath math="n_2 = 22 - 2 = 20" />
+- New average: <InlineMath math="\bar{x}_2 = 4.9" />
+
+The sum of the remaining scores is:
+
+<MathContainer>
+  <BlockMath math="\sum_{i=2}^{21} x_i = n_2 \cdot \bar{x}_2" />
+  <BlockMath math="\sum_{i=2}^{21} x_i = 20 \cdot 4.9 = 98" />
+</MathContainer>
+
+#### Calculating the Lowest Score
+
+The relationship between the initial sum and the remaining sum is:
+
+<MathContainer>
+  <BlockMath math="\sum_{i=1}^{22} x_i = x_1 + \sum_{i=2}^{21} x_i + x_{22}" />
+  <BlockMath math="110 = x_1 + 98 + x_{22}" />
+  <BlockMath math="x_1 + x_{22} = 110 - 98" />
+  <BlockMath math="x_1 + x_{22} = 12 \quad \dots(3)" />
+</MathContainer>
+
+Substitute equation <InlineMath math="(2)" /> into equation <InlineMath math="(3)" />:
+
+<MathContainer>
+  <BlockMath math="x_1 + (x_1 + 4) = 12" />
+  <BlockMath math="2x_1 + 4 = 12" />
+  <BlockMath math="2x_1 = 8" />
+  <BlockMath math="x_1 = 4" />
+</MathContainer>
+
+So, the lowest student's score is <InlineMath math="4" />.

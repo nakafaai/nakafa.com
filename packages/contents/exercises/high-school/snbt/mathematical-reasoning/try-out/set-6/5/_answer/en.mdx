@@ -1,0 +1,47 @@
+export const metadata = {
+  title: "Solution to Question 5",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/16/2026",
+};
+
+Given:
+- Cone A: Radius (<InlineMath math="R_1" />) is equal to height (<InlineMath math="h_1" />), so <InlineMath math="R_1 = h_1" />.
+- Cone B: Radius (<InlineMath math="R_2" />) is twice the height (<InlineMath math="h_2" />), so <InlineMath math="R_2 = 2h_2" /> or <InlineMath math="h_2 = \frac{1}{2}R_2" />.
+- Equal volumetric rate means <InlineMath math="V_A = V_B" /> (Volume of cone A equals Volume of cone B).
+
+Recall the cone volume formula <InlineMath math="V = \frac{1}{3}\pi R^2 h" />.
+
+<MathContainer>
+  <BlockMath math="\frac{1}{3}\pi R_1^2 h_1 = \frac{1}{3}\pi R_2^2 h_2" />
+</MathContainer>
+
+Simplify by cancelling <InlineMath math="\frac{1}{3}\pi" /> on both sides:
+
+<MathContainer>
+  <BlockMath math="R_1^2 h_1 = R_2^2 h_2" />
+</MathContainer>
+
+Substitute the height-radius relationship for each cone:
+- Replace <InlineMath math="h_1" /> with <InlineMath math="R_1" />
+- Replace <InlineMath math="h_2" /> with <InlineMath math="\frac{1}{2}R_2" />
+
+<MathContainer>
+  <BlockMath math="R_1^2 (R_1) = R_2^2 \left(\frac{1}{2}R_2\right)" />
+  <BlockMath math="R_1^3 = \frac{1}{2} R_2^3" />
+</MathContainer>
+
+We want to find the ratio <InlineMath math="R_1 : R_2" />:
+
+<MathContainer>
+  <BlockMath math="\frac{R_1^3}{R_2^3} = \frac{1}{2}" />
+  <BlockMath math="\left(\frac{R_1}{R_2}\right)^3 = \frac{1}{2}" />
+</MathContainer>
+
+Take the cube root of both sides:
+
+<MathContainer>
+  <BlockMath math="\frac{R_1}{R_2} = \sqrt[3]{\frac{1}{2}}" />
+  <BlockMath math="\frac{R_1}{R_2} = \frac{1}{\sqrt[3]{2}}" />
+</MathContainer>
+
+Thus, the ratio <InlineMath math="R_1 : R_2 = 1 : \sqrt[3]{2}" />.

@@ -1,0 +1,54 @@
+export const metadata = {
+  title: "Solution to Question 15",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/17/2026",
+};
+
+#### Creating a Mathematical Model
+
+Let:
+- <InlineMath math="x" /> = price of meat per kg
+- <InlineMath math="y" /> = price of fish per kg
+
+Based on the table, we can create a system of two linear equations.
+
+For Store A:
+
+<MathContainer>
+  <BlockMath math="80x + 20y = 2960" />
+  <BlockMath math="4x + y = 148 \quad ...(1)" />
+</MathContainer>
+
+For Store B:
+
+<MathContainer>
+  <BlockMath math="70x + 40y = 3040" />
+  <BlockMath math="7x + 4y = 304 \quad ...(2)" />
+</MathContainer>
+
+#### Finding the Price of Fish
+
+We will find the value of <InlineMath math="y" /> (price of fish). Eliminate variable <InlineMath math="x" /> from equations <InlineMath math="(1)" /> and <InlineMath math="(2)" />.
+
+Multiply equation <InlineMath math="(1)" /> by <InlineMath math="7" /> and equation <InlineMath math="(2)" /> by <InlineMath math="4" /> so that the coefficients of <InlineMath math="x" /> are the same:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} 4x + y &= 148 \quad |\times 7| \rightarrow 28x + 7y &= 1036 \\ 7x + 4y &= 304 \quad |\times 4| \rightarrow 28x + 16y &= 1216 \end{aligned}" />
+</MathContainer>
+
+Subtract the two equations:
+
+<MathContainer>
+  <BlockMath math="\begin{aligned} 28x + 16y &= 1216 \\ 28x + 7y &= 1036 \\ \hline 9y &= 180 \end{aligned}" />
+</MathContainer>
+
+Therefore:
+
+<MathContainer>
+  <BlockMath math="y = \frac{180}{9}" />
+  <BlockMath math="y = 20" />
+</MathContainer>
+
+Since the unit in the table is "thousand rupiah", the price of fish is <InlineMath math="20" /> thousand rupiah or <InlineMath math="\text{Rp}20,000.00" />.
+
+Thus, the price of fish per kilogram is <InlineMath math="\text{Rp}20,000.00" />.

@@ -18,20 +18,20 @@ import { FONT_PATH, MONO_FONT_PATH, ORIGIN_COLOR } from "./_data";
 interface Props {
   /** Angle in degrees */
   angle?: number;
-  /** Show labels for trig functions */
-  showLabels?: boolean;
   /** Display mode for values */
   displayMode?: "decimal" | "exact";
   /** Precision for decimal values */
   precision?: number;
-  /** Use mono font for the labels */
-  useMonoFont?: boolean;
+  /** Show labels for trig functions */
+  showLabels?: boolean;
   /** Exact trigonometric values as fractions (e.g., "5/13", "12/13", "5/12") */
   trigValues?: {
     sin?: string;
     cos?: string;
     tan?: string;
   };
+  /** Use mono font for the labels */
+  useMonoFont?: boolean;
   /** Additional props */
   [key: string]: unknown;
 }

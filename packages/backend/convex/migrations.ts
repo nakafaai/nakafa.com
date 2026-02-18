@@ -312,8 +312,8 @@ export const migrationSyncUserData = internalMutation({
     // Build lookup map with explicit types
     interface AuthUser {
       _id: string;
-      name: string;
       image?: string | null;
+      name: string;
     }
     const authMap = new Map<string, AuthUser>(
       authUsers.page.map((u: AuthUser) => [u._id, u])

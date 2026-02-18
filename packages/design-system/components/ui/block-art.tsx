@@ -15,29 +15,29 @@ import {
 } from "react";
 
 interface BlockArtProps {
+  animatedCellCount?: number;
+  animationColor?: string;
+  animationInterval?: number;
+  className?: string;
   gridCols?: number;
   gridRows?: number;
-  className?: string;
-  animationColor?: string;
-  animatedCellCount?: number;
-  animationInterval?: number;
-  waveDuration?: number;
   onCellClick?: () => void;
+  waveDuration?: number;
 }
 
 interface Ripple {
+  id: number;
+  startTime: number;
   x: number;
   y: number;
-  startTime: number;
-  id: number;
 }
 
 interface BlockCellProps {
-  index: number;
-  row: number;
   col: number;
-  onHoverStart: (index: number) => void;
+  index: number;
   onHoverEnd: (index: number) => void;
+  onHoverStart: (index: number) => void;
+  row: number;
 }
 
 const DEFAULT_ANIMATED_CELL_COUNT = 15;

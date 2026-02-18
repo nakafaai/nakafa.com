@@ -8,15 +8,15 @@ import type {
 import { JsonLd } from ".";
 
 interface BookJsonLdProps {
-  name: string;
-  description: string;
-  url: string;
-  inLanguage: string;
   author?: Person | Organization;
   bookFormat?: BookFormatType;
+  description: string;
+  inLanguage: string;
+  isAccessibleForFree?: boolean;
+  name: string;
   position?: number;
   totalPages?: number;
-  isAccessibleForFree?: boolean;
+  url: string;
 }
 
 /**

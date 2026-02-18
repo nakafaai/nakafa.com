@@ -14,11 +14,11 @@ import { Fragment, type ReactElement } from "react";
 import type { PagefindResult } from "@/types/pagefind";
 
 interface Props {
-  results: PagefindResult[];
-  query: string;
-  isLoading: boolean;
-  isError: boolean;
   error: string | ReactElement;
+  isError: boolean;
+  isLoading: boolean;
+  query: string;
+  results: PagefindResult[];
 }
 
 export function SearchResults({

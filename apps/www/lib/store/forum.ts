@@ -18,17 +18,17 @@ const stateSchema = z.object({
 });
 
 interface ReactionWithUsers {
-  emoji: string;
   count: number;
+  emoji: string;
   reactors: string[];
 }
 
 export interface ForumPost extends Doc<"schoolClassForumPosts"> {
-  user: UserData | null;
-  replyToUser: UserData | null;
+  attachments: PostAttachment[];
   myReactions: string[];
   reactionUsers: ReactionWithUsers[];
-  attachments: PostAttachment[];
+  replyToUser: UserData | null;
+  user: UserData | null;
 }
 
 interface ReplyTo {
@@ -38,15 +38,15 @@ interface ReplyTo {
 
 // Jump mode state for bidirectional pagination
 interface JumpModeState {
-  targetPostId: Id<"schoolClassForumPosts">;
+  hasMoreAfter: boolean;
+  hasMoreBefore: boolean;
+  isLoadingNewer: boolean;
+  isLoadingOlder: boolean;
+  newestTime: number;
+  oldestTime: number;
   posts: ForumPost[];
   targetIndex: number;
-  hasMoreBefore: boolean;
-  hasMoreAfter: boolean;
-  oldestTime: number;
-  newestTime: number;
-  isLoadingOlder: boolean;
-  isLoadingNewer: boolean;
+  targetPostId: Id<"schoolClassForumPosts">;
 }
 
 type JumpModeStateOrNull = JumpModeState | null;
@@ -63,11 +63,22 @@ interface TransientState {
 type State = PersistedState & TransientState;
 
 interface Actions {
-  setActiveForumId: (activeForumId: Id<"schoolClassForums"> | null) => void;
-  setReplyTo: (replyTo: ReplyTo | null) => void;
+  appendNewerPosts: (
+    posts: ForumPost[],
+    hasMore: boolean,
+    newestTime?: number
+  ) => void;
+  appendOlderPosts: (
+    posts: ForumPost[],
+    hasMore: boolean,
+    oldestTime?: number
+  ) => void;
   // Jump mode actions
   enterJumpMode: (targetPostId: Id<"schoolClassForumPosts">) => void;
   exitJumpMode: () => void;
+  loadNewerPosts: () => void;
+  loadOlderPosts: () => void;
+  setActiveForumId: (activeForumId: Id<"schoolClassForums"> | null) => void;
   setJumpModeData: (data: {
     posts: ForumPost[];
     targetIndex: number;
@@ -76,18 +87,7 @@ interface Actions {
     oldestTime: number;
     newestTime: number;
   }) => void;
-  loadOlderPosts: () => void;
-  loadNewerPosts: () => void;
-  appendOlderPosts: (
-    posts: ForumPost[],
-    hasMore: boolean,
-    oldestTime?: number
-  ) => void;
-  appendNewerPosts: (
-    posts: ForumPost[],
-    hasMore: boolean,
-    newestTime?: number
-  ) => void;
+  setReplyTo: (replyTo: ReplyTo | null) => void;
 }
 
 export type ForumStore = State & Actions;

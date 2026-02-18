@@ -10,15 +10,15 @@ import { Spinner } from "./spinner";
 // Types
 interface StepperContextValue {
   activeStep: number;
-  setActiveStep: (step: number) => void;
   orientation: "horizontal" | "vertical";
+  setActiveStep: (step: number) => void;
 }
 
 interface StepItemContextValue {
-  step: number;
-  state: StepState;
   isDisabled: boolean;
   isLoading: boolean;
+  state: StepState;
+  step: number;
 }
 
 type StepState = "active" | "completed" | "inactive" | "loading";
@@ -50,9 +50,9 @@ const useStepItem = () => {
 // Components
 interface StepperProps extends React.HTMLAttributes<HTMLDivElement> {
   defaultValue?: number;
-  value?: number;
   onValueChange?: (value: number) => void;
   orientation?: "horizontal" | "vertical";
+  value?: number;
 }
 
 function Stepper({
@@ -100,10 +100,10 @@ function Stepper({
 
 // StepperItem
 interface StepperItemProps extends React.HTMLAttributes<HTMLDivElement> {
-  step: number;
   completed?: boolean;
   disabled?: boolean;
   loading?: boolean;
+  step: number;
 }
 
 function StepperItem({

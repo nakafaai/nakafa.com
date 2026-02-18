@@ -6,34 +6,34 @@ import { format } from "date-fns";
 import { OpenContent } from "@/components/shared/open-content";
 
 interface Props {
-  /** The title of the content */
-  title: string;
-  /** The link to go some where, it will be shown as a button on top of the title */
-  link?: {
-    href: string;
-    label: string;
-  };
-  /** The description of the content */
-  description?: string;
-  /** The icon of the title */
-  icon?: IconSvgElement;
+  /** The authors of the content */
+  authors?: {
+    name: string;
+  }[];
   /** The category of the content */
   category?: {
     icon: IconSvgElement;
     name: string;
   };
-  /** The authors of the content */
-  authors?: {
-    name: string;
-  }[];
-  /** The date of the content creation */
-  date?: string;
-  /** The slug of the content */
-  slug?: string;
-  /** The github url of the content */
-  githubUrl?: string;
   /** The raw content, used for copying */
   content?: string;
+  /** The date of the content creation */
+  date?: string;
+  /** The description of the content */
+  description?: string;
+  /** The github url of the content */
+  githubUrl?: string;
+  /** The icon of the title */
+  icon?: IconSvgElement;
+  /** The link to go some where, it will be shown as a button on top of the title */
+  link?: {
+    href: string;
+    label: string;
+  };
+  /** The slug of the content */
+  slug?: string;
+  /** The title of the content */
+  title: string;
 }
 
 export function HeaderContent({

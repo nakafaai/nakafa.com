@@ -1,0 +1,36 @@
+export const metadata = {
+    title: "Pembahasan Soal 5",
+    authors: [{ name: "Nabil Akbarazzima Fatih" }],
+    date: "06/11/2025",
+};
+
+#### Analisis Volume
+
+Volume air yang tersisa merupakan selisih dari volume tabung (air mula-mula) dengan total volume bola yang dimasukkan.
+
+<MathContainer>
+  <BlockMath math="V_{\text{sisa}} = V_{\text{tabung}} - n \cdot V_{\text{bola}}" />
+  <BlockMath math="64\pi = \pi r_1^2 t - n \left(\frac{4}{3} \pi r_2^3\right)" />
+  <BlockMath math="64\pi = \pi \left(r_1^2 t - n \cdot \frac{4}{3} r_2^3\right)" />
+</MathContainer>
+
+Substitusikan <InlineMath math="r_1 = 16 \text{ cm}" /> dan <InlineMath math="t = 20 \text{ cm}" /> untuk tabung, serta <InlineMath math="r_2 = 6 \text{ cm}" /> untuk bola.
+
+<MathContainer>
+  <BlockMath math="64 = (16)^2(20) - n \left(\frac{4}{3}(6)^3\right)" />
+  <BlockMath math="64 = 5120 - n \left(\frac{4}{3}(216)\right)" />
+  <BlockMath math="64 = 5120 - 288n" />
+</MathContainer>
+
+Sederhanakan persamaan dengan membagi kedua ruas dengan 32:
+
+<MathContainer>
+  <BlockMath math="2 = 160 - 9n" />
+  <BlockMath math="9n = 160 - 2" />
+  <BlockMath math="9n = 158" />
+  <BlockMath math="n = \frac{158}{9} = 17\frac{5}{9}" />
+</MathContainer>
+
+Karena <InlineMath math="n" /> adalah banyaknya bola, maka <InlineMath math="n" /> harus bilangan bulat. Selain itu, total volume bola tidak boleh melebihi kapasitas yang memungkinkan sisa air <InlineMath math="64\pi" /> (jika <InlineMath math="n=18" />, maka sisa air akan negatif, yang tidak mungkin).
+
+Maka, banyaknya bola yang dimasukkan adalah <InlineMath math="17" /> bola.

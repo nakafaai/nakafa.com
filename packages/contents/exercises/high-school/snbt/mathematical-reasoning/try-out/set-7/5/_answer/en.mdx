@@ -1,0 +1,36 @@
+export const metadata = {
+  title: "Solution to Question 5",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+#### Volume Analysis
+
+The remaining water volume is the difference between the cylinder volume (initial water) and the total volume of the balls inserted.
+
+<MathContainer>
+  <BlockMath math="V_{\text{remaining}} = V_{\text{cylinder}} - n \cdot V_{\text{ball}}" />
+  <BlockMath math="64\pi = \pi r_1^2 t - n \left(\frac{4}{3} \pi r_2^3\right)" />
+  <BlockMath math="64\pi = \pi \left(r_1^2 t - n \cdot \frac{4}{3} r_2^3\right)" />
+</MathContainer>
+
+Substitute <InlineMath math="r_1 = 16 \text{ cm}" /> and <InlineMath math="t = 20 \text{ cm}" /> for the cylinder, and <InlineMath math="r_2 = 6 \text{ cm}" /> for the ball.
+
+<MathContainer>
+  <BlockMath math="64 = (16)^2(20) - n \left(\frac{4}{3}(6)^3\right)" />
+  <BlockMath math="64 = 5120 - n \left(\frac{4}{3}(216)\right)" />
+  <BlockMath math="64 = 5120 - 288n" />
+</MathContainer>
+
+Simplify the equation by dividing both sides by 32:
+
+<MathContainer>
+  <BlockMath math="2 = 160 - 9n" />
+  <BlockMath math="9n = 160 - 2" />
+  <BlockMath math="9n = 158" />
+  <BlockMath math="n = \frac{158}{9} = 17\frac{5}{9}" />
+</MathContainer>
+
+Since <InlineMath math="n" /> represents the number of balls, <InlineMath math="n" /> must be an integer. Furthermore, the total volume of the balls cannot exceed the capacity that allows for <InlineMath math="64\pi" /> of remaining water (if <InlineMath math="n=18" />, the remaining water would be negative, which is impossible).
+
+Therefore, the number of balls inserted is <InlineMath math="17" /> balls.

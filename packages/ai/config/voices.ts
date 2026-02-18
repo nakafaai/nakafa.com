@@ -6,20 +6,19 @@
  */
 export interface VoiceSettings {
   /**
-   * Determines how stable the voice is and the randomness between each generation.
-   * For ElevenLabs V3: 0.0 (Creative), 0.5 (Natural), or 1.0 (Robust).
-   * Range: 0.0 to 1.0
-   * @see https://elevenlabs.io/docs/api-reference/text-to-speech/convert
-   */
-  stability?: number;
-
-  /**
    * Determines how closely the AI should adhere to the original voice
    * when attempting to replicate it.
    * Range: 0.0 to 1.0
    * @see https://elevenlabs.io/docs/api-reference/text-to-speech/convert
    */
   similarityBoost?: number;
+  /**
+   * Determines how stable the voice is and the randomness between each generation.
+   * For ElevenLabs V3: 0.0 (Creative), 0.5 (Natural), or 1.0 (Robust).
+   * Range: 0.0 to 1.0
+   * @see https://elevenlabs.io/docs/api-reference/text-to-speech/convert
+   */
+  stability?: number;
 
   /**
    * Determines the style exaggeration of the voice.
@@ -43,6 +42,10 @@ export interface VoiceSettings {
  */
 export interface VoiceConfig {
   /**
+   * Optional description of the voice characteristics.
+   */
+  description?: string;
+  /**
    * The ElevenLabs voice ID.
    * @see https://elevenlabs.io/docs/voices/voice-library
    */
@@ -58,11 +61,6 @@ export interface VoiceConfig {
    * @see https://elevenlabs.io/docs/api-reference/text-to-speech/convert
    */
   settings: VoiceSettings;
-
-  /**
-   * Optional description of the voice characteristics.
-   */
-  description?: string;
 }
 
 /**

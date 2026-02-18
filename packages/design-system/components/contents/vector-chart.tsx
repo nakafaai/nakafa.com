@@ -19,6 +19,14 @@ import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
 interface Vector {
   /**
+   * Color of the vector
+   */
+  color?: string;
+  /**
+   * Direction of the vector arrow
+   */
+  direction?: "forward" | "backward" | "both" | "none";
+  /**
    * Unique identifier for the vector
    */
   id: string;
@@ -27,20 +35,12 @@ interface Vector {
    */
   name: string;
   /**
-   * Color of the vector
-   */
-  color?: string;
-  /**
    * Points of the vector
    */
   points: {
     x: number;
     y: number;
   }[];
-  /**
-   * Direction of the vector arrow
-   */
-  direction?: "forward" | "backward" | "both" | "none";
   /**
    * Type of the vector
    * @default "monotone"
@@ -50,17 +50,9 @@ interface Vector {
 
 interface Props {
   /**
-   * Title of the chart
-   */
-  title: ReactNode;
-  /**
    * Description of the chart
    */
   description: ReactNode;
-  /**
-   * Vectors to display in the chart
-   */
-  vectors: Vector[];
   /**
    * Labels for the x and y axes
    */
@@ -76,6 +68,14 @@ interface Props {
      */
     yAxis: string;
   };
+  /**
+   * Title of the chart
+   */
+  title: ReactNode;
+  /**
+   * Vectors to display in the chart
+   */
+  vectors: Vector[];
 }
 
 export function VectorChart({

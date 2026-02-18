@@ -23,8 +23,8 @@ import { useTranslations } from "next-intl";
 import { env } from "@/env";
 
 interface Props {
-  open: boolean;
   action: (open: boolean) => void;
+  open: boolean;
 }
 
 function AboutDialogContent({

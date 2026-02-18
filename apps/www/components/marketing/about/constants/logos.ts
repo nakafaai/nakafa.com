@@ -1,8 +1,8 @@
 export interface School {
-  name: string;
+  alt: string;
   href: string;
   logo: string;
-  alt: string;
+  name: string;
 }
 
 export const schools: School[] = [

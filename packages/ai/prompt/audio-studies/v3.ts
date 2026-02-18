@@ -2,21 +2,21 @@ import { createPrompt } from "@repo/ai/prompt/utils";
 
 interface PodcastScriptProps {
   /**
-   * The title of the content (article or subject section).
+   * The body content (article body or subject section body).
    */
-  title: string;
+  body: string;
   /**
    * Optional description of the content.
    */
   description?: string;
   /**
-   * The body content (article body or subject section body).
-   */
-  body: string;
-  /**
    * The locale of the content (e.g., "en", "id", "es", etc.).
    */
   locale: string;
+  /**
+   * The title of the content (article or subject section).
+   */
+  title: string;
 }
 
 /**

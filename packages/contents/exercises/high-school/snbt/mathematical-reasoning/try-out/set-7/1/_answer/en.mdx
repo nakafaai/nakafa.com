@@ -1,0 +1,43 @@
+export const metadata = {
+  title: "Solution to Question 1",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "02/17/2026",
+};
+
+#### Determining Meeting Interval
+
+It is known that the three vans meet for the <InlineMath math="4" />-th time <InlineMath math="18" /> hours after the initial meeting.
+
+Meeting for the <InlineMath math="4" />-th time means that <InlineMath math="3" /> meeting intervals (LCM) have passed.
+
+Let <InlineMath math="T" /> be the joint meeting interval (LCM of periods A, B, and C).
+
+<MathContainer>
+  <BlockMath math="3 \times T = 18 \text{ hours}" />
+  <BlockMath math="T = \frac{18}{3} = 6 \text{ hours}" />
+</MathContainer>
+
+So, the three vans meet together every <InlineMath math="6" /> hours.
+
+#### Determining Value of x
+
+The joint meeting interval (<InlineMath math="T" />) is the Least Common Multiple (LCM) of the periods of each van.
+
+Known periods:
+- Van A: <InlineMath math="2" /> hours
+- Van B: <InlineMath math="3" /> hours
+- Van C: <InlineMath math="x" /> hours
+
+Thus:
+
+<BlockMath math="\text{LCM}(2, 3, x) = 6" />
+
+We know that <InlineMath math="\text{LCM}(2, 3) = 6" />. Therefore, we must find the value of <InlineMath math="x" /> such that <InlineMath math="\text{LCM}(6, x) = 6" />. For <InlineMath math="\text{LCM}(6, x) = 6" />, <InlineMath math="x" /> must be a factor of <InlineMath math="6" />.
+
+From the available options, we are looking for a value of <InlineMath math="x" /> that is a factor of <InlineMath math="6" />.
+
+The values <InlineMath math="5" />, <InlineMath math="7" />, <InlineMath math="8" />, and <InlineMath math="9" /> are not factors of <InlineMath math="6" />, so they do not satisfy the condition <InlineMath math="\text{LCM}(6, x) = 6" />.
+
+For <InlineMath math="x = 6" />, we get <InlineMath math="\text{LCM}(6, 6) = 6" />, which satisfies the condition.
+
+So, the satisfying value of <InlineMath math="x" /> is <InlineMath math="6" />.

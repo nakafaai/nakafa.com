@@ -14,11 +14,11 @@ const DEFAULT_CAMERA_POSITION_Y = 6;
 const DEFAULT_CAMERA_POSITION_Z = 10;
 
 interface Props {
-  title: ReactNode;
-  description: ReactNode;
-  data: ComponentProps<typeof LineEquation3D>[];
   cameraPosition?: [number, number, number];
+  data: ComponentProps<typeof LineEquation3D>[];
+  description: ReactNode;
   showZAxis?: boolean;
+  title: ReactNode;
 }
 
 export function LineEquation({

@@ -1,0 +1,66 @@
+import { Graph } from "../graph";
+
+export const metadata = {
+  title: "Pembahasan Soal 18",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/11/2025",
+};
+
+#### Visualisasi Masalah
+
+Berikut adalah ilustrasi posisi elang dan ikan berdasarkan informasi soal:
+
+<Graph 
+  title="Posisi Elang dan Ikan"
+  description={<>Visualisasi jarak pandang elang ke ikan dengan sudut depresi <InlineMath math="30^\circ" />.</>}
+  labels={{
+    eagle: "Elang",
+    fish: "Ikan",
+    surface: "Permukaan Air",
+    sightDistance: "18 m"
+  }}
+/>
+
+#### Identifikasi Variabel
+
+Diketahui:
+- Kedalaman ikan dari permukaan air (<InlineMath math="y_1" />) = <InlineMath math="3 \text{ m}" />.
+- Jarak pandang total (Elang ke Ikan) = <InlineMath math="18 \text{ m}" />.
+- Sudut antara garis pandang dan permukaan air = <InlineMath math="30^\circ" />.
+
+Misalkan:
+- <InlineMath math="r_1" /> = jarak pandang ikan ke titik permukaan air.
+- <InlineMath math="r_2" /> = jarak pandang elang ke titik permukaan air.
+- <InlineMath math="y_2" /> = tinggi elang dari permukaan air.
+
+#### Menghitung Jarak Pandang Ikan ke Permukaan
+
+Perhatikan segitiga siku-siku yang dibentuk oleh posisi ikan dan permukaan air. Dengan menggunakan konsep sinus:
+
+<MathContainer>
+  <BlockMath math="\sin 30^\circ = \frac{y_1}{r_1}" />
+  <BlockMath math="\frac{1}{2} = \frac{3}{r_1}" />
+  <BlockMath math="r_1 = 3 \cdot 2 = 6 \text{ m}" />
+</MathContainer>
+
+#### Menghitung Jarak Pandang Elang ke Permukaan
+
+Jarak pandang total adalah jumlah dari jarak pandang ikan ke permukaan dan jarak pandang elang ke permukaan:
+
+<MathContainer>
+  <BlockMath math="R_{\text{total}} = r_1 + r_2" />
+  <BlockMath math="18 = 6 + r_2" />
+  <BlockMath math="r_2 = 18 - 6 = 12 \text{ m}" />
+</MathContainer>
+
+#### Menghitung Tinggi Elang
+
+Sekarang perhatikan segitiga siku-siku yang dibentuk oleh posisi elang dan permukaan air. Kembali gunakan konsep sinus:
+
+<MathContainer>
+  <BlockMath math="\sin 30^\circ = \frac{y_2}{r_2}" />
+  <BlockMath math="\frac{1}{2} = \frac{y_2}{12}" />
+  <BlockMath math="y_2 = 12 \cdot \frac{1}{2} = 6 \text{ m}" />
+</MathContainer>
+
+Jadi, tinggi elang terhadap permukaan sungai adalah <InlineMath math="6 \text{ m}" />.
