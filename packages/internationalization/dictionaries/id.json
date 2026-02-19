@@ -745,9 +745,9 @@
   },
   "SEO": {
     "subject": {
-      "title": "Belajar {title} {subject} Kelas {grade}: Panduan Lengkap | Nakafa",
-      "description": "Pelajari {title} dalam {subject} untuk Kelas {grade}. Panduan lengkap dengan contoh, latihan soal, dan pembahasan langkah demi langkah.",
-      "keywords": "{title}, {subject}, Kelas {grade}, belajar, panduan, contoh, latihan, edukasi"
+      "title": "{title}: Panduan {subject} Lengkap ({grade}) | Nakafa",
+      "description": "Pelajari {title} dalam {subject} untuk {grade}. Panduan lengkap dengan contoh, latihan soal, dan pembahasan langkah demi langkah.",
+      "keywords": "{title}, {subject}, {grade}, belajar, panduan, contoh, latihan, edukasi"
     },
     "exercise": {
       "title": "{setNumber, plural, =1 {Latihan Soal} other {Latihan Soal Set {setNumber}}}: {material} | Nakafa",

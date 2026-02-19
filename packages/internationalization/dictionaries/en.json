@@ -745,9 +745,9 @@
   },
   "SEO": {
     "subject": {
-      "title": "{title} {subject} Grade {grade}: Complete Guide | Nakafa",
-      "description": "Learn {title} in {subject} for Grade {grade}. Complete guide with examples, practice exercises, and step-by-step solutions.",
-      "keywords": "{title}, {subject}, Grade {grade}, learn, guide, examples, exercises, education"
+      "title": "{title}: Complete {subject} Guide ({grade}) | Nakafa",
+      "description": "Learn {title} in {subject} for {grade}. Complete guide with examples, practice exercises, and step-by-step explanations.",
+      "keywords": "{title}, {subject}, {grade}, learn, guide, examples, exercises, education"
     },
     "exercise": {
       "title": "{setNumber, plural, =1 {Practice Exercise} other {Set {setNumber} Practice}}: {material} | Nakafa",

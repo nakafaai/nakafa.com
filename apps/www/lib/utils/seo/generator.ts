@@ -1,3 +1,5 @@
+import { getGradeNonNumeric } from "@repo/contents/_lib/subject/grade";
+import type { Grade } from "@repo/contents/_types/subject/grade";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { createSEODescription } from "./descriptions";
@@ -32,6 +34,26 @@ async function getEffectiveTitle(
 }
 
 /**
+ * Formats grade for display in titles.
+ * Reuses getGradeNonNumeric from @repo/contents/_lib/subject/grade.
+ * Handles both numeric (1-12) and non-numeric (bachelor, master, phd) grades.
+ */
+async function formatGradeForDisplay(
+  grade: Grade,
+  locale: Locale
+): Promise<string> {
+  const tSubject = await getTranslations({ locale, namespace: "Subject" });
+
+  const nonNumericGrade = getGradeNonNumeric(grade);
+
+  if (nonNumericGrade) {
+    return tSubject(nonNumericGrade);
+  }
+
+  return tSubject("grade", { grade });
+}
+
+/**
  * Generates SEO metadata using ICU templates with graceful fallbacks.
  * All translations come from i18n - no hardcoded strings.
  */
@@ -48,18 +70,23 @@ export async function generateSEOMetadata(
         const { data, grade, material } = context;
         const subject = data.subject || material;
         const effectiveTitle = await getEffectiveTitle(data, locale);
+        const gradeDisplay = await formatGradeForDisplay(grade, locale);
 
         return {
-          title: t("subject.title", { title: effectiveTitle, subject, grade }),
+          title: t("subject.title", {
+            title: effectiveTitle,
+            subject,
+            grade: gradeDisplay,
+          }),
           description: t("subject.description", {
             title: effectiveTitle,
             subject,
-            grade,
+            grade: gradeDisplay,
           }),
           keywords: t("subject.keywords", {
             title: effectiveTitle,
             subject,
-            grade,
+            grade: gradeDisplay,
           })
             .split(", ")
             .map((k) => k.trim()),
