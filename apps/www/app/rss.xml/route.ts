@@ -62,6 +62,13 @@ export async function GET() {
         continue;
       }
 
+      // Extract locale and path from URL to match canonical OG URL pattern
+      const url = new URL(content.url);
+      const pathname = url.pathname; // e.g., "/en/articles/politics/my-article"
+      const pathSegments = pathname.split("/").filter(Boolean);
+      const locale = pathSegments[0]; // e.g., "en"
+      const path = pathSegments.slice(1).join("/"); // e.g., "articles/politics/my-article"
+
       feedItems.push({
         title: content.metadata.title,
         description: content.metadata.description ?? content.metadata.title,
@@ -69,7 +76,7 @@ export async function GET() {
         date: new Date(content.metadata.date),
         id: content.url,
         author: content.metadata.authors,
-        image: `${baseUrl}/og${new URL(content.url).pathname}/image.png`,
+        image: `${baseUrl}/${locale}/og/${path}/image.png`,
       });
     }
   }
