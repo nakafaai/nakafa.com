@@ -1,5 +1,8 @@
 import { getGradeNonNumeric } from "@repo/contents/_lib/subject/grade";
+import type { ArticleCategory } from "@repo/contents/_types/articles/category";
+import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
 import type { Grade } from "@repo/contents/_types/subject/grade";
+import type { Material } from "@repo/contents/_types/subject/material";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -8,11 +11,55 @@ import { createSEOTitle } from "./titles";
 import type { ContentSEOData, SEOContext, SEOMetadata } from "./types";
 
 /**
+ * Fetches translations for the Metadata namespace.
+ */
+const fetchMetadataTranslations = (locale: Locale) =>
+  Effect.tryPromise({
+    try: () => getTranslations({ locale, namespace: "Metadata" }),
+    catch: () => new Error("Failed to load Metadata translations"),
+  });
+
+/**
+ * Fetches translations for the Subject namespace.
+ */
+const fetchSubjectTranslations = (locale: Locale) =>
+  Effect.tryPromise({
+    try: () => getTranslations({ locale, namespace: "Subject" }),
+    catch: () => new Error("Failed to load Subject translations"),
+  });
+
+/**
+ * Fetches translations for the Exercises namespace.
+ */
+const fetchExercisesTranslations = (locale: Locale) =>
+  Effect.tryPromise({
+    try: () => getTranslations({ locale, namespace: "Exercises" }),
+    catch: () => new Error("Failed to load Exercises translations"),
+  });
+
+/**
+ * Fetches translations for the Articles namespace.
+ */
+const fetchArticlesTranslations = (locale: Locale) =>
+  Effect.tryPromise({
+    try: () => getTranslations({ locale, namespace: "Articles" }),
+    catch: () => new Error("Failed to load Articles translations"),
+  });
+
+/**
+ * Fetches translations for the SEO namespace.
+ */
+const fetchSEOTranslations = (locale: Locale) =>
+  Effect.tryPromise({
+    try: () => getTranslations({ locale, namespace: "SEO" }),
+    catch: () => new Error("Failed to load SEO translations"),
+  });
+
+/**
  * Gets effective title with fallback chain:
  * 1. data.title
  * 2. data.subject
- * 3. data.displayName (pre-translated from page)
- * 4. Metadata.title (ultimate fallback)
+ * 3. Metadata.title (ultimate fallback)
  */
 const getEffectiveTitle = Effect.fn("SEO.getEffectiveTitle")(
   (data: ContentSEOData, locale: Locale) =>
@@ -25,14 +72,7 @@ const getEffectiveTitle = Effect.fn("SEO.getEffectiveTitle")(
         return data.subject.trim();
       }
 
-      if (data.displayName?.trim()) {
-        return data.displayName.trim();
-      }
-
-      const tMeta = yield* Effect.tryPromise({
-        try: () => getTranslations({ locale, namespace: "Metadata" }),
-        catch: () => new Error("Failed to load Metadata translations"),
-      });
+      const tMeta = yield* fetchMetadataTranslations(locale);
 
       return tMeta("title");
     })
@@ -46,10 +86,7 @@ const getEffectiveTitle = Effect.fn("SEO.getEffectiveTitle")(
 const formatGradeForDisplay = Effect.fn("SEO.formatGradeForDisplay")(
   (grade: Grade, locale: Locale) =>
     Effect.gen(function* () {
-      const tSubject = yield* Effect.tryPromise({
-        try: () => getTranslations({ locale, namespace: "Subject" }),
-        catch: () => new Error("Failed to load Subject translations"),
-      });
+      const tSubject = yield* fetchSubjectTranslations(locale);
 
       const nonNumericGrade = getGradeNonNumeric(grade);
 
@@ -62,41 +99,72 @@ const formatGradeForDisplay = Effect.fn("SEO.formatGradeForDisplay")(
 );
 
 /**
+ * Translates material name from Subject namespace.
+ */
+const translateSubjectMaterial = Effect.fn("SEO.translateSubjectMaterial")(
+  (material: Material, locale: Locale) =>
+    Effect.gen(function* () {
+      const tSubject = yield* fetchSubjectTranslations(locale);
+      return tSubject(material);
+    })
+);
+
+/**
+ * Translates material name from Exercises namespace.
+ */
+const translateExerciseMaterial = Effect.fn("SEO.translateExerciseMaterial")(
+  (material: ExercisesMaterial, locale: Locale) =>
+    Effect.gen(function* () {
+      const tExercises = yield* fetchExercisesTranslations(locale);
+      return tExercises(material);
+    })
+);
+
+/**
+ * Translates category name from Articles namespace.
+ */
+const translateArticleCategory = Effect.fn("SEO.translateArticleCategory")(
+  (category: ArticleCategory, locale: Locale) =>
+    Effect.gen(function* () {
+      const tArticles = yield* fetchArticlesTranslations(locale);
+      return tArticles(category);
+    })
+);
+
+/**
  * Generates SEO metadata for subject content.
  */
 const generateSubjectMetadata = Effect.fn("SEO.generateSubjectMetadata")(
   (context: Extract<SEOContext, { type: "subject" }>, locale: Locale) =>
     Effect.gen(function* () {
       const { data, grade, material } = context;
-      const subject = data.subject || material;
 
-      const [t, effectiveTitle, gradeDisplay] = yield* Effect.all([
-        Effect.tryPromise({
-          try: () => getTranslations({ locale, namespace: "SEO" }),
-          catch: () => new Error("Failed to load SEO translations"),
-        }),
-        getEffectiveTitle(data, locale),
-        formatGradeForDisplay(grade, locale),
-      ]);
+      const [t, effectiveTitle, gradeDisplay, materialDisplayName] =
+        yield* Effect.all([
+          fetchSEOTranslations(locale),
+          getEffectiveTitle(data, locale),
+          formatGradeForDisplay(grade, locale),
+          translateSubjectMaterial(material, locale),
+        ]);
 
       return {
         title: t("subject.title", {
           title: effectiveTitle,
-          subject,
+          subject: materialDisplayName,
           grade: gradeDisplay,
         }),
         description: t("subject.description", {
           title: effectiveTitle,
-          subject,
+          subject: materialDisplayName,
           grade: gradeDisplay,
         }),
         keywords: t("subject.keywords", {
           title: effectiveTitle,
-          subject,
+          subject: materialDisplayName,
           grade: gradeDisplay,
         })
           .split(", ")
-          .map((k) => k.trim()),
+          .map((k: string) => k.trim()),
       };
     })
 );
@@ -109,28 +177,29 @@ const generateExerciseMetadata = Effect.fn("SEO.generateExerciseMetadata")(
     Effect.gen(function* () {
       const { data, material, setNumber, questionCount } = context;
 
-      const [t, effectiveTitle] = yield* Effect.all([
-        Effect.tryPromise({
-          try: () => getTranslations({ locale, namespace: "SEO" }),
-          catch: () => new Error("Failed to load SEO translations"),
-        }),
+      const [t, effectiveTitle, materialDisplayName] = yield* Effect.all([
+        fetchSEOTranslations(locale),
         getEffectiveTitle(data, locale),
+        translateExerciseMaterial(material, locale),
       ]);
 
       return {
         title: t("exercise.title", {
           setNumber: setNumber ?? 1,
-          material,
+          material: materialDisplayName,
           title: effectiveTitle,
         }),
         description: t("exercise.description", {
-          material,
+          material: materialDisplayName,
           questionCount: questionCount ?? 20,
           title: effectiveTitle,
         }),
-        keywords: t("exercise.keywords", { material, title: effectiveTitle })
+        keywords: t("exercise.keywords", {
+          material: materialDisplayName,
+          title: effectiveTitle,
+        })
           .split(", ")
-          .map((k) => k.trim()),
+          .map((k: string) => k.trim()),
       };
     })
 );
@@ -141,33 +210,29 @@ const generateExerciseMetadata = Effect.fn("SEO.generateExerciseMetadata")(
 const generateArticleMetadata = Effect.fn("SEO.generateArticleMetadata")(
   (context: Extract<SEOContext, { type: "article" }>, locale: Locale) =>
     Effect.gen(function* () {
-      const { data, category, categoryDisplayName } = context;
+      const { data, category } = context;
 
-      const [t, effectiveTitle] = yield* Effect.all([
-        Effect.tryPromise({
-          try: () => getTranslations({ locale, namespace: "SEO" }),
-          catch: () => new Error("Failed to load SEO translations"),
-        }),
+      const [t, effectiveTitle, categoryDisplayName] = yield* Effect.all([
+        fetchSEOTranslations(locale),
         getEffectiveTitle(data, locale),
+        translateArticleCategory(category, locale),
       ]);
-
-      const categoryLabel = categoryDisplayName || category;
 
       return {
         title: t("article.title", {
           title: effectiveTitle,
-          category: categoryLabel,
+          category: categoryDisplayName,
         }),
         description: t("article.description", {
           title: effectiveTitle,
-          category: categoryLabel,
+          category: categoryDisplayName,
         }),
         keywords: t("article.keywords", {
           title: effectiveTitle,
-          category: categoryLabel,
+          category: categoryDisplayName,
         })
           .split(", ")
-          .map((k) => k.trim()),
+          .map((k: string) => k.trim()),
       };
     })
 );
@@ -189,10 +254,7 @@ const generateQuranMetadata = Effect.fn("SEO.generateQuranMetadata")(
       const revelation = surah.revelation[locale] || surah.revelation.en || "";
       const effectiveTitle = translation || name;
 
-      const t = yield* Effect.tryPromise({
-        try: () => getTranslations({ locale, namespace: "SEO" }),
-        catch: () => new Error("Failed to load SEO translations"),
-      });
+      const t = yield* fetchSEOTranslations(locale);
 
       return {
         title: t("quran.title", {
@@ -212,7 +274,7 @@ const generateQuranMetadata = Effect.fn("SEO.generateQuranMetadata")(
           revelation,
         })
           .split(", ")
-          .map((k) => k.trim()),
+          .map((k: string) => k.trim()),
       };
     })
 );
@@ -258,6 +320,22 @@ export async function generateSEOMetadata(
 }
 
 /**
+ * Gets display name from context for fallback metadata.
+ */
+function getDisplayNameFromContext(context: SEOContext): string {
+  if (context.type === "subject") {
+    return context.material;
+  }
+  if (context.type === "exercise") {
+    return context.material;
+  }
+  if (context.type === "article") {
+    return context.category;
+  }
+  return "";
+}
+
+/**
  * Fallback using legacy functions when ICU templates fail.
  */
 function generateFallbackMetadata(context: SEOContext): SEOMetadata {
@@ -266,8 +344,10 @@ function generateFallbackMetadata(context: SEOContext): SEOMetadata {
       ? context.data
       : { title: "", description: "", subject: "" };
 
+  const displayName = getDisplayNameFromContext(context);
+
   return {
-    title: createSEOTitle([data?.title, data?.subject]),
+    title: createSEOTitle([data?.title, data?.subject, displayName]),
     description: createSEODescription([data?.description, data?.title]),
     keywords: [],
   };

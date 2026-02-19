@@ -15,9 +15,7 @@ import type { Material } from "@repo/contents/_types/subject/material";
 export interface ContentSEOData {
   /** Content description for meta description */
   description?: string;
-  /** Pre-translated display name for fallback (e.g., "Mathematics" from i18n) */
-  displayName?: string;
-  /** Subject name (e.g., "Mathematics", "Physics") */
+  /** Subject name - used as fallback in getEffectiveTitle() */
   subject?: string;
   /** Content title - primary keyword source (undefined = use fallback chain) */
   title?: string;
@@ -48,7 +46,6 @@ export type SEOContext =
   | {
       type: "article";
       category: ArticleCategory;
-      categoryDisplayName: string;
       data: ContentSEOData;
     }
   | {

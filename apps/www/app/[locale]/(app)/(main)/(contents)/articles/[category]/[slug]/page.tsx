@@ -79,21 +79,15 @@ export async function generateMetadata({
     locale,
   };
 
-  // Get category display name from Articles namespace
-  const tArticles = await getTranslations({ locale, namespace: "Articles" });
-  const categoryDisplayName = tArticles(category);
-
   // Evidence: Use ICU-based SEO generator for type-safe, locale-aware metadata
   // Source: https://developers.google.com/search/docs/appearance/title-link
   const seoContext: SEOContext = {
     type: "article",
     category,
-    categoryDisplayName,
     data: {
       title: content?.metadata.title,
       description: content?.metadata.description,
       subject: undefined,
-      displayName: categoryDisplayName,
     },
   };
 

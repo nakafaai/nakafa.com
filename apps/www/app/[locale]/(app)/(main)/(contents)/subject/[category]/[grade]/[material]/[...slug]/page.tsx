@@ -100,10 +100,6 @@ export async function generateMetadata({
     locale,
   };
 
-  // Get material display name from Subject namespace
-  const tSubject = await getTranslations({ locale, namespace: "Subject" });
-  const materialDisplayName = tSubject(material);
-
   // Evidence: Use ICU-based SEO generator for type-safe, locale-aware metadata
   // Source: https://developers.google.com/search/docs/appearance/title-link
   const seoContext: SEOContext = {
@@ -115,7 +111,6 @@ export async function generateMetadata({
       title: metadata?.title,
       description: metadata?.description,
       subject: metadata?.subject,
-      displayName: materialDisplayName,
     },
   };
 

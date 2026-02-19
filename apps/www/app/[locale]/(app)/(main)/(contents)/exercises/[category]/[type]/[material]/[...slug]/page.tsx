@@ -97,10 +97,6 @@ export async function generateMetadata({
     height: 630,
   };
 
-  // Get material display name from Exercises namespace
-  const tExercises = await getTranslations({ locale, namespace: "Exercises" });
-  const materialDisplayName = tExercises(material);
-
   // Evidence: Use ICU-based SEO generator for type-safe, locale-aware metadata
   // Source: https://developers.google.com/search/docs/appearance/title-link
   // Extract set number and question count from slug if available
@@ -120,7 +116,6 @@ export async function generateMetadata({
         exerciseTitle ?? currentMaterialItem?.title ?? currentMaterial?.title,
       description: undefined,
       subject: material,
-      displayName: materialDisplayName,
     },
   };
 
