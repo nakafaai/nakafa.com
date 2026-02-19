@@ -65,11 +65,11 @@ export async function GET() {
       feedItems.push({
         title: content.metadata.title,
         description: content.metadata.description ?? content.metadata.title,
-        link: `${baseUrl}${content.url}`,
+        link: content.url,
         date: new Date(content.metadata.date),
         id: content.url,
         author: content.metadata.authors,
-        image: `${baseUrl}/og${content.url}/image.png`,
+        image: `${baseUrl}/og${new URL(content.url).pathname}/image.png`,
       });
     }
   }
