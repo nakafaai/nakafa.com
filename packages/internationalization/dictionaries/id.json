@@ -316,6 +316,7 @@
     "login": "Masuk",
     "account": "Akun",
     "settings": "Pengaturan",
+    "settings-description": "Kelola pengaturan akun Nakafa, preferensi, dan informasi profil untuk mempersonalisasi pengalaman belajarmu.",
     "profile": "Profil",
     "profile-description": "Jelajahi profil belajar pengguna dengan kontribusi edukasi, komentar bermakna, pelacakan progres belajar, dan keterlibatan komunitas dalam pembelajaran kolaboratif.",
     "chat": "Obrolan",
@@ -338,6 +339,7 @@
     "administrator": "Administrator",
     "save": "Simpan",
     "developers": "Developer",
+    "developers-description": "Akses alat developer, API key, dan sumber integrasi untuk membangun aplikasi dengan konten dan layanan edukasi Nakafa.",
     "api-key": "API Key",
     "api-key-description": "Kelola API keys untuk autentikasi dengan API Nakafa.",
     "api-key-footer": "Buat API key baru di sini.",
@@ -544,8 +546,11 @@
   "Legal": {
     "terms-and-policies": "Syarat dan Kebijakan",
     "terms-of-service": "Syarat dan Ketentuan",
+    "terms-of-service-description": "Baca Syarat dan Ketentuan Nakafa untuk memahami aturan dan panduan penggunaan platform dan layanan edukasi kami.",
     "privacy-policy": "Kebijakan Privasi",
+    "privacy-policy-description": "Pelajari bagaimana Nakafa mengumpulkan, menggunakan, dan melindungi data pribadi dan privasi kamu saat menggunakan platform belajar kami.",
     "security-policy": "Kebijakan Keamanan",
+    "security-policy-description": "Tinjau praktik dan kebijakan keamanan Nakafa untuk memahami bagaimana kami melindungi data dan menjamin keamanan platform.",
     "legal-description": "Dengan menggunakan layanan kami, Anda setuju dengan <terms-of-service>Syarat dan Ketentuan</terms-of-service> dan <privacy-policy>Kebijakan Privasi</privacy-policy>."
   },
   "School": {
