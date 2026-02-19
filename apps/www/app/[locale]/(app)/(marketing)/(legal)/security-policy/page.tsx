@@ -16,6 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: t("security-policy"),
+    description: t("security-policy-description"),
     alternates: {
       canonical: `/${locale}/security-policy`,
     },

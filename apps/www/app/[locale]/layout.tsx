@@ -8,7 +8,6 @@ import { TailwindIndicator } from "@repo/design-system/components/ui/tailwind-in
 import { fonts } from "@repo/design-system/lib/fonts";
 import { routing } from "@repo/internationalization/src/routing";
 import { EducationalOrgJsonLd } from "@repo/seo/json-ld/educational-org";
-import { OrganizationJsonLd } from "@repo/seo/json-ld/organization";
 import { WebsiteJsonLd } from "@repo/seo/json-ld/website";
 import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
@@ -161,7 +160,6 @@ export default function Layout(props: LayoutProps<"/[locale]">) {
           <ReactScan />
           {/* Add JSON-LD structured data using the JsonLd component */}
           <EducationalOrgJsonLd />
-          <OrganizationJsonLd />
           <WebsiteJsonLd locale={locale} />
         </head>
         <body className="relative">
