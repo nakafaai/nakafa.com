@@ -48,6 +48,7 @@ export type SEOContext =
   | {
       type: "article";
       category: ArticleCategory;
+      categoryDisplayName: string;
       data: ContentSEOData;
     }
   | {

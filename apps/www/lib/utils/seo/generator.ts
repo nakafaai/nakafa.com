@@ -141,7 +141,7 @@ const generateExerciseMetadata = Effect.fn("SEO.generateExerciseMetadata")(
 const generateArticleMetadata = Effect.fn("SEO.generateArticleMetadata")(
   (context: Extract<SEOContext, { type: "article" }>, locale: Locale) =>
     Effect.gen(function* () {
-      const { data, category } = context;
+      const { data, category, categoryDisplayName } = context;
 
       const [t, effectiveTitle] = yield* Effect.all([
         Effect.tryPromise({
@@ -151,13 +151,21 @@ const generateArticleMetadata = Effect.fn("SEO.generateArticleMetadata")(
         getEffectiveTitle(data, locale),
       ]);
 
+      const categoryLabel = categoryDisplayName || category;
+
       return {
-        title: t("article.title", { title: effectiveTitle, category }),
+        title: t("article.title", {
+          title: effectiveTitle,
+          category: categoryLabel,
+        }),
         description: t("article.description", {
           title: effectiveTitle,
-          category,
+          category: categoryLabel,
         }),
-        keywords: t("article.keywords", { title: effectiveTitle, category })
+        keywords: t("article.keywords", {
+          title: effectiveTitle,
+          category: categoryLabel,
+        })
           .split(", ")
           .map((k) => k.trim()),
       };

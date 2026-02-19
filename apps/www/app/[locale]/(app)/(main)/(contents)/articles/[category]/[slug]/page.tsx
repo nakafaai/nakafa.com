@@ -88,6 +88,7 @@ export async function generateMetadata({
   const seoContext: SEOContext = {
     type: "article",
     category,
+    categoryDisplayName,
     data: {
       title: content?.metadata.title,
       description: content?.metadata.description,

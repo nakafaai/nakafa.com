@@ -124,16 +124,18 @@ export async function generateMetadata({
     },
   };
 
-  const { title: finalTitle, description } = await generateSEOMetadata(
-    seoContext,
-    locale
-  );
+  const {
+    title: finalTitle,
+    description,
+    keywords,
+  } = await generateSEOMetadata(seoContext, locale);
 
   return {
     title: {
       absolute: finalTitle,
     },
     description,
+    keywords,
     alternates: {
       canonical: urlPath,
     },
