@@ -742,5 +742,27 @@
       "schools": "Schools",
       "school-joining-failed": "Failed to join school. Make sure the code is correct."
     }
+  },
+  "SEO": {
+    "subject": {
+      "title": "{title} {subject} Grade {grade}: Complete Guide | Nakafa",
+      "description": "Learn {title} in {subject} for Grade {grade}. Complete guide with examples, practice exercises, and step-by-step solutions.",
+      "keywords": "{title}, {subject}, Grade {grade}, learn, guide, examples, exercises, education"
+    },
+    "exercise": {
+      "title": "{setNumber, plural, =1 {Practice Exercise} other {Set {setNumber} Practice}}: {material} | Nakafa",
+      "description": "Practice {material} with {questionCount, plural, =1 {1 question} other {{questionCount} questions}}. Includes detailed solutions and explanations.",
+      "keywords": "{material}, practice, exercises, questions, solutions, UTBK, try out"
+    },
+    "article": {
+      "title": "{title}: {category} Analysis | Nakafa",
+      "description": "Explore {title} in-depth. {category} analysis with data-driven insights and comprehensive research.",
+      "keywords": "{title}, {category}, analysis, research, insights"
+    },
+    "quran": {
+      "title": "Surah {number}. {name} ({transliteration}) - {translation} | Nakafa",
+      "description": "Read Surah {name} ({transliteration}) with translation and tafsir. {numberOfVerses} verses from the Holy Quran.",
+      "keywords": "Surah {name}, Quran, {translation}, {revelation}, tafsir"
+    }
   }
 }

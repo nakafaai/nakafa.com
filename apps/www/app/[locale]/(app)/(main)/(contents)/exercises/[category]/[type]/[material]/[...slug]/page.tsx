@@ -40,8 +40,8 @@ import {
   fetchExerciseContext,
   fetchExerciseMetadataContext,
 } from "@/lib/utils/pages/exercises";
-import { createSEODescription } from "@/lib/utils/seo/descriptions";
-import { createSEOTitle } from "@/lib/utils/seo/titles";
+import { generateSEOMetadata } from "@/lib/utils/seo/generator";
+import type { SEOContext } from "@/lib/utils/seo/types";
 import { getStaticParams } from "@/lib/utils/system";
 import { QuestionAnalytics } from "./analytics";
 import { ExerciseArticle } from "./article";
@@ -67,7 +67,6 @@ export async function generateMetadata({
   params: Props["params"];
 }): Promise<Metadata> {
   const { locale, category, type, material, slug } = await params;
-  const t = await getTranslations({ locale, namespace: "Exercises" });
 
   const {
     isSpecificExercise,
@@ -91,17 +90,6 @@ export async function generateMetadata({
     )
   );
 
-  // Build SEO-optimized title with smart truncation
-  // Priority: exercise title > material item > material > type > category
-  const finalTitle = createSEOTitle([
-    isSpecificExercise && exerciseTitle ? exerciseTitle : undefined,
-    currentMaterialItem?.title,
-    currentMaterial?.title,
-    t(material),
-    t(type),
-    t(category),
-  ]);
-
   const urlPath = `/${locale}${FilePath}`;
   const image = {
     url: getOgUrl(locale, FilePath),
@@ -109,19 +97,35 @@ export async function generateMetadata({
     height: 630,
   };
 
-  // Build SEO description from content parts
-  const description = createSEODescription([
-    isSpecificExercise && exerciseTitle
-      ? `${exerciseTitle} - ${t("practice-exercises")}`
-      : undefined,
-    currentMaterialItem?.title
-      ? `${currentMaterialItem.title} - ${t("practice-exercises")}`
-      : undefined,
-    currentMaterial?.title
-      ? `${currentMaterial.title} - ${t("practice-exercises")}`
-      : undefined,
-    `${t(material)} ${t(type)} - ${t("practice-exercises")}`,
-  ]);
+  // Evidence: Use ICU-based SEO generator for type-safe, locale-aware metadata
+  // Source: https://developers.google.com/search/docs/appearance/title-link
+  // Extract set number and question count from slug if available
+  const lastSlug = slug.at(-1);
+  const setNumber =
+    lastSlug && !Number.isNaN(Number(lastSlug)) ? Number(lastSlug) : undefined;
+
+  const seoContext: SEOContext = {
+    type: "exercise",
+    category,
+    exerciseType: type,
+    material,
+    setNumber,
+    questionCount: isSpecificExercise ? 1 : 20, // Single question or collection
+    data: {
+      title:
+        exerciseTitle ??
+        currentMaterialItem?.title ??
+        currentMaterial?.title ??
+        material,
+      description: undefined,
+      subject: material,
+    },
+  };
+
+  const { title: finalTitle, description } = await generateSEOMetadata(
+    seoContext,
+    locale
+  );
 
   return {
     title: {

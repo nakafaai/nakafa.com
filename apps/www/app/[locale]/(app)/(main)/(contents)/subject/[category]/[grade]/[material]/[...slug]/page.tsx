@@ -39,8 +39,8 @@ import {
   getContentContext,
   getContentMetadataContext,
 } from "@/lib/utils/pages/subject";
-import { createSEODescription } from "@/lib/utils/seo/descriptions";
-import { createSEOTitle } from "@/lib/utils/seo/titles";
+import { generateSEOMetadata } from "@/lib/utils/seo/generator";
+import type { SEOContext } from "@/lib/utils/seo/types";
 import { getStaticParams } from "@/lib/utils/system";
 
 export const revalidate = false;
@@ -100,45 +100,41 @@ export async function generateMetadata({
     locale,
   };
 
-  // Build SEO-optimized title with smart truncation
-  // Priority: content title > subject > material > grade > category
-  const title = createSEOTitle([
-    metadata?.title,
-    metadata?.subject,
-    t(material),
-    t(getGradeNonNumeric(grade) ?? "grade", { grade }),
-    t(category),
-  ]);
+  // Evidence: Use ICU-based SEO generator for type-safe, locale-aware metadata
+  // Source: https://developers.google.com/search/docs/appearance/title-link
+  const seoContext: SEOContext = {
+    type: "subject",
+    category,
+    grade,
+    material,
+    data: {
+      title: metadata?.title ?? "Content",
+      description: metadata?.description,
+      subject: metadata?.subject,
+    },
+  };
+
+  const { title, description, keywords } = await generateSEOMetadata(
+    seoContext,
+    locale
+  );
 
   if (!metadata) {
     return {
-      title: {
-        absolute: title,
-      },
+      title: { absolute: title },
       alternates,
       openGraph,
       twitter,
     };
   }
 
-  // Build SEO description from content parts
-  const description = createSEODescription([
-    metadata.description,
-    `${metadata.title} - ${t("learn-with-nakafa")}`,
-  ]);
-
   return {
-    title: {
-      absolute: title,
-    },
+    title: { absolute: title },
     description,
     alternates,
     authors: metadata.authors,
     category: t(material),
-    keywords: metadata.title
-      .split(" ")
-      .concat(metadata.description?.split(" ") ?? [])
-      .filter((keyword: string) => keyword.length > 0),
+    keywords,
     openGraph,
     twitter,
   };
