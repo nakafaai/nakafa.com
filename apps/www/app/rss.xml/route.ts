@@ -69,6 +69,7 @@ export async function GET() {
         date: new Date(content.metadata.date),
         id: content.url,
         author: content.metadata.authors,
+        image: `${baseUrl}/og${content.url}/image.png`,
       });
     }
   }
@@ -87,6 +88,7 @@ export async function GET() {
         link: `${baseUrl}/${locale}/quran/${surah.number}`,
         date: new Date("2025-01-01"), // Static date for Quran content
         id: `/${locale}/quran/${surah.number}`,
+        image: `${baseUrl}/og.png`, // Default OG image for Quran
       });
     }
   }
