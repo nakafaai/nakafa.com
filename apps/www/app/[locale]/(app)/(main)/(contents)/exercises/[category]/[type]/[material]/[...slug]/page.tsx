@@ -71,6 +71,7 @@ export async function generateMetadata({
   const {
     isSpecificExercise,
     exerciseTitle,
+    exerciseCount,
     FilePath,
     currentMaterial,
     currentMaterialItem,
@@ -81,6 +82,7 @@ export async function generateMetadata({
         onFailure: () => ({
           isSpecificExercise: false,
           exerciseTitle: undefined,
+          exerciseCount: 0,
           FilePath: getSlugPath(category, type, material, slug),
           currentMaterial: undefined,
           currentMaterialItem: undefined,
@@ -110,7 +112,7 @@ export async function generateMetadata({
     exerciseType: type,
     material,
     setNumber,
-    questionCount: isSpecificExercise ? 1 : 20, // Single question or collection
+    questionCount: isSpecificExercise ? 1 : exerciseCount, // Use actual count from filesystem
     data: {
       title:
         exerciseTitle ?? currentMaterialItem?.title ?? currentMaterial?.title,

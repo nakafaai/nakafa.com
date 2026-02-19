@@ -137,7 +137,7 @@ const translateArticleCategory = Effect.fn("SEO.translateArticleCategory")(
 const generateSubjectMetadata = Effect.fn("SEO.generateSubjectMetadata")(
   (context: Extract<SEOContext, { type: "subject" }>, locale: Locale) =>
     Effect.gen(function* () {
-      const { data, grade, material } = context;
+      const { data, grade, material, chapter } = context;
 
       const [t, effectiveTitle, gradeDisplay, materialDisplayName] =
         yield* Effect.all([
@@ -147,20 +147,23 @@ const generateSubjectMetadata = Effect.fn("SEO.generateSubjectMetadata")(
           translateSubjectMaterial(material, locale),
         ]);
 
+      // Use chapter if available, otherwise fall back to material name
+      const subjectLabel = chapter || materialDisplayName;
+
       return {
         title: t("subject.title", {
           title: effectiveTitle,
-          subject: materialDisplayName,
+          subject: subjectLabel,
           grade: gradeDisplay,
         }),
         description: t("subject.description", {
           title: effectiveTitle,
-          subject: materialDisplayName,
+          subject: subjectLabel,
           grade: gradeDisplay,
         }),
         keywords: t("subject.keywords", {
           title: effectiveTitle,
-          subject: materialDisplayName,
+          subject: subjectLabel,
           grade: gradeDisplay,
         })
           .split(", ")

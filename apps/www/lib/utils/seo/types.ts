@@ -32,6 +32,7 @@ export type SEOContext =
       category: SubjectCategory;
       grade: Grade;
       material: Material;
+      chapter?: string;
       data: ContentSEOData;
     }
   | {

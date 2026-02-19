@@ -1,7 +1,9 @@
 import { getGradeNonNumeric } from "@repo/contents/_lib/subject/grade";
 import {
+  getCurrentMaterial,
   getMaterialIcon,
   getMaterialPath,
+  getMaterials,
 } from "@repo/contents/_lib/subject/material";
 import {
   getMaterialsPagination,
@@ -65,20 +67,34 @@ export async function generateMetadata({
   const { locale, category, grade, material, slug } = await params;
   const t = await getTranslations({ locale, namespace: "Subject" });
 
-  const { content, FilePath } = await Effect.runPromise(
-    Effect.match(
-      getContentMetadataContext({ locale, category, grade, material, slug }),
-      {
-        onFailure: () => ({
-          content: null,
-          FilePath: getSlugPath(category, grade, material, slug),
-        }),
-        onSuccess: (data) => data,
-      }
-    )
-  );
+  const FilePath = getSlugPath(category, grade, material, slug);
+  const materialPath = getMaterialPath(category, grade, material);
+
+  // Fetch content and materials in parallel
+  const [{ content }, materials] = await Promise.all([
+    Effect.runPromise(
+      Effect.match(
+        getContentMetadataContext({ locale, category, grade, material, slug }),
+        {
+          onFailure: () => ({ content: null, FilePath }),
+          onSuccess: (data) => data,
+        }
+      )
+    ),
+    getMaterials(materialPath, locale).catch(() => []),
+  ]);
 
   const metadata = content?.metadata ?? null;
+
+  // Get chapter title from materials using getCurrentMaterial
+  let chapter: string | undefined;
+  if (slug.length > 0 && materials.length > 0) {
+    const chapterPath = getSlugPath(category, grade, material, [
+      slug.at(0) ?? "",
+    ]);
+    const { currentChapter } = getCurrentMaterial(chapterPath, materials);
+    chapter = currentChapter?.title;
+  }
 
   const path = `/${locale}${FilePath}`;
   const alternates = {
@@ -107,6 +123,7 @@ export async function generateMetadata({
     category,
     grade,
     material,
+    chapter,
     data: {
       title: metadata?.title,
       description: metadata?.description,

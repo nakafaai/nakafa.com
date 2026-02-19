@@ -1,4 +1,7 @@
-import { getExerciseByNumber } from "@repo/contents/_lib/exercises";
+import {
+  getExerciseByNumber,
+  getExerciseCount,
+} from "@repo/contents/_lib/exercises";
 import {
   getCurrentMaterial,
   getMaterialPath,
@@ -47,13 +50,15 @@ interface FetchExerciseContextOutput {
 /**
  * Output data containing fetched exercise metadata context.
  */
-interface FetchExerciseMetadataContextOutput {
+export interface FetchExerciseMetadataContextOutput {
   /** The current material being accessed (can be undefined for metadata generation) */
   currentMaterial: ReturnType<typeof getCurrentMaterial>["currentMaterial"];
   /** The specific item within the current material (can be undefined for metadata generation) */
   currentMaterialItem: ReturnType<
     typeof getCurrentMaterial
   >["currentMaterialItem"];
+  /** The total count of exercises in the current set */
+  exerciseCount: number;
   /** The exercise title if it's a specific exercise, undefined otherwise */
   exerciseTitle: string | undefined;
   /** The full file path to the content file */
@@ -141,8 +146,9 @@ export function fetchExerciseMetadataContext({
 
     const baseSlug = isSpecificExercise ? slug.slice(0, -1) : slug;
     const FilePath = getSlugPath(category, type, material, slug);
+    const exerciseSetPath = getSlugPath(category, type, material, baseSlug);
 
-    const [materials, exerciseOption] = yield* Effect.all([
+    const [materials, exerciseOption, exerciseCount] = yield* Effect.all([
       Effect.tryPromise({
         try: () => getMaterials(materialPath, locale),
         catch: () => new Error("Failed to fetch materials"),
@@ -150,10 +156,11 @@ export function fetchExerciseMetadataContext({
       isSpecificExercise
         ? getExerciseByNumber(
             locale,
-            getSlugPath(category, type, material, baseSlug),
+            exerciseSetPath,
             Number.parseInt(lastSlug, 10)
           )
         : Effect.succeed(Option.none()),
+      getExerciseCount(exerciseSetPath),
     ]);
 
     const exerciseTitle = Option.isSome(exerciseOption)
@@ -168,6 +175,7 @@ export function fetchExerciseMetadataContext({
     return {
       isSpecificExercise: Boolean(isSpecificExercise),
       exerciseTitle,
+      exerciseCount,
       FilePath,
       materials,
       currentMaterial,
