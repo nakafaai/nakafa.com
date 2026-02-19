@@ -7,6 +7,7 @@
     "setup": "convex dev --once && convex env set VALIDATE_ENV=true",
     "seed": "convex dev --once && convex run init",
     "deploy": "convex deploy",
+    "insights": "convex insights",
     "generate-schema": "pnpm dlx @better-auth/cli generate --config convex/betterAuth/auth.ts --output convex/betterAuth/generatedSchema.ts -y",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
