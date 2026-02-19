@@ -67,18 +67,18 @@ export async function generateSEOMetadata(
       }
 
       case "exercise": {
-        const { data, material, setNumber = 1, questionCount = 20 } = context;
+        const { data, material, setNumber, questionCount } = context;
         const effectiveTitle = await getEffectiveTitle(data, locale);
 
         return {
           title: t("exercise.title", {
-            setNumber,
+            setNumber: setNumber ?? 1,
             material,
             title: effectiveTitle,
           }),
           description: t("exercise.description", {
             material,
-            questionCount,
+            questionCount: questionCount ?? 20,
             title: effectiveTitle,
           }),
           keywords: t("exercise.keywords", { material, title: effectiveTitle })
