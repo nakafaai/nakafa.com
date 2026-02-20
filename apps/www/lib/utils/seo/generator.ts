@@ -148,29 +148,24 @@ const generateSubjectMetadata = Effect.fn("SEO.generateSubjectMetadata")(
           translateSubjectMaterial(material, locale),
         ]);
 
-      // ICU select requires valid keys (not empty strings)
-      // Use "true"/"false" string for conditional rendering
-      const hasChapter = chapter?.trim() ? "true" : "false";
-      const chapterValue = chapter?.trim() ?? "";
+      // Use sentinel value for optional fields in ICU select
+      const chapterValue = chapter?.trim() ?? "__EMPTY__";
 
       return {
         title: t("subject.title", {
           title: effectiveTitle,
-          hasChapter,
           chapter: chapterValue,
           material: materialDisplayName,
           grade: gradeDisplay,
         }),
         description: t("subject.description", {
           title: effectiveTitle,
-          hasChapter,
           chapter: chapterValue,
           material: materialDisplayName,
           grade: gradeDisplay,
         }),
         keywords: t("subject.keywords", {
           title: effectiveTitle,
-          hasChapter,
           chapter: chapterValue,
           material: materialDisplayName,
           grade: gradeDisplay,
@@ -197,21 +192,17 @@ const generateExerciseMetadata = Effect.fn("SEO.generateExerciseMetadata")(
         translateExerciseMaterial(material, locale),
       ]);
 
-      // ICU select requires valid keys (not empty strings)
-      // Use "true"/"false" string for conditional rendering
-      const hasSetName = setName?.trim() ? "true" : "false";
-      const setNameValue = setName?.trim() ?? "";
+      // Use sentinel value for optional fields in ICU select
+      const setNameValue = setName?.trim() ?? "__EMPTY__";
 
       return {
         title: t("exercise.title", {
-          hasSetName,
           setName: setNameValue,
           exerciseType: exerciseTypeDisplay,
           material: materialDisplayName,
           title: effectiveTitle,
         }),
         description: t("exercise.description", {
-          hasSetName,
           setName: setNameValue,
           exerciseType: exerciseTypeDisplay,
           material: materialDisplayName,
@@ -219,7 +210,6 @@ const generateExerciseMetadata = Effect.fn("SEO.generateExerciseMetadata")(
           title: effectiveTitle,
         }),
         keywords: t("exercise.keywords", {
-          hasSetName,
           setName: setNameValue,
           exerciseType: exerciseTypeDisplay,
           material: materialDisplayName,

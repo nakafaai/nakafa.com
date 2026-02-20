@@ -745,14 +745,14 @@
   },
   "SEO": {
     "subject": {
-      "title": "{title}: {hasChapter, select, true {{chapter} - } other {}}{material} ({grade}) | Nakafa",
-      "description": "Learn {title} in {hasChapter, select, true {{chapter} } other {}}{material} for {grade}. Complete material with practice problems, exercises, and step-by-step explanations.",
-      "keywords": "{title}, {hasChapter, select, true {{chapter}, } other {}}{material}, {grade}, learn, material, practice problems, exercises, education"
+      "title": "{title}: {chapter, select, __EMPTY__ {} other {{chapter} - }}{material} ({grade}) | Nakafa",
+      "description": "Learn {title} in {chapter, select, __EMPTY__ {} other {{chapter} }}{material} for {grade}. Complete material with practice problems, exercises, and step-by-step explanations.",
+      "keywords": "{title}, {chapter, select, __EMPTY__ {} other {{chapter}, }}{material}, {grade}, learn, material, practice problems, exercises, education"
     },
     "exercise": {
-      "title": "{hasSetName, select, true {{setName}: } other {}}{exerciseType} Simulation - {material} | Nakafa",
-      "description": "Take {material} {exerciseType} simulation{hasSetName, select, true { {setName}} other {}} with {questionCount, plural, =0 {practice questions} =1 {1 question} other {{questionCount} questions}} and detailed solutions for exam preparation.",
-      "keywords": "{material}, {exerciseType}, {hasSetName, select, true {{setName}, } other {}}simulation, practice questions, solutions, UTBK, try out, exam"
+      "title": "{setName, select, __EMPTY__ {} other {{setName}: }}{exerciseType} Simulation - {material} | Nakafa",
+      "description": "Take {material} {exerciseType} simulation{setName, select, __EMPTY__ {} other { {setName}}} with {questionCount, plural, =0 {practice questions} =1 {1 question} other {{questionCount} questions}} and detailed solutions for exam preparation.",
+      "keywords": "{material}, {exerciseType}, {setName, select, __EMPTY__ {} other {{setName}, }}simulation, practice questions, solutions, UTBK, try out, exam"
     },
     "article": {
       "title": "{title} - {category} | Nakafa",
