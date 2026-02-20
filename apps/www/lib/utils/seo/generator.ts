@@ -191,7 +191,8 @@ const generateSubjectMetadata = Effect.fn("SEO.generateSubjectMetadata")(
 const generateExerciseMetadata = Effect.fn("SEO.generateExerciseMetadata")(
   (context: Extract<SEOContext, { type: "exercise" }>, locale: Locale) =>
     Effect.gen(function* () {
-      const { data, material, exam, group, set, questionCount } = context;
+      const { data, material, exam, group, set, number, questionCount } =
+        context;
 
       const [t, effectiveTitle, materialDisplayName, examDisplayName] =
         yield* Effect.all([
@@ -205,11 +206,15 @@ const generateExerciseMetadata = Effect.fn("SEO.generateExerciseMetadata")(
       const groupValue = group?.trim() || "__EMPTY__";
       const setValue = set?.trim() || "__EMPTY__";
 
+      // Convert number to string for ICU select
+      const numberValue = number && number > 0 ? String(number) : "0";
+
       return {
         title: t("exercise.title", {
           exam: examDisplayName,
           group: groupValue,
           set: setValue,
+          number: numberValue,
           material: materialDisplayName,
           title: effectiveTitle,
         }),

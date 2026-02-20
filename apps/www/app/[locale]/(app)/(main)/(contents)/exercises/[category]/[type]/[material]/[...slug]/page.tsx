@@ -105,6 +105,13 @@ export async function generateMetadata({
   const group = currentMaterial?.title;
   const set = currentMaterialItem?.title;
 
+  // Extract exercise number from slug for specific exercises (e.g., /set-2/1)
+  const lastSlug = slug.at(-1);
+  const exerciseNumber =
+    isSpecificExercise && lastSlug && isNumber(lastSlug)
+      ? Number.parseInt(lastSlug, 10)
+      : undefined;
+
   const seoContext: SEOContext = {
     type: "exercise",
     category,
@@ -112,6 +119,7 @@ export async function generateMetadata({
     material,
     group,
     set,
+    number: exerciseNumber,
     questionCount: isSpecificExercise ? 1 : exerciseCount, // Use actual count from filesystem
     data: {
       title:

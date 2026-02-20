@@ -42,6 +42,7 @@ export type SEOContext =
       material: ExercisesMaterial;
       group?: string; // Exercise group name (e.g., "Try Out")
       set?: string; // Exercise set name (e.g., "Set 1")
+      number?: number; // Exercise number for specific questions (e.g., 1, 2, 3)
       questionCount?: number;
       data: ContentSEOData;
     }

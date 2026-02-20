@@ -3,7 +3,7 @@ import { BASE_PATH } from ".";
 
 const idMaterials: MaterialList = [
   {
-    title: "Komposisi Fungsi dan Fungsi Invers",
+    title: "Fungsi Komposisi dan Fungsi Invers",
     description:
       "Aljabar canggih yang mendasari enkripsi data dan algoritma komputer modern.",
     href: `${BASE_PATH}/function-composition-inverse-function`,

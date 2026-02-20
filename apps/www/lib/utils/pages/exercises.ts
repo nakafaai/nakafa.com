@@ -167,8 +167,9 @@ export function fetchExerciseMetadataContext({
       ? exerciseOption.value.question.metadata.title
       : undefined;
 
+    // Use exerciseSetPath (without exercise number) for material lookup
     const { currentMaterial, currentMaterialItem } = getCurrentMaterial(
-      FilePath,
+      exerciseSetPath,
       materials
     );
 
