@@ -79,9 +79,7 @@ const getEffectiveTitle = Effect.fn("SEO.getEffectiveTitle")(
 );
 
 /**
- * Formats grade for display in titles.
- * Reuses getGradeNonNumeric from @repo/contents/_lib/subject/grade.
- * Handles both numeric (1-12) and non-numeric (bachelor, master, phd) grades.
+ * Formats grade for display (numeric or non-numeric like bachelor/master).
  */
 const formatGradeForDisplay = Effect.fn("SEO.formatGradeForDisplay")(
   (grade: Grade, locale: Locale) =>
@@ -133,7 +131,6 @@ const translateArticleCategory = Effect.fn("SEO.translateArticleCategory")(
 
 /**
  * Generates SEO metadata for subject content.
- * Uses ICU select with boolean string keys for conditional rendering.
  */
 const generateSubjectMetadata = Effect.fn("SEO.generateSubjectMetadata")(
   (context: Extract<SEOContext, { type: "subject" }>, locale: Locale) =>
@@ -178,7 +175,6 @@ const generateSubjectMetadata = Effect.fn("SEO.generateSubjectMetadata")(
 
 /**
  * Generates SEO metadata for exercise content.
- * Uses ICU select with boolean string keys for conditional rendering.
  */
 const generateExerciseMetadata = Effect.fn("SEO.generateExerciseMetadata")(
   (context: Extract<SEOContext, { type: "exercise" }>, locale: Locale) =>
@@ -297,9 +293,7 @@ const generateQuranMetadata = Effect.fn("SEO.generateQuranMetadata")(
 );
 
 /**
- * Generates SEO metadata using ICU templates with graceful fallbacks.
- * All translations come from i18n - no hardcoded strings.
- * Uses Effect internally for type-safe error handling.
+ * Main entry point for generating SEO metadata.
  */
 export async function generateSEOMetadata(
   context: SEOContext,
@@ -353,9 +347,7 @@ function getDisplayNameFromContext(context: SEOContext): string {
 }
 
 /**
- * Fallback using legacy functions when ICU templates fail.
- * Note: "subject" field in ContentSEOData is a legacy name for fallback title,
- * not specific to "subject" content type. It's used as second priority in title chain.
+ * Fallback using legacy title/description builders.
  */
 function generateFallbackMetadata(context: SEOContext): SEOMetadata {
   const displayName = getDisplayNameFromContext(context);
