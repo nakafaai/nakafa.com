@@ -133,9 +133,7 @@ const translateArticleCategory = Effect.fn("SEO.translateArticleCategory")(
 
 /**
  * Generates SEO metadata for subject content.
- * Uses ICU select with empty string matching for clean conditional rendering
- * Evidence: https://unicode-org.github.io/icu/userguide/format_parse/messages/
- * Best Practice: ICU MessageFormat matches empty strings with "" keyword
+ * Uses ICU select with boolean string keys for conditional rendering.
  */
 const generateSubjectMetadata = Effect.fn("SEO.generateSubjectMetadata")(
   (context: Extract<SEOContext, { type: "subject" }>, locale: Locale) =>
@@ -150,25 +148,29 @@ const generateSubjectMetadata = Effect.fn("SEO.generateSubjectMetadata")(
           translateSubjectMaterial(material, locale),
         ]);
 
-      // ICU select matches empty string "" as a keyword
-      // No need for separate hasChapter flag
+      // ICU select requires valid keys (not empty strings)
+      // Use "true"/"false" string for conditional rendering
+      const hasChapter = chapter?.trim() ? "true" : "false";
       const chapterValue = chapter?.trim() ?? "";
 
       return {
         title: t("subject.title", {
           title: effectiveTitle,
+          hasChapter,
           chapter: chapterValue,
           material: materialDisplayName,
           grade: gradeDisplay,
         }),
         description: t("subject.description", {
           title: effectiveTitle,
+          hasChapter,
           chapter: chapterValue,
           material: materialDisplayName,
           grade: gradeDisplay,
         }),
         keywords: t("subject.keywords", {
           title: effectiveTitle,
+          hasChapter,
           chapter: chapterValue,
           material: materialDisplayName,
           grade: gradeDisplay,
@@ -181,9 +183,7 @@ const generateSubjectMetadata = Effect.fn("SEO.generateSubjectMetadata")(
 
 /**
  * Generates SEO metadata for exercise content.
- * Uses ICU select with empty string matching for clean conditional rendering
- * Evidence: https://unicode-org.github.io/icu/userguide/format_parse/messages/
- * Best Practice: ICU MessageFormat matches empty strings with "" keyword
+ * Uses ICU select with boolean string keys for conditional rendering.
  */
 const generateExerciseMetadata = Effect.fn("SEO.generateExerciseMetadata")(
   (context: Extract<SEOContext, { type: "exercise" }>, locale: Locale) =>
@@ -197,18 +197,21 @@ const generateExerciseMetadata = Effect.fn("SEO.generateExerciseMetadata")(
         translateExerciseMaterial(material, locale),
       ]);
 
-      // ICU select matches empty string "" as a keyword
-      // No need for separate hasSetName flag
+      // ICU select requires valid keys (not empty strings)
+      // Use "true"/"false" string for conditional rendering
+      const hasSetName = setName?.trim() ? "true" : "false";
       const setNameValue = setName?.trim() ?? "";
 
       return {
         title: t("exercise.title", {
+          hasSetName,
           setName: setNameValue,
           exerciseType: exerciseTypeDisplay,
           material: materialDisplayName,
           title: effectiveTitle,
         }),
         description: t("exercise.description", {
+          hasSetName,
           setName: setNameValue,
           exerciseType: exerciseTypeDisplay,
           material: materialDisplayName,
@@ -216,6 +219,7 @@ const generateExerciseMetadata = Effect.fn("SEO.generateExerciseMetadata")(
           title: effectiveTitle,
         }),
         keywords: t("exercise.keywords", {
+          hasSetName,
           setName: setNameValue,
           exerciseType: exerciseTypeDisplay,
           material: materialDisplayName,

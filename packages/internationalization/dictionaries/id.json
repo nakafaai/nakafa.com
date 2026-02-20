@@ -745,14 +745,14 @@
   },
   "SEO": {
     "subject": {
-      "title": "{title}: {chapter, select,  {} other {{chapter} - }}{material} ({grade}) | Nakafa",
-      "description": "Pelajari {title} dalam {chapter, select,  {} other {{chapter} }}{material} untuk {grade}. Materi lengkap dengan contoh soal, latihan, dan pembahasan langkah demi langkah.",
-      "keywords": "{title}, {chapter, select,  {} other {{chapter}, }}{material}, {grade}, belajar, materi, contoh soal, latihan, edukasi"
+      "title": "{title}: {hasChapter, select, true {{chapter} - } other {}}{material} ({grade}) | Nakafa",
+      "description": "Pelajari {title} dalam {hasChapter, select, true {{chapter} } other {}}{material} untuk {grade}. Materi lengkap dengan contoh soal, latihan, dan pembahasan langkah demi langkah.",
+      "keywords": "{title}, {hasChapter, select, true {{chapter}, } other {}}{material}, {grade}, belajar, materi, contoh soal, latihan, edukasi"
     },
     "exercise": {
-      "title": "{setName, select,  {} other {{setName}: }}Simulasi {exerciseType} - {material} | Nakafa",
-      "description": "Simulasi {material} {exerciseType} {setName, select,  {} other {{setName} }}dengan {questionCount, plural, =0 {soal-soal} =1 {1 soal} other {{questionCount} soal}} lengkap beserta pembahasan dan penjelasan detail untuk persiapan ujian.",
-      "keywords": "{material}, {exerciseType}, {setName, select,  {} other {{setName}, }}simulasi, latihan soal, pembahasan, UTBK, try out, ujian"
+      "title": "{hasSetName, select, true {{setName}: } other {}}Simulasi {exerciseType} - {material} | Nakafa",
+      "description": "Simulasi {material} {exerciseType} {hasSetName, select, true {{setName} } other {}}dengan {questionCount, plural, =0 {soal-soal} =1 {1 soal} other {{questionCount} soal}} lengkap beserta pembahasan dan penjelasan detail untuk persiapan ujian.",
+      "keywords": "{material}, {exerciseType}, {hasSetName, select, true {{setName}, } other {}}simulasi, latihan soal, pembahasan, UTBK, try out, ujian"
     },
     "article": {
       "title": "{title} - {category} | Nakafa",
