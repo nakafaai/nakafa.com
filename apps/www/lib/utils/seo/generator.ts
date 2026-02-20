@@ -322,7 +322,7 @@ export async function generateSEOMetadata(
         return yield* generateQuranMetadata(context, locale);
       }
       default: {
-        return generateFallbackMetadata(context);
+        return yield* Effect.sync(() => generateFallbackMetadata(context));
       }
     }
   });
@@ -354,18 +354,27 @@ function getDisplayNameFromContext(context: SEOContext): string {
 
 /**
  * Fallback using legacy functions when ICU templates fail.
+ * Note: "subject" field in ContentSEOData is a legacy name for fallback title,
+ * not specific to "subject" content type. It's used as second priority in title chain.
  */
 function generateFallbackMetadata(context: SEOContext): SEOMetadata {
-  const data =
-    "data" in context
-      ? context.data
-      : { title: "", description: "", subject: "" };
-
   const displayName = getDisplayNameFromContext(context);
 
+  // Quran type doesn't have data property - handle first
+  if (context.type === "quran") {
+    return {
+      title: createSEOTitle([context.surah.name.translation.en, displayName]),
+      description: createSEODescription([context.surah.name.translation.en]),
+      keywords: [],
+    };
+  }
+
+  // Types with data: subject, exercise, article
+  const { data } = context;
+
   return {
-    title: createSEOTitle([data?.title, data?.subject, displayName]),
-    description: createSEODescription([data?.description, data?.title]),
+    title: createSEOTitle([data.title, data.subject, displayName]),
+    description: createSEODescription([data.description, data.title]),
     keywords: [],
   };
 }
