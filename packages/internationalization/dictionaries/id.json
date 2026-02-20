@@ -745,20 +745,14 @@
   },
   "SEO": {
     "subject": {
-      "titleWithChapter": "{title}: {chapter} - {material} ({grade}) | Nakafa",
-      "titleWithoutChapter": "{title}: {material} ({grade}) | Nakafa",
-      "descriptionWithChapter": "Pelajari {title} dalam {chapter} {material} untuk {grade}. Materi lengkap dengan contoh soal, latihan, dan pembahasan langkah demi langkah.",
-      "descriptionWithoutChapter": "Pelajari {title} dalam {material} untuk {grade}. Materi lengkap dengan contoh soal, latihan, dan pembahasan langkah demi langkah.",
-      "keywordsWithChapter": "{title}, {chapter}, {material}, {grade}, belajar, materi, contoh soal, latihan, edukasi",
-      "keywordsWithoutChapter": "{title}, {material}, {grade}, belajar, materi, contoh soal, latihan, edukasi"
+      "title": "{title}: {chapter, select,  {} other {{chapter} - }}{material} ({grade}) | Nakafa",
+      "description": "Pelajari {title} dalam {chapter, select,  {} other {{chapter} }}{material} untuk {grade}. Materi lengkap dengan contoh soal, latihan, dan pembahasan langkah demi langkah.",
+      "keywords": "{title}, {chapter, select,  {} other {{chapter}, }}{material}, {grade}, belajar, materi, contoh soal, latihan, edukasi"
     },
     "exercise": {
-      "titleWithSet": "{setName}: Simulasi {exerciseType} - {material} | Nakafa",
-      "titleWithoutSet": "Simulasi {exerciseType} - {material} | Nakafa",
-      "descriptionWithSet": "Simulasi {material} {exerciseType} {setName} dengan {questionCount, plural, =0 {soal-soal} =1 {1 soal} other {{questionCount} soal}} lengkap beserta pembahasan dan penjelasan detail untuk persiapan ujian.",
-      "descriptionWithoutSet": "Simulasi {material} {exerciseType} dengan {questionCount, plural, =0 {soal-soal} =1 {1 soal} other {{questionCount} soal}} lengkap beserta pembahasan dan penjelasan detail untuk persiapan ujian.",
-      "keywordsWithSet": "{material}, {exerciseType}, {setName}, simulasi, latihan soal, pembahasan, UTBK, try out, ujian",
-      "keywordsWithoutSet": "{material}, {exerciseType}, simulasi, latihan soal, pembahasan, UTBK, try out, ujian"
+      "title": "{setName, select,  {} other {{setName}: }}Simulasi {exerciseType} - {material} | Nakafa",
+      "description": "Simulasi {material} {exerciseType} {setName, select,  {} other {{setName} }}dengan {questionCount, plural, =0 {soal-soal} =1 {1 soal} other {{questionCount} soal}} lengkap beserta pembahasan dan penjelasan detail untuk persiapan ujian.",
+      "keywords": "{material}, {exerciseType}, {setName, select,  {} other {{setName}, }}simulasi, latihan soal, pembahasan, UTBK, try out, ujian"
     },
     "article": {
       "title": "{title} - {category} | Nakafa",
