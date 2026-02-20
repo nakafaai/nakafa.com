@@ -745,19 +745,19 @@
   },
   "SEO": {
     "subject": {
-      "title": "{title}: Complete {subject} Guide ({grade}) | Nakafa",
-      "description": "Learn {title} in {subject} for {grade}. Complete guide with examples, practice exercises, and step-by-step explanations.",
-      "keywords": "{title}, {subject}, {grade}, learn, guide, examples, exercises, education"
+      "title": "{title}: {chapter} - {material} ({grade}) | Nakafa",
+      "description": "Learn {title} in {chapter} {material} for {grade}. Complete material with practice problems, exercises, and step-by-step explanations.",
+      "keywords": "{title}, {chapter}, {material}, {grade}, learn, material, practice problems, exercises, education"
     },
     "exercise": {
-      "title": "Practice {setName}: {exerciseType} - {material} | Nakafa",
-      "description": "Practice {material} {exerciseType} {setName} with {questionCount} questions. Includes detailed solutions and explanations.",
-      "keywords": "{material}, {exerciseType}, {setName}, practice, exercises, questions, solutions, UTBK, try out"
+      "title": "{setName} {exerciseType} {material} - {questionCount} Questions and Solutions | Nakafa",
+      "description": "Practice {material} {exerciseType} {setName} with {questionCount} questions complete with detailed solutions and explanations.",
+      "keywords": "{material}, {exerciseType}, {setName}, practice questions, solutions, UTBK, try out, exam"
     },
     "article": {
-      "title": "{title}: {category} Analysis | Nakafa",
-      "description": "Explore {title} in-depth. {category} analysis with data-driven insights and comprehensive research.",
-      "keywords": "{title}, {category}, analysis, research, insights"
+      "title": "{title} - {category} | Nakafa",
+      "description": "Read complete analysis of {title}. Latest information with data and in-depth research from Nakafa editorial team.",
+      "keywords": "{title}, {category}, analysis, facts, latest, research, information, news"
     },
     "quran": {
       "title": "Surah {number}. {name} ({transliteration}) - {translation} | Nakafa",

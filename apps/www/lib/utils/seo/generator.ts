@@ -147,23 +147,26 @@ const generateSubjectMetadata = Effect.fn("SEO.generateSubjectMetadata")(
           translateSubjectMaterial(material, locale),
         ]);
 
-      // Use chapter if available, otherwise fall back to material name
-      const subjectLabel = chapter || materialDisplayName;
+      // Pass chapter and material separately for better SEO structure
+      const chapterLabel = chapter || "";
 
       return {
         title: t("subject.title", {
           title: effectiveTitle,
-          subject: subjectLabel,
+          chapter: chapterLabel,
+          material: materialDisplayName,
           grade: gradeDisplay,
         }),
         description: t("subject.description", {
           title: effectiveTitle,
-          subject: subjectLabel,
+          chapter: chapterLabel,
+          material: materialDisplayName,
           grade: gradeDisplay,
         }),
         keywords: t("subject.keywords", {
           title: effectiveTitle,
-          subject: subjectLabel,
+          chapter: chapterLabel,
+          material: materialDisplayName,
           grade: gradeDisplay,
         })
           .split(", ")

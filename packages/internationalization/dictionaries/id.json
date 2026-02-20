@@ -745,19 +745,19 @@
   },
   "SEO": {
     "subject": {
-      "title": "{title}: Panduan {subject} Lengkap ({grade}) | Nakafa",
-      "description": "Pelajari {title} dalam {subject} untuk {grade}. Panduan lengkap dengan contoh, latihan soal, dan pembahasan langkah demi langkah.",
-      "keywords": "{title}, {subject}, {grade}, belajar, panduan, contoh, latihan, edukasi"
+      "title": "{title}: {chapter} - {material} ({grade}) | Nakafa",
+      "description": "Pelajari {title} dalam {chapter} {material} untuk {grade}. Materi lengkap dengan contoh soal, latihan, dan pembahasan langkah demi langkah.",
+      "keywords": "{title}, {chapter}, {material}, {grade}, belajar, materi, contoh soal, latihan, edukasi"
     },
     "exercise": {
-      "title": "Latihan {setName}: {exerciseType} - {material} | Nakafa",
-      "description": "Latihan {material} {exerciseType} {setName} dengan {questionCount} soal. Dilengkapi pembahasan lengkap dan penjelasan detail.",
-      "keywords": "{material}, {exerciseType}, {setName}, latihan, soal, pembahasan, UTBK, try out"
+      "title": "{setName} {exerciseType} {material} - {questionCount} Soal dan Pembahasan | Nakafa",
+      "description": "Latihan {material} {exerciseType} {setName} dengan {questionCount} soal lengkap beserta pembahasan dan penjelasan detail.",
+      "keywords": "{material}, {exerciseType}, {setName}, latihan soal, pembahasan, UTBK, try out, ujian"
     },
     "article": {
-      "title": "{title}: Analisis {category} | Nakafa",
-      "description": "Eksplorasi mendalam {title}. Analisis {category} dengan wawasan berbasis data.",
-      "keywords": "{title}, {category}, analisis, riset, wawasan"
+      "title": "{title} - {category} | Nakafa",
+      "description": "Baca analisis lengkap {title}. Informasi terkini dengan data dan riset mendalam dari tim redaksi Nakafa.",
+      "keywords": "{title}, {category}, analisis, fakta, terkini, riset, informasi, berita"
     },
     "quran": {
       "title": "Surat {number}. {name} ({transliteration}) - {translation} | Nakafa",
