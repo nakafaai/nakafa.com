@@ -33,6 +33,7 @@ import type {
   MaterialList,
 } from "@repo/contents/_types/subject/material";
 import { MaterialListSchema } from "@repo/contents/_types/subject/material";
+import { cleanSlug } from "@repo/utilities/helper";
 import type { Locale } from "next-intl";
 
 /**
@@ -134,4 +135,36 @@ export function getMaterialIcon(material: Material | ExercisesMaterial) {
     default:
       return BulbIcon;
   }
+}
+
+/**
+ * Gets the current chapter and item from the materials list by path.
+ * Evidence: Reuses pattern from exercises/material.ts
+ * @param path - The path to search for (can be chapter href or item href)
+ * @param materials - The materials list
+ * @returns The current chapter and item if found
+ */
+export function getCurrentMaterial(path: string, materials: MaterialList) {
+  let currentChapter: (typeof materials)[number] | undefined;
+  let currentItem: (typeof materials)[number]["items"][number] | undefined;
+
+  for (const chapter of materials) {
+    // Check if path matches chapter href
+    if (cleanSlug(chapter.href) === cleanSlug(path)) {
+      currentChapter = chapter;
+      break;
+    }
+
+    // Check items within the chapter
+    const foundItem = chapter.items.find(
+      (item) => cleanSlug(item.href) === cleanSlug(path)
+    );
+    if (foundItem) {
+      currentChapter = chapter;
+      currentItem = foundItem;
+      break;
+    }
+  }
+
+  return { currentChapter, currentItem };
 }

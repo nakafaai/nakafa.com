@@ -119,8 +119,9 @@ export function getContentMetadataContext({
   const FilePath = getSlugPath(category, grade, material, slug);
 
   return Effect.all({
-    content: Effect.orElse(getContent(locale, FilePath), () =>
-      Effect.succeed(null)
+    content: Effect.orElse(
+      getContent(locale, FilePath, { includeMDX: false }),
+      () => Effect.succeed(null)
     ),
     FilePath: Effect.succeed(FilePath),
   });

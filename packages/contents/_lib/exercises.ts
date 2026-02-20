@@ -3,6 +3,7 @@ import nodePath from "node:path";
 import { fileURLToPath } from "node:url";
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import { getContent } from "@repo/contents/_lib/content";
+import { getFolderChildNames } from "@repo/contents/_lib/fs";
 import {
   type ChoicesValidationError,
   ExerciseLoadError,
@@ -25,6 +26,40 @@ const CHOICES_REGEX =
   /const\s+choices\s*(?::\s*ExercisesChoices\s*)?=\s*({[\s\S]*?});/;
 
 const NUMBER_REGEX = /^\d+$/;
+
+/**
+ * Counts the number of exercises in a given path by scanning for numbered directories.
+ * This is a lightweight operation that does not load any MDX content.
+ * Evidence: Reuses getFolderChildNames from fs.ts for clean, maintainable code
+ *
+ * @param filePath - Path to the exercise set (e.g., "exercises/high-school/tka/mathematics/try-out/set-1")
+ * @returns Effect that produces the count of exercises, or 0 if path doesn't exist
+ *
+ * @example
+ * ```ts
+ * const count = await Effect.runPromise(
+ *   getExerciseCount("exercises/high-school/tka/mathematics/try-out/set-1")
+ * );
+ * // Returns: 40
+ * ```
+ */
+export function getExerciseCount(filePath: string): Effect.Effect<number> {
+  return Effect.gen(function* () {
+    const cleanPath = cleanSlug(filePath);
+
+    // Reuse existing getFolderChildNames - returns directory names as strings
+    const childNames = yield* getFolderChildNames(cleanPath).pipe(
+      Effect.orElse(() => Effect.succeed([]))
+    );
+
+    // Filter for numeric folder names (1, 2, 3, etc.)
+    const exerciseCount = childNames.filter((name) =>
+      NUMBER_REGEX.test(name)
+    ).length;
+
+    return exerciseCount;
+  });
+}
 
 export interface ExerciseContentOptions {
   filePath: string;

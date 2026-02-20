@@ -90,14 +90,12 @@ async function AboutPageContent({ locale }: { locale: Locale }) {
   const breadcrumbItems: ListItem[] = [
     {
       "@type": "ListItem",
-      "@id": `https://nakafa.com/${locale}`,
       position: 1,
       name: tCommon("home"),
       item: `https://nakafa.com/${locale}`,
     },
     {
       "@type": "ListItem",
-      "@id": `https://nakafa.com/${locale}/about`,
       position: 2,
       name: t("meta-title"),
       item: `https://nakafa.com/${locale}/about`,

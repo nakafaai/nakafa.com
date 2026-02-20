@@ -40,8 +40,8 @@ import {
   fetchExerciseContext,
   fetchExerciseMetadataContext,
 } from "@/lib/utils/pages/exercises";
-import { createSEODescription } from "@/lib/utils/seo/descriptions";
-import { createSEOTitle } from "@/lib/utils/seo/titles";
+import { generateSEOMetadata } from "@/lib/utils/seo/generator";
+import type { SEOContext } from "@/lib/utils/seo/types";
 import { getStaticParams } from "@/lib/utils/system";
 import { QuestionAnalytics } from "./analytics";
 import { ExerciseArticle } from "./article";
@@ -67,11 +67,11 @@ export async function generateMetadata({
   params: Props["params"];
 }): Promise<Metadata> {
   const { locale, category, type, material, slug } = await params;
-  const t = await getTranslations({ locale, namespace: "Exercises" });
 
   const {
     isSpecificExercise,
     exerciseTitle,
+    exerciseCount,
     FilePath,
     currentMaterial,
     currentMaterialItem,
@@ -82,6 +82,7 @@ export async function generateMetadata({
         onFailure: () => ({
           isSpecificExercise: false,
           exerciseTitle: undefined,
+          exerciseCount: 0,
           FilePath: getSlugPath(category, type, material, slug),
           currentMaterial: undefined,
           currentMaterialItem: undefined,
@@ -91,17 +92,6 @@ export async function generateMetadata({
     )
   );
 
-  // Build SEO-optimized title with smart truncation
-  // Priority: exercise title > material item > material > type > category
-  const finalTitle = createSEOTitle([
-    isSpecificExercise && exerciseTitle ? exerciseTitle : undefined,
-    currentMaterialItem?.title,
-    currentMaterial?.title,
-    t(material),
-    t(type),
-    t(category),
-  ]);
-
   const urlPath = `/${locale}${FilePath}`;
   const image = {
     url: getOgUrl(locale, FilePath),
@@ -109,25 +99,48 @@ export async function generateMetadata({
     height: 630,
   };
 
-  // Build SEO description from content parts
-  const description = createSEODescription([
-    isSpecificExercise && exerciseTitle
-      ? `${exerciseTitle} - ${t("practice-exercises")}`
-      : undefined,
-    currentMaterialItem?.title
-      ? `${currentMaterialItem.title} - ${t("practice-exercises")}`
-      : undefined,
-    currentMaterial?.title
-      ? `${currentMaterial.title} - ${t("practice-exercises")}`
-      : undefined,
-    `${t(material)} ${t(type)} - ${t("practice-exercises")}`,
-  ]);
+  // Evidence: Use ICU-based SEO generator for type-safe, locale-aware metadata
+  // Source: https://developers.google.com/search/docs/appearance/title-link
+  // Get exercise type and set names from material data (e.g., "Try Out", "Set 1")
+  const group = currentMaterial?.title;
+  const set = currentMaterialItem?.title;
+
+  // Extract exercise number from slug for specific exercises (e.g., /set-2/1)
+  const lastSlug = slug.at(-1);
+  const exerciseNumber =
+    isSpecificExercise && lastSlug && isNumber(lastSlug)
+      ? Number.parseInt(lastSlug, 10)
+      : undefined;
+
+  const seoContext: SEOContext = {
+    type: "exercise",
+    category,
+    exam: type,
+    material,
+    group,
+    set,
+    number: exerciseNumber,
+    questionCount: exerciseCount, // Total count from filesystem
+    data: {
+      title:
+        exerciseTitle ?? currentMaterialItem?.title ?? currentMaterial?.title,
+      description: undefined,
+      subject: material,
+    },
+  };
+
+  const {
+    title: finalTitle,
+    description,
+    keywords,
+  } = await generateSEOMetadata(seoContext, locale);
 
   return {
     title: {
       absolute: finalTitle,
     },
     description,
+    keywords,
     alternates: {
       canonical: urlPath,
     },
