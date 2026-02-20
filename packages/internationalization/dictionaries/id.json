@@ -753,12 +753,12 @@
       "keywordsWithoutChapter": "{title}, {material}, {grade}, belajar, materi, contoh soal, latihan, edukasi"
     },
     "exercise": {
-      "titleWithSet": "{setName}: {exerciseType} - {material} - {questionCount} Soal dan Pembahasan | Nakafa",
-      "titleWithoutSet": "{exerciseType} - {material} - {questionCount} Soal dan Pembahasan | Nakafa",
-      "descriptionWithSet": "Latihan {material} {exerciseType} {setName} dengan {questionCount} soal lengkap beserta pembahasan dan penjelasan detail.",
-      "descriptionWithoutSet": "Latihan {material} {exerciseType} dengan {questionCount} soal lengkap beserta pembahasan dan penjelasan detail.",
-      "keywordsWithSet": "{material}, {exerciseType}, {setName}, latihan soal, pembahasan, UTBK, try out, ujian",
-      "keywordsWithoutSet": "{material}, {exerciseType}, latihan soal, pembahasan, UTBK, try out, ujian"
+      "titleWithSet": "{setName}: Simulasi {exerciseType} - {material} | Nakafa",
+      "titleWithoutSet": "Simulasi {exerciseType} - {material} | Nakafa",
+      "descriptionWithSet": "Simulasi {material} {exerciseType} {setName} dengan {questionCount, plural, =0 {soal-soal} =1 {1 soal} other {{questionCount} soal}} lengkap beserta pembahasan dan penjelasan detail untuk persiapan ujian.",
+      "descriptionWithoutSet": "Simulasi {material} {exerciseType} dengan {questionCount, plural, =0 {soal-soal} =1 {1 soal} other {{questionCount} soal}} lengkap beserta pembahasan dan penjelasan detail untuk persiapan ujian.",
+      "keywordsWithSet": "{material}, {exerciseType}, {setName}, simulasi, latihan soal, pembahasan, UTBK, try out, ujian",
+      "keywordsWithoutSet": "{material}, {exerciseType}, simulasi, latihan soal, pembahasan, UTBK, try out, ujian"
     },
     "article": {
       "title": "{title} - {category} | Nakafa",

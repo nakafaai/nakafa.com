@@ -753,12 +753,12 @@
       "keywordsWithoutChapter": "{title}, {material}, {grade}, learn, material, practice problems, exercises, education"
     },
     "exercise": {
-      "titleWithSet": "{setName}: {exerciseType} - {material} - {questionCount} Questions and Solutions | Nakafa",
-      "titleWithoutSet": "{exerciseType} - {material} - {questionCount} Questions and Solutions | Nakafa",
-      "descriptionWithSet": "Practice {material} {exerciseType} {setName} with {questionCount} questions complete with detailed solutions and explanations.",
-      "descriptionWithoutSet": "Practice {material} {exerciseType} with {questionCount} questions complete with detailed solutions and explanations.",
-      "keywordsWithSet": "{material}, {exerciseType}, {setName}, practice questions, solutions, UTBK, try out, exam",
-      "keywordsWithoutSet": "{material}, {exerciseType}, practice questions, solutions, UTBK, try out, exam"
+      "titleWithSet": "{setName}: {exerciseType} Simulation - {material} | Nakafa",
+      "titleWithoutSet": "{exerciseType} Simulation - {material} | Nakafa",
+      "descriptionWithSet": "Take {material} {exerciseType} simulation {setName} with {questionCount, plural, =0 {practice questions} =1 {1 question} other {{questionCount} questions}} and detailed solutions for exam preparation.",
+      "descriptionWithoutSet": "Take {material} {exerciseType} simulation with {questionCount, plural, =0 {practice questions} =1 {1 question} other {{questionCount} questions}} and detailed solutions for exam preparation.",
+      "keywordsWithSet": "{material}, {exerciseType}, {setName}, simulation, practice questions, solutions, UTBK, try out, exam",
+      "keywordsWithoutSet": "{material}, {exerciseType}, simulation, practice questions, solutions, UTBK, try out, exam"
     },
     "article": {
       "title": "{title} - {category} | Nakafa",
