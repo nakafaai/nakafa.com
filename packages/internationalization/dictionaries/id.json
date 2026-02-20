@@ -316,6 +316,7 @@
     "login": "Masuk",
     "account": "Akun",
     "settings": "Pengaturan",
+    "settings-description": "Kelola pengaturan akun Nakafa, preferensi, dan informasi profil untuk mempersonalisasi pengalaman belajarmu.",
     "profile": "Profil",
     "profile-description": "Jelajahi profil belajar pengguna dengan kontribusi edukasi, komentar bermakna, pelacakan progres belajar, dan keterlibatan komunitas dalam pembelajaran kolaboratif.",
     "chat": "Obrolan",
@@ -338,6 +339,7 @@
     "administrator": "Administrator",
     "save": "Simpan",
     "developers": "Developer",
+    "developers-description": "Akses alat developer, API key, dan sumber integrasi untuk membangun aplikasi dengan konten dan layanan edukasi Nakafa.",
     "api-key": "API Key",
     "api-key-description": "Kelola API keys untuk autentikasi dengan API Nakafa.",
     "api-key-footer": "Buat API key baru di sini.",
@@ -544,8 +546,11 @@
   "Legal": {
     "terms-and-policies": "Syarat dan Kebijakan",
     "terms-of-service": "Syarat dan Ketentuan",
+    "terms-of-service-description": "Baca Syarat dan Ketentuan Nakafa untuk memahami aturan dan panduan penggunaan platform dan layanan edukasi kami.",
     "privacy-policy": "Kebijakan Privasi",
+    "privacy-policy-description": "Pelajari bagaimana Nakafa mengumpulkan, menggunakan, dan melindungi data pribadi dan privasi kamu saat menggunakan platform belajar kami.",
     "security-policy": "Kebijakan Keamanan",
+    "security-policy-description": "Tinjau praktik dan kebijakan keamanan Nakafa untuk memahami bagaimana kami melindungi data dan menjamin keamanan platform.",
     "legal-description": "Dengan menggunakan layanan kami, Anda setuju dengan <terms-of-service>Syarat dan Ketentuan</terms-of-service> dan <privacy-policy>Kebijakan Privasi</privacy-policy>."
   },
   "School": {
@@ -736,6 +741,28 @@
       "add-school": "Tambah sekolah",
       "schools": "Sekolah",
       "school-joining-failed": "Gagal bergabung sekolah. Pastikan kode yang kamu masukkan benar."
+    }
+  },
+  "SEO": {
+    "subject": {
+      "title": "{title}: {chapter, select, __EMPTY__ {} other {{chapter} - }}{material} ({grade}) | Nakafa",
+      "description": "Pelajari {title} dalam {chapter, select, __EMPTY__ {} other {{chapter} }}{material} untuk {grade}. Materi lengkap dengan contoh soal, latihan, dan pembahasan langkah demi langkah.",
+      "keywords": "{title}, {chapter, select, __EMPTY__ {} other {{chapter}, }}{material}, {grade}, belajar, materi, contoh soal, latihan, edukasi"
+    },
+    "exercise": {
+      "title": "{number, select, 0 {} other {Soal {number}: }}{set, select, __EMPTY__ {} other {{set}{number, select, 0 {: } other { - }}}}{group, select, __EMPTY__ {} other {{group} - }}{material} ({exam}) | Nakafa",
+      "description": "Latihan {material} {exam}{group, select, __EMPTY__ {} other { {group}}}{set, select, __EMPTY__ {} other { {set}}} dengan {questionCount, plural, =0 {soal-soal} =1 {1 soal} other {{questionCount} soal}} lengkap beserta pembahasan dan penjelasan detail.",
+      "keywords": "{material}, {exam}, {group, select, __EMPTY__ {} other {{group}, }}{set, select, __EMPTY__ {} other {{set}, }}latihan, soal, pembahasan, ujian"
+    },
+    "article": {
+      "title": "{title} - {category} | Nakafa",
+      "description": "Baca analisis lengkap {title}. Informasi terkini dengan data dan riset mendalam dari tim redaksi Nakafa.",
+      "keywords": "{title}, {category}, analisis, fakta, terkini, riset, informasi, berita"
+    },
+    "quran": {
+      "title": "Surat {number}. {name} ({transliteration}) - {translation} | Nakafa",
+      "description": "Baca Surat {name} ({transliteration}) dengan terjemahan dan tafsir. {numberOfVerses} ayat dari Al-Quran.",
+      "keywords": "Surat {name}, Al-Quran, {translation}, {revelation}, tafsir"
     }
   }
 }

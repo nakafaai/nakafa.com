@@ -27,8 +27,8 @@ import {
   fetchArticleContext,
   fetchArticleMetadataContext,
 } from "@/lib/utils/pages/article";
-import { createSEODescription } from "@/lib/utils/seo/descriptions";
-import { createSEOTitle } from "@/lib/utils/seo/titles";
+import { generateSEOMetadata } from "@/lib/utils/seo/generator";
+import type { SEOContext } from "@/lib/utils/seo/types";
 import { getStaticParams } from "@/lib/utils/system";
 
 export const revalidate = false;
@@ -79,15 +79,26 @@ export async function generateMetadata({
     locale,
   };
 
-  // Build SEO-optimized title with smart truncation
-  // Priority: content title > category
-  const title = createSEOTitle([content?.metadata.title, t(category)]);
+  // Evidence: Use ICU-based SEO generator for type-safe, locale-aware metadata
+  // Source: https://developers.google.com/search/docs/appearance/title-link
+  const seoContext: SEOContext = {
+    type: "article",
+    category,
+    data: {
+      title: content?.metadata.title,
+      description: content?.metadata.description,
+      subject: undefined,
+    },
+  };
+
+  const { title, description, keywords } = await generateSEOMetadata(
+    seoContext,
+    locale
+  );
 
   if (!content) {
     return {
-      title: {
-        absolute: title,
-      },
+      title: { absolute: title },
       alternates,
       openGraph,
       twitter,
@@ -96,24 +107,13 @@ export async function generateMetadata({
 
   const { metadata } = content;
 
-  // Build SEO description from content parts
-  const description = createSEODescription([
-    metadata.description,
-    `${metadata.title} - ${t("read-article-on-nakafa")}`,
-  ]);
-
   return {
-    title: {
-      absolute: title,
-    },
+    title: { absolute: title },
     description,
     alternates,
     authors: metadata.authors,
     category: t(category),
-    keywords: metadata.title
-      .split(" ")
-      .concat(metadata.description?.split(" ") ?? [])
-      .filter((keyword: string) => keyword.length > 0),
+    keywords,
     openGraph,
     twitter,
   };

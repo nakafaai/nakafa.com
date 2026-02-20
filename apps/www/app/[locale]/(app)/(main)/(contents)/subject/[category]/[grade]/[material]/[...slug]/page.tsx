@@ -1,7 +1,9 @@
 import { getGradeNonNumeric } from "@repo/contents/_lib/subject/grade";
 import {
+  getCurrentMaterial,
   getMaterialIcon,
   getMaterialPath,
+  getMaterials,
 } from "@repo/contents/_lib/subject/material";
 import {
   getMaterialsPagination,
@@ -39,8 +41,8 @@ import {
   getContentContext,
   getContentMetadataContext,
 } from "@/lib/utils/pages/subject";
-import { createSEODescription } from "@/lib/utils/seo/descriptions";
-import { createSEOTitle } from "@/lib/utils/seo/titles";
+import { generateSEOMetadata } from "@/lib/utils/seo/generator";
+import type { SEOContext } from "@/lib/utils/seo/types";
 import { getStaticParams } from "@/lib/utils/system";
 
 export const revalidate = false;
@@ -65,20 +67,34 @@ export async function generateMetadata({
   const { locale, category, grade, material, slug } = await params;
   const t = await getTranslations({ locale, namespace: "Subject" });
 
-  const { content, FilePath } = await Effect.runPromise(
-    Effect.match(
-      getContentMetadataContext({ locale, category, grade, material, slug }),
-      {
-        onFailure: () => ({
-          content: null,
-          FilePath: getSlugPath(category, grade, material, slug),
-        }),
-        onSuccess: (data) => data,
-      }
-    )
-  );
+  const FilePath = getSlugPath(category, grade, material, slug);
+  const materialPath = getMaterialPath(category, grade, material);
+
+  // Fetch content and materials in parallel
+  const [{ content }, materials] = await Promise.all([
+    Effect.runPromise(
+      Effect.match(
+        getContentMetadataContext({ locale, category, grade, material, slug }),
+        {
+          onFailure: () => ({ content: null, FilePath }),
+          onSuccess: (data) => data,
+        }
+      )
+    ),
+    getMaterials(materialPath, locale).catch(() => []),
+  ]);
 
   const metadata = content?.metadata ?? null;
+
+  // Get chapter title from materials using getCurrentMaterial
+  let chapter: string | undefined;
+  if (slug.length > 0 && materials.length > 0) {
+    const chapterPath = getSlugPath(category, grade, material, [
+      slug.at(0) ?? "",
+    ]);
+    const { currentChapter } = getCurrentMaterial(chapterPath, materials);
+    chapter = currentChapter?.title;
+  }
 
   const path = `/${locale}${FilePath}`;
   const alternates = {
@@ -100,45 +116,42 @@ export async function generateMetadata({
     locale,
   };
 
-  // Build SEO-optimized title with smart truncation
-  // Priority: content title > subject > material > grade > category
-  const title = createSEOTitle([
-    metadata?.title,
-    metadata?.subject,
-    t(material),
-    t(getGradeNonNumeric(grade) ?? "grade", { grade }),
-    t(category),
-  ]);
+  // Evidence: Use ICU-based SEO generator for type-safe, locale-aware metadata
+  // Source: https://developers.google.com/search/docs/appearance/title-link
+  const seoContext: SEOContext = {
+    type: "subject",
+    category,
+    grade,
+    material,
+    chapter,
+    data: {
+      title: metadata?.title,
+      description: metadata?.description,
+      subject: metadata?.subject,
+    },
+  };
+
+  const { title, description, keywords } = await generateSEOMetadata(
+    seoContext,
+    locale
+  );
 
   if (!metadata) {
     return {
-      title: {
-        absolute: title,
-      },
+      title: { absolute: title },
       alternates,
       openGraph,
       twitter,
     };
   }
 
-  // Build SEO description from content parts
-  const description = createSEODescription([
-    metadata.description,
-    `${metadata.title} - ${t("learn-with-nakafa")}`,
-  ]);
-
   return {
-    title: {
-      absolute: title,
-    },
+    title: { absolute: title },
     description,
     alternates,
     authors: metadata.authors,
     category: t(material),
-    keywords: metadata.title
-      .split(" ")
-      .concat(metadata.description?.split(" ") ?? [])
-      .filter((keyword: string) => keyword.length > 0),
+    keywords,
     openGraph,
     twitter,
   };

@@ -316,6 +316,7 @@
     "login": "Login",
     "account": "Account",
     "settings": "Settings",
+    "settings-description": "Manage your Nakafa account settings, preferences, and profile information to personalize your learning experience.",
     "profile": "Profile",
     "profile-description": "Explore user learning profiles featuring educational contributions, insightful comments, study progress tracking, and community engagement in collaborative learning.",
     "chat": "Chat",
@@ -338,6 +339,7 @@
     "administrator": "Administrator",
     "save": "Save",
     "developers": "Developers",
+    "developers-description": "Access developer tools, API keys, and integration resources to build applications with Nakafa's educational content and services.",
     "api-key": "API Key",
     "api-key-description": "Manage your API keys to authenticate with Nakafa API.",
     "api-key-footer": "Create a new API key here.",
@@ -544,8 +546,11 @@
   "Legal": {
     "terms-and-policies": "Terms and Policies",
     "terms-of-service": "Terms of Service",
+    "terms-of-service-description": "Read Nakafa's Terms of Service to understand the rules and guidelines for using our educational platform and services.",
     "privacy-policy": "Privacy Policy",
+    "privacy-policy-description": "Learn how Nakafa collects, uses, and protects your personal data and privacy when using our learning platform.",
     "security-policy": "Security Policy",
+    "security-policy-description": "Review Nakafa's security practices and policies to understand how we safeguard your data and ensure platform security.",
     "legal-description": "By using our services, you agree to our <terms-of-service>Terms of Service</terms-of-service> and <privacy-policy>Privacy Policy</privacy-policy>."
   },
   "School": {
@@ -736,6 +741,28 @@
       "add-school": "Add school",
       "schools": "Schools",
       "school-joining-failed": "Failed to join school. Make sure the code is correct."
+    }
+  },
+  "SEO": {
+    "subject": {
+      "title": "{title}: {chapter, select, __EMPTY__ {} other {{chapter} - }}{material} ({grade}) | Nakafa",
+      "description": "Learn {title} in {chapter, select, __EMPTY__ {} other {{chapter} }}{material} for {grade}. Complete material with practice problems, exercises, and step-by-step explanations.",
+      "keywords": "{title}, {chapter, select, __EMPTY__ {} other {{chapter}, }}{material}, {grade}, learn, material, practice problems, exercises, education"
+    },
+    "exercise": {
+      "title": "{number, select, 0 {} other {Question {number}: }}{set, select, __EMPTY__ {} other {{set}{number, select, 0 {: } other { - }}}}{group, select, __EMPTY__ {} other {{group} - }}{material} ({exam}) | Nakafa",
+      "description": "Take {material} {exam} exercise{group, select, __EMPTY__ {} other { {group}}}{set, select, __EMPTY__ {} other { {set}}} with {questionCount, plural, =0 {practice questions} =1 {1 question} other {{questionCount} questions}} and detailed solutions.",
+      "keywords": "{material}, {exam}, {group, select, __EMPTY__ {} other {{group}, }}{set, select, __EMPTY__ {} other {{set}, }}exercise, practice questions, solutions, exam"
+    },
+    "article": {
+      "title": "{title} - {category} | Nakafa",
+      "description": "Read complete analysis of {title}. Latest information with data and in-depth research from Nakafa editorial team.",
+      "keywords": "{title}, {category}, analysis, facts, latest, research, information, news"
+    },
+    "quran": {
+      "title": "Surah {number}. {name} ({transliteration}) - {translation} | Nakafa",
+      "description": "Read Surah {name} ({transliteration}) with translation and tafsir. {numberOfVerses} verses from the Holy Quran.",
+      "keywords": "Surah {name}, Quran, {translation}, {revelation}, tafsir"
     }
   }
 }

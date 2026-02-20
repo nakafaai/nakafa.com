@@ -27,7 +27,8 @@ import {
   fetchSurahMetadataContext,
   getQuranPagination,
 } from "@/lib/utils/pages/quran";
-import { createSEODescription } from "@/lib/utils/seo/descriptions";
+import { generateSEOMetadata } from "@/lib/utils/seo/generator";
+import type { SEOContext } from "@/lib/utils/seo/types";
 
 export const revalidate = false;
 
@@ -90,30 +91,25 @@ export async function generateMetadata({
     };
   }
 
-  const surahName = getSurahName({ locale, name: surahData.name });
-  const surahTranslation = surahData.name.translation[locale];
+  // Evidence: Use ICU-based SEO generator for type-safe, locale-aware metadata
+  // Source: https://developers.google.com/search/docs/appearance/title-link
+  // Evidence: Arabic name is universal, locale-specific for transliteration/translation
+  const seoContext: SEOContext = {
+    type: "quran",
+    surah: surahData,
+  };
 
-  // SEO-optimized title with rich translation key for i18n scalability
-  const title = t("surah-title", {
-    number: surahData.number,
-    name: surahName,
-    translation: surahTranslation,
-    quran: t("quran"),
-  });
-
-  // Build SEO description from content parts
-  const description = createSEODescription([
-    `${surahTranslation} (${surahName}) - ${surahData.numberOfVerses} ${t("verses")}. ${t("read-quran-description")}`,
-    `${t("quran")} ${surahData.number}`,
-  ]);
+  const { title, description, keywords } = await generateSEOMetadata(
+    seoContext,
+    locale
+  );
 
   return {
-    title: {
-      absolute: title,
-    },
+    title: { absolute: title },
     alternates,
     category: t("quran"),
     description,
+    keywords,
     twitter,
     openGraph,
   };

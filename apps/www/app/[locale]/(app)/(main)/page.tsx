@@ -53,28 +53,24 @@ function PageBreadcrumb({ locale }: { locale: Locale }) {
       breadcrumbItems={[
         {
           "@type": "ListItem",
-          "@id": `https://nakafa.com/${locale}`,
           position: 1,
           name: tHome("title"),
           item: `https://nakafa.com/${locale}`,
         },
         {
           "@type": "ListItem",
-          "@id": `https://nakafa.com/${locale}/subject`,
           position: 2,
           name: tCommon("subject"),
           item: `https://nakafa.com/${locale}/subject`,
         },
         {
           "@type": "ListItem",
-          "@id": `https://nakafa.com/${locale}/articles`,
           position: 3,
           name: tCommon("articles"),
           item: `https://nakafa.com/${locale}/articles`,
         },
         {
           "@type": "ListItem",
-          "@id": `https://nakafa.com/${locale}/contributor`,
           position: 4,
           name: tCommon("contributor"),
           item: `https://nakafa.com/${locale}/contributor`,
