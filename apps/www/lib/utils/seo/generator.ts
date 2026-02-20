@@ -133,6 +133,9 @@ const translateArticleCategory = Effect.fn("SEO.translateArticleCategory")(
 
 /**
  * Generates SEO metadata for subject content.
+ * Uses dual template strategy for optimal SEO with/without chapter
+ * Evidence: https://effect.website/docs/guides/essential/file-watching
+ * Best Practice: Pure template selection logic, Effect for async operations
  */
 const generateSubjectMetadata = Effect.fn("SEO.generateSubjectMetadata")(
   (context: Extract<SEOContext, { type: "subject" }>, locale: Locale) =>
@@ -147,25 +150,49 @@ const generateSubjectMetadata = Effect.fn("SEO.generateSubjectMetadata")(
           translateSubjectMaterial(material, locale),
         ]);
 
-      // Pass chapter and material separately for better SEO structure
-      const chapterLabel = chapter || "";
+      // Smart template selection based on chapter presence
+      const chapterValue = chapter?.trim();
+
+      // Use inline conditional for type-safe template selection
+      // This pattern avoids complex ICU conditionals while maintaining DX
+      if (chapterValue) {
+        return {
+          title: t("subject.titleWithChapter", {
+            title: effectiveTitle,
+            chapter: chapterValue,
+            material: materialDisplayName,
+            grade: gradeDisplay,
+          }),
+          description: t("subject.descriptionWithChapter", {
+            title: effectiveTitle,
+            chapter: chapterValue,
+            material: materialDisplayName,
+            grade: gradeDisplay,
+          }),
+          keywords: t("subject.keywordsWithChapter", {
+            title: effectiveTitle,
+            chapter: chapterValue,
+            material: materialDisplayName,
+            grade: gradeDisplay,
+          })
+            .split(", ")
+            .map((k: string) => k.trim()),
+        };
+      }
 
       return {
-        title: t("subject.title", {
+        title: t("subject.titleWithoutChapter", {
           title: effectiveTitle,
-          chapter: chapterLabel,
           material: materialDisplayName,
           grade: gradeDisplay,
         }),
-        description: t("subject.description", {
+        description: t("subject.descriptionWithoutChapter", {
           title: effectiveTitle,
-          chapter: chapterLabel,
           material: materialDisplayName,
           grade: gradeDisplay,
         }),
-        keywords: t("subject.keywords", {
+        keywords: t("subject.keywordsWithoutChapter", {
           title: effectiveTitle,
-          chapter: chapterLabel,
           material: materialDisplayName,
           grade: gradeDisplay,
         })
@@ -177,6 +204,7 @@ const generateSubjectMetadata = Effect.fn("SEO.generateSubjectMetadata")(
 
 /**
  * Generates SEO metadata for exercise content.
+ * Uses dual template strategy for optimal SEO with/without set name
  */
 const generateExerciseMetadata = Effect.fn("SEO.generateExerciseMetadata")(
   (context: Extract<SEOContext, { type: "exercise" }>, locale: Locale) =>
@@ -190,22 +218,49 @@ const generateExerciseMetadata = Effect.fn("SEO.generateExerciseMetadata")(
         translateExerciseMaterial(material, locale),
       ]);
 
+      // Smart template selection based on set name presence
+      const setNameValue = setName?.trim();
+
+      // Use inline conditional for type-safe template selection
+      if (setNameValue) {
+        return {
+          title: t("exercise.titleWithSet", {
+            setName: setNameValue,
+            exerciseType: exerciseTypeDisplay,
+            material: materialDisplayName,
+            title: effectiveTitle,
+          }),
+          description: t("exercise.descriptionWithSet", {
+            setName: setNameValue,
+            exerciseType: exerciseTypeDisplay,
+            material: materialDisplayName,
+            questionCount: questionCount ?? 0,
+            title: effectiveTitle,
+          }),
+          keywords: t("exercise.keywordsWithSet", {
+            setName: setNameValue,
+            exerciseType: exerciseTypeDisplay,
+            material: materialDisplayName,
+            title: effectiveTitle,
+          })
+            .split(", ")
+            .map((k: string) => k.trim()),
+        };
+      }
+
       return {
-        title: t("exercise.title", {
-          setName: setName ?? "",
+        title: t("exercise.titleWithoutSet", {
           exerciseType: exerciseTypeDisplay,
           material: materialDisplayName,
           title: effectiveTitle,
         }),
-        description: t("exercise.description", {
-          setName: setName ?? "",
+        description: t("exercise.descriptionWithoutSet", {
           exerciseType: exerciseTypeDisplay,
           material: materialDisplayName,
           questionCount: questionCount ?? 0,
           title: effectiveTitle,
         }),
-        keywords: t("exercise.keywords", {
-          setName: setName ?? "",
+        keywords: t("exercise.keywordsWithoutSet", {
           exerciseType: exerciseTypeDisplay,
           material: materialDisplayName,
           title: effectiveTitle,
