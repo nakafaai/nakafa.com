@@ -38,11 +38,10 @@ export type SEOContext =
   | {
       type: "exercise";
       category: ExercisesCategory;
-      exerciseType: ExercisesType;
-      exerciseTypeDisplay: string; // Human-readable type (e.g., "Try Out")
+      exam: ExercisesType;
       material: ExercisesMaterial;
-      setName?: string; // Formatted set name (e.g., "Set 1")
-      setNumber?: number;
+      group?: string; // Exercise group name (e.g., "Try Out")
+      set?: string; // Exercise set name (e.g., "Set 1")
       questionCount?: number;
       data: ContentSEOData;
     }

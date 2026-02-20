@@ -102,16 +102,16 @@ export async function generateMetadata({
   // Evidence: Use ICU-based SEO generator for type-safe, locale-aware metadata
   // Source: https://developers.google.com/search/docs/appearance/title-link
   // Get exercise type and set names from material data (e.g., "Try Out", "Set 1")
-  const exerciseTypeDisplay = currentMaterial?.title ?? "";
-  const setName = currentMaterialItem?.title ?? "";
+  const group = currentMaterial?.title;
+  const set = currentMaterialItem?.title;
 
   const seoContext: SEOContext = {
     type: "exercise",
     category,
-    exerciseType: type,
-    exerciseTypeDisplay,
+    exam: type,
     material,
-    setName,
+    group,
+    set,
     questionCount: isSpecificExercise ? 1 : exerciseCount, // Use actual count from filesystem
     data: {
       title:

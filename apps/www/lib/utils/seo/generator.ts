@@ -1,6 +1,7 @@
 import { getGradeNonNumeric } from "@repo/contents/_lib/subject/grade";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
 import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
+import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import type { Grade } from "@repo/contents/_types/subject/grade";
 import type { Material } from "@repo/contents/_types/subject/material";
 import { Effect } from "effect";
@@ -119,6 +120,17 @@ const translateExerciseMaterial = Effect.fn("SEO.translateExerciseMaterial")(
 );
 
 /**
+ * Translates exam type from Exercises namespace.
+ */
+const translateExerciseType = Effect.fn("SEO.translateExerciseType")(
+  (type: ExercisesType, locale: Locale) =>
+    Effect.gen(function* () {
+      const tExercises = yield* fetchExercisesTranslations(locale);
+      return tExercises(type);
+    })
+);
+
+/**
  * Translates category name from Articles namespace.
  */
 const translateArticleCategory = Effect.fn("SEO.translateArticleCategory")(
@@ -146,7 +158,7 @@ const generateSubjectMetadata = Effect.fn("SEO.generateSubjectMetadata")(
         ]);
 
       // Use sentinel value for optional fields in ICU select
-      const chapterValue = chapter?.trim() ?? "__EMPTY__";
+      const chapterValue = chapter?.trim() || "__EMPTY__";
 
       return {
         title: t("subject.title", {
@@ -179,35 +191,40 @@ const generateSubjectMetadata = Effect.fn("SEO.generateSubjectMetadata")(
 const generateExerciseMetadata = Effect.fn("SEO.generateExerciseMetadata")(
   (context: Extract<SEOContext, { type: "exercise" }>, locale: Locale) =>
     Effect.gen(function* () {
-      const { data, material, setName, exerciseTypeDisplay, questionCount } =
-        context;
+      const { data, material, exam, group, set, questionCount } = context;
 
-      const [t, effectiveTitle, materialDisplayName] = yield* Effect.all([
-        fetchSEOTranslations(locale),
-        getEffectiveTitle(data, locale),
-        translateExerciseMaterial(material, locale),
-      ]);
+      const [t, effectiveTitle, materialDisplayName, examDisplayName] =
+        yield* Effect.all([
+          fetchSEOTranslations(locale),
+          getEffectiveTitle(data, locale),
+          translateExerciseMaterial(material, locale),
+          translateExerciseType(exam, locale),
+        ]);
 
       // Use sentinel value for optional fields in ICU select
-      const setNameValue = setName?.trim() ?? "__EMPTY__";
+      const groupValue = group?.trim() || "__EMPTY__";
+      const setValue = set?.trim() || "__EMPTY__";
 
       return {
         title: t("exercise.title", {
-          setName: setNameValue,
-          exerciseType: exerciseTypeDisplay,
+          exam: examDisplayName,
+          group: groupValue,
+          set: setValue,
           material: materialDisplayName,
           title: effectiveTitle,
         }),
         description: t("exercise.description", {
-          setName: setNameValue,
-          exerciseType: exerciseTypeDisplay,
+          exam: examDisplayName,
+          group: groupValue,
+          set: setValue,
           material: materialDisplayName,
           questionCount: questionCount ?? 0,
           title: effectiveTitle,
         }),
         keywords: t("exercise.keywords", {
-          setName: setNameValue,
-          exerciseType: exerciseTypeDisplay,
+          exam: examDisplayName,
+          group: groupValue,
+          set: setValue,
           material: materialDisplayName,
           title: effectiveTitle,
         })

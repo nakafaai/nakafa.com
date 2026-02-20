@@ -750,9 +750,9 @@
       "keywords": "{title}, {chapter, select, __EMPTY__ {} other {{chapter}, }}{material}, {grade}, belajar, materi, contoh soal, latihan, edukasi"
     },
     "exercise": {
-      "title": "{setName, select, __EMPTY__ {} other {{setName}: }}Simulasi {exerciseType} - {material} | Nakafa",
-      "description": "Simulasi {material} {exerciseType} {setName, select, __EMPTY__ {} other {{setName} }}dengan {questionCount, plural, =0 {soal-soal} =1 {1 soal} other {{questionCount} soal}} lengkap beserta pembahasan dan penjelasan detail untuk persiapan ujian.",
-      "keywords": "{material}, {exerciseType}, {setName, select, __EMPTY__ {} other {{setName}, }}simulasi, latihan soal, pembahasan, UTBK, try out, ujian"
+      "title": "{group, select, __EMPTY__ {} other {{group}: }}{exam} {material} | Nakafa",
+      "description": "Latihan {material} {exam}{group, select, __EMPTY__ {} other { {group}}}{set, select, __EMPTY__ {} other { {set}}} dengan {questionCount, plural, =0 {soal-soal} =1 {1 soal} other {{questionCount} soal}} lengkap beserta pembahasan dan penjelasan detail.",
+      "keywords": "{material}, {exam}, {group, select, __EMPTY__ {} other {{group}, }}{set, select, __EMPTY__ {} other {{set}, }}latihan, soal, pembahasan, ujian"
     },
     "article": {
       "title": "{title} - {category} | Nakafa",

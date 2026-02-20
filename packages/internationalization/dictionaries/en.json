@@ -750,9 +750,9 @@
       "keywords": "{title}, {chapter, select, __EMPTY__ {} other {{chapter}, }}{material}, {grade}, learn, material, practice problems, exercises, education"
     },
     "exercise": {
-      "title": "{setName, select, __EMPTY__ {} other {{setName}: }}{exerciseType} Simulation - {material} | Nakafa",
-      "description": "Take {material} {exerciseType} simulation{setName, select, __EMPTY__ {} other { {setName}}} with {questionCount, plural, =0 {practice questions} =1 {1 question} other {{questionCount} questions}} and detailed solutions for exam preparation.",
-      "keywords": "{material}, {exerciseType}, {setName, select, __EMPTY__ {} other {{setName}, }}simulation, practice questions, solutions, UTBK, try out, exam"
+      "title": "{group, select, __EMPTY__ {} other {{group}: }}{exam} {material} | Nakafa",
+      "description": "Take {material} {exam} exercise{group, select, __EMPTY__ {} other { {group}}}{set, select, __EMPTY__ {} other { {set}}} with {questionCount, plural, =0 {practice questions} =1 {1 question} other {{questionCount} questions}} and detailed solutions.",
+      "keywords": "{material}, {exam}, {group, select, __EMPTY__ {} other {{group}, }}{set, select, __EMPTY__ {} other {{set}, }}exercise, practice questions, solutions, exam"
     },
     "article": {
       "title": "{title} - {category} | Nakafa",
