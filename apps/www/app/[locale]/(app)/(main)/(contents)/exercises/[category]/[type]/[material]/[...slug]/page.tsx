@@ -120,7 +120,7 @@ export async function generateMetadata({
     group,
     set,
     number: exerciseNumber,
-    questionCount: isSpecificExercise ? 1 : exerciseCount, // Use actual count from filesystem
+    questionCount: exerciseCount, // Total count from filesystem
     data: {
       title:
         exerciseTitle ?? currentMaterialItem?.title ?? currentMaterial?.title,

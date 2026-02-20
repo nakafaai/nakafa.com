@@ -215,6 +215,7 @@ const generateExerciseMetadata = Effect.fn("SEO.generateExerciseMetadata")(
           group: groupValue,
           set: setValue,
           number: numberValue,
+          questionCount: questionCount ?? 0,
           material: materialDisplayName,
           title: effectiveTitle,
         }),

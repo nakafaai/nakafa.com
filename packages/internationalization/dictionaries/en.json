@@ -750,7 +750,7 @@
       "keywords": "{title}, {chapter, select, __EMPTY__ {} other {{chapter}, }}{material}, {grade}, learn, material, practice problems, exercises, education"
     },
     "exercise": {
-      "title": "{number, select, 0 {} other {Question {number}: }}{set, select, __EMPTY__ {} other {{set}{number, select, 0 {: } other { - }}}}{group, select, __EMPTY__ {} other {{group} - }}{material} ({exam}) | Nakafa",
+      "title": "{number, select, 0 {} other {Question {number}/{questionCount}: }}{set, select, __EMPTY__ {} other {{set}{number, select, 0 {: } other { - }}}}{group, select, __EMPTY__ {} other {{group} - }}{material} ({exam}) | Nakafa",
       "description": "Take {material} {exam} exercise{group, select, __EMPTY__ {} other { {group}}}{set, select, __EMPTY__ {} other { {set}}} with {questionCount, plural, =0 {practice questions} =1 {1 question} other {{questionCount} questions}} and detailed solutions.",
       "keywords": "{material}, {exam}, {group, select, __EMPTY__ {} other {{group}, }}{set, select, __EMPTY__ {} other {{set}, }}exercise, practice questions, solutions, exam"
     },

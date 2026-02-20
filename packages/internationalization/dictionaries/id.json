@@ -750,7 +750,7 @@
       "keywords": "{title}, {chapter, select, __EMPTY__ {} other {{chapter}, }}{material}, {grade}, belajar, materi, contoh soal, latihan, edukasi"
     },
     "exercise": {
-      "title": "{number, select, 0 {} other {Soal {number}: }}{set, select, __EMPTY__ {} other {{set}{number, select, 0 {: } other { - }}}}{group, select, __EMPTY__ {} other {{group} - }}{material} ({exam}) | Nakafa",
+      "title": "{number, select, 0 {} other {Soal {number}/{questionCount}: }}{set, select, __EMPTY__ {} other {{set}{number, select, 0 {: } other { - }}}}{group, select, __EMPTY__ {} other {{group} - }}{material} ({exam}) | Nakafa",
       "description": "Latihan {material} {exam}{group, select, __EMPTY__ {} other { {group}}}{set, select, __EMPTY__ {} other { {set}}} dengan {questionCount, plural, =0 {soal-soal} =1 {1 soal} other {{questionCount} soal}} lengkap beserta pembahasan dan penjelasan detail.",
       "keywords": "{material}, {exam}, {group, select, __EMPTY__ {} other {{group}, }}{set, select, __EMPTY__ {} other {{set}, }}latihan, soal, pembahasan, ujian"
     },
