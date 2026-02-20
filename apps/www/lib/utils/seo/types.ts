@@ -39,7 +39,9 @@ export type SEOContext =
       type: "exercise";
       category: ExercisesCategory;
       exerciseType: ExercisesType;
+      exerciseTypeDisplay: string; // Human-readable type (e.g., "Try Out")
       material: ExercisesMaterial;
+      setName?: string; // Formatted set name (e.g., "Set 1")
       setNumber?: number;
       questionCount?: number;
       data: ContentSEOData;

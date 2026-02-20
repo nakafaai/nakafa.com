@@ -178,7 +178,8 @@ const generateSubjectMetadata = Effect.fn("SEO.generateSubjectMetadata")(
 const generateExerciseMetadata = Effect.fn("SEO.generateExerciseMetadata")(
   (context: Extract<SEOContext, { type: "exercise" }>, locale: Locale) =>
     Effect.gen(function* () {
-      const { data, material, setNumber, questionCount } = context;
+      const { data, material, setName, exerciseTypeDisplay, questionCount } =
+        context;
 
       const [t, effectiveTitle, materialDisplayName] = yield* Effect.all([
         fetchSEOTranslations(locale),
@@ -188,16 +189,21 @@ const generateExerciseMetadata = Effect.fn("SEO.generateExerciseMetadata")(
 
       return {
         title: t("exercise.title", {
-          setNumber: setNumber ?? 1,
+          setName: setName ?? "",
+          exerciseType: exerciseTypeDisplay,
           material: materialDisplayName,
           title: effectiveTitle,
         }),
         description: t("exercise.description", {
+          setName: setName ?? "",
+          exerciseType: exerciseTypeDisplay,
           material: materialDisplayName,
-          questionCount: questionCount ?? 20,
+          questionCount: questionCount ?? 0,
           title: effectiveTitle,
         }),
         keywords: t("exercise.keywords", {
+          setName: setName ?? "",
+          exerciseType: exerciseTypeDisplay,
           material: materialDisplayName,
           title: effectiveTitle,
         })

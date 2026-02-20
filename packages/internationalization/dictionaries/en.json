@@ -750,9 +750,9 @@
       "keywords": "{title}, {subject}, {grade}, learn, guide, examples, exercises, education"
     },
     "exercise": {
-      "title": "{setNumber, plural, =1 {Practice Exercise} other {Set {setNumber} Practice}}: {material} | Nakafa",
-      "description": "Practice {material} with {questionCount, plural, =1 {1 question} other {{questionCount} questions}}. Includes detailed solutions and explanations.",
-      "keywords": "{material}, practice, exercises, questions, solutions, UTBK, try out"
+      "title": "Practice {setName}: {exerciseType} - {material} | Nakafa",
+      "description": "Practice {material} {exerciseType} {setName} with {questionCount} questions. Includes detailed solutions and explanations.",
+      "keywords": "{material}, {exerciseType}, {setName}, practice, exercises, questions, solutions, UTBK, try out"
     },
     "article": {
       "title": "{title}: {category} Analysis | Nakafa",
