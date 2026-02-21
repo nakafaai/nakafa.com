@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       '@biomejs/biome':
-        specifier: 2.4.3
-        version: 2.4.3
+        specifier: 2.4.4
+        version: 2.4.4
       '@changesets/changelog-github':
         specifier: ^0.5.2
         version: 0.5.2
@@ -204,8 +204,8 @@ importers:
         specifier: ^0.0.15
         version: 0.0.15
       '@ai-sdk/react':
-        specifier: ^3.0.96
-        version: 3.0.96(react@19.2.4)(zod@4.3.6)
+        specifier: ^3.0.99
+        version: 3.0.99(react@19.2.4)(zod@4.3.6)
       '@convex-dev/better-auth':
         specifier: ^0.10.10
         version: 0.10.10(@better-auth/core@1.4.9(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.7(zod@4.3.6))(jose@6.1.3)(kysely@0.28.9)(nanostores@1.1.0))(@better-auth/utils@0.3.0)(@standard-schema/spec@1.1.0)(better-auth@1.4.9(next@16.1.6(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.0.18))(better-call@1.1.7(zod@4.3.6))(convex@1.32.0(react@19.2.4))(hono@4.12.0)(nanostores@1.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
@@ -276,11 +276,11 @@ importers:
         specifier: ^4.2.0
         version: 4.2.0
       '@takumi-rs/core':
-        specifier: ^0.68.15
-        version: 0.68.15
+        specifier: ^0.68.16
+        version: 0.68.16
       '@takumi-rs/image-response':
-        specifier: ^0.68.15
-        version: 0.68.15
+        specifier: ^0.68.16
+        version: 0.68.16
       '@tanstack/react-form':
         specifier: ^1.28.3
         version: 1.28.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -294,8 +294,8 @@ importers:
         specifier: ^3.4.2
         version: 3.4.2
       ai:
-        specifier: ^6.0.94
-        version: 6.0.94(zod@4.3.6)
+        specifier: ^6.0.97
+        version: 6.0.97(zod@4.3.6)
       any-ascii:
         specifier: ^0.3.3
         version: 0.3.3
@@ -433,8 +433,8 @@ importers:
         specifier: ^2.0.20
         version: 2.0.20(zod@4.3.6)
       '@ai-sdk/gateway':
-        specifier: ^3.0.52
-        version: 3.0.52(zod@4.3.6)
+        specifier: ^3.0.53
+        version: 3.0.53(zod@4.3.6)
       '@ai-sdk/google':
         specifier: ^3.0.30
         version: 3.0.30(zod@4.3.6)
@@ -445,8 +445,8 @@ importers:
         specifier: ^3.0.30
         version: 3.0.30(zod@4.3.6)
       '@ai-sdk/react':
-        specifier: ^3.0.96
-        version: 3.0.96(react@19.2.4)(zod@4.3.6)
+        specifier: ^3.0.99
+        version: 3.0.99(react@19.2.4)(zod@4.3.6)
       '@mendable/firecrawl-js':
         specifier: ^4.13.0
         version: 4.13.0
@@ -457,8 +457,8 @@ importers:
         specifier: ^0.13.10
         version: 0.13.10(typescript@5.9.3)(zod@4.3.6)
       ai:
-        specifier: ^6.0.94
-        version: 6.0.94(zod@4.3.6)
+        specifier: ^6.0.97
+        version: 6.0.97(zod@4.3.6)
       convex:
         specifier: ^1.32.0
         version: 1.32.0(react@19.2.4)
@@ -544,13 +544,13 @@ importers:
         version: 0.3.1(convex@1.32.0(react@19.2.4))
       '@convex-dev/resend':
         specifier: ^0.2.3
-        version: 0.2.3(@react-email/render@2.0.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(convex-helpers@0.1.112(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.32.0(react@19.2.4))(react@19.2.4)
+        version: 0.2.3(@react-email/render@2.0.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(convex-helpers@0.1.113(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.32.0(react@19.2.4))(react@19.2.4)
       '@convex-dev/workflow':
         specifier: ^0.3.4
-        version: 0.3.4(@convex-dev/workpool@0.3.1(convex-helpers@0.1.112(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.32.0(react@19.2.4)))(convex-helpers@0.1.112(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.32.0(react@19.2.4))
+        version: 0.3.4(@convex-dev/workpool@0.3.1(convex-helpers@0.1.113(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.32.0(react@19.2.4)))(convex-helpers@0.1.113(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.32.0(react@19.2.4))
       '@convex-dev/workpool':
         specifier: ^0.3.1
-        version: 0.3.1(convex-helpers@0.1.112(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.32.0(react@19.2.4))
+        version: 0.3.1(convex-helpers@0.1.113(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.32.0(react@19.2.4))
       '@polar-sh/sdk':
         specifier: ^0.43.1
         version: 0.43.1
@@ -561,8 +561,8 @@ importers:
         specifier: ^0.13.10
         version: 0.13.10(typescript@5.9.3)(zod@4.3.6)
       ai:
-        specifier: ^6.0.94
-        version: 6.0.94(zod@4.3.6)
+        specifier: ^6.0.97
+        version: 6.0.97(zod@4.3.6)
       better-auth:
         specifier: 1.4.9
         version: 1.4.9(next@16.1.6(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.0.18)
@@ -573,8 +573,8 @@ importers:
         specifier: ^1.32.0
         version: 1.32.0(react@19.2.4)
       convex-helpers:
-        specifier: ^0.1.112
-        version: 0.1.112(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6)
+        specifier: ^0.1.113
+        version: 0.1.113(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6)
       hono:
         specifier: ^4.12.0
         version: 4.12.0
@@ -736,7 +736,7 @@ importers:
         version: 1.2.2(@types/react@19.2.14)(react@19.2.4)
       '@react-three/drei':
         specifier: ^10.7.7
-        version: 10.7.7(@react-three/fiber@9.5.0(@types/react@19.2.14)(immer@11.1.4)(react-dom@19.2.4(react@19.2.4))(react-native@0.83.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)(three@0.183.1))(@types/react@19.2.14)(@types/three@0.183.0)(immer@11.1.4)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(three@0.183.1)
+        version: 10.7.7(@react-three/fiber@9.5.0(@types/react@19.2.14)(immer@11.1.4)(react-dom@19.2.4(react@19.2.4))(react-native@0.83.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)(three@0.183.1))(@types/react@19.2.14)(@types/three@0.183.1)(immer@11.1.4)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(three@0.183.1)
       '@react-three/fiber':
         specifier: ^9.5.0
         version: 9.5.0(@types/react@19.2.14)(immer@11.1.4)(react-dom@19.2.4(react@19.2.4))(react-native@0.83.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)(three@0.183.1)
@@ -756,8 +756,8 @@ importers:
         specifier: ^2.0.13
         version: 2.0.13
       ai:
-        specifier: ^6.0.94
-        version: 6.0.94(zod@4.3.6)
+        specifier: ^6.0.97
+        version: 6.0.97(zod@4.3.6)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -946,8 +946,8 @@ importers:
         specifier: ^15.5.13
         version: 15.5.13
       '@types/three':
-        specifier: ^0.183.0
-        version: 0.183.0
+        specifier: ^0.183.1
+        version: 0.183.1
       '@vitest/coverage-istanbul':
         specifier: ^4.0.18
         version: 4.0.18(vitest@4.0.18)
@@ -1115,8 +1115,8 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/gateway@3.0.52':
-    resolution: {integrity: sha512-lYCXP8T3YnIDiz8DP7loAMT27wnblc3IAYzQ7igg89RCRyTUjk6ffbxHXXQ5Pmv8jrdLF0ZIJnH54Dsr1OCKHg==}
+  '@ai-sdk/gateway@3.0.53':
+    resolution: {integrity: sha512-QT3FEoNARMRlk8JJVR7L98exiK9C8AGfrEJVbRxBT1yIXKs/N19o/+PsjTRVsARgDJNcy9JbJp1FspKucEat0Q==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -1149,8 +1149,8 @@ packages:
     resolution: {integrity: sha512-oGMAgGoQdBXbZqNG0Ze56CHjDZ1IDYOwGYxYjO5KLSlz5HiNQ9udIXsPZ61VWaHGZ5XW/jyjmr6t2xz2jGVwbQ==}
     engines: {node: '>=18'}
 
-  '@ai-sdk/react@3.0.96':
-    resolution: {integrity: sha512-9nTW9tteFB7F6x2WzT4nK45atNphFDChlfMu9OJy0WAMzEAswwvE1dfWGqFH2bGs8Q+mdWBATMxqDvfvHcGnxQ==}
+  '@ai-sdk/react@3.0.99':
+    resolution: {integrity: sha512-xMsp5br4Dpr/3BYq/jrE8q4YLgViU1KHVq8VB0+dzdLJFU3jKA83uoxpbWqzV/edQOBPgGBSb2CgmV5v77rvzA==}
     engines: {node: '>=18'}
     peerDependencies:
       react: ^18 || ~19.0.1 || ~19.1.2 || ^19.2.1
@@ -1515,59 +1515,59 @@ packages:
   '@better-fetch/fetch@1.1.21':
     resolution: {integrity: sha512-/ImESw0sskqlVR94jB+5+Pxjf+xBwDZF/N5+y2/q4EqD7IARUTSpPfIo8uf39SYpCxyOCtbyYpUrZ3F/k0zT4A==}
 
-  '@biomejs/biome@2.4.3':
-    resolution: {integrity: sha512-cBrjf6PNF6yfL8+kcNl85AjiK2YHNsbU0EvDOwiZjBPbMbQ5QcgVGFpjD0O52p8nec5O8NYw7PKw3xUR7fPAkQ==}
+  '@biomejs/biome@2.4.4':
+    resolution: {integrity: sha512-tigwWS5KfJf0cABVd52NVaXyAVv4qpUXOWJ1rxFL8xF1RVoeS2q/LK+FHgYoKMclJCuRoCWAPy1IXaN9/mS61Q==}
     engines: {node: '>=14.21.3'}
     hasBin: true
 
-  '@biomejs/cli-darwin-arm64@2.4.3':
-    resolution: {integrity: sha512-eOafSFlI/CF4id2tlwq9CVHgeEqvTL5SrhWff6ZORp6S3NL65zdsR3ugybItkgF8Pf4D9GSgtbB6sE3UNgOM9w==}
+  '@biomejs/cli-darwin-arm64@2.4.4':
+    resolution: {integrity: sha512-jZ+Xc6qvD6tTH5jM6eKX44dcbyNqJHssfl2nnwT6vma6B1sj7ZLTGIk6N5QwVBs5xGN52r3trk5fgd3sQ9We9A==}
     engines: {node: '>=14.21.3'}
     cpu: [arm64]
     os: [darwin]
 
-  '@biomejs/cli-darwin-x64@2.4.3':
-    resolution: {integrity: sha512-V2+av4ilbWcBMNufTtMMXVW00nPwyIjI5qf7n9wSvUaZ+tt0EvMGk46g9sAFDJBEDOzSyoRXiSP6pCvKTOEbPA==}
+  '@biomejs/cli-darwin-x64@2.4.4':
+    resolution: {integrity: sha512-Dh1a/+W+SUCXhEdL7TiX3ArPTFCQKJTI1mGncZNWfO+6suk+gYA4lNyJcBB+pwvF49uw0pEbUS49BgYOY4hzUg==}
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [darwin]
 
-  '@biomejs/cli-linux-arm64-musl@2.4.3':
-    resolution: {integrity: sha512-QuFzvsGo8BA4Xm7jGX5idkw6BqFblcCPySMTvq0AhGYnhUej5VJIDJbmTKfHqwjHepZiC4fA+T5i6wmiZolZNw==}
+  '@biomejs/cli-linux-arm64-musl@2.4.4':
+    resolution: {integrity: sha512-+sPAXq3bxmFwhVFJnSwkSF5Rw2ZAJMH3MF6C9IveAEOdSpgajPhoQhbbAK12SehN9j2QrHpk4J/cHsa/HqWaYQ==}
     engines: {node: '>=14.21.3'}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@biomejs/cli-linux-arm64@2.4.3':
-    resolution: {integrity: sha512-0m+O0x9FgK99FAwDK+fiDtjs2wnqq7bvfj17KJVeCkTwT/liI+Q9njJG7lwXK0iSJVXeFNRIxukpVI3SifMYAA==}
+  '@biomejs/cli-linux-arm64@2.4.4':
+    resolution: {integrity: sha512-V/NFfbWhsUU6w+m5WYbBenlEAz8eYnSqRMDMAW3K+3v0tYVkNyZn8VU0XPxk/lOqNXLSCCrV7FmV/u3SjCBShg==}
     engines: {node: '>=14.21.3'}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@biomejs/cli-linux-x64-musl@2.4.3':
-    resolution: {integrity: sha512-qEc0OCpj/uytruQ4wLM0yWNJLZy0Up8H1Er5MW3SrstqM6J2d4XqdNA86xzCy8MQCHpoVZ3lFye3GBlIL4/ljw==}
+  '@biomejs/cli-linux-x64-musl@2.4.4':
+    resolution: {integrity: sha512-gGvFTGpOIQDb5CQ2VC0n9Z2UEqlP46c4aNgHmAMytYieTGEcfqhfCFnhs6xjt0S3igE6q5GLuIXtdQt3Izok+g==}
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@biomejs/cli-linux-x64@2.4.3':
-    resolution: {integrity: sha512-NVqh0saIU0u5OfOp/0jFdlKRE59+XyMvWmtx0f6Nm/2OpdxBl04coRIftBbY9d1gfu+23JVv4CItAqPYrjYh5w==}
+  '@biomejs/cli-linux-x64@2.4.4':
+    resolution: {integrity: sha512-R4+ZCDtG9kHArasyBO+UBD6jr/FcFCTH8QkNTOCu0pRJzCWyWC4EtZa2AmUZB5h3e0jD7bRV2KvrENcf8rndBg==}
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@biomejs/cli-win32-arm64@2.4.3':
-    resolution: {integrity: sha512-gRO96vrIARilv/Cp2ZnmNNL5LSZg3RO75GPp13hsLO3N4YVpE7saaMDp2bcyV48y2N2Pbit1brkGVGta0yd6VQ==}
+  '@biomejs/cli-win32-arm64@2.4.4':
+    resolution: {integrity: sha512-trzCqM7x+Gn832zZHgr28JoYagQNX4CZkUZhMUac2YxvvyDRLJDrb5m9IA7CaZLlX6lTQmADVfLEKP1et1Ma4Q==}
     engines: {node: '>=14.21.3'}
     cpu: [arm64]
     os: [win32]
 
-  '@biomejs/cli-win32-x64@2.4.3':
-    resolution: {integrity: sha512-vSm/vOJe06pf14aGHfHl3Ar91Nlx4YYmohElDJ+17UbRwe99n987S/MhAlQOkONqf1utJor04ChkCPmKb8SWdw==}
+  '@biomejs/cli-win32-x64@2.4.4':
+    resolution: {integrity: sha512-gnOHKVPFAAPrpoPt2t+Q6FZ7RPry/FDV3GcpU53P3PtLNnQjBmKyN2Vh/JtqXet+H4pme8CC76rScwdjDcT1/A==}
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [win32]
@@ -5920,70 +5920,70 @@ packages:
     peerDependencies:
       tailwindcss: '>=3.0.0 || insiders || >=4.0.0-alpha.20 || >=4.0.0-beta.1'
 
-  '@takumi-rs/core-darwin-arm64@0.68.15':
-    resolution: {integrity: sha512-oO9fenz4l08j/T1Nwu8DYjcv0KOSfXIozStwJNQ1CklbZJOgkGpooacQ2SEOEMeY026YRNR4d+ayDIL8eVbV5g==}
+  '@takumi-rs/core-darwin-arm64@0.68.16':
+    resolution: {integrity: sha512-S4B2n7NB4jkijv0A9wpBOuX9pVtu4ukTrtNAf6NxW5rmVdUvqmwouK6OjrrYl1+CjswZGFlOFiBUp9h+bV6h6w==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [arm64]
     os: [darwin]
 
-  '@takumi-rs/core-darwin-x64@0.68.15':
-    resolution: {integrity: sha512-cj8lcxZXkNtK416IZcwZDD3v82GlOkr+AnKXgyBD/ya6wXBKhrC7sItfWHLdfJoZyB6P1fYPdUz7U42quhHNeA==}
+  '@takumi-rs/core-darwin-x64@0.68.16':
+    resolution: {integrity: sha512-AGM8YCxraq0FgKr/ftYv3jtLozcsqMUtKWZl+LYwVyWpz0qzHrRpngyFnfMzxlgNK+8O8W+2s3n3SljfgkuZ3w==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [x64]
     os: [darwin]
 
-  '@takumi-rs/core-linux-arm64-gnu@0.68.15':
-    resolution: {integrity: sha512-lxzy0iyubQKTtBcOifwppnG8ybazglYPjpe//x/vb3+dFZBrpBkkmhDqkN1QcacibCJHoFdG7tv/E/XONbBHPA==}
+  '@takumi-rs/core-linux-arm64-gnu@0.68.16':
+    resolution: {integrity: sha512-WQTapY7mDqd/teGmMHoi6RlnhEjfWWkwZOEQiWobwiJDu2CmnO9NdiFUfX9h0nHY/AHxZ+N4WmldJRSoZj55Dw==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@takumi-rs/core-linux-arm64-musl@0.68.15':
-    resolution: {integrity: sha512-f6qf1K8Dkfe88lYJZ+HAKu63dgRoMAffOppHPqilJyTYiPsnv1ly5hab2/DSPh758YGRAK6gWTFEAYSgsgwKJA==}
+  '@takumi-rs/core-linux-arm64-musl@0.68.16':
+    resolution: {integrity: sha512-lie+WwL6XN0i+P0e+zfPhvx+UCLMEnRFaM8oN4XWL7gPMP6m3vPM1uH73edFjuZcyIwmP3LIA2ADOgFCUstYyQ==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@takumi-rs/core-linux-x64-gnu@0.68.15':
-    resolution: {integrity: sha512-gebH4bhwFKF2c9/vwi+GXtu3r+KygbFe1ej6WHMfYQlWAG1J8SlJamRNYDOmbmbMTw5QlFFafK4Kwh92MKbyrQ==}
+  '@takumi-rs/core-linux-x64-gnu@0.68.16':
+    resolution: {integrity: sha512-SRsqNUeg/F1B1wbUVHTIE2HqqYAMlA2JYG33mS84UPg8XzBoHzoY8eSwK6Os700K7JL/8qm4ZSB9vX+Nk44BNg==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@takumi-rs/core-linux-x64-musl@0.68.15':
-    resolution: {integrity: sha512-4ry3guGmWjsG5PZCur2kmxqTCRFCtYe63FDnXsJlLk8OIsm5QEZyn9A8+t5aSVnn+nH1canJMnTL1pNwGyVScg==}
+  '@takumi-rs/core-linux-x64-musl@0.68.16':
+    resolution: {integrity: sha512-zopP1zg+s5xpvCxFXsGe5cSmKi1hrnTh491ykZ7eyywdvDH9rsFly0fyECp1hi5c5J1KHrYskmGmbH/fkasG/w==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@takumi-rs/core-win32-arm64-msvc@0.68.15':
-    resolution: {integrity: sha512-fmLOLisAaJsj+d8D84BEpKYvevUpgifEbf9qLItS3qy4sAielQuWmUfhY4N9zlMx5kbGUv5zayFj8GGsJ+f2fw==}
+  '@takumi-rs/core-win32-arm64-msvc@0.68.16':
+    resolution: {integrity: sha512-l3KhrEsEjWeZtdBoet9eWsfH1qkO0TMO1rZTOYF8fouulYSXK4EhJMROuSIi4LZp6djq61cGEkWB9TqYCuNtlw==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [arm64]
     os: [win32]
 
-  '@takumi-rs/core-win32-x64-msvc@0.68.15':
-    resolution: {integrity: sha512-wyb2n3U0s9rYgqNfsEOZQIl9Jp+kxGYJ/r1X/KiK+ESwHDn0XONnrhXgPhogQj3JhTWGKl0tz1l8lahnu7VEYw==}
+  '@takumi-rs/core-win32-x64-msvc@0.68.16':
+    resolution: {integrity: sha512-AAjzi/Yyk2wy9tuvq4/5rYEVtrWG20YK5vJRSES4kPPczWffJT7j0lI1rOZHcRf1CCpDxWgw8LbxUdBkC2MZig==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [x64]
     os: [win32]
 
-  '@takumi-rs/core@0.68.15':
-    resolution: {integrity: sha512-Wdk7GtpPeNKbPKYl+H6dIsbu41Lp9xqrmNAv1m/sSvsLxO67HICPnR2V2wsQZu3ww5fohmk1GRQ6iCTmuHdudw==}
+  '@takumi-rs/core@0.68.16':
+    resolution: {integrity: sha512-yMaNWTrPs5uOQ5ml2DFRykz/AkgQCQ6J9n+DjifUC5BPhbFA5SnkH7bir5CZm65Q1kJizB3zm94jFC8AUP6HrA==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
 
-  '@takumi-rs/helpers@0.68.15':
-    resolution: {integrity: sha512-Teig+QSW40iRpHils4dq/Y7RGG9BMZGpvDbONEJdNCMCkP+DvvwxyF1aHEqCygosYCMqX9+/UWNsNndg4WZDbQ==}
+  '@takumi-rs/helpers@0.68.16':
+    resolution: {integrity: sha512-4QuBSDSP32jmmoAgmdUAU7yWZRuptYBBdVBeTklGLYlGHba2iRIcYl0mL9mDuq/L2bsUyy6dibeJoghLC8mPww==}
 
-  '@takumi-rs/image-response@0.68.15':
-    resolution: {integrity: sha512-/cE336Jt2cHMnWh8y6Kxf/PWIm3+MGMITFPQVlk2uQiJ14QnZ9NKwTvR0IcGFQJqz3/MLcgBEpYO4yjhaSLy1g==}
+  '@takumi-rs/image-response@0.68.16':
+    resolution: {integrity: sha512-U1f3a2ZJ+fXyiEL/dej9p0tGakQTn3/gNLLxEokRz9nlPTJ1vpE5100AsWkRA4RKxJRUicTsxBgI1sRKDTrT8Q==}
 
-  '@takumi-rs/wasm@0.68.15':
-    resolution: {integrity: sha512-XMNDC4XhJ6VCAeBOzl5buozSnC4MWE0pQAqLKtqDr71QqdkOI+SaCqkQD5vtmuvdvK3z1xpxQgeZsTqbQpTGIA==}
+  '@takumi-rs/wasm@0.68.16':
+    resolution: {integrity: sha512-FShgIu+TTq6/Axi4DKYIvERwpuEsPJN0oobTpOA0c+SC65FC9wellonU/9sJEwOd+HA80PFD9hnnCyV4j7H0BA==}
 
   '@tanstack/devtools-event-client@0.4.0':
     resolution: {integrity: sha512-RPfGuk2bDZgcu9bAJodvO2lnZeHuz4/71HjZ0bGb/SPg8+lyTA+RLSKQvo7fSmPSi8/vcH3aKQ8EM9ywf1olaw==}
@@ -6291,8 +6291,8 @@ packages:
   '@types/statuses@2.0.6':
     resolution: {integrity: sha512-xMAgYwceFhRA2zY+XbEA7mxYbA093wdiW8Vu6gZPGWy9cmOyU9XesH1tNcEWsKFd5Vzrqx5T3D38PWx1FIIXkA==}
 
-  '@types/three@0.183.0':
-    resolution: {integrity: sha512-AaGkvloQhxdrfMm/HbY8cpOz1K1jkEELn6zjFoY3yhAiC7zhhZE19+gDBybYwKk+GqXmWKxqDCB43NqyW3+QZw==}
+  '@types/three@0.183.1':
+    resolution: {integrity: sha512-f2Pu5Hrepfgavttdye3PsH5RWyY/AvdZQwIVhrc4uNtvF7nOWJacQKcoVJn0S4f0yYbmAE6AR+ve7xDcuYtMGw==}
 
   '@types/through@0.0.33':
     resolution: {integrity: sha512-HsJ+z3QuETzP3cswwtzt2vEIiHBk/dCcHGhbmG5X3ecnwFD/lPrMpliGXxSCg03L9AhrdwA4Oz/qfspkDW+xGQ==}
@@ -6475,8 +6475,8 @@ packages:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  ai@6.0.94:
-    resolution: {integrity: sha512-/F9wh262HbK05b/5vILh38JvPiheonT+kBj1L97712E7VPchqmcx7aJuZN3QSk5Pj6knxUJLm2FFpYJI1pHXUA==}
+  ai@6.0.97:
+    resolution: {integrity: sha512-eZIAcBymwGhBwncRH/v9pillZNMeRCDkc4BwcvwXerXd7sxjVxRis3ZNCNCpP02pVH4NLs81ljm4cElC4vbNcQ==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -7104,8 +7104,8 @@ packages:
       zod:
         optional: true
 
-  convex-helpers@0.1.112:
-    resolution: {integrity: sha512-zhcm14aaRRNQYwxsFngmfYsGB3V0HwJ/hHMfKI9eeTR1N0b9o5Rohqvz3NgzyVJcmGNvYlZpUPbOy2YL5sYQNw==}
+  convex-helpers@0.1.113:
+    resolution: {integrity: sha512-IFLmgEbN2skC0w+M0MfXTYAITq/FeGxEe602Fij2/GI/WJ75G8/9aSDO0GddbwPDfvzUgQTbx5SbDtiegfwZBA==}
     hasBin: true
     peerDependencies:
       '@standard-schema/spec': ^1.0.0
@@ -11976,7 +11976,7 @@ snapshots:
       '@ai-sdk/provider-utils': 4.0.15(zod@4.3.6)
       zod: 4.3.6
 
-  '@ai-sdk/gateway@3.0.52(zod@4.3.6)':
+  '@ai-sdk/gateway@3.0.53(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider': 3.0.8
       '@ai-sdk/provider-utils': 4.0.15(zod@4.3.6)
@@ -12017,10 +12017,10 @@ snapshots:
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/react@3.0.96(react@19.2.4)(zod@4.3.6)':
+  '@ai-sdk/react@3.0.99(react@19.2.4)(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider-utils': 4.0.15(zod@4.3.6)
-      ai: 6.0.94(zod@4.3.6)
+      ai: 6.0.97(zod@4.3.6)
       react: 19.2.4
       swr: 2.3.8(react@19.2.4)
       throttleit: 2.1.0
@@ -12532,39 +12532,39 @@ snapshots:
 
   '@better-fetch/fetch@1.1.21': {}
 
-  '@biomejs/biome@2.4.3':
+  '@biomejs/biome@2.4.4':
     optionalDependencies:
-      '@biomejs/cli-darwin-arm64': 2.4.3
-      '@biomejs/cli-darwin-x64': 2.4.3
-      '@biomejs/cli-linux-arm64': 2.4.3
-      '@biomejs/cli-linux-arm64-musl': 2.4.3
-      '@biomejs/cli-linux-x64': 2.4.3
-      '@biomejs/cli-linux-x64-musl': 2.4.3
-      '@biomejs/cli-win32-arm64': 2.4.3
-      '@biomejs/cli-win32-x64': 2.4.3
+      '@biomejs/cli-darwin-arm64': 2.4.4
+      '@biomejs/cli-darwin-x64': 2.4.4
+      '@biomejs/cli-linux-arm64': 2.4.4
+      '@biomejs/cli-linux-arm64-musl': 2.4.4
+      '@biomejs/cli-linux-x64': 2.4.4
+      '@biomejs/cli-linux-x64-musl': 2.4.4
+      '@biomejs/cli-win32-arm64': 2.4.4
+      '@biomejs/cli-win32-x64': 2.4.4
 
-  '@biomejs/cli-darwin-arm64@2.4.3':
+  '@biomejs/cli-darwin-arm64@2.4.4':
     optional: true
 
-  '@biomejs/cli-darwin-x64@2.4.3':
+  '@biomejs/cli-darwin-x64@2.4.4':
     optional: true
 
-  '@biomejs/cli-linux-arm64-musl@2.4.3':
+  '@biomejs/cli-linux-arm64-musl@2.4.4':
     optional: true
 
-  '@biomejs/cli-linux-arm64@2.4.3':
+  '@biomejs/cli-linux-arm64@2.4.4':
     optional: true
 
-  '@biomejs/cli-linux-x64-musl@2.4.3':
+  '@biomejs/cli-linux-x64-musl@2.4.4':
     optional: true
 
-  '@biomejs/cli-linux-x64@2.4.3':
+  '@biomejs/cli-linux-x64@2.4.4':
     optional: true
 
-  '@biomejs/cli-win32-arm64@2.4.3':
+  '@biomejs/cli-win32-arm64@2.4.4':
     optional: true
 
-  '@biomejs/cli-win32-x64@2.4.3':
+  '@biomejs/cli-win32-x64@2.4.4':
     optional: true
 
   '@braintree/sanitize-url@7.1.1': {}
@@ -12826,12 +12826,12 @@ snapshots:
     optionalDependencies:
       react: 19.2.4
 
-  '@convex-dev/resend@0.2.3(@react-email/render@2.0.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(convex-helpers@0.1.112(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.32.0(react@19.2.4))(react@19.2.4)':
+  '@convex-dev/resend@0.2.3(@react-email/render@2.0.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(convex-helpers@0.1.113(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.32.0(react@19.2.4))(react@19.2.4)':
     dependencies:
       '@convex-dev/rate-limiter': 0.3.2(convex@1.32.0(react@19.2.4))(react@19.2.4)
-      '@convex-dev/workpool': 0.3.1(convex-helpers@0.1.112(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.32.0(react@19.2.4))
+      '@convex-dev/workpool': 0.3.1(convex-helpers@0.1.113(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.32.0(react@19.2.4))
       convex: 1.32.0(react@19.2.4)
-      convex-helpers: 0.1.112(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6)
+      convex-helpers: 0.1.113(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6)
       remeda: 2.33.1
       resend: 6.7.0(@react-email/render@2.0.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4))
       svix: 1.84.1
@@ -12839,17 +12839,17 @@ snapshots:
       - '@react-email/render'
       - react
 
-  '@convex-dev/workflow@0.3.4(@convex-dev/workpool@0.3.1(convex-helpers@0.1.112(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.32.0(react@19.2.4)))(convex-helpers@0.1.112(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.32.0(react@19.2.4))':
+  '@convex-dev/workflow@0.3.4(@convex-dev/workpool@0.3.1(convex-helpers@0.1.113(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.32.0(react@19.2.4)))(convex-helpers@0.1.113(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.32.0(react@19.2.4))':
     dependencies:
-      '@convex-dev/workpool': 0.3.1(convex-helpers@0.1.112(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.32.0(react@19.2.4))
+      '@convex-dev/workpool': 0.3.1(convex-helpers@0.1.113(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.32.0(react@19.2.4))
       async-channel: 0.2.0
       convex: 1.32.0(react@19.2.4)
-      convex-helpers: 0.1.112(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6)
+      convex-helpers: 0.1.113(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6)
 
-  '@convex-dev/workpool@0.3.1(convex-helpers@0.1.112(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.32.0(react@19.2.4))':
+  '@convex-dev/workpool@0.3.1(convex-helpers@0.1.113(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.32.0(react@19.2.4))':
     dependencies:
       convex: 1.32.0(react@19.2.4)
-      convex-helpers: 0.1.112(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6)
+      convex-helpers: 0.1.113(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6)
 
   '@csstools/color-helpers@6.0.1': {}
 
@@ -16788,7 +16788,7 @@ snapshots:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
 
-  '@react-three/drei@10.7.7(@react-three/fiber@9.5.0(@types/react@19.2.14)(immer@11.1.4)(react-dom@19.2.4(react@19.2.4))(react-native@0.83.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)(three@0.183.1))(@types/react@19.2.14)(@types/three@0.183.0)(immer@11.1.4)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(three@0.183.1)':
+  '@react-three/drei@10.7.7(@react-three/fiber@9.5.0(@types/react@19.2.14)(immer@11.1.4)(react-dom@19.2.4(react@19.2.4))(react-native@0.83.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)(three@0.183.1))(@types/react@19.2.14)(@types/three@0.183.1)(immer@11.1.4)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(three@0.183.1)':
     dependencies:
       '@babel/runtime': 7.28.6
       '@mediapipe/tasks-vision': 0.10.17
@@ -16800,10 +16800,10 @@ snapshots:
       detect-gpu: 5.0.70
       glsl-noise: 0.0.0
       hls.js: 1.6.15
-      maath: 0.10.8(@types/three@0.183.0)(three@0.183.1)
+      maath: 0.10.8(@types/three@0.183.1)(three@0.183.1)
       meshline: 3.3.1(three@0.183.1)
       react: 19.2.4
-      stats-gl: 2.4.2(@types/three@0.183.0)(three@0.183.1)
+      stats-gl: 2.4.2(@types/three@0.183.1)(three@0.183.1)
       stats.js: 0.17.0
       suspend-react: 0.1.3(react@19.2.4)
       three: 0.183.1
@@ -17385,50 +17385,50 @@ snapshots:
       postcss-selector-parser: 6.0.10
       tailwindcss: 4.2.0
 
-  '@takumi-rs/core-darwin-arm64@0.68.15':
+  '@takumi-rs/core-darwin-arm64@0.68.16':
     optional: true
 
-  '@takumi-rs/core-darwin-x64@0.68.15':
+  '@takumi-rs/core-darwin-x64@0.68.16':
     optional: true
 
-  '@takumi-rs/core-linux-arm64-gnu@0.68.15':
+  '@takumi-rs/core-linux-arm64-gnu@0.68.16':
     optional: true
 
-  '@takumi-rs/core-linux-arm64-musl@0.68.15':
+  '@takumi-rs/core-linux-arm64-musl@0.68.16':
     optional: true
 
-  '@takumi-rs/core-linux-x64-gnu@0.68.15':
+  '@takumi-rs/core-linux-x64-gnu@0.68.16':
     optional: true
 
-  '@takumi-rs/core-linux-x64-musl@0.68.15':
+  '@takumi-rs/core-linux-x64-musl@0.68.16':
     optional: true
 
-  '@takumi-rs/core-win32-arm64-msvc@0.68.15':
+  '@takumi-rs/core-win32-arm64-msvc@0.68.16':
     optional: true
 
-  '@takumi-rs/core-win32-x64-msvc@0.68.15':
+  '@takumi-rs/core-win32-x64-msvc@0.68.16':
     optional: true
 
-  '@takumi-rs/core@0.68.15':
+  '@takumi-rs/core@0.68.16':
     optionalDependencies:
-      '@takumi-rs/core-darwin-arm64': 0.68.15
-      '@takumi-rs/core-darwin-x64': 0.68.15
-      '@takumi-rs/core-linux-arm64-gnu': 0.68.15
-      '@takumi-rs/core-linux-arm64-musl': 0.68.15
-      '@takumi-rs/core-linux-x64-gnu': 0.68.15
-      '@takumi-rs/core-linux-x64-musl': 0.68.15
-      '@takumi-rs/core-win32-arm64-msvc': 0.68.15
-      '@takumi-rs/core-win32-x64-msvc': 0.68.15
+      '@takumi-rs/core-darwin-arm64': 0.68.16
+      '@takumi-rs/core-darwin-x64': 0.68.16
+      '@takumi-rs/core-linux-arm64-gnu': 0.68.16
+      '@takumi-rs/core-linux-arm64-musl': 0.68.16
+      '@takumi-rs/core-linux-x64-gnu': 0.68.16
+      '@takumi-rs/core-linux-x64-musl': 0.68.16
+      '@takumi-rs/core-win32-arm64-msvc': 0.68.16
+      '@takumi-rs/core-win32-x64-msvc': 0.68.16
 
-  '@takumi-rs/helpers@0.68.15': {}
+  '@takumi-rs/helpers@0.68.16': {}
 
-  '@takumi-rs/image-response@0.68.15':
+  '@takumi-rs/image-response@0.68.16':
     dependencies:
-      '@takumi-rs/core': 0.68.15
-      '@takumi-rs/helpers': 0.68.15
-      '@takumi-rs/wasm': 0.68.15
+      '@takumi-rs/core': 0.68.16
+      '@takumi-rs/helpers': 0.68.16
+      '@takumi-rs/wasm': 0.68.16
 
-  '@takumi-rs/wasm@0.68.15': {}
+  '@takumi-rs/wasm@0.68.16': {}
 
   '@tanstack/devtools-event-client@0.4.0': {}
 
@@ -17765,7 +17765,7 @@ snapshots:
 
   '@types/statuses@2.0.6': {}
 
-  '@types/three@0.183.0':
+  '@types/three@0.183.1':
     dependencies:
       '@dimforge/rapier3d-compat': 0.12.0
       '@tweenjs/tween.js': 23.1.3
@@ -17976,9 +17976,9 @@ snapshots:
       screenfull: 5.2.0
       tslib: 2.8.1
 
-  ai@6.0.94(zod@4.3.6):
+  ai@6.0.97(zod@4.3.6):
     dependencies:
-      '@ai-sdk/gateway': 3.0.52(zod@4.3.6)
+      '@ai-sdk/gateway': 3.0.53(zod@4.3.6)
       '@ai-sdk/provider': 3.0.8
       '@ai-sdk/provider-utils': 4.0.15(zod@4.3.6)
       '@opentelemetry/api': 1.9.0
@@ -18652,7 +18652,7 @@ snapshots:
       typescript: 5.9.3
       zod: 4.3.5
 
-  convex-helpers@0.1.112(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6):
+  convex-helpers@0.1.113(@standard-schema/spec@1.1.0)(convex@1.32.0(react@19.2.4))(hono@4.12.0)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6):
     dependencies:
       convex: 1.32.0(react@19.2.4)
     optionalDependencies:
@@ -20822,9 +20822,9 @@ snapshots:
     dependencies:
       react: 19.2.4
 
-  maath@0.10.8(@types/three@0.183.0)(three@0.183.1):
+  maath@0.10.8(@types/three@0.183.1)(three@0.183.1):
     dependencies:
-      '@types/three': 0.183.0
+      '@types/three': 0.183.1
       three: 0.183.1
 
   magic-string@0.30.21:
@@ -23697,9 +23697,9 @@ snapshots:
       '@stablelib/base64': 1.0.1
       fast-sha256: 1.3.0
 
-  stats-gl@2.4.2(@types/three@0.183.0)(three@0.183.1):
+  stats-gl@2.4.2(@types/three@0.183.1)(three@0.183.1):
     dependencies:
-      '@types/three': 0.183.0
+      '@types/three': 0.183.1
       three: 0.183.1
 
   stats.js@0.17.0: {}

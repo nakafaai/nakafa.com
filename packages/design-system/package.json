@@ -28,7 +28,7 @@
     "@tabler/icons-react": "^3.37.1",
     "@tailwindcss/postcss": "^4.2.0",
     "@types/mdx": "^2.0.13",
-    "ai": "^6.0.94",
+    "ai": "^6.0.97",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -93,7 +93,7 @@
     "@types/react": "^19.2.14",
     "@types/react-katex": "^3.0.4",
     "@types/react-syntax-highlighter": "^15.5.13",
-    "@types/three": "^0.183.0",
+    "@types/three": "^0.183.1",
     "@vitest/coverage-istanbul": "^4.0.18",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
