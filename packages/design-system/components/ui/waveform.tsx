@@ -418,10 +418,13 @@ export const AudioScrubber = ({
   const [localProgress, setLocalProgress] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const waveformData =
-    data.length > 0
-      ? data
-      : Array.from({ length: 100 }, () => 0.2 + Math.random() * 0.6);
+  const waveformData = useMemo(
+    () =>
+      data.length > 0
+        ? data
+        : Array.from({ length: 100 }, () => 0.2 + Math.random() * 0.6),
+    [data]
+  );
 
   useEffect(() => {
     if (!isDragging && duration > 0) {
@@ -982,10 +985,7 @@ export const LiveMicrophoneWaveform = ({
       source.buffer = audioBufferRef.current;
 
       const speed = Math.abs(direction);
-      const playbackRate =
-        direction > 0
-          ? Math.min(3, 1 + speed * 0.1)
-          : Math.max(-3, -1 - speed * 0.1);
+      const playbackRate = Math.min(3, Math.max(0.25, 1 + speed * 0.1));
 
       source.playbackRate.value = playbackRate;
 
