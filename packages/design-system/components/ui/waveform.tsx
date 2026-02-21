@@ -550,6 +550,7 @@ export const MicrophoneWaveform = ({
   const processingAnimationRef = useRef<number | null>(null);
   const lastActiveDataRef = useRef<number[]>([]);
   const transitionProgressRef = useRef(0);
+  const fadeAnimationRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (processing && !active) {
@@ -607,27 +608,31 @@ export const MicrophoneWaveform = ({
       };
     }
     if (!(active || processing)) {
-      // Use functional update to avoid data dependency
-      setData((currentData) => {
-        if (currentData.length === 0) {
-          return currentData;
+      if (data.length === 0) {
+        return;
+      }
+
+      let fadeProgress = 0;
+      const fadeToIdle = () => {
+        fadeProgress += 0.03;
+        if (fadeProgress < 1) {
+          setData((prev) => prev.map((value) => value * (1 - fadeProgress)));
+          fadeAnimationRef.current = requestAnimationFrame(fadeToIdle);
+        } else {
+          setData([]);
+          fadeAnimationRef.current = null;
         }
-        let fadeProgress = 0;
-        const fadeToIdle = () => {
-          fadeProgress += 0.03;
-          if (fadeProgress < 1) {
-            setData((prev) => prev.map((value) => value * (1 - fadeProgress)));
-            requestAnimationFrame(fadeToIdle);
-          } else {
-            setData([]);
-          }
-        };
-        fadeToIdle();
-        return currentData;
-      });
-      return;
+      };
+      fadeAnimationRef.current = requestAnimationFrame(fadeToIdle);
+
+      return () => {
+        if (fadeAnimationRef.current) {
+          cancelAnimationFrame(fadeAnimationRef.current);
+          fadeAnimationRef.current = null;
+        }
+      };
     }
-  }, [processing, active]);
+  }, [processing, active, data.length]);
 
   useEffect(() => {
     if (!active) {

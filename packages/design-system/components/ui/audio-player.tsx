@@ -383,7 +383,7 @@ export const AudioPlayerDuration = ({
     >
       {player.duration !== null &&
       player.duration !== undefined &&
-      !Number.isNaN(player.duration)
+      Number.isFinite(player.duration)
         ? formatTime(player.duration)
         : "--:--"}
     </span>
