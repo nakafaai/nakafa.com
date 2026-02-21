@@ -36,6 +36,12 @@ export const aiModels: Model[] = [
   },
   {
     icon: Gemini,
+    value: "gemini-3.1-pro",
+    label: "Gemini 3.1 Pro",
+    type: "premium",
+  },
+  {
+    icon: Gemini,
     value: "gemini-3-pro",
     label: "Gemini 3 Pro",
     type: "premium",

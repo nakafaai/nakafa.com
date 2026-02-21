@@ -48,6 +48,7 @@ const languageModels = {
   "gemini-2.5-pro": createWrappedLanguageModel("google/gemini-2.5-pro"),
   "gemini-3-flash": createWrappedLanguageModel("google/gemini-3-flash"),
   "gemini-3-pro": createWrappedLanguageModel("google/gemini-3-pro-preview"),
+  "gemini-3.1-pro": createWrappedLanguageModel("google/gemini-3.1-pro-preview"),
 
   // Meta
   "llama-4-maverick": createWrappedLanguageModel("meta/llama-4-maverick"),
