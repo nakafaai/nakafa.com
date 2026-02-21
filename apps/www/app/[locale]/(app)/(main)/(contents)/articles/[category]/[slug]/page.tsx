@@ -11,6 +11,7 @@ import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
+import { AiSheetOpen } from "@/components/ai/sheet-open";
 import { Comments } from "@/components/comments";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import {
@@ -204,7 +205,7 @@ async function PageContent({
         name={metadata.title}
       />
       <LayoutMaterial>
-        <LayoutMaterialContent showAskButton>
+        <LayoutMaterialContent>
           <LayoutMaterialHeader
             content={raw}
             description={metadata.description}
@@ -222,6 +223,7 @@ async function PageContent({
           <LayoutMaterialFooter>
             <Comments slug={FilePath} />
           </LayoutMaterialFooter>
+          <AiSheetOpen />
         </LayoutMaterialContent>
         <LayoutMaterialToc
           chapters={{

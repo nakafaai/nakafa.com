@@ -2,7 +2,6 @@ import type { ParsedHeading } from "@repo/contents/_types/toc";
 import { cn } from "@repo/design-system/lib/utils";
 import type { ComponentProps, ReactNode } from "react";
 import { VirtualProvider } from "@/lib/context/use-virtual";
-import { AiSheetOpen } from "../ai/sheet-open";
 import { FooterContent } from "./footer-content";
 import { HeaderContent } from "./header-content";
 import { LayoutContent } from "./layout-content";
@@ -19,18 +18,11 @@ export function LayoutMaterialHeader({
 export function LayoutMaterialContent({
   children,
   className,
-  showAskButton,
 }: {
   children: ReactNode;
   className?: string;
-  showAskButton?: boolean;
 }) {
-  return (
-    <div className={cn("flex-1", className)}>
-      {children}
-      {!!showAskButton && <AiSheetOpen />}
-    </div>
-  );
+  return <div className={cn("flex-1", className)}>{children}</div>;
 }
 
 export function LayoutMaterialMain({
