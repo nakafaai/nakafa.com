@@ -271,14 +271,14 @@ function Scene({
   );
 }
 
-function splitmix32(a: number) {
+function splitmix32(seed: number) {
+  // biome-ignore lint/suspicious/noBitwiseOperators: Required for splitmix32 PRNG algorithm - converts to signed 32-bit
+  let state = seed | 0;
   return () => {
-    // biome-ignore lint: Required for splitmix32 PRNG algorithm
-    a |= 0;
-    // biome-ignore lint: Required for splitmix32 PRNG algorithm state update
-    a = (a + 0x9e_37_79_b9) | 0;
     // biome-ignore lint/suspicious/noBitwiseOperators: Required for splitmix32 PRNG algorithm
-    let t = a ^ (a >>> 16);
+    state = (state + 0x9e_37_79_b9) | 0;
+    // biome-ignore lint/suspicious/noBitwiseOperators: Required for splitmix32 PRNG algorithm
+    let t = state ^ (state >>> 16);
     t = Math.imul(t, 0x21_f0_aa_ad);
     // biome-ignore lint/suspicious/noBitwiseOperators: Required for splitmix32 PRNG algorithm
     t ^= t >>> 15;

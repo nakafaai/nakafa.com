@@ -281,8 +281,9 @@ export function AudioPlayerProvider<TData = unknown>({
   return (
     <AudioPlayerContext.Provider value={api as AudioPlayerApi<unknown>}>
       <AudioPlayerTimeContext.Provider value={time}>
-        {/* biome-ignore lint/a11y/useMediaCaption: Audio player doesn't require captions like video */}
-        <audio className="hidden" crossOrigin="anonymous" ref={audioRef} />
+        <audio className="hidden" crossOrigin="anonymous" ref={audioRef}>
+          <track kind="captions" label="Audio captions" src="" />
+        </audio>
         {children}
       </AudioPlayerTimeContext.Provider>
     </AudioPlayerContext.Provider>
@@ -583,7 +584,7 @@ export function AudioPlayerSpeed({
 }
 
 export interface AudioPlayerSpeedButtonGroupProps
-  extends Omit<React.HTMLAttributes<HTMLDivElement>, "children"> {
+  extends Omit<React.HTMLAttributes<HTMLFieldSetElement>, "children"> {
   speeds?: readonly number[];
 }
 
@@ -596,11 +597,9 @@ export function AudioPlayerSpeedButtonGroup({
   const currentSpeed = player.playbackRate;
 
   return (
-    // biome-ignore lint/a11y/useSemanticElements: Using div with role="group" to maintain Button props compatibility
-    <div
+    <fieldset
       aria-label="Playback speed controls"
       className={cn("flex items-center gap-1", className)}
-      role="group"
       {...props}
     >
       {speeds.map((speed) => (
@@ -614,7 +613,7 @@ export function AudioPlayerSpeedButtonGroup({
           {speed}x
         </Button>
       ))}
-    </div>
+    </fieldset>
   );
 }
 

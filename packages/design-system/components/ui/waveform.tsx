@@ -793,7 +793,7 @@ export const LiveMicrophoneWaveform = ({
   ...props
 }: LiveMicrophoneWaveformProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLButtonElement>(null);
   const internalHistoryRef = useRef<number[]>([]);
   const historyRef = savedHistoryRef || internalHistoryRef;
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -1292,7 +1292,7 @@ export const LiveMicrophoneWaveform = ({
     historyRef,
   ]);
 
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (active || historyRef.current.length === 0) {
       return;
     }
@@ -1400,40 +1400,34 @@ export const LiveMicrophoneWaveform = ({
     historyRef,
   ]);
 
+  const isInteractive = !active && historyRef.current.length > 0;
+
   return (
-    // biome-ignore lint/a11y/useAriaPropsSupportedByRole: ARIA props are conditionally applied based on slider state
-    // biome-ignore lint/a11y/noStaticElementInteractions: Interactive element with conditional role slider
-    <div
+    <button
       aria-label={
-        !active && historyRef.current.length > 0
+        isInteractive
           ? "Drag to scrub through recording"
-          : undefined
+          : "Audio waveform visualization"
       }
-      aria-valuemax={
-        !active && historyRef.current.length > 0
-          ? historyRef.current.length
-          : undefined
-      }
-      aria-valuemin={!active && historyRef.current.length > 0 ? 0 : undefined}
-      aria-valuenow={
-        !active && historyRef.current.length > 0
-          ? Math.abs(dragOffset)
-          : undefined
-      }
+      aria-valuemax={isInteractive ? historyRef.current.length : 0}
+      aria-valuemin={0}
+      aria-valuenow={isInteractive ? Math.abs(dragOffset) : 0}
       className={cn(
         "relative flex items-center",
-        !active && historyRef.current.length > 0 && "cursor-pointer",
+        isInteractive && "cursor-pointer",
         className
       )}
+      disabled={!isInteractive}
       onMouseDown={handleMouseDown}
       ref={containerRef}
-      role={!active && historyRef.current.length > 0 ? "slider" : undefined}
+      role="slider"
       style={{ height: heightStyle }}
-      tabIndex={!active && historyRef.current.length > 0 ? 0 : undefined}
+      tabIndex={isInteractive ? 0 : -1}
+      type="button"
       {...props}
     >
       <canvas className="block h-full w-full" ref={canvasRef} />
-    </div>
+    </button>
   );
 };
 
@@ -1475,7 +1469,7 @@ export const RecordingWaveform = ({
   const [isRecordingComplete, setIsRecordingComplete] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLButtonElement>(null);
   const recordingDataRef = useRef<number[]>([]);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -1764,7 +1758,7 @@ export const RecordingWaveform = ({
     [recording, isRecordingComplete]
   );
 
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (recording || !isRecordingComplete) {
       return;
     }
@@ -1796,33 +1790,31 @@ export const RecordingWaveform = ({
     };
   }, [isDragging, handleScrub]);
 
+  const isInteractive = isRecordingComplete && !recording;
+
   return (
-    // biome-ignore lint/a11y/useAriaPropsSupportedByRole: ARIA props are conditionally applied based on slider state
-    // biome-ignore lint/a11y/noStaticElementInteractions: Interactive element with conditional role slider
-    <div
+    <button
       aria-label={
-        isRecordingComplete && !recording
-          ? "Drag to scrub through recording"
-          : undefined
+        isInteractive ? "Drag to scrub through recording" : "Recording waveform"
       }
-      aria-valuemax={isRecordingComplete && !recording ? 100 : undefined}
-      aria-valuemin={isRecordingComplete && !recording ? 0 : undefined}
-      aria-valuenow={
-        isRecordingComplete && !recording ? viewPosition * 100 : undefined
-      }
+      aria-valuemax={isInteractive ? 100 : 0}
+      aria-valuemin={0}
+      aria-valuenow={isInteractive ? viewPosition * 100 : 0}
       className={cn(
         "relative flex items-center",
-        isRecordingComplete && !recording && "cursor-pointer",
+        isInteractive && "cursor-pointer",
         className
       )}
+      disabled={!isInteractive}
       onMouseDown={handleMouseDown}
       ref={containerRef}
-      role={isRecordingComplete && !recording ? "slider" : undefined}
+      role="slider"
       style={{ height: heightStyle }}
-      tabIndex={isRecordingComplete && !recording ? 0 : undefined}
+      tabIndex={isInteractive ? 0 : -1}
+      type="button"
       {...props}
     >
       <canvas className="block h-full w-full" ref={canvasRef} />
-    </div>
+    </button>
   );
 };
