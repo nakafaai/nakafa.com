@@ -296,7 +296,12 @@ export function AudioPlayerProvider<TData = unknown>({
   return (
     <AudioPlayerContext.Provider value={api as AudioPlayerApi<unknown>}>
       <AudioPlayerTimeContext.Provider value={time}>
-        <audio className="hidden" crossOrigin="anonymous" ref={audioRef}>
+        <audio
+          className="hidden"
+          crossOrigin="anonymous"
+          preload="metadata"
+          ref={audioRef}
+        >
           <track kind="captions" label="Captions" src={undefined} />
         </audio>
 
@@ -515,6 +520,23 @@ export function AudioPlayerButton<TData = unknown>({
       playing={player.isItemActive(item.id) && player.isPlaying}
     />
   );
+}
+
+export interface AudioPlayerInitializerProps<TData = unknown> {
+  item: AudioPlayerItem<TData>;
+}
+
+export function AudioPlayerInitializer<TData = unknown>({
+  item,
+}: AudioPlayerInitializerProps<TData>) {
+  const player = useAudioPlayer<TData>();
+
+  useEffect(() => {
+    // Set the active item immediately on mount so audio can preload
+    player.setActiveItem(item);
+  }, [item, player]);
+
+  return null;
 }
 
 type Callback = (delta: number) => void;

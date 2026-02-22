@@ -9,11 +9,12 @@ import type {
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import {
   AudioPlayerButton,
+  AudioPlayerDuration,
+  AudioPlayerInitializer,
   AudioPlayerProgress,
   AudioPlayerProvider,
   AudioPlayerSpeed,
   AudioPlayerTime,
-  useAudioPlayer,
 } from "@repo/design-system/components/ui/audio-player";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -67,20 +68,24 @@ function AiToolbar({
     FunctionReturnType<typeof api.audioStudies.public.queries.getAudioBySlug>
   >;
 }) {
+  const audioItem = {
+    id: data.audioUrl,
+    src: data.audioUrl,
+  };
+
   return (
     <aside className="sticky right-0 bottom-0 left-0 z-50 px-6 pb-6">
       <div className="mx-auto w-full sm:max-w-2xl">
-        <div className="flex flex-col rounded-xl border bg-background p-3 shadow-sm">
+        <div className="flex flex-col gap-3 rounded-xl border bg-background p-4 shadow-sm">
+          {/* Initialize audio player immediately for preloading */}
+          <AudioPlayerInitializer item={audioItem} />
+
           {/* Header toolbar */}
           <div className="flex items-center gap-3">
             {/* Play/Pause button */}
             <AudioPlayerButton
               className="shrink-0 rounded-full"
-              item={{
-                id: data.audioUrl,
-                src: data.audioUrl,
-                data: { duration: data.duration },
-              }}
+              item={audioItem}
               size="icon"
               variant="default"
             />
@@ -89,7 +94,7 @@ function AiToolbar({
             <div className="flex shrink-0 items-center gap-1 text-xs tabular-nums">
               <AudioPlayerTime />
               <span className="text-muted-foreground">/</span>
-              <DurationDisplay initialDuration={data.duration} />
+              <AudioPlayerDuration />
             </div>
 
             {/* Progress bar */}
@@ -110,12 +115,6 @@ function AiToolbar({
   );
 }
 
-function formatTime(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, "0")}`;
-}
-
 function AskNinaButton() {
   const open = useAi((state) => state.open);
   const setOpen = useAi((state) => state.setOpen);
@@ -128,26 +127,8 @@ function AskNinaButton() {
       variant="ghost"
     >
       <span className="hidden sm:inline">{t("ask-nina")}</span>
-      <HugeIcons className="size-4" icon={ArrowUpRight01Icon} />
+      <HugeIcons className="size-4 sm:hidden" icon={ArrowUpRight01Icon} />
     </Button>
-  );
-}
-
-function DurationDisplay({ initialDuration }: { initialDuration: number }) {
-  const player = useAudioPlayer();
-
-  // Use player's duration if available, otherwise use initial duration from backend
-  const duration =
-    player.duration !== null &&
-    player.duration !== undefined &&
-    Number.isFinite(player.duration)
-      ? player.duration
-      : initialDuration;
-
-  return (
-    <span className="text-muted-foreground text-sm tabular-nums">
-      {formatTime(duration)}
-    </span>
   );
 }
 

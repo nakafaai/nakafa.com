@@ -7,9 +7,9 @@ import { podcastScriptPrompt } from "@repo/ai/prompt/audio-studies/v3";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { internalAction } from "@repo/backend/convex/_generated/server";
 import {
-  SECONDS_PER_MINUTE,
-  WORD_SPLIT_REGEX,
-  WORDS_PER_MINUTE,
+  calculateDurationFromPCM,
+  PCM_FORMAT,
+  pcmToWav,
 } from "@repo/backend/convex/audioStudies/constants";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { getErrorMessage } from "@repo/backend/convex/utils/helper";
@@ -152,10 +152,24 @@ export const generateScript = internalAction({
 /**
  * Generate speech from a script using ElevenLabs V3 with automatic chunking.
  *
+ * AUDIO FORMAT STRATEGY:
+ * Using PCM 44.1kHz (Pro plan) instead of MP3 for 100% accurate duration:
+ * 1. ElevenLabs generates PCM 44.1kHz (CD quality, uncompressed)
+ * 2. PCM buffers concatenate safely (no metadata headers to conflict)
+ * 3. Duration calculated from exact buffer size: bytes / (44100 × 2)
+ * 4. Convert to WAV for browser compatibility with accurate headers
+ *
+ * WHY NOT MP3?
+ * - MP3 chunks each have duration metadata headers
+ * - Concatenating MP3 bytes keeps only first chunk's duration header
+ * - Results in incorrect duration (e.g., 5:46 instead of actual 6:58)
+ * - VBR (Variable Bit Rate) MP3 duration estimation is inherently inaccurate
+ *
  * V3 has a 5,000 character limit per request. To handle longer scripts:
  * 1. Split script into chunks at natural boundaries (paragraphs/sentences)
- * 2. Generate audio for each chunk sequentially
- * 3. Combine all audio buffers into a single file
+ * 2. Generate audio for each chunk sequentially using PCM 44.1kHz
+ * 3. Concatenate PCM buffers (safe - no metadata conflicts)
+ * 4. Convert to WAV with proper duration headers
  *
  * Idempotent: If audio already exists, returns immediately without API call.
  * Cost protection: Validates content hash before expensive ElevenLabs API call.
@@ -164,6 +178,7 @@ export const generateScript = internalAction({
  * Continuity is achieved through the audio tags in the script itself.
  *
  * @see https://elevenlabs.io/docs/overview/capabilities/text-to-speech/best-practices#prompting-eleven-v3
+ * @see https://elevenlabs.io/docs/api-reference/text-to-speech/convert#query-parameters
  */
 export const generateSpeech = internalAction({
   args: { contentAudioId: vv.id("contentAudios") },
@@ -243,7 +258,7 @@ export const generateSpeech = internalAction({
           model: elevenlabs.speech(audio.model),
           text: chunk.text,
           voice: audio.voiceId,
-          outputFormat: "mp3_44100_192",
+          outputFormat: PCM_FORMAT.outputFormat,
           providerOptions: {
             elevenlabs: {
               voiceSettings,
@@ -259,16 +274,27 @@ export const generateSpeech = internalAction({
         chunkCount: chunks.length,
       });
 
+      // Concatenate PCM buffers (PCM has no metadata headers, just raw samples)
       const totalLength = audioBuffers.reduce(
         (sum, buf) => sum + buf.length,
         0
       );
-      const combinedBuffer = new Uint8Array(totalLength);
+      const pcmBuffer = new Uint8Array(totalLength);
       let offset = 0;
       for (const buffer of audioBuffers) {
-        combinedBuffer.set(buffer, offset);
+        pcmBuffer.set(buffer, offset);
         offset += buffer.length;
       }
+
+      // Calculate exact duration from PCM buffer size
+      // PCM 16-bit 16kHz mono: duration = bufferLength / (sampleRate * bytesPerSample)
+      const duration = Math.ceil(calculateDurationFromPCM(pcmBuffer.length));
+
+      logger.info("PCM audio concatenated", {
+        contentAudioId: args.contentAudioId,
+        pcmBufferLength: pcmBuffer.length,
+        calculatedDuration: duration,
+      });
 
       const hashValidAfter = await ctx.runQuery(
         internal.audioStudies.queries.verifyContentHash,
@@ -290,32 +316,25 @@ export const generateSpeech = internalAction({
         });
       }
 
-      const audioBlob = new Blob([combinedBuffer], {
-        type: "audio/mpeg",
+      // Convert PCM to WAV format with proper duration metadata
+      const wavBuffer = pcmToWav(pcmBuffer);
+      const audioBlob = new Blob([Buffer.from(wavBuffer)], {
+        type: "audio/wav",
       });
       const storageId = await ctx.storage.store(audioBlob);
-
-      const scriptWithoutTags = audio.script.replace(/\[[^\]]+\]/g, "");
-      const wordCount = scriptWithoutTags
-        .trim()
-        .split(WORD_SPLIT_REGEX)
-        .filter(Boolean).length;
-      const duration = Math.ceil(
-        (wordCount / WORDS_PER_MINUTE) * SECONDS_PER_MINUTE
-      );
 
       await ctx.runMutation(internal.audioStudies.mutations.saveAudio, {
         contentAudioId: args.contentAudioId,
         storageId,
         duration,
-        size: combinedBuffer.byteLength,
+        size: wavBuffer.byteLength,
       });
 
       logger.info("Speech saved", {
         contentAudioId: args.contentAudioId,
         storageId,
         duration,
-        size: combinedBuffer.byteLength,
+        size: wavBuffer.byteLength,
       });
     } catch (error) {
       logger.error(
