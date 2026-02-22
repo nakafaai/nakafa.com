@@ -898,6 +898,7 @@ export const LiveMicrophoneWaveform = ({
             ) {
               audioContextRef.current.close();
             }
+            audioContextRef.current = null;
           }
         })();
       } else if (
@@ -906,6 +907,7 @@ export const LiveMicrophoneWaveform = ({
       ) {
         // Close AudioContext immediately if no audio to process
         audioContextRef.current.close();
+        audioContextRef.current = null;
       }
       return;
     }
