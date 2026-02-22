@@ -27,7 +27,7 @@ const tables = {
     script: v.optional(v.string()),
     /** Convex storage ID for the generated audio file */
     audioStorageId: v.optional(v.id("_storage")),
-    /** Audio duration in seconds */
+    /** Audio duration in milliseconds (integer) for maximum precision */
     audioDuration: v.optional(v.number()),
     /** Audio file size in bytes */
     audioSize: v.optional(v.number()),

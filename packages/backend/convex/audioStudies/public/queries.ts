@@ -111,15 +111,20 @@ export const getAudioBySlug = query({
       return null;
     }
 
+    // Convert milliseconds to seconds for API response
+    // Database stores milliseconds for precision, but API returns seconds for compatibility
+    const durationSec = audio.audioDuration ? audio.audioDuration / 1000 : 0;
+
     logger.info("Audio served", {
       slug: args.slug,
       locale: args.locale,
-      duration: audio.audioDuration,
+      durationMs: audio.audioDuration,
+      durationSec: durationSec.toFixed(3),
     });
 
     return {
       audioUrl,
-      duration: audio.audioDuration ?? 0,
+      duration: durationSec,
       status: audio.status,
       script: audio.script,
       contentType: args.contentType,

@@ -287,13 +287,14 @@ export const generateSpeech = internalAction({
       }
 
       // Calculate exact duration from PCM buffer size
-      // PCM 16-bit 16kHz mono: duration = bufferLength / (sampleRate * bytesPerSample)
-      const duration = Math.ceil(calculateDurationFromPCM(pcmBuffer.length));
+      // Returns milliseconds as integer for maximum precision
+      const duration = calculateDurationFromPCM(pcmBuffer.length);
 
       logger.info("PCM audio concatenated", {
         contentAudioId: args.contentAudioId,
         pcmBufferLength: pcmBuffer.length,
-        calculatedDuration: duration,
+        calculatedDurationMs: duration,
+        calculatedDurationSec: (duration / 1000).toFixed(3),
       });
 
       const hashValidAfter = await ctx.runQuery(
@@ -333,7 +334,8 @@ export const generateSpeech = internalAction({
       logger.info("Speech saved", {
         contentAudioId: args.contentAudioId,
         storageId,
-        duration,
+        durationMs: duration,
+        durationSec: (duration / 1000).toFixed(3),
         size: wavBuffer.byteLength,
       });
     } catch (error) {

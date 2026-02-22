@@ -138,6 +138,7 @@ export const PCM_FORMAT = {
 
 /**
  * Calculate exact audio duration from PCM buffer size.
+ * Returns duration in milliseconds as integer for maximum precision.
  *
  * WHY THIS IS 100% ACCURATE:
  * PCM (Pulse-Code Modulation) is uncompressed raw audio. Unlike MP3 which uses
@@ -150,18 +151,19 @@ export const PCM_FORMAT = {
  * - Bytes per second = 44,100 × 2 × 1 = 88,200 bytes/second
  * - Duration = Total Bytes / Bytes Per Second
  *
- * Example: 6:58 (418 seconds) of audio
- * - Total bytes = 418 × 88,200 = 36,867,600 bytes
- * - Duration = 36,867,600 / 88,200 = 418 seconds ✓
+ * Example: 6:58.723 (418,723 ms) of audio
+ * - Total bytes = 418.723 × 88,200 = 36,931,405 bytes
+ * - Duration = 36,931,405 / 88,200 = 418.723 seconds = 418,723 ms ✓
  *
  * @param pcmBufferLength - Length of PCM buffer in bytes
- * @returns Duration in seconds (exact, not estimated)
+ * @returns Duration in milliseconds (integer, maximum precision)
  * @see https://en.wikipedia.org/wiki/Pulse-code_modulation
  * @see https://en.wikipedia.org/wiki/Sampling_(signal_processing)#Sampling_rate
  */
 export function calculateDurationFromPCM(pcmBufferLength: number): number {
   const samples = pcmBufferLength / PCM_FORMAT.bytesPerSample;
-  return samples / PCM_FORMAT.sampleRate;
+  const seconds = samples / PCM_FORMAT.sampleRate;
+  return Math.round(seconds * 1000); // Convert to milliseconds
 }
 
 /**
