@@ -152,8 +152,8 @@ export function AudioPlayerProvider<TData = unknown>({
     if (playPromiseRef.current) {
       try {
         await playPromiseRef.current;
-      } catch (error) {
-        console.error("Play promise error:", error);
+      } catch {
+        // log error
       }
     }
 
@@ -180,9 +180,16 @@ export function AudioPlayerProvider<TData = unknown>({
       audioRef.current.playbackRate = currentRate;
       return Promise.resolve();
     }
+
+    // Validate source before setting
+    if (!item.src || item.src === "") {
+      return Promise.reject(new Error("Invalid audio source"));
+    }
+
     audioRef.current.src = item.src;
     audioRef.current.load();
     audioRef.current.playbackRate = currentRate;
+
     const playPromise = audioRef.current.play();
     playPromiseRef.current = playPromise;
     return playPromise;
@@ -196,8 +203,8 @@ export function AudioPlayerProvider<TData = unknown>({
     if (playPromiseRef.current) {
       try {
         await playPromiseRef.current;
-      } catch (e) {
-        console.error(e);
+      } catch {
+        // log error
       }
     }
 
@@ -280,9 +287,15 @@ export function AudioPlayerProvider<TData = unknown>({
   return (
     <AudioPlayerContext.Provider value={api as AudioPlayerApi<unknown>}>
       <AudioPlayerTimeContext.Provider value={time}>
-        <audio className="hidden" crossOrigin="anonymous" ref={audioRef}>
-          <track kind="captions" label="Audio captions" src="" />
+        <audio
+          className="hidden"
+          crossOrigin="anonymous"
+          preload="metadata"
+          ref={audioRef}
+        >
+          <track kind="captions" label="Captions" src={undefined} />
         </audio>
+
         {children}
       </AudioPlayerTimeContext.Provider>
     </AudioPlayerContext.Provider>
@@ -303,7 +316,7 @@ export const AudioPlayerProgress = ({
     <SliderPrimitive.Root
       {...otherProps}
       className={cn(
-        "group/player relative flex h-4 touch-none select-none items-center data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col data-disabled:opacity-50",
+        "group/player relative flex h-4 cursor-grab touch-none select-none items-center active:cursor-grabbing data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col data-disabled:opacity-50",
         otherProps.className
       )}
       disabled={
@@ -500,6 +513,23 @@ export function AudioPlayerButton<TData = unknown>({
   );
 }
 
+export interface AudioPlayerInitializerProps<TData = unknown> {
+  item: AudioPlayerItem<TData>;
+}
+
+export function AudioPlayerInitializer<TData = unknown>({
+  item,
+}: AudioPlayerInitializerProps<TData>) {
+  const player = useAudioPlayer<TData>();
+
+  useEffect(() => {
+    // Set the active item immediately on mount so audio can preload
+    player.setActiveItem(item);
+  }, [item, player]);
+
+  return null;
+}
+
 type Callback = (delta: number) => void;
 
 function useAnimationFrame(callback: Callback) {
@@ -565,7 +595,7 @@ export function AudioPlayerSpeed({
       <DropdownMenuContent align="end" className="min-w-30">
         {speeds.map((speed) => (
           <DropdownMenuItem
-            className="flex items-center justify-between"
+            className="flex cursor-pointer items-center justify-between"
             key={speed}
             onClick={() => player.setPlaybackRate(speed)}
           >

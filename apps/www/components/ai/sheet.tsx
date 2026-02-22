@@ -30,7 +30,6 @@ import {
   PromptInputTools,
 } from "@repo/design-system/components/ai/input";
 import { Message } from "@repo/design-system/components/ai/message";
-import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -129,7 +128,6 @@ export function AiSheet() {
                 <HugeIcons className="size-4" icon={SparklesIcon} />
                 <span>Nina</span>
               </div>
-              <Badge variant="secondary">Beta</Badge>
             </div>
 
             <div className="flex items-center">

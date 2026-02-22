@@ -18,6 +18,7 @@ export const securityHeaders = [
       "font-src 'self'",
       "connect-src 'self' wss://*.convex.cloud https://*.convex.cloud https://*.convex.site https://*.vercel-analytics.com https://*.posthog.com https://eu.i.posthog.com https://eu-assets.i.posthog.com https://accounts.google.com https://www.youtube-nocookie.com https://www.youtube.com",
       "frame-src 'self' https://accounts.google.com https://www.youtube-nocookie.com https://www.youtube.com",
+      "media-src 'self' https://*.convex.cloud",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self' https://accounts.google.com",
