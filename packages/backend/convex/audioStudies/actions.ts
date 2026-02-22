@@ -97,7 +97,7 @@ export const generateScript = internalAction({
       });
 
       const { text: script } = await generateText({
-        model: model.languageModel("gemini-3-flash"),
+        model: model.languageModel("gemini-3.1-pro"),
         prompt,
       });
 
