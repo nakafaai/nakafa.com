@@ -272,7 +272,8 @@ function Scene({
 }
 
 function splitmix32(initialSeed: number) {
-  let state = initialSeed;
+  // biome-ignore lint/suspicious/noBitwiseOperators: <Required for PRNG>
+  let state = initialSeed | 0;
   return () => {
     // biome-ignore lint/suspicious/noBitwiseOperators: <Required for PRNG>
     state = (state + 0x9e_37_79_b9) | 0;

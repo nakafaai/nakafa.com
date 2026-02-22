@@ -146,15 +146,14 @@ export function AudioPlayerProvider<TData = unknown>({
 
   const play = useCallback(async (item?: AudioPlayerItem<TData> | null) => {
     if (!audioRef.current) {
-      console.error("No audio element found");
       return;
     }
 
     if (playPromiseRef.current) {
       try {
         await playPromiseRef.current;
-      } catch (error) {
-        console.error("Play promise error:", error);
+      } catch {
+        // log error
       }
     }
 
@@ -184,20 +183,12 @@ export function AudioPlayerProvider<TData = unknown>({
 
     // Validate source before setting
     if (!item.src || item.src === "") {
-      console.error("Invalid audio source:", item.src);
       return Promise.reject(new Error("Invalid audio source"));
     }
 
-    console.log("Setting audio source:", item.src);
     audioRef.current.src = item.src;
     audioRef.current.load();
     audioRef.current.playbackRate = currentRate;
-
-    // Add error listener
-    const handleError = () => {
-      console.error("Audio element error:", audioRef.current?.error);
-    };
-    audioRef.current.addEventListener("error", handleError, { once: true });
 
     const playPromise = audioRef.current.play();
     playPromiseRef.current = playPromise;
@@ -212,8 +203,8 @@ export function AudioPlayerProvider<TData = unknown>({
     if (playPromiseRef.current) {
       try {
         await playPromiseRef.current;
-      } catch (e) {
-        console.error(e);
+      } catch {
+        // log error
       }
     }
 
