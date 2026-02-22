@@ -958,6 +958,12 @@ export const LiveMicrophoneWaveform = ({
       if (scrubSourceRef.current) {
         scrubSourceRef.current.stop();
       }
+      if (
+        audioContextRef.current &&
+        audioContextRef.current.state !== "closed"
+      ) {
+        audioContextRef.current.close();
+      }
     };
   }, [
     active,
