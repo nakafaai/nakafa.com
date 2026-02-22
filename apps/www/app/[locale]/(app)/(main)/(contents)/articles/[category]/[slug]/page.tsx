@@ -223,7 +223,13 @@ async function PageContent({
           <LayoutMaterialFooter>
             <Comments slug={FilePath} />
           </LayoutMaterialFooter>
-          <AiSheetOpen />
+          <AiSheetOpen
+            audio={{
+              locale,
+              slug: FilePath,
+              contentType: "article",
+            }}
+          />
         </LayoutMaterialContent>
         <LayoutMaterialToc
           chapters={{
