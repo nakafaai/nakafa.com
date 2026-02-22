@@ -10,19 +10,24 @@ import {
   useState,
 } from "react";
 
-export type WaveformProps = HTMLAttributes<HTMLDivElement> & {
-  data?: number[];
-  barWidth?: number;
-  barHeight?: number;
-  barGap?: number;
-  barRadius?: number;
+// Base visual props shared across all waveform components
+export interface WaveformVisualProps {
   barColor?: string;
+  barGap?: number;
+  barHeight?: number;
+  barRadius?: number;
+  barWidth?: number;
   fadeEdges?: boolean;
   fadeWidth?: number;
   height?: string | number;
-  active?: boolean;
-  onBarClick?: (index: number, value: number) => void;
-};
+}
+
+export type WaveformProps = HTMLAttributes<HTMLDivElement> &
+  WaveformVisualProps & {
+    data?: number[];
+    active?: boolean;
+    onBarClick?: (index: number, value: number) => void;
+  };
 
 export const Waveform = ({
   data = [],
@@ -758,23 +763,21 @@ export const StaticWaveform = ({
   return <Waveform data={data} {...props} />;
 };
 
-export type LiveMicrophoneWaveformProps = Omit<
-  ScrollingWaveformProps,
-  "barCount"
-> & {
-  active?: boolean;
-  fftSize?: number;
-  smoothingTimeConstant?: number;
-  sensitivity?: number;
-  onError?: (error: Error) => void;
-  historySize?: number;
-  updateRate?: number;
-  savedHistoryRef?: React.MutableRefObject<number[]>;
-  dragOffset?: number;
-  setDragOffset?: (offset: number) => void;
-  enableAudioPlayback?: boolean;
-  playbackRate?: number;
-};
+export type LiveMicrophoneWaveformProps = HTMLAttributes<HTMLButtonElement> &
+  WaveformVisualProps & {
+    active?: boolean;
+    fftSize?: number;
+    smoothingTimeConstant?: number;
+    sensitivity?: number;
+    onError?: (error: Error) => void;
+    historySize?: number;
+    updateRate?: number;
+    savedHistoryRef?: React.RefObject<number[]>;
+    dragOffset?: number;
+    setDragOffset?: (offset: number) => void;
+    enableAudioPlayback?: boolean;
+    playbackRate?: number;
+  };
 
 export const LiveMicrophoneWaveform = ({
   active = false,
@@ -1436,19 +1439,17 @@ export const LiveMicrophoneWaveform = ({
   );
 };
 
-export type RecordingWaveformProps = Omit<
-  WaveformProps,
-  "data" | "onBarClick"
-> & {
-  recording?: boolean;
-  fftSize?: number;
-  smoothingTimeConstant?: number;
-  sensitivity?: number;
-  onError?: (error: Error) => void;
-  onRecordingComplete?: (data: number[]) => void;
-  updateRate?: number;
-  showHandle?: boolean;
-};
+export type RecordingWaveformProps = HTMLAttributes<HTMLButtonElement> &
+  WaveformVisualProps & {
+    recording?: boolean;
+    fftSize?: number;
+    smoothingTimeConstant?: number;
+    sensitivity?: number;
+    onError?: (error: Error) => void;
+    onRecordingComplete?: (data: number[]) => void;
+    updateRate?: number;
+    showHandle?: boolean;
+  };
 
 export const RecordingWaveform = ({
   recording = false,
