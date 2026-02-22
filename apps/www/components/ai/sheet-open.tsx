@@ -22,7 +22,9 @@ import { cleanSlug } from "@repo/utilities/helper";
 import type { FunctionReturnType } from "convex/server";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
+import { useTheme } from "next-themes";
 import { useEffect, useRef } from "react";
+import { getColorFront } from "@/components/marketing/about/utils";
 import { useAi } from "@/lib/context/use-ai";
 
 const SLIDE_DISTANCE = 200;
@@ -142,11 +144,14 @@ function AiToolbar({
 
 function AudioOrbVisualizer() {
   const player = useAudioPlayer();
+  const { resolvedTheme } = useTheme();
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const animationRef = useRef<number | undefined>(undefined);
   const volumeRef = useRef(0);
+
+  const colorFront = getColorFront(resolvedTheme);
 
   // Setup audio analyser when playing
   useEffect(() => {
@@ -240,14 +245,17 @@ function AudioOrbVisualizer() {
   const getVolume = () => volumeRef.current;
 
   return (
-    <div className="h-24 w-full">
-      <Orb
-        agentState={player.isPlaying ? "talking" : null}
-        className="h-full w-full"
-        colors={["var(--primary)", "var(--muted-foreground)"]}
-        getOutputVolume={getVolume}
-        volumeMode="manual"
-      />
+    <div className="mx-auto">
+      <div className="relative size-24 rounded-full bg-muted p-1 shadow-xs">
+        <div className="size-full overflow-hidden rounded-full bg-background shadow-xs">
+          <Orb
+            agentState={player.isPlaying ? "talking" : undefined}
+            colors={[colorFront, "#00000000"]}
+            getOutputVolume={getVolume}
+            volumeMode="auto"
+          />
+        </div>
+      </div>
     </div>
   );
 }
@@ -264,8 +272,8 @@ function AskNinaButton() {
 
   return (
     <Button onClick={() => setOpen(true)} variant="ghost">
-      <HugeIcons className="h-4 w-4" icon={SparklesIcon} />
       <span className="hidden sm:inline">{t("ask-nina")}</span>
+      <HugeIcons className="size-4" icon={ArrowUpRight01Icon} />
     </Button>
   );
 }
