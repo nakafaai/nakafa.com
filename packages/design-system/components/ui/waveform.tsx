@@ -872,7 +872,10 @@ export const LiveMicrophoneWaveform = ({
         }
       }
       // Process recorded audio when stopping
-      if (enableAudioPlayback && audioChunksRef.current.length > 0) {
+      const shouldProcessAudio =
+        enableAudioPlayback && audioChunksRef.current.length > 0;
+
+      if (shouldProcessAudio) {
         const audioBlob = new Blob(audioChunksRef.current, {
           type: "audio/webm",
         });
@@ -887,8 +890,22 @@ export const LiveMicrophoneWaveform = ({
             }
           } catch (error) {
             console.error("Error processing audio:", error);
+          } finally {
+            // Close AudioContext after decoding is complete
+            if (
+              audioContextRef.current &&
+              audioContextRef.current.state !== "closed"
+            ) {
+              audioContextRef.current.close();
+            }
           }
         })();
+      } else if (
+        audioContextRef.current &&
+        audioContextRef.current.state !== "closed"
+      ) {
+        // Close AudioContext immediately if no audio to process
+        audioContextRef.current.close();
       }
       return;
     }
@@ -958,12 +975,7 @@ export const LiveMicrophoneWaveform = ({
       if (scrubSourceRef.current) {
         scrubSourceRef.current.stop();
       }
-      if (
-        audioContextRef.current &&
-        audioContextRef.current.state !== "closed"
-      ) {
-        audioContextRef.current.close();
-      }
+      // Note: AudioContext is closed in the !active branch after decoding is complete
     };
   }, [
     active,

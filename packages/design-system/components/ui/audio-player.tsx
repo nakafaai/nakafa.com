@@ -176,9 +176,11 @@ export function AudioPlayerProvider<TData = unknown>({
     audioRef.current.currentTime = 0;
     if (item === null) {
       audioRef.current.removeAttribute("src");
-    } else {
-      audioRef.current.src = item.src;
+      audioRef.current.load();
+      audioRef.current.playbackRate = currentRate;
+      return Promise.resolve();
     }
+    audioRef.current.src = item.src;
     audioRef.current.load();
     audioRef.current.playbackRate = currentRate;
     const playPromise = audioRef.current.play();
