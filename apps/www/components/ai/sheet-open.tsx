@@ -117,11 +117,16 @@ function formatTime(seconds: number): string {
 }
 
 function AskNinaButton() {
+  const open = useAi((state) => state.open);
   const setOpen = useAi((state) => state.setOpen);
   const t = useTranslations("Ai");
 
   return (
-    <Button onClick={() => setOpen(true)} variant="ghost">
+    <Button
+      className="w-9 sm:w-auto"
+      onClick={() => setOpen(!open)}
+      variant="ghost"
+    >
       <span className="hidden sm:inline">{t("ask-nina")}</span>
       <HugeIcons className="size-4" icon={ArrowUpRight01Icon} />
     </Button>
