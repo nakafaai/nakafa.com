@@ -13,7 +13,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@convex-dev/better-auth": "^0.10.10",
+    "@convex-dev/better-auth": "^0.10.11",
     "@repo/backend": "workspace:*",
     "@repo/contents": "workspace:*",
     "@repo/design-system": "workspace:*",
