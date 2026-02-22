@@ -582,7 +582,7 @@ export function AudioPlayerSpeed({
       <DropdownMenuContent align="end" className="min-w-30">
         {speeds.map((speed) => (
           <DropdownMenuItem
-            className="flex items-center justify-between"
+            className="flex cursor-pointer items-center justify-between"
             key={speed}
             onClick={() => player.setPlaybackRate(speed)}
           >

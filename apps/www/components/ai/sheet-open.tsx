@@ -17,14 +17,10 @@ import {
 } from "@repo/design-system/components/ui/audio-player";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Orb } from "@repo/design-system/components/ui/orb";
 import { cleanSlug } from "@repo/utilities/helper";
 import type { FunctionReturnType } from "convex/server";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
-import { useTheme } from "next-themes";
-import { useEffect, useRef } from "react";
-import { getColorFront } from "@/components/marketing/about/utils";
 import { useAi } from "@/lib/context/use-ai";
 
 const SLIDE_DISTANCE = 200;
@@ -38,7 +34,7 @@ interface Props {
 }
 
 export function AiSheetOpen({ audio }: Props) {
-  const { data, isPending, error } = useQueryWithStatus(
+  const { data, isPending } = useQueryWithStatus(
     api.audioStudies.public.queries.getAudioBySlug,
     audio
       ? {
@@ -49,36 +45,11 @@ export function AiSheetOpen({ audio }: Props) {
       : "skip"
   );
 
-  // Debug logging
-  useEffect(() => {
-    if (data) {
-      console.log("Audio data received:", data);
-      console.log("Audio URL:", data.audioUrl);
-      console.log("Audio URL type:", typeof data.audioUrl);
-      console.log("Audio URL length:", data.audioUrl?.length);
-      console.log(
-        "Audio URL starts with https:",
-        data.audioUrl?.startsWith("https://")
-      );
-    }
-    if (error) {
-      console.error("Audio query error:", error);
-    }
-  }, [data, error]);
-
   if (isPending) {
     return null;
   }
 
-  // Validate that we have a proper audio URL
-  const hasValidAudio =
-    data?.audioUrl &&
-    typeof data.audioUrl === "string" &&
-    data.audioUrl.length > 0 &&
-    data.audioUrl.startsWith("https://");
-
-  if (!hasValidAudio) {
-    console.log("No valid audio data or URL, showing AiSheet. Data:", data);
+  if (!data) {
     return <AiSheet />;
   }
 
@@ -99,12 +70,12 @@ function AiToolbar({
   return (
     <aside className="sticky right-0 bottom-0 left-0 z-50 px-6 pb-6">
       <div className="mx-auto w-full sm:max-w-2xl">
-        <div className="flex flex-col rounded-xl border bg-background p-4 shadow-sm">
+        <div className="flex flex-col rounded-xl border bg-background p-3 shadow-sm">
           {/* Header toolbar */}
           <div className="flex items-center gap-3">
             {/* Play/Pause button */}
             <AudioPlayerButton
-              className="h-10 w-10 shrink-0 rounded-full"
+              className="shrink-0 rounded-full"
               item={{
                 id: data.audioUrl,
                 src: data.audioUrl,
@@ -133,130 +104,9 @@ function AiToolbar({
               <AskNinaButton />
             </div>
           </div>
-
-          {/* Audio visualizer */}
-          <AudioOrbVisualizer />
         </div>
       </div>
     </aside>
-  );
-}
-
-function AudioOrbVisualizer() {
-  const player = useAudioPlayer();
-  const { resolvedTheme } = useTheme();
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
-  const animationRef = useRef<number | undefined>(undefined);
-  const volumeRef = useRef(0);
-
-  const colorFront = getColorFront(resolvedTheme);
-
-  // Setup audio analyser when playing
-  useEffect(() => {
-    if (!(player.isPlaying && player.ref.current)) {
-      volumeRef.current = 0;
-      return;
-    }
-
-    // Create audio context and analyser if not exists
-    if (!audioContextRef.current) {
-      const audioContext = new (
-        window.AudioContext ||
-        (window as unknown as { webkitAudioContext: typeof AudioContext })
-          .webkitAudioContext
-      )();
-      audioContextRef.current = audioContext;
-    }
-
-    const audioContext = audioContextRef.current;
-
-    // Resume context if suspended
-    if (audioContext.state === "suspended") {
-      audioContext.resume();
-    }
-
-    // Create analyser
-    if (!analyserRef.current) {
-      const analyser = audioContext.createAnalyser();
-      analyser.fftSize = 256;
-      analyser.smoothingTimeConstant = 0.8;
-      analyserRef.current = analyser;
-    }
-
-    // Connect audio element to analyser
-    if (!sourceRef.current && player.ref.current) {
-      try {
-        const source = audioContext.createMediaElementSource(
-          player.ref.current
-        );
-        source.connect(analyserRef.current);
-        analyserRef.current.connect(audioContext.destination);
-        sourceRef.current = source;
-      } catch {
-        // Already connected
-      }
-    }
-
-    const analyser = analyserRef.current;
-    const dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-    // Animation loop to update volume
-    const animate = () => {
-      analyser.getByteFrequencyData(dataArray);
-
-      // Calculate average volume
-      let sum = 0;
-      for (const value of dataArray) {
-        sum += value;
-      }
-      const average = sum / dataArray.length / 255;
-      volumeRef.current = average;
-
-      animationRef.current = requestAnimationFrame(animate);
-    };
-
-    animationRef.current = requestAnimationFrame(animate);
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [player.isPlaying, player.ref]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-      if (
-        audioContextRef.current &&
-        audioContextRef.current.state !== "closed"
-      ) {
-        audioContextRef.current.close();
-      }
-    };
-  }, []);
-
-  // Get volume function for Orb
-  const getVolume = () => volumeRef.current;
-
-  return (
-    <div className="mx-auto">
-      <div className="relative size-24 rounded-full bg-muted p-1 shadow-xs">
-        <div className="size-full overflow-hidden rounded-full bg-background shadow-xs">
-          <Orb
-            agentState={player.isPlaying ? "talking" : undefined}
-            colors={[colorFront, "#00000000"]}
-            getOutputVolume={getVolume}
-            volumeMode="auto"
-          />
-        </div>
-      </div>
-    </div>
   );
 }
 
