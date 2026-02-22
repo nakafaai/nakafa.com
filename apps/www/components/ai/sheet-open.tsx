@@ -7,12 +7,22 @@ import type {
   Locale,
 } from "@repo/backend/convex/lib/validators/contents";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
+import {
+  AudioPlayerButton,
+  AudioPlayerProgress,
+  AudioPlayerProvider,
+  AudioPlayerSpeed,
+  AudioPlayerTime,
+  useAudioPlayer,
+} from "@repo/design-system/components/ui/audio-player";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Orb } from "@repo/design-system/components/ui/orb";
 import { cleanSlug } from "@repo/utilities/helper";
 import type { FunctionReturnType } from "convex/server";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
+import { useEffect, useRef } from "react";
 import { useAi } from "@/lib/context/use-ai";
 
 const SLIDE_DISTANCE = 200;
@@ -26,7 +36,7 @@ interface Props {
 }
 
 export function AiSheetOpen({ audio }: Props) {
-  const { data, isPending } = useQueryWithStatus(
+  const { data, isPending, error } = useQueryWithStatus(
     api.audioStudies.public.queries.getAudioBySlug,
     audio
       ? {
@@ -37,15 +47,44 @@ export function AiSheetOpen({ audio }: Props) {
       : "skip"
   );
 
+  // Debug logging
+  useEffect(() => {
+    if (data) {
+      console.log("Audio data received:", data);
+      console.log("Audio URL:", data.audioUrl);
+      console.log("Audio URL type:", typeof data.audioUrl);
+      console.log("Audio URL length:", data.audioUrl?.length);
+      console.log(
+        "Audio URL starts with https:",
+        data.audioUrl?.startsWith("https://")
+      );
+    }
+    if (error) {
+      console.error("Audio query error:", error);
+    }
+  }, [data, error]);
+
   if (isPending) {
     return null;
   }
 
-  if (!data) {
+  // Validate that we have a proper audio URL
+  const hasValidAudio =
+    data?.audioUrl &&
+    typeof data.audioUrl === "string" &&
+    data.audioUrl.length > 0 &&
+    data.audioUrl.startsWith("https://");
+
+  if (!hasValidAudio) {
+    console.log("No valid audio data or URL, showing AiSheet. Data:", data);
     return <AiSheet />;
   }
 
-  return <AiToolbar data={data} />;
+  return (
+    <AudioPlayerProvider>
+      <AiToolbar data={data} />
+    </AudioPlayerProvider>
+  );
 }
 
 function AiToolbar({
@@ -58,21 +97,194 @@ function AiToolbar({
   return (
     <aside className="sticky right-0 bottom-0 left-0 z-50 px-6 pb-6">
       <div className="mx-auto w-full sm:max-w-2xl">
-        <div className="flex flex-col">
+        <div className="flex flex-col rounded-xl border bg-background p-4 shadow-sm">
           {/* Header toolbar */}
-          <div className="flex items-center justify-between gap-4">
-            {/* audio player */}
-            <div />
+          <div className="flex items-center gap-3">
+            {/* Play/Pause button */}
+            <AudioPlayerButton
+              className="h-10 w-10 shrink-0 rounded-full"
+              item={{
+                id: data.audioUrl,
+                src: data.audioUrl,
+                data: { duration: data.duration },
+              }}
+              size="icon"
+              variant="default"
+            />
 
-            {/* button ghost ask nina*/}
-            <div />
+            {/* Time display */}
+            <div className="flex shrink-0 items-center gap-1 text-xs tabular-nums">
+              <AudioPlayerTime />
+              <span className="text-muted-foreground">/</span>
+              <DurationDisplay initialDuration={data.duration} />
+            </div>
+
+            {/* Progress bar */}
+            <div className="min-w-0 flex-1">
+              <AudioPlayerProgress className="w-full" />
+            </div>
+
+            <div className="flex items-center">
+              <AudioPlayerSpeed size="icon" variant="ghost" />
+
+              {/* Ask Nina button */}
+              <AskNinaButton />
+            </div>
           </div>
 
-          {/* Wave form */}
-          <div />
+          {/* Audio visualizer */}
+          <AudioOrbVisualizer />
         </div>
       </div>
     </aside>
+  );
+}
+
+function AudioOrbVisualizer() {
+  const player = useAudioPlayer();
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const animationRef = useRef<number | undefined>(undefined);
+  const volumeRef = useRef(0);
+
+  // Setup audio analyser when playing
+  useEffect(() => {
+    if (!(player.isPlaying && player.ref.current)) {
+      volumeRef.current = 0;
+      return;
+    }
+
+    // Create audio context and analyser if not exists
+    if (!audioContextRef.current) {
+      const audioContext = new (
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext })
+          .webkitAudioContext
+      )();
+      audioContextRef.current = audioContext;
+    }
+
+    const audioContext = audioContextRef.current;
+
+    // Resume context if suspended
+    if (audioContext.state === "suspended") {
+      audioContext.resume();
+    }
+
+    // Create analyser
+    if (!analyserRef.current) {
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.8;
+      analyserRef.current = analyser;
+    }
+
+    // Connect audio element to analyser
+    if (!sourceRef.current && player.ref.current) {
+      try {
+        const source = audioContext.createMediaElementSource(
+          player.ref.current
+        );
+        source.connect(analyserRef.current);
+        analyserRef.current.connect(audioContext.destination);
+        sourceRef.current = source;
+      } catch {
+        // Already connected
+      }
+    }
+
+    const analyser = analyserRef.current;
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+    // Animation loop to update volume
+    const animate = () => {
+      analyser.getByteFrequencyData(dataArray);
+
+      // Calculate average volume
+      let sum = 0;
+      for (const value of dataArray) {
+        sum += value;
+      }
+      const average = sum / dataArray.length / 255;
+      volumeRef.current = average;
+
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    animationRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [player.isPlaying, player.ref]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+      if (
+        audioContextRef.current &&
+        audioContextRef.current.state !== "closed"
+      ) {
+        audioContextRef.current.close();
+      }
+    };
+  }, []);
+
+  // Get volume function for Orb
+  const getVolume = () => volumeRef.current;
+
+  return (
+    <div className="h-24 w-full">
+      <Orb
+        agentState={player.isPlaying ? "talking" : null}
+        className="h-full w-full"
+        colors={["var(--primary)", "var(--muted-foreground)"]}
+        getOutputVolume={getVolume}
+        volumeMode="manual"
+      />
+    </div>
+  );
+}
+
+function formatTime(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
+
+function AskNinaButton() {
+  const setOpen = useAi((state) => state.setOpen);
+  const t = useTranslations("Ai");
+
+  return (
+    <Button onClick={() => setOpen(true)} variant="ghost">
+      <HugeIcons className="h-4 w-4" icon={SparklesIcon} />
+      <span className="hidden sm:inline">{t("ask-nina")}</span>
+    </Button>
+  );
+}
+
+function DurationDisplay({ initialDuration }: { initialDuration: number }) {
+  const player = useAudioPlayer();
+
+  // Use player's duration if available, otherwise use initial duration from backend
+  const duration =
+    player.duration !== null &&
+    player.duration !== undefined &&
+    Number.isFinite(player.duration)
+      ? player.duration
+      : initialDuration;
+
+  return (
+    <span className="text-muted-foreground text-sm tabular-nums">
+      {formatTime(duration)}
+    </span>
   );
 }
 

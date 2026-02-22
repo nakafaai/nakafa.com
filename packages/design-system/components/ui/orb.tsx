@@ -271,22 +271,20 @@ function Scene({
   );
 }
 
-function splitmix32(seed: number) {
-  // biome-ignore lint/suspicious/noBitwiseOperators: Required for splitmix32 PRNG algorithm - converts to signed 32-bit
-  let state = seed | 0;
+function splitmix32(initialSeed: number) {
+  let state = initialSeed;
   return () => {
-    // biome-ignore lint/suspicious/noBitwiseOperators: Required for splitmix32 PRNG algorithm
+    // biome-ignore lint/suspicious/noBitwiseOperators: <Required for PRNG>
     state = (state + 0x9e_37_79_b9) | 0;
-    // biome-ignore lint/suspicious/noBitwiseOperators: Required for splitmix32 PRNG algorithm
+    // biome-ignore lint/suspicious/noBitwiseOperators: <Required for PRNG>
     let t = state ^ (state >>> 16);
     t = Math.imul(t, 0x21_f0_aa_ad);
-    // biome-ignore lint/suspicious/noBitwiseOperators: Required for splitmix32 PRNG algorithm
+    // biome-ignore lint/suspicious/noBitwiseOperators: <Required for PRNG>
     t ^= t >>> 15;
     t = Math.imul(t, 0x73_5a_2d_97);
-    // biome-ignore lint/suspicious/noBitwiseOperators: Required for splitmix32 PRNG algorithm
-    t ^= t >>> 15;
-    // biome-ignore lint/suspicious/noBitwiseOperators: Required for splitmix32 PRNG algorithm
-    return (t >>> 0) / 4_294_967_296;
+    // biome-ignore lint/suspicious/noBitwiseOperators: <Required for PRNG>
+    const result = ((t ^ (t >>> 15)) >>> 0) / 4_294_967_296;
+    return result;
   };
 }
 

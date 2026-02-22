@@ -146,6 +146,7 @@ export function AudioPlayerProvider<TData = unknown>({
 
   const play = useCallback(async (item?: AudioPlayerItem<TData> | null) => {
     if (!audioRef.current) {
+      console.error("No audio element found");
       return;
     }
 
@@ -180,9 +181,24 @@ export function AudioPlayerProvider<TData = unknown>({
       audioRef.current.playbackRate = currentRate;
       return Promise.resolve();
     }
+
+    // Validate source before setting
+    if (!item.src || item.src === "") {
+      console.error("Invalid audio source:", item.src);
+      return Promise.reject(new Error("Invalid audio source"));
+    }
+
+    console.log("Setting audio source:", item.src);
     audioRef.current.src = item.src;
     audioRef.current.load();
     audioRef.current.playbackRate = currentRate;
+
+    // Add error listener
+    const handleError = () => {
+      console.error("Audio element error:", audioRef.current?.error);
+    };
+    audioRef.current.addEventListener("error", handleError, { once: true });
+
     const playPromise = audioRef.current.play();
     playPromiseRef.current = playPromise;
     return playPromise;
@@ -281,8 +297,9 @@ export function AudioPlayerProvider<TData = unknown>({
     <AudioPlayerContext.Provider value={api as AudioPlayerApi<unknown>}>
       <AudioPlayerTimeContext.Provider value={time}>
         <audio className="hidden" crossOrigin="anonymous" ref={audioRef}>
-          <track kind="captions" label="Audio captions" src="" />
+          <track kind="captions" label="Captions" src={undefined} />
         </audio>
+
         {children}
       </AudioPlayerTimeContext.Provider>
     </AudioPlayerContext.Provider>
