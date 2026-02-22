@@ -24,6 +24,7 @@ import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
+import { AiSheetOpen } from "@/components/ai/sheet-open";
 import { Comments } from "@/components/comments";
 import {
   LayoutMaterial,
@@ -278,7 +279,7 @@ async function PageContent({
         url={`/${locale}${FilePath}`}
       />
       <LayoutMaterial>
-        <LayoutMaterialContent showAskButton>
+        <LayoutMaterialContent>
           <LayoutMaterialHeader
             link={{
               href: materialPath,
@@ -312,6 +313,7 @@ async function PageContent({
           <LayoutMaterialFooter>
             <Comments slug={FilePath} />
           </LayoutMaterialFooter>
+          <AiSheetOpen />
         </LayoutMaterialContent>
         <LayoutMaterialToc
           chapters={{
@@ -427,7 +429,7 @@ async function SingleExerciseContent({
         url={`/${locale}${exerciseFilePath}`}
       />
       <LayoutMaterial>
-        <LayoutMaterialContent showAskButton>
+        <LayoutMaterialContent>
           <LayoutMaterialHeader
             link={{
               href: FilePath,
@@ -450,6 +452,7 @@ async function SingleExerciseContent({
           <LayoutMaterialFooter>
             <Comments slug={exerciseFilePath} />
           </LayoutMaterialFooter>
+          <AiSheetOpen />
         </LayoutMaterialContent>
         <LayoutMaterialToc
           chapters={{

@@ -8,6 +8,7 @@ import { notFound } from "next/navigation";
 import { type Locale, useTranslations } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
+import { AiSheetOpen } from "@/components/ai/sheet-open";
 import {
   LayoutMaterial,
   LayoutMaterialContent,
@@ -207,7 +208,7 @@ function PageContent({ locale, surah }: { locale: Locale; surah: string }) {
         url={`https://nakafa.com/${locale}/quran/${surah}`}
       />
       <LayoutMaterial>
-        <LayoutMaterialContent showAskButton>
+        <LayoutMaterialContent>
           <LayoutMaterialHeader
             description={translation}
             icon={AllahIcon}
@@ -291,6 +292,7 @@ function PageContent({ locale, surah }: { locale: Locale; surah: string }) {
           <LayoutMaterialFooter>
             <RefContent />
           </LayoutMaterialFooter>
+          <AiSheetOpen />
         </LayoutMaterialContent>
         <LayoutMaterialToc
           chapters={{
