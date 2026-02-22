@@ -20,7 +20,7 @@ crons.interval(
  */
 crons.interval(
   "process audio generation queue",
-  { minutes: 30 },
+  { minutes: 45 },
   internal.audioStudies.mutations.startWorkflowsForPendingItems,
   {}
 );
