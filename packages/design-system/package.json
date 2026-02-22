@@ -43,7 +43,7 @@
     "harden-react-markdown": "^1.1.8",
     "hono": "^4.12.1",
     "input-otp": "^1.4.2",
-    "katex": "^0.16.28",
+    "katex": "^0.16.29",
     "lodash.throttle": "^4.1.1",
     "marked": "^17.0.3",
     "mathjs": "^15.1.1",
