@@ -325,7 +325,7 @@ export const AudioPlayerProgress = ({
     <SliderPrimitive.Root
       {...otherProps}
       className={cn(
-        "group/player relative flex h-4 touch-none select-none items-center data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col data-disabled:opacity-50",
+        "group/player relative flex h-4 cursor-grab touch-none select-none items-center active:cursor-grabbing data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col data-disabled:opacity-50",
         otherProps.className
       )}
       disabled={
