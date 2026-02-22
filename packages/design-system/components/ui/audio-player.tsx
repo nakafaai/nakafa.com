@@ -144,50 +144,47 @@ export function AudioPlayerProvider<TData = unknown>({
     audioRef.current.playbackRate = currentRate;
   }, []);
 
-  const play = useCallback(
-    async (item?: AudioPlayerItem<TData> | null) => {
-      if (!audioRef.current) {
-        return;
-      }
+  const play = useCallback(async (item?: AudioPlayerItem<TData> | null) => {
+    if (!audioRef.current) {
+      return;
+    }
 
-      if (playPromiseRef.current) {
-        try {
-          await playPromiseRef.current;
-        } catch (error) {
-          console.error("Play promise error:", error);
-        }
+    if (playPromiseRef.current) {
+      try {
+        await playPromiseRef.current;
+      } catch (error) {
+        console.error("Play promise error:", error);
       }
+    }
 
-      if (item === undefined) {
-        const playPromise = audioRef.current.play();
-        playPromiseRef.current = playPromise;
-        return playPromise;
-      }
-      if (item?.id === activeItem?.id) {
-        const playPromise = audioRef.current.play();
-        playPromiseRef.current = playPromise;
-        return playPromise;
-      }
-
-      itemRef.current = item;
-      const currentRate = audioRef.current.playbackRate;
-      if (!audioRef.current.paused) {
-        audioRef.current.pause();
-      }
-      audioRef.current.currentTime = 0;
-      if (item === null) {
-        audioRef.current.removeAttribute("src");
-      } else {
-        audioRef.current.src = item.src;
-      }
-      audioRef.current.load();
-      audioRef.current.playbackRate = currentRate;
+    if (item === undefined) {
       const playPromise = audioRef.current.play();
       playPromiseRef.current = playPromise;
       return playPromise;
-    },
-    [activeItem]
-  );
+    }
+    if (item?.id === itemRef.current?.id) {
+      const playPromise = audioRef.current.play();
+      playPromiseRef.current = playPromise;
+      return playPromise;
+    }
+
+    itemRef.current = item;
+    const currentRate = audioRef.current.playbackRate;
+    if (!audioRef.current.paused) {
+      audioRef.current.pause();
+    }
+    audioRef.current.currentTime = 0;
+    if (item === null) {
+      audioRef.current.removeAttribute("src");
+    } else {
+      audioRef.current.src = item.src;
+    }
+    audioRef.current.load();
+    audioRef.current.playbackRate = currentRate;
+    const playPromise = audioRef.current.play();
+    playPromiseRef.current = playPromise;
+    return playPromise;
+  }, []);
 
   const pause = useCallback(async () => {
     if (!audioRef.current) {
