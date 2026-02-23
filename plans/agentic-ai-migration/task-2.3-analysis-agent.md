@@ -33,19 +33,23 @@ export const analysisAgentConfig = AgentConfigSchema.parse({
 /**
  * Create analysis agent instance
  * 
- * @param writer - UIMessageStreamWriter for UI updates
- * @param selectedModel - Model ID selected by user (same as orchestrator)
+ * @param props - Configuration object
+ * @param props.writer - UIMessageStreamWriter for UI updates
+ * @param props.selectedModel - Model ID selected by user (same as orchestrator)
  * @returns Configured ToolLoopAgent
  */
-export function createAnalysisAgent(
-  writer: UIMessageStreamWriter<MyUIMessage>,
-  selectedModel: ModelId
-) {
+export function createAnalysisAgent({
+  writer,
+  selectedModel,
+}: {
+  writer: UIMessageStreamWriter<MyUIMessage>;
+  selectedModel: ModelId;
+}) {
   return new ToolLoopAgent({
     // Uses the same model as orchestrator (user's selection)
     model: model.languageModel(selectedModel),
     instructions: analysisAgentConfig.instructions,
-    tools: getToolsByCategory("analysis", writer),
+    tools: getToolsByCategory({ category: "analysis", writer }),
     stopWhen: stepCountIs(analysisAgentConfig.maxSteps),
   });
 }
@@ -61,22 +65,28 @@ export type AnalysisAgentMessage = InferAgentUIMessage<
 /**
  * Perform analysis convenience function
  * 
- * @param writer - UIMessageStreamWriter
- * @param selectedModel - Model ID selected by user
- * @param task - Analysis task description
- * @param options - Optional abort signal
+ * @param props - Configuration object
+ * @param props.writer - UIMessageStreamWriter
+ * @param props.selectedModel - Model ID selected by user
+ * @param props.task - Analysis task description
+ * @param props.abortSignal - Optional abort signal
  */
-export async function performAnalysis(
-  writer: UIMessageStreamWriter<MyUIMessage>,
-  selectedModel: ModelId,
-  task: string,
-  options?: { abortSignal?: AbortSignal }
-) {
-  const agent = createAnalysisAgent(writer, selectedModel);
+export async function performAnalysis({
+  writer,
+  selectedModel,
+  task,
+  abortSignal,
+}: {
+  writer: UIMessageStreamWriter<MyUIMessage>;
+  selectedModel: ModelId;
+  task: string;
+  abortSignal?: AbortSignal;
+}) {
+  const agent = createAnalysisAgent({ writer, selectedModel });
   
   const result = await agent.generate({
     prompt: task,
-    abortSignal: options?.abortSignal,
+    abortSignal,
   });
   
   return {

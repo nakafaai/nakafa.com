@@ -33,19 +33,23 @@ export const webAgentConfig = AgentConfigSchema.parse({
 /**
  * Create web agent instance
  * 
- * @param writer - UIMessageStreamWriter for UI updates
- * @param selectedModel - Model ID selected by user (same as orchestrator)
+ * @param props - Configuration object
+ * @param props.writer - UIMessageStreamWriter for UI updates
+ * @param props.selectedModel - Model ID selected by user (same as orchestrator)
  * @returns Configured ToolLoopAgent
  */
-export function createWebAgent(
-  writer: UIMessageStreamWriter<MyUIMessage>,
-  selectedModel: ModelId
-) {
+export function createWebAgent({
+  writer,
+  selectedModel,
+}: {
+  writer: UIMessageStreamWriter<MyUIMessage>;
+  selectedModel: ModelId;
+}) {
   return new ToolLoopAgent({
     // Uses the same model as orchestrator (user's selection)
     model: model.languageModel(selectedModel),
     instructions: webAgentConfig.instructions,
-    tools: getToolsByCategory("web", writer),
+    tools: getToolsByCategory({ category: "web", writer }),
     stopWhen: stepCountIs(webAgentConfig.maxSteps),
   });
 }
@@ -61,26 +65,35 @@ export type WebAgentMessage = InferAgentUIMessage<
 /**
  * Scrape URL convenience function
  * 
- * @param writer - UIMessageStreamWriter
- * @param selectedModel - Model ID selected by user
- * @param url - External URL to scrape
- * @param options - Optional context and abort signal
+ * @param props - Configuration object
+ * @param props.writer - UIMessageStreamWriter
+ * @param props.selectedModel - Model ID selected by user
+ * @param props.url - External URL to scrape
+ * @param props.context - Optional context
+ * @param props.abortSignal - Optional abort signal
  */
-export async function scrapeUrl(
-  writer: UIMessageStreamWriter<MyUIMessage>,
-  selectedModel: ModelId,
-  url: string,
-  options?: { context?: string; abortSignal?: AbortSignal }
-) {
-  const agent = createWebAgent(writer, selectedModel);
+export async function scrapeUrl({
+  writer,
+  selectedModel,
+  url,
+  context,
+  abortSignal,
+}: {
+  writer: UIMessageStreamWriter<MyUIMessage>;
+  selectedModel: ModelId;
+  url: string;
+  context?: string;
+  abortSignal?: AbortSignal;
+}) {
+  const agent = createWebAgent({ writer, selectedModel });
   
-  const prompt = options?.context
-    ? `Scrape and analyze: ${url}\n\nContext: ${options.context}`
+  const prompt = context
+    ? `Scrape and analyze: ${url}\n\nContext: ${context}`
     : `Scrape and analyze: ${url}`;
   
   const result = await agent.generate({
     prompt,
-    abortSignal: options?.abortSignal,
+    abortSignal,
   });
   
   return {

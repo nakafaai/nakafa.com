@@ -4,7 +4,7 @@
 Create a centralized tool registry with categorization for dynamic tool discovery
 
 ## Context
-Replaces flat tool export in `packages/ai/tools/index.ts` with categorized registry
+Replaces flat tool structure with categorized registry in agents directory. Direct imports only - no barrel files.
 
 ## Implementation
 
@@ -89,33 +89,38 @@ export const toolRegistry: Record<string, RegistryEntry> = {
 /**
  * Get tools by category
  */
-export function getToolsByCategory(
-  category: ToolCategory,
-  writer: UIMessageStreamWriter<MyUIMessage>
-): Record<string, Tool> {
+export function getToolsByCategory({
+  category,
+  writer,
+}: {
+  category: ToolCategory;
+  writer: UIMessageStreamWriter<MyUIMessage>;
+}): Record<string, Tool> {
   const tools: Record<string, Tool> = {};
-  
+
   for (const [key, entry] of Object.entries(toolRegistry)) {
     if (entry.category === category) {
       tools[key] = entry.factory(writer);
     }
   }
-  
+
   return tools;
 }
 
 /**
  * Get all tools
  */
-export function getAllTools(
-  writer: UIMessageStreamWriter<MyUIMessage>
-): Record<string, Tool> {
+export function getAllTools({
+  writer,
+}: {
+  writer: UIMessageStreamWriter<MyUIMessage>;
+}): Record<string, Tool> {
   const tools: Record<string, Tool> = {};
-  
+
   for (const [key, entry] of Object.entries(toolRegistry)) {
     tools[key] = entry.factory(writer);
   }
-  
+
   return tools;
 }
 
@@ -166,14 +171,18 @@ export function getToolsDescription(): string {
 }
 ```
 
-**Update File**: `packages/ai/agents/index.ts`
+## Import Pattern
+
+**NO index.ts barrel file!** Import directly from specific files:
 
 ```typescript
-// Export schemas
-export * from "./schema";
+// ❌ WRONG - Barrel import
+import { createOrchestratorAgent } from "@repo/ai/agents";
 
-// Export registry
-export * from "./registry";
+// ✅ CORRECT - Direct import
+import { createOrchestratorAgent } from "@repo/ai/agents/orchestrator";
+import { DelegateInputSchema } from "@repo/ai/agents/schema";
+import { toolRegistry } from "@repo/ai/agents/registry";
 ```
 
 ## Commands

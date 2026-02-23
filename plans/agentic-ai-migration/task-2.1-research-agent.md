@@ -33,25 +33,32 @@ export const researchAgentConfig = AgentConfigSchema.parse({
 /**
  * Create research agent instance
  * 
- * @param writer - UIMessageStreamWriter for UI updates
- * @param selectedModel - Model ID selected by user (same as orchestrator)
+ * @param props - Configuration object
+ * @param props.writer - UIMessageStreamWriter for UI updates
+ * @param props.selectedModel - Model ID selected by user (same as orchestrator)
  * @returns Configured ToolLoopAgent
  * 
  * @example
  * ```typescript
- * const agent = createResearchAgent(writer, "kimi-k2.5");
+ * const agent = createResearchAgent({
+ *   writer,
+ *   selectedModel: "kimi-k2.5"
+ * });
  * const result = await agent.generate({ prompt: "Research quantum computing" });
  * ```
  */
-export function createResearchAgent(
-  writer: UIMessageStreamWriter<MyUIMessage>,
-  selectedModel: ModelId
-) {
+export function createResearchAgent({
+  writer,
+  selectedModel,
+}: {
+  writer: UIMessageStreamWriter<MyUIMessage>;
+  selectedModel: ModelId;
+}) {
   return new ToolLoopAgent({
     // Uses the same model as orchestrator (user's selection)
     model: model.languageModel(selectedModel),
     instructions: researchAgentConfig.instructions,
-    tools: getToolsByCategory("research", writer),
+    tools: getToolsByCategory({ category: "research", writer }),
     stopWhen: stepCountIs(researchAgentConfig.maxSteps),
   });
 }
@@ -67,22 +74,28 @@ export type ResearchAgentMessage = InferAgentUIMessage<
 /**
  * Run research task convenience function
  * 
- * @param writer - UIMessageStreamWriter
- * @param selectedModel - Model ID selected by user
- * @param task - Research task description
- * @param options - Optional abort signal
+ * @param props - Configuration object
+ * @param props.writer - UIMessageStreamWriter
+ * @param props.selectedModel - Model ID selected by user
+ * @param props.task - Research task description
+ * @param props.abortSignal - Optional abort signal
  */
-export async function runResearch(
-  writer: UIMessageStreamWriter<MyUIMessage>,
-  selectedModel: ModelId,
-  task: string,
-  options?: { abortSignal?: AbortSignal }
-) {
-  const agent = createResearchAgent(writer, selectedModel);
+export async function runResearch({
+  writer,
+  selectedModel,
+  task,
+  abortSignal,
+}: {
+  writer: UIMessageStreamWriter<MyUIMessage>;
+  selectedModel: ModelId;
+  task: string;
+  abortSignal?: AbortSignal;
+}) {
+  const agent = createResearchAgent({ writer, selectedModel });
   
   const result = await agent.generate({
     prompt: task,
-    abortSignal: options?.abortSignal,
+    abortSignal,
   });
   
   return {

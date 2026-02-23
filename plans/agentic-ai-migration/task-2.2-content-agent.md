@@ -33,19 +33,23 @@ export const contentAgentConfig = AgentConfigSchema.parse({
 /**
  * Create content agent instance
  * 
- * @param writer - UIMessageStreamWriter for UI updates
- * @param selectedModel - Model ID selected by user (same as orchestrator)
+ * @param props - Configuration object
+ * @param props.writer - UIMessageStreamWriter for UI updates
+ * @param props.selectedModel - Model ID selected by user (same as orchestrator)
  * @returns Configured ToolLoopAgent
  */
-export function createContentAgent(
-  writer: UIMessageStreamWriter<MyUIMessage>,
-  selectedModel: ModelId
-) {
+export function createContentAgent({
+  writer,
+  selectedModel,
+}: {
+  writer: UIMessageStreamWriter<MyUIMessage>;
+  selectedModel: ModelId;
+}) {
   return new ToolLoopAgent({
     // Uses the same model as orchestrator (user's selection)
     model: model.languageModel(selectedModel),
     instructions: contentAgentConfig.instructions,
-    tools: getToolsByCategory("content", writer),
+    tools: getToolsByCategory({ category: "content", writer }),
     stopWhen: stepCountIs(contentAgentConfig.maxSteps),
   });
 }
@@ -61,26 +65,35 @@ export type ContentAgentMessage = InferAgentUIMessage<
 /**
  * Retrieve content convenience function
  * 
- * @param writer - UIMessageStreamWriter
- * @param selectedModel - Model ID selected by user
- * @param slug - Verified content slug
- * @param options - Optional context and abort signal
+ * @param props - Configuration object
+ * @param props.writer - UIMessageStreamWriter
+ * @param props.selectedModel - Model ID selected by user
+ * @param props.slug - Verified content slug
+ * @param props.context - Optional context
+ * @param props.abortSignal - Optional abort signal
  */
-export async function retrieveContent(
-  writer: UIMessageStreamWriter<MyUIMessage>,
-  selectedModel: ModelId,
-  slug: string,
-  options?: { context?: string; abortSignal?: AbortSignal }
-) {
-  const agent = createContentAgent(writer, selectedModel);
+export async function retrieveContent({
+  writer,
+  selectedModel,
+  slug,
+  context,
+  abortSignal,
+}: {
+  writer: UIMessageStreamWriter<MyUIMessage>;
+  selectedModel: ModelId;
+  slug: string;
+  context?: string;
+  abortSignal?: AbortSignal;
+}) {
+  const agent = createContentAgent({ writer, selectedModel });
   
-  const prompt = options?.context
-    ? `Retrieve content for slug: ${slug}\n\nContext: ${options.context}`
+  const prompt = context
+    ? `Retrieve content for slug: ${slug}\n\nContext: ${context}`
     : `Retrieve content for slug: ${slug}`;
   
   const result = await agent.generate({
     prompt,
-    abortSignal: options?.abortSignal,
+    abortSignal,
   });
   
   return {

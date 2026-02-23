@@ -35,10 +35,10 @@ Replace the `execute` function (around line 254):
 execute: async ({ writer }) => {
   // Create orchestrator with user's selected model (dynamic)
   // and full context
-  const orchestrator = createOrchestratorAgent(
+  const orchestrator = createOrchestratorAgent({
     writer,
     selectedModel, // User's selected model from request
-    {
+    context: {
       url,
       currentPage: { locale, slug, verified },
       currentDate,
@@ -48,7 +48,7 @@ execute: async ({ writer }) => {
       },
       userRole,
     }
-  );
+  });
   
   // Run orchestrator
   const result = await orchestrator.stream({

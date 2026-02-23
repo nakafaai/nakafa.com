@@ -18,25 +18,28 @@ All plans have been verified against:
 **Problem**: Multiple files use `export * from "./module"` pattern
 
 **Files Affected**:
-- `task-1.3-tool-registry.md` line 169-177
-- `task-2.1-research-agent.md` line 92-103
-- `task-2.2-content-agent.md` line 79-88
-- `task-2.3-analysis-agent.md` line 89-99
-- `task-2.4-web-agent.md` line 103-113
-- `task-3.1-orchestrator.md` line 229-244
+- `task-2.1-research-agent.md` line 92-103 (removed index.ts reference)
+- `task-2.2-content-agent.md` line 79-88 (removed index.ts reference)
+- `task-2.3-analysis-agent.md` line 89-99 (removed index.ts reference)
+- `task-2.4-web-agent.md` line 103-113 (removed index.ts reference)
+- `task-3.1-orchestrator.md` line 229-244 (removed index.ts reference)
 
-**Correction**: Use explicit named exports only
+**Correction**: NO barrel files (index.ts) at all! Use direct imports from specific files.
 
 ```typescript
-// ❌ WRONG - Re-export
+// ❌ WRONG - Barrel file with re-exports
+// packages/ai/agents/index.ts
 export * from "./schema";
 export * from "./registry";
-export * from "./research";
-
-// ✅ CORRECT - Explicit exports
-export { AgentConfigSchema, DelegateInputSchema } from "./schema";
-export { toolRegistry, getToolsByCategory } from "./registry";
 export { createResearchAgent } from "./research";
+
+// ❌ WRONG - Importing from barrel
+import { createOrchestratorAgent } from "@repo/ai/agents";
+
+// ✅ CORRECT - Direct imports only (NO index.ts)
+import { createOrchestratorAgent } from "@repo/ai/agents/orchestrator";
+import { DelegateInputSchema } from "@repo/ai/agents/schema";
+import { toolRegistry } from "@repo/ai/agents/registry";
 ```
 
 ---
@@ -164,22 +167,22 @@ execute: async ({ task }, { abortSignal }) => {
 
 ## Corrected Architecture
 
-### Import Pattern (No Re-exports)
+### Import Pattern (Direct Imports Only - NO index.ts)
+
+**NO barrel files!** Import directly from specific files:
 
 ```typescript
-// packages/ai/agents/index.ts - CORRECT VERSION
-export { AgentTypeSchema, type AgentType } from "./schema";
-export { toolRegistry, getToolsByCategory, getAllTools } from "./registry";
-export { createResearchAgent } from "./research";
-export { createContentAgent } from "./content";
-export { createAnalysisAgent } from "./analysis";
-export { createWebAgent } from "./web";
-export {
-  createOrchestratorAgent,
-  type OrchestratorAgent,
-  DEFAULT_SUB_AGENT_MODEL,
-  ORCHESTRATOR_MAX_STEPS,
-} from "./orchestrator";
+// ❌ WRONG - Barrel/index.ts import
+import { createOrchestratorAgent, toolRegistry } from "@repo/ai/agents";
+
+// ✅ CORRECT - Direct imports only
+import { createOrchestratorAgent } from "@repo/ai/agents/orchestrator";
+import { DelegateInputSchema } from "@repo/ai/agents/schema";
+import { toolRegistry, getToolsByCategory } from "@repo/ai/agents/registry";
+import { createResearchAgent } from "@repo/ai/agents/research";
+import { createContentAgent } from "@repo/ai/agents/content";
+import { createAnalysisAgent } from "@repo/ai/agents/analysis";
+import { createWebAgent } from "@repo/ai/agents/web";
 ```
 
 ### Model Architecture
@@ -282,13 +285,15 @@ export {
 9. ✅ **CRITICAL FIX**: All agents now use SAME model (user's selection)
 
 ### Pattern Applied Across All Files
-1. ✅ No re-exports (export *) - use explicit named exports
-2. ✅ Direct imports only
-3. ✅ No hardcoded values - use constants and parameters
-4. ✅ All AI SDK patterns verified against documentation
-5. ✅ Proper streaming with async generators
-6. ✅ Context control with toModelOutput
-7. ✅ Abort signal propagation
+1. ✅ NO barrel files (index.ts) - direct imports only
+2. ✅ NO re-exports (export *) - explicit named exports only
+3. ✅ Direct imports from specific files (e.g., `@repo/ai/agents/orchestrator`)
+4. ✅ Object parameters for all functions - better autocomplete in editor
+5. ✅ No hardcoded values - use constants and parameters
+6. ✅ All AI SDK patterns verified against documentation
+7. ✅ Proper streaming with async generators
+8. ✅ Context control with toModelOutput
+9. ✅ Abort signal propagation
 
 ---
 

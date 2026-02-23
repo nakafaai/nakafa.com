@@ -47,38 +47,43 @@ export const ORCHESTRATOR_MAX_STEPS = 15;
  * The orchestrator uses the user's selected model for main reasoning,
  * while sub-agents use DEFAULT_SUB_AGENT_MODEL for specialized tasks.
  * 
- * @param writer - UIMessageStreamWriter for UI updates
- * @param selectedModel - Model ID selected by user (dynamic)
- * @param context - Context object with URL, page info, etc.
+ * @param props - Configuration object
+ * @param props.writer - UIMessageStreamWriter for UI updates
+ * @param props.selectedModel - Model ID selected by user (dynamic)
+ * @param props.context - Context object with URL, page info, etc.
  * @returns Configured ToolLoopAgent
  * 
  * @example
  * ```typescript
- * const orchestrator = createOrchestratorAgent(
+ * const orchestrator = createOrchestratorAgent({
  *   writer,
- *   "kimi-k2.5",
- *   { url, currentPage, currentDate, userLocation }
- * );
+ *   selectedModel: "kimi-k2.5",
+ *   context: { url, currentPage, currentDate, userLocation }
+ * });
  * ```
  */
-export function createOrchestratorAgent(
-  writer: UIMessageStreamWriter<MyUIMessage>,
-  selectedModel: ModelId,
+export function createOrchestratorAgent({
+  writer,
+  selectedModel,
+  context,
+}: {
+  writer: UIMessageStreamWriter<MyUIMessage>;
+  selectedModel: ModelId;
   context: {
     url: string;
     currentPage: { locale: string; slug: string; verified: boolean };
     currentDate: string;
     userLocation: { city: string; country: string };
     userRole?: string;
-  }
-) {
+  };
+}) {
   return new ToolLoopAgent({
     // Use the user's selected model dynamically
     // Reference: https://ai-sdk.dev/docs/agents/building-agents#model-and-system-instructions
     model: model.languageModel(selectedModel),
     instructions: orchestratorPrompt(context),
     tools: {
-      delegate: createDelegateTool(writer, selectedModel),
+      delegate: createDelegateTool({ writer, selectedModel }),
     },
     stopWhen: stepCountIs(ORCHESTRATOR_MAX_STEPS),
   });
@@ -98,10 +103,13 @@ export type OrchestratorAgent = ReturnType<typeof createOrchestratorAgent>;
  * 
  * Reference: https://ai-sdk.dev/docs/agents/subagents#streaming-subagent-progress
  */
-function createDelegateTool(
-  writer: UIMessageStreamWriter<MyUIMessage>,
-  selectedModel: ModelId
-) {
+function createDelegateTool({
+  writer,
+  selectedModel,
+}: {
+  writer: UIMessageStreamWriter<MyUIMessage>;
+  selectedModel: ModelId;
+}) {
   return tool({
     description: `Delegate a task to a specialized sub-agent.
 
@@ -119,7 +127,7 @@ Available agents:
     // Reference: https://ai-sdk.dev/docs/agents/subagents#streaming-subagent-progress
     execute: async function* ({ agentType, task, context }, { abortSignal }) {
       // Create appropriate sub-agent with same model as orchestrator
-      const agent = createSubAgent(agentType, writer, selectedModel);
+      const agent = createSubAgent({ agentType, writer, selectedModel });
       
       try {
         // Start sub-agent with streaming
@@ -203,20 +211,24 @@ Available agents:
  * Create sub-agent based on type
  * All sub-agents use the same model as orchestrator (user's selection)
  */
-function createSubAgent(
-  agentType: "research" | "content" | "analysis" | "web",
-  writer: UIMessageStreamWriter<MyUIMessage>,
-  selectedModel: ModelId
-) {
+function createSubAgent({
+  agentType,
+  writer,
+  selectedModel,
+}: {
+  agentType: "research" | "content" | "analysis" | "web";
+  writer: UIMessageStreamWriter<MyUIMessage>;
+  selectedModel: ModelId;
+}) {
   switch (agentType) {
     case "research":
-      return createResearchAgent(writer, selectedModel);
+      return createResearchAgent({ writer, selectedModel });
     case "content":
-      return createContentAgent(writer, selectedModel);
+      return createContentAgent({ writer, selectedModel });
     case "analysis":
-      return createAnalysisAgent(writer, selectedModel);
+      return createAnalysisAgent({ writer, selectedModel });
     case "web":
-      return createWebAgent(writer, selectedModel);
+      return createWebAgent({ writer, selectedModel });
     default:
       throw new Error(`Unknown agent type: ${agentType}`);
   }
@@ -226,33 +238,36 @@ function createSubAgent(
  * Quick routing helper to determine which agent to use
  * Returns null if no specific agent is needed (handle directly)
  */
-export function routeToAgent(
-  query: string,
-  context?: { hasVerifiedSlug?: boolean }
-): { agent: "research" | "content" | "analysis" | "web" | null; confidence: number } {
+export function routeToAgent({
+  query,
+  context,
+}: {
+  query: string;
+  context?: { hasVerifiedSlug?: boolean };
+}): { agent: "research" | "content" | "analysis" | "web" | null; confidence: number } {
   // Check for math
   const mathConfidence = isMathematicalQuery(query);
   if (mathConfidence >= 0.5) {
     return { agent: "analysis", confidence: mathConfidence };
   }
-  
+
   // Check for URL
   const url = extractUrlFromQuery(query);
   if (url && isExternalUrl(url)) {
     return { agent: "web", confidence: 0.9 };
   }
-  
+
   // Check for verified slug
   if (context?.hasVerifiedSlug) {
     return { agent: "content", confidence: 0.8 };
   }
-  
+
   // Check for research keywords
   const researchKeywords = /\b(search|find|look up|research|what is|how to|latest)\b/i;
   if (researchKeywords.test(query)) {
     return { agent: "research", confidence: 0.7 };
   }
-  
+
   return { agent: null, confidence: 0 };
 }
 ```

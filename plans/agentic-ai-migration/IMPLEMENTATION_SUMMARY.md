@@ -8,7 +8,16 @@ Successfully designed a complete **Orchestrator-Agent Architecture** for Nakafa'
 
 1. **Single Model Architecture**: All agents (orchestrator + sub-agents) use the SAME model - the user's selected model (`selectedModel`). This ensures consistent reasoning quality across the entire system.
 
-2. **No Re-exports**: All exports are explicit named exports. No `export *` patterns.
+2. **No Barrel Files**: NO `index.ts` files anywhere. Direct imports only (e.g., `@repo/ai/agents/orchestrator`, not `@repo/ai/agents`).
+
+3. **Object Parameters**: All function parameters use object destructuring for better autocomplete:
+   ```typescript
+   // ❌ WRONG
+   createResearchAgent(writer, selectedModel)
+   
+   // ✅ CORRECT
+   createResearchAgent({ writer, selectedModel })
+   ```
 
 3. **Streaming First**: All sub-agents use async generators (`async function*`) to stream progress to the UI while the orchestrator controls what the model sees via `toModelOutput`.
 
@@ -55,11 +64,43 @@ All plans are complete and verified in `/plans/agentic-ai-migration/`:
 - `task-3.1-orchestrator.md`: `createDelegateTool` now receives and passes `selectedModel`
 - `task-4.1-refactor-chat-route.md`: Updated model flow documentation
 
-### 2. Re-export Removal
-All files now use explicit named exports instead of `export *`.
+### 2. Barrel File Removal
+**NO `index.ts` files anywhere!** All imports are direct from specific files:
 
-### 3. Import Consolidation
-Combined type and value imports from same modules.
+```typescript
+// ❌ WRONG
+import { createOrchestratorAgent } from "@repo/ai/agents";
+
+// ✅ CORRECT
+import { createOrchestratorAgent } from "@repo/ai/agents/orchestrator";
+```
+
+### 3. Object Parameters (Better Autocomplete)
+All function parameters now use object destructuring for better autocomplete in code editors:
+
+```typescript
+// ❌ WRONG - Positional parameters
+function createResearchAgent(writer, selectedModel) { }
+createResearchAgent(writer, "kimi-k2.5")
+
+// ✅ CORRECT - Object parameters
+function createResearchAgent({ writer, selectedModel }: { writer: UIMessageStreamWriter; selectedModel: ModelId }) { }
+createResearchAgent({ writer, selectedModel: "kimi-k2.5" })
+```
+
+**Functions updated:**
+- `createResearchAgent({ writer, selectedModel })`
+- `createContentAgent({ writer, selectedModel })`
+- `createAnalysisAgent({ writer, selectedModel })`
+- `createWebAgent({ writer, selectedModel })`
+- `createOrchestratorAgent({ writer, selectedModel, context })`
+- `runResearch({ writer, selectedModel, task, abortSignal })`
+- `retrieveContent({ writer, selectedModel, slug, context, abortSignal })`
+- `performAnalysis({ writer, selectedModel, task, abortSignal })`
+- `scrapeUrl({ writer, selectedModel, url, context, abortSignal })`
+- `getToolsByCategory({ category, writer })`
+- `getAllTools({ writer })`
+- `routeToAgent({ query, context })`
 
 ## Implementation Flow
 
