@@ -27,6 +27,8 @@ Orchestrator Agent (Nina)
 ### API Design
 
 ```typescript
+import type { AgentType, SubAgentResult } from "./schema";
+
 // Constants
 export const ORCHESTRATOR_MAX_STEPS = 15;
 
@@ -47,7 +49,7 @@ export function createOrchestratorAgent({
   };
 }): ToolLoopAgent
 
-// Routing helper
+// Routing helper - returns which agent should handle the query
 export function routeToAgent({
   query,
   context,
@@ -68,8 +70,6 @@ export function routeToAgent({
 ### Agent Routing Logic
 
 ```typescript
-type AgentType = "research" | "study" | "math";
-
 // Decision matrix:
 // - web search queries → research agent
 // - scrape/external URL → research agent  

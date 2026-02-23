@@ -49,62 +49,48 @@ export const ToolCategorySchema = z.enum([
   "research",
   "study",
   "math",
-  "utility",
 ]);
 
 export type ToolCategory = z.infer<typeof ToolCategorySchema>;
 
 /**
- * Tool definition schema
+ * Tool registry entry schema
+ * 
+ * Simple structure for tool registry - no requiresWriter since
+ * all tools use writers for streaming UI updates.
  */
-export const ToolDefinitionSchema = z.object({
+export const ToolRegistryEntrySchema = z.object({
   name: z.string(),
   description: z.string(),
   category: ToolCategorySchema,
-  requiresWriter: z.boolean().default(true),
+  factory: z.function()
+    .args(z.custom<UIMessageStreamWriter<unknown>>())
+    .returns(z.custom<Tool>()),
 });
 
-export type ToolDefinition = z.infer<typeof ToolDefinitionSchema>;
+export type ToolRegistryEntry = z.infer<typeof ToolRegistryEntrySchema>;
 
 /**
  * Sub-agent result schema
+ * 
+ * Simplified - only what the orchestrator needs to receive
+ * from sub-agents. Token usage tracked at the message level.
  */
 export const SubAgentResultSchema = z.object({
-  agentId: z.string(),
-  success: z.boolean(),
-  output: z.string(),
-  toolCalls: z.array(z.object({
-    toolName: z.string(),
-    input: z.unknown(),
-    output: z.unknown(),
-  })),
-  tokenUsage: z.object({
-    input: z.number(),
-    output: z.number(),
-    total: z.number(),
+  agentType: AgentTypeSchema.exclude(["orchestrator"]),
+  output: z.string().describe("Synthesized text result for parent"),
+  usage: z.object({
+    input: z.number().describe("Input/prompt tokens used"),
+    output: z.number().describe("Output/completion tokens used"),
   }),
-  duration: z.number().optional(),
 });
 
 export type SubAgentResult = z.infer<typeof SubAgentResultSchema>;
 
 /**
- * Orchestrator decision schema
- */
-export const OrchestratorDecisionSchema = z.object({
-  reasoning: z.string().describe("Reasoning for the decision"),
-  subAgentsToSpawn: z.array(z.object({
-    agentType: AgentTypeSchema.exclude(["orchestrator"]),
-    task: z.string(),
-    priority: z.enum(["high", "medium", "low"]),
-  })),
-  parallelExecution: z.boolean().describe("Whether to execute in parallel"),
-});
-
-export type OrchestratorDecision = z.infer<typeof OrchestratorDecisionSchema>;
-
-/**
  * Delegation input schema
+ * 
+ * Used by the orchestrator's delegate tool
  */
 export const DelegateInputSchema = z.object({
   agentType: AgentTypeSchema.exclude(["orchestrator"]),
@@ -113,16 +99,18 @@ export const DelegateInputSchema = z.object({
 });
 
 export type DelegateInput = z.infer<typeof DelegateInputSchema>;
+```
 
-/**
- * Delegation output schema
- */
-export const DelegateOutputSchema = z.object({
-  status: z.enum(["started", "progress", "completed", "error"]),
-  agentType: AgentTypeSchema.exclude(["orchestrator"]),
-  result: z.string().optional(),
-  error: z.string().optional(),
-  timestamp: z.number(),
-});
+## Key Design Decisions
 
-export type DelegateOutput = z.infer<typeof DelegateOutputSchema>;
+1. **No requiresWriter**: All tools use writers for streaming - no need for flag
+2. **Simplified SubAgentResult**: Removed unused `toolCalls` array with unknown types
+3. **No OrchestratorDecisionSchema**: Not used - routing is handled by simple function
+4. **No DelegationOutputSchema**: Sub-agents return SubAgentResult directly
+
+## Commands
+
+```bash
+pnpm lint
+pnpm --filter @repo/ai typecheck
+```

@@ -22,23 +22,29 @@ Based on analysis of `packages/ai/tools/*.ts`:
 **File**: `packages/ai/agents/registry.ts`
 
 ```typescript
+import type { ToolCategory } from "./schema";
+
 // Registry entry structure
 interface RegistryEntry {
   name: string;
   description: string;  // From descriptions.ts
   category: ToolCategory;
-  factory: ToolFactory; // (writer) => Tool
+  factory: (writer: UIMessageStreamWriter<unknown>) => Tool;
 }
 
 // Central registry
 export const toolRegistry: Record<string, RegistryEntry>
 
 // Helper functions
-export function getToolsByCategory({ category, writer })
-export function getAllTools({ writer })
-export function getToolNamesByCategory(category)
-export function getToolDescription(name)
-export function getToolsDescription()
+export function getToolsByCategory({ 
+  category, 
+  writer 
+}: { 
+  category: ToolCategory; 
+  writer: UIMessageStreamWriter<unknown>;
+}): Tool[]
+
+export function getToolDescription(name: string): string | undefined
 ```
 
 ### Key Design Decisions
@@ -46,6 +52,7 @@ export function getToolsDescription()
 1. **Object Parameters**: All functions use object destructuring for better autocomplete
 2. **Description Functions**: Import descriptions from `packages/ai/prompt/agents/descriptions.ts`
 3. **No Barrel Files**: Import directly from specific files
+4. **Simple RegistryEntry**: No requiresWriter flag - all tools use writers
 
 ## Import Pattern
 
