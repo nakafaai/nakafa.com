@@ -18,6 +18,7 @@ Uses AI SDK's ToolLoopAgent with study category tools (getSubjects, getArticles,
 
 ```typescript
 // Create agent instance
+// Reference: https://ai-sdk.dev/docs/agents/building-agents#creating-an-agent
 export function createStudyAgent({
   writer,
   selectedModel,
@@ -27,6 +28,7 @@ export function createStudyAgent({
 }): ToolLoopAgent
 
 // Convenience function for content retrieval
+// Reference: https://ai-sdk.dev/docs/agents/subagents
 export async function retrieveContent({
   writer,
   selectedModel,
@@ -44,8 +46,7 @@ export async function retrieveContent({
   abortSignal?: AbortSignal;
 }): Promise<{
   output: string;
-  usage: TokenUsage;
-  toolCalls: ToolCall[];
+  usage: { input: number; output: number };
 }>
 
 // Helper to check if query is about Nakafa content
@@ -63,6 +64,7 @@ export function isContentQuery(query: string): boolean
 ## References
 
 - **AI SDK ToolLoopAgent**: https://ai-sdk.dev/docs/agents/building-agents#creating-an-agent
+- **AI SDK Subagents**: https://ai-sdk.dev/docs/agents/subagents
 - **Current Content Tools**: `packages/ai/tools/content.ts`, `packages/ai/tools/subjects.ts`, `packages/ai/tools/articles.ts`
 - **Prompt Pattern**: `packages/ai/prompt/tools/calculator.ts`
 

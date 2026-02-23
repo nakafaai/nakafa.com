@@ -99,8 +99,7 @@ Migrate Nakafa's chat system to an **Orchestrator-Agent Architecture** with Nina
 │  Each agent returns:                                                         │
 │  {                                                                           │
 │    output: "Synthesized text result",      → Goes to Nina (parent)          │
-│    usage: {input, output, total},                                           │
-│    toolCalls: [...]                                                         │
+│    usage: {input, output},        → Token usage for tracking                │
 │  }                                                                           │
 └───────────────────────────────────┬─────────────────────────────────────────┘
                                     │

@@ -18,6 +18,7 @@ Uses AI SDK's ToolLoopAgent with research category tools (webSearch, scrape).
 
 ```typescript
 // Create agent instance
+// Reference: https://ai-sdk.dev/docs/agents/building-agents#creating-an-agent
 export function createResearchAgent({
   writer,
   selectedModel,
@@ -27,6 +28,7 @@ export function createResearchAgent({
 }): ToolLoopAgent
 
 // Convenience function for one-off tasks
+// Reference: https://ai-sdk.dev/docs/agents/subagents
 export async function runResearch({
   writer,
   selectedModel,
@@ -39,8 +41,7 @@ export async function runResearch({
   abortSignal?: AbortSignal;
 }): Promise<{
   output: string;
-  usage: TokenUsage;
-  toolCalls: ToolCall[];
+  usage: { input: number; output: number };
 }>
 
 // URL helpers for scraping
@@ -59,6 +60,7 @@ export function extractUrlFromQuery(query: string): string | null
 ## References
 
 - **AI SDK ToolLoopAgent**: https://ai-sdk.dev/docs/agents/building-agents#creating-an-agent
+- **AI SDK Subagents**: https://ai-sdk.dev/docs/agents/subagents
 - **Current Research Tools**: `packages/ai/tools/web-search.ts`, `packages/ai/tools/scrape.ts`
 - **Prompt Pattern**: `packages/ai/prompt/tools/calculator.ts`
 

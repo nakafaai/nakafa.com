@@ -18,6 +18,7 @@ Uses AI SDK's ToolLoopAgent with math category tools (calculator).
 
 ```typescript
 // Create agent instance
+// Reference: https://ai-sdk.dev/docs/agents/building-agents#creating-an-agent
 export function createMathAgent({
   writer,
   selectedModel,
@@ -27,6 +28,7 @@ export function createMathAgent({
 }): ToolLoopAgent
 
 // Convenience function for math tasks
+// Reference: https://ai-sdk.dev/docs/agents/subagents
 export async function performCalculation({
   writer,
   selectedModel,
@@ -39,8 +41,7 @@ export async function performCalculation({
   abortSignal?: AbortSignal;
 }): Promise<{
   output: string;
-  usage: TokenUsage;
-  toolCalls: ToolCall[];
+  usage: { input: number; output: number };
 }>
 
 // Helper functions for routing
@@ -58,6 +59,7 @@ export function shouldUseMathAgent(query: string): boolean
 ## References
 
 - **AI SDK ToolLoopAgent**: https://ai-sdk.dev/docs/agents/building-agents#creating-an-agent
+- **AI SDK Subagents**: https://ai-sdk.dev/docs/agents/subagents
 - **Current Calculator Tool**: `packages/ai/tools/calculator.ts`
 - **Prompt Pattern**: `packages/ai/prompt/tools/calculator.ts`
 

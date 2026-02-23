@@ -35,6 +35,7 @@ Replace the `execute` function (around line 254):
 execute: async ({ writer }) => {
   // Create orchestrator with user's selected model (dynamic)
   // and full context
+  // Reference: https://ai-sdk.dev/docs/agents/building-agents#creating-an-agent
   const orchestrator = createOrchestratorAgent({
     writer,
     selectedModel, // User's selected model from request
@@ -51,7 +52,9 @@ execute: async ({ writer }) => {
   });
   
   // Run orchestrator
-  const result = await orchestrator.stream({
+  // Note: orchestrator is a ToolLoopAgent, we call .generate() not .stream()
+  // Reference: https://ai-sdk.dev/docs/agents/building-agents#generating-output
+  const result = await orchestrator.generate({
     messages: compressedMessages,
   });
   
@@ -67,7 +70,6 @@ execute: async ({ writer }) => {
             token: {
               input: part.totalUsage.inputTokens,
               output: part.totalUsage.outputTokens,
-              total: part.totalUsage.totalTokens,
             },
           };
         }
@@ -173,6 +175,15 @@ User selects model → Orchestrator uses that model
                (all agents use user's selection)
 ```
 
+### ToolLoopAgent API Reference
+
+- **Constructor**: `new ToolLoopAgent({ model, instructions, tools, stopWhen })`
+  - Reference: https://ai-sdk.dev/docs/agents/building-agents#creating-an-agent
+- **generate()**: Returns `Promise<GenerateTextResult>` for non-streaming
+  - Reference: https://ai-sdk.dev/docs/agents/building-agents#generating-output
+- **stream()**: Returns `Promise<StreamTextResult>` for streaming (used in subagents)
+  - Reference: https://ai-sdk.dev/docs/agents/building-agents#streaming-output
+
 ### Rollback Plan
 Keep old code commented out:
 ```typescript
@@ -180,7 +191,8 @@ Keep old code commented out:
 // const streamTextResult = streamText({...});
 
 // NEW: Orchestrator approach with dynamic model
-const orchestrator = createOrchestratorAgent(writer, selectedModel, ...);
+const orchestrator = createOrchestratorAgent({ writer, selectedModel, ... });
+const result = await orchestrator.generate({ messages: compressedMessages });
 ```
 
 ## Commands
