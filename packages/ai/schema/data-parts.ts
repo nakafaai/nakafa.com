@@ -1,7 +1,7 @@
 import {
   getArticlesInputSchema,
   getSubjectsInputSchema,
-} from "@repo/ai/schema/tools/nakafa-content";
+} from "@repo/ai/agents/content-access/schema";
 import * as z from "zod";
 
 /**

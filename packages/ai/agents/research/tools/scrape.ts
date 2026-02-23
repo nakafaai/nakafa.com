@@ -1,14 +1,14 @@
-import { firecrawlApp } from "@repo/ai/config/firecrawl";
-import { selectRelevantContent } from "@repo/ai/lib/content-selection";
-import { dedentString } from "@repo/ai/lib/utils";
+import { nakafaScrape } from "@repo/ai/agents/research/descriptions";
 import {
   type ScrapeOutput,
   scrapeInputSchema,
-} from "@repo/ai/schema/tools/web";
+} from "@repo/ai/agents/research/schema";
+import { firecrawlApp } from "@repo/ai/config/firecrawl";
+import { selectRelevantContent } from "@repo/ai/lib/content-selection";
+import { dedentString } from "@repo/ai/lib/utils";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { tool, type UIMessageStreamWriter } from "ai";
 import * as z from "zod";
-import { nakafaScrape } from "../descriptions";
 
 interface Params {
   writer: UIMessageStreamWriter<MyUIMessage>;

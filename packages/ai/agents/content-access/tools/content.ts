@@ -1,8 +1,9 @@
-import { dedentString } from "@repo/ai/lib/utils";
+import { nakafaContent } from "@repo/ai/agents/content-access/descriptions";
 import {
   type GetContentOutput,
   getContentInputSchema,
-} from "@repo/ai/schema/tools/nakafa-content";
+} from "@repo/ai/agents/content-access/schema";
+import { dedentString } from "@repo/ai/lib/utils";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { api } from "@repo/connection/routes";
 import {
@@ -14,7 +15,6 @@ import type { Surah } from "@repo/contents/_types/quran";
 import { cleanSlug } from "@repo/utilities/helper";
 import { tool, type UIMessageStreamWriter } from "ai";
 import * as z from "zod";
-import { nakafaContent } from "../descriptions";
 
 const QURAN_SLUG_PARTS_COUNT = 2;
 

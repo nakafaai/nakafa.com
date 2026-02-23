@@ -1,13 +1,13 @@
-import { dedentString } from "@repo/ai/lib/utils";
+import { nakafaCalculator } from "@repo/ai/agents/math/descriptions";
 import {
   type CalculatorOutput,
   calculatorInputSchema,
-} from "@repo/ai/schema/tools/calculator";
+} from "@repo/ai/agents/math/schema";
+import { dedentString } from "@repo/ai/lib/utils";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { tool, type UIMessageStreamWriter } from "ai";
 import * as math from "mathjs";
 import * as z from "zod";
-import { nakafaCalculator } from "../descriptions";
 
 interface Params {
   writer: UIMessageStreamWriter<MyUIMessage>;
