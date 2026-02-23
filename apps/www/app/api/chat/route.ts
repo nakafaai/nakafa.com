@@ -1,4 +1,5 @@
 import { orchestratorTools } from "@repo/ai/agents/orchestrator";
+import { nakafaPrompt } from "@repo/ai/agents/orchestrator/prompt";
 import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
@@ -15,7 +16,6 @@ import {
 import { generateTitle } from "@repo/ai/features/title-generation";
 import { compressMessages } from "@repo/ai/lib/utils";
 import { nakafaSuggestions } from "@repo/ai/prompt/suggestions";
-import { nakafaPrompt } from "@repo/ai/prompt/system";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";

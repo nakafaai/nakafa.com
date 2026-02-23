@@ -1,7 +1,6 @@
 import { firecrawlApp } from "@repo/ai/config/firecrawl";
 import { selectRelevantContent } from "@repo/ai/lib/content-selection";
 import { dedentString } from "@repo/ai/lib/utils";
-import { nakafaScrape } from "@repo/ai/prompt/tools/scrape";
 import {
   type ScrapeOutput,
   scrapeInputSchema,
@@ -9,6 +8,7 @@ import {
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { tool, type UIMessageStreamWriter } from "ai";
 import * as z from "zod";
+import { nakafaScrape } from "../descriptions";
 
 interface Params {
   writer: UIMessageStreamWriter<MyUIMessage>;

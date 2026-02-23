@@ -1,5 +1,4 @@
 import { dedentString } from "@repo/ai/lib/utils";
-import { nakafaContent } from "@repo/ai/prompt/tools/content";
 import {
   type GetContentOutput,
   getContentInputSchema,
@@ -15,6 +14,7 @@ import type { Surah } from "@repo/contents/_types/quran";
 import { cleanSlug } from "@repo/utilities/helper";
 import { tool, type UIMessageStreamWriter } from "ai";
 import * as z from "zod";
+import { nakafaContent } from "../descriptions";
 
 const QURAN_SLUG_PARTS_COUNT = 2;
 

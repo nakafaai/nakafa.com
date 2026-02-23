@@ -1,7 +1,6 @@
 import { firecrawlApp } from "@repo/ai/config/firecrawl";
 import { selectRelevantContent } from "@repo/ai/lib/content-selection";
 import { dedentString, extractDomain } from "@repo/ai/lib/utils";
-import { nakafaWebSearch } from "@repo/ai/prompt/tools/web-search";
 import {
   type WebSearchOutput,
   webSearchInputSchema,
@@ -9,6 +8,7 @@ import {
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { tool, type UIMessageStreamWriter } from "ai";
 import * as z from "zod";
+import { nakafaWebSearch } from "../descriptions";
 
 interface Params {
   writer: UIMessageStreamWriter<MyUIMessage>;

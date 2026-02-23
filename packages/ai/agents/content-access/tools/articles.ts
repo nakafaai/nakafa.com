@@ -1,5 +1,4 @@
 import { buildContentSlug, dedentString } from "@repo/ai/lib/utils";
-import { nakafaArticles } from "@repo/ai/prompt/tools/articles";
 import {
   type GetArticlesOutput,
   getArticlesInputSchema,
@@ -8,6 +7,7 @@ import type { MyUIMessage } from "@repo/ai/types/message";
 import { api } from "@repo/connection/routes";
 import { tool, type UIMessageStreamWriter } from "ai";
 import * as z from "zod";
+import { nakafaArticles } from "../descriptions";
 
 interface Params {
   writer: UIMessageStreamWriter<MyUIMessage>;
