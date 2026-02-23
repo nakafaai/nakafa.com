@@ -130,43 +130,30 @@ export function nakafaPrompt({
     toolUsageGuidelines: `
       # Tools Overview
 
-      You are equipped with the following tools:
+      You are equipped with the following tools. Each tool is a specialized agent that handles specific tasks:
 
-      1. **getContent**:
+      1. **contentAccess**:
       
-        - Fetches the full content from Nakafa platform that will serve as the answer to the user's question. Can also retrieve Quran chapters.
-        - Uses locale and verified slug to get the content. Verified slug can be inferred from the current page information or getSubjects/getArticles responses.
-        - CRITICAL: NEVER use with guessed, assumed, or unverified slugs. MUST use this tool when verified="yes" (Means you are allowed to use this tool, because you have verified the slug).
+        - A specialized agent that retrieves educational content from the Nakafa platform (subjects, articles, Quran, exercises).
+        - This agent internally uses getContent, getSubjects, and getArticles tools to fetch the right content.
+        - Provide a clear description of what content you need (e.g., "Get the math subject for grade 10", "Find articles about photosynthesis", "Fetch Quran Surah Al-Baqarah").
+        - The agent will return the content in a structured format with all relevant details.
+        - CRITICAL: NEVER use with guessed, assumed, or unverified slugs. Use this when you need Nakafa educational content.
       
-      2. **getSubjects**:
+      2. **deepResearch**:
 
-        - Fetches the list of subjects (K-12 through university level) from Nakafa platform that will serve as the answer to the user's question or to get verified slug for getContent tool.
-        - Uses locale, category, grade, and material to get the subjects.
-        - CRITICAL: NEVER use with guessed, assumed category, grade, or material. MUST use this tool to get verified slug for getContent tool.
+        - A specialized agent that conducts web research using search and scraping capabilities.
+        - This agent internally uses webSearch and scrape tools to gather information from external sources.
+        - Provide a clear research query or topic (e.g., "Research latest developments in solar energy 2025", "Find information about climate change impacts").
+        - The agent will search the web, scrape relevant pages, and return comprehensive findings with sources.
+        - CRITICAL: Use this as your main source for current events, external information, or when Nakafa content is insufficient.
       
-      3. **getArticles**:
+      3. **mathCalculation**:
 
-        - Fetches the list of articles from Nakafa (Not serve as current events) that will serve as the answer to the user's question or to get verified slug for getContent tool.
-        - Uses locale and category to get the articles.
-        - CRITICAL: NEVER use with guessed, assumed category. MUST use this tool to get verified slug for getContent tool.
-      
-      4. **calculator**:
-
-        - Calculates the user's question or our internal calculations using calculator.
-        - Uses mathematical expression with concrete numbers and operations. The tool uses Math.js under the hood to evaluate expressions. It will not work with algebraic variables like x, y, a, b.
-        - CRITICAL: ALWAYS use calculator for ANY math calculation - even simple arithmetic like 2+3, 10×5, basic percentages. NEVER calculate manually. NO EXCEPTIONS.
-      
-      5. **scrape**:
-
-        - Fetches the content from the URL provided by the user. It uses Mendable's Firecrawl API under the hood.
-        - Uses url to get the content (scraped content) of the url.
-        - CRITICAL: NEVER use with guessed, assumed url. NEVER use this tool to scrape Nakafa content (Use getContent tool instead). Use this tool for external URLs only.
-      
-      6. **webSearch**:
-
-        - Searches the web for up-to-date information and as universal fallback for ANY topic when Nakafa content is insufficient.
-        - Uses query to get the content (web search results) of the query.
-        - CRITICAL: NEVER use with guessed, assumed query. Use this as main source of information for every topic. NO EXCEPTIONS.
+        - A specialized agent that performs mathematical calculations using a calculator tool.
+        - Provide a clear mathematical expression or problem description (e.g., "Calculate 125 * 37", "Solve (45 + 23) / 8", "Find the square root of 144").
+        - The agent uses Math.js under the hood to evaluate expressions. It will not work with algebraic variables like x, y, a, b.
+        - CRITICAL: ALWAYS use this tool for ANY math calculation - even simple arithmetic like 2+3, 10×5, basic percentages. NEVER calculate manually. NO EXCEPTIONS.
     `,
 
     // Decision-making workflow

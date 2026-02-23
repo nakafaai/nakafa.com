@@ -1,3 +1,4 @@
+import { orchestratorTools } from "@repo/ai/agents/orchestrator";
 import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
@@ -15,7 +16,6 @@ import { generateTitle } from "@repo/ai/features/title-generation";
 import { compressMessages } from "@repo/ai/lib/utils";
 import { nakafaSuggestions } from "@repo/ai/prompt/suggestions";
 import { nakafaPrompt } from "@repo/ai/prompt/system";
-import { tools } from "@repo/ai/tools";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -267,7 +267,7 @@ export async function POST(req: Request) {
         }),
         messages: finalMessages,
         stopWhen: stepCountIs(MAX_STEPS),
-        tools: tools({ writer }),
+        tools: orchestratorTools({ writer, modelId: selectedModel, locale }),
         experimental_repairToolCall: async ({
           toolCall,
           tools: availableTools,
