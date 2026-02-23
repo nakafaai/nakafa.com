@@ -42,7 +42,7 @@
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.10",
     "@tabler/icons-react": "^3.37.1",
-    "@tailwindcss/postcss": "^4.2.0",
+    "@tailwindcss/postcss": "^4.2.1",
     "@takumi-rs/core": "^0.68.17",
     "@takumi-rs/image-response": "^0.68.17",
     "@tanstack/react-form": "^1.28.3",
@@ -90,7 +90,7 @@
     "@vitest/ui": "^4.0.18",
     "jsdom": "^28.1.0",
     "pagefind": "^1.4.0",
-    "tailwindcss": "^4.2.0",
+    "tailwindcss": "^4.2.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
