@@ -152,7 +152,7 @@ service: "chat-api-agentic",
 - Tools are no longer passed directly to `streamText`
 - Orchestrator manages sub-agent delegation
 - **Orchestrator uses user's selected model dynamically**
-- **Sub-agents use configurable model (easy to change)**
+- **Sub-agents use SAME model as orchestrator**
 
 ### What Stays Same
 - Message persistence with Convex
@@ -166,11 +166,11 @@ service: "chat-api-agentic",
 
 ```
 User selects model → Orchestrator uses that model
-                           ↓
-                    Delegates to sub-agents
-                           ↓
-              Sub-agents use DEFAULT_SUB_AGENT_MODEL
-              (easily changeable in orchestrator.ts)
+                            ↓
+                     Delegates to sub-agents
+                            ↓
+               Sub-agents use SAME model
+               (all agents use user's selection)
 ```
 
 ### Rollback Plan

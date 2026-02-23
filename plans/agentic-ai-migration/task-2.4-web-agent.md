@@ -4,14 +4,14 @@
 Create the web sub-agent for external content scraping
 
 ## Context
-Uses AI SDK's ToolLoopAgent with web category tools
+Uses AI SDK's ToolLoopAgent with web category tools. Uses the same model as orchestrator (user's selection).
 
 ## Implementation
 
 **File**: `packages/ai/agents/web.ts`
 
 ```typescript
-import { ToolLoopAgent, stepCountIs } from "ai";
+import { ToolLoopAgent, stepCountIs, type InferAgentUIMessage } from "ai";
 import { model, type ModelId } from "@repo/ai/config/vercel";
 import { webAgentPrompt } from "@repo/ai/prompt/agents/web";
 import type { MyUIMessage } from "@repo/ai/types/message";
@@ -34,15 +34,16 @@ export const webAgentConfig = AgentConfigSchema.parse({
  * Create web agent instance
  * 
  * @param writer - UIMessageStreamWriter for UI updates
- * @param agentModel - Model ID to use for this agent (from config/vercel.ts)
+ * @param selectedModel - Model ID selected by user (same as orchestrator)
  * @returns Configured ToolLoopAgent
  */
 export function createWebAgent(
   writer: UIMessageStreamWriter<MyUIMessage>,
-  agentModel: ModelId
+  selectedModel: ModelId
 ) {
   return new ToolLoopAgent({
-    model: model.languageModel(agentModel),
+    // Uses the same model as orchestrator (user's selection)
+    model: model.languageModel(selectedModel),
     instructions: webAgentConfig.instructions,
     tools: getToolsByCategory("web", writer),
     stopWhen: stepCountIs(webAgentConfig.maxSteps),
@@ -50,25 +51,28 @@ export function createWebAgent(
 }
 
 /**
- * Type for web agent instance
+ * Type for web agent messages
+ * Used in UI for type-safe message rendering
  */
-export type WebAgent = ReturnType<typeof createWebAgent>;
+export type WebAgentMessage = InferAgentUIMessage<
+  ReturnType<typeof createWebAgent>
+>;
 
 /**
  * Scrape URL convenience function
  * 
  * @param writer - UIMessageStreamWriter
- * @param agentModel - Model ID to use
+ * @param selectedModel - Model ID selected by user
  * @param url - External URL to scrape
  * @param options - Optional context and abort signal
  */
 export async function scrapeUrl(
   writer: UIMessageStreamWriter<MyUIMessage>,
-  agentModel: ModelId,
+  selectedModel: ModelId,
   url: string,
   options?: { context?: string; abortSignal?: AbortSignal }
 ) {
-  const agent = createWebAgent(writer, agentModel);
+  const agent = createWebAgent(writer, selectedModel);
   
   const prompt = options?.context
     ? `Scrape and analyze: ${url}\n\nContext: ${options.context}`
@@ -174,22 +178,6 @@ export function extractUrlFromQuery(query: string): string | null {
   const matches = query.match(urlPattern);
   return matches ? matches[0] : null;
 }
-```
-
-**Update File**: `packages/ai/agents/index.ts`
-
-```typescript
-// Export schemas
-export * from "./schema";
-
-// Export registry
-export * from "./registry";
-
-// Export agents
-export * from "./research";
-export * from "./content";
-export * from "./analysis";
-export * from "./web";
 ```
 
 ## Commands

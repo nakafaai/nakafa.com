@@ -4,14 +4,14 @@
 Create the analysis sub-agent for mathematical calculations
 
 ## Context
-Uses AI SDK's ToolLoopAgent with analysis category tools
+Uses AI SDK's ToolLoopAgent with analysis category tools. Uses the same model as orchestrator (user's selection).
 
 ## Implementation
 
 **File**: `packages/ai/agents/analysis.ts`
 
 ```typescript
-import { ToolLoopAgent, stepCountIs } from "ai";
+import { ToolLoopAgent, stepCountIs, type InferAgentUIMessage } from "ai";
 import { model, type ModelId } from "@repo/ai/config/vercel";
 import { analysisAgentPrompt } from "@repo/ai/prompt/agents/analysis";
 import type { MyUIMessage } from "@repo/ai/types/message";
@@ -34,15 +34,16 @@ export const analysisAgentConfig = AgentConfigSchema.parse({
  * Create analysis agent instance
  * 
  * @param writer - UIMessageStreamWriter for UI updates
- * @param agentModel - Model ID to use for this agent (from config/vercel.ts)
+ * @param selectedModel - Model ID selected by user (same as orchestrator)
  * @returns Configured ToolLoopAgent
  */
 export function createAnalysisAgent(
   writer: UIMessageStreamWriter<MyUIMessage>,
-  agentModel: ModelId
+  selectedModel: ModelId
 ) {
   return new ToolLoopAgent({
-    model: model.languageModel(agentModel),
+    // Uses the same model as orchestrator (user's selection)
+    model: model.languageModel(selectedModel),
     instructions: analysisAgentConfig.instructions,
     tools: getToolsByCategory("analysis", writer),
     stopWhen: stepCountIs(analysisAgentConfig.maxSteps),
@@ -50,25 +51,28 @@ export function createAnalysisAgent(
 }
 
 /**
- * Type for analysis agent instance
+ * Type for analysis agent messages
+ * Used in UI for type-safe message rendering
  */
-export type AnalysisAgent = ReturnType<typeof createAnalysisAgent>;
+export type AnalysisAgentMessage = InferAgentUIMessage<
+  ReturnType<typeof createAnalysisAgent>
+>;
 
 /**
  * Perform analysis convenience function
  * 
  * @param writer - UIMessageStreamWriter
- * @param agentModel - Model ID to use
+ * @param selectedModel - Model ID selected by user
  * @param task - Analysis task description
  * @param options - Optional abort signal
  */
 export async function performAnalysis(
   writer: UIMessageStreamWriter<MyUIMessage>,
-  agentModel: ModelId,
+  selectedModel: ModelId,
   task: string,
   options?: { abortSignal?: AbortSignal }
 ) {
-  const agent = createAnalysisAgent(writer, agentModel);
+  const agent = createAnalysisAgent(writer, selectedModel);
   
   const result = await agent.generate({
     prompt: task,
@@ -122,21 +126,6 @@ export function isMathematicalQuery(query: string): number {
 export function shouldUseAnalysisAgent(query: string): boolean {
   return isMathematicalQuery(query) >= 0.5;
 }
-```
-
-**Update File**: `packages/ai/agents/index.ts`
-
-```typescript
-// Export schemas
-export * from "./schema";
-
-// Export registry
-export * from "./registry";
-
-// Export agents
-export * from "./research";
-export * from "./content";
-export * from "./analysis";
 ```
 
 ## Commands

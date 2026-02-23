@@ -28,6 +28,12 @@ export type AgentType = z.infer<typeof AgentTypeSchema>;
 
 /**
  * Base agent configuration schema
+ * 
+ * Note: Model is NOT included here because:
+ * - Orchestrator uses dynamic model from user selection (selectedModel param)
+ * - Sub-agents use DEFAULT_SUB_AGENT_MODEL constant from orchestrator.ts
+ * 
+ * This keeps configuration separate from runtime model selection.
  */
 export const AgentConfigSchema = z.object({
   id: z.string().describe("Unique identifier for the agent"),
@@ -36,8 +42,6 @@ export const AgentConfigSchema = z.object({
   instructions: z.string().describe("System instructions for the agent"),
   maxSteps: z.number().int().min(1).max(50).default(10)
     .describe("Maximum steps allowed"),
-  model: z.string().default("claude-sonnet-4-5")
-    .describe("Model ID to use"),
 });
 
 export type AgentConfig = z.infer<typeof AgentConfigSchema>;

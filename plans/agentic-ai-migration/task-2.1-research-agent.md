@@ -4,14 +4,14 @@
 Create the research sub-agent that handles web search and content discovery
 
 ## Context
-Uses AI SDK's ToolLoopAgent with research category tools
+Uses AI SDK's ToolLoopAgent with research category tools. Uses the same model as orchestrator (user's selection).
 
 ## Implementation
 
 **File**: `packages/ai/agents/research.ts`
 
 ```typescript
-import { ToolLoopAgent, stepCountIs } from "ai";
+import { ToolLoopAgent, stepCountIs, type InferAgentUIMessage } from "ai";
 import { model, type ModelId } from "@repo/ai/config/vercel";
 import { researchAgentPrompt } from "@repo/ai/prompt/agents/research";
 import type { MyUIMessage } from "@repo/ai/types/message";
@@ -34,21 +34,22 @@ export const researchAgentConfig = AgentConfigSchema.parse({
  * Create research agent instance
  * 
  * @param writer - UIMessageStreamWriter for UI updates
- * @param agentModel - Model ID to use for this agent (from config/vercel.ts)
+ * @param selectedModel - Model ID selected by user (same as orchestrator)
  * @returns Configured ToolLoopAgent
  * 
  * @example
  * ```typescript
- * const agent = createResearchAgent(writer, "claude-sonnet-4.5");
+ * const agent = createResearchAgent(writer, "kimi-k2.5");
  * const result = await agent.generate({ prompt: "Research quantum computing" });
  * ```
  */
 export function createResearchAgent(
   writer: UIMessageStreamWriter<MyUIMessage>,
-  agentModel: ModelId
+  selectedModel: ModelId
 ) {
   return new ToolLoopAgent({
-    model: model.languageModel(agentModel),
+    // Uses the same model as orchestrator (user's selection)
+    model: model.languageModel(selectedModel),
     instructions: researchAgentConfig.instructions,
     tools: getToolsByCategory("research", writer),
     stopWhen: stepCountIs(researchAgentConfig.maxSteps),
@@ -56,25 +57,28 @@ export function createResearchAgent(
 }
 
 /**
- * Type for research agent instance
+ * Type for research agent messages
+ * Used in UI for type-safe message rendering
  */
-export type ResearchAgent = ReturnType<typeof createResearchAgent>;
+export type ResearchAgentMessage = InferAgentUIMessage<
+  ReturnType<typeof createResearchAgent>
+>;
 
 /**
  * Run research task convenience function
  * 
  * @param writer - UIMessageStreamWriter
- * @param agentModel - Model ID to use
+ * @param selectedModel - Model ID selected by user
  * @param task - Research task description
  * @param options - Optional abort signal
  */
 export async function runResearch(
   writer: UIMessageStreamWriter<MyUIMessage>,
-  agentModel: ModelId,
+  selectedModel: ModelId,
   task: string,
   options?: { abortSignal?: AbortSignal }
 ) {
-  const agent = createResearchAgent(writer, agentModel);
+  const agent = createResearchAgent(writer, selectedModel);
   
   const result = await agent.generate({
     prompt: task,
@@ -87,19 +91,6 @@ export async function runResearch(
     toolCalls: result.toolCalls,
   };
 }
-```
-
-**Update File**: `packages/ai/agents/index.ts`
-
-```typescript
-// Export schemas
-export * from "./schema";
-
-// Export registry
-export * from "./registry";
-
-// Export agents
-export * from "./research";
 ```
 
 ## Commands

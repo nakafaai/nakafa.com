@@ -77,13 +77,23 @@ import {
 
 ---
 
-### 4. ✅ HARDCODING - ALREADY CORRECTED
+### 4. ✅ HARDCODING - FIXED
 
-**No hardcoding issues found**:
-- ✅ Models come from `ModelId` type in config
-- ✅ `DEFAULT_SUB_AGENT_MODEL` is a configurable constant
-- ✅ Orchestrator uses dynamic `selectedModel` parameter
-- ✅ Max steps are exported constants
+**Issue Found**: `task-1.1-agent-schemas.md` line 39 had hardcoded default model
+
+**Correction**: Removed `model` field from AgentConfigSchema entirely
+
+**Why**: Model is determined at runtime, not in config:
+- Orchestrator uses dynamic `selectedModel` parameter from user
+- Sub-agents use SAME `selectedModel` as orchestrator (passed via parameter)
+- All agents use the user's selected model consistently
+
+**Before**:
+```typescript
+model: z.string().default("claude-sonnet-4-5")
+```
+
+**After**: Removed from schema - model passed as parameter instead
 
 ---
 
@@ -192,10 +202,10 @@ export {
            │
            ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  SUB-AGENTS (All use DEFAULT_SUB_AGENT_MODEL)              │
-│  - Constant: DEFAULT_SUB_AGENT_MODEL = "claude-sonnet-4.5" │
-│  - Easy to change: 1 constant updates all agents           │
-│  - Reference: task-3.1-orchestrator.md line 32             │
+│  SUB-AGENTS (All use SAME model as orchestrator)           │
+│  - Model: selectedModel (same as orchestrator)             │
+│  - Passed through createSubAgent function                  │
+│  - Reference: task-3.1-orchestrator.md line 203-220        │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -217,9 +227,10 @@ export {
 ### Phase 3: Orchestrator ✅
 - [x] **Task 3.1**: Orchestrator with dynamic model (FIXED)
   - Dynamic model from user selection
-  - Sub-agents use configurable constant
+  - Sub-agents use SAME model as orchestrator (passed via parameter)
   - Proper streaming with async generators
   - Context control with toModelOutput
+  - Fixed: createDelegateTool now passes selectedModel to createSubAgent
 
 ### Phase 4: Integration ✅
 - [x] **Task 4.1**: Chat route integration
@@ -267,6 +278,8 @@ export {
 5. ✅ Removed dead code (unused agent type exports)
 6. ✅ Fixed toModelOutput to use proper type assertions
 7. ✅ Added explicit return types
+8. ✅ **CRITICAL FIX**: createDelegateTool now receives and passes `selectedModel` to createSubAgent
+9. ✅ **CRITICAL FIX**: All agents now use SAME model (user's selection)
 
 ### Pattern Applied Across All Files
 1. ✅ No re-exports (export *) - use explicit named exports

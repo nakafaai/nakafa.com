@@ -42,12 +42,6 @@ import { isExternalUrl, extractUrlFromQuery } from "./web";
 export const ORCHESTRATOR_MAX_STEPS = 15;
 
 /**
- * Default sub-agent model - easily replaceable
- * Change this constant to use a different model for all sub-agents
- */
-export const DEFAULT_SUB_AGENT_MODEL: ModelId = "claude-sonnet-4.5";
-
-/**
  * Create orchestrator agent with dynamic model
  * 
  * The orchestrator uses the user's selected model for main reasoning,
@@ -84,7 +78,7 @@ export function createOrchestratorAgent(
     model: model.languageModel(selectedModel),
     instructions: orchestratorPrompt(context),
     tools: {
-      delegate: createDelegateTool(writer),
+      delegate: createDelegateTool(writer, selectedModel),
     },
     stopWhen: stepCountIs(ORCHESTRATOR_MAX_STEPS),
   });
@@ -104,7 +98,10 @@ export type OrchestratorAgent = ReturnType<typeof createOrchestratorAgent>;
  * 
  * Reference: https://ai-sdk.dev/docs/agents/subagents#streaming-subagent-progress
  */
-function createDelegateTool(writer: UIMessageStreamWriter<MyUIMessage>) {
+function createDelegateTool(
+  writer: UIMessageStreamWriter<MyUIMessage>,
+  selectedModel: ModelId
+) {
   return tool({
     description: `Delegate a task to a specialized sub-agent.
 
@@ -121,8 +118,8 @@ Available agents:
     // Async generator for streaming preliminary results to UI
     // Reference: https://ai-sdk.dev/docs/agents/subagents#streaming-subagent-progress
     execute: async function* ({ agentType, task, context }, { abortSignal }) {
-      // Create appropriate sub-agent with default model
-      const agent = createSubAgent(agentType, writer);
+      // Create appropriate sub-agent with same model as orchestrator
+      const agent = createSubAgent(agentType, writer, selectedModel);
       
       try {
         // Start sub-agent with streaming
@@ -204,21 +201,22 @@ Available agents:
 
 /**
  * Create sub-agent based on type
- * All sub-agents use DEFAULT_SUB_AGENT_MODEL for consistency
+ * All sub-agents use the same model as orchestrator (user's selection)
  */
 function createSubAgent(
   agentType: "research" | "content" | "analysis" | "web",
-  writer: UIMessageStreamWriter<MyUIMessage>
+  writer: UIMessageStreamWriter<MyUIMessage>,
+  selectedModel: ModelId
 ) {
   switch (agentType) {
     case "research":
-      return createResearchAgent(writer, DEFAULT_SUB_AGENT_MODEL);
+      return createResearchAgent(writer, selectedModel);
     case "content":
-      return createContentAgent(writer, DEFAULT_SUB_AGENT_MODEL);
+      return createContentAgent(writer, selectedModel);
     case "analysis":
-      return createAnalysisAgent(writer, DEFAULT_SUB_AGENT_MODEL);
+      return createAnalysisAgent(writer, selectedModel);
     case "web":
-      return createWebAgent(writer, DEFAULT_SUB_AGENT_MODEL);
+      return createWebAgent(writer, selectedModel);
     default:
       throw new Error(`Unknown agent type: ${agentType}`);
   }
@@ -266,16 +264,16 @@ export function routeToAgent(
 - User can choose any model from `@repo/ai/config/vercel.ts`
 - This is the "main brain" that decides delegation
 
-### Sub-agent Model: Configurable Constant
-- Uses `DEFAULT_SUB_AGENT_MODEL` constant (line 32)
-- Easy to change: just update the constant value
-- All sub-agents use the same model for consistency
+### Sub-agent Model: Same as Orchestrator
+- All sub-agents use the SAME model as the orchestrator
+- Passed through `selectedModel` parameter consistently
+- Ensures consistent reasoning quality across the entire system
 
 ### Why This Pattern?
-1. **Flexibility**: Users can choose their preferred model for main reasoning
-2. **Simplicity**: Sub-agents use a sensible default that works well
-3. **Cost Control**: Sub-agents can use cheaper models since they're specialized
-4. **Easy Maintenance**: One constant to change updates all sub-agents
+1. **Consistency**: All agents use the same model for uniform behavior
+2. **User Control**: User's model choice applies to entire agent system
+3. **Simplicity**: Single model configuration, no complexity
+4. **Quality**: No quality mismatch between orchestrator and sub-agents
 
 ## AI SDK Best Practices Applied
 

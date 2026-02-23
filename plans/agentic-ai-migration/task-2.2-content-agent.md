@@ -4,14 +4,14 @@
 Create the content sub-agent for retrieving Nakafa educational materials
 
 ## Context
-Uses AI SDK's ToolLoopAgent with content category tools
+Uses AI SDK's ToolLoopAgent with content category tools. Uses the same model as orchestrator (user's selection).
 
 ## Implementation
 
 **File**: `packages/ai/agents/content.ts`
 
 ```typescript
-import { ToolLoopAgent, stepCountIs } from "ai";
+import { ToolLoopAgent, stepCountIs, type InferAgentUIMessage } from "ai";
 import { model, type ModelId } from "@repo/ai/config/vercel";
 import { contentAgentPrompt } from "@repo/ai/prompt/agents/content";
 import type { MyUIMessage } from "@repo/ai/types/message";
@@ -34,15 +34,16 @@ export const contentAgentConfig = AgentConfigSchema.parse({
  * Create content agent instance
  * 
  * @param writer - UIMessageStreamWriter for UI updates
- * @param agentModel - Model ID to use for this agent (from config/vercel.ts)
+ * @param selectedModel - Model ID selected by user (same as orchestrator)
  * @returns Configured ToolLoopAgent
  */
 export function createContentAgent(
   writer: UIMessageStreamWriter<MyUIMessage>,
-  agentModel: ModelId
+  selectedModel: ModelId
 ) {
   return new ToolLoopAgent({
-    model: model.languageModel(agentModel),
+    // Uses the same model as orchestrator (user's selection)
+    model: model.languageModel(selectedModel),
     instructions: contentAgentConfig.instructions,
     tools: getToolsByCategory("content", writer),
     stopWhen: stepCountIs(contentAgentConfig.maxSteps),
@@ -50,25 +51,28 @@ export function createContentAgent(
 }
 
 /**
- * Type for content agent instance
+ * Type for content agent messages
+ * Used in UI for type-safe message rendering
  */
-export type ContentAgent = ReturnType<typeof createContentAgent>;
+export type ContentAgentMessage = InferAgentUIMessage<
+  ReturnType<typeof createContentAgent>
+>;
 
 /**
  * Retrieve content convenience function
  * 
  * @param writer - UIMessageStreamWriter
- * @param agentModel - Model ID to use
+ * @param selectedModel - Model ID selected by user
  * @param slug - Verified content slug
  * @param options - Optional context and abort signal
  */
 export async function retrieveContent(
   writer: UIMessageStreamWriter<MyUIMessage>,
-  agentModel: ModelId,
+  selectedModel: ModelId,
   slug: string,
   options?: { context?: string; abortSignal?: AbortSignal }
 ) {
-  const agent = createContentAgent(writer, agentModel);
+  const agent = createContentAgent(writer, selectedModel);
   
   const prompt = options?.context
     ? `Retrieve content for slug: ${slug}\n\nContext: ${options.context}`
@@ -85,20 +89,6 @@ export async function retrieveContent(
     toolCalls: result.toolCalls,
   };
 }
-```
-
-**Update File**: `packages/ai/agents/index.ts`
-
-```typescript
-// Export schemas
-export * from "./schema";
-
-// Export registry
-export * from "./registry";
-
-// Export agents
-export * from "./research";
-export * from "./content";
 ```
 
 ## Commands
