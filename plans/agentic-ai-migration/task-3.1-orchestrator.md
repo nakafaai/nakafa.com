@@ -1,67 +1,36 @@
-# Task 3.1: Create Orchestrator Agent (CORRECTED)
+# Task 3.1: Create Orchestrator Agent
 
 ## Goal
-Create the main orchestrator agent that uses user's selected model dynamically and delegates to sub-agents
+Create the main orchestrator agent that delegates to sub-agents.
 
 ## Context
-Orchestrator uses dynamic model from user selection (`selectedModel`), while sub-agents use a configurable model from `@repo/ai/config/vercel.ts`
+The orchestrator is Nina - the main entry point that decides which sub-agents to spawn based on user queries.
 
-## AI SDK References
-- **Building Agents**: https://ai-sdk.dev/docs/agents/building-agents
-- **Subagents**: https://ai-sdk.dev/docs/agents/subagents
-- **ToolLoopAgent Constructor**: `node_modules/ai/dist/index.d.mts` (lines showing ToolLoopAgentSettings)
+## Architecture
 
-## Implementation
+### Orchestrator Configuration
+- **File**: `packages/ai/agents/orchestrator.ts`
+- **Uses**: `orchestratorPrompt()` and `delegateToolDescription()` from prompts
+- **Tools**: Single "delegate" tool that spawns sub-agents
+- **Model**: User's selected model (dynamic)
 
-**File**: `packages/ai/agents/orchestrator.ts`
+### Agent Hierarchy
+
+```
+Orchestrator Agent (Nina)
+├── delegate tool
+    ├── Research Agent (webSearch, scrape)
+    ├── Study Agent (getSubjects, getArticles, getContent)
+    └── Math Agent (calculator)
+```
+
+### API Design
 
 ```typescript
-import { 
-  ToolLoopAgent, 
-  tool, 
-  stepCountIs,
-  readUIMessageStream,
-} from "ai";
-import * as z from "zod";
-import { model, type ModelId } from "@repo/ai/config/vercel";
-import { orchestratorPrompt } from "@repo/ai/prompt/agents/orchestrator";
-import type { MyUIMessage } from "@repo/ai/types/message";
-import type { UIMessageStreamWriter } from "ai";
-import { DelegateInputSchema } from "./schema";
-import { createResearchAgent } from "./research";
-import { createContentAgent } from "./content";
-import { createAnalysisAgent } from "./analysis";
-import { createWebAgent } from "./web";
-import { isMathematicalQuery } from "./analysis";
-import { isExternalUrl, extractUrlFromQuery } from "./web";
-
-/**
- * Maximum steps for orchestrator
- * Reference: https://ai-sdk.dev/docs/agents/building-agents#loop-control
- */
+// Constants
 export const ORCHESTRATOR_MAX_STEPS = 15;
 
-/**
- * Create orchestrator agent with dynamic model
- * 
- * The orchestrator uses the user's selected model for main reasoning,
- * while sub-agents use DEFAULT_SUB_AGENT_MODEL for specialized tasks.
- * 
- * @param props - Configuration object
- * @param props.writer - UIMessageStreamWriter for UI updates
- * @param props.selectedModel - Model ID selected by user (dynamic)
- * @param props.context - Context object with URL, page info, etc.
- * @returns Configured ToolLoopAgent
- * 
- * @example
- * ```typescript
- * const orchestrator = createOrchestratorAgent({
- *   writer,
- *   selectedModel: "kimi-k2.5",
- *   context: { url, currentPage, currentDate, userLocation }
- * });
- * ```
- */
+// Create orchestrator instance
 export function createOrchestratorAgent({
   writer,
   selectedModel,
@@ -76,236 +45,59 @@ export function createOrchestratorAgent({
     userLocation: { city: string; country: string };
     userRole?: string;
   };
-}) {
-  return new ToolLoopAgent({
-    // Use the user's selected model dynamically
-    // Reference: https://ai-sdk.dev/docs/agents/building-agents#model-and-system-instructions
-    model: model.languageModel(selectedModel),
-    instructions: orchestratorPrompt(context),
-    tools: {
-      delegate: createDelegateTool({ writer, selectedModel }),
-    },
-    stopWhen: stepCountIs(ORCHESTRATOR_MAX_STEPS),
-  });
-}
+}): ToolLoopAgent
 
-/**
- * Type for orchestrator agent instance
- * Reference: https://ai-sdk.dev/docs/agents/building-agents#end-to-end-type-safety
- */
-export type OrchestratorAgent = ReturnType<typeof createOrchestratorAgent>;
-
-/**
- * Create delegation tool that spawns sub-agents
- * 
- * This tool uses async generators to stream sub-agent progress to the UI
- * while controlling what the parent model sees via toModelOutput.
- * 
- * Reference: https://ai-sdk.dev/docs/agents/subagents#streaming-subagent-progress
- */
-function createDelegateTool({
-  writer,
-  selectedModel,
-}: {
-  writer: UIMessageStreamWriter<MyUIMessage>;
-  selectedModel: ModelId;
-}) {
-  return tool({
-    description: `Delegate a task to a specialized sub-agent.
-
-Available agents:
-- research: Web search, finding subjects/articles
-- content: Retrieving Nakafa content (requires verified slug)
-- analysis: Mathematical calculations  
-- web: Scraping external URLs`,
-    
-    inputSchema: DelegateInputSchema,
-    
-    outputSchema: z.string(),
-    
-    // Async generator for streaming preliminary results to UI
-    // Reference: https://ai-sdk.dev/docs/agents/subagents#streaming-subagent-progress
-    execute: async function* ({ agentType, task, context }, { abortSignal }) {
-      // Create appropriate sub-agent with same model as orchestrator
-      const agent = createSubAgent({ agentType, writer, selectedModel });
-      
-      try {
-        // Start sub-agent with streaming
-        const result = await agent.stream({
-          prompt: context ? `${task}\n\nContext: ${context}` : task,
-          abortSignal,
-        });
-        
-        // Stream progress to UI using readUIMessageStream
-        // Reference: https://ai-sdk.dev/docs/agents/subagents#building-the-complete-message
-        for await (const message of readUIMessageStream({
-          stream: result.toUIMessageStream(),
-        })) {
-          yield JSON.stringify({
-            status: "progress",
-            agentType,
-            message,
-            timestamp: Date.now(),
-          });
-        }
-        
-        // Extract final result for return
-        const response = await result.response;
-        const lastText = response.messages
-          .flatMap(m => m.parts || [])
-          .filter(p => p.type === "text")
-          .pop()?.text || "Task completed";
-        
-        return JSON.stringify({
-          status: "completed",
-          agentType,
-          result: lastText,
-        });
-        
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "Unknown error";
-        return JSON.stringify({
-          status: "error",
-          agentType,
-          error: message,
-        });
-      }
-    },
-    
-    // Control what the orchestrator model sees
-    // Reference: https://ai-sdk.dev/docs/agents/subagents#controlling-what-the-model-sees
-    toModelOutput: ({ output }) => {
-      try {
-        const parsed = JSON.parse(output as string);
-        
-        if (parsed.status === "completed") {
-          return {
-            type: "text" as const,
-            value: parsed.result,
-          };
-        }
-        
-        if (parsed.status === "error") {
-          return {
-            type: "text" as const,
-            value: `Error from ${parsed.agentType} agent: ${parsed.error}`,
-          };
-        }
-        
-        return {
-          type: "text" as const,
-          value: `${parsed.agentType} agent is working...`,
-        };
-        
-      } catch {
-        return {
-          type: "text" as const,
-          value: output as string,
-        };
-      }
-    },
-  });
-}
-
-/**
- * Create sub-agent based on type
- * All sub-agents use the same model as orchestrator (user's selection)
- */
-function createSubAgent({
-  agentType,
-  writer,
-  selectedModel,
-}: {
-  agentType: "research" | "content" | "analysis" | "web";
-  writer: UIMessageStreamWriter<MyUIMessage>;
-  selectedModel: ModelId;
-}) {
-  switch (agentType) {
-    case "research":
-      return createResearchAgent({ writer, selectedModel });
-    case "content":
-      return createContentAgent({ writer, selectedModel });
-    case "analysis":
-      return createAnalysisAgent({ writer, selectedModel });
-    case "web":
-      return createWebAgent({ writer, selectedModel });
-    default:
-      throw new Error(`Unknown agent type: ${agentType}`);
-  }
-}
-
-/**
- * Quick routing helper to determine which agent to use
- * Returns null if no specific agent is needed (handle directly)
- */
+// Routing helper
 export function routeToAgent({
   query,
   context,
 }: {
   query: string;
   context?: { hasVerifiedSlug?: boolean };
-}): { agent: "research" | "content" | "analysis" | "web" | null; confidence: number } {
-  // Check for math
-  const mathConfidence = isMathematicalQuery(query);
-  if (mathConfidence >= 0.5) {
-    return { agent: "analysis", confidence: mathConfidence };
-  }
-
-  // Check for URL
-  const url = extractUrlFromQuery(query);
-  if (url && isExternalUrl(url)) {
-    return { agent: "web", confidence: 0.9 };
-  }
-
-  // Check for verified slug
-  if (context?.hasVerifiedSlug) {
-    return { agent: "content", confidence: 0.8 };
-  }
-
-  // Check for research keywords
-  const researchKeywords = /\b(search|find|look up|research|what is|how to|latest)\b/i;
-  if (researchKeywords.test(query)) {
-    return { agent: "research", confidence: 0.7 };
-  }
-
-  return { agent: null, confidence: 0 };
-}
+}): { agent: AgentType | null; confidence: number }
 ```
 
-## Key Design Decisions
+### Key Features
 
-### Orchestrator Model: Dynamic
-- Uses `selectedModel` parameter passed from chat route (line 59)
-- User can choose any model from `@repo/ai/config/vercel.ts`
-- This is the "main brain" that decides delegation
+1. **Single Model**: All agents use user's selected model
+2. **Delegation Tool**: Uses async generators for streaming
+3. **Context Control**: Uses `toModelOutput` to limit parent context
+4. **Object Parameters**: All functions use object destructuring
+5. **Type Exports**: Export `OrchestratorAgent` type
 
-### Sub-agent Model: Same as Orchestrator
-- All sub-agents use the SAME model as the orchestrator
-- Passed through `selectedModel` parameter consistently
-- Ensures consistent reasoning quality across the entire system
+### Agent Routing Logic
 
-### Why This Pattern?
-1. **Consistency**: All agents use the same model for uniform behavior
-2. **User Control**: User's model choice applies to entire agent system
-3. **Simplicity**: Single model configuration, no complexity
-4. **Quality**: No quality mismatch between orchestrator and sub-agents
+```typescript
+type AgentType = "research" | "study" | "math";
 
-## AI SDK Best Practices Applied
+// Decision matrix:
+// - web search queries → research agent
+// - scrape/external URL → research agent  
+// - Nakafa content (subjects, articles) → study agent
+// - mathematical queries → math agent
+// - mixed/complex → multiple agents
+```
 
-1. **ToolLoopAgent**: Used for both orchestrator and sub-agents
+## AI SDK Patterns Used
+
+1. **ToolLoopAgent**: Main orchestrator and sub-agents
    - Reference: https://ai-sdk.dev/docs/agents/building-agents#creating-an-agent
 
-2. **Streaming with async generators**: `execute: async function*`
+2. **Subagent Streaming**: `execute: async function*`
    - Reference: https://ai-sdk.dev/docs/agents/subagents#streaming-subagent-progress
 
-3. **Context control with toModelOutput**: Limits what parent model sees
+3. **Context Control**: `toModelOutput` for limiting what parent sees
    - Reference: https://ai-sdk.dev/docs/agents/subagents#controlling-what-the-model-sees
 
-4. **Abort signal propagation**: Passed through to sub-agents
+4. **Abort Signal**: Passed through to sub-agents
    - Reference: https://ai-sdk.dev/docs/agents/subagents#handling-cancellation
 
-5. **readUIMessageStream**: Accumulates streaming messages
-   - Reference: https://ai-sdk.dev/docs/agents/subagents#building-the-complete-message
+## References
+
+- **AI SDK Building Agents**: https://ai-sdk.dev/docs/agents/building-agents
+- **AI SDK Subagents**: https://ai-sdk.dev/docs/agents/subagents
+- **Current Chat Route**: `apps/www/app/api/chat/route.ts`
+- **Model Config**: `packages/ai/config/vercel.ts`
 
 ## Commands
 
@@ -313,11 +105,3 @@ export function routeToAgent({
 pnpm lint
 pnpm --filter @repo/ai typecheck
 ```
-
-## References
-
-- AI SDK Building Agents: https://ai-sdk.dev/docs/agents/building-agents
-- AI SDK Subagents: https://ai-sdk.dev/docs/agents/subagents
-- AI SDK ToolLoopAgent Types: `node_modules/ai/dist/index.d.mts`
-- Current Chat Route: `apps/www/app/api/chat/route.ts`
-- Model Config: `packages/ai/config/vercel.ts`

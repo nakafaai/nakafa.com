@@ -18,10 +18,9 @@ import * as z from "zod";
  */
 export const AgentTypeSchema = z.enum([
   "orchestrator",
-  "research", 
-  "content",
-  "analysis",
-  "web",
+  "research",
+  "study",
+  "math",
 ]);
 
 export type AgentType = z.infer<typeof AgentTypeSchema>;
@@ -29,11 +28,8 @@ export type AgentType = z.infer<typeof AgentTypeSchema>;
 /**
  * Base agent configuration schema
  * 
- * Note: Model is NOT included here because:
- * - Orchestrator uses dynamic model from user selection (selectedModel param)
- * - Sub-agents use DEFAULT_SUB_AGENT_MODEL constant from orchestrator.ts
- * 
- * This keeps configuration separate from runtime model selection.
+ * Note: Model is NOT included here because all agents use
+ * the user's selected model dynamically at runtime.
  */
 export const AgentConfigSchema = z.object({
   id: z.string().describe("Unique identifier for the agent"),
@@ -51,9 +47,8 @@ export type AgentConfig = z.infer<typeof AgentConfigSchema>;
  */
 export const ToolCategorySchema = z.enum([
   "research",
-  "content", 
-  "analysis",
-  "web",
+  "study",
+  "math",
   "utility",
 ]);
 

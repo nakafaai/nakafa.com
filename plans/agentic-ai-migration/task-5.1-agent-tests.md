@@ -13,8 +13,9 @@ Uses Vitest for testing agent behavior
 ```typescript
 import { describe, it, expect, vi } from "vitest";
 import { createOrchestratorAgent, routeToAgent } from "../orchestrator";
-import { isMathematicalQuery } from "../analysis";
-import { isExternalUrl, extractUrlFromQuery } from "../web";
+import { isMathematicalQuery, shouldUseMathAgent } from "../math";
+import { isExternalUrl, extractUrlFromQuery } from "../research";
+import { isContentQuery } from "../study";
 
 describe("Orchestrator", () => {
   const mockWriter = {
@@ -23,36 +24,45 @@ describe("Orchestrator", () => {
   };
 
   describe("routeToAgent", () => {
-    it("should route math queries to analysis agent", () => {
-      const result = routeToAgent("Calculate 15 * 23");
-      expect(result.agent).toBe("analysis");
+    it("should route math queries to math agent", () => {
+      const result = routeToAgent({ query: "Calculate 15 * 23" });
+      expect(result.agent).toBe("math");
       expect(result.confidence).toBeGreaterThan(0.5);
     });
 
-    it("should route URLs to web agent", () => {
-      const result = routeToAgent("Analyze https://example.com");
-      expect(result.agent).toBe("web");
+    it("should route URLs to research agent", () => {
+      const result = routeToAgent({ query: "Analyze https://example.com" });
+      expect(result.agent).toBe("research");
       expect(result.confidence).toBe(0.9);
     });
 
-    it("should route research keywords to research agent", () => {
-      const result = routeToAgent("Search for quantum computing");
+    it("should route web search to research agent", () => {
+      const result = routeToAgent({ query: "Search for quantum computing" });
       expect(result.agent).toBe("research");
     });
 
+    it("should route Nakafa content to study agent", () => {
+      const result = routeToAgent({ query: "Find articles about physics" });
+      expect(result.agent).toBe("study");
+    });
+
     it("should return null for simple queries", () => {
-      const result = routeToAgent("Hello");
+      const result = routeToAgent({ query: "Hello" });
       expect(result.agent).toBeNull();
     });
   });
 
   describe("createOrchestratorAgent", () => {
     it("should create agent with correct configuration", () => {
-      const agent = createOrchestratorAgent(mockWriter as any, {
-        url: "/test",
-        currentPage: { locale: "en", slug: "test", verified: true },
-        currentDate: "2025-01-01",
-        userLocation: { city: "Test", country: "TC" },
+      const agent = createOrchestratorAgent({
+        writer: mockWriter as any,
+        selectedModel: "claude-sonnet-4-20250514",
+        context: {
+          url: "/test",
+          currentPage: { locale: "en", slug: "test", verified: true },
+          currentDate: "2025-01-01",
+          userLocation: { city: "Test", country: "TC" },
+        }
       });
 
       expect(agent).toBeDefined();
@@ -61,13 +71,13 @@ describe("Orchestrator", () => {
 });
 ```
 
-**File**: `packages/ai/agents/__tests__/analysis.test.ts`
+**File**: `packages/ai/agents/__tests__/math.test.ts`
 
 ```typescript
 import { describe, it, expect } from "vitest";
-import { isMathematicalQuery, shouldUseAnalysisAgent } from "../analysis";
+import { isMathematicalQuery, shouldUseMathAgent } from "../math";
 
-describe("Analysis Agent", () => {
+describe("Math Agent", () => {
   describe("isMathematicalQuery", () => {
     it("should detect arithmetic", () => {
       expect(isMathematicalQuery("2 + 2")).toBeGreaterThan(0.5);
@@ -84,25 +94,25 @@ describe("Analysis Agent", () => {
     });
   });
 
-  describe("shouldUseAnalysisAgent", () => {
+  describe("shouldUseMathAgent", () => {
     it("should return true for math queries", () => {
-      expect(shouldUseAnalysisAgent("What is 10 + 5?")).toBe(true);
+      expect(shouldUseMathAgent("What is 10 + 5?")).toBe(true);
     });
 
     it("should return false for non-math", () => {
-      expect(shouldUseAnalysisAgent("Tell me a story")).toBe(false);
+      expect(shouldUseMathAgent("Tell me a story")).toBe(false);
     });
   });
 });
 ```
 
-**File**: `packages/ai/agents/__tests__/web.test.ts`
+**File**: `packages/ai/agents/__tests__/research.test.ts`
 
 ```typescript
 import { describe, it, expect } from "vitest";
-import { isExternalUrl, validateUrl, extractUrlFromQuery } from "../web";
+import { isExternalUrl, validateUrl, extractUrlFromQuery } from "../research";
 
-describe("Web Agent", () => {
+describe("Research Agent", () => {
   describe("isExternalUrl", () => {
     it("should allow external URLs", () => {
       expect(isExternalUrl("https://example.com")).toBe(true);
@@ -146,6 +156,32 @@ describe("Web Agent", () => {
 
     it("should return null if no URL", () => {
       expect(extractUrlFromQuery("No URL here")).toBeNull();
+    });
+  });
+});
+```
+
+**File**: `packages/ai/agents/__tests__/study.test.ts`
+
+```typescript
+import { describe, it, expect } from "vitest";
+import { isContentQuery } from "../study";
+
+describe("Study Agent", () => {
+  describe("isContentQuery", () => {
+    it("should detect content queries", () => {
+      expect(isContentQuery("Find articles about physics")).toBe(true);
+      expect(isContentQuery("Get content for slug math-algebra")).toBe(true);
+    });
+
+    it("should detect subject queries", () => {
+      expect(isContentQuery("List all subjects")).toBe(true);
+      expect(isContentQuery("What subjects are available?")).toBe(true);
+    });
+
+    it("should return false for non-content queries", () => {
+      expect(isContentQuery("Hello world")).toBe(false);
+      expect(isContentQuery("Calculate 2+2")).toBe(false);
     });
   });
 });
