@@ -1,16 +1,12 @@
 import { type ModelId, model } from "@repo/ai/config/vercel";
+import type { AgentContext } from "@repo/ai/types/agents";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { generateText, stepCountIs, type UIMessageStreamWriter } from "ai";
 import { researchPrompt } from "./prompt";
 import { researchTools } from "./tools";
 
 interface RunResearchAgentParams {
-  context: {
-    url: string;
-    slug: string;
-    verified: boolean;
-    userRole?: "teacher" | "student" | "parent" | "administrator";
-  };
+  context: AgentContext;
   locale: string;
   modelId: ModelId;
   task: string;

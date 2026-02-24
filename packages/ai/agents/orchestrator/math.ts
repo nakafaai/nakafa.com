@@ -1,18 +1,15 @@
 import { runMathAgent } from "@repo/ai/agents/math";
 import type { ModelId } from "@repo/ai/config/vercel";
+import type { AgentContext, UserRole } from "@repo/ai/types/agents";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { tool, type UIMessageStreamWriter } from "ai";
 import * as z from "zod";
 
 interface Params {
-  context: {
-    url: string;
-    slug: string;
-    verified: boolean;
-    userRole?: "teacher" | "student" | "parent" | "administrator";
-  };
+  context: AgentContext;
   locale: string;
   modelId: ModelId;
+  userRole?: UserRole;
   writer: UIMessageStreamWriter<MyUIMessage>;
 }
 

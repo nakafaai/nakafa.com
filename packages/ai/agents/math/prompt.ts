@@ -1,12 +1,8 @@
 import { createPrompt } from "@repo/ai/prompt/utils";
+import type { AgentContext } from "@repo/ai/types/agents";
 
 interface MathPromptProps {
-  context: {
-    url: string;
-    slug: string;
-    verified: boolean;
-    userRole?: "teacher" | "student" | "parent" | "administrator";
-  };
+  context: AgentContext;
   locale: string;
 }
 

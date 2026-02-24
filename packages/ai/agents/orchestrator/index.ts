@@ -1,28 +1,16 @@
-import type { ModelId } from "@repo/ai/config/vercel";
-import type { MyUIMessage } from "@repo/ai/types/message";
-import type { UIMessageStreamWriter } from "ai";
+import type { OrchestratorToolParams } from "@repo/ai/types/agents";
 import { createContentAccessTool } from "./content-access";
 import { createMathTool } from "./math";
 import { createResearchTool } from "./research";
 
-interface Params {
-  context: {
-    url: string;
-    slug: string;
-    verified: boolean;
-    userRole?: "teacher" | "student" | "parent" | "administrator";
-  };
-  locale: string;
-  modelId: ModelId;
-  writer: UIMessageStreamWriter<MyUIMessage>;
-}
+export type { AgentContext } from "@repo/ai/types/agents";
 
 export function orchestratorTools({
   writer,
   modelId,
   locale,
   context,
-}: Params) {
+}: OrchestratorToolParams) {
   return {
     contentAccess: createContentAccessTool({
       writer,
