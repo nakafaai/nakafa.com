@@ -23,6 +23,7 @@ import {
   mapDBMessagesToUIMessages,
   mapUIMessagePartsToDBParts,
 } from "@repo/backend/convex/chats/utils";
+import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { api } from "@repo/connection/routes";
 import { CorsValidator } from "@repo/security/lib/cors-validator";
 import { cleanSlug } from "@repo/utilities/helper";
@@ -74,7 +75,7 @@ export async function POST(req: Request) {
   }: {
     message: MyUIMessage | undefined;
     id: Id<"chats"> | undefined;
-    locale: string;
+    locale: Locale;
     slug: string;
     model: ModelId;
   } = await req.json();
