@@ -44,10 +44,15 @@ const SuggestionsPartButton = memo(
         onClick={() => sendMessage({ text: suggestion })}
         type="button"
       >
-        {suggestion}
+        <SuggestionsPartContent content={suggestion} />
         <HugeIcons className="size-4 text-primary" icon={Add01Icon} />
       </button>
     );
   }
 );
 SuggestionsPartButton.displayName = "SuggestionsPartButton";
+
+const SuggestionsPartContent = memo(({ content }: { content: string }) => {
+  return content;
+});
+SuggestionsPartContent.displayName = "SuggestionsPartContent";

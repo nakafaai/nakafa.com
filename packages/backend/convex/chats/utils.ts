@@ -69,73 +69,40 @@ export function mapUIMessagePartsToDBParts({
           type: part.type,
         };
 
-      // Tool parts - these are specific tool names from our tools
-      // Note: Tool parts are transient and not rendered in UI, but we store minimal info
-      case "tool-getArticles":
+      // Subagent orchestrator tools
+      case "tool-contentAccess": {
         return {
           ...baseFields,
           type: part.type,
           toolToolCallId: part.toolCallId,
           toolState: part.state,
-          toolGetArticlesInputLocale: part.input?.locale,
-          toolGetArticlesInputCategory: part.input?.category,
-          toolGetArticlesOutput: part.output,
+          toolContentAccessInput: part.input?.query,
+          toolContentAccessOutput: part.output,
           toolErrorText: part.errorText,
         };
-      case "tool-getSubjects":
+      }
+      case "tool-deepResearch": {
         return {
           ...baseFields,
           type: part.type,
           toolToolCallId: part.toolCallId,
           toolState: part.state,
-          toolGetSubjectsInputLocale: part.input?.locale,
-          toolGetSubjectsInputCategory: part.input?.category,
-          toolGetSubjectsInputGrade: part.input?.grade,
-          toolGetSubjectsInputMaterial: part.input?.material,
-          toolGetSubjectsOutput: part.output,
+          toolDeepResearchInput: part.input?.query,
+          toolDeepResearchOutput: part.output,
           toolErrorText: part.errorText,
         };
-      case "tool-getContent":
+      }
+      case "tool-mathCalculation": {
         return {
           ...baseFields,
           type: part.type,
           toolToolCallId: part.toolCallId,
           toolState: part.state,
-          toolGetContentInputLocale: part.input?.locale,
-          toolGetContentInputSlug: part.input?.slug,
-          toolGetContentOutput: part.output,
+          toolMathCalculationInput: part.input?.query,
+          toolMathCalculationOutput: part.output,
           toolErrorText: part.errorText,
         };
-      case "tool-calculator":
-        return {
-          ...baseFields,
-          type: part.type,
-          toolToolCallId: part.toolCallId,
-          toolState: part.state,
-          toolCalculatorInputExpression: part.input?.expression,
-          toolCalculatorOutput: part.output,
-          toolErrorText: part.errorText,
-        };
-      case "tool-scrape":
-        return {
-          ...baseFields,
-          type: part.type,
-          toolToolCallId: part.toolCallId,
-          toolState: part.state,
-          toolScrapeUrlInputUrlToCrawl: part.input?.urlToCrawl,
-          toolScrapeUrlOutput: part.output,
-          toolErrorText: part.errorText,
-        };
-      case "tool-webSearch":
-        return {
-          ...baseFields,
-          type: part.type,
-          toolToolCallId: part.toolCallId,
-          toolState: part.state,
-          toolWebSearchInputQuery: part.input?.query,
-          toolWebSearchOutput: part.output,
-          toolErrorText: part.errorText,
-        };
+      }
 
       // Data parts - these contain the actual data
       case "data-suggestions":
@@ -338,14 +305,13 @@ export function mapDBPartToUIMessagePart({
         type: part.type,
       };
 
-    // Tool parts - handle each separately for proper type narrowing
-    case "tool-getArticles": {
+    // Subagent orchestrator tools
+    case "tool-contentAccess": {
       if (!part.toolState) {
         throw new Error("tool_state is undefined");
       }
       const reconstructedInput = {
-        locale: part.toolGetArticlesInputLocale,
-        category: part.toolGetArticlesInputCategory,
+        query: part.toolContentAccessInput ?? "",
       };
       switch (part.toolState) {
         case "input-streaming":
@@ -381,8 +347,8 @@ export function mapDBPartToUIMessagePart({
             }),
             input: buildRequiredObject(reconstructedInput),
             output: requireField({
-              value: part.toolGetArticlesOutput,
-              fieldName: "toolGetArticlesOutput",
+              value: part.toolContentAccessOutput,
+              fieldName: "toolContentAccessOutput",
               partType: part.type,
             }),
           };
@@ -406,15 +372,12 @@ export function mapDBPartToUIMessagePart({
           throw new Error(`Unsupported tool state: ${part.toolState}`);
       }
     }
-    case "tool-getSubjects": {
+    case "tool-deepResearch": {
       if (!part.toolState) {
         throw new Error("tool_state is undefined");
       }
       const reconstructedInput = {
-        locale: part.toolGetSubjectsInputLocale,
-        category: part.toolGetSubjectsInputCategory,
-        grade: part.toolGetSubjectsInputGrade,
-        material: part.toolGetSubjectsInputMaterial,
+        query: part.toolDeepResearchInput ?? "",
       };
       switch (part.toolState) {
         case "input-streaming":
@@ -450,8 +413,8 @@ export function mapDBPartToUIMessagePart({
             }),
             input: buildRequiredObject(reconstructedInput),
             output: requireField({
-              value: part.toolGetSubjectsOutput,
-              fieldName: "toolGetSubjectsOutput",
+              value: part.toolDeepResearchOutput,
+              fieldName: "toolDeepResearchOutput",
               partType: part.type,
             }),
           };
@@ -475,13 +438,12 @@ export function mapDBPartToUIMessagePart({
           throw new Error(`Unsupported tool state: ${part.toolState}`);
       }
     }
-    case "tool-getContent": {
+    case "tool-mathCalculation": {
       if (!part.toolState) {
         throw new Error("tool_state is undefined");
       }
       const reconstructedInput = {
-        locale: part.toolGetContentInputLocale,
-        slug: part.toolGetContentInputSlug,
+        query: part.toolMathCalculationInput ?? "",
       };
       switch (part.toolState) {
         case "input-streaming":
@@ -517,206 +479,8 @@ export function mapDBPartToUIMessagePart({
             }),
             input: buildRequiredObject(reconstructedInput),
             output: requireField({
-              value: part.toolGetContentOutput,
-              fieldName: "toolGetContentOutput",
-              partType: part.type,
-            }),
-          };
-        case "output-error":
-          return {
-            type: part.type,
-            state: part.toolState,
-            toolCallId: requireField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            input: buildRequiredObject(reconstructedInput),
-            errorText: requireField({
-              value: part.toolErrorText,
-              fieldName: "toolErrorText",
-              partType: part.type,
-            }),
-          };
-        default:
-          throw new Error(`Unsupported tool state: ${part.toolState}`);
-      }
-    }
-    case "tool-calculator": {
-      if (!part.toolState) {
-        throw new Error("tool_state is undefined");
-      }
-      const reconstructedInput = {
-        expression: part.toolCalculatorInputExpression,
-      };
-      switch (part.toolState) {
-        case "input-streaming":
-          return {
-            type: part.type,
-            state: part.toolState,
-            toolCallId: requireField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            input: reconstructedInput,
-          };
-        case "input-available":
-          return {
-            type: part.type,
-            state: part.toolState,
-            toolCallId: requireField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            input: buildRequiredObject(reconstructedInput),
-          };
-        case "output-available":
-          return {
-            type: part.type,
-            state: part.toolState,
-            toolCallId: requireField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            input: buildRequiredObject(reconstructedInput),
-            output: requireField({
-              value: part.toolCalculatorOutput,
-              fieldName: "toolCalculatorOutput",
-              partType: part.type,
-            }),
-          };
-        case "output-error":
-          return {
-            type: part.type,
-            state: part.toolState,
-            toolCallId: requireField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            input: buildRequiredObject(reconstructedInput),
-            errorText: requireField({
-              value: part.toolErrorText,
-              fieldName: "toolErrorText",
-              partType: part.type,
-            }),
-          };
-        default:
-          throw new Error(`Unsupported tool state: ${part.toolState}`);
-      }
-    }
-    case "tool-scrape": {
-      if (!part.toolState) {
-        throw new Error("tool_state is undefined");
-      }
-      const reconstructedInput = {
-        urlToCrawl: part.toolScrapeUrlInputUrlToCrawl,
-      };
-      switch (part.toolState) {
-        case "input-streaming":
-          return {
-            type: part.type,
-            state: part.toolState,
-            toolCallId: requireField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            input: reconstructedInput,
-          };
-        case "input-available":
-          return {
-            type: part.type,
-            state: part.toolState,
-            toolCallId: requireField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            input: buildRequiredObject(reconstructedInput),
-          };
-        case "output-available":
-          return {
-            type: part.type,
-            state: part.toolState,
-            toolCallId: requireField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            input: buildRequiredObject(reconstructedInput),
-            output: requireField({
-              value: part.toolScrapeUrlOutput,
-              fieldName: "toolScrapeUrlOutput",
-              partType: part.type,
-            }),
-          };
-        case "output-error":
-          return {
-            type: part.type,
-            state: part.toolState,
-            toolCallId: requireField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            input: buildRequiredObject(reconstructedInput),
-            errorText: requireField({
-              value: part.toolErrorText,
-              fieldName: "toolErrorText",
-              partType: part.type,
-            }),
-          };
-        default:
-          throw new Error(`Unsupported tool state: ${part.toolState}`);
-      }
-    }
-    case "tool-webSearch": {
-      if (!part.toolState) {
-        throw new Error("tool_state is undefined");
-      }
-      const reconstructedInput = {
-        query: part.toolWebSearchInputQuery,
-      };
-      switch (part.toolState) {
-        case "input-streaming":
-          return {
-            type: part.type,
-            state: part.toolState,
-            toolCallId: requireField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            input: reconstructedInput,
-          };
-        case "input-available":
-          return {
-            type: part.type,
-            state: part.toolState,
-            toolCallId: requireField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            input: buildRequiredObject(reconstructedInput),
-          };
-        case "output-available":
-          return {
-            type: part.type,
-            state: part.toolState,
-            toolCallId: requireField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            input: buildRequiredObject(reconstructedInput),
-            output: requireField({
-              value: part.toolWebSearchOutput,
-              fieldName: "toolWebSearchOutput",
+              value: part.toolMathCalculationOutput,
+              fieldName: "toolMathCalculationOutput",
               partType: part.type,
             }),
           };

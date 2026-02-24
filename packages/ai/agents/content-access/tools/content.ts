@@ -1,9 +1,9 @@
-import { dedentString } from "@repo/ai/lib/utils";
-import { nakafaContent } from "@repo/ai/prompt/tools/content";
+import { nakafaContent } from "@repo/ai/agents/content-access/descriptions";
 import {
   type GetContentOutput,
   getContentInputSchema,
-} from "@repo/ai/schema/tools/nakafa-content";
+} from "@repo/ai/agents/content-access/schema";
+import { dedentString } from "@repo/ai/lib/utils";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { api } from "@repo/connection/routes";
 import {
@@ -31,8 +31,7 @@ export const createGetContent = ({ writer }: Params) => {
       let cleanedSlug = cleanSlug(slug);
 
       if (cleanedSlug.startsWith(locale)) {
-        // Manually make sure that slug not containing locale
-        cleanedSlug = cleanedSlug.slice(locale.length + 1); // remove locale and slash
+        cleanedSlug = cleanedSlug.slice(locale.length + 1);
       }
 
       const url = new URL(
@@ -71,7 +70,6 @@ export const createGetContent = ({ writer }: Params) => {
           return createOutput({ output: { url, content: "" } });
         }
 
-        // quran/surah
         const surah = slugParts[1];
 
         const { data: surahData, error: surahError } =
@@ -373,9 +371,6 @@ function createQuranOutput({
   `);
 }
 
-/**
- * Checks if a string represents a valid integer (only digits).
- */
 function isNumericString(str: string): boolean {
   return (
     str.trim() !== "" && Number.parseInt(str, 10).toString() === str.trim()

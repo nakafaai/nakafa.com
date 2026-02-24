@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.26.0",
+    "@modelcontextprotocol/sdk": "^1.27.0",
     "@repo/connection": "workspace:*",
     "@repo/contents": "workspace:*",
     "@repo/next-config": "workspace:*",

@@ -109,13 +109,12 @@ export const partTypeValidator = literals(
   "source-document",
   "file",
   "step-start",
-  "tool-getArticles",
-  "tool-getSubjects",
-  "tool-getContent",
-  "tool-calculator",
-  "tool-scrape",
-  "tool-webSearch",
+  // Orchestrator tools
+  "tool-contentAccess",
+  "tool-deepResearch",
+  "tool-mathCalculation",
   "dynamic-tool",
+  // Data parts
   "data-suggestions",
   "data-get-articles",
   "data-get-subjects",
@@ -193,28 +192,13 @@ export const partValidator = v.object({
   toolState: v.optional(toolStateValidator),
   toolErrorText: v.optional(v.string()),
 
-  toolGetArticlesInputLocale: v.optional(localeValidator),
-  toolGetArticlesInputCategory: v.optional(articleCategoryValidator),
-  toolGetArticlesOutput: v.optional(v.string()),
-
-  toolGetSubjectsInputLocale: v.optional(localeValidator),
-  toolGetSubjectsInputCategory: v.optional(subjectCategoryValidator),
-  toolGetSubjectsInputGrade: v.optional(gradeValidator),
-  toolGetSubjectsInputMaterial: v.optional(materialValidator),
-  toolGetSubjectsOutput: v.optional(v.string()),
-
-  toolGetContentInputLocale: v.optional(localeValidator),
-  toolGetContentInputSlug: v.optional(v.string()),
-  toolGetContentOutput: v.optional(v.string()),
-
-  toolCalculatorInputExpression: v.optional(v.string()),
-  toolCalculatorOutput: v.optional(v.string()),
-
-  toolScrapeUrlInputUrlToCrawl: v.optional(v.string()),
-  toolScrapeUrlOutput: v.optional(v.string()),
-
-  toolWebSearchInputQuery: v.optional(v.string()),
-  toolWebSearchOutput: v.optional(v.string()),
+  // Orchestrator tool fields
+  toolContentAccessInput: v.optional(v.string()),
+  toolContentAccessOutput: v.optional(v.string()),
+  toolMathCalculationInput: v.optional(v.string()),
+  toolMathCalculationOutput: v.optional(v.string()),
+  toolDeepResearchInput: v.optional(v.string()),
+  toolDeepResearchOutput: v.optional(v.string()),
 
   dataSuggestionsId: v.optional(v.string()),
   dataSuggestionsData: v.optional(v.array(v.string())),

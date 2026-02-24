@@ -1,11 +1,11 @@
-import { firecrawlApp } from "@repo/ai/config/firecrawl";
-import { selectRelevantContent } from "@repo/ai/lib/content-selection";
-import { dedentString } from "@repo/ai/lib/utils";
-import { nakafaScrape } from "@repo/ai/prompt/tools/scrape";
+import { nakafaScrape } from "@repo/ai/agents/research/descriptions";
 import {
   type ScrapeOutput,
   scrapeInputSchema,
-} from "@repo/ai/schema/tools/web";
+} from "@repo/ai/agents/research/schema";
+import { firecrawlApp } from "@repo/ai/config/firecrawl";
+import { selectRelevantContent } from "@repo/ai/lib/content-selection";
+import { dedentString } from "@repo/ai/lib/utils";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { tool, type UIMessageStreamWriter } from "ai";
 import * as z from "zod";
@@ -31,7 +31,7 @@ export const createScrape = ({ writer }: Params) => {
       try {
         const response = await firecrawlApp.scrape(url, {
           formats: ["markdown"],
-          timeout: 5000, // 5 second timeout
+          timeout: 5000,
         });
 
         const markdown = response.markdown;
@@ -53,10 +53,9 @@ export const createScrape = ({ writer }: Params) => {
           });
         }
 
-        // Use smart content selection to truncate long content while preserving readability
         const processedContent = selectRelevantContent({
           content: markdown,
-          maxLength: 3000, // Longer limit for scraped content
+          maxLength: 3000,
         });
 
         writer.write({

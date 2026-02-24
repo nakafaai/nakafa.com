@@ -275,25 +275,3 @@ export function selectRelevantContent(
   const result = selectedParts.join("\n\n");
   return truncateAtBoundary(result, maxLength);
 }
-
-/**
- * Get content length statistics
- */
-export function getContentStats(content: string): {
-  totalLength: number;
-  paragraphCount: number;
-  averageParagraphLength: number;
-} {
-  const paragraphs = content
-    .split(PARAGRAPH_SPLIT_REGEX)
-    .filter((p) => p.trim());
-
-  return {
-    totalLength: content.length,
-    paragraphCount: paragraphs.length,
-    averageParagraphLength:
-      paragraphs.length > 0
-        ? Math.round(content.length / paragraphs.length)
-        : 0,
-  };
-}

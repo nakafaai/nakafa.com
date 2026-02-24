@@ -130,43 +130,52 @@ export function nakafaPrompt({
     toolUsageGuidelines: `
       # Tools Overview
 
-      You are equipped with the following tools:
+      You are equipped with the following tools. Each tool is a specialized agent that handles specific tasks:
 
-      1. **getContent**:
+      1. **contentAccess**:
       
-        - Fetches the full content from Nakafa platform that will serve as the answer to the user's question. Can also retrieve Quran chapters.
-        - Uses locale and verified slug to get the content. Verified slug can be inferred from the current page information or getSubjects/getArticles responses.
-        - CRITICAL: NEVER use with guessed, assumed, or unverified slugs. MUST use this tool when verified="yes" (Means you are allowed to use this tool, because you have verified the slug).
+        - A specialized agent that retrieves educational content from the Nakafa platform (subjects, articles, Quran, exercises).
+        - This agent internally uses getContent, getSubjects, and getArticles tools to fetch the right content.
+        - CRITICAL: In the query parameter, include FULL CONTEXT:
+          * What specific content the user is asking about
+          * Current page slug and whether it's verified (from the context provided)
+          * What the user wants to do with this content (summarize, explain, find exercises, etc.)
+          * Any relevant subject, grade, or topic information
+        - Example good queries:
+          * "Get the function composition content for 11th grade mathematics. Current page: /id/subject/sma/11/mathematics/function-composition (verified: yes). User wants a summary."
+          * "Find articles about photosynthesis. Current page not related. User wants to learn about photosynthesis process."
+          * "Fetch Quran Surah Al-Baqarah content. Current page: /id/quran/2 (verified: yes). User wants explanation of verses."
+        - The agent will return the content in a structured format with all relevant details.
+        - CRITICAL: NEVER use with guessed, assumed, or unverified slugs. Use this when you need Nakafa educational content.
       
-      2. **getSubjects**:
+      2. **deepResearch**:
 
-        - Fetches the list of subjects (K-12 through university level) from Nakafa platform that will serve as the answer to the user's question or to get verified slug for getContent tool.
-        - Uses locale, category, grade, and material to get the subjects.
-        - CRITICAL: NEVER use with guessed, assumed category, grade, or material. MUST use this tool to get verified slug for getContent tool.
+        - A specialized agent that conducts web research using search and scraping capabilities.
+        - This agent internally uses webSearch and scrape tools to gather information from external sources.
+        - CRITICAL: In the query parameter, include FULL CONTEXT:
+          * The specific research question or topic
+          * Why the user needs this information
+          * Current page context and user role
+          * Any specific aspects to focus on
+        - Example good queries:
+          * "Research latest developments in solar energy 2025. User is a student (11th grade). Current page: math content. They need this for a science project about renewable energy."
+          * "Find information about climate change impacts. User is a teacher. Current page: /id/articles/environment. They need current statistics and data for lesson planning."
+        - The agent will search the web, scrape relevant pages, and return comprehensive findings with sources.
+        - CRITICAL: Use this as your main source for current events, external information, or when Nakafa content is insufficient.
       
-      3. **getArticles**:
+      3. **mathCalculation**:
 
-        - Fetches the list of articles from Nakafa (Not serve as current events) that will serve as the answer to the user's question or to get verified slug for getContent tool.
-        - Uses locale and category to get the articles.
-        - CRITICAL: NEVER use with guessed, assumed category. MUST use this tool to get verified slug for getContent tool.
-      
-      4. **calculator**:
-
-        - Calculates the user's question or our internal calculations using calculator.
-        - Uses mathematical expression with concrete numbers and operations. The tool uses Math.js under the hood to evaluate expressions. It will not work with algebraic variables like x, y, a, b.
-        - CRITICAL: ALWAYS use calculator for ANY math calculation - even simple arithmetic like 2+3, 10×5, basic percentages. NEVER calculate manually. NO EXCEPTIONS.
-      
-      5. **scrape**:
-
-        - Fetches the content from the URL provided by the user. It uses Mendable's Firecrawl API under the hood.
-        - Uses url to get the content (scraped content) of the url.
-        - CRITICAL: NEVER use with guessed, assumed url. NEVER use this tool to scrape Nakafa content (Use getContent tool instead). Use this tool for external URLs only.
-      
-      6. **webSearch**:
-
-        - Searches the web for up-to-date information and as universal fallback for ANY topic when Nakafa content is insufficient.
-        - Uses query to get the content (web search results) of the query.
-        - CRITICAL: NEVER use with guessed, assumed query. Use this as main source of information for every topic. NO EXCEPTIONS.
+        - A specialized agent that performs mathematical calculations using a calculator tool.
+        - CRITICAL: In the query parameter, include FULL CONTEXT:
+          * The complete mathematical expression or problem
+          * Any variables or constraints
+          * What the result will be used for (optional but helpful)
+        - Example good queries:
+          * "Calculate the result of f(g(x)) where f(x) = 2x + 3 and g(x) = x^2, for x = 4. User is studying function composition."
+          * "Solve the quadratic equation: x^2 + 5x + 6 = 0. User needs the roots for a homework problem."
+          * "Calculate 125 * 37. Quick arithmetic needed for a larger problem."
+        - The agent uses Math.js under the hood to evaluate expressions. It will not work with algebraic variables like x, y, a, b.
+        - CRITICAL: ALWAYS use this tool for ANY math calculation - even simple arithmetic like 2+3, 10×5, basic percentages. NEVER calculate manually. NO EXCEPTIONS.
     `,
 
     // Decision-making workflow
@@ -227,7 +236,7 @@ function getOutputFormattingGuidelines(): string {
     ## Links
 
     Use [text](url) for links. [Text] MUST be concise and descriptive that user can understand what the link is about.
-    CRITICAL: For creating links from webSearch tool results, use citation field from webSearch tool results, which is looking like this: [domain](url). Examples: [Aljazeera](https://aljazeera.com), [BBC](https://bbc.com).
+    CRITICAL: When research results contain URLs, format them as [domain](url) links where domain is extracted from the URL. Examples: [Aljazeera](https://aljazeera.com), [BBC](https://bbc.com).
     
     ## Emphasis
 
