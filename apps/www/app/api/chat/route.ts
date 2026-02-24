@@ -1,3 +1,5 @@
+import { orchestratorTools } from "@repo/ai/agents/orchestrator";
+import { nakafaPrompt } from "@repo/ai/agents/orchestrator/prompt";
 import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
@@ -14,8 +16,6 @@ import {
 import { generateTitle } from "@repo/ai/features/title-generation";
 import { compressMessages } from "@repo/ai/lib/utils";
 import { nakafaSuggestions } from "@repo/ai/prompt/suggestions";
-import { nakafaPrompt } from "@repo/ai/prompt/system";
-import { tools } from "@repo/ai/tools";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -23,6 +23,7 @@ import {
   mapDBMessagesToUIMessages,
   mapUIMessagePartsToDBParts,
 } from "@repo/backend/convex/chats/utils";
+import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { api } from "@repo/connection/routes";
 import { CorsValidator } from "@repo/security/lib/cors-validator";
 import { cleanSlug } from "@repo/utilities/helper";
@@ -74,7 +75,7 @@ export async function POST(req: Request) {
   }: {
     message: MyUIMessage | undefined;
     id: Id<"chats"> | undefined;
-    locale: string;
+    locale: Locale;
     slug: string;
     model: ModelId;
   } = await req.json();
@@ -267,7 +268,17 @@ export async function POST(req: Request) {
         }),
         messages: finalMessages,
         stopWhen: stepCountIs(MAX_STEPS),
-        tools: tools({ writer }),
+        tools: orchestratorTools({
+          writer,
+          modelId: selectedModel,
+          locale,
+          context: {
+            url,
+            slug: cleanSlug(slug),
+            verified,
+            userRole,
+          },
+        }),
         experimental_repairToolCall: async ({
           toolCall,
           tools: availableTools,

@@ -4,7 +4,7 @@
  * @see https://sdk.vercel.ai/providers/ai-sdk-providers/elevenlabs
  * @see https://elevenlabs.io/docs/api-reference/text-to-speech/convert
  */
-export interface VoiceSettings {
+interface VoiceSettings {
   /**
    * Determines how closely the AI should adhere to the original voice
    * when attempting to replicate it.
@@ -40,7 +40,7 @@ export interface VoiceSettings {
 /**
  * Configuration for a predefined ElevenLabs voice.
  */
-export interface VoiceConfig {
+interface VoiceConfig {
   /**
    * Optional description of the voice characteristics.
    */
@@ -90,7 +90,7 @@ export interface VoiceConfig {
  *
  * @see https://elevenlabs.io/docs/overview/capabilities/text-to-speech/best-practices#prompting-eleven-v3
  */
-export const PREDEFINED_VOICES = {
+const PREDEFINED_VOICES = {
   nina: {
     id: "LcvlyuBGMjj1h4uAtQjo",
     name: "Nina",
@@ -108,7 +108,7 @@ export const PREDEFINED_VOICES = {
 /**
  * Available voice keys from predefined voices.
  */
-export type VoiceKey = keyof typeof PREDEFINED_VOICES;
+type VoiceKey = keyof typeof PREDEFINED_VOICES;
 
 /**
  * Default voice key for audio generation.
@@ -125,27 +125,10 @@ export function getVoiceConfig(key: VoiceKey): VoiceConfig {
 }
 
 /**
- * Check if a string is a valid voice key.
- * @param key - The key to validate
- * @returns True if the key is a valid VoiceKey
- */
-export function isValidVoiceKey(key: string): key is VoiceKey {
-  return Object.hasOwn(PREDEFINED_VOICES, key);
-}
-
-/**
  * Get the default voice settings.
  * Used as fallback when no custom settings are provided.
  * @returns The default VoiceSettings object
  */
 export function getDefaultVoiceSettings(): VoiceSettings {
   return PREDEFINED_VOICES[DEFAULT_VOICE_KEY].settings;
-}
-
-/**
- * Get the default voice ID.
- * @returns The default voice ID string
- */
-export function getDefaultVoiceId(): string {
-  return PREDEFINED_VOICES[DEFAULT_VOICE_KEY].id;
 }

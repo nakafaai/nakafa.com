@@ -1,7 +1,7 @@
 import {
   getArticlesInputSchema,
   getSubjectsInputSchema,
-} from "@repo/ai/schema/tools/nakafa-content";
+} from "@repo/ai/agents/content-access/schema";
 import * as z from "zod";
 
 /**
@@ -72,13 +72,6 @@ export const dataPartSchema = z.object({
         citation: z.string(),
       })
     ),
-    status: z.enum(["loading", "done", "error"]),
-    error: z.string().optional(),
-  }),
-  "create-dataset": z.object({
-    datasetId: z.string().optional(),
-    query: z.string(),
-    targetRows: z.number(),
     status: z.enum(["loading", "done", "error"]),
     error: z.string().optional(),
   }),

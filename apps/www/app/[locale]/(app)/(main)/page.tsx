@@ -1,12 +1,14 @@
 import { Particles } from "@repo/design-system/components/ui/particles";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
+import { redirect } from "next/navigation";
 import { type Locale, useTranslations } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
-import { use } from "react";
+import { Suspense, use } from "react";
 import { HomeSearch } from "@/components/home/search";
 import { HomeTitle } from "@/components/home/title";
 import { Videos } from "@/components/home/videos";
 import { Weather } from "@/components/home/weather";
+import { getToken } from "@/lib/auth/server";
 
 export const revalidate = false;
 
@@ -18,6 +20,21 @@ export default function Page({ params }: Props) {
   const { locale } = use(params);
 
   setRequestLocale(locale);
+
+  return (
+    <Suspense>
+      <Main locale={locale} />
+    </Suspense>
+  );
+}
+
+async function Main({ locale }: { locale: Locale }) {
+  const token = await getToken();
+
+  // If no user token, go to landing page
+  if (!token) {
+    redirect("/about");
+  }
 
   return (
     <>

@@ -66,7 +66,7 @@ export function extractDomain(url: string): string {
  * @param part - The message part to extract content from
  * @returns The extracted content
  */
-export function extractContentFromPart(
+function extractContentFromPart(
   part: UIMessagePart<UIDataTypes, MyUITools>
 ): string {
   // Extract content from different part types

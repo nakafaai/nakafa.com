@@ -34,7 +34,7 @@ export const AIChatMessageActions = memo(
     }
 
     return (
-      <Actions className="transition-opacity ease-out group-hover:opacity-100 lg:opacity-0">
+      <Actions>
         <Action
           disabled={disabled}
           label={t("retry-message")}
