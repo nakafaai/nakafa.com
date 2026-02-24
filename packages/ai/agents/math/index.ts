@@ -16,7 +16,7 @@ export async function runMathAgent({
     system: mathPrompt({ locale, context }),
     messages: [{ role: "user", content: task }],
     tools: mathTools({ writer }),
-    stopWhen: stepCountIs(3),
+    stopWhen: stepCountIs(10),
   });
 
   return result.text;

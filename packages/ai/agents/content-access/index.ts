@@ -16,7 +16,7 @@ export async function runContentAccessAgent({
     system: contentAccessPrompt({ locale, context }),
     messages: [{ role: "user", content: task }],
     tools: contentAccessTools({ writer }),
-    stopWhen: stepCountIs(5),
+    stopWhen: stepCountIs(10),
   });
 
   return result.text;
