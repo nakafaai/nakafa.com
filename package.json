@@ -39,7 +39,7 @@
     "@biomejs/biome": "2.4.4",
     "@changesets/changelog-github": "^0.5.2",
     "@changesets/cli": "^2.29.8",
-    "@effect/language-service": "^0.75.1",
+    "@effect/language-service": "^0.76.0",
     "@repo/typescript-config": "workspace:*",
     "@turbo/gen": "^2.8.10",
     "@types/node": "^25.3.0",
@@ -52,6 +52,6 @@
   "engines": {
     "node": ">=22"
   },
-  "packageManager": "pnpm@10.30.1",
+  "packageManager": "pnpm@10.30.2",
   "type": "module"
 }

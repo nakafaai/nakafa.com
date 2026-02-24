@@ -33,7 +33,7 @@
     "@convex-dev/resend": "^0.2.3",
     "@convex-dev/workflow": "^0.3.4",
     "@convex-dev/workpool": "^0.4.0",
-    "@polar-sh/sdk": "^0.43.1",
+    "@polar-sh/sdk": "^0.44.0",
     "@repo/ai": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.10",
     "ai": "^6.0.97",
