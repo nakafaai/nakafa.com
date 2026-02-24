@@ -1,23 +1,14 @@
 import { runContentAccessAgent } from "@repo/ai/agents/content-access";
-import type { ModelId } from "@repo/ai/config/vercel";
-import type { AgentContext } from "@repo/ai/types/agents";
-import type { MyUIMessage } from "@repo/ai/types/message";
-import { tool, type UIMessageStreamWriter } from "ai";
+import type { ContentAccessAgentParams } from "@repo/ai/types/agents";
+import { tool } from "ai";
 import * as z from "zod";
-
-interface Params {
-  context: AgentContext;
-  locale: string;
-  modelId: ModelId;
-  writer: UIMessageStreamWriter<MyUIMessage>;
-}
 
 export const createContentAccessTool = ({
   writer,
   modelId,
   locale,
   context,
-}: Params) => {
+}: Omit<ContentAccessAgentParams, "task">) => {
   return tool({
     description:
       "Access Nakafa educational content including articles, subjects, Quran chapters, and exercises. Use this for retrieving content from the Nakafa platform.",

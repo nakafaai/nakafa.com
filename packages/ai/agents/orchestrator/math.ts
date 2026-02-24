@@ -1,23 +1,14 @@
 import { runMathAgent } from "@repo/ai/agents/math";
-import type { ModelId } from "@repo/ai/config/vercel";
-import type { AgentContext } from "@repo/ai/types/agents";
-import type { MyUIMessage } from "@repo/ai/types/message";
-import { tool, type UIMessageStreamWriter } from "ai";
+import type { MathAgentParams } from "@repo/ai/types/agents";
+import { tool } from "ai";
 import * as z from "zod";
-
-interface Params {
-  context: AgentContext;
-  locale: string;
-  modelId: ModelId;
-  writer: UIMessageStreamWriter<MyUIMessage>;
-}
 
 export const createMathTool = ({
   writer,
   modelId,
   locale,
   context,
-}: Params) => {
+}: Omit<MathAgentParams, "task">) => {
   return tool({
     description:
       "Perform mathematical calculations and solve math problems. Use this for ANY mathematical computation - from simple arithmetic to complex expressions.",

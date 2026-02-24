@@ -1,17 +1,8 @@
 import { mathPrompt } from "@repo/ai/agents/math/prompt";
 import { mathTools } from "@repo/ai/agents/math/tools";
-import { type ModelId, model } from "@repo/ai/config/vercel";
-import type { AgentContext } from "@repo/ai/types/agents";
-import type { MyUIMessage } from "@repo/ai/types/message";
-import { generateText, stepCountIs, type UIMessageStreamWriter } from "ai";
-
-interface RunMathAgentParams {
-  context: AgentContext;
-  locale: string;
-  modelId: ModelId;
-  task: string;
-  writer: UIMessageStreamWriter<MyUIMessage>;
-}
+import { model } from "@repo/ai/config/vercel";
+import type { MathAgentParams } from "@repo/ai/types/agents";
+import { generateText, stepCountIs } from "ai";
 
 export async function runMathAgent({
   task,
@@ -19,7 +10,7 @@ export async function runMathAgent({
   modelId,
   locale,
   context,
-}: RunMathAgentParams): Promise<string> {
+}: MathAgentParams): Promise<string> {
   const result = await generateText({
     model: model.languageModel(modelId),
     system: mathPrompt({ locale, context }),

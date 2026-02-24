@@ -3,8 +3,6 @@ import { createMathTool } from "@repo/ai/agents/orchestrator/math";
 import { createResearchTool } from "@repo/ai/agents/orchestrator/research";
 import type { OrchestratorToolParams } from "@repo/ai/types/agents";
 
-export type { AgentContext } from "@repo/ai/types/agents";
-
 export function orchestratorTools({
   writer,
   modelId,

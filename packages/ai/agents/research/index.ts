@@ -1,17 +1,8 @@
 import { researchPrompt } from "@repo/ai/agents/research/prompt";
 import { researchTools } from "@repo/ai/agents/research/tools";
-import { type ModelId, model } from "@repo/ai/config/vercel";
-import type { AgentContext } from "@repo/ai/types/agents";
-import type { MyUIMessage } from "@repo/ai/types/message";
-import { generateText, stepCountIs, type UIMessageStreamWriter } from "ai";
-
-interface RunResearchAgentParams {
-  context: AgentContext;
-  locale: string;
-  modelId: ModelId;
-  task: string;
-  writer: UIMessageStreamWriter<MyUIMessage>;
-}
+import { model } from "@repo/ai/config/vercel";
+import type { ResearchAgentParams } from "@repo/ai/types/agents";
+import { generateText, stepCountIs } from "ai";
 
 export async function runResearchAgent({
   task,
@@ -19,7 +10,7 @@ export async function runResearchAgent({
   modelId,
   locale,
   context,
-}: RunResearchAgentParams): Promise<string> {
+}: ResearchAgentParams): Promise<string> {
   const result = await generateText({
     model: model.languageModel(modelId),
     system: researchPrompt({ locale, context }),

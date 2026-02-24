@@ -1,23 +1,14 @@
 import { runResearchAgent } from "@repo/ai/agents/research";
-import type { ModelId } from "@repo/ai/config/vercel";
-import type { AgentContext } from "@repo/ai/types/agents";
-import type { MyUIMessage } from "@repo/ai/types/message";
-import { tool, type UIMessageStreamWriter } from "ai";
+import type { ResearchAgentParams } from "@repo/ai/types/agents";
+import { tool } from "ai";
 import * as z from "zod";
-
-interface Params {
-  context: AgentContext;
-  locale: string;
-  modelId: ModelId;
-  writer: UIMessageStreamWriter<MyUIMessage>;
-}
 
 export const createResearchTool = ({
   writer,
   modelId,
   locale,
   context,
-}: Params) => {
+}: Omit<ResearchAgentParams, "task">) => {
   return tool({
     description:
       "Conduct deep research on any topic by searching the web and analyzing sources. Use this for up-to-date information, general knowledge questions, and external research.",
