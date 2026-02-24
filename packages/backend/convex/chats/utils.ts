@@ -10,213 +10,211 @@ type DBPart = Omit<Doc<"parts">, "_id" | "_creationTime" | "messageId">;
 /**
  * Maps UI message parts to database parts with full type safety
  */
+// Internal tool types that should NOT be stored in database
+// These are implementation details of subagents, not user-facing content
+const INTERNAL_TOOL_TYPES = [
+  "tool-getArticles",
+  "tool-getSubjects",
+  "tool-getContent",
+  "tool-calculator",
+  "tool-scrape",
+  "tool-webSearch",
+];
+
+/**
+ * Checks if a part type is an internal subagent tool that should not be stored
+ */
+function isInternalToolPart(type: string): boolean {
+  return INTERNAL_TOOL_TYPES.includes(type);
+}
+
+/**
+ * Maps UI message parts to database parts with full type safety
+ * Internal tool parts (subagent implementation details) are filtered out
+ */
 export function mapUIMessagePartsToDBParts({
   messageParts,
 }: {
   messageParts: MyUIMessage["parts"];
 }): DBPart[] {
-  return messageParts.map((part, index): DBPart => {
-    const baseFields = {
-      order: index,
-    };
+  return messageParts
+    .filter((part) => !isInternalToolPart(part.type))
+    .map((part, index): DBPart => {
+      const baseFields = {
+        order: index,
+      };
 
-    switch (part.type) {
-      case "text":
-        return {
-          ...baseFields,
-          type: part.type,
-          textText: part.text,
-          textState: part.state,
-        };
-      case "reasoning":
-        return {
-          ...baseFields,
-          type: part.type,
-          reasoningText: part.text,
-          reasoningState: part.state,
-          providerMetadata: part.providerMetadata,
-        };
-      case "file":
-        return {
-          ...baseFields,
-          type: part.type,
-          fileMediaType: part.mediaType,
-          fileFilename: part.filename,
-          fileUrl: part.url,
-        };
-      case "source-document":
-        return {
-          ...baseFields,
-          type: part.type,
-          sourceDocumentSourceId: part.sourceId,
-          sourceDocumentMediaType: part.mediaType,
-          sourceDocumentTitle: part.title,
-          sourceDocumentFilename: part.filename,
-          providerMetadata: part.providerMetadata,
-        };
-      case "source-url":
-        return {
-          ...baseFields,
-          type: part.type,
-          sourceUrlSourceId: part.sourceId,
-          sourceUrlUrl: part.url,
-          sourceUrlTitle: part.title,
-          providerMetadata: part.providerMetadata,
-        };
-      case "step-start":
-        return {
-          ...baseFields,
-          type: part.type,
-        };
+      switch (part.type) {
+        case "text":
+          return {
+            ...baseFields,
+            type: part.type,
+            textText: part.text,
+            textState: part.state,
+          };
+        case "reasoning":
+          return {
+            ...baseFields,
+            type: part.type,
+            reasoningText: part.text,
+            reasoningState: part.state,
+            providerMetadata: part.providerMetadata,
+          };
+        case "file":
+          return {
+            ...baseFields,
+            type: part.type,
+            fileMediaType: part.mediaType,
+            fileFilename: part.filename,
+            fileUrl: part.url,
+          };
+        case "source-document":
+          return {
+            ...baseFields,
+            type: part.type,
+            sourceDocumentSourceId: part.sourceId,
+            sourceDocumentMediaType: part.mediaType,
+            sourceDocumentTitle: part.title,
+            sourceDocumentFilename: part.filename,
+            providerMetadata: part.providerMetadata,
+          };
+        case "source-url":
+          return {
+            ...baseFields,
+            type: part.type,
+            sourceUrlSourceId: part.sourceId,
+            sourceUrlUrl: part.url,
+            sourceUrlTitle: part.title,
+            providerMetadata: part.providerMetadata,
+          };
+        case "step-start":
+          return {
+            ...baseFields,
+            type: part.type,
+          };
 
-      // Tool parts - these are specific tool names from our tools
-      // Note: Tool parts are transient and not rendered in UI, but we store minimal info
-      case "tool-getArticles":
-        return {
-          ...baseFields,
-          type: part.type,
-          toolToolCallId: part.toolCallId,
-          toolState: part.state,
-          toolGetArticlesInputLocale: part.input?.locale,
-          toolGetArticlesInputCategory: part.input?.category,
-          toolGetArticlesOutput: part.output,
-          toolErrorText: part.errorText,
-        };
-      case "tool-getSubjects":
-        return {
-          ...baseFields,
-          type: part.type,
-          toolToolCallId: part.toolCallId,
-          toolState: part.state,
-          toolGetSubjectsInputLocale: part.input?.locale,
-          toolGetSubjectsInputCategory: part.input?.category,
-          toolGetSubjectsInputGrade: part.input?.grade,
-          toolGetSubjectsInputMaterial: part.input?.material,
-          toolGetSubjectsOutput: part.output,
-          toolErrorText: part.errorText,
-        };
-      case "tool-getContent":
-        return {
-          ...baseFields,
-          type: part.type,
-          toolToolCallId: part.toolCallId,
-          toolState: part.state,
-          toolGetContentInputLocale: part.input?.locale,
-          toolGetContentInputSlug: part.input?.slug,
-          toolGetContentOutput: part.output,
-          toolErrorText: part.errorText,
-        };
-      case "tool-calculator":
-        return {
-          ...baseFields,
-          type: part.type,
-          toolToolCallId: part.toolCallId,
-          toolState: part.state,
-          toolCalculatorInputExpression: part.input?.expression,
-          toolCalculatorOutput: part.output,
-          toolErrorText: part.errorText,
-        };
-      case "tool-scrape":
-        return {
-          ...baseFields,
-          type: part.type,
-          toolToolCallId: part.toolCallId,
-          toolState: part.state,
-          toolScrapeUrlInputUrlToCrawl: part.input?.urlToCrawl,
-          toolScrapeUrlOutput: part.output,
-          toolErrorText: part.errorText,
-        };
-      case "tool-webSearch":
-        return {
-          ...baseFields,
-          type: part.type,
-          toolToolCallId: part.toolCallId,
-          toolState: part.state,
-          toolWebSearchInputQuery: part.input?.query,
-          toolWebSearchOutput: part.output,
-          toolErrorText: part.errorText,
-        };
+        // Subagent orchestrator tools
+        case "tool-contentAccess": {
+          // Safe to cast since we know the structure based on the discriminator
+          const input = part.input as { query?: string } | undefined;
+          return {
+            ...baseFields,
+            type: part.type,
+            toolToolCallId: part.toolCallId,
+            toolState: part.state,
+            toolContentAccessInput: input?.query,
+            toolContentAccessOutput:
+              typeof part.output === "string" ? part.output : undefined,
+            toolErrorText: part.errorText,
+          };
+        }
+        case "tool-deepResearch": {
+          const input = part.input as { query?: string } | undefined;
+          return {
+            ...baseFields,
+            type: part.type,
+            toolToolCallId: part.toolCallId,
+            toolState: part.state,
+            toolDeepResearchInput: input?.query,
+            toolDeepResearchOutput:
+              typeof part.output === "string" ? part.output : undefined,
+            toolErrorText: part.errorText,
+          };
+        }
+        case "tool-mathCalculation": {
+          const input = part.input as { query?: string } | undefined;
+          return {
+            ...baseFields,
+            type: part.type,
+            toolToolCallId: part.toolCallId,
+            toolState: part.state,
+            toolMathCalculationInput: input?.query,
+            toolMathCalculationOutput:
+              typeof part.output === "string" ? part.output : undefined,
+            toolErrorText: part.errorText,
+          };
+        }
 
-      // Data parts - these contain the actual data
-      case "data-suggestions":
-        return {
-          ...baseFields,
-          type: part.type,
-          dataSuggestionsId: part.id,
-          dataSuggestionsData: part.data.data,
-        };
-      case "data-get-articles":
-        return {
-          ...baseFields,
-          type: part.type,
-          dataGetArticlesId: part.id,
-          dataGetArticlesBaseUrl: part.data.baseUrl,
-          dataGetArticlesInputLocale: part.data.input.locale,
-          dataGetArticlesInputCategory: part.data.input.category,
-          dataGetArticlesArticles: part.data.articles,
-          dataGetArticlesStatus: part.data.status,
-          dataGetArticlesError: part.data.error,
-        };
-      case "data-get-subjects":
-        return {
-          ...baseFields,
-          type: part.type,
-          dataGetSubjectsId: part.id,
-          dataGetSubjectsBaseUrl: part.data.baseUrl,
-          dataGetSubjectsInputLocale: part.data.input.locale,
-          dataGetSubjectsInputCategory: part.data.input.category,
-          dataGetSubjectsInputGrade: part.data.input.grade,
-          dataGetSubjectsInputMaterial: part.data.input.material,
-          dataGetSubjectsSubjects: part.data.subjects,
-          dataGetSubjectsStatus: part.data.status,
-          dataGetSubjectsError: part.data.error,
-        };
-      case "data-get-content":
-        return {
-          ...baseFields,
-          type: part.type,
-          dataGetContentId: part.id,
-          dataGetContentUrl: part.data.url,
-          dataGetContentTitle: part.data.title,
-          dataGetContentDescription: part.data.description,
-          dataGetContentStatus: part.data.status,
-          dataGetContentError: part.data.error,
-        };
-      case "data-calculator":
-        return {
-          ...baseFields,
-          type: part.type,
-          dataCalculatorId: part.id,
-          dataCalculatorOriginal: part.data.original,
-          dataCalculatorResult: part.data.result,
-          dataCalculatorStatus: part.data.status,
-          dataCalculatorError: part.data.error,
-        };
-      case "data-scrape-url":
-        return {
-          ...baseFields,
-          type: part.type,
-          dataScrapeUrlId: part.id,
-          dataScrapeUrlUrl: part.data.url,
-          dataScrapeUrlContent: part.data.content,
-          dataScrapeUrlStatus: part.data.status,
-          dataScrapeUrlError: part.data.error,
-        };
-      case "data-web-search":
-        return {
-          ...baseFields,
-          type: part.type,
-          dataWebSearchId: part.id,
-          dataWebSearchQuery: part.data.query,
-          dataWebSearchSources: part.data.sources,
-          dataWebSearchStatus: part.data.status,
-          dataWebSearchError: part.data.error,
-        };
-      default: {
-        throw new Error(`Unsupported part type: ${JSON.stringify(part)}`);
+        // Data parts - these contain the actual data
+        case "data-suggestions":
+          return {
+            ...baseFields,
+            type: part.type,
+            dataSuggestionsId: part.id,
+            dataSuggestionsData: part.data.data,
+          };
+        case "data-get-articles":
+          return {
+            ...baseFields,
+            type: part.type,
+            dataGetArticlesId: part.id,
+            dataGetArticlesBaseUrl: part.data.baseUrl,
+            dataGetArticlesInputLocale: part.data.input.locale,
+            dataGetArticlesInputCategory: part.data.input.category,
+            dataGetArticlesArticles: part.data.articles,
+            dataGetArticlesStatus: part.data.status,
+            dataGetArticlesError: part.data.error,
+          };
+        case "data-get-subjects":
+          return {
+            ...baseFields,
+            type: part.type,
+            dataGetSubjectsId: part.id,
+            dataGetSubjectsBaseUrl: part.data.baseUrl,
+            dataGetSubjectsInputLocale: part.data.input.locale,
+            dataGetSubjectsInputCategory: part.data.input.category,
+            dataGetSubjectsInputGrade: part.data.input.grade,
+            dataGetSubjectsInputMaterial: part.data.input.material,
+            dataGetSubjectsSubjects: part.data.subjects,
+            dataGetSubjectsStatus: part.data.status,
+            dataGetSubjectsError: part.data.error,
+          };
+        case "data-get-content":
+          return {
+            ...baseFields,
+            type: part.type,
+            dataGetContentId: part.id,
+            dataGetContentUrl: part.data.url,
+            dataGetContentTitle: part.data.title,
+            dataGetContentDescription: part.data.description,
+            dataGetContentStatus: part.data.status,
+            dataGetContentError: part.data.error,
+          };
+        case "data-calculator":
+          return {
+            ...baseFields,
+            type: part.type,
+            dataCalculatorId: part.id,
+            dataCalculatorOriginal: part.data.original,
+            dataCalculatorResult: part.data.result,
+            dataCalculatorStatus: part.data.status,
+            dataCalculatorError: part.data.error,
+          };
+        case "data-scrape-url":
+          return {
+            ...baseFields,
+            type: part.type,
+            dataScrapeUrlId: part.id,
+            dataScrapeUrlUrl: part.data.url,
+            dataScrapeUrlContent: part.data.content,
+            dataScrapeUrlStatus: part.data.status,
+            dataScrapeUrlError: part.data.error,
+          };
+        case "data-web-search":
+          return {
+            ...baseFields,
+            type: part.type,
+            dataWebSearchId: part.id,
+            dataWebSearchQuery: part.data.query,
+            dataWebSearchSources: part.data.sources,
+            dataWebSearchStatus: part.data.status,
+            dataWebSearchError: part.data.error,
+          };
+        default: {
+          throw new Error(`Unsupported part type: ${JSON.stringify(part)}`);
+        }
       }
-    }
-  });
+    });
 }
 
 /**
@@ -338,14 +336,13 @@ export function mapDBPartToUIMessagePart({
         type: part.type,
       };
 
-    // Tool parts - handle each separately for proper type narrowing
-    case "tool-getArticles": {
+    // Subagent orchestrator tools
+    case "tool-contentAccess": {
       if (!part.toolState) {
         throw new Error("tool_state is undefined");
       }
       const reconstructedInput = {
-        locale: part.toolGetArticlesInputLocale,
-        category: part.toolGetArticlesInputCategory,
+        query: part.toolContentAccessInput ?? "",
       };
       switch (part.toolState) {
         case "input-streaming":
@@ -381,8 +378,8 @@ export function mapDBPartToUIMessagePart({
             }),
             input: buildRequiredObject(reconstructedInput),
             output: requireField({
-              value: part.toolGetArticlesOutput,
-              fieldName: "toolGetArticlesOutput",
+              value: part.toolContentAccessOutput,
+              fieldName: "toolContentAccessOutput",
               partType: part.type,
             }),
           };
@@ -406,15 +403,12 @@ export function mapDBPartToUIMessagePart({
           throw new Error(`Unsupported tool state: ${part.toolState}`);
       }
     }
-    case "tool-getSubjects": {
+    case "tool-deepResearch": {
       if (!part.toolState) {
         throw new Error("tool_state is undefined");
       }
       const reconstructedInput = {
-        locale: part.toolGetSubjectsInputLocale,
-        category: part.toolGetSubjectsInputCategory,
-        grade: part.toolGetSubjectsInputGrade,
-        material: part.toolGetSubjectsInputMaterial,
+        query: part.toolDeepResearchInput ?? "",
       };
       switch (part.toolState) {
         case "input-streaming":
@@ -450,8 +444,8 @@ export function mapDBPartToUIMessagePart({
             }),
             input: buildRequiredObject(reconstructedInput),
             output: requireField({
-              value: part.toolGetSubjectsOutput,
-              fieldName: "toolGetSubjectsOutput",
+              value: part.toolDeepResearchOutput,
+              fieldName: "toolDeepResearchOutput",
               partType: part.type,
             }),
           };
@@ -475,13 +469,12 @@ export function mapDBPartToUIMessagePart({
           throw new Error(`Unsupported tool state: ${part.toolState}`);
       }
     }
-    case "tool-getContent": {
+    case "tool-mathCalculation": {
       if (!part.toolState) {
         throw new Error("tool_state is undefined");
       }
       const reconstructedInput = {
-        locale: part.toolGetContentInputLocale,
-        slug: part.toolGetContentInputSlug,
+        query: part.toolMathCalculationInput ?? "",
       };
       switch (part.toolState) {
         case "input-streaming":
@@ -517,206 +510,8 @@ export function mapDBPartToUIMessagePart({
             }),
             input: buildRequiredObject(reconstructedInput),
             output: requireField({
-              value: part.toolGetContentOutput,
-              fieldName: "toolGetContentOutput",
-              partType: part.type,
-            }),
-          };
-        case "output-error":
-          return {
-            type: part.type,
-            state: part.toolState,
-            toolCallId: requireField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            input: buildRequiredObject(reconstructedInput),
-            errorText: requireField({
-              value: part.toolErrorText,
-              fieldName: "toolErrorText",
-              partType: part.type,
-            }),
-          };
-        default:
-          throw new Error(`Unsupported tool state: ${part.toolState}`);
-      }
-    }
-    case "tool-calculator": {
-      if (!part.toolState) {
-        throw new Error("tool_state is undefined");
-      }
-      const reconstructedInput = {
-        expression: part.toolCalculatorInputExpression,
-      };
-      switch (part.toolState) {
-        case "input-streaming":
-          return {
-            type: part.type,
-            state: part.toolState,
-            toolCallId: requireField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            input: reconstructedInput,
-          };
-        case "input-available":
-          return {
-            type: part.type,
-            state: part.toolState,
-            toolCallId: requireField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            input: buildRequiredObject(reconstructedInput),
-          };
-        case "output-available":
-          return {
-            type: part.type,
-            state: part.toolState,
-            toolCallId: requireField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            input: buildRequiredObject(reconstructedInput),
-            output: requireField({
-              value: part.toolCalculatorOutput,
-              fieldName: "toolCalculatorOutput",
-              partType: part.type,
-            }),
-          };
-        case "output-error":
-          return {
-            type: part.type,
-            state: part.toolState,
-            toolCallId: requireField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            input: buildRequiredObject(reconstructedInput),
-            errorText: requireField({
-              value: part.toolErrorText,
-              fieldName: "toolErrorText",
-              partType: part.type,
-            }),
-          };
-        default:
-          throw new Error(`Unsupported tool state: ${part.toolState}`);
-      }
-    }
-    case "tool-scrape": {
-      if (!part.toolState) {
-        throw new Error("tool_state is undefined");
-      }
-      const reconstructedInput = {
-        urlToCrawl: part.toolScrapeUrlInputUrlToCrawl,
-      };
-      switch (part.toolState) {
-        case "input-streaming":
-          return {
-            type: part.type,
-            state: part.toolState,
-            toolCallId: requireField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            input: reconstructedInput,
-          };
-        case "input-available":
-          return {
-            type: part.type,
-            state: part.toolState,
-            toolCallId: requireField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            input: buildRequiredObject(reconstructedInput),
-          };
-        case "output-available":
-          return {
-            type: part.type,
-            state: part.toolState,
-            toolCallId: requireField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            input: buildRequiredObject(reconstructedInput),
-            output: requireField({
-              value: part.toolScrapeUrlOutput,
-              fieldName: "toolScrapeUrlOutput",
-              partType: part.type,
-            }),
-          };
-        case "output-error":
-          return {
-            type: part.type,
-            state: part.toolState,
-            toolCallId: requireField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            input: buildRequiredObject(reconstructedInput),
-            errorText: requireField({
-              value: part.toolErrorText,
-              fieldName: "toolErrorText",
-              partType: part.type,
-            }),
-          };
-        default:
-          throw new Error(`Unsupported tool state: ${part.toolState}`);
-      }
-    }
-    case "tool-webSearch": {
-      if (!part.toolState) {
-        throw new Error("tool_state is undefined");
-      }
-      const reconstructedInput = {
-        query: part.toolWebSearchInputQuery,
-      };
-      switch (part.toolState) {
-        case "input-streaming":
-          return {
-            type: part.type,
-            state: part.toolState,
-            toolCallId: requireField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            input: reconstructedInput,
-          };
-        case "input-available":
-          return {
-            type: part.type,
-            state: part.toolState,
-            toolCallId: requireField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            input: buildRequiredObject(reconstructedInput),
-          };
-        case "output-available":
-          return {
-            type: part.type,
-            state: part.toolState,
-            toolCallId: requireField({
-              value: part.toolToolCallId,
-              fieldName: "toolToolCallId",
-              partType: part.type,
-            }),
-            input: buildRequiredObject(reconstructedInput),
-            output: requireField({
-              value: part.toolWebSearchOutput,
-              fieldName: "toolWebSearchOutput",
+              value: part.toolMathCalculationOutput,
+              fieldName: "toolMathCalculationOutput",
               partType: part.type,
             }),
           };

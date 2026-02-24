@@ -1,6 +1,8 @@
-import { components } from "@repo/backend/convex/_generated/api";
+import { components, internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { internalQuery } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
+import { v } from "convex/values";
 
 // Migration to create app users from Better Auth users
 export const migrationCreateAppUsers = internalMutation({
@@ -337,5 +339,213 @@ export const migrationSyncUserData = internalMutation({
     const remaining = allUsers.filter((u) => !u.name).length - updated;
 
     return { updated, remaining, total: allUsers.length };
+  },
+});
+
+// ============================================================================
+// MIGRATION: Rename Tool Fields - Old Naming to New Naming
+// ============================================================================
+// This migration copies data from old field names to new field names
+// following Convex best practices for schema evolution
+//
+// Old → New mapping:
+// - toolGetContentInputSlug → toolContentAccessInput
+// - toolGetContentOutput → toolContentAccessOutput
+// - toolCalculatorInputExpression → toolMathCalculationInput
+// - toolCalculatorOutput → toolMathCalculationOutput
+// - toolWebSearchInputQuery → toolDeepResearchInput
+// - toolWebSearchOutput → toolDeepResearchOutput
+// ============================================================================
+
+/**
+ * Check migration status - useful for planning and verification
+ */
+export const migrationCheckToolFieldStatus = internalQuery({
+  args: {},
+  returns: v.object({
+    totalParts: v.number(),
+    needsMigration: v.boolean(),
+    oldFields: v.object({
+      contentAccess: v.number(),
+      mathCalculation: v.number(),
+      deepResearch: v.number(),
+    }),
+    newFields: v.object({
+      contentAccess: v.number(),
+      mathCalculation: v.number(),
+      deepResearch: v.number(),
+    }),
+  }),
+  handler: async (ctx) => {
+    const parts = await ctx.db.query("parts").collect();
+
+    let contentAccessOld = 0,
+      contentAccessNew = 0;
+    let mathCalcOld = 0,
+      mathCalcNew = 0;
+    let deepResearchOld = 0,
+      deepResearchNew = 0;
+
+    for (const part of parts) {
+      // Check old field names
+      if (part.toolContentAccessInput || part.toolContentAccessOutput) {
+        contentAccessOld++;
+      }
+      if (part.toolMathCalculationInput || part.toolMathCalculationOutput) {
+        mathCalcOld++;
+      }
+      if (part.toolDeepResearchInput || part.toolDeepResearchOutput) {
+        deepResearchOld++;
+      }
+
+      // Check new field names
+      if (part.toolContentAccessInput || part.toolContentAccessOutput) {
+        contentAccessNew++;
+      }
+      if (part.toolMathCalculationInput || part.toolMathCalculationOutput) {
+        mathCalcNew++;
+      }
+      if (part.toolDeepResearchInput || part.toolDeepResearchOutput) {
+        deepResearchNew++;
+      }
+    }
+
+    const hasOldData =
+      contentAccessOld > 0 || mathCalcOld > 0 || deepResearchOld > 0;
+    const hasNewData =
+      contentAccessNew > 0 || mathCalcNew > 0 || deepResearchNew > 0;
+
+    return {
+      totalParts: parts.length,
+      needsMigration: hasOldData && !hasNewData,
+      oldFields: {
+        contentAccess: contentAccessOld,
+        mathCalculation: mathCalcOld,
+        deepResearch: deepResearchOld,
+      },
+      newFields: {
+        contentAccess: contentAccessNew,
+        mathCalculation: mathCalcNew,
+        deepResearch: deepResearchNew,
+      },
+    };
+  },
+});
+
+/**
+ * Migration to rename tool fields from old to new naming
+ * Uses pagination to handle large datasets safely
+ */
+export const migrationRenameToolFields = internalMutation({
+  args: {
+    cursor: v.optional(v.string()),
+    batchSize: v.optional(v.number()),
+    dryRun: v.optional(v.boolean()),
+  },
+  returns: v.object({
+    processed: v.number(),
+    migrated: v.number(),
+    skipped: v.number(),
+    errors: v.number(),
+    hasMore: v.boolean(),
+    nextCursor: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const batchSize = args.batchSize ?? 100;
+    const dryRun = args.dryRun ?? false;
+
+    const result = await ctx.db
+      .query("parts")
+      .withIndex("messageId_order")
+      .paginate({ numItems: batchSize, cursor: args.cursor ?? null });
+
+    let processed = 0;
+    let migrated = 0;
+    let skipped = 0;
+    let errors = 0;
+
+    for (const part of result.page) {
+      processed++;
+
+      // Check if this part has old field data that needs migration
+      const hasOldContentAccess =
+        part.toolContentAccessInput || part.toolContentAccessOutput;
+      const hasOldMathCalc =
+        part.toolMathCalculationInput || part.toolMathCalculationOutput;
+      const hasOldDeepResearch =
+        part.toolDeepResearchInput || part.toolDeepResearchOutput;
+
+      const needsMigration =
+        hasOldContentAccess || hasOldMathCalc || hasOldDeepResearch;
+
+      if (!needsMigration) {
+        skipped++;
+        continue;
+      }
+
+      try {
+        // Build update object with new field names
+        const updates: Record<string, unknown> = {};
+
+        // Migrate contentAccess fields
+        if (hasOldContentAccess) {
+          updates.toolContentAccessInput = part.toolContentAccessInput;
+          updates.toolContentAccessOutput = part.toolContentAccessOutput;
+          // Clear old fields
+          updates.toolGetContentInputSlug = undefined;
+          updates.toolGetContentOutput = undefined;
+          updates.toolGetContentInputLocale = undefined;
+        }
+
+        // Migrate mathCalculation fields
+        if (hasOldMathCalc) {
+          updates.toolMathCalculationInput = part.toolMathCalculationInput;
+          updates.toolMathCalculationOutput = part.toolMathCalculationOutput;
+          // Clear old fields
+          updates.toolCalculatorInputExpression = undefined;
+          updates.toolCalculatorOutput = undefined;
+        }
+
+        // Migrate deepResearch fields
+        if (hasOldDeepResearch) {
+          updates.toolDeepResearchInput = part.toolDeepResearchInput;
+          updates.toolDeepResearchOutput = part.toolDeepResearchOutput;
+          // Clear old fields
+          updates.toolWebSearchInputQuery = undefined;
+          updates.toolWebSearchOutput = undefined;
+        }
+
+        if (!dryRun) {
+          await ctx.db.patch(part._id, updates);
+        }
+
+        migrated++;
+      } catch (error) {
+        errors++;
+        console.error(`Error migrating part ${part._id}:`, error);
+      }
+    }
+
+    // Schedule next batch if needed
+    if (!(result.isDone || dryRun)) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.migrations.migrationRenameToolFields,
+        {
+          cursor: result.continueCursor,
+          batchSize,
+          dryRun: false,
+        }
+      );
+    }
+
+    return {
+      processed,
+      migrated,
+      skipped,
+      errors,
+      hasMore: !result.isDone,
+      nextCursor: result.isDone ? undefined : result.continueCursor,
+    };
   },
 });
