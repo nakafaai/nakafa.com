@@ -267,7 +267,17 @@ export async function POST(req: Request) {
         }),
         messages: finalMessages,
         stopWhen: stepCountIs(MAX_STEPS),
-        tools: orchestratorTools({ writer, modelId: selectedModel, locale }),
+        tools: orchestratorTools({
+          writer,
+          modelId: selectedModel,
+          locale,
+          context: {
+            url,
+            slug: cleanSlug(slug),
+            verified,
+            userRole,
+          },
+        }),
         experimental_repairToolCall: async ({
           toolCall,
           tools: availableTools,

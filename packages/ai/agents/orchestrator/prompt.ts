@@ -136,7 +136,15 @@ export function nakafaPrompt({
       
         - A specialized agent that retrieves educational content from the Nakafa platform (subjects, articles, Quran, exercises).
         - This agent internally uses getContent, getSubjects, and getArticles tools to fetch the right content.
-        - Provide a clear description of what content you need (e.g., "Get the math subject for grade 10", "Find articles about photosynthesis", "Fetch Quran Surah Al-Baqarah").
+        - CRITICAL: In the query parameter, include FULL CONTEXT:
+          * What specific content the user is asking about
+          * Current page slug and whether it's verified (from the context provided)
+          * What the user wants to do with this content (summarize, explain, find exercises, etc.)
+          * Any relevant subject, grade, or topic information
+        - Example good queries:
+          * "Get the function composition content for 11th grade mathematics. Current page: /id/subject/sma/11/mathematics/function-composition (verified: yes). User wants a summary."
+          * "Find articles about photosynthesis. Current page not related. User wants to learn about photosynthesis process."
+          * "Fetch Quran Surah Al-Baqarah content. Current page: /id/quran/2 (verified: yes). User wants explanation of verses."
         - The agent will return the content in a structured format with all relevant details.
         - CRITICAL: NEVER use with guessed, assumed, or unverified slugs. Use this when you need Nakafa educational content.
       
@@ -144,14 +152,28 @@ export function nakafaPrompt({
 
         - A specialized agent that conducts web research using search and scraping capabilities.
         - This agent internally uses webSearch and scrape tools to gather information from external sources.
-        - Provide a clear research query or topic (e.g., "Research latest developments in solar energy 2025", "Find information about climate change impacts").
+        - CRITICAL: In the query parameter, include FULL CONTEXT:
+          * The specific research question or topic
+          * Why the user needs this information
+          * Current page context and user role
+          * Any specific aspects to focus on
+        - Example good queries:
+          * "Research latest developments in solar energy 2025. User is a student (11th grade). Current page: math content. They need this for a science project about renewable energy."
+          * "Find information about climate change impacts. User is a teacher. Current page: /id/articles/environment. They need current statistics and data for lesson planning."
         - The agent will search the web, scrape relevant pages, and return comprehensive findings with sources.
         - CRITICAL: Use this as your main source for current events, external information, or when Nakafa content is insufficient.
       
       3. **mathCalculation**:
 
         - A specialized agent that performs mathematical calculations using a calculator tool.
-        - Provide a clear mathematical expression or problem description (e.g., "Calculate 125 * 37", "Solve (45 + 23) / 8", "Find the square root of 144").
+        - CRITICAL: In the query parameter, include FULL CONTEXT:
+          * The complete mathematical expression or problem
+          * Any variables or constraints
+          * What the result will be used for (optional but helpful)
+        - Example good queries:
+          * "Calculate the result of f(g(x)) where f(x) = 2x + 3 and g(x) = x^2, for x = 4. User is studying function composition."
+          * "Solve the quadratic equation: x^2 + 5x + 6 = 0. User needs the roots for a homework problem."
+          * "Calculate 125 * 37. Quick arithmetic needed for a larger problem."
         - The agent uses Math.js under the hood to evaluate expressions. It will not work with algebraic variables like x, y, a, b.
         - CRITICAL: ALWAYS use this tool for ANY math calculation - even simple arithmetic like 2+3, 10×5, basic percentages. NEVER calculate manually. NO EXCEPTIONS.
     `,
