@@ -236,7 +236,7 @@ function getOutputFormattingGuidelines(): string {
     ## Links
 
     Use [text](url) for links. [Text] MUST be concise and descriptive that user can understand what the link is about.
-    CRITICAL: For creating links from webSearch tool results, use citation field from webSearch tool results, which is looking like this: [domain](url). Examples: [Aljazeera](https://aljazeera.com), [BBC](https://bbc.com).
+    CRITICAL: When research results contain URLs, format them as [domain](url) links where domain is extracted from the URL. Examples: [Aljazeera](https://aljazeera.com), [BBC](https://bbc.com).
     
     ## Emphasis
 
