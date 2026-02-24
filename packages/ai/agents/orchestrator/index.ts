@@ -1,7 +1,7 @@
+import { createContentAccessTool } from "@repo/ai/agents/orchestrator/content-access";
+import { createMathTool } from "@repo/ai/agents/orchestrator/math";
+import { createResearchTool } from "@repo/ai/agents/orchestrator/research";
 import type { OrchestratorToolParams } from "@repo/ai/types/agents";
-import { createContentAccessTool } from "./content-access";
-import { createMathTool } from "./math";
-import { createResearchTool } from "./research";
 
 export type { AgentContext } from "@repo/ai/types/agents";
 

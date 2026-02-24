@@ -1,9 +1,9 @@
+import { researchPrompt } from "@repo/ai/agents/research/prompt";
+import { researchTools } from "@repo/ai/agents/research/tools";
 import { type ModelId, model } from "@repo/ai/config/vercel";
 import type { AgentContext } from "@repo/ai/types/agents";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { generateText, stepCountIs, type UIMessageStreamWriter } from "ai";
-import { researchPrompt } from "./prompt";
-import { researchTools } from "./tools";
 
 interface RunResearchAgentParams {
   context: AgentContext;

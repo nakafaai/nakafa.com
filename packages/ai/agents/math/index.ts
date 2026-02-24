@@ -1,9 +1,9 @@
+import { mathPrompt } from "@repo/ai/agents/math/prompt";
+import { mathTools } from "@repo/ai/agents/math/tools";
 import { type ModelId, model } from "@repo/ai/config/vercel";
 import type { AgentContext } from "@repo/ai/types/agents";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { generateText, stepCountIs, type UIMessageStreamWriter } from "ai";
-import { mathPrompt } from "./prompt";
-import { mathTools } from "./tools";
 
 interface RunMathAgentParams {
   context: AgentContext;

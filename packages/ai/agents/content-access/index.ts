@@ -1,9 +1,9 @@
+import { contentAccessPrompt } from "@repo/ai/agents/content-access/prompt";
+import { contentAccessTools } from "@repo/ai/agents/content-access/tools";
 import { type ModelId, model } from "@repo/ai/config/vercel";
 import type { AgentContext } from "@repo/ai/types/agents";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { generateText, stepCountIs, type UIMessageStreamWriter } from "ai";
-import { contentAccessPrompt } from "./prompt";
-import { contentAccessTools } from "./tools";
 
 interface RunContentAccessAgentParams {
   context: AgentContext;
