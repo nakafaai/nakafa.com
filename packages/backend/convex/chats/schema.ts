@@ -192,7 +192,7 @@ export const partValidator = v.object({
   toolState: v.optional(toolStateValidator),
   toolErrorText: v.optional(v.string()),
 
-  // Orchestrator tool fields (new naming)
+  // Orchestrator tool fields
   toolContentAccessInput: v.optional(v.string()),
   toolContentAccessOutput: v.optional(v.string()),
   toolMathCalculationInput: v.optional(v.string()),

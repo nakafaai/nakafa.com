@@ -10,211 +10,180 @@ type DBPart = Omit<Doc<"parts">, "_id" | "_creationTime" | "messageId">;
 /**
  * Maps UI message parts to database parts with full type safety
  */
-// Internal tool types that should NOT be stored in database
-// These are implementation details of subagents, not user-facing content
-const INTERNAL_TOOL_TYPES = [
-  "tool-getArticles",
-  "tool-getSubjects",
-  "tool-getContent",
-  "tool-calculator",
-  "tool-scrape",
-  "tool-webSearch",
-];
-
-/**
- * Checks if a part type is an internal subagent tool that should not be stored
- */
-function isInternalToolPart(type: string): boolean {
-  return INTERNAL_TOOL_TYPES.includes(type);
-}
-
-/**
- * Maps UI message parts to database parts with full type safety
- * Internal tool parts (subagent implementation details) are filtered out
- */
 export function mapUIMessagePartsToDBParts({
   messageParts,
 }: {
   messageParts: MyUIMessage["parts"];
 }): DBPart[] {
-  return messageParts
-    .filter((part) => !isInternalToolPart(part.type))
-    .map((part, index): DBPart => {
-      const baseFields = {
-        order: index,
-      };
+  return messageParts.map((part, index): DBPart => {
+    const baseFields = {
+      order: index,
+    };
 
-      switch (part.type) {
-        case "text":
-          return {
-            ...baseFields,
-            type: part.type,
-            textText: part.text,
-            textState: part.state,
-          };
-        case "reasoning":
-          return {
-            ...baseFields,
-            type: part.type,
-            reasoningText: part.text,
-            reasoningState: part.state,
-            providerMetadata: part.providerMetadata,
-          };
-        case "file":
-          return {
-            ...baseFields,
-            type: part.type,
-            fileMediaType: part.mediaType,
-            fileFilename: part.filename,
-            fileUrl: part.url,
-          };
-        case "source-document":
-          return {
-            ...baseFields,
-            type: part.type,
-            sourceDocumentSourceId: part.sourceId,
-            sourceDocumentMediaType: part.mediaType,
-            sourceDocumentTitle: part.title,
-            sourceDocumentFilename: part.filename,
-            providerMetadata: part.providerMetadata,
-          };
-        case "source-url":
-          return {
-            ...baseFields,
-            type: part.type,
-            sourceUrlSourceId: part.sourceId,
-            sourceUrlUrl: part.url,
-            sourceUrlTitle: part.title,
-            providerMetadata: part.providerMetadata,
-          };
-        case "step-start":
-          return {
-            ...baseFields,
-            type: part.type,
-          };
+    switch (part.type) {
+      case "text":
+        return {
+          ...baseFields,
+          type: part.type,
+          textText: part.text,
+          textState: part.state,
+        };
+      case "reasoning":
+        return {
+          ...baseFields,
+          type: part.type,
+          reasoningText: part.text,
+          reasoningState: part.state,
+          providerMetadata: part.providerMetadata,
+        };
+      case "file":
+        return {
+          ...baseFields,
+          type: part.type,
+          fileMediaType: part.mediaType,
+          fileFilename: part.filename,
+          fileUrl: part.url,
+        };
+      case "source-document":
+        return {
+          ...baseFields,
+          type: part.type,
+          sourceDocumentSourceId: part.sourceId,
+          sourceDocumentMediaType: part.mediaType,
+          sourceDocumentTitle: part.title,
+          sourceDocumentFilename: part.filename,
+          providerMetadata: part.providerMetadata,
+        };
+      case "source-url":
+        return {
+          ...baseFields,
+          type: part.type,
+          sourceUrlSourceId: part.sourceId,
+          sourceUrlUrl: part.url,
+          sourceUrlTitle: part.title,
+          providerMetadata: part.providerMetadata,
+        };
+      case "step-start":
+        return {
+          ...baseFields,
+          type: part.type,
+        };
 
-        // Subagent orchestrator tools
-        case "tool-contentAccess": {
-          // Safe to cast since we know the structure based on the discriminator
-          const input = part.input as { query?: string } | undefined;
-          return {
-            ...baseFields,
-            type: part.type,
-            toolToolCallId: part.toolCallId,
-            toolState: part.state,
-            toolContentAccessInput: input?.query,
-            toolContentAccessOutput:
-              typeof part.output === "string" ? part.output : undefined,
-            toolErrorText: part.errorText,
-          };
-        }
-        case "tool-deepResearch": {
-          const input = part.input as { query?: string } | undefined;
-          return {
-            ...baseFields,
-            type: part.type,
-            toolToolCallId: part.toolCallId,
-            toolState: part.state,
-            toolDeepResearchInput: input?.query,
-            toolDeepResearchOutput:
-              typeof part.output === "string" ? part.output : undefined,
-            toolErrorText: part.errorText,
-          };
-        }
-        case "tool-mathCalculation": {
-          const input = part.input as { query?: string } | undefined;
-          return {
-            ...baseFields,
-            type: part.type,
-            toolToolCallId: part.toolCallId,
-            toolState: part.state,
-            toolMathCalculationInput: input?.query,
-            toolMathCalculationOutput:
-              typeof part.output === "string" ? part.output : undefined,
-            toolErrorText: part.errorText,
-          };
-        }
-
-        // Data parts - these contain the actual data
-        case "data-suggestions":
-          return {
-            ...baseFields,
-            type: part.type,
-            dataSuggestionsId: part.id,
-            dataSuggestionsData: part.data.data,
-          };
-        case "data-get-articles":
-          return {
-            ...baseFields,
-            type: part.type,
-            dataGetArticlesId: part.id,
-            dataGetArticlesBaseUrl: part.data.baseUrl,
-            dataGetArticlesInputLocale: part.data.input.locale,
-            dataGetArticlesInputCategory: part.data.input.category,
-            dataGetArticlesArticles: part.data.articles,
-            dataGetArticlesStatus: part.data.status,
-            dataGetArticlesError: part.data.error,
-          };
-        case "data-get-subjects":
-          return {
-            ...baseFields,
-            type: part.type,
-            dataGetSubjectsId: part.id,
-            dataGetSubjectsBaseUrl: part.data.baseUrl,
-            dataGetSubjectsInputLocale: part.data.input.locale,
-            dataGetSubjectsInputCategory: part.data.input.category,
-            dataGetSubjectsInputGrade: part.data.input.grade,
-            dataGetSubjectsInputMaterial: part.data.input.material,
-            dataGetSubjectsSubjects: part.data.subjects,
-            dataGetSubjectsStatus: part.data.status,
-            dataGetSubjectsError: part.data.error,
-          };
-        case "data-get-content":
-          return {
-            ...baseFields,
-            type: part.type,
-            dataGetContentId: part.id,
-            dataGetContentUrl: part.data.url,
-            dataGetContentTitle: part.data.title,
-            dataGetContentDescription: part.data.description,
-            dataGetContentStatus: part.data.status,
-            dataGetContentError: part.data.error,
-          };
-        case "data-calculator":
-          return {
-            ...baseFields,
-            type: part.type,
-            dataCalculatorId: part.id,
-            dataCalculatorOriginal: part.data.original,
-            dataCalculatorResult: part.data.result,
-            dataCalculatorStatus: part.data.status,
-            dataCalculatorError: part.data.error,
-          };
-        case "data-scrape-url":
-          return {
-            ...baseFields,
-            type: part.type,
-            dataScrapeUrlId: part.id,
-            dataScrapeUrlUrl: part.data.url,
-            dataScrapeUrlContent: part.data.content,
-            dataScrapeUrlStatus: part.data.status,
-            dataScrapeUrlError: part.data.error,
-          };
-        case "data-web-search":
-          return {
-            ...baseFields,
-            type: part.type,
-            dataWebSearchId: part.id,
-            dataWebSearchQuery: part.data.query,
-            dataWebSearchSources: part.data.sources,
-            dataWebSearchStatus: part.data.status,
-            dataWebSearchError: part.data.error,
-          };
-        default: {
-          throw new Error(`Unsupported part type: ${JSON.stringify(part)}`);
-        }
+      // Subagent orchestrator tools
+      case "tool-contentAccess": {
+        return {
+          ...baseFields,
+          type: part.type,
+          toolToolCallId: part.toolCallId,
+          toolState: part.state,
+          toolContentAccessInput: part.input?.query,
+          toolContentAccessOutput: part.output,
+          toolErrorText: part.errorText,
+        };
       }
-    });
+      case "tool-deepResearch": {
+        return {
+          ...baseFields,
+          type: part.type,
+          toolToolCallId: part.toolCallId,
+          toolState: part.state,
+          toolDeepResearchInput: part.input?.query,
+          toolDeepResearchOutput: part.output,
+          toolErrorText: part.errorText,
+        };
+      }
+      case "tool-mathCalculation": {
+        return {
+          ...baseFields,
+          type: part.type,
+          toolToolCallId: part.toolCallId,
+          toolState: part.state,
+          toolMathCalculationInput: part.input?.query,
+          toolMathCalculationOutput: part.output,
+          toolErrorText: part.errorText,
+        };
+      }
+
+      // Data parts - these contain the actual data
+      case "data-suggestions":
+        return {
+          ...baseFields,
+          type: part.type,
+          dataSuggestionsId: part.id,
+          dataSuggestionsData: part.data.data,
+        };
+      case "data-get-articles":
+        return {
+          ...baseFields,
+          type: part.type,
+          dataGetArticlesId: part.id,
+          dataGetArticlesBaseUrl: part.data.baseUrl,
+          dataGetArticlesInputLocale: part.data.input.locale,
+          dataGetArticlesInputCategory: part.data.input.category,
+          dataGetArticlesArticles: part.data.articles,
+          dataGetArticlesStatus: part.data.status,
+          dataGetArticlesError: part.data.error,
+        };
+      case "data-get-subjects":
+        return {
+          ...baseFields,
+          type: part.type,
+          dataGetSubjectsId: part.id,
+          dataGetSubjectsBaseUrl: part.data.baseUrl,
+          dataGetSubjectsInputLocale: part.data.input.locale,
+          dataGetSubjectsInputCategory: part.data.input.category,
+          dataGetSubjectsInputGrade: part.data.input.grade,
+          dataGetSubjectsInputMaterial: part.data.input.material,
+          dataGetSubjectsSubjects: part.data.subjects,
+          dataGetSubjectsStatus: part.data.status,
+          dataGetSubjectsError: part.data.error,
+        };
+      case "data-get-content":
+        return {
+          ...baseFields,
+          type: part.type,
+          dataGetContentId: part.id,
+          dataGetContentUrl: part.data.url,
+          dataGetContentTitle: part.data.title,
+          dataGetContentDescription: part.data.description,
+          dataGetContentStatus: part.data.status,
+          dataGetContentError: part.data.error,
+        };
+      case "data-calculator":
+        return {
+          ...baseFields,
+          type: part.type,
+          dataCalculatorId: part.id,
+          dataCalculatorOriginal: part.data.original,
+          dataCalculatorResult: part.data.result,
+          dataCalculatorStatus: part.data.status,
+          dataCalculatorError: part.data.error,
+        };
+      case "data-scrape-url":
+        return {
+          ...baseFields,
+          type: part.type,
+          dataScrapeUrlId: part.id,
+          dataScrapeUrlUrl: part.data.url,
+          dataScrapeUrlContent: part.data.content,
+          dataScrapeUrlStatus: part.data.status,
+          dataScrapeUrlError: part.data.error,
+        };
+      case "data-web-search":
+        return {
+          ...baseFields,
+          type: part.type,
+          dataWebSearchId: part.id,
+          dataWebSearchQuery: part.data.query,
+          dataWebSearchSources: part.data.sources,
+          dataWebSearchStatus: part.data.status,
+          dataWebSearchError: part.data.error,
+        };
+      default: {
+        throw new Error(`Unsupported part type: ${JSON.stringify(part)}`);
+      }
+    }
+  });
 }
 
 /**
