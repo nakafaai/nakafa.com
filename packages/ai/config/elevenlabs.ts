@@ -14,15 +14,3 @@ export const elevenlabs = createElevenLabs({
  * @see https://elevenlabs.io/docs/overview/models
  */
 export const ACTIVE_MODEL = "eleven_v3";
-
-/**
- * Maximum characters per request for V3.
- * V3 has a 5,000 character limit per request.
- * Using 4,800 as safety margin.
- */
-export const V3_MAX_CHARS_PER_CHUNK = 4800;
-
-/**
- * @deprecated Use V3_MAX_CHARS_PER_CHUNK directly
- */
-export const getMaxCharsPerChunk = (): number => V3_MAX_CHARS_PER_CHUNK;
