@@ -20,7 +20,7 @@ import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
 import { formatISO } from "date-fns";
 import { Effect } from "effect";
 import type { Metadata } from "next";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
@@ -231,7 +231,15 @@ async function PageContent({
   const { content, materials } = result;
 
   if (!(content && materials)) {
-    notFound();
+    return (
+      <LayoutMaterial>
+        <LayoutMaterialContent>
+          <LayoutMaterialMain className="py-24">
+            <ComingSoon />
+          </LayoutMaterialMain>
+        </LayoutMaterialContent>
+      </LayoutMaterial>
+    );
   }
 
   const { metadata, default: Content, raw } = content;
