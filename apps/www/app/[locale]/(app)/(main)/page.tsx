@@ -14,27 +14,14 @@ export const revalidate = false;
 
 interface Props {
   params: Promise<{ locale: Locale }>;
+  searchParams: Promise<{ from: string }>;
 }
 
-export default function Page({ params }: Props) {
+export default function Page({ params, searchParams }: Props) {
   const { locale } = use(params);
+  const { from } = use(searchParams);
 
   setRequestLocale(locale);
-
-  return (
-    <Suspense>
-      <Main locale={locale} />
-    </Suspense>
-  );
-}
-
-async function Main({ locale }: { locale: Locale }) {
-  const token = await getToken();
-
-  // If no user token, go to landing page
-  if (!token) {
-    redirect("/about");
-  }
 
   return (
     <>
@@ -44,20 +31,40 @@ async function Main({ locale }: { locale: Locale }) {
         data-pagefind-ignore
       >
         <Particles className="pointer-events-none absolute inset-0 opacity-80" />
-        <div className="mx-auto w-full max-w-xl px-6">
-          <div className="relative flex h-full flex-col space-y-4">
-            <HomeTitle />
-
-            <HomeSearch />
-
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-              <Videos />
-              <Weather />
-            </div>
-          </div>
-        </div>
+        <Suspense>
+          <Main from={from} />
+        </Suspense>
       </div>
     </>
+  );
+}
+
+async function Main({ from }: { from: string }) {
+  const token = await getToken();
+
+  // If no user token and from about page, goes to auth
+  if (!token && from === "/about") {
+    redirect("/auth");
+  }
+
+  // if just no user token
+  if (!token) {
+    redirect("/about");
+  }
+
+  return (
+    <div className="mx-auto w-full max-w-xl px-6">
+      <div className="relative flex h-full flex-col space-y-4">
+        <HomeTitle />
+
+        <HomeSearch />
+
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+          <Videos />
+          <Weather />
+        </div>
+      </div>
+    </div>
   );
 }
 
