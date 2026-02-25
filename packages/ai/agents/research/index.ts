@@ -16,7 +16,7 @@ export async function runResearchAgent({
     system: researchPrompt({ locale, context }),
     messages: [{ role: "user", content: task }],
     tools: researchTools({ writer }),
-    stopWhen: stepCountIs(10),
+    stopWhen: stepCountIs(3),
   });
 
   return result.text;

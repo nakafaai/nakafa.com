@@ -27,28 +27,34 @@ export const WebSearchPart = memo(({ message }: Props) => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-2">
-        <Spinner className="size-4 text-muted-foreground" />
-        <p className="text-muted-foreground text-sm">
-          {t("web-search-loading")}
-        </p>
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <Spinner className="size-4 text-muted-foreground" />
+          <p className="text-muted-foreground text-sm">
+            {t("web-search-loading")}
+          </p>
+        </div>
+        <WebSearchPartQuery query={message.query} />
       </div>
     );
   }
 
   if (isError) {
     return (
-      <div className="flex items-center gap-2">
-        <HugeIcons className="size-4 text-destructive" icon={Sad02Icon} />
-        <span className="text-muted-foreground text-sm">
-          {t("web-search-error")}
-        </span>
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <HugeIcons className="size-4 text-destructive" icon={Sad02Icon} />
+          <span className="text-muted-foreground text-sm">
+            {t("web-search-error")}
+          </span>
+        </div>
+        <WebSearchPartQuery query={message.query} />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       <div className="flex items-center gap-2">
         <HugeIcons
           className="size-4 text-muted-foreground"
@@ -57,11 +63,21 @@ export const WebSearchPart = memo(({ message }: Props) => {
         <span className="text-muted-foreground text-sm">{t("web-search")}</span>
         <Badge variant="muted">{results.length}</Badge>
       </div>
+      <WebSearchPartQuery query={message.query} />
       <WebSearchPartPreview results={results} />
     </div>
   );
 });
 WebSearchPart.displayName = "WebSearchPart";
+
+const WebSearchPartQuery = memo(({ query }: { query: string }) => {
+  return (
+    <blockquote className="text-muted-foreground text-sm italic">
+      "{query}"
+    </blockquote>
+  );
+});
+WebSearchPartQuery.displayName = "WebSearchPartQuery";
 
 const WebSearchPartPreview = memo(
   ({ results }: { results: DataPart["web-search"]["sources"] }) => {
