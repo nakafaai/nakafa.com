@@ -138,7 +138,7 @@ export function Footer() {
 
       <NavigationLink
         className="mx-auto flex w-full max-w-7xl px-6 py-16 transition-colors ease-out hover:text-primary"
-        href="/"
+        href="/?from=/about"
         rel="noopener noreferrer"
         target="_blank"
       >
