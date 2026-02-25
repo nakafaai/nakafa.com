@@ -1,9 +1,11 @@
 import { Button } from "@repo/design-system/components/ui/button";
-import { Particles } from "@repo/design-system/components/ui/particles";
 import { type Locale, useTranslations } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { use } from "react";
 import { Auth } from "@/components/auth";
+import { FeaturesDithering } from "@/components/marketing/about/features.client";
+import { Theme } from "@/components/marketing/shared/footer-action";
+import { BackButton } from "./page.client";
 
 export const revalidate = false;
 
@@ -18,19 +20,23 @@ export default function Page({ params }: Props) {
   setRequestLocale(locale);
 
   return (
-    <main
-      className="relative flex h-[calc(100svh-4rem)] items-center justify-center lg:h-svh"
-      data-pagefind-ignore
-    >
-      <Particles className="pointer-events-none absolute inset-0 opacity-80" />
-      <div className="mx-auto max-w-lg px-6">
-        <div className="relative flex h-full flex-col items-center gap-6">
+    <main className="relative grid h-svh lg:grid-cols-7" data-pagefind-ignore>
+      <div className="col-span-3 flex flex-col gap-4 p-6 sm:p-12">
+        <div className="flex items-center justify-between">
+          <BackButton />
+
+          <Theme variant="ghost" />
+        </div>
+        <div className="flex flex-1 flex-col items-center justify-center gap-6">
           <PageTitle />
 
           <Auth />
 
           <PageFooter />
         </div>
+      </div>
+      <div className="relative col-span-4 hidden lg:block">
+        <FeaturesDithering />
       </div>
     </main>
   );
@@ -51,7 +57,7 @@ function PageFooter() {
   const tLegal = useTranslations("Legal");
 
   return (
-    <div className="flex flex-col">
+    <div className="flex max-w-sm flex-col">
       <p className="text-balance text-center text-muted-foreground text-sm">
         {tLegal.rich("legal-description", {
           "terms-of-service": (chunks) => (

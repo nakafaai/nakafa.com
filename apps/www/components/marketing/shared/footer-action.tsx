@@ -26,7 +26,7 @@ import ID from "country-flag-icons/react/3x2/ID";
 import { useParams } from "next/navigation";
 import { type Locale, useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
-import { useTransition } from "react";
+import { type ComponentProps, useTransition } from "react";
 
 export function FooterAction() {
   return (
@@ -123,7 +123,11 @@ function Language() {
 
 const BASE_THEMES_COUNT = 3;
 
-function Theme() {
+export function Theme({
+  variant = "outline",
+}: {
+  variant?: ComponentProps<typeof Button>["variant"];
+}) {
   const t = useTranslations("Common");
   const { theme: currentTheme, setTheme } = useTheme();
 
@@ -134,7 +138,7 @@ function Theme() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline">
+        <Button variant={variant}>
           <HugeIcons icon={PaintBoardIcon} />
           <span className="truncate">{t("theme")}</span>
         </Button>
