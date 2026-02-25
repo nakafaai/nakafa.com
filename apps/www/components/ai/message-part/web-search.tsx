@@ -1,6 +1,6 @@
 "use client";
 
-import { AiWebBrowsingIcon, Sad02Icon } from "@hugeicons/core-free-icons";
+import { Sad02Icon, Search01Icon } from "@hugeicons/core-free-icons";
 import type { DataPart } from "@repo/ai/schema/data-parts";
 import {
   Source,
@@ -58,7 +58,7 @@ export const WebSearchPart = memo(({ message }: Props) => {
       <div className="flex items-center gap-2">
         <HugeIcons
           className="size-4 text-muted-foreground"
-          icon={AiWebBrowsingIcon}
+          icon={Search01Icon}
         />
         <span className="text-muted-foreground text-sm">{t("web-search")}</span>
         <Badge variant="muted">{results.length}</Badge>
