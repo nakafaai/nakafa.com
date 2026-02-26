@@ -17,7 +17,7 @@ export function HeaderSearch() {
 
   const setOpen = useSearch((state) => state.setOpen);
 
-  if (pathname === "/" || pathname === "/search") {
+  if (pathname === "/search") {
     return null;
   }
 

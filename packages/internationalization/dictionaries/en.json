@@ -269,7 +269,10 @@
   "Home": {
     "title": "What do you want to learn?",
     "contribute": "Contribute",
-    "videos": "Videos"
+    "videos": "Videos",
+    "trending-subjects": "Trending Subjects This Week",
+    "views": "{count} views",
+    "explore-materials": "Explore Materials"
   },
   "Marketing": {
     "about": "About",

@@ -24,7 +24,7 @@ export default function Page({ params, searchParams }: Props) {
     <>
       <PageBreadcrumb locale={locale} />
       <div
-        className="relative flex min-h-[calc(100svh-4rem)] items-center justify-center lg:min-h-svh"
+        className="relative min-h-[calc(100svh-4rem)] lg:min-h-svh"
         data-pagefind-ignore
       >
         <Particles className="pointer-events-none absolute inset-0 opacity-50" />
@@ -54,8 +54,8 @@ async function Main({
   }
 
   return (
-    <div className="mx-auto w-full max-w-xl px-6">
-      <div className="relative flex-col space-y-4">
+    <div className="mx-auto w-full max-w-3xl px-6 py-24">
+      <div className="relative flex-col space-y-12">
         <HomeHeader />
 
         <HomeTrending />

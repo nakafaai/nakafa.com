@@ -269,7 +269,10 @@
   "Home": {
     "title": "Mau belajar apa hari ini?",
     "contribute": "Kontribusi",
-    "videos": "Video"
+    "videos": "Video",
+    "trending-subjects": "Materi Populer Minggu Ini",
+    "views": "{count} views",
+    "explore-materials": "Jelajahi Materi"
   },
   "Marketing": {
     "about": "Tentang",
