@@ -4,9 +4,11 @@ import { ArrowLeft02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useRouter } from "@repo/internationalization/src/navigation";
+import { useTranslations } from "next-intl";
 import { useCallback } from "react";
 
 export function BackButton() {
+  const t = useTranslations("Common");
   const router = useRouter();
 
   const handleBack = useCallback(() => {
@@ -27,7 +29,7 @@ export function BackButton() {
   return (
     <Button onClick={handleBack} variant="ghost">
       <HugeIcons className="size-4" icon={ArrowLeft02Icon} />
-      Back
+      {t("back")}
     </Button>
   );
 }

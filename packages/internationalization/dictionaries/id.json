@@ -139,7 +139,8 @@
     "emoji-picker-placeholder": "Pilih emoji...",
     "no-emoji-found": "Emoji nggak ketemu.",
     "customize": "Kustomisasi",
-    "back-to-latest": "Kembali ke terbaru"
+    "back-to-latest": "Kembali ke terbaru",
+    "back": "Kembali"
   },
   "Onboarding": {
     "title": "Selamat datang di Nakafa!",

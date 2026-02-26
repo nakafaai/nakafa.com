@@ -139,7 +139,8 @@
     "emoji-picker-placeholder": "Select an emoji...",
     "no-emoji-found": "No emoji found.",
     "customize": "Customize",
-    "back-to-latest": "Back to latest"
+    "back-to-latest": "Back to latest",
+    "back": "Back"
   },
   "Onboarding": {
     "title": "Welcome to Nakafa!",
