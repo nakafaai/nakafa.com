@@ -5,6 +5,7 @@ import { type Locale, useTranslations } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { Suspense, use } from "react";
 import { HomeHeader } from "@/components/home/header";
+import { HomeTrending } from "@/components/home/trending";
 import { getToken } from "@/lib/auth/server";
 
 export const revalidate = false;
@@ -56,6 +57,8 @@ async function Main({
     <div className="mx-auto w-full max-w-xl px-6">
       <div className="relative flex-col space-y-4">
         <HomeHeader />
+
+        <HomeTrending />
       </div>
     </div>
   );
