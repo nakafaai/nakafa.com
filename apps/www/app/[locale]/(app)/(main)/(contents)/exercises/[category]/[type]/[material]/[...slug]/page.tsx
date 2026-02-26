@@ -381,7 +381,15 @@ async function SingleExerciseContent({
   );
 
   if (Option.isNone(exerciseOption) || !exerciseContext) {
-    return <ComingSoon />;
+    return (
+      <LayoutMaterial>
+        <LayoutMaterialContent>
+          <LayoutMaterialMain className="py-24">
+            <ComingSoon />
+          </LayoutMaterialMain>
+        </LayoutMaterialContent>
+      </LayoutMaterial>
+    );
   }
 
   const exercise = exerciseOption.value;

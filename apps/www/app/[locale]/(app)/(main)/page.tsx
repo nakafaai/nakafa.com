@@ -19,7 +19,6 @@ interface Props {
 
 export default function Page({ params, searchParams }: Props) {
   const { locale } = use(params);
-  const { from } = use(searchParams);
 
   setRequestLocale(locale);
 
@@ -32,15 +31,19 @@ export default function Page({ params, searchParams }: Props) {
       >
         <Particles className="pointer-events-none absolute inset-0 opacity-80" />
         <Suspense>
-          <Main from={from} />
+          <Main searchParams={searchParams} />
         </Suspense>
       </div>
     </>
   );
 }
 
-async function Main({ from }: { from: string }) {
-  const token = await getToken();
+async function Main({
+  searchParams,
+}: {
+  searchParams: Promise<{ from: string }>;
+}) {
+  const [{ from }, token] = await Promise.all([searchParams, getToken()]);
 
   // If no user token and from about page, goes to auth
   if (!token && from === "/about") {
