@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Suspense, use } from "react";
-import { HomeTitle } from "@/components/home/title";
+import { HomeTitle } from "@/components/ai/title";
 import { InputSearch } from "@/components/search/input";
 import { SearchListItems } from "@/components/search/results";
 import { FooterContent } from "@/components/shared/footer-content";
