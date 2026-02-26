@@ -42,16 +42,16 @@
     "@effect/language-service": "^0.76.0",
     "@repo/typescript-config": "workspace:*",
     "@turbo/gen": "^2.8.11",
-    "@types/node": "^25.3.0",
+    "@types/node": "^25.3.1",
     "depcheck": "^1.4.7",
     "tsup": "^8.5.1",
     "turbo": "^2.8.11",
     "typescript": "^5.9.3",
-    "ultracite": "^7.2.3"
+    "ultracite": "^7.2.4"
   },
   "engines": {
     "node": ">=22"
   },
-  "packageManager": "pnpm@10.30.2",
+  "packageManager": "pnpm@10.30.3",
   "type": "module"
 }
