@@ -1,11 +1,9 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { internalQuery, query } from "@repo/backend/convex/_generated/server";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
-import {
-  type TrendingSubject,
-  trendingSubjectValidator,
-} from "@repo/backend/convex/lib/validators/trending";
+import { trendingSubjectValidator } from "@repo/backend/convex/lib/validators/trending";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
+import { getAll } from "convex-helpers/server/relationships";
 import { nullable } from "convex-helpers/validators";
 
 /**
@@ -97,24 +95,31 @@ export const getTrendingSubjects = query({
       return [];
     }
 
-    const results: TrendingSubject[] = [];
+    // Extract subject IDs and batch fetch using convex-helpers
+    // This replaces N+1 sequential queries with a single batch operation
+    const subjectIds = trendingEntries.map(([id]) => id);
+    const subjects = await getAll(ctx.db, subjectIds);
 
-    for (const [subjectId, viewCount] of trendingEntries) {
-      const subject = await ctx.db.get("subjectSections", subjectId);
-      if (!subject) {
-        continue;
-      }
-
-      results.push({
-        id: subject._id,
-        title: subject.title,
-        description: subject.description,
-        slug: slugBySubject.get(subjectId) ?? subject.slug,
-        viewCount,
-        grade: subject.grade,
-        material: subject.material,
-      });
-    }
+    // Map to results maintaining sort order from trendingEntries
+    const results = trendingEntries
+      .map(([id, viewCount], index) => {
+        const subject = subjects[index];
+        if (!subject) {
+          return null;
+        }
+        return {
+          id: subject._id,
+          title: subject.title,
+          description: subject.description,
+          slug: slugBySubject.get(id) ?? subject.slug,
+          viewCount,
+          grade: subject.grade,
+          material: subject.material,
+        };
+      })
+      .filter(
+        (subject) => subject !== null
+      );
 
     return results;
   },
