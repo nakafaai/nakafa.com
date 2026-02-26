@@ -46,6 +46,7 @@ export const getById = internalQuery({
  * Use getTrendingTimeRange() helper.
  *
  * @see https://docs.convex.dev/understanding/best-practices/#date-in-queries
+ * @see https://docs.convex.dev/understanding/best-practices/#only-use-collect-with-a-small-number-of-results
  */
 export const getTrendingSubjects = query({
   args: {
@@ -60,6 +61,8 @@ export const getTrendingSubjects = query({
     const limit = args.limit ?? 6;
     const minViews = args.minViews ?? 5;
 
+    // Use .take() instead of .collect() to prevent unbounded queries
+    // This limits results to MAX_VIEWS most recent views in the range
     const viewsInRange = await ctx.db
       .query("contentViews")
       .withIndex("by_locale_type_viewedAt", (q) =>
@@ -69,7 +72,7 @@ export const getTrendingSubjects = query({
           .gte("viewedAt", args.since)
           .lt("viewedAt", args.until)
       )
-      .collect();
+      .take(1000);
 
     const countBySubject = new Map<Id<"subjectSections">, number>();
     const slugBySubject = new Map<Id<"subjectSections">, string>();
