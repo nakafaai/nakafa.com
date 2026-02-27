@@ -76,7 +76,7 @@ function AiToolbar({
   return (
     <aside className="sticky right-0 bottom-0 left-0 z-50 px-6 pb-6">
       <div className="mx-auto w-full sm:max-w-2xl">
-        <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 text-card-foreground shadow-sm">
+        <div className="flex flex-col gap-3 rounded-xl border bg-card p-3 text-card-foreground shadow-sm">
           {/* Initialize audio player immediately for preloading */}
           <AudioPlayerInitializer item={audioItem} />
 

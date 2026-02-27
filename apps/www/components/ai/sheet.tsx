@@ -8,8 +8,8 @@ import {
   Globe02Icon,
   Maximize03Icon,
   Minimize03Icon,
-  SparklesIcon,
   SquareLock01Icon,
+  StarsIcon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { useMediaQuery } from "@mantine/hooks";
@@ -125,7 +125,7 @@ export function AiSheet() {
           <SheetTitle className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 px-2">
               <div className="flex items-center gap-2 text-base">
-                <HugeIcons className="size-4" icon={SparklesIcon} />
+                <HugeIcons className="size-4" icon={StarsIcon} />
                 <span>Nina</span>
               </div>
             </div>
@@ -481,6 +481,7 @@ const AiSheetInput = memo(
         <PromptInput onSubmit={onSubmit}>
           <PromptInputTextarea
             aria-label={t("text-placeholder")}
+            autoFocus
             onChange={(e) => setText(e.target.value)}
             placeholder={t("text-placeholder")}
             value={text}

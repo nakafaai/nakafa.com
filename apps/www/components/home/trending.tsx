@@ -13,6 +13,7 @@ import { useMemo } from "react";
 
 export function HomeTrending() {
   const t = useTranslations("Home");
+  const tSubject = useTranslations("Subject");
   const locale = useLocale();
 
   const timeRange = useMemo(() => {
@@ -58,21 +59,23 @@ export function HomeTrending() {
         {data?.map((subject) => {
           return (
             <NavigationLink
-              className="group flex items-start gap-3 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
+              className="group grid gap-3 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
               href={subject.slug}
               key={subject.id}
             >
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted">
-                <HugeIcons
-                  className="size-5 text-muted-foreground"
-                  icon={getMaterialIcon(subject.material)}
-                />
-              </div>
-              <div className="-mt-1 flex flex-col">
-                <h3>{subject.title}</h3>
-                <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground/80 sm:mr-12">
-                  {subject.description}
-                </span>
+              <div className="flex items-start gap-3">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary/5">
+                  <HugeIcons
+                    className="size-4 text-primary"
+                    icon={getMaterialIcon(subject.material)}
+                  />
+                </div>
+                <div className="-mt-1 flex flex-col">
+                  <h3>{subject.title}</h3>
+                  <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground/80 sm:mr-12">
+                    {subject.description}
+                  </span>
+                </div>
               </div>
             </NavigationLink>
           );
