@@ -839,7 +839,7 @@ export const deleteStaleSubjectTopics = internalMutation({
     // Normalize all IDs upfront
     const topicIds = args.topicIds
       .map((idStr) => ctx.db.normalizeId("subjectTopics", idStr))
-      .filter((id)=> id !== null);
+      .filter((id) => id !== null);
 
     if (topicIds.length === 0) {
       return { deleted: 0 };
