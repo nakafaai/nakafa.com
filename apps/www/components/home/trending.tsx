@@ -1,10 +1,11 @@
 "use client";
 
-import { ArrowDown02Icon } from "@hugeicons/core-free-icons";
+import { ArrowDown02Icon, Search02Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { getTrendingTimeRange } from "@repo/backend/convex/subjectSections/utils";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
+import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { useLocale, useTranslations } from "next-intl";
@@ -33,11 +34,11 @@ export function HomeTrending() {
 
   return (
     <section className="flex flex-col gap-4">
-      <h2 className="flex items-center gap-2 px-2">
+      <h2 className="flex items-center gap-2 px-2.5">
         {t("trending-subjects")}
         <HugeIcons className="size-4" icon={ArrowDown02Icon} />
       </h2>
-      <div className="grid gap-3 divide-y overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
+      <div className="grid divide-y overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
         {data?.map((subject) => {
           return (
             <NavigationLink
@@ -61,6 +62,18 @@ export function HomeTrending() {
           );
         })}
       </div>
+
+      <Button
+        className="w-fit"
+        nativeButton={false}
+        render={
+          <NavigationLink href="/search">
+            <HugeIcons className="size-4" icon={Search02Icon} />
+            {t("explore-materials")}
+          </NavigationLink>
+        }
+        variant="ghost"
+      />
     </section>
   );
 }

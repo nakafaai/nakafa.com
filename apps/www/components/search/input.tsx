@@ -19,5 +19,9 @@ export function InputSearch() {
     [setSearch, setQuery]
   );
 
-  return <SearchInput autoFocus setValue={setValue} value={q} />;
+  return (
+    <div className="sticky top-20 lg:top-4">
+      <SearchInput autoFocus setValue={setValue} value={q} />
+    </div>
+  );
 }
