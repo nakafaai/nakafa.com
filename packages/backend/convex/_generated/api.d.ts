@@ -61,7 +61,6 @@ import type * as lib_validators_audio from "../lib/validators/audio.js";
 import type * as lib_validators_contents from "../lib/validators/contents.js";
 import type * as lib_validators_trending from "../lib/validators/trending.js";
 import type * as lib_validators_vv from "../lib/validators/vv.js";
-import type * as migrations from "../migrations.js";
 import type * as polyfills from "../polyfills.js";
 import type * as routes_constants from "../routes/constants.js";
 import type * as routes_middleware_auth from "../routes/middleware/auth.js";
@@ -166,7 +165,6 @@ declare const fullApi: ApiFromModules<{
   "lib/validators/contents": typeof lib_validators_contents;
   "lib/validators/trending": typeof lib_validators_trending;
   "lib/validators/vv": typeof lib_validators_vv;
-  migrations: typeof migrations;
   polyfills: typeof polyfills;
   "routes/constants": typeof routes_constants;
   "routes/middleware/auth": typeof routes_middleware_auth;
