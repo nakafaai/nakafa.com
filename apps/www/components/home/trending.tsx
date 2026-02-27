@@ -50,7 +50,7 @@ export function HomeTrending() {
 
   return (
     <section className="flex flex-col gap-4">
-      <h2 className="flex items-center gap-2 px-2.5">
+      <h2 className="flex items-center gap-2 px-3">
         {t("trending-subjects")}
         <HugeIcons className="size-4" icon={ArrowDown02Icon} />
       </h2>

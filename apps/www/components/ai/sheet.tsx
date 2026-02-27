@@ -2,12 +2,12 @@
 
 import {
   Add01Icon,
+  ArrowExpand01Icon,
+  ArrowShrink02Icon,
   Cancel01Icon,
   ChatSearch01Icon,
   GeometricShapes01Icon,
   Globe02Icon,
-  Maximize03Icon,
-  Minimize03Icon,
   SquareLock01Icon,
   StarsIcon,
   Tick01Icon,
@@ -152,7 +152,9 @@ export function AiSheet() {
                 variant="ghost"
               >
                 <HugeIcons
-                  icon={width === MAX_WIDTH ? Minimize03Icon : Maximize03Icon}
+                  icon={
+                    width === MAX_WIDTH ? ArrowShrink02Icon : ArrowExpand01Icon
+                  }
                 />
                 <span className="sr-only">Resize</span>
               </Button>
