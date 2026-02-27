@@ -64,9 +64,9 @@ export function HomeTrending() {
               key={subject.id}
             >
               <div className="flex items-start gap-3">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary/5">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary/5 group-hover:bg-primary">
                   <HugeIcons
-                    className="size-4 text-primary"
+                    className="size-4 text-primary group-hover:text-primary-foreground"
                     icon={getMaterialIcon(subject.material)}
                   />
                 </div>
