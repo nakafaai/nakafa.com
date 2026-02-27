@@ -8,6 +8,7 @@ import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { cleanSlug } from "@repo/utilities/helper";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo } from "react";
 
@@ -59,7 +60,7 @@ export function HomeTrending() {
           return (
             <NavigationLink
               className="group grid gap-3 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
-              href={`/${subject.slug}`}
+              href={`/${cleanSlug(subject.slug)}`}
               key={subject.id}
             >
               <div className="flex items-start gap-3">
