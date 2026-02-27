@@ -45,22 +45,22 @@ export default function Page({
         <div className="relative space-y-12">
           <HomeHeader />
 
-          <div className="flex flex-col gap-6">
-            <div className="flex flex-col gap-2">
-              <BackButton
-                className="w-fit p-0 text-muted-foreground"
-                defaultHref="/"
-                variant="link"
-              />
+          <div className="flex flex-col gap-2">
+            <BackButton
+              className="w-fit p-0 text-muted-foreground"
+              defaultHref="/"
+              variant="link"
+            />
 
+            <div className="grid gap-6">
               <Suspense>
                 <InputSearch />
               </Suspense>
-            </div>
 
-            <Suspense>
-              <SearchListItems />
-            </Suspense>
+              <Suspense>
+                <SearchListItems />
+              </Suspense>
+            </div>
           </div>
         </div>
       </div>

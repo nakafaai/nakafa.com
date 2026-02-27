@@ -19,7 +19,7 @@ export function HomeTrending() {
     return getTrendingTimeRange(7);
   }, []);
 
-  const { data } = useQueryWithStatus(
+  const { data, isPending } = useQueryWithStatus(
     api.subjectSections.queries.getTrendingSubjects,
     {
       locale,
@@ -28,8 +28,24 @@ export function HomeTrending() {
     }
   );
 
-  if (!data || data.length === 0) {
+  if (isPending) {
     return null;
+  }
+
+  if (!data || data.length === 0) {
+    return (
+      <Button
+        className="w-fit"
+        nativeButton={false}
+        render={
+          <NavigationLink href="/search">
+            <HugeIcons className="size-4" icon={Search02Icon} />
+            {t("explore-materials")}
+          </NavigationLink>
+        }
+        variant="outline"
+      />
+    );
   }
 
   return (

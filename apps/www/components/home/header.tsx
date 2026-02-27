@@ -11,7 +11,7 @@ export function HomeHeader() {
   return (
     <div className="flex flex-col gap-2">
       <p>{t("greeting", { name: userName })}</p>
-      <h1 className="text-pretty font-medium text-4xl leading-none tracking-tighter">
+      <h1 className="text-pretty font-medium text-4xl tracking-tighter">
         {t("title")}
       </h1>
     </div>
