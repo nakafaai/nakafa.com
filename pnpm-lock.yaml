@@ -219,8 +219,8 @@ importers:
         specifier: ^13.11.2
         version: 13.11.2(react@19.2.4)
       '@lobehub/icons':
-        specifier: ^4.6.0
-        version: 4.6.0(@lobehub/ui@4.17.0)(@types/react@19.2.14)(antd@6.1.4(date-fns@4.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        specifier: ^4.7.0
+        version: 4.7.0(@lobehub/ui@4.17.0)(@types/react@19.2.14)(antd@6.1.4(date-fns@4.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@mantine/hooks':
         specifier: ^8.3.15
         version: 8.3.15(react@19.2.4)
@@ -351,8 +351,8 @@ importers:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       nuqs:
-        specifier: ^2.8.8
-        version: 2.8.8(next@16.1.6(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
+        specifier: ^2.8.9
+        version: 2.8.9(next@16.1.6(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
       pino:
         specifier: ^10.3.1
         version: 10.3.1
@@ -439,8 +439,8 @@ importers:
         specifier: ^3.0.33
         version: 3.0.33(zod@4.3.6)
       '@ai-sdk/google-vertex':
-        specifier: ^4.0.66
-        version: 4.0.66(zod@4.3.6)
+        specifier: ^4.0.67
+        version: 4.0.67(zod@4.3.6)
       '@ai-sdk/openai':
         specifier: ^3.0.36
         version: 3.0.36(zod@4.3.6)
@@ -717,8 +717,8 @@ importers:
         specifier: ^13.11.2
         version: 13.11.2(react@19.2.4)
       '@lobehub/icons-static-svg':
-        specifier: ^1.79.0
-        version: 1.79.0
+        specifier: ^1.80.0
+        version: 1.80.0
       '@mantine/hooks':
         specifier: ^8.3.15
         version: 8.3.15(react@19.2.4)
@@ -1105,8 +1105,8 @@ packages:
   '@acemir/cssom@0.9.31':
     resolution: {integrity: sha512-ZnR3GSaH+/vJ0YlHau21FjfLYjMpYVIzTD8M8vIEQvIGxeOXyXdzCI140rrCY862p/C/BbzWsjc1dgnM9mkoTA==}
 
-  '@ai-sdk/anthropic@3.0.48':
-    resolution: {integrity: sha512-QSvz0XumBFaxulalUB+3D2/tLvfsYjIcG3HlqOxmmXIzATIBLInTVEw0Sy3yXJjqhNQZedBokVrN53Bh/V+eWQ==}
+  '@ai-sdk/anthropic@3.0.49':
+    resolution: {integrity: sha512-EU/odEtJeqAWY9gRgCBQEK3m1p9nXPdGuvy4XF4q5TFJqUD+x5ykGUpJUL7Eo+pzXddHP+VyP8yW12FpB9EsYA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -1127,8 +1127,8 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/google-vertex@4.0.66':
-    resolution: {integrity: sha512-euSOJSgOwemtnQ/EIM2LgKPPWUqOkZwYTejsle79K/kOWvDzu376IbvaLaegLQ+uymxx2pskhmSrMvAD1uAQoA==}
+  '@ai-sdk/google-vertex@4.0.67':
+    resolution: {integrity: sha512-JBvsIgzsFAMYbZspsL+uZrWpyePRd5iCsr1hBhNzWygYmfXrgTcxmQgIV0BxgDfcSYGKeXeaVGmui2B5VMFIeA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -3003,11 +3003,11 @@ packages:
       react: ^19.0.0
       react-dom: ^19.0.0
 
-  '@lobehub/icons-static-svg@1.79.0':
-    resolution: {integrity: sha512-5OnwC9FyaH1mKkLjJrySEV50wWVC2vbRW0T5H5FeQGvsW4PDvsVlvB7DMNnvz3F2bbGzsfbYnhhFQSzxyBXDVg==}
+  '@lobehub/icons-static-svg@1.80.0':
+    resolution: {integrity: sha512-Lgx2soQPfCn5gat1DtOP1qHVFV8pUuWZQ76YcECFWbIOoJ51lVwhW3N+J1BcqF5dsFJX8WNbuor8BiRCMmGabg==}
 
-  '@lobehub/icons@4.6.0':
-    resolution: {integrity: sha512-TuU0837kalurxQfGwfyd6UODwKtPluhvuT8XrgqHo/D0B/ggbYWrLF1pwIYG+p9ccA6oz6HeaEQhmNH2eQl2sw==}
+  '@lobehub/icons@4.7.0':
+    resolution: {integrity: sha512-VpzrUw9htpNX8cM2DixeBLOpgDzDZpS+Vi2xWC6fzfRkiZNdET/XixTYt6+9oCiMb0sA1rPg0bHrNTRYxA7Xew==}
     peerDependencies:
       '@lobehub/ui': ^4.3.3
       antd: ^6.1.1
@@ -9642,8 +9642,8 @@ packages:
   numeral@2.0.6:
     resolution: {integrity: sha512-qaKRmtYPZ5qdw4jWJD6bxEf1FJEqllJrwxCLIm0sQU/A7v2/czigzOb+C2uSiFsa9lBUzeH7M1oK+Q+OLxL3kA==}
 
-  nuqs@2.8.8:
-    resolution: {integrity: sha512-LF5sw9nWpHyPWzMMu9oho3r9C5DvkpmBIg4LQN78sexIzGaeRx8DWr0uy3YiFx5i2QGZN1Qqcb+OAtEVRa2bnA==}
+  nuqs@2.8.9:
+    resolution: {integrity: sha512-8ou6AEwsxMWSYo2qkfZtYFVzngwbKmg4c00HVxC1fF6CEJv3Fwm6eoZmfVPALB+vw8Udo7KL5uy96PFcYe1BIQ==}
     peerDependencies:
       '@remix-run/react': '>=2'
       '@tanstack/react-router': ^1
@@ -11969,7 +11969,7 @@ snapshots:
 
   '@acemir/cssom@0.9.31': {}
 
-  '@ai-sdk/anthropic@3.0.48(zod@4.3.6)':
+  '@ai-sdk/anthropic@3.0.49(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider': 3.0.8
       '@ai-sdk/provider-utils': 4.0.15(zod@4.3.6)
@@ -11994,9 +11994,9 @@ snapshots:
       '@vercel/oidc': 3.1.0
       zod: 4.3.6
 
-  '@ai-sdk/google-vertex@4.0.66(zod@4.3.6)':
+  '@ai-sdk/google-vertex@4.0.67(zod@4.3.6)':
     dependencies:
-      '@ai-sdk/anthropic': 3.0.48(zod@4.3.6)
+      '@ai-sdk/anthropic': 3.0.49(zod@4.3.6)
       '@ai-sdk/google': 3.0.33(zod@4.3.6)
       '@ai-sdk/provider': 3.0.8
       '@ai-sdk/provider-utils': 4.0.15(zod@4.3.6)
@@ -13843,11 +13843,11 @@ snapshots:
       - antd
       - supports-color
 
-  '@lobehub/icons-static-svg@1.79.0': {}
+  '@lobehub/icons-static-svg@1.80.0': {}
 
-  '@lobehub/icons@4.6.0(@lobehub/ui@4.17.0)(@types/react@19.2.14)(antd@6.1.4(date-fns@4.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+  '@lobehub/icons@4.7.0(@lobehub/ui@4.17.0)(@types/react@19.2.14)(antd@6.1.4(date-fns@4.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
-      '@lobehub/ui': 4.17.0(@lobehub/fluent-emoji@4.1.0(@types/react@19.2.14)(antd@6.1.4(date-fns@4.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@lobehub/icons@4.6.0)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(antd@6.1.4(date-fns@4.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(micromark-util-types@2.0.2)(micromark@4.0.2)(motion@12.34.3(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lobehub/ui': 4.17.0(@lobehub/fluent-emoji@4.1.0(@types/react@19.2.14)(antd@6.1.4(date-fns@4.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@lobehub/icons@4.7.0)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(antd@6.1.4(date-fns@4.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(micromark-util-types@2.0.2)(micromark@4.0.2)(motion@12.34.3(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       antd: 6.1.4(date-fns@4.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       antd-style: 4.1.0(@types/react@19.2.14)(antd@6.1.4(date-fns@4.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       lucide-react: 0.469.0(react@19.2.4)
@@ -13858,7 +13858,7 @@ snapshots:
       - '@types/react'
       - supports-color
 
-  '@lobehub/ui@4.17.0(@lobehub/fluent-emoji@4.1.0(@types/react@19.2.14)(antd@6.1.4(date-fns@4.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@lobehub/icons@4.6.0)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(antd@6.1.4(date-fns@4.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(micromark-util-types@2.0.2)(micromark@4.0.2)(motion@12.34.3(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+  '@lobehub/ui@4.17.0(@lobehub/fluent-emoji@4.1.0(@types/react@19.2.14)(antd@6.1.4(date-fns@4.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@lobehub/icons@4.7.0)(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(antd@6.1.4(date-fns@4.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(micromark-util-types@2.0.2)(micromark@4.0.2)(motion@12.34.3(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
       '@ant-design/cssinjs': 2.0.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@base-ui/react': 1.2.0(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -13872,7 +13872,7 @@ snapshots:
       '@floating-ui/react': 0.27.18(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@giscus/react': 3.1.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@lobehub/fluent-emoji': 4.1.0(@types/react@19.2.14)(antd@6.1.4(date-fns@4.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@lobehub/icons': 4.6.0(@lobehub/ui@4.17.0)(@types/react@19.2.14)(antd@6.1.4(date-fns@4.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@lobehub/icons': 4.7.0(@lobehub/ui@4.17.0)(@types/react@19.2.14)(antd@6.1.4(date-fns@4.1.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@mdx-js/mdx': 3.1.1
       '@mdx-js/react': 3.1.1(@types/react@19.2.14)(react@19.2.4)
       '@radix-ui/react-slot': 1.2.4(@types/react@19.2.14)(react@19.2.4)
@@ -21885,7 +21885,7 @@ snapshots:
 
   numeral@2.0.6: {}
 
-  nuqs@2.8.8(next@16.1.6(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4):
+  nuqs@2.8.9(next@16.1.6(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4):
     dependencies:
       '@standard-schema/spec': 1.0.0
       react: 19.2.4

@@ -85,13 +85,6 @@ export function SearchResults({
                   )}
                   href={subResult.url}
                   key={`${subResult.url}-${subResult.title}-${subIndex}`}
-                <NavigationLink
-                  className={cn(
-                    "group flex flex-col gap-2 p-2 px-4 text-sm transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
-                  )}
-                  href={subResult.url}
-                  key={`${subResult.url}-${subResult.title}-${index}`}
-                  title={subResult.title}
                 >
                   <div className="flex items-center gap-2">
                     <HugeIcons
