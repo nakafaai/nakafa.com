@@ -442,7 +442,8 @@
     "private-chat-error-description": "Ini bukan obrolanmu. Minta akses ke pemiliknya dulu ya.",
     "no-models-found": "Tidak ada model yang ditemukan.",
     "search-models-placeholder": "Cari model...",
-    "change-model-error": "Waduh, ada kesalahan! Silakan hubungi kami."
+    "change-model-error": "Waduh, ada kesalahan! Silakan hubungi kami.",
+    "speed": "Kecepatan pemutaran"
   },
   "Pricing": {
     "headline": "<mark>Kita juga pernah jadi pelajar.</mark> Ngerti rasanya milih antara belajar atau makan. Akses dasar gratis. Selamanya.",
