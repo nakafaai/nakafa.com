@@ -5,9 +5,16 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
-import { useCallback } from "react";
+import { type ComponentProps, useCallback } from "react";
 
-export function BackButton() {
+interface BackButtonProps extends ComponentProps<typeof Button> {
+  defaultHref?: string;
+}
+
+export function BackButton({
+  defaultHref = "/about",
+  ...props
+}: BackButtonProps) {
   const t = useTranslations("Common");
   const router = useRouter();
 
@@ -20,14 +27,14 @@ export function BackButton() {
       (window.history.length <= 2 || document.referrer === "")
     ) {
       // Navigate to about page instead of going back to avoid redirect loop
-      router.push("/about");
+      router.push(defaultHref);
     } else {
       router.back();
     }
-  }, [router]);
+  }, [router, defaultHref]);
 
   return (
-    <Button onClick={handleBack} variant="ghost">
+    <Button onClick={handleBack} variant="ghost" {...props}>
       <HugeIcons className="size-4" icon={ArrowLeft02Icon} />
       {t("back")}
     </Button>

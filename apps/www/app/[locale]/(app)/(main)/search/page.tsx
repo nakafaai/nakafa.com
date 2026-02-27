@@ -5,6 +5,7 @@ import { Suspense, use } from "react";
 import { HomeHeader } from "@/components/home/header";
 import { InputSearch } from "@/components/search/input";
 import { SearchListItems } from "@/components/search/results";
+import { BackButton } from "@/components/shared/back-button";
 
 export const revalidate = false;
 
@@ -45,9 +46,17 @@ export default function Page({
           <HomeHeader />
 
           <div className="flex flex-col gap-6">
-            <Suspense>
-              <InputSearch />
-            </Suspense>
+            <div className="flex flex-col gap-2">
+              <BackButton
+                className="w-fit p-0 text-muted-foreground"
+                defaultHref="/"
+                variant="link"
+              />
+
+              <Suspense>
+                <InputSearch />
+              </Suspense>
+            </div>
 
             <Suspense>
               <SearchListItems />
