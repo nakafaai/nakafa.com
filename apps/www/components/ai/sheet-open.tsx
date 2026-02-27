@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  ArrowUpRight01Icon,
-  SparklesIcon,
-  StarsIcon,
-} from "@hugeicons/core-free-icons";
+import { ArrowUpRight01Icon, StarsIcon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import type {
   ContentType,
@@ -182,7 +178,7 @@ function AiSheet() {
           variant="default-outline"
         >
           <div className="flex items-center gap-2">
-            <HugeIcons icon={SparklesIcon} />
+            <HugeIcons icon={StarsIcon} />
             <span>{t("ask-nina")}</span>
           </div>
 

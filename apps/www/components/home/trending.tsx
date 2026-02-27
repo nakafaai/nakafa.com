@@ -13,7 +13,6 @@ import { useMemo } from "react";
 
 export function HomeTrending() {
   const t = useTranslations("Home");
-  const tSubject = useTranslations("Subject");
   const locale = useLocale();
 
   const timeRange = useMemo(() => {
@@ -60,7 +59,7 @@ export function HomeTrending() {
           return (
             <NavigationLink
               className="group grid gap-3 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
-              href={subject.slug}
+              href={`/${subject.slug}`}
               key={subject.id}
             >
               <div className="flex items-start gap-3">
