@@ -1,6 +1,6 @@
 "use client";
 
-import { SparklesIcon } from "@hugeicons/core-free-icons";
+import { StarsIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useRouter } from "@repo/internationalization/src/navigation";
@@ -35,16 +35,16 @@ export function AskCta({ title }: Props) {
       return;
     }
 
-    router.push("/");
+    router.push("/chat");
   };
 
   useEffect(() => {
-    router.prefetch("/");
+    router.prefetch("/chat");
   }, [router]);
 
   return (
     <Button onClick={handleAsk}>
-      <HugeIcons icon={SparklesIcon} />
+      <HugeIcons icon={StarsIcon} />
       {t("ask-ai")}
     </Button>
   );

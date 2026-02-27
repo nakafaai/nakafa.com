@@ -5,7 +5,7 @@ import { use } from "react";
 import { Auth } from "@/components/auth";
 import { FeaturesDithering } from "@/components/marketing/about/features.client";
 import { Theme } from "@/components/marketing/shared/footer-action";
-import { BackButton } from "./page.client";
+import { BackButton } from "@/components/shared/back-button";
 
 export const revalidate = false;
 

@@ -17,7 +17,7 @@ import { AiChatModel } from "@/components/ai/chat-model";
 import { useAi } from "@/lib/context/use-ai";
 import { useUser } from "@/lib/context/use-user";
 
-export function HomeSearch() {
+export function ChatNew() {
   const t = useTranslations("Ai");
 
   const router = useRouter();
