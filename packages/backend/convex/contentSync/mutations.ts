@@ -14,6 +14,7 @@ import {
   subjectCategoryValidator,
 } from "@repo/backend/convex/lib/validators/contents";
 import { v } from "convex/values";
+import { getAll } from "convex-helpers/server/relationships";
 
 type AuthorCache = Map<string, Id<"authors">>;
 
@@ -777,19 +778,31 @@ export const deleteStaleArticles = internalMutation({
     articleIds: v.array(v.string()),
   },
   handler: async (ctx, args) => {
+    // Normalize all IDs upfront to avoid repeated normalization in loop
+    const articleIds = args.articleIds
+      .map((idStr) => ctx.db.normalizeId("articleContents", idStr))
+      .filter((id) => id !== null);
+
+    if (articleIds.length === 0) {
+      return { deleted: 0 };
+    }
+
+    // Batch fetch all articles at once using getAll (O(1) instead of O(n))
+    const articles = await getAll(ctx.db, articleIds);
+
     let deleted = 0;
+    const validArticleIds: Id<"articleContents">[] = [];
 
-    for (const idStr of args.articleIds) {
-      const articleId = ctx.db.normalizeId("articleContents", idStr);
-      if (!articleId) {
-        continue;
+    // Filter out null results and collect valid IDs
+    for (let i = 0; i < articles.length; i++) {
+      if (articles[i] !== null) {
+        validArticleIds.push(articleIds[i]);
       }
+    }
 
-      const article = await ctx.db.get("articleContents", articleId);
-      if (!article) {
-        continue;
-      }
-
+    // Process each article's related data
+    // Note: Sequential deletes are acceptable as Convex batches writes automatically
+    for (const articleId of validArticleIds) {
       const contentAuthors = await ctx.db
         .query("contentAuthors")
         .withIndex("contentId_contentType_authorId", (q) =>
@@ -823,19 +836,30 @@ export const deleteStaleSubjectTopics = internalMutation({
     topicIds: v.array(v.string()),
   },
   handler: async (ctx, args) => {
+    // Normalize all IDs upfront
+    const topicIds = args.topicIds
+      .map((idStr) => ctx.db.normalizeId("subjectTopics", idStr))
+      .filter((id)=> id !== null);
+
+    if (topicIds.length === 0) {
+      return { deleted: 0 };
+    }
+
+    // Batch fetch all topics at once using getAll
+    const topics = await getAll(ctx.db, topicIds);
+
     let deleted = 0;
+    const validTopicIds: Id<"subjectTopics">[] = [];
 
-    for (const idStr of args.topicIds) {
-      const topicId = ctx.db.normalizeId("subjectTopics", idStr);
-      if (!topicId) {
-        continue;
+    // Filter out null results
+    for (let i = 0; i < topics.length; i++) {
+      if (topics[i] !== null) {
+        validTopicIds.push(topicIds[i]);
       }
+    }
 
-      const topic = await ctx.db.get("subjectTopics", topicId);
-      if (!topic) {
-        continue;
-      }
-
+    // Process each topic
+    for (const topicId of validTopicIds) {
       const sections = await ctx.db
         .query("subjectSections")
         .withIndex("topicId", (q) => q.eq("topicId", topicId))
@@ -869,19 +893,30 @@ export const deleteStaleSubjectSections = internalMutation({
     sectionIds: v.array(v.string()),
   },
   handler: async (ctx, args) => {
+    // Normalize all IDs upfront
+    const sectionIds = args.sectionIds
+      .map((idStr) => ctx.db.normalizeId("subjectSections", idStr))
+      .filter((id) => id !== null);
+
+    if (sectionIds.length === 0) {
+      return { deleted: 0 };
+    }
+
+    // Batch fetch all sections at once using getAll
+    const sections = await getAll(ctx.db, sectionIds);
+
     let deleted = 0;
+    const validSectionIds: Id<"subjectSections">[] = [];
 
-    for (const idStr of args.sectionIds) {
-      const sectionId = ctx.db.normalizeId("subjectSections", idStr);
-      if (!sectionId) {
-        continue;
+    // Filter out null results
+    for (let i = 0; i < sections.length; i++) {
+      if (sections[i] !== null) {
+        validSectionIds.push(sectionIds[i]);
       }
+    }
 
-      const section = await ctx.db.get("subjectSections", sectionId);
-      if (!section) {
-        continue;
-      }
-
+    // Process each section
+    for (const sectionId of validSectionIds) {
       const contentAuthors = await ctx.db
         .query("contentAuthors")
         .withIndex("contentId_contentType_authorId", (q) =>
@@ -906,19 +941,30 @@ export const deleteStaleExerciseSets = internalMutation({
     setIds: v.array(v.string()),
   },
   handler: async (ctx, args) => {
+    // Normalize all IDs upfront
+    const setIds = args.setIds
+      .map((idStr) => ctx.db.normalizeId("exerciseSets", idStr))
+      .filter((id) => id !== null);
+
+    if (setIds.length === 0) {
+      return { deleted: 0 };
+    }
+
+    // Batch fetch all exercise sets at once using getAll
+    const sets = await getAll(ctx.db, setIds);
+
     let deleted = 0;
+    const validSetIds: Id<"exerciseSets">[] = [];
 
-    for (const idStr of args.setIds) {
-      const setId = ctx.db.normalizeId("exerciseSets", idStr);
-      if (!setId) {
-        continue;
+    // Filter out null results
+    for (let i = 0; i < sets.length; i++) {
+      if (sets[i] !== null) {
+        validSetIds.push(setIds[i]);
       }
+    }
 
-      const set = await ctx.db.get("exerciseSets", setId);
-      if (!set) {
-        continue;
-      }
-
+    // Process each exercise set
+    for (const setId of validSetIds) {
       const questions = await ctx.db
         .query("exerciseQuestions")
         .withIndex("setId", (q) => q.eq("setId", setId))
@@ -963,19 +1009,30 @@ export const deleteStaleExerciseQuestions = internalMutation({
     questionIds: v.array(v.string()),
   },
   handler: async (ctx, args) => {
+    // Normalize all IDs upfront
+    const questionIds = args.questionIds
+      .map((idStr) => ctx.db.normalizeId("exerciseQuestions", idStr))
+      .filter((id) => id !== null);
+
+    if (questionIds.length === 0) {
+      return { deleted: 0 };
+    }
+
+    // Batch fetch all questions at once using getAll
+    const questions = await getAll(ctx.db, questionIds);
+
     let deleted = 0;
+    const validQuestionIds: Id<"exerciseQuestions">[] = [];
 
-    for (const idStr of args.questionIds) {
-      const questionId = ctx.db.normalizeId("exerciseQuestions", idStr);
-      if (!questionId) {
-        continue;
+    // Filter out null results
+    for (let i = 0; i < questions.length; i++) {
+      if (questions[i] !== null) {
+        validQuestionIds.push(questionIds[i]);
       }
+    }
 
-      const question = await ctx.db.get("exerciseQuestions", questionId);
-      if (!question) {
-        continue;
-      }
-
+    // Process each question
+    for (const questionId of validQuestionIds) {
       const contentAuthors = await ctx.db
         .query("contentAuthors")
         .withIndex("contentId_contentType_authorId", (q) =>
@@ -1009,15 +1066,25 @@ export const deleteUnusedAuthors = internalMutation({
     authorIds: v.array(v.string()),
   },
   handler: async (ctx, args) => {
+    // Normalize all IDs upfront
+    const authorIds = args.authorIds
+      .map((idStr) => ctx.db.normalizeId("authors", idStr))
+      .filter((id) => id !== null);
+
+    if (authorIds.length === 0) {
+      return { deleted: 0 };
+    }
+
+    // Batch fetch all authors at once using getAll
+    const authors = await getAll(ctx.db, authorIds);
+
     let deleted = 0;
 
-    for (const idStr of args.authorIds) {
-      const authorId = ctx.db.normalizeId("authors", idStr);
-      if (!authorId) {
-        continue;
-      }
+    // Process each author
+    for (let i = 0; i < authors.length; i++) {
+      const author = authors[i];
+      const authorId = authorIds[i];
 
-      const author = await ctx.db.get("authors", authorId);
       if (!author) {
         continue;
       }
