@@ -267,12 +267,14 @@
     "search-description": "Search thousands of free learning materials, educational articles, practice exercises, and study resources. Find exactly what you need to master any subject."
   },
   "Home": {
+    "greeting": "Hi, {name}",
     "title": "What do you want to learn?",
     "contribute": "Contribute",
     "videos": "Videos",
     "trending-subjects": "Trending Subjects This Week",
     "views": "{count} views",
-    "explore-materials": "Explore Materials"
+    "explore-materials": "Explore Materials",
+    "guest": "you"
   },
   "Marketing": {
     "about": "About",

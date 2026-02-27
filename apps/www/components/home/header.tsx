@@ -1,14 +1,18 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useUser } from "@/lib/context/use-user";
 
 export function HomeHeader() {
+  const t = useTranslations("Home");
   const currentUser = useUser((state) => state.user);
+  const userName = currentUser?.appUser.name || t("guest");
+
   return (
     <div className="flex flex-col gap-2">
-      <p>Hi, {currentUser?.appUser.name || "kamu"}</p>
-      <h1 className="font-medium text-4xl leading-none tracking-tighter">
-        Mau belajar apa hari ini?
+      <p>{t("greeting", { name: userName })}</p>
+      <h1 className="font-medium text-pretty text-4xl leading-none tracking-tighter">
+        {t("title")}
       </h1>
     </div>
   );

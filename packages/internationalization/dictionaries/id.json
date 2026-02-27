@@ -267,12 +267,14 @@
     "search-description": "Cari ribuan materi pembelajaran gratis, artikel edukasi, latihan soal, dan sumber belajar. Temukan persis apa yang kamu butuhkan untuk menguasai pelajaran."
   },
   "Home": {
+    "greeting": "Hi, {name}",
     "title": "Mau belajar apa hari ini?",
     "contribute": "Kontribusi",
     "videos": "Video",
     "trending-subjects": "Materi Populer Minggu Ini",
     "views": "{count} views",
-    "explore-materials": "Jelajahi Materi"
+    "explore-materials": "Jelajahi Materi",
+    "guest": "kamu"
   },
   "Marketing": {
     "about": "Tentang",

@@ -117,9 +117,7 @@ export const getTrendingSubjects = query({
           material: subject.material,
         };
       })
-      .filter(
-        (subject) => subject !== null
-      );
+      .filter((subject) => subject !== null);
 
     return results;
   },

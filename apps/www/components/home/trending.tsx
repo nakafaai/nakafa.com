@@ -18,7 +18,7 @@ export function HomeTrending() {
     return getTrendingTimeRange(7);
   }, []);
 
-  const { data, isPending } = useQueryWithStatus(
+  const { data } = useQueryWithStatus(
     api.subjectSections.queries.getTrendingSubjects,
     {
       locale,
@@ -27,15 +27,15 @@ export function HomeTrending() {
     }
   );
 
-  if (isPending || data?.length === 0) {
+  if (!data || data.length === 0) {
     return null;
   }
 
   return (
     <section className="flex flex-col gap-4">
-      <h2 className="flex items-center gap-2 px-2 text-lg">
+      <h2 className="flex items-center gap-2 px-2">
         {t("trending-subjects")}
-        <HugeIcons className="size-5" icon={ArrowDown02Icon} />
+        <HugeIcons className="size-4" icon={ArrowDown02Icon} />
       </h2>
       <div className="grid gap-3 divide-y overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
         {data?.map((subject) => {
