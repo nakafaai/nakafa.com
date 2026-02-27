@@ -78,7 +78,13 @@ export function SearchResults({
               {result.meta.title}
             </h2>
             <div className="flex flex-col gap-1">
-              {result.sub_results.map((subResult, index) => (
+              {result.sub_results.map((subResult, subIndex) => (
+                <NavigationLink
+                  className={cn(
+                    "group flex flex-col gap-2 p-2 px-4 text-sm transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
+                  )}
+                  href={subResult.url}
+                  key={`${subResult.url}-${subResult.title}-${subIndex}`}
                 <NavigationLink
                   className={cn(
                     "group flex flex-col gap-2 p-2 px-4 text-sm transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
