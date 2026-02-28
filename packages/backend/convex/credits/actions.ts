@@ -3,6 +3,7 @@ import { internalAction } from "@repo/backend/convex/_generated/server";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { workflow } from "@repo/backend/convex/workflow";
 import { v } from "convex/values";
+import { literals } from "convex-helpers/validators";
 
 /**
  * Populates the credit reset queue for all users of a given plan.
@@ -12,7 +13,7 @@ import { v } from "convex/values";
  */
 export const populateQueue = internalAction({
   args: {
-    plan: v.union(v.literal("free"), v.literal("pro")),
+    plan: literals("free", "pro"),
     resetTimestamp: v.number(),
   },
   returns: v.null(),

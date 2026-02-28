@@ -1,13 +1,14 @@
 import { internalMutation } from "@repo/backend/convex/functions";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { v } from "convex/values";
+import { literals } from "convex-helpers/validators";
 
 /**
  * Create a reset job record.
  */
 export const createResetJob = internalMutation({
   args: {
-    jobType: v.union(v.literal("free-daily"), v.literal("pro-monthly")),
+    jobType: literals("free-daily", "pro-monthly"),
     resetTimestamp: v.number(),
   },
   returns: v.id("creditResetJobs"),
@@ -37,29 +38,22 @@ export const createResetJob = internalMutation({
  */
 export const populateQueue = internalMutation({
   args: {
-    plan: v.union(v.literal("free"), v.literal("pro")),
+    plan: literals("free", "pro"),
     resetTimestamp: v.number(),
   },
   returns: v.number(),
   handler: async (ctx, args) => {
     let totalUsers = 0;
-    let cursor: string | undefined;
     const BATCH_SIZE = 1000;
 
     // Process users in batches
     while (true) {
-      let query = ctx.db
+      const users = await ctx.db
         .query("users")
         .withIndex("plan", (idx) =>
           idx.eq("plan", args.plan).lt("creditsResetAt", args.resetTimestamp)
-        );
-
-      const cursorId = cursor;
-      if (cursorId) {
-        query = query.filter((f) => f.gt(f.field("_id"), cursorId));
-      }
-
-      const users = await query.take(BATCH_SIZE);
+        )
+        .take(BATCH_SIZE);
 
       if (users.length === 0) {
         break;
@@ -76,7 +70,6 @@ export const populateQueue = internalMutation({
       }
 
       totalUsers += users.length;
-      cursor = users.at(-1)?._id;
 
       logger.info("Queue populated batch", {
         plan: args.plan,
@@ -105,7 +98,7 @@ export const populateQueue = internalMutation({
  */
 export const claimQueueItems = internalMutation({
   args: {
-    plan: v.union(v.literal("free"), v.literal("pro")),
+    plan: literals("free", "pro"),
     resetTimestamp: v.number(),
     batchSize: v.number(),
   },
@@ -117,13 +110,15 @@ export const claimQueueItems = internalMutation({
     })
   ),
   handler: async (ctx, args) => {
-    // Find pending items
+    // Find pending items using indexed query (no .filter())
     const pendingItems = await ctx.db
       .query("creditResetQueue")
-      .withIndex("planStatus", (idx) =>
-        idx.eq("plan", args.plan).eq("status", "pending")
+      .withIndex("planStatusTimestamp", (idx) =>
+        idx
+          .eq("plan", args.plan)
+          .eq("status", "pending")
+          .eq("resetTimestamp", args.resetTimestamp)
       )
-      .filter((f) => f.eq(f.field("resetTimestamp"), args.resetTimestamp))
       .take(args.batchSize);
 
     if (pendingItems.length === 0) {
@@ -180,7 +175,7 @@ export const resetUserCredits = internalMutation({
   args: {
     userId: v.id("users"),
     creditAmount: v.number(),
-    grantType: v.union(v.literal("daily-grant"), v.literal("monthly-grant")),
+    grantType: literals("daily-grant", "monthly-grant"),
     resetTimestamp: v.number(),
     previousBalance: v.number(),
   },
@@ -290,8 +285,9 @@ export const cleanupOldQueueItems = internalMutation({
 
     const oldItems = await ctx.db
       .query("creditResetQueue")
-      .withIndex("status", (idx) => idx.eq("status", "completed"))
-      .filter((f) => f.lt(f.field("_creationTime"), CUTOFF))
+      .withIndex("status", (idx) =>
+        idx.eq("status", "completed").lt("_creationTime", CUTOFF)
+      )
       .take(1000);
 
     for (const item of oldItems) {
