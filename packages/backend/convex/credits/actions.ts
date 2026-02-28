@@ -14,21 +14,21 @@ import { literals } from "convex-helpers/validators";
 export const populateQueue = internalAction({
   args: {
     plan: literals("free", "pro"),
-    resetTimestamp: v.number(),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
+    const resetTimestamp = Date.now();
     const jobType = args.plan === "free" ? "free-daily" : "pro-monthly";
 
     logger.info(`Populating ${jobType} credit reset queue`, {
       plan: args.plan,
-      resetTimestamp: args.resetTimestamp,
+      resetTimestamp,
     });
 
     // Start the orchestrator workflow
     await workflow.start(ctx, internal.credits.workflows.orchestrateReset, {
       plan: args.plan,
-      resetTimestamp: args.resetTimestamp,
+      resetTimestamp,
     });
 
     logger.info(`${jobType} orchestration started`);

@@ -53,7 +53,7 @@ crons.cron(
   "reset free user credits",
   "0 0 * * *",
   internal.credits.actions.populateQueue,
-  { plan: "free", resetTimestamp: Date.now() }
+  { plan: "free" }
 );
 
 /**
@@ -64,7 +64,7 @@ crons.cron(
   "reset pro user credits",
   "0 0 1 * *",
   internal.credits.actions.populateQueue,
-  { plan: "pro", resetTimestamp: Date.now() }
+  { plan: "pro" }
 );
 
 /**
