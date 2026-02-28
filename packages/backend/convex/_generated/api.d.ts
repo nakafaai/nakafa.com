@@ -40,7 +40,6 @@ import type * as contents_mutations from "../contents/mutations.js";
 import type * as contents_queries from "../contents/queries.js";
 import type * as contents_utils from "../contents/utils.js";
 import type * as credits_actions from "../credits/actions.js";
-import type * as credits_lib_helpers from "../credits/lib/helpers.js";
 import type * as credits_mutations from "../credits/mutations.js";
 import type * as credits_queries from "../credits/queries.js";
 import type * as credits_workflows from "../credits/workflows.js";
@@ -150,7 +149,6 @@ declare const fullApi: ApiFromModules<{
   "contents/queries": typeof contents_queries;
   "contents/utils": typeof contents_utils;
   "credits/actions": typeof credits_actions;
-  "credits/lib/helpers": typeof credits_lib_helpers;
   "credits/mutations": typeof credits_mutations;
   "credits/queries": typeof credits_queries;
   "credits/workflows": typeof credits_workflows;

@@ -28,22 +28,23 @@ export const resetCreditsBatch = workflow.define({
     });
 
     // Step 1: Get batch of users needing reset
-    const users = await step.runQuery(
+    const plan = args.isPro ? "pro" : "free";
+    const result = await step.runQuery(
       internal.credits.queries.getUsersNeedingReset,
       {
+        plan,
         resetTimestamp: args.resetTimestamp,
         cursor: args.cursor,
         batchSize,
       }
     );
 
-    if (users.length === 0) {
+    if (result.users.length === 0) {
       logger.info("Credit reset completed - no more users", {
         jobId: args.jobId,
         totalProcessed: args.processedCount,
       });
 
-      // Mark job as completed
       await step.runMutation(internal.credits.mutations.completeResetJob, {
         jobId: args.jobId,
         totalProcessed: args.processedCount,
@@ -54,15 +55,14 @@ export const resetCreditsBatch = workflow.define({
 
     logger.info("Processing credit reset batch", {
       jobId: args.jobId,
-      batchSize: users.length,
+      batchSize: result.users.length,
       processedSoFar: args.processedCount,
     });
 
     // Step 2: Process each user with idempotent mutation
-    // Using runMutation with retry config for resilience
     await Promise.all(
-      users.map((user) =>
-        step.runMutation(
+      result.users.map((user) => {
+        return step.runMutation(
           internal.credits.mutations.resetUserCredits,
           {
             userId: user._id,
@@ -74,17 +74,16 @@ export const resetCreditsBatch = workflow.define({
           {
             name: `reset-credits-${user._id}`,
           }
-        )
-      )
+        );
+      })
     );
 
     // Step 3: Continue with next batch
-    const lastUser = users.at(-1);
-    const newProcessedCount = args.processedCount + users.length;
+    const newProcessedCount = args.processedCount + result.users.length;
 
     logger.info("Credit reset batch complete, continuing", {
       jobId: args.jobId,
-      batchProcessed: users.length,
+      batchProcessed: result.users.length,
       newTotal: newProcessedCount,
     });
 
@@ -92,7 +91,7 @@ export const resetCreditsBatch = workflow.define({
       jobId: args.jobId,
       resetTimestamp: args.resetTimestamp,
       isPro: args.isPro,
-      cursor: lastUser?._id,
+      cursor: result.continueCursor,
       processedCount: newProcessedCount,
     });
 

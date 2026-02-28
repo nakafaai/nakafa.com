@@ -1,5 +1,4 @@
-import { internalMutation, mutation } from "@repo/backend/convex/functions";
-import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
+import { internalMutation } from "@repo/backend/convex/functions";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { v } from "convex/values";
 
@@ -113,100 +112,6 @@ export const completeResetJob = internalMutation({
     logger.info("Credit reset job completed", {
       jobId: args.jobId,
       totalProcessed: args.totalProcessed,
-    });
-
-    return null;
-  },
-});
-
-/**
- * Deduct credits for AI usage.
- * Public mutation - called when user uses AI.
- * Validates sufficient balance before deducting.
- */
-export const deductCredits = mutation({
-  args: {
-    amount: v.number(),
-    metadata: v.optional(v.record(v.string(), v.any())),
-  },
-  returns: v.object({
-    success: v.boolean(),
-    remaining: v.number(),
-  }),
-  handler: async (ctx, args) => {
-    const { appUser } = await requireAuth(ctx);
-
-    const currentCredits = appUser.credits ?? 0;
-
-    if (currentCredits < args.amount) {
-      return { success: false, remaining: currentCredits };
-    }
-
-    const newBalance = currentCredits - args.amount;
-
-    // Update user
-    await ctx.db.patch(appUser._id, {
-      credits: newBalance,
-    });
-
-    // Record transaction - _creationTime is automatically set by Convex
-    await ctx.db.insert("creditTransactions", {
-      userId: appUser._id,
-      amount: -args.amount,
-      type: "usage",
-      balanceAfter: newBalance,
-      metadata: args.metadata,
-    });
-
-    return { success: true, remaining: newBalance };
-  },
-});
-
-/**
- * Add credits (for purchases, bonuses, refunds).
- * Admin-only or internal use.
- */
-export const addCredits = internalMutation({
-  args: {
-    userId: v.id("users"),
-    amount: v.number(),
-    type: v.union(
-      v.literal("purchase"),
-      v.literal("refund"),
-      v.literal("bonus")
-    ),
-    metadata: v.optional(v.record(v.string(), v.any())),
-  },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    const user = await ctx.db.get("users", args.userId);
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    const currentCredits = user.credits ?? 0;
-    const newBalance = currentCredits + args.amount;
-
-    // Update user
-    await ctx.db.patch(args.userId, {
-      credits: newBalance,
-    });
-
-    // Record transaction - _creationTime is automatically set by Convex
-    await ctx.db.insert("creditTransactions", {
-      userId: args.userId,
-      amount: args.amount,
-      type: args.type,
-      balanceAfter: newBalance,
-      metadata: args.metadata,
-    });
-
-    logger.info("Credits added", {
-      userId: args.userId,
-      amount: args.amount,
-      type: args.type,
-      newBalance,
     });
 
     return null;

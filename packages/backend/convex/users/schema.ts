@@ -21,6 +21,14 @@ export const userRoleValidator = nullable(userRoleOptionsValidator);
 export type UserRole = Infer<typeof userRoleValidator>;
 
 /**
+ * User plan validator
+ * Currently supports: free and pro
+ * Can be extended in the future
+ */
+export const userPlanValidator = literals("free", "pro");
+export type UserPlan = Infer<typeof userPlanValidator>;
+
+/**
  * User base validator (without system fields)
  * Used for table definition
  */
@@ -30,6 +38,7 @@ export const userValidator = v.object({
   name: v.string(),
   image: v.optional(v.string()),
   role: v.optional(userRoleOptionsValidator),
+  plan: v.optional(userPlanValidator),
   credits: v.optional(v.number()),
   creditsResetAt: v.optional(v.number()),
 });
@@ -70,7 +79,7 @@ const tables = {
   users: defineTable(userValidator)
     .index("email", ["email"])
     .index("authId", ["authId"])
-    .index("creditsResetAt", ["creditsResetAt"]),
+    .index("plan", ["plan", "creditsResetAt"]),
   userDevices: defineTable(userDeviceValidator)
     .index("deviceId", ["deviceId"])
     .index("userId_lastSeenAt", ["userId", "lastSeenAt"])
