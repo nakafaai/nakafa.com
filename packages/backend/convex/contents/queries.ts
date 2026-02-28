@@ -26,8 +26,6 @@ export const getRecentlyViewed = query({
       return [];
     }
 
-    // Fetch recent views for this user using index
-    // Uses userId_type_locale_viewedAt index for efficient querying
     const recentViews = await ctx.db
       .query("contentViews")
       .withIndex("userId_type_locale_viewedAt", (q) =>

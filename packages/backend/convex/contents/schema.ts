@@ -19,7 +19,6 @@ const tables = {
     viewedAt: v.number(),
   })
     .index("userId_contentRefId", ["userId", "contentRef.id"])
-    .index("userId_type_viewedAt", ["userId", "contentRef.type", "viewedAt"])
     .index("userId_type_locale_viewedAt", [
       "userId",
       "contentRef.type",
