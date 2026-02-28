@@ -1,5 +1,13 @@
 # @repo/analytics
 
+## 0.1.0
+
+### Minor Changes
+
+- [`e9c4947`](https://github.com/nakafaai/nakafa.com/commit/e9c4947c95d674cb42a21c34544c0939d1bd804d) Thanks [@nabilfatih](https://github.com/nabilfatih)! - add email package with welcome template and components
+
+- [`aa179b9`](https://github.com/nakafaai/nakafa.com/commit/aa179b9e3a196cc6117d997246a150e1561b7442) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Add exercise tracking, get results, timer
+
 ## 0.0.3
 
 ### Patch Changes

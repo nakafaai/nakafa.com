@@ -1,5 +1,22 @@
 # @repo/connection
 
+## 1.0.0
+
+### Major Changes
+
+- [`c6b51e6`](https://github.com/nakafaai/nakafa.com/commit/c6b51e60d3dd96fd3d148035d19f3c2304145ab7) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Migrate contents to use effect, adding extensive testing, adding cache for building contents, improving performance and type safety
+
+### Minor Changes
+
+- [`8743029`](https://github.com/nakafaai/nakafa.com/commit/87430293f82dd666543ea9722289ed68d318aefa) Thanks [@nabilfatih](https://github.com/nabilfatih)! - New set of try out snbt, use semantic html, fix tailwind css lint
+
+- [`aa179b9`](https://github.com/nakafaai/nakafa.com/commit/aa179b9e3a196cc6117d997246a150e1561b7442) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Add exercise tracking, get results, timer
+
+### Patch Changes
+
+- Updated dependencies [[`aa179b9`](https://github.com/nakafaai/nakafa.com/commit/aa179b9e3a196cc6117d997246a150e1561b7442)]:
+  - @repo/utilities@0.2.0
+
 ## 0.1.0
 
 ### Minor Changes
