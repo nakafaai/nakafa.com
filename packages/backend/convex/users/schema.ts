@@ -30,6 +30,8 @@ export const userValidator = v.object({
   name: v.string(),
   image: v.optional(v.string()),
   role: v.optional(userRoleOptionsValidator),
+  credits: v.optional(v.number()),
+  creditsResetAt: v.optional(v.number()),
 });
 
 /**
@@ -67,7 +69,8 @@ export const apiKeyVerifyResultValidator = v.object({
 const tables = {
   users: defineTable(userValidator)
     .index("email", ["email"])
-    .index("authId", ["authId"]),
+    .index("authId", ["authId"])
+    .index("creditsResetAt", ["creditsResetAt"]),
   userDevices: defineTable(userDeviceValidator)
     .index("deviceId", ["deviceId"])
     .index("userId_lastSeenAt", ["userId", "lastSeenAt"])

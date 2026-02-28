@@ -45,4 +45,26 @@ crons.interval(
   {}
 );
 
+/**
+ * Resets free user credits daily at midnight UTC.
+ * Grants 10 credits per day to free users.
+ */
+crons.cron(
+  "reset free user credits",
+  "0 0 * * *",
+  internal.credits.actions.startUserReset,
+  { isPro: false }
+);
+
+/**
+ * Resets pro user credits monthly on 1st at midnight UTC.
+ * Grants 3000 credits per month to pro users.
+ */
+crons.cron(
+  "reset pro user credits",
+  "0 0 1 * *",
+  internal.credits.actions.startUserReset,
+  { isPro: true }
+);
+
 export default crons;

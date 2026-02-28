@@ -58,6 +58,8 @@ triggers.register("schoolClassMaterialViews", noopHandler);
 triggers.register("contentAudios", noopHandler);
 triggers.register("audioGenerationQueue", noopHandler);
 triggers.register("exerciseAttempts", noopHandler);
+triggers.register("creditTransactions", noopHandler);
+triggers.register("creditResetJobs", noopHandler);
 triggers.register("contentViews", contentViewsHandler);
 
 // Popularity aggregate triggers for trending content
