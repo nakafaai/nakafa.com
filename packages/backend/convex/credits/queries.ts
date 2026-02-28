@@ -1,19 +1,22 @@
 import { internalQuery } from "@repo/backend/convex/_generated/server";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
+import schema from "@repo/backend/convex/schema";
 import { userPlanValidator } from "@repo/backend/convex/users/schema";
 import { v } from "convex/values";
+import type { IndexKey } from "convex-helpers/server/pagination";
+import { getPage } from "convex-helpers/server/pagination";
 
 /**
  * Get users who need their credits reset.
  * Internal query used by workflow.
- * Uses cursor-based pagination for scalability.
+ * Uses convex-helpers getPage for proper cursor-based pagination.
  * Filters by plan tier (free, pro) to only reset users in that tier.
  */
 export const getUsersNeedingReset = internalQuery({
   args: {
     plan: userPlanValidator,
     resetTimestamp: v.number(),
-    cursor: v.optional(vv.id("users")),
+    cursor: v.optional(v.string()),
     batchSize: v.number(),
   },
   returns: v.object({
@@ -23,36 +26,41 @@ export const getUsersNeedingReset = internalQuery({
         credits: v.optional(v.number()),
       })
     ),
-    continueCursor: v.optional(vv.id("users")),
+    continueCursor: v.optional(v.string()),
     isDone: v.boolean(),
   }),
   handler: async (ctx, args) => {
-    // Query users by plan whose credits haven't been reset since resetTimestamp
-    let query = ctx.db
-      .query("users")
-      .withIndex("plan", (idx) =>
-        idx.eq("plan", args.plan).lt("creditsResetAt", args.resetTimestamp)
-      );
+    // Convert string cursor to IndexKey array for getPage
+    const startIndexKey: IndexKey | undefined = args.cursor
+      ? [args.cursor]
+      : undefined;
 
-    // Apply cursor pagination if provided
-    const cursor = args.cursor;
-    if (cursor) {
-      query = query.filter((f) => f.gt(f.field("_id"), cursor));
-    }
+    // Use getPage from convex-helpers for proper pagination without .filter()
+    const result = await getPage(ctx, {
+      table: "users",
+      index: "plan",
+      schema,
+      startIndexKey,
+      targetMaxRows: args.batchSize,
+    });
 
-    const users = await query.take(args.batchSize);
+    // Filter users whose credits haven't been reset since resetTimestamp
+    const usersNeedingReset = result.page.filter(
+      (user) => (user.creditsResetAt ?? 0) < args.resetTimestamp
+    );
 
-    // Determine if there are more users to process
-    const isDone = users.length < args.batchSize;
-    const continueCursor = isDone ? undefined : users.at(-1)?._id;
+    // Build continue cursor from last index key if there are more results
+    const lastIndexKey = result.indexKeys.at(-1);
+    const continueCursor =
+      result.hasMore && lastIndexKey ? String(lastIndexKey[0]) : undefined;
 
     return {
-      users: users.map((user) => ({
+      users: usersNeedingReset.map((user) => ({
         _id: user._id,
         credits: user.credits,
       })),
       continueCursor,
-      isDone,
+      isDone: !result.hasMore || usersNeedingReset.length === 0,
     };
   },
 });

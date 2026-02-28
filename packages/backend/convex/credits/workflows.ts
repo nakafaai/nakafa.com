@@ -12,7 +12,7 @@ export const resetCreditsBatch = workflow.define({
     jobId: v.id("creditResetJobs"),
     resetTimestamp: v.number(),
     isPro: v.boolean(),
-    cursor: v.optional(v.id("users")),
+    cursor: v.optional(v.string()),
     processedCount: v.number(),
   },
   returns: v.null(),
