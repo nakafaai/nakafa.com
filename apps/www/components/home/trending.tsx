@@ -1,16 +1,11 @@
 "use client";
 
-import {
-  ArrowDown02Icon,
-  Search02Icon,
-  ViewIcon,
-} from "@hugeicons/core-free-icons";
+import { ArrowDown02Icon, ViewIcon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { getTrendingTimeRange } from "@repo/backend/convex/subjectSections/utils";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import { Badge } from "@repo/design-system/components/ui/badge";
-import { Button } from "@repo/design-system/components/ui/button";
 import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
@@ -40,24 +35,12 @@ export function HomeTrending() {
   }
 
   if (!data || data.length === 0) {
-    return (
-      <Button
-        className="w-fit"
-        nativeButton={false}
-        render={
-          <NavigationLink href="/search">
-            <HugeIcons className="size-4" icon={Search02Icon} />
-            {t("explore-materials")}
-          </NavigationLink>
-        }
-        variant="outline"
-      />
-    );
+    return null;
   }
 
   return (
     <section className="flex flex-col gap-4">
-      <h2 className="flex items-center gap-2 px-3">
+      <h2 className="flex items-center gap-2 px-3 font-medium">
         {t("trending-subjects")}
         <HugeIcons className="size-4" icon={ArrowDown02Icon} />
       </h2>

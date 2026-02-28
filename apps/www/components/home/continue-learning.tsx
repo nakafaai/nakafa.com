@@ -62,7 +62,7 @@ export function HomeContinueLearning() {
 
   return (
     <section className="flex flex-col gap-4">
-      <h2 className="px-3">{t("continue-learning")}</h2>
+      <h2 className="px-3 font-medium">{t("continue-learning")}</h2>
       <div className="grid divide-y overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
         {data.map((subject) => {
           return (
