@@ -34,8 +34,6 @@ export const createResetJob = internalMutation({
 
 /**
  * Populate the queue with all users needing credit reset.
- * Processes users in batches using cursor-based pagination.
- * Uses the last document's _id as cursor to avoid returning same users.
  */
 export const populateQueue = internalMutation({
   args: {
@@ -48,16 +46,13 @@ export const populateQueue = internalMutation({
     const BATCH_SIZE = 1000;
     let lastId: string | undefined;
 
-    // Process users in batches using cursor-based pagination
     while (true) {
-      // Build query with cursor to get next batch (avoids returning same users)
       let query = ctx.db
         .query("users")
         .withIndex("plan", (idx) =>
           idx.eq("plan", args.plan).lt("creditsResetAt", args.resetTimestamp)
         );
 
-      // Apply cursor filter to skip already processed users
       const cursorId = lastId;
       if (cursorId) {
         query = query.filter((q) => q.gt(q.field("_id"), cursorId));
@@ -69,7 +64,6 @@ export const populateQueue = internalMutation({
         break;
       }
 
-      // Add users to queue
       for (const user of users) {
         await ctx.db.insert("creditResetQueue", {
           userId: user._id,
@@ -88,7 +82,6 @@ export const populateQueue = internalMutation({
         totalSoFar: totalUsers,
       });
 
-      // Continue if we got a full batch
       if (users.length < BATCH_SIZE) {
         break;
       }
