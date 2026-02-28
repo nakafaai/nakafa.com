@@ -1,63 +1,56 @@
 import { internalQuery } from "@repo/backend/convex/_generated/server";
-import { vv } from "@repo/backend/convex/lib/validators/vv";
-import schema from "@repo/backend/convex/schema";
-import { userPlanValidator } from "@repo/backend/convex/users/schema";
 import { v } from "convex/values";
-import { getPage } from "convex-helpers/server/pagination";
+import { literals } from "convex-helpers/validators";
 
 /**
- * Get users who need their credits reset.
- * Internal query used by workflow.
- * Uses convex-helpers getPage for proper cursor-based pagination.
- * Filters by plan tier (free, pro) to only reset users in that tier.
+ * Check if there are pending queue items for a job.
+ * Returns true if any pending items exist, false otherwise.
+ * Uses indexed query for efficiency (no counting).
  */
-export const getUsersNeedingReset = internalQuery({
+export const hasPendingQueueItems = internalQuery({
   args: {
-    plan: userPlanValidator,
+    plan: literals("free", "pro"),
     resetTimestamp: v.number(),
-    cursor: v.optional(v.string()),
-    batchSize: v.number(),
+  },
+  returns: v.boolean(),
+  handler: async (ctx, args) => {
+    const pendingItem = await ctx.db
+      .query("creditResetQueue")
+      .withIndex("planStatusTimestamp", (idx) =>
+        idx
+          .eq("plan", args.plan)
+          .eq("status", "pending")
+          .eq("resetTimestamp", args.resetTimestamp)
+      )
+      .first();
+
+    return pendingItem !== null;
+  },
+});
+
+/**
+ * Get current job progress.
+ */
+export const getJobProgress = internalQuery({
+  args: {
+    jobId: v.id("creditResetJobs"),
   },
   returns: v.object({
-    users: v.array(
-      v.object({
-        _id: vv.id("users"),
-        credits: v.optional(v.number()),
-      })
-    ),
-    continueCursor: v.optional(v.string()),
-    isDone: v.boolean(),
+    totalUsers: v.number(),
+    processedUsers: v.number(),
+    status: v.string(),
   }),
   handler: async (ctx, args) => {
-    // Convert string cursor to IndexKey array for getPage
-    const startIndexKey = args.cursor ? [args.cursor] : undefined;
+    const job = await ctx.db.get("creditResetJobs", args.jobId);
 
-    // Use getPage from convex-helpers for proper pagination without .filter()
-    const result = await getPage(ctx, {
-      table: "users",
-      index: "plan",
-      schema,
-      startIndexKey,
-      targetMaxRows: args.batchSize,
-    });
-
-    // Filter users whose credits haven't been reset since resetTimestamp
-    const usersNeedingReset = result.page.filter(
-      (user) => (user.creditsResetAt ?? 0) < args.resetTimestamp
-    );
-
-    // Build continue cursor from last index key if there are more results
-    const lastIndexKey = result.indexKeys.at(-1);
-    const continueCursor =
-      result.hasMore && lastIndexKey ? String(lastIndexKey[0]) : undefined;
+    if (!job) {
+      return { totalUsers: 0, processedUsers: 0, status: "not_found" };
+    }
 
     return {
-      users: usersNeedingReset.map((user) => ({
-        _id: user._id,
-        credits: user.credits,
-      })),
-      continueCursor,
-      isDone: !result.hasMore || usersNeedingReset.length === 0,
+      totalUsers: job.totalUsers,
+      processedUsers: job.processedUsers,
+      status: job.status,
     };
   },
 });
