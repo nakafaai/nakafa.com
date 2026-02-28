@@ -47,24 +47,34 @@ crons.interval(
 
 /**
  * Resets free user credits daily at midnight UTC.
- * Grants 10 credits per day to free users.
+ * Populates queue and starts parallel workers.
  */
 crons.cron(
   "reset free user credits",
   "0 0 * * *",
-  internal.credits.actions.startUserReset,
-  { isPro: false }
+  internal.credits.actions.populateQueue,
+  { plan: "free", resetTimestamp: Date.now() }
 );
 
 /**
  * Resets pro user credits monthly on 1st at midnight UTC.
- * Grants 3000 credits per month to pro users.
+ * Populates queue and starts parallel workers.
  */
 crons.cron(
   "reset pro user credits",
   "0 0 1 * *",
-  internal.credits.actions.startUserReset,
-  { isPro: true }
+  internal.credits.actions.populateQueue,
+  { plan: "pro", resetTimestamp: Date.now() }
+);
+
+/**
+ * Cleans up old credit reset queue items daily at 3 AM UTC.
+ */
+crons.cron(
+  "cleanup credit reset queue",
+  "0 3 * * *",
+  internal.credits.mutations.cleanupOldQueueItems,
+  {}
 );
 
 export default crons;

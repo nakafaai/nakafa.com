@@ -4,96 +4,155 @@ import { workflow } from "@repo/backend/convex/workflow";
 import { v } from "convex/values";
 
 /**
- * Resets credits for a batch of users. Idempotent steps, survives crashes.
- * Processes users in parallel using workpool for scalability.
+ * Orchestrator workflow that manages the entire credit reset process.
+ * 1. Creates job record
+ * 2. Populates queue with all users
+ * 3. Spawns parallel worker workflows
  */
-export const resetCreditsBatch = workflow.define({
+export const orchestrateReset = workflow.define({
   args: {
-    jobId: v.id("creditResetJobs"),
+    plan: v.union(v.literal("free"), v.literal("pro")),
     resetTimestamp: v.number(),
-    isPro: v.boolean(),
-    cursor: v.optional(v.string()),
-    processedCount: v.number(),
   },
   returns: v.null(),
   handler: async (step, args) => {
-    const creditAmount = args.isPro ? 3000 : 10;
-    const grantType = args.isPro ? "monthly-grant" : "daily-grant";
-    const batchSize = 1000;
+    const jobType = args.plan === "free" ? "free-daily" : "pro-monthly";
+    const creditAmount = args.plan === "pro" ? 3000 : 10;
+    const grantType = args.plan === "pro" ? "monthly-grant" : "daily-grant";
 
-    logger.info("Credit reset batch started", {
-      jobId: args.jobId,
-      isPro: args.isPro,
-      processedCount: args.processedCount,
+    logger.info(`Starting ${jobType} credit reset orchestration`, {
+      plan: args.plan,
+      resetTimestamp: args.resetTimestamp,
     });
 
-    // Step 1: Get batch of users needing reset
-    const plan = args.isPro ? "pro" : "free";
-    const result = await step.runQuery(
-      internal.credits.queries.getUsersNeedingReset,
+    // Step 1: Create job record
+    const jobId = await step.runMutation(
+      internal.credits.mutations.createResetJob,
       {
-        plan,
+        jobType,
         resetTimestamp: args.resetTimestamp,
-        cursor: args.cursor,
-        batchSize,
       }
     );
 
-    if (result.users.length === 0) {
-      logger.info("Credit reset completed - no more users", {
-        jobId: args.jobId,
-        totalProcessed: args.processedCount,
-      });
+    logger.info(`${jobType} job created`, { jobId });
 
-      await step.runMutation(internal.credits.mutations.completeResetJob, {
-        jobId: args.jobId,
-        totalProcessed: args.processedCount,
-      });
-
-      return null;
-    }
-
-    logger.info("Processing credit reset batch", {
-      jobId: args.jobId,
-      batchSize: result.users.length,
-      processedSoFar: args.processedCount,
-    });
-
-    // Step 2: Process each user with idempotent mutation
-    await Promise.all(
-      result.users.map((user) => {
-        return step.runMutation(
-          internal.credits.mutations.resetUserCredits,
-          {
-            userId: user._id,
-            creditAmount,
-            grantType,
-            resetTimestamp: args.resetTimestamp,
-            previousBalance: user.credits ?? 0,
-          },
-          {
-            name: `reset-credits-${user._id}`,
-          }
-        );
-      })
+    // Step 2: Populate queue with users
+    const totalUsers = await step.runMutation(
+      internal.credits.mutations.populateQueue,
+      {
+        plan: args.plan,
+        resetTimestamp: args.resetTimestamp,
+      }
     );
 
-    // Step 3: Continue with next batch
-    const newProcessedCount = args.processedCount + result.users.length;
-
-    logger.info("Credit reset batch complete, continuing", {
-      jobId: args.jobId,
-      batchProcessed: result.users.length,
-      newTotal: newProcessedCount,
+    logger.info(`${jobType} queue populated`, {
+      jobId,
+      totalUsers,
     });
 
-    await step.runWorkflow(internal.credits.workflows.resetCreditsBatch, {
-      jobId: args.jobId,
-      resetTimestamp: args.resetTimestamp,
-      isPro: args.isPro,
-      cursor: result.continueCursor,
-      processedCount: newProcessedCount,
+    // Step 3: Spawn parallel workers
+    const WORKER_COUNT = 10;
+    await Promise.all(
+      Array.from({ length: WORKER_COUNT }, (_, i) =>
+        step.runWorkflow(internal.credits.workflows.processQueue, {
+          jobId,
+          plan: args.plan,
+          resetTimestamp: args.resetTimestamp,
+          workerId: i,
+          creditAmount,
+          grantType,
+        })
+      )
+    );
+
+    logger.info(`${jobType} workers completed`, {
+      jobId,
+      workerCount: WORKER_COUNT,
     });
+
+    // Step 4: Complete job
+    await step.runMutation(internal.credits.mutations.completeResetJob, {
+      jobId,
+    });
+
+    logger.info(`${jobType} reset completed`, { jobId });
+
+    return null;
+  },
+});
+
+/**
+ * Worker workflow that processes credit reset queue items.
+ * Multiple instances run in parallel.
+ */
+export const processQueue = workflow.define({
+  args: {
+    jobId: v.id("creditResetJobs"),
+    plan: v.union(v.literal("free"), v.literal("pro")),
+    resetTimestamp: v.number(),
+    workerId: v.number(),
+    creditAmount: v.number(),
+    grantType: v.union(v.literal("daily-grant"), v.literal("monthly-grant")),
+  },
+  returns: v.null(),
+  handler: async (step, args) => {
+    const BATCH_SIZE = 100;
+    let totalProcessed = 0;
+
+    logger.info(`Worker ${args.workerId} started`, {
+      jobId: args.jobId,
+      plan: args.plan,
+    });
+
+    while (true) {
+      // Claim items from queue
+      const items = await step.runMutation(
+        internal.credits.mutations.claimQueueItems,
+        {
+          plan: args.plan,
+          resetTimestamp: args.resetTimestamp,
+          batchSize: BATCH_SIZE,
+        }
+      );
+
+      if (items.length === 0) {
+        logger.info(`Worker ${args.workerId} finished`, {
+          jobId: args.jobId,
+          totalProcessed,
+        });
+        break;
+      }
+
+      // Process items in parallel
+      await Promise.all(
+        items.map((item) => {
+          return step.runMutation(internal.credits.mutations.resetUserCredits, {
+            userId: item.userId,
+            creditAmount: args.creditAmount,
+            grantType: args.grantType,
+            resetTimestamp: args.resetTimestamp,
+            previousBalance: item.credits ?? 0,
+          });
+        })
+      );
+
+      // Mark items as completed
+      await step.runMutation(internal.credits.mutations.completeQueueItems, {
+        queueIds: items.map((item) => item.queueId),
+      });
+
+      totalProcessed += items.length;
+
+      logger.info(`Worker ${args.workerId} processed batch`, {
+        jobId: args.jobId,
+        batchSize: items.length,
+        totalProcessed,
+      });
+
+      if (items.length < BATCH_SIZE) {
+        break;
+      }
+    }
 
     return null;
   },

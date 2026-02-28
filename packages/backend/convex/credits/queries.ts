@@ -3,7 +3,6 @@ import { vv } from "@repo/backend/convex/lib/validators/vv";
 import schema from "@repo/backend/convex/schema";
 import { userPlanValidator } from "@repo/backend/convex/users/schema";
 import { v } from "convex/values";
-import type { IndexKey } from "convex-helpers/server/pagination";
 import { getPage } from "convex-helpers/server/pagination";
 
 /**
@@ -31,9 +30,7 @@ export const getUsersNeedingReset = internalQuery({
   }),
   handler: async (ctx, args) => {
     // Convert string cursor to IndexKey array for getPage
-    const startIndexKey: IndexKey | undefined = args.cursor
-      ? [args.cursor]
-      : undefined;
+    const startIndexKey = args.cursor ? [args.cursor] : undefined;
 
     // Use getPage from convex-helpers for proper pagination without .filter()
     const result = await getPage(ctx, {

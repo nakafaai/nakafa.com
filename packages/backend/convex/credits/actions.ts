@@ -5,56 +5,32 @@ import { workflow } from "@repo/backend/convex/workflow";
 import { v } from "convex/values";
 
 /**
- * Starts the credit reset workflow for users.
- * Unified function for both free (daily) and pro (monthly) resets.
+ * Populates the credit reset queue for all users of a given plan.
+ * This is the entry point called by cron jobs.
  *
- * @param isPro - false for free users (daily reset, 10 credits),
- *                true for pro users (monthly reset, 3000 credits)
+ * Scalable: Handles millions of users by chunking into batches
  */
-export const startUserReset = internalAction({
+export const populateQueue = internalAction({
   args: {
-    isPro: v.boolean(),
+    plan: v.union(v.literal("free"), v.literal("pro")),
+    resetTimestamp: v.number(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
-    let resetTimestamp: number;
-    let jobType: "free-daily" | "pro-monthly";
+    const jobType = args.plan === "free" ? "free-daily" : "pro-monthly";
 
-    if (args.isPro) {
-      // Pro: Monthly reset on 1st of month
-      const firstDayOfMonth = new Date();
-      firstDayOfMonth.setUTCDate(1);
-      firstDayOfMonth.setUTCHours(0, 0, 0, 0);
-      resetTimestamp = firstDayOfMonth.getTime();
-      jobType = "pro-monthly";
-    } else {
-      // Free: Daily reset
-      const today = new Date();
-      today.setUTCHours(0, 0, 0, 0);
-      resetTimestamp = today.getTime();
-      jobType = "free-daily";
-    }
-
-    logger.info(`Starting ${jobType} credit reset`, { resetTimestamp });
-
-    // Create job record
-    const jobId = await ctx.runMutation(
-      internal.credits.mutations.createResetJob,
-      {
-        jobType,
-        resetTimestamp,
-      }
-    );
-
-    // Start workflow
-    await workflow.start(ctx, internal.credits.workflows.resetCreditsBatch, {
-      jobId,
-      resetTimestamp,
-      isPro: args.isPro,
-      cursor: undefined,
-      processedCount: 0,
+    logger.info(`Populating ${jobType} credit reset queue`, {
+      plan: args.plan,
+      resetTimestamp: args.resetTimestamp,
     });
 
-    logger.info(`${jobType} credit reset workflow started`, { jobId });
+    // Start the orchestrator workflow
+    await workflow.start(ctx, internal.credits.workflows.orchestrateReset, {
+      plan: args.plan,
+      resetTimestamp: args.resetTimestamp,
+    });
+
+    logger.info(`${jobType} orchestration started`);
 
     return null;
   },
