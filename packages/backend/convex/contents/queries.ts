@@ -27,11 +27,14 @@ export const getRecentlyViewed = query({
     }
 
     // Fetch recent views for this user using index
-    // Uses userId_type_viewedAt index for efficient querying
+    // Uses userId_type_locale_viewedAt index for efficient querying
     const recentViews = await ctx.db
       .query("contentViews")
-      .withIndex("userId_type_viewedAt", (q) =>
-        q.eq("userId", user.appUser._id).eq("contentRef.type", "subject")
+      .withIndex("userId_type_locale_viewedAt", (q) =>
+        q
+          .eq("userId", user.appUser._id)
+          .eq("contentRef.type", "subject")
+          .eq("locale", args.locale)
       )
       .order("desc")
       .take(limit * 2); // Take more to handle potential duplicates
