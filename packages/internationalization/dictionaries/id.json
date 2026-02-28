@@ -274,7 +274,12 @@
     "trending-subjects": "Materi Populer Minggu Ini",
     "views": "{count} views",
     "explore-materials": "Jelajahi Materi",
-    "guest": "kamu"
+    "guest": "kamu",
+    "continue-learning": "Lanjutkan Belajar",
+    "continue-learning-description": "Lanjutkan membaca materi yang belum selesai",
+    "no-recent-views": "Belum ada riwayat bacaan",
+    "no-recent-views-description": "Yuk, mulai eksplorasi materi pembelajaran yang tersedia!",
+    "start-learning": "Mulai Belajar"
   },
   "Marketing": {
     "about": "Tentang",

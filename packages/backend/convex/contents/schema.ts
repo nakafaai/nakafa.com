@@ -1,4 +1,7 @@
-import { contentRefValidator } from "@repo/backend/convex/lib/validators/contents";
+import {
+  contentRefValidator,
+  localeValidator,
+} from "@repo/backend/convex/lib/validators/contents";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
 
@@ -9,13 +12,19 @@ const tables = {
    */
   contentViews: defineTable({
     contentRef: contentRefValidator,
-    locale: v.string(),
+    locale: localeValidator,
     slug: v.string(),
     deviceId: v.string(),
     userId: v.optional(v.id("users")),
     viewedAt: v.number(),
   })
     .index("userId_contentRefId", ["userId", "contentRef.id"])
+    .index("userId_type_locale_viewedAt", [
+      "userId",
+      "contentRef.type",
+      "locale",
+      "viewedAt",
+    ])
     .index("deviceId_contentRefId", ["deviceId", "contentRef.id"])
     .index("contentRefId_locale", ["contentRef.id", "locale"])
     .index("by_locale_type_viewedAt", [

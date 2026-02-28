@@ -274,7 +274,12 @@
     "trending-subjects": "Trending Subjects This Week",
     "views": "{count} views",
     "explore-materials": "Explore Materials",
-    "guest": "you"
+    "guest": "you",
+    "continue-learning": "Continue Learning",
+    "continue-learning-description": "Continue reading where you left off",
+    "no-recent-views": "No reading history yet",
+    "no-recent-views-description": "Start exploring available learning materials!",
+    "start-learning": "Start Learning"
   },
   "Marketing": {
     "about": "About",
