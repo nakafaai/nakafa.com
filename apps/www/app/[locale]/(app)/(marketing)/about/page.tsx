@@ -1,6 +1,7 @@
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import { EducationalOrgJsonLd } from "@repo/seo/json-ld/educational-org";
+import { FAQPageJsonLd } from "@repo/seo/json-ld/faq-page";
 import type { ListItem } from "@repo/seo/types";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
@@ -80,11 +81,12 @@ export default function Page({ params }: Props) {
 }
 
 async function AboutPageContent({ locale }: { locale: Locale }) {
-  const [t, tCommon, tSubject, tExercises] = await Promise.all([
+  const [t, tCommon, tSubject, tExercises, tFaq] = await Promise.all([
     getTranslations({ locale, namespace: "About" }),
     getTranslations({ locale, namespace: "Common" }),
     getTranslations({ locale, namespace: "Subject" }),
     getTranslations({ locale, namespace: "Exercises" }),
+    getTranslations({ locale, namespace: "Faq" }),
   ]);
 
   const breadcrumbItems: ListItem[] = [
@@ -130,6 +132,16 @@ async function AboutPageContent({ locale }: { locale: Locale }) {
     ),
   ];
 
+  const faqItems = [
+    { question: tFaq("q1"), answer: tFaq("a1") },
+    { question: tFaq("q2"), answer: tFaq("a2") },
+    { question: tFaq("q3"), answer: tFaq("a3") },
+    { question: tFaq("q4"), answer: tFaq("a4") },
+    { question: tFaq("q5"), answer: tFaq("a5") },
+    { question: tFaq("q6"), answer: tFaq("a6") },
+    { question: tFaq("q7"), answer: tFaq("a7") },
+  ];
+
   return (
     <>
       <BreadcrumbJsonLd breadcrumbItems={breadcrumbItems} />
@@ -138,6 +150,17 @@ async function AboutPageContent({ locale }: { locale: Locale }) {
         description={t("description")}
         items={collectionItems}
         name={t("meta-title")}
+        url={`https://nakafa.com/${locale}/about`}
+      />
+      <FAQPageJsonLd
+        inLanguage={locale}
+        mainEntity={faqItems.map((item) => ({
+          name: item.question,
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: item.answer,
+          },
+        }))}
         url={`https://nakafa.com/${locale}/about`}
       />
       <div className="relative grid" data-pagefind-ignore>

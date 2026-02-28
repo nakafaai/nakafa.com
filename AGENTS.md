@@ -1,24 +1,19 @@
 # Nakafa Codebase Agent Guide
 
-This codebase will outlive you. Every shortcut you take becomes
-someone else's burden. Every hack compounds into technical debt
-that slows the whole team down.
+This codebase will outlive you. Every shortcut you take becomes someone else's burden. Every hack compounds into technical debt that slows the whole team down.
 
-You are not just writing code. You are shaping the future of this
-project. The patterns you establish will be copied. The corners
-you cut will be cut again.
+You are not just writing code. You are shaping the future of this project. The patterns you establish will be copied. The corners you cut will be cut again.
 
 Fight entropy. Leave the codebase better than you found it.
 
-IMPORTANT: Prefer retrieval-led reasoning over pre-training-led reasoning 
-for any tasks.
+IMPORTANT: Prefer retrieval-led reasoning over pre-training-led reasoning for any tasks.
 
 **Tech Stack**: Next.js 16, React 19, TypeScript, Convex, Biome linter
 
 ## Agent Tools
 
-- **Context7**: When you need to search docs, use `context7` tools.
-- **ultracite**: Returns Ultracite's core coding standards covering type safety, modern JavaScript/TypeScript patterns, React/JSX best practices, error handling, security, performance, and testing guidelines. use `ultracite` to get the rules.
+- **Context7**: When you need to search docs, use `context7` tools
+- **ultracite**: Returns Ultracite's coding standards. Use `ultracite_SearchUltracite` to get rules
 
 ## Commands
 
@@ -30,6 +25,8 @@ for any tasks.
 - `pnpm --filter www exec vitest run <file-path>` - Run single test file
 - `pnpm lint` - Ultracite check
 - `pnpm format` - Ultracite fix
+- `pnpm dlx ultracite fix` - Format code
+- `pnpm dlx ultracite check` - Check for issues
 
 ## Project Structure
 
@@ -42,12 +39,13 @@ Monorepo with apps and packages:
 
 - **Formatter**: Biome (Ultracite presets)
 - **Quotes**: Double quotes only (`"text"`)
-- **Indentation**: Spaces (2 or 4, check existing files)
+- **Indentation**: Spaces (check existing files)
 - **Comments**: None unless explicitly requested
 - **TypeScript**: Strict mode enabled, always type-check changes
 - **Naming**: camelCase for variables/functions, PascalCase for components/types
 - **Imports**: Use `@repo/*` for internal packages, absolute imports with `@/` alias
 - **Error handling**: Use try-catch, throw proper Error objects, handle edge cases
+- **Never use type assertions** - write type-safe code without `as`
 
 ## Key Patterns
 
@@ -72,24 +70,7 @@ Monorepo with apps and packages:
 - 3D visualizations: generate points via Array.from() with math calculations (never hard-code), use `getColor()` for colors (not randomColor)
 - Lists: use hyphens `-`, no nested lists, proper indentation
 - Line breaks: blank line between text paragraphs and math blocks
-
-## TypeScript Style
-
-NEVER USE ASSERTION! Good typescript is when you can write code like javascript but still type safe.
-
-## Ultracite Code Standards
-
-This project uses **Ultracite**, a zero-config Biome preset that enforces strict code quality standards through automated formatting and linting.
-
-## Quick Reference
-
-- **Format code**: `pnpm dlx ultracite fix`
-- **Check for issues**: `pnpm dlx ultracite check`
-- **Diagnose setup**: `pnpm dlx ultracite doctor`
-
-Biome (the underlying engine) provides extremely fast Rust-based linting and formatting. Most issues are automatically fixable.
-
----
+- Content language: Indonesian only (except where English required by context)
 
 ## Core Principles
 
@@ -101,7 +82,7 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 - Prefer `unknown` over `any` when the type is genuinely unknown
 - Use const assertions (`as const`) for immutable values and literal types
 - Leverage TypeScript's type narrowing instead of type assertions
-- Use meaningful variable names instead of magic numbers - extract constants with descriptive names
+- Use meaningful variable names instead of magic numbers
 
 ### Modern JavaScript/TypeScript
 
@@ -114,7 +95,7 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 
 ### Async & Promises
 
-- Always `await` promises in async functions - don't forget to use the return value
+- Always `await` promises in async functions
 - Use `async/await` syntax instead of promise chains for better readability
 - Handle errors appropriately in async code with try-catch blocks
 - Don't use async functions as Promise executors
@@ -127,12 +108,8 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 - Use the `key` prop for elements in iterables (prefer unique IDs over array indices)
 - Nest children between opening and closing tags instead of passing as props
 - Don't define components inside other components
-- Use semantic HTML and ARIA attributes for accessibility:
-  - Provide meaningful alt text for images
-  - Use proper heading hierarchy
-  - Add labels for form inputs
-  - Include keyboard event handlers alongside mouse events
-  - Use semantic elements (`<button>`, `<nav>`, etc.) instead of divs with roles
+- Use semantic HTML and ARIA attributes for accessibility
+- React 19+: Use ref as prop instead of `React.forwardRef`
 
 ### Error Handling & Debugging
 
@@ -163,13 +140,6 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 - Prefer specific imports over namespace imports
 - Avoid barrel files (index files that re-export everything)
 - Use proper image components (e.g., Next.js `<Image>`) over `<img>` tags
-
-### Framework-Specific Guidance
-
-- **Next.js**: Use `<Image>` component, App Router metadata API, Server Components for async data
-- **React 19+**: Use ref as prop instead of `React.forwardRef`
-
----
 
 ## Testing
 

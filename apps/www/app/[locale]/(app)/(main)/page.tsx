@@ -4,60 +4,63 @@ import { redirect } from "next/navigation";
 import { type Locale, useTranslations } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { Suspense, use } from "react";
-import { HomeSearch } from "@/components/home/search";
-import { HomeTitle } from "@/components/home/title";
-import { Videos } from "@/components/home/videos";
-import { Weather } from "@/components/home/weather";
+import { HomeHeader } from "@/components/home/header";
+import { HomeTrending } from "@/components/home/trending";
 import { getToken } from "@/lib/auth/server";
 
 export const revalidate = false;
 
 interface Props {
   params: Promise<{ locale: Locale }>;
+  searchParams: Promise<{ from: string }>;
 }
 
-export default function Page({ params }: Props) {
+export default function Page({ params, searchParams }: Props) {
   const { locale } = use(params);
 
   setRequestLocale(locale);
 
   return (
-    <Suspense>
-      <Main locale={locale} />
-    </Suspense>
+    <>
+      <PageBreadcrumb locale={locale} />
+      <div
+        className="relative min-h-[calc(100svh-4rem)] lg:min-h-svh"
+        data-pagefind-ignore
+      >
+        <Particles className="pointer-events-none absolute inset-0 opacity-50" />
+        <Suspense>
+          <Main searchParams={searchParams} />
+        </Suspense>
+      </div>
+    </>
   );
 }
 
-async function Main({ locale }: { locale: Locale }) {
-  const token = await getToken();
+async function Main({
+  searchParams,
+}: {
+  searchParams: Promise<{ from: string }>;
+}) {
+  const [{ from }, token] = await Promise.all([searchParams, getToken()]);
 
-  // If no user token, go to landing page
+  // If no user token and from about page, goes to auth
+  if (!token && from === "/about") {
+    redirect("/auth");
+  }
+
+  // if just no user token
   if (!token) {
     redirect("/about");
   }
 
   return (
-    <>
-      <PageBreadcrumb locale={locale} />
-      <div
-        className="relative flex min-h-[calc(100svh-4rem)] items-center justify-center lg:min-h-svh"
-        data-pagefind-ignore
-      >
-        <Particles className="pointer-events-none absolute inset-0 opacity-80" />
-        <div className="mx-auto w-full max-w-xl px-6">
-          <div className="relative flex h-full flex-col space-y-4">
-            <HomeTitle />
+    <div className="mx-auto w-full max-w-3xl px-6 py-24">
+      <div className="relative space-y-12">
+        <HomeHeader />
 
-            <HomeSearch />
-
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-              <Videos />
-              <Weather />
-            </div>
-          </div>
-        </div>
+        <HomeTrending />
       </div>
-    </>
+    </div>
   );
 }
 

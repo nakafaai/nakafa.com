@@ -20,12 +20,12 @@ import { FOUNDER } from "@repo/seo/json-ld/constants";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
 import { Effect, Option } from "effect";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
 import { AiSheetOpen } from "@/components/ai/sheet-open";
 import { Comments } from "@/components/comments";
+import { ComingSoon } from "@/components/shared/coming-soon";
 import {
   LayoutMaterial,
   LayoutMaterialContent,
@@ -236,7 +236,15 @@ async function PageContent({
   );
 
   if (exercises.length === 0 || !exerciseContext) {
-    notFound();
+    return (
+      <LayoutMaterial>
+        <LayoutMaterialContent>
+          <LayoutMaterialMain className="py-24">
+            <ComingSoon />
+          </LayoutMaterialMain>
+        </LayoutMaterialContent>
+      </LayoutMaterial>
+    );
   }
 
   const { currentMaterial, currentMaterialItem, materials } = exerciseContext;
@@ -373,7 +381,15 @@ async function SingleExerciseContent({
   );
 
   if (Option.isNone(exerciseOption) || !exerciseContext) {
-    notFound();
+    return (
+      <LayoutMaterial>
+        <LayoutMaterialContent>
+          <LayoutMaterialMain className="py-24">
+            <ComingSoon />
+          </LayoutMaterialMain>
+        </LayoutMaterialContent>
+      </LayoutMaterial>
+    );
   }
 
   const exercise = exerciseOption.value;

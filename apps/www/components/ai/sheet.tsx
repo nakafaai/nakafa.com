@@ -2,14 +2,14 @@
 
 import {
   Add01Icon,
+  ArrowExpand01Icon,
+  ArrowShrink02Icon,
   Cancel01Icon,
   ChatSearch01Icon,
   GeometricShapes01Icon,
   Globe02Icon,
-  Maximize03Icon,
-  Minimize03Icon,
-  SparklesIcon,
   SquareLock01Icon,
+  StarsIcon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { useMediaQuery } from "@mantine/hooks";
@@ -125,7 +125,7 @@ export function AiSheet() {
           <SheetTitle className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 px-2">
               <div className="flex items-center gap-2 text-base">
-                <HugeIcons className="size-4" icon={SparklesIcon} />
+                <HugeIcons className="size-4" icon={StarsIcon} />
                 <span>Nina</span>
               </div>
             </div>
@@ -152,7 +152,9 @@ export function AiSheet() {
                 variant="ghost"
               >
                 <HugeIcons
-                  icon={width === MAX_WIDTH ? Minimize03Icon : Maximize03Icon}
+                  icon={
+                    width === MAX_WIDTH ? ArrowShrink02Icon : ArrowExpand01Icon
+                  }
                 />
                 <span className="sr-only">Resize</span>
               </Button>
@@ -481,6 +483,7 @@ const AiSheetInput = memo(
         <PromptInput onSubmit={onSubmit}>
           <PromptInputTextarea
             aria-label={t("text-placeholder")}
+            autoFocus
             onChange={(e) => setText(e.target.value)}
             placeholder={t("text-placeholder")}
             value={text}

@@ -2,12 +2,10 @@ import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Suspense, use } from "react";
-import { HomeTitle } from "@/components/home/title";
+import { HomeHeader } from "@/components/home/header";
 import { InputSearch } from "@/components/search/input";
 import { SearchListItems } from "@/components/search/results";
-import { FooterContent } from "@/components/shared/footer-content";
-import { RefContent } from "@/components/shared/ref-content";
-import { getGithubUrl } from "@/lib/utils/github";
+import { BackButton } from "@/components/shared/back-button";
 
 export const revalidate = false;
 
@@ -39,34 +37,33 @@ export default function Page({
   setRequestLocale(locale);
 
   return (
-    <>
-      <div
-        className="relative min-h-[calc(100svh-4rem)] py-10 lg:min-h-svh lg:py-26"
-        data-pagefind-ignore
-      >
-        <div className="mx-auto w-full max-w-xl px-6">
-          <HomeTitle />
-        </div>
-        <div className="sticky top-20 z-10 sm:top-10">
-          <div className="mx-auto w-full max-w-3xl px-6">
-            <Suspense>
-              <InputSearch />
-            </Suspense>
+    <div
+      className="relative min-h-[calc(100svh-4rem)] lg:min-h-svh"
+      data-pagefind-ignore
+    >
+      <div className="mx-auto w-full max-w-3xl px-6 py-24">
+        <div className="relative space-y-12">
+          <HomeHeader />
+
+          <div className="flex flex-col gap-2">
+            <BackButton
+              className="w-fit p-0 text-muted-foreground"
+              defaultHref="/"
+              variant="link"
+            />
+
+            <div className="grid gap-6">
+              <Suspense>
+                <InputSearch />
+              </Suspense>
+
+              <Suspense>
+                <SearchListItems />
+              </Suspense>
+            </div>
           </div>
         </div>
-        <div className="mx-auto mt-8 w-full max-w-3xl px-6">
-          <Suspense>
-            <SearchListItems />
-          </Suspense>
-        </div>
       </div>
-      <FooterContent>
-        <RefContent
-          githubUrl={getGithubUrl({
-            path: encodeURI("/app/[locale]/search"),
-          })}
-        />
-      </FooterContent>
-    </>
+    </div>
   );
 }

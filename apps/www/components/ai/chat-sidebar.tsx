@@ -75,7 +75,7 @@ function AiChatSidebarContent({ ...props }: ComponentProps<typeof Sidebar>) {
               className="w-full border border-sidebar-border shadow-none"
               nativeButton={false}
               render={
-                <NavigationLink href="/" title={t("new-chat")}>
+                <NavigationLink href="/chat" title={t("new-chat")}>
                   {t("new-chat")}
                 </NavigationLink>
               }

@@ -103,7 +103,7 @@ export function Ai() {
 
           <div className="grid grid-cols-1 border-t lg:grid-cols-3 lg:divide-x">
             <AudienceCard
-              ctaHref="/"
+              ctaHref="/?from=/about"
               ctaText={t("cta-students")}
               description={t("students-description")}
               icon={StudentIcon}

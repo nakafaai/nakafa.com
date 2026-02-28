@@ -1,4 +1,5 @@
 import { askSeo } from "@repo/seo/ask";
+import { FAQPageJsonLd } from "@repo/seo/json-ld/faq-page";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
@@ -72,30 +73,45 @@ export default function Page({ params }: Props) {
   const description = seoData?.locales[locale].description ?? "";
 
   return (
-    <div data-pagefind-ignore>
-      <LayoutMaterial>
-        <LayoutMaterialContent>
-          <div className="relative py-20">
-            <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 px-6">
-              <h1 className="text-balance text-center font-medium text-3xl leading-tight tracking-tight">
-                {title}
-              </h1>
+    <>
+      <FAQPageJsonLd
+        inLanguage={locale}
+        mainEntity={[
+          {
+            name: title,
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: description,
+            },
+          },
+        ]}
+        url={`https://nakafa.com/${locale}/ask/${slug}`}
+      />
+      <div data-pagefind-ignore>
+        <LayoutMaterial>
+          <LayoutMaterialContent>
+            <div className="relative py-20">
+              <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 px-6">
+                <h1 className="text-balance text-center font-medium text-3xl leading-tight tracking-tight">
+                  {title}
+                </h1>
 
-              {!!description && (
-                <p className="text-balance text-center text-muted-foreground">
-                  {description}
-                </p>
-              )}
+                {!!description && (
+                  <p className="text-balance text-center text-muted-foreground">
+                    {description}
+                  </p>
+                )}
 
-              <AskCta title={title} />
+                <AskCta title={title} />
+              </div>
             </div>
-          </div>
 
-          <LayoutMaterialMain>
-            <AskListItems query={title} />
-          </LayoutMaterialMain>
-        </LayoutMaterialContent>
-      </LayoutMaterial>
-    </div>
+            <LayoutMaterialMain>
+              <AskListItems query={title} />
+            </LayoutMaterialMain>
+          </LayoutMaterialContent>
+        </LayoutMaterial>
+      </div>
+    </>
   );
 }

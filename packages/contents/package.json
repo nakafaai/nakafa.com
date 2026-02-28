@@ -10,7 +10,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@hugeicons/core-free-icons": "^3.1.1",
+    "@hugeicons/core-free-icons": "^3.3.0",
     "@hugeicons/react": "^1.1.5",
     "@mantine/hooks": "^8.3.15",
     "@repo/internationalization": "workspace:*",
@@ -26,7 +26,7 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "25.3.0",
+    "@types/node": "25.3.2",
     "@types/react": "^19.2.14",
     "@vitest/coverage-istanbul": "^4.0.18",
     "vitest": "^4.0.18"

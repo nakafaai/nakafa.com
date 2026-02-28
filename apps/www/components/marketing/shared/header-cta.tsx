@@ -2,8 +2,30 @@
 
 import { Button } from "@repo/design-system/components/ui/button";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { Link } from "@repo/internationalization/src/navigation";
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useUser } from "@/lib/context/use-user";
+
+export function LogoCta() {
+  const currentUser = useUser((state) => state.user);
+
+  return (
+    <Link
+      className="flex items-center gap-2"
+      href={currentUser ? "/" : "/auth"}
+    >
+      <Image
+        alt="Nakafa"
+        className="size-8 rounded-full border"
+        height={32}
+        src="/logo.svg"
+        width={32}
+      />
+      <span className="font-medium">Nakafa</span>
+    </Link>
+  );
+}
 
 export function HeaderCta() {
   const t = useTranslations("Marketing");

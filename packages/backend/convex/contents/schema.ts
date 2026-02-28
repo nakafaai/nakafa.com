@@ -17,7 +17,12 @@ const tables = {
   })
     .index("userId_contentRefId", ["userId", "contentRef.id"])
     .index("deviceId_contentRefId", ["deviceId", "contentRef.id"])
-    .index("contentRefId_locale", ["contentRef.id", "locale"]),
+    .index("contentRefId_locale", ["contentRef.id", "locale"])
+    .index("by_locale_type_viewedAt", [
+      "locale",
+      "contentRef.type",
+      "viewedAt",
+    ]),
 
   /**
    * Article popularity counts.

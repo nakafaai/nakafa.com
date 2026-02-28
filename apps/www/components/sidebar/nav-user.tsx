@@ -60,7 +60,7 @@ export function NavUser() {
 
   async function handleSignOut() {
     await authClient.signOut();
-    router.replace(`/auth?redirect=${pathname}`);
+    router.push(`/auth?redirect=${pathname}`);
   }
 
   useEffect(() => {

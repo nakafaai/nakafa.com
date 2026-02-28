@@ -599,7 +599,7 @@ export function AudioPlayerSpeed({
             key={speed}
             onClick={() => player.setPlaybackRate(speed)}
           >
-            <span className={speed === 1 ? "" : "font-mono"}>
+            <span className="tabular-nums">
               {speed === 1 ? "Normal" : `${speed}x`}
             </span>
             {currentSpeed === speed && (
