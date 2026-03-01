@@ -103,7 +103,6 @@ import type * as triggers_schools_classes from "../triggers/schools/classes.js";
 import type * as triggers_schools_members from "../triggers/schools/members.js";
 import type * as triggers_schools_schools from "../triggers/schools/schools.js";
 import type * as triggers_subscriptions_subscriptions from "../triggers/subscriptions/subscriptions.js";
-import type * as users_backfill from "../users/backfill.js";
 import type * as users_mutations from "../users/mutations.js";
 import type * as users_queries from "../users/queries.js";
 import type * as utils_helper from "../utils/helper.js";
@@ -215,7 +214,6 @@ declare const fullApi: ApiFromModules<{
   "triggers/schools/members": typeof triggers_schools_members;
   "triggers/schools/schools": typeof triggers_schools_schools;
   "triggers/subscriptions/subscriptions": typeof triggers_subscriptions_subscriptions;
-  "users/backfill": typeof users_backfill;
   "users/mutations": typeof users_mutations;
   "users/queries": typeof users_queries;
   "utils/helper": typeof utils_helper;
