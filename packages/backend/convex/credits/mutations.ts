@@ -173,19 +173,23 @@ export const completeQueueItems = internalMutation({
 });
 
 /**
- * Mark queue items as failed.
+ * Mark queue items as failed with individual error messages.
  */
 export const failQueueItems = internalMutation({
   args: {
-    queueIds: v.array(v.id("creditResetQueue")),
-    error: v.string(),
+    failures: v.array(
+      v.object({
+        queueId: v.id("creditResetQueue"),
+        error: v.string(),
+      })
+    ),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    for (const queueId of args.queueIds) {
-      await ctx.db.patch("creditResetQueue", queueId, {
+    for (const failure of args.failures) {
+      await ctx.db.patch("creditResetQueue", failure.queueId, {
         status: "failed",
-        error: args.error,
+        error: failure.error,
         processedAt: Date.now(),
       });
     }

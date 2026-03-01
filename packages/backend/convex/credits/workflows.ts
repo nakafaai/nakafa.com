@@ -222,8 +222,11 @@ export const processQueue = workflow.define({
         break;
       }
 
-      const successfulItems: typeof items = [];
-      const failedItems: typeof items = [];
+      const successIds: (typeof items)[number]["queueId"][] = [];
+      const failures: {
+        queueId: (typeof items)[number]["queueId"];
+        error: string;
+      }[] = [];
 
       for (const item of items) {
         try {
@@ -234,32 +237,33 @@ export const processQueue = workflow.define({
             resetTimestamp: args.resetTimestamp,
             previousBalance: item.credits ?? 0,
           });
-          successfulItems.push(item);
+          successIds.push(item.queueId);
         } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
           logger.error(`Worker ${args.workerId} failed to process item`, {
             jobId: args.jobId,
             queueId: item.queueId,
             userId: item.userId,
-            error: error instanceof Error ? error.message : String(error),
+            error: errorMessage,
           });
-          failedItems.push(item);
+          failures.push({ queueId: item.queueId, error: errorMessage });
         }
       }
 
-      if (successfulItems.length > 0) {
+      if (successIds.length > 0) {
         await step.runMutation(internal.credits.mutations.completeQueueItems, {
-          queueIds: successfulItems.map((item) => item.queueId),
+          queueIds: successIds,
         });
       }
 
-      if (failedItems.length > 0) {
+      if (failures.length > 0) {
         await step.runMutation(internal.credits.mutations.failQueueItems, {
-          queueIds: failedItems.map((item) => item.queueId),
-          error: "Failed to reset user credits",
+          failures,
         });
       }
 
-      totalProcessed += successfulItems.length;
+      totalProcessed += successIds.length;
       batchCount++;
 
       if (batchCount % PROGRESS_REPORT_INTERVAL === 0) {
