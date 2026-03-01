@@ -60,6 +60,7 @@ triggers.register("audioGenerationQueue", noopHandler);
 triggers.register("exerciseAttempts", noopHandler);
 triggers.register("creditTransactions", noopHandler);
 triggers.register("creditResetJobs", noopHandler);
+triggers.register("creditResetQueue", noopHandler);
 triggers.register("contentViews", contentViewsHandler);
 
 // Popularity aggregate triggers for trending content

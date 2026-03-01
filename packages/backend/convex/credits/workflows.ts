@@ -246,7 +246,7 @@ export const processQueue = workflow.define({
           internal.credits.mutations.incrementJobProgress,
           {
             jobId: args.jobId,
-            increment: items.length,
+            increment: totalProcessed,
           }
         );
 
@@ -255,6 +255,8 @@ export const processQueue = workflow.define({
           batchCount,
           totalProcessed,
         });
+
+        totalProcessed = 0;
       }
 
       if (items.length < BATCH_SIZE) {
@@ -262,7 +264,7 @@ export const processQueue = workflow.define({
           internal.credits.mutations.incrementJobProgress,
           {
             jobId: args.jobId,
-            increment: items.length,
+            increment: totalProcessed,
           }
         );
         break;
