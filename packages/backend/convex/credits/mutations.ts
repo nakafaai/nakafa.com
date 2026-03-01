@@ -1,3 +1,5 @@
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { v } from "convex/values";
@@ -196,6 +198,152 @@ export const failQueueItems = internalMutation({
     return null;
   },
 });
+
+/**
+ * Batch reset user credits - Convex best practice.
+ *
+ * WHY THIS APPROACH:
+ * - Workflows have 8MiB journal limit; each step is recorded
+ * - Processing 100 items sequentially = 100+ workflow steps
+ * - This approach: 1 workflow step calling 1 mutation
+ * - Mutation processes all 100 items in parallel internally
+ * - Still maintains per-item error tracking
+ * - Follows "batch operations in mutations" best practice
+ */
+export const batchResetUserCredits = internalMutation({
+  args: {
+    items: v.array(
+      v.object({
+        queueId: v.id("creditResetQueue"),
+        userId: v.id("users"),
+        previousBalance: v.number(),
+      })
+    ),
+    creditAmount: v.number(),
+    grantType: literals("daily-grant", "monthly-grant"),
+    resetTimestamp: v.number(),
+  },
+  returns: v.object({
+    successCount: v.number(),
+    failureCount: v.number(),
+    failures: v.array(
+      v.object({
+        queueId: v.id("creditResetQueue"),
+        error: v.string(),
+      })
+    ),
+  }),
+  handler: async (ctx, args) => {
+    // Process all items in parallel inside the mutation
+    // This is more efficient than sequential workflow steps
+    const results = await Promise.all(
+      args.items.map(async (item) => {
+        try {
+          await resetUserCreditsHelper(ctx, {
+            userId: item.userId,
+            creditAmount: args.creditAmount,
+            grantType: args.grantType,
+            resetTimestamp: args.resetTimestamp,
+            previousBalance: item.previousBalance,
+          });
+          return { queueId: item.queueId, success: true as const };
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          return {
+            queueId: item.queueId,
+            success: false as const,
+            error: errorMessage,
+          };
+        }
+      })
+    );
+
+    const successes = results.filter((r) => r.success);
+    const failures = results.filter((r) => !r.success);
+
+    // Mark successful items as completed
+    if (successes.length > 0) {
+      for (const success of successes) {
+        await ctx.db.patch("creditResetQueue", success.queueId, {
+          status: "completed",
+          processedAt: Date.now(),
+        });
+      }
+    }
+
+    // Mark failed items with their specific errors
+    if (failures.length > 0) {
+      for (const failure of failures) {
+        await ctx.db.patch("creditResetQueue", failure.queueId, {
+          status: "failed",
+          error: failure.error,
+          processedAt: Date.now(),
+        });
+      }
+    }
+
+    return {
+      successCount: successes.length,
+      failureCount: failures.length,
+      failures: failures.map((f) => ({ queueId: f.queueId, error: f.error })),
+    };
+  },
+});
+
+/**
+ * Helper function to reset a single user's credits.
+ * Extracted for reuse and clarity.
+ */
+async function resetUserCreditsHelper(
+  ctx: MutationCtx,
+  args: {
+    userId: Id<"users">;
+    creditAmount: number;
+    grantType: "daily-grant" | "monthly-grant";
+    resetTimestamp: number;
+    previousBalance: number;
+  }
+) {
+  const user = await ctx.db.get("users", args.userId);
+
+  if (!user) {
+    throw new Error(`User not found: ${args.userId}`);
+  }
+
+  // Idempotency check: already reset?
+  if (user.creditsResetAt && user.creditsResetAt >= args.resetTimestamp) {
+    logger.info("User credits already reset, skipping", {
+      userId: args.userId,
+      creditsResetAt: user.creditsResetAt,
+      resetTimestamp: args.resetTimestamp,
+    });
+    return;
+  }
+
+  // Update user credits
+  await ctx.db.patch("users", args.userId, {
+    credits: args.creditAmount,
+    creditsResetAt: args.resetTimestamp,
+  });
+
+  // Record transaction
+  await ctx.db.insert("creditTransactions", {
+    userId: args.userId,
+    amount: args.creditAmount,
+    type: args.grantType,
+    balanceAfter: args.creditAmount,
+    metadata: {
+      previousBalance: args.previousBalance,
+    },
+  });
+
+  logger.info("User credits reset", {
+    userId: args.userId,
+    amount: args.creditAmount,
+    type: args.grantType,
+  });
+}
 
 /**
  * Reset user credits and record transaction.

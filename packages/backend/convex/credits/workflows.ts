@@ -222,48 +222,35 @@ export const processQueue = workflow.define({
         break;
       }
 
-      const successIds: (typeof items)[number]["queueId"][] = [];
-      const failures: {
-        queueId: (typeof items)[number]["queueId"];
-        error: string;
-      }[] = [];
-
-      for (const item of items) {
-        try {
-          await step.runMutation(internal.credits.mutations.resetUserCredits, {
-            userId: item.userId,
-            creditAmount: args.creditAmount,
-            grantType: args.grantType,
-            resetTimestamp: args.resetTimestamp,
-            previousBalance: item.credits ?? 0,
-          });
-          successIds.push(item.queueId);
-        } catch (error) {
-          const errorMessage =
-            error instanceof Error ? error.message : String(error);
-          logger.error(`Worker ${args.workerId} failed to process item`, {
-            jobId: args.jobId,
+      // Process entire batch in a single mutation step (Convex best practice)
+      // This reduces workflow journal size vs sequential individual steps
+      const result = await step.runMutation(
+        internal.credits.mutations.batchResetUserCredits,
+        {
+          items: items.map((item) => ({
             queueId: item.queueId,
             userId: item.userId,
-            error: errorMessage,
-          });
-          failures.push({ queueId: item.queueId, error: errorMessage });
+            previousBalance: item.credits ?? 0,
+          })),
+          creditAmount: args.creditAmount,
+          grantType: args.grantType,
+          resetTimestamp: args.resetTimestamp,
         }
+      );
+
+      // Log any failures for observability
+      if (result.failureCount > 0) {
+        logger.error(
+          `Worker ${args.workerId} batch had ${result.failureCount} failures`,
+          {
+            jobId: args.jobId,
+            successCount: result.successCount,
+            failureCount: result.failureCount,
+          }
+        );
       }
 
-      if (successIds.length > 0) {
-        await step.runMutation(internal.credits.mutations.completeQueueItems, {
-          queueIds: successIds,
-        });
-      }
-
-      if (failures.length > 0) {
-        await step.runMutation(internal.credits.mutations.failQueueItems, {
-          failures,
-        });
-      }
-
-      totalProcessed += successIds.length;
+      totalProcessed += result.successCount;
       batchCount++;
 
       if (batchCount % PROGRESS_REPORT_INTERVAL === 0) {
