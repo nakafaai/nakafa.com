@@ -53,10 +53,7 @@ export const populateQueueBatch = internalMutation({
   }),
   handler: async (ctx, args) => {
     // Query users who need credit reset using index
-    // Note: We don't use cursor pagination because:
-    // 1. The idempotency check in resetUserCreditsHelper prevents duplicates
-    // 2. Once added to queue, users are filtered by status in claimQueueItems
-    // 3. This avoids needing complex multi-field index ranges
+    // Returns same users each call - idempotency handled by checking queue before insert
     const users = await ctx.db
       .query("users")
       .withIndex("plan", (idx) =>
@@ -68,23 +65,44 @@ export const populateQueueBatch = internalMutation({
       return { usersAdded: 0, hasMore: false };
     }
 
+    // Check which users are already in queue to avoid duplicates
+    const existingEntries = await ctx.db
+      .query("creditResetQueue")
+      .withIndex("planStatusTimestamp", (idx) =>
+        idx
+          .eq("plan", args.plan)
+          .eq("status", "pending")
+          .eq("resetTimestamp", args.resetTimestamp)
+      )
+      .collect();
+
+    const existingUserIds = new Set(existingEntries.map((e) => e.userId));
+    let added = 0;
+
     for (const user of users) {
+      // Skip if already in queue
+      if (existingUserIds.has(user._id)) {
+        continue;
+      }
+
       await ctx.db.insert("creditResetQueue", {
         userId: user._id,
         plan: args.plan,
         resetTimestamp: args.resetTimestamp,
         status: "pending",
       });
+      added++;
     }
 
     logger.info("Queue batch populated", {
       jobId: args.jobId,
       plan: args.plan,
-      batchSize: users.length,
+      batchSize: added,
+      skipped: users.length - added,
     });
 
     return {
-      usersAdded: users.length,
+      usersAdded: added,
       hasMore: users.length >= args.batchSize,
     };
   },
