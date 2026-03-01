@@ -44,17 +44,6 @@ export const userValidator = v.object({
 });
 
 /**
- * User device base validator
- */
-export const userDeviceValidator = v.object({
-  userId: v.id("users"),
-  deviceId: v.string(),
-  deviceName: v.optional(v.string()),
-  lastSeenAt: v.number(),
-  isActive: v.boolean(),
-});
-
-/**
  * API key validator for cross-component use.
  * When calling betterAuth component queries, IDs are serialized as strings.
  * Derived from betterAuthTables.apikey - single source of truth.
@@ -80,10 +69,6 @@ const tables = {
     .index("email", ["email"])
     .index("authId", ["authId"])
     .index("plan", ["plan", "creditsResetAt"]),
-  userDevices: defineTable(userDeviceValidator)
-    .index("deviceId", ["deviceId"])
-    .index("userId_lastSeenAt", ["userId", "lastSeenAt"])
-    .index("userId_isActive", ["userId", "isActive"]),
 };
 
 export default tables;
