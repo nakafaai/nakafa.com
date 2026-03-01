@@ -1,6 +1,6 @@
 "use client";
 
-import { Search02Icon } from "@hugeicons/core-free-icons";
+import { Progress03Icon, Search02Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
@@ -62,7 +62,10 @@ export function HomeContinueLearning() {
 
   return (
     <section className="flex flex-col gap-4">
-      <h2 className="px-3 font-medium">{t("continue-learning")}</h2>
+      <h2 className="flex items-center gap-2 px-3 font-medium">
+        {t("continue-learning")}
+        <HugeIcons className="size-4" icon={Progress03Icon} />
+      </h2>
       <div className="grid divide-y overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
         {data.map((subject) => {
           return (
