@@ -70,7 +70,10 @@ export function HomeTrending() {
                 <div className="-mt-1 flex flex-1 flex-col gap-0.5">
                   <div className="relative">
                     <h3 className="pr-20">{subject.title}</h3>
-                    <Badge className="absolute top-0 right-0" variant="muted">
+                    <Badge
+                      className="absolute top-0 right-0 mt-0.5"
+                      variant="muted"
+                    >
                       <HugeIcons className="size-3" icon={ViewIcon} />
                       {subject.viewCount}
                     </Badge>

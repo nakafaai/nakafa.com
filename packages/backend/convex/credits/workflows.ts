@@ -1,14 +1,12 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import {
+  getPlanCreditConfig,
+  RESET_WORKFLOW_CONFIG,
+} from "@repo/backend/convex/credits/constants";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { workflow } from "@repo/backend/convex/workflow";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
-
-const MIN_WORKERS = 1;
-const MAX_WORKERS = 50;
-const SCALE_UP_THRESHOLD = 0.5;
-const CHECK_INTERVAL_MS = 30_000;
-const PROGRESS_REPORT_INTERVAL = 10;
 
 /**
  * Orchestrates the credit reset workflow with dynamic worker scaling.
@@ -20,33 +18,30 @@ export const orchestrateReset = workflow.define({
   },
   returns: v.null(),
   handler: async (step, args) => {
-    const jobType = args.plan === "free" ? "free-daily" : "pro-monthly";
-    const creditAmount = args.plan === "pro" ? 3000 : 10;
-    const grantType = args.plan === "pro" ? "monthly-grant" : "daily-grant";
+    const creditConfig = getPlanCreditConfig(args.plan);
 
-    logger.info(`Starting ${jobType} credit reset orchestration`, {
+    logger.info(`Starting ${creditConfig.jobType} credit reset orchestration`, {
       plan: args.plan,
       resetTimestamp: args.resetTimestamp,
-      minWorkers: MIN_WORKERS,
-      maxWorkers: MAX_WORKERS,
+      minWorkers: RESET_WORKFLOW_CONFIG.minWorkers,
+      maxWorkers: RESET_WORKFLOW_CONFIG.maxWorkers,
     });
 
     const jobId = await step.runMutation(
       internal.credits.mutations.createResetJob,
       {
-        jobType,
+        jobType: creditConfig.jobType,
         resetTimestamp: args.resetTimestamp,
       }
     );
 
-    logger.info(`${jobType} job created`, { jobId });
+    logger.info(`${creditConfig.jobType} job created`, { jobId });
 
     // Populate queue in batched workflow steps
     // Following Convex best practice: Keep each mutation within limits
     // Reference: https://docs.convex.dev/production/state/limits
     let totalUsers = 0;
     let cursor: string | undefined;
-    const POPULATE_BATCH_SIZE = 1000;
 
     while (true) {
       const result = await step.runMutation(
@@ -56,7 +51,7 @@ export const orchestrateReset = workflow.define({
           plan: args.plan,
           resetTimestamp: args.resetTimestamp,
           cursor,
-          batchSize: POPULATE_BATCH_SIZE,
+          batchSize: RESET_WORKFLOW_CONFIG.populateBatchSize,
         }
       );
 
@@ -75,13 +70,16 @@ export const orchestrateReset = workflow.define({
       totalUsers,
     });
 
-    logger.info(`${jobType} queue populated`, {
+    logger.info(`${creditConfig.jobType} queue populated`, {
       jobId,
       totalUsers,
     });
 
     if (totalUsers === 0) {
-      logger.info(`${jobType} no users to process, completing job`, { jobId });
+      logger.info(
+        `${creditConfig.jobType} no users to process, completing job`,
+        { jobId }
+      );
       await step.runMutation(internal.credits.mutations.completeResetJob, {
         jobId,
       });
@@ -90,26 +88,28 @@ export const orchestrateReset = workflow.define({
 
     const workers: Promise<null>[] = [];
 
-    for (let i = 0; i < MIN_WORKERS; i++) {
+    for (let i = 0; i < RESET_WORKFLOW_CONFIG.minWorkers; i++) {
       workers.push(
         step.runWorkflow(internal.credits.workflows.processQueue, {
           jobId,
           plan: args.plan,
           resetTimestamp: args.resetTimestamp,
           workerId: i,
-          creditAmount,
-          grantType,
+          creditAmount: creditConfig.amount,
+          grantType: creditConfig.grantType,
         })
       );
     }
 
-    let currentWorkers = MIN_WORKERS;
+    let currentWorkers = RESET_WORKFLOW_CONFIG.minWorkers;
     let lastScaleUpTime = Date.now();
 
     while (workers.length > 0) {
       await Promise.race([
         Promise.all(workers),
-        new Promise((resolve) => setTimeout(resolve, CHECK_INTERVAL_MS)),
+        new Promise((resolve) =>
+          setTimeout(resolve, RESET_WORKFLOW_CONFIG.checkIntervalMs)
+        ),
       ]);
 
       const hasPending = await step.runQuery(
@@ -121,9 +121,12 @@ export const orchestrateReset = workflow.define({
       );
 
       if (!hasPending) {
-        logger.info(`${jobType} queue drained, waiting for workers to finish`, {
-          jobId,
-        });
+        logger.info(
+          `${creditConfig.jobType} queue drained, waiting for workers to finish`,
+          {
+            jobId,
+          }
+        );
         await Promise.all(workers);
         break;
       }
@@ -131,15 +134,15 @@ export const orchestrateReset = workflow.define({
       const timeSinceLastScale = Date.now() - lastScaleUpTime;
 
       if (
-        currentWorkers < MAX_WORKERS &&
-        timeSinceLastScale > CHECK_INTERVAL_MS
+        currentWorkers < RESET_WORKFLOW_CONFIG.maxWorkers &&
+        timeSinceLastScale > RESET_WORKFLOW_CONFIG.checkIntervalMs
       ) {
         const workersToAdd = Math.min(
-          Math.ceil(currentWorkers * SCALE_UP_THRESHOLD),
-          MAX_WORKERS - currentWorkers
+          Math.ceil(currentWorkers * RESET_WORKFLOW_CONFIG.scaleUpThreshold),
+          RESET_WORKFLOW_CONFIG.maxWorkers - currentWorkers
         );
 
-        logger.info(`${jobType} scaling up workers`, {
+        logger.info(`${creditConfig.jobType} scaling up workers`, {
           jobId,
           currentWorkers,
           workersToAdd,
@@ -154,8 +157,8 @@ export const orchestrateReset = workflow.define({
               plan: args.plan,
               resetTimestamp: args.resetTimestamp,
               workerId,
-              creditAmount,
-              grantType,
+              creditAmount: creditConfig.amount,
+              grantType: creditConfig.grantType,
             })
           );
         }
@@ -169,7 +172,7 @@ export const orchestrateReset = workflow.define({
         { jobId }
       );
 
-      logger.info(`${jobType} progress update`, {
+      logger.info(`${creditConfig.jobType} progress update`, {
         jobId,
         processed: progress.processedUsers,
         total: progress.totalUsers,
@@ -177,7 +180,7 @@ export const orchestrateReset = workflow.define({
       });
     }
 
-    logger.info(`${jobType} all workers completed`, {
+    logger.info(`${creditConfig.jobType} all workers completed`, {
       jobId,
       totalWorkersSpawned: currentWorkers,
     });
@@ -186,7 +189,7 @@ export const orchestrateReset = workflow.define({
       jobId,
     });
 
-    logger.info(`${jobType} reset completed`, { jobId });
+    logger.info(`${creditConfig.jobType} reset completed`, { jobId });
 
     return null;
   },
@@ -206,7 +209,6 @@ export const processQueue = workflow.define({
   },
   returns: v.null(),
   handler: async (step, args) => {
-    const BATCH_SIZE = 100;
     let batchCount = 0;
     let cumulativeProcessed = 0;
     let lastReportedCount = 0;
@@ -222,7 +224,7 @@ export const processQueue = workflow.define({
         {
           plan: args.plan,
           resetTimestamp: args.resetTimestamp,
-          batchSize: BATCH_SIZE,
+          batchSize: RESET_WORKFLOW_CONFIG.processBatchSize,
         }
       );
 
@@ -275,8 +277,8 @@ export const processQueue = workflow.define({
       cumulativeProcessed += result.successCount + result.failureCount;
       batchCount++;
 
-      // Report progress every PROGRESS_REPORT_INTERVAL batches
-      if (batchCount % PROGRESS_REPORT_INTERVAL === 0) {
+      // Report progress every RESET_WORKFLOW_CONFIG.progressReportInterval batches
+      if (batchCount % RESET_WORKFLOW_CONFIG.progressReportInterval === 0) {
         const unreportedCount = cumulativeProcessed - lastReportedCount;
         if (unreportedCount > 0) {
           await step.runMutation(
@@ -298,7 +300,7 @@ export const processQueue = workflow.define({
       }
 
       // Last batch - report any remaining unreported progress
-      if (items.length < BATCH_SIZE) {
+      if (items.length < RESET_WORKFLOW_CONFIG.processBatchSize) {
         const unreportedCount = cumulativeProcessed - lastReportedCount;
         if (unreportedCount > 0) {
           await step.runMutation(

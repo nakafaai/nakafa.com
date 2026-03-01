@@ -1,9 +1,13 @@
+import {
+  DEFAULT_USER_CREDITS,
+  DEFAULT_USER_PLAN,
+} from "@repo/backend/convex/credits/constants";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { v } from "convex/values";
 
 /**
- * Backfill user plans - Set plan="free" for all users where plan is undefined.
+ * Backfill user plans and credits - Set plan and credits for all users where undefined.
  *
  * STRATEGY FOR PRO USERS:
  * ======================
@@ -40,16 +44,19 @@ export const backfillUserPlans = internalMutation({
     for (const user of users) {
       processed++;
 
-      // Check if plan is undefined
-      if (user.plan === undefined) {
+      // Check if plan or credits is undefined
+      if (user.plan === undefined || user.credits === undefined) {
         await ctx.db.patch("users", user._id, {
-          plan: "free",
+          plan: DEFAULT_USER_PLAN,
+          credits: DEFAULT_USER_CREDITS,
         });
         updated++;
 
-        logger.info("Backfilled user plan to free", {
+        logger.info("Backfilled user plan and credits", {
           userId: user._id,
           email: user.email,
+          plan: DEFAULT_USER_PLAN,
+          credits: DEFAULT_USER_CREDITS,
         });
       }
     }

@@ -1,5 +1,6 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { CLEANUP_CONFIG } from "@repo/backend/convex/credits/constants";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { v } from "convex/values";
@@ -352,20 +353,21 @@ export const completeResetJob = internalMutation({
 });
 
 /**
- * Clean up completed queue items older than 7 days.
+ * Clean up completed queue items older than retention period.
  */
 export const cleanupOldQueueItems = internalMutation({
   args: {},
   returns: v.number(),
   handler: async (ctx) => {
-    const CUTOFF = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const CUTOFF =
+      Date.now() - CLEANUP_CONFIG.retentionDays * 24 * 60 * 60 * 1000;
 
     const oldItems = await ctx.db
       .query("creditResetQueue")
       .withIndex("status", (idx) =>
         idx.eq("status", "completed").lt("_creationTime", CUTOFF)
       )
-      .take(1000);
+      .take(CLEANUP_CONFIG.batchSize);
 
     for (const item of oldItems) {
       await ctx.db.delete("creditResetQueue", item._id);
