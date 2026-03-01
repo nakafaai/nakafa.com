@@ -38,10 +38,11 @@ export const orchestrateReset = workflow.define({
 
     logger.info(`${creditConfig.jobType} job created`, { jobId });
 
-    // Populate queue in batched workflow steps
-    // Following Convex best practice: Keep each mutation within limits
-    // Reference: https://docs.convex.dev/production/state/limits
+    // Populate queue using Convex built-in pagination
+    // Following Convex best practice: Use .paginate() for large datasets
+    // Reference: https://docs.convex.dev/database/pagination
     let totalUsers = 0;
+    let continueCursor: string | undefined;
 
     while (true) {
       const result = await step.runMutation(
@@ -50,15 +51,20 @@ export const orchestrateReset = workflow.define({
           jobId,
           plan: args.plan,
           resetTimestamp: args.resetTimestamp,
-          batchSize: RESET_WORKFLOW_CONFIG.populateBatchSize,
+          paginationOpts: {
+            numItems: RESET_WORKFLOW_CONFIG.populateBatchSize,
+            cursor: continueCursor ?? null,
+          },
         }
       );
 
       totalUsers += result.usersAdded;
 
-      if (!result.hasMore) {
+      if (result.isDone) {
         break;
       }
+
+      continueCursor = result.continueCursor;
     }
 
     // Update job with total users count

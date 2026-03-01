@@ -2,6 +2,7 @@ import { CLEANUP_CONFIG } from "@repo/backend/convex/credits/constants";
 import { resetUserCredits } from "@repo/backend/convex/credits/utils";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { logger } from "@repo/backend/convex/utils/logger";
+import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
@@ -45,65 +46,45 @@ export const populateQueueBatch = internalMutation({
     jobId: v.id("creditResetJobs"),
     plan: literals("free", "pro"),
     resetTimestamp: v.number(),
-    batchSize: v.number(),
+    paginationOpts: paginationOptsValidator,
   },
   returns: v.object({
     usersAdded: v.number(),
-    hasMore: v.boolean(),
+    isDone: v.boolean(),
+    continueCursor: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
-    // Query users who need credit reset using index
-    // Returns same users each call - idempotency handled by checking queue before insert
-    const users = await ctx.db
+    // Use Convex built-in pagination - best practice for large datasets
+    // Reference: https://docs.convex.dev/database/pagination
+    // This automatically handles cursor management and respects Convex limits
+    const results = await ctx.db
       .query("users")
       .withIndex("plan", (idx) =>
         idx.eq("plan", args.plan).lt("creditsResetAt", args.resetTimestamp)
       )
-      .take(args.batchSize);
+      .paginate(args.paginationOpts);
 
-    if (users.length === 0) {
-      return { usersAdded: 0, hasMore: false };
-    }
-
-    // Check which users are already in queue to avoid duplicates
-    const existingEntries = await ctx.db
-      .query("creditResetQueue")
-      .withIndex("planStatusTimestamp", (idx) =>
-        idx
-          .eq("plan", args.plan)
-          .eq("status", "pending")
-          .eq("resetTimestamp", args.resetTimestamp)
-      )
-      .collect();
-
-    const existingUserIds = new Set(existingEntries.map((e) => e.userId));
-    let added = 0;
-
-    for (const user of users) {
-      // Skip if already in queue
-      if (existingUserIds.has(user._id)) {
-        continue;
-      }
-
+    // Insert users into queue
+    for (const user of results.page) {
       await ctx.db.insert("creditResetQueue", {
         userId: user._id,
         plan: args.plan,
         resetTimestamp: args.resetTimestamp,
         status: "pending",
       });
-      added++;
     }
 
     logger.info("Queue batch populated", {
       jobId: args.jobId,
       plan: args.plan,
-      batchSize: added,
-      skipped: users.length - added,
+      batchSize: results.page.length,
+      isDone: results.isDone,
     });
 
     return {
-      usersAdded: added,
-      hasMore: users.length >= args.batchSize,
+      usersAdded: results.page.length,
+      isDone: results.isDone,
+      continueCursor: results.continueCursor,
     };
   },
 });
