@@ -232,23 +232,6 @@ export const resetUserCredits = internalMutation({
 });
 
 /**
- * Update job progress.
- */
-export const updateJobProgress = internalMutation({
-  args: {
-    jobId: v.id("creditResetJobs"),
-    processedCount: v.number(),
-  },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    await ctx.db.patch("creditResetJobs", args.jobId, {
-      processedUsers: args.processedCount,
-    });
-    return null;
-  },
-});
-
-/**
  * Increment job progress by a delta.
  * Used by workers to report progress atomically.
  */
