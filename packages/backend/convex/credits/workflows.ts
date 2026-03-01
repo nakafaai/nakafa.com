@@ -41,26 +41,46 @@ export const orchestrateReset = workflow.define({
 
     logger.info(`${jobType} job created`, { jobId });
 
-    // Populate queue and update job total in single mutation
-    // Following Convex best practice: minimize workflow steps
-    // Reference: https://docs.convex.dev/components/workflow
-    await step.runMutation(internal.credits.mutations.populateQueue, {
-      jobId,
-      plan: args.plan,
-      resetTimestamp: args.resetTimestamp,
-    });
+    // Populate queue in batched workflow steps
+    // Following Convex best practice: Keep each mutation within limits
+    // Reference: https://docs.convex.dev/production/state/limits
+    let totalUsers = 0;
+    let cursor: string | undefined;
+    const POPULATE_BATCH_SIZE = 1000;
 
-    // Query job to check totalUsers and log progress
-    const job = await step.runQuery(internal.credits.queries.getJobProgress, {
+    while (true) {
+      const result = await step.runMutation(
+        internal.credits.mutations.populateQueueBatch,
+        {
+          jobId,
+          plan: args.plan,
+          resetTimestamp: args.resetTimestamp,
+          cursor,
+          batchSize: POPULATE_BATCH_SIZE,
+        }
+      );
+
+      totalUsers += result.usersAdded;
+
+      if (!result.hasMore) {
+        break;
+      }
+
+      cursor = result.nextCursor;
+    }
+
+    // Update job with total users count
+    await step.runMutation(internal.credits.mutations.updateJobTotalUsers, {
       jobId,
+      totalUsers,
     });
 
     logger.info(`${jobType} queue populated`, {
       jobId,
-      totalUsers: job.totalUsers,
+      totalUsers,
     });
 
-    if (job.totalUsers === 0) {
+    if (totalUsers === 0) {
       logger.info(`${jobType} no users to process, completing job`, { jobId });
       await step.runMutation(internal.credits.mutations.completeResetJob, {
         jobId,
@@ -251,7 +271,8 @@ export const processQueue = workflow.define({
         );
       }
 
-      cumulativeProcessed += result.successCount;
+      // Count ALL attempted items (successes + failures) for accurate progress tracking
+      cumulativeProcessed += result.successCount + result.failureCount;
       batchCount++;
 
       // Report progress every PROGRESS_REPORT_INTERVAL batches

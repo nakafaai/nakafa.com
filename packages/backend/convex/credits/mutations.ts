@@ -35,74 +35,80 @@ export const createResetJob = internalMutation({
 });
 
 /**
- * Populate queue with users needing credit reset and update job total.
+ * Populate queue with a single batch of users.
+ * Returns cursor and count for next batch.
+ * Following Convex best practice: Keep mutations within limits by batching via workflow.
+ * Reference: https://docs.convex.dev/production/state/limits
  */
-export const populateQueue = internalMutation({
+export const populateQueueBatch = internalMutation({
   args: {
     jobId: v.id("creditResetJobs"),
     plan: literals("free", "pro"),
     resetTimestamp: v.number(),
+    cursor: v.optional(v.string()),
+    batchSize: v.number(),
+  },
+  returns: v.object({
+    usersAdded: v.number(),
+    nextCursor: v.optional(v.string()),
+    hasMore: v.boolean(),
+  }),
+  handler: async (ctx, args) => {
+    let query = ctx.db
+      .query("users")
+      .withIndex("plan", (idx) =>
+        idx.eq("plan", args.plan).lt("creditsResetAt", args.resetTimestamp)
+      );
+
+    const cursorId = args.cursor;
+    if (cursorId) {
+      query = query.filter((q) => q.gt(q.field("_id"), cursorId));
+    }
+
+    const users = await query.take(args.batchSize);
+
+    if (users.length === 0) {
+      return { usersAdded: 0, hasMore: false };
+    }
+
+    for (const user of users) {
+      await ctx.db.insert("creditResetQueue", {
+        userId: user._id,
+        plan: args.plan,
+        resetTimestamp: args.resetTimestamp,
+        status: "pending",
+      });
+    }
+
+    const lastId = users.at(-1)?._id;
+
+    logger.info("Queue batch populated", {
+      jobId: args.jobId,
+      plan: args.plan,
+      batchSize: users.length,
+    });
+
+    return {
+      usersAdded: users.length,
+      nextCursor: lastId,
+      hasMore: users.length >= args.batchSize,
+    };
+  },
+});
+
+/**
+ * Update job total users count.
+ */
+export const updateJobTotalUsers = internalMutation({
+  args: {
+    jobId: v.id("creditResetJobs"),
+    totalUsers: v.number(),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    let totalUsers = 0;
-    const BATCH_SIZE = 1000;
-    let lastId: string | undefined;
-
-    while (true) {
-      let query = ctx.db
-        .query("users")
-        .withIndex("plan", (idx) =>
-          idx.eq("plan", args.plan).lt("creditsResetAt", args.resetTimestamp)
-        );
-
-      const cursorId = lastId;
-      if (cursorId) {
-        query = query.filter((q) => q.gt(q.field("_id"), cursorId));
-      }
-
-      const users = await query.take(BATCH_SIZE);
-
-      if (users.length === 0) {
-        break;
-      }
-
-      for (const user of users) {
-        await ctx.db.insert("creditResetQueue", {
-          userId: user._id,
-          plan: args.plan,
-          resetTimestamp: args.resetTimestamp,
-          status: "pending",
-        });
-      }
-
-      totalUsers += users.length;
-      lastId = users.at(-1)?._id;
-
-      logger.info("Queue populated batch", {
-        plan: args.plan,
-        batchSize: users.length,
-        totalSoFar: totalUsers,
-      });
-
-      if (users.length < BATCH_SIZE) {
-        break;
-      }
-    }
-
-    // Update job record with total users count
-    // This is done in the same mutation to ensure atomicity
-    // and minimize workflow steps (Convex best practice)
     await ctx.db.patch("creditResetJobs", args.jobId, {
-      totalUsers,
+      totalUsers: args.totalUsers,
     });
-
-    logger.info("Queue population complete", {
-      jobId: args.jobId,
-      plan: args.plan,
-      totalUsers,
-    });
-
     return null;
   },
 });
