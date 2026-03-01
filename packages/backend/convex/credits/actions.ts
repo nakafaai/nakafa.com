@@ -6,10 +6,7 @@ import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
 /**
- * Populates the credit reset queue for all users of a given plan.
- * This is the entry point called by cron jobs.
- *
- * Scalable: Handles millions of users by chunking into batches
+ * Entry point for cron jobs to start credit reset workflow.
  */
 export const populateQueue = internalAction({
   args: {
@@ -25,7 +22,6 @@ export const populateQueue = internalAction({
       resetTimestamp,
     });
 
-    // Start the orchestrator workflow
     await workflow.start(ctx, internal.credits.workflows.orchestrateReset, {
       plan: args.plan,
       resetTimestamp,

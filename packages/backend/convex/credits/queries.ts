@@ -3,9 +3,7 @@ import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
 /**
- * Check if there are pending queue items for a job.
- * Returns true if any pending items exist, false otherwise.
- * Uses indexed query for efficiency (no counting).
+ * Check if pending queue items exist for a job.
  */
 export const hasPendingQueueItems = internalQuery({
   args: {
@@ -29,7 +27,7 @@ export const hasPendingQueueItems = internalQuery({
 });
 
 /**
- * Get current job progress.
+ * Get current job progress statistics.
  */
 export const getJobProgress = internalQuery({
   args: {

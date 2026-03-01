@@ -3,10 +3,6 @@ import type { Infer } from "convex/values";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
-/**
- * Credit transaction types
- * All types for future extensibility
- */
 export const creditTransactionTypeValidator = literals(
   "daily-grant",
   "monthly-grant",
@@ -21,9 +17,6 @@ export type CreditTransactionType = Infer<
   typeof creditTransactionTypeValidator
 >;
 
-/**
- * Credit transactions table - Audit trail for all credit changes
- */
 export const creditTransactionValidator = v.object({
   userId: v.id("users"),
   amount: v.number(),
@@ -32,9 +25,6 @@ export const creditTransactionValidator = v.object({
   metadata: v.optional(v.record(v.string(), v.any())),
 });
 
-/**
- * Credit reset queue table - Scalable queue for processing credit resets
- */
 export const creditResetQueueValidator = v.object({
   userId: v.id("users"),
   plan: literals("free", "pro"),
@@ -44,9 +34,6 @@ export const creditResetQueueValidator = v.object({
   error: v.optional(v.string()),
 });
 
-/**
- * Credit reset job tracking - Monitor overall reset progress
- */
 export const creditResetJobValidator = v.object({
   jobType: literals("free-daily", "pro-monthly"),
   status: literals("pending", "running", "completed", "failed"),
@@ -59,9 +46,9 @@ export const creditResetJobValidator = v.object({
 });
 
 const tables = {
-  creditTransactions: defineTable(creditTransactionValidator)
-    .index("userId", ["userId"])
-    .index("type", ["type"]),
+  creditTransactions: defineTable(creditTransactionValidator).index("userId", [
+    "userId",
+  ]),
 
   creditResetQueue: defineTable(creditResetQueueValidator)
     .index("status", ["status"])

@@ -6,7 +6,7 @@ import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
 /**
- * Create a reset job record.
+ * Create a credit reset job record to track progress.
  */
 export const createResetJob = internalMutation({
   args: {
@@ -35,7 +35,7 @@ export const createResetJob = internalMutation({
 });
 
 /**
- * Populate the queue with all users needing credit reset.
+ * Populate queue with users needing credit reset.
  */
 export const populateQueue = internalMutation({
   args: {
@@ -99,8 +99,7 @@ export const populateQueue = internalMutation({
 });
 
 /**
- * Claim pending queue items for processing.
- * Workers call this to get work.
+ * Atomically claim pending queue items for processing.
  */
 export const claimQueueItems = internalMutation({
   args: {
@@ -116,7 +115,6 @@ export const claimQueueItems = internalMutation({
     })
   ),
   handler: async (ctx, args) => {
-    // Find pending items using indexed query (no .filter())
     const pendingItems = await ctx.db
       .query("creditResetQueue")
       .withIndex("planStatusTimestamp", (idx) =>
@@ -127,18 +125,12 @@ export const claimQueueItems = internalMutation({
       )
       .take(args.batchSize);
 
-    if (pendingItems.length === 0) {
-      return [];
-    }
-
-    // Claim them by setting status to processing and collect results
     const claimed = await Promise.all(
       pendingItems.map(async (item) => {
         await ctx.db.patch("creditResetQueue", item._id, {
           status: "processing",
         });
 
-        // Get user credits
         const user = await ctx.db.get("users", item.userId);
 
         return user
@@ -156,59 +148,7 @@ export const claimQueueItems = internalMutation({
 });
 
 /**
- * Mark queue items as completed.
- */
-export const completeQueueItems = internalMutation({
-  args: {
-    queueIds: v.array(v.id("creditResetQueue")),
-  },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    for (const queueId of args.queueIds) {
-      await ctx.db.patch("creditResetQueue", queueId, {
-        status: "completed",
-        processedAt: Date.now(),
-      });
-    }
-    return null;
-  },
-});
-
-/**
- * Mark queue items as failed with individual error messages.
- */
-export const failQueueItems = internalMutation({
-  args: {
-    failures: v.array(
-      v.object({
-        queueId: v.id("creditResetQueue"),
-        error: v.string(),
-      })
-    ),
-  },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    for (const failure of args.failures) {
-      await ctx.db.patch("creditResetQueue", failure.queueId, {
-        status: "failed",
-        error: failure.error,
-        processedAt: Date.now(),
-      });
-    }
-    return null;
-  },
-});
-
-/**
- * Batch reset user credits - Convex best practice.
- *
- * WHY THIS APPROACH:
- * - Workflows have 8MiB journal limit; each step is recorded
- * - Processing 100 items sequentially = 100+ workflow steps
- * - This approach: 1 workflow step calling 1 mutation
- * - Mutation processes all 100 items in parallel internally
- * - Still maintains per-item error tracking
- * - Follows "batch operations in mutations" best practice
+ * Batch process credit resets for multiple users in parallel.
  */
 export const batchResetUserCredits = internalMutation({
   args: {
@@ -234,8 +174,6 @@ export const batchResetUserCredits = internalMutation({
     ),
   }),
   handler: async (ctx, args) => {
-    // Process all items in parallel inside the mutation
-    // This is more efficient than sequential workflow steps
     const results = await Promise.all(
       args.items.map(async (item) => {
         try {
@@ -262,7 +200,6 @@ export const batchResetUserCredits = internalMutation({
     const successes = results.filter((r) => r.success);
     const failures = results.filter((r) => !r.success);
 
-    // Mark successful items as completed
     if (successes.length > 0) {
       for (const success of successes) {
         await ctx.db.patch("creditResetQueue", success.queueId, {
@@ -272,7 +209,6 @@ export const batchResetUserCredits = internalMutation({
       }
     }
 
-    // Mark failed items with their specific errors
     if (failures.length > 0) {
       for (const failure of failures) {
         await ctx.db.patch("creditResetQueue", failure.queueId, {
@@ -291,10 +227,6 @@ export const batchResetUserCredits = internalMutation({
   },
 });
 
-/**
- * Helper function to reset a single user's credits.
- * Extracted for reuse and clarity.
- */
 async function resetUserCreditsHelper(
   ctx: MutationCtx,
   args: {
@@ -311,7 +243,6 @@ async function resetUserCreditsHelper(
     throw new Error(`User not found: ${args.userId}`);
   }
 
-  // Idempotency check: already reset?
   if (user.creditsResetAt && user.creditsResetAt >= args.resetTimestamp) {
     logger.info("User credits already reset, skipping", {
       userId: args.userId,
@@ -321,13 +252,11 @@ async function resetUserCreditsHelper(
     return;
   }
 
-  // Update user credits
   await ctx.db.patch("users", args.userId, {
     credits: args.creditAmount,
     creditsResetAt: args.resetTimestamp,
   });
 
-  // Record transaction
   await ctx.db.insert("creditTransactions", {
     userId: args.userId,
     amount: args.creditAmount,
@@ -346,67 +275,7 @@ async function resetUserCreditsHelper(
 }
 
 /**
- * Reset user credits and record transaction.
- */
-export const resetUserCredits = internalMutation({
-  args: {
-    userId: v.id("users"),
-    creditAmount: v.number(),
-    grantType: literals("daily-grant", "monthly-grant"),
-    resetTimestamp: v.number(),
-    previousBalance: v.number(),
-  },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    const user = await ctx.db.get("users", args.userId);
-
-    if (!user) {
-      logger.warn("User not found during credit reset", {
-        userId: args.userId,
-      });
-      return null;
-    }
-
-    // Idempotency check: already reset?
-    if (user.creditsResetAt && user.creditsResetAt >= args.resetTimestamp) {
-      logger.info("User credits already reset, skipping", {
-        userId: args.userId,
-        creditsResetAt: user.creditsResetAt,
-        resetTimestamp: args.resetTimestamp,
-      });
-      return null;
-    }
-
-    // Update user credits
-    await ctx.db.patch("users", args.userId, {
-      credits: args.creditAmount,
-      creditsResetAt: args.resetTimestamp,
-    });
-
-    // Record transaction
-    await ctx.db.insert("creditTransactions", {
-      userId: args.userId,
-      amount: args.creditAmount,
-      type: args.grantType,
-      balanceAfter: args.creditAmount,
-      metadata: {
-        previousBalance: args.previousBalance,
-      },
-    });
-
-    logger.info("User credits reset", {
-      userId: args.userId,
-      amount: args.creditAmount,
-      type: args.grantType,
-    });
-
-    return null;
-  },
-});
-
-/**
- * Increment job progress by a delta.
- * Used by workers to report progress atomically.
+ * Increment job progress counter atomically.
  */
 export const incrementJobProgress = internalMutation({
   args: {
@@ -429,7 +298,7 @@ export const incrementJobProgress = internalMutation({
 });
 
 /**
- * Complete a reset job.
+ * Mark job as completed and record completion time.
  */
 export const completeResetJob = internalMutation({
   args: {
@@ -449,7 +318,8 @@ export const completeResetJob = internalMutation({
 
     logger.info("Credit reset job completed", {
       jobId: args.jobId,
-      totalProcessed: job.processedUsers,
+      totalUsers: job.totalUsers,
+      processedUsers: job.processedUsers,
     });
 
     return null;
@@ -458,14 +328,12 @@ export const completeResetJob = internalMutation({
 
 /**
  * Clean up completed queue items older than 7 days.
- * Called periodically to prevent unbounded growth.
  */
 export const cleanupOldQueueItems = internalMutation({
   args: {},
   returns: v.number(),
   handler: async (ctx) => {
-    const CUTOFF = Date.now() - 7 * 24 * 60 * 60 * 1000; // 7 days ago
-    let deletedCount = 0;
+    const CUTOFF = Date.now() - 7 * 24 * 60 * 60 * 1000;
 
     const oldItems = await ctx.db
       .query("creditResetQueue")
@@ -476,9 +344,12 @@ export const cleanupOldQueueItems = internalMutation({
 
     for (const item of oldItems) {
       await ctx.db.delete("creditResetQueue", item._id);
-      deletedCount++;
     }
 
-    return deletedCount;
+    logger.info("Cleaned up old queue items", {
+      count: oldItems.length,
+    });
+
+    return oldItems.length;
   },
 });

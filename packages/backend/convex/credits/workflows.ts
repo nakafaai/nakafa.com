@@ -4,10 +4,6 @@ import { workflow } from "@repo/backend/convex/workflow";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
-/**
- * Dynamic scaling configuration
- * These can be adjusted via environment variables in production
- */
 const MIN_WORKERS = 1;
 const MAX_WORKERS = 50;
 const SCALE_UP_THRESHOLD = 0.5;
@@ -15,17 +11,7 @@ const CHECK_INTERVAL_MS = 30_000;
 const PROGRESS_REPORT_INTERVAL = 10;
 
 /**
- * Orchestrator workflow with dynamic scaling.
- *
- * Scales workers from MIN_WORKERS (1) to MAX_WORKERS (50) based on queue size.
- * Workers self-terminate when queue is empty.
- *
- * Flow:
- * 1. Create job record
- * 2. Populate queue with users
- * 3. Start with MIN_WORKERS
- * 4. Monitor progress and scale up if queue not draining fast enough
- * 5. Complete job when all workers finish
+ * Orchestrates the credit reset workflow with dynamic worker scaling.
  */
 export const orchestrateReset = workflow.define({
   args: {
@@ -181,8 +167,7 @@ export const orchestrateReset = workflow.define({
 });
 
 /**
- * Worker workflow that processes credit reset queue items.
- * Runs until queue is empty, reporting progress periodically.
+ * Worker workflow that processes batches of credit resets.
  */
 export const processQueue = workflow.define({
   args: {
@@ -196,8 +181,8 @@ export const processQueue = workflow.define({
   returns: v.null(),
   handler: async (step, args) => {
     const BATCH_SIZE = 100;
-    let totalProcessed = 0;
     let batchCount = 0;
+    let cumulativeProcessed = 0;
 
     logger.info(`Worker ${args.workerId} started`, {
       jobId: args.jobId,
@@ -217,13 +202,11 @@ export const processQueue = workflow.define({
       if (items.length === 0) {
         logger.info(`Worker ${args.workerId} finished`, {
           jobId: args.jobId,
-          totalProcessed,
+          totalProcessed: cumulativeProcessed,
         });
         break;
       }
 
-      // Process entire batch in a single mutation step (Convex best practice)
-      // This reduces workflow journal size vs sequential individual steps
       const result = await step.runMutation(
         internal.credits.mutations.batchResetUserCredits,
         {
@@ -238,7 +221,6 @@ export const processQueue = workflow.define({
         }
       );
 
-      // Log any failures for observability
       if (result.failureCount > 0) {
         logger.error(
           `Worker ${args.workerId} batch had ${result.failureCount} failures`,
@@ -250,37 +232,33 @@ export const processQueue = workflow.define({
         );
       }
 
-      totalProcessed += result.successCount;
+      cumulativeProcessed += result.successCount;
       batchCount++;
 
       if (batchCount % PROGRESS_REPORT_INTERVAL === 0) {
-        const countToReport = totalProcessed;
-        totalProcessed = 0;
-
         await step.runMutation(
           internal.credits.mutations.incrementJobProgress,
           {
             jobId: args.jobId,
-            increment: countToReport,
+            increment: result.successCount,
           }
         );
 
         logger.info(`Worker ${args.workerId} progress report`, {
           jobId: args.jobId,
           batchCount,
-          reportedCount: countToReport,
+          reportedCount: result.successCount,
+          cumulativeProcessed,
         });
       }
 
       if (items.length < BATCH_SIZE) {
-        const countToReport = totalProcessed;
-
-        if (countToReport > 0) {
+        if (result.successCount > 0) {
           await step.runMutation(
             internal.credits.mutations.incrementJobProgress,
             {
               jobId: args.jobId,
-              increment: countToReport,
+              increment: result.successCount,
             }
           );
         }
