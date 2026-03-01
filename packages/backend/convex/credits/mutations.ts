@@ -298,30 +298,50 @@ export const completeResetJob = internalMutation({
 });
 
 /**
- * Clean up completed queue items older than retention period.
+ * Clean up completed and failed queue items older than retention period.
  */
 export const cleanupOldQueueItems = internalMutation({
   args: {},
-  returns: v.number(),
+  returns: v.object({
+    completedCount: v.number(),
+    failedCount: v.number(),
+  }),
   handler: async (ctx) => {
     const CUTOFF =
       Date.now() - CLEANUP_CONFIG.retentionDays * 24 * 60 * 60 * 1000;
 
-    const oldItems = await ctx.db
+    // Query and delete old completed items
+    const oldCompletedItems = await ctx.db
       .query("creditResetQueue")
       .withIndex("status", (idx) =>
         idx.eq("status", "completed").lt("_creationTime", CUTOFF)
       )
       .take(CLEANUP_CONFIG.batchSize);
 
-    for (const item of oldItems) {
+    for (const item of oldCompletedItems) {
+      await ctx.db.delete("creditResetQueue", item._id);
+    }
+
+    // Query and delete old failed items
+    const oldFailedItems = await ctx.db
+      .query("creditResetQueue")
+      .withIndex("status", (idx) =>
+        idx.eq("status", "failed").lt("_creationTime", CUTOFF)
+      )
+      .take(CLEANUP_CONFIG.batchSize);
+
+    for (const item of oldFailedItems) {
       await ctx.db.delete("creditResetQueue", item._id);
     }
 
     logger.info("Cleaned up old queue items", {
-      count: oldItems.length,
+      completedCount: oldCompletedItems.length,
+      failedCount: oldFailedItems.length,
     });
 
-    return oldItems.length;
+    return {
+      completedCount: oldCompletedItems.length,
+      failedCount: oldFailedItems.length,
+    };
   },
 });
