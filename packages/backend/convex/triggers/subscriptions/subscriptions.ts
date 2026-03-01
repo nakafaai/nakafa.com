@@ -45,7 +45,10 @@ export async function subscriptionsHandler(
         break;
       }
 
-      const plan = getPlanFromProductId(subscription.productId);
+      const isActive = subscription.status === "active";
+      const plan = isActive
+        ? getPlanFromProductId(subscription.productId)
+        : "free";
       await ctx.db.patch("users", customer.userId, { plan });
 
       logger.info("User plan updated from subscription", {

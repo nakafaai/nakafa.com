@@ -1,4 +1,4 @@
-import { internalMutation } from "@repo/backend/convex/_generated/server";
+import { internalMutation } from "@repo/backend/convex/functions";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import tables from "@repo/backend/convex/subscriptions/schema";
 
