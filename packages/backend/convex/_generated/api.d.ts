@@ -42,7 +42,7 @@ import type * as contents_utils from "../contents/utils.js";
 import type * as credits_actions from "../credits/actions.js";
 import type * as credits_constants from "../credits/constants.js";
 import type * as credits_mutations from "../credits/mutations.js";
-import type * as credits_queries from "../credits/queries.js";
+import type * as credits_utils from "../credits/utils.js";
 import type * as credits_workflows from "../credits/workflows.js";
 import type * as crons from "../crons.js";
 import type * as customers_actions from "../customers/actions.js";
@@ -153,7 +153,7 @@ declare const fullApi: ApiFromModules<{
   "credits/actions": typeof credits_actions;
   "credits/constants": typeof credits_constants;
   "credits/mutations": typeof credits_mutations;
-  "credits/queries": typeof credits_queries;
+  "credits/utils": typeof credits_utils;
   "credits/workflows": typeof credits_workflows;
   crons: typeof crons;
   "customers/actions": typeof customers_actions;

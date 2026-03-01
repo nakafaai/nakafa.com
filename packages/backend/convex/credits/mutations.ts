@@ -1,6 +1,5 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { CLEANUP_CONFIG } from "@repo/backend/convex/credits/constants";
+import { resetUserCredits } from "@repo/backend/convex/credits/utils";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { v } from "convex/values";
@@ -46,27 +45,24 @@ export const populateQueueBatch = internalMutation({
     jobId: v.id("creditResetJobs"),
     plan: literals("free", "pro"),
     resetTimestamp: v.number(),
-    cursor: v.optional(v.string()),
     batchSize: v.number(),
   },
   returns: v.object({
     usersAdded: v.number(),
-    nextCursor: v.optional(v.string()),
     hasMore: v.boolean(),
   }),
   handler: async (ctx, args) => {
-    let query = ctx.db
+    // Query users who need credit reset using index
+    // Note: We don't use cursor pagination because:
+    // 1. The idempotency check in resetUserCreditsHelper prevents duplicates
+    // 2. Once added to queue, users are filtered by status in claimQueueItems
+    // 3. This avoids needing complex multi-field index ranges
+    const users = await ctx.db
       .query("users")
       .withIndex("plan", (idx) =>
         idx.eq("plan", args.plan).lt("creditsResetAt", args.resetTimestamp)
-      );
-
-    const cursorId = args.cursor;
-    if (cursorId) {
-      query = query.filter((q) => q.gt(q.field("_id"), cursorId));
-    }
-
-    const users = await query.take(args.batchSize);
+      )
+      .take(args.batchSize);
 
     if (users.length === 0) {
       return { usersAdded: 0, hasMore: false };
@@ -81,8 +77,6 @@ export const populateQueueBatch = internalMutation({
       });
     }
 
-    const lastId = users.at(-1)?._id;
-
     logger.info("Queue batch populated", {
       jobId: args.jobId,
       plan: args.plan,
@@ -91,7 +85,6 @@ export const populateQueueBatch = internalMutation({
 
     return {
       usersAdded: users.length,
-      nextCursor: lastId,
       hasMore: users.length >= args.batchSize,
     };
   },
@@ -203,7 +196,7 @@ export const batchResetUserCredits = internalMutation({
     const results = await Promise.all(
       args.items.map(async (item) => {
         try {
-          await resetUserCreditsHelper(ctx, {
+          await resetUserCredits(ctx, {
             userId: item.userId,
             creditAmount: args.creditAmount,
             grantType: args.grantType,
@@ -252,53 +245,6 @@ export const batchResetUserCredits = internalMutation({
     };
   },
 });
-
-async function resetUserCreditsHelper(
-  ctx: MutationCtx,
-  args: {
-    userId: Id<"users">;
-    creditAmount: number;
-    grantType: "daily-grant" | "monthly-grant";
-    resetTimestamp: number;
-    previousBalance: number;
-  }
-) {
-  const user = await ctx.db.get("users", args.userId);
-
-  if (!user) {
-    throw new Error(`User not found: ${args.userId}`);
-  }
-
-  if (user.creditsResetAt >= args.resetTimestamp) {
-    logger.info("User credits already reset, skipping", {
-      userId: args.userId,
-      creditsResetAt: user.creditsResetAt,
-      resetTimestamp: args.resetTimestamp,
-    });
-    return;
-  }
-
-  await ctx.db.patch("users", args.userId, {
-    credits: args.creditAmount,
-    creditsResetAt: args.resetTimestamp,
-  });
-
-  await ctx.db.insert("creditTransactions", {
-    userId: args.userId,
-    amount: args.creditAmount,
-    type: args.grantType,
-    balanceAfter: args.creditAmount,
-    metadata: {
-      previousBalance: args.previousBalance,
-    },
-  });
-
-  logger.info("User credits reset", {
-    userId: args.userId,
-    amount: args.creditAmount,
-    type: args.grantType,
-  });
-}
 
 /**
  * Increment job progress counter atomically.

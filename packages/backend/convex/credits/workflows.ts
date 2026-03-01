@@ -42,7 +42,6 @@ export const orchestrateReset = workflow.define({
     // Following Convex best practice: Keep each mutation within limits
     // Reference: https://docs.convex.dev/production/state/limits
     let totalUsers = 0;
-    let cursor: string | undefined;
 
     while (true) {
       const result = await step.runMutation(
@@ -51,7 +50,6 @@ export const orchestrateReset = workflow.define({
           jobId,
           plan: args.plan,
           resetTimestamp: args.resetTimestamp,
-          cursor,
           batchSize: RESET_WORKFLOW_CONFIG.populateBatchSize,
         }
       );
@@ -61,8 +59,6 @@ export const orchestrateReset = workflow.define({
       if (!result.hasMore) {
         break;
       }
-
-      cursor = result.nextCursor;
     }
 
     // Update job with total users count
