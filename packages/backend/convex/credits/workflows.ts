@@ -9,7 +9,9 @@ import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
 /**
- * Orchestrates the credit reset workflow with dynamic worker scaling.
+ * Orchestrates the credit reset workflow with fixed worker pool.
+ * Note: Convex workflows don't support setTimeout or Date.now(),
+ * so we use a fixed number of workers instead of dynamic scaling.
  */
 export const orchestrateReset = workflow.define({
   args: {
@@ -23,7 +25,6 @@ export const orchestrateReset = workflow.define({
     logger.info(`Starting ${creditConfig.jobType} credit reset orchestration`, {
       plan: args.plan,
       resetTimestamp: args.resetTimestamp,
-      minWorkers: RESET_WORKFLOW_CONFIG.minWorkers,
       maxWorkers: RESET_WORKFLOW_CONFIG.maxWorkers,
     });
 
@@ -86,9 +87,11 @@ export const orchestrateReset = workflow.define({
       return null;
     }
 
+    // Spawn fixed number of workers (no dynamic scaling - Convex workflow limitation)
+    // Workflows don't support setTimeout or Date.now()
     const workers: Promise<null>[] = [];
 
-    for (let i = 0; i < RESET_WORKFLOW_CONFIG.minWorkers; i++) {
+    for (let i = 0; i < RESET_WORKFLOW_CONFIG.maxWorkers; i++) {
       workers.push(
         step.runWorkflow(internal.credits.workflows.processQueue, {
           jobId,
@@ -101,88 +104,20 @@ export const orchestrateReset = workflow.define({
       );
     }
 
-    let currentWorkers = RESET_WORKFLOW_CONFIG.minWorkers;
-    let lastScaleUpTime = Date.now();
-
-    while (workers.length > 0) {
-      await Promise.race([
-        Promise.all(workers),
-        new Promise((resolve) =>
-          setTimeout(resolve, RESET_WORKFLOW_CONFIG.checkIntervalMs)
-        ),
-      ]);
-
-      const hasPending = await step.runQuery(
-        internal.credits.queries.hasPendingQueueItems,
-        {
-          plan: args.plan,
-          resetTimestamp: args.resetTimestamp,
-        }
-      );
-
-      if (!hasPending) {
-        logger.info(
-          `${creditConfig.jobType} queue drained, waiting for workers to finish`,
-          {
-            jobId,
-          }
-        );
-        await Promise.all(workers);
-        break;
-      }
-
-      const timeSinceLastScale = Date.now() - lastScaleUpTime;
-
-      if (
-        currentWorkers < RESET_WORKFLOW_CONFIG.maxWorkers &&
-        timeSinceLastScale > RESET_WORKFLOW_CONFIG.checkIntervalMs
-      ) {
-        const workersToAdd = Math.min(
-          Math.ceil(currentWorkers * RESET_WORKFLOW_CONFIG.scaleUpThreshold),
-          RESET_WORKFLOW_CONFIG.maxWorkers - currentWorkers
-        );
-
-        logger.info(`${creditConfig.jobType} scaling up workers`, {
-          jobId,
-          currentWorkers,
-          workersToAdd,
-          totalWillBe: currentWorkers + workersToAdd,
-        });
-
-        for (let i = 0; i < workersToAdd; i++) {
-          const workerId = currentWorkers + i;
-          workers.push(
-            step.runWorkflow(internal.credits.workflows.processQueue, {
-              jobId,
-              plan: args.plan,
-              resetTimestamp: args.resetTimestamp,
-              workerId,
-              creditAmount: creditConfig.amount,
-              grantType: creditConfig.grantType,
-            })
-          );
-        }
-
-        currentWorkers += workersToAdd;
-        lastScaleUpTime = Date.now();
-      }
-
-      const progress = await step.runQuery(
-        internal.credits.queries.getJobProgress,
-        { jobId }
-      );
-
-      logger.info(`${creditConfig.jobType} progress update`, {
+    logger.info(
+      `${creditConfig.jobType} spawned ${RESET_WORKFLOW_CONFIG.maxWorkers} workers`,
+      {
         jobId,
-        processed: progress.processedUsers,
-        total: progress.totalUsers,
-        currentWorkers,
-      });
-    }
+        totalWorkers: RESET_WORKFLOW_CONFIG.maxWorkers,
+      }
+    );
+
+    // Wait for all workers to complete
+    await Promise.all(workers);
 
     logger.info(`${creditConfig.jobType} all workers completed`, {
       jobId,
-      totalWorkersSpawned: currentWorkers,
+      totalWorkersSpawned: RESET_WORKFLOW_CONFIG.maxWorkers,
     });
 
     await step.runMutation(internal.credits.mutations.completeResetJob, {

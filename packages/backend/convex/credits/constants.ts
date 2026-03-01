@@ -48,12 +48,11 @@ export const DEFAULT_USER_CREDITS =
 
 /**
  * Workflow configuration for credit reset processing.
+ * Note: Convex workflows don't support setTimeout or Date.now(),
+ * so we use a fixed number of workers instead of dynamic scaling.
  */
 export const RESET_WORKFLOW_CONFIG = {
-  minWorkers: 1,
-  maxWorkers: 50,
-  scaleUpThreshold: 0.5,
-  checkIntervalMs: 30_000,
+  maxWorkers: 10,
   progressReportInterval: 10,
   populateBatchSize: 1000,
   processBatchSize: 100,
