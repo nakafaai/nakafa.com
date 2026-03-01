@@ -183,6 +183,7 @@ export const processQueue = workflow.define({
     const BATCH_SIZE = 100;
     let batchCount = 0;
     let cumulativeProcessed = 0;
+    let lastReportedCount = 0;
 
     logger.info(`Worker ${args.workerId} started`, {
       jobId: args.jobId,
@@ -235,32 +236,46 @@ export const processQueue = workflow.define({
       cumulativeProcessed += result.successCount;
       batchCount++;
 
+      // Track if we reported progress this batch to avoid double-reporting
+      let reportedThisBatch = false;
+
+      // Report progress every PROGRESS_REPORT_INTERVAL batches
+      // Report cumulative unreported count (cumulativeProcessed - lastReportedCount)
       if (batchCount % PROGRESS_REPORT_INTERVAL === 0) {
-        await step.runMutation(
-          internal.credits.mutations.incrementJobProgress,
-          {
-            jobId: args.jobId,
-            increment: result.successCount,
-          }
-        );
-
-        logger.info(`Worker ${args.workerId} progress report`, {
-          jobId: args.jobId,
-          batchCount,
-          reportedCount: result.successCount,
-          cumulativeProcessed,
-        });
-      }
-
-      if (items.length < BATCH_SIZE) {
-        if (result.successCount > 0) {
+        const unreportedCount = cumulativeProcessed - lastReportedCount;
+        if (unreportedCount > 0) {
           await step.runMutation(
             internal.credits.mutations.incrementJobProgress,
             {
               jobId: args.jobId,
-              increment: result.successCount,
+              increment: unreportedCount,
             }
           );
+          lastReportedCount = cumulativeProcessed;
+        }
+
+        logger.info(`Worker ${args.workerId} progress report`, {
+          jobId: args.jobId,
+          batchCount,
+          reportedCount: unreportedCount,
+          cumulativeProcessed,
+        });
+        reportedThisBatch = true;
+      }
+
+      // Last batch - report any remaining unreported progress
+      // Skip if already reported this batch (prevents double-reporting)
+      if (items.length < BATCH_SIZE && !reportedThisBatch) {
+        const unreportedCount = cumulativeProcessed - lastReportedCount;
+        if (unreportedCount > 0) {
+          await step.runMutation(
+            internal.credits.mutations.incrementJobProgress,
+            {
+              jobId: args.jobId,
+              increment: unreportedCount,
+            }
+          );
+          lastReportedCount = cumulativeProcessed;
         }
 
         break;

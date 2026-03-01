@@ -127,19 +127,29 @@ export const claimQueueItems = internalMutation({
 
     const claimed = await Promise.all(
       pendingItems.map(async (item) => {
+        // Check user exists BEFORE marking as processing
+        // This prevents deleted users from getting stuck in 'processing' status
+        const user = await ctx.db.get("users", item.userId);
+
+        if (!user) {
+          // User deleted - mark as completed so it's not stuck
+          await ctx.db.patch("creditResetQueue", item._id, {
+            status: "completed",
+            processedAt: Date.now(),
+          });
+          return null;
+        }
+
+        // Only mark as processing if user exists
         await ctx.db.patch("creditResetQueue", item._id, {
           status: "processing",
         });
 
-        const user = await ctx.db.get("users", item.userId);
-
-        return user
-          ? {
-              queueId: item._id,
-              userId: item.userId,
-              credits: user.credits,
-            }
-          : null;
+        return {
+          queueId: item._id,
+          userId: item.userId,
+          credits: user.credits,
+        };
       })
     );
 
