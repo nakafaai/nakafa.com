@@ -50,6 +50,7 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
             image: authUser.image ?? undefined,
             plan: DEFAULT_USER_PLAN,
             credits: DEFAULT_USER_CREDITS,
+            creditsResetAt: Date.now(),
           });
 
           // Create default notification preferences

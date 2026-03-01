@@ -38,9 +38,9 @@ export const userValidator = v.object({
   name: v.string(),
   image: v.optional(v.string()),
   role: v.optional(userRoleOptionsValidator),
-  plan: v.optional(userPlanValidator),
-  credits: v.optional(v.number()),
-  creditsResetAt: v.optional(v.number()),
+  plan: userPlanValidator,
+  credits: v.number(),
+  creditsResetAt: v.number(),
 });
 
 /**

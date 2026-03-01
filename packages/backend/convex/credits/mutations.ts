@@ -269,7 +269,7 @@ async function resetUserCreditsHelper(
     throw new Error(`User not found: ${args.userId}`);
   }
 
-  if (user.creditsResetAt && user.creditsResetAt >= args.resetTimestamp) {
+  if (user.creditsResetAt >= args.resetTimestamp) {
     logger.info("User credits already reset, skipping", {
       userId: args.userId,
       creditsResetAt: user.creditsResetAt,
