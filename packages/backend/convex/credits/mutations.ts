@@ -173,6 +173,27 @@ export const completeQueueItems = internalMutation({
 });
 
 /**
+ * Mark queue items as failed.
+ */
+export const failQueueItems = internalMutation({
+  args: {
+    queueIds: v.array(v.id("creditResetQueue")),
+    error: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    for (const queueId of args.queueIds) {
+      await ctx.db.patch("creditResetQueue", queueId, {
+        status: "failed",
+        error: args.error,
+        processedAt: Date.now(),
+      });
+    }
+    return null;
+  },
+});
+
+/**
  * Reset user credits and record transaction.
  */
 export const resetUserCredits = internalMutation({

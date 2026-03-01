@@ -222,51 +222,78 @@ export const processQueue = workflow.define({
         break;
       }
 
-      await Promise.all(
-        items.map((item) => {
-          return step.runMutation(internal.credits.mutations.resetUserCredits, {
+      const successfulItems: typeof items = [];
+      const failedItems: typeof items = [];
+
+      for (const item of items) {
+        try {
+          await step.runMutation(internal.credits.mutations.resetUserCredits, {
             userId: item.userId,
             creditAmount: args.creditAmount,
             grantType: args.grantType,
             resetTimestamp: args.resetTimestamp,
             previousBalance: item.credits ?? 0,
           });
-        })
-      );
+          successfulItems.push(item);
+        } catch (error) {
+          logger.error(`Worker ${args.workerId} failed to process item`, {
+            jobId: args.jobId,
+            queueId: item.queueId,
+            userId: item.userId,
+            error: error instanceof Error ? error.message : String(error),
+          });
+          failedItems.push(item);
+        }
+      }
 
-      await step.runMutation(internal.credits.mutations.completeQueueItems, {
-        queueIds: items.map((item) => item.queueId),
-      });
+      if (successfulItems.length > 0) {
+        await step.runMutation(internal.credits.mutations.completeQueueItems, {
+          queueIds: successfulItems.map((item) => item.queueId),
+        });
+      }
 
-      totalProcessed += items.length;
+      if (failedItems.length > 0) {
+        await step.runMutation(internal.credits.mutations.failQueueItems, {
+          queueIds: failedItems.map((item) => item.queueId),
+          error: "Failed to reset user credits",
+        });
+      }
+
+      totalProcessed += successfulItems.length;
       batchCount++;
 
       if (batchCount % PROGRESS_REPORT_INTERVAL === 0) {
+        const countToReport = totalProcessed;
+        totalProcessed = 0;
+
         await step.runMutation(
           internal.credits.mutations.incrementJobProgress,
           {
             jobId: args.jobId,
-            increment: totalProcessed,
+            increment: countToReport,
           }
         );
 
         logger.info(`Worker ${args.workerId} progress report`, {
           jobId: args.jobId,
           batchCount,
-          totalProcessed,
+          reportedCount: countToReport,
         });
-
-        totalProcessed = 0;
       }
 
       if (items.length < BATCH_SIZE) {
-        await step.runMutation(
-          internal.credits.mutations.incrementJobProgress,
-          {
-            jobId: args.jobId,
-            increment: totalProcessed,
-          }
-        );
+        const countToReport = totalProcessed;
+
+        if (countToReport > 0) {
+          await step.runMutation(
+            internal.credits.mutations.incrementJobProgress,
+            {
+              jobId: args.jobId,
+              increment: countToReport,
+            }
+          );
+        }
+
         break;
       }
     }
