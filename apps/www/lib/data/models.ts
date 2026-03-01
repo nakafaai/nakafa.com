@@ -11,7 +11,7 @@ import {
   XAI,
   ZAI,
 } from "@lobehub/icons";
-import type { ModelId } from "@repo/ai/config/vercel";
+import type { ModelId } from "@repo/ai/config/models";
 import type { ComponentType } from "react";
 
 interface Model {

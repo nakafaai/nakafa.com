@@ -4,11 +4,10 @@ import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
 } from "@repo/ai/clients/weather/client";
+import { defaultModel, type ModelId } from "@repo/ai/config/models";
 import {
-  defaultModel,
   type GatewayProvider,
   type GoogleProvider,
-  type ModelId,
   model,
   type OpenAIProvider,
   order,

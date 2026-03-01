@@ -21,6 +21,14 @@ export const userRoleValidator = nullable(userRoleOptionsValidator);
 export type UserRole = Infer<typeof userRoleValidator>;
 
 /**
+ * User plan validator
+ * Currently supports: free and pro
+ * Can be extended in the future
+ */
+export const userPlanValidator = literals("free", "pro");
+export type UserPlan = Infer<typeof userPlanValidator>;
+
+/**
  * User base validator (without system fields)
  * Used for table definition
  */
@@ -30,17 +38,9 @@ export const userValidator = v.object({
   name: v.string(),
   image: v.optional(v.string()),
   role: v.optional(userRoleOptionsValidator),
-});
-
-/**
- * User device base validator
- */
-export const userDeviceValidator = v.object({
-  userId: v.id("users"),
-  deviceId: v.string(),
-  deviceName: v.optional(v.string()),
-  lastSeenAt: v.number(),
-  isActive: v.boolean(),
+  plan: userPlanValidator,
+  credits: v.number(),
+  creditsResetAt: v.number(),
 });
 
 /**
@@ -67,11 +67,8 @@ export const apiKeyVerifyResultValidator = v.object({
 const tables = {
   users: defineTable(userValidator)
     .index("email", ["email"])
-    .index("authId", ["authId"]),
-  userDevices: defineTable(userDeviceValidator)
-    .index("deviceId", ["deviceId"])
-    .index("userId_lastSeenAt", ["userId", "lastSeenAt"])
-    .index("userId_isActive", ["userId", "isActive"]),
+    .index("authId", ["authId"])
+    .index("plan", ["plan", "creditsResetAt"]),
 };
 
 export default tables;

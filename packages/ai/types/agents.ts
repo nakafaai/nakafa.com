@@ -1,4 +1,4 @@
-import type { ModelId } from "@repo/ai/config/vercel";
+import type { ModelId } from "@repo/ai/config/models";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import type { UserRole } from "@repo/backend/convex/users/schema";
