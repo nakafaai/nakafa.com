@@ -35,14 +35,15 @@ export const createResetJob = internalMutation({
 });
 
 /**
- * Populate queue with users needing credit reset.
+ * Populate queue with users needing credit reset and update job total.
  */
 export const populateQueue = internalMutation({
   args: {
+    jobId: v.id("creditResetJobs"),
     plan: literals("free", "pro"),
     resetTimestamp: v.number(),
   },
-  returns: v.number(),
+  returns: v.null(),
   handler: async (ctx, args) => {
     let totalUsers = 0;
     const BATCH_SIZE = 1000;
@@ -89,12 +90,20 @@ export const populateQueue = internalMutation({
       }
     }
 
+    // Update job record with total users count
+    // This is done in the same mutation to ensure atomicity
+    // and minimize workflow steps (Convex best practice)
+    await ctx.db.patch("creditResetJobs", args.jobId, {
+      totalUsers,
+    });
+
     logger.info("Queue population complete", {
+      jobId: args.jobId,
       plan: args.plan,
       totalUsers,
     });
 
-    return totalUsers;
+    return null;
   },
 });
 

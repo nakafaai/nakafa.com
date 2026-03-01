@@ -41,20 +41,26 @@ export const orchestrateReset = workflow.define({
 
     logger.info(`${jobType} job created`, { jobId });
 
-    const totalUsers = await step.runMutation(
-      internal.credits.mutations.populateQueue,
-      {
-        plan: args.plan,
-        resetTimestamp: args.resetTimestamp,
-      }
-    );
+    // Populate queue and update job total in single mutation
+    // Following Convex best practice: minimize workflow steps
+    // Reference: https://docs.convex.dev/components/workflow
+    await step.runMutation(internal.credits.mutations.populateQueue, {
+      jobId,
+      plan: args.plan,
+      resetTimestamp: args.resetTimestamp,
+    });
+
+    // Query job to check totalUsers and log progress
+    const job = await step.runQuery(internal.credits.queries.getJobProgress, {
+      jobId,
+    });
 
     logger.info(`${jobType} queue populated`, {
       jobId,
-      totalUsers,
+      totalUsers: job.totalUsers,
     });
 
-    if (totalUsers === 0) {
+    if (job.totalUsers === 0) {
       logger.info(`${jobType} no users to process, completing job`, { jobId });
       await step.runMutation(internal.credits.mutations.completeResetJob, {
         jobId,
@@ -201,6 +207,18 @@ export const processQueue = workflow.define({
       );
 
       if (items.length === 0) {
+        // Report any remaining unreported progress before exiting
+        const unreportedCount = cumulativeProcessed - lastReportedCount;
+        if (unreportedCount > 0) {
+          await step.runMutation(
+            internal.credits.mutations.incrementJobProgress,
+            {
+              jobId: args.jobId,
+              increment: unreportedCount,
+            }
+          );
+        }
+
         logger.info(`Worker ${args.workerId} finished`, {
           jobId: args.jobId,
           totalProcessed: cumulativeProcessed,
@@ -236,11 +254,7 @@ export const processQueue = workflow.define({
       cumulativeProcessed += result.successCount;
       batchCount++;
 
-      // Track if we reported progress this batch to avoid double-reporting
-      let reportedThisBatch = false;
-
       // Report progress every PROGRESS_REPORT_INTERVAL batches
-      // Report cumulative unreported count (cumulativeProcessed - lastReportedCount)
       if (batchCount % PROGRESS_REPORT_INTERVAL === 0) {
         const unreportedCount = cumulativeProcessed - lastReportedCount;
         if (unreportedCount > 0) {
@@ -260,12 +274,10 @@ export const processQueue = workflow.define({
           reportedCount: unreportedCount,
           cumulativeProcessed,
         });
-        reportedThisBatch = true;
       }
 
       // Last batch - report any remaining unreported progress
-      // Skip if already reported this batch (prevents double-reporting)
-      if (items.length < BATCH_SIZE && !reportedThisBatch) {
+      if (items.length < BATCH_SIZE) {
         const unreportedCount = cumulativeProcessed - lastReportedCount;
         if (unreportedCount > 0) {
           await step.runMutation(
@@ -275,7 +287,6 @@ export const processQueue = workflow.define({
               increment: unreportedCount,
             }
           );
-          lastReportedCount = cumulativeProcessed;
         }
 
         break;
