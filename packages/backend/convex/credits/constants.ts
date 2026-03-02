@@ -1,8 +1,10 @@
-import type {
-  CreditResetJobType,
-  CreditTransactionType,
-} from "@repo/backend/convex/credits/schema";
+import type { CreditResetJobType } from "@repo/backend/convex/credits/schema";
 import type { UserPlan } from "@repo/backend/convex/users/schema";
+
+/**
+ * Grant types for credit reset (subset of CreditTransactionType).
+ */
+type CreditGrantType = "daily-grant" | "monthly-grant";
 
 /**
  * Credit grant configuration per plan.
@@ -14,7 +16,7 @@ export const PLAN_CREDIT_CONFIG: Record<
     /** Amount of credits granted per reset cycle */
     amount: number;
     /** Grant type for transaction logging */
-    grantType: CreditTransactionType;
+    grantType: CreditGrantType;
     /** Job type identifier for credit reset jobs */
     jobType: CreditResetJobType;
   }
