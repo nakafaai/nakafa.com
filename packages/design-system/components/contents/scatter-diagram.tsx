@@ -164,6 +164,7 @@ export function ScatterDiagram({
                   return (
                     <ReferenceLine
                       ifOverflow="visible"
+                      // biome-ignore lint/suspicious/noArrayIndexKey: Points with same coordinates need index for uniqueness
                       key={`${dataset.name}-residual-${index}`}
                       segment={[
                         { x: point.x, y: point.y },

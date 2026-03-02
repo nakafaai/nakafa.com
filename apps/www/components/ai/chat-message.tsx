@@ -25,6 +25,7 @@ export const AiChatMessage = memo(({ message, showActions }: Props) => {
       <div className="flex flex-col gap-4">
         {parts.map((part, i) => (
           <AiMessagePart
+            // biome-ignore lint/suspicious/noArrayIndexKey: Part type may not be unique, need index for stability
             key={`part-${part.type}-${i}`}
             messageId={message.id}
             part={part}

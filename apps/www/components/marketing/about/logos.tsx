@@ -69,6 +69,7 @@ export function Logos() {
           {duplicatedSchools.map((school, index) => (
             <div
               className="shrink-0 transition-opacity duration-300 ease-out hover:opacity-100! group-hover/logos:opacity-60"
+              // biome-ignore lint/suspicious/noArrayIndexKey: Schools are duplicated, need index for unique keys
               key={`${school.href}-${index}`}
             >
               <SchoolLogo school={school} />

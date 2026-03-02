@@ -366,6 +366,7 @@ export default function TableChairsAnimation({
             {Array.from({ length: maxTables }).map((_, i) => (
               <Button
                 aria-label={`Set table count to ${i + 1}`}
+                // biome-ignore lint/suspicious/noArrayIndexKey: Button count is based on array index position
                 key={`table-count-${i + 1}`}
                 onClick={() => {
                   setTableCount(i + 1);

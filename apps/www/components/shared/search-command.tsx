@@ -175,6 +175,7 @@ function SearchListItems({
           <CommandItem
             className="group cursor-pointer flex-col items-start"
             disabled={isPending}
+            // biome-ignore lint/suspicious/noArrayIndexKey: URL+title may not be unique, need index for stability
             key={`${subResult.url}-${subResult.title}-${index}`}
             onSelect={() => {
               startTransition(() => {
