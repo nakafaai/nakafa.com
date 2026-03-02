@@ -1,22 +1,18 @@
 import { createContentAccessTool } from "@repo/ai/agents/orchestrator/content-access";
 import { createMathTool } from "@repo/ai/agents/orchestrator/math";
 import { createResearchTool } from "@repo/ai/agents/orchestrator/research";
+import type { ToolName } from "@repo/ai/schema/tools";
 import type { OrchestratorToolParams } from "@repo/ai/types/agents";
 
 /**
  * Tool names used by the orchestrator.
  * Single source of truth for tool identifiers.
  */
-export const TOOL_NAMES = {
+export const TOOL_NAMES: Record<ToolName, ToolName> = {
   contentAccess: "contentAccess",
   deepResearch: "deepResearch",
   mathCalculation: "mathCalculation",
-} as const;
-
-/**
- * Tool name type - inferred from TOOL_NAMES.
- */
-export type ToolName = keyof typeof TOOL_NAMES;
+};
 
 /**
  * Create orchestrator tools with usage tracking.

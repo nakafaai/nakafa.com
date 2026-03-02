@@ -1,4 +1,4 @@
-import type { ToolName } from "@repo/ai/types/agents";
+import type { ToolName } from "@repo/ai/schema/tools";
 import type { LanguageModelUsage } from "ai";
 
 /**

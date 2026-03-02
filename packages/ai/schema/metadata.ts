@@ -4,6 +4,7 @@ const componentUsageSchema = z.object({
   input: z.number(),
   output: z.number(),
 });
+export type ComponentUsage = z.infer<typeof componentUsageSchema>;
 
 export const metadataSchema = z.object({
   model: z.string(),

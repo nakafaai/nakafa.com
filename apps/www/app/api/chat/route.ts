@@ -19,6 +19,8 @@ import {
 import { generateTitle } from "@repo/ai/features/title-generation";
 import { compressMessages } from "@repo/ai/lib/utils";
 import { nakafaSuggestions } from "@repo/ai/prompt/suggestions";
+import type { ComponentUsage } from "@repo/ai/schema/metadata";
+import type { ToolName } from "@repo/ai/schema/tools";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -291,9 +293,7 @@ export async function POST(req: Request) {
       }
     },
     execute: async ({ writer }) => {
-      // Track usage across main agent and sub-agents
-      const subAgentUsage: Record<string, { input: number; output: number }> =
-        {};
+      const subAgentUsage = {} as Record<ToolName, ComponentUsage>;
 
       const streamTextResult = streamText({
         model: model.languageModel(selectedModel),
@@ -422,14 +422,12 @@ export async function POST(req: Request) {
               const mainInput = part.totalUsage.inputTokens ?? 0;
               const mainOutput = part.totalUsage.outputTokens ?? 0;
 
-              const subAgentsInput = Object.values(subAgentUsage).reduce(
-                (sum, usage) => sum + usage.input,
-                0
-              );
-              const subAgentsOutput = Object.values(subAgentUsage).reduce(
-                (sum, usage) => sum + usage.output,
-                0
-              );
+              const subAgentsInput = Object.values(subAgentUsage)
+                .filter((usage) => usage !== undefined)
+                .reduce((sum, usage) => sum + usage.input, 0);
+              const subAgentsOutput = Object.values(subAgentUsage)
+                .filter((usage) => usage !== undefined)
+                .reduce((sum, usage) => sum + usage.output, 0);
 
               return {
                 model: selectedModel,

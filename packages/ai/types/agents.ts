@@ -1,5 +1,6 @@
 import type { ModelId } from "@repo/ai/config/models";
 import type { AccumulatedTokenUsage } from "@repo/ai/lib/usage";
+import type { ToolName } from "@repo/ai/schema/tools";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import type { UserRole } from "@repo/backend/convex/users/schema";
@@ -28,11 +29,6 @@ export interface BaseAgentParams {
 export interface TaskAgentParams extends BaseAgentParams {
   task: string;
 }
-
-/**
- * Tool names for type-safe usage tracking.
- */
-export type ToolName = "contentAccess" | "deepResearch" | "mathCalculation";
 
 /**
  * Token usage accumulator for tracking across sub-agents.
