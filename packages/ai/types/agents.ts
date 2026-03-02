@@ -3,7 +3,7 @@ import type { AccumulatedTokenUsage } from "@repo/ai/lib/usage";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import type { UserRole } from "@repo/backend/convex/users/schema";
-import type { UIMessageStreamWriter } from "ai";
+import type { LanguageModelUsage, UIMessageStreamWriter } from "ai";
 
 export interface AgentContext {
   slug: string;
@@ -13,50 +13,45 @@ export interface AgentContext {
 }
 
 /**
+ * Base parameters shared by all agents.
+ */
+export interface BaseAgentParams {
+  context: AgentContext;
+  locale: Locale;
+  modelId: ModelId;
+  writer: UIMessageStreamWriter<MyUIMessage>;
+}
+
+/**
+ * Parameters for agents that receive a task.
+ */
+export interface TaskAgentParams extends BaseAgentParams {
+  task: string;
+}
+
+/**
+ * Tool names for type-safe usage tracking.
+ */
+export type ToolName = "contentAccess" | "deepResearch" | "mathCalculation";
+
+/**
  * Token usage accumulator for tracking across sub-agents.
- * Reference: AI SDK experimental_context pattern for sharing state
  */
 export interface UsageAccumulator {
-  addUsage: (
-    component: "contentAccess" | "math" | "research",
-    inputTokens: number,
-    outputTokens: number
-  ) => void;
+  addUsage: (component: ToolName, usage: LanguageModelUsage) => void;
   getTotal: () => AccumulatedTokenUsage;
 }
 
-export interface OrchestratorToolParams {
-  context: AgentContext;
-  locale: Locale;
-  modelId: ModelId;
-  /**
-   * Accumulator for tracking token usage across sub-agents.
-   * Passed through to sub-agents to accumulate usage.
-   */
+/**
+ * Parameters for orchestrator tools.
+ */
+export interface OrchestratorToolParams extends BaseAgentParams {
   usageAccumulator: UsageAccumulator;
-  writer: UIMessageStreamWriter<MyUIMessage>;
 }
 
-export interface ContentAccessAgentParams {
-  context: AgentContext;
-  locale: Locale;
-  modelId: ModelId;
-  task: string;
-  writer: UIMessageStreamWriter<MyUIMessage>;
-}
-
-export interface ResearchAgentParams {
-  context: AgentContext;
-  locale: Locale;
-  modelId: ModelId;
-  task: string;
-  writer: UIMessageStreamWriter<MyUIMessage>;
-}
-
-export interface MathAgentParams {
-  context: AgentContext;
-  locale: Locale;
-  modelId: ModelId;
-  task: string;
-  writer: UIMessageStreamWriter<MyUIMessage>;
-}
+/**
+ * Agent parameter exports.
+ */
+export type ContentAccessAgentParams = TaskAgentParams;
+export type MathAgentParams = TaskAgentParams;
+export type ResearchAgentParams = TaskAgentParams;

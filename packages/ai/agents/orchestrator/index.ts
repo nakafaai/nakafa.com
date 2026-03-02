@@ -4,9 +4,23 @@ import { createResearchTool } from "@repo/ai/agents/orchestrator/research";
 import type { OrchestratorToolParams } from "@repo/ai/types/agents";
 
 /**
+ * Tool names used by the orchestrator.
+ * Single source of truth for tool identifiers.
+ */
+export const TOOL_NAMES = {
+  contentAccess: "contentAccess",
+  deepResearch: "deepResearch",
+  mathCalculation: "mathCalculation",
+} as const;
+
+/**
+ * Tool name type - inferred from TOOL_NAMES.
+ */
+export type ToolName = keyof typeof TOOL_NAMES;
+
+/**
  * Create orchestrator tools with usage tracking.
  * All sub-agents accumulate their token usage through the usageAccumulator.
- * Reference: AI SDK best practice for tracking sub-agent usage
  */
 export function orchestratorTools({
   writer,
@@ -16,21 +30,21 @@ export function orchestratorTools({
   usageAccumulator,
 }: OrchestratorToolParams) {
   return {
-    contentAccess: createContentAccessTool({
+    [TOOL_NAMES.contentAccess]: createContentAccessTool({
       writer,
       modelId,
       locale,
       context,
       usageAccumulator,
     }),
-    deepResearch: createResearchTool({
+    [TOOL_NAMES.deepResearch]: createResearchTool({
       writer,
       modelId,
       locale,
       context,
       usageAccumulator,
     }),
-    mathCalculation: createMathTool({
+    [TOOL_NAMES.mathCalculation]: createMathTool({
       writer,
       modelId,
       locale,

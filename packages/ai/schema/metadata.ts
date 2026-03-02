@@ -1,6 +1,6 @@
 import * as z from "zod";
 
-const tokenBreakdownSchema = z.object({
+const componentUsageSchema = z.object({
   input: z.number(),
   output: z.number(),
 });
@@ -14,10 +14,8 @@ export const metadataSchema = z.object({
       total: z.optional(z.number()),
       breakdown: z.optional(
         z.object({
-          main: tokenBreakdownSchema,
-          contentAccess: tokenBreakdownSchema.optional(),
-          math: tokenBreakdownSchema.optional(),
-          research: tokenBreakdownSchema.optional(),
+          main: componentUsageSchema,
+          subAgents: z.record(z.string(), componentUsageSchema),
         })
       ),
     })

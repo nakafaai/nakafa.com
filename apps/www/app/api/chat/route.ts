@@ -17,7 +17,6 @@ import {
   order,
 } from "@repo/ai/config/vercel";
 import { generateTitle } from "@repo/ai/features/title-generation";
-import type { AccumulatedTokenUsage } from "@repo/ai/lib/usage";
 import { compressMessages } from "@repo/ai/lib/utils";
 import { nakafaSuggestions } from "@repo/ai/prompt/suggestions";
 import type { MyUIMessage } from "@repo/ai/types/message";
@@ -292,23 +291,9 @@ export async function POST(req: Request) {
       }
     },
     execute: async ({ writer }) => {
-      // Create usage accumulator to track tokens across main agent and sub-agents
-      // Reference: AI SDK best practice - accumulate usage from sub-agents
-      const usageAccumulator = {
-        main: { input: 0, output: 0 },
-        contentAccess: { input: 0, output: 0 },
-        math: { input: 0, output: 0 },
-        research: { input: 0, output: 0 },
-      };
-
-      const accumulatedUsage: AccumulatedTokenUsage = {
-        input: 0,
-        output: 0,
-        total: 0,
-        breakdown: {
-          main: { input: 0, output: 0 },
-        },
-      };
+      // Track usage across main agent and sub-agents
+      const subAgentUsage: Record<string, { input: number; output: number }> =
+        {};
 
       const streamTextResult = streamText({
         model: model.languageModel(selectedModel),
@@ -336,11 +321,20 @@ export async function POST(req: Request) {
             userRole,
           },
           usageAccumulator: {
-            addUsage: (component, inputTokens, outputTokens) => {
-              usageAccumulator[component].input += inputTokens;
-              usageAccumulator[component].output += outputTokens;
+            addUsage: (component, usage) => {
+              const input = usage.inputTokens ?? 0;
+              const output = usage.outputTokens ?? 0;
+              subAgentUsage[component] = {
+                input: (subAgentUsage[component]?.input ?? 0) + input,
+                output: (subAgentUsage[component]?.output ?? 0) + output,
+              };
             },
-            getTotal: () => accumulatedUsage,
+            getTotal: () => ({
+              input: 0,
+              output: 0,
+              total: 0,
+              breakdown: { main: { input: 0, output: 0 }, subAgents: {} },
+            }),
           },
         }),
         experimental_repairToolCall: async ({
@@ -425,17 +419,17 @@ export async function POST(req: Request) {
             }
 
             if (part.type === "finish") {
-              // Calculate total usage including main agent and sub-agents
               const mainInput = part.totalUsage.inputTokens ?? 0;
               const mainOutput = part.totalUsage.outputTokens ?? 0;
-              const subAgentsInput =
-                usageAccumulator.contentAccess.input +
-                usageAccumulator.math.input +
-                usageAccumulator.research.input;
-              const subAgentsOutput =
-                usageAccumulator.contentAccess.output +
-                usageAccumulator.math.output +
-                usageAccumulator.research.output;
+
+              const subAgentsInput = Object.values(subAgentUsage).reduce(
+                (sum, usage) => sum + usage.input,
+                0
+              );
+              const subAgentsOutput = Object.values(subAgentUsage).reduce(
+                (sum, usage) => sum + usage.output,
+                0
+              );
 
               return {
                 model: selectedModel,
@@ -444,15 +438,9 @@ export async function POST(req: Request) {
                   output: mainOutput + subAgentsOutput,
                   total:
                     mainInput + mainOutput + subAgentsInput + subAgentsOutput,
-                  // Include breakdown for transparency
                   breakdown: {
-                    main: {
-                      input: mainInput,
-                      output: mainOutput,
-                    },
-                    contentAccess: usageAccumulator.contentAccess,
-                    math: usageAccumulator.math,
-                    research: usageAccumulator.research,
+                    main: { input: mainInput, output: mainOutput },
+                    subAgents: subAgentUsage,
                   },
                 },
               };

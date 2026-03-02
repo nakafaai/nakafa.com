@@ -1,4 +1,5 @@
 import { runContentAccessAgent } from "@repo/ai/agents/content-access";
+import { TOOL_NAMES } from "@repo/ai/agents/orchestrator";
 import type {
   ContentAccessAgentParams,
   UsageAccumulator,
@@ -13,8 +14,6 @@ interface ContentAccessToolParams
 
 /**
  * Create content access tool with usage tracking.
- * Accumulates token usage from sub-agent for total cost calculation.
- * Reference: AI SDK best practice - track sub-agent usage
  */
 export const createContentAccessTool = ({
   writer,
@@ -42,12 +41,7 @@ export const createContentAccessTool = ({
         context,
       });
 
-      // Accumulate usage from sub-agent
-      usageAccumulator.addUsage(
-        "contentAccess",
-        result.usage.inputTokens ?? 0,
-        result.usage.outputTokens ?? 0
-      );
+      usageAccumulator.addUsage(TOOL_NAMES.contentAccess, result.usage);
 
       return result.text;
     },

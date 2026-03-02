@@ -1,9 +1,9 @@
+import type { ToolName } from "@repo/ai/types/agents";
 import type { LanguageModelUsage } from "ai";
 
 /**
  * Agent execution result with token usage.
- * Follows AI SDK pattern of returning usage alongside text.
- * Reference: AI SDK GenerateTextResult interface
+ * Follows AI SDK GenerateTextResult interface pattern.
  */
 export interface AgentResult {
   text: string;
@@ -11,31 +11,24 @@ export interface AgentResult {
 }
 
 /**
- * Token usage breakdown by agent/component.
- * Allows tracking which parts of the system consume tokens.
+ * Token usage for a single component.
+ */
+interface ComponentUsage {
+  input: number;
+  output: number;
+}
+
+/**
+ * Token usage breakdown by component.
+ * Main is always present, sub-agents are optional.
  */
 export interface TokenUsageBreakdown {
-  contentAccess?: {
-    input: number;
-    output: number;
-  };
-  main: {
-    input: number;
-    output: number;
-  };
-  math?: {
-    input: number;
-    output: number;
-  };
-  research?: {
-    input: number;
-    output: number;
-  };
+  main: ComponentUsage;
+  subAgents: Partial<Record<ToolName, ComponentUsage>>;
 }
 
 /**
  * Accumulated token usage with breakdown.
- * Used to track total usage across main agent and sub-agents.
  */
 export interface AccumulatedTokenUsage {
   breakdown: TokenUsageBreakdown;
@@ -46,13 +39,8 @@ export interface AccumulatedTokenUsage {
 
 /**
  * Accumulator for tracking usage across agent invocations.
- * Passed through tool context to accumulate usage from sub-agents.
- * Reference: AI SDK experimental_context pattern
  */
 export interface UsageAccumulator {
-  addUsage: (
-    component: keyof TokenUsageBreakdown,
-    usage: LanguageModelUsage
-  ) => void;
+  addUsage: (component: ToolName, usage: LanguageModelUsage) => void;
   getTotal: () => AccumulatedTokenUsage;
 }

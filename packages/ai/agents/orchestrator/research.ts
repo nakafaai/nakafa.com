@@ -1,3 +1,4 @@
+import { TOOL_NAMES } from "@repo/ai/agents/orchestrator";
 import { runResearchAgent } from "@repo/ai/agents/research";
 import type {
   ResearchAgentParams,
@@ -12,8 +13,6 @@ interface ResearchToolParams extends Omit<ResearchAgentParams, "task"> {
 
 /**
  * Create research tool with usage tracking.
- * Accumulates token usage from sub-agent for total cost calculation.
- * Reference: AI SDK best practice - track sub-agent usage
  */
 export const createResearchTool = ({
   writer,
@@ -41,12 +40,7 @@ export const createResearchTool = ({
         context,
       });
 
-      // Accumulate usage from sub-agent
-      usageAccumulator.addUsage(
-        "research",
-        result.usage.inputTokens ?? 0,
-        result.usage.outputTokens ?? 0
-      );
+      usageAccumulator.addUsage(TOOL_NAMES.deepResearch, result.usage);
 
       return result.text;
     },

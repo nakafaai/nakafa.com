@@ -1,4 +1,5 @@
 import { runMathAgent } from "@repo/ai/agents/math";
+import { TOOL_NAMES } from "@repo/ai/agents/orchestrator";
 import type { MathAgentParams, UsageAccumulator } from "@repo/ai/types/agents";
 import { tool } from "ai";
 import * as z from "zod";
@@ -9,8 +10,6 @@ interface MathToolParams extends Omit<MathAgentParams, "task"> {
 
 /**
  * Create math tool with usage tracking.
- * Accumulates token usage from sub-agent for total cost calculation.
- * Reference: AI SDK best practice - track sub-agent usage
  */
 export const createMathTool = ({
   writer,
@@ -38,12 +37,7 @@ export const createMathTool = ({
         context,
       });
 
-      // Accumulate usage from sub-agent
-      usageAccumulator.addUsage(
-        "math",
-        result.usage.inputTokens ?? 0,
-        result.usage.outputTokens ?? 0
-      );
+      usageAccumulator.addUsage(TOOL_NAMES.mathCalculation, result.usage);
 
       return result.text;
     },
