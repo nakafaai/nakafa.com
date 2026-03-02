@@ -388,6 +388,14 @@ export const deductCreditsForChat = mutation({
       });
     }
 
+    // SECURITY: Verify message belongs to the provided chat
+    if (message.chatId !== args.chatId) {
+      throw new ConvexError({
+        code: "FORBIDDEN",
+        message: "Message does not belong to this chat",
+      });
+    }
+
     // SECURITY: Prevent duplicate credit deduction
     if (message.creditsUsed !== undefined && message.creditsUsed > 0) {
       throw new ConvexError({
