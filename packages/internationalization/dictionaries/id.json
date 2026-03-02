@@ -382,6 +382,7 @@
     "ask-nina": "Tanya Nina",
     "text-placeholder": "Tanya Nina apa saja...",
     "error-message": "Waduh, ada masalah nih. Coba ganti model AI-nya ya.",
+    "insufficient-credits": "Kredit tidak mencukupi. Tunggu reset harian atau upgrade ke Pro.",
     "rate-limit-message": "Kamu terlalu cepat! Coba lagi nanti ya.",
     "get-content": "Materi",
     "get-content-loading": "Mengambil materi...",

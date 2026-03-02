@@ -382,6 +382,7 @@
     "ask-nina": "Ask Nina",
     "text-placeholder": "Ask Nina anything...",
     "error-message": "Oops, something went wrong. Try switching the AI model.",
+    "insufficient-credits": "Not enough credits. Please wait for daily reset or upgrade to Pro.",
     "rate-limit-message": "Whoa, slow down! Please try again in a moment.",
     "get-content": "Material",
     "get-content-loading": "Getting material...",

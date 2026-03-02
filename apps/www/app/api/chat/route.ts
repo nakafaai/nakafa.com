@@ -49,6 +49,7 @@ import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { getTranslations } from "next-intl/server";
 import * as z from "zod";
 import { getToken } from "@/lib/auth/server";
+import { CHAT_ERRORS } from "./constants";
 import { getUserInfo, getVerified } from "./utils";
 
 const MAX_STEPS = 10;
@@ -138,7 +139,10 @@ export async function POST(req: Request) {
   const userCredits = userInfo.credits;
 
   if (!hasEnoughCredits(userCredits, selectedModel)) {
-    return new Response("Insufficient credits", { status: 402 });
+    return Response.json(
+      { error: CHAT_ERRORS.INSUFFICIENT_CREDITS.code },
+      { status: CHAT_ERRORS.INSUFFICIENT_CREDITS.status }
+    );
   }
 
   const sessionLogger = createChildLogger({
