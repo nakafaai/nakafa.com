@@ -1,6 +1,10 @@
+import { getModelCreditCost } from "@repo/ai/config/models";
 import { DEFAULT_TITLE } from "@repo/ai/features/constants";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import {
+  deleteMessageByIdentifier,
+  insertParts,
+  verifyChatOwnership,
+} from "@repo/backend/convex/chats/helpers";
 import tables, {
   chatTypeValidator,
   chatVisibilityValidator,
@@ -12,47 +16,6 @@ import {
 } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { ConvexError, v } from "convex/values";
-
-/**
- * Helper: Delete all parts for a message.
- * This operates within the same transaction as the caller.
- */
-async function deletePartsForMessage(
-  ctx: MutationCtx,
-  messageId: Id<"messages">
-) {
-  // Use compound index, omit order condition to get all parts
-  const parts = await ctx.db
-    .query("parts")
-    .withIndex("messageId_order", (q) => q.eq("messageId", messageId))
-    .collect();
-
-  for (const part of parts) {
-    await ctx.db.delete("parts", part._id);
-  }
-}
-
-/**
- * Helper: Delete messages and their parts from a specific message onwards.
- * This operates within the same transaction as the caller.
- */
-async function deleteMessagesFromPoint(
-  ctx: MutationCtx,
-  chatId: Id<"chats">,
-  fromCreationTime: number
-) {
-  const messages = await ctx.db
-    .query("messages")
-    .withIndex("chatId", (q) =>
-      q.eq("chatId", chatId).gte("_creationTime", fromCreationTime)
-    )
-    .collect();
-
-  for (const message of messages) {
-    await deletePartsForMessage(ctx, message._id);
-    await ctx.db.delete("messages", message._id);
-  }
-}
 
 /**
  * Create a new chat for the authenticated user with optional title.
@@ -148,13 +111,13 @@ export const updateChatVisibility = mutation({
 });
 
 /**
- * Atomically replace a message with parts.
+ * Save a user message with parts.
  * If identifier exists, deletes that message (and all subsequent messages) before inserting.
  * This ensures one message per identifier, but creates a new _id each time.
  * Parts messageId is omitted - set internally after message creation.
  * Only the chat owner can add messages.
  */
-export const replaceMessageWithParts = mutation({
+export const saveMessage = mutation({
   args: {
     message: tables.messages.validator,
     parts: v.array(
@@ -175,54 +138,24 @@ export const replaceMessageWithParts = mutation({
     const user = await requireAuth(ctx);
 
     // Authorization check - verify user owns the chat
-    const chat = await ctx.db.get("chats", message.chatId);
-    if (!chat) {
-      throw new ConvexError({
-        code: "CHAT_NOT_FOUND",
-        message: `Chat not found for chatId: ${message.chatId}`,
-      });
-    }
+    await verifyChatOwnership(ctx, message.chatId, user.appUser._id);
 
-    if (chat.userId !== user.appUser._id) {
-      throw new ConvexError({
-        code: "FORBIDDEN",
-        message: "You do not have permission to add messages to this chat.",
-      });
-    }
-
+    // Delete existing message if identifier exists (for replacement/upsert)
     if (message.identifier) {
-      const targetMessage = await ctx.db
-        .query("messages")
-        .withIndex("chatId_identifier", (q) =>
-          q.eq("chatId", message.chatId).eq("identifier", message.identifier)
-        )
-        .unique();
-
-      if (targetMessage && targetMessage.chatId === message.chatId) {
-        await deleteMessagesFromPoint(
-          ctx,
-          targetMessage.chatId,
-          targetMessage._creationTime
-        );
-      }
+      await deleteMessageByIdentifier(ctx, message.chatId, message.identifier);
     }
 
     // Create message
+    // Note: modelId is stored server-side for security (credit calculation)
     const messageId = await ctx.db.insert("messages", {
       chatId: message.chatId,
       role: message.role,
       identifier: message.identifier,
+      modelId: message.modelId,
     });
 
-    // Insert parts with messageId
-    const partIds: Id<"parts">[] = [];
-    for (const part of parts) {
-      const partId = await ctx.db.insert("parts", {
-        ...part,
-        messageId,
-      });
-      partIds.push(partId);
-    }
+    // Insert parts for the message
+    const partIds = await insertParts(ctx, messageId, parts);
 
     return { messageId, partIds };
   },
@@ -273,15 +206,8 @@ export const createChatWithMessage = mutation({
       identifier: args.message.identifier,
     });
 
-    // Insert parts with messageId
-    const partIds: Id<"parts">[] = [];
-    for (const part of args.parts) {
-      const partId = await ctx.db.insert("parts", {
-        ...part,
-        messageId,
-      });
-      partIds.push(partId);
-    }
+    // Insert parts for the message
+    const partIds = await insertParts(ctx, messageId, args.parts);
 
     return { chatId, messageId, partIds };
   },
@@ -316,5 +242,100 @@ export const deleteChat = mutation({
 
     await ctx.db.delete("chats", args.chatId);
     return null;
+  },
+});
+
+/**
+ * Save an assistant response with parts and deduct credits atomically.
+ * Handles both message persistence and credit deduction in a single operation.
+ * Security: modelId is read from the stored message, not from client arguments.
+ * Token counts (inputTokens, outputTokens, totalTokens) should be passed in the message object.
+ */
+export const saveAssistantResponse = mutation({
+  args: {
+    message: tables.messages.validator,
+    parts: v.array(
+      v.object({
+        ...tables.parts.validator.fields,
+        messageId: v.optional(vv.id("messages")),
+      })
+    ),
+  },
+  returns: v.object({
+    messageId: vv.id("messages"),
+    partIds: v.array(vv.id("parts")),
+    creditsUsed: v.number(),
+    newBalance: v.number(),
+  }),
+  handler: async (ctx, args) => {
+    const { message, parts } = args;
+
+    // Authorization check
+    const user = await requireAuth(ctx);
+    await verifyChatOwnership(ctx, message.chatId, user.appUser._id);
+
+    // Delete existing message if identifier exists (for replacement/upsert)
+    if (message.identifier) {
+      await deleteMessageByIdentifier(ctx, message.chatId, message.identifier);
+    }
+
+    // Calculate credits before insert
+    let creditsUsed = 0;
+    let newBalance = user.appUser.credits;
+
+    if (message.modelId) {
+      creditsUsed = getModelCreditCost(message.modelId);
+      newBalance = user.appUser.credits - creditsUsed;
+
+      if (newBalance < 0) {
+        throw new ConvexError({
+          code: "INSUFFICIENT_CREDITS",
+          message: "Insufficient credits for this operation",
+        });
+      }
+    }
+
+    // Create message with ALL data in single insert
+    // Convex best practice: Insert all fields at once, avoid unnecessary patch
+    // Reference: https://docs.convex.dev/database/writing-data#inserting-new-documents
+    const messageId = await ctx.db.insert("messages", {
+      chatId: message.chatId,
+      role: message.role,
+      identifier: message.identifier,
+      modelId: message.modelId,
+      inputTokens: message.inputTokens,
+      outputTokens: message.outputTokens,
+      totalTokens: message.totalTokens,
+      creditsUsed: message.modelId ? creditsUsed : undefined,
+    });
+
+    // Insert parts for the message
+    const partIds = await insertParts(ctx, messageId, parts);
+
+    // Deduct credits if modelId is provided
+    if (message.modelId) {
+      // Deduct credits from user
+      await ctx.db.patch("users", user.appUser._id, {
+        credits: newBalance,
+      });
+
+      // Create transaction record
+      await ctx.db.insert("creditTransactions", {
+        userId: user.appUser._id,
+        amount: -creditsUsed,
+        type: "usage",
+        balanceAfter: newBalance,
+        metadata: {
+          chatId: message.chatId,
+          messageId,
+          modelId: message.modelId,
+          inputTokens: message.inputTokens,
+          outputTokens: message.outputTokens,
+          totalTokens: message.totalTokens,
+        },
+      });
+    }
+
+    return { messageId, partIds, creditsUsed, newBalance };
   },
 });

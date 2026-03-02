@@ -165,7 +165,7 @@ export async function POST(req: Request) {
   if (chatIdToUse) {
     // Replace message with parts for existing chat
     await fetchMutation(
-      convexApi.chats.mutations.replaceMessageWithParts,
+      convexApi.chats.mutations.saveMessage,
       {
         message: {
           chatId: chatIdToUse,
@@ -277,54 +277,37 @@ export async function POST(req: Request) {
       }
 
       // Persist assistant response and deduct credits asynchronously
-      // Both operations are chained: credits wait for messageId from replacement
-      // Using waitUntil extends function lifetime without blocking HTTP response
-      // Reference: https://vercel.com/docs/functions/functions-api-reference/vercel-functions-package#waituntil
+      // Uses combined mutation for simplicity and atomicity
+      // Token counts and modelId are passed in message object (schema already has these fields)
       const tokenData = responseMessage.metadata?.tokens;
 
       waitUntil(
         fetchMutation(
-          convexApi.chats.mutations.replaceMessageWithParts,
+          convexApi.chats.mutations.saveAssistantResponse,
           {
             message: {
               chatId: chatIdToUse,
               role: responseMessage.role,
               identifier: responseMessage.id,
+              modelId: selectedModel,
+              inputTokens: tokenData?.input ?? 0,
+              outputTokens: tokenData?.output ?? 0,
+              totalTokens: tokenData?.total ?? 0,
             },
             parts: mapUIMessagePartsToDBParts({
               messageParts: responseMessage.parts,
             }),
           },
           { token }
-        )
-          .then((result) => {
-            // Chain credit deduction after message is persisted
-            // This maintains the dependency while keeping both async
-            if (tokenData) {
-              return fetchMutation(
-                convexApi.credits.mutations.deductCreditsForChat,
-                {
-                  messageId: result.messageId,
-                  chatId: chatIdToUse,
-                  inputTokens: tokenData.input ?? 0,
-                  outputTokens: tokenData.output ?? 0,
-                  totalTokens: tokenData.total ?? 0,
-                  modelId: selectedModel,
-                },
-                { token }
-              );
+        ).catch((error) => {
+          logError(
+            sessionLogger,
+            error instanceof Error ? error : new Error(String(error)),
+            {
+              errorLocation: "saveAssistantResponse",
             }
-          })
-          .catch((error) => {
-            // Log error from either operation but don't block response
-            logError(
-              sessionLogger,
-              error instanceof Error ? error : new Error(String(error)),
-              {
-                errorLocation: "onFinish-async-operations",
-              }
-            );
-          })
+          );
+        })
       );
     },
     execute: async ({ writer }) => {

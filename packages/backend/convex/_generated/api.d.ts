@@ -18,6 +18,7 @@ import type * as audioStudies_queries from "../audioStudies/queries.js";
 import type * as audioStudies_utils from "../audioStudies/utils.js";
 import type * as audioStudies_workflows from "../audioStudies/workflows.js";
 import type * as auth from "../auth.js";
+import type * as chats_helpers from "../chats/helpers.js";
 import type * as chats_mutations from "../chats/mutations.js";
 import type * as chats_queries from "../chats/queries.js";
 import type * as chats_utils from "../chats/utils.js";
@@ -129,6 +130,7 @@ declare const fullApi: ApiFromModules<{
   "audioStudies/utils": typeof audioStudies_utils;
   "audioStudies/workflows": typeof audioStudies_workflows;
   auth: typeof auth;
+  "chats/helpers": typeof chats_helpers;
   "chats/mutations": typeof chats_mutations;
   "chats/queries": typeof chats_queries;
   "chats/utils": typeof chats_utils;
