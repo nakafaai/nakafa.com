@@ -280,19 +280,15 @@ export const saveAssistantResponse = mutation({
     }
 
     // Calculate credits before insert
+    // Debt system: Allow negative balances for better UX
+    // Users can continue chatting even with insufficient credits
     let creditsUsed = 0;
     let newBalance = user.appUser.credits;
 
     if (message.modelId) {
       creditsUsed = getModelCreditCost(message.modelId);
       newBalance = user.appUser.credits - creditsUsed;
-
-      if (newBalance < 0) {
-        throw new ConvexError({
-          code: "INSUFFICIENT_CREDITS",
-          message: "Insufficient credits for this operation",
-        });
-      }
+      // No longer throwing error for negative balance - debt is allowed
     }
 
     // Create message with ALL data in single insert

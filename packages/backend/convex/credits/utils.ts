@@ -13,7 +13,6 @@ export async function resetUserCredits(
     creditAmount: number;
     grantType: "daily-grant" | "monthly-grant";
     resetTimestamp: number;
-    previousBalance: number;
   }
 ) {
   const user = await ctx.db.get("users", args.userId);
@@ -31,8 +30,15 @@ export async function resetUserCredits(
     return;
   }
 
+  // Calculate new balance accounting for debt
+  // If user has negative balance (debt), add it to the new credit amount
+  // Example: User has -5 credits, gets 10 credits -> New balance: 10 + (-5) = 5
+  const currentBalance = user.credits;
+  const debt = currentBalance < 0 ? currentBalance : 0;
+  const newBalance = args.creditAmount + debt;
+
   await ctx.db.patch("users", args.userId, {
-    credits: args.creditAmount,
+    credits: newBalance,
     creditsResetAt: args.resetTimestamp,
   });
 
@@ -40,15 +46,20 @@ export async function resetUserCredits(
     userId: args.userId,
     amount: args.creditAmount,
     type: args.grantType,
-    balanceAfter: args.creditAmount,
+    balanceAfter: newBalance,
     metadata: {
-      previousBalance: args.previousBalance,
+      previousBalance: currentBalance,
+      debtAdjustment: debt,
+      baseGrant: args.creditAmount,
     },
   });
 
   logger.info("User credits reset", {
     userId: args.userId,
-    amount: args.creditAmount,
+    baseGrant: args.creditAmount,
+    debtAdjustment: debt,
+    newBalance,
+    previousBalance: currentBalance,
     type: args.grantType,
   });
 }

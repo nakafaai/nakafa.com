@@ -200,7 +200,6 @@ export const batchResetUserCredits = internalMutation({
             creditAmount: args.creditAmount,
             grantType: args.grantType,
             resetTimestamp: args.resetTimestamp,
-            previousBalance: item.previousBalance,
           });
           return { queueId: item.queueId, success: true as const };
         } catch (error) {
