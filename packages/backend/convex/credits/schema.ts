@@ -34,8 +34,15 @@ export const creditResetQueueValidator = v.object({
   error: v.optional(v.string()),
 });
 
+export const creditResetJobTypeValidator = literals(
+  "free-daily",
+  "pro-monthly"
+);
+
+export type CreditResetJobType = Infer<typeof creditResetJobTypeValidator>;
+
 export const creditResetJobValidator = v.object({
-  jobType: literals("free-daily", "pro-monthly"),
+  jobType: creditResetJobTypeValidator,
   status: literals("pending", "running", "completed", "failed"),
   startedAt: v.number(),
   completedAt: v.optional(v.number()),
