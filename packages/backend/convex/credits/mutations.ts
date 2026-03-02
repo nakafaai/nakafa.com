@@ -388,6 +388,14 @@ export const deductCreditsForChat = mutation({
       });
     }
 
+    // SECURITY: Prevent duplicate credit deduction
+    if (message.creditsUsed !== undefined && message.creditsUsed > 0) {
+      throw new ConvexError({
+        code: "CREDITS_ALREADY_DEDUCTED",
+        message: "Credits already deducted for this message",
+      });
+    }
+
     // Compute credits server-side from modelId to prevent client manipulation
     const creditsUsed = getModelCreditCost(args.modelId);
 
@@ -398,6 +406,28 @@ export const deductCreditsForChat = mutation({
         code: "INSUFFICIENT_CREDITS",
         message: "Insufficient credits for this operation",
       });
+    }
+
+    // SECURITY: Check for existing transaction to prevent duplicates
+    // Query recent transactions and filter by messageId in memory
+    const recentTransactions = await ctx.db
+      .query("creditTransactions")
+      .withIndex("userId", (q) => q.eq("userId", userId))
+      .order("desc")
+      .take(100);
+
+    const existingTransaction = recentTransactions.find(
+      (tx) => tx.metadata?.messageId === args.messageId
+    );
+
+    if (existingTransaction) {
+      // Idempotent return - credits already deducted
+      logger.info("Credits already deducted for message", {
+        userId,
+        messageId: args.messageId,
+        transactionId: existingTransaction._id,
+      });
+      return { success: true, newBalance: existingTransaction.balanceAfter };
     }
 
     // Store token/credit data on message

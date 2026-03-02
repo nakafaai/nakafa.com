@@ -1,6 +1,6 @@
 import * as z from "zod";
 
-const toolNameSchema = z.literal([
+const toolNameSchema = z.enum([
   "contentAccess",
   "deepResearch",
   "mathCalculation",
