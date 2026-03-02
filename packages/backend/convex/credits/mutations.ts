@@ -1,9 +1,11 @@
+import { modelIdValidator } from "@repo/backend/convex/chats/schema";
 import { CLEANUP_CONFIG } from "@repo/backend/convex/credits/constants";
 import { resetUserCredits } from "@repo/backend/convex/credits/utils";
-import { internalMutation } from "@repo/backend/convex/functions";
+import { internalMutation, mutation } from "@repo/backend/convex/functions";
+import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { paginationOptsValidator } from "convex/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
 /**
@@ -343,5 +345,86 @@ export const cleanupOldQueueItems = internalMutation({
       completedCount: oldCompletedItems.length,
       failedCount: oldFailedItems.length,
     };
+  },
+});
+
+/**
+ * Deduct credits for chat usage and store token metadata.
+ * Called after successful chat completion.
+ */
+export const deductCreditsForChat = mutation({
+  args: {
+    messageId: v.id("messages"),
+    chatId: v.id("chats"),
+    inputTokens: v.number(),
+    outputTokens: v.number(),
+    totalTokens: v.number(),
+    modelId: modelIdValidator,
+    creditsUsed: v.number(),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    newBalance: v.number(),
+  }),
+  handler: async (ctx, args) => {
+    const user = await requireAuthWithSession(ctx);
+    const userId = user.appUser._id;
+
+    // Verify the message belongs to the authenticated user via chat
+    const chat = await ctx.db.get("chats", args.chatId);
+    if (!chat || chat.userId !== userId) {
+      throw new ConvexError({
+        code: "FORBIDDEN",
+        message: "Not authorized to modify this chat",
+      });
+    }
+
+    const message = await ctx.db.get("messages", args.messageId);
+    if (!message) {
+      throw new ConvexError({
+        code: "MESSAGE_NOT_FOUND",
+        message: "Message not found",
+      });
+    }
+
+    // Store token/credit data on message
+    await ctx.db.patch("messages", args.messageId, {
+      inputTokens: args.inputTokens,
+      outputTokens: args.outputTokens,
+      totalTokens: args.totalTokens,
+      creditsUsed: args.creditsUsed,
+      modelId: args.modelId,
+    });
+
+    // Use credits from already-fetched user object (no need to fetch again)
+    const newBalance = user.appUser.credits - args.creditsUsed;
+    await ctx.db.patch("users", userId, {
+      credits: newBalance,
+    });
+
+    // Create transaction record
+    await ctx.db.insert("creditTransactions", {
+      userId,
+      amount: -args.creditsUsed,
+      type: "usage",
+      balanceAfter: newBalance,
+      metadata: {
+        chatId: args.chatId,
+        messageId: args.messageId,
+        modelId: args.modelId,
+        inputTokens: args.inputTokens,
+        outputTokens: args.outputTokens,
+        totalTokens: args.totalTokens,
+      },
+    });
+
+    logger.info("Credits deducted for chat", {
+      userId,
+      messageId: args.messageId,
+      creditsUsed: args.creditsUsed,
+      newBalance,
+    });
+
+    return { success: true, newBalance };
   },
 });

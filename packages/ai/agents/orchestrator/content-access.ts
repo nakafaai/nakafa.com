@@ -1,14 +1,28 @@
 import { runContentAccessAgent } from "@repo/ai/agents/content-access";
-import type { ContentAccessAgentParams } from "@repo/ai/types/agents";
+import type {
+  ContentAccessAgentParams,
+  UsageAccumulator,
+} from "@repo/ai/types/agents";
 import { tool } from "ai";
 import * as z from "zod";
 
+interface ContentAccessToolParams
+  extends Omit<ContentAccessAgentParams, "task"> {
+  usageAccumulator: UsageAccumulator;
+}
+
+/**
+ * Create content access tool with usage tracking.
+ * Accumulates token usage from sub-agent for total cost calculation.
+ * Reference: AI SDK best practice - track sub-agent usage
+ */
 export const createContentAccessTool = ({
   writer,
   modelId,
   locale,
   context,
-}: Omit<ContentAccessAgentParams, "task">) => {
+  usageAccumulator,
+}: ContentAccessToolParams) => {
   return tool({
     description:
       "Access Nakafa educational content including articles, subjects, Quran chapters, and exercises. Use this for retrieving content from the Nakafa platform.",
@@ -28,7 +42,14 @@ export const createContentAccessTool = ({
         context,
       });
 
-      return result;
+      // Accumulate usage from sub-agent
+      usageAccumulator.addUsage(
+        "contentAccess",
+        result.usage.inputTokens ?? 0,
+        result.usage.outputTokens ?? 0
+      );
+
+      return result.text;
     },
   });
 };

@@ -1,14 +1,27 @@
 import { runResearchAgent } from "@repo/ai/agents/research";
-import type { ResearchAgentParams } from "@repo/ai/types/agents";
+import type {
+  ResearchAgentParams,
+  UsageAccumulator,
+} from "@repo/ai/types/agents";
 import { tool } from "ai";
 import * as z from "zod";
 
+interface ResearchToolParams extends Omit<ResearchAgentParams, "task"> {
+  usageAccumulator: UsageAccumulator;
+}
+
+/**
+ * Create research tool with usage tracking.
+ * Accumulates token usage from sub-agent for total cost calculation.
+ * Reference: AI SDK best practice - track sub-agent usage
+ */
 export const createResearchTool = ({
   writer,
   modelId,
   locale,
   context,
-}: Omit<ResearchAgentParams, "task">) => {
+  usageAccumulator,
+}: ResearchToolParams) => {
   return tool({
     description:
       "Conduct deep research on any topic by searching the web and analyzing sources. Use this for up-to-date information, general knowledge questions, and external research.",
@@ -28,7 +41,14 @@ export const createResearchTool = ({
         context,
       });
 
-      return result;
+      // Accumulate usage from sub-agent
+      usageAccumulator.addUsage(
+        "research",
+        result.usage.inputTokens ?? 0,
+        result.usage.outputTokens ?? 0
+      );
+
+      return result.text;
     },
   });
 };

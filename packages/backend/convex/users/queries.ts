@@ -57,15 +57,21 @@ export const getCurrentUserApiKeys = query({
 });
 
 /**
- * Get user role.
+ * Get user info for chat.
  * Requires authentication.
- * Returns null if role is not set.
+ * Returns the user's role and credits.
  */
-export const getUserRole = query({
+export const getUserInfoForChat = query({
   args: {},
-  returns: userRoleValidator,
+  returns: v.object({
+    role: nullable(userRoleValidator),
+    credits: v.number(),
+  }),
   handler: async (ctx) => {
     const user = await requireAuth(ctx);
-    return user.appUser.role ?? null;
+    return {
+      role: user.appUser.role ?? null,
+      credits: user.appUser.credits ?? 0,
+    };
   },
 });

@@ -4,7 +4,11 @@ import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
 } from "@repo/ai/clients/weather/client";
-import { defaultModel, type ModelId } from "@repo/ai/config/models";
+import {
+  defaultModel,
+  getModelCreditCost,
+  type ModelId,
+} from "@repo/ai/config/models";
 import {
   type GatewayProvider,
   type GoogleProvider,
@@ -13,6 +17,7 @@ import {
   order,
 } from "@repo/ai/config/vercel";
 import { generateTitle } from "@repo/ai/features/title-generation";
+import type { AccumulatedTokenUsage } from "@repo/ai/lib/usage";
 import { compressMessages } from "@repo/ai/lib/utils";
 import { nakafaSuggestions } from "@repo/ai/prompt/suggestions";
 import type { MyUIMessage } from "@repo/ai/types/message";
@@ -23,7 +28,6 @@ import {
   mapUIMessagePartsToDBParts,
 } from "@repo/backend/convex/chats/utils";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
-import { api } from "@repo/connection/routes";
 import { CorsValidator } from "@repo/security/lib/cors-validator";
 import { cleanSlug } from "@repo/utilities/helper";
 import { createChildLogger, logError } from "@repo/utilities/logging";
@@ -44,9 +48,9 @@ import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { getTranslations } from "next-intl/server";
 import * as z from "zod";
 import { getToken } from "@/lib/auth/server";
+import { getUserInfo, getVerified } from "./utils";
 
 const MAX_STEPS = 10;
-const QURAN_SLUG_PARTS_COUNT = 3;
 
 // Allow streaming responses up to 60 seconds
 export const maxDuration = 60;
@@ -117,7 +121,13 @@ export async function POST(req: Request) {
     country: geo.country ?? "Unknown",
   };
 
-  const userRole = await getUserRole(token);
+  const userInfo = await getUserInfo(token);
+  const userRole = userInfo.role ?? undefined;
+  const userCredits = userInfo.credits;
+
+  if (userCredits < 0) {
+    return new Response("Insufficient credits", { status: 402 });
+  }
 
   const sessionLogger = createChildLogger({
     service: "chat-api",
@@ -236,7 +246,7 @@ export async function POST(req: Request) {
       }
 
       // Replace assistant response with parts
-      await fetchMutation(
+      const result = await fetchMutation(
         convexApi.chats.mutations.replaceMessageWithParts,
         {
           message: {
@@ -250,8 +260,56 @@ export async function POST(req: Request) {
         },
         { token }
       );
+
+      // Deduct credits and store token usage if available
+      // Access token data from message metadata (set by messageMetadata callback)
+      // Reference: AI SDK toUIMessageStream - metadata is attached to responseMessage
+      const tokenData = responseMessage.metadata?.tokens;
+      if (tokenData) {
+        try {
+          await fetchMutation(
+            convexApi.credits.mutations.deductCreditsForChat,
+            {
+              messageId: result.messageId,
+              chatId: chatIdToUse,
+              inputTokens: tokenData.input ?? 0,
+              outputTokens: tokenData.output ?? 0,
+              totalTokens: tokenData.total ?? 0,
+              modelId: selectedModel,
+              creditsUsed: getModelCreditCost(selectedModel),
+            },
+            { token }
+          );
+        } catch (error) {
+          logError(
+            sessionLogger,
+            error instanceof Error ? error : new Error(String(error)),
+            {
+              errorLocation: "deductCreditsForChat",
+            }
+          );
+        }
+      }
     },
     execute: async ({ writer }) => {
+      // Create usage accumulator to track tokens across main agent and sub-agents
+      // Reference: AI SDK best practice - accumulate usage from sub-agents
+      const usageAccumulator = {
+        main: { input: 0, output: 0 },
+        contentAccess: { input: 0, output: 0 },
+        math: { input: 0, output: 0 },
+        research: { input: 0, output: 0 },
+      };
+
+      const accumulatedUsage: AccumulatedTokenUsage = {
+        input: 0,
+        output: 0,
+        total: 0,
+        breakdown: {
+          main: { input: 0, output: 0 },
+        },
+      };
+
       const streamTextResult = streamText({
         model: model.languageModel(selectedModel),
         system: nakafaPrompt({
@@ -276,6 +334,13 @@ export async function POST(req: Request) {
             slug: cleanSlug(slug),
             verified,
             userRole,
+          },
+          usageAccumulator: {
+            addUsage: (component, inputTokens, outputTokens) => {
+              usageAccumulator[component].input += inputTokens;
+              usageAccumulator[component].output += outputTokens;
+            },
+            getTotal: () => accumulatedUsage,
           },
         }),
         experimental_repairToolCall: async ({
@@ -360,12 +425,35 @@ export async function POST(req: Request) {
             }
 
             if (part.type === "finish") {
+              // Calculate total usage including main agent and sub-agents
+              const mainInput = part.totalUsage.inputTokens ?? 0;
+              const mainOutput = part.totalUsage.outputTokens ?? 0;
+              const subAgentsInput =
+                usageAccumulator.contentAccess.input +
+                usageAccumulator.math.input +
+                usageAccumulator.research.input;
+              const subAgentsOutput =
+                usageAccumulator.contentAccess.output +
+                usageAccumulator.math.output +
+                usageAccumulator.research.output;
+
               return {
                 model: selectedModel,
                 token: {
-                  input: part.totalUsage.inputTokens,
-                  output: part.totalUsage.outputTokens,
-                  total: part.totalUsage.totalTokens,
+                  input: mainInput + subAgentsInput,
+                  output: mainOutput + subAgentsOutput,
+                  total:
+                    mainInput + mainOutput + subAgentsInput + subAgentsOutput,
+                  // Include breakdown for transparency
+                  breakdown: {
+                    main: {
+                      input: mainInput,
+                      output: mainOutput,
+                    },
+                    contentAccess: usageAccumulator.contentAccess,
+                    math: usageAccumulator.math,
+                    research: usageAccumulator.research,
+                  },
                 },
               };
             }
@@ -445,59 +533,4 @@ export async function POST(req: Request) {
   });
 
   return createUIMessageStreamResponse({ stream });
-}
-
-async function getVerified(url: string) {
-  const cleanedUrl = cleanSlug(url);
-
-  // [0] is locale, [1] is slug
-  const slugParts = cleanedUrl.split("/");
-
-  if (slugParts[1] === "quran") {
-    if (slugParts.length !== QURAN_SLUG_PARTS_COUNT) {
-      return false;
-    }
-    // example: locale/quran/surah
-    const surah = slugParts[2];
-    const { data: surahData, error: surahError } = await api.contents.getSurah({
-      surah: Number.parseInt(surah, 10),
-    });
-    if (surahError) {
-      return false;
-    }
-    return surahData !== null;
-  }
-
-  if (slugParts[1] === "exercises") {
-    const { data: exercisesData, error: exercisesError } =
-      await api.contents.getExercises({
-        slug: cleanedUrl,
-      });
-    if (exercisesError) {
-      return false;
-    }
-    return exercisesData !== null;
-  }
-
-  const { data: contentData, error: contentError } =
-    await api.contents.getContent({
-      slug: cleanedUrl,
-    });
-
-  if (contentError) {
-    return false;
-  }
-
-  return contentData !== null;
-}
-
-async function getUserRole(token: string) {
-  const role = await fetchQuery(
-    convexApi.users.queries.getUserRole,
-    {},
-    {
-      token,
-    }
-  );
-  return role ?? undefined;
 }

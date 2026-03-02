@@ -104,11 +104,11 @@ export const modelRegistry = {
     gatewayId: "xai/grok-4",
     credits: 5,
   },
-  "xai/grok-4.1-fast-non-reasoning": {
+  "grok-4.1-fast-non-reasoning": {
     gatewayId: "xai/grok-4.1-fast-non-reasoning",
     credits: 1,
   },
-  "xai/grok-4.1-fast-reasoning": {
+  "grok-4.1-fast-reasoning": {
     gatewayId: "xai/grok-4.1-fast-reasoning",
     credits: 2,
   },
@@ -133,6 +133,14 @@ export const modelRegistry = {
     credits: 1,
   },
 } as const;
+
+/**
+ * Array of all model IDs for use with Convex literals validator.
+ * Single source of truth for model ID validation.
+ */
+export const MODEL_IDS = Object.keys(modelRegistry) as Array<
+  keyof typeof modelRegistry
+>;
 
 export type ModelId = keyof typeof modelRegistry;
 
