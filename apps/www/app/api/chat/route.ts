@@ -32,7 +32,7 @@ import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { CorsValidator } from "@repo/security/lib/cors-validator";
 import { cleanSlug } from "@repo/utilities/helper";
 import { createChildLogger, logError } from "@repo/utilities/logging";
-import { geolocation } from "@vercel/functions";
+import { geolocation, waitUntil } from "@vercel/functions";
 import {
   convertToModelMessages,
   createUIMessageStream,
@@ -274,34 +274,37 @@ export async function POST(req: Request) {
       const [, result] = await Promise.all([titlePromise, replacePromise]);
 
       // Deduct credits and store token usage if available
-      // Run asynchronously (fire-and-forget) to avoid blocking HTTP response
+      // Run asynchronously using waitUntil to extend function lifetime
+      // This keeps the function alive until credit deduction completes without blocking response
       // The credit system has idempotency checks via message.creditsUsed
       // Reference: AI SDK toUIMessageStream - metadata is attached to responseMessage
       const tokenData = responseMessage.metadata?.tokens;
       if (tokenData) {
-        // Fire-and-forget: don't await, let it run in background
-        // This saves 50-150ms on HTTP response time
-        fetchMutation(
-          convexApi.credits.mutations.deductCreditsForChat,
-          {
-            messageId: result.messageId,
-            chatId: chatIdToUse,
-            inputTokens: tokenData.input ?? 0,
-            outputTokens: tokenData.output ?? 0,
-            totalTokens: tokenData.total ?? 0,
-            modelId: selectedModel,
-          },
-          { token }
-        ).catch((error) => {
-          // Log error but don't block response
-          logError(
-            sessionLogger,
-            error instanceof Error ? error : new Error(String(error)),
+        // Use waitUntil to extend function lifetime in Vercel serverless runtime
+        // This ensures the credit deduction completes even after HTTP response finishes
+        waitUntil(
+          fetchMutation(
+            convexApi.credits.mutations.deductCreditsForChat,
             {
-              errorLocation: "deductCreditsForChat (async)",
-            }
-          );
-        });
+              messageId: result.messageId,
+              chatId: chatIdToUse,
+              inputTokens: tokenData.input ?? 0,
+              outputTokens: tokenData.output ?? 0,
+              totalTokens: tokenData.total ?? 0,
+              modelId: selectedModel,
+            },
+            { token }
+          ).catch((error) => {
+            // Log error but don't block response
+            logError(
+              sessionLogger,
+              error instanceof Error ? error : new Error(String(error)),
+              {
+                errorLocation: "deductCreditsForChat (async)",
+              }
+            );
+          })
+        );
       }
     },
     execute: async ({ writer }) => {

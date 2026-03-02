@@ -71,7 +71,7 @@ export const getUserInfoForChat = query({
     const user = await requireAuth(ctx);
     return {
       role: user.appUser.role ?? null,
-      credits: user.appUser.credits ?? 0,
+      credits: user.appUser.credits,
     };
   },
 });
