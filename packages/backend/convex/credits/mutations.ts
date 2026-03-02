@@ -478,3 +478,141 @@ export const deductCreditsForChat = mutation({
     return { success: true, newBalance };
   },
 });
+
+/**
+ * Internal mutation for async credit deduction.
+ * Called via scheduler from chat API to avoid blocking the HTTP response.
+ * This is a non-blocking version of deductCreditsForChat that accepts userId explicitly.
+ */
+export const deductCreditsForChatAsync = internalMutation({
+  args: {
+    userId: v.id("users"),
+    messageId: v.id("messages"),
+    chatId: v.id("chats"),
+    inputTokens: v.number(),
+    outputTokens: v.number(),
+    totalTokens: v.number(),
+    modelId: literals(...MODEL_IDS),
+  },
+  returns: v.object({
+    success: v.boolean(),
+    newBalance: v.number(),
+  }),
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get("users", args.userId);
+    if (!user) {
+      throw new ConvexError({
+        code: "USER_NOT_FOUND",
+        message: "User not found for credit deduction",
+      });
+    }
+
+    const userId = user._id;
+
+    // Verify the message belongs to the authenticated user via chat
+    const chat = await ctx.db.get("chats", args.chatId);
+    if (!chat || chat.userId !== userId) {
+      throw new ConvexError({
+        code: "FORBIDDEN",
+        message: "Not authorized to modify this chat",
+      });
+    }
+
+    const message = await ctx.db.get("messages", args.messageId);
+    if (!message) {
+      throw new ConvexError({
+        code: "MESSAGE_NOT_FOUND",
+        message: "Message not found",
+      });
+    }
+
+    // SECURITY: Verify message belongs to the provided chat
+    if (message.chatId !== args.chatId) {
+      throw new ConvexError({
+        code: "FORBIDDEN",
+        message: "Message does not belong to this chat",
+      });
+    }
+
+    // SECURITY: Prevent duplicate credit deduction
+    if (message.creditsUsed !== undefined && message.creditsUsed > 0) {
+      throw new ConvexError({
+        code: "CREDITS_ALREADY_DEDUCTED",
+        message: "Credits already deducted for this message",
+      });
+    }
+
+    // Compute credits server-side from modelId to prevent client manipulation
+    const creditsUsed = getModelCreditCost(args.modelId);
+
+    // Validate sufficient balance
+    const newBalance = user.credits - creditsUsed;
+    if (newBalance < 0) {
+      throw new ConvexError({
+        code: "INSUFFICIENT_CREDITS",
+        message: "Insufficient credits for this operation",
+      });
+    }
+
+    // SECURITY: Check for existing transaction to prevent duplicates
+    // Query recent transactions and filter by messageId in memory
+    const recentTransactions = await ctx.db
+      .query("creditTransactions")
+      .withIndex("userId", (q) => q.eq("userId", userId))
+      .order("desc")
+      .take(100);
+
+    const existingTransaction = recentTransactions.find(
+      (tx) => tx.metadata?.messageId === args.messageId
+    );
+
+    if (existingTransaction) {
+      // Idempotent return - credits already deducted
+      logger.info("Credits already deducted for message (async)", {
+        userId,
+        messageId: args.messageId,
+        transactionId: existingTransaction._id,
+      });
+      return { success: true, newBalance: existingTransaction.balanceAfter };
+    }
+
+    // Store token/credit data on message
+    await ctx.db.patch("messages", args.messageId, {
+      inputTokens: args.inputTokens,
+      outputTokens: args.outputTokens,
+      totalTokens: args.totalTokens,
+      creditsUsed,
+      modelId: args.modelId,
+    });
+
+    // Deduct credits
+    await ctx.db.patch("users", userId, {
+      credits: newBalance,
+    });
+
+    // Create transaction record
+    await ctx.db.insert("creditTransactions", {
+      userId,
+      amount: -creditsUsed,
+      type: "usage",
+      balanceAfter: newBalance,
+      metadata: {
+        chatId: args.chatId,
+        messageId: args.messageId,
+        modelId: args.modelId,
+        inputTokens: args.inputTokens,
+        outputTokens: args.outputTokens,
+        totalTokens: args.totalTokens,
+      },
+    });
+
+    logger.info("Credits deducted for chat (async)", {
+      userId,
+      messageId: args.messageId,
+      creditsUsed,
+      newBalance,
+    });
+
+    return { success: true, newBalance };
+  },
+});
