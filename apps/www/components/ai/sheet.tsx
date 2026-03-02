@@ -13,6 +13,7 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { useMediaQuery } from "@mantine/hooks";
+import { DEFAULT_TITLE } from "@repo/ai/features/constants";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
@@ -233,7 +234,7 @@ const AiSheetNewChat = memo(() => {
       }
 
       const chatId = await createChat({
-        title: "New Chat",
+        title: DEFAULT_TITLE,
         type: "study",
       });
 

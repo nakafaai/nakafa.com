@@ -192,6 +192,10 @@ export async function POST(req: Request) {
   // Transform raw DB messages to UI messages
   const messages = mapDBMessagesToUIMessages(rawMessages);
 
+  // Capture whether this is the first message before any streaming occurs
+  // This is more reliable than checking message count after streaming
+  const isFirstMessage = messages.length === 1;
+
   // Use smart message compression to stay within token limits
   const originalMessageCount = messages.length;
   const { messages: compressedMessages, tokens } = compressMessages(messages);
@@ -233,8 +237,9 @@ export async function POST(req: Request) {
     },
     originalMessages: compressedMessages,
     onFinish: async ({ messages: updatedMessages, responseMessage }) => {
-      // If updatedMessage length is 2, means it is new chat, so we need to update the chat title
-      if (updatedMessages.length === 2) {
+      // Generate title for new chats (first message exchange)
+      // Uses captured state from before streaming to avoid relying on AI SDK message count
+      if (isFirstMessage) {
         const title = await generateTitle({ messages: updatedMessages });
         await fetchMutation(
           convexApi.chats.mutations.updateChatTitle,

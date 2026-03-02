@@ -1,3 +1,4 @@
+import { DEFAULT_TITLE } from "@repo/ai/features/constants";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import tables, {
@@ -68,7 +69,7 @@ export const createChat = mutation({
 
     const chatId = await ctx.db.insert("chats", {
       updatedAt: Date.now(),
-      title: args.title || "New Chat",
+      title: args.title || DEFAULT_TITLE,
       userId: user.appUser._id,
       visibility: "private", // default to private
       type: args.type,
@@ -259,7 +260,7 @@ export const createChatWithMessage = mutation({
     // Create chat
     const chatId = await ctx.db.insert("chats", {
       updatedAt: Date.now(),
-      title: args.title || "New Chat",
+      title: args.title || DEFAULT_TITLE,
       userId: user.appUser._id,
       visibility: "private", // default to private
       type: args.type,

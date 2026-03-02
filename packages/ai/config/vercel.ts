@@ -10,7 +10,11 @@ const languageModels = Object.fromEntries(
     key,
     createWrappedLanguageModel(def.gatewayId),
   ])
-);
+) as {
+  [K in keyof typeof modelRegistry]: ReturnType<
+    typeof createWrappedLanguageModel
+  >;
+};
 
 export const model = customProvider({
   languageModels,
