@@ -7,6 +7,7 @@ import {
 import {
   defaultModel,
   getModelCreditCost,
+  hasEnoughCredits,
   type ModelId,
 } from "@repo/ai/config/models";
 import {
@@ -126,7 +127,7 @@ export async function POST(req: Request) {
   const userRole = userInfo.role ?? undefined;
   const userCredits = userInfo.credits;
 
-  if (userCredits < 0) {
+  if (!hasEnoughCredits(userCredits, selectedModel)) {
     return new Response("Insufficient credits", { status: 402 });
   }
 
@@ -437,7 +438,7 @@ export async function POST(req: Request) {
 
               return {
                 model: selectedModel,
-                token: {
+                tokens: {
                   input: mainInput + subAgentsInput,
                   output: mainOutput + subAgentsOutput,
                   total:
