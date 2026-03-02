@@ -1,5 +1,6 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type { CreditTransactionType } from "@repo/backend/convex/credits/schema";
 import { logger } from "@repo/backend/convex/utils/logger";
 
 /**
@@ -11,7 +12,7 @@ export async function resetUserCredits(
   args: {
     userId: Id<"users">;
     creditAmount: number;
-    grantType: "daily-grant" | "monthly-grant";
+    grantType: CreditTransactionType;
     resetTimestamp: number;
   }
 ) {
