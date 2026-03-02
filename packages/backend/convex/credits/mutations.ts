@@ -1,4 +1,4 @@
-import { modelIdValidator } from "@repo/backend/convex/chats/schema";
+import { getModelCreditCost, MODEL_IDS } from "@repo/ai/config/models";
 import { CLEANUP_CONFIG } from "@repo/backend/convex/credits/constants";
 import { resetUserCredits } from "@repo/backend/convex/credits/utils";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
@@ -351,6 +351,8 @@ export const cleanupOldQueueItems = internalMutation({
 /**
  * Deduct credits for chat usage and store token metadata.
  * Called after successful chat completion.
+ * Security: Credits are computed server-side from modelId to prevent client manipulation.
+ * Validates sufficient balance before deduction.
  */
 export const deductCreditsForChat = mutation({
   args: {
@@ -359,8 +361,7 @@ export const deductCreditsForChat = mutation({
     inputTokens: v.number(),
     outputTokens: v.number(),
     totalTokens: v.number(),
-    modelId: modelIdValidator,
-    creditsUsed: v.number(),
+    modelId: literals(...MODEL_IDS),
   },
   returns: v.object({
     success: v.boolean(),
@@ -387,17 +388,28 @@ export const deductCreditsForChat = mutation({
       });
     }
 
+    // Compute credits server-side from modelId to prevent client manipulation
+    const creditsUsed = getModelCreditCost(args.modelId);
+
+    // Validate sufficient balance
+    const newBalance = user.appUser.credits - creditsUsed;
+    if (newBalance < 0) {
+      throw new ConvexError({
+        code: "INSUFFICIENT_CREDITS",
+        message: "Insufficient credits for this operation",
+      });
+    }
+
     // Store token/credit data on message
     await ctx.db.patch("messages", args.messageId, {
       inputTokens: args.inputTokens,
       outputTokens: args.outputTokens,
       totalTokens: args.totalTokens,
-      creditsUsed: args.creditsUsed,
+      creditsUsed,
       modelId: args.modelId,
     });
 
-    // Use credits from already-fetched user object (no need to fetch again)
-    const newBalance = user.appUser.credits - args.creditsUsed;
+    // Deduct credits
     await ctx.db.patch("users", userId, {
       credits: newBalance,
     });
@@ -405,7 +417,7 @@ export const deductCreditsForChat = mutation({
     // Create transaction record
     await ctx.db.insert("creditTransactions", {
       userId,
-      amount: -args.creditsUsed,
+      amount: -creditsUsed,
       type: "usage",
       balanceAfter: newBalance,
       metadata: {
@@ -421,7 +433,7 @@ export const deductCreditsForChat = mutation({
     logger.info("Credits deducted for chat", {
       userId,
       messageId: args.messageId,
-      creditsUsed: args.creditsUsed,
+      creditsUsed,
       newBalance,
     });
 
