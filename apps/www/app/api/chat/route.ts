@@ -293,7 +293,8 @@ export async function POST(req: Request) {
       }
     },
     execute: async ({ writer }) => {
-      const subAgentUsage = {} as Record<ToolName, ComponentUsage>;
+      // Use Map to track usage without type assertion
+      const subAgentUsage = new Map<ToolName, ComponentUsage>();
 
       const streamTextResult = streamText({
         model: model.languageModel(selectedModel),
@@ -324,10 +325,11 @@ export async function POST(req: Request) {
             addUsage: (component, usage) => {
               const input = usage.inputTokens ?? 0;
               const output = usage.outputTokens ?? 0;
-              subAgentUsage[component] = {
-                input: (subAgentUsage[component]?.input ?? 0) + input,
-                output: (subAgentUsage[component]?.output ?? 0) + output,
-              };
+              const existing = subAgentUsage.get(component);
+              subAgentUsage.set(component, {
+                input: (existing?.input ?? 0) + input,
+                output: (existing?.output ?? 0) + output,
+              });
             },
             getTotal: () => ({
               input: 0,
@@ -422,12 +424,16 @@ export async function POST(req: Request) {
               const mainInput = part.totalUsage.inputTokens ?? 0;
               const mainOutput = part.totalUsage.outputTokens ?? 0;
 
-              const subAgentsInput = Object.values(subAgentUsage)
-                .filter((usage) => usage !== undefined)
-                .reduce((sum, usage) => sum + usage.input, 0);
-              const subAgentsOutput = Object.values(subAgentUsage)
-                .filter((usage) => usage !== undefined)
-                .reduce((sum, usage) => sum + usage.output, 0);
+              // Convert Map to record for metadata
+              const subAgentsRecord = Object.fromEntries(subAgentUsage);
+              const subAgentsInput = Array.from(subAgentUsage.values()).reduce(
+                (sum, usage) => sum + usage.input,
+                0
+              );
+              const subAgentsOutput = Array.from(subAgentUsage.values()).reduce(
+                (sum, usage) => sum + usage.output,
+                0
+              );
 
               return {
                 model: selectedModel,
@@ -438,7 +444,7 @@ export async function POST(req: Request) {
                     mainInput + mainOutput + subAgentsInput + subAgentsOutput,
                   breakdown: {
                     main: { input: mainInput, output: mainOutput },
-                    subAgents: subAgentUsage,
+                    subAgents: subAgentsRecord,
                   },
                 },
               };
