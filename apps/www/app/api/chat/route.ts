@@ -96,11 +96,15 @@ export async function POST(req: Request) {
   const token = await getToken();
 
   if (!token) {
-    return new Response("Unauthorized", { status: 401 });
+    return new Response(CHAT_ERRORS.UNAUTHORIZED.code, {
+      status: CHAT_ERRORS.UNAUTHORIZED.status,
+    });
   }
 
   if (!message) {
-    return new Response("Bad Request", { status: 400 });
+    return new Response(CHAT_ERRORS.BAD_REQUEST.code, {
+      status: CHAT_ERRORS.BAD_REQUEST.status,
+    });
   }
 
   const currentDate = new Date().toLocaleString("en-US", {

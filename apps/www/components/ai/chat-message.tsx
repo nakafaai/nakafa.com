@@ -4,7 +4,6 @@ import type { MyUIMessage } from "@repo/ai/types/message";
 import type { ComponentProps } from "react";
 import { memo } from "react";
 import { AIChatMessageActions } from "./chat-actions";
-import { AIChatLoading } from "./chat-loading";
 import { AiMessagePart } from "./message-part";
 
 interface Props {
@@ -15,10 +14,6 @@ interface Props {
 export const AiChatMessage = memo(({ message, showActions }: Props) => {
   // We are not showing the reasoning parts in the chat message, and not include step-start
   const parts = message.parts.filter((p) => p.type !== "step-start");
-
-  if (parts.length === 0) {
-    return <AIChatLoading force />;
-  }
 
   return (
     <div className="flex size-full flex-col gap-2 group-[.is-user]:items-end group-[.is-user]:justify-end">

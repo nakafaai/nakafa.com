@@ -17,11 +17,4 @@ export const CHAT_ERRORS = {
     code: "BAD_REQUEST",
     status: 400,
   },
-  RATE_LIMIT: {
-    code: "RATE_LIMIT",
-    status: 429,
-  },
 } as const;
-
-export type ChatErrorCode =
-  (typeof CHAT_ERRORS)[keyof typeof CHAT_ERRORS]["code"];

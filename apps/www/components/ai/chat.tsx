@@ -20,6 +20,7 @@ import { memo } from "react";
 import { useAi } from "@/lib/context/use-ai";
 import { useChat } from "@/lib/context/use-chat";
 import { useUser } from "@/lib/context/use-user";
+import { AiChatError } from "./chat-error";
 import { AiChatHeader } from "./chat-header";
 import { AIChatLoading } from "./chat-loading";
 import { AiChatMessage } from "./chat-message";
@@ -58,6 +59,8 @@ const AiChatConversation = memo(() => {
           </Message>
         ))}
 
+        <AiChatError />
+
         <AIChatLoading />
       </ConversationContent>
       <ConversationScrollButton />
@@ -78,9 +81,14 @@ const AiChatToolbar = memo(() => {
   const text = useAi((state) => state.text);
   const setText = useAi((state) => state.setText);
 
-  const { sendMessage, status } = useChat((state) => state.chat);
+  const { sendMessage, status, stop } = useChat((state) => state.chat);
 
   function handleSubmit(message: PromptInputMessage) {
+    if (status === "streaming") {
+      stop();
+      return;
+    }
+
     if (!message.text?.trim()) {
       return;
     }
