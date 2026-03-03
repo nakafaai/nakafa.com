@@ -92,13 +92,21 @@ const ButtonCheckout = memo(() => {
   return (
     <div className="flex items-center gap-4">
       <Activity mode={hasSubscription ? "visible" : "hidden"}>
-        <Button disabled={isPending} onClick={handleManageSubscription}>
+        <Button
+          disabled={isPending}
+          onClick={handleManageSubscription}
+          variant="secondary"
+        >
           <Spinner icon={Settings01Icon} isLoading={isPending} />
           {t("manage")}
         </Button>
       </Activity>
       <Activity mode={hasSubscription ? "hidden" : "visible"}>
-        <Button disabled={isPending} onClick={handleCheckout}>
+        <Button
+          disabled={isPending}
+          onClick={handleCheckout}
+          variant="secondary"
+        >
           <Spinner icon={PartyIcon} isLoading={isPending} />
           {t("get-pro")}
         </Button>
@@ -113,6 +121,10 @@ const ButtonRegenerate = memo(() => {
 
   const regenerate = useChat((state) => state.chat.regenerate);
 
-  return <Button onClick={() => regenerate()}>{t("retry")}</Button>;
+  return (
+    <Button onClick={() => regenerate()} variant="secondary">
+      {t("retry")}
+    </Button>
+  );
 });
 ButtonRegenerate.displayName = "ButtonRegenerate";
