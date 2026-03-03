@@ -6,6 +6,7 @@ import {
 } from "@repo/ai/clients/weather/client";
 import {
   defaultModel,
+  getModelCreditCost,
   hasEnoughCredits,
   type ModelId,
 } from "@repo/ai/config/models";
@@ -461,8 +462,12 @@ export async function POST(req: Request) {
                 0
               );
 
+              // Calculate credits based on model
+              const credits = getModelCreditCost(selectedModel);
+
               return {
                 model: selectedModel,
+                credits,
                 tokens: {
                   input: mainInput + subAgentsInput,
                   output: mainOutput + subAgentsOutput,

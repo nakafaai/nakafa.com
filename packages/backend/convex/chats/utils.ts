@@ -746,5 +746,17 @@ export function mapDBMessagesToUIMessages(
     id: message.identifier,
     role: message.role,
     parts: message.parts.map((part) => mapDBPartToUIMessagePart({ part })),
+    metadata: {
+      model: message.modelId ?? "unknown",
+      credits: message.credits,
+      tokens:
+        message.inputTokens || message.outputTokens || message.totalTokens
+          ? {
+              input: message.inputTokens,
+              output: message.outputTokens,
+              total: message.totalTokens,
+            }
+          : undefined,
+    },
   }));
 }
