@@ -40,7 +40,7 @@ export const AiChatMessageCredits = memo(() => {
 
   return (
     <Popover onOpenChange={setOpen} open={open}>
-      <PopoverTrigger onMouseEnter={() => setOpen(true)}>
+      <PopoverTrigger asChild onMouseEnter={() => setOpen(true)}>
         <Button size="icon" variant="outline">
           <HugeIcons icon={InformationCircleIcon} />
         </Button>
