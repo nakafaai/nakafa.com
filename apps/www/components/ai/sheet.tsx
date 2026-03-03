@@ -37,6 +37,7 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
@@ -291,6 +292,7 @@ const AiSheetHistory = memo(() => {
 AiSheetHistory.displayName = "AiSheetHistory";
 
 const AiSheetHistoryContent = memo(({ userId }: { userId: Id<"users"> }) => {
+  const t = useTranslations("Ai");
   const activeChatId = useAi((state) => state.activeChatId);
   const setActiveChatId = useAi((state) => state.setActiveChatId);
   const { results, status } = usePaginatedQuery(
@@ -305,6 +307,7 @@ const AiSheetHistoryContent = memo(({ userId }: { userId: Id<"users"> }) => {
 
   return (
     <DropdownMenuContent align="end" className="max-h-64">
+      <DropdownMenuLabel>{t("recent-chats")}</DropdownMenuLabel>
       <DropdownMenuGroup>
         {results.map((chat) => {
           const isPrivate = chat.visibility === "private";

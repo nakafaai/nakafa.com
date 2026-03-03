@@ -456,6 +456,7 @@
     "input-tokens": "Input",
     "output-tokens": "Output",
     "total-tokens": "Total",
+    "recent-chats": "Recent Chats",
     "no-models-found": "No models found.",
     "search-models-placeholder": "Search model...",
     "change-model-error": "Oops, something went wrong! Please contact us.",

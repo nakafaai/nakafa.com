@@ -456,6 +456,7 @@
     "input-tokens": "Input",
     "output-tokens": "Output",
     "total-tokens": "Total",
+    "recent-chats": "Obrolan Terbaru",
     "no-models-found": "Tidak ada model yang ditemukan.",
     "search-models-placeholder": "Cari model...",
     "change-model-error": "Waduh, ada kesalahan! Silakan hubungi kami.",
