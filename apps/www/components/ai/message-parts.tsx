@@ -1,6 +1,8 @@
 "use client";
 
 import { memo } from "react";
+import { useUser } from "@/lib/context/use-user";
+import { useCurrentChat } from "./chat-provider";
 import { useMessage } from "./message-context";
 import { AiMessagePart } from "./message-part";
 import { SuggestionsPart } from "./message-part/suggestions";
@@ -28,12 +30,16 @@ export const AiChatMessageContent = memo(() => {
 AiChatMessageContent.displayName = "AiChatMessageContent";
 
 export const AiChatMessageSuggestions = memo(() => {
+  const chat = useCurrentChat((s) => s.chat);
+
+  const currentUser = useUser((s) => s.user);
+  const showSuggestions = chat?.userId === currentUser?.appUser._id;
   const suggestions = useMessage((state) => {
     const part = state.message.parts.find((p) => p.type === "data-suggestions");
     return part?.type === "data-suggestions" ? part.data : null;
   });
 
-  if (!suggestions) {
+  if (!(showSuggestions && suggestions)) {
     return null;
   }
 

@@ -447,6 +447,8 @@
     "link-copied": "Link berhasil disalin!",
     "private-chat-error": "Akses ditolak",
     "private-chat-error-description": "Ini bukan obrolanmu. Minta akses ke pemiliknya dulu ya.",
+    "chat-login-required": "Login diperlukan",
+    "chat-login-required-description": "Silakan login untuk mengakses obrolan ini.",
     "no-models-found": "Tidak ada model yang ditemukan.",
     "search-models-placeholder": "Cari model...",
     "change-model-error": "Waduh, ada kesalahan! Silakan hubungi kami.",

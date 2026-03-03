@@ -447,6 +447,8 @@
     "link-copied": "Link copied!",
     "private-chat-error": "Access denied",
     "private-chat-error-description": "This isn't your chat. Ask the owner for access.",
+    "chat-login-required": "Login required",
+    "chat-login-required-description": "Please login to access this chat.",
     "no-models-found": "No models found.",
     "search-models-placeholder": "Search model...",
     "change-model-error": "Oops, something went wrong! Please contact us.",
