@@ -1,8 +1,10 @@
-import type { ModelId } from "@repo/ai/config/vercel";
+import type { ModelId } from "@repo/ai/config/models";
+import type { AccumulatedTokenUsage } from "@repo/ai/lib/usage";
+import type { ToolName } from "@repo/ai/schema/tools";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import type { UserRole } from "@repo/backend/convex/users/schema";
-import type { UIMessageStreamWriter } from "ai";
+import type { LanguageModelUsage, UIMessageStreamWriter } from "ai";
 
 export interface AgentContext {
   slug: string;
@@ -11,33 +13,41 @@ export interface AgentContext {
   verified: boolean;
 }
 
-export interface OrchestratorToolParams {
+/**
+ * Base parameters shared by all agents.
+ */
+export interface BaseAgentParams {
   context: AgentContext;
   locale: Locale;
   modelId: ModelId;
   writer: UIMessageStreamWriter<MyUIMessage>;
 }
 
-export interface ContentAccessAgentParams {
-  context: AgentContext;
-  locale: Locale;
-  modelId: ModelId;
+/**
+ * Parameters for agents that receive a task.
+ */
+export interface TaskAgentParams extends BaseAgentParams {
   task: string;
-  writer: UIMessageStreamWriter<MyUIMessage>;
 }
 
-export interface ResearchAgentParams {
-  context: AgentContext;
-  locale: Locale;
-  modelId: ModelId;
-  task: string;
-  writer: UIMessageStreamWriter<MyUIMessage>;
+/**
+ * Token usage accumulator for tracking across sub-agents.
+ */
+export interface UsageAccumulator {
+  addUsage: (component: ToolName, usage: LanguageModelUsage) => void;
+  getTotal: () => AccumulatedTokenUsage;
 }
 
-export interface MathAgentParams {
-  context: AgentContext;
-  locale: Locale;
-  modelId: ModelId;
-  task: string;
-  writer: UIMessageStreamWriter<MyUIMessage>;
+/**
+ * Parameters for orchestrator tools.
+ */
+export interface OrchestratorToolParams extends BaseAgentParams {
+  usageAccumulator: UsageAccumulator;
 }
+
+/**
+ * Agent parameter exports.
+ */
+export type ContentAccessAgentParams = TaskAgentParams;
+export type MathAgentParams = TaskAgentParams;
+export type ResearchAgentParams = TaskAgentParams;

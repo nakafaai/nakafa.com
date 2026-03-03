@@ -8,8 +8,8 @@ import { useTranslations } from "next-intl";
 import { type PropsWithChildren, useMemo } from "react";
 import { toast } from "sonner";
 import { createContext, useContextSelector } from "use-context-selector";
+import { useAi } from "@/lib/context/use-ai";
 import { getLocale, getPathname } from "@/lib/utils/browser";
-import { useAi } from "./use-ai";
 
 interface ChatContextValue {
   chat: UseChatHelpers<MyUIMessage>;
@@ -53,8 +53,16 @@ export function ChatProvider({
         };
       },
     }),
-    onError: () => {
-      toast.error(t("error-message"), { position: "bottom-center" });
+    onError: (error) => {
+      // Check for specific error codes in the error message
+      // Our API returns JSON with error codes like { error: "INSUFFICIENT_CREDITS" }
+      const errorMessage = error.message ?? "";
+
+      if (errorMessage.includes("INSUFFICIENT_CREDITS")) {
+        toast.error(t("insufficient-credits"), { position: "bottom-center" });
+      } else {
+        toast.error(t("error-message"), { position: "bottom-center" });
+      }
     },
   });
 

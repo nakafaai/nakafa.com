@@ -211,6 +211,7 @@ function FieldError({
         {uniqueErrors.map(
           (error, index) =>
             !!error?.message && (
+              // biome-ignore lint/suspicious/noArrayIndexKey: Error message may repeat, need index for uniqueness
               <li key={`${error.message}-${index}`}>{error.message}</li>
             )
         )}

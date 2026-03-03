@@ -35,6 +35,7 @@ export function TypingLoader({
             "animate-[typing_1s_infinite] rounded-full bg-primary",
             dotSizes[size]
           )}
+          // biome-ignore lint/suspicious/noArrayIndexKey: Dots are static and ordered, index is stable
           key={`dot-${i + 1}`}
           style={{
             animationDelay: `${i * DOT_DELAY}ms`,

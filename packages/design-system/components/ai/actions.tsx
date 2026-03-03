@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@repo/design-system/components/ui/button";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   Tooltip,
   TooltipContent,
@@ -9,13 +10,13 @@ import {
 import { cn } from "@repo/design-system/lib/utils";
 import { type ComponentProps, memo } from "react";
 
-export type ActionsProps = ComponentProps<"div">;
+export type ActionsProps = ComponentProps<typeof ButtonGroup>;
 
 export const Actions = memo(
   ({ className, children, ...props }: ActionsProps) => (
-    <div className={cn("flex items-center gap-1", className)} {...props}>
+    <ButtonGroup className={cn(className)} {...props}>
       {children}
-    </div>
+    </ButtonGroup>
   )
 );
 Actions.displayName = "Actions";
@@ -31,8 +32,8 @@ export const Action = memo(
     children,
     label,
     className,
-    variant = "ghost",
-    size = "icon-sm",
+    variant = "outline",
+    size = "icon",
     ...props
   }: ActionProps) => {
     const button = (

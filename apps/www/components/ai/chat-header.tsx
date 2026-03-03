@@ -329,7 +329,7 @@ function Header({
   children,
 }: PropsWithChildren<{ className?: string }>) {
   return (
-    <header className="z-1 mx-auto mt-2 grid h-12 w-full max-w-3xl shrink-0 px-2">
+    <header className="z-1 mx-auto mt-2 grid h-12 w-full max-w-3xl shrink-0">
       <div
         className={cn(
           "flex items-center justify-between gap-2 rounded-md border bg-card px-2 shadow-xs",

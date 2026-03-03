@@ -1,5 +1,6 @@
 "use client";
 
+import { DEFAULT_TITLE } from "@repo/ai/features/constants";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   PromptInput,
@@ -43,7 +44,7 @@ export function ChatNew() {
       }
 
       const chatId = await createChat({
-        title: "New Chat",
+        title: DEFAULT_TITLE,
         type: "study",
       });
 

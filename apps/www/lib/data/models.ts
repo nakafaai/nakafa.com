@@ -11,7 +11,7 @@ import {
   XAI,
   ZAI,
 } from "@lobehub/icons";
-import type { ModelId } from "@repo/ai/config/vercel";
+import type { ModelId } from "@repo/ai/config/models";
 import type { ComponentType } from "react";
 
 interface Model {
@@ -114,7 +114,7 @@ export const aiModels: Model[] = [
   },
   {
     icon: XAI,
-    value: "xai/grok-4.1-fast-reasoning",
+    value: "grok-4.1-fast-reasoning",
     label: "Grok 4.1 Fast",
     type: "free",
   },

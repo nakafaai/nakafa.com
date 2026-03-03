@@ -1,4 +1,4 @@
-import type { ModelId } from "@repo/ai/config/vercel";
+import type { ModelId } from "@repo/ai/config/models";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { createStore } from "zustand";
 import { persist } from "zustand/middleware";

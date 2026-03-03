@@ -13,6 +13,7 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { useMediaQuery } from "@mantine/hooks";
+import { DEFAULT_TITLE } from "@repo/ai/features/constants";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
@@ -74,7 +75,8 @@ import {
 import { useAi } from "@/lib/context/use-ai";
 import { ChatProvider, useChat } from "@/lib/context/use-chat";
 import { useUser } from "@/lib/context/use-user";
-import { AIChatLoading } from "./chat-loading";
+import { AiChatError } from "./chat-error";
+import { AiChatLoading } from "./chat-loading";
 import { AiChatMessage } from "./chat-message";
 import { AiChatModel } from "./chat-model";
 import { CurrentChatProvider, useCurrentChat } from "./chat-provider";
@@ -233,7 +235,7 @@ const AiSheetNewChat = memo(() => {
       }
 
       const chatId = await createChat({
-        title: "New Chat",
+        title: DEFAULT_TITLE,
         type: "study",
       });
 
@@ -445,7 +447,9 @@ const AiSheetContent = memo(() => {
             </Message>
           ))}
 
-          <AIChatLoading />
+          <AiChatLoading />
+
+          <AiChatError />
         </ConversationContent>
         <ConversationScrollButton />
       </Conversation>

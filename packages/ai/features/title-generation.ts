@@ -1,11 +1,12 @@
 import { model } from "@repo/ai/config/vercel";
+import {
+  DEFAULT_TITLE,
+  MAX_TITLE_LENGTH,
+  TRUNCATED_TITLE_LENGTH,
+} from "@repo/ai/features/constants";
 import { createPrompt } from "@repo/ai/prompt/utils";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { generateText } from "ai";
-
-const MAX_TITLE_LENGTH = 80;
-const TRUNCATED_TITLE_LENGTH = 77;
-const DEFAULT_TITLE = "New Chat";
 
 /**
  * Generate a title for a chat based on conversation messages
@@ -16,7 +17,7 @@ const DEFAULT_TITLE = "New Chat";
 export async function generateTitle({ messages }: { messages: MyUIMessage[] }) {
   try {
     const { text } = await generateText({
-      model: model.languageModel("xai/grok-4.1-fast-non-reasoning"),
+      model: model.languageModel("grok-4.1-fast-non-reasoning"),
       prompt: JSON.stringify(messages, null, 2),
       system: createPrompt({
         taskContext:

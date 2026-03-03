@@ -84,6 +84,7 @@ export function SearchResults({
                     "group flex flex-col gap-2 p-2 px-4 text-sm transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
                   )}
                   href={subResult.url}
+                  // biome-ignore lint/suspicious/noArrayIndexKey: URL+title may not be unique, need index for stability
                   key={`${subResult.url}-${subResult.title}-${subIndex}`}
                 >
                   <div className="flex items-center gap-2">

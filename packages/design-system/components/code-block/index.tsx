@@ -409,6 +409,7 @@ function CodeBlockFallback({ children, ...props }: CodeBlockFallbackProps) {
             ?.toString()
             .split("\n")
             .map((line, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: Line content may repeat, need index for uniqueness
               <span className="line" key={`${i}-${line}`}>
                 {line}
               </span>

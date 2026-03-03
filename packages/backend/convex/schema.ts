@@ -6,6 +6,7 @@ import chatsSchema from "@repo/backend/convex/chats/schema";
 import classesSchema from "@repo/backend/convex/classes/schema";
 import commentsSchema from "@repo/backend/convex/comments/schema";
 import contentsSchema from "@repo/backend/convex/contents/schema";
+import creditsSchema from "@repo/backend/convex/credits/schema";
 import customersSchema from "@repo/backend/convex/customers/schema";
 import exerciseQuestionsSchema from "@repo/backend/convex/exerciseQuestions/schema";
 import exerciseSetsSchema from "@repo/backend/convex/exerciseSets/schema";
@@ -38,6 +39,7 @@ export default defineSchema(
     ...exerciseSetsSchema,
     ...exerciseQuestionsSchema,
     ...audioStudiesSchema,
+    ...creditsSchema,
   },
   {
     schemaValidation: true,

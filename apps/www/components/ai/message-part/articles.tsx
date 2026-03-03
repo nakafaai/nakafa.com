@@ -102,15 +102,17 @@ const ArticlesPartPreview = memo(
       <div className="flex flex-wrap items-center gap-2">
         {articles.slice(0, MAX_SHOWN_ARTICLES).map((article) => (
           <Button
+            className="max-w-full"
             key={article.url}
             nativeButton={false}
             render={
               <a
+                className="min-w-0"
                 href={`/${article.slug}`}
                 rel="noopener noreferrer"
                 target="_blank"
               >
-                {article.title}
+                <span className="truncate">{article.title}</span>
                 <HugeIcons icon={ArrowUpRight01Icon} />
               </a>
             }
