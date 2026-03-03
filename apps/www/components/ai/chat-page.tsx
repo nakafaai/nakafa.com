@@ -22,7 +22,7 @@ export function AiChatPage({ chatId }: { chatId: Id<"chats"> }) {
                 <h1 className="font-semibold text-xl">
                   {t("private-chat-error")}
                 </h1>
-                <p className="text-center text-muted-foreground text-sm">
+                <p className="text-pretty text-center text-muted-foreground text-sm">
                   {t("private-chat-error-description")}
                 </p>
               </div>

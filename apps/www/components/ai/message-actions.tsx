@@ -6,7 +6,6 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { useClipboard } from "@mantine/hooks";
-import type { MyUIMessage } from "@repo/ai/types/message";
 import { Action, Actions } from "@repo/design-system/components/ai/actions";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
@@ -15,15 +14,19 @@ import { memo } from "react";
 import { useCurrentChat } from "@/components/ai/chat-provider";
 import { useChat } from "@/lib/context/use-chat";
 import { useUser } from "@/lib/context/use-user";
+import { useMessage } from "./message-context";
 
-interface Props {
-  messageId: string;
-  role: MyUIMessage["role"];
-  text: string;
-}
-
-export const AIChatMessageActions = memo(({ messageId, role, text }: Props) => {
+export const AiChatMessageActions = memo(() => {
   const t = useTranslations("Ai");
+
+  const messageId = useMessage((state) => state.message.id);
+  const role = useMessage((state) => state.message.role);
+  const text = useMessage((state) =>
+    state.message.parts
+      .filter((p) => p.type === "text")
+      .map((p) => p.text)
+      .join("\n")
+  );
 
   const regenerate = useChat((state) => state.chat.regenerate);
   const status = useChat((state) => state.chat.status);
@@ -42,9 +45,7 @@ export const AIChatMessageActions = memo(({ messageId, role, text }: Props) => {
   }
 
   return (
-    <Actions
-      className={cn(role === "user" ? "translate-x-2" : "-translate-x-2.5")}
-    >
+    <Actions className={cn(role === "assistant" && "my-6")}>
       <Action
         disabled={disabled}
         label={t("retry-message")}
@@ -63,4 +64,4 @@ export const AIChatMessageActions = memo(({ messageId, role, text }: Props) => {
     </Actions>
   );
 });
-AIChatMessageActions.displayName = "AIChatMessageActions";
+AiChatMessageActions.displayName = "AiChatMessageActions";

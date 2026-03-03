@@ -9,20 +9,21 @@ import {
 } from "@repo/design-system/components/ai/reasoning";
 import { Response } from "@repo/design-system/components/ai/response";
 import { memo } from "react";
+import { useMessage } from "../message-context";
 import { ArticlesPart } from "./articles";
 import { CalculatorPart } from "./calculator";
 import { ContentPart } from "./content";
 import { SubjectsPart } from "./subjects";
-import { SuggestionsPart } from "./suggestions";
 import { WebSearchPart } from "./web-search";
 
 interface Props {
-  messageId: string;
   part: MyUIMessage["parts"][number];
   partIndex: number;
 }
 
-export const AiMessagePart = memo(({ part, partIndex, messageId }: Props) => {
+export const AiMessagePart = memo(({ part, partIndex }: Props) => {
+  const messageId = useMessage((state) => state.message.id);
+
   switch (part.type) {
     case "text":
       return (
@@ -50,7 +51,7 @@ export const AiMessagePart = memo(({ part, partIndex, messageId }: Props) => {
     case "data-web-search":
       return <WebSearchPart message={part.data} />;
     case "data-suggestions":
-      return <SuggestionsPart message={part.data} />;
+      return null;
     case "data-calculator":
       return <CalculatorPart message={part.data} />;
     case "data-get-content":
