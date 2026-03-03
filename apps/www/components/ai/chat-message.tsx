@@ -10,7 +10,6 @@ interface Props {
 }
 
 export const AiChatMessage = memo(({ message }: Props) => {
-  // We are not showing the reasoning parts in the chat message, and not include step-start
   const parts = message.parts.filter((p) => p.type !== "step-start");
 
   return (

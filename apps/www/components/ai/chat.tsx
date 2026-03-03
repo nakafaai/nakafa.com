@@ -22,6 +22,7 @@ import { useChat } from "@/lib/context/use-chat";
 import { useUser } from "@/lib/context/use-user";
 import { AiChatError } from "./chat-error";
 import { AiChatHeader } from "./chat-header";
+import { AiChatLoading } from "./chat-loading";
 import { AiChatMessage } from "./chat-message";
 import { AiChatModel } from "./chat-model";
 import { useCurrentChat } from "./chat-provider";
@@ -52,6 +53,8 @@ const AiChatConversation = memo(() => {
             <AiChatMessage message={message} />
           </Message>
         ))}
+
+        <AiChatLoading />
 
         <AiChatError />
       </ConversationContent>

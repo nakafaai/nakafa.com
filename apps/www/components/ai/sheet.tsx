@@ -76,6 +76,7 @@ import { useAi } from "@/lib/context/use-ai";
 import { ChatProvider, useChat } from "@/lib/context/use-chat";
 import { useUser } from "@/lib/context/use-user";
 import { AiChatError } from "./chat-error";
+import { AiChatLoading } from "./chat-loading";
 import { AiChatMessage } from "./chat-message";
 import { AiChatModel } from "./chat-model";
 import { CurrentChatProvider, useCurrentChat } from "./chat-provider";
@@ -445,6 +446,8 @@ const AiSheetContent = memo(() => {
               <AiChatMessage message={message} />
             </Message>
           ))}
+
+          <AiChatLoading />
 
           <AiChatError />
         </ConversationContent>
