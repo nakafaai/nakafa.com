@@ -4,7 +4,8 @@ import { memo } from "react";
 import { useChat } from "@/lib/context/use-chat";
 
 export const AiChatLoading = memo(() => {
-  const { status, messages } = useChat((state) => state.chat);
+  const status = useChat((state) => state.chat.status);
+  const messages = useChat((state) => state.chat.messages);
 
   // Not loading
   if (status !== "submitted" && status !== "streaming") {
