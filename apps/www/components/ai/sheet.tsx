@@ -79,6 +79,7 @@ import { useUser } from "@/lib/context/use-user";
 import { AiChatError } from "./chat-error";
 import { AiChatMessage } from "./chat-message";
 import { AiChatModel } from "./chat-model";
+import { AiChatPending } from "./chat-pending";
 import { CurrentChatProvider, useCurrentChat } from "./chat-provider";
 
 const MIN_WIDTH = 384;
@@ -448,6 +449,8 @@ const AiSheetContent = memo(() => {
               <AiChatMessage message={message} />
             </Message>
           ))}
+
+          <AiChatPending />
 
           <AiChatError />
         </ConversationContent>
