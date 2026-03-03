@@ -4,6 +4,7 @@ import { memo } from "react";
 import { useUser } from "@/lib/context/use-user";
 import { useCurrentChat } from "./chat-provider";
 import { useMessage } from "./message-context";
+import { AiChatMessageLoading } from "./message-loading";
 import { AiMessagePart } from "./message-part";
 import { SuggestionsPart } from "./message-part/suggestions";
 
@@ -24,6 +25,7 @@ export const AiChatMessageContent = memo(() => {
           partIndex={i}
         />
       ))}
+      <AiChatMessageLoading />
     </div>
   );
 });

@@ -264,7 +264,7 @@ export const saveAssistantResponse = mutation({
   returns: v.object({
     messageId: vv.id("messages"),
     partIds: v.array(vv.id("parts")),
-    creditsUsed: v.number(),
+    credits: v.number(),
     newBalance: v.number(),
   }),
   handler: async (ctx, args) => {
@@ -282,12 +282,12 @@ export const saveAssistantResponse = mutation({
     // Calculate credits before insert
     // Debt system: Allow negative balances for better UX
     // Users can continue chatting even with insufficient credits
-    let creditsUsed = 0;
+    let credits = 0;
     let newBalance = user.appUser.credits;
 
     if (message.modelId) {
-      creditsUsed = getModelCreditCost(message.modelId);
-      newBalance = user.appUser.credits - creditsUsed;
+      credits = getModelCreditCost(message.modelId);
+      newBalance = user.appUser.credits - credits;
       // No longer throwing error for negative balance - debt is allowed
     }
 
@@ -302,7 +302,7 @@ export const saveAssistantResponse = mutation({
       inputTokens: message.inputTokens,
       outputTokens: message.outputTokens,
       totalTokens: message.totalTokens,
-      creditsUsed: message.modelId ? creditsUsed : undefined,
+      credits: message.modelId ? credits : undefined,
     });
 
     // Insert parts for the message
@@ -318,7 +318,7 @@ export const saveAssistantResponse = mutation({
       // Create transaction record
       await ctx.db.insert("creditTransactions", {
         userId: user.appUser._id,
-        amount: -creditsUsed,
+        amount: -credits,
         type: "usage",
         balanceAfter: newBalance,
         metadata: {
@@ -332,6 +332,6 @@ export const saveAssistantResponse = mutation({
       });
     }
 
-    return { messageId, partIds, creditsUsed, newBalance };
+    return { messageId, partIds, credits, newBalance };
   },
 });

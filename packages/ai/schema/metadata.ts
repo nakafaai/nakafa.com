@@ -8,6 +8,7 @@ export type ComponentUsage = z.infer<typeof componentUsageSchema>;
 
 export const metadataSchema = z.object({
   model: z.string(),
+  credits: z.optional(z.number()),
   tokens: z.optional(
     z.object({
       input: z.optional(z.number()),

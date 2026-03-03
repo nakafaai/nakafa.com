@@ -73,7 +73,7 @@ export const messageValidator = v.object({
   inputTokens: v.optional(v.number()),
   outputTokens: v.optional(v.number()),
   totalTokens: v.optional(v.number()),
-  creditsUsed: v.optional(v.number()),
+  credits: v.optional(v.number()),
   modelId: modelIdValidator,
 });
 

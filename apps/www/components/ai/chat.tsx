@@ -22,9 +22,9 @@ import { useChat } from "@/lib/context/use-chat";
 import { useUser } from "@/lib/context/use-user";
 import { AiChatError } from "./chat-error";
 import { AiChatHeader } from "./chat-header";
-import { AiChatLoading } from "./chat-loading";
 import { AiChatMessage } from "./chat-message";
 import { AiChatModel } from "./chat-model";
+import { AiChatPending } from "./chat-pending";
 import { useCurrentChat } from "./chat-provider";
 
 export function AiChat() {
@@ -54,7 +54,7 @@ const AiChatConversation = memo(() => {
           </Message>
         ))}
 
-        <AiChatLoading />
+        <AiChatPending />
 
         <AiChatError />
       </ConversationContent>
