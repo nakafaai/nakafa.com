@@ -13,7 +13,7 @@ export type ActionsProps = ComponentProps<"div">;
 
 export const Actions = memo(
   ({ className, children, ...props }: ActionsProps) => (
-    <div className={cn("flex items-center gap-1", className)} {...props}>
+    <div className={cn("flex items-center", className)} {...props}>
       {children}
     </div>
   )
@@ -32,7 +32,7 @@ export const Action = memo(
     label,
     className,
     variant = "ghost",
-    size = "icon-sm",
+    size = "icon",
     ...props
   }: ActionProps) => {
     const button = (
