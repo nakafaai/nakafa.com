@@ -6,6 +6,7 @@ import {
   InvalidPathError,
   MetadataParseError,
 } from "@repo/contents/_shared/error";
+import { LocaleSchema } from "@repo/contents/_types/content";
 import { createServiceLogger, logError } from "@repo/utilities/logging";
 import { Effect } from "effect";
 import { NextResponse } from "next/server";
@@ -26,12 +27,21 @@ export async function GET(
 ) {
   const { locale, slug } = await params;
 
+  const parseResult = LocaleSchema.safeParse(locale);
+  if (!parseResult.success) {
+    return NextResponse.json(
+      { error: "Invalid locale. Must be 'en' or 'id'." },
+      { status: 400 }
+    );
+  }
+
+  const validLocale = parseResult.data;
   const basePath = slug.join("/");
 
   const cleanPath = `subject/${basePath}` as const;
 
   const program = getContents({
-    locale,
+    locale: validLocale,
     basePath: cleanPath,
     includeMDX: false,
   });

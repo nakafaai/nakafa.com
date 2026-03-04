@@ -1,9 +1,10 @@
 import { createPrompt } from "@repo/ai/prompt/utils";
 import type { AgentContext } from "@repo/ai/types/agents";
+import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 
 interface ContentAccessPromptProps {
   context: AgentContext;
-  locale: string;
+  locale: Locale;
 }
 
 export function contentAccessPrompt({

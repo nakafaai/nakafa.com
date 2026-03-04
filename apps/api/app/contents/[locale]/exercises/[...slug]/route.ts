@@ -9,6 +9,7 @@ import {
   InvalidPathError,
   MetadataParseError,
 } from "@repo/contents/_shared/error";
+import { LocaleSchema } from "@repo/contents/_types/content";
 import { createServiceLogger, logError } from "@repo/utilities/logging";
 import { Effect } from "effect";
 import { NextResponse } from "next/server";
@@ -28,6 +29,16 @@ export async function GET(
   { params }: { params: Promise<{ locale: string; slug: string[] }> }
 ) {
   const { locale, slug } = await params;
+
+  const parseResult = LocaleSchema.safeParse(locale);
+  if (!parseResult.success) {
+    return NextResponse.json(
+      { error: "Invalid locale. Must be 'en' or 'id'." },
+      { status: 400 }
+    );
+  }
+
+  const validLocale = parseResult.data;
 
   let exerciseNumber: number | null = null;
   let rest = [...slug];
@@ -61,13 +72,13 @@ export async function GET(
   if (isQuestionOrAnswer && exerciseNumber !== null) {
     const mdxPath = `exercises/${basePath}/${exerciseNumber}/${slug.at(-1)}`;
 
-    const program = Effect.match(getContent(locale, mdxPath), {
+    const program = Effect.match(getContent(validLocale, mdxPath), {
       onFailure: (error: unknown) => {
         logError(
           logger,
           error instanceof Error ? error : new Error(String(error)),
           {
-            locale,
+            locale: validLocale,
             mdxPath,
             message: "Failed to fetch MDX content.",
           }
@@ -105,7 +116,7 @@ export async function GET(
 
   const program = Effect.match(
     getExercisesContent({
-      locale,
+      locale: validLocale,
       filePath: cleanPath,
       includeMDX: false,
     }),
@@ -115,7 +126,7 @@ export async function GET(
           logger,
           error instanceof Error ? error : new Error(String(error)),
           {
-            locale,
+            locale: validLocale,
             basePath: basePath || "/",
             slugLength: slug.length,
             message: "Failed to fetch content.",

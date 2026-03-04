@@ -1,6 +1,10 @@
 import type React from "react";
 import * as z from "zod";
 
+/** Locale validation schema - single source of truth */
+export const LocaleSchema = z.enum(["en", "id"]);
+export type Locale = z.infer<typeof LocaleSchema>;
+
 export const ArticleSchema = z.object({
   title: z.string(),
   description: z.string(),
@@ -50,7 +54,7 @@ export const ContentSchema = z.object({
   metadata: ContentMetadataSchema,
   raw: z.string(),
   url: z.string(),
-  locale: z.string(),
+  locale: LocaleSchema,
   slug: z.string(),
 });
 export type Content = z.infer<typeof ContentSchema>;

@@ -30,7 +30,7 @@ export const getArticlesOutputSchema = z
         title: z.string().describe("The title of article."),
         url: z.string().describe("The url of article."),
         slug: z.string().describe("The slug of article."),
-        locale: z.string().describe("The locale of article."),
+        locale: z.enum(["en", "id"]).describe("The locale of article."),
       })
     ),
   })
@@ -67,7 +67,7 @@ export const getSubjectsOutputSchema = z
         title: z.string().describe("The title of subject."),
         url: z.string().describe("The url of subject."),
         slug: z.string().describe("The slug of subject."),
-        locale: z.string().describe("The locale of subject."),
+        locale: z.enum(["en", "id"]).describe("The locale of subject."),
       })
     ),
   })
