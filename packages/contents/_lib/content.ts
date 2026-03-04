@@ -9,6 +9,7 @@ import {
   MetadataParseError,
   ModuleLoadError,
 } from "@repo/contents/_shared/error";
+import type { Locale } from "@repo/contents/_types/content";
 import {
   type ContentListWithMDX,
   type ContentMetadata,
@@ -20,7 +21,6 @@ import {
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, Either, Option } from "effect";
 import ky from "ky";
-import type { Locale } from "next-intl";
 import { createElement } from "react";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -217,11 +217,7 @@ export function getContent(
 export function getContents(
   options: ContentOptions = {}
 ): Effect.Effect<ContentListWithMDX[], never, never> {
-  const {
-    includeMDX = true,
-    locale = "en",
-    basePath = "",
-  }: ContentOptions = options;
+  const { includeMDX = true, locale = "en", basePath = "" } = options;
 
   const slugs = getMDXSlugsForLocale(locale);
 
@@ -229,30 +225,34 @@ export function getContents(
     ? slugs.filter((slug) => slug.startsWith(basePath))
     : slugs;
 
-  return Effect.forEach(
-    filteredSlugs,
-    (slug) =>
-      Effect.gen(function* () {
-        const content = yield* Effect.either(
-          getContent(locale, slug, { includeMDX })
-        );
+  function processSlug(slug: string, contentLocale: Locale) {
+    return Effect.gen(function* () {
+      const loc: Locale = contentLocale;
+      const content = yield* Effect.either(
+        getContent(loc, slug, { includeMDX })
+      );
 
-        if (Either.isLeft(content)) {
-          return undefined;
-        }
+      if (Either.isLeft(content)) {
+        return undefined;
+      }
 
-        const url = new URL(`/${locale}/${slug}`, "https://nakafa.com");
+      const url = new URL(`/${loc}/${slug}`, "https://nakafa.com");
 
-        return {
-          metadata: content.right.metadata,
-          raw: content.right.raw,
-          url: url.toString(),
-          slug,
-          locale,
-        };
-      }),
-    { concurrency: "unbounded" }
-  ).pipe(Effect.map((items) => items.filter((item) => item !== undefined)));
+      const result: ContentListWithMDX = {
+        metadata: content.right.metadata,
+        raw: content.right.raw,
+        url: url.toString(),
+        slug,
+        locale: loc,
+      };
+
+      return result;
+    });
+  }
+
+  return Effect.forEach(filteredSlugs, (slug) => processSlug(slug, locale), {
+    concurrency: "unbounded",
+  }).pipe(Effect.map((items) => items.filter((item) => item !== undefined)));
 }
 
 /**

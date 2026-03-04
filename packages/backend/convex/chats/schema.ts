@@ -129,7 +129,7 @@ export const contentItemValidator = v.object({
   title: v.string(),
   url: v.string(),
   slug: v.string(),
-  locale: v.string(),
+  locale: localeValidator,
 });
 
 export const webSearchSourceValidator = v.object({

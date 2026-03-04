@@ -1,5 +1,6 @@
 import { DEFAULT_LIMIT, isWithinLimit } from "@repo/ai/lib/tokens";
 import type { MyUIMessage, MyUITools } from "@repo/ai/types/message";
+import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import type { UIDataTypes, UIMessagePart } from "ai";
 import dedent from "dedent";
 import { fromUrl, ParseResultType, parseDomain } from "parse-domain";
@@ -10,7 +11,7 @@ import { fromUrl, ParseResultType, parseDomain } from "parse-domain";
  * @returns The built slug
  */
 export function buildContentSlug(params: {
-  locale: string;
+  locale: Locale;
   filters: {
     type: "articles" | "subject";
     category?: string | null;

@@ -9,7 +9,7 @@ const EXERCISE_SET_REGEX = /^(exercises\/.*?)\/\d+\/_(?:question|answer)$/;
 const EXERCISE_NUMBER_REGEX = /^(exercises\/.*?\/\d+)\/_(?:question|answer)$/;
 
 interface StaticParamsWithLocale {
-  locale: string;
+  locale: Locale;
   slug: string[];
 }
 
@@ -18,7 +18,7 @@ interface StaticParamsSlugOnly {
 }
 
 interface BaseConfig {
-  locales?: readonly string[];
+  locales?: readonly Locale[];
 }
 
 interface ContentPathsConfig extends BaseConfig {
@@ -130,7 +130,7 @@ export function generateContentParams(
   const allFolderPaths = getAllFolderPaths(basePath);
 
   for (const locale of locales) {
-    const mdxPaths = getMDXPathsForBasePath(locale as Locale, basePath);
+    const mdxPaths = getMDXPathsForBasePath(locale, basePath);
 
     for (const folderPath of allFolderPaths) {
       result.push({
@@ -149,7 +149,7 @@ export function generateContentParams(
     }
 
     if (basePath === "exercises") {
-      const allSlugs = getMDXSlugsForLocale(locale as Locale);
+      const allSlugs = getMDXSlugsForLocale(locale);
       const exerciseSetPaths = getExerciseSetPaths(allSlugs);
 
       for (const exercisePath of exerciseSetPaths) {
@@ -213,7 +213,7 @@ export function generateSlugOnlyParams(
 
   const result: StaticParamsSlugOnly[] = [];
 
-  const addPath = (locale: string, slugParts: string[]) => {
+  const addPath = (locale: Locale, slugParts: string[]) => {
     result.push({ slug: [locale, ...slugParts] });
     if (includeOGVariants && slugParts.length > 0) {
       result.push({ slug: [locale, ...slugParts, "image.png"] });
@@ -225,7 +225,7 @@ export function generateSlugOnlyParams(
       result.push({ slug: [locale, "image.png"] });
     }
 
-    const slugs = getMDXSlugsForLocale(locale as Locale);
+    const slugs = getMDXSlugsForLocale(locale);
     const localeCache = new Set(slugs);
 
     for (const topDir of topDirs) {
@@ -298,7 +298,7 @@ export function generateLocaleParams(
 
   const result: StaticParamsWithLocale[] = [];
 
-  const addPath = (locale: string, slugParts: string[]) => {
+  const addPath = (locale: Locale, slugParts: string[]) => {
     result.push({ locale, slug: slugParts });
     if (includeOGVariants && slugParts.length > 0) {
       result.push({ locale, slug: [...slugParts, "image.png"] });
@@ -310,7 +310,7 @@ export function generateLocaleParams(
       result.push({ locale, slug: ["image.png"] });
     }
 
-    const slugs = getMDXSlugsForLocale(locale as Locale);
+    const slugs = getMDXSlugsForLocale(locale);
     const localeCache = new Set(slugs);
 
     for (const topDir of topDirs) {

@@ -64,7 +64,7 @@ export async function GET(
 
   // Handle MDX content
   const content = await Effect.runPromise(
-    Effect.match(getContent(locale, cleanSlug), {
+    Effect.match(getContent(locale, cleanSlug, { includeMDX: false }), {
       onFailure: () => null,
       onSuccess: (data) => data,
     })

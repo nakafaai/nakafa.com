@@ -11,7 +11,7 @@ export const contentsSchema = z.object({
   title: z.string(),
   url: z.string(),
   slug: z.string(),
-  locale: z.string(),
+  locale: z.enum(["en", "id"]),
 });
 
 /**

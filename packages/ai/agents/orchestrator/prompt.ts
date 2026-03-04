@@ -1,4 +1,5 @@
 import { createPrompt } from "@repo/ai/prompt/utils";
+import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 
 interface SystemPromptProps {
   /**
@@ -12,7 +13,7 @@ interface SystemPromptProps {
     /**
      * The locale of the current page.
      */
-    locale: string;
+    locale: Locale;
     /**
      * The slug of the current page.
      */
