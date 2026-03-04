@@ -25,23 +25,23 @@ const choices: ExercisesChoices = {
   ],
   en: [
     {
-      label: "tetapi.",
+      label: "but.",
       value: true,
     },
     {
-      label: "akan tetapi.",
+      label: "however.",
       value: false,
     },
     {
-      label: "bahwa.",
+      label: "that.",
       value: false,
     },
     {
-      label: "sehingga.",
+      label: "so.",
       value: false,
     },
     {
-      label: "karena.",
+      label: "because.",
       value: false,
     },
   ],
