@@ -1,6 +1,6 @@
 import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 
-export const choices: ExercisesChoices = {
+const choices: ExercisesChoices = {
   id: [
     {
       label: "2.",
