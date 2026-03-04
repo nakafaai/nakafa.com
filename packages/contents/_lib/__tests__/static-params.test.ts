@@ -8,6 +8,7 @@ import {
   getExerciseSetPaths,
 } from "@repo/contents/_lib/static-params";
 import { DirectoryReadError } from "@repo/contents/_shared/error";
+import type { Locale } from "@repo/contents/_types/content";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -124,7 +125,7 @@ describe("generateContentParams", () => {
 
     const result = generateContentParams({
       basePath: "articles",
-      locales: ["de", "fr"],
+      locales: ["de", "fr"] as unknown as Locale[],
     });
 
     const locales = result.map((r) => r.locale);
@@ -525,7 +526,9 @@ describe("generateLocaleParams", () => {
     vi.mocked(getNestedSlugs).mockReturnValue([]);
     vi.mocked(getMDXSlugsForLocale).mockReturnValue(["subject"]);
 
-    const result = generateLocaleParams({ locales: ["de", "fr"] });
+    const result = generateLocaleParams({
+      locales: ["de", "fr"] as unknown as Locale[],
+    });
 
     const locales = result.map((r) => r.locale);
     expect(locales).toContain("de");

@@ -217,13 +217,7 @@ export function getContent(
 export function getContents(
   options: ContentOptions = {}
 ): Effect.Effect<ContentListWithMDX[], never, never> {
-  const {
-    includeMDX = true,
-    locale: localeOpt,
-    basePath = "",
-  }: ContentOptions = options;
-
-  const locale: Locale = localeOpt ?? ("en" as const);
+  const { includeMDX = true, locale = "en", basePath = "" } = options;
 
   const slugs = getMDXSlugsForLocale(locale);
 
@@ -256,13 +250,9 @@ export function getContents(
     });
   }
 
-  return Effect.forEach(
-    filteredSlugs,
-    (slug) => processSlug(slug, locale as Locale),
-    {
-      concurrency: "unbounded",
-    }
-  ).pipe(Effect.map((items) => items.filter((item) => item !== undefined)));
+  return Effect.forEach(filteredSlugs, (slug) => processSlug(slug, locale), {
+    concurrency: "unbounded",
+  }).pipe(Effect.map((items) => items.filter((item) => item !== undefined)));
 }
 
 /**
