@@ -25,23 +25,23 @@ const choices: ExercisesChoices = {
   ],
   en: [
     {
-      label: "produk.",
+      label: "product.",
       value: false,
     },
     {
-      label: "produktif.",
+      label: "productive.",
       value: false,
     },
     {
-      label: "produksi.",
+      label: "production.",
       value: false,
     },
     {
-      label: "produsen.",
+      label: "producer.",
       value: false,
     },
     {
-      label: "produktivitas.",
+      label: "productivity.",
       value: true,
     },
   ],
