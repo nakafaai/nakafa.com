@@ -3,46 +3,46 @@ import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 const choices: ExercisesChoices = {
   id: [
     {
-      label: "produk.",
+      label: "kalimat $$(7)$$.",
       value: false,
     },
     {
-      label: "produktif.",
+      label: "kalimat $$(6)$$.",
       value: false,
     },
     {
-      label: "produksi.",
+      label: "kalimat $$(5)$$.",
       value: false,
     },
     {
-      label: "produsen.",
-      value: false,
-    },
-    {
-      label: "produktivitas.",
+      label: "kalimat $$(4)$$.",
       value: true,
+    },
+    {
+      label: "kalimat $$(3)$$.",
+      value: false,
     },
   ],
   en: [
     {
-      label: "produk.",
+      label: "sentence $$(7)$$.",
       value: false,
     },
     {
-      label: "produktif.",
+      label: "sentence $$(6)$$.",
       value: false,
     },
     {
-      label: "produksi.",
+      label: "sentence $$(5)$$.",
       value: false,
     },
     {
-      label: "produsen.",
-      value: false,
-    },
-    {
-      label: "produktivitas.",
+      label: "sentence $$(4)$$.",
       value: true,
+    },
+    {
+      label: "sentence $$(3)$$.",
+      value: false,
     },
   ],
 };
