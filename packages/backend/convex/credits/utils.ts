@@ -31,9 +31,10 @@ export async function resetUserCredits(
     return;
   }
 
-  // Calculate new balance accounting for debt
-  // If user has negative balance (debt), add it to the new credit amount
-  // Example: User has -5 credits, gets 10 credits -> New balance: 10 + (-5) = 5
+  // Calculate new balance accounting for debt.
+  // If user has a negative balance (debt from post-stream deductions), carry it forward
+  // so the reset grant partially offsets it.
+  // Example: balance = -5, grant = 10 → new balance = 5
   const currentBalance = user.credits;
   const debt = currentBalance < 0 ? currentBalance : 0;
   const newBalance = args.creditAmount + debt;

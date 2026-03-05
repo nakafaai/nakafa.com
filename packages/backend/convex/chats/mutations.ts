@@ -250,6 +250,11 @@ export const deleteChat = mutation({
  * Handles both message persistence and credit deduction in a single operation.
  * Security: modelId is read from the stored message, not from client arguments.
  * Token counts (inputTokens, outputTokens, totalTokens) should be passed in the message object.
+ *
+ * Debt system: Credits are deducted after streaming completes (via waitUntil in the API route).
+ * Because enforcement must happen before streaming starts (pre-check in route.ts), a small
+ * negative balance is intentionally allowed here to avoid erroring mid-stream. The pre-check
+ * is the real gate; this mutation deducts whatever the pre-check already approved.
  */
 export const saveAssistantResponse = mutation({
   args: {
@@ -279,16 +284,16 @@ export const saveAssistantResponse = mutation({
       await deleteMessageByIdentifier(ctx, message.chatId, message.identifier);
     }
 
-    // Calculate credits before insert
-    // Debt system: Allow negative balances for better UX
-    // Users can continue chatting even with insufficient credits
+    // Calculate credits and deduct.
+    // Debt system: Allow negative balances for better UX — the pre-check in route.ts
+    // is the real enforcement gate before streaming starts. Throwing here would silently
+    // fail (the stream already completed) and leave the response unrecorded.
     let credits = 0;
     let newBalance = user.appUser.credits;
 
     if (message.modelId) {
       credits = getModelCreditCost(message.modelId);
       newBalance = user.appUser.credits - credits;
-      // No longer throwing error for negative balance - debt is allowed
     }
 
     // Create message with ALL data in single insert
