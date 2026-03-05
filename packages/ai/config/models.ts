@@ -1,3 +1,64 @@
+import type { GatewayModelId } from "@ai-sdk/gateway";
+
+/**
+ * All model IDs — single source of truth.
+ * The registry is derived from this tuple so MODEL_IDS is always in sync
+ * and fully typed without any type assertions.
+ */
+export const MODEL_IDS = [
+  // Alibaba
+  "qwen-3-coder",
+  "qwen-3-max",
+
+  // Anthropic
+  "claude-haiku-4.5",
+  "claude-sonnet-4.5",
+
+  // DeepSeek
+  "deepseek-v3.1",
+
+  // Google
+  "gemini-2.5-flash",
+  "gemini-2.5-pro",
+  "gemini-3-flash",
+  "gemini-3-pro",
+  "gemini-3.1-pro",
+
+  // Meta
+  "llama-4-maverick",
+
+  // Minimax
+  "minimax-m2",
+  "minimax-m2.1",
+  "minimax-m2.5",
+
+  // MoonshotAI
+  "kimi-k2",
+  "kimi-k2-thinking",
+  "kimi-k2.5",
+
+  // OpenAI
+  "gpt-5",
+  "gpt-5-nano",
+  "gpt-5.2",
+  "gpt-oss-120b",
+
+  // XAI
+  "grok-4",
+  "grok-4.1-fast-non-reasoning",
+  "grok-4.1-fast-reasoning",
+
+  // ZAI
+  "glm-4.6",
+  "glm-4.7",
+  "glm-5",
+
+  // Meituan
+  "longcat-flash",
+] as const;
+
+export type ModelId = (typeof MODEL_IDS)[number];
+
 export const modelRegistry = {
   // Alibaba
   "qwen-3-coder": {
@@ -132,17 +193,7 @@ export const modelRegistry = {
     gatewayId: "meituan/longcat-flash-chat",
     credits: 1,
   },
-} as const;
-
-/**
- * Array of all model IDs for use with Convex literals validator.
- * Single source of truth for model ID validation.
- */
-export const MODEL_IDS = Object.keys(modelRegistry) as Array<
-  keyof typeof modelRegistry
->;
-
-export type ModelId = keyof typeof modelRegistry;
+} satisfies Record<ModelId, { gatewayId: GatewayModelId; credits: number }>;
 
 export const defaultModel: ModelId = "kimi-k2.5";
 

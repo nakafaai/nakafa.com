@@ -750,7 +750,9 @@ export function mapDBMessagesToUIMessages(
       model: message.modelId ?? "unknown",
       credits: message.credits,
       tokens:
-        message.inputTokens || message.outputTokens || message.totalTokens
+        message.inputTokens != null ||
+        message.outputTokens != null ||
+        message.totalTokens != null
           ? {
               input: message.inputTokens,
               output: message.outputTokens,

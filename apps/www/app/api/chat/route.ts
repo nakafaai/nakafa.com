@@ -8,7 +8,7 @@ import {
   defaultModel,
   getModelCreditCost,
   hasEnoughCredits,
-  type ModelId,
+  MODEL_IDS,
 } from "@repo/ai/config/models";
 import {
   type GatewayProvider,
@@ -29,7 +29,7 @@ import {
   mapDBMessagesToUIMessages,
   mapUIMessagePartsToDBParts,
 } from "@repo/backend/convex/chats/utils";
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import { LocaleSchema } from "@repo/contents/_types/content";
 import { CorsValidator } from "@repo/security/lib/cors-validator";
 import { cleanSlug } from "@repo/utilities/helper";
 import { createChildLogger, logError } from "@repo/utilities/logging";
@@ -53,6 +53,8 @@ import { getToken } from "@/lib/auth/server";
 import { CHAT_ERRORS } from "./constants";
 import { getUserInfo, getVerified } from "./utils";
 
+const ModelIdSchema = z.enum(MODEL_IDS);
+
 const MAX_STEPS = 10;
 
 // Allow streaming responses up to 60 seconds
@@ -75,16 +77,32 @@ export async function POST(req: Request) {
   const {
     message,
     id,
-    locale,
+    locale: rawLocale,
     slug,
-    model: selectedModel,
+    model: rawModel,
   }: {
     message: MyUIMessage | undefined;
     id: Id<"chats"> | undefined;
-    locale: Locale;
+    locale: unknown;
     slug: string;
-    model: ModelId;
+    model: unknown;
   } = await req.json();
+
+  const localeResult = LocaleSchema.safeParse(rawLocale);
+  if (!localeResult.success) {
+    return new Response(CHAT_ERRORS.BAD_REQUEST.code, {
+      status: CHAT_ERRORS.BAD_REQUEST.status,
+    });
+  }
+  const locale = localeResult.data;
+
+  const modelResult = ModelIdSchema.safeParse(rawModel);
+  if (!modelResult.success) {
+    return new Response(CHAT_ERRORS.BAD_REQUEST.code, {
+      status: CHAT_ERRORS.BAD_REQUEST.status,
+    });
+  }
+  const selectedModel = modelResult.data;
 
   const url = `/${locale}/${cleanSlug(slug)}`;
   const shouldVerify = possibleVerifiedUrls.some((segment) =>
@@ -358,12 +376,25 @@ export async function POST(req: Request) {
                 output: (existing?.output ?? 0) + output,
               });
             },
-            getTotal: () => ({
-              input: 0,
-              output: 0,
-              total: 0,
-              breakdown: { main: { input: 0, output: 0 }, subAgents: {} },
-            }),
+            getTotal: () => {
+              const subAgentsInput = Array.from(subAgentUsage.values()).reduce(
+                (sum, usage) => sum + usage.input,
+                0
+              );
+              const subAgentsOutput = Array.from(subAgentUsage.values()).reduce(
+                (sum, usage) => sum + usage.output,
+                0
+              );
+              return {
+                input: subAgentsInput,
+                output: subAgentsOutput,
+                total: subAgentsInput + subAgentsOutput,
+                breakdown: {
+                  main: { input: 0, output: 0 },
+                  subAgents: Object.fromEntries(subAgentUsage),
+                },
+              };
+            },
           },
         }),
         experimental_repairToolCall: async ({

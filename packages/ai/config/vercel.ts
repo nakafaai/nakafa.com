@@ -2,19 +2,18 @@ import type { GatewayProviderOptions } from "@ai-sdk/gateway";
 import type { GoogleGenerativeAIProviderOptions } from "@ai-sdk/google";
 import type { OpenAIResponsesProviderOptions } from "@ai-sdk/openai";
 import { createWrappedLanguageModel } from "@repo/ai/config/gateway";
-import { modelRegistry } from "@repo/ai/config/models";
+import { MODEL_IDS, modelRegistry } from "@repo/ai/config/models";
 import { customProvider } from "ai";
 
-const languageModels = Object.fromEntries(
-  Object.entries(modelRegistry).map(([key, def]) => [
-    key,
-    createWrappedLanguageModel(def.gatewayId),
-  ])
-) as {
-  [K in keyof typeof modelRegistry]: ReturnType<
-    typeof createWrappedLanguageModel
-  >;
-};
+type WrappedModel = ReturnType<typeof createWrappedLanguageModel>;
+type LanguageModelMap = { [K in keyof typeof modelRegistry]: WrappedModel };
+
+const languageModels: LanguageModelMap = Object.assign(
+  {},
+  ...MODEL_IDS.map((id) => ({
+    [id]: createWrappedLanguageModel(modelRegistry[id].gatewayId),
+  }))
+);
 
 export const model = customProvider({
   languageModels,
