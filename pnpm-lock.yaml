@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       '@biomejs/biome':
-        specifier: 2.4.5
-        version: 2.4.5
+        specifier: 2.4.6
+        version: 2.4.6
       '@changesets/changelog-github':
         specifier: ^0.6.0
         version: 0.6.0
@@ -210,8 +210,8 @@ importers:
         specifier: ^0.10.13
         version: 0.10.13(@better-auth/core@1.4.9(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.7(zod@4.3.6))(jose@6.1.3)(kysely@0.28.9)(nanostores@1.1.0))(@better-auth/utils@0.3.0)(@standard-schema/spec@1.1.0)(better-auth@1.4.9(next@16.1.6(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.0.18))(better-call@1.1.7(zod@4.3.6))(convex@1.32.0(react@19.2.4))(hono@4.12.5)(nanostores@1.1.0)(react@19.2.4)(typescript@5.9.3)
       '@hugeicons/core-free-icons':
-        specifier: ^3.3.0
-        version: 3.3.0
+        specifier: ^4.0.0
+        version: 4.0.0
       '@hugeicons/react':
         specifier: ^1.1.5
         version: 1.1.5(react@19.2.4)
@@ -506,8 +506,8 @@ importers:
         specifier: ^1.358.1
         version: 1.358.1
       posthog-node:
-        specifier: ^5.27.1
-        version: 5.27.1
+        specifier: ^5.28.0
+        version: 5.28.0
       react:
         specifier: ^19.2.4
         version: 19.2.4
@@ -644,8 +644,8 @@ importers:
   packages/contents:
     dependencies:
       '@hugeicons/core-free-icons':
-        specifier: ^3.3.0
-        version: 3.3.0
+        specifier: ^4.0.0
+        version: 4.0.0
       '@hugeicons/react':
         specifier: ^1.1.5
         version: 1.1.5(react@19.2.4)
@@ -708,8 +708,8 @@ importers:
         specifier: ^0.27.19
         version: 0.27.19(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@hugeicons/core-free-icons':
-        specifier: ^3.3.0
-        version: 3.3.0
+        specifier: ^4.0.0
+        version: 4.0.0
       '@hugeicons/react':
         specifier: ^1.1.5
         version: 1.1.5(react@19.2.4)
@@ -801,8 +801,8 @@ importers:
         specifier: ^1.4.2
         version: 1.4.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       katex:
-        specifier: ^0.16.33
-        version: 0.16.33
+        specifier: ^0.16.35
+        version: 0.16.35
       lodash.throttle:
         specifier: ^4.1.1
         version: 4.1.1
@@ -1521,59 +1521,59 @@ packages:
   '@better-fetch/fetch@1.1.21':
     resolution: {integrity: sha512-/ImESw0sskqlVR94jB+5+Pxjf+xBwDZF/N5+y2/q4EqD7IARUTSpPfIo8uf39SYpCxyOCtbyYpUrZ3F/k0zT4A==}
 
-  '@biomejs/biome@2.4.5':
-    resolution: {integrity: sha512-OWNCyMS0Q011R6YifXNOg6qsOg64IVc7XX6SqGsrGszPbkVCoaO7Sr/lISFnXZ9hjQhDewwZ40789QmrG0GYgQ==}
+  '@biomejs/biome@2.4.6':
+    resolution: {integrity: sha512-QnHe81PMslpy3mnpL8DnO2M4S4ZnYPkjlGCLWBZT/3R9M6b5daArWMMtEfP52/n174RKnwRIf3oT8+wc9ihSfQ==}
     engines: {node: '>=14.21.3'}
     hasBin: true
 
-  '@biomejs/cli-darwin-arm64@2.4.5':
-    resolution: {integrity: sha512-lGS4Nd5O3KQJ6TeWv10mElnx1phERhBxqGP/IKq0SvZl78kcWDFMaTtVK+w3v3lusRFxJY78n07PbKplirsU5g==}
+  '@biomejs/cli-darwin-arm64@2.4.6':
+    resolution: {integrity: sha512-NW18GSyxr+8sJIqgoGwVp5Zqm4SALH4b4gftIA0n62PTuBs6G2tHlwNAOj0Vq0KKSs7Sf88VjjmHh0O36EnzrQ==}
     engines: {node: '>=14.21.3'}
     cpu: [arm64]
     os: [darwin]
 
-  '@biomejs/cli-darwin-x64@2.4.5':
-    resolution: {integrity: sha512-6MoH4tyISIBNkZ2Q5T1R7dLd5BsITb2yhhhrU9jHZxnNSNMWl+s2Mxu7NBF8Y3a7JJcqq9nsk8i637z4gqkJxQ==}
+  '@biomejs/cli-darwin-x64@2.4.6':
+    resolution: {integrity: sha512-4uiE/9tuI7cnjtY9b07RgS7gGyYOAfIAGeVJWEfeCnAarOAS7qVmuRyX6d7JTKw28/mt+rUzMasYeZ+0R/U1Mw==}
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [darwin]
 
-  '@biomejs/cli-linux-arm64-musl@2.4.5':
-    resolution: {integrity: sha512-iqLDgpzobG7gpBF0fwEVS/LT8kmN7+S0E2YKFDtqliJfzNLnAiV2Nnyb+ehCDCJgAZBASkYHR2o60VQWikpqIg==}
+  '@biomejs/cli-linux-arm64-musl@2.4.6':
+    resolution: {integrity: sha512-F/JdB7eN22txiTqHM5KhIVt0jVkzZwVYrdTR1O3Y4auBOQcXxHK4dxULf4z43QyZI5tsnQJrRBHZy7wwtL+B3A==}
     engines: {node: '>=14.21.3'}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@biomejs/cli-linux-arm64@2.4.5':
-    resolution: {integrity: sha512-U1GAG6FTjhAO04MyH4xn23wRNBkT6H7NentHh+8UxD6ShXKBm5SY4RedKJzkUThANxb9rUKIPc7B8ew9Xo/cWg==}
+  '@biomejs/cli-linux-arm64@2.4.6':
+    resolution: {integrity: sha512-kMLaI7OF5GN1Q8Doymjro1P8rVEoy7BKQALNz6fiR8IC1WKduoNyteBtJlHT7ASIL0Cx2jR6VUOBIbcB1B8pew==}
     engines: {node: '>=14.21.3'}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@biomejs/cli-linux-x64-musl@2.4.5':
-    resolution: {integrity: sha512-NlKa7GpbQmNhZf9kakQeddqZyT7itN7jjWdakELeXyTU3pg/83fTysRRDPJD0akTfKDl6vZYNT9Zqn4MYZVBOA==}
+  '@biomejs/cli-linux-x64-musl@2.4.6':
+    resolution: {integrity: sha512-C9s98IPDu7DYarjlZNuzJKTjVHN03RUnmHV5htvqsx6vEUXCDSJ59DNwjKVD5XYoSS4N+BYhq3RTBAL8X6svEg==}
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@biomejs/cli-linux-x64@2.4.5':
-    resolution: {integrity: sha512-NdODlSugMzTlENPTa4z0xB82dTUlCpsrOxc43///aNkTLblIYH4XpYflBbf5ySlQuP8AA4AZd1qXhV07IdrHdQ==}
+  '@biomejs/cli-linux-x64@2.4.6':
+    resolution: {integrity: sha512-oHXmUFEoH8Lql1xfc3QkFLiC1hGR7qedv5eKNlC185or+o4/4HiaU7vYODAH3peRCfsuLr1g6v2fK9dFFOYdyw==}
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@biomejs/cli-win32-arm64@2.4.5':
-    resolution: {integrity: sha512-EBfrTqRIWOFSd7CQb/0ttjHMR88zm3hGravnDwUA9wHAaCAYsULKDebWcN5RmrEo1KBtl/gDVJMrFjNR0pdGUw==}
+  '@biomejs/cli-win32-arm64@2.4.6':
+    resolution: {integrity: sha512-xzThn87Pf3YrOGTEODFGONmqXpTwUNxovQb72iaUOdcw8sBSY3+3WD8Hm9IhMYLnPi0n32s3L3NWU6+eSjfqFg==}
     engines: {node: '>=14.21.3'}
     cpu: [arm64]
     os: [win32]
 
-  '@biomejs/cli-win32-x64@2.4.5':
-    resolution: {integrity: sha512-Pmhv9zT95YzECfjEHNl3mN9Vhusw9VA5KHY0ZvlGsxsjwS5cb7vpRnHzJIv0vG7jB0JI7xEaMH9ddfZm/RozBw==}
+  '@biomejs/cli-win32-x64@2.4.6':
+    resolution: {integrity: sha512-7++XhnsPlr1HDbor5amovPjOH6vsrFOCdp93iKXhFn6bcMUI6soodj3WWKfgEO6JosKU1W5n3uky3WW9RlRjTg==}
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [win32]
@@ -2609,8 +2609,8 @@ packages:
     peerDependencies:
       hono: ^4
 
-  '@hugeicons/core-free-icons@3.3.0':
-    resolution: {integrity: sha512-qYyr4JQ2eQIHTSTbITvnJvs6ERNK64D9gpwZnf2IyuG0exzqfyABLO/oTB71FB3RZPfu1GbwycdiGSo46apjMQ==}
+  '@hugeicons/core-free-icons@4.0.0':
+    resolution: {integrity: sha512-bzfbKumv3ke3ajbe2MyXi9i0I/cdsZ6n/mO9EfIPNSL++pHLqs7nSGRIVUtjF4xrrEyVkfhxssv4Jek8DPA6gA==}
 
   '@hugeicons/react@1.1.5':
     resolution: {integrity: sha512-JX/iDz3oO7hWdVqbjwFwRrAjHk8h2vI+mBkNzp4JcXG3t4idoupfjon73nLOA7cr27m0M8hrRC1Q2h6nEBGKVA==}
@@ -8817,8 +8817,8 @@ packages:
   jws@4.0.1:
     resolution: {integrity: sha512-EKI/M/yqPncGUUh44xz0PxSidXFr/+r0pA70+gIYhjv+et7yxM+s29Y+VGDkovRofQem0fs7Uvf4+YmAdyRduA==}
 
-  katex@0.16.33:
-    resolution: {integrity: sha512-q3N5u+1sY9Bu7T4nlXoiRBXWfwSefNGoKeOwekV+gw0cAXQlz2Ww6BLcmBxVDeXBMUDQv6fK5bcNaJLxob3ZQA==}
+  katex@0.16.35:
+    resolution: {integrity: sha512-S0+riEvy1CK4VKse1ivMff8gmabe/prY7sKB3njjhyoLLsNFDQYtKNgXrbWUggGDCJBz7Fctl5i8fLCESHXzSg==}
     hasBin: true
 
   keycode@2.2.1:
@@ -9977,9 +9977,14 @@ packages:
   posthog-js@1.358.1:
     resolution: {integrity: sha512-teipwLZtfErKDrURiUlLMnmpjgjGlni15JxyJ7oRaSlT3sX4E/mgvNatHIbWnp+7z1zYm3Jz5BYwGqwgyesRnw==}
 
-  posthog-node@5.27.1:
-    resolution: {integrity: sha512-cVlVQNKNYwqcdJ8W3HidAkcyCNnt+uuwr1YSZqPXjQ3OC1UMdGyXPrGCuxWjgl7EVIuzkdWBT812UMEzeHCvCw==}
+  posthog-node@5.28.0:
+    resolution: {integrity: sha512-EETYV0zA+7BLQmXzY+vGyDMoQK8uHf8f/1utbRjKncI41gPkw+4piGP7l4UT5Luld+4vQpJPOR1q1YrbXm7XjQ==}
     engines: {node: ^20.20.0 || >=22.22.0}
+    peerDependencies:
+      rxjs: ^7.0.0
+    peerDependenciesMeta:
+      rxjs:
+        optional: true
 
   potpack@1.0.2:
     resolution: {integrity: sha512-choctRBIV9EMT9WGAZHn3V7t0Z2pMQyl0EZE6pFc/6ml3ssw7Dlf/oAOvFwjm1HVsqfQN8GfeFyJ+d8tRzqueQ==}
@@ -12516,39 +12521,39 @@ snapshots:
 
   '@better-fetch/fetch@1.1.21': {}
 
-  '@biomejs/biome@2.4.5':
+  '@biomejs/biome@2.4.6':
     optionalDependencies:
-      '@biomejs/cli-darwin-arm64': 2.4.5
-      '@biomejs/cli-darwin-x64': 2.4.5
-      '@biomejs/cli-linux-arm64': 2.4.5
-      '@biomejs/cli-linux-arm64-musl': 2.4.5
-      '@biomejs/cli-linux-x64': 2.4.5
-      '@biomejs/cli-linux-x64-musl': 2.4.5
-      '@biomejs/cli-win32-arm64': 2.4.5
-      '@biomejs/cli-win32-x64': 2.4.5
+      '@biomejs/cli-darwin-arm64': 2.4.6
+      '@biomejs/cli-darwin-x64': 2.4.6
+      '@biomejs/cli-linux-arm64': 2.4.6
+      '@biomejs/cli-linux-arm64-musl': 2.4.6
+      '@biomejs/cli-linux-x64': 2.4.6
+      '@biomejs/cli-linux-x64-musl': 2.4.6
+      '@biomejs/cli-win32-arm64': 2.4.6
+      '@biomejs/cli-win32-x64': 2.4.6
 
-  '@biomejs/cli-darwin-arm64@2.4.5':
+  '@biomejs/cli-darwin-arm64@2.4.6':
     optional: true
 
-  '@biomejs/cli-darwin-x64@2.4.5':
+  '@biomejs/cli-darwin-x64@2.4.6':
     optional: true
 
-  '@biomejs/cli-linux-arm64-musl@2.4.5':
+  '@biomejs/cli-linux-arm64-musl@2.4.6':
     optional: true
 
-  '@biomejs/cli-linux-arm64@2.4.5':
+  '@biomejs/cli-linux-arm64@2.4.6':
     optional: true
 
-  '@biomejs/cli-linux-x64-musl@2.4.5':
+  '@biomejs/cli-linux-x64-musl@2.4.6':
     optional: true
 
-  '@biomejs/cli-linux-x64@2.4.5':
+  '@biomejs/cli-linux-x64@2.4.6':
     optional: true
 
-  '@biomejs/cli-win32-arm64@2.4.5':
+  '@biomejs/cli-win32-arm64@2.4.6':
     optional: true
 
-  '@biomejs/cli-win32-x64@2.4.5':
+  '@biomejs/cli-win32-x64@2.4.6':
     optional: true
 
   '@braintree/sanitize-url@7.1.1': {}
@@ -13459,7 +13464,7 @@ snapshots:
     dependencies:
       hono: 4.12.2
 
-  '@hugeicons/core-free-icons@3.3.0': {}
+  '@hugeicons/core-free-icons@4.0.0': {}
 
   '@hugeicons/react@1.1.5(react@19.2.4)':
     dependencies:
@@ -13888,7 +13893,7 @@ snapshots:
       es-toolkit: 1.43.0
       fast-deep-equal: 3.1.3
       immer: 11.1.4
-      katex: 0.16.33
+      katex: 0.16.35
       leva: 0.10.1(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       lucide-react: 0.562.0(react@19.2.4)
       marked: 17.0.4
@@ -20600,7 +20605,7 @@ snapshots:
       jwa: 2.0.1
       safe-buffer: 5.2.1
 
-  katex@0.16.33:
+  katex@0.16.35:
     dependencies:
       commander: 8.3.0
 
@@ -21076,7 +21081,7 @@ snapshots:
       dagre-d3-es: 7.0.13
       dayjs: 1.11.19
       dompurify: 3.3.1
-      katex: 0.16.33
+      katex: 0.16.35
       khroma: 2.1.0
       lodash-es: 4.17.23
       marked: 16.4.2
@@ -21366,7 +21371,7 @@ snapshots:
     dependencies:
       '@types/katex': 0.16.8
       devlop: 1.1.0
-      katex: 0.16.33
+      katex: 0.16.35
       micromark-factory-space: 2.0.1
       micromark-util-character: 2.1.1
       micromark-util-symbol: 2.0.1
@@ -22221,7 +22226,7 @@ snapshots:
       query-selector-shadow-dom: 1.0.1
       web-vitals: 5.1.0
 
-  posthog-node@5.27.1:
+  posthog-node@5.28.0:
     dependencies:
       '@posthog/core': 1.23.2
 
@@ -22679,7 +22684,7 @@ snapshots:
 
   react-katex@3.1.0(prop-types@15.8.1)(react@19.2.4):
     dependencies:
-      katex: 0.16.33
+      katex: 0.16.35
       prop-types: 15.8.1
       react: 19.2.4
 
@@ -23085,7 +23090,7 @@ snapshots:
       '@types/katex': 0.16.8
       hast-util-from-html-isomorphic: 2.0.0
       hast-util-to-text: 4.0.2
-      katex: 0.16.33
+      katex: 0.16.35
       unist-util-visit-parents: 6.0.2
       vfile: 6.0.3
 
