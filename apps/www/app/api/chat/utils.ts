@@ -5,6 +5,12 @@ import { fetchQuery } from "convex/nextjs";
 
 const QURAN_SLUG_PARTS_COUNT = 3;
 
+/**
+ * Checks whether the given URL corresponds to verified content by querying
+ * the appropriate content API (Quran surah, exercises, or general content).
+ *
+ * @returns `true` if the content exists and is verified, `false` otherwise.
+ */
 export async function getVerified(url: string) {
   const cleanedUrl = cleanSlug(url);
 
@@ -49,6 +55,10 @@ export async function getVerified(url: string) {
   return contentData !== null;
 }
 
+/**
+ * Fetches the authenticated user's role and credit balance from Convex,
+ * used for access control and credit gating before the chat stream starts.
+ */
 export async function getUserInfo(token: string) {
   const userInfo = await fetchQuery(
     convexApi.users.queries.getUserInfoForChat,

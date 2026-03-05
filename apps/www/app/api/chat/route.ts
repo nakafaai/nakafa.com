@@ -25,10 +25,7 @@ import type { ToolName } from "@repo/ai/schema/tools";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import {
-  mapDBMessagesToUIMessages,
-  mapUIMessagePartsToDBParts,
-} from "@repo/backend/convex/chats/utils";
+import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/utils";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { CorsValidator } from "@repo/security/lib/cors-validator";
 import { cleanSlug } from "@repo/utilities/helper";
@@ -46,11 +43,12 @@ import {
   streamText,
   type Tool,
 } from "ai";
-import { fetchMutation, fetchQuery } from "convex/nextjs";
+import { fetchMutation } from "convex/nextjs";
 import { getTranslations } from "next-intl/server";
 import * as z from "zod";
 import { getToken } from "@/lib/auth/server";
 import { CHAT_ERRORS } from "./constants";
+import { loadMessages, saveOrCreateChat } from "./persistence";
 import { getUserInfo, getVerified } from "./utils";
 
 const ModelIdSchema = z.enum(MODEL_IDS);
@@ -69,6 +67,17 @@ const possibleVerifiedUrls = [
   "/exercises",
 ] as const;
 
+/**
+ * POST /api/chat
+ *
+ * Handles an incoming chat message from the client. Validates the request,
+ * gates on user credits, persists the user message, then streams the
+ * assistant response back using the AI SDK UI message stream protocol.
+ *
+ * After the stream finishes, two fire-and-forget tasks run via `waitUntil`:
+ * - Title generation (first message only)
+ * - Assistant response persistence and credit deduction
+ */
 export async function POST(req: Request) {
   if (!corsValidator.isRequestFromAllowedDomain(req)) {
     return corsValidator.createForbiddenResponse();
@@ -104,16 +113,7 @@ export async function POST(req: Request) {
   }
   const selectedModel = modelResult.data;
 
-  const url = `/${locale}/${cleanSlug(slug)}`;
-  const shouldVerify = possibleVerifiedUrls.some((segment) =>
-    url.includes(segment)
-  );
-
-  // Get token first (fast operation), then parallelize dependent calls
-  // This allows userInfo to be fetched in parallel with translations and verification
-  // Optimization: ~150ms saved by parallelizing userInfo with other independent operations
   const token = await getToken();
-
   if (!token) {
     return new Response(CHAT_ERRORS.UNAUTHORIZED.code, {
       status: CHAT_ERRORS.UNAUTHORIZED.status,
@@ -125,6 +125,11 @@ export async function POST(req: Request) {
       status: CHAT_ERRORS.BAD_REQUEST.status,
     });
   }
+
+  const url = `/${locale}/${cleanSlug(slug)}`;
+  const shouldVerify = possibleVerifiedUrls.some((segment) =>
+    url.includes(segment)
+  );
 
   const currentDate = new Date().toLocaleString("en-US", {
     year: "numeric",
@@ -145,23 +150,12 @@ export async function POST(req: Request) {
     country: geo.country ?? "Unknown",
   };
 
-  // Parallelize all operations that can run concurrently
-  // All three are independent at this point (token already acquired)
-  const tPromise = getTranslations("Ai");
-  const verifiedPromise = shouldVerify
-    ? getVerified(url)
-    : Promise.resolve(false);
-  const userInfoPromise = getUserInfo(token);
-
-  const [t, verified, userInfo] = await Promise.all([
-    tPromise,
-    verifiedPromise,
-    userInfoPromise,
+  const [verified, userInfo] = await Promise.all([
+    shouldVerify ? getVerified(url) : Promise.resolve(false),
+    getUserInfo(token),
   ]);
-  const userRole = userInfo.role ?? undefined;
-  const userCredits = userInfo.credits;
 
-  if (!hasEnoughCredits(userCredits, selectedModel)) {
+  if (!hasEnoughCredits(userInfo.credits, selectedModel)) {
     return Response.json(
       { error: CHAT_ERRORS.INSUFFICIENT_CREDITS.code },
       { status: CHAT_ERRORS.INSUFFICIENT_CREDITS.status }
@@ -178,67 +172,17 @@ export async function POST(req: Request) {
     },
     currentDate,
     userLocation,
-    userRole,
+    userRole: userInfo.role,
     url,
   });
 
-  let chatIdToUse: Id<"chats"> | undefined = id;
-
-  const dbParts = mapUIMessagePartsToDBParts({
-    messageParts: message.parts,
-  });
-
-  // Replace user message with parts
-  if (chatIdToUse) {
-    // Replace message with parts for existing chat
-    await fetchMutation(
-      convexApi.chats.mutations.saveMessage,
-      {
-        message: {
-          chatId: chatIdToUse,
-          role: message.role,
-          identifier: message.id,
-        },
-        parts: dbParts,
-      },
-      { token }
-    );
-  } else {
-    const result = await fetchMutation(
-      convexApi.chats.mutations.createChatWithMessage,
-      {
-        type: "study",
-        message: {
-          role: message.role,
-          identifier: message.id,
-        },
-        parts: dbParts,
-      },
-      { token }
-    );
-    chatIdToUse = result.chatId;
-  }
-
-  const rawMessages = await fetchQuery(
-    convexApi.chats.queries.loadMessages,
-    {
-      chatId: chatIdToUse,
-    },
-    { token }
-  );
-
-  // Transform raw DB messages to UI messages
-  const messages = mapDBMessagesToUIMessages(rawMessages);
-
-  // Capture whether this is the first message before any streaming occurs
-  // This is more reliable than checking message count after streaming
+  const chatId = await saveOrCreateChat({ chatId: id, message, token });
+  const messages = await loadMessages({ chatId, token });
   const isFirstMessage = messages.length === 1;
 
-  // Use smart message compression to stay within token limits
   const originalMessageCount = messages.length;
   const { messages: compressedMessages, tokens } = compressMessages(messages);
 
-  // Log compression results
   if (compressedMessages.length < originalMessageCount) {
     sessionLogger.warn(
       `Messages compressed from ${originalMessageCount} to ${compressedMessages.length} messages (${tokens} tokens) to stay within token limit`
@@ -251,43 +195,35 @@ export async function POST(req: Request) {
 
   const finalMessages = await convertToModelMessages(compressedMessages);
 
-  // Log chat session start
   sessionLogger.info("Chat session started");
+
+  const t = await getTranslations("Ai");
 
   const stream = createUIMessageStream<MyUIMessage>({
     onError: (error) => {
-      // Log the error with context
       if (error instanceof Error) {
         logError(sessionLogger, error, {
           errorLocation: "createUIMessageStream",
           errorType: error.name,
         });
-
         if (error.message.includes("Rate limit")) {
           sessionLogger.warn("Rate limit exceeded in chat stream");
           return t("rate-limit-message");
         }
         return error.message;
       }
-
       sessionLogger.error("Unknown error in chat stream");
       return t("error-message");
     },
     originalMessages: compressedMessages,
     onFinish: ({ messages: updatedMessages, responseMessage }) => {
-      // Generate title asynchronously using waitUntil
-      // Convex real-time queries will automatically reflect the title change
-      // Reference: https://docs.convex.dev/client/react#reactivity
       if (isFirstMessage) {
         waitUntil(
           generateTitle({ messages: updatedMessages })
             .then((title) =>
               fetchMutation(
                 convexApi.chats.mutations.updateChatTitle,
-                {
-                  chatId: chatIdToUse,
-                  title,
-                },
+                { chatId, title },
                 { token }
               )
             )
@@ -295,17 +231,12 @@ export async function POST(req: Request) {
               logError(
                 sessionLogger,
                 error instanceof Error ? error : new Error(String(error)),
-                {
-                  errorLocation: "generateTitle/updateChatTitle",
-                }
+                { errorLocation: "generateTitle/updateChatTitle" }
               );
             })
         );
       }
 
-      // Persist assistant response and deduct credits asynchronously
-      // Uses combined mutation for simplicity and atomicity
-      // Token counts and modelId are passed in message object (schema already has these fields)
       const tokenData = responseMessage.metadata?.tokens;
 
       waitUntil(
@@ -313,7 +244,7 @@ export async function POST(req: Request) {
           convexApi.chats.mutations.saveAssistantResponse,
           {
             message: {
-              chatId: chatIdToUse,
+              chatId,
               role: responseMessage.role,
               identifier: responseMessage.id,
               modelId: selectedModel,
@@ -330,29 +261,22 @@ export async function POST(req: Request) {
           logError(
             sessionLogger,
             error instanceof Error ? error : new Error(String(error)),
-            {
-              errorLocation: "saveAssistantResponse",
-            }
+            { errorLocation: "saveAssistantResponse" }
           );
         })
       );
     },
     execute: async ({ writer }) => {
-      // Use Map to track usage without type assertion
       const subAgentUsage = new Map<ToolName, ComponentUsage>();
 
       const streamTextResult = streamText({
         model: model.languageModel(selectedModel),
         system: nakafaPrompt({
           url,
-          currentPage: {
-            locale,
-            slug,
-            verified,
-          },
+          currentPage: { locale, slug, verified },
           currentDate,
           userLocation,
-          userRole,
+          userRole: userInfo.role ?? undefined,
         }),
         messages: finalMessages,
         stopWhen: stepCountIs(MAX_STEPS),
@@ -364,7 +288,7 @@ export async function POST(req: Request) {
             url,
             slug: cleanSlug(slug),
             verified,
-            userRole,
+            userRole: userInfo.role,
           },
           usageAccumulator: {
             addUsage: (component, usage) => {
@@ -403,7 +327,6 @@ export async function POST(req: Request) {
           inputSchema,
           error,
         }) => {
-          // Log tool call repair attempt
           logError(sessionLogger, error, {
             errorLocation: "experimental_repairToolCall",
             toolName: toolCall.toolName,
@@ -413,7 +336,7 @@ export async function POST(req: Request) {
 
           if (NoSuchToolError.isInstance(error)) {
             sessionLogger.warn("Invalid tool name, not attempting repair");
-            return null; // do not attempt to fix invalid tool names
+            return null;
           }
 
           const tool: Tool =
@@ -421,9 +344,7 @@ export async function POST(req: Request) {
 
           const { output: repairedArgs } = await generateText({
             model: model.languageModel(defaultModel),
-            output: Output.object({
-              schema: tool.inputSchema,
-            }),
+            output: Output.object({ schema: tool.inputSchema }),
             prompt: [
               `The model tried to call the tool "${toolCall.toolName}"` +
                 " with the following arguments:",
@@ -436,7 +357,7 @@ export async function POST(req: Request) {
               gateway: { order },
               google: {
                 thinkingConfig: {
-                  thinkingBudget: 0, // Disable thinking
+                  thinkingBudget: 0,
                   includeThoughts: false,
                 },
               } satisfies GoogleProvider,
@@ -444,7 +365,6 @@ export async function POST(req: Request) {
           });
 
           sessionLogger.info("Tool call successfully repaired");
-
           return { ...toolCall, input: JSON.stringify(repairedArgs, null, 2) };
         },
         experimental_transform: smoothStream({
@@ -455,12 +375,12 @@ export async function POST(req: Request) {
           gateway: { order },
           openai: {
             include: ["reasoning.encrypted_content"],
-            reasoningSummary: "detailed", // 'auto' for condensed or 'detailed' for comprehensive
+            reasoningSummary: "detailed",
             serviceTier: "priority",
           } satisfies OpenAIProvider,
           google: {
             thinkingConfig: {
-              thinkingBudget: -1, // Dynamic thinking budget
+              thinkingBudget: -1,
               includeThoughts: true,
             },
           } satisfies GoogleProvider,
@@ -473,16 +393,13 @@ export async function POST(req: Request) {
           sendStart: false,
           messageMetadata: ({ part }) => {
             if (part.type === "start") {
-              return {
-                model: selectedModel,
-              };
+              return { model: selectedModel };
             }
 
             if (part.type === "finish") {
               const mainInput = part.totalUsage.inputTokens ?? 0;
               const mainOutput = part.totalUsage.outputTokens ?? 0;
 
-              // Convert Map to record for metadata
               const subAgentsRecord = Object.fromEntries(subAgentUsage);
               const subAgentsInput = Array.from(subAgentUsage.values()).reduce(
                 (sum, usage) => sum + usage.input,
@@ -493,12 +410,9 @@ export async function POST(req: Request) {
                 0
               );
 
-              // Calculate credits based on model
-              const credits = getModelCreditCost(selectedModel);
-
               return {
                 model: selectedModel,
-                credits,
+                credits: getModelCreditCost(selectedModel),
                 tokens: {
                   input: mainInput + subAgentsInput,
                   output: mainOutput + subAgentsOutput,
@@ -513,20 +427,17 @@ export async function POST(req: Request) {
             }
           },
           onError: (error) => {
-            // Log the error with context
             if (error instanceof Error) {
               logError(sessionLogger, error, {
                 errorLocation: "toUIMessageStream",
                 errorType: error.name,
               });
-
               if (error.message.includes("Rate limit")) {
                 sessionLogger.warn("Rate limit exceeded in message stream");
                 return t("rate-limit-message");
               }
               return error.message;
             }
-
             sessionLogger.error("Unknown error in message stream");
             return t("error-message");
           },
@@ -535,7 +446,6 @@ export async function POST(req: Request) {
 
       await streamTextResult.consumeStream();
 
-      // Return the messages from the response, to be used in the followup suggestions
       const messagesFromResponse = (await streamTextResult.response).messages;
 
       const suggestionsStream = streamText({
@@ -562,22 +472,15 @@ export async function POST(req: Request) {
         },
       });
 
-      // Create a data part ID for the suggestions - this
-      // ensures that only ONE data-suggestions part will
-      // be visible in the frontend
       const dataPartId = crypto.randomUUID();
 
-      // Read the suggestions from the stream
       for await (const chunk of suggestionsStream.partialOutputStream) {
-        // Write the suggestions to the UIMessageStream
         writer.write({
           id: dataPartId,
           type: "data-suggestions",
           data: {
             data:
               chunk.suggestions?.filter(
-                // Because of some AI SDK type weirdness,
-                // we need to filter out undefined suggestions
                 (suggestion) => suggestion !== undefined
               ) ?? [],
           },
