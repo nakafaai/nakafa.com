@@ -33,7 +33,7 @@ const choices: ExercisesChoices = {
       value: false,
     },
     {
-      label: "plateau.",
+      label: "high plateau.",
       value: true,
     },
     {
