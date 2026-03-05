@@ -25,23 +25,23 @@ const choices: ExercisesChoices = {
   ],
   en: [
     {
-      label: "the word *menemukan* in sentence $$(3)$$.",
+      label: "the word *discovered* in sentence $$(3)$$.",
       value: false,
     },
     {
-      label: "the word *tertanggal* in sentence $$(4)$$.",
+      label: "the word *date back* in sentence $$(4)$$.",
       value: false,
     },
     {
-      label: "the word *temuan* in sentence $$(5)$$.",
+      label: "the word *finding* in sentence $$(5)$$.",
       value: false,
     },
     {
-      label: "the word *penelitian* in sentence $$(6)$$.",
+      label: "the word *research* in sentence $$(6)$$.",
       value: true,
     },
     {
-      label: "the word *menderita* in sentence $$(8)$$.",
+      label: "the word *suffered* in sentence $$(8)$$.",
       value: false,
     },
   ],
