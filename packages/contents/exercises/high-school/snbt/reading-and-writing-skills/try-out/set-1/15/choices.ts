@@ -43,7 +43,7 @@ const choices: ExercisesChoices = {
       value: false,
     },
     {
-      label: "Water pollution is caused by human activities.",
+      label: "Water pollution is resulted by human activities.",
       value: false,
     },
   ],
