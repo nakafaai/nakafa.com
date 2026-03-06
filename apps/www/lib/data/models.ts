@@ -96,6 +96,12 @@ export const aiModels: Model[] = [
   },
   {
     icon: Kimi,
+    value: "kimi-k2-thinking",
+    label: "Kimi K2 Thinking",
+    type: "premium",
+  },
+  {
+    icon: Kimi,
     value: "kimi-k2.5",
     label: "Kimi K2.5",
     type: "free",
@@ -115,6 +121,12 @@ export const aiModels: Model[] = [
   {
     icon: XAI,
     value: "grok-4.1-fast-reasoning",
+    label: "Grok 4.1 Fast Reasoning",
+    type: "free",
+  },
+  {
+    icon: XAI,
+    value: "grok-4.1-fast-non-reasoning",
     label: "Grok 4.1 Fast",
     type: "free",
   },
