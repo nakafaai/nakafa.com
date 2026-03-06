@@ -125,7 +125,7 @@ const tables = {
     previewBody: v.optional(v.string()),
 
     // Note: Use _creationTime for when notification was created
-  }).index("recipientId", ["recipientId"]),
+  }),
 
   /**
    * Denormalized unread counts for O(1) badge display
@@ -170,7 +170,7 @@ const tables = {
     ),
 
     updatedAt: v.number(),
-  }).index("userId", ["userId"]),
+  }),
 };
 
 export default tables;
