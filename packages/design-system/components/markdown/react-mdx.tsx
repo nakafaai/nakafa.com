@@ -150,7 +150,7 @@ export const reactMdxComponents: Options["components"] = {
   ol: memo(
     ({ ...props }) => (
       <ol
-        className="my-4 list-decimal space-y-4 pl-6 last:mb-0"
+        className="my-4 list-decimal space-y-4 pl-4 last:mb-0"
         data-nakafa="ordered-list"
         {...props}
       />
@@ -160,7 +160,7 @@ export const reactMdxComponents: Options["components"] = {
   ul: memo(
     ({ ...props }) => (
       <ul
-        className="my-4 list-disc space-y-4 pl-6 last:mb-0"
+        className="my-4 list-disc space-y-4 pl-4 last:mb-0"
         data-nakafa="unordered-list"
         {...props}
       />

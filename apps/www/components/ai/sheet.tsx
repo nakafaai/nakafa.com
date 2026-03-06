@@ -81,6 +81,7 @@ import { AiChatMessage } from "./chat-message";
 import { AiChatModel } from "./chat-model";
 import { AiChatPending } from "./chat-pending";
 import { CurrentChatProvider, useCurrentChat } from "./chat-provider";
+import { ChatSpacing } from "./chat-spacing";
 
 const MIN_WIDTH = 384;
 const MAX_WIDTH = 672;
@@ -453,6 +454,8 @@ const AiSheetContent = memo(() => {
           <AiChatPending />
 
           <AiChatError />
+
+          <ChatSpacing />
         </ConversationContent>
         <ConversationScrollButton />
       </Conversation>

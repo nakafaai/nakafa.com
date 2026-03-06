@@ -26,6 +26,7 @@ import { AiChatMessage } from "./chat-message";
 import { AiChatModel } from "./chat-model";
 import { AiChatPending } from "./chat-pending";
 import { useCurrentChat } from "./chat-provider";
+import { ChatSpacing } from "./chat-spacing";
 
 export function AiChat() {
   return (
@@ -57,6 +58,8 @@ const AiChatConversation = memo(() => {
         <AiChatPending />
 
         <AiChatError />
+
+        <ChatSpacing />
       </ConversationContent>
       <ConversationScrollButton />
     </Conversation>
