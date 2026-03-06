@@ -41,7 +41,7 @@
     "@repo/seo": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.10",
-    "@tabler/icons-react": "^3.38.0",
+    "@tabler/icons-react": "^3.39.0",
     "@tailwindcss/postcss": "^4.2.1",
     "@takumi-rs/core": "^0.70.4",
     "@takumi-rs/image-response": "^0.70.4",
@@ -83,7 +83,7 @@
   "devDependencies": {
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "25.3.3",
+    "@types/node": "25.3.5",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "@vitest/coverage-istanbul": "^4.0.18",
