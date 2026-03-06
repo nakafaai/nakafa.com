@@ -2,6 +2,10 @@ import { vWorkflowId } from "@convex-dev/workflow";
 import { vResultValidator } from "@convex-dev/workpool";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
+import {
+  markQueueCompletedHelper,
+  markQueueFailedHelper,
+} from "@repo/backend/convex/audioStudies/utils";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { getErrorMessage } from "@repo/backend/convex/utils/helper";
 import { logger } from "@repo/backend/convex/utils/logger";
@@ -131,12 +135,7 @@ export const handleWorkflowComplete = internalMutation({
         queueItemId: args.context.queueItemId,
         workflowId: args.workflowId,
       });
-      await ctx.runMutation(
-        internal.audioStudies.mutations.markQueueCompleted,
-        {
-          queueItemId: args.context.queueItemId,
-        }
-      );
+      await markQueueCompletedHelper(ctx, args.context.queueItemId);
     } else if (args.result.kind === "failed") {
       const errorMessage = getErrorMessage(args.result.error);
       logger.error(
@@ -148,10 +147,7 @@ export const handleWorkflowComplete = internalMutation({
         args.result.error
       );
 
-      await ctx.runMutation(internal.audioStudies.mutations.markQueueFailed, {
-        queueItemId: args.context.queueItemId,
-        error: errorMessage,
-      });
+      await markQueueFailedHelper(ctx, args.context.queueItemId, errorMessage);
     } else if (args.result.kind === "canceled") {
       logger.info("Audio workflow canceled", {
         queueItemId: args.context.queueItemId,

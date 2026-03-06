@@ -155,7 +155,6 @@ const tables = {
     .index("email", ["email"]),
 
   schoolMembers: defineTable(schoolMemberValidator)
-    .index("schoolId", ["schoolId"])
     .index("userId_status", ["userId", "status"])
     .index("schoolId_role", ["schoolId", "role"])
     .index("schoolId_userId_status", ["schoolId", "userId", "status"])
@@ -178,7 +177,6 @@ const tables = {
     .index("parentId", ["parentId"])
     .index("studentId", ["studentId"])
     .index("parentId_studentId", ["parentId", "studentId"])
-    .index("schoolId", ["schoolId"])
     .index("status", ["status"]),
 
   schoolInviteCodes: defineTable({

@@ -248,7 +248,10 @@ export const deleteChat = mutation({
 /**
  * Save an assistant response with parts and deduct credits atomically.
  * Handles both message persistence and credit deduction in a single operation.
- * Security: modelId is read from the stored message, not from client arguments.
+ * Security: modelId is read from the most recent user message stored in the DB
+ * for this chat, not from client-supplied arguments. This prevents authenticated
+ * clients from calling this public mutation directly with a spoofed or missing
+ * modelId to bypass credit deduction.
  * Token counts (inputTokens, outputTokens, totalTokens) should be passed in the message object.
  *
  * Debt system: Credits are deducted after streaming completes (via waitUntil in the API route).
@@ -279,6 +282,17 @@ export const saveAssistantResponse = mutation({
     const user = await requireAuth(ctx);
     await verifyChatOwnership(ctx, message.chatId, user.appUser._id);
 
+    // Look up the most recent user message in the chat to get modelId from the DB.
+    // This prevents clients from spoofing or omitting modelId to skip credit deduction.
+    const userMessages = await ctx.db
+      .query("messages")
+      .withIndex("chatId_role", (q) =>
+        q.eq("chatId", message.chatId).eq("role", "user")
+      )
+      .order("desc")
+      .first();
+    const storedModelId = userMessages?.modelId;
+
     // Delete existing message if identifier exists (for replacement/upsert)
     if (message.identifier) {
       await deleteMessageByIdentifier(ctx, message.chatId, message.identifier);
@@ -291,8 +305,8 @@ export const saveAssistantResponse = mutation({
     let credits = 0;
     let newBalance = user.appUser.credits;
 
-    if (message.modelId) {
-      credits = getModelCreditCost(message.modelId);
+    if (storedModelId) {
+      credits = getModelCreditCost(storedModelId);
       newBalance = user.appUser.credits - credits;
     }
 
@@ -303,18 +317,18 @@ export const saveAssistantResponse = mutation({
       chatId: message.chatId,
       role: message.role,
       identifier: message.identifier,
-      modelId: message.modelId,
+      modelId: storedModelId,
       inputTokens: message.inputTokens,
       outputTokens: message.outputTokens,
       totalTokens: message.totalTokens,
-      credits: message.modelId ? credits : undefined,
+      credits: storedModelId ? credits : undefined,
     });
 
     // Insert parts for the message
     const partIds = await insertParts(ctx, messageId, parts);
 
-    // Deduct credits if modelId is provided
-    if (message.modelId) {
+    // Deduct credits if modelId is resolved from the stored user message
+    if (storedModelId) {
       // Deduct credits from user
       await ctx.db.patch("users", user.appUser._id, {
         credits: newBalance,
@@ -329,7 +343,7 @@ export const saveAssistantResponse = mutation({
         metadata: {
           chatId: message.chatId,
           messageId,
-          modelId: message.modelId,
+          modelId: storedModelId,
           inputTokens: message.inputTokens,
           outputTokens: message.outputTokens,
           totalTokens: message.totalTokens,

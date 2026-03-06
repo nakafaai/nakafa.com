@@ -281,6 +281,7 @@ export const tables = {
 
   messages: defineTable(messageValidator)
     .index("chatId", ["chatId"])
+    .index("chatId_role", ["chatId", "role"])
     .index("chatId_identifier", ["chatId", "identifier"]),
 
   parts: defineTable(partValidator).index("messageId_order", [

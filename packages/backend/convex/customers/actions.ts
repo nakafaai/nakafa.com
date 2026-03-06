@@ -1,4 +1,4 @@
-import { api, internal } from "@repo/backend/convex/_generated/api";
+import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { action, internalAction } from "@repo/backend/convex/_generated/server";
 import {
@@ -18,7 +18,7 @@ export const syncCustomer = internalAction({
   args: { userId: vv.id("users") },
   returns: vv.id("customers"),
   handler: async (ctx, args): Promise<Id<"customers">> => {
-    const user = await ctx.runQuery(api.auth.getUserById, {
+    const user = await ctx.runQuery(internal.auth.getUserByIdInternal, {
       userId: args.userId,
     });
 

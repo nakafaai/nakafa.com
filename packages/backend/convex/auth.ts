@@ -8,6 +8,7 @@ import { components, internal } from "@repo/backend/convex/_generated/api";
 import type { DataModel, Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   internalAction,
+  internalQuery,
   type QueryCtx,
   query,
 } from "@repo/backend/convex/_generated/server";
@@ -239,6 +240,15 @@ export const getCurrentUser = query({
  * Query to get any user by ID.
  */
 export const getUserById = query({
+  args: { userId: vv.id("users") },
+  handler: (ctx, args) => getAnyAppUserById(ctx, args.userId),
+});
+
+/**
+ * Internal query to get any user by ID.
+ * Use this for server-to-server calls instead of the public query.
+ */
+export const getUserByIdInternal = internalQuery({
   args: { userId: vv.id("users") },
   handler: (ctx, args) => getAnyAppUserById(ctx, args.userId),
 });

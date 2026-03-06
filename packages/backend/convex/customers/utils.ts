@@ -1,5 +1,5 @@
 import type { Customer } from "@polar-sh/sdk/models/components/customer.js";
-import { api, components, internal } from "@repo/backend/convex/_generated/api";
+import { components, internal } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import type {
@@ -82,7 +82,7 @@ export async function findUserIdFromCustomer(
  */
 export async function requireCustomer(ctx: ActionCtx, userId: Id<"users">) {
   const [user, localCustomer] = await Promise.all([
-    ctx.runQuery(api.auth.getUserById, { userId }),
+    ctx.runQuery(internal.auth.getUserByIdInternal, { userId }),
     ctx.runQuery(internal.customers.queries.getCustomerByUserId, { userId }),
   ]);
 

@@ -1,9 +1,13 @@
-import { internal } from "@repo/backend/convex/_generated/api";
 import {
   MIN_VIEW_THRESHOLD,
   RETRY_CONFIG,
   SUPPORTED_LOCALES,
 } from "@repo/backend/convex/audioStudies/constants";
+import {
+  getContentHashHelper,
+  getContentRefBySlugAndLocaleHelper,
+  getContentSlugHelper,
+} from "@repo/backend/convex/audioStudies/utils";
 import { safeGetAppUser } from "@repo/backend/convex/auth";
 import {
   articlePopularity,
@@ -93,10 +97,7 @@ export const populateAudioQueue = internalMutation({
         break;
       }
 
-      const contentSlug = await ctx.runQuery(
-        internal.audioStudies.queries.getContentSlug,
-        { contentRef: item.ref }
-      );
+      const contentSlug = await getContentSlugHelper(ctx, item.ref);
 
       if (!contentSlug) {
         logger.warn("Content slug not found", {
@@ -107,12 +108,10 @@ export const populateAudioQueue = internalMutation({
       }
 
       for (const locale of SUPPORTED_LOCALES) {
-        const localeContentRef = await ctx.runQuery(
-          internal.audioStudies.queries.getContentRefBySlugAndLocale,
-          {
-            contentRef: item.ref,
-            locale,
-          }
+        const localeContentRef = await getContentRefBySlugAndLocaleHelper(
+          ctx,
+          item.ref,
+          locale
         );
 
         if (!localeContentRef) {
@@ -124,10 +123,7 @@ export const populateAudioQueue = internalMutation({
           continue;
         }
 
-        const contentHash = await ctx.runQuery(
-          internal.audioStudies.queries.getContentHash,
-          { contentRef: localeContentRef }
-        );
+        const contentHash = await getContentHashHelper(ctx, localeContentRef);
 
         const existingForLocale = await ctx.db
           .query("audioGenerationQueue")
