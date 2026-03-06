@@ -14,12 +14,12 @@ import { nullable } from "convex-helpers/validators";
 
 /**
  * Validator for UserData (subset of user doc used in attachUsers).
- * Matches the UserData interface in lib/userHelpers.ts
+ * Matches the public fields of UserData in lib/userHelpers.ts.
+ * Email is intentionally excluded — it must not be sent to unauthenticated callers.
  */
 const userDataValidator = v.object({
   _id: vv.id("users"),
   name: v.string(),
-  email: v.string(),
   image: v.optional(nullable(v.string())),
 });
 
@@ -49,13 +49,26 @@ export const getCommentsBySlug = query({
 
     return {
       ...comments,
-      page: comments.page.map((comment) => ({
-        ...comment,
-        user: userMap.get(comment.userId) ?? null,
-        replyToUser: comment.replyToUserId
-          ? (replyToUserMap.get(comment.replyToUserId) ?? null)
-          : null,
-      })),
+      page: comments.page.map((comment) => {
+        const rawUser = userMap.get(comment.userId);
+        const rawReplyToUser = comment.replyToUserId
+          ? replyToUserMap.get(comment.replyToUserId)
+          : undefined;
+
+        return {
+          ...comment,
+          user: rawUser
+            ? { _id: rawUser._id, name: rawUser.name, image: rawUser.image }
+            : null,
+          replyToUser: rawReplyToUser
+            ? {
+                _id: rawReplyToUser._id,
+                name: rawReplyToUser.name,
+                image: rawReplyToUser.image,
+              }
+            : null,
+        };
+      }),
     };
   },
 });

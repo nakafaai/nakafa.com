@@ -11,10 +11,10 @@ import {
   checkClassAccess,
   requireClassAccess,
 } from "@repo/backend/convex/lib/helpers/class";
-import { getUserMap } from "@repo/backend/convex/lib/helpers/user";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
+import { getAll } from "convex-helpers/server/relationships";
 import { nullable } from "convex-helpers/validators";
 
 export const getClasses = query({
@@ -191,28 +191,43 @@ export const getPeople = query({
       .withIndex("classId_userId", (idx) => idx.eq("classId", classId))
       .paginate(paginationOpts);
 
-    const userMap = await getUserMap(
-      ctx,
-      membersPage.page.map((m) => m.userId)
+    const uniqueUserIds = [...new Set(membersPage.page.map((m) => m.userId))];
+    const userDocs = await getAll(ctx.db, uniqueUserIds);
+
+    const userDocMap = new Map(
+      uniqueUserIds.flatMap((id, i) => {
+        const doc = userDocs[i];
+        return doc ? [[id, doc]] : [];
+      })
     );
 
     const people = membersPage.page.flatMap((member) => {
-      const userData = userMap.get(member.userId);
-      if (!userData) {
+      const userDoc = userDocMap.get(member.userId);
+      if (!userDoc) {
         return [];
       }
 
       if (q && q.trim().length > 0) {
         const searchLower = q.toLowerCase().trim();
         const matches =
-          userData.name.toLowerCase().includes(searchLower) ||
-          userData.email.toLowerCase().includes(searchLower);
+          userDoc.name.toLowerCase().includes(searchLower) ||
+          userDoc.email.toLowerCase().includes(searchLower);
         if (!matches) {
           return [];
         }
       }
 
-      return [{ ...member, user: userData }];
+      return [
+        {
+          ...member,
+          user: {
+            _id: userDoc._id,
+            name: userDoc.name,
+            email: userDoc.email,
+            image: userDoc.image,
+          },
+        },
+      ];
     });
 
     people.sort((a, b) => {

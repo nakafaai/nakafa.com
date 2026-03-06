@@ -28,6 +28,7 @@ export const createMaterialGroup = mutation({
     status: schoolClassMaterialStatusValidator,
     scheduledAt: v.optional(v.number()),
   },
+  returns: vv.id("schoolClassMaterialGroups"),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);
     const userId = appUser._id;
@@ -97,6 +98,7 @@ export const updateMaterialGroup = mutation({
     status: v.optional(schoolClassMaterialStatusValidator),
     scheduledAt: v.optional(v.number()),
   },
+  returns: vv.id("schoolClassMaterialGroups"),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);
     const userId = appUser._id;
@@ -191,6 +193,7 @@ export const deleteMaterialGroup = mutation({
   args: {
     groupId: vv.id("schoolClassMaterialGroups"),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);
     const userId = appUser._id;
@@ -207,6 +210,8 @@ export const deleteMaterialGroup = mutation({
 
     // Delete triggers cascade: children, materials, attachments, views, parent count
     await ctx.db.delete("schoolClassMaterialGroups", args.groupId);
+
+    return null;
   },
 });
 
@@ -215,6 +220,7 @@ export const reorderMaterialGroup = mutation({
     groupId: vv.id("schoolClassMaterialGroups"),
     direction: reorderDirectionValidator,
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);
     const userId = appUser._id;
@@ -255,7 +261,7 @@ export const reorderMaterialGroup = mutation({
 
     if (!adjacentGroup) {
       // Already at the edge, nothing to do
-      return;
+      return null;
     }
 
     // Swap orders
@@ -270,5 +276,7 @@ export const reorderMaterialGroup = mutation({
         updatedAt: now,
       }),
     ]);
+
+    return null;
   },
 });

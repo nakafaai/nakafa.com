@@ -9,13 +9,103 @@ import {
   loadForum,
   loadForumWithAccess,
 } from "@repo/backend/convex/classes/forums/utils";
+import {
+  schoolClassForumPostValidator,
+  schoolClassForumValidator,
+} from "@repo/backend/convex/classes/schema";
 import { loadClass } from "@repo/backend/convex/classes/utils";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { requireClassAccess } from "@repo/backend/convex/lib/helpers/class";
 import { getUserMap } from "@repo/backend/convex/lib/helpers/user";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { paginationOptsValidator } from "convex/server";
+import {
+  paginationOptsValidator,
+  paginationResultValidator,
+} from "convex/server";
 import { ConvexError, v } from "convex/values";
+import {
+  addFieldsToValidator,
+  nullable,
+  systemFields,
+} from "convex-helpers/validators";
+
+/**
+ * Public user fields returned in forum responses.
+ * Email is intentionally excluded.
+ */
+const forumUserValidator = nullable(
+  v.object({
+    _id: vv.id("users"),
+    name: v.string(),
+    image: v.optional(nullable(v.string())),
+  })
+);
+
+/**
+ * Reaction users entry: emoji, count, and reactor names.
+ */
+const reactionUsersEntryValidator = v.object({
+  emoji: v.string(),
+  count: v.number(),
+  reactors: v.array(v.string()),
+});
+
+/**
+ * Forum doc with system fields validator.
+ */
+const forumDocValidator = addFieldsToValidator(
+  schoolClassForumValidator,
+  systemFields("schoolClassForums")
+);
+
+/**
+ * Enriched forum entry returned by getForums.
+ */
+const enrichedForumValidator = forumDocValidator.extend({
+  user: forumUserValidator,
+  myReactions: v.array(v.string()),
+  unreadCount: v.number(),
+});
+
+/**
+ * Enriched forum entry returned by getForum (includes reactionUsers and lastReadAt).
+ */
+const enrichedForumDetailValidator = forumDocValidator.extend({
+  user: forumUserValidator,
+  myReactions: v.array(v.string()),
+  reactionUsers: v.array(reactionUsersEntryValidator),
+  lastReadAt: nullable(v.number()),
+});
+
+/**
+ * Attachment validator for forum post attachments.
+ */
+const postAttachmentValidator = v.object({
+  _id: vv.id("schoolClassForumPostAttachments"),
+  name: v.string(),
+  url: nullable(v.string()),
+  mimeType: v.string(),
+  size: v.number(),
+});
+
+/**
+ * Post doc with system fields validator.
+ */
+const forumPostDocValidator = addFieldsToValidator(
+  schoolClassForumPostValidator,
+  systemFields("schoolClassForumPosts")
+);
+
+/**
+ * Enriched forum post returned by getForumPosts and related queries.
+ */
+const enrichedForumPostValidator = forumPostDocValidator.extend({
+  user: forumUserValidator,
+  replyToUser: forumUserValidator,
+  myReactions: v.array(v.string()),
+  reactionUsers: v.array(reactionUsersEntryValidator),
+  attachments: v.array(postAttachmentValidator),
+});
 
 export const getForums = query({
   args: {
@@ -23,6 +113,7 @@ export const getForums = query({
     q: v.optional(v.string()),
     paginationOpts: paginationOptsValidator,
   },
+  returns: paginationResultValidator(enrichedForumValidator),
   handler: async (ctx, args) => {
     const { classId, q: searchQuery, paginationOpts } = args;
 
@@ -60,12 +151,17 @@ export const getForums = query({
 
     return {
       ...forumsPage,
-      page: forumsPage.page.map((forum) => ({
-        ...forum,
-        user: userMap.get(forum.createdBy) ?? null,
-        myReactions: myReactionsMap.get(forum._id) ?? [],
-        unreadCount: unreadCountMap.get(forum._id) ?? 0,
-      })),
+      page: forumsPage.page.map((forum) => {
+        const rawUser = userMap.get(forum.createdBy);
+        return {
+          ...forum,
+          user: rawUser
+            ? { _id: rawUser._id, name: rawUser.name, image: rawUser.image }
+            : null,
+          myReactions: myReactionsMap.get(forum._id) ?? [],
+          unreadCount: unreadCountMap.get(forum._id) ?? 0,
+        };
+      }),
     };
   },
 });
@@ -74,6 +170,7 @@ export const getForum = query({
   args: {
     forumId: vv.id("schoolClassForums"),
   },
+  returns: enrichedForumDetailValidator,
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
     const currentUserId = user.appUser._id;
@@ -98,9 +195,13 @@ export const getForum = query({
 
     const reactorsByEmoji = buildReactorsByEmoji(reactions, userMap);
 
+    const rawUser = userMap.get(forum.createdBy);
+
     return {
       ...forum,
-      user: userMap.get(forum.createdBy) ?? null,
+      user: rawUser
+        ? { _id: rawUser._id, name: rawUser.name, image: rawUser.image }
+        : null,
       myReactions,
       reactionUsers: forum.reactionCounts.map(({ emoji, count }) => ({
         emoji,
@@ -117,6 +218,7 @@ export const getForumPosts = query({
     forumId: vv.id("schoolClassForums"),
     paginationOpts: paginationOptsValidator,
   },
+  returns: paginationResultValidator(enrichedForumPostValidator),
   handler: async (ctx, args) => {
     const { forumId, paginationOpts } = args;
 
@@ -137,9 +239,30 @@ export const getForumPosts = query({
 
     return {
       ...postsPage,
-      page: enrichedPosts,
+      page: enrichedPosts.map((p) => ({
+        ...p,
+        user: p.user
+          ? { _id: p.user._id, name: p.user.name, image: p.user.image }
+          : null,
+        replyToUser: p.replyToUser
+          ? {
+              _id: p.replyToUser._id,
+              name: p.replyToUser.name,
+              image: p.replyToUser.image,
+            }
+          : null,
+      })),
     };
   },
+});
+
+const forumPostsAroundValidator = v.object({
+  posts: v.array(enrichedForumPostValidator),
+  targetIndex: v.number(),
+  hasMoreBefore: v.boolean(),
+  hasMoreAfter: v.boolean(),
+  oldestTime: v.number(),
+  newestTime: v.number(),
 });
 
 export const getForumPostsAround = query({
@@ -148,6 +271,7 @@ export const getForumPostsAround = query({
     targetPostId: vv.id("schoolClassForumPosts"),
     limit: v.optional(v.number()),
   },
+  returns: forumPostsAroundValidator,
   handler: async (ctx, args) => {
     const { forumId, targetPostId, limit = 15 } = args;
 
@@ -196,7 +320,19 @@ export const getForumPostsAround = query({
     const lastPost = lastPostIdx >= 0 ? allPosts[lastPostIdx] : undefined;
 
     return {
-      posts: enrichedPosts,
+      posts: enrichedPosts.map((p) => ({
+        ...p,
+        user: p.user
+          ? { _id: p.user._id, name: p.user.name, image: p.user.image }
+          : null,
+        replyToUser: p.replyToUser
+          ? {
+              _id: p.replyToUser._id,
+              name: p.replyToUser.name,
+              image: p.replyToUser.image,
+            }
+          : null,
+      })),
       targetIndex: postsBefore.length,
       hasMoreBefore,
       hasMoreAfter,
@@ -206,12 +342,19 @@ export const getForumPostsAround = query({
   },
 });
 
+const forumPostsPageValidator = v.object({
+  posts: v.array(enrichedForumPostValidator),
+  hasMore: v.boolean(),
+  oldestTime: v.optional(v.number()),
+});
+
 export const getForumPostsOlder = query({
   args: {
     forumId: vv.id("schoolClassForums"),
     beforeTime: v.number(),
     limit: v.optional(v.number()),
   },
+  returns: forumPostsPageValidator,
   handler: async (ctx, args) => {
     const { forumId, beforeTime, limit = 15 } = args;
 
@@ -236,11 +379,29 @@ export const getForumPostsOlder = query({
     );
 
     return {
-      posts: enrichedPosts,
+      posts: enrichedPosts.map((p) => ({
+        ...p,
+        user: p.user
+          ? { _id: p.user._id, name: p.user.name, image: p.user.image }
+          : null,
+        replyToUser: p.replyToUser
+          ? {
+              _id: p.replyToUser._id,
+              name: p.replyToUser.name,
+              image: p.replyToUser.image,
+            }
+          : null,
+      })),
       hasMore,
       oldestTime: orderedPosts[0]?._creationTime,
     };
   },
+});
+
+const forumPostsNewerValidator = v.object({
+  posts: v.array(enrichedForumPostValidator),
+  hasMore: v.boolean(),
+  newestTime: v.optional(v.number()),
 });
 
 export const getForumPostsNewer = query({
@@ -249,6 +410,7 @@ export const getForumPostsNewer = query({
     afterTime: v.number(),
     limit: v.optional(v.number()),
   },
+  returns: forumPostsNewerValidator,
   handler: async (ctx, args) => {
     const { forumId, afterTime, limit = 15 } = args;
 
@@ -270,7 +432,19 @@ export const getForumPostsNewer = query({
     const newestPost = lastIdx >= 0 ? posts[lastIdx] : undefined;
 
     return {
-      posts: enrichedPosts,
+      posts: enrichedPosts.map((p) => ({
+        ...p,
+        user: p.user
+          ? { _id: p.user._id, name: p.user.name, image: p.user.image }
+          : null,
+        replyToUser: p.replyToUser
+          ? {
+              _id: p.replyToUser._id,
+              name: p.replyToUser.name,
+              image: p.replyToUser.image,
+            }
+          : null,
+      })),
       hasMore,
       newestTime: newestPost?._creationTime,
     };

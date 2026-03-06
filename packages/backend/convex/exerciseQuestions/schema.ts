@@ -46,12 +46,6 @@ const tables = {
   })
     .index("locale_slug", ["locale", "slug"])
     .index("setId", ["setId"])
-    .index("locale_category_type_material", [
-      "locale",
-      "category",
-      "type",
-      "material",
-    ])
     .index("locale_category_type_material_exerciseType_setName", [
       "locale",
       "category",

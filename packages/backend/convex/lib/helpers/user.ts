@@ -9,7 +9,6 @@ import { getAll } from "convex-helpers/server/relationships";
 
 export interface UserData {
   _id: Id<"users">;
-  email: string;
   image: string | null | undefined;
   name: string;
 }
@@ -36,7 +35,6 @@ export async function getUserMap(ctx: QueryCtx, userIds: Id<"users">[]) {
       {
         _id: user._id,
         name: user.name,
-        email: user.email,
         image: user.image,
       },
     ]);

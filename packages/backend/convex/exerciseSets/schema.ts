@@ -35,12 +35,6 @@ const tables = {
     syncedAt: v.number(),
   })
     .index("locale_slug", ["locale", "slug"])
-    .index("locale_category_type_material", [
-      "locale",
-      "category",
-      "type",
-      "material",
-    ])
     .index("locale_category_type_material_exerciseType", [
       "locale",
       "category",

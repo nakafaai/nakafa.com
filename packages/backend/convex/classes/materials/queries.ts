@@ -1,14 +1,51 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { query } from "@repo/backend/convex/_generated/server";
 import { enrichMaterialGroups } from "@repo/backend/convex/classes/materials/utils";
+import { schoolClassMaterialGroupValidator } from "@repo/backend/convex/classes/schema";
 import { loadClass } from "@repo/backend/convex/classes/utils";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { requireClassAccess } from "@repo/backend/convex/lib/helpers/class";
 import { isAdmin } from "@repo/backend/convex/lib/helpers/school";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import type { PaginationResult } from "convex/server";
-import { paginationOptsValidator } from "convex/server";
+import {
+  paginationOptsValidator,
+  paginationResultValidator,
+} from "convex/server";
 import { v } from "convex/values";
+import {
+  addFieldsToValidator,
+  nullable,
+  systemFields,
+} from "convex-helpers/validators";
+
+/**
+ * Public user fields returned in material group responses.
+ * Email is intentionally excluded.
+ */
+const materialGroupUserValidator = nullable(
+  v.object({
+    _id: vv.id("users"),
+    name: v.string(),
+    image: v.optional(nullable(v.string())),
+  })
+);
+
+/**
+ * Material group doc with system fields.
+ */
+const materialGroupDocValidator = addFieldsToValidator(
+  schoolClassMaterialGroupValidator,
+  systemFields("schoolClassMaterialGroups")
+);
+
+/**
+ * Enriched material group with creator and publisher user data.
+ */
+const enrichedMaterialGroupValidator = materialGroupDocValidator.extend({
+  user: materialGroupUserValidator,
+  publishedByUser: materialGroupUserValidator,
+});
 
 /**
  * Get paginated material groups for a class.
@@ -22,6 +59,7 @@ export const getMaterialGroups = query({
     q: v.optional(v.string()),
     paginationOpts: paginationOptsValidator,
   },
+  returns: paginationResultValidator(enrichedMaterialGroupValidator),
   handler: async (ctx, args) => {
     const { classId, parentId, q: searchQuery, paginationOpts } = args;
 
@@ -93,7 +131,19 @@ export const getMaterialGroups = query({
 
     return {
       ...groupsPage,
-      page: enrichedGroups,
+      page: enrichedGroups.map((g) => ({
+        ...g,
+        user: g.user
+          ? { _id: g.user._id, name: g.user.name, image: g.user.image }
+          : null,
+        publishedByUser: g.publishedByUser
+          ? {
+              _id: g.publishedByUser._id,
+              name: g.publishedByUser.name,
+              image: g.publishedByUser.image,
+            }
+          : null,
+      })),
     };
   },
 });

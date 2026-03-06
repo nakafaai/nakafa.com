@@ -16,6 +16,7 @@ export const generateUploadUrl = mutation({
   args: {
     forumId: vv.id("schoolClassForums"),
   },
+  returns: v.string(),
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
     await loadOpenForumWithAccess(ctx, args.forumId, user.appUser._id);
@@ -30,6 +31,7 @@ export const createForum = mutation({
     body: v.string(),
     tag: schoolClassForumTagValidator,
   },
+  returns: vv.id("schoolClassForums"),
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
@@ -89,6 +91,7 @@ export const createForumPost = mutation({
     parentId: v.optional(vv.id("schoolClassForumPosts")),
     attachments: v.optional(v.array(attachmentArg)),
   },
+  returns: vv.id("schoolClassForumPosts"),
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
@@ -160,11 +163,16 @@ export const createForumPost = mutation({
   },
 });
 
+const toggleReactionResultValidator = v.object({
+  added: v.boolean(),
+});
+
 export const togglePostReaction = mutation({
   args: {
     postId: vv.id("schoolClassForumPosts"),
     emoji: v.string(),
   },
+  returns: toggleReactionResultValidator,
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
@@ -209,6 +217,7 @@ export const toggleForumReaction = mutation({
     forumId: vv.id("schoolClassForums"),
     emoji: v.string(),
   },
+  returns: toggleReactionResultValidator,
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
@@ -244,6 +253,7 @@ export const markForumRead = mutation({
   args: {
     forumId: vv.id("schoolClassForums"),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
@@ -273,5 +283,7 @@ export const markForumRead = mutation({
         lastReadAt: now,
       });
     }
+
+    return null;
   },
 });

@@ -247,7 +247,6 @@ export async function POST(req: Request) {
               chatId,
               role: responseMessage.role,
               identifier: responseMessage.id,
-              modelId: selectedModel,
               inputTokens: tokenData?.input ?? 0,
               outputTokens: tokenData?.output ?? 0,
               totalTokens: tokenData?.total ?? 0,

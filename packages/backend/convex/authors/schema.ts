@@ -15,9 +15,7 @@ const tables = {
     github: v.optional(v.string()),
     bio: v.optional(v.string()),
     avatarUrl: v.optional(v.string()),
-  })
-    .index("username", ["username"])
-    .index("name", ["name"]),
+  }).index("name", ["name"]),
 
   /**
    * Join table linking content to authors (N:M relationship).

@@ -27,6 +27,8 @@ import {
   organization,
   username,
 } from "better-auth/plugins";
+import { v } from "convex/values";
+import { nullable } from "convex-helpers/validators";
 
 const siteUrl = process.env.SITE_URL ?? "http://localhost:3000";
 
@@ -210,6 +212,7 @@ export const safeGetAppUser = async (ctx: QueryCtx) => {
 
 /**
  * Get any app user by ID with auth data (bypasses session check).
+ * Only for internal/server-side use — returns sensitive fields.
  */
 export const getAnyAppUserById = async (ctx: QueryCtx, userId: Id<"users">) => {
   const user = await ctx.db.get("users", userId);
@@ -229,6 +232,17 @@ export const getAnyAppUserById = async (ctx: QueryCtx, userId: Id<"users">) => {
 };
 
 /**
+ * Public profile fields safe to expose to any caller.
+ */
+const publicUserValidator = nullable(
+  v.object({
+    _id: vv.id("users"),
+    name: v.string(),
+    image: v.optional(v.string()),
+  })
+);
+
+/**
  * Query to get current logged-in user.
  */
 export const getCurrentUser = query({
@@ -237,15 +251,27 @@ export const getCurrentUser = query({
 });
 
 /**
- * Query to get any user by ID.
+ * Query to get a user's public profile fields by ID.
+ * Returns only name and image — no sensitive data (email, credits, plan, role).
  */
 export const getUserById = query({
   args: { userId: vv.id("users") },
-  handler: (ctx, args) => getAnyAppUserById(ctx, args.userId),
+  returns: publicUserValidator,
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get("users", args.userId);
+    if (!user) {
+      return null;
+    }
+    return {
+      _id: user._id,
+      name: user.name,
+      image: user.image,
+    };
+  },
 });
 
 /**
- * Internal query to get any user by ID.
+ * Internal query to get any user by ID with full data.
  * Use this for server-to-server calls instead of the public query.
  */
 export const getUserByIdInternal = internalQuery({

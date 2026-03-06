@@ -42,12 +42,6 @@ const tables = {
   })
     .index("locale_slug", ["locale", "slug"])
     .index("topicId", ["topicId"])
-    .index("locale_category_grade_material", [
-      "locale",
-      "category",
-      "grade",
-      "material",
-    ])
     .index("contentHash", ["contentHash"]),
 };
 

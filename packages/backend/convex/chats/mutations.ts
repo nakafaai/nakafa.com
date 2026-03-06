@@ -8,6 +8,8 @@ import {
 import tables, {
   chatTypeValidator,
   chatVisibilityValidator,
+  messageRoleValidator,
+  modelIdValidator,
 } from "@repo/backend/convex/chats/schema";
 import { mutation } from "@repo/backend/convex/functions";
 import {
@@ -119,7 +121,12 @@ export const updateChatVisibility = mutation({
  */
 export const saveMessage = mutation({
   args: {
-    message: tables.messages.validator,
+    message: v.object({
+      chatId: vv.id("chats"),
+      role: messageRoleValidator,
+      identifier: v.string(),
+      modelId: modelIdValidator,
+    }),
     parts: v.array(
       v.object({
         ...tables.parts.validator.fields,
@@ -171,8 +178,9 @@ export const createChatWithMessage = mutation({
     title: v.optional(v.string()),
     type: chatTypeValidator,
     message: v.object({
-      ...tables.messages.validator.fields,
-      chatId: v.optional(vv.id("chats")), // make it optional here to allow for creating a chat with a message without a chatId
+      chatId: v.optional(vv.id("chats")),
+      role: messageRoleValidator,
+      identifier: v.string(),
     }),
     parts: v.array(
       v.object({
@@ -261,7 +269,14 @@ export const deleteChat = mutation({
  */
 export const saveAssistantResponse = mutation({
   args: {
-    message: tables.messages.validator,
+    message: v.object({
+      chatId: vv.id("chats"),
+      role: messageRoleValidator,
+      identifier: v.string(),
+      inputTokens: v.optional(v.number()),
+      outputTokens: v.optional(v.number()),
+      totalTokens: v.optional(v.number()),
+    }),
     parts: v.array(
       v.object({
         ...tables.parts.validator.fields,

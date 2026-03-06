@@ -29,7 +29,6 @@ const tables = {
     syncedAt: v.number(),
   })
     .index("locale_slug", ["locale", "slug"])
-    .index("locale_category", ["locale", "category"])
     .index("contentHash", ["contentHash"]),
 
   /**

@@ -156,9 +156,7 @@ const tables = {
 
   schoolMembers: defineTable(schoolMemberValidator)
     .index("userId_status", ["userId", "status"])
-    .index("schoolId_role", ["schoolId", "role"])
     .index("schoolId_userId_status", ["schoolId", "userId", "status"])
-    .index("schoolId_status", ["schoolId", "status"])
     .index("inviteToken", ["inviteToken"]),
 
   schoolParentStudents: defineTable({
@@ -191,11 +189,7 @@ const tables = {
     createdBy: v.id("users"),
     updatedBy: v.optional(v.id("users")),
     updatedAt: v.number(),
-  })
-    .index("schoolId_role", ["schoolId", "role"])
-    .index("code", ["code"])
-    .index("schoolId_code", ["schoolId", "code"])
-    .index("schoolId_enabled", ["schoolId", "enabled"]),
+  }).index("code", ["code"]),
 
   schoolActivityLogs: defineTable({
     schoolId: v.id("schools"),
