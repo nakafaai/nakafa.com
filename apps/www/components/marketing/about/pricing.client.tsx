@@ -68,14 +68,14 @@ export function ProButton() {
         productIds: [products.pro.id],
         successUrl: window.location.href,
       });
-      window.open(url, "_blank");
+      window.location.href = url;
     });
   };
 
   const handleManageSubscription = () => {
     startTransition(async () => {
       const { url } = await generateCustomerPortalUrl({});
-      window.open(url, "_blank");
+      window.location.href = url;
     });
   };
 
