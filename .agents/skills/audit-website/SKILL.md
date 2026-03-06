@@ -1,12 +1,12 @@
 ---
 name: audit-website
-description: Audit websites for SEO, technical, content, and security issues using squirrelscan CLI. Returns LLM-optimized reports with health scores, broken links, meta tag analysis, and actionable recommendations. Use when analyzing websites, debugging SEO issues, or checking site health.
+description: Audit websites for SEO, performance, security, technical, content, and 15 other issue cateories with 230+ rules using the squirrelscan CLI. Returns LLM-optimized reports with health scores, broken links, meta tag analysis, and actionable recommendations. Use to discover and asses website or webapp issues and health.
 license: See LICENSE file in repository root
 compatibility: Requires squirrel CLI installed and accessible in PATH
 metadata:
   author: squirrelscan
-  version: "1.9"
-allowed-tools: Bash(squirrel:*)
+  version: "1.22"
+allowed-tools: Bash(squirrel:*) Read Edit Grep Glob
 ---
 
 # Website Audit Skill
@@ -14,7 +14,7 @@ allowed-tools: Bash(squirrel:*)
 Audit websites for SEO, technical, content, performance and security issues using the squirrelscan cli.
 
 squirrelscan provides a cli tool squirrel - available for macos, windows and linux. It carries out extensive website auditing
-by emulating a browser, search crawler, and analyzing the website's structure and content against over 140+ rules.
+by emulating a browser, search crawler, and analyzing the website's structure and content against over 230+ rules.
 
 It will provide you a list of issues as well as suggestions on how to fix them.
 
@@ -33,7 +33,7 @@ https://docs.squirrelscan.com/rules/links/external-links
 
 ## What This Skill Does
 
-This skill enables AI agents to audit websites for over 140 rules in 20 categories, including:
+This skill enables AI agents to audit websites for over 230 rules in 21 categories, including:
 
 - **SEO issues**: Meta tags, titles, descriptions, canonical URLs, Open Graph tags
 - **Technical problems**: Broken links, redirect chains, page speed, mobile-friendliness
@@ -57,7 +57,7 @@ This skill enables AI agents to audit websites for over 140 rules in 20 categori
 - **Local SEO**: NAP consistency, geo metadata
 - **Video**: VideoObject schema, accessibility
 
-and more!
+and more
 
 The audit crawls the website, analyzes each page against audit rules, and returns a comprehensive report with:
 - Overall health score (0-100)
@@ -65,10 +65,12 @@ The audit crawls the website, analyzes each page against audit rules, and return
 - Specific issues with affected URLs
 - Broken link detection
 - Actionable recommendations
+- Rules have levels of error, warning and notice and also have a rank between 1 and 10
 
 ## When to Use
 
 Use this skill when you need to:
+
 - Analyze a website's health
 - Debug technical SEO issues
 - Fix all of the issues mentioned above
@@ -78,78 +80,28 @@ Use this skill when you need to:
 - Compare site health before/after changes
 - Improve website performance, accessibility, SEO, security and more.
 
+You should re-audit as often as possible to ensure your website remains healthy and performs well. 
+
 ## Prerequisites
 
-This skill requires the squirrel CLI to be installed and available in your PATH.
+This skill requires the squirrel CLI installed and in PATH.
 
-### Installation
+**Install:** [squirrelscan.com/download](https://squirrelscan.com/download)
 
-If squirrel is not already installed, you can install it using:
-
-```bash
-curl -fsSL https://squirrelscan.com/install | bash
-```
-
-This will:
-- Download the latest release binary
-- Install to `~/.local/share/squirrel/releases/{version}/`
-- Create a symlink at `~/.local/bin/squirrel`
-- Initialize settings at `~/.squirrel/settings.json`
-
-If `~/.local/bin` is not in your PATH, add it to your shell configuration:
-
-```bash
-export PATH="$HOME/.local/bin:$PATH"
-```
-
-### Windows Installation
-
-Install using PowerShell:
-
-```powershell
-irm https://squirrelscan.com/install.ps1 | iex
-```
-
-This will:
-- Download the latest release binary
-- Install to `%LOCALAPPDATA%\squirrel\`
-- Add squirrel to your PATH
-
-If using Command Prompt, you may need to restart your terminal for PATH changes to take effect.
-
-### Verify Installation
-
-Check that squirrel is installed and accessible:
-
+**Verify:**
 ```bash
 squirrel --version
 ```
 
 ## Setup
 
-Running `squirrel init` will setup a squirrel.toml file for configuration in the current directory.
-
-Each project should have a squirrel project name for the database - by default this is the name of the 
-website you audit - but you can set it yourself so that you can place all audits for a project in one database
-
-You do this either on init with:
+Run `squirrel init` to create a `squirrel.toml` config in the current directory. If none exists, create one and specify a project name:
 
 ```bash
-squirrel init --project-name my-project
+squirrel init -n my-project
+# overwrite existing config
+squirrel init -n my-project --force
 ```
-
-or config:
-
-```bash
-squirrel config set project.name my-project
-```
-
-If there is no squirrel.toml in the directory you're running from CREATE ONE with `squirrel init` and specify the '-n' 
-parameter for a project name (infer this)
-
-The project name is used to identify the project in the database and is used to generate the database name. 
-
-It is stored in ~/.squirrel/projects/<project-name>
 
 ## Usage
 
@@ -169,13 +121,11 @@ squirrel audit https://example.com --format llm
 
 YOU SHOULD always prefer format option llm - it was made for you and provides an exhaustive and compact output format.
 
-If the user doesn't provide a website to audit - extrapolate the possibilities in the local directory and checking environment variables (ie. linked vercel projects, references in memory or the code). 
+FIRST SCAN should be a surface scan, which is a quick and shallow scan of the website to gather basic information about the website, such as its structure, content, and technology stack. This scan can be done quickly and without impacting the website's performance.
 
-If the directory you're running for provides for a method to run or restart a local dev server - run the audit against that.
+SECOND SCAN should be a deep scan, which is a thorough and detailed scan of the website to gather more information about the website, such as its security, performance, and accessibility. This scan can take longer and may impact the website's performance.
 
-If you have more than one option on a website to audit that you discover - prompt the user to choose which one to audit.
-
-If there is no website - either local, or on the web to discover to audit, then ask the user which URL they would like to audit.
+If the user doesn't provide a website to audit, ask which URL they'd like audited.
 
 You should PREFER to audit live websites - only there do we get a TRUE representation of the website and performance or rendering issuers. 
 
@@ -187,8 +137,7 @@ When planning scope tasks so they can run concurrently as sub-agents to speed up
 
 When implementing fixes take advantage of subagents to speed up implementation of fixes.
 
-Run typechecking and formatting against generated code when you finish if available in the environment (ruff for python, 
-biome and tsc for typescript etc.)
+After applying fixes, verify the code still builds and passes any existing checks in the project.
 
 ### Basic Workflow
 
@@ -204,6 +153,94 @@ squirrel audit https://example.com
 # Step 2: Export as LLM format
 squirrel report <audit-id> --format llm
 ```
+
+### Regression Diffs
+
+When you need to detect regressions between audits, use diff mode:
+
+```bash
+# Compare current report against a baseline audit ID
+squirrel report --diff <audit-id> --format llm
+
+# Compare latest domain report against a baseline domain
+squirrel report --regression-since example.com --format llm
+```
+
+Diff mode supports `console`, `text`, `json`, `llm`, and `markdown`. `html` and `xml` are not supported.
+
+### Running Audits
+
+When running an audit:
+
+1. **Present the report** - show the user the audit results and score
+2. **Propose fixes** - list the issues you can fix and ask the user to confirm before making changes
+3. **Parallelize approved fixes** - use subagents for bulk content edits (alt text, headings, descriptions)
+4. **Iterate** - fix batch → re-audit → present results → propose next batch
+5. **Pause for judgment** - broken links, structural changes, and anything ambiguous should be flagged for user review
+6. **Show before/after** - present score comparison after each fix batch
+
+- **Iteration Loop**: After fixing a batch of issues, re-audit and continue fixing until:
+  - Score reaches target (typically 85+), OR
+  - Only issues requiring human judgment remain (e.g., "should this link be removed?")
+
+- **Treat all fixes equally**: Code changes and content changes are equally important.
+
+- **Parallelize content fixes**: For issues affecting multiple files:
+  - Spawn subagents to fix in parallel
+  - Example: 7 files need alt text → spawn 1-2 agents to fix all
+  - Example: 30 files have heading issues → spawn agents to batch edit
+
+- **Completion criteria**:
+  - ✅ All errors fixed
+  - ✅ All warnings fixed (or documented as requiring human review)
+  - ✅ Re-audit confirms improvements
+  - ✅ Before/after comparison shown to user
+
+After fixes are applied, ask the user if they'd like to review the changes.
+
+### Score Targets
+
+| Starting Score | Target Score | Expected Work |
+|----------------|--------------|---------------|
+| < 50 (Grade F) | 75+ (Grade C) | Major fixes |
+| 50-70 (Grade D) | 85+ (Grade B) | Moderate fixes |
+| 70-85 (Grade C) | 90+ (Grade A) | Polish |
+| > 85 (Grade B+) | 95+ | Fine-tuning |
+
+A site is only considered COMPLETE and FIXED when scores are above 95 (Grade A) with coverage set to FULL (--coverage full).
+
+### Issue Categories
+
+| Category | Fix Approach | Parallelizable |
+|----------|--------------|----------------|
+| Meta tags/titles | Edit page components or metadata | No |
+| Structured data | Add JSON-LD to page templates | No |
+| Missing H1/headings | Edit page components + content files | Yes (content) |
+| Image alt text | Edit content files | Yes |
+| Heading hierarchy | Edit content files | Yes |
+| Short descriptions | Edit content frontmatter | Yes |
+| HTTP→HTTPS links | Find and replace in content | Yes |
+| Broken links | Manual review (flag for user) | No |
+
+**For parallelizable fixes**: Spawn subagents with specific file assignments.
+
+### Content File Fixes
+
+Many issues require editing content files. These are equally important as code fixes:
+
+- **Image alt text**: Add descriptive alt text to images
+- **Heading hierarchy**: Fix skipped heading levels
+- **Meta descriptions**: Extend short descriptions in frontmatter
+- **HTTP links**: Update insecure links to HTTPS
+
+### Parallelizing Fixes with Subagents
+
+When the user approves a batch of fixes, you can use subagents to apply them in parallel:
+
+- **Ask the user first** — always confirm which fixes to apply before spawning subagents
+- Group 3-5 files per subagent for the same fix type
+- Only parallelize independent files (no shared components or config)
+- Spawn multiple subagents in a single message for concurrent execution
 
 ### Advanced Options
 
@@ -238,17 +275,88 @@ squirrel audit https://example.com --verbose
 | Option | Alias | Description | Default |
 |--------|-------|-------------|---------|
 | `--format <fmt>` | `-f <fmt>` | Output format: console, text, json, html, markdown, llm | console |
-| `--max-pages <n>` | `-m <n>` | Maximum pages to crawl (max 500) | 500 |
+| `--coverage <mode>` | `-C <mode>` | Coverage mode: quick, surface, full | surface |
+| `--max-pages <n>` | `-m <n>` | Maximum pages to crawl (max 5000) | varies by coverage |
+| `--output <path>` | `-o <path>` | Output file path | - |
 | `--refresh` | `-r` | Ignore cache, fetch all pages fresh | false |
 | `--resume` | - | Resume interrupted crawl | false |
 | `--verbose` | `-v` | Verbose output | false |
 | `--debug` | - | Debug logging | false |
+| `--trace` | - | Enable performance tracing | false |
+| `--project-name <name>` | `-n <name>` | Override project name | from config |
+
+### Coverage Modes
+
+Choose a coverage mode based on your audit needs:
+
+| Mode | Default Pages | Behavior | Use Case |
+|------|---------------|----------|----------|
+| `quick` | 25 | Seed + sitemaps only, no link discovery | CI checks, fast health check |
+| `surface` | 100 | One sample per URL pattern | General audits (default) |
+| `full` | 500 | Crawl everything up to limit | Deep analysis |
+
+**Surface mode is smart** - it detects URL patterns like `/blog/{slug}` or `/products/{id}` and only crawls one sample per pattern. This makes it efficient for sites with many similar pages (blogs, e-commerce).
+
+```bash
+# Quick health check (25 pages, no link discovery)
+squirrel audit https://example.com -C quick --format llm
+
+# Default surface audit (100 pages, pattern sampling)
+squirrel audit https://example.com --format llm
+
+# Full comprehensive audit (500 pages)
+squirrel audit https://example.com -C full --format llm
+
+# Override page limit for any mode
+squirrel audit https://example.com -C surface -m 200 --format llm
+```
+
+**When to use each mode:**
+- `quick`: CI pipelines, daily health checks, monitoring
+- `surface`: Most audits - covers unique templates efficiently
+- `full`: Before launches, comprehensive analysis, deep dives
 
 ### Report Command Options
 
 | Option | Alias | Description |
 |--------|-------|-------------|
+| `--list` | `-l` | List recent audits |
+| `--severity <level>` | - | Filter by severity: error, warning, all |
+| `--category <cats>` | - | Filter by categories (comma-separated) |
 | `--format <fmt>` | `-f <fmt>` | Output format: console, text, json, html, markdown, xml, llm |
+| `--output <path>` | `-o <path>` | Output file path |
+| `--input <path>` | `-i <path>` | Load from JSON file (fallback mode) |
+
+### Config Subcommands
+
+| Command | Description |
+|---------|-------------|
+| `config show` | Show current config |
+| `config set <key> <value>` | Set config value |
+| `config path` | Show config file path |
+| `config validate` | Validate config file |
+
+### Other Commands
+
+| Command | Description |
+|---------|-------------|
+| `squirrel feedback` | Send feedback to squirrelscan team |
+| `squirrel skills install` | Install Claude Code skill |
+| `squirrel skills update` | Update Claude Code skill |
+
+### Self Commands
+
+Self-management commands under `squirrel self`:
+
+| Command | Description |
+|---------|-------------|
+| `self install` | Bootstrap local installation |
+| `self update` | Check and apply updates |
+| `self completion` | Generate shell completions |
+| `self doctor` | Run health checks |
+| `self version` | Show version information |
+| `self settings` | Manage CLI settings |
+| `self uninstall` | Remove squirrel from the system |
 
 ## Output Formats
 
@@ -318,17 +426,13 @@ On completion give the user a summary of all of the changes you made.
 If you see this error, squirrel is not installed or not in your PATH.
 
 **Solution:**
-1. Install squirrel: `curl -fsSL https://squirrelscan.com/install | bash`
-2. Add to PATH: `export PATH="$HOME/.local/bin:$PATH"`
+1. Install squirrel: [squirrelscan.com/download](https://squirrelscan.com/download)
+2. Ensure `~/.local/bin` is in PATH
 3. Verify: `squirrel --version`
 
 ### Permission denied
 
-If squirrel is not executable:
-
-```bash
-chmod +x ~/.local/bin/squirrel
-```
+If squirrel is not executable, ensure the binary has execute permissions. Reinstalling from [squirrelscan.com/download](https://squirrelscan.com/download) will fix this.
 
 ### Crawl timeout or slow performance
 
