@@ -1,4 +1,4 @@
-import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
+import type { DataModel, Id } from "@repo/backend/convex/_generated/dataModel";
 import { getPlanCreditConfig } from "@repo/backend/convex/credits/constants";
 import type { UserPlan } from "@repo/backend/convex/users/schema";
 import { logger } from "@repo/backend/convex/utils/logger";
@@ -34,6 +34,89 @@ function getEffectivePlan(
 }
 
 /**
+ * Applies a plan change for a user: patches plan/credits and inserts a
+ * creditTransactions record. Handles upgrade, downgrade, and same-tier transitions.
+ */
+async function applyPlanChange(
+  ctx: GenericMutationCtx<DataModel>,
+  userId: Id<"users">,
+  oldPlan: UserPlan,
+  newPlan: UserPlan,
+  subscriptionId: string
+) {
+  const oldCreditConfig = getPlanCreditConfig(oldPlan);
+  const newCreditConfig = getPlanCreditConfig(newPlan);
+
+  if (newCreditConfig.amount > oldCreditConfig.amount) {
+    // UPGRADE: New plan has more credits
+    await ctx.db.patch("users", userId, {
+      plan: newPlan,
+      credits: newCreditConfig.amount,
+      creditsResetAt: Date.now(),
+    });
+
+    await ctx.db.insert("creditTransactions", {
+      userId,
+      amount: newCreditConfig.amount,
+      type: "purchase",
+      balanceAfter: newCreditConfig.amount,
+      metadata: {
+        reason: "plan-upgrade",
+        "previous-plan": oldPlan,
+        "new-plan": newPlan,
+        "subscription-id": subscriptionId,
+      },
+    });
+
+    logger.info("User upgraded with credits", {
+      userId,
+      subscriptionId,
+      creditsGranted: newCreditConfig.amount,
+      previousPlan: oldPlan,
+      newPlan,
+    });
+  } else if (newCreditConfig.amount < oldCreditConfig.amount) {
+    // DOWNGRADE: New plan has fewer credits
+    await ctx.db.patch("users", userId, {
+      plan: newPlan,
+      credits: newCreditConfig.amount,
+      creditsResetAt: Date.now(),
+    });
+
+    await ctx.db.insert("creditTransactions", {
+      userId,
+      amount: newCreditConfig.amount,
+      type: newCreditConfig.grantType,
+      balanceAfter: newCreditConfig.amount,
+      metadata: {
+        reason: "plan-downgrade",
+        "previous-plan": oldPlan,
+        "new-plan": newPlan,
+        "subscription-id": subscriptionId,
+      },
+    });
+
+    logger.info("User downgraded, credits adjusted", {
+      userId,
+      subscriptionId,
+      newCredits: newCreditConfig.amount,
+      previousPlan: oldPlan,
+      newPlan,
+    });
+  } else {
+    // Same credit amount (e.g., pro monthly -> pro yearly) - just update plan
+    await ctx.db.patch("users", userId, { plan: newPlan });
+
+    logger.info("User plan changed (same tier)", {
+      userId,
+      subscriptionId,
+      previousPlan: oldPlan,
+      newPlan,
+    });
+  }
+}
+
+/**
  * Updates user.plan and credits when subscription changes.
  * Handles upgrades (immediate credit grant) and downgrades.
  */
@@ -62,7 +145,7 @@ export async function subscriptionsHandler(
         break;
       }
 
-      const plan = getEffectivePlan(subscription);
+      const newPlan = getEffectivePlan(subscription);
       const user = await ctx.db.get("users", customer.userId);
 
       if (!user) {
@@ -73,72 +156,13 @@ export async function subscriptionsHandler(
         break;
       }
 
-      // For new subscriptions, check if this is a plan change with different credits
-      const currentCreditConfig = getPlanCreditConfig(user.plan);
-      const newCreditConfig = getPlanCreditConfig(plan);
-
-      if (newCreditConfig.amount > currentCreditConfig.amount) {
-        // UPGRADE: New plan has more credits than current
-        await ctx.db.patch("users", customer.userId, {
-          plan,
-          credits: newCreditConfig.amount,
-          creditsResetAt: Date.now(),
-        });
-
-        // Create transaction record for audit
-        await ctx.db.insert("creditTransactions", {
-          userId: customer.userId,
-          amount: newCreditConfig.amount,
-          type: "purchase",
-          balanceAfter: newCreditConfig.amount,
-          metadata: {
-            reason: "plan-upgrade",
-            "previous-plan": user.plan,
-            "new-plan": plan,
-            "subscription-id": subscription.id,
-          },
-        });
-
-        logger.info("User upgraded with credits", {
-          userId: customer.userId,
-          subscriptionId: subscription.id,
-          creditsGranted: newCreditConfig.amount,
-          previousPlan: user.plan,
-          newPlan: plan,
-        });
-      } else if (newCreditConfig.amount < currentCreditConfig.amount) {
-        // DOWNGRADE: New plan has fewer credits
-        await ctx.db.patch("users", customer.userId, {
-          plan,
-          credits: newCreditConfig.amount,
-          creditsResetAt: Date.now(),
-        });
-
-        // Create transaction record
-        await ctx.db.insert("creditTransactions", {
-          userId: customer.userId,
-          amount: newCreditConfig.amount,
-          type: newCreditConfig.grantType,
-          balanceAfter: newCreditConfig.amount,
-          metadata: {
-            reason: "plan-downgrade",
-            "previous-plan": user.plan,
-            "new-plan": plan,
-            "subscription-id": subscription.id,
-          },
-        });
-
-        logger.info("User downgraded, credits adjusted", {
-          userId: customer.userId,
-          subscriptionId: subscription.id,
-          newCredits: newCreditConfig.amount,
-          previousPlan: user.plan,
-          newPlan: plan,
-        });
-      } else {
-        // Same credit amount - just update plan
-        await ctx.db.patch("users", customer.userId, { plan });
-      }
+      await applyPlanChange(
+        ctx,
+        customer.userId,
+        user.plan,
+        newPlan,
+        subscription.id
+      );
 
       break;
     }
@@ -185,80 +209,13 @@ export async function subscriptionsHandler(
         break;
       }
 
-      // Handle any plan transition generically (works for all current and future plans)
-      const oldCreditConfig = getPlanCreditConfig(oldPlan);
-      const newCreditConfig = getPlanCreditConfig(newPlan);
-
-      if (newCreditConfig.amount > oldCreditConfig.amount) {
-        // UPGRADE: New plan has more credits
-        await ctx.db.patch("users", customer.userId, {
-          plan: newPlan,
-          credits: newCreditConfig.amount,
-          creditsResetAt: Date.now(),
-        });
-
-        // Create transaction record
-        await ctx.db.insert("creditTransactions", {
-          userId: customer.userId,
-          amount: newCreditConfig.amount,
-          type: "purchase",
-          balanceAfter: newCreditConfig.amount,
-          metadata: {
-            reason: "plan-upgrade",
-            "previous-plan": oldPlan,
-            "new-plan": newPlan,
-            "subscription-id": subscription.id,
-          },
-        });
-
-        logger.info("User upgraded with credits", {
-          userId: customer.userId,
-          subscriptionId: subscription.id,
-          creditsGranted: newCreditConfig.amount,
-          previousPlan: oldPlan,
-          newPlan,
-        });
-      } else if (newCreditConfig.amount < oldCreditConfig.amount) {
-        // DOWNGRADE: New plan has fewer credits
-        await ctx.db.patch("users", customer.userId, {
-          plan: newPlan,
-          credits: newCreditConfig.amount,
-          creditsResetAt: Date.now(),
-        });
-
-        // Create transaction record
-        await ctx.db.insert("creditTransactions", {
-          userId: customer.userId,
-          amount: newCreditConfig.amount,
-          type: newCreditConfig.grantType,
-          balanceAfter: newCreditConfig.amount,
-          metadata: {
-            reason: "plan-downgrade",
-            "previous-plan": oldPlan,
-            "new-plan": newPlan,
-            "subscription-id": subscription.id,
-          },
-        });
-
-        logger.info("User downgraded, credits adjusted", {
-          userId: customer.userId,
-          subscriptionId: subscription.id,
-          newCredits: newCreditConfig.amount,
-          previousPlan: oldPlan,
-          newPlan,
-        });
-      } else {
-        // Same credit amount (e.g., pro monthly -> pro yearly)
-        // Just update the plan without changing credits
-        await ctx.db.patch("users", customer.userId, { plan: newPlan });
-
-        logger.info("User plan changed (same tier)", {
-          userId: customer.userId,
-          subscriptionId: subscription.id,
-          previousPlan: oldPlan,
-          newPlan,
-        });
-      }
+      await applyPlanChange(
+        ctx,
+        customer.userId,
+        oldPlan,
+        newPlan,
+        subscription.id
+      );
 
       break;
     }

@@ -74,25 +74,6 @@ export const schoolMemberValidator = v.object({
 });
 
 /**
- * Parent-student relationship validator
- */
-export const parentStudentRelationshipValidator = literals(
-  "father",
-  "mother",
-  "guardian",
-  "other"
-);
-
-/**
- * Parent-student status validator
- */
-export const parentStudentStatusValidator = literals(
-  "pending",
-  "verified",
-  "inactive"
-);
-
-/**
  * School activity action validator
  */
 export const schoolActivityActionValidator = literals(
@@ -155,26 +136,7 @@ const tables = {
 
   schoolMembers: defineTable(schoolMemberValidator)
     .index("userId_status", ["userId", "status"])
-    .index("schoolId_role", ["schoolId", "role"])
-    .index("schoolId_userId_status", ["schoolId", "userId", "status"])
-    .index("schoolId_status", ["schoolId", "status"]),
-
-  schoolParentStudents: defineTable({
-    parentId: v.id("users"),
-    studentId: v.id("users"),
-    schoolId: v.id("schools"),
-    relationship: parentStudentRelationshipValidator,
-    permissions: v.array(v.string()),
-    status: parentStudentStatusValidator,
-    verifiedEmail: v.optional(v.string()),
-    verifiedPhone: v.optional(v.string()),
-    updatedAt: v.number(),
-    verifiedAt: v.optional(v.number()),
-    verifiedBy: v.optional(v.id("users")),
-  })
-    .index("parentId", ["parentId"])
-    .index("studentId", ["studentId"])
-    .index("schoolId", ["schoolId"]),
+    .index("schoolId_userId_status", ["schoolId", "userId", "status"]),
 
   schoolInviteCodes: defineTable({
     schoolId: v.id("schools"),
