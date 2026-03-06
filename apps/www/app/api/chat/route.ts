@@ -99,31 +99,35 @@ export async function POST(req: Request) {
 
   const localeResult = LocaleSchema.safeParse(rawLocale);
   if (!localeResult.success) {
-    return new Response(CHAT_ERRORS.BAD_REQUEST.code, {
-      status: CHAT_ERRORS.BAD_REQUEST.status,
-    });
+    return Response.json(
+      { error: CHAT_ERRORS.BAD_REQUEST.code },
+      { status: CHAT_ERRORS.BAD_REQUEST.status }
+    );
   }
   const locale = localeResult.data;
 
   const modelResult = ModelIdSchema.safeParse(rawModel);
   if (!modelResult.success) {
-    return new Response(CHAT_ERRORS.BAD_REQUEST.code, {
-      status: CHAT_ERRORS.BAD_REQUEST.status,
-    });
+    return Response.json(
+      { error: CHAT_ERRORS.BAD_REQUEST.code },
+      { status: CHAT_ERRORS.BAD_REQUEST.status }
+    );
   }
   const selectedModel = modelResult.data;
 
   const token = await getToken();
   if (!token) {
-    return new Response(CHAT_ERRORS.UNAUTHORIZED.code, {
-      status: CHAT_ERRORS.UNAUTHORIZED.status,
-    });
+    return Response.json(
+      { error: CHAT_ERRORS.UNAUTHORIZED.code },
+      { status: CHAT_ERRORS.UNAUTHORIZED.status }
+    );
   }
 
   if (!message) {
-    return new Response(CHAT_ERRORS.BAD_REQUEST.code, {
-      status: CHAT_ERRORS.BAD_REQUEST.status,
-    });
+    return Response.json(
+      { error: CHAT_ERRORS.BAD_REQUEST.code },
+      { status: CHAT_ERRORS.BAD_REQUEST.status }
+    );
   }
 
   const url = `/${locale}/${cleanSlug(slug)}`;

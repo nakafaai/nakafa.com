@@ -31,7 +31,8 @@
       ]
     },
     "test": {
-      "dependsOn": ["^test"]
+      "dependsOn": ["^test"],
+      "outputs": []
     },
     "test:watch": {
       "dependsOn": ["^test:watch"],
@@ -44,7 +45,8 @@
       "persistent": true
     },
     "test:coverage": {
-      "dependsOn": ["^test:coverage"]
+      "dependsOn": ["^test:coverage"],
+      "outputs": ["coverage/**"]
     },
     "analyze": {
       "dependsOn": ["^analyze"]
@@ -55,10 +57,6 @@
     },
     "start": {
       "dependsOn": ["build"],
-      "cache": false
-    },
-    "translate": {
-      "dependsOn": ["^translate"],
       "cache": false
     },
     "clean": {
