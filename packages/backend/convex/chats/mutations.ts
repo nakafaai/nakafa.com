@@ -248,8 +248,7 @@ export const deleteChat = mutation({
 /**
  * Save an assistant response with parts and deduct credits atomically.
  * Handles both message persistence and credit deduction in a single operation.
- * Security: modelId is read from the stored message, not from client arguments.
- * Token counts (inputTokens, outputTokens, totalTokens) should be passed in the message object.
+ * modelId comes from the server-side route handler, validated before this call.
  *
  * Debt system: Credits are deducted after streaming completes (via waitUntil in the API route).
  * Because enforcement must happen before streaming starts (pre-check in route.ts), a small
@@ -275,19 +274,13 @@ export const saveAssistantResponse = mutation({
   handler: async (ctx, args) => {
     const { message, parts } = args;
 
-    // Authorization check
     const user = await requireAuth(ctx);
     await verifyChatOwnership(ctx, message.chatId, user.appUser._id);
 
-    // Delete existing message if identifier exists (for replacement/upsert)
     if (message.identifier) {
       await deleteMessageByIdentifier(ctx, message.chatId, message.identifier);
     }
 
-    // Calculate credits and deduct.
-    // Debt system: Allow negative balances for better UX — the pre-check in route.ts
-    // is the real enforcement gate before streaming starts. Throwing here would silently
-    // fail (the stream already completed) and leave the response unrecorded.
     let credits = 0;
     let newBalance = user.appUser.credits;
 
@@ -296,9 +289,6 @@ export const saveAssistantResponse = mutation({
       newBalance = user.appUser.credits - credits;
     }
 
-    // Create message with ALL data in single insert
-    // Convex best practice: Insert all fields at once, avoid unnecessary patch
-    // Reference: https://docs.convex.dev/database/writing-data#inserting-new-documents
     const messageId = await ctx.db.insert("messages", {
       chatId: message.chatId,
       role: message.role,
@@ -310,17 +300,13 @@ export const saveAssistantResponse = mutation({
       credits: message.modelId ? credits : undefined,
     });
 
-    // Insert parts for the message
     const partIds = await insertParts(ctx, messageId, parts);
 
-    // Deduct credits if modelId is provided
     if (message.modelId) {
-      // Deduct credits from user
       await ctx.db.patch("users", user.appUser._id, {
         credits: newBalance,
       });
 
-      // Create transaction record
       await ctx.db.insert("creditTransactions", {
         userId: user.appUser._id,
         amount: -credits,

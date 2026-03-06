@@ -14,14 +14,12 @@ const QURAN_SLUG_PARTS_COUNT = 3;
 export async function getVerified(url: string) {
   const cleanedUrl = cleanSlug(url);
 
-  // [0] is locale, [1] is slug
   const slugParts = cleanedUrl.split("/");
 
   if (slugParts[1] === "quran") {
     if (slugParts.length !== QURAN_SLUG_PARTS_COUNT) {
       return false;
     }
-    // example: locale/quran/surah
     const surah = slugParts[2];
     const { data: surahData, error: surahError } = await api.contents.getSurah({
       surah: Number.parseInt(surah, 10),

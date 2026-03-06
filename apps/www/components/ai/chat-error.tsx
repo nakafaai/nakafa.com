@@ -28,7 +28,6 @@ export const AiChatError = memo(() => {
 
   const error = useChat((state) => state.chat.error);
 
-  // Don't render if no error
   if (!error) {
     return null;
   }

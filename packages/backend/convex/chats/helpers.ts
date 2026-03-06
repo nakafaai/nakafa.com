@@ -4,8 +4,6 @@ import type { partValidator } from "@repo/backend/convex/chats/schema";
 import type { Infer } from "convex/values";
 import { ConvexError } from "convex/values";
 
-// Infer part type from schema validator
-// Parts passed from client don't have messageId yet (it's added during insert)
 type PartInput = Omit<Infer<typeof partValidator>, "messageId">;
 
 /**
