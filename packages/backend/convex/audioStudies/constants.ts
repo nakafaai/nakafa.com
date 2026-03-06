@@ -99,19 +99,6 @@ export function isAudioGenerationEnabled(): boolean {
 }
 
 /**
- * Regex for splitting text into words for word count estimation.
- * Used for calculating audio duration from script length.
- */
-export const WORD_SPLIT_REGEX = /\s+/;
-
-/**
- * Audio duration calculation constants.
- * Used for estimating audio duration from word count.
- */
-export const WORDS_PER_MINUTE = 150; // Average speaking rate
-export const SECONDS_PER_MINUTE = 60;
-
-/**
  * PCM audio format constants for ElevenLabs API.
  * Using pcm_44100 (44.1kHz) for Pro plan - CD quality audio.
  *

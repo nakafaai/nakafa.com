@@ -17,8 +17,7 @@ const tables = {
     metadata: v.optional(polarMetadataValidator),
   })
     .index("userId", ["userId"])
-    .index("id", ["id"])
-    .index("externalId", ["externalId"]),
+    .index("id", ["id"]),
 };
 
 export default tables;

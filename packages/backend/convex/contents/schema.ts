@@ -41,9 +41,7 @@ const tables = {
     contentId: v.id("articleContents"),
     viewCount: v.number(),
     updatedAt: v.number(),
-  })
-    .index("by_popularity", ["viewCount"])
-    .index("by_contentId", ["contentId"]),
+  }).index("by_contentId", ["contentId"]),
 
   /**
    * Subject popularity counts.
@@ -53,9 +51,7 @@ const tables = {
     contentId: v.id("subjectSections"),
     viewCount: v.number(),
     updatedAt: v.number(),
-  })
-    .index("by_popularity", ["viewCount"])
-    .index("by_contentId", ["contentId"]),
+  }).index("by_contentId", ["contentId"]),
 
   /**
    * Exercise popularity counts.
@@ -65,9 +61,7 @@ const tables = {
     contentId: v.id("exerciseSets"),
     viewCount: v.number(),
     updatedAt: v.number(),
-  })
-    .index("by_popularity", ["viewCount"])
-    .index("by_contentId", ["contentId"]),
+  }).index("by_contentId", ["contentId"]),
 };
 
 export default tables;

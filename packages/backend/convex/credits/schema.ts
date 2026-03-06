@@ -53,17 +53,13 @@ export const creditResetJobValidator = v.object({
 });
 
 const tables = {
-  creditTransactions: defineTable(creditTransactionValidator).index("userId", [
-    "userId",
-  ]),
+  creditTransactions: defineTable(creditTransactionValidator),
 
   creditResetQueue: defineTable(creditResetQueueValidator)
     .index("status", ["status"])
     .index("planStatusTimestamp", ["plan", "status", "resetTimestamp"]),
 
-  creditResetJobs: defineTable(creditResetJobValidator)
-    .index("jobTypeStartedAt", ["jobType", "startedAt"])
-    .index("status", ["status"]),
+  creditResetJobs: defineTable(creditResetJobValidator),
 };
 
 export default tables;

@@ -5,6 +5,7 @@ import {
   localeValidator,
 } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
+import { slugify } from "@repo/backend/convex/utils/helper";
 import { v } from "convex/values";
 
 /**
@@ -137,7 +138,7 @@ export const linkContentAuthor = internalMutation({
       .first();
 
     if (!author) {
-      const username = slugifyName(args.authorName);
+      const username = slugify(args.authorName);
       const authorId = await ctx.db.insert("authors", {
         name: args.authorName,
         username,
@@ -182,17 +183,6 @@ export const linkContentAuthor = internalMutation({
     return { authorId: author._id, linkId, action: "created" as const };
   },
 });
-
-/**
- * Generate a URL-safe username from a display name.
- * "John Doe" -> "john-doe"
- */
-function slugifyName(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
 
 /**
  * Remove all content authors for a given content item.

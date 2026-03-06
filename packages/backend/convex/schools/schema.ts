@@ -74,25 +74,6 @@ export const schoolMemberValidator = v.object({
 });
 
 /**
- * Parent-student relationship validator
- */
-export const parentStudentRelationshipValidator = literals(
-  "father",
-  "mother",
-  "guardian",
-  "other"
-);
-
-/**
- * Parent-student status validator
- */
-export const parentStudentStatusValidator = literals(
-  "pending",
-  "verified",
-  "inactive"
-);
-
-/**
  * School activity action validator
  */
 export const schoolActivityActionValidator = literals(
@@ -151,35 +132,11 @@ const activityMetadataValidator = v.optional(v.any());
 const tables = {
   schools: defineTable(schoolValidator)
     .index("slug", ["slug"])
-    .index("createdBy", ["createdBy"])
     .index("email", ["email"]),
 
   schoolMembers: defineTable(schoolMemberValidator)
-    .index("schoolId", ["schoolId"])
     .index("userId_status", ["userId", "status"])
-    .index("schoolId_role", ["schoolId", "role"])
-    .index("schoolId_userId_status", ["schoolId", "userId", "status"])
-    .index("schoolId_status", ["schoolId", "status"])
-    .index("inviteToken", ["inviteToken"]),
-
-  schoolParentStudents: defineTable({
-    parentId: v.id("users"),
-    studentId: v.id("users"),
-    schoolId: v.id("schools"),
-    relationship: parentStudentRelationshipValidator,
-    permissions: v.array(v.string()),
-    status: parentStudentStatusValidator,
-    verifiedEmail: v.optional(v.string()),
-    verifiedPhone: v.optional(v.string()),
-    updatedAt: v.number(),
-    verifiedAt: v.optional(v.number()),
-    verifiedBy: v.optional(v.id("users")),
-  })
-    .index("parentId", ["parentId"])
-    .index("studentId", ["studentId"])
-    .index("parentId_studentId", ["parentId", "studentId"])
-    .index("schoolId", ["schoolId"])
-    .index("status", ["status"]),
+    .index("schoolId_userId_status", ["schoolId", "userId", "status"]),
 
   schoolInviteCodes: defineTable({
     schoolId: v.id("schools"),
@@ -193,11 +150,7 @@ const tables = {
     createdBy: v.id("users"),
     updatedBy: v.optional(v.id("users")),
     updatedAt: v.number(),
-  })
-    .index("schoolId_role", ["schoolId", "role"])
-    .index("code", ["code"])
-    .index("schoolId_code", ["schoolId", "code"])
-    .index("schoolId_enabled", ["schoolId", "enabled"]),
+  }).index("code", ["code"]),
 
   schoolActivityLogs: defineTable({
     schoolId: v.id("schools"),
@@ -208,11 +161,7 @@ const tables = {
     metadata: activityMetadataValidator,
     ipAddress: v.optional(v.string()),
     userAgent: v.optional(v.string()),
-  })
-    .index("schoolId", ["schoolId"])
-    .index("userId", ["userId"])
-    .index("action", ["action"])
-    .index("entityType_entityId", ["entityType", "entityId"]),
+  }).index("schoolId", ["schoolId"]),
 };
 
 export default tables;

@@ -1,6 +1,6 @@
-import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { updateContentHash } from "@repo/backend/convex/audioStudies/utils";
 import { internalMutation } from "@repo/backend/convex/functions";
 import {
   articleCategoryValidator,
@@ -13,17 +13,12 @@ import {
   materialValidator,
   subjectCategoryValidator,
 } from "@repo/backend/convex/lib/validators/contents";
+import { slugify } from "@repo/backend/convex/utils/helper";
+import { logger } from "@repo/backend/convex/utils/logger";
 import { v } from "convex/values";
 import { getAll } from "convex-helpers/server/relationships";
 
 type AuthorCache = Map<string, Id<"authors">>;
-
-function slugifyName(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
 
 /**
  * Builds a read-only author cache by querying existing authors.
@@ -89,7 +84,7 @@ export const bulkSyncAuthors = internalMutation({
     for (const name of newAuthorNames) {
       await ctx.db.insert("authors", {
         name,
-        username: slugifyName(name),
+        username: slugify(name),
       });
     }
 
@@ -148,7 +143,7 @@ async function syncContentAuthorsWithCache(
 
   // Log warning for missing authors to aid debugging
   if (missingAuthors.length > 0) {
-    console.warn(
+    logger.warn(
       `[contentSync] Warning: ${missingAuthors.length} author(s) not found in cache for ${contentType} ${contentId}: ${missingAuthors.join(", ")}. ` +
         "Ensure authors are pre-synced via bulkSyncAuthors before content sync."
     );
@@ -224,12 +219,10 @@ export const bulkSyncArticles = internalMutation({
         });
 
         // Invalidate cached audio since content changed
-        await ctx.runMutation(
-          internal.audioStudies.mutations.updateContentHash,
-          {
-            contentRef: { type: "article", id: existing._id },
-            newHash: article.contentHash,
-          }
+        await updateContentHash(
+          ctx,
+          { type: "article", id: existing._id },
+          article.contentHash
         );
 
         authorLinksCreated += await syncContentAuthorsWithCache(
@@ -436,7 +429,7 @@ export const bulkSyncSubjectSections = internalMutation({
         .first();
 
       if (!topicDoc) {
-        console.warn(`Topic not found for section: ${section.slug}`);
+        logger.warn(`Topic not found for section: ${section.slug}`);
         continue;
       }
 
@@ -470,12 +463,10 @@ export const bulkSyncSubjectSections = internalMutation({
         });
 
         // Invalidate cached audio since content changed
-        await ctx.runMutation(
-          internal.audioStudies.mutations.updateContentHash,
-          {
-            contentRef: { type: "subject", id: existing._id },
-            newHash: section.contentHash,
-          }
+        await updateContentHash(
+          ctx,
+          { type: "subject", id: existing._id },
+          section.contentHash
         );
 
         authorLinksCreated += await syncContentAuthorsWithCache(
@@ -653,7 +644,7 @@ export const bulkSyncExerciseQuestions = internalMutation({
         .first();
 
       if (!set) {
-        console.warn(`Set not found for question: ${question.slug}`);
+        logger.warn(`Set not found for question: ${question.slug}`);
         continue;
       }
 
