@@ -24,7 +24,7 @@ export type ChatVisibility = Infer<typeof chatVisibilityValidator>;
 /**
  * Chat type validator
  */
-export const chatTypeValidator = literals("study", "finance");
+export const chatTypeValidator = literals("study");
 
 /**
  * Chat base validator (without system fields)
