@@ -41,7 +41,7 @@
     "@repo/seo": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.10",
-    "@tabler/icons-react": "^3.39.0",
+    "@tabler/icons-react": "^3.40.0",
     "@tailwindcss/postcss": "^4.2.1",
     "@takumi-rs/core": "^0.70.4",
     "@takumi-rs/image-response": "^0.70.4",
