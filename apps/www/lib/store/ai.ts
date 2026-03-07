@@ -1,4 +1,5 @@
 import type { ModelId } from "@repo/ai/config/models";
+import { MODEL_IDS } from "@repo/ai/config/models";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { createStore } from "zustand";
 import { persist } from "zustand/middleware";
@@ -40,7 +41,13 @@ export const createAiStore = () =>
         setOpen: (open) => set({ open }),
         setText: (text) => set({ text }),
         setModel: (model) => set({ model }),
-        getModel: () => get().model,
+        getModel: () => {
+          const current = get().model;
+          if (MODEL_IDS.includes(current)) {
+            return current;
+          }
+          return initialState.model;
+        },
         setQuery: (query) => set({ query }),
         setActiveChatId: (activeChatId) => set({ activeChatId }),
       })),
