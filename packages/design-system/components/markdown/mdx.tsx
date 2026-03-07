@@ -60,10 +60,10 @@ export const components = {
   ),
   p: (props: ParagraphProps) => <Paragraph {...props} />,
   ol: (props: ListProps) => (
-    <ol className="my-4 list-decimal space-y-4 pl-4 last:mb-0" {...props} />
+    <ol className="my-4 list-decimal space-y-4 pl-4.25 last:mb-0" {...props} />
   ),
   ul: (props: ListProps) => (
-    <ul className="my-4 list-disc space-y-4 pl-4 last:mb-0" {...props} />
+    <ul className="my-4 list-disc space-y-4 pl-4.25 last:mb-0" {...props} />
   ),
   li: (props: ListItemProps) => (
     <li className="space-y-4 text-pretty pl-1 leading-relaxed" {...props} />
