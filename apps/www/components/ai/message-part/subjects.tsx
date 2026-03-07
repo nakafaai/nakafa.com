@@ -106,15 +106,17 @@ const SubjectsPartPreview = memo(
       <div className="flex flex-wrap items-center gap-2">
         {subjects.slice(0, MAX_SHOWN_SUBJECTS).map((subject) => (
           <Button
+            className="max-w-full"
             key={subject.url}
             nativeButton={false}
             render={
               <a
+                className="min-w-0"
                 href={`/${subject.slug}`}
                 rel="noopener noreferrer"
                 target="_blank"
               >
-                {subject.title}
+                <span className="truncate">{subject.title}</span>
                 <HugeIcons icon={ArrowUpRight01Icon} />
               </a>
             }

@@ -9,8 +9,6 @@ import { HomeHeader } from "@/components/home/header";
 import { HomeTrending } from "@/components/home/trending";
 import { getToken } from "@/lib/auth/server";
 
-export const revalidate = false;
-
 interface Props {
   params: Promise<{ locale: Locale }>;
   searchParams: Promise<{ from: string }>;

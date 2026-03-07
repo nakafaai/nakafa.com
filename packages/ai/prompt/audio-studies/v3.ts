@@ -1,4 +1,5 @@
 import { createPrompt } from "@repo/ai/prompt/utils";
+import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 
 interface PodcastScriptProps {
   /**
@@ -12,7 +13,7 @@ interface PodcastScriptProps {
   /**
    * The locale of the content (e.g., "en", "id", "es", etc.).
    */
-  locale: string;
+  locale: Locale;
   /**
    * The title of the content (article or subject section).
    */
@@ -22,7 +23,7 @@ interface PodcastScriptProps {
 /**
  * Language guidelines for different locales.
  */
-const LANGUAGE_GUIDELINES: Record<string, string> = {
+const LANGUAGE_GUIDELINES: Record<Locale, string> = {
   en: "Use conversational, direct English. No formal introductions. Get straight to the point. Use everyday analogies.",
   id: "Gunakan Bahasa Indonesia yang santai dan langsung. Tanpa perkenalan panjang. Langsung ke inti materi. Gunakan analogi kehidupan sehari-hari.",
 };
@@ -30,7 +31,7 @@ const LANGUAGE_GUIDELINES: Record<string, string> = {
 /**
  * Gets language guidelines for a locale.
  */
-function getLanguageGuideline(locale: string): string {
+function getLanguageGuideline(locale: Locale): string {
   return LANGUAGE_GUIDELINES[locale] ?? LANGUAGE_GUIDELINES.en;
 }
 

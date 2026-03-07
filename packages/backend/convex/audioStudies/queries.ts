@@ -1,5 +1,10 @@
 import { internalQuery } from "@repo/backend/convex/_generated/server";
-import { fetchContentForAudio } from "@repo/backend/convex/audioStudies/utils";
+import {
+  fetchContentForAudio,
+  getContentHash as getContentHashHelper,
+  getContentRefBySlugAndLocale as getContentRefBySlugAndLocaleHelper,
+  getContentSlug as getContentSlugHelper,
+} from "@repo/backend/convex/audioStudies/utils";
 import {
   audioContentRefValidator,
   audioModelValidator,
@@ -133,26 +138,7 @@ export const getContentHash = internalQuery({
     contentRef: audioContentRefValidator,
   },
   returns: nullable(v.string()),
-  handler: async (ctx, args) => {
-    // TypeScript automatically narrows the type based on the discriminator
-    // No assertions needed - this is the power of discriminated unions
-    switch (args.contentRef.type) {
-      case "article": {
-        // TypeScript knows args.contentRef.id is Id<"articleContents">
-        const article = await ctx.db.get("articleContents", args.contentRef.id);
-        return article?.contentHash ?? null;
-      }
-      case "subject": {
-        // TypeScript knows args.contentRef.id is Id<"subjectSections">
-        const section = await ctx.db.get("subjectSections", args.contentRef.id);
-        return section?.contentHash ?? null;
-      }
-      default: {
-        // Exhaustive check - TypeScript ensures we handle all cases
-        return null;
-      }
-    }
-  },
+  handler: async (ctx, args) => getContentHashHelper(ctx, args.contentRef),
 });
 
 /**
@@ -165,21 +151,7 @@ export const getContentSlug = internalQuery({
     contentRef: audioContentRefValidator,
   },
   returns: nullable(v.string()),
-  handler: async (ctx, args) => {
-    switch (args.contentRef.type) {
-      case "article": {
-        const article = await ctx.db.get("articleContents", args.contentRef.id);
-        return article?.slug ?? null;
-      }
-      case "subject": {
-        const section = await ctx.db.get("subjectSections", args.contentRef.id);
-        return section?.slug ?? null;
-      }
-      default: {
-        return null;
-      }
-    }
-  },
+  handler: async (ctx, args) => getContentSlugHelper(ctx, args.contentRef),
 });
 
 /**
@@ -215,59 +187,6 @@ export const getContentRefBySlugAndLocale = internalQuery({
     locale: localeValidator,
   },
   returns: nullable(audioContentRefValidator),
-  handler: async (ctx, args) => {
-    // First get the slug from the original content
-    let slug: string | null = null;
-    switch (args.contentRef.type) {
-      case "article": {
-        const article = await ctx.db.get("articleContents", args.contentRef.id);
-        slug = article?.slug ?? null;
-        break;
-      }
-      case "subject": {
-        const section = await ctx.db.get("subjectSections", args.contentRef.id);
-        slug = section?.slug ?? null;
-        break;
-      }
-      default: {
-        return null;
-      }
-    }
-
-    if (!slug) {
-      return null;
-    }
-
-    // Then find the content with matching slug in the target locale
-    // Return discriminated union - TypeScript infers correct types
-    switch (args.contentRef.type) {
-      case "article": {
-        const article = await ctx.db
-          .query("articleContents")
-          .withIndex("locale_slug", (q) =>
-            q.eq("locale", args.locale).eq("slug", slug)
-          )
-          .first();
-        if (!article) {
-          return null;
-        }
-        return { type: "article" as const, id: article._id };
-      }
-      case "subject": {
-        const section = await ctx.db
-          .query("subjectSections")
-          .withIndex("locale_slug", (q) =>
-            q.eq("locale", args.locale).eq("slug", slug)
-          )
-          .first();
-        if (!section) {
-          return null;
-        }
-        return { type: "subject" as const, id: section._id };
-      }
-      default: {
-        return null;
-      }
-    }
-  },
+  handler: async (ctx, args) =>
+    getContentRefBySlugAndLocaleHelper(ctx, args.contentRef, args.locale),
 });

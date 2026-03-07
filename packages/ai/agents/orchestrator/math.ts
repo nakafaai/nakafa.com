@@ -1,14 +1,23 @@
 import { runMathAgent } from "@repo/ai/agents/math";
-import type { MathAgentParams } from "@repo/ai/types/agents";
+import { TOOL_NAMES } from "@repo/ai/agents/orchestrator";
+import type { MathAgentParams, UsageAccumulator } from "@repo/ai/types/agents";
 import { tool } from "ai";
 import * as z from "zod";
 
+interface MathToolParams extends Omit<MathAgentParams, "task"> {
+  usageAccumulator: UsageAccumulator;
+}
+
+/**
+ * Create math tool with usage tracking.
+ */
 export const createMathTool = ({
   writer,
   modelId,
   locale,
   context,
-}: Omit<MathAgentParams, "task">) => {
+  usageAccumulator,
+}: MathToolParams) => {
   return tool({
     description:
       "Perform mathematical calculations and solve math problems. Use this for ANY mathematical computation - from simple arithmetic to complex expressions.",
@@ -28,7 +37,9 @@ export const createMathTool = ({
         context,
       });
 
-      return result;
+      usageAccumulator.addUsage(TOOL_NAMES.mathCalculation, result.usage);
+
+      return result.text;
     },
   });
 };

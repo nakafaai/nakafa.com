@@ -1,4 +1,6 @@
-import type { PersistentImage } from "@takumi-rs/core";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import type { ImageSource } from "@takumi-rs/core";
 import { ImageResponse } from "@takumi-rs/image-response";
 import anyAscii from "any-ascii";
 import type { ReactNode } from "react";
@@ -12,11 +14,9 @@ interface GenerateProps {
   title: ReactNode;
 }
 
-const [logo] = await Promise.all([
-  fetch("https://nakafa.com/logo.svg").then((res) => res.arrayBuffer()),
-]);
+const logo = await readFile(join(process.cwd(), "public", "logo.svg"));
 
-const persistentImages: PersistentImage[] = [
+const persistentImages: ImageSource[] = [
   {
     src: "logo",
     data: logo,
@@ -34,6 +34,7 @@ export function generateOGImage(
       width,
       height,
       persistentImages,
+      fetchedResources: [],
     }
   );
 }

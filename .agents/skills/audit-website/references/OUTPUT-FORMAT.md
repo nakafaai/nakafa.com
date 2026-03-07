@@ -19,7 +19,7 @@ The `--format llm` output is a compact, token-optimized hybrid XML/text format d
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<audit version="0.0.13">
+<audit version="0.0.24">
 ```
 
 ### 2. Site Information
@@ -120,11 +120,49 @@ Item format:
 - `[key: value, ...]` - Metadata in square brackets
 - `(from: <sources>)` - Source pages where item appears
 
+## Diff Output (LLM Format)
+
+When using `squirrel report --diff` or `--regression-since` with `--format llm`,
+the output is a compact XML diff format:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<diff version="0.0.24">
+ <baseline id="a7b3c2d1" url="https://example.com" date="2026-01-17T10:30:00Z" pages="42" score="87" grade="B"/>
+ <current id="b9c4e1f2" url="https://example.com" date="2026-01-18T10:30:00Z" pages="44" score="84" grade="B"/>
+ <summary added="3" removed="1" changed="2" regressions="1" improvements="1"/>
+ <added>
+  <issue fp="abc123" rule="core/meta-title" severity="error" status="fail" check="meta-title" category="core" weight="8">
+   Missing page title
+   Target: page /about
+  </issue>
+ </added>
+ <removed>
+  ...
+ </removed>
+ <changed>
+  <change type="regression" fp="def456" rule="links/broken-links" severity="warning" status="fail" check="broken-links">
+   warn→fail: Broken link count increased
+   Before:
+    <issue ...> ... </issue>
+   After:
+    <issue ...> ... </issue>
+  </change>
+ </changed>
+</diff>
+```
+
+Key fields:
+- `fp`: deterministic fingerprint for the issue instance
+- `rule`, `check`, `severity`, `status`: rule and check metadata
+- `Target:`: item/page/check target
+- `change type`: `regression`, `improvement`, or `change`
+
 ## Example Output
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<audit version="0.0.13">
+<audit version="0.0.24">
 <site url="https://example.com" crawled="51" date="2025-01-18T10:30:00Z"/>
 <score overall="78" grade="C">
  <cat name="Core SEO" score="85"/>
@@ -150,20 +188,21 @@ Item format:
 
 ## Usage
 
-The LLM format is only available via the `report` command:
+The LLM format is available via both `audit` and `report` commands:
 
 ```bash
-# Run audit first
-squirrel audit https://example.com
+# Direct LLM output (single step)
+squirrel audit https://example.com --format llm
 
-# Export as LLM format
+# Or two-step workflow
+squirrel audit https://example.com
 squirrel report <audit-id> --format llm
 
-# Or pipe directly to AI agent
-squirrel report <audit-id> --format llm | claude
+# Pipe directly to AI agent
+squirrel audit https://example.com --format llm | claude
 ```
 
-**Note:** The `audit` command does not support `--format llm`. You must use the two-step process: audit then report.
+The `audit` command supports `--format llm` directly for convenience. Use the two-step workflow when you need to generate reports in multiple formats from a single audit.
 
 ## Comparison with Other Formats
 

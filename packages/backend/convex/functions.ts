@@ -28,6 +28,7 @@ import { schoolClassesHandler } from "@repo/backend/convex/triggers/schools/clas
 import { schoolClassMembersHandler } from "@repo/backend/convex/triggers/schools/classMembers";
 import { schoolMembersHandler } from "@repo/backend/convex/triggers/schools/members";
 import { schoolsHandler } from "@repo/backend/convex/triggers/schools/schools";
+import { subscriptionsHandler } from "@repo/backend/convex/triggers/subscriptions/subscriptions";
 import {
   customCtx,
   customMutation,
@@ -58,6 +59,11 @@ triggers.register("schoolClassMaterialViews", noopHandler);
 triggers.register("contentAudios", noopHandler);
 triggers.register("audioGenerationQueue", noopHandler);
 triggers.register("exerciseAttempts", noopHandler);
+triggers.register("creditTransactions", noopHandler);
+triggers.register("creditResetJobs", noopHandler);
+triggers.register("creditResetQueue", noopHandler);
+triggers.register("users", noopHandler);
+triggers.register("subscriptions", subscriptionsHandler);
 triggers.register("contentViews", contentViewsHandler);
 
 // Popularity aggregate triggers for trending content

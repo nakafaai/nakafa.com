@@ -13,6 +13,7 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { useMediaQuery } from "@mantine/hooks";
+import { DEFAULT_TITLE } from "@repo/ai/features/constants";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
@@ -36,6 +37,7 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
@@ -74,10 +76,12 @@ import {
 import { useAi } from "@/lib/context/use-ai";
 import { ChatProvider, useChat } from "@/lib/context/use-chat";
 import { useUser } from "@/lib/context/use-user";
-import { AIChatLoading } from "./chat-loading";
+import { AiChatError } from "./chat-error";
 import { AiChatMessage } from "./chat-message";
 import { AiChatModel } from "./chat-model";
+import { AiChatPending } from "./chat-pending";
 import { CurrentChatProvider, useCurrentChat } from "./chat-provider";
+import { ChatSpacing } from "./chat-spacing";
 
 const MIN_WIDTH = 384;
 const MAX_WIDTH = 672;
@@ -233,7 +237,7 @@ const AiSheetNewChat = memo(() => {
       }
 
       const chatId = await createChat({
-        title: "New Chat",
+        title: DEFAULT_TITLE,
         type: "study",
       });
 
@@ -290,6 +294,7 @@ const AiSheetHistory = memo(() => {
 AiSheetHistory.displayName = "AiSheetHistory";
 
 const AiSheetHistoryContent = memo(({ userId }: { userId: Id<"users"> }) => {
+  const t = useTranslations("Ai");
   const activeChatId = useAi((state) => state.activeChatId);
   const setActiveChatId = useAi((state) => state.setActiveChatId);
   const { results, status } = usePaginatedQuery(
@@ -304,6 +309,7 @@ const AiSheetHistoryContent = memo(({ userId }: { userId: Id<"users"> }) => {
 
   return (
     <DropdownMenuContent align="end" className="max-h-64">
+      <DropdownMenuLabel>{t("recent-chats")}</DropdownMenuLabel>
       <DropdownMenuGroup>
         {results.map((chat) => {
           const isPrivate = chat.visibility === "private";
@@ -445,7 +451,11 @@ const AiSheetContent = memo(() => {
             </Message>
           ))}
 
-          <AIChatLoading />
+          <AiChatPending />
+
+          <AiChatError />
+
+          <ChatSpacing />
         </ConversationContent>
         <ConversationScrollButton />
       </Conversation>

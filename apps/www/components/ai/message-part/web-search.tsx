@@ -88,6 +88,7 @@ const WebSearchPartPreview = memo(
     return (
       <div className="flex flex-wrap items-center gap-2">
         {results.map((item, index) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: URL may appear multiple times, need index for uniqueness
           <Source href={item.url} key={`${item.url}-${index}`}>
             <SourceTrigger showFavicon />
             <SourceContent description={item.description} title={item.title} />

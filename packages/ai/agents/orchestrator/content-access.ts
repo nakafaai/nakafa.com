@@ -1,14 +1,27 @@
 import { runContentAccessAgent } from "@repo/ai/agents/content-access";
-import type { ContentAccessAgentParams } from "@repo/ai/types/agents";
+import { TOOL_NAMES } from "@repo/ai/agents/orchestrator";
+import type {
+  ContentAccessAgentParams,
+  UsageAccumulator,
+} from "@repo/ai/types/agents";
 import { tool } from "ai";
 import * as z from "zod";
 
+interface ContentAccessToolParams
+  extends Omit<ContentAccessAgentParams, "task"> {
+  usageAccumulator: UsageAccumulator;
+}
+
+/**
+ * Create content access tool with usage tracking.
+ */
 export const createContentAccessTool = ({
   writer,
   modelId,
   locale,
   context,
-}: Omit<ContentAccessAgentParams, "task">) => {
+  usageAccumulator,
+}: ContentAccessToolParams) => {
   return tool({
     description:
       "Access Nakafa educational content including articles, subjects, Quran chapters, and exercises. Use this for retrieving content from the Nakafa platform.",
@@ -28,7 +41,9 @@ export const createContentAccessTool = ({
         context,
       });
 
-      return result;
+      usageAccumulator.addUsage(TOOL_NAMES.contentAccess, result.usage);
+
+      return result.text;
     },
   });
 };

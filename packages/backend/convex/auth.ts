@@ -13,6 +13,10 @@ import {
 } from "@repo/backend/convex/_generated/server";
 import authConfig from "@repo/backend/convex/auth.config";
 import authSchema from "@repo/backend/convex/betterAuth/schema";
+import {
+  DEFAULT_USER_CREDITS,
+  DEFAULT_USER_PLAN,
+} from "@repo/backend/convex/credits/constants";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
 import {
@@ -44,6 +48,9 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
             authId: authUser._id,
             name: authUser.name,
             image: authUser.image ?? undefined,
+            plan: DEFAULT_USER_PLAN,
+            credits: DEFAULT_USER_CREDITS,
+            creditsResetAt: Date.now(),
           });
 
           // Create default notification preferences

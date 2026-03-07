@@ -27,10 +27,7 @@ const tables = {
     contentHash: v.string(),
     /** Last sync timestamp (epoch ms) */
     syncedAt: v.number(),
-  })
-    .index("locale_slug", ["locale", "slug"])
-    .index("locale_category", ["locale", "category"])
-    .index("contentHash", ["contentHash"]),
+  }).index("locale_slug", ["locale", "slug"]),
 
   /**
    * Normalized article citations.

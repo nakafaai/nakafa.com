@@ -7,7 +7,7 @@ import { getTranslations } from "next-intl/server";
 
 class TranslationLoadError extends Data.TaggedError("TranslationLoadError")<{
   readonly namespace: string;
-  readonly locale: string;
+  readonly locale: Locale;
 }> {}
 
 class MetadataNotFoundError extends Data.TaggedError("MetadataNotFoundError")<{

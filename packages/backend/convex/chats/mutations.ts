@@ -1,10 +1,15 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { getModelCreditCost } from "@repo/ai/config/models";
+import { DEFAULT_TITLE } from "@repo/ai/features/constants";
+import {
+  deleteMessageByIdentifier,
+  insertParts,
+  verifyChatOwnership,
+} from "@repo/backend/convex/chats/helpers";
 import tables, {
   chatTypeValidator,
   chatVisibilityValidator,
 } from "@repo/backend/convex/chats/schema";
-import { mutation } from "@repo/backend/convex/functions";
+import { internalMutation, mutation } from "@repo/backend/convex/functions";
 import {
   requireAuth,
   requireAuthWithSession,
@@ -12,51 +17,7 @@ import {
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { ConvexError, v } from "convex/values";
 
-/**
- * Helper: Delete all parts for a message.
- * This operates within the same transaction as the caller.
- */
-async function deletePartsForMessage(
-  ctx: MutationCtx,
-  messageId: Id<"messages">
-) {
-  // Use compound index, omit order condition to get all parts
-  const parts = await ctx.db
-    .query("parts")
-    .withIndex("messageId_order", (q) => q.eq("messageId", messageId))
-    .collect();
-
-  for (const part of parts) {
-    await ctx.db.delete("parts", part._id);
-  }
-}
-
-/**
- * Helper: Delete messages and their parts from a specific message onwards.
- * This operates within the same transaction as the caller.
- */
-async function deleteMessagesFromPoint(
-  ctx: MutationCtx,
-  chatId: Id<"chats">,
-  fromCreationTime: number
-) {
-  const messages = await ctx.db
-    .query("messages")
-    .withIndex("chatId", (q) =>
-      q.eq("chatId", chatId).gte("_creationTime", fromCreationTime)
-    )
-    .collect();
-
-  for (const message of messages) {
-    await deletePartsForMessage(ctx, message._id);
-    await ctx.db.delete("messages", message._id);
-  }
-}
-
-/**
- * Create a new chat for the authenticated user with optional title.
- * Only the logged-in user can create chats for themselves.
- */
+/** Creates a new chat for the authenticated user. */
 export const createChat = mutation({
   args: {
     title: v.optional(v.string()),
@@ -68,7 +29,7 @@ export const createChat = mutation({
 
     const chatId = await ctx.db.insert("chats", {
       updatedAt: Date.now(),
-      title: args.title || "New Chat",
+      title: args.title || DEFAULT_TITLE,
       userId: user.appUser._id,
       visibility: "private", // default to private
       type: args.type,
@@ -77,10 +38,7 @@ export const createChat = mutation({
   },
 });
 
-/**
- * Update the title of a chat.
- * Only the chat owner can update the title.
- */
+/** Updates the title of a chat. Only the owner can rename. */
 export const updateChatTitle = mutation({
   args: {
     chatId: vv.id("chats"),
@@ -88,7 +46,7 @@ export const updateChatTitle = mutation({
   },
   returns: vv.id("chats"),
   handler: async (ctx, args) => {
-    // We need fast access, so we use requireAuth instead of requireAuthWithSession
+    // Fast JWT auth — no session DB call needed here
     const user = await requireAuth(ctx);
 
     const chat = await ctx.db.get("chats", args.chatId);
@@ -112,10 +70,7 @@ export const updateChatTitle = mutation({
   },
 });
 
-/**
- * Update the visibility of a chat.
- * Only the chat owner can update the visibility.
- */
+/** Updates the visibility of a chat. Only the owner can change it. */
 export const updateChatVisibility = mutation({
   args: {
     chatId: vv.id("chats"),
@@ -147,19 +102,16 @@ export const updateChatVisibility = mutation({
 });
 
 /**
- * Atomically replace a message with parts.
- * If identifier exists, deletes that message (and all subsequent messages) before inserting.
- * This ensures one message per identifier, but creates a new _id each time.
- * Parts messageId is omitted - set internally after message creation.
- * Only the chat owner can add messages.
+ * Saves a user message with parts.
+ * If an existing message shares the same identifier it is replaced (upsert semantics).
  */
-export const replaceMessageWithParts = mutation({
+export const saveMessage = mutation({
   args: {
     message: tables.messages.validator,
     parts: v.array(
       v.object({
         ...tables.parts.validator.fields,
-        messageId: v.optional(vv.id("messages")), // make it optional here to allow for upserting parts without a messageId
+        messageId: v.optional(vv.id("messages")),
       })
     ),
   },
@@ -170,80 +122,42 @@ export const replaceMessageWithParts = mutation({
   handler: async (ctx, args) => {
     const { message, parts } = args;
 
-    // We need fast access, so we use requireAuth instead of requireAuthWithSession
+    // Fast JWT auth — no session DB call needed here
     const user = await requireAuth(ctx);
 
-    // Authorization check - verify user owns the chat
-    const chat = await ctx.db.get("chats", message.chatId);
-    if (!chat) {
-      throw new ConvexError({
-        code: "CHAT_NOT_FOUND",
-        message: `Chat not found for chatId: ${message.chatId}`,
-      });
-    }
-
-    if (chat.userId !== user.appUser._id) {
-      throw new ConvexError({
-        code: "FORBIDDEN",
-        message: "You do not have permission to add messages to this chat.",
-      });
-    }
+    await verifyChatOwnership(ctx, message.chatId, user.appUser._id);
 
     if (message.identifier) {
-      const targetMessage = await ctx.db
-        .query("messages")
-        .withIndex("chatId_identifier", (q) =>
-          q.eq("chatId", message.chatId).eq("identifier", message.identifier)
-        )
-        .unique();
-
-      if (targetMessage && targetMessage.chatId === message.chatId) {
-        await deleteMessagesFromPoint(
-          ctx,
-          targetMessage.chatId,
-          targetMessage._creationTime
-        );
-      }
+      await deleteMessageByIdentifier(ctx, message.chatId, message.identifier);
     }
 
-    // Create message
+    // modelId stored server-side so clients cannot spoof credit calculations
     const messageId = await ctx.db.insert("messages", {
       chatId: message.chatId,
       role: message.role,
       identifier: message.identifier,
+      modelId: message.modelId,
     });
 
-    // Insert parts with messageId
-    const partIds: Id<"parts">[] = [];
-    for (const part of parts) {
-      const partId = await ctx.db.insert("parts", {
-        ...part,
-        messageId,
-      });
-      partIds.push(partId);
-    }
+    const partIds = await insertParts(ctx, messageId, parts);
 
     return { messageId, partIds };
   },
 });
 
-/**
- * Atomically create a chat with initial message and parts.
- * Message chatId and parts messageId are omitted - set internally after creation.
- * Only the logged-in user can create chats for themselves.
- */
+/** Atomically creates a chat with its first message and parts. */
 export const createChatWithMessage = mutation({
   args: {
     title: v.optional(v.string()),
     type: chatTypeValidator,
     message: v.object({
       ...tables.messages.validator.fields,
-      chatId: v.optional(vv.id("chats")), // make it optional here to allow for creating a chat with a message without a chatId
+      chatId: v.optional(vv.id("chats")),
     }),
     parts: v.array(
       v.object({
         ...tables.parts.validator.fields,
-        messageId: v.optional(vv.id("messages")), // make it optional here to allow for creating a chat with a message without a messageId
+        messageId: v.optional(vv.id("messages")),
       })
     ),
   },
@@ -253,43 +167,30 @@ export const createChatWithMessage = mutation({
     partIds: v.array(vv.id("parts")),
   }),
   handler: async (ctx, args) => {
-    // We need fast access, so we use requireAuth instead of requireAuthWithSession
+    // Fast JWT auth — no session DB call needed here
     const user = await requireAuth(ctx);
 
-    // Create chat
     const chatId = await ctx.db.insert("chats", {
       updatedAt: Date.now(),
-      title: args.title || "New Chat",
+      title: args.title || DEFAULT_TITLE,
       userId: user.appUser._id,
-      visibility: "private", // default to private
+      visibility: "private",
       type: args.type,
     });
 
-    // Create first message
     const messageId = await ctx.db.insert("messages", {
       chatId,
       role: args.message.role,
       identifier: args.message.identifier,
     });
 
-    // Insert parts with messageId
-    const partIds: Id<"parts">[] = [];
-    for (const part of args.parts) {
-      const partId = await ctx.db.insert("parts", {
-        ...part,
-        messageId,
-      });
-      partIds.push(partId);
-    }
+    const partIds = await insertParts(ctx, messageId, args.parts);
 
     return { chatId, messageId, partIds };
   },
 });
 
-/**
- * Delete a chat.
- * Only the chat owner can delete their own chats.
- */
+/** Deletes a chat. Only the owner can delete their own chats. */
 export const deleteChat = mutation({
   args: {
     chatId: vv.id("chats"),
@@ -315,5 +216,94 @@ export const deleteChat = mutation({
 
     await ctx.db.delete("chats", args.chatId);
     return null;
+  },
+});
+
+/**
+ * Persists an assistant message with parts and deducts credits atomically.
+ *
+ * Credits are deducted *after* streaming (via waitUntil). The pre-check in
+ * route.ts is the real gate — a small negative balance is intentionally
+ * allowed here to avoid erroring mid-stream.
+ */
+export const saveAssistantResponse = internalMutation({
+  args: {
+    userId: vv.id("users"),
+    message: tables.messages.validator,
+    parts: v.array(
+      v.object({
+        ...tables.parts.validator.fields,
+        messageId: v.optional(vv.id("messages")),
+      })
+    ),
+  },
+  returns: v.object({
+    messageId: vv.id("messages"),
+    partIds: v.array(vv.id("parts")),
+    credits: v.number(),
+    newBalance: v.number(),
+  }),
+  handler: async (ctx, args) => {
+    const { userId, message, parts } = args;
+
+    // Auth is not propagated to scheduled functions — user is looked up by the
+    // userId the action captured from its own auth context before scheduling.
+    const appUser = await ctx.db.get("users", userId);
+    if (!appUser) {
+      throw new ConvexError({
+        code: "UNAUTHORIZED",
+        message: "User not found.",
+      });
+    }
+
+    await verifyChatOwnership(ctx, message.chatId, appUser._id);
+
+    if (message.identifier) {
+      await deleteMessageByIdentifier(ctx, message.chatId, message.identifier);
+    }
+
+    let credits = 0;
+    let newBalance = appUser.credits;
+
+    if (message.modelId) {
+      credits = getModelCreditCost(message.modelId);
+      newBalance = appUser.credits - credits;
+    }
+
+    const messageId = await ctx.db.insert("messages", {
+      chatId: message.chatId,
+      role: message.role,
+      identifier: message.identifier,
+      modelId: message.modelId,
+      inputTokens: message.inputTokens,
+      outputTokens: message.outputTokens,
+      totalTokens: message.totalTokens,
+      credits: message.modelId ? credits : undefined,
+    });
+
+    const partIds = await insertParts(ctx, messageId, parts);
+
+    if (message.modelId) {
+      await ctx.db.patch("users", appUser._id, {
+        credits: newBalance,
+      });
+
+      await ctx.db.insert("creditTransactions", {
+        userId: appUser._id,
+        amount: -credits,
+        type: "usage",
+        balanceAfter: newBalance,
+        metadata: {
+          chatId: message.chatId,
+          messageId,
+          modelId: message.modelId,
+          inputTokens: message.inputTokens,
+          outputTokens: message.outputTokens,
+          totalTokens: message.totalTokens,
+        },
+      });
+    }
+
+    return { messageId, partIds, credits, newBalance };
   },
 });

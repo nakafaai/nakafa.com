@@ -215,6 +215,7 @@ export function RelationVisualizer({
           return (
             <line
               className="stroke-foreground/50"
+              // biome-ignore lint/suspicious/noArrayIndexKey: Mappings may have same from/to, need index for uniqueness
               key={`mapping-${mapping.from}-${mapping.to}-${index}`}
               markerEnd="url(#arrowhead-visualizer)"
               strokeWidth="1.5" // Adjusted end point for marker

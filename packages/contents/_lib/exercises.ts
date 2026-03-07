@@ -8,6 +8,7 @@ import {
   type ChoicesValidationError,
   ExerciseLoadError,
 } from "@repo/contents/_shared/error";
+import type { Locale } from "@repo/contents/_types/content";
 import {
   type ExercisesChoices,
   ExercisesChoicesSchema,
@@ -16,7 +17,6 @@ import type { Exercise } from "@repo/contents/_types/exercises/shared";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, Option } from "effect";
 import ky from "ky";
-import type { Locale } from "next-intl";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = nodePath.dirname(__filename);

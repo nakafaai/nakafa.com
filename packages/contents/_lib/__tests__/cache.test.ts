@@ -97,7 +97,7 @@ describe("cache - locale and path checks", () => {
   it("should return false for invalid locale", () => {
     resetMDXFileCache();
     registry.build();
-    const hasLocale = hasLocaleInCache("invalid-locale");
+    const hasLocale = hasLocaleInCache("invalid-locale" as Locale);
     expect(hasLocale).toBe(false);
   });
 
@@ -113,7 +113,7 @@ describe("cache - locale and path checks", () => {
 
   it("should return false when checking path for non-existent locale", () => {
     registry.build();
-    expect(hasPathInCache("fr", "some-path")).toBe(false);
+    expect(hasPathInCache("fr" as Locale, "some-path")).toBe(false);
   });
 
   it("should return slugs for locale", () => {

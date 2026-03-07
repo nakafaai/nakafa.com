@@ -19,7 +19,7 @@ export const SuggestionsPart = memo(({ message }: Props) => {
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
         <HugeIcons className="size-4" icon={QuoteDownIcon} />
-        <span>{t("related")}</span>
+        <span>{t("follow-up")}</span>
       </div>
       <div className="flex flex-col">
         {suggestions.map((suggestion) => (

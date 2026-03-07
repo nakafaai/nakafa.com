@@ -9,6 +9,7 @@ import {
   type Verse,
 } from "@repo/contents/_types/quran";
 import { Effect, Option, pipe } from "effect";
+import type { Locale } from "next-intl";
 
 const SURAH_COUNT = 114;
 const VERSE_COUNT = 286;
@@ -132,7 +133,7 @@ export const getSurahName = ({
   locale,
   name,
 }: {
-  locale: string;
+  locale: Locale;
   name: Surah["name"];
 }): string =>
   pipe(

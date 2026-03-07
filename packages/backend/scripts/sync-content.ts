@@ -143,7 +143,7 @@ const DataIntegritySchema = z.object({
 const StaleItemSchema = z.object({
   id: z.string(),
   slug: z.string(),
-  locale: z.string(),
+  locale: z.enum(["en", "id"]),
 });
 
 /** Zod schema for StaleContent query result */
@@ -520,7 +520,7 @@ function logSuccess(message: string) {
 /** Stale item info for clean operations */
 interface StaleItem {
   id: string;
-  locale: string;
+  locale: Locale;
   slug: string;
 }
 

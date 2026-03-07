@@ -39,8 +39,7 @@ const tables = {
     customerCancellationComment: v.optional(nullable(v.string())),
   })
     .index("id", ["id"])
-    .index("customerId_status", ["customerId", "status"])
-    .index("schoolId_status", ["schoolId", "status"]),
+    .index("customerId_status", ["customerId", "status"]),
 };
 
 export default tables;

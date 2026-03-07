@@ -1,3 +1,4 @@
+import { MODEL_IDS } from "@repo/ai/config/models";
 import {
   articleCategoryValidator,
   gradeValidator,
@@ -15,17 +16,6 @@ import {
 } from "convex-helpers/validators";
 
 /**
- * Re-export content validators for backward compatibility.
- * Import from lib/contentValidators directly in new code.
- */
-export {
-  gradeValidator,
-  localeValidator,
-  materialValidator,
-  subjectCategoryValidator,
-} from "@repo/backend/convex/lib/validators/contents";
-
-/**
  * Chat visibility validator
  */
 export const chatVisibilityValidator = literals("private", "public");
@@ -34,7 +24,7 @@ export type ChatVisibility = Infer<typeof chatVisibilityValidator>;
 /**
  * Chat type validator
  */
-export const chatTypeValidator = literals("study", "finance");
+export const chatTypeValidator = literals("study");
 
 /**
  * Chat base validator (without system fields)
@@ -70,10 +60,21 @@ export const messageRoleValidator = literals("user", "assistant", "system");
 /**
  * Message base validator (without system fields)
  */
+/**
+ * Model ID validator using literals for type safety.
+ * References MODEL_IDS from @repo/ai/config/models for single source of truth.
+ */
+export const modelIdValidator = v.optional(literals(...MODEL_IDS));
+
 export const messageValidator = v.object({
   identifier: v.string(),
   chatId: v.id("chats"),
   role: messageRoleValidator,
+  inputTokens: v.optional(v.number()),
+  outputTokens: v.optional(v.number()),
+  totalTokens: v.optional(v.number()),
+  credits: v.optional(v.number()),
+  modelId: modelIdValidator,
 });
 
 /**
@@ -128,7 +129,7 @@ export const contentItemValidator = v.object({
   title: v.string(),
   url: v.string(),
   slug: v.string(),
-  locale: v.string(),
+  locale: localeValidator,
 });
 
 export const webSearchSourceValidator = v.object({

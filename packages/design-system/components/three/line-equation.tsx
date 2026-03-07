@@ -346,6 +346,7 @@ export function LineEquation({
       >
         {vectorPoints.map((v, index) => (
           <Instance
+            // biome-ignore lint/suspicious/noArrayIndexKey: Coordinates may appear multiple times, need index for uniqueness
             key={`point-${index}-${v.x}-${v.y}-${v.z}`}
             position={[v.x, v.y, v.z]}
           />

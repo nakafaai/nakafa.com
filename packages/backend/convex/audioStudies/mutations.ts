@@ -7,7 +7,12 @@ import {
   isAudioGenerationEnabled,
   QUEUE_TIMEOUT_MS,
 } from "@repo/backend/convex/audioStudies/constants";
-import { getResetAudioFields } from "@repo/backend/convex/audioStudies/utils";
+import {
+  getResetAudioFields,
+  markQueueCompleted as markQueueCompletedHelper,
+  markQueueFailed as markQueueFailedHelper,
+  updateContentHash as updateContentHashHelper,
+} from "@repo/backend/convex/audioStudies/utils";
 import { internalMutation } from "@repo/backend/convex/functions";
 import {
   type AudioStatus,
@@ -239,36 +244,11 @@ export const updateContentHash = internalMutation({
   },
   returns: v.object({ updatedCount: v.number() }),
   handler: async (ctx, args) => {
-    // Bounded query: max 10 records (2 locales × safety margin)
-    const audios = await ctx.db
-      .query("contentAudios")
-      .withIndex("contentRef_locale", (q) =>
-        q
-          .eq("contentRef.type", args.contentRef.type)
-          .eq("contentRef.id", args.contentRef.id)
-      )
-      .take(10);
-
-    let updatedCount = 0;
-
-    for (const audio of audios) {
-      if (audio.contentHash === args.newHash) {
-        continue;
-      }
-
-      if (audio.audioStorageId) {
-        await ctx.storage.delete(audio.audioStorageId);
-      }
-
-      await ctx.db.patch(
-        "contentAudios",
-        audio._id,
-        getResetAudioFields(args.newHash)
-      );
-
-      updatedCount++;
-    }
-
+    const updatedCount = await updateContentHashHelper(
+      ctx,
+      args.contentRef,
+      args.newHash
+    );
     return { updatedCount };
   },
 });
@@ -418,26 +398,7 @@ export const markQueueCompleted = internalMutation({
     queueItemId: vv.id("audioGenerationQueue"),
   },
   returns: v.null(),
-  handler: async (ctx, args) => {
-    const item = await ctx.db.get("audioGenerationQueue", args.queueItemId);
-
-    if (!item) {
-      return null;
-    }
-
-    if (item.status === "completed") {
-      return null;
-    }
-
-    const now = Date.now();
-    await ctx.db.patch("audioGenerationQueue", args.queueItemId, {
-      status: "completed",
-      completedAt: now,
-      updatedAt: now,
-    });
-
-    return null;
-  },
+  handler: (ctx, args) => markQueueCompletedHelper(ctx, args.queueItemId),
 });
 
 /**
@@ -449,44 +410,8 @@ export const markQueueFailed = internalMutation({
     error: v.string(),
   },
   returns: v.null(),
-  handler: async (ctx, args) => {
-    const item = await ctx.db.get("audioGenerationQueue", args.queueItemId);
-
-    if (!item) {
-      return null;
-    }
-
-    if (item.status === "completed" || item.status === "failed") {
-      return null;
-    }
-
-    const now = Date.now();
-    const newRetryCount = item.retryCount + 1;
-
-    // Check if max retries exceeded (consistent with lockQueueItem boundary)
-    if (newRetryCount >= item.maxRetries) {
-      // Permanent failure - max retries exhausted
-      await ctx.db.patch("audioGenerationQueue", args.queueItemId, {
-        status: "failed",
-        errorMessage: `Max retries exceeded (${item.maxRetries}): ${args.error}`,
-        lastErrorAt: now,
-        retryCount: newRetryCount,
-        updatedAt: now,
-      });
-      return null;
-    }
-
-    // Retries remaining - set back to pending for retry on next cron run
-    await ctx.db.patch("audioGenerationQueue", args.queueItemId, {
-      status: "pending",
-      errorMessage: args.error,
-      lastErrorAt: now,
-      retryCount: newRetryCount,
-      updatedAt: now,
-    });
-
-    return null;
-  },
+  handler: (ctx, args) =>
+    markQueueFailedHelper(ctx, args.queueItemId, args.error),
 });
 
 /**

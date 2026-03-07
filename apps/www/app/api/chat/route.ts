@@ -6,9 +6,13 @@ import {
 } from "@repo/ai/clients/weather/client";
 import {
   defaultModel,
+  getModelCreditCost,
+  hasEnoughCredits,
+  MODEL_IDS,
+} from "@repo/ai/config/models";
+import {
   type GatewayProvider,
   type GoogleProvider,
-  type ModelId,
   model,
   type OpenAIProvider,
   order,
@@ -16,19 +20,17 @@ import {
 import { generateTitle } from "@repo/ai/features/title-generation";
 import { compressMessages } from "@repo/ai/lib/utils";
 import { nakafaSuggestions } from "@repo/ai/prompt/suggestions";
+import type { ComponentUsage } from "@repo/ai/schema/metadata";
+import type { ToolName } from "@repo/ai/schema/tools";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import {
-  mapDBMessagesToUIMessages,
-  mapUIMessagePartsToDBParts,
-} from "@repo/backend/convex/chats/utils";
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
-import { api } from "@repo/connection/routes";
+import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/utils";
+import { LocaleSchema } from "@repo/contents/_types/content";
 import { CorsValidator } from "@repo/security/lib/cors-validator";
 import { cleanSlug } from "@repo/utilities/helper";
 import { createChildLogger, logError } from "@repo/utilities/logging";
-import { geolocation } from "@vercel/functions";
+import { geolocation, waitUntil } from "@vercel/functions";
 import {
   convertToModelMessages,
   createUIMessageStream,
@@ -41,13 +43,17 @@ import {
   streamText,
   type Tool,
 } from "ai";
-import { fetchMutation, fetchQuery } from "convex/nextjs";
+import { fetchAction, fetchMutation } from "convex/nextjs";
 import { getTranslations } from "next-intl/server";
 import * as z from "zod";
 import { getToken } from "@/lib/auth/server";
+import { CHAT_ERRORS } from "./constants";
+import { loadMessages, saveOrCreateChat } from "./persistence";
+import { getUserInfo, getVerified } from "./utils";
+
+const ModelIdSchema = z.enum(MODEL_IDS);
 
 const MAX_STEPS = 10;
-const QURAN_SLUG_PARTS_COUNT = 3;
 
 // Allow streaming responses up to 60 seconds
 export const maxDuration = 60;
@@ -61,6 +67,17 @@ const possibleVerifiedUrls = [
   "/exercises",
 ] as const;
 
+/**
+ * POST /api/chat
+ *
+ * Handles an incoming chat message from the client. Validates the request,
+ * gates on user credits, persists the user message, then streams the
+ * assistant response back using the AI SDK UI message stream protocol.
+ *
+ * After the stream finishes, two fire-and-forget tasks run via `waitUntil`:
+ * - Title generation (first message only)
+ * - Assistant response persistence and credit deduction
+ */
 export async function POST(req: Request) {
   if (!corsValidator.isRequestFromAllowedDomain(req)) {
     return corsValidator.createForbiddenResponse();
@@ -69,35 +86,50 @@ export async function POST(req: Request) {
   const {
     message,
     id,
-    locale,
+    locale: rawLocale,
     slug,
-    model: selectedModel,
+    model: rawModel,
   }: {
     message: MyUIMessage | undefined;
     id: Id<"chats"> | undefined;
-    locale: Locale;
+    locale: unknown;
     slug: string;
-    model: ModelId;
+    model: unknown;
   } = await req.json();
+
+  const localeResult = LocaleSchema.safeParse(rawLocale);
+  if (!localeResult.success) {
+    return new Response(CHAT_ERRORS.BAD_REQUEST.code, {
+      status: CHAT_ERRORS.BAD_REQUEST.status,
+    });
+  }
+  const locale = localeResult.data;
+
+  const modelResult = ModelIdSchema.safeParse(rawModel);
+  if (!modelResult.success) {
+    return new Response(CHAT_ERRORS.BAD_REQUEST.code, {
+      status: CHAT_ERRORS.BAD_REQUEST.status,
+    });
+  }
+  const selectedModel = modelResult.data;
+
+  const token = await getToken();
+  if (!token) {
+    return new Response(CHAT_ERRORS.UNAUTHORIZED.code, {
+      status: CHAT_ERRORS.UNAUTHORIZED.status,
+    });
+  }
+
+  if (!message) {
+    return new Response(CHAT_ERRORS.BAD_REQUEST.code, {
+      status: CHAT_ERRORS.BAD_REQUEST.status,
+    });
+  }
 
   const url = `/${locale}/${cleanSlug(slug)}`;
   const shouldVerify = possibleVerifiedUrls.some((segment) =>
     url.includes(segment)
   );
-
-  const [t, verified, token] = await Promise.all([
-    getTranslations("Ai"),
-    shouldVerify ? getVerified(url) : Promise.resolve(false),
-    getToken(),
-  ]);
-
-  if (!token) {
-    return new Response("Unauthorized", { status: 401 });
-  }
-
-  if (!message) {
-    return new Response("Bad Request", { status: 400 });
-  }
 
   const currentDate = new Date().toLocaleString("en-US", {
     year: "numeric",
@@ -118,7 +150,16 @@ export async function POST(req: Request) {
     country: geo.country ?? "Unknown",
   };
 
-  const userRole = await getUserRole(token);
+  const [verified, userInfo] = await Promise.all([
+    shouldVerify ? getVerified(url) : Promise.resolve(false),
+    getUserInfo(token),
+  ]);
+
+  if (!hasEnoughCredits(userInfo.credits, selectedModel)) {
+    return new Response(CHAT_ERRORS.INSUFFICIENT_CREDITS.code, {
+      status: CHAT_ERRORS.INSUFFICIENT_CREDITS.status,
+    });
+  }
 
   const sessionLogger = createChildLogger({
     service: "chat-api",
@@ -130,63 +171,17 @@ export async function POST(req: Request) {
     },
     currentDate,
     userLocation,
-    userRole,
+    userRole: userInfo.role,
     url,
   });
 
-  let chatIdToUse: Id<"chats"> | undefined = id;
+  const chatId = await saveOrCreateChat({ chatId: id, message, token });
+  const messages = await loadMessages({ chatId, token });
+  const isFirstMessage = messages.length === 1;
 
-  const dbParts = mapUIMessagePartsToDBParts({
-    messageParts: message.parts,
-  });
-
-  // Replace user message with parts
-  if (chatIdToUse) {
-    // Replace message with parts for existing chat
-    await fetchMutation(
-      convexApi.chats.mutations.replaceMessageWithParts,
-      {
-        message: {
-          chatId: chatIdToUse,
-          role: message.role,
-          identifier: message.id,
-        },
-        parts: dbParts,
-      },
-      { token }
-    );
-  } else {
-    const result = await fetchMutation(
-      convexApi.chats.mutations.createChatWithMessage,
-      {
-        type: "study",
-        message: {
-          role: message.role,
-          identifier: message.id,
-        },
-        parts: dbParts,
-      },
-      { token }
-    );
-    chatIdToUse = result.chatId;
-  }
-
-  const rawMessages = await fetchQuery(
-    convexApi.chats.queries.loadMessages,
-    {
-      chatId: chatIdToUse,
-    },
-    { token }
-  );
-
-  // Transform raw DB messages to UI messages
-  const messages = mapDBMessagesToUIMessages(rawMessages);
-
-  // Use smart message compression to stay within token limits
   const originalMessageCount = messages.length;
   const { messages: compressedMessages, tokens } = compressMessages(messages);
 
-  // Log compression results
   if (compressedMessages.length < originalMessageCount) {
     sessionLogger.warn(
       `Messages compressed from ${originalMessageCount} to ${compressedMessages.length} messages (${tokens} tokens) to stay within token limit`
@@ -199,72 +194,88 @@ export async function POST(req: Request) {
 
   const finalMessages = await convertToModelMessages(compressedMessages);
 
-  // Log chat session start
   sessionLogger.info("Chat session started");
+
+  const t = await getTranslations("Ai");
 
   const stream = createUIMessageStream<MyUIMessage>({
     onError: (error) => {
-      // Log the error with context
       if (error instanceof Error) {
         logError(sessionLogger, error, {
           errorLocation: "createUIMessageStream",
           errorType: error.name,
         });
-
         if (error.message.includes("Rate limit")) {
           sessionLogger.warn("Rate limit exceeded in chat stream");
           return t("rate-limit-message");
         }
         return error.message;
       }
-
       sessionLogger.error("Unknown error in chat stream");
       return t("error-message");
     },
     originalMessages: compressedMessages,
-    onFinish: async ({ messages: updatedMessages, responseMessage }) => {
-      // If updatedMessage length is 2, means it is new chat, so we need to update the chat title
-      if (updatedMessages.length === 2) {
-        const title = await generateTitle({ messages: updatedMessages });
-        await fetchMutation(
-          convexApi.chats.mutations.updateChatTitle,
-          {
-            chatId: chatIdToUse,
-            title,
-          },
-          { token }
+    onFinish: ({ messages: updatedMessages, responseMessage }) => {
+      if (isFirstMessage) {
+        waitUntil(
+          generateTitle({ messages: updatedMessages })
+            .then((title) =>
+              fetchMutation(
+                convexApi.chats.mutations.updateChatTitle,
+                { chatId, title },
+                { token }
+              )
+            )
+            .catch((error) => {
+              logError(
+                sessionLogger,
+                error instanceof Error ? error : new Error(String(error)),
+                { errorLocation: "generateTitle/updateChatTitle" }
+              );
+            })
         );
       }
 
-      // Replace assistant response with parts
-      await fetchMutation(
-        convexApi.chats.mutations.replaceMessageWithParts,
-        {
-          message: {
-            chatId: chatIdToUse,
-            role: responseMessage.role,
-            identifier: responseMessage.id,
+      const tokenData = responseMessage.metadata?.tokens;
+
+      waitUntil(
+        fetchAction(
+          convexApi.chats.actions.scheduleSaveAssistantResponse,
+          {
+            message: {
+              chatId,
+              role: responseMessage.role,
+              identifier: responseMessage.id,
+              modelId: selectedModel,
+              inputTokens: tokenData?.input ?? 0,
+              outputTokens: tokenData?.output ?? 0,
+              totalTokens: tokenData?.total ?? 0,
+            },
+            parts: mapUIMessagePartsToDBParts({
+              messageParts: responseMessage.parts,
+            }),
           },
-          parts: mapUIMessagePartsToDBParts({
-            messageParts: responseMessage.parts,
-          }),
-        },
-        { token }
+          { token }
+        ).catch((error) => {
+          logError(
+            sessionLogger,
+            error instanceof Error ? error : new Error(String(error)),
+            { errorLocation: "saveAssistantResponse" }
+          );
+        })
       );
     },
     execute: async ({ writer }) => {
+      const subAgentUsage = new Map<ToolName, ComponentUsage>();
+
       const streamTextResult = streamText({
         model: model.languageModel(selectedModel),
         system: nakafaPrompt({
           url,
-          currentPage: {
-            locale,
-            slug,
-            verified,
-          },
+          currentPage: { locale, slug, verified },
           currentDate,
           userLocation,
-          userRole,
+          userRole: userInfo.role ?? undefined,
         }),
         messages: finalMessages,
         stopWhen: stepCountIs(MAX_STEPS),
@@ -276,7 +287,37 @@ export async function POST(req: Request) {
             url,
             slug: cleanSlug(slug),
             verified,
-            userRole,
+            userRole: userInfo.role,
+          },
+          usageAccumulator: {
+            addUsage: (component, usage) => {
+              const input = usage.inputTokens ?? 0;
+              const output = usage.outputTokens ?? 0;
+              const existing = subAgentUsage.get(component);
+              subAgentUsage.set(component, {
+                input: (existing?.input ?? 0) + input,
+                output: (existing?.output ?? 0) + output,
+              });
+            },
+            getTotal: () => {
+              const subAgentsInput = Array.from(subAgentUsage.values()).reduce(
+                (sum, usage) => sum + usage.input,
+                0
+              );
+              const subAgentsOutput = Array.from(subAgentUsage.values()).reduce(
+                (sum, usage) => sum + usage.output,
+                0
+              );
+              return {
+                input: subAgentsInput,
+                output: subAgentsOutput,
+                total: subAgentsInput + subAgentsOutput,
+                breakdown: {
+                  main: { input: 0, output: 0 },
+                  subAgents: Object.fromEntries(subAgentUsage),
+                },
+              };
+            },
           },
         }),
         experimental_repairToolCall: async ({
@@ -285,7 +326,6 @@ export async function POST(req: Request) {
           inputSchema,
           error,
         }) => {
-          // Log tool call repair attempt
           logError(sessionLogger, error, {
             errorLocation: "experimental_repairToolCall",
             toolName: toolCall.toolName,
@@ -295,7 +335,7 @@ export async function POST(req: Request) {
 
           if (NoSuchToolError.isInstance(error)) {
             sessionLogger.warn("Invalid tool name, not attempting repair");
-            return null; // do not attempt to fix invalid tool names
+            return null;
           }
 
           const tool: Tool =
@@ -303,9 +343,7 @@ export async function POST(req: Request) {
 
           const { output: repairedArgs } = await generateText({
             model: model.languageModel(defaultModel),
-            output: Output.object({
-              schema: tool.inputSchema,
-            }),
+            output: Output.object({ schema: tool.inputSchema }),
             prompt: [
               `The model tried to call the tool "${toolCall.toolName}"` +
                 " with the following arguments:",
@@ -318,7 +356,7 @@ export async function POST(req: Request) {
               gateway: { order },
               google: {
                 thinkingConfig: {
-                  thinkingBudget: 0, // Disable thinking
+                  thinkingBudget: 0,
                   includeThoughts: false,
                 },
               } satisfies GoogleProvider,
@@ -326,7 +364,6 @@ export async function POST(req: Request) {
           });
 
           sessionLogger.info("Tool call successfully repaired");
-
           return { ...toolCall, input: JSON.stringify(repairedArgs, null, 2) };
         },
         experimental_transform: smoothStream({
@@ -337,12 +374,12 @@ export async function POST(req: Request) {
           gateway: { order },
           openai: {
             include: ["reasoning.encrypted_content"],
-            reasoningSummary: "detailed", // 'auto' for condensed or 'detailed' for comprehensive
+            reasoningSummary: "detailed",
             serviceTier: "priority",
           } satisfies OpenAIProvider,
           google: {
             thinkingConfig: {
-              thinkingBudget: -1, // Dynamic thinking budget
+              thinkingBudget: -1,
               includeThoughts: true,
             },
           } satisfies GoogleProvider,
@@ -355,37 +392,51 @@ export async function POST(req: Request) {
           sendStart: false,
           messageMetadata: ({ part }) => {
             if (part.type === "start") {
-              return {
-                model: selectedModel,
-              };
+              return { model: selectedModel };
             }
 
             if (part.type === "finish") {
+              const mainInput = part.totalUsage.inputTokens ?? 0;
+              const mainOutput = part.totalUsage.outputTokens ?? 0;
+
+              const subAgentsRecord = Object.fromEntries(subAgentUsage);
+              const subAgentsInput = Array.from(subAgentUsage.values()).reduce(
+                (sum, usage) => sum + usage.input,
+                0
+              );
+              const subAgentsOutput = Array.from(subAgentUsage.values()).reduce(
+                (sum, usage) => sum + usage.output,
+                0
+              );
+
               return {
                 model: selectedModel,
-                token: {
-                  input: part.totalUsage.inputTokens,
-                  output: part.totalUsage.outputTokens,
-                  total: part.totalUsage.totalTokens,
+                credits: getModelCreditCost(selectedModel),
+                tokens: {
+                  input: mainInput + subAgentsInput,
+                  output: mainOutput + subAgentsOutput,
+                  total:
+                    mainInput + mainOutput + subAgentsInput + subAgentsOutput,
+                  breakdown: {
+                    main: { input: mainInput, output: mainOutput },
+                    subAgents: subAgentsRecord,
+                  },
                 },
               };
             }
           },
           onError: (error) => {
-            // Log the error with context
             if (error instanceof Error) {
               logError(sessionLogger, error, {
                 errorLocation: "toUIMessageStream",
                 errorType: error.name,
               });
-
               if (error.message.includes("Rate limit")) {
                 sessionLogger.warn("Rate limit exceeded in message stream");
                 return t("rate-limit-message");
               }
               return error.message;
             }
-
             sessionLogger.error("Unknown error in message stream");
             return t("error-message");
           },
@@ -394,7 +445,6 @@ export async function POST(req: Request) {
 
       await streamTextResult.consumeStream();
 
-      // Return the messages from the response, to be used in the followup suggestions
       const messagesFromResponse = (await streamTextResult.response).messages;
 
       const suggestionsStream = streamText({
@@ -421,22 +471,15 @@ export async function POST(req: Request) {
         },
       });
 
-      // Create a data part ID for the suggestions - this
-      // ensures that only ONE data-suggestions part will
-      // be visible in the frontend
       const dataPartId = crypto.randomUUID();
 
-      // Read the suggestions from the stream
       for await (const chunk of suggestionsStream.partialOutputStream) {
-        // Write the suggestions to the UIMessageStream
         writer.write({
           id: dataPartId,
           type: "data-suggestions",
           data: {
             data:
               chunk.suggestions?.filter(
-                // Because of some AI SDK type weirdness,
-                // we need to filter out undefined suggestions
                 (suggestion) => suggestion !== undefined
               ) ?? [],
           },
@@ -446,59 +489,4 @@ export async function POST(req: Request) {
   });
 
   return createUIMessageStreamResponse({ stream });
-}
-
-async function getVerified(url: string) {
-  const cleanedUrl = cleanSlug(url);
-
-  // [0] is locale, [1] is slug
-  const slugParts = cleanedUrl.split("/");
-
-  if (slugParts[1] === "quran") {
-    if (slugParts.length !== QURAN_SLUG_PARTS_COUNT) {
-      return false;
-    }
-    // example: locale/quran/surah
-    const surah = slugParts[2];
-    const { data: surahData, error: surahError } = await api.contents.getSurah({
-      surah: Number.parseInt(surah, 10),
-    });
-    if (surahError) {
-      return false;
-    }
-    return surahData !== null;
-  }
-
-  if (slugParts[1] === "exercises") {
-    const { data: exercisesData, error: exercisesError } =
-      await api.contents.getExercises({
-        slug: cleanedUrl,
-      });
-    if (exercisesError) {
-      return false;
-    }
-    return exercisesData !== null;
-  }
-
-  const { data: contentData, error: contentError } =
-    await api.contents.getContent({
-      slug: cleanedUrl,
-    });
-
-  if (contentError) {
-    return false;
-  }
-
-  return contentData !== null;
-}
-
-async function getUserRole(token: string) {
-  const role = await fetchQuery(
-    convexApi.users.queries.getUserRole,
-    {},
-    {
-      token,
-    }
-  );
-  return role ?? undefined;
 }

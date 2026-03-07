@@ -33,21 +33,7 @@ const tables = {
     questionCount: v.number(),
     /** Last sync timestamp (epoch ms) */
     syncedAt: v.number(),
-  })
-    .index("locale_slug", ["locale", "slug"])
-    .index("locale_category_type_material", [
-      "locale",
-      "category",
-      "type",
-      "material",
-    ])
-    .index("locale_category_type_material_exerciseType", [
-      "locale",
-      "category",
-      "type",
-      "material",
-      "exerciseType",
-    ]),
+  }).index("locale_slug", ["locale", "slug"]),
 };
 
 export default tables;

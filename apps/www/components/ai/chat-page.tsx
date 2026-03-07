@@ -1,40 +1,86 @@
 "use client";
 
+import { SquareLock01Icon, UserIcon } from "@hugeicons/core-free-icons";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@repo/design-system/components/ui/empty";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
-import { Authenticated } from "convex/react";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Authenticated, Unauthenticated } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useEffectEvent, useRef } from "react";
+import { AuthGoogle } from "@/components/auth/google";
 import { useAi } from "@/lib/context/use-ai";
 import { ChatProvider, useChat } from "@/lib/context/use-chat";
 import { AiChat } from "./chat";
 import { CurrentChatProvider, useCurrentChat } from "./chat-provider";
 
 export function AiChatPage({ chatId }: { chatId: Id<"chats"> }) {
+  return (
+    <>
+      <Authenticated>
+        <AiChatPageAuthenticated chatId={chatId} />
+      </Authenticated>
+      <Unauthenticated>
+        <AiChatPageUnauthenticated chatId={chatId} />
+      </Unauthenticated>
+    </>
+  );
+}
+
+function AiChatPageAuthenticated({ chatId }: { chatId: Id<"chats"> }) {
   const t = useTranslations("Ai");
   return (
-    <Authenticated>
-      <ErrorBoundary
-        fallback={
-          <div className="relative flex size-full flex-col overflow-hidden">
-            <div className="flex size-full flex-col items-center justify-center">
-              <div className="mx-6 flex max-w-sm flex-col items-center justify-center gap-2 rounded-xl border p-4 shadow-sm">
-                <h1 className="font-semibold text-xl">
-                  {t("private-chat-error")}
-                </h1>
-                <p className="text-center text-muted-foreground text-sm">
+    <ErrorBoundary
+      fallback={
+        <div className="relative flex size-full flex-col overflow-hidden">
+          <div className="flex size-full flex-col items-center justify-center">
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <HugeIcons icon={SquareLock01Icon} />
+                </EmptyMedia>
+                <EmptyTitle>{t("private-chat-error")}</EmptyTitle>
+                <EmptyDescription>
                   {t("private-chat-error-description")}
-                </p>
-              </div>
-            </div>
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           </div>
-        }
-      >
-        <CurrentChatProvider chatId={chatId}>
-          <AiChatMain />
-        </CurrentChatProvider>
-      </ErrorBoundary>
-    </Authenticated>
+        </div>
+      }
+    >
+      <CurrentChatProvider chatId={chatId}>
+        <AiChatMain />
+      </CurrentChatProvider>
+    </ErrorBoundary>
+  );
+}
+
+function AiChatPageUnauthenticated({ chatId }: { chatId: Id<"chats"> }) {
+  const t = useTranslations("Ai");
+  return (
+    <div className="relative flex size-full flex-col overflow-hidden">
+      <div className="flex size-full flex-col items-center justify-center">
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <HugeIcons icon={UserIcon} />
+            </EmptyMedia>
+            <EmptyTitle>{t("chat-login-required")}</EmptyTitle>
+            <EmptyDescription>
+              {t("chat-login-required-description")}
+            </EmptyDescription>
+          </EmptyHeader>
+          <AuthGoogle redirect={`/chat/${chatId}`} />
+        </Empty>
+      </div>
+    </div>
   );
 }
 
