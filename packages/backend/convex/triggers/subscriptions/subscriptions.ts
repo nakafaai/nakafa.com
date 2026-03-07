@@ -188,6 +188,16 @@ export async function subscriptionsHandler(
         break;
       }
 
+      const user = await ctx.db.get("users", customer.userId);
+
+      if (!user) {
+        logger.warn("Subscription trigger: User not found", {
+          userId: customer.userId,
+          subscriptionId: subscription.id,
+        });
+        break;
+      }
+
       const newPlan = getEffectivePlan(subscription);
       const oldPlan = oldSubscription
         ? getEffectivePlan(oldSubscription)
@@ -196,16 +206,6 @@ export async function subscriptionsHandler(
       if (newPlan === oldPlan) {
         // No plan change, just update the plan field in case
         await ctx.db.patch("users", customer.userId, { plan: newPlan });
-        break;
-      }
-
-      const user = await ctx.db.get("users", customer.userId);
-
-      if (!user) {
-        logger.warn("Subscription trigger: User not found", {
-          userId: customer.userId,
-          subscriptionId: subscription.id,
-        });
         break;
       }
 
@@ -234,6 +234,16 @@ export async function subscriptionsHandler(
         .unique();
 
       if (!customer) {
+        break;
+      }
+
+      const user = await ctx.db.get("users", customer.userId);
+
+      if (!user) {
+        logger.warn("Subscription trigger: User not found on delete", {
+          userId: customer.userId,
+          subscriptionId: subscription.id,
+        });
         break;
       }
 
