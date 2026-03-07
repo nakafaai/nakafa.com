@@ -43,7 +43,7 @@ import {
   streamText,
   type Tool,
 } from "ai";
-import { fetchMutation } from "convex/nextjs";
+import { fetchAction, fetchMutation } from "convex/nextjs";
 import { getTranslations } from "next-intl/server";
 import * as z from "zod";
 import { getToken } from "@/lib/auth/server";
@@ -239,8 +239,8 @@ export async function POST(req: Request) {
       const tokenData = responseMessage.metadata?.tokens;
 
       waitUntil(
-        fetchMutation(
-          convexApi.chats.mutations.saveAssistantResponse,
+        fetchAction(
+          convexApi.chats.actions.scheduleSaveAssistantResponse,
           {
             message: {
               chatId,
