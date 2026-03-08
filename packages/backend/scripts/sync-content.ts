@@ -107,6 +107,8 @@ const SyncResultSchema = z.object({
   referencesCreated: z.number().optional(),
   choicesCreated: z.number().optional(),
   authorLinksCreated: z.number().optional(),
+  skipped: z.number().optional(),
+  skippedSetSlugs: z.array(z.string()).optional(),
 });
 
 /** Zod schema for AuthorSyncResult from bulkSyncAuthors */
@@ -375,6 +377,10 @@ function formatSyncResult(result: SyncResult): string {
 
   let output = `${total} synced (${parts.join(", ")})`;
 
+  if (result.skipped && result.skipped > 0) {
+    output += ` ⚠️ ${result.skipped} SKIPPED`;
+  }
+
   const related: string[] = [];
   if (result.referencesCreated && result.referencesCreated > 0) {
     related.push(`${result.referencesCreated} refs`);
@@ -483,6 +489,8 @@ interface SyncResult {
   durationMs?: number;
   itemsPerSecond?: number;
   referencesCreated?: number;
+  skipped?: number;
+  skippedSetSlugs?: string[];
   unchanged: number;
   updated: number;
 }
@@ -1384,6 +1392,8 @@ async function syncExerciseQuestions(
     unchanged: 0,
     choicesCreated: 0,
     authorLinksCreated: 0,
+    skipped: 0,
+    skippedSetSlugs: [],
   };
   const questions: Array<{
     locale: Locale;
@@ -1505,6 +1515,13 @@ async function syncExerciseQuestions(
       (totals.choicesCreated || 0) + (result.choicesCreated || 0);
     totals.authorLinksCreated =
       (totals.authorLinksCreated || 0) + (result.authorLinksCreated || 0);
+    totals.skipped = (totals.skipped || 0) + (result.skipped || 0);
+    if (result.skippedSetSlugs && result.skippedSetSlugs.length > 0) {
+      totals.skippedSetSlugs = [
+        ...(totals.skippedSetSlugs || []),
+        ...result.skippedSetSlugs,
+      ];
+    }
     updateBatchProgress(progress, batch.length);
   }
 
@@ -1516,6 +1533,14 @@ async function syncExerciseQuestions(
     log(
       `\nResult: ${totals.created} created, ${totals.updated} updated, ${totals.unchanged} unchanged`
     );
+    if (totals.skipped && totals.skipped > 0) {
+      logError(`${totals.skipped} questions SKIPPED (missing exercise sets)`);
+      const uniqueSets = [...new Set(totals.skippedSetSlugs || [])];
+      logError(
+        `Missing sets: ${uniqueSets.map((s) => s.replace("exercises/", "")).join(", ")}`
+      );
+      logError("Add these sets to your material files in _data/*-material.ts");
+    }
     if (totals.choicesCreated || totals.authorLinksCreated) {
       log(
         `Related: ${totals.choicesCreated || 0} choices, ${totals.authorLinksCreated || 0} author links`
@@ -1525,9 +1550,14 @@ async function syncExerciseQuestions(
       `Time: ${formatDuration(durationMs)} (${itemsPerSecond.toFixed(1)} items/sec)`
     );
 
-    if (processed === questions.length) {
+    const totalProcessed = processed + (totals.skipped || 0);
+    if (totalProcessed === questions.length && !totals.skipped) {
       logSuccess(
         `${processed}/${questionFiles.length} exercise questions synced`
+      );
+    } else if (totals.skipped) {
+      logError(
+        `Processed: ${processed} synced, ${totals.skipped} skipped vs ${questions.length} parsed`
       );
     } else {
       logError(

@@ -163,6 +163,26 @@ packages/contents/exercises/{category}/{type}/{material}/
     choices.ts
 ```
 
+**⚠️ IMPORTANT**: When adding new exercise questions, you MUST define the set in the material files:
+
+1. Create question directories: `{category}/{type}/{material}/{exerciseType}/{set}/{number}/`
+2. Add MDX files and choices
+3. **Add set definition** to `exercises/{category}/{type}/{material}/_data/en-material.ts` and `id-material.ts`:
+
+```typescript
+{
+  title: "Set 2",
+  href: `${BASE_PATH}/try-out/set-2`,
+}
+```
+
+If you forget step 3, the sync will report:
+```
+ERROR: X questions SKIPPED (missing exercise sets)
+ERROR: Missing sets: category/type/material/exerciseType/set-name
+ERROR: Add these sets to your material files in _data/*-material.ts
+```
+
 ## Performance
 
 | Content | Items | Time | Rate |

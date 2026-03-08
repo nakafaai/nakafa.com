@@ -627,8 +627,10 @@ export const bulkSyncExerciseQuestions = internalMutation({
     let created = 0;
     let updated = 0;
     let unchanged = 0;
+    let skipped = 0;
     let choicesCreated = 0;
     let authorLinksCreated = 0;
+    const skippedSetSlugs = new Set<string>();
 
     const allAuthorNames = args.questions.flatMap((q) =>
       q.authors.map((author) => author.name)
@@ -644,6 +646,8 @@ export const bulkSyncExerciseQuestions = internalMutation({
         .first();
 
       if (!set) {
+        skipped++;
+        skippedSetSlugs.add(question.setSlug);
         logger.warn(`Set not found for question: ${question.slug}`);
         continue;
       }
@@ -758,6 +762,8 @@ export const bulkSyncExerciseQuestions = internalMutation({
       created,
       updated,
       unchanged,
+      skipped,
+      skippedSetSlugs: [...skippedSetSlugs],
       choicesCreated,
       authorLinksCreated,
     };
