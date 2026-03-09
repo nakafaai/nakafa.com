@@ -9,6 +9,7 @@ const tables = {
   /**
    * Unified content views table.
    * One record per user/device per content.
+   * Tracks first and last view timestamps for engagement analytics.
    */
   contentViews: defineTable({
     contentRef: contentRefValidator,
@@ -16,21 +17,22 @@ const tables = {
     slug: v.string(),
     deviceId: v.string(),
     userId: v.optional(v.id("users")),
-    viewedAt: v.number(),
+    firstViewedAt: v.number(),
+    lastViewedAt: v.number(),
   })
     .index("userId_contentRefId", ["userId", "contentRef.id"])
-    .index("userId_type_locale_viewedAt", [
+    .index("userId_type_locale_lastViewedAt", [
       "userId",
       "contentRef.type",
       "locale",
-      "viewedAt",
+      "lastViewedAt",
     ])
     .index("deviceId_contentRefId", ["deviceId", "contentRef.id"])
     .index("contentRefId_locale", ["contentRef.id", "locale"])
-    .index("by_locale_type_viewedAt", [
+    .index("by_locale_type_lastViewedAt", [
       "locale",
       "contentRef.type",
-      "viewedAt",
+      "lastViewedAt",
     ]),
 
   /**
