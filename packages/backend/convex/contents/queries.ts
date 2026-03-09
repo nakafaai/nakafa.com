@@ -82,7 +82,7 @@ export const getRecentlyViewed = query({
           slug: view.slug,
           grade: subject.grade,
           material: subject.material,
-          viewedAt: view.lastViewedAt,
+          lastViewedAt: view.lastViewedAt,
         };
       })
       .filter((subject) => subject !== null);

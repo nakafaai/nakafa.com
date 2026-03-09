@@ -26,5 +26,5 @@ export const recentlyViewedSubjectValidator = v.object({
   slug: v.string(),
   grade: gradeValidator,
   material: materialValidator,
-  viewedAt: v.number(),
+  lastViewedAt: v.number(),
 });
