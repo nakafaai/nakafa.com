@@ -24,7 +24,8 @@ interface UseRecordContentViewOptions {
 /**
  * Records unique content views per user/device.
  *
- * Design: Once viewed, always viewed. No view count inflation.
+ * Design: Backend tracks first and last view timestamps.
+ * Local deduplication prevents rapid duplicate calls within session.
  * Uses tab visibility tracking with minimum engagement threshold.
  *
  * @param delay - Minimum engagement time before recording (default: 3000ms)
@@ -49,10 +50,6 @@ export function useRecordContentView({
 
   const { start, clear } = useTimeout(
     async () => {
-      if (isViewed(contentView.slug)) {
-        return;
-      }
-
       try {
         await recordView({
           contentRef: { type: contentView.type, slug: contentView.slug },

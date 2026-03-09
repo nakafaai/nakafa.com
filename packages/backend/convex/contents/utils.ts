@@ -21,6 +21,7 @@ interface RecordViewResult {
 
 /**
  * Records a unique content view per user/device.
+ * Updates lastViewedAt on re-view for accurate engagement tracking.
  * Returns alreadyViewed=true if previously viewed.
  */
 async function recordView(
@@ -49,6 +50,9 @@ async function recordView(
   const existingView = existingByDevice ?? existingByUser;
 
   if (existingView) {
+    await ctx.db.patch("contentViews", existingView._id, {
+      lastViewedAt: now,
+    });
     return { success: true, isNewView: false, alreadyViewed: true };
   }
 
@@ -58,7 +62,8 @@ async function recordView(
     slug: args.slug,
     deviceId: args.deviceId,
     userId: args.userId,
-    viewedAt: now,
+    firstViewedAt: now,
+    lastViewedAt: now,
   });
 
   return { success: true, isNewView: true, alreadyViewed: false };
