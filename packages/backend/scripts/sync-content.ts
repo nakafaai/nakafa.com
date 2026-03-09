@@ -1588,10 +1588,12 @@ async function syncExerciseQuestions(
     options
   );
 
+  const processed = totals.created + totals.updated + totals.unchanged;
+
   return {
     ...totals,
     durationMs,
-    itemsPerSecond: durationMs > 0 ? (questions.length / durationMs) * 1000 : 0,
+    itemsPerSecond: durationMs > 0 ? (processed / durationMs) * 1000 : 0,
   };
 }
 
