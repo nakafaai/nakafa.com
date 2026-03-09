@@ -1365,6 +1365,177 @@ async function syncExerciseSets(
 }
 
 /**
+ * Parses a single exercise question file.
+ */
+async function parseQuestionFile(questionFile: string) {
+  const pathInfo = parseExercisePath(questionFile);
+  const exerciseDir = getExerciseDir(questionFile);
+
+  const answerFile = questionFile.replace("_question", "_answer");
+  const questionParsed = await readMdxFile(questionFile);
+
+  let answerBody = "";
+  try {
+    const answerParsed = await readMdxFile(answerFile);
+    answerBody = answerParsed.body;
+  } catch {
+    // Answer file is optional
+  }
+
+  const choicesData = await readExerciseChoices(exerciseDir);
+  const localeChoices = choicesData?.[pathInfo.locale] || [];
+  const choices = localeChoices.map((choice, index) => ({
+    optionKey: String.fromCharCode(65 + index),
+    label: choice.label,
+    isCorrect: choice.value,
+    order: index,
+  }));
+
+  const combinedContent =
+    questionParsed.body +
+    answerBody +
+    JSON.stringify(choices) +
+    JSON.stringify(questionParsed.metadata.authors);
+  const combinedHash = computeHash(combinedContent);
+
+  const setSlug = `exercises/${pathInfo.category}/${pathInfo.examType}/${pathInfo.material}/${pathInfo.exerciseType}/${pathInfo.setName}`;
+
+  return {
+    locale: pathInfo.locale,
+    slug: pathInfo.slug,
+    setSlug,
+    category: pathInfo.category,
+    type: pathInfo.examType,
+    material: pathInfo.material,
+    exerciseType: pathInfo.exerciseType,
+    setName: pathInfo.setName,
+    number: pathInfo.number,
+    title: questionParsed.metadata.title,
+    description: questionParsed.metadata.description,
+    date: parseDateToEpoch(questionParsed.metadata.date),
+    questionBody: questionParsed.body,
+    answerBody,
+    contentHash: combinedHash,
+    authors: questionParsed.metadata.authors,
+    choices,
+  };
+}
+
+/**
+ * Processes batches of questions and syncs them to Convex.
+ */
+async function processQuestionBatches(
+  config: ConvexConfig,
+  questions: Awaited<ReturnType<typeof parseQuestionFile>>[],
+  options: SyncOptions
+): Promise<SyncResult> {
+  const totals: SyncResult = {
+    created: 0,
+    updated: 0,
+    unchanged: 0,
+    choicesCreated: 0,
+    authorLinksCreated: 0,
+    skipped: 0,
+    skippedSetSlugs: [],
+  };
+
+  const totalBatches = Math.ceil(
+    questions.length / BATCH_SIZES.exerciseQuestions
+  );
+  const progress = createBatchProgress(
+    questions.length,
+    BATCH_SIZES.exerciseQuestions
+  );
+
+  for (let i = 0; i < questions.length; i += BATCH_SIZES.exerciseQuestions) {
+    const batch = questions.slice(i, i + BATCH_SIZES.exerciseQuestions);
+    const batchNum = Math.floor(i / BATCH_SIZES.exerciseQuestions) + 1;
+
+    if (!options.quiet) {
+      log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
+    }
+
+    const result = await runConvexMutation(
+      config,
+      "contentSync/mutations:bulkSyncExerciseQuestions",
+      { questions: batch }
+    );
+
+    totals.created += result.created;
+    totals.updated += result.updated;
+    totals.unchanged += result.unchanged;
+    totals.choicesCreated =
+      (totals.choicesCreated || 0) + (result.choicesCreated || 0);
+    totals.authorLinksCreated =
+      (totals.authorLinksCreated || 0) + (result.authorLinksCreated || 0);
+    totals.skipped = (totals.skipped || 0) + (result.skipped || 0);
+
+    if (result.skippedSetSlugs && result.skippedSetSlugs.length > 0) {
+      totals.skippedSetSlugs = [
+        ...(totals.skippedSetSlugs || []),
+        ...result.skippedSetSlugs,
+      ];
+    }
+
+    updateBatchProgress(progress, batch.length);
+  }
+
+  return totals;
+}
+
+/**
+ * Reports the results of question sync.
+ */
+function reportQuestionSyncResults(
+  totals: SyncResult,
+  questionFilesLength: number,
+  questionsLength: number,
+  durationMs: number,
+  options: SyncOptions
+): void {
+  const processed = totals.created + totals.updated + totals.unchanged;
+  const itemsPerSecond = durationMs > 0 ? (processed / durationMs) * 1000 : 0;
+
+  if (!options.quiet) {
+    log(
+      `\nResult: ${totals.created} created, ${totals.updated} updated, ${totals.unchanged} unchanged`
+    );
+
+    if (totals.skipped && totals.skipped > 0) {
+      logError(`${totals.skipped} questions SKIPPED (missing exercise sets)`);
+      const uniqueSets = [...new Set(totals.skippedSetSlugs || [])];
+      logError(
+        `Missing sets: ${uniqueSets.map((s) => s.replace("exercises/", "")).join(", ")}`
+      );
+      logError("Add these sets to your material files in _data/*-material.ts");
+    }
+
+    if (totals.choicesCreated || totals.authorLinksCreated) {
+      log(
+        `Related: ${totals.choicesCreated || 0} choices, ${totals.authorLinksCreated || 0} author links`
+      );
+    }
+
+    log(
+      `Time: ${formatDuration(durationMs)} (${itemsPerSecond.toFixed(1)} items/sec)`
+    );
+
+    const totalProcessed = processed + (totals.skipped || 0);
+    if (totalProcessed === questionsLength && !totals.skipped) {
+      logSuccess(
+        `${processed}/${questionFilesLength} exercise questions synced`
+      );
+    } else if (totals.skipped) {
+      logError(
+        `Processed: ${processed} synced, ${totals.skipped} skipped vs ${questionsLength} parsed`
+      );
+    } else {
+      logError(`Mismatch: ${processed} processed vs ${questionsLength} parsed`);
+    }
+  }
+}
+
+/**
  * Syncs exercise questions from MDX files to Convex.
  * Includes question/answer bodies, choices, and author links.
  */
@@ -1386,94 +1557,13 @@ async function syncExerciseQuestions(
     log(`Files found: ${questionFiles.length} (question files only)`);
   }
 
-  const totals: SyncResult = {
-    created: 0,
-    updated: 0,
-    unchanged: 0,
-    choicesCreated: 0,
-    authorLinksCreated: 0,
-    skipped: 0,
-    skippedSetSlugs: [],
-  };
-  const questions: Array<{
-    locale: Locale;
-    slug: string;
-    setSlug: string;
-    category: string;
-    type: string;
-    material: string;
-    exerciseType: string;
-    setName: string;
-    number: number;
-    title: string;
-    description?: string;
-    date: number;
-    questionBody: string;
-    answerBody: string;
-    contentHash: string;
-    authors: Array<{ name: string }>;
-    choices: Array<{
-      optionKey: string;
-      label: string;
-      isCorrect: boolean;
-      order: number;
-    }>;
-  }> = [];
+  const questions: Awaited<ReturnType<typeof parseQuestionFile>>[] = [];
   const errors: string[] = [];
 
   for (const questionFile of questionFiles) {
     try {
-      const pathInfo = parseExercisePath(questionFile);
-      const exerciseDir = getExerciseDir(questionFile);
-
-      const answerFile = questionFile.replace("_question", "_answer");
-      const questionParsed = await readMdxFile(questionFile);
-
-      let answerBody = "";
-      try {
-        const answerParsed = await readMdxFile(answerFile);
-        answerBody = answerParsed.body;
-      } catch {
-        // Answer file is optional
-      }
-
-      const choicesData = await readExerciseChoices(exerciseDir);
-      const localeChoices = choicesData?.[pathInfo.locale] || [];
-      const choices = localeChoices.map((choice, index) => ({
-        optionKey: String.fromCharCode(65 + index),
-        label: choice.label,
-        isCorrect: choice.value,
-        order: index,
-      }));
-
-      const combinedContent =
-        questionParsed.body +
-        answerBody +
-        JSON.stringify(choices) +
-        JSON.stringify(questionParsed.metadata.authors);
-      const combinedHash = computeHash(combinedContent);
-
-      const setSlug = `exercises/${pathInfo.category}/${pathInfo.examType}/${pathInfo.material}/${pathInfo.exerciseType}/${pathInfo.setName}`;
-
-      questions.push({
-        locale: pathInfo.locale,
-        slug: pathInfo.slug,
-        setSlug,
-        category: pathInfo.category,
-        type: pathInfo.examType,
-        material: pathInfo.material,
-        exerciseType: pathInfo.exerciseType,
-        setName: pathInfo.setName,
-        number: pathInfo.number,
-        title: questionParsed.metadata.title,
-        description: questionParsed.metadata.description,
-        date: parseDateToEpoch(questionParsed.metadata.date),
-        questionBody: questionParsed.body,
-        answerBody,
-        contentHash: combinedHash,
-        authors: questionParsed.metadata.authors,
-        choices,
-      });
+      const question = await parseQuestionFile(questionFile);
+      questions.push(question);
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       errors.push(`${questionFile}: ${msg}`);
@@ -1487,86 +1577,24 @@ async function syncExerciseQuestions(
     }
   }
 
-  const totalBatches = Math.ceil(
-    questions.length / BATCH_SIZES.exerciseQuestions
-  );
-  const progress = createBatchProgress(
+  const totals = await processQuestionBatches(config, questions, options);
+  const durationMs = performance.now() - startTime;
+
+  reportQuestionSyncResults(
+    totals,
+    questionFiles.length,
     questions.length,
-    BATCH_SIZES.exerciseQuestions
+    durationMs,
+    options
   );
-
-  for (let i = 0; i < questions.length; i += BATCH_SIZES.exerciseQuestions) {
-    const batch = questions.slice(i, i + BATCH_SIZES.exerciseQuestions);
-    const batchNum = Math.floor(i / BATCH_SIZES.exerciseQuestions) + 1;
-    if (!options.quiet) {
-      log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
-    }
-
-    const result = await runConvexMutation(
-      config,
-      "contentSync/mutations:bulkSyncExerciseQuestions",
-      { questions: batch }
-    );
-
-    totals.created += result.created;
-    totals.updated += result.updated;
-    totals.unchanged += result.unchanged;
-    totals.choicesCreated =
-      (totals.choicesCreated || 0) + (result.choicesCreated || 0);
-    totals.authorLinksCreated =
-      (totals.authorLinksCreated || 0) + (result.authorLinksCreated || 0);
-    totals.skipped = (totals.skipped || 0) + (result.skipped || 0);
-    if (result.skippedSetSlugs && result.skippedSetSlugs.length > 0) {
-      totals.skippedSetSlugs = [
-        ...(totals.skippedSetSlugs || []),
-        ...result.skippedSetSlugs,
-      ];
-    }
-    updateBatchProgress(progress, batch.length);
-  }
 
   const processed = totals.created + totals.updated + totals.unchanged;
-  const durationMs = performance.now() - startTime;
-  const itemsPerSecond = durationMs > 0 ? (processed / durationMs) * 1000 : 0;
 
-  if (!options.quiet) {
-    log(
-      `\nResult: ${totals.created} created, ${totals.updated} updated, ${totals.unchanged} unchanged`
-    );
-    if (totals.skipped && totals.skipped > 0) {
-      logError(`${totals.skipped} questions SKIPPED (missing exercise sets)`);
-      const uniqueSets = [...new Set(totals.skippedSetSlugs || [])];
-      logError(
-        `Missing sets: ${uniqueSets.map((s) => s.replace("exercises/", "")).join(", ")}`
-      );
-      logError("Add these sets to your material files in _data/*-material.ts");
-    }
-    if (totals.choicesCreated || totals.authorLinksCreated) {
-      log(
-        `Related: ${totals.choicesCreated || 0} choices, ${totals.authorLinksCreated || 0} author links`
-      );
-    }
-    log(
-      `Time: ${formatDuration(durationMs)} (${itemsPerSecond.toFixed(1)} items/sec)`
-    );
-
-    const totalProcessed = processed + (totals.skipped || 0);
-    if (totalProcessed === questions.length && !totals.skipped) {
-      logSuccess(
-        `${processed}/${questionFiles.length} exercise questions synced`
-      );
-    } else if (totals.skipped) {
-      logError(
-        `Processed: ${processed} synced, ${totals.skipped} skipped vs ${questions.length} parsed`
-      );
-    } else {
-      logError(
-        `Mismatch: ${processed} processed vs ${questions.length} parsed`
-      );
-    }
-  }
-
-  return { ...totals, durationMs, itemsPerSecond };
+  return {
+    ...totals,
+    durationMs,
+    itemsPerSecond: durationMs > 0 ? (processed / durationMs) * 1000 : 0,
+  };
 }
 
 /**

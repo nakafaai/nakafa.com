@@ -13,6 +13,7 @@ import {
 } from "@/components/shared/layout-material";
 import { convertSlugToTitle } from "@/lib/utils/helper";
 
+export const dynamic = "force-static";
 export const revalidate = false;
 
 const askData = askSeo();

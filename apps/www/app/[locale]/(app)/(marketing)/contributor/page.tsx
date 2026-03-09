@@ -8,6 +8,7 @@ import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { contributors } from "@/lib/data/contributor";
 
+export const dynamic = "force-static";
 export const revalidate = false;
 
 interface Props {

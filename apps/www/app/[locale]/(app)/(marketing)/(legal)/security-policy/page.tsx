@@ -4,6 +4,7 @@ import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
 
+export const dynamic = "force-static";
 export const revalidate = false;
 
 interface Props {

@@ -3,11 +3,13 @@ import { persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
 /**
- * Tracks content views to prevent duplicate recording.
+ * Tracks content views to prevent rapid duplicate recording within session.
  *
- * Design: Once a content is viewed, it's marked forever (no expiry).
- * This prevents view count inflation and ensures 1 view = 1 person.
+ * Design: Local deduplication prevents spam.
+ * Backend tracks first and last view timestamps for accurate analytics.
  */
+
+const SESSION_TTL = 30 * 60 * 1000; // 30 minutes
 
 interface State {
   viewedSlugs: Record<string, number>;
@@ -36,11 +38,16 @@ export const createContentViewsStore = () =>
           }),
 
         /**
-         * Checks if content has been viewed.
-         * Returns true if viewed (no expiry - once viewed, always viewed).
+         * Checks if content has been viewed in current session.
+         * Returns true if viewed within TTL (30 minutes).
+         * Allows re-views after TTL expires to update backend lastViewedAt.
          */
         isViewed: (slug) => {
-          return slug in get().viewedSlugs;
+          const viewedAt = get().viewedSlugs[slug];
+          if (viewedAt === undefined) {
+            return false;
+          }
+          return Date.now() - viewedAt < SESSION_TTL;
         },
       })),
       {

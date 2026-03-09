@@ -8,7 +8,7 @@ import { getAll } from "convex-helpers/server/relationships";
 /**
  * Get recently viewed subjects for the current user.
  *
- * Returns the most recently viewed subjects, sorted by viewedAt descending.
+ * Returns the most recently viewed subjects, sorted by lastViewedAt descending.
  * Limited to the specified limit (default: 5).
  */
 export const getRecentlyViewed = query({
@@ -28,7 +28,7 @@ export const getRecentlyViewed = query({
 
     const recentViews = await ctx.db
       .query("contentViews")
-      .withIndex("userId_type_locale_viewedAt", (q) =>
+      .withIndex("userId_type_locale_lastViewedAt", (q) =>
         q
           .eq("userId", user.appUser._id)
           .eq("contentRef.type", "subject")
@@ -82,7 +82,7 @@ export const getRecentlyViewed = query({
           slug: view.slug,
           grade: subject.grade,
           material: subject.material,
-          viewedAt: view.viewedAt,
+          lastViewedAt: view.lastViewedAt,
         };
       })
       .filter((subject) => subject !== null);

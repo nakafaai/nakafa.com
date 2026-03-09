@@ -63,12 +63,12 @@ export const getTrendingSubjects = query({
     // This limits results to MAX_VIEWS most recent views in the range
     const viewsInRange = await ctx.db
       .query("contentViews")
-      .withIndex("by_locale_type_viewedAt", (q) =>
+      .withIndex("by_locale_type_lastViewedAt", (q) =>
         q
           .eq("locale", args.locale)
           .eq("contentRef.type", "subject")
-          .gte("viewedAt", args.since)
-          .lt("viewedAt", args.until)
+          .gte("lastViewedAt", args.since)
+          .lt("lastViewedAt", args.until)
       )
       .take(1000);
 
