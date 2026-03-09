@@ -19,6 +19,7 @@ import { Blocker } from "@/components/marketing/shared/blocker";
 import { exercisesMenu } from "@/components/sidebar/_data/exercises";
 import { subjectMenu } from "@/components/sidebar/_data/subject";
 
+export const dynamic = "force-static";
 export const revalidate = false;
 
 interface Props {
