@@ -28,7 +28,6 @@ const tables = {
       "lastViewedAt",
     ])
     .index("deviceId_contentRefId", ["deviceId", "contentRef.id"])
-    .index("contentRefId_locale", ["contentRef.id", "locale"])
     .index("by_locale_type_lastViewedAt", [
       "locale",
       "contentRef.type",
