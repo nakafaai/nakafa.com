@@ -9,6 +9,8 @@ import { immer } from "zustand/middleware/immer";
  * Backend tracks first and last view timestamps for accurate analytics.
  */
 
+const SESSION_TTL = 30 * 60 * 1000; // 30 minutes
+
 interface State {
   viewedSlugs: Record<string, number>;
 }
@@ -37,10 +39,15 @@ export const createContentViewsStore = () =>
 
         /**
          * Checks if content has been viewed in current session.
-         * Returns true if viewed (session-based deduplication).
+         * Returns true if viewed within TTL (30 minutes).
+         * Allows re-views after TTL expires to update backend lastViewedAt.
          */
         isViewed: (slug) => {
-          return slug in get().viewedSlugs;
+          const viewedAt = get().viewedSlugs[slug];
+          if (viewedAt === undefined) {
+            return false;
+          }
+          return Date.now() - viewedAt < SESSION_TTL;
         },
       })),
       {
