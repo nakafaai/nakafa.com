@@ -11,13 +11,12 @@ import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
-import { CardSubject } from "@/components/shared/card-subject";
 import { ComingSoon } from "@/components/shared/coming-soon";
-import { ContainerList } from "@/components/shared/container-list";
 import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
+import { SubjectItem, SubjectList } from "@/components/shared/subject-list";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { createSEODescription } from "@/lib/utils/seo/descriptions";
@@ -139,16 +138,16 @@ async function PageContent({
         {subjects.length === 0 ? (
           <ComingSoon />
         ) : (
-          <ContainerList>
+          <SubjectList>
             {subjects.map((subject) => (
-              <CardSubject
+              <SubjectItem
                 href={subject.href}
                 icon={getMaterialIcon(subject.label)}
                 key={subject.label}
                 label={t(subject.label)}
               />
             ))}
-          </ContainerList>
+          </SubjectList>
         )}
       </LayoutContent>
       <FooterContent>

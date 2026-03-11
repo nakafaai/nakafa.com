@@ -92,7 +92,7 @@ export function CardMaterial({ material }: Props) {
                     prefetch
                     title={item.title}
                   >
-                    <h3>{item.title}</h3>
+                    <h3 className="flex-1">{item.title}</h3>
                     <HugeIcons
                       className="size-4 shrink-0 opacity-0 transition-opacity ease-out group-hover:opacity-100"
                       icon={ArrowRight02Icon}
