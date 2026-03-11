@@ -11,7 +11,7 @@ const choices: ExercisesChoices = {
   en: [
     { label: "GPS Collar", value: true },
     { label: "GMaps", value: false },
-    { label: "Compass", value: false },
+    { label: "Kompas", value: false },
     { label: "Moovit", value: false },
     { label: "Marine Navigation", value: false },
   ],
