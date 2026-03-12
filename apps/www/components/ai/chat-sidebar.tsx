@@ -62,12 +62,7 @@ function AiChatSidebarContent({ ...props }: ComponentProps<typeof Sidebar>) {
   const [q, setQ] = useState("");
 
   return (
-    <Sidebar
-      containerClassName="lg:hidden xl:block"
-      side="right"
-      variant="floating"
-      {...props}
-    >
+    <Sidebar containerClassName="lg:hidden xl:block" side="right" {...props}>
       <SidebarHeader className="border-b">
         <SidebarMenu>
           <SidebarMenuItem>

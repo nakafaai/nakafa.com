@@ -135,7 +135,6 @@ export function SidebarRight({
         <Sidebar
           containerClassName="lg:hidden xl:block"
           side="right"
-          variant="floating"
           {...props}
         >
           <SidebarRightHeader header={header} />
