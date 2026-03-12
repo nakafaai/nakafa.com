@@ -5,6 +5,7 @@ import { type Locale, useTranslations } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { Suspense, use } from "react";
 import { HomeContinueLearning } from "@/components/home/continue-learning";
+import { HomeExplore } from "@/components/home/explore";
 import { HomeHeader } from "@/components/home/header";
 import { HomeTrending } from "@/components/home/trending";
 import { getToken } from "@/lib/auth/server";
@@ -56,6 +57,8 @@ async function Main({
     <div className="mx-auto w-full max-w-3xl px-6 py-24">
       <div className="relative space-y-12">
         <HomeHeader />
+
+        <HomeExplore />
 
         <HomeContinueLearning />
 
