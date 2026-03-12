@@ -21,12 +21,7 @@ import { ThemeMenu } from "./theme-menu";
 
 export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar
-      className={cn("z-20", props.className)}
-      side="left"
-      variant="floating"
-      {...props}
-    >
+    <Sidebar className={cn("z-20", props.className)} side="left" {...props}>
       <SidebarHeader className="border-b">
         <HeaderMenu />
         <SearchMenu />
