@@ -21,7 +21,6 @@ import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
 import {
   anonymous,
-  apiKey,
   openAPI,
   organization,
   username,
@@ -157,7 +156,6 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
       anonymous(),
       username(),
       organization(),
-      apiKey(),
       openAPI(),
       convex({
         authConfig,

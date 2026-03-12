@@ -71,7 +71,6 @@ import type * as lib_validators_trending from "../lib/validators/trending.js";
 import type * as lib_validators_vv from "../lib/validators/vv.js";
 import type * as polyfills from "../polyfills.js";
 import type * as routes_constants from "../routes/constants.js";
-import type * as routes_middleware_auth from "../routes/middleware/auth.js";
 import type * as routes_middleware_requestId from "../routes/middleware/requestId.js";
 import type * as routes_polar from "../routes/polar.js";
 import type * as routes_v1_index from "../routes/v1/index.js";
@@ -184,7 +183,6 @@ declare const fullApi: ApiFromModules<{
   "lib/validators/vv": typeof lib_validators_vv;
   polyfills: typeof polyfills;
   "routes/constants": typeof routes_constants;
-  "routes/middleware/auth": typeof routes_middleware_auth;
   "routes/middleware/requestId": typeof routes_middleware_requestId;
   "routes/polar": typeof routes_polar;
   "routes/v1/index": typeof routes_v1_index;
@@ -347,31 +345,6 @@ export declare const components: {
                   status: string;
                 };
                 model: "invitation";
-              }
-            | {
-                data: {
-                  createdAt: number;
-                  enabled?: null | boolean;
-                  expiresAt?: null | number;
-                  key: string;
-                  lastRefillAt?: null | number;
-                  lastRequest?: null | number;
-                  metadata?: null | string;
-                  name?: null | string;
-                  permissions?: null | string;
-                  prefix?: null | string;
-                  rateLimitEnabled?: null | boolean;
-                  rateLimitMax?: null | number;
-                  rateLimitTimeWindow?: null | number;
-                  refillAmount?: null | number;
-                  refillInterval?: null | number;
-                  remaining?: null | number;
-                  requestCount?: null | number;
-                  start?: null | string;
-                  updatedAt: number;
-                  userId: string;
-                };
-                model: "apikey";
               }
             | {
                 data: {
@@ -610,53 +583,6 @@ export declare const components: {
                     | "expiresAt"
                     | "createdAt"
                     | "inviterId"
-                    | "_id";
-                  operator?:
-                    | "lt"
-                    | "lte"
-                    | "gt"
-                    | "gte"
-                    | "eq"
-                    | "in"
-                    | "not_in"
-                    | "ne"
-                    | "contains"
-                    | "starts_with"
-                    | "ends_with";
-                  value:
-                    | string
-                    | number
-                    | boolean
-                    | Array<string>
-                    | Array<number>
-                    | null;
-                }>;
-              }
-            | {
-                model: "apikey";
-                where?: Array<{
-                  connector?: "AND" | "OR";
-                  field:
-                    | "name"
-                    | "start"
-                    | "prefix"
-                    | "key"
-                    | "userId"
-                    | "refillInterval"
-                    | "refillAmount"
-                    | "lastRefillAt"
-                    | "enabled"
-                    | "rateLimitEnabled"
-                    | "rateLimitTimeWindow"
-                    | "rateLimitMax"
-                    | "requestCount"
-                    | "remaining"
-                    | "lastRequest"
-                    | "expiresAt"
-                    | "createdAt"
-                    | "updatedAt"
-                    | "permissions"
-                    | "metadata"
                     | "_id";
                   operator?:
                     | "lt"
@@ -968,53 +894,6 @@ export declare const components: {
                 }>;
               }
             | {
-                model: "apikey";
-                where?: Array<{
-                  connector?: "AND" | "OR";
-                  field:
-                    | "name"
-                    | "start"
-                    | "prefix"
-                    | "key"
-                    | "userId"
-                    | "refillInterval"
-                    | "refillAmount"
-                    | "lastRefillAt"
-                    | "enabled"
-                    | "rateLimitEnabled"
-                    | "rateLimitTimeWindow"
-                    | "rateLimitMax"
-                    | "requestCount"
-                    | "remaining"
-                    | "lastRequest"
-                    | "expiresAt"
-                    | "createdAt"
-                    | "updatedAt"
-                    | "permissions"
-                    | "metadata"
-                    | "_id";
-                  operator?:
-                    | "lt"
-                    | "lte"
-                    | "gt"
-                    | "gte"
-                    | "eq"
-                    | "in"
-                    | "not_in"
-                    | "ne"
-                    | "contains"
-                    | "starts_with"
-                    | "ends_with";
-                  value:
-                    | string
-                    | number
-                    | boolean
-                    | Array<string>
-                    | Array<number>
-                    | null;
-                }>;
-              }
-            | {
                 model: "jwks";
                 where?: Array<{
                   connector?: "AND" | "OR";
@@ -1063,7 +942,6 @@ export declare const components: {
             | "organization"
             | "member"
             | "invitation"
-            | "apikey"
             | "jwks";
           offset?: number;
           paginationOpts: {
@@ -1074,6 +952,7 @@ export declare const components: {
             maximumRowsRead?: number;
             numItems: number;
           };
+          select?: Array<string>;
           sortBy?: { direction: "asc" | "desc"; field: string };
           where?: Array<{
             connector?: "AND" | "OR";
@@ -1114,7 +993,6 @@ export declare const components: {
             | "organization"
             | "member"
             | "invitation"
-            | "apikey"
             | "jwks";
           select?: Array<string>;
           where?: Array<{
@@ -1431,75 +1309,6 @@ export declare const components: {
                     | "expiresAt"
                     | "createdAt"
                     | "inviterId"
-                    | "_id";
-                  operator?:
-                    | "lt"
-                    | "lte"
-                    | "gt"
-                    | "gte"
-                    | "eq"
-                    | "in"
-                    | "not_in"
-                    | "ne"
-                    | "contains"
-                    | "starts_with"
-                    | "ends_with";
-                  value:
-                    | string
-                    | number
-                    | boolean
-                    | Array<string>
-                    | Array<number>
-                    | null;
-                }>;
-              }
-            | {
-                model: "apikey";
-                update: {
-                  createdAt?: number;
-                  enabled?: null | boolean;
-                  expiresAt?: null | number;
-                  key?: string;
-                  lastRefillAt?: null | number;
-                  lastRequest?: null | number;
-                  metadata?: null | string;
-                  name?: null | string;
-                  permissions?: null | string;
-                  prefix?: null | string;
-                  rateLimitEnabled?: null | boolean;
-                  rateLimitMax?: null | number;
-                  rateLimitTimeWindow?: null | number;
-                  refillAmount?: null | number;
-                  refillInterval?: null | number;
-                  remaining?: null | number;
-                  requestCount?: null | number;
-                  start?: null | string;
-                  updatedAt?: number;
-                  userId?: string;
-                };
-                where?: Array<{
-                  connector?: "AND" | "OR";
-                  field:
-                    | "name"
-                    | "start"
-                    | "prefix"
-                    | "key"
-                    | "userId"
-                    | "refillInterval"
-                    | "refillAmount"
-                    | "lastRefillAt"
-                    | "enabled"
-                    | "rateLimitEnabled"
-                    | "rateLimitTimeWindow"
-                    | "rateLimitMax"
-                    | "requestCount"
-                    | "remaining"
-                    | "lastRequest"
-                    | "expiresAt"
-                    | "createdAt"
-                    | "updatedAt"
-                    | "permissions"
-                    | "metadata"
                     | "_id";
                   operator?:
                     | "lt"
@@ -1882,75 +1691,6 @@ export declare const components: {
                 }>;
               }
             | {
-                model: "apikey";
-                update: {
-                  createdAt?: number;
-                  enabled?: null | boolean;
-                  expiresAt?: null | number;
-                  key?: string;
-                  lastRefillAt?: null | number;
-                  lastRequest?: null | number;
-                  metadata?: null | string;
-                  name?: null | string;
-                  permissions?: null | string;
-                  prefix?: null | string;
-                  rateLimitEnabled?: null | boolean;
-                  rateLimitMax?: null | number;
-                  rateLimitTimeWindow?: null | number;
-                  refillAmount?: null | number;
-                  refillInterval?: null | number;
-                  remaining?: null | number;
-                  requestCount?: null | number;
-                  start?: null | string;
-                  updatedAt?: number;
-                  userId?: string;
-                };
-                where?: Array<{
-                  connector?: "AND" | "OR";
-                  field:
-                    | "name"
-                    | "start"
-                    | "prefix"
-                    | "key"
-                    | "userId"
-                    | "refillInterval"
-                    | "refillAmount"
-                    | "lastRefillAt"
-                    | "enabled"
-                    | "rateLimitEnabled"
-                    | "rateLimitTimeWindow"
-                    | "rateLimitMax"
-                    | "requestCount"
-                    | "remaining"
-                    | "lastRequest"
-                    | "expiresAt"
-                    | "createdAt"
-                    | "updatedAt"
-                    | "permissions"
-                    | "metadata"
-                    | "_id";
-                  operator?:
-                    | "lt"
-                    | "lte"
-                    | "gt"
-                    | "gte"
-                    | "eq"
-                    | "in"
-                    | "not_in"
-                    | "ne"
-                    | "contains"
-                    | "starts_with"
-                    | "ends_with";
-                  value:
-                    | string
-                    | number
-                    | boolean
-                    | Array<string>
-                    | Array<number>
-                    | null;
-                }>;
-              }
-            | {
                 model: "jwks";
                 update: {
                   createdAt?: number;
@@ -2005,47 +1745,8 @@ export declare const components: {
         { authId: string; name: string },
         any
       >;
-      verifyApiKey: FunctionReference<
-        "mutation",
-        "internal",
-        { key: string; permissions?: string },
-        {
-          error: null | { code: string; message: string };
-          userId: null | string;
-          valid: boolean;
-        }
-      >;
     };
     queries: {
-      getApiKeysByUserId: FunctionReference<
-        "query",
-        "internal",
-        { userId: string },
-        Array<{
-          _creationTime: number;
-          _id: string;
-          createdAt: number;
-          enabled?: null | boolean;
-          expiresAt?: null | number;
-          key: string;
-          lastRefillAt?: null | number;
-          lastRequest?: null | number;
-          metadata?: null | string;
-          name?: null | string;
-          permissions?: null | string;
-          prefix?: null | string;
-          rateLimitEnabled?: null | boolean;
-          rateLimitMax?: null | number;
-          rateLimitTimeWindow?: null | number;
-          refillAmount?: null | number;
-          refillInterval?: null | number;
-          remaining?: null | number;
-          requestCount?: null | number;
-          start?: null | string;
-          updatedAt: number;
-          userId: string;
-        }>
-      >;
       getUserByEmail: FunctionReference<
         "query",
         "internal",
@@ -2398,7 +2099,7 @@ export declare const components: {
       cleanup: FunctionReference<
         "mutation",
         "internal",
-        { workflowId: string },
+        { force?: boolean; workflowId: string },
         boolean
       >;
       complete: FunctionReference<
@@ -2604,6 +2305,12 @@ export declare const components: {
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
         }
+      >;
+      restart: FunctionReference<
+        "mutation",
+        "internal",
+        { from?: number | string; startAsync?: boolean; workflowId: string },
+        null
       >;
     };
   };

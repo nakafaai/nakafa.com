@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@react-email/components": "1.0.8",
+    "@react-email/components": "1.0.9",
     "@repo/email": "workspace:*",
     "react": "19.2.4",
     "react-email": "5.2.9"
@@ -18,7 +18,7 @@
   "devDependencies": {
     "@react-email/preview-server": "^5.2.9",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "25.4.0",
+    "@types/node": "25.5.0",
     "@types/react": "19.2.14",
     "typescript": "^5.9.3"
   }
