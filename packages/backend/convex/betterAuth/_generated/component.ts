@@ -118,31 +118,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             | {
                 data: {
                   createdAt: number;
-                  enabled?: null | boolean;
-                  expiresAt?: null | number;
-                  key: string;
-                  lastRefillAt?: null | number;
-                  lastRequest?: null | number;
-                  metadata?: null | string;
-                  name?: null | string;
-                  permissions?: null | string;
-                  prefix?: null | string;
-                  rateLimitEnabled?: null | boolean;
-                  rateLimitMax?: null | number;
-                  rateLimitTimeWindow?: null | number;
-                  refillAmount?: null | number;
-                  refillInterval?: null | number;
-                  remaining?: null | number;
-                  requestCount?: null | number;
-                  start?: null | string;
-                  updatedAt: number;
-                  userId: string;
-                };
-                model: "apikey";
-              }
-            | {
-                data: {
-                  createdAt: number;
                   expiresAt?: null | number;
                   privateKey: string;
                   publicKey: string;
@@ -378,53 +353,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "expiresAt"
                     | "createdAt"
                     | "inviterId"
-                    | "_id";
-                  operator?:
-                    | "lt"
-                    | "lte"
-                    | "gt"
-                    | "gte"
-                    | "eq"
-                    | "in"
-                    | "not_in"
-                    | "ne"
-                    | "contains"
-                    | "starts_with"
-                    | "ends_with";
-                  value:
-                    | string
-                    | number
-                    | boolean
-                    | Array<string>
-                    | Array<number>
-                    | null;
-                }>;
-              }
-            | {
-                model: "apikey";
-                where?: Array<{
-                  connector?: "AND" | "OR";
-                  field:
-                    | "name"
-                    | "start"
-                    | "prefix"
-                    | "key"
-                    | "userId"
-                    | "refillInterval"
-                    | "refillAmount"
-                    | "lastRefillAt"
-                    | "enabled"
-                    | "rateLimitEnabled"
-                    | "rateLimitTimeWindow"
-                    | "rateLimitMax"
-                    | "requestCount"
-                    | "remaining"
-                    | "lastRequest"
-                    | "expiresAt"
-                    | "createdAt"
-                    | "updatedAt"
-                    | "permissions"
-                    | "metadata"
                     | "_id";
                   operator?:
                     | "lt"
@@ -737,53 +665,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "apikey";
-                where?: Array<{
-                  connector?: "AND" | "OR";
-                  field:
-                    | "name"
-                    | "start"
-                    | "prefix"
-                    | "key"
-                    | "userId"
-                    | "refillInterval"
-                    | "refillAmount"
-                    | "lastRefillAt"
-                    | "enabled"
-                    | "rateLimitEnabled"
-                    | "rateLimitTimeWindow"
-                    | "rateLimitMax"
-                    | "requestCount"
-                    | "remaining"
-                    | "lastRequest"
-                    | "expiresAt"
-                    | "createdAt"
-                    | "updatedAt"
-                    | "permissions"
-                    | "metadata"
-                    | "_id";
-                  operator?:
-                    | "lt"
-                    | "lte"
-                    | "gt"
-                    | "gte"
-                    | "eq"
-                    | "in"
-                    | "not_in"
-                    | "ne"
-                    | "contains"
-                    | "starts_with"
-                    | "ends_with";
-                  value:
-                    | string
-                    | number
-                    | boolean
-                    | Array<string>
-                    | Array<number>
-                    | null;
-                }>;
-              }
-            | {
                 model: "jwks";
                 where?: Array<{
                   connector?: "AND" | "OR";
@@ -833,7 +714,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             | "organization"
             | "member"
             | "invitation"
-            | "apikey"
             | "jwks";
           offset?: number;
           paginationOpts: {
@@ -844,6 +724,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             maximumRowsRead?: number;
             numItems: number;
           };
+          select?: Array<string>;
           sortBy?: { direction: "asc" | "desc"; field: string };
           where?: Array<{
             connector?: "AND" | "OR";
@@ -885,7 +766,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
             | "organization"
             | "member"
             | "invitation"
-            | "apikey"
             | "jwks";
           select?: Array<string>;
           where?: Array<{
@@ -1203,75 +1083,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "expiresAt"
                     | "createdAt"
                     | "inviterId"
-                    | "_id";
-                  operator?:
-                    | "lt"
-                    | "lte"
-                    | "gt"
-                    | "gte"
-                    | "eq"
-                    | "in"
-                    | "not_in"
-                    | "ne"
-                    | "contains"
-                    | "starts_with"
-                    | "ends_with";
-                  value:
-                    | string
-                    | number
-                    | boolean
-                    | Array<string>
-                    | Array<number>
-                    | null;
-                }>;
-              }
-            | {
-                model: "apikey";
-                update: {
-                  createdAt?: number;
-                  enabled?: null | boolean;
-                  expiresAt?: null | number;
-                  key?: string;
-                  lastRefillAt?: null | number;
-                  lastRequest?: null | number;
-                  metadata?: null | string;
-                  name?: null | string;
-                  permissions?: null | string;
-                  prefix?: null | string;
-                  rateLimitEnabled?: null | boolean;
-                  rateLimitMax?: null | number;
-                  rateLimitTimeWindow?: null | number;
-                  refillAmount?: null | number;
-                  refillInterval?: null | number;
-                  remaining?: null | number;
-                  requestCount?: null | number;
-                  start?: null | string;
-                  updatedAt?: number;
-                  userId?: string;
-                };
-                where?: Array<{
-                  connector?: "AND" | "OR";
-                  field:
-                    | "name"
-                    | "start"
-                    | "prefix"
-                    | "key"
-                    | "userId"
-                    | "refillInterval"
-                    | "refillAmount"
-                    | "lastRefillAt"
-                    | "enabled"
-                    | "rateLimitEnabled"
-                    | "rateLimitTimeWindow"
-                    | "rateLimitMax"
-                    | "requestCount"
-                    | "remaining"
-                    | "lastRequest"
-                    | "expiresAt"
-                    | "createdAt"
-                    | "updatedAt"
-                    | "permissions"
-                    | "metadata"
                     | "_id";
                   operator?:
                     | "lt"
@@ -1655,75 +1466,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 }>;
               }
             | {
-                model: "apikey";
-                update: {
-                  createdAt?: number;
-                  enabled?: null | boolean;
-                  expiresAt?: null | number;
-                  key?: string;
-                  lastRefillAt?: null | number;
-                  lastRequest?: null | number;
-                  metadata?: null | string;
-                  name?: null | string;
-                  permissions?: null | string;
-                  prefix?: null | string;
-                  rateLimitEnabled?: null | boolean;
-                  rateLimitMax?: null | number;
-                  rateLimitTimeWindow?: null | number;
-                  refillAmount?: null | number;
-                  refillInterval?: null | number;
-                  remaining?: null | number;
-                  requestCount?: null | number;
-                  start?: null | string;
-                  updatedAt?: number;
-                  userId?: string;
-                };
-                where?: Array<{
-                  connector?: "AND" | "OR";
-                  field:
-                    | "name"
-                    | "start"
-                    | "prefix"
-                    | "key"
-                    | "userId"
-                    | "refillInterval"
-                    | "refillAmount"
-                    | "lastRefillAt"
-                    | "enabled"
-                    | "rateLimitEnabled"
-                    | "rateLimitTimeWindow"
-                    | "rateLimitMax"
-                    | "requestCount"
-                    | "remaining"
-                    | "lastRequest"
-                    | "expiresAt"
-                    | "createdAt"
-                    | "updatedAt"
-                    | "permissions"
-                    | "metadata"
-                    | "_id";
-                  operator?:
-                    | "lt"
-                    | "lte"
-                    | "gt"
-                    | "gte"
-                    | "eq"
-                    | "in"
-                    | "not_in"
-                    | "ne"
-                    | "contains"
-                    | "starts_with"
-                    | "ends_with";
-                  value:
-                    | string
-                    | number
-                    | boolean
-                    | Array<string>
-                    | Array<number>
-                    | null;
-                }>;
-              }
-            | {
                 model: "jwks";
                 update: {
                   createdAt?: number;
@@ -1781,49 +1523,8 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         any,
         Name
       >;
-      verifyApiKey: FunctionReference<
-        "mutation",
-        "internal",
-        { key: string; permissions?: string },
-        {
-          error: null | { code: string; message: string };
-          userId: null | string;
-          valid: boolean;
-        },
-        Name
-      >;
     };
     queries: {
-      getApiKeysByUserId: FunctionReference<
-        "query",
-        "internal",
-        { userId: string },
-        Array<{
-          _creationTime: number;
-          _id: string;
-          createdAt: number;
-          enabled?: null | boolean;
-          expiresAt?: null | number;
-          key: string;
-          lastRefillAt?: null | number;
-          lastRequest?: null | number;
-          metadata?: null | string;
-          name?: null | string;
-          permissions?: null | string;
-          prefix?: null | string;
-          rateLimitEnabled?: null | boolean;
-          rateLimitMax?: null | number;
-          rateLimitTimeWindow?: null | number;
-          refillAmount?: null | number;
-          refillInterval?: null | number;
-          remaining?: null | number;
-          requestCount?: null | number;
-          start?: null | string;
-          updatedAt: number;
-          userId: string;
-        }>,
-        Name
-      >;
       getUserByEmail: FunctionReference<
         "query",
         "internal",

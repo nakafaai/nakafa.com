@@ -10,8 +10,6 @@ import { defineSchema } from "convex/server";
 // <add link to triggers doc>
 const schema = defineSchema({
   ...tables,
-  // add index by key
-  apikey: tables.apikey.index("key", ["key"]),
 });
 
 export default schema;
