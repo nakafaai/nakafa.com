@@ -45,7 +45,7 @@
     "@tailwindcss/postcss": "^4.2.1",
     "@takumi-rs/core": "^0.71.7",
     "@takumi-rs/image-response": "^0.71.7",
-    "@tanstack/react-form": "^1.28.4",
+    "@tanstack/react-form": "^1.28.5",
     "@tanstack/react-query": "^5.90.21",
     "@tanstack/react-query-devtools": "^5.91.3",
     "@vercel/functions": "^3.4.3",
@@ -63,7 +63,7 @@
     "immer": "^11.1.4",
     "jsonrepair": "^3.13.3",
     "ky": "^1.14.3",
-    "motion": "^12.35.2",
+    "motion": "^12.36.0",
     "nanoid": "^5.1.6",
     "next": "16.1.6",
     "next-intl": "^4.8.3",
@@ -76,23 +76,23 @@
     "sonner": "^2.0.7",
     "use-context-selector": "^2.0.0",
     "use-sound": "^5.0.0",
-    "virtua": "^0.48.6",
+    "virtua": "^0.48.7",
     "zod": "^4.3.6",
     "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "25.4.0",
+    "@types/node": "25.5.0",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
-    "@vitest/coverage-istanbul": "^4.0.18",
-    "@vitest/ui": "^4.0.18",
+    "@vitest/coverage-istanbul": "^4.1.0",
+    "@vitest/ui": "^4.1.0",
     "jsdom": "^28.1.0",
     "pagefind": "^1.4.0",
     "tailwindcss": "^4.2.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.0"
   }
 }
