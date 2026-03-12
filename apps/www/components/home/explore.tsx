@@ -11,7 +11,7 @@ import { useTranslations } from "next-intl";
 function SubjectIcon() {
   return (
     <div className="relative flex h-18 w-20 items-center justify-center">
-      <div className="relative flex h-14 w-16 flex-col gap-2 rounded-lg border bg-card p-3 shadow-sm transition-all ease-out group-hover:-translate-y-1">
+      <div className="relative flex h-14 w-16 flex-col gap-2 rounded-md border bg-card p-3 shadow-sm transition-all ease-out group-hover:-translate-y-1">
         <div className="h-1 w-5 rounded-full bg-chart-1/30" />
         <div className="h-1 w-full rounded-full bg-chart-1/30" />
         <div className="h-1 w-3/4 rounded-full bg-chart-1/30" />
@@ -31,7 +31,7 @@ function SubjectIcon() {
 function SNBTIcon() {
   return (
     <div className="relative flex h-18 w-20 items-center justify-center">
-      <div className="relative flex h-14 w-16 flex-col justify-between rounded-lg border bg-card p-2.5 shadow-sm transition-all ease-out group-hover:-translate-y-1">
+      <div className="relative flex h-14 w-16 flex-col justify-between rounded-md border bg-card p-2.5 shadow-sm transition-all ease-out group-hover:-translate-y-1">
         <div className="flex items-center gap-2">
           <div className="h-4 w-4 shrink-0 rounded-full bg-chart-2/30" />
           <div className="flex flex-1 flex-col gap-1.5">
@@ -60,23 +60,23 @@ export function HomeExplore() {
     <section className="flex flex-col gap-4">
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 md:gap-6">
         <NavigationLink
-          className="group flex flex-col items-center gap-4 outline-none"
+          className="group flex flex-col items-center gap-2"
           href="/subject"
         >
           <div className="flex aspect-[1/0.95] w-full items-center justify-center rounded-xl bg-muted/50 transition-all ease-out group-hover:bg-muted">
             <SubjectIcon />
           </div>
-          <span>{t("subject")}</span>
+          <h2>{t("subject")}</h2>
         </NavigationLink>
 
         <NavigationLink
-          className="group flex flex-col items-center gap-4 outline-none"
+          className="group flex flex-col items-center gap-2"
           href="/exercises"
         >
           <div className="flex aspect-[1/0.95] w-full items-center justify-center rounded-xl bg-muted/50 transition-all ease-out group-hover:bg-muted">
             <SNBTIcon />
           </div>
-          <span>SNBT Try out</span>
+          <h2>SNBT Try out</h2>
         </NavigationLink>
       </div>
     </section>
