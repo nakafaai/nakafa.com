@@ -71,7 +71,6 @@ import type * as lib_validators_trending from "../lib/validators/trending.js";
 import type * as lib_validators_vv from "../lib/validators/vv.js";
 import type * as polyfills from "../polyfills.js";
 import type * as routes_constants from "../routes/constants.js";
-import type * as routes_middleware_auth from "../routes/middleware/auth.js";
 import type * as routes_middleware_requestId from "../routes/middleware/requestId.js";
 import type * as routes_polar from "../routes/polar.js";
 import type * as routes_v1_index from "../routes/v1/index.js";
@@ -184,7 +183,6 @@ declare const fullApi: ApiFromModules<{
   "lib/validators/vv": typeof lib_validators_vv;
   polyfills: typeof polyfills;
   "routes/constants": typeof routes_constants;
-  "routes/middleware/auth": typeof routes_middleware_auth;
   "routes/middleware/requestId": typeof routes_middleware_requestId;
   "routes/polar": typeof routes_polar;
   "routes/v1/index": typeof routes_v1_index;
