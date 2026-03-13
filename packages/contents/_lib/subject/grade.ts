@@ -88,6 +88,10 @@ export async function getGradeSubjects(
   }
 }
 
+/**
+ * Gets all grades with their subjects across all categories.
+ * @returns An array of grade objects with category, grade, label, href, and subjects.
+ */
 export async function getAllGradesWithSubjects() {
   const allGrades: {
     category: SubjectCategory;
