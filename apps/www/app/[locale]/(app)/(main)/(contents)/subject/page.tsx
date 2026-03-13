@@ -7,6 +7,7 @@ import {
 import { SubjectCategorySchema } from "@repo/contents/_types/subject/category";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -27,13 +28,29 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "Common" });
+  const [tCommon, tSubject] = await Promise.all([
+    getTranslations({ locale, namespace: "Common" }),
+    getTranslations({ locale, namespace: "Subject" }),
+  ]);
+
+  const path = `/${locale}/subject`;
+  const title = tCommon("subject");
+  const description = tSubject("subject-description");
 
   return {
-    title: {
-      absolute: t("subject"),
+    title,
+    description,
+    alternates: {
+      canonical: path,
     },
-    description: t("subject"),
+    openGraph: {
+      title,
+      description,
+      url: path,
+      siteName: "Nakafa",
+      locale,
+      type: "website",
+    },
   };
 }
 
@@ -63,6 +80,17 @@ async function PageContent({ locale }: { locale: Locale }) {
 
   return (
     <>
+      <BreadcrumbJsonLd
+        breadcrumbItems={allGrades.map((grade, index) => ({
+          "@type": "ListItem" as const,
+          "@id": `https://nakafa.com/${locale}${grade.href}`,
+          position: index + 1,
+          name: tSubject(getGradeNonNumeric(grade.grade) ?? "grade", {
+            grade: grade.grade,
+          }),
+          item: `https://nakafa.com/${locale}${grade.href}`,
+        }))}
+      />
       <HeaderContent
         description={tSubject("subject-description")}
         icon={Books02Icon}
