@@ -76,7 +76,7 @@ export function HomeExplore() {
           <div className="flex aspect-[1/0.95] w-full items-center justify-center rounded-xl bg-muted/50 transition-all ease-out group-hover:bg-muted">
             <SNBTIcon />
           </div>
-          <h2>SNBT Try out</h2>
+          <h2>{t("snbt-tryout")}</h2>
         </NavigationLink>
       </div>
     </section>

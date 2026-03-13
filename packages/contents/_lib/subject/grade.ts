@@ -25,10 +25,21 @@ const GradeSubjectSchema = z.array(
 
 type GradeSubject = z.infer<typeof GradeSubjectSchema>;
 
+/**
+ * Gets the path to the grade of the subject.
+ * @param category - The category to get the path for.
+ * @param grade - The grade to get the path for.
+ * @returns The path to the grade.
+ */
 export function getGradePath(category: SubjectCategory, grade: Grade) {
   return `/subject/${category}/${grade}` as const;
 }
 
+/**
+ * Gets the non-numeric grade.
+ * @param grade - The grade to get.
+ * @returns The non-numeric grade, or undefined if the grade is numeric.
+ */
 export function getGradeNonNumeric(grade: Grade) {
   const parsedGrade = NonNumericGradeSchema.safeParse(grade);
 
@@ -39,10 +50,21 @@ export function getGradeNonNumeric(grade: Grade) {
   return parsedGrade.data;
 }
 
+/**
+ * Gets the list of grades for a category.
+ * @param category - The category to get grades for.
+ * @returns An array of grades for the category.
+ */
 export function getCategoryGrades(category: SubjectCategory) {
   return CATEGORY_GRADES[category] ?? [];
 }
 
+/**
+ * Gets the subjects for a grade.
+ * @param category - The category to get the subjects for.
+ * @param grade - The grade to get the subjects for.
+ * @returns An array of subjects for the grade.
+ */
 export async function getGradeSubjects(
   category: SubjectCategory,
   grade: Grade
