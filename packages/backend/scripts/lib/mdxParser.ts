@@ -109,16 +109,15 @@ interface ParsedSubjectTopic {
   topic: string;
 }
 
+export type { Locale } from "@repo/backend/convex/lib/validators/contents";
 export type {
-  ParsedMdx,
   ArticleParsedPath,
-  SubjectParsedPath,
   ExerciseParsedPath,
   ParsedExerciseSet,
+  ParsedMdx,
   ParsedSubjectTopic,
+  SubjectParsedPath,
 };
-
-export type { Locale } from "@repo/backend/convex/lib/validators/contents";
 
 // Regex patterns for parsing MDX content and file paths
 const METADATA_REGEX = /export\s+const\s+metadata\s*=\s*({[\s\S]*?});/;

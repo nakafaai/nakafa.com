@@ -73,6 +73,4 @@ export function EmailTailwind({ children }: { children: ReactNode }) {
   return <ReactEmailTailwind config={config}>{children}</ReactEmailTailwind>;
 }
 
-export { config };
-
-export { EmailTailwind as Tailwind };
+export { config, EmailTailwind as Tailwind };

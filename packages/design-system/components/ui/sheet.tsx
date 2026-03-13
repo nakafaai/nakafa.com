@@ -148,16 +148,16 @@ function SheetDescription({
 
 export {
   Sheet,
-  SheetTrigger,
-  SheetPortal,
-  SheetClose,
   SheetBackdrop,
   SheetBackdrop as SheetOverlay,
+  SheetClose,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
   SheetPopup,
   SheetPopup as SheetContent,
-  SheetHeader,
-  SheetFooter,
+  SheetPortal,
   SheetTitle,
-  SheetDescription,
+  SheetTrigger,
   sheetPopupVariants,
 };

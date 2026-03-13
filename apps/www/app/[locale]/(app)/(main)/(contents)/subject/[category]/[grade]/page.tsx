@@ -127,8 +127,9 @@ async function PageContent({
 }) {
   const FilePath = getGradePath(category, grade);
 
-  const [subjects, t] = await Promise.all([
+  const [subjects, tCommon, tSubject] = await Promise.all([
     getGradeSubjects(category, grade),
+    getTranslations({ locale, namespace: "Common" }),
     getTranslations({ locale, namespace: "Subject" }),
   ]);
 
@@ -139,14 +140,18 @@ async function PageContent({
           "@type": "ListItem",
           "@id": `https://nakafa.com/${locale}${subject.href}`,
           position: index + 1,
-          name: t(subject.label),
+          name: tSubject(subject.label),
           item: `https://nakafa.com/${locale}${subject.href}`,
         }))}
       />
       <HeaderContent
-        description={t("grade-description")}
+        description={tSubject("grade-description")}
         icon={getCategoryIcon(category)}
-        title={t(getGradeNonNumeric(grade) ?? "grade", { grade })}
+        link={{
+          href: "/subject",
+          label: tCommon("explore-grades"),
+        }}
+        title={tSubject(getGradeNonNumeric(grade) ?? "grade", { grade })}
       />
       <LayoutContent>
         {subjects.length === 0 ? (
@@ -158,7 +163,7 @@ async function PageContent({
                 href={subject.href}
                 icon={getMaterialIcon(subject.label)}
                 key={subject.label}
-                label={t(subject.label)}
+                label={tSubject(subject.label)}
               />
             ))}
           </SubjectList>

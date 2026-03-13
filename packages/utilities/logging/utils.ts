@@ -136,7 +136,7 @@ export function logDatabaseOperation(
       duration: `${duration}ms`,
       ...(rowsAffected !== undefined && { rowsAffected }),
     },
-    `${operation} ${table} (${duration}ms)${rowsAffected !== undefined ? ` - ${rowsAffected} rows` : ""}`
+    `${operation} ${table} (${duration}ms)${rowsAffected === undefined ? "" : ` - ${rowsAffected} rows`}`
   );
 }
 
@@ -160,6 +160,6 @@ export function logCacheOperation(
       hit,
       ...(ttl !== undefined && { ttl: `${ttl}s` }),
     },
-    `Cache ${hit ? "HIT" : "MISS"}: ${key}${ttl !== undefined ? ` (TTL: ${ttl}s)` : ""}`
+    `Cache ${hit ? "HIT" : "MISS"}: ${key}${ttl === undefined ? "" : ` (TTL: ${ttl}s)`}`
   );
 }
