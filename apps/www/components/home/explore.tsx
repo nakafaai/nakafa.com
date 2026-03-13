@@ -1,6 +1,6 @@
 import {
   Atom02Icon,
-  Brain02Icon,
+  Books02Icon,
   Target01Icon,
   Timer02Icon,
 } from "@hugeicons/core-free-icons";
@@ -21,7 +21,7 @@ function SubjectIcon() {
         </div>
 
         <div className="absolute -bottom-2 -left-2 z-20 flex h-9 w-9 items-center justify-center rounded-full border-2 border-card bg-chart-1 text-background shadow-xs transition-all ease-out group-hover:-translate-x-1 group-hover:translate-y-1 group-hover:scale-110">
-          <HugeIcons className="size-4.5" icon={Brain02Icon} />
+          <HugeIcons className="size-4.5" icon={Books02Icon} />
         </div>
       </div>
     </div>

@@ -164,7 +164,8 @@
     "vocational-school": "Vocational School",
     "university": "University",
     "grade": "Grade {grade}",
-    "grade-description": "Let's learn about what you want to know.",
+    "grade-description": "Choose your subject and level up your understanding chapter by chapter!",
+    "subject-description": "Choose your grade and start exploring exciting learning materials today!",
     "chapter": "Chapter",
     "mathematics": "Mathematics",
     "physics": "Physics",
@@ -190,7 +191,7 @@
     "learn-with-nakafa": "Learn with Nakafa"
   },
   "Articles": {
-    "description": "Academic research and publications based on scientific methods.",
+    "description": "Explore fresh perspectives with our deeply researched educational articles.",
     "politics": "Politics",
     "official": "Official",
     "official-description": "Made by Nakafa",
@@ -202,7 +203,7 @@
   "Holy": {
     "holy": "Holy",
     "quran": "Quran",
-    "quran-description": "Blessed is the one who reads the Quran and follows its guidance.",
+    "quran-description": "Find peace and profound wisdom in every holy verse of the Quran.",
     "verse": "Verse",
     "verse-count": "Verse {count}",
     "interpretation": "Interpretation",
@@ -224,7 +225,7 @@
     "grade-9": "Grade 9",
     "tka": "TKA",
     "snbt": "SNBT",
-    "type-description": "Prepare yourself for the exam with real-world practice.",
+    "type-description": "Test your limits and conquer exams with interactive practice sessions!",
     "mathematics": "Mathematics",
     "quantitative-knowledge": "Quantitative Knowledge",
     "mathematical-reasoning": "Mathematical Reasoning",

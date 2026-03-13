@@ -164,7 +164,8 @@
     "vocational-school": "SMK",
     "university": "Universitas",
     "grade": "Kelas {grade}",
-    "grade-description": "Yuk, pelajari apa yang ingin kamu ketahui.",
+    "grade-description": "Pilih materi dan tingkatkan pemahamanmu di setiap bab!",
+    "subject-description": "Pilih kelas kamu dan mulai petualangan belajar yang seru hari ini!",
     "chapter": "Bab",
     "mathematics": "Matematika",
     "physics": "Fisika",
@@ -190,7 +191,7 @@
     "learn-with-nakafa": "Belajar dengan Nakafa"
   },
   "Articles": {
-    "description": "Penelitian akademik dan publikasi berdasarkan metode ilmiah.",
+    "description": "Eksplorasi wawasan baru dari artikel edukatif dan riset mendalam kami.",
     "politics": "Politik",
     "official": "Resmi",
     "official-description": "Dibuat oleh Nakafa",
@@ -202,7 +203,7 @@
   "Holy": {
     "holy": "Suci",
     "quran": "Al Quran",
-    "quran-description": "Barokah bagi orang yang membaca Al Quran dan mengikuti petunjuknya.",
+    "quran-description": "Temukan ketenangan dan hikmah dalam setiap ayat suci Al-Quran.",
     "verse": "Ayat",
     "verse-count": "Ayat {count}",
     "interpretation": "Tafsir",
@@ -224,7 +225,7 @@
     "grade-9": "Kelas 9",
     "tka": "TKA",
     "snbt": "SNBT",
-    "type-description": "Persiapkan diri kamu untuk ujian dengan latihan nyata.",
+    "type-description": "Uji seberapa jauh kemampuanmu dengan ribuan soal latihan interaktif!",
     "mathematics": "Matematika",
     "quantitative-knowledge": "Pengetahuan Kuantitatif",
     "mathematical-reasoning": "Penalaran Matematika",

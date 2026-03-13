@@ -54,7 +54,7 @@
     "babel-plugin-react-compiler": "^1.0.0",
     "better-auth": "1.5.5",
     "class-variance-authority": "^0.7.1",
-    "convex": "^1.32.0",
+    "convex": "^1.33.0",
     "country-flag-icons": "^1.6.15",
     "date-fns": "^4.1.0",
     "effect": "^3.19.19",

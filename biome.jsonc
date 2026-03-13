@@ -16,6 +16,10 @@
   },
   "linter": {
     "rules": {
+      "correctness": {
+        "useImportExtensions": "off",
+        "noUnresolvedImports": "off"
+      },
       "a11y": {
         "noNoninteractiveElementInteractions": "off"
       },
