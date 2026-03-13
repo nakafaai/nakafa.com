@@ -30,7 +30,7 @@ export function timingSafeEqual(
 
     let result = 0;
     for (let i = 0; i < aBuffer.length; i++) {
-      result += aBuffer[i] !== bBuffer[i] ? 1 : 0;
+      result += aBuffer[i] === bBuffer[i] ? 0 : 1;
     }
 
     return result === 0;

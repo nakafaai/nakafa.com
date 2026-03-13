@@ -153,12 +153,12 @@ export async function GET(
         }
 
         const result =
-          exerciseNumber !== null
-            ? content.filter(
+          exerciseNumber === null
+            ? content
+            : content.filter(
                 (exercise: { number: number }) =>
                   exercise.number === exerciseNumber
-              )
-            : content;
+              );
 
         if (exerciseNumber !== null && result.length === 0) {
           return NextResponse.json(
