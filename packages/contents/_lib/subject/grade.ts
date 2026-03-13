@@ -1,9 +1,6 @@
 import type { SubjectCategory } from "@repo/contents/_types/subject/category";
 import { SubjectCategorySchema } from "@repo/contents/_types/subject/category";
-import type {
-  Grade,
-  NonNumericGrade,
-} from "@repo/contents/_types/subject/grade";
+import type { Grade } from "@repo/contents/_types/subject/grade";
 import { NonNumericGradeSchema } from "@repo/contents/_types/subject/grade";
 import { MaterialSchema } from "@repo/contents/_types/subject/material";
 import * as z from "zod";
@@ -22,8 +19,6 @@ const GradeSubjectSchema = z.array(
     href: z.string(),
   })
 );
-
-type GradeSubject = z.infer<typeof GradeSubjectSchema>;
 
 /**
  * Gets the path to the grade of the subject.
@@ -93,29 +88,22 @@ export async function getGradeSubjects(
  * @returns An array of grade objects with category, grade, label, href, and subjects.
  */
 export async function getAllGradesWithSubjects() {
-  const allGrades: {
-    category: SubjectCategory;
-    grade: Grade;
-    label: string | NonNumericGrade;
-    href: string;
-    subjects: GradeSubject;
-  }[] = [];
+  const gradeEntries = SubjectCategorySchema.options.flatMap((category) =>
+    CATEGORY_GRADES[category].map((grade) => ({
+      category,
+      grade,
+    }))
+  );
 
-  for (const category of SubjectCategorySchema.options) {
-    const grades = CATEGORY_GRADES[category];
-    for (const grade of grades) {
-      const subjects = await getGradeSubjects(category, grade);
-      const nonNumericGrade = getGradeNonNumeric(grade);
+  const subjectsResults = await Promise.all(
+    gradeEntries.map(({ category, grade }) => getGradeSubjects(category, grade))
+  );
 
-      allGrades.push({
-        category,
-        grade,
-        label: nonNumericGrade ?? grade,
-        href: getGradePath(category, grade),
-        subjects,
-      });
-    }
-  }
-
-  return allGrades;
+  return gradeEntries.map(({ category, grade }, index) => ({
+    category,
+    grade,
+    label: getGradeNonNumeric(grade) ?? grade,
+    href: getGradePath(category, grade),
+    subjects: subjectsResults[index],
+  }));
 }
