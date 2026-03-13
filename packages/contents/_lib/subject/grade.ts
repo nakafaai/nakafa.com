@@ -84,11 +84,16 @@ export async function getGradeSubjects(
 }
 
 /**
- * Gets all grades with their subjects across all categories.
+ * Gets all grades with their subjects across specified categories.
+ * @param categories - Optional array of categories to filter. If not provided, returns all categories.
  * @returns An array of grade objects with category, grade, label, href, and subjects.
  */
-export async function getAllGradesWithSubjects() {
-  const gradeEntries = SubjectCategorySchema.options.flatMap((category) =>
+export async function getAllGradesWithSubjects(
+  categories?: readonly SubjectCategory[]
+) {
+  const categoriesToFetch = categories ?? SubjectCategorySchema.options;
+
+  const gradeEntries = categoriesToFetch.flatMap((category) =>
     CATEGORY_GRADES[category].map((grade) => ({
       category,
       grade,

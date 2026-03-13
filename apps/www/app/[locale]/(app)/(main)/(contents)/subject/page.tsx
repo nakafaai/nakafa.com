@@ -4,7 +4,6 @@ import {
   getAllGradesWithSubjects,
   getGradeNonNumeric,
 } from "@repo/contents/_lib/subject/grade";
-import { SubjectCategorySchema } from "@repo/contents/_types/subject/category";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
@@ -17,6 +16,8 @@ import { LayoutContent } from "@/components/shared/layout-content";
 import { getGradeIcon } from "./icons";
 
 export const revalidate = false;
+
+const CATEGORY_ORDER = ["middle-school", "high-school", "university"] as const;
 
 interface Params {
   locale: Locale;
@@ -64,19 +65,17 @@ export default function Page({ params }: Props) {
 
 async function PageContent({ locale }: { locale: Locale }) {
   const [allGrades, tCommon, tSubject] = await Promise.all([
-    getAllGradesWithSubjects(),
+    getAllGradesWithSubjects(CATEGORY_ORDER),
     getTranslations({ locale, namespace: "Common" }),
     getTranslations({ locale, namespace: "Subject" }),
   ]);
 
   const groupedByCategory = new Map(
-    SubjectCategorySchema.options.map((category) => [
+    CATEGORY_ORDER.map((category) => [
       category,
       allGrades.filter((grade) => grade.category === category),
     ])
   );
-
-  const categoryOrder = ["middle-school", "high-school", "university"] as const;
 
   return (
     <>
@@ -98,7 +97,7 @@ async function PageContent({ locale }: { locale: Locale }) {
       />
       <LayoutContent>
         <div className="flex flex-col gap-12 pb-24">
-          {categoryOrder.map((category) => {
+          {CATEGORY_ORDER.map((category) => {
             const grades = groupedByCategory.get(category);
             if (!grades || grades.length === 0) {
               return null;
