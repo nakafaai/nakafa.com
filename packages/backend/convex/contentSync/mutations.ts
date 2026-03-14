@@ -1408,13 +1408,8 @@ export const bulkSyncSnbtTryouts = internalMutation({
         });
 
         const sortedSets = [...tryout.sets].sort((a, b) => {
-          const aIndex = SNBT_TRYOUT_MATERIALS.indexOf(
-            a.material as (typeof SNBT_TRYOUT_MATERIALS)[number]
-          );
-          const bIndex = SNBT_TRYOUT_MATERIALS.indexOf(
-            b.material as (typeof SNBT_TRYOUT_MATERIALS)[number]
-          );
-          return aIndex - bIndex;
+          const order: readonly string[] = SNBT_TRYOUT_MATERIALS;
+          return order.indexOf(a.material) - order.indexOf(b.material);
         });
 
         for (let i = 0; i < sortedSets.length; i++) {
