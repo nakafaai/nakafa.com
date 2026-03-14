@@ -444,21 +444,27 @@ export const completeTryout = mutation({
       )
       .collect();
 
+    const subjectAttemptData = await Promise.all(
+      subjectAttempts.map(async (sa) => {
+        const [answers, itemParamsRecords] = await Promise.all([
+          ctx.db
+            .query("exerciseAnswers")
+            .withIndex("attemptId_exerciseNumber", (q) =>
+              q.eq("attemptId", sa.setAttemptId)
+            )
+            .collect(),
+          ctx.db
+            .query("exerciseItemParameters")
+            .withIndex("setId", (q) => q.eq("setId", sa.setId))
+            .collect(),
+        ]);
+        return { answers, itemParamsRecords };
+      })
+    );
+
     const allResponses: Response[] = [];
 
-    for (const sa of subjectAttempts) {
-      const answers = await ctx.db
-        .query("exerciseAnswers")
-        .withIndex("attemptId_exerciseNumber", (q) =>
-          q.eq("attemptId", sa.setAttemptId)
-        )
-        .collect();
-
-      const itemParamsRecords = await ctx.db
-        .query("exerciseItemParameters")
-        .withIndex("setId", (q) => q.eq("setId", sa.setId))
-        .collect();
-
+    for (const { answers, itemParamsRecords } of subjectAttemptData) {
       const itemParamsMap = new Map(
         itemParamsRecords.map((ip) => [ip.questionId, ip])
       );

@@ -1,8 +1,10 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { query } from "@repo/backend/convex/_generated/server";
+import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
+import { getManyFrom } from "convex-helpers/server/relationships";
 import { nullable } from "convex-helpers/validators";
 
 export const getUserTryoutAttempt = query({
@@ -25,20 +27,7 @@ export const getUserTryoutAttempt = query({
     })
   ),
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    const email = identity?.email;
-    if (!email) {
-      return null;
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", email))
-      .first();
-
-    if (!user) {
-      return null;
-    }
+    const { appUser } = await requireAuth(ctx);
 
     const tryout = await ctx.db
       .query("snbtTryouts")
@@ -54,7 +43,7 @@ export const getUserTryoutAttempt = query({
     const attempt = await ctx.db
       .query("snbtTryoutAttempts")
       .withIndex("userId_tryoutId", (q) =>
-        q.eq("userId", user._id).eq("tryoutId", tryout._id)
+        q.eq("userId", appUser._id).eq("tryoutId", tryout._id)
       )
       .order("desc")
       .first();
@@ -63,10 +52,12 @@ export const getUserTryoutAttempt = query({
       return null;
     }
 
-    const subjectAttempts = await ctx.db
-      .query("snbtTryoutSubjectAttempts")
-      .withIndex("tryoutAttemptId", (q) => q.eq("tryoutAttemptId", attempt._id))
-      .collect();
+    const subjectAttempts = await getManyFrom(
+      ctx.db,
+      "snbtTryoutSubjectAttempts",
+      "tryoutAttemptId",
+      attempt._id
+    );
 
     const subjectAttemptDetails = await Promise.all(
       subjectAttempts.map(async (sa) => {
@@ -93,10 +84,12 @@ export const getUserTryoutAttempt = query({
 
     const completedSubjectIndices = attempt.completedSubjectIndices;
 
-    const tryoutSets = await ctx.db
-      .query("snbtTryoutSets")
-      .withIndex("tryoutId", (q) => q.eq("tryoutId", tryout._id))
-      .collect();
+    const tryoutSets = await getManyFrom(
+      ctx.db,
+      "snbtTryoutSets",
+      "tryoutId",
+      tryout._id
+    );
 
     const allSubjectIndices = tryoutSets.map((ts) => ts.subjectIndex);
     const nextSubjectIndex = allSubjectIndices.find(
