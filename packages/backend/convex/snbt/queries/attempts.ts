@@ -10,6 +10,10 @@ import {
 } from "convex-helpers/server/relationships";
 import { nullable } from "convex-helpers/validators";
 
+/**
+ * Load the current user's latest attempt for a try-out, including subject-level
+ * exercise attempts and the next unfinished subject index.
+ */
 export const getUserTryoutAttempt = query({
   args: {
     locale: localeValidator,
@@ -58,8 +62,9 @@ export const getUserTryoutAttempt = query({
     const subjectAttempts = await getManyFrom(
       ctx.db,
       "snbtTryoutSubjectAttempts",
-      "tryoutAttemptId",
-      attempt._id
+      "tryoutAttemptId_subjectIndex",
+      attempt._id,
+      "tryoutAttemptId"
     );
 
     const setAttemptIds = subjectAttempts.map((sa) => sa.setAttemptId);
@@ -84,8 +89,9 @@ export const getUserTryoutAttempt = query({
     const tryoutSets = await getManyFrom(
       ctx.db,
       "snbtTryoutSets",
-      "tryoutId",
-      tryout._id
+      "tryoutId_subjectIndex",
+      tryout._id,
+      "tryoutId"
     );
 
     const allSubjectIndices = tryoutSets.map((ts) => ts.subjectIndex);
@@ -102,6 +108,9 @@ export const getUserTryoutAttempt = query({
   },
 });
 
+/**
+ * Resolve SNBT try-out context for a shared `exerciseAttempt`.
+ */
 export const getTryoutContextForAttempt = query({
   args: {
     setAttemptId: vv.id("exerciseAttempts"),

@@ -2,8 +2,11 @@ import { query } from "@repo/backend/convex/_generated/server";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
-import { getAll } from "convex-helpers/server/relationships";
+import { getAll, getManyFrom } from "convex-helpers/server/relationships";
 
+/**
+ * List active SNBT try-outs for a locale.
+ */
 export const getActiveTryouts = query({
   args: {
     locale: localeValidator,
@@ -36,6 +39,9 @@ export const getActiveTryouts = query({
   },
 });
 
+/**
+ * Load one try-out and its ordered subject set metadata.
+ */
 export const getTryoutDetails = query({
   args: {
     locale: localeValidator,
@@ -67,10 +73,13 @@ export const getTryoutDetails = query({
       return null;
     }
 
-    const tryoutSets = await ctx.db
-      .query("snbtTryoutSets")
-      .withIndex("tryoutId", (q) => q.eq("tryoutId", tryout._id))
-      .collect();
+    const tryoutSets = await getManyFrom(
+      ctx.db,
+      "snbtTryoutSets",
+      "tryoutId_subjectIndex",
+      tryout._id,
+      "tryoutId"
+    );
 
     const sets = await getAll(
       ctx.db,
@@ -78,18 +87,16 @@ export const getTryoutDetails = query({
       tryoutSets.map((ts) => ts.setId)
     );
 
-    const subjects = tryoutSets
-      .map((ts, i) => {
-        const set = sets[i];
-        return {
-          subjectIndex: ts.subjectIndex,
-          setId: ts.setId,
-          material: set?.material ?? "",
-          title: set?.title ?? "",
-          questionCount: set?.questionCount ?? 0,
-        };
-      })
-      .sort((a, b) => a.subjectIndex - b.subjectIndex);
+    const subjects = tryoutSets.map((ts, i) => {
+      const set = sets[i];
+      return {
+        subjectIndex: ts.subjectIndex,
+        setId: ts.setId,
+        material: set?.material ?? "",
+        title: set?.title ?? "",
+        questionCount: set?.questionCount ?? 0,
+      };
+    });
 
     return { tryout, subjects };
   },

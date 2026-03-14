@@ -1,5 +1,6 @@
 import { internalMutation } from "@repo/backend/convex/functions";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
+import { computeSnbtRawScorePercentage } from "@repo/backend/convex/snbt/helpers";
 import { v } from "convex/values";
 
 /**
@@ -45,10 +46,7 @@ export const updateLeaderboard = internalMutation({
 
     const completedAt =
       tryoutAttempt.completedAt ?? tryoutAttempt.lastActivityAt;
-    const rawScore =
-      tryoutAttempt.totalQuestions > 0
-        ? (tryoutAttempt.totalCorrect / tryoutAttempt.totalQuestions) * 100
-        : 0;
+    const rawScore = computeSnbtRawScorePercentage(tryoutAttempt);
 
     const entryData = {
       tryoutId: tryoutAttempt.tryoutId,

@@ -1,4 +1,3 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { query } from "@repo/backend/convex/_generated/server";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
@@ -9,9 +8,11 @@ import {
 import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
 
+/**
+ * Read the official leaderboard for a specific SNBT try-out.
+ */
 export const getTryoutLeaderboard = query({
   args: {
-    locale: localeValidator,
     tryoutId: vv.id("snbtTryouts"),
     limit: v.optional(v.number()),
   },
@@ -27,51 +28,49 @@ export const getTryoutLeaderboard = query({
     })
   ),
   handler: async (ctx, args) => {
-    const limit = Math.min(args.limit ?? 50, 100);
+    const limit = Math.max(0, Math.min(args.limit ?? 50, 100));
 
     const totalCount = await tryoutLeaderboard.count(ctx, {
       namespace: args.tryoutId,
     });
 
-    const results: Array<{
-      rank: number;
-      userId: Id<"users">;
-      userName: string;
-      theta: number;
-      irtScore: number;
-      rawScore: number;
-      completedAt: number;
-    }> = [];
+    const rankedEntries = await Promise.all(
+      Array.from({ length: Math.min(limit, totalCount) }, async (_, index) => {
+        const item = await tryoutLeaderboard.at(ctx, index, {
+          namespace: args.tryoutId,
+        });
 
-    for (let i = 0; i < Math.min(limit, totalCount); i++) {
-      const item = await tryoutLeaderboard.at(ctx, i, {
-        namespace: args.tryoutId,
-      });
-      if (!item) {
-        break;
-      }
+        if (!item) {
+          return null;
+        }
 
-      const leaderboardEntry = await ctx.db.get("snbtLeaderboard", item.id);
-      if (!leaderboardEntry) {
-        continue;
-      }
+        const leaderboardEntry = await ctx.db.get("snbtLeaderboard", item.id);
 
-      const user = await ctx.db.get("users", leaderboardEntry.userId);
-      results.push({
-        rank: i + 1,
-        userId: leaderboardEntry.userId,
-        userName: user?.name ?? "Unknown",
-        theta: leaderboardEntry.theta,
-        irtScore: leaderboardEntry.irtScore,
-        rawScore: leaderboardEntry.rawScore,
-        completedAt: leaderboardEntry.completedAt,
-      });
-    }
+        if (!leaderboardEntry) {
+          return null;
+        }
 
-    return results;
+        const user = await ctx.db.get("users", leaderboardEntry.userId);
+
+        return {
+          rank: index + 1,
+          userId: leaderboardEntry.userId,
+          userName: user?.name ?? "Unknown",
+          theta: leaderboardEntry.theta,
+          irtScore: leaderboardEntry.irtScore,
+          rawScore: leaderboardEntry.rawScore,
+          completedAt: leaderboardEntry.completedAt,
+        };
+      })
+    );
+
+    return rankedEntries.filter((entry) => entry !== null);
   },
 });
 
+/**
+ * Read the official locale-wide SNBT leaderboard.
+ */
 export const getGlobalLeaderboard = query({
   args: {
     locale: localeValidator,
@@ -90,53 +89,50 @@ export const getGlobalLeaderboard = query({
     })
   ),
   handler: async (ctx, args) => {
-    const limit = Math.min(args.limit ?? 50, 100);
+    const limit = Math.max(0, Math.min(args.limit ?? 50, 100));
 
     const totalCount = await globalLeaderboard.count(ctx, {
       namespace: args.locale,
     });
 
-    const results: Array<{
-      rank: number;
-      userId: Id<"users">;
-      userName: string;
-      averageTheta: number;
-      totalTryoutsCompleted: number;
-      bestTheta: number;
-      averageRawScore: number;
-      lastTryoutAt: number;
-    }> = [];
+    const rankedEntries = await Promise.all(
+      Array.from({ length: Math.min(limit, totalCount) }, async (_, index) => {
+        const item = await globalLeaderboard.at(ctx, index, {
+          namespace: args.locale,
+        });
 
-    for (let i = 0; i < Math.min(limit, totalCount); i++) {
-      const item = await globalLeaderboard.at(ctx, i, {
-        namespace: args.locale,
-      });
-      if (!item) {
-        break;
-      }
+        if (!item) {
+          return null;
+        }
 
-      const stats = await ctx.db.get("userSnbtStats", item.id);
-      if (!stats) {
-        continue;
-      }
+        const stats = await ctx.db.get("userSnbtStats", item.id);
 
-      const user = await ctx.db.get("users", stats.userId);
-      results.push({
-        rank: i + 1,
-        userId: stats.userId,
-        userName: user?.name ?? "Unknown",
-        averageTheta: stats.averageTheta,
-        totalTryoutsCompleted: stats.totalTryoutsCompleted,
-        bestTheta: stats.bestTheta,
-        averageRawScore: stats.averageRawScore,
-        lastTryoutAt: stats.lastTryoutAt,
-      });
-    }
+        if (!stats) {
+          return null;
+        }
 
-    return results;
+        const user = await ctx.db.get("users", stats.userId);
+
+        return {
+          rank: index + 1,
+          userId: stats.userId,
+          userName: user?.name ?? "Unknown",
+          averageTheta: stats.averageTheta,
+          totalTryoutsCompleted: stats.totalTryoutsCompleted,
+          bestTheta: stats.bestTheta,
+          averageRawScore: stats.averageRawScore,
+          lastTryoutAt: stats.lastTryoutAt,
+        };
+      })
+    );
+
+    return rankedEntries.filter((entry) => entry !== null);
   },
 });
 
+/**
+ * Get one user's rank inside an official try-out leaderboard.
+ */
 export const getUserTryoutRank = query({
   args: {
     tryoutId: vv.id("snbtTryouts"),

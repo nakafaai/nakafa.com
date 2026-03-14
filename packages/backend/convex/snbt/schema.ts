@@ -33,9 +33,7 @@ const tables = {
     tryoutId: v.id("snbtTryouts"),
     setId: v.id("exerciseSets"),
     subjectIndex: v.number(),
-  })
-    .index("tryoutId", ["tryoutId"])
-    .index("tryoutId_subjectIndex", ["tryoutId", "subjectIndex"]),
+  }).index("tryoutId_subjectIndex", ["tryoutId", "subjectIndex"]),
 
   snbtTryoutAttempts: defineTable({
     userId: v.id("users"),
@@ -61,7 +59,6 @@ const tables = {
     theta: v.number(),
     thetaSE: v.number(),
   })
-    .index("tryoutAttemptId", ["tryoutAttemptId"])
     .index("tryoutAttemptId_subjectIndex", ["tryoutAttemptId", "subjectIndex"])
     .index("setAttemptId", ["setAttemptId"]),
 

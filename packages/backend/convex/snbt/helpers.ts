@@ -9,6 +9,10 @@ import {
 } from "convex-helpers/server/relationships";
 
 type SnbtMutationCtx = Pick<MutationCtx, "db">;
+type TryoutScoreTotals = Pick<
+  Doc<"snbtTryoutAttempts">,
+  "totalCorrect" | "totalQuestions"
+>;
 
 const HOURS_PER_DAY = 24;
 const MINUTES_PER_HOUR = 60;
@@ -41,8 +45,8 @@ export function resolveSnbtSubjectTimeLimitSeconds({
   requestedTimeLimit,
 }: {
   mode: Doc<"snbtTryoutAttempts">["mode"];
-  questionCount: number;
-  requestedTimeLimit?: number;
+  questionCount: Doc<"exerciseSets">["questionCount"];
+  requestedTimeLimit?: Doc<"exerciseAttempts">["timeLimit"];
 }) {
   if (mode === "simulation") {
     return questionCount * SIMULATION_SECONDS_PER_QUESTION;
@@ -56,6 +60,69 @@ export function resolveSnbtSubjectTimeLimitSeconds({
   }
 
   return requestedTimeLimit;
+}
+
+/**
+ * Convert try-out score totals to a percentage.
+ */
+export function computeSnbtRawScorePercentage({
+  totalCorrect,
+  totalQuestions,
+}: TryoutScoreTotals) {
+  if (totalQuestions <= 0) {
+    return 0;
+  }
+
+  return (totalCorrect / totalQuestions) * 100;
+}
+
+/**
+ * Count correct answers in a subject attempt.
+ */
+export function countCorrectAnswers(answers: Doc<"exerciseAnswers">[]) {
+  return answers.reduce(
+    (correctCount, answer) => correctCount + (answer.isCorrect ? 1 : 0),
+    0
+  );
+}
+
+/**
+ * Build IRT response payloads from recorded exercise answers and item
+ * parameters.
+ */
+export function buildIrtResponses({
+  answers,
+  itemParamsRecords,
+}: {
+  answers: Doc<"exerciseAnswers">[];
+  itemParamsRecords: Doc<"exerciseItemParameters">[];
+}) {
+  const itemParamsMap = new Map(
+    itemParamsRecords.map((itemParams) => [itemParams.questionId, itemParams])
+  );
+
+  return answers.flatMap((answer) => {
+    if (answer.questionId === undefined) {
+      return [];
+    }
+
+    const params = itemParamsMap.get(answer.questionId);
+
+    if (!params) {
+      return [];
+    }
+
+    const response = {
+      correct: answer.isCorrect,
+      params: {
+        difficulty: params.difficulty,
+        discrimination: params.discrimination,
+        guessing: params.guessing,
+      },
+    };
+
+    return [response];
+  });
 }
 
 /**
@@ -106,8 +173,9 @@ export async function expireTryoutAttempt(
   const subjectAttempts = await getManyFrom(
     ctx.db,
     "snbtTryoutSubjectAttempts",
-    "tryoutAttemptId",
-    tryoutAttempt._id
+    "tryoutAttemptId_subjectIndex",
+    tryoutAttempt._id,
+    "tryoutAttemptId"
   );
   const setAttempts = await getAll(
     ctx.db,
