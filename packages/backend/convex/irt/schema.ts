@@ -8,17 +8,47 @@ export const irtCalibrationStatusValidator = literals(
   "calibrated"
 );
 
+export const irtCalibrationRunStatusValidator = literals(
+  "running",
+  "completed",
+  "failed"
+);
+
+export const irtOperationalModelValidator = literals("2pl");
+
 const tables = {
+  irtCalibrationRuns: defineTable({
+    setId: v.id("exerciseSets"),
+    model: irtOperationalModelValidator,
+    status: irtCalibrationRunStatusValidator,
+    questionCount: v.number(),
+    responseCount: v.number(),
+    attemptCount: v.number(),
+    iterationCount: v.number(),
+    maxParameterDelta: v.number(),
+    startedAt: v.number(),
+    updatedAt: v.number(),
+    completedAt: v.optional(v.number()),
+    error: v.optional(v.string()),
+  }).index("setId_startedAt", ["setId", "startedAt"]),
+
   exerciseItemParameters: defineTable({
     questionId: v.id("exerciseQuestions"),
     setId: v.id("exerciseSets"),
+    /** 2PL/3PL difficulty parameter (b). */
     difficulty: v.number(),
+    /** 2PL/3PL discrimination parameter (a). */
     discrimination: v.number(),
+    /**
+     * Stored for future calibration workflows.
+     * Operational SNBT scoring currently applies a 2PL policy and uses `c = 0`.
+     */
     guessing: v.number(),
     responseCount: v.number(),
     correctRate: v.number(),
     calibratedAt: v.number(),
     calibrationStatus: irtCalibrationStatusValidator,
+    calibrationRunId: v.optional(v.id("irtCalibrationRuns")),
   })
     .index("questionId", ["questionId"])
     .index("setId", ["setId"])

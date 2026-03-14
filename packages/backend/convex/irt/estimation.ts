@@ -59,6 +59,23 @@ function normalPDF(x: number, mean: number, sd: number): number {
 }
 
 /**
+ * Convert stored item parameters to the operational 2PL policy used for SNBT
+ * scoring.
+ *
+ * The backend still persists `guessing` for future calibration work, but the
+ * current operational model sets `c = 0` so scoring behaves as a 2PL model.
+ */
+export function toOperationalTwoPLParams(
+  params: ItemParameters
+): ItemParameters {
+  return {
+    difficulty: params.difficulty,
+    discrimination: params.discrimination,
+    guessing: 0,
+  };
+}
+
+/**
  * Estimates ability (θ) using EAP (Expected A Posteriori).
  *
  * @param responses - Array of responses with item parameters
@@ -117,7 +134,7 @@ export function getProvisionalParams(): ItemParameters {
   return {
     difficulty: 0,
     discrimination: 1,
-    guessing: 0.2,
+    guessing: 0,
   };
 }
 

@@ -10,6 +10,8 @@ tables own try-out lifecycle, IRT scoring, and official leaderboard rules.
 - Subject attempts are stored in `exerciseAttempts` with `origin: "snbt"`
 - SNBT try-out attempts are simulation-only
 - Simulation subjects use a fixed time limit of `90` seconds per question
+- Official scoring is currently `2PL-first`: stored item parameters keep
+  `guessing`, but operational theta estimation uses `c = 0`
 - Only the first completed simulation attempt per user per try-out is official
 - Later simulation retries never update the official leaderboard
 - Practice is unlocked only after an official simulation completion and uses the
@@ -90,6 +92,7 @@ flowchart TD
 ## Convex Design Notes
 
 - Shared timing uses the same durable scheduled-expiry pattern as standalone exercises
+- Exercise answer correctness is computed on the server from canonical choice data
 - Try-out expiry is handled by an internal scheduled mutation, not `Date.now()` in queries
 - Relationship traversals use `convex-helpers` where they fit naturally (`getManyFrom`, `getAll`, `getOneFrom`)
 - Official ranking reads use the aggregate component for O(log n) rank lookup
@@ -99,6 +102,7 @@ flowchart TD
 ## IRT Scoring
 
 - Subject and try-out theta use EAP estimation
+- Operational SNBT theta estimation uses a 2PL policy over calibrated item parameters
 - Display score scale is `200-1000`
 - `theta = 0` maps to `600`
 - Implementation lives in `packages/backend/convex/irt/`

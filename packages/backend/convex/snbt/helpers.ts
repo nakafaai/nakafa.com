@@ -4,6 +4,7 @@ import type {
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
 import { computeAttemptDurationSeconds } from "@repo/backend/convex/exercises/utils";
+import { toOperationalTwoPLParams } from "@repo/backend/convex/irt/estimation";
 import { ConvexError } from "convex/values";
 import {
   getAll,
@@ -99,6 +100,9 @@ export function countCorrectAnswers(answers: Doc<"exerciseAnswers">[]) {
 /**
  * Build IRT response payloads from recorded exercise answers and item
  * parameters.
+ *
+ * Operational SNBT scoring currently uses a 2PL policy, so stored `guessing`
+ * parameters are normalized to `c = 0` before estimating theta.
  */
 export function buildIrtResponses({
   answers,
@@ -122,12 +126,14 @@ export function buildIrtResponses({
       return [];
     }
 
+    const operationalParams = toOperationalTwoPLParams(params);
+
     const response = {
       correct: answer.isCorrect,
       params: {
-        difficulty: params.difficulty,
-        discrimination: params.discrimination,
-        guessing: params.guessing,
+        difficulty: operationalParams.difficulty,
+        discrimination: operationalParams.discrimination,
+        guessing: operationalParams.guessing,
       },
     };
 

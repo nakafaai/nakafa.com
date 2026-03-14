@@ -63,7 +63,9 @@ const tables = {
   exerciseAnswers: defineTable({
     attemptId: v.id("exerciseAttempts"),
     exerciseNumber: v.number(),
+    /** Populated by server-authoritative scoring on all new writes. */
     questionId: v.optional(v.id("exerciseQuestions")),
+    /** Canonical choice key selected by the user. */
     selectedOptionId: v.optional(v.string()),
     textAnswer: v.optional(v.string()),
     isCorrect: v.boolean(),

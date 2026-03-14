@@ -1,3 +1,4 @@
+import { scoreExerciseAnswer } from "@repo/backend/convex/exercises/answerScoring";
 import { createExerciseAttempt } from "@repo/backend/convex/exercises/helpers";
 import {
   exerciseAttemptModeValidator,
@@ -117,24 +118,23 @@ export const startAttempt = mutation({
  * - Retry-safe (triggers use newDoc/oldDoc pattern)
  * - Clean separation of concerns (mutation = operations, triggers = aggregates)
  * - No race conditions or double-updates
+ * - Server-authoritative scoring (correctness is derived from stored choices)
  *
  * `timeSpent` is the total time spent on this question (seconds).
  * If the user re-submits an answer, the trigger calculates the delta correctly.
  *
  * @param attemptId - The ID of the attempt.
  * @param exerciseNumber - The 1-based index of the exercise in the set.
- * @param selectedOptionId - The ID of the selected option (for multiple choice).
- * @param textAnswer - The text answer (for fill-in-the-blank/essay).
- * @param isCorrect - Whether the answer is correct (validated by frontend/backend logic before calling this).
+ * @param questionId - The backend question ID for this exercise number.
+ * @param selectedOptionId - The canonical option key selected by the user.
  * @param timeSpent - Time spent on this specific question in seconds.
  */
 export const submitAnswer = mutation({
   args: {
     attemptId: vv.id("exerciseAttempts"),
     exerciseNumber: v.number(),
-    selectedOptionId: v.optional(v.string()),
-    textAnswer: v.optional(v.string()),
-    isCorrect: v.boolean(),
+    questionId: vv.id("exerciseQuestions"),
+    selectedOptionId: v.string(),
     timeSpent: v.number(),
   },
   returns: v.null(),
@@ -230,14 +230,22 @@ export const submitAnswer = mutation({
       )
       .first();
 
+    const scoredAnswer = await scoreExerciseAnswer(ctx.db, {
+      attempt,
+      exerciseNumber: args.exerciseNumber,
+      questionId: args.questionId,
+      selectedOptionId: args.selectedOptionId,
+    });
+
     // Create or update the answer record.
     // All aggregate updates (answeredCount, correctAnswers, totalTime, scorePercentage)
     // are handled by the trigger system in functions.ts.
     if (existingAnswer) {
       await ctx.db.patch("exerciseAnswers", existingAnswer._id, {
-        selectedOptionId: args.selectedOptionId,
-        textAnswer: args.textAnswer,
-        isCorrect: args.isCorrect,
+        questionId: scoredAnswer.questionId,
+        selectedOptionId: scoredAnswer.selectedOptionId,
+        textAnswer: scoredAnswer.textAnswer,
+        isCorrect: scoredAnswer.isCorrect,
         timeSpent: args.timeSpent,
         updatedAt: now,
       });
@@ -245,9 +253,10 @@ export const submitAnswer = mutation({
       await ctx.db.insert("exerciseAnswers", {
         attemptId: args.attemptId,
         exerciseNumber: args.exerciseNumber,
-        selectedOptionId: args.selectedOptionId,
-        textAnswer: args.textAnswer,
-        isCorrect: args.isCorrect,
+        questionId: scoredAnswer.questionId,
+        selectedOptionId: scoredAnswer.selectedOptionId,
+        textAnswer: scoredAnswer.textAnswer,
+        isCorrect: scoredAnswer.isCorrect,
         timeSpent: args.timeSpent,
         answeredAt: now,
         updatedAt: now,

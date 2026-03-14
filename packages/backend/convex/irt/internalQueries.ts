@@ -1,0 +1,131 @@
+import { internalQuery } from "@repo/backend/convex/_generated/server";
+import { irtCalibratedItemValidator } from "@repo/backend/convex/irt/validators";
+import { vv } from "@repo/backend/convex/lib/validators/vv";
+import { paginationOptsValidator } from "convex/server";
+import { v } from "convex/values";
+import { getAll, getManyFrom } from "convex-helpers/server/relationships";
+
+export const calibrationQuestionValidator = v.object({
+  questionId: vv.id("exerciseQuestions"),
+  number: v.number(),
+});
+
+export const calibrationResponseValidator = v.object({
+  attemptId: vv.id("exerciseAttempts"),
+  isCorrect: v.boolean(),
+  questionId: vv.id("exerciseQuestions"),
+});
+
+export const calibrationQuestionsForSetResultValidator = v.object({
+  existingParams: v.array(irtCalibratedItemValidator),
+  questions: v.array(calibrationQuestionValidator),
+});
+
+export const calibrationResponsesPageResultValidator = v.object({
+  continueCursor: v.string(),
+  isDone: v.boolean(),
+  page: v.array(calibrationResponseValidator),
+});
+
+/**
+ * Load the questions in one exercise set together with any previously stored
+ * item parameters used as seeds for the next calibration run.
+ */
+export const getCalibrationQuestionsForSet = internalQuery({
+  args: {
+    setId: vv.id("exerciseSets"),
+  },
+  returns: calibrationQuestionsForSetResultValidator,
+  handler: async (ctx, args) => {
+    const questions = await getManyFrom(
+      ctx.db,
+      "exerciseQuestions",
+      "setId",
+      args.setId
+    );
+    const existingParams = await getManyFrom(
+      ctx.db,
+      "exerciseItemParameters",
+      "setId",
+      args.setId
+    );
+
+    return {
+      questions: [...questions]
+        .sort((a, b) => a.number - b.number)
+        .map((question) => ({
+          questionId: question._id,
+          number: question.number,
+        })),
+      existingParams: existingParams.map((params) => ({
+        questionId: params.questionId,
+        difficulty: params.difficulty,
+        discrimination: params.discrimination,
+        guessing: params.guessing,
+        responseCount: params.responseCount,
+        correctRate: params.correctRate,
+        calibrationStatus: params.calibrationStatus,
+      })),
+    };
+  },
+});
+
+/**
+ * Load one page of scored responses for a single question.
+ *
+ * Only completed simulation attempts are included so the calibration dataset is
+ * aligned with the operational testing conditions used by SNBT.
+ */
+export const getCalibrationResponsesPageForQuestion = internalQuery({
+  args: {
+    questionId: vv.id("exerciseQuestions"),
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: calibrationResponsesPageResultValidator,
+  handler: async (ctx, args) => {
+    const responsePage = await ctx.db
+      .query("exerciseAnswers")
+      .withIndex("questionId", (q) => q.eq("questionId", args.questionId))
+      .paginate(args.paginationOpts);
+
+    const attemptIds = [
+      ...new Set(responsePage.page.map((answer) => answer.attemptId)),
+    ];
+    const attempts = await getAll(ctx.db, "exerciseAttempts", attemptIds);
+    const attemptsById = new Map(
+      attempts.flatMap((attempt) => {
+        if (!attempt) {
+          return [];
+        }
+
+        return [[attempt._id, attempt]];
+      })
+    );
+
+    const page = responsePage.page.flatMap((answer) => {
+      const attempt = attemptsById.get(answer.attemptId);
+
+      if (
+        !attempt ||
+        attempt.mode !== "simulation" ||
+        attempt.status !== "completed"
+      ) {
+        return [];
+      }
+
+      return [
+        {
+          attemptId: answer.attemptId,
+          isCorrect: answer.isCorrect,
+          questionId: args.questionId,
+        },
+      ];
+    });
+
+    return {
+      page,
+      isDone: responsePage.isDone,
+      continueCursor: responsePage.continueCursor,
+    };
+  },
+});

@@ -2,6 +2,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import { createExerciseAttempt } from "@repo/backend/convex/exercises/helpers";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
 import { estimateThetaEAP } from "@repo/backend/convex/irt/estimation";
+import { thetaToSnbtScore } from "@repo/backend/convex/irt/scoring";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
@@ -600,8 +601,7 @@ export const completeTryout = mutation({
     );
 
     const { theta, se } = estimateThetaEAP(allResponses);
-    const irtScore = Math.round(600 + theta * 100);
-    const clampedIRTScore = Math.max(200, Math.min(1000, irtScore));
+    const clampedIRTScore = thetaToSnbtScore(theta);
 
     await ctx.db.patch("snbtTryoutAttempts", args.tryoutAttemptId, {
       status: "completed",
