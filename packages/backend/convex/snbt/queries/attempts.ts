@@ -1,10 +1,9 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
-import { getManyFrom } from "convex-helpers/server/relationships";
+import { getAll, getManyFrom } from "convex-helpers/server/relationships";
 import { nullable } from "convex-helpers/validators";
 
 export const getUserTryoutAttempt = query({
@@ -59,28 +58,22 @@ export const getUserTryoutAttempt = query({
       attempt._id
     );
 
-    const subjectAttemptDetails = await Promise.all(
-      subjectAttempts.map(async (sa) => {
-        const setAttempt = await ctx.db.get(sa.setAttemptId);
+    const setAttemptIds = subjectAttempts.map((sa) => sa.setAttemptId);
+    const setAttempts = await getAll(ctx.db, "exerciseAttempts", setAttemptIds);
+
+    const validSubjectAttempts = subjectAttempts
+      .map((sa, i) => {
+        const setAttempt = setAttempts[i];
+        if (!setAttempt) {
+          return null;
+        }
         return {
           subjectIndex: sa.subjectIndex,
-          setAttempt: setAttempt ?? null,
+          setAttempt,
           setId: sa.setId,
         };
       })
-    );
-
-    const validSubjectAttempts = subjectAttemptDetails.filter(
-      (
-        sa
-      ): sa is {
-        subjectIndex: number;
-        setAttempt: NonNullable<
-          (typeof subjectAttemptDetails)[number]["setAttempt"]
-        >;
-        setId: Id<"exerciseSets">;
-      } => sa.setAttempt !== null
-    );
+      .filter((x) => x !== null);
 
     const completedSubjectIndices = attempt.completedSubjectIndices;
 

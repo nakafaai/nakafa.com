@@ -51,12 +51,12 @@ export const getTryoutLeaderboard = query({
         break;
       }
 
-      const leaderboardEntry = await ctx.db.get(item.id);
+      const leaderboardEntry = await ctx.db.get("snbtLeaderboard", item.id);
       if (!leaderboardEntry) {
         continue;
       }
 
-      const user = await ctx.db.get(leaderboardEntry.userId);
+      const user = await ctx.db.get("users", leaderboardEntry.userId);
       results.push({
         rank: i + 1,
         userId: leaderboardEntry.userId,
@@ -115,12 +115,12 @@ export const getGlobalLeaderboard = query({
         break;
       }
 
-      const stats = await ctx.db.get(item.id);
+      const stats = await ctx.db.get("userSnbtStats", item.id);
       if (!stats) {
         continue;
       }
 
-      const user = await ctx.db.get(stats.userId);
+      const user = await ctx.db.get("users", stats.userId);
       results.push({
         rank: i + 1,
         userId: stats.userId,

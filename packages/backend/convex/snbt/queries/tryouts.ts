@@ -2,6 +2,7 @@ import { query } from "@repo/backend/convex/_generated/server";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
+import { getAll } from "convex-helpers/server/relationships";
 
 export const getActiveTryouts = query({
   args: {
@@ -71,9 +72,15 @@ export const getTryoutDetails = query({
       .withIndex("tryoutId", (q) => q.eq("tryoutId", tryout._id))
       .collect();
 
-    const subjects = await Promise.all(
-      tryoutSets.map(async (ts) => {
-        const set = await ctx.db.get(ts.setId);
+    const sets = await getAll(
+      ctx.db,
+      "exerciseSets",
+      tryoutSets.map((ts) => ts.setId)
+    );
+
+    const subjects = tryoutSets
+      .map((ts, i) => {
+        const set = sets[i];
         return {
           subjectIndex: ts.subjectIndex,
           setId: ts.setId,
@@ -82,9 +89,7 @@ export const getTryoutDetails = query({
           questionCount: set?.questionCount ?? 0,
         };
       })
-    );
-
-    subjects.sort((a, b) => a.subjectIndex - b.subjectIndex);
+      .sort((a, b) => a.subjectIndex - b.subjectIndex);
 
     return { tryout, subjects };
   },
