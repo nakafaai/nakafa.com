@@ -18,6 +18,8 @@ tables own try-out lifecycle, IRT scoring, and official leaderboard rules.
   recalibration; bounded cron jobs and workflows publish newer frozen scales
 - Only the first completed simulation attempt per user per try-out is official
 - Later simulation retries never update the official leaderboard
+- Global leaderboard scope is `locale + year`; different tryout years are never
+  combined into one ranking
 - Practice is unlocked only after an official simulation completion and uses the
   standalone `exerciseAttempts` flow outside of `snbtTryoutAttempts`
 
@@ -44,7 +46,7 @@ erDiagram
 | `snbtTryoutAttempts` | Per-user simulation lifecycle, frozen `scaleVersionId`, raw totals, and final IRT result. The 24h expiry window is derived from `startedAt`. |
 | `snbtTryoutSubjectAttempts` | One subject record per try-out attempt. Points to the shared `exerciseAttempts` row for that subject. |
 | `snbtLeaderboard` | Official per-try-out leaderboard entries. One official simulation entry per user per try-out. |
-| `userSnbtStats` | Official aggregate stats per user and locale, fed only by official leaderboard insertions. |
+| `userSnbtStats` | Official aggregate stats per user, locale, and year, fed only by official leaderboard insertions. |
 
 ## Backend Flow
 
@@ -75,7 +77,7 @@ flowchart TD
 | `getUserTryoutAttempt` | Load the latest simulation attempt, subject progress, whether the latest attempt is official, and whether standalone practice is unlocked |
 | `getTryoutContextForAttempt` | Resolve SNBT context from a subject `exerciseAttempt` |
 | `getTryoutLeaderboard` | Read official per-try-out ranking via aggregate component |
-| `getGlobalLeaderboard` | Read official global ranking via aggregate component |
+| `getGlobalLeaderboard` | Read official locale+year global ranking via aggregate component |
 
 ## Mutation Contract
 
@@ -93,6 +95,8 @@ flowchart TD
 - The first completed simulation attempt for a user on a try-out is the only official one
 - Later simulation retries still get results, but they do not overwrite official leaderboard data
 - Standalone practice attempts never create leaderboard entries and never affect `userSnbtStats`
+- Global comparison is limited to the same locale and year so unrelated tryout
+  years are not mixed on one leaderboard
 
 ## Convex Design Notes
 

@@ -8,7 +8,7 @@ import { v } from "convex/values";
 
 /**
  * Record the official first completed simulation attempt for a user on a try-out
- * and update locale-level SNBT stats from that official result.
+ * and update locale/year-level SNBT stats from that official result.
  *
  * Later simulation retries remain visible to the user as results, but they are
  * unofficial and therefore do not overwrite the first official leaderboard row.
@@ -76,8 +76,11 @@ export const updateLeaderboard = internalMutation({
 
     const statsRecord = await ctx.db
       .query("userSnbtStats")
-      .withIndex("userId_locale", (q) =>
-        q.eq("userId", tryoutAttempt.userId).eq("locale", tryout.locale)
+      .withIndex("userId_locale_year", (q) =>
+        q
+          .eq("userId", tryoutAttempt.userId)
+          .eq("locale", tryout.locale)
+          .eq("year", tryout.year)
       )
       .first();
 
@@ -110,6 +113,7 @@ export const updateLeaderboard = internalMutation({
       await ctx.db.insert("userSnbtStats", {
         userId: tryoutAttempt.userId,
         locale: tryout.locale,
+        year: tryout.year,
         totalTryoutsCompleted: 1,
         averageTheta: tryoutAttempt.theta,
         averageThetaSE: tryoutAttempt.thetaSE,

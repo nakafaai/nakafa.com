@@ -72,6 +72,7 @@ const tables = {
   userSnbtStats: defineTable({
     userId: v.id("users"),
     locale: localeValidator,
+    year: v.number(),
     totalTryoutsCompleted: v.number(),
     averageTheta: v.number(),
     averageThetaSE: v.number(),
@@ -80,7 +81,7 @@ const tables = {
     bestRawScore: v.number(),
     lastTryoutAt: v.number(),
     updatedAt: v.number(),
-  }).index("userId_locale", ["userId", "locale"]),
+  }).index("userId_locale_year", ["userId", "locale", "year"]),
 
   snbtLeaderboard: defineTable({
     tryoutId: v.id("snbtTryouts"),

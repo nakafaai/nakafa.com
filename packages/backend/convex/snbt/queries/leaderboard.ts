@@ -69,11 +69,12 @@ export const getTryoutLeaderboard = query({
 });
 
 /**
- * Read the official locale-wide SNBT leaderboard.
+ * Read the official year-scoped SNBT leaderboard for one locale.
  */
 export const getGlobalLeaderboard = query({
   args: {
     locale: localeValidator,
+    year: v.number(),
     limit: v.optional(v.number()),
   },
   returns: v.array(
@@ -90,15 +91,16 @@ export const getGlobalLeaderboard = query({
   ),
   handler: async (ctx, args) => {
     const limit = Math.max(0, Math.min(args.limit ?? 50, 100));
+    const namespace = `${args.locale}:${args.year}`;
 
     const totalCount = await globalLeaderboard.count(ctx, {
-      namespace: args.locale,
+      namespace,
     });
 
     const rankedEntries = await Promise.all(
       Array.from({ length: Math.min(limit, totalCount) }, async (_, index) => {
         const item = await globalLeaderboard.at(ctx, index, {
-          namespace: args.locale,
+          namespace,
         });
 
         if (!item) {

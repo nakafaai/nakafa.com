@@ -25,18 +25,20 @@ export const tryoutLeaderboard = new TableAggregate<{
 /**
  * Aggregate for global leaderboard rankings.
  *
- * Maintains O(log n) rankings by average theta across all try-outs.
- * Used for: Global leaderboard, user's overall rank.
+ * Maintains O(log n) rankings by average theta across all official try-outs in
+ * the same locale and year.
+ * Used for: Year-scoped global leaderboard, user's overall rank within that
+ * scale family.
  *
- * Namespace: locale (separate rankings per locale)
+ * Namespace: locale:year (separate rankings per locale and year)
  * Key: [-averageTheta, userId] (negative for descending order)
  */
 export const globalLeaderboard = new TableAggregate<{
-  Namespace: string; // locale: "id" | "en"
+  Namespace: string;
   Key: [number, Id<"users">];
   DataModel: DataModel;
   TableName: "userSnbtStats";
 }>(components.globalLeaderboard, {
-  namespace: (doc) => doc.locale,
+  namespace: (doc) => `${doc.locale}:${doc.year}`,
   sortKey: (doc) => [-doc.averageTheta, doc.userId],
 });
