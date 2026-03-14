@@ -2,6 +2,7 @@ import { query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
+import { getFirstCompletedSimulationAttempt } from "@repo/backend/convex/snbt/helpers";
 import { v } from "convex/values";
 import {
   getAll,
@@ -12,7 +13,7 @@ import { nullable } from "convex-helpers/validators";
 
 /**
  * Load the current user's latest attempt for a try-out, including subject-level
- * exercise attempts and the next unfinished subject index.
+ * simulation progress and whether standalone practice is unlocked.
  */
 export const getUserTryoutAttempt = query({
   args: {
@@ -31,6 +32,8 @@ export const getUserTryoutAttempt = query({
       ),
       completedSubjectIndices: v.array(v.number()),
       nextSubjectIndex: v.optional(v.number()),
+      practiceUnlocked: v.boolean(),
+      isOfficialAttempt: v.boolean(),
     })
   ),
   handler: async (ctx, args) => {
@@ -99,11 +102,21 @@ export const getUserTryoutAttempt = query({
       (idx) => !completedSubjectIndices.includes(idx)
     );
 
+    const firstCompletedAttempt = await getFirstCompletedSimulationAttempt(
+      ctx.db,
+      {
+        userId: appUser._id,
+        tryoutId: tryout._id,
+      }
+    );
+
     return {
       attempt,
       subjectAttempts: validSubjectAttempts,
       completedSubjectIndices,
       nextSubjectIndex,
+      practiceUnlocked: firstCompletedAttempt !== null,
+      isOfficialAttempt: firstCompletedAttempt?._id === attempt._id,
     };
   },
 });
@@ -121,7 +134,6 @@ export const getTryoutContextForAttempt = query({
       tryoutId: vv.id("snbtTryouts"),
       tryoutSlug: v.string(),
       subjectIndex: v.number(),
-      mode: v.string(),
     })
   ),
   handler: async (ctx, args) => {
@@ -152,7 +164,6 @@ export const getTryoutContextForAttempt = query({
       tryoutId: tryoutAttempt.tryoutId,
       tryoutSlug: tryout?.slug ?? "",
       subjectIndex: subjectAttempt.subjectIndex,
-      mode: tryoutAttempt.mode,
     };
   },
 });

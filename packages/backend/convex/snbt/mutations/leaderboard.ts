@@ -1,11 +1,17 @@
 import { internalMutation } from "@repo/backend/convex/functions";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { computeSnbtRawScorePercentage } from "@repo/backend/convex/snbt/helpers";
+import {
+  computeSnbtRawScorePercentage,
+  getFirstCompletedSimulationAttempt,
+} from "@repo/backend/convex/snbt/helpers";
 import { v } from "convex/values";
 
 /**
  * Record the official first completed simulation attempt for a user on a try-out
  * and update locale-level SNBT stats from that official result.
+ *
+ * Later simulation retries remain visible to the user as results, but they are
+ * unofficial and therefore do not overwrite the first official leaderboard row.
  */
 export const updateLeaderboard = internalMutation({
   args: {
@@ -17,11 +23,7 @@ export const updateLeaderboard = internalMutation({
       "snbtTryoutAttempts",
       args.tryoutAttemptId
     );
-    if (
-      !tryoutAttempt ||
-      tryoutAttempt.status !== "completed" ||
-      tryoutAttempt.mode !== "simulation"
-    ) {
+    if (!tryoutAttempt || tryoutAttempt.status !== "completed") {
       return null;
     }
 
@@ -31,6 +33,18 @@ export const updateLeaderboard = internalMutation({
       throw new Error("Completed SNBT tryout attempt is missing its tryout.");
     }
 
+    const firstCompletedAttempt = await getFirstCompletedSimulationAttempt(
+      ctx.db,
+      {
+        userId: tryoutAttempt.userId,
+        tryoutId: tryoutAttempt.tryoutId,
+      }
+    );
+
+    if (firstCompletedAttempt?._id !== tryoutAttempt._id) {
+      return null;
+    }
+
     const existingEntry = await ctx.db
       .query("snbtLeaderboard")
       .withIndex("tryoutId_userId", (q) =>
@@ -38,7 +52,7 @@ export const updateLeaderboard = internalMutation({
           .eq("tryoutId", tryoutAttempt.tryoutId)
           .eq("userId", tryoutAttempt.userId)
       )
-      .first();
+      .unique();
 
     if (existingEntry) {
       return null;

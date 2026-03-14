@@ -1,5 +1,8 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type {
+  MutationCtx,
+  QueryCtx,
+} from "@repo/backend/convex/_generated/server";
 import { computeAttemptDurationSeconds } from "@repo/backend/convex/exercises/utils";
 import { ConvexError } from "convex/values";
 import {
@@ -9,6 +12,7 @@ import {
 } from "convex-helpers/server/relationships";
 
 type SnbtMutationCtx = Pick<MutationCtx, "db">;
+type SnbtDbReader = QueryCtx["db"];
 type TryoutScoreTotals = Pick<
   Doc<"snbtTryoutAttempts">,
   "totalCorrect" | "totalQuestions"
@@ -34,32 +38,19 @@ export function computeSnbtTryoutExpiresAtMs(startedAtMs: number) {
 }
 
 /**
- * Resolve the authoritative subject timer for an SNBT subject attempt.
- *
- * Simulation mode is fixed to 90 seconds per question so leaderboard attempts
- * cannot be manipulated by client-provided timing.
+ * Compute the fixed per-subject timer used by official SNBT simulations.
  */
-export function resolveSnbtSubjectTimeLimitSeconds({
-  mode,
-  questionCount,
-  requestedTimeLimit,
-}: {
-  mode: Doc<"snbtTryoutAttempts">["mode"];
-  questionCount: Doc<"exerciseSets">["questionCount"];
-  requestedTimeLimit?: Doc<"exerciseAttempts">["timeLimit"];
-}) {
-  if (mode === "simulation") {
-    return questionCount * SIMULATION_SECONDS_PER_QUESTION;
-  }
-
-  if (!requestedTimeLimit || requestedTimeLimit <= 0) {
+export function computeSnbtSimulationTimeLimitSeconds(
+  questionCount: Doc<"exerciseSets">["questionCount"]
+) {
+  if (questionCount <= 0) {
     throw new ConvexError({
       code: "INVALID_ARGUMENT",
-      message: "timeLimit must be greater than 0 for practice mode.",
+      message: "questionCount must be greater than 0.",
     });
   }
 
-  return requestedTimeLimit;
+  return questionCount * SIMULATION_SECONDS_PER_QUESTION;
 }
 
 /**
@@ -74,6 +65,25 @@ export function computeSnbtRawScorePercentage({
   }
 
   return (totalCorrect / totalQuestions) * 100;
+}
+
+/**
+ * Load the earliest completed simulation attempt for a user on a try-out.
+ *
+ * This is the source of truth for official-result checks because SNBT try-out
+ * attempts are simulation-only.
+ */
+export function getFirstCompletedSimulationAttempt(
+  db: SnbtDbReader,
+  { userId, tryoutId }: Pick<Doc<"snbtTryoutAttempts">, "userId" | "tryoutId">
+) {
+  return db
+    .query("snbtTryoutAttempts")
+    .withIndex("userId_tryoutId_status_startedAt", (q) =>
+      q.eq("userId", userId).eq("tryoutId", tryoutId).eq("status", "completed")
+    )
+    .order("asc")
+    .first();
 }
 
 /**

@@ -8,25 +8,24 @@ import { vv } from "@repo/backend/convex/lib/validators/vv";
 import {
   buildIrtResponses,
   computeSnbtRawScorePercentage,
+  computeSnbtSimulationTimeLimitSeconds,
   computeSnbtTryoutExpiresAtMs,
   countCorrectAnswers,
   expireTryoutAttempt,
-  resolveSnbtSubjectTimeLimitSeconds,
+  getFirstCompletedSimulationAttempt,
   syncTryoutAttemptExpiry,
 } from "@repo/backend/convex/snbt/helpers";
-import { snbtTryoutModeValidator } from "@repo/backend/convex/snbt/schema";
 import { ConvexError, v } from "convex/values";
 import { getManyFrom } from "convex-helpers/server/relationships";
 
 /**
- * Start a new SNBT try-out attempt or resume the latest in-progress attempt if
- * it is still inside the 24 hour completion window.
+ * Start a new SNBT simulation attempt or resume the latest in-progress
+ * simulation attempt if it is still inside the 24 hour completion window.
  */
 export const startTryout = mutation({
   args: {
     locale: localeValidator,
     tryoutSlug: v.string(),
-    mode: snbtTryoutModeValidator,
   },
   returns: v.object({
     tryoutAttemptId: vv.id("snbtTryoutAttempts"),
@@ -99,7 +98,6 @@ export const startTryout = mutation({
     const tryoutAttemptId = await ctx.db.insert("snbtTryoutAttempts", {
       userId,
       tryoutId: tryout._id,
-      mode: args.mode,
       status: "in-progress",
       completedSubjectIndices: [],
       totalCorrect: 0,
@@ -131,7 +129,7 @@ export const startTryout = mutation({
 });
 
 /**
- * Start or resume a single subject inside an SNBT try-out.
+ * Start or resume a single subject inside an SNBT simulation attempt.
  *
  * Subject exercise attempts reuse the shared `exerciseAttempts` table with
  * `origin: "snbt"` so the generic exercise engine stays the single source of
@@ -141,7 +139,6 @@ export const startSubject = mutation({
   args: {
     tryoutAttemptId: vv.id("snbtTryoutAttempts"),
     subjectIndex: v.number(),
-    timeLimit: v.optional(v.number()),
   },
   returns: v.object({
     setAttemptId: vv.id("exerciseAttempts"),
@@ -248,17 +245,13 @@ export const startSubject = mutation({
       };
     }
 
-    const timeLimit = resolveSnbtSubjectTimeLimitSeconds({
-      mode: tryoutAttempt.mode,
-      questionCount: set.questionCount,
-      requestedTimeLimit: args.timeLimit,
-    });
+    const timeLimit = computeSnbtSimulationTimeLimitSeconds(set.questionCount);
 
     const setAttemptId = await createExerciseAttempt(ctx, {
       slug: set.slug,
       userId,
       origin: "snbt",
-      mode: tryoutAttempt.mode,
+      mode: "simulation",
       scope: "set",
       timeLimit,
       startedAt: now,
@@ -443,7 +436,8 @@ export const completeSubject = mutation({
  * Finalize a try-out after all subjects are complete.
  *
  * Official leaderboard updates are delegated to an internal mutation so the
- * leaderboard policy remains centralized in one backend path.
+ * first-official / later-unofficial simulation policy remains centralized in
+ * one backend path.
  */
 export const completeTryout = mutation({
   args: {
@@ -456,6 +450,7 @@ export const completeTryout = mutation({
       v.literal("expired"),
       v.literal("abandoned")
     ),
+    isOfficial: v.boolean(),
     theta: v.number(),
     irtScore: v.number(),
     rawScorePercentage: v.number(),
@@ -485,8 +480,16 @@ export const completeTryout = mutation({
 
     if (tryoutAttempt.status === "completed") {
       const rawScorePercentage = computeSnbtRawScorePercentage(tryoutAttempt);
+      const firstCompletedAttempt = await getFirstCompletedSimulationAttempt(
+        ctx.db,
+        {
+          userId,
+          tryoutId: tryoutAttempt.tryoutId,
+        }
+      );
       return {
         status: "completed" as const,
+        isOfficial: firstCompletedAttempt?._id === tryoutAttempt._id,
         theta: tryoutAttempt.theta,
         irtScore: tryoutAttempt.irtScore,
         rawScorePercentage,
@@ -497,6 +500,7 @@ export const completeTryout = mutation({
       const rawScorePercentage = computeSnbtRawScorePercentage(tryoutAttempt);
       return {
         status: "expired" as const,
+        isOfficial: false,
         theta: tryoutAttempt.theta,
         irtScore: tryoutAttempt.irtScore,
         rawScorePercentage,
@@ -507,6 +511,7 @@ export const completeTryout = mutation({
       const rawScorePercentage = computeSnbtRawScorePercentage(tryoutAttempt);
       return {
         status: "abandoned" as const,
+        isOfficial: false,
         theta: tryoutAttempt.theta,
         irtScore: tryoutAttempt.irtScore,
         rawScorePercentage,
@@ -527,6 +532,7 @@ export const completeTryout = mutation({
 
       return {
         status: "expired" as const,
+        isOfficial: false,
         theta: tryoutAttempt.theta,
         irtScore: tryoutAttempt.irtScore,
         rawScorePercentage,
@@ -547,11 +553,21 @@ export const completeTryout = mutation({
     if (tryoutAttempt.completedSubjectIndices.length < tryout.subjectCount) {
       return {
         status: "in-progress" as const,
+        isOfficial: false,
         theta: tryoutAttempt.theta,
         irtScore: tryoutAttempt.irtScore,
         rawScorePercentage,
       };
     }
+
+    const firstCompletedAttempt = await getFirstCompletedSimulationAttempt(
+      ctx.db,
+      {
+        userId,
+        tryoutId: tryoutAttempt.tryoutId,
+      }
+    );
+    const isOfficial = firstCompletedAttempt === null;
 
     const subjectAttempts = await getManyFrom(
       ctx.db,
@@ -596,16 +612,19 @@ export const completeTryout = mutation({
       lastActivityAt: now,
     });
 
-    await ctx.scheduler.runAfter(
-      0,
-      internal.snbt.mutations.leaderboard.updateLeaderboard,
-      {
-        tryoutAttemptId: args.tryoutAttemptId,
-      }
-    );
+    if (isOfficial) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.snbt.mutations.leaderboard.updateLeaderboard,
+        {
+          tryoutAttemptId: args.tryoutAttemptId,
+        }
+      );
+    }
 
     return {
       status: "completed" as const,
+      isOfficial,
       theta,
       irtScore: clampedIRTScore,
       rawScorePercentage,

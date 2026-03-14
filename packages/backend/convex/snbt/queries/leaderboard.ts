@@ -150,7 +150,7 @@ export const getUserTryoutRank = query({
       .withIndex("tryoutId_userId", (q) =>
         q.eq("tryoutId", args.tryoutId).eq("userId", args.userId)
       )
-      .first();
+      .unique();
 
     if (!entry) {
       return null;

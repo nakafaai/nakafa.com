@@ -3,8 +3,6 @@ import { defineTable } from "convex/server";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
-export const snbtTryoutModeValidator = literals("simulation", "practice");
-
 export const snbtTryoutStatusValidator = literals(
   "in-progress",
   "completed",
@@ -38,7 +36,6 @@ const tables = {
   snbtTryoutAttempts: defineTable({
     userId: v.id("users"),
     tryoutId: v.id("snbtTryouts"),
-    mode: snbtTryoutModeValidator,
     status: snbtTryoutStatusValidator,
     completedSubjectIndices: v.array(v.number()),
     totalCorrect: v.number(),
@@ -49,7 +46,14 @@ const tables = {
     startedAt: v.number(),
     lastActivityAt: v.number(),
     completedAt: v.optional(v.number()),
-  }).index("userId_tryoutId", ["userId", "tryoutId"]),
+  })
+    .index("userId_tryoutId", ["userId", "tryoutId"])
+    .index("userId_tryoutId_status_startedAt", [
+      "userId",
+      "tryoutId",
+      "status",
+      "startedAt",
+    ]),
 
   snbtTryoutSubjectAttempts: defineTable({
     tryoutAttemptId: v.id("snbtTryoutAttempts"),
