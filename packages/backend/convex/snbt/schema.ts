@@ -51,10 +51,7 @@ const tables = {
     startedAt: v.number(),
     lastActivityAt: v.number(),
     completedAt: v.optional(v.number()),
-  })
-    .index("userId_tryoutId", ["userId", "tryoutId"])
-    .index("userId_status_startedAt", ["userId", "status", "startedAt"])
-    .index("tryoutId_status_theta", ["tryoutId", "status", "theta"]),
+  }).index("userId_tryoutId", ["userId", "tryoutId"]),
 
   snbtTryoutSubjectAttempts: defineTable({
     tryoutAttemptId: v.id("snbtTryoutAttempts"),
@@ -79,9 +76,7 @@ const tables = {
     bestRawScore: v.number(),
     lastTryoutAt: v.number(),
     updatedAt: v.number(),
-  })
-    .index("userId_locale", ["userId", "locale"])
-    .index("locale_averageTheta", ["locale", "averageTheta"]),
+  }).index("userId_locale", ["userId", "locale"]),
 
   snbtLeaderboard: defineTable({
     tryoutId: v.id("snbtTryouts"),

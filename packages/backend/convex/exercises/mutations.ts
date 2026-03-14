@@ -1,4 +1,4 @@
-import { internal } from "@repo/backend/convex/_generated/api";
+import { createExerciseAttempt } from "@repo/backend/convex/exercises/helpers";
 import {
   exerciseAttemptModeValidator,
   exerciseAttemptScopeValidator,
@@ -8,6 +8,7 @@ import { computeAttemptDurationSeconds } from "@repo/backend/convex/exercises/ut
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
+import { syncSnbtExerciseAttemptExpiry } from "@repo/backend/convex/snbt/helpers";
 import { ConvexError, v } from "convex/values";
 
 /**
@@ -82,40 +83,21 @@ export const startAttempt = mutation({
       });
     }
 
-    const attemptId = await ctx.db.insert("exerciseAttempts", {
+    const attemptId = await createExerciseAttempt(ctx, {
       slug: args.slug,
       userId,
+      origin: "standalone",
       mode: args.mode,
       scope: args.scope,
-      exerciseNumber: args.scope === "single" ? args.exerciseNumber : undefined,
+      exerciseNumber: args.exerciseNumber,
       timeLimit: args.timeLimit,
       perQuestionTimeLimit: args.perQuestionTimeLimit,
       startedAt: now,
-      lastActivityAt: now,
-      updatedAt: now,
-      status: "in-progress",
       totalExercises: args.totalExercises,
-      answeredCount: 0,
-      correctAnswers: 0,
-      totalTime: 0,
-      scorePercentage: 0,
     });
 
     // NOTE: totalTime starts at 0 and accumulates through submitAnswer calls.
     // Final duration is calculated from wall-clock time when attempt completes.
-
-    if (args.timeLimit > 0) {
-      const expiresAtMs = now + args.timeLimit * 1000;
-      const schedulerId = await ctx.scheduler.runAfter(
-        args.timeLimit * 1000,
-        internal.exercises.mutations.expireAttemptInternal,
-        {
-          attemptId,
-          expiresAtMs,
-        }
-      );
-      await ctx.db.patch("exerciseAttempts", attemptId, { schedulerId });
-    }
 
     return attemptId;
   },
@@ -221,6 +203,16 @@ export const submitAnswer = mutation({
     }
 
     const expiresAtMs = attempt.startedAt + attempt.timeLimit * 1000;
+
+    const tryoutExpiry = await syncSnbtExerciseAttemptExpiry(ctx, attempt, now);
+    if (tryoutExpiry.expired) {
+      throw new ConvexError({
+        code: "TRYOUT_EXPIRED",
+        message: "This tryout has expired.",
+        expiresAtMs: tryoutExpiry.expiredAtMs,
+      });
+    }
+
     if (now >= expiresAtMs) {
       throw new ConvexError({
         code: "TIME_EXPIRED",
@@ -309,6 +301,14 @@ export const completeAttempt = mutation({
 
     if (attempt.schedulerId) {
       await ctx.scheduler.cancel(attempt.schedulerId);
+    }
+
+    const tryoutExpiry = await syncSnbtExerciseAttemptExpiry(ctx, attempt, now);
+    if (tryoutExpiry.expired) {
+      return {
+        status: "expired" as const,
+        expiredAtMs: tryoutExpiry.expiredAtMs,
+      };
     }
 
     if (attempt.status === "completed") {

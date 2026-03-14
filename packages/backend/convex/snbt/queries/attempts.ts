@@ -3,7 +3,11 @@ import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
-import { getAll, getManyFrom } from "convex-helpers/server/relationships";
+import {
+  getAll,
+  getManyFrom,
+  getOneFrom,
+} from "convex-helpers/server/relationships";
 import { nullable } from "convex-helpers/validators";
 
 export const getUserTryoutAttempt = query({
@@ -112,10 +116,12 @@ export const getTryoutContextForAttempt = query({
     })
   ),
   handler: async (ctx, args) => {
-    const subjectAttempt = await ctx.db
-      .query("snbtTryoutSubjectAttempts")
-      .withIndex("setAttemptId", (q) => q.eq("setAttemptId", args.setAttemptId))
-      .first();
+    const subjectAttempt = await getOneFrom(
+      ctx.db,
+      "snbtTryoutSubjectAttempts",
+      "setAttemptId",
+      args.setAttemptId
+    );
 
     if (!subjectAttempt) {
       return null;

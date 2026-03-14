@@ -15,6 +15,12 @@ export const exerciseAttemptModeValidator = literals("practice", "simulation");
 export const exerciseAttemptScopeValidator = literals("set", "single");
 
 /**
+ * Exercise attempt origin validator.
+ * Distinguishes standalone exercise attempts from SNBT try-out subject attempts.
+ */
+export const exerciseAttemptOriginValidator = literals("standalone", "snbt");
+
+/**
  * Exercise attempt status validator.
  * Attempt lifecycle state.
  */
@@ -29,6 +35,7 @@ const tables = {
   exerciseAttempts: defineTable({
     slug: v.string(),
     userId: v.id("users"),
+    origin: exerciseAttemptOriginValidator,
     mode: exerciseAttemptModeValidator,
     scope: exerciseAttemptScopeValidator,
     exerciseNumber: v.optional(v.number()),
@@ -45,8 +52,9 @@ const tables = {
     correctAnswers: v.number(),
     totalTime: v.number(),
     scorePercentage: v.number(),
-  }).index("userId_slug_scope_startedAt", [
+  }).index("userId_origin_slug_scope_startedAt", [
     "userId",
+    "origin",
     "slug",
     "scope",
     "startedAt",

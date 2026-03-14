@@ -29,8 +29,12 @@ export const getLatestAttemptBySlug = query({
 
     const attempt = await ctx.db
       .query("exerciseAttempts")
-      .withIndex("userId_slug_scope_startedAt", (q) =>
-        q.eq("userId", userId).eq("slug", args.slug).eq("scope", "set")
+      .withIndex("userId_origin_slug_scope_startedAt", (q) =>
+        q
+          .eq("userId", userId)
+          .eq("origin", "standalone")
+          .eq("slug", args.slug)
+          .eq("scope", "set")
       )
       .order("desc")
       .first();

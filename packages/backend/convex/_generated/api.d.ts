@@ -53,6 +53,7 @@ import type * as customers_polar from "../customers/polar.js";
 import type * as customers_queries from "../customers/queries.js";
 import type * as customers_utils from "../customers/utils.js";
 import type * as emails_mutations from "../emails/mutations.js";
+import type * as exercises_helpers from "../exercises/helpers.js";
 import type * as exercises_mutations from "../exercises/mutations.js";
 import type * as exercises_queries from "../exercises/queries.js";
 import type * as exercises_utils from "../exercises/utils.js";
@@ -80,6 +81,7 @@ import type * as schools_mutations from "../schools/mutations.js";
 import type * as schools_queries from "../schools/queries.js";
 import type * as schools_utils from "../schools/utils.js";
 import type * as snbt_aggregate from "../snbt/aggregate.js";
+import type * as snbt_helpers from "../snbt/helpers.js";
 import type * as snbt_mutations_attempts from "../snbt/mutations/attempts.js";
 import type * as snbt_mutations_leaderboard from "../snbt/mutations/leaderboard.js";
 import type * as snbt_queries_attempts from "../snbt/queries/attempts.js";
@@ -174,6 +176,7 @@ declare const fullApi: ApiFromModules<{
   "customers/queries": typeof customers_queries;
   "customers/utils": typeof customers_utils;
   "emails/mutations": typeof emails_mutations;
+  "exercises/helpers": typeof exercises_helpers;
   "exercises/mutations": typeof exercises_mutations;
   "exercises/queries": typeof exercises_queries;
   "exercises/utils": typeof exercises_utils;
@@ -201,6 +204,7 @@ declare const fullApi: ApiFromModules<{
   "schools/queries": typeof schools_queries;
   "schools/utils": typeof schools_utils;
   "snbt/aggregate": typeof snbt_aggregate;
+  "snbt/helpers": typeof snbt_helpers;
   "snbt/mutations/attempts": typeof snbt_mutations_attempts;
   "snbt/mutations/leaderboard": typeof snbt_mutations_leaderboard;
   "snbt/queries/attempts": typeof snbt_queries_attempts;
@@ -1782,92 +1786,6 @@ export declare const components: {
           updatedAt: number;
           userId?: null | string;
           username?: null | string;
-        }
-      >;
-    };
-  };
-  migrations: {
-    lib: {
-      cancel: FunctionReference<
-        "mutation",
-        "internal",
-        { name: string },
-        {
-          batchSize?: number;
-          cursor?: string | null;
-          error?: string;
-          isDone: boolean;
-          latestEnd?: number;
-          latestStart: number;
-          name: string;
-          next?: Array<string>;
-          processed: number;
-          state: "inProgress" | "success" | "failed" | "canceled" | "unknown";
-        }
-      >;
-      cancelAll: FunctionReference<
-        "mutation",
-        "internal",
-        { sinceTs?: number },
-        Array<{
-          batchSize?: number;
-          cursor?: string | null;
-          error?: string;
-          isDone: boolean;
-          latestEnd?: number;
-          latestStart: number;
-          name: string;
-          next?: Array<string>;
-          processed: number;
-          state: "inProgress" | "success" | "failed" | "canceled" | "unknown";
-        }>
-      >;
-      clearAll: FunctionReference<
-        "mutation",
-        "internal",
-        { before?: number },
-        null
-      >;
-      getStatus: FunctionReference<
-        "query",
-        "internal",
-        { limit?: number; names?: Array<string> },
-        Array<{
-          batchSize?: number;
-          cursor?: string | null;
-          error?: string;
-          isDone: boolean;
-          latestEnd?: number;
-          latestStart: number;
-          name: string;
-          next?: Array<string>;
-          processed: number;
-          state: "inProgress" | "success" | "failed" | "canceled" | "unknown";
-        }>
-      >;
-      migrate: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          batchSize?: number;
-          cursor?: string | null;
-          dryRun: boolean;
-          fnHandle: string;
-          name: string;
-          next?: Array<{ fnHandle: string; name: string }>;
-          oneBatchOnly?: boolean;
-        },
-        {
-          batchSize?: number;
-          cursor?: string | null;
-          error?: string;
-          isDone: boolean;
-          latestEnd?: number;
-          latestStart: number;
-          name: string;
-          next?: Array<string>;
-          processed: number;
-          state: "inProgress" | "success" | "failed" | "canceled" | "unknown";
         }
       >;
     };

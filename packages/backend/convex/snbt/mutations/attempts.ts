@@ -1,13 +1,25 @@
 import { internal } from "@repo/backend/convex/_generated/api";
-import { mutation } from "@repo/backend/convex/functions";
+import { createExerciseAttempt } from "@repo/backend/convex/exercises/helpers";
+import { internalMutation, mutation } from "@repo/backend/convex/functions";
 import type { Response } from "@repo/backend/convex/irt/estimation";
 import { estimateThetaEAP } from "@repo/backend/convex/irt/estimation";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
+import {
+  computeSnbtTryoutExpiresAtMs,
+  expireTryoutAttempt,
+  resolveSnbtSubjectTimeLimitSeconds,
+  syncTryoutAttemptExpiry,
+} from "@repo/backend/convex/snbt/helpers";
 import { snbtTryoutModeValidator } from "@repo/backend/convex/snbt/schema";
 import { ConvexError, v } from "convex/values";
+import { getManyFrom } from "convex-helpers/server/relationships";
 
+/**
+ * Start a new SNBT try-out attempt or resume the latest in-progress attempt if
+ * it is still inside the 24 hour completion window.
+ */
 export const startTryout = mutation({
   args: {
     locale: localeValidator,
@@ -53,22 +65,32 @@ export const startTryout = mutation({
       .order("desc")
       .first();
 
-    if (existingAttempt && existingAttempt.status === "in-progress") {
-      const tryoutSets = await ctx.db
-        .query("snbtTryoutSets")
-        .withIndex("tryoutId", (q) => q.eq("tryoutId", tryout._id))
-        .collect();
+    if (existingAttempt) {
+      const tryoutExpiry = await syncTryoutAttemptExpiry(
+        ctx,
+        existingAttempt,
+        now
+      );
 
-      const firstIncompleteIndex = tryoutSets.find(
-        (ts) =>
-          !existingAttempt.completedSubjectIndices.includes(ts.subjectIndex)
-      )?.subjectIndex;
+      if (!tryoutExpiry.expired && existingAttempt.status === "in-progress") {
+        const tryoutSets = await getManyFrom(
+          ctx.db,
+          "snbtTryoutSets",
+          "tryoutId",
+          tryout._id
+        );
 
-      return {
-        tryoutAttemptId: existingAttempt._id,
-        subjectCount: tryout.subjectCount,
-        firstSubjectIndex: firstIncompleteIndex ?? 0,
-      };
+        const firstIncompleteIndex = tryoutSets.find(
+          (ts) =>
+            !existingAttempt.completedSubjectIndices.includes(ts.subjectIndex)
+        )?.subjectIndex;
+
+        return {
+          tryoutAttemptId: existingAttempt._id,
+          subjectCount: tryout.subjectCount,
+          firstSubjectIndex: firstIncompleteIndex ?? 0,
+        };
+      }
     }
 
     const tryoutAttemptId = await ctx.db.insert("snbtTryoutAttempts", {
@@ -86,6 +108,17 @@ export const startTryout = mutation({
       lastActivityAt: now,
     });
 
+    const expiresAtMs = computeSnbtTryoutExpiresAtMs(now);
+
+    await ctx.scheduler.runAfter(
+      expiresAtMs - now,
+      internal.snbt.mutations.attempts.expireTryoutAttemptInternal,
+      {
+        tryoutAttemptId,
+        expiresAtMs,
+      }
+    );
+
     return {
       tryoutAttemptId,
       subjectCount: tryout.subjectCount,
@@ -98,24 +131,24 @@ export const startSubject = mutation({
   args: {
     tryoutAttemptId: vv.id("snbtTryoutAttempts"),
     subjectIndex: v.number(),
-    timeLimit: v.number(),
+    timeLimit: v.optional(v.number()),
   },
   returns: v.object({
     setAttemptId: vv.id("exerciseAttempts"),
     setId: vv.id("exerciseSets"),
     questionCount: v.number(),
   }),
+  /**
+   * Start or resume a single subject inside an SNBT try-out.
+   *
+   * Subject exercise attempts reuse the shared `exerciseAttempts` table with
+   * `origin: "snbt"` so the generic exercise engine stays the single source of
+   * truth for timers and answers.
+   */
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);
     const userId = appUser._id;
     const now = Date.now();
-
-    if (args.timeLimit <= 0) {
-      throw new ConvexError({
-        code: "INVALID_ARGUMENT",
-        message: "timeLimit must be greater than 0.",
-      });
-    }
 
     const tryoutAttempt = await ctx.db.get(
       "snbtTryoutAttempts",
@@ -132,6 +165,16 @@ export const startSubject = mutation({
       throw new ConvexError({
         code: "FORBIDDEN",
         message: "You do not have access to this tryout attempt.",
+      });
+    }
+
+    const tryoutExpiry = await syncTryoutAttemptExpiry(ctx, tryoutAttempt, now);
+
+    if (tryoutExpiry.expired) {
+      throw new ConvexError({
+        code: "TRYOUT_EXPIRED",
+        message: "This tryout has expired.",
+        expiresAtMs: tryoutExpiry.expiredAtMs,
       });
     }
 
@@ -187,30 +230,36 @@ export const startSubject = mutation({
         "exerciseAttempts",
         existingSubjectAttempt.setAttemptId
       );
-      if (existingSetAttempt && existingSetAttempt.status === "in-progress") {
-        return {
-          setAttemptId: existingSubjectAttempt.setAttemptId,
-          setId: tryoutSet.setId,
-          questionCount: set.questionCount,
-        };
+
+      if (!existingSetAttempt) {
+        throw new ConvexError({
+          code: "INVALID_ATTEMPT_STATE",
+          message: "Subject attempt exists without its exercise attempt.",
+        });
       }
+
+      return {
+        setAttemptId: existingSubjectAttempt.setAttemptId,
+        setId: tryoutSet.setId,
+        questionCount: set.questionCount,
+      };
     }
 
-    const setAttemptId = await ctx.db.insert("exerciseAttempts", {
+    const timeLimit = resolveSnbtSubjectTimeLimitSeconds({
+      mode: tryoutAttempt.mode,
+      questionCount: set.questionCount,
+      requestedTimeLimit: args.timeLimit,
+    });
+
+    const setAttemptId = await createExerciseAttempt(ctx, {
       slug: set.slug,
       userId,
-      mode: tryoutAttempt.mode === "simulation" ? "simulation" : "practice",
+      origin: "snbt",
+      mode: tryoutAttempt.mode,
       scope: "set",
-      timeLimit: args.timeLimit,
+      timeLimit,
       startedAt: now,
-      lastActivityAt: now,
-      updatedAt: now,
-      status: "in-progress",
       totalExercises: set.questionCount,
-      answeredCount: 0,
-      correctAnswers: 0,
-      totalTime: 0,
-      scorePercentage: 0,
     });
 
     await ctx.db.insert("snbtTryoutSubjectAttempts", {
@@ -245,6 +294,10 @@ export const completeSubject = mutation({
     rawScore: v.number(),
     totalQuestions: v.number(),
   }),
+  /**
+   * Finalize one SNBT subject, store subject-level theta, and update the parent
+   * try-out's raw aggregates.
+   */
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);
     const userId = appUser._id;
@@ -265,6 +318,16 @@ export const completeSubject = mutation({
       throw new ConvexError({
         code: "FORBIDDEN",
         message: "You do not have access to this tryout attempt.",
+      });
+    }
+
+    const tryoutExpiry = await syncTryoutAttemptExpiry(ctx, tryoutAttempt, now);
+
+    if (tryoutExpiry.expired) {
+      throw new ConvexError({
+        code: "TRYOUT_EXPIRED",
+        message: "This tryout has expired.",
+        expiresAtMs: tryoutExpiry.expiredAtMs,
       });
     }
 
@@ -322,6 +385,7 @@ export const completeSubject = mutation({
       await ctx.db.patch("exerciseAttempts", subjectAttempt.setAttemptId, {
         status: "completed",
         completedAt: now,
+        lastActivityAt: now,
         updatedAt: now,
       });
     }
@@ -408,6 +472,12 @@ export const completeTryout = mutation({
     irtScore: v.number(),
     rawScorePercentage: v.number(),
   }),
+  /**
+   * Finalize a try-out after all subjects are complete.
+   *
+   * Official leaderboard updates are delegated to an internal mutation so the
+   * leaderboard policy remains centralized in one backend path.
+   */
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);
     const userId = appUser._id;
@@ -444,6 +514,32 @@ export const completeTryout = mutation({
       };
     }
 
+    if (tryoutAttempt.status === "expired") {
+      const rawScorePercentage =
+        tryoutAttempt.totalQuestions > 0
+          ? (tryoutAttempt.totalCorrect / tryoutAttempt.totalQuestions) * 100
+          : 0;
+      return {
+        status: "expired" as const,
+        theta: tryoutAttempt.theta,
+        irtScore: tryoutAttempt.irtScore,
+        rawScorePercentage,
+      };
+    }
+
+    if (tryoutAttempt.status === "abandoned") {
+      const rawScorePercentage =
+        tryoutAttempt.totalQuestions > 0
+          ? (tryoutAttempt.totalCorrect / tryoutAttempt.totalQuestions) * 100
+          : 0;
+      return {
+        status: "abandoned" as const,
+        theta: tryoutAttempt.theta,
+        irtScore: tryoutAttempt.irtScore,
+        rawScorePercentage,
+      };
+    }
+
     if (tryoutAttempt.status !== "in-progress") {
       throw new ConvexError({
         code: "INVALID_ATTEMPT_STATUS",
@@ -451,14 +547,51 @@ export const completeTryout = mutation({
       });
     }
 
+    const tryoutExpiry = await syncTryoutAttemptExpiry(ctx, tryoutAttempt, now);
+
+    if (tryoutExpiry.expired) {
+      const rawScorePercentage =
+        tryoutAttempt.totalQuestions > 0
+          ? (tryoutAttempt.totalCorrect / tryoutAttempt.totalQuestions) * 100
+          : 0;
+
+      return {
+        status: "expired" as const,
+        theta: tryoutAttempt.theta,
+        irtScore: tryoutAttempt.irtScore,
+        rawScorePercentage,
+      };
+    }
+
     const tryout = await ctx.db.get("snbtTryouts", tryoutAttempt.tryoutId);
 
-    const subjectAttempts = await ctx.db
-      .query("snbtTryoutSubjectAttempts")
-      .withIndex("tryoutAttemptId", (q) =>
-        q.eq("tryoutAttemptId", args.tryoutAttemptId)
-      )
-      .collect();
+    if (!tryout) {
+      throw new ConvexError({
+        code: "TRYOUT_NOT_FOUND",
+        message: "Tryout not found.",
+      });
+    }
+
+    const rawScorePercentage =
+      tryoutAttempt.totalQuestions > 0
+        ? (tryoutAttempt.totalCorrect / tryoutAttempt.totalQuestions) * 100
+        : 0;
+
+    if (tryoutAttempt.completedSubjectIndices.length < tryout.subjectCount) {
+      return {
+        status: "in-progress" as const,
+        theta: tryoutAttempt.theta,
+        irtScore: tryoutAttempt.irtScore,
+        rawScorePercentage,
+      };
+    }
+
+    const subjectAttempts = await getManyFrom(
+      ctx.db,
+      "snbtTryoutSubjectAttempts",
+      "tryoutAttemptId",
+      args.tryoutAttemptId
+    );
 
     const subjectAttemptData = await Promise.all(
       subjectAttempts.map(async (sa) => {
@@ -506,10 +639,6 @@ export const completeTryout = mutation({
     const { theta, se } = estimateThetaEAP(allResponses);
     const irtScore = Math.round(600 + theta * 100);
     const clampedIRTScore = Math.max(200, Math.min(1000, irtScore));
-    const rawScorePercentage =
-      tryoutAttempt.totalQuestions > 0
-        ? (tryoutAttempt.totalCorrect / tryoutAttempt.totalQuestions) * 100
-        : 0;
 
     await ctx.db.patch("snbtTryoutAttempts", args.tryoutAttemptId, {
       status: "completed",
@@ -519,49 +648,6 @@ export const completeTryout = mutation({
       irtScore: clampedIRTScore,
       lastActivityAt: now,
     });
-
-    const statsRecord = await ctx.db
-      .query("userSnbtStats")
-      .withIndex("userId_locale", (q) =>
-        q.eq("userId", userId).eq("locale", tryout?.locale ?? "id")
-      )
-      .first();
-
-    const locale = tryout?.locale ?? "id";
-
-    if (statsRecord) {
-      const newTotal = statsRecord.totalTryoutsCompleted + 1;
-      const newAverageTheta =
-        (statsRecord.averageTheta * statsRecord.totalTryoutsCompleted + theta) /
-        newTotal;
-      const newAverageRawScore =
-        (statsRecord.averageRawScore * statsRecord.totalTryoutsCompleted +
-          rawScorePercentage) /
-        newTotal;
-
-      await ctx.db.patch("userSnbtStats", statsRecord._id, {
-        totalTryoutsCompleted: newTotal,
-        averageTheta: newAverageTheta,
-        bestTheta: Math.max(statsRecord.bestTheta, theta),
-        averageRawScore: newAverageRawScore,
-        bestRawScore: Math.max(statsRecord.bestRawScore, rawScorePercentage),
-        lastTryoutAt: now,
-        updatedAt: now,
-      });
-    } else {
-      await ctx.db.insert("userSnbtStats", {
-        userId,
-        locale,
-        totalTryoutsCompleted: 1,
-        averageTheta: theta,
-        averageThetaSE: se,
-        bestTheta: theta,
-        averageRawScore: rawScorePercentage,
-        bestRawScore: rawScorePercentage,
-        lastTryoutAt: now,
-        updatedAt: now,
-      });
-    }
 
     await ctx.scheduler.runAfter(
       0,
@@ -577,5 +663,42 @@ export const completeTryout = mutation({
       irtScore: clampedIRTScore,
       rawScorePercentage,
     };
+  },
+});
+
+export const expireTryoutAttemptInternal = internalMutation({
+  args: {
+    tryoutAttemptId: vv.id("snbtTryoutAttempts"),
+    expiresAtMs: v.number(),
+  },
+  returns: v.null(),
+  /**
+   * Scheduled expiry for the 24 hour SNBT try-out window.
+   *
+   * The mutation is idempotent so delayed or duplicate scheduler execution does
+   * not corrupt try-out state.
+   */
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const tryoutAttempt = await ctx.db.get(
+      "snbtTryoutAttempts",
+      args.tryoutAttemptId
+    );
+
+    if (!tryoutAttempt || tryoutAttempt.status !== "in-progress") {
+      return null;
+    }
+
+    const computedExpiresAtMs = computeSnbtTryoutExpiresAtMs(
+      tryoutAttempt.startedAt
+    );
+
+    if (args.expiresAtMs < computedExpiresAtMs || now < computedExpiresAtMs) {
+      return null;
+    }
+
+    await expireTryoutAttempt(ctx, tryoutAttempt, now);
+
+    return null;
   },
 });
