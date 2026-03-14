@@ -12,6 +12,7 @@ export const getActiveTryouts = query({
       _id: vv.id("snbtTryouts"),
       _creationTime: v.number(),
       locale: localeValidator,
+      year: v.number(),
       slug: v.string(),
       setName: v.string(),
       subjectCount: v.number(),

@@ -12,57 +12,58 @@ erDiagram
     snbtTryoutSubjectAttempts }o--|| exerciseAttempts : references
     snbtTryoutAttempts }o--|| users : "belongs to"
     snbtLeaderboard }o--|| snbtTryoutAttempts : references
-    userSnbtStats }o--|| users : "aggregates"
+    userSnbtStats }o--|| users : aggregates
 ```
 
 ## Tables
 
-| Table | Purpose |
-|-------|---------|
-| `snbtTryouts` | Try-out metadata (synced from content) |
-| `snbtTryoutSets` | Links try-out to exercise sets |
-| `snbtTryoutAttempts` | User's try-out progress |
-| `snbtTryoutSubjectAttempts` | Per-subject attempt tracking |
-| `userSnbtStats` | Aggregated user performance |
-| `snbtLeaderboard` | Per-tryout rankings |
+| Table | Fields |
+|-------|--------|
+| `snbtTryouts` | `year`, `slug` (`{year}-{setName}`), `setName`, `locale`, `subjectCount`, `isActive` |
+| `snbtTryoutSets` | `tryoutId`, `setId`, `subjectIndex` |
+| `snbtTryoutAttempts` | `userId`, `tryoutId`, `mode`, `status`, `completedSubjectIndices`, `theta`, `irtScore` |
+| `snbtTryoutSubjectAttempts` | `tryoutAttemptId`, `subjectIndex`, `setAttemptId`, `theta` |
+| `userSnbtStats` | `userId`, `locale`, `averageTheta`, `totalTryoutsCompleted` |
+| `snbtLeaderboard` | `tryoutId`, `userId`, `theta`, `irtScore`, `rawScore` (Aggregate handles ranking) |
 
 ## User Flow
 
 ```mermaid
 flowchart TD
-    A[Start Try-out] --> B[startTryout]
-    B --> C[Select Subject]
-    C --> D[startSubject]
-    D --> E[Exercise Page]
+    A[Browse Try-outs] --> B[Select Year/Set]
+    B --> C[startTryout]
+    C --> D[Select Subject]
+    D --> E[startSubject]
     E --> F[Complete Exercises]
     F --> G[completeSubject]
     G --> H{All subjects done?}
-    H -->|No| C
+    H -->|No| D
     H -->|Yes| I[completeTryout]
-    I --> J[Calculate θ & update leaderboard]
+    I --> J[Update Leaderboard]
 ```
 
-## Functions
+## Queries
 
-**Queries:**
-- `getActiveTryouts` - List active try-outs
-- `getTryoutDetails` - Get try-out + subjects
-- `getUserTryoutAttempt` - Current progress
-- `getTryoutContextForAttempt` - Detect try-out context
-- `getTryoutLeaderboard` - Per-tryout rankings (O(log n) via Aggregate)
-- `getGlobalLeaderboard` - Overall rankings (O(log n) via Aggregate)
-- `getUserTryoutRank` - User's rank (O(log n) via Aggregate)
+| Query | Purpose |
+|-------|---------|
+| `getActiveTryouts` | List active try-outs (grouped by year in UI) |
+| `getTryoutDetails` | Get try-out + subjects by slug |
+| `getUserTryoutAttempt` | Current user progress |
+| `getTryoutContextForAttempt` | Detect try-out context from exercise |
+| `getTryoutLeaderboard` | Per-tryout rankings (O(log n) via Aggregate) |
+| `getGlobalLeaderboard` | Overall rankings (O(log n) via Aggregate) |
 
-**Mutations:**
-- `startTryout` - Create attempt
-- `startSubject` - Create subject attempt
-- `completeSubject` - Calculate subject θ
-- `completeTryout` - Final θ + leaderboard
+## Mutations
+
+| Mutation | Purpose |
+|----------|---------|
+| `startTryout` | Create try-out attempt |
+| `startSubject` | Create subject attempt |
+| `completeSubject` | Calculate subject θ, mark complete |
+| `completeTryout` | Final θ, update stats/leaderboard |
 
 ## IRT Scoring
 
-EAP (Expected A Posteriori) estimation:
-- θ = ability score
-- Scale: 200-1000 (θ=0→600)
-
-See `convex/irt/` for estimation algorithm.
+- EAP (Expected A Posteriori) estimation
+- Scale: 200-1000 (θ=0 → 600)
+- See `convex/irt/` forimplementation

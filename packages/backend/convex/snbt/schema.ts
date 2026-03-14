@@ -15,6 +15,7 @@ export const snbtTryoutStatusValidator = literals(
 const tables = {
   snbtTryouts: defineTable({
     locale: localeValidator,
+    year: v.number(),
     slug: v.string(),
     setName: v.string(),
     subjectCount: v.number(),
@@ -25,6 +26,7 @@ const tables = {
     syncedAt: v.number(),
   })
     .index("locale_slug", ["locale", "slug"])
+    .index("locale_year_slug", ["locale", "year", "slug"])
     .index("locale_isActive", ["locale", "isActive"]),
 
   snbtTryoutSets: defineTable({

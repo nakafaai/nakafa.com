@@ -1361,15 +1361,16 @@ export const bulkSyncSnbtTryouts = internalMutation({
     }
 
     for (const tryout of detectedTryouts) {
-      const slug = `try-out-${tryout.setName}`;
+      const year = new Date(now).getFullYear();
+      const slug = `${year}-${tryout.setName}`;
       const questionCounts = tryout.sets.map((s) => s.questionCount);
       const totalQuestionCount = questionCounts.reduce((a, b) => a + b, 0);
       const questionCountPerSubject = questionCounts[0] ?? 0;
 
       const existing = await ctx.db
         .query("snbtTryouts")
-        .withIndex("locale_slug", (q) =>
-          q.eq("locale", tryout.locale).eq("slug", slug)
+        .withIndex("locale_year_slug", (q) =>
+          q.eq("locale", tryout.locale).eq("year", year).eq("slug", slug)
         )
         .first();
 
@@ -1395,6 +1396,7 @@ export const bulkSyncSnbtTryouts = internalMutation({
       } else {
         const tryoutId = await ctx.db.insert("snbtTryouts", {
           locale: tryout.locale,
+          year,
           slug,
           setName: tryout.setName,
           subjectCount: SNBT_TRYOUT_MATERIALS.length,
