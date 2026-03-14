@@ -302,6 +302,22 @@ export const completeSubject = mutation({
       });
     }
 
+    if (tryoutAttempt.completedSubjectIndices.includes(args.subjectIndex)) {
+      const answers = await ctx.db
+        .query("exerciseAnswers")
+        .withIndex("attemptId_exerciseNumber", (q) =>
+          q.eq("attemptId", subjectAttempt.setAttemptId)
+        )
+        .collect();
+
+      return {
+        theta: subjectAttempt.theta,
+        thetaSE: subjectAttempt.thetaSE,
+        rawScore: answers.filter((a) => a.isCorrect).length,
+        totalQuestions: setAttempt.totalExercises,
+      };
+    }
+
     if (setAttempt.status !== "completed" && setAttempt.status !== "expired") {
       await ctx.db.patch("exerciseAttempts", subjectAttempt.setAttemptId, {
         status: "completed",
