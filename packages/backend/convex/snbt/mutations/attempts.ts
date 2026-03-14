@@ -444,6 +444,11 @@ export const completeSubject = mutation({
       lastActivityAt: now,
     });
 
+    await ctx.db.insert("irtCalibrationQueue", {
+      setId: subjectAttempt.setId,
+      enqueuedAt: now,
+    });
+
     return {
       theta,
       thetaSE: se,

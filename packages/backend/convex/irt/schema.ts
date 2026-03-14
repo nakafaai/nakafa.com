@@ -17,6 +17,20 @@ export const irtCalibrationRunStatusValidator = literals(
 export const irtOperationalModelValidator = literals("2pl");
 
 const tables = {
+  irtCalibrationQueue: defineTable({
+    setId: v.id("exerciseSets"),
+    enqueuedAt: v.number(),
+  })
+    .index("enqueuedAt", ["enqueuedAt"])
+    .index("setId_enqueuedAt", ["setId", "enqueuedAt"]),
+
+  irtScalePublicationQueue: defineTable({
+    tryoutId: v.id("snbtTryouts"),
+    enqueuedAt: v.number(),
+  })
+    .index("enqueuedAt", ["enqueuedAt"])
+    .index("tryoutId_enqueuedAt", ["tryoutId", "enqueuedAt"]),
+
   irtScaleVersions: defineTable({
     tryoutId: v.id("snbtTryouts"),
     model: irtOperationalModelValidator,
@@ -26,6 +40,7 @@ const tables = {
 
   irtScaleVersionItems: defineTable({
     scaleVersionId: v.id("irtScaleVersions"),
+    calibrationRunId: v.id("irtCalibrationRuns"),
     questionId: v.id("exerciseQuestions"),
     setId: v.id("exerciseSets"),
     difficulty: v.number(),
@@ -71,7 +86,6 @@ const tables = {
     calibrationRunId: v.optional(v.id("irtCalibrationRuns")),
   })
     .index("questionId", ["questionId"])
-    .index("questionId_calibrationStatus", ["questionId", "calibrationStatus"])
     .index("setId", ["setId"])
     .index("calibrationStatus", ["calibrationStatus"]),
 };

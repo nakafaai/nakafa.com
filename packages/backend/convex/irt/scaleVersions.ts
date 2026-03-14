@@ -18,7 +18,9 @@ type ScaleVersionItemsBySetId = Map<
   Doc<"irtScaleVersionItems">[]
 >;
 type ScaleVersionItemSnapshot = OperationalItemParams &
-  Pick<Doc<"irtScaleVersionItems">, "setId">;
+  Pick<Doc<"irtScaleVersionItems">, "setId"> & {
+    calibrationRunId: Doc<"irtScaleVersionItems">["calibrationRunId"];
+  };
 
 /**
  * Load the latest published scale version for a try-out.
@@ -48,6 +50,39 @@ export function getScaleVersionItems(
     scaleVersionId,
     "scaleVersionId"
   );
+}
+
+/**
+ * Compare a publishable snapshot with an already published scale version.
+ */
+export function hasPublishedScaleChanged({
+  publishedItems,
+  snapshotItems,
+}: {
+  publishedItems: Doc<"irtScaleVersionItems">[];
+  snapshotItems: ScaleVersionItemSnapshot[];
+}) {
+  if (publishedItems.length !== snapshotItems.length) {
+    return true;
+  }
+
+  const publishedByQuestionId = new Map(
+    publishedItems.map((item) => [item.questionId, item])
+  );
+
+  for (const snapshotItem of snapshotItems) {
+    const publishedItem = publishedByQuestionId.get(snapshotItem.questionId);
+
+    if (!publishedItem) {
+      return true;
+    }
+
+    if (publishedItem.calibrationRunId !== snapshotItem.calibrationRunId) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 /**
@@ -124,7 +159,11 @@ export async function getPublishableScaleSnapshot(
     return questions.flatMap((question) => {
       const params = paramsByQuestionId.get(question._id);
 
-      if (!params || params.calibrationStatus !== "calibrated") {
+      if (
+        !params ||
+        params.calibrationStatus !== "calibrated" ||
+        params.calibrationRunId === undefined
+      ) {
         return [];
       }
 
@@ -134,6 +173,7 @@ export async function getPublishableScaleSnapshot(
         difficulty: params.difficulty,
         discrimination: params.discrimination,
         guessing: params.guessing,
+        calibrationRunId: params.calibrationRunId,
       };
 
       return [item];
@@ -183,6 +223,7 @@ export async function publishScaleVersion(
   await asyncMap(items, (item) =>
     db.insert("irtScaleVersionItems", {
       scaleVersionId,
+      calibrationRunId: item.calibrationRunId,
       questionId: item.questionId,
       setId: item.setId,
       difficulty: item.difficulty,

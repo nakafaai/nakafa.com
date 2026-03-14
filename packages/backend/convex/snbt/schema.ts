@@ -31,7 +31,9 @@ const tables = {
     tryoutId: v.id("snbtTryouts"),
     setId: v.id("exerciseSets"),
     subjectIndex: v.number(),
-  }).index("tryoutId_subjectIndex", ["tryoutId", "subjectIndex"]),
+  })
+    .index("tryoutId_subjectIndex", ["tryoutId", "subjectIndex"])
+    .index("setId", ["setId"]),
 
   snbtTryoutAttempts: defineTable({
     userId: v.id("users"),

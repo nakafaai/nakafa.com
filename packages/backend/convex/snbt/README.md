@@ -14,6 +14,8 @@ tables own try-out lifecycle, IRT scoring, and official leaderboard rules.
   `guessing`, but operational theta estimation uses `c = 0`
 - Official simulation attempts require a published scale version with fully
   calibrated item parameters for every tryout question
+- Completed simulation subjects automatically enqueue background IRT
+  recalibration; bounded cron jobs and workflows publish newer frozen scales
 - Only the first completed simulation attempt per user per try-out is official
 - Later simulation retries never update the official leaderboard
 - Practice is unlocked only after an official simulation completion and uses the

@@ -22,6 +22,16 @@ completed simulation answers
 exerciseAnswers(questionId, isCorrect, attempt metadata)
     |
     v
+completeSubject()
+    |
+    +--> append irtCalibrationQueue row
+    |
+    v
+cron drains calibration queue
+    |
+    +--> start calibration workflow in bounded batches
+    |
+    v
 irt/internalQueries.ts
     |
     v
@@ -38,14 +48,15 @@ irt/internalMutations.ts
     |
     +--> persist exerciseItemParameters
     +--> persist irtCalibrationRuns audit record
+    +--> append irtScalePublicationQueue rows for affected tryouts
 
 published official scoring
     |
     v
-irt/internalMutations.ts:publishTryoutScaleVersion
+cron drains scale publication queue
     |
     +--> verify every tryout question is calibrated
-    +--> snapshot item params into irtScaleVersions + irtScaleVersionItems
+    +--> snapshot frozen item params into irtScaleVersions + irtScaleVersionItems
 ```
 
 ## Modules
@@ -72,12 +83,17 @@ startCalibrationRun(setId)
             |
             +--> calibrateSetTwoPL action
             +--> completeCalibrationRun mutation
-    +--> or failCalibrationRun mutation
+            +--> or failCalibrationRun mutation
 
-publishTryoutScaleVersion(tryoutId)
+drainCalibrationQueue()
     |
-    +--> require all questions calibrated
-    +--> snapshot frozen scale version for official scoring
+    +--> take oldest queued sets
+    +--> calibrate when enough new completed attempts exist or calibration is stale
+
+drainScalePublicationQueue()
+    |
+    +--> take oldest queued tryouts
+    +--> publish only when calibrated snapshot changed
 ```
 
 ## Notes
