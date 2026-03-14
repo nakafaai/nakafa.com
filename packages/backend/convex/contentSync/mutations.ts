@@ -1292,3 +1292,144 @@ export const deleteAuthorsBatch = internalMutation({
     return { deleted, hasMore: remaining !== null };
   },
 });
+
+const SNBT_TRYOUT_MATERIALS = [
+  "quantitative-knowledge",
+  "mathematical-reasoning",
+  "general-reasoning",
+  "indonesian-language",
+  "english-language",
+  "general-knowledge",
+  "reading-and-writing-skills",
+] as const;
+
+/**
+ * Syncs SNBT try-outs by detecting complete sets across all subjects.
+ * A try-out is detected when exercise sets exist for ALL 7 SNBT subjects
+ * with the same setName within a locale.
+ */
+export const bulkSyncSnbtTryouts = internalMutation({
+  args: {
+    locale: localeValidator,
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    let created = 0;
+    let updated = 0;
+    let unchanged = 0;
+
+    const allSets = await ctx.db
+      .query("exerciseSets")
+      .withIndex("locale_slug", (q) => q.eq("locale", args.locale))
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("type"), "snbt"),
+          q.eq(q.field("exerciseType"), "try-out")
+        )
+      )
+      .collect();
+
+    const setsByName = new Map<string, typeof allSets>();
+
+    for (const set of allSets) {
+      const key = `${set.locale}:${set.setName}`;
+      const existing = setsByName.get(key) || [];
+      existing.push(set);
+      setsByName.set(key, existing);
+    }
+
+    const detectedTryouts: Array<{
+      locale: typeof args.locale;
+      setName: string;
+      sets: typeof allSets;
+    }> = [];
+
+    for (const [key, sets] of setsByName) {
+      const materials = new Set(sets.map((s) => s.material));
+      const hasAllMaterials = SNBT_TRYOUT_MATERIALS.every((m) =>
+        materials.has(m)
+      );
+
+      if (hasAllMaterials) {
+        const [, setName] = key.split(":");
+        detectedTryouts.push({
+          locale: args.locale,
+          setName: setName ?? "",
+          sets,
+        });
+      }
+    }
+
+    for (const tryout of detectedTryouts) {
+      const slug = `try-out-${tryout.setName}`;
+      const questionCounts = tryout.sets.map((s) => s.questionCount);
+      const totalQuestionCount = questionCounts.reduce((a, b) => a + b, 0);
+      const questionCountPerSubject = questionCounts[0] ?? 0;
+
+      const existing = await ctx.db
+        .query("snbtTryouts")
+        .withIndex("locale_slug", (q) =>
+          q.eq("locale", tryout.locale).eq("slug", slug)
+        )
+        .first();
+
+      if (existing) {
+        const hasChanges =
+          existing.subjectCount !== SNBT_TRYOUT_MATERIALS.length ||
+          existing.questionCountPerSubject !== questionCountPerSubject ||
+          existing.totalQuestionCount !== totalQuestionCount;
+
+        if (!hasChanges) {
+          unchanged++;
+          continue;
+        }
+
+        await ctx.db.patch("snbtTryouts", existing._id, {
+          subjectCount: SNBT_TRYOUT_MATERIALS.length,
+          questionCountPerSubject,
+          totalQuestionCount,
+          syncedAt: now,
+        });
+
+        updated++;
+      } else {
+        const tryoutId = await ctx.db.insert("snbtTryouts", {
+          locale: tryout.locale,
+          slug,
+          setName: tryout.setName,
+          subjectCount: SNBT_TRYOUT_MATERIALS.length,
+          questionCountPerSubject,
+          totalQuestionCount,
+          isActive: true,
+          detectedAt: now,
+          syncedAt: now,
+        });
+
+        const sortedSets = [...tryout.sets].sort((a, b) => {
+          const aIndex = SNBT_TRYOUT_MATERIALS.indexOf(
+            a.material as (typeof SNBT_TRYOUT_MATERIALS)[number]
+          );
+          const bIndex = SNBT_TRYOUT_MATERIALS.indexOf(
+            b.material as (typeof SNBT_TRYOUT_MATERIALS)[number]
+          );
+          return aIndex - bIndex;
+        });
+
+        for (let i = 0; i < sortedSets.length; i++) {
+          const sortedSet = sortedSets[i];
+          if (sortedSet) {
+            await ctx.db.insert("snbtTryoutSets", {
+              tryoutId,
+              setId: sortedSet._id,
+              subjectIndex: i,
+            });
+          }
+        }
+
+        created++;
+      }
+    }
+
+    return { created, updated, unchanged };
+  },
+});

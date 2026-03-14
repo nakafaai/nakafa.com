@@ -55,13 +55,16 @@ const tables = {
   exerciseAnswers: defineTable({
     attemptId: v.id("exerciseAttempts"),
     exerciseNumber: v.number(),
+    questionId: v.optional(v.id("exerciseQuestions")),
     selectedOptionId: v.optional(v.string()),
     textAnswer: v.optional(v.string()),
     isCorrect: v.boolean(),
     timeSpent: v.number(),
     answeredAt: v.number(),
     updatedAt: v.number(),
-  }).index("attemptId_exerciseNumber", ["attemptId", "exerciseNumber"]),
+  })
+    .index("attemptId_exerciseNumber", ["attemptId", "exerciseNumber"])
+    .index("questionId", ["questionId"]),
 };
 
 export default tables;
