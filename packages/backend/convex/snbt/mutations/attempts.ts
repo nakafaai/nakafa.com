@@ -2,6 +2,12 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import { createExerciseAttempt } from "@repo/backend/convex/exercises/helpers";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
 import { estimateThetaEAP } from "@repo/backend/convex/irt/estimation";
+import {
+  getLatestScaleVersionForTryout,
+  getScaleVersionItems,
+  getScaleVersionItemsForSet,
+  groupScaleVersionItemsBySetId,
+} from "@repo/backend/convex/irt/scaleVersions";
 import { thetaToSnbtScore } from "@repo/backend/convex/irt/scoring";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
@@ -22,6 +28,9 @@ import { getManyFrom } from "convex-helpers/server/relationships";
 /**
  * Start a new SNBT simulation attempt or resume the latest in-progress
  * simulation attempt if it is still inside the 24 hour completion window.
+ *
+ * Official simulation attempts are only allowed after a published scale version
+ * exists for the tryout, so scoring always uses frozen calibrated parameters.
  */
 export const startTryout = mutation({
   args: {
@@ -59,13 +68,23 @@ export const startTryout = mutation({
       });
     }
 
-    const existingAttempt = await ctx.db
-      .query("snbtTryoutAttempts")
-      .withIndex("userId_tryoutId", (q) =>
-        q.eq("userId", userId).eq("tryoutId", tryout._id)
-      )
-      .order("desc")
-      .first();
+    const [scaleVersion, existingAttempt] = await Promise.all([
+      getLatestScaleVersionForTryout(ctx.db, tryout._id),
+      ctx.db
+        .query("snbtTryoutAttempts")
+        .withIndex("userId_tryoutId", (q) =>
+          q.eq("userId", userId).eq("tryoutId", tryout._id)
+        )
+        .order("desc")
+        .first(),
+    ]);
+
+    if (!scaleVersion) {
+      throw new ConvexError({
+        code: "TRYOUT_NOT_READY",
+        message: "This tryout is not ready for official scoring yet.",
+      });
+    }
 
     if (existingAttempt) {
       const tryoutExpiry = await syncTryoutAttemptExpiry(
@@ -99,6 +118,7 @@ export const startTryout = mutation({
     const tryoutAttemptId = await ctx.db.insert("snbtTryoutAttempts", {
       userId,
       tryoutId: tryout._id,
+      scaleVersionId: scaleVersion._id,
       status: "in-progress",
       completedSubjectIndices: [],
       totalCorrect: 0,
@@ -394,10 +414,10 @@ export const completeSubject = mutation({
       )
       .collect();
 
-    const itemParamsRecords = await ctx.db
-      .query("exerciseItemParameters")
-      .withIndex("setId", (q) => q.eq("setId", subjectAttempt.setId))
-      .collect();
+    const itemParamsRecords = await getScaleVersionItemsForSet(ctx.db, {
+      scaleVersionId: tryoutAttempt.scaleVersionId,
+      setId: subjectAttempt.setId,
+    });
 
     const itemResponses = buildIrtResponses({ answers, itemParamsRecords });
 
@@ -438,7 +458,8 @@ export const completeSubject = mutation({
  *
  * Official leaderboard updates are delegated to an internal mutation so the
  * first-official / later-unofficial simulation policy remains centralized in
- * one backend path.
+ * one backend path. Final theta is estimated from the frozen scale version that
+ * was bound to the attempt when the simulation started.
  */
 export const completeTryout = mutation({
   args: {
@@ -540,7 +561,13 @@ export const completeTryout = mutation({
       };
     }
 
-    const tryout = await ctx.db.get("snbtTryouts", tryoutAttempt.tryoutId);
+    const [tryout, firstCompletedAttempt] = await Promise.all([
+      ctx.db.get("snbtTryouts", tryoutAttempt.tryoutId),
+      getFirstCompletedSimulationAttempt(ctx.db, {
+        userId,
+        tryoutId: tryoutAttempt.tryoutId,
+      }),
+    ]);
 
     if (!tryout) {
       throw new ConvexError({
@@ -561,38 +588,33 @@ export const completeTryout = mutation({
       };
     }
 
-    const firstCompletedAttempt = await getFirstCompletedSimulationAttempt(
-      ctx.db,
-      {
-        userId,
-        tryoutId: tryoutAttempt.tryoutId,
-      }
-    );
     const isOfficial = firstCompletedAttempt === null;
 
-    const subjectAttempts = await getManyFrom(
-      ctx.db,
-      "snbtTryoutSubjectAttempts",
-      "tryoutAttemptId_subjectIndex",
-      args.tryoutAttemptId,
-      "tryoutAttemptId"
-    );
+    const [subjectAttempts, scaleVersionItems] = await Promise.all([
+      getManyFrom(
+        ctx.db,
+        "snbtTryoutSubjectAttempts",
+        "tryoutAttemptId_subjectIndex",
+        args.tryoutAttemptId,
+        "tryoutAttemptId"
+      ),
+      getScaleVersionItems(ctx.db, tryoutAttempt.scaleVersionId),
+    ]);
+
+    const scaleItemsBySetId = groupScaleVersionItemsBySetId(scaleVersionItems);
 
     const subjectAttemptData = await Promise.all(
       subjectAttempts.map(async (sa) => {
-        const [answers, itemParamsRecords] = await Promise.all([
-          ctx.db
-            .query("exerciseAnswers")
-            .withIndex("attemptId_exerciseNumber", (q) =>
-              q.eq("attemptId", sa.setAttemptId)
-            )
-            .collect(),
-          ctx.db
-            .query("exerciseItemParameters")
-            .withIndex("setId", (q) => q.eq("setId", sa.setId))
-            .collect(),
-        ]);
-        return { answers, itemParamsRecords };
+        const answers = await ctx.db
+          .query("exerciseAnswers")
+          .withIndex("attemptId_exerciseNumber", (q) =>
+            q.eq("attemptId", sa.setAttemptId)
+          )
+          .collect();
+        return {
+          answers,
+          itemParamsRecords: scaleItemsBySetId.get(sa.setId) ?? [],
+        };
       })
     );
 

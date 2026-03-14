@@ -17,6 +17,26 @@ export const irtCalibrationRunStatusValidator = literals(
 export const irtOperationalModelValidator = literals("2pl");
 
 const tables = {
+  irtScaleVersions: defineTable({
+    tryoutId: v.id("snbtTryouts"),
+    model: irtOperationalModelValidator,
+    questionCount: v.number(),
+    publishedAt: v.number(),
+  }).index("tryoutId_publishedAt", ["tryoutId", "publishedAt"]),
+
+  irtScaleVersionItems: defineTable({
+    scaleVersionId: v.id("irtScaleVersions"),
+    questionId: v.id("exerciseQuestions"),
+    setId: v.id("exerciseSets"),
+    difficulty: v.number(),
+    discrimination: v.number(),
+    guessing: v.number(),
+  }).index("scaleVersionId_setId_questionId", [
+    "scaleVersionId",
+    "setId",
+    "questionId",
+  ]),
+
   irtCalibrationRuns: defineTable({
     setId: v.id("exerciseSets"),
     model: irtOperationalModelValidator,
@@ -51,6 +71,7 @@ const tables = {
     calibrationRunId: v.optional(v.id("irtCalibrationRuns")),
   })
     .index("questionId", ["questionId"])
+    .index("questionId_calibrationStatus", ["questionId", "calibrationStatus"])
     .index("setId", ["setId"])
     .index("calibrationStatus", ["calibrationStatus"]),
 };

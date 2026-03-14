@@ -66,6 +66,7 @@ import type * as irt_internalActions from "../irt/internalActions.js";
 import type * as irt_internalMutations from "../irt/internalMutations.js";
 import type * as irt_internalQueries from "../irt/internalQueries.js";
 import type * as irt_policy from "../irt/policy.js";
+import type * as irt_scaleVersions from "../irt/scaleVersions.js";
 import type * as irt_scoring from "../irt/scoring.js";
 import type * as irt_validators from "../irt/validators.js";
 import type * as irt_workflows from "../irt/workflows.js";
@@ -197,6 +198,7 @@ declare const fullApi: ApiFromModules<{
   "irt/internalMutations": typeof irt_internalMutations;
   "irt/internalQueries": typeof irt_internalQueries;
   "irt/policy": typeof irt_policy;
+  "irt/scaleVersions": typeof irt_scaleVersions;
   "irt/scoring": typeof irt_scoring;
   "irt/validators": typeof irt_validators;
   "irt/workflows": typeof irt_workflows;

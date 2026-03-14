@@ -9,6 +9,9 @@ This module owns operational IRT scoring policy and durable item calibration for
 - Stored item parameters keep `guessing`, but operational scoring sets `c = 0`
 - Ability estimation uses `EAP` over the operational 2PL item parameters
 - New or weakly supported items remain `provisional` or `emerging`
+- Official SNBT simulation attempts require a published tryout scale version
+- Published scale versions freeze item parameters so official scores do not drift
+  when future calibration runs update the live item bank
 
 ## Data Flow
 
@@ -35,6 +38,14 @@ irt/internalMutations.ts
     |
     +--> persist exerciseItemParameters
     +--> persist irtCalibrationRuns audit record
+
+published official scoring
+    |
+    v
+irt/internalMutations.ts:publishTryoutScaleVersion
+    |
+    +--> verify every tryout question is calibrated
+    +--> snapshot item params into irtScaleVersions + irtScaleVersionItems
 ```
 
 ## Modules
@@ -48,6 +59,7 @@ irt/internalMutations.ts
 | `internalQueries.ts` | Paginated response extraction for calibration |
 | `internalActions.ts` | Set-level calibration job assembly and execution |
 | `internalMutations.ts` | Run tracking and parameter persistence |
+| `scaleVersions.ts` | Published tryout scale-version loading and snapshot helpers |
 | `workflows.ts` | Durable orchestration for long-running calibration runs |
 
 ## Run Lifecycle
@@ -60,7 +72,12 @@ startCalibrationRun(setId)
             |
             +--> calibrateSetTwoPL action
             +--> completeCalibrationRun mutation
-            +--> or failCalibrationRun mutation
+    +--> or failCalibrationRun mutation
+
+publishTryoutScaleVersion(tryoutId)
+    |
+    +--> require all questions calibrated
+    +--> snapshot frozen scale version for official scoring
 ```
 
 ## Notes

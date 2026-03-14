@@ -36,6 +36,7 @@ const tables = {
   snbtTryoutAttempts: defineTable({
     userId: v.id("users"),
     tryoutId: v.id("snbtTryouts"),
+    scaleVersionId: v.id("irtScaleVersions"),
     status: snbtTryoutStatusValidator,
     completedSubjectIndices: v.array(v.number()),
     totalCorrect: v.number(),

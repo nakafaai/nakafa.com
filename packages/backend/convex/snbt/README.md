@@ -12,6 +12,8 @@ tables own try-out lifecycle, IRT scoring, and official leaderboard rules.
 - Simulation subjects use a fixed time limit of `90` seconds per question
 - Official scoring is currently `2PL-first`: stored item parameters keep
   `guessing`, but operational theta estimation uses `c = 0`
+- Official simulation attempts require a published scale version with fully
+  calibrated item parameters for every tryout question
 - Only the first completed simulation attempt per user per try-out is official
 - Later simulation retries never update the official leaderboard
 - Practice is unlocked only after an official simulation completion and uses the
@@ -37,7 +39,7 @@ erDiagram
 | `exerciseAttempts` | Shared exercise engine. SNBT subjects use `origin: "snbt"`; standalone exercise pages use `origin: "standalone"`. |
 | `snbtTryouts` | Auto-detected SNBT try-out definitions keyed by locale/year/slug. |
 | `snbtTryoutSets` | Maps a try-out to its seven subject `exerciseSets`. |
-| `snbtTryoutAttempts` | Per-user simulation lifecycle, raw totals, and final IRT result. The 24h expiry window is derived from `startedAt`. |
+| `snbtTryoutAttempts` | Per-user simulation lifecycle, frozen `scaleVersionId`, raw totals, and final IRT result. The 24h expiry window is derived from `startedAt`. |
 | `snbtTryoutSubjectAttempts` | One subject record per try-out attempt. Points to the shared `exerciseAttempts` row for that subject. |
 | `snbtLeaderboard` | Official per-try-out leaderboard entries. One official simulation entry per user per try-out. |
 | `userSnbtStats` | Official aggregate stats per user and locale, fed only by official leaderboard insertions. |
@@ -46,19 +48,20 @@ erDiagram
 
 ```mermaid
 flowchart TD
-    A[startTryout simulation] --> B[create or resume snbtTryoutAttempt]
-    B --> C[schedule 24h expiry]
-    C --> D[startSubject]
-    D --> E[create or reuse exerciseAttempt origin=snbt]
-    E --> F[submitAnswer or completeAttempt]
-    F --> G[sync parent tryout expiry]
-    G --> H[completeSubject]
-    H --> I{all subjects completed?}
-    I -->|No| D
-    I -->|Yes| J[completeTryout]
-    J --> K[updateLeaderboard internal mutation]
-    K --> L[snbtLeaderboard + userSnbtStats]
-    L --> M[unlock standalone practice]
+    A[startTryout simulation] --> B[load latest published scale version]
+    B --> C[create or resume snbtTryoutAttempt]
+    C --> D[schedule 24h expiry]
+    D --> E[startSubject]
+    E --> F[create or reuse exerciseAttempt origin=snbt]
+    F --> G[submitAnswer or completeAttempt]
+    G --> H[sync parent tryout expiry]
+    H --> I[completeSubject]
+    I --> J{all subjects completed?}
+    J -->|No| E
+    J -->|Yes| K[completeTryout using frozen scaleVersion items]
+    K --> L[updateLeaderboard internal mutation]
+    L --> M[snbtLeaderboard + userSnbtStats]
+    M --> N[unlock standalone practice]
 ```
 
 ## Query Contract

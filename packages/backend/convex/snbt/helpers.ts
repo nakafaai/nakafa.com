@@ -109,7 +109,10 @@ export function buildIrtResponses({
   itemParamsRecords,
 }: {
   answers: Doc<"exerciseAnswers">[];
-  itemParamsRecords: Doc<"exerciseItemParameters">[];
+  itemParamsRecords: Pick<
+    Doc<"exerciseItemParameters">,
+    "questionId" | "difficulty" | "discrimination" | "guessing"
+  >[];
 }) {
   const itemParamsMap = new Map(
     itemParamsRecords.map((itemParams) => [itemParams.questionId, itemParams])

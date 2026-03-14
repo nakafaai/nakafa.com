@@ -1,10 +1,16 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { IRT_OPERATIONAL_MODEL } from "@repo/backend/convex/irt/policy";
+import {
+  getPublishableScaleSnapshot,
+  publishScaleVersion,
+} from "@repo/backend/convex/irt/scaleVersions";
 import { irtCalibrationResultValidator } from "@repo/backend/convex/irt/validators";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { workflow } from "@repo/backend/convex/workflow";
 import { v } from "convex/values";
+import { asyncMap } from "convex-helpers";
+import { getManyFrom } from "convex-helpers/server/relationships";
 
 /**
  * Create and start a tracked 2PL calibration run for one exercise set.
@@ -71,11 +77,20 @@ export const completeCalibrationRun = internalMutation({
       throw new Error("Calibration run not found.");
     }
 
-    for (const item of args.result.items) {
-      const existingParams = await ctx.db
-        .query("exerciseItemParameters")
-        .withIndex("questionId", (q) => q.eq("questionId", item.questionId))
-        .unique();
+    const existingParams = await getManyFrom(
+      ctx.db,
+      "exerciseItemParameters",
+      "setId",
+      run.setId
+    );
+    const existingParamsByQuestionId = new Map(
+      existingParams.map((params) => [params.questionId, params])
+    );
+
+    await asyncMap(args.result.items, async (item) => {
+      const existingItemParams = existingParamsByQuestionId.get(
+        item.questionId
+      );
 
       const nextValues = {
         setId: run.setId,
@@ -89,10 +104,10 @@ export const completeCalibrationRun = internalMutation({
         calibrationRunId: args.calibrationRunId,
       };
 
-      if (existingParams) {
+      if (existingItemParams) {
         await ctx.db.patch(
           "exerciseItemParameters",
-          existingParams._id,
+          existingItemParams._id,
           nextValues
         );
       } else {
@@ -101,7 +116,7 @@ export const completeCalibrationRun = internalMutation({
           ...nextValues,
         });
       }
-    }
+    });
 
     await ctx.db.patch("irtCalibrationRuns", args.calibrationRunId, {
       status: "completed",
@@ -136,5 +151,41 @@ export const failCalibrationRun = internalMutation({
     });
 
     return null;
+  },
+});
+
+/**
+ * Publish a frozen operational scale version for one SNBT try-out.
+ *
+ * The mutation fails until every question inside the try-out has a calibrated
+ * item parameter, which keeps official scoring tied to sufficiently calibrated
+ * items only.
+ */
+export const publishTryoutScaleVersion = internalMutation({
+  args: {
+    tryoutId: vv.id("snbtTryouts"),
+  },
+  returns: vv.id("irtScaleVersions"),
+  handler: async (ctx, args) => {
+    const tryout = await ctx.db.get("snbtTryouts", args.tryoutId);
+
+    if (!tryout) {
+      throw new Error("Tryout not found for scale publication.");
+    }
+
+    const snapshot = await getPublishableScaleSnapshot(ctx.db, tryout._id);
+
+    if (!snapshot) {
+      throw new Error(
+        "Tryout cannot publish an official scale version until all questions are calibrated."
+      );
+    }
+
+    return publishScaleVersion(ctx.db, {
+      tryoutId: tryout._id,
+      questionCount: snapshot.questionCount,
+      items: snapshot.items,
+      publishedAt: Date.now(),
+    });
   },
 });
