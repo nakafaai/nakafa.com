@@ -1,10 +1,9 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { internalAction } from "@repo/backend/convex/_generated/server";
 import { calibrateTwoPLItems } from "@repo/backend/convex/irt/calibration";
-import type {
-  calibrationQuestionsForSetResultValidator,
-  calibrationResponsesPageResultValidator,
-} from "@repo/backend/convex/irt/internalQueries";
+import type { calibrationResponsesPageResultValidator } from "@repo/backend/convex/irt/internalQueries";
 import {
   IRT_OPERATIONAL_MODEL,
   IRT_PROBABILITY_EPSILON,
@@ -13,15 +12,44 @@ import { irtCalibrationResultValidator } from "@repo/backend/convex/irt/validato
 import { type Infer, v } from "convex/values";
 
 const CALIBRATION_PAGE_SIZE = 500;
-type CalibrationQuestionsForSetResult = Infer<
-  typeof calibrationQuestionsForSetResultValidator
->;
 type CalibrationResponsesPage = Infer<
   typeof calibrationResponsesPageResultValidator
 >;
 type CalibrationResponse = CalibrationResponsesPage["page"][number];
-type ExistingCalibrationParams =
-  CalibrationQuestionsForSetResult["existingParams"][number];
+
+function runCalibrationQuestionsForSet(
+  ctx: ActionCtx,
+  setId: Id<"exerciseSets">
+) {
+  return ctx.runQuery(
+    internal.irt.internalQueries.getCalibrationQuestionsForSet,
+    {
+      setId,
+    }
+  );
+}
+
+function runCalibrationResponsesPageForQuestion(
+  ctx: ActionCtx,
+  {
+    cursor,
+    questionId,
+  }: {
+    cursor: string | null;
+    questionId: Id<"exerciseQuestions">;
+  }
+) {
+  return ctx.runQuery(
+    internal.irt.internalQueries.getCalibrationResponsesPageForQuestion,
+    {
+      questionId,
+      paginationOpts: {
+        numItems: CALIBRATION_PAGE_SIZE,
+        cursor,
+      },
+    }
+  );
+}
 
 /**
  * Run one set-level 2PL calibration job from completed simulation responses.
@@ -35,11 +63,10 @@ export const calibrateSetTwoPL = internalAction({
   },
   returns: irtCalibrationResultValidator,
   handler: async (ctx, args) => {
-    const { questions, existingParams }: CalibrationQuestionsForSetResult =
-      await ctx.runQuery(
-        internal.irt.internalQueries.getCalibrationQuestionsForSet,
-        { setId: args.setId }
-      );
+    const { questions, existingParams } = await runCalibrationQuestionsForSet(
+      ctx,
+      args.setId
+    );
 
     const responses: CalibrationResponse[] = [];
 
@@ -47,16 +74,10 @@ export const calibrateSetTwoPL = internalAction({
       let cursor: string | null = null;
 
       while (true) {
-        const responsePage: CalibrationResponsesPage = await ctx.runQuery(
-          internal.irt.internalQueries.getCalibrationResponsesPageForQuestion,
-          {
-            questionId: question.questionId,
-            paginationOpts: {
-              numItems: CALIBRATION_PAGE_SIZE,
-              cursor,
-            },
-          }
-        );
+        const responsePage = await runCalibrationResponsesPageForQuestion(ctx, {
+          questionId: question.questionId,
+          cursor,
+        });
 
         responses.push(...responsePage.page);
 
@@ -72,7 +93,7 @@ export const calibrateSetTwoPL = internalAction({
       questions,
       responses,
       existingParams: new Map(
-        existingParams.map((params: ExistingCalibrationParams) => [
+        existingParams.map((params) => [
           params.questionId,
           {
             difficulty: params.difficulty,

@@ -1,7 +1,12 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { workflow } from "@repo/backend/convex/workflow";
-import { v } from "convex/values";
+import { type Infer, v } from "convex/values";
+
+const calibrationWorkflowReturnValidator = v.null();
+type CalibrationWorkflowReturn = Infer<
+  typeof calibrationWorkflowReturnValidator
+>;
 
 /**
  * Durable workflow that calibrates one exercise set and persists the resulting
@@ -12,8 +17,8 @@ export const calibrateSetTwoPL = workflow.define({
     calibrationRunId: vv.id("irtCalibrationRuns"),
     setId: vv.id("exerciseSets"),
   },
-  returns: v.null(),
-  handler: async (step, args): Promise<null> => {
+  returns: calibrationWorkflowReturnValidator,
+  handler: async (step, args): Promise<CalibrationWorkflowReturn> => {
     try {
       const result = await step.runAction(
         internal.irt.internalActions.calibrateSetTwoPL,
