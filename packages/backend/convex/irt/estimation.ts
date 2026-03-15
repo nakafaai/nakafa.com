@@ -122,5 +122,5 @@ export function getProvisionalParams(): ItemParameters {
  */
 export function estimateDifficultyFromCorrectRate(correctRate: number): number {
   const cr = Math.max(0.01, Math.min(0.99, correctRate));
-  return -Math.log((1 - cr) / cr);
+  return Math.log((1 - cr) / cr);
 }

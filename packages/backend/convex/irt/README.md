@@ -17,48 +17,20 @@ This module owns operational IRT scoring policy and durable item calibration for
 
 ## Data Flow
 
-```text
-completed simulation answers
-    |
-    v
-exerciseAnswers(questionId, isCorrect, attempt metadata)
-    |
-    v
-completeSubject()
-    |
-    +--> append irtCalibrationQueue row
-    |
-    v
-cron drains calibration queue
-    |
-    +--> start calibration workflow in bounded batches
-    |
-    v
-irt/internalQueries.ts
-    |
-    v
-irt/internalActions.ts
-    |
-    +--> load completed simulation set responses in pages
-    +--> run alternating 2PL calibration
-    |
-    v
-irt/workflows.ts
-    |
-    v
-irt/internalMutations.ts
-    |
-    +--> persist exerciseItemParameters
-    +--> persist irtCalibrationRuns audit record
-    +--> append irtScalePublicationQueue rows for affected tryouts
-
-published official scoring
-    |
-    v
-cron drains scale publication queue
-    |
-    +--> verify every tryout question is calibrated
-    +--> snapshot frozen calibrated params into irtScaleVersions + irtScaleVersionItems
+```mermaid
+flowchart TD
+    A[completeSubject] --> B[enqueue set in irtCalibrationQueue]
+    B --> C[cron drains calibration queue]
+    C --> D[start calibration workflow]
+    D --> E[load completed simulation set responses]
+    E --> F[run set-level 2PL calibration]
+    F --> G[persist exerciseItemParameters and irtCalibrationRuns]
+    G --> H[enqueue affected tryouts for publication]
+    H --> I[cron drains publication queue]
+    I --> J{all tryout questions calibrated\nand snapshot changed?}
+    J -- No --> K[skip publish]
+    J -- Yes --> L[publish irtScaleVersion\nand irtScaleVersionItems]
+    L --> M[new startTryout binds latest frozen scale]
 ```
 
 ## Modules
@@ -77,25 +49,19 @@ cron drains scale publication queue
 
 ## Run Lifecycle
 
-```text
-startCalibrationRun(setId)
-    |
-    +--> create irtCalibrationRuns row (running)
-    +--> start durable workflow
-            |
-            +--> calibrateSetTwoPL action
-            +--> completeCalibrationRun mutation
-            +--> or failCalibrationRun mutation
-
-drainCalibrationQueue()
-    |
-    +--> take oldest queued sets
-    +--> calibrate when enough new completed attempts exist or calibration is stale
-
-drainScalePublicationQueue()
-    |
-    +--> take oldest queued tryouts
-    +--> publish only when calibrated snapshot changed
+```mermaid
+flowchart TD
+    A[drainCalibrationQueue] --> B{enough new attempts\nor calibration is stale?}
+    B -- No --> C[leave set queued]
+    B -- Yes --> D[startCalibrationRun]
+    D --> E[create running irtCalibrationRuns row]
+    E --> F[start durable workflow]
+    F --> G[calibrateSetTwoPL action]
+    G --> H{action succeeded?}
+    H -- Yes --> I[completeCalibrationRun]
+    I --> J[persist params and queue tryouts]
+    H -- No --> K[failCalibrationRun]
+    K --> L[mark failed and requeue set]
 ```
 
 ## Notes
