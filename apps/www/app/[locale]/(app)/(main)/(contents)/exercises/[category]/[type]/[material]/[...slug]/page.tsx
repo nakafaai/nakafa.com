@@ -11,6 +11,10 @@ import {
   getExerciseNumberPagination,
   getExercisesPagination,
   getSlugPath,
+  hasInvalidTryOutYearSlug,
+  isTryOutCollectionSlug,
+  isYearlessTryOutCollectionSlug,
+  LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
 } from "@repo/contents/_lib/exercises/slug";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
 import type {
@@ -28,7 +32,7 @@ import { FOUNDER } from "@repo/seo/json-ld/constants";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
 import { Effect, Option } from "effect";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
@@ -57,9 +61,6 @@ import {
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
 import { getStaticParams } from "@/lib/utils/system";
-
-const EXERCISE_YEAR_SEGMENT_REGEX = /^\d{4}$/;
-
 import { QuestionAnalytics } from "./analytics";
 import { ExerciseArticle } from "./article";
 import { ExerciseAttempt } from "./attempt";
@@ -183,7 +184,7 @@ export function generateStaticParams() {
     isDeep: true,
   }).filter((params) => {
     const slug = params.slug;
-    return !(Array.isArray(slug) && slug.length === 1 && slug[0] === "try-out");
+    return !(Array.isArray(slug) && isYearlessTryOutCollectionSlug(slug));
   });
 }
 
@@ -193,16 +194,25 @@ export default function Page({ params }: Props) {
   // Enable static rendering
   setRequestLocale(locale);
 
-  if (
-    slug[0] === "try-out" &&
-    !EXERCISE_YEAR_SEGMENT_REGEX.test(slug[1] ?? "")
-  ) {
-    notFound();
+  if (hasInvalidTryOutYearSlug(slug)) {
+    const tryOutSuffixIndex = 1;
+    const legacyTryOutSuffix = slug.slice(tryOutSuffixIndex);
+
+    // Legacy yearless try-out URLs were already indexed before the year segment
+    // migration, so keep forwarding them to their yearful 2026 successor.
+    permanentRedirect(
+      getSlugPath(category, type, material, [
+        "try-out",
+        LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
+        ...legacyTryOutSuffix,
+      ])
+    );
   }
 
-  // if last slug can be converted to a number, means it is a specific exercise
   const lastSlug = slug.at(-1);
-  if (lastSlug && isNumber(lastSlug)) {
+  // Try-out collection routes like `try-out/2026` end in a number but should
+  // still render the collection page, not a single exercise page.
+  if (!isTryOutCollectionSlug(slug) && lastSlug && isNumber(lastSlug)) {
     const exerciseNumber = Number.parseInt(lastSlug, 10);
     const baseSlug = slug.slice(0, -1);
     return (

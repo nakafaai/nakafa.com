@@ -1,5 +1,10 @@
 import { getContent } from "@repo/contents/_lib/content";
 import { getExercisesContent } from "@repo/contents/_lib/exercises";
+import {
+  hasInvalidTryOutYearSlug,
+  isTryOutCollectionSlug,
+  LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
+} from "@repo/contents/_lib/exercises/slug";
 import { generateContentParams } from "@repo/contents/_lib/static-params";
 import {
   ChoicesValidationError,
@@ -17,27 +22,24 @@ import { NextResponse } from "next/server";
 export const revalidate = false;
 
 const logger = createServiceLogger("api-exercises");
-const EXERCISE_YEAR_SEGMENT_REGEX = /^\d{4}$/;
-
-function isUnsupportedTryOutCollectionSlug(slug: string[]): boolean {
-  const tryOutSlug = slug.slice(3);
-
-  return (
-    (tryOutSlug.length === 1 && tryOutSlug[0] === "try-out") ||
-    (tryOutSlug.length === 2 &&
-      tryOutSlug[0] === "try-out" &&
-      EXERCISE_YEAR_SEGMENT_REGEX.test(tryOutSlug[1] ?? ""))
-  );
-}
+const EXERCISE_PREFIX_LEN = 3;
+const EXERCISE_TYPE_INDEX = 0;
+const LEGACY_TRY_OUT_SUFFIX_INDEX = 1;
 
 export function generateStaticParams() {
   return generateContentParams({
     basePath: "exercises",
-  }).filter((params) => !isUnsupportedTryOutCollectionSlug(params.slug));
+  }).filter((params) => {
+    // In this route, `params.slug` is everything after `/contents/{locale}/exercises/`:
+    // [category, type, material, ...exerciseSlug]
+    const relativeExerciseSlug = params.slug.slice(EXERCISE_PREFIX_LEN);
+
+    return !isTryOutCollectionSlug(relativeExerciseSlug);
+  });
 }
 
 export async function GET(
-  _req: Request,
+  request: Request,
   { params }: { params: Promise<{ locale: string; slug: string[] }> }
 ) {
   const { locale, slug } = await params;
@@ -51,8 +53,36 @@ export async function GET(
   }
 
   const validLocale = parseResult.data;
+  // In this API route, `slug` is the catch-all part after
+  // `/contents/{locale}/exercises/`:
+  // [category, type, material, ...exerciseSlug]
+  const exerciseRoutePrefix = slug.slice(0, EXERCISE_PREFIX_LEN);
+  const relativeExerciseSlug = slug.slice(EXERCISE_PREFIX_LEN);
+  const exerciseType = relativeExerciseSlug[EXERCISE_TYPE_INDEX];
+  const legacyTryOutSuffix = relativeExerciseSlug.slice(
+    LEGACY_TRY_OUT_SUFFIX_INDEX
+  );
 
-  if (isUnsupportedTryOutCollectionSlug(slug)) {
+  if (
+    exerciseType !== undefined &&
+    hasInvalidTryOutYearSlug(relativeExerciseSlug) &&
+    legacyTryOutSuffix.length > 0
+  ) {
+    // The API only serves concrete set/question endpoints, so redirect legacy
+    // yearless try-out requests like `try-out/set-1` and `try-out/set-1/1`.
+    const redirectUrl = new URL(request.url);
+    const redirectedSlug = [
+      ...exerciseRoutePrefix,
+      exerciseType,
+      LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
+      ...legacyTryOutSuffix,
+    ];
+
+    redirectUrl.pathname = `/contents/${validLocale}/exercises/${redirectedSlug.join("/")}`;
+    return NextResponse.redirect(redirectUrl, 308);
+  }
+
+  if (isTryOutCollectionSlug(relativeExerciseSlug)) {
     return NextResponse.json(
       { error: "Exercises content not found." },
       { status: 404 }

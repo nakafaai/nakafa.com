@@ -6,6 +6,17 @@ import type {
 } from "@repo/contents/_types/exercises/material";
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 
+const TRY_OUT_SEGMENT = "try-out";
+const EXERCISE_YEAR_SEGMENT_REGEX = /^\d{4}$/;
+
+/**
+ * Legacy yearless try-out URLs were migrated into the 2026 content tree.
+ *
+ * This is only used to redirect old URLs that were indexed before the year was
+ * added to the path. New try-out URLs must always include an explicit year.
+ */
+export const LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR = "2026";
+
 /**
  * Gets the path to a exercises material based on its category, type, material, and slug.
  * @param category - The category of the subject.
@@ -21,6 +32,61 @@ export function getSlugPath(
   slug: string[]
 ) {
   return `/exercises/${category}/${type}/${material}/${slug.join("/")}` as const;
+}
+
+/**
+ * Returns true when a path segment is a valid exercise year.
+ *
+ * The exercise content model only treats 4-digit segments as years, so the
+ * try-out helpers can distinguish yearly try-out slugs from regular collection
+ * names like `semester-1`.
+ */
+function isExerciseYearSegment(value: string | undefined) {
+  return value !== undefined && EXERCISE_YEAR_SEGMENT_REGEX.test(value);
+}
+
+/**
+ * Returns true when a relative exercise slug points to the old yearless
+ * try-out collection root.
+ *
+ * Expected input is relative to the material path, not a full URL path.
+ * For example:
+ * - `["try-out"]`
+ * - `["try-out", "2026"]`
+ * - `["semester-1", "set-1"]`
+ */
+export function isYearlessTryOutCollectionSlug(slug: readonly string[]) {
+  return slug.length === 1 && slug[0] === TRY_OUT_SEGMENT;
+}
+
+/**
+ * Returns true when a relative exercise slug points to a try-out collection
+ * page instead of a concrete set page.
+ *
+ * Supported collection shapes are:
+ * - `["try-out"]` for the legacy yearless root
+ * - `["try-out", "2026"]` for the yearly root
+ */
+export function isTryOutCollectionSlug(slug: readonly string[]) {
+  return (
+    isYearlessTryOutCollectionSlug(slug) ||
+    (slug.length === 2 &&
+      slug[0] === TRY_OUT_SEGMENT &&
+      isExerciseYearSegment(slug[1]))
+  );
+}
+
+/**
+ * Returns true when a try-out slug starts with `try-out` but does not include
+ * a valid 4-digit year as the next segment.
+ *
+ * Examples:
+ * - `["try-out"]` => true
+ * - `["try-out", "set-1"]` => true
+ * - `["try-out", "2026"]` => false
+ */
+export function hasInvalidTryOutYearSlug(slug: readonly string[]) {
+  return slug[0] === TRY_OUT_SEGMENT && !isExerciseYearSegment(slug[1]);
 }
 
 /**
