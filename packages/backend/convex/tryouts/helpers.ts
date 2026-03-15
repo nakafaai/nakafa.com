@@ -19,6 +19,7 @@ type TryoutScoreTotals = Pick<
   "totalCorrect" | "totalQuestions"
 >;
 
+/** Converts accumulated tryout score totals into a percentage. */
 export function computeTryoutRawScorePercentage({
   totalCorrect,
   totalQuestions,
@@ -30,6 +31,7 @@ export function computeTryoutRawScorePercentage({
   return (totalCorrect / totalQuestions) * 100;
 }
 
+/** Returns the earliest completed simulation attempt for official-result checks. */
 export function getFirstCompletedSimulationAttempt(
   db: TryoutDbReader,
   { userId, tryoutId }: Pick<Doc<"tryoutAttempts">, "userId" | "tryoutId">
@@ -43,6 +45,7 @@ export function getFirstCompletedSimulationAttempt(
     .first();
 }
 
+/** Counts correct answers from the shared exercise-attempt answer rows. */
 export function countCorrectAnswers(answers: Doc<"exerciseAnswers">[]) {
   return answers.reduce(
     (correctCount, answer) => correctCount + (answer.isCorrect ? 1 : 0),
@@ -50,6 +53,7 @@ export function countCorrectAnswers(answers: Doc<"exerciseAnswers">[]) {
   );
 }
 
+/** Builds the EAP/IRT response payload from scored answers plus item params. */
 export function buildIrtResponses({
   answers,
   itemParamsRecords,
@@ -111,6 +115,7 @@ async function expireExerciseAttemptIfInProgress(
   });
 }
 
+/** Expires a tryout and every still-open shared set attempt under it. */
 export async function expireTryoutAttempt(
   ctx: TryoutMutationCtx,
   tryoutAttempt: Doc<"tryoutAttempts">,
@@ -162,6 +167,7 @@ export async function expireTryoutAttempt(
   return expiredAtMs;
 }
 
+/** Reconciles one tryout attempt against its derived expiry window. */
 export async function syncTryoutAttemptExpiry(
   ctx: TryoutMutationCtx,
   tryoutAttempt: Doc<"tryoutAttempts">,
@@ -193,6 +199,7 @@ export async function syncTryoutAttemptExpiry(
   return { expired: false, expiredAtMs };
 }
 
+/** Reconciles a shared exercise attempt that belongs to a tryout part. */
 export async function syncTryoutExerciseAttemptExpiry(
   ctx: TryoutMutationCtx,
   attempt: Doc<"exerciseAttempts">,

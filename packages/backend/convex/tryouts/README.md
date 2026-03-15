@@ -1,7 +1,7 @@
 # Tryout Runtime
 
 Generic tryout runtime built on top of the shared `exerciseAttempts` engine.
-Product-specific rules live in `tryouts/products.ts`, while the runtime tables,
+Product-specific rules live in `tryouts/products/`, while the runtime tables,
 queries, mutations, IRT publication, and leaderboard flow stay generic.
 
 ## Core Model
@@ -15,7 +15,7 @@ queries, mutations, IRT publication, and leaderboard flow stay generic.
 
 ## Current Product Policy
 
-Today only SNBT is configured in `tryouts/products.ts`.
+Today only SNBT is configured in `tryouts/products/`.
 That policy owns:
 
 - tryout detection from synced `exerciseSets`

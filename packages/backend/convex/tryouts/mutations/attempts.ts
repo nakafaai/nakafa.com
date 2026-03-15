@@ -385,7 +385,7 @@ export const completePart = mutation({
           .eq("tryoutAttemptId", args.tryoutAttemptId)
           .eq("partIndex", args.partIndex)
       )
-      .first();
+      .unique();
 
     if (!partAttempt) {
       throw new ConvexError({
