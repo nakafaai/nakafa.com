@@ -219,13 +219,22 @@ export function getUrl(href: Href, locale: Locale, domain?: string): string {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const contentRoutes = getContentRoutes().filter((route) => {
-    const segments = route.split("/").filter(Boolean);
+    const routeSegments = route.split("/").filter(Boolean);
+    const isExerciseRoute = routeSegments[0] === "exercises";
 
-    return !(
-      segments[0] === "exercises" &&
-      segments.length >= 5 &&
-      isYearlessTryOutCollectionSlug(segments.slice(4))
-    );
+    if (!isExerciseRoute) {
+      return true;
+    }
+
+    // `getContentRoutes()` walks raw directories, so it also returns
+    // intermediate folders like `/exercises/.../try-out`. That folder is not a
+    // real page anymore because try-out collections now start at
+    // `/exercises/.../try-out/{year}`.
+    const exerciseSlug = routeSegments.slice(4);
+    const isInvalidYearlessTryOutRoute =
+      isYearlessTryOutCollectionSlug(exerciseSlug);
+
+    return !isInvalidYearlessTryOutRoute;
   });
   const quranRoutes = getQuranRoutes();
   const askRoutes = getAskRoutes();
