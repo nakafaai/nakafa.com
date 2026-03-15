@@ -12,6 +12,7 @@ import {
   getExercisesPagination,
   getSlugPath,
   hasInvalidTryOutYearSlug,
+  isTryOutCollectionSlug,
   isYearlessTryOutCollectionSlug,
   LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
 } from "@repo/contents/_lib/exercises/slug";
@@ -208,9 +209,10 @@ export default function Page({ params }: Props) {
     );
   }
 
-  // if last slug can be converted to a number, means it is a specific exercise
   const lastSlug = slug.at(-1);
-  if (lastSlug && isNumber(lastSlug)) {
+  // Try-out collection routes like `try-out/2026` end in a number but should
+  // still render the collection page, not a single exercise page.
+  if (!isTryOutCollectionSlug(slug) && lastSlug && isNumber(lastSlug)) {
     const exerciseNumber = Number.parseInt(lastSlug, 10);
     const baseSlug = slug.slice(0, -1);
     return (
