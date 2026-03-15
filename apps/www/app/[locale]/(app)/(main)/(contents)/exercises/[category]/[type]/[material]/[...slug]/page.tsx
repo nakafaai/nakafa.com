@@ -13,6 +13,7 @@ import {
   getSlugPath,
   hasInvalidTryOutYearSlug,
   isYearlessTryOutCollectionSlug,
+  LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
 } from "@repo/contents/_lib/exercises/slug";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
 import type {
@@ -30,7 +31,7 @@ import { FOUNDER } from "@repo/seo/json-ld/constants";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
 import { Effect, Option } from "effect";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
@@ -193,7 +194,18 @@ export default function Page({ params }: Props) {
   setRequestLocale(locale);
 
   if (hasInvalidTryOutYearSlug(slug)) {
-    notFound();
+    const tryOutSuffixIndex = 1;
+    const legacyTryOutSuffix = slug.slice(tryOutSuffixIndex);
+
+    // Legacy yearless try-out URLs were already indexed before the year segment
+    // migration, so keep forwarding them to their yearful 2026 successor.
+    permanentRedirect(
+      getSlugPath(category, type, material, [
+        "try-out",
+        LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
+        ...legacyTryOutSuffix,
+      ])
+    );
   }
 
   // if last slug can be converted to a number, means it is a specific exercise

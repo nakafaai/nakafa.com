@@ -10,6 +10,14 @@ const TRY_OUT_SEGMENT = "try-out";
 const EXERCISE_YEAR_SEGMENT_REGEX = /^\d{4}$/;
 
 /**
+ * Legacy yearless try-out URLs were migrated into the 2026 content tree.
+ *
+ * This is only used to redirect old URLs that were indexed before the year was
+ * added to the path. New try-out URLs must always include an explicit year.
+ */
+export const LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR = "2026";
+
+/**
  * Gets the path to a exercises material based on its category, type, material, and slug.
  * @param category - The category of the subject.
  * @param type - The type of the subject.
