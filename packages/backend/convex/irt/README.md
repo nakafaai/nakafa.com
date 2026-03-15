@@ -12,6 +12,9 @@ This module owns operational IRT scoring policy and durable item calibration for
 - Official SNBT simulation attempts require a published tryout scale version
 - Published scale versions freeze item parameters so official scores do not drift
   when future calibration runs update the live item bank
+- Year-scoped global comparison is limited to the same locale and year, but does
+  not currently perform additional cross-form linking beyond frozen calibrated
+  scale versions
 
 ## Data Flow
 
@@ -56,7 +59,7 @@ published official scoring
 cron drains scale publication queue
     |
     +--> verify every tryout question is calibrated
-    +--> snapshot frozen item params into irtScaleVersions + irtScaleVersionItems
+    +--> snapshot frozen calibrated params into irtScaleVersions + irtScaleVersionItems
 ```
 
 ## Modules
@@ -93,12 +96,12 @@ drainCalibrationQueue()
 drainScalePublicationQueue()
     |
     +--> take oldest queued tryouts
-    +--> publish only when calibrated snapshot changed
+-    +--> publish only when calibrated snapshot changed
 ```
 
 ## Notes
 
 - Calibration currently works at the `exerciseSet` level
 - Calibration input is limited to `completed` `simulation` attempts
-- This pipeline improves item parameters, but it is not yet a full cross-form
-  equating/linking system
+- This pipeline improves item parameters and freezes official scales, but it does
+  not attempt additional cross-form equating/linking for unique-item tryouts

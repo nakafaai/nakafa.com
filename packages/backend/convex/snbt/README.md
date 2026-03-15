@@ -97,6 +97,8 @@ flowchart TD
 - Standalone practice attempts never create leaderboard entries and never affect `userSnbtStats`
 - Global comparison is limited to the same locale and year so unrelated tryout
   years are not mixed on one leaderboard
+- Same-year global comparison depends on published frozen calibrated scales and
+  does not mix unrelated tryout years
 
 ## Convex Design Notes
 
@@ -107,6 +109,9 @@ flowchart TD
 - Official ranking reads use the aggregate component for O(log n) rank lookup
 - The backend stores only the state it must query directly; officialness is derived from completion behavior, not a redundant flag
 - Practice uses the standalone exercise engine so the SNBT lifecycle stays focused on official simulation state
+- Global leaderboard within one year is a product metric over official frozen
+  calibrated tryouts; it does not attempt extra cross-form linking for unique
+  question sets
 
 ## IRT Scoring
 

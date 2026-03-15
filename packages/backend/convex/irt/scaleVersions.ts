@@ -1,11 +1,11 @@
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
 import { IRT_OPERATIONAL_MODEL } from "@repo/backend/convex/irt/policy";
 import { asyncMap } from "convex-helpers";
-import { getManyFrom } from "convex-helpers/server/relationships";
+import { getAll, getManyFrom } from "convex-helpers/server/relationships";
 
 type IrtDbReader = QueryCtx["db"];
 type IrtDbWriter = MutationCtx["db"];
@@ -121,42 +121,58 @@ export function getScaleVersionItemsForSet(
 }
 
 /**
- * Build a publishable scale-version snapshot for one try-out.
+ * Build a publishable frozen scale snapshot for one try-out.
  *
  * Returns `null` when any question in the try-out is still missing calibrated
  * parameters, so official simulation attempts cannot start on an unstable scale.
  */
 export async function getPublishableScaleSnapshot(
   db: IrtDbReader,
-  tryoutId: Doc<"snbtTryouts">["_id"]
+  tryoutId: Id<"snbtTryouts">
 ) {
-  const tryoutSets = await getManyFrom(
+  const [tryout, tryoutSets] = await Promise.all([
+    db.get("snbtTryouts", tryoutId),
+    getManyFrom(
+      db,
+      "snbtTryoutSets",
+      "tryoutId_subjectIndex",
+      tryoutId,
+      "tryoutId"
+    ),
+  ]);
+
+  if (!tryout) {
+    return null;
+  }
+
+  const sets = await getAll(
     db,
-    "snbtTryoutSets",
-    "tryoutId_subjectIndex",
-    tryoutId,
-    "tryoutId"
+    "exerciseSets",
+    tryoutSets.map((tryoutSet) => tryoutSet.setId)
   );
 
-  const perSetData = await asyncMap(tryoutSets, async (tryoutSet) => {
+  const perSetData = await asyncMap(tryoutSets, async (tryoutSet, index) => {
+    const set = sets[index];
+
+    if (!set) {
+      return null;
+    }
+
     const [questions, itemParams] = await Promise.all([
-      getManyFrom(db, "exerciseQuestions", "setId", tryoutSet.setId),
-      getManyFrom(db, "exerciseItemParameters", "setId", tryoutSet.setId),
+      getManyFrom(db, "exerciseQuestions", "setId", tryoutSet.setId, "setId"),
+      getManyFrom(
+        db,
+        "exerciseItemParameters",
+        "setId",
+        tryoutSet.setId,
+        "setId"
+      ),
     ]);
 
-    return {
-      setId: tryoutSet.setId,
-      itemParams,
-      questions,
-    };
-  });
-
-  const items = perSetData.flatMap(({ setId, itemParams, questions }) => {
     const paramsByQuestionId = new Map(
       itemParams.map((params) => [params.questionId, params])
     );
-
-    return questions.flatMap((question) => {
+    const calibratedItems = questions.flatMap((question) => {
       const params = paramsByQuestionId.get(question._id);
 
       if (
@@ -167,31 +183,38 @@ export async function getPublishableScaleSnapshot(
         return [];
       }
 
-      const item: ScaleVersionItemSnapshot = {
-        questionId: question._id,
-        setId,
-        difficulty: params.difficulty,
-        discrimination: params.discrimination,
-        guessing: params.guessing,
-        calibrationRunId: params.calibrationRunId,
-      };
-
-      return [item];
+      return [
+        {
+          questionId: question._id,
+          setId: set._id,
+          difficulty: params.difficulty,
+          discrimination: params.discrimination,
+          guessing: params.guessing,
+          calibrationRunId: params.calibrationRunId,
+        },
+      ];
     });
+
+    if (calibratedItems.length !== questions.length) {
+      return null;
+    }
+
+    return calibratedItems;
   });
 
-  const questionCount = perSetData.reduce(
-    (count, { questions }) => count + questions.length,
-    0
-  );
+  const items: ScaleVersionItemSnapshot[] = [];
 
-  if (items.length !== questionCount) {
-    return null;
+  for (const setItems of perSetData) {
+    if (!setItems) {
+      return null;
+    }
+
+    items.push(...setItems);
   }
 
   return {
     model: IRT_OPERATIONAL_MODEL,
-    questionCount,
+    questionCount: items.length,
     items,
   };
 }

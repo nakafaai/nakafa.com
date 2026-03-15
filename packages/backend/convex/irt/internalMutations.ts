@@ -21,7 +21,6 @@ import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { workflow } from "@repo/backend/convex/workflow";
 import { v } from "convex/values";
 import { asyncMap } from "convex-helpers";
-import { getManyFrom } from "convex-helpers/server/relationships";
 
 async function startCalibrationRunWorkflow(
   ctx: MutationCtx,
@@ -78,7 +77,7 @@ async function publishTryoutScaleVersionIfNeeded(
   const snapshot = await getPublishableScaleSnapshot(ctx.db, tryout._id);
 
   if (!snapshot) {
-    return null;
+    return { kind: "not-ready" };
   }
 
   const latestScaleVersion = await getLatestScaleVersionForTryout(
@@ -98,16 +97,18 @@ async function publishTryoutScaleVersionIfNeeded(
         snapshotItems: snapshot.items,
       })
     ) {
-      return latestScaleVersion._id;
+      return { kind: "unchanged", scaleVersionId: latestScaleVersion._id };
     }
   }
 
-  return publishScaleVersion(ctx.db, {
+  const scaleVersionId = await publishScaleVersion(ctx.db, {
     tryoutId: tryout._id,
     questionCount: snapshot.questionCount,
     items: snapshot.items,
     publishedAt: Date.now(),
   });
+
+  return { kind: "published", scaleVersionId };
 }
 
 /**
@@ -132,13 +133,10 @@ export const drainCalibrationQueue = internalMutation({
 
     await asyncMap(distinctSetIds, async (setId) => {
       const [setQueueEntries, latestRun] = await Promise.all([
-        getManyFrom(
-          ctx.db,
-          "irtCalibrationQueue",
-          "setId_enqueuedAt",
-          setId,
-          "setId"
-        ),
+        ctx.db
+          .query("irtCalibrationQueue")
+          .withIndex("setId_enqueuedAt", (q) => q.eq("setId", setId))
+          .collect(),
         ctx.db
           .query("irtCalibrationRuns")
           .withIndex("setId_startedAt", (q) => q.eq("setId", setId))
@@ -198,12 +196,10 @@ export const completeCalibrationRun = internalMutation({
       throw new Error("Calibration run not found.");
     }
 
-    const existingParams = await getManyFrom(
-      ctx.db,
-      "exerciseItemParameters",
-      "setId",
-      run.setId
-    );
+    const existingParams = await ctx.db
+      .query("exerciseItemParameters")
+      .withIndex("setId", (q) => q.eq("setId", run.setId))
+      .collect();
     const existingParamsByQuestionId = new Map(
       existingParams.map((params) => [params.questionId, params])
     );
@@ -251,20 +247,28 @@ export const completeCalibrationRun = internalMutation({
       error: undefined,
     });
 
-    const affectedTryoutSets = await getManyFrom(
-      ctx.db,
-      "snbtTryoutSets",
-      "setId",
-      run.setId
-    );
+    const affectedTryoutSets = await ctx.db
+      .query("snbtTryoutSets")
+      .withIndex("setId", (q) => q.eq("setId", run.setId))
+      .collect();
 
     await asyncMap(
       [...new Set(affectedTryoutSets.map((tryoutSet) => tryoutSet.tryoutId))],
-      (tryoutId) =>
-        ctx.db.insert("irtScalePublicationQueue", {
-          tryoutId,
-          enqueuedAt: now,
-        })
+      async (tryoutId) => {
+        const existingQueueEntry = await ctx.db
+          .query("irtScalePublicationQueue")
+          .withIndex("tryoutId_enqueuedAt", (q) => q.eq("tryoutId", tryoutId))
+          .first();
+
+        if (!existingQueueEntry) {
+          await ctx.db.insert("irtScalePublicationQueue", {
+            tryoutId,
+            enqueuedAt: now,
+          });
+        }
+
+        return null;
+      }
     );
 
     return null;
@@ -307,23 +311,22 @@ export const drainScalePublicationQueue = internalMutation({
       ...new Set(queueEntries.map((entry) => entry.tryoutId)),
     ];
 
-    await asyncMap(distinctTryoutIds, async (tryoutId) => {
-      const tryoutQueueEntries = await getManyFrom(
-        ctx.db,
-        "irtScalePublicationQueue",
-        "tryoutId_enqueuedAt",
-        tryoutId,
-        "tryoutId"
-      );
+    for (const tryoutId of distinctTryoutIds) {
+      const tryoutQueueEntries = await ctx.db
+        .query("irtScalePublicationQueue")
+        .withIndex("tryoutId_enqueuedAt", (q) => q.eq("tryoutId", tryoutId))
+        .collect();
 
-      await publishTryoutScaleVersionIfNeeded(ctx, tryoutId);
+      const result = await publishTryoutScaleVersionIfNeeded(ctx, tryoutId);
+
+      if (result.kind === "not-ready") {
+        continue;
+      }
 
       await asyncMap(tryoutQueueEntries, (entry) =>
         ctx.db.delete("irtScalePublicationQueue", entry._id)
       );
-
-      return null;
-    });
+    }
 
     return null;
   },
