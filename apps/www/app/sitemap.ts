@@ -1,4 +1,5 @@
 import { getContentMetadata } from "@repo/contents/_lib/content";
+import { isYearlessTryOutCollectionSlug } from "@repo/contents/_lib/exercises/slug";
 import { getFolderChildNames } from "@repo/contents/_lib/fs";
 import { getPathname } from "@repo/internationalization/src/navigation";
 import { routing } from "@repo/internationalization/src/routing";
@@ -27,9 +28,6 @@ export const baseRoutes = [
 // Constants for date calculations
 const MONTHS_IN_FALLBACK_PERIOD = 6;
 const MONTHS_IN_CONTENT_FALLBACK = 3;
-const YEARLESS_TRYOUT_ROUTE_REGEX =
-  /^\/exercises\/[^/]+\/[^/]+\/[^/]+\/try-out$/;
-
 // Note: LLM routes (.md, .mdx, .txt, /llms.txt) are excluded from sitemap
 // as they are file downloads, not HTML pages for indexing
 // Per Google guidelines: sitemaps should only contain URLs you want indexed
@@ -220,9 +218,15 @@ export function getUrl(href: Href, locale: Locale, domain?: string): string {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const contentRoutes = getContentRoutes().filter(
-    (route) => !YEARLESS_TRYOUT_ROUTE_REGEX.test(route)
-  );
+  const contentRoutes = getContentRoutes().filter((route) => {
+    const segments = route.split("/").filter(Boolean);
+
+    return !(
+      segments[0] === "exercises" &&
+      segments.length >= 5 &&
+      isYearlessTryOutCollectionSlug(segments.slice(4))
+    );
+  });
   const quranRoutes = getQuranRoutes();
   const askRoutes = getAskRoutes();
 

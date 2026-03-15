@@ -11,6 +11,8 @@ import {
   getExerciseNumberPagination,
   getExercisesPagination,
   getSlugPath,
+  hasInvalidTryOutYearSlug,
+  isYearlessTryOutCollectionSlug,
 } from "@repo/contents/_lib/exercises/slug";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
 import type {
@@ -57,9 +59,6 @@ import {
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
 import { getStaticParams } from "@/lib/utils/system";
-
-const EXERCISE_YEAR_SEGMENT_REGEX = /^\d{4}$/;
-
 import { QuestionAnalytics } from "./analytics";
 import { ExerciseArticle } from "./article";
 import { ExerciseAttempt } from "./attempt";
@@ -183,7 +182,7 @@ export function generateStaticParams() {
     isDeep: true,
   }).filter((params) => {
     const slug = params.slug;
-    return !(Array.isArray(slug) && slug.length === 1 && slug[0] === "try-out");
+    return !(Array.isArray(slug) && isYearlessTryOutCollectionSlug(slug));
   });
 }
 
@@ -193,10 +192,7 @@ export default function Page({ params }: Props) {
   // Enable static rendering
   setRequestLocale(locale);
 
-  if (
-    slug[0] === "try-out" &&
-    !EXERCISE_YEAR_SEGMENT_REGEX.test(slug[1] ?? "")
-  ) {
+  if (hasInvalidTryOutYearSlug(slug)) {
     notFound();
   }
 
