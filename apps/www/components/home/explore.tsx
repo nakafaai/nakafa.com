@@ -71,7 +71,7 @@ export function HomeExplore() {
 
         <NavigationLink
           className="group flex flex-col items-center gap-2"
-          href="/exercises"
+          href="/exercises/high-school/snbt"
         >
           <div className="flex aspect-[1/0.95] w-full items-center justify-center rounded-xl bg-muted/50 transition-all ease-out group-hover:bg-muted">
             <SNBTIcon />
