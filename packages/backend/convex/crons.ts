@@ -1,4 +1,5 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import { IRT_AUTOMATION_CRON_INTERVAL_MINUTES } from "@repo/backend/convex/irt/policy";
 import { cronJobs } from "convex/server";
 
 const crons = cronJobs();
@@ -74,6 +75,26 @@ crons.cron(
   "cleanup credit reset queue",
   "0 3 * * *",
   internal.credits.mutations.cleanupOldQueueItems,
+  {}
+);
+
+/**
+ * Starts queued IRT calibrations in bounded batches.
+ */
+crons.interval(
+  "drain irt calibration queue",
+  { minutes: IRT_AUTOMATION_CRON_INTERVAL_MINUTES },
+  internal.irt.internalMutations.drainCalibrationQueue,
+  {}
+);
+
+/**
+ * Publishes queued tryout scale versions in bounded batches.
+ */
+crons.interval(
+  "drain irt scale publication queue",
+  { minutes: IRT_AUTOMATION_CRON_INTERVAL_MINUTES },
+  internal.irt.internalMutations.drainScalePublicationQueue,
   {}
 );
 

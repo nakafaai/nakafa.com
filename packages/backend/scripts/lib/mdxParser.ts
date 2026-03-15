@@ -68,7 +68,7 @@ interface SubjectParsedPath {
   type: "subject";
 }
 
-/** Parsed path info for exercise files: exercises/{category}/{type}/{material}/{exerciseType}/{set}/{number}/(_question|_answer)/{locale}.mdx */
+/** Parsed path info for exercise files. */
 interface ExerciseParsedPath {
   category: ExercisesCategory;
   examType: ExercisesType;
@@ -78,9 +78,10 @@ interface ExerciseParsedPath {
   material: ExercisesMaterial;
   number: number;
   setName: string;
-  /** Full slug: exercises/{category}/{type}/{material}/{exerciseType}/{set}/{number} */
+  /** Full slug: exercises/{category}/{type}/{material}/{exerciseType}/{year?}/{set}/{number} */
   slug: string;
   type: "exercise";
+  year?: number;
 }
 
 /** Parsed exercise set from material file */
@@ -94,6 +95,7 @@ interface ParsedExerciseSet {
   slug: string;
   title: string;
   type: ExercisesType;
+  year?: number;
 }
 
 /** Parsed subject topic from material file */
@@ -109,16 +111,15 @@ interface ParsedSubjectTopic {
   topic: string;
 }
 
+export type { Locale } from "@repo/backend/convex/lib/validators/contents";
 export type {
-  ParsedMdx,
   ArticleParsedPath,
-  SubjectParsedPath,
   ExerciseParsedPath,
   ParsedExerciseSet,
+  ParsedMdx,
   ParsedSubjectTopic,
+  SubjectParsedPath,
 };
-
-export type { Locale } from "@repo/backend/convex/lib/validators/contents";
 
 // Regex patterns for parsing MDX content and file paths
 const METADATA_REGEX = /export\s+const\s+metadata\s*=\s*({[\s\S]*?});/;
@@ -126,12 +127,10 @@ const METADATA_REGEX = /export\s+const\s+metadata\s*=\s*({[\s\S]*?});/;
 const ARTICLE_PATH_REGEX = /articles\/([^/]+)\/([^/]+)\/([^/]+)\.mdx$/;
 const SUBJECT_PATH_REGEX =
   /subject\/([^/]+)\/([^/]+)\/([^/]+)\/([^/]+)\/([^/]+)\/([^/]+)\.mdx$/;
-const EXERCISE_PATH_REGEX =
-  /exercises\/([^/]+)\/([^/]+)\/([^/]+)\/([^/]+)\/([^/]+)\/(\d+)\/(_(question|answer))\/([^/]+)\.mdx$/;
-const EXERCISE_DIR_REGEX =
-  /(.*\/exercises\/[^/]+\/[^/]+\/[^/]+\/[^/]+\/[^/]+\/\d+)\//;
 
 const BACKSLASH_REGEX = /\\/g;
+const EXERCISE_YEAR_SEGMENT_REGEX = /^\d{4}$/;
+const MDX_EXTENSION_REGEX = /\.mdx$/;
 const DEFAULT_EXPORT_REGEX = /export\s+default\s+(\{[\s\S]*\})\s*;?\s*$/;
 const CONST_CHOICES_REGEX = /const\s+choices[^=]*=\s*(\{[\s\S]*\})\s*;/;
 const REFERENCES_REGEX =
@@ -263,6 +262,79 @@ function validateExercisesMaterial(
     );
   }
   return result.data;
+}
+
+function parseExerciseYear(value: string | undefined, context: string) {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (!EXERCISE_YEAR_SEGMENT_REGEX.test(value)) {
+    throw new Error(
+      `Invalid exercise year "${value}" in ${context}. Expected a 4-digit year segment.`
+    );
+  }
+
+  return Number.parseInt(value, 10);
+}
+
+export function buildExerciseSetSlug({
+  category,
+  examType,
+  material,
+  exerciseType,
+  setName,
+  year,
+}: {
+  category: ExercisesCategory;
+  examType: ExercisesType;
+  material: ExercisesMaterial;
+  exerciseType: string;
+  setName: string;
+  year?: number;
+}) {
+  const pathSegments = [
+    "exercises",
+    category,
+    examType,
+    material,
+    exerciseType,
+  ];
+
+  if (year !== undefined) {
+    pathSegments.push(String(year));
+  }
+
+  pathSegments.push(setName);
+  return pathSegments.join("/");
+}
+
+function getRelativeExercisePathSegments(
+  basePath: string,
+  href: string,
+  context: string
+) {
+  const normalizedBasePath = basePath.replace(LEADING_SLASH_REGEX, "");
+  const normalizedHref = href.replace(LEADING_SLASH_REGEX, "");
+
+  if (
+    normalizedHref !== normalizedBasePath &&
+    !normalizedHref.startsWith(`${normalizedBasePath}/`)
+  ) {
+    throw new Error(
+      `Exercise href "${href}" in ${context} must start with /${normalizedBasePath}.`
+    );
+  }
+
+  const relativePath = normalizedHref
+    .slice(normalizedBasePath.length)
+    .replace(LEADING_SLASH_REGEX, "");
+
+  if (relativePath === "") {
+    return [];
+  }
+
+  return relativePath.split("/");
 }
 
 /**
@@ -424,39 +496,86 @@ export function parseSubjectPath(filePath: string): SubjectParsedPath {
 /**
  * Parses exercise file path to extract metadata.
  *
- * @param filePath - Path like: exercises/{category}/{type}/{material}/{exerciseType}/{set}/{number}/(_question|_answer)/{locale}.mdx
+ * @param filePath - Path like: exercises/{category}/{type}/{material}/{exerciseType}/{year?}/{set}/{number}/(_question|_answer)/{locale}.mdx
  * @returns Parsed path info with all path segments and isQuestion flag
  * @throws Error if path doesn't match expected pattern
  *
  * @example
- * const info = parseExercisePath("exercises/high-school/snbt/mathematics/multiple-choice/set-1/1/_question/en.mdx");
+ * const info = parseExercisePath("exercises/high-school/tka/mathematics/try-out/2026/set-1/1/_question/en.mdx");
  */
 export function parseExercisePath(filePath: string): ExerciseParsedPath {
   const normalized = filePath.replace(BACKSLASH_REGEX, "/");
-  const match = normalized.match(EXERCISE_PATH_REGEX);
+  const pathSegments = normalized.split("/");
+  const exercisesIndex = pathSegments.lastIndexOf("exercises");
 
-  if (!match) {
+  if (exercisesIndex === -1) {
     throw new Error(`Invalid exercise path: ${filePath}`);
   }
 
-  const [
-    ,
-    rawCategory,
-    rawExamType,
-    rawMaterial,
-    exerciseType,
-    setName,
-    numberStr,
-    ,
-    questionOrAnswer,
-    rawLocale,
-  ] = match;
+  const relativeSegments = pathSegments.slice(exercisesIndex);
+
+  if (relativeSegments.length !== 9 && relativeSegments.length !== 10) {
+    throw new Error(`Invalid exercise path: ${filePath}`);
+  }
+
+  const [, rawCategory, rawExamType, rawMaterial, exerciseType] =
+    relativeSegments;
+
+  let year: number | undefined;
+  let setName: string | undefined;
+  let numberStr: string | undefined;
+  let questionOrAnswerDir: string | undefined;
+  let rawLocaleFile: string | undefined;
+
+  if (relativeSegments.length === 10) {
+    year = parseExerciseYear(relativeSegments[5], filePath);
+    setName = relativeSegments[6];
+    numberStr = relativeSegments[7];
+    questionOrAnswerDir = relativeSegments[8];
+    rawLocaleFile = relativeSegments[9];
+  } else {
+    setName = relativeSegments[5];
+    numberStr = relativeSegments[6];
+    questionOrAnswerDir = relativeSegments[7];
+    rawLocaleFile = relativeSegments[8];
+  }
+
+  if (
+    setName === undefined ||
+    numberStr === undefined ||
+    questionOrAnswerDir === undefined ||
+    rawLocaleFile === undefined
+  ) {
+    throw new Error(`Invalid exercise path: ${filePath}`);
+  }
+
+  if (
+    questionOrAnswerDir !== "_question" &&
+    questionOrAnswerDir !== "_answer"
+  ) {
+    throw new Error(`Invalid exercise path: ${filePath}`);
+  }
+
+  const rawLocale = rawLocaleFile.replace(MDX_EXTENSION_REGEX, "");
   const category = validateExercisesCategory(rawCategory, filePath);
   const examType = validateExercisesType(rawExamType, filePath);
   const material = validateExercisesMaterial(rawMaterial, filePath);
   const locale = validateLocale(rawLocale, filePath);
   const number = Number.parseInt(numberStr, 10);
-  const slug = `exercises/${category}/${examType}/${material}/${exerciseType}/${setName}/${number}`;
+
+  if (!Number.isFinite(number)) {
+    throw new Error(`Invalid exercise number "${numberStr}" in ${filePath}.`);
+  }
+
+  const setSlug = buildExerciseSetSlug({
+    category,
+    examType,
+    material,
+    exerciseType,
+    setName,
+    year,
+  });
+  const slug = `${setSlug}/${number}`;
 
   return {
     type: "exercise",
@@ -468,7 +587,8 @@ export function parseExercisePath(filePath: string): ExerciseParsedPath {
     setName,
     number,
     slug,
-    isQuestion: questionOrAnswer === "question",
+    isQuestion: questionOrAnswerDir === "_question",
+    year,
   };
 }
 
@@ -482,13 +602,13 @@ export function parseExercisePath(filePath: string): ExerciseParsedPath {
  */
 export function getExerciseDir(filePath: string): string {
   const normalized = filePath.replace(BACKSLASH_REGEX, "/");
-  const match = normalized.match(EXERCISE_DIR_REGEX);
+  const exerciseDir = path.posix.dirname(path.posix.dirname(normalized));
 
-  if (!match) {
+  if (exerciseDir === "." || exerciseDir === "/") {
     throw new Error(`Cannot extract exercise directory from: ${filePath}`);
   }
 
-  return match[1];
+  return exerciseDir;
 }
 
 /**
@@ -698,15 +818,69 @@ export async function parseExerciseMaterialFile(
   const sets: ParsedExerciseSet[] = [];
 
   for (const exerciseTypeGroup of parseResult.data) {
-    const exerciseTypeMatch = exerciseTypeGroup.href.match(
-      LAST_PATH_SEGMENT_REGEX
+    const groupSegments = getRelativeExercisePathSegments(
+      basePath,
+      exerciseTypeGroup.href,
+      materialFilePath
     );
-    const exerciseType = exerciseTypeMatch ? exerciseTypeMatch[1] : "";
+
+    if (groupSegments.length === 0 || groupSegments.length > 2) {
+      throw new Error(
+        `Invalid exercise group href "${exerciseTypeGroup.href}" in ${materialFilePath}.`
+      );
+    }
+
+    const [exerciseType, rawYear] = groupSegments;
+
+    if (!exerciseType) {
+      throw new Error(
+        `Invalid exercise group href "${exerciseTypeGroup.href}" in ${materialFilePath}.`
+      );
+    }
+
+    const year = parseExerciseYear(rawYear, materialFilePath);
 
     for (const setItem of exerciseTypeGroup.items) {
-      const setNameMatch = setItem.href.match(LAST_PATH_SEGMENT_REGEX);
-      const setName = setNameMatch ? setNameMatch[1] : "";
-      const slug = `${basePath}/${exerciseType}/${setName}`;
+      const itemSegments = getRelativeExercisePathSegments(
+        basePath,
+        setItem.href,
+        materialFilePath
+      );
+      const expectedPrefix = [exerciseType];
+
+      if (year !== undefined) {
+        expectedPrefix.push(String(year));
+      }
+
+      const hasExpectedPrefix = expectedPrefix.every(
+        (segment, index) => itemSegments[index] === segment
+      );
+
+      if (
+        itemSegments.length !== expectedPrefix.length + 1 ||
+        !hasExpectedPrefix
+      ) {
+        throw new Error(
+          `Invalid exercise set href "${setItem.href}" in ${materialFilePath}.`
+        );
+      }
+
+      const setName = itemSegments.at(-1);
+
+      if (!setName) {
+        throw new Error(
+          `Invalid exercise set href "${setItem.href}" in ${materialFilePath}.`
+        );
+      }
+
+      const slug = buildExerciseSetSlug({
+        category: validCategory,
+        examType: validType,
+        material: validMaterial,
+        exerciseType,
+        setName,
+        year,
+      });
 
       sets.push({
         locale,
@@ -718,6 +892,7 @@ export async function parseExerciseMaterialFile(
         setName,
         title: setItem.title,
         description: exerciseTypeGroup.description,
+        year,
       });
     }
   }

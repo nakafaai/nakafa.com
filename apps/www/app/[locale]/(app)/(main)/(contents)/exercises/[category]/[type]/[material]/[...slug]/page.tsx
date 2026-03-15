@@ -2,30 +2,45 @@ import {
   getExerciseByNumber,
   getExercisesContent,
 } from "@repo/contents/_lib/exercises";
-import { getMaterialPath } from "@repo/contents/_lib/exercises/material";
+import {
+  getCurrentMaterial,
+  getMaterialPath,
+  getMaterials,
+} from "@repo/contents/_lib/exercises/material";
 import {
   getExerciseNumberPagination,
   getExercisesPagination,
   getSlugPath,
+  hasInvalidTryOutYearSlug,
+  isTryOutCollectionSlug,
+  isYearlessTryOutCollectionSlug,
+  LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
 } from "@repo/contents/_lib/exercises/slug";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
-import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
+import type {
+  ExercisesMaterial,
+  ExercisesMaterialList,
+} from "@repo/contents/_types/exercises/material";
 import type { Exercise } from "@repo/contents/_types/exercises/shared";
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import type { ParsedHeading } from "@repo/contents/_types/toc";
 import { slugify } from "@repo/design-system/lib/utils";
 import { ArticleJsonLd } from "@repo/seo/json-ld/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
+import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import { FOUNDER } from "@repo/seo/json-ld/constants";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
 import { Effect, Option } from "effect";
 import type { Metadata } from "next";
+import { permanentRedirect } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
 import { AiSheetOpen } from "@/components/ai/sheet-open";
 import { Comments } from "@/components/comments";
+import { CardMaterial } from "@/components/shared/card-material";
 import { ComingSoon } from "@/components/shared/coming-soon";
+import { ContainerList } from "@/components/shared/container-list";
 import {
   LayoutMaterial,
   LayoutMaterialContent,
@@ -35,6 +50,8 @@ import {
   LayoutMaterialPagination,
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
+import { RefContent } from "@/components/shared/ref-content";
+import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { isNumber } from "@/lib/utils/number";
 import {
@@ -165,6 +182,9 @@ export function generateStaticParams() {
     paramNames: ["category", "type", "material", "slug"],
     slugParam: "slug",
     isDeep: true,
+  }).filter((params) => {
+    const slug = params.slug;
+    return !(Array.isArray(slug) && isYearlessTryOutCollectionSlug(slug));
   });
 }
 
@@ -174,9 +194,25 @@ export default function Page({ params }: Props) {
   // Enable static rendering
   setRequestLocale(locale);
 
-  // if last slug can be converted to a number, means it is a specific exercise
+  if (hasInvalidTryOutYearSlug(slug)) {
+    const tryOutSuffixIndex = 1;
+    const legacyTryOutSuffix = slug.slice(tryOutSuffixIndex);
+
+    // Legacy yearless try-out URLs were already indexed before the year segment
+    // migration, so keep forwarding them to their yearful 2026 successor.
+    permanentRedirect(
+      getSlugPath(category, type, material, [
+        "try-out",
+        LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
+        ...legacyTryOutSuffix,
+      ])
+    );
+  }
+
   const lastSlug = slug.at(-1);
-  if (lastSlug && isNumber(lastSlug)) {
+  // Try-out collection routes like `try-out/2026` end in a number but should
+  // still render the collection page, not a single exercise page.
+  if (!isTryOutCollectionSlug(slug) && lastSlug && isNumber(lastSlug)) {
     const exerciseNumber = Number.parseInt(lastSlug, 10);
     const baseSlug = slug.slice(0, -1);
     return (
@@ -202,6 +238,88 @@ export default function Page({ params }: Props) {
   );
 }
 
+async function YearGroupContent({
+  currentMaterial,
+  FilePath,
+  locale,
+  material,
+  materialPath,
+  type,
+}: {
+  currentMaterial: ExercisesMaterialList[number];
+  FilePath: string;
+  locale: Locale;
+  material: ExercisesMaterial;
+  materialPath: string;
+  type: ExercisesType;
+}) {
+  const t = await getTranslations({ locale, namespace: "Exercises" });
+  const headingId = slugify(currentMaterial.title);
+
+  return (
+    <>
+      <BreadcrumbJsonLd
+        breadcrumbItems={currentMaterial.items.map((item, index) => ({
+          "@type": "ListItem",
+          "@id": `https://nakafa.com/${locale}${item.href}`,
+          position: index + 1,
+          name: item.title,
+          item: `https://nakafa.com/${locale}${item.href}`,
+        }))}
+      />
+      <CollectionPageJsonLd
+        description={currentMaterial.description ?? t(type)}
+        items={currentMaterial.items.map((item) => ({
+          url: `https://nakafa.com/${locale}${item.href}`,
+          name: item.title,
+        }))}
+        name={`${t(material)} - ${currentMaterial.title}`}
+        url={`https://nakafa.com/${locale}${FilePath}`}
+      />
+      <LayoutMaterial>
+        <LayoutMaterialContent>
+          <LayoutMaterialHeader
+            link={{
+              href: materialPath,
+              label: t(material),
+            }}
+            title={currentMaterial.title}
+          />
+          <LayoutMaterialMain>
+            <ContainerList className="sm:grid-cols-1">
+              <CardMaterial material={currentMaterial} />
+            </ContainerList>
+          </LayoutMaterialMain>
+          <LayoutMaterialFooter>
+            <RefContent
+              githubUrl={getGithubUrl({
+                path: `/packages/contents${FilePath}`,
+              })}
+            />
+          </LayoutMaterialFooter>
+        </LayoutMaterialContent>
+        <LayoutMaterialToc
+          chapters={{
+            label: t("exercises"),
+            data: [
+              {
+                label: currentMaterial.title,
+                href: `#${headingId}`,
+                children: [],
+              },
+            ],
+          }}
+          header={{
+            title: currentMaterial.title,
+            href: FilePath,
+            description: currentMaterial.description ?? t(type),
+          }}
+        />
+      </LayoutMaterial>
+    </>
+  );
+}
+
 async function PageContent({
   locale,
   category,
@@ -219,23 +337,31 @@ async function PageContent({
 
   const materialPath = getMaterialPath(category, type, material);
   const FilePath = getSlugPath(category, type, material, slug);
+  const materialGroups = await getMaterials(materialPath, locale);
+  const { currentMaterial: matchedMaterial, currentMaterialItem: matchedItem } =
+    getCurrentMaterial(FilePath, materialGroups);
 
-  const exercisesEffect = Effect.all([
-    getExercisesContent({ locale, filePath: FilePath }),
-    fetchExerciseContext({ locale, category, type, material, slug }),
-  ]);
+  if (matchedMaterial && !matchedItem) {
+    return (
+      <YearGroupContent
+        currentMaterial={matchedMaterial}
+        FilePath={FilePath}
+        locale={locale}
+        material={material}
+        materialPath={materialPath}
+        type={type}
+      />
+    );
+  }
 
-  const [exercises, exerciseContext] = await Effect.runPromise(
-    Effect.match(exercisesEffect, {
-      onFailure: () => {
-        const emptyResult: [Exercise[], null] = [[], null];
-        return emptyResult;
-      },
+  const exercises = await Effect.runPromise(
+    Effect.match(getExercisesContent({ locale, filePath: FilePath }), {
+      onFailure: () => [],
       onSuccess: (data) => data,
     })
   );
 
-  if (exercises.length === 0 || !exerciseContext) {
+  if (exercises.length === 0 || !matchedMaterial || !matchedItem) {
     return (
       <LayoutMaterial>
         <LayoutMaterialContent>
@@ -247,7 +373,9 @@ async function PageContent({
     );
   }
 
-  const { currentMaterial, currentMaterialItem, materials } = exerciseContext;
+  const currentMaterial = matchedMaterial;
+  const currentMaterialItem = matchedItem;
+  const materials = materialGroups;
 
   const pagination = getExercisesPagination(FilePath, materials);
 

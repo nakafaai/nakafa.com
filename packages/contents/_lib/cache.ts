@@ -88,7 +88,7 @@ class MDXCacheRegistry {
   hasPath(locale: Locale, path: FilePath): boolean {
     const cache = this.cache ?? this.build();
     const localeCache = cache.get(locale);
-    return localeCache !== undefined ? localeCache.has(path) : false;
+    return localeCache === undefined ? false : localeCache.has(path);
   }
 
   getAllLocales(): Locale[] {

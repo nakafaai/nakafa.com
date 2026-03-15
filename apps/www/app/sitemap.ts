@@ -1,4 +1,5 @@
 import { getContentMetadata } from "@repo/contents/_lib/content";
+import { isYearlessTryOutCollectionSlug } from "@repo/contents/_lib/exercises/slug";
 import { getFolderChildNames } from "@repo/contents/_lib/fs";
 import { getPathname } from "@repo/internationalization/src/navigation";
 import { routing } from "@repo/internationalization/src/routing";
@@ -27,7 +28,7 @@ export const baseRoutes = [
 // Constants for date calculations
 const MONTHS_IN_FALLBACK_PERIOD = 6;
 const MONTHS_IN_CONTENT_FALLBACK = 3;
-
+const EXERCISE_ROUTE_PREFIX_LEN = 4;
 // Note: LLM routes (.md, .mdx, .txt, /llms.txt) are excluded from sitemap
 // as they are file downloads, not HTML pages for indexing
 // Per Google guidelines: sitemaps should only contain URLs you want indexed
@@ -218,7 +219,36 @@ export function getUrl(href: Href, locale: Locale, domain?: string): string {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const contentRoutes = getContentRoutes(); // Get routes from 'contents' directory
+  const contentRoutes = getContentRoutes().filter((route) => {
+    const routeSegments = route.split("/").filter(Boolean);
+    const [routeBase, category, type, material] = routeSegments;
+    const isExerciseRoute =
+      routeBase === "exercises" &&
+      category !== undefined &&
+      type !== undefined &&
+      material !== undefined;
+
+    if (!isExerciseRoute) {
+      return true;
+    }
+
+    // `getContentRoutes()` walks raw directories, so it also returns
+    // intermediate folders like `/exercises/.../try-out`. That folder is not a
+    // real page anymore because try-out collections now start at
+    // `/exercises/.../try-out/{year}`.
+    //
+    // The first 4 route segments are always:
+    // [`exercises`, category, type, material]
+    // Everything after that is the exercise slug checked by the shared helper.
+    const exerciseSlugFromRoute = routeSegments.slice(
+      EXERCISE_ROUTE_PREFIX_LEN
+    );
+    const isInvalidYearlessTryOutRoute = isYearlessTryOutCollectionSlug(
+      exerciseSlugFromRoute
+    );
+
+    return !isInvalidYearlessTryOutRoute;
+  });
   const quranRoutes = getQuranRoutes();
   const askRoutes = getAskRoutes();
 

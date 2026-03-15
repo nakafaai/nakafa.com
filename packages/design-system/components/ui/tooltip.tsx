@@ -72,8 +72,8 @@ const TooltipPopup = TooltipContent;
 
 export {
   Tooltip,
-  TooltipTrigger,
   TooltipContent,
   TooltipPopup,
   TooltipProvider,
+  TooltipTrigger,
 };

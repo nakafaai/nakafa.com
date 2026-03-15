@@ -30,6 +30,7 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
 
   const attempt = useAttempt((state) => state.attempt);
   const answers = useAttempt((state) => state.answers);
+  const answerSheet = useAttempt((state) => state.answerSheet);
 
   const submitAttempt = useMutation(api.exercises.mutations.submitAnswer);
   const timeSpent = useExercise(
@@ -39,14 +40,11 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
   const currentAnswer = answers.find(
     (a) => a.exerciseNumber === exerciseNumber
   );
+  const answerSheetEntry = answerSheet.find(
+    (entry) => entry.exerciseNumber === exerciseNumber
+  );
 
-  function handleSubmit({
-    choice,
-    index,
-  }: {
-    choice: ExercisesChoices[keyof ExercisesChoices][number];
-    index: number;
-  }) {
+  function handleSubmit({ index }: { index: number }) {
     if (!attempt) {
       toast.info(t("attempt-not-found"), { position: "bottom-center" });
       return;
@@ -58,14 +56,22 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
       return;
     }
 
+    const option = answerSheetEntry?.options[index];
+
+    if (!(answerSheetEntry && option)) {
+      toast.error("Question metadata unavailable.", {
+        position: "bottom-center",
+      });
+      return;
+    }
+
     startTransition(async () => {
       try {
         await submitAttempt({
           attemptId: attempt._id,
           exerciseNumber,
-          selectedOptionId: index.toString(),
-          textAnswer: choice.label,
-          isCorrect: choice.value,
+          questionId: answerSheetEntry.questionId,
+          selectedOptionId: option.optionKey,
           timeSpent,
         });
       } catch {
@@ -78,9 +84,11 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
     <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
       {choices.map((choice, index) => {
         let variant: ComponentProps<typeof Button>["variant"] = "outline";
+        const optionKey = answerSheetEntry?.options[index]?.optionKey;
 
         const checked =
-          currentAnswer?.selectedOptionId === index.toString() ||
+          (optionKey !== undefined &&
+            currentAnswer?.selectedOptionId === optionKey) ||
           currentAnswer?.textAnswer === choice.label;
 
         if (checked) {
@@ -111,7 +119,7 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
               disabled={isPending}
               onCheckedChange={(checked) => {
                 if (checked) {
-                  handleSubmit({ choice, index });
+                  handleSubmit({ index });
                 }
               }}
             />

@@ -204,9 +204,9 @@ describe("getStaticParams", () => {
         if (path === "exercises/high-school/tka/mathematics/try-out") {
           const paths: string[][] = [];
           for (let set = 1; set <= 3; set++) {
-            paths.push([`set-${set}`]);
+            paths.push(["2026", `set-${set}`]);
             for (let item = 1; item <= 40; item++) {
-              paths.push([`set-${set}`, String(item)]);
+              paths.push(["2026", `set-${set}`, String(item)]);
             }
           }
           return paths;
@@ -228,7 +228,7 @@ describe("getStaticParams", () => {
           r.category === "high-school" &&
           r.type === "tka" &&
           r.material === "mathematics" &&
-          r.slug[1] === "set-1"
+          r.slug[2] === "set-1"
       );
 
       expect(tkaMathSet1.length).toBeGreaterThan(0);
@@ -237,35 +237,35 @@ describe("getStaticParams", () => {
         category: "high-school",
         type: "tka",
         material: "mathematics",
-        slug: ["try-out", "set-1"],
+        slug: ["try-out", "2026", "set-1"],
       });
 
       expect(result).toContainEqual({
         category: "high-school",
         type: "tka",
         material: "mathematics",
-        slug: ["try-out", "set-1", "1"],
+        slug: ["try-out", "2026", "set-1", "1"],
       });
 
       expect(result).toContainEqual({
         category: "high-school",
         type: "tka",
         material: "mathematics",
-        slug: ["try-out", "set-1", "40"],
+        slug: ["try-out", "2026", "set-1", "40"],
       });
 
       expect(result).toContainEqual({
         category: "high-school",
         type: "tka",
         material: "mathematics",
-        slug: ["try-out", "set-2"],
+        slug: ["try-out", "2026", "set-2"],
       });
 
       expect(result).toContainEqual({
         category: "high-school",
         type: "tka",
         material: "mathematics",
-        slug: ["try-out", "set-3"],
+        slug: ["try-out", "2026", "set-3"],
       });
     });
 
@@ -282,7 +282,7 @@ describe("getStaticParams", () => {
           r.category === "high-school" &&
           r.type === "tka" &&
           r.material === "mathematics" &&
-          r.slug.length === 3
+          r.slug.length === 4
       );
 
       expect(tkaMathExercises.length).toBe(120);
@@ -625,7 +625,7 @@ describe("getStaticParams", () => {
       });
 
       mockGetNestedSlugs.mockReturnValue([
-        ["set-1", "advanced", "section-1", "chapter-1", "lesson-1"],
+        ["2026", "set-1", "advanced", "section-1", "chapter-1", "lesson-1"],
       ]);
 
       const result = getStaticParams({
@@ -636,7 +636,7 @@ describe("getStaticParams", () => {
       });
 
       const deepPath = result.find(
-        (r) => r.slug.length === 6 && r.slug[5] === "lesson-1"
+        (r) => r.slug.length === 7 && r.slug[6] === "lesson-1"
       );
 
       expect(deepPath).toBeDefined();
@@ -646,6 +646,7 @@ describe("getStaticParams", () => {
         material: "mathematics",
         slug: [
           "try-out",
+          "2026",
           "set-1",
           "advanced",
           "section-1",
@@ -677,7 +678,10 @@ describe("getStaticParams", () => {
 
       mockGetNestedSlugs.mockImplementation((path: string) => {
         if (path === "exercises/high-school/tka/mathematics/try-out") {
-          return [["set-1"], ["set-1", "1"]];
+          return [
+            ["2026", "set-1"],
+            ["2026", "set-1", "1"],
+          ];
         }
         return [];
       });
@@ -693,14 +697,14 @@ describe("getStaticParams", () => {
         category: "high-school",
         type: "tka",
         material: "mathematics",
-        slug: ["try-out", "set-1"],
+        slug: ["try-out", "2026", "set-1"],
       });
 
       expect(result).toContainEqual({
         category: "high-school",
         type: "tka",
         material: "mathematics",
-        slug: ["try-out", "set-1", "1"],
+        slug: ["try-out", "2026", "set-1", "1"],
       });
 
       expect(result).toContainEqual({
@@ -865,6 +869,7 @@ describe("getMetadataFromSlug", () => {
           "snbt",
           "general-reasoning",
           "try-out",
+          "2026",
           "set-1",
           "1",
         ])

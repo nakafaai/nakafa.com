@@ -39,7 +39,7 @@ export default function Layout({ children, params }: Props) {
       locale={locale}
     >
       <ExerciseContextProvider slug={cleanedSlug}>
-        <AttemptContextProvider slug={cleanedSlug}>
+        <AttemptContextProvider locale={locale} slug={cleanedSlug}>
           {children}
         </AttemptContextProvider>
       </ExerciseContextProvider>

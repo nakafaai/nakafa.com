@@ -15,7 +15,7 @@ const tables = {
    */
   exerciseSets: defineTable({
     locale: localeValidator,
-    /** Full URL path: "exercises/high-school/snbt/quantitative-knowledge/try-out/set-1" */
+    /** Full URL path: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1" */
     slug: v.string(),
     category: exercisesCategoryValidator,
     /** Exam type: "grade-9", "tka", "snbt" */

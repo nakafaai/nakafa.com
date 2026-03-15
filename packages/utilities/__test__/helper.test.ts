@@ -119,9 +119,9 @@ describe("cleanSlug", () => {
 
     it("should handle nested exercise slug", () => {
       const slug =
-        "/exercises/high-school/snbt/general-reasoning/try-out/set-1/1/";
+        "/exercises/high-school/snbt/general-reasoning/try-out/2026/set-1/1/";
       expect(cleanSlug(slug)).toBe(
-        "exercises/high-school/snbt/general-reasoning/try-out/set-1/1"
+        "exercises/high-school/snbt/general-reasoning/try-out/2026/set-1/1"
       );
     });
 
