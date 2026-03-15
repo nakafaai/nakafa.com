@@ -44,26 +44,30 @@ export const getDataIntegrity = internalQuery({
     const questionsWithoutAuthors: string[] = [];
     const articlesWithoutReferences: string[] = [];
     const sectionsWithoutTopics: string[] = [];
+    const questionIdsWithChoices = new Set(
+      exerciseChoices.map((choice) => choice.questionId)
+    );
+    const questionIdsWithAuthors = new Set(
+      contentAuthors
+        .filter((authorLink) => authorLink.contentType === "exercise")
+        .map((authorLink) => authorLink.contentId)
+    );
+    const articleIdsWithReferences = new Set(
+      articleReferences.map((reference) => reference.articleId)
+    );
 
     for (const question of exerciseQuestions) {
-      const choices = exerciseChoices.filter(
-        (c) => c.questionId === question._id
-      );
-      if (choices.length === 0) {
+      if (!questionIdsWithChoices.has(question._id)) {
         questionsWithoutChoices.push(`${question.slug} (${question.locale})`);
       }
 
-      const authors = contentAuthors.filter(
-        (a) => a.contentId === question._id && a.contentType === "exercise"
-      );
-      if (authors.length === 0) {
+      if (!questionIdsWithAuthors.has(question._id)) {
         questionsWithoutAuthors.push(`${question.slug} (${question.locale})`);
       }
     }
 
     for (const article of articles) {
-      const refs = articleReferences.filter((r) => r.articleId === article._id);
-      if (refs.length === 0) {
+      if (!articleIdsWithReferences.has(article._id)) {
         articlesWithoutReferences.push(`${article.slug} (${article.locale})`);
       }
     }

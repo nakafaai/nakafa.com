@@ -4,9 +4,11 @@ import {
   computeTryoutRawScorePercentage,
   expireTryoutAttempt,
   getFirstCompletedSimulationAttempt,
-  getTryoutExpiresAtMs,
 } from "@repo/backend/convex/tryouts/helpers";
-import { getTryoutLeaderboardNamespace } from "@repo/backend/convex/tryouts/products";
+import {
+  computeTryoutExpiresAtMs,
+  getTryoutLeaderboardNamespace,
+} from "@repo/backend/convex/tryouts/products";
 import { v } from "convex/values";
 
 export const expireTryoutAttemptInternal = internalMutation({
@@ -32,7 +34,7 @@ export const expireTryoutAttemptInternal = internalMutation({
       return null;
     }
 
-    const computedExpiresAtMs = getTryoutExpiresAtMs({
+    const computedExpiresAtMs = computeTryoutExpiresAtMs({
       product: tryout.product,
       startedAtMs: tryoutAttempt.startedAt,
     });
@@ -120,7 +122,7 @@ export const updateLeaderboard = internalMutation({
           .eq("product", tryout.product)
           .eq("leaderboardNamespace", leaderboardNamespace)
       )
-      .first();
+      .unique();
 
     if (statsRecord) {
       const newTotal = statsRecord.totalTryoutsCompleted + 1;

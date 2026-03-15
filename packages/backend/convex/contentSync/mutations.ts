@@ -1372,7 +1372,7 @@ export const bulkSyncTryouts = internalMutation({
             .eq("cycleKey", tryout.cycleKey)
             .eq("slug", tryout.slug)
         )
-        .first();
+        .unique();
 
       if (existing) {
         const mappingsChanged = await syncTryoutPartSetMappings(ctx, {

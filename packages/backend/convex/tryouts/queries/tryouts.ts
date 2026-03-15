@@ -58,7 +58,7 @@ export const getTryoutDetails = query({
           .eq("locale", args.locale)
           .eq("slug", args.slug)
       )
-      .first();
+      .unique();
 
     if (!tryout) {
       return null;

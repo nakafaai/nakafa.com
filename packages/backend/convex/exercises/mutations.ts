@@ -19,12 +19,6 @@ const completeAttemptResultValidator = v.object({
 
 type CompleteAttemptResult = Infer<typeof completeAttemptResultValidator>;
 
-function buildCompleteAttemptResult<T extends CompleteAttemptResult>(
-  result: T
-) {
-  return result;
-}
-
 /**
  * Start a standalone exercise attempt for the authenticated user.
  */
@@ -275,11 +269,11 @@ export const completeAttempt = mutation({
     }
 
     if (attempt.status === "completed") {
-      return buildCompleteAttemptResult({ status: "completed" });
+      return { status: "completed" } satisfies CompleteAttemptResult;
     }
 
     if (attempt.status === "expired") {
-      return buildCompleteAttemptResult({ status: "expired" });
+      return { status: "expired" } satisfies CompleteAttemptResult;
     }
 
     if (attempt.status !== "in-progress") {
@@ -299,10 +293,10 @@ export const completeAttempt = mutation({
       now
     );
     if (tryoutExpiry.expired) {
-      return buildCompleteAttemptResult({
+      return {
         status: "expired",
         expiredAtMs: tryoutExpiry.expiredAtMs,
-      });
+      } satisfies CompleteAttemptResult;
     }
 
     const expiresAtMs = attempt.startedAt + attempt.timeLimit * 1000;
@@ -321,10 +315,10 @@ export const completeAttempt = mutation({
         totalTime: finalTotalTime,
       });
 
-      return buildCompleteAttemptResult({
+      return {
         status: "expired",
         expiredAtMs: expiresAtMs,
-      });
+      } satisfies CompleteAttemptResult;
     }
 
     await ctx.db.patch("exerciseAttempts", args.attemptId, {
@@ -335,7 +329,7 @@ export const completeAttempt = mutation({
       totalTime: finalTotalTime,
     });
 
-    return buildCompleteAttemptResult({ status: "completed" });
+    return { status: "completed" } satisfies CompleteAttemptResult;
   },
 });
 

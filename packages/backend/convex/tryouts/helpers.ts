@@ -4,10 +4,7 @@ import type {
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
 import { computeAttemptDurationSeconds } from "@repo/backend/convex/exercises/utils";
-import {
-  computeTryoutExpiresAtMs,
-  computeTryoutPartTimeLimitSeconds,
-} from "@repo/backend/convex/tryouts/products";
+import { computeTryoutExpiresAtMs } from "@repo/backend/convex/tryouts/products";
 import { ConvexError } from "convex/values";
 import {
   getAll,
@@ -21,27 +18,6 @@ type TryoutScoreTotals = Pick<
   Doc<"tryoutAttempts">,
   "totalCorrect" | "totalQuestions"
 >;
-
-export function getTryoutPartTimeLimitSeconds(args: {
-  product: Doc<"tryouts">["product"];
-  questionCount: Doc<"exerciseSets">["questionCount"];
-}) {
-  if (args.questionCount <= 0) {
-    throw new ConvexError({
-      code: "INVALID_ARGUMENT",
-      message: "questionCount must be greater than 0.",
-    });
-  }
-
-  return computeTryoutPartTimeLimitSeconds(args);
-}
-
-export function getTryoutExpiresAtMs(args: {
-  product: Doc<"tryouts">["product"];
-  startedAtMs: number;
-}) {
-  return computeTryoutExpiresAtMs(args);
-}
 
 export function computeTryoutRawScorePercentage({
   totalCorrect,
@@ -149,7 +125,7 @@ export async function expireTryoutAttempt(
     });
   }
 
-  const expiredAtMs = getTryoutExpiresAtMs({
+  const expiredAtMs = computeTryoutExpiresAtMs({
     product: tryout.product,
     startedAtMs: tryoutAttempt.startedAt,
   });
@@ -200,7 +176,7 @@ export async function syncTryoutAttemptExpiry(
     });
   }
 
-  const expiredAtMs = getTryoutExpiresAtMs({
+  const expiredAtMs = computeTryoutExpiresAtMs({
     product: tryout.product,
     startedAtMs: tryoutAttempt.startedAt,
   });

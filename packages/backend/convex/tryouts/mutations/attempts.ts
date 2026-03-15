@@ -17,11 +17,11 @@ import {
   computeTryoutRawScorePercentage,
   countCorrectAnswers,
   getFirstCompletedSimulationAttempt,
-  getTryoutExpiresAtMs,
-  getTryoutPartTimeLimitSeconds,
   syncTryoutAttemptExpiry,
 } from "@repo/backend/convex/tryouts/helpers";
 import {
+  computeTryoutExpiresAtMs,
+  computeTryoutPartTimeLimitSeconds,
   scaleThetaToTryoutScore,
   tryoutProductValidator,
 } from "@repo/backend/convex/tryouts/products";
@@ -63,7 +63,7 @@ export const startTryout = mutation({
           .eq("locale", args.locale)
           .eq("slug", args.tryoutSlug)
       )
-      .first();
+      .unique();
 
     if (!tryout) {
       throw new ConvexError({
@@ -83,7 +83,7 @@ export const startTryout = mutation({
       getLatestScaleVersionForTryout(ctx.db, tryout._id),
       ctx.db
         .query("tryoutAttempts")
-        .withIndex("userId_tryoutId", (q) =>
+        .withIndex("userId_tryoutId_startedAt", (q) =>
           q.eq("userId", userId).eq("tryoutId", tryout._id)
         )
         .order("desc")
@@ -141,7 +141,7 @@ export const startTryout = mutation({
       lastActivityAt: now,
     });
 
-    const expiresAtMs = getTryoutExpiresAtMs({
+    const expiresAtMs = computeTryoutExpiresAtMs({
       product: tryout.product,
       startedAtMs: now,
     });
@@ -235,7 +235,7 @@ export const startPart = mutation({
       .withIndex("tryoutId_partIndex", (q) =>
         q.eq("tryoutId", tryoutAttempt.tryoutId).eq("partIndex", args.partIndex)
       )
-      .first();
+      .unique();
 
     if (!tryoutPartSet) {
       throw new ConvexError({
@@ -260,7 +260,7 @@ export const startPart = mutation({
           .eq("tryoutAttemptId", args.tryoutAttemptId)
           .eq("partIndex", args.partIndex)
       )
-      .first();
+      .unique();
 
     if (existingPartAttempt) {
       const existingSetAttempt = await ctx.db.get(
@@ -282,7 +282,14 @@ export const startPart = mutation({
       };
     }
 
-    const timeLimit = getTryoutPartTimeLimitSeconds({
+    if (set.questionCount <= 0) {
+      throw new ConvexError({
+        code: "INVALID_ARGUMENT",
+        message: "questionCount must be greater than 0.",
+      });
+    }
+
+    const timeLimit = computeTryoutPartTimeLimitSeconds({
       product: tryout.product,
       questionCount: set.questionCount,
     });

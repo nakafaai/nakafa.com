@@ -45,7 +45,7 @@ export const getUserTryoutAttempt = query({
           .eq("locale", args.locale)
           .eq("slug", args.tryoutSlug)
       )
-      .first();
+      .unique();
 
     if (!tryout) {
       return null;
@@ -53,7 +53,7 @@ export const getUserTryoutAttempt = query({
 
     const attempt = await ctx.db
       .query("tryoutAttempts")
-      .withIndex("userId_tryoutId", (q) =>
+      .withIndex("userId_tryoutId_startedAt", (q) =>
         q.eq("userId", appUser._id).eq("tryoutId", tryout._id)
       )
       .order("desc")

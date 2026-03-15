@@ -10,7 +10,12 @@ import {
   tryoutProductValidator,
 } from "@repo/backend/convex/tryouts/products";
 import { v } from "convex/values";
+import { getAll } from "convex-helpers/server/relationships";
 import { nullable } from "convex-helpers/validators";
+
+function isPresent<T>(value: T | null): value is T {
+  return value !== null;
+}
 
 export const getTryoutLeaderboard = query({
   args: {
@@ -34,7 +39,7 @@ export const getTryoutLeaderboard = query({
       namespace: args.tryoutId,
     });
 
-    const rankedEntries = await Promise.all(
+    const rankedItems = await Promise.all(
       Array.from({ length: Math.min(limit, totalCount) }, async (_, index) => {
         const item = await tryoutLeaderboard.at(ctx, index, {
           namespace: args.tryoutId,
@@ -44,30 +49,31 @@ export const getTryoutLeaderboard = query({
           return null;
         }
 
-        const leaderboardEntry = await ctx.db.get(
-          "tryoutLeaderboardEntries",
-          item.id
-        );
-
-        if (!leaderboardEntry) {
-          return null;
-        }
-
-        const user = await ctx.db.get("users", leaderboardEntry.userId);
-
-        return {
-          rank: index + 1,
-          userId: leaderboardEntry.userId,
-          userName: user?.name ?? "Unknown",
-          theta: leaderboardEntry.theta,
-          irtScore: leaderboardEntry.irtScore,
-          rawScore: leaderboardEntry.rawScore,
-          completedAt: leaderboardEntry.completedAt,
-        };
+        return item;
       })
     );
+    const aggregateItems = rankedItems.filter(isPresent);
+    const leaderboardEntries = await getAll(
+      ctx.db,
+      "tryoutLeaderboardEntries",
+      aggregateItems.map((item) => item.id)
+    );
+    const existingEntries = leaderboardEntries.filter(isPresent);
+    const users = await getAll(
+      ctx.db,
+      "users",
+      existingEntries.map((entry) => entry.userId)
+    );
 
-    return rankedEntries.filter((entry) => entry !== null);
+    return existingEntries.map((entry, index) => ({
+      rank: index + 1,
+      userId: entry.userId,
+      userName: users[index]?.name ?? "Unknown",
+      theta: entry.theta,
+      irtScore: entry.irtScore,
+      rawScore: entry.rawScore,
+      completedAt: entry.completedAt,
+    }));
   },
 });
 
@@ -97,7 +103,7 @@ export const getGlobalLeaderboard = query({
       namespace,
     });
 
-    const rankedEntries = await Promise.all(
+    const rankedItems = await Promise.all(
       Array.from({ length: Math.min(limit, totalCount) }, async (_, index) => {
         const item = await globalLeaderboard.at(ctx, index, {
           namespace,
@@ -107,28 +113,32 @@ export const getGlobalLeaderboard = query({
           return null;
         }
 
-        const stats = await ctx.db.get("userTryoutStats", item.id);
-
-        if (!stats) {
-          return null;
-        }
-
-        const user = await ctx.db.get("users", stats.userId);
-
-        return {
-          rank: index + 1,
-          userId: stats.userId,
-          userName: user?.name ?? "Unknown",
-          averageTheta: stats.averageTheta,
-          totalTryoutsCompleted: stats.totalTryoutsCompleted,
-          bestTheta: stats.bestTheta,
-          averageRawScore: stats.averageRawScore,
-          lastTryoutAt: stats.lastTryoutAt,
-        };
+        return item;
       })
     );
+    const aggregateItems = rankedItems.filter(isPresent);
+    const statsRecords = await getAll(
+      ctx.db,
+      "userTryoutStats",
+      aggregateItems.map((item) => item.id)
+    );
+    const existingStats = statsRecords.filter(isPresent);
+    const users = await getAll(
+      ctx.db,
+      "users",
+      existingStats.map((stats) => stats.userId)
+    );
 
-    return rankedEntries.filter((entry) => entry !== null);
+    return existingStats.map((stats, index) => ({
+      rank: index + 1,
+      userId: stats.userId,
+      userName: users[index]?.name ?? "Unknown",
+      averageTheta: stats.averageTheta,
+      totalTryoutsCompleted: stats.totalTryoutsCompleted,
+      bestTheta: stats.bestTheta,
+      averageRawScore: stats.averageRawScore,
+      lastTryoutAt: stats.lastTryoutAt,
+    }));
   },
 });
 

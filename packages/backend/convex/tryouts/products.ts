@@ -1,3 +1,4 @@
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { Infer } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
@@ -7,52 +8,56 @@ export const tryoutProductValidator = literals(...tryoutProducts);
 
 export type TryoutProduct = Infer<typeof tryoutProductValidator>;
 
-interface TryoutSetCandidate<SetId, Locale extends string = string> {
-  _id: SetId;
-  exerciseType: string;
-  locale: Locale;
-  material: string;
-  questionCount: number;
-  setName: string;
-  slug: string;
-  type: string;
-}
+type TryoutSetCandidate = Pick<
+  Doc<"exerciseSets">,
+  | "_id"
+  | "exerciseType"
+  | "locale"
+  | "material"
+  | "questionCount"
+  | "setName"
+  | "slug"
+  | "type"
+>;
 
-interface DetectedTryout<SetId, Locale extends string = string> {
-  /** Product-defined cycle identifier, not a closed enum. */
-  cycleKey: string;
-  isActive: boolean;
-  label: string;
-  locale: Locale;
-  partCount: number;
-  product: TryoutProduct;
-  setIds: SetId[];
-  slug: string;
-  totalQuestionCount: number;
-}
+type DetectedTryout = Pick<
+  Doc<"tryouts">,
+  | "cycleKey"
+  | "isActive"
+  | "label"
+  | "locale"
+  | "partCount"
+  | "product"
+  | "slug"
+  | "totalQuestionCount"
+> & {
+  setIds: Id<"exerciseSets">[];
+};
 
-interface TryoutRecordLike {
-  /** Product-defined cycle identifier used for sorting and leaderboard scope. */
-  cycleKey: string;
-  label: string;
-  locale: string;
-  product: TryoutProduct;
-}
+type TryoutRecord = Pick<
+  Doc<"tryouts">,
+  "cycleKey" | "label" | "locale" | "product"
+>;
+type TryoutLeaderboardNamespaceArgs = Pick<
+  Doc<"tryouts">,
+  "cycleKey" | "locale" | "product"
+>;
+type SnbtTryoutSetCandidate = TryoutSetCandidate & {
+  cycleKey: Doc<"tryouts">["cycleKey"];
+};
 
 interface TryoutProductPolicy {
-  compareTryouts: (left: TryoutRecordLike, right: TryoutRecordLike) => number;
-  detectTryouts: <SetId, Locale extends string>(args: {
-    locale: Locale;
-    sets: TryoutSetCandidate<SetId, Locale>[];
-  }) => DetectedTryout<SetId, Locale>[];
+  compareTryouts: (left: TryoutRecord, right: TryoutRecord) => number;
+  detectTryouts: (args: {
+    locale: TryoutSetCandidate["locale"];
+    sets: TryoutSetCandidate[];
+  }) => DetectedTryout[];
   getAttemptWindowMs: () => number;
-  getLeaderboardNamespace: (args: {
-    cycleKey: string;
-    locale: string;
-    product: TryoutProduct;
-  }) => string;
-  getPartTimeLimitSeconds: (questionCount: number) => number;
-  scaleThetaToScore: (theta: number) => number;
+  getLeaderboardNamespace: (args: TryoutLeaderboardNamespaceArgs) => string;
+  getPartTimeLimitSeconds: (
+    questionCount: Doc<"exerciseSets">["questionCount"]
+  ) => number;
+  scaleThetaToScore: (theta: Doc<"tryoutAttempts">["theta"]) => number;
 }
 
 const HOURS_PER_DAY = 24;
@@ -81,14 +86,14 @@ const snbtRequiredPartKeys = [
   "reading-and-writing-skills",
 ] as const;
 
-const snbtPartOrder = new Map<string, number>(
+const snbtPartOrder = new Map<TryoutSetCandidate["material"], number>(
   snbtRequiredPartKeys.map((material, index) => [material, index])
 );
 
 const YEARFUL_TRYOUT_SET_SLUG_REGEX =
   /^exercises\/[^/]+\/[^/]+\/[^/]+\/try-out\/(\d{4})\/[^/]+$/;
 
-function getSnbtCycleKeyFromSetSlug(setSlug: string) {
+function getSnbtCycleKeyFromSetSlug(setSlug: Doc<"exerciseSets">["slug"]) {
   const match = setSlug.match(YEARFUL_TRYOUT_SET_SLUG_REGEX);
 
   if (!match) {
@@ -98,7 +103,7 @@ function getSnbtCycleKeyFromSetSlug(setSlug: string) {
   return match[1];
 }
 
-function sortSnbtSets<SetId>(sets: TryoutSetCandidate<SetId>[]) {
+function sortSnbtSets(sets: TryoutSetCandidate[]) {
   return [...sets].sort(
     (left, right) =>
       (snbtPartOrder.get(left.material) ?? Number.MAX_SAFE_INTEGER) -
@@ -106,7 +111,7 @@ function sortSnbtSets<SetId>(sets: TryoutSetCandidate<SetId>[]) {
   );
 }
 
-function compareSnbtTryouts(left: TryoutRecordLike, right: TryoutRecordLike) {
+function compareSnbtTryouts(left: TryoutRecord, right: TryoutRecord) {
   const leftYear = Number.parseInt(left.cycleKey, 10);
   const rightYear = Number.parseInt(right.cycleKey, 10);
 
@@ -123,13 +128,7 @@ function compareSnbtTryouts(left: TryoutRecordLike, right: TryoutRecordLike) {
 const tryoutProductPolicies = {
   snbt: {
     compareTryouts: compareSnbtTryouts,
-    detectTryouts: <SetId, Locale extends string>({
-      locale,
-      sets,
-    }: {
-      locale: Locale;
-      sets: TryoutSetCandidate<SetId, Locale>[];
-    }) => {
+    detectTryouts: ({ locale, sets }) => {
       const candidateSets = sets.flatMap((set) => {
         if (set.type !== "snbt" || set.exerciseType !== "try-out") {
           return [];
@@ -144,7 +143,7 @@ const tryoutProductPolicies = {
         return [{ ...set, cycleKey }];
       });
 
-      const setsByKey = new Map<string, typeof candidateSets>();
+      const setsByKey = new Map<string, SnbtTryoutSetCandidate[]>();
 
       for (const set of candidateSets) {
         const key = `${set.cycleKey}:${set.setName}`;
@@ -153,7 +152,7 @@ const tryoutProductPolicies = {
         setsByKey.set(key, existing);
       }
 
-      const detectedTryouts: DetectedTryout<SetId, Locale>[] = [];
+      const detectedTryouts: DetectedTryout[] = [];
 
       for (const groupedSets of setsByKey.values()) {
         const firstSet = groupedSets[0];
@@ -214,33 +213,38 @@ const tryoutProductPolicies = {
   },
 } satisfies Record<TryoutProduct, TryoutProductPolicy>;
 
+/** Returns the configured runtime policy for one tryout product. */
 export function getTryoutProductPolicy(product: TryoutProduct) {
   return tryoutProductPolicies[product];
 }
 
+/** Builds the aggregate namespace for one product's global leaderboard scope. */
 export function getTryoutLeaderboardNamespace(args: {
-  cycleKey: string;
-  locale: string;
-  product: TryoutProduct;
+  cycleKey: TryoutLeaderboardNamespaceArgs["cycleKey"];
+  locale: TryoutLeaderboardNamespaceArgs["locale"];
+  product: TryoutLeaderboardNamespaceArgs["product"];
 }) {
   return getTryoutProductPolicy(args.product).getLeaderboardNamespace(args);
 }
 
-export function sortTryoutsForProduct<T extends TryoutRecordLike>(
+/** Sorts tryouts with the product-specific ordering policy. */
+export function sortTryoutsForProduct<T extends TryoutRecord>(
   product: TryoutProduct,
   tryouts: T[]
 ) {
   return [...tryouts].sort(getTryoutProductPolicy(product).compareTryouts);
 }
 
-export function detectTryoutsForProduct<SetId, Locale extends string>(args: {
-  locale: Locale;
+/** Detects runtime tryouts from synced exercise sets for one product. */
+export function detectTryoutsForProduct(args: {
+  locale: TryoutSetCandidate["locale"];
   product: TryoutProduct;
-  sets: TryoutSetCandidate<SetId, Locale>[];
+  sets: TryoutSetCandidate[];
 }) {
   return getTryoutProductPolicy(args.product).detectTryouts(args);
 }
 
+/** Computes one part's time limit from the active product policy. */
 export function computeTryoutPartTimeLimitSeconds(args: {
   product: TryoutProduct;
   questionCount: number;
@@ -250,6 +254,7 @@ export function computeTryoutPartTimeLimitSeconds(args: {
   );
 }
 
+/** Computes the absolute tryout expiry timestamp from the product policy. */
 export function computeTryoutExpiresAtMs(args: {
   product: TryoutProduct;
   startedAtMs: number;
@@ -259,6 +264,7 @@ export function computeTryoutExpiresAtMs(args: {
   );
 }
 
+/** Converts an operational theta estimate into the product's displayed score. */
 export function scaleThetaToTryoutScore(args: {
   product: TryoutProduct;
   theta: number;
