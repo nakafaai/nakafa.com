@@ -3,18 +3,18 @@ import { BASE_PATH } from ".";
 
 const idMaterials: ExercisesMaterialList = [
   {
-    title: "Try Out",
+    title: "Try Out 2026",
     description:
       "Simulasi ujian nyata untuk mengasah kemampuan dan kepercayaan diri.",
-    href: `${BASE_PATH}/try-out`,
+    href: `${BASE_PATH}/try-out/2026`,
     items: [
       {
         title: "Set 1",
-        href: `${BASE_PATH}/try-out/set-1`,
+        href: `${BASE_PATH}/try-out/2026/set-1`,
       },
       {
         title: "Set 2",
-        href: `${BASE_PATH}/try-out/set-2`,
+        href: `${BASE_PATH}/try-out/2026/set-2`,
       },
     ],
   },

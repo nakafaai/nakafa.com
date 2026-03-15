@@ -27,6 +27,8 @@ export const baseRoutes = [
 // Constants for date calculations
 const MONTHS_IN_FALLBACK_PERIOD = 6;
 const MONTHS_IN_CONTENT_FALLBACK = 3;
+const YEARLESS_TRYOUT_ROUTE_REGEX =
+  /^\/exercises\/[^/]+\/[^/]+\/[^/]+\/try-out$/;
 
 // Note: LLM routes (.md, .mdx, .txt, /llms.txt) are excluded from sitemap
 // as they are file downloads, not HTML pages for indexing
@@ -218,7 +220,9 @@ export function getUrl(href: Href, locale: Locale, domain?: string): string {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const contentRoutes = getContentRoutes(); // Get routes from 'contents' directory
+  const contentRoutes = getContentRoutes().filter(
+    (route) => !YEARLESS_TRYOUT_ROUTE_REGEX.test(route)
+  );
   const quranRoutes = getQuranRoutes();
   const askRoutes = getAskRoutes();
 

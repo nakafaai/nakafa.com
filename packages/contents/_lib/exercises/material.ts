@@ -50,7 +50,7 @@ export async function getMaterials(
 }
 
 /**
- * Gets the current material and item from the materials list.
+ * Gets the current material group and optional item from the materials list.
  * @param path - The path to the material.
  * @param materials - The materials list.
  * @returns The current material and item.
@@ -64,10 +64,18 @@ export function getCurrentMaterial(
     | (typeof materials)[number]["items"][number]
     | undefined;
 
+  const normalizedPath = cleanSlug(path);
+
   for (const mat of materials) {
+    if (cleanSlug(mat.href) === normalizedPath) {
+      currentMaterial = mat;
+      break;
+    }
+
     const foundItem = mat.items.find(
-      (itm) => cleanSlug(itm.href) === cleanSlug(path)
+      (itm) => cleanSlug(itm.href) === normalizedPath
     );
+
     if (foundItem) {
       currentMaterial = mat;
       currentMaterialItem = foundItem;

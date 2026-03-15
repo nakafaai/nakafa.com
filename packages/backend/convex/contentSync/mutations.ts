@@ -16,7 +16,7 @@ import {
 import { slugify } from "@repo/backend/convex/utils/helper";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { v } from "convex/values";
-import { getAll } from "convex-helpers/server/relationships";
+import { getAll, getManyFrom } from "convex-helpers/server/relationships";
 
 type AuthorCache = Map<string, Id<"authors">>;
 
@@ -1290,5 +1290,246 @@ export const deleteAuthorsBatch = internalMutation({
 
     const remaining = await ctx.db.query("authors").first();
     return { deleted, hasMore: remaining !== null };
+  },
+});
+
+const SNBT_TRYOUT_MATERIALS = [
+  "quantitative-knowledge",
+  "mathematical-reasoning",
+  "general-reasoning",
+  "indonesian-language",
+  "english-language",
+  "general-knowledge",
+  "reading-and-writing-skills",
+] as const;
+
+const YEARFUL_TRYOUT_SET_SLUG_REGEX =
+  /^exercises\/[^/]+\/[^/]+\/[^/]+\/try-out\/(\d{4})\/[^/]+$/;
+
+function getYearFromTryoutSetSlug(setSlug: string) {
+  const match = setSlug.match(YEARFUL_TRYOUT_SET_SLUG_REGEX);
+
+  if (!match) {
+    return null;
+  }
+
+  return Number.parseInt(match[1], 10);
+}
+
+const snbtTryoutMaterialOrder = new Map<string, number>(
+  SNBT_TRYOUT_MATERIALS.map((material, index) => [material, index])
+);
+
+function sortSnbtTryoutSets<T extends { material: string }>(sets: T[]) {
+  return [...sets].sort(
+    (left, right) =>
+      (snbtTryoutMaterialOrder.get(left.material) ?? Number.MAX_SAFE_INTEGER) -
+      (snbtTryoutMaterialOrder.get(right.material) ?? Number.MAX_SAFE_INTEGER)
+  );
+}
+
+async function syncSnbtTryoutSetMappings(
+  ctx: MutationCtx,
+  {
+    tryoutId,
+    setIds,
+  }: {
+    tryoutId: Id<"snbtTryouts">;
+    setIds: Id<"exerciseSets">[];
+  }
+) {
+  const existingMappings = await getManyFrom(
+    ctx.db,
+    "snbtTryoutSets",
+    "tryoutId_subjectIndex",
+    tryoutId,
+    "tryoutId"
+  );
+  const hasChanges =
+    existingMappings.length !== setIds.length ||
+    existingMappings.some(
+      (mapping) => setIds[mapping.subjectIndex] !== mapping.setId
+    );
+
+  if (!hasChanges) {
+    return false;
+  }
+
+  for (const existingMapping of existingMappings) {
+    await ctx.db.delete("snbtTryoutSets", existingMapping._id);
+  }
+
+  for (const [subjectIndex, setId] of setIds.entries()) {
+    await ctx.db.insert("snbtTryoutSets", {
+      tryoutId,
+      setId,
+      subjectIndex,
+    });
+  }
+
+  return true;
+}
+
+/**
+ * Syncs SNBT try-outs by detecting complete sets across all subjects.
+ * A try-out is detected when exercise sets exist for ALL 7 SNBT subjects
+ * with the same year + setName within a locale.
+ */
+export const bulkSyncSnbtTryouts = internalMutation({
+  args: {
+    locale: localeValidator,
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    let created = 0;
+    let updated = 0;
+    let unchanged = 0;
+
+    const localeSets = await ctx.db
+      .query("exerciseSets")
+      .withIndex("locale_slug", (q) => q.eq("locale", args.locale))
+      .collect();
+    const allSets = localeSets.flatMap((set) => {
+      if (set.type !== "snbt" || set.exerciseType !== "try-out") {
+        return [];
+      }
+
+      const year = getYearFromTryoutSetSlug(set.slug);
+
+      if (year === null) {
+        logger.warn(`Skipping malformed SNBT try-out set slug: ${set.slug}`);
+        return [];
+      }
+
+      return [{ ...set, year }];
+    });
+
+    const setsByKey = new Map<string, typeof allSets>();
+
+    for (const set of allSets) {
+      const existing = setsByKey.get(`${set.year}:${set.setName}`) || [];
+      existing.push(set);
+      setsByKey.set(`${set.year}:${set.setName}`, existing);
+    }
+
+    const detectedTryouts: Array<{
+      locale: typeof args.locale;
+      year: number;
+      setName: string;
+      sets: typeof allSets;
+      slug: string;
+    }> = [];
+
+    for (const sets of setsByKey.values()) {
+      const firstSet = sets[0];
+
+      if (!firstSet) {
+        continue;
+      }
+
+      const materials = new Set(sets.map((s) => s.material));
+      const questionCounts = sets.map((set) => set.questionCount);
+      const hasAllMaterials = SNBT_TRYOUT_MATERIALS.every((m) =>
+        materials.has(m)
+      );
+      const hasPositiveQuestionCounts = questionCounts.every(
+        (count) => count > 0
+      );
+
+      if (hasAllMaterials && hasPositiveQuestionCounts) {
+        detectedTryouts.push({
+          locale: args.locale,
+          year: firstSet.year,
+          setName: firstSet.setName,
+          sets,
+          slug: `${firstSet.year}-${firstSet.setName}`,
+        });
+      }
+    }
+
+    const detectedSlugs = new Set(detectedTryouts.map((tryout) => tryout.slug));
+
+    for (const tryout of detectedTryouts) {
+      const questionCounts = tryout.sets.map((s) => s.questionCount);
+      const totalQuestionCount = questionCounts.reduce((a, b) => a + b, 0);
+      const sortedSets = sortSnbtTryoutSets(tryout.sets);
+      const setIds = sortedSets.map((set) => set._id);
+
+      const existing = await ctx.db
+        .query("snbtTryouts")
+        .withIndex("locale_year_slug", (q) =>
+          q
+            .eq("locale", tryout.locale)
+            .eq("year", tryout.year)
+            .eq("slug", tryout.slug)
+        )
+        .first();
+
+      if (existing) {
+        const mappingsChanged = await syncSnbtTryoutSetMappings(ctx, {
+          tryoutId: existing._id,
+          setIds,
+        });
+        const hasChanges =
+          !existing.isActive ||
+          existing.subjectCount !== SNBT_TRYOUT_MATERIALS.length ||
+          existing.totalQuestionCount !== totalQuestionCount ||
+          mappingsChanged;
+
+        if (!hasChanges) {
+          unchanged++;
+          continue;
+        }
+
+        await ctx.db.patch("snbtTryouts", existing._id, {
+          subjectCount: SNBT_TRYOUT_MATERIALS.length,
+          totalQuestionCount,
+          isActive: true,
+          syncedAt: now,
+        });
+
+        updated++;
+      } else {
+        const tryoutId = await ctx.db.insert("snbtTryouts", {
+          locale: tryout.locale,
+          year: tryout.year,
+          slug: tryout.slug,
+          setName: tryout.setName,
+          subjectCount: SNBT_TRYOUT_MATERIALS.length,
+          totalQuestionCount,
+          isActive: true,
+          detectedAt: now,
+          syncedAt: now,
+        });
+
+        await syncSnbtTryoutSetMappings(ctx, {
+          tryoutId,
+          setIds,
+        });
+
+        created++;
+      }
+    }
+
+    const existingTryouts = await ctx.db
+      .query("snbtTryouts")
+      .withIndex("locale_isActive", (q) =>
+        q.eq("locale", args.locale).eq("isActive", true)
+      )
+      .collect();
+
+    for (const tryout of existingTryouts) {
+      if (detectedSlugs.has(tryout.slug)) {
+        continue;
+      }
+
+      await ctx.db.patch("snbtTryouts", tryout._id, {
+        isActive: false,
+        syncedAt: now,
+      });
+      updated++;
+    }
+
+    return { created, updated, unchanged };
   },
 });

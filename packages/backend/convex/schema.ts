@@ -11,8 +11,10 @@ import customersSchema from "@repo/backend/convex/customers/schema";
 import exerciseQuestionsSchema from "@repo/backend/convex/exerciseQuestions/schema";
 import exerciseSetsSchema from "@repo/backend/convex/exerciseSets/schema";
 import exercisesSchema from "@repo/backend/convex/exercises/schema";
+import irtSchema from "@repo/backend/convex/irt/schema";
 import notificationsSchema from "@repo/backend/convex/notifications/schema";
 import schoolsSchema from "@repo/backend/convex/schools/schema";
+import snbtSchema from "@repo/backend/convex/snbt/schema";
 import subjectSectionsSchema from "@repo/backend/convex/subjectSections/schema";
 import subjectTopicsSchema from "@repo/backend/convex/subjectTopics/schema";
 import subscriptionsSchema from "@repo/backend/convex/subscriptions/schema";
@@ -40,6 +42,8 @@ export default defineSchema(
     ...exerciseQuestionsSchema,
     ...audioStudiesSchema,
     ...creditsSchema,
+    ...irtSchema,
+    ...snbtSchema,
   },
   {
     schemaValidation: true,

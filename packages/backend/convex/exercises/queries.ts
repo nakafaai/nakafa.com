@@ -1,5 +1,6 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
+import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
 import { getManyFrom } from "convex-helpers/server/relationships";
@@ -10,13 +11,23 @@ const attemptWithAnswersValidator = v.object({
   answers: v.array(vv.doc("exerciseAnswers")),
 });
 
+const questionAnswerSheetValidator = v.array(
+  v.object({
+    exerciseNumber: v.number(),
+    questionId: vv.id("exerciseQuestions"),
+    options: v.array(
+      v.object({
+        optionKey: v.string(),
+        order: v.number(),
+      })
+    ),
+  })
+);
+
 /**
  * Get the latest attempt for a specific exercise/set.
  *
- * Best Practices:
- * - Uses `.withIndex` for O(log n) efficient lookup (no table scans).
- * - Returns the most recent attempt regardless of status (in-progress, completed, expired, abandoned).
- * - Joins answers efficiently using `.withIndex` on the child table.
+ * Returns the most recent attempt regardless of status.
  */
 export const getLatestAttemptBySlug = query({
   args: {
@@ -29,8 +40,12 @@ export const getLatestAttemptBySlug = query({
 
     const attempt = await ctx.db
       .query("exerciseAttempts")
-      .withIndex("userId_slug_scope_startedAt", (q) =>
-        q.eq("userId", userId).eq("slug", args.slug).eq("scope", "set")
+      .withIndex("userId_origin_slug_scope_startedAt", (q) =>
+        q
+          .eq("userId", userId)
+          .eq("origin", "standalone")
+          .eq("slug", args.slug)
+          .eq("scope", "set")
       )
       .order("desc")
       .first();
@@ -46,11 +61,70 @@ export const getLatestAttemptBySlug = query({
       attempt._id,
       "attemptId"
     );
-
-    // 3. Return the combined state (Attempt + Answers).
     return {
       attempt,
       answers,
     };
+  },
+});
+
+/**
+ * Load the backend question IDs and canonical option keys for one exercise set.
+ *
+ * This gives the frontend the stable identifiers needed for
+ * server-authoritative answer scoring without trusting client correctness flags.
+ */
+export const getQuestionAnswerSheetBySlug = query({
+  args: {
+    locale: localeValidator,
+    slug: v.string(),
+  },
+  returns: questionAnswerSheetValidator,
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+
+    const set = await ctx.db
+      .query("exerciseSets")
+      .withIndex("locale_slug", (q) =>
+        q.eq("locale", args.locale).eq("slug", args.slug)
+      )
+      .first();
+
+    if (!set) {
+      return [];
+    }
+
+    const questions = await getManyFrom(
+      ctx.db,
+      "exerciseQuestions",
+      "setId",
+      set._id
+    );
+    const orderedQuestions = [...questions].sort((a, b) => a.number - b.number);
+
+    const answerSheet = await Promise.all(
+      orderedQuestions.map(async (question) => {
+        const choices = await getManyFrom(
+          ctx.db,
+          "exerciseChoices",
+          "questionId_locale",
+          question._id,
+          "questionId"
+        );
+
+        return {
+          exerciseNumber: question.number,
+          questionId: question._id,
+          options: choices
+            .map((choice) => ({
+              optionKey: choice.optionKey,
+              order: choice.order,
+            }))
+            .sort((a, b) => a.order - b.order),
+        };
+      })
+    );
+
+    return answerSheet;
   },
 });
