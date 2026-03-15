@@ -213,18 +213,13 @@ const tryoutProductPolicies = {
   },
 } satisfies Record<TryoutProduct, TryoutProductPolicy>;
 
-/** Returns the configured runtime policy for one tryout product. */
-export function getTryoutProductPolicy(product: TryoutProduct) {
-  return tryoutProductPolicies[product];
-}
-
 /** Builds the aggregate namespace for one product's global leaderboard scope. */
 export function getTryoutLeaderboardNamespace(args: {
   cycleKey: TryoutLeaderboardNamespaceArgs["cycleKey"];
   locale: TryoutLeaderboardNamespaceArgs["locale"];
   product: TryoutLeaderboardNamespaceArgs["product"];
 }) {
-  return getTryoutProductPolicy(args.product).getLeaderboardNamespace(args);
+  return tryoutProductPolicies[args.product].getLeaderboardNamespace(args);
 }
 
 /** Sorts tryouts with the product-specific ordering policy. */
@@ -232,7 +227,7 @@ export function sortTryoutsForProduct<T extends TryoutRecord>(
   product: TryoutProduct,
   tryouts: T[]
 ) {
-  return [...tryouts].sort(getTryoutProductPolicy(product).compareTryouts);
+  return [...tryouts].sort(tryoutProductPolicies[product].compareTryouts);
 }
 
 /** Detects runtime tryouts from synced exercise sets for one product. */
@@ -241,7 +236,7 @@ export function detectTryoutsForProduct(args: {
   product: TryoutProduct;
   sets: TryoutSetCandidate[];
 }) {
-  return getTryoutProductPolicy(args.product).detectTryouts(args);
+  return tryoutProductPolicies[args.product].detectTryouts(args);
 }
 
 /** Computes one part's time limit from the active product policy. */
@@ -249,7 +244,7 @@ export function computeTryoutPartTimeLimitSeconds(args: {
   product: TryoutProduct;
   questionCount: number;
 }) {
-  return getTryoutProductPolicy(args.product).getPartTimeLimitSeconds(
+  return tryoutProductPolicies[args.product].getPartTimeLimitSeconds(
     args.questionCount
   );
 }
@@ -260,7 +255,7 @@ export function computeTryoutExpiresAtMs(args: {
   startedAtMs: number;
 }) {
   return (
-    args.startedAtMs + getTryoutProductPolicy(args.product).getAttemptWindowMs()
+    args.startedAtMs + tryoutProductPolicies[args.product].getAttemptWindowMs()
   );
 }
 
@@ -269,5 +264,5 @@ export function scaleThetaToTryoutScore(args: {
   product: TryoutProduct;
   theta: number;
 }) {
-  return getTryoutProductPolicy(args.product).scaleThetaToScore(args.theta);
+  return tryoutProductPolicies[args.product].scaleThetaToScore(args.theta);
 }

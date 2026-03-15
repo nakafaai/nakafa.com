@@ -13,10 +13,6 @@ import { v } from "convex/values";
 import { getAll } from "convex-helpers/server/relationships";
 import { nullable } from "convex-helpers/validators";
 
-function isPresent<T>(value: T | null): value is T {
-  return value !== null;
-}
-
 export const getTryoutLeaderboard = query({
   args: {
     tryoutId: vv.id("tryouts"),
@@ -38,27 +34,25 @@ export const getTryoutLeaderboard = query({
     const totalCount = await tryoutLeaderboard.count(ctx, {
       namespace: args.tryoutId,
     });
+    const aggregateItems = (
+      await Promise.all(
+        Array.from({ length: Math.min(limit, totalCount) }, async (_, index) =>
+          tryoutLeaderboard.at(ctx, index, {
+            namespace: args.tryoutId,
+          })
+        )
+      )
+    ).flatMap((item) => (item ? [item] : []));
 
-    const rankedItems = await Promise.all(
-      Array.from({ length: Math.min(limit, totalCount) }, async (_, index) => {
-        const item = await tryoutLeaderboard.at(ctx, index, {
-          namespace: args.tryoutId,
-        });
-
-        if (!item) {
-          return null;
-        }
-
-        return item;
-      })
-    );
-    const aggregateItems = rankedItems.filter(isPresent);
     const leaderboardEntries = await getAll(
       ctx.db,
       "tryoutLeaderboardEntries",
       aggregateItems.map((item) => item.id)
     );
-    const existingEntries = leaderboardEntries.filter(isPresent);
+    const existingEntries = leaderboardEntries.flatMap((entry) =>
+      entry ? [entry] : []
+    );
+
     const users = await getAll(
       ctx.db,
       "users",
@@ -102,27 +96,25 @@ export const getGlobalLeaderboard = query({
     const totalCount = await globalLeaderboard.count(ctx, {
       namespace,
     });
+    const aggregateItems = (
+      await Promise.all(
+        Array.from({ length: Math.min(limit, totalCount) }, async (_, index) =>
+          globalLeaderboard.at(ctx, index, {
+            namespace,
+          })
+        )
+      )
+    ).flatMap((item) => (item ? [item] : []));
 
-    const rankedItems = await Promise.all(
-      Array.from({ length: Math.min(limit, totalCount) }, async (_, index) => {
-        const item = await globalLeaderboard.at(ctx, index, {
-          namespace,
-        });
-
-        if (!item) {
-          return null;
-        }
-
-        return item;
-      })
-    );
-    const aggregateItems = rankedItems.filter(isPresent);
     const statsRecords = await getAll(
       ctx.db,
       "userTryoutStats",
       aggregateItems.map((item) => item.id)
     );
-    const existingStats = statsRecords.filter(isPresent);
+    const existingStats = statsRecords.flatMap((stats) =>
+      stats ? [stats] : []
+    );
+
     const users = await getAll(
       ctx.db,
       "users",
