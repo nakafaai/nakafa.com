@@ -1,5 +1,6 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import { createExerciseAttempt } from "@repo/backend/convex/exercises/helpers";
+import { computeAttemptDurationSeconds } from "@repo/backend/convex/exercises/utils";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
 import { estimateThetaEAP } from "@repo/backend/convex/irt/estimation";
 import {
@@ -414,11 +415,24 @@ export const completeSubject = mutation({
     }
 
     if (setAttempt.status !== "completed" && setAttempt.status !== "expired") {
+      if (setAttempt.schedulerId) {
+        await ctx.scheduler.cancel(setAttempt.schedulerId);
+      }
+
+      const expiresAtMs = setAttempt.startedAt + setAttempt.timeLimit * 1000;
+      const completedAtMs = Math.min(now, expiresAtMs);
+      const finalStatus = now >= expiresAtMs ? "expired" : "completed";
+      const totalTime = computeAttemptDurationSeconds({
+        startedAtMs: setAttempt.startedAt,
+        completedAtMs,
+      });
+
       await ctx.db.patch("exerciseAttempts", subjectAttempt.setAttemptId, {
-        status: "completed",
-        completedAt: now,
+        status: finalStatus,
+        completedAt: completedAtMs,
         lastActivityAt: now,
         updatedAt: now,
+        totalTime,
       });
     }
 

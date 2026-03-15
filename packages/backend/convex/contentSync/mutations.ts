@@ -1384,10 +1384,9 @@ export const bulkSyncSnbtTryouts = internalMutation({
     const setsByName = new Map<string, typeof allSets>();
 
     for (const set of allSets) {
-      const key = `${set.locale}:${set.setName}`;
-      const existing = setsByName.get(key) || [];
+      const existing = setsByName.get(set.setName) || [];
       existing.push(set);
-      setsByName.set(key, existing);
+      setsByName.set(set.setName, existing);
     }
 
     const detectedTryouts: Array<{
@@ -1395,21 +1394,28 @@ export const bulkSyncSnbtTryouts = internalMutation({
       setName: string;
       sets: typeof allSets;
       slug: string;
+      questionCountPerSubject: number;
     }> = [];
 
-    for (const [key, sets] of setsByName) {
+    for (const [setName, sets] of setsByName) {
       const materials = new Set(sets.map((s) => s.material));
+      const questionCounts = sets.map((set) => set.questionCount);
+      const questionCountPerSubject = questionCounts[0];
       const hasAllMaterials = SNBT_TRYOUT_MATERIALS.every((m) =>
         materials.has(m)
       );
+      const hasUniformPositiveQuestionCounts =
+        questionCountPerSubject !== undefined &&
+        questionCountPerSubject > 0 &&
+        questionCounts.every((count) => count === questionCountPerSubject);
 
-      if (hasAllMaterials) {
-        const [, setName] = key.split(":");
+      if (hasAllMaterials && hasUniformPositiveQuestionCounts) {
         detectedTryouts.push({
           locale: args.locale,
-          setName: setName ?? "",
+          setName,
           sets,
-          slug: `${year}-${setName ?? ""}`,
+          slug: `${year}-${setName}`,
+          questionCountPerSubject,
         });
       }
     }
@@ -1419,7 +1425,6 @@ export const bulkSyncSnbtTryouts = internalMutation({
     for (const tryout of detectedTryouts) {
       const questionCounts = tryout.sets.map((s) => s.questionCount);
       const totalQuestionCount = questionCounts.reduce((a, b) => a + b, 0);
-      const questionCountPerSubject = questionCounts[0] ?? 0;
       const sortedSets = sortSnbtTryoutSets(tryout.sets);
       const setIds = sortedSets.map((set) => set._id);
 
@@ -1438,7 +1443,7 @@ export const bulkSyncSnbtTryouts = internalMutation({
         const hasChanges =
           !existing.isActive ||
           existing.subjectCount !== SNBT_TRYOUT_MATERIALS.length ||
-          existing.questionCountPerSubject !== questionCountPerSubject ||
+          existing.questionCountPerSubject !== tryout.questionCountPerSubject ||
           existing.totalQuestionCount !== totalQuestionCount ||
           mappingsChanged;
 
@@ -1449,7 +1454,7 @@ export const bulkSyncSnbtTryouts = internalMutation({
 
         await ctx.db.patch("snbtTryouts", existing._id, {
           subjectCount: SNBT_TRYOUT_MATERIALS.length,
-          questionCountPerSubject,
+          questionCountPerSubject: tryout.questionCountPerSubject,
           totalQuestionCount,
           isActive: true,
           syncedAt: now,
@@ -1463,7 +1468,7 @@ export const bulkSyncSnbtTryouts = internalMutation({
           slug: tryout.slug,
           setName: tryout.setName,
           subjectCount: SNBT_TRYOUT_MATERIALS.length,
-          questionCountPerSubject,
+          questionCountPerSubject: tryout.questionCountPerSubject,
           totalQuestionCount,
           isActive: true,
           detectedAt: now,
