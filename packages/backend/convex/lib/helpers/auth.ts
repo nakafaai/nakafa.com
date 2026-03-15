@@ -18,7 +18,7 @@ import { ConvexError } from "convex/values";
 
 /**
  * Fast authentication using JWT identity.
- * Reads from JWT directly - no database call for session.
+ * Reads from JWT directly and resolves the app user by stable auth ID.
  *
  * Pros: ~700ms faster than session validation
  * Cons: Won't catch revoked sessions until JWT expires
@@ -27,8 +27,10 @@ import { ConvexError } from "convex/values";
  */
 export async function requireAuth(ctx: QueryCtx | MutationCtx) {
   const identity = await ctx.auth.getUserIdentity();
-  const email = identity?.email;
-  if (!email) {
+  // In our Better Auth + Convex setup, JWT `subject` is the Better Auth
+  // `user._id`, which we persist on the app user as `users.authId`.
+  const authId = identity?.subject;
+  if (!authId) {
     throw new ConvexError({
       code: "UNAUTHORIZED",
       message: "You must be logged in.",
@@ -37,7 +39,7 @@ export async function requireAuth(ctx: QueryCtx | MutationCtx) {
 
   const appUser = await ctx.db
     .query("users")
-    .withIndex("email", (q) => q.eq("email", email))
+    .withIndex("authId", (q) => q.eq("authId", authId))
     .unique();
 
   if (!appUser) {
@@ -72,19 +74,18 @@ export async function requireAuthWithSession(ctx: QueryCtx | MutationCtx) {
 
 /**
  * Fast authentication for actions using JWT identity.
- * Actions don't have ctx.db, so uses runQuery instead.
  */
 export async function requireAuthForAction(ctx: ActionCtx) {
   const identity = await ctx.auth.getUserIdentity();
-  if (!identity?.email) {
+  if (!identity?.subject) {
     throw new ConvexError({
       code: "UNAUTHORIZED",
       message: "You must be logged in.",
     });
   }
 
-  const appUser = await ctx.runQuery(internal.users.queries.getUserByEmail, {
-    email: identity.email,
+  const appUser = await ctx.runQuery(internal.users.queries.getUserByAuthId, {
+    authId: identity.subject,
   });
 
   if (!appUser) {

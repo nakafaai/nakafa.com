@@ -11,7 +11,7 @@ type IrtDbReader = QueryCtx["db"];
 type IrtDbWriter = MutationCtx["db"];
 type OperationalItemParams = Pick<
   Doc<"exerciseItemParameters">,
-  "questionId" | "difficulty" | "discrimination" | "guessing"
+  "questionId" | "difficulty" | "discrimination"
 >;
 type ScaleVersionItemsBySetId = Map<
   Doc<"irtScaleVersionItems">["setId"],
@@ -189,7 +189,6 @@ export async function getPublishableScaleSnapshot(
           setId: set._id,
           difficulty: params.difficulty,
           discrimination: params.discrimination,
-          guessing: params.guessing,
           calibrationRunId: params.calibrationRunId,
         },
       ];
@@ -251,7 +250,6 @@ export async function publishScaleVersion(
       setId: item.setId,
       difficulty: item.difficulty,
       discrimination: item.discrimination,
-      guessing: item.guessing,
     })
   );
 

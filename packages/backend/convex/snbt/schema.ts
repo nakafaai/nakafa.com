@@ -6,8 +6,7 @@ import { literals } from "convex-helpers/validators";
 export const snbtTryoutStatusValidator = literals(
   "in-progress",
   "completed",
-  "expired",
-  "abandoned"
+  "expired"
 );
 
 const tables = {

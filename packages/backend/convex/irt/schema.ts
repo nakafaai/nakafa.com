@@ -45,7 +45,6 @@ const tables = {
     setId: v.id("exerciseSets"),
     difficulty: v.number(),
     discrimination: v.number(),
-    guessing: v.number(),
   }).index("scaleVersionId_setId_questionId", [
     "scaleVersionId",
     "setId",
@@ -70,15 +69,10 @@ const tables = {
   exerciseItemParameters: defineTable({
     questionId: v.id("exerciseQuestions"),
     setId: v.id("exerciseSets"),
-    /** 2PL/3PL difficulty parameter (b). */
+    /** 2PL difficulty parameter (b). */
     difficulty: v.number(),
-    /** 2PL/3PL discrimination parameter (a). */
+    /** 2PL discrimination parameter (a). */
     discrimination: v.number(),
-    /**
-     * Stored for future calibration workflows.
-     * Operational SNBT scoring currently applies a 2PL policy and uses `c = 0`.
-     */
-    guessing: v.number(),
     responseCount: v.number(),
     correctRate: v.number(),
     calibratedAt: v.number(),

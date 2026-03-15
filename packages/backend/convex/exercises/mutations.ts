@@ -10,18 +10,23 @@ import { internalMutation, mutation } from "@repo/backend/convex/functions";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { syncSnbtExerciseAttemptExpiry } from "@repo/backend/convex/snbt/helpers";
-import { ConvexError, v } from "convex/values";
+import { ConvexError, type Infer, v } from "convex/values";
+
+const completeAttemptResultValidator = v.object({
+  status: exerciseAttemptStatusValidator,
+  expiredAtMs: v.optional(v.number()),
+});
+
+type CompleteAttemptResult = Infer<typeof completeAttemptResultValidator>;
+
+function buildCompleteAttemptResult<T extends CompleteAttemptResult>(
+  result: T
+) {
+  return result;
+}
 
 /**
- * Starts a new exercise attempt for the authenticated user.
- *
- * @param slug - The unique identifier/path of the exercise set (e.g., "math/algebra/set-1").
- * @param mode - The mode of the attempt ("practice" or "simulation").
- * @param scope - The scope of the attempt ("set" or "single").
- * @param totalExercises - The total number of exercises in the set.
- * @param timeLimit - Optional time limit for the entire set in seconds.
- * @param perQuestionTimeLimit - Optional time limit per question in seconds.
- * @returns The ID of the newly created or existing attempt.
+ * Start a standalone exercise attempt for the authenticated user.
  */
 export const startAttempt = mutation({
   args: {
@@ -96,38 +101,12 @@ export const startAttempt = mutation({
       startedAt: now,
       totalExercises: args.totalExercises,
     });
-
-    // NOTE: totalTime starts at 0 and accumulates through submitAnswer calls.
-    // Final duration is calculated from wall-clock time when attempt completes.
-
     return attemptId;
   },
 });
 
 /**
- * Submits an answer for a specific exercise within an attempt.
- *
- * BUSINESS LOGIC: Creates or updates an answer record for a question.
- *
- * AGGREGATE UPDATES: All attempt aggregates (answeredCount, correctAnswers,
- * totalTime, scorePercentage) are managed by the trigger system in `functions.ts`.
- * This mutation only handles the answer record - triggers handle the rest.
- *
- * ARCHITECTURE BENEFITS:
- * - Single source of truth for aggregates (trigger system)
- * - Retry-safe (triggers use newDoc/oldDoc pattern)
- * - Clean separation of concerns (mutation = operations, triggers = aggregates)
- * - No race conditions or double-updates
- * - Server-authoritative scoring (correctness is derived from stored choices)
- *
- * `timeSpent` is the total time spent on this question (seconds).
- * If the user re-submits an answer, the trigger calculates the delta correctly.
- *
- * @param attemptId - The ID of the attempt.
- * @param exerciseNumber - The 1-based index of the exercise in the set.
- * @param questionId - The backend question ID for this exercise number.
- * @param selectedOptionId - The canonical option key selected by the user.
- * @param timeSpent - Time spent on this specific question in seconds.
+ * Submit one server-scored answer inside an in-progress exercise attempt.
  */
 export const submitAnswer = mutation({
   args: {
@@ -180,8 +159,7 @@ export const submitAnswer = mutation({
     }
 
     if (args.exerciseNumber > attempt.totalExercises) {
-      // Need to patch the attempt, it might that the totalExercises is increased
-      // by the admin.
+      // Keep the stored attempt bounds aligned if the source set has grown.
       await ctx.db.patch("exerciseAttempts", args.attemptId, {
         totalExercises: args.exerciseNumber,
       });
@@ -237,9 +215,6 @@ export const submitAnswer = mutation({
       selectedOptionId: args.selectedOptionId,
     });
 
-    // Create or update the answer record.
-    // All aggregate updates (answeredCount, correctAnswers, totalTime, scorePercentage)
-    // are handled by the trigger system in functions.ts.
     if (existingAnswer) {
       await ctx.db.patch("exerciseAnswers", existingAnswer._id, {
         questionId: scoredAnswer.questionId,
@@ -268,26 +243,13 @@ export const submitAnswer = mutation({
 });
 
 /**
- * Completes an in-progress exercise attempt.
- *
- * This is the authoritative end-of-session event used by UI (Finish button
- * or timer expiry flow).
- *
- * Final duration is calculated from wall-clock time (completedAt - startedAt)
- * to capture all time periods including idle time. See `computeAttemptDurationSeconds`
- * in exercises/utils.ts for detailed rationale.
- *
- * Idempotent behavior:
- * - If attempt is already completed, it returns `{ status: "completed" }`.
+ * Complete an in-progress exercise attempt.
  */
 export const completeAttempt = mutation({
   args: {
     attemptId: vv.id("exerciseAttempts"),
   },
-  returns: v.object({
-    status: exerciseAttemptStatusValidator,
-    expiredAtMs: v.optional(v.number()),
-  }),
+  returns: completeAttemptResultValidator,
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);
     const userId = appUser._id;
@@ -314,22 +276,18 @@ export const completeAttempt = mutation({
 
     const tryoutExpiry = await syncSnbtExerciseAttemptExpiry(ctx, attempt, now);
     if (tryoutExpiry.expired) {
-      return {
-        status: "expired" as const,
+      return buildCompleteAttemptResult({
+        status: "expired",
         expiredAtMs: tryoutExpiry.expiredAtMs,
-      };
+      });
     }
 
     if (attempt.status === "completed") {
-      return { status: "completed" as const };
+      return buildCompleteAttemptResult({ status: "completed" });
     }
 
     if (attempt.status === "expired") {
-      return { status: "expired" as const };
-    }
-
-    if (attempt.status === "abandoned") {
-      return { status: "abandoned" as const };
+      return buildCompleteAttemptResult({ status: "expired" });
     }
 
     if (attempt.status !== "in-progress") {
@@ -355,7 +313,10 @@ export const completeAttempt = mutation({
         totalTime: finalTotalTime,
       });
 
-      return { status: "expired" as const, expiredAtMs: expiresAtMs };
+      return buildCompleteAttemptResult({
+        status: "expired",
+        expiredAtMs: expiresAtMs,
+      });
     }
 
     await ctx.db.patch("exerciseAttempts", args.attemptId, {
@@ -366,7 +327,7 @@ export const completeAttempt = mutation({
       totalTime: finalTotalTime,
     });
 
-    return { status: "completed" as const };
+    return buildCompleteAttemptResult({ status: "completed" });
   },
 });
 

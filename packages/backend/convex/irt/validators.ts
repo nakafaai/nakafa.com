@@ -9,7 +9,6 @@ export const irtCalibratedItemValidator = v.object({
   questionId: vv.id("exerciseQuestions"),
   difficulty: v.number(),
   discrimination: v.number(),
-  guessing: v.number(),
   responseCount: v.number(),
   correctRate: v.number(),
   calibrationStatus: irtCalibrationStatusValidator,

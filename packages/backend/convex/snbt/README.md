@@ -10,8 +10,7 @@ tables own try-out lifecycle, IRT scoring, and official leaderboard rules.
 - Subject attempts are stored in `exerciseAttempts` with `origin: "snbt"`
 - SNBT try-out attempts are simulation-only
 - Simulation subjects use a fixed time limit of `90` seconds per question
-- Official scoring is currently `2PL-first`: stored item parameters keep
-  `guessing`, but operational theta estimation uses `c = 0`
+- Official scoring uses `2PL`
 - Official simulation attempts require a published scale version with fully
   calibrated item parameters for every tryout question
 - Completed simulation subjects automatically enqueue background IRT
@@ -41,7 +40,7 @@ erDiagram
 | Table | Purpose |
 |-------|---------|
 | `exerciseAttempts` | Shared exercise engine. SNBT subjects use `origin: "snbt"`; standalone exercise pages use `origin: "standalone"`. |
-| `snbtTryouts` | Auto-detected SNBT try-out definitions keyed by locale/year/slug. |
+| `snbtTryouts` | Auto-detected SNBT try-out definitions keyed by locale and year-prefixed slug. |
 | `snbtTryoutSets` | Maps a try-out to its seven subject `exerciseSets`. |
 | `snbtTryoutAttempts` | Per-user simulation lifecycle, frozen `scaleVersionId`, raw totals, and final IRT result. The 24h expiry window is derived from `startedAt`. |
 | `snbtTryoutSubjectAttempts` | One subject record per try-out attempt. Points to the shared `exerciseAttempts` row for that subject. |
@@ -73,9 +72,9 @@ flowchart TD
 | Query | Purpose |
 |-------|---------|
 | `getActiveTryouts` | List active try-outs for a locale |
-| `getTryoutDetails` | Load one try-out and its ordered subject sets |
+| `getTryoutDetails` | Load one try-out and its ordered subject sets by locale + year-prefixed slug |
 | `getUserTryoutAttempt` | Load the latest simulation attempt, subject progress, whether the latest attempt is official, and whether standalone practice is unlocked |
-| `getTryoutContextForAttempt` | Resolve SNBT context from a subject `exerciseAttempt` |
+| `getTryoutContextForAttempt` | Resolve owned SNBT context from a subject `exerciseAttempt` |
 | `getTryoutLeaderboard` | Read official per-try-out ranking via aggregate component |
 | `getGlobalLeaderboard` | Read official locale+year global ranking via aggregate component |
 
@@ -109,6 +108,7 @@ flowchart TD
 - Official ranking reads use the aggregate component for O(log n) rank lookup
 - The backend stores only the state it must query directly; officialness is derived from completion behavior, not a redundant flag
 - Practice uses the standalone exercise engine so the SNBT lifecycle stays focused on official simulation state
+- Try-out queries fail fast on broken subject mappings instead of silently hiding invalid relational state
 - Global leaderboard within one year is a product metric over official frozen
   calibrated tryouts; it does not attempt extra cross-form linking for unique
   question sets
@@ -116,7 +116,7 @@ flowchart TD
 ## IRT Scoring
 
 - Subject and try-out theta use EAP estimation
-- Operational SNBT theta estimation uses a 2PL policy over calibrated item parameters
+- Operational SNBT theta estimation uses calibrated 2PL item parameters
 - Display score scale is `200-1000`
 - `theta = 0` maps to `600`
 - Implementation lives in `packages/backend/convex/irt/`

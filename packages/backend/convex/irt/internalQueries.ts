@@ -3,7 +3,7 @@ import { irtCalibratedItemValidator } from "@repo/backend/convex/irt/validators"
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
-import { getAll, getManyFrom } from "convex-helpers/server/relationships";
+import { getManyFrom } from "convex-helpers/server/relationships";
 
 export const calibrationQuestionValidator = v.object({
   questionId: vv.id("exerciseQuestions"),
@@ -61,7 +61,6 @@ export const getCalibrationQuestionsForSet = internalQuery({
         questionId: params.questionId,
         difficulty: params.difficulty,
         discrimination: params.discrimination,
-        guessing: params.guessing,
         responseCount: params.responseCount,
         correctRate: params.correctRate,
         calibrationStatus: params.calibrationStatus,
@@ -71,61 +70,70 @@ export const getCalibrationQuestionsForSet = internalQuery({
 });
 
 /**
- * Load one page of scored responses for a single question.
- *
- * Only completed simulation attempts are included so the calibration dataset is
- * aligned with the operational testing conditions used by SNBT.
+ * Load one page of scored responses from completed simulation set attempts.
  */
-export const getCalibrationResponsesPageForQuestion = internalQuery({
+export const getCalibrationResponsesPageForSet = internalQuery({
   args: {
-    questionId: vv.id("exerciseQuestions"),
+    setId: vv.id("exerciseSets"),
     paginationOpts: paginationOptsValidator,
   },
   returns: calibrationResponsesPageResultValidator,
   handler: async (ctx, args) => {
-    const responsePage = await ctx.db
-      .query("exerciseAnswers")
-      .withIndex("questionId", (q) => q.eq("questionId", args.questionId))
+    const set = await ctx.db.get("exerciseSets", args.setId);
+
+    if (!set) {
+      throw new Error("Exercise set not found for calibration responses.");
+    }
+
+    const attemptPage = await ctx.db
+      .query("exerciseAttempts")
+      .withIndex("slug_scope_mode_status_startedAt", (q) =>
+        q
+          .eq("slug", set.slug)
+          .eq("scope", "set")
+          .eq("mode", "simulation")
+          .eq("status", "completed")
+      )
       .paginate(args.paginationOpts);
 
-    const attemptIds = [
-      ...new Set(responsePage.page.map((answer) => answer.attemptId)),
-    ];
-    const attempts = await getAll(ctx.db, "exerciseAttempts", attemptIds);
-    const attemptsById = new Map(
-      attempts.flatMap((attempt) => {
-        if (!attempt) {
-          return [];
-        }
-
-        return [[attempt._id, attempt]];
-      })
+    const answersByAttempt = await Promise.all(
+      attemptPage.page.map((attempt) =>
+        getManyFrom(
+          ctx.db,
+          "exerciseAnswers",
+          "attemptId_exerciseNumber",
+          attempt._id,
+          "attemptId"
+        )
+      )
     );
 
-    const page = responsePage.page.flatMap((answer) => {
-      const attempt = attemptsById.get(answer.attemptId);
+    const page = answersByAttempt.flatMap((answers, index) => {
+      const attempt = attemptPage.page[index];
 
-      if (
-        !attempt ||
-        attempt.mode !== "simulation" ||
-        attempt.status !== "completed"
-      ) {
+      if (!attempt) {
         return [];
       }
 
-      return [
-        {
-          attemptId: answer.attemptId,
-          isCorrect: answer.isCorrect,
-          questionId: args.questionId,
-        },
-      ];
+      return answers.flatMap((answer) => {
+        if (answer.questionId === undefined) {
+          return [];
+        }
+
+        return [
+          {
+            attemptId: attempt._id,
+            isCorrect: answer.isCorrect,
+            questionId: answer.questionId,
+          },
+        ];
+      });
     });
 
     return {
       page,
-      isDone: responsePage.isDone,
-      continueCursor: responsePage.continueCursor,
+      isDone: attemptPage.isDone,
+      continueCursor: attemptPage.continueCursor,
     };
   },
 });

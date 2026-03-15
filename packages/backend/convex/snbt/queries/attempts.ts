@@ -3,7 +3,7 @@ import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { getFirstCompletedSimulationAttempt } from "@repo/backend/convex/snbt/helpers";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import {
   getAll,
   getManyFrom,
@@ -73,19 +73,24 @@ export const getUserTryoutAttempt = query({
     const setAttemptIds = subjectAttempts.map((sa) => sa.setAttemptId);
     const setAttempts = await getAll(ctx.db, "exerciseAttempts", setAttemptIds);
 
-    const validSubjectAttempts = subjectAttempts
-      .map((sa, i) => {
-        const setAttempt = setAttempts[i];
+    const validSubjectAttempts = subjectAttempts.map(
+      (subjectAttempt, index) => {
+        const setAttempt = setAttempts[index];
+
         if (!setAttempt) {
-          return null;
+          throw new ConvexError({
+            code: "INVALID_ATTEMPT_STATE",
+            message: "Subject attempt is missing its exercise attempt.",
+          });
         }
+
         return {
-          subjectIndex: sa.subjectIndex,
+          subjectIndex: subjectAttempt.subjectIndex,
           setAttempt,
-          setId: sa.setId,
+          setId: subjectAttempt.setId,
         };
-      })
-      .filter((x) => x !== null);
+      }
+    );
 
     const completedSubjectIndices = attempt.completedSubjectIndices;
 
@@ -122,7 +127,7 @@ export const getUserTryoutAttempt = query({
 });
 
 /**
- * Resolve SNBT try-out context for a shared `exerciseAttempt`.
+ * Resolve owned SNBT try-out context for a shared `exerciseAttempt`.
  */
 export const getTryoutContextForAttempt = query({
   args: {
@@ -137,6 +142,8 @@ export const getTryoutContextForAttempt = query({
     })
   ),
   handler: async (ctx, args) => {
+    const { appUser } = await requireAuth(ctx);
+
     const subjectAttempt = await getOneFrom(
       ctx.db,
       "snbtTryoutSubjectAttempts",
@@ -157,12 +164,23 @@ export const getTryoutContextForAttempt = query({
       return null;
     }
 
+    if (tryoutAttempt.userId !== appUser._id) {
+      return null;
+    }
+
     const tryout = await ctx.db.get("snbtTryouts", tryoutAttempt.tryoutId);
+
+    if (!tryout) {
+      throw new ConvexError({
+        code: "INVALID_ATTEMPT_STATE",
+        message: "Subject attempt is missing its parent tryout.",
+      });
+    }
 
     return {
       tryoutAttemptId: tryoutAttempt._id,
       tryoutId: tryoutAttempt.tryoutId,
-      tryoutSlug: tryout?.slug ?? "",
+      tryoutSlug: tryout.slug,
       subjectIndex: subjectAttempt.subjectIndex,
     };
   },

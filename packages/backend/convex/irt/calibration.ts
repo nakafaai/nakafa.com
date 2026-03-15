@@ -3,7 +3,6 @@ import {
   estimateDifficultyFromCorrectRate,
   estimateThetaEAP,
   getProvisionalParams,
-  toOperationalTwoPLParams,
 } from "@repo/backend/convex/irt/estimation";
 import {
   IRT_CALIBRATION_CONVERGENCE_DELTA,
@@ -22,7 +21,6 @@ interface CalibrationResponse {
 interface CalibrationSeed {
   difficulty: number;
   discrimination: number;
-  guessing: number;
 }
 
 const THETA_SEED_MIN = -4;
@@ -45,7 +43,7 @@ function sigmoid(value: number) {
 
 function createSeedParams(correctRate: number, existing?: CalibrationSeed) {
   if (existing) {
-    return toOperationalTwoPLParams(existing);
+    return existing;
   }
 
   const provisional = getProvisionalParams();
@@ -171,7 +169,6 @@ function fitItemLogistic2PL(
     params: {
       difficulty: -intercept / slope,
       discrimination: slope,
-      guessing: 0,
     },
   };
 }
@@ -193,9 +190,13 @@ export function calibrateTwoPLItems({
   existingParams: Map<Id<"exerciseQuestions">, CalibrationSeed>;
 }) {
   const questionIds = questions.map((question) => question.questionId);
-  const responsesByQuestion = new Map(
-    questionIds.map((questionId) => [questionId, [] as CalibrationResponse[]])
-  );
+  const responsesByQuestion = new Map<
+    Id<"exerciseQuestions">,
+    CalibrationResponse[]
+  >();
+  for (const questionId of questionIds) {
+    responsesByQuestion.set(questionId, []);
+  }
   const responsesByAttempt = new Map<
     Id<"exerciseAttempts">,
     CalibrationResponse[]
@@ -331,7 +332,6 @@ export function calibrateTwoPLItems({
       questionId,
       difficulty: params.difficulty,
       discrimination: params.discrimination,
-      guessing: 0,
       responseCount,
       correctRate,
       calibrationStatus,

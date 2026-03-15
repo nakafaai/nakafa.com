@@ -5,8 +5,7 @@ This module owns operational IRT scoring policy and durable item calibration for
 
 ## Current Operational Policy
 
-- SNBT scoring uses `2PL` operationally
-- Stored item parameters keep `guessing`, but operational scoring sets `c = 0`
+- SNBT scoring uses `2PL`
 - Ability estimation uses `EAP` over the operational 2PL item parameters
 - New or weakly supported items remain `provisional` or `emerging`
 - Official SNBT simulation attempts require a published tryout scale version
@@ -40,7 +39,7 @@ irt/internalQueries.ts
     v
 irt/internalActions.ts
     |
-    +--> load completed simulation responses in pages
+    +--> load completed simulation set responses in pages
     +--> run alternating 2PL calibration
     |
     v
@@ -66,7 +65,7 @@ cron drains scale publication queue
 
 | File | Responsibility |
 |------|----------------|
-| `estimation.ts` | EAP theta estimation and operational 2PL normalization |
+| `estimation.ts` | EAP theta estimation helpers |
 | `scoring.ts` | Theta-to-score transforms |
 | `policy.ts` | Centralized operational model and convergence policy |
 | `calibration.ts` | Pure TypeScript 2PL calibration math |
@@ -96,12 +95,12 @@ drainCalibrationQueue()
 drainScalePublicationQueue()
     |
     +--> take oldest queued tryouts
--    +--> publish only when calibrated snapshot changed
+    +--> publish only when calibrated snapshot changed
 ```
 
 ## Notes
 
 - Calibration currently works at the `exerciseSet` level
-- Calibration input is limited to `completed` `simulation` attempts
+- Calibration input is limited to `completed` `simulation` set attempts
 - This pipeline improves item parameters and freezes official scales, but it does
   not attempt additional cross-form equating/linking for unique-item tryouts

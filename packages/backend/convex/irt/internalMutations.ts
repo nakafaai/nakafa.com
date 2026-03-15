@@ -213,7 +213,6 @@ export const completeCalibrationRun = internalMutation({
         setId: run.setId,
         difficulty: item.difficulty,
         discrimination: item.discrimination,
-        guessing: item.guessing,
         responseCount: item.responseCount,
         correctRate: item.correctRate,
         calibratedAt: now,
@@ -276,7 +275,7 @@ export const completeCalibrationRun = internalMutation({
 });
 
 /**
- * Mark a calibration run as failed.
+ * Mark a calibration run as failed and keep it eligible for retry.
  */
 export const failCalibrationRun = internalMutation({
   args: {
@@ -285,11 +284,29 @@ export const failCalibrationRun = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
+    const run = await ctx.db.get("irtCalibrationRuns", args.calibrationRunId);
+
+    if (!run) {
+      throw new Error("Calibration run not found.");
+    }
+
     await ctx.db.patch("irtCalibrationRuns", args.calibrationRunId, {
       status: "failed",
       error: args.error,
       updatedAt: Date.now(),
     });
+
+    const existingQueueEntry = await ctx.db
+      .query("irtCalibrationQueue")
+      .withIndex("setId_enqueuedAt", (q) => q.eq("setId", run.setId))
+      .first();
+
+    if (!existingQueueEntry) {
+      await ctx.db.insert("irtCalibrationQueue", {
+        setId: run.setId,
+        enqueuedAt: Date.now(),
+      });
+    }
 
     return null;
   },

@@ -22,8 +22,23 @@ import {
   getFirstCompletedSimulationAttempt,
   syncTryoutAttemptExpiry,
 } from "@repo/backend/convex/snbt/helpers";
-import { ConvexError, v } from "convex/values";
+import { snbtTryoutStatusValidator } from "@repo/backend/convex/snbt/schema";
+import { ConvexError, type Infer, v } from "convex/values";
 import { getManyFrom } from "convex-helpers/server/relationships";
+
+const completeTryoutResultValidator = v.object({
+  status: snbtTryoutStatusValidator,
+  isOfficial: v.boolean(),
+  theta: v.number(),
+  irtScore: v.number(),
+  rawScorePercentage: v.number(),
+});
+
+type CompleteTryoutResult = Infer<typeof completeTryoutResultValidator>;
+
+function buildCompleteTryoutResult<T extends CompleteTryoutResult>(result: T) {
+  return result;
+}
 
 /**
  * Start a new SNBT simulation attempt or resume the latest in-progress
@@ -470,18 +485,7 @@ export const completeTryout = mutation({
   args: {
     tryoutAttemptId: vv.id("snbtTryoutAttempts"),
   },
-  returns: v.object({
-    status: v.union(
-      v.literal("in-progress"),
-      v.literal("completed"),
-      v.literal("expired"),
-      v.literal("abandoned")
-    ),
-    isOfficial: v.boolean(),
-    theta: v.number(),
-    irtScore: v.number(),
-    rawScorePercentage: v.number(),
-  }),
+  returns: completeTryoutResultValidator,
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);
     const userId = appUser._id;
@@ -514,35 +518,24 @@ export const completeTryout = mutation({
           tryoutId: tryoutAttempt.tryoutId,
         }
       );
-      return {
-        status: "completed" as const,
+      return buildCompleteTryoutResult({
+        status: "completed",
         isOfficial: firstCompletedAttempt?._id === tryoutAttempt._id,
         theta: tryoutAttempt.theta,
         irtScore: tryoutAttempt.irtScore,
         rawScorePercentage,
-      };
+      });
     }
 
     if (tryoutAttempt.status === "expired") {
       const rawScorePercentage = computeSnbtRawScorePercentage(tryoutAttempt);
-      return {
-        status: "expired" as const,
+      return buildCompleteTryoutResult({
+        status: "expired",
         isOfficial: false,
         theta: tryoutAttempt.theta,
         irtScore: tryoutAttempt.irtScore,
         rawScorePercentage,
-      };
-    }
-
-    if (tryoutAttempt.status === "abandoned") {
-      const rawScorePercentage = computeSnbtRawScorePercentage(tryoutAttempt);
-      return {
-        status: "abandoned" as const,
-        isOfficial: false,
-        theta: tryoutAttempt.theta,
-        irtScore: tryoutAttempt.irtScore,
-        rawScorePercentage,
-      };
+      });
     }
 
     if (tryoutAttempt.status !== "in-progress") {
@@ -557,13 +550,13 @@ export const completeTryout = mutation({
     if (tryoutExpiry.expired) {
       const rawScorePercentage = computeSnbtRawScorePercentage(tryoutAttempt);
 
-      return {
-        status: "expired" as const,
+      return buildCompleteTryoutResult({
+        status: "expired",
         isOfficial: false,
         theta: tryoutAttempt.theta,
         irtScore: tryoutAttempt.irtScore,
         rawScorePercentage,
-      };
+      });
     }
 
     const [tryout, firstCompletedAttempt] = await Promise.all([
@@ -584,13 +577,13 @@ export const completeTryout = mutation({
     const rawScorePercentage = computeSnbtRawScorePercentage(tryoutAttempt);
 
     if (tryoutAttempt.completedSubjectIndices.length < tryout.subjectCount) {
-      return {
-        status: "in-progress" as const,
+      return buildCompleteTryoutResult({
+        status: "in-progress",
         isOfficial: false,
         theta: tryoutAttempt.theta,
         irtScore: tryoutAttempt.irtScore,
         rawScorePercentage,
-      };
+      });
     }
 
     const isOfficial = firstCompletedAttempt === null;
@@ -649,13 +642,13 @@ export const completeTryout = mutation({
       );
     }
 
-    return {
-      status: "completed" as const,
+    return buildCompleteTryoutResult({
+      status: "completed",
       isOfficial,
       theta,
       irtScore: clampedIRTScore,
       rawScorePercentage,
-    };
+    });
   },
 });
 

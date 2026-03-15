@@ -4,10 +4,7 @@ import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { internalAction } from "@repo/backend/convex/_generated/server";
 import { calibrateTwoPLItems } from "@repo/backend/convex/irt/calibration";
 import type { calibrationResponsesPageResultValidator } from "@repo/backend/convex/irt/internalQueries";
-import {
-  IRT_OPERATIONAL_MODEL,
-  IRT_PROBABILITY_EPSILON,
-} from "@repo/backend/convex/irt/policy";
+import { IRT_PROBABILITY_EPSILON } from "@repo/backend/convex/irt/policy";
 import { irtCalibrationResultValidator } from "@repo/backend/convex/irt/validators";
 import { type Infer, v } from "convex/values";
 
@@ -29,20 +26,20 @@ function runCalibrationQuestionsForSet(
   );
 }
 
-function runCalibrationResponsesPageForQuestion(
+function runCalibrationResponsesPageForSet(
   ctx: ActionCtx,
   {
     cursor,
-    questionId,
+    setId,
   }: {
     cursor: string | null;
-    questionId: Id<"exerciseQuestions">;
+    setId: Id<"exerciseSets">;
   }
 ) {
   return ctx.runQuery(
-    internal.irt.internalQueries.getCalibrationResponsesPageForQuestion,
+    internal.irt.internalQueries.getCalibrationResponsesPageForSet,
     {
-      questionId,
+      setId,
       paginationOpts: {
         numItems: CALIBRATION_PAGE_SIZE,
         cursor,
@@ -70,23 +67,21 @@ export const calibrateSetTwoPL = internalAction({
 
     const responses: CalibrationResponse[] = [];
 
-    for (const question of questions) {
-      let cursor: string | null = null;
+    let cursor: string | null = null;
 
-      while (true) {
-        const responsePage = await runCalibrationResponsesPageForQuestion(ctx, {
-          questionId: question.questionId,
-          cursor,
-        });
+    while (true) {
+      const responsePage = await runCalibrationResponsesPageForSet(ctx, {
+        setId: args.setId,
+        cursor,
+      });
 
-        responses.push(...responsePage.page);
+      responses.push(...responsePage.page);
 
-        if (responsePage.isDone) {
-          break;
-        }
-
-        cursor = responsePage.continueCursor;
+      if (responsePage.isDone) {
+        break;
       }
+
+      cursor = responsePage.continueCursor;
     }
 
     const calibration = calibrateTwoPLItems({
@@ -98,14 +93,13 @@ export const calibrateSetTwoPL = internalAction({
           {
             difficulty: params.difficulty,
             discrimination: params.discrimination,
-            guessing: params.guessing,
           },
         ])
       ),
     });
 
-    return {
-      model: IRT_OPERATIONAL_MODEL,
+    const result = {
+      model: "2pl",
       attemptCount: calibration.attemptCount,
       responseCount: calibration.responseCount,
       questionCount: calibration.questionCount,
@@ -114,6 +108,8 @@ export const calibrateSetTwoPL = internalAction({
         Math.round(calibration.maxParameterDelta / IRT_PROBABILITY_EPSILON) *
         IRT_PROBABILITY_EPSILON,
       items: calibration.items,
-    };
+    } satisfies Infer<typeof irtCalibrationResultValidator>;
+
+    return result;
   },
 });

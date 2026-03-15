@@ -27,10 +27,7 @@ const questionAnswerSheetValidator = v.array(
 /**
  * Get the latest attempt for a specific exercise/set.
  *
- * Best Practices:
- * - Uses `.withIndex` for O(log n) efficient lookup (no table scans).
- * - Returns the most recent attempt regardless of status (in-progress, completed, expired, abandoned).
- * - Joins answers efficiently using `.withIndex` on the child table.
+ * Returns the most recent attempt regardless of status.
  */
 export const getLatestAttemptBySlug = query({
   args: {
@@ -64,8 +61,6 @@ export const getLatestAttemptBySlug = query({
       attempt._id,
       "attemptId"
     );
-
-    // 3. Return the combined state (Attempt + Answers).
     return {
       attempt,
       answers,

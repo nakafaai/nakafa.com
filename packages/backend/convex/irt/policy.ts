@@ -1,11 +1,7 @@
 /**
  * Operational IRT model used for current SNBT scoring.
- *
- * We intentionally keep the operational model conservative and interpretable by
- * using 2PL for scoring while still storing a guessing parameter for future
- * calibration work.
  */
-export const IRT_OPERATIONAL_MODEL = "2pl" as const;
+export const IRT_OPERATIONAL_MODEL = "2pl";
 
 /**
  * Conservative minimum scored responses required before an item is promoted to

@@ -8,7 +8,6 @@
 export interface ItemParameters {
   difficulty: number;
   discrimination: number;
-  guessing: number;
 }
 
 export interface Response {
@@ -30,13 +29,8 @@ function getThetaGrid(): number[] {
   return grid;
 }
 
-function probabilityCorrect(
-  theta: number,
-  a: number,
-  b: number,
-  c: number
-): number {
-  return c + (1 - c) / (1 + Math.exp(-a * (theta - b)));
+function probabilityCorrect(theta: number, a: number, b: number): number {
+  return 1 / (1 + Math.exp(-a * (theta - b)));
 }
 
 function likelihood(theta: number, responses: Response[]): number {
@@ -45,8 +39,7 @@ function likelihood(theta: number, responses: Response[]): number {
     const p = probabilityCorrect(
       theta,
       response.params.discrimination,
-      response.params.difficulty,
-      response.params.guessing
+      response.params.difficulty
     );
     product *= response.correct ? p : 1 - p;
   }
@@ -56,23 +49,6 @@ function likelihood(theta: number, responses: Response[]): number {
 function normalPDF(x: number, mean: number, sd: number): number {
   const exp = -0.5 * ((x - mean) / sd) ** 2;
   return (1 / (sd * Math.sqrt(2 * Math.PI))) * Math.exp(exp);
-}
-
-/**
- * Convert stored item parameters to the operational 2PL policy used for SNBT
- * scoring.
- *
- * The backend still persists `guessing` for future calibration work, but the
- * current operational model sets `c = 0` so scoring behaves as a 2PL model.
- */
-export function toOperationalTwoPLParams(
-  params: ItemParameters
-): ItemParameters {
-  return {
-    difficulty: params.difficulty,
-    discrimination: params.discrimination,
-    guessing: 0,
-  };
 }
 
 /**
@@ -134,7 +110,6 @@ export function getProvisionalParams(): ItemParameters {
   return {
     difficulty: 0,
     discrimination: 1,
-    guessing: 0,
   };
 }
 

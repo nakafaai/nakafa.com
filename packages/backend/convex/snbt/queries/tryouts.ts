@@ -1,7 +1,7 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { getAll, getManyFrom } from "convex-helpers/server/relationships";
 
 /**
@@ -11,22 +11,7 @@ export const getActiveTryouts = query({
   args: {
     locale: localeValidator,
   },
-  returns: v.array(
-    v.object({
-      _id: vv.id("snbtTryouts"),
-      _creationTime: v.number(),
-      locale: localeValidator,
-      year: v.number(),
-      slug: v.string(),
-      setName: v.string(),
-      subjectCount: v.number(),
-      questionCountPerSubject: v.number(),
-      totalQuestionCount: v.number(),
-      isActive: v.boolean(),
-      detectedAt: v.number(),
-      syncedAt: v.number(),
-    })
-  ),
+  returns: v.array(vv.doc("snbtTryouts")),
   handler: async (ctx, args) => {
     const tryouts = await ctx.db
       .query("snbtTryouts")
@@ -35,7 +20,10 @@ export const getActiveTryouts = query({
       )
       .collect();
 
-    return tryouts;
+    return [...tryouts].sort(
+      (left, right) =>
+        right.year - left.year || left.setName.localeCompare(right.setName)
+    );
   },
 });
 
@@ -89,12 +77,20 @@ export const getTryoutDetails = query({
 
     const subjects = tryoutSets.map((ts, i) => {
       const set = sets[i];
+
+      if (!set) {
+        throw new ConvexError({
+          code: "INVALID_TRYOUT_STATE",
+          message: "Tryout is missing one of its subject sets.",
+        });
+      }
+
       return {
         subjectIndex: ts.subjectIndex,
         setId: ts.setId,
-        material: set?.material ?? "",
-        title: set?.title ?? "",
-        questionCount: set?.questionCount ?? 0,
+        material: set.material,
+        title: set.title,
+        questionCount: set.questionCount,
       };
     });
 

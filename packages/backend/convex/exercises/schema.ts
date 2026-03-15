@@ -27,8 +27,7 @@ export const exerciseAttemptOriginValidator = literals("standalone", "snbt");
 export const exerciseAttemptStatusValidator = literals(
   "in-progress",
   "completed",
-  "expired",
-  "abandoned"
+  "expired"
 );
 
 const tables = {
@@ -52,13 +51,21 @@ const tables = {
     correctAnswers: v.number(),
     totalTime: v.number(),
     scorePercentage: v.number(),
-  }).index("userId_origin_slug_scope_startedAt", [
-    "userId",
-    "origin",
-    "slug",
-    "scope",
-    "startedAt",
-  ]),
+  })
+    .index("userId_origin_slug_scope_startedAt", [
+      "userId",
+      "origin",
+      "slug",
+      "scope",
+      "startedAt",
+    ])
+    .index("slug_scope_mode_status_startedAt", [
+      "slug",
+      "scope",
+      "mode",
+      "status",
+      "startedAt",
+    ]),
 
   exerciseAnswers: defineTable({
     attemptId: v.id("exerciseAttempts"),
