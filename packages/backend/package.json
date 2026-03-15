@@ -28,21 +28,20 @@
   },
   "dependencies": {
     "@convex-dev/aggregate": "^0.2.1",
-    "@convex-dev/better-auth": "^0.10.13",
-    "@convex-dev/migrations": "^0.3.1",
+    "@convex-dev/better-auth": "^0.11.1",
     "@convex-dev/resend": "^0.2.3",
-    "@convex-dev/workflow": "^0.3.5",
-    "@convex-dev/workpool": "^0.4.1",
-    "@polar-sh/sdk": "^0.46.3",
+    "@convex-dev/workflow": "^0.3.6",
+    "@convex-dev/workpool": "^0.4.2",
+    "@polar-sh/sdk": "^0.46.4",
     "@repo/ai": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.10",
     "ai": "^6.0.116",
-    "better-auth": "1.4.9",
+    "better-auth": "1.5.5",
     "buffer": "^6.0.3",
-    "convex": "^1.32.0",
+    "convex": "^1.33.1",
     "convex-helpers": "^0.1.114",
-    "hono": "^4.12.5",
-    "jsonrepair": "^3.13.2",
+    "hono": "^4.12.8",
+    "jsonrepair": "^3.13.3",
     "nanoid": "^5.1.6",
     "strip-ansi": "^7.2.0",
     "zod": "^4.3.6"
@@ -51,10 +50,10 @@
     "@edge-runtime/vm": "^5.0.0",
     "@repo/contents": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@vitest/coverage-istanbul": "^4.0.18",
+    "@vitest/coverage-istanbul": "^4.1.0",
     "convex-test": "^0.0.41",
     "glob": "^13.0.6",
     "tsx": "^4.21.0",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.0"
   }
 }

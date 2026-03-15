@@ -3,38 +3,38 @@ import { BASE_PATH } from ".";
 
 const idMaterials: ExercisesMaterialList = [
   {
-    title: "Try Out",
+    title: "Try Out 2026",
     description:
       "Simulasi ujian nyata untuk mengasah kemampuan dan kepercayaan diri.",
-    href: `${BASE_PATH}/try-out`,
+    href: `${BASE_PATH}/try-out/2026`,
     items: [
       {
         title: "Set 1",
-        href: `${BASE_PATH}/try-out/set-1`,
+        href: `${BASE_PATH}/try-out/2026/set-1`,
       },
       {
         title: "Set 2",
-        href: `${BASE_PATH}/try-out/set-2`,
+        href: `${BASE_PATH}/try-out/2026/set-2`,
       },
       {
         title: "Set 3",
-        href: `${BASE_PATH}/try-out/set-3`,
+        href: `${BASE_PATH}/try-out/2026/set-3`,
       },
       {
         title: "Set 4",
-        href: `${BASE_PATH}/try-out/set-4`,
+        href: `${BASE_PATH}/try-out/2026/set-4`,
       },
       {
         title: "Set 5",
-        href: `${BASE_PATH}/try-out/set-5`,
+        href: `${BASE_PATH}/try-out/2026/set-5`,
       },
       {
         title: "Set 6",
-        href: `${BASE_PATH}/try-out/set-6`,
+        href: `${BASE_PATH}/try-out/2026/set-6`,
       },
       {
         title: "Set 7",
-        href: `${BASE_PATH}/try-out/set-7`,
+        href: `${BASE_PATH}/try-out/2026/set-7`,
       },
     ],
   },

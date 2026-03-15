@@ -12,13 +12,12 @@ import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
-import { CardSubject } from "@/components/shared/card-subject";
 import { ComingSoon } from "@/components/shared/coming-soon";
-import { ContainerList } from "@/components/shared/container-list";
 import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
+import { SubjectItem, SubjectList } from "@/components/shared/subject-list";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { createSEOTitle } from "@/lib/utils/seo/titles";
@@ -128,8 +127,9 @@ async function PageContent({
 }) {
   const FilePath = getGradePath(category, grade);
 
-  const [subjects, t] = await Promise.all([
+  const [subjects, tCommon, tSubject] = await Promise.all([
     getGradeSubjects(category, grade),
+    getTranslations({ locale, namespace: "Common" }),
     getTranslations({ locale, namespace: "Subject" }),
   ]);
 
@@ -140,29 +140,33 @@ async function PageContent({
           "@type": "ListItem",
           "@id": `https://nakafa.com/${locale}${subject.href}`,
           position: index + 1,
-          name: t(subject.label),
+          name: tSubject(subject.label),
           item: `https://nakafa.com/${locale}${subject.href}`,
         }))}
       />
       <HeaderContent
-        description={t("grade-description")}
+        description={tSubject("grade-description")}
         icon={getCategoryIcon(category)}
-        title={t(getGradeNonNumeric(grade) ?? "grade", { grade })}
+        link={{
+          href: "/subject",
+          label: tCommon("explore-grades"),
+        }}
+        title={tSubject(getGradeNonNumeric(grade) ?? "grade", { grade })}
       />
       <LayoutContent>
         {subjects.length === 0 ? (
           <ComingSoon />
         ) : (
-          <ContainerList>
+          <SubjectList>
             {subjects.map((subject) => (
-              <CardSubject
+              <SubjectItem
                 href={subject.href}
                 icon={getMaterialIcon(subject.label)}
                 key={subject.label}
-                label={t(subject.label)}
+                label={tSubject(subject.label)}
               />
             ))}
-          </ContainerList>
+          </SubjectList>
         )}
       </LayoutContent>
       <FooterContent>

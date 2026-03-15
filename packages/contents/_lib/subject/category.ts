@@ -1,8 +1,8 @@
 import {
   Backpack01Icon,
+  Building03Icon,
   GraduationScrollIcon,
-  LibraryIcon,
-  Notebook01Icon,
+  TeacherIcon,
   UniversityIcon,
 } from "@hugeicons/core-free-icons";
 import type { SubjectCategory } from "@repo/contents/_types/subject/category";
@@ -26,9 +26,9 @@ export function getCategoryIcon(category: SubjectCategory) {
     case "elementary-school":
       return Backpack01Icon;
     case "middle-school":
-      return Notebook01Icon;
+      return TeacherIcon;
     case "high-school":
-      return LibraryIcon;
+      return Building03Icon;
     case "university":
       return UniversityIcon;
     default:

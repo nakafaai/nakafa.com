@@ -1,10 +1,24 @@
 import type { SubjectCategory } from "@repo/contents/_types/subject/category";
-import {
-  type Grade,
-  NonNumericGradeSchema,
-} from "@repo/contents/_types/subject/grade";
-import type { Material } from "@repo/contents/_types/subject/material";
+import { SubjectCategorySchema } from "@repo/contents/_types/subject/category";
+import type { Grade } from "@repo/contents/_types/subject/grade";
+import { NonNumericGradeSchema } from "@repo/contents/_types/subject/grade";
+import { MaterialSchema } from "@repo/contents/_types/subject/material";
+import * as z from "zod";
 import { getCategoryPath } from "./category";
+
+const CATEGORY_GRADES: Record<SubjectCategory, Grade[]> = {
+  "elementary-school": ["1", "2", "3", "4", "5", "6"],
+  "middle-school": ["7", "8", "9"],
+  "high-school": ["10", "11", "12"],
+  university: ["bachelor"],
+};
+
+const GradeSubjectSchema = z.array(
+  z.object({
+    label: MaterialSchema,
+    href: z.string(),
+  })
+);
 
 /**
  * Gets the path to the grade of the subject.
@@ -19,7 +33,7 @@ export function getGradePath(category: SubjectCategory, grade: Grade) {
 /**
  * Gets the non-numeric grade.
  * @param grade - The grade to get.
- * @returns The non-numeric grade.
+ * @returns The non-numeric grade, or undefined if the grade is numeric.
  */
 export function getGradeNonNumeric(grade: Grade) {
   const parsedGrade = NonNumericGradeSchema.safeParse(grade);
@@ -32,20 +46,24 @@ export function getGradeNonNumeric(grade: Grade) {
 }
 
 /**
+ * Gets the list of grades for a category.
+ * @param category - The category to get grades for.
+ * @returns An array of grades for the category.
+ */
+export function getCategoryGrades(category: SubjectCategory) {
+  return CATEGORY_GRADES[category] ?? [];
+}
+
+/**
  * Gets the subjects for a grade.
  * @param category - The category to get the subjects for.
  * @param grade - The grade to get the subjects for.
- * @returns The subjects for the grade.
+ * @returns An array of subjects for the grade.
  */
 export async function getGradeSubjects(
   category: SubjectCategory,
   grade: Grade
-): Promise<
-  {
-    label: Material;
-    href: string;
-  }[]
-> {
+) {
   try {
     const gradePath = getCategoryPath(category);
 
@@ -57,8 +75,40 @@ export async function getGradeSubjects(
       `@repo/contents/${cleanPath}/_data/subject.ts`
     );
 
-    return gradeModule.getSubjects(grade);
+    const result = gradeModule.getSubjects(grade);
+
+    return GradeSubjectSchema.parse(result);
   } catch {
     return [];
   }
+}
+
+/**
+ * Gets all grades with their subjects across specified categories.
+ * @param categories - Optional array of categories to filter. If not provided, returns all categories.
+ * @returns An array of grade objects with category, grade, label, href, and subjects.
+ */
+export async function getAllGradesWithSubjects(
+  categories?: readonly SubjectCategory[]
+) {
+  const categoriesToFetch = categories ?? SubjectCategorySchema.options;
+
+  const gradeEntries = categoriesToFetch.flatMap((category) =>
+    CATEGORY_GRADES[category].map((grade) => ({
+      category,
+      grade,
+    }))
+  );
+
+  const subjectsResults = await Promise.all(
+    gradeEntries.map(({ category, grade }) => getGradeSubjects(category, grade))
+  );
+
+  return gradeEntries.map(({ category, grade }, index) => ({
+    category,
+    grade,
+    label: getGradeNonNumeric(grade) ?? grade,
+    href: getGradePath(category, grade),
+    subjects: subjectsResults[index],
+  }));
 }

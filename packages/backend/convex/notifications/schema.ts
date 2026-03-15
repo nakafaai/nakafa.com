@@ -170,7 +170,7 @@ const tables = {
     ),
 
     updatedAt: v.number(),
-  }),
+  }).index("userId", ["userId"]),
 };
 
 export default tables;

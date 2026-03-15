@@ -122,15 +122,15 @@ function DialogDescription({
 
 export {
   Dialog,
-  DialogTrigger,
-  DialogPortal,
-  DialogClose,
   DialogBackdrop,
   DialogBackdrop as DialogOverlay,
+  DialogClose,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
   DialogPopup,
   DialogPopup as DialogContent,
-  DialogHeader,
-  DialogFooter,
+  DialogPortal,
   DialogTitle,
-  DialogDescription,
+  DialogTrigger,
 };

@@ -103,10 +103,10 @@ export const ForumPostConversation = memo(
     const jumpToPostId = useCallback(
       (postId: Id<"schoolClassForumPosts">) => {
         const index = postIdToIndex.get(postId);
-        if (index !== undefined) {
-          scrollRef.current?.scrollToIndex(index);
-        } else {
+        if (index === undefined) {
           enterJumpMode(postId);
+        } else {
+          scrollRef.current?.scrollToIndex(index);
         }
       },
       [postIdToIndex, enterJumpMode]

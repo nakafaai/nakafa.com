@@ -16,6 +16,10 @@
   },
   "linter": {
     "rules": {
+      "correctness": {
+        "useImportExtensions": "off",
+        "noUnresolvedImports": "off"
+      },
       "a11y": {
         "noNoninteractiveElementInteractions": "off"
       },
@@ -46,7 +50,8 @@
       "!apps/www/scripts/_data/**/*",
       "!packages/contents/_data/quran.ts",
       "!packages/backend/convex/_generated/**/*",
-      "!packages/backend/convex/betterAuth/_generated/**/*"
+      "!packages/backend/convex/betterAuth/_generated/**/*",
+      "!.agents/**/*"
     ]
   }
 }

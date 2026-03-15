@@ -155,7 +155,7 @@ packages/contents/exercises/{category}/{type}/{material}/
   _data/
     en-material.ts    # Set metadata
     id-material.ts
-  {exerciseType}/{set}/{number}/
+  {exerciseType}/{year?}/{set}/{number}/
     _question/en.mdx
     _question/id.mdx
     _answer/en.mdx
@@ -165,14 +165,14 @@ packages/contents/exercises/{category}/{type}/{material}/
 
 **⚠️ IMPORTANT**: When adding new exercise questions, you MUST define the set in the material files:
 
-1. Create question directories: `{category}/{type}/{material}/{exerciseType}/{set}/{number}/`
+1. Create question directories: `{category}/{type}/{material}/{exerciseType}/{year?}/{set}/{number}/`
 2. Add MDX files and choices
 3. **Add set definition** to `exercises/{category}/{type}/{material}/_data/en-material.ts` and `id-material.ts`:
 
 ```typescript
 {
   title: "Set 2",
-  href: `${BASE_PATH}/try-out/set-2`,
+  href: `${BASE_PATH}/try-out/2026/set-2`,
 }
 ```
 

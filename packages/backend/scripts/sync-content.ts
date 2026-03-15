@@ -6,6 +6,7 @@ import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import * as z from "zod";
 import {
+  buildExerciseSetSlug,
   computeHash,
   getArticleDir,
   getExerciseDir,
@@ -61,6 +62,8 @@ const BATCH_SIZES = {
   subjectSections: 20,
   exerciseSets: 50,
   exerciseQuestions: 30,
+  staleExerciseSets: 5,
+  staleExerciseQuestions: 100,
 } as const;
 
 /** Extracts locale from material file paths like "en-material.ts" -> "en" */
@@ -553,20 +556,28 @@ async function deleteStaleItems(
   mutationPath: string,
   paramName: string,
   items: StaleItem[],
-  successLabel: string
+  successLabel: string,
+  batchSize = items.length
 ): Promise<boolean> {
   if (items.length === 0) {
     return false;
   }
 
-  const ids = items.map((item) => item.id);
-  const result = await runConvexMutationGeneric(
-    config,
-    mutationPath,
-    { [paramName]: ids },
-    DeleteResultSchema
-  );
-  logSuccess(`Deleted ${result.deleted} ${successLabel}`);
+  let deleted = 0;
+
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch = items.slice(i, i + batchSize);
+    const ids = batch.map((item) => item.id);
+    const result = await runConvexMutationGeneric(
+      config,
+      mutationPath,
+      { [paramName]: ids },
+      DeleteResultSchema
+    );
+    deleted += result.deleted;
+  }
+
+  logSuccess(`Deleted ${deleted} ${successLabel}`);
   return true;
 }
 
@@ -1268,7 +1279,14 @@ async function syncExerciseSets(
   for (const qFile of questionFiles) {
     try {
       const pathInfo = parseExercisePath(qFile);
-      const setSlug = `exercises/${pathInfo.category}/${pathInfo.examType}/${pathInfo.material}/${pathInfo.exerciseType}/${pathInfo.setName}`;
+      const setSlug = buildExerciseSetSlug({
+        category: pathInfo.category,
+        examType: pathInfo.examType,
+        material: pathInfo.material,
+        exerciseType: pathInfo.exerciseType,
+        setName: pathInfo.setName,
+        year: pathInfo.year,
+      });
       const countKey = `${pathInfo.locale}:${setSlug}`;
       const count = questionCountByLocaleSlug.get(countKey) || 0;
       questionCountByLocaleSlug.set(countKey, count + 1);
@@ -1398,7 +1416,14 @@ async function parseQuestionFile(questionFile: string) {
     JSON.stringify(questionParsed.metadata.authors);
   const combinedHash = computeHash(combinedContent);
 
-  const setSlug = `exercises/${pathInfo.category}/${pathInfo.examType}/${pathInfo.material}/${pathInfo.exerciseType}/${pathInfo.setName}`;
+  const setSlug = buildExerciseSetSlug({
+    category: pathInfo.category,
+    examType: pathInfo.examType,
+    material: pathInfo.material,
+    exerciseType: pathInfo.exerciseType,
+    setName: pathInfo.setName,
+    year: pathInfo.year,
+  });
 
   return {
     locale: pathInfo.locale,
@@ -1598,6 +1623,59 @@ async function syncExerciseQuestions(
 }
 
 /**
+ * Syncs SNBT try-outs by detecting complete sets across all subjects.
+ * A try-out is detected when exercise sets exist for ALL 7 SNBT subjects
+ * with the same year + setName within a locale.
+ */
+async function syncSnbtTryouts(
+  config: ConvexConfig,
+  options: SyncOptions
+): Promise<SyncResult> {
+  const startTime = performance.now();
+  if (!options.quiet) {
+    log("\n--- SNBT TRY-OUTS ---\n");
+  }
+
+  const locales: Locale[] = options.locale ? [options.locale] : ["en", "id"];
+
+  const totals: SyncResult = { created: 0, updated: 0, unchanged: 0 };
+
+  for (const locale of locales) {
+    const result = await runConvexMutation(
+      config,
+      "contentSync/mutations:bulkSyncSnbtTryouts",
+      { locale }
+    );
+
+    totals.created += result.created;
+    totals.updated += result.updated;
+    totals.unchanged += result.unchanged;
+
+    if (!options.quiet) {
+      log(
+        `  ${locale}: ${result.created} created, ${result.updated} updated, ${result.unchanged} unchanged`
+      );
+    }
+  }
+
+  const durationMs = performance.now() - startTime;
+  const processed = totals.created + totals.updated + totals.unchanged;
+
+  if (!options.quiet) {
+    log(
+      `\nResult: ${totals.created} created, ${totals.updated} updated, ${totals.unchanged} unchanged`
+    );
+    log(`Time: ${formatDuration(durationMs)}`);
+  }
+
+  return {
+    ...totals,
+    durationMs,
+    itemsPerSecond: durationMs > 0 ? (processed / durationMs) * 1000 : 0,
+  };
+}
+
+/**
  * Syncs all content types to Convex.
  * Phases: Authors (pre-sync) -> Content (parallel or sequential)
  */
@@ -1628,6 +1706,7 @@ async function syncAll(
   let subjectSectionResult: SyncResult;
   let exerciseSetResult: SyncResult;
   let exerciseQuestionResult: SyncResult;
+  let snbtTryoutResult: SyncResult;
 
   if (options.sequential) {
     const articlePhase = startPhase(metrics, "Articles");
@@ -1672,6 +1751,15 @@ async function syncAll(
         exerciseQuestionResult.updated +
         exerciseQuestionResult.unchanged
     );
+
+    const tryoutPhase = startPhase(metrics, "SNBT Try-outs");
+    snbtTryoutResult = await syncSnbtTryouts(config, options);
+    endPhase(
+      tryoutPhase,
+      snbtTryoutResult.created +
+        snbtTryoutResult.updated +
+        snbtTryoutResult.unchanged
+    );
   } else {
     const quietOptions = { ...options, quiet: true };
 
@@ -1712,11 +1800,22 @@ async function syncAll(
     log(`  Exercise Questions: ${formatSyncResult(exerciseQuestionResult)}`);
     log(`  Duration: ${formatDuration(phase2Duration)}`);
 
+    // Phase 3: Sync SNBT try-outs (depends on exercise sets from Phase 1)
+    log("Phase 3: Syncing SNBT try-outs...");
+    const phase3Start = performance.now();
+
+    snbtTryoutResult = await syncSnbtTryouts(config, options);
+
+    const phase3Duration = performance.now() - phase3Start;
+    log(`  SNBT Try-outs:      ${formatSyncResult(snbtTryoutResult)}`);
+    log(`  Duration: ${formatDuration(phase3Duration)}`);
+
     addPhaseMetrics(metrics, "Articles", articleResult);
     addPhaseMetrics(metrics, "Subject Topics", subjectTopicResult);
     addPhaseMetrics(metrics, "Subject Sections", subjectSectionResult);
     addPhaseMetrics(metrics, "Exercise Sets", exerciseSetResult);
     addPhaseMetrics(metrics, "Exercise Questions", exerciseQuestionResult);
+    addPhaseMetrics(metrics, "SNBT Try-outs", snbtTryoutResult);
   }
 
   finalizeMetrics(metrics);
@@ -1729,19 +1828,22 @@ async function syncAll(
     subjectTopicResult.created +
     subjectSectionResult.created +
     exerciseSetResult.created +
-    exerciseQuestionResult.created;
+    exerciseQuestionResult.created +
+    snbtTryoutResult.created;
   const totalUpdated =
     articleResult.updated +
     subjectTopicResult.updated +
     subjectSectionResult.updated +
     exerciseSetResult.updated +
-    exerciseQuestionResult.updated;
+    exerciseQuestionResult.updated +
+    snbtTryoutResult.updated;
   const totalUnchanged =
     articleResult.unchanged +
     subjectTopicResult.unchanged +
     subjectSectionResult.unchanged +
     exerciseSetResult.unchanged +
-    exerciseQuestionResult.unchanged;
+    exerciseQuestionResult.unchanged +
+    snbtTryoutResult.unchanged;
   const total = totalCreated + totalUpdated + totalUnchanged;
 
   const totalReferencesCreated = articleResult.referencesCreated || 0;
@@ -1766,6 +1868,9 @@ async function syncAll(
   );
   log(
     `  Exercise Questions: ${exerciseQuestionResult.created + exerciseQuestionResult.updated + exerciseQuestionResult.unchanged} (${exerciseQuestionResult.created} new, ${exerciseQuestionResult.updated} updated)`
+  );
+  log(
+    `  SNBT Try-outs:      ${snbtTryoutResult.created + snbtTryoutResult.updated + snbtTryoutResult.unchanged} (${snbtTryoutResult.created} new, ${snbtTryoutResult.updated} updated)`
   );
 
   log("\nRelated Items:");
@@ -2457,18 +2562,20 @@ async function clean(
 
       await deleteStaleItems(
         config,
-        "contentSync/mutations:deleteStaleExerciseSets",
-        "setIds",
-        stale.staleExerciseSets,
-        "stale exercise sets (and their questions)"
+        "contentSync/mutations:deleteStaleExerciseQuestions",
+        "questionIds",
+        stale.staleExerciseQuestions,
+        "stale exercise questions",
+        BATCH_SIZES.staleExerciseQuestions
       );
 
       await deleteStaleItems(
         config,
-        "contentSync/mutations:deleteStaleExerciseQuestions",
-        "questionIds",
-        stale.staleExerciseQuestions,
-        "stale exercise questions"
+        "contentSync/mutations:deleteStaleExerciseSets",
+        "setIds",
+        stale.staleExerciseSets,
+        "stale exercise sets",
+        BATCH_SIZES.staleExerciseSets
       );
     } else {
       log("\nTo delete stale content, run:");

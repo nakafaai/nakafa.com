@@ -1,14 +1,23 @@
 "use client";
 
 import { api } from "@repo/backend/convex/_generated/api";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
+import type { FunctionReturnType } from "convex/server";
+import type { Locale } from "next-intl";
 import { createContext, useContextSelector } from "use-context-selector";
 import { useUser } from "@/lib/context/use-user";
 
+type LatestAttemptResult = FunctionReturnType<
+  typeof api.exercises.queries.getLatestAttemptBySlug
+>;
+type QuestionAnswerSheet = FunctionReturnType<
+  typeof api.exercises.queries.getQuestionAnswerSheetBySlug
+>;
+
 interface AttemptContextValue {
-  answers: Doc<"exerciseAnswers">[];
-  attempt: Doc<"exerciseAttempts"> | null;
+  answerSheet: QuestionAnswerSheet;
+  answers: NonNullable<LatestAttemptResult>["answers"];
+  attempt: NonNullable<LatestAttemptResult>["attempt"] | null;
   slug: string;
 }
 
@@ -16,9 +25,11 @@ const AttemptContext = createContext<AttemptContextValue | null>(null);
 
 export function AttemptContextProvider({
   children,
+  locale,
   slug,
 }: {
   children: React.ReactNode;
+  locale: Locale;
   slug: string;
 }) {
   const user = useUser((state) => state.user);
@@ -26,10 +37,15 @@ export function AttemptContextProvider({
     api.exercises.queries.getLatestAttemptBySlug,
     user ? { slug } : "skip"
   );
+  const { data: answerSheet } = useQueryWithStatus(
+    api.exercises.queries.getQuestionAnswerSheetBySlug,
+    user ? { locale, slug } : "skip"
+  );
 
   return (
     <AttemptContext.Provider
       value={{
+        answerSheet: answerSheet ?? [],
         slug,
         attempt: results?.attempt || null,
         answers: results?.answers || [],

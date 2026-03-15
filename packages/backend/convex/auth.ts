@@ -21,7 +21,6 @@ import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
 import {
   anonymous,
-  apiKey,
   openAPI,
   organization,
   username,
@@ -86,14 +85,18 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
           );
         },
         onUpdate: async (ctx, newDoc, oldDoc) => {
-          // Sync name/image changes to app user
-          if (newDoc.name !== oldDoc.name || newDoc.image !== oldDoc.image) {
+          if (
+            newDoc.name !== oldDoc.name ||
+            newDoc.image !== oldDoc.image ||
+            newDoc.email !== oldDoc.email
+          ) {
             const appUser = await ctx.db
               .query("users")
               .withIndex("authId", (q) => q.eq("authId", newDoc._id))
               .unique();
             if (appUser) {
               await ctx.db.patch("users", appUser._id, {
+                email: newDoc.email,
                 name: newDoc.name,
                 image: newDoc.image ?? undefined,
               });
@@ -107,6 +110,15 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
             .unique();
 
           if (userApp) {
+            const notificationPreferences = await ctx.db
+              .query("notificationPreferences")
+              .withIndex("userId", (q) => q.eq("userId", userApp._id))
+              .collect();
+
+            for (const preference of notificationPreferences) {
+              await ctx.db.delete("notificationPreferences", preference._id);
+            }
+
             // Delete customer in Polar to prevent email conflicts
             await ctx.scheduler.runAfter(
               0,
@@ -157,7 +169,6 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
       anonymous(),
       username(),
       organization(),
-      apiKey(),
       openAPI(),
       convex({
         authConfig,

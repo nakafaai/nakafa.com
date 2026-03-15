@@ -1,4 +1,3 @@
-import { tables as betterAuthTables } from "@repo/backend/convex/betterAuth/generatedSchema";
 import { defineTable } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
@@ -41,27 +40,6 @@ export const userValidator = v.object({
   plan: userPlanValidator,
   credits: v.number(),
   creditsResetAt: v.number(),
-});
-
-/**
- * API key validator for cross-component use.
- * When calling betterAuth component queries, IDs are serialized as strings.
- * Derived from betterAuthTables.apikey - single source of truth.
- */
-export const apiKeyDocValidator = v.object({
-  ...betterAuthTables.apikey.validator.fields,
-  _id: v.string(),
-  _creationTime: v.number(),
-});
-
-/**
- * API key verification result validator
- * Matches the return type of betterAuth.mutations.verifyApiKey
- */
-export const apiKeyVerifyResultValidator = v.object({
-  error: nullable(v.object({ code: v.string(), message: v.string() })),
-  userId: nullable(v.string()),
-  valid: v.boolean(),
 });
 
 const tables = {
