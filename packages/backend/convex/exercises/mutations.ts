@@ -270,18 +270,6 @@ export const completeAttempt = mutation({
       });
     }
 
-    if (attempt.schedulerId) {
-      await ctx.scheduler.cancel(attempt.schedulerId);
-    }
-
-    const tryoutExpiry = await syncSnbtExerciseAttemptExpiry(ctx, attempt, now);
-    if (tryoutExpiry.expired) {
-      return buildCompleteAttemptResult({
-        status: "expired",
-        expiredAtMs: tryoutExpiry.expiredAtMs,
-      });
-    }
-
     if (attempt.status === "completed") {
       return buildCompleteAttemptResult({ status: "completed" });
     }
@@ -294,6 +282,18 @@ export const completeAttempt = mutation({
       throw new ConvexError({
         code: "INVALID_ATTEMPT_STATUS",
         message: "Attempt is not in progress.",
+      });
+    }
+
+    if (attempt.schedulerId) {
+      await ctx.scheduler.cancel(attempt.schedulerId);
+    }
+
+    const tryoutExpiry = await syncSnbtExerciseAttemptExpiry(ctx, attempt, now);
+    if (tryoutExpiry.expired) {
+      return buildCompleteAttemptResult({
+        status: "expired",
+        expiredAtMs: tryoutExpiry.expiredAtMs,
       });
     }
 
