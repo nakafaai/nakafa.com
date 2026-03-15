@@ -17,11 +17,23 @@ import { NextResponse } from "next/server";
 export const revalidate = false;
 
 const logger = createServiceLogger("api-exercises");
+const EXERCISE_YEAR_SEGMENT_REGEX = /^\d{4}$/;
+
+function isUnsupportedTryOutCollectionSlug(slug: string[]): boolean {
+  const tryOutSlug = slug.slice(3);
+
+  return (
+    (tryOutSlug.length === 1 && tryOutSlug[0] === "try-out") ||
+    (tryOutSlug.length === 2 &&
+      tryOutSlug[0] === "try-out" &&
+      EXERCISE_YEAR_SEGMENT_REGEX.test(tryOutSlug[1] ?? ""))
+  );
+}
 
 export function generateStaticParams() {
   return generateContentParams({
     basePath: "exercises",
-  });
+  }).filter((params) => !isUnsupportedTryOutCollectionSlug(params.slug));
 }
 
 export async function GET(
@@ -39,6 +51,13 @@ export async function GET(
   }
 
   const validLocale = parseResult.data;
+
+  if (isUnsupportedTryOutCollectionSlug(slug)) {
+    return NextResponse.json(
+      { error: "Exercises content not found." },
+      { status: 404 }
+    );
+  }
 
   let exerciseNumber: number | null = null;
   let rest = [...slug];
