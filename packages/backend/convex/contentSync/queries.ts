@@ -9,6 +9,7 @@ export const getContentCounts = internalQuery({
     const subjectSections = await ctx.db.query("subjectSections").collect();
     const exerciseSets = await ctx.db.query("exerciseSets").collect();
     const exerciseQuestions = await ctx.db.query("exerciseQuestions").collect();
+    const tryouts = await ctx.db.query("tryouts").collect();
     const authors = await ctx.db.query("authors").collect();
     const contentAuthors = await ctx.db.query("contentAuthors").collect();
     const articleReferences = await ctx.db.query("articleReferences").collect();
@@ -20,6 +21,7 @@ export const getContentCounts = internalQuery({
       subjectSections: subjectSections.length,
       exerciseSets: exerciseSets.length,
       exerciseQuestions: exerciseQuestions.length,
+      tryouts: tryouts.length,
       authors: authors.length,
       contentAuthors: contentAuthors.length,
       articleReferences: articleReferences.length,

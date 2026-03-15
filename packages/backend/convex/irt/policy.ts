@@ -1,5 +1,5 @@
 /**
- * Operational IRT model used for current SNBT scoring.
+ * Operational IRT model used for current tryout scoring.
  */
 export const IRT_OPERATIONAL_MODEL = "2pl";
 

@@ -1,46 +1,46 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
+import {
+  sortTryoutsForProduct,
+  tryoutProductValidator,
+} from "@repo/backend/convex/tryouts/products";
 import { ConvexError, v } from "convex/values";
 import { getAll, getManyFrom } from "convex-helpers/server/relationships";
 
-/**
- * List active SNBT try-outs for a locale.
- */
 export const getActiveTryouts = query({
   args: {
+    product: tryoutProductValidator,
     locale: localeValidator,
   },
-  returns: v.array(vv.doc("snbtTryouts")),
+  returns: v.array(vv.doc("tryouts")),
   handler: async (ctx, args) => {
     const tryouts = await ctx.db
-      .query("snbtTryouts")
-      .withIndex("locale_isActive", (q) =>
-        q.eq("locale", args.locale).eq("isActive", true)
+      .query("tryouts")
+      .withIndex("product_locale_isActive", (q) =>
+        q
+          .eq("product", args.product)
+          .eq("locale", args.locale)
+          .eq("isActive", true)
       )
       .collect();
 
-    return [...tryouts].sort(
-      (left, right) =>
-        right.year - left.year || left.setName.localeCompare(right.setName)
-    );
+    return sortTryoutsForProduct(args.product, tryouts);
   },
 });
 
-/**
- * Load one try-out and its ordered subject set metadata.
- */
 export const getTryoutDetails = query({
   args: {
+    product: tryoutProductValidator,
     locale: localeValidator,
     slug: v.string(),
   },
   returns: vv.nullable(
     v.object({
-      tryout: vv.doc("snbtTryouts"),
-      subjects: v.array(
+      tryout: vv.doc("tryouts"),
+      parts: v.array(
         v.object({
-          subjectIndex: v.number(),
+          partIndex: v.number(),
           setId: vv.id("exerciseSets"),
           material: v.string(),
           title: v.string(),
@@ -51,9 +51,12 @@ export const getTryoutDetails = query({
   ),
   handler: async (ctx, args) => {
     const tryout = await ctx.db
-      .query("snbtTryouts")
-      .withIndex("locale_slug", (q) =>
-        q.eq("locale", args.locale).eq("slug", args.slug)
+      .query("tryouts")
+      .withIndex("product_locale_slug", (q) =>
+        q
+          .eq("product", args.product)
+          .eq("locale", args.locale)
+          .eq("slug", args.slug)
       )
       .first();
 
@@ -61,39 +64,38 @@ export const getTryoutDetails = query({
       return null;
     }
 
-    const tryoutSets = await getManyFrom(
+    const tryoutPartSets = await getManyFrom(
       ctx.db,
-      "snbtTryoutSets",
-      "tryoutId_subjectIndex",
+      "tryoutPartSets",
+      "tryoutId_partIndex",
       tryout._id,
       "tryoutId"
     );
-
     const sets = await getAll(
       ctx.db,
       "exerciseSets",
-      tryoutSets.map((ts) => ts.setId)
+      tryoutPartSets.map((partSet) => partSet.setId)
     );
 
-    const subjects = tryoutSets.map((ts, i) => {
-      const set = sets[i];
+    const parts = tryoutPartSets.map((partSet, index) => {
+      const set = sets[index];
 
       if (!set) {
         throw new ConvexError({
           code: "INVALID_TRYOUT_STATE",
-          message: "Tryout is missing one of its subject sets.",
+          message: "Tryout is missing one of its part sets.",
         });
       }
 
       return {
-        subjectIndex: ts.subjectIndex,
-        setId: ts.setId,
+        partIndex: partSet.partIndex,
+        setId: partSet.setId,
         material: set.material,
         title: set.title,
         questionCount: set.questionCount,
       };
     });
 
-    return { tryout, subjects };
+    return { tryout, parts };
   },
 });

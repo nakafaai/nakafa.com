@@ -1,44 +1,52 @@
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
+import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
-export const snbtTryoutStatusValidator = literals(
+export const tryoutStatusValidator = literals(
   "in-progress",
   "completed",
   "expired"
 );
 
 const tables = {
-  snbtTryouts: defineTable({
+  tryouts: defineTable({
+    product: tryoutProductValidator,
     locale: localeValidator,
-    year: v.number(),
+    /** Product-defined cycle identifier, e.g. `2026` or a future `2026-wave-1`. */
+    cycleKey: v.string(),
     slug: v.string(),
-    setName: v.string(),
-    subjectCount: v.number(),
+    label: v.string(),
+    partCount: v.number(),
     totalQuestionCount: v.number(),
     isActive: v.boolean(),
     detectedAt: v.number(),
     syncedAt: v.number(),
   })
-    .index("locale_slug", ["locale", "slug"])
-    .index("locale_year_slug", ["locale", "year", "slug"])
-    .index("locale_isActive", ["locale", "isActive"]),
+    .index("product_locale_slug", ["product", "locale", "slug"])
+    .index("product_locale_cycleKey_slug", [
+      "product",
+      "locale",
+      "cycleKey",
+      "slug",
+    ])
+    .index("product_locale_isActive", ["product", "locale", "isActive"]),
 
-  snbtTryoutSets: defineTable({
-    tryoutId: v.id("snbtTryouts"),
+  tryoutPartSets: defineTable({
+    tryoutId: v.id("tryouts"),
     setId: v.id("exerciseSets"),
-    subjectIndex: v.number(),
+    partIndex: v.number(),
   })
-    .index("tryoutId_subjectIndex", ["tryoutId", "subjectIndex"])
+    .index("tryoutId_partIndex", ["tryoutId", "partIndex"])
     .index("setId", ["setId"]),
 
-  snbtTryoutAttempts: defineTable({
+  tryoutAttempts: defineTable({
     userId: v.id("users"),
-    tryoutId: v.id("snbtTryouts"),
+    tryoutId: v.id("tryouts"),
     scaleVersionId: v.id("irtScaleVersions"),
-    status: snbtTryoutStatusValidator,
-    completedSubjectIndices: v.array(v.number()),
+    status: tryoutStatusValidator,
+    completedPartIndices: v.array(v.number()),
     totalCorrect: v.number(),
     totalQuestions: v.number(),
     theta: v.number(),
@@ -56,21 +64,21 @@ const tables = {
       "startedAt",
     ]),
 
-  snbtTryoutSubjectAttempts: defineTable({
-    tryoutAttemptId: v.id("snbtTryoutAttempts"),
-    subjectIndex: v.number(),
+  tryoutPartAttempts: defineTable({
+    tryoutAttemptId: v.id("tryoutAttempts"),
+    partIndex: v.number(),
     setAttemptId: v.id("exerciseAttempts"),
     setId: v.id("exerciseSets"),
     theta: v.number(),
     thetaSE: v.number(),
   })
-    .index("tryoutAttemptId_subjectIndex", ["tryoutAttemptId", "subjectIndex"])
+    .index("tryoutAttemptId_partIndex", ["tryoutAttemptId", "partIndex"])
     .index("setAttemptId", ["setAttemptId"]),
 
-  userSnbtStats: defineTable({
+  userTryoutStats: defineTable({
     userId: v.id("users"),
-    locale: localeValidator,
-    year: v.number(),
+    product: tryoutProductValidator,
+    leaderboardNamespace: v.string(),
     totalTryoutsCompleted: v.number(),
     averageTheta: v.number(),
     averageThetaSE: v.number(),
@@ -79,16 +87,20 @@ const tables = {
     bestRawScore: v.number(),
     lastTryoutAt: v.number(),
     updatedAt: v.number(),
-  }).index("userId_locale_year", ["userId", "locale", "year"]),
+  }).index("userId_product_leaderboardNamespace", [
+    "userId",
+    "product",
+    "leaderboardNamespace",
+  ]),
 
-  snbtLeaderboard: defineTable({
-    tryoutId: v.id("snbtTryouts"),
+  tryoutLeaderboardEntries: defineTable({
+    tryoutId: v.id("tryouts"),
     userId: v.id("users"),
     theta: v.number(),
     irtScore: v.number(),
     rawScore: v.number(),
     completedAt: v.number(),
-    attemptId: v.id("snbtTryoutAttempts"),
+    attemptId: v.id("tryoutAttempts"),
   }).index("tryoutId_userId", ["tryoutId", "userId"]),
 };
 

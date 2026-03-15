@@ -14,7 +14,7 @@ app.use(aggregate, { name: "articlePopularity" });
 app.use(aggregate, { name: "subjectPopularity" });
 app.use(aggregate, { name: "exercisePopularity" });
 
-// Aggregates for SNBT leaderboard rankings
+// Aggregates for tryout leaderboard rankings
 app.use(aggregate, { name: "tryoutLeaderboard" });
 app.use(aggregate, { name: "globalLeaderboard" });
 

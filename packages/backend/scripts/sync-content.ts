@@ -5,6 +5,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import * as z from "zod";
+import { tryoutProducts } from "../convex/tryouts/products";
 import {
   buildExerciseSetSlug,
   computeHash,
@@ -127,6 +128,7 @@ const ContentCountsSchema = z.object({
   subjectSections: z.number(),
   exerciseSets: z.number(),
   exerciseQuestions: z.number(),
+  tryouts: z.number(),
   authors: z.number(),
   contentAuthors: z.number(),
   articleReferences: z.number(),
@@ -1622,39 +1624,36 @@ async function syncExerciseQuestions(
   };
 }
 
-/**
- * Syncs SNBT try-outs by detecting complete sets across all subjects.
- * A try-out is detected when exercise sets exist for ALL 7 SNBT subjects
- * with the same year + setName within a locale.
- */
-async function syncSnbtTryouts(
+async function syncTryouts(
   config: ConvexConfig,
   options: SyncOptions
 ): Promise<SyncResult> {
   const startTime = performance.now();
   if (!options.quiet) {
-    log("\n--- SNBT TRY-OUTS ---\n");
+    log("\n--- TRYOUTS ---\n");
   }
 
   const locales: Locale[] = options.locale ? [options.locale] : ["en", "id"];
 
   const totals: SyncResult = { created: 0, updated: 0, unchanged: 0 };
 
-  for (const locale of locales) {
-    const result = await runConvexMutation(
-      config,
-      "contentSync/mutations:bulkSyncSnbtTryouts",
-      { locale }
-    );
-
-    totals.created += result.created;
-    totals.updated += result.updated;
-    totals.unchanged += result.unchanged;
-
-    if (!options.quiet) {
-      log(
-        `  ${locale}: ${result.created} created, ${result.updated} updated, ${result.unchanged} unchanged`
+  for (const product of tryoutProducts) {
+    for (const locale of locales) {
+      const result = await runConvexMutation(
+        config,
+        "contentSync/mutations:bulkSyncTryouts",
+        { product, locale }
       );
+
+      totals.created += result.created;
+      totals.updated += result.updated;
+      totals.unchanged += result.unchanged;
+
+      if (!options.quiet) {
+        log(
+          `  ${product}/${locale}: ${result.created} created, ${result.updated} updated, ${result.unchanged} unchanged`
+        );
+      }
     }
   }
 
@@ -1706,7 +1705,7 @@ async function syncAll(
   let subjectSectionResult: SyncResult;
   let exerciseSetResult: SyncResult;
   let exerciseQuestionResult: SyncResult;
-  let snbtTryoutResult: SyncResult;
+  let tryoutResult: SyncResult;
 
   if (options.sequential) {
     const articlePhase = startPhase(metrics, "Articles");
@@ -1752,13 +1751,11 @@ async function syncAll(
         exerciseQuestionResult.unchanged
     );
 
-    const tryoutPhase = startPhase(metrics, "SNBT Try-outs");
-    snbtTryoutResult = await syncSnbtTryouts(config, options);
+    const tryoutPhase = startPhase(metrics, "Tryouts");
+    tryoutResult = await syncTryouts(config, options);
     endPhase(
       tryoutPhase,
-      snbtTryoutResult.created +
-        snbtTryoutResult.updated +
-        snbtTryoutResult.unchanged
+      tryoutResult.created + tryoutResult.updated + tryoutResult.unchanged
     );
   } else {
     const quietOptions = { ...options, quiet: true };
@@ -1800,14 +1797,13 @@ async function syncAll(
     log(`  Exercise Questions: ${formatSyncResult(exerciseQuestionResult)}`);
     log(`  Duration: ${formatDuration(phase2Duration)}`);
 
-    // Phase 3: Sync SNBT try-outs (depends on exercise sets from Phase 1)
-    log("Phase 3: Syncing SNBT try-outs...");
+    log("Phase 3: Syncing tryouts...");
     const phase3Start = performance.now();
 
-    snbtTryoutResult = await syncSnbtTryouts(config, options);
+    tryoutResult = await syncTryouts(config, options);
 
     const phase3Duration = performance.now() - phase3Start;
-    log(`  SNBT Try-outs:      ${formatSyncResult(snbtTryoutResult)}`);
+    log(`  Tryouts:            ${formatSyncResult(tryoutResult)}`);
     log(`  Duration: ${formatDuration(phase3Duration)}`);
 
     addPhaseMetrics(metrics, "Articles", articleResult);
@@ -1815,7 +1811,7 @@ async function syncAll(
     addPhaseMetrics(metrics, "Subject Sections", subjectSectionResult);
     addPhaseMetrics(metrics, "Exercise Sets", exerciseSetResult);
     addPhaseMetrics(metrics, "Exercise Questions", exerciseQuestionResult);
-    addPhaseMetrics(metrics, "SNBT Try-outs", snbtTryoutResult);
+    addPhaseMetrics(metrics, "Tryouts", tryoutResult);
   }
 
   finalizeMetrics(metrics);
@@ -1829,21 +1825,21 @@ async function syncAll(
     subjectSectionResult.created +
     exerciseSetResult.created +
     exerciseQuestionResult.created +
-    snbtTryoutResult.created;
+    tryoutResult.created;
   const totalUpdated =
     articleResult.updated +
     subjectTopicResult.updated +
     subjectSectionResult.updated +
     exerciseSetResult.updated +
     exerciseQuestionResult.updated +
-    snbtTryoutResult.updated;
+    tryoutResult.updated;
   const totalUnchanged =
     articleResult.unchanged +
     subjectTopicResult.unchanged +
     subjectSectionResult.unchanged +
     exerciseSetResult.unchanged +
     exerciseQuestionResult.unchanged +
-    snbtTryoutResult.unchanged;
+    tryoutResult.unchanged;
   const total = totalCreated + totalUpdated + totalUnchanged;
 
   const totalReferencesCreated = articleResult.referencesCreated || 0;
@@ -1870,7 +1866,7 @@ async function syncAll(
     `  Exercise Questions: ${exerciseQuestionResult.created + exerciseQuestionResult.updated + exerciseQuestionResult.unchanged} (${exerciseQuestionResult.created} new, ${exerciseQuestionResult.updated} updated)`
   );
   log(
-    `  SNBT Try-outs:      ${snbtTryoutResult.created + snbtTryoutResult.updated + snbtTryoutResult.unchanged} (${snbtTryoutResult.created} new, ${snbtTryoutResult.updated} updated)`
+    `  Tryouts:            ${tryoutResult.created + tryoutResult.updated + tryoutResult.unchanged} (${tryoutResult.created} new, ${tryoutResult.updated} updated)`
   );
 
   log("\nRelated Items:");
@@ -2135,6 +2131,7 @@ async function verify(
     log(`  subjectSections:     ${counts.subjectSections}`);
     log(`  exerciseSets:        ${counts.exerciseSets}`);
     log(`  exerciseQuestions:   ${counts.exerciseQuestions}`);
+    log(`  tryouts:             ${counts.tryouts}`);
 
     log("\nRelated tables:");
     log(`  authors:             ${counts.authors}`);
@@ -2270,6 +2267,7 @@ async function verify(
       log(`  - ${counts.subjectSections} subject sections`);
       log(`  - ${counts.exerciseSets} exercise sets`);
       log(`  - ${counts.exerciseQuestions} exercise questions`);
+      log(`  - ${counts.tryouts} tryouts`);
       log(`  - ${counts.articleReferences} references`);
       log(`  - ${counts.exerciseChoices} choices`);
       log(`  - ${counts.authors} authors`);

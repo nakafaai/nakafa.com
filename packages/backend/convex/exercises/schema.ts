@@ -16,9 +16,9 @@ export const exerciseAttemptScopeValidator = literals("set", "single");
 
 /**
  * Exercise attempt origin validator.
- * Distinguishes standalone exercise attempts from SNBT try-out subject attempts.
+ * Distinguishes standalone exercise attempts from runtime-managed tryout parts.
  */
-export const exerciseAttemptOriginValidator = literals("standalone", "snbt");
+export const exerciseAttemptOriginValidator = literals("standalone", "tryout");
 
 /**
  * Exercise attempt status validator.

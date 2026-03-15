@@ -4,16 +4,17 @@ import { vv } from "@repo/backend/convex/lib/validators/vv";
 import {
   globalLeaderboard,
   tryoutLeaderboard,
-} from "@repo/backend/convex/snbt/aggregate";
+} from "@repo/backend/convex/tryouts/aggregate";
+import {
+  getTryoutLeaderboardNamespace,
+  tryoutProductValidator,
+} from "@repo/backend/convex/tryouts/products";
 import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
 
-/**
- * Read the official leaderboard for a specific SNBT try-out.
- */
 export const getTryoutLeaderboard = query({
   args: {
-    tryoutId: vv.id("snbtTryouts"),
+    tryoutId: vv.id("tryouts"),
     limit: v.optional(v.number()),
   },
   returns: v.array(
@@ -29,7 +30,6 @@ export const getTryoutLeaderboard = query({
   ),
   handler: async (ctx, args) => {
     const limit = Math.max(0, Math.min(args.limit ?? 50, 100));
-
     const totalCount = await tryoutLeaderboard.count(ctx, {
       namespace: args.tryoutId,
     });
@@ -44,7 +44,10 @@ export const getTryoutLeaderboard = query({
           return null;
         }
 
-        const leaderboardEntry = await ctx.db.get("snbtLeaderboard", item.id);
+        const leaderboardEntry = await ctx.db.get(
+          "tryoutLeaderboardEntries",
+          item.id
+        );
 
         if (!leaderboardEntry) {
           return null;
@@ -68,13 +71,11 @@ export const getTryoutLeaderboard = query({
   },
 });
 
-/**
- * Read the official year-scoped SNBT leaderboard for one locale.
- */
 export const getGlobalLeaderboard = query({
   args: {
+    product: tryoutProductValidator,
     locale: localeValidator,
-    year: v.number(),
+    cycleKey: v.string(),
     limit: v.optional(v.number()),
   },
   returns: v.array(
@@ -91,8 +92,7 @@ export const getGlobalLeaderboard = query({
   ),
   handler: async (ctx, args) => {
     const limit = Math.max(0, Math.min(args.limit ?? 50, 100));
-    const namespace = `${args.locale}:${args.year}`;
-
+    const namespace = getTryoutLeaderboardNamespace(args);
     const totalCount = await globalLeaderboard.count(ctx, {
       namespace,
     });
@@ -107,7 +107,7 @@ export const getGlobalLeaderboard = query({
           return null;
         }
 
-        const stats = await ctx.db.get("userSnbtStats", item.id);
+        const stats = await ctx.db.get("userTryoutStats", item.id);
 
         if (!stats) {
           return null;
@@ -132,12 +132,9 @@ export const getGlobalLeaderboard = query({
   },
 });
 
-/**
- * Get one user's rank inside an official try-out leaderboard.
- */
 export const getUserTryoutRank = query({
   args: {
-    tryoutId: vv.id("snbtTryouts"),
+    tryoutId: vv.id("tryouts"),
     userId: vv.id("users"),
   },
   returns: nullable(
@@ -148,7 +145,7 @@ export const getUserTryoutRank = query({
   ),
   handler: async (ctx, args) => {
     const entry = await ctx.db
-      .query("snbtLeaderboard")
+      .query("tryoutLeaderboardEntries")
       .withIndex("tryoutId_userId", (q) =>
         q.eq("tryoutId", args.tryoutId).eq("userId", args.userId)
       )
@@ -161,9 +158,10 @@ export const getUserTryoutRank = query({
     const index = await tryoutLeaderboard.indexOf(
       ctx,
       [-entry.theta, args.userId],
-      { namespace: args.tryoutId }
+      {
+        namespace: args.tryoutId,
+      }
     );
-
     const totalEntries = await tryoutLeaderboard.count(ctx, {
       namespace: args.tryoutId,
     });

@@ -128,14 +128,14 @@ export function getScaleVersionItemsForSet(
  */
 export async function getPublishableScaleSnapshot(
   db: IrtDbReader,
-  tryoutId: Id<"snbtTryouts">
+  tryoutId: Id<"tryouts">
 ) {
-  const [tryout, tryoutSets] = await Promise.all([
-    db.get("snbtTryouts", tryoutId),
+  const [tryout, tryoutPartSets] = await Promise.all([
+    db.get("tryouts", tryoutId),
     getManyFrom(
       db,
-      "snbtTryoutSets",
-      "tryoutId_subjectIndex",
+      "tryoutPartSets",
+      "tryoutId_partIndex",
       tryoutId,
       "tryoutId"
     ),
@@ -148,10 +148,10 @@ export async function getPublishableScaleSnapshot(
   const sets = await getAll(
     db,
     "exerciseSets",
-    tryoutSets.map((tryoutSet) => tryoutSet.setId)
+    tryoutPartSets.map((partSet) => partSet.setId)
   );
 
-  const perSetData = await asyncMap(tryoutSets, async (tryoutSet, index) => {
+  const perSetData = await asyncMap(tryoutPartSets, async (partSet, index) => {
     const set = sets[index];
 
     if (!set) {
@@ -159,12 +159,12 @@ export async function getPublishableScaleSnapshot(
     }
 
     const [questions, itemParams] = await Promise.all([
-      getManyFrom(db, "exerciseQuestions", "setId", tryoutSet.setId, "setId"),
+      getManyFrom(db, "exerciseQuestions", "setId", partSet.setId, "setId"),
       getManyFrom(
         db,
         "exerciseItemParameters",
         "setId",
-        tryoutSet.setId,
+        partSet.setId,
         "setId"
       ),
     ]);

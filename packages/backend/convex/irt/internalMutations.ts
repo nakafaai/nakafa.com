@@ -66,9 +66,9 @@ async function startCalibrationRunWorkflow(
 
 async function publishTryoutScaleVersionIfNeeded(
   ctx: MutationCtx,
-  tryoutId: Id<"snbtTryouts">
+  tryoutId: Id<"tryouts">
 ) {
-  const tryout = await ctx.db.get("snbtTryouts", tryoutId);
+  const tryout = await ctx.db.get("tryouts", tryoutId);
 
   if (!tryout) {
     throw new Error("Tryout not found for scale publication.");
@@ -247,7 +247,7 @@ export const completeCalibrationRun = internalMutation({
     });
 
     const affectedTryoutSets = await ctx.db
-      .query("snbtTryoutSets")
+      .query("tryoutPartSets")
       .withIndex("setId", (q) => q.eq("setId", run.setId))
       .collect();
 

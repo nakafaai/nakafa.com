@@ -9,7 +9,7 @@ import { computeAttemptDurationSeconds } from "@repo/backend/convex/exercises/ut
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { syncSnbtExerciseAttemptExpiry } from "@repo/backend/convex/snbt/helpers";
+import { syncTryoutExerciseAttemptExpiry } from "@repo/backend/convex/tryouts/helpers";
 import { ConvexError, type Infer, v } from "convex/values";
 
 const completeAttemptResultValidator = v.object({
@@ -182,7 +182,11 @@ export const submitAnswer = mutation({
 
     const expiresAtMs = attempt.startedAt + attempt.timeLimit * 1000;
 
-    const tryoutExpiry = await syncSnbtExerciseAttemptExpiry(ctx, attempt, now);
+    const tryoutExpiry = await syncTryoutExerciseAttemptExpiry(
+      ctx,
+      attempt,
+      now
+    );
     if (tryoutExpiry.expired) {
       throw new ConvexError({
         code: "TRYOUT_EXPIRED",
@@ -289,7 +293,11 @@ export const completeAttempt = mutation({
       await ctx.scheduler.cancel(attempt.schedulerId);
     }
 
-    const tryoutExpiry = await syncSnbtExerciseAttemptExpiry(ctx, attempt, now);
+    const tryoutExpiry = await syncTryoutExerciseAttemptExpiry(
+      ctx,
+      attempt,
+      now
+    );
     if (tryoutExpiry.expired) {
       return buildCompleteAttemptResult({
         status: "expired",

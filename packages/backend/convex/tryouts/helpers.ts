@@ -4,6 +4,10 @@ import type {
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
 import { computeAttemptDurationSeconds } from "@repo/backend/convex/exercises/utils";
+import {
+  computeTryoutExpiresAtMs,
+  computeTryoutPartTimeLimitSeconds,
+} from "@repo/backend/convex/tryouts/products";
 import { ConvexError } from "convex/values";
 import {
   getAll,
@@ -11,52 +15,35 @@ import {
   getOneFrom,
 } from "convex-helpers/server/relationships";
 
-type SnbtMutationCtx = Pick<MutationCtx, "db">;
-type SnbtDbReader = QueryCtx["db"];
+type TryoutMutationCtx = Pick<MutationCtx, "db">;
+type TryoutDbReader = QueryCtx["db"];
 type TryoutScoreTotals = Pick<
-  Doc<"snbtTryoutAttempts">,
+  Doc<"tryoutAttempts">,
   "totalCorrect" | "totalQuestions"
 >;
 
-const HOURS_PER_DAY = 24;
-const MINUTES_PER_HOUR = 60;
-const SECONDS_PER_MINUTE = 60;
-const MILLISECONDS_PER_SECOND = 1000;
-const SIMULATION_SECONDS_PER_QUESTION = 90;
-
-const SNBT_TRYOUT_WINDOW_MS =
-  HOURS_PER_DAY *
-  MINUTES_PER_HOUR *
-  SECONDS_PER_MINUTE *
-  MILLISECONDS_PER_SECOND;
-
-/**
- * Compute the absolute expiry timestamp for a try-out attempt.
- */
-export function computeSnbtTryoutExpiresAtMs(startedAtMs: number) {
-  return startedAtMs + SNBT_TRYOUT_WINDOW_MS;
-}
-
-/**
- * Compute the fixed per-subject timer used by official SNBT simulations.
- */
-export function computeSnbtSimulationTimeLimitSeconds(
-  questionCount: Doc<"exerciseSets">["questionCount"]
-) {
-  if (questionCount <= 0) {
+export function getTryoutPartTimeLimitSeconds(args: {
+  product: Doc<"tryouts">["product"];
+  questionCount: Doc<"exerciseSets">["questionCount"];
+}) {
+  if (args.questionCount <= 0) {
     throw new ConvexError({
       code: "INVALID_ARGUMENT",
       message: "questionCount must be greater than 0.",
     });
   }
 
-  return questionCount * SIMULATION_SECONDS_PER_QUESTION;
+  return computeTryoutPartTimeLimitSeconds(args);
 }
 
-/**
- * Convert try-out score totals to a percentage.
- */
-export function computeSnbtRawScorePercentage({
+export function getTryoutExpiresAtMs(args: {
+  product: Doc<"tryouts">["product"];
+  startedAtMs: number;
+}) {
+  return computeTryoutExpiresAtMs(args);
+}
+
+export function computeTryoutRawScorePercentage({
   totalCorrect,
   totalQuestions,
 }: TryoutScoreTotals) {
@@ -67,18 +54,12 @@ export function computeSnbtRawScorePercentage({
   return (totalCorrect / totalQuestions) * 100;
 }
 
-/**
- * Load the earliest completed simulation attempt for a user on a try-out.
- *
- * This is the source of truth for official-result checks because SNBT try-out
- * attempts are simulation-only.
- */
 export function getFirstCompletedSimulationAttempt(
-  db: SnbtDbReader,
-  { userId, tryoutId }: Pick<Doc<"snbtTryoutAttempts">, "userId" | "tryoutId">
+  db: TryoutDbReader,
+  { userId, tryoutId }: Pick<Doc<"tryoutAttempts">, "userId" | "tryoutId">
 ) {
   return db
-    .query("snbtTryoutAttempts")
+    .query("tryoutAttempts")
     .withIndex("userId_tryoutId_status_startedAt", (q) =>
       q.eq("userId", userId).eq("tryoutId", tryoutId).eq("status", "completed")
     )
@@ -86,9 +67,6 @@ export function getFirstCompletedSimulationAttempt(
     .first();
 }
 
-/**
- * Count correct answers in a subject attempt.
- */
 export function countCorrectAnswers(answers: Doc<"exerciseAnswers">[]) {
   return answers.reduce(
     (correctCount, answer) => correctCount + (answer.isCorrect ? 1 : 0),
@@ -96,10 +74,6 @@ export function countCorrectAnswers(answers: Doc<"exerciseAnswers">[]) {
   );
 }
 
-/**
- * Build 2PL response payloads from recorded exercise answers and item
- * parameters.
- */
 export function buildIrtResponses({
   answers,
   itemParamsRecords,
@@ -125,23 +99,20 @@ export function buildIrtResponses({
       return [];
     }
 
-    const response = {
-      correct: answer.isCorrect,
-      params: {
-        difficulty: params.difficulty,
-        discrimination: params.discrimination,
+    return [
+      {
+        correct: answer.isCorrect,
+        params: {
+          difficulty: params.difficulty,
+          discrimination: params.discrimination,
+        },
       },
-    };
-
-    return [response];
+    ];
   });
 }
 
-/**
- * Expire a single shared `exerciseAttempt` if it is still open.
- */
 async function expireExerciseAttemptIfInProgress(
-  ctx: SnbtMutationCtx,
+  ctx: TryoutMutationCtx,
   attempt: Doc<"exerciseAttempts">,
   expiredAtMs: number,
   now: number
@@ -164,35 +135,44 @@ async function expireExerciseAttemptIfInProgress(
   });
 }
 
-/**
- * Expire a try-out attempt and any still-open subject exercise attempts.
- */
 export async function expireTryoutAttempt(
-  ctx: SnbtMutationCtx,
-  tryoutAttempt: Doc<"snbtTryoutAttempts">,
+  ctx: TryoutMutationCtx,
+  tryoutAttempt: Doc<"tryoutAttempts">,
   now: number
 ) {
-  const expiredAtMs = computeSnbtTryoutExpiresAtMs(tryoutAttempt.startedAt);
+  const tryout = await ctx.db.get("tryouts", tryoutAttempt.tryoutId);
+
+  if (!tryout) {
+    throw new ConvexError({
+      code: "INVALID_ATTEMPT_STATE",
+      message: "Tryout attempt is missing its parent tryout.",
+    });
+  }
+
+  const expiredAtMs = getTryoutExpiresAtMs({
+    product: tryout.product,
+    startedAtMs: tryoutAttempt.startedAt,
+  });
 
   if (tryoutAttempt.status === "in-progress") {
-    await ctx.db.patch("snbtTryoutAttempts", tryoutAttempt._id, {
+    await ctx.db.patch("tryoutAttempts", tryoutAttempt._id, {
       status: "expired",
       completedAt: expiredAtMs,
       lastActivityAt: now,
     });
   }
 
-  const subjectAttempts = await getManyFrom(
+  const partAttempts = await getManyFrom(
     ctx.db,
-    "snbtTryoutSubjectAttempts",
-    "tryoutAttemptId_subjectIndex",
+    "tryoutPartAttempts",
+    "tryoutAttemptId_partIndex",
     tryoutAttempt._id,
     "tryoutAttemptId"
   );
   const setAttempts = await getAll(
     ctx.db,
     "exerciseAttempts",
-    subjectAttempts.map((subjectAttempt) => subjectAttempt.setAttemptId)
+    partAttempts.map((partAttempt) => partAttempt.setAttemptId)
   );
 
   for (const setAttempt of setAttempts) {
@@ -206,15 +186,24 @@ export async function expireTryoutAttempt(
   return expiredAtMs;
 }
 
-/**
- * Synchronize a try-out attempt with its derived 24h expiry window.
- */
 export async function syncTryoutAttemptExpiry(
-  ctx: SnbtMutationCtx,
-  tryoutAttempt: Doc<"snbtTryoutAttempts">,
+  ctx: TryoutMutationCtx,
+  tryoutAttempt: Doc<"tryoutAttempts">,
   now: number
 ) {
-  const expiredAtMs = computeSnbtTryoutExpiresAtMs(tryoutAttempt.startedAt);
+  const tryout = await ctx.db.get("tryouts", tryoutAttempt.tryoutId);
+
+  if (!tryout) {
+    throw new ConvexError({
+      code: "INVALID_ATTEMPT_STATE",
+      message: "Tryout attempt is missing its parent tryout.",
+    });
+  }
+
+  const expiredAtMs = getTryoutExpiresAtMs({
+    product: tryout.product,
+    startedAtMs: tryoutAttempt.startedAt,
+  });
 
   if (tryoutAttempt.status === "expired") {
     return { expired: true, expiredAtMs };
@@ -228,42 +217,38 @@ export async function syncTryoutAttemptExpiry(
   return { expired: false, expiredAtMs };
 }
 
-/**
- * Synchronize an `exerciseAttempt` that belongs to an SNBT subject with its
- * parent try-out expiry.
- */
-export async function syncSnbtExerciseAttemptExpiry(
-  ctx: SnbtMutationCtx,
+export async function syncTryoutExerciseAttemptExpiry(
+  ctx: TryoutMutationCtx,
   attempt: Doc<"exerciseAttempts">,
   now: number
 ) {
-  if (attempt.origin !== "snbt") {
+  if (attempt.origin !== "tryout") {
     return { expired: false, expiredAtMs: undefined };
   }
 
-  const subjectAttempt = await getOneFrom(
+  const partAttempt = await getOneFrom(
     ctx.db,
-    "snbtTryoutSubjectAttempts",
+    "tryoutPartAttempts",
     "setAttemptId",
     attempt._id
   );
 
-  if (!subjectAttempt) {
+  if (!partAttempt) {
     throw new ConvexError({
       code: "INVALID_ATTEMPT_STATE",
-      message: "SNBT exercise attempt is missing its subject attempt mapping.",
+      message: "Tryout exercise attempt is missing its part attempt mapping.",
     });
   }
 
   const tryoutAttempt = await ctx.db.get(
-    "snbtTryoutAttempts",
-    subjectAttempt.tryoutAttemptId
+    "tryoutAttempts",
+    partAttempt.tryoutAttemptId
   );
 
   if (!tryoutAttempt) {
     throw new ConvexError({
       code: "INVALID_ATTEMPT_STATE",
-      message: "SNBT exercise attempt is missing its parent tryout attempt.",
+      message: "Tryout exercise attempt is missing its parent tryout attempt.",
     });
   }
 

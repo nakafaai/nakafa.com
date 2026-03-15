@@ -1,36 +1,71 @@
 import { internalMutation } from "@repo/backend/convex/functions";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import {
-  computeSnbtRawScorePercentage,
+  computeTryoutRawScorePercentage,
+  expireTryoutAttempt,
   getFirstCompletedSimulationAttempt,
-} from "@repo/backend/convex/snbt/helpers";
+  getTryoutExpiresAtMs,
+} from "@repo/backend/convex/tryouts/helpers";
+import { getTryoutLeaderboardNamespace } from "@repo/backend/convex/tryouts/products";
 import { v } from "convex/values";
 
-/**
- * Record the official first completed simulation attempt for a user on a try-out
- * and update locale/year-level SNBT stats from that official result.
- *
- * Later simulation retries remain visible to the user as results, but they are
- * unofficial and therefore do not overwrite the first official leaderboard row.
- */
+export const expireTryoutAttemptInternal = internalMutation({
+  args: {
+    tryoutAttemptId: vv.id("tryoutAttempts"),
+    expiresAtMs: v.number(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const tryoutAttempt = await ctx.db.get(
+      "tryoutAttempts",
+      args.tryoutAttemptId
+    );
+
+    if (!tryoutAttempt || tryoutAttempt.status !== "in-progress") {
+      return null;
+    }
+
+    const tryout = await ctx.db.get("tryouts", tryoutAttempt.tryoutId);
+
+    if (!tryout) {
+      return null;
+    }
+
+    const computedExpiresAtMs = getTryoutExpiresAtMs({
+      product: tryout.product,
+      startedAtMs: tryoutAttempt.startedAt,
+    });
+
+    if (args.expiresAtMs < computedExpiresAtMs || now < computedExpiresAtMs) {
+      return null;
+    }
+
+    await expireTryoutAttempt(ctx, tryoutAttempt, now);
+
+    return null;
+  },
+});
+
 export const updateLeaderboard = internalMutation({
   args: {
-    tryoutAttemptId: vv.id("snbtTryoutAttempts"),
+    tryoutAttemptId: vv.id("tryoutAttempts"),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
     const tryoutAttempt = await ctx.db.get(
-      "snbtTryoutAttempts",
+      "tryoutAttempts",
       args.tryoutAttemptId
     );
+
     if (!tryoutAttempt || tryoutAttempt.status !== "completed") {
       return null;
     }
 
-    const tryout = await ctx.db.get("snbtTryouts", tryoutAttempt.tryoutId);
+    const tryout = await ctx.db.get("tryouts", tryoutAttempt.tryoutId);
 
     if (!tryout) {
-      throw new Error("Completed SNBT tryout attempt is missing its tryout.");
+      throw new Error("Completed tryout attempt is missing its tryout.");
     }
 
     const firstCompletedAttempt = await getFirstCompletedSimulationAttempt(
@@ -46,7 +81,7 @@ export const updateLeaderboard = internalMutation({
     }
 
     const existingEntry = await ctx.db
-      .query("snbtLeaderboard")
+      .query("tryoutLeaderboardEntries")
       .withIndex("tryoutId_userId", (q) =>
         q
           .eq("tryoutId", tryoutAttempt.tryoutId)
@@ -60,9 +95,9 @@ export const updateLeaderboard = internalMutation({
 
     const completedAt =
       tryoutAttempt.completedAt ?? tryoutAttempt.lastActivityAt;
-    const rawScore = computeSnbtRawScorePercentage(tryoutAttempt);
+    const rawScore = computeTryoutRawScorePercentage(tryoutAttempt);
 
-    const entryData = {
+    await ctx.db.insert("tryoutLeaderboardEntries", {
       tryoutId: tryoutAttempt.tryoutId,
       userId: tryoutAttempt.userId,
       theta: tryoutAttempt.theta,
@@ -70,17 +105,20 @@ export const updateLeaderboard = internalMutation({
       rawScore,
       completedAt,
       attemptId: tryoutAttempt._id,
-    };
+    });
 
-    await ctx.db.insert("snbtLeaderboard", entryData);
-
+    const leaderboardNamespace = getTryoutLeaderboardNamespace({
+      product: tryout.product,
+      locale: tryout.locale,
+      cycleKey: tryout.cycleKey,
+    });
     const statsRecord = await ctx.db
-      .query("userSnbtStats")
-      .withIndex("userId_locale_year", (q) =>
+      .query("userTryoutStats")
+      .withIndex("userId_product_leaderboardNamespace", (q) =>
         q
           .eq("userId", tryoutAttempt.userId)
-          .eq("locale", tryout.locale)
-          .eq("year", tryout.year)
+          .eq("product", tryout.product)
+          .eq("leaderboardNamespace", leaderboardNamespace)
       )
       .first();
 
@@ -99,7 +137,7 @@ export const updateLeaderboard = internalMutation({
           rawScore) /
         newTotal;
 
-      await ctx.db.patch("userSnbtStats", statsRecord._id, {
+      await ctx.db.patch("userTryoutStats", statsRecord._id, {
         totalTryoutsCompleted: newTotal,
         averageTheta: newAverageTheta,
         averageThetaSE: newAverageThetaSE,
@@ -110,10 +148,10 @@ export const updateLeaderboard = internalMutation({
         updatedAt: completedAt,
       });
     } else {
-      await ctx.db.insert("userSnbtStats", {
+      await ctx.db.insert("userTryoutStats", {
         userId: tryoutAttempt.userId,
-        locale: tryout.locale,
-        year: tryout.year,
+        product: tryout.product,
+        leaderboardNamespace,
         totalTryoutsCompleted: 1,
         averageTheta: tryoutAttempt.theta,
         averageThetaSE: tryoutAttempt.thetaSE,

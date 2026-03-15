@@ -25,14 +25,14 @@ const tables = {
     .index("setId_enqueuedAt", ["setId", "enqueuedAt"]),
 
   irtScalePublicationQueue: defineTable({
-    tryoutId: v.id("snbtTryouts"),
+    tryoutId: v.id("tryouts"),
     enqueuedAt: v.number(),
   })
     .index("enqueuedAt", ["enqueuedAt"])
     .index("tryoutId_enqueuedAt", ["tryoutId", "enqueuedAt"]),
 
   irtScaleVersions: defineTable({
-    tryoutId: v.id("snbtTryouts"),
+    tryoutId: v.id("tryouts"),
     model: irtOperationalModelValidator,
     questionCount: v.number(),
     publishedAt: v.number(),
