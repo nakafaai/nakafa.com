@@ -17,6 +17,10 @@ tables own try-out lifecycle, IRT scoring, and official leaderboard rules.
   recalibration; bounded cron jobs and workflows publish newer frozen scales
 - Only the first completed simulation attempt per user per try-out is official
 - Later simulation retries never update the official leaderboard
+- Try-out year is derived from yearful content paths like
+  `.../try-out/2026/set-1`, not from the server clock
+- Different SNBT subjects may have different question counts inside one try-out;
+  the backend stores the total question count, not a fake per-subject uniform count
 - Global leaderboard scope is `locale + year`; different tryout years are never
   combined into one ranking
 - Practice is unlocked only after an official simulation completion and uses the

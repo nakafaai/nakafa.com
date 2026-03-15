@@ -1303,6 +1303,19 @@ const SNBT_TRYOUT_MATERIALS = [
   "reading-and-writing-skills",
 ] as const;
 
+const YEARFUL_TRYOUT_SET_SLUG_REGEX =
+  /^exercises\/[^/]+\/[^/]+\/[^/]+\/try-out\/(\d{4})\/[^/]+$/;
+
+function getYearFromTryoutSetSlug(setSlug: string) {
+  const match = setSlug.match(YEARFUL_TRYOUT_SET_SLUG_REGEX);
+
+  if (!match) {
+    return null;
+  }
+
+  return Number.parseInt(match[1], 10);
+}
+
 const snbtTryoutMaterialOrder = new Map<string, number>(
   SNBT_TRYOUT_MATERIALS.map((material, index) => [material, index])
 );
@@ -1360,7 +1373,7 @@ async function syncSnbtTryoutSetMappings(
 /**
  * Syncs SNBT try-outs by detecting complete sets across all subjects.
  * A try-out is detected when exercise sets exist for ALL 7 SNBT subjects
- * with the same setName within a locale.
+ * with the same year + setName within a locale.
  */
 export const bulkSyncSnbtTryouts = internalMutation({
   args: {
@@ -1368,7 +1381,6 @@ export const bulkSyncSnbtTryouts = internalMutation({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
-    const year = new Date(now).getUTCFullYear();
     let created = 0;
     let updated = 0;
     let unchanged = 0;
@@ -1377,45 +1389,60 @@ export const bulkSyncSnbtTryouts = internalMutation({
       .query("exerciseSets")
       .withIndex("locale_slug", (q) => q.eq("locale", args.locale))
       .collect();
-    const allSets = localeSets.filter(
-      (set) => set.type === "snbt" && set.exerciseType === "try-out"
-    );
+    const allSets = localeSets.flatMap((set) => {
+      if (set.type !== "snbt" || set.exerciseType !== "try-out") {
+        return [];
+      }
 
-    const setsByName = new Map<string, typeof allSets>();
+      const year = getYearFromTryoutSetSlug(set.slug);
+
+      if (year === null) {
+        logger.warn(`Skipping malformed SNBT try-out set slug: ${set.slug}`);
+        return [];
+      }
+
+      return [{ ...set, year }];
+    });
+
+    const setsByKey = new Map<string, typeof allSets>();
 
     for (const set of allSets) {
-      const existing = setsByName.get(set.setName) || [];
+      const existing = setsByKey.get(`${set.year}:${set.setName}`) || [];
       existing.push(set);
-      setsByName.set(set.setName, existing);
+      setsByKey.set(`${set.year}:${set.setName}`, existing);
     }
 
     const detectedTryouts: Array<{
       locale: typeof args.locale;
+      year: number;
       setName: string;
       sets: typeof allSets;
       slug: string;
-      questionCountPerSubject: number;
     }> = [];
 
-    for (const [setName, sets] of setsByName) {
+    for (const sets of setsByKey.values()) {
+      const firstSet = sets[0];
+
+      if (!firstSet) {
+        continue;
+      }
+
       const materials = new Set(sets.map((s) => s.material));
       const questionCounts = sets.map((set) => set.questionCount);
-      const questionCountPerSubject = questionCounts[0];
       const hasAllMaterials = SNBT_TRYOUT_MATERIALS.every((m) =>
         materials.has(m)
       );
-      const hasUniformPositiveQuestionCounts =
-        questionCountPerSubject !== undefined &&
-        questionCountPerSubject > 0 &&
-        questionCounts.every((count) => count === questionCountPerSubject);
+      const hasPositiveQuestionCounts = questionCounts.every(
+        (count) => count > 0
+      );
 
-      if (hasAllMaterials && hasUniformPositiveQuestionCounts) {
+      if (hasAllMaterials && hasPositiveQuestionCounts) {
         detectedTryouts.push({
           locale: args.locale,
-          setName,
+          year: firstSet.year,
+          setName: firstSet.setName,
           sets,
-          slug: `${year}-${setName}`,
-          questionCountPerSubject,
+          slug: `${firstSet.year}-${firstSet.setName}`,
         });
       }
     }
@@ -1431,7 +1458,10 @@ export const bulkSyncSnbtTryouts = internalMutation({
       const existing = await ctx.db
         .query("snbtTryouts")
         .withIndex("locale_year_slug", (q) =>
-          q.eq("locale", tryout.locale).eq("year", year).eq("slug", tryout.slug)
+          q
+            .eq("locale", tryout.locale)
+            .eq("year", tryout.year)
+            .eq("slug", tryout.slug)
         )
         .first();
 
@@ -1443,7 +1473,6 @@ export const bulkSyncSnbtTryouts = internalMutation({
         const hasChanges =
           !existing.isActive ||
           existing.subjectCount !== SNBT_TRYOUT_MATERIALS.length ||
-          existing.questionCountPerSubject !== tryout.questionCountPerSubject ||
           existing.totalQuestionCount !== totalQuestionCount ||
           mappingsChanged;
 
@@ -1454,7 +1483,6 @@ export const bulkSyncSnbtTryouts = internalMutation({
 
         await ctx.db.patch("snbtTryouts", existing._id, {
           subjectCount: SNBT_TRYOUT_MATERIALS.length,
-          questionCountPerSubject: tryout.questionCountPerSubject,
           totalQuestionCount,
           isActive: true,
           syncedAt: now,
@@ -1464,11 +1492,10 @@ export const bulkSyncSnbtTryouts = internalMutation({
       } else {
         const tryoutId = await ctx.db.insert("snbtTryouts", {
           locale: tryout.locale,
-          year,
+          year: tryout.year,
           slug: tryout.slug,
           setName: tryout.setName,
           subjectCount: SNBT_TRYOUT_MATERIALS.length,
-          questionCountPerSubject: tryout.questionCountPerSubject,
           totalQuestionCount,
           isActive: true,
           detectedAt: now,
@@ -1484,15 +1511,15 @@ export const bulkSyncSnbtTryouts = internalMutation({
       }
     }
 
-    const existingTryoutsForYear = await ctx.db
+    const existingTryouts = await ctx.db
       .query("snbtTryouts")
-      .withIndex("locale_year_slug", (q) =>
-        q.eq("locale", args.locale).eq("year", year)
+      .withIndex("locale_isActive", (q) =>
+        q.eq("locale", args.locale).eq("isActive", true)
       )
       .collect();
 
-    for (const tryout of existingTryoutsForYear) {
-      if (!tryout.isActive || detectedSlugs.has(tryout.slug)) {
+    for (const tryout of existingTryouts) {
+      if (detectedSlugs.has(tryout.slug)) {
         continue;
       }
 

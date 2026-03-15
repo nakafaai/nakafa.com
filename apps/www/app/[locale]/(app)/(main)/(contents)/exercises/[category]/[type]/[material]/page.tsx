@@ -190,7 +190,7 @@ async function PageContent({
             ) : (
               <ContainerList className="sm:grid-cols-1">
                 {materials.map((mat) => (
-                  <CardMaterial key={mat.title} material={mat} />
+                  <CardMaterial key={mat.href} material={mat} />
                 ))}
               </ContainerList>
             )}

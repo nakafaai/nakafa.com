@@ -32,13 +32,13 @@ const NUMBER_REGEX = /^\d+$/;
  * This is a lightweight operation that does not load any MDX content.
  * Evidence: Reuses getFolderChildNames from fs.ts for clean, maintainable code
  *
- * @param filePath - Path to the exercise set (e.g., "exercises/high-school/tka/mathematics/try-out/set-1")
+ * @param filePath - Path to the exercise set (e.g., "exercises/high-school/tka/mathematics/try-out/2026/set-1")
  * @returns Effect that produces the count of exercises, or 0 if path doesn't exist
  *
  * @example
  * ```ts
  * const count = await Effect.runPromise(
- *   getExerciseCount("exercises/high-school/tka/mathematics/try-out/set-1")
+ *   getExerciseCount("exercises/high-school/tka/mathematics/try-out/2026/set-1")
  * );
  * // Returns: 40
  * ```
@@ -74,7 +74,7 @@ export interface ExerciseContentOptions {
  * @param options - Exercise retrieval options
  * @param options.includeMDX - Whether to load MDX components (default: true)
  * @param options.locale - Target locale
- * @param options.filePath - Base path to exercise set (e.g., "exercises/high-school/tka/mathematics/try-out/set-1")
+ * @param options.filePath - Base path to exercise set (e.g., "exercises/high-school/tka/mathematics/try-out/2026/set-1")
  * @returns Effect that produces array of exercises sorted by number, or Option.none() if no exercises found
  *
  * @example
@@ -82,7 +82,7 @@ export interface ExerciseContentOptions {
  * const exercises = await Effect.runPromise(
  *   getExercisesContent({
  *     locale: "en",
- *     filePath: "exercises/high-school/tka/mathematics/try-out/set-1",
+ *     filePath: "exercises/high-school/tka/mathematics/try-out/2026/set-1",
  *     includeMDX: true
  *   })
  * );
@@ -261,7 +261,7 @@ function loadExercise(
  * @example
  * ```ts
  * const exercise = await Effect.runPromise(
- *   getExerciseByNumber("en", "exercises/high-school/tka/mathematics/try-out/set-1", 5)
+ *   getExerciseByNumber("en", "exercises/high-school/tka/mathematics/try-out/2026/set-1", 5)
  * );
  * ```
  */

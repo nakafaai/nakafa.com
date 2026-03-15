@@ -16,7 +16,6 @@ const tables = {
     slug: v.string(),
     setName: v.string(),
     subjectCount: v.number(),
-    questionCountPerSubject: v.number(),
     totalQuestionCount: v.number(),
     isActive: v.boolean(),
     detectedAt: v.number(),

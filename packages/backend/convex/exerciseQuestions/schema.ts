@@ -11,14 +11,14 @@ const tables = {
   /**
    * Exercise question storage.
    * Each row is a single question within an exercise set.
-   * URL structure: /exercises/{category}/{type}/{material}/{exerciseType}/{setName}/{number}
+   * URL structure: /exercises/{category}/{type}/{material}/{exerciseType}/{year?}/{setName}/{number}
    * Authors are linked via contentAuthors join table.
    */
   exerciseQuestions: defineTable({
     /** Reference to parent exercise set */
     setId: v.id("exerciseSets"),
     locale: localeValidator,
-    /** Full URL path: "exercises/high-school/tka/mathematics/try-out/set-1/12" */
+    /** Full URL path: "exercises/high-school/tka/mathematics/try-out/2026/set-1/12" */
     slug: v.string(),
     /** Denormalized for query performance */
     category: exercisesCategoryValidator,
