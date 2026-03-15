@@ -1598,6 +1598,59 @@ async function syncExerciseQuestions(
 }
 
 /**
+ * Syncs SNBT try-outs by detecting complete sets across all subjects.
+ * A try-out is detected when exercise sets exist for ALL 7 SNBT subjects
+ * with the same setName within a locale.
+ */
+async function syncSnbtTryouts(
+  config: ConvexConfig,
+  options: SyncOptions
+): Promise<SyncResult> {
+  const startTime = performance.now();
+  if (!options.quiet) {
+    log("\n--- SNBT TRY-OUTS ---\n");
+  }
+
+  const locales: Locale[] = options.locale ? [options.locale] : ["en", "id"];
+
+  const totals: SyncResult = { created: 0, updated: 0, unchanged: 0 };
+
+  for (const locale of locales) {
+    const result = await runConvexMutation(
+      config,
+      "contentSync/mutations:bulkSyncSnbtTryouts",
+      { locale }
+    );
+
+    totals.created += result.created;
+    totals.updated += result.updated;
+    totals.unchanged += result.unchanged;
+
+    if (!options.quiet) {
+      log(
+        `  ${locale}: ${result.created} created, ${result.updated} updated, ${result.unchanged} unchanged`
+      );
+    }
+  }
+
+  const durationMs = performance.now() - startTime;
+  const processed = totals.created + totals.updated + totals.unchanged;
+
+  if (!options.quiet) {
+    log(
+      `\nResult: ${totals.created} created, ${totals.updated} updated, ${totals.unchanged} unchanged`
+    );
+    log(`Time: ${formatDuration(durationMs)}`);
+  }
+
+  return {
+    ...totals,
+    durationMs,
+    itemsPerSecond: durationMs > 0 ? (processed / durationMs) * 1000 : 0,
+  };
+}
+
+/**
  * Syncs all content types to Convex.
  * Phases: Authors (pre-sync) -> Content (parallel or sequential)
  */
@@ -1628,6 +1681,7 @@ async function syncAll(
   let subjectSectionResult: SyncResult;
   let exerciseSetResult: SyncResult;
   let exerciseQuestionResult: SyncResult;
+  let snbtTryoutResult: SyncResult;
 
   if (options.sequential) {
     const articlePhase = startPhase(metrics, "Articles");
@@ -1672,6 +1726,15 @@ async function syncAll(
         exerciseQuestionResult.updated +
         exerciseQuestionResult.unchanged
     );
+
+    const tryoutPhase = startPhase(metrics, "SNBT Try-outs");
+    snbtTryoutResult = await syncSnbtTryouts(config, options);
+    endPhase(
+      tryoutPhase,
+      snbtTryoutResult.created +
+        snbtTryoutResult.updated +
+        snbtTryoutResult.unchanged
+    );
   } else {
     const quietOptions = { ...options, quiet: true };
 
@@ -1712,11 +1775,22 @@ async function syncAll(
     log(`  Exercise Questions: ${formatSyncResult(exerciseQuestionResult)}`);
     log(`  Duration: ${formatDuration(phase2Duration)}`);
 
+    // Phase 3: Sync SNBT try-outs (depends on exercise sets from Phase 1)
+    log("Phase 3: Syncing SNBT try-outs...");
+    const phase3Start = performance.now();
+
+    snbtTryoutResult = await syncSnbtTryouts(config, options);
+
+    const phase3Duration = performance.now() - phase3Start;
+    log(`  SNBT Try-outs:      ${formatSyncResult(snbtTryoutResult)}`);
+    log(`  Duration: ${formatDuration(phase3Duration)}`);
+
     addPhaseMetrics(metrics, "Articles", articleResult);
     addPhaseMetrics(metrics, "Subject Topics", subjectTopicResult);
     addPhaseMetrics(metrics, "Subject Sections", subjectSectionResult);
     addPhaseMetrics(metrics, "Exercise Sets", exerciseSetResult);
     addPhaseMetrics(metrics, "Exercise Questions", exerciseQuestionResult);
+    addPhaseMetrics(metrics, "SNBT Try-outs", snbtTryoutResult);
   }
 
   finalizeMetrics(metrics);
@@ -1729,19 +1803,22 @@ async function syncAll(
     subjectTopicResult.created +
     subjectSectionResult.created +
     exerciseSetResult.created +
-    exerciseQuestionResult.created;
+    exerciseQuestionResult.created +
+    snbtTryoutResult.created;
   const totalUpdated =
     articleResult.updated +
     subjectTopicResult.updated +
     subjectSectionResult.updated +
     exerciseSetResult.updated +
-    exerciseQuestionResult.updated;
+    exerciseQuestionResult.updated +
+    snbtTryoutResult.updated;
   const totalUnchanged =
     articleResult.unchanged +
     subjectTopicResult.unchanged +
     subjectSectionResult.unchanged +
     exerciseSetResult.unchanged +
-    exerciseQuestionResult.unchanged;
+    exerciseQuestionResult.unchanged +
+    snbtTryoutResult.unchanged;
   const total = totalCreated + totalUpdated + totalUnchanged;
 
   const totalReferencesCreated = articleResult.referencesCreated || 0;
@@ -1766,6 +1843,9 @@ async function syncAll(
   );
   log(
     `  Exercise Questions: ${exerciseQuestionResult.created + exerciseQuestionResult.updated + exerciseQuestionResult.unchanged} (${exerciseQuestionResult.created} new, ${exerciseQuestionResult.updated} updated)`
+  );
+  log(
+    `  SNBT Try-outs:      ${snbtTryoutResult.created + snbtTryoutResult.updated + snbtTryoutResult.unchanged} (${snbtTryoutResult.created} new, ${snbtTryoutResult.updated} updated)`
   );
 
   log("\nRelated Items:");

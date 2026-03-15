@@ -15,20 +15,26 @@ export const exerciseAttemptModeValidator = literals("practice", "simulation");
 export const exerciseAttemptScopeValidator = literals("set", "single");
 
 /**
+ * Exercise attempt origin validator.
+ * Distinguishes standalone exercise attempts from SNBT try-out subject attempts.
+ */
+export const exerciseAttemptOriginValidator = literals("standalone", "snbt");
+
+/**
  * Exercise attempt status validator.
  * Attempt lifecycle state.
  */
 export const exerciseAttemptStatusValidator = literals(
   "in-progress",
   "completed",
-  "expired",
-  "abandoned"
+  "expired"
 );
 
 const tables = {
   exerciseAttempts: defineTable({
     slug: v.string(),
     userId: v.id("users"),
+    origin: exerciseAttemptOriginValidator,
     mode: exerciseAttemptModeValidator,
     scope: exerciseAttemptScopeValidator,
     exerciseNumber: v.optional(v.number()),
@@ -45,23 +51,37 @@ const tables = {
     correctAnswers: v.number(),
     totalTime: v.number(),
     scorePercentage: v.number(),
-  }).index("userId_slug_scope_startedAt", [
-    "userId",
-    "slug",
-    "scope",
-    "startedAt",
-  ]),
+  })
+    .index("userId_origin_slug_scope_startedAt", [
+      "userId",
+      "origin",
+      "slug",
+      "scope",
+      "startedAt",
+    ])
+    .index("slug_scope_mode_status_startedAt", [
+      "slug",
+      "scope",
+      "mode",
+      "status",
+      "startedAt",
+    ]),
 
   exerciseAnswers: defineTable({
     attemptId: v.id("exerciseAttempts"),
     exerciseNumber: v.number(),
+    /** Populated by server-authoritative scoring on all new writes. */
+    questionId: v.optional(v.id("exerciseQuestions")),
+    /** Canonical choice key selected by the user. */
     selectedOptionId: v.optional(v.string()),
     textAnswer: v.optional(v.string()),
     isCorrect: v.boolean(),
     timeSpent: v.number(),
     answeredAt: v.number(),
     updatedAt: v.number(),
-  }).index("attemptId_exerciseNumber", ["attemptId", "exerciseNumber"]),
+  })
+    .index("attemptId_exerciseNumber", ["attemptId", "exerciseNumber"])
+    .index("questionId", ["questionId"]),
 };
 
 export default tables;

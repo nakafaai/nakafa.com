@@ -28,6 +28,10 @@ import { schoolClassesHandler } from "@repo/backend/convex/triggers/schools/clas
 import { schoolClassMembersHandler } from "@repo/backend/convex/triggers/schools/classMembers";
 import { schoolMembersHandler } from "@repo/backend/convex/triggers/schools/members";
 import { schoolsHandler } from "@repo/backend/convex/triggers/schools/schools";
+import {
+  globalLeaderboardTrigger,
+  tryoutLeaderboardTrigger,
+} from "@repo/backend/convex/triggers/snbt/leaderboard";
 import { subscriptionsHandler } from "@repo/backend/convex/triggers/subscriptions/subscriptions";
 import {
   customCtx,
@@ -85,3 +89,7 @@ triggers.register("schoolClassForumPostReactions", postReactionsHandler);
 triggers.register("schoolClassForumReactions", forumReactionsHandler);
 triggers.register("schoolClassMaterials", materialsHandler);
 triggers.register("schoolClassMaterialGroups", materialGroupsHandler);
+
+// SNBT leaderboard aggregate triggers
+triggers.register("snbtLeaderboard", tryoutLeaderboardTrigger);
+triggers.register("userSnbtStats", globalLeaderboardTrigger);
