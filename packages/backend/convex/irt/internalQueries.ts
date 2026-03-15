@@ -1,7 +1,10 @@
 import { internalQuery } from "@repo/backend/convex/_generated/server";
 import { irtCalibratedItemValidator } from "@repo/backend/convex/irt/validators";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { paginationOptsValidator } from "convex/server";
+import {
+  paginationOptsValidator,
+  paginationResultValidator,
+} from "convex/server";
 import { v } from "convex/values";
 import { getManyFrom } from "convex-helpers/server/relationships";
 
@@ -21,11 +24,8 @@ export const calibrationQuestionsForSetResultValidator = v.object({
   questions: v.array(calibrationQuestionValidator),
 });
 
-export const calibrationResponsesPageResultValidator = v.object({
-  continueCursor: v.string(),
-  isDone: v.boolean(),
-  page: v.array(calibrationResponseValidator),
-});
+export const calibrationResponsesPageResultValidator =
+  paginationResultValidator(calibrationResponseValidator);
 
 /**
  * Load the questions in one exercise set together with any previously stored
