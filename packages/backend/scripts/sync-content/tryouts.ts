@@ -1,7 +1,8 @@
+import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { tryoutProducts } from "../../convex/tryouts/products";
 import { runConvexMutation } from "./convexApi";
 import { formatDuration, log } from "./logging";
-import type { ConvexConfig, Locale, SyncOptions, SyncResult } from "./types";
+import type { ConvexConfig, SyncOptions, SyncResult } from "./types";
 
 export const syncTryouts = async (
   config: ConvexConfig,

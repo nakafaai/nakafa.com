@@ -1,6 +1,4 @@
-import type { Locale } from "../lib/mdxParser";
-
-export type { Locale } from "../lib/mdxParser";
+import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 
 export interface SyncOptions {
   authors?: boolean;

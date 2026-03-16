@@ -1,11 +1,11 @@
+import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import {
   computeHash,
-  getArticleDir,
-  parseArticlePath,
   parseDateToEpoch,
   readArticleReferences,
   readMdxFile,
-} from "../lib/mdxParser";
+} from "../lib/mdx-parser/content";
+import { getArticleDir, parseArticlePath } from "../lib/mdx-parser/paths";
 import { runConvexMutation } from "./convexApi";
 import { formatDuration, log, logError, logSuccess } from "./logging";
 import {
@@ -15,7 +15,7 @@ import {
 } from "./metrics";
 import { globFiles } from "./runtime";
 import { BATCH_SIZES } from "./schemas";
-import type { ConvexConfig, Locale, SyncOptions, SyncResult } from "./types";
+import type { ConvexConfig, SyncOptions, SyncResult } from "./types";
 
 interface ArticlePayload {
   articleSlug: string;

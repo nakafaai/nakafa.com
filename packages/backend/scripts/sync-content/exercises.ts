@@ -1,13 +1,16 @@
+import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import {
-  buildExerciseSetSlug,
   computeHash,
-  getExerciseDir,
   parseDateToEpoch,
-  parseExerciseMaterialFile,
-  parseExercisePath,
   readExerciseChoices,
   readMdxFile,
-} from "../lib/mdxParser";
+} from "../lib/mdx-parser/content";
+import { parseExerciseMaterialFile } from "../lib/mdx-parser/materials";
+import {
+  buildExerciseSetSlug,
+  getExerciseDir,
+  parseExercisePath,
+} from "../lib/mdx-parser/paths";
 import { runConvexMutation } from "./convexApi";
 import { formatDuration, log, logError, logSuccess } from "./logging";
 import {
@@ -21,7 +24,7 @@ import {
   LOCALE_MATERIAL_FILE_REGEX,
   parseLocale,
 } from "./schemas";
-import type { ConvexConfig, Locale, SyncOptions, SyncResult } from "./types";
+import type { ConvexConfig, SyncOptions, SyncResult } from "./types";
 
 interface ExerciseSetPayload {
   category: string;

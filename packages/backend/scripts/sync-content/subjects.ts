@@ -1,10 +1,11 @@
+import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import {
   computeHash,
   parseDateToEpoch,
-  parseSubjectMaterialFile,
-  parseSubjectPath,
   readMdxFile,
-} from "../lib/mdxParser";
+} from "../lib/mdx-parser/content";
+import { parseSubjectMaterialFile } from "../lib/mdx-parser/materials";
+import { parseSubjectPath } from "../lib/mdx-parser/paths";
 import { runConvexMutation } from "./convexApi";
 import { formatDuration, log, logError, logSuccess } from "./logging";
 import {
@@ -18,7 +19,7 @@ import {
   LOCALE_SUBJECT_MATERIAL_FILE_REGEX,
   parseLocale,
 } from "./schemas";
-import type { ConvexConfig, Locale, SyncOptions, SyncResult } from "./types";
+import type { ConvexConfig, SyncOptions, SyncResult } from "./types";
 
 interface SubjectTopicPayload {
   category: string;

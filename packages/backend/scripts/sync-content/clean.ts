@@ -1,10 +1,12 @@
 import {
-  parseArticlePath,
   parseExerciseMaterialFile,
-  parseExercisePath,
   parseSubjectMaterialFile,
+} from "../lib/mdx-parser/materials";
+import {
+  parseArticlePath,
+  parseExercisePath,
   parseSubjectPath,
-} from "../lib/mdxParser";
+} from "../lib/mdx-parser/paths";
 import {
   runConvexMutationGeneric,
   runConvexQuery,

@@ -1,15 +1,19 @@
 import {
-  getArticleDir,
-  getExerciseDir,
-  parseArticlePath,
-  parseExerciseMaterialFile,
-  parseExercisePath,
-  parseSubjectMaterialFile,
-  parseSubjectPath,
   readArticleReferences,
   readExerciseChoices,
   readMdxFile,
-} from "../lib/mdxParser";
+} from "../lib/mdx-parser/content";
+import {
+  parseExerciseMaterialFile,
+  parseSubjectMaterialFile,
+} from "../lib/mdx-parser/materials";
+import {
+  getArticleDir,
+  getExerciseDir,
+  parseArticlePath,
+  parseExercisePath,
+  parseSubjectPath,
+} from "../lib/mdx-parser/paths";
 import { formatDuration, log, logError, logSuccess } from "./logging";
 import { globFiles } from "./runtime";
 import {

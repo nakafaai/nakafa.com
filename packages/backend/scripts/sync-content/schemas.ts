@@ -1,5 +1,5 @@
+import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import * as z from "zod";
-import type { Locale } from "./types";
 
 export const BATCH_SIZES = {
   articles: 50,

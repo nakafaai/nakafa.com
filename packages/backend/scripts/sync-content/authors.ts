@@ -1,4 +1,4 @@
-import { readMdxFile } from "../lib/mdxParser";
+import { readMdxFile } from "../lib/mdx-parser/content";
 import { runConvexMutationGeneric } from "./convexApi";
 import { formatDuration, log } from "./logging";
 import { globFiles } from "./runtime";
