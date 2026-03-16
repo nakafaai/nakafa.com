@@ -1178,6 +1178,298 @@ export const deleteExerciseChoicesBatch = internalMutation({
 });
 
 /**
+ * Delete a batch of exercise answers.
+ */
+export const deleteExerciseAnswersBatch = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const answers = await ctx.db
+      .query("exerciseAnswers")
+      .take(DELETE_BATCH_SIZE);
+    let deleted = 0;
+
+    for (const answer of answers) {
+      await ctx.db.delete("exerciseAnswers", answer._id);
+      deleted++;
+    }
+
+    const remaining = await ctx.db.query("exerciseAnswers").first();
+    return { deleted, hasMore: remaining !== null };
+  },
+});
+
+/**
+ * Delete a batch of tryout part attempts.
+ */
+export const deleteTryoutPartAttemptsBatch = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const partAttempts = await ctx.db
+      .query("tryoutPartAttempts")
+      .take(DELETE_BATCH_SIZE);
+    let deleted = 0;
+
+    for (const partAttempt of partAttempts) {
+      await ctx.db.delete("tryoutPartAttempts", partAttempt._id);
+      deleted++;
+    }
+
+    const remaining = await ctx.db.query("tryoutPartAttempts").first();
+    return { deleted, hasMore: remaining !== null };
+  },
+});
+
+/**
+ * Delete a batch of tryout leaderboard entries.
+ */
+export const deleteTryoutLeaderboardEntriesBatch = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const entries = await ctx.db
+      .query("tryoutLeaderboardEntries")
+      .take(DELETE_BATCH_SIZE);
+    let deleted = 0;
+
+    for (const entry of entries) {
+      await ctx.db.delete("tryoutLeaderboardEntries", entry._id);
+      deleted++;
+    }
+
+    const remaining = await ctx.db.query("tryoutLeaderboardEntries").first();
+    return { deleted, hasMore: remaining !== null };
+  },
+});
+
+/**
+ * Delete a batch of user tryout stats.
+ */
+export const deleteUserTryoutStatsBatch = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const statsRecords = await ctx.db
+      .query("userTryoutStats")
+      .take(DELETE_BATCH_SIZE);
+    let deleted = 0;
+
+    for (const statsRecord of statsRecords) {
+      await ctx.db.delete("userTryoutStats", statsRecord._id);
+      deleted++;
+    }
+
+    const remaining = await ctx.db.query("userTryoutStats").first();
+    return { deleted, hasMore: remaining !== null };
+  },
+});
+
+/**
+ * Delete a batch of IRT scale publication queue jobs.
+ */
+export const deleteIrtScalePublicationQueueBatch = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const jobs = await ctx.db
+      .query("irtScalePublicationQueue")
+      .take(DELETE_BATCH_SIZE);
+    let deleted = 0;
+
+    for (const job of jobs) {
+      await ctx.db.delete("irtScalePublicationQueue", job._id);
+      deleted++;
+    }
+
+    const remaining = await ctx.db.query("irtScalePublicationQueue").first();
+    return { deleted, hasMore: remaining !== null };
+  },
+});
+
+/**
+ * Delete a batch of IRT scale version items.
+ */
+export const deleteIrtScaleVersionItemsBatch = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const items = await ctx.db
+      .query("irtScaleVersionItems")
+      .take(DELETE_BATCH_SIZE);
+    let deleted = 0;
+
+    for (const item of items) {
+      await ctx.db.delete("irtScaleVersionItems", item._id);
+      deleted++;
+    }
+
+    const remaining = await ctx.db.query("irtScaleVersionItems").first();
+    return { deleted, hasMore: remaining !== null };
+  },
+});
+
+/**
+ * Delete a batch of exercise item parameters.
+ */
+export const deleteExerciseItemParametersBatch = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const itemParameters = await ctx.db
+      .query("exerciseItemParameters")
+      .take(DELETE_BATCH_SIZE);
+    let deleted = 0;
+
+    for (const itemParameter of itemParameters) {
+      await ctx.db.delete("exerciseItemParameters", itemParameter._id);
+      deleted++;
+    }
+
+    const remaining = await ctx.db.query("exerciseItemParameters").first();
+    return { deleted, hasMore: remaining !== null };
+  },
+});
+
+/**
+ * Delete a batch of IRT calibration queue jobs.
+ */
+export const deleteIrtCalibrationQueueBatch = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const jobs = await ctx.db
+      .query("irtCalibrationQueue")
+      .take(DELETE_BATCH_SIZE);
+    let deleted = 0;
+
+    for (const job of jobs) {
+      await ctx.db.delete("irtCalibrationQueue", job._id);
+      deleted++;
+    }
+
+    const remaining = await ctx.db.query("irtCalibrationQueue").first();
+    return { deleted, hasMore: remaining !== null };
+  },
+});
+
+/**
+ * Delete a batch of exercise attempts.
+ */
+export const deleteExerciseAttemptsBatch = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const attempts = await ctx.db
+      .query("exerciseAttempts")
+      .take(DELETE_BATCH_SIZE);
+    let deleted = 0;
+
+    for (const attempt of attempts) {
+      await ctx.db.delete("exerciseAttempts", attempt._id);
+      deleted++;
+    }
+
+    const remaining = await ctx.db.query("exerciseAttempts").first();
+    return { deleted, hasMore: remaining !== null };
+  },
+});
+
+/**
+ * Delete a batch of tryout attempts.
+ */
+export const deleteTryoutAttemptsBatch = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const attempts = await ctx.db
+      .query("tryoutAttempts")
+      .take(DELETE_BATCH_SIZE);
+    let deleted = 0;
+
+    for (const attempt of attempts) {
+      await ctx.db.delete("tryoutAttempts", attempt._id);
+      deleted++;
+    }
+
+    const remaining = await ctx.db.query("tryoutAttempts").first();
+    return { deleted, hasMore: remaining !== null };
+  },
+});
+
+/**
+ * Delete a batch of tryout part mappings.
+ */
+export const deleteTryoutPartSetsBatch = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const partSets = await ctx.db
+      .query("tryoutPartSets")
+      .take(DELETE_BATCH_SIZE);
+    let deleted = 0;
+
+    for (const partSet of partSets) {
+      await ctx.db.delete("tryoutPartSets", partSet._id);
+      deleted++;
+    }
+
+    const remaining = await ctx.db.query("tryoutPartSets").first();
+    return { deleted, hasMore: remaining !== null };
+  },
+});
+
+/**
+ * Delete a batch of IRT scale versions.
+ */
+export const deleteIrtScaleVersionsBatch = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const versions = await ctx.db
+      .query("irtScaleVersions")
+      .take(DELETE_BATCH_SIZE);
+    let deleted = 0;
+
+    for (const version of versions) {
+      await ctx.db.delete("irtScaleVersions", version._id);
+      deleted++;
+    }
+
+    const remaining = await ctx.db.query("irtScaleVersions").first();
+    return { deleted, hasMore: remaining !== null };
+  },
+});
+
+/**
+ * Delete a batch of IRT calibration runs.
+ */
+export const deleteIrtCalibrationRunsBatch = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const runs = await ctx.db
+      .query("irtCalibrationRuns")
+      .take(DELETE_BATCH_SIZE);
+    let deleted = 0;
+
+    for (const run of runs) {
+      await ctx.db.delete("irtCalibrationRuns", run._id);
+      deleted++;
+    }
+
+    const remaining = await ctx.db.query("irtCalibrationRuns").first();
+    return { deleted, hasMore: remaining !== null };
+  },
+});
+
+/**
+ * Delete a batch of tryouts.
+ */
+export const deleteTryoutsBatch = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const tryouts = await ctx.db.query("tryouts").take(DELETE_BATCH_SIZE);
+    let deleted = 0;
+
+    for (const tryout of tryouts) {
+      await ctx.db.delete("tryouts", tryout._id);
+      deleted++;
+    }
+
+    const remaining = await ctx.db.query("tryouts").first();
+    return { deleted, hasMore: remaining !== null };
+  },
+});
+
+/**
  * Delete a batch of exercise questions.
  */
 export const deleteExerciseQuestionsBatch = internalMutation({
