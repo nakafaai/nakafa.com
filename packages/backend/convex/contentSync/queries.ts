@@ -9,7 +9,34 @@ export const getContentCounts = internalQuery({
     const subjectSections = await ctx.db.query("subjectSections").collect();
     const exerciseSets = await ctx.db.query("exerciseSets").collect();
     const exerciseQuestions = await ctx.db.query("exerciseQuestions").collect();
+    const exerciseAttempts = await ctx.db.query("exerciseAttempts").collect();
+    const exerciseAnswers = await ctx.db.query("exerciseAnswers").collect();
     const tryouts = await ctx.db.query("tryouts").collect();
+    const tryoutPartSets = await ctx.db.query("tryoutPartSets").collect();
+    const tryoutAttempts = await ctx.db.query("tryoutAttempts").collect();
+    const tryoutPartAttempts = await ctx.db
+      .query("tryoutPartAttempts")
+      .collect();
+    const tryoutLeaderboardEntries = await ctx.db
+      .query("tryoutLeaderboardEntries")
+      .collect();
+    const userTryoutStats = await ctx.db.query("userTryoutStats").collect();
+    const irtCalibrationQueue = await ctx.db
+      .query("irtCalibrationQueue")
+      .collect();
+    const irtCalibrationRuns = await ctx.db
+      .query("irtCalibrationRuns")
+      .collect();
+    const exerciseItemParameters = await ctx.db
+      .query("exerciseItemParameters")
+      .collect();
+    const irtScalePublicationQueue = await ctx.db
+      .query("irtScalePublicationQueue")
+      .collect();
+    const irtScaleVersions = await ctx.db.query("irtScaleVersions").collect();
+    const irtScaleVersionItems = await ctx.db
+      .query("irtScaleVersionItems")
+      .collect();
     const authors = await ctx.db.query("authors").collect();
     const contentAuthors = await ctx.db.query("contentAuthors").collect();
     const articleReferences = await ctx.db.query("articleReferences").collect();
@@ -21,7 +48,20 @@ export const getContentCounts = internalQuery({
       subjectSections: subjectSections.length,
       exerciseSets: exerciseSets.length,
       exerciseQuestions: exerciseQuestions.length,
+      exerciseAttempts: exerciseAttempts.length,
+      exerciseAnswers: exerciseAnswers.length,
       tryouts: tryouts.length,
+      tryoutPartSets: tryoutPartSets.length,
+      tryoutAttempts: tryoutAttempts.length,
+      tryoutPartAttempts: tryoutPartAttempts.length,
+      tryoutLeaderboardEntries: tryoutLeaderboardEntries.length,
+      userTryoutStats: userTryoutStats.length,
+      irtCalibrationQueue: irtCalibrationQueue.length,
+      irtCalibrationRuns: irtCalibrationRuns.length,
+      exerciseItemParameters: exerciseItemParameters.length,
+      irtScalePublicationQueue: irtScalePublicationQueue.length,
+      irtScaleVersions: irtScaleVersions.length,
+      irtScaleVersionItems: irtScaleVersionItems.length,
       authors: authors.length,
       contentAuthors: contentAuthors.length,
       articleReferences: articleReferences.length,
