@@ -7,11 +7,8 @@ import {
   parseExercisePath,
   parseSubjectPath,
 } from "../lib/mdx-parser/paths";
-import {
-  runConvexMutationGeneric,
-  runConvexQuery,
-  runConvexQueryWithArgs,
-} from "./convexApi";
+import { runConvexMutationGeneric } from "./convexApi";
+import { getStaleContent, getUnusedAuthors } from "./inspection";
 import { log, logStaleItems, logSuccess } from "./logging";
 import { globFiles } from "./runtime";
 import {
@@ -20,8 +17,6 @@ import {
   LOCALE_MATERIAL_FILE_REGEX,
   LOCALE_SUBJECT_MATERIAL_FILE_REGEX,
   parseLocale,
-  StaleContentSchema,
-  UnusedAuthorsSchema,
 } from "./schemas";
 import type {
   ConvexConfig,
@@ -132,11 +127,7 @@ const cleanUnusedAuthors = async (
   log("\n--- UNUSED AUTHORS ---\n");
   log("Unused authors = authors with no linked content\n");
 
-  const authorsResult = await runConvexQuery(
-    config,
-    "contentSync/queries:findUnusedAuthors",
-    UnusedAuthorsSchema
-  );
+  const authorsResult = await getUnusedAuthors(config);
 
   if (authorsResult.unusedAuthors.length === 0) {
     logSuccess("No unused authors found!");
@@ -191,18 +182,7 @@ export const clean = async (
   log(`  Exercise questions on disk: ${slugs.exerciseQuestionSlugs.length}`);
 
   log("\nQuerying database for stale content...");
-  const stale = await runConvexQueryWithArgs(
-    config,
-    "contentSync/queries:findStaleContent",
-    {
-      articleSlugs: slugs.articleSlugs,
-      subjectTopicSlugs: slugs.subjectTopicSlugs,
-      subjectSectionSlugs: slugs.subjectSectionSlugs,
-      exerciseSetSlugs: slugs.exerciseSetSlugs,
-      exerciseQuestionSlugs: slugs.exerciseQuestionSlugs,
-    },
-    StaleContentSchema
-  );
+  const stale = await getStaleContent(config, slugs);
 
   const totalStale =
     stale.staleArticles.length +

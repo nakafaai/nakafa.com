@@ -1,7 +1,7 @@
-import { runConvexQuery } from "./convexApi";
+import { getContentCounts } from "./counts";
+import { getDataIntegrity } from "./inspection";
 import { log, logError, logSuccess } from "./logging";
 import { globFiles } from "./runtime";
-import { ContentCountsSchema, DataIntegritySchema } from "./schemas";
 import type { ConvexConfig, SyncOptions } from "./types";
 
 const logIntegrityList = (
@@ -93,11 +93,7 @@ export const verify = async (
   log("\n=== DATABASE ===\n");
 
   try {
-    const counts = await runConvexQuery(
-      config,
-      "contentSync/queries:getContentCounts",
-      ContentCountsSchema
-    );
+    const counts = await getContentCounts(config);
 
     log("Content tables:");
     log(`  articleContents:     ${counts.articles}`);
@@ -174,11 +170,7 @@ export const verify = async (
     }
 
     log("\n=== DATA INTEGRITY ===\n");
-    const integrity = await runConvexQuery(
-      config,
-      "contentSync/queries:getDataIntegrity",
-      DataIntegritySchema
-    );
+    const integrity = await getDataIntegrity(config);
 
     allMatch =
       !logIntegrityList(

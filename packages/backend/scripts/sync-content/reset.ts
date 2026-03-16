@@ -1,7 +1,8 @@
-import { runConvexMutationGeneric, runConvexQuery } from "./convexApi";
+import { runConvexMutationGeneric } from "./convexApi";
+import { getContentCounts } from "./counts";
 import { formatDuration, log, logSuccess, logWarning } from "./logging";
 import { clearSyncState } from "./runtime";
-import { BatchDeleteResultSchema, ContentCountsSchema } from "./schemas";
+import { BatchDeleteResultSchema } from "./schemas";
 import type { ConvexConfig, SyncOptions } from "./types";
 
 interface ResetStep {
@@ -174,11 +175,7 @@ export const reset = async (
   }
 
   log("Current database contents:\n");
-  const counts = await runConvexQuery(
-    config,
-    "contentSync/queries:getContentCounts",
-    ContentCountsSchema
-  );
+  const counts = await getContentCounts(config);
 
   log(`  Content Authors:       ${counts.contentAuthors}`);
   log(`  Article References:    ${counts.articleReferences}`);

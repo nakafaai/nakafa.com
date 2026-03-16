@@ -100,12 +100,71 @@ const StaleItemSchema = z.object({
   locale: z.enum(["en", "id"]),
 });
 
+const PaginationPageSchema = z.object({
+  continueCursor: z.string(),
+  isDone: z.boolean(),
+});
+
 export const StaleContentSchema = z.object({
   staleArticles: z.array(StaleItemSchema),
   staleSubjectTopics: z.array(StaleItemSchema),
   staleSubjectSections: z.array(StaleItemSchema),
   staleExerciseSets: z.array(StaleItemSchema),
   staleExerciseQuestions: z.array(StaleItemSchema),
+});
+
+export const StaleContentPageSchema = PaginationPageSchema.extend({
+  page: z.array(StaleItemSchema),
+});
+
+export const ExerciseQuestionIntegrityPageSchema = PaginationPageSchema.extend({
+  page: z.array(StaleItemSchema),
+});
+
+export const ExerciseChoiceIntegrityPageSchema = PaginationPageSchema.extend({
+  page: z.array(
+    z.object({
+      questionId: z.string(),
+    })
+  ),
+});
+
+export const ContentAuthorIntegrityPageSchema = PaginationPageSchema.extend({
+  page: z.array(
+    z.object({
+      authorId: z.string(),
+      contentId: z.string(),
+      contentType: z.enum(["article", "subject", "exercise"]),
+    })
+  ),
+});
+
+export const ArticleReferenceIntegrityPageSchema = PaginationPageSchema.extend({
+  page: z.array(
+    z.object({
+      articleId: z.string(),
+    })
+  ),
+});
+
+export const SubjectSectionIntegrityPageSchema = PaginationPageSchema.extend({
+  page: z.array(
+    z.object({
+      locale: z.enum(["en", "id"]),
+      slug: z.string(),
+      topicId: z.string().optional(),
+    })
+  ),
+});
+
+export const AuthorPageSchema = PaginationPageSchema.extend({
+  page: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      username: z.string(),
+    })
+  ),
 });
 
 export const UnusedAuthorsSchema = z.object({
@@ -125,4 +184,10 @@ export const DeleteResultSchema = z.object({
 export const BatchDeleteResultSchema = z.object({
   deleted: z.number(),
   hasMore: z.boolean(),
+});
+
+export const CountTablePageSchema = z.object({
+  continueCursor: z.string(),
+  isDone: z.boolean(),
+  pageSize: z.number(),
 });
