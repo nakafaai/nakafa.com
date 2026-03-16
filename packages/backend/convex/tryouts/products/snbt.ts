@@ -1,6 +1,6 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { getSubjects } from "@repo/contents/exercises/high-school/_data/subject";
-import type { DetectedTryout, TryoutSetCandidate } from ".";
+import type { DetectedTryout, TryoutProductPolicy } from ".";
 
 const HOURS_PER_DAY = 24;
 const MINUTES_PER_HOUR = 60;
@@ -55,13 +55,7 @@ function compareSnbtTryouts(
 /** SNBT policy is derived from the high-school subject source of truth. */
 export const snbtTryoutProductPolicy = {
   compareTryouts: compareSnbtTryouts,
-  detectTryouts: ({
-    locale,
-    sets,
-  }: {
-    locale: TryoutSetCandidate["locale"];
-    sets: TryoutSetCandidate[];
-  }) => {
+  detectTryouts: ({ locale, sets }) => {
     const candidateSets = sets.flatMap((set) => {
       if (set.type !== "snbt" || set.exerciseType !== "try-out") {
         return [];
@@ -130,11 +124,7 @@ export const snbtTryoutProductPolicy = {
     return detectedTryouts;
   },
   getAttemptWindowMs: () => SNBT_ATTEMPT_WINDOW_MS,
-  getLeaderboardNamespace: ({
-    product,
-    locale,
-    cycleKey,
-  }: Pick<Doc<"tryouts">, "product" | "locale" | "cycleKey">) =>
+  getLeaderboardNamespace: ({ product, locale, cycleKey }) =>
     `${product}:${locale}:${cycleKey}`,
   getPartTimeLimitSeconds: (
     questionCount: Doc<"exerciseSets">["questionCount"]
@@ -151,4 +141,4 @@ export const snbtTryoutProductPolicy = {
       Math.max(SNBT_SCORE_MIN, Math.min(SNBT_SCORE_MAX, score))
     );
   },
-};
+} satisfies TryoutProductPolicy;

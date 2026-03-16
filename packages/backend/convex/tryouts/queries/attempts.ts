@@ -12,6 +12,7 @@ import {
 } from "convex-helpers/server/relationships";
 import { nullable } from "convex-helpers/validators";
 
+/** Returns the authenticated user's latest tryout attempt for one tryout slug. */
 export const getUserTryoutAttempt = query({
   args: {
     product: tryoutProductValidator,
@@ -123,6 +124,7 @@ export const getUserTryoutAttempt = query({
   },
 });
 
+/** Resolves tryout context from a shared set-attempt id. */
 export const getTryoutContextForAttempt = query({
   args: {
     setAttemptId: vv.id("exerciseAttempts"),

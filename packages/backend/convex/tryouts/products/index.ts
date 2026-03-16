@@ -45,7 +45,7 @@ type TryoutLeaderboardNamespaceArgs = Pick<
   "cycleKey" | "locale" | "product"
 >;
 
-interface TryoutProductPolicy {
+export interface TryoutProductPolicy {
   compareTryouts: (left: TryoutRecord, right: TryoutRecord) => number;
   detectTryouts: (args: {
     locale: TryoutSetCandidate["locale"];

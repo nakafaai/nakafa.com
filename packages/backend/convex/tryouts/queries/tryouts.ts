@@ -8,6 +8,7 @@ import {
 import { ConvexError, v } from "convex/values";
 import { getAll, getManyFrom } from "convex-helpers/server/relationships";
 
+/** Lists active tryouts for one product and locale. */
 export const getActiveTryouts = query({
   args: {
     product: tryoutProductValidator,
@@ -29,6 +30,7 @@ export const getActiveTryouts = query({
   },
 });
 
+/** Loads one tryout plus its ordered part-set metadata. */
 export const getTryoutDetails = query({
   args: {
     product: tryoutProductValidator,

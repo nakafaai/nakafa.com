@@ -39,6 +39,7 @@ const completeTryoutResultValidator = v.object({
 
 type CompleteTryoutResult = Infer<typeof completeTryoutResultValidator>;
 
+/** Starts or resumes one authenticated tryout attempt for a product slug. */
 export const startTryout = mutation({
   args: {
     product: tryoutProductValidator,
@@ -163,6 +164,7 @@ export const startTryout = mutation({
   },
 });
 
+/** Starts or resumes one concrete tryout part backed by a shared set attempt. */
 export const startPart = mutation({
   args: {
     tryoutAttemptId: vv.id("tryoutAttempts"),
@@ -326,6 +328,7 @@ export const startPart = mutation({
   },
 });
 
+/** Finalizes one part, updates running totals, and queues set recalibration. */
 export const completePart = mutation({
   args: {
     tryoutAttemptId: vv.id("tryoutAttempts"),
@@ -492,6 +495,7 @@ export const completePart = mutation({
   },
 });
 
+/** Finalizes the full tryout and publishes leaderboard state when official. */
 export const completeTryout = mutation({
   args: {
     tryoutAttemptId: vv.id("tryoutAttempts"),

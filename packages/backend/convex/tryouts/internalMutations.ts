@@ -11,6 +11,7 @@ import {
 } from "@repo/backend/convex/tryouts/products";
 import { v } from "convex/values";
 
+/** Scheduler-safe expiry for one in-progress tryout attempt. */
 export const expireTryoutAttemptInternal = internalMutation({
   args: {
     tryoutAttemptId: vv.id("tryoutAttempts"),
@@ -49,6 +50,7 @@ export const expireTryoutAttemptInternal = internalMutation({
   },
 });
 
+/** Upserts official leaderboard state after a completed tryout. */
 export const updateLeaderboard = internalMutation({
   args: {
     tryoutAttemptId: vv.id("tryoutAttempts"),

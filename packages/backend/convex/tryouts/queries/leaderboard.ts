@@ -13,6 +13,7 @@ import { v } from "convex/values";
 import { getAll } from "convex-helpers/server/relationships";
 import { nullable } from "convex-helpers/validators";
 
+/** Returns ranked official results for one concrete tryout. */
 export const getTryoutLeaderboard = query({
   args: {
     tryoutId: vv.id("tryouts"),
@@ -71,6 +72,7 @@ export const getTryoutLeaderboard = query({
   },
 });
 
+/** Returns ranked aggregate user stats for one product namespace. */
 export const getGlobalLeaderboard = query({
   args: {
     product: tryoutProductValidator,
@@ -134,6 +136,7 @@ export const getGlobalLeaderboard = query({
   },
 });
 
+/** Returns one user's rank within a concrete tryout leaderboard. */
 export const getUserTryoutRank = query({
   args: {
     tryoutId: vv.id("tryouts"),
