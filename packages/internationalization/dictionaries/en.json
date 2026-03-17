@@ -267,7 +267,14 @@
     "available-item-description": "{questions} questions - {parts} parts",
     "year-title": "Year {year}",
     "product-page-description": "See every SNBT package and open the one that fits your goal best.",
-    "slug-description": "Once you are ready to start, you can choose which part to work on first.",
+    "slug-description": "When you are ready, start this tryout and choose which part you want to work on first.",
+    "start-cta": "Start tryout",
+    "continue-cta": "Continue tryout",
+    "cancel-cta": "Not yet",
+    "start-dialog-title": "Start this tryout?",
+    "start-dialog-description": "Your tryout time will stay active for 1 day. Once it starts, you can choose which part to work on first.",
+    "start-success": "Tryout started. You can choose your first part now.",
+    "start-error": "We could not start the tryout yet. Please try again.",
     "question-unit": "questions",
     "products": {
       "snbt": {

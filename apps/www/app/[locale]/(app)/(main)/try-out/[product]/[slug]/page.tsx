@@ -10,6 +10,7 @@ import { fetchQuery } from "convex/nextjs";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { TryoutStartButton } from "@/components/tryout/start-button";
 
 interface Props {
   params: Promise<{ locale: Locale; product: string; slug: string }>;
@@ -88,6 +89,14 @@ export default async function Page({ params }: Props) {
           <p className="max-w-2xl text-muted-foreground">
             {tTryouts("slug-description")}
           </p>
+
+          <div className="pt-3">
+            <TryoutStartButton
+              locale={locale}
+              product="snbt"
+              tryoutSlug={details.tryout.slug}
+            />
+          </div>
         </header>
 
         <section className="overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">

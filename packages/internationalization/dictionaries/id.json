@@ -267,7 +267,14 @@
     "available-item-description": "{questions} soal - {parts} bagian",
     "year-title": "Tahun {year}",
     "product-page-description": "Lihat semua paket SNBT dan buka yang paling pas buat targetmu.",
-    "slug-description": "Kalau sudah siap mulai, kamu bisa pilih bagian yang mau dikerjakan lebih dulu.",
+    "slug-description": "Kalau sudah siap, mulai try out ini lalu pilih bagian yang mau kamu kerjakan duluan.",
+    "start-cta": "Mulai try out",
+    "continue-cta": "Lanjutkan try out",
+    "cancel-cta": "Nanti dulu",
+    "start-dialog-title": "Mulai try out ini?",
+    "start-dialog-description": "Waktu try out akan aktif selama 1 hari. Setelah mulai, kamu bisa pilih bagian yang mau dikerjakan duluan.",
+    "start-success": "Try out dimulai. Kamu bisa pilih bagian pertama sekarang.",
+    "start-error": "Try out belum bisa dimulai. Coba lagi ya.",
     "question-unit": "soal",
     "products": {
       "snbt": {
