@@ -39,13 +39,6 @@ function compareSnbtTryouts(
   left: Pick<Doc<"tryouts">, "cycleKey" | "label">,
   right: Pick<Doc<"tryouts">, "cycleKey" | "label">
 ) {
-  const leftYear = Number.parseInt(left.cycleKey, 10);
-  const rightYear = Number.parseInt(right.cycleKey, 10);
-
-  if (!(Number.isNaN(leftYear) || Number.isNaN(rightYear))) {
-    return rightYear - leftYear || left.label.localeCompare(right.label);
-  }
-
   return (
     right.cycleKey.localeCompare(left.cycleKey) ||
     left.label.localeCompare(right.label)

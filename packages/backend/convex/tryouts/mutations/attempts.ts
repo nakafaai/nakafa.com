@@ -5,42 +5,40 @@ import { mutation } from "@repo/backend/convex/functions";
 import { estimateThetaEAP } from "@repo/backend/convex/irt/estimation";
 import {
   getLatestScaleVersionForTryout,
-  getScaleVersionItems,
   getScaleVersionItemsForSet,
-  groupScaleVersionItemsBySetId,
 } from "@repo/backend/convex/irt/scaleVersions";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import {
   buildIrtResponses,
-  computeTryoutRawScorePercentage,
   countCorrectAnswers,
-  getFirstCompletedSimulationAttempt,
   syncTryoutAttemptExpiry,
 } from "@repo/backend/convex/tryouts/helpers";
+import {
+  completeTryoutResultValidator,
+  finalizeTryoutAttempt,
+} from "@repo/backend/convex/tryouts/mutations/helpers";
 import {
   computeTryoutExpiresAtMs,
   computeTryoutPartTimeLimitSeconds,
   scaleThetaToTryoutScore,
   tryoutProductValidator,
 } from "@repo/backend/convex/tryouts/products";
-import {
-  tryoutPartKeyValidator,
-  tryoutStatusValidator,
-} from "@repo/backend/convex/tryouts/schema";
+import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError, type Infer, v } from "convex/values";
 import { getManyFrom } from "convex-helpers/server/relationships";
+import { literals } from "convex-helpers/validators";
 
-const completeTryoutResultValidator = v.object({
-  status: tryoutStatusValidator,
-  isOfficial: v.boolean(),
-  theta: v.number(),
-  irtScore: v.number(),
-  rawScorePercentage: v.number(),
+const startTryoutStatusValidator = literals("in-progress", "completed");
+
+const startTryoutResultValidator = v.object({
+  tryoutAttemptId: vv.id("tryoutAttempts"),
+  partCount: v.number(),
+  firstPartKey: v.optional(tryoutPartKeyValidator),
+  expiresAtMs: v.number(),
+  status: startTryoutStatusValidator,
 });
-
-type CompleteTryoutResult = Infer<typeof completeTryoutResultValidator>;
 
 /** Starts or resumes one authenticated tryout attempt for a product slug. */
 export const startTryout = mutation({
@@ -49,12 +47,7 @@ export const startTryout = mutation({
     locale: localeValidator,
     tryoutSlug: v.string(),
   },
-  returns: v.object({
-    tryoutAttemptId: vv.id("tryoutAttempts"),
-    partCount: v.number(),
-    firstPartKey: tryoutPartKeyValidator,
-    expiresAtMs: v.number(),
-  }),
+  returns: startTryoutResultValidator,
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);
     const userId = appUser._id;
@@ -124,10 +117,28 @@ export const startTryout = mutation({
         );
 
         if (!firstIncompletePart) {
-          throw new ConvexError({
-            code: "INVALID_TRYOUT_STATE",
-            message: "Tryout is missing its first incomplete part.",
+          const completedAttempt = await finalizeTryoutAttempt({
+            ctx,
+            now,
+            tryoutAttempt: existingAttempt,
+            userId,
           });
+
+          if (completedAttempt.status !== "completed") {
+            throw new ConvexError({
+              code: "INVALID_TRYOUT_STATE",
+              message:
+                "Tryout has no incomplete part but could not be finalized.",
+            });
+          }
+
+          return {
+            tryoutAttemptId: existingAttempt._id,
+            partCount: tryout.partCount,
+            firstPartKey: undefined,
+            expiresAtMs: tryoutExpiry.expiredAtMs,
+            status: completedAttempt.status,
+          } satisfies Infer<typeof startTryoutResultValidator>;
         }
 
         return {
@@ -135,7 +146,8 @@ export const startTryout = mutation({
           partCount: tryout.partCount,
           firstPartKey: firstIncompletePart.partKey,
           expiresAtMs: tryoutExpiry.expiredAtMs,
-        };
+          status: "in-progress",
+        } satisfies Infer<typeof startTryoutResultValidator>;
       }
     }
 
@@ -189,7 +201,8 @@ export const startTryout = mutation({
       partCount: tryout.partCount,
       firstPartKey: firstPart.partKey,
       expiresAtMs,
-    };
+      status: "in-progress",
+    } satisfies Infer<typeof startTryoutResultValidator>;
   },
 });
 
@@ -555,157 +568,11 @@ export const completeTryout = mutation({
       });
     }
 
-    if (tryoutAttempt.status === "completed") {
-      const rawScorePercentage = computeTryoutRawScorePercentage(tryoutAttempt);
-      const firstCompletedAttempt = await getFirstCompletedSimulationAttempt(
-        ctx.db,
-        {
-          userId,
-          tryoutId: tryoutAttempt.tryoutId,
-        }
-      );
-
-      const result = {
-        status: "completed",
-        isOfficial: firstCompletedAttempt?._id === tryoutAttempt._id,
-        theta: tryoutAttempt.theta,
-        irtScore: tryoutAttempt.irtScore,
-        rawScorePercentage,
-      } satisfies CompleteTryoutResult;
-
-      return result;
-    }
-
-    if (tryoutAttempt.status === "expired") {
-      const rawScorePercentage = computeTryoutRawScorePercentage(tryoutAttempt);
-      const result = {
-        status: "expired",
-        isOfficial: false,
-        theta: tryoutAttempt.theta,
-        irtScore: tryoutAttempt.irtScore,
-        rawScorePercentage,
-      } satisfies CompleteTryoutResult;
-
-      return result;
-    }
-
-    if (tryoutAttempt.status !== "in-progress") {
-      throw new ConvexError({
-        code: "INVALID_ATTEMPT_STATUS",
-        message: "Tryout attempt is not in progress.",
-      });
-    }
-
-    const tryoutExpiry = await syncTryoutAttemptExpiry(ctx, tryoutAttempt, now);
-
-    if (tryoutExpiry.expired) {
-      const rawScorePercentage = computeTryoutRawScorePercentage(tryoutAttempt);
-
-      const result = {
-        status: "expired",
-        isOfficial: false,
-        theta: tryoutAttempt.theta,
-        irtScore: tryoutAttempt.irtScore,
-        rawScorePercentage,
-      } satisfies CompleteTryoutResult;
-
-      return result;
-    }
-
-    const [tryout, firstCompletedAttempt] = await Promise.all([
-      ctx.db.get("tryouts", tryoutAttempt.tryoutId),
-      getFirstCompletedSimulationAttempt(ctx.db, {
-        userId,
-        tryoutId: tryoutAttempt.tryoutId,
-      }),
-    ]);
-
-    if (!tryout) {
-      throw new ConvexError({
-        code: "TRYOUT_NOT_FOUND",
-        message: "Tryout not found.",
-      });
-    }
-
-    const rawScorePercentage = computeTryoutRawScorePercentage(tryoutAttempt);
-
-    if (tryoutAttempt.completedPartIndices.length < tryout.partCount) {
-      const result = {
-        status: "in-progress",
-        isOfficial: false,
-        theta: tryoutAttempt.theta,
-        irtScore: tryoutAttempt.irtScore,
-        rawScorePercentage,
-      } satisfies CompleteTryoutResult;
-
-      return result;
-    }
-
-    const isOfficial = firstCompletedAttempt === null;
-
-    const [partAttempts, scaleVersionItems] = await Promise.all([
-      getManyFrom(
-        ctx.db,
-        "tryoutPartAttempts",
-        "tryoutAttemptId_partIndex",
-        args.tryoutAttemptId,
-        "tryoutAttemptId"
-      ),
-      getScaleVersionItems(ctx.db, tryoutAttempt.scaleVersionId),
-    ]);
-
-    const scaleItemsBySetId = groupScaleVersionItemsBySetId(scaleVersionItems);
-    const partAttemptData = await Promise.all(
-      partAttempts.map(async (partAttempt) => {
-        const answers = await ctx.db
-          .query("exerciseAnswers")
-          .withIndex("attemptId_exerciseNumber", (q) =>
-            q.eq("attemptId", partAttempt.setAttemptId)
-          )
-          .collect();
-
-        return {
-          answers,
-          itemParamsRecords: scaleItemsBySetId.get(partAttempt.setId) ?? [],
-        };
-      })
-    );
-    const allResponses = partAttemptData.flatMap((partData) =>
-      buildIrtResponses(partData)
-    );
-    const { theta, se } = estimateThetaEAP(allResponses);
-    const irtScore = scaleThetaToTryoutScore({
-      product: tryout.product,
-      theta,
+    return finalizeTryoutAttempt({
+      ctx,
+      now,
+      tryoutAttempt,
+      userId,
     });
-
-    await ctx.db.patch("tryoutAttempts", args.tryoutAttemptId, {
-      status: "completed",
-      completedAt: now,
-      theta,
-      thetaSE: se,
-      irtScore,
-      lastActivityAt: now,
-    });
-
-    if (isOfficial) {
-      await ctx.scheduler.runAfter(
-        0,
-        internal.tryouts.internalMutations.updateLeaderboard,
-        {
-          tryoutAttemptId: args.tryoutAttemptId,
-        }
-      );
-    }
-
-    const result = {
-      status: "completed",
-      isOfficial,
-      theta,
-      irtScore,
-      rawScorePercentage,
-    } satisfies CompleteTryoutResult;
-
-    return result;
   },
 });
