@@ -1,5 +1,9 @@
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
+import {
+  isTryoutProduct,
+  type TryoutProduct,
+} from "@repo/backend/convex/tryouts/products";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
 import { Badge } from "@repo/design-system/components/ui/badge";
@@ -17,13 +21,14 @@ interface Props {
 }
 
 export default async function Page({ params }: Props) {
-  const { locale, product, slug } = await params;
+  const { locale, product: productParam, slug } = await params;
 
   setRequestLocale(locale);
 
-  if (product !== "snbt") {
+  if (!isTryoutProduct(productParam)) {
     notFound();
   }
+  const product: TryoutProduct = productParam;
 
   const [tCommon, tExercises, tTryouts, details] = await Promise.all([
     getTranslations({ locale, namespace: "Common" }),
@@ -31,7 +36,7 @@ export default async function Page({ params }: Props) {
     getTranslations({ locale, namespace: "Tryouts" }),
     fetchQuery(api.tryouts.queries.tryouts.getTryoutDetails, {
       locale,
-      product: "snbt",
+      product,
       slug,
     }),
   ]);
@@ -71,7 +76,7 @@ export default async function Page({ params }: Props) {
         <header className="flex flex-col gap-3">
           <NavigationLink
             className="w-fit font-medium text-primary text-sm underline-offset-4 hover:underline"
-            href="/try-out/snbt"
+            href={`/try-out/${product}`}
           >
             {tCommon("back")}
           </NavigationLink>
@@ -93,7 +98,7 @@ export default async function Page({ params }: Props) {
           <div className="pt-3">
             <TryoutStartButton
               locale={locale}
-              product="snbt"
+              product={product}
               tryoutSlug={details.tryout.slug}
             />
           </div>
@@ -116,7 +121,7 @@ export default async function Page({ params }: Props) {
               return (
                 <NavigationLink
                   className="group flex items-center gap-3 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
-                  href={`/try-out/snbt/${details.tryout.slug}/part/${part.partKey}`}
+                  href={`/try-out/${product}/${details.tryout.slug}/part/${part.partKey}`}
                   key={part.partKey}
                 >
                   <div className="flex flex-1 items-start gap-3">

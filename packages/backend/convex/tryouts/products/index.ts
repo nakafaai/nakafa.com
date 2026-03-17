@@ -6,9 +6,16 @@ import { snbtTryoutProductPolicy } from "./snbt";
 
 export const tryoutProducts = ["snbt"] as const;
 
+const tryoutProductSet = new Set<string>(tryoutProducts);
+
 export const tryoutProductValidator = literals(...tryoutProducts);
 
 export type TryoutProduct = Infer<typeof tryoutProductValidator>;
+
+/** Checks whether a route/product string is one of the supported tryout products. */
+export function isTryoutProduct(value: string): value is TryoutProduct {
+  return tryoutProductSet.has(value);
+}
 
 export type TryoutSetCandidate = Pick<
   Doc<"exerciseSets">,

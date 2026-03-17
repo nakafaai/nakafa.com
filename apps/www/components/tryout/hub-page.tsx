@@ -1,5 +1,6 @@
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
+import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -33,11 +34,12 @@ import {
 import { SnbtTryoutIcon } from "@/components/tryout/product-art";
 
 export async function TryoutHubPage({ locale }: { locale: Locale }) {
+  const product: TryoutProduct = "snbt";
   const [tTryouts, activeTryouts] = await Promise.all([
     getTranslations({ locale, namespace: "Tryouts" }),
     fetchQuery(api.tryouts.queries.tryouts.getActiveTryouts, {
       locale,
-      product: "snbt",
+      product,
     }),
   ]);
 
@@ -74,7 +76,7 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
                 <Button
                   nativeButton={false}
                   render={
-                    <NavigationLink href="/try-out/snbt">
+                    <NavigationLink href={`/try-out/${product}`}>
                       {tTryouts("cta")}
                       <HugeIcons className="size-4" icon={ArrowRight02Icon} />
                     </NavigationLink>
@@ -100,7 +102,7 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
                   <TryoutPackageItems>
                     {group.tryouts.map((tryout) => (
                       <TryoutPackageLink
-                        href={`/try-out/snbt/${tryout.slug}`}
+                        href={`/try-out/${product}/${tryout.slug}`}
                         key={tryout._id}
                       >
                         <TryoutPackageCopy>

@@ -1,5 +1,9 @@
 import { Certificate02Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
+import {
+  isTryoutProduct,
+  type TryoutProduct,
+} from "@repo/backend/convex/tryouts/products";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
@@ -36,20 +40,21 @@ interface Props {
 }
 
 export default async function Page({ params }: Props) {
-  const { locale, product } = await params;
+  const { locale, product: productParam } = await params;
 
   setRequestLocale(locale);
 
-  if (product !== "snbt") {
+  if (!isTryoutProduct(productParam)) {
     notFound();
   }
+  const product: TryoutProduct = productParam;
 
   const [tCommon, tTryouts, activeTryouts] = await Promise.all([
     getTranslations({ locale, namespace: "Common" }),
     getTranslations({ locale, namespace: "Tryouts" }),
     fetchQuery(api.tryouts.queries.tryouts.getActiveTryouts, {
       locale,
-      product: "snbt",
+      product,
     }),
   ]);
 
@@ -122,7 +127,7 @@ export default async function Page({ params }: Props) {
                   <TryoutPackageItems>
                     {group.tryouts.map((tryout) => (
                       <TryoutPackageLink
-                        href={`/try-out/snbt/${tryout.slug}`}
+                        href={`/try-out/${product}/${tryout.slug}`}
                         key={tryout._id}
                       >
                         <TryoutPackageCopy>
