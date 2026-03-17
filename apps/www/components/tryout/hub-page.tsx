@@ -8,7 +8,28 @@ import { cn } from "@repo/design-system/lib/utils";
 import { fetchQuery } from "convex/nextjs";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
+import {
+  TryoutCard,
+  TryoutCardArt,
+  TryoutCardBody,
+  TryoutCardContent,
+  TryoutCardCopy,
+  TryoutCardDescription,
+  TryoutCardHero,
+  TryoutCardTitle,
+} from "@/components/tryout/card";
 import { TryoutHeader } from "@/components/tryout/header";
+import {
+  groupActiveTryoutsByCycle,
+  TryoutPackageCopy,
+  TryoutPackageEmpty,
+  TryoutPackageGroup,
+  TryoutPackageItems,
+  TryoutPackageLink,
+  TryoutPackageMeta,
+  TryoutPackageTitle,
+  TryoutPackageYear,
+} from "@/components/tryout/package-groups";
 import { SnbtTryoutIcon } from "@/components/tryout/product-art";
 
 export async function TryoutHubPage({ locale }: { locale: Locale }) {
@@ -20,49 +41,34 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
     }),
   ]);
 
-  const groupedTryouts = new Map<string, typeof activeTryouts>();
-
-  for (const tryout of activeTryouts) {
-    const cycleTryouts = groupedTryouts.get(tryout.cycleKey);
-
-    if (cycleTryouts) {
-      cycleTryouts.push(tryout);
-      continue;
-    }
-
-    groupedTryouts.set(tryout.cycleKey, [tryout]);
-  }
-
-  const cycleGroups = Array.from(groupedTryouts.entries()).map(
-    ([cycleKey, tryouts]) => ({ cycleKey, tryouts })
-  );
+  const cycleGroups = groupActiveTryoutsByCycle(activeTryouts);
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
       <div className="space-y-10">
         <TryoutHeader />
 
-        <section className="overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
-          <div className="flex flex-col gap-5 p-5 sm:flex-row sm:items-center">
-            <div className="flex size-28 shrink-0 items-center justify-center rounded-xl bg-muted/40 sm:size-32">
+        <TryoutCard>
+          <TryoutCardHero>
+            <TryoutCardArt>
               <SnbtTryoutIcon />
-            </div>
+            </TryoutCardArt>
 
-            <div className="flex flex-1 flex-col gap-3">
-              <div className="space-y-1">
+            <TryoutCardBody>
+              <TryoutCardCopy>
                 <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="font-medium text-lg">
+                  <TryoutCardTitle>
                     {tTryouts("products.snbt.title")}
-                  </h2>
+                  </TryoutCardTitle>
                   <Badge variant="muted">
                     {tTryouts("package-count", { count: activeTryouts.length })}
                   </Badge>
                 </div>
 
-                <p className="text-muted-foreground">
+                <TryoutCardDescription>
                   {tTryouts("products.snbt.description")}
-                </p>
-              </div>
+                </TryoutCardDescription>
+              </TryoutCardCopy>
 
               <div>
                 <Button
@@ -75,59 +81,47 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
                   }
                 />
               </div>
-            </div>
-          </div>
+            </TryoutCardBody>
+          </TryoutCardHero>
 
-          <div className="border-t">
+          <TryoutCardContent>
             {cycleGroups.length === 0 ? (
-              <div className="px-5 py-4 text-muted-foreground text-sm">
-                {tTryouts("list-empty")}
-              </div>
+              <TryoutPackageEmpty>{tTryouts("list-empty")}</TryoutPackageEmpty>
             ) : (
               cycleGroups.map((group, index) => (
-                <div
+                <TryoutPackageGroup
                   className={cn(index > 0 && "border-t")}
                   key={group.cycleKey}
                 >
-                  <div className="px-5 pt-4 pb-2 font-medium text-muted-foreground text-sm">
+                  <TryoutPackageYear>
                     {tTryouts("year-title", { year: group.cycleKey })}
-                  </div>
+                  </TryoutPackageYear>
 
-                  <div className="grid">
-                    {group.tryouts.map((tryout) => {
-                      const tryoutLabel = tryout.label.replaceAll("-", " ");
-
-                      return (
-                        <NavigationLink
-                          className="group flex items-center justify-between gap-3 border-t px-5 py-4 tabular-nums transition-colors ease-out first:border-t-0 last:pb-5 hover:bg-accent hover:text-accent-foreground"
-                          href={`/try-out/snbt/${tryout.slug}`}
-                          key={tryout._id}
-                        >
-                          <div className="space-y-1">
-                            <p className="font-medium capitalize">
-                              {tryoutLabel}
-                            </p>
-                            <p className="text-muted-foreground text-sm group-hover:text-accent-foreground/80">
-                              {tTryouts("available-item-description", {
-                                parts: tryout.partCount,
-                                questions: tryout.totalQuestionCount,
-                              })}
-                            </p>
-                          </div>
-
-                          <HugeIcons
-                            className="size-4 shrink-0 opacity-0 transition-opacity ease-out group-hover:opacity-100"
-                            icon={ArrowRight02Icon}
-                          />
-                        </NavigationLink>
-                      );
-                    })}
-                  </div>
-                </div>
+                  <TryoutPackageItems>
+                    {group.tryouts.map((tryout) => (
+                      <TryoutPackageLink
+                        href={`/try-out/snbt/${tryout.slug}`}
+                        key={tryout._id}
+                      >
+                        <TryoutPackageCopy>
+                          <TryoutPackageTitle>
+                            {tryout.label.replaceAll("-", " ")}
+                          </TryoutPackageTitle>
+                          <TryoutPackageMeta>
+                            {tTryouts("available-item-description", {
+                              parts: tryout.partCount,
+                              questions: tryout.totalQuestionCount,
+                            })}
+                          </TryoutPackageMeta>
+                        </TryoutPackageCopy>
+                      </TryoutPackageLink>
+                    ))}
+                  </TryoutPackageItems>
+                </TryoutPackageGroup>
               ))
             )}
-          </div>
-        </section>
+          </TryoutCardContent>
+        </TryoutCard>
       </div>
     </div>
   );
