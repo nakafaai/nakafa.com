@@ -260,11 +260,12 @@
   },
   "Tryouts": {
     "title": "Mau coba try out apa hari ini?",
-    "description": "Rasakan simulasi yang mirip ujian asli, biar latihanmu lebih siap.",
+    "description": "Coba simulasi yang mirip ujian asli, biar kamu lebih siap.",
     "package-count": "{count, plural, =0 {Belum ada paket} =1 {# paket} other {# paket}}",
     "cta": "Lihat paket",
     "list-empty": "Belum ada try out yang tampil sekarang.",
     "available-item-description": "{questions} soal - {parts} bagian",
+    "year-title": "Tahun {year}",
     "product-page-description": "Lihat semua paket SNBT dan buka yang paling pas buat targetmu.",
     "slug-description": "Lihat susunan bagian dan jumlah soal sebelum mulai.",
     "part-list-title": "Bagian try out",
@@ -272,7 +273,7 @@
     "products": {
       "snbt": {
         "title": "SNBT",
-        "description": "Paket try out SNBT buat latihan yang lebih siap dan terarah."
+        "description": "Pilih paket SNBT yang paling pas buat latihanmu."
       }
     }
   },

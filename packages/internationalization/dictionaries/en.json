@@ -260,11 +260,12 @@
   },
   "Tryouts": {
     "title": "What tryout do you want today?",
-    "description": "Try a simulation that feels close to the real exam, so your practice feels more prepared.",
+    "description": "Try a simulation that feels close to the real exam, so you feel more prepared.",
     "package-count": "{count, plural, =0 {No packages yet} =1 {# package} other {# packages}}",
     "cta": "See packages",
     "list-empty": "There are no tryouts showing right now.",
     "available-item-description": "{questions} questions - {parts} parts",
+    "year-title": "Year {year}",
     "product-page-description": "See every SNBT package and open the one that fits your goal best.",
     "slug-description": "Review the parts and question count before you start.",
     "part-list-title": "Tryout parts",
@@ -272,7 +273,7 @@
     "products": {
       "snbt": {
         "title": "SNBT",
-        "description": "SNBT tryout packages for practice that feels more focused and ready."
+        "description": "Pick the SNBT package that fits your practice best."
       }
     }
   },

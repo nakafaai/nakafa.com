@@ -4,11 +4,12 @@ import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { cn } from "@repo/design-system/lib/utils";
 import { fetchQuery } from "convex/nextjs";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { TryoutHeader } from "@/components/tryout/header";
-import { SnbtTryoutArt } from "@/components/tryout/snbt-art";
+import { SnbtTryoutIcon } from "@/components/tryout/product-art";
 
 export async function TryoutHubPage({ locale }: { locale: Locale }) {
   const [tTryouts, activeTryouts] = await Promise.all([
@@ -44,16 +45,16 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
         <section className="overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
           <div className="flex flex-col gap-5 p-5 sm:flex-row sm:items-center">
             <div className="flex size-28 shrink-0 items-center justify-center rounded-xl bg-muted/40 sm:size-32">
-              <SnbtTryoutArt />
+              <SnbtTryoutIcon />
             </div>
 
-            <div className="flex flex-1 flex-col gap-4">
-              <div className="space-y-1.5">
+            <div className="flex flex-1 flex-col gap-3">
+              <div className="space-y-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="font-medium text-2xl">
+                  <h2 className="font-medium text-lg">
                     {tTryouts("products.snbt.title")}
                   </h2>
-                  <Badge variant="muted-outline">
+                  <Badge variant="muted">
                     {tTryouts("package-count", { count: activeTryouts.length })}
                   </Badge>
                 </div>
@@ -85,11 +86,11 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
             ) : (
               cycleGroups.map((group, index) => (
                 <div
-                  className={index === 0 ? "" : "border-t"}
+                  className={cn(index > 0 && "border-t")}
                   key={group.cycleKey}
                 >
                   <div className="px-5 pt-4 pb-2 font-medium text-muted-foreground text-sm">
-                    {group.cycleKey}
+                    {tTryouts("year-title", { year: group.cycleKey })}
                   </div>
 
                   <div className="grid">
@@ -98,7 +99,7 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
 
                       return (
                         <NavigationLink
-                          className="group flex items-center justify-between gap-3 border-t px-5 py-4 transition-colors ease-out first:border-t-0 hover:bg-accent hover:text-accent-foreground"
+                          className="group flex items-center justify-between gap-3 border-t px-5 py-4 tabular-nums transition-colors ease-out first:border-t-0 hover:bg-accent hover:text-accent-foreground"
                           href={`/try-out/snbt/${tryout.slug}`}
                           key={tryout._id}
                         >

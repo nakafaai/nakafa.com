@@ -1,11 +1,12 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { cn } from "@repo/design-system/lib/utils";
 import { fetchQuery } from "convex/nextjs";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { SnbtTryoutArt } from "@/components/tryout/snbt-art";
+import { SnbtTryoutIcon } from "@/components/tryout/product-art";
 
 interface Props {
   params: Promise<{ locale: Locale; product: string }>;
@@ -60,15 +61,15 @@ export default async function Page({ params }: Props) {
         <section className="overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
           <div className="flex flex-col gap-5 p-5 sm:flex-row sm:items-center">
             <div className="flex size-28 shrink-0 items-center justify-center rounded-xl bg-muted/40 sm:size-32">
-              <SnbtTryoutArt />
+              <SnbtTryoutIcon />
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="font-medium text-2xl">
+                <h2 className="font-medium text-lg">
                   {tTryouts("products.snbt.title")}
                 </h2>
-                <Badge variant="muted-outline">
+                <Badge variant="muted">
                   {tTryouts("package-count", { count: activeTryouts.length })}
                 </Badge>
               </div>
@@ -87,11 +88,11 @@ export default async function Page({ params }: Props) {
             ) : (
               cycleGroups.map((group, index) => (
                 <div
-                  className={index === 0 ? "" : "border-t"}
+                  className={cn(index > 0 && "border-t")}
                   key={group.cycleKey}
                 >
                   <div className="px-5 pt-4 pb-2 font-medium text-muted-foreground text-sm">
-                    {group.cycleKey}
+                    {tTryouts("year-title", { year: group.cycleKey })}
                   </div>
 
                   <div className="grid">
