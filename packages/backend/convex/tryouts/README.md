@@ -8,6 +8,8 @@ queries, mutations, IRT publication, and leaderboard flow stay generic.
 
 - `tryouts` stores detected tryout definitions for one product and locale
 - `tryoutPartSets` maps each tryout to its ordered exercise sets
+- each mapped part keeps both `partIndex` (internal order) and `partKey`
+  (stable public identity for routes)
 - `tryoutAttempts` stores per-user simulation lifecycle and final IRT result
 - `tryoutPartAttempts` links one runtime part to one shared `exerciseAttempt`
 - `tryoutLeaderboardEntries` stores the official first-completed result per user

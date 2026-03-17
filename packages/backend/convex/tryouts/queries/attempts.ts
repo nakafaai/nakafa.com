@@ -25,12 +25,13 @@ export const getUserTryoutAttempt = query({
       partAttempts: v.array(
         v.object({
           partIndex: v.number(),
+          partKey: v.string(),
           setAttempt: vv.doc("exerciseAttempts"),
           setId: vv.id("exerciseSets"),
         })
       ),
       completedPartIndices: v.array(v.number()),
-      nextPartIndex: v.optional(v.number()),
+      nextPartKey: v.optional(v.string()),
       practiceUnlocked: v.boolean(),
       isOfficialAttempt: v.boolean(),
     })
@@ -64,6 +65,13 @@ export const getUserTryoutAttempt = query({
       return null;
     }
 
+    const tryoutPartSets = await getManyFrom(
+      ctx.db,
+      "tryoutPartSets",
+      "tryoutId_partIndex",
+      tryout._id,
+      "tryoutId"
+    );
     const partAttempts = await getManyFrom(
       ctx.db,
       "tryoutPartAttempts",
@@ -88,23 +96,20 @@ export const getUserTryoutAttempt = query({
 
       return {
         partIndex: partAttempt.partIndex,
+        partKey: partAttempt.partKey,
         setAttempt,
         setId: partAttempt.setId,
       };
     });
-
-    const tryoutPartSets = await getManyFrom(
-      ctx.db,
-      "tryoutPartSets",
-      "tryoutId_partIndex",
-      tryout._id,
-      "tryoutId"
-    );
     const allPartIndices = tryoutPartSets.map((partSet) => partSet.partIndex);
     const completedPartIndices = attempt.completedPartIndices;
     const nextPartIndex = allPartIndices.find(
       (partIndex) => !completedPartIndices.includes(partIndex)
     );
+    const nextPartKey = tryoutPartSets.find(
+      (partSet) => partSet.partIndex === nextPartIndex
+    )?.partKey;
+
     const firstCompletedAttempt = await getFirstCompletedSimulationAttempt(
       ctx.db,
       {
@@ -117,7 +122,7 @@ export const getUserTryoutAttempt = query({
       attempt,
       partAttempts: validPartAttempts,
       completedPartIndices,
-      nextPartIndex,
+      nextPartKey,
       practiceUnlocked: firstCompletedAttempt !== null,
       isOfficialAttempt: firstCompletedAttempt?._id === attempt._id,
     };
@@ -135,7 +140,7 @@ export const getTryoutContextForAttempt = query({
       tryoutId: vv.id("tryouts"),
       tryoutSlug: v.string(),
       product: tryoutProductValidator,
-      partIndex: v.number(),
+      partKey: v.string(),
     })
   ),
   handler: async (ctx, args) => {
@@ -179,7 +184,7 @@ export const getTryoutContextForAttempt = query({
       tryoutId: tryoutAttempt.tryoutId,
       tryoutSlug: tryout.slug,
       product: tryout.product,
-      partIndex: partAttempt.partIndex,
+      partKey: partAttempt.partKey,
     };
   },
 });

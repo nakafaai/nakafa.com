@@ -17,6 +17,7 @@ import {
   detectTryoutsForProduct,
   tryoutProductValidator,
 } from "@repo/backend/convex/tryouts/products";
+import type { TryoutPartKey } from "@repo/backend/convex/tryouts/schema";
 import { slugify } from "@repo/backend/convex/utils/helper";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { v } from "convex/values";
@@ -1592,11 +1593,14 @@ export const deleteAuthorsBatch = internalMutation({
 async function syncTryoutPartSetMappings(
   ctx: MutationCtx,
   {
+    parts,
     tryoutId,
-    setIds,
   }: {
+    parts: Array<{
+      partKey: TryoutPartKey;
+      setId: Id<"exerciseSets">;
+    }>;
     tryoutId: Id<"tryouts">;
-    setIds: Id<"exerciseSets">[];
   }
 ) {
   const existingMappings = await getManyFrom(
@@ -1607,9 +1611,11 @@ async function syncTryoutPartSetMappings(
     "tryoutId"
   );
   const hasChanges =
-    existingMappings.length !== setIds.length ||
+    existingMappings.length !== parts.length ||
     existingMappings.some(
-      (mapping) => setIds[mapping.partIndex] !== mapping.setId
+      (mapping) =>
+        parts[mapping.partIndex]?.setId !== mapping.setId ||
+        parts[mapping.partIndex]?.partKey !== mapping.partKey
     );
 
   if (!hasChanges) {
@@ -1620,11 +1626,12 @@ async function syncTryoutPartSetMappings(
     await ctx.db.delete("tryoutPartSets", existingMapping._id);
   }
 
-  for (const [partIndex, setId] of setIds.entries()) {
+  for (const [partIndex, part] of parts.entries()) {
     await ctx.db.insert("tryoutPartSets", {
       tryoutId,
-      setId,
+      setId: part.setId,
       partIndex,
+      partKey: part.partKey,
     });
   }
 
@@ -1668,8 +1675,8 @@ export const bulkSyncTryouts = internalMutation({
 
       if (existing) {
         const mappingsChanged = await syncTryoutPartSetMappings(ctx, {
+          parts: tryout.parts,
           tryoutId: existing._id,
-          setIds: tryout.setIds,
         });
         const hasChanges =
           !existing.isActive ||
@@ -1707,8 +1714,8 @@ export const bulkSyncTryouts = internalMutation({
         });
 
         await syncTryoutPartSetMappings(ctx, {
+          parts: tryout.parts,
           tryoutId,
-          setIds: tryout.setIds,
         });
 
         created++;

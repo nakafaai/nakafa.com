@@ -49,7 +49,7 @@ export const startTryout = mutation({
   returns: v.object({
     tryoutAttemptId: vv.id("tryoutAttempts"),
     partCount: v.number(),
-    firstPartIndex: v.number(),
+    firstPartKey: v.string(),
   }),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);
@@ -114,17 +114,40 @@ export const startTryout = mutation({
           "tryoutId"
         );
 
-        const firstIncompleteIndex = tryoutPartSets.find(
+        const firstIncompletePart = tryoutPartSets.find(
           (partSet) =>
             !existingAttempt.completedPartIndices.includes(partSet.partIndex)
-        )?.partIndex;
+        );
+
+        if (!firstIncompletePart) {
+          throw new ConvexError({
+            code: "INVALID_TRYOUT_STATE",
+            message: "Tryout is missing its first incomplete part.",
+          });
+        }
 
         return {
           tryoutAttemptId: existingAttempt._id,
           partCount: tryout.partCount,
-          firstPartIndex: firstIncompleteIndex ?? 0,
+          firstPartKey: firstIncompletePart.partKey,
         };
       }
+    }
+
+    const tryoutPartSets = await getManyFrom(
+      ctx.db,
+      "tryoutPartSets",
+      "tryoutId_partIndex",
+      tryout._id,
+      "tryoutId"
+    );
+    const firstPart = tryoutPartSets[0];
+
+    if (!firstPart) {
+      throw new ConvexError({
+        code: "INVALID_TRYOUT_STATE",
+        message: "Tryout is missing its first part.",
+      });
     }
 
     const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
@@ -159,16 +182,16 @@ export const startTryout = mutation({
     return {
       tryoutAttemptId,
       partCount: tryout.partCount,
-      firstPartIndex: 0,
+      firstPartKey: firstPart.partKey,
     };
   },
 });
 
-/** Starts or resumes one concrete tryout part backed by a shared set attempt. */
+/** Starts or resumes one concrete tryout part looked up by stable part key. */
 export const startPart = mutation({
   args: {
     tryoutAttemptId: vv.id("tryoutAttempts"),
-    partIndex: v.number(),
+    partKey: v.string(),
   },
   returns: v.object({
     setAttemptId: vv.id("exerciseAttempts"),
@@ -225,17 +248,10 @@ export const startPart = mutation({
       });
     }
 
-    if (tryoutAttempt.completedPartIndices.includes(args.partIndex)) {
-      throw new ConvexError({
-        code: "PART_ALREADY_COMPLETED",
-        message: "This tryout part has already been completed.",
-      });
-    }
-
     const tryoutPartSet = await ctx.db
       .query("tryoutPartSets")
-      .withIndex("tryoutId_partIndex", (q) =>
-        q.eq("tryoutId", tryoutAttempt.tryoutId).eq("partIndex", args.partIndex)
+      .withIndex("tryoutId_partKey", (q) =>
+        q.eq("tryoutId", tryoutAttempt.tryoutId).eq("partKey", args.partKey)
       )
       .unique();
 
@@ -243,6 +259,13 @@ export const startPart = mutation({
       throw new ConvexError({
         code: "PART_NOT_FOUND",
         message: "Tryout part not found.",
+      });
+    }
+
+    if (tryoutAttempt.completedPartIndices.includes(tryoutPartSet.partIndex)) {
+      throw new ConvexError({
+        code: "PART_ALREADY_COMPLETED",
+        message: "This tryout part has already been completed.",
       });
     }
 
@@ -257,10 +280,10 @@ export const startPart = mutation({
 
     const existingPartAttempt = await ctx.db
       .query("tryoutPartAttempts")
-      .withIndex("tryoutAttemptId_partIndex", (q) =>
+      .withIndex("tryoutAttemptId_partKey", (q) =>
         q
           .eq("tryoutAttemptId", args.tryoutAttemptId)
-          .eq("partIndex", args.partIndex)
+          .eq("partKey", args.partKey)
       )
       .unique();
 
@@ -309,7 +332,8 @@ export const startPart = mutation({
 
     await ctx.db.insert("tryoutPartAttempts", {
       tryoutAttemptId: args.tryoutAttemptId,
-      partIndex: args.partIndex,
+      partIndex: tryoutPartSet.partIndex,
+      partKey: tryoutPartSet.partKey,
       setAttemptId,
       setId: tryoutPartSet.setId,
       theta: 0,
@@ -328,11 +352,11 @@ export const startPart = mutation({
   },
 });
 
-/** Finalizes one part, updates running totals, and queues set recalibration. */
+/** Finalizes one part identified by stable part key and updates totals. */
 export const completePart = mutation({
   args: {
     tryoutAttemptId: vv.id("tryoutAttempts"),
-    partIndex: v.number(),
+    partKey: v.string(),
   },
   returns: v.object({
     theta: v.number(),
@@ -383,10 +407,10 @@ export const completePart = mutation({
 
     const partAttempt = await ctx.db
       .query("tryoutPartAttempts")
-      .withIndex("tryoutAttemptId_partIndex", (q) =>
+      .withIndex("tryoutAttemptId_partKey", (q) =>
         q
           .eq("tryoutAttemptId", args.tryoutAttemptId)
-          .eq("partIndex", args.partIndex)
+          .eq("partKey", args.partKey)
       )
       .unique();
 
@@ -409,7 +433,7 @@ export const completePart = mutation({
       });
     }
 
-    if (tryoutAttempt.completedPartIndices.includes(args.partIndex)) {
+    if (tryoutAttempt.completedPartIndices.includes(partAttempt.partIndex)) {
       const answers = await ctx.db
         .query("exerciseAnswers")
         .withIndex("attemptId_exerciseNumber", (q) =>
@@ -471,7 +495,7 @@ export const completePart = mutation({
       tryoutAttempt.totalQuestions + setAttempt.totalExercises;
     const completedPartIndices = [
       ...tryoutAttempt.completedPartIndices,
-      args.partIndex,
+      partAttempt.partIndex,
     ];
 
     await ctx.db.patch("tryoutAttempts", args.tryoutAttemptId, {

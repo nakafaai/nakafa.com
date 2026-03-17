@@ -43,6 +43,7 @@ export const getTryoutDetails = query({
       parts: v.array(
         v.object({
           partIndex: v.number(),
+          partKey: v.string(),
           setId: vv.id("exerciseSets"),
           material: v.string(),
           title: v.string(),
@@ -91,6 +92,7 @@ export const getTryoutDetails = query({
 
       return {
         partIndex: partSet.partIndex,
+        partKey: partSet.partKey,
         setId: partSet.setId,
         material: set.material,
         title: set.title,

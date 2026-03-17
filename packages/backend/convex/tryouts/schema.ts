@@ -1,7 +1,7 @@
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
 import { defineTable } from "convex/server";
-import { v } from "convex/values";
+import { type Infer, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
 export const tryoutStatusValidator = literals(
@@ -9,6 +9,9 @@ export const tryoutStatusValidator = literals(
   "completed",
   "expired"
 );
+
+export const tryoutPartKeyValidator = v.string();
+export type TryoutPartKey = Infer<typeof tryoutPartKeyValidator>;
 
 const tables = {
   tryouts: defineTable({
@@ -37,8 +40,11 @@ const tables = {
     tryoutId: v.id("tryouts"),
     setId: v.id("exerciseSets"),
     partIndex: v.number(),
+    /** Stable public identifier for one part, e.g. `general-reasoning`. */
+    partKey: tryoutPartKeyValidator,
   })
     .index("tryoutId_partIndex", ["tryoutId", "partIndex"])
+    .index("tryoutId_partKey", ["tryoutId", "partKey"])
     .index("setId", ["setId"]),
 
   tryoutAttempts: defineTable({
@@ -68,12 +74,15 @@ const tables = {
   tryoutPartAttempts: defineTable({
     tryoutAttemptId: v.id("tryoutAttempts"),
     partIndex: v.number(),
+    /** Snapshot of the stable public part identifier used when the attempt started. */
+    partKey: tryoutPartKeyValidator,
     setAttemptId: v.id("exerciseAttempts"),
     setId: v.id("exerciseSets"),
     theta: v.number(),
     thetaSE: v.number(),
   })
     .index("tryoutAttemptId_partIndex", ["tryoutAttemptId", "partIndex"])
+    .index("tryoutAttemptId_partKey", ["tryoutAttemptId", "partKey"])
     .index("setAttemptId", ["setAttemptId"]),
 
   userTryoutStats: defineTable({

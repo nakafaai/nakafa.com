@@ -90,11 +90,18 @@ export const snbtTryoutProductPolicy = {
       const hasAllRequiredParts = snbtPartLabels.every((material) =>
         materials.has(material)
       );
+      const hasExpectedPartCount = groupedSets.length === snbtPartLabels.length;
       const hasPositiveQuestionCounts = groupedSets.every(
         (set) => set.questionCount > 0
       );
 
-      if (!(hasAllRequiredParts && hasPositiveQuestionCounts)) {
+      if (
+        !(
+          hasAllRequiredParts &&
+          hasExpectedPartCount &&
+          hasPositiveQuestionCounts
+        )
+      ) {
         continue;
       }
 
@@ -114,10 +121,13 @@ export const snbtTryoutProductPolicy = {
         cycleKey: firstSet.cycleKey,
         label: firstSet.setName,
         slug: `${firstSet.cycleKey}-${firstSet.setName}`,
-        partCount: snbtPartLabels.length,
+        partCount: sortedSets.length,
         totalQuestionCount,
         isActive: true,
-        setIds: sortedSets.map((set) => set._id),
+        parts: sortedSets.map((set) => ({
+          partKey: set.material,
+          setId: set._id,
+        })),
       });
     }
 

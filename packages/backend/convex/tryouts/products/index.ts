@@ -1,4 +1,5 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import type { TryoutPartKey } from "@repo/backend/convex/tryouts/schema";
 import type { Infer } from "convex/values";
 import { literals } from "convex-helpers/validators";
 import { snbtTryoutProductPolicy } from "./snbt";
@@ -32,7 +33,10 @@ export type DetectedTryout = Pick<
   | "slug"
   | "totalQuestionCount"
 > & {
-  setIds: Id<"exerciseSets">[];
+  parts: Array<{
+    partKey: TryoutPartKey;
+    setId: Id<"exerciseSets">;
+  }>;
 };
 
 type TryoutRecord = Pick<
