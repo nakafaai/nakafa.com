@@ -47,7 +47,6 @@ export const getTryoutDetails = query({
           partKey: tryoutPartKeyValidator,
           setId: vv.id("exerciseSets"),
           material: v.string(),
-          title: v.string(),
           questionCount: v.number(),
         })
       ),
@@ -96,7 +95,6 @@ export const getTryoutDetails = query({
         partKey: partSet.partKey,
         setId: partSet.setId,
         material: set.material,
-        title: set.title,
         questionCount: set.questionCount,
       };
     });

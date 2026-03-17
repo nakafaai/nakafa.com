@@ -267,8 +267,7 @@
     "available-item-description": "{questions} soal - {parts} bagian",
     "year-title": "Tahun {year}",
     "product-page-description": "Lihat semua paket SNBT dan buka yang paling pas buat targetmu.",
-    "slug-description": "Lihat susunan bagian dan jumlah soal sebelum mulai.",
-    "part-list-title": "Bagian try out",
+    "slug-description": "Cek dulu susunan bagiannya sebelum mulai.",
     "question-unit": "soal",
     "products": {
       "snbt": {

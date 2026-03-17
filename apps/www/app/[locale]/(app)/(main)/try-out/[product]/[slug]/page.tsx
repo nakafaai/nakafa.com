@@ -1,5 +1,10 @@
+import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
+import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
+import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
 import { Badge } from "@repo/design-system/components/ui/badge";
+import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { fetchQuery } from "convex/nextjs";
 import { notFound } from "next/navigation";
@@ -19,8 +24,9 @@ export default async function Page({ params }: Props) {
     notFound();
   }
 
-  const [tCommon, tTryouts, details] = await Promise.all([
+  const [tCommon, tExercises, tTryouts, details] = await Promise.all([
     getTranslations({ locale, namespace: "Common" }),
+    getTranslations({ locale, namespace: "Exercises" }),
     getTranslations({ locale, namespace: "Tryouts" }),
     fetchQuery(api.tryouts.queries.tryouts.getTryoutDetails, {
       locale,
@@ -34,6 +40,29 @@ export default async function Page({ params }: Props) {
   }
 
   const tryoutLabel = details.tryout.label.replaceAll("-", " ");
+
+  const getPartLabel = (partKey: string) => {
+    switch (partKey) {
+      case "mathematics":
+        return tExercises("mathematics");
+      case "quantitative-knowledge":
+        return tExercises("quantitative-knowledge");
+      case "mathematical-reasoning":
+        return tExercises("mathematical-reasoning");
+      case "general-reasoning":
+        return tExercises("general-reasoning");
+      case "indonesian-language":
+        return tExercises("indonesian-language");
+      case "english-language":
+        return tExercises("english-language");
+      case "general-knowledge":
+        return tExercises("general-knowledge");
+      case "reading-and-writing-skills":
+        return tExercises("reading-and-writing-skills");
+      default:
+        return partKey;
+    }
+  };
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
@@ -59,30 +88,61 @@ export default async function Page({ params }: Props) {
           <p className="max-w-2xl text-muted-foreground">
             {tTryouts("slug-description")}
           </p>
-          <p className="text-muted-foreground text-sm">
-            {tTryouts("available-item-description", {
-              parts: details.tryout.partCount,
-              questions: details.tryout.totalQuestionCount,
-            })}
-          </p>
         </header>
 
         <section className="overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
-          <div className="border-b px-5 py-4">
-            <h2 className="font-medium">{tTryouts("part-list-title")}</h2>
-          </div>
-
           <div className="grid divide-y">
-            {details.parts.map((part) => (
-              <div className="px-5 py-4" key={part.partKey}>
-                <div className="space-y-1">
-                  <p className="font-medium">{part.title}</p>
-                  <p className="text-muted-foreground text-sm">
-                    {part.questionCount} {tTryouts("question-unit")}
-                  </p>
-                </div>
-              </div>
-            ))}
+            {details.parts.map((part) => {
+              const parsedMaterial = ExercisesMaterialSchema.safeParse(
+                part.partKey
+              );
+              const material = parsedMaterial.success
+                ? parsedMaterial.data
+                : null;
+              const partLabel = material
+                ? tExercises(material)
+                : getPartLabel(part.partKey);
+              const partIcon = material ? getMaterialIcon(material) : null;
+
+              return (
+                <NavigationLink
+                  className="group flex items-center gap-3 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
+                  href={`/try-out/snbt/${details.tryout.slug}/part/${part.partKey}`}
+                  key={part.partKey}
+                >
+                  <div className="flex flex-1 items-start gap-3">
+                    <div className="relative size-10 shrink-0 overflow-hidden rounded-md">
+                      <GradientBlock
+                        className="absolute inset-0"
+                        colorScheme="vibrant"
+                        intensity="medium"
+                        keyString={part.partKey}
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        {!!partIcon && (
+                          <HugeIcons
+                            className="size-4 text-background drop-shadow-md"
+                            icon={partIcon}
+                          />
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="-mt-1 flex flex-1 flex-col gap-0.5">
+                      <h3>{partLabel}</h3>
+                      <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground/80">
+                        {part.questionCount} {tTryouts("question-unit")}
+                      </span>
+                    </div>
+                  </div>
+
+                  <HugeIcons
+                    className="size-4 shrink-0 opacity-0 transition-opacity ease-out group-hover:opacity-100"
+                    icon={ArrowRight02Icon}
+                  />
+                </NavigationLink>
+              );
+            })}
           </div>
         </section>
       </div>

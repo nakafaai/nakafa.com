@@ -267,8 +267,7 @@
     "available-item-description": "{questions} questions - {parts} parts",
     "year-title": "Year {year}",
     "product-page-description": "See every SNBT package and open the one that fits your goal best.",
-    "slug-description": "Review the parts and question count before you start.",
-    "part-list-title": "Tryout parts",
+    "slug-description": "Take a quick look at the parts before you start.",
     "question-unit": "questions",
     "products": {
       "snbt": {
