@@ -132,7 +132,7 @@
     "chat": "Obrolan",
     "no-chats": "Belum ada obrolan.",
     "exercises": "Latihan",
-    "snbt-tryout": "Try out SNBT",
+    "try-out": "Try out",
     "search-country-placeholder": "Cari negara...",
     "no-country-found": "Negara nggak ketemu.",
     "reaction": "Reaksi",
@@ -257,6 +257,24 @@
     "attempt-not-in-progress": "Mulai sesi baru dulu ya untuk lanjut latihan.",
     "attempt-not-found": "Mulai latihan terlebih dahulu ya.",
     "practice-exercises": "Latihan soal untuk menguasai materi"
+  },
+  "Tryouts": {
+    "title": "Mau coba try out apa hari ini?",
+    "description": "Rasakan simulasi yang mirip ujian asli, biar latihanmu lebih siap.",
+    "package-count": "{count, plural, =0 {Belum ada paket} =1 {# paket} other {# paket}}",
+    "cta": "Lihat paket",
+    "list-empty": "Belum ada try out yang tampil sekarang.",
+    "available-item-description": "{questions} soal - {parts} bagian",
+    "product-page-description": "Lihat semua paket SNBT dan buka yang paling pas buat targetmu.",
+    "slug-description": "Lihat susunan bagian dan jumlah soal sebelum mulai.",
+    "part-list-title": "Bagian try out",
+    "question-unit": "soal",
+    "products": {
+      "snbt": {
+        "title": "SNBT",
+        "description": "Paket try out SNBT buat latihan yang lebih siap dan terarah."
+      }
+    }
   },
   "Utils": {
     "search": "Cari",

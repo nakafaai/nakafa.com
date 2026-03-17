@@ -120,6 +120,7 @@ import type * as tryouts_aggregate from "../tryouts/aggregate.js";
 import type * as tryouts_helpers from "../tryouts/helpers.js";
 import type * as tryouts_internalMutations from "../tryouts/internalMutations.js";
 import type * as tryouts_mutations_attempts from "../tryouts/mutations/attempts.js";
+import type * as tryouts_mutations_helpers from "../tryouts/mutations/helpers.js";
 import type * as tryouts_products_index from "../tryouts/products/index.js";
 import type * as tryouts_products_snbt from "../tryouts/products/snbt.js";
 import type * as tryouts_queries_attempts from "../tryouts/queries/attempts.js";
@@ -253,6 +254,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/helpers": typeof tryouts_helpers;
   "tryouts/internalMutations": typeof tryouts_internalMutations;
   "tryouts/mutations/attempts": typeof tryouts_mutations_attempts;
+  "tryouts/mutations/helpers": typeof tryouts_mutations_helpers;
   "tryouts/products/index": typeof tryouts_products_index;
   "tryouts/products/snbt": typeof tryouts_products_snbt;
   "tryouts/queries/attempts": typeof tryouts_queries_attempts;

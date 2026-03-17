@@ -132,7 +132,7 @@
     "chat": "Chat",
     "no-chats": "No chats yet.",
     "exercises": "Exercises",
-    "snbt-tryout": "SNBT Try out",
+    "try-out": "Try out",
     "search-country-placeholder": "Search country...",
     "no-country-found": "No country found.",
     "reaction": "Reaction",
@@ -257,6 +257,24 @@
     "attempt-not-in-progress": "Please start a new session to continue practicing.",
     "attempt-not-found": "Please start the exercise first.",
     "practice-exercises": "Practice exercises to master the material"
+  },
+  "Tryouts": {
+    "title": "What tryout do you want today?",
+    "description": "Try a simulation that feels close to the real exam, so your practice feels more prepared.",
+    "package-count": "{count, plural, =0 {No packages yet} =1 {# package} other {# packages}}",
+    "cta": "See packages",
+    "list-empty": "There are no tryouts showing right now.",
+    "available-item-description": "{questions} questions - {parts} parts",
+    "product-page-description": "See every SNBT package and open the one that fits your goal best.",
+    "slug-description": "Review the parts and question count before you start.",
+    "part-list-title": "Tryout parts",
+    "question-unit": "questions",
+    "products": {
+      "snbt": {
+        "title": "SNBT",
+        "description": "SNBT tryout packages for practice that feels more focused and ready."
+      }
+    }
   },
   "Utils": {
     "search": "Search",
