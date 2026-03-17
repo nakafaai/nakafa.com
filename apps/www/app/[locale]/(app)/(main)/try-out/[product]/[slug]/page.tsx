@@ -76,10 +76,10 @@ export default async function Page({ params }: Props) {
           </NavigationLink>
 
           <div className="flex flex-wrap gap-2">
-            <Badge variant="muted-outline">
-              {tTryouts("products.snbt.title")}
+            <Badge variant="muted">{tTryouts("products.snbt.title")}</Badge>
+            <Badge variant="muted">
+              {tTryouts("year-title", { year: details.tryout.cycleKey })}
             </Badge>
-            <Badge variant="muted">{details.tryout.cycleKey}</Badge>
           </div>
 
           <h1 className="text-pretty font-medium text-4xl capitalize tracking-tight">
