@@ -25,7 +25,10 @@ import {
   scaleThetaToTryoutScore,
   tryoutProductValidator,
 } from "@repo/backend/convex/tryouts/products";
-import { tryoutStatusValidator } from "@repo/backend/convex/tryouts/schema";
+import {
+  tryoutPartKeyValidator,
+  tryoutStatusValidator,
+} from "@repo/backend/convex/tryouts/schema";
 import { ConvexError, type Infer, v } from "convex/values";
 import { getManyFrom } from "convex-helpers/server/relationships";
 
@@ -49,7 +52,8 @@ export const startTryout = mutation({
   returns: v.object({
     tryoutAttemptId: vv.id("tryoutAttempts"),
     partCount: v.number(),
-    firstPartKey: v.string(),
+    firstPartKey: tryoutPartKeyValidator,
+    expiresAtMs: v.number(),
   }),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);
@@ -130,6 +134,7 @@ export const startTryout = mutation({
           tryoutAttemptId: existingAttempt._id,
           partCount: tryout.partCount,
           firstPartKey: firstIncompletePart.partKey,
+          expiresAtMs: tryoutExpiry.expiredAtMs,
         };
       }
     }
@@ -183,6 +188,7 @@ export const startTryout = mutation({
       tryoutAttemptId,
       partCount: tryout.partCount,
       firstPartKey: firstPart.partKey,
+      expiresAtMs,
     };
   },
 });
@@ -191,7 +197,7 @@ export const startTryout = mutation({
 export const startPart = mutation({
   args: {
     tryoutAttemptId: vv.id("tryoutAttempts"),
-    partKey: v.string(),
+    partKey: tryoutPartKeyValidator,
   },
   returns: v.object({
     setAttemptId: vv.id("exerciseAttempts"),
@@ -356,7 +362,7 @@ export const startPart = mutation({
 export const completePart = mutation({
   args: {
     tryoutAttemptId: vv.id("tryoutAttempts"),
-    partKey: v.string(),
+    partKey: tryoutPartKeyValidator,
   },
   returns: v.object({
     theta: v.number(),

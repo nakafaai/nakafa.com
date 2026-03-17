@@ -62,7 +62,6 @@ const tables = {
     lastActivityAt: v.number(),
     completedAt: v.optional(v.number()),
   })
-    .index("userId_tryoutId", ["userId", "tryoutId"])
     .index("userId_tryoutId_startedAt", ["userId", "tryoutId", "startedAt"])
     .index("userId_tryoutId_status_startedAt", [
       "userId",

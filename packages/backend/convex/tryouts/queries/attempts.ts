@@ -3,7 +3,11 @@ import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { getFirstCompletedSimulationAttempt } from "@repo/backend/convex/tryouts/helpers";
-import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
+import {
+  computeTryoutExpiresAtMs,
+  tryoutProductValidator,
+} from "@repo/backend/convex/tryouts/products";
+import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError, v } from "convex/values";
 import {
   getAll,
@@ -25,13 +29,14 @@ export const getUserTryoutAttempt = query({
       partAttempts: v.array(
         v.object({
           partIndex: v.number(),
-          partKey: v.string(),
+          partKey: tryoutPartKeyValidator,
           setAttempt: vv.doc("exerciseAttempts"),
           setId: vv.id("exerciseSets"),
         })
       ),
       completedPartIndices: v.array(v.number()),
-      nextPartKey: v.optional(v.string()),
+      nextPartKey: v.optional(tryoutPartKeyValidator),
+      expiresAtMs: v.number(),
       practiceUnlocked: v.boolean(),
       isOfficialAttempt: v.boolean(),
     })
@@ -117,12 +122,17 @@ export const getUserTryoutAttempt = query({
         tryoutId: tryout._id,
       }
     );
+    const expiresAtMs = computeTryoutExpiresAtMs({
+      product: tryout.product,
+      startedAtMs: attempt.startedAt,
+    });
 
     return {
       attempt,
       partAttempts: validPartAttempts,
       completedPartIndices,
       nextPartKey,
+      expiresAtMs,
       practiceUnlocked: firstCompletedAttempt !== null,
       isOfficialAttempt: firstCompletedAttempt?._id === attempt._id,
     };
@@ -140,7 +150,7 @@ export const getTryoutContextForAttempt = query({
       tryoutId: vv.id("tryouts"),
       tryoutSlug: v.string(),
       product: tryoutProductValidator,
-      partKey: v.string(),
+      partKey: tryoutPartKeyValidator,
     })
   ),
   handler: async (ctx, args) => {

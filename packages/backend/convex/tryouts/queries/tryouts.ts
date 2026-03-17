@@ -5,6 +5,7 @@ import {
   sortTryoutsForProduct,
   tryoutProductValidator,
 } from "@repo/backend/convex/tryouts/products";
+import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError, v } from "convex/values";
 import { getAll, getManyFrom } from "convex-helpers/server/relationships";
 
@@ -43,7 +44,7 @@ export const getTryoutDetails = query({
       parts: v.array(
         v.object({
           partIndex: v.number(),
-          partKey: v.string(),
+          partKey: tryoutPartKeyValidator,
           setId: vv.id("exerciseSets"),
           material: v.string(),
           title: v.string(),
