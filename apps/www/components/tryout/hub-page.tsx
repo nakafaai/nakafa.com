@@ -99,7 +99,7 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
 
                       return (
                         <NavigationLink
-                          className="group flex items-center justify-between gap-3 border-t px-5 py-4 tabular-nums transition-colors ease-out first:border-t-0 hover:bg-accent hover:text-accent-foreground"
+                          className="group flex items-center justify-between gap-3 border-t px-5 py-4 tabular-nums transition-colors ease-out first:border-t-0 last:pb-5 hover:bg-accent hover:text-accent-foreground"
                           href={`/try-out/snbt/${tryout.slug}`}
                           key={tryout._id}
                         >

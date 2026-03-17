@@ -101,7 +101,7 @@ export default async function Page({ params }: Props) {
 
                       return (
                         <NavigationLink
-                          className="group block border-t px-5 py-4 transition-colors ease-out first:border-t-0 hover:bg-accent hover:text-accent-foreground"
+                          className="group block border-t px-5 py-4 transition-colors ease-out first:border-t-0 last:pb-5 hover:bg-accent hover:text-accent-foreground"
                           href={`/try-out/snbt/${tryout.slug}`}
                           key={tryout._id}
                         >
