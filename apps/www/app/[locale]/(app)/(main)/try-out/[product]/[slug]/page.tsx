@@ -1,23 +1,39 @@
-import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   isTryoutProduct,
   type TryoutProduct,
+  tryoutProducts,
 } from "@repo/backend/convex/tryouts/products";
-import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
-import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
 import { Badge } from "@repo/design-system/components/ui/badge";
-import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { routing } from "@repo/internationalization/src/routing";
 import { fetchQuery } from "convex/nextjs";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { TryoutSetParts } from "@/components/tryout/set-parts";
 import { TryoutStartButton } from "@/components/tryout/start-button";
+import { getStaticTryouts } from "@/lib/utils/pages/tryouts";
 
 interface Props {
   params: Promise<{ locale: Locale; product: string; slug: string }>;
+}
+
+export const dynamicParams = false;
+
+export async function generateStaticParams() {
+  const staticTryouts = await Promise.all(
+    tryoutProducts.map((product) =>
+      getStaticTryouts({ locale: routing.defaultLocale, product })
+    )
+  );
+
+  return staticTryouts.flatMap((tryouts) =>
+    tryouts.map((tryout) => ({
+      product: tryout.product,
+      slug: tryout.slug,
+    }))
+  );
 }
 
 export default async function Page({ params }: Props) {
@@ -105,59 +121,18 @@ export default async function Page({ params }: Props) {
         </header>
 
         <section className="overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
-          <div className="grid divide-y">
-            {details.parts.map((part) => {
-              const parsedMaterial = ExercisesMaterialSchema.safeParse(
-                part.partKey
-              );
-              const material = parsedMaterial.success
-                ? parsedMaterial.data
-                : null;
-              const partLabel = material
-                ? tExercises(material)
-                : getPartLabel(part.partKey);
-              const partIcon = material ? getMaterialIcon(material) : null;
-
-              return (
-                <NavigationLink
-                  className="group flex items-center gap-3 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
-                  href={`/try-out/${product}/${details.tryout.slug}/part/${part.partKey}`}
-                  key={part.partKey}
-                >
-                  <div className="flex flex-1 items-start gap-3">
-                    <div className="relative size-10 shrink-0 overflow-hidden rounded-md">
-                      <GradientBlock
-                        className="absolute inset-0"
-                        colorScheme="vibrant"
-                        intensity="medium"
-                        keyString={part.partKey}
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        {!!partIcon && (
-                          <HugeIcons
-                            className="size-4 text-background drop-shadow-md"
-                            icon={partIcon}
-                          />
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="-mt-1 flex flex-1 flex-col gap-0.5">
-                      <h3>{partLabel}</h3>
-                      <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground/80">
-                        {part.questionCount} {tTryouts("question-unit")}
-                      </span>
-                    </div>
-                  </div>
-
-                  <HugeIcons
-                    className="size-4 shrink-0 opacity-0 transition-opacity ease-out group-hover:opacity-100"
-                    icon={ArrowRight02Icon}
-                  />
-                </NavigationLink>
-              );
-            })}
-          </div>
+          <TryoutSetParts
+            locale={locale}
+            parts={details.parts.map((part) => ({
+              partIndex: part.partIndex,
+              partKey: part.partKey,
+              label: getPartLabel(part.partKey),
+              material: part.material,
+              questionCount: part.questionCount,
+            }))}
+            product={product}
+            tryoutSlug={details.tryout.slug}
+          />
         </section>
       </div>
     </div>

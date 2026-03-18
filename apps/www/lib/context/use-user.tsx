@@ -6,6 +6,7 @@ import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { createContext, useContextSelector } from "use-context-selector";
 
 interface UserContextValue {
+  isPending: boolean;
   user: AppUser | null;
 }
 
@@ -16,10 +17,10 @@ export function UserContextProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const { data: user } = useQueryWithStatus(api.auth.getCurrentUser);
+  const { data: user, isPending } = useQueryWithStatus(api.auth.getCurrentUser);
 
   return (
-    <UserContext.Provider value={{ user: user || null }}>
+    <UserContext.Provider value={{ user: user || null, isPending }}>
       {children}
     </UserContext.Provider>
   );

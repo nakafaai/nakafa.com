@@ -1,6 +1,7 @@
 "use client";
 
 import { Rocket01Icon } from "@hugeicons/core-free-icons";
+import { useInterval } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
 import { products } from "@repo/backend/convex/utils/polar";
@@ -15,8 +16,14 @@ import {
 import { useAction, useMutation } from "convex/react";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
+import {
+  TryoutCountdown,
+  TryoutCountdownAction,
+  TryoutCountdownMeta,
+  TryoutCountdownTime,
+} from "@/components/tryout/countdown";
 import { useUser } from "@/lib/context/use-user";
 
 interface TryoutStartButtonProps {
@@ -32,6 +39,7 @@ export function TryoutStartButton({
 }: TryoutStartButtonProps) {
   const tAuth = useTranslations("Auth");
   const tTryouts = useTranslations("Tryouts");
+  const isUserPending = useUser((state) => state.isPending);
   const user = useUser((state) => state.user);
   const pathname = usePathname();
   const router = useRouter();
@@ -40,12 +48,12 @@ export function TryoutStartButton({
 
   const { data: attemptData, isPending: isAttemptPending } = useQueryWithStatus(
     api.tryouts.queries.attempts.getUserTryoutAttempt,
-    user ? { locale, product, tryoutSlug } : "skip"
+    !isUserPending && user ? { locale, product, tryoutSlug } : "skip"
   );
   const { data: hasSubscription, isPending: isSubscriptionPending } =
     useQueryWithStatus(
       api.subscriptions.queries.hasActiveSubscription,
-      user ? { productId: products.pro.id } : "skip"
+      !isUserPending && user ? { productId: products.pro.id } : "skip"
     );
 
   const startTryout = useMutation(api.tryouts.mutations.attempts.startTryout);
@@ -57,8 +65,11 @@ export function TryoutStartButton({
     attemptData?.attempt.status === "in-progress"
       ? attemptData.nextPartKey
       : undefined;
+  const [nowMs, setNowMs] = useState(Date.now());
   const isLoading =
-    isPending || (user ? isAttemptPending || isSubscriptionPending : false);
+    isPending ||
+    isUserPending ||
+    (user ? isAttemptPending || isSubscriptionPending : false);
   let buttonLabel = tTryouts("start-cta");
 
   if (user && hasSubscription === false) {
@@ -68,6 +79,43 @@ export function TryoutStartButton({
   if (nextPartKey) {
     buttonLabel = tTryouts("continue-cta");
   }
+
+  useInterval(
+    () => {
+      setNowMs(Date.now());
+    },
+    1000,
+    { autoInvoke: true }
+  );
+
+  const remainingTime = useMemo(() => {
+    if (attemptData?.attempt.status !== "in-progress") {
+      return null;
+    }
+
+    const totalSeconds = Math.max(
+      0,
+      Math.floor((attemptData.expiresAtMs - nowMs) / 1000)
+    );
+
+    return {
+      hours: Math.floor(totalSeconds / 3600),
+      minutes: Math.floor((totalSeconds % 3600) / 60),
+      seconds: totalSeconds % 60,
+    };
+  }, [attemptData, nowMs]);
+
+  const timeSegments = useMemo(() => {
+    if (!remainingTime) {
+      return [];
+    }
+
+    return [
+      { label: tTryouts("time-hours-short"), value: remainingTime.hours },
+      { label: tTryouts("time-minutes-short"), value: remainingTime.minutes },
+      { label: tTryouts("time-seconds-short"), value: remainingTime.seconds },
+    ];
+  }, [remainingTime, tTryouts]);
 
   const handleClick = () => {
     if (!user) {
@@ -114,10 +162,29 @@ export function TryoutStartButton({
 
   return (
     <>
-      <Button disabled={isLoading} onClick={handleClick}>
-        <Spinner icon={Rocket01Icon} isLoading={isPending} />
-        {buttonLabel}
-      </Button>
+      <div className="flex w-full flex-col items-start gap-4">
+        {remainingTime ? (
+          <TryoutCountdown>
+            <TryoutCountdownTime segments={timeSegments} />
+            <TryoutCountdownMeta>
+              {tTryouts("remaining-time-label")}
+            </TryoutCountdownMeta>
+            <TryoutCountdownAction>
+              <Button disabled={isLoading} onClick={handleClick}>
+                <Spinner icon={Rocket01Icon} isLoading={isPending} />
+                {buttonLabel}
+              </Button>
+            </TryoutCountdownAction>
+          </TryoutCountdown>
+        ) : null}
+
+        {remainingTime ? null : (
+          <Button disabled={isLoading} onClick={handleClick}>
+            <Spinner icon={Rocket01Icon} isLoading={isPending} />
+            {buttonLabel}
+          </Button>
+        )}
+      </div>
 
       <ResponsiveDialog
         description={tTryouts("start-dialog-description")}

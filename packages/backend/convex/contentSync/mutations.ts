@@ -2,6 +2,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { updateContentHash } from "@repo/backend/convex/audioStudies/utils";
 import { internalMutation } from "@repo/backend/convex/functions";
+import { getOrPublishScaleVersionForTryout } from "@repo/backend/convex/irt/scaleVersions";
 import {
   articleCategoryValidator,
   type ContentType,
@@ -1686,6 +1687,13 @@ export const bulkSyncTryouts = internalMutation({
           mappingsChanged;
 
         if (!hasChanges) {
+          if (existing.isActive) {
+            await getOrPublishScaleVersionForTryout(ctx.db, {
+              now,
+              tryoutId: existing._id,
+            });
+          }
+
           unchanged++;
           continue;
         }
@@ -1697,6 +1705,13 @@ export const bulkSyncTryouts = internalMutation({
           isActive: true,
           syncedAt: now,
         });
+
+        if (tryout.isActive) {
+          await getOrPublishScaleVersionForTryout(ctx.db, {
+            now,
+            tryoutId: existing._id,
+          });
+        }
 
         updated++;
       } else {
@@ -1717,6 +1732,13 @@ export const bulkSyncTryouts = internalMutation({
           parts: tryout.parts,
           tryoutId,
         });
+
+        if (tryout.isActive) {
+          await getOrPublishScaleVersionForTryout(ctx.db, {
+            now,
+            tryoutId,
+          });
+        }
 
         created++;
       }

@@ -89,9 +89,21 @@ export const DataIntegritySchema = z.object({
   questionsWithoutAuthors: z.array(z.string()),
   articlesWithoutReferences: z.array(z.string()),
   sectionsWithoutTopics: z.array(z.string()),
+  activeTryoutsWithoutScale: z.array(z.string()),
   totalQuestions: z.number(),
   totalArticles: z.number(),
   totalSections: z.number(),
+});
+
+export const TryoutScaleIntegritySchema = z.object({
+  activeTryoutsWithoutScale: z.array(
+    z.object({
+      cycleKey: z.string(),
+      locale: z.enum(["en", "id"]),
+      product: z.string(),
+      slug: z.string(),
+    })
+  ),
 });
 
 const StaleItemSchema = z.object({

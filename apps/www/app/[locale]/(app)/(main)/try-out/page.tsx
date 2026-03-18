@@ -46,7 +46,7 @@ export default function Page({ params }: Props) {
   return (
     <>
       <PageBreadcrumb locale={locale} />
-      <div className="min-h-[calc(100svh-4rem)]" data-pagefind-ignore>
+      <div className="min-h-svh" data-pagefind-ignore>
         <TryoutHubPage locale={locale} />
       </div>
     </>

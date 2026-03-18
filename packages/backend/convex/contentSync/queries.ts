@@ -1,13 +1,15 @@
 import { internalQuery } from "@repo/backend/convex/_generated/server";
+import { getLatestScaleVersionForTryout } from "@repo/backend/convex/irt/scaleVersions";
 import {
   contentTypeValidator,
   localeValidator,
 } from "@repo/backend/convex/lib/validators/contents";
+import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
 import {
   paginationOptsValidator,
   paginationResultValidator,
 } from "convex/server";
-import { v } from "convex/values";
+import { type Infer, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
 const countableTableNameValidator = literals(
@@ -87,6 +89,14 @@ const authorSummaryValidator = v.object({
   name: v.string(),
   username: v.string(),
 });
+
+const tryoutScaleIntegrityItemValidator = v.object({
+  cycleKey: v.string(),
+  locale: localeValidator,
+  product: tryoutProductValidator,
+  slug: v.string(),
+});
+type TryoutScaleIntegrityItem = Infer<typeof tryoutScaleIntegrityItemValidator>;
 
 export const countTablePage = internalQuery({
   args: {
@@ -330,6 +340,36 @@ export const countTablePage = internalQuery({
         throw new Error(`Unsupported count table: ${args.tableName}`);
       }
     }
+  },
+});
+
+export const getTryoutScaleIntegrity = internalQuery({
+  args: {},
+  returns: v.object({
+    activeTryoutsWithoutScale: v.array(tryoutScaleIntegrityItemValidator),
+  }),
+  handler: async (ctx) => {
+    const tryouts = await ctx.db.query("tryouts").collect();
+    const activeTryouts = tryouts.filter((tryout) => tryout.isActive);
+    const activeTryoutsWithoutScale: TryoutScaleIntegrityItem[] = [];
+
+    for (const tryout of activeTryouts) {
+      const scaleVersion = await getLatestScaleVersionForTryout(
+        ctx.db,
+        tryout._id
+      );
+
+      if (!scaleVersion) {
+        activeTryoutsWithoutScale.push({
+          cycleKey: tryout.cycleKey,
+          locale: tryout.locale,
+          product: tryout.product,
+          slug: tryout.slug,
+        });
+      }
+    }
+
+    return { activeTryoutsWithoutScale };
   },
 });
 

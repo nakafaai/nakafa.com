@@ -3,6 +3,7 @@ import { api } from "@repo/backend/convex/_generated/api";
 import {
   isTryoutProduct,
   type TryoutProduct,
+  tryoutProducts,
 } from "@repo/backend/convex/tryouts/products";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -37,6 +38,12 @@ import { SnbtTryoutIcon } from "@/components/tryout/product-art";
 
 interface Props {
   params: Promise<{ locale: Locale; product: string }>;
+}
+
+export const dynamicParams = false;
+
+export function generateStaticParams() {
+  return tryoutProducts.map((product) => ({ product }));
 }
 
 export default async function Page({ params }: Props) {

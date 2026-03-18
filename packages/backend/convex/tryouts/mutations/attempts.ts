@@ -4,7 +4,7 @@ import { computeAttemptDurationSeconds } from "@repo/backend/convex/exercises/ut
 import { mutation } from "@repo/backend/convex/functions";
 import { estimateThetaEAP } from "@repo/backend/convex/irt/estimation";
 import {
-  getLatestScaleVersionForTryout,
+  getOrPublishScaleVersionForTryout,
   getScaleVersionItemsForSet,
 } from "@repo/backend/convex/irt/scaleVersions";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
@@ -78,7 +78,10 @@ export const startTryout = mutation({
     }
 
     const [scaleVersion, existingAttempt] = await Promise.all([
-      getLatestScaleVersionForTryout(ctx.db, tryout._id),
+      getOrPublishScaleVersionForTryout(ctx.db, {
+        now,
+        tryoutId: tryout._id,
+      }),
       ctx.db
         .query("tryoutAttempts")
         .withIndex("userId_tryoutId_startedAt", (q) =>
