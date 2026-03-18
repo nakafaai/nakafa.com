@@ -6,7 +6,6 @@ import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
-import { Badge } from "@repo/design-system/components/ui/badge";
 import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
@@ -14,6 +13,8 @@ import { cn } from "@repo/design-system/lib/utils";
 import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
+import { TryoutStatusBadge } from "@/components/tryout/status-badge";
 import { useUser } from "@/lib/context/use-user";
 
 type TryoutSetPartItem = Pick<
@@ -61,12 +62,12 @@ export function TryoutSetParts({
         const isInProgress = partAttempt?.setAttempt.status === "in-progress";
         const isCurrent =
           attemptData?.nextPartKey === part.partKey && !isCompleted;
-        let statusLabel: string | undefined;
+        let statusBadge: ReactNode = null;
 
         if (isCompleted) {
-          statusLabel = tTryouts("part-status-completed");
+          statusBadge = <TryoutStatusBadge status="completed" />;
         } else if (isInProgress) {
-          statusLabel = tTryouts("part-status-in-progress");
+          statusBadge = <TryoutStatusBadge status="in-progress" />;
         }
 
         return (
@@ -99,9 +100,7 @@ export function TryoutSetParts({
               <div className="-mt-1 flex flex-1 flex-col gap-0.5">
                 <div className="flex flex-wrap items-center gap-2">
                   <h3>{part.label}</h3>
-                  {statusLabel ? (
-                    <Badge variant="muted">{statusLabel}</Badge>
-                  ) : null}
+                  {statusBadge}
                 </div>
                 <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground">
                   {part.questionCount} {tTryouts("question-unit")}

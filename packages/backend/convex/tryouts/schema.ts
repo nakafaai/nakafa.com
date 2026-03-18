@@ -9,6 +9,7 @@ export const tryoutStatusValidator = literals(
   "completed",
   "expired"
 );
+export type TryoutStatus = Infer<typeof tryoutStatusValidator>;
 
 export const tryoutPartKeyValidator = v.string();
 export type TryoutPartKey = Infer<typeof tryoutPartKeyValidator>;

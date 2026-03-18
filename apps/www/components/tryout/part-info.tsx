@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@repo/design-system/components/ui/badge";
 import {
   NumberFormat,
   NumberFormatGroup,
@@ -13,9 +12,9 @@ import {
   TryoutPartStats,
 } from "@/components/tryout/part-shell";
 import { useTryoutPart } from "@/components/tryout/part-state";
+import { TryoutStatusBadge } from "@/components/tryout/status-badge";
 
 export function TryoutPartStatus() {
-  const tTryouts = useTranslations("Tryouts");
   const status = useTryoutPart((state) => state.state.status);
 
   if (status === "loading") {
@@ -23,15 +22,11 @@ export function TryoutPartStatus() {
   }
 
   if (status === "completed") {
-    return (
-      <Badge variant="secondary">{tTryouts("part-status-completed")}</Badge>
-    );
+    return <TryoutStatusBadge status="completed" />;
   }
 
   if (status === "in-progress") {
-    return (
-      <Badge variant="secondary">{tTryouts("part-status-in-progress")}</Badge>
-    );
+    return <TryoutStatusBadge status="in-progress" />;
   }
 
   return null;
