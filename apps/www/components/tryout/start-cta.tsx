@@ -15,6 +15,7 @@ import { useTryoutStart } from "@/components/tryout/start-state";
 export function TryoutStartCta() {
   const tAuth = useTranslations("Auth");
   const tTryouts = useTranslations("Tryouts");
+  const isReady = useTryoutStart((state) => state.state.isReady);
   const hasSubscription = useTryoutStart(
     (state) => state.state.hasSubscription
   );
@@ -23,6 +24,10 @@ export function TryoutStartCta() {
   const isLoading = useTryoutStart((state) => state.state.isLoading);
   const isActionPending = useTryoutStart((state) => state.meta.isActionPending);
   const clickCta = useTryoutStart((state) => state.actions.clickCta);
+
+  if (!isReady) {
+    return null;
+  }
 
   let label = tTryouts("start-cta");
 

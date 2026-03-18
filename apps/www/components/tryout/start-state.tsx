@@ -85,6 +85,10 @@ function useTryoutStartValue({
       seconds: totalSeconds % 60,
     };
   }, [attemptData, nowMs]);
+  const isReady = !(
+    isUserPending ||
+    (user && (isAttemptPending || isSubscriptionPending))
+  );
   const isLoading =
     isActionPending ||
     isUserPending ||
@@ -176,6 +180,7 @@ function useTryoutStartValue({
       },
       state: {
         hasSubscription,
+        isReady,
         isLoading,
         nextPartKey,
         remainingTime,
@@ -186,6 +191,7 @@ function useTryoutStartValue({
       clickCta,
       confirmStart,
       hasSubscription,
+      isReady,
       isActionPending,
       isDialogOpen,
       isLoading,
