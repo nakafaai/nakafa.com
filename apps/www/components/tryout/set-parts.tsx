@@ -73,7 +73,7 @@ export function TryoutSetParts({
           <NavigationLink
             className={cn(
               "group flex items-center gap-3 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground",
-              isCurrent && "bg-accent/40 hover:bg-accent/60"
+              isCurrent && "bg-accent/20 hover:bg-accent"
             )}
             href={`/try-out/${product}/${tryoutSlug}/part/${part.partKey}`}
             key={part.partKey}
@@ -103,7 +103,7 @@ export function TryoutSetParts({
                     <Badge variant="muted">{statusLabel}</Badge>
                   ) : null}
                 </div>
-                <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground/80">
+                <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground">
                   {part.questionCount} {tTryouts("question-unit")}
                 </span>
               </div>

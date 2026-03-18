@@ -143,14 +143,18 @@ export default async function Page({ params }: Props) {
         </header>
 
         <TryoutPartRuntime
-          locale={locale}
-          partKey={part.partKey}
-          partLabel={partLabel}
-          product={product}
-          questionCount={part.questionCount}
-          setSlug={part.setSlug}
-          timeLimitSeconds={timeLimitSeconds}
-          tryoutSlug={slug}
+          part={{
+            key: part.partKey,
+            label: partLabel,
+            questionCount: part.questionCount,
+            setSlug: part.setSlug,
+            timeLimitSeconds,
+          }}
+          tryout={{
+            locale,
+            product,
+            slug,
+          }}
         >
           {exercises.map((exercise) => {
             const id = slugify(

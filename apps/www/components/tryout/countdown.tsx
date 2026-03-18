@@ -40,12 +40,12 @@ export function TryoutCountdownTime({
           <tr>
             {segments.map((segment, index) => (
               <Fragment key={`${segment.label}-label`}>
-                <td className="pb-3 text-center align-bottom">
-                  <span className="text-muted-foreground text-xs uppercase tracking-widest">
+                <td className="text-center align-bottom">
+                  <span className="text-muted-foreground text-xs uppercase tracking-wide">
                     {segment.label}
                   </span>
                 </td>
-                {index < segments.length - 1 ? <td className="pb-3" /> : null}
+                {index < segments.length - 1 ? <td /> : null}
               </Fragment>
             ))}
           </tr>
@@ -82,10 +82,7 @@ export function TryoutCountdownMeta({
 }: ComponentProps<"p">) {
   return (
     <p
-      className={cn(
-        "pt-3 text-center text-muted-foreground text-sm",
-        className
-      )}
+      className={cn("text-center text-muted-foreground text-sm", className)}
       {...props}
     />
   );
