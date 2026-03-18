@@ -30,10 +30,56 @@ export interface TryoutPartValue {
 }
 
 export interface TryoutValue {
+  cycleKey: string;
+  label: string;
   locale: Locale;
   product: TryoutProduct;
   slug: string;
 }
+
+function getTryoutPartStatus({
+  canContinuePart,
+  hasStartedTryout,
+  isRuntimePending,
+  partCompleted,
+  tryoutInProgress,
+}: {
+  canContinuePart: boolean;
+  hasStartedTryout: boolean;
+  isRuntimePending: boolean;
+  partCompleted: boolean;
+  tryoutInProgress: boolean;
+}):
+  | "completed"
+  | "ended"
+  | "in-progress"
+  | "loading"
+  | "needs-tryout"
+  | "ready" {
+  if (isRuntimePending) {
+    return "loading";
+  }
+
+  if (!hasStartedTryout) {
+    return "needs-tryout";
+  }
+
+  if (!tryoutInProgress) {
+    return "ended";
+  }
+
+  if (partCompleted) {
+    return "completed";
+  }
+
+  if (canContinuePart) {
+    return "in-progress";
+  }
+
+  return "ready";
+}
+
+type TryoutPartStatus = ReturnType<typeof getTryoutPartStatus>;
 
 type TryoutPartQuery = FunctionReturnType<
   typeof api.tryouts.queries.attempts.getUserTryoutPartAttempt
@@ -66,6 +112,7 @@ interface TryoutPartContextValue {
     partCompleted: boolean;
     runtime: TryoutPartQuery | undefined;
     shouldShowTryoutStartButton: boolean;
+    status: TryoutPartStatus;
     timer: ReturnType<typeof useExerciseTimer>;
     tryout: TryoutValue;
     tryoutInProgress: boolean;
@@ -111,6 +158,13 @@ export function TryoutPartProvider({
     isRuntimePending ||
     (user && hasStartedTryout)
   );
+  const status = getTryoutPartStatus({
+    canContinuePart,
+    hasStartedTryout,
+    isRuntimePending,
+    partCompleted,
+    tryoutInProgress,
+  });
 
   const goToSet = useCallback(() => {
     router.push(`/try-out/${tryout.product}/${tryout.slug}`);
@@ -213,6 +267,7 @@ export function TryoutPartProvider({
         partCompleted,
         runtime,
         shouldShowTryoutStartButton,
+        status,
         timer,
         tryout,
         tryoutInProgress,
@@ -233,6 +288,7 @@ export function TryoutPartProvider({
       partCompleted,
       runtime,
       shouldShowTryoutStartButton,
+      status,
       timer,
       tryout,
       tryoutInProgress,

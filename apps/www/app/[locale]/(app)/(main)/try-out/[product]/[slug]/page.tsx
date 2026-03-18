@@ -4,13 +4,13 @@ import {
   type TryoutProduct,
   tryoutProducts,
 } from "@repo/backend/convex/tryouts/products";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { routing } from "@repo/internationalization/src/routing";
 import { fetchQuery } from "convex/nextjs";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { TryoutMeta } from "@/components/tryout/meta";
+import { TryoutPageHead } from "@/components/tryout/page-head";
 import { TryoutSetParts } from "@/components/tryout/set-parts";
 import { TryoutStartButton } from "@/components/tryout/start-button";
 import { getStaticTryouts } from "@/lib/utils/pages/tryouts";
@@ -89,23 +89,18 @@ export default async function Page({ params }: Props) {
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
       <div className="space-y-10">
-        <header className="flex flex-col gap-3">
-          <NavigationLink
-            className="w-fit font-medium text-primary text-sm underline-offset-4 hover:underline"
-            href={`/try-out/${product}`}
-          >
-            {tCommon("back")}
-          </NavigationLink>
-
-          <TryoutMeta cycleKey={details.tryout.cycleKey} product={product} />
-
-          <h1 className="text-pretty font-medium text-4xl capitalize tracking-tight">
-            {tryoutLabel}
-          </h1>
-          <p className="max-w-2xl text-muted-foreground">
-            {tTryouts("slug-description")}
-          </p>
-
+        <div className="space-y-3">
+          <TryoutPageHead
+            description={tTryouts("slug-description")}
+            link={{ href: `/try-out/${product}`, label: tCommon("back") }}
+            meta={
+              <TryoutMeta
+                cycleKey={details.tryout.cycleKey}
+                product={product}
+              />
+            }
+            title={tryoutLabel}
+          />
           <div className="pt-3">
             <TryoutStartButton
               locale={locale}
@@ -113,7 +108,7 @@ export default async function Page({ params }: Props) {
               tryoutSlug={details.tryout.slug}
             />
           </div>
-        </header>
+        </div>
 
         <section className="overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
           <TryoutSetParts

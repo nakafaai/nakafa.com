@@ -85,7 +85,7 @@ export default async function Page({ params }: Props) {
               className="hidden size-7 shrink-0 translate-y-1 sm:block"
               icon={Certificate02Icon}
             />
-            <h1 className="text-pretty font-medium text-4xl tracking-tight">
+            <h1 className="text-pretty font-medium text-3xl tracking-tight">
               {tTryouts("products.snbt.title")}
             </h1>
           </div>

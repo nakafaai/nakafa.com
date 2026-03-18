@@ -1,7 +1,12 @@
 "use client";
 
-import { Rocket01Icon, StopIcon } from "@hugeicons/core-free-icons";
+import {
+  ArrowLeft02Icon,
+  Rocket01Icon,
+  StopIcon,
+} from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useTranslations } from "next-intl";
@@ -80,7 +85,13 @@ export function TryoutPartStartCta() {
   }
 
   return (
-    <Button disabled={isActionPending} onClick={startPart} type="button">
+    <Button
+      className="w-full sm:w-auto"
+      disabled={isActionPending}
+      onClick={startPart}
+      size="lg"
+      type="button"
+    >
       <Spinner icon={Rocket01Icon} isLoading={isActionPending} />
       {tTryouts("start-part-cta")}
     </Button>
@@ -100,7 +111,13 @@ export function TryoutPartBackCta() {
   }
 
   return (
-    <Button onClick={goToSet} type="button" variant="outline">
+    <Button
+      className="w-full sm:w-auto"
+      onClick={goToSet}
+      size="lg"
+      type="button"
+    >
+      <HugeIcons className="size-4" icon={ArrowLeft02Icon} />
       {tTryouts("back-to-set-cta")}
     </Button>
   );

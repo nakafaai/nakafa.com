@@ -2,7 +2,7 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import {
   TryoutPartBackCta,
   TryoutPartDialog,
@@ -10,16 +10,16 @@ import {
   TryoutPartSticky,
   TryoutPartTryoutCta,
 } from "@/components/tryout/part-actions";
+import { TryoutPartHead } from "@/components/tryout/part-head";
 import {
-  TryoutPartDesc,
+  TryoutPartMetrics,
   TryoutPartStatus,
-  TryoutPartTime,
 } from "@/components/tryout/part-info";
 import {
-  TryoutPartBadges,
   TryoutPartBody,
   TryoutPartCtas,
   TryoutPartHero,
+  TryoutPartLead,
   TryoutPartSummary,
 } from "@/components/tryout/part-shell";
 import {
@@ -33,12 +33,14 @@ import { useUser } from "@/lib/context/use-user";
 
 export interface TryoutPartRuntimeProps {
   children: ReactNode;
+  icon?: ComponentProps<typeof TryoutPartHead>["icon"];
   part: TryoutPartValue;
   tryout: TryoutValue;
 }
 
 export function TryoutPartRuntime({
   children,
+  icon,
   part,
   tryout,
 }: TryoutPartRuntimeProps) {
@@ -89,16 +91,16 @@ export function TryoutPartRuntime({
         >
           <div className="space-y-12">
             <TryoutPartHero>
+              <TryoutPartHead icon={icon} />
               <TryoutPartSticky />
 
               <TryoutPartSummary>
-                <TryoutPartBadges>
-                  <TryoutPartStatus />
-                  <TryoutPartTime />
-                </TryoutPartBadges>
+                <TryoutPartStatus />
 
                 <TryoutPartBody>
-                  <TryoutPartDesc />
+                  <TryoutPartLead>
+                    <TryoutPartMetrics />
+                  </TryoutPartLead>
 
                   <TryoutPartCtas>
                     <TryoutPartTryoutCta />

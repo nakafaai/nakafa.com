@@ -1,121 +1,150 @@
 "use client";
 
 import { Badge } from "@repo/design-system/components/ui/badge";
-import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
+import {
+  NumberFormat,
+  NumberFormatGroup,
+} from "@repo/design-system/components/ui/number-flow";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import { useTranslations } from "next-intl";
+import { Fragment } from "react";
+import {
+  TryoutPartStat,
+  TryoutPartStats,
+} from "@/components/tryout/part-shell";
 import { useTryoutPart } from "@/components/tryout/part-state";
 
 export function TryoutPartStatus() {
   const tTryouts = useTranslations("Tryouts");
-  const isRuntimePending = useTryoutPart(
-    (state) => state.state.isRuntimePending
-  );
-  const partCompleted = useTryoutPart((state) => state.state.partCompleted);
-  const canContinuePart = useTryoutPart((state) => state.state.canContinuePart);
-  const questionCount = useTryoutPart(
-    (state) => state.state.part.questionCount
-  );
+  const status = useTryoutPart((state) => state.state.status);
 
-  if (isRuntimePending) {
+  if (status === "loading") {
     return <Skeleton className="h-7 w-20 rounded-md" />;
   }
 
-  if (partCompleted) {
-    return <Badge variant="muted">{tTryouts("part-status-completed")}</Badge>;
+  if (status === "completed") {
+    return (
+      <Badge variant="secondary">{tTryouts("part-status-completed")}</Badge>
+    );
   }
 
-  if (canContinuePart) {
-    return <Badge variant="muted">{tTryouts("part-status-in-progress")}</Badge>;
+  if (status === "in-progress") {
+    return (
+      <Badge variant="secondary">{tTryouts("part-status-in-progress")}</Badge>
+    );
   }
 
-  return (
-    <Badge variant="muted">
-      <NumberFormat value={questionCount} /> {tTryouts("question-unit")}
-    </Badge>
-  );
+  return null;
 }
 
-export function TryoutPartTime() {
-  const isRuntimePending = useTryoutPart(
-    (state) => state.state.isRuntimePending
+export function TryoutPartMetrics() {
+  const tTryouts = useTranslations("Tryouts");
+  const status = useTryoutPart((state) => state.state.status);
+  const questionCount = useTryoutPart(
+    (state) => state.state.part.questionCount
   );
   const timeLimitSeconds = useTryoutPart(
     (state) => state.state.part.timeLimitSeconds
   );
 
-  if (isRuntimePending) {
-    return <Skeleton className="h-7 w-20 rounded-md" />;
-  }
-
-  return <Badge variant="muted">{formatTimeLimit(timeLimitSeconds)}</Badge>;
-}
-
-export function TryoutPartDesc() {
-  const tTryouts = useTranslations("Tryouts");
-  const isRuntimePending = useTryoutPart(
-    (state) => state.state.isRuntimePending
-  );
-  const hasStartedTryout = useTryoutPart(
-    (state) => state.state.hasStartedTryout
-  );
-  const tryoutInProgress = useTryoutPart(
-    (state) => state.state.tryoutInProgress
-  );
-  const partCompleted = useTryoutPart((state) => state.state.partCompleted);
-  const canContinuePart = useTryoutPart((state) => state.state.canContinuePart);
-  const partLabel = useTryoutPart((state) => state.state.part.label);
-  const questionCount = useTryoutPart(
-    (state) => state.state.part.questionCount
-  );
-
-  if (isRuntimePending) {
+  if (status === "loading") {
     return (
-      <div className="max-w-2xl space-y-2">
-        <Skeleton className="h-4 w-72 rounded-sm" />
-        <Skeleton className="h-4 w-56 rounded-sm" />
-      </div>
+      <TryoutPartStats>
+        <Skeleton className="h-28 rounded-xl" />
+        <Skeleton className="h-28 rounded-xl" />
+      </TryoutPartStats>
     );
   }
 
-  let description = tTryouts("part-start-description", {
-    count: questionCount,
-    part: partLabel,
-  });
+  return (
+    <TryoutPartStats>
+      <TryoutPartStat label={tTryouts("part-questions-label")}>
+        <TryoutMetricNumber value={questionCount} />
+      </TryoutPartStat>
 
-  if (!hasStartedTryout) {
-    description = tTryouts("part-start-tryout-description", {
-      part: partLabel,
-    });
-  } else if (!tryoutInProgress) {
-    description = tTryouts("part-tryout-ended-description", {
-      part: partLabel,
-    });
-  } else if (partCompleted) {
-    description = tTryouts("part-completed-description", {
-      part: partLabel,
-    });
-  } else if (canContinuePart) {
-    description = tTryouts("part-continue-description", {
-      part: partLabel,
-    });
-  }
-
-  return <p className="max-w-2xl text-muted-foreground">{description}</p>;
+      <TryoutPartStat label={tTryouts("part-time-label")}>
+        <TryoutMetricTime totalSeconds={timeLimitSeconds} />
+      </TryoutPartStat>
+    </TryoutPartStats>
+  );
 }
 
-function formatTimeLimit(totalSeconds: number) {
+export function useTryoutPartHeadDescription() {
+  const tTryouts = useTranslations("Tryouts");
+  const status = useTryoutPart((state) => state.state.status);
+
+  switch (status) {
+    case "loading":
+      return tTryouts("part-head-loading");
+    case "needs-tryout":
+      return tTryouts("part-head-needs-tryout");
+    case "ended":
+      return tTryouts("part-head-ended");
+    case "completed":
+      return tTryouts("part-head-completed");
+    case "in-progress":
+      return tTryouts("part-head-in-progress");
+    case "ready":
+      return tTryouts("part-head-ready");
+    default:
+      return tTryouts("part-head-loading");
+  }
+}
+
+function TryoutMetricNumber({ value }: { value: number }) {
+  return (
+    <div className="font-light font-mono text-5xl text-foreground tabular-nums leading-none tracking-tighter">
+      <NumberFormat
+        format={{ maximumFractionDigits: 0 }}
+        trend={0}
+        value={value}
+      />
+    </div>
+  );
+}
+
+function TryoutMetricTime({ totalSeconds }: { totalSeconds: number }) {
+  const segments = getTimeSegments(totalSeconds);
+
+  return (
+    <NumberFormatGroup>
+      <div className="flex items-center gap-2 sm:gap-3">
+        {segments.map((segment, index) => (
+          <Fragment key={`${segment.label}-${segment.value}`}>
+            <div className="font-light font-mono text-5xl text-foreground tabular-nums leading-none tracking-tighter">
+              <NumberFormat
+                format={{ minimumIntegerDigits: 2 }}
+                trend={0}
+                value={segment.value}
+              />
+            </div>
+            {index < segments.length - 1 ? (
+              <span className="font-light font-mono text-3xl text-muted-foreground leading-none">
+                :
+              </span>
+            ) : null}
+          </Fragment>
+        ))}
+      </div>
+    </NumberFormatGroup>
+  );
+}
+
+function getTimeSegments(totalSeconds: number) {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
 
-  const hh = String(hours).padStart(2, "0");
-  const mm = String(minutes).padStart(2, "0");
-  const ss = String(seconds).padStart(2, "0");
-
   if (hours > 0) {
-    return `${hh}:${mm}:${ss}`;
+    return [
+      { label: "hours", value: hours },
+      { label: "minutes", value: minutes },
+      { label: "seconds", value: seconds },
+    ] as const;
   }
 
-  return `${mm}:${ss}`;
+  return [
+    { label: "minutes", value: minutes },
+    { label: "seconds", value: seconds },
+  ] as const;
 }
