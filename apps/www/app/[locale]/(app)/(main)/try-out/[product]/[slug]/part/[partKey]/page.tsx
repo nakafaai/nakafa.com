@@ -5,7 +5,6 @@ import {
   tryoutProducts,
 } from "@repo/backend/convex/tryouts/products";
 import { getExercisesContent } from "@repo/contents/_lib/exercises";
-import { Badge } from "@repo/design-system/components/ui/badge";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { slugify } from "@repo/design-system/lib/utils";
 import { routing } from "@repo/internationalization/src/routing";
@@ -15,6 +14,7 @@ import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { QuestionAnalytics } from "@/app/[locale]/(app)/(main)/(contents)/exercises/[category]/[type]/[material]/[...slug]/analytics";
 import { ExerciseArticle } from "@/app/[locale]/(app)/(main)/(contents)/exercises/[category]/[type]/[material]/[...slug]/article";
+import { formatTryoutLabel, TryoutMeta } from "@/components/tryout/meta";
 import { TryoutPartRuntime } from "@/components/tryout/part-runtime";
 import { getStaticTryout, getStaticTryouts } from "@/lib/utils/pages/tryouts";
 
@@ -85,7 +85,7 @@ export default async function Page({ params }: Props) {
     notFound();
   }
 
-  const tryoutLabel = staticTryout.label.replaceAll("-", " ");
+  const tryoutLabel = formatTryoutLabel(staticTryout.label);
 
   const getPartLabel = (currentPartKey: string) => {
     switch (currentPartKey) {
@@ -127,12 +127,11 @@ export default async function Page({ params }: Props) {
             {tCommon("back")}
           </NavigationLink>
 
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="muted">{tTryouts("products.snbt.title")}</Badge>
-            <Badge className="capitalize" variant="muted">
-              {tryoutLabel}
-            </Badge>
-          </div>
+          <TryoutMeta
+            cycleKey={staticTryout.cycleKey}
+            label={tryoutLabel}
+            product={product}
+          />
 
           <h1 className="text-pretty font-medium text-4xl tracking-tight">
             {partLabel}

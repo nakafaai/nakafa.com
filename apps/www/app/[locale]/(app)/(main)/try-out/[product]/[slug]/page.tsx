@@ -4,13 +4,13 @@ import {
   type TryoutProduct,
   tryoutProducts,
 } from "@repo/backend/convex/tryouts/products";
-import { Badge } from "@repo/design-system/components/ui/badge";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { routing } from "@repo/internationalization/src/routing";
 import { fetchQuery } from "convex/nextjs";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { formatTryoutLabel, TryoutMeta } from "@/components/tryout/meta";
 import { TryoutSetParts } from "@/components/tryout/set-parts";
 import { TryoutStartButton } from "@/components/tryout/start-button";
 import { getStaticTryouts } from "@/lib/utils/pages/tryouts";
@@ -61,7 +61,7 @@ export default async function Page({ params }: Props) {
     notFound();
   }
 
-  const tryoutLabel = details.tryout.label.replaceAll("-", " ");
+  const tryoutLabel = formatTryoutLabel(details.tryout.label);
 
   const getPartLabel = (partKey: string) => {
     switch (partKey) {
@@ -97,12 +97,7 @@ export default async function Page({ params }: Props) {
             {tCommon("back")}
           </NavigationLink>
 
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="muted">{tTryouts("products.snbt.title")}</Badge>
-            <Badge variant="muted">
-              {tTryouts("year-title", { year: details.tryout.cycleKey })}
-            </Badge>
-          </div>
+          <TryoutMeta cycleKey={details.tryout.cycleKey} product={product} />
 
           <h1 className="text-pretty font-medium text-4xl capitalize tracking-tight">
             {tryoutLabel}
