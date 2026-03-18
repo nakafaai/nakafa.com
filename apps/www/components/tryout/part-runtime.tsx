@@ -26,6 +26,7 @@ import {
   TryoutPartProvider,
   type TryoutPartValue,
   type TryoutValue,
+  useTryoutPart,
 } from "@/components/tryout/part-state";
 import { AttemptProvider } from "@/lib/context/use-attempt";
 import { ExerciseContextProvider } from "@/lib/context/use-exercise";
@@ -93,22 +94,7 @@ export function TryoutPartRuntime({
             <TryoutPartHero>
               <TryoutPartHead icon={icon} />
               <TryoutPartSticky />
-
-              <TryoutPartSummary>
-                <TryoutPartStatus />
-
-                <TryoutPartBody>
-                  <TryoutPartLead>
-                    <TryoutPartMetrics />
-                  </TryoutPartLead>
-
-                  <TryoutPartCtas>
-                    <TryoutPartTryoutCta />
-                    <TryoutPartStartCta />
-                    <TryoutPartBackCta />
-                  </TryoutPartCtas>
-                </TryoutPartBody>
-              </TryoutPartSummary>
+              <TryoutPartSummaryCard />
 
               <TryoutPartDialog />
             </TryoutPartHero>
@@ -118,5 +104,31 @@ export function TryoutPartRuntime({
         </TryoutPartProvider>
       </AttemptProvider>
     </ExerciseContextProvider>
+  );
+}
+
+function TryoutPartSummaryCard() {
+  const status = useTryoutPart((state) => state.state.status);
+
+  if (status === "in-progress") {
+    return null;
+  }
+
+  return (
+    <TryoutPartSummary>
+      <TryoutPartStatus />
+
+      <TryoutPartBody>
+        <TryoutPartLead>
+          <TryoutPartMetrics />
+        </TryoutPartLead>
+
+        <TryoutPartCtas>
+          <TryoutPartTryoutCta />
+          <TryoutPartStartCta />
+          <TryoutPartBackCta />
+        </TryoutPartCtas>
+      </TryoutPartBody>
+    </TryoutPartSummary>
   );
 }
