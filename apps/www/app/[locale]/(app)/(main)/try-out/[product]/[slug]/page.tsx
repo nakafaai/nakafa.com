@@ -89,7 +89,7 @@ export default async function Page({ params }: Props) {
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
       <div className="space-y-10">
-        <div className="space-y-3">
+        <div className="space-y-6">
           <TryoutPageHead
             description={tTryouts("slug-description")}
             link={{ href: `/try-out/${product}`, label: tCommon("back") }}
@@ -101,7 +101,7 @@ export default async function Page({ params }: Props) {
             }
             title={tryoutLabel}
           />
-          <div className="pt-3">
+          <div>
             <TryoutStartButton
               locale={locale}
               product={product}

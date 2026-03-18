@@ -17,7 +17,7 @@ export function TryoutCountdown({
   return (
     <div
       className={cn(
-        "w-full rounded-xl border bg-card px-4 py-4 shadow-sm sm:px-5 sm:py-5",
+        "w-full rounded-xl border bg-card p-5 shadow-sm",
         className
       )}
       {...props}

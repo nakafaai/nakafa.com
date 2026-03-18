@@ -30,18 +30,20 @@ export function TryoutPageHead({
         {link.label}
       </NavigationLink>
 
-      {meta}
+      <div className="space-y-3">
+        {meta}
 
-      <div className="flex items-start gap-2">
-        {icon ? (
-          <HugeIcons
-            className="hidden size-7 shrink-0 translate-y-1 sm:block"
-            icon={icon}
-          />
-        ) : null}
-        <h1 className="text-pretty font-medium text-3xl leading-tight tracking-tight">
-          {title}
-        </h1>
+        <div className="flex items-start gap-2">
+          {icon ? (
+            <HugeIcons
+              className="hidden size-7 shrink-0 translate-y-1 sm:block"
+              icon={icon}
+            />
+          ) : null}
+          <h1 className="text-pretty font-medium text-3xl leading-tight tracking-tight">
+            {title}
+          </h1>
+        </div>
       </div>
 
       {description ? (
