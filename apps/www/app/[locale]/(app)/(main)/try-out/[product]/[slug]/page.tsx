@@ -10,7 +10,7 @@ import { fetchQuery } from "convex/nextjs";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { formatTryoutLabel, TryoutMeta } from "@/components/tryout/meta";
+import { TryoutMeta } from "@/components/tryout/meta";
 import { TryoutSetParts } from "@/components/tryout/set-parts";
 import { TryoutStartButton } from "@/components/tryout/start-button";
 import { getStaticTryouts } from "@/lib/utils/pages/tryouts";
@@ -61,7 +61,7 @@ export default async function Page({ params }: Props) {
     notFound();
   }
 
-  const tryoutLabel = formatTryoutLabel(details.tryout.label);
+  const tryoutLabel = details.tryout.label;
 
   const getPartLabel = (partKey: string) => {
     switch (partKey) {

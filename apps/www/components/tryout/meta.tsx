@@ -2,10 +2,6 @@ import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { useTranslations } from "next-intl";
 
-export function formatTryoutLabel(label: string) {
-  return label.replaceAll("-", " ");
-}
-
 export function TryoutMeta({
   cycleKey,
   label,

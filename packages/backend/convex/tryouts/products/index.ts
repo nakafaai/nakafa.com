@@ -25,6 +25,7 @@ export type TryoutSetCandidate = Pick<
   | "material"
   | "questionCount"
   | "setName"
+  | "title"
   | "slug"
   | "type"
 >;

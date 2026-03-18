@@ -112,7 +112,7 @@ export const snbtTryoutProductPolicy = {
         product: "snbt",
         locale,
         cycleKey: firstSet.cycleKey,
-        label: firstSet.setName,
+        label: firstSet.title,
         slug: `${firstSet.cycleKey}-${firstSet.setName}`,
         partCount: sortedSets.length,
         totalQuestionCount,

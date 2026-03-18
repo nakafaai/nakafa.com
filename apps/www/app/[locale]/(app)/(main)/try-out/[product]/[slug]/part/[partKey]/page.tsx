@@ -14,7 +14,7 @@ import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { QuestionAnalytics } from "@/app/[locale]/(app)/(main)/(contents)/exercises/[category]/[type]/[material]/[...slug]/analytics";
 import { ExerciseArticle } from "@/app/[locale]/(app)/(main)/(contents)/exercises/[category]/[type]/[material]/[...slug]/article";
-import { formatTryoutLabel, TryoutMeta } from "@/components/tryout/meta";
+import { TryoutMeta } from "@/components/tryout/meta";
 import { TryoutPartRuntime } from "@/components/tryout/part-runtime";
 import { getStaticTryout, getStaticTryouts } from "@/lib/utils/pages/tryouts";
 
@@ -85,7 +85,7 @@ export default async function Page({ params }: Props) {
     notFound();
   }
 
-  const tryoutLabel = formatTryoutLabel(staticTryout.label);
+  const tryoutLabel = staticTryout.label;
 
   const getPartLabel = (currentPartKey: string) => {
     switch (currentPartKey) {

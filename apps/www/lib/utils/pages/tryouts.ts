@@ -68,6 +68,7 @@ async function getStaticSnbtTryouts(locale: Locale): Promise<StaticTryout[]> {
       cycleKey: string;
       label: string;
       parts: StaticTryoutPart[];
+      setKey: string;
     }
   >();
 
@@ -107,8 +108,9 @@ async function getStaticSnbtTryouts(locale: Locale): Promise<StaticTryout[]> {
 
         groupedTryouts.set(tryoutKey, {
           cycleKey,
-          label: setName,
+          label: item.title,
           parts: [{ partKey, questionCount, setSlug }],
+          setKey: setName,
         });
       }
     }
@@ -138,7 +140,7 @@ async function getStaticSnbtTryouts(locale: Locale): Promise<StaticTryout[]> {
         partCount: orderedParts.length,
         parts: orderedParts,
         product: "snbt",
-        slug: `${tryout.cycleKey}-${tryout.label}`,
+        slug: `${tryout.cycleKey}-${tryout.setKey}`,
         totalQuestionCount: orderedParts.reduce(
           (count, part) => count + part.questionCount,
           0

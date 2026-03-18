@@ -107,7 +107,7 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
                       >
                         <TryoutPackageCopy>
                           <TryoutPackageTitle>
-                            {tryout.label.replaceAll("-", " ")}
+                            {tryout.label}
                           </TryoutPackageTitle>
                           <TryoutPackageMeta>
                             {tTryouts("available-item-description", {

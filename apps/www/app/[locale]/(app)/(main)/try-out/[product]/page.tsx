@@ -139,7 +139,7 @@ export default async function Page({ params }: Props) {
                       >
                         <TryoutPackageCopy>
                           <TryoutPackageTitle>
-                            {tryout.label.replaceAll("-", " ")}
+                            {tryout.label}
                           </TryoutPackageTitle>
                           <TryoutPackageMeta>
                             {tTryouts("available-item-description", {
