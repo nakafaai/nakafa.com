@@ -4,8 +4,12 @@ import { Tick01Icon } from "@hugeicons/core-free-icons";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
+import type { TryoutPartUiStatus } from "@/components/tryout/utils/part-state";
 
-type TryoutStatusBadgeValue = "completed" | "in-progress" | "locked";
+type TryoutStatusBadgeValue = Extract<
+  TryoutPartUiStatus,
+  "completed" | "in-progress" | "locked"
+>;
 
 export function TryoutStatusBadge({
   status,
