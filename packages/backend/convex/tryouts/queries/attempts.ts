@@ -106,20 +106,16 @@ export const getUserTryoutAttempt = query({
         setId: partAttempt.setId,
       };
     });
-    const allPartIndices = tryoutPartSets.map((partSet) => partSet.partIndex);
     const completedPartIndices = attempt.completedPartIndices;
     const activePartAttempt = validPartAttempts.find(
       (partAttempt) =>
         partAttempt.setAttempt.status === "in-progress" &&
         !completedPartIndices.includes(partAttempt.partIndex)
     );
-    const nextPartIndex = allPartIndices.find(
-      (partIndex) => !completedPartIndices.includes(partIndex)
+    const nextPartSet = tryoutPartSets.find(
+      (partSet) => !completedPartIndices.includes(partSet.partIndex)
     );
-    const nextPartKey =
-      activePartAttempt?.partKey ??
-      tryoutPartSets.find((partSet) => partSet.partIndex === nextPartIndex)
-        ?.partKey;
+    const nextPartKey = activePartAttempt?.partKey ?? nextPartSet?.partKey;
 
     const firstCompletedAttempt = await getFirstCompletedSimulationAttempt(
       ctx.db,
@@ -285,15 +281,11 @@ export const getUserTryoutPartAttempt = query({
         !tryoutAttempt.completedPartIndices.includes(partAttempt.partIndex)
       );
     })?.partKey;
-    const nextPartIndex = tryoutPartSets
-      .map((partSet) => partSet.partIndex)
-      .find(
-        (partIndex) => !tryoutAttempt.completedPartIndices.includes(partIndex)
-      );
-    const nextPartKey =
-      activePartKey ??
-      tryoutPartSets.find((partSet) => partSet.partIndex === nextPartIndex)
-        ?.partKey;
+    const nextPartSet = tryoutPartSets.find(
+      (partSet) =>
+        !tryoutAttempt.completedPartIndices.includes(partSet.partIndex)
+    );
+    const nextPartKey = activePartKey ?? nextPartSet?.partKey;
 
     const partAttempt = await ctx.db
       .query("tryoutPartAttempts")
