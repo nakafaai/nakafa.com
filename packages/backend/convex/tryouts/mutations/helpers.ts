@@ -1,18 +1,13 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { estimateThetaEAP } from "@repo/backend/convex/irt/estimation";
 import {
-  getScaleVersionItems,
-  groupScaleVersionItemsBySetId,
-} from "@repo/backend/convex/irt/scaleVersions";
-import {
-  buildIrtResponses,
   computeTryoutRawScorePercentage,
+  finalizeTryoutPartAttempt,
   getFirstCompletedSimulationAttempt,
+  syncTryoutAttemptAggregates,
   syncTryoutAttemptExpiry,
 } from "@repo/backend/convex/tryouts/helpers";
-import { scaleThetaToTryoutScore } from "@repo/backend/convex/tryouts/products";
 import { tryoutStatusValidator } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError, type Infer, v } from "convex/values";
 import { getManyFrom } from "convex-helpers/server/relationships";
@@ -78,12 +73,24 @@ export async function finalizeTryoutAttempt({
   const tryoutExpiry = await syncTryoutAttemptExpiry(ctx, tryoutAttempt, now);
 
   if (tryoutExpiry.expired) {
+    const expiredAttempt = await ctx.db.get(
+      "tryoutAttempts",
+      tryoutAttempt._id
+    );
+
+    if (!expiredAttempt) {
+      throw new ConvexError({
+        code: "ATTEMPT_NOT_FOUND",
+        message: "Tryout attempt not found.",
+      });
+    }
+
     return {
       status: "expired",
       isOfficial: false,
-      theta: tryoutAttempt.theta,
-      irtScore: tryoutAttempt.irtScore,
-      rawScorePercentage: computeTryoutRawScorePercentage(tryoutAttempt),
+      theta: expiredAttempt.theta,
+      irtScore: expiredAttempt.irtScore,
+      rawScorePercentage: computeTryoutRawScorePercentage(expiredAttempt),
     } satisfies CompleteTryoutResult;
   }
 
@@ -102,62 +109,105 @@ export async function finalizeTryoutAttempt({
     });
   }
 
-  const rawScorePercentage = computeTryoutRawScorePercentage(tryoutAttempt);
-
   if (tryoutAttempt.completedPartIndices.length < tryout.partCount) {
-    return {
-      status: "in-progress",
-      isOfficial: false,
-      theta: tryoutAttempt.theta,
-      irtScore: tryoutAttempt.irtScore,
-      rawScorePercentage,
-    } satisfies CompleteTryoutResult;
-  }
-
-  const isOfficial = firstCompletedAttempt === null;
-
-  const [partAttempts, scaleVersionItems] = await Promise.all([
-    getManyFrom(
+    const pendingPartAttempts = await getManyFrom(
       ctx.db,
       "tryoutPartAttempts",
       "tryoutAttemptId_partIndex",
       tryoutAttempt._id,
       "tryoutAttemptId"
-    ),
-    getScaleVersionItems(ctx.db, tryoutAttempt.scaleVersionId),
-  ]);
-  const scaleItemsBySetId = groupScaleVersionItemsBySetId(scaleVersionItems);
-  const partAttemptData = await Promise.all(
-    partAttempts.map(async (partAttempt) => {
-      const answers = await ctx.db
-        .query("exerciseAnswers")
-        .withIndex("attemptId_exerciseNumber", (q) =>
-          q.eq("attemptId", partAttempt.setAttemptId)
-        )
-        .collect();
+    );
 
+    for (const partAttempt of pendingPartAttempts) {
+      if (tryoutAttempt.completedPartIndices.includes(partAttempt.partIndex)) {
+        continue;
+      }
+
+      const setAttempt = await ctx.db.get(
+        "exerciseAttempts",
+        partAttempt.setAttemptId
+      );
+
+      if (!setAttempt || setAttempt.completedAt === undefined) {
+        continue;
+      }
+
+      if (
+        setAttempt.status !== "completed" &&
+        setAttempt.status !== "expired"
+      ) {
+        continue;
+      }
+
+      await finalizeTryoutPartAttempt({
+        ctx,
+        finishedAtMs: setAttempt.completedAt,
+        now,
+        partAttempt,
+        status: setAttempt.status,
+        tryoutAttemptId: tryoutAttempt._id,
+      });
+    }
+
+    const refreshedTryoutAttempt = await ctx.db.get(
+      "tryoutAttempts",
+      tryoutAttempt._id
+    );
+
+    if (!refreshedTryoutAttempt) {
+      throw new ConvexError({
+        code: "ATTEMPT_NOT_FOUND",
+        message: "Tryout attempt not found.",
+      });
+    }
+
+    if (refreshedTryoutAttempt.completedPartIndices.length < tryout.partCount) {
       return {
-        answers,
-        itemParamsRecords: scaleItemsBySetId.get(partAttempt.setId) ?? [],
-      };
-    })
-  );
-  const allResponses = partAttemptData.flatMap((partData) =>
-    buildIrtResponses(partData)
-  );
-  const { theta, se } = estimateThetaEAP(allResponses);
-  const irtScore = scaleThetaToTryoutScore({
-    product: tryout.product,
-    theta,
-  });
+        status: "in-progress",
+        isOfficial: false,
+        theta: refreshedTryoutAttempt.theta,
+        irtScore: refreshedTryoutAttempt.irtScore,
+        rawScorePercentage: computeTryoutRawScorePercentage(
+          refreshedTryoutAttempt
+        ),
+      } satisfies CompleteTryoutResult;
+    }
 
-  await ctx.db.patch("tryoutAttempts", tryoutAttempt._id, {
+    const isOfficial = firstCompletedAttempt === null;
+    const completedAttempt = await syncTryoutAttemptAggregates({
+      completedAtMs: now,
+      ctx,
+      now,
+      status: "completed",
+      tryoutAttemptId: refreshedTryoutAttempt._id,
+    });
+
+    if (isOfficial) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.tryouts.internalMutations.updateLeaderboard,
+        {
+          tryoutAttemptId: refreshedTryoutAttempt._id,
+        }
+      );
+    }
+
+    return {
+      status: "completed",
+      isOfficial,
+      theta: completedAttempt.theta,
+      irtScore: completedAttempt.irtScore,
+      rawScorePercentage: completedAttempt.rawScorePercentage,
+    } satisfies CompleteTryoutResult;
+  }
+
+  const isOfficial = firstCompletedAttempt === null;
+  const completedAttempt = await syncTryoutAttemptAggregates({
+    completedAtMs: now,
+    ctx,
+    now,
     status: "completed",
-    completedAt: now,
-    theta,
-    thetaSE: se,
-    irtScore,
-    lastActivityAt: now,
+    tryoutAttemptId: tryoutAttempt._id,
   });
 
   if (isOfficial) {
@@ -173,8 +223,8 @@ export async function finalizeTryoutAttempt({
   return {
     status: "completed",
     isOfficial,
-    theta,
-    irtScore,
-    rawScorePercentage,
+    theta: completedAttempt.theta,
+    irtScore: completedAttempt.irtScore,
+    rawScorePercentage: completedAttempt.rawScorePercentage,
   } satisfies CompleteTryoutResult;
 }

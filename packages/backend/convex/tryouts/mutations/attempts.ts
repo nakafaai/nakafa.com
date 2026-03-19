@@ -1,18 +1,12 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import { createExerciseAttempt } from "@repo/backend/convex/exercises/helpers";
-import { computeAttemptDurationSeconds } from "@repo/backend/convex/exercises/utils";
 import { mutation } from "@repo/backend/convex/functions";
-import { estimateThetaEAP } from "@repo/backend/convex/irt/estimation";
-import {
-  getOrPublishScaleVersionForTryout,
-  getScaleVersionItemsForSet,
-} from "@repo/backend/convex/irt/scaleVersions";
+import { getOrPublishScaleVersionForTryout } from "@repo/backend/convex/irt/scaleVersions";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import {
-  buildIrtResponses,
-  countCorrectAnswers,
+  finalizeTryoutPartAttempt,
   syncTryoutAttemptExpiry,
 } from "@repo/backend/convex/tryouts/helpers";
 import {
@@ -456,88 +450,22 @@ export const completePart = mutation({
     }
 
     if (tryoutAttempt.completedPartIndices.includes(partAttempt.partIndex)) {
-      const answers = await ctx.db
-        .query("exerciseAnswers")
-        .withIndex("attemptId_exerciseNumber", (q) =>
-          q.eq("attemptId", partAttempt.setAttemptId)
-        )
-        .collect();
-
       return {
         theta: partAttempt.theta,
         thetaSE: partAttempt.thetaSE,
-        rawScore: countCorrectAnswers(answers),
+        rawScore: setAttempt.correctAnswers,
         totalQuestions: setAttempt.totalExercises,
       };
     }
 
-    if (setAttempt.status !== "completed" && setAttempt.status !== "expired") {
-      if (setAttempt.schedulerId) {
-        await ctx.scheduler.cancel(setAttempt.schedulerId);
-      }
-
-      const expiresAtMs = setAttempt.startedAt + setAttempt.timeLimit * 1000;
-      const completedAtMs = Math.min(now, expiresAtMs);
-      const finalStatus = now >= expiresAtMs ? "expired" : "completed";
-      const totalTime = computeAttemptDurationSeconds({
-        startedAtMs: setAttempt.startedAt,
-        completedAtMs,
-      });
-
-      await ctx.db.patch("exerciseAttempts", partAttempt.setAttemptId, {
-        status: finalStatus,
-        completedAt: completedAtMs,
-        lastActivityAt: now,
-        updatedAt: now,
-        totalTime,
-      });
-    }
-
-    const answers = await ctx.db
-      .query("exerciseAnswers")
-      .withIndex("attemptId_exerciseNumber", (q) =>
-        q.eq("attemptId", partAttempt.setAttemptId)
-      )
-      .collect();
-    const itemParamsRecords = await getScaleVersionItemsForSet(ctx.db, {
-      scaleVersionId: tryoutAttempt.scaleVersionId,
-      setId: partAttempt.setId,
+    return finalizeTryoutPartAttempt({
+      ctx,
+      finishedAtMs: now,
+      now,
+      partAttempt,
+      status: "completed",
+      tryoutAttemptId: args.tryoutAttemptId,
     });
-    const itemResponses = buildIrtResponses({ answers, itemParamsRecords });
-    const { theta, se } = estimateThetaEAP(itemResponses);
-    const rawScore = countCorrectAnswers(answers);
-
-    await ctx.db.patch("tryoutPartAttempts", partAttempt._id, {
-      theta,
-      thetaSE: se,
-    });
-
-    const totalCorrect = tryoutAttempt.totalCorrect + rawScore;
-    const totalQuestions =
-      tryoutAttempt.totalQuestions + setAttempt.totalExercises;
-    const completedPartIndices = [
-      ...tryoutAttempt.completedPartIndices,
-      partAttempt.partIndex,
-    ];
-
-    await ctx.db.patch("tryoutAttempts", args.tryoutAttemptId, {
-      completedPartIndices,
-      totalCorrect,
-      totalQuestions,
-      lastActivityAt: now,
-    });
-
-    await ctx.db.insert("irtCalibrationQueue", {
-      setId: partAttempt.setId,
-      enqueuedAt: now,
-    });
-
-    return {
-      theta,
-      thetaSE: se,
-      rawScore,
-      totalQuestions: setAttempt.totalExercises,
-    };
   },
 });
 

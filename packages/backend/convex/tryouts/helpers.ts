@@ -4,19 +4,29 @@ import type {
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
 import { computeAttemptDurationSeconds } from "@repo/backend/convex/exercises/utils";
-import { computeTryoutExpiresAtMs } from "@repo/backend/convex/tryouts/products";
+import { estimateThetaEAP } from "@repo/backend/convex/irt/estimation";
+import { getScaleVersionItemsForSet } from "@repo/backend/convex/irt/scaleVersions";
+import {
+  computeTryoutExpiresAtMs,
+  scaleThetaToTryoutScore,
+} from "@repo/backend/convex/tryouts/products";
 import { ConvexError } from "convex/values";
+import { asyncMap } from "convex-helpers";
 import {
   getAll,
   getManyFrom,
   getOneFrom,
 } from "convex-helpers/server/relationships";
 
-type TryoutMutationCtx = Pick<MutationCtx, "db">;
+type TryoutMutationCtx = Pick<MutationCtx, "db" | "scheduler">;
 type TryoutDbReader = QueryCtx["db"];
 type TryoutScoreTotals = Pick<
   Doc<"tryoutAttempts">,
   "totalCorrect" | "totalQuestions"
+>;
+type TryoutPartFinalStatus = Extract<
+  Doc<"exerciseAttempts">["status"],
+  "completed" | "expired"
 >;
 
 /** Converts accumulated tryout score totals into a percentage. */
@@ -93,11 +103,13 @@ export function buildIrtResponses({
 
 async function expireExerciseAttemptIfInProgress(
   ctx: TryoutMutationCtx,
-  attempt: Doc<"exerciseAttempts">,
+  attemptId: Doc<"exerciseAttempts">["_id"],
   expiredAtMs: number,
   now: number
 ) {
-  if (attempt.status !== "in-progress") {
+  const attempt = await ctx.db.get("exerciseAttempts", attemptId);
+
+  if (!attempt || attempt.status !== "in-progress") {
     return;
   }
 
@@ -113,6 +125,254 @@ async function expireExerciseAttemptIfInProgress(
     updatedAt: now,
     totalTime,
   });
+}
+
+/** Finalize one started tryout part from its persisted exercise answers. */
+export async function finalizeTryoutPartAttempt({
+  ctx,
+  finishedAtMs,
+  now,
+  partAttempt,
+  status,
+  tryoutAttemptId,
+}: {
+  ctx: TryoutMutationCtx;
+  finishedAtMs: number;
+  now: number;
+  partAttempt: Doc<"tryoutPartAttempts">;
+  status: TryoutPartFinalStatus;
+  tryoutAttemptId: Doc<"tryoutAttempts">["_id"];
+}) {
+  const [setAttempt, tryoutAttempt] = await Promise.all([
+    ctx.db.get("exerciseAttempts", partAttempt.setAttemptId),
+    ctx.db.get("tryoutAttempts", tryoutAttemptId),
+  ]);
+
+  if (!setAttempt) {
+    throw new ConvexError({
+      code: "SET_ATTEMPT_NOT_FOUND",
+      message: "Exercise set attempt not found.",
+    });
+  }
+
+  if (!tryoutAttempt) {
+    throw new ConvexError({
+      code: "ATTEMPT_NOT_FOUND",
+      message: "Tryout attempt not found.",
+    });
+  }
+
+  const isAlreadyFinalized = tryoutAttempt.completedPartIndices.includes(
+    partAttempt.partIndex
+  );
+  let currentSetAttempt = setAttempt;
+
+  if (setAttempt.status === "in-progress") {
+    if (setAttempt.schedulerId) {
+      await ctx.scheduler.cancel(setAttempt.schedulerId);
+    }
+
+    const setExpiresAtMs = setAttempt.startedAt + setAttempt.timeLimit * 1000;
+    const completedAt = Math.min(finishedAtMs, setExpiresAtMs);
+    const finalStatus =
+      status === "expired" || finishedAtMs >= setExpiresAtMs
+        ? "expired"
+        : "completed";
+    const totalTime = computeAttemptDurationSeconds({
+      startedAtMs: setAttempt.startedAt,
+      completedAtMs: completedAt,
+    });
+
+    currentSetAttempt = {
+      ...setAttempt,
+      completedAt,
+      lastActivityAt: now,
+      status: finalStatus,
+      totalTime,
+      updatedAt: now,
+    };
+
+    await ctx.db.patch("exerciseAttempts", setAttempt._id, {
+      status: finalStatus,
+      completedAt,
+      lastActivityAt: now,
+      updatedAt: now,
+      totalTime,
+    });
+  }
+
+  if (isAlreadyFinalized) {
+    return {
+      rawScore: currentSetAttempt.correctAnswers,
+      theta: partAttempt.theta,
+      thetaSE: partAttempt.thetaSE,
+      totalQuestions: currentSetAttempt.totalExercises,
+    };
+  }
+
+  const [answers, itemParamsRecords] = await Promise.all([
+    getManyFrom(
+      ctx.db,
+      "exerciseAnswers",
+      "attemptId_exerciseNumber",
+      partAttempt.setAttemptId,
+      "attemptId"
+    ),
+    getScaleVersionItemsForSet(ctx.db, {
+      scaleVersionId: tryoutAttempt.scaleVersionId,
+      setId: partAttempt.setId,
+    }),
+  ]);
+  const itemResponses = buildIrtResponses({ answers, itemParamsRecords });
+  const { theta, se } = estimateThetaEAP(itemResponses);
+  const rawScore = countCorrectAnswers(answers);
+  const completedPartIndices = [...tryoutAttempt.completedPartIndices];
+
+  if (!completedPartIndices.includes(partAttempt.partIndex)) {
+    completedPartIndices.push(partAttempt.partIndex);
+    completedPartIndices.sort((left, right) => left - right);
+  }
+
+  await Promise.all([
+    ctx.db.patch("tryoutPartAttempts", partAttempt._id, {
+      theta,
+      thetaSE: se,
+    }),
+    ctx.db.patch("tryoutAttempts", tryoutAttempt._id, {
+      completedPartIndices,
+      lastActivityAt: now,
+    }),
+    ctx.db.insert("irtCalibrationQueue", {
+      setId: partAttempt.setId,
+      enqueuedAt: now,
+    }),
+  ]);
+
+  return {
+    rawScore,
+    theta,
+    thetaSE: se,
+    totalQuestions: currentSetAttempt.totalExercises,
+  };
+}
+
+/** Recompute the persisted tryout aggregates from finalized part attempts. */
+export async function syncTryoutAttemptAggregates({
+  completedAtMs,
+  ctx,
+  now,
+  status,
+  tryoutAttemptId,
+}: {
+  completedAtMs: number;
+  ctx: TryoutMutationCtx;
+  now: number;
+  status: Doc<"tryoutAttempts">["status"];
+  tryoutAttemptId: Doc<"tryoutAttempts">["_id"];
+}) {
+  const tryoutAttempt = await ctx.db.get("tryoutAttempts", tryoutAttemptId);
+
+  if (!tryoutAttempt) {
+    throw new ConvexError({
+      code: "ATTEMPT_NOT_FOUND",
+      message: "Tryout attempt not found.",
+    });
+  }
+
+  const tryout = await ctx.db.get("tryouts", tryoutAttempt.tryoutId);
+
+  if (!tryout) {
+    throw new ConvexError({
+      code: "TRYOUT_NOT_FOUND",
+      message: "Tryout not found.",
+    });
+  }
+
+  const completedPartIndices = new Set(tryoutAttempt.completedPartIndices);
+  const partAttempts = await getManyFrom(
+    ctx.db,
+    "tryoutPartAttempts",
+    "tryoutAttemptId_partIndex",
+    tryoutAttemptId,
+    "tryoutAttemptId"
+  );
+  const finalizedPartAttempts = partAttempts.filter((partAttempt) =>
+    completedPartIndices.has(partAttempt.partIndex)
+  );
+  const setAttempts = await getAll(
+    ctx.db,
+    "exerciseAttempts",
+    finalizedPartAttempts.map((partAttempt) => partAttempt.setAttemptId)
+  );
+  const partData = await asyncMap(
+    finalizedPartAttempts,
+    async (partAttempt, index) => {
+      const setAttempt = setAttempts[index];
+
+      if (!setAttempt) {
+        throw new ConvexError({
+          code: "INVALID_ATTEMPT_STATE",
+          message: "Tryout part is missing its exercise attempt.",
+        });
+      }
+
+      const [answers, itemParamsRecords] = await Promise.all([
+        getManyFrom(
+          ctx.db,
+          "exerciseAnswers",
+          "attemptId_exerciseNumber",
+          partAttempt.setAttemptId,
+          "attemptId"
+        ),
+        getScaleVersionItemsForSet(ctx.db, {
+          scaleVersionId: tryoutAttempt.scaleVersionId,
+          setId: partAttempt.setId,
+        }),
+      ]);
+
+      return {
+        answers,
+        itemParamsRecords,
+        totalQuestions: setAttempt.totalExercises,
+      };
+    }
+  );
+  const allResponses = partData.flatMap((part) => buildIrtResponses(part));
+  const totalCorrect = partData.reduce(
+    (count, part) => count + countCorrectAnswers(part.answers),
+    0
+  );
+  const totalQuestions = partData.reduce(
+    (count, part) => count + part.totalQuestions,
+    0
+  );
+  const { theta, se } = estimateThetaEAP(allResponses);
+  const irtScore = scaleThetaToTryoutScore({
+    product: tryout.product,
+    theta,
+  });
+
+  await ctx.db.patch("tryoutAttempts", tryoutAttemptId, {
+    completedAt: completedAtMs,
+    irtScore,
+    lastActivityAt: now,
+    status,
+    theta,
+    thetaSE: se,
+    totalCorrect,
+    totalQuestions,
+  });
+
+  return {
+    irtScore,
+    rawScorePercentage: computeTryoutRawScorePercentage({
+      totalCorrect,
+      totalQuestions,
+    }),
+    status,
+    theta,
+    thetaSE: se,
+  };
 }
 
 /** Expires a tryout and every still-open shared set attempt under it. */
@@ -135,14 +395,6 @@ export async function expireTryoutAttempt(
     startedAtMs: tryoutAttempt.startedAt,
   });
 
-  if (tryoutAttempt.status === "in-progress") {
-    await ctx.db.patch("tryoutAttempts", tryoutAttempt._id, {
-      status: "expired",
-      completedAt: expiredAtMs,
-      lastActivityAt: now,
-    });
-  }
-
   const partAttempts = await getManyFrom(
     ctx.db,
     "tryoutPartAttempts",
@@ -150,19 +402,28 @@ export async function expireTryoutAttempt(
     tryoutAttempt._id,
     "tryoutAttemptId"
   );
-  const setAttempts = await getAll(
-    ctx.db,
-    "exerciseAttempts",
-    partAttempts.map((partAttempt) => partAttempt.setAttemptId)
-  );
-
-  for (const setAttempt of setAttempts) {
-    if (!setAttempt) {
+  for (const partAttempt of partAttempts) {
+    if (tryoutAttempt.completedPartIndices.includes(partAttempt.partIndex)) {
       continue;
     }
 
-    await expireExerciseAttemptIfInProgress(ctx, setAttempt, expiredAtMs, now);
+    await finalizeTryoutPartAttempt({
+      ctx,
+      finishedAtMs: expiredAtMs,
+      now,
+      partAttempt,
+      status: "expired",
+      tryoutAttemptId: tryoutAttempt._id,
+    });
   }
+
+  await syncTryoutAttemptAggregates({
+    completedAtMs: expiredAtMs,
+    ctx,
+    now,
+    status: "expired",
+    tryoutAttemptId: tryoutAttempt._id,
+  });
 
   return expiredAtMs;
 }
@@ -243,7 +504,7 @@ export async function syncTryoutExerciseAttemptExpiry(
 
   await expireExerciseAttemptIfInProgress(
     ctx,
-    attempt,
+    attempt._id,
     tryoutExpiry.expiredAtMs,
     now
   );
