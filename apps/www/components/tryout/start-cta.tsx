@@ -5,11 +5,11 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useTranslations } from "next-intl";
 import {
-  TryoutCountdown,
-  TryoutCountdownAction,
-  TryoutCountdownMeta,
-  TryoutCountdownTime,
-} from "@/components/tryout/countdown";
+  TryoutStartCountdown,
+  TryoutStartCountdownAction,
+  TryoutStartCountdownMeta,
+  TryoutStartCountdownTime,
+} from "@/components/tryout/start-countdown";
 import { useTryoutStart } from "@/components/tryout/start-state";
 
 export function TryoutStartCta() {
@@ -60,13 +60,13 @@ export function TryoutStartCta() {
 
   return (
     <div className="flex w-full flex-col items-start gap-4">
-      <TryoutCountdown>
-        <TryoutCountdownTime segments={timeSegments} />
-        <TryoutCountdownMeta>
+      <TryoutStartCountdown>
+        <TryoutStartCountdownTime segments={timeSegments} />
+        <TryoutStartCountdownMeta>
           {tTryouts("remaining-time-label")}
-        </TryoutCountdownMeta>
-        <TryoutCountdownAction>{action}</TryoutCountdownAction>
-      </TryoutCountdown>
+        </TryoutStartCountdownMeta>
+        <TryoutStartCountdownAction>{action}</TryoutStartCountdownAction>
+      </TryoutStartCountdown>
     </div>
   );
 }

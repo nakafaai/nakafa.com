@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useUser } from "@/lib/context/use-user";
 
-export function TryoutHeader() {
+export function TryoutHubHeader() {
   const tHome = useTranslations("Home");
   const tTryouts = useTranslations("Tryouts");
   const currentUser = useUser((state) => state.user);

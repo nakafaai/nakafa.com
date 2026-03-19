@@ -19,9 +19,8 @@ import {
   TryoutCardHero,
   TryoutCardTitle,
 } from "@/components/tryout/card";
-import { TryoutHeader } from "@/components/tryout/header";
+import { TryoutHubHeader } from "@/components/tryout/hub-header";
 import {
-  groupActiveTryoutsByCycle,
   TryoutPackageCopy,
   TryoutPackageEmpty,
   TryoutPackageGroup,
@@ -30,8 +29,9 @@ import {
   TryoutPackageMeta,
   TryoutPackageTitle,
   TryoutPackageYear,
-} from "@/components/tryout/package-groups";
-import { SnbtTryoutIcon } from "@/components/tryout/product-art";
+} from "@/components/tryout/package-list";
+import { SnbtTryoutIcon } from "@/components/tryout/product-icon";
+import { groupActiveTryoutsByCycle } from "@/components/tryout/utils/package-list";
 
 export async function TryoutHubPage({ locale }: { locale: Locale }) {
   const product: TryoutProduct = "snbt";
@@ -48,7 +48,7 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
       <div className="space-y-10">
-        <TryoutHeader />
+        <TryoutHubHeader />
 
         <TryoutCard>
           <TryoutCardHero>

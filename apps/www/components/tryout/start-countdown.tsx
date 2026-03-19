@@ -5,12 +5,12 @@ import {
 import { cn } from "@repo/design-system/lib/utils";
 import { type ComponentProps, Fragment } from "react";
 
-export interface TryoutCountdownSegment {
+export interface TryoutStartCountdownSegment {
   label: string;
   value: number;
 }
 
-export function TryoutCountdown({
+export function TryoutStartCountdown({
   className,
   ...props
 }: ComponentProps<"div">) {
@@ -25,10 +25,10 @@ export function TryoutCountdown({
   );
 }
 
-export function TryoutCountdownTime({
+export function TryoutStartCountdownTime({
   segments,
 }: {
-  segments: readonly TryoutCountdownSegment[];
+  segments: readonly TryoutStartCountdownSegment[];
 }) {
   return (
     <NumberFormatGroup>
@@ -76,7 +76,7 @@ export function TryoutCountdownTime({
   );
 }
 
-export function TryoutCountdownMeta({
+export function TryoutStartCountdownMeta({
   className,
   ...props
 }: ComponentProps<"p">) {
@@ -88,7 +88,7 @@ export function TryoutCountdownMeta({
   );
 }
 
-export function TryoutCountdownAction({
+export function TryoutStartCountdownAction({
   className,
   ...props
 }: ComponentProps<"div">) {

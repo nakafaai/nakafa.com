@@ -24,7 +24,6 @@ import {
   TryoutCardTitle,
 } from "@/components/tryout/card";
 import {
-  groupActiveTryoutsByCycle,
   TryoutPackageCopy,
   TryoutPackageEmpty,
   TryoutPackageGroup,
@@ -33,8 +32,9 @@ import {
   TryoutPackageMeta,
   TryoutPackageTitle,
   TryoutPackageYear,
-} from "@/components/tryout/package-groups";
-import { SnbtTryoutIcon } from "@/components/tryout/product-art";
+} from "@/components/tryout/package-list";
+import { SnbtTryoutIcon } from "@/components/tryout/product-icon";
+import { groupActiveTryoutsByCycle } from "@/components/tryout/utils/package-list";
 
 interface Props {
   params: Promise<{ locale: Locale; product: string }>;

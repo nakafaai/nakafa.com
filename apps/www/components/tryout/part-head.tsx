@@ -2,13 +2,13 @@
 
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
-import { TryoutMeta } from "@/components/tryout/meta";
-import { TryoutPageHead } from "@/components/tryout/page-head";
+import { TryoutPageHeader } from "@/components/tryout/page-header";
+import { TryoutPageMeta } from "@/components/tryout/page-meta";
 import { useTryoutPartHeadDescription } from "@/components/tryout/part-info";
 import { useTryoutPart } from "@/components/tryout/part-state";
 
 interface TryoutPartHeadProps {
-  icon?: ComponentProps<typeof TryoutPageHead>["icon"];
+  icon?: ComponentProps<typeof TryoutPageHeader>["icon"];
 }
 
 export function TryoutPartHead({ icon }: TryoutPartHeadProps) {
@@ -18,7 +18,7 @@ export function TryoutPartHead({ icon }: TryoutPartHeadProps) {
   const tryout = useTryoutPart((state) => state.state.tryout);
 
   return (
-    <TryoutPageHead
+    <TryoutPageHeader
       description={description}
       icon={icon}
       link={{
@@ -26,7 +26,7 @@ export function TryoutPartHead({ icon }: TryoutPartHeadProps) {
         label: tCommon("back"),
       }}
       meta={
-        <TryoutMeta
+        <TryoutPageMeta
           cycleKey={tryout.cycleKey}
           label={tryout.label}
           product={tryout.product}

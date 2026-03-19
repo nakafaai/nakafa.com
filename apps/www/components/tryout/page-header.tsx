@@ -3,7 +3,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import type { ReactNode } from "react";
 
-interface TryoutPageHeadProps {
+interface TryoutPageHeaderProps {
   description?: ReactNode;
   icon?: IconSvgElement;
   link: {
@@ -14,13 +14,13 @@ interface TryoutPageHeadProps {
   title: ReactNode;
 }
 
-export function TryoutPageHead({
+export function TryoutPageHeader({
   description,
   icon,
   link,
   meta,
   title,
-}: TryoutPageHeadProps) {
+}: TryoutPageHeaderProps) {
   return (
     <header className="flex flex-col gap-3">
       <NavigationLink
