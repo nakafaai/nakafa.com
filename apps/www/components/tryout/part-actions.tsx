@@ -9,11 +9,14 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { cn } from "@repo/design-system/lib/utils";
+import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { Countdown } from "@/app/[locale]/(app)/(main)/(contents)/exercises/[category]/[type]/[material]/[...slug]/attempt-countdown";
 import { ExerciseStats } from "@/app/[locale]/(app)/(main)/(contents)/exercises/[category]/[type]/[material]/[...slug]/attempt-stats";
 import { useTryoutPart } from "@/components/tryout/part-state";
 import { TryoutStartButton } from "@/components/tryout/start-button";
+import { useStickyVisibility } from "@/lib/hooks/use-sticky-visibility";
 
 export function TryoutPartSticky() {
   const tTryouts = useTranslations("Tryouts");
@@ -22,6 +25,7 @@ export function TryoutPartSticky() {
   );
   const timer = useTryoutPart((state) => state.state.timer);
   const isActionPending = useTryoutPart((state) => state.meta.isActionPending);
+  const { anchorRef, hidden } = useStickyVisibility();
   const setCompleteDialogOpen = useTryoutPart(
     (state) => state.actions.setCompleteDialogOpen
   );
@@ -31,8 +35,22 @@ export function TryoutPartSticky() {
   }
 
   return (
-    <div className="sticky top-18 z-1 lg:top-2">
-      <div className="flex flex-col rounded-xl border bg-card p-2 shadow-sm">
+    <div
+      className={cn(
+        "sticky top-18 z-1 mb-20 lg:top-2",
+        hidden && "pointer-events-none"
+      )}
+      ref={anchorRef}
+    >
+      <motion.div
+        animate={hidden ? "hidden" : "visible"}
+        className="flex flex-col rounded-xl border bg-card p-2 shadow-sm"
+        transition={{ ease: "easeOut" }}
+        variants={{
+          visible: { y: 0, opacity: 1 },
+          hidden: { y: "-120%", opacity: 0 },
+        }}
+      >
         <div className="flex items-center justify-between">
           <Countdown timer={timer} />
 
@@ -47,7 +65,7 @@ export function TryoutPartSticky() {
         </div>
 
         <ExerciseStats />
-      </div>
+      </motion.div>
     </div>
   );
 }
@@ -89,7 +107,6 @@ export function TryoutPartStartCta() {
       className="w-full sm:w-auto"
       disabled={isActionPending}
       onClick={startPart}
-      size="lg"
       type="button"
     >
       <Spinner icon={Rocket01Icon} isLoading={isActionPending} />
@@ -111,12 +128,7 @@ export function TryoutPartBackCta() {
   }
 
   return (
-    <Button
-      className="w-full sm:w-auto"
-      onClick={goToSet}
-      size="lg"
-      type="button"
-    >
+    <Button className="w-full sm:w-auto" onClick={goToSet} type="button">
       <HugeIcons className="size-4" icon={ArrowLeft02Icon} />
       {tTryouts("back-to-set-cta")}
     </Button>
