@@ -9,7 +9,10 @@ import { computeAttemptDurationSeconds } from "@repo/backend/convex/exercises/ut
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { syncTryoutExerciseAttemptExpiry } from "@repo/backend/convex/tryouts/helpers";
+import {
+  finalizeTryoutPartAttempt,
+  syncTryoutExerciseAttemptExpiry,
+} from "@repo/backend/convex/tryouts/helpers";
 import { ConvexError, type Infer, v } from "convex/values";
 
 const completeAttemptResultValidator = v.object({
@@ -374,6 +377,28 @@ export const expireAttemptInternal = internalMutation({
       lastActivityAt: now,
       updatedAt: now,
       totalTime: finalTotalTime,
+    });
+
+    if (attempt.origin !== "tryout") {
+      return null;
+    }
+
+    const partAttempt = await ctx.db
+      .query("tryoutPartAttempts")
+      .withIndex("setAttemptId", (q) => q.eq("setAttemptId", attempt._id))
+      .unique();
+
+    if (!partAttempt) {
+      return null;
+    }
+
+    await finalizeTryoutPartAttempt({
+      ctx,
+      finishedAtMs: expiresAtMs,
+      now,
+      partAttempt,
+      status: "expired",
+      tryoutAttemptId: partAttempt.tryoutAttemptId,
     });
 
     return null;

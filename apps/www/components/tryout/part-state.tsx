@@ -43,20 +43,21 @@ function getTryoutPartStatus({
   hasStartedTryout,
   isRuntimePending,
   partCompleted,
-  partEnded,
+  partExpired,
   partLocked,
-  tryoutInProgress,
+  tryoutEnded,
 }: {
   canContinuePart: boolean;
   hasStartedTryout: boolean;
   isRuntimePending: boolean;
   partCompleted: boolean;
-  partEnded: boolean;
+  partExpired: boolean;
   partLocked: boolean;
-  tryoutInProgress: boolean;
+  tryoutEnded: boolean;
 }):
   | "completed"
   | "ended"
+  | "expired"
   | "in-progress"
   | "locked"
   | "loading"
@@ -74,8 +75,12 @@ function getTryoutPartStatus({
     return "completed";
   }
 
-  if (partEnded || !tryoutInProgress) {
+  if (tryoutEnded) {
     return "ended";
+  }
+
+  if (partExpired) {
+    return "expired";
   }
 
   if (canContinuePart) {
@@ -121,6 +126,7 @@ interface TryoutPartContextValue {
     partAttempt: TryoutPartAttempt | null;
     partCompleted: boolean;
     partEnded: boolean;
+    partExpired: boolean;
     partLocked: boolean;
     runtime: TryoutPartQuery | undefined;
     shouldShowTryoutStartButton: boolean;
@@ -172,9 +178,11 @@ export function TryoutPartProvider({
     partAttempt && partAttempt.setAttempt.status !== "in-progress"
   );
   const partCompleted = partAttempt?.setAttempt.status === "completed";
+  const partExpired = partAttempt?.setAttempt.status === "expired";
   const hasStartedTryout = Boolean(runtime);
   const tryoutInProgress =
     runtime?.tryoutAttempt.status === "in-progress" && !hasTryoutExpired;
+  const tryoutEnded = hasStartedTryout && !tryoutInProgress;
   const partLocked = Boolean(
     tryoutInProgress &&
       runtime?.nextPartKey &&
@@ -196,9 +204,9 @@ export function TryoutPartProvider({
     hasStartedTryout,
     isRuntimePending,
     partCompleted,
-    partEnded,
+    partExpired,
     partLocked,
-    tryoutInProgress,
+    tryoutEnded,
   });
 
   const goToSet = useCallback(() => {
@@ -302,6 +310,7 @@ export function TryoutPartProvider({
         partAttempt,
         partCompleted,
         partEnded,
+        partExpired,
         partLocked,
         runtime,
         shouldShowTryoutStartButton,
@@ -325,6 +334,7 @@ export function TryoutPartProvider({
       partAttempt,
       partCompleted,
       partEnded,
+      partExpired,
       partLocked,
       runtime,
       shouldShowTryoutStartButton,

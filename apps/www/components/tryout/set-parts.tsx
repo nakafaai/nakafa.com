@@ -14,8 +14,9 @@ import { cn } from "@repo/design-system/lib/utils";
 import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
-import { useState } from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { useMemo, useState } from "react";
+import { createContext, useContextSelector } from "use-context-selector";
 import { TryoutStatusBadge } from "@/components/tryout/status-badge";
 import { useUser } from "@/lib/context/use-user";
 
@@ -28,12 +29,37 @@ type TryoutSetPartItem = Pick<
   label: string;
 };
 
+type TryoutAttemptData = FunctionReturnType<
+  typeof api.tryouts.queries.attempts.getUserTryoutAttempt
+>;
+
+type TryoutSetPartAttempt =
+  NonNullable<TryoutAttemptData>["partAttempts"][number];
+
+type TryoutSetPartBadgeStatus = ComponentProps<
+  typeof TryoutStatusBadge
+>["status"];
+
 interface TryoutSetPartsProps {
   locale: Locale;
   parts: TryoutSetPartItem[];
   product: TryoutProduct;
   tryoutSlug: string;
 }
+
+interface TryoutSetPartsContextValue {
+  state: {
+    attemptData: TryoutAttemptData | undefined;
+    isTryoutActive: boolean;
+    product: TryoutProduct;
+    questionUnitLabel: string;
+    tryoutSlug: string;
+  };
+}
+
+const TryoutSetPartsContext = createContext<TryoutSetPartsContextValue | null>(
+  null
+);
 
 export function TryoutSetParts({
   locale,
@@ -66,78 +92,174 @@ export function TryoutSetParts({
     attemptData?.attempt.status === "in-progress" && !hasExpired;
 
   return (
-    <div className="grid divide-y">
-      {parts.map((part) => {
-        const material = ExercisesMaterialSchema.safeParse(part.material);
-        const partIcon = material.success
-          ? getMaterialIcon(material.data)
-          : null;
-        const partAttempt = attemptData?.partAttempts.find(
-          (attempt) => attempt.partKey === part.partKey
-        );
-        const isCompleted = partAttempt?.setAttempt.status === "completed";
-        const isInProgress =
-          isTryoutActive && partAttempt?.setAttempt.status === "in-progress";
-        const isCurrent =
-          isTryoutActive &&
-          attemptData?.nextPartKey === part.partKey &&
-          !isCompleted;
-        let statusBadge: ReactNode = null;
-
-        if (isCompleted) {
-          statusBadge = <TryoutStatusBadge status="completed" />;
-        } else if (isInProgress) {
-          statusBadge = <TryoutStatusBadge status="in-progress" />;
-        }
-
-        return (
-          <NavigationLink
-            className={cn(
-              "group flex items-center gap-3 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground",
-              isCurrent && "bg-accent/20 hover:bg-accent"
-            )}
-            href={`/try-out/${product}/${tryoutSlug}/part/${part.partKey}`}
-            key={part.partKey}
-          >
-            <div className="flex flex-1 items-start gap-3">
-              <div className="relative size-10 shrink-0 overflow-hidden rounded-md">
-                <GradientBlock
-                  className="absolute inset-0"
-                  colorScheme="vibrant"
-                  intensity="medium"
-                  keyString={part.partKey}
-                />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  {!!partIcon && (
-                    <HugeIcons
-                      className="size-4 text-background drop-shadow-md"
-                      icon={partIcon}
-                    />
-                  )}
-                </div>
-              </div>
-
-              <div className="-mt-1 flex flex-1 flex-col gap-0.5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3>{part.label}</h3>
-                  {statusBadge}
-                </div>
-                <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground">
-                  {part.questionCount} {tTryouts("question-unit")}
-                </span>
-              </div>
-            </div>
-
-            <HugeIcons
-              className={cn(
-                "size-4 shrink-0 opacity-0 transition-opacity ease-out group-hover:opacity-100",
-                isCurrent && "opacity-100"
-              )}
-              icon={ArrowRight02Icon}
-            />
-          </NavigationLink>
-        );
-      })}
-    </div>
+    <TryoutSetPartsProvider
+      attemptData={attemptData ?? undefined}
+      isTryoutActive={isTryoutActive}
+      product={product}
+      questionUnitLabel={tTryouts("question-unit")}
+      tryoutSlug={tryoutSlug}
+    >
+      <TryoutSetPartsList>
+        {parts.map((part) => (
+          <TryoutSetPart key={part.partKey} part={part} />
+        ))}
+      </TryoutSetPartsList>
+    </TryoutSetPartsProvider>
   );
+}
+
+function TryoutSetPartsProvider({
+  attemptData,
+  children,
+  isTryoutActive,
+  product,
+  questionUnitLabel,
+  tryoutSlug,
+}: {
+  attemptData: TryoutAttemptData | undefined;
+  children: ReactNode;
+  isTryoutActive: boolean;
+  product: TryoutProduct;
+  questionUnitLabel: string;
+  tryoutSlug: string;
+}) {
+  const value = useMemo(
+    () => ({
+      state: {
+        attemptData,
+        isTryoutActive,
+        product,
+        questionUnitLabel,
+        tryoutSlug,
+      },
+    }),
+    [attemptData, isTryoutActive, product, questionUnitLabel, tryoutSlug]
+  );
+
+  return (
+    <TryoutSetPartsContext.Provider value={value}>
+      {children}
+    </TryoutSetPartsContext.Provider>
+  );
+}
+
+function TryoutSetPartsList({ children }: { children: ReactNode }) {
+  return <div className="grid divide-y">{children}</div>;
+}
+
+function TryoutSetPart({ part }: { part: TryoutSetPartItem }) {
+  const {
+    attemptData,
+    isTryoutActive,
+    product,
+    questionUnitLabel,
+    tryoutSlug,
+  } = useTryoutSetParts((context) => context.state);
+  const partIcon = getTryoutPartIcon(part.material);
+  const partAttempt = getTryoutPartAttempt(attemptData, part.partKey);
+  const badgeStatus = getTryoutPartBadgeStatus({
+    isTryoutActive,
+    partAttempt,
+  });
+  const isCurrent =
+    isTryoutActive &&
+    attemptData?.nextPartKey === part.partKey &&
+    badgeStatus !== "completed";
+
+  return (
+    <NavigationLink
+      className={cn(
+        "group flex items-center gap-3 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground",
+        isCurrent && "bg-accent/20 hover:bg-accent"
+      )}
+      href={`/try-out/${product}/${tryoutSlug}/part/${part.partKey}`}
+    >
+      <div className="flex flex-1 items-start gap-3">
+        <div className="relative size-10 shrink-0 overflow-hidden rounded-md">
+          <GradientBlock
+            className="absolute inset-0"
+            colorScheme="vibrant"
+            intensity="medium"
+            keyString={part.partKey}
+          />
+          <div className="absolute inset-0 flex items-center justify-center">
+            {partIcon ? (
+              <HugeIcons
+                className="size-4 text-background drop-shadow-md"
+                icon={partIcon}
+              />
+            ) : null}
+          </div>
+        </div>
+
+        <div className="-mt-1 flex flex-1 flex-col gap-0.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3>{part.label}</h3>
+            {badgeStatus ? <TryoutStatusBadge status={badgeStatus} /> : null}
+          </div>
+          <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground">
+            {part.questionCount} {questionUnitLabel}
+          </span>
+        </div>
+      </div>
+
+      <HugeIcons
+        className={cn(
+          "size-4 shrink-0 opacity-0 transition-opacity ease-out group-hover:opacity-100",
+          isCurrent && "opacity-100"
+        )}
+        icon={ArrowRight02Icon}
+      />
+    </NavigationLink>
+  );
+}
+
+function useTryoutSetParts<T>(
+  selector: (context: TryoutSetPartsContextValue) => T
+) {
+  const context = useContextSelector(TryoutSetPartsContext, (value) => value);
+
+  if (!context) {
+    throw new Error("useTryoutSetParts must be used within TryoutSetParts");
+  }
+
+  return selector(context);
+}
+
+function getTryoutPartIcon(material: string) {
+  const parsedMaterial = ExercisesMaterialSchema.safeParse(material);
+
+  if (!parsedMaterial.success) {
+    return null;
+  }
+
+  return getMaterialIcon(parsedMaterial.data);
+}
+
+function getTryoutPartAttempt(
+  attemptData: TryoutAttemptData | undefined,
+  partKey: string
+) {
+  return attemptData?.partAttempts.find(
+    (attempt) => attempt.partKey === partKey
+  );
+}
+
+function getTryoutPartBadgeStatus({
+  isTryoutActive,
+  partAttempt,
+}: {
+  isTryoutActive: boolean;
+  partAttempt: TryoutSetPartAttempt | undefined;
+}): TryoutSetPartBadgeStatus | null {
+  switch (partAttempt?.setAttempt.status) {
+    case "completed":
+      return "completed";
+    case "expired":
+      return "expired";
+    case "in-progress":
+      return isTryoutActive ? "in-progress" : null;
+    default:
+      return null;
+  }
 }

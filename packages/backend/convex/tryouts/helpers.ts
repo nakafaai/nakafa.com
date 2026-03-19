@@ -193,10 +193,12 @@ export async function finalizeTryoutPartAttempt({
 
     const setExpiresAtMs = setAttempt.startedAt + setAttempt.timeLimit * 1000;
     const completedAt = Math.min(finishedAtMs, setExpiresAtMs);
-    const finalStatus =
-      status === "expired" || finishedAtMs >= setExpiresAtMs
-        ? "expired"
-        : "completed";
+    let finalStatus: FinalizedExerciseAttemptStatus = "completed";
+
+    if (status === "expired" || finishedAtMs >= setExpiresAtMs) {
+      finalStatus = "expired";
+    }
+
     const totalTime = computeAttemptDurationSeconds({
       startedAtMs: setAttempt.startedAt,
       completedAtMs: completedAt,

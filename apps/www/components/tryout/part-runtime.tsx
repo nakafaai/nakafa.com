@@ -5,6 +5,7 @@ import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import type { ComponentProps, ReactNode } from "react";
 import {
   TryoutPartBackCta,
+  TryoutPartCompleteExpiredCta,
   TryoutPartDialog,
   TryoutPartStartCta,
   TryoutPartSticky,
@@ -140,6 +141,7 @@ function TryoutPartSummaryCard() {
         <TryoutPartCtas>
           <TryoutPartTryoutCta />
           <TryoutPartStartCta />
+          <TryoutPartCompleteExpiredCta />
           <TryoutPartBackCta />
         </TryoutPartCtas>
       </TryoutPartBody>

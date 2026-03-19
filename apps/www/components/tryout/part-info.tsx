@@ -17,19 +17,18 @@ import { TryoutStatusBadge } from "@/components/tryout/status-badge";
 export function TryoutPartStatus() {
   const status = useTryoutPart((state) => state.state.status);
 
-  if (status === "loading") {
-    return <Skeleton className="h-7 w-20 rounded-md" />;
+  switch (status) {
+    case "loading":
+      return <Skeleton className="h-7 w-20 rounded-md" />;
+    case "completed":
+      return <TryoutStatusBadge status="completed" />;
+    case "expired":
+      return <TryoutStatusBadge status="expired" />;
+    case "in-progress":
+      return <TryoutStatusBadge status="in-progress" />;
+    default:
+      return null;
   }
-
-  if (status === "completed") {
-    return <TryoutStatusBadge status="completed" />;
-  }
-
-  if (status === "in-progress") {
-    return <TryoutStatusBadge status="in-progress" />;
-  }
-
-  return null;
 }
 
 export function TryoutPartMetrics() {
@@ -75,6 +74,8 @@ export function useTryoutPartHeadDescription() {
       return tTryouts("part-head-needs-tryout");
     case "ended":
       return tTryouts("part-head-ended");
+    case "expired":
+      return tTryouts("part-head-expired");
     case "locked":
       return tTryouts("part-head-locked");
     case "completed":

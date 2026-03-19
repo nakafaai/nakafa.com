@@ -20,8 +20,8 @@ import { useStickyVisibility } from "@/lib/hooks/use-sticky-visibility";
 
 export function TryoutPartSticky() {
   const tTryouts = useTranslations("Tryouts");
-  const showSticky = useTryoutPart((state) =>
-    Boolean(state.state.partAttempt && !state.state.partCompleted)
+  const showSticky = useTryoutPart(
+    (state) => state.state.status === "in-progress"
   );
   const timer = useTryoutPart((state) => state.state.timer);
   const isActionPending = useTryoutPart((state) => state.meta.isActionPending);
@@ -111,6 +111,29 @@ export function TryoutPartStartCta() {
     >
       <Spinner icon={Rocket01Icon} isLoading={isActionPending} />
       {tTryouts("start-part-cta")}
+    </Button>
+  );
+}
+
+export function TryoutPartCompleteExpiredCta() {
+  const tTryouts = useTranslations("Tryouts");
+  const status = useTryoutPart((state) => state.state.status);
+  const isActionPending = useTryoutPart((state) => state.meta.isActionPending);
+  const completePart = useTryoutPart((state) => state.actions.completePart);
+
+  if (status !== "expired") {
+    return null;
+  }
+
+  return (
+    <Button
+      className="w-full sm:w-auto"
+      disabled={isActionPending}
+      onClick={completePart}
+      type="button"
+    >
+      <Spinner icon={StopIcon} isLoading={isActionPending} />
+      {tTryouts("complete-part-cta")}
     </Button>
   );
 }
