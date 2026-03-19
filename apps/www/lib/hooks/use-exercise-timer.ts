@@ -15,6 +15,7 @@ export interface UseExerciseTimerReturn {
     seconds: number;
   };
   isActive: boolean;
+  isExpired: boolean;
 }
 
 const UPDATE_INTERVAL_MS = 1000;
@@ -74,7 +75,7 @@ export function useExerciseTimer({
   onExpire,
 }: UseExerciseTimerProps): UseExerciseTimerReturn {
   const [nowMs, setNowMs] = useState(Date.now);
-  const [hasExpired, setHasExpired] = useState(false);
+  const [hasHandledExpiry, setHasHandledExpiry] = useState(false);
 
   const isTimed = attempt?.timeLimit !== undefined && attempt.timeLimit > 0;
 
@@ -86,6 +87,7 @@ export function useExerciseTimer({
       : 0;
 
   const isActive = isInProgress && remainingSeconds > 0;
+  const isExpired = isInProgress && remainingSeconds === 0;
 
   const interval = useInterval(() => {
     if (!(isActive && attempt)) {
@@ -97,32 +99,28 @@ export function useExerciseTimer({
 
     const remaining = calculateRemainingTime(attempt, now, expiresAtMs);
 
-    if (remaining === 0 && !hasExpired) {
-      setHasExpired(true);
+    if (remaining === 0 && !hasHandledExpiry) {
+      setHasHandledExpiry(true);
       onExpire?.();
     }
   }, UPDATE_INTERVAL_MS);
 
   useEffect(() => {
-    if (!hasExpired || remainingSeconds === 0) {
+    if (!hasHandledExpiry || isExpired) {
       return;
     }
 
-    setHasExpired(false);
-  }, [hasExpired, remainingSeconds]);
+    setHasHandledExpiry(false);
+  }, [hasHandledExpiry, isExpired]);
 
   useEffect(() => {
-    if (!(attempt && isInProgress)) {
+    if (!isExpired || hasHandledExpiry) {
       return;
     }
 
-    if (remainingSeconds > 0 || hasExpired) {
-      return;
-    }
-
-    setHasExpired(true);
+    setHasHandledExpiry(true);
     onExpire?.();
-  }, [attempt, hasExpired, isInProgress, onExpire, remainingSeconds]);
+  }, [hasHandledExpiry, isExpired, onExpire]);
 
   useEffect(() => {
     if (!isActive) {
@@ -144,6 +142,7 @@ export function useExerciseTimer({
 
   return {
     isActive,
+    isExpired,
     formatted,
   };
 }

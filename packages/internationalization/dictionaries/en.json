@@ -254,8 +254,10 @@
     "time-limit-placeholder": "Select time limit",
     "time": "Time",
     "answered": "Answered",
+    "attempt-expiry-processing": "Time is up. Your saved answers are being processed.",
     "attempt-not-in-progress": "Please start a new session to continue practicing.",
     "attempt-not-found": "Please start the exercise first.",
+    "submit-answer-error": "We couldn't save your answer. Please try again.",
     "practice-exercises": "Practice exercises to master the material"
   },
   "Tryouts": {
@@ -280,6 +282,7 @@
     "part-head-ready": "Whenever you're ready, you can start this section.",
     "part-head-locked": "Finish the previous section first to unlock this one.",
     "part-head-in-progress": "You're currently working on this section.",
+    "part-head-processing-expiry": "Time is up. Your saved answers are being processed.",
     "part-head-completed": "This section is done. You can head back to the set for the next one.",
     "part-head-completed-time-expired": "Time ran out, but your answers for this section were submitted automatically.",
     "part-head-ended": "This tryout is already finished, so this section is closed.",
@@ -296,6 +299,7 @@
     "start-part-success": "Section started. The timer is now running.",
     "start-part-error": "We could not start this section yet. Please try again.",
     "complete-part-cta": "Finish section",
+    "part-processing-expiry-cta": "Processing...",
     "complete-part-title": "Finish this section?",
     "complete-part-description": "If you finish now, the answers in this section will be locked right away.",
     "complete-part-success": "Section finished. You can continue to the next one.",

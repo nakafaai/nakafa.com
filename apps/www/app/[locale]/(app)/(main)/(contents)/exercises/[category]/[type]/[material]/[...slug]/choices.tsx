@@ -11,6 +11,7 @@ import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import { Label } from "@repo/design-system/components/ui/label";
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
+import { ConvexError } from "convex/values";
 import { useTranslations } from "next-intl";
 import { type ComponentProps, useTransition } from "react";
 import { toast } from "sonner";
@@ -31,6 +32,7 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
   const attempt = useAttempt((state) => state.attempt);
   const answers = useAttempt((state) => state.answers);
   const answerSheet = useAttempt((state) => state.answerSheet);
+  const isInputLocked = useAttempt((state) => state.isInputLocked);
 
   const submitAttempt = useMutation(api.exercises.mutations.submitAnswer);
   const timeSpent = useExercise(
@@ -47,6 +49,13 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
   function handleSubmit({ index }: { index: number }) {
     if (!attempt) {
       toast.info(t("attempt-not-found"), { position: "bottom-center" });
+      return;
+    }
+
+    if (isInputLocked) {
+      toast.info(t("attempt-expiry-processing"), {
+        position: "bottom-center",
+      });
       return;
     }
 
@@ -74,8 +83,42 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
           selectedOptionId: option.optionKey,
           timeSpent,
         });
-      } catch {
-        // Ignore error
+      } catch (error) {
+        if (!(error instanceof ConvexError)) {
+          toast.error(t("submit-answer-error"), {
+            position: "bottom-center",
+          });
+          return;
+        }
+
+        const errorData = error.data;
+
+        if (!(typeof errorData === "object" && errorData !== null)) {
+          toast.error(t("submit-answer-error"), {
+            position: "bottom-center",
+          });
+          return;
+        }
+
+        const errorCode = "code" in errorData ? errorData.code : undefined;
+
+        if (errorCode === "TIME_EXPIRED" || errorCode === "TRYOUT_EXPIRED") {
+          toast.info(t("attempt-expiry-processing"), {
+            position: "bottom-center",
+          });
+          return;
+        }
+
+        if (errorCode === "INVALID_ATTEMPT_STATUS") {
+          toast.info(t("attempt-not-in-progress"), {
+            position: "bottom-center",
+          });
+          return;
+        }
+
+        toast.error(t("submit-answer-error"), {
+          position: "bottom-center",
+        });
       }
     });
   }
@@ -116,7 +159,7 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
             <Checkbox
               checked={checked}
               className="cursor-pointer"
-              disabled={isPending}
+              disabled={isInputLocked || isPending}
               onCheckedChange={(checked) => {
                 if (checked) {
                   handleSubmit({ index });

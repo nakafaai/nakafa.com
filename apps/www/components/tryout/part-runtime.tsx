@@ -83,6 +83,7 @@ function TryoutPartRuntimeBody({
 }: TryoutPartRuntimeProps) {
   const attempt = useTryoutPart((state) => state.state.attempt);
   const answers = useTryoutPart((state) => state.state.answers);
+  const isInputLocked = useTryoutPart((state) => state.state.isAwaitingExpiry);
   const status = useTryoutPart((state) => state.state.status);
   const shouldRequestAnswerSheet = status === "in-progress";
   const { data: answerSheet, isPending: isAnswerSheetPending } =
@@ -100,6 +101,7 @@ function TryoutPartRuntimeBody({
         answerSheet: answerSheet ?? [],
         answers,
         attempt,
+        isInputLocked,
         slug: part.setSlug,
       }}
     >

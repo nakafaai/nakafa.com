@@ -65,6 +65,7 @@ interface TryoutPartContextValue {
     answers: TryoutPartPageState["answers"];
     attempt: TryoutPartPageState["attempt"];
     canStartPart: boolean;
+    isAwaitingExpiry: boolean;
     isRuntimePending: boolean;
     part: TryoutPartValue;
     partEndReason: TryoutPartPageState["partEndReason"];
@@ -127,6 +128,7 @@ export function TryoutPartProvider({
     attempt,
     expiresAtMs: runtime?.expiresAtMs,
   });
+  const isAwaitingExpiry = status === "in-progress" && timer.isExpired;
 
   const handleStartPart = useCallback(() => {
     if (!runtime) {
@@ -189,6 +191,7 @@ export function TryoutPartProvider({
         answers,
         attempt,
         canStartPart,
+        isAwaitingExpiry,
         isRuntimePending,
         part,
         partEndReason,
@@ -205,6 +208,7 @@ export function TryoutPartProvider({
       goToSet,
       handleCompletePart,
       handleStartPart,
+      isAwaitingExpiry,
       isActionPending,
       isCompleteDialogOpen,
       isRuntimePending,

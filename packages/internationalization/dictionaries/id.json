@@ -254,8 +254,10 @@
     "time-limit-placeholder": "Pilih batas waktu",
     "time": "Waktu",
     "answered": "Dijawab",
+    "attempt-expiry-processing": "Waktu habis. Jawaban yang sudah tersimpan sedang diproses.",
     "attempt-not-in-progress": "Mulai sesi baru dulu ya untuk lanjut latihan.",
     "attempt-not-found": "Mulai latihan terlebih dahulu ya.",
+    "submit-answer-error": "Ada masalah saat menyimpan jawaban. Coba lagi ya.",
     "practice-exercises": "Latihan soal untuk menguasai materi"
   },
   "Tryouts": {
@@ -280,6 +282,7 @@
     "part-head-ready": "Kalau udah siap, kamu bisa mulai bagian ini kapan aja.",
     "part-head-locked": "Selesaikan bagian sebelumnya dulu, baru bagian ini bisa dibuka.",
     "part-head-in-progress": "Kamu sedang mengerjakan bagian ini.",
+    "part-head-processing-expiry": "Waktu habis. Jawaban yang sudah tersimpan sedang diproses.",
     "part-head-completed": "Bagian ini udah kelar. Kalau mau, kamu bisa balik ke set dan lihat bagian lain.",
     "part-head-completed-time-expired": "Waktu habis, tapi jawabanmu untuk bagian ini sudah dikumpulkan otomatis.",
     "part-head-ended": "Try out ini udah selesai, jadi bagian ini nggak bisa dikerjakan lagi.",
@@ -296,6 +299,7 @@
     "start-part-success": "Bagian dimulai. Waktu sudah berjalan.",
     "start-part-error": "Bagian belum bisa dimulai. Coba lagi ya.",
     "complete-part-cta": "Selesaikan bagian",
+    "part-processing-expiry-cta": "Memproses...",
     "complete-part-title": "Selesaikan bagian ini?",
     "complete-part-description": "Kalau diselesaikan sekarang, jawaban bagian ini akan langsung dikunci.",
     "complete-part-success": "Bagian selesai. Kamu bisa lanjut ke bagian berikutnya.",

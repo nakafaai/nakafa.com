@@ -23,6 +23,9 @@ export function TryoutPartSticky() {
   const showSticky = useTryoutPart(
     (state) => state.state.status === "in-progress"
   );
+  const isAwaitingExpiry = useTryoutPart(
+    (state) => state.state.isAwaitingExpiry
+  );
   const timer = useTryoutPart((state) => state.state.timer);
   const isActionPending = useTryoutPart((state) => state.meta.isActionPending);
   const { anchorRef, hidden } = useStickyVisibility();
@@ -55,16 +58,28 @@ export function TryoutPartSticky() {
           <Countdown timer={timer} />
 
           <Button
+            disabled={isAwaitingExpiry || isActionPending}
             onClick={() => setCompleteDialogOpen(true)}
             type="button"
             variant="destructive"
           >
-            <Spinner icon={StopIcon} isLoading={isActionPending} />
-            {tTryouts("complete-part-cta")}
+            <Spinner
+              icon={StopIcon}
+              isLoading={isAwaitingExpiry || isActionPending}
+            />
+            {isAwaitingExpiry
+              ? tTryouts("part-processing-expiry-cta")
+              : tTryouts("complete-part-cta")}
           </Button>
         </div>
 
         <ExerciseStats />
+
+        {isAwaitingExpiry ? (
+          <p className="px-2 pt-2 text-muted-foreground text-sm">
+            {tTryouts("part-head-processing-expiry")}
+          </p>
+        ) : null}
       </motion.div>
     </div>
   );
@@ -146,6 +161,9 @@ export function TryoutPartBackCta() {
 
 export function TryoutPartDialog() {
   const tTryouts = useTranslations("Tryouts");
+  const isAwaitingExpiry = useTryoutPart(
+    (state) => state.state.isAwaitingExpiry
+  );
   const isActionPending = useTryoutPart((state) => state.meta.isActionPending);
   const isCompleteDialogOpen = useTryoutPart(
     (state) => state.meta.isCompleteDialogOpen
@@ -157,7 +175,11 @@ export function TryoutPartDialog() {
 
   return (
     <ResponsiveDialog
-      description={tTryouts("complete-part-description")}
+      description={
+        isAwaitingExpiry
+          ? tTryouts("part-head-processing-expiry")
+          : tTryouts("complete-part-description")
+      }
       footer={
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button
@@ -168,13 +190,18 @@ export function TryoutPartDialog() {
             {tTryouts("cancel-cta")}
           </Button>
           <Button
-            disabled={isActionPending}
+            disabled={isAwaitingExpiry || isActionPending}
             onClick={completePart}
             type="button"
             variant="destructive"
           >
-            <Spinner icon={StopIcon} isLoading={isActionPending} />
-            {tTryouts("complete-part-cta")}
+            <Spinner
+              icon={StopIcon}
+              isLoading={isAwaitingExpiry || isActionPending}
+            />
+            {isAwaitingExpiry
+              ? tTryouts("part-processing-expiry-cta")
+              : tTryouts("complete-part-cta")}
           </Button>
         </div>
       }

@@ -63,8 +63,15 @@ export function TryoutPartMetrics() {
 
 export function useTryoutPartHeadDescription() {
   const tTryouts = useTranslations("Tryouts");
+  const isAwaitingExpiry = useTryoutPart(
+    (state) => state.state.isAwaitingExpiry
+  );
   const partEndReason = useTryoutPart((state) => state.state.partEndReason);
   const status = useTryoutPart((state) => state.state.status);
+
+  if (status === "in-progress" && isAwaitingExpiry) {
+    return tTryouts("part-head-processing-expiry");
+  }
 
   switch (status) {
     case "loading":

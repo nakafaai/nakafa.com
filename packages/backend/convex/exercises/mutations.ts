@@ -15,6 +15,7 @@ import {
   finalizeTryoutPartAttempt,
   syncTryoutExerciseAttemptExpiry,
 } from "@repo/backend/convex/tryouts/helpers";
+import { finalizeTryoutAttempt } from "@repo/backend/convex/tryouts/mutations/helpers";
 import { ConvexError, type Infer, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
@@ -404,6 +405,22 @@ export const expireAttemptInternal = internalMutation({
       partAttempt,
       status: "expired",
       tryoutAttemptId: partAttempt.tryoutAttemptId,
+    });
+
+    const tryoutAttempt = await ctx.db.get(
+      "tryoutAttempts",
+      partAttempt.tryoutAttemptId
+    );
+
+    if (!tryoutAttempt) {
+      return null;
+    }
+
+    await finalizeTryoutAttempt({
+      ctx,
+      now,
+      tryoutAttempt,
+      userId: attempt.userId,
     });
 
     return null;
