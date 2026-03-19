@@ -57,11 +57,38 @@ export function TryoutPartRuntime({
         }
       : "skip"
   );
-  const attempt = partState?.partAttempt?.setAttempt ?? null;
-  const answers = partState?.partAttempt?.answers ?? [];
-  const shouldRequestAnswerSheet = Boolean(
-    !isUserPending && user && attempt?.status === "in-progress"
+  const isRuntimePending = isUserPending || (user ? isPartStatePending : false);
+
+  return (
+    <ExerciseContextProvider slug={part.setSlug}>
+      <TryoutPartProvider
+        isRuntimePending={isRuntimePending}
+        part={part}
+        runtime={partState}
+        tryout={tryout}
+      >
+        <TryoutPartRuntimeBody icon={icon} part={part} tryout={tryout}>
+          {children}
+        </TryoutPartRuntimeBody>
+      </TryoutPartProvider>
+    </ExerciseContextProvider>
   );
+}
+
+function TryoutPartRuntimeBody({
+  children,
+  icon,
+  part,
+  tryout,
+}: TryoutPartRuntimeProps) {
+  const attempt = useTryoutPart(
+    (state) => state.state.partAttempt?.setAttempt ?? null
+  );
+  const answers = useTryoutPart(
+    (state) => state.state.runtime?.partAttempt?.answers ?? []
+  );
+  const status = useTryoutPart((state) => state.state.status);
+  const shouldRequestAnswerSheet = status === "in-progress";
   const { data: answerSheet, isPending: isAnswerSheetPending } =
     useQueryWithStatus(
       api.exercises.queries.getQuestionAnswerSheetBySlug,
@@ -69,42 +96,28 @@ export function TryoutPartRuntime({
         ? { locale: tryout.locale, slug: part.setSlug }
         : "skip"
     );
-  const isRuntimePending = isUserPending || (user ? isPartStatePending : false);
-  const isQuestionDataPending =
-    shouldRequestAnswerSheet && isAnswerSheetPending;
-  const shouldShowQuestions =
-    !(isRuntimePending || isQuestionDataPending) &&
-    attempt?.status === "in-progress";
+  const shouldShowQuestions = status === "in-progress" && !isAnswerSheetPending;
 
   return (
-    <ExerciseContextProvider slug={part.setSlug}>
-      <AttemptProvider
-        value={{
-          answerSheet: answerSheet ?? [],
-          answers,
-          attempt,
-          slug: part.setSlug,
-        }}
-      >
-        <TryoutPartProvider
-          isRuntimePending={isRuntimePending}
-          part={part}
-          runtime={partState}
-          tryout={tryout}
-        >
-          <div className="space-y-6">
-            <TryoutPartHead icon={icon} />
+    <AttemptProvider
+      value={{
+        answerSheet: answerSheet ?? [],
+        answers,
+        attempt,
+        slug: part.setSlug,
+      }}
+    >
+      <div className="space-y-6">
+        <TryoutPartHead icon={icon} />
 
-            <div className="space-y-12">
-              <TryoutPartSticky />
-              <TryoutPartSummaryCard />
-              <TryoutPartDialog />
-              {shouldShowQuestions ? children : null}
-            </div>
-          </div>
-        </TryoutPartProvider>
-      </AttemptProvider>
-    </ExerciseContextProvider>
+        <div className="space-y-12">
+          <TryoutPartSticky />
+          <TryoutPartSummaryCard />
+          <TryoutPartDialog />
+          {shouldShowQuestions ? children : null}
+        </div>
+      </div>
+    </AttemptProvider>
   );
 }
 

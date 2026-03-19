@@ -10,10 +10,7 @@ import {
   getFirstIncompleteTryoutPartIndex,
   syncTryoutAttemptExpiry,
 } from "@repo/backend/convex/tryouts/helpers";
-import {
-  completeTryoutResultValidator,
-  finalizeTryoutAttempt,
-} from "@repo/backend/convex/tryouts/mutations/helpers";
+import { finalizeTryoutAttempt } from "@repo/backend/convex/tryouts/mutations/helpers";
 import {
   computeTryoutExpiresAtMs,
   computeTryoutPartTimeLimitSeconds,
@@ -536,45 +533,6 @@ export const completePart = mutation({
       partAttempt,
       status: "completed",
       tryoutAttemptId: args.tryoutAttemptId,
-    });
-  },
-});
-
-/** Finalizes the full tryout and publishes leaderboard state when official. */
-export const completeTryout = mutation({
-  args: {
-    tryoutAttemptId: vv.id("tryoutAttempts"),
-  },
-  returns: completeTryoutResultValidator,
-  handler: async (ctx, args) => {
-    const { appUser } = await requireAuthWithSession(ctx);
-    const userId = appUser._id;
-    const now = Date.now();
-
-    const tryoutAttempt = await ctx.db.get(
-      "tryoutAttempts",
-      args.tryoutAttemptId
-    );
-
-    if (!tryoutAttempt) {
-      throw new ConvexError({
-        code: "ATTEMPT_NOT_FOUND",
-        message: "Tryout attempt not found.",
-      });
-    }
-
-    if (tryoutAttempt.userId !== userId) {
-      throw new ConvexError({
-        code: "FORBIDDEN",
-        message: "You do not have access to this tryout attempt.",
-      });
-    }
-
-    return finalizeTryoutAttempt({
-      ctx,
-      now,
-      tryoutAttempt,
-      userId,
     });
   },
 });

@@ -75,6 +75,8 @@ export function useTryoutPartHeadDescription() {
       return tTryouts("part-head-needs-tryout");
     case "ended":
       return tTryouts("part-head-ended");
+    case "locked":
+      return tTryouts("part-head-locked");
     case "completed":
       return tTryouts("part-head-completed");
     case "in-progress":

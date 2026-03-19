@@ -1,14 +1,10 @@
-import type {
-  DataModel,
-  Doc,
-  Id,
-} from "@repo/backend/convex/_generated/dataModel";
+import type { DataModel, Id } from "@repo/backend/convex/_generated/dataModel";
 import { getPlanCreditConfig } from "@repo/backend/convex/credits/constants";
 import type { UserPlan } from "@repo/backend/convex/users/schema";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { products } from "@repo/backend/convex/utils/polar";
 import type { GenericMutationCtx } from "convex/server";
-import { getManyFrom, getOneFrom } from "convex-helpers/server/relationships";
+import { getOneFrom } from "convex-helpers/server/relationships";
 import type { Change } from "convex-helpers/server/triggers";
 
 /**
@@ -20,17 +16,6 @@ const productToPlanMap: Record<string, UserPlan> = {
 
 function getPlanFromProductId(productId: string): UserPlan {
   return productToPlanMap[productId] ?? "free";
-}
-
-/** Derive the effective plan from the customer's current subscriptions. */
-function getEffectivePlan(subscriptions: Doc<"subscriptions">[]): UserPlan {
-  for (const subscription of subscriptions) {
-    if (subscription.status === "active") {
-      return getPlanFromProductId(subscription.productId);
-    }
-  }
-
-  return "free";
 }
 
 /**
@@ -118,7 +103,7 @@ async function applyPlanChange(
 
 async function syncCustomerPlan(
   ctx: GenericMutationCtx<DataModel>,
-  subscription: Doc<"subscriptions">
+  subscription: DataModel["subscriptions"]["document"]
 ) {
   const customer = await getOneFrom(
     ctx.db,
@@ -145,14 +130,15 @@ async function syncCustomerPlan(
     return;
   }
 
-  const customerSubscriptions = await getManyFrom(
-    ctx.db,
-    "subscriptions",
-    "customerId_status",
-    subscription.customerId,
-    "customerId"
-  );
-  const newPlan = getEffectivePlan(customerSubscriptions);
+  const activeSubscription = await ctx.db
+    .query("subscriptions")
+    .withIndex("customerId_status", (q) =>
+      q.eq("customerId", subscription.customerId).eq("status", "active")
+    )
+    .first();
+  const newPlan = activeSubscription
+    ? getPlanFromProductId(activeSubscription.productId)
+    : "free";
 
   if (newPlan === user.plan) {
     return;

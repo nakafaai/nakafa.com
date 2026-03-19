@@ -278,6 +278,7 @@
     "part-head-loading": "Getting this section ready...",
     "part-head-needs-tryout": "Start the tryout first, then this section will unlock.",
     "part-head-ready": "Whenever you're ready, you can start this section.",
+    "part-head-locked": "Finish the previous section first to unlock this one.",
     "part-head-in-progress": "You're currently working on this section.",
     "part-head-completed": "This section is done. You can head back to the set for the next one.",
     "part-head-ended": "This tryout is already finished, so this section is closed.",

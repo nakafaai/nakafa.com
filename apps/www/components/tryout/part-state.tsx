@@ -44,6 +44,7 @@ function getTryoutPartStatus({
   isRuntimePending,
   partCompleted,
   partEnded,
+  partLocked,
   tryoutInProgress,
 }: {
   canContinuePart: boolean;
@@ -51,11 +52,13 @@ function getTryoutPartStatus({
   isRuntimePending: boolean;
   partCompleted: boolean;
   partEnded: boolean;
+  partLocked: boolean;
   tryoutInProgress: boolean;
 }):
   | "completed"
   | "ended"
   | "in-progress"
+  | "locked"
   | "loading"
   | "needs-tryout"
   | "ready" {
@@ -77,6 +80,10 @@ function getTryoutPartStatus({
 
   if (canContinuePart) {
     return "in-progress";
+  }
+
+  if (partLocked) {
+    return "locked";
   }
 
   return "ready";
@@ -114,6 +121,7 @@ interface TryoutPartContextValue {
     partAttempt: TryoutPartAttempt | null;
     partCompleted: boolean;
     partEnded: boolean;
+    partLocked: boolean;
     runtime: TryoutPartQuery | undefined;
     shouldShowTryoutStartButton: boolean;
     status: TryoutPartStatus;
@@ -167,6 +175,12 @@ export function TryoutPartProvider({
   const hasStartedTryout = Boolean(runtime);
   const tryoutInProgress =
     runtime?.tryoutAttempt.status === "in-progress" && !hasTryoutExpired;
+  const partLocked = Boolean(
+    tryoutInProgress &&
+      runtime?.nextPartKey &&
+      runtime.nextPartKey !== part.key &&
+      !partAttempt
+  );
   const canStartPart = Boolean(
     tryoutInProgress && runtime?.nextPartKey === part.key && !partAttempt
   );
@@ -183,6 +197,7 @@ export function TryoutPartProvider({
     isRuntimePending,
     partCompleted,
     partEnded,
+    partLocked,
     tryoutInProgress,
   });
 
@@ -287,6 +302,7 @@ export function TryoutPartProvider({
         partAttempt,
         partCompleted,
         partEnded,
+        partLocked,
         runtime,
         shouldShowTryoutStartButton,
         status,
@@ -309,6 +325,7 @@ export function TryoutPartProvider({
       partAttempt,
       partCompleted,
       partEnded,
+      partLocked,
       runtime,
       shouldShowTryoutStartButton,
       status,

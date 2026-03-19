@@ -12,11 +12,7 @@ import {
 } from "@repo/backend/convex/tryouts/products";
 import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError, v } from "convex/values";
-import {
-  getAll,
-  getManyFrom,
-  getOneFrom,
-} from "convex-helpers/server/relationships";
+import { getAll, getManyFrom } from "convex-helpers/server/relationships";
 import { nullable } from "convex-helpers/validators";
 
 /** Returns the authenticated user's latest tryout attempt for one tryout slug. */
@@ -147,66 +143,6 @@ export const getUserTryoutAttempt = query({
       expiresAtMs,
       practiceUnlocked: firstCompletedAttempt !== null,
       isOfficialAttempt: firstCompletedAttempt?._id === attempt._id,
-    };
-  },
-});
-
-/** Resolves tryout context from a shared set-attempt id. */
-export const getTryoutContextForAttempt = query({
-  args: {
-    setAttemptId: vv.id("exerciseAttempts"),
-  },
-  returns: nullable(
-    v.object({
-      tryoutAttemptId: vv.id("tryoutAttempts"),
-      tryoutId: vv.id("tryouts"),
-      tryoutSlug: v.string(),
-      product: tryoutProductValidator,
-      partKey: tryoutPartKeyValidator,
-    })
-  ),
-  handler: async (ctx, args) => {
-    const { appUser } = await requireAuth(ctx);
-
-    const partAttempt = await getOneFrom(
-      ctx.db,
-      "tryoutPartAttempts",
-      "setAttemptId",
-      args.setAttemptId
-    );
-
-    if (!partAttempt) {
-      return null;
-    }
-
-    const tryoutAttempt = await ctx.db.get(
-      "tryoutAttempts",
-      partAttempt.tryoutAttemptId
-    );
-
-    if (!tryoutAttempt || tryoutAttempt.status !== "in-progress") {
-      return null;
-    }
-
-    if (tryoutAttempt.userId !== appUser._id) {
-      return null;
-    }
-
-    const tryout = await ctx.db.get("tryouts", tryoutAttempt.tryoutId);
-
-    if (!tryout) {
-      throw new ConvexError({
-        code: "INVALID_ATTEMPT_STATE",
-        message: "Part attempt is missing its parent tryout.",
-      });
-    }
-
-    return {
-      tryoutAttemptId: tryoutAttempt._id,
-      tryoutId: tryoutAttempt.tryoutId,
-      tryoutSlug: tryout.slug,
-      product: tryout.product,
-      partKey: partAttempt.partKey,
     };
   },
 });
