@@ -1,5 +1,6 @@
 "use client";
 
+import { useInterval } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
 import type { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
@@ -42,12 +43,14 @@ function getTryoutPartStatus({
   hasStartedTryout,
   isRuntimePending,
   partCompleted,
+  partEnded,
   tryoutInProgress,
 }: {
   canContinuePart: boolean;
   hasStartedTryout: boolean;
   isRuntimePending: boolean;
   partCompleted: boolean;
+  partEnded: boolean;
   tryoutInProgress: boolean;
 }):
   | "completed"
@@ -64,12 +67,12 @@ function getTryoutPartStatus({
     return "needs-tryout";
   }
 
-  if (!tryoutInProgress) {
-    return "ended";
-  }
-
   if (partCompleted) {
     return "completed";
+  }
+
+  if (partEnded || !tryoutInProgress) {
+    return "ended";
   }
 
   if (canContinuePart) {
@@ -110,6 +113,7 @@ interface TryoutPartContextValue {
     part: TryoutPartValue;
     partAttempt: TryoutPartAttempt | null;
     partCompleted: boolean;
+    partEnded: boolean;
     runtime: TryoutPartQuery | undefined;
     shouldShowTryoutStartButton: boolean;
     status: TryoutPartStatus;
@@ -137,22 +141,35 @@ export function TryoutPartProvider({
   const tTryouts = useTranslations("Tryouts");
   const [isCompleteDialogOpen, setCompleteDialogOpen] = useState(false);
   const [isActionPending, startTransition] = useTransition();
+  const [nowMs, setNowMs] = useState(() => Date.now());
   const router = useRouter();
   const user = useUser((state) => state.user);
   const startPart = useMutation(api.tryouts.mutations.attempts.startPart);
   const completePart = useMutation(api.tryouts.mutations.attempts.completePart);
 
+  useInterval(
+    () => {
+      setNowMs(Date.now());
+    },
+    1000,
+    { autoInvoke: true }
+  );
+
   const partAttempt = runtime?.partAttempt ?? null;
-  const partCompleted = Boolean(
-    partAttempt && runtime?.completedPartIndices.includes(partAttempt.partIndex)
+  const hasTryoutExpired = Boolean(
+    runtime?.tryoutAttempt.status === "in-progress" &&
+      runtime.expiresAtMs <= nowMs
   );
+  const partEnded = Boolean(
+    partAttempt && partAttempt.setAttempt.status !== "in-progress"
+  );
+  const partCompleted = partAttempt?.setAttempt.status === "completed";
   const hasStartedTryout = Boolean(runtime);
-  const tryoutInProgress = runtime?.tryoutAttempt.status === "in-progress";
-  const canStartPart = Boolean(
-    tryoutInProgress && !partAttempt && !partCompleted
-  );
+  const tryoutInProgress =
+    runtime?.tryoutAttempt.status === "in-progress" && !hasTryoutExpired;
+  const canStartPart = Boolean(tryoutInProgress && !partAttempt);
   const canContinuePart = Boolean(
-    partAttempt?.setAttempt.status === "in-progress"
+    partAttempt?.setAttempt.status === "in-progress" && !hasTryoutExpired
   );
   const shouldShowTryoutStartButton = !(
     isRuntimePending ||
@@ -163,6 +180,7 @@ export function TryoutPartProvider({
     hasStartedTryout,
     isRuntimePending,
     partCompleted,
+    partEnded,
     tryoutInProgress,
   });
 
@@ -266,6 +284,7 @@ export function TryoutPartProvider({
         part,
         partAttempt,
         partCompleted,
+        partEnded,
         runtime,
         shouldShowTryoutStartButton,
         status,
@@ -287,6 +306,7 @@ export function TryoutPartProvider({
       part,
       partAttempt,
       partCompleted,
+      partEnded,
       runtime,
       shouldShowTryoutStartButton,
       status,

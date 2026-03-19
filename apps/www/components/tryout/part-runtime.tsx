@@ -57,21 +57,24 @@ export function TryoutPartRuntime({
         }
       : "skip"
   );
+  const attempt = partState?.partAttempt?.setAttempt ?? null;
+  const answers = partState?.partAttempt?.answers ?? [];
+  const shouldRequestAnswerSheet = Boolean(
+    !isUserPending && user && attempt?.status === "in-progress"
+  );
   const { data: answerSheet, isPending: isAnswerSheetPending } =
     useQueryWithStatus(
       api.exercises.queries.getQuestionAnswerSheetBySlug,
-      !isUserPending && user
+      shouldRequestAnswerSheet
         ? { locale: tryout.locale, slug: part.setSlug }
         : "skip"
     );
-
-  const attempt = partState?.partAttempt?.setAttempt ?? null;
-  const answers = partState?.partAttempt?.answers ?? [];
-  const isRuntimePending =
-    isUserPending ||
-    (user ? isPartStatePending || isAnswerSheetPending : false);
+  const isRuntimePending = isUserPending || (user ? isPartStatePending : false);
+  const isQuestionDataPending =
+    shouldRequestAnswerSheet && isAnswerSheetPending;
   const shouldShowQuestions =
-    !isRuntimePending && attempt?.status === "in-progress";
+    !(isRuntimePending || isQuestionDataPending) &&
+    attempt?.status === "in-progress";
 
   return (
     <ExerciseContextProvider slug={part.setSlug}>

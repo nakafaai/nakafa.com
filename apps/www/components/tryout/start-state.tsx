@@ -65,12 +65,16 @@ function useTryoutStartValue({
     }),
     [locale, product, tryoutSlug]
   );
+  const hasExpired = Boolean(
+    attemptData?.attempt.status === "in-progress" &&
+      attemptData.expiresAtMs <= nowMs
+  );
   const nextPartKey =
-    attemptData?.attempt.status === "in-progress"
+    attemptData?.attempt.status === "in-progress" && !hasExpired
       ? attemptData.nextPartKey
       : undefined;
   const remainingTime = useMemo(() => {
-    if (attemptData?.attempt.status !== "in-progress") {
+    if (attemptData?.attempt.status !== "in-progress" || hasExpired) {
       return null;
     }
 
@@ -84,7 +88,7 @@ function useTryoutStartValue({
       minutes: Math.floor((totalSeconds % 3600) / 60),
       seconds: totalSeconds % 60,
     };
-  }, [attemptData, nowMs]);
+  }, [attemptData, hasExpired, nowMs]);
   const isReady = !(
     isUserPending ||
     (user && (isAttemptPending || isSubscriptionPending))

@@ -120,10 +120,10 @@ export function TryoutPartBackCta() {
   const isRuntimePending = useTryoutPart(
     (state) => state.state.isRuntimePending
   );
-  const partCompleted = useTryoutPart((state) => state.state.partCompleted);
+  const partEnded = useTryoutPart((state) => state.state.partEnded);
   const goToSet = useTryoutPart((state) => state.actions.goToSet);
 
-  if (isRuntimePending || !partCompleted) {
+  if (isRuntimePending || !partEnded) {
     return null;
   }
 

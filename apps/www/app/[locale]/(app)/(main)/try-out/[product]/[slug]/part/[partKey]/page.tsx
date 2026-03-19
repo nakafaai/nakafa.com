@@ -85,30 +85,10 @@ export default async function Page({ params }: Props) {
 
   const tryoutLabel = staticTryout.label;
 
-  const getPartLabel = (currentPartKey: string) => {
-    switch (currentPartKey) {
-      case "mathematics":
-        return tExercises("mathematics");
-      case "quantitative-knowledge":
-        return tExercises("quantitative-knowledge");
-      case "mathematical-reasoning":
-        return tExercises("mathematical-reasoning");
-      case "general-reasoning":
-        return tExercises("general-reasoning");
-      case "indonesian-language":
-        return tExercises("indonesian-language");
-      case "english-language":
-        return tExercises("english-language");
-      case "general-knowledge":
-        return tExercises("general-knowledge");
-      case "reading-and-writing-skills":
-        return tExercises("reading-and-writing-skills");
-      default:
-        return currentPartKey;
-    }
-  };
-
-  const partLabel = getPartLabel(part.partKey);
+  const materialLabel = ExercisesMaterialSchema.safeParse(part.partKey);
+  const partLabel = materialLabel.success
+    ? tExercises(materialLabel.data)
+    : part.partKey;
   const timeLimitSeconds = computeTryoutPartTimeLimitSeconds({
     product,
     questionCount: part.questionCount,

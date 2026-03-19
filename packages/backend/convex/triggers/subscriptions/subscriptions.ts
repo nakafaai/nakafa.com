@@ -1,9 +1,14 @@
-import type { DataModel, Id } from "@repo/backend/convex/_generated/dataModel";
+import type {
+  DataModel,
+  Doc,
+  Id,
+} from "@repo/backend/convex/_generated/dataModel";
 import { getPlanCreditConfig } from "@repo/backend/convex/credits/constants";
 import type { UserPlan } from "@repo/backend/convex/users/schema";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { products } from "@repo/backend/convex/utils/polar";
 import type { GenericMutationCtx } from "convex/server";
+import { getManyFrom, getOneFrom } from "convex-helpers/server/relationships";
 import type { Change } from "convex-helpers/server/triggers";
 
 /**
@@ -17,17 +22,12 @@ function getPlanFromProductId(productId: string): UserPlan {
   return productToPlanMap[productId] ?? "free";
 }
 
-/**
- * Determine effective plan based on subscription status.
- * Handles Polar's cancel-at-period-end behavior.
- */
-function getEffectivePlan(
-  subscription: DataModel["subscriptions"]["document"]
-): UserPlan {
-  // Only grant paid plan if currently active
-  // cancelAtPeriodEnd=true means still active until period ends
-  if (subscription.status === "active") {
-    return getPlanFromProductId(subscription.productId);
+/** Derive the effective plan from the customer's current subscriptions. */
+function getEffectivePlan(subscriptions: Doc<"subscriptions">[]): UserPlan {
+  for (const subscription of subscriptions) {
+    if (subscription.status === "active") {
+      return getPlanFromProductId(subscription.productId);
+    }
   }
 
   return "free";
@@ -116,6 +116,57 @@ async function applyPlanChange(
   }
 }
 
+async function syncCustomerPlan(
+  ctx: GenericMutationCtx<DataModel>,
+  subscription: Doc<"subscriptions">
+) {
+  const customer = await getOneFrom(
+    ctx.db,
+    "customers",
+    "id",
+    subscription.customerId
+  );
+
+  if (!customer) {
+    logger.warn("Subscription trigger: Customer not found", {
+      subscriptionId: subscription.id,
+      customerId: subscription.customerId,
+    });
+    return;
+  }
+
+  const user = await ctx.db.get("users", customer.userId);
+
+  if (!user) {
+    logger.warn("Subscription trigger: User not found", {
+      userId: customer.userId,
+      subscriptionId: subscription.id,
+    });
+    return;
+  }
+
+  const customerSubscriptions = await getManyFrom(
+    ctx.db,
+    "subscriptions",
+    "customerId_status",
+    subscription.customerId,
+    "customerId"
+  );
+  const newPlan = getEffectivePlan(customerSubscriptions);
+
+  if (newPlan === user.plan) {
+    return;
+  }
+
+  await applyPlanChange(
+    ctx,
+    customer.userId,
+    user.plan,
+    newPlan,
+    subscription.id
+  );
+}
+
 /**
  * Updates user.plan and credits when subscription changes.
  * Handles upgrades (immediate credit grant) and downgrades.
@@ -131,134 +182,31 @@ export async function subscriptionsHandler(
       if (!subscription) {
         break;
       }
-
-      const customer = await ctx.db
-        .query("customers")
-        .withIndex("id", (q) => q.eq("id", subscription.customerId))
-        .unique();
-
-      if (!customer) {
-        logger.warn("Subscription trigger: Customer not found", {
-          subscriptionId: subscription.id,
-          customerId: subscription.customerId,
-        });
-        break;
-      }
-
-      const newPlan = getEffectivePlan(subscription);
-      const user = await ctx.db.get("users", customer.userId);
-
-      if (!user) {
-        logger.warn("Subscription trigger: User not found", {
-          userId: customer.userId,
-          subscriptionId: subscription.id,
-        });
-        break;
-      }
-
-      await applyPlanChange(
-        ctx,
-        customer.userId,
-        user.plan,
-        newPlan,
-        subscription.id
-      );
+      await syncCustomerPlan(ctx, subscription);
 
       break;
     }
 
     case "update": {
       const subscription = change.newDoc;
-      const oldSubscription = change.oldDoc;
 
       if (!subscription) {
         break;
       }
 
-      const customer = await ctx.db
-        .query("customers")
-        .withIndex("id", (q) => q.eq("id", subscription.customerId))
-        .unique();
-
-      if (!customer) {
-        logger.warn("Subscription trigger: Customer not found", {
-          subscriptionId: subscription.id,
-          customerId: subscription.customerId,
-        });
-        break;
-      }
-
-      const user = await ctx.db.get("users", customer.userId);
-
-      if (!user) {
-        logger.warn("Subscription trigger: User not found", {
-          userId: customer.userId,
-          subscriptionId: subscription.id,
-        });
-        break;
-      }
-
-      const newPlan = getEffectivePlan(subscription);
-      const oldPlan = oldSubscription
-        ? getEffectivePlan(oldSubscription)
-        : "free";
-
-      if (newPlan === oldPlan) {
-        // No plan change, just update the plan field in case
-        await ctx.db.patch("users", customer.userId, { plan: newPlan });
-        break;
-      }
-
-      await applyPlanChange(
-        ctx,
-        customer.userId,
-        oldPlan,
-        newPlan,
-        subscription.id
-      );
+      await syncCustomerPlan(ctx, subscription);
 
       break;
     }
 
     case "delete": {
-      // Subscription deleted - user goes back to free
       const subscription = change.oldDoc;
 
       if (!subscription) {
         break;
       }
 
-      const customer = await ctx.db
-        .query("customers")
-        .withIndex("id", (q) => q.eq("id", subscription.customerId))
-        .unique();
-
-      if (!customer) {
-        break;
-      }
-
-      const user = await ctx.db.get("users", customer.userId);
-
-      if (!user) {
-        logger.warn("Subscription trigger: User not found on delete", {
-          userId: customer.userId,
-          subscriptionId: subscription.id,
-        });
-        break;
-      }
-
-      const creditConfig = getPlanCreditConfig("free");
-
-      await ctx.db.patch("users", customer.userId, {
-        plan: "free",
-        credits: creditConfig.amount,
-        creditsResetAt: Date.now(),
-      });
-
-      logger.info("Subscription deleted, user reset to free", {
-        userId: customer.userId,
-        subscriptionId: subscription.id,
-      });
+      await syncCustomerPlan(ctx, subscription);
 
       break;
     }

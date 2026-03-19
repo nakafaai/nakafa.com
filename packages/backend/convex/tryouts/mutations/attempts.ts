@@ -264,17 +264,39 @@ export const startPart = mutation({
       });
     }
 
-    const tryoutPartSet = await ctx.db
-      .query("tryoutPartSets")
-      .withIndex("tryoutId_partKey", (q) =>
-        q.eq("tryoutId", tryoutAttempt.tryoutId).eq("partKey", args.partKey)
-      )
-      .unique();
+    const tryoutPartSets = await getManyFrom(
+      ctx.db,
+      "tryoutPartSets",
+      "tryoutId_partIndex",
+      tryoutAttempt.tryoutId,
+      "tryoutId"
+    );
+    const tryoutPartSet = tryoutPartSets.find(
+      (partSet) => partSet.partKey === args.partKey
+    );
+    const nextPartSet = tryoutPartSets.find(
+      (partSet) =>
+        !tryoutAttempt.completedPartIndices.includes(partSet.partIndex)
+    );
 
     if (!tryoutPartSet) {
       throw new ConvexError({
         code: "PART_NOT_FOUND",
         message: "Tryout part not found.",
+      });
+    }
+
+    if (!nextPartSet) {
+      throw new ConvexError({
+        code: "INVALID_TRYOUT_STATE",
+        message: "Tryout has no available part to start.",
+      });
+    }
+
+    if (nextPartSet.partKey !== args.partKey) {
+      throw new ConvexError({
+        code: "PART_NOT_READY",
+        message: "This tryout part is not available yet.",
       });
     }
 

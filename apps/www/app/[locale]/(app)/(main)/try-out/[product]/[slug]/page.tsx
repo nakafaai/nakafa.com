@@ -4,6 +4,7 @@ import {
   type TryoutProduct,
   tryoutProducts,
 } from "@repo/backend/convex/tryouts/products";
+import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
 import { routing } from "@repo/internationalization/src/routing";
 import { fetchQuery } from "convex/nextjs";
 import { notFound } from "next/navigation";
@@ -63,29 +64,6 @@ export default async function Page({ params }: Props) {
 
   const tryoutLabel = details.tryout.label;
 
-  const getPartLabel = (partKey: string) => {
-    switch (partKey) {
-      case "mathematics":
-        return tExercises("mathematics");
-      case "quantitative-knowledge":
-        return tExercises("quantitative-knowledge");
-      case "mathematical-reasoning":
-        return tExercises("mathematical-reasoning");
-      case "general-reasoning":
-        return tExercises("general-reasoning");
-      case "indonesian-language":
-        return tExercises("indonesian-language");
-      case "english-language":
-        return tExercises("english-language");
-      case "general-knowledge":
-        return tExercises("general-knowledge");
-      case "reading-and-writing-skills":
-        return tExercises("reading-and-writing-skills");
-      default:
-        return partKey;
-    }
-  };
-
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
       <div className="space-y-10">
@@ -113,13 +91,21 @@ export default async function Page({ params }: Props) {
         <section className="overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
           <TryoutSetParts
             locale={locale}
-            parts={details.parts.map((part) => ({
-              partIndex: part.partIndex,
-              partKey: part.partKey,
-              label: getPartLabel(part.partKey),
-              material: part.material,
-              questionCount: part.questionCount,
-            }))}
+            parts={details.parts.map((part) => {
+              const materialLabel = ExercisesMaterialSchema.safeParse(
+                part.partKey
+              );
+
+              return {
+                partIndex: part.partIndex,
+                partKey: part.partKey,
+                label: materialLabel.success
+                  ? tExercises(materialLabel.data)
+                  : part.partKey,
+                material: part.material,
+                questionCount: part.questionCount,
+              };
+            })}
             product={product}
             tryoutSlug={details.tryout.slug}
           />

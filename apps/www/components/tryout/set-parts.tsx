@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
+import { useInterval } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
@@ -14,6 +15,7 @@ import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { useState } from "react";
 import { TryoutStatusBadge } from "@/components/tryout/status-badge";
 import { useUser } from "@/lib/context/use-user";
 
@@ -42,10 +44,26 @@ export function TryoutSetParts({
   const tTryouts = useTranslations("Tryouts");
   const isUserPending = useUser((state) => state.isPending);
   const user = useUser((state) => state.user);
+  const [nowMs, setNowMs] = useState(() => Date.now());
   const { data: attemptData } = useQueryWithStatus(
     api.tryouts.queries.attempts.getUserTryoutAttempt,
     !isUserPending && user ? { locale, product, tryoutSlug } : "skip"
   );
+
+  useInterval(
+    () => {
+      setNowMs(Date.now());
+    },
+    1000,
+    { autoInvoke: true }
+  );
+
+  const hasExpired = Boolean(
+    attemptData?.attempt.status === "in-progress" &&
+      attemptData.expiresAtMs <= nowMs
+  );
+  const isTryoutActive =
+    attemptData?.attempt.status === "in-progress" && !hasExpired;
 
   return (
     <div className="grid divide-y">
@@ -57,11 +75,13 @@ export function TryoutSetParts({
         const partAttempt = attemptData?.partAttempts.find(
           (attempt) => attempt.partKey === part.partKey
         );
-        const isCompleted =
-          attemptData?.completedPartIndices.includes(part.partIndex) ?? false;
-        const isInProgress = partAttempt?.setAttempt.status === "in-progress";
+        const isCompleted = partAttempt?.setAttempt.status === "completed";
+        const isInProgress =
+          isTryoutActive && partAttempt?.setAttempt.status === "in-progress";
         const isCurrent =
-          attemptData?.nextPartKey === part.partKey && !isCompleted;
+          isTryoutActive &&
+          attemptData?.nextPartKey === part.partKey &&
+          !isCompleted;
         let statusBadge: ReactNode = null;
 
         if (isCompleted) {
