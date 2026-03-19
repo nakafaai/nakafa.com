@@ -264,16 +264,21 @@ export const startPart = mutation({
       });
     }
 
-    const tryoutPartSets = await getManyFrom(
-      ctx.db,
-      "tryoutPartSets",
-      "tryoutId_partIndex",
-      tryoutAttempt.tryoutId,
-      "tryoutId"
-    );
-    const tryoutPartSet = tryoutPartSets.find(
-      (partSet) => partSet.partKey === args.partKey
-    );
+    const [tryoutPartSet, tryoutPartSets] = await Promise.all([
+      ctx.db
+        .query("tryoutPartSets")
+        .withIndex("tryoutId_partKey", (q) =>
+          q.eq("tryoutId", tryoutAttempt.tryoutId).eq("partKey", args.partKey)
+        )
+        .unique(),
+      getManyFrom(
+        ctx.db,
+        "tryoutPartSets",
+        "tryoutId_partIndex",
+        tryoutAttempt.tryoutId,
+        "tryoutId"
+      ),
+    ]);
     const nextPartSet = tryoutPartSets.find(
       (partSet) =>
         !tryoutAttempt.completedPartIndices.includes(partSet.partIndex)
