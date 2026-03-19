@@ -2,10 +2,7 @@ import { query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import {
-  getFirstCompletedSimulationAttempt,
-  getFirstIncompleteTryoutPartIndex,
-} from "@repo/backend/convex/tryouts/helpers";
+import { getFirstIncompleteTryoutPartIndex } from "@repo/backend/convex/tryouts/helpers";
 import {
   computeTryoutExpiresAtMs,
   tryoutProductValidator,
@@ -43,8 +40,6 @@ export const getUserTryoutAttempt = query({
       completedPartIndices: v.array(v.number()),
       nextPartKey: v.optional(tryoutPartKeyValidator),
       expiresAtMs: v.number(),
-      practiceUnlocked: v.boolean(),
-      isOfficialAttempt: v.boolean(),
     })
   ),
   handler: async (ctx, args) => {
@@ -129,13 +124,6 @@ export const getUserTryoutAttempt = query({
       nextPartKey = nextPartSet.partKey;
     }
 
-    const firstCompletedAttempt = await getFirstCompletedSimulationAttempt(
-      ctx.db,
-      {
-        userId: appUser._id,
-        tryoutId: tryout._id,
-      }
-    );
     const expiresAtMs = computeTryoutExpiresAtMs({
       product: tryout.product,
       startedAtMs: attempt.startedAt,
@@ -147,8 +135,6 @@ export const getUserTryoutAttempt = query({
       completedPartIndices: attempt.completedPartIndices,
       nextPartKey,
       expiresAtMs,
-      practiceUnlocked: firstCompletedAttempt !== null,
-      isOfficialAttempt: firstCompletedAttempt?._id === attempt._id,
     };
   },
 });

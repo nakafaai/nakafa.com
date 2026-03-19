@@ -42,7 +42,6 @@ interface TryoutSetPartsProps {
 interface TryoutSetPartsContextValue {
   state: {
     attemptData: TryoutAttemptData | undefined;
-    nowMs: number;
     product: TryoutProduct;
     questionUnitLabel: string;
     tryoutSlug: string;
@@ -60,7 +59,7 @@ export function TryoutSetParts({
   tryoutSlug,
 }: TryoutSetPartsProps) {
   const tTryouts = useTranslations("Tryouts");
-  const { attemptData, nowMs } = useTryoutAttemptState({
+  const { attemptData } = useTryoutAttemptState({
     locale,
     product,
     tryoutSlug,
@@ -69,7 +68,6 @@ export function TryoutSetParts({
   return (
     <TryoutSetPartsProvider
       attemptData={attemptData ?? undefined}
-      nowMs={nowMs}
       product={product}
       questionUnitLabel={tTryouts("question-unit")}
       tryoutSlug={tryoutSlug}
@@ -86,14 +84,12 @@ export function TryoutSetParts({
 function TryoutSetPartsProvider({
   attemptData,
   children,
-  nowMs,
   product,
   questionUnitLabel,
   tryoutSlug,
 }: {
   attemptData: TryoutAttemptData | undefined;
   children: ReactNode;
-  nowMs: number;
   product: TryoutProduct;
   questionUnitLabel: string;
   tryoutSlug: string;
@@ -102,13 +98,12 @@ function TryoutSetPartsProvider({
     () => ({
       state: {
         attemptData,
-        nowMs,
         product,
         questionUnitLabel,
         tryoutSlug,
       },
     }),
-    [attemptData, nowMs, product, questionUnitLabel, tryoutSlug]
+    [attemptData, product, questionUnitLabel, tryoutSlug]
   );
 
   return (
@@ -123,12 +118,11 @@ function TryoutSetPartsList({ children }: { children: ReactNode }) {
 }
 
 function TryoutSetPart({ part }: { part: TryoutSetPartItem }) {
-  const { attemptData, nowMs, product, questionUnitLabel, tryoutSlug } =
+  const { attemptData, product, questionUnitLabel, tryoutSlug } =
     useTryoutSetParts((context) => context.state);
   const partIcon = getTryoutPartIcon(part.material);
   const partState = deriveTryoutSetPartState({
     attemptData,
-    nowMs,
     partKey: part.partKey,
   });
 

@@ -41,15 +41,12 @@ export function useTryoutAttemptState({
     { autoInvoke: true }
   );
 
-  const isTryoutActive = Boolean(
-    attemptData?.attempt.status === "in-progress" &&
-      attemptData.expiresAtMs > nowMs
-  );
-  const nextPartKey = isTryoutActive ? attemptData?.nextPartKey : undefined;
+  const isTryoutInProgress = attemptData?.attempt.status === "in-progress";
+  const nextPartKey = isTryoutInProgress ? attemptData?.nextPartKey : undefined;
 
   let remainingTime: TryoutRemainingTime | null = null;
 
-  if (attemptData && isTryoutActive) {
+  if (attemptData && isTryoutInProgress) {
     const totalSeconds = Math.max(
       0,
       Math.floor((attemptData.expiresAtMs - nowMs) / 1000)
@@ -66,7 +63,6 @@ export function useTryoutAttemptState({
     attemptData,
     isAttemptPending,
     nextPartKey,
-    nowMs,
     remainingTime,
   };
 }

@@ -123,9 +123,18 @@ function useTryoutStartValue({
   const confirmStart = useCallback(() => {
     startTransition(async () => {
       try {
-        await startTryout({ locale, product, tryoutSlug });
+        const result = await startTryout({ locale, product, tryoutSlug });
+
         closeDialog();
-        router.refresh();
+
+        if (result.status === "in-progress" && result.firstPartKey) {
+          router.push(
+            `/try-out/${product}/${tryoutSlug}/part/${result.firstPartKey}`
+          );
+        } else {
+          router.refresh();
+        }
+
         toast.success(tTryouts("start-success"), {
           position: "bottom-center",
         });

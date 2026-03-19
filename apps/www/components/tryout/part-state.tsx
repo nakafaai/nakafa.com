@@ -1,6 +1,5 @@
 "use client";
 
-import { useInterval } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
 import type { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
@@ -94,24 +93,14 @@ export function TryoutPartProvider({
   const tTryouts = useTranslations("Tryouts");
   const [isCompleteDialogOpen, setCompleteDialogOpen] = useState(false);
   const [isActionPending, startTransition] = useTransition();
-  const [nowMs, setNowMs] = useState(() => Date.now());
   const router = useRouter();
   const user = useUser((state) => state.user);
   const startPart = useMutation(api.tryouts.mutations.attempts.startPart);
   const completePart = useMutation(api.tryouts.mutations.attempts.completePart);
 
-  useInterval(
-    () => {
-      setNowMs(Date.now());
-    },
-    1000,
-    { autoInvoke: true }
-  );
-
   const { answers, attempt, canStartPart, partEndReason, status } =
     deriveTryoutPartPageState({
       isRuntimePending,
-      nowMs,
       partKey: part.key,
       runtime,
     });

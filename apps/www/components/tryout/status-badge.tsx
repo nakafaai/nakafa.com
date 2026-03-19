@@ -28,9 +28,10 @@ export function TryoutStatusBadge({
       );
     case "locked":
       return <Badge variant="outline">{tTryouts("part-status-locked")}</Badge>;
-    default:
-      return (
-        <Badge variant="muted">{tTryouts("part-status-in-progress")}</Badge>
-      );
+    default: {
+      const exhaustiveStatus: never = status;
+
+      return exhaustiveStatus;
+    }
   }
 }

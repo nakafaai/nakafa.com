@@ -26,53 +26,17 @@ export type TryoutPartUiStatus =
 
 interface TryoutProgress {
   completedPartIndices: number[];
-  expiresAtMs: number;
   nextPartKey: string | undefined;
   status: TryoutAttemptStatus;
 }
 
-function hasExpiredPartAttempt({
-  nowMs,
-  partAttempt,
-}: {
-  nowMs: number;
-  partAttempt: TryoutPartAttempt | null;
-}) {
-  if (!partAttempt) {
-    return false;
-  }
-
-  if (partAttempt.setAttempt.status !== "in-progress") {
-    return false;
-  }
-
-  const expiresAtMs =
-    partAttempt.setAttempt.startedAt + partAttempt.setAttempt.timeLimit * 1000;
-
-  return nowMs >= expiresAtMs;
-}
-
-function isActiveTryout({
-  expiresAtMs,
-  nowMs,
-  status,
-}: {
-  expiresAtMs: number;
-  nowMs: number;
-  status: TryoutAttemptStatus;
-}) {
-  return status === "in-progress" && expiresAtMs > nowMs;
-}
-
 function getTryoutPartStatus({
   isRuntimePending,
-  nowMs,
   partAttempt,
   partKey,
   tryout,
 }: {
   isRuntimePending: boolean;
-  nowMs: number;
   partAttempt: TryoutPartAttempt | null;
   partKey: string;
   tryout: TryoutProgress | null;
@@ -92,17 +56,7 @@ function getTryoutPartStatus({
     return "completed";
   }
 
-  if (hasExpiredPartAttempt({ nowMs, partAttempt })) {
-    return "completed";
-  }
-
-  const tryoutIsActive = isActiveTryout({
-    expiresAtMs: tryout.expiresAtMs,
-    nowMs,
-    status: tryout.status,
-  });
-
-  if (!tryoutIsActive) {
+  if (tryout.status !== "in-progress") {
     return "ended";
   }
 
@@ -119,12 +73,10 @@ function getTryoutPartStatus({
 
 export function deriveTryoutPartPageState({
   isRuntimePending,
-  nowMs,
   partKey,
   runtime,
 }: {
   isRuntimePending: boolean;
-  nowMs: number;
   partKey: string;
   runtime: TryoutPartRuntime | undefined;
 }) {
@@ -132,21 +84,17 @@ export function deriveTryoutPartPageState({
   const tryout = runtime
     ? {
         completedPartIndices: runtime.completedPartIndices,
-        expiresAtMs: runtime.expiresAtMs,
         nextPartKey: runtime.nextPartKey,
         status: runtime.tryoutAttempt.status,
       }
     : null;
   const status = getTryoutPartStatus({
     isRuntimePending,
-    nowMs,
     partAttempt,
     partKey,
     tryout,
   });
-  const partEndReason = hasExpiredPartAttempt({ nowMs, partAttempt })
-    ? "time-expired"
-    : (partAttempt?.setAttempt.endReason ?? null);
+  const partEndReason = partAttempt?.setAttempt.endReason ?? null;
 
   return {
     answers: partAttempt?.answers ?? [],
@@ -159,11 +107,9 @@ export function deriveTryoutPartPageState({
 
 export function deriveTryoutSetPartState({
   attemptData,
-  nowMs,
   partKey,
 }: {
   attemptData: TryoutAttemptData | undefined;
-  nowMs: number;
   partKey: string;
 }) {
   const partAttempt =
@@ -172,21 +118,21 @@ export function deriveTryoutSetPartState({
   const tryout = attemptData
     ? {
         completedPartIndices: attemptData.completedPartIndices,
-        expiresAtMs: attemptData.expiresAtMs,
         nextPartKey: attemptData.nextPartKey,
         status: attemptData.attempt.status,
       }
     : null;
   const status = getTryoutPartStatus({
     isRuntimePending: false,
-    nowMs,
     partAttempt,
     partKey,
     tryout,
   });
 
   return {
-    isCurrent: status !== "completed" && attemptData?.nextPartKey === partKey,
+    isCurrent:
+      (status === "in-progress" || status === "ready") &&
+      attemptData?.nextPartKey === partKey,
     status,
   };
 }
