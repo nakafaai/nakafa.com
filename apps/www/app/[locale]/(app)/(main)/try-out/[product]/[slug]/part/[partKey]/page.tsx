@@ -27,8 +27,6 @@ interface Props {
   }>;
 }
 
-export const dynamicParams = false;
-
 export async function generateStaticParams() {
   const staticTryouts = await Promise.all(
     tryoutProducts.map((product) =>

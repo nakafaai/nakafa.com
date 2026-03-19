@@ -20,8 +20,6 @@ interface Props {
   params: Promise<{ locale: Locale; product: string; slug: string }>;
 }
 
-export const dynamicParams = false;
-
 export async function generateStaticParams() {
   const staticTryouts = await Promise.all(
     tryoutProducts.map((product) =>

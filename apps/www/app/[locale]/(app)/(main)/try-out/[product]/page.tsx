@@ -40,8 +40,6 @@ interface Props {
   params: Promise<{ locale: Locale; product: string }>;
 }
 
-export const dynamicParams = false;
-
 export function generateStaticParams() {
   return tryoutProducts.map((product) => ({ product }));
 }
