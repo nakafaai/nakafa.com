@@ -42,22 +42,19 @@ function getTryoutPartStatus({
   canContinuePart,
   hasStartedTryout,
   isRuntimePending,
-  partCompleted,
-  partExpired,
+  partFinalized,
   partLocked,
   tryoutEnded,
 }: {
   canContinuePart: boolean;
   hasStartedTryout: boolean;
   isRuntimePending: boolean;
-  partCompleted: boolean;
-  partExpired: boolean;
+  partFinalized: boolean;
   partLocked: boolean;
   tryoutEnded: boolean;
 }):
   | "completed"
   | "ended"
-  | "expired"
   | "in-progress"
   | "locked"
   | "loading"
@@ -71,16 +68,12 @@ function getTryoutPartStatus({
     return "needs-tryout";
   }
 
-  if (partCompleted) {
+  if (partFinalized) {
     return "completed";
   }
 
   if (tryoutEnded) {
     return "ended";
-  }
-
-  if (partExpired) {
-    return "expired";
   }
 
   if (canContinuePart) {
@@ -101,7 +94,7 @@ type TryoutPartQuery = FunctionReturnType<
 >;
 
 type TryoutPartState = NonNullable<TryoutPartQuery>;
-type TryoutPartAttempt = TryoutPartState["partAttempt"];
+type TryoutPartAttempt = NonNullable<TryoutPartState["partAttempt"]>;
 type TryoutPartDialogSetter = ComponentProps<
   typeof ResponsiveDialog
 >["setOpen"];
@@ -124,8 +117,8 @@ interface TryoutPartContextValue {
     isRuntimePending: boolean;
     part: TryoutPartValue;
     partAttempt: TryoutPartAttempt | null;
-    partCompleted: boolean;
-    partExpired: boolean;
+    partEndReason: TryoutPartAttempt["endReason"] | null;
+    partFinalized: boolean;
     partLocked: boolean;
     runtime: TryoutPartQuery | undefined;
     shouldShowTryoutStartButton: boolean;
@@ -173,8 +166,8 @@ export function TryoutPartProvider({
     runtime?.tryoutAttempt.status === "in-progress" &&
       runtime.expiresAtMs <= nowMs
   );
-  const partCompleted = partAttempt?.setAttempt.status === "completed";
-  const partExpired = partAttempt?.setAttempt.status === "expired";
+  const partEndReason = partAttempt?.endReason ?? null;
+  const partFinalized = Boolean(partAttempt?.isFinalized);
   const hasStartedTryout = Boolean(runtime);
   const tryoutInProgress =
     runtime?.tryoutAttempt.status === "in-progress" && !hasTryoutExpired;
@@ -199,8 +192,7 @@ export function TryoutPartProvider({
     canContinuePart,
     hasStartedTryout,
     isRuntimePending,
-    partCompleted,
-    partExpired,
+    partFinalized,
     partLocked,
     tryoutEnded,
   });
@@ -304,8 +296,8 @@ export function TryoutPartProvider({
         isRuntimePending,
         part,
         partAttempt,
-        partCompleted,
-        partExpired,
+        partEndReason,
+        partFinalized,
         partLocked,
         runtime,
         shouldShowTryoutStartButton,
@@ -327,8 +319,8 @@ export function TryoutPartProvider({
       isRuntimePending,
       part,
       partAttempt,
-      partCompleted,
-      partExpired,
+      partEndReason,
+      partFinalized,
       partLocked,
       runtime,
       shouldShowTryoutStartButton,

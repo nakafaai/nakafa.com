@@ -5,7 +5,11 @@ import {
   exerciseAttemptScopeValidator,
   exerciseAttemptStatusValidator,
 } from "@repo/backend/convex/exercises/schema";
-import { computeAttemptDurationSeconds } from "@repo/backend/convex/exercises/utils";
+import {
+  buildFinalizedExerciseAttemptPatch,
+  computeAttemptDurationSeconds,
+  getExerciseAttemptEndReason,
+} from "@repo/backend/convex/exercises/utils";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
@@ -276,7 +280,12 @@ export const completeAttempt = mutation({
     }
 
     if (attempt.status === "expired") {
-      return { status: "expired" } satisfies CompleteAttemptResult;
+      return {
+        status:
+          getExerciseAttemptEndReason(attempt) === "submitted"
+            ? "completed"
+            : "expired",
+      } satisfies CompleteAttemptResult;
     }
 
     if (attempt.status !== "in-progress") {
@@ -310,13 +319,16 @@ export const completeAttempt = mutation({
     });
 
     if (now >= expiresAtMs) {
-      await ctx.db.patch("exerciseAttempts", args.attemptId, {
-        status: "expired",
-        completedAt: expiresAtMs,
-        lastActivityAt: now,
-        updatedAt: now,
-        totalTime: finalTotalTime,
-      });
+      await ctx.db.patch(
+        "exerciseAttempts",
+        args.attemptId,
+        buildFinalizedExerciseAttemptPatch({
+          completedAtMs: expiresAtMs,
+          now,
+          status: "expired",
+          totalTime: finalTotalTime,
+        })
+      );
 
       return {
         status: "expired",
@@ -324,13 +336,16 @@ export const completeAttempt = mutation({
       } satisfies CompleteAttemptResult;
     }
 
-    await ctx.db.patch("exerciseAttempts", args.attemptId, {
-      status: "completed",
-      completedAt: now,
-      lastActivityAt: now,
-      updatedAt: now,
-      totalTime: finalTotalTime,
-    });
+    await ctx.db.patch(
+      "exerciseAttempts",
+      args.attemptId,
+      buildFinalizedExerciseAttemptPatch({
+        completedAtMs: now,
+        now,
+        status: "completed",
+        totalTime: finalTotalTime,
+      })
+    );
 
     return { status: "completed" } satisfies CompleteAttemptResult;
   },
@@ -371,13 +386,16 @@ export const expireAttemptInternal = internalMutation({
       completedAtMs: expiresAtMs,
     });
 
-    await ctx.db.patch("exerciseAttempts", args.attemptId, {
-      status: "expired",
-      completedAt: expiresAtMs,
-      lastActivityAt: now,
-      updatedAt: now,
-      totalTime: finalTotalTime,
-    });
+    await ctx.db.patch(
+      "exerciseAttempts",
+      args.attemptId,
+      buildFinalizedExerciseAttemptPatch({
+        completedAtMs: expiresAtMs,
+        now,
+        status: "expired",
+        totalTime: finalTotalTime,
+      })
+    );
 
     if (attempt.origin !== "tryout") {
       return null;

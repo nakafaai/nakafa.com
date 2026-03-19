@@ -3,9 +3,14 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
-import { computeAttemptDurationSeconds } from "@repo/backend/convex/exercises/utils";
+import {
+  buildFinalizedExerciseAttemptPatch,
+  computeAttemptDurationSeconds,
+  isExerciseAttemptFinalized,
+} from "@repo/backend/convex/exercises/utils";
 import { estimateThetaEAP } from "@repo/backend/convex/irt/estimation";
 import { getScaleVersionItemsForSet } from "@repo/backend/convex/irt/scaleVersions";
+import { getAttemptEndReasonFromStatus } from "@repo/backend/convex/lib/attempts";
 import {
   computeTryoutExpiresAtMs,
   scaleThetaToTryoutScore,
@@ -58,6 +63,32 @@ export function getFirstIncompleteTryoutPartIndex({
   }
 
   return undefined;
+}
+
+export function getEffectiveCompletedTryoutPartIndices({
+  completedPartIndices,
+  partAttempts,
+}: {
+  completedPartIndices: number[];
+  partAttempts: Array<{
+    partIndex: number;
+    setAttempt: Pick<
+      Doc<"exerciseAttempts">,
+      "completedAt" | "endReason" | "finalizedAt" | "status"
+    >;
+  }>;
+}) {
+  const effectiveCompletedPartIndices = new Set(completedPartIndices);
+
+  for (const partAttempt of partAttempts) {
+    if (!isExerciseAttemptFinalized(partAttempt.setAttempt)) {
+      continue;
+    }
+
+    effectiveCompletedPartIndices.add(partAttempt.partIndex);
+  }
+
+  return [...effectiveCompletedPartIndices].sort((left, right) => left - right);
 }
 
 /** Returns the earliest completed simulation attempt for official-result checks. */
@@ -137,13 +168,16 @@ async function expireExerciseAttemptIfInProgress(
     completedAtMs: expiredAtMs,
   });
 
-  await ctx.db.patch("exerciseAttempts", attempt._id, {
-    status: "expired",
-    completedAt: expiredAtMs,
-    lastActivityAt: now,
-    updatedAt: now,
-    totalTime,
-  });
+  await ctx.db.patch(
+    "exerciseAttempts",
+    attempt._id,
+    buildFinalizedExerciseAttemptPatch({
+      completedAtMs: expiredAtMs,
+      now,
+      status: "expired",
+      totalTime,
+    })
+  );
 }
 
 /** Finalize one started tryout part from its persisted exercise answers. */
@@ -207,19 +241,24 @@ export async function finalizeTryoutPartAttempt({
     currentSetAttempt = {
       ...setAttempt,
       completedAt,
+      endReason: getAttemptEndReasonFromStatus(finalStatus),
+      finalizedAt: completedAt,
       lastActivityAt: now,
       status: finalStatus,
       totalTime,
       updatedAt: now,
     };
 
-    await ctx.db.patch("exerciseAttempts", setAttempt._id, {
-      status: finalStatus,
-      completedAt,
-      lastActivityAt: now,
-      updatedAt: now,
-      totalTime,
-    });
+    await ctx.db.patch(
+      "exerciseAttempts",
+      setAttempt._id,
+      buildFinalizedExerciseAttemptPatch({
+        completedAtMs: completedAt,
+        now,
+        status: finalStatus,
+        totalTime,
+      })
+    );
   }
 
   if (isAlreadyFinalized) {
@@ -275,6 +314,79 @@ export async function finalizeTryoutPartAttempt({
     thetaSE: se,
     totalQuestions: currentSetAttempt.totalExercises,
   };
+}
+
+export async function syncPendingFinalizedTryoutParts({
+  ctx,
+  now,
+  tryoutAttempt,
+}: {
+  ctx: TryoutMutationCtx;
+  now: number;
+  tryoutAttempt: Doc<"tryoutAttempts">;
+}) {
+  const partAttempts = await getManyFrom(
+    ctx.db,
+    "tryoutPartAttempts",
+    "tryoutAttemptId_partIndex",
+    tryoutAttempt._id,
+    "tryoutAttemptId"
+  );
+
+  if (partAttempts.length === 0) {
+    return tryoutAttempt;
+  }
+
+  const setAttempts = await getAll(
+    ctx.db,
+    "exerciseAttempts",
+    partAttempts.map((partAttempt) => partAttempt.setAttemptId)
+  );
+  let didFinalizePendingPart = false;
+
+  for (const [index, partAttempt] of partAttempts.entries()) {
+    if (tryoutAttempt.completedPartIndices.includes(partAttempt.partIndex)) {
+      continue;
+    }
+
+    const setAttempt = setAttempts[index];
+
+    if (!setAttempt || setAttempt.completedAt === undefined) {
+      continue;
+    }
+
+    if (setAttempt.status !== "completed" && setAttempt.status !== "expired") {
+      continue;
+    }
+
+    didFinalizePendingPart = true;
+    await finalizeTryoutPartAttempt({
+      ctx,
+      finishedAtMs: setAttempt.completedAt,
+      now,
+      partAttempt,
+      status: setAttempt.status,
+      tryoutAttemptId: tryoutAttempt._id,
+    });
+  }
+
+  if (!didFinalizePendingPart) {
+    return tryoutAttempt;
+  }
+
+  const refreshedTryoutAttempt = await ctx.db.get(
+    "tryoutAttempts",
+    tryoutAttempt._id
+  );
+
+  if (!refreshedTryoutAttempt) {
+    throw new ConvexError({
+      code: "ATTEMPT_NOT_FOUND",
+      message: "Tryout attempt not found.",
+    });
+  }
+
+  return refreshedTryoutAttempt;
 }
 
 /** Recompute the persisted tryout aggregates from finalized part attempts. */
@@ -375,6 +487,8 @@ export async function syncTryoutAttemptAggregates({
 
   await ctx.db.patch("tryoutAttempts", tryoutAttemptId, {
     completedAt: completedAtMs,
+    endReason: getAttemptEndReasonFromStatus(status),
+    finalizedAt: completedAtMs,
     irtScore,
     lastActivityAt: now,
     status,

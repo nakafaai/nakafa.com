@@ -115,29 +115,6 @@ export function TryoutPartStartCta() {
   );
 }
 
-export function TryoutPartCompleteExpiredCta() {
-  const tTryouts = useTranslations("Tryouts");
-  const status = useTryoutPart((state) => state.state.status);
-  const isActionPending = useTryoutPart((state) => state.meta.isActionPending);
-  const completePart = useTryoutPart((state) => state.actions.completePart);
-
-  if (status !== "expired") {
-    return null;
-  }
-
-  return (
-    <Button
-      className="w-full sm:w-auto"
-      disabled={isActionPending}
-      onClick={completePart}
-      type="button"
-    >
-      <Spinner icon={StopIcon} isLoading={isActionPending} />
-      {tTryouts("complete-part-cta")}
-    </Button>
-  );
-}
-
 export function TryoutPartBackCta() {
   const tTryouts = useTranslations("Tryouts");
   const isRuntimePending = useTryoutPart(

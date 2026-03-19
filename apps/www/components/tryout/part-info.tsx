@@ -22,8 +22,6 @@ export function TryoutPartStatus() {
       return <Skeleton className="h-7 w-20 rounded-md" />;
     case "completed":
       return <TryoutStatusBadge status="completed" />;
-    case "expired":
-      return <TryoutStatusBadge status="expired" />;
     case "in-progress":
       return <TryoutStatusBadge status="in-progress" />;
     default:
@@ -65,6 +63,7 @@ export function TryoutPartMetrics() {
 
 export function useTryoutPartHeadDescription() {
   const tTryouts = useTranslations("Tryouts");
+  const partEndReason = useTryoutPart((state) => state.state.partEndReason);
   const status = useTryoutPart((state) => state.state.status);
 
   switch (status) {
@@ -74,12 +73,12 @@ export function useTryoutPartHeadDescription() {
       return tTryouts("part-head-needs-tryout");
     case "ended":
       return tTryouts("part-head-ended");
-    case "expired":
-      return tTryouts("part-head-expired");
     case "locked":
       return tTryouts("part-head-locked");
     case "completed":
-      return tTryouts("part-head-completed");
+      return partEndReason === "time-expired"
+        ? tTryouts("part-head-completed-time-expired")
+        : tTryouts("part-head-completed");
     case "in-progress":
       return tTryouts("part-head-in-progress");
     case "ready":

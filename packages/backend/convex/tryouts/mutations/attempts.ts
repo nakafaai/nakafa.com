@@ -8,6 +8,7 @@ import { vv } from "@repo/backend/convex/lib/validators/vv";
 import {
   finalizeTryoutPartAttempt,
   getFirstIncompleteTryoutPartIndex,
+  syncPendingFinalizedTryoutParts,
   syncTryoutAttemptExpiry,
 } from "@repo/backend/convex/tryouts/helpers";
 import { finalizeTryoutAttempt } from "@repo/backend/convex/tryouts/mutations/helpers";
@@ -97,8 +98,13 @@ export const startTryout = mutation({
       );
 
       if (!tryoutExpiry.expired && existingAttempt.status === "in-progress") {
+        const currentTryoutAttempt = await syncPendingFinalizedTryoutParts({
+          ctx,
+          now,
+          tryoutAttempt: existingAttempt,
+        });
         const firstIncompletePartIndex = getFirstIncompleteTryoutPartIndex({
-          completedPartIndices: existingAttempt.completedPartIndices,
+          completedPartIndices: currentTryoutAttempt.completedPartIndices,
           partCount: tryout.partCount,
         });
 
@@ -106,7 +112,7 @@ export const startTryout = mutation({
           const completedAttempt = await finalizeTryoutAttempt({
             ctx,
             now,
-            tryoutAttempt: existingAttempt,
+            tryoutAttempt: currentTryoutAttempt,
             userId,
           });
 
@@ -119,7 +125,7 @@ export const startTryout = mutation({
           }
 
           return {
-            tryoutAttemptId: existingAttempt._id,
+            tryoutAttemptId: currentTryoutAttempt._id,
             partCount: tryout.partCount,
             firstPartKey: undefined,
             expiresAtMs: tryoutExpiry.expiredAtMs,
@@ -144,7 +150,7 @@ export const startTryout = mutation({
         }
 
         return {
-          tryoutAttemptId: existingAttempt._id,
+          tryoutAttemptId: currentTryoutAttempt._id,
           partCount: tryout.partCount,
           firstPartKey: firstIncompletePart.partKey,
           expiresAtMs: tryoutExpiry.expiredAtMs,
@@ -267,8 +273,14 @@ export const startPart = mutation({
       });
     }
 
+    const currentTryoutAttempt = await syncPendingFinalizedTryoutParts({
+      ctx,
+      now,
+      tryoutAttempt,
+    });
+
     const nextPartIndex = getFirstIncompleteTryoutPartIndex({
-      completedPartIndices: tryoutAttempt.completedPartIndices,
+      completedPartIndices: currentTryoutAttempt.completedPartIndices,
       partCount: tryout.partCount,
     });
 
@@ -317,7 +329,11 @@ export const startPart = mutation({
       });
     }
 
-    if (tryoutAttempt.completedPartIndices.includes(tryoutPartSet.partIndex)) {
+    if (
+      currentTryoutAttempt.completedPartIndices.includes(
+        tryoutPartSet.partIndex
+      )
+    ) {
       throw new ConvexError({
         code: "PART_ALREADY_COMPLETED",
         message: "This tryout part has already been completed.",

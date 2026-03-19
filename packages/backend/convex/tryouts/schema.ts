@@ -1,3 +1,4 @@
+import { attemptEndReasonValidator } from "@repo/backend/convex/lib/attempts";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
 import { defineTable } from "convex/server";
@@ -62,6 +63,8 @@ const tables = {
     startedAt: v.number(),
     lastActivityAt: v.number(),
     completedAt: v.optional(v.number()),
+    finalizedAt: v.optional(v.number()),
+    endReason: v.optional(attemptEndReasonValidator),
   })
     .index("userId_tryoutId_startedAt", ["userId", "tryoutId", "startedAt"])
     .index("userId_tryoutId_status_startedAt", [

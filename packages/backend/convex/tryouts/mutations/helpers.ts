@@ -3,14 +3,13 @@ import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   computeTryoutRawScorePercentage,
-  finalizeTryoutPartAttempt,
   getFirstCompletedSimulationAttempt,
+  syncPendingFinalizedTryoutParts,
   syncTryoutAttemptAggregates,
   syncTryoutAttemptExpiry,
 } from "@repo/backend/convex/tryouts/helpers";
 import { tryoutStatusValidator } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError, type Infer, v } from "convex/values";
-import { getManyFrom } from "convex-helpers/server/relationships";
 
 export const completeTryoutResultValidator = v.object({
   status: tryoutStatusValidator,
@@ -110,56 +109,11 @@ export async function finalizeTryoutAttempt({
   }
 
   if (tryoutAttempt.completedPartIndices.length < tryout.partCount) {
-    const pendingPartAttempts = await getManyFrom(
-      ctx.db,
-      "tryoutPartAttempts",
-      "tryoutAttemptId_partIndex",
-      tryoutAttempt._id,
-      "tryoutAttemptId"
-    );
-
-    for (const partAttempt of pendingPartAttempts) {
-      if (tryoutAttempt.completedPartIndices.includes(partAttempt.partIndex)) {
-        continue;
-      }
-
-      const setAttempt = await ctx.db.get(
-        "exerciseAttempts",
-        partAttempt.setAttemptId
-      );
-
-      if (!setAttempt || setAttempt.completedAt === undefined) {
-        continue;
-      }
-
-      if (
-        setAttempt.status !== "completed" &&
-        setAttempt.status !== "expired"
-      ) {
-        continue;
-      }
-
-      await finalizeTryoutPartAttempt({
-        ctx,
-        finishedAtMs: setAttempt.completedAt,
-        now,
-        partAttempt,
-        status: setAttempt.status,
-        tryoutAttemptId: tryoutAttempt._id,
-      });
-    }
-
-    const refreshedTryoutAttempt = await ctx.db.get(
-      "tryoutAttempts",
-      tryoutAttempt._id
-    );
-
-    if (!refreshedTryoutAttempt) {
-      throw new ConvexError({
-        code: "ATTEMPT_NOT_FOUND",
-        message: "Tryout attempt not found.",
-      });
-    }
+    const refreshedTryoutAttempt = await syncPendingFinalizedTryoutParts({
+      ctx,
+      now,
+      tryoutAttempt,
+    });
 
     if (refreshedTryoutAttempt.completedPartIndices.length < tryout.partCount) {
       return {

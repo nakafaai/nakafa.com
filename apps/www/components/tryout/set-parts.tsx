@@ -252,14 +252,13 @@ function getTryoutPartBadgeStatus({
   isTryoutActive: boolean;
   partAttempt: TryoutSetPartAttempt | undefined;
 }): TryoutSetPartBadgeStatus | null {
-  switch (partAttempt?.setAttempt.status) {
-    case "completed":
-      return "completed";
-    case "expired":
-      return "expired";
-    case "in-progress":
-      return isTryoutActive ? "in-progress" : null;
-    default:
-      return null;
+  if (partAttempt?.isFinalized) {
+    return "completed";
   }
+
+  if (partAttempt?.setAttempt.status === "in-progress" && isTryoutActive) {
+    return "in-progress";
+  }
+
+  return null;
 }

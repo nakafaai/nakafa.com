@@ -1,3 +1,4 @@
+import { attemptEndReasonValidator } from "@repo/backend/convex/lib/attempts";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
@@ -44,6 +45,8 @@ const tables = {
     startedAt: v.number(),
     lastActivityAt: v.number(),
     completedAt: v.optional(v.number()),
+    finalizedAt: v.optional(v.number()),
+    endReason: v.optional(attemptEndReasonValidator),
     status: exerciseAttemptStatusValidator,
     updatedAt: v.number(),
     totalExercises: v.number(),

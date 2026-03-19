@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 
 type TryoutStatusBadgeValue = Extract<
   TryoutStatus,
-  "completed" | "expired" | "in-progress"
+  "completed" | "in-progress"
 >;
 
 export function TryoutStatusBadge({
@@ -26,8 +26,6 @@ export function TryoutStatusBadge({
           {tTryouts("part-status-completed")}
         </Badge>
       );
-    case "expired":
-      return <Badge variant="outline">{tTryouts("part-status-expired")}</Badge>;
     case "in-progress":
       return (
         <Badge variant="muted">{tTryouts("part-status-in-progress")}</Badge>

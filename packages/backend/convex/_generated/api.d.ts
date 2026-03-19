@@ -69,6 +69,7 @@ import type * as irt_policy from "../irt/policy.js";
 import type * as irt_scaleVersions from "../irt/scaleVersions.js";
 import type * as irt_validators from "../irt/validators.js";
 import type * as irt_workflows from "../irt/workflows.js";
+import type * as lib_attempts from "../lib/attempts.js";
 import type * as lib_helpers_auth from "../lib/helpers/auth.js";
 import type * as lib_helpers_chat from "../lib/helpers/chat.js";
 import type * as lib_helpers_class from "../lib/helpers/class.js";
@@ -203,6 +204,7 @@ declare const fullApi: ApiFromModules<{
   "irt/scaleVersions": typeof irt_scaleVersions;
   "irt/validators": typeof irt_validators;
   "irt/workflows": typeof irt_workflows;
+  "lib/attempts": typeof lib_attempts;
   "lib/helpers/auth": typeof lib_helpers_auth;
   "lib/helpers/chat": typeof lib_helpers_chat;
   "lib/helpers/class": typeof lib_helpers_class;

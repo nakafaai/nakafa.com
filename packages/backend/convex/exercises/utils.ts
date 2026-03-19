@@ -1,4 +1,9 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import {
+  type AttemptEndReason,
+  type FinalizedAttemptStatus,
+  getAttemptEndReasonFromStatus,
+} from "@repo/backend/convex/lib/attempts";
 import { clampNumber } from "@repo/backend/convex/utils/helper";
 import type { WithoutSystemFields } from "convex/server";
 
@@ -10,6 +15,22 @@ type ExerciseAttemptAggregates = Pick<
 type ExerciseAttemptAggregatesPatch = Pick<
   WithoutSystemFields<Doc<"exerciseAttempts">>,
   "answeredCount" | "correctAnswers" | "totalTime" | "scorePercentage"
+>;
+
+type ExerciseAttemptFinalization = Pick<
+  Doc<"exerciseAttempts">,
+  "completedAt" | "endReason" | "finalizedAt" | "status"
+>;
+
+type FinalizedExerciseAttemptPatch = Pick<
+  WithoutSystemFields<Doc<"exerciseAttempts">>,
+  | "completedAt"
+  | "endReason"
+  | "finalizedAt"
+  | "lastActivityAt"
+  | "status"
+  | "totalTime"
+  | "updatedAt"
 >;
 
 /**
@@ -125,4 +146,55 @@ export function computeAttemptDurationSeconds({
   const wallClockSeconds = (completedAtMs - startedAtMs) / 1000;
 
   return Math.max(0, Math.round(wallClockSeconds));
+}
+
+export function getExerciseAttemptEndReason(
+  attempt: ExerciseAttemptFinalization
+): AttemptEndReason | null {
+  if (attempt.endReason) {
+    return attempt.endReason;
+  }
+
+  if (attempt.status === "in-progress") {
+    return null;
+  }
+
+  return getAttemptEndReasonFromStatus(attempt.status);
+}
+
+export function getExerciseAttemptFinalizedAt(
+  attempt: ExerciseAttemptFinalization
+): number | null {
+  return attempt.finalizedAt ?? attempt.completedAt ?? null;
+}
+
+export function isExerciseAttemptFinalized(
+  attempt: ExerciseAttemptFinalization
+): boolean {
+  return (
+    getExerciseAttemptFinalizedAt(attempt) !== null ||
+    attempt.status !== "in-progress"
+  );
+}
+
+export function buildFinalizedExerciseAttemptPatch({
+  completedAtMs,
+  now,
+  status,
+  totalTime,
+}: {
+  completedAtMs: number;
+  now: number;
+  status: FinalizedAttemptStatus;
+  totalTime: number;
+}): FinalizedExerciseAttemptPatch {
+  return {
+    completedAt: completedAtMs,
+    endReason: getAttemptEndReasonFromStatus(status),
+    finalizedAt: completedAtMs,
+    lastActivityAt: now,
+    status,
+    totalTime,
+    updatedAt: now,
+  };
 }
