@@ -22,11 +22,13 @@ type CompleteTryoutResult = Infer<typeof completeTryoutResultValidator>;
 
 /** Finalizes one tryout attempt into its current result state. */
 export async function finalizeTryoutAttempt({
+  completedAtMs,
   ctx,
   now,
   tryoutAttempt,
   userId,
 }: {
+  completedAtMs?: number;
   ctx: Pick<MutationCtx, "db" | "scheduler">;
   now: number;
   tryoutAttempt: Doc<"tryoutAttempts">;
@@ -119,7 +121,7 @@ export async function finalizeTryoutAttempt({
 
   const isOfficial = firstCompletedAttempt === null;
   const completedAttempt = await syncTryoutAttemptAggregates({
-    completedAtMs: now,
+    completedAtMs: completedAtMs ?? now,
     ctx,
     now,
     status: "completed",

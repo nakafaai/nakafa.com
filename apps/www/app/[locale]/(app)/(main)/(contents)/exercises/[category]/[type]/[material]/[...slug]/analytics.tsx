@@ -14,6 +14,7 @@ export function QuestionAnalytics({
   children: ReactNode;
 }) {
   const attempt = useAttempt((state) => state.attempt);
+  const isInputLocked = useAttempt((state) => state.isInputLocked);
 
   const ref = useIntersection({ threshold: 0.75 });
   const isActive = ref.entry?.isIntersecting ?? false;
@@ -21,7 +22,7 @@ export function QuestionAnalytics({
 
   const setTimeSpent = useExercise((state) => state.setTimeSpent);
 
-  const hasActiveAttempt = attempt?.status === "in-progress";
+  const hasActiveAttempt = attempt?.status === "in-progress" && !isInputLocked;
 
   const handleTick = useEffectEvent(() => {
     if (isActive && hasActiveAttempt) {

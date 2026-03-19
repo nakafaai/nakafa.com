@@ -417,6 +417,7 @@ export const expireAttemptInternal = internalMutation({
     }
 
     await finalizeTryoutAttempt({
+      completedAtMs: expiresAtMs,
       ctx,
       now,
       tryoutAttempt,

@@ -207,7 +207,11 @@ export function TryoutPartDialog() {
       }
       open={isCompleteDialogOpen}
       setOpen={setCompleteDialogOpen}
-      title={tTryouts("complete-part-title")}
+      title={
+        isAwaitingExpiry
+          ? tTryouts("part-processing-expiry-title")
+          : tTryouts("complete-part-title")
+      }
     />
   );
 }

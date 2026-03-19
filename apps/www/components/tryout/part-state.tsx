@@ -6,6 +6,7 @@ import type { ResponsiveDialog } from "@repo/design-system/components/ui/respons
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
+import { ConvexError } from "convex/values";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import {
@@ -167,7 +168,25 @@ export function TryoutPartProvider({
         toast.success(tTryouts("complete-part-success"), {
           position: "bottom-center",
         });
-      } catch {
+      } catch (error) {
+        if (error instanceof ConvexError) {
+          const errorData = error.data;
+
+          if (typeof errorData === "object" && errorData !== null) {
+            const errorCode = "code" in errorData ? errorData.code : undefined;
+
+            if (
+              errorCode === "TRYOUT_EXPIRED" ||
+              errorCode === "TRYOUT_PART_EXPIRED"
+            ) {
+              toast.info(tTryouts("part-head-processing-expiry"), {
+                position: "bottom-center",
+              });
+              return;
+            }
+          }
+        }
+
         toast.error(tTryouts("complete-part-error"), {
           position: "bottom-center",
         });
