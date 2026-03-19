@@ -72,7 +72,7 @@ export function truncateText(text: string, maxLength: number): string {
 
   if (text.length > maxLength) {
     if (trimmed.length > maxLength) {
-      return `${trimmed.substring(0, maxLength).trimEnd()}...`;
+      return `${trimmed.slice(0, maxLength).trimEnd()}...`;
     }
     return `${trimmed}...`;
   }

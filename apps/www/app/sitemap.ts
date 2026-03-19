@@ -170,7 +170,7 @@ export async function getEntries(
     try {
       // This is likely educational content, get actual modification date
       const contentPath = routeString.startsWith("/")
-        ? routeString.substring(1)
+        ? routeString.slice(1)
         : routeString;
       lastModified = await getContentLastModified(contentPath);
     } catch {
