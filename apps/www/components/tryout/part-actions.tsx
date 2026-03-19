@@ -143,12 +143,20 @@ export function TryoutPartBackCta() {
   const isRuntimePending = useTryoutPart(
     (state) => state.state.isRuntimePending
   );
-  const partEnded = useTryoutPart((state) => state.state.partEnded);
   const status = useTryoutPart((state) => state.state.status);
   const goToSet = useTryoutPart((state) => state.actions.goToSet);
 
-  if (isRuntimePending || !(partEnded || status === "locked")) {
+  if (isRuntimePending) {
     return null;
+  }
+
+  switch (status) {
+    case "completed":
+    case "ended":
+    case "locked":
+      break;
+    default:
+      return null;
   }
 
   return (

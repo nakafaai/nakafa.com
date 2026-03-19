@@ -125,7 +125,6 @@ interface TryoutPartContextValue {
     part: TryoutPartValue;
     partAttempt: TryoutPartAttempt | null;
     partCompleted: boolean;
-    partEnded: boolean;
     partExpired: boolean;
     partLocked: boolean;
     runtime: TryoutPartQuery | undefined;
@@ -173,9 +172,6 @@ export function TryoutPartProvider({
   const hasTryoutExpired = Boolean(
     runtime?.tryoutAttempt.status === "in-progress" &&
       runtime.expiresAtMs <= nowMs
-  );
-  const partEnded = Boolean(
-    partAttempt && partAttempt.setAttempt.status !== "in-progress"
   );
   const partCompleted = partAttempt?.setAttempt.status === "completed";
   const partExpired = partAttempt?.setAttempt.status === "expired";
@@ -309,7 +305,6 @@ export function TryoutPartProvider({
         part,
         partAttempt,
         partCompleted,
-        partEnded,
         partExpired,
         partLocked,
         runtime,
@@ -333,7 +328,6 @@ export function TryoutPartProvider({
       part,
       partAttempt,
       partCompleted,
-      partEnded,
       partExpired,
       partLocked,
       runtime,
