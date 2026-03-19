@@ -2,10 +2,6 @@
 
 import type { ReactNode } from "react";
 
-export function TryoutPartHero({ children }: { children: ReactNode }) {
-  return <div className="space-y-6">{children}</div>;
-}
-
 export function TryoutPartSummary({ children }: { children: ReactNode }) {
   return (
     <section className="rounded-xl border bg-card p-5 shadow-sm">

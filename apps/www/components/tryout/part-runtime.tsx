@@ -18,7 +18,6 @@ import {
 import {
   TryoutPartBody,
   TryoutPartCtas,
-  TryoutPartHero,
   TryoutPartLead,
   TryoutPartSummary,
 } from "@/components/tryout/part-shell";
@@ -90,16 +89,15 @@ export function TryoutPartRuntime({
           runtime={partState}
           tryout={tryout}
         >
-          <div className="space-y-12">
-            <TryoutPartHero>
-              <TryoutPartHead icon={icon} />
+          <div className="space-y-6">
+            <TryoutPartHead icon={icon} />
+
+            <div className="space-y-12">
               <TryoutPartSticky />
               <TryoutPartSummaryCard />
-
               <TryoutPartDialog />
-            </TryoutPartHero>
-
-            {shouldShowQuestions ? children : null}
+              {shouldShowQuestions ? children : null}
+            </div>
           </div>
         </TryoutPartProvider>
       </AttemptProvider>
