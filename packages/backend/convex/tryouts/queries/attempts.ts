@@ -1,5 +1,4 @@
 import { query } from "@repo/backend/convex/_generated/server";
-import { getExerciseAttemptEndReason } from "@repo/backend/convex/exercises/utils";
 import { attemptEndReasonValidator } from "@repo/backend/convex/lib/attempts";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
@@ -108,7 +107,7 @@ export const getUserTryoutAttempt = query({
       return {
         partIndex: partAttempt.partIndex,
         partKey: partAttempt.partKey,
-        endReason: getExerciseAttemptEndReason(setAttempt),
+        endReason: setAttempt.endReason,
         isFinalized: false,
         setAttempt,
         setId: partAttempt.setId,
@@ -241,7 +240,7 @@ export const getUserTryoutPartAttempt = query({
       return {
         partIndex: partAttempt.partIndex,
         partKey: partAttempt.partKey,
-        endReason: getExerciseAttemptEndReason(setAttempt),
+        endReason: setAttempt.endReason,
         isFinalized: false,
         setAttempt,
         setAttemptId: partAttempt.setAttemptId,

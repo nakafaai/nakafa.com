@@ -97,8 +97,11 @@ export const updateLeaderboard = internalMutation({
       return null;
     }
 
-    const completedAt =
-      tryoutAttempt.completedAt ?? tryoutAttempt.lastActivityAt;
+    if (tryoutAttempt.completedAt === null) {
+      throw new Error("Completed tryout attempt is missing completedAt.");
+    }
+
+    const completedAt = tryoutAttempt.completedAt;
     const rawScore = computeTryoutRawScorePercentage(tryoutAttempt);
 
     await ctx.db.insert("tryoutLeaderboardEntries", {

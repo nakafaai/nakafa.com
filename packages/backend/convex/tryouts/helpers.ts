@@ -6,7 +6,6 @@ import type {
 import {
   buildFinalizedExerciseAttemptPatch,
   computeAttemptDurationSeconds,
-  isExerciseAttemptFinalized,
 } from "@repo/backend/convex/exercises/utils";
 import { estimateThetaEAP } from "@repo/backend/convex/irt/estimation";
 import { getScaleVersionItemsForSet } from "@repo/backend/convex/irt/scaleVersions";
@@ -81,7 +80,7 @@ export function getEffectiveCompletedTryoutPartIndices({
   const effectiveCompletedPartIndices = new Set(completedPartIndices);
 
   for (const partAttempt of partAttempts) {
-    if (!isExerciseAttemptFinalized(partAttempt.setAttempt)) {
+    if (partAttempt.setAttempt.finalizedAt === null) {
       continue;
     }
 
@@ -351,7 +350,7 @@ export async function syncPendingFinalizedTryoutParts({
 
     const setAttempt = setAttempts[index];
 
-    if (!setAttempt || setAttempt.completedAt === undefined) {
+    if (!setAttempt || setAttempt.completedAt === null) {
       continue;
     }
 

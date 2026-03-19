@@ -8,7 +8,6 @@ import {
 import {
   buildFinalizedExerciseAttemptPatch,
   computeAttemptDurationSeconds,
-  getExerciseAttemptEndReason,
 } from "@repo/backend/convex/exercises/utils";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
@@ -280,12 +279,7 @@ export const completeAttempt = mutation({
     }
 
     if (attempt.status === "expired") {
-      return {
-        status:
-          getExerciseAttemptEndReason(attempt) === "submitted"
-            ? "completed"
-            : "expired",
-      } satisfies CompleteAttemptResult;
+      return { status: "expired" } satisfies CompleteAttemptResult;
     }
 
     if (attempt.status !== "in-progress") {

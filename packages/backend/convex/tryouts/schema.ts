@@ -62,9 +62,9 @@ const tables = {
     irtScore: v.number(),
     startedAt: v.number(),
     lastActivityAt: v.number(),
-    completedAt: v.optional(v.number()),
-    finalizedAt: v.optional(v.number()),
-    endReason: v.optional(attemptEndReasonValidator),
+    completedAt: v.union(v.number(), v.null()),
+    finalizedAt: v.union(v.number(), v.null()),
+    endReason: v.union(attemptEndReasonValidator, v.null()),
   })
     .index("userId_tryoutId_startedAt", ["userId", "tryoutId", "startedAt"])
     .index("userId_tryoutId_status_startedAt", [

@@ -186,6 +186,9 @@ export const startTryout = mutation({
       irtScore: scaleThetaToTryoutScore({ product: tryout.product, theta: 0 }),
       startedAt: now,
       lastActivityAt: now,
+      completedAt: null,
+      finalizedAt: null,
+      endReason: null,
     });
 
     const expiresAtMs = computeTryoutExpiresAtMs({
