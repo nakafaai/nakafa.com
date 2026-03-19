@@ -185,6 +185,7 @@ export function TryoutPartProvider({
 
   const timer = useExerciseTimer({
     attempt: partAttempt?.setAttempt ?? null,
+    expiresAtMs: runtime?.expiresAtMs,
     onExpire: async () => {
       try {
         const didCompletePart = await completeCurrentPart();

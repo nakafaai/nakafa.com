@@ -24,9 +24,13 @@ type TryoutScoreTotals = Pick<
   Doc<"tryoutAttempts">,
   "totalCorrect" | "totalQuestions"
 >;
-type TryoutPartFinalStatus = Extract<
+type FinalizedExerciseAttemptStatus = Exclude<
   Doc<"exerciseAttempts">["status"],
-  "completed" | "expired"
+  "in-progress"
+>;
+type FinalizedTryoutStatus = Exclude<
+  Doc<"tryoutAttempts">["status"],
+  "in-progress"
 >;
 
 /** Converts accumulated tryout score totals into a percentage. */
@@ -140,7 +144,7 @@ export async function finalizeTryoutPartAttempt({
   finishedAtMs: number;
   now: number;
   partAttempt: Doc<"tryoutPartAttempts">;
-  status: TryoutPartFinalStatus;
+  status: FinalizedExerciseAttemptStatus;
   tryoutAttemptId: Doc<"tryoutAttempts">["_id"];
 }) {
   const [setAttempt, tryoutAttempt] = await Promise.all([
@@ -267,7 +271,7 @@ export async function syncTryoutAttemptAggregates({
   completedAtMs: number;
   ctx: TryoutMutationCtx;
   now: number;
-  status: Doc<"tryoutAttempts">["status"];
+  status: FinalizedTryoutStatus;
   tryoutAttemptId: Doc<"tryoutAttempts">["_id"];
 }) {
   const tryoutAttempt = await ctx.db.get("tryoutAttempts", tryoutAttemptId);

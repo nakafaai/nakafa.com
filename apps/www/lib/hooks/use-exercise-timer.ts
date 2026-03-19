@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 export interface UseExerciseTimerProps {
   attempt: Doc<"exerciseAttempts"> | null;
+  expiresAtMs?: number;
   onExpire?: () => void | Promise<void>;
 }
 
@@ -46,7 +47,8 @@ function formatTimePart(value: number): string {
  */
 function calculateRemainingTime(
   attempt: Doc<"exerciseAttempts">,
-  nowMs: number
+  nowMs: number,
+  expiresAtMs?: number
 ): number {
   const timeLimitSeconds = attempt.timeLimit;
 
@@ -54,8 +56,12 @@ function calculateRemainingTime(
     return 0;
   }
 
-  const expiresAtMs = attempt.startedAt + timeLimitSeconds * 1000;
-  const remainingMs = expiresAtMs - nowMs;
+  const attemptExpiresAtMs = attempt.startedAt + timeLimitSeconds * 1000;
+  const effectiveExpiresAtMs =
+    expiresAtMs === undefined
+      ? attemptExpiresAtMs
+      : Math.min(attemptExpiresAtMs, expiresAtMs);
+  const remainingMs = effectiveExpiresAtMs - nowMs;
   return Math.max(0, Math.ceil(remainingMs / 1000));
 }
 
@@ -89,6 +95,7 @@ function formatTime(seconds: number): UseExerciseTimerReturn["formatted"] {
  */
 export function useExerciseTimer({
   attempt,
+  expiresAtMs,
   onExpire,
 }: UseExerciseTimerProps): UseExerciseTimerReturn {
   const [nowMs, setNowMs] = useState(Date.now);
@@ -99,9 +106,14 @@ export function useExerciseTimer({
   const isInProgress = isTimed && attempt.status === "in-progress";
 
   const remainingSeconds =
-    attempt && isInProgress ? calculateRemainingTime(attempt, nowMs) : 0;
+    attempt && isInProgress
+      ? calculateRemainingTime(attempt, nowMs, expiresAtMs)
+      : 0;
 
-  const totalSeconds = isTimed ? attempt.timeLimit : 0;
+  const totalSeconds =
+    attempt && isTimed
+      ? calculateRemainingTime(attempt, attempt.startedAt, expiresAtMs)
+      : 0;
 
   const isActive = isInProgress && remainingSeconds > 0;
 
@@ -122,7 +134,7 @@ export function useExerciseTimer({
     const now = Date.now();
     setNowMs(now);
 
-    const remaining = calculateRemainingTime(attempt, now);
+    const remaining = calculateRemainingTime(attempt, now, expiresAtMs);
 
     if (remaining === 0 && !hasExpired) {
       setHasExpired(true);

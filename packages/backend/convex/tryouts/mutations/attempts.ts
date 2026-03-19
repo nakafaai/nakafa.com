@@ -406,14 +406,6 @@ export const completePart = mutation({
 
     const tryoutExpiry = await syncTryoutAttemptExpiry(ctx, tryoutAttempt, now);
 
-    if (tryoutExpiry.expired) {
-      throw new ConvexError({
-        code: "TRYOUT_EXPIRED",
-        message: "This tryout has expired.",
-        expiresAtMs: tryoutExpiry.expiredAtMs,
-      });
-    }
-
     if (tryoutAttempt.status !== "in-progress") {
       throw new ConvexError({
         code: "INVALID_ATTEMPT_STATUS",
@@ -446,6 +438,43 @@ export const completePart = mutation({
       throw new ConvexError({
         code: "SET_ATTEMPT_NOT_FOUND",
         message: "Exercise set attempt not found.",
+      });
+    }
+
+    if (tryoutExpiry.expired) {
+      const [expiredTryoutAttempt, expiredPartAttempt, expiredSetAttempt] =
+        await Promise.all([
+          ctx.db.get("tryoutAttempts", args.tryoutAttemptId),
+          ctx.db
+            .query("tryoutPartAttempts")
+            .withIndex("tryoutAttemptId_partKey", (q) =>
+              q
+                .eq("tryoutAttemptId", args.tryoutAttemptId)
+                .eq("partKey", args.partKey)
+            )
+            .unique(),
+          ctx.db.get("exerciseAttempts", partAttempt.setAttemptId),
+        ]);
+
+      if (
+        expiredTryoutAttempt?.completedPartIndices.includes(
+          partAttempt.partIndex
+        ) &&
+        expiredPartAttempt &&
+        expiredSetAttempt
+      ) {
+        return {
+          theta: expiredPartAttempt.theta,
+          thetaSE: expiredPartAttempt.thetaSE,
+          rawScore: expiredSetAttempt.correctAnswers,
+          totalQuestions: expiredSetAttempt.totalExercises,
+        };
+      }
+
+      throw new ConvexError({
+        code: "TRYOUT_EXPIRED",
+        message: "This tryout has expired.",
+        expiresAtMs: tryoutExpiry.expiredAtMs,
       });
     }
 
