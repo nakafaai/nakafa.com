@@ -7,6 +7,7 @@ import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import {
   finalizeTryoutPartAttempt,
+  getFirstIncompleteTryoutPartIndex,
   syncTryoutAttemptExpiry,
 } from "@repo/backend/convex/tryouts/helpers";
 import {
@@ -21,7 +22,6 @@ import {
 } from "@repo/backend/convex/tryouts/products";
 import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError, type Infer, v } from "convex/values";
-import { getManyFrom } from "convex-helpers/server/relationships";
 import { literals } from "convex-helpers/validators";
 
 const startTryoutStatusValidator = literals("in-progress", "completed");
@@ -100,20 +100,12 @@ export const startTryout = mutation({
       );
 
       if (!tryoutExpiry.expired && existingAttempt.status === "in-progress") {
-        const tryoutPartSets = await getManyFrom(
-          ctx.db,
-          "tryoutPartSets",
-          "tryoutId_partIndex",
-          tryout._id,
-          "tryoutId"
-        );
+        const firstIncompletePartIndex = getFirstIncompleteTryoutPartIndex({
+          completedPartIndices: existingAttempt.completedPartIndices,
+          partCount: tryout.partCount,
+        });
 
-        const firstIncompletePart = tryoutPartSets.find(
-          (partSet) =>
-            !existingAttempt.completedPartIndices.includes(partSet.partIndex)
-        );
-
-        if (!firstIncompletePart) {
+        if (firstIncompletePartIndex === undefined) {
           const completedAttempt = await finalizeTryoutAttempt({
             ctx,
             now,
@@ -138,6 +130,22 @@ export const startTryout = mutation({
           } satisfies Infer<typeof startTryoutResultValidator>;
         }
 
+        const firstIncompletePart = await ctx.db
+          .query("tryoutPartSets")
+          .withIndex("tryoutId_partIndex", (q) =>
+            q
+              .eq("tryoutId", tryout._id)
+              .eq("partIndex", firstIncompletePartIndex)
+          )
+          .unique();
+
+        if (!firstIncompletePart) {
+          throw new ConvexError({
+            code: "INVALID_TRYOUT_STATE",
+            message: "Tryout is missing its next part.",
+          });
+        }
+
         return {
           tryoutAttemptId: existingAttempt._id,
           partCount: tryout.partCount,
@@ -148,14 +156,12 @@ export const startTryout = mutation({
       }
     }
 
-    const tryoutPartSets = await getManyFrom(
-      ctx.db,
-      "tryoutPartSets",
-      "tryoutId_partIndex",
-      tryout._id,
-      "tryoutId"
-    );
-    const firstPart = tryoutPartSets[0];
+    const firstPart = await ctx.db
+      .query("tryoutPartSets")
+      .withIndex("tryoutId_partIndex", (q) =>
+        q.eq("tryoutId", tryout._id).eq("partIndex", 0)
+      )
+      .unique();
 
     if (!firstPart) {
       throw new ConvexError({
@@ -264,25 +270,34 @@ export const startPart = mutation({
       });
     }
 
-    const [tryoutPartSet, tryoutPartSets] = await Promise.all([
+    const nextPartIndex = getFirstIncompleteTryoutPartIndex({
+      completedPartIndices: tryoutAttempt.completedPartIndices,
+      partCount: tryout.partCount,
+    });
+
+    if (nextPartIndex === undefined) {
+      throw new ConvexError({
+        code: "INVALID_TRYOUT_STATE",
+        message: "Tryout has no available part to start.",
+      });
+    }
+
+    const [tryoutPartSet, nextPartSet] = await Promise.all([
       ctx.db
         .query("tryoutPartSets")
         .withIndex("tryoutId_partKey", (q) =>
           q.eq("tryoutId", tryoutAttempt.tryoutId).eq("partKey", args.partKey)
         )
         .unique(),
-      getManyFrom(
-        ctx.db,
-        "tryoutPartSets",
-        "tryoutId_partIndex",
-        tryoutAttempt.tryoutId,
-        "tryoutId"
-      ),
+      ctx.db
+        .query("tryoutPartSets")
+        .withIndex("tryoutId_partIndex", (q) =>
+          q
+            .eq("tryoutId", tryoutAttempt.tryoutId)
+            .eq("partIndex", nextPartIndex)
+        )
+        .unique(),
     ]);
-    const nextPartSet = tryoutPartSets.find(
-      (partSet) =>
-        !tryoutAttempt.completedPartIndices.includes(partSet.partIndex)
-    );
 
     if (!tryoutPartSet) {
       throw new ConvexError({
@@ -294,7 +309,7 @@ export const startPart = mutation({
     if (!nextPartSet) {
       throw new ConvexError({
         code: "INVALID_TRYOUT_STATE",
-        message: "Tryout has no available part to start.",
+        message: "Tryout is missing its next part.",
       });
     }
 

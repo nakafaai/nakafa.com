@@ -45,6 +45,21 @@ export function computeTryoutRawScorePercentage({
   return (totalCorrect / totalQuestions) * 100;
 }
 
+/** Returns the first ordered part index that has not been finalized yet. */
+export function getFirstIncompleteTryoutPartIndex({
+  completedPartIndices,
+  partCount,
+}: Pick<Doc<"tryoutAttempts">, "completedPartIndices"> &
+  Pick<Doc<"tryouts">, "partCount">) {
+  for (let partIndex = 0; partIndex < partCount; partIndex += 1) {
+    if (!completedPartIndices.includes(partIndex)) {
+      return partIndex;
+    }
+  }
+
+  return undefined;
+}
+
 /** Returns the earliest completed simulation attempt for official-result checks. */
 export function getFirstCompletedSimulationAttempt(
   db: TryoutDbReader,

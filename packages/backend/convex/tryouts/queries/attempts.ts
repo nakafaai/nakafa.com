@@ -2,7 +2,10 @@ import { query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { getFirstCompletedSimulationAttempt } from "@repo/backend/convex/tryouts/helpers";
+import {
+  getFirstCompletedSimulationAttempt,
+  getFirstIncompleteTryoutPartIndex,
+} from "@repo/backend/convex/tryouts/helpers";
 import {
   computeTryoutExpiresAtMs,
   tryoutProductValidator,
@@ -70,13 +73,6 @@ export const getUserTryoutAttempt = query({
       return null;
     }
 
-    const tryoutPartSets = await getManyFrom(
-      ctx.db,
-      "tryoutPartSets",
-      "tryoutId_partIndex",
-      tryout._id,
-      "tryoutId"
-    );
     const partAttempts = await getManyFrom(
       ctx.db,
       "tryoutPartAttempts",
@@ -112,10 +108,29 @@ export const getUserTryoutAttempt = query({
         partAttempt.setAttempt.status === "in-progress" &&
         !completedPartIndices.includes(partAttempt.partIndex)
     );
-    const nextPartSet = tryoutPartSets.find(
-      (partSet) => !completedPartIndices.includes(partSet.partIndex)
-    );
-    const nextPartKey = activePartAttempt?.partKey ?? nextPartSet?.partKey;
+    const nextPartIndex = getFirstIncompleteTryoutPartIndex({
+      completedPartIndices,
+      partCount: tryout.partCount,
+    });
+    let nextPartKey = activePartAttempt?.partKey;
+
+    if (nextPartKey === undefined && nextPartIndex !== undefined) {
+      const nextPartSet = await ctx.db
+        .query("tryoutPartSets")
+        .withIndex("tryoutId_partIndex", (q) =>
+          q.eq("tryoutId", tryout._id).eq("partIndex", nextPartIndex)
+        )
+        .unique();
+
+      if (!nextPartSet) {
+        throw new ConvexError({
+          code: "INVALID_TRYOUT_STATE",
+          message: "Tryout is missing its next part.",
+        });
+      }
+
+      nextPartKey = nextPartSet.partKey;
+    }
 
     const firstCompletedAttempt = await getFirstCompletedSimulationAttempt(
       ctx.db,
@@ -254,13 +269,6 @@ export const getUserTryoutPartAttempt = query({
       return null;
     }
 
-    const tryoutPartSets = await getManyFrom(
-      ctx.db,
-      "tryoutPartSets",
-      "tryoutId_partIndex",
-      tryout._id,
-      "tryoutId"
-    );
     const activePartAttempts = await getManyFrom(
       ctx.db,
       "tryoutPartAttempts",
@@ -281,11 +289,29 @@ export const getUserTryoutPartAttempt = query({
         !tryoutAttempt.completedPartIndices.includes(partAttempt.partIndex)
       );
     })?.partKey;
-    const nextPartSet = tryoutPartSets.find(
-      (partSet) =>
-        !tryoutAttempt.completedPartIndices.includes(partSet.partIndex)
-    );
-    const nextPartKey = activePartKey ?? nextPartSet?.partKey;
+    const nextPartIndex = getFirstIncompleteTryoutPartIndex({
+      completedPartIndices: tryoutAttempt.completedPartIndices,
+      partCount: tryout.partCount,
+    });
+    let nextPartKey = activePartKey;
+
+    if (nextPartKey === undefined && nextPartIndex !== undefined) {
+      const nextPartSet = await ctx.db
+        .query("tryoutPartSets")
+        .withIndex("tryoutId_partIndex", (q) =>
+          q.eq("tryoutId", tryout._id).eq("partIndex", nextPartIndex)
+        )
+        .unique();
+
+      if (!nextPartSet) {
+        throw new ConvexError({
+          code: "INVALID_TRYOUT_STATE",
+          message: "Tryout is missing its next part.",
+        });
+      }
+
+      nextPartKey = nextPartSet.partKey;
+    }
 
     const partAttempt = await ctx.db
       .query("tryoutPartAttempts")
