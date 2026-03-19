@@ -103,18 +103,13 @@ export const getUserTryoutAttempt = query({
       };
     });
     const completedPartIndices = attempt.completedPartIndices;
-    const activePartAttempt = validPartAttempts.find(
-      (partAttempt) =>
-        partAttempt.setAttempt.status === "in-progress" &&
-        !completedPartIndices.includes(partAttempt.partIndex)
-    );
     const nextPartIndex = getFirstIncompleteTryoutPartIndex({
       completedPartIndices,
       partCount: tryout.partCount,
     });
-    let nextPartKey = activePartAttempt?.partKey;
+    let nextPartKey: (typeof validPartAttempts)[number]["partKey"] | undefined;
 
-    if (nextPartKey === undefined && nextPartIndex !== undefined) {
+    if (nextPartIndex !== undefined) {
       const nextPartSet = await ctx.db
         .query("tryoutPartSets")
         .withIndex("tryoutId_partIndex", (q) =>
@@ -269,33 +264,13 @@ export const getUserTryoutPartAttempt = query({
       return null;
     }
 
-    const activePartAttempts = await getManyFrom(
-      ctx.db,
-      "tryoutPartAttempts",
-      "tryoutAttemptId_partIndex",
-      tryoutAttempt._id,
-      "tryoutAttemptId"
-    );
-    const activeSetAttempts = await getAll(
-      ctx.db,
-      "exerciseAttempts",
-      activePartAttempts.map((partAttempt) => partAttempt.setAttemptId)
-    );
-    const activePartKey = activePartAttempts.find((partAttempt, index) => {
-      const setAttempt = activeSetAttempts[index];
-
-      return (
-        setAttempt?.status === "in-progress" &&
-        !tryoutAttempt.completedPartIndices.includes(partAttempt.partIndex)
-      );
-    })?.partKey;
     const nextPartIndex = getFirstIncompleteTryoutPartIndex({
       completedPartIndices: tryoutAttempt.completedPartIndices,
       partCount: tryout.partCount,
     });
-    let nextPartKey = activePartKey;
+    let nextPartKey: typeof args.partKey | undefined;
 
-    if (nextPartKey === undefined && nextPartIndex !== undefined) {
+    if (nextPartIndex !== undefined) {
       const nextPartSet = await ctx.db
         .query("tryoutPartSets")
         .withIndex("tryoutId_partIndex", (q) =>

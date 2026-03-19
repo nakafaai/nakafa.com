@@ -167,7 +167,9 @@ export function TryoutPartProvider({
   const hasStartedTryout = Boolean(runtime);
   const tryoutInProgress =
     runtime?.tryoutAttempt.status === "in-progress" && !hasTryoutExpired;
-  const canStartPart = Boolean(tryoutInProgress && !partAttempt);
+  const canStartPart = Boolean(
+    tryoutInProgress && runtime?.nextPartKey === part.key && !partAttempt
+  );
   const canContinuePart = Boolean(
     partAttempt?.setAttempt.status === "in-progress" && !hasTryoutExpired
   );
