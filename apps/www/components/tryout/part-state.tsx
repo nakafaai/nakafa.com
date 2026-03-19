@@ -137,19 +137,6 @@ export function TryoutPartProvider({
   const timer = useExerciseTimer({
     attempt,
     expiresAtMs: runtime?.expiresAtMs,
-    onExpire: async () => {
-      try {
-        const didCompletePart = await completeCurrentPart();
-
-        if (didCompletePart) {
-          goToSet();
-        }
-      } catch {
-        toast.error(tTryouts("complete-part-error"), {
-          position: "bottom-center",
-        });
-      }
-    },
   });
 
   const handleStartPart = useCallback(() => {

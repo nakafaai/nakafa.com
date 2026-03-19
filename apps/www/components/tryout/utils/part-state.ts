@@ -31,6 +31,27 @@ interface TryoutProgress {
   status: TryoutAttemptStatus;
 }
 
+function hasExpiredPartAttempt({
+  nowMs,
+  partAttempt,
+}: {
+  nowMs: number;
+  partAttempt: TryoutPartAttempt | null;
+}) {
+  if (!partAttempt) {
+    return false;
+  }
+
+  if (partAttempt.setAttempt.status !== "in-progress") {
+    return false;
+  }
+
+  const expiresAtMs =
+    partAttempt.setAttempt.startedAt + partAttempt.setAttempt.timeLimit * 1000;
+
+  return nowMs >= expiresAtMs;
+}
+
 function isActiveTryout({
   expiresAtMs,
   nowMs,
@@ -68,6 +89,10 @@ function getTryoutPartStatus({
     partAttempt &&
     tryout.completedPartIndices.includes(partAttempt.partIndex)
   ) {
+    return "completed";
+  }
+
+  if (hasExpiredPartAttempt({ nowMs, partAttempt })) {
     return "completed";
   }
 
@@ -119,12 +144,15 @@ export function deriveTryoutPartPageState({
     partKey,
     tryout,
   });
+  const partEndReason = hasExpiredPartAttempt({ nowMs, partAttempt })
+    ? "time-expired"
+    : (partAttempt?.setAttempt.endReason ?? null);
 
   return {
     answers: partAttempt?.answers ?? [],
     attempt: partAttempt?.setAttempt ?? null,
     canStartPart: status === "ready" && runtime?.nextPartKey === partKey,
-    partEndReason: partAttempt?.setAttempt.endReason ?? null,
+    partEndReason,
     status,
   };
 }
