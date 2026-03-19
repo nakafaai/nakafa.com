@@ -91,12 +91,15 @@ function formatTime(seconds: number): string {
   const duration = intervalToDuration({ start: 0, end: seconds * 1000 });
 
   const parts: string[] = [];
+
   if (duration.hours && duration.hours > 0) {
     parts.push(`${duration.hours}h`);
   }
+
   if (duration.minutes && duration.minutes > 0) {
     parts.push(`${duration.minutes}m`);
   }
+
   if (duration.seconds && duration.seconds > 0) {
     parts.push(`${duration.seconds}s`);
   }
@@ -113,10 +116,12 @@ function StatsProgress({
 }) {
   const t = useTranslations("Exercises");
 
-  const answeredCount = answers.filter(
-    (a) => a.selectedOptionId !== undefined || a.textAnswer !== undefined
-  ).length;
-  const totalCount = attempt.totalExercises ?? 0;
+  const answeredCount = answers.filter((answer) => {
+    return (
+      answer.selectedOptionId !== undefined || answer.textAnswer !== undefined
+    );
+  }).length;
+  const totalCount = attempt.totalExercises;
   const progress = totalCount > 0 ? (answeredCount / totalCount) * 100 : 0;
 
   return (

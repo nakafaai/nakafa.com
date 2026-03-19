@@ -1,10 +1,8 @@
 import { query } from "@repo/backend/convex/_generated/server";
-import { attemptEndReasonValidator } from "@repo/backend/convex/lib/attempts";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import {
-  getEffectiveCompletedTryoutPartIndices,
   getFirstCompletedSimulationAttempt,
   getFirstIncompleteTryoutPartIndex,
 } from "@repo/backend/convex/tryouts/helpers";
@@ -22,8 +20,6 @@ const tryoutPartAttemptSummaryValidator = v.object({
   partKey: tryoutPartKeyValidator,
   setAttempt: vv.doc("exerciseAttempts"),
   setId: vv.id("exerciseSets"),
-  endReason: nullable(attemptEndReasonValidator),
-  isFinalized: v.boolean(),
 });
 
 const tryoutPartAttemptRuntimeValidator = v.object({
@@ -31,8 +27,6 @@ const tryoutPartAttemptRuntimeValidator = v.object({
   partKey: tryoutPartKeyValidator,
   setAttempt: vv.doc("exerciseAttempts"),
   answers: v.array(vv.doc("exerciseAnswers")),
-  endReason: nullable(attemptEndReasonValidator),
-  isFinalized: v.boolean(),
 });
 
 /** Returns the authenticated user's latest tryout attempt for one tryout slug. */
@@ -107,22 +101,12 @@ export const getUserTryoutAttempt = query({
       return {
         partIndex: partAttempt.partIndex,
         partKey: partAttempt.partKey,
-        endReason: setAttempt.endReason,
-        isFinalized: false,
         setAttempt,
         setId: partAttempt.setId,
       };
     });
-    const completedPartIndices = getEffectiveCompletedTryoutPartIndices({
-      completedPartIndices: attempt.completedPartIndices,
-      partAttempts: validPartAttempts,
-    });
-    const summarizedPartAttempts = validPartAttempts.map((partAttempt) => ({
-      ...partAttempt,
-      isFinalized: completedPartIndices.includes(partAttempt.partIndex),
-    }));
     const nextPartIndex = getFirstIncompleteTryoutPartIndex({
-      completedPartIndices,
+      completedPartIndices: attempt.completedPartIndices,
       partCount: tryout.partCount,
     });
     let nextPartKey: (typeof validPartAttempts)[number]["partKey"] | undefined;
@@ -159,8 +143,8 @@ export const getUserTryoutAttempt = query({
 
     return {
       attempt,
-      partAttempts: summarizedPartAttempts,
-      completedPartIndices,
+      partAttempts: validPartAttempts,
+      completedPartIndices: attempt.completedPartIndices,
       nextPartKey,
       expiresAtMs,
       practiceUnlocked: firstCompletedAttempt !== null,
@@ -240,21 +224,15 @@ export const getUserTryoutPartAttempt = query({
       return {
         partIndex: partAttempt.partIndex,
         partKey: partAttempt.partKey,
-        endReason: setAttempt.endReason,
-        isFinalized: false,
         setAttempt,
         setAttemptId: partAttempt.setAttemptId,
       };
-    });
-    const completedPartIndices = getEffectiveCompletedTryoutPartIndices({
-      completedPartIndices: tryoutAttempt.completedPartIndices,
-      partAttempts: validPartAttempts,
     });
     const currentPartAttempt = validPartAttempts.find(
       (partAttempt) => partAttempt.partKey === args.partKey
     );
     const nextPartIndex = getFirstIncompleteTryoutPartIndex({
-      completedPartIndices,
+      completedPartIndices: tryoutAttempt.completedPartIndices,
       partCount: tryout.partCount,
     });
     let nextPartKey: typeof args.partKey | undefined;
@@ -285,7 +263,7 @@ export const getUserTryoutPartAttempt = query({
           startedAtMs: tryoutAttempt.startedAt,
         }),
         nextPartKey,
-        completedPartIndices,
+        completedPartIndices: tryoutAttempt.completedPartIndices,
         partAttempt: null,
       };
     }
@@ -305,15 +283,11 @@ export const getUserTryoutPartAttempt = query({
         startedAtMs: tryoutAttempt.startedAt,
       }),
       nextPartKey,
-      completedPartIndices,
+      completedPartIndices: tryoutAttempt.completedPartIndices,
       partAttempt: {
         partIndex: currentPartAttempt.partIndex,
         partKey: currentPartAttempt.partKey,
         answers,
-        endReason: currentPartAttempt.endReason,
-        isFinalized: completedPartIndices.includes(
-          currentPartAttempt.partIndex
-        ),
         setAttempt: currentPartAttempt.setAttempt,
       },
     };

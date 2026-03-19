@@ -4,7 +4,6 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   computeTryoutRawScorePercentage,
   getFirstCompletedSimulationAttempt,
-  syncPendingFinalizedTryoutParts,
   syncTryoutAttemptAggregates,
   syncTryoutAttemptExpiry,
 } from "@repo/backend/convex/tryouts/helpers";
@@ -109,49 +108,12 @@ export async function finalizeTryoutAttempt({
   }
 
   if (tryoutAttempt.completedPartIndices.length < tryout.partCount) {
-    const refreshedTryoutAttempt = await syncPendingFinalizedTryoutParts({
-      ctx,
-      now,
-      tryoutAttempt,
-    });
-
-    if (refreshedTryoutAttempt.completedPartIndices.length < tryout.partCount) {
-      return {
-        status: "in-progress",
-        isOfficial: false,
-        theta: refreshedTryoutAttempt.theta,
-        irtScore: refreshedTryoutAttempt.irtScore,
-        rawScorePercentage: computeTryoutRawScorePercentage(
-          refreshedTryoutAttempt
-        ),
-      } satisfies CompleteTryoutResult;
-    }
-
-    const isOfficial = firstCompletedAttempt === null;
-    const completedAttempt = await syncTryoutAttemptAggregates({
-      completedAtMs: now,
-      ctx,
-      now,
-      status: "completed",
-      tryoutAttemptId: refreshedTryoutAttempt._id,
-    });
-
-    if (isOfficial) {
-      await ctx.scheduler.runAfter(
-        0,
-        internal.tryouts.internalMutations.updateLeaderboard,
-        {
-          tryoutAttemptId: refreshedTryoutAttempt._id,
-        }
-      );
-    }
-
     return {
-      status: "completed",
-      isOfficial,
-      theta: completedAttempt.theta,
-      irtScore: completedAttempt.irtScore,
-      rawScorePercentage: completedAttempt.rawScorePercentage,
+      status: "in-progress",
+      isOfficial: false,
+      theta: tryoutAttempt.theta,
+      irtScore: tryoutAttempt.irtScore,
+      rawScorePercentage: computeTryoutRawScorePercentage(tryoutAttempt),
     } satisfies CompleteTryoutResult;
   }
 

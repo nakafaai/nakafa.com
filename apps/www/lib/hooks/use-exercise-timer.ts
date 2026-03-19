@@ -13,31 +13,11 @@ export interface UseExerciseTimerReturn {
     hours: number;
     minutes: number;
     seconds: number;
-    hh: string;
-    mm: string;
-    ss: string;
-    hms: string;
-    ms: string;
   };
   isActive: boolean;
-  isExpired: boolean;
-  isLowTime: boolean;
-  progress: number;
-  remainingSeconds: number;
-  totalSeconds: number;
 }
 
-const LOW_TIME_THRESHOLD_SECONDS = 60;
 const UPDATE_INTERVAL_MS = 1000;
-
-/**
- * Formats a time unit as a zero-padded string.
- * @param value - The numeric time unit (hours, minutes, seconds)
- * @returns The time unit formatted as two digits
- */
-function formatTimePart(value: number): string {
-  return String(value).padStart(2, "0");
-}
 
 /**
  * Calculates the remaining time in seconds for an exercise attempt.
@@ -79,11 +59,6 @@ function formatTime(seconds: number): UseExerciseTimerReturn["formatted"] {
     hours,
     minutes,
     seconds: secs,
-    hh: formatTimePart(hours),
-    mm: formatTimePart(minutes),
-    ss: formatTimePart(secs),
-    hms: `${formatTimePart(hours)}:${formatTimePart(minutes)}:${formatTimePart(secs)}`,
-    ms: `${formatTimePart(minutes)}:${formatTimePart(secs)}`,
   };
 }
 
@@ -110,21 +85,7 @@ export function useExerciseTimer({
       ? calculateRemainingTime(attempt, nowMs, expiresAtMs)
       : 0;
 
-  const totalSeconds =
-    attempt && isTimed
-      ? calculateRemainingTime(attempt, attempt.startedAt, expiresAtMs)
-      : 0;
-
   const isActive = isInProgress && remainingSeconds > 0;
-
-  const isExpired =
-    isTimed &&
-    (attempt.status === "expired" || (isInProgress && remainingSeconds === 0));
-
-  const isLowTime =
-    remainingSeconds > 0 && remainingSeconds <= LOW_TIME_THRESHOLD_SECONDS;
-
-  const progress = totalSeconds > 0 ? remainingSeconds / totalSeconds : 0;
 
   const interval = useInterval(() => {
     if (!(isActive && attempt)) {
@@ -141,6 +102,27 @@ export function useExerciseTimer({
       onExpire?.();
     }
   }, UPDATE_INTERVAL_MS);
+
+  useEffect(() => {
+    if (!hasExpired || remainingSeconds === 0) {
+      return;
+    }
+
+    setHasExpired(false);
+  }, [hasExpired, remainingSeconds]);
+
+  useEffect(() => {
+    if (!(attempt && isInProgress)) {
+      return;
+    }
+
+    if (remainingSeconds > 0 || hasExpired) {
+      return;
+    }
+
+    setHasExpired(true);
+    onExpire?.();
+  }, [attempt, hasExpired, isInProgress, onExpire, remainingSeconds]);
 
   useEffect(() => {
     if (!isActive) {
@@ -161,12 +143,7 @@ export function useExerciseTimer({
   );
 
   return {
-    remainingSeconds,
-    totalSeconds,
-    progress,
     isActive,
-    isExpired,
-    isLowTime,
     formatted,
   };
 }

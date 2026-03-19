@@ -81,12 +81,8 @@ function TryoutPartRuntimeBody({
   part,
   tryout,
 }: TryoutPartRuntimeProps) {
-  const attempt = useTryoutPart(
-    (state) => state.state.partAttempt?.setAttempt ?? null
-  );
-  const answers = useTryoutPart(
-    (state) => state.state.runtime?.partAttempt?.answers ?? []
-  );
+  const attempt = useTryoutPart((state) => state.state.attempt);
+  const answers = useTryoutPart((state) => state.state.answers);
   const status = useTryoutPart((state) => state.state.status);
   const shouldRequestAnswerSheet = status === "in-progress";
   const { data: answerSheet, isPending: isAnswerSheetPending } =

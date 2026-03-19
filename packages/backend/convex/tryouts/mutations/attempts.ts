@@ -8,7 +8,6 @@ import { vv } from "@repo/backend/convex/lib/validators/vv";
 import {
   finalizeTryoutPartAttempt,
   getFirstIncompleteTryoutPartIndex,
-  syncPendingFinalizedTryoutParts,
   syncTryoutAttemptExpiry,
 } from "@repo/backend/convex/tryouts/helpers";
 import { finalizeTryoutAttempt } from "@repo/backend/convex/tryouts/mutations/helpers";
@@ -98,13 +97,8 @@ export const startTryout = mutation({
       );
 
       if (!tryoutExpiry.expired && existingAttempt.status === "in-progress") {
-        const currentTryoutAttempt = await syncPendingFinalizedTryoutParts({
-          ctx,
-          now,
-          tryoutAttempt: existingAttempt,
-        });
         const firstIncompletePartIndex = getFirstIncompleteTryoutPartIndex({
-          completedPartIndices: currentTryoutAttempt.completedPartIndices,
+          completedPartIndices: existingAttempt.completedPartIndices,
           partCount: tryout.partCount,
         });
 
@@ -112,7 +106,7 @@ export const startTryout = mutation({
           const completedAttempt = await finalizeTryoutAttempt({
             ctx,
             now,
-            tryoutAttempt: currentTryoutAttempt,
+            tryoutAttempt: existingAttempt,
             userId,
           });
 
@@ -125,7 +119,7 @@ export const startTryout = mutation({
           }
 
           return {
-            tryoutAttemptId: currentTryoutAttempt._id,
+            tryoutAttemptId: existingAttempt._id,
             partCount: tryout.partCount,
             firstPartKey: undefined,
             expiresAtMs: tryoutExpiry.expiredAtMs,
@@ -150,7 +144,7 @@ export const startTryout = mutation({
         }
 
         return {
-          tryoutAttemptId: currentTryoutAttempt._id,
+          tryoutAttemptId: existingAttempt._id,
           partCount: tryout.partCount,
           firstPartKey: firstIncompletePart.partKey,
           expiresAtMs: tryoutExpiry.expiredAtMs,
@@ -187,7 +181,6 @@ export const startTryout = mutation({
       startedAt: now,
       lastActivityAt: now,
       completedAt: null,
-      finalizedAt: null,
       endReason: null,
     });
 
@@ -276,14 +269,8 @@ export const startPart = mutation({
       });
     }
 
-    const currentTryoutAttempt = await syncPendingFinalizedTryoutParts({
-      ctx,
-      now,
-      tryoutAttempt,
-    });
-
     const nextPartIndex = getFirstIncompleteTryoutPartIndex({
-      completedPartIndices: currentTryoutAttempt.completedPartIndices,
+      completedPartIndices: tryoutAttempt.completedPartIndices,
       partCount: tryout.partCount,
     });
 
@@ -332,11 +319,7 @@ export const startPart = mutation({
       });
     }
 
-    if (
-      currentTryoutAttempt.completedPartIndices.includes(
-        tryoutPartSet.partIndex
-      )
-    ) {
+    if (tryoutAttempt.completedPartIndices.includes(tryoutPartSet.partIndex)) {
       throw new ConvexError({
         code: "PART_ALREADY_COMPLETED",
         message: "This tryout part has already been completed.",
@@ -374,11 +357,37 @@ export const startPart = mutation({
         });
       }
 
-      return {
-        setAttemptId: existingPartAttempt.setAttemptId,
-        setId: tryoutPartSet.setId,
-        questionCount: set.questionCount,
-      };
+      if (existingSetAttempt.status === "in-progress") {
+        const expiresAtMs =
+          existingSetAttempt.startedAt + existingSetAttempt.timeLimit * 1000;
+
+        if (now >= expiresAtMs) {
+          await finalizeTryoutPartAttempt({
+            ctx,
+            finishedAtMs: expiresAtMs,
+            now,
+            partAttempt: existingPartAttempt,
+            status: "expired",
+            tryoutAttemptId: args.tryoutAttemptId,
+          });
+
+          throw new ConvexError({
+            code: "TRYOUT_PART_EXPIRED",
+            message: "This tryout part has already expired.",
+          });
+        }
+
+        return {
+          setAttemptId: existingPartAttempt.setAttemptId,
+          setId: tryoutPartSet.setId,
+          questionCount: set.questionCount,
+        };
+      }
+
+      throw new ConvexError({
+        code: "INVALID_ATTEMPT_STATE",
+        message: "Tryout part state is out of sync with its tryout attempt.",
+      });
     }
 
     if (set.questionCount <= 0) {
@@ -462,12 +471,26 @@ export const completePart = mutation({
       });
     }
 
-    const tryoutExpiry = await syncTryoutAttemptExpiry(ctx, tryoutAttempt, now);
+    await syncTryoutAttemptExpiry(ctx, tryoutAttempt, now);
 
-    if (tryoutAttempt.status !== "in-progress") {
+    const currentTryoutAttempt = await ctx.db.get(
+      "tryoutAttempts",
+      args.tryoutAttemptId
+    );
+
+    if (!currentTryoutAttempt) {
       throw new ConvexError({
-        code: "INVALID_ATTEMPT_STATUS",
-        message: "Tryout attempt is not in progress.",
+        code: "ATTEMPT_NOT_FOUND",
+        message: "Tryout attempt not found.",
+      });
+    }
+
+    const tryout = await ctx.db.get("tryouts", currentTryoutAttempt.tryoutId);
+
+    if (!tryout) {
+      throw new ConvexError({
+        code: "TRYOUT_NOT_FOUND",
+        message: "Tryout not found.",
       });
     }
 
@@ -499,44 +522,9 @@ export const completePart = mutation({
       });
     }
 
-    if (tryoutExpiry.expired) {
-      const [expiredTryoutAttempt, expiredPartAttempt, expiredSetAttempt] =
-        await Promise.all([
-          ctx.db.get("tryoutAttempts", args.tryoutAttemptId),
-          ctx.db
-            .query("tryoutPartAttempts")
-            .withIndex("tryoutAttemptId_partKey", (q) =>
-              q
-                .eq("tryoutAttemptId", args.tryoutAttemptId)
-                .eq("partKey", args.partKey)
-            )
-            .unique(),
-          ctx.db.get("exerciseAttempts", partAttempt.setAttemptId),
-        ]);
-
-      if (
-        expiredTryoutAttempt?.completedPartIndices.includes(
-          partAttempt.partIndex
-        ) &&
-        expiredPartAttempt &&
-        expiredSetAttempt
-      ) {
-        return {
-          theta: expiredPartAttempt.theta,
-          thetaSE: expiredPartAttempt.thetaSE,
-          rawScore: expiredSetAttempt.correctAnswers,
-          totalQuestions: expiredSetAttempt.totalExercises,
-        };
-      }
-
-      throw new ConvexError({
-        code: "TRYOUT_EXPIRED",
-        message: "This tryout has expired.",
-        expiresAtMs: tryoutExpiry.expiredAtMs,
-      });
-    }
-
-    if (tryoutAttempt.completedPartIndices.includes(partAttempt.partIndex)) {
+    if (
+      currentTryoutAttempt.completedPartIndices.includes(partAttempt.partIndex)
+    ) {
       return {
         theta: partAttempt.theta,
         thetaSE: partAttempt.thetaSE,
@@ -545,7 +533,25 @@ export const completePart = mutation({
       };
     }
 
-    return finalizeTryoutPartAttempt({
+    if (currentTryoutAttempt.status === "expired") {
+      throw new ConvexError({
+        code: "TRYOUT_EXPIRED",
+        message: "This tryout has expired.",
+        expiresAtMs: computeTryoutExpiresAtMs({
+          product: tryout.product,
+          startedAtMs: currentTryoutAttempt.startedAt,
+        }),
+      });
+    }
+
+    if (currentTryoutAttempt.status !== "in-progress") {
+      throw new ConvexError({
+        code: "INVALID_ATTEMPT_STATUS",
+        message: "Tryout attempt is not in progress.",
+      });
+    }
+
+    const partResult = await finalizeTryoutPartAttempt({
       ctx,
       finishedAtMs: now,
       now,
@@ -553,5 +559,26 @@ export const completePart = mutation({
       status: "completed",
       tryoutAttemptId: args.tryoutAttemptId,
     });
+
+    const refreshedTryoutAttempt = await ctx.db.get(
+      "tryoutAttempts",
+      args.tryoutAttemptId
+    );
+
+    if (!refreshedTryoutAttempt) {
+      throw new ConvexError({
+        code: "ATTEMPT_NOT_FOUND",
+        message: "Tryout attempt not found.",
+      });
+    }
+
+    await finalizeTryoutAttempt({
+      ctx,
+      now,
+      tryoutAttempt: refreshedTryoutAttempt,
+      userId,
+    });
+
+    return partResult;
   },
 });

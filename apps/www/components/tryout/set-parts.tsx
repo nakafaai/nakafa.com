@@ -1,10 +1,8 @@
 "use client";
 
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
-import { useInterval } from "@mantine/hooks";
-import { api } from "@repo/backend/convex/_generated/api";
+import type { api } from "@repo/backend/convex/_generated/api";
 import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
 import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
@@ -14,17 +12,18 @@ import { cn } from "@repo/design-system/lib/utils";
 import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
-import type { ComponentProps, ReactNode } from "react";
-import { useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { useMemo } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
+import { useTryoutAttemptState } from "@/components/tryout/hooks/use-attempt-state";
 import { TryoutStatusBadge } from "@/components/tryout/status-badge";
-import { useUser } from "@/lib/context/use-user";
+import { deriveTryoutSetPartState } from "@/components/tryout/utils/part-state";
 
 type TryoutSetPartItem = Pick<
   NonNullable<
     FunctionReturnType<typeof api.tryouts.queries.tryouts.getTryoutDetails>
   >["parts"][number],
-  "material" | "partIndex" | "partKey" | "questionCount"
+  "material" | "partKey" | "questionCount"
 > & {
   label: string;
 };
@@ -32,13 +31,6 @@ type TryoutSetPartItem = Pick<
 type TryoutAttemptData = FunctionReturnType<
   typeof api.tryouts.queries.attempts.getUserTryoutAttempt
 >;
-
-type TryoutSetPartAttempt =
-  NonNullable<TryoutAttemptData>["partAttempts"][number];
-
-type TryoutSetPartBadgeStatus = ComponentProps<
-  typeof TryoutStatusBadge
->["status"];
 
 interface TryoutSetPartsProps {
   locale: Locale;
@@ -50,7 +42,7 @@ interface TryoutSetPartsProps {
 interface TryoutSetPartsContextValue {
   state: {
     attemptData: TryoutAttemptData | undefined;
-    isTryoutActive: boolean;
+    nowMs: number;
     product: TryoutProduct;
     questionUnitLabel: string;
     tryoutSlug: string;
@@ -68,33 +60,16 @@ export function TryoutSetParts({
   tryoutSlug,
 }: TryoutSetPartsProps) {
   const tTryouts = useTranslations("Tryouts");
-  const isUserPending = useUser((state) => state.isPending);
-  const user = useUser((state) => state.user);
-  const [nowMs, setNowMs] = useState(() => Date.now());
-  const { data: attemptData } = useQueryWithStatus(
-    api.tryouts.queries.attempts.getUserTryoutAttempt,
-    !isUserPending && user ? { locale, product, tryoutSlug } : "skip"
-  );
-
-  useInterval(
-    () => {
-      setNowMs(Date.now());
-    },
-    1000,
-    { autoInvoke: true }
-  );
-
-  const hasExpired = Boolean(
-    attemptData?.attempt.status === "in-progress" &&
-      attemptData.expiresAtMs <= nowMs
-  );
-  const isTryoutActive =
-    attemptData?.attempt.status === "in-progress" && !hasExpired;
+  const { attemptData, nowMs } = useTryoutAttemptState({
+    locale,
+    product,
+    tryoutSlug,
+  });
 
   return (
     <TryoutSetPartsProvider
       attemptData={attemptData ?? undefined}
-      isTryoutActive={isTryoutActive}
+      nowMs={nowMs}
       product={product}
       questionUnitLabel={tTryouts("question-unit")}
       tryoutSlug={tryoutSlug}
@@ -111,14 +86,14 @@ export function TryoutSetParts({
 function TryoutSetPartsProvider({
   attemptData,
   children,
-  isTryoutActive,
+  nowMs,
   product,
   questionUnitLabel,
   tryoutSlug,
 }: {
   attemptData: TryoutAttemptData | undefined;
   children: ReactNode;
-  isTryoutActive: boolean;
+  nowMs: number;
   product: TryoutProduct;
   questionUnitLabel: string;
   tryoutSlug: string;
@@ -127,13 +102,13 @@ function TryoutSetPartsProvider({
     () => ({
       state: {
         attemptData,
-        isTryoutActive,
+        nowMs,
         product,
         questionUnitLabel,
         tryoutSlug,
       },
     }),
-    [attemptData, isTryoutActive, product, questionUnitLabel, tryoutSlug]
+    [attemptData, nowMs, product, questionUnitLabel, tryoutSlug]
   );
 
   return (
@@ -148,29 +123,20 @@ function TryoutSetPartsList({ children }: { children: ReactNode }) {
 }
 
 function TryoutSetPart({ part }: { part: TryoutSetPartItem }) {
-  const {
-    attemptData,
-    isTryoutActive,
-    product,
-    questionUnitLabel,
-    tryoutSlug,
-  } = useTryoutSetParts((context) => context.state);
+  const { attemptData, nowMs, product, questionUnitLabel, tryoutSlug } =
+    useTryoutSetParts((context) => context.state);
   const partIcon = getTryoutPartIcon(part.material);
-  const partAttempt = getTryoutPartAttempt(attemptData, part.partKey);
-  const badgeStatus = getTryoutPartBadgeStatus({
-    isTryoutActive,
-    partAttempt,
+  const partState = deriveTryoutSetPartState({
+    attemptData,
+    nowMs,
+    partKey: part.partKey,
   });
-  const isCurrent =
-    isTryoutActive &&
-    attemptData?.nextPartKey === part.partKey &&
-    badgeStatus !== "completed";
 
   return (
     <NavigationLink
       className={cn(
         "group flex items-center gap-3 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground",
-        isCurrent && "bg-accent/20 hover:bg-accent"
+        partState.isCurrent && "bg-accent/20 hover:bg-accent"
       )}
       href={`/try-out/${product}/${tryoutSlug}/part/${part.partKey}`}
     >
@@ -195,7 +161,15 @@ function TryoutSetPart({ part }: { part: TryoutSetPartItem }) {
         <div className="-mt-1 flex flex-1 flex-col gap-0.5">
           <div className="flex flex-wrap items-center gap-2">
             <h3>{part.label}</h3>
-            {badgeStatus ? <TryoutStatusBadge status={badgeStatus} /> : null}
+            {partState.status === "completed" ? (
+              <TryoutStatusBadge status="completed" />
+            ) : null}
+            {partState.status === "in-progress" ? (
+              <TryoutStatusBadge status="in-progress" />
+            ) : null}
+            {partState.status === "locked" ? (
+              <TryoutStatusBadge status="locked" />
+            ) : null}
           </div>
           <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground">
             {part.questionCount} {questionUnitLabel}
@@ -206,7 +180,7 @@ function TryoutSetPart({ part }: { part: TryoutSetPartItem }) {
       <HugeIcons
         className={cn(
           "size-4 shrink-0 opacity-0 transition-opacity ease-out group-hover:opacity-100",
-          isCurrent && "opacity-100"
+          partState.isCurrent && "opacity-100"
         )}
         icon={ArrowRight02Icon}
       />
@@ -234,31 +208,4 @@ function getTryoutPartIcon(material: string) {
   }
 
   return getMaterialIcon(parsedMaterial.data);
-}
-
-function getTryoutPartAttempt(
-  attemptData: TryoutAttemptData | undefined,
-  partKey: string
-) {
-  return attemptData?.partAttempts.find(
-    (attempt) => attempt.partKey === partKey
-  );
-}
-
-function getTryoutPartBadgeStatus({
-  isTryoutActive,
-  partAttempt,
-}: {
-  isTryoutActive: boolean;
-  partAttempt: TryoutSetPartAttempt | undefined;
-}): TryoutSetPartBadgeStatus | null {
-  if (partAttempt?.isFinalized) {
-    return "completed";
-  }
-
-  if (partAttempt?.setAttempt.status === "in-progress" && isTryoutActive) {
-    return "in-progress";
-  }
-
-  return null;
 }

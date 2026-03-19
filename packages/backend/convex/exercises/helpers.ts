@@ -49,7 +49,6 @@ export async function createExerciseAttempt(
     startedAt: args.startedAt,
     lastActivityAt: args.startedAt,
     completedAt: null,
-    finalizedAt: null,
     endReason: null,
     updatedAt: args.startedAt,
     status: "in-progress",

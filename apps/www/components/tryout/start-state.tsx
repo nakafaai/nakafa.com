@@ -1,8 +1,7 @@
 "use client";
 
-import { useDisclosure, useInterval } from "@mantine/hooks";
+import { useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
-import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
 import { products } from "@repo/backend/convex/utils/polar";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import {
@@ -10,24 +9,22 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { useAction, useMutation } from "convex/react";
-import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import {
   type PropsWithChildren,
   useCallback,
   useMemo,
-  useState,
   useTransition,
 } from "react";
 import { toast } from "sonner";
 import { createContext, useContextSelector } from "use-context-selector";
+import {
+  type TryoutAttemptStateProps,
+  useTryoutAttemptState,
+} from "@/components/tryout/hooks/use-attempt-state";
 import { useUser } from "@/lib/context/use-user";
 
-export interface TryoutStartButtonProps {
-  locale: Locale;
-  product: TryoutProduct;
-  tryoutSlug: string;
-}
+export type TryoutStartButtonProps = TryoutAttemptStateProps;
 
 function useTryoutStartValue({
   locale,
@@ -39,14 +36,15 @@ function useTryoutStartValue({
   const user = useUser((state) => state.user);
   const pathname = usePathname();
   const router = useRouter();
-  const [nowMs, setNowMs] = useState(() => Date.now());
   const [isActionPending, startTransition] = useTransition();
   const [isDialogOpen, { close: closeDialog, open: openDialog }] =
     useDisclosure(false);
-  const { data: attemptData, isPending: isAttemptPending } = useQueryWithStatus(
-    api.tryouts.queries.attempts.getUserTryoutAttempt,
-    !isUserPending && user ? { locale, product, tryoutSlug } : "skip"
-  );
+  const { isAttemptPending, nextPartKey, remainingTime } =
+    useTryoutAttemptState({
+      locale,
+      product,
+      tryoutSlug,
+    });
   const { data: hasSubscription, isPending: isSubscriptionPending } =
     useQueryWithStatus(
       api.subscriptions.queries.hasActiveSubscription,
@@ -65,30 +63,6 @@ function useTryoutStartValue({
     }),
     [locale, product, tryoutSlug]
   );
-  const hasExpired = Boolean(
-    attemptData?.attempt.status === "in-progress" &&
-      attemptData.expiresAtMs <= nowMs
-  );
-  const nextPartKey =
-    attemptData?.attempt.status === "in-progress" && !hasExpired
-      ? attemptData.nextPartKey
-      : undefined;
-  const remainingTime = useMemo(() => {
-    if (attemptData?.attempt.status !== "in-progress" || hasExpired) {
-      return null;
-    }
-
-    const totalSeconds = Math.max(
-      0,
-      Math.floor((attemptData.expiresAtMs - nowMs) / 1000)
-    );
-
-    return {
-      hours: Math.floor(totalSeconds / 3600),
-      minutes: Math.floor((totalSeconds % 3600) / 60),
-      seconds: totalSeconds % 60,
-    };
-  }, [attemptData, hasExpired, nowMs]);
   const isReady = !(
     isUserPending ||
     (user && (isAttemptPending || isSubscriptionPending))
@@ -97,14 +71,6 @@ function useTryoutStartValue({
     isActionPending ||
     isUserPending ||
     (user ? isAttemptPending || isSubscriptionPending : false);
-
-  useInterval(
-    () => {
-      setNowMs(Date.now());
-    },
-    1000,
-    { autoInvoke: true }
-  );
 
   const setDialogOpen = useCallback(
     (open: boolean) => {

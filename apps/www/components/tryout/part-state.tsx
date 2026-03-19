@@ -19,6 +19,11 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { createContext, useContextSelector } from "use-context-selector";
+import type {
+  TryoutPartPageState,
+  TryoutPartUiStatus,
+} from "@/components/tryout/utils/part-state";
+import { deriveTryoutPartPageState } from "@/components/tryout/utils/part-state";
 import { useUser } from "@/lib/context/use-user";
 import { useExerciseTimer } from "@/lib/hooks/use-exercise-timer";
 
@@ -38,63 +43,10 @@ export interface TryoutValue {
   slug: string;
 }
 
-function getTryoutPartStatus({
-  canContinuePart,
-  hasStartedTryout,
-  isRuntimePending,
-  partFinalized,
-  partLocked,
-  tryoutEnded,
-}: {
-  canContinuePart: boolean;
-  hasStartedTryout: boolean;
-  isRuntimePending: boolean;
-  partFinalized: boolean;
-  partLocked: boolean;
-  tryoutEnded: boolean;
-}):
-  | "completed"
-  | "ended"
-  | "in-progress"
-  | "locked"
-  | "loading"
-  | "needs-tryout"
-  | "ready" {
-  if (isRuntimePending) {
-    return "loading";
-  }
-
-  if (!hasStartedTryout) {
-    return "needs-tryout";
-  }
-
-  if (partFinalized) {
-    return "completed";
-  }
-
-  if (tryoutEnded) {
-    return "ended";
-  }
-
-  if (canContinuePart) {
-    return "in-progress";
-  }
-
-  if (partLocked) {
-    return "locked";
-  }
-
-  return "ready";
-}
-
-type TryoutPartStatus = ReturnType<typeof getTryoutPartStatus>;
-
 type TryoutPartQuery = FunctionReturnType<
   typeof api.tryouts.queries.attempts.getUserTryoutPartAttempt
 >;
 
-type TryoutPartState = NonNullable<TryoutPartQuery>;
-type TryoutPartAttempt = NonNullable<TryoutPartState["partAttempt"]>;
 type TryoutPartDialogSetter = ComponentProps<
   typeof ResponsiveDialog
 >["setOpen"];
@@ -111,21 +63,16 @@ interface TryoutPartContextValue {
     isCompleteDialogOpen: boolean;
   };
   state: {
-    canContinuePart: boolean;
+    answers: TryoutPartPageState["answers"];
+    attempt: TryoutPartPageState["attempt"];
     canStartPart: boolean;
-    hasStartedTryout: boolean;
     isRuntimePending: boolean;
     part: TryoutPartValue;
-    partAttempt: TryoutPartAttempt | null;
-    partEndReason: TryoutPartAttempt["endReason"] | null;
-    partFinalized: boolean;
-    partLocked: boolean;
-    runtime: TryoutPartQuery | undefined;
+    partEndReason: TryoutPartPageState["partEndReason"];
     shouldShowTryoutStartButton: boolean;
-    status: TryoutPartStatus;
+    status: TryoutPartUiStatus;
     timer: ReturnType<typeof useExerciseTimer>;
     tryout: TryoutValue;
-    tryoutInProgress: boolean;
   };
 }
 
@@ -161,48 +108,21 @@ export function TryoutPartProvider({
     { autoInvoke: true }
   );
 
-  const partAttempt = runtime?.partAttempt ?? null;
-  const hasTryoutExpired = Boolean(
-    runtime?.tryoutAttempt.status === "in-progress" &&
-      runtime.expiresAtMs <= nowMs
-  );
-  const partEndReason = partAttempt?.endReason ?? null;
-  const partFinalized = Boolean(partAttempt?.isFinalized);
-  const hasStartedTryout = Boolean(runtime);
-  const tryoutInProgress =
-    runtime?.tryoutAttempt.status === "in-progress" && !hasTryoutExpired;
-  const tryoutEnded = hasStartedTryout && !tryoutInProgress;
-  const partLocked = Boolean(
-    tryoutInProgress &&
-      runtime?.nextPartKey &&
-      runtime.nextPartKey !== part.key &&
-      !partAttempt
-  );
-  const canStartPart = Boolean(
-    tryoutInProgress && runtime?.nextPartKey === part.key && !partAttempt
-  );
-  const canContinuePart = Boolean(
-    partAttempt?.setAttempt.status === "in-progress" && !hasTryoutExpired
-  );
-  const shouldShowTryoutStartButton = !(
-    isRuntimePending ||
-    (user && hasStartedTryout)
-  );
-  const status = getTryoutPartStatus({
-    canContinuePart,
-    hasStartedTryout,
-    isRuntimePending,
-    partFinalized,
-    partLocked,
-    tryoutEnded,
-  });
+  const { answers, attempt, canStartPart, partEndReason, status } =
+    deriveTryoutPartPageState({
+      isRuntimePending,
+      nowMs,
+      partKey: part.key,
+      runtime,
+    });
+  const shouldShowTryoutStartButton = !(isRuntimePending || (user && runtime));
 
   const goToSet = useCallback(() => {
     router.push(`/try-out/${tryout.product}/${tryout.slug}`);
   }, [router, tryout.product, tryout.slug]);
 
   const completeCurrentPart = useCallback(async () => {
-    if (!(runtime && partAttempt)) {
+    if (!(runtime && attempt)) {
       return false;
     }
 
@@ -212,10 +132,10 @@ export function TryoutPartProvider({
     });
 
     return true;
-  }, [completePart, part.key, partAttempt, runtime]);
+  }, [attempt, completePart, part.key, runtime]);
 
   const timer = useExerciseTimer({
-    attempt: partAttempt?.setAttempt ?? null,
+    attempt,
     expiresAtMs: runtime?.expiresAtMs,
     onExpire: async () => {
       try {
@@ -290,44 +210,34 @@ export function TryoutPartProvider({
         isCompleteDialogOpen,
       },
       state: {
-        canContinuePart,
+        answers,
+        attempt,
         canStartPart,
-        hasStartedTryout,
         isRuntimePending,
         part,
-        partAttempt,
         partEndReason,
-        partFinalized,
-        partLocked,
-        runtime,
         shouldShowTryoutStartButton,
         status,
         timer,
         tryout,
-        tryoutInProgress,
       },
     }),
     [
-      canContinuePart,
+      answers,
+      attempt,
       canStartPart,
       goToSet,
       handleCompletePart,
       handleStartPart,
-      hasStartedTryout,
       isActionPending,
       isCompleteDialogOpen,
       isRuntimePending,
       part,
-      partAttempt,
       partEndReason,
-      partFinalized,
-      partLocked,
-      runtime,
       shouldShowTryoutStartButton,
       status,
       timer,
       tryout,
-      tryoutInProgress,
     ]
   );
 

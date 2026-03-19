@@ -4,13 +4,13 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
 import { motion } from "motion/react";
+import { Countdown } from "@/components/exercise/attempt-countdown";
+import { ExerciseStats } from "@/components/exercise/attempt-stats";
 import { useAttempt } from "@/lib/context/use-attempt";
 import { useExerciseTimer } from "@/lib/hooks/use-exercise-timer";
 import { useStickyVisibility } from "@/lib/hooks/use-sticky-visibility";
 import { CompleteExerciseButton } from "./attempt-complete-button";
-import { Countdown } from "./attempt-countdown";
 import { StartExerciseButton } from "./attempt-start-button";
-import { ExerciseStats } from "./attempt-stats";
 
 interface Props {
   totalExercises: number;

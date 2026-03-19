@@ -22,8 +22,8 @@ export function TryoutPartStatus() {
       return <Skeleton className="h-7 w-20 rounded-md" />;
     case "completed":
       return <TryoutStatusBadge status="completed" />;
-    case "in-progress":
-      return <TryoutStatusBadge status="in-progress" />;
+    case "locked":
+      return <TryoutStatusBadge status="locked" />;
     default:
       return null;
   }

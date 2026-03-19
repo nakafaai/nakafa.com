@@ -3,7 +3,6 @@ import { createExerciseAttempt } from "@repo/backend/convex/exercises/helpers";
 import {
   exerciseAttemptModeValidator,
   exerciseAttemptScopeValidator,
-  exerciseAttemptStatusValidator,
 } from "@repo/backend/convex/exercises/schema";
 import {
   buildFinalizedExerciseAttemptPatch,
@@ -17,9 +16,10 @@ import {
   syncTryoutExerciseAttemptExpiry,
 } from "@repo/backend/convex/tryouts/helpers";
 import { ConvexError, type Infer, v } from "convex/values";
+import { literals } from "convex-helpers/validators";
 
 const completeAttemptResultValidator = v.object({
-  status: exerciseAttemptStatusValidator,
+  status: literals("completed", "expired"),
   expiredAtMs: v.optional(v.number()),
 });
 
@@ -158,13 +158,6 @@ export const submitAnswer = mutation({
       });
     }
 
-    if (args.exerciseNumber > attempt.totalExercises) {
-      // Keep the stored attempt bounds aligned if the source set has grown.
-      await ctx.db.patch("exerciseAttempts", args.attemptId, {
-        totalExercises: args.exerciseNumber,
-      });
-    }
-
     if (attempt.scope === "single") {
       if (!attempt.exerciseNumber) {
         throw new ConvexError({
@@ -274,6 +267,13 @@ export const completeAttempt = mutation({
       });
     }
 
+    if (attempt.origin === "tryout") {
+      throw new ConvexError({
+        code: "INVALID_ATTEMPT_STATE",
+        message: "Tryout attempts must be completed from the tryout flow.",
+      });
+    }
+
     if (attempt.status === "completed") {
       return { status: "completed" } satisfies CompleteAttemptResult;
     }
@@ -293,26 +293,14 @@ export const completeAttempt = mutation({
       await ctx.scheduler.cancel(attempt.schedulerId);
     }
 
-    const tryoutExpiry = await syncTryoutExerciseAttemptExpiry(
-      ctx,
-      attempt,
-      now
-    );
-    if (tryoutExpiry.expired) {
-      return {
-        status: "expired",
-        expiredAtMs: tryoutExpiry.expiredAtMs,
-      } satisfies CompleteAttemptResult;
-    }
-
     const expiresAtMs = attempt.startedAt + attempt.timeLimit * 1000;
 
-    const finalTotalTime = computeAttemptDurationSeconds({
-      startedAtMs: attempt.startedAt,
-      completedAtMs: now,
-    });
-
     if (now >= expiresAtMs) {
+      const totalTime = computeAttemptDurationSeconds({
+        startedAtMs: attempt.startedAt,
+        completedAtMs: expiresAtMs,
+      });
+
       await ctx.db.patch(
         "exerciseAttempts",
         args.attemptId,
@@ -320,7 +308,7 @@ export const completeAttempt = mutation({
           completedAtMs: expiresAtMs,
           now,
           status: "expired",
-          totalTime: finalTotalTime,
+          totalTime,
         })
       );
 
@@ -330,6 +318,11 @@ export const completeAttempt = mutation({
       } satisfies CompleteAttemptResult;
     }
 
+    const totalTime = computeAttemptDurationSeconds({
+      startedAtMs: attempt.startedAt,
+      completedAtMs: now,
+    });
+
     await ctx.db.patch(
       "exerciseAttempts",
       args.attemptId,
@@ -337,7 +330,7 @@ export const completeAttempt = mutation({
         completedAtMs: now,
         now,
         status: "completed",
-        totalTime: finalTotalTime,
+        totalTime,
       })
     );
 

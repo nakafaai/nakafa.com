@@ -20,7 +20,6 @@ type FinalizedExerciseAttemptPatch = Pick<
   WithoutSystemFields<Doc<"exerciseAttempts">>,
   | "completedAt"
   | "endReason"
-  | "finalizedAt"
   | "lastActivityAt"
   | "status"
   | "totalTime"
@@ -156,7 +155,6 @@ export function buildFinalizedExerciseAttemptPatch({
   return {
     completedAt: completedAtMs,
     endReason: getAttemptEndReasonFromStatus(status),
-    finalizedAt: completedAtMs,
     lastActivityAt: now,
     status,
     totalTime,

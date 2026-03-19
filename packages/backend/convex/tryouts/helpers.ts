@@ -64,32 +64,6 @@ export function getFirstIncompleteTryoutPartIndex({
   return undefined;
 }
 
-export function getEffectiveCompletedTryoutPartIndices({
-  completedPartIndices,
-  partAttempts,
-}: {
-  completedPartIndices: number[];
-  partAttempts: Array<{
-    partIndex: number;
-    setAttempt: Pick<
-      Doc<"exerciseAttempts">,
-      "completedAt" | "endReason" | "finalizedAt" | "status"
-    >;
-  }>;
-}) {
-  const effectiveCompletedPartIndices = new Set(completedPartIndices);
-
-  for (const partAttempt of partAttempts) {
-    if (partAttempt.setAttempt.finalizedAt === null) {
-      continue;
-    }
-
-    effectiveCompletedPartIndices.add(partAttempt.partIndex);
-  }
-
-  return [...effectiveCompletedPartIndices].sort((left, right) => left - right);
-}
-
 /** Returns the earliest completed simulation attempt for official-result checks. */
 export function getFirstCompletedSimulationAttempt(
   db: TryoutDbReader,
@@ -148,35 +122,6 @@ export function buildIrtResponses({
       },
     ];
   });
-}
-
-async function expireExerciseAttemptIfInProgress(
-  ctx: TryoutMutationCtx,
-  attemptId: Doc<"exerciseAttempts">["_id"],
-  expiredAtMs: number,
-  now: number
-) {
-  const attempt = await ctx.db.get("exerciseAttempts", attemptId);
-
-  if (!attempt || attempt.status !== "in-progress") {
-    return;
-  }
-
-  const totalTime = computeAttemptDurationSeconds({
-    startedAtMs: attempt.startedAt,
-    completedAtMs: expiredAtMs,
-  });
-
-  await ctx.db.patch(
-    "exerciseAttempts",
-    attempt._id,
-    buildFinalizedExerciseAttemptPatch({
-      completedAtMs: expiredAtMs,
-      now,
-      status: "expired",
-      totalTime,
-    })
-  );
 }
 
 /** Finalize one started tryout part from its persisted exercise answers. */
@@ -241,7 +186,6 @@ export async function finalizeTryoutPartAttempt({
       ...setAttempt,
       completedAt,
       endReason: getAttemptEndReasonFromStatus(finalStatus),
-      finalizedAt: completedAt,
       lastActivityAt: now,
       status: finalStatus,
       totalTime,
@@ -313,79 +257,6 @@ export async function finalizeTryoutPartAttempt({
     thetaSE: se,
     totalQuestions: currentSetAttempt.totalExercises,
   };
-}
-
-export async function syncPendingFinalizedTryoutParts({
-  ctx,
-  now,
-  tryoutAttempt,
-}: {
-  ctx: TryoutMutationCtx;
-  now: number;
-  tryoutAttempt: Doc<"tryoutAttempts">;
-}) {
-  const partAttempts = await getManyFrom(
-    ctx.db,
-    "tryoutPartAttempts",
-    "tryoutAttemptId_partIndex",
-    tryoutAttempt._id,
-    "tryoutAttemptId"
-  );
-
-  if (partAttempts.length === 0) {
-    return tryoutAttempt;
-  }
-
-  const setAttempts = await getAll(
-    ctx.db,
-    "exerciseAttempts",
-    partAttempts.map((partAttempt) => partAttempt.setAttemptId)
-  );
-  let didFinalizePendingPart = false;
-
-  for (const [index, partAttempt] of partAttempts.entries()) {
-    if (tryoutAttempt.completedPartIndices.includes(partAttempt.partIndex)) {
-      continue;
-    }
-
-    const setAttempt = setAttempts[index];
-
-    if (!setAttempt || setAttempt.completedAt === null) {
-      continue;
-    }
-
-    if (setAttempt.status !== "completed" && setAttempt.status !== "expired") {
-      continue;
-    }
-
-    didFinalizePendingPart = true;
-    await finalizeTryoutPartAttempt({
-      ctx,
-      finishedAtMs: setAttempt.completedAt,
-      now,
-      partAttempt,
-      status: setAttempt.status,
-      tryoutAttemptId: tryoutAttempt._id,
-    });
-  }
-
-  if (!didFinalizePendingPart) {
-    return tryoutAttempt;
-  }
-
-  const refreshedTryoutAttempt = await ctx.db.get(
-    "tryoutAttempts",
-    tryoutAttempt._id
-  );
-
-  if (!refreshedTryoutAttempt) {
-    throw new ConvexError({
-      code: "ATTEMPT_NOT_FOUND",
-      message: "Tryout attempt not found.",
-    });
-  }
-
-  return refreshedTryoutAttempt;
 }
 
 /** Recompute the persisted tryout aggregates from finalized part attempts. */
@@ -487,7 +358,6 @@ export async function syncTryoutAttemptAggregates({
   await ctx.db.patch("tryoutAttempts", tryoutAttemptId, {
     completedAt: completedAtMs,
     endReason: getAttemptEndReasonFromStatus(status),
-    finalizedAt: completedAtMs,
     irtScore,
     lastActivityAt: now,
     status,
@@ -635,13 +505,6 @@ export async function syncTryoutExerciseAttemptExpiry(
   if (!tryoutExpiry.expired) {
     return { expired: false, expiredAtMs: tryoutExpiry.expiredAtMs };
   }
-
-  await expireExerciseAttemptIfInProgress(
-    ctx,
-    attempt._id,
-    tryoutExpiry.expiredAtMs,
-    now
-  );
 
   return { expired: true, expiredAtMs: tryoutExpiry.expiredAtMs };
 }
