@@ -1,5 +1,5 @@
 import { internalQuery } from "@repo/backend/convex/_generated/server";
-import { getLatestScaleVersionForTryout } from "@repo/backend/convex/irt/scaleVersions";
+import { getActiveTryoutsWithoutScale } from "@repo/backend/convex/irt/scaleVersions";
 import {
   contentTypeValidator,
   localeValidator,
@@ -349,25 +349,14 @@ export const getTryoutScaleIntegrity = internalQuery({
     activeTryoutsWithoutScale: v.array(tryoutScaleIntegrityItemValidator),
   }),
   handler: async (ctx) => {
-    const tryouts = await ctx.db.query("tryouts").collect();
-    const activeTryouts = tryouts.filter((tryout) => tryout.isActive);
-    const activeTryoutsWithoutScale: TryoutScaleIntegrityItem[] = [];
-
-    for (const tryout of activeTryouts) {
-      const scaleVersion = await getLatestScaleVersionForTryout(
-        ctx.db,
-        tryout._id
-      );
-
-      if (!scaleVersion) {
-        activeTryoutsWithoutScale.push({
-          cycleKey: tryout.cycleKey,
-          locale: tryout.locale,
-          product: tryout.product,
-          slug: tryout.slug,
-        });
-      }
-    }
+    const tryoutsWithoutScale = await getActiveTryoutsWithoutScale(ctx.db);
+    const activeTryoutsWithoutScale: TryoutScaleIntegrityItem[] =
+      tryoutsWithoutScale.map((tryout) => ({
+        cycleKey: tryout.cycleKey,
+        locale: tryout.locale,
+        product: tryout.product,
+        slug: tryout.slug,
+      }));
 
     return { activeTryoutsWithoutScale };
   },

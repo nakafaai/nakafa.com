@@ -10,7 +10,9 @@ import {
   IRT_SCALE_PUBLICATION_QUEUE_BATCH_SIZE,
 } from "@repo/backend/convex/irt/policy";
 import {
+  getActiveTryoutsWithoutScale,
   getLatestScaleVersionForTryout,
+  getOrPublishScaleVersionForTryout,
   getPublishableScaleSnapshot,
   getScaleVersionItems,
   hasPublishedScaleChanged,
@@ -110,6 +112,55 @@ async function publishTryoutScaleVersionIfNeeded(
 
   return { kind: "published", scaleVersionId };
 }
+
+const ensureActiveTryoutScalesResultValidator = v.object({
+  missingCount: v.number(),
+  publishedCount: v.number(),
+  remainingCount: v.number(),
+});
+
+/**
+ * Repairs active tryouts that are still missing a frozen scale version.
+ */
+export const ensureActiveTryoutScales = internalMutation({
+  args: {},
+  returns: ensureActiveTryoutScalesResultValidator,
+  handler: async (ctx) => {
+    const now = Date.now();
+    const tryoutsWithoutScale = await getActiveTryoutsWithoutScale(ctx.db);
+
+    if (tryoutsWithoutScale.length === 0) {
+      return {
+        missingCount: 0,
+        publishedCount: 0,
+        remainingCount: 0,
+      };
+    }
+
+    let publishedCount = 0;
+    let remainingCount = 0;
+
+    for (const tryout of tryoutsWithoutScale) {
+      const scaleVersion = await getOrPublishScaleVersionForTryout(ctx.db, {
+        now,
+        tryoutId: tryout._id,
+      });
+
+      if (scaleVersion) {
+        publishedCount += 1;
+        continue;
+      }
+
+      remainingCount += 1;
+    }
+
+    return {
+      missingCount: tryoutsWithoutScale.length,
+      publishedCount,
+      remainingCount,
+    };
+  },
+});
 
 /**
  * Drain a bounded batch of queued set calibrations.

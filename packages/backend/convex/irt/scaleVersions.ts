@@ -18,6 +18,10 @@ type ScaleVersionItemsBySetId = Map<
   Doc<"irtScaleVersionItems">["setId"],
   Doc<"irtScaleVersionItems">[]
 >;
+type ActiveTryoutWithoutScale = Pick<
+  Doc<"tryouts">,
+  "_id" | "cycleKey" | "locale" | "product" | "slug"
+>;
 type ScaleVersionItemSnapshot = OperationalItemParams &
   Pick<Doc<"irtScaleVersionItems">, "setId"> & {
     calibrationRunId: Doc<"irtScaleVersionItems">["calibrationRunId"];
@@ -35,6 +39,34 @@ export function getLatestScaleVersionForTryout(
     .withIndex("tryoutId_publishedAt", (q) => q.eq("tryoutId", tryoutId))
     .order("desc")
     .first();
+}
+
+/** Lists active tryouts that still do not have a frozen scale version. */
+export async function getActiveTryoutsWithoutScale(db: IrtDbReader) {
+  const tryouts = await db.query("tryouts").collect();
+  const activeTryoutsWithoutScale: ActiveTryoutWithoutScale[] = [];
+
+  for (const tryout of tryouts) {
+    if (!tryout.isActive) {
+      continue;
+    }
+
+    const scaleVersion = await getLatestScaleVersionForTryout(db, tryout._id);
+
+    if (scaleVersion) {
+      continue;
+    }
+
+    activeTryoutsWithoutScale.push({
+      _id: tryout._id,
+      cycleKey: tryout.cycleKey,
+      locale: tryout.locale,
+      product: tryout.product,
+      slug: tryout.slug,
+    });
+  }
+
+  return activeTryoutsWithoutScale;
 }
 
 /**

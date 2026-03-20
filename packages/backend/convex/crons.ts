@@ -79,6 +79,16 @@ crons.cron(
 );
 
 /**
+ * Repairs active tryouts that are still missing frozen scales.
+ */
+crons.interval(
+  "ensure active tryout scales",
+  { minutes: IRT_AUTOMATION_CRON_INTERVAL_MINUTES },
+  internal.irt.internalMutations.ensureActiveTryoutScales,
+  {}
+);
+
+/**
  * Starts queued IRT calibrations in bounded batches.
  */
 crons.interval(
