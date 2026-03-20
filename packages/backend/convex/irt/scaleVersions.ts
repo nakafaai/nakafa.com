@@ -27,6 +27,7 @@ type ScaleVersionItemSnapshot = OperationalItemParams &
     calibrationRunId: Doc<"irtScaleVersionItems">["calibrationRunId"];
   };
 
+/** Returns the scoring maturity of one published tryout scale version. */
 export function getScaleVersionStatus(
   scaleVersion: Pick<Doc<"irtScaleVersions">, "status">
 ) {

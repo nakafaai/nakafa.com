@@ -8,7 +8,11 @@ import {
   computeAttemptDurationSeconds,
 } from "@repo/backend/convex/exercises/utils";
 import { estimateThetaEAP } from "@repo/backend/convex/irt/estimation";
-import { getScaleVersionItemsForSet } from "@repo/backend/convex/irt/scaleVersions";
+import {
+  getLatestScaleVersionForTryout,
+  getScaleVersionItemsForSet,
+  getScaleVersionStatus,
+} from "@repo/backend/convex/irt/scaleVersions";
 import { getAttemptEndReasonFromStatus } from "@repo/backend/convex/lib/attempts";
 import {
   computeTryoutExpiresAtMs,
@@ -30,11 +34,49 @@ type TryoutScoreTotals = Pick<
   "totalCorrect" | "totalQuestions"
 >;
 
+/** Returns the persisted maturity status of one tryout attempt score. */
 export function getTryoutAttemptScoreStatus(
   tryoutAttempt: Pick<Doc<"tryoutAttempts">, "scoreStatus">
 ) {
   return tryoutAttempt.scoreStatus;
 }
+
+/** Picks the best frozen scale currently available for one tryout attempt. */
+export async function getTryoutScoreTarget(
+  db: TryoutDbReader,
+  tryoutAttempt: Pick<
+    Doc<"tryoutAttempts">,
+    "_id" | "scaleVersionId" | "tryoutId"
+  >
+) {
+  const [currentScaleVersion, latestScaleVersion] = await Promise.all([
+    db.get("irtScaleVersions", tryoutAttempt.scaleVersionId),
+    getLatestScaleVersionForTryout(db, tryoutAttempt.tryoutId),
+  ]);
+
+  if (!currentScaleVersion) {
+    throw new ConvexError({
+      code: "INVALID_ATTEMPT_STATE",
+      message: "Tryout attempt is missing its scoring scale.",
+    });
+  }
+
+  if (
+    !latestScaleVersion ||
+    getScaleVersionStatus(latestScaleVersion) !== "official"
+  ) {
+    return {
+      scaleVersionId: currentScaleVersion._id,
+      scoreStatus: getScaleVersionStatus(currentScaleVersion),
+    };
+  }
+
+  return {
+    scaleVersionId: latestScaleVersion._id,
+    scoreStatus: "official",
+  } as const;
+}
+
 type FinalizedExerciseAttemptStatus = Exclude<
   Doc<"exerciseAttempts">["status"],
   "in-progress"
@@ -451,6 +493,7 @@ export async function expireTryoutAttempt(
     product: tryout.product,
     startedAtMs: tryoutAttempt.startedAt,
   });
+  const scoreTarget = await getTryoutScoreTarget(ctx.db, tryoutAttempt);
 
   const partAttempts = await getManyFrom(
     ctx.db,
@@ -478,6 +521,8 @@ export async function expireTryoutAttempt(
     completedAtMs: expiredAtMs,
     ctx,
     now,
+    scaleVersionId: scoreTarget.scaleVersionId,
+    scoreStatus: scoreTarget.scoreStatus,
     status: "expired",
     tryoutAttemptId: tryoutAttempt._id,
   });
