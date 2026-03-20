@@ -2,10 +2,16 @@
 
 import type { api } from "@repo/backend/convex/_generated/api";
 import { Badge } from "@repo/design-system/components/ui/badge";
-import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
+import {
+  NumberFormat,
+  NumberFormatGroup,
+} from "@repo/design-system/components/ui/number-flow";
 import type { FunctionReturnType } from "convex/server";
 import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
+import {
+  TryoutPartStat,
+  TryoutPartStats,
+} from "@/components/tryout/part-shell";
 import { TryoutStartCountdown } from "@/components/tryout/start-countdown";
 
 type TryoutAttempt = NonNullable<
@@ -37,30 +43,25 @@ export function TryoutScoreCard({ attempt }: { attempt: TryoutAttempt }) {
       </div>
 
       {hasScoredQuestions ? (
-        <div className="grid gap-3 sm:grid-cols-2">
-          <TryoutScoreStat label={tTryouts("score-label")}>
-            <div className="font-light font-mono text-4xl text-foreground tabular-nums leading-none tracking-tighter">
-              <NumberFormat
-                format={{ maximumFractionDigits: 0 }}
-                trend={0}
-                value={attempt.irtScore}
-              />
-            </div>
-          </TryoutScoreStat>
+        <TryoutPartStats>
+          <TryoutPartStat label={tTryouts("score-label")}>
+            <TryoutScoreMetricNumber value={attempt.irtScore} />
+          </TryoutPartStat>
 
-          <TryoutScoreStat label={tTryouts("correct-answers-label")}>
-            <div className="font-light font-mono text-4xl text-foreground tabular-nums leading-none tracking-tighter">
-              {attempt.totalCorrect}/{attempt.totalQuestions}
-            </div>
-          </TryoutScoreStat>
-        </div>
+          <TryoutPartStat label={tTryouts("correct-answers-label")}>
+            <TryoutScoreMetricFraction
+              correct={attempt.totalCorrect}
+              total={attempt.totalQuestions}
+            />
+          </TryoutPartStat>
+        </TryoutPartStats>
       ) : (
         <p className="text-muted-foreground text-sm">
           {tTryouts("score-card-no-answers")}
         </p>
       )}
 
-      <p className="text-muted-foreground text-sm">
+      <p className="pt-2 text-muted-foreground text-sm">
         {tTryouts("score-card-review-hint")}
       </p>
     </TryoutStartCountdown>
@@ -105,18 +106,47 @@ function TryoutScoreStatusBadge({
   );
 }
 
-function TryoutScoreStat({
-  children,
-  label,
+function TryoutScoreMetricNumber({ value }: { value: number }) {
+  return (
+    <div className="font-light font-mono text-5xl text-foreground tabular-nums leading-none tracking-tighter">
+      <NumberFormat
+        format={{ maximumFractionDigits: 0 }}
+        trend={0}
+        value={value}
+      />
+    </div>
+  );
+}
+
+function TryoutScoreMetricFraction({
+  correct,
+  total,
 }: {
-  children: ReactNode;
-  label: string;
+  correct: number;
+  total: number;
 }) {
   return (
-    <div className="space-y-2 rounded-lg border bg-background/70 p-4">
-      <p className="text-muted-foreground text-sm">{label}</p>
-      {children}
-    </div>
+    <NumberFormatGroup>
+      <div className="flex items-center gap-2 sm:gap-3">
+        <div className="font-light font-mono text-5xl text-foreground tabular-nums leading-none tracking-tighter">
+          <NumberFormat
+            format={{ maximumFractionDigits: 0 }}
+            trend={0}
+            value={correct}
+          />
+        </div>
+        <span className="font-light font-mono text-3xl text-muted-foreground leading-none">
+          /
+        </span>
+        <div className="font-light font-mono text-5xl text-foreground tabular-nums leading-none tracking-tighter">
+          <NumberFormat
+            format={{ maximumFractionDigits: 0 }}
+            trend={0}
+            value={total}
+          />
+        </div>
+      </div>
+    </NumberFormatGroup>
   );
 }
 
