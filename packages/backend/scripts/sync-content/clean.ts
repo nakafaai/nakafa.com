@@ -154,7 +154,7 @@ const cleanUnusedAuthors = async (
       const batch = authorIds.slice(index, index + BATCH_SIZES.unusedAuthors);
       const result = await runConvexMutationGeneric(
         config,
-        "contentSync/mutations:deleteUnusedAuthors",
+        "contentSync/mutations/authors:deleteUnusedAuthors",
         { authorIds: batch },
         DeleteResultSchema
       );
@@ -223,7 +223,7 @@ export const clean = async (
 
       await deleteStaleItems(
         config,
-        "contentSync/mutations:deleteStaleArticles",
+        "contentSync/mutations/articles:deleteStaleArticles",
         "articleIds",
         stale.staleArticles,
         "stale articles",
@@ -231,7 +231,7 @@ export const clean = async (
       );
       await deleteStaleItems(
         config,
-        "contentSync/mutations:deleteStaleSubjectTopics",
+        "contentSync/mutations/subjects:deleteStaleSubjectTopics",
         "topicIds",
         stale.staleSubjectTopics,
         "stale subject topics (and their sections)",
@@ -239,7 +239,7 @@ export const clean = async (
       );
       await deleteStaleItems(
         config,
-        "contentSync/mutations:deleteStaleSubjectSections",
+        "contentSync/mutations/subjects:deleteStaleSubjectSections",
         "sectionIds",
         stale.staleSubjectSections,
         "stale subject sections",
@@ -247,7 +247,7 @@ export const clean = async (
       );
       await deleteStaleItems(
         config,
-        "contentSync/mutations:deleteStaleExerciseQuestions",
+        "contentSync/mutations/exercises:deleteStaleExerciseQuestions",
         "questionIds",
         stale.staleExerciseQuestions,
         "stale exercise questions",
@@ -255,7 +255,7 @@ export const clean = async (
       );
       await deleteStaleItems(
         config,
-        "contentSync/mutations:deleteStaleExerciseSets",
+        "contentSync/mutations/exercises:deleteStaleExerciseSets",
         "setIds",
         stale.staleExerciseSets,
         "stale exercise sets",

@@ -311,7 +311,7 @@ export const syncIncremental = async (
       );
       const authorResult = await runConvexMutationGeneric(
         config,
-        "contentSync/mutations:bulkSyncAuthors",
+        "contentSync/mutations/authors:bulkSyncAuthors",
         { authorNames: batch },
         AuthorSyncResultSchema
       );

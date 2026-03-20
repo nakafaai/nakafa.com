@@ -30,8 +30,7 @@ function sanitize<T>(data: T): T {
 
 /**
  * Polar metadata validator for action args.
- * Uses v.any() because this is passed directly to Polar's SDK.
- * The shape is defined by Polar's API, not by us.
+ * Keep values Convex-compatible so the same shape can be stored locally.
  */
 const polarMetadataValueValidator = v.union(
   v.string(),

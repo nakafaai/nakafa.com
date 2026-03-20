@@ -9,6 +9,11 @@ import type {
 import { ConvexError } from "convex/values";
 
 type PolarMetadata = Record<string, string | number | boolean>;
+type CustomerSyncUser = Pick<Doc<"users">, "_id" | "authId" | "email" | "name">;
+
+export type RequiredCustomer = WithoutSystemFields<Doc<"customers">> & {
+  localCustomerId: Id<"customers">;
+};
 
 /**
  * Convert Polar customer to database format.
@@ -87,6 +92,46 @@ export async function findUserIdFromCustomer(
   return userByAuthId._id;
 }
 
+export async function syncCustomerForUser(
+  ctx: ActionCtx,
+  args: {
+    localCustomerId?: string | null;
+    user: CustomerSyncUser;
+  }
+): Promise<RequiredCustomer> {
+  const polarCustomer = await ctx.runAction(
+    internal.customers.polar.ensureCustomer,
+    {
+      localCustomerId: args.localCustomerId ?? undefined,
+      externalId: args.user.authId,
+      email: args.user.email,
+      name: args.user.name,
+      metadata: { userId: args.user._id },
+    }
+  );
+
+  let syncedPolarCustomer = polarCustomer;
+  if (Object.keys(polarCustomer.metadata).length === 0) {
+    syncedPolarCustomer = await ctx.runAction(
+      internal.customers.polar.updateCustomerMetadata,
+      { id: polarCustomer.id, metadata: { userId: args.user._id } }
+    );
+  }
+
+  const customer = convertToDatabaseCustomer({
+    ...syncedPolarCustomer,
+    userId: args.user._id,
+  });
+  const localCustomerId = await ctx.runMutation(
+    internal.customers.mutations.upsertCustomer,
+    {
+      customer,
+    }
+  );
+
+  return { ...customer, localCustomerId };
+}
+
 /**
  * Get customer for authenticated user.
  * Single Polar API call that handles all edge cases:
@@ -96,7 +141,10 @@ export async function findUserIdFromCustomer(
  * - Race condition (concurrent creates) → handles gracefully
  * Always syncs result to local DB.
  */
-export async function requireCustomer(ctx: ActionCtx, userId: Id<"users">) {
+export async function requireCustomer(
+  ctx: ActionCtx,
+  userId: Id<"users">
+): Promise<RequiredCustomer> {
   const [user, localCustomer] = await Promise.all([
     ctx.runQuery(internal.users.queries.getUserById, { userId }),
     ctx.runQuery(internal.customers.queries.getCustomerByUserId, { userId }),
@@ -109,32 +157,8 @@ export async function requireCustomer(ctx: ActionCtx, userId: Id<"users">) {
     });
   }
 
-  // Single Polar action handles get/create/race-condition
-  const polarCustomer = await ctx.runAction(
-    internal.customers.polar.ensureCustomer,
-    {
-      localCustomerId: localCustomer?.id,
-      externalId: user.authId,
-      email: user.email,
-      name: user.name,
-      metadata: { userId },
-    }
-  );
-
-  // Update metadata if empty (migration case)
-  let finalCustomer = polarCustomer;
-  if (Object.keys(polarCustomer.metadata).length === 0) {
-    finalCustomer = await ctx.runAction(
-      internal.customers.polar.updateCustomerMetadata,
-      { id: polarCustomer.id, metadata: { userId } }
-    );
-  }
-
-  const customer = convertToDatabaseCustomer({ ...finalCustomer, userId });
-  // Sync to local DB (idempotent upsert)
-  await ctx.runMutation(internal.customers.mutations.upsertCustomer, {
-    customer,
+  return await syncCustomerForUser(ctx, {
+    localCustomerId: localCustomer?.id,
+    user,
   });
-
-  return customer;
 }

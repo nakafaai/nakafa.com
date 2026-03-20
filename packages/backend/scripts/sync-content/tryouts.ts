@@ -20,7 +20,7 @@ export const syncTryouts = async (
     for (const locale of locales) {
       const result = await runConvexMutation(
         config,
-        "contentSync/mutations:bulkSyncTryouts",
+        "contentSync/mutations/tryouts:bulkSyncTryouts",
         { product, locale }
       );
 

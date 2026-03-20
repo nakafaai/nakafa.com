@@ -134,7 +134,7 @@ export const syncSubjectTopics = async (
 
     const result = await runConvexMutation(
       config,
-      "contentSync/mutations:bulkSyncSubjectTopics",
+      "contentSync/mutations/subjects:bulkSyncSubjectTopics",
       { topics: batch }
     );
 
@@ -249,19 +249,21 @@ export const syncSubjectSections = async (
 
     const result = await runConvexMutation(
       config,
-      "contentSync/mutations:bulkSyncSubjectSections",
+      "contentSync/mutations/subjects:bulkSyncSubjectSections",
       { sections: batch }
     );
 
     totals.created += result.created;
     totals.updated += result.updated;
     totals.unchanged += result.unchanged;
+    totals.skipped = (totals.skipped || 0) + (result.skipped || 0);
     totals.authorLinksCreated =
       (totals.authorLinksCreated || 0) + (result.authorLinksCreated || 0);
     updateBatchProgress(progress, batch.length);
   }
 
-  const processed = totals.created + totals.updated + totals.unchanged;
+  const processed =
+    totals.created + totals.updated + totals.unchanged + (totals.skipped || 0);
   const durationMs = performance.now() - startTime;
   const itemsPerSecond = durationMs > 0 ? (processed / durationMs) * 1000 : 0;
 
@@ -269,6 +271,9 @@ export const syncSubjectSections = async (
     log(
       `\nResult: ${totals.created} created, ${totals.updated} updated, ${totals.unchanged} unchanged`
     );
+    if (totals.skipped) {
+      log(`Skipped: ${totals.skipped} sections with missing topics`);
+    }
     if (totals.authorLinksCreated) {
       log(`Related: ${totals.authorLinksCreated} author links`);
     }

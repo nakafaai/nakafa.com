@@ -14,117 +14,133 @@ interface ResetStep {
 const RESET_STEPS: ResetStep[] = [
   {
     label: "Deleting content authors...",
-    mutationPath: "contentSync/mutations:deleteContentAuthorsBatch",
+    mutationPath: "contentSync/mutations/maintenance:deleteContentAuthorsBatch",
     resultLabel: "content authors",
   },
   {
     label: "Deleting article references...",
-    mutationPath: "contentSync/mutations:deleteArticleReferencesBatch",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteArticleReferencesBatch",
     resultLabel: "article references",
   },
   {
     label: "Deleting exercise choices...",
-    mutationPath: "contentSync/mutations:deleteExerciseChoicesBatch",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteExerciseChoicesBatch",
     resultLabel: "exercise choices",
   },
   {
     label: "Deleting exercise answers...",
-    mutationPath: "contentSync/mutations:deleteExerciseAnswersBatch",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteExerciseAnswersBatch",
     resultLabel: "exercise answers",
   },
   {
     label: "Deleting tryout part attempts...",
-    mutationPath: "contentSync/mutations:deleteTryoutPartAttemptsBatch",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteTryoutPartAttemptsBatch",
     resultLabel: "tryout part attempts",
   },
   {
     label: "Deleting tryout leaderboard entries...",
-    mutationPath: "contentSync/mutations:deleteTryoutLeaderboardEntriesBatch",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteTryoutLeaderboardEntriesBatch",
     resultLabel: "tryout leaderboard entries",
   },
   {
     label: "Deleting user tryout stats...",
-    mutationPath: "contentSync/mutations:deleteUserTryoutStatsBatch",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteUserTryoutStatsBatch",
     resultLabel: "user tryout stats",
   },
   {
     label: "Deleting IRT scale publication queue...",
-    mutationPath: "contentSync/mutations:deleteIrtScalePublicationQueueBatch",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteIrtScalePublicationQueueBatch",
     resultLabel: "IRT scale publication queue entries",
   },
   {
     label: "Deleting IRT scale version items...",
-    mutationPath: "contentSync/mutations:deleteIrtScaleVersionItemsBatch",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteIrtScaleVersionItemsBatch",
     resultLabel: "IRT scale version items",
   },
   {
     label: "Deleting exercise item parameters...",
-    mutationPath: "contentSync/mutations:deleteExerciseItemParametersBatch",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteExerciseItemParametersBatch",
     resultLabel: "exercise item parameters",
   },
   {
     label: "Deleting IRT calibration queue...",
-    mutationPath: "contentSync/mutations:deleteIrtCalibrationQueueBatch",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteIrtCalibrationQueueBatch",
     resultLabel: "IRT calibration queue entries",
   },
   {
     label: "Deleting IRT calibration attempts...",
-    mutationPath: "contentSync/mutations:deleteIrtCalibrationAttemptsBatch",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteIrtCalibrationAttemptsBatch",
     resultLabel: "IRT calibration attempts",
   },
   {
     label: "Deleting exercise attempts...",
-    mutationPath: "contentSync/mutations:deleteExerciseAttemptsBatch",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteExerciseAttemptsBatch",
     resultLabel: "exercise attempts",
   },
   {
     label: "Deleting tryout attempts...",
-    mutationPath: "contentSync/mutations:deleteTryoutAttemptsBatch",
+    mutationPath: "contentSync/mutations/maintenance:deleteTryoutAttemptsBatch",
     resultLabel: "tryout attempts",
   },
   {
     label: "Deleting tryout part sets...",
-    mutationPath: "contentSync/mutations:deleteTryoutPartSetsBatch",
+    mutationPath: "contentSync/mutations/maintenance:deleteTryoutPartSetsBatch",
     resultLabel: "tryout part sets",
   },
   {
     label: "Deleting IRT scale versions...",
-    mutationPath: "contentSync/mutations:deleteIrtScaleVersionsBatch",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteIrtScaleVersionsBatch",
     resultLabel: "IRT scale versions",
   },
   {
     label: "Deleting IRT calibration runs...",
-    mutationPath: "contentSync/mutations:deleteIrtCalibrationRunsBatch",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteIrtCalibrationRunsBatch",
     resultLabel: "IRT calibration runs",
   },
   {
     label: "Deleting tryouts...",
-    mutationPath: "contentSync/mutations:deleteTryoutsBatch",
+    mutationPath: "contentSync/mutations/maintenance:deleteTryoutsBatch",
     resultLabel: "tryouts",
   },
   {
     label: "Deleting exercise questions...",
-    mutationPath: "contentSync/mutations:deleteExerciseQuestionsBatch",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteExerciseQuestionsBatch",
     resultLabel: "exercise questions",
   },
   {
     label: "Deleting subject sections...",
-    mutationPath: "contentSync/mutations:deleteSubjectSectionsBatch",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteSubjectSectionsBatch",
     resultLabel: "subject sections",
   },
   {
     label: "Deleting exercise sets...",
-    mutationPath: "contentSync/mutations:deleteExerciseSetsBatch",
+    mutationPath: "contentSync/mutations/maintenance:deleteExerciseSetsBatch",
     resultLabel: "exercise sets",
   },
   {
     label: "Deleting subject topics...",
-    mutationPath: "contentSync/mutations:deleteSubjectTopicsBatch",
+    mutationPath: "contentSync/mutations/maintenance:deleteSubjectTopicsBatch",
     resultLabel: "subject topics",
   },
   {
     label: "Deleting articles...",
-    mutationPath: "contentSync/mutations:deleteArticlesBatch",
+    mutationPath: "contentSync/mutations/maintenance:deleteArticlesBatch",
     resultLabel: "articles",
   },
 ];
@@ -275,7 +291,7 @@ export const reset = async (
     log("Deleting authors...");
     const authorsDeleted = await deleteAllBatched(
       config,
-      "contentSync/mutations:deleteAuthorsBatch",
+      "contentSync/mutations/maintenance:deleteAuthorsBatch",
       "authors"
     );
     logSuccess(`  Deleted ${authorsDeleted} authors`);

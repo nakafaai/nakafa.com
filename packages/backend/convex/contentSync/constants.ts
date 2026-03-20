@@ -10,5 +10,6 @@ export const CONTENT_SYNC_BATCH_LIMITS = {
   staleSubjectTopics: 20,
   subjectSections: 20,
   subjectTopics: 50,
+  tryoutDetectionSets: 500,
   unusedAuthors: 50,
 } as const;

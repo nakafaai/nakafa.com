@@ -166,7 +166,7 @@ export const syncExerciseSets = async (
 
     const result = await runConvexMutation(
       config,
-      "contentSync/mutations:bulkSyncExerciseSets",
+      "contentSync/mutations/exercises:bulkSyncExerciseSets",
       { sets: batch }
     );
 
@@ -295,7 +295,7 @@ const processQuestionBatches = async (
 
     const result = await runConvexMutation(
       config,
-      "contentSync/mutations:bulkSyncExerciseQuestions",
+      "contentSync/mutations/exercises:bulkSyncExerciseQuestions",
       { questions: batch }
     );
 

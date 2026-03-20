@@ -84,7 +84,7 @@ export const syncAuthors = async (
     const batch = authorNames.slice(index, index + BATCH_SIZES.authors);
     const result = await runConvexMutationGeneric(
       config,
-      "contentSync/mutations:bulkSyncAuthors",
+      "contentSync/mutations/authors:bulkSyncAuthors",
       { authorNames: batch },
       AuthorSyncResultSchema
     );

@@ -55,7 +55,7 @@ const countTableDocuments = async (config: ConvexConfig, tableName: string) => {
   while (!isDone) {
     ({ continueCursor, isDone, pageSize } = await runConvexQueryWithArgs(
       config,
-      "contentSync/queries:countTablePage",
+      "contentSync/queries/counts:countTablePage",
       {
         tableName,
         paginationOpts: {

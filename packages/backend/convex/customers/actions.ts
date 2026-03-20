@@ -2,8 +2,8 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { action, internalAction } from "@repo/backend/convex/_generated/server";
 import {
-  convertToDatabaseCustomer,
   requireCustomer,
+  syncCustomerForUser,
 } from "@repo/backend/convex/customers/utils";
 import { requireAuthForAction } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
@@ -12,36 +12,31 @@ import { v } from "convex/values";
 /**
  * Sync customer between Polar and local database.
  * For scheduling from auth triggers.
- * Uses same logic as requireCustomer but returns local DB ID.
+ * Reuses the shared customer sync helper so Polar and local writes stay aligned.
  */
 export const syncCustomer = internalAction({
   args: { userId: vv.id("users") },
   returns: vv.nullable(vv.id("customers")),
   handler: async (ctx, args): Promise<Id<"customers"> | null> => {
-    const user = await ctx.runQuery(internal.users.queries.getUserById, {
-      userId: args.userId,
-    });
+    const [user, localCustomer] = await Promise.all([
+      ctx.runQuery(internal.users.queries.getUserById, {
+        userId: args.userId,
+      }),
+      ctx.runQuery(internal.customers.queries.getCustomerByUserId, {
+        userId: args.userId,
+      }),
+    ]);
 
     if (!user) {
       return null;
     }
 
-    const polarCustomer = await ctx.runAction(
-      internal.customers.polar.ensureCustomer,
-      {
-        externalId: user.authId,
-        email: user.email,
-        name: user.name,
-        metadata: { userId: args.userId },
-      }
-    );
-
-    return await ctx.runMutation(internal.customers.mutations.upsertCustomer, {
-      customer: convertToDatabaseCustomer({
-        ...polarCustomer,
-        userId: args.userId,
-      }),
+    const customer = await syncCustomerForUser(ctx, {
+      localCustomerId: localCustomer?.id,
+      user,
     });
+
+    return customer.localCustomerId;
   },
 });
 
