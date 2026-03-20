@@ -2,7 +2,6 @@ import "@/styles/globals.css";
 
 import { AnalyticsProvider } from "@repo/analytics/provider";
 import { DesignSystemProvider } from "@repo/design-system";
-import { ReactScan } from "@repo/design-system/components/ui/react-scan";
 import { Toaster } from "@repo/design-system/components/ui/sonner";
 import { TailwindIndicator } from "@repo/design-system/components/ui/tailwind-indicator";
 import { fonts } from "@repo/design-system/lib/fonts";
@@ -157,7 +156,6 @@ export default function Layout(props: LayoutProps<"/[locale]">) {
     <html className={fonts} lang={locale} suppressHydrationWarning>
       <NextIntlClientProvider>
         <head>
-          <ReactScan />
           {/* Add JSON-LD structured data using the JsonLd component */}
           <EducationalOrgJsonLd />
           <WebsiteJsonLd locale={locale} />
