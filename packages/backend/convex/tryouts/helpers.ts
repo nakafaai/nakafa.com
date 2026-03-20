@@ -86,8 +86,15 @@ export function countCorrectAnswers(answers: Doc<"exerciseAnswers">[]) {
   );
 }
 
-/** Builds the EAP/IRT response payload from scored answers plus item params. */
-export function buildIrtResponses({
+/**
+ * Builds the operational person-scoring payload from frozen tryout item params.
+ *
+ * Unanswered items inside a timed tryout are treated as incorrect here so the
+ * operational IRT score reflects the full administered form, not only the
+ * subset of items the student answered. See `convex/irt/README.md` for the
+ * documented rationale and source links.
+ */
+export function buildOperationalIrtResponses({
   answers,
   itemParamsRecords,
 }: {
@@ -97,31 +104,26 @@ export function buildIrtResponses({
     "questionId" | "difficulty" | "discrimination"
   >[];
 }) {
-  const itemParamsMap = new Map(
-    itemParamsRecords.map((itemParams) => [itemParams.questionId, itemParams])
-  );
+  const answersByQuestionId = new Map<
+    NonNullable<Doc<"exerciseAnswers">["questionId"]>,
+    Doc<"exerciseAnswers">
+  >();
 
-  return answers.flatMap((answer) => {
-    if (answer.questionId === undefined) {
-      return [];
+  for (const answer of answers) {
+    if (!answer.questionId) {
+      continue;
     }
 
-    const params = itemParamsMap.get(answer.questionId);
+    answersByQuestionId.set(answer.questionId, answer);
+  }
 
-    if (!params) {
-      return [];
-    }
-
-    return [
-      {
-        correct: answer.isCorrect,
-        params: {
-          difficulty: params.difficulty,
-          discrimination: params.discrimination,
-        },
-      },
-    ];
-  });
+  return itemParamsRecords.map((itemParams) => ({
+    correct: answersByQuestionId.get(itemParams.questionId)?.isCorrect ?? false,
+    params: {
+      difficulty: itemParams.difficulty,
+      discrimination: itemParams.discrimination,
+    },
+  }));
 }
 
 /** Finalize one started tryout part from its persisted exercise answers. */
@@ -226,7 +228,10 @@ export async function finalizeTryoutPartAttempt({
       setId: partAttempt.setId,
     }),
   ]);
-  const itemResponses = buildIrtResponses({ answers, itemParamsRecords });
+  const itemResponses = buildOperationalIrtResponses({
+    answers,
+    itemParamsRecords,
+  });
   const { theta, se } = estimateThetaEAP(itemResponses);
   const rawScore = countCorrectAnswers(answers);
   const completedPartIndices = [...tryoutAttempt.completedPartIndices];
@@ -340,7 +345,9 @@ export async function syncTryoutAttemptAggregates({
       };
     }
   );
-  const allResponses = partData.flatMap((part) => buildIrtResponses(part));
+  const allResponses = partData.flatMap((part) =>
+    buildOperationalIrtResponses(part)
+  );
   const totalCorrect = partData.reduce(
     (count, part) => count + countCorrectAnswers(part.answers),
     0
