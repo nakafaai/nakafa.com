@@ -14,6 +14,11 @@ export const irtCalibrationRunStatusValidator = literals(
   "failed"
 );
 
+export const irtScaleVersionStatusValidator = literals(
+  "provisional",
+  "official"
+);
+
 export const irtOperationalModelValidator = literals("2pl");
 
 const tables = {
@@ -34,6 +39,7 @@ const tables = {
   irtScaleVersions: defineTable({
     tryoutId: v.id("tryouts"),
     model: irtOperationalModelValidator,
+    status: irtScaleVersionStatusValidator,
     questionCount: v.number(),
     publishedAt: v.number(),
   }).index("tryoutId_publishedAt", ["tryoutId", "publishedAt"]),

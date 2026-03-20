@@ -1,15 +1,21 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import { internalMutation } from "@repo/backend/convex/functions";
+import { getScaleVersionStatus } from "@repo/backend/convex/irt/scaleVersions";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import {
   computeTryoutRawScorePercentage,
   expireTryoutAttempt,
   getFirstCompletedSimulationAttempt,
+  getTryoutAttemptScoreStatus,
+  rescoreTryoutAttempt,
 } from "@repo/backend/convex/tryouts/helpers";
 import {
   computeTryoutExpiresAtMs,
   getTryoutLeaderboardNamespace,
 } from "@repo/backend/convex/tryouts/products";
 import { v } from "convex/values";
+
+const TRYOUT_SCORE_PROMOTION_BATCH_SIZE = 100;
 
 /** Scheduler-safe expiry for one in-progress tryout attempt. */
 export const expireTryoutAttemptInternal = internalMutation({
@@ -62,7 +68,11 @@ export const updateLeaderboard = internalMutation({
       args.tryoutAttemptId
     );
 
-    if (!tryoutAttempt || tryoutAttempt.status !== "completed") {
+    if (
+      !tryoutAttempt ||
+      tryoutAttempt.status !== "completed" ||
+      getTryoutAttemptScoreStatus(tryoutAttempt) !== "official"
+    ) {
       return null;
     }
 
@@ -169,6 +179,93 @@ export const updateLeaderboard = internalMutation({
         updatedAt: completedAt,
       });
     }
+
+    return null;
+  },
+});
+
+/** Promotes completed provisional tryout scores to one official frozen scale. */
+export const promoteProvisionalTryoutScores = internalMutation({
+  args: {
+    tryoutId: vv.id("tryouts"),
+    scaleVersionId: vv.id("irtScaleVersions"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const scaleVersion = await ctx.db.get(
+      "irtScaleVersions",
+      args.scaleVersionId
+    );
+
+    if (!scaleVersion || getScaleVersionStatus(scaleVersion) !== "official") {
+      return null;
+    }
+
+    const [completedAttempts, expiredAttempts] = await Promise.all([
+      ctx.db
+        .query("tryoutAttempts")
+        .withIndex("tryoutId_scoreStatus_status_startedAt", (q) =>
+          q
+            .eq("tryoutId", args.tryoutId)
+            .eq("scoreStatus", "provisional")
+            .eq("status", "completed")
+        )
+        .order("asc")
+        .take(TRYOUT_SCORE_PROMOTION_BATCH_SIZE),
+      ctx.db
+        .query("tryoutAttempts")
+        .withIndex("tryoutId_scoreStatus_status_startedAt", (q) =>
+          q
+            .eq("tryoutId", args.tryoutId)
+            .eq("scoreStatus", "provisional")
+            .eq("status", "expired")
+        )
+        .order("asc")
+        .take(TRYOUT_SCORE_PROMOTION_BATCH_SIZE),
+    ]);
+
+    const provisionalAttempts = [
+      ...completedAttempts,
+      ...expiredAttempts,
+    ].slice(0, TRYOUT_SCORE_PROMOTION_BATCH_SIZE);
+
+    if (provisionalAttempts.length === 0) {
+      return null;
+    }
+
+    const now = Date.now();
+
+    for (const tryoutAttempt of provisionalAttempts) {
+      await rescoreTryoutAttempt({
+        ctx,
+        now,
+        scaleVersionId: scaleVersion._id,
+        scoreStatus: "official",
+        tryoutAttempt,
+      });
+
+      if (tryoutAttempt.status !== "completed") {
+        continue;
+      }
+
+      await ctx.scheduler.runAfter(
+        0,
+        internal.tryouts.internalMutations.updateLeaderboard,
+        {
+          tryoutAttemptId: tryoutAttempt._id,
+        }
+      );
+    }
+
+    if (provisionalAttempts.length < TRYOUT_SCORE_PROMOTION_BATCH_SIZE) {
+      return null;
+    }
+
+    await ctx.scheduler.runAfter(
+      0,
+      internal.tryouts.internalMutations.promoteProvisionalTryoutScores,
+      args
+    );
 
     return null;
   },

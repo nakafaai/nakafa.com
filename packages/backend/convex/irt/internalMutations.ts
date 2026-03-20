@@ -15,6 +15,7 @@ import {
   getOrPublishScaleVersionForTryout,
   getPublishableScaleSnapshot,
   getScaleVersionItems,
+  getScaleVersionStatus,
   hasPublishedScaleChanged,
   publishScaleVersion,
 } from "@repo/backend/convex/irt/scaleVersions";
@@ -87,7 +88,10 @@ async function publishTryoutScaleVersionIfNeeded(
     tryout._id
   );
 
-  if (latestScaleVersion) {
+  if (
+    latestScaleVersion &&
+    getScaleVersionStatus(latestScaleVersion) === "official"
+  ) {
     const latestScaleItems = await getScaleVersionItems(
       ctx.db,
       latestScaleVersion._id
@@ -107,8 +111,18 @@ async function publishTryoutScaleVersionIfNeeded(
     tryoutId: tryout._id,
     questionCount: snapshot.questionCount,
     items: snapshot.items,
+    status: "official",
     publishedAt: Date.now(),
   });
+
+  await ctx.scheduler.runAfter(
+    0,
+    internal.tryouts.internalMutations.promoteProvisionalTryoutScores,
+    {
+      scaleVersionId,
+      tryoutId: tryout._id,
+    }
+  );
 
   return { kind: "published", scaleVersionId };
 }

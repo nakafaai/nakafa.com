@@ -14,6 +14,7 @@ import {
   computeTryoutExpiresAtMs,
   scaleThetaToTryoutScore,
 } from "@repo/backend/convex/tryouts/products";
+import type { TryoutScoreStatus } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError } from "convex/values";
 import { asyncMap } from "convex-helpers";
 import {
@@ -28,6 +29,12 @@ type TryoutScoreTotals = Pick<
   Doc<"tryoutAttempts">,
   "totalCorrect" | "totalQuestions"
 >;
+
+export function getTryoutAttemptScoreStatus(
+  tryoutAttempt: Pick<Doc<"tryoutAttempts">, "scoreStatus">
+) {
+  return tryoutAttempt.scoreStatus;
+}
 type FinalizedExerciseAttemptStatus = Exclude<
   Doc<"exerciseAttempts">["status"],
   "in-progress"
@@ -269,12 +276,16 @@ export async function syncTryoutAttemptAggregates({
   completedAtMs,
   ctx,
   now,
+  scaleVersionId,
+  scoreStatus,
   status,
   tryoutAttemptId,
 }: {
   completedAtMs: number;
   ctx: TryoutMutationCtx;
   now: number;
+  scaleVersionId?: Doc<"tryoutAttempts">["scaleVersionId"];
+  scoreStatus?: TryoutScoreStatus;
   status: FinalizedTryoutStatus;
   tryoutAttemptId: Doc<"tryoutAttempts">["_id"];
 }) {
@@ -296,6 +307,10 @@ export async function syncTryoutAttemptAggregates({
     });
   }
 
+  const effectiveScaleVersionId =
+    scaleVersionId ?? tryoutAttempt.scaleVersionId;
+  const effectiveScoreStatus =
+    scoreStatus ?? getTryoutAttemptScoreStatus(tryoutAttempt);
   const completedPartIndices = new Set(tryoutAttempt.completedPartIndices);
   const partAttempts = await getManyFrom(
     ctx.db,
@@ -333,7 +348,7 @@ export async function syncTryoutAttemptAggregates({
           "attemptId"
         ),
         getScaleVersionItemsForSet(ctx.db, {
-          scaleVersionId: tryoutAttempt.scaleVersionId,
+          scaleVersionId: effectiveScaleVersionId,
           setId: partAttempt.setId,
         }),
       ]);
@@ -367,6 +382,8 @@ export async function syncTryoutAttemptAggregates({
     endReason: getAttemptEndReasonFromStatus(status),
     irtScore,
     lastActivityAt: now,
+    scaleVersionId: effectiveScaleVersionId,
+    scoreStatus: effectiveScoreStatus,
     status,
     theta,
     thetaSE: se,
@@ -384,6 +401,35 @@ export async function syncTryoutAttemptAggregates({
     theta,
     thetaSE: se,
   };
+}
+
+/** Re-score one terminal tryout attempt against a newer frozen scale. */
+export function rescoreTryoutAttempt({
+  ctx,
+  now,
+  scaleVersionId,
+  scoreStatus,
+  tryoutAttempt,
+}: {
+  ctx: TryoutMutationCtx;
+  now: number;
+  scaleVersionId: Doc<"tryoutAttempts">["scaleVersionId"];
+  scoreStatus: TryoutScoreStatus;
+  tryoutAttempt: Doc<"tryoutAttempts">;
+}) {
+  if (tryoutAttempt.status === "in-progress") {
+    return null;
+  }
+
+  return syncTryoutAttemptAggregates({
+    completedAtMs: tryoutAttempt.completedAt ?? now,
+    ctx,
+    now,
+    scaleVersionId,
+    scoreStatus,
+    status: tryoutAttempt.status,
+    tryoutAttemptId: tryoutAttempt._id,
+  });
 }
 
 /** Expires a tryout and every still-open shared set attempt under it. */

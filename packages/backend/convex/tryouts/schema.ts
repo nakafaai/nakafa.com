@@ -12,6 +12,9 @@ export const tryoutStatusValidator = literals(
 );
 export type TryoutStatus = Infer<typeof tryoutStatusValidator>;
 
+export const tryoutScoreStatusValidator = literals("provisional", "official");
+export type TryoutScoreStatus = Infer<typeof tryoutScoreStatusValidator>;
+
 export const tryoutPartKeyValidator = v.string();
 export type TryoutPartKey = Infer<typeof tryoutPartKeyValidator>;
 
@@ -53,6 +56,7 @@ const tables = {
     userId: v.id("users"),
     tryoutId: v.id("tryouts"),
     scaleVersionId: v.id("irtScaleVersions"),
+    scoreStatus: tryoutScoreStatusValidator,
     status: tryoutStatusValidator,
     completedPartIndices: v.array(v.number()),
     totalCorrect: v.number(),
@@ -69,6 +73,12 @@ const tables = {
     .index("userId_tryoutId_status_startedAt", [
       "userId",
       "tryoutId",
+      "status",
+      "startedAt",
+    ])
+    .index("tryoutId_scoreStatus_status_startedAt", [
+      "tryoutId",
+      "scoreStatus",
       "status",
       "startedAt",
     ]),

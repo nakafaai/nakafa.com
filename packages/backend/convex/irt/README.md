@@ -36,9 +36,14 @@ parts we can support with public sources.
 - SNBT scoring uses `2PL`
 - Ability estimation uses `EAP` over the operational 2PL item parameters
 - New or weakly supported items remain `provisional` or `emerging`
-- Official SNBT simulation attempts require a published tryout scale version
-- Published scale versions freeze item parameters so official scores do not drift
-  when future calibration runs update the live item bank
+- Every active tryout has a published frozen scale version so it stays startable
+- Scale versions are split into two product states:
+  - `provisional`: bootstrap scoring only; enough to start and estimate a score
+  - `official`: published from a fully calibrated tryout snapshot
+- Completed attempts scored on a provisional scale remain provisional and are
+  automatically re-scored once an official scale is published for that tryout
+- Official attempts freeze item parameters so official scores do not drift when
+  future calibration runs update the live item bank
 - Year-scoped global comparison is limited to the same locale and year, but does
   not currently perform additional cross-form linking beyond frozen calibrated
   scale versions
@@ -54,6 +59,9 @@ Nakafa currently uses this split policy:
 - **Operational student scoring**: unanswered timed tryout items are treated as
   incorrect
 - **Item calibration**: only observed responses are used
+- **Cold start**: if a tryout already has a fully calibrated snapshot, Nakafa
+  publishes an official scale immediately; otherwise it starts with a
+  provisional bootstrap scale and auto-promotes completed attempts later
 
 This is a documented operational choice, not a claim of universal psychometric
 optimality. It matches a public pattern used in large-scale assessment and is

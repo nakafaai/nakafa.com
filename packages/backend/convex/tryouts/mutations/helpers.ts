@@ -1,9 +1,11 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { getScaleVersionStatus } from "@repo/backend/convex/irt/scaleVersions";
 import {
   computeTryoutRawScorePercentage,
   getFirstCompletedSimulationAttempt,
+  getTryoutAttemptScoreStatus,
   syncTryoutAttemptAggregates,
   syncTryoutAttemptExpiry,
 } from "@repo/backend/convex/tryouts/helpers";
@@ -46,7 +48,9 @@ export async function finalizeTryoutAttempt({
 
     return {
       status: "completed",
-      isOfficial: firstCompletedAttempt?._id === tryoutAttempt._id,
+      isOfficial:
+        firstCompletedAttempt?._id === tryoutAttempt._id &&
+        getTryoutAttemptScoreStatus(tryoutAttempt) === "official",
       theta: tryoutAttempt.theta,
       irtScore: tryoutAttempt.irtScore,
       rawScorePercentage,
@@ -94,18 +98,26 @@ export async function finalizeTryoutAttempt({
     } satisfies CompleteTryoutResult;
   }
 
-  const [tryout, firstCompletedAttempt] = await Promise.all([
+  const [tryout, firstCompletedAttempt, scaleVersion] = await Promise.all([
     ctx.db.get("tryouts", tryoutAttempt.tryoutId),
     getFirstCompletedSimulationAttempt(ctx.db, {
       userId,
       tryoutId: tryoutAttempt.tryoutId,
     }),
+    ctx.db.get("irtScaleVersions", tryoutAttempt.scaleVersionId),
   ]);
 
   if (!tryout) {
     throw new ConvexError({
       code: "TRYOUT_NOT_FOUND",
       message: "Tryout not found.",
+    });
+  }
+
+  if (!scaleVersion) {
+    throw new ConvexError({
+      code: "INVALID_ATTEMPT_STATE",
+      message: "Tryout attempt is missing its scoring scale.",
     });
   }
 
@@ -120,15 +132,17 @@ export async function finalizeTryoutAttempt({
   }
 
   const isOfficial = firstCompletedAttempt === null;
+  const scoreStatus = getScaleVersionStatus(scaleVersion);
   const completedAttempt = await syncTryoutAttemptAggregates({
     completedAtMs: completedAtMs ?? now,
     ctx,
     now,
+    scoreStatus,
     status: "completed",
     tryoutAttemptId: tryoutAttempt._id,
   });
 
-  if (isOfficial) {
+  if (isOfficial && scoreStatus === "official") {
     await ctx.scheduler.runAfter(
       0,
       internal.tryouts.internalMutations.updateLeaderboard,

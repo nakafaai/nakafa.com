@@ -27,6 +27,12 @@ type ScaleVersionItemSnapshot = OperationalItemParams &
     calibrationRunId: Doc<"irtScaleVersionItems">["calibrationRunId"];
   };
 
+export function getScaleVersionStatus(
+  scaleVersion: Pick<Doc<"irtScaleVersions">, "status">
+) {
+  return scaleVersion.status;
+}
+
 /**
  * Load the latest published scale version for a try-out.
  */
@@ -259,11 +265,13 @@ export async function publishScaleVersion(
   {
     publishedAt,
     questionCount,
+    status,
     tryoutId,
     items,
   }: {
     publishedAt: number;
     questionCount: number;
+    status: NonNullable<Doc<"irtScaleVersions">["status"]>;
     tryoutId: Doc<"irtScaleVersions">["tryoutId"];
     items: ScaleVersionItemSnapshot[];
   }
@@ -271,6 +279,7 @@ export async function publishScaleVersion(
   const scaleVersionId = await db.insert("irtScaleVersions", {
     tryoutId,
     model: IRT_OPERATIONAL_MODEL,
+    status,
     questionCount,
     publishedAt,
   });
@@ -406,6 +415,7 @@ export async function publishBootstrapScaleVersion(
     tryoutId,
     questionCount: items.length,
     items,
+    status: "provisional",
     publishedAt: now,
   });
 
@@ -424,9 +434,50 @@ export async function getOrPublishScaleVersionForTryout(
   }
 ) {
   const latestScaleVersion = await getLatestScaleVersionForTryout(db, tryoutId);
+  const publishableSnapshot = await getPublishableScaleSnapshot(db, tryoutId);
 
   if (latestScaleVersion) {
-    return latestScaleVersion;
+    if (!publishableSnapshot) {
+      return latestScaleVersion;
+    }
+
+    if (getScaleVersionStatus(latestScaleVersion) === "official") {
+      const latestScaleItems = await getScaleVersionItems(
+        db,
+        latestScaleVersion._id
+      );
+
+      if (
+        !hasPublishedScaleChanged({
+          publishedItems: latestScaleItems,
+          snapshotItems: publishableSnapshot.items,
+        })
+      ) {
+        return latestScaleVersion;
+      }
+    }
+
+    const scaleVersionId = await publishScaleVersion(db, {
+      tryoutId,
+      questionCount: publishableSnapshot.questionCount,
+      items: publishableSnapshot.items,
+      status: "official",
+      publishedAt: now,
+    });
+
+    return db.get("irtScaleVersions", scaleVersionId);
+  }
+
+  if (publishableSnapshot) {
+    const scaleVersionId = await publishScaleVersion(db, {
+      tryoutId,
+      questionCount: publishableSnapshot.questionCount,
+      items: publishableSnapshot.items,
+      status: "official",
+      publishedAt: now,
+    });
+
+    return db.get("irtScaleVersions", scaleVersionId);
   }
 
   return publishBootstrapScaleVersion(db, { now, tryoutId });
