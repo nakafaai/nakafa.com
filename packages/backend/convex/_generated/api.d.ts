@@ -8,8 +8,6 @@
  * @module
  */
 
-import type * as articleContents_mutations from "../articleContents/mutations.js";
-import type * as articleContents_queries from "../articleContents/queries.js";
 import type * as audioStudies_actions from "../audioStudies/actions.js";
 import type * as audioStudies_constants from "../audioStudies/constants.js";
 import type * as audioStudies_mutations from "../audioStudies/mutations.js";
@@ -102,7 +100,6 @@ import type * as routes_v1_index from "../routes/v1/index.js";
 import type * as schools_mutations from "../schools/mutations.js";
 import type * as schools_queries from "../schools/queries.js";
 import type * as schools_utils from "../schools/utils.js";
-import type * as subjectSections_mutations from "../subjectSections/mutations.js";
 import type * as subjectSections_queries from "../subjectSections/queries.js";
 import type * as subjectSections_utils from "../subjectSections/utils.js";
 import type * as subscriptions_mutations from "../subscriptions/mutations.js";
@@ -157,8 +154,6 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  "articleContents/mutations": typeof articleContents_mutations;
-  "articleContents/queries": typeof articleContents_queries;
   "audioStudies/actions": typeof audioStudies_actions;
   "audioStudies/constants": typeof audioStudies_constants;
   "audioStudies/mutations": typeof audioStudies_mutations;
@@ -251,7 +246,6 @@ declare const fullApi: ApiFromModules<{
   "schools/mutations": typeof schools_mutations;
   "schools/queries": typeof schools_queries;
   "schools/utils": typeof schools_utils;
-  "subjectSections/mutations": typeof subjectSections_mutations;
   "subjectSections/queries": typeof subjectSections_queries;
   "subjectSections/utils": typeof subjectSections_utils;
   "subscriptions/mutations": typeof subscriptions_mutations;

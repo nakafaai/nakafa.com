@@ -23,7 +23,7 @@ import { irtCalibrationResultValidator } from "@repo/backend/convex/irt/validato
 import { irtCalibrationSyncWorkpool } from "@repo/backend/convex/irt/workpool";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { workflow } from "@repo/backend/convex/workflow";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { asyncMap } from "convex-helpers";
 import { getAll, getManyFrom } from "convex-helpers/server/relationships";
 
@@ -35,7 +35,10 @@ async function startCalibrationRunWorkflow(
   const set = await ctx.db.get("exerciseSets", setId);
 
   if (!set) {
-    throw new Error("Exercise set not found for calibration.");
+    throw new ConvexError({
+      code: "IRT_SET_NOT_FOUND",
+      message: "Exercise set not found for calibration.",
+    });
   }
 
   const latestRun = await ctx.db
@@ -76,7 +79,10 @@ async function publishTryoutScaleVersionIfNeeded(
   const tryout = await ctx.db.get("tryouts", tryoutId);
 
   if (!tryout) {
-    throw new Error("Tryout not found for scale publication.");
+    throw new ConvexError({
+      code: "IRT_TRYOUT_NOT_FOUND",
+      message: "Tryout not found for scale publication.",
+    });
   }
 
   const snapshot = await getPublishableScaleSnapshot(ctx.db, tryout._id);
@@ -266,15 +272,17 @@ export const syncCalibrationResponsesForAttempt = internalMutation({
       const question = questions[index];
 
       if (!question) {
-        throw new Error(
-          "Calibration response is missing its exercise question."
-        );
+        throw new ConvexError({
+          code: "IRT_QUESTION_NOT_FOUND",
+          message: "Calibration response is missing its exercise question.",
+        });
       }
 
       if (question.setId !== setId) {
-        throw new Error(
-          "Calibration attempt contains answers from multiple sets."
-        );
+        throw new ConvexError({
+          code: "IRT_MULTIPLE_SETS_IN_ATTEMPT",
+          message: "Calibration attempt contains answers from multiple sets.",
+        });
       }
 
       return {
@@ -444,7 +452,10 @@ export const completeCalibrationRun = internalMutation({
     const run = await ctx.db.get("irtCalibrationRuns", args.calibrationRunId);
 
     if (!run) {
-      throw new Error("Calibration run not found.");
+      throw new ConvexError({
+        code: "IRT_CALIBRATION_RUN_NOT_FOUND",
+        message: "Calibration run not found.",
+      });
     }
 
     const existingParams = await ctx.db
@@ -547,7 +558,10 @@ export const failCalibrationRun = internalMutation({
     const run = await ctx.db.get("irtCalibrationRuns", args.calibrationRunId);
 
     if (!run) {
-      throw new Error("Calibration run not found.");
+      throw new ConvexError({
+        code: "IRT_CALIBRATION_RUN_NOT_FOUND",
+        message: "Calibration run not found.",
+      });
     }
 
     await ctx.db.patch("irtCalibrationRuns", args.calibrationRunId, {

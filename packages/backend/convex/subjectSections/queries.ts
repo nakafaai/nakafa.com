@@ -1,41 +1,9 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { internalQuery, query } from "@repo/backend/convex/_generated/server";
+import { query } from "@repo/backend/convex/_generated/server";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { trendingSubjectValidator } from "@repo/backend/convex/lib/validators/trending";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { getAll } from "convex-helpers/server/relationships";
-import { nullable } from "convex-helpers/validators";
-
-/**
- * Get subject section content by ID.
- */
-export const getById = internalQuery({
-  args: {
-    id: vv.id("subjectSections"),
-  },
-  returns: nullable(
-    vv.object({
-      title: vv.string(),
-      description: vv.optional(vv.string()),
-      body: vv.string(),
-      locale: localeValidator,
-      contentHash: vv.string(),
-    })
-  ),
-  handler: async (ctx, args) => {
-    const section = await ctx.db.get("subjectSections", args.id);
-    if (!section) {
-      return null;
-    }
-    return {
-      title: section.title,
-      description: section.description,
-      body: section.body,
-      locale: section.locale,
-      contentHash: section.contentHash,
-    };
-  },
-});
 
 /**
  * Get trending subjects for a time range.

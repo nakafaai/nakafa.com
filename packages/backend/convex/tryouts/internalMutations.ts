@@ -17,7 +17,7 @@ import {
   getTryoutLeaderboardNamespace,
   tryoutProductValidator,
 } from "@repo/backend/convex/tryouts/products";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { getAll } from "convex-helpers/server/relationships";
 
 const TRYOUT_SCORE_PROMOTION_BATCH_SIZE = 100;
@@ -324,7 +324,10 @@ export const updateLeaderboard = internalMutation({
     const tryout = await ctx.db.get("tryouts", tryoutAttempt.tryoutId);
 
     if (!tryout) {
-      throw new Error("Completed tryout attempt is missing its tryout.");
+      throw new ConvexError({
+        code: "TRYOUT_NOT_FOUND",
+        message: "Completed tryout attempt is missing its tryout.",
+      });
     }
 
     const leaderboardNamespace = getTryoutLeaderboardNamespace({
@@ -355,7 +358,10 @@ export const updateLeaderboard = internalMutation({
     }
 
     if (tryoutAttempt.completedAt === null) {
-      throw new Error("Completed tryout attempt is missing completedAt.");
+      throw new ConvexError({
+        code: "TRYOUT_COMPLETED_AT_MISSING",
+        message: "Completed tryout attempt is missing completedAt.",
+      });
     }
 
     const completedAt = tryoutAttempt.completedAt;

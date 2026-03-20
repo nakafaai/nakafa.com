@@ -245,6 +245,12 @@ export const generateSpeech = internalAction({
 
       const audioBuffers: Uint8Array[] = [];
       const voiceSettings = audio.voiceSettings ?? getDefaultVoiceSettings();
+      const providerVoiceSettings = {
+        similarityBoost: voiceSettings.similarityBoost,
+        stability: voiceSettings.stability,
+        style: voiceSettings.style,
+        useSpeakerBoost: voiceSettings.useSpeakerBoost,
+      };
 
       for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];
@@ -261,7 +267,7 @@ export const generateSpeech = internalAction({
           outputFormat: PCM_FORMAT.outputFormat,
           providerOptions: {
             elevenlabs: {
-              voiceSettings,
+              voiceSettings: providerVoiceSettings,
             },
           },
         });
