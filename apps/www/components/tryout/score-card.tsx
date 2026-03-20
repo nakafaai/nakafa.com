@@ -48,7 +48,7 @@ export function TryoutScoreCard({ attempt }: { attempt: TryoutAttempt }) {
         </p>
       )}
 
-      <p className="pt-2 text-muted-foreground text-sm">
+      <p className="text-muted-foreground text-sm">
         {tTryouts("score-card-review-hint")}
       </p>
     </TryoutStartCountdown>
