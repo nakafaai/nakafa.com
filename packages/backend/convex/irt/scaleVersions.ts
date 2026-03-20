@@ -50,15 +50,17 @@ export function getLatestScaleVersionForTryout(
 
 /** Lists active tryouts that still do not have a frozen scale version. */
 export async function getActiveTryoutsWithoutScale(db: IrtDbReader) {
-  const tryouts = await db.query("tryouts").collect();
+  const tryouts = await db
+    .query("tryouts")
+    .withIndex("isActive", (q) => q.eq("isActive", true))
+    .collect();
+  const latestScaleVersions = await asyncMap(tryouts, (tryout) =>
+    getLatestScaleVersionForTryout(db, tryout._id)
+  );
   const activeTryoutsWithoutScale: ActiveTryoutWithoutScale[] = [];
 
-  for (const tryout of tryouts) {
-    if (!tryout.isActive) {
-      continue;
-    }
-
-    const scaleVersion = await getLatestScaleVersionForTryout(db, tryout._id);
+  for (const [index, tryout] of tryouts.entries()) {
+    const scaleVersion = latestScaleVersions[index];
 
     if (scaleVersion) {
       continue;

@@ -32,6 +32,7 @@ const tables = {
     detectedAt: v.number(),
     syncedAt: v.number(),
   })
+    .index("isActive", ["isActive"])
     .index("product_locale_slug", ["product", "locale", "slug"])
     .index("product_locale_cycleKey_slug", [
       "product",

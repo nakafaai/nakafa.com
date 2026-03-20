@@ -43,5 +43,8 @@ export const IRT_CALIBRATION_QUEUE_BATCH_SIZE = 5;
 /** Maximum number of distinct tryouts to publish in one queue drain. */
 export const IRT_SCALE_PUBLICATION_QUEUE_BATCH_SIZE = 10;
 
+/** Maximum number of queue rows deleted in one cleanup mutation. */
+export const IRT_QUEUE_CLEANUP_BATCH_SIZE = 100;
+
 /** Interval, in minutes, for the automatic IRT automation crons. */
 export const IRT_AUTOMATION_CRON_INTERVAL_MINUTES = 15;

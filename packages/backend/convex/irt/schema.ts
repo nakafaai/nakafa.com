@@ -70,7 +70,9 @@ const tables = {
     updatedAt: v.number(),
     completedAt: v.optional(v.number()),
     error: v.optional(v.string()),
-  }).index("setId_startedAt", ["setId", "startedAt"]),
+  })
+    .index("setId_startedAt", ["setId", "startedAt"])
+    .index("setId_status_startedAt", ["setId", "status", "startedAt"]),
 
   exerciseItemParameters: defineTable({
     questionId: v.id("exerciseQuestions"),
