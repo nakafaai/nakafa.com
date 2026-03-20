@@ -29,19 +29,6 @@ export function TryoutScoreCard({ attempt }: { attempt: TryoutAttempt }) {
         <TryoutAttemptStatusBadge status={attempt.status} />
       </div>
 
-      <div className="space-y-1">
-        <h2 className="font-medium text-foreground text-lg">
-          {tTryouts("score-card-title")}
-        </h2>
-        <p className="text-muted-foreground text-sm">
-          {getTryoutScoreDescription({
-            scoreStatus: attempt.scoreStatus,
-            status: attempt.status,
-            tTryouts,
-          })}
-        </p>
-      </div>
-
       {hasScoredQuestions ? (
         <TryoutPartStats>
           <TryoutPartStat label={tTryouts("score-label")}>
@@ -148,28 +135,4 @@ function TryoutScoreMetricFraction({
       </div>
     </NumberFormatGroup>
   );
-}
-
-function getTryoutScoreDescription({
-  scoreStatus,
-  status,
-  tTryouts,
-}: {
-  scoreStatus: TryoutAttempt["scoreStatus"];
-  status: TryoutAttempt["status"];
-  tTryouts: ReturnType<typeof useTranslations>;
-}) {
-  if (scoreStatus === "official") {
-    if (status === "expired") {
-      return tTryouts("score-card-official-expired");
-    }
-
-    return tTryouts("score-card-official-completed");
-  }
-
-  if (status === "expired") {
-    return tTryouts("score-card-provisional-expired");
-  }
-
-  return tTryouts("score-card-provisional-completed");
 }
