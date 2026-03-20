@@ -211,8 +211,10 @@ export function ArrowHelper({
         color={color instanceof Color ? color.getStyle() : color || ""}
         font={fontPath}
         fontSize={0.5}
-        frustumCulled
+        frustumCulled={false}
+        material-depthTest={false}
         position={labelPos}
+        renderOrder={10}
         visible={Boolean(label)}
       >
         {label}

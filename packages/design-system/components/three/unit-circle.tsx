@@ -249,12 +249,14 @@ export function UnitCircle({
           color={COLORS.VIOLET}
           font={fontPath}
           fontSize={LABEL_FONT_SIZE}
-          frustumCulled
+          frustumCulled={false}
+          material-depthTest={false}
           position={[
             Math.cos(angleInRadians / 2) * ANGLE_LABEL_X_FACTOR,
             Math.sin(angleInRadians / 2) * ANGLE_LABEL_Y_FACTOR,
             0,
           ]}
+          renderOrder={10}
           visible={showLabels}
         >
           {`${angle}°`}
@@ -300,8 +302,10 @@ export function UnitCircle({
               color={COLORS.CYAN}
               font={fontPath}
               fontSize={LABEL_FONT_SIZE}
-              frustumCulled
+              frustumCulled={false}
+              material-depthTest={false}
               position={[cos / 2, COS_LABEL_Y_OFFSET, 0]}
+              renderOrder={10}
             >
               {labels.cos}
             </Text>
@@ -311,8 +315,10 @@ export function UnitCircle({
               color={COLORS.ORANGE}
               font={fontPath}
               fontSize={LABEL_FONT_SIZE}
-              frustumCulled
+              frustumCulled={false}
+              material-depthTest={false}
               position={[cos + SIN_LABEL_X_OFFSET, sin / 2, 0]}
+              renderOrder={10}
             >
               {labels.sin}
             </Text>
@@ -320,8 +326,10 @@ export function UnitCircle({
               color={COLORS.ROSE}
               font={fontPath}
               fontSize={LABEL_FONT_SIZE}
-              frustumCulled
+              frustumCulled={false}
+              material-depthTest={false}
               position={[TAN_LABEL_POSITION, TAN_LABEL_POSITION, 0]}
+              renderOrder={10}
             >
               {labels.tan}
             </Text>

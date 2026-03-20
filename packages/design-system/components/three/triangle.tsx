@@ -298,7 +298,8 @@ export function Triangle({
         color={COLORS.VIOLET}
         font={fontPath}
         fontSize={fontSize}
-        frustumCulled
+        frustumCulled={false}
+        material-depthTest={false}
         position={[
           Math.cos(angleInRadians / 2) * angleLabelDistance +
             (angle > DEGREES_IN_HALF_CIRCLE ? -1 : 1) *
@@ -307,6 +308,7 @@ export function Triangle({
           Math.sin(angleInRadians / 2) * angleLabelDistance,
           0,
         ]}
+        renderOrder={10}
       >
         {`${angle}°`}
       </Text>
@@ -317,8 +319,10 @@ export function Triangle({
         color={COLORS.CYAN}
         font={fontPath}
         fontSize={fontSize}
-        frustumCulled
+        frustumCulled={false}
+        material-depthTest={false}
         position={labelPositions.adjacentLabelPos}
+        renderOrder={10}
       >
         {labels.adjacent}
       </Text>
@@ -328,8 +332,10 @@ export function Triangle({
         color={COLORS.ORANGE}
         font={fontPath}
         fontSize={fontSize}
-        frustumCulled
+        frustumCulled={false}
+        material-depthTest={false}
         position={labelPositions.oppositeLabelPos}
+        renderOrder={10}
       >
         {labels.opposite}
       </Text>
@@ -340,8 +346,10 @@ export function Triangle({
         color={COLORS.ROSE}
         font={fontPath}
         fontSize={fontSize}
-        frustumCulled
+        frustumCulled={false}
+        material-depthTest={false}
         position={labelPositions.hypotenuseLabelPos}
+        renderOrder={10}
         rotation={[0, 0, hypotenuseLabelRotation]}
       >
         {labels.hypotenuse}

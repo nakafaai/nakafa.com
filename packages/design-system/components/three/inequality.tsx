@@ -505,8 +505,10 @@ export function Inequality({
           color={label.color || finalBoundaryColor}
           font={fontPath}
           fontSize={label.fontSize || DEFAULT_LABEL_FONT_SIZE}
-          frustumCulled
+          frustumCulled={false}
+          material-depthTest={false}
           position={label.position}
+          renderOrder={10}
         >
           {label.text}
         </Text>
