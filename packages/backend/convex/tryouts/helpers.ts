@@ -113,6 +113,7 @@ export function getFirstIncompleteTryoutPartIndex({
   return undefined;
 }
 
+/** Breaks ties between two completed official attempts for leaderboard selection. */
 function isBetterOfficialTryoutAttempt(
   candidate: Pick<Doc<"tryoutAttempts">, "completedAt" | "theta" | "_id">,
   currentBest: Pick<Doc<"tryoutAttempts">, "completedAt" | "theta" | "_id">

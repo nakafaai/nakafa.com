@@ -20,6 +20,7 @@ import { getAll } from "convex-helpers/server/relationships";
 
 const TRYOUT_SCORE_PROMOTION_BATCH_SIZE = 100;
 
+/** Recomputes one user's aggregate tryout stats from canonical leaderboard rows. */
 async function syncUserTryoutStats({
   ctx,
   leaderboardNamespace,
