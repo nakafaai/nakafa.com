@@ -114,7 +114,7 @@ export function getFirstIncompleteTryoutPartIndex({
 }
 
 /** Breaks ties between two completed official attempts for leaderboard selection. */
-function isBetterOfficialTryoutAttempt(
+export function isBetterOfficialTryoutAttempt(
   candidate: Pick<Doc<"tryoutAttempts">, "completedAt" | "theta" | "_id">,
   currentBest: Pick<Doc<"tryoutAttempts">, "completedAt" | "theta" | "_id">
 ) {
@@ -125,32 +125,36 @@ function isBetterOfficialTryoutAttempt(
   return (candidate.completedAt ?? 0) > (currentBest.completedAt ?? 0);
 }
 
-/** Returns the best completed official attempt for one user in one tryout. */
-export async function getBestOfficialCompletedTryoutAttempt(
+/** Returns the official attempt currently exposed on the public leaderboard. */
+export async function getCurrentOfficialLeaderboardAttempt(
   db: TryoutDbReader,
   { userId, tryoutId }: Pick<Doc<"tryoutAttempts">, "userId" | "tryoutId">
 ) {
-  const attempts = await db
-    .query("tryoutAttempts")
-    .withIndex("userId_tryoutId_scoreStatus_status_startedAt", (q) =>
-      q
-        .eq("userId", userId)
-        .eq("tryoutId", tryoutId)
-        .eq("scoreStatus", "official")
-        .eq("status", "completed")
+  const leaderboardEntry = await db
+    .query("tryoutLeaderboardEntries")
+    .withIndex("tryoutId_userId", (q) =>
+      q.eq("tryoutId", tryoutId).eq("userId", userId)
     )
-    .order("asc")
-    .collect();
+    .unique();
 
-  let bestAttempt: (typeof attempts)[number] | null = null;
-
-  for (const attempt of attempts) {
-    if (!bestAttempt || isBetterOfficialTryoutAttempt(attempt, bestAttempt)) {
-      bestAttempt = attempt;
-    }
+  if (!leaderboardEntry) {
+    return null;
   }
 
-  return bestAttempt;
+  const leaderboardAttempt = await db.get(
+    "tryoutAttempts",
+    leaderboardEntry.attemptId
+  );
+
+  if (
+    !leaderboardAttempt ||
+    leaderboardAttempt.status !== "completed" ||
+    getTryoutAttemptScoreStatus(leaderboardAttempt) !== "official"
+  ) {
+    return null;
+  }
+
+  return leaderboardAttempt;
 }
 
 /** Counts correct answers from the shared exercise-attempt answer rows. */

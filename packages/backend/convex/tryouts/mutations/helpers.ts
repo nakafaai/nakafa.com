@@ -3,9 +3,10 @@ import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   computeTryoutRawScorePercentage,
-  getBestOfficialCompletedTryoutAttempt,
+  getCurrentOfficialLeaderboardAttempt,
   getTryoutAttemptScoreStatus,
   getTryoutScoreTarget,
+  isBetterOfficialTryoutAttempt,
   syncTryoutAttemptAggregates,
   syncTryoutAttemptExpiry,
 } from "@repo/backend/convex/tryouts/helpers";
@@ -38,7 +39,7 @@ export async function finalizeTryoutAttempt({
 }) {
   if (tryoutAttempt.status === "completed") {
     const rawScorePercentage = computeTryoutRawScorePercentage(tryoutAttempt);
-    const bestOfficialAttempt = await getBestOfficialCompletedTryoutAttempt(
+    const leaderboardAttempt = await getCurrentOfficialLeaderboardAttempt(
       ctx.db,
       {
         userId,
@@ -49,8 +50,8 @@ export async function finalizeTryoutAttempt({
     return {
       status: "completed",
       isOfficial:
-        bestOfficialAttempt?._id === tryoutAttempt._id &&
-        getTryoutAttemptScoreStatus(tryoutAttempt) === "official",
+        getTryoutAttemptScoreStatus(tryoutAttempt) === "official" &&
+        (!leaderboardAttempt || leaderboardAttempt._id === tryoutAttempt._id),
       theta: tryoutAttempt.theta,
       irtScore: tryoutAttempt.irtScore,
       rawScorePercentage,
@@ -130,14 +131,26 @@ export async function finalizeTryoutAttempt({
     tryoutAttemptId: tryoutAttempt._id,
   });
 
-  const bestOfficialAttempt =
+  const leaderboardAttempt =
     scoreTarget.scoreStatus === "official"
-      ? await getBestOfficialCompletedTryoutAttempt(ctx.db, {
+      ? await getCurrentOfficialLeaderboardAttempt(ctx.db, {
           userId,
           tryoutId: tryoutAttempt.tryoutId,
         })
       : null;
-  const isOfficial = bestOfficialAttempt?._id === tryoutAttempt._id;
+  const completedAttemptForLeaderboard = {
+    _id: tryoutAttempt._id,
+    completedAt: completedAtMs ?? now,
+    theta: completedAttempt.theta,
+  };
+  const isOfficial =
+    scoreTarget.scoreStatus === "official" &&
+    (!leaderboardAttempt ||
+      leaderboardAttempt._id === completedAttemptForLeaderboard._id ||
+      isBetterOfficialTryoutAttempt(
+        completedAttemptForLeaderboard,
+        leaderboardAttempt
+      ));
 
   if (isOfficial && scoreTarget.scoreStatus === "official") {
     await ctx.scheduler.runAfter(

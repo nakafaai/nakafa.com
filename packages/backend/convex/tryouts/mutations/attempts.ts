@@ -2,7 +2,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import { createExerciseAttempt } from "@repo/backend/convex/exercises/helpers";
 import { mutation } from "@repo/backend/convex/functions";
 import {
-  getOrPublishScaleVersionForTryout,
+  getLatestScaleVersionForTryout,
   getScaleVersionStatus,
 } from "@repo/backend/convex/irt/scaleVersions";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
@@ -72,10 +72,7 @@ export const startTryout = mutation({
     }
 
     const [scaleVersion, existingAttempt] = await Promise.all([
-      getOrPublishScaleVersionForTryout(ctx.db, {
-        now,
-        tryoutId: tryout._id,
-      }),
+      getLatestScaleVersionForTryout(ctx.db, tryout._id),
       ctx.db
         .query("tryoutAttempts")
         .withIndex("userId_tryoutId_startedAt", (q) =>

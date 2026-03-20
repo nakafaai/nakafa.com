@@ -114,7 +114,6 @@ const tables = {
     averageThetaSE: v.number(),
     bestTheta: v.number(),
     averageRawScore: v.number(),
-    bestRawScore: v.number(),
     lastTryoutAt: v.number(),
     updatedAt: v.number(),
   }).index("userId_product_leaderboardNamespace", [

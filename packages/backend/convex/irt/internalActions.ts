@@ -6,7 +6,7 @@ import { IRT_PROBABILITY_EPSILON } from "@repo/backend/convex/irt/policy";
 import { irtCalibrationResultValidator } from "@repo/backend/convex/irt/validators";
 import { type Infer, v } from "convex/values";
 
-const CALIBRATION_PAGE_SIZE = 500;
+const CALIBRATION_PAGE_SIZE = 100;
 type CalibrationResponse = Infer<typeof calibrationResponseValidator>;
 
 /**
