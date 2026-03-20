@@ -9,6 +9,9 @@ import { useTryoutStart } from "@/components/tryout/start-state";
 
 export function TryoutStartDialog() {
   const tTryouts = useTranslations("Tryouts");
+  const hasFinishedAttempt = useTryoutStart(
+    (state) => state.state.hasFinishedAttempt
+  );
   const isActionPending = useTryoutStart((state) => state.meta.isActionPending);
   const isDialogOpen = useTryoutStart((state) => state.meta.isDialogOpen);
   const confirmStart = useTryoutStart((state) => state.actions.confirmStart);
@@ -16,7 +19,11 @@ export function TryoutStartDialog() {
 
   return (
     <ResponsiveDialog
-      description={tTryouts("start-dialog-description")}
+      description={
+        hasFinishedAttempt
+          ? tTryouts("restart-dialog-description")
+          : tTryouts("start-dialog-description")
+      }
       footer={
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button
@@ -32,13 +39,19 @@ export function TryoutStartDialog() {
             type="button"
           >
             <Spinner icon={Rocket01Icon} isLoading={isActionPending} />
-            {tTryouts("start-cta")}
+            {hasFinishedAttempt
+              ? tTryouts("restart-cta")
+              : tTryouts("start-cta")}
           </Button>
         </div>
       }
       open={isDialogOpen}
       setOpen={setDialogOpen}
-      title={tTryouts("start-dialog-title")}
+      title={
+        hasFinishedAttempt
+          ? tTryouts("restart-dialog-title")
+          : tTryouts("start-dialog-title")
+      }
     />
   );
 }

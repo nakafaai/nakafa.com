@@ -39,7 +39,7 @@ function useTryoutStartValue({
   const [isActionPending, startTransition] = useTransition();
   const [isDialogOpen, { close: closeDialog, open: openDialog }] =
     useDisclosure(false);
-  const { isAttemptPending, nextPartKey, remainingTime } =
+  const { attemptData, isAttemptPending, nextPartKey, remainingTime } =
     useTryoutAttemptState({
       locale,
       product,
@@ -71,6 +71,9 @@ function useTryoutStartValue({
     isActionPending ||
     isUserPending ||
     (user ? isAttemptPending || isSubscriptionPending : false);
+  const hasFinishedAttempt = Boolean(
+    attemptData && attemptData.attempt.status !== "in-progress"
+  );
 
   const setDialogOpen = useCallback(
     (open: boolean) => {
@@ -158,7 +161,9 @@ function useTryoutStartValue({
         isDialogOpen,
       },
       state: {
+        attemptData,
         hasSubscription,
+        hasFinishedAttempt,
         isReady,
         isLoading,
         nextPartKey,
@@ -169,7 +174,9 @@ function useTryoutStartValue({
     [
       clickCta,
       confirmStart,
+      attemptData,
       hasSubscription,
+      hasFinishedAttempt,
       isReady,
       isActionPending,
       isDialogOpen,

@@ -4,6 +4,7 @@ import { Rocket01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useTranslations } from "next-intl";
+import { TryoutScoreCard } from "@/components/tryout/score-card";
 import {
   TryoutStartCountdown,
   TryoutStartCountdownAction,
@@ -19,6 +20,10 @@ export function TryoutStartCta() {
   const hasSubscription = useTryoutStart(
     (state) => state.state.hasSubscription
   );
+  const attempt = useTryoutStart((state) => state.state.attemptData?.attempt);
+  const hasFinishedAttempt = useTryoutStart(
+    (state) => state.state.hasFinishedAttempt
+  );
   const nextPartKey = useTryoutStart((state) => state.state.nextPartKey);
   const remainingTime = useTryoutStart((state) => state.state.remainingTime);
   const isLoading = useTryoutStart((state) => state.state.isLoading);
@@ -30,6 +35,10 @@ export function TryoutStartCta() {
   }
 
   let label = tTryouts("start-cta");
+
+  if (hasFinishedAttempt) {
+    label = tTryouts("restart-cta");
+  }
 
   if (hasSubscription === false) {
     label = tAuth("get-pro");
@@ -48,7 +57,12 @@ export function TryoutStartCta() {
 
   if (!remainingTime) {
     return (
-      <div className="flex w-full flex-col items-start gap-4">{action}</div>
+      <div className="flex w-full flex-col items-start gap-4">
+        {attempt && hasFinishedAttempt ? (
+          <TryoutScoreCard attempt={attempt} />
+        ) : null}
+        {action}
+      </div>
     );
   }
 
@@ -60,6 +74,9 @@ export function TryoutStartCta() {
 
   return (
     <div className="flex w-full flex-col items-start gap-4">
+      {attempt && hasFinishedAttempt ? (
+        <TryoutScoreCard attempt={attempt} />
+      ) : null}
       <TryoutStartCountdown>
         <TryoutStartCountdownTime segments={timeSegments} />
         <TryoutStartCountdownMeta>
