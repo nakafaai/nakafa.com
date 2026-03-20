@@ -126,7 +126,7 @@ function ThreeCanvasComponent({
           max: 1.0,
           debounce: 100,
         }}
-        shadows
+        shadows="percentage"
         {...props}
       >
         <AdaptiveDpr />

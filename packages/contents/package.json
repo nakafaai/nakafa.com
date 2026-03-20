@@ -16,7 +16,7 @@
     "@repo/internationalization": "workspace:*",
     "@repo/utilities": "workspace:*",
     "date-fns": "^4.1.0",
-    "effect": "^3.20.0",
+    "effect": "^3.21.0",
     "ky": "^1.14.3",
     "motion": "^12.38.0",
     "next-intl": "^4.8.3",
