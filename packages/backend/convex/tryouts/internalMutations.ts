@@ -1,11 +1,13 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { getScaleVersionStatus } from "@repo/backend/convex/irt/scaleVersions";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import {
   computeTryoutRawScorePercentage,
   expireTryoutAttempt,
-  getFirstCompletedSimulationAttempt,
+  getBestOfficialCompletedTryoutAttempt,
   getTryoutAttemptScoreStatus,
   rescoreTryoutAttempt,
 } from "@repo/backend/convex/tryouts/helpers";
@@ -14,8 +16,122 @@ import {
   getTryoutLeaderboardNamespace,
 } from "@repo/backend/convex/tryouts/products";
 import { v } from "convex/values";
+import { getAll } from "convex-helpers/server/relationships";
 
 const TRYOUT_SCORE_PROMOTION_BATCH_SIZE = 100;
+
+async function syncUserTryoutStats({
+  ctx,
+  leaderboardNamespace,
+  product,
+  userId,
+}: {
+  ctx: Pick<MutationCtx, "db">;
+  leaderboardNamespace: string;
+  product: Parameters<typeof getTryoutLeaderboardNamespace>[0]["product"];
+  userId: Id<"users">;
+}) {
+  const entries = await ctx.db
+    .query("tryoutLeaderboardEntries")
+    .withIndex("userId", (q) => q.eq("userId", userId))
+    .collect();
+
+  const tryouts = await getAll(
+    ctx.db,
+    "tryouts",
+    entries.map((entry) => entry.tryoutId)
+  );
+  const namespaceEntries = entries.filter((_entry, index) => {
+    const tryout = tryouts[index];
+
+    if (!tryout) {
+      return false;
+    }
+
+    return (
+      getTryoutLeaderboardNamespace({
+        product: tryout.product,
+        locale: tryout.locale,
+        cycleKey: tryout.cycleKey,
+      }) === leaderboardNamespace
+    );
+  });
+  const statsRecord = await ctx.db
+    .query("userTryoutStats")
+    .withIndex("userId_product_leaderboardNamespace", (q) =>
+      q
+        .eq("userId", userId)
+        .eq("product", product)
+        .eq("leaderboardNamespace", leaderboardNamespace)
+    )
+    .unique();
+
+  if (namespaceEntries.length === 0) {
+    if (statsRecord) {
+      await ctx.db.delete(statsRecord._id);
+    }
+
+    return;
+  }
+
+  const totalTryoutsCompleted = namespaceEntries.length;
+  const totalTheta = namespaceEntries.reduce(
+    (sum, entry) => sum + entry.theta,
+    0
+  );
+  const totalRawScore = namespaceEntries.reduce(
+    (sum, entry) => sum + entry.rawScore,
+    0
+  );
+  const latestCompletedAt = namespaceEntries.reduce(
+    (latest, entry) => Math.max(latest, entry.completedAt),
+    0
+  );
+  const bestTheta = namespaceEntries.reduce(
+    (best, entry) => Math.max(best, entry.theta),
+    Number.NEGATIVE_INFINITY
+  );
+  const bestRawScore = namespaceEntries.reduce(
+    (best, entry) => Math.max(best, entry.rawScore),
+    Number.NEGATIVE_INFINITY
+  );
+  const averageTheta = totalTheta / totalTryoutsCompleted;
+  const averageRawScore = totalRawScore / totalTryoutsCompleted;
+
+  const attemptIds = namespaceEntries.map((entry) => entry.attemptId);
+  const attempts = await getAll(ctx.db, "tryoutAttempts", attemptIds);
+  const averageThetaSE =
+    attempts.reduce((sum, attempt) => sum + (attempt?.thetaSE ?? 0), 0) /
+    totalTryoutsCompleted;
+
+  if (statsRecord) {
+    await ctx.db.patch(statsRecord._id, {
+      totalTryoutsCompleted,
+      averageTheta,
+      averageThetaSE,
+      bestTheta,
+      averageRawScore,
+      bestRawScore,
+      lastTryoutAt: latestCompletedAt,
+      updatedAt: latestCompletedAt,
+    });
+    return;
+  }
+
+  await ctx.db.insert("userTryoutStats", {
+    userId,
+    product,
+    leaderboardNamespace,
+    totalTryoutsCompleted,
+    averageTheta,
+    averageThetaSE,
+    bestTheta,
+    averageRawScore,
+    bestRawScore,
+    lastTryoutAt: latestCompletedAt,
+    updatedAt: latestCompletedAt,
+  });
+}
 
 /** Scheduler-safe expiry for one in-progress tryout attempt. */
 export const expireTryoutAttemptInternal = internalMutation({
@@ -82,7 +198,7 @@ export const updateLeaderboard = internalMutation({
       throw new Error("Completed tryout attempt is missing its tryout.");
     }
 
-    const firstCompletedAttempt = await getFirstCompletedSimulationAttempt(
+    const bestOfficialAttempt = await getBestOfficialCompletedTryoutAttempt(
       ctx.db,
       {
         userId: tryoutAttempt.userId,
@@ -90,7 +206,7 @@ export const updateLeaderboard = internalMutation({
       }
     );
 
-    if (firstCompletedAttempt?._id !== tryoutAttempt._id) {
+    if (bestOfficialAttempt?._id !== tryoutAttempt._id) {
       return null;
     }
 
@@ -103,10 +219,6 @@ export const updateLeaderboard = internalMutation({
       )
       .unique();
 
-    if (existingEntry) {
-      return null;
-    }
-
     if (tryoutAttempt.completedAt === null) {
       throw new Error("Completed tryout attempt is missing completedAt.");
     }
@@ -114,71 +226,37 @@ export const updateLeaderboard = internalMutation({
     const completedAt = tryoutAttempt.completedAt;
     const rawScore = computeTryoutRawScorePercentage(tryoutAttempt);
 
-    await ctx.db.insert("tryoutLeaderboardEntries", {
-      tryoutId: tryoutAttempt.tryoutId,
-      userId: tryoutAttempt.userId,
-      theta: tryoutAttempt.theta,
-      irtScore: tryoutAttempt.irtScore,
-      rawScore,
-      completedAt,
-      attemptId: tryoutAttempt._id,
-    });
+    if (existingEntry) {
+      await ctx.db.patch(existingEntry._id, {
+        theta: tryoutAttempt.theta,
+        irtScore: tryoutAttempt.irtScore,
+        rawScore,
+        completedAt,
+        attemptId: tryoutAttempt._id,
+      });
+    } else {
+      await ctx.db.insert("tryoutLeaderboardEntries", {
+        tryoutId: tryoutAttempt.tryoutId,
+        userId: tryoutAttempt.userId,
+        theta: tryoutAttempt.theta,
+        irtScore: tryoutAttempt.irtScore,
+        rawScore,
+        completedAt,
+        attemptId: tryoutAttempt._id,
+      });
+    }
 
     const leaderboardNamespace = getTryoutLeaderboardNamespace({
       product: tryout.product,
       locale: tryout.locale,
       cycleKey: tryout.cycleKey,
     });
-    const statsRecord = await ctx.db
-      .query("userTryoutStats")
-      .withIndex("userId_product_leaderboardNamespace", (q) =>
-        q
-          .eq("userId", tryoutAttempt.userId)
-          .eq("product", tryout.product)
-          .eq("leaderboardNamespace", leaderboardNamespace)
-      )
-      .unique();
-
-    if (statsRecord) {
-      const newTotal = statsRecord.totalTryoutsCompleted + 1;
-      const newAverageTheta =
-        (statsRecord.averageTheta * statsRecord.totalTryoutsCompleted +
-          tryoutAttempt.theta) /
-        newTotal;
-      const newAverageThetaSE =
-        (statsRecord.averageThetaSE * statsRecord.totalTryoutsCompleted +
-          tryoutAttempt.thetaSE) /
-        newTotal;
-      const newAverageRawScore =
-        (statsRecord.averageRawScore * statsRecord.totalTryoutsCompleted +
-          rawScore) /
-        newTotal;
-
-      await ctx.db.patch("userTryoutStats", statsRecord._id, {
-        totalTryoutsCompleted: newTotal,
-        averageTheta: newAverageTheta,
-        averageThetaSE: newAverageThetaSE,
-        bestTheta: Math.max(statsRecord.bestTheta, tryoutAttempt.theta),
-        averageRawScore: newAverageRawScore,
-        bestRawScore: Math.max(statsRecord.bestRawScore, rawScore),
-        lastTryoutAt: completedAt,
-        updatedAt: completedAt,
-      });
-    } else {
-      await ctx.db.insert("userTryoutStats", {
-        userId: tryoutAttempt.userId,
-        product: tryout.product,
-        leaderboardNamespace,
-        totalTryoutsCompleted: 1,
-        averageTheta: tryoutAttempt.theta,
-        averageThetaSE: tryoutAttempt.thetaSE,
-        bestTheta: tryoutAttempt.theta,
-        averageRawScore: rawScore,
-        bestRawScore: rawScore,
-        lastTryoutAt: completedAt,
-        updatedAt: completedAt,
-      });
-    }
+    await syncUserTryoutStats({
+      ctx,
+      leaderboardNamespace,
+      product: tryout.product,
+      userId: tryoutAttempt.userId,
+    });
 
     return null;
   },

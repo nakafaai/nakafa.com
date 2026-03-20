@@ -3,7 +3,7 @@ import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   computeTryoutRawScorePercentage,
-  getFirstCompletedSimulationAttempt,
+  getBestOfficialCompletedTryoutAttempt,
   getTryoutAttemptScoreStatus,
   getTryoutScoreTarget,
   syncTryoutAttemptAggregates,
@@ -38,7 +38,7 @@ export async function finalizeTryoutAttempt({
 }) {
   if (tryoutAttempt.status === "completed") {
     const rawScorePercentage = computeTryoutRawScorePercentage(tryoutAttempt);
-    const firstCompletedAttempt = await getFirstCompletedSimulationAttempt(
+    const bestOfficialAttempt = await getBestOfficialCompletedTryoutAttempt(
       ctx.db,
       {
         userId,
@@ -49,7 +49,7 @@ export async function finalizeTryoutAttempt({
     return {
       status: "completed",
       isOfficial:
-        firstCompletedAttempt?._id === tryoutAttempt._id &&
+        bestOfficialAttempt?._id === tryoutAttempt._id &&
         getTryoutAttemptScoreStatus(tryoutAttempt) === "official",
       theta: tryoutAttempt.theta,
       irtScore: tryoutAttempt.irtScore,
@@ -98,12 +98,8 @@ export async function finalizeTryoutAttempt({
     } satisfies CompleteTryoutResult;
   }
 
-  const [tryout, firstCompletedAttempt, scoreTarget] = await Promise.all([
+  const [tryout, scoreTarget] = await Promise.all([
     ctx.db.get("tryouts", tryoutAttempt.tryoutId),
-    getFirstCompletedSimulationAttempt(ctx.db, {
-      userId,
-      tryoutId: tryoutAttempt.tryoutId,
-    }),
     getTryoutScoreTarget(ctx.db, tryoutAttempt),
   ]);
 
@@ -124,7 +120,6 @@ export async function finalizeTryoutAttempt({
     } satisfies CompleteTryoutResult;
   }
 
-  const isOfficial = firstCompletedAttempt === null;
   const completedAttempt = await syncTryoutAttemptAggregates({
     completedAtMs: completedAtMs ?? now,
     ctx,
@@ -134,6 +129,15 @@ export async function finalizeTryoutAttempt({
     status: "completed",
     tryoutAttemptId: tryoutAttempt._id,
   });
+
+  const bestOfficialAttempt =
+    scoreTarget.scoreStatus === "official"
+      ? await getBestOfficialCompletedTryoutAttempt(ctx.db, {
+          userId,
+          tryoutId: tryoutAttempt.tryoutId,
+        })
+      : null;
+  const isOfficial = bestOfficialAttempt?._id === tryoutAttempt._id;
 
   if (isOfficial && scoreTarget.scoreStatus === "official") {
     await ctx.scheduler.runAfter(

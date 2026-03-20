@@ -84,8 +84,12 @@ function TryoutPartRuntimeBody({
   const attempt = useTryoutPart((state) => state.state.attempt);
   const answers = useTryoutPart((state) => state.state.answers);
   const isInputLocked = useTryoutPart((state) => state.state.isAwaitingExpiry);
+  const isTryoutFinished = useTryoutPart(
+    (state) => state.state.isTryoutFinished
+  );
   const status = useTryoutPart((state) => state.state.status);
-  const shouldRequestAnswerSheet = status === "in-progress";
+  const isReviewMode = isTryoutFinished;
+  const shouldRequestAnswerSheet = status === "in-progress" || isReviewMode;
   const { data: answerSheet, isPending: isAnswerSheetPending } =
     useQueryWithStatus(
       api.exercises.queries.getQuestionAnswerSheetBySlug,
@@ -93,7 +97,7 @@ function TryoutPartRuntimeBody({
         ? { locale: tryout.locale, slug: part.setSlug }
         : "skip"
     );
-  const shouldShowQuestions = status === "in-progress" && !isAnswerSheetPending;
+  const shouldShowQuestions = shouldRequestAnswerSheet && !isAnswerSheetPending;
 
   return (
     <AttemptProvider
@@ -102,6 +106,7 @@ function TryoutPartRuntimeBody({
         answers,
         attempt,
         isInputLocked,
+        isReviewMode,
         slug: part.setSlug,
       }}
     >

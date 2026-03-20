@@ -19,6 +19,7 @@ export interface AttemptContextValue {
   answers: NonNullable<LatestAttemptResult>["answers"];
   attempt: NonNullable<LatestAttemptResult>["attempt"] | null;
   isInputLocked: boolean;
+  isReviewMode: boolean;
   slug: string;
 }
 
@@ -63,6 +64,7 @@ export function AttemptContextProvider({
         attempt: results?.attempt || null,
         answers: results?.answers || [],
         isInputLocked: false,
+        isReviewMode: false,
       }}
     >
       {children}

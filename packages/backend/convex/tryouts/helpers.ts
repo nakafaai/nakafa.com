@@ -113,18 +113,43 @@ export function getFirstIncompleteTryoutPartIndex({
   return undefined;
 }
 
-/** Returns the earliest completed simulation attempt for official-result checks. */
-export function getFirstCompletedSimulationAttempt(
+function isBetterOfficialTryoutAttempt(
+  candidate: Pick<Doc<"tryoutAttempts">, "completedAt" | "theta" | "_id">,
+  currentBest: Pick<Doc<"tryoutAttempts">, "completedAt" | "theta" | "_id">
+) {
+  if (candidate.theta !== currentBest.theta) {
+    return candidate.theta > currentBest.theta;
+  }
+
+  return (candidate.completedAt ?? 0) > (currentBest.completedAt ?? 0);
+}
+
+/** Returns the best completed official attempt for one user in one tryout. */
+export async function getBestOfficialCompletedTryoutAttempt(
   db: TryoutDbReader,
   { userId, tryoutId }: Pick<Doc<"tryoutAttempts">, "userId" | "tryoutId">
 ) {
-  return db
+  const attempts = await db
     .query("tryoutAttempts")
-    .withIndex("userId_tryoutId_status_startedAt", (q) =>
-      q.eq("userId", userId).eq("tryoutId", tryoutId).eq("status", "completed")
+    .withIndex("userId_tryoutId_scoreStatus_status_startedAt", (q) =>
+      q
+        .eq("userId", userId)
+        .eq("tryoutId", tryoutId)
+        .eq("scoreStatus", "official")
+        .eq("status", "completed")
     )
     .order("asc")
-    .first();
+    .collect();
+
+  let bestAttempt: (typeof attempts)[number] | null = null;
+
+  for (const attempt of attempts) {
+    if (!bestAttempt || isBetterOfficialTryoutAttempt(attempt, bestAttempt)) {
+      bestAttempt = attempt;
+    }
+  }
+
+  return bestAttempt;
 }
 
 /** Counts correct answers from the shared exercise-attempt answer rows. */

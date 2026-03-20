@@ -33,6 +33,7 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
   const answers = useAttempt((state) => state.answers);
   const answerSheet = useAttempt((state) => state.answerSheet);
   const isInputLocked = useAttempt((state) => state.isInputLocked);
+  const isReviewMode = useAttempt((state) => state.isReviewMode);
 
   const submitAttempt = useMutation(api.exercises.mutations.submitAnswer);
   const timeSpent = useExercise(
@@ -138,12 +139,18 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
           variant = "default-outline";
         }
 
-        // if attempt mode is practice, we directly show if the currentAnswer is correct or not
-        if (attempt?.mode === "practice" && currentAnswer) {
-          if (checked && !currentAnswer.isCorrect) {
+        const shouldShowReviewState =
+          isReviewMode ||
+          attempt?.mode === "practice" ||
+          attempt?.status === "completed" ||
+          attempt?.status === "expired";
+
+        if (shouldShowReviewState) {
+          if (checked && currentAnswer && !currentAnswer.isCorrect) {
             variant = "destructive-outline";
           }
-          if (!currentAnswer.isCorrect && choice.value) {
+
+          if (choice.value) {
             variant = "default-outline";
           }
         }

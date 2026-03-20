@@ -76,6 +76,13 @@ const tables = {
       "status",
       "startedAt",
     ])
+    .index("userId_tryoutId_scoreStatus_status_startedAt", [
+      "userId",
+      "tryoutId",
+      "scoreStatus",
+      "status",
+      "startedAt",
+    ])
     .index("tryoutId_scoreStatus_status_startedAt", [
       "tryoutId",
       "scoreStatus",
@@ -123,7 +130,9 @@ const tables = {
     rawScore: v.number(),
     completedAt: v.number(),
     attemptId: v.id("tryoutAttempts"),
-  }).index("tryoutId_userId", ["tryoutId", "userId"]),
+  })
+    .index("tryoutId_userId", ["tryoutId", "userId"])
+    .index("userId", ["userId"]),
 };
 
 export default tables;

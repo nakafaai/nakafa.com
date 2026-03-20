@@ -59,6 +59,10 @@ export function TryoutScoreCard({ attempt }: { attempt: TryoutAttempt }) {
           {tTryouts("score-card-no-answers")}
         </p>
       )}
+
+      <p className="text-muted-foreground text-sm">
+        {tTryouts("score-card-review-hint")}
+      </p>
     </TryoutStartCountdown>
   );
 }
