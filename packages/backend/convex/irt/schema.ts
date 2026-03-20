@@ -29,6 +29,19 @@ const tables = {
     .index("enqueuedAt", ["enqueuedAt"])
     .index("setId_enqueuedAt", ["setId", "enqueuedAt"]),
 
+  irtCalibrationAttempts: defineTable({
+    setId: v.id("exerciseSets"),
+    attemptId: v.id("exerciseAttempts"),
+    responses: v.array(
+      v.object({
+        questionId: v.id("exerciseQuestions"),
+        isCorrect: v.boolean(),
+      })
+    ),
+  })
+    .index("setId_attemptId", ["setId", "attemptId"])
+    .index("attemptId", ["attemptId"]),
+
   irtScalePublicationQueue: defineTable({
     tryoutId: v.id("tryouts"),
     enqueuedAt: v.number(),

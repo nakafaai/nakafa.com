@@ -1,9 +1,11 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import type {
   DataModel,
   Doc,
   Id,
 } from "@repo/backend/convex/_generated/dataModel";
 import { applyAttemptAggregatesDelta } from "@repo/backend/convex/exercises/utils";
+import { irtCalibrationSyncWorkpool } from "@repo/backend/convex/irt/workpool";
 import type { GenericMutationCtx } from "convex/server";
 import type { Change } from "convex-helpers/server/triggers";
 
@@ -56,6 +58,27 @@ export async function exerciseAnswersHandler(
     });
   };
 
+  const syncCalibrationAttempt = async (attemptId: Id<"exerciseAttempts">) => {
+    const attempt = await ctx.db.get("exerciseAttempts", attemptId);
+
+    if (
+      !attempt ||
+      attempt.scope !== "set" ||
+      attempt.mode !== "simulation" ||
+      attempt.status !== "completed"
+    ) {
+      return;
+    }
+
+    await irtCalibrationSyncWorkpool.enqueueMutation(
+      ctx,
+      internal.irt.internalMutations.syncCalibrationResponsesForAttempt,
+      {
+        attemptId,
+      }
+    );
+  };
+
   const toDelta = (doc: Doc<"exerciseAnswers">) => ({
     deltaAnsweredCount: 1,
     deltaCorrectAnswers: doc.isCorrect ? 1 : 0,
@@ -74,6 +97,7 @@ export async function exerciseAnswersHandler(
         break;
       }
       await applyDelta({ attemptId: answer.attemptId, ...toDelta(answer) });
+      await syncCalibrationAttempt(answer.attemptId);
       break;
     }
 
@@ -88,6 +112,8 @@ export async function exerciseAnswersHandler(
           ...toNegativeDelta(oldAnswer),
         });
         await applyDelta({ attemptId: answer.attemptId, ...toDelta(answer) });
+        await syncCalibrationAttempt(oldAnswer.attemptId);
+        await syncCalibrationAttempt(answer.attemptId);
         break;
       }
 
@@ -101,6 +127,7 @@ export async function exerciseAnswersHandler(
         deltaCorrectAnswers,
         deltaTotalTime,
       });
+      await syncCalibrationAttempt(answer.attemptId);
       break;
     }
 
@@ -112,6 +139,7 @@ export async function exerciseAnswersHandler(
         attemptId: oldAnswer.attemptId,
         ...toNegativeDelta(oldAnswer),
       });
+      await syncCalibrationAttempt(oldAnswer.attemptId);
       break;
     }
 

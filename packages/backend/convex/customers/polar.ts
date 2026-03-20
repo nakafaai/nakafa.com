@@ -5,9 +5,11 @@ import { customersDelete } from "@polar-sh/sdk/funcs/customersDelete.js";
 import { customersGet } from "@polar-sh/sdk/funcs/customersGet.js";
 import { customersGetExternal } from "@polar-sh/sdk/funcs/customersGetExternal.js";
 import { customersUpdate } from "@polar-sh/sdk/funcs/customersUpdate.js";
+import { PolarError } from "@polar-sh/sdk/models/errors/polarerror.js";
 import { internalAction } from "@repo/backend/convex/_generated/server";
 import { polarClient } from "@repo/backend/convex/utils/polar";
 import { ConvexError, v } from "convex/values";
+import { nullable } from "convex-helpers/validators";
 
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T/;
 
@@ -31,7 +33,86 @@ function sanitize<T>(data: T): T {
  * Uses v.any() because this is passed directly to Polar's SDK.
  * The shape is defined by Polar's API, not by us.
  */
-const polarMetadataArgsValidator = v.optional(v.record(v.string(), v.any()));
+const polarMetadataValueValidator = v.union(
+  v.string(),
+  v.number(),
+  v.boolean()
+);
+const polarMetadataArgsValidator = v.optional(
+  v.record(v.string(), polarMetadataValueValidator)
+);
+type PolarMetadata = Record<string, string | number | boolean>;
+const polarCustomerResultValidator = v.object({
+  id: v.string(),
+  externalId: nullable(v.string()),
+  email: v.string(),
+  name: nullable(v.string()),
+  metadata: v.record(v.string(), polarMetadataValueValidator),
+});
+
+function isMissingPolarCustomer(error: unknown) {
+  return error instanceof PolarError && error.statusCode === 404;
+}
+
+function toPolarCustomerResult(customer: {
+  id: string;
+  externalId?: string | null;
+  email: string;
+  metadata?: PolarMetadata | null;
+  name?: string | null;
+}) {
+  return {
+    id: customer.id,
+    externalId: customer.externalId ?? null,
+    email: customer.email,
+    name: customer.name ?? null,
+    metadata: customer.metadata ?? {},
+  };
+}
+
+async function syncExistingCustomer(
+  customer: {
+    id: string;
+    email: string;
+    metadata?: PolarMetadata | null;
+    name?: string | null;
+  },
+  args: {
+    email: string;
+    metadata?: PolarMetadata;
+    name: string;
+  }
+) {
+  const currentMetadata = JSON.stringify(customer.metadata ?? {});
+  const nextMetadata = JSON.stringify(args.metadata ?? {});
+
+  if (
+    customer.email === args.email &&
+    customer.name === args.name &&
+    currentMetadata === nextMetadata
+  ) {
+    return toPolarCustomerResult(customer);
+  }
+
+  const updateResult = await customersUpdate(polarClient, {
+    id: customer.id,
+    customerUpdate: {
+      email: args.email,
+      metadata: args.metadata,
+      name: args.name,
+    },
+  });
+
+  if (!updateResult.ok) {
+    throw new ConvexError({
+      code: "POLAR_UPDATE_ERROR",
+      message: "Failed to sync customer data in Polar",
+      detail: String(updateResult.error),
+    });
+  }
+
+  return toPolarCustomerResult(sanitize(updateResult.value));
+}
 
 /**
  * Get or create customer in Polar.
@@ -46,7 +127,7 @@ export const ensureCustomer = internalAction({
     name: v.string(),
     metadata: polarMetadataArgsValidator,
   },
-  returns: v.any(),
+  returns: polarCustomerResultValidator,
   handler: async (_ctx, args) => {
     // 1. If we have a local customer ID, verify it exists in Polar
     if (args.localCustomerId) {
@@ -55,9 +136,13 @@ export const ensureCustomer = internalAction({
           id: args.localCustomerId,
         });
         if (result.ok) {
-          return sanitize(result.value);
+          return await syncExistingCustomer(sanitize(result.value), args);
         }
-      } catch {
+      } catch (error) {
+        if (!isMissingPolarCustomer(error)) {
+          throw error;
+        }
+
         // Customer doesn't exist in Polar, continue to find/create
       }
     }
@@ -68,9 +153,13 @@ export const ensureCustomer = internalAction({
         externalId: args.externalId,
       });
       if (result.ok) {
-        return sanitize(result.value);
+        return await syncExistingCustomer(sanitize(result.value), args);
       }
-    } catch {
+    } catch (error) {
+      if (!isMissingPolarCustomer(error)) {
+        throw error;
+      }
+
       // Not found, continue to create
     }
 
@@ -85,7 +174,7 @@ export const ensureCustomer = internalAction({
       });
 
       if (createResult.ok) {
-        return sanitize(createResult.value);
+        return toPolarCustomerResult(sanitize(createResult.value));
       }
       createError = createResult.error;
     } catch (error) {
@@ -99,9 +188,13 @@ export const ensureCustomer = internalAction({
         externalId: args.externalId,
       });
       if (retryResult.ok) {
-        return sanitize(retryResult.value);
+        return await syncExistingCustomer(sanitize(retryResult.value), args);
       }
-    } catch {
+    } catch (error) {
+      if (!isMissingPolarCustomer(error)) {
+        throw error;
+      }
+
       // Fall through to error
     }
 
@@ -119,9 +212,9 @@ export const ensureCustomer = internalAction({
 export const updateCustomerMetadata = internalAction({
   args: {
     id: v.string(),
-    metadata: v.record(v.string(), v.any()), // Polar SDK metadata - shape defined by Polar
+    metadata: v.record(v.string(), polarMetadataValueValidator),
   },
-  returns: v.any(),
+  returns: polarCustomerResultValidator,
   handler: async (_ctx, args) => {
     const result = await customersUpdate(polarClient, {
       id: args.id,
@@ -136,7 +229,9 @@ export const updateCustomerMetadata = internalAction({
         detail: String(result.error),
       });
     }
-    return sanitize(result.value);
+
+    const customer = sanitize(result.value);
+    return toPolarCustomerResult(customer);
   },
 });
 
@@ -151,7 +246,7 @@ export const createCheckoutSession = internalAction({
     embedOrigin: v.optional(v.string()),
     subscriptionId: v.optional(v.string()),
   },
-  returns: v.any(),
+  returns: v.object({ url: v.string() }),
   handler: async (_ctx, args) => {
     const result = await checkoutsCreate(polarClient, {
       allowDiscountCodes: true,
@@ -168,7 +263,8 @@ export const createCheckoutSession = internalAction({
         detail: String(result.error),
       });
     }
-    return sanitize(result.value);
+
+    return { url: result.value.url };
   },
 });
 
@@ -207,6 +303,10 @@ export const deleteCustomer = internalAction({
   handler: async (_ctx, args) => {
     const result = await customersDelete(polarClient, { id: args.id });
     if (!result.ok) {
+      if (isMissingPolarCustomer(result.error)) {
+        return null;
+      }
+
       throw new ConvexError({
         code: "POLAR_DELETE_ERROR",
         message: "Failed to delete customer from Polar",

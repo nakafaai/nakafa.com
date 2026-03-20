@@ -1,6 +1,7 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { updateContentHash } from "@repo/backend/convex/audioStudies/utils";
+import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { getOrPublishScaleVersionForTryout } from "@repo/backend/convex/irt/scaleVersions";
 import {
@@ -42,7 +43,7 @@ async function buildAuthorCache(
       ctx.db
         .query("authors")
         .withIndex("name", (q) => q.eq("name", name))
-        .first()
+        .unique()
         .then((author) => ({ name, author }))
     )
   );
@@ -68,6 +69,12 @@ export const bulkSyncAuthors = internalMutation({
     authorNames: v.array(v.string()),
   },
   handler: async (ctx, args) => {
+    if (args.authorNames.length > CONTENT_SYNC_BATCH_LIMITS.authors) {
+      throw new Error(
+        "bulkSyncAuthors received more items than one safe batch."
+      );
+    }
+
     const uniqueNames = [...new Set(args.authorNames)];
 
     // Parallel reads: check which authors already exist
@@ -76,7 +83,7 @@ export const bulkSyncAuthors = internalMutation({
         ctx.db
           .query("authors")
           .withIndex("name", (q) => q.eq("name", name))
-          .first()
+          .unique()
           .then((author) => ({ name, exists: author !== null }))
       )
     );
@@ -116,6 +123,20 @@ async function syncContentAuthorsWithCache(
   authors: Array<{ name: string }>,
   authorCache: AuthorCache
 ): Promise<number> {
+  const missingAuthors = authors.flatMap((author) => {
+    if (authorCache.has(author.name)) {
+      return [];
+    }
+
+    return [author.name];
+  });
+
+  if (missingAuthors.length > 0) {
+    throw new Error(
+      `[contentSync] Missing author(s) for ${contentType} ${contentId}: ${missingAuthors.join(", ")}. Run bulkSyncAuthors first.`
+    );
+  }
+
   const existingLinks = await ctx.db
     .query("contentAuthors")
     .withIndex("contentId_contentType_authorId", (q) =>
@@ -128,31 +149,24 @@ async function syncContentAuthorsWithCache(
   }
 
   let linksCreated = 0;
-  const missingAuthors: string[] = [];
 
   for (let i = 0; i < authors.length; i++) {
     const authorName = authors[i].name;
     const authorId = authorCache.get(authorName);
 
-    if (authorId) {
-      await ctx.db.insert("contentAuthors", {
-        contentId,
-        contentType,
-        authorId,
-        order: i,
-      });
-      linksCreated++;
-    } else {
-      missingAuthors.push(authorName);
+    if (!authorId) {
+      throw new Error(
+        `[contentSync] Missing author cache entry for ${authorName}.`
+      );
     }
-  }
 
-  // Log warning for missing authors to aid debugging
-  if (missingAuthors.length > 0) {
-    logger.warn(
-      `[contentSync] Warning: ${missingAuthors.length} author(s) not found in cache for ${contentType} ${contentId}: ${missingAuthors.join(", ")}. ` +
-        "Ensure authors are pre-synced via bulkSyncAuthors before content sync."
-    );
+    await ctx.db.insert("contentAuthors", {
+      contentId,
+      contentType,
+      authorId,
+      order: i,
+    });
+    linksCreated++;
   }
 
   return linksCreated;
@@ -187,6 +201,12 @@ export const bulkSyncArticles = internalMutation({
     ),
   },
   handler: async (ctx, args) => {
+    if (args.articles.length > CONTENT_SYNC_BATCH_LIMITS.articles) {
+      throw new Error(
+        "bulkSyncArticles received more items than one safe batch."
+      );
+    }
+
     const now = Date.now();
     let created = 0;
     let updated = 0;
@@ -205,7 +225,7 @@ export const bulkSyncArticles = internalMutation({
         .withIndex("locale_slug", (q) =>
           q.eq("locale", article.locale).eq("slug", article.slug)
         )
-        .first();
+        .unique();
 
       if (existing) {
         if (existing.contentHash === article.contentHash) {
@@ -334,6 +354,12 @@ export const bulkSyncSubjectTopics = internalMutation({
     ),
   },
   handler: async (ctx, args) => {
+    if (args.topics.length > CONTENT_SYNC_BATCH_LIMITS.subjectTopics) {
+      throw new Error(
+        "bulkSyncSubjectTopics received more items than one safe batch."
+      );
+    }
+
     const now = Date.now();
     let created = 0;
     let updated = 0;
@@ -345,7 +371,7 @@ export const bulkSyncSubjectTopics = internalMutation({
         .withIndex("locale_slug", (q) =>
           q.eq("locale", topic.locale).eq("slug", topic.slug)
         )
-        .first();
+        .unique();
 
       if (existing) {
         const hasChanges =
@@ -415,6 +441,12 @@ export const bulkSyncSubjectSections = internalMutation({
     ),
   },
   handler: async (ctx, args) => {
+    if (args.sections.length > CONTENT_SYNC_BATCH_LIMITS.subjectSections) {
+      throw new Error(
+        "bulkSyncSubjectSections received more items than one safe batch."
+      );
+    }
+
     const now = Date.now();
     let created = 0;
     let updated = 0;
@@ -432,7 +464,7 @@ export const bulkSyncSubjectSections = internalMutation({
         .withIndex("locale_slug", (q) =>
           q.eq("locale", section.locale).eq("slug", section.topicSlug)
         )
-        .first();
+        .unique();
 
       if (!topicDoc) {
         logger.warn(`Topic not found for section: ${section.slug}`);
@@ -444,7 +476,7 @@ export const bulkSyncSubjectSections = internalMutation({
         .withIndex("locale_slug", (q) =>
           q.eq("locale", section.locale).eq("slug", section.slug)
         )
-        .first();
+        .unique();
 
       if (existing) {
         if (existing.contentHash === section.contentHash) {
@@ -537,6 +569,12 @@ export const bulkSyncExerciseSets = internalMutation({
     ),
   },
   handler: async (ctx, args) => {
+    if (args.sets.length > CONTENT_SYNC_BATCH_LIMITS.exerciseSets) {
+      throw new Error(
+        "bulkSyncExerciseSets received more items than one safe batch."
+      );
+    }
+
     const now = Date.now();
     let created = 0;
     let updated = 0;
@@ -548,7 +586,7 @@ export const bulkSyncExerciseSets = internalMutation({
         .withIndex("locale_slug", (q) =>
           q.eq("locale", set.locale).eq("slug", set.slug)
         )
-        .first();
+        .unique();
 
       if (existing) {
         const hasChanges =
@@ -629,6 +667,12 @@ export const bulkSyncExerciseQuestions = internalMutation({
     ),
   },
   handler: async (ctx, args) => {
+    if (args.questions.length > CONTENT_SYNC_BATCH_LIMITS.exerciseQuestions) {
+      throw new Error(
+        "bulkSyncExerciseQuestions received more items than one safe batch."
+      );
+    }
+
     const now = Date.now();
     let created = 0;
     let updated = 0;
@@ -649,7 +693,7 @@ export const bulkSyncExerciseQuestions = internalMutation({
         .withIndex("locale_slug", (q) =>
           q.eq("locale", question.locale).eq("slug", question.setSlug)
         )
-        .first();
+        .unique();
 
       if (!set) {
         skipped++;
@@ -663,7 +707,7 @@ export const bulkSyncExerciseQuestions = internalMutation({
         .withIndex("locale_slug", (q) =>
           q.eq("locale", question.locale).eq("slug", question.slug)
         )
-        .first();
+        .unique();
 
       if (existing) {
         if (existing.contentHash === question.contentHash) {
@@ -781,6 +825,12 @@ export const deleteStaleArticles = internalMutation({
     articleIds: v.array(v.string()),
   },
   handler: async (ctx, args) => {
+    if (args.articleIds.length > CONTENT_SYNC_BATCH_LIMITS.staleArticles) {
+      throw new Error(
+        "deleteStaleArticles received more IDs than one safe batch."
+      );
+    }
+
     // Normalize all IDs upfront to avoid repeated normalization in loop
     const articleIds = args.articleIds
       .map((idStr) => ctx.db.normalizeId("articleContents", idStr))
@@ -839,6 +889,12 @@ export const deleteStaleSubjectTopics = internalMutation({
     topicIds: v.array(v.string()),
   },
   handler: async (ctx, args) => {
+    if (args.topicIds.length > CONTENT_SYNC_BATCH_LIMITS.staleSubjectTopics) {
+      throw new Error(
+        "deleteStaleSubjectTopics received more IDs than one safe batch."
+      );
+    }
+
     // Normalize all IDs upfront
     const topicIds = args.topicIds
       .map((idStr) => ctx.db.normalizeId("subjectTopics", idStr))
@@ -896,6 +952,14 @@ export const deleteStaleSubjectSections = internalMutation({
     sectionIds: v.array(v.string()),
   },
   handler: async (ctx, args) => {
+    if (
+      args.sectionIds.length > CONTENT_SYNC_BATCH_LIMITS.staleSubjectSections
+    ) {
+      throw new Error(
+        "deleteStaleSubjectSections received more IDs than one safe batch."
+      );
+    }
+
     // Normalize all IDs upfront
     const sectionIds = args.sectionIds
       .map((idStr) => ctx.db.normalizeId("subjectSections", idStr))
@@ -944,6 +1008,12 @@ export const deleteStaleExerciseSets = internalMutation({
     setIds: v.array(v.string()),
   },
   handler: async (ctx, args) => {
+    if (args.setIds.length > CONTENT_SYNC_BATCH_LIMITS.staleExerciseSets) {
+      throw new Error(
+        "deleteStaleExerciseSets received more IDs than one safe batch."
+      );
+    }
+
     // Normalize all IDs upfront
     const setIds = args.setIds
       .map((idStr) => ctx.db.normalizeId("exerciseSets", idStr))
@@ -1012,6 +1082,14 @@ export const deleteStaleExerciseQuestions = internalMutation({
     questionIds: v.array(v.string()),
   },
   handler: async (ctx, args) => {
+    if (
+      args.questionIds.length > CONTENT_SYNC_BATCH_LIMITS.staleExerciseQuestions
+    ) {
+      throw new Error(
+        "deleteStaleExerciseQuestions received more IDs than one safe batch."
+      );
+    }
+
     // Normalize all IDs upfront
     const questionIds = args.questionIds
       .map((idStr) => ctx.db.normalizeId("exerciseQuestions", idStr))
@@ -1069,6 +1147,12 @@ export const deleteUnusedAuthors = internalMutation({
     authorIds: v.array(v.string()),
   },
   handler: async (ctx, args) => {
+    if (args.authorIds.length > CONTENT_SYNC_BATCH_LIMITS.unusedAuthors) {
+      throw new Error(
+        "deleteUnusedAuthors received more IDs than one safe batch."
+      );
+    }
+
     // Normalize all IDs upfront
     const authorIds = args.authorIds
       .map((idStr) => ctx.db.normalizeId("authors", idStr))
@@ -1343,6 +1427,27 @@ export const deleteIrtCalibrationQueueBatch = internalMutation({
     }
 
     const remaining = await ctx.db.query("irtCalibrationQueue").first();
+    return { deleted, hasMore: remaining !== null };
+  },
+});
+
+/**
+ * Delete a batch of denormalized IRT calibration attempts.
+ */
+export const deleteIrtCalibrationAttemptsBatch = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const responses = await ctx.db
+      .query("irtCalibrationAttempts")
+      .take(DELETE_BATCH_SIZE);
+    let deleted = 0;
+
+    for (const response of responses) {
+      await ctx.db.delete("irtCalibrationAttempts", response._id);
+      deleted++;
+    }
+
+    const remaining = await ctx.db.query("irtCalibrationAttempts").first();
     return { deleted, hasMore: remaining !== null };
   },
 });

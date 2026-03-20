@@ -2,7 +2,7 @@ import { readMdxFile } from "../lib/mdx-parser/content";
 import { runConvexMutationGeneric } from "./convexApi";
 import { formatDuration, log } from "./logging";
 import { globFiles } from "./runtime";
-import { AuthorSyncResultSchema } from "./schemas";
+import { AuthorSyncResultSchema, BATCH_SIZES } from "./schemas";
 import type { AuthorSyncResult, ConvexConfig, SyncOptions } from "./types";
 
 export const collectAllAuthorNames = async (
@@ -73,18 +73,32 @@ export const syncAuthors = async (
     };
   }
 
-  const result = await runConvexMutationGeneric(
-    config,
-    "contentSync/mutations:bulkSyncAuthors",
-    { authorNames },
-    AuthorSyncResultSchema
-  );
+  let created = 0;
+  let existing = 0;
+
+  for (
+    let index = 0;
+    index < authorNames.length;
+    index += BATCH_SIZES.authors
+  ) {
+    const batch = authorNames.slice(index, index + BATCH_SIZES.authors);
+    const result = await runConvexMutationGeneric(
+      config,
+      "contentSync/mutations:bulkSyncAuthors",
+      { authorNames: batch },
+      AuthorSyncResultSchema
+    );
+
+    created += result.created;
+    existing += result.existing;
+  }
+
   const durationMs = performance.now() - startTime;
 
   if (!options.quiet) {
-    log(`Authors: ${result.created} created, ${result.existing} existing`);
+    log(`Authors: ${created} created, ${existing} existing`);
     log(`Duration: ${formatDuration(durationMs)}`);
   }
 
-  return { ...result, durationMs };
+  return { created, existing, durationMs };
 };

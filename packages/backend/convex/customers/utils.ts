@@ -1,5 +1,4 @@
-import type { Customer } from "@polar-sh/sdk/models/components/customer.js";
-import { api, components, internal } from "@repo/backend/convex/_generated/api";
+import { components, internal } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import type {
@@ -9,13 +8,18 @@ import type {
 } from "convex/server";
 import { ConvexError } from "convex/values";
 
+type PolarMetadata = Record<string, string | number | boolean>;
+
 /**
  * Convert Polar customer to database format.
  * Maps Polar customer fields to local database schema.
  */
-export function convertToDatabaseCustomer(
-  customer: Customer & { userId: Id<"users"> }
-): WithoutSystemFields<Doc<"customers">> {
+export function convertToDatabaseCustomer(customer: {
+  id: string;
+  externalId?: string | null;
+  metadata: PolarMetadata;
+  userId: Id<"users">;
+}): WithoutSystemFields<Doc<"customers">> {
   return {
     id: customer.id,
     externalId: customer.externalId ?? null,
@@ -64,11 +68,23 @@ export async function findUserIdFromCustomer(
       email: customerData.email,
     }
   );
-  if (authUser?.userId) {
-    return authUser.userId as Id<"users">;
+
+  if (!authUser) {
+    return null;
   }
 
-  return null;
+  const userByAuthId = await ctx.runQuery(
+    internal.users.queries.getUserByAuthId,
+    {
+      authId: authUser._id,
+    }
+  );
+
+  if (!userByAuthId) {
+    return null;
+  }
+
+  return userByAuthId._id;
 }
 
 /**
@@ -82,7 +98,7 @@ export async function findUserIdFromCustomer(
  */
 export async function requireCustomer(ctx: ActionCtx, userId: Id<"users">) {
   const [user, localCustomer] = await Promise.all([
-    ctx.runQuery(api.auth.getUserById, { userId }),
+    ctx.runQuery(internal.users.queries.getUserById, { userId }),
     ctx.runQuery(internal.customers.queries.getCustomerByUserId, { userId }),
   ]);
 
@@ -98,9 +114,9 @@ export async function requireCustomer(ctx: ActionCtx, userId: Id<"users">) {
     internal.customers.polar.ensureCustomer,
     {
       localCustomerId: localCustomer?.id,
-      externalId: user.authUser._id,
-      email: user.authUser.email,
-      name: user.authUser.name,
+      externalId: user.authId,
+      email: user.email,
+      name: user.name,
       metadata: { userId },
     }
   );

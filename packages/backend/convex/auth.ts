@@ -5,7 +5,7 @@ import {
 } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import { components, internal } from "@repo/backend/convex/_generated/api";
-import type { DataModel, Id } from "@repo/backend/convex/_generated/dataModel";
+import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import {
   internalAction,
   type QueryCtx,
@@ -100,6 +100,12 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
                 name: newDoc.name,
                 image: newDoc.image ?? undefined,
               });
+
+              await ctx.scheduler.runAfter(
+                0,
+                internal.customers.actions.syncCustomer,
+                { userId: appUser._id }
+              );
             }
           }
         },
@@ -219,26 +225,6 @@ export const safeGetAppUser = async (ctx: QueryCtx) => {
 };
 
 /**
- * Get any app user by ID with auth data (bypasses session check).
- */
-export const getAnyAppUserById = async (ctx: QueryCtx, userId: Id<"users">) => {
-  const user = await ctx.db.get("users", userId);
-  if (!user) {
-    return null;
-  }
-
-  const authUser = await getAnyUserById(ctx, user.authId);
-  if (!authUser) {
-    return null;
-  }
-
-  return {
-    appUser: user,
-    authUser,
-  };
-};
-
-/**
  * Query to get current logged-in user.
  */
 export const getCurrentUser = query({
@@ -251,7 +237,18 @@ export const getCurrentUser = query({
  */
 export const getUserById = query({
   args: { userId: vv.id("users") },
-  handler: (ctx, args) => getAnyAppUserById(ctx, args.userId),
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get("users", args.userId);
+
+    if (!user) {
+      return null;
+    }
+
+    return {
+      image: user.image ?? undefined,
+      name: user.name,
+    };
+  },
 });
 
 /**
@@ -270,6 +267,3 @@ export const getLatestJwks = internalAction({
 export const { onCreate, onUpdate, onDelete } = authComponent.triggersApi();
 
 export type AppUser = NonNullable<Awaited<ReturnType<typeof safeGetAppUser>>>;
-export type AnyAppUser = NonNullable<
-  Awaited<ReturnType<typeof getAnyAppUserById>>
->;

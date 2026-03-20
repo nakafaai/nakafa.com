@@ -144,13 +144,25 @@ const cleanUnusedAuthors = async (
 
   if (options.force) {
     const authorIds = authorsResult.unusedAuthors.map((author) => author.id);
-    const result = await runConvexMutationGeneric(
-      config,
-      "contentSync/mutations:deleteUnusedAuthors",
-      { authorIds },
-      DeleteResultSchema
-    );
-    logSuccess(`Deleted ${result.deleted} unused authors`);
+    let deleted = 0;
+
+    for (
+      let index = 0;
+      index < authorIds.length;
+      index += BATCH_SIZES.unusedAuthors
+    ) {
+      const batch = authorIds.slice(index, index + BATCH_SIZES.unusedAuthors);
+      const result = await runConvexMutationGeneric(
+        config,
+        "contentSync/mutations:deleteUnusedAuthors",
+        { authorIds: batch },
+        DeleteResultSchema
+      );
+
+      deleted += result.deleted;
+    }
+
+    logSuccess(`Deleted ${deleted} unused authors`);
     return;
   }
 
@@ -214,21 +226,24 @@ export const clean = async (
         "contentSync/mutations:deleteStaleArticles",
         "articleIds",
         stale.staleArticles,
-        "stale articles"
+        "stale articles",
+        BATCH_SIZES.staleArticles
       );
       await deleteStaleItems(
         config,
         "contentSync/mutations:deleteStaleSubjectTopics",
         "topicIds",
         stale.staleSubjectTopics,
-        "stale subject topics (and their sections)"
+        "stale subject topics (and their sections)",
+        BATCH_SIZES.staleSubjectTopics
       );
       await deleteStaleItems(
         config,
         "contentSync/mutations:deleteStaleSubjectSections",
         "sectionIds",
         stale.staleSubjectSections,
-        "stale subject sections"
+        "stale subject sections",
+        BATCH_SIZES.staleSubjectSections
       );
       await deleteStaleItems(
         config,

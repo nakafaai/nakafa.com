@@ -35,6 +35,7 @@ import type * as classes_utils from "../classes/utils.js";
 import type * as comments_mutations from "../comments/mutations.js";
 import type * as comments_queries from "../comments/queries.js";
 import type * as comments_utils from "../comments/utils.js";
+import type * as contentSync_constants from "../contentSync/constants.js";
 import type * as contentSync_mutations from "../contentSync/mutations.js";
 import type * as contentSync_queries from "../contentSync/queries.js";
 import type * as contents_aggregate from "../contents/aggregate.js";
@@ -69,6 +70,7 @@ import type * as irt_policy from "../irt/policy.js";
 import type * as irt_scaleVersions from "../irt/scaleVersions.js";
 import type * as irt_validators from "../irt/validators.js";
 import type * as irt_workflows from "../irt/workflows.js";
+import type * as irt_workpool from "../irt/workpool.js";
 import type * as lib_attempts from "../lib/attempts.js";
 import type * as lib_helpers_auth from "../lib/helpers/auth.js";
 import type * as lib_helpers_chat from "../lib/helpers/chat.js";
@@ -100,6 +102,7 @@ import type * as triggers_comments_commentVotes from "../triggers/comments/comme
 import type * as triggers_comments_comments from "../triggers/comments/comments.js";
 import type * as triggers_contents_contentViews from "../triggers/contents/contentViews.js";
 import type * as triggers_contents_exerciseAnswers from "../triggers/contents/exerciseAnswers.js";
+import type * as triggers_contents_exerciseAttempts from "../triggers/contents/exerciseAttempts.js";
 import type * as triggers_contents_popularity from "../triggers/contents/popularity.js";
 import type * as triggers_forums_postReactions from "../triggers/forums/postReactions.js";
 import type * as triggers_forums_posts from "../triggers/forums/posts.js";
@@ -170,6 +173,7 @@ declare const fullApi: ApiFromModules<{
   "comments/mutations": typeof comments_mutations;
   "comments/queries": typeof comments_queries;
   "comments/utils": typeof comments_utils;
+  "contentSync/constants": typeof contentSync_constants;
   "contentSync/mutations": typeof contentSync_mutations;
   "contentSync/queries": typeof contentSync_queries;
   "contents/aggregate": typeof contents_aggregate;
@@ -204,6 +208,7 @@ declare const fullApi: ApiFromModules<{
   "irt/scaleVersions": typeof irt_scaleVersions;
   "irt/validators": typeof irt_validators;
   "irt/workflows": typeof irt_workflows;
+  "irt/workpool": typeof irt_workpool;
   "lib/attempts": typeof lib_attempts;
   "lib/helpers/auth": typeof lib_helpers_auth;
   "lib/helpers/chat": typeof lib_helpers_chat;
@@ -235,6 +240,7 @@ declare const fullApi: ApiFromModules<{
   "triggers/comments/comments": typeof triggers_comments_comments;
   "triggers/contents/contentViews": typeof triggers_contents_contentViews;
   "triggers/contents/exerciseAnswers": typeof triggers_contents_exerciseAnswers;
+  "triggers/contents/exerciseAttempts": typeof triggers_contents_exerciseAttempts;
   "triggers/contents/popularity": typeof triggers_contents_popularity;
   "triggers/forums/postReactions": typeof triggers_forums_postReactions;
   "triggers/forums/posts": typeof triggers_forums_posts;
@@ -2271,6 +2277,104 @@ export declare const components: {
         "internal",
         { from?: number | string; startAsync?: boolean; workflowId: string },
         null
+      >;
+    };
+  };
+  irtCalibrationSyncWorkpool: {
+    config: {
+      update: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+          maxParallelism?: number;
+        },
+        any
+      >;
+    };
+    lib: {
+      cancel: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          id: string;
+          logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+        },
+        any
+      >;
+      cancelAll: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          before?: number;
+          limit?: number;
+          logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+        },
+        any
+      >;
+      enqueue: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          config: {
+            logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+            maxParallelism?: number;
+          };
+          fnArgs: any;
+          fnHandle: string;
+          fnName: string;
+          fnType: "action" | "mutation" | "query";
+          onComplete?: { context?: any; fnHandle: string };
+          retryBehavior?: {
+            base: number;
+            initialBackoffMs: number;
+            maxAttempts: number;
+          };
+          runAt: number;
+        },
+        string
+      >;
+      enqueueBatch: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          config: {
+            logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+            maxParallelism?: number;
+          };
+          items: Array<{
+            fnArgs: any;
+            fnHandle: string;
+            fnName: string;
+            fnType: "action" | "mutation" | "query";
+            onComplete?: { context?: any; fnHandle: string };
+            retryBehavior?: {
+              base: number;
+              initialBackoffMs: number;
+              maxAttempts: number;
+            };
+            runAt: number;
+          }>;
+        },
+        Array<string>
+      >;
+      status: FunctionReference<
+        "query",
+        "internal",
+        { id: string },
+        | { previousAttempts: number; state: "pending" }
+        | { previousAttempts: number; state: "running" }
+        | { state: "finished" }
+      >;
+      statusBatch: FunctionReference<
+        "query",
+        "internal",
+        { ids: Array<string> },
+        Array<
+          | { previousAttempts: number; state: "pending" }
+          | { previousAttempts: number; state: "running" }
+          | { state: "finished" }
+        >
       >;
     };
   };

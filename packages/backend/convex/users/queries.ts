@@ -6,6 +6,20 @@ import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
 
 /**
+ * Get app user by app user ID.
+ * Returns null if user doesn't exist.
+ */
+export const getUserById = internalQuery({
+  args: {
+    userId: vv.id("users"),
+  },
+  returns: nullable(vv.doc("users")),
+  handler: async (ctx, args) => {
+    return await ctx.db.get("users", args.userId);
+  },
+});
+
+/**
  * Get app user by Better Auth user ID.
  * Returns null if user doesn't exist.
  */

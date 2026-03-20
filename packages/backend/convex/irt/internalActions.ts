@@ -27,7 +27,6 @@ export const calibrateSetTwoPL = internalAction({
         setId: args.setId,
       }
     );
-
     const responses: CalibrationResponse[] = [];
     let continueCursor: string | null = null;
     let isDone = false;

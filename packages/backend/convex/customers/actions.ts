@@ -1,4 +1,4 @@
-import { api, internal } from "@repo/backend/convex/_generated/api";
+import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { action, internalAction } from "@repo/backend/convex/_generated/server";
 import {
@@ -7,7 +7,7 @@ import {
 } from "@repo/backend/convex/customers/utils";
 import { requireAuthForAction } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { ConvexError, v } from "convex/values";
+import { v } from "convex/values";
 
 /**
  * Sync customer between Polar and local database.
@@ -16,26 +16,22 @@ import { ConvexError, v } from "convex/values";
  */
 export const syncCustomer = internalAction({
   args: { userId: vv.id("users") },
-  returns: vv.id("customers"),
-  handler: async (ctx, args): Promise<Id<"customers">> => {
-    const user = await ctx.runQuery(api.auth.getUserById, {
+  returns: vv.nullable(vv.id("customers")),
+  handler: async (ctx, args): Promise<Id<"customers"> | null> => {
+    const user = await ctx.runQuery(internal.users.queries.getUserById, {
       userId: args.userId,
     });
 
     if (!user) {
-      throw new ConvexError({
-        code: "USER_NOT_FOUND",
-        message: "User not found",
-        userId: args.userId,
-      });
+      return null;
     }
 
     const polarCustomer = await ctx.runAction(
       internal.customers.polar.ensureCustomer,
       {
-        externalId: user.authUser._id,
-        email: user.authUser.email,
-        name: user.authUser.name,
+        externalId: user.authId,
+        email: user.email,
+        name: user.name,
         metadata: { userId: args.userId },
       }
     );
@@ -102,6 +98,10 @@ export const cleanupUserData = internalAction({
 
     if (customer?.id) {
       await ctx.runAction(internal.customers.polar.deleteCustomer, {
+        id: customer.id,
+      });
+
+      await ctx.runMutation(internal.customers.mutations.deleteCustomerById, {
         id: customer.id,
       });
     }

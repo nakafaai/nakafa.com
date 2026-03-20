@@ -13,6 +13,7 @@ import { commentsHandler } from "@repo/backend/convex/triggers/comments/comments
 import { commentVotesHandler } from "@repo/backend/convex/triggers/comments/commentVotes";
 import { contentViewsHandler } from "@repo/backend/convex/triggers/contents/contentViews";
 import { exerciseAnswersHandler } from "@repo/backend/convex/triggers/contents/exerciseAnswers";
+import { exerciseAttemptsHandler } from "@repo/backend/convex/triggers/contents/exerciseAttempts";
 import {
   articlePopularityTrigger,
   exercisePopularityTrigger,
@@ -62,7 +63,6 @@ triggers.register("schoolClassMaterialAttachments", noopHandler);
 triggers.register("schoolClassMaterialViews", noopHandler);
 triggers.register("contentAudios", noopHandler);
 triggers.register("audioGenerationQueue", noopHandler);
-triggers.register("exerciseAttempts", noopHandler);
 triggers.register("creditTransactions", noopHandler);
 triggers.register("creditResetJobs", noopHandler);
 triggers.register("creditResetQueue", noopHandler);
@@ -76,6 +76,7 @@ triggers.register("subjectPopularity", subjectPopularityTrigger);
 triggers.register("exercisePopularity", exercisePopularityTrigger);
 
 // Active triggers with custom logic
+triggers.register("exerciseAttempts", exerciseAttemptsHandler);
 triggers.register("exerciseAnswers", exerciseAnswersHandler);
 triggers.register("comments", commentsHandler);
 triggers.register("commentVotes", commentVotesHandler);

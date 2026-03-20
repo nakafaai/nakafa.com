@@ -61,8 +61,7 @@ const tables = {
       "scope",
       "startedAt",
     ])
-    .index("slug_scope_mode_status_startedAt", [
-      "slug",
+    .index("scope_mode_status_startedAt", [
       "scope",
       "mode",
       "status",

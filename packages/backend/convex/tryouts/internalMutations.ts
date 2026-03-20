@@ -42,61 +42,41 @@ async function buildUserTryoutStatsSnapshot({
   product: Parameters<typeof getTryoutLeaderboardNamespace>[0]["product"];
   userId: Id<"users">;
 }) {
+  const leaderboardNamespace = getTryoutLeaderboardNamespace({
+    cycleKey,
+    locale,
+    product,
+  });
   const leaderboardEntries = await ctx.db
     .query("tryoutLeaderboardEntries")
-    .withIndex("userId", (q) => q.eq("userId", userId))
+    .withIndex("userId_leaderboardNamespace", (q) =>
+      q.eq("userId", userId).eq("leaderboardNamespace", leaderboardNamespace)
+    )
     .collect();
 
   if (leaderboardEntries.length === 0) {
     return null;
   }
 
-  const tryouts = await getAll(
-    ctx.db,
-    "tryouts",
-    leaderboardEntries.map((entry) => entry.tryoutId)
-  );
-  const namespaceEntries = leaderboardEntries.flatMap((entry, index) => {
-    const tryout = tryouts[index];
-
-    if (!tryout) {
-      return [];
-    }
-
-    if (
-      tryout.product !== product ||
-      tryout.locale !== locale ||
-      tryout.cycleKey !== cycleKey
-    ) {
-      return [];
-    }
-
-    return [entry];
-  });
-
-  if (namespaceEntries.length === 0) {
-    return null;
-  }
-
   const attempts = await getAll(
     ctx.db,
     "tryoutAttempts",
-    namespaceEntries.map((entry) => entry.attemptId)
+    leaderboardEntries.map((entry) => entry.attemptId)
   );
-  const totalTryoutsCompleted = namespaceEntries.length;
-  const totalTheta = namespaceEntries.reduce(
+  const totalTryoutsCompleted = leaderboardEntries.length;
+  const totalTheta = leaderboardEntries.reduce(
     (sum, entry) => sum + entry.theta,
     0
   );
-  const totalRawScore = namespaceEntries.reduce(
+  const totalRawScore = leaderboardEntries.reduce(
     (sum, entry) => sum + entry.rawScore,
     0
   );
-  const lastTryoutAt = namespaceEntries.reduce(
+  const lastTryoutAt = leaderboardEntries.reduce(
     (latest, entry) => Math.max(latest, entry.completedAt),
     0
   );
-  const bestTheta = namespaceEntries.reduce(
+  const bestTheta = leaderboardEntries.reduce(
     (best, entry) => Math.max(best, entry.theta),
     Number.NEGATIVE_INFINITY
   );
@@ -126,7 +106,7 @@ async function syncUserTryoutStats({
   userId,
 }: {
   cycleKey: string;
-  ctx: Pick<MutationCtx, "db" | "scheduler">;
+  ctx: Pick<MutationCtx, "db">;
   locale: Doc<"tryouts">["locale"];
   nextEntry: LeaderboardStatsEntry;
   previousEntry: LeaderboardStatsEntry | null;
@@ -149,17 +129,52 @@ async function syncUserTryoutStats({
     .unique();
 
   if (!statsRecord) {
-    await ctx.scheduler.runAfter(
-      0,
-      internal.tryouts.internalMutations.rebuildUserTryoutStats,
-      {
-        cycleKey,
-        locale,
-        product,
-        userId,
-      }
-    );
+    const rebuiltStats = await buildUserTryoutStatsSnapshot({
+      cycleKey,
+      ctx,
+      locale,
+      product,
+      userId,
+    });
 
+    if (!rebuiltStats) {
+      return;
+    }
+
+    await ctx.db.insert("userTryoutStats", {
+      userId,
+      product,
+      leaderboardNamespace,
+      ...rebuiltStats,
+    });
+
+    return;
+  }
+
+  const bestThetaWouldDrop =
+    previousEntry !== null &&
+    previousEntry.theta === statsRecord.bestTheta &&
+    nextEntry.theta < previousEntry.theta;
+  const lastTryoutAtWouldDrop =
+    previousEntry !== null &&
+    previousEntry.completedAt === statsRecord.lastTryoutAt &&
+    nextEntry.completedAt < previousEntry.completedAt;
+
+  if (bestThetaWouldDrop || lastTryoutAtWouldDrop) {
+    const rebuiltStats = await buildUserTryoutStatsSnapshot({
+      cycleKey,
+      ctx,
+      locale,
+      product,
+      userId,
+    });
+
+    if (!rebuiltStats) {
+      await ctx.db.delete("userTryoutStats", statsRecord._id);
+      return;
+    }
+
+    await ctx.db.patch("userTryoutStats", statsRecord._id, rebuiltStats);
     return;
   }
 
@@ -312,6 +327,11 @@ export const updateLeaderboard = internalMutation({
       throw new Error("Completed tryout attempt is missing its tryout.");
     }
 
+    const leaderboardNamespace = getTryoutLeaderboardNamespace({
+      cycleKey: tryout.cycleKey,
+      locale: tryout.locale,
+      product: tryout.product,
+    });
     const existingEntry = await ctx.db
       .query("tryoutLeaderboardEntries")
       .withIndex("tryoutId_userId", (q) =>
@@ -343,6 +363,7 @@ export const updateLeaderboard = internalMutation({
 
     if (existingEntry) {
       await ctx.db.patch("tryoutLeaderboardEntries", existingEntry._id, {
+        leaderboardNamespace,
         theta: tryoutAttempt.theta,
         irtScore: tryoutAttempt.irtScore,
         rawScore,
@@ -353,6 +374,7 @@ export const updateLeaderboard = internalMutation({
       await ctx.db.insert("tryoutLeaderboardEntries", {
         tryoutId: tryoutAttempt.tryoutId,
         userId: tryoutAttempt.userId,
+        leaderboardNamespace,
         theta: tryoutAttempt.theta,
         irtScore: tryoutAttempt.irtScore,
         rawScore,

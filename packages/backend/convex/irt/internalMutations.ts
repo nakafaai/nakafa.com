@@ -4,6 +4,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
 import {
   IRT_CALIBRATION_QUEUE_BATCH_SIZE,
+  IRT_CALIBRATION_RESPONSE_BACKFILL_BATCH_SIZE,
   IRT_MAX_CALIBRATION_STALENESS_MS,
   IRT_MIN_COMPLETED_ATTEMPTS_FOR_RECALIBRATION,
   IRT_OPERATIONAL_MODEL,
@@ -19,10 +20,12 @@ import {
   publishScaleVersion,
 } from "@repo/backend/convex/irt/scaleVersions";
 import { irtCalibrationResultValidator } from "@repo/backend/convex/irt/validators";
+import { irtCalibrationSyncWorkpool } from "@repo/backend/convex/irt/workpool";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { workflow } from "@repo/backend/convex/workflow";
 import { v } from "convex/values";
 import { asyncMap } from "convex-helpers";
+import { getAll, getManyFrom } from "convex-helpers/server/relationships";
 
 async function startCalibrationRunWorkflow(
   ctx: MutationCtx,
@@ -188,6 +191,153 @@ async function cleanupScalePublicationQueueEntriesBatch(
 
   return queueEntries.length;
 }
+
+const backfillCalibrationResponsesResultValidator = v.object({
+  isDone: v.boolean(),
+  processedCount: v.number(),
+});
+
+/**
+ * Syncs the denormalized calibration responses for one exercise attempt.
+ */
+export const syncCalibrationResponsesForAttempt = internalMutation({
+  args: {
+    attemptId: vv.id("exerciseAttempts"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const existingAttempts = await ctx.db
+      .query("irtCalibrationAttempts")
+      .withIndex("attemptId", (q) => q.eq("attemptId", args.attemptId))
+      .collect();
+
+    for (const calibrationAttempt of existingAttempts) {
+      await ctx.db.delete("irtCalibrationAttempts", calibrationAttempt._id);
+    }
+
+    const attempt = await ctx.db.get("exerciseAttempts", args.attemptId);
+
+    if (
+      !attempt ||
+      attempt.scope !== "set" ||
+      attempt.mode !== "simulation" ||
+      attempt.status !== "completed"
+    ) {
+      return null;
+    }
+
+    const answers = await getManyFrom(
+      ctx.db,
+      "exerciseAnswers",
+      "attemptId_exerciseNumber",
+      args.attemptId,
+      "attemptId"
+    );
+    const scoredAnswers = answers.flatMap((answer) => {
+      if (answer.questionId === undefined) {
+        return [];
+      }
+
+      return [
+        {
+          isCorrect: answer.isCorrect,
+          questionId: answer.questionId,
+        },
+      ];
+    });
+
+    if (scoredAnswers.length === 0) {
+      return null;
+    }
+
+    const questions = await getAll(
+      ctx.db,
+      "exerciseQuestions",
+      scoredAnswers.map((answer) => answer.questionId)
+    );
+    const firstQuestion = questions[0];
+
+    if (!firstQuestion) {
+      return null;
+    }
+
+    const setId = firstQuestion.setId;
+    const responses = scoredAnswers.map((answer, index) => {
+      const question = questions[index];
+
+      if (!question) {
+        throw new Error(
+          "Calibration response is missing its exercise question."
+        );
+      }
+
+      if (question.setId !== setId) {
+        throw new Error(
+          "Calibration attempt contains answers from multiple sets."
+        );
+      }
+
+      return {
+        questionId: question._id,
+        isCorrect: answer.isCorrect,
+      };
+    });
+
+    await ctx.db.insert("irtCalibrationAttempts", {
+      setId,
+      attemptId: args.attemptId,
+      responses,
+    });
+
+    return null;
+  },
+});
+
+/**
+ * Backfills denormalized calibration responses for existing completed attempts.
+ */
+export const backfillCalibrationResponsesPage = internalMutation({
+  args: {
+    cursor: v.optional(v.string()),
+  },
+  returns: backfillCalibrationResponsesResultValidator,
+  handler: async (ctx, args) => {
+    const page = await ctx.db
+      .query("exerciseAttempts")
+      .withIndex("scope_mode_status_startedAt", (q) =>
+        q.eq("scope", "set").eq("mode", "simulation").eq("status", "completed")
+      )
+      .paginate({
+        cursor: args.cursor ?? null,
+        numItems: IRT_CALIBRATION_RESPONSE_BACKFILL_BATCH_SIZE,
+      });
+
+    for (const attempt of page.page) {
+      await irtCalibrationSyncWorkpool.enqueueMutation(
+        ctx,
+        internal.irt.internalMutations.syncCalibrationResponsesForAttempt,
+        {
+          attemptId: attempt._id,
+        }
+      );
+    }
+
+    if (!page.isDone) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.irt.internalMutations.backfillCalibrationResponsesPage,
+        {
+          cursor: page.continueCursor,
+        }
+      );
+    }
+
+    return {
+      isDone: page.isDone,
+      processedCount: page.page.length,
+    };
+  },
+});
 
 /**
  * Drain a bounded batch of queued set calibrations.

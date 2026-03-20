@@ -125,6 +125,7 @@ const tables = {
   tryoutLeaderboardEntries: defineTable({
     tryoutId: v.id("tryouts"),
     userId: v.id("users"),
+    leaderboardNamespace: v.string(),
     theta: v.number(),
     irtScore: v.number(),
     rawScore: v.number(),
@@ -132,6 +133,7 @@ const tables = {
     attemptId: v.id("tryoutAttempts"),
   })
     .index("tryoutId_userId", ["tryoutId", "userId"])
+    .index("userId_leaderboardNamespace", ["userId", "leaderboardNamespace"])
     .index("userId", ["userId"]),
 };
 

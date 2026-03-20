@@ -28,6 +28,10 @@ const countTableSpecs: Array<{
   },
   { field: "userTryoutStats", tableName: "userTryoutStats" },
   { field: "irtCalibrationQueue", tableName: "irtCalibrationQueue" },
+  {
+    field: "irtCalibrationAttempts",
+    tableName: "irtCalibrationAttempts",
+  },
   { field: "irtCalibrationRuns", tableName: "irtCalibrationRuns" },
   { field: "exerciseItemParameters", tableName: "exerciseItemParameters" },
   {

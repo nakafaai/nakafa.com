@@ -24,7 +24,7 @@ import {
   loadSyncState,
   saveSyncState,
 } from "./runtime";
-import { AuthorSyncResultSchema } from "./schemas";
+import { AuthorSyncResultSchema, BATCH_SIZES } from "./schemas";
 import { syncSubjectSections, syncSubjectTopics } from "./subjects";
 import { syncTryouts } from "./tryouts";
 import type { ConvexConfig, SyncOptions, SyncResult } from "./types";
@@ -297,15 +297,30 @@ export const syncIncremental = async (
 
   if (changedAuthorNames.length > 0) {
     log("Phase 0: Pre-syncing authors from changed files...");
-    const authorResult = await runConvexMutationGeneric(
-      config,
-      "contentSync/mutations:bulkSyncAuthors",
-      { authorNames: changedAuthorNames },
-      AuthorSyncResultSchema
-    );
-    log(
-      `  Authors: ${authorResult.created} new, ${authorResult.existing} existing\n`
-    );
+    let created = 0;
+    let existing = 0;
+
+    for (
+      let index = 0;
+      index < changedAuthorNames.length;
+      index += BATCH_SIZES.authors
+    ) {
+      const batch = changedAuthorNames.slice(
+        index,
+        index + BATCH_SIZES.authors
+      );
+      const authorResult = await runConvexMutationGeneric(
+        config,
+        "contentSync/mutations:bulkSyncAuthors",
+        { authorNames: batch },
+        AuthorSyncResultSchema
+      );
+
+      created += authorResult.created;
+      existing += authorResult.existing;
+    }
+
+    log(`  Authors: ${created} new, ${existing} existing\n`);
   }
 
   const hasArticleChanges = changedFilesArray.some((file) =>

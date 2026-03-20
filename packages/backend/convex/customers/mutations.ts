@@ -1,7 +1,7 @@
 import { internalMutation } from "@repo/backend/convex/_generated/server";
 import tables from "@repo/backend/convex/customers/schema";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { ConvexError, v } from "convex/values";
+import { v } from "convex/values";
 
 /**
  * Delete a customer by Polar customer ID.
@@ -19,10 +19,7 @@ export const deleteCustomerById = internalMutation({
       .unique();
 
     if (!customer) {
-      throw new ConvexError({
-        code: "CUSTOMER_NOT_FOUND",
-        message: `Customer not found for id: ${args.id}`,
-      });
+      return null;
     }
 
     await ctx.db.delete("customers", customer._id);

@@ -79,61 +79,21 @@ export const getCalibrationResponsesPageForSet = internalQuery({
   },
   returns: calibrationResponsesPageResultValidator,
   handler: async (ctx, args) => {
-    const set = await ctx.db.get("exerciseSets", args.setId);
-
-    if (!set) {
-      throw new Error("Exercise set not found for calibration responses.");
-    }
-
-    const attemptPage = await ctx.db
-      .query("exerciseAttempts")
-      .withIndex("slug_scope_mode_status_startedAt", (q) =>
-        q
-          .eq("slug", set.slug)
-          .eq("scope", "set")
-          .eq("mode", "simulation")
-          .eq("status", "completed")
-      )
+    const responsePage = await ctx.db
+      .query("irtCalibrationAttempts")
+      .withIndex("setId_attemptId", (q) => q.eq("setId", args.setId))
       .paginate(args.paginationOpts);
 
-    const answersByAttempt = await Promise.all(
-      attemptPage.page.map((attempt) =>
-        getManyFrom(
-          ctx.db,
-          "exerciseAnswers",
-          "attemptId_exerciseNumber",
-          attempt._id,
-          "attemptId"
-        )
-      )
-    );
-
-    const page = answersByAttempt.flatMap((answers, index) => {
-      const attempt = attemptPage.page[index];
-
-      if (!attempt) {
-        return [];
-      }
-
-      return answers.flatMap((answer) => {
-        if (answer.questionId === undefined) {
-          return [];
-        }
-
-        return [
-          {
-            attemptId: attempt._id,
-            isCorrect: answer.isCorrect,
-            questionId: answer.questionId,
-          },
-        ];
-      });
-    });
-
     return {
-      page,
-      isDone: attemptPage.isDone,
-      continueCursor: attemptPage.continueCursor,
+      page: responsePage.page.flatMap((attempt) =>
+        attempt.responses.map((response) => ({
+          attemptId: attempt.attemptId,
+          isCorrect: response.isCorrect,
+          questionId: response.questionId,
+        }))
+      ),
+      isDone: responsePage.isDone,
+      continueCursor: responsePage.continueCursor,
     };
   },
 });

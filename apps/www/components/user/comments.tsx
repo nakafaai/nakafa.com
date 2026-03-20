@@ -69,8 +69,8 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
   });
   const currentUser = useUser((state) => state.user);
 
-  const userName = user?.authUser.name ?? t("anonymous");
-  const userImage = user?.authUser.image ?? "";
+  const userName = user?.name ?? t("anonymous");
+  const userImage = user?.image ?? "";
 
   const [isPending, startTransition] = useTransition();
 

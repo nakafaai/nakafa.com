@@ -27,6 +27,7 @@ const countableTableNameValidator = literals(
   "tryoutLeaderboardEntries",
   "userTryoutStats",
   "irtCalibrationQueue",
+  "irtCalibrationAttempts",
   "irtCalibrationRuns",
   "exerciseItemParameters",
   "irtScalePublicationQueue",
@@ -239,6 +240,16 @@ export const countTablePage = internalQuery({
       case "irtCalibrationQueue": {
         const page = await ctx.db
           .query("irtCalibrationQueue")
+          .paginate(args.paginationOpts);
+        return {
+          continueCursor: page.continueCursor,
+          isDone: page.isDone,
+          pageSize: page.page.length,
+        };
+      }
+      case "irtCalibrationAttempts": {
+        const page = await ctx.db
+          .query("irtCalibrationAttempts")
           .paginate(args.paginationOpts);
         return {
           continueCursor: page.continueCursor,
