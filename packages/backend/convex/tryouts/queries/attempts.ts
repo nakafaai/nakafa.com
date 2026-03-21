@@ -119,7 +119,10 @@ export const getUserTryoutAttempt = query({
       return {
         partIndex: partAttempt.partIndex,
         partKey: partAttempt.partKey,
-        setAttempt,
+        setAttempt: {
+          lastActivityAt: setAttempt.lastActivityAt,
+          status: setAttempt.status,
+        },
       };
     });
     const suggestedPartKey = pickSuggestedPartKey(validPartAttempts);
