@@ -72,19 +72,6 @@ const tables = {
   })
     .index("userId_status_startedAt", ["userId", "status", "startedAt"])
     .index("userId_tryoutId_startedAt", ["userId", "tryoutId", "startedAt"])
-    .index("userId_tryoutId_status_startedAt", [
-      "userId",
-      "tryoutId",
-      "status",
-      "startedAt",
-    ])
-    .index("userId_tryoutId_scoreStatus_status_startedAt", [
-      "userId",
-      "tryoutId",
-      "scoreStatus",
-      "status",
-      "startedAt",
-    ])
     .index("tryoutId_scoreStatus_status_startedAt", [
       "tryoutId",
       "scoreStatus",
@@ -112,7 +99,6 @@ const tables = {
     leaderboardNamespace: v.string(),
     totalTryoutsCompleted: v.number(),
     averageTheta: v.number(),
-    averageThetaSE: v.number(),
     bestTheta: v.number(),
     averageRawScore: v.number(),
     lastTryoutAt: v.number(),
@@ -128,14 +114,14 @@ const tables = {
     userId: v.id("users"),
     leaderboardNamespace: v.string(),
     theta: v.number(),
+    thetaSE: v.number(),
     irtScore: v.number(),
     rawScore: v.number(),
     completedAt: v.number(),
     attemptId: v.id("tryoutAttempts"),
   })
     .index("tryoutId_userId", ["tryoutId", "userId"])
-    .index("userId_leaderboardNamespace", ["userId", "leaderboardNamespace"])
-    .index("userId", ["userId"]),
+    .index("userId_leaderboardNamespace", ["userId", "leaderboardNamespace"]),
 };
 
 export default tables;

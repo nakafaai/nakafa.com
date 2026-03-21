@@ -12,7 +12,7 @@ queries, mutations, IRT publication, and leaderboard flow stay generic.
   (stable public identity for routes)
 - `tryoutAttempts` stores per-user simulation lifecycle and final IRT result
 - `tryoutPartAttempts` links one runtime part to one shared `exerciseAttempt`
-- `tryoutLeaderboardEntries` stores the official first-completed result per user
+- `tryoutLeaderboardEntries` stores the current best official result per user
 - `userTryoutStats` stores leaderboard aggregates per product namespace
 
 ## Current Product Policy

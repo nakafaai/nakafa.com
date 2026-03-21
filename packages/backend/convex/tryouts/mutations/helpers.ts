@@ -3,14 +3,14 @@ import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   computeTryoutRawScorePercentage,
-  getCurrentOfficialLeaderboardAttempt,
   getTryoutAttemptScoreStatus,
   getTryoutScoreTarget,
-  isBetterOfficialTryoutAttempt,
+  isBetterLeaderboardScore,
   syncTryoutAttemptAggregates,
   syncTryoutAttemptExpiry,
 } from "@repo/backend/convex/tryouts/helpers";
 import { tryoutStatusValidator } from "@repo/backend/convex/tryouts/schema";
+import { tryoutLeaderboardWorkpool } from "@repo/backend/convex/tryouts/workpool";
 import { ConvexError, type Infer, v } from "convex/values";
 
 export const completeTryoutResultValidator = v.object({
@@ -32,26 +32,25 @@ export async function finalizeTryoutAttempt({
   userId,
 }: {
   completedAtMs?: number;
-  ctx: Pick<MutationCtx, "db" | "scheduler">;
+  ctx: MutationCtx;
   now: number;
   tryoutAttempt: Doc<"tryoutAttempts">;
   userId: Id<"users">;
 }): Promise<CompleteTryoutResult> {
   if (tryoutAttempt.status === "completed") {
     const rawScorePercentage = computeTryoutRawScorePercentage(tryoutAttempt);
-    const leaderboardAttempt = await getCurrentOfficialLeaderboardAttempt(
-      ctx.db,
-      {
-        userId,
-        tryoutId: tryoutAttempt.tryoutId,
-      }
-    );
+    const leaderboardEntry = await ctx.db
+      .query("tryoutLeaderboardEntries")
+      .withIndex("tryoutId_userId", (q) =>
+        q.eq("tryoutId", tryoutAttempt.tryoutId).eq("userId", userId)
+      )
+      .unique();
 
     return {
       status: "completed",
       isOfficial:
         getTryoutAttemptScoreStatus(tryoutAttempt) === "official" &&
-        (!leaderboardAttempt || leaderboardAttempt._id === tryoutAttempt._id),
+        (!leaderboardEntry || leaderboardEntry.attemptId === tryoutAttempt._id),
       theta: tryoutAttempt.theta,
       irtScore: tryoutAttempt.irtScore,
       rawScorePercentage,
@@ -131,30 +130,31 @@ export async function finalizeTryoutAttempt({
     tryoutAttemptId: tryoutAttempt._id,
   });
 
-  const leaderboardAttempt =
+  const leaderboardEntry =
     scoreTarget.scoreStatus === "official"
-      ? await getCurrentOfficialLeaderboardAttempt(ctx.db, {
-          userId,
-          tryoutId: tryoutAttempt.tryoutId,
-        })
+      ? await ctx.db
+          .query("tryoutLeaderboardEntries")
+          .withIndex("tryoutId_userId", (q) =>
+            q.eq("tryoutId", tryoutAttempt.tryoutId).eq("userId", userId)
+          )
+          .unique()
       : null;
   const completedAttemptForLeaderboard = {
-    _id: tryoutAttempt._id,
     completedAt: completedAtMs ?? now,
     theta: completedAttempt.theta,
   };
   const isOfficial =
     scoreTarget.scoreStatus === "official" &&
-    (!leaderboardAttempt ||
-      leaderboardAttempt._id === completedAttemptForLeaderboard._id ||
-      isBetterOfficialTryoutAttempt(
+    (!leaderboardEntry ||
+      leaderboardEntry.attemptId === tryoutAttempt._id ||
+      isBetterLeaderboardScore(
         completedAttemptForLeaderboard,
-        leaderboardAttempt
+        leaderboardEntry
       ));
 
   if (isOfficial && scoreTarget.scoreStatus === "official") {
-    await ctx.scheduler.runAfter(
-      0,
+    await tryoutLeaderboardWorkpool.enqueueMutation(
+      ctx,
       internal.tryouts.internalMutations.updateLeaderboard,
       {
         tryoutAttemptId: tryoutAttempt._id,

@@ -110,22 +110,6 @@ export const startTryout = mutation({
           return null;
         }
 
-        const firstIncompletePart = await ctx.db
-          .query("tryoutPartSets")
-          .withIndex("tryoutId_partIndex", (q) =>
-            q
-              .eq("tryoutId", tryout._id)
-              .eq("partIndex", firstIncompletePartIndex)
-          )
-          .unique();
-
-        if (!firstIncompletePart) {
-          throw new ConvexError({
-            code: "INVALID_TRYOUT_STATE",
-            message: "Tryout is missing its next part.",
-          });
-        }
-
         return null;
       }
     }

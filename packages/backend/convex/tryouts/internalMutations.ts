@@ -9,7 +9,7 @@ import {
   computeTryoutRawScorePercentage,
   expireTryoutAttempt,
   getTryoutAttemptScoreStatus,
-  isBetterOfficialTryoutAttempt,
+  isBetterLeaderboardScore,
   rescoreTryoutAttempt,
 } from "@repo/backend/convex/tryouts/helpers";
 import {
@@ -17,17 +17,15 @@ import {
   getTryoutLeaderboardNamespace,
   tryoutProductValidator,
 } from "@repo/backend/convex/tryouts/products";
+import { tryoutLeaderboardWorkpool } from "@repo/backend/convex/tryouts/workpool";
 import { ConvexError, v } from "convex/values";
-import { getAll } from "convex-helpers/server/relationships";
 
 const TRYOUT_SCORE_PROMOTION_BATCH_SIZE = 100;
 
 type LeaderboardStatsEntry = Pick<
   Doc<"tryoutLeaderboardEntries">,
-  "attemptId" | "completedAt" | "rawScore" | "theta"
-> & {
-  thetaSE: number;
-};
+  "completedAt" | "rawScore" | "theta"
+>;
 
 async function buildUserTryoutStatsSnapshot({
   cycleKey,
@@ -47,47 +45,33 @@ async function buildUserTryoutStatsSnapshot({
     locale,
     product,
   });
-  const leaderboardEntries = await ctx.db
+  const leaderboardEntries = ctx.db
     .query("tryoutLeaderboardEntries")
     .withIndex("userId_leaderboardNamespace", (q) =>
       q.eq("userId", userId).eq("leaderboardNamespace", leaderboardNamespace)
-    )
-    .collect();
+    );
 
-  if (leaderboardEntries.length === 0) {
-    return null;
+  let totalTryoutsCompleted = 0;
+  let totalTheta = 0;
+  let totalRawScore = 0;
+  let lastTryoutAt = 0;
+  let bestTheta = Number.NEGATIVE_INFINITY;
+
+  for await (const entry of leaderboardEntries) {
+    totalTryoutsCompleted += 1;
+    totalTheta += entry.theta;
+    totalRawScore += entry.rawScore;
+    lastTryoutAt = Math.max(lastTryoutAt, entry.completedAt);
+    bestTheta = Math.max(bestTheta, entry.theta);
   }
 
-  const attempts = await getAll(
-    ctx.db,
-    "tryoutAttempts",
-    leaderboardEntries.map((entry) => entry.attemptId)
-  );
-  const totalTryoutsCompleted = leaderboardEntries.length;
-  const totalTheta = leaderboardEntries.reduce(
-    (sum, entry) => sum + entry.theta,
-    0
-  );
-  const totalRawScore = leaderboardEntries.reduce(
-    (sum, entry) => sum + entry.rawScore,
-    0
-  );
-  const lastTryoutAt = leaderboardEntries.reduce(
-    (latest, entry) => Math.max(latest, entry.completedAt),
-    0
-  );
-  const bestTheta = leaderboardEntries.reduce(
-    (best, entry) => Math.max(best, entry.theta),
-    Number.NEGATIVE_INFINITY
-  );
-  const averageThetaSE =
-    attempts.reduce((sum, attempt) => sum + (attempt?.thetaSE ?? 0), 0) /
-    totalTryoutsCompleted;
+  if (totalTryoutsCompleted === 0) {
+    return null;
+  }
 
   return {
     averageRawScore: totalRawScore / totalTryoutsCompleted,
     averageTheta: totalTheta / totalTryoutsCompleted,
-    averageThetaSE,
     bestTheta,
     lastTryoutAt,
     totalTryoutsCompleted,
@@ -186,10 +170,6 @@ async function syncUserTryoutStats({
     statsRecord.averageTheta * previousCount -
     (previousEntry?.theta ?? 0) +
     nextEntry.theta;
-  const totalThetaSE =
-    statsRecord.averageThetaSE * previousCount -
-    (previousEntry?.thetaSE ?? 0) +
-    nextEntry.thetaSE;
   const totalRawScore =
     statsRecord.averageRawScore * previousCount -
     (previousEntry?.rawScore ?? 0) +
@@ -198,7 +178,6 @@ async function syncUserTryoutStats({
   await ctx.db.patch("userTryoutStats", statsRecord._id, {
     totalTryoutsCompleted,
     averageTheta: totalTheta / totalTryoutsCompleted,
-    averageThetaSE: totalThetaSE / totalTryoutsCompleted,
     bestTheta: Math.max(statsRecord.bestTheta, nextEntry.theta),
     averageRawScore: totalRawScore / totalTryoutsCompleted,
     lastTryoutAt: Math.max(statsRecord.lastTryoutAt, nextEntry.completedAt),
@@ -343,16 +322,11 @@ export const updateLeaderboard = internalMutation({
           .eq("userId", tryoutAttempt.userId)
       )
       .unique();
-    const existingAttempt = existingEntry
-      ? await ctx.db.get("tryoutAttempts", existingEntry.attemptId)
-      : null;
 
     if (
-      existingAttempt &&
-      existingAttempt.status === "completed" &&
-      getTryoutAttemptScoreStatus(existingAttempt) === "official" &&
-      existingAttempt._id !== tryoutAttempt._id &&
-      !isBetterOfficialTryoutAttempt(tryoutAttempt, existingAttempt)
+      existingEntry &&
+      existingEntry.attemptId !== tryoutAttempt._id &&
+      !isBetterLeaderboardScore(tryoutAttempt, existingEntry)
     ) {
       return null;
     }
@@ -371,6 +345,7 @@ export const updateLeaderboard = internalMutation({
       await ctx.db.patch("tryoutLeaderboardEntries", existingEntry._id, {
         leaderboardNamespace,
         theta: tryoutAttempt.theta,
+        thetaSE: tryoutAttempt.thetaSE,
         irtScore: tryoutAttempt.irtScore,
         rawScore,
         completedAt,
@@ -382,6 +357,7 @@ export const updateLeaderboard = internalMutation({
         userId: tryoutAttempt.userId,
         leaderboardNamespace,
         theta: tryoutAttempt.theta,
+        thetaSE: tryoutAttempt.thetaSE,
         irtScore: tryoutAttempt.irtScore,
         rawScore,
         completedAt,
@@ -394,19 +370,15 @@ export const updateLeaderboard = internalMutation({
       ctx,
       locale: tryout.locale,
       nextEntry: {
-        attemptId: tryoutAttempt._id,
         completedAt,
         rawScore,
         theta: tryoutAttempt.theta,
-        thetaSE: tryoutAttempt.thetaSE,
       },
       previousEntry: existingEntry
         ? {
-            attemptId: existingEntry.attemptId,
             completedAt: existingEntry.completedAt,
             rawScore: existingEntry.rawScore,
             theta: existingEntry.theta,
-            thetaSE: existingAttempt?.thetaSE ?? 0,
           }
         : null,
       product: tryout.product,
@@ -434,33 +406,34 @@ export const promoteProvisionalTryoutScores = internalMutation({
       return null;
     }
 
-    const [completedAttempts, expiredAttempts] = await Promise.all([
-      ctx.db
-        .query("tryoutAttempts")
-        .withIndex("tryoutId_scoreStatus_status_startedAt", (q) =>
-          q
-            .eq("tryoutId", args.tryoutId)
-            .eq("scoreStatus", "provisional")
-            .eq("status", "completed")
-        )
-        .order("asc")
-        .take(TRYOUT_SCORE_PROMOTION_BATCH_SIZE),
-      ctx.db
-        .query("tryoutAttempts")
-        .withIndex("tryoutId_scoreStatus_status_startedAt", (q) =>
-          q
-            .eq("tryoutId", args.tryoutId)
-            .eq("scoreStatus", "provisional")
-            .eq("status", "expired")
-        )
-        .order("asc")
-        .take(TRYOUT_SCORE_PROMOTION_BATCH_SIZE),
-    ]);
+    const completedAttempts = await ctx.db
+      .query("tryoutAttempts")
+      .withIndex("tryoutId_scoreStatus_status_startedAt", (q) =>
+        q
+          .eq("tryoutId", args.tryoutId)
+          .eq("scoreStatus", "provisional")
+          .eq("status", "completed")
+      )
+      .order("asc")
+      .take(TRYOUT_SCORE_PROMOTION_BATCH_SIZE);
 
-    const provisionalAttempts = [
-      ...completedAttempts,
-      ...expiredAttempts,
-    ].slice(0, TRYOUT_SCORE_PROMOTION_BATCH_SIZE);
+    const remainingSlots =
+      TRYOUT_SCORE_PROMOTION_BATCH_SIZE - completedAttempts.length;
+    const expiredAttempts =
+      remainingSlots === 0
+        ? []
+        : await ctx.db
+            .query("tryoutAttempts")
+            .withIndex("tryoutId_scoreStatus_status_startedAt", (q) =>
+              q
+                .eq("tryoutId", args.tryoutId)
+                .eq("scoreStatus", "provisional")
+                .eq("status", "expired")
+            )
+            .order("asc")
+            .take(remainingSlots);
+
+    const provisionalAttempts = [...completedAttempts, ...expiredAttempts];
 
     if (provisionalAttempts.length === 0) {
       return null;
@@ -481,8 +454,8 @@ export const promoteProvisionalTryoutScores = internalMutation({
         continue;
       }
 
-      await ctx.scheduler.runAfter(
-        0,
+      await tryoutLeaderboardWorkpool.enqueueMutation(
+        ctx,
         internal.tryouts.internalMutations.updateLeaderboard,
         {
           tryoutAttemptId: tryoutAttempt._id,

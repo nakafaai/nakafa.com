@@ -13,37 +13,61 @@ import { v } from "convex/values";
 import { getAll } from "convex-helpers/server/relationships";
 import { nullable } from "convex-helpers/validators";
 
+const DEFAULT_LEADERBOARD_LIMIT = 50;
+const MAX_LEADERBOARD_LIMIT = 100;
+
+const tryoutLeaderboardRowValidator = v.object({
+  rank: v.number(),
+  userId: vv.id("users"),
+  userName: nullable(v.string()),
+  theta: v.number(),
+  irtScore: v.number(),
+  rawScore: v.number(),
+  completedAt: v.number(),
+});
+
+const globalLeaderboardRowValidator = v.object({
+  rank: v.number(),
+  userId: vv.id("users"),
+  userName: nullable(v.string()),
+  averageTheta: v.number(),
+  totalTryoutsCompleted: v.number(),
+  bestTheta: v.number(),
+  averageRawScore: v.number(),
+  lastTryoutAt: v.number(),
+});
+
+/** Keeps leaderboard list queries bounded and predictable. */
+function resolveLeaderboardLimit(limit: number | undefined) {
+  return Math.max(
+    0,
+    Math.min(limit ?? DEFAULT_LEADERBOARD_LIMIT, MAX_LEADERBOARD_LIMIT)
+  );
+}
+
 /** Returns ranked official results for one concrete tryout. */
 export const getTryoutLeaderboard = query({
   args: {
     tryoutId: vv.id("tryouts"),
     limit: v.optional(v.number()),
   },
-  returns: v.array(
-    v.object({
-      rank: v.number(),
-      userId: vv.id("users"),
-      userName: v.string(),
-      theta: v.number(),
-      irtScore: v.number(),
-      rawScore: v.number(),
-      completedAt: v.number(),
-    })
-  ),
+  returns: v.array(tryoutLeaderboardRowValidator),
   handler: async (ctx, args) => {
-    const limit = Math.max(0, Math.min(args.limit ?? 50, 100));
-    const totalCount = await tryoutLeaderboard.count(ctx, {
+    const limit = resolveLeaderboardLimit(args.limit);
+
+    if (limit === 0) {
+      return [];
+    }
+
+    const { page: aggregateItems } = await tryoutLeaderboard.paginate(ctx, {
       namespace: args.tryoutId,
+      order: "asc",
+      pageSize: limit,
     });
-    const aggregateItems = (
-      await Promise.all(
-        Array.from({ length: Math.min(limit, totalCount) }, async (_, index) =>
-          tryoutLeaderboard.at(ctx, index, {
-            namespace: args.tryoutId,
-          })
-        )
-      )
-    ).flatMap((item) => (item ? [item] : []));
+
+    if (aggregateItems.length === 0) {
+      return [];
+    }
 
     const leaderboardEntries = await getAll(
       ctx.db,
@@ -63,7 +87,7 @@ export const getTryoutLeaderboard = query({
     return existingEntries.map((entry, index) => ({
       rank: index + 1,
       userId: entry.userId,
-      userName: users[index]?.name ?? "Unknown",
+      userName: users[index]?.name ?? null,
       theta: entry.theta,
       irtScore: entry.irtScore,
       rawScore: entry.rawScore,
@@ -80,33 +104,24 @@ export const getGlobalLeaderboard = query({
     cycleKey: v.string(),
     limit: v.optional(v.number()),
   },
-  returns: v.array(
-    v.object({
-      rank: v.number(),
-      userId: vv.id("users"),
-      userName: v.string(),
-      averageTheta: v.number(),
-      totalTryoutsCompleted: v.number(),
-      bestTheta: v.number(),
-      averageRawScore: v.number(),
-      lastTryoutAt: v.number(),
-    })
-  ),
+  returns: v.array(globalLeaderboardRowValidator),
   handler: async (ctx, args) => {
-    const limit = Math.max(0, Math.min(args.limit ?? 50, 100));
+    const limit = resolveLeaderboardLimit(args.limit);
+
+    if (limit === 0) {
+      return [];
+    }
+
     const namespace = getTryoutLeaderboardNamespace(args);
-    const totalCount = await globalLeaderboard.count(ctx, {
+    const { page: aggregateItems } = await globalLeaderboard.paginate(ctx, {
       namespace,
+      order: "asc",
+      pageSize: limit,
     });
-    const aggregateItems = (
-      await Promise.all(
-        Array.from({ length: Math.min(limit, totalCount) }, async (_, index) =>
-          globalLeaderboard.at(ctx, index, {
-            namespace,
-          })
-        )
-      )
-    ).flatMap((item) => (item ? [item] : []));
+
+    if (aggregateItems.length === 0) {
+      return [];
+    }
 
     const statsRecords = await getAll(
       ctx.db,
@@ -126,7 +141,7 @@ export const getGlobalLeaderboard = query({
     return existingStats.map((stats, index) => ({
       rank: index + 1,
       userId: stats.userId,
-      userName: users[index]?.name ?? "Unknown",
+      userName: users[index]?.name ?? null,
       averageTheta: stats.averageTheta,
       totalTryoutsCompleted: stats.totalTryoutsCompleted,
       bestTheta: stats.bestTheta,

@@ -117,48 +117,16 @@ export function getFirstIncompleteTryoutPartIndex({
   return undefined;
 }
 
-/** Breaks ties between two completed official attempts for leaderboard selection. */
-export function isBetterOfficialTryoutAttempt(
-  candidate: Pick<Doc<"tryoutAttempts">, "completedAt" | "theta" | "_id">,
-  currentBest: Pick<Doc<"tryoutAttempts">, "completedAt" | "theta" | "_id">
+/** Breaks ties between two completed leaderboard scores. */
+export function isBetterLeaderboardScore(
+  candidate: Pick<Doc<"tryoutAttempts">, "completedAt" | "theta">,
+  currentBest: Pick<Doc<"tryoutAttempts">, "completedAt" | "theta">
 ) {
   if (candidate.theta !== currentBest.theta) {
     return candidate.theta > currentBest.theta;
   }
 
   return (candidate.completedAt ?? 0) > (currentBest.completedAt ?? 0);
-}
-
-/** Returns the official attempt currently exposed on the public leaderboard. */
-export async function getCurrentOfficialLeaderboardAttempt(
-  db: TryoutDbReader,
-  { userId, tryoutId }: Pick<Doc<"tryoutAttempts">, "userId" | "tryoutId">
-) {
-  const leaderboardEntry = await db
-    .query("tryoutLeaderboardEntries")
-    .withIndex("tryoutId_userId", (q) =>
-      q.eq("tryoutId", tryoutId).eq("userId", userId)
-    )
-    .unique();
-
-  if (!leaderboardEntry) {
-    return null;
-  }
-
-  const leaderboardAttempt = await db.get(
-    "tryoutAttempts",
-    leaderboardEntry.attemptId
-  );
-
-  if (
-    !leaderboardAttempt ||
-    leaderboardAttempt.status !== "completed" ||
-    getTryoutAttemptScoreStatus(leaderboardAttempt) !== "official"
-  ) {
-    return null;
-  }
-
-  return leaderboardAttempt;
 }
 
 /** Counts correct answers from the shared exercise-attempt answer rows. */

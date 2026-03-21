@@ -67,7 +67,6 @@ export const getUserTryoutAttempt = query({
   ),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
-
     const tryout = await ctx.db
       .query("tryouts")
       .withIndex("product_locale_slug", (q) =>
@@ -126,6 +125,18 @@ export const getUserTryoutAttempt = query({
       };
     });
     const suggestedPartKey = pickSuggestedPartKey(validPartAttempts);
+
+    if (attempt.status !== "in-progress") {
+      return {
+        attempt,
+        partAttempts: validPartAttempts,
+        expiresAtMs: computeTryoutExpiresAtMs({
+          product: tryout.product,
+          startedAtMs: attempt.startedAt,
+        }),
+      };
+    }
+
     const nextPartIndex = getFirstIncompleteTryoutPartIndex({
       completedPartIndices: attempt.completedPartIndices,
       partCount: tryout.partCount,
@@ -154,16 +165,14 @@ export const getUserTryoutAttempt = query({
       resumePartKey = nextPartSet.partKey;
     }
 
-    const expiresAtMs = computeTryoutExpiresAtMs({
-      product: tryout.product,
-      startedAtMs: attempt.startedAt,
-    });
-
     return {
       attempt,
       partAttempts: validPartAttempts,
       resumePartKey,
-      expiresAtMs,
+      expiresAtMs: computeTryoutExpiresAtMs({
+        product: tryout.product,
+        startedAtMs: attempt.startedAt,
+      }),
     };
   },
 });
@@ -179,35 +188,32 @@ export const getUserInProgressTryoutSlugs = query({
   returns: v.array(v.string()),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
-    const inProgressAttempts = await ctx.db
-      .query("tryoutAttempts")
-      .withIndex("userId_status_startedAt", (q) =>
-        q.eq("userId", appUser._id).eq("status", "in-progress")
-      )
-      .order("desc")
-      .collect();
-
-    if (inProgressAttempts.length === 0) {
-      return [];
-    }
-
-    const tryouts = await getAll(
-      ctx.db,
-      "tryouts",
-      inProgressAttempts.map((attempt) => attempt.tryoutId)
-    );
     const activeTryoutSlugs = new Set<string>();
 
-    for (const tryout of tryouts) {
-      if (!tryout) {
+    const activeTryouts = await ctx.db
+      .query("tryouts")
+      .withIndex("product_locale_isActive", (q) =>
+        q
+          .eq("product", args.product)
+          .eq("locale", args.locale)
+          .eq("isActive", true)
+      )
+      .collect();
+
+    for (const tryout of activeTryouts) {
+      const latestAttempt = await ctx.db
+        .query("tryoutAttempts")
+        .withIndex("userId_tryoutId_startedAt", (q) =>
+          q.eq("userId", appUser._id).eq("tryoutId", tryout._id)
+        )
+        .order("desc")
+        .first();
+
+      if (!latestAttempt) {
         continue;
       }
 
-      if (!tryout.isActive) {
-        continue;
-      }
-
-      if (tryout.product !== args.product || tryout.locale !== args.locale) {
+      if (latestAttempt.status !== "in-progress") {
         continue;
       }
 
@@ -235,7 +241,6 @@ export const getUserTryoutPartAttempt = query({
   ),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
-
     const tryout = await ctx.db
       .query("tryouts")
       .withIndex("product_locale_slug", (q) =>
