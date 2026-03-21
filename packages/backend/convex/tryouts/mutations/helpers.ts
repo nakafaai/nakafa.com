@@ -36,7 +36,7 @@ export async function finalizeTryoutAttempt({
   now: number;
   tryoutAttempt: Doc<"tryoutAttempts">;
   userId: Id<"users">;
-}) {
+}): Promise<CompleteTryoutResult> {
   if (tryoutAttempt.status === "completed") {
     const rawScorePercentage = computeTryoutRawScorePercentage(tryoutAttempt);
     const leaderboardAttempt = await getCurrentOfficialLeaderboardAttempt(
@@ -55,7 +55,7 @@ export async function finalizeTryoutAttempt({
       theta: tryoutAttempt.theta,
       irtScore: tryoutAttempt.irtScore,
       rawScorePercentage,
-    } satisfies CompleteTryoutResult;
+    };
   }
 
   if (tryoutAttempt.status === "expired") {
@@ -65,7 +65,7 @@ export async function finalizeTryoutAttempt({
       theta: tryoutAttempt.theta,
       irtScore: tryoutAttempt.irtScore,
       rawScorePercentage: computeTryoutRawScorePercentage(tryoutAttempt),
-    } satisfies CompleteTryoutResult;
+    };
   }
 
   if (tryoutAttempt.status !== "in-progress") {
@@ -96,7 +96,7 @@ export async function finalizeTryoutAttempt({
       theta: expiredAttempt.theta,
       irtScore: expiredAttempt.irtScore,
       rawScorePercentage: computeTryoutRawScorePercentage(expiredAttempt),
-    } satisfies CompleteTryoutResult;
+    };
   }
 
   const [tryout, scoreTarget] = await Promise.all([
@@ -118,7 +118,7 @@ export async function finalizeTryoutAttempt({
       theta: tryoutAttempt.theta,
       irtScore: tryoutAttempt.irtScore,
       rawScorePercentage: computeTryoutRawScorePercentage(tryoutAttempt),
-    } satisfies CompleteTryoutResult;
+    };
   }
 
   const completedAttempt = await syncTryoutAttemptAggregates({
@@ -168,5 +168,5 @@ export async function finalizeTryoutAttempt({
     theta: completedAttempt.theta,
     irtScore: completedAttempt.irtScore,
     rawScorePercentage: completedAttempt.rawScorePercentage,
-  } satisfies CompleteTryoutResult;
+  };
 }

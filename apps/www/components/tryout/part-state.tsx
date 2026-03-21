@@ -104,7 +104,6 @@ export function TryoutPartProvider({
   const { answers, attempt, canStartPart, partEndReason, status } =
     deriveTryoutPartPageState({
       isRuntimePending,
-      partKey: part.key,
       runtime,
     });
   const shouldShowTryoutStartButton = !(isRuntimePending || (user && runtime));

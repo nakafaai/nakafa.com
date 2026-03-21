@@ -8,7 +8,7 @@ import type { TryoutPartUiStatus } from "@/components/tryout/utils/part-state";
 
 type TryoutStatusBadgeValue = Extract<
   TryoutPartUiStatus,
-  "completed" | "in-progress" | "locked"
+  "completed" | "in-progress"
 >;
 
 export function TryoutStatusBadge({
@@ -30,8 +30,6 @@ export function TryoutStatusBadge({
       return (
         <Badge variant="muted">{tTryouts("part-status-in-progress")}</Badge>
       );
-    case "locked":
-      return <Badge variant="outline">{tTryouts("part-status-locked")}</Badge>;
     default: {
       const exhaustiveStatus: never = status;
 

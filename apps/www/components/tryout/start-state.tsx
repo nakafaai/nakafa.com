@@ -39,7 +39,7 @@ function useTryoutStartValue({
   const [isActionPending, startTransition] = useTransition();
   const [isDialogOpen, { close: closeDialog, open: openDialog }] =
     useDisclosure(false);
-  const { attemptData, isAttemptPending, nextPartKey, remainingTime } =
+  const { attemptData, isAttemptPending, resumePartKey, remainingTime } =
     useTryoutAttemptState({
       locale,
       product,
@@ -93,8 +93,8 @@ function useTryoutStartValue({
       return;
     }
 
-    if (nextPartKey) {
-      router.push(`/try-out/${product}/${tryoutSlug}/part/${nextPartKey}`);
+    if (resumePartKey) {
+      router.push(`/try-out/${product}/${tryoutSlug}/part/${resumePartKey}`);
       return;
     }
 
@@ -115,7 +115,7 @@ function useTryoutStartValue({
     openDialog,
     generateCheckoutLink,
     hasSubscription,
-    nextPartKey,
+    resumePartKey,
     pathname,
     product,
     router,
@@ -126,17 +126,11 @@ function useTryoutStartValue({
   const confirmStart = useCallback(() => {
     startTransition(async () => {
       try {
-        const result = await startTryout({ locale, product, tryoutSlug });
+        await startTryout({ locale, product, tryoutSlug });
 
         closeDialog();
 
-        if (result.status === "in-progress" && result.firstPartKey) {
-          router.push(
-            `/try-out/${product}/${tryoutSlug}/part/${result.firstPartKey}`
-          );
-        } else {
-          router.refresh();
-        }
+        router.refresh();
 
         toast.success(tTryouts("start-success"), {
           position: "bottom-center",
@@ -166,7 +160,7 @@ function useTryoutStartValue({
         hasFinishedAttempt,
         isReady,
         isLoading,
-        nextPartKey,
+        resumePartKey,
         remainingTime,
         tryout,
       },
@@ -181,7 +175,7 @@ function useTryoutStartValue({
       isActionPending,
       isDialogOpen,
       isLoading,
-      nextPartKey,
+      resumePartKey,
       remainingTime,
       setDialogOpen,
       tryout,

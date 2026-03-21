@@ -24,7 +24,7 @@ export function TryoutStartCta() {
   const hasFinishedAttempt = useTryoutStart(
     (state) => state.state.hasFinishedAttempt
   );
-  const nextPartKey = useTryoutStart((state) => state.state.nextPartKey);
+  const resumePartKey = useTryoutStart((state) => state.state.resumePartKey);
   const remainingTime = useTryoutStart((state) => state.state.remainingTime);
   const isLoading = useTryoutStart((state) => state.state.isLoading);
   const isActionPending = useTryoutStart((state) => state.meta.isActionPending);
@@ -44,7 +44,7 @@ export function TryoutStartCta() {
     label = tAuth("get-pro");
   }
 
-  if (nextPartKey) {
+  if (resumePartKey) {
     label = tTryouts("continue-cta");
   }
 

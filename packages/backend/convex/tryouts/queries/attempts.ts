@@ -1,4 +1,5 @@
 import { query } from "@repo/backend/convex/_generated/server";
+import { exerciseAttemptStatusValidator } from "@repo/backend/convex/exercises/schema";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
@@ -8,15 +9,19 @@ import {
   tryoutProductValidator,
 } from "@repo/backend/convex/tryouts/products";
 import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
-import { ConvexError, v } from "convex/values";
+import { ConvexError, type Infer, v } from "convex/values";
 import { getAll, getManyFrom } from "convex-helpers/server/relationships";
 import { nullable } from "convex-helpers/validators";
+
+const tryoutPartAttemptSummarySetAttemptValidator = v.object({
+  lastActivityAt: v.number(),
+  status: exerciseAttemptStatusValidator,
+});
 
 const tryoutPartAttemptSummaryValidator = v.object({
   partIndex: v.number(),
   partKey: tryoutPartKeyValidator,
-  setAttempt: vv.doc("exerciseAttempts"),
-  setId: vv.id("exerciseSets"),
+  setAttempt: tryoutPartAttemptSummarySetAttemptValidator,
 });
 
 const tryoutPartAttemptRuntimeValidator = v.object({
@@ -25,6 +30,25 @@ const tryoutPartAttemptRuntimeValidator = v.object({
   setAttempt: vv.doc("exerciseAttempts"),
   answers: v.array(vv.doc("exerciseAnswers")),
 });
+
+type TryoutPartAttemptSummary = Infer<typeof tryoutPartAttemptSummaryValidator>;
+
+function pickSuggestedPartKey(partAttempts: TryoutPartAttemptSummary[]) {
+  const inProgressParts = partAttempts.filter(
+    (partAttempt) => partAttempt.setAttempt.status === "in-progress"
+  );
+
+  if (inProgressParts.length === 0) {
+    return undefined;
+  }
+
+  inProgressParts.sort(
+    (left, right) =>
+      right.setAttempt.lastActivityAt - left.setAttempt.lastActivityAt
+  );
+
+  return inProgressParts[0]?.partKey;
+}
 
 /** Returns the authenticated user's latest tryout attempt for one tryout slug. */
 export const getUserTryoutAttempt = query({
@@ -37,8 +61,7 @@ export const getUserTryoutAttempt = query({
     v.object({
       attempt: vv.doc("tryoutAttempts"),
       partAttempts: v.array(tryoutPartAttemptSummaryValidator),
-      completedPartIndices: v.array(v.number()),
-      nextPartKey: v.optional(tryoutPartKeyValidator),
+      resumePartKey: v.optional(tryoutPartKeyValidator),
       expiresAtMs: v.number(),
     })
   ),
@@ -97,16 +120,20 @@ export const getUserTryoutAttempt = query({
         partIndex: partAttempt.partIndex,
         partKey: partAttempt.partKey,
         setAttempt,
-        setId: partAttempt.setId,
       };
     });
+    const suggestedPartKey = pickSuggestedPartKey(validPartAttempts);
     const nextPartIndex = getFirstIncompleteTryoutPartIndex({
       completedPartIndices: attempt.completedPartIndices,
       partCount: tryout.partCount,
     });
-    let nextPartKey: (typeof validPartAttempts)[number]["partKey"] | undefined;
+    let resumePartKey:
+      | (typeof validPartAttempts)[number]["partKey"]
+      | undefined;
 
-    if (nextPartIndex !== undefined) {
+    if (suggestedPartKey) {
+      resumePartKey = suggestedPartKey;
+    } else if (nextPartIndex !== undefined) {
       const nextPartSet = await ctx.db
         .query("tryoutPartSets")
         .withIndex("tryoutId_partIndex", (q) =>
@@ -121,7 +148,7 @@ export const getUserTryoutAttempt = query({
         });
       }
 
-      nextPartKey = nextPartSet.partKey;
+      resumePartKey = nextPartSet.partKey;
     }
 
     const expiresAtMs = computeTryoutExpiresAtMs({
@@ -132,8 +159,7 @@ export const getUserTryoutAttempt = query({
     return {
       attempt,
       partAttempts: validPartAttempts,
-      completedPartIndices: attempt.completedPartIndices,
-      nextPartKey,
+      resumePartKey,
       expiresAtMs,
     };
   },
@@ -151,8 +177,6 @@ export const getUserTryoutPartAttempt = query({
     v.object({
       tryoutAttempt: vv.doc("tryoutAttempts"),
       expiresAtMs: v.number(),
-      nextPartKey: v.optional(tryoutPartKeyValidator),
-      completedPartIndices: v.array(v.number()),
       partAttempt: nullable(tryoutPartAttemptRuntimeValidator),
     })
   ),
@@ -217,30 +241,6 @@ export const getUserTryoutPartAttempt = query({
     const currentPartAttempt = validPartAttempts.find(
       (partAttempt) => partAttempt.partKey === args.partKey
     );
-    const nextPartIndex = getFirstIncompleteTryoutPartIndex({
-      completedPartIndices: tryoutAttempt.completedPartIndices,
-      partCount: tryout.partCount,
-    });
-    let nextPartKey: typeof args.partKey | undefined;
-
-    if (nextPartIndex !== undefined) {
-      const nextPartSet = await ctx.db
-        .query("tryoutPartSets")
-        .withIndex("tryoutId_partIndex", (q) =>
-          q.eq("tryoutId", tryout._id).eq("partIndex", nextPartIndex)
-        )
-        .unique();
-
-      if (!nextPartSet) {
-        throw new ConvexError({
-          code: "INVALID_TRYOUT_STATE",
-          message: "Tryout is missing its next part.",
-        });
-      }
-
-      nextPartKey = nextPartSet.partKey;
-    }
-
     if (!currentPartAttempt) {
       return {
         tryoutAttempt,
@@ -248,8 +248,6 @@ export const getUserTryoutPartAttempt = query({
           product: tryout.product,
           startedAtMs: tryoutAttempt.startedAt,
         }),
-        nextPartKey,
-        completedPartIndices: tryoutAttempt.completedPartIndices,
         partAttempt: null,
       };
     }
@@ -268,8 +266,6 @@ export const getUserTryoutPartAttempt = query({
         product: tryout.product,
         startedAtMs: tryoutAttempt.startedAt,
       }),
-      nextPartKey,
-      completedPartIndices: tryoutAttempt.completedPartIndices,
       partAttempt: {
         partIndex: currentPartAttempt.partIndex,
         partKey: currentPartAttempt.partKey,

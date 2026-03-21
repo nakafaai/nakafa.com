@@ -29,6 +29,10 @@ import {
 
 type TryoutMutationCtx = Pick<MutationCtx, "db" | "scheduler">;
 type TryoutDbReader = QueryCtx["db"];
+type TryoutScoreTarget = Pick<
+  Doc<"tryoutAttempts">,
+  "scaleVersionId" | "scoreStatus"
+>;
 type TryoutScoreTotals = Pick<
   Doc<"tryoutAttempts">,
   "totalCorrect" | "totalQuestions"
@@ -48,7 +52,7 @@ export async function getTryoutScoreTarget(
     Doc<"tryoutAttempts">,
     "_id" | "scaleVersionId" | "tryoutId"
   >
-) {
+): Promise<TryoutScoreTarget> {
   const [currentScaleVersion, latestScaleVersion] = await Promise.all([
     db.get("irtScaleVersions", tryoutAttempt.scaleVersionId),
     getLatestScaleVersionForTryout(db, tryoutAttempt.tryoutId),
@@ -74,7 +78,7 @@ export async function getTryoutScoreTarget(
   return {
     scaleVersionId: latestScaleVersion._id,
     scoreStatus: "official",
-  } as const;
+  };
 }
 
 type FinalizedExerciseAttemptStatus = Exclude<

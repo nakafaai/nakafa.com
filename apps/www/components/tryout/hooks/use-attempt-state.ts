@@ -42,7 +42,9 @@ export function useTryoutAttemptState({
   );
 
   const isTryoutInProgress = attemptData?.attempt.status === "in-progress";
-  const nextPartKey = isTryoutInProgress ? attemptData?.nextPartKey : undefined;
+  const resumePartKey = isTryoutInProgress
+    ? attemptData?.resumePartKey
+    : undefined;
 
   let remainingTime: TryoutRemainingTime | null = null;
 
@@ -62,7 +64,7 @@ export function useTryoutAttemptState({
   return {
     attemptData,
     isAttemptPending,
-    nextPartKey,
+    resumePartKey,
     remainingTime,
   };
 }

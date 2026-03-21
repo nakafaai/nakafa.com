@@ -161,9 +161,6 @@ function TryoutSetPart({ part }: { part: TryoutSetPartItem }) {
             {partState.status === "in-progress" ? (
               <TryoutStatusBadge status="in-progress" />
             ) : null}
-            {partState.status === "locked" ? (
-              <TryoutStatusBadge status="locked" />
-            ) : null}
           </div>
           <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground">
             {part.questionCount} {questionUnitLabel}

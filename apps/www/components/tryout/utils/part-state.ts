@@ -20,25 +20,21 @@ export type TryoutPartUiStatus =
   | "ended"
   | "in-progress"
   | "loading"
-  | "locked"
   | "needs-tryout"
   | "ready";
 
 interface TryoutProgress {
   completedPartIndices: number[];
-  nextPartKey: string | undefined;
   status: TryoutAttemptStatus;
 }
 
 function getTryoutPartStatus({
   isRuntimePending,
   partAttempt,
-  partKey,
   tryout,
 }: {
   isRuntimePending: boolean;
   partAttempt: TryoutPartAttempt | null;
-  partKey: string;
   tryout: TryoutProgress | null;
 }): TryoutPartUiStatus {
   if (isRuntimePending) {
@@ -64,34 +60,26 @@ function getTryoutPartStatus({
     return "in-progress";
   }
 
-  if (!partAttempt && tryout.nextPartKey && tryout.nextPartKey !== partKey) {
-    return "locked";
-  }
-
   return "ready";
 }
 
 export function deriveTryoutPartPageState({
   isRuntimePending,
-  partKey,
   runtime,
 }: {
   isRuntimePending: boolean;
-  partKey: string;
   runtime: TryoutPartRuntime | undefined;
 }) {
   const partAttempt = runtime?.partAttempt ?? null;
   const tryout = runtime
     ? {
-        completedPartIndices: runtime.completedPartIndices,
-        nextPartKey: runtime.nextPartKey,
+        completedPartIndices: runtime.tryoutAttempt.completedPartIndices,
         status: runtime.tryoutAttempt.status,
       }
     : null;
   const status = getTryoutPartStatus({
     isRuntimePending,
     partAttempt,
-    partKey,
     tryout,
   });
   const partEndReason = partAttempt?.setAttempt.endReason ?? null;
@@ -99,7 +87,7 @@ export function deriveTryoutPartPageState({
   return {
     answers: partAttempt?.answers ?? [],
     attempt: partAttempt?.setAttempt ?? null,
-    canStartPart: status === "ready" && runtime?.nextPartKey === partKey,
+    canStartPart: status === "ready",
     partEndReason,
     status,
   };
@@ -117,22 +105,19 @@ export function deriveTryoutSetPartState({
     null;
   const tryout = attemptData
     ? {
-        completedPartIndices: attemptData.completedPartIndices,
-        nextPartKey: attemptData.nextPartKey,
+        completedPartIndices: attemptData.attempt.completedPartIndices,
         status: attemptData.attempt.status,
       }
     : null;
   const status = getTryoutPartStatus({
     isRuntimePending: false,
     partAttempt,
-    partKey,
     tryout,
   });
 
   return {
     isCurrent:
-      (status === "in-progress" || status === "ready") &&
-      attemptData?.nextPartKey === partKey,
+      status === "in-progress" || attemptData?.resumePartKey === partKey,
     status,
   };
 }

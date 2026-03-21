@@ -145,7 +145,6 @@ export function TryoutPartBackCta() {
   switch (status) {
     case "completed":
     case "ended":
-    case "locked":
       break;
     default:
       return null;

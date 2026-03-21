@@ -21,18 +21,7 @@ import {
   tryoutProductValidator,
 } from "@repo/backend/convex/tryouts/products";
 import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
-import { ConvexError, type Infer, v } from "convex/values";
-import { literals } from "convex-helpers/validators";
-
-const startTryoutStatusValidator = literals("in-progress", "completed");
-
-const startTryoutResultValidator = v.object({
-  tryoutAttemptId: vv.id("tryoutAttempts"),
-  partCount: v.number(),
-  firstPartKey: v.optional(tryoutPartKeyValidator),
-  expiresAtMs: v.number(),
-  status: startTryoutStatusValidator,
-});
+import { ConvexError, v } from "convex/values";
 
 /** Starts or resumes one authenticated tryout attempt for a product slug. */
 export const startTryout = mutation({
@@ -41,7 +30,7 @@ export const startTryout = mutation({
     locale: localeValidator,
     tryoutSlug: v.string(),
   },
-  returns: startTryoutResultValidator,
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);
     const userId = appUser._id;
@@ -118,13 +107,7 @@ export const startTryout = mutation({
             });
           }
 
-          return {
-            tryoutAttemptId: existingAttempt._id,
-            partCount: tryout.partCount,
-            firstPartKey: undefined,
-            expiresAtMs: tryoutExpiry.expiredAtMs,
-            status: completedAttempt.status,
-          } satisfies Infer<typeof startTryoutResultValidator>;
+          return null;
         }
 
         const firstIncompletePart = await ctx.db
@@ -143,13 +126,7 @@ export const startTryout = mutation({
           });
         }
 
-        return {
-          tryoutAttemptId: existingAttempt._id,
-          partCount: tryout.partCount,
-          firstPartKey: firstIncompletePart.partKey,
-          expiresAtMs: tryoutExpiry.expiredAtMs,
-          status: "in-progress",
-        } satisfies Infer<typeof startTryoutResultValidator>;
+        return null;
       }
     }
 
@@ -199,13 +176,7 @@ export const startTryout = mutation({
       }
     );
 
-    return {
-      tryoutAttemptId,
-      partCount: tryout.partCount,
-      firstPartKey: firstPart.partKey,
-      expiresAtMs,
-      status: "in-progress",
-    } satisfies Infer<typeof startTryoutResultValidator>;
+    return null;
   },
 });
 
@@ -215,11 +186,7 @@ export const startPart = mutation({
     tryoutAttemptId: vv.id("tryoutAttempts"),
     partKey: tryoutPartKeyValidator,
   },
-  returns: v.object({
-    setAttemptId: vv.id("exerciseAttempts"),
-    setId: vv.id("exerciseSets"),
-    questionCount: v.number(),
-  }),
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);
     const userId = appUser._id;
@@ -270,53 +237,17 @@ export const startPart = mutation({
       });
     }
 
-    const nextPartIndex = getFirstIncompleteTryoutPartIndex({
-      completedPartIndices: tryoutAttempt.completedPartIndices,
-      partCount: tryout.partCount,
-    });
-
-    if (nextPartIndex === undefined) {
-      throw new ConvexError({
-        code: "INVALID_TRYOUT_STATE",
-        message: "Tryout has no available part to start.",
-      });
-    }
-
-    const [tryoutPartSet, nextPartSet] = await Promise.all([
-      ctx.db
-        .query("tryoutPartSets")
-        .withIndex("tryoutId_partKey", (q) =>
-          q.eq("tryoutId", tryoutAttempt.tryoutId).eq("partKey", args.partKey)
-        )
-        .unique(),
-      ctx.db
-        .query("tryoutPartSets")
-        .withIndex("tryoutId_partIndex", (q) =>
-          q
-            .eq("tryoutId", tryoutAttempt.tryoutId)
-            .eq("partIndex", nextPartIndex)
-        )
-        .unique(),
-    ]);
+    const tryoutPartSet = await ctx.db
+      .query("tryoutPartSets")
+      .withIndex("tryoutId_partKey", (q) =>
+        q.eq("tryoutId", tryoutAttempt.tryoutId).eq("partKey", args.partKey)
+      )
+      .unique();
 
     if (!tryoutPartSet) {
       throw new ConvexError({
         code: "PART_NOT_FOUND",
         message: "Tryout part not found.",
-      });
-    }
-
-    if (!nextPartSet) {
-      throw new ConvexError({
-        code: "INVALID_TRYOUT_STATE",
-        message: "Tryout is missing its next part.",
-      });
-    }
-
-    if (nextPartSet.partKey !== args.partKey) {
-      throw new ConvexError({
-        code: "PART_NOT_READY",
-        message: "This tryout part is not available yet.",
       });
     }
 
@@ -378,11 +309,7 @@ export const startPart = mutation({
           });
         }
 
-        return {
-          setAttemptId: existingPartAttempt.setAttemptId,
-          setId: tryoutPartSet.setId,
-          questionCount: set.questionCount,
-        };
+        return null;
       }
 
       throw new ConvexError({
@@ -428,11 +355,7 @@ export const startPart = mutation({
       lastActivityAt: now,
     });
 
-    return {
-      setAttemptId,
-      setId: tryoutPartSet.setId,
-      questionCount: set.questionCount,
-    };
+    return null;
   },
 });
 
@@ -442,12 +365,7 @@ export const completePart = mutation({
     tryoutAttemptId: vv.id("tryoutAttempts"),
     partKey: tryoutPartKeyValidator,
   },
-  returns: v.object({
-    theta: v.number(),
-    thetaSE: v.number(),
-    rawScore: v.number(),
-    totalQuestions: v.number(),
-  }),
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthWithSession(ctx);
     const userId = appUser._id;
@@ -526,12 +444,7 @@ export const completePart = mutation({
     if (
       currentTryoutAttempt.completedPartIndices.includes(partAttempt.partIndex)
     ) {
-      return {
-        theta: partAttempt.theta,
-        thetaSE: partAttempt.thetaSE,
-        rawScore: setAttempt.correctAnswers,
-        totalQuestions: setAttempt.totalExercises,
-      };
+      return null;
     }
 
     if (currentTryoutAttempt.status === "expired") {
@@ -552,7 +465,7 @@ export const completePart = mutation({
       });
     }
 
-    const partResult = await finalizeTryoutPartAttempt({
+    await finalizeTryoutPartAttempt({
       ctx,
       finishedAtMs: now,
       now,
@@ -580,6 +493,6 @@ export const completePart = mutation({
       userId,
     });
 
-    return partResult;
+    return null;
   },
 });

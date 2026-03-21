@@ -22,8 +22,6 @@ export function TryoutPartStatus() {
       return <Skeleton className="h-7 w-20 rounded-md" />;
     case "completed":
       return <TryoutStatusBadge status="completed" />;
-    case "locked":
-      return <TryoutStatusBadge status="locked" />;
     default:
       return null;
   }
@@ -66,6 +64,9 @@ export function useTryoutPartHeadDescription() {
   const isAwaitingExpiry = useTryoutPart(
     (state) => state.state.isAwaitingExpiry
   );
+  const isTryoutFinished = useTryoutPart(
+    (state) => state.state.isTryoutFinished
+  );
   const partEndReason = useTryoutPart((state) => state.state.partEndReason);
   const status = useTryoutPart((state) => state.state.status);
 
@@ -80,9 +81,13 @@ export function useTryoutPartHeadDescription() {
       return tTryouts("part-head-needs-tryout");
     case "ended":
       return tTryouts("part-head-ended");
-    case "locked":
-      return tTryouts("part-head-locked");
     case "completed":
+      if (!isTryoutFinished) {
+        return partEndReason === "time-expired"
+          ? tTryouts("part-head-completed-time-expired-pending-review")
+          : tTryouts("part-head-completed-pending-review");
+      }
+
       return partEndReason === "time-expired"
         ? tTryouts("part-head-completed-time-expired")
         : tTryouts("part-head-completed");
