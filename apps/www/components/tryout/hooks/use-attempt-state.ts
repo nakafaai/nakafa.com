@@ -7,12 +7,9 @@ import {
   getEffectivePartAttemptStatus,
   getEffectiveTryoutStatus,
 } from "@/components/tryout/utils/status";
+import type { UseExerciseTimerReturn } from "@/lib/hooks/use-exercise-timer";
 
-interface TryoutRemainingTime {
-  hours: number;
-  minutes: number;
-  seconds: number;
-}
+type TryoutRemainingTime = UseExerciseTimerReturn["formatted"];
 
 export interface TryoutAttemptStateProps {
   locale: Locale;

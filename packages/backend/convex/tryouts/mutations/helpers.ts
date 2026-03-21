@@ -11,13 +11,13 @@ import {
 import { tryoutLeaderboardWorkpool } from "@repo/backend/convex/tryouts/workpool";
 import { ConvexError } from "convex/values";
 
-interface CompleteTryoutResult {
-  irtScore: Doc<"tryoutAttempts">["irtScore"];
+type CompleteTryoutResult = Pick<
+  Doc<"tryoutAttempts">,
+  "irtScore" | "status" | "theta"
+> & {
   isOfficial: boolean;
   rawScorePercentage: number;
-  status: Doc<"tryoutAttempts">["status"];
-  theta: Doc<"tryoutAttempts">["theta"];
-}
+};
 
 /** Finalizes one tryout attempt into its current result state. */
 export async function finalizeTryoutAttempt({

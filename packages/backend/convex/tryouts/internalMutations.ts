@@ -23,13 +23,14 @@ type LeaderboardStatsEntry = Pick<
   "completedAt" | "rawScore" | "theta"
 >;
 
-interface UserTryoutStatsSnapshot {
-  averageRawScore: number;
-  averageTheta: number;
-  bestTheta: number;
-  lastTryoutAt: number;
-  totalTryoutsCompleted: number;
-}
+type UserTryoutStatsSnapshot = Pick<
+  Doc<"userTryoutStats">,
+  | "averageRawScore"
+  | "averageTheta"
+  | "bestTheta"
+  | "lastTryoutAt"
+  | "totalTryoutsCompleted"
+>;
 
 async function getUserTryoutStatsSnapshot({
   ctx,

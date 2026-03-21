@@ -13,10 +13,10 @@ type TryoutPartRuntime = FunctionReturnType<
   typeof api.tryouts.queries.attempts.getUserTryoutPartAttempt
 >;
 
-interface TryoutPartAttempt {
-  partIndex: number;
-  setAttempt: NonNullable<TryoutAttemptData>["partAttempts"][number]["setAttempt"];
-}
+type TryoutPartAttempt = Pick<
+  NonNullable<TryoutAttemptData>["partAttempts"][number],
+  "partIndex" | "setAttempt"
+>;
 type TryoutAttemptStatus = NonNullable<TryoutAttemptData>["attempt"]["status"];
 
 export type TryoutPartUiStatus =
@@ -27,10 +27,10 @@ export type TryoutPartUiStatus =
   | "needs-tryout"
   | "ready";
 
-interface TryoutProgress {
-  completedPartIndices: number[];
-  status: TryoutAttemptStatus;
-}
+type TryoutProgress = Pick<
+  NonNullable<TryoutAttemptData>["attempt"],
+  "completedPartIndices" | "status"
+>;
 
 function getTryoutPartPageStatus({
   isRuntimePending,
