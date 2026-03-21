@@ -74,6 +74,21 @@ export function TryoutPackageCopy({
   return <div className={cn("space-y-1", className)} {...props} />;
 }
 
+/**
+ * Keeps the package title and optional status badge aligned on one row.
+ */
+export function TryoutPackageHeader({
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
+  return (
+    <div
+      className={cn("flex flex-wrap items-center gap-2", className)}
+      {...props}
+    />
+  );
+}
+
 export function TryoutPackageTitle({
   className,
   ...props

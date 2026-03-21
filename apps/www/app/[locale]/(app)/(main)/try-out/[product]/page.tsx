@@ -27,12 +27,17 @@ import {
   TryoutPackageCopy,
   TryoutPackageEmpty,
   TryoutPackageGroup,
+  TryoutPackageHeader,
   TryoutPackageItems,
   TryoutPackageLink,
   TryoutPackageMeta,
   TryoutPackageTitle,
   TryoutPackageYear,
 } from "@/components/tryout/package-list";
+import {
+  TryoutPackageInProgressBadge,
+  TryoutPackageProgressProvider,
+} from "@/components/tryout/package-progress";
 import { SnbtTryoutIcon } from "@/components/tryout/product-icon";
 import { groupActiveTryoutsByCycle } from "@/components/tryout/utils/package-list";
 
@@ -104,7 +109,7 @@ export default async function Page({ params }: Props) {
                   <TryoutCardTitle>
                     {tTryouts("products.snbt.title")}
                   </TryoutCardTitle>
-                  <Badge variant="muted">
+                  <Badge variant="secondary">
                     {tTryouts("package-count", { count: activeTryouts.length })}
                   </Badge>
                 </div>
@@ -120,37 +125,44 @@ export default async function Page({ params }: Props) {
             {cycleGroups.length === 0 ? (
               <TryoutPackageEmpty>{tTryouts("list-empty")}</TryoutPackageEmpty>
             ) : (
-              cycleGroups.map((group, index) => (
-                <TryoutPackageGroup
-                  className={cn(index > 0 && "border-t")}
-                  key={group.cycleKey}
-                >
-                  <TryoutPackageYear>
-                    {tTryouts("year-title", { year: group.cycleKey })}
-                  </TryoutPackageYear>
+              <TryoutPackageProgressProvider locale={locale} product={product}>
+                {cycleGroups.map((group, index) => (
+                  <TryoutPackageGroup
+                    className={cn(index > 0 && "border-t")}
+                    key={group.cycleKey}
+                  >
+                    <TryoutPackageYear>
+                      {tTryouts("year-title", { year: group.cycleKey })}
+                    </TryoutPackageYear>
 
-                  <TryoutPackageItems>
-                    {group.tryouts.map((tryout) => (
-                      <TryoutPackageLink
-                        href={`/try-out/${product}/${tryout.slug}`}
-                        key={tryout._id}
-                      >
-                        <TryoutPackageCopy>
-                          <TryoutPackageTitle>
-                            {tryout.label}
-                          </TryoutPackageTitle>
-                          <TryoutPackageMeta>
-                            {tTryouts("available-item-description", {
-                              parts: tryout.partCount,
-                              questions: tryout.totalQuestionCount,
-                            })}
-                          </TryoutPackageMeta>
-                        </TryoutPackageCopy>
-                      </TryoutPackageLink>
-                    ))}
-                  </TryoutPackageItems>
-                </TryoutPackageGroup>
-              ))
+                    <TryoutPackageItems>
+                      {group.tryouts.map((tryout) => (
+                        <TryoutPackageLink
+                          href={`/try-out/${product}/${tryout.slug}`}
+                          key={tryout._id}
+                        >
+                          <TryoutPackageCopy>
+                            <TryoutPackageHeader>
+                              <TryoutPackageTitle>
+                                {tryout.label}
+                              </TryoutPackageTitle>
+                              <TryoutPackageInProgressBadge
+                                tryoutSlug={tryout.slug}
+                              />
+                            </TryoutPackageHeader>
+                            <TryoutPackageMeta>
+                              {tTryouts("available-item-description", {
+                                parts: tryout.partCount,
+                                questions: tryout.totalQuestionCount,
+                              })}
+                            </TryoutPackageMeta>
+                          </TryoutPackageCopy>
+                        </TryoutPackageLink>
+                      ))}
+                    </TryoutPackageItems>
+                  </TryoutPackageGroup>
+                ))}
+              </TryoutPackageProgressProvider>
             )}
           </TryoutCardContent>
         </TryoutCard>

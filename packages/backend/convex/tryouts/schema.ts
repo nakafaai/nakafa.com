@@ -70,6 +70,7 @@ const tables = {
     completedAt: v.union(v.number(), v.null()),
     endReason: v.union(attemptEndReasonValidator, v.null()),
   })
+    .index("userId_status_startedAt", ["userId", "status", "startedAt"])
     .index("userId_tryoutId_startedAt", ["userId", "tryoutId", "startedAt"])
     .index("userId_tryoutId_status_startedAt", [
       "userId",

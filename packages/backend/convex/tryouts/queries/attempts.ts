@@ -168,6 +168,56 @@ export const getUserTryoutAttempt = query({
   },
 });
 
+/**
+ * Returns active tryout slugs whose latest attempt is still in progress.
+ */
+export const getUserInProgressTryoutSlugs = query({
+  args: {
+    product: tryoutProductValidator,
+    locale: localeValidator,
+  },
+  returns: v.array(v.string()),
+  handler: async (ctx, args) => {
+    const { appUser } = await requireAuth(ctx);
+    const inProgressAttempts = await ctx.db
+      .query("tryoutAttempts")
+      .withIndex("userId_status_startedAt", (q) =>
+        q.eq("userId", appUser._id).eq("status", "in-progress")
+      )
+      .order("desc")
+      .collect();
+
+    if (inProgressAttempts.length === 0) {
+      return [];
+    }
+
+    const tryouts = await getAll(
+      ctx.db,
+      "tryouts",
+      inProgressAttempts.map((attempt) => attempt.tryoutId)
+    );
+    const activeTryoutSlugs = new Set<string>();
+
+    for (const tryout of tryouts) {
+      if (!tryout) {
+        continue;
+      }
+
+      if (!tryout.isActive) {
+        continue;
+      }
+
+      if (tryout.product !== args.product || tryout.locale !== args.locale) {
+        continue;
+      }
+
+      activeTryoutSlugs.add(tryout.slug);
+    }
+
+    return Array.from(activeTryoutSlugs);
+  },
+});
+
 /** Returns the authenticated user's runtime state for one tryout part. */
 export const getUserTryoutPartAttempt = query({
   args: {
