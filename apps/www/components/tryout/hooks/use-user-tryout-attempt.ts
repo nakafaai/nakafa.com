@@ -2,9 +2,13 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
+import type { FunctionArgs } from "convex/server";
 import { useTryoutQueryNowMs } from "@/components/tryout/hooks/use-query-now-ms";
-import type { TryoutAttemptParams } from "@/components/tryout/utils/attempt-params";
 import { useUser } from "@/lib/context/use-user";
+
+export type TryoutAttemptParams = FunctionArgs<
+  typeof api.tryouts.queries.attempts.getUserTryoutAttempt
+>;
 
 /**
  * Loads the current user's latest tryout attempt when auth and route data are ready.

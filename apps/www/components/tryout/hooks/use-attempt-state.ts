@@ -1,7 +1,9 @@
 "use client";
 
-import { useUserTryoutAttempt } from "@/components/tryout/hooks/use-user-tryout-attempt";
-import type { TryoutAttemptParams } from "@/components/tryout/utils/attempt-params";
+import {
+  type TryoutAttemptParams,
+  useUserTryoutAttempt,
+} from "@/components/tryout/hooks/use-user-tryout-attempt";
 import {
   getEffectivePartAttemptStatus,
   getEffectiveTryoutStatus,

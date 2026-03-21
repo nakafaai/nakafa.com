@@ -13,7 +13,7 @@ import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useTransition } from "react";
 import { toast } from "sonner";
 import { useTryoutAttemptState } from "@/components/tryout/hooks/use-attempt-state";
-import type { TryoutAttemptParams } from "@/components/tryout/utils/attempt-params";
+import type { TryoutAttemptParams } from "@/components/tryout/hooks/use-user-tryout-attempt";
 import { useUser } from "@/lib/context/use-user";
 
 export type TryoutStartButtonProps = TryoutAttemptParams;
