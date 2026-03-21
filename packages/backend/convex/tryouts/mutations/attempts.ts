@@ -252,15 +252,6 @@ export const startPart = mutation({
       });
     }
 
-    const set = await ctx.db.get("exerciseSets", tryoutPartSet.setId);
-
-    if (!set) {
-      throw new ConvexError({
-        code: "SET_NOT_FOUND",
-        message: "Exercise set not found.",
-      });
-    }
-
     const existingPartAttempt = await ctx.db
       .query("tryoutPartAttempts")
       .withIndex("tryoutAttemptId_partKey", (q) =>
@@ -309,6 +300,15 @@ export const startPart = mutation({
       throw new ConvexError({
         code: "INVALID_ATTEMPT_STATE",
         message: "Tryout part state is out of sync with its tryout attempt.",
+      });
+    }
+
+    const set = await ctx.db.get("exerciseSets", tryoutPartSet.setId);
+
+    if (!set) {
+      throw new ConvexError({
+        code: "SET_NOT_FOUND",
+        message: "Exercise set not found.",
       });
     }
 
@@ -420,18 +420,6 @@ export const completePart = mutation({
       throw new ConvexError({
         code: "PART_ATTEMPT_NOT_FOUND",
         message: "Tryout part attempt not found.",
-      });
-    }
-
-    const setAttempt = await ctx.db.get(
-      "exerciseAttempts",
-      partAttempt.setAttemptId
-    );
-
-    if (!setAttempt) {
-      throw new ConvexError({
-        code: "SET_ATTEMPT_NOT_FOUND",
-        message: "Exercise set attempt not found.",
       });
     }
 

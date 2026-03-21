@@ -10,23 +10,15 @@ import {
 } from "@repo/internationalization/src/navigation";
 import { useAction, useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
-import {
-  type PropsWithChildren,
-  useCallback,
-  useMemo,
-  useTransition,
-} from "react";
+import { useCallback, useMemo, useTransition } from "react";
 import { toast } from "sonner";
-import { createContext, useContextSelector } from "use-context-selector";
-import {
-  type TryoutAttemptStateProps,
-  useTryoutAttemptState,
-} from "@/components/tryout/hooks/use-attempt-state";
+import { useTryoutAttemptState } from "@/components/tryout/hooks/use-attempt-state";
+import type { TryoutAttemptParams } from "@/components/tryout/utils/attempt-params";
 import { useUser } from "@/lib/context/use-user";
 
-export type TryoutStartButtonProps = TryoutAttemptStateProps;
+export type TryoutStartButtonProps = TryoutAttemptParams;
 
-function useTryoutStartValue({
+export function useTryoutStartValue({
   locale,
   product,
   tryoutSlug,
@@ -178,31 +170,4 @@ function useTryoutStartValue({
   );
 }
 
-type TryoutStartContextValue = ReturnType<typeof useTryoutStartValue>;
-
-const TryoutStartContext = createContext<TryoutStartContextValue | null>(null);
-
-export function TryoutStartProvider({
-  children,
-  ...props
-}: PropsWithChildren<TryoutStartButtonProps>) {
-  const value = useTryoutStartValue(props);
-
-  return (
-    <TryoutStartContext.Provider value={value}>
-      {children}
-    </TryoutStartContext.Provider>
-  );
-}
-
-export function useTryoutStart<T>(
-  selector: (state: TryoutStartContextValue) => T
-) {
-  const context = useContextSelector(TryoutStartContext, (value) => value);
-
-  if (!context) {
-    throw new Error("useTryoutStart must be used within a TryoutStartProvider");
-  }
-
-  return selector(context);
-}
+export type TryoutStartValue = ReturnType<typeof useTryoutStartValue>;

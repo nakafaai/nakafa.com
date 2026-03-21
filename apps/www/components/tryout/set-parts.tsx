@@ -12,9 +12,6 @@ import { cn } from "@repo/design-system/lib/utils";
 import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
-import { useMemo } from "react";
-import { createContext, useContextSelector } from "use-context-selector";
 import { useTryoutAttemptState } from "@/components/tryout/hooks/use-attempt-state";
 import { TryoutStatusBadge } from "@/components/tryout/status-badge";
 import { deriveTryoutSetPartState } from "@/components/tryout/utils/part-state";
@@ -28,11 +25,6 @@ type TryoutSetPartItem = Pick<
   label: string;
 };
 
-type TryoutAttemptData = FunctionReturnType<
-  typeof api.tryouts.queries.attempts.getUserTryoutAttempt
->;
-type TryoutAttemptStatus = NonNullable<TryoutAttemptData>["attempt"]["status"];
-
 interface TryoutSetPartsProps {
   locale: Locale;
   parts: TryoutSetPartItem[];
@@ -40,21 +32,14 @@ interface TryoutSetPartsProps {
   tryoutSlug: string;
 }
 
-interface TryoutSetPartsContextValue {
-  state: {
-    attemptData: TryoutAttemptData | undefined;
-    effectiveStatus: TryoutAttemptStatus | undefined;
-    nowMs: number;
-    product: TryoutProduct;
-    questionUnitLabel: string;
-    resumePartKey: string | undefined;
-    tryoutSlug: string;
-  };
-}
-
-const TryoutSetPartsContext = createContext<TryoutSetPartsContextValue | null>(
-  null
-);
+type TryoutSetPartsState = Pick<
+  ReturnType<typeof useTryoutAttemptState>,
+  "attemptData" | "effectiveStatus" | "nowMs" | "resumePartKey"
+> & {
+  product: TryoutProduct;
+  questionUnitLabel: string;
+  tryoutSlug: string;
+};
 
 export function TryoutSetParts({
   locale,
@@ -69,80 +54,32 @@ export function TryoutSetParts({
       product,
       tryoutSlug,
     });
+  const state: TryoutSetPartsState = {
+    attemptData,
+    effectiveStatus,
+    nowMs,
+    product,
+    questionUnitLabel: tTryouts("question-unit"),
+    resumePartKey,
+    tryoutSlug,
+  };
 
   return (
-    <TryoutSetPartsProvider
-      attemptData={attemptData ?? undefined}
-      effectiveStatus={effectiveStatus}
-      nowMs={nowMs}
-      product={product}
-      questionUnitLabel={tTryouts("question-unit")}
-      resumePartKey={resumePartKey}
-      tryoutSlug={tryoutSlug}
-    >
-      <TryoutSetPartsList>
-        {parts.map((part) => (
-          <TryoutSetPart key={part.partKey} part={part} />
-        ))}
-      </TryoutSetPartsList>
-    </TryoutSetPartsProvider>
+    <div className="grid divide-y">
+      {parts.map((part) => (
+        <TryoutSetPart key={part.partKey} part={part} state={state} />
+      ))}
+    </div>
   );
 }
 
-function TryoutSetPartsProvider({
-  attemptData,
-  children,
-  effectiveStatus,
-  nowMs,
-  product,
-  questionUnitLabel,
-  resumePartKey,
-  tryoutSlug,
+function TryoutSetPart({
+  part,
+  state,
 }: {
-  attemptData: TryoutAttemptData | undefined;
-  children: ReactNode;
-  effectiveStatus: TryoutAttemptStatus | undefined;
-  nowMs: number;
-  product: TryoutProduct;
-  questionUnitLabel: string;
-  resumePartKey: string | undefined;
-  tryoutSlug: string;
+  part: TryoutSetPartItem;
+  state: TryoutSetPartsState;
 }) {
-  const value = useMemo(
-    () => ({
-      state: {
-        attemptData,
-        effectiveStatus,
-        nowMs,
-        product,
-        questionUnitLabel,
-        resumePartKey,
-        tryoutSlug,
-      },
-    }),
-    [
-      attemptData,
-      effectiveStatus,
-      nowMs,
-      product,
-      questionUnitLabel,
-      resumePartKey,
-      tryoutSlug,
-    ]
-  );
-
-  return (
-    <TryoutSetPartsContext.Provider value={value}>
-      {children}
-    </TryoutSetPartsContext.Provider>
-  );
-}
-
-function TryoutSetPartsList({ children }: { children: ReactNode }) {
-  return <div className="grid divide-y">{children}</div>;
-}
-
-function TryoutSetPart({ part }: { part: TryoutSetPartItem }) {
   const {
     attemptData,
     effectiveStatus,
@@ -151,7 +88,7 @@ function TryoutSetPart({ part }: { part: TryoutSetPartItem }) {
     questionUnitLabel,
     resumePartKey,
     tryoutSlug,
-  } = useTryoutSetParts((context) => context.state);
+  } = state;
   const partIcon = getTryoutPartIcon(part.material);
   const partState = deriveTryoutSetPartState({
     attemptData,
@@ -212,18 +149,6 @@ function TryoutSetPart({ part }: { part: TryoutSetPartItem }) {
       />
     </NavigationLink>
   );
-}
-
-function useTryoutSetParts<T>(
-  selector: (context: TryoutSetPartsContextValue) => T
-) {
-  const context = useContextSelector(TryoutSetPartsContext, (value) => value);
-
-  if (!context) {
-    throw new Error("useTryoutSetParts must be used within TryoutSetParts");
-  }
-
-  return selector(context);
 }
 
 function getTryoutPartIcon(material: string) {

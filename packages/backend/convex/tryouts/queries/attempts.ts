@@ -44,20 +44,23 @@ const tryoutPartAttemptRuntimeValidator = v.object({
 type TryoutPartAttemptSummary = Infer<typeof tryoutPartAttemptSummaryValidator>;
 
 function pickSuggestedPartKey(partAttempts: TryoutPartAttemptSummary[]) {
-  const inProgressParts = partAttempts.filter(
-    (partAttempt) => partAttempt.setAttempt.status === "in-progress"
-  );
+  let suggestedPartKey: TryoutPartAttemptSummary["partKey"] | undefined;
+  let latestActivityAt = Number.NEGATIVE_INFINITY;
 
-  if (inProgressParts.length === 0) {
-    return undefined;
+  for (const partAttempt of partAttempts) {
+    if (partAttempt.setAttempt.status !== "in-progress") {
+      continue;
+    }
+
+    if (partAttempt.setAttempt.lastActivityAt <= latestActivityAt) {
+      continue;
+    }
+
+    suggestedPartKey = partAttempt.partKey;
+    latestActivityAt = partAttempt.setAttempt.lastActivityAt;
   }
 
-  inProgressParts.sort(
-    (left, right) =>
-      right.setAttempt.lastActivityAt - left.setAttempt.lastActivityAt
-  );
-
-  return inProgressParts[0]?.partKey;
+  return suggestedPartKey;
 }
 
 /** Returns the authenticated user's latest tryout attempt for one tryout slug. */
@@ -186,26 +189,9 @@ export const getUserTryoutAttempt = query({
       completedPartIndices: attempt.completedPartIndices,
       partCount: tryout.partCount,
     });
-    let resumePartKey:
-      | (typeof validPartAttempts)[number]["partKey"]
-      | undefined;
-
-    if (suggestedPartKey) {
-      resumePartKey = suggestedPartKey;
-    } else if (nextPartIndex !== undefined) {
-      const nextPartSet = orderedParts.find(
-        (part) => part.partIndex === nextPartIndex
-      );
-
-      if (!nextPartSet) {
-        throw new ConvexError({
-          code: "INVALID_TRYOUT_STATE",
-          message: "Tryout is missing its next part.",
-        });
-      }
-
-      resumePartKey = nextPartSet.partKey;
-    }
+    const nextPart =
+      nextPartIndex === undefined ? undefined : orderedParts[nextPartIndex];
+    const resumePartKey = suggestedPartKey ?? nextPart?.partKey;
 
     return {
       attempt,

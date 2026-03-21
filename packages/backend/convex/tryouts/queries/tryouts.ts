@@ -87,6 +87,18 @@ export const getTryoutDetails = query({
         message: "Tryout part mapping count does not match partCount.",
       });
     }
+
+    for (const [partIndex, partSet] of tryoutPartSets.entries()) {
+      if (partSet.partIndex === partIndex) {
+        continue;
+      }
+
+      throw new ConvexError({
+        code: "INVALID_TRYOUT_STATE",
+        message: "Tryout part mappings are out of order.",
+      });
+    }
+
     const sets = await getAll(
       ctx.db,
       "exerciseSets",

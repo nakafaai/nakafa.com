@@ -1,12 +1,10 @@
-import {
-  isTryoutProduct,
-  type TryoutProduct,
-} from "@repo/backend/convex/tryouts/products";
+import { isTryoutProduct } from "@repo/backend/convex/tryouts/products";
+import type { TryoutAttemptParams } from "@/components/tryout/utils/attempt-params";
 
-export interface TryoutAttemptRoute {
-  product: TryoutProduct;
-  tryoutSlug: string;
-}
+export type TryoutAttemptRoute = Pick<
+  TryoutAttemptParams,
+  "product" | "tryoutSlug"
+>;
 
 /**
  * Returns the tryout identifiers for pages that can enter focus mode.

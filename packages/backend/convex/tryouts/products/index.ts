@@ -76,11 +76,9 @@ const tryoutProductPolicies = {
 } satisfies Record<TryoutProduct, TryoutProductPolicy>;
 
 /** Builds the aggregate namespace for one product's global leaderboard scope. */
-export function getTryoutLeaderboardNamespace(args: {
-  cycleKey: TryoutLeaderboardNamespaceArgs["cycleKey"];
-  locale: TryoutLeaderboardNamespaceArgs["locale"];
-  product: TryoutLeaderboardNamespaceArgs["product"];
-}) {
+export function getTryoutLeaderboardNamespace(
+  args: TryoutLeaderboardNamespaceArgs
+) {
   return tryoutProductPolicies[args.product].getLeaderboardNamespace(args);
 }
 
@@ -104,7 +102,7 @@ export function detectTryoutsForProduct(args: {
 /** Computes one part's time limit from the active product policy. */
 export function computeTryoutPartTimeLimitSeconds(args: {
   product: TryoutProduct;
-  questionCount: number;
+  questionCount: Doc<"exerciseSets">["questionCount"];
 }) {
   return tryoutProductPolicies[args.product].getPartTimeLimitSeconds(
     args.questionCount
@@ -124,7 +122,7 @@ export function computeTryoutExpiresAtMs(args: {
 /** Converts an operational theta estimate into the product's displayed score. */
 export function scaleThetaToTryoutScore(args: {
   product: TryoutProduct;
-  theta: number;
+  theta: Doc<"tryoutAttempts">["theta"];
 }) {
   return tryoutProductPolicies[args.product].scaleThetaToScore(args.theta);
 }

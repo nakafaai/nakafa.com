@@ -11,25 +11,21 @@ import {
   TryoutStartCountdownMeta,
   TryoutStartCountdownTime,
 } from "@/components/tryout/start-countdown";
-import { useTryoutStart } from "@/components/tryout/start-state";
+import type { TryoutStartValue } from "@/components/tryout/start-state";
 
-export function TryoutStartCta() {
+export function TryoutStartCta({ value }: { value: TryoutStartValue }) {
   const tAuth = useTranslations("Auth");
   const tTryouts = useTranslations("Tryouts");
-  const isReady = useTryoutStart((state) => state.state.isReady);
-  const hasSubscription = useTryoutStart(
-    (state) => state.state.hasSubscription
-  );
-  const attempt = useTryoutStart((state) => state.state.attemptData?.attempt);
-  const attemptStatus = useTryoutStart((state) => state.state.effectiveStatus);
-  const hasFinishedAttempt = useTryoutStart(
-    (state) => state.state.hasFinishedAttempt
-  );
-  const resumePartKey = useTryoutStart((state) => state.state.resumePartKey);
-  const remainingTime = useTryoutStart((state) => state.state.remainingTime);
-  const isLoading = useTryoutStart((state) => state.state.isLoading);
-  const isActionPending = useTryoutStart((state) => state.meta.isActionPending);
-  const clickCta = useTryoutStart((state) => state.actions.clickCta);
+  const attempt = value.state.attemptData?.attempt;
+  const attemptStatus = value.state.effectiveStatus;
+  const clickCta = value.actions.clickCta;
+  const hasFinishedAttempt = value.state.hasFinishedAttempt;
+  const hasSubscription = value.state.hasSubscription;
+  const isActionPending = value.meta.isActionPending;
+  const isLoading = value.state.isLoading;
+  const isReady = value.state.isReady;
+  const remainingTime = value.state.remainingTime;
+  const resumePartKey = value.state.resumePartKey;
 
   if (!isReady) {
     return null;

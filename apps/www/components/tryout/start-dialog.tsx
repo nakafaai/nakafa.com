@@ -5,17 +5,15 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useTranslations } from "next-intl";
-import { useTryoutStart } from "@/components/tryout/start-state";
+import type { TryoutStartValue } from "@/components/tryout/start-state";
 
-export function TryoutStartDialog() {
+export function TryoutStartDialog({ value }: { value: TryoutStartValue }) {
   const tTryouts = useTranslations("Tryouts");
-  const hasFinishedAttempt = useTryoutStart(
-    (state) => state.state.hasFinishedAttempt
-  );
-  const isActionPending = useTryoutStart((state) => state.meta.isActionPending);
-  const isDialogOpen = useTryoutStart((state) => state.meta.isDialogOpen);
-  const confirmStart = useTryoutStart((state) => state.actions.confirmStart);
-  const setDialogOpen = useTryoutStart((state) => state.actions.setDialogOpen);
+  const confirmStart = value.actions.confirmStart;
+  const hasFinishedAttempt = value.state.hasFinishedAttempt;
+  const isActionPending = value.meta.isActionPending;
+  const isDialogOpen = value.meta.isDialogOpen;
+  const setDialogOpen = value.actions.setDialogOpen;
 
   return (
     <ResponsiveDialog

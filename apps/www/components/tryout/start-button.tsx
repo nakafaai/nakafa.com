@@ -4,16 +4,18 @@ import { TryoutStartCta } from "@/components/tryout/start-cta";
 import { TryoutStartDialog } from "@/components/tryout/start-dialog";
 import {
   type TryoutStartButtonProps,
-  TryoutStartProvider,
+  useTryoutStartValue,
 } from "@/components/tryout/start-state";
 
 export type { TryoutStartButtonProps } from "@/components/tryout/start-state";
 
 export function TryoutStartButton(props: TryoutStartButtonProps) {
+  const value = useTryoutStartValue(props);
+
   return (
-    <TryoutStartProvider {...props}>
-      <TryoutStartCta />
-      <TryoutStartDialog />
-    </TryoutStartProvider>
+    <>
+      <TryoutStartCta value={value} />
+      <TryoutStartDialog value={value} />
+    </>
   );
 }

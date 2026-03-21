@@ -59,47 +59,6 @@ export function TryoutPartMetrics() {
   );
 }
 
-export function useTryoutPartHeadDescription() {
-  const tTryouts = useTranslations("Tryouts");
-  const isAwaitingExpiry = useTryoutPart(
-    (state) => state.state.isAwaitingExpiry
-  );
-  const isTryoutFinished = useTryoutPart(
-    (state) => state.state.isTryoutFinished
-  );
-  const partEndReason = useTryoutPart((state) => state.state.partEndReason);
-  const status = useTryoutPart((state) => state.state.status);
-
-  if (status === "in-progress" && isAwaitingExpiry) {
-    return tTryouts("part-head-processing-expiry");
-  }
-
-  switch (status) {
-    case "loading":
-      return tTryouts("part-head-loading");
-    case "needs-tryout":
-      return tTryouts("part-head-needs-tryout");
-    case "ended":
-      return tTryouts("part-head-ended");
-    case "completed":
-      if (!isTryoutFinished) {
-        return partEndReason === "time-expired"
-          ? tTryouts("part-head-completed-time-expired-pending-review")
-          : tTryouts("part-head-completed-pending-review");
-      }
-
-      return partEndReason === "time-expired"
-        ? tTryouts("part-head-completed-time-expired")
-        : tTryouts("part-head-completed");
-    case "in-progress":
-      return tTryouts("part-head-in-progress");
-    case "ready":
-      return tTryouts("part-head-ready");
-    default:
-      return tTryouts("part-head-loading");
-  }
-}
-
 function TryoutMetricNumber({ value }: { value: number }) {
   return (
     <div className="font-light font-mono text-5xl text-foreground tabular-nums leading-none tracking-tighter">

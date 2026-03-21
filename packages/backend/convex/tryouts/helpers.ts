@@ -590,9 +590,8 @@ export async function syncTryoutExerciseAttemptExpiry(
 
   const tryoutExpiry = await syncTryoutAttemptExpiry(ctx, tryoutAttempt, now);
 
-  if (!tryoutExpiry.expired) {
-    return { expired: false, expiredAtMs: tryoutExpiry.expiredAtMs };
-  }
-
-  return { expired: true, expiredAtMs: tryoutExpiry.expiredAtMs };
+  return {
+    expired: tryoutExpiry.expired,
+    expiredAtMs: tryoutExpiry.expiredAtMs,
+  };
 }

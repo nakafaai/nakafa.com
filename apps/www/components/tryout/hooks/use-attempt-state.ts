@@ -1,8 +1,7 @@
 "use client";
 
-import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
-import type { Locale } from "next-intl";
 import { useUserTryoutAttempt } from "@/components/tryout/hooks/use-user-tryout-attempt";
+import type { TryoutAttemptParams } from "@/components/tryout/utils/attempt-params";
 import {
   getEffectivePartAttemptStatus,
   getEffectiveTryoutStatus,
@@ -10,12 +9,6 @@ import {
 import type { UseExerciseTimerReturn } from "@/lib/hooks/use-exercise-timer";
 
 type TryoutRemainingTime = UseExerciseTimerReturn["formatted"];
-
-export interface TryoutAttemptStateProps {
-  locale: Locale;
-  product: TryoutProduct;
-  tryoutSlug: string;
-}
 
 function getResumePartKey({
   attemptData,
@@ -84,7 +77,7 @@ export function useTryoutAttemptState({
   locale,
   product,
   tryoutSlug,
-}: TryoutAttemptStateProps) {
+}: TryoutAttemptParams) {
   const {
     data: attemptData,
     isPending: isAttemptPending,

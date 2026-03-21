@@ -74,21 +74,6 @@ export function TryoutPackageInProgressBadge({
   tryoutSlug: string;
 }) {
   const tTryouts = useTranslations("Tryouts");
-  const isInProgress = useIsTryoutInProgress(tryoutSlug);
-
-  if (!isInProgress) {
-    return null;
-  }
-
-  return (
-    <Badge variant="muted">{tTryouts("package-status-in-progress")}</Badge>
-  );
-}
-
-/**
- * Returns whether one tryout slug is still in progress.
- */
-function useIsTryoutInProgress(tryoutSlug: string) {
   const hasProvider = useContextSelector(
     TryoutPackageProgressContext,
     (value) => value !== null
@@ -100,9 +85,15 @@ function useIsTryoutInProgress(tryoutSlug: string) {
 
   if (!hasProvider) {
     throw new Error(
-      "useIsTryoutInProgress must be used within TryoutPackageProgressProvider"
+      "TryoutPackageInProgressBadge must be used within TryoutPackageProgressProvider"
     );
   }
 
-  return isInProgress;
+  if (!isInProgress) {
+    return null;
+  }
+
+  return (
+    <Badge variant="muted">{tTryouts("package-status-in-progress")}</Badge>
+  );
 }
