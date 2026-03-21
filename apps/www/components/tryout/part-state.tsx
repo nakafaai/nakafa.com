@@ -143,7 +143,6 @@ export function TryoutPartProvider({
           partKey: part.key,
           tryoutAttemptId: runtime.tryoutAttempt._id,
         });
-        router.refresh();
         toast.success(tTryouts("start-part-success"), {
           position: "bottom-center",
         });
@@ -153,7 +152,7 @@ export function TryoutPartProvider({
         });
       }
     });
-  }, [part.key, router, runtime, startPart, tTryouts]);
+  }, [part.key, runtime, startPart, tTryouts]);
 
   const handleCompletePart = useCallback(() => {
     startTransition(async () => {

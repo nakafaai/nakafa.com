@@ -130,8 +130,6 @@ function useTryoutStartValue({
 
         closeDialog();
 
-        router.refresh();
-
         toast.success(tTryouts("start-success"), {
           position: "bottom-center",
         });
@@ -141,7 +139,7 @@ function useTryoutStartValue({
         });
       }
     });
-  }, [closeDialog, locale, product, router, startTryout, tTryouts, tryoutSlug]);
+  }, [closeDialog, locale, product, startTryout, tTryouts, tryoutSlug]);
 
   return useMemo(
     () => ({

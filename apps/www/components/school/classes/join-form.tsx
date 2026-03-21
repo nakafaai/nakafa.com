@@ -15,7 +15,6 @@ import { Input } from "@repo/design-system/components/ui/input";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Particles } from "@repo/design-system/components/ui/particles";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { useRouter } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
@@ -39,7 +38,6 @@ interface Props {
 
 export function SchoolClassesJoinForm({ classId, visibility }: Props) {
   const t = useTranslations("School.Classes");
-  const router = useRouter();
   const schoolSlug = useSchool((state) => state.school.slug);
 
   const [isPending, startTransition] = useTransition();
@@ -52,7 +50,6 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
     startTransition(async () => {
       try {
         await joinPublicClass({ classId });
-        router.refresh();
       } catch {
         toast.error(t("join-class-failed"));
       }
@@ -67,7 +64,6 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
     onSubmit: async ({ value }) => {
       try {
         await joinClass(value);
-        router.refresh();
       } catch {
         toast.error(t("join-class-failed"));
       }
