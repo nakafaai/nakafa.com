@@ -35,6 +35,9 @@ import type { PagefindResult } from "@/types/pagefind";
 
 const DEBOUNCE_TIME = 500;
 
+/**
+ * Renders the global command menu used across the main app shell.
+ */
 export function SearchCommand() {
   const { open, setOpen } = useSearch((state) => ({
     open: state.open,
@@ -215,7 +218,6 @@ function DefaultItems() {
   const [, startTransition] = useTransition();
 
   useEffect(() => {
-    // prefetch all the links
     for (const item of subjectMenu) {
       for (const subItem of item.items) {
         router.prefetch(subItem.href);
@@ -229,7 +231,7 @@ function DefaultItems() {
     for (const item of holyMenu) {
       router.prefetch(item.href);
     }
-  });
+  }, [router]);
 
   return (
     <>

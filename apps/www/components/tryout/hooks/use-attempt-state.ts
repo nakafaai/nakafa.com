@@ -1,12 +1,10 @@
 "use client";
 
 import { useInterval } from "@mantine/hooks";
-import { api } from "@repo/backend/convex/_generated/api";
 import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import type { Locale } from "next-intl";
 import { useState } from "react";
-import { useUser } from "@/lib/context/use-user";
+import { useUserTryoutAttempt } from "@/components/tryout/hooks/use-user-tryout-attempt";
 
 interface TryoutRemainingTime {
   hours: number;
@@ -20,18 +18,21 @@ export interface TryoutAttemptStateProps {
   tryoutSlug: string;
 }
 
+/**
+ * Derives the student-facing tryout CTA state from the latest tryout attempt.
+ */
 export function useTryoutAttemptState({
   locale,
   product,
   tryoutSlug,
 }: TryoutAttemptStateProps) {
-  const isUserPending = useUser((state) => state.isPending);
-  const user = useUser((state) => state.user);
   const [nowMs, setNowMs] = useState(() => Date.now());
-  const { data: attemptData, isPending: isAttemptPending } = useQueryWithStatus(
-    api.tryouts.queries.attempts.getUserTryoutAttempt,
-    !isUserPending && user ? { locale, product, tryoutSlug } : "skip"
-  );
+  const { data: attemptData, isPending: isAttemptPending } =
+    useUserTryoutAttempt({
+      locale,
+      product,
+      tryoutSlug,
+    });
 
   useInterval(
     () => {

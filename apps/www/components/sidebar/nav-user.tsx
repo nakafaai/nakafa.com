@@ -47,6 +47,9 @@ const prefetchLinks = [
   "/user/settings",
 ] as const;
 
+/**
+ * Renders the signed-in user menu and the guest login shortcut in the sidebar.
+ */
 export function NavUser() {
   const t = useTranslations("Auth");
   const tLegal = useTranslations("Legal");
@@ -64,11 +67,10 @@ export function NavUser() {
   }
 
   useEffect(() => {
-    // prefetch all the links
     for (const link of prefetchLinks) {
       router.prefetch(link);
     }
-  });
+  }, [router]);
 
   if (!user) {
     return (
