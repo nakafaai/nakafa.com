@@ -21,6 +21,7 @@ export function TryoutStartCta() {
     (state) => state.state.hasSubscription
   );
   const attempt = useTryoutStart((state) => state.state.attemptData?.attempt);
+  const attemptStatus = useTryoutStart((state) => state.state.effectiveStatus);
   const hasFinishedAttempt = useTryoutStart(
     (state) => state.state.hasFinishedAttempt
   );
@@ -59,7 +60,10 @@ export function TryoutStartCta() {
     return (
       <div className="flex w-full flex-col items-start gap-4">
         {attempt && hasFinishedAttempt ? (
-          <TryoutScoreCard attempt={attempt} />
+          <TryoutScoreCard
+            attempt={attempt}
+            status={attemptStatus ?? attempt.status}
+          />
         ) : null}
         {action}
       </div>
@@ -75,14 +79,19 @@ export function TryoutStartCta() {
   return (
     <div className="flex w-full flex-col items-start gap-4">
       {attempt && hasFinishedAttempt ? (
-        <TryoutScoreCard attempt={attempt} />
+        <TryoutScoreCard
+          attempt={attempt}
+          status={attemptStatus ?? attempt.status}
+        />
       ) : null}
       <TryoutStartCountdown>
         <TryoutStartCountdownTime segments={timeSegments} />
         <TryoutStartCountdownMeta>
           {tTryouts("remaining-time-label")}
         </TryoutStartCountdownMeta>
-        <TryoutStartCountdownAction>{action}</TryoutStartCountdownAction>
+        {resumePartKey ? (
+          <TryoutStartCountdownAction>{action}</TryoutStartCountdownAction>
+        ) : null}
       </TryoutStartCountdown>
     </div>
   );

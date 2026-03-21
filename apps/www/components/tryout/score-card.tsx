@@ -17,8 +17,15 @@ import { TryoutStartCountdown } from "@/components/tryout/start-countdown";
 type TryoutAttempt = NonNullable<
   FunctionReturnType<typeof api.tryouts.queries.attempts.getUserTryoutAttempt>
 >["attempt"];
+type TryoutAttemptStatus = TryoutAttempt["status"];
 
-export function TryoutScoreCard({ attempt }: { attempt: TryoutAttempt }) {
+export function TryoutScoreCard({
+  attempt,
+  status,
+}: {
+  attempt: TryoutAttempt;
+  status: TryoutAttemptStatus;
+}) {
   const tTryouts = useTranslations("Tryouts");
   const hasScoredQuestions = attempt.totalQuestions > 0;
 
@@ -26,7 +33,7 @@ export function TryoutScoreCard({ attempt }: { attempt: TryoutAttempt }) {
     <TryoutStartCountdown className="space-y-4">
       <div className="flex flex-wrap gap-2">
         <TryoutScoreStatusBadge status={attempt.scoreStatus} />
-        <TryoutAttemptStatusBadge status={attempt.status} />
+        <TryoutAttemptStatusBadge status={status} />
       </div>
 
       {hasScoredQuestions ? (

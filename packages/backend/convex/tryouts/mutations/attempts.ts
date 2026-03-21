@@ -114,19 +114,33 @@ export const startTryout = mutation({
       }
     }
 
-    const firstPart = await ctx.db
+    const tryoutParts = await ctx.db
       .query("tryoutPartSets")
-      .withIndex("tryoutId_partIndex", (q) =>
-        q.eq("tryoutId", tryout._id).eq("partIndex", 0)
-      )
-      .unique();
+      .withIndex("tryoutId_partIndex", (q) => q.eq("tryoutId", tryout._id))
+      .take(tryout.partCount + 1);
 
-    if (!firstPart) {
+    if (tryoutParts.length !== tryout.partCount) {
       throw new ConvexError({
         code: "INVALID_TRYOUT_STATE",
-        message: "Tryout is missing its first part.",
+        message: "Tryout is missing one or more parts.",
       });
     }
+
+    for (const [partIndex, tryoutPart] of tryoutParts.entries()) {
+      if (tryoutPart.partIndex === partIndex) {
+        continue;
+      }
+
+      throw new ConvexError({
+        code: "INVALID_TRYOUT_STATE",
+        message: "Tryout parts are out of order.",
+      });
+    }
+
+    const expiresAtMs = computeTryoutExpiresAtMs({
+      product: tryout.product,
+      startedAtMs: now,
+    });
 
     const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
       userId,
@@ -141,14 +155,10 @@ export const startTryout = mutation({
       thetaSE: 1,
       irtScore: scaleThetaToTryoutScore({ product: tryout.product, theta: 0 }),
       startedAt: now,
+      expiresAt: expiresAtMs,
       lastActivityAt: now,
       completedAt: null,
       endReason: null,
-    });
-
-    const expiresAtMs = computeTryoutExpiresAtMs({
-      product: tryout.product,
-      startedAtMs: now,
     });
 
     await ctx.scheduler.runAfter(
@@ -435,10 +445,7 @@ export const completePart = mutation({
       throw new ConvexError({
         code: "TRYOUT_EXPIRED",
         message: "This tryout has expired.",
-        expiresAtMs: computeTryoutExpiresAtMs({
-          product: tryout.product,
-          startedAtMs: currentTryoutAttempt.startedAt,
-        }),
+        expiresAtMs: currentTryoutAttempt.expiresAt,
       });
     }
 

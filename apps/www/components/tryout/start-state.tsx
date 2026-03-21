@@ -39,12 +39,17 @@ function useTryoutStartValue({
   const [isActionPending, startTransition] = useTransition();
   const [isDialogOpen, { close: closeDialog, open: openDialog }] =
     useDisclosure(false);
-  const { attemptData, isAttemptPending, resumePartKey, remainingTime } =
-    useTryoutAttemptState({
-      locale,
-      product,
-      tryoutSlug,
-    });
+  const {
+    effectiveStatus,
+    attemptData,
+    isAttemptPending,
+    resumePartKey,
+    remainingTime,
+  } = useTryoutAttemptState({
+    locale,
+    product,
+    tryoutSlug,
+  });
   const { data: hasSubscription, isPending: isSubscriptionPending } =
     useQueryWithStatus(
       api.subscriptions.queries.hasActiveSubscription,
@@ -55,14 +60,6 @@ function useTryoutStartValue({
     api.customers.actions.generateCheckoutLink
   );
 
-  const tryout = useMemo(
-    () => ({
-      locale,
-      product,
-      slug: tryoutSlug,
-    }),
-    [locale, product, tryoutSlug]
-  );
   const isReady = !(
     isUserPending ||
     (user && (isAttemptPending || isSubscriptionPending))
@@ -72,7 +69,7 @@ function useTryoutStartValue({
     isUserPending ||
     (user ? isAttemptPending || isSubscriptionPending : false);
   const hasFinishedAttempt = Boolean(
-    attemptData && attemptData.attempt.status !== "in-progress"
+    attemptData && effectiveStatus !== "in-progress"
   );
 
   const setDialogOpen = useCallback(
@@ -154,19 +151,20 @@ function useTryoutStartValue({
       },
       state: {
         attemptData,
+        effectiveStatus,
         hasSubscription,
         hasFinishedAttempt,
         isReady,
         isLoading,
         resumePartKey,
         remainingTime,
-        tryout,
       },
     }),
     [
       clickCta,
       confirmStart,
       attemptData,
+      effectiveStatus,
       hasSubscription,
       hasFinishedAttempt,
       isReady,
@@ -176,7 +174,6 @@ function useTryoutStartValue({
       resumePartKey,
       remainingTime,
       setDialogOpen,
-      tryout,
     ]
   );
 }

@@ -8,6 +8,8 @@ import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useMemo } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
+import { useTryoutQueryNowMs } from "@/components/tryout/hooks/use-query-now-ms";
+import { getEffectiveTryoutStatus } from "@/components/tryout/utils/status";
 import { useUser } from "@/lib/context/use-user";
 
 const TryoutPackageProgressContext = createContext<ReadonlySet<string> | null>(
@@ -29,12 +31,31 @@ export function TryoutPackageProgressProvider({
   product,
 }: TryoutPackageProgressProviderProps) {
   const isUserPending = useUser((state) => state.isPending);
+  const nowMs = useTryoutQueryNowMs();
   const user = useUser((state) => state.user);
   const { data } = useQueryWithStatus(
-    api.tryouts.queries.attempts.getUserInProgressTryoutSlugs,
+    api.tryouts.queries.attempts.getUserInProgressTryouts,
     !isUserPending && user ? { locale, product } : "skip"
   );
-  const inProgressTryoutSlugs = useMemo(() => new Set(data ?? []), [data]);
+  const inProgressTryoutSlugs = useMemo(() => {
+    const activeSlugs = new Set<string>();
+
+    for (const tryout of data ?? []) {
+      if (
+        getEffectiveTryoutStatus({
+          expiresAtMs: tryout.expiresAtMs,
+          nowMs,
+          status: "in-progress",
+        }) !== "in-progress"
+      ) {
+        continue;
+      }
+
+      activeSlugs.add(tryout.slug);
+    }
+
+    return activeSlugs;
+  }, [data, nowMs]);
 
   return (
     <TryoutPackageProgressContext.Provider value={inProgressTryoutSlugs}>

@@ -24,6 +24,7 @@ import type {
   TryoutPartUiStatus,
 } from "@/components/tryout/utils/part-state";
 import { deriveTryoutPartPageState } from "@/components/tryout/utils/part-state";
+import { getEffectiveTryoutStatus } from "@/components/tryout/utils/status";
 import { useUser } from "@/lib/context/use-user";
 import { useExerciseTimer } from "@/lib/hooks/use-exercise-timer";
 
@@ -50,17 +51,6 @@ type TryoutPartQuery = FunctionReturnType<
 type TryoutPartDialogSetter = ComponentProps<
   typeof ResponsiveDialog
 >["setOpen"];
-
-/**
- * Returns true only when the current tryout attempt exists and is no longer active.
- */
-function hasFinishedTryout(runtime: TryoutPartQuery | undefined) {
-  if (!runtime) {
-    return false;
-  }
-
-  return runtime.tryoutAttempt.status !== "in-progress";
-}
 
 interface TryoutPartContextValue {
   actions: {
@@ -94,12 +84,14 @@ const TryoutPartContext = createContext<TryoutPartContextValue | null>(null);
 export function TryoutPartProvider({
   children,
   isRuntimePending,
+  nowMs,
   part,
   runtime,
   tryout,
 }: {
   children: ReactNode;
   isRuntimePending: boolean;
+  nowMs: number;
   part: TryoutPartValue;
   runtime: TryoutPartQuery | undefined;
   tryout: TryoutValue;
@@ -115,6 +107,7 @@ export function TryoutPartProvider({
   const { answers, attempt, canStartPart, partEndReason, status } =
     deriveTryoutPartPageState({
       isRuntimePending,
+      nowMs,
       runtime,
     });
   const shouldShowTryoutStartButton = !(isRuntimePending || (user && runtime));
@@ -141,7 +134,14 @@ export function TryoutPartProvider({
     expiresAtMs: runtime?.expiresAtMs,
   });
   const isAwaitingExpiry = status === "in-progress" && timer.isExpired;
-  const isTryoutFinished = hasFinishedTryout(runtime);
+  const isTryoutFinished = Boolean(
+    runtime &&
+      getEffectiveTryoutStatus({
+        expiresAtMs: runtime.expiresAtMs,
+        nowMs,
+        status: runtime.tryoutAttempt.status,
+      }) !== "in-progress"
+  );
 
   const handleStartPart = useCallback(() => {
     if (!runtime) {

@@ -7,7 +7,9 @@ import {
 } from "@repo/backend/convex/tryouts/products";
 import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError, v } from "convex/values";
-import { getAll, getManyFrom } from "convex-helpers/server/relationships";
+import { getAll } from "convex-helpers/server/relationships";
+
+const MAX_ACTIVE_TRYOUTS_PER_PRODUCT = 100;
 
 /** Lists active tryouts for one product and locale. */
 export const getActiveTryouts = query({
@@ -25,7 +27,14 @@ export const getActiveTryouts = query({
           .eq("locale", args.locale)
           .eq("isActive", true)
       )
-      .collect();
+      .take(MAX_ACTIVE_TRYOUTS_PER_PRODUCT + 1);
+
+    if (tryouts.length > MAX_ACTIVE_TRYOUTS_PER_PRODUCT) {
+      throw new ConvexError({
+        code: "TOO_MANY_ACTIVE_TRYOUTS",
+        message: "Active tryout list exceeded the supported query limit.",
+      });
+    }
 
     return sortTryoutsForProduct(args.product, tryouts);
   },
@@ -67,13 +76,17 @@ export const getTryoutDetails = query({
       return null;
     }
 
-    const tryoutPartSets = await getManyFrom(
-      ctx.db,
-      "tryoutPartSets",
-      "tryoutId_partIndex",
-      tryout._id,
-      "tryoutId"
-    );
+    const tryoutPartSets = await ctx.db
+      .query("tryoutPartSets")
+      .withIndex("tryoutId_partIndex", (q) => q.eq("tryoutId", tryout._id))
+      .take(tryout.partCount + 1);
+
+    if (tryoutPartSets.length !== tryout.partCount) {
+      throw new ConvexError({
+        code: "INVALID_TRYOUT_STATE",
+        message: "Tryout part mapping count does not match partCount.",
+      });
+    }
     const sets = await getAll(
       ctx.db,
       "exerciseSets",

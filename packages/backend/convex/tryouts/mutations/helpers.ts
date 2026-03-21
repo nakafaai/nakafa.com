@@ -3,25 +3,21 @@ import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   computeTryoutRawScorePercentage,
-  getTryoutAttemptScoreStatus,
   getTryoutScoreTarget,
   isBetterLeaderboardScore,
   syncTryoutAttemptAggregates,
   syncTryoutAttemptExpiry,
 } from "@repo/backend/convex/tryouts/helpers";
-import { tryoutStatusValidator } from "@repo/backend/convex/tryouts/schema";
 import { tryoutLeaderboardWorkpool } from "@repo/backend/convex/tryouts/workpool";
-import { ConvexError, type Infer, v } from "convex/values";
+import { ConvexError } from "convex/values";
 
-export const completeTryoutResultValidator = v.object({
-  status: tryoutStatusValidator,
-  isOfficial: v.boolean(),
-  theta: v.number(),
-  irtScore: v.number(),
-  rawScorePercentage: v.number(),
-});
-
-type CompleteTryoutResult = Infer<typeof completeTryoutResultValidator>;
+interface CompleteTryoutResult {
+  irtScore: Doc<"tryoutAttempts">["irtScore"];
+  isOfficial: boolean;
+  rawScorePercentage: number;
+  status: Doc<"tryoutAttempts">["status"];
+  theta: Doc<"tryoutAttempts">["theta"];
+}
 
 /** Finalizes one tryout attempt into its current result state. */
 export async function finalizeTryoutAttempt({
@@ -49,7 +45,7 @@ export async function finalizeTryoutAttempt({
     return {
       status: "completed",
       isOfficial:
-        getTryoutAttemptScoreStatus(tryoutAttempt) === "official" &&
+        tryoutAttempt.scoreStatus === "official" &&
         (!leaderboardEntry || leaderboardEntry.attemptId === tryoutAttempt._id),
       theta: tryoutAttempt.theta,
       irtScore: tryoutAttempt.irtScore,

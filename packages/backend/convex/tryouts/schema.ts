@@ -66,11 +66,13 @@ const tables = {
     thetaSE: v.number(),
     irtScore: v.number(),
     startedAt: v.number(),
+    expiresAt: v.number(),
     lastActivityAt: v.number(),
     completedAt: v.union(v.number(), v.null()),
     endReason: v.union(attemptEndReasonValidator, v.null()),
   })
-    .index("userId_status_startedAt", ["userId", "status", "startedAt"])
+    .index("status_expiresAt", ["status", "expiresAt"])
+    .index("userId_status_expiresAt", ["userId", "status", "expiresAt"])
     .index("userId_tryoutId_startedAt", ["userId", "tryoutId", "startedAt"])
     .index("tryoutId_scoreStatus_status_startedAt", [
       "tryoutId",
@@ -121,7 +123,16 @@ const tables = {
     attemptId: v.id("tryoutAttempts"),
   })
     .index("tryoutId_userId", ["tryoutId", "userId"])
-    .index("userId_leaderboardNamespace", ["userId", "leaderboardNamespace"]),
+    .index("userId_leaderboardNamespace_completedAt", [
+      "userId",
+      "leaderboardNamespace",
+      "completedAt",
+    ])
+    .index("userId_leaderboardNamespace_theta", [
+      "userId",
+      "leaderboardNamespace",
+      "theta",
+    ]),
 };
 
 export default tables;

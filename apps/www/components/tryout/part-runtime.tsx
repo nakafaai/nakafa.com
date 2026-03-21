@@ -3,6 +3,7 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import type { ComponentProps, ReactNode } from "react";
+import { useTryoutQueryNowMs } from "@/components/tryout/hooks/use-query-now-ms";
 import {
   TryoutPartBackCta,
   TryoutPartDialog,
@@ -45,6 +46,7 @@ export function TryoutPartRuntime({
   tryout,
 }: TryoutPartRuntimeProps) {
   const isUserPending = useUser((state) => state.isPending);
+  const nowMs = useTryoutQueryNowMs();
   const user = useUser((state) => state.user);
   const { data: partState, isPending: isPartStatePending } = useQueryWithStatus(
     api.tryouts.queries.attempts.getUserTryoutPartAttempt,
@@ -63,6 +65,7 @@ export function TryoutPartRuntime({
     <ExerciseContextProvider slug={part.setSlug}>
       <TryoutPartProvider
         isRuntimePending={isRuntimePending}
+        nowMs={nowMs}
         part={part}
         runtime={partState}
         tryout={tryout}

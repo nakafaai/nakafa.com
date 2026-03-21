@@ -4,6 +4,7 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import type { Locale } from "next-intl";
+import { useTryoutQueryNowMs } from "@/components/tryout/hooks/use-query-now-ms";
 import { useUser } from "@/lib/context/use-user";
 
 export interface UserTryoutAttemptParams {
@@ -19,11 +20,16 @@ export interface UserTryoutAttemptParams {
  */
 export function useUserTryoutAttempt(params: UserTryoutAttemptParams | null) {
   const isUserPending = useUser((state) => state.isPending);
+  const nowMs = useTryoutQueryNowMs();
   const user = useUser((state) => state.user);
   const queryArgs = !params || isUserPending || !user ? "skip" : params;
-
-  return useQueryWithStatus(
+  const queryResult = useQueryWithStatus(
     api.tryouts.queries.attempts.getUserTryoutAttempt,
     queryArgs
   );
+
+  return {
+    nowMs,
+    ...queryResult,
+  };
 }

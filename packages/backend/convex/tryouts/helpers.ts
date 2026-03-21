@@ -14,10 +14,7 @@ import {
   getScaleVersionStatus,
 } from "@repo/backend/convex/irt/scaleVersions";
 import { getAttemptEndReasonFromStatus } from "@repo/backend/convex/lib/attempts";
-import {
-  computeTryoutExpiresAtMs,
-  scaleThetaToTryoutScore,
-} from "@repo/backend/convex/tryouts/products";
+import { scaleThetaToTryoutScore } from "@repo/backend/convex/tryouts/products";
 import type { TryoutScoreStatus } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError } from "convex/values";
 import { asyncMap } from "convex-helpers";
@@ -37,13 +34,6 @@ type TryoutScoreTotals = Pick<
   Doc<"tryoutAttempts">,
   "totalCorrect" | "totalQuestions"
 >;
-
-/** Returns the persisted maturity status of one tryout attempt score. */
-export function getTryoutAttemptScoreStatus(
-  tryoutAttempt: Pick<Doc<"tryoutAttempts">, "scoreStatus">
-) {
-  return tryoutAttempt.scoreStatus;
-}
 
 /** Picks the best frozen scale currently available for one tryout attempt. */
 export async function getTryoutScoreTarget(
@@ -353,16 +343,21 @@ export async function syncTryoutAttemptAggregates({
 
   const effectiveScaleVersionId =
     scaleVersionId ?? tryoutAttempt.scaleVersionId;
-  const effectiveScoreStatus =
-    scoreStatus ?? getTryoutAttemptScoreStatus(tryoutAttempt);
+  const effectiveScoreStatus = scoreStatus ?? tryoutAttempt.scoreStatus;
   const completedPartIndices = new Set(tryoutAttempt.completedPartIndices);
-  const partAttempts = await getManyFrom(
-    ctx.db,
-    "tryoutPartAttempts",
-    "tryoutAttemptId_partIndex",
-    tryoutAttemptId,
-    "tryoutAttemptId"
-  );
+  const partAttempts = await ctx.db
+    .query("tryoutPartAttempts")
+    .withIndex("tryoutAttemptId_partIndex", (q) =>
+      q.eq("tryoutAttemptId", tryoutAttemptId)
+    )
+    .take(tryout.partCount + 1);
+
+  if (partAttempts.length > tryout.partCount) {
+    throw new ConvexError({
+      code: "INVALID_ATTEMPT_STATE",
+      message: "Tryout attempt has more part attempts than expected.",
+    });
+  }
   const finalizedPartAttempts = partAttempts.filter((partAttempt) =>
     completedPartIndices.has(partAttempt.partIndex)
   );
@@ -482,28 +477,33 @@ export async function expireTryoutAttempt(
   tryoutAttempt: Doc<"tryoutAttempts">,
   now: number
 ) {
-  const tryout = await ctx.db.get("tryouts", tryoutAttempt.tryoutId);
+  const expiredAtMs = tryoutAttempt.expiresAt;
+  const [scoreTarget, tryout] = await Promise.all([
+    getTryoutScoreTarget(ctx.db, tryoutAttempt),
+    ctx.db.get("tryouts", tryoutAttempt.tryoutId),
+  ]);
 
   if (!tryout) {
     throw new ConvexError({
-      code: "INVALID_ATTEMPT_STATE",
-      message: "Tryout attempt is missing its parent tryout.",
+      code: "TRYOUT_NOT_FOUND",
+      message: "Tryout not found.",
     });
   }
 
-  const expiredAtMs = computeTryoutExpiresAtMs({
-    product: tryout.product,
-    startedAtMs: tryoutAttempt.startedAt,
-  });
-  const scoreTarget = await getTryoutScoreTarget(ctx.db, tryoutAttempt);
+  const partAttempts = await ctx.db
+    .query("tryoutPartAttempts")
+    .withIndex("tryoutAttemptId_partIndex", (q) =>
+      q.eq("tryoutAttemptId", tryoutAttempt._id)
+    )
+    .take(tryout.partCount + 1);
 
-  const partAttempts = await getManyFrom(
-    ctx.db,
-    "tryoutPartAttempts",
-    "tryoutAttemptId_partIndex",
-    tryoutAttempt._id,
-    "tryoutAttemptId"
-  );
+  if (partAttempts.length > tryout.partCount) {
+    throw new ConvexError({
+      code: "INVALID_ATTEMPT_STATE",
+      message: "Tryout attempt has more part attempts than expected.",
+    });
+  }
+
   for (const partAttempt of partAttempts) {
     if (tryoutAttempt.completedPartIndices.includes(partAttempt.partIndex)) {
       continue;
@@ -538,19 +538,7 @@ export async function syncTryoutAttemptExpiry(
   tryoutAttempt: Doc<"tryoutAttempts">,
   now: number
 ) {
-  const tryout = await ctx.db.get("tryouts", tryoutAttempt.tryoutId);
-
-  if (!tryout) {
-    throw new ConvexError({
-      code: "INVALID_ATTEMPT_STATE",
-      message: "Tryout attempt is missing its parent tryout.",
-    });
-  }
-
-  const expiredAtMs = computeTryoutExpiresAtMs({
-    product: tryout.product,
-    startedAtMs: tryoutAttempt.startedAt,
-  });
+  const expiredAtMs = tryoutAttempt.expiresAt;
 
   if (tryoutAttempt.status === "expired") {
     return { expired: true, expiredAtMs };

@@ -1,10 +1,12 @@
 "use client";
 
-import { useInterval } from "@mantine/hooks";
 import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
 import type { Locale } from "next-intl";
-import { useState } from "react";
 import { useUserTryoutAttempt } from "@/components/tryout/hooks/use-user-tryout-attempt";
+import {
+  getEffectivePartAttemptStatus,
+  getEffectiveTryoutStatus,
+} from "@/components/tryout/utils/status";
 
 interface TryoutRemainingTime {
   hours: number;
@@ -18,6 +20,57 @@ export interface TryoutAttemptStateProps {
   tryoutSlug: string;
 }
 
+function getLocalResumePartKey({
+  attemptData,
+  effectiveStatus,
+  nowMs,
+}: {
+  attemptData: ReturnType<typeof useUserTryoutAttempt>["data"] | undefined;
+  effectiveStatus: ReturnType<typeof getEffectiveTryoutStatus> | undefined;
+  nowMs: number;
+}) {
+  if (!(attemptData && effectiveStatus === "in-progress")) {
+    return undefined;
+  }
+
+  const activePartAttempts = attemptData.partAttempts.filter(
+    (partAttempt) =>
+      getEffectivePartAttemptStatus({
+        expiresAtMs: attemptData.expiresAtMs,
+        nowMs,
+        setAttempt: partAttempt.setAttempt,
+      }) === "in-progress"
+  );
+
+  if (activePartAttempts.length === 0) {
+    const suggestedPartAttempt = attemptData.resumePartKey
+      ? attemptData.partAttempts.find(
+          (partAttempt) => partAttempt.partKey === attemptData.resumePartKey
+        )
+      : null;
+
+    if (
+      suggestedPartAttempt &&
+      getEffectivePartAttemptStatus({
+        expiresAtMs: attemptData.expiresAtMs,
+        nowMs,
+        setAttempt: suggestedPartAttempt.setAttempt,
+      }) !== "in-progress"
+    ) {
+      return undefined;
+    }
+
+    return attemptData.resumePartKey;
+  }
+
+  activePartAttempts.sort(
+    (left, right) =>
+      right.setAttempt.lastActivityAt - left.setAttempt.lastActivityAt
+  );
+
+  return activePartAttempts[0]?.partKey;
+}
+
 /**
  * Derives the student-facing tryout CTA state from the latest tryout attempt.
  */
@@ -26,26 +79,29 @@ export function useTryoutAttemptState({
   product,
   tryoutSlug,
 }: TryoutAttemptStateProps) {
-  const [nowMs, setNowMs] = useState(() => Date.now());
-  const { data: attemptData, isPending: isAttemptPending } =
-    useUserTryoutAttempt({
-      locale,
-      product,
-      tryoutSlug,
-    });
+  const {
+    data: attemptData,
+    isPending: isAttemptPending,
+    nowMs,
+  } = useUserTryoutAttempt({
+    locale,
+    product,
+    tryoutSlug,
+  });
 
-  useInterval(
-    () => {
-      setNowMs(Date.now());
-    },
-    1000,
-    { autoInvoke: true }
-  );
-
-  const isTryoutInProgress = attemptData?.attempt.status === "in-progress";
-  const resumePartKey = isTryoutInProgress
-    ? attemptData?.resumePartKey
+  const effectiveStatus = attemptData
+    ? getEffectiveTryoutStatus({
+        expiresAtMs: attemptData.expiresAtMs,
+        nowMs,
+        status: attemptData.attempt.status,
+      })
     : undefined;
+  const isTryoutInProgress = effectiveStatus === "in-progress";
+  const resumePartKey = getLocalResumePartKey({
+    attemptData,
+    effectiveStatus,
+    nowMs,
+  });
 
   let remainingTime: TryoutRemainingTime | null = null;
 
@@ -64,7 +120,9 @@ export function useTryoutAttemptState({
 
   return {
     attemptData,
+    effectiveStatus,
     isAttemptPending,
+    nowMs,
     resumePartKey,
     remainingTime,
   };

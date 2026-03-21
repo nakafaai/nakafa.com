@@ -1,5 +1,9 @@
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
+import {
+  getEffectivePartAttemptStatus,
+  getEffectiveTryoutStatus,
+} from "@/components/tryout/utils/status";
 
 type TryoutAttemptData = FunctionReturnType<
   typeof api.tryouts.queries.attempts.getUserTryoutAttempt
@@ -29,11 +33,15 @@ interface TryoutProgress {
 }
 
 function getTryoutPartStatus({
+  expiresAtMs,
   isRuntimePending,
+  nowMs,
   partAttempt,
   tryout,
 }: {
+  expiresAtMs: number | undefined;
   isRuntimePending: boolean;
+  nowMs: number;
   partAttempt: TryoutPartAttempt | null;
   tryout: TryoutProgress | null;
 }): TryoutPartUiStatus {
@@ -56,6 +64,17 @@ function getTryoutPartStatus({
     return "ended";
   }
 
+  if (
+    partAttempt &&
+    getEffectivePartAttemptStatus({
+      expiresAtMs,
+      nowMs,
+      setAttempt: partAttempt.setAttempt,
+    }) !== "in-progress"
+  ) {
+    return "ended";
+  }
+
   if (partAttempt?.setAttempt.status === "in-progress") {
     return "in-progress";
   }
@@ -64,21 +83,44 @@ function getTryoutPartStatus({
 }
 
 export function deriveTryoutPartPageState({
+  nowMs,
   isRuntimePending,
   runtime,
 }: {
+  nowMs: number;
   isRuntimePending: boolean;
   runtime: TryoutPartRuntime | undefined;
 }) {
   const partAttempt = runtime?.partAttempt ?? null;
-  const tryout = runtime
-    ? {
-        completedPartIndices: runtime.tryoutAttempt.completedPartIndices,
-        status: runtime.tryoutAttempt.status,
-      }
-    : null;
+
+  if (!runtime) {
+    return {
+      answers: [],
+      attempt: null,
+      canStartPart: false,
+      partEndReason: null,
+      status: getTryoutPartStatus({
+        expiresAtMs: undefined,
+        isRuntimePending,
+        nowMs,
+        partAttempt,
+        tryout: null,
+      }),
+    };
+  }
+
+  const tryout = {
+    completedPartIndices: runtime.tryoutAttempt.completedPartIndices,
+    status: getEffectiveTryoutStatus({
+      expiresAtMs: runtime.expiresAtMs,
+      nowMs,
+      status: runtime.tryoutAttempt.status,
+    }),
+  };
   const status = getTryoutPartStatus({
+    expiresAtMs: runtime?.expiresAtMs,
     isRuntimePending,
+    nowMs,
     partAttempt,
     tryout,
   });
@@ -95,29 +137,51 @@ export function deriveTryoutPartPageState({
 
 export function deriveTryoutSetPartState({
   attemptData,
+  effectiveStatus,
+  nowMs,
   partKey,
+  resumePartKey,
 }: {
   attemptData: TryoutAttemptData | undefined;
+  effectiveStatus: TryoutAttemptStatus | undefined;
+  nowMs: number;
   partKey: string;
+  resumePartKey: string | undefined;
 }) {
   const partAttempt =
     attemptData?.partAttempts.find((attempt) => attempt.partKey === partKey) ??
     null;
-  const tryout = attemptData
-    ? {
-        completedPartIndices: attemptData.attempt.completedPartIndices,
-        status: attemptData.attempt.status,
-      }
-    : null;
+  const tryoutStatus = effectiveStatus ?? attemptData?.attempt.status;
+
+  if (!(attemptData && tryoutStatus)) {
+    const status = getTryoutPartStatus({
+      expiresAtMs: attemptData?.expiresAtMs,
+      isRuntimePending: false,
+      nowMs,
+      partAttempt,
+      tryout: null,
+    });
+
+    return {
+      isCurrent: status === "in-progress" || resumePartKey === partKey,
+      status,
+    };
+  }
+
+  const tryout = {
+    completedPartIndices: attemptData.attempt.completedPartIndices,
+    status: tryoutStatus,
+  };
   const status = getTryoutPartStatus({
+    expiresAtMs: attemptData?.expiresAtMs,
     isRuntimePending: false,
+    nowMs,
     partAttempt,
     tryout,
   });
 
   return {
-    isCurrent:
-      status === "in-progress" || attemptData?.resumePartKey === partKey,
+    isCurrent: status === "in-progress" || resumePartKey === partKey,
     status,
   };
 }

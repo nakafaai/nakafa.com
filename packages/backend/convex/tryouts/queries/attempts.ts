@@ -4,18 +4,23 @@ import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { getFirstIncompleteTryoutPartIndex } from "@repo/backend/convex/tryouts/helpers";
-import {
-  computeTryoutExpiresAtMs,
-  tryoutProductValidator,
-} from "@repo/backend/convex/tryouts/products";
+import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
 import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError, type Infer, v } from "convex/values";
 import { getAll, getManyFrom } from "convex-helpers/server/relationships";
 import { nullable } from "convex-helpers/validators";
 
+const MAX_IN_PROGRESS_TRYOUTS_PER_USER = 100;
+const inProgressTryoutValidator = v.object({
+  expiresAtMs: v.number(),
+  slug: v.string(),
+});
+
 const tryoutPartAttemptSummarySetAttemptValidator = v.object({
   lastActivityAt: v.number(),
+  startedAt: v.number(),
   status: exerciseAttemptStatusValidator,
+  timeLimit: v.number(),
 });
 
 const tryoutPartAttemptSummaryValidator = v.object({
@@ -93,13 +98,19 @@ export const getUserTryoutAttempt = query({
       return null;
     }
 
-    const partAttempts = await getManyFrom(
-      ctx.db,
-      "tryoutPartAttempts",
-      "tryoutAttemptId_partIndex",
-      attempt._id,
-      "tryoutAttemptId"
-    );
+    const partAttempts = await ctx.db
+      .query("tryoutPartAttempts")
+      .withIndex("tryoutAttemptId_partIndex", (q) =>
+        q.eq("tryoutAttemptId", attempt._id)
+      )
+      .take(tryout.partCount + 1);
+
+    if (partAttempts.length > tryout.partCount) {
+      throw new ConvexError({
+        code: "INVALID_ATTEMPT_STATE",
+        message: "Tryout attempt has more part attempts than expected.",
+      });
+    }
     const setAttemptIds = partAttempts.map(
       (partAttempt) => partAttempt.setAttemptId
     );
@@ -120,7 +131,9 @@ export const getUserTryoutAttempt = query({
         partKey: partAttempt.partKey,
         setAttempt: {
           lastActivityAt: setAttempt.lastActivityAt,
+          startedAt: setAttempt.startedAt,
           status: setAttempt.status,
+          timeLimit: setAttempt.timeLimit,
         },
       };
     });
@@ -130,10 +143,7 @@ export const getUserTryoutAttempt = query({
       return {
         attempt,
         partAttempts: validPartAttempts,
-        expiresAtMs: computeTryoutExpiresAtMs({
-          product: tryout.product,
-          startedAtMs: attempt.startedAt,
-        }),
+        expiresAtMs: attempt.expiresAt,
       };
     }
 
@@ -169,10 +179,7 @@ export const getUserTryoutAttempt = query({
       attempt,
       partAttempts: validPartAttempts,
       resumePartKey,
-      expiresAtMs: computeTryoutExpiresAtMs({
-        product: tryout.product,
-        startedAtMs: attempt.startedAt,
-      }),
+      expiresAtMs: attempt.expiresAt,
     };
   },
 });
@@ -180,47 +187,68 @@ export const getUserTryoutAttempt = query({
 /**
  * Returns active tryout slugs whose latest attempt is still in progress.
  */
-export const getUserInProgressTryoutSlugs = query({
+export const getUserInProgressTryouts = query({
   args: {
     product: tryoutProductValidator,
     locale: localeValidator,
   },
-  returns: v.array(v.string()),
+  returns: v.array(inProgressTryoutValidator),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
-    const activeTryoutSlugs = new Set<string>();
-
-    const activeTryouts = await ctx.db
-      .query("tryouts")
-      .withIndex("product_locale_isActive", (q) =>
-        q
-          .eq("product", args.product)
-          .eq("locale", args.locale)
-          .eq("isActive", true)
+    const inProgressAttempts = await ctx.db
+      .query("tryoutAttempts")
+      .withIndex("userId_status_expiresAt", (q) =>
+        q.eq("userId", appUser._id).eq("status", "in-progress")
       )
-      .collect();
+      .take(MAX_IN_PROGRESS_TRYOUTS_PER_USER + 1);
 
-    for (const tryout of activeTryouts) {
-      const latestAttempt = await ctx.db
-        .query("tryoutAttempts")
-        .withIndex("userId_tryoutId_startedAt", (q) =>
-          q.eq("userId", appUser._id).eq("tryoutId", tryout._id)
-        )
-        .order("desc")
-        .first();
-
-      if (!latestAttempt) {
-        continue;
-      }
-
-      if (latestAttempt.status !== "in-progress") {
-        continue;
-      }
-
-      activeTryoutSlugs.add(tryout.slug);
+    if (inProgressAttempts.length > MAX_IN_PROGRESS_TRYOUTS_PER_USER) {
+      throw new ConvexError({
+        code: "TOO_MANY_IN_PROGRESS_TRYOUTS",
+        message: "In-progress tryout list exceeded the supported query limit.",
+      });
     }
 
-    return Array.from(activeTryoutSlugs);
+    if (inProgressAttempts.length === 0) {
+      return [];
+    }
+
+    const tryouts = await getAll(
+      ctx.db,
+      "tryouts",
+      inProgressAttempts.map((tryoutAttempt) => tryoutAttempt.tryoutId)
+    );
+    const activeTryoutsBySlug = new Map<
+      string,
+      Infer<typeof inProgressTryoutValidator>
+    >();
+
+    for (const [index, tryout] of tryouts.entries()) {
+      if (!tryout) {
+        continue;
+      }
+
+      const tryoutAttempt = inProgressAttempts[index];
+
+      if (!tryoutAttempt) {
+        continue;
+      }
+
+      if (!tryout.isActive) {
+        continue;
+      }
+
+      if (tryout.product !== args.product || tryout.locale !== args.locale) {
+        continue;
+      }
+
+      activeTryoutsBySlug.set(tryout.slug, {
+        expiresAtMs: tryoutAttempt.expiresAt,
+        slug: tryout.slug,
+      });
+    }
+
+    return Array.from(activeTryoutsBySlug.values());
   },
 });
 
@@ -234,9 +262,9 @@ export const getUserTryoutPartAttempt = query({
   },
   returns: nullable(
     v.object({
-      tryoutAttempt: vv.doc("tryoutAttempts"),
       expiresAtMs: v.number(),
       partAttempt: nullable(tryoutPartAttemptRuntimeValidator),
+      tryoutAttempt: vv.doc("tryoutAttempts"),
     })
   ),
   handler: async (ctx, args) => {
@@ -267,47 +295,31 @@ export const getUserTryoutPartAttempt = query({
       return null;
     }
 
-    const partAttempts = await getManyFrom(
-      ctx.db,
-      "tryoutPartAttempts",
-      "tryoutAttemptId_partIndex",
-      tryoutAttempt._id,
-      "tryoutAttemptId"
-    );
-    const setAttempts = await getAll(
-      ctx.db,
-      "exerciseAttempts",
-      partAttempts.map((partAttempt) => partAttempt.setAttemptId)
-    );
-    const validPartAttempts = partAttempts.map((partAttempt, index) => {
-      const setAttempt = setAttempts[index];
+    const currentPartAttempt = await ctx.db
+      .query("tryoutPartAttempts")
+      .withIndex("tryoutAttemptId_partKey", (q) =>
+        q.eq("tryoutAttemptId", tryoutAttempt._id).eq("partKey", args.partKey)
+      )
+      .unique();
 
-      if (!setAttempt) {
-        throw new ConvexError({
-          code: "INVALID_ATTEMPT_STATE",
-          message: "Tryout part is missing its exercise attempt.",
-        });
-      }
-
-      return {
-        partIndex: partAttempt.partIndex,
-        partKey: partAttempt.partKey,
-        setAttempt,
-        setAttemptId: partAttempt.setAttemptId,
-      };
-    });
-    const currentPartAttempt = validPartAttempts.find(
-      (partAttempt) => partAttempt.partKey === args.partKey
-    );
     if (!currentPartAttempt) {
       return {
-        tryoutAttempt,
-        expiresAtMs: computeTryoutExpiresAtMs({
-          product: tryout.product,
-          startedAtMs: tryoutAttempt.startedAt,
-        }),
+        expiresAtMs: tryoutAttempt.expiresAt,
         partAttempt: null,
+        tryoutAttempt,
       };
+    }
+
+    const setAttempt = await ctx.db.get(
+      "exerciseAttempts",
+      currentPartAttempt.setAttemptId
+    );
+
+    if (!setAttempt) {
+      throw new ConvexError({
+        code: "INVALID_ATTEMPT_STATE",
+        message: "Tryout part is missing its exercise attempt.",
+      });
     }
 
     const answers = await getManyFrom(
@@ -319,17 +331,14 @@ export const getUserTryoutPartAttempt = query({
     );
 
     return {
-      tryoutAttempt,
-      expiresAtMs: computeTryoutExpiresAtMs({
-        product: tryout.product,
-        startedAtMs: tryoutAttempt.startedAt,
-      }),
+      expiresAtMs: tryoutAttempt.expiresAt,
       partAttempt: {
         partIndex: currentPartAttempt.partIndex,
         partKey: currentPartAttempt.partKey,
         answers,
-        setAttempt: currentPartAttempt.setAttempt,
+        setAttempt,
       },
+      tryoutAttempt,
     };
   },
 });

@@ -3,6 +3,7 @@ import { IRT_AUTOMATION_CRON_INTERVAL_MINUTES } from "@repo/backend/convex/irt/p
 import { cronJobs } from "convex/server";
 
 const crons = cronJobs();
+const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
 
 /**
  * Populates audio generation queue every 30 minutes.
@@ -95,6 +96,16 @@ crons.interval(
   "drain irt scale publication queue",
   { minutes: IRT_AUTOMATION_CRON_INTERVAL_MINUTES },
   internal.irt.internalMutations.drainScalePublicationQueue,
+  {}
+);
+
+/**
+ * Repairs overdue tryouts whose scheduled expiry was delayed or missed.
+ */
+crons.interval(
+  "sweep expired tryouts",
+  { minutes: TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES },
+  internal.tryouts.internalMutations.sweepExpiredTryoutAttempts,
   {}
 );
 
