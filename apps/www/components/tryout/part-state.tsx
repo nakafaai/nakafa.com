@@ -51,6 +51,17 @@ type TryoutPartDialogSetter = ComponentProps<
   typeof ResponsiveDialog
 >["setOpen"];
 
+/**
+ * Returns true only when the current tryout attempt exists and is no longer active.
+ */
+function hasFinishedTryout(runtime: TryoutPartQuery | undefined) {
+  if (!runtime) {
+    return false;
+  }
+
+  return runtime.tryoutAttempt.status !== "in-progress";
+}
+
 interface TryoutPartContextValue {
   actions: {
     completePart: () => void;
@@ -130,7 +141,7 @@ export function TryoutPartProvider({
     expiresAtMs: runtime?.expiresAtMs,
   });
   const isAwaitingExpiry = status === "in-progress" && timer.isExpired;
-  const isTryoutFinished = runtime?.tryoutAttempt.status !== "in-progress";
+  const isTryoutFinished = hasFinishedTryout(runtime);
 
   const handleStartPart = useCallback(() => {
     if (!runtime) {
