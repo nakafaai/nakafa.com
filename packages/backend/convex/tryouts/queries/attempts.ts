@@ -16,6 +16,11 @@ const inProgressTryoutValidator = v.object({
   slug: v.string(),
 });
 
+const orderedTryoutPartValidator = v.object({
+  partIndex: v.number(),
+  partKey: tryoutPartKeyValidator,
+});
+
 const tryoutPartAttemptSummarySetAttemptValidator = v.object({
   lastActivityAt: v.number(),
   startedAt: v.number(),
@@ -65,6 +70,7 @@ export const getUserTryoutAttempt = query({
   returns: nullable(
     v.object({
       attempt: vv.doc("tryoutAttempts"),
+      orderedParts: v.array(orderedTryoutPartValidator),
       partAttempts: v.array(tryoutPartAttemptSummaryValidator),
       resumePartKey: v.optional(tryoutPartKeyValidator),
       expiresAtMs: v.number(),
@@ -97,6 +103,34 @@ export const getUserTryoutAttempt = query({
     if (!attempt) {
       return null;
     }
+
+    const tryoutPartSets = await ctx.db
+      .query("tryoutPartSets")
+      .withIndex("tryoutId_partIndex", (q) => q.eq("tryoutId", tryout._id))
+      .take(tryout.partCount + 1);
+
+    if (tryoutPartSets.length !== tryout.partCount) {
+      throw new ConvexError({
+        code: "INVALID_TRYOUT_STATE",
+        message: "Tryout is missing one or more parts.",
+      });
+    }
+
+    for (const [partIndex, tryoutPartSet] of tryoutPartSets.entries()) {
+      if (tryoutPartSet.partIndex === partIndex) {
+        continue;
+      }
+
+      throw new ConvexError({
+        code: "INVALID_TRYOUT_STATE",
+        message: "Tryout parts are out of order.",
+      });
+    }
+
+    const orderedParts = tryoutPartSets.map((tryoutPartSet) => ({
+      partIndex: tryoutPartSet.partIndex,
+      partKey: tryoutPartSet.partKey,
+    }));
 
     const partAttempts = await ctx.db
       .query("tryoutPartAttempts")
@@ -142,6 +176,7 @@ export const getUserTryoutAttempt = query({
     if (attempt.status !== "in-progress") {
       return {
         attempt,
+        orderedParts,
         partAttempts: validPartAttempts,
         expiresAtMs: attempt.expiresAt,
       };
@@ -158,12 +193,9 @@ export const getUserTryoutAttempt = query({
     if (suggestedPartKey) {
       resumePartKey = suggestedPartKey;
     } else if (nextPartIndex !== undefined) {
-      const nextPartSet = await ctx.db
-        .query("tryoutPartSets")
-        .withIndex("tryoutId_partIndex", (q) =>
-          q.eq("tryoutId", tryout._id).eq("partIndex", nextPartIndex)
-        )
-        .unique();
+      const nextPartSet = orderedParts.find(
+        (part) => part.partIndex === nextPartIndex
+      );
 
       if (!nextPartSet) {
         throw new ConvexError({
@@ -177,6 +209,7 @@ export const getUserTryoutAttempt = query({
 
     return {
       attempt,
+      orderedParts,
       partAttempts: validPartAttempts,
       resumePartKey,
       expiresAtMs: attempt.expiresAt,

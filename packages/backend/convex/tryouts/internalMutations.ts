@@ -23,6 +23,54 @@ type LeaderboardStatsEntry = Pick<
   "completedAt" | "rawScore" | "theta"
 >;
 
+interface UserTryoutStatsSnapshot {
+  averageRawScore: number;
+  averageTheta: number;
+  bestTheta: number;
+  lastTryoutAt: number;
+  totalTryoutsCompleted: number;
+}
+
+async function getUserTryoutStatsSnapshot({
+  ctx,
+  leaderboardNamespace,
+  userId,
+}: {
+  ctx: Pick<MutationCtx, "db">;
+  leaderboardNamespace: string;
+  userId: Id<"users">;
+}) {
+  let totalTryoutsCompleted = 0;
+  let totalTheta = 0;
+  let totalRawScore = 0;
+  let bestTheta = Number.NEGATIVE_INFINITY;
+  let lastTryoutAt = 0;
+
+  for await (const entry of ctx.db
+    .query("tryoutLeaderboardEntries")
+    .withIndex("userId_leaderboardNamespace_completedAt", (q) =>
+      q.eq("userId", userId).eq("leaderboardNamespace", leaderboardNamespace)
+    )) {
+    totalTryoutsCompleted += 1;
+    totalTheta += entry.theta;
+    totalRawScore += entry.rawScore;
+    bestTheta = Math.max(bestTheta, entry.theta);
+    lastTryoutAt = Math.max(lastTryoutAt, entry.completedAt);
+  }
+
+  if (totalTryoutsCompleted === 0) {
+    return null;
+  }
+
+  return {
+    averageRawScore: totalRawScore / totalTryoutsCompleted,
+    averageTheta: totalTheta / totalTryoutsCompleted,
+    bestTheta,
+    lastTryoutAt,
+    totalTryoutsCompleted,
+  } satisfies UserTryoutStatsSnapshot;
+}
+
 /** Updates one user's aggregate tryout stats from the changed canonical row. */
 async function syncUserTryoutStats({
   cycleKey,
@@ -57,21 +105,23 @@ async function syncUserTryoutStats({
     .unique();
 
   if (!statsRecord) {
-    if (previousEntry) {
+    const statsSnapshot = await getUserTryoutStatsSnapshot({
+      ctx,
+      leaderboardNamespace,
+      userId,
+    });
+
+    if (!statsSnapshot) {
       throw new ConvexError({
         code: "INVALID_TRYOUT_STATE",
-        message: "Tryout stats are missing for an existing leaderboard entry.",
+        message: "Tryout stats rebuild found no leaderboard entries.",
       });
     }
 
     await ctx.db.insert("userTryoutStats", {
-      averageRawScore: nextEntry.rawScore,
-      averageTheta: nextEntry.theta,
-      bestTheta: nextEntry.theta,
-      lastTryoutAt: nextEntry.completedAt,
+      ...statsSnapshot,
       leaderboardNamespace,
       product,
-      totalTryoutsCompleted: 1,
       updatedAt: nextEntry.completedAt,
       userId,
     });
@@ -113,11 +163,26 @@ async function syncUserTryoutStats({
       .first();
 
     if (!nextBestEntry) {
-      throw new ConvexError({
-        code: "INVALID_TRYOUT_STATE",
-        message:
-          "Tryout leaderboard entry is missing while rebuilding best theta.",
+      const statsSnapshot = await getUserTryoutStatsSnapshot({
+        ctx,
+        leaderboardNamespace,
+        userId,
       });
+
+      if (!statsSnapshot) {
+        throw new ConvexError({
+          code: "INVALID_TRYOUT_STATE",
+          message:
+            "Tryout leaderboard entry is missing while rebuilding stats.",
+        });
+      }
+
+      await ctx.db.patch("userTryoutStats", statsRecord._id, {
+        ...statsSnapshot,
+        updatedAt: nextEntry.completedAt,
+      });
+
+      return;
     }
 
     bestTheta = nextBestEntry.theta;
@@ -133,11 +198,26 @@ async function syncUserTryoutStats({
       .first();
 
     if (!latestEntry) {
-      throw new ConvexError({
-        code: "INVALID_TRYOUT_STATE",
-        message:
-          "Tryout leaderboard entry is missing while rebuilding last activity.",
+      const statsSnapshot = await getUserTryoutStatsSnapshot({
+        ctx,
+        leaderboardNamespace,
+        userId,
       });
+
+      if (!statsSnapshot) {
+        throw new ConvexError({
+          code: "INVALID_TRYOUT_STATE",
+          message:
+            "Tryout leaderboard entry is missing while rebuilding stats.",
+        });
+      }
+
+      await ctx.db.patch("userTryoutStats", statsRecord._id, {
+        ...statsSnapshot,
+        updatedAt: nextEntry.completedAt,
+      });
+
+      return;
     }
 
     lastTryoutAt = latestEntry.completedAt;

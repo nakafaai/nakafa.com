@@ -20,9 +20,11 @@ export interface UserTryoutAttemptParams {
  */
 export function useUserTryoutAttempt(params: UserTryoutAttemptParams | null) {
   const isUserPending = useUser((state) => state.isPending);
-  const nowMs = useTryoutQueryNowMs();
   const user = useUser((state) => state.user);
-  const queryArgs = !params || isUserPending || !user ? "skip" : params;
+  const shouldQuery = Boolean(params && !isUserPending && user);
+  const nowMs = useTryoutQueryNowMs(shouldQuery);
+  const queryArgs: UserTryoutAttemptParams | "skip" =
+    shouldQuery && params ? params : "skip";
   const queryResult = useQueryWithStatus(
     api.tryouts.queries.attempts.getUserTryoutAttempt,
     queryArgs

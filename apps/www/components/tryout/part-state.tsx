@@ -132,8 +132,11 @@ export function TryoutPartProvider({
   const timer = useExerciseTimer({
     attempt,
     expiresAtMs: runtime?.expiresAtMs,
+    nowMs,
   });
-  const isAwaitingExpiry = status === "in-progress" && timer.isExpired;
+  const isAwaitingExpiry = Boolean(
+    attempt && attempt.status === "in-progress" && timer.isExpired
+  );
   const isTryoutFinished = Boolean(
     runtime &&
       getEffectiveTryoutStatus({

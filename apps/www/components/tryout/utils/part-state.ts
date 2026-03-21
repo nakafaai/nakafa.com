@@ -32,7 +32,46 @@ interface TryoutProgress {
   status: TryoutAttemptStatus;
 }
 
-function getTryoutPartStatus({
+function getTryoutPartPageStatus({
+  isRuntimePending,
+  partAttempt,
+  tryout,
+}: {
+  isRuntimePending: boolean;
+  partAttempt: TryoutPartAttempt | null;
+  tryout: TryoutProgress | null;
+}): TryoutPartUiStatus {
+  if (isRuntimePending) {
+    return "loading";
+  }
+
+  if (!tryout) {
+    return "needs-tryout";
+  }
+
+  if (
+    partAttempt &&
+    tryout.completedPartIndices.includes(partAttempt.partIndex)
+  ) {
+    return "completed";
+  }
+
+  if (tryout.status !== "in-progress") {
+    return "ended";
+  }
+
+  if (partAttempt?.setAttempt.status === "in-progress") {
+    return "in-progress";
+  }
+
+  if (partAttempt) {
+    return "ended";
+  }
+
+  return "ready";
+}
+
+function getTryoutSetPartStatus({
   expiresAtMs,
   isRuntimePending,
   nowMs,
@@ -99,10 +138,8 @@ export function deriveTryoutPartPageState({
       attempt: null,
       canStartPart: false,
       partEndReason: null,
-      status: getTryoutPartStatus({
-        expiresAtMs: undefined,
+      status: getTryoutPartPageStatus({
         isRuntimePending,
-        nowMs,
         partAttempt,
         tryout: null,
       }),
@@ -117,10 +154,8 @@ export function deriveTryoutPartPageState({
       status: runtime.tryoutAttempt.status,
     }),
   };
-  const status = getTryoutPartStatus({
-    expiresAtMs: runtime?.expiresAtMs,
+  const status = getTryoutPartPageStatus({
     isRuntimePending,
-    nowMs,
     partAttempt,
     tryout,
   });
@@ -154,7 +189,7 @@ export function deriveTryoutSetPartState({
   const tryoutStatus = effectiveStatus ?? attemptData?.attempt.status;
 
   if (!(attemptData && tryoutStatus)) {
-    const status = getTryoutPartStatus({
+    const status = getTryoutSetPartStatus({
       expiresAtMs: attemptData?.expiresAtMs,
       isRuntimePending: false,
       nowMs,
@@ -172,7 +207,7 @@ export function deriveTryoutSetPartState({
     completedPartIndices: attemptData.attempt.completedPartIndices,
     status: tryoutStatus,
   };
-  const status = getTryoutPartStatus({
+  const status = getTryoutSetPartStatus({
     expiresAtMs: attemptData?.expiresAtMs,
     isRuntimePending: false,
     nowMs,

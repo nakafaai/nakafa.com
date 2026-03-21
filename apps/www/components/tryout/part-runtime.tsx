@@ -46,11 +46,12 @@ export function TryoutPartRuntime({
   tryout,
 }: TryoutPartRuntimeProps) {
   const isUserPending = useUser((state) => state.isPending);
-  const nowMs = useTryoutQueryNowMs();
   const user = useUser((state) => state.user);
+  const shouldLoadRuntime = !isUserPending && Boolean(user);
+  const nowMs = useTryoutQueryNowMs(shouldLoadRuntime);
   const { data: partState, isPending: isPartStatePending } = useQueryWithStatus(
     api.tryouts.queries.attempts.getUserTryoutPartAttempt,
-    !isUserPending && user
+    shouldLoadRuntime
       ? {
           locale: tryout.locale,
           partKey: part.key,

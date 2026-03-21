@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 export interface UseExerciseTimerProps {
   attempt: Doc<"exerciseAttempts"> | null;
   expiresAtMs?: number;
+  nowMs?: number;
   onExpire?: () => void | Promise<void>;
 }
 
@@ -72,10 +73,13 @@ function formatTime(seconds: number): UseExerciseTimerReturn["formatted"] {
 export function useExerciseTimer({
   attempt,
   expiresAtMs,
+  nowMs,
   onExpire,
 }: UseExerciseTimerProps): UseExerciseTimerReturn {
-  const [nowMs, setNowMs] = useState(Date.now);
+  const [localNowMs, setLocalNowMs] = useState(Date.now);
   const [hasHandledExpiry, setHasHandledExpiry] = useState(false);
+  const currentNowMs = nowMs ?? localNowMs;
+  const usesInternalClock = nowMs === undefined;
 
   const isTimed = attempt?.timeLimit !== undefined && attempt.timeLimit > 0;
 
@@ -83,7 +87,7 @@ export function useExerciseTimer({
 
   const remainingSeconds =
     attempt && isInProgress
-      ? calculateRemainingTime(attempt, nowMs, expiresAtMs)
+      ? calculateRemainingTime(attempt, currentNowMs, expiresAtMs)
       : 0;
 
   const isActive = isInProgress && remainingSeconds > 0;
@@ -95,7 +99,7 @@ export function useExerciseTimer({
     }
 
     const now = Date.now();
-    setNowMs(now);
+    setLocalNowMs(now);
 
     const remaining = calculateRemainingTime(attempt, now, expiresAtMs);
 
@@ -123,7 +127,7 @@ export function useExerciseTimer({
   }, [hasHandledExpiry, isExpired, onExpire]);
 
   useEffect(() => {
-    if (!isActive) {
+    if (!(usesInternalClock && isActive)) {
       interval.stop();
       return;
     }
@@ -133,7 +137,7 @@ export function useExerciseTimer({
     return () => {
       interval.stop();
     };
-  }, [isActive, interval]);
+  }, [isActive, interval, usesInternalClock]);
 
   const formatted = useMemo(
     () => formatTime(remainingSeconds),

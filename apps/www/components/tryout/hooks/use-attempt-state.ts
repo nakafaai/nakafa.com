@@ -20,7 +20,7 @@ export interface TryoutAttemptStateProps {
   tryoutSlug: string;
 }
 
-function getLocalResumePartKey({
+function getResumePartKey({
   attemptData,
   effectiveStatus,
   nowMs,
@@ -43,24 +43,33 @@ function getLocalResumePartKey({
   );
 
   if (activePartAttempts.length === 0) {
-    const suggestedPartAttempt = attemptData.resumePartKey
-      ? attemptData.partAttempts.find(
-          (partAttempt) => partAttempt.partKey === attemptData.resumePartKey
-        )
-      : null;
+    const locallyEndedPartIndices = new Set(
+      attemptData.attempt.completedPartIndices
+    );
 
-    if (
-      suggestedPartAttempt &&
-      getEffectivePartAttemptStatus({
-        expiresAtMs: attemptData.expiresAtMs,
-        nowMs,
-        setAttempt: suggestedPartAttempt.setAttempt,
-      }) !== "in-progress"
-    ) {
-      return undefined;
+    for (const partAttempt of attemptData.partAttempts) {
+      if (locallyEndedPartIndices.has(partAttempt.partIndex)) {
+        continue;
+      }
+
+      if (
+        getEffectivePartAttemptStatus({
+          expiresAtMs: attemptData.expiresAtMs,
+          nowMs,
+          setAttempt: partAttempt.setAttempt,
+        }) === "in-progress"
+      ) {
+        continue;
+      }
+
+      locallyEndedPartIndices.add(partAttempt.partIndex);
     }
 
-    return attemptData.resumePartKey;
+    const nextAvailablePart = attemptData.orderedParts.find(
+      (part) => !locallyEndedPartIndices.has(part.partIndex)
+    );
+
+    return nextAvailablePart?.partKey;
   }
 
   activePartAttempts.sort(
@@ -97,7 +106,7 @@ export function useTryoutAttemptState({
       })
     : undefined;
   const isTryoutInProgress = effectiveStatus === "in-progress";
-  const resumePartKey = getLocalResumePartKey({
+  const resumePartKey = getResumePartKey({
     attemptData,
     effectiveStatus,
     nowMs,
