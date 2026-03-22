@@ -18,22 +18,15 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { createContext, useContextSelector } from "use-context-selector";
-import { useTryoutAttemptState } from "@/components/tryout/hooks/use-attempt-state";
-import type { TryoutAttemptParams } from "@/components/tryout/hooks/use-user-tryout-attempt";
+import { useTryoutAttemptState } from "@/components/tryout/providers/attempt-state";
 import { useUser } from "@/lib/context/use-user";
 
-export type TryoutStartButtonProps = TryoutAttemptParams;
+type TryoutStartContextValue = ReturnType<typeof useTryoutStartValue>;
 
-type TryoutStartValue = ReturnType<typeof useTryoutStartValue>;
+const TryoutStartContext = createContext<TryoutStartContextValue | null>(null);
 
-const TryoutStartContext = createContext<TryoutStartValue | null>(null);
-
-/** Builds the state and actions for the tryout start CTA flow. */
-export function useTryoutStartValue({
-  locale,
-  product,
-  tryoutSlug,
-}: TryoutStartButtonProps) {
+/** Builds the shared state for the tryout start flow. */
+export function useTryoutStartValue() {
   const tTryouts = useTranslations("Tryouts");
   const isUserPending = useUser((state) => state.isPending);
   const user = useUser((state) => state.user);
@@ -42,17 +35,18 @@ export function useTryoutStartValue({
   const [isActionPending, startTransition] = useTransition();
   const [isDialogOpen, { close: closeDialog, open: openDialog }] =
     useDisclosure(false);
-  const {
-    effectiveStatus,
-    attemptData,
-    isAttemptPending,
-    resumePartKey,
-    remainingTime,
-  } = useTryoutAttemptState({
-    locale,
-    product,
-    tryoutSlug,
-  });
+  const attemptData = useTryoutAttemptState((state) => state.attemptData);
+  const effectiveStatus = useTryoutAttemptState(
+    (state) => state.effectiveStatus
+  );
+  const isAttemptPending = useTryoutAttemptState(
+    (state) => state.isAttemptPending
+  );
+  const locale = useTryoutAttemptState((state) => state.params.locale);
+  const product = useTryoutAttemptState((state) => state.params.product);
+  const remainingTime = useTryoutAttemptState((state) => state.remainingTime);
+  const resumePartKey = useTryoutAttemptState((state) => state.resumePartKey);
+  const tryoutSlug = useTryoutAttemptState((state) => state.params.tryoutSlug);
   const { data: hasSubscription, isPending: isSubscriptionPending } =
     useQueryWithStatus(
       api.subscriptions.queries.hasActiveSubscription,
@@ -75,7 +69,7 @@ export function useTryoutStartValue({
     attemptData && effectiveStatus !== "in-progress"
   );
 
-  const setDialogOpen = useCallback(
+  const setDialogOpenAction = useCallback(
     (open: boolean) => {
       if (open) {
         openDialog();
@@ -87,7 +81,7 @@ export function useTryoutStartValue({
     [closeDialog, openDialog]
   );
 
-  const clickCta = useCallback(() => {
+  const clickCtaAction = useCallback(() => {
     if (!user) {
       router.push(`/auth?redirect=${pathname}`);
       return;
@@ -123,7 +117,7 @@ export function useTryoutStartValue({
     user,
   ]);
 
-  const confirmStart = useCallback(() => {
+  const confirmStartAction = useCallback(() => {
     startTransition(async () => {
       try {
         await startTryout({ locale, product, tryoutSlug });
@@ -144,9 +138,9 @@ export function useTryoutStartValue({
   return useMemo(
     () => ({
       actions: {
-        clickCta,
-        confirmStart,
-        setDialogOpen,
+        clickCtaAction,
+        confirmStartAction,
+        setDialogOpenAction,
       },
       meta: {
         isActionPending,
@@ -155,37 +149,34 @@ export function useTryoutStartValue({
       state: {
         attemptData,
         effectiveStatus,
-        hasSubscription,
         hasFinishedAttempt,
-        isReady,
+        hasSubscription,
         isLoading,
-        resumePartKey,
+        isReady,
         remainingTime,
+        resumePartKey,
       },
     }),
     [
-      clickCta,
-      confirmStart,
       attemptData,
+      clickCtaAction,
+      confirmStartAction,
       effectiveStatus,
-      hasSubscription,
       hasFinishedAttempt,
-      isReady,
+      hasSubscription,
       isActionPending,
       isDialogOpen,
       isLoading,
-      resumePartKey,
+      isReady,
       remainingTime,
-      setDialogOpen,
+      resumePartKey,
+      setDialogOpenAction,
     ]
   );
 }
 
-export function TryoutStartProvider({
-  children,
-  ...props
-}: PropsWithChildren<TryoutStartButtonProps>) {
-  const value = useTryoutStartValue(props);
+export function TryoutStartProvider({ children }: PropsWithChildren) {
+  const value = useTryoutStartValue();
 
   return (
     <TryoutStartContext.Provider value={value}>
@@ -194,8 +185,10 @@ export function TryoutStartProvider({
   );
 }
 
-/** Selects a slice of the current tryout start state. */
-export function useTryoutStart<T>(selector: (state: TryoutStartValue) => T): T {
+/** Selects a slice of the current tryout start flow state. */
+export function useTryoutStart<T>(
+  selector: (state: TryoutStartContextValue) => T
+) {
   return useContextSelector(TryoutStartContext, (context) => {
     if (!context) {
       throw new Error(

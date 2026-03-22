@@ -5,17 +5,21 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useTranslations } from "next-intl";
-import { useTryoutStart } from "@/components/tryout/start-state";
+import { useTryoutStart } from "@/components/tryout/providers/start-state";
 
 export function TryoutStartDialog() {
   const tTryouts = useTranslations("Tryouts");
-  const confirmStart = useTryoutStart((state) => state.actions.confirmStart);
+  const confirmStartAction = useTryoutStart(
+    (state) => state.actions.confirmStartAction
+  );
   const hasFinishedAttempt = useTryoutStart(
     (state) => state.state.hasFinishedAttempt
   );
   const isActionPending = useTryoutStart((state) => state.meta.isActionPending);
   const isDialogOpen = useTryoutStart((state) => state.meta.isDialogOpen);
-  const setDialogOpen = useTryoutStart((state) => state.actions.setDialogOpen);
+  const setDialogOpenAction = useTryoutStart(
+    (state) => state.actions.setDialogOpenAction
+  );
 
   return (
     <ResponsiveDialog
@@ -27,7 +31,7 @@ export function TryoutStartDialog() {
       footer={
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button
-            onClick={() => setDialogOpen(false)}
+            onClick={() => setDialogOpenAction(false)}
             type="button"
             variant="outline"
           >
@@ -35,7 +39,7 @@ export function TryoutStartDialog() {
           </Button>
           <Button
             disabled={isActionPending}
-            onClick={confirmStart}
+            onClick={confirmStartAction}
             type="button"
           >
             <Spinner icon={Rocket01Icon} isLoading={isActionPending} />
@@ -46,7 +50,7 @@ export function TryoutStartDialog() {
         </div>
       }
       open={isDialogOpen}
-      setOpen={setDialogOpen}
+      setOpen={setDialogOpenAction}
       title={
         hasFinishedAttempt
           ? tTryouts("restart-dialog-title")

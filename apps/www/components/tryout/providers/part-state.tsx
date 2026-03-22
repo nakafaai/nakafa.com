@@ -2,15 +2,16 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
+import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
-import type { FunctionReturnType } from "convex/server";
 import { ConvexError } from "convex/values";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useCallback, useMemo, useTransition } from "react";
 import { toast } from "sonner";
 import { createContext, useContextSelector } from "use-context-selector";
+import { useTryoutQueryNowMs } from "@/components/tryout/hooks/use-query-now-ms";
 import type {
   TryoutPartPageState,
   TryoutPartUiStatus,
@@ -35,10 +36,6 @@ export interface TryoutValue {
   product: TryoutProduct;
   slug: string;
 }
-
-type TryoutPartQuery = FunctionReturnType<
-  typeof api.tryouts.queries.attempts.getUserTryoutPartAttempt
->;
 
 interface TryoutPartContextValue {
   actions: {
@@ -69,23 +66,32 @@ const TryoutPartContext = createContext<TryoutPartContextValue | null>(null);
 
 export function TryoutPartProvider({
   children,
-  isRuntimePending,
-  nowMs,
   part,
-  runtime,
   tryout,
 }: {
   children: ReactNode;
-  isRuntimePending: boolean;
-  nowMs: number;
   part: TryoutPartValue;
-  runtime: TryoutPartQuery | undefined;
   tryout: TryoutValue;
 }) {
   const tTryouts = useTranslations("Tryouts");
   const [isActionPending, startTransition] = useTransition();
   const router = useRouter();
+  const isUserPending = useUser((state) => state.isPending);
   const user = useUser((state) => state.user);
+  const shouldLoadRuntime = !isUserPending && Boolean(user);
+  const nowMs = useTryoutQueryNowMs(shouldLoadRuntime);
+  const { data: runtime, isPending: isPartStatePending } = useQueryWithStatus(
+    api.tryouts.queries.attempts.getUserTryoutPartAttempt,
+    shouldLoadRuntime
+      ? {
+          locale: tryout.locale,
+          partKey: part.key,
+          product: tryout.product,
+          tryoutSlug: tryout.slug,
+        }
+      : "skip"
+  );
+  const isRuntimePending = isUserPending || (user ? isPartStatePending : false);
   const startPart = useMutation(api.tryouts.mutations.attempts.startPart);
   const completePart = useMutation(api.tryouts.mutations.attempts.completePart);
 

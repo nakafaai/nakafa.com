@@ -4,7 +4,6 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import type { ComponentProps, ReactNode } from "react";
 import { useState } from "react";
-import { useTryoutQueryNowMs } from "@/components/tryout/hooks/use-query-now-ms";
 import {
   TryoutPartBackCta,
   TryoutPartDialog,
@@ -28,10 +27,9 @@ import {
   type TryoutPartValue,
   type TryoutValue,
   useTryoutPart,
-} from "@/components/tryout/part-state";
+} from "@/components/tryout/providers/part-state";
 import { AttemptProvider } from "@/lib/context/use-attempt";
 import { ExerciseContextProvider } from "@/lib/context/use-exercise";
-import { useUser } from "@/lib/context/use-user";
 
 export interface TryoutPartRuntimeProps {
   children: ReactNode;
@@ -46,32 +44,9 @@ export function TryoutPartRuntime({
   part,
   tryout,
 }: TryoutPartRuntimeProps) {
-  const isUserPending = useUser((state) => state.isPending);
-  const user = useUser((state) => state.user);
-  const shouldLoadRuntime = !isUserPending && Boolean(user);
-  const nowMs = useTryoutQueryNowMs(shouldLoadRuntime);
-  const { data: partState, isPending: isPartStatePending } = useQueryWithStatus(
-    api.tryouts.queries.attempts.getUserTryoutPartAttempt,
-    shouldLoadRuntime
-      ? {
-          locale: tryout.locale,
-          partKey: part.key,
-          product: tryout.product,
-          tryoutSlug: tryout.slug,
-        }
-      : "skip"
-  );
-  const isRuntimePending = isUserPending || (user ? isPartStatePending : false);
-
   return (
     <ExerciseContextProvider slug={part.setSlug}>
-      <TryoutPartProvider
-        isRuntimePending={isRuntimePending}
-        nowMs={nowMs}
-        part={part}
-        runtime={partState}
-        tryout={tryout}
-      >
+      <TryoutPartProvider part={part} tryout={tryout}>
         <TryoutPartRuntimeBody icon={icon}>{children}</TryoutPartRuntimeBody>
       </TryoutPartProvider>
     </ExerciseContextProvider>
@@ -131,10 +106,10 @@ function TryoutPartCompletionControls() {
 
   return (
     <>
-      <TryoutPartSticky setCompleteDialogOpen={setCompleteDialogOpen} />
+      <TryoutPartSticky setCompleteDialogOpenAction={setCompleteDialogOpen} />
       <TryoutPartDialog
         isCompleteDialogOpen={isCompleteDialogOpen}
-        setCompleteDialogOpen={setCompleteDialogOpen}
+        setCompleteDialogOpenAction={setCompleteDialogOpen}
       />
     </>
   );

@@ -74,7 +74,7 @@ function getResumePartKey({
 }
 
 /** Derives the current tryout CTA state from the user's latest attempt. */
-export function useTryoutAttemptState({
+export function useTryoutAttemptStateValue({
   locale,
   product,
   tryoutSlug,

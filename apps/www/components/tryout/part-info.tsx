@@ -11,7 +11,7 @@ import {
   TryoutPartStat,
   TryoutPartStats,
 } from "@/components/tryout/part-shell";
-import { useTryoutPart } from "@/components/tryout/part-state";
+import { useTryoutPart } from "@/components/tryout/providers/part-state";
 import { TryoutStatusBadge } from "@/components/tryout/status-badge";
 
 export function TryoutPartStatus() {

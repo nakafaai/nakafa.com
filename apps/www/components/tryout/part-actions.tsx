@@ -15,16 +15,17 @@ import { useTranslations } from "next-intl";
 import type { Dispatch, SetStateAction } from "react";
 import { Countdown } from "@/components/exercise/attempt-countdown";
 import { ExerciseStats } from "@/components/exercise/attempt-stats";
-import { useTryoutPart } from "@/components/tryout/part-state";
+import { TryoutAttemptStateProvider } from "@/components/tryout/providers/attempt-state";
+import { useTryoutPart } from "@/components/tryout/providers/part-state";
 import { TryoutStartButton } from "@/components/tryout/start-button";
 import { useStickyVisibility } from "@/lib/hooks/use-sticky-visibility";
 
 type TryoutPartDialogSetter = Dispatch<SetStateAction<boolean>>;
 
 export function TryoutPartSticky({
-  setCompleteDialogOpen,
+  setCompleteDialogOpenAction,
 }: {
-  setCompleteDialogOpen: TryoutPartDialogSetter;
+  setCompleteDialogOpenAction: TryoutPartDialogSetter;
 }) {
   const tTryouts = useTranslations("Tryouts");
   const showSticky = useTryoutPart(
@@ -63,7 +64,7 @@ export function TryoutPartSticky({
 
           <Button
             disabled={isAwaitingExpiry || isActionPending}
-            onClick={() => setCompleteDialogOpen(true)}
+            onClick={() => setCompleteDialogOpenAction(true)}
             type="button"
             variant="destructive"
           >
@@ -100,11 +101,13 @@ export function TryoutPartTryoutCta() {
   }
 
   return (
-    <TryoutStartButton
+    <TryoutAttemptStateProvider
       locale={tryout.locale}
       product={tryout.product}
       tryoutSlug={tryout.slug}
-    />
+    >
+      <TryoutStartButton />
+    </TryoutAttemptStateProvider>
   );
 }
 
@@ -164,10 +167,10 @@ export function TryoutPartBackCta() {
 
 export function TryoutPartDialog({
   isCompleteDialogOpen,
-  setCompleteDialogOpen,
+  setCompleteDialogOpenAction,
 }: {
   isCompleteDialogOpen: boolean;
-  setCompleteDialogOpen: TryoutPartDialogSetter;
+  setCompleteDialogOpenAction: TryoutPartDialogSetter;
 }) {
   const tTryouts = useTranslations("Tryouts");
   const isAwaitingExpiry = useTryoutPart(
@@ -186,7 +189,7 @@ export function TryoutPartDialog({
       footer={
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button
-            onClick={() => setCompleteDialogOpen(false)}
+            onClick={() => setCompleteDialogOpenAction(false)}
             type="button"
             variant="outline"
           >
@@ -209,7 +212,7 @@ export function TryoutPartDialog({
         </div>
       }
       open={isCompleteDialogOpen}
-      setOpen={setCompleteDialogOpen}
+      setOpen={setCompleteDialogOpenAction}
       title={
         isAwaitingExpiry
           ? tTryouts("part-processing-expiry-title")

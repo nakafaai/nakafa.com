@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { TryoutPageHeader } from "@/components/tryout/page-header";
 import { TryoutPageMeta } from "@/components/tryout/page-meta";
-import { useTryoutPart } from "@/components/tryout/part-state";
+import { useTryoutPart } from "@/components/tryout/providers/part-state";
 
 interface TryoutPartHeadProps {
   icon?: ComponentProps<typeof TryoutPageHeader>["icon"];

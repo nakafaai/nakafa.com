@@ -23,7 +23,6 @@ import { TryoutHubHeader } from "@/components/tryout/hub-header";
 import {
   TryoutPackageCopy,
   TryoutPackageEmpty,
-  TryoutPackageGroup,
   TryoutPackageHeader,
   TryoutPackageItems,
   TryoutPackageLink,
@@ -97,7 +96,7 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
             ) : (
               <TryoutPackageProgressProvider locale={locale} product={product}>
                 {cycleGroups.map((group, index) => (
-                  <TryoutPackageGroup
+                  <div
                     className={cn(index > 0 && "border-t")}
                     key={group.cycleKey}
                   >
@@ -130,7 +129,7 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
                         </TryoutPackageLink>
                       ))}
                     </TryoutPackageItems>
-                  </TryoutPackageGroup>
+                  </div>
                 ))}
               </TryoutPackageProgressProvider>
             )}

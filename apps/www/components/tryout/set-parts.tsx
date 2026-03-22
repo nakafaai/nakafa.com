@@ -2,7 +2,6 @@
 
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import type { api } from "@repo/backend/convex/_generated/api";
-import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
 import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
@@ -10,9 +9,8 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cn } from "@repo/design-system/lib/utils";
 import type { FunctionReturnType } from "convex/server";
-import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { useTryoutAttemptState } from "@/components/tryout/hooks/use-attempt-state";
+import { useTryoutAttemptState } from "@/components/tryout/providers/attempt-state";
 import { TryoutStatusBadge } from "@/components/tryout/status-badge";
 import { deriveTryoutSetPartState } from "@/components/tryout/utils/part-state";
 
@@ -26,27 +24,21 @@ type TryoutSetPartItem = Pick<
 };
 
 interface TryoutSetPartsProps {
-  locale: Locale;
   parts: TryoutSetPartItem[];
-  product: TryoutProduct;
-  tryoutSlug: string;
 }
 
 type TryoutSetPartState = ReturnType<typeof deriveTryoutSetPartState>;
 
-export function TryoutSetParts({
-  locale,
-  parts,
-  product,
-  tryoutSlug,
-}: TryoutSetPartsProps) {
+export function TryoutSetParts({ parts }: TryoutSetPartsProps) {
   const tTryouts = useTranslations("Tryouts");
-  const { attemptData, effectiveStatus, nowMs, resumePartKey } =
-    useTryoutAttemptState({
-      locale,
-      product,
-      tryoutSlug,
-    });
+  const attemptData = useTryoutAttemptState((state) => state.attemptData);
+  const effectiveStatus = useTryoutAttemptState(
+    (state) => state.effectiveStatus
+  );
+  const nowMs = useTryoutAttemptState((state) => state.nowMs);
+  const product = useTryoutAttemptState((state) => state.params.product);
+  const resumePartKey = useTryoutAttemptState((state) => state.resumePartKey);
+  const tryoutSlug = useTryoutAttemptState((state) => state.params.tryoutSlug);
   const questionUnitLabel = tTryouts("question-unit");
 
   return (

@@ -26,7 +26,6 @@ import {
 import {
   TryoutPackageCopy,
   TryoutPackageEmpty,
-  TryoutPackageGroup,
   TryoutPackageHeader,
   TryoutPackageItems,
   TryoutPackageLink,
@@ -127,7 +126,7 @@ export default async function Page({ params }: Props) {
             ) : (
               <TryoutPackageProgressProvider locale={locale} product={product}>
                 {cycleGroups.map((group, index) => (
-                  <TryoutPackageGroup
+                  <div
                     className={cn(index > 0 && "border-t")}
                     key={group.cycleKey}
                   >
@@ -160,7 +159,7 @@ export default async function Page({ params }: Props) {
                         </TryoutPackageLink>
                       ))}
                     </TryoutPackageItems>
-                  </TryoutPackageGroup>
+                  </div>
                 ))}
               </TryoutPackageProgressProvider>
             )}

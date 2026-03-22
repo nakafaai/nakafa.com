@@ -16,13 +16,6 @@ export function TryoutPackageEmpty({
   );
 }
 
-export function TryoutPackageGroup({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
-  return <div className={className} {...props} />;
-}
-
 export function TryoutPackageYear({
   className,
   ...props
