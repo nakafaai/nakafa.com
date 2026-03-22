@@ -127,3 +127,7 @@ export function useTryoutAttemptStateValue({
     remainingTime,
   };
 }
+
+export type TryoutAttemptStateValue = ReturnType<
+  typeof useTryoutAttemptStateValue
+>;

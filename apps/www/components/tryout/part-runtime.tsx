@@ -9,7 +9,6 @@ import {
   TryoutPartDialog,
   TryoutPartStartCta,
   TryoutPartSticky,
-  TryoutPartTryoutCta,
 } from "@/components/tryout/part-actions";
 import { TryoutPartHead } from "@/components/tryout/part-head";
 import {
@@ -22,12 +21,14 @@ import {
   TryoutPartLead,
   TryoutPartSummary,
 } from "@/components/tryout/part-shell";
+import { TryoutAttemptStateProvider } from "@/components/tryout/providers/attempt-state";
 import {
   TryoutPartProvider,
   type TryoutPartValue,
   type TryoutValue,
   useTryoutPart,
 } from "@/components/tryout/providers/part-state";
+import { TryoutStartButton } from "@/components/tryout/start-button";
 import { AttemptProvider } from "@/lib/context/use-attempt";
 import { ExerciseContextProvider } from "@/lib/context/use-exercise";
 
@@ -132,11 +133,32 @@ function TryoutPartSummaryCard() {
         </TryoutPartLead>
 
         <TryoutPartCtas>
-          <TryoutPartTryoutCta />
+          <TryoutPartTryoutStartButton />
           <TryoutPartStartCta />
           <TryoutPartBackCta />
         </TryoutPartCtas>
       </TryoutPartBody>
     </TryoutPartSummary>
+  );
+}
+
+function TryoutPartTryoutStartButton() {
+  const shouldShowTryoutStartButton = useTryoutPart(
+    (state) => state.state.shouldShowTryoutStartButton
+  );
+  const tryout = useTryoutPart((state) => state.state.tryout);
+
+  if (!shouldShowTryoutStartButton) {
+    return null;
+  }
+
+  return (
+    <TryoutAttemptStateProvider
+      locale={tryout.locale}
+      product={tryout.product}
+      tryoutSlug={tryout.slug}
+    >
+      <TryoutStartButton />
+    </TryoutAttemptStateProvider>
   );
 }

@@ -15,9 +15,7 @@ import { useTranslations } from "next-intl";
 import type { Dispatch, SetStateAction } from "react";
 import { Countdown } from "@/components/exercise/attempt-countdown";
 import { ExerciseStats } from "@/components/exercise/attempt-stats";
-import { TryoutAttemptStateProvider } from "@/components/tryout/providers/attempt-state";
 import { useTryoutPart } from "@/components/tryout/providers/part-state";
-import { TryoutStartButton } from "@/components/tryout/start-button";
 import { useStickyVisibility } from "@/lib/hooks/use-sticky-visibility";
 
 type TryoutPartDialogSetter = Dispatch<SetStateAction<boolean>>;
@@ -87,27 +85,6 @@ export function TryoutPartSticky({
         ) : null}
       </motion.div>
     </div>
-  );
-}
-
-export function TryoutPartTryoutCta() {
-  const shouldShowTryoutStartButton = useTryoutPart(
-    (state) => state.state.shouldShowTryoutStartButton
-  );
-  const tryout = useTryoutPart((state) => state.state.tryout);
-
-  if (!shouldShowTryoutStartButton) {
-    return null;
-  }
-
-  return (
-    <TryoutAttemptStateProvider
-      locale={tryout.locale}
-      product={tryout.product}
-      tryoutSlug={tryout.slug}
-    >
-      <TryoutStartButton />
-    </TryoutAttemptStateProvider>
   );
 }
 

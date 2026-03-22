@@ -30,11 +30,9 @@ import {
   TryoutPackageTitle,
   TryoutPackageYear,
 } from "@/components/tryout/package-list";
-import {
-  TryoutPackageInProgressBadge,
-  TryoutPackageProgressProvider,
-} from "@/components/tryout/package-progress";
+import { TryoutPackageInProgressBadge } from "@/components/tryout/package-progress";
 import { SnbtTryoutIcon } from "@/components/tryout/product-icon";
+import { TryoutPackageProgressProvider } from "@/components/tryout/providers/package-progress";
 import { groupActiveTryoutsByCycle } from "@/components/tryout/utils/package-list";
 
 export async function TryoutHubPage({ locale }: { locale: Locale }) {
