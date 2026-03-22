@@ -3,6 +3,7 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import type { ComponentProps, ReactNode } from "react";
+import { useState } from "react";
 import { useTryoutQueryNowMs } from "@/components/tryout/hooks/use-query-now-ms";
 import {
   TryoutPartBackCta,
@@ -71,9 +72,7 @@ export function TryoutPartRuntime({
         runtime={partState}
         tryout={tryout}
       >
-        <TryoutPartRuntimeBody icon={icon} part={part} tryout={tryout}>
-          {children}
-        </TryoutPartRuntimeBody>
+        <TryoutPartRuntimeBody icon={icon}>{children}</TryoutPartRuntimeBody>
       </TryoutPartProvider>
     </ExerciseContextProvider>
   );
@@ -82,16 +81,16 @@ export function TryoutPartRuntime({
 function TryoutPartRuntimeBody({
   children,
   icon,
-  part,
-  tryout,
-}: TryoutPartRuntimeProps) {
+}: Pick<TryoutPartRuntimeProps, "children" | "icon">) {
   const attempt = useTryoutPart((state) => state.state.attempt);
   const answers = useTryoutPart((state) => state.state.answers);
   const isInputLocked = useTryoutPart((state) => state.state.isAwaitingExpiry);
+  const part = useTryoutPart((state) => state.state.part);
   const isTryoutFinished = useTryoutPart(
     (state) => state.state.isTryoutFinished
   );
   const status = useTryoutPart((state) => state.state.status);
+  const tryout = useTryoutPart((state) => state.state.tryout);
   const isReviewMode = isTryoutFinished;
   const shouldRequestAnswerSheet = status === "in-progress" || isReviewMode;
   const { data: answerSheet, isPending: isAnswerSheetPending } =
@@ -118,13 +117,26 @@ function TryoutPartRuntimeBody({
         <TryoutPartHead icon={icon} />
 
         <div className="space-y-12">
-          <TryoutPartSticky />
+          <TryoutPartCompletionControls />
           <TryoutPartSummaryCard />
-          <TryoutPartDialog />
           {shouldShowQuestions ? children : null}
         </div>
       </div>
     </AttemptProvider>
+  );
+}
+
+function TryoutPartCompletionControls() {
+  const [isCompleteDialogOpen, setCompleteDialogOpen] = useState(false);
+
+  return (
+    <>
+      <TryoutPartSticky setCompleteDialogOpen={setCompleteDialogOpen} />
+      <TryoutPartDialog
+        isCompleteDialogOpen={isCompleteDialogOpen}
+        setCompleteDialogOpen={setCompleteDialogOpen}
+      />
+    </>
   );
 }
 

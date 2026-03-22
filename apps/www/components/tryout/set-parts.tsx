@@ -32,14 +32,7 @@ interface TryoutSetPartsProps {
   tryoutSlug: string;
 }
 
-type TryoutSetPartsState = Pick<
-  ReturnType<typeof useTryoutAttemptState>,
-  "attemptData" | "effectiveStatus" | "nowMs" | "resumePartKey"
-> & {
-  product: TryoutProduct;
-  questionUnitLabel: string;
-  tryoutSlug: string;
-};
+type TryoutSetPartState = ReturnType<typeof deriveTryoutSetPartState>;
 
 export function TryoutSetParts({
   locale,
@@ -54,49 +47,45 @@ export function TryoutSetParts({
       product,
       tryoutSlug,
     });
-  const state: TryoutSetPartsState = {
-    attemptData,
-    effectiveStatus,
-    nowMs,
-    product,
-    questionUnitLabel: tTryouts("question-unit"),
-    resumePartKey,
-    tryoutSlug,
-  };
+  const questionUnitLabel = tTryouts("question-unit");
 
   return (
     <div className="grid divide-y">
-      {parts.map((part) => (
-        <TryoutSetPart key={part.partKey} part={part} state={state} />
-      ))}
+      {parts.map((part) => {
+        const partState = deriveTryoutSetPartState({
+          attemptData,
+          effectiveStatus,
+          nowMs,
+          partKey: part.partKey,
+          resumePartKey,
+        });
+
+        return (
+          <TryoutSetPart
+            href={`/try-out/${product}/${tryoutSlug}/part/${part.partKey}`}
+            key={part.partKey}
+            part={part}
+            partState={partState}
+            questionUnitLabel={questionUnitLabel}
+          />
+        );
+      })}
     </div>
   );
 }
 
 function TryoutSetPart({
+  href,
   part,
-  state,
+  partState,
+  questionUnitLabel,
 }: {
+  href: string;
   part: TryoutSetPartItem;
-  state: TryoutSetPartsState;
+  partState: TryoutSetPartState;
+  questionUnitLabel: string;
 }) {
-  const {
-    attemptData,
-    effectiveStatus,
-    nowMs,
-    product,
-    questionUnitLabel,
-    resumePartKey,
-    tryoutSlug,
-  } = state;
   const partIcon = getTryoutPartIcon(part.material);
-  const partState = deriveTryoutSetPartState({
-    attemptData,
-    effectiveStatus,
-    nowMs,
-    partKey: part.partKey,
-    resumePartKey,
-  });
 
   return (
     <NavigationLink
@@ -104,7 +93,7 @@ function TryoutSetPart({
         "group flex items-center gap-3 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground",
         partState.isCurrent && "bg-accent/20 hover:bg-accent"
       )}
-      href={`/try-out/${product}/${tryoutSlug}/part/${part.partKey}`}
+      href={href}
     >
       <div className="flex flex-1 items-start gap-3">
         <div className="relative size-10 shrink-0 overflow-hidden rounded-md">

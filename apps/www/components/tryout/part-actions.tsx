@@ -12,13 +12,20 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
+import type { Dispatch, SetStateAction } from "react";
 import { Countdown } from "@/components/exercise/attempt-countdown";
 import { ExerciseStats } from "@/components/exercise/attempt-stats";
 import { useTryoutPart } from "@/components/tryout/part-state";
 import { TryoutStartButton } from "@/components/tryout/start-button";
 import { useStickyVisibility } from "@/lib/hooks/use-sticky-visibility";
 
-export function TryoutPartSticky() {
+type TryoutPartDialogSetter = Dispatch<SetStateAction<boolean>>;
+
+export function TryoutPartSticky({
+  setCompleteDialogOpen,
+}: {
+  setCompleteDialogOpen: TryoutPartDialogSetter;
+}) {
   const tTryouts = useTranslations("Tryouts");
   const showSticky = useTryoutPart(
     (state) => state.state.status === "in-progress"
@@ -29,9 +36,6 @@ export function TryoutPartSticky() {
   const timer = useTryoutPart((state) => state.state.timer);
   const isActionPending = useTryoutPart((state) => state.meta.isActionPending);
   const { anchorRef, hidden } = useStickyVisibility();
-  const setCompleteDialogOpen = useTryoutPart(
-    (state) => state.actions.setCompleteDialogOpen
-  );
 
   if (!showSticky) {
     return null;
@@ -158,19 +162,19 @@ export function TryoutPartBackCta() {
   );
 }
 
-export function TryoutPartDialog() {
+export function TryoutPartDialog({
+  isCompleteDialogOpen,
+  setCompleteDialogOpen,
+}: {
+  isCompleteDialogOpen: boolean;
+  setCompleteDialogOpen: TryoutPartDialogSetter;
+}) {
   const tTryouts = useTranslations("Tryouts");
   const isAwaitingExpiry = useTryoutPart(
     (state) => state.state.isAwaitingExpiry
   );
   const isActionPending = useTryoutPart((state) => state.meta.isActionPending);
-  const isCompleteDialogOpen = useTryoutPart(
-    (state) => state.meta.isCompleteDialogOpen
-  );
   const completePart = useTryoutPart((state) => state.actions.completePart);
-  const setCompleteDialogOpen = useTryoutPart(
-    (state) => state.actions.setCompleteDialogOpen
-  );
 
   return (
     <ResponsiveDialog

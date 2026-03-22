@@ -16,6 +16,20 @@ const TryoutPackageProgressContext = createContext<ReadonlySet<string> | null>(
   null
 );
 
+function useTryoutPackageProgress<T>(
+  selector: (state: ReadonlySet<string>) => T
+) {
+  return useContextSelector(TryoutPackageProgressContext, (context) => {
+    if (!context) {
+      throw new Error(
+        "useTryoutPackageProgress must be used within TryoutPackageProgressProvider"
+      );
+    }
+
+    return selector(context);
+  });
+}
+
 interface TryoutPackageProgressProviderProps {
   children: ReactNode;
   locale: Locale;
@@ -68,20 +82,9 @@ export function TryoutPackageInProgressBadge({
   tryoutSlug: string;
 }) {
   const tTryouts = useTranslations("Tryouts");
-  const hasProvider = useContextSelector(
-    TryoutPackageProgressContext,
-    (value) => value !== null
+  const isInProgress = useTryoutPackageProgress((state) =>
+    state.has(tryoutSlug)
   );
-  const isInProgress = useContextSelector(
-    TryoutPackageProgressContext,
-    (value) => value?.has(tryoutSlug) ?? false
-  );
-
-  if (!hasProvider) {
-    throw new Error(
-      "TryoutPackageInProgressBadge must be used within TryoutPackageProgressProvider"
-    );
-  }
 
   if (!isInProgress) {
     return null;

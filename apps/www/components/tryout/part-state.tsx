@@ -2,21 +2,13 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
-import type { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { ConvexError } from "convex/values";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
-import {
-  type ComponentProps,
-  type ReactNode,
-  useCallback,
-  useMemo,
-  useState,
-  useTransition,
-} from "react";
+import { type ReactNode, useCallback, useMemo, useTransition } from "react";
 import { toast } from "sonner";
 import { createContext, useContextSelector } from "use-context-selector";
 import type {
@@ -48,20 +40,14 @@ type TryoutPartQuery = FunctionReturnType<
   typeof api.tryouts.queries.attempts.getUserTryoutPartAttempt
 >;
 
-type TryoutPartDialogSetter = ComponentProps<
-  typeof ResponsiveDialog
->["setOpen"];
-
 interface TryoutPartContextValue {
   actions: {
     completePart: () => void;
     goToSet: () => void;
-    setCompleteDialogOpen: TryoutPartDialogSetter;
     startPart: () => void;
   };
   meta: {
     isActionPending: boolean;
-    isCompleteDialogOpen: boolean;
   };
   state: {
     answers: TryoutPartPageState["answers"];
@@ -97,7 +83,6 @@ export function TryoutPartProvider({
   tryout: TryoutValue;
 }) {
   const tTryouts = useTranslations("Tryouts");
-  const [isCompleteDialogOpen, setCompleteDialogOpen] = useState(false);
   const [isActionPending, startTransition] = useTransition();
   const router = useRouter();
   const user = useUser((state) => state.user);
@@ -177,7 +162,6 @@ export function TryoutPartProvider({
           return;
         }
 
-        setCompleteDialogOpen(false);
         goToSet();
         toast.success(tTryouts("complete-part-success"), {
           position: "bottom-center",
@@ -213,12 +197,10 @@ export function TryoutPartProvider({
       actions: {
         completePart: handleCompletePart,
         goToSet,
-        setCompleteDialogOpen,
         startPart: handleStartPart,
       },
       meta: {
         isActionPending,
-        isCompleteDialogOpen,
       },
       state: {
         answers,
@@ -245,7 +227,6 @@ export function TryoutPartProvider({
       isAwaitingExpiry,
       isTryoutFinished,
       isActionPending,
-      isCompleteDialogOpen,
       isRuntimePending,
       part,
       partEndReason,
@@ -267,11 +248,11 @@ export function TryoutPartProvider({
 export function useTryoutPart<T>(
   selector: (state: TryoutPartContextValue) => T
 ) {
-  const context = useContextSelector(TryoutPartContext, (value) => value);
+  return useContextSelector(TryoutPartContext, (context) => {
+    if (!context) {
+      throw new Error("useTryoutPart must be used within a TryoutPartProvider");
+    }
 
-  if (!context) {
-    throw new Error("useTryoutPart must be used within a TryoutPartProvider");
-  }
-
-  return selector(context);
+    return selector(context);
+  });
 }
