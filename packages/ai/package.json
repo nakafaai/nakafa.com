@@ -16,7 +16,7 @@
     "@ai-sdk/react": "^3.0.136",
     "@mendable/firecrawl-js": "^4.16.0",
     "@repo/utilities": "workspace:*",
-    "@t3-oss/env-nextjs": "^0.13.10",
+    "@t3-oss/env-nextjs": "^0.13.11",
     "ai": "^6.0.134",
     "convex": "^1.34.0",
     "dedent": "^1.7.2",

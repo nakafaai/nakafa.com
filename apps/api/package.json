@@ -21,7 +21,7 @@
     "@repo/next-config": "workspace:*",
     "@repo/security": "workspace:*",
     "@repo/utilities": "workspace:*",
-    "@t3-oss/env-nextjs": "^0.13.10",
+    "@t3-oss/env-nextjs": "^0.13.11",
     "effect": "^3.21.0",
     "next": "16.2.1",
     "pino": "^10.3.1",
