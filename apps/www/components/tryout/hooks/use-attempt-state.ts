@@ -2,7 +2,7 @@
 
 import {
   type TryoutAttemptParams,
-  useUserTryoutAttempt,
+  useTryoutAttempt,
 } from "@/components/tryout/hooks/use-tryout-attempt";
 import {
   getEffectivePartAttemptStatus,
@@ -18,7 +18,7 @@ function getResumePartKey({
   effectiveStatus,
   nowMs,
 }: {
-  attemptData: ReturnType<typeof useUserTryoutAttempt>["data"] | undefined;
+  attemptData: ReturnType<typeof useTryoutAttempt>["data"] | undefined;
   effectiveStatus: ReturnType<typeof getEffectiveTryoutStatus> | undefined;
   nowMs: number;
 }) {
@@ -83,7 +83,7 @@ export function useTryoutAttemptStateValue({
     data: attemptData,
     isPending: isAttemptPending,
     nowMs,
-  } = useUserTryoutAttempt({
+  } = useTryoutAttempt({
     locale,
     product,
     tryoutSlug,

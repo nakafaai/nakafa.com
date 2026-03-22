@@ -6,7 +6,7 @@ import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import type { Locale } from "next-intl";
 import { type ReactNode, useMemo } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
-import { useTryoutQueryNowMs } from "@/components/tryout/hooks/use-tryout-clock";
+import { useTryoutClock } from "@/components/tryout/hooks/use-tryout-clock";
 import { getEffectiveTryoutStatus } from "@/components/tryout/utils/status";
 import { useUser } from "@/lib/context/use-user";
 
@@ -42,7 +42,7 @@ export function TryoutPackageProgressProvider({
   const isUserPending = useUser((state) => state.isPending);
   const user = useUser((state) => state.user);
   const shouldQuery = !isUserPending && Boolean(user);
-  const nowMs = useTryoutQueryNowMs(shouldQuery);
+  const nowMs = useTryoutClock(shouldQuery);
   const { data } = useQueryWithStatus(
     api.tryouts.queries.attempts.getUserInProgressTryouts,
     shouldQuery ? { locale, product } : "skip"

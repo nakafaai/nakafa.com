@@ -2,7 +2,7 @@
 
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { useLocale } from "next-intl";
-import { useUserTryoutAttempt } from "@/components/tryout/hooks/use-tryout-attempt";
+import { useTryoutAttempt } from "@/components/tryout/hooks/use-tryout-attempt";
 import { getTryoutAttemptRoute } from "@/components/tryout/utils/route";
 import { getEffectiveTryoutStatus } from "@/components/tryout/utils/status";
 
@@ -18,7 +18,7 @@ export function useTryoutSidebarLocked() {
         tryoutSlug: route.tryoutSlug,
       }
     : null;
-  const { data: attempt, nowMs } = useUserTryoutAttempt(tryoutParams);
+  const { data: attempt, nowMs } = useTryoutAttempt(tryoutParams);
 
   if (!attempt) {
     return false;

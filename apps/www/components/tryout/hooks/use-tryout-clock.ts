@@ -66,7 +66,7 @@ function getDisabledSnapshot() {
 }
 
 /** Returns the shared client clock used for expiry-sensitive tryout UI. */
-export function useTryoutQueryNowMs(enabled = true) {
+export function useTryoutClock(enabled = true) {
   return useSyncExternalStore(
     enabled ? subscribeEnabled : subscribeDisabled,
     enabled ? getEnabledSnapshot : getDisabledSnapshot,

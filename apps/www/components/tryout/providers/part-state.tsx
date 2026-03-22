@@ -11,7 +11,7 @@ import { useTranslations } from "next-intl";
 import { type ReactNode, useCallback, useMemo, useTransition } from "react";
 import { toast } from "sonner";
 import { createContext, useContextSelector } from "use-context-selector";
-import { useTryoutQueryNowMs } from "@/components/tryout/hooks/use-tryout-clock";
+import { useTryoutClock } from "@/components/tryout/hooks/use-tryout-clock";
 import type {
   TryoutPartPageState,
   TryoutPartUiStatus,
@@ -79,7 +79,7 @@ export function TryoutPartProvider({
   const isUserPending = useUser((state) => state.isPending);
   const user = useUser((state) => state.user);
   const shouldLoadRuntime = !isUserPending && Boolean(user);
-  const nowMs = useTryoutQueryNowMs(shouldLoadRuntime);
+  const nowMs = useTryoutClock(shouldLoadRuntime);
   const { data: runtime, isPending: isPartStatePending } = useQueryWithStatus(
     api.tryouts.queries.attempts.getUserTryoutPartAttempt,
     shouldLoadRuntime
