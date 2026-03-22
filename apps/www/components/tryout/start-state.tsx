@@ -18,6 +18,7 @@ import { useUser } from "@/lib/context/use-user";
 
 export type TryoutStartButtonProps = TryoutAttemptParams;
 
+/** Builds the state and actions for the tryout start CTA flow. */
 export function useTryoutStartValue({
   locale,
   product,

@@ -22,9 +22,6 @@ interface TryoutPackageProgressProviderProps {
   product: TryoutProduct;
 }
 
-/**
- * Loads the current user's in-progress tryout slugs for one product page.
- */
 export function TryoutPackageProgressProvider({
   children,
   locale,
@@ -65,9 +62,6 @@ export function TryoutPackageProgressProvider({
   );
 }
 
-/**
- * Shows a short badge when a tryout set is still running for the current user.
- */
 export function TryoutPackageInProgressBadge({
   tryoutSlug,
 }: {

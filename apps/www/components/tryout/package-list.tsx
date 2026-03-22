@@ -74,9 +74,6 @@ export function TryoutPackageCopy({
   return <div className={cn("space-y-1", className)} {...props} />;
 }
 
-/**
- * Keeps the package title and optional status badge aligned on one row.
- */
 export function TryoutPackageHeader({
   className,
   ...props

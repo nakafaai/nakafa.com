@@ -5,6 +5,7 @@ type ActiveTryout = FunctionReturnType<
   typeof api.tryouts.queries.tryouts.getActiveTryouts
 >[number];
 
+/** Groups active tryouts by cycle key for package list rendering. */
 export function groupActiveTryoutsByCycle(tryouts: readonly ActiveTryout[]) {
   const groupedTryouts = new Map<string, ActiveTryout[]>();
 

@@ -65,12 +65,7 @@ function getDisabledSnapshot() {
   return DISABLED_NOW_MS;
 }
 
-/**
- * Returns a client clock value for tryout expiry-sensitive queries.
- *
- * This uses a shared external store so multiple tryout components subscribe to
- * one clock instead of each starting their own interval.
- */
+/** Returns the shared client clock used for expiry-sensitive tryout UI. */
 export function useTryoutQueryNowMs(enabled = true) {
   return useSyncExternalStore(
     enabled ? subscribeEnabled : subscribeDisabled,

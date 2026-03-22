@@ -98,6 +98,7 @@ function TryoutMetricTime({ totalSeconds }: { totalSeconds: number }) {
   );
 }
 
+/** Splits a duration into the visible time segments for the UI. */
 function getTimeSegments(totalSeconds: number) {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);

@@ -263,6 +263,7 @@ export function TryoutPartProvider({
   );
 }
 
+/** Selects a slice of the active tryout part context. */
 export function useTryoutPart<T>(
   selector: (state: TryoutPartContextValue) => T
 ) {

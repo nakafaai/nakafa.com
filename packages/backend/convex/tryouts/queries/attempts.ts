@@ -43,6 +43,7 @@ const tryoutPartAttemptRuntimeValidator = v.object({
 
 type TryoutPartAttemptSummary = Infer<typeof tryoutPartAttemptSummaryValidator>;
 
+/** Picks the most recent in-progress part to resume for a tryout. */
 function pickSuggestedPartKey(partAttempts: TryoutPartAttemptSummary[]) {
   let suggestedPartKey: TryoutPartAttemptSummary["partKey"] | undefined;
   let latestActivityAt = Number.NEGATIVE_INFINITY;

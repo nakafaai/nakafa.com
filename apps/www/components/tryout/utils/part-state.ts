@@ -32,6 +32,7 @@ type TryoutProgress = Pick<
   "completedPartIndices" | "status"
 >;
 
+/** Derives the page-level UI status for one tryout part runtime. */
 function getTryoutPartPageStatus({
   isRuntimePending,
   partAttempt,
@@ -71,6 +72,7 @@ function getTryoutPartPageStatus({
   return "ready";
 }
 
+/** Derives the list-row UI status for one tryout part entry. */
 function getTryoutSetPartStatus({
   expiresAtMs,
   isRuntimePending,
@@ -121,6 +123,7 @@ function getTryoutSetPartStatus({
   return "ready";
 }
 
+/** Derives the state needed to render a tryout part page. */
 export function deriveTryoutPartPageState({
   nowMs,
   isRuntimePending,
@@ -170,6 +173,7 @@ export function deriveTryoutPartPageState({
   };
 }
 
+/** Derives the state needed to render one tryout part list item. */
 export function deriveTryoutSetPartState({
   attemptData,
   effectiveStatus,

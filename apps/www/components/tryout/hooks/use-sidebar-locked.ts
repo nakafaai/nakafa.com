@@ -6,9 +6,7 @@ import { useUserTryoutAttempt } from "@/components/tryout/hooks/use-user-tryout-
 import { getTryoutAttemptRoute } from "@/components/tryout/utils/route";
 import { getEffectiveTryoutStatus } from "@/components/tryout/utils/status";
 
-/**
- * Hides the main sidebar while the current tryout is still in progress.
- */
+/** Returns whether the current route belongs to an active tryout. */
 export function useTryoutSidebarLocked() {
   const locale = useLocale();
   const pathname = usePathname();

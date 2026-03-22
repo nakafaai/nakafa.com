@@ -27,6 +27,7 @@ const snbtPartOrder = new Map(
   snbtPartLabels.map((material, index) => [material, index])
 );
 
+/** Extracts the SNBT cycle year from a yearful tryout set slug. */
 function getSnbtCycleKeyFromSetSlug(setSlug: Doc<"exerciseSets">["slug"]) {
   const match = setSlug.match(YEARFUL_TRYOUT_SET_SLUG_REGEX);
 
@@ -37,6 +38,7 @@ function getSnbtCycleKeyFromSetSlug(setSlug: Doc<"exerciseSets">["slug"]) {
   return match[1];
 }
 
+/** Sorts SNBT tryouts by newest cycle and then by label. */
 function compareSnbtTryouts(
   left: Pick<Doc<"tryouts">, "cycleKey" | "label">,
   right: Pick<Doc<"tryouts">, "cycleKey" | "label">

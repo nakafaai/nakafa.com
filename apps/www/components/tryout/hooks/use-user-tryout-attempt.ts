@@ -10,11 +10,7 @@ export type TryoutAttemptParams = FunctionArgs<
   typeof api.tryouts.queries.attempts.getUserTryoutAttempt
 >;
 
-/**
- * Loads the current user's latest tryout attempt when auth and route data are ready.
- *
- * Pass `null` to skip the query on routes that are outside the tryout flow.
- */
+/** Loads the current user's latest tryout attempt together with a shared clock. */
 export function useUserTryoutAttempt(params: TryoutAttemptParams | null) {
   const isUserPending = useUser((state) => state.isPending);
   const user = useUser((state) => state.user);

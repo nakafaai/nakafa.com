@@ -151,6 +151,7 @@ function TryoutSetPart({
   );
 }
 
+/** Resolves the icon used for a tryout part material. */
 function getTryoutPartIcon(material: string) {
   const parsedMaterial = ExercisesMaterialSchema.safeParse(material);
 

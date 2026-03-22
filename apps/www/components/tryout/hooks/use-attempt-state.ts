@@ -12,6 +12,7 @@ import type { UseExerciseTimerReturn } from "@/lib/hooks/use-exercise-timer";
 
 type TryoutRemainingTime = UseExerciseTimerReturn["formatted"];
 
+/** Picks the next part key the student should resume in an active tryout. */
 function getResumePartKey({
   attemptData,
   effectiveStatus,
@@ -72,9 +73,7 @@ function getResumePartKey({
   return activePartAttempts[0]?.partKey;
 }
 
-/**
- * Derives the student-facing tryout CTA state from the latest tryout attempt.
- */
+/** Derives the current tryout CTA state from the user's latest attempt. */
 export function useTryoutAttemptState({
   locale,
   product,

@@ -32,6 +32,7 @@ type UserTryoutStatsSnapshot = Pick<
   | "totalTryoutsCompleted"
 >;
 
+/** Rebuilds one user's aggregate tryout stats from leaderboard entries. */
 async function getUserTryoutStatsSnapshot({
   ctx,
   leaderboardNamespace,
