@@ -1,4 +1,5 @@
 import { internalQuery } from "@repo/backend/convex/_generated/server";
+import { contentAuthorContentIdValidator } from "@repo/backend/convex/authors/schema";
 import {
   contentTypeValidator,
   localeValidator,
@@ -10,35 +11,35 @@ import {
 import { v } from "convex/values";
 
 const staleContentItemValidator = v.object({
-  id: v.string(),
+  id: v.id("articleContents"),
   locale: localeValidator,
   slug: v.string(),
 });
 
 const exerciseQuestionIntegrityItemValidator = v.object({
-  id: v.string(),
+  id: v.id("exerciseQuestions"),
   locale: localeValidator,
   slug: v.string(),
 });
 
 const exerciseChoiceIntegrityItemValidator = v.object({
-  questionId: v.string(),
+  questionId: v.id("exerciseQuestions"),
 });
 
 const contentAuthorIntegrityItemValidator = v.object({
-  authorId: v.string(),
-  contentId: v.string(),
+  authorId: v.id("authors"),
+  contentId: contentAuthorContentIdValidator,
   contentType: contentTypeValidator,
 });
 
 const articleReferenceIntegrityItemValidator = v.object({
-  articleId: v.string(),
+  articleId: v.id("articleContents"),
 });
 
 const subjectSectionIntegrityItemValidator = v.object({
   locale: localeValidator,
   slug: v.string(),
-  topicId: v.optional(v.string()),
+  topicId: v.optional(v.id("subjectTopics")),
 });
 
 export const listIntegrityExerciseQuestionsPage = internalQuery({

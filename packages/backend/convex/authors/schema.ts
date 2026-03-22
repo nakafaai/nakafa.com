@@ -1,6 +1,15 @@
 import { contentTypeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { defineTable } from "convex/server";
-import { v } from "convex/values";
+import { type Infer, v } from "convex/values";
+
+export const contentAuthorContentIdValidator = v.union(
+  v.id("articleContents"),
+  v.id("subjectSections"),
+  v.id("exerciseQuestions")
+);
+export type ContentAuthorContentId = Infer<
+  typeof contentAuthorContentIdValidator
+>;
 
 const tables = {
   /** Shared author profiles, referenced by multiple content types */
@@ -31,8 +40,8 @@ const tables = {
    *   ).collect();
    */
   contentAuthors: defineTable({
-    /** Document ID from articleContents, subjectContents, or exerciseContents (stored as string for polymorphism) */
-    contentId: v.string(),
+    /** Document ID from articleContents, subjectSections, or exerciseQuestions. */
+    contentId: contentAuthorContentIdValidator,
     /** Discriminator: which table contentId refers to */
     contentType: contentTypeValidator,
     authorId: v.id("authors"),

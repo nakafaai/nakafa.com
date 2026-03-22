@@ -1,5 +1,3 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
 import { internalMutation } from "@repo/backend/convex/functions";
@@ -15,22 +13,6 @@ const bulkSyncAuthorsResultValidator = v.object({
 const deleteResultValidator = v.object({
   deleted: v.number(),
 });
-
-const normalizeAuthorIds = (ctx: MutationCtx, authorIds: string[]) => {
-  const normalizedIds: Id<"authors">[] = [];
-
-  for (const authorId of authorIds) {
-    const normalizedId = ctx.db.normalizeId("authors", authorId);
-
-    if (!normalizedId) {
-      continue;
-    }
-
-    normalizedIds.push(normalizedId);
-  }
-
-  return normalizedIds;
-};
 
 export const bulkSyncAuthors = internalMutation({
   args: {
@@ -76,7 +58,7 @@ export const bulkSyncAuthors = internalMutation({
 
 export const deleteUnusedAuthors = internalMutation({
   args: {
-    authorIds: v.array(v.string()),
+    authorIds: v.array(v.id("authors")),
   },
   returns: deleteResultValidator,
   handler: async (ctx, args) => {
@@ -87,13 +69,11 @@ export const deleteUnusedAuthors = internalMutation({
       unit: "author IDs",
     });
 
-    const normalizedAuthorIds = normalizeAuthorIds(ctx, args.authorIds);
-
-    if (normalizedAuthorIds.length === 0) {
+    if (args.authorIds.length === 0) {
       return { deleted: 0 };
     }
 
-    const authors = await getAll(ctx.db, normalizedAuthorIds);
+    const authors = await getAll(ctx.db, args.authorIds);
     let deleted = 0;
 
     for (const [index, author] of authors.entries()) {
@@ -101,7 +81,7 @@ export const deleteUnusedAuthors = internalMutation({
         continue;
       }
 
-      const authorId = normalizedAuthorIds[index];
+      const authorId = args.authorIds[index];
       const linkedContent = await ctx.db
         .query("contentAuthors")
         .withIndex("authorId", (q) => q.eq("authorId", authorId))

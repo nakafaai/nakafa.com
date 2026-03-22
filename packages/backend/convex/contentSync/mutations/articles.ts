@@ -1,5 +1,3 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { updateContentHash } from "@repo/backend/convex/audioStudies/utils";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
@@ -53,22 +51,6 @@ const bulkSyncArticlesResultValidator = v.object({
 const deleteResultValidator = v.object({
   deleted: v.number(),
 });
-
-const normalizeArticleIds = (ctx: MutationCtx, articleIds: string[]) => {
-  const normalizedIds: Id<"articleContents">[] = [];
-
-  for (const articleId of articleIds) {
-    const normalizedId = ctx.db.normalizeId("articleContents", articleId);
-
-    if (!normalizedId) {
-      continue;
-    }
-
-    normalizedIds.push(normalizedId);
-  }
-
-  return normalizedIds;
-};
 
 export const bulkSyncArticles = internalMutation({
   args: {
@@ -184,7 +166,7 @@ export const bulkSyncArticles = internalMutation({
 
 export const deleteStaleArticles = internalMutation({
   args: {
-    articleIds: v.array(v.string()),
+    articleIds: v.array(v.id("articleContents")),
   },
   returns: deleteResultValidator,
   handler: async (ctx, args) => {
@@ -195,13 +177,11 @@ export const deleteStaleArticles = internalMutation({
       unit: "article IDs",
     });
 
-    const normalizedArticleIds = normalizeArticleIds(ctx, args.articleIds);
-
-    if (normalizedArticleIds.length === 0) {
+    if (args.articleIds.length === 0) {
       return { deleted: 0 };
     }
 
-    const articles = await getAll(ctx.db, normalizedArticleIds);
+    const articles = await getAll(ctx.db, args.articleIds);
     let deleted = 0;
 
     for (const [index, article] of articles.entries()) {
@@ -209,7 +189,7 @@ export const deleteStaleArticles = internalMutation({
         continue;
       }
 
-      const articleId = normalizedArticleIds[index];
+      const articleId = args.articleIds[index];
 
       await deleteContentAuthorLinks(ctx, articleId, "article");
       await deleteArticleReferencesForArticle(ctx, articleId);

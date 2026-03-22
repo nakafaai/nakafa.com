@@ -11,12 +11,16 @@ import {
   rescoreTryoutAttempt,
   syncTryoutAttemptExpiry,
 } from "@repo/backend/convex/tryouts/helpers";
-import { getTryoutLeaderboardNamespace } from "@repo/backend/convex/tryouts/products";
+import {
+  getTryoutLeaderboardNamespace,
+  tryoutProductValidator,
+} from "@repo/backend/convex/tryouts/products";
 import { tryoutLeaderboardWorkpool } from "@repo/backend/convex/tryouts/workpool";
 import { ConvexError, v } from "convex/values";
 
 const TRYOUT_SCORE_PROMOTION_BATCH_SIZE = 100;
 const TRYOUT_EXPIRY_SWEEP_BATCH_SIZE = 100;
+const TRYOUT_STATS_REBUILD_BATCH_SIZE = 100;
 
 type LeaderboardStatsEntry = Pick<
   Doc<"tryoutLeaderboardEntries">,
@@ -32,46 +36,13 @@ type UserTryoutStatsSnapshot = Pick<
   | "totalTryoutsCompleted"
 >;
 
-/** Rebuilds one user's aggregate tryout stats from leaderboard entries. */
-async function getUserTryoutStatsSnapshot({
-  ctx,
-  leaderboardNamespace,
-  userId,
-}: {
-  ctx: Pick<MutationCtx, "db">;
-  leaderboardNamespace: string;
-  userId: Id<"users">;
-}) {
-  let totalTryoutsCompleted = 0;
-  let totalTheta = 0;
-  let totalRawScore = 0;
-  let bestTheta = Number.NEGATIVE_INFINITY;
-  let lastTryoutAt = 0;
-
-  for await (const entry of ctx.db
-    .query("tryoutLeaderboardEntries")
-    .withIndex("userId_leaderboardNamespace_completedAt", (q) =>
-      q.eq("userId", userId).eq("leaderboardNamespace", leaderboardNamespace)
-    )) {
-    totalTryoutsCompleted += 1;
-    totalTheta += entry.theta;
-    totalRawScore += entry.rawScore;
-    bestTheta = Math.max(bestTheta, entry.theta);
-    lastTryoutAt = Math.max(lastTryoutAt, entry.completedAt);
-  }
-
-  if (totalTryoutsCompleted === 0) {
-    return null;
-  }
-
-  return {
-    averageRawScore: totalRawScore / totalTryoutsCompleted,
-    averageTheta: totalTheta / totalTryoutsCompleted,
-    bestTheta,
-    lastTryoutAt,
-    totalTryoutsCompleted,
-  } satisfies UserTryoutStatsSnapshot;
-}
+const tryoutStatsRebuildProgressValidator = v.object({
+  bestTheta: v.optional(v.number()),
+  lastTryoutAt: v.number(),
+  totalRawScore: v.number(),
+  totalTheta: v.number(),
+  totalTryoutsCompleted: v.number(),
+});
 
 /** Updates one user's aggregate tryout stats from the changed canonical row. */
 async function syncUserTryoutStats({
@@ -84,7 +55,7 @@ async function syncUserTryoutStats({
   userId,
 }: {
   cycleKey: string;
-  ctx: Pick<MutationCtx, "db">;
+  ctx: Pick<MutationCtx, "db" | "scheduler">;
   locale: Doc<"tryouts">["locale"];
   nextEntry: LeaderboardStatsEntry;
   previousEntry: LeaderboardStatsEntry | null;
@@ -107,23 +78,28 @@ async function syncUserTryoutStats({
     .unique();
 
   if (!statsRecord) {
-    const statsSnapshot = await getUserTryoutStatsSnapshot({
-      ctx,
-      leaderboardNamespace,
-      userId,
-    });
+    if (previousEntry !== null) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.tryouts.internalMutations.rebuildUserTryoutStats,
+        {
+          leaderboardNamespace,
+          product,
+          userId,
+        }
+      );
 
-    if (!statsSnapshot) {
-      throw new ConvexError({
-        code: "INVALID_TRYOUT_STATE",
-        message: "Tryout stats rebuild found no leaderboard entries.",
-      });
+      return;
     }
 
     await ctx.db.insert("userTryoutStats", {
-      ...statsSnapshot,
+      averageRawScore: nextEntry.rawScore,
+      averageTheta: nextEntry.theta,
+      bestTheta: nextEntry.theta,
+      lastTryoutAt: nextEntry.completedAt,
       leaderboardNamespace,
       product,
+      totalTryoutsCompleted: 1,
       updatedAt: nextEntry.completedAt,
       userId,
     });
@@ -165,24 +141,15 @@ async function syncUserTryoutStats({
       .first();
 
     if (!nextBestEntry) {
-      const statsSnapshot = await getUserTryoutStatsSnapshot({
-        ctx,
-        leaderboardNamespace,
-        userId,
-      });
-
-      if (!statsSnapshot) {
-        throw new ConvexError({
-          code: "INVALID_TRYOUT_STATE",
-          message:
-            "Tryout leaderboard entry is missing while rebuilding stats.",
-        });
-      }
-
-      await ctx.db.patch("userTryoutStats", statsRecord._id, {
-        ...statsSnapshot,
-        updatedAt: nextEntry.completedAt,
-      });
+      await ctx.scheduler.runAfter(
+        0,
+        internal.tryouts.internalMutations.rebuildUserTryoutStats,
+        {
+          leaderboardNamespace,
+          product,
+          userId,
+        }
+      );
 
       return;
     }
@@ -200,24 +167,15 @@ async function syncUserTryoutStats({
       .first();
 
     if (!latestEntry) {
-      const statsSnapshot = await getUserTryoutStatsSnapshot({
-        ctx,
-        leaderboardNamespace,
-        userId,
-      });
-
-      if (!statsSnapshot) {
-        throw new ConvexError({
-          code: "INVALID_TRYOUT_STATE",
-          message:
-            "Tryout leaderboard entry is missing while rebuilding stats.",
-        });
-      }
-
-      await ctx.db.patch("userTryoutStats", statsRecord._id, {
-        ...statsSnapshot,
-        updatedAt: nextEntry.completedAt,
-      });
+      await ctx.scheduler.runAfter(
+        0,
+        internal.tryouts.internalMutations.rebuildUserTryoutStats,
+        {
+          leaderboardNamespace,
+          product,
+          userId,
+        }
+      );
 
       return;
     }
@@ -234,6 +192,117 @@ async function syncUserTryoutStats({
     updatedAt: nextEntry.completedAt,
   });
 }
+
+/** Rebuilds one user's aggregate tryout stats in bounded pages. */
+export const rebuildUserTryoutStats = internalMutation({
+  args: {
+    cursor: v.optional(v.string()),
+    leaderboardNamespace: v.string(),
+    product: tryoutProductValidator,
+    progress: v.optional(tryoutStatsRebuildProgressValidator),
+    userId: vv.id("users"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const page = await ctx.db
+      .query("tryoutLeaderboardEntries")
+      .withIndex("userId_leaderboardNamespace_completedAt", (q) =>
+        q
+          .eq("userId", args.userId)
+          .eq("leaderboardNamespace", args.leaderboardNamespace)
+      )
+      .paginate({
+        cursor: args.cursor ?? null,
+        numItems: TRYOUT_STATS_REBUILD_BATCH_SIZE,
+      });
+
+    const progress = args.progress ?? {
+      bestTheta: undefined,
+      lastTryoutAt: 0,
+      totalRawScore: 0,
+      totalTheta: 0,
+      totalTryoutsCompleted: 0,
+    };
+
+    for (const entry of page.page) {
+      progress.bestTheta =
+        progress.bestTheta === undefined
+          ? entry.theta
+          : Math.max(progress.bestTheta, entry.theta);
+      progress.lastTryoutAt = Math.max(
+        progress.lastTryoutAt,
+        entry.completedAt
+      );
+      progress.totalRawScore += entry.rawScore;
+      progress.totalTheta += entry.theta;
+      progress.totalTryoutsCompleted += 1;
+    }
+
+    if (!page.isDone) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.tryouts.internalMutations.rebuildUserTryoutStats,
+        {
+          cursor: page.continueCursor,
+          leaderboardNamespace: args.leaderboardNamespace,
+          product: args.product,
+          progress,
+          userId: args.userId,
+        }
+      );
+
+      return null;
+    }
+
+    const statsRecord = await ctx.db
+      .query("userTryoutStats")
+      .withIndex("userId_product_leaderboardNamespace", (q) =>
+        q
+          .eq("userId", args.userId)
+          .eq("product", args.product)
+          .eq("leaderboardNamespace", args.leaderboardNamespace)
+      )
+      .unique();
+
+    if (
+      progress.totalTryoutsCompleted === 0 ||
+      progress.bestTheta === undefined
+    ) {
+      if (statsRecord) {
+        await ctx.db.delete("userTryoutStats", statsRecord._id);
+      }
+
+      return null;
+    }
+
+    const nextStats: UserTryoutStatsSnapshot = {
+      averageRawScore: progress.totalRawScore / progress.totalTryoutsCompleted,
+      averageTheta: progress.totalTheta / progress.totalTryoutsCompleted,
+      bestTheta: progress.bestTheta,
+      lastTryoutAt: progress.lastTryoutAt,
+      totalTryoutsCompleted: progress.totalTryoutsCompleted,
+    };
+
+    if (statsRecord) {
+      await ctx.db.patch("userTryoutStats", statsRecord._id, {
+        ...nextStats,
+        updatedAt: progress.lastTryoutAt,
+      });
+
+      return null;
+    }
+
+    await ctx.db.insert("userTryoutStats", {
+      ...nextStats,
+      leaderboardNamespace: args.leaderboardNamespace,
+      product: args.product,
+      updatedAt: progress.lastTryoutAt,
+      userId: args.userId,
+    });
+
+    return null;
+  },
+});
 
 /** Scheduler-safe expiry for one in-progress tryout attempt. */
 export const expireTryoutAttemptInternal = internalMutation({

@@ -192,7 +192,14 @@ export const bulkSyncTryouts = internalMutation({
           .eq("locale", args.locale)
           .eq("isActive", true)
       )
-      .collect();
+      .take(tryoutCandidateLimit + 1);
+
+    assertContentSyncBatchSize({
+      functionName: "bulkSyncTryouts",
+      limit: tryoutCandidateLimit,
+      received: activeTryouts.length,
+      unit: "active tryouts",
+    });
 
     for (const activeTryout of activeTryouts) {
       if (detectedSlugs.has(activeTryout.slug)) {

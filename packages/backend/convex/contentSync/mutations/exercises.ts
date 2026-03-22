@@ -80,38 +80,6 @@ const deleteResultValidator = v.object({
   deleted: v.number(),
 });
 
-const normalizeSetIds = (ctx: MutationCtx, setIds: string[]) => {
-  const normalizedIds: Id<"exerciseSets">[] = [];
-
-  for (const setId of setIds) {
-    const normalizedId = ctx.db.normalizeId("exerciseSets", setId);
-
-    if (!normalizedId) {
-      continue;
-    }
-
-    normalizedIds.push(normalizedId);
-  }
-
-  return normalizedIds;
-};
-
-const normalizeQuestionIds = (ctx: MutationCtx, questionIds: string[]) => {
-  const normalizedIds: Id<"exerciseQuestions">[] = [];
-
-  for (const questionId of questionIds) {
-    const normalizedId = ctx.db.normalizeId("exerciseQuestions", questionId);
-
-    if (!normalizedId) {
-      continue;
-    }
-
-    normalizedIds.push(normalizedId);
-  }
-
-  return normalizedIds;
-};
-
 async function deleteExerciseQuestion(
   ctx: MutationCtx,
   questionId: Id<"exerciseQuestions">
@@ -325,7 +293,7 @@ export const bulkSyncExerciseQuestions = internalMutation({
 
 export const deleteStaleExerciseSets = internalMutation({
   args: {
-    setIds: v.array(v.string()),
+    setIds: v.array(v.id("exerciseSets")),
   },
   returns: deleteResultValidator,
   handler: async (ctx, args) => {
@@ -336,13 +304,11 @@ export const deleteStaleExerciseSets = internalMutation({
       unit: "exercise set IDs",
     });
 
-    const normalizedSetIds = normalizeSetIds(ctx, args.setIds);
-
-    if (normalizedSetIds.length === 0) {
+    if (args.setIds.length === 0) {
       return { deleted: 0 };
     }
 
-    const sets = await getAll(ctx.db, normalizedSetIds);
+    const sets = await getAll(ctx.db, args.setIds);
     let deleted = 0;
 
     for (const [index, exerciseSet] of sets.entries()) {
@@ -350,14 +316,20 @@ export const deleteStaleExerciseSets = internalMutation({
         continue;
       }
 
-      const setId = normalizedSetIds[index];
-      const questions = await ctx.db
-        .query("exerciseQuestions")
-        .withIndex("setId", (q) => q.eq("setId", setId))
-        .collect();
+      const setId = args.setIds[index];
+      while (true) {
+        const questions = await ctx.db
+          .query("exerciseQuestions")
+          .withIndex("setId", (q) => q.eq("setId", setId))
+          .take(CONTENT_SYNC_BATCH_LIMITS.exerciseQuestions);
 
-      for (const question of questions) {
-        await deleteExerciseQuestion(ctx, question._id);
+        if (questions.length === 0) {
+          break;
+        }
+
+        for (const question of questions) {
+          await deleteExerciseQuestion(ctx, question._id);
+        }
       }
 
       await ctx.db.delete("exerciseSets", setId);
@@ -370,7 +342,7 @@ export const deleteStaleExerciseSets = internalMutation({
 
 export const deleteStaleExerciseQuestions = internalMutation({
   args: {
-    questionIds: v.array(v.string()),
+    questionIds: v.array(v.id("exerciseQuestions")),
   },
   returns: deleteResultValidator,
   handler: async (ctx, args) => {
@@ -381,13 +353,11 @@ export const deleteStaleExerciseQuestions = internalMutation({
       unit: "exercise question IDs",
     });
 
-    const normalizedQuestionIds = normalizeQuestionIds(ctx, args.questionIds);
-
-    if (normalizedQuestionIds.length === 0) {
+    if (args.questionIds.length === 0) {
       return { deleted: 0 };
     }
 
-    const questions = await getAll(ctx.db, normalizedQuestionIds);
+    const questions = await getAll(ctx.db, args.questionIds);
     let deleted = 0;
 
     for (const [index, question] of questions.entries()) {
@@ -395,7 +365,7 @@ export const deleteStaleExerciseQuestions = internalMutation({
         continue;
       }
 
-      const questionId = normalizedQuestionIds[index];
+      const questionId = args.questionIds[index];
       await deleteExerciseQuestion(ctx, questionId);
       deleted++;
     }

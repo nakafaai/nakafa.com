@@ -1,5 +1,7 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type { ContentAuthorContentId } from "@repo/backend/convex/authors/schema";
+import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import type {
   ContentType,
   Locale,
@@ -59,10 +61,7 @@ export async function buildAuthorCache(
 
 export async function syncContentAuthorsWithCache(
   ctx: MutationCtx,
-  contentId:
-    | Id<"articleContents">
-    | Id<"subjectSections">
-    | Id<"exerciseQuestions">,
+  contentId: ContentAuthorContentId,
   contentType: ContentType,
   authors: SyncedAuthor[],
   authorCache: AuthorCache
@@ -164,21 +163,24 @@ export async function replaceExerciseChoices(
 
 export async function deleteContentAuthorLinks(
   ctx: MutationCtx,
-  contentId:
-    | Id<"articleContents">
-    | Id<"subjectSections">
-    | Id<"exerciseQuestions">,
+  contentId: ContentAuthorContentId,
   contentType: ContentType
 ) {
-  const existingLinks = await ctx.db
-    .query("contentAuthors")
-    .withIndex("contentId_contentType_authorId", (q) =>
-      q.eq("contentId", contentId).eq("contentType", contentType)
-    )
-    .collect();
+  while (true) {
+    const existingLinks = await ctx.db
+      .query("contentAuthors")
+      .withIndex("contentId_contentType_authorId", (q) =>
+        q.eq("contentId", contentId).eq("contentType", contentType)
+      )
+      .take(CONTENT_SYNC_BATCH_LIMITS.authors);
 
-  for (const link of existingLinks) {
-    await ctx.db.delete("contentAuthors", link._id);
+    if (existingLinks.length === 0) {
+      return;
+    }
+
+    for (const link of existingLinks) {
+      await ctx.db.delete("contentAuthors", link._id);
+    }
   }
 }
 
@@ -186,13 +188,19 @@ export async function deleteArticleReferencesForArticle(
   ctx: MutationCtx,
   articleId: Id<"articleContents">
 ) {
-  const existingReferences = await ctx.db
-    .query("articleReferences")
-    .withIndex("articleId", (q) => q.eq("articleId", articleId))
-    .collect();
+  while (true) {
+    const existingReferences = await ctx.db
+      .query("articleReferences")
+      .withIndex("articleId", (q) => q.eq("articleId", articleId))
+      .take(CONTENT_SYNC_BATCH_LIMITS.articleReferences);
 
-  for (const reference of existingReferences) {
-    await ctx.db.delete("articleReferences", reference._id);
+    if (existingReferences.length === 0) {
+      return;
+    }
+
+    for (const reference of existingReferences) {
+      await ctx.db.delete("articleReferences", reference._id);
+    }
   }
 }
 
@@ -200,12 +208,18 @@ export async function deleteExerciseChoicesForQuestion(
   ctx: MutationCtx,
   questionId: Id<"exerciseQuestions">
 ) {
-  const existingChoices = await ctx.db
-    .query("exerciseChoices")
-    .withIndex("questionId_locale", (q) => q.eq("questionId", questionId))
-    .collect();
+  while (true) {
+    const existingChoices = await ctx.db
+      .query("exerciseChoices")
+      .withIndex("questionId_locale", (q) => q.eq("questionId", questionId))
+      .take(CONTENT_SYNC_BATCH_LIMITS.exerciseChoices);
 
-  for (const choice of existingChoices) {
-    await ctx.db.delete("exerciseChoices", choice._id);
+    if (existingChoices.length === 0) {
+      return;
+    }
+
+    for (const choice of existingChoices) {
+      await ctx.db.delete("exerciseChoices", choice._id);
+    }
   }
 }

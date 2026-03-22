@@ -68,38 +68,6 @@ const deleteResultValidator = v.object({
   deleted: v.number(),
 });
 
-const normalizeTopicIds = (ctx: MutationCtx, topicIds: string[]) => {
-  const normalizedIds: Id<"subjectTopics">[] = [];
-
-  for (const topicId of topicIds) {
-    const normalizedId = ctx.db.normalizeId("subjectTopics", topicId);
-
-    if (!normalizedId) {
-      continue;
-    }
-
-    normalizedIds.push(normalizedId);
-  }
-
-  return normalizedIds;
-};
-
-const normalizeSectionIds = (ctx: MutationCtx, sectionIds: string[]) => {
-  const normalizedIds: Id<"subjectSections">[] = [];
-
-  for (const sectionId of sectionIds) {
-    const normalizedId = ctx.db.normalizeId("subjectSections", sectionId);
-
-    if (!normalizedId) {
-      continue;
-    }
-
-    normalizedIds.push(normalizedId);
-  }
-
-  return normalizedIds;
-};
-
 async function deleteSubjectSection(
   ctx: MutationCtx,
   sectionId: Id<"subjectSections">
@@ -303,7 +271,7 @@ export const bulkSyncSubjectSections = internalMutation({
 
 export const deleteStaleSubjectTopics = internalMutation({
   args: {
-    topicIds: v.array(v.string()),
+    topicIds: v.array(v.id("subjectTopics")),
   },
   returns: deleteResultValidator,
   handler: async (ctx, args) => {
@@ -314,13 +282,11 @@ export const deleteStaleSubjectTopics = internalMutation({
       unit: "topic IDs",
     });
 
-    const normalizedTopicIds = normalizeTopicIds(ctx, args.topicIds);
-
-    if (normalizedTopicIds.length === 0) {
+    if (args.topicIds.length === 0) {
       return { deleted: 0 };
     }
 
-    const topics = await getAll(ctx.db, normalizedTopicIds);
+    const topics = await getAll(ctx.db, args.topicIds);
     let deleted = 0;
 
     for (const [index, topic] of topics.entries()) {
@@ -328,14 +294,20 @@ export const deleteStaleSubjectTopics = internalMutation({
         continue;
       }
 
-      const topicId = normalizedTopicIds[index];
-      const sections = await ctx.db
-        .query("subjectSections")
-        .withIndex("topicId", (q) => q.eq("topicId", topicId))
-        .collect();
+      const topicId = args.topicIds[index];
+      while (true) {
+        const sections = await ctx.db
+          .query("subjectSections")
+          .withIndex("topicId", (q) => q.eq("topicId", topicId))
+          .take(CONTENT_SYNC_BATCH_LIMITS.subjectSections);
 
-      for (const section of sections) {
-        await deleteSubjectSection(ctx, section._id);
+        if (sections.length === 0) {
+          break;
+        }
+
+        for (const section of sections) {
+          await deleteSubjectSection(ctx, section._id);
+        }
       }
 
       await ctx.db.delete("subjectTopics", topicId);
@@ -348,7 +320,7 @@ export const deleteStaleSubjectTopics = internalMutation({
 
 export const deleteStaleSubjectSections = internalMutation({
   args: {
-    sectionIds: v.array(v.string()),
+    sectionIds: v.array(v.id("subjectSections")),
   },
   returns: deleteResultValidator,
   handler: async (ctx, args) => {
@@ -359,13 +331,11 @@ export const deleteStaleSubjectSections = internalMutation({
       unit: "section IDs",
     });
 
-    const normalizedSectionIds = normalizeSectionIds(ctx, args.sectionIds);
-
-    if (normalizedSectionIds.length === 0) {
+    if (args.sectionIds.length === 0) {
       return { deleted: 0 };
     }
 
-    const sections = await getAll(ctx.db, normalizedSectionIds);
+    const sections = await getAll(ctx.db, args.sectionIds);
     let deleted = 0;
 
     for (const [index, section] of sections.entries()) {
@@ -373,7 +343,7 @@ export const deleteStaleSubjectSections = internalMutation({
         continue;
       }
 
-      const sectionId = normalizedSectionIds[index];
+      const sectionId = args.sectionIds[index];
       await deleteSubjectSection(ctx, sectionId);
       deleted++;
     }
