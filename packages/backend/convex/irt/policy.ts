@@ -49,11 +49,33 @@ export const IRT_QUEUE_CLEANUP_BATCH_SIZE = 100;
 /** Maximum number of completed attempts backfilled in one calibration sync pass. */
 export const IRT_CALIBRATION_RESPONSE_BACKFILL_BATCH_SIZE = 25;
 
+/** Maximum number of cached calibration attempts trimmed in one mutation. */
+export const IRT_CALIBRATION_CACHE_TRIM_BATCH_SIZE = 100;
+
+/** Maximum number of cached calibration attempts counted in one rebuild page. */
+export const IRT_CALIBRATION_CACHE_STATS_REBUILD_BATCH_SIZE = 500;
+
 /** Maximum number of completed attempts loaded into one calibration action. */
 export const IRT_MAX_CALIBRATION_ATTEMPTS_PER_RUN = 10_000;
 
 /** Maximum number of scored responses loaded into one calibration action. */
 export const IRT_MAX_CALIBRATION_RESPONSES_PER_RUN = 250_000;
+
+/**
+ * Returns the largest calibration-attempt cache we can keep for one set without
+ * letting the calibration action grow beyond its operational response budget.
+ */
+export function getCalibrationAttemptCacheLimit(questionCount: number) {
+  const boundedQuestionCount = Math.max(questionCount, 1);
+  const responseBound = Math.floor(
+    IRT_MAX_CALIBRATION_RESPONSES_PER_RUN / boundedQuestionCount
+  );
+
+  return Math.max(
+    1,
+    Math.min(IRT_MAX_CALIBRATION_ATTEMPTS_PER_RUN, responseBound)
+  );
+}
 
 /** Interval, in minutes, for the automatic IRT automation crons. */
 export const IRT_AUTOMATION_CRON_INTERVAL_MINUTES = 15;

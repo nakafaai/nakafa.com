@@ -39,8 +39,15 @@ const tables = {
       })
     ),
   })
+    .index("by_setId", ["setId"])
     .index("by_setId_and_attemptId", ["setId", "attemptId"])
     .index("by_attemptId", ["attemptId"]),
+
+  irtCalibrationCacheStats: defineTable({
+    setId: v.id("exerciseSets"),
+    attemptCount: v.number(),
+    updatedAt: v.number(),
+  }).index("by_setId", ["setId"]),
 
   irtScalePublicationQueue: defineTable({
     tryoutId: v.id("tryouts"),

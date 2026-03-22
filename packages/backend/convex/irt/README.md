@@ -125,6 +125,9 @@ flowchart TD
 
 - Calibration currently works at the `exerciseSet` level
 - Calibration input is limited to `completed` `simulation` set attempts
+- `irtCalibrationAttempts` is an operational cache, not the source of truth; the
+  queue drainer trims each set back to a bounded working window before a new
+  calibration run starts
 - This pipeline improves item parameters and freezes official scales, but it does
   not attempt additional cross-form equating/linking for unique-item tryouts
 - If Nakafa later wants a more advanced treatment of timed omissions, the next

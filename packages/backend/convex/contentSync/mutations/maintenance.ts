@@ -21,6 +21,7 @@ type ResettableTableName =
   | "exerciseQuestions"
   | "exerciseSets"
   | "irtCalibrationAttempts"
+  | "irtCalibrationCacheStats"
   | "irtCalibrationQueue"
   | "irtCalibrationRuns"
   | "irtScalePublicationQueue"
@@ -122,6 +123,12 @@ export const deleteIrtCalibrationAttemptsBatch = internalMutation({
   args: {},
   returns: batchDeleteResultValidator,
   handler: async (ctx) => deleteBatchFromTable(ctx, "irtCalibrationAttempts"),
+});
+
+export const deleteIrtCalibrationCacheStatsBatch = internalMutation({
+  args: {},
+  returns: batchDeleteResultValidator,
+  handler: async (ctx) => deleteBatchFromTable(ctx, "irtCalibrationCacheStats"),
 });
 
 export const deleteExerciseAttemptsBatch = internalMutation({

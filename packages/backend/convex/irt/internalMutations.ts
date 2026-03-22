@@ -3,6 +3,9 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
 import {
+  getCalibrationAttemptCacheLimit,
+  IRT_CALIBRATION_CACHE_STATS_REBUILD_BATCH_SIZE,
+  IRT_CALIBRATION_CACHE_TRIM_BATCH_SIZE,
   IRT_CALIBRATION_QUEUE_BATCH_SIZE,
   IRT_CALIBRATION_RESPONSE_BACKFILL_BATCH_SIZE,
   IRT_MAX_CALIBRATION_STALENESS_MS,
@@ -26,6 +29,54 @@ import { workflow } from "@repo/backend/convex/workflow";
 import { ConvexError, v } from "convex/values";
 import { asyncMap } from "convex-helpers";
 import { getAll, getManyFrom } from "convex-helpers/server/relationships";
+
+const calibrationCacheStatsRebuildProgressValidator = v.object({
+  attemptCount: v.number(),
+});
+
+async function prepareCalibrationCacheForSet(
+  ctx: Pick<MutationCtx, "db" | "scheduler">,
+  setId: Id<"exerciseSets">
+) {
+  const set = await ctx.db.get("exerciseSets", setId);
+
+  if (!set) {
+    throw new ConvexError({
+      code: "IRT_SET_NOT_FOUND",
+      message: "Exercise set not found for calibration cache management.",
+    });
+  }
+
+  const cacheStats = await ctx.db
+    .query("irtCalibrationCacheStats")
+    .withIndex("by_setId", (q) => q.eq("setId", setId))
+    .unique();
+
+  if (!cacheStats) {
+    await ctx.scheduler.runAfter(
+      0,
+      internal.irt.internalMutations.rebuildCalibrationCacheStatsForSet,
+      { setId }
+    );
+
+    return false;
+  }
+
+  if (
+    cacheStats.attemptCount <=
+    getCalibrationAttemptCacheLimit(set.questionCount)
+  ) {
+    return true;
+  }
+
+  await ctx.scheduler.runAfter(
+    0,
+    internal.irt.internalMutations.trimCalibrationCacheForSet,
+    { setId }
+  );
+
+  return false;
+}
 
 async function startCalibrationRunWorkflow(
   ctx: MutationCtx,
@@ -198,7 +249,52 @@ async function cleanupScalePublicationQueueEntriesBatch(
   return queueEntries.length;
 }
 
+async function adjustCalibrationCacheAttemptCount(
+  ctx: Pick<MutationCtx, "db">,
+  {
+    setId,
+    delta,
+    updatedAt,
+  }: {
+    setId: Id<"exerciseSets">;
+    delta: number;
+    updatedAt: number;
+  }
+) {
+  if (delta === 0) {
+    return false;
+  }
+
+  const cacheStats = await ctx.db
+    .query("irtCalibrationCacheStats")
+    .withIndex("by_setId", (q) => q.eq("setId", setId))
+    .unique();
+
+  if (!cacheStats) {
+    return false;
+  }
+
+  const nextAttemptCount = Math.max(0, cacheStats.attemptCount + delta);
+
+  if (nextAttemptCount === 0) {
+    await ctx.db.delete("irtCalibrationCacheStats", cacheStats._id);
+    return true;
+  }
+
+  await ctx.db.patch("irtCalibrationCacheStats", cacheStats._id, {
+    attemptCount: nextAttemptCount,
+    updatedAt,
+  });
+
+  return true;
+}
+
 const backfillCalibrationResponsesResultValidator = v.object({
+  isDone: v.boolean(),
+  processedCount: v.number(),
+});
+
+const rebuildCalibrationCacheStatsResultValidator = v.object({
   isDone: v.boolean(),
   processedCount: v.number(),
 });
@@ -212,13 +308,39 @@ export const syncCalibrationResponsesForAttempt = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
+    const now = Date.now();
     const existingAttempts = await ctx.db
       .query("irtCalibrationAttempts")
       .withIndex("by_attemptId", (q) => q.eq("attemptId", args.attemptId))
       .collect();
+    const removedAttemptCounts = new Map<Id<"exerciseSets">, number>();
+
+    for (const calibrationAttempt of existingAttempts) {
+      const nextCount =
+        (removedAttemptCounts.get(calibrationAttempt.setId) ?? 0) + 1;
+      removedAttemptCounts.set(calibrationAttempt.setId, nextCount);
+    }
 
     for (const calibrationAttempt of existingAttempts) {
       await ctx.db.delete("irtCalibrationAttempts", calibrationAttempt._id);
+    }
+
+    for (const [setId, removedCount] of removedAttemptCounts) {
+      const didAdjustStats = await adjustCalibrationCacheAttemptCount(ctx, {
+        setId,
+        delta: -removedCount,
+        updatedAt: now,
+      });
+
+      if (didAdjustStats) {
+        continue;
+      }
+
+      await ctx.scheduler.runAfter(
+        0,
+        internal.irt.internalMutations.rebuildCalibrationCacheStatsForSet,
+        { setId }
+      );
     }
 
     const attempt = await ctx.db.get("exerciseAttempts", args.attemptId);
@@ -297,6 +419,103 @@ export const syncCalibrationResponsesForAttempt = internalMutation({
       responses,
     });
 
+    const didAdjustStats = await adjustCalibrationCacheAttemptCount(ctx, {
+      setId,
+      delta: 1,
+      updatedAt: now,
+    });
+
+    if (!didAdjustStats) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.irt.internalMutations.rebuildCalibrationCacheStatsForSet,
+        { setId }
+      );
+    }
+
+    return null;
+  },
+});
+
+/** Rebuilds one set's calibration-cache stats in bounded pages. */
+export const rebuildCalibrationCacheStatsForSet = internalMutation({
+  args: {
+    cursor: v.optional(v.string()),
+    progress: v.optional(calibrationCacheStatsRebuildProgressValidator),
+    setId: vv.id("exerciseSets"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const set = await ctx.db.get("exerciseSets", args.setId);
+
+    if (!set) {
+      return null;
+    }
+
+    const page = await ctx.db
+      .query("irtCalibrationAttempts")
+      .withIndex("by_setId", (q) => q.eq("setId", args.setId))
+      .paginate({
+        cursor: args.cursor ?? null,
+        numItems: IRT_CALIBRATION_CACHE_STATS_REBUILD_BATCH_SIZE,
+      });
+
+    const progress = args.progress ?? { attemptCount: 0 };
+    progress.attemptCount += page.page.length;
+
+    if (!page.isDone) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.irt.internalMutations.rebuildCalibrationCacheStatsForSet,
+        {
+          cursor: page.continueCursor,
+          progress,
+          setId: args.setId,
+        }
+      );
+
+      return null;
+    }
+
+    const cacheStats = await ctx.db
+      .query("irtCalibrationCacheStats")
+      .withIndex("by_setId", (q) => q.eq("setId", args.setId))
+      .unique();
+
+    if (progress.attemptCount === 0) {
+      if (cacheStats) {
+        await ctx.db.delete("irtCalibrationCacheStats", cacheStats._id);
+      }
+
+      return null;
+    }
+
+    if (cacheStats) {
+      await ctx.db.patch("irtCalibrationCacheStats", cacheStats._id, {
+        attemptCount: progress.attemptCount,
+        updatedAt: Date.now(),
+      });
+    } else {
+      await ctx.db.insert("irtCalibrationCacheStats", {
+        setId: args.setId,
+        attemptCount: progress.attemptCount,
+        updatedAt: Date.now(),
+      });
+    }
+
+    if (
+      progress.attemptCount <=
+      getCalibrationAttemptCacheLimit(set.questionCount)
+    ) {
+      return null;
+    }
+
+    await ctx.scheduler.runAfter(
+      0,
+      internal.irt.internalMutations.trimCalibrationCacheForSet,
+      { setId: args.setId }
+    );
+
     return null;
   },
 });
@@ -347,6 +566,122 @@ export const backfillCalibrationResponsesPage = internalMutation({
   },
 });
 
+/** Schedules bounded calibration-cache stats rebuilds for all exercise sets. */
+export const rebuildCalibrationCacheStatsPage = internalMutation({
+  args: {
+    cursor: v.optional(v.string()),
+  },
+  returns: rebuildCalibrationCacheStatsResultValidator,
+  handler: async (ctx, args) => {
+    const page = await ctx.db.query("exerciseSets").paginate({
+      cursor: args.cursor ?? null,
+      numItems: IRT_CALIBRATION_CACHE_STATS_REBUILD_BATCH_SIZE,
+    });
+
+    for (const set of page.page) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.irt.internalMutations.rebuildCalibrationCacheStatsForSet,
+        { setId: set._id }
+      );
+    }
+
+    if (!page.isDone) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.irt.internalMutations.rebuildCalibrationCacheStatsPage,
+        { cursor: page.continueCursor }
+      );
+    }
+
+    return {
+      isDone: page.isDone,
+      processedCount: page.page.length,
+    };
+  },
+});
+
+/** Deletes the oldest cached calibration attempts until one set is back in budget. */
+export const trimCalibrationCacheForSet = internalMutation({
+  args: {
+    setId: vv.id("exerciseSets"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const set = await ctx.db.get("exerciseSets", args.setId);
+
+    if (!set) {
+      return null;
+    }
+
+    const cacheStats = await ctx.db
+      .query("irtCalibrationCacheStats")
+      .withIndex("by_setId", (q) => q.eq("setId", args.setId))
+      .unique();
+
+    if (!cacheStats) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.irt.internalMutations.rebuildCalibrationCacheStatsForSet,
+        { setId: args.setId }
+      );
+
+      return null;
+    }
+
+    const cacheLimit = getCalibrationAttemptCacheLimit(set.questionCount);
+
+    if (cacheStats.attemptCount <= cacheLimit) {
+      return null;
+    }
+
+    const trimCount = Math.min(
+      cacheStats.attemptCount - cacheLimit,
+      IRT_CALIBRATION_CACHE_TRIM_BATCH_SIZE
+    );
+    const oldestAttempts = await ctx.db
+      .query("irtCalibrationAttempts")
+      .withIndex("by_setId", (q) => q.eq("setId", args.setId))
+      .take(trimCount);
+
+    if (oldestAttempts.length === 0) {
+      await ctx.db.delete("irtCalibrationCacheStats", cacheStats._id);
+      return null;
+    }
+
+    for (const calibrationAttempt of oldestAttempts) {
+      await ctx.db.delete("irtCalibrationAttempts", calibrationAttempt._id);
+    }
+
+    const nextAttemptCount = Math.max(
+      0,
+      cacheStats.attemptCount - oldestAttempts.length
+    );
+
+    if (nextAttemptCount === 0) {
+      await ctx.db.delete("irtCalibrationCacheStats", cacheStats._id);
+      return null;
+    }
+
+    await ctx.db.patch("irtCalibrationCacheStats", cacheStats._id, {
+      attemptCount: nextAttemptCount,
+      updatedAt: Date.now(),
+    });
+
+    if (nextAttemptCount <= cacheLimit) {
+      return null;
+    }
+
+    await ctx.scheduler.runAfter(
+      0,
+      internal.irt.internalMutations.trimCalibrationCacheForSet,
+      args
+    );
+
+    return null;
+  },
+});
+
 /**
  * Drain a bounded batch of queued set calibrations.
  */
@@ -368,6 +703,15 @@ export const drainCalibrationQueue = internalMutation({
     ].slice(0, IRT_CALIBRATION_QUEUE_BATCH_SIZE);
 
     await asyncMap(distinctSetIds, async (setId) => {
+      const cacheIsWithinLimit = await prepareCalibrationCacheForSet(
+        ctx,
+        setId
+      );
+
+      if (!cacheIsWithinLimit) {
+        return null;
+      }
+
       const [latestCompletedRun, latestRun] = await Promise.all([
         ctx.db
           .query("irtCalibrationRuns")
