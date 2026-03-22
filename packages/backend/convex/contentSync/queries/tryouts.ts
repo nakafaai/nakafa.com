@@ -1,5 +1,5 @@
 import { internalQuery } from "@repo/backend/convex/_generated/server";
-import { getActiveTryoutsWithoutScale } from "@repo/backend/convex/irt/scaleVersions";
+import { getActiveTryoutsWithoutScale } from "@repo/backend/convex/irt/scales/read";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
 import { type Infer, v } from "convex/values";

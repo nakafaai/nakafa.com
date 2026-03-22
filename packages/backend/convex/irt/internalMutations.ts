@@ -1,7 +1,17 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
+import {
+  adjustCalibrationCacheAttemptCount,
+  calibrationCacheStatsRebuildProgressValidator,
+  prepareCalibrationCacheForSet,
+} from "@repo/backend/convex/irt/helpers/cache";
+import {
+  cleanupCalibrationQueueEntriesBatch,
+  cleanupScalePublicationQueueEntriesBatch,
+  getPendingCalibrationQueueQuery,
+  startCalibrationRunWorkflow,
+} from "@repo/backend/convex/irt/helpers/queue";
 import {
   getCalibrationAttemptCacheLimit,
   IRT_CALIBRATION_CACHE_STATS_REBUILD_BATCH_SIZE,
@@ -10,284 +20,16 @@ import {
   IRT_CALIBRATION_RESPONSE_BACKFILL_BATCH_SIZE,
   IRT_MAX_CALIBRATION_STALENESS_MS,
   IRT_MIN_COMPLETED_ATTEMPTS_FOR_RECALIBRATION,
-  IRT_OPERATIONAL_MODEL,
   IRT_QUEUE_CLEANUP_BATCH_SIZE,
   IRT_SCALE_PUBLICATION_QUEUE_BATCH_SIZE,
 } from "@repo/backend/convex/irt/policy";
-import {
-  getLatestScaleVersionForTryout,
-  getPublishableScaleSnapshot,
-  getScaleVersionItems,
-  getScaleVersionStatus,
-  hasPublishedScaleChanged,
-  publishScaleVersion,
-} from "@repo/backend/convex/irt/scaleVersions";
+import { publishTryoutScaleVersionIfNeeded } from "@repo/backend/convex/irt/scales/publish";
 import { irtCalibrationResultValidator } from "@repo/backend/convex/irt/validators";
 import { irtCalibrationSyncWorkpool } from "@repo/backend/convex/irt/workpool";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { workflow } from "@repo/backend/convex/workflow";
 import { ConvexError, v } from "convex/values";
 import { asyncMap } from "convex-helpers";
 import { getAll, getManyFrom } from "convex-helpers/server/relationships";
-
-const calibrationCacheStatsRebuildProgressValidator = v.object({
-  attemptCount: v.number(),
-});
-
-async function prepareCalibrationCacheForSet(
-  ctx: Pick<MutationCtx, "db" | "scheduler">,
-  setId: Id<"exerciseSets">
-) {
-  const set = await ctx.db.get("exerciseSets", setId);
-
-  if (!set) {
-    throw new ConvexError({
-      code: "IRT_SET_NOT_FOUND",
-      message: "Exercise set not found for calibration cache management.",
-    });
-  }
-
-  const cacheStats = await ctx.db
-    .query("irtCalibrationCacheStats")
-    .withIndex("by_setId", (q) => q.eq("setId", setId))
-    .unique();
-
-  if (!cacheStats) {
-    await ctx.scheduler.runAfter(
-      0,
-      internal.irt.internalMutations.rebuildCalibrationCacheStatsForSet,
-      { setId }
-    );
-
-    return false;
-  }
-
-  if (
-    cacheStats.attemptCount <=
-    getCalibrationAttemptCacheLimit(set.questionCount)
-  ) {
-    return true;
-  }
-
-  await ctx.scheduler.runAfter(
-    0,
-    internal.irt.internalMutations.trimCalibrationCacheForSet,
-    { setId }
-  );
-
-  return false;
-}
-
-async function startCalibrationRunWorkflow(
-  ctx: MutationCtx,
-  setId: Id<"exerciseSets">
-) {
-  const now = Date.now();
-  const set = await ctx.db.get("exerciseSets", setId);
-
-  if (!set) {
-    throw new ConvexError({
-      code: "IRT_SET_NOT_FOUND",
-      message: "Exercise set not found for calibration.",
-    });
-  }
-
-  const latestRun = await ctx.db
-    .query("irtCalibrationRuns")
-    .withIndex("by_setId_and_startedAt", (q) => q.eq("setId", setId))
-    .order("desc")
-    .first();
-
-  if (latestRun?.status === "running") {
-    return null;
-  }
-
-  const calibrationRunId = await ctx.db.insert("irtCalibrationRuns", {
-    setId,
-    model: IRT_OPERATIONAL_MODEL,
-    status: "running",
-    questionCount: set.questionCount,
-    responseCount: 0,
-    attemptCount: 0,
-    iterationCount: 0,
-    maxParameterDelta: 0,
-    startedAt: now,
-    updatedAt: now,
-  });
-
-  await workflow.start(ctx, internal.irt.workflows.calibrateSetTwoPL, {
-    calibrationRunId,
-    setId,
-  });
-
-  return calibrationRunId;
-}
-
-async function publishTryoutScaleVersionIfNeeded(
-  ctx: MutationCtx,
-  tryoutId: Id<"tryouts">
-) {
-  const tryout = await ctx.db.get("tryouts", tryoutId);
-
-  if (!tryout) {
-    throw new ConvexError({
-      code: "IRT_TRYOUT_NOT_FOUND",
-      message: "Tryout not found for scale publication.",
-    });
-  }
-
-  const snapshot = await getPublishableScaleSnapshot(ctx.db, tryout._id);
-
-  if (!snapshot) {
-    return { kind: "not-ready" };
-  }
-
-  const latestScaleVersion = await getLatestScaleVersionForTryout(
-    ctx.db,
-    tryout._id
-  );
-
-  if (
-    latestScaleVersion &&
-    getScaleVersionStatus(latestScaleVersion) === "official"
-  ) {
-    const latestScaleItems = await getScaleVersionItems(
-      ctx.db,
-      latestScaleVersion._id
-    );
-
-    if (
-      !hasPublishedScaleChanged({
-        publishedItems: latestScaleItems,
-        snapshotItems: snapshot.items,
-      })
-    ) {
-      return { kind: "unchanged", scaleVersionId: latestScaleVersion._id };
-    }
-  }
-
-  const scaleVersionId = await publishScaleVersion(ctx.db, {
-    tryoutId: tryout._id,
-    questionCount: snapshot.questionCount,
-    items: snapshot.items,
-    status: "official",
-    publishedAt: Date.now(),
-  });
-
-  await ctx.scheduler.runAfter(
-    0,
-    internal.tryouts.internalMutations.promoteProvisionalTryoutScores,
-    {
-      scaleVersionId,
-      tryoutId: tryout._id,
-    }
-  );
-
-  return { kind: "published", scaleVersionId };
-}
-
-function getPendingCalibrationQueueQuery(
-  ctx: Pick<MutationCtx, "db">,
-  {
-    lastSuccessfulRunStartedAt,
-    setId,
-  }: {
-    lastSuccessfulRunStartedAt?: number;
-    setId: Id<"exerciseSets">;
-  }
-) {
-  return ctx.db
-    .query("irtCalibrationQueue")
-    .withIndex("by_setId_and_enqueuedAt", (q) => {
-      const setQuery = q.eq("setId", setId);
-
-      if (lastSuccessfulRunStartedAt === undefined) {
-        return setQuery;
-      }
-
-      return setQuery.gt("enqueuedAt", lastSuccessfulRunStartedAt);
-    });
-}
-
-async function cleanupCalibrationQueueEntriesBatch(
-  ctx: Pick<MutationCtx, "db">,
-  {
-    setId,
-    throughAt,
-  }: {
-    setId: Id<"exerciseSets">;
-    throughAt: number;
-  }
-) {
-  const queueEntries = await ctx.db
-    .query("irtCalibrationQueue")
-    .withIndex("by_setId_and_enqueuedAt", (q) =>
-      q.eq("setId", setId).lte("enqueuedAt", throughAt)
-    )
-    .take(IRT_QUEUE_CLEANUP_BATCH_SIZE);
-
-  for (const entry of queueEntries) {
-    await ctx.db.delete("irtCalibrationQueue", entry._id);
-  }
-
-  return queueEntries.length;
-}
-
-async function cleanupScalePublicationQueueEntriesBatch(
-  ctx: Pick<MutationCtx, "db">,
-  tryoutId: Id<"tryouts">
-) {
-  const queueEntries = await ctx.db
-    .query("irtScalePublicationQueue")
-    .withIndex("by_tryoutId_and_enqueuedAt", (q) => q.eq("tryoutId", tryoutId))
-    .take(IRT_QUEUE_CLEANUP_BATCH_SIZE);
-
-  for (const entry of queueEntries) {
-    await ctx.db.delete("irtScalePublicationQueue", entry._id);
-  }
-
-  return queueEntries.length;
-}
-
-async function adjustCalibrationCacheAttemptCount(
-  ctx: Pick<MutationCtx, "db">,
-  {
-    setId,
-    delta,
-    updatedAt,
-  }: {
-    setId: Id<"exerciseSets">;
-    delta: number;
-    updatedAt: number;
-  }
-) {
-  if (delta === 0) {
-    return false;
-  }
-
-  const cacheStats = await ctx.db
-    .query("irtCalibrationCacheStats")
-    .withIndex("by_setId", (q) => q.eq("setId", setId))
-    .unique();
-
-  if (!cacheStats) {
-    return false;
-  }
-
-  const nextAttemptCount = Math.max(0, cacheStats.attemptCount + delta);
-
-  if (nextAttemptCount === 0) {
-    await ctx.db.delete("irtCalibrationCacheStats", cacheStats._id);
-    return true;
-  }
-
-  await ctx.db.patch("irtCalibrationCacheStats", cacheStats._id, {
-    attemptCount: nextAttemptCount,
-    updatedAt,
-  });
-
-  return true;
-}
 
 const backfillCalibrationResponsesResultValidator = v.object({
   isDone: v.boolean(),
@@ -298,6 +40,9 @@ const rebuildCalibrationCacheStatsResultValidator = v.object({
   isDone: v.boolean(),
   processedCount: v.number(),
 });
+
+const MAX_CALIBRATION_ATTEMPT_DUPLICATES = 100;
+const MAX_AFFECTED_TRYOUTS_PER_SET = 100;
 
 /**
  * Syncs the denormalized calibration responses for one exercise attempt.
@@ -312,7 +57,14 @@ export const syncCalibrationResponsesForAttempt = internalMutation({
     const existingAttempts = await ctx.db
       .query("irtCalibrationAttempts")
       .withIndex("by_attemptId", (q) => q.eq("attemptId", args.attemptId))
-      .collect();
+      .take(MAX_CALIBRATION_ATTEMPT_DUPLICATES + 1);
+
+    if (existingAttempts.length > MAX_CALIBRATION_ATTEMPT_DUPLICATES) {
+      throw new ConvexError({
+        code: "IRT_CALIBRATION_ATTEMPT_DUPLICATE_LIMIT_EXCEEDED",
+        message: "Too many cached calibration rows exist for one attempt.",
+      });
+    }
     const removedAttemptCounts = new Map<Id<"exerciseSets">, number>();
 
     for (const calibrationAttempt of existingAttempts) {
@@ -805,7 +557,15 @@ export const completeCalibrationRun = internalMutation({
     const existingParams = await ctx.db
       .query("exerciseItemParameters")
       .withIndex("by_setId", (q) => q.eq("setId", run.setId))
-      .collect();
+      .take(run.questionCount + 1);
+
+    if (existingParams.length > run.questionCount) {
+      throw new ConvexError({
+        code: "IRT_ITEM_PARAMETER_COUNT_EXCEEDED",
+        message:
+          "Exercise item parameter count exceeds the set question count.",
+      });
+    }
     const existingParamsByQuestionId = new Map(
       existingParams.map((params) => [params.questionId, params])
     );
@@ -855,7 +615,14 @@ export const completeCalibrationRun = internalMutation({
     const affectedTryoutSets = await ctx.db
       .query("tryoutPartSets")
       .withIndex("setId", (q) => q.eq("setId", run.setId))
-      .collect();
+      .take(MAX_AFFECTED_TRYOUTS_PER_SET + 1);
+
+    if (affectedTryoutSets.length > MAX_AFFECTED_TRYOUTS_PER_SET) {
+      throw new ConvexError({
+        code: "IRT_AFFECTED_TRYOUT_LIMIT_EXCEEDED",
+        message: "Too many tryouts reference one calibrated set.",
+      });
+    }
 
     await asyncMap(
       [...new Set(affectedTryoutSets.map((tryoutSet) => tryoutSet.tryoutId))],

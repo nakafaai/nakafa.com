@@ -11,8 +11,7 @@ import { estimateThetaEAP } from "@repo/backend/convex/irt/estimation";
 import {
   getLatestScaleVersionForTryout,
   getScaleVersionItemsForSet,
-  getScaleVersionStatus,
-} from "@repo/backend/convex/irt/scaleVersions";
+} from "@repo/backend/convex/irt/scales/read";
 import { getAttemptEndReasonFromStatus } from "@repo/backend/convex/lib/attempts";
 import { scaleThetaToTryoutScore } from "@repo/backend/convex/tryouts/products";
 import type { TryoutScoreStatus } from "@repo/backend/convex/tryouts/schema";
@@ -55,13 +54,10 @@ export async function getTryoutScoreTarget(
     });
   }
 
-  if (
-    !latestScaleVersion ||
-    getScaleVersionStatus(latestScaleVersion) !== "official"
-  ) {
+  if (!latestScaleVersion || latestScaleVersion.status !== "official") {
     return {
       scaleVersionId: currentScaleVersion._id,
-      scoreStatus: getScaleVersionStatus(currentScaleVersion),
+      scoreStatus: currentScaleVersion.status,
     };
   }
 

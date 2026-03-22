@@ -2,7 +2,6 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
-import { getScaleVersionStatus } from "@repo/backend/convex/irt/scaleVersions";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import {
   computeTryoutRawScorePercentage,
@@ -484,7 +483,7 @@ export const promoteProvisionalTryoutScores = internalMutation({
       args.scaleVersionId
     );
 
-    if (!scaleVersion || getScaleVersionStatus(scaleVersion) !== "official") {
+    if (!scaleVersion || scaleVersion.status !== "official") {
       return null;
     }
 

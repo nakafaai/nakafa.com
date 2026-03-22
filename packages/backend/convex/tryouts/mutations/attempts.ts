@@ -1,10 +1,7 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import { createExerciseAttempt } from "@repo/backend/convex/exercises/helpers";
 import { mutation } from "@repo/backend/convex/functions";
-import {
-  getLatestScaleVersionForTryout,
-  getScaleVersionStatus,
-} from "@repo/backend/convex/irt/scaleVersions";
+import { getLatestScaleVersionForTryout } from "@repo/backend/convex/irt/scales/read";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
@@ -146,7 +143,7 @@ export const startTryout = mutation({
       userId,
       tryoutId: tryout._id,
       scaleVersionId: scaleVersion._id,
-      scoreStatus: getScaleVersionStatus(scaleVersion),
+      scoreStatus: scaleVersion.status,
       status: "in-progress",
       completedPartIndices: [],
       totalCorrect: 0,

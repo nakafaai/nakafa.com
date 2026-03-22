@@ -3,7 +3,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
 import { internalMutation } from "@repo/backend/convex/functions";
-import { getOrPublishScaleVersionForTryout } from "@repo/backend/convex/irt/scaleVersions";
+import { getOrPublishScaleVersionForTryout } from "@repo/backend/convex/irt/scales/publish";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import {
   detectTryoutsForProduct,

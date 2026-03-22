@@ -101,7 +101,11 @@ flowchart TD
 | `internalQueries.ts` | Paginated response extraction for calibration |
 | `internalActions.ts` | Set-level calibration job assembly and execution |
 | `internalMutations.ts` | Run tracking and parameter persistence |
-| `scaleVersions.ts` | Published tryout scale-version loading and snapshot helpers |
+| `helpers/cache.ts` | Calibration cache readiness and stats helpers |
+| `helpers/queue.ts` | Queue and workflow orchestration helpers |
+| `scales/read.ts` | Frozen scale lookups and coverage checks |
+| `scales/snapshot.ts` | Publishable scale snapshot assembly and comparison |
+| `scales/publish.ts` | Frozen scale publication and bootstrap helpers |
 | `workflows.ts` | Durable orchestration for long-running calibration runs |
 
 ## Run Lifecycle
