@@ -5,18 +5,17 @@ import type {
 } from "@repo/backend/convex/_generated/server";
 import { getProvisionalParams } from "@repo/backend/convex/irt/estimation";
 import { IRT_OPERATIONAL_MODEL } from "@repo/backend/convex/irt/policy";
+import { ConvexError } from "convex/values";
 import { asyncMap } from "convex-helpers";
 import { getAll, getManyFrom } from "convex-helpers/server/relationships";
+
+const MAX_ACTIVE_TRYOUTS_WITHOUT_SCALE = 100;
 
 type IrtDbReader = QueryCtx["db"];
 type IrtDbWriter = MutationCtx["db"];
 type OperationalItemParams = Pick<
   Doc<"exerciseItemParameters">,
   "questionId" | "difficulty" | "discrimination"
->;
-type ScaleVersionItemsBySetId = Map<
-  Doc<"irtScaleVersionItems">["setId"],
-  Doc<"irtScaleVersionItems">[]
 >;
 type ActiveTryoutWithoutScale = Pick<
   Doc<"tryouts">,
@@ -43,7 +42,7 @@ export function getLatestScaleVersionForTryout(
 ) {
   return db
     .query("irtScaleVersions")
-    .withIndex("tryoutId_publishedAt", (q) => q.eq("tryoutId", tryoutId))
+    .withIndex("by_tryoutId_and_publishedAt", (q) => q.eq("tryoutId", tryoutId))
     .order("desc")
     .first();
 }
@@ -53,7 +52,15 @@ export async function getActiveTryoutsWithoutScale(db: IrtDbReader) {
   const tryouts = await db
     .query("tryouts")
     .withIndex("isActive", (q) => q.eq("isActive", true))
-    .collect();
+    .take(MAX_ACTIVE_TRYOUTS_WITHOUT_SCALE + 1);
+
+  if (tryouts.length > MAX_ACTIVE_TRYOUTS_WITHOUT_SCALE) {
+    throw new ConvexError({
+      code: "IRT_ACTIVE_TRYOUT_LIMIT_EXCEEDED",
+      message: "Too many active tryouts to audit scale coverage safely.",
+    });
+  }
+
   const latestScaleVersions = await asyncMap(tryouts, (tryout) =>
     getLatestScaleVersionForTryout(db, tryout._id)
   );
@@ -88,7 +95,7 @@ export function getScaleVersionItems(
   return getManyFrom(
     db,
     "irtScaleVersionItems",
-    "scaleVersionId_setId_questionId",
+    "by_scaleVersionId_and_setId_and_questionId",
     scaleVersionId,
     "scaleVersionId"
   );
@@ -128,23 +135,6 @@ export function hasPublishedScaleChanged({
 }
 
 /**
- * Group frozen scale-version items by `setId` for efficient per-subject lookups.
- */
-export function groupScaleVersionItemsBySetId(
-  items: Doc<"irtScaleVersionItems">[]
-) {
-  const itemsBySetId: ScaleVersionItemsBySetId = new Map();
-
-  for (const item of items) {
-    const itemsForSet = itemsBySetId.get(item.setId) ?? [];
-    itemsForSet.push(item);
-    itemsBySetId.set(item.setId, itemsForSet);
-  }
-
-  return itemsBySetId;
-}
-
-/**
  * Load the frozen item parameters for one set inside a published scale version.
  */
 export function getScaleVersionItemsForSet(
@@ -156,7 +146,7 @@ export function getScaleVersionItemsForSet(
 ) {
   return db
     .query("irtScaleVersionItems")
-    .withIndex("scaleVersionId_setId_questionId", (q) =>
+    .withIndex("by_scaleVersionId_and_setId_and_questionId", (q) =>
       q.eq("scaleVersionId", scaleVersionId).eq("setId", setId)
     )
     .collect();
@@ -205,7 +195,7 @@ export async function getPublishableScaleSnapshot(
       getManyFrom(
         db,
         "exerciseItemParameters",
-        "setId",
+        "by_setId",
         partSet.setId,
         "setId"
       ),
@@ -380,7 +370,7 @@ export async function publishBootstrapScaleVersion(
       getManyFrom(
         db,
         "exerciseItemParameters",
-        "setId",
+        "by_setId",
         partSet.setId,
         "setId"
       ),

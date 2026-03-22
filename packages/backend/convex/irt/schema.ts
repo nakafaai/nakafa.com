@@ -26,8 +26,8 @@ const tables = {
     setId: v.id("exerciseSets"),
     enqueuedAt: v.number(),
   })
-    .index("enqueuedAt", ["enqueuedAt"])
-    .index("setId_enqueuedAt", ["setId", "enqueuedAt"]),
+    .index("by_enqueuedAt", ["enqueuedAt"])
+    .index("by_setId_and_enqueuedAt", ["setId", "enqueuedAt"]),
 
   irtCalibrationAttempts: defineTable({
     setId: v.id("exerciseSets"),
@@ -39,15 +39,15 @@ const tables = {
       })
     ),
   })
-    .index("setId_attemptId", ["setId", "attemptId"])
-    .index("attemptId", ["attemptId"]),
+    .index("by_setId_and_attemptId", ["setId", "attemptId"])
+    .index("by_attemptId", ["attemptId"]),
 
   irtScalePublicationQueue: defineTable({
     tryoutId: v.id("tryouts"),
     enqueuedAt: v.number(),
   })
-    .index("enqueuedAt", ["enqueuedAt"])
-    .index("tryoutId_enqueuedAt", ["tryoutId", "enqueuedAt"]),
+    .index("by_enqueuedAt", ["enqueuedAt"])
+    .index("by_tryoutId_and_enqueuedAt", ["tryoutId", "enqueuedAt"]),
 
   irtScaleVersions: defineTable({
     tryoutId: v.id("tryouts"),
@@ -55,7 +55,7 @@ const tables = {
     status: irtScaleVersionStatusValidator,
     questionCount: v.number(),
     publishedAt: v.number(),
-  }).index("tryoutId_publishedAt", ["tryoutId", "publishedAt"]),
+  }).index("by_tryoutId_and_publishedAt", ["tryoutId", "publishedAt"]),
 
   irtScaleVersionItems: defineTable({
     scaleVersionId: v.id("irtScaleVersions"),
@@ -64,7 +64,7 @@ const tables = {
     setId: v.id("exerciseSets"),
     difficulty: v.number(),
     discrimination: v.number(),
-  }).index("scaleVersionId_setId_questionId", [
+  }).index("by_scaleVersionId_and_setId_and_questionId", [
     "scaleVersionId",
     "setId",
     "questionId",
@@ -84,8 +84,12 @@ const tables = {
     completedAt: v.optional(v.number()),
     error: v.optional(v.string()),
   })
-    .index("setId_startedAt", ["setId", "startedAt"])
-    .index("setId_status_startedAt", ["setId", "status", "startedAt"]),
+    .index("by_setId_and_startedAt", ["setId", "startedAt"])
+    .index("by_setId_and_status_and_startedAt", [
+      "setId",
+      "status",
+      "startedAt",
+    ]),
 
   exerciseItemParameters: defineTable({
     questionId: v.id("exerciseQuestions"),
@@ -100,9 +104,9 @@ const tables = {
     calibrationStatus: irtCalibrationStatusValidator,
     calibrationRunId: v.optional(v.id("irtCalibrationRuns")),
   })
-    .index("questionId", ["questionId"])
-    .index("setId", ["setId"])
-    .index("calibrationStatus", ["calibrationStatus"]),
+    .index("by_questionId", ["questionId"])
+    .index("by_setId", ["setId"])
+    .index("by_calibrationStatus", ["calibrationStatus"]),
 };
 
 export default tables;

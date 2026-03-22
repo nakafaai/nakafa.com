@@ -43,7 +43,7 @@ async function startCalibrationRunWorkflow(
 
   const latestRun = await ctx.db
     .query("irtCalibrationRuns")
-    .withIndex("setId_startedAt", (q) => q.eq("setId", setId))
+    .withIndex("by_setId_and_startedAt", (q) => q.eq("setId", setId))
     .order("desc")
     .first();
 
@@ -147,7 +147,7 @@ function getPendingCalibrationQueueQuery(
 ) {
   return ctx.db
     .query("irtCalibrationQueue")
-    .withIndex("setId_enqueuedAt", (q) => {
+    .withIndex("by_setId_and_enqueuedAt", (q) => {
       const setQuery = q.eq("setId", setId);
 
       if (lastSuccessfulRunStartedAt === undefined) {
@@ -170,7 +170,7 @@ async function cleanupCalibrationQueueEntriesBatch(
 ) {
   const queueEntries = await ctx.db
     .query("irtCalibrationQueue")
-    .withIndex("setId_enqueuedAt", (q) =>
+    .withIndex("by_setId_and_enqueuedAt", (q) =>
       q.eq("setId", setId).lte("enqueuedAt", throughAt)
     )
     .take(IRT_QUEUE_CLEANUP_BATCH_SIZE);
@@ -188,7 +188,7 @@ async function cleanupScalePublicationQueueEntriesBatch(
 ) {
   const queueEntries = await ctx.db
     .query("irtScalePublicationQueue")
-    .withIndex("tryoutId_enqueuedAt", (q) => q.eq("tryoutId", tryoutId))
+    .withIndex("by_tryoutId_and_enqueuedAt", (q) => q.eq("tryoutId", tryoutId))
     .take(IRT_QUEUE_CLEANUP_BATCH_SIZE);
 
   for (const entry of queueEntries) {
@@ -214,7 +214,7 @@ export const syncCalibrationResponsesForAttempt = internalMutation({
   handler: async (ctx, args) => {
     const existingAttempts = await ctx.db
       .query("irtCalibrationAttempts")
-      .withIndex("attemptId", (q) => q.eq("attemptId", args.attemptId))
+      .withIndex("by_attemptId", (q) => q.eq("attemptId", args.attemptId))
       .collect();
 
     for (const calibrationAttempt of existingAttempts) {
@@ -357,7 +357,7 @@ export const drainCalibrationQueue = internalMutation({
     const now = Date.now();
     const queueEntries = await ctx.db
       .query("irtCalibrationQueue")
-      .withIndex("enqueuedAt")
+      .withIndex("by_enqueuedAt")
       .take(
         IRT_CALIBRATION_QUEUE_BATCH_SIZE *
           IRT_MIN_COMPLETED_ATTEMPTS_FOR_RECALIBRATION
@@ -371,14 +371,14 @@ export const drainCalibrationQueue = internalMutation({
       const [latestCompletedRun, latestRun] = await Promise.all([
         ctx.db
           .query("irtCalibrationRuns")
-          .withIndex("setId_status_startedAt", (q) =>
+          .withIndex("by_setId_and_status_and_startedAt", (q) =>
             q.eq("setId", setId).eq("status", "completed")
           )
           .order("desc")
           .first(),
         ctx.db
           .query("irtCalibrationRuns")
-          .withIndex("setId_startedAt", (q) => q.eq("setId", setId))
+          .withIndex("by_setId_and_startedAt", (q) => q.eq("setId", setId))
           .order("desc")
           .first(),
       ]);
@@ -460,7 +460,7 @@ export const completeCalibrationRun = internalMutation({
 
     const existingParams = await ctx.db
       .query("exerciseItemParameters")
-      .withIndex("setId", (q) => q.eq("setId", run.setId))
+      .withIndex("by_setId", (q) => q.eq("setId", run.setId))
       .collect();
     const existingParamsByQuestionId = new Map(
       existingParams.map((params) => [params.questionId, params])
@@ -518,7 +518,9 @@ export const completeCalibrationRun = internalMutation({
       async (tryoutId) => {
         const existingQueueEntry = await ctx.db
           .query("irtScalePublicationQueue")
-          .withIndex("tryoutId_enqueuedAt", (q) => q.eq("tryoutId", tryoutId))
+          .withIndex("by_tryoutId_and_enqueuedAt", (q) =>
+            q.eq("tryoutId", tryoutId)
+          )
           .first();
 
         if (!existingQueueEntry) {
@@ -572,7 +574,7 @@ export const failCalibrationRun = internalMutation({
 
     const existingQueueEntry = await ctx.db
       .query("irtCalibrationQueue")
-      .withIndex("setId_enqueuedAt", (q) => q.eq("setId", run.setId))
+      .withIndex("by_setId_and_enqueuedAt", (q) => q.eq("setId", run.setId))
       .first();
 
     if (!existingQueueEntry) {
@@ -649,7 +651,7 @@ export const drainScalePublicationQueue = internalMutation({
   handler: async (ctx) => {
     const queueEntries = await ctx.db
       .query("irtScalePublicationQueue")
-      .withIndex("enqueuedAt")
+      .withIndex("by_enqueuedAt")
       .take(IRT_SCALE_PUBLICATION_QUEUE_BATCH_SIZE);
 
     const distinctTryoutIds = [

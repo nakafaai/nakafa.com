@@ -1,13 +1,12 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import { internalAction } from "@repo/backend/convex/_generated/server";
 import { calibrateTwoPLItems } from "@repo/backend/convex/irt/calibration";
-import type { calibrationResponseValidator } from "@repo/backend/convex/irt/internalQueries";
+import type { CalibrationResponse } from "@repo/backend/convex/irt/internalQueries";
 import { IRT_PROBABILITY_EPSILON } from "@repo/backend/convex/irt/policy";
 import { irtCalibrationResultValidator } from "@repo/backend/convex/irt/validators";
 import { type Infer, v } from "convex/values";
 
 const CALIBRATION_PAGE_SIZE = 100;
-type CalibrationResponse = Infer<typeof calibrationResponseValidator>;
 
 /**
  * Run one set-level 2PL calibration job from completed simulation responses.
@@ -27,10 +26,24 @@ export const calibrateSetTwoPL = internalAction({
         setId: args.setId,
       }
     );
-    const responses: CalibrationResponse[] = [];
+    const questionIds = questions.map((question) => question.questionId);
+    const responsesByAttempt = new Map<
+      CalibrationResponse["attemptId"],
+      CalibrationResponse[]
+    >();
+    const responsesByQuestion = new Map<
+      CalibrationResponse["questionId"],
+      CalibrationResponse[]
+    >();
+
+    for (const questionId of questionIds) {
+      responsesByQuestion.set(questionId, []);
+    }
+
     let continueCursor: string | null = null;
     let isDone = false;
     let page: CalibrationResponse[] = [];
+    let responseCount = 0;
 
     while (!isDone) {
       ({ continueCursor, isDone, page } = await ctx.runQuery(
@@ -44,12 +57,26 @@ export const calibrateSetTwoPL = internalAction({
         }
       ));
 
-      responses.push(...page);
+      for (const response of page) {
+        const questionResponses = responsesByQuestion.get(response.questionId);
+
+        if (questionResponses) {
+          questionResponses.push(response);
+        }
+
+        const attemptResponses =
+          responsesByAttempt.get(response.attemptId) ?? [];
+        attemptResponses.push(response);
+        responsesByAttempt.set(response.attemptId, attemptResponses);
+        responseCount += 1;
+      }
     }
 
     const calibration = calibrateTwoPLItems({
+      responseCount,
       questions,
-      responses,
+      responsesByAttempt,
+      responsesByQuestion,
       existingParams: new Map(
         existingParams.map((params) => [
           params.questionId,

@@ -5,7 +5,7 @@ import {
   paginationOptsValidator,
   paginationResultValidator,
 } from "convex/server";
-import { v } from "convex/values";
+import { type Infer, v } from "convex/values";
 import { getManyFrom } from "convex-helpers/server/relationships";
 
 export const calibrationQuestionValidator = v.object({
@@ -18,6 +18,7 @@ export const calibrationResponseValidator = v.object({
   isCorrect: v.boolean(),
   questionId: vv.id("exerciseQuestions"),
 });
+export type CalibrationResponse = Infer<typeof calibrationResponseValidator>;
 
 export const calibrationQuestionsForSetResultValidator = v.object({
   existingParams: v.array(irtCalibratedItemValidator),
@@ -46,8 +47,9 @@ export const getCalibrationQuestionsForSet = internalQuery({
     const existingParams = await getManyFrom(
       ctx.db,
       "exerciseItemParameters",
-      "setId",
-      args.setId
+      "by_setId",
+      args.setId,
+      "setId"
     );
 
     return {
@@ -81,7 +83,7 @@ export const getCalibrationResponsesPageForSet = internalQuery({
   handler: async (ctx, args) => {
     const responsePage = await ctx.db
       .query("irtCalibrationAttempts")
-      .withIndex("setId_attemptId", (q) => q.eq("setId", args.setId))
+      .withIndex("by_setId_and_attemptId", (q) => q.eq("setId", args.setId))
       .paginate(args.paginationOpts);
 
     return {

@@ -4,6 +4,7 @@ import {
   estimateThetaEAP,
   getProvisionalParams,
 } from "@repo/backend/convex/irt/estimation";
+import type { CalibrationResponse } from "@repo/backend/convex/irt/internalQueries";
 import {
   IRT_CALIBRATION_CONVERGENCE_DELTA,
   IRT_CALIBRATION_MAX_ITERATIONS,
@@ -11,12 +12,6 @@ import {
   IRT_MIN_RESPONSES_FOR_CALIBRATED,
   IRT_PROBABILITY_EPSILON,
 } from "@repo/backend/convex/irt/policy";
-
-interface CalibrationResponse {
-  attemptId: Id<"exerciseAttempts">;
-  isCorrect: boolean;
-  questionId: Id<"exerciseQuestions">;
-}
 
 interface CalibrationSeed {
   difficulty: number;
@@ -181,33 +176,26 @@ function fitItemLogistic2PL(
  * current theta estimates until the item parameters stabilize.
  */
 export function calibrateTwoPLItems({
+  responseCount,
   questions,
-  responses,
+  responsesByAttempt,
+  responsesByQuestion,
   existingParams,
 }: {
+  responseCount: number;
   questions: Array<{ questionId: Id<"exerciseQuestions"> }>;
-  responses: CalibrationResponse[];
+  responsesByAttempt: Map<Id<"exerciseAttempts">, CalibrationResponse[]>;
+  responsesByQuestion: Map<Id<"exerciseQuestions">, CalibrationResponse[]>;
   existingParams: Map<Id<"exerciseQuestions">, CalibrationSeed>;
 }) {
   const questionIds = questions.map((question) => question.questionId);
-  const responsesByQuestion = new Map<
-    Id<"exerciseQuestions">,
-    CalibrationResponse[]
-  >();
+
   for (const questionId of questionIds) {
+    if (responsesByQuestion.has(questionId)) {
+      continue;
+    }
+
     responsesByQuestion.set(questionId, []);
-  }
-  const responsesByAttempt = new Map<
-    Id<"exerciseAttempts">,
-    CalibrationResponse[]
-  >();
-
-  for (const response of responses) {
-    responsesByQuestion.get(response.questionId)?.push(response);
-
-    const attemptResponses = responsesByAttempt.get(response.attemptId) ?? [];
-    attemptResponses.push(response);
-    responsesByAttempt.set(response.attemptId, attemptResponses);
   }
 
   let itemParams = new Map(
@@ -340,7 +328,7 @@ export function calibrateTwoPLItems({
 
   return {
     attemptCount: responsesByAttempt.size,
-    responseCount: responses.length,
+    responseCount,
     questionCount: questionIds.length,
     iterationCount,
     maxParameterDelta: Number.isFinite(maxParameterDelta)
