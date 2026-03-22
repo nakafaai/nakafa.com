@@ -8,6 +8,7 @@ import {
 import { workflow } from "@repo/backend/convex/workflow";
 import { ConvexError } from "convex/values";
 
+/** Starts one durable calibration workflow if the set is not already running. */
 export async function startCalibrationRunWorkflow(
   ctx: MutationCtx,
   setId: Id<"exerciseSets">
@@ -53,6 +54,7 @@ export async function startCalibrationRunWorkflow(
   return calibrationRunId;
 }
 
+/** Returns the pending calibration queue rows that are newer than the last successful run. */
 export function getPendingCalibrationQueueQuery(
   ctx: Pick<MutationCtx, "db">,
   {
@@ -76,6 +78,7 @@ export function getPendingCalibrationQueueQuery(
     });
 }
 
+/** Deletes one bounded batch of processed calibration queue rows. */
 export async function cleanupCalibrationQueueEntriesBatch(
   ctx: Pick<MutationCtx, "db">,
   {
@@ -100,6 +103,7 @@ export async function cleanupCalibrationQueueEntriesBatch(
   return queueEntries.length;
 }
 
+/** Deletes one bounded batch of processed scale-publication queue rows. */
 export async function cleanupScalePublicationQueueEntriesBatch(
   ctx: Pick<MutationCtx, "db">,
   tryoutId: Id<"tryouts">

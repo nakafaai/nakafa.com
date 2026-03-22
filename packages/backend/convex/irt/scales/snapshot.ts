@@ -1,6 +1,5 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { IRT_OPERATIONAL_MODEL } from "@repo/backend/convex/irt/policy";
 import type { ScaleVersionItemSnapshot } from "@repo/backend/convex/irt/scales/read";
 import { getAll, getManyFrom } from "convex-helpers/server/relationships";
 
@@ -126,7 +125,6 @@ export async function getPublishableScaleSnapshot(
   }
 
   return {
-    model: IRT_OPERATIONAL_MODEL,
     questionCount: items.length,
     items,
   };

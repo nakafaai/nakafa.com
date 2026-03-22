@@ -99,10 +99,14 @@ flowchart TD
 | `policy.ts` | Centralized operational model and convergence policy |
 | `calibration.ts` | Pure TypeScript 2PL calibration math |
 | `internalQueries.ts` | Paginated response extraction for calibration |
+| `maintenance.ts` | Operational cache integrity checks |
 | `internalActions.ts` | Set-level calibration job assembly and execution |
 | `internalMutations.ts` | Run tracking and parameter persistence |
+| `helpers/attempts.ts` | Calibration attempt sync and backfill helpers |
 | `helpers/cache.ts` | Calibration cache readiness and stats helpers |
 | `helpers/queue.ts` | Queue and workflow orchestration helpers |
+| `helpers/runs.ts` | Calibration run completion and failure helpers |
+| `scales/bootstrap.ts` | Provisional scale bootstrap helpers |
 | `scales/read.ts` | Frozen scale lookups and coverage checks |
 | `scales/snapshot.ts` | Publishable scale snapshot assembly and comparison |
 | `scales/publish.ts` | Frozen scale publication and bootstrap helpers |

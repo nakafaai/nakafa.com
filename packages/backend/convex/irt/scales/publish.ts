@@ -1,8 +1,8 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { getProvisionalParams } from "@repo/backend/convex/irt/estimation";
 import { IRT_OPERATIONAL_MODEL } from "@repo/backend/convex/irt/policy";
+import { buildBootstrapScaleItems } from "@repo/backend/convex/irt/scales/bootstrap";
 import {
   getLatestScaleVersionForTryout,
   getScaleVersionItems,
@@ -13,12 +13,11 @@ import {
   hasPublishedScaleChanged,
 } from "@repo/backend/convex/irt/scales/snapshot";
 import { ConvexError } from "convex/values";
-import { getAll, getManyFrom } from "convex-helpers/server/relationships";
 
 type IrtDbWriter = MutationCtx["db"];
 
 /** Publishes one frozen scale version from a prepared item snapshot. */
-export async function publishScaleVersion(
+async function publishScaleVersion(
   db: IrtDbWriter,
   {
     publishedAt,
@@ -58,35 +57,8 @@ export async function publishScaleVersion(
   return scaleVersionId;
 }
 
-function createBootstrapCalibrationRun(
-  db: IrtDbWriter,
-  {
-    now,
-    questionCount,
-    setId,
-  }: {
-    now: number;
-    questionCount: number;
-    setId: Id<"exerciseSets">;
-  }
-) {
-  return db.insert("irtCalibrationRuns", {
-    setId,
-    model: IRT_OPERATIONAL_MODEL,
-    status: "completed",
-    questionCount,
-    responseCount: 0,
-    attemptCount: 0,
-    iterationCount: 0,
-    maxParameterDelta: 0,
-    startedAt: now,
-    updatedAt: now,
-    completedAt: now,
-  });
-}
-
 /** Publishes an initial frozen scale version before enough calibration data exists. */
-export async function publishBootstrapScaleVersion(
+async function publishBootstrapScaleVersion(
   db: IrtDbWriter,
   {
     now,
@@ -96,71 +68,10 @@ export async function publishBootstrapScaleVersion(
     tryoutId: Id<"tryouts">;
   }
 ) {
-  const [tryout, tryoutPartSets] = await Promise.all([
-    db.get("tryouts", tryoutId),
-    getManyFrom(
-      db,
-      "tryoutPartSets",
-      "tryoutId_partIndex",
-      tryoutId,
-      "tryoutId"
-    ),
-  ]);
+  const items = await buildBootstrapScaleItems(db, { now, tryoutId });
 
-  if (!tryout || tryoutPartSets.length === 0) {
+  if (!items) {
     return null;
-  }
-
-  const sets = await getAll(
-    db,
-    "exerciseSets",
-    tryoutPartSets.map((partSet) => partSet.setId)
-  );
-  const items: ScaleVersionItemSnapshot[] = [];
-
-  for (const [index, partSet] of tryoutPartSets.entries()) {
-    const set = sets[index];
-
-    if (!set) {
-      return null;
-    }
-
-    const [questions, existingParams] = await Promise.all([
-      getManyFrom(db, "exerciseQuestions", "setId", partSet.setId, "setId"),
-      getManyFrom(
-        db,
-        "exerciseItemParameters",
-        "by_setId",
-        partSet.setId,
-        "setId"
-      ),
-    ]);
-
-    if (questions.length === 0) {
-      return null;
-    }
-
-    const paramsByQuestionId = new Map(
-      existingParams.map((params) => [params.questionId, params])
-    );
-    const bootstrapRunId = await createBootstrapCalibrationRun(db, {
-      now,
-      questionCount: questions.length,
-      setId: partSet.setId,
-    });
-
-    for (const question of questions) {
-      const params = paramsByQuestionId.get(question._id);
-      const provisional = getProvisionalParams();
-
-      items.push({
-        questionId: question._id,
-        setId: partSet.setId,
-        difficulty: params?.difficulty ?? provisional.difficulty,
-        discrimination: params?.discrimination ?? provisional.discrimination,
-        calibrationRunId: params?.calibrationRunId ?? bootstrapRunId,
-      });
-    }
   }
 
   const scaleVersionId = await publishScaleVersion(db, {
@@ -172,6 +83,66 @@ export async function publishBootstrapScaleVersion(
   });
 
   return db.get("irtScaleVersions", scaleVersionId);
+}
+
+async function publishOfficialScaleVersion(
+  db: IrtDbWriter,
+  {
+    now,
+    tryoutId,
+    snapshot,
+  }: {
+    now: number;
+    tryoutId: Id<"tryouts">;
+    snapshot: NonNullable<
+      Awaited<ReturnType<typeof getPublishableScaleSnapshot>>
+    >;
+  }
+) {
+  const scaleVersionId = await publishScaleVersion(db, {
+    tryoutId,
+    questionCount: snapshot.questionCount,
+    items: snapshot.items,
+    status: "official",
+    publishedAt: now,
+  });
+
+  return db.get("irtScaleVersions", scaleVersionId);
+}
+
+async function getUnchangedOfficialScaleVersion(
+  db: IrtDbWriter,
+  {
+    latestScaleVersion,
+    snapshot,
+  }: {
+    latestScaleVersion: Awaited<
+      ReturnType<typeof getLatestScaleVersionForTryout>
+    >;
+    snapshot: NonNullable<
+      Awaited<ReturnType<typeof getPublishableScaleSnapshot>>
+    >;
+  }
+) {
+  if (!(latestScaleVersion && latestScaleVersion.status === "official")) {
+    return null;
+  }
+
+  const latestScaleItems = await getScaleVersionItems(
+    db,
+    latestScaleVersion._id
+  );
+
+  if (
+    hasPublishedScaleChanged({
+      publishedItems: latestScaleItems,
+      snapshotItems: snapshot.items,
+    })
+  ) {
+    return null;
+  }
+
+  return latestScaleVersion;
 }
 
 /** Returns an existing frozen scale version or publishes the appropriate next one. */
@@ -193,43 +164,28 @@ export async function getOrPublishScaleVersionForTryout(
       return latestScaleVersion;
     }
 
-    if (latestScaleVersion.status === "official") {
-      const latestScaleItems = await getScaleVersionItems(
-        db,
-        latestScaleVersion._id
-      );
-
-      if (
-        !hasPublishedScaleChanged({
-          publishedItems: latestScaleItems,
-          snapshotItems: publishableSnapshot.items,
-        })
-      ) {
-        return latestScaleVersion;
-      }
-    }
-
-    const scaleVersionId = await publishScaleVersion(db, {
-      tryoutId,
-      questionCount: publishableSnapshot.questionCount,
-      items: publishableSnapshot.items,
-      status: "official",
-      publishedAt: now,
+    const unchangedOfficialScale = await getUnchangedOfficialScaleVersion(db, {
+      latestScaleVersion,
+      snapshot: publishableSnapshot,
     });
 
-    return db.get("irtScaleVersions", scaleVersionId);
+    if (unchangedOfficialScale) {
+      return unchangedOfficialScale;
+    }
+
+    return publishOfficialScaleVersion(db, {
+      now,
+      tryoutId,
+      snapshot: publishableSnapshot,
+    });
   }
 
   if (publishableSnapshot) {
-    const scaleVersionId = await publishScaleVersion(db, {
+    return publishOfficialScaleVersion(db, {
+      now,
       tryoutId,
-      questionCount: publishableSnapshot.questionCount,
-      items: publishableSnapshot.items,
-      status: "official",
-      publishedAt: now,
+      snapshot: publishableSnapshot,
     });
-
-    return db.get("irtScaleVersions", scaleVersionId);
   }
 
   return publishBootstrapScaleVersion(db, { now, tryoutId });
@@ -260,41 +216,42 @@ export async function publishTryoutScaleVersionIfNeeded(
     tryout._id
   );
 
-  if (latestScaleVersion && latestScaleVersion.status === "official") {
-    const latestScaleItems = await getScaleVersionItems(
-      ctx.db,
-      latestScaleVersion._id
-    );
-
-    if (
-      !hasPublishedScaleChanged({
-        publishedItems: latestScaleItems,
-        snapshotItems: snapshot.items,
-      })
-    ) {
-      return {
-        kind: "unchanged" as const,
-        scaleVersionId: latestScaleVersion._id,
-      };
+  const unchangedOfficialScale = await getUnchangedOfficialScaleVersion(
+    ctx.db,
+    {
+      latestScaleVersion,
+      snapshot,
     }
+  );
+
+  if (unchangedOfficialScale) {
+    return {
+      kind: "unchanged" as const,
+      scaleVersionId: unchangedOfficialScale._id,
+    };
   }
 
-  const scaleVersionId = await publishScaleVersion(ctx.db, {
+  const scaleVersion = await publishOfficialScaleVersion(ctx.db, {
+    now: Date.now(),
     tryoutId: tryout._id,
-    questionCount: snapshot.questionCount,
-    items: snapshot.items,
-    status: "official",
-    publishedAt: Date.now(),
+    snapshot,
   });
+
+  if (!scaleVersion) {
+    throw new ConvexError({
+      code: "IRT_SCALE_VERSION_NOT_FOUND",
+      message: "Published scale version could not be reloaded.",
+    });
+  }
 
   await ctx.scheduler.runAfter(
     0,
     internal.tryouts.internalMutations.promoteProvisionalTryoutScores,
     {
-      scaleVersionId,
+      scaleVersionId: scaleVersion._id,
       tryoutId: tryout._id,
     }
   );
 
-  return { kind: "published" as const, scaleVersionId };
+  return { kind: "published" as const, scaleVersionId: scaleVersion._id };
 }
