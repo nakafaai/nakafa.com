@@ -11,7 +11,7 @@ import { useTranslations } from "next-intl";
 import { type ReactNode, useCallback, useMemo, useTransition } from "react";
 import { toast } from "sonner";
 import { createContext, useContextSelector } from "use-context-selector";
-import { useTryoutQueryNowMs } from "@/components/tryout/hooks/use-query-now-ms";
+import { useTryoutQueryNowMs } from "@/components/tryout/hooks/use-tryout-clock";
 import type {
   TryoutPartPageState,
   TryoutPartUiStatus,

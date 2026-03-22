@@ -3,7 +3,7 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import type { FunctionArgs } from "convex/server";
-import { useTryoutQueryNowMs } from "@/components/tryout/hooks/use-query-now-ms";
+import { useTryoutQueryNowMs } from "@/components/tryout/hooks/use-tryout-clock";
 import { useUser } from "@/lib/context/use-user";
 
 export type TryoutAttemptParams = FunctionArgs<

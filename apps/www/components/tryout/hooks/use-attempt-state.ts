@@ -3,7 +3,7 @@
 import {
   type TryoutAttemptParams,
   useUserTryoutAttempt,
-} from "@/components/tryout/hooks/use-user-tryout-attempt";
+} from "@/components/tryout/hooks/use-tryout-attempt";
 import {
   getEffectivePartAttemptStatus,
   getEffectiveTryoutStatus,

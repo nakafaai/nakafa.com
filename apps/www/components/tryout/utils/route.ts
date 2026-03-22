@@ -1,5 +1,5 @@
 import { isTryoutProduct } from "@repo/backend/convex/tryouts/products";
-import type { TryoutAttemptParams } from "@/components/tryout/hooks/use-user-tryout-attempt";
+import type { TryoutAttemptParams } from "@/components/tryout/hooks/use-tryout-attempt";
 
 export type TryoutAttemptRoute = Pick<
   TryoutAttemptParams,

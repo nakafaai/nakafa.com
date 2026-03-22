@@ -3,7 +3,7 @@
 import type { PropsWithChildren } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 import { useTryoutAttemptStateValue } from "@/components/tryout/hooks/use-attempt-state";
-import type { TryoutAttemptParams } from "@/components/tryout/hooks/use-user-tryout-attempt";
+import type { TryoutAttemptParams } from "@/components/tryout/hooks/use-tryout-attempt";
 
 type TryoutAttemptStateContextValue = ReturnType<
   typeof useTryoutAttemptStateValue

@@ -2,7 +2,7 @@
 
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { useLocale } from "next-intl";
-import { useUserTryoutAttempt } from "@/components/tryout/hooks/use-user-tryout-attempt";
+import { useUserTryoutAttempt } from "@/components/tryout/hooks/use-tryout-attempt";
 import { getTryoutAttemptRoute } from "@/components/tryout/utils/route";
 import { getEffectiveTryoutStatus } from "@/components/tryout/utils/status";
 
