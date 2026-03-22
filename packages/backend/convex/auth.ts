@@ -85,29 +85,35 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
           );
         },
         onUpdate: async (ctx, newDoc, oldDoc) => {
-          if (
+          const hasProfileChanges =
             newDoc.name !== oldDoc.name ||
             newDoc.image !== oldDoc.image ||
-            newDoc.email !== oldDoc.email
-          ) {
-            const appUser = await ctx.db
-              .query("users")
-              .withIndex("authId", (q) => q.eq("authId", newDoc._id))
-              .unique();
-            if (appUser) {
-              await ctx.db.patch("users", appUser._id, {
-                email: newDoc.email,
-                name: newDoc.name,
-                image: newDoc.image ?? undefined,
-              });
+            newDoc.email !== oldDoc.email;
 
-              await ctx.scheduler.runAfter(
-                0,
-                internal.customers.actions.syncCustomer,
-                { userId: appUser._id }
-              );
-            }
+          if (!hasProfileChanges) {
+            return;
           }
+
+          const appUser = await ctx.db
+            .query("users")
+            .withIndex("authId", (q) => q.eq("authId", newDoc._id))
+            .unique();
+
+          if (!appUser) {
+            return;
+          }
+
+          await ctx.db.patch("users", appUser._id, {
+            email: newDoc.email,
+            name: newDoc.name,
+            image: newDoc.image ?? undefined,
+          });
+
+          await ctx.scheduler.runAfter(
+            0,
+            internal.customers.actions.syncCustomer,
+            { userId: appUser._id }
+          );
         },
         onDelete: async (ctx, authUser) => {
           const userApp = await ctx.db
@@ -115,26 +121,22 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
             .withIndex("authId", (q) => q.eq("authId", authUser._id))
             .unique();
 
-          if (userApp) {
-            const notificationPreferences = await ctx.db
-              .query("notificationPreferences")
-              .withIndex("userId", (q) => q.eq("userId", userApp._id))
-              .collect();
-
-            for (const preference of notificationPreferences) {
-              await ctx.db.delete("notificationPreferences", preference._id);
-            }
-
-            // Delete customer in Polar to prevent email conflicts
-            await ctx.scheduler.runAfter(
-              0,
-              internal.customers.actions.cleanupUserData,
-              { userId: userApp._id }
-            );
-
-            // Delete user data in local DB
-            await ctx.db.delete("users", userApp._id);
+          if (!userApp) {
+            return;
           }
+
+          await ctx.scheduler.runAfter(
+            0,
+            internal.auth.cleanup.cleanupDeletedUser,
+            { userId: userApp._id }
+          );
+
+          // Delete customer in Polar to prevent email conflicts
+          await ctx.scheduler.runAfter(
+            0,
+            internal.customers.actions.cleanupUserData,
+            { userId: userApp._id }
+          );
         },
       },
     },
