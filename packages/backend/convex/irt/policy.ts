@@ -49,5 +49,11 @@ export const IRT_QUEUE_CLEANUP_BATCH_SIZE = 100;
 /** Maximum number of completed attempts backfilled in one calibration sync pass. */
 export const IRT_CALIBRATION_RESPONSE_BACKFILL_BATCH_SIZE = 25;
 
+/** Maximum number of completed attempts loaded into one calibration action. */
+export const IRT_MAX_CALIBRATION_ATTEMPTS_PER_RUN = 10_000;
+
+/** Maximum number of scored responses loaded into one calibration action. */
+export const IRT_MAX_CALIBRATION_RESPONSES_PER_RUN = 250_000;
+
 /** Interval, in minutes, for the automatic IRT automation crons. */
 export const IRT_AUTOMATION_CRON_INTERVAL_MINUTES = 15;

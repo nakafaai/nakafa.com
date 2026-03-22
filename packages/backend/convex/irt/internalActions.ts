@@ -2,9 +2,13 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import { internalAction } from "@repo/backend/convex/_generated/server";
 import { calibrateTwoPLItems } from "@repo/backend/convex/irt/calibration";
 import type { CalibrationResponse } from "@repo/backend/convex/irt/internalQueries";
-import { IRT_PROBABILITY_EPSILON } from "@repo/backend/convex/irt/policy";
+import {
+  IRT_MAX_CALIBRATION_ATTEMPTS_PER_RUN,
+  IRT_MAX_CALIBRATION_RESPONSES_PER_RUN,
+  IRT_PROBABILITY_EPSILON,
+} from "@repo/backend/convex/irt/policy";
 import { irtCalibrationResultValidator } from "@repo/backend/convex/irt/validators";
-import { type Infer, v } from "convex/values";
+import { ConvexError, type Infer, v } from "convex/values";
 
 const CALIBRATION_PAGE_SIZE = 100;
 
@@ -13,6 +17,8 @@ const CALIBRATION_PAGE_SIZE = 100;
  *
  * This action intentionally loads responses in pages through internal queries so
  * large calibration jobs do not depend on a single database transaction.
+ * It also enforces explicit operational bounds so one calibration run stays
+ * predictable in action memory and runtime.
  */
 export const calibrateSetTwoPL = internalAction({
   args: {
@@ -69,6 +75,22 @@ export const calibrateSetTwoPL = internalAction({
         attemptResponses.push(response);
         responsesByAttempt.set(response.attemptId, attemptResponses);
         responseCount += 1;
+
+        if (responseCount > IRT_MAX_CALIBRATION_RESPONSES_PER_RUN) {
+          throw new ConvexError({
+            code: "IRT_CALIBRATION_RESPONSE_LIMIT_EXCEEDED",
+            message:
+              "Calibration response volume exceeds the supported action limit.",
+          });
+        }
+      }
+
+      if (responsesByAttempt.size > IRT_MAX_CALIBRATION_ATTEMPTS_PER_RUN) {
+        throw new ConvexError({
+          code: "IRT_CALIBRATION_ATTEMPT_LIMIT_EXCEEDED",
+          message:
+            "Calibration attempt volume exceeds the supported action limit.",
+        });
       }
     }
 
