@@ -21,7 +21,6 @@ let nextConfig: NextConfig = {
     "@takumi-rs/image-response",
   ],
   async rewrites() {
-    await Promise.resolve();
     const llmSource = [
       "/:path*.md",
       "/:path*.mdx",
@@ -43,8 +42,6 @@ let nextConfig: NextConfig = {
     ];
   },
   async redirects() {
-    await Promise.resolve();
-
     const redirects = [
       {
         source: "/subject/junior-high-school/:path*",

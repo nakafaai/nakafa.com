@@ -23,7 +23,7 @@ SchoolClassesForumPostSheetContent.displayName =
 const ForumPostList = memo(
   ({ forumId }: { forumId: Id<"schoolClassForums"> }) => {
     const user = useUser((state) => state.user);
-    // getForum now includes lastReadAt - single query instead of two
+    // Forum details now come from a single query.
     const forum = useQuery(api.classes.forums.queries.getForum, { forumId });
 
     if (!(forum && user)) {
@@ -35,8 +35,6 @@ const ForumPostList = memo(
         currentUserId={user.appUser._id}
         forum={forum}
         key={forum._id}
-        lastReadAt={forum.lastReadAt ?? 0}
-        lastReadPostId={forum.lastReadPostId ?? null}
       />
     );
   }

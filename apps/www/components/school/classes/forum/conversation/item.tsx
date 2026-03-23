@@ -84,7 +84,7 @@ export const ForumPostItem = memo(
 
         <Activity mode={isFirstInGroup === true ? "visible" : "hidden"}>
           <Avatar className="size-8 shrink-0">
-            <AvatarImage alt={userName} role="presentation" src={userImage} />
+            <AvatarImage alt={userName} src={userImage} />
             <AvatarFallback>{getInitialName(userName)}</AvatarFallback>
           </Avatar>
         </Activity>

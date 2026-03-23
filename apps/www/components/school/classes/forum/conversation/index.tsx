@@ -31,17 +31,7 @@ import { useForum } from "@/lib/context/use-forum";
 import { ForumScrollProvider } from "@/lib/context/use-forum-scroll";
 
 export const ForumPostConversation = memo(
-  ({
-    forum,
-    lastReadAt,
-    lastReadPostId,
-    currentUserId,
-  }: {
-    forum: Forum;
-    lastReadAt: number;
-    lastReadPostId: Id<"schoolClassForumPosts"> | null;
-    currentUserId: Id<"users">;
-  }) => {
+  ({ forum, currentUserId }: { forum: Forum; currentUserId: Id<"users"> }) => {
     // Data fetching & pagination
     const {
       posts,
@@ -63,16 +53,13 @@ export const ForumPostConversation = memo(
     const { items, initialScrollIndex, postIdToIndex } = useVirtualItems({
       forum,
       posts,
-      currentUserId,
-      lastReadAt,
-      lastReadPostId,
       isJumpMode,
       targetIndex,
     });
 
     // Scroll refs and state
     const scrollRef = useRef<VirtualConversationHandle>(null);
-    const [isAtBottom, setIsAtBottom] = useState(true);
+    const [isAtBottom, setIsAtBottom] = useState(false);
     const [isPrepending, setIsPrepending] = useState(false);
 
     const lastPostId = posts.at(-1)?._id;
@@ -123,6 +110,12 @@ export const ForumPostConversation = memo(
       const atBottom = scrollRef.current?.isAtBottom() ?? true;
       setIsAtBottom(atBottom);
     }, []);
+
+    useEffect(() => {
+      if (!isInitialLoading) {
+        handleScroll();
+      }
+    }, [handleScroll, isInitialLoading]);
 
     const handleScrollToBottom = useCallback(() => {
       if (isJumpMode) {

@@ -148,11 +148,7 @@ function UserAvatar() {
       title={user.authUser.name}
     >
       <Avatar className="size-8">
-        <AvatarImage
-          alt={user.authUser.name}
-          role="presentation"
-          src={user.authUser.image ?? ""}
-        />
+        <AvatarImage alt={user.authUser.name} src={user.authUser.image ?? ""} />
         <AvatarFallback className="text-xs">
           {getInitialName(user.authUser.name)}
         </AvatarFallback>

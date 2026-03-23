@@ -121,7 +121,7 @@ function CommentContent({
       )}
     >
       <Avatar className="size-10">
-        <AvatarImage alt={userName} role="presentation" src={userImage} />
+        <AvatarImage alt={userName} src={userImage} />
         <AvatarFallback>{getInitialName(userName)}</AvatarFallback>
       </Avatar>
       <div className="grid min-w-0 flex-1 gap-2">

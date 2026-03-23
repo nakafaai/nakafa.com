@@ -3,13 +3,14 @@ import type {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/convex/_generated/server";
+import { shouldAdvanceForumReadBoundary } from "@repo/backend/convex/classes/forums/utils";
 
 /**
  * Helper function to update forum read state (upsert pattern)
  *
- * Updates the lastReadAt timestamp for a user's forum read state.
+ * Updates the read boundary for a user's forum read state.
  * Creates a new record if one doesn't exist.
- * Uses "high water mark" pattern: only updates if new value is greater.
+ * Uses a high-water-mark pattern across timestamp and post boundary.
  */
 export async function updateForumReadState(
   ctx: { db: DatabaseReader & DatabaseWriter },
@@ -30,10 +31,13 @@ export async function updateForumReadState(
 
   if (existing) {
     if (
-      args.lastReadAt > existing.lastReadAt ||
-      (args.lastReadAt === existing.lastReadAt &&
-        args.lastReadPostId !== undefined &&
-        existing.lastReadPostId !== args.lastReadPostId)
+      await shouldAdvanceForumReadBoundary(ctx.db, {
+        existingLastReadAt: existing.lastReadAt,
+        existingLastReadPostId: existing.lastReadPostId,
+        forumId: args.forumId,
+        nextLastReadAt: args.lastReadAt,
+        nextLastReadPostId: args.lastReadPostId,
+      })
     ) {
       await ctx.db.patch("schoolClassForumReadStates", existing._id, {
         lastReadAt: args.lastReadAt,

@@ -4,7 +4,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { Particles } from "@repo/design-system/components/ui/particles";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { AuthGoogle } from "@/components/auth/google";
 import { SchoolLoader } from "@/components/school/loader";
 
@@ -49,6 +49,7 @@ function Title() {
 
 function Footer() {
   const tLegal = useTranslations("Legal");
+  const locale = useLocale();
 
   return (
     <div className="flex flex-col">
@@ -60,7 +61,7 @@ function Footer() {
               nativeButton={false}
               render={
                 <a
-                  href="/terms-of-service"
+                  href={`/${locale}/terms-of-service`}
                   rel="noopener noreferrer"
                   target="_blank"
                 >
@@ -77,7 +78,7 @@ function Footer() {
               nativeButton={false}
               render={
                 <a
-                  href="/privacy-policy"
+                  href={`/${locale}/privacy-policy`}
                   rel="noopener noreferrer"
                   target="_blank"
                 >

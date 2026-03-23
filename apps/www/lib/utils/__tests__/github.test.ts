@@ -12,7 +12,7 @@ describe("getGithubUrl", () => {
   it("handles path without leading slash", () => {
     const result = getGithubUrl({ path: "docs/index.md" });
     expect(result).toBe(
-      "https://github.com/nakafaai/nakafa.com/tree/maindocs/index.md"
+      "https://github.com/nakafaai/nakafa.com/tree/main/docs/index.md"
     );
   });
 

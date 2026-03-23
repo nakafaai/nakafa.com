@@ -37,7 +37,7 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { cleanupUrl, cn, formatUrl } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useId, useState } from "react";
 
 interface Props {
   /** The className of the references. */
@@ -52,6 +52,7 @@ interface Props {
 
 export function RefContent({ title, references, githubUrl, className }: Props) {
   const t = useTranslations("Common");
+  const headingId = useId();
 
   const [open, setOpen] = useState<boolean>(false);
 
@@ -60,12 +61,12 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
   return (
     <>
       <section
-        aria-labelledby={t("references")}
+        aria-labelledby={headingId}
         className={cn("space-y-4", className)}
       >
         <h2
           className="scroll-mt-28 font-medium text-2xl leading-tight tracking-tight"
-          id={t("references")}
+          id={headingId}
         >
           {t("references")}
         </h2>

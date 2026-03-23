@@ -1,19 +1,11 @@
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { UserData } from "@repo/backend/convex/lib/helpers/user";
-import type { ForumPost } from "@/lib/store/forum";
+import type { ForumPost, ReactionWithUsers } from "@/lib/store/forum";
 
 // Re-export ForumPost for convenience
 export type { ForumPost } from "@/lib/store/forum";
 
-interface ReactionWithUsers {
-  count: number;
-  emoji: string;
-  reactors: string[];
-}
-
 export type Forum = Doc<"schoolClassForums"> & {
-  lastReadAt: number | null;
-  lastReadPostId: Id<"schoolClassForumPosts"> | null;
   user: UserData | null;
   myReactions: string[];
   reactionUsers: ReactionWithUsers[];

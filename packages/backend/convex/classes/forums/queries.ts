@@ -1,10 +1,10 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import { type QueryCtx, query } from "@repo/backend/convex/_generated/server";
+import { query } from "@repo/backend/convex/_generated/server";
 import {
   attachForumUsers,
   enrichForumPosts,
+  getForumPostsAtTimestamp,
   getForumReactionPreviews,
-  getForumReadState,
   getForumUnreadCounts,
   getMyForumReactions,
   loadForum,
@@ -19,7 +19,6 @@ import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 
 const MAX_FORUM_POST_WINDOW = 50;
-const MAX_FORUM_BOUNDARY_POSTS = MAX_FORUM_POST_WINDOW * 4;
 
 /**
  * Clamps forum jump-window requests to a small bounded range.
@@ -49,37 +48,6 @@ function getBoundaryPostIndex(
   }
 
   return boundaryIndex;
-}
-
-/**
- * Loads posts sharing one forum timestamp in a bounded batch.
- */
-async function getPostsAtBoundaryTime(
-  ctx: QueryCtx,
-  {
-    forumId,
-    timestamp,
-  }: {
-    forumId: Id<"schoolClassForums">;
-    timestamp: number;
-  }
-) {
-  const posts = await ctx.db
-    .query("schoolClassForumPosts")
-    .withIndex("forumId", (q) =>
-      q.eq("forumId", forumId).eq("_creationTime", timestamp)
-    )
-    .order("asc")
-    .take(MAX_FORUM_BOUNDARY_POSTS + 1);
-
-  if (posts.length > MAX_FORUM_BOUNDARY_POSTS) {
-    throw new ConvexError({
-      code: "FORUM_BOUNDARY_WINDOW_LIMIT_EXCEEDED",
-      message: "Too many forum posts share the same creation time.",
-    });
-  }
-
-  return posts;
 }
 
 export const getForums = query({
@@ -120,7 +88,11 @@ export const getForums = query({
     const [userMap, myReactionsMap, unreadCountMap] = await Promise.all([
       attachForumUsers(ctx, forumsPage.page),
       getMyForumReactions(ctx, forumIds, user.appUser._id),
-      getForumUnreadCounts(ctx, user.appUser._id, forumsPage.page),
+      getForumUnreadCounts(ctx, {
+        classId,
+        forums: forumsPage.page,
+        userId: user.appUser._id,
+      }),
     ]);
 
     return {
@@ -144,13 +116,12 @@ export const getForum = query({
     const currentUserId = user.appUser._id;
 
     const forum = await loadForum(ctx, args.forumId);
-    const [, forumUserMap, reactionPreviews, myReactionsByForum, readState] =
+    const [, forumUserMap, reactionPreviews, myReactionsByForum] =
       await Promise.all([
         requireClassAccess(ctx, forum.classId, forum.schoolId, currentUserId),
         getUserMap(ctx, [forum.createdBy]),
         getForumReactionPreviews(ctx, forum),
         getMyForumReactions(ctx, [forum._id], currentUserId),
-        getForumReadState(ctx, forum._id, currentUserId),
       ]);
 
     return {
@@ -162,8 +133,6 @@ export const getForum = query({
         count,
         reactors: reactionPreviews.get(emoji) ?? [],
       })),
-      lastReadAt: readState.lastReadAt,
-      lastReadPostId: readState.lastReadPostId,
     };
   },
 });
@@ -177,23 +146,97 @@ export const getForumPosts = query({
     const { forumId, paginationOpts } = args;
 
     const user = await requireAuth(ctx);
-    await loadForumWithAccess(ctx, forumId, user.appUser._id);
+    const currentUserId = user.appUser._id;
+    await loadForumWithAccess(ctx, forumId, currentUserId);
 
-    const postsPage = await ctx.db
-      .query("schoolClassForumPosts")
-      .withIndex("forumId", (idx) => idx.eq("forumId", forumId))
-      .order("desc")
-      .paginate(paginationOpts);
+    const [postsPage, readState] = await Promise.all([
+      ctx.db
+        .query("schoolClassForumPosts")
+        .withIndex("forumId", (idx) => idx.eq("forumId", forumId))
+        .order("desc")
+        .paginate(paginationOpts),
+      ctx.db
+        .query("schoolClassForumReadStates")
+        .withIndex("forumId_userId", (q) =>
+          q.eq("forumId", forumId).eq("userId", currentUserId)
+        )
+        .unique(),
+    ]);
 
     const enrichedPosts = await enrichForumPosts(
       ctx,
       postsPage.page,
-      user.appUser._id
+      currentUserId
+    );
+
+    const sameTimestampCache = new Map<
+      number,
+      Awaited<ReturnType<typeof getForumPostsAtTimestamp>>
+    >();
+
+    async function isUnreadPost(post: (typeof enrichedPosts)[number]) {
+      if (post.createdBy === currentUserId) {
+        return false;
+      }
+
+      if (!readState) {
+        return true;
+      }
+
+      if (post._creationTime > readState.lastReadAt) {
+        return true;
+      }
+
+      if (post._creationTime < readState.lastReadAt) {
+        return false;
+      }
+
+      const lastReadPostId = readState.lastReadPostId;
+
+      if (!lastReadPostId) {
+        return false;
+      }
+
+      const cachedPosts = sameTimestampCache.get(post._creationTime);
+      const postsAtTimestamp =
+        cachedPosts ??
+        (await getForumPostsAtTimestamp(ctx.db, {
+          forumId,
+          timestamp: post._creationTime,
+        }));
+
+      if (!cachedPosts) {
+        sameTimestampCache.set(post._creationTime, postsAtTimestamp);
+      }
+
+      const lastReadIndex = postsAtTimestamp.findIndex(
+        (timestampPost) => timestampPost._id === lastReadPostId
+      );
+      const postIndex = postsAtTimestamp.findIndex(
+        (timestampPost) => timestampPost._id === post._id
+      );
+
+      if (postIndex < 0) {
+        return false;
+      }
+
+      if (lastReadIndex < 0) {
+        return true;
+      }
+
+      return postIndex > lastReadIndex;
+    }
+
+    const postsWithUnread = await Promise.all(
+      enrichedPosts.map(async (post) => ({
+        ...post,
+        isUnread: await isUnreadPost(post),
+      }))
     );
 
     return {
       ...postsPage,
-      page: enrichedPosts,
+      page: postsWithUnread,
     };
   },
 });
@@ -222,7 +265,7 @@ export const getForumPostsAround = query({
     const targetTime = targetPost._creationTime;
 
     const [postsAtTargetTime, olderPosts, newerPosts] = await Promise.all([
-      getPostsAtBoundaryTime(ctx, {
+      getForumPostsAtTimestamp(ctx.db, {
         forumId,
         timestamp: targetTime,
       }),
@@ -316,7 +359,7 @@ export const getForumPostsOlder = query({
     }
 
     const [postsAtBoundaryTime, olderPosts] = await Promise.all([
-      getPostsAtBoundaryTime(ctx, {
+      getForumPostsAtTimestamp(ctx.db, {
         forumId,
         timestamp: boundaryPost._creationTime,
       }),
@@ -383,7 +426,7 @@ export const getForumPostsNewer = query({
     }
 
     const [postsAtBoundaryTime, newerPosts] = await Promise.all([
-      getPostsAtBoundaryTime(ctx, {
+      getForumPostsAtTimestamp(ctx.db, {
         forumId,
         timestamp: boundaryPost._creationTime,
       }),

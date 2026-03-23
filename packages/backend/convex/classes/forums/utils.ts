@@ -1,5 +1,6 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type {
+  DatabaseReader,
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
@@ -11,7 +12,102 @@ import { asyncMap } from "convex-helpers";
 const FORUM_REACTION_PREVIEW_LIMIT = 10;
 const FORUM_REACTION_PREVIEW_BATCH_LIMIT = 20;
 const FORUM_ATTACHMENT_LIMIT = 10;
+const FORUM_SAME_TIMESTAMP_POST_LIMIT = 200;
 const FORUM_UNREAD_COUNT_LIMIT = 26;
+
+/**
+ * Loads all posts in one forum sharing the same creation timestamp.
+ * Throws if the bucket grows beyond the supported bounded size.
+ */
+export async function getForumPostsAtTimestamp(
+  db: DatabaseReader,
+  {
+    forumId,
+    timestamp,
+  }: {
+    forumId: Id<"schoolClassForums">;
+    timestamp: number;
+  }
+) {
+  const posts = await db
+    .query("schoolClassForumPosts")
+    .withIndex("forumId", (q) =>
+      q.eq("forumId", forumId).eq("_creationTime", timestamp)
+    )
+    .order("asc")
+    .take(FORUM_SAME_TIMESTAMP_POST_LIMIT + 1);
+
+  if (posts.length > FORUM_SAME_TIMESTAMP_POST_LIMIT) {
+    throw new ConvexError({
+      code: "FORUM_BOUNDARY_WINDOW_LIMIT_EXCEEDED",
+      message: "Too many forum posts share the same creation time.",
+    });
+  }
+
+  return posts;
+}
+
+/**
+ * Returns whether a new read boundary moves forward within one forum.
+ */
+export async function shouldAdvanceForumReadBoundary(
+  db: DatabaseReader,
+  {
+    existingLastReadAt,
+    existingLastReadPostId,
+    forumId,
+    nextLastReadAt,
+    nextLastReadPostId,
+  }: {
+    existingLastReadAt: number;
+    existingLastReadPostId?: Id<"schoolClassForumPosts">;
+    forumId: Id<"schoolClassForums">;
+    nextLastReadAt: number;
+    nextLastReadPostId?: Id<"schoolClassForumPosts">;
+  }
+) {
+  if (nextLastReadAt > existingLastReadAt) {
+    return true;
+  }
+
+  if (nextLastReadAt < existingLastReadAt) {
+    return false;
+  }
+
+  if (!nextLastReadPostId) {
+    return false;
+  }
+
+  if (!existingLastReadPostId) {
+    return false;
+  }
+
+  if (existingLastReadPostId === nextLastReadPostId) {
+    return false;
+  }
+
+  const postsAtTimestamp = await getForumPostsAtTimestamp(db, {
+    forumId,
+    timestamp: nextLastReadAt,
+  });
+
+  const existingIndex = postsAtTimestamp.findIndex(
+    (post) => post._id === existingLastReadPostId
+  );
+  const nextIndex = postsAtTimestamp.findIndex(
+    (post) => post._id === nextLastReadPostId
+  );
+
+  if (nextIndex < 0) {
+    return false;
+  }
+
+  if (existingIndex < 0) {
+    return true;
+  }
+
+  return nextIndex > existingIndex;
+}
 
 /**
  * Counts unread posts after a read-state boundary, including same-timestamp posts.
@@ -22,46 +118,64 @@ async function getUnreadForumPostCount(
     forumId,
     lastReadAt,
     lastReadPostId,
+    userId,
   }: {
     forumId: Id<"schoolClassForums">;
     lastReadAt: number;
     lastReadPostId?: Id<"schoolClassForumPosts">;
+    userId: Id<"users">;
   }
 ) {
-  const sameTimestampPosts = await ctx.db
-    .query("schoolClassForumPosts")
-    .withIndex("forumId", (q) =>
-      q.eq("forumId", forumId).eq("_creationTime", lastReadAt)
-    )
-    .order("asc")
-    .take(FORUM_UNREAD_COUNT_LIMIT + 1);
+  const sameTimestampPosts = await getForumPostsAtTimestamp(ctx.db, {
+    forumId,
+    timestamp: lastReadAt,
+  });
+
+  const sameTimestampUnreadPosts = lastReadPostId
+    ? (() => {
+        const boundaryIndex = sameTimestampPosts.findIndex(
+          (post) => post._id === lastReadPostId
+        );
+
+        if (boundaryIndex >= 0) {
+          return sameTimestampPosts.slice(boundaryIndex + 1);
+        }
+
+        return sameTimestampPosts;
+      })()
+    : [];
 
   let unreadCount = 0;
 
-  if (lastReadPostId) {
-    const boundaryIndex = sameTimestampPosts.findIndex(
-      (post) => post._id === lastReadPostId
-    );
+  for (const post of sameTimestampUnreadPosts) {
+    if (post.createdBy === userId) {
+      continue;
+    }
 
-    if (boundaryIndex >= 0) {
-      unreadCount += sameTimestampPosts.length - boundaryIndex - 1;
-    } else {
-      unreadCount += sameTimestampPosts.length;
+    unreadCount += 1;
+
+    if (unreadCount >= FORUM_UNREAD_COUNT_LIMIT) {
+      return FORUM_UNREAD_COUNT_LIMIT;
     }
   }
 
-  if (unreadCount >= FORUM_UNREAD_COUNT_LIMIT) {
-    return FORUM_UNREAD_COUNT_LIMIT;
-  }
-
-  const newerPosts = await ctx.db
+  for await (const post of ctx.db
     .query("schoolClassForumPosts")
     .withIndex("forumId", (q) =>
       q.eq("forumId", forumId).gt("_creationTime", lastReadAt)
-    )
-    .take(FORUM_UNREAD_COUNT_LIMIT - unreadCount);
+    )) {
+    if (post.createdBy === userId) {
+      continue;
+    }
 
-  return unreadCount + newerPosts.length;
+    unreadCount += 1;
+
+    if (unreadCount >= FORUM_UNREAD_COUNT_LIMIT) {
+      return FORUM_UNREAD_COUNT_LIMIT;
+    }
+  }
+
+  return unreadCount;
 }
 
 /**
@@ -79,49 +193,44 @@ export function attachForumUsers(
 }
 
 /**
- * Get the current user's read boundary for one forum.
- */
-export async function getForumReadState(
-  ctx: QueryCtx,
-  forumId: Id<"schoolClassForums">,
-  userId: Id<"users">
-): Promise<{
-  lastReadAt: number | null;
-  lastReadPostId: Id<"schoolClassForumPosts"> | null;
-}> {
-  const readState = await ctx.db
-    .query("schoolClassForumReadStates")
-    .withIndex("forumId_userId", (q) =>
-      q.eq("forumId", forumId).eq("userId", userId)
-    )
-    .unique();
-
-  return {
-    lastReadAt: readState?.lastReadAt ?? null,
-    lastReadPostId: readState?.lastReadPostId ?? null,
-  };
-}
-
-/**
  * Get unread post counts for multiple forums.
  * Returns Map of forumId -> count (capped at 26 for "25+" display).
- * Uses index range query for efficient counting.
  */
 export async function getForumUnreadCounts(
   ctx: QueryCtx,
-  userId: Id<"users">,
-  forums: Array<{ _id: Id<"schoolClassForums">; lastPostAt: number }>
+  {
+    classId,
+    forums,
+    userId,
+  }: {
+    classId: Id<"schoolClasses">;
+    forums: Array<{
+      _id: Id<"schoolClassForums">;
+      lastPostAt: number;
+    }>;
+    userId: Id<"users">;
+  }
 ): Promise<Map<Id<"schoolClassForums">, number>> {
+  if (forums.length === 0) {
+    return new Map();
+  }
+
+  const readStates = await ctx.db
+    .query("schoolClassForumReadStates")
+    .withIndex("classId_userId", (q) =>
+      q.eq("classId", classId).eq("userId", userId)
+    )
+    .collect();
+
+  const readStateByForumId = new Map(
+    readStates.map((readState) => [readState.forumId, readState])
+  );
+
   const counts = await asyncMap(forums, async (forum) => {
-    const readState = await ctx.db
-      .query("schoolClassForumReadStates")
-      .withIndex("forumId_userId", (q) =>
-        q.eq("forumId", forum._id).eq("userId", userId)
-      )
-      .unique();
+    const readState = readStateByForumId.get(forum._id);
     const lastReadAt = readState?.lastReadAt ?? 0;
 
-    if (forum.lastPostAt <= lastReadAt) {
+    if (forum.lastPostAt < lastReadAt) {
       return { forumId: forum._id, count: 0 };
     }
 
@@ -131,6 +240,7 @@ export async function getForumUnreadCounts(
         forumId: forum._id,
         lastReadAt,
         lastReadPostId: readState?.lastReadPostId,
+        userId,
       }),
     };
   });

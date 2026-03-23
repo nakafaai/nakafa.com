@@ -11,6 +11,7 @@ import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
 import { requireClassAccess } from "@repo/backend/convex/lib/helpers/class";
 import { isAdmin } from "@repo/backend/convex/lib/helpers/school";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
+import { updateForumReadState } from "@repo/backend/convex/triggers/helpers/forums";
 import { truncateText } from "@repo/backend/convex/utils/helper";
 import { ConvexError, type Infer, v } from "convex/values";
 
@@ -451,35 +452,12 @@ export const markForumRead = mutation({
       forum.lastPostAt
     );
 
-    const existing = await ctx.db
-      .query("schoolClassForumReadStates")
-      .withIndex("forumId_userId", (q) =>
-        q.eq("forumId", args.forumId).eq("userId", userId)
-      )
-      .unique();
-
-    if (existing) {
-      if (safeLastReadAt > existing.lastReadAt) {
-        await ctx.db.patch("schoolClassForumReadStates", existing._id, {
-          lastReadAt: safeLastReadAt,
-          lastReadPostId: lastReadPost._id,
-        });
-      } else if (
-        safeLastReadAt === existing.lastReadAt &&
-        existing.lastReadPostId !== lastReadPost._id
-      ) {
-        await ctx.db.patch("schoolClassForumReadStates", existing._id, {
-          lastReadPostId: lastReadPost._id,
-        });
-      }
-    } else {
-      await ctx.db.insert("schoolClassForumReadStates", {
-        forumId: args.forumId,
-        classId: forum.classId,
-        userId,
-        lastReadAt: safeLastReadAt,
-        lastReadPostId: lastReadPost._id,
-      });
-    }
+    await updateForumReadState(ctx, {
+      forumId: args.forumId,
+      classId: forum.classId,
+      userId,
+      lastReadAt: safeLastReadAt,
+      lastReadPostId: lastReadPost._id,
+    });
   },
 });

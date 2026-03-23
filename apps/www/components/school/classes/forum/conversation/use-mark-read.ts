@@ -4,7 +4,7 @@ import { useDebouncedCallback } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useMutation } from "convex/react";
-import { useEffect, useRef } from "react";
+import { useEffect, useReducer, useRef } from "react";
 
 /**
  * Discord/Slack-style mark-read strategy:
@@ -26,6 +26,10 @@ export function useMarkRead({
 }) {
   const markRead = useMutation(api.classes.forums.mutations.markForumRead);
   const lastReadPostIdRef = useRef(lastPostId);
+  const [retryTick, retryMarkRead] = useReducer(
+    (count: number) => count + 1,
+    0
+  );
 
   lastReadPostIdRef.current = lastPostId;
 
@@ -40,7 +44,10 @@ export function useMarkRead({
         return;
       }
 
-      return markRead({ forumId, lastReadPostId });
+      return markRead({ forumId, lastReadPostId }).catch(() => {
+        hasMarkedAtBottomRef.current = false;
+        retryMarkRead();
+      });
     },
     {
       delay: 1000,
@@ -57,13 +64,13 @@ export function useMarkRead({
   }, [isAtBottom, debouncedMarkRead]);
 
   // Primary trigger: mark read when user scrolls to bottom (debounced)
-  const canMarkRead = isAtBottom && !isJumpMode;
+  const canMarkRead = isAtBottom && !isJumpMode && lastPostId !== undefined;
   useEffect(() => {
-    if (canMarkRead && !hasMarkedAtBottomRef.current) {
+    if (canMarkRead && !hasMarkedAtBottomRef.current && retryTick >= 0) {
       hasMarkedAtBottomRef.current = true;
       debouncedMarkRead();
     }
-  }, [canMarkRead, debouncedMarkRead]);
+  }, [canMarkRead, debouncedMarkRead, retryTick]);
 
   // Real-time trigger: mark read when a newer visible post arrives.
   const prevLastPostIdRef = useRef(lastPostId);

@@ -133,6 +133,7 @@ function SearchListItems({
   isLoading: boolean;
   results: PagefindResult[];
 }) {
+  const router = useRouter();
   const t = useTranslations("Utils");
   const setOpen = useSearch((state) => state.setOpen);
   const [isPending, startTransition] = useTransition();
@@ -183,7 +184,7 @@ function SearchListItems({
             onSelect={() => {
               startTransition(() => {
                 setOpen(false);
-                window.location.href = subResult.url;
+                router.push(subResult.url);
               });
             }}
             value={`${result.meta.title} ${subResult.title} ${subResult.url}`}

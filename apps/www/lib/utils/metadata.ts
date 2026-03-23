@@ -1,12 +1,15 @@
-import { removeLeadingSlash } from "@repo/design-system/lib/utils";
+import { cleanSlug } from "@repo/utilities/helper";
 import type { Locale } from "next-intl";
 
 /**
- * Get the Open Graph URL for a given locale and path
- * @param locale - The locale of the page
- * @param path - The path of the page
- * @returns The Open Graph URL
+ * Get the Open Graph URL for a given locale and path.
  */
 export function getOgUrl(locale: Locale, path: string) {
-  return `/${locale}/og/${removeLeadingSlash(path)}/image.png` as const;
+  const cleanPath = cleanSlug(path.trim());
+
+  if (cleanPath.length === 0) {
+    return `/${locale}/og/image.png` as const;
+  }
+
+  return `/${locale}/og/${cleanPath}/image.png` as const;
 }

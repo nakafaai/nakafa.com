@@ -32,7 +32,7 @@ export default function Page({ params }: Props) {
 
           <Auth />
 
-          <PageFooter />
+          <PageFooter locale={locale} />
         </div>
       </div>
       <div className="relative col-span-4 hidden lg:block">
@@ -53,7 +53,7 @@ function PageTitle() {
   );
 }
 
-function PageFooter() {
+function PageFooter({ locale }: { locale: Locale }) {
   const tLegal = useTranslations("Legal");
 
   return (
@@ -66,7 +66,7 @@ function PageFooter() {
               nativeButton={false}
               render={
                 <a
-                  href="/terms-of-service"
+                  href={`/${locale}/terms-of-service`}
                   rel="noopener noreferrer"
                   target="_blank"
                 >
@@ -83,7 +83,7 @@ function PageFooter() {
               nativeButton={false}
               render={
                 <a
-                  href="/privacy-policy"
+                  href={`/${locale}/privacy-policy`}
                   rel="noopener noreferrer"
                   target="_blank"
                 >

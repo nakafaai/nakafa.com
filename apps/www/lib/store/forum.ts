@@ -4,7 +4,7 @@ import type { UserData } from "@repo/backend/convex/lib/helpers/user";
 import { createStore } from "zustand";
 import { immer } from "zustand/middleware/immer";
 
-interface ReactionWithUsers {
+export interface ReactionWithUsers {
   count: number;
   emoji: string;
   reactors: string[];
@@ -12,6 +12,7 @@ interface ReactionWithUsers {
 
 export interface ForumPost extends Doc<"schoolClassForumPosts"> {
   attachments: PostAttachment[];
+  isUnread?: boolean;
   myReactions: string[];
   reactionUsers: ReactionWithUsers[];
   replyToUser: UserData | null;

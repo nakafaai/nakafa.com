@@ -1,7 +1,7 @@
 import { routing } from "@repo/internationalization/src/routing";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { hasLocale, type Locale } from "next-intl";
+import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
 
@@ -11,8 +11,13 @@ export async function generateMetadata({
   params: LayoutProps<"/[locale]/school">["params"];
 }): Promise<Metadata> {
   const { locale } = await params;
+
+  if (!hasLocale(routing.locales, locale)) {
+    notFound();
+  }
+
   const t = await getTranslations({
-    locale: locale as Locale,
+    locale,
     namespace: "Metadata",
   });
 

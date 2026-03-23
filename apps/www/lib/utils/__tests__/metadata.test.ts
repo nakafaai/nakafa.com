@@ -24,17 +24,17 @@ describe("getOgUrl", () => {
 
   it("handles root path", () => {
     const result = getOgUrl("en", "/");
-    expect(result).toBe("/en/og//image.png");
+    expect(result).toBe("/en/og/image.png");
   });
 
   it("handles empty path", () => {
     const result = getOgUrl("en", "");
-    expect(result).toBe("/en/og//image.png");
+    expect(result).toBe("/en/og/image.png");
   });
 
   it("handles path with multiple leading slashes", () => {
     const result = getOgUrl("en", "//double/slash");
-    expect(result).toBe("/en/og//double/slash/image.png");
+    expect(result).toBe("/en/og/double/slash/image.png");
   });
 
   it("handles paths with special characters", () => {

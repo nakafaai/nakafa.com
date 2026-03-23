@@ -19,23 +19,19 @@ import type {
 export function useVirtualItems({
   forum,
   posts,
-  currentUserId,
-  lastReadAt,
-  lastReadPostId,
   isJumpMode,
   targetIndex,
 }: {
   forum: Forum;
   posts: ForumPost[];
-  currentUserId: Id<"users">;
-  lastReadAt: number;
-  lastReadPostId: Id<"schoolClassForumPosts"> | null;
   isJumpMode: boolean;
   targetIndex: number;
 }) {
-  const initialLastReadAt = useRef(lastReadAt);
-  const initialLastReadPostId = useRef(lastReadPostId);
-  const mountTime = useRef(Date.now());
+  const initialLatestPostId = useRef<Id<"schoolClassForumPosts"> | null>(null);
+
+  if (initialLatestPostId.current === null && !isJumpMode && posts.length > 0) {
+    initialLatestPostId.current = posts.at(-1)?._id ?? null;
+  }
 
   // Calculate unread info
   const { firstUnreadIndex, unreadCount } = useMemo(() => {
@@ -44,33 +40,24 @@ export function useVirtualItems({
     }
     let firstIdx = -1;
     let count = 0;
-    const readBoundaryExists =
-      initialLastReadPostId.current !== null &&
-      posts.some((post) => post._id === initialLastReadPostId.current);
-    let passedReadBoundary =
-      initialLastReadPostId.current === null || !readBoundaryExists;
+    let passedInitialLatestPost = initialLatestPostId.current === null;
 
     for (const [i, post] of posts.entries()) {
-      if (!passedReadBoundary && post._id === initialLastReadPostId.current) {
-        passedReadBoundary = true;
-        continue;
-      }
+      const isUnread = !passedInitialLatestPost && post.isUnread === true;
 
-      const isUnread =
-        (post._creationTime > initialLastReadAt.current ||
-          (post._creationTime === initialLastReadAt.current &&
-            passedReadBoundary)) &&
-        post._creationTime < mountTime.current &&
-        post.createdBy !== currentUserId;
       if (isUnread) {
         if (firstIdx === -1) {
           firstIdx = i;
         }
         count += 1;
       }
+
+      if (post._id === initialLatestPostId.current) {
+        passedInitialLatestPost = true;
+      }
     }
     return { firstUnreadIndex: firstIdx, unreadCount: count };
-  }, [posts, currentUserId, isJumpMode]);
+  }, [posts, isJumpMode]);
 
   // Build virtual items
   const { items, initialScrollIndex, postIdToIndex } = useMemo(() => {
@@ -122,7 +109,5 @@ export function useVirtualItems({
     items,
     initialScrollIndex,
     postIdToIndex,
-    firstUnreadIndex,
-    unreadCount,
   };
 }

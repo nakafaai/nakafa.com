@@ -1,5 +1,3 @@
-"use client";
-
 import "@repo/design-system/styles/globals.css";
 import "@repo/design-system/styles/theme.css";
 
