@@ -37,25 +37,6 @@ export const getUserByAuthId = internalQuery({
 });
 
 /**
- * Get app user by the auth identity token identifier.
- * Returns null if user doesn't exist.
- */
-export const getUserByTokenIdentifier = internalQuery({
-  args: {
-    tokenIdentifier: v.string(),
-  },
-  returns: nullable(vv.doc("users")),
-  handler: async (ctx, args) => {
-    return await ctx.db
-      .query("users")
-      .withIndex("tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", args.tokenIdentifier)
-      )
-      .unique();
-  },
-});
-
-/**
  * Get app user by email address.
  * Returns null if user doesn't exist.
  */

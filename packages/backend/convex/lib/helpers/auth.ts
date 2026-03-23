@@ -18,35 +18,17 @@ import { ConvexError } from "convex/values";
 
 async function getUserByIdentity(
   ctx: QueryCtx,
-  args: {
-    authId: string | null | undefined;
-    tokenIdentifier: string | null | undefined;
-  }
+  authId: string | null | undefined
 ) {
-  const tokenIdentifier = args.tokenIdentifier ?? undefined;
+  const normalizedAuthId = authId ?? undefined;
 
-  if (tokenIdentifier) {
-    const userByTokenIdentifier = await ctx.db
-      .query("users")
-      .withIndex("tokenIdentifier", (q) =>
-        q.eq("tokenIdentifier", tokenIdentifier)
-      )
-      .unique();
-
-    if (userByTokenIdentifier) {
-      return userByTokenIdentifier;
-    }
-  }
-
-  const authId = args.authId ?? undefined;
-
-  if (!authId) {
+  if (!normalizedAuthId) {
     return null;
   }
 
   return await ctx.db
     .query("users")
-    .withIndex("authId", (q) => q.eq("authId", authId))
+    .withIndex("authId", (q) => q.eq("authId", normalizedAuthId))
     .unique();
 }
 
@@ -56,10 +38,12 @@ async function getUserByIdentity(
  */
 export async function getOptionalAppUserFromIdentity(ctx: QueryCtx) {
   const identity = await ctx.auth.getUserIdentity();
-  const appUser = await getUserByIdentity(ctx, {
-    authId: identity?.subject,
-    tokenIdentifier: identity?.tokenIdentifier,
-  });
+
+  if (!identity?.subject) {
+    return null;
+  }
+
+  const appUser = await getUserByIdentity(ctx, identity.subject);
 
   if (!(appUser && identity)) {
     return null;
@@ -73,7 +57,7 @@ export async function getOptionalAppUserFromIdentity(ctx: QueryCtx) {
 
 /**
  * Fast authentication using JWT identity.
- * Reads from JWT directly and resolves the app user by stable auth ID.
+ * Reads from JWT directly and resolves the app user by Better Auth user ID.
  *
  * Pros: ~700ms faster than session validation
  * Cons: Won't catch revoked sessions until JWT expires
@@ -112,25 +96,6 @@ export async function requireAuthWithSession(ctx: MutationCtx) {
     });
   }
 
-  const identity = await ctx.auth.getUserIdentity();
-
-  if (
-    identity?.tokenIdentifier &&
-    user.appUser.tokenIdentifier !== identity.tokenIdentifier
-  ) {
-    await ctx.db.patch("users", user.appUser._id, {
-      tokenIdentifier: identity.tokenIdentifier,
-    });
-
-    return {
-      ...user,
-      appUser: {
-        ...user.appUser,
-        tokenIdentifier: identity.tokenIdentifier,
-      },
-    };
-  }
-
   return user;
 }
 
@@ -140,33 +105,23 @@ export async function requireAuthWithSession(ctx: MutationCtx) {
 export async function requireAuthForAction(ctx: ActionCtx) {
   const identity = await ctx.auth.getUserIdentity();
 
-  if (!(identity?.tokenIdentifier || identity?.subject)) {
+  if (!identity?.subject) {
     throw new ConvexError({
       code: "UNAUTHORIZED",
       message: "You must be logged in.",
     });
   }
 
-  const appUser = identity.tokenIdentifier
-    ? await ctx.runQuery(internal.users.queries.getUserByTokenIdentifier, {
-        tokenIdentifier: identity.tokenIdentifier,
-      })
-    : null;
+  const appUser = await ctx.runQuery(internal.users.queries.getUserByAuthId, {
+    authId: identity.subject,
+  });
 
-  const fallbackUser =
-    appUser ??
-    (identity.subject
-      ? await ctx.runQuery(internal.users.queries.getUserByAuthId, {
-          authId: identity.subject,
-        })
-      : null);
-
-  if (!fallbackUser) {
+  if (!appUser) {
     throw new ConvexError({
       code: "UNAUTHORIZED",
       message: "User not found.",
     });
   }
 
-  return { appUser: fallbackUser, identity };
+  return { appUser, identity };
 }

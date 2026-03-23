@@ -41,7 +41,6 @@ export type UserPlan = Infer<typeof userPlanValidator>;
 export const userValidator = v.object({
   email: v.string(),
   authId: v.string(),
-  tokenIdentifier: v.optional(v.string()),
   name: v.string(),
   image: v.optional(v.string()),
   role: v.optional(userRoleOptionsValidator),
@@ -54,7 +53,6 @@ const tables = {
   users: defineTable(userValidator)
     .index("email", ["email"])
     .index("authId", ["authId"])
-    .index("tokenIdentifier", ["tokenIdentifier"])
     .index("plan", ["plan", "creditsResetAt"]),
 };
 
