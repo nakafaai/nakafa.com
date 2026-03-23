@@ -80,6 +80,7 @@ const deleteResultValidator = v.object({
   deleted: v.number(),
 });
 
+/** Delete one exercise question together with its sync-managed dependent rows. */
 async function deleteExerciseQuestion(
   ctx: MutationCtx,
   questionId: Id<"exerciseQuestions">
@@ -89,6 +90,7 @@ async function deleteExerciseQuestion(
   await ctx.db.delete("exerciseQuestions", questionId);
 }
 
+/** Upsert exercise sets from the filesystem sync source. */
 export const bulkSyncExerciseSets = internalMutation({
   args: {
     sets: v.array(syncedExerciseSetValidator),
@@ -163,6 +165,7 @@ export const bulkSyncExerciseSets = internalMutation({
   },
 });
 
+/** Upsert exercise questions, choices, and author links from the filesystem sync source. */
 export const bulkSyncExerciseQuestions = internalMutation({
   args: {
     questions: v.array(syncedExerciseQuestionValidator),
@@ -291,6 +294,7 @@ export const bulkSyncExerciseQuestions = internalMutation({
   },
 });
 
+/** Delete stale exercise sets after their questions have been removed. */
 export const deleteStaleExerciseSets = internalMutation({
   args: {
     setIds: v.array(v.id("exerciseSets")),
@@ -341,6 +345,7 @@ export const deleteStaleExerciseSets = internalMutation({
   },
 });
 
+/** Delete stale exercise questions together with sync-managed dependent rows. */
 export const deleteStaleExerciseQuestions = internalMutation({
   args: {
     questionIds: v.array(v.id("exerciseQuestions")),

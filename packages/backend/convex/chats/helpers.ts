@@ -1,5 +1,9 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import {
+  MAX_CHAT_MESSAGE_PARTS,
+  MAX_CHAT_MESSAGES_PER_MUTATION_DELETE,
+} from "@repo/backend/convex/chats/constants";
 import type { partValidator } from "@repo/backend/convex/chats/schema";
 import type { Infer } from "convex/values";
 import { ConvexError } from "convex/values";
@@ -54,7 +58,14 @@ async function deletePartsForMessage(
   const parts = await ctx.db
     .query("parts")
     .withIndex("messageId_order", (q) => q.eq("messageId", messageId))
-    .collect();
+    .take(MAX_CHAT_MESSAGE_PARTS + 1);
+
+  if (parts.length > MAX_CHAT_MESSAGE_PARTS) {
+    throw new ConvexError({
+      code: "CHAT_MESSAGE_PART_LIMIT_EXCEEDED",
+      message: "Chat message part count exceeds the supported delete limit.",
+    });
+  }
 
   for (const part of parts) {
     await ctx.db.delete("parts", part._id);
@@ -79,7 +90,15 @@ export async function deleteMessagesFromPoint(
     .withIndex("chatId", (q) =>
       q.eq("chatId", chatId).gte("_creationTime", fromCreationTime)
     )
-    .collect();
+    .take(MAX_CHAT_MESSAGES_PER_MUTATION_DELETE + 1);
+
+  if (messages.length > MAX_CHAT_MESSAGES_PER_MUTATION_DELETE) {
+    throw new ConvexError({
+      code: "CHAT_DELETE_LIMIT_EXCEEDED",
+      message:
+        "Chat message delete count exceeds the supported mutation limit.",
+    });
+  }
 
   for (const message of messages) {
     await deletePartsForMessage(ctx, message._id);

@@ -68,6 +68,7 @@ const deleteResultValidator = v.object({
   deleted: v.number(),
 });
 
+/** Delete one subject section together with its sync-managed author links. */
 async function deleteSubjectSection(
   ctx: MutationCtx,
   sectionId: Id<"subjectSections">
@@ -76,6 +77,7 @@ async function deleteSubjectSection(
   await ctx.db.delete("subjectSections", sectionId);
 }
 
+/** Upsert subject topics from the filesystem sync source. */
 export const bulkSyncSubjectTopics = internalMutation({
   args: {
     topics: v.array(syncedSubjectTopicValidator),
@@ -148,6 +150,7 @@ export const bulkSyncSubjectTopics = internalMutation({
   },
 });
 
+/** Upsert subject sections and author links from the filesystem sync source. */
 export const bulkSyncSubjectSections = internalMutation({
   args: {
     sections: v.array(syncedSubjectSectionValidator),
@@ -269,6 +272,7 @@ export const bulkSyncSubjectSections = internalMutation({
   },
 });
 
+/** Delete stale subject topics after their sections have been removed. */
 export const deleteStaleSubjectTopics = internalMutation({
   args: {
     topicIds: v.array(v.id("subjectTopics")),
@@ -319,6 +323,7 @@ export const deleteStaleSubjectTopics = internalMutation({
   },
 });
 
+/** Delete stale subject sections together with sync-managed author links. */
 export const deleteStaleSubjectSections = internalMutation({
   args: {
     sectionIds: v.array(v.id("subjectSections")),

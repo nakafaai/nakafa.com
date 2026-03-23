@@ -1,33 +1,20 @@
-import { type QueryCtx, query } from "@repo/backend/convex/_generated/server";
+import { query } from "@repo/backend/convex/_generated/server";
+import { loadChatMessages } from "@repo/backend/convex/chats/read";
 import {
   chatTypeValidator,
   chatVisibilityValidator,
   messageWithPartsDocValidator,
   paginatedChatsValidator,
 } from "@repo/backend/convex/chats/schema";
-import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
+import {
+  getOptionalAppUserFromIdentity,
+  requireAuth,
+} from "@repo/backend/convex/lib/helpers/auth";
 import { requireChatAccess } from "@repo/backend/convex/lib/helpers/chat";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
-import { asyncMap } from "convex-helpers";
-import { getManyFrom } from "convex-helpers/server/relationships";
 import { nullable } from "convex-helpers/validators";
-
-async function getViewerUserId(ctx: Pick<QueryCtx, "auth" | "db">) {
-  const identity = await ctx.auth.getUserIdentity();
-
-  if (!identity?.subject) {
-    return null;
-  }
-
-  const appUser = await ctx.db
-    .query("users")
-    .withIndex("authId", (q) => q.eq("authId", identity.subject))
-    .unique();
-
-  return appUser?._id ?? null;
-}
 
 /**
  * Get a chat by its ID.
@@ -73,7 +60,8 @@ export const getChats = query({
   returns: paginatedChatsValidator,
   handler: async (ctx, args) => {
     const { userId, q: searchQuery, visibility, type, paginationOpts } = args;
-    const viewerUserId = await getViewerUserId(ctx);
+    const viewer = await getOptionalAppUserFromIdentity(ctx);
+    const viewerUserId = viewer?.appUser._id ?? null;
     const isOwner = viewerUserId === userId;
 
     if (!isOwner && visibility === "private") {
@@ -171,7 +159,8 @@ export const getChatTitle = query({
       return chat.title ?? null;
     }
 
-    const viewerUserId = await getViewerUserId(ctx);
+    const viewer = await getOptionalAppUserFromIdentity(ctx);
+    const viewerUserId = viewer?.appUser._id ?? null;
 
     if (viewerUserId !== chat.userId) {
       return null;
@@ -187,11 +176,8 @@ export const getChatTitle = query({
  * Requires authentication. Public chats are accessible by any logged-in user.
  * Private chats are only accessible by the owner.
  *
- * Returns raw DB documents. Use mapDBMessagesToUIMessages from chats/utils
- * to transform to UI messages on the client side.
- *
- * Note: If you have chats with 100+ messages, consider implementing pagination
- * to avoid loading all messages at once.
+ * Returns a bounded full transcript. Use mapDBMessagesToUIMessages from
+ * chats/utils to transform to UI messages on the client side.
  */
 export const loadMessages = query({
   args: {
@@ -212,26 +198,6 @@ export const loadMessages = query({
     // Use centralized chat access check
     requireChatAccess(chat.userId, user.appUser._id, chat.visibility);
 
-    // Get messages ordered by creation time using index
-    const messages = await getManyFrom(
-      ctx.db,
-      "messages",
-      "chatId",
-      args.chatId
-    );
-
-    // Fetch parts for all messages concurrently using asyncMap
-    const messagesWithParts = await asyncMap(messages, async (message) => {
-      // Get parts ordered by order field using compound index
-      const parts = await ctx.db
-        .query("parts")
-        .withIndex("messageId_order", (q) => q.eq("messageId", message._id))
-        .order("asc")
-        .collect();
-
-      return { ...message, parts };
-    });
-
-    return messagesWithParts;
+    return await loadChatMessages(ctx.db, args.chatId);
   },
 });

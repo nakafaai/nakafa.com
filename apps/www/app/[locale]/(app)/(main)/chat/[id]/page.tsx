@@ -6,6 +6,7 @@ import type { Locale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { cache, use } from "react";
 import { AiChatPage } from "@/components/ai/chat-page";
+import { getToken } from "@/lib/auth/server";
 
 interface Props {
   params: Promise<{
@@ -14,9 +15,15 @@ interface Props {
   }>;
 }
 
-const getChatTitle = cache(async (id: Id<"chats">) =>
-  fetchQuery(api.chats.queries.getChatTitle, { chatId: id })
-);
+const getChatTitle = cache(async (id: Id<"chats">) => {
+  const token = await getToken();
+
+  return await fetchQuery(
+    api.chats.queries.getChatTitle,
+    { chatId: id },
+    token ? { token } : undefined
+  );
+});
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;

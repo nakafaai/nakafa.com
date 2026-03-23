@@ -17,6 +17,38 @@ import { safeGetAppUser } from "@repo/backend/convex/auth";
 import { ConvexError } from "convex/values";
 
 /**
+ * Resolve the current app user from the JWT identity without enforcing auth.
+ * Returns null when no identity is present or no matching app user exists.
+ */
+export async function getOptionalAppUserFromIdentity(
+  ctx: QueryCtx | MutationCtx
+) {
+  const identity = await ctx.auth.getUserIdentity();
+  // In this Better Auth integration, Convex JWT `subject` carries the Better
+  // Auth user ID. We persist that value on `users.authId` and resolve app users
+  // from it for the fast JWT-backed read path.
+  const authId = identity?.subject;
+
+  if (!authId) {
+    return null;
+  }
+
+  const appUser = await ctx.db
+    .query("users")
+    .withIndex("authId", (q) => q.eq("authId", authId))
+    .unique();
+
+  if (!appUser) {
+    return null;
+  }
+
+  return {
+    appUser,
+    identity,
+  };
+}
+
+/**
  * Fast authentication using JWT identity.
  * Reads from JWT directly and resolves the app user by stable auth ID.
  *
@@ -26,30 +58,16 @@ import { ConvexError } from "convex/values";
  * Best for: Read-only queries where speed matters
  */
 export async function requireAuth(ctx: QueryCtx | MutationCtx) {
-  const identity = await ctx.auth.getUserIdentity();
-  // In our Better Auth + Convex setup, JWT `subject` is the Better Auth
-  // `user._id`, which we persist on the app user as `users.authId`.
-  const authId = identity?.subject;
-  if (!authId) {
+  const user = await getOptionalAppUserFromIdentity(ctx);
+
+  if (!user) {
     throw new ConvexError({
       code: "UNAUTHORIZED",
       message: "You must be logged in.",
     });
   }
 
-  const appUser = await ctx.db
-    .query("users")
-    .withIndex("authId", (q) => q.eq("authId", authId))
-    .unique();
-
-  if (!appUser) {
-    throw new ConvexError({
-      code: "UNAUTHORIZED",
-      message: "User not found.",
-    });
-  }
-
-  return { appUser, identity };
+  return user;
 }
 
 /**

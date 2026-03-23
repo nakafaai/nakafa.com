@@ -32,6 +32,7 @@ export interface SyncedExerciseChoice {
   order: number;
 }
 
+/** Load existing authors into a lookup map keyed by author name. */
 export async function buildAuthorCache(
   ctx: MutationCtx,
   authorNames: string[]
@@ -60,6 +61,7 @@ export async function buildAuthorCache(
   return cache;
 }
 
+/** Replace one content item's author links from a preloaded author cache. */
 export async function syncContentAuthorsWithCache(
   ctx: MutationCtx,
   contentId: ContentAuthorContentId,
@@ -115,6 +117,7 @@ export async function syncContentAuthorsWithCache(
   return linksCreated;
 }
 
+/** Replace one article's references within the bounded sync batch limits. */
 export async function replaceArticleReferences(
   ctx: MutationCtx,
   articleId: Id<"articleContents">,
@@ -149,6 +152,7 @@ export async function replaceArticleReferences(
   return created;
 }
 
+/** Replace one question's multiple-choice options within the bounded sync limits. */
 export async function replaceExerciseChoices(
   ctx: MutationCtx,
   args: {
@@ -183,6 +187,7 @@ export async function replaceExerciseChoices(
   return created;
 }
 
+/** Delete all author links for one content item under the sync safety limits. */
 export async function deleteContentAuthorLinks(
   ctx: MutationCtx,
   contentId: ContentAuthorContentId,
@@ -208,6 +213,7 @@ export async function deleteContentAuthorLinks(
   }
 }
 
+/** Delete all references for one article under the sync safety limits. */
 export async function deleteArticleReferencesForArticle(
   ctx: MutationCtx,
   articleId: Id<"articleContents">
@@ -229,6 +235,7 @@ export async function deleteArticleReferencesForArticle(
   }
 }
 
+/** Delete all choices for one question under the sync safety limits. */
 export async function deleteExerciseChoicesForQuestion(
   ctx: MutationCtx,
   questionId: Id<"exerciseQuestions">

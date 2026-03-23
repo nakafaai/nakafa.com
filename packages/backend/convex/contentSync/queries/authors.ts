@@ -11,6 +11,7 @@ const authorSummaryValidator = v.object({
   username: v.string(),
 });
 
+/** Return one paginated page of author summaries for sync tooling. */
 export const listAuthorsPage = internalQuery({
   args: {
     paginationOpts: paginationOptsValidator,

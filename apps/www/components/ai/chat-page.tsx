@@ -1,6 +1,7 @@
 "use client";
 
 import { SquareLock01Icon, UserIcon } from "@hugeicons/core-free-icons";
+import { useDidUpdate } from "@mantine/hooks";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   Empty,
@@ -87,6 +88,14 @@ function AiChatPageUnauthenticated({ chatId }: { chatId: Id<"chats"> }) {
 function AiChatMain() {
   const chat = useCurrentChat((s) => s.chat);
   const messages = useCurrentChat((s) => s.messages);
+
+  useDidUpdate(() => {
+    if (!chat?.title) {
+      return;
+    }
+
+    document.title = chat.title;
+  }, [chat?.title]);
 
   if (!(chat && messages)) {
     return <div className="relative flex size-full flex-col overflow-hidden" />;

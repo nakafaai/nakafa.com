@@ -1,3 +1,4 @@
+import { SCHOOL_CLASS_INVITE_CODE_ROLES } from "@repo/backend/convex/classes/constants";
 import {
   schoolClassImageValidator,
   schoolClassVisibilityValidator,
@@ -17,6 +18,7 @@ import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { generateNanoId } from "@repo/backend/convex/utils/helper";
 import { ConvexError, v } from "convex/values";
 
+/** Create one class and its default teacher/student invite codes. */
 export const createClass = mutation({
   args: {
     schoolId: vv.id("schools"),
@@ -30,25 +32,10 @@ export const createClass = mutation({
     const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
 
-    const schoolMember = await ctx.db
-      .query("schoolMembers")
-      .withIndex("schoolId_userId_status", (q) =>
-        q
-          .eq("schoolId", args.schoolId)
-          .eq("userId", userId)
-          .eq("status", "active")
-      )
-      .first();
-
-    if (
-      !schoolMember ||
-      (schoolMember.role !== "admin" && schoolMember.role !== "teacher")
-    ) {
-      throw new ConvexError({
-        code: "FORBIDDEN",
-        message: "You do not have permission to create classes in this school.",
-      });
-    }
+    await requirePermission(ctx, PERMISSIONS.CLASS_CREATE, {
+      schoolId: args.schoolId,
+      userId,
+    });
 
     const now = Date.now();
 
@@ -77,8 +64,7 @@ export const createClass = mutation({
       addedBy: userId,
     });
 
-    const roles = ["teacher", "student"] as const;
-    for (const role of roles) {
+    for (const role of SCHOOL_CLASS_INVITE_CODE_ROLES) {
       await ctx.db.insert("schoolClassInviteCodes", {
         classId,
         schoolId: args.schoolId,

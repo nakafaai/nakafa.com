@@ -29,6 +29,7 @@ const staleContentItemValidator = v.object({
   slug: v.string(),
 });
 
+/** Return one paginated page of existing content rows for stale-content detection. */
 export const listStaleContentPage = internalQuery({
   args: {
     paginationOpts: paginationOptsValidator,
