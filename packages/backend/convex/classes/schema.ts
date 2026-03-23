@@ -327,6 +327,7 @@ const tables = {
     .index("schoolId", ["schoolId"]),
 
   schoolClassForums: defineTable(schoolClassForumValidator)
+    .index("by_classId_and_lastPostAt", ["classId", "lastPostAt"])
     .index("classId_status_lastPostAt", ["classId", "status", "lastPostAt"])
     .searchIndex("search_title", {
       searchField: "title",
@@ -339,10 +340,9 @@ const tables = {
     emoji: v.string(),
   }).index("forumId_userId_emoji", ["forumId", "userId", "emoji"]),
 
-  schoolClassForumPosts: defineTable(schoolClassForumPostValidator).index(
-    "forumId",
-    ["forumId"]
-  ),
+  schoolClassForumPosts: defineTable(schoolClassForumPostValidator)
+    .index("forumId", ["forumId"])
+    .index("by_forumId_and_createdBy", ["forumId", "createdBy"]),
 
   schoolClassForumPostAttachments: defineTable({
     postId: v.id("schoolClassForumPosts"),

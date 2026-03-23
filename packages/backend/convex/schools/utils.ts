@@ -13,7 +13,7 @@ export async function generateUniqueSlug(
   while (true) {
     const existing = await ctx.db
       .query("schools")
-      .withIndex("slug", (q) => q.eq("slug", slug))
+      .withIndex("by_slug", (q) => q.eq("slug", slug))
       .first();
 
     if (!existing) {

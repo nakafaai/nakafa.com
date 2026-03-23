@@ -44,7 +44,7 @@ async function deletePartsForMessageBatch(
 ) {
   const parts = await ctx.db
     .query("parts")
-    .withIndex("messageId_order", (q) => q.eq("messageId", messageId))
+    .withIndex("by_messageId_and_order", (q) => q.eq("messageId", messageId))
     .take(MAX_CHAT_MESSAGE_PARTS + 1);
 
   for (const part of parts.slice(0, MAX_CHAT_MESSAGE_PARTS)) {
@@ -67,7 +67,7 @@ export async function deleteMessageBatchFromPoint(
 ) {
   const messages = await ctx.db
     .query("messages")
-    .withIndex("chatId", (q) =>
+    .withIndex("by_chatId", (q) =>
       q.eq("chatId", chatId).gte("_creationTime", fromCreationTime)
     )
     .take(CHAT_TRANSCRIPT_REWRITE_MESSAGE_BATCH_SIZE);
@@ -99,7 +99,7 @@ export async function getMessageByIdentifier(
 ) {
   return await ctx.db
     .query("messages")
-    .withIndex("chatId_identifier", (q) =>
+    .withIndex("by_chatId_and_identifier", (q) =>
       q.eq("chatId", chatId).eq("identifier", identifier)
     )
     .unique();

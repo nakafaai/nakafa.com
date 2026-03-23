@@ -20,15 +20,15 @@ const tables = {
     downvoteCount: v.number(),
     replyCount: v.number(),
   })
-    .index("slug", ["slug"])
-    .index("parentId", ["parentId"])
-    .index("userId", ["userId"]),
+    .index("by_slug", ["slug"])
+    .index("by_parentId", ["parentId"])
+    .index("by_userId", ["userId"]),
 
   commentVotes: defineTable({
     commentId: v.id("comments"),
     userId: v.id("users"),
     vote: commentVoteValidator,
-  }).index("commentId_userId", ["commentId", "userId"]),
+  }).index("by_commentId_and_userId", ["commentId", "userId"]),
 };
 
 export default tables;

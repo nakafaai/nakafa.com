@@ -275,20 +275,24 @@ export const paginatedMessagesValidator = paginationResultValidator(
 
 export const tables = {
   chats: defineTable(chatValidator)
-    .index("userId", ["userId"])
-    .index("userId_visibility", ["userId", "visibility"])
-    .index("userId_type", ["userId", "type"])
-    .index("userId_visibility_type", ["userId", "visibility", "type"])
+    .index("by_userId", ["userId"])
+    .index("by_userId_and_visibility", ["userId", "visibility"])
+    .index("by_userId_and_type", ["userId", "type"])
+    .index("by_userId_and_visibility_and_type", [
+      "userId",
+      "visibility",
+      "type",
+    ])
     .searchIndex("search_title", {
       searchField: "title",
       filterFields: ["userId", "visibility", "type"],
     }),
 
   messages: defineTable(messageValidator)
-    .index("chatId", ["chatId"])
-    .index("chatId_identifier", ["chatId", "identifier"]),
+    .index("by_chatId", ["chatId"])
+    .index("by_chatId_and_identifier", ["chatId", "identifier"]),
 
-  parts: defineTable(partValidator).index("messageId_order", [
+  parts: defineTable(partValidator).index("by_messageId_and_order", [
     "messageId",
     "order",
   ]),

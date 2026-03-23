@@ -1,3 +1,5 @@
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   loadForumWithAccess,
   loadOpenForumWithAccess,
@@ -13,7 +15,72 @@ import { truncateText } from "@repo/backend/convex/utils/helper";
 import { ConvexError, type Infer, v } from "convex/values";
 
 const MAX_FORUM_POST_ATTACHMENTS = 10;
+const MAX_FORUM_POST_MENTIONS = 20;
 const MAX_FORUM_REACTION_VARIANTS = 20;
+
+/**
+ * Validates and deduplicates forum mentions.
+ * Only users who can access the forum may be mentioned.
+ */
+async function validateForumMentions(
+  ctx: MutationCtx,
+  {
+    forum,
+    mentionedUserIds,
+  }: {
+    forum: Awaited<ReturnType<typeof loadForumWithAccess>>["forum"];
+    mentionedUserIds: Id<"users">[];
+  }
+) {
+  if (mentionedUserIds.length === 0) {
+    return [];
+  }
+
+  const uniqueMentionedUserIds = [...new Set(mentionedUserIds)];
+
+  if (uniqueMentionedUserIds.length > MAX_FORUM_POST_MENTIONS) {
+    throw new ConvexError({
+      code: "FORUM_MENTION_LIMIT_EXCEEDED",
+      message: "Forum post mention count exceeds the supported limit.",
+    });
+  }
+
+  const accessChecks = await Promise.all(
+    uniqueMentionedUserIds.map(async (mentionedUserId) => {
+      const classMember = await ctx.db
+        .query("schoolClassMembers")
+        .withIndex("classId_userId", (q) =>
+          q.eq("classId", forum.classId).eq("userId", mentionedUserId)
+        )
+        .first();
+
+      if (classMember) {
+        return true;
+      }
+
+      const schoolMember = await ctx.db
+        .query("schoolMembers")
+        .withIndex("by_schoolId_and_userId_and_status", (q) =>
+          q
+            .eq("schoolId", forum.schoolId)
+            .eq("userId", mentionedUserId)
+            .eq("status", "active")
+        )
+        .first();
+
+      return isAdmin(schoolMember);
+    })
+  );
+
+  if (accessChecks.every(Boolean)) {
+    return uniqueMentionedUserIds;
+  }
+
+  throw new ConvexError({
+    code: "INVALID_FORUM_MENTION",
+    message: "Mentions must target users who can access this forum.",
+  });
+}
 
 export const generateUploadUrl = mutation({
   args: {
@@ -115,6 +182,10 @@ export const createForumPost = mutation({
     }
 
     const { forum } = await loadOpenForumWithAccess(ctx, args.forumId, userId);
+    const mentions = await validateForumMentions(ctx, {
+      forum,
+      mentionedUserIds: args.mentions ?? [],
+    });
 
     let replyToUserId: typeof args.parentId extends undefined
       ? undefined
@@ -142,7 +213,7 @@ export const createForumPost = mutation({
       forumId: args.forumId,
       classId: forum.classId,
       body: args.body,
-      mentions: args.mentions ?? [],
+      mentions,
       parentId: args.parentId,
       replyToUserId,
       replyToBody,

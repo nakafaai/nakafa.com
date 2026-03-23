@@ -126,7 +126,7 @@ async function checkPermission(
   if (schoolId) {
     const schoolMember = await ctx.db
       .query("schoolMembers")
-      .withIndex("schoolId_userId_status", (q) =>
+      .withIndex("by_schoolId_and_userId_and_status", (q) =>
         q.eq("schoolId", schoolId).eq("userId", userId).eq("status", "active")
       )
       .unique();

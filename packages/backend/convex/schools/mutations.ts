@@ -30,7 +30,7 @@ export const createSchool = mutation({
     // Check if school with same email already exists
     const existingSchoolByEmail = await ctx.db
       .query("schools")
-      .withIndex("email", (q) => q.eq("email", args.email))
+      .withIndex("by_email", (q) => q.eq("email", args.email))
       .first();
 
     if (existingSchoolByEmail) {
@@ -107,7 +107,7 @@ export const joinSchool = mutation({
     // Find invite code
     const inviteCode = await ctx.db
       .query("schoolInviteCodes")
-      .withIndex("code", (q) => q.eq("code", args.code))
+      .withIndex("by_code", (q) => q.eq("code", args.code))
       .first();
 
     if (!inviteCode) {
@@ -156,7 +156,7 @@ export const joinSchool = mutation({
     // Check if user is already a member
     const existingMember = await ctx.db
       .query("schoolMembers")
-      .withIndex("schoolId_userId_status", (q) =>
+      .withIndex("by_schoolId_and_userId_and_status", (q) =>
         q.eq("schoolId", school._id).eq("userId", userId)
       )
       .first();

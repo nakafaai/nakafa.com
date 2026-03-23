@@ -38,9 +38,9 @@ const tables = {
     customerCancellationReason: v.optional(nullable(v.string())),
     customerCancellationComment: v.optional(nullable(v.string())),
   })
-    .index("id", ["id"])
-    .index("customerId_status", ["customerId", "status"])
-    .index("customerId_status_productId", [
+    .index("by_subscriptionId", ["id"])
+    .index("by_customerId_and_status", ["customerId", "status"])
+    .index("by_customerId_and_status_and_productId", [
       "customerId",
       "status",
       "productId",

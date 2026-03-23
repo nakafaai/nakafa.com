@@ -55,7 +55,7 @@ export const getForums = query({
             .paginate(paginationOpts)
         : await ctx.db
             .query("schoolClassForums")
-            .withIndex("classId_status_lastPostAt", (q) =>
+            .withIndex("by_classId_and_lastPostAt", (q) =>
               q.eq("classId", classId)
             )
             .order("desc")
@@ -94,7 +94,7 @@ export const getForum = query({
       0
     );
 
-    const [, reactions, lastReadAt] = await Promise.all([
+    const [, reactions, myReactionsByForum, lastReadAt] = await Promise.all([
       requireClassAccess(ctx, forum.classId, forum.schoolId, currentUserId),
       reactionPreviewLimit === 0
         ? Promise.resolve([])
@@ -104,22 +104,19 @@ export const getForum = query({
               q.eq("forumId", forum._id)
             )
             .take(reactionPreviewLimit),
+      getMyForumReactions(ctx, [forum._id], currentUserId),
       getForumLastReadAt(ctx, forum._id, currentUserId),
     ]);
 
     const reactorUserIds = reactions.map((r) => r.userId);
     const userMap = await getUserMap(ctx, [forum.createdBy, ...reactorUserIds]);
 
-    const myReactions = reactions
-      .filter((r) => r.userId === currentUserId)
-      .map((r) => r.emoji);
-
     const reactorsByEmoji = buildReactorsByEmoji(reactions, userMap);
 
     return {
       ...forum,
       user: userMap.get(forum.createdBy) ?? null,
-      myReactions,
+      myReactions: myReactionsByForum.get(forum._id) ?? [],
       reactionUsers: forum.reactionCounts.map(({ emoji, count }) => ({
         emoji,
         count,
@@ -190,19 +187,21 @@ export const getForumPostsAround = query({
           q.eq("forumId", forumId).lt("_creationTime", targetTime)
         )
         .order("desc")
-        .take(limit),
+        .take(limit + 1),
       ctx.db
         .query("schoolClassForumPosts")
         .withIndex("forumId", (q) =>
           q.eq("forumId", forumId).gt("_creationTime", targetTime)
         )
         .order("asc")
-        .take(limit),
+        .take(limit + 1),
     ]);
 
-    const allPosts = [...postsBefore.reverse(), targetPost, ...postsAfter];
-    const hasMoreBefore = postsBefore.length === limit;
-    const hasMoreAfter = postsAfter.length === limit;
+    const hasMoreBefore = postsBefore.length > limit;
+    const hasMoreAfter = postsAfter.length > limit;
+    const visiblePostsBefore = postsBefore.slice(0, limit).reverse();
+    const visiblePostsAfter = postsAfter.slice(0, limit);
+    const allPosts = [...visiblePostsBefore, targetPost, ...visiblePostsAfter];
 
     const enrichedPosts = await enrichForumPosts(
       ctx,
@@ -216,7 +215,7 @@ export const getForumPostsAround = query({
 
     return {
       posts: enrichedPosts,
-      targetIndex: postsBefore.length,
+      targetIndex: visiblePostsBefore.length,
       hasMoreBefore,
       hasMoreAfter,
       oldestTime: firstPost?._creationTime ?? targetTime,
@@ -244,10 +243,10 @@ export const getForumPostsOlder = query({
         q.eq("forumId", forumId).lt("_creationTime", beforeTime)
       )
       .order("desc")
-      .take(limit);
+      .take(limit + 1);
 
-    const hasMore = posts.length === limit;
-    const orderedPosts = [...posts].reverse();
+    const hasMore = posts.length > limit;
+    const orderedPosts = [...posts.slice(0, limit)].reverse();
 
     const enrichedPosts = await enrichForumPosts(
       ctx,
@@ -282,13 +281,18 @@ export const getForumPostsNewer = query({
         q.eq("forumId", forumId).gt("_creationTime", afterTime)
       )
       .order("asc")
-      .take(limit);
+      .take(limit + 1);
 
-    const hasMore = posts.length === limit;
-    const enrichedPosts = await enrichForumPosts(ctx, posts, user.appUser._id);
+    const hasMore = posts.length > limit;
+    const visiblePosts = posts.slice(0, limit);
+    const enrichedPosts = await enrichForumPosts(
+      ctx,
+      visiblePosts,
+      user.appUser._id
+    );
 
-    const lastIdx = posts.length - 1;
-    const newestPost = lastIdx >= 0 ? posts[lastIdx] : undefined;
+    const lastIdx = visiblePosts.length - 1;
+    const newestPost = lastIdx >= 0 ? visiblePosts[lastIdx] : undefined;
 
     return {
       posts: enrichedPosts,

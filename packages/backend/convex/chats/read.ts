@@ -17,7 +17,9 @@ export async function hydrateMessagePage(
   return await asyncMap(messages, async (message) => {
     const parts = await db
       .query("parts")
-      .withIndex("messageId_order", (q) => q.eq("messageId", message._id))
+      .withIndex("by_messageId_and_order", (q) =>
+        q.eq("messageId", message._id)
+      )
       .order("asc")
       .take(MAX_CHAT_MESSAGE_PARTS + 1);
 

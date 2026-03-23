@@ -141,7 +141,7 @@ async function syncCustomerPlan(
 
   const activeSubscriptions = await ctx.db
     .query("subscriptions")
-    .withIndex("customerId_status", (q) =>
+    .withIndex("by_customerId_and_status", (q) =>
       q.eq("customerId", subscription.customerId).eq("status", "active")
     )
     .take(MAX_ACTIVE_SUBSCRIPTIONS_PER_CUSTOMER);

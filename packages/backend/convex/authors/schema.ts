@@ -36,7 +36,7 @@ const tables = {
    * @example
    * // Get authors for an article
    * const links = await ctx.db.query("contentAuthors")
-   *   .withIndex("contentId_contentType", q =>
+   *   .withIndex("contentId_contentType_authorId", q =>
    *     q.eq("contentId", article._id).eq("contentType", "article")
    *   ).collect();
    */

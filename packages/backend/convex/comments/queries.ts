@@ -28,7 +28,7 @@ export const getCommentsBySlug = query({
   handler: async (ctx, args) => {
     const comments = await ctx.db
       .query("comments")
-      .withIndex("slug", (q) => q.eq("slug", cleanSlug(args.slug)))
+      .withIndex("by_slug", (q) => q.eq("slug", cleanSlug(args.slug)))
       .order("desc")
       .paginate(args.paginationOpts);
 
@@ -59,7 +59,7 @@ export const getCommentsByUserId = query({
   handler: async (ctx, args) =>
     ctx.db
       .query("comments")
-      .withIndex("userId", (q) => q.eq("userId", args.userId))
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
       .order("desc")
       .paginate(args.paginationOpts),
 });

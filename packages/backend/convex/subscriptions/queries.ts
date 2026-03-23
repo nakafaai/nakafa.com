@@ -21,7 +21,7 @@ export const hasActiveSubscription = query({
 
     const subscription = await ctx.db
       .query("subscriptions")
-      .withIndex("customerId_status_productId", (q) =>
+      .withIndex("by_customerId_and_status_and_productId", (q) =>
         q
           .eq("customerId", customer.id)
           .eq("status", "active")

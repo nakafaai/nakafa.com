@@ -15,7 +15,9 @@ export const cleanupDeletedComment = internalMutation({
   handler: async (ctx, args) => {
     const votes = await ctx.db
       .query("commentVotes")
-      .withIndex("commentId_userId", (q) => q.eq("commentId", args.commentId))
+      .withIndex("by_commentId_and_userId", (q) =>
+        q.eq("commentId", args.commentId)
+      )
       .take(COMMENT_VOTE_CLEANUP_BATCH_SIZE);
 
     for (const vote of votes) {
@@ -34,7 +36,7 @@ export const cleanupDeletedComment = internalMutation({
 
     const replies = await ctx.db
       .query("comments")
-      .withIndex("parentId", (q) => q.eq("parentId", args.commentId))
+      .withIndex("by_parentId", (q) => q.eq("parentId", args.commentId))
       .take(COMMENT_REPLY_CLEANUP_BATCH_SIZE);
 
     for (const reply of replies) {

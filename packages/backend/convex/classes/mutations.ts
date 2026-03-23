@@ -144,7 +144,7 @@ export const joinClass = mutation({
 
     const schoolMember = await ctx.db
       .query("schoolMembers")
-      .withIndex("schoolId_userId_status", (q) =>
+      .withIndex("by_schoolId_and_userId_and_status", (q) =>
         q
           .eq("schoolId", classData.schoolId)
           .eq("userId", userId)
@@ -248,7 +248,7 @@ export const joinPublicClass = mutation({
 
     const schoolMember = await ctx.db
       .query("schoolMembers")
-      .withIndex("schoolId_userId_status", (q) =>
+      .withIndex("by_schoolId_and_userId_and_status", (q) =>
         q
           .eq("schoolId", classData.schoolId)
           .eq("userId", userId)

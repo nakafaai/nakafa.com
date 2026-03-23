@@ -51,7 +51,7 @@ export const getSchoolInfoBySlug = query({
   handler: async (ctx, args) => {
     const school = await ctx.db
       .query("schools")
-      .withIndex("slug", (q) => q.eq("slug", args.slug))
+      .withIndex("by_slug", (q) => q.eq("slug", args.slug))
       .first();
 
     if (!school) {
@@ -80,7 +80,7 @@ export const getSchoolBySlug = query({
 
     const school = await ctx.db
       .query("schools")
-      .withIndex("slug", (q) => q.eq("slug", args.slug))
+      .withIndex("by_slug", (q) => q.eq("slug", args.slug))
       .first();
 
     if (!school) {
@@ -92,7 +92,7 @@ export const getSchoolBySlug = query({
 
     const membership = await ctx.db
       .query("schoolMembers")
-      .withIndex("schoolId_userId_status", (q) =>
+      .withIndex("by_schoolId_and_userId_and_status", (q) =>
         q
           .eq("schoolId", school._id)
           .eq("userId", user.appUser._id)
@@ -124,7 +124,7 @@ export const getSchoolMemberships = query({
     // Use the new userId_status index instead of filter
     const memberships = await ctx.db
       .query("schoolMembers")
-      .withIndex("userId_status", (q) =>
+      .withIndex("by_userId_and_status", (q) =>
         q.eq("userId", user.appUser._id).eq("status", "active")
       )
       .take(MAX_ACTIVE_SCHOOL_MEMBERSHIPS + 1);
@@ -149,7 +149,7 @@ export const getMySchools = query({
     // Get all active memberships using userId_status index
     const memberships = await ctx.db
       .query("schoolMembers")
-      .withIndex("userId_status", (q) =>
+      .withIndex("by_userId_and_status", (q) =>
         q.eq("userId", user.appUser._id).eq("status", "active")
       )
       .take(MAX_ACTIVE_SCHOOL_MEMBERSHIPS + 1);

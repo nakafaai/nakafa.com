@@ -99,7 +99,7 @@ export const getChats = query({
     if (effectiveVisibility && type) {
       return await ctx.db
         .query("chats")
-        .withIndex("userId_visibility_type", (q) =>
+        .withIndex("by_userId_and_visibility_and_type", (q) =>
           q
             .eq("userId", userId)
             .eq("visibility", effectiveVisibility)
@@ -112,7 +112,7 @@ export const getChats = query({
     if (type) {
       return await ctx.db
         .query("chats")
-        .withIndex("userId_type", (q) =>
+        .withIndex("by_userId_and_type", (q) =>
           q.eq("userId", userId).eq("type", type)
         )
         .order("desc")
@@ -122,7 +122,7 @@ export const getChats = query({
     if (effectiveVisibility) {
       return await ctx.db
         .query("chats")
-        .withIndex("userId_visibility", (q) =>
+        .withIndex("by_userId_and_visibility", (q) =>
           q.eq("userId", userId).eq("visibility", effectiveVisibility)
         )
         .order("desc")
@@ -131,7 +131,7 @@ export const getChats = query({
 
     return await ctx.db
       .query("chats")
-      .withIndex("userId", (q) => q.eq("userId", userId))
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
       .order("desc")
       .paginate(paginationOpts);
   },
@@ -193,7 +193,7 @@ export const loadMessagesPage = query({
 
     const page = await ctx.db
       .query("messages")
-      .withIndex("chatId", (q) => q.eq("chatId", args.chatId))
+      .withIndex("by_chatId", (q) => q.eq("chatId", args.chatId))
       .order("desc")
       .paginate(args.paginationOpts);
 

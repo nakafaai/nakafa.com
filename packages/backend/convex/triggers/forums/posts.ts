@@ -6,6 +6,135 @@ import type { GenericMutationCtx } from "convex/server";
 import type { Change } from "convex-helpers/server/triggers";
 
 /**
+ * Updates forum counters and last-post metadata after inserting one post.
+ */
+async function updateForumAfterInsert(
+  ctx: GenericMutationCtx<DataModel>,
+  post: NonNullable<Change<DataModel, "schoolClassForumPosts">["newDoc"]>
+) {
+  const forum = await ctx.db.get("schoolClassForums", post.forumId);
+
+  if (!forum) {
+    return null;
+  }
+
+  const authorPosts = await ctx.db
+    .query("schoolClassForumPosts")
+    .withIndex("by_forumId_and_createdBy", (q) =>
+      q.eq("forumId", post.forumId).eq("createdBy", post.createdBy)
+    )
+    .take(2);
+
+  const participantCount =
+    authorPosts.length === 1 && post.createdBy !== forum.createdBy
+      ? forum.participantCount + 1
+      : forum.participantCount;
+
+  await ctx.db.patch("schoolClassForums", post.forumId, {
+    postCount: forum.postCount + 1,
+    participantCount,
+    lastPostAt: post._creationTime,
+    lastPostBy: post.createdBy,
+    updatedAt: Date.now(),
+  });
+
+  return forum;
+}
+
+/**
+ * Updates forum counters and last-post metadata after deleting one post.
+ */
+async function updateForumAfterDelete(
+  ctx: GenericMutationCtx<DataModel>,
+  oldPost: NonNullable<Change<DataModel, "schoolClassForumPosts">["oldDoc"]>
+) {
+  const forum = await ctx.db.get("schoolClassForums", oldPost.forumId);
+
+  if (!forum) {
+    return;
+  }
+
+  const latestRemainingPost = await ctx.db
+    .query("schoolClassForumPosts")
+    .withIndex("forumId", (q) => q.eq("forumId", oldPost.forumId))
+    .order("desc")
+    .first();
+
+  const authorPosts = await ctx.db
+    .query("schoolClassForumPosts")
+    .withIndex("by_forumId_and_createdBy", (q) =>
+      q.eq("forumId", oldPost.forumId).eq("createdBy", oldPost.createdBy)
+    )
+    .take(1);
+
+  const participantCount =
+    authorPosts.length === 0 && oldPost.createdBy !== forum.createdBy
+      ? Math.max(forum.participantCount - 1, 1)
+      : forum.participantCount;
+
+  await ctx.db.patch("schoolClassForums", oldPost.forumId, {
+    postCount: Math.max(forum.postCount - 1, 0),
+    participantCount,
+    lastPostAt: latestRemainingPost?._creationTime ?? forum._creationTime,
+    lastPostBy: latestRemainingPost?.createdBy ?? forum.createdBy,
+    updatedAt: Date.now(),
+  });
+}
+
+/**
+ * Sends reply and mention notifications for one newly inserted forum post.
+ */
+async function notifyForumPostParticipants(
+  ctx: GenericMutationCtx<DataModel>,
+  {
+    forum,
+    post,
+    postId,
+  }: {
+    forum: NonNullable<Awaited<ReturnType<typeof updateForumAfterInsert>>>;
+    post: NonNullable<Change<DataModel, "schoolClassForumPosts">["newDoc"]>;
+    postId: Change<DataModel, "schoolClassForumPosts">["id"];
+  }
+) {
+  const truncatedBody = truncateText({ text: post.body });
+
+  if (
+    post.parentId &&
+    post.replyToUserId &&
+    post.replyToUserId !== post.createdBy
+  ) {
+    await createNotification(ctx, {
+      recipientId: post.replyToUserId,
+      actorId: post.createdBy,
+      type: "post_reply",
+      entityType: "schoolClassForumPosts",
+      entityId: postId,
+      previewTitle: forum.title,
+      previewBody: truncatedBody,
+    });
+  }
+
+  for (const mentionedUserId of post.mentions) {
+    if (
+      mentionedUserId === post.createdBy ||
+      mentionedUserId === post.replyToUserId
+    ) {
+      continue;
+    }
+
+    await createNotification(ctx, {
+      recipientId: mentionedUserId,
+      actorId: post.createdBy,
+      type: "post_mention",
+      entityType: "schoolClassForumPosts",
+      entityId: postId,
+      previewTitle: forum.title,
+      previewBody: truncatedBody,
+    });
+  }
+}
+
+/**
  * Trigger handler for schoolClassForumPosts table changes.
  *
  * Manages forum post lifecycle with comprehensive side effects:
@@ -30,15 +159,8 @@ export async function forumPostsHandler(
         break;
       }
 
-      const forum = await ctx.db.get("schoolClassForums", post.forumId);
+      const forum = await updateForumAfterInsert(ctx, post);
       if (forum) {
-        await ctx.db.patch("schoolClassForums", post.forumId, {
-          postCount: forum.postCount + 1,
-          lastPostAt: post._creationTime,
-          lastPostBy: post.createdBy,
-          updatedAt: Date.now(),
-        });
-
         await updateForumReadState(ctx, {
           forumId: post.forumId,
           classId: post.classId,
@@ -46,42 +168,11 @@ export async function forumPostsHandler(
           lastReadAt: post._creationTime,
         });
 
-        const truncatedBody = truncateText({ text: post.body });
-
-        if (
-          post.parentId &&
-          post.replyToUserId &&
-          post.replyToUserId !== post.createdBy
-        ) {
-          await createNotification(ctx, {
-            recipientId: post.replyToUserId,
-            actorId: post.createdBy,
-            type: "post_reply",
-            entityType: "schoolClassForumPosts",
-            entityId: change.id,
-            previewTitle: forum.title,
-            previewBody: truncatedBody,
-          });
-        }
-
-        if (post.mentions.length > 0) {
-          for (const mentionedUserId of post.mentions) {
-            if (
-              mentionedUserId !== post.createdBy &&
-              mentionedUserId !== post.replyToUserId
-            ) {
-              await createNotification(ctx, {
-                recipientId: mentionedUserId,
-                actorId: post.createdBy,
-                type: "post_mention",
-                entityType: "schoolClassForumPosts",
-                entityId: change.id,
-                previewTitle: forum.title,
-                previewBody: truncatedBody,
-              });
-            }
-          }
-        }
+        await notifyForumPostParticipants(ctx, {
+          forum,
+          post,
+          postId: change.id,
+        });
       }
 
       if (post.parentId) {
@@ -104,13 +195,7 @@ export async function forumPostsHandler(
         break;
       }
 
-      const forum = await ctx.db.get("schoolClassForums", oldPost.forumId);
-      if (forum) {
-        await ctx.db.patch("schoolClassForums", oldPost.forumId, {
-          postCount: Math.max(forum.postCount - 1, 0),
-          updatedAt: Date.now(),
-        });
-      }
+      await updateForumAfterDelete(ctx, oldPost);
 
       if (oldPost.parentId) {
         const parentPost = await ctx.db.get(

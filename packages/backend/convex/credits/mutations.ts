@@ -125,7 +125,7 @@ export const claimQueueItems = internalMutation({
   handler: async (ctx, args) => {
     const pendingItems = await ctx.db
       .query("creditResetQueue")
-      .withIndex("planStatusTimestamp", (idx) =>
+      .withIndex("by_plan_and_status_and_resetTimestamp", (idx) =>
         idx
           .eq("plan", args.plan)
           .eq("status", "pending")
@@ -312,7 +312,7 @@ export const cleanupOldQueueItems = internalMutation({
     // Query and delete old completed items
     const oldCompletedItems = await ctx.db
       .query("creditResetQueue")
-      .withIndex("status", (idx) =>
+      .withIndex("by_status", (idx) =>
         idx.eq("status", "completed").lt("_creationTime", CUTOFF)
       )
       .take(CLEANUP_CONFIG.batchSize);
@@ -324,7 +324,7 @@ export const cleanupOldQueueItems = internalMutation({
     // Query and delete old failed items
     const oldFailedItems = await ctx.db
       .query("creditResetQueue")
-      .withIndex("status", (idx) =>
+      .withIndex("by_status", (idx) =>
         idx.eq("status", "failed").lt("_creationTime", CUTOFF)
       )
       .take(CLEANUP_CONFIG.batchSize);
