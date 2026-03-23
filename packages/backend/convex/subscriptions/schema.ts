@@ -19,7 +19,7 @@ const tables = {
   subscriptions: defineTable({
     id: v.string(),
     customerId: v.string(),
-    schoolId: v.optional(v.id("schools")),
+    schoolId: v.optional(v.string()),
     createdAt: v.string(),
     modifiedAt: nullable(v.string()),
     amount: nullable(v.number()),
@@ -39,7 +39,12 @@ const tables = {
     customerCancellationComment: v.optional(nullable(v.string())),
   })
     .index("id", ["id"])
-    .index("customerId_status", ["customerId", "status"]),
+    .index("customerId_status", ["customerId", "status"])
+    .index("customerId_status_productId", [
+      "customerId",
+      "status",
+      "productId",
+    ]),
 };
 
 export default tables;

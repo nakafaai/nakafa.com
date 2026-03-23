@@ -5,7 +5,6 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect } from "react";
 import { authClient } from "@/lib/auth/client";
 import { useAi } from "@/lib/context/use-ai";
 import { useUser } from "@/lib/context/use-user";
@@ -38,12 +37,13 @@ export function AskCta({ title }: Props) {
     router.push("/chat");
   };
 
-  useEffect(() => {
-    router.prefetch("/chat");
-  }, [router]);
-
   return (
-    <Button onClick={handleAsk}>
+    <Button
+      onClick={handleAsk}
+      onMouseEnter={() => {
+        router.prefetch("/chat");
+      }}
+    >
       <HugeIcons icon={StarsIcon} />
       {t("ask-ai")}
     </Button>

@@ -14,10 +14,8 @@ import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary"
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Unauthenticated } from "convex/react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useEffectEvent, useRef } from "react";
 import { AuthGoogle } from "@/components/auth/google";
-import { useAi } from "@/lib/context/use-ai";
-import { ChatProvider, useChat } from "@/lib/context/use-chat";
+import { ChatProvider } from "@/lib/context/use-chat";
 import { AiChat } from "./chat";
 import { CurrentChatProvider, useCurrentChat } from "./chat-provider";
 
@@ -67,37 +65,16 @@ function AiChatMain() {
   }
 
   return (
-    <ChatProvider chatId={chat._id} initialMessages={messages}>
+    <ChatProvider
+      chatId={chat._id}
+      initialMessages={messages}
+      pendingQueryOwner="page"
+    >
       <AiChatPageContent />
     </ChatProvider>
   );
 }
 
 function AiChatPageContent() {
-  const query = useAi((state) => state.query);
-  const setQuery = useAi((state) => state.setQuery);
-  const setText = useAi((state) => state.setText);
-
-  const sendMessage = useChat((state) => state.chat.sendMessage);
-
-  const lastProcessedQuery = useRef<string | null>(null);
-
-  const handleClearQuery = useCallback(() => {
-    setQuery("");
-    setText("");
-  }, [setQuery, setText]);
-
-  const handleQuery = useEffectEvent((text: string) => {
-    sendMessage({ text });
-    handleClearQuery();
-  });
-
-  useEffect(() => {
-    if (query && query !== lastProcessedQuery.current) {
-      lastProcessedQuery.current = query;
-      handleQuery(query);
-    }
-  }, [query]);
-
   return <AiChat />;
 }

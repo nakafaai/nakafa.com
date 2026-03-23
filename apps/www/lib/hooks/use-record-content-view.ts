@@ -42,6 +42,7 @@ export function useRecordContentView({
 
   const documentState = useDocumentVisibility();
   const isVisible = documentState === "visible";
+  const viewKey = `${contentView.type}:${locale}:${contentView.slug}`;
 
   const [deviceId] = useLocalStorage({
     key: "nakafa-device-id",
@@ -56,7 +57,7 @@ export function useRecordContentView({
           locale,
           deviceId,
         });
-        markAsViewed(contentView.slug);
+        markAsViewed(viewKey);
       } catch {
         // View tracking is non-critical
       }
@@ -66,7 +67,7 @@ export function useRecordContentView({
   );
 
   useEffect(() => {
-    if (isViewed(contentView.slug)) {
+    if (isViewed(viewKey)) {
       clear();
       return;
     }
@@ -80,5 +81,5 @@ export function useRecordContentView({
     return () => {
       clear();
     };
-  }, [isVisible, isViewed, contentView.slug, start, clear]);
+  }, [clear, isVisible, isViewed, start, viewKey]);
 }

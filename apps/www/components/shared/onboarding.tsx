@@ -66,8 +66,7 @@ function OnboardingContent({ user }: { user: AppUser }) {
     });
   };
 
-  // Dialog stays open until user has a role
-  const open = !user.appUser.role;
+  const open = !roles.some((role) => role.value === user.appUser.role);
 
   return (
     <Dialog open={open}>

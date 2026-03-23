@@ -13,6 +13,7 @@ const tryoutScaleIntegrityItemValidator = v.object({
 
 type TryoutScaleIntegrityItem = Infer<typeof tryoutScaleIntegrityItemValidator>;
 
+/** Return active tryouts that still do not have a published frozen scale. */
 export const getTryoutScaleIntegrity = internalQuery({
   args: {},
   returns: v.object({

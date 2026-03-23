@@ -35,17 +35,9 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect } from "react";
 import { authClient } from "@/lib/auth/client";
 import { useUser } from "@/lib/context/use-user";
 import { getInitialName } from "@/lib/utils/helper";
-
-const prefetchLinks = [
-  "/auth",
-  "/terms-of-service",
-  "/privacy-policy",
-  "/user/settings",
-] as const;
 
 /**
  * Renders the signed-in user menu and the guest login shortcut in the sidebar.
@@ -65,12 +57,6 @@ export function NavUser() {
     await authClient.signOut();
     router.push(`/auth?redirect=${pathname}`);
   }
-
-  useEffect(() => {
-    for (const link of prefetchLinks) {
-      router.prefetch(link);
-    }
-  }, [router]);
 
   if (!user) {
     return (

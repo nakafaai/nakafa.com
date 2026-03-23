@@ -21,11 +21,14 @@ export const hasActiveSubscription = query({
 
     const subscription = await ctx.db
       .query("subscriptions")
-      .withIndex("customerId_status", (q) =>
-        q.eq("customerId", customer.id).eq("status", "active")
+      .withIndex("customerId_status_productId", (q) =>
+        q
+          .eq("customerId", customer.id)
+          .eq("status", "active")
+          .eq("productId", args.productId)
       )
       .first();
 
-    return subscription?.productId === args.productId;
+    return subscription !== null;
   },
 });

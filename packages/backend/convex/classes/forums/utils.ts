@@ -8,6 +8,20 @@ import { getUserMap } from "@repo/backend/convex/lib/helpers/user";
 import { ConvexError } from "convex/values";
 import { asyncMap } from "convex-helpers";
 
+const FORUM_REACTION_PREVIEW_LIMIT = 10;
+const FORUM_REACTION_PREVIEW_BATCH_LIMIT = 20;
+const FORUM_ATTACHMENT_LIMIT = 10;
+
+function getReactionPreviewBatchLimit(
+  reactionCounts: Array<{ count: number }>
+) {
+  return reactionCounts.reduce(
+    (total, reactionCount) =>
+      total + Math.min(reactionCount.count, FORUM_REACTION_PREVIEW_LIMIT),
+    0
+  );
+}
+
 /**
  * Batch fetch user data for forum creators.
  * Returns a Map for O(1) lookup by userId.
@@ -48,24 +62,19 @@ export async function getForumLastReadAt(
  */
 export async function getForumUnreadCounts(
   ctx: QueryCtx,
-  classId: Id<"schoolClasses">,
   userId: Id<"users">,
   forums: Array<{ _id: Id<"schoolClassForums">; lastPostAt: number }>
 ): Promise<Map<Id<"schoolClassForums">, number>> {
   const MAX_COUNT = 26;
 
-  const readStates = await ctx.db
-    .query("schoolClassForumReadStates")
-    .withIndex("classId_userId", (q) =>
-      q.eq("classId", classId).eq("userId", userId)
-    )
-    .collect();
-  const readStateMap = new Map(
-    readStates.map((rs) => [rs.forumId, rs.lastReadAt])
-  );
-
   const counts = await asyncMap(forums, async (forum) => {
-    const lastReadAt = readStateMap.get(forum._id) ?? 0;
+    const readState = await ctx.db
+      .query("schoolClassForumReadStates")
+      .withIndex("forumId_userId", (q) =>
+        q.eq("forumId", forum._id).eq("userId", userId)
+      )
+      .unique();
+    const lastReadAt = readState?.lastReadAt ?? 0;
 
     if (forum.lastPostAt <= lastReadAt) {
       return { forumId: forum._id, count: 0 };
@@ -99,7 +108,7 @@ export async function getMyForumReactions(
       .withIndex("forumId_userId_emoji", (q) =>
         q.eq("forumId", forumId).eq("userId", userId)
       )
-      .collect()
+      .take(FORUM_REACTION_PREVIEW_BATCH_LIMIT)
   );
 
   return new Map(
@@ -122,7 +131,7 @@ async function getMyPostReactions(
       .withIndex("postId_userId_emoji", (q) =>
         q.eq("postId", postId).eq("userId", userId)
       )
-      .collect()
+      .take(FORUM_REACTION_PREVIEW_BATCH_LIMIT)
   );
 
   return new Map(
@@ -265,20 +274,39 @@ export async function enrichForumPosts(
   );
 
   const [allReactions, myReactionsMap, allAttachments] = await Promise.all([
-    asyncMap(postIds, (postId) =>
-      ctx.db
+    asyncMap(posts, (post) => {
+      const reactionPreviewLimit = getReactionPreviewBatchLimit(
+        post.reactionCounts
+      );
+
+      if (reactionPreviewLimit === 0) {
+        return Promise.resolve([]);
+      }
+
+      return ctx.db
         .query("schoolClassForumPostReactions")
-        .withIndex("postId_userId_emoji", (idx) => idx.eq("postId", postId))
-        .collect()
-    ),
+        .withIndex("postId_userId_emoji", (idx) => idx.eq("postId", post._id))
+        .take(reactionPreviewLimit);
+    }),
     getMyPostReactions(ctx, postIds, currentUserId),
     asyncMap(postIds, (postId) =>
       ctx.db
         .query("schoolClassForumPostAttachments")
         .withIndex("postId", (idx) => idx.eq("postId", postId))
-        .collect()
+        .take(FORUM_ATTACHMENT_LIMIT + 1)
     ),
   ]);
+
+  for (const attachments of allAttachments) {
+    if (attachments.length <= FORUM_ATTACHMENT_LIMIT) {
+      continue;
+    }
+
+    throw new ConvexError({
+      code: "FORUM_ATTACHMENT_LIMIT_EXCEEDED",
+      message: "Forum post attachment count exceeds the supported limit.",
+    });
+  }
 
   const reactorUserIds = allReactions.flat().map((r) => r.userId);
   const flatAttachments = allAttachments.flat();

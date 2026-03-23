@@ -16,29 +16,52 @@ import type {
 import { safeGetAppUser } from "@repo/backend/convex/auth";
 import { ConvexError } from "convex/values";
 
-/**
- * Resolve the current app user from the JWT identity without enforcing auth.
- * Returns null when no identity is present or no matching app user exists.
- */
-export async function getOptionalAppUserFromIdentity(
-  ctx: QueryCtx | MutationCtx
+async function getUserByIdentity(
+  ctx: QueryCtx,
+  args: {
+    authId: string | null | undefined;
+    tokenIdentifier: string | null | undefined;
+  }
 ) {
-  const identity = await ctx.auth.getUserIdentity();
-  // In this Better Auth integration, Convex JWT `subject` carries the Better
-  // Auth user ID. We persist that value on `users.authId` and resolve app users
-  // from it for the fast JWT-backed read path.
-  const authId = identity?.subject;
+  const tokenIdentifier = args.tokenIdentifier ?? undefined;
+
+  if (tokenIdentifier) {
+    const userByTokenIdentifier = await ctx.db
+      .query("users")
+      .withIndex("tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", tokenIdentifier)
+      )
+      .unique();
+
+    if (userByTokenIdentifier) {
+      return userByTokenIdentifier;
+    }
+  }
+
+  const authId = args.authId ?? undefined;
 
   if (!authId) {
     return null;
   }
 
-  const appUser = await ctx.db
+  return await ctx.db
     .query("users")
     .withIndex("authId", (q) => q.eq("authId", authId))
     .unique();
+}
 
-  if (!appUser) {
+/**
+ * Resolve the current app user from the JWT identity without enforcing auth.
+ * Returns null when no identity is present or no matching app user exists.
+ */
+export async function getOptionalAppUserFromIdentity(ctx: QueryCtx) {
+  const identity = await ctx.auth.getUserIdentity();
+  const appUser = await getUserByIdentity(ctx, {
+    authId: identity?.subject,
+    tokenIdentifier: identity?.tokenIdentifier,
+  });
+
+  if (!(appUser && identity)) {
     return null;
   }
 
@@ -57,7 +80,7 @@ export async function getOptionalAppUserFromIdentity(
  *
  * Best for: Read-only queries where speed matters
  */
-export async function requireAuth(ctx: QueryCtx | MutationCtx) {
+export async function requireAuth(ctx: QueryCtx) {
   const user = await getOptionalAppUserFromIdentity(ctx);
 
   if (!user) {
@@ -79,14 +102,35 @@ export async function requireAuth(ctx: QueryCtx | MutationCtx) {
  *
  * Best for: Mutations, sensitive operations, security-critical paths
  */
-export async function requireAuthWithSession(ctx: QueryCtx | MutationCtx) {
+export async function requireAuthWithSession(ctx: MutationCtx) {
   const user = await safeGetAppUser(ctx);
+
   if (!user) {
     throw new ConvexError({
       code: "UNAUTHORIZED",
       message: "You must be logged in.",
     });
   }
+
+  const identity = await ctx.auth.getUserIdentity();
+
+  if (
+    identity?.tokenIdentifier &&
+    user.appUser.tokenIdentifier !== identity.tokenIdentifier
+  ) {
+    await ctx.db.patch("users", user.appUser._id, {
+      tokenIdentifier: identity.tokenIdentifier,
+    });
+
+    return {
+      ...user,
+      appUser: {
+        ...user.appUser,
+        tokenIdentifier: identity.tokenIdentifier,
+      },
+    };
+  }
+
   return user;
 }
 
@@ -95,23 +139,34 @@ export async function requireAuthWithSession(ctx: QueryCtx | MutationCtx) {
  */
 export async function requireAuthForAction(ctx: ActionCtx) {
   const identity = await ctx.auth.getUserIdentity();
-  if (!identity?.subject) {
+
+  if (!(identity?.tokenIdentifier || identity?.subject)) {
     throw new ConvexError({
       code: "UNAUTHORIZED",
       message: "You must be logged in.",
     });
   }
 
-  const appUser = await ctx.runQuery(internal.users.queries.getUserByAuthId, {
-    authId: identity.subject,
-  });
+  const appUser = identity.tokenIdentifier
+    ? await ctx.runQuery(internal.users.queries.getUserByTokenIdentifier, {
+        tokenIdentifier: identity.tokenIdentifier,
+      })
+    : null;
 
-  if (!appUser) {
+  const fallbackUser =
+    appUser ??
+    (identity.subject
+      ? await ctx.runQuery(internal.users.queries.getUserByAuthId, {
+          authId: identity.subject,
+        })
+      : null);
+
+  if (!fallbackUser) {
     throw new ConvexError({
       code: "UNAUTHORIZED",
       message: "User not found.",
     });
   }
 
-  return { appUser, identity };
+  return { appUser: fallbackUser, identity };
 }

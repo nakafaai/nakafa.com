@@ -10,8 +10,7 @@ import {
   tryoutProductValidator,
 } from "@repo/backend/convex/tryouts/products";
 import type { TryoutPartKey } from "@repo/backend/convex/tryouts/schema";
-import { v } from "convex/values";
-import { getManyFrom } from "convex-helpers/server/relationships";
+import { ConvexError, v } from "convex/values";
 
 const syncTryoutsResultValidator = v.object({
   created: v.number(),
@@ -29,13 +28,41 @@ async function syncTryoutPartSetMappings(
     tryoutId: Id<"tryouts">;
   }
 ) {
-  const existingMappings = await getManyFrom(
-    ctx.db,
-    "tryoutPartSets",
-    "tryoutId_partIndex",
-    args.tryoutId,
-    "tryoutId"
-  );
+  const tryout = await ctx.db.get("tryouts", args.tryoutId);
+  const expectedPartCount = Math.max(args.parts.length, tryout?.partCount ?? 0);
+  const existingMappings = await ctx.db
+    .query("tryoutPartSets")
+    .withIndex("tryoutId_partIndex", (q) => q.eq("tryoutId", args.tryoutId))
+    .take(expectedPartCount + 1);
+
+  if (existingMappings.length > expectedPartCount) {
+    throw new ConvexError({
+      code: "TRYOUT_PART_SET_COUNT_EXCEEDED",
+      message: "Tryout part set mapping count exceeds detected tryout parts.",
+    });
+  }
+
+  const mappingsByPartIndex = new Map<
+    number,
+    (typeof existingMappings)[number]
+  >();
+
+  for (const mapping of existingMappings) {
+    if (!args.parts[mapping.partIndex]) {
+      continue;
+    }
+
+    if (!mappingsByPartIndex.has(mapping.partIndex)) {
+      mappingsByPartIndex.set(mapping.partIndex, mapping);
+      continue;
+    }
+
+    throw new ConvexError({
+      code: "TRYOUT_PART_SET_DUPLICATE_INDEX",
+      message: "Tryout part set mappings contain duplicate part indexes.",
+    });
+  }
+
   const hasChanges =
     existingMappings.length !== args.parts.length ||
     existingMappings.some(
@@ -48,17 +75,40 @@ async function syncTryoutPartSetMappings(
     return false;
   }
 
-  for (const existingMapping of existingMappings) {
-    await ctx.db.delete("tryoutPartSets", existingMapping._id);
-  }
-
   for (const [partIndex, part] of args.parts.entries()) {
-    await ctx.db.insert("tryoutPartSets", {
-      partIndex,
+    const existingMapping = mappingsByPartIndex.get(partIndex);
+
+    if (!existingMapping) {
+      await ctx.db.insert("tryoutPartSets", {
+        partIndex,
+        partKey: part.partKey,
+        setId: part.setId,
+        tryoutId: args.tryoutId,
+      });
+      continue;
+    }
+
+    if (
+      existingMapping.partKey === part.partKey &&
+      existingMapping.setId === part.setId
+    ) {
+      continue;
+    }
+
+    await ctx.db.patch("tryoutPartSets", existingMapping._id, {
       partKey: part.partKey,
       setId: part.setId,
-      tryoutId: args.tryoutId,
     });
+  }
+
+  const validPartIndexes = new Set(args.parts.map((_, partIndex) => partIndex));
+
+  for (const existingMapping of existingMappings) {
+    if (validPartIndexes.has(existingMapping.partIndex)) {
+      continue;
+    }
+
+    await ctx.db.delete("tryoutPartSets", existingMapping._id);
   }
 
   return true;

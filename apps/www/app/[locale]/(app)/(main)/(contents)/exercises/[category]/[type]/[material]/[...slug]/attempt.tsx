@@ -19,7 +19,7 @@ interface Props {
 export function ExerciseAttempt({ totalExercises }: Props) {
   const attempt = useAttempt((state) => state.attempt);
   const completeAttempt = useMutation(api.exercises.mutations.completeAttempt);
-  const { anchorRef, hidden } = useStickyVisibility();
+  const { hidden } = useStickyVisibility();
 
   const timer = useExerciseTimer({
     attempt,
@@ -40,7 +40,6 @@ export function ExerciseAttempt({ totalExercises }: Props) {
         "sticky top-18 z-1 mb-20 lg:top-2",
         hidden && "pointer-events-none"
       )}
-      ref={anchorRef}
     >
       <motion.div
         animate={hidden ? "hidden" : "visible"}

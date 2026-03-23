@@ -11,10 +11,7 @@ import tables, {
   chatVisibilityValidator,
 } from "@repo/backend/convex/chats/schema";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
-import {
-  requireAuth,
-  requireAuthWithSession,
-} from "@repo/backend/convex/lib/helpers/auth";
+import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { ConvexError, v } from "convex/values";
 
@@ -47,8 +44,7 @@ export const updateChatTitle = mutation({
   },
   returns: vv.id("chats"),
   handler: async (ctx, args) => {
-    // Fast JWT auth — no session DB call needed here
-    const user = await requireAuth(ctx);
+    const user = await requireAuthWithSession(ctx);
 
     const chat = await ctx.db.get("chats", args.chatId);
     if (!chat) {
@@ -119,9 +115,7 @@ export const saveMessage = mutation({
   }),
   handler: async (ctx, args) => {
     const { message, parts } = args;
-
-    // Fast JWT auth — no session DB call needed here
-    const user = await requireAuth(ctx);
+    const user = await requireAuthWithSession(ctx);
 
     await verifyChatOwnership(ctx, message.chatId, user.appUser._id);
 
@@ -147,7 +141,7 @@ export const deleteMessageBatch = mutation({
   },
   returns: v.object({ hasMore: v.boolean() }),
   handler: async (ctx, args) => {
-    const user = await requireAuth(ctx);
+    const user = await requireAuthWithSession(ctx);
 
     await verifyChatOwnership(ctx, args.chatId, user.appUser._id);
 
@@ -181,8 +175,7 @@ export const createChatWithMessage = mutation({
     partIds: v.array(vv.id("parts")),
   }),
   handler: async (ctx, args) => {
-    // Fast JWT auth — no session DB call needed here
-    const user = await requireAuth(ctx);
+    const user = await requireAuthWithSession(ctx);
 
     const chatId = await ctx.db.insert("chats", {
       updatedAt: Date.now(),

@@ -27,9 +27,7 @@ export const getTrendingSubjects = query({
     const limit = args.limit ?? 6;
     const minViews = args.minViews ?? 5;
 
-    // Use .take() instead of .collect() to prevent unbounded queries
-    // This limits results to MAX_VIEWS most recent views in the range
-    const viewsInRange = await ctx.db
+    const viewsInRange = ctx.db
       .query("contentViews")
       .withIndex("by_locale_type_lastViewedAt", (q) =>
         q
@@ -37,13 +35,12 @@ export const getTrendingSubjects = query({
           .eq("contentRef.type", "subject")
           .gte("lastViewedAt", args.since)
           .lt("lastViewedAt", args.until)
-      )
-      .take(1000);
+      );
 
     const countBySubject = new Map<Id<"subjectSections">, number>();
     const slugBySubject = new Map<Id<"subjectSections">, string>();
 
-    for (const view of viewsInRange) {
+    for await (const view of viewsInRange) {
       // Type narrowing: index filters by type, but TS needs explicit check
       if (view.contentRef.type === "subject") {
         const subjectId = view.contentRef.id;

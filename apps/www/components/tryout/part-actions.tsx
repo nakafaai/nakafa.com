@@ -34,7 +34,7 @@ export function TryoutPartSticky({
   );
   const timer = useTryoutPart((state) => state.state.timer);
   const isActionPending = useTryoutPart((state) => state.meta.isActionPending);
-  const { anchorRef, hidden } = useStickyVisibility();
+  const { hidden } = useStickyVisibility();
 
   if (!showSticky) {
     return null;
@@ -46,7 +46,6 @@ export function TryoutPartSticky({
         "sticky top-18 z-1 mb-20 lg:top-2",
         hidden && "pointer-events-none"
       )}
-      ref={anchorRef}
     >
       <motion.div
         animate={hidden ? "hidden" : "visible"}

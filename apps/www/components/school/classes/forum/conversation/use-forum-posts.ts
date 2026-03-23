@@ -3,8 +3,7 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { usePaginatedQuery, useQuery } from "convex/react";
-import { useEffect, useMemo, useRef } from "react";
-import type { ForumPost } from "@/components/school/classes/forum/conversation/types";
+import { useEffect, useMemo } from "react";
 import { useForum } from "@/lib/context/use-forum";
 
 /**
@@ -92,19 +91,13 @@ export function useForumPosts(forumId: Id<"schoolClassForums">) {
 
   // Determine which posts to show
   const isJumpMode = jumpMode !== null && jumpMode.posts.length > 0;
-  const lastPostsRef = useRef<ForumPost[]>([]);
 
   const posts = useMemo(() => {
-    let newPosts: ForumPost[];
     if (isJumpMode) {
-      newPosts = jumpMode.posts;
-    } else if (results.length > 0) {
-      newPosts = [...results].reverse();
-    } else {
-      return lastPostsRef.current;
+      return jumpMode.posts;
     }
-    lastPostsRef.current = newPosts;
-    return newPosts;
+
+    return [...results].reverse();
   }, [isJumpMode, jumpMode?.posts, results]);
 
   const hasMoreBefore = isJumpMode

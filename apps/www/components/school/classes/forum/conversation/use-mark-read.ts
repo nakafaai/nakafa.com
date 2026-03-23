@@ -26,17 +26,13 @@ export function useMarkRead({
 }) {
   const markRead = useMutation(api.classes.forums.mutations.markForumRead);
 
-  // Store forumId in ref to avoid stale closure issues
-  const forumIdRef = useRef(forumId);
-  forumIdRef.current = forumId;
-
   // Track if we've already marked read at bottom to prevent duplicate calls
   const hasMarkedAtBottomRef = useRef(false);
 
-  const debouncedMarkRead = useDebouncedCallback(
-    () => markRead({ forumId: forumIdRef.current }),
-    { delay: 1000, flushOnUnmount: true }
-  );
+  const debouncedMarkRead = useDebouncedCallback(() => markRead({ forumId }), {
+    delay: 1000,
+    flushOnUnmount: true,
+  });
 
   // Cancel pending mark-read and reset flag when user scrolls away from bottom
   useEffect(() => {

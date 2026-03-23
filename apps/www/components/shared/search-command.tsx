@@ -24,7 +24,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
 import type { ReactElement, ReactNode } from "react";
-import { Fragment, useEffect, useTransition } from "react";
+import { Fragment, useTransition } from "react";
 import { articlesMenu } from "@/components/sidebar/_data/articles";
 import { holyMenu } from "@/components/sidebar/_data/holy";
 import { subjectMenu } from "@/components/sidebar/_data/subject";
@@ -216,22 +216,6 @@ function DefaultItems() {
   const setOpen = useSearch((state) => state.setOpen);
 
   const [, startTransition] = useTransition();
-
-  useEffect(() => {
-    for (const item of subjectMenu) {
-      for (const subItem of item.items) {
-        router.prefetch(subItem.href);
-      }
-    }
-
-    for (const item of articlesMenu) {
-      router.prefetch(item.href);
-    }
-
-    for (const item of holyMenu) {
-      router.prefetch(item.href);
-    }
-  }, [router]);
 
   return (
     <>

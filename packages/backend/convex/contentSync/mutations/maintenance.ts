@@ -54,158 +54,67 @@ async function deleteBatchFromTable(
   return { deleted, hasMore };
 }
 
-export const deleteContentAuthorsBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: async (ctx) => deleteBatchFromTable(ctx, "contentAuthors"),
-});
+function makeBatchDeleteMutation(tableName: ResettableTableName) {
+  return internalMutation({
+    args: {},
+    returns: batchDeleteResultValidator,
+    handler: async (ctx) => deleteBatchFromTable(ctx, tableName),
+  });
+}
 
-export const deleteArticleReferencesBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: async (ctx) => deleteBatchFromTable(ctx, "articleReferences"),
-});
-
-export const deleteExerciseChoicesBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: async (ctx) => deleteBatchFromTable(ctx, "exerciseChoices"),
-});
-
-export const deleteExerciseAnswersBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: async (ctx) => deleteBatchFromTable(ctx, "exerciseAnswers"),
-});
-
-export const deleteTryoutPartAttemptsBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: async (ctx) => deleteBatchFromTable(ctx, "tryoutPartAttempts"),
-});
-
-export const deleteTryoutLeaderboardEntriesBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: async (ctx) => deleteBatchFromTable(ctx, "tryoutLeaderboardEntries"),
-});
-
-export const deleteUserTryoutStatsBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: async (ctx) => deleteBatchFromTable(ctx, "userTryoutStats"),
-});
-
-export const deleteIrtScalePublicationQueueBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: async (ctx) => deleteBatchFromTable(ctx, "irtScalePublicationQueue"),
-});
-
-export const deleteIrtScaleVersionItemsBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: async (ctx) => deleteBatchFromTable(ctx, "irtScaleVersionItems"),
-});
-
-export const deleteExerciseItemParametersBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: async (ctx) => deleteBatchFromTable(ctx, "exerciseItemParameters"),
-});
-
-export const deleteIrtCalibrationQueueBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: async (ctx) => deleteBatchFromTable(ctx, "irtCalibrationQueue"),
-});
-
-export const deleteIrtCalibrationAttemptsBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: async (ctx) => deleteBatchFromTable(ctx, "irtCalibrationAttempts"),
-});
-
-export const deleteIrtCalibrationCacheStatsBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: async (ctx) => deleteBatchFromTable(ctx, "irtCalibrationCacheStats"),
-});
-
-export const deleteIrtScaleQualityChecksBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: async (ctx) => deleteBatchFromTable(ctx, "irtScaleQualityChecks"),
-});
-
-export const deleteExerciseAttemptsBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: async (ctx) => deleteBatchFromTable(ctx, "exerciseAttempts"),
-});
-
-export const deleteTryoutAttemptsBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: async (ctx) => deleteBatchFromTable(ctx, "tryoutAttempts"),
-});
-
-export const deleteTryoutPartSetsBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: async (ctx) => deleteBatchFromTable(ctx, "tryoutPartSets"),
-});
-
-export const deleteIrtScaleVersionsBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: async (ctx) => deleteBatchFromTable(ctx, "irtScaleVersions"),
-});
-
-export const deleteIrtCalibrationRunsBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: async (ctx) => deleteBatchFromTable(ctx, "irtCalibrationRuns"),
-});
-
-export const deleteTryoutsBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: async (ctx) => deleteBatchFromTable(ctx, "tryouts"),
-});
-
-export const deleteExerciseQuestionsBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: async (ctx) => deleteBatchFromTable(ctx, "exerciseQuestions"),
-});
-
-export const deleteExerciseSetsBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: async (ctx) => deleteBatchFromTable(ctx, "exerciseSets"),
-});
-
-export const deleteSubjectSectionsBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: async (ctx) => deleteBatchFromTable(ctx, "subjectSections"),
-});
-
-export const deleteSubjectTopicsBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: async (ctx) => deleteBatchFromTable(ctx, "subjectTopics"),
-});
-
-export const deleteArticlesBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: async (ctx) => deleteBatchFromTable(ctx, "articleContents"),
-});
-
-export const deleteAuthorsBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: async (ctx) => deleteBatchFromTable(ctx, "authors"),
-});
+export const deleteContentAuthorsBatch =
+  makeBatchDeleteMutation("contentAuthors");
+export const deleteArticleReferencesBatch =
+  makeBatchDeleteMutation("articleReferences");
+export const deleteExerciseChoicesBatch =
+  makeBatchDeleteMutation("exerciseChoices");
+export const deleteExerciseAnswersBatch =
+  makeBatchDeleteMutation("exerciseAnswers");
+export const deleteTryoutPartAttemptsBatch =
+  makeBatchDeleteMutation("tryoutPartAttempts");
+export const deleteTryoutLeaderboardEntriesBatch = makeBatchDeleteMutation(
+  "tryoutLeaderboardEntries"
+);
+export const deleteUserTryoutStatsBatch =
+  makeBatchDeleteMutation("userTryoutStats");
+export const deleteIrtScalePublicationQueueBatch = makeBatchDeleteMutation(
+  "irtScalePublicationQueue"
+);
+export const deleteIrtScaleVersionItemsBatch = makeBatchDeleteMutation(
+  "irtScaleVersionItems"
+);
+export const deleteExerciseItemParametersBatch = makeBatchDeleteMutation(
+  "exerciseItemParameters"
+);
+export const deleteIrtCalibrationQueueBatch = makeBatchDeleteMutation(
+  "irtCalibrationQueue"
+);
+export const deleteIrtCalibrationAttemptsBatch = makeBatchDeleteMutation(
+  "irtCalibrationAttempts"
+);
+export const deleteIrtCalibrationCacheStatsBatch = makeBatchDeleteMutation(
+  "irtCalibrationCacheStats"
+);
+export const deleteIrtScaleQualityChecksBatch = makeBatchDeleteMutation(
+  "irtScaleQualityChecks"
+);
+export const deleteExerciseAttemptsBatch =
+  makeBatchDeleteMutation("exerciseAttempts");
+export const deleteTryoutAttemptsBatch =
+  makeBatchDeleteMutation("tryoutAttempts");
+export const deleteTryoutPartSetsBatch =
+  makeBatchDeleteMutation("tryoutPartSets");
+export const deleteIrtScaleVersionsBatch =
+  makeBatchDeleteMutation("irtScaleVersions");
+export const deleteIrtCalibrationRunsBatch =
+  makeBatchDeleteMutation("irtCalibrationRuns");
+export const deleteTryoutsBatch = makeBatchDeleteMutation("tryouts");
+export const deleteExerciseQuestionsBatch =
+  makeBatchDeleteMutation("exerciseQuestions");
+export const deleteExerciseSetsBatch = makeBatchDeleteMutation("exerciseSets");
+export const deleteSubjectSectionsBatch =
+  makeBatchDeleteMutation("subjectSections");
+export const deleteSubjectTopicsBatch =
+  makeBatchDeleteMutation("subjectTopics");
+export const deleteArticlesBatch = makeBatchDeleteMutation("articleContents");
+export const deleteAuthorsBatch = makeBatchDeleteMutation("authors");

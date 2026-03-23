@@ -17,6 +17,16 @@ import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 
+const MAX_FORUM_POST_WINDOW = 50;
+
+function clampForumPostWindow(limit: number | undefined) {
+  if (limit === undefined) {
+    return 15;
+  }
+
+  return Math.min(Math.max(limit, 1), MAX_FORUM_POST_WINDOW);
+}
+
 export const getForums = query({
   args: {
     classId: vv.id("schoolClasses"),
@@ -55,7 +65,7 @@ export const getForums = query({
     const [userMap, myReactionsMap, unreadCountMap] = await Promise.all([
       attachForumUsers(ctx, forumsPage.page),
       getMyForumReactions(ctx, forumIds, user.appUser._id),
-      getForumUnreadCounts(ctx, classId, user.appUser._id, forumsPage.page),
+      getForumUnreadCounts(ctx, user.appUser._id, forumsPage.page),
     ]);
 
     return {
@@ -79,13 +89,21 @@ export const getForum = query({
     const currentUserId = user.appUser._id;
 
     const forum = await loadForum(ctx, args.forumId);
+    const reactionPreviewLimit = forum.reactionCounts.reduce(
+      (total, reactionCount) => total + Math.min(reactionCount.count, 10),
+      0
+    );
 
     const [, reactions, lastReadAt] = await Promise.all([
       requireClassAccess(ctx, forum.classId, forum.schoolId, currentUserId),
-      ctx.db
-        .query("schoolClassForumReactions")
-        .withIndex("forumId_userId_emoji", (q) => q.eq("forumId", forum._id))
-        .collect(),
+      reactionPreviewLimit === 0
+        ? Promise.resolve([])
+        : ctx.db
+            .query("schoolClassForumReactions")
+            .withIndex("forumId_userId_emoji", (q) =>
+              q.eq("forumId", forum._id)
+            )
+            .take(reactionPreviewLimit),
       getForumLastReadAt(ctx, forum._id, currentUserId),
     ]);
 
@@ -149,7 +167,8 @@ export const getForumPostsAround = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { forumId, targetPostId, limit = 15 } = args;
+    const { forumId, targetPostId } = args;
+    const limit = clampForumPostWindow(args.limit);
 
     const user = await requireAuth(ctx);
     await loadForumWithAccess(ctx, forumId, user.appUser._id);
@@ -213,7 +232,8 @@ export const getForumPostsOlder = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { forumId, beforeTime, limit = 15 } = args;
+    const { forumId, beforeTime } = args;
+    const limit = clampForumPostWindow(args.limit);
 
     const user = await requireAuth(ctx);
     await loadForumWithAccess(ctx, forumId, user.appUser._id);
@@ -250,7 +270,8 @@ export const getForumPostsNewer = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { forumId, afterTime, limit = 15 } = args;
+    const { forumId, afterTime } = args;
+    const limit = clampForumPostWindow(args.limit);
 
     const user = await requireAuth(ctx);
     await loadForumWithAccess(ctx, forumId, user.appUser._id);

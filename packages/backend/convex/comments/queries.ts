@@ -3,6 +3,7 @@ import {
   attachReplyToUsers,
   attachUsers,
 } from "@repo/backend/convex/comments/utils";
+import { userDataValidator } from "@repo/backend/convex/lib/validators/user";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { cleanSlug } from "@repo/backend/convex/utils/helper";
 import {
@@ -11,17 +12,6 @@ import {
 } from "convex/server";
 import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
-
-/**
- * Validator for UserData (subset of user doc used in attachUsers).
- * Matches the UserData interface in lib/userHelpers.ts
- */
-const userDataValidator = v.object({
-  _id: vv.id("users"),
-  name: v.string(),
-  email: v.string(),
-  image: v.optional(nullable(v.string())),
-});
 
 const commentWithUserValidator = v.object({
   ...vv.doc("comments").fields,

@@ -12,6 +12,9 @@ import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { truncateText } from "@repo/backend/convex/utils/helper";
 import { ConvexError, type Infer, v } from "convex/values";
 
+const MAX_FORUM_POST_ATTACHMENTS = 10;
+const MAX_FORUM_REACTION_VARIANTS = 20;
+
 export const generateUploadUrl = mutation({
   args: {
     forumId: vv.id("schoolClassForums"),
@@ -96,6 +99,13 @@ export const createForumPost = mutation({
     const hasBody = args.body.trim().length > 0;
     const attachments = args.attachments ?? [];
     const hasAttachments = attachments.length > 0;
+
+    if (attachments.length > MAX_FORUM_POST_ATTACHMENTS) {
+      throw new ConvexError({
+        code: "FORUM_ATTACHMENT_LIMIT_EXCEEDED",
+        message: "Forum post attachment count exceeds the supported limit.",
+      });
+    }
 
     if (!(hasBody || hasAttachments)) {
       throw new ConvexError({
@@ -194,6 +204,20 @@ export const togglePostReaction = mutation({
       return { added: false };
     }
 
+    const hasReactionVariant = post.reactionCounts.some(
+      (reactionCount) => reactionCount.emoji === args.emoji
+    );
+
+    if (
+      !hasReactionVariant &&
+      post.reactionCounts.length >= MAX_FORUM_REACTION_VARIANTS
+    ) {
+      throw new ConvexError({
+        code: "FORUM_REACTION_VARIANT_LIMIT_EXCEEDED",
+        message: "Forum post reaction variants exceed the supported limit.",
+      });
+    }
+
     await ctx.db.insert("schoolClassForumPostReactions", {
       postId: args.postId,
       userId,
@@ -213,7 +237,7 @@ export const toggleForumReaction = mutation({
     const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
 
-    await loadForumWithAccess(ctx, args.forumId, userId);
+    const { forum } = await loadForumWithAccess(ctx, args.forumId, userId);
 
     const existingReaction = await ctx.db
       .query("schoolClassForumReactions")
@@ -228,6 +252,20 @@ export const toggleForumReaction = mutation({
     if (existingReaction) {
       await ctx.db.delete("schoolClassForumReactions", existingReaction._id);
       return { added: false };
+    }
+
+    const hasReactionVariant = forum.reactionCounts.some(
+      (reactionCount) => reactionCount.emoji === args.emoji
+    );
+
+    if (
+      !hasReactionVariant &&
+      forum.reactionCounts.length >= MAX_FORUM_REACTION_VARIANTS
+    ) {
+      throw new ConvexError({
+        code: "FORUM_REACTION_VARIANT_LIMIT_EXCEEDED",
+        message: "Forum reaction variants exceed the supported limit.",
+      });
     }
 
     await ctx.db.insert("schoolClassForumReactions", {

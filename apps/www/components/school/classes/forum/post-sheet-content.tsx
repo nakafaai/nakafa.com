@@ -34,6 +34,7 @@ const ForumPostList = memo(
       <ForumPostConversation
         currentUserId={user.appUser._id}
         forum={forum}
+        key={forum._id}
         lastReadAt={forum.lastReadAt ?? 0}
       />
     );

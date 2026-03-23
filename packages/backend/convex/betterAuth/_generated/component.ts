@@ -1513,14 +1513,14 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         "mutation",
         "internal",
         { authId: string; userId: string },
-        any,
+        null,
         Name
       >;
       updateUserName: FunctionReference<
         "mutation",
         "internal",
         { authId: string; name: string },
-        any,
+        null,
         Name
       >;
     };

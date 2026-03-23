@@ -10,10 +10,13 @@ export const setUserId = mutation({
     authId: v.id("user"),
     userId: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     await ctx.db.patch("user", args.authId, {
       userId: args.userId,
     });
+
+    return null;
   },
 });
 
@@ -33,9 +36,12 @@ export const updateUserName = mutation({
     authId: v.id("user"),
     name: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     await ctx.db.patch("user", args.authId, {
       name: args.name,
     });
+
+    return null;
   },
 });

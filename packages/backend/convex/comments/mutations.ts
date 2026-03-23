@@ -23,14 +23,22 @@ export const addComment = mutation({
   returns: vv.id("comments"),
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
+    const cleanedSlug = cleanSlug(args.slug);
 
     const parentComment = args.parentId
       ? await ctx.db.get("comments", args.parentId)
       : null;
 
+    if (parentComment && parentComment.slug !== cleanedSlug) {
+      throw new ConvexError({
+        code: "COMMENT_PARENT_MISMATCH",
+        message: "Reply parent must belong to the same slug.",
+      });
+    }
+
     // Insert comment - trigger handles parent's replyCount update
     const newCommentId = await ctx.db.insert("comments", {
-      slug: cleanSlug(args.slug),
+      slug: cleanedSlug,
       userId: user.appUser._id,
       text: args.text,
       parentId: args.parentId,
@@ -85,11 +93,11 @@ export const voteOnComment = mutation({
     }
 
     // Add new vote if not removing (vote=0 means remove) - trigger handles count update
-    if (args.vote !== 0) {
+    if (args.vote === 1 || args.vote === -1) {
       await ctx.db.insert("commentVotes", {
         commentId: args.commentId,
         userId: user.appUser._id,
-        vote: args.vote as -1 | 1,
+        vote: args.vote,
       });
     }
 

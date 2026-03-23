@@ -2,12 +2,9 @@ import {
   validateEvent,
   WebhookVerificationError,
 } from "@polar-sh/sdk/webhooks";
-import { internal } from "@repo/backend/convex/_generated/api";
+import { components, internal } from "@repo/backend/convex/_generated/api";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
-import {
-  convertToDatabaseCustomer,
-  findUserIdFromCustomer,
-} from "@repo/backend/convex/customers/utils";
+import { convertToDatabaseCustomer } from "@repo/backend/convex/customers/utils";
 import {
   HTTP_ACCEPTED,
   HTTP_BAD_REQUEST,
@@ -19,80 +16,119 @@ import { logger } from "@repo/backend/convex/utils/logger";
 import { polarWebhookSecret } from "@repo/backend/convex/utils/polar";
 import type { HonoWithConvex } from "convex-helpers/server/hono";
 
-/**
- * Register Polar webhook routes on the Hono app.
- */
+async function handleCustomerUpsert(
+  ctx: ActionCtx,
+  customer: {
+    id: string;
+    externalId?: string | null;
+    email: string;
+    metadata: Record<string, string | number | boolean>;
+  }
+) {
+  const userByExternalId = customer.externalId
+    ? await ctx.runQuery(internal.users.queries.getUserByAuthId, {
+        authId: customer.externalId,
+      })
+    : null;
+
+  const userByEmail = userByExternalId
+    ? null
+    : await ctx.runQuery(internal.users.queries.getUserByEmail, {
+        email: customer.email,
+      });
+
+  const authUser =
+    userByExternalId || userByEmail
+      ? null
+      : await ctx.runQuery(components.betterAuth.queries.getUserByEmail, {
+          email: customer.email,
+        });
+
+  const userByAuthUser = authUser
+    ? await ctx.runQuery(internal.users.queries.getUserByAuthId, {
+        authId: authUser._id,
+      })
+    : null;
+
+  const userId =
+    userByExternalId?._id ?? userByEmail?._id ?? userByAuthUser?._id;
+
+  if (!userId) {
+    return false;
+  }
+
+  await ctx.runMutation(internal.customers.mutations.upsertCustomer, {
+    customer: convertToDatabaseCustomer({
+      id: customer.id,
+      externalId: customer.externalId,
+      metadata: customer.metadata,
+      userId,
+    }),
+  });
+
+  return true;
+}
+
+async function handlePolarEvent(
+  ctx: ActionCtx,
+  body: string,
+  headers: Headers
+) {
+  const event = validateEvent(
+    body,
+    Object.fromEntries(headers.entries()),
+    polarWebhookSecret
+  );
+
+  switch (event.type) {
+    case "customer.created":
+    case "customer.updated": {
+      return await handleCustomerUpsert(ctx, event.data);
+    }
+    case "customer.deleted": {
+      await ctx.runMutation(internal.customers.mutations.deleteCustomerById, {
+        id: event.data.id,
+      });
+      return true;
+    }
+    case "subscription.created": {
+      await ctx.runMutation(
+        internal.subscriptions.mutations.createSubscription,
+        {
+          subscription: convertToDatabaseSubscription(event.data),
+        }
+      );
+      return true;
+    }
+    case "subscription.updated":
+    case "subscription.active":
+    case "subscription.canceled":
+    case "subscription.uncanceled":
+    case "subscription.revoked": {
+      await ctx.runMutation(
+        internal.subscriptions.mutations.updateSubscription,
+        {
+          subscription: convertToDatabaseSubscription(event.data),
+        }
+      );
+      return true;
+    }
+    default: {
+      return true;
+    }
+  }
+}
+
+/** Register Polar webhook routes on the Hono app. */
 export function registerPolarRoutes(app: HonoWithConvex<ActionCtx>) {
   app.post("/polar/events", async (c) => {
     const body = await c.req.text();
-    const headers = Object.fromEntries(c.req.raw.headers.entries());
 
     try {
-      const event = validateEvent(body, headers, polarWebhookSecret);
+      const handled = await handlePolarEvent(c.env, body, c.req.raw.headers);
 
-      switch (event.type) {
-        case "customer.created":
-        case "customer.updated": {
-          const userId = await findUserIdFromCustomer(c.env, event.data);
-
-          if (!userId) {
-            return c.text("Bad Request: Missing User", HTTP_BAD_REQUEST);
-          }
-
-          await c.env.runMutation(internal.customers.mutations.upsertCustomer, {
-            customer: convertToDatabaseCustomer({
-              ...event.data,
-              userId,
-            }),
-          });
-          break;
-        }
-
-        case "customer.deleted": {
-          await c.env.runMutation(
-            internal.customers.mutations.deleteCustomerById,
-            {
-              id: event.data.id,
-            }
-          );
-          break;
-        }
-
-        case "subscription.created": {
-          await c.env.runMutation(
-            internal.subscriptions.mutations.createSubscription,
-            {
-              subscription: convertToDatabaseSubscription(event.data),
-            }
-          );
-          break;
-        }
-
-        // All subscription state changes use updateSubscription
-        // They all contain the full subscription object with updated status
-        case "subscription.updated":
-        case "subscription.active":
-        case "subscription.canceled":
-        case "subscription.uncanceled":
-        case "subscription.revoked": {
-          await c.env.runMutation(
-            internal.subscriptions.mutations.updateSubscription,
-            {
-              subscription: convertToDatabaseSubscription(event.data),
-            }
-          );
-          break;
-        }
-
-        // Checkout events - optional, skip for now
-        // case "checkout.created":
-        // case "checkout.updated":
-
-        // Customer state changed - aggregated event, skip (we handle individual events)
-        // case "customer.state_changed":
-
-        default:
-          break;
+      if (!handled) {
+        return c.text("Bad Request: Missing User", HTTP_BAD_REQUEST);
       }
 
       return c.text("Accepted", HTTP_ACCEPTED);

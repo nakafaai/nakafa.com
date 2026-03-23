@@ -24,7 +24,6 @@ const formSchema = z.object({
     z.literal("teacher"),
     z.literal("student"),
     z.literal("parent"),
-    z.literal("administrator"),
   ]),
 });
 const roleSchema = formSchema.shape.role;
@@ -33,17 +32,20 @@ export function UserSettingsRole({ user }: { user: AppUser }) {
   const t = useTranslations("Auth");
 
   const updateUserRole = useMutation(api.users.mutations.updateUserRole);
+  const initialRole = roles.find(
+    (role) => role.value === user.appUser.role
+  )?.value;
 
   const form = useForm({
     defaultValues: {
-      role: user.appUser.role,
+      role: initialRole,
     },
     validators: {
       onChange: formSchema,
     },
     onSubmit: async ({ value }) => {
       const { role } = value;
-      if (!role) {
+      if (!(role === "teacher" || role === "student" || role === "parent")) {
         return;
       }
 

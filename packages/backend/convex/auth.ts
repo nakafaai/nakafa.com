@@ -8,6 +8,7 @@ import { components, internal } from "@repo/backend/convex/_generated/api";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import {
   internalAction,
+  type MutationCtx,
   type QueryCtx,
   query,
 } from "@repo/backend/convex/_generated/server";
@@ -156,7 +157,7 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
     account: {
       accountLinking: {
         enabled: true,
-        allowDifferentEmails: true,
+        allowDifferentEmails: false,
       },
     },
     emailAndPassword: {
@@ -196,23 +197,11 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
   betterAuth(createAuthOptions(ctx));
 
 /**
- * Get Better Auth user from session.
- */
-export const safeGetUser = (ctx: QueryCtx) =>
-  authComponent.safeGetAuthUser(ctx);
-
-/**
- * Get Better Auth user by ID (bypasses session check).
- */
-export const getAnyUserById = (ctx: QueryCtx, userId: string) =>
-  authComponent.getAnyUserById(ctx, userId);
-
-/**
  * Get current logged-in app user with auth data.
  * Returns null if not logged in.
  */
-export const safeGetAppUser = async (ctx: QueryCtx) => {
-  const authUser = await safeGetUser(ctx);
+export const safeGetAppUser = async (ctx: QueryCtx | MutationCtx) => {
+  const authUser = await authComponent.safeGetAuthUser(ctx);
   if (!authUser) {
     return null;
   }

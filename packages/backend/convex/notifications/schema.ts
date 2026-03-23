@@ -160,7 +160,6 @@ const tables = {
     disabledTypes: v.array(notificationTypesValidator),
 
     // Entity-level mutes (muted threads, classes, etc.)
-    // e.g., mute a specific noisy forum thread
     mutedEntities: v.array(
       v.object({
         entityType: notificationEntityTypesValidator,

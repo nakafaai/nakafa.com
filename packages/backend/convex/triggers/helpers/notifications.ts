@@ -27,6 +27,27 @@ export async function createNotification(
   ctx: { db: DatabaseReader & DatabaseWriter },
   args: Omit<WithoutSystemFields<Doc<"notifications">>, "readAt">
 ) {
+  const preferences = await ctx.db
+    .query("notificationPreferences")
+    .withIndex("userId", (q) => q.eq("userId", args.recipientId))
+    .unique();
+
+  if (preferences?.disabledTypes.includes(args.type)) {
+    return null;
+  }
+
+  if (args.entityId && args.entityType !== "system") {
+    const isMuted = preferences?.mutedEntities.some(
+      (mutedEntity) =>
+        mutedEntity.entityType === args.entityType &&
+        mutedEntity.entityId === args.entityId
+    );
+
+    if (isMuted) {
+      return null;
+    }
+  }
+
   await ctx.db.insert("notifications", {
     recipientId: args.recipientId,
     actorId: args.actorId,

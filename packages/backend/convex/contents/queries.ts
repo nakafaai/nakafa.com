@@ -1,3 +1,4 @@
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { query } from "@repo/backend/convex/_generated/server";
 import { safeGetAppUser } from "@repo/backend/convex/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
@@ -26,7 +27,7 @@ export const getRecentlyViewed = query({
       return [];
     }
 
-    const recentViews = await ctx.db
+    const recentViewsQuery = ctx.db
       .query("contentViews")
       .withIndex("userId_type_locale_lastViewedAt", (q) =>
         q
@@ -34,26 +35,27 @@ export const getRecentlyViewed = query({
           .eq("contentRef.type", "subject")
           .eq("locale", args.locale)
       )
-      .order("desc")
-      .take(limit * 2); // Take more to handle potential duplicates
+      .order("desc");
 
-    // Remove duplicates (keep most recent view per subject)
     const seenSubjects = new Set<string>();
-    const uniqueViews = recentViews.filter((view) => {
-      // Type is already filtered by index, but we need to narrow for TypeScript
-      if (view.contentRef.type !== "subject") {
-        return false;
-      }
-      const subjectId = view.contentRef.id;
-      if (seenSubjects.has(subjectId)) {
-        return false;
-      }
-      seenSubjects.add(subjectId);
-      return true;
-    });
+    const limitedViews: Doc<"contentViews">[] = [];
 
-    // Limit to requested amount after deduplication
-    const limitedViews = uniqueViews.slice(0, limit);
+    for await (const view of recentViewsQuery) {
+      if (view.contentRef.type !== "subject") {
+        continue;
+      }
+
+      if (seenSubjects.has(view.contentRef.id)) {
+        continue;
+      }
+
+      seenSubjects.add(view.contentRef.id);
+      limitedViews.push(view);
+
+      if (limitedViews.length === limit) {
+        break;
+      }
+    }
 
     if (limitedViews.length === 0) {
       return [];

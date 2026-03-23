@@ -104,6 +104,7 @@ import type * as lib_images from "../lib/images.js";
 import type * as lib_validators_audio from "../lib/validators/audio.js";
 import type * as lib_validators_contents from "../lib/validators/contents.js";
 import type * as lib_validators_trending from "../lib/validators/trending.js";
+import type * as lib_validators_user from "../lib/validators/user.js";
 import type * as lib_validators_vv from "../lib/validators/vv.js";
 import type * as polyfills from "../polyfills.js";
 import type * as routes_constants from "../routes/constants.js";
@@ -269,6 +270,7 @@ declare const fullApi: ApiFromModules<{
   "lib/validators/audio": typeof lib_validators_audio;
   "lib/validators/contents": typeof lib_validators_contents;
   "lib/validators/trending": typeof lib_validators_trending;
+  "lib/validators/user": typeof lib_validators_user;
   "lib/validators/vv": typeof lib_validators_vv;
   polyfills: typeof polyfills;
   "routes/constants": typeof routes_constants;
@@ -1843,13 +1845,13 @@ export declare const components: {
         "mutation",
         "internal",
         { authId: string; userId: string },
-        any
+        null
       >;
       updateUserName: FunctionReference<
         "mutation",
         "internal",
         { authId: string; name: string },
-        any
+        null
       >;
     };
     queries: {

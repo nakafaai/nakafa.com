@@ -14,6 +14,7 @@ const deleteResultValidator = v.object({
   deleted: v.number(),
 });
 
+/** Upsert missing author rows from synced content metadata. */
 export const bulkSyncAuthors = internalMutation({
   args: {
     authorNames: v.array(v.string()),
@@ -56,6 +57,7 @@ export const bulkSyncAuthors = internalMutation({
   },
 });
 
+/** Delete author rows that are no longer linked from synced content. */
 export const deleteUnusedAuthors = internalMutation({
   args: {
     authorIds: v.array(v.id("authors")),

@@ -54,29 +54,37 @@ export const populateAudioQueue = internalMutation({
     });
 
     let totalQueued = 0;
+    const articleItems: PopularItem[] = [];
+    for await (const item of articlePopularity.iter(ctx, {
+      namespace: "global",
+      order: "desc",
+      pageSize: 100,
+    })) {
+      if (item.sumValue < MIN_VIEW_THRESHOLD) {
+        break;
+      }
 
-    const [articleResults, subjectResults] = await Promise.all([
-      articlePopularity.paginate(ctx, {
-        namespace: "global",
-        order: "desc",
-        pageSize: 100,
-      }),
-      subjectPopularity.paginate(ctx, {
-        namespace: "global",
-        order: "desc",
-        pageSize: 100,
-      }),
-    ]);
+      articleItems.push({
+        ref: { type: "article", id: item.key[1] },
+        viewCount: item.sumValue,
+      });
+    }
 
-    const articleItems: PopularItem[] = articleResults.page.map((item) => ({
-      ref: { type: "article" as const, id: item.key[1] },
-      viewCount: item.sumValue,
-    }));
+    const subjectItems: PopularItem[] = [];
+    for await (const item of subjectPopularity.iter(ctx, {
+      namespace: "global",
+      order: "desc",
+      pageSize: 100,
+    })) {
+      if (item.sumValue < MIN_VIEW_THRESHOLD) {
+        break;
+      }
 
-    const subjectItems: PopularItem[] = subjectResults.page.map((item) => ({
-      ref: { type: "subject" as const, id: item.key[1] },
-      viewCount: item.sumValue,
-    }));
+      subjectItems.push({
+        ref: { type: "subject", id: item.key[1] },
+        viewCount: item.sumValue,
+      });
+    }
 
     const allItems: PopularItem[] = [...articleItems, ...subjectItems].sort(
       (a, b) => b.viewCount - a.viewCount

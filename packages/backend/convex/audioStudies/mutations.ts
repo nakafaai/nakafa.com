@@ -6,10 +6,10 @@ import {
   getMaxContentPerDay,
   isAudioGenerationEnabled,
   QUEUE_TIMEOUT_MS,
+  SUPPORTED_LOCALES,
 } from "@repo/backend/convex/audioStudies/constants";
 import {
   getResetAudioFields,
-  markQueueCompleted as markQueueCompletedHelper,
   markQueueFailed as markQueueFailedHelper,
   updateContentHash as updateContentHashHelper,
 } from "@repo/backend/convex/audioStudies/utils";
@@ -26,6 +26,8 @@ import { ConvexError, v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
 
 type ClaimableStatus = Extract<AudioStatus, "pending" | "script-generated">;
+
+const AUDIO_QUEUE_PER_SLUG_LIMIT = SUPPORTED_LOCALES.length + 1;
 
 /**
  * Saves generated script. Idempotent.
@@ -391,17 +393,6 @@ export const createOrGetAudioRecord = internalMutation({
 });
 
 /**
- * Marks queue item as completed. Idempotent.
- */
-export const markQueueCompleted = internalMutation({
-  args: {
-    queueItemId: vv.id("audioGenerationQueue"),
-  },
-  returns: v.null(),
-  handler: (ctx, args) => markQueueCompletedHelper(ctx, args.queueItemId),
-});
-
-/**
  * Marks queue item as failed. Prevents infinite retries by checking maxRetries.
  */
 export const markQueueFailed = internalMutation({
@@ -477,7 +468,14 @@ export const startWorkflowsForPendingItems = internalMutation({
       .withIndex("slug_status", (q) =>
         q.eq("slug", topItem.slug).eq("status", "pending")
       )
-      .collect();
+      .take(AUDIO_QUEUE_PER_SLUG_LIMIT);
+
+    if (contentItems.length > SUPPORTED_LOCALES.length) {
+      throw new ConvexError({
+        code: "AUDIO_QUEUE_LOCALE_COUNT_EXCEEDED",
+        message: "Audio queue slug exceeded the supported locale count.",
+      });
+    }
 
     let started = 0;
 

@@ -67,7 +67,12 @@ export function SchoolClassesForumPostSheet() {
           onMouseDown={resizerProps.onMouseDown}
           type="button"
         />
-        <ErrorBoundary fallback={<SchoolClassesForumPostSheetError />}>
+        <ErrorBoundary
+          fallback={<SchoolClassesForumPostSheetError />}
+          onError={() => {
+            setActiveForumId(null);
+          }}
+        >
           <SheetHeader className="border-b p-3">
             <SheetTitle className="flex items-center justify-between gap-2">
               <SchoolClassesForumPostSheetInfo />
