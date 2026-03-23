@@ -100,6 +100,16 @@ crons.interval(
 );
 
 /**
+ * Refreshes persisted IRT scale quality summaries in bounded batches.
+ */
+crons.cron(
+  "rebuild irt scale quality checks",
+  "0 */6 * * *",
+  internal.irt.internalMutations.rebuildScaleQualityChecksPage,
+  {}
+);
+
+/**
  * Repairs overdue tryouts whose scheduled expiry was delayed or missed.
  */
 crons.interval(

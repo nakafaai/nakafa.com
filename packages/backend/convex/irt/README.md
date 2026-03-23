@@ -40,10 +40,14 @@ parts we can support with public sources.
 - Scale versions are split into two product states:
   - `provisional`: bootstrap scoring only; enough to start and estimate a score
   - `official`: published from a fully calibrated tryout snapshot
+- Official publication now checks a rolling live calibration window and stores a
+  persisted quality summary before promoting a new frozen scale version
 - Completed attempts scored on a provisional scale remain provisional and are
   automatically re-scored once an official scale is published for that tryout
 - Official attempts freeze item parameters so official scores do not drift when
   future calibration runs update the live item bank
+- The live calibration bank uses a rolling trailing window and must pass an
+  explicit quality check before a new official scale is published
 - Year-scoped global comparison is limited to the same locale and year, but does
   not currently perform additional cross-form linking beyond frozen calibrated
   scale versions
@@ -107,6 +111,7 @@ flowchart TD
 | `helpers/queue.ts` | Queue and workflow orchestration helpers |
 | `helpers/runs.ts` | Calibration run completion and failure helpers |
 | `scales/bootstrap.ts` | Provisional scale bootstrap helpers |
+| `scales/quality.ts` | Official-scale quality gates and persisted summaries |
 | `scales/read.ts` | Frozen scale lookups and coverage checks |
 | `scales/snapshot.ts` | Publishable scale snapshot assembly and comparison |
 | `scales/publish.ts` | Frozen scale publication and bootstrap helpers |

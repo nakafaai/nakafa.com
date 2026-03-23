@@ -3,6 +3,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   getCalibrationAttemptCacheLimit,
+  getCalibrationWindowStartAt,
   IRT_CALIBRATION_CACHE_STATS_REBUILD_BATCH_SIZE,
   IRT_CALIBRATION_CACHE_TRIM_BATCH_SIZE,
 } from "@repo/backend/convex/irt/policy";
@@ -17,6 +18,7 @@ export async function prepareCalibrationCacheForSet(
   ctx: Pick<MutationCtx, "db" | "scheduler">,
   setId: Id<"exerciseSets">
 ) {
+  const now = Date.now();
   const set = await ctx.db.get("exerciseSets", setId);
 
   if (!set) {
@@ -45,7 +47,17 @@ export async function prepareCalibrationCacheForSet(
     cacheStats.attemptCount <=
     getCalibrationAttemptCacheLimit(set.questionCount)
   ) {
-    return true;
+    const oldestCachedAttempt = await ctx.db
+      .query("irtCalibrationAttempts")
+      .withIndex("by_setId", (q) => q.eq("setId", setId))
+      .first();
+
+    if (
+      !oldestCachedAttempt ||
+      oldestCachedAttempt._creationTime >= getCalibrationWindowStartAt(now)
+    ) {
+      return true;
+    }
   }
 
   await ctx.scheduler.runAfter(
@@ -220,6 +232,7 @@ export async function trimCalibrationCacheForSetHandler(
     setId: Id<"exerciseSets">;
   }
 ) {
+  const now = Date.now();
   const set = await ctx.db.get("exerciseSets", args.setId);
 
   if (!set) {
@@ -242,6 +255,56 @@ export async function trimCalibrationCacheForSetHandler(
   }
 
   const cacheLimit = getCalibrationAttemptCacheLimit(set.questionCount);
+  const oldestAttempts = await ctx.db
+    .query("irtCalibrationAttempts")
+    .withIndex("by_setId", (q) => q.eq("setId", args.setId))
+    .take(IRT_CALIBRATION_CACHE_TRIM_BATCH_SIZE);
+
+  if (oldestAttempts.length === 0) {
+    await ctx.db.delete("irtCalibrationCacheStats", cacheStats._id);
+    return null;
+  }
+
+  const windowStartAt = getCalibrationWindowStartAt(now);
+  const staleAttempts = oldestAttempts.filter(
+    (attempt) => attempt._creationTime < windowStartAt
+  );
+
+  if (staleAttempts.length > 0) {
+    for (const calibrationAttempt of staleAttempts) {
+      await ctx.db.delete("irtCalibrationAttempts", calibrationAttempt._id);
+    }
+
+    const nextAttemptCount = Math.max(
+      0,
+      cacheStats.attemptCount - staleAttempts.length
+    );
+
+    if (nextAttemptCount === 0) {
+      await ctx.db.delete("irtCalibrationCacheStats", cacheStats._id);
+      return null;
+    }
+
+    await ctx.db.patch("irtCalibrationCacheStats", cacheStats._id, {
+      attemptCount: nextAttemptCount,
+      updatedAt: now,
+    });
+
+    if (
+      staleAttempts.length < IRT_CALIBRATION_CACHE_TRIM_BATCH_SIZE &&
+      nextAttemptCount <= cacheLimit
+    ) {
+      return null;
+    }
+
+    await ctx.scheduler.runAfter(
+      0,
+      internal.irt.internalMutations.trimCalibrationCacheForSet,
+      args
+    );
+
+    return null;
+  }
 
   if (cacheStats.attemptCount <= cacheLimit) {
     return null;
@@ -251,23 +314,15 @@ export async function trimCalibrationCacheForSetHandler(
     cacheStats.attemptCount - cacheLimit,
     IRT_CALIBRATION_CACHE_TRIM_BATCH_SIZE
   );
-  const oldestAttempts = await ctx.db
-    .query("irtCalibrationAttempts")
-    .withIndex("by_setId", (q) => q.eq("setId", args.setId))
-    .take(trimCount);
+  const overflowAttempts = oldestAttempts.slice(0, trimCount);
 
-  if (oldestAttempts.length === 0) {
-    await ctx.db.delete("irtCalibrationCacheStats", cacheStats._id);
-    return null;
-  }
-
-  for (const calibrationAttempt of oldestAttempts) {
+  for (const calibrationAttempt of overflowAttempts) {
     await ctx.db.delete("irtCalibrationAttempts", calibrationAttempt._id);
   }
 
   const nextAttemptCount = Math.max(
     0,
-    cacheStats.attemptCount - oldestAttempts.length
+    cacheStats.attemptCount - overflowAttempts.length
   );
 
   if (nextAttemptCount === 0) {
@@ -277,7 +332,7 @@ export async function trimCalibrationCacheForSetHandler(
 
   await ctx.db.patch("irtCalibrationCacheStats", cacheStats._id, {
     attemptCount: nextAttemptCount,
-    updatedAt: Date.now(),
+    updatedAt: now,
   });
 
   if (nextAttemptCount <= cacheLimit) {

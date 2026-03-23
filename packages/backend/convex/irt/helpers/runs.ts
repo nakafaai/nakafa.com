@@ -111,6 +111,12 @@ export async function completeCalibrationRunHandler(
         });
       }
 
+      await ctx.scheduler.runAfter(
+        0,
+        internal.irt.internalMutations.refreshScaleQualityCheck,
+        { tryoutId }
+      );
+
       return null;
     }
   );

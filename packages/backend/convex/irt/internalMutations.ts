@@ -31,6 +31,11 @@ import {
   IRT_SCALE_PUBLICATION_QUEUE_BATCH_SIZE,
 } from "@repo/backend/convex/irt/policy";
 import { publishTryoutScaleVersionIfNeeded } from "@repo/backend/convex/irt/scales/publish";
+import {
+  rebuildScaleQualityChecksPageHandler,
+  refreshScaleQualityCheckHandler,
+  scaleQualityRebuildResultValidator,
+} from "@repo/backend/convex/irt/scales/quality";
 import { irtCalibrationResultValidator } from "@repo/backend/convex/irt/validators";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
@@ -96,6 +101,27 @@ export const rebuildCalibrationCacheStatsPage = internalMutation({
   },
   returns: rebuildCalibrationCacheStatsResultValidator,
   handler: (ctx, args) => rebuildCalibrationCacheStatsPageHandler(ctx, args),
+});
+
+/** Recomputes one tryout's official-scale readiness summary. */
+export const refreshScaleQualityCheck = internalMutation({
+  args: {
+    tryoutId: vv.id("tryouts"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await refreshScaleQualityCheckHandler(ctx, args);
+    return null;
+  },
+});
+
+/** Schedules bounded quality-check rebuilds for all tryouts. */
+export const rebuildScaleQualityChecksPage = internalMutation({
+  args: {
+    cursor: v.optional(v.string()),
+  },
+  returns: scaleQualityRebuildResultValidator,
+  handler: (ctx, args) => rebuildScaleQualityChecksPageHandler(ctx, args),
 });
 
 /** Deletes the oldest cached calibration attempts until one set is back in budget. */

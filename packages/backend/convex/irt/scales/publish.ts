@@ -4,6 +4,10 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { IRT_OPERATIONAL_MODEL } from "@repo/backend/convex/irt/policy";
 import { buildBootstrapScaleItems } from "@repo/backend/convex/irt/scales/bootstrap";
 import {
+  evaluateTryoutScaleQuality,
+  upsertTryoutScaleQualityCheck,
+} from "@repo/backend/convex/irt/scales/quality";
+import {
   getLatestScaleVersionForTryout,
   getScaleVersionItems,
   type ScaleVersionItemSnapshot,
@@ -156,7 +160,22 @@ export async function getOrPublishScaleVersionForTryout(
     tryoutId: Id<"tryouts">;
   }
 ) {
+  const scaleQuality = await evaluateTryoutScaleQuality(db, { now, tryoutId });
+
+  if (scaleQuality) {
+    await upsertTryoutScaleQualityCheck(db, scaleQuality);
+  }
+
   const latestScaleVersion = await getLatestScaleVersionForTryout(db, tryoutId);
+
+  if (!scaleQuality || scaleQuality.status === "blocked") {
+    if (latestScaleVersion) {
+      return latestScaleVersion;
+    }
+
+    return publishBootstrapScaleVersion(db, { now, tryoutId });
+  }
+
   const publishableSnapshot = await getPublishableScaleSnapshot(db, tryoutId);
 
   if (latestScaleVersion) {
@@ -203,6 +222,21 @@ export async function publishTryoutScaleVersionIfNeeded(
       code: "IRT_TRYOUT_NOT_FOUND",
       message: "Tryout not found for scale publication.",
     });
+  }
+
+  const scaleQuality = await evaluateTryoutScaleQuality(ctx.db, {
+    now: Date.now(),
+    tryoutId: tryout._id,
+  });
+
+  if (!scaleQuality) {
+    return { kind: "not-ready" as const };
+  }
+
+  await upsertTryoutScaleQualityCheck(ctx.db, scaleQuality);
+
+  if (scaleQuality.status === "blocked") {
+    return { kind: "not-ready" as const };
   }
 
   const snapshot = await getPublishableScaleSnapshot(ctx.db, tryout._id);

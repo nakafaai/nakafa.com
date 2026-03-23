@@ -19,6 +19,8 @@ export const irtScaleVersionStatusValidator = literals(
   "official"
 );
 
+export const irtScaleQualityStatusValidator = literals("passed", "blocked");
+
 export const irtOperationalModelValidator = literals("2pl");
 
 const tables = {
@@ -48,6 +50,18 @@ const tables = {
     attemptCount: v.number(),
     updatedAt: v.number(),
   }).index("by_setId", ["setId"]),
+
+  irtScaleQualityChecks: defineTable({
+    tryoutId: v.id("tryouts"),
+    status: irtScaleQualityStatusValidator,
+    blockingReason: v.union(v.string(), v.null()),
+    totalQuestionCount: v.number(),
+    calibratedQuestionCount: v.number(),
+    staleQuestionCount: v.number(),
+    minAttemptCount: v.number(),
+    liveWindowStartAt: v.number(),
+    checkedAt: v.number(),
+  }).index("by_tryoutId", ["tryoutId"]),
 
   irtScalePublicationQueue: defineTable({
     tryoutId: v.id("tryouts"),

@@ -81,6 +81,7 @@ export const ContentCountsSchema = z.object({
   irtCalibrationQueue: z.number(),
   irtCalibrationAttempts: z.number(),
   irtCalibrationRuns: z.number(),
+  irtScaleQualityChecks: z.number(),
   exerciseItemParameters: z.number(),
   irtScalePublicationQueue: z.number(),
   irtScaleVersions: z.number(),

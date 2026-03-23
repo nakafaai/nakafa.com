@@ -61,6 +61,13 @@ export const IRT_MAX_CALIBRATION_ATTEMPTS_PER_RUN = 10_000;
 /** Maximum number of scored responses loaded into one calibration action. */
 export const IRT_MAX_CALIBRATION_RESPONSES_PER_RUN = 250_000;
 
+/** Number of trailing days retained in the operational live calibration window. */
+export const IRT_LIVE_WINDOW_DAYS = 365;
+
+/** Minimum per-set cache attempts required before an official scale can publish. */
+export const IRT_MIN_ATTEMPTS_FOR_OFFICIAL_SCALE =
+  IRT_MIN_RESPONSES_FOR_CALIBRATED;
+
 /**
  * Returns the largest calibration-attempt cache we can keep for one set without
  * letting the calibration action grow beyond its operational response budget.
@@ -75,6 +82,11 @@ export function getCalibrationAttemptCacheLimit(questionCount: number) {
     1,
     Math.min(IRT_MAX_CALIBRATION_ATTEMPTS_PER_RUN, responseBound)
   );
+}
+
+/** Returns the earliest timestamp still included in the live calibration window. */
+export function getCalibrationWindowStartAt(now: number) {
+  return now - IRT_LIVE_WINDOW_DAYS * 24 * 60 * 60 * 1000;
 }
 
 /** Interval, in minutes, for the automatic IRT automation crons. */

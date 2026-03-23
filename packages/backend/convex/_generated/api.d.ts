@@ -84,6 +84,7 @@ import type * as irt_maintenance from "../irt/maintenance.js";
 import type * as irt_policy from "../irt/policy.js";
 import type * as irt_scales_bootstrap from "../irt/scales/bootstrap.js";
 import type * as irt_scales_publish from "../irt/scales/publish.js";
+import type * as irt_scales_quality from "../irt/scales/quality.js";
 import type * as irt_scales_read from "../irt/scales/read.js";
 import type * as irt_scales_snapshot from "../irt/scales/snapshot.js";
 import type * as irt_validators from "../irt/validators.js";
@@ -242,6 +243,7 @@ declare const fullApi: ApiFromModules<{
   "irt/policy": typeof irt_policy;
   "irt/scales/bootstrap": typeof irt_scales_bootstrap;
   "irt/scales/publish": typeof irt_scales_publish;
+  "irt/scales/quality": typeof irt_scales_quality;
   "irt/scales/read": typeof irt_scales_read;
   "irt/scales/snapshot": typeof irt_scales_snapshot;
   "irt/validators": typeof irt_validators;

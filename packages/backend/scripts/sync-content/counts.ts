@@ -33,6 +33,7 @@ const countTableSpecs: Array<{
     tableName: "irtCalibrationAttempts",
   },
   { field: "irtCalibrationRuns", tableName: "irtCalibrationRuns" },
+  { field: "irtScaleQualityChecks", tableName: "irtScaleQualityChecks" },
   { field: "exerciseItemParameters", tableName: "exerciseItemParameters" },
   {
     field: "irtScalePublicationQueue",

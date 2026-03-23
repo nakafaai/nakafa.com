@@ -20,6 +20,7 @@ const countableTableNameValidator = literals(
   "irtCalibrationQueue",
   "irtCalibrationAttempts",
   "irtCalibrationCacheStats",
+  "irtScaleQualityChecks",
   "irtCalibrationRuns",
   "exerciseItemParameters",
   "irtScalePublicationQueue",

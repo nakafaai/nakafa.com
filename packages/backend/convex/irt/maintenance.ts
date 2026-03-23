@@ -9,6 +9,11 @@ const calibrationCacheIntegrityResultValidator = v.object({
   oversizedSetCount: v.number(),
 });
 
+const scaleQualityIntegrityResultValidator = v.object({
+  blockedTryoutCount: v.number(),
+  missingQualityCheckTryoutCount: v.number(),
+});
+
 /** Returns whether any set still has missing or oversized calibration cache state. */
 export const getCalibrationCacheIntegrity = internalQuery({
   args: {},
@@ -61,6 +66,48 @@ export const getCalibrationCacheIntegrity = internalQuery({
     return {
       missingStatsSetCount,
       oversizedSetCount,
+    };
+  },
+});
+
+/** Returns whether any tryout is missing a quality check or still blocked. */
+export const getScaleQualityIntegrity = internalQuery({
+  args: {},
+  returns: scaleQualityIntegrityResultValidator,
+  handler: async (ctx) => {
+    const tryouts = await ctx.db
+      .query("tryouts")
+      .take(MAX_IRT_CACHE_INTEGRITY_SETS + 1);
+
+    if (tryouts.length > MAX_IRT_CACHE_INTEGRITY_SETS) {
+      throw new ConvexError({
+        code: "IRT_SCALE_QUALITY_TRYOUT_LIMIT_EXCEEDED",
+        message: "Too many tryouts to scan scale quality safely.",
+      });
+    }
+
+    let blockedTryoutCount = 0;
+    let missingQualityCheckTryoutCount = 0;
+
+    for (const tryout of tryouts) {
+      const qualityCheck = await ctx.db
+        .query("irtScaleQualityChecks")
+        .withIndex("by_tryoutId", (q) => q.eq("tryoutId", tryout._id))
+        .unique();
+
+      if (!qualityCheck) {
+        missingQualityCheckTryoutCount += 1;
+        continue;
+      }
+
+      if (qualityCheck.status === "blocked") {
+        blockedTryoutCount += 1;
+      }
+    }
+
+    return {
+      blockedTryoutCount,
+      missingQualityCheckTryoutCount,
     };
   },
 });
