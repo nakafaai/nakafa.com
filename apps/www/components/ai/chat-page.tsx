@@ -1,7 +1,7 @@
 "use client";
 
-import { SquareLock01Icon, UserIcon } from "@hugeicons/core-free-icons";
-import { useDidUpdate } from "@mantine/hooks";
+import { SquareLock01Icon } from "@hugeicons/core-free-icons";
+import { useDocumentTitle } from "@mantine/hooks";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   Empty,
@@ -12,7 +12,7 @@ import {
 } from "@repo/design-system/components/ui/empty";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Authenticated, Unauthenticated } from "convex/react";
+import { Unauthenticated } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useEffectEvent, useRef } from "react";
 import { AuthGoogle } from "@/components/auth/google";
@@ -23,39 +23,7 @@ import { CurrentChatProvider, useCurrentChat } from "./chat-provider";
 
 export function AiChatPage({ chatId }: { chatId: Id<"chats"> }) {
   return (
-    <>
-      <Authenticated>
-        <AiChatPageAuthenticated chatId={chatId} />
-      </Authenticated>
-      <Unauthenticated>
-        <AiChatPageUnauthenticated chatId={chatId} />
-      </Unauthenticated>
-    </>
-  );
-}
-
-function AiChatPageAuthenticated({ chatId }: { chatId: Id<"chats"> }) {
-  const t = useTranslations("Ai");
-  return (
-    <ErrorBoundary
-      fallback={
-        <div className="relative flex size-full flex-col overflow-hidden">
-          <div className="flex size-full flex-col items-center justify-center">
-            <Empty>
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <HugeIcons icon={SquareLock01Icon} />
-                </EmptyMedia>
-                <EmptyTitle>{t("private-chat-error")}</EmptyTitle>
-                <EmptyDescription>
-                  {t("private-chat-error-description")}
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          </div>
-        </div>
-      }
-    >
+    <ErrorBoundary fallback={<AiChatPageError chatId={chatId} />}>
       <CurrentChatProvider chatId={chatId}>
         <AiChatMain />
       </CurrentChatProvider>
@@ -63,22 +31,25 @@ function AiChatPageAuthenticated({ chatId }: { chatId: Id<"chats"> }) {
   );
 }
 
-function AiChatPageUnauthenticated({ chatId }: { chatId: Id<"chats"> }) {
+function AiChatPageError({ chatId }: { chatId: Id<"chats"> }) {
   const t = useTranslations("Ai");
+
   return (
     <div className="relative flex size-full flex-col overflow-hidden">
       <div className="flex size-full flex-col items-center justify-center">
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon">
-              <HugeIcons icon={UserIcon} />
+              <HugeIcons icon={SquareLock01Icon} />
             </EmptyMedia>
-            <EmptyTitle>{t("chat-login-required")}</EmptyTitle>
+            <EmptyTitle>{t("private-chat-error")}</EmptyTitle>
             <EmptyDescription>
-              {t("chat-login-required-description")}
+              {t("private-chat-error-description")}
             </EmptyDescription>
           </EmptyHeader>
-          <AuthGoogle redirect={`/chat/${chatId}`} />
+          <Unauthenticated>
+            <AuthGoogle redirect={`/chat/${chatId}`} />
+          </Unauthenticated>
         </Empty>
       </div>
     </div>
@@ -89,13 +60,7 @@ function AiChatMain() {
   const chat = useCurrentChat((s) => s.chat);
   const messages = useCurrentChat((s) => s.messages);
 
-  useDidUpdate(() => {
-    if (!chat?.title) {
-      return;
-    }
-
-    document.title = chat.title;
-  }, [chat?.title]);
+  useDocumentTitle(chat?.title ?? "");
 
   if (!(chat && messages)) {
     return <div className="relative flex size-full flex-col overflow-hidden" />;

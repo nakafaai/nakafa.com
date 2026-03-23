@@ -1,10 +1,14 @@
 import { query } from "@repo/backend/convex/_generated/server";
-import { loadChatMessages } from "@repo/backend/convex/chats/read";
+import {
+  getMessageByIdentifier,
+  verifyChatOwnership,
+} from "@repo/backend/convex/chats/helpers";
+import { hydrateMessagePage } from "@repo/backend/convex/chats/read";
 import {
   chatTypeValidator,
   chatVisibilityValidator,
-  messageWithPartsDocValidator,
   paginatedChatsValidator,
+  paginatedMessagesValidator,
 } from "@repo/backend/convex/chats/schema";
 import {
   getOptionalAppUserFromIdentity,
@@ -27,9 +31,11 @@ export const getChat = query({
   },
   returns: vv.doc("chats"),
   handler: async (ctx, args) => {
-    const user = await requireAuth(ctx);
+    const viewer = await getOptionalAppUserFromIdentity(ctx);
+    const viewerUserId = viewer?.appUser._id ?? null;
 
     const chat = await ctx.db.get("chats", args.chatId);
+
     if (!chat) {
       throw new ConvexError({
         code: "CHAT_NOT_FOUND",
@@ -37,8 +43,7 @@ export const getChat = query({
       });
     }
 
-    // Use centralized chat access check
-    requireChatAccess(chat.userId, user.appUser._id, chat.visibility);
+    requireChatAccess(chat.userId, viewerUserId, chat.visibility);
 
     return chat;
   },
@@ -47,7 +52,6 @@ export const getChat = query({
 /**
  * Get all chats by user ID, type, visibility, and search query.
  * Owners can load all of their chats. Everyone else only sees public chats.
- * Supports optional full-text search by title and filtering by visibility and type.
  */
 export const getChats = query({
   args: {
@@ -73,28 +77,26 @@ export const getChats = query({
 
     const effectiveVisibility = isOwner ? visibility : "public";
 
-    // If search query is provided and not empty, use full-text search
     if (searchQuery && searchQuery.trim().length > 0) {
       return await ctx.db
         .query("chats")
         .withSearchIndex("search_title", (q) => {
           let builder = q.search("title", searchQuery).eq("userId", userId);
+
           if (effectiveVisibility) {
             builder = builder.eq("visibility", effectiveVisibility);
           }
+
           if (type) {
             builder = builder.eq("type", type);
           }
+
           return builder;
         })
         .paginate(paginationOpts);
     }
 
-    // Use the most specific index available based on filters
-    // Priority: userId_visibility_type > userId_type > userId_visibility > userId
-
     if (effectiveVisibility && type) {
-      // Use compound index for all three fields
       return await ctx.db
         .query("chats")
         .withIndex("userId_visibility_type", (q) =>
@@ -108,7 +110,6 @@ export const getChats = query({
     }
 
     if (type) {
-      // Use userId_type index
       return await ctx.db
         .query("chats")
         .withIndex("userId_type", (q) =>
@@ -119,7 +120,6 @@ export const getChats = query({
     }
 
     if (effectiveVisibility) {
-      // Use userId_visibility index
       return await ctx.db
         .query("chats")
         .withIndex("userId_visibility", (q) =>
@@ -129,7 +129,6 @@ export const getChats = query({
         .paginate(paginationOpts);
     }
 
-    // No filters, return all user's chats
     return await ctx.db
       .query("chats")
       .withIndex("userId", (q) => q.eq("userId", userId))
@@ -170,24 +169,19 @@ export const getChatTitle = query({
   },
 });
 
-/**
- * Load messages for a chat.
- * Messages are ordered by creation time, parts by order field.
- * Requires authentication. Public chats are accessible by any logged-in user.
- * Private chats are only accessible by the owner.
- *
- * Returns a bounded full transcript. Use mapDBMessagesToUIMessages from
- * chats/utils to transform to UI messages on the client side.
- */
-export const loadMessages = query({
+/** Return one transcript page ordered from newest to oldest. */
+export const loadMessagesPage = query({
   args: {
     chatId: vv.id("chats"),
+    paginationOpts: paginationOptsValidator,
   },
-  returns: v.array(messageWithPartsDocValidator),
+  returns: paginatedMessagesValidator,
   handler: async (ctx, args) => {
-    const user = await requireAuth(ctx);
+    const viewer = await getOptionalAppUserFromIdentity(ctx);
+    const viewerUserId = viewer?.appUser._id ?? null;
 
     const chat = await ctx.db.get("chats", args.chatId);
+
     if (!chat) {
       throw new ConvexError({
         code: "CHAT_NOT_FOUND",
@@ -195,9 +189,52 @@ export const loadMessages = query({
       });
     }
 
-    // Use centralized chat access check
-    requireChatAccess(chat.userId, user.appUser._id, chat.visibility);
+    requireChatAccess(chat.userId, viewerUserId, chat.visibility);
 
-    return await loadChatMessages(ctx.db, args.chatId);
+    const page = await ctx.db
+      .query("messages")
+      .withIndex("chatId", (q) => q.eq("chatId", args.chatId))
+      .order("desc")
+      .paginate(args.paginationOpts);
+
+    return {
+      ...page,
+      page: await hydrateMessagePage(ctx.db, page.page),
+    };
+  },
+});
+
+/** Find one persisted chat message by the UI message identifier. */
+export const getMessageMatch = query({
+  args: {
+    chatId: vv.id("chats"),
+    identifier: v.string(),
+  },
+  returns: v.union(
+    v.null(),
+    v.object({
+      creationTime: v.number(),
+      messageId: vv.id("messages"),
+    })
+  ),
+  handler: async (ctx, args) => {
+    const user = await requireAuth(ctx);
+
+    await verifyChatOwnership(ctx, args.chatId, user.appUser._id);
+
+    const message = await getMessageByIdentifier(
+      ctx,
+      args.chatId,
+      args.identifier
+    );
+
+    if (!message) {
+      return null;
+    }
+
+    return {
+      creationTime: message._creationTime,
+      messageId: message._id,
+    };
   },
 });

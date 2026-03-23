@@ -24,6 +24,7 @@ import { AiChatError } from "./chat-error";
 import { AiChatHeader } from "./chat-header";
 import { AiChatMessage } from "./chat-message";
 import { AiChatModel } from "./chat-model";
+import { AiChatPaginationTrigger } from "./chat-pagination-trigger";
 import { AiChatPending } from "./chat-pending";
 import { useCurrentChat } from "./chat-provider";
 import { ChatSpacing } from "./chat-spacing";
@@ -46,11 +47,12 @@ const AiChatConversation = memo(() => {
   return (
     <Conversation>
       <ConversationContent className="mx-auto max-w-3xl">
-        {messages.map((message) => (
+        {messages.map((message, index) => (
           <Message
             from={message.role === "user" ? "user" : "assistant"}
             key={message.id}
           >
+            {index === 0 ? <AiChatPaginationTrigger /> : null}
             <AiChatMessage message={message} />
           </Message>
         ))}

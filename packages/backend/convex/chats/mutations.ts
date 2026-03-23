@@ -1,7 +1,8 @@
 import { getModelCreditCost } from "@repo/ai/config/models";
 import { DEFAULT_TITLE } from "@repo/ai/features/constants";
 import {
-  deleteMessageByIdentifier,
+  deleteMessageBatchFromPoint,
+  getMessageByIdentifier,
   insertParts,
   verifyChatOwnership,
 } from "@repo/backend/convex/chats/helpers";
@@ -101,10 +102,7 @@ export const updateChatVisibility = mutation({
   },
 });
 
-/**
- * Saves a user message with parts.
- * If an existing message shares the same identifier it is replaced (upsert semantics).
- */
+/** Persist one user message and its parts after any transcript rewrite is complete. */
 export const saveMessage = mutation({
   args: {
     message: tables.messages.validator,
@@ -127,10 +125,6 @@ export const saveMessage = mutation({
 
     await verifyChatOwnership(ctx, message.chatId, user.appUser._id);
 
-    if (message.identifier) {
-      await deleteMessageByIdentifier(ctx, message.chatId, message.identifier);
-    }
-
     // modelId stored server-side so clients cannot spoof credit calculations
     const messageId = await ctx.db.insert("messages", {
       chatId: message.chatId,
@@ -142,6 +136,26 @@ export const saveMessage = mutation({
     const partIds = await insertParts(ctx, messageId, parts);
 
     return { messageId, partIds };
+  },
+});
+
+/** Delete one bounded transcript-rewrite batch before re-saving a message. */
+export const deleteMessageBatch = mutation({
+  args: {
+    chatId: vv.id("chats"),
+    fromCreationTime: v.number(),
+  },
+  returns: v.object({ hasMore: v.boolean() }),
+  handler: async (ctx, args) => {
+    const user = await requireAuth(ctx);
+
+    await verifyChatOwnership(ctx, args.chatId, user.appUser._id);
+
+    return await deleteMessageBatchFromPoint(
+      ctx,
+      args.chatId,
+      args.fromCreationTime
+    );
   },
 });
 
@@ -259,7 +273,27 @@ export const saveAssistantResponse = internalMutation({
     await verifyChatOwnership(ctx, message.chatId, appUser._id);
 
     if (message.identifier) {
-      await deleteMessageByIdentifier(ctx, message.chatId, message.identifier);
+      const existingMessage = await getMessageByIdentifier(
+        ctx,
+        message.chatId,
+        message.identifier
+      );
+
+      if (existingMessage) {
+        const deleteResult = await deleteMessageBatchFromPoint(
+          ctx,
+          message.chatId,
+          existingMessage._creationTime
+        );
+
+        if (deleteResult.hasMore) {
+          throw new ConvexError({
+            code: "CHAT_ASSISTANT_RESPONSE_REWRITE_EXCEEDED",
+            message:
+              "Assistant response rewrite exceeded the supported batch size.",
+          });
+        }
+      }
     }
 
     let credits = 0;

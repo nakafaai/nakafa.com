@@ -1,8 +1,11 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type {
+  MutationCtx,
+  QueryCtx,
+} from "@repo/backend/convex/_generated/server";
 import {
+  CHAT_TRANSCRIPT_REWRITE_MESSAGE_BATCH_SIZE,
   MAX_CHAT_MESSAGE_PARTS,
-  MAX_CHAT_MESSAGES_PER_MUTATION_DELETE,
 } from "@repo/backend/convex/chats/constants";
 import type { partValidator } from "@repo/backend/convex/chats/schema";
 import type { Infer } from "convex/values";
@@ -10,18 +13,9 @@ import { ConvexError } from "convex/values";
 
 type PartInput = Omit<Infer<typeof partValidator>, "messageId">;
 
-/**
- * Verify the current user owns the chat.
- * Throws ConvexError if chat not found or user doesn't have permission.
- *
- * @param ctx - Convex mutation context
- * @param chatId - ID of the chat to check
- * @param userId - ID of the current user
- * @returns The chat document
- * @throws {ConvexError} If chat not found or FORBIDDEN
- */
+/** Load one chat and require that the current user owns it. */
 export async function verifyChatOwnership(
-  ctx: MutationCtx,
+  ctx: MutationCtx | QueryCtx,
   chatId: Id<"chats">,
   userId: Id<"users">
 ) {
@@ -44,14 +38,7 @@ export async function verifyChatOwnership(
   return chat;
 }
 
-/**
- * Delete all parts for a message.
- * This operates within the same transaction as the caller.
- *
- * @param ctx - Convex mutation context
- * @param messageId - ID of the message whose parts should be deleted
- */
-async function deletePartsForMessage(
+async function deletePartsForMessageBatch(
   ctx: MutationCtx,
   messageId: Id<"messages">
 ) {
@@ -60,27 +47,20 @@ async function deletePartsForMessage(
     .withIndex("messageId_order", (q) => q.eq("messageId", messageId))
     .take(MAX_CHAT_MESSAGE_PARTS + 1);
 
-  if (parts.length > MAX_CHAT_MESSAGE_PARTS) {
-    throw new ConvexError({
-      code: "CHAT_MESSAGE_PART_LIMIT_EXCEEDED",
-      message: "Chat message part count exceeds the supported delete limit.",
-    });
-  }
-
-  for (const part of parts) {
+  for (const part of parts.slice(0, MAX_CHAT_MESSAGE_PARTS)) {
     await ctx.db.delete("parts", part._id);
   }
+
+  return {
+    hasMore: parts.length > MAX_CHAT_MESSAGE_PARTS,
+  };
 }
 
 /**
- * Delete messages and their parts from a specific message onwards.
- * This operates within the same transaction as the caller.
- *
- * @param ctx - Convex mutation context
- * @param chatId - ID of the chat
- * @param fromCreationTime - Delete messages with _creationTime >= this value
+ * Delete one bounded transcript batch from a creation time onward.
+ * This supports message regeneration without loading an unbounded mutation.
  */
-export async function deleteMessagesFromPoint(
+export async function deleteMessageBatchFromPoint(
   ctx: MutationCtx,
   chatId: Id<"chats">,
   fromCreationTime: number
@@ -90,55 +70,42 @@ export async function deleteMessagesFromPoint(
     .withIndex("chatId", (q) =>
       q.eq("chatId", chatId).gte("_creationTime", fromCreationTime)
     )
-    .take(MAX_CHAT_MESSAGES_PER_MUTATION_DELETE + 1);
+    .take(CHAT_TRANSCRIPT_REWRITE_MESSAGE_BATCH_SIZE);
 
-  if (messages.length > MAX_CHAT_MESSAGES_PER_MUTATION_DELETE) {
-    throw new ConvexError({
-      code: "CHAT_DELETE_LIMIT_EXCEEDED",
-      message:
-        "Chat message delete count exceeds the supported mutation limit.",
-    });
+  if (messages.length === 0) {
+    return { hasMore: false };
   }
 
   for (const message of messages) {
-    await deletePartsForMessage(ctx, message._id);
+    const partsBatch = await deletePartsForMessageBatch(ctx, message._id);
+
+    if (partsBatch.hasMore) {
+      return { hasMore: true };
+    }
+
     await ctx.db.delete("messages", message._id);
   }
+
+  return {
+    hasMore: messages.length === CHAT_TRANSCRIPT_REWRITE_MESSAGE_BATCH_SIZE,
+  };
 }
 
-/**
- * Delete a message and all subsequent messages by identifier.
- * Used for message replacement/upsert behavior.
- *
- * @param ctx - Convex mutation context
- * @param chatId - ID of the chat
- * @param identifier - Message identifier to find and delete
- */
-export async function deleteMessageByIdentifier(
-  ctx: MutationCtx,
+/** Find the persisted message that matches one UI message identifier. */
+export async function getMessageByIdentifier(
+  ctx: MutationCtx | QueryCtx,
   chatId: Id<"chats">,
   identifier: string
 ) {
-  const targetMessage = await ctx.db
+  return await ctx.db
     .query("messages")
     .withIndex("chatId_identifier", (q) =>
       q.eq("chatId", chatId).eq("identifier", identifier)
     )
     .unique();
-
-  if (targetMessage && targetMessage.chatId === chatId) {
-    await deleteMessagesFromPoint(ctx, chatId, targetMessage._creationTime);
-  }
 }
 
-/**
- * Insert parts for a message.
- *
- * @param ctx - Convex mutation context
- * @param messageId - ID of the message to attach parts to
- * @param parts - Array of parts to insert
- * @returns Array of inserted part IDs
- */
+/** Insert all parts for one chat message. */
 export async function insertParts(
   ctx: MutationCtx,
   messageId: Id<"messages">,

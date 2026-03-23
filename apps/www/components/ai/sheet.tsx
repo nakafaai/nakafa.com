@@ -79,6 +79,7 @@ import { useUser } from "@/lib/context/use-user";
 import { AiChatError } from "./chat-error";
 import { AiChatMessage } from "./chat-message";
 import { AiChatModel } from "./chat-model";
+import { AiChatPaginationTrigger } from "./chat-pagination-trigger";
 import { AiChatPending } from "./chat-pending";
 import { CurrentChatProvider, useCurrentChat } from "./chat-provider";
 import { ChatSpacing } from "./chat-spacing";
@@ -442,11 +443,12 @@ const AiSheetContent = memo(() => {
     <div className="relative flex size-full flex-col overflow-hidden">
       <Conversation>
         <ConversationContent>
-          {messages.map((message) => (
+          {messages.map((message, index) => (
             <Message
               from={message.role === "user" ? "user" : "assistant"}
               key={message.id}
             >
+              {index === 0 ? <AiChatPaginationTrigger /> : null}
               <AiChatMessage message={message} />
             </Message>
           ))}

@@ -3,8 +3,13 @@
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import { CHAT_MESSAGES_PAGE_SIZE } from "@repo/backend/convex/chats/constants";
 import { mapDBMessagesToUIMessages } from "@repo/backend/convex/chats/utils";
-import { useQuery } from "convex/react";
+import {
+  type UsePaginatedQueryReturnType,
+  usePaginatedQuery,
+  useQuery,
+} from "convex/react";
 import { type PropsWithChildren, useMemo } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 
@@ -12,8 +17,14 @@ interface Props {
   chatId: Id<"chats">;
 }
 
+type ChatMessagesQueryResult = UsePaginatedQueryReturnType<
+  typeof api.chats.queries.loadMessagesPage
+>;
+
 interface ChatContextValue {
   chat: Doc<"chats"> | undefined;
+  loadMoreMessages: ChatMessagesQueryResult["loadMore"];
+  messageStatus: ChatMessagesQueryResult["status"];
   messages: MyUIMessage[] | undefined;
 }
 
@@ -26,18 +37,31 @@ export function CurrentChatProvider({
   const chat = useQuery(api.chats.queries.getChat, {
     chatId,
   });
-  const rawMessages = useQuery(api.chats.queries.loadMessages, {
-    chatId,
-  });
+  const { results, status, loadMore } = usePaginatedQuery(
+    api.chats.queries.loadMessagesPage,
+    { chatId },
+    { initialNumItems: CHAT_MESSAGES_PAGE_SIZE }
+  );
 
-  // Transform raw DB messages to UI messages
   const messages = useMemo(
-    () => (rawMessages ? mapDBMessagesToUIMessages(rawMessages) : undefined),
-    [rawMessages]
+    () =>
+      status === "LoadingFirstPage" && results.length === 0
+        ? undefined
+        : mapDBMessagesToUIMessages([...results].reverse()),
+    [results, status]
+  );
+  const value = useMemo(
+    () => ({
+      chat,
+      messages,
+      messageStatus: status,
+      loadMoreMessages: loadMore,
+    }),
+    [chat, loadMore, messages, status]
   );
 
   return (
-    <CurrentChatContext.Provider value={{ chat, messages }}>
+    <CurrentChatContext.Provider value={value}>
       {children}
     </CurrentChatContext.Provider>
   );

@@ -731,12 +731,16 @@ export function mapDBPartToUIMessagePart({
 
 /**
  * Maps raw DB messages (with parts) to UI messages.
- * Use this on the client side after receiving data from loadMessages query.
+ * Use this after receiving one or more pages from `loadMessagesPage`.
  *
  * @example
  * ```ts
- * const rawMessages = useQuery(api.chats.queries.loadMessages, { chatId });
- * const messages = rawMessages ? mapDBMessagesToUIMessages(rawMessages) : [];
+ * const { results } = usePaginatedQuery(
+ *   api.chats.queries.loadMessagesPage,
+ *   { chatId },
+ *   { initialNumItems: 50 }
+ * );
+ * const messages = mapDBMessagesToUIMessages([...results].reverse());
  * ```
  */
 export function mapDBMessagesToUIMessages(

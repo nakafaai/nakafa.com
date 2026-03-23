@@ -261,12 +261,17 @@ const partDocValidator = addFieldsToValidator(
 
 /**
  * Message with parts document validator
- * Used for loadMessages return type - returns raw DB documents
+ * Used for chat transcript query results - returns raw DB documents
  */
 export const messageWithPartsDocValidator = messageDocValidator.extend({
   parts: v.array(partDocValidator),
 });
 export type MessageWithPartsDoc = Infer<typeof messageWithPartsDocValidator>;
+
+/** Paginated chat transcript validator. */
+export const paginatedMessagesValidator = paginationResultValidator(
+  messageWithPartsDocValidator
+);
 
 export const tables = {
   chats: defineTable(chatValidator)
