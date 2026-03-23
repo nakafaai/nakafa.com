@@ -214,7 +214,6 @@ export const schoolClassForumValidator = v.object({
   status: schoolClassForumStatusValidator,
   isPinned: v.boolean(),
   postCount: v.number(),
-  participantCount: v.number(),
   reactionCounts: v.array(schoolClassReactionCountValidator),
   lastPostAt: v.number(),
   lastPostBy: v.optional(v.id("users")),
@@ -338,11 +337,14 @@ const tables = {
     forumId: v.id("schoolClassForums"),
     userId: v.id("users"),
     emoji: v.string(),
-  }).index("forumId_userId_emoji", ["forumId", "userId", "emoji"]),
+  })
+    .index("forumId_userId_emoji", ["forumId", "userId", "emoji"])
+    .index("by_forumId_and_emoji_and_userId", ["forumId", "emoji", "userId"]),
 
-  schoolClassForumPosts: defineTable(schoolClassForumPostValidator)
-    .index("forumId", ["forumId"])
-    .index("by_forumId_and_createdBy", ["forumId", "createdBy"]),
+  schoolClassForumPosts: defineTable(schoolClassForumPostValidator).index(
+    "forumId",
+    ["forumId"]
+  ),
 
   schoolClassForumPostAttachments: defineTable({
     postId: v.id("schoolClassForumPosts"),
@@ -359,13 +361,16 @@ const tables = {
     postId: v.id("schoolClassForumPosts"),
     userId: v.id("users"),
     emoji: v.string(),
-  }).index("postId_userId_emoji", ["postId", "userId", "emoji"]),
+  })
+    .index("postId_userId_emoji", ["postId", "userId", "emoji"])
+    .index("by_postId_and_emoji_and_userId", ["postId", "emoji", "userId"]),
 
   schoolClassForumReadStates: defineTable({
     forumId: v.id("schoolClassForums"),
     classId: v.id("schoolClasses"),
     userId: v.id("users"),
     lastReadAt: v.number(),
+    lastReadPostId: v.optional(v.id("schoolClassForumPosts")),
   })
     .index("forumId_userId", ["forumId", "userId"])
     .index("classId_userId", ["classId", "userId"]),

@@ -18,6 +18,7 @@ export async function updateForumReadState(
     classId: Id<"schoolClasses">;
     userId: Id<"users">;
     lastReadAt: number;
+    lastReadPostId?: Id<"schoolClassForumPosts">;
   }
 ) {
   const existing = await ctx.db
@@ -28,9 +29,15 @@ export async function updateForumReadState(
     .unique();
 
   if (existing) {
-    if (args.lastReadAt > existing.lastReadAt) {
+    if (
+      args.lastReadAt > existing.lastReadAt ||
+      (args.lastReadAt === existing.lastReadAt &&
+        args.lastReadPostId !== undefined &&
+        existing.lastReadPostId !== args.lastReadPostId)
+    ) {
       await ctx.db.patch("schoolClassForumReadStates", existing._id, {
         lastReadAt: args.lastReadAt,
+        lastReadPostId: args.lastReadPostId,
       });
     }
   } else {
@@ -39,6 +46,7 @@ export async function updateForumReadState(
       classId: args.classId,
       userId: args.userId,
       lastReadAt: args.lastReadAt,
+      lastReadPostId: args.lastReadPostId,
     });
   }
 }

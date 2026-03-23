@@ -35,7 +35,7 @@ export default function Layout(
           <SchoolClassesHeaderInfo />
           <SchoolClassesTabs />
 
-          <ForumContextProvider classId={classId} key={classId}>
+          <ForumContextProvider key={classId}>
             <SchoolClassesForumPostSheet />
             {children}
           </ForumContextProvider>

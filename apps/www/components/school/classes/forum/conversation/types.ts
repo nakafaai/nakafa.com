@@ -1,4 +1,4 @@
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { UserData } from "@repo/backend/convex/lib/helpers/user";
 import type { ForumPost } from "@/lib/store/forum";
 
@@ -12,6 +12,8 @@ interface ReactionWithUsers {
 }
 
 export type Forum = Doc<"schoolClassForums"> & {
+  lastReadAt: number | null;
+  lastReadPostId: Id<"schoolClassForumPosts"> | null;
   user: UserData | null;
   myReactions: string[];
   reactionUsers: ReactionWithUsers[];

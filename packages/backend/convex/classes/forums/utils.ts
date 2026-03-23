@@ -11,15 +11,57 @@ import { asyncMap } from "convex-helpers";
 const FORUM_REACTION_PREVIEW_LIMIT = 10;
 const FORUM_REACTION_PREVIEW_BATCH_LIMIT = 20;
 const FORUM_ATTACHMENT_LIMIT = 10;
+const FORUM_UNREAD_COUNT_LIMIT = 26;
 
-function getReactionPreviewBatchLimit(
-  reactionCounts: Array<{ count: number }>
+/**
+ * Counts unread posts after a read-state boundary, including same-timestamp posts.
+ */
+async function getUnreadForumPostCount(
+  ctx: QueryCtx,
+  {
+    forumId,
+    lastReadAt,
+    lastReadPostId,
+  }: {
+    forumId: Id<"schoolClassForums">;
+    lastReadAt: number;
+    lastReadPostId?: Id<"schoolClassForumPosts">;
+  }
 ) {
-  return reactionCounts.reduce(
-    (total, reactionCount) =>
-      total + Math.min(reactionCount.count, FORUM_REACTION_PREVIEW_LIMIT),
-    0
-  );
+  const sameTimestampPosts = await ctx.db
+    .query("schoolClassForumPosts")
+    .withIndex("forumId", (q) =>
+      q.eq("forumId", forumId).eq("_creationTime", lastReadAt)
+    )
+    .order("asc")
+    .take(FORUM_UNREAD_COUNT_LIMIT + 1);
+
+  let unreadCount = 0;
+
+  if (lastReadPostId) {
+    const boundaryIndex = sameTimestampPosts.findIndex(
+      (post) => post._id === lastReadPostId
+    );
+
+    if (boundaryIndex >= 0) {
+      unreadCount += sameTimestampPosts.length - boundaryIndex - 1;
+    } else {
+      unreadCount += sameTimestampPosts.length;
+    }
+  }
+
+  if (unreadCount >= FORUM_UNREAD_COUNT_LIMIT) {
+    return FORUM_UNREAD_COUNT_LIMIT;
+  }
+
+  const newerPosts = await ctx.db
+    .query("schoolClassForumPosts")
+    .withIndex("forumId", (q) =>
+      q.eq("forumId", forumId).gt("_creationTime", lastReadAt)
+    )
+    .take(FORUM_UNREAD_COUNT_LIMIT - unreadCount);
+
+  return unreadCount + newerPosts.length;
 }
 
 /**
@@ -37,14 +79,16 @@ export function attachForumUsers(
 }
 
 /**
- * Get last read timestamp for a forum.
- * Returns null if user has never read the forum.
+ * Get the current user's read boundary for one forum.
  */
-export async function getForumLastReadAt(
+export async function getForumReadState(
   ctx: QueryCtx,
   forumId: Id<"schoolClassForums">,
   userId: Id<"users">
-): Promise<number | null> {
+): Promise<{
+  lastReadAt: number | null;
+  lastReadPostId: Id<"schoolClassForumPosts"> | null;
+}> {
   const readState = await ctx.db
     .query("schoolClassForumReadStates")
     .withIndex("forumId_userId", (q) =>
@@ -52,7 +96,10 @@ export async function getForumLastReadAt(
     )
     .unique();
 
-  return readState?.lastReadAt ?? null;
+  return {
+    lastReadAt: readState?.lastReadAt ?? null,
+    lastReadPostId: readState?.lastReadPostId ?? null,
+  };
 }
 
 /**
@@ -65,8 +112,6 @@ export async function getForumUnreadCounts(
   userId: Id<"users">,
   forums: Array<{ _id: Id<"schoolClassForums">; lastPostAt: number }>
 ): Promise<Map<Id<"schoolClassForums">, number>> {
-  const MAX_COUNT = 26;
-
   const counts = await asyncMap(forums, async (forum) => {
     const readState = await ctx.db
       .query("schoolClassForumReadStates")
@@ -80,14 +125,14 @@ export async function getForumUnreadCounts(
       return { forumId: forum._id, count: 0 };
     }
 
-    const posts = await ctx.db
-      .query("schoolClassForumPosts")
-      .withIndex("forumId", (q) =>
-        q.eq("forumId", forum._id).gt("_creationTime", lastReadAt)
-      )
-      .take(MAX_COUNT);
-
-    return { forumId: forum._id, count: posts.length };
+    return {
+      forumId: forum._id,
+      count: await getUnreadForumPostCount(ctx, {
+        forumId: forum._id,
+        lastReadAt,
+        lastReadPostId: readState?.lastReadPostId,
+      }),
+    };
   });
 
   return new Map(counts.map((c) => [c.forumId, c.count]));
@@ -139,31 +184,88 @@ async function getMyPostReactions(
   );
 }
 
-interface ReactionDoc {
-  emoji: string;
-  userId: Id<"users">;
+/**
+ * Gets per-emoji reactor name previews for a single forum.
+ * Previews are bounded and follow the forum's aggregated reaction counts.
+ */
+export async function getForumReactionPreviews(
+  ctx: QueryCtx,
+  forum: Doc<"schoolClassForums">
+) {
+  const reactionsByEmoji = await asyncMap(
+    forum.reactionCounts,
+    ({ count, emoji }) => {
+      if (count === 0) {
+        return Promise.resolve([]);
+      }
+
+      return ctx.db
+        .query("schoolClassForumReactions")
+        .withIndex("by_forumId_and_emoji_and_userId", (q) =>
+          q.eq("forumId", forum._id).eq("emoji", emoji)
+        )
+        .take(Math.min(count, FORUM_REACTION_PREVIEW_LIMIT));
+    }
+  );
+
+  const userMap = await getUserMap(
+    ctx,
+    reactionsByEmoji.flat().map((reaction) => reaction.userId)
+  );
+
+  return new Map(
+    forum.reactionCounts.map(({ emoji }, index) => [
+      emoji,
+      reactionsByEmoji[index].map(
+        (reaction) => userMap.get(reaction.userId)?.name ?? "Unknown"
+      ),
+    ])
+  );
 }
 
 /**
- * Group reactor names by emoji for display.
- * Limits to 10 names per emoji.
+ * Gets per-emoji reactor name previews for a batch of forum posts.
  */
-export function buildReactorsByEmoji(
-  reactions: ReactionDoc[],
-  userMap: Map<Id<"users">, { name: string }>
-): Map<string, string[]> {
-  const reactorsByEmoji = new Map<string, string[]>();
+async function getPostReactionPreviews(
+  ctx: QueryCtx,
+  posts: Doc<"schoolClassForumPosts">[]
+) {
+  const reactionsByPost = await asyncMap(posts, (post) =>
+    asyncMap(post.reactionCounts, ({ count, emoji }) => {
+      if (count === 0) {
+        return Promise.resolve([]);
+      }
 
-  for (const reaction of reactions) {
-    const userName = userMap.get(reaction.userId)?.name ?? "Unknown";
-    const existing = reactorsByEmoji.get(reaction.emoji) ?? [];
-    if (existing.length < 10) {
-      existing.push(userName);
-    }
-    reactorsByEmoji.set(reaction.emoji, existing);
-  }
+      return ctx.db
+        .query("schoolClassForumPostReactions")
+        .withIndex("by_postId_and_emoji_and_userId", (q) =>
+          q.eq("postId", post._id).eq("emoji", emoji)
+        )
+        .take(Math.min(count, FORUM_REACTION_PREVIEW_LIMIT));
+    })
+  );
 
-  return reactorsByEmoji;
+  const userMap = await getUserMap(
+    ctx,
+    reactionsByPost
+      .flat()
+      .flat()
+      .map((reaction) => reaction.userId)
+  );
+
+  return new Map(
+    posts.map((post, postIndex) => [
+      post._id,
+      new Map(
+        post.reactionCounts.map(({ emoji }, reactionIndex) => [
+          emoji,
+          reactionsByPost[postIndex][reactionIndex].map(
+            (reaction) => userMap.get(reaction.userId)?.name ?? "Unknown"
+          ),
+        ])
+      ),
+    ])
+  );
 }
 
 /**
@@ -273,21 +375,8 @@ export async function enrichForumPosts(
     p.replyToUserId ? [p.createdBy, p.replyToUserId] : [p.createdBy]
   );
 
-  const [allReactions, myReactionsMap, allAttachments] = await Promise.all([
-    asyncMap(posts, (post) => {
-      const reactionPreviewLimit = getReactionPreviewBatchLimit(
-        post.reactionCounts
-      );
-
-      if (reactionPreviewLimit === 0) {
-        return Promise.resolve([]);
-      }
-
-      return ctx.db
-        .query("schoolClassForumPostReactions")
-        .withIndex("postId_userId_emoji", (idx) => idx.eq("postId", post._id))
-        .take(reactionPreviewLimit);
-    }),
+  const [reactionPreviews, myReactionsMap, allAttachments] = await Promise.all([
+    getPostReactionPreviews(ctx, posts),
     getMyPostReactions(ctx, postIds, currentUserId),
     asyncMap(postIds, (postId) =>
       ctx.db
@@ -308,20 +397,12 @@ export async function enrichForumPosts(
     });
   }
 
-  const reactorUserIds = allReactions.flat().map((r) => r.userId);
   const flatAttachments = allAttachments.flat();
 
   const [userMap, urls] = await Promise.all([
-    getUserMap(ctx, [...postUserIds, ...reactorUserIds]),
+    getUserMap(ctx, postUserIds),
     asyncMap(flatAttachments, (att) => ctx.storage.getUrl(att.fileId)),
   ]);
-
-  const reactorMaps = new Map(
-    postIds.map((postId, i) => [
-      postId,
-      buildReactorsByEmoji(allReactions[i], userMap),
-    ])
-  );
 
   const urlMap = new Map(flatAttachments.map((att, i) => [att._id, urls[i]]));
 
@@ -348,7 +429,7 @@ export async function enrichForumPosts(
     reactionUsers: post.reactionCounts.map(({ emoji, count }) => ({
       emoji,
       count,
-      reactors: reactorMaps.get(post._id)?.get(emoji) ?? [],
+      reactors: reactionPreviews.get(post._id)?.get(emoji) ?? [],
     })),
     attachments: attachmentsByPost.get(post._id) ?? [],
   }));

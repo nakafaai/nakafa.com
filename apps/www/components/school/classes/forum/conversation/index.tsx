@@ -34,10 +34,12 @@ export const ForumPostConversation = memo(
   ({
     forum,
     lastReadAt,
+    lastReadPostId,
     currentUserId,
   }: {
     forum: Forum;
     lastReadAt: number;
+    lastReadPostId: Id<"schoolClassForumPosts"> | null;
     currentUserId: Id<"users">;
   }) => {
     // Data fetching & pagination
@@ -63,6 +65,7 @@ export const ForumPostConversation = memo(
       posts,
       currentUserId,
       lastReadAt,
+      lastReadPostId,
       isJumpMode,
       targetIndex,
     });
@@ -72,11 +75,10 @@ export const ForumPostConversation = memo(
     const [isAtBottom, setIsAtBottom] = useState(true);
     const [isPrepending, setIsPrepending] = useState(false);
 
-    // Mark read strategy - use lastPostTime to detect new posts (not pagination)
-    const lastPostTime = posts.at(-1)?._creationTime;
+    const lastPostId = posts.at(-1)?._id;
     useMarkRead({
       forumId: forum._id,
-      lastPostTime,
+      lastPostId,
       isAtBottom,
       isJumpMode,
     });

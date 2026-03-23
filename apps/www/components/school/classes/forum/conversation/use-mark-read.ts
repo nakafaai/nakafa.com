@@ -15,24 +15,38 @@ import { useEffect, useRef } from "react";
  */
 export function useMarkRead({
   forumId,
-  lastPostTime,
+  lastPostId,
   isAtBottom,
   isJumpMode,
 }: {
   forumId: Id<"schoolClassForums">;
-  lastPostTime: number | undefined;
+  lastPostId: Id<"schoolClassForumPosts"> | undefined;
   isAtBottom: boolean;
   isJumpMode: boolean;
 }) {
   const markRead = useMutation(api.classes.forums.mutations.markForumRead);
+  const lastReadPostIdRef = useRef(lastPostId);
+
+  lastReadPostIdRef.current = lastPostId;
 
   // Track if we've already marked read at bottom to prevent duplicate calls
   const hasMarkedAtBottomRef = useRef(false);
 
-  const debouncedMarkRead = useDebouncedCallback(() => markRead({ forumId }), {
-    delay: 1000,
-    flushOnUnmount: true,
-  });
+  const debouncedMarkRead = useDebouncedCallback(
+    () => {
+      const lastReadPostId = lastReadPostIdRef.current;
+
+      if (lastReadPostId === undefined) {
+        return;
+      }
+
+      return markRead({ forumId, lastReadPostId });
+    },
+    {
+      delay: 1000,
+      flushOnUnmount: true,
+    }
+  );
 
   // Cancel pending mark-read and reset flag when user scrolls away from bottom
   useEffect(() => {
@@ -51,21 +65,20 @@ export function useMarkRead({
     }
   }, [canMarkRead, debouncedMarkRead]);
 
-  // Real-time trigger: mark read when new messages arrive while at bottom
-  // Track by lastPostTime to detect actual new posts (not pagination)
-  const prevLastPostTimeRef = useRef(lastPostTime);
+  // Real-time trigger: mark read when a newer visible post arrives.
+  const prevLastPostIdRef = useRef(lastPostId);
   useEffect(() => {
-    const prevTime = prevLastPostTimeRef.current;
-    prevLastPostTimeRef.current = lastPostTime;
+    const prevPostId = prevLastPostIdRef.current;
+    prevLastPostIdRef.current = lastPostId;
 
-    // Only flush if a genuinely newer post arrived (not older posts from pagination)
     const hasNewerPost =
-      lastPostTime !== undefined &&
-      prevTime !== undefined &&
-      lastPostTime > prevTime;
+      lastPostId !== undefined &&
+      prevPostId !== undefined &&
+      lastPostId !== prevPostId;
 
     if (hasNewerPost && isAtBottom && !isJumpMode) {
+      debouncedMarkRead();
       debouncedMarkRead.flush();
     }
-  }, [lastPostTime, isAtBottom, isJumpMode, debouncedMarkRead]);
+  }, [lastPostId, isAtBottom, isJumpMode, debouncedMarkRead]);
 }

@@ -46,8 +46,8 @@ export function useForumPosts(forumId: Id<"schoolClassForums">) {
         targetIndex: jumpInitData.targetIndex,
         hasMoreBefore: jumpInitData.hasMoreBefore,
         hasMoreAfter: jumpInitData.hasMoreAfter,
-        oldestTime: jumpInitData.oldestTime,
-        newestTime: jumpInitData.newestTime,
+        oldestPostId: jumpInitData.oldestPostId,
+        newestPostId: jumpInitData.newestPostId,
       });
     }
   }, [shouldFetchJumpData, jumpInitData, setJumpModeData]);
@@ -55,15 +55,15 @@ export function useForumPosts(forumId: Id<"schoolClassForums">) {
   // Bidirectional pagination queries
   const olderData = useQuery(
     api.classes.forums.queries.getForumPostsOlder,
-    jumpMode?.isLoadingOlder === true
-      ? { forumId, beforeTime: jumpMode.oldestTime }
+    jumpMode?.isLoadingOlder === true && jumpMode.oldestPostId
+      ? { forumId, beforePostId: jumpMode.oldestPostId }
       : "skip"
   );
 
   const newerData = useQuery(
     api.classes.forums.queries.getForumPostsNewer,
-    jumpMode?.isLoadingNewer === true
-      ? { forumId, afterTime: jumpMode.newestTime }
+    jumpMode?.isLoadingNewer === true && jumpMode.newestPostId
+      ? { forumId, afterPostId: jumpMode.newestPostId }
       : "skip"
   );
 
@@ -73,7 +73,7 @@ export function useForumPosts(forumId: Id<"schoolClassForums">) {
       appendOlderPosts(
         olderData.posts,
         olderData.hasMore,
-        olderData.oldestTime
+        olderData.oldestPostId
       );
     }
   }, [jumpMode?.isLoadingOlder, olderData, appendOlderPosts]);
@@ -84,7 +84,7 @@ export function useForumPosts(forumId: Id<"schoolClassForums">) {
       appendNewerPosts(
         newerData.posts,
         newerData.hasMore,
-        newerData.newestTime
+        newerData.newestPostId
       );
     }
   }, [jumpMode?.isLoadingNewer, newerData, appendNewerPosts]);

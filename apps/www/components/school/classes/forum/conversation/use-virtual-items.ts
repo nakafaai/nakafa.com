@@ -21,6 +21,7 @@ export function useVirtualItems({
   posts,
   currentUserId,
   lastReadAt,
+  lastReadPostId,
   isJumpMode,
   targetIndex,
 }: {
@@ -28,10 +29,12 @@ export function useVirtualItems({
   posts: ForumPost[];
   currentUserId: Id<"users">;
   lastReadAt: number;
+  lastReadPostId: Id<"schoolClassForumPosts"> | null;
   isJumpMode: boolean;
   targetIndex: number;
 }) {
   const initialLastReadAt = useRef(lastReadAt);
+  const initialLastReadPostId = useRef(lastReadPostId);
   const mountTime = useRef(Date.now());
 
   // Calculate unread info
@@ -41,9 +44,22 @@ export function useVirtualItems({
     }
     let firstIdx = -1;
     let count = 0;
+    const readBoundaryExists =
+      initialLastReadPostId.current !== null &&
+      posts.some((post) => post._id === initialLastReadPostId.current);
+    let passedReadBoundary =
+      initialLastReadPostId.current === null || !readBoundaryExists;
+
     for (const [i, post] of posts.entries()) {
+      if (!passedReadBoundary && post._id === initialLastReadPostId.current) {
+        passedReadBoundary = true;
+        continue;
+      }
+
       const isUnread =
-        post._creationTime > initialLastReadAt.current &&
+        (post._creationTime > initialLastReadAt.current ||
+          (post._creationTime === initialLastReadAt.current &&
+            passedReadBoundary)) &&
         post._creationTime < mountTime.current &&
         post.createdBy !== currentUserId;
       if (isUnread) {

@@ -36,6 +36,7 @@ const ForumPostList = memo(
         forum={forum}
         key={forum._id}
         lastReadAt={forum.lastReadAt ?? 0}
+        lastReadPostId={forum.lastReadPostId ?? null}
       />
     );
   }

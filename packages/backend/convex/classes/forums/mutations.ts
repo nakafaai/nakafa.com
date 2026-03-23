@@ -18,6 +18,96 @@ const MAX_FORUM_POST_ATTACHMENTS = 10;
 const MAX_FORUM_POST_MENTIONS = 20;
 const MAX_FORUM_REACTION_VARIANTS = 20;
 
+/** Returns whether a forum already has room for a new emoji variant. */
+async function canAddForumReactionVariant(
+  ctx: MutationCtx,
+  {
+    emoji,
+    forumId,
+  }: {
+    emoji: string;
+    forumId: Id<"schoolClassForums">;
+  }
+) {
+  const existingVariant = await ctx.db
+    .query("schoolClassForumReactions")
+    .withIndex("by_forumId_and_emoji_and_userId", (q) =>
+      q.eq("forumId", forumId).eq("emoji", emoji)
+    )
+    .first();
+
+  if (existingVariant) {
+    return true;
+  }
+
+  let variantCount = 0;
+  let previousEmoji: string | null = null;
+
+  for await (const reaction of ctx.db
+    .query("schoolClassForumReactions")
+    .withIndex("by_forumId_and_emoji_and_userId", (q) =>
+      q.eq("forumId", forumId)
+    )) {
+    if (reaction.emoji === previousEmoji) {
+      continue;
+    }
+
+    previousEmoji = reaction.emoji;
+    variantCount += 1;
+
+    if (variantCount >= MAX_FORUM_REACTION_VARIANTS) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/** Returns whether a post already has room for a new emoji variant. */
+async function canAddPostReactionVariant(
+  ctx: MutationCtx,
+  {
+    emoji,
+    postId,
+  }: {
+    emoji: string;
+    postId: Id<"schoolClassForumPosts">;
+  }
+) {
+  const existingVariant = await ctx.db
+    .query("schoolClassForumPostReactions")
+    .withIndex("by_postId_and_emoji_and_userId", (q) =>
+      q.eq("postId", postId).eq("emoji", emoji)
+    )
+    .first();
+
+  if (existingVariant) {
+    return true;
+  }
+
+  let variantCount = 0;
+  let previousEmoji: string | null = null;
+
+  for await (const reaction of ctx.db
+    .query("schoolClassForumPostReactions")
+    .withIndex("by_postId_and_emoji_and_userId", (q) =>
+      q.eq("postId", postId)
+    )) {
+    if (reaction.emoji === previousEmoji) {
+      continue;
+    }
+
+    previousEmoji = reaction.emoji;
+    variantCount += 1;
+
+    if (variantCount >= MAX_FORUM_REACTION_VARIANTS) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 /**
  * Validates and deduplicates forum mentions.
  * Only users who can access the forum may be mentioned.
@@ -131,7 +221,6 @@ export const createForum = mutation({
       status: "open",
       isPinned: false,
       postCount: 0,
-      participantCount: 1,
       reactionCounts: [],
       lastPostAt: now,
       lastPostBy: userId,
@@ -275,14 +364,7 @@ export const togglePostReaction = mutation({
       return { added: false };
     }
 
-    const hasReactionVariant = post.reactionCounts.some(
-      (reactionCount) => reactionCount.emoji === args.emoji
-    );
-
-    if (
-      !hasReactionVariant &&
-      post.reactionCounts.length >= MAX_FORUM_REACTION_VARIANTS
-    ) {
+    if (!(await canAddPostReactionVariant(ctx, args))) {
       throw new ConvexError({
         code: "FORUM_REACTION_VARIANT_LIMIT_EXCEEDED",
         message: "Forum post reaction variants exceed the supported limit.",
@@ -308,7 +390,7 @@ export const toggleForumReaction = mutation({
     const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
 
-    const { forum } = await loadForumWithAccess(ctx, args.forumId, userId);
+    await loadForumWithAccess(ctx, args.forumId, userId);
 
     const existingReaction = await ctx.db
       .query("schoolClassForumReactions")
@@ -325,14 +407,7 @@ export const toggleForumReaction = mutation({
       return { added: false };
     }
 
-    const hasReactionVariant = forum.reactionCounts.some(
-      (reactionCount) => reactionCount.emoji === args.emoji
-    );
-
-    if (
-      !hasReactionVariant &&
-      forum.reactionCounts.length >= MAX_FORUM_REACTION_VARIANTS
-    ) {
+    if (!(await canAddForumReactionVariant(ctx, args))) {
       throw new ConvexError({
         code: "FORUM_REACTION_VARIANT_LIMIT_EXCEEDED",
         message: "Forum reaction variants exceed the supported limit.",
@@ -352,14 +427,29 @@ export const toggleForumReaction = mutation({
 export const markForumRead = mutation({
   args: {
     forumId: vv.id("schoolClassForums"),
+    lastReadPostId: vv.id("schoolClassForumPosts"),
   },
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
 
     const { forum } = await loadForumWithAccess(ctx, args.forumId, userId);
+    const lastReadPost = await ctx.db.get(
+      "schoolClassForumPosts",
+      args.lastReadPostId
+    );
 
-    const now = Date.now();
+    if (!lastReadPost || lastReadPost.forumId !== args.forumId) {
+      throw new ConvexError({
+        code: "POST_NOT_FOUND",
+        message: "Read boundary post not found.",
+      });
+    }
+
+    const safeLastReadAt = Math.min(
+      lastReadPost._creationTime,
+      forum.lastPostAt
+    );
 
     const existing = await ctx.db
       .query("schoolClassForumReadStates")
@@ -369,9 +459,17 @@ export const markForumRead = mutation({
       .unique();
 
     if (existing) {
-      if (now > existing.lastReadAt) {
+      if (safeLastReadAt > existing.lastReadAt) {
         await ctx.db.patch("schoolClassForumReadStates", existing._id, {
-          lastReadAt: now,
+          lastReadAt: safeLastReadAt,
+          lastReadPostId: lastReadPost._id,
+        });
+      } else if (
+        safeLastReadAt === existing.lastReadAt &&
+        existing.lastReadPostId !== lastReadPost._id
+      ) {
+        await ctx.db.patch("schoolClassForumReadStates", existing._id, {
+          lastReadPostId: lastReadPost._id,
         });
       }
     } else {
@@ -379,7 +477,8 @@ export const markForumRead = mutation({
         forumId: args.forumId,
         classId: forum.classId,
         userId,
-        lastReadAt: now,
+        lastReadAt: safeLastReadAt,
+        lastReadPostId: lastReadPost._id,
       });
     }
   },

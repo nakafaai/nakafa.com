@@ -18,21 +18,8 @@ async function updateForumAfterInsert(
     return null;
   }
 
-  const authorPosts = await ctx.db
-    .query("schoolClassForumPosts")
-    .withIndex("by_forumId_and_createdBy", (q) =>
-      q.eq("forumId", post.forumId).eq("createdBy", post.createdBy)
-    )
-    .take(2);
-
-  const participantCount =
-    authorPosts.length === 1 && post.createdBy !== forum.createdBy
-      ? forum.participantCount + 1
-      : forum.participantCount;
-
   await ctx.db.patch("schoolClassForums", post.forumId, {
     postCount: forum.postCount + 1,
-    participantCount,
     lastPostAt: post._creationTime,
     lastPostBy: post.createdBy,
     updatedAt: Date.now(),
@@ -60,21 +47,8 @@ async function updateForumAfterDelete(
     .order("desc")
     .first();
 
-  const authorPosts = await ctx.db
-    .query("schoolClassForumPosts")
-    .withIndex("by_forumId_and_createdBy", (q) =>
-      q.eq("forumId", oldPost.forumId).eq("createdBy", oldPost.createdBy)
-    )
-    .take(1);
-
-  const participantCount =
-    authorPosts.length === 0 && oldPost.createdBy !== forum.createdBy
-      ? Math.max(forum.participantCount - 1, 1)
-      : forum.participantCount;
-
   await ctx.db.patch("schoolClassForums", oldPost.forumId, {
     postCount: Math.max(forum.postCount - 1, 0),
-    participantCount,
     lastPostAt: latestRemainingPost?._creationTime ?? forum._creationTime,
     lastPostBy: latestRemainingPost?.createdBy ?? forum.createdBy,
     updatedAt: Date.now(),
@@ -166,6 +140,7 @@ export async function forumPostsHandler(
           classId: post.classId,
           userId: post.createdBy,
           lastReadAt: post._creationTime,
+          lastReadPostId: post._id,
         });
 
         await notifyForumPostParticipants(ctx, {
