@@ -19,6 +19,20 @@ import {
 import { ConvexError } from "convex/values";
 
 type IrtDbWriter = MutationCtx["db"];
+type LatestScaleVersion = Awaited<
+  ReturnType<typeof getLatestScaleVersionForTryout>
+>;
+type ResolvedScaleVersion = NonNullable<LatestScaleVersion>;
+type PublishableScaleSnapshot = NonNullable<
+  Awaited<ReturnType<typeof getPublishableScaleSnapshot>>
+>;
+
+type OfficialScaleDecision =
+  | { kind: "not-ready" }
+  | {
+      kind: "published" | "unchanged";
+      scaleVersion: ResolvedScaleVersion;
+    };
 
 /** Publishes one frozen scale version from a prepared item snapshot. */
 async function publishScaleVersion(
@@ -115,9 +129,7 @@ async function publishOfficialScaleVersion(
   }: {
     now: number;
     tryoutId: Id<"tryouts">;
-    snapshot: NonNullable<
-      Awaited<ReturnType<typeof getPublishableScaleSnapshot>>
-    >;
+    snapshot: PublishableScaleSnapshot;
   }
 ) {
   const scaleVersionId = await publishScaleVersion(db, {
@@ -137,12 +149,8 @@ async function getUnchangedOfficialScaleVersion(
     latestScaleVersion,
     snapshot,
   }: {
-    latestScaleVersion: Awaited<
-      ReturnType<typeof getLatestScaleVersionForTryout>
-    >;
-    snapshot: NonNullable<
-      Awaited<ReturnType<typeof getPublishableScaleSnapshot>>
-    >;
+    latestScaleVersion: LatestScaleVersion;
+    snapshot: PublishableScaleSnapshot;
   }
 ) {
   if (!(latestScaleVersion && latestScaleVersion.status === "official")) {
@@ -163,8 +171,7 @@ async function getUnchangedOfficialScaleVersion(
   return latestScaleVersion;
 }
 
-/** Returns an existing frozen scale version or publishes the appropriate next one. */
-export async function getOrPublishScaleVersionForTryout(
+async function evaluateAndPersistScaleQuality(
   db: IrtDbWriter,
   {
     now,
@@ -180,6 +187,74 @@ export async function getOrPublishScaleVersionForTryout(
     await upsertTryoutScaleQualityCheck(db, scaleQuality);
   }
 
+  return scaleQuality;
+}
+
+async function resolveOfficialScaleDecision(
+  db: IrtDbWriter,
+  {
+    latestScaleVersion,
+    now,
+    tryoutId,
+  }: {
+    latestScaleVersion: LatestScaleVersion;
+    now: number;
+    tryoutId: Id<"tryouts">;
+  }
+): Promise<OfficialScaleDecision> {
+  const snapshot = await getPublishableScaleSnapshot(db, tryoutId);
+
+  if (!snapshot) {
+    return { kind: "not-ready" };
+  }
+
+  const unchangedOfficialScale = await getUnchangedOfficialScaleVersion(db, {
+    latestScaleVersion,
+    snapshot,
+  });
+
+  if (unchangedOfficialScale) {
+    return {
+      kind: "unchanged",
+      scaleVersion: unchangedOfficialScale,
+    };
+  }
+
+  const scaleVersion = await publishOfficialScaleVersion(db, {
+    now,
+    tryoutId,
+    snapshot,
+  });
+
+  if (!scaleVersion) {
+    throw new ConvexError({
+      code: "IRT_SCALE_VERSION_NOT_FOUND",
+      message: "Published scale version could not be reloaded.",
+    });
+  }
+
+  return {
+    kind: "published",
+    scaleVersion,
+  };
+}
+
+/** Returns an existing frozen scale version or publishes the appropriate next one. */
+export async function getOrPublishScaleVersionForTryout(
+  db: IrtDbWriter,
+  {
+    now,
+    tryoutId,
+  }: {
+    now: number;
+    tryoutId: Id<"tryouts">;
+  }
+) {
+  const scaleQuality = await evaluateAndPersistScaleQuality(db, {
+    now,
+    tryoutId,
+  });
+
   const latestScaleVersion = await getLatestScaleVersionForTryout(db, tryoutId);
 
   if (!scaleQuality || scaleQuality.status === "blocked") {
@@ -190,38 +265,21 @@ export async function getOrPublishScaleVersionForTryout(
     return publishBootstrapScaleVersion(db, { now, tryoutId });
   }
 
-  const publishableSnapshot = await getPublishableScaleSnapshot(db, tryoutId);
+  const officialScaleDecision = await resolveOfficialScaleDecision(db, {
+    latestScaleVersion,
+    now,
+    tryoutId,
+  });
 
-  if (latestScaleVersion) {
-    if (!publishableSnapshot) {
+  if (officialScaleDecision.kind === "not-ready") {
+    if (latestScaleVersion) {
       return latestScaleVersion;
     }
 
-    const unchangedOfficialScale = await getUnchangedOfficialScaleVersion(db, {
-      latestScaleVersion,
-      snapshot: publishableSnapshot,
-    });
-
-    if (unchangedOfficialScale) {
-      return unchangedOfficialScale;
-    }
-
-    return publishOfficialScaleVersion(db, {
-      now,
-      tryoutId,
-      snapshot: publishableSnapshot,
-    });
+    return publishBootstrapScaleVersion(db, { now, tryoutId });
   }
 
-  if (publishableSnapshot) {
-    return publishOfficialScaleVersion(db, {
-      now,
-      tryoutId,
-      snapshot: publishableSnapshot,
-    });
-  }
-
-  return publishBootstrapScaleVersion(db, { now, tryoutId });
+  return officialScaleDecision.scaleVersion;
 }
 
 /** Publishes a new official tryout scale if the current frozen version changed. */
@@ -238,8 +296,10 @@ export async function publishTryoutScaleVersionIfNeeded(
     });
   }
 
-  const scaleQuality = await evaluateTryoutScaleQuality(ctx.db, {
-    now: Date.now(),
+  const now = Date.now();
+
+  const scaleQuality = await evaluateAndPersistScaleQuality(ctx.db, {
+    now,
     tryoutId: tryout._id,
   });
 
@@ -247,15 +307,7 @@ export async function publishTryoutScaleVersionIfNeeded(
     return { kind: "not-ready" as const };
   }
 
-  await upsertTryoutScaleQualityCheck(ctx.db, scaleQuality);
-
   if (scaleQuality.status === "blocked") {
-    return { kind: "not-ready" as const };
-  }
-
-  const snapshot = await getPublishableScaleSnapshot(ctx.db, tryout._id);
-
-  if (!snapshot) {
     return { kind: "not-ready" as const };
   }
 
@@ -264,33 +316,24 @@ export async function publishTryoutScaleVersionIfNeeded(
     tryout._id
   );
 
-  const unchangedOfficialScale = await getUnchangedOfficialScaleVersion(
-    ctx.db,
-    {
-      latestScaleVersion,
-      snapshot,
-    }
-  );
+  const officialScaleDecision = await resolveOfficialScaleDecision(ctx.db, {
+    latestScaleVersion,
+    now,
+    tryoutId: tryout._id,
+  });
 
-  if (unchangedOfficialScale) {
+  if (officialScaleDecision.kind === "not-ready") {
+    return { kind: "not-ready" as const };
+  }
+
+  if (officialScaleDecision.kind === "unchanged") {
     return {
       kind: "unchanged" as const,
-      scaleVersionId: unchangedOfficialScale._id,
+      scaleVersionId: officialScaleDecision.scaleVersion._id,
     };
   }
 
-  const scaleVersion = await publishOfficialScaleVersion(ctx.db, {
-    now: Date.now(),
-    tryoutId: tryout._id,
-    snapshot,
-  });
-
-  if (!scaleVersion) {
-    throw new ConvexError({
-      code: "IRT_SCALE_VERSION_NOT_FOUND",
-      message: "Published scale version could not be reloaded.",
-    });
-  }
+  const scaleVersion = officialScaleDecision.scaleVersion;
 
   await ctx.scheduler.runAfter(
     0,

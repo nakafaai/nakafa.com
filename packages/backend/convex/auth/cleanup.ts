@@ -1,9 +1,12 @@
 import { internal } from "@repo/backend/convex/_generated/api";
-import { internalMutation } from "@repo/backend/convex/_generated/server";
+import { internalMutation } from "@repo/backend/convex/functions";
 import { v } from "convex/values";
 
 const NOTIFICATION_PREFERENCES_CLEANUP_BATCH_SIZE = 10;
+const NOTIFICATION_ENTITY_MUTES_CLEANUP_BATCH_SIZE = 25;
 const NOTIFICATION_COUNT_CLEANUP_BATCH_SIZE = 10;
+const NOTIFICATION_RECIPIENT_CLEANUP_BATCH_SIZE = 25;
+const NOTIFICATION_ACTOR_CLEANUP_BATCH_SIZE = 25;
 
 /** Deletes one user's local auth-related rows in bounded batches. */
 export const cleanupDeletedUser = internalMutation({
@@ -34,6 +37,28 @@ export const cleanupDeletedUser = internalMutation({
       return null;
     }
 
+    const notificationEntityMutes = await ctx.db
+      .query("notificationEntityMutes")
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .take(NOTIFICATION_ENTITY_MUTES_CLEANUP_BATCH_SIZE);
+
+    for (const mutedEntity of notificationEntityMutes) {
+      await ctx.db.delete("notificationEntityMutes", mutedEntity._id);
+    }
+
+    if (
+      notificationEntityMutes.length ===
+      NOTIFICATION_ENTITY_MUTES_CLEANUP_BATCH_SIZE
+    ) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.auth.cleanup.cleanupDeletedUser,
+        args
+      );
+
+      return null;
+    }
+
     const notificationCounts = await ctx.db
       .query("notificationCounts")
       .withIndex("userId", (q) => q.eq("userId", args.userId))
@@ -44,6 +69,47 @@ export const cleanupDeletedUser = internalMutation({
     }
 
     if (notificationCounts.length === NOTIFICATION_COUNT_CLEANUP_BATCH_SIZE) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.auth.cleanup.cleanupDeletedUser,
+        args
+      );
+
+      return null;
+    }
+
+    const notificationsByRecipient = await ctx.db
+      .query("notifications")
+      .withIndex("recipientId", (q) => q.eq("recipientId", args.userId))
+      .take(NOTIFICATION_RECIPIENT_CLEANUP_BATCH_SIZE);
+
+    for (const notification of notificationsByRecipient) {
+      await ctx.db.delete("notifications", notification._id);
+    }
+
+    if (
+      notificationsByRecipient.length ===
+      NOTIFICATION_RECIPIENT_CLEANUP_BATCH_SIZE
+    ) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.auth.cleanup.cleanupDeletedUser,
+        args
+      );
+
+      return null;
+    }
+
+    const notificationsByActor = await ctx.db
+      .query("notifications")
+      .withIndex("actorId", (q) => q.eq("actorId", args.userId))
+      .take(NOTIFICATION_ACTOR_CLEANUP_BATCH_SIZE);
+
+    for (const notification of notificationsByActor) {
+      await ctx.db.delete("notifications", notification._id);
+    }
+
+    if (notificationsByActor.length === NOTIFICATION_ACTOR_CLEANUP_BATCH_SIZE) {
       await ctx.scheduler.runAfter(
         0,
         internal.auth.cleanup.cleanupDeletedUser,

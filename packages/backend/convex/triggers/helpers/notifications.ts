@@ -18,34 +18,45 @@ import type { WithoutSystemFields } from "convex/server";
  * - Comment → comment.slug
  * This ensures URLs are always correct even if routing changes.
  *
- * Future enhancements:
- * - Check user preferences (disabledTypes, mutedEntities)
- * - Send push notifications
- * - Send email notifications based on digest settings
+ * Current preference checks:
+ * - Disabled notification types via notificationPreferences.disabledTypes
+ * - Muted entities via notificationEntityMutes
  */
 export async function createNotification(
   ctx: { db: DatabaseReader & DatabaseWriter },
   args: Omit<WithoutSystemFields<Doc<"notifications">>, "readAt">
 ) {
-  const preferences = await ctx.db
+  const entityId = args.entityId;
+
+  const preferencesPromise = ctx.db
     .query("notificationPreferences")
     .withIndex("userId", (q) => q.eq("userId", args.recipientId))
-    .unique();
+    .first();
+
+  const mutedEntityPromise =
+    entityId && args.entityType !== "system"
+      ? ctx.db
+          .query("notificationEntityMutes")
+          .withIndex("by_userId_entityType_entityId", (q) =>
+            q
+              .eq("userId", args.recipientId)
+              .eq("entityType", args.entityType)
+              .eq("entityId", entityId)
+          )
+          .first()
+      : Promise.resolve(null);
+
+  const [preferences, mutedEntity] = await Promise.all([
+    preferencesPromise,
+    mutedEntityPromise,
+  ]);
 
   if (preferences?.disabledTypes.includes(args.type)) {
     return null;
   }
 
-  if (args.entityId && args.entityType !== "system") {
-    const isMuted = preferences?.mutedEntities.some(
-      (mutedEntity) =>
-        mutedEntity.entityType === args.entityType &&
-        mutedEntity.entityId === args.entityId
-    );
-
-    if (isMuted) {
-      return null;
-    }
+  if (mutedEntity) {
+    return null;
   }
 
   await ctx.db.insert("notifications", {

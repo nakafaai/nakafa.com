@@ -25,6 +25,7 @@ import { forumReactionsHandler } from "@repo/backend/convex/triggers/forums/reac
 import { materialGroupsHandler } from "@repo/backend/convex/triggers/materials/groups";
 import { materialsHandler } from "@repo/backend/convex/triggers/materials/materials";
 import { noopHandler } from "@repo/backend/convex/triggers/noop";
+import { notificationsHandler } from "@repo/backend/convex/triggers/notifications/notifications";
 import { schoolClassesHandler } from "@repo/backend/convex/triggers/schools/classes";
 import { schoolClassMembersHandler } from "@repo/backend/convex/triggers/schools/classMembers";
 import { schoolMembersHandler } from "@repo/backend/convex/triggers/schools/members";
@@ -56,8 +57,9 @@ triggers.register("schoolClassInviteCodes", noopHandler);
 triggers.register("schoolClassForums", noopHandler);
 triggers.register("schoolClassForumReadStates", noopHandler);
 triggers.register("schoolActivityLogs", noopHandler);
-triggers.register("notifications", noopHandler);
+triggers.register("notifications", notificationsHandler);
 triggers.register("notificationCounts", noopHandler);
+triggers.register("notificationEntityMutes", noopHandler);
 triggers.register("notificationPreferences", noopHandler);
 triggers.register("schoolClassMaterialAttachments", noopHandler);
 triggers.register("schoolClassMaterialViews", noopHandler);

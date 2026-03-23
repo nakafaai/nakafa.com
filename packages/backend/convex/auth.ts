@@ -55,11 +55,10 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
 
           // Create default notification preferences
           await ctx.db.insert("notificationPreferences", {
+            disabledTypes: [],
             userId,
             emailEnabled: true,
             emailDigest: "weekly",
-            disabledTypes: [],
-            mutedEntities: [],
             updatedAt: Date.now(),
           });
 

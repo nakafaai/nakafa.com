@@ -1,4 +1,5 @@
 import {
+  MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE,
   MIN_VIEW_THRESHOLD,
   RETRY_CONFIG,
   SUPPORTED_LOCALES,
@@ -47,8 +48,15 @@ export const populateAudioQueue = internalMutation({
     ]);
 
     const totalCount = articleCount + subjectCount;
+
+    if (totalCount === 0) {
+      logger.info("No popular content found for audio queue population");
+      return { processed: 0, queued: 0 };
+    }
+
     logger.info("Fetched popularity counts", {
       articles: articleCount,
+      maxItemsPerType: MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE,
       subjects: subjectCount,
       total: totalCount,
     });
@@ -60,6 +68,10 @@ export const populateAudioQueue = internalMutation({
       order: "desc",
       pageSize: 100,
     })) {
+      if (articleItems.length === MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE) {
+        break;
+      }
+
       if (item.sumValue < MIN_VIEW_THRESHOLD) {
         break;
       }
@@ -76,6 +88,10 @@ export const populateAudioQueue = internalMutation({
       order: "desc",
       pageSize: 100,
     })) {
+      if (subjectItems.length === MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE) {
+        break;
+      }
+
       if (item.sumValue < MIN_VIEW_THRESHOLD) {
         break;
       }

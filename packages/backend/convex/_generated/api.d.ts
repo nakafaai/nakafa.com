@@ -106,6 +106,8 @@ import type * as lib_validators_contents from "../lib/validators/contents.js";
 import type * as lib_validators_trending from "../lib/validators/trending.js";
 import type * as lib_validators_user from "../lib/validators/user.js";
 import type * as lib_validators_vv from "../lib/validators/vv.js";
+import type * as notifications_mutations from "../notifications/mutations.js";
+import type * as notifications_queries from "../notifications/queries.js";
 import type * as polyfills from "../polyfills.js";
 import type * as routes_constants from "../routes/constants.js";
 import type * as routes_middleware_requestId from "../routes/middleware/requestId.js";
@@ -139,6 +141,7 @@ import type * as triggers_materials_cleanup from "../triggers/materials/cleanup.
 import type * as triggers_materials_groups from "../triggers/materials/groups.js";
 import type * as triggers_materials_materials from "../triggers/materials/materials.js";
 import type * as triggers_noop from "../triggers/noop.js";
+import type * as triggers_notifications_notifications from "../triggers/notifications/notifications.js";
 import type * as triggers_schools_classMembers from "../triggers/schools/classMembers.js";
 import type * as triggers_schools_classes from "../triggers/schools/classes.js";
 import type * as triggers_schools_cleanup from "../triggers/schools/cleanup.js";
@@ -272,6 +275,8 @@ declare const fullApi: ApiFromModules<{
   "lib/validators/trending": typeof lib_validators_trending;
   "lib/validators/user": typeof lib_validators_user;
   "lib/validators/vv": typeof lib_validators_vv;
+  "notifications/mutations": typeof notifications_mutations;
+  "notifications/queries": typeof notifications_queries;
   polyfills: typeof polyfills;
   "routes/constants": typeof routes_constants;
   "routes/middleware/requestId": typeof routes_middleware_requestId;
@@ -305,6 +310,7 @@ declare const fullApi: ApiFromModules<{
   "triggers/materials/groups": typeof triggers_materials_groups;
   "triggers/materials/materials": typeof triggers_materials_materials;
   "triggers/noop": typeof triggers_noop;
+  "triggers/notifications/notifications": typeof triggers_notifications_notifications;
   "triggers/schools/classMembers": typeof triggers_schools_classMembers;
   "triggers/schools/classes": typeof triggers_schools_classes;
   "triggers/schools/cleanup": typeof triggers_schools_cleanup;
