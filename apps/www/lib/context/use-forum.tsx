@@ -10,6 +10,7 @@ type ForumStoreApi = ReturnType<typeof createForumStore>;
 
 export const ForumContext = createContext<ForumStoreApi | null>(null);
 
+/** Provides one class-scoped forum store instance. */
 export function ForumContextProvider({ children }: { children: ReactNode }) {
   const [store] = useState(() => createForumStore());
 
@@ -18,6 +19,7 @@ export function ForumContextProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/** Reads one selected slice from the forum store. */
 export function useForum<T>(selector: (state: ForumStore) => T): T {
   const ctx = useContextSelector(ForumContext, (context) => context);
   if (!ctx) {

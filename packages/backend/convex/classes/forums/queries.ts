@@ -21,6 +21,9 @@ import { ConvexError, v } from "convex/values";
 const MAX_FORUM_POST_WINDOW = 50;
 const MAX_FORUM_BOUNDARY_POSTS = MAX_FORUM_POST_WINDOW * 4;
 
+/**
+ * Clamps forum jump-window requests to a small bounded range.
+ */
 function clampForumPostWindow(limit: number | undefined) {
   if (limit === undefined) {
     return 15;
@@ -29,6 +32,9 @@ function clampForumPostWindow(limit: number | undefined) {
   return Math.min(Math.max(limit, 1), MAX_FORUM_POST_WINDOW);
 }
 
+/**
+ * Finds the boundary post inside one same-timestamp forum slice.
+ */
 function getBoundaryPostIndex(
   posts: Doc<"schoolClassForumPosts">[],
   boundaryPostId: Id<"schoolClassForumPosts">

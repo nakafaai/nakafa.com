@@ -83,6 +83,9 @@ const initialState: State = {
   jumpMode: null,
 };
 
+/**
+ * Creates one transient forum UI store for a single class route subtree.
+ */
 export const createForumStore = () =>
   createStore<ForumStore>()(
     immer((set, get) => ({
