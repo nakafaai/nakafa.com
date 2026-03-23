@@ -137,7 +137,7 @@ export function buildOperationalIrtResponses({
 }: {
   answers: Doc<"exerciseAnswers">[];
   itemParamsRecords: Pick<
-    Doc<"exerciseItemParameters">,
+    Doc<"irtScaleVersionItems">,
     "questionId" | "difficulty" | "discrimination"
   >[];
 }) {

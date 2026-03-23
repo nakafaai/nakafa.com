@@ -1,6 +1,8 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { adjustCalibrationCacheAttemptCount } from "@repo/backend/convex/irt/helpers/cache";
+import { IRT_CALIBRATION_RESPONSE_BACKFILL_BATCH_SIZE } from "@repo/backend/convex/irt/policy";
 import { irtCalibrationSyncWorkpool } from "@repo/backend/convex/irt/workpool";
 import { ConvexError } from "convex/values";
 import { getAll, getManyFrom } from "convex-helpers/server/relationships";
@@ -12,15 +14,7 @@ export async function syncCalibrationResponsesForAttemptHandler(
   ctx: MutationCtx,
   args: {
     attemptId: Id<"exerciseAttempts">;
-  },
-  adjustCalibrationCacheAttemptCount: (
-    ctx: Pick<MutationCtx, "db">,
-    args: {
-      setId: Id<"exerciseSets">;
-      delta: number;
-      updatedAt: number;
-    }
-  ) => Promise<boolean>
+  }
 ) {
   const now = Date.now();
   const existingAttempts = await ctx.db
@@ -163,8 +157,7 @@ export async function backfillCalibrationResponsesPageHandler(
   ctx: MutationCtx,
   args: {
     cursor?: string;
-  },
-  batchSize: number
+  }
 ) {
   const page = await ctx.db
     .query("exerciseAttempts")
@@ -173,7 +166,7 @@ export async function backfillCalibrationResponsesPageHandler(
     )
     .paginate({
       cursor: args.cursor ?? null,
-      numItems: batchSize,
+      numItems: IRT_CALIBRATION_RESPONSE_BACKFILL_BATCH_SIZE,
     });
 
   for (const attempt of page.page) {

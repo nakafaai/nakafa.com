@@ -6,6 +6,7 @@ import type {
 } from "@repo/backend/convex/_generated/server";
 import {
   getCalibrationWindowStartAt,
+  IRT_MIN_ATTEMPTS_FOR_OFFICIAL_SCALE,
   IRT_MIN_RESPONSES_FOR_CALIBRATED,
 } from "@repo/backend/convex/irt/policy";
 import { v } from "convex/values";
@@ -22,13 +23,25 @@ export const scaleQualityRebuildResultValidator = v.object({
 
 function getBlockingReason({
   calibratedQuestionCount,
+  staleQuestionCount,
   totalQuestionCount,
+  minAttemptCount,
 }: {
   calibratedQuestionCount: number;
+  staleQuestionCount: number;
   totalQuestionCount: number;
+  minAttemptCount: number;
 }) {
   if (calibratedQuestionCount !== totalQuestionCount) {
     return "missing-calibrated-items";
+  }
+
+  if (staleQuestionCount > 0) {
+    return "stale-calibration-window";
+  }
+
+  if (minAttemptCount < IRT_MIN_ATTEMPTS_FOR_OFFICIAL_SCALE) {
+    return "insufficient-live-attempts";
   }
 
   return null;
@@ -121,7 +134,9 @@ export async function evaluateTryoutScaleQuality(
 
   const blockingReason = getBlockingReason({
     calibratedQuestionCount,
+    staleQuestionCount,
     totalQuestionCount,
+    minAttemptCount,
   });
 
   return {
@@ -193,7 +208,8 @@ export async function refreshScaleQualityCheckHandler(
     return null;
   }
 
-  return upsertTryoutScaleQualityCheck(ctx.db, summary);
+  await upsertTryoutScaleQualityCheck(ctx.db, summary);
+  return null;
 }
 
 /** Rebuilds all tryout scale-quality summaries in bounded pages. */

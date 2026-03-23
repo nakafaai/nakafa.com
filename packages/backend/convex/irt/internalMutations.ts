@@ -5,7 +5,6 @@ import {
   syncCalibrationResponsesForAttemptHandler,
 } from "@repo/backend/convex/irt/helpers/attempts";
 import {
-  adjustCalibrationCacheAttemptCount,
   calibrationCacheStatsRebuildProgressValidator,
   prepareCalibrationCacheForSet,
   rebuildCalibrationCacheStatsForSetHandler,
@@ -24,7 +23,6 @@ import {
 } from "@repo/backend/convex/irt/helpers/runs";
 import {
   IRT_CALIBRATION_QUEUE_BATCH_SIZE,
-  IRT_CALIBRATION_RESPONSE_BACKFILL_BATCH_SIZE,
   IRT_MAX_CALIBRATION_STALENESS_MS,
   IRT_MIN_COMPLETED_ATTEMPTS_FOR_RECALIBRATION,
   IRT_QUEUE_CLEANUP_BATCH_SIZE,
@@ -59,12 +57,7 @@ export const syncCalibrationResponsesForAttempt = internalMutation({
     attemptId: vv.id("exerciseAttempts"),
   },
   returns: v.null(),
-  handler: (ctx, args) =>
-    syncCalibrationResponsesForAttemptHandler(
-      ctx,
-      args,
-      adjustCalibrationCacheAttemptCount
-    ),
+  handler: syncCalibrationResponsesForAttemptHandler,
 });
 
 /** Rebuilds one set's calibration-cache stats in bounded pages. */
@@ -75,7 +68,7 @@ export const rebuildCalibrationCacheStatsForSet = internalMutation({
     setId: vv.id("exerciseSets"),
   },
   returns: v.null(),
-  handler: (ctx, args) => rebuildCalibrationCacheStatsForSetHandler(ctx, args),
+  handler: rebuildCalibrationCacheStatsForSetHandler,
 });
 
 /**
@@ -86,12 +79,7 @@ export const backfillCalibrationResponsesPage = internalMutation({
     cursor: v.optional(v.string()),
   },
   returns: backfillCalibrationResponsesResultValidator,
-  handler: (ctx, args) =>
-    backfillCalibrationResponsesPageHandler(
-      ctx,
-      args,
-      IRT_CALIBRATION_RESPONSE_BACKFILL_BATCH_SIZE
-    ),
+  handler: backfillCalibrationResponsesPageHandler,
 });
 
 /** Schedules bounded calibration-cache stats rebuilds for all exercise sets. */
@@ -100,7 +88,7 @@ export const rebuildCalibrationCacheStatsPage = internalMutation({
     cursor: v.optional(v.string()),
   },
   returns: rebuildCalibrationCacheStatsResultValidator,
-  handler: (ctx, args) => rebuildCalibrationCacheStatsPageHandler(ctx, args),
+  handler: rebuildCalibrationCacheStatsPageHandler,
 });
 
 /** Recomputes one tryout's official-scale readiness summary. */
@@ -109,10 +97,7 @@ export const refreshScaleQualityCheck = internalMutation({
     tryoutId: vv.id("tryouts"),
   },
   returns: v.null(),
-  handler: async (ctx, args) => {
-    await refreshScaleQualityCheckHandler(ctx, args);
-    return null;
-  },
+  handler: refreshScaleQualityCheckHandler,
 });
 
 /** Schedules bounded quality-check rebuilds for all tryouts. */
@@ -121,7 +106,7 @@ export const rebuildScaleQualityChecksPage = internalMutation({
     cursor: v.optional(v.string()),
   },
   returns: scaleQualityRebuildResultValidator,
-  handler: (ctx, args) => rebuildScaleQualityChecksPageHandler(ctx, args),
+  handler: rebuildScaleQualityChecksPageHandler,
 });
 
 /** Deletes the oldest cached calibration attempts until one set is back in budget. */
@@ -130,7 +115,7 @@ export const trimCalibrationCacheForSet = internalMutation({
     setId: vv.id("exerciseSets"),
   },
   returns: v.null(),
-  handler: (ctx, args) => trimCalibrationCacheForSetHandler(ctx, args),
+  handler: trimCalibrationCacheForSetHandler,
 });
 
 /**
@@ -242,7 +227,7 @@ export const completeCalibrationRun = internalMutation({
     result: irtCalibrationResultValidator,
   },
   returns: v.null(),
-  handler: (ctx, args) => completeCalibrationRunHandler(ctx, args),
+  handler: completeCalibrationRunHandler,
 });
 
 /**
@@ -254,7 +239,7 @@ export const failCalibrationRun = internalMutation({
     error: v.string(),
   },
   returns: v.null(),
-  handler: (ctx, args) => failCalibrationRunHandler(ctx, args),
+  handler: failCalibrationRunHandler,
 });
 
 /**
@@ -328,11 +313,7 @@ export const drainScalePublicationQueue = internalMutation({
     ];
 
     for (const tryoutId of distinctTryoutIds) {
-      const result = await publishTryoutScaleVersionIfNeeded(ctx, tryoutId);
-
-      if (result.kind === "not-ready") {
-        continue;
-      }
+      await publishTryoutScaleVersionIfNeeded(ctx, tryoutId);
 
       await ctx.scheduler.runAfter(
         0,

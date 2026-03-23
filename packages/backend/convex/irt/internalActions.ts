@@ -5,7 +5,6 @@ import type { CalibrationResponse } from "@repo/backend/convex/irt/internalQueri
 import {
   IRT_MAX_CALIBRATION_ATTEMPTS_PER_RUN,
   IRT_MAX_CALIBRATION_RESPONSES_PER_RUN,
-  IRT_PROBABILITY_EPSILON,
 } from "@repo/backend/convex/irt/policy";
 import { irtCalibrationResultValidator } from "@repo/backend/convex/irt/validators";
 import { ConvexError, type Infer, v } from "convex/values";
@@ -116,9 +115,7 @@ export const calibrateSetTwoPL = internalAction({
       responseCount: calibration.responseCount,
       questionCount: calibration.questionCount,
       iterationCount: calibration.iterationCount,
-      maxParameterDelta:
-        Math.round(calibration.maxParameterDelta / IRT_PROBABILITY_EPSILON) *
-        IRT_PROBABILITY_EPSILON,
+      maxParameterDelta: calibration.maxParameterDelta,
       items: calibration.items,
     } satisfies Infer<typeof irtCalibrationResultValidator>;
 
