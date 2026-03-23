@@ -62,6 +62,12 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
             updatedAt: Date.now(),
           });
 
+          await ctx.db.insert("notificationCounts", {
+            userId,
+            unreadCount: 0,
+            updatedAt: Date.now(),
+          });
+
           await ctx.runMutation(components.betterAuth.mutations.setUserId, {
             authId: authUser._id,
             userId,

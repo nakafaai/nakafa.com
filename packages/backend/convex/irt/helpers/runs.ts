@@ -26,6 +26,76 @@ export async function completeCalibrationRunHandler(
     });
   }
 
+  const questions = await ctx.db
+    .query("exerciseQuestions")
+    .withIndex("setId", (q) => q.eq("setId", run.setId))
+    .take(run.questionCount + 1);
+
+  if (questions.length > run.questionCount) {
+    throw new ConvexError({
+      code: "IRT_QUESTION_COUNT_EXCEEDED",
+      message:
+        "Exercise question count exceeds the calibration run question count.",
+    });
+  }
+
+  if (args.result.items.length > run.questionCount) {
+    throw new ConvexError({
+      code: "IRT_RESULT_ITEM_COUNT_EXCEEDED",
+      message:
+        "Calibration result item count exceeds the calibration run question count.",
+    });
+  }
+
+  const validQuestionIds = new Set(questions.map((question) => question._id));
+  const seenQuestionIds = new Set<Id<"exerciseQuestions">>();
+
+  for (const item of args.result.items) {
+    if (!validQuestionIds.has(item.questionId)) {
+      throw new ConvexError({
+        code: "IRT_RESULT_QUESTION_NOT_IN_SET",
+        message:
+          "Calibration result references a question outside the exercise set.",
+      });
+    }
+
+    if (!seenQuestionIds.has(item.questionId)) {
+      seenQuestionIds.add(item.questionId);
+      continue;
+    }
+
+    throw new ConvexError({
+      code: "IRT_RESULT_DUPLICATE_QUESTION",
+      message: "Calibration result contains duplicate question parameters.",
+    });
+  }
+
+  if (args.result.questionCount !== questions.length) {
+    throw new ConvexError({
+      code: "IRT_RESULT_QUESTION_COUNT_MISMATCH",
+      message:
+        "Calibration result question count does not match the exercise set.",
+    });
+  }
+
+  if (args.result.attemptCount > args.result.responseCount) {
+    throw new ConvexError({
+      code: "IRT_RESULT_ATTEMPT_COUNT_EXCEEDED",
+      message: "Calibration result attempt count exceeds the response count.",
+    });
+  }
+
+  if (
+    args.result.responseCount >
+    args.result.attemptCount * run.questionCount
+  ) {
+    throw new ConvexError({
+      code: "IRT_RESULT_RESPONSE_COUNT_EXCEEDED",
+      message:
+        "Calibration result response count exceeds the set response limit.",
+    });
+  }
+
   const existingParams = await ctx.db
     .query("exerciseItemParameters")
     .withIndex("by_setId", (q) => q.eq("setId", run.setId))

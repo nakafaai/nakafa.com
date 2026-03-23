@@ -17,14 +17,11 @@ import { scaleThetaToTryoutScore } from "@repo/backend/convex/tryouts/products";
 import type { TryoutScoreStatus } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError } from "convex/values";
 import { asyncMap } from "convex-helpers";
-import {
-  getAll,
-  getManyFrom,
-  getOneFrom,
-} from "convex-helpers/server/relationships";
+import { getAll, getOneFrom } from "convex-helpers/server/relationships";
 
 type TryoutMutationCtx = Pick<MutationCtx, "db" | "scheduler">;
 type TryoutDbReader = QueryCtx["db"];
+type TryoutAnswerLoaderDb = QueryCtx["db"] | MutationCtx["db"];
 type TryoutScoreTarget = Pick<
   Doc<"tryoutAttempts">,
   "scaleVersionId" | "scoreStatus"
@@ -121,6 +118,30 @@ export function countCorrectAnswers(answers: Doc<"exerciseAnswers">[]) {
     (correctCount, answer) => correctCount + (answer.isCorrect ? 1 : 0),
     0
   );
+}
+
+async function getBoundedExerciseAnswers(
+  db: TryoutAnswerLoaderDb,
+  args: {
+    attemptId: Doc<"exerciseAttempts">["_id"];
+    totalExercises: Doc<"exerciseAttempts">["totalExercises"];
+  }
+) {
+  const answers = await db
+    .query("exerciseAnswers")
+    .withIndex("attemptId_exerciseNumber", (q) =>
+      q.eq("attemptId", args.attemptId)
+    )
+    .take(args.totalExercises + 1);
+
+  if (answers.length > args.totalExercises) {
+    throw new ConvexError({
+      code: "TRYOUT_ANSWER_COUNT_EXCEEDED",
+      message: "Exercise answer count exceeds the attempt total exercises.",
+    });
+  }
+
+  return answers;
 }
 
 /**
@@ -253,13 +274,10 @@ export async function finalizeTryoutPartAttempt({
   }
 
   const [answers, itemParamsRecords] = await Promise.all([
-    getManyFrom(
-      ctx.db,
-      "exerciseAnswers",
-      "attemptId_exerciseNumber",
-      partAttempt.setAttemptId,
-      "attemptId"
-    ),
+    getBoundedExerciseAnswers(ctx.db, {
+      attemptId: partAttempt.setAttemptId,
+      totalExercises: currentSetAttempt.totalExercises,
+    }),
     getScaleVersionItemsForSet(ctx.db, {
       scaleVersionId: tryoutAttempt.scaleVersionId,
       setId: partAttempt.setId,
@@ -375,13 +393,10 @@ export async function syncTryoutAttemptAggregates({
       }
 
       const [answers, itemParamsRecords] = await Promise.all([
-        getManyFrom(
-          ctx.db,
-          "exerciseAnswers",
-          "attemptId_exerciseNumber",
-          partAttempt.setAttemptId,
-          "attemptId"
-        ),
+        getBoundedExerciseAnswers(ctx.db, {
+          attemptId: partAttempt.setAttemptId,
+          totalExercises: setAttempt.totalExercises,
+        }),
         getScaleVersionItemsForSet(ctx.db, {
           scaleVersionId: effectiveScaleVersionId,
           setId: partAttempt.setId,
@@ -436,35 +451,6 @@ export async function syncTryoutAttemptAggregates({
     theta,
     thetaSE: se,
   };
-}
-
-/** Re-score one terminal tryout attempt against a newer frozen scale. */
-export function rescoreTryoutAttempt({
-  ctx,
-  now,
-  scaleVersionId,
-  scoreStatus,
-  tryoutAttempt,
-}: {
-  ctx: TryoutMutationCtx;
-  now: number;
-  scaleVersionId: Doc<"tryoutAttempts">["scaleVersionId"];
-  scoreStatus: TryoutScoreStatus;
-  tryoutAttempt: Doc<"tryoutAttempts">;
-}) {
-  if (tryoutAttempt.status === "in-progress") {
-    return null;
-  }
-
-  return syncTryoutAttemptAggregates({
-    completedAtMs: tryoutAttempt.completedAt ?? now,
-    ctx,
-    now,
-    scaleVersionId,
-    scoreStatus,
-    status: tryoutAttempt.status,
-    tryoutAttemptId: tryoutAttempt._id,
-  });
 }
 
 /** Expires a tryout and every still-open shared set attempt under it. */

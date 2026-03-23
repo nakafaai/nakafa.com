@@ -11,10 +11,14 @@ import {
   checkClassAccess,
   requireClassAccess,
 } from "@repo/backend/convex/lib/helpers/class";
+import {
+  getSchoolMembership,
+  isAdmin,
+} from "@repo/backend/convex/lib/helpers/school";
 import { getUserMap } from "@repo/backend/convex/lib/helpers/user";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { paginationOptsValidator } from "convex/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
 
 export const getClasses = query({
@@ -27,6 +31,7 @@ export const getClasses = query({
   },
   returns: paginatedClassesValidator,
   handler: async (ctx, args) => {
+    const user = await requireAuth(ctx);
     const {
       schoolId,
       q: searchQuery,
@@ -34,6 +39,18 @@ export const getClasses = query({
       visibility,
       paginationOpts,
     } = args;
+    const schoolMembership = await getSchoolMembership(
+      ctx,
+      schoolId,
+      user.appUser._id
+    );
+
+    if (!schoolMembership) {
+      throw new ConvexError({
+        code: "ACCESS_DENIED",
+        message: "You must be a member of this school to list its classes.",
+      });
+    }
 
     if (searchQuery && searchQuery.trim().length > 0) {
       return await ctx.db
@@ -51,14 +68,24 @@ export const getClasses = query({
         .paginate(paginationOpts);
     }
 
-    if (isArchived !== undefined && visibility !== undefined) {
+    if (visibility !== undefined && isArchived !== undefined) {
       return await ctx.db
         .query("schoolClasses")
-        .withIndex("schoolId_isArchived_visibility", (q) =>
+        .withIndex("schoolId_visibility_isArchived", (q) =>
           q
             .eq("schoolId", schoolId)
-            .eq("isArchived", isArchived)
             .eq("visibility", visibility)
+            .eq("isArchived", isArchived)
+        )
+        .order("desc")
+        .paginate(paginationOpts);
+    }
+
+    if (visibility !== undefined) {
+      return await ctx.db
+        .query("schoolClasses")
+        .withIndex("schoolId_visibility_isArchived", (q) =>
+          q.eq("schoolId", schoolId).eq("visibility", visibility)
         )
         .order("desc")
         .paginate(paginationOpts);
@@ -74,22 +101,13 @@ export const getClasses = query({
         .paginate(paginationOpts);
     }
 
-    const result = await ctx.db
+    return await ctx.db
       .query("schoolClasses")
       .withIndex("schoolId_isArchived_visibility", (q) =>
         q.eq("schoolId", schoolId)
       )
       .order("desc")
       .paginate(paginationOpts);
-
-    if (visibility !== undefined) {
-      return {
-        ...result,
-        page: result.page.filter((c) => c.visibility === visibility),
-      };
-    }
-
-    return result;
   },
 });
 
@@ -240,16 +258,23 @@ export const getInviteCodes = query({
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
     const classData = await loadClass(ctx, args.classId);
-    await requireClassAccess(
+    const { classMembership, schoolMembership } = await requireClassAccess(
       ctx,
       args.classId,
       classData.schoolId,
       user.appUser._id
     );
 
-    return await ctx.db
-      .query("schoolClassInviteCodes")
-      .withIndex("classId_role", (idx) => idx.eq("classId", args.classId))
-      .collect();
+    if (isAdmin(schoolMembership) || classMembership?.role === "teacher") {
+      return await ctx.db
+        .query("schoolClassInviteCodes")
+        .withIndex("classId_role", (idx) => idx.eq("classId", args.classId))
+        .collect();
+    }
+
+    throw new ConvexError({
+      code: "ACCESS_DENIED",
+      message: "Only teachers or school admins can view class invite codes.",
+    });
   },
 });

@@ -9,8 +9,8 @@ import {
   IRT_MIN_ATTEMPTS_FOR_OFFICIAL_SCALE,
   IRT_MIN_RESPONSES_FOR_CALIBRATED,
 } from "@repo/backend/convex/irt/policy";
-import { v } from "convex/values";
-import { getAll, getManyFrom } from "convex-helpers/server/relationships";
+import { ConvexError, v } from "convex/values";
+import { getAll } from "convex-helpers/server/relationships";
 
 type IrtDbReader = QueryCtx["db"] | MutationCtx["db"];
 
@@ -58,19 +58,22 @@ export async function evaluateTryoutScaleQuality(
     tryoutId: Id<"tryouts">;
   }
 ) {
-  const [tryout, tryoutPartSets] = await Promise.all([
-    db.get("tryouts", tryoutId),
-    getManyFrom(
-      db,
-      "tryoutPartSets",
-      "tryoutId_partIndex",
-      tryoutId,
-      "tryoutId"
-    ),
-  ]);
+  const tryout = await db.get("tryouts", tryoutId);
 
   if (!tryout) {
     return null;
+  }
+
+  const tryoutPartSets = await db
+    .query("tryoutPartSets")
+    .withIndex("tryoutId_partIndex", (q) => q.eq("tryoutId", tryoutId))
+    .take(tryout.partCount + 1);
+
+  if (tryoutPartSets.length > tryout.partCount) {
+    throw new ConvexError({
+      code: "IRT_TRYOUT_PART_COUNT_EXCEEDED",
+      message: "Tryout part set count exceeds the tryout part count.",
+    });
   }
 
   const sets = await getAll(
@@ -97,9 +100,30 @@ export async function evaluateTryoutScaleQuality(
         .query("irtCalibrationCacheStats")
         .withIndex("by_setId", (q) => q.eq("setId", set._id))
         .unique(),
-      getManyFrom(db, "exerciseItemParameters", "by_setId", set._id, "setId"),
-      getManyFrom(db, "exerciseQuestions", "setId", set._id, "setId"),
+      db
+        .query("exerciseItemParameters")
+        .withIndex("by_setId", (q) => q.eq("setId", set._id))
+        .take(set.questionCount + 1),
+      db
+        .query("exerciseQuestions")
+        .withIndex("setId", (q) => q.eq("setId", set._id))
+        .take(set.questionCount + 1),
     ]);
+
+    if (itemParams.length > set.questionCount) {
+      throw new ConvexError({
+        code: "IRT_ITEM_PARAMETER_COUNT_EXCEEDED",
+        message:
+          "Exercise item parameter count exceeds the set question count.",
+      });
+    }
+
+    if (questions.length > set.questionCount) {
+      throw new ConvexError({
+        code: "IRT_QUESTION_COUNT_EXCEEDED",
+        message: "Exercise question count exceeds the set question count.",
+      });
+    }
 
     totalQuestionCount += questions.length;
     minAttemptCount = Math.min(minAttemptCount, cacheStats?.attemptCount ?? 0);

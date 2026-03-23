@@ -116,6 +116,7 @@ import type * as subscriptions_mutations from "../subscriptions/mutations.js";
 import type * as subscriptions_queries from "../subscriptions/queries.js";
 import type * as subscriptions_utils from "../subscriptions/utils.js";
 import type * as triggers_chats_chats from "../triggers/chats/chats.js";
+import type * as triggers_chats_cleanup from "../triggers/chats/cleanup.js";
 import type * as triggers_comments_cleanup from "../triggers/comments/cleanup.js";
 import type * as triggers_comments_commentVotes from "../triggers/comments/commentVotes.js";
 import type * as triggers_comments_comments from "../triggers/comments/comments.js";
@@ -136,6 +137,7 @@ import type * as triggers_materials_materials from "../triggers/materials/materi
 import type * as triggers_noop from "../triggers/noop.js";
 import type * as triggers_schools_classMembers from "../triggers/schools/classMembers.js";
 import type * as triggers_schools_classes from "../triggers/schools/classes.js";
+import type * as triggers_schools_cleanup from "../triggers/schools/cleanup.js";
 import type * as triggers_schools_members from "../triggers/schools/members.js";
 import type * as triggers_schools_schools from "../triggers/schools/schools.js";
 import type * as triggers_subscriptions_subscriptions from "../triggers/subscriptions/subscriptions.js";
@@ -275,6 +277,7 @@ declare const fullApi: ApiFromModules<{
   "subscriptions/queries": typeof subscriptions_queries;
   "subscriptions/utils": typeof subscriptions_utils;
   "triggers/chats/chats": typeof triggers_chats_chats;
+  "triggers/chats/cleanup": typeof triggers_chats_cleanup;
   "triggers/comments/cleanup": typeof triggers_comments_cleanup;
   "triggers/comments/commentVotes": typeof triggers_comments_commentVotes;
   "triggers/comments/comments": typeof triggers_comments_comments;
@@ -295,6 +298,7 @@ declare const fullApi: ApiFromModules<{
   "triggers/noop": typeof triggers_noop;
   "triggers/schools/classMembers": typeof triggers_schools_classMembers;
   "triggers/schools/classes": typeof triggers_schools_classes;
+  "triggers/schools/cleanup": typeof triggers_schools_cleanup;
   "triggers/schools/members": typeof triggers_schools_members;
   "triggers/schools/schools": typeof triggers_schools_schools;
   "triggers/subscriptions/subscriptions": typeof triggers_subscriptions_subscriptions;

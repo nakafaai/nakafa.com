@@ -37,6 +37,23 @@ async function publishScaleVersion(
     items: ScaleVersionItemSnapshot[];
   }
 ) {
+  if (items.length !== questionCount) {
+    throw new ConvexError({
+      code: "IRT_SCALE_ITEM_COUNT_MISMATCH",
+      message:
+        "Frozen scale item count does not match the scale version question count.",
+    });
+  }
+
+  const questionIds = new Set(items.map((item) => item.questionId));
+
+  if (questionIds.size !== items.length) {
+    throw new ConvexError({
+      code: "IRT_SCALE_ITEM_DUPLICATE_QUESTION",
+      message: "Frozen scale items contain duplicate questions.",
+    });
+  }
+
   const scaleVersionId = await db.insert("irtScaleVersions", {
     tryoutId,
     model: IRT_OPERATIONAL_MODEL,
@@ -132,10 +149,7 @@ async function getUnchangedOfficialScaleVersion(
     return null;
   }
 
-  const latestScaleItems = await getScaleVersionItems(
-    db,
-    latestScaleVersion._id
-  );
+  const latestScaleItems = await getScaleVersionItems(db, latestScaleVersion);
 
   if (
     hasPublishedScaleChanged({

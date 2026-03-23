@@ -47,7 +47,10 @@ export const getMaterialGroups = query({
         ? await ctx.db
             .query("schoolClassMaterialGroups")
             .withSearchIndex("search_name", (q) =>
-              q.search("name", searchQuery).eq("classId", classId)
+              q
+                .search("name", searchQuery)
+                .eq("classId", classId)
+                .eq("parentId", parentId)
             )
             .paginate(paginationOpts)
         : await ctx.db
@@ -56,18 +59,12 @@ export const getMaterialGroups = query({
               q
                 .search("name", searchQuery)
                 .eq("classId", classId)
+                .eq("parentId", parentId)
                 .eq("status", "published")
             )
             .paginate(paginationOpts);
 
-      const filteredPage = searchResults.page.filter(
-        (group) => group.parentId === parentId
-      );
-
-      groupsPage = {
-        ...searchResults,
-        page: filteredPage,
-      };
+      groupsPage = searchResults;
     } else if (canSeeAllStatuses) {
       groupsPage = await ctx.db
         .query("schoolClassMaterialGroups")

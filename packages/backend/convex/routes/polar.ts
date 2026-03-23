@@ -15,6 +15,7 @@ import {
   HTTP_INTERNAL_ERROR,
 } from "@repo/backend/convex/routes/constants";
 import { convertToDatabaseSubscription } from "@repo/backend/convex/subscriptions/utils";
+import { logger } from "@repo/backend/convex/utils/logger";
 import { polarWebhookSecret } from "@repo/backend/convex/utils/polar";
 import type { HonoWithConvex } from "convex-helpers/server/hono";
 
@@ -97,9 +98,14 @@ export function registerPolarRoutes(app: HonoWithConvex<ActionCtx>) {
       return c.text("Accepted", HTTP_ACCEPTED);
     } catch (error) {
       if (error instanceof WebhookVerificationError) {
-        return c.text(`Forbidden: ${error}`, HTTP_FORBIDDEN);
+        logger.warn("Polar webhook verification failed", {
+          error: error.message,
+        });
+        return c.text("Forbidden", HTTP_FORBIDDEN);
       }
-      return c.text(`Internal server error: ${error}`, HTTP_INTERNAL_ERROR);
+
+      logger.error("Polar webhook processing failed", undefined, error);
+      return c.text("Internal server error", HTTP_INTERNAL_ERROR);
     }
   });
 }

@@ -15,8 +15,16 @@ const staleContentTableNameValidator = literals(
   "exerciseQuestions"
 );
 
+const staleContentIdValidator = v.union(
+  v.id("articleContents"),
+  v.id("subjectTopics"),
+  v.id("subjectSections"),
+  v.id("exerciseSets"),
+  v.id("exerciseQuestions")
+);
+
 const staleContentItemValidator = v.object({
-  id: v.string(),
+  id: staleContentIdValidator,
   locale: localeValidator,
   slug: v.string(),
 });

@@ -3,6 +3,7 @@ import { internalMutation } from "@repo/backend/convex/_generated/server";
 import { v } from "convex/values";
 
 const NOTIFICATION_PREFERENCES_CLEANUP_BATCH_SIZE = 10;
+const NOTIFICATION_COUNT_CLEANUP_BATCH_SIZE = 10;
 
 /** Deletes one user's local auth-related rows in bounded batches. */
 export const cleanupDeletedUser = internalMutation({
@@ -24,6 +25,25 @@ export const cleanupDeletedUser = internalMutation({
       notificationPreferences.length ===
       NOTIFICATION_PREFERENCES_CLEANUP_BATCH_SIZE
     ) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.auth.cleanup.cleanupDeletedUser,
+        args
+      );
+
+      return null;
+    }
+
+    const notificationCounts = await ctx.db
+      .query("notificationCounts")
+      .withIndex("userId", (q) => q.eq("userId", args.userId))
+      .take(NOTIFICATION_COUNT_CLEANUP_BATCH_SIZE);
+
+    for (const count of notificationCounts) {
+      await ctx.db.delete("notificationCounts", count._id);
+    }
+
+    if (notificationCounts.length === NOTIFICATION_COUNT_CLEANUP_BATCH_SIZE) {
       await ctx.scheduler.runAfter(
         0,
         internal.auth.cleanup.cleanupDeletedUser,

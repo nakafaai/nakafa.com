@@ -2,6 +2,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type { ContentAuthorContentId } from "@repo/backend/convex/authors/schema";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
+import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
 import type {
   ContentType,
   Locale,
@@ -66,6 +67,13 @@ export async function syncContentAuthorsWithCache(
   authors: SyncedAuthor[],
   authorCache: AuthorCache
 ): Promise<number> {
+  assertContentSyncBatchSize({
+    functionName: "syncContentAuthorsWithCache",
+    limit: CONTENT_SYNC_BATCH_LIMITS.authors,
+    received: authors.length,
+    unit: "authors",
+  });
+
   const missingAuthorNames = authors.flatMap((author) => {
     if (authorCache.has(author.name)) {
       return [];
@@ -112,6 +120,13 @@ export async function replaceArticleReferences(
   articleId: Id<"articleContents">,
   references: SyncedArticleReference[]
 ): Promise<number> {
+  assertContentSyncBatchSize({
+    functionName: "replaceArticleReferences",
+    limit: CONTENT_SYNC_BATCH_LIMITS.articleReferences,
+    received: references.length,
+    unit: "article references",
+  });
+
   await deleteArticleReferencesForArticle(ctx, articleId);
 
   let created = 0;
@@ -142,6 +157,13 @@ export async function replaceExerciseChoices(
     questionId: Id<"exerciseQuestions">;
   }
 ): Promise<number> {
+  assertContentSyncBatchSize({
+    functionName: "replaceExerciseChoices",
+    limit: CONTENT_SYNC_BATCH_LIMITS.exerciseChoices,
+    received: args.choices.length,
+    unit: "exercise choices",
+  });
+
   await deleteExerciseChoicesForQuestion(ctx, args.questionId);
 
   let created = 0;
@@ -166,21 +188,23 @@ export async function deleteContentAuthorLinks(
   contentId: ContentAuthorContentId,
   contentType: ContentType
 ) {
-  while (true) {
-    const existingLinks = await ctx.db
-      .query("contentAuthors")
-      .withIndex("contentId_contentType_authorId", (q) =>
-        q.eq("contentId", contentId).eq("contentType", contentType)
-      )
-      .take(CONTENT_SYNC_BATCH_LIMITS.authors);
+  const existingLinks = await ctx.db
+    .query("contentAuthors")
+    .withIndex("contentId_contentType_authorId", (q) =>
+      q.eq("contentId", contentId).eq("contentType", contentType)
+    )
+    .take(CONTENT_SYNC_BATCH_LIMITS.authors + 1);
 
-    if (existingLinks.length === 0) {
-      return;
-    }
+  if (existingLinks.length > CONTENT_SYNC_BATCH_LIMITS.authors) {
+    throw new ConvexError({
+      code: "CONTENT_SYNC_LINK_COUNT_EXCEEDED",
+      message:
+        "Existing content author link count exceeds the safe sync limit.",
+    });
+  }
 
-    for (const link of existingLinks) {
-      await ctx.db.delete("contentAuthors", link._id);
-    }
+  for (const link of existingLinks) {
+    await ctx.db.delete("contentAuthors", link._id);
   }
 }
 
@@ -188,19 +212,20 @@ export async function deleteArticleReferencesForArticle(
   ctx: MutationCtx,
   articleId: Id<"articleContents">
 ) {
-  while (true) {
-    const existingReferences = await ctx.db
-      .query("articleReferences")
-      .withIndex("articleId", (q) => q.eq("articleId", articleId))
-      .take(CONTENT_SYNC_BATCH_LIMITS.articleReferences);
+  const existingReferences = await ctx.db
+    .query("articleReferences")
+    .withIndex("articleId", (q) => q.eq("articleId", articleId))
+    .take(CONTENT_SYNC_BATCH_LIMITS.articleReferences + 1);
 
-    if (existingReferences.length === 0) {
-      return;
-    }
+  if (existingReferences.length > CONTENT_SYNC_BATCH_LIMITS.articleReferences) {
+    throw new ConvexError({
+      code: "CONTENT_SYNC_REFERENCE_COUNT_EXCEEDED",
+      message: "Existing article reference count exceeds the safe sync limit.",
+    });
+  }
 
-    for (const reference of existingReferences) {
-      await ctx.db.delete("articleReferences", reference._id);
-    }
+  for (const reference of existingReferences) {
+    await ctx.db.delete("articleReferences", reference._id);
   }
 }
 
@@ -208,18 +233,19 @@ export async function deleteExerciseChoicesForQuestion(
   ctx: MutationCtx,
   questionId: Id<"exerciseQuestions">
 ) {
-  while (true) {
-    const existingChoices = await ctx.db
-      .query("exerciseChoices")
-      .withIndex("questionId_locale", (q) => q.eq("questionId", questionId))
-      .take(CONTENT_SYNC_BATCH_LIMITS.exerciseChoices);
+  const existingChoices = await ctx.db
+    .query("exerciseChoices")
+    .withIndex("questionId_locale", (q) => q.eq("questionId", questionId))
+    .take(CONTENT_SYNC_BATCH_LIMITS.exerciseChoices + 1);
 
-    if (existingChoices.length === 0) {
-      return;
-    }
+  if (existingChoices.length > CONTENT_SYNC_BATCH_LIMITS.exerciseChoices) {
+    throw new ConvexError({
+      code: "CONTENT_SYNC_CHOICE_COUNT_EXCEEDED",
+      message: "Existing exercise choice count exceeds the safe sync limit.",
+    });
+  }
 
-    for (const choice of existingChoices) {
-      await ctx.db.delete("exerciseChoices", choice._id);
-    }
+  for (const choice of existingChoices) {
+    await ctx.db.delete("exerciseChoices", choice._id);
   }
 }

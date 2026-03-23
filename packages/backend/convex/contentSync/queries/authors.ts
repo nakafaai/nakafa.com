@@ -6,7 +6,7 @@ import {
 import { v } from "convex/values";
 
 const authorSummaryValidator = v.object({
-  id: v.string(),
+  id: v.id("authors"),
   name: v.string(),
   username: v.string(),
 });

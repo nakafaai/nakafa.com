@@ -16,7 +16,7 @@ import {
   subjectCategoryValidator,
 } from "@repo/backend/convex/lib/validators/contents";
 import { logger } from "@repo/backend/convex/utils/logger";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { getAll } from "convex-helpers/server/relationships";
 
 const syncedSubjectTopicValidator = v.object({
@@ -295,19 +295,20 @@ export const deleteStaleSubjectTopics = internalMutation({
       }
 
       const topicId = args.topicIds[index];
-      while (true) {
-        const sections = await ctx.db
-          .query("subjectSections")
-          .withIndex("topicId", (q) => q.eq("topicId", topicId))
-          .take(CONTENT_SYNC_BATCH_LIMITS.subjectSections);
+      const sections = await ctx.db
+        .query("subjectSections")
+        .withIndex("topicId", (q) => q.eq("topicId", topicId))
+        .take(topic.sectionCount + 1);
 
-        if (sections.length === 0) {
-          break;
-        }
+      if (sections.length > topic.sectionCount) {
+        throw new ConvexError({
+          code: "CONTENT_SYNC_SECTION_COUNT_EXCEEDED",
+          message: "Subject section count exceeds the topic section count.",
+        });
+      }
 
-        for (const section of sections) {
-          await deleteSubjectSection(ctx, section._id);
-        }
+      for (const section of sections) {
+        await deleteSubjectSection(ctx, section._id);
       }
 
       await ctx.db.delete("subjectTopics", topicId);

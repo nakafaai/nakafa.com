@@ -5,11 +5,10 @@ import type {
 } from "@repo/backend/convex/_generated/server";
 import { ConvexError } from "convex/values";
 import { asyncMap } from "convex-helpers";
-import { getManyFrom } from "convex-helpers/server/relationships";
 
 const MAX_ACTIVE_TRYOUTS_WITHOUT_SCALE = 100;
 
-type IrtDbReader = QueryCtx["db"];
+type IrtDbReader = MutationCtx["db"] | QueryCtx["db"];
 type OperationalItemParams = Pick<
   Doc<"exerciseItemParameters">,
   "questionId" | "difficulty" | "discrimination"
@@ -76,17 +75,26 @@ export async function getActiveTryoutsWithoutScale(db: IrtDbReader) {
 }
 
 /** Loads all frozen item parameters in one published scale version. */
-export function getScaleVersionItems(
+export async function getScaleVersionItems(
   db: IrtDbReader,
-  scaleVersionId: Doc<"irtScaleVersionItems">["scaleVersionId"]
+  scaleVersion: Pick<Doc<"irtScaleVersions">, "_id" | "questionCount">
 ) {
-  return getManyFrom(
-    db,
-    "irtScaleVersionItems",
-    "by_scaleVersionId_and_setId_and_questionId",
-    scaleVersionId,
-    "scaleVersionId"
-  );
+  const scaleItems = await db
+    .query("irtScaleVersionItems")
+    .withIndex("by_scaleVersionId_and_setId_and_questionId", (q) =>
+      q.eq("scaleVersionId", scaleVersion._id)
+    )
+    .take(scaleVersion.questionCount + 1);
+
+  if (scaleItems.length > scaleVersion.questionCount) {
+    throw new ConvexError({
+      code: "IRT_SCALE_ITEM_COUNT_EXCEEDED",
+      message:
+        "Frozen scale item count exceeds the scale version question count.",
+    });
+  }
+
+  return scaleItems;
 }
 
 /** Loads the frozen item parameters for one set inside a published scale version. */

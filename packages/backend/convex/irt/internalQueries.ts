@@ -5,8 +5,7 @@ import {
   paginationOptsValidator,
   paginationResultValidator,
 } from "convex/server";
-import { type Infer, v } from "convex/values";
-import { getManyFrom } from "convex-helpers/server/relationships";
+import { ConvexError, type Infer, v } from "convex/values";
 
 export const calibrationQuestionValidator = v.object({
   questionId: vv.id("exerciseQuestions"),
@@ -37,19 +36,40 @@ export const getCalibrationQuestionsForSet = internalQuery({
   },
   returns: calibrationQuestionsForSetResultValidator,
   handler: async (ctx, args) => {
-    const questions = await getManyFrom(
-      ctx.db,
-      "exerciseQuestions",
-      "setId",
-      args.setId
-    );
-    const existingParams = await getManyFrom(
-      ctx.db,
-      "exerciseItemParameters",
-      "by_setId",
-      args.setId,
-      "setId"
-    );
+    const set = await ctx.db.get("exerciseSets", args.setId);
+
+    if (!set) {
+      throw new ConvexError({
+        code: "IRT_SET_NOT_FOUND",
+        message: "Exercise set not found for calibration question lookup.",
+      });
+    }
+
+    const [questions, existingParams] = await Promise.all([
+      ctx.db
+        .query("exerciseQuestions")
+        .withIndex("setId", (q) => q.eq("setId", args.setId))
+        .take(set.questionCount + 1),
+      ctx.db
+        .query("exerciseItemParameters")
+        .withIndex("by_setId", (q) => q.eq("setId", args.setId))
+        .take(set.questionCount + 1),
+    ]);
+
+    if (questions.length > set.questionCount) {
+      throw new ConvexError({
+        code: "IRT_QUESTION_COUNT_EXCEEDED",
+        message: "Exercise question count exceeds the set question count.",
+      });
+    }
+
+    if (existingParams.length > set.questionCount) {
+      throw new ConvexError({
+        code: "IRT_ITEM_PARAMETER_COUNT_EXCEEDED",
+        message:
+          "Exercise item parameter count exceeds the set question count.",
+      });
+    }
 
     return {
       questions: [...questions]
@@ -79,10 +99,31 @@ export const getCalibrationResponsesPageForSet = internalQuery({
   },
   returns: calibrationResponsesPageResultValidator,
   handler: async (ctx, args) => {
+    const set = await ctx.db.get("exerciseSets", args.setId);
+
+    if (!set) {
+      throw new ConvexError({
+        code: "IRT_SET_NOT_FOUND",
+        message: "Exercise set not found for calibration response lookup.",
+      });
+    }
+
     const responsePage = await ctx.db
       .query("irtCalibrationAttempts")
       .withIndex("by_setId_and_attemptId", (q) => q.eq("setId", args.setId))
       .paginate(args.paginationOpts);
+
+    for (const attempt of responsePage.page) {
+      if (attempt.responses.length <= set.questionCount) {
+        continue;
+      }
+
+      throw new ConvexError({
+        code: "IRT_CALIBRATION_RESPONSE_COUNT_EXCEEDED",
+        message:
+          "Cached calibration response count exceeds the set question count.",
+      });
+    }
 
     return {
       page: responsePage.page.flatMap((attempt) =>

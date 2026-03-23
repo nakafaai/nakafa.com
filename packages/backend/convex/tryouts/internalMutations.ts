@@ -7,7 +7,7 @@ import {
   computeTryoutRawScorePercentage,
   expireTryoutAttempt,
   isBetterLeaderboardScore,
-  rescoreTryoutAttempt,
+  syncTryoutAttemptAggregates,
   syncTryoutAttemptExpiry,
 } from "@repo/backend/convex/tryouts/helpers";
 import {
@@ -523,13 +523,17 @@ export const promoteProvisionalTryoutScores = internalMutation({
     const now = Date.now();
 
     for (const tryoutAttempt of provisionalAttempts) {
-      await rescoreTryoutAttempt({
-        ctx,
-        now,
-        scaleVersionId: scaleVersion._id,
-        scoreStatus: "official",
-        tryoutAttempt,
-      });
+      if (tryoutAttempt.status !== "in-progress") {
+        await syncTryoutAttemptAggregates({
+          completedAtMs: tryoutAttempt.completedAt ?? now,
+          ctx,
+          now,
+          scaleVersionId: scaleVersion._id,
+          scoreStatus: "official",
+          status: tryoutAttempt.status,
+          tryoutAttemptId: tryoutAttempt._id,
+        });
+      }
 
       if (tryoutAttempt.status !== "completed") {
         continue;

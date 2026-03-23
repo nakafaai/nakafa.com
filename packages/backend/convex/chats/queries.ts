@@ -1,4 +1,4 @@
-import { query } from "@repo/backend/convex/_generated/server";
+import { type QueryCtx, query } from "@repo/backend/convex/_generated/server";
 import {
   chatTypeValidator,
   chatVisibilityValidator,
@@ -13,6 +13,21 @@ import { ConvexError, v } from "convex/values";
 import { asyncMap } from "convex-helpers";
 import { getManyFrom } from "convex-helpers/server/relationships";
 import { nullable } from "convex-helpers/validators";
+
+async function getViewerUserId(ctx: Pick<QueryCtx, "auth" | "db">) {
+  const identity = await ctx.auth.getUserIdentity();
+
+  if (!identity?.subject) {
+    return null;
+  }
+
+  const appUser = await ctx.db
+    .query("users")
+    .withIndex("authId", (q) => q.eq("authId", identity.subject))
+    .unique();
+
+  return appUser?._id ?? null;
+}
 
 /**
  * Get a chat by its ID.
@@ -44,7 +59,7 @@ export const getChat = query({
 
 /**
  * Get all chats by user ID, type, visibility, and search query.
- * Only accessible by the user ID passed as an argument.
+ * Owners can load all of their chats. Everyone else only sees public chats.
  * Supports optional full-text search by title and filtering by visibility and type.
  */
 export const getChats = query({
@@ -58,6 +73,17 @@ export const getChats = query({
   returns: paginatedChatsValidator,
   handler: async (ctx, args) => {
     const { userId, q: searchQuery, visibility, type, paginationOpts } = args;
+    const viewerUserId = await getViewerUserId(ctx);
+    const isOwner = viewerUserId === userId;
+
+    if (!isOwner && visibility === "private") {
+      throw new ConvexError({
+        code: "FORBIDDEN",
+        message: "Private chats are only visible to their owner.",
+      });
+    }
+
+    const effectiveVisibility = isOwner ? visibility : "public";
 
     // If search query is provided and not empty, use full-text search
     if (searchQuery && searchQuery.trim().length > 0) {
@@ -65,8 +91,8 @@ export const getChats = query({
         .query("chats")
         .withSearchIndex("search_title", (q) => {
           let builder = q.search("title", searchQuery).eq("userId", userId);
-          if (visibility) {
-            builder = builder.eq("visibility", visibility);
+          if (effectiveVisibility) {
+            builder = builder.eq("visibility", effectiveVisibility);
           }
           if (type) {
             builder = builder.eq("type", type);
@@ -79,12 +105,15 @@ export const getChats = query({
     // Use the most specific index available based on filters
     // Priority: userId_visibility_type > userId_type > userId_visibility > userId
 
-    if (visibility && type) {
+    if (effectiveVisibility && type) {
       // Use compound index for all three fields
       return await ctx.db
         .query("chats")
         .withIndex("userId_visibility_type", (q) =>
-          q.eq("userId", userId).eq("visibility", visibility).eq("type", type)
+          q
+            .eq("userId", userId)
+            .eq("visibility", effectiveVisibility)
+            .eq("type", type)
         )
         .order("desc")
         .paginate(paginationOpts);
@@ -101,12 +130,12 @@ export const getChats = query({
         .paginate(paginationOpts);
     }
 
-    if (visibility) {
+    if (effectiveVisibility) {
       // Use userId_visibility index
       return await ctx.db
         .query("chats")
         .withIndex("userId_visibility", (q) =>
-          q.eq("userId", userId).eq("visibility", visibility)
+          q.eq("userId", userId).eq("visibility", effectiveVisibility)
         )
         .order("desc")
         .paginate(paginationOpts);
@@ -123,7 +152,8 @@ export const getChats = query({
 
 /**
  * Get the title of a chat.
- * Accessible by anyone.
+ * Public chat titles are readable by anyone.
+ * Private chat titles are only readable by the owner.
  */
 export const getChatTitle = query({
   args: {
@@ -132,7 +162,22 @@ export const getChatTitle = query({
   returns: nullable(v.string()),
   handler: async (ctx, args) => {
     const chat = await ctx.db.get("chats", args.chatId);
-    return chat?.title ?? null;
+
+    if (!chat) {
+      return null;
+    }
+
+    if (chat.visibility === "public") {
+      return chat.title ?? null;
+    }
+
+    const viewerUserId = await getViewerUserId(ctx);
+
+    if (viewerUserId !== chat.userId) {
+      return null;
+    }
+
+    return chat.title ?? null;
   },
 });
 

@@ -5,7 +5,7 @@ import { adjustCalibrationCacheAttemptCount } from "@repo/backend/convex/irt/hel
 import { IRT_CALIBRATION_RESPONSE_BACKFILL_BATCH_SIZE } from "@repo/backend/convex/irt/policy";
 import { irtCalibrationSyncWorkpool } from "@repo/backend/convex/irt/workpool";
 import { ConvexError } from "convex/values";
-import { getAll, getManyFrom } from "convex-helpers/server/relationships";
+import { getAll } from "convex-helpers/server/relationships";
 
 const MAX_CALIBRATION_ATTEMPT_DUPLICATES = 100;
 
@@ -70,13 +70,20 @@ export async function syncCalibrationResponsesForAttemptHandler(
     return null;
   }
 
-  const answers = await getManyFrom(
-    ctx.db,
-    "exerciseAnswers",
-    "attemptId_exerciseNumber",
-    args.attemptId,
-    "attemptId"
-  );
+  const answers = await ctx.db
+    .query("exerciseAnswers")
+    .withIndex("attemptId_exerciseNumber", (q) =>
+      q.eq("attemptId", args.attemptId)
+    )
+    .take(attempt.totalExercises + 1);
+
+  if (answers.length > attempt.totalExercises) {
+    throw new ConvexError({
+      code: "IRT_ATTEMPT_ANSWER_COUNT_EXCEEDED",
+      message: "Exercise answer count exceeds the attempt total exercises.",
+    });
+  }
+
   const scoredAnswers = answers.flatMap((answer) => {
     if (answer.questionId === undefined) {
       return [];
@@ -102,7 +109,10 @@ export async function syncCalibrationResponsesForAttemptHandler(
   const firstQuestion = questions[0];
 
   if (!firstQuestion) {
-    return null;
+    throw new ConvexError({
+      code: "IRT_QUESTION_NOT_FOUND",
+      message: "Calibration response is missing its exercise question.",
+    });
   }
 
   const setId = firstQuestion.setId;

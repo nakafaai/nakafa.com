@@ -9,7 +9,7 @@ import {
 import { irtCalibrationResultValidator } from "@repo/backend/convex/irt/validators";
 import { ConvexError, type Infer, v } from "convex/values";
 
-const CALIBRATION_PAGE_SIZE = 100;
+const CALIBRATION_RESPONSE_PAGE_SIZE = 100;
 
 /**
  * Run one set-level 2PL calibration job from completed simulation responses.
@@ -32,6 +32,11 @@ export const calibrateSetTwoPL = internalAction({
       }
     );
     const questionIds = questions.map((question) => question.questionId);
+    const responsesPerAttemptLimit = Math.max(questionIds.length, 1);
+    const attemptPageSize = Math.max(
+      1,
+      Math.floor(CALIBRATION_RESPONSE_PAGE_SIZE / responsesPerAttemptLimit)
+    );
     const responsesByAttempt = new Map<
       CalibrationResponse["attemptId"],
       CalibrationResponse[]
@@ -56,7 +61,7 @@ export const calibrateSetTwoPL = internalAction({
         {
           setId: args.setId,
           paginationOpts: {
-            numItems: CALIBRATION_PAGE_SIZE,
+            numItems: attemptPageSize,
             cursor: continueCursor,
           },
         }
@@ -65,13 +70,28 @@ export const calibrateSetTwoPL = internalAction({
       for (const response of page) {
         const questionResponses = responsesByQuestion.get(response.questionId);
 
-        if (questionResponses) {
-          questionResponses.push(response);
+        if (!questionResponses) {
+          throw new ConvexError({
+            code: "IRT_RESPONSE_QUESTION_NOT_IN_SET",
+            message:
+              "Calibration response references a question outside the set.",
+          });
         }
+
+        questionResponses.push(response);
 
         const attemptResponses =
           responsesByAttempt.get(response.attemptId) ?? [];
         attemptResponses.push(response);
+
+        if (attemptResponses.length > questionIds.length) {
+          throw new ConvexError({
+            code: "IRT_ATTEMPT_RESPONSE_COUNT_EXCEEDED",
+            message:
+              "One calibration attempt has more responses than the set question count.",
+          });
+        }
+
         responsesByAttempt.set(response.attemptId, attemptResponses);
         responseCount += 1;
 

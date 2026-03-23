@@ -17,7 +17,7 @@ import {
   localeValidator,
 } from "@repo/backend/convex/lib/validators/contents";
 import { logger } from "@repo/backend/convex/utils/logger";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { getAll } from "convex-helpers/server/relationships";
 
 const syncedExerciseSetValidator = v.object({
@@ -317,19 +317,20 @@ export const deleteStaleExerciseSets = internalMutation({
       }
 
       const setId = args.setIds[index];
-      while (true) {
-        const questions = await ctx.db
-          .query("exerciseQuestions")
-          .withIndex("setId", (q) => q.eq("setId", setId))
-          .take(CONTENT_SYNC_BATCH_LIMITS.exerciseQuestions);
+      const questions = await ctx.db
+        .query("exerciseQuestions")
+        .withIndex("setId", (q) => q.eq("setId", setId))
+        .take(exerciseSet.questionCount + 1);
 
-        if (questions.length === 0) {
-          break;
-        }
+      if (questions.length > exerciseSet.questionCount) {
+        throw new ConvexError({
+          code: "CONTENT_SYNC_QUESTION_COUNT_EXCEEDED",
+          message: "Exercise question count exceeds the set question count.",
+        });
+      }
 
-        for (const question of questions) {
-          await deleteExerciseQuestion(ctx, question._id);
-        }
+      for (const question of questions) {
+        await deleteExerciseQuestion(ctx, question._id);
       }
 
       await ctx.db.delete("exerciseSets", setId);

@@ -307,6 +307,11 @@ const tables = {
       "isArchived",
       "visibility",
     ])
+    .index("schoolId_visibility_isArchived", [
+      "schoolId",
+      "visibility",
+      "isArchived",
+    ])
     .searchIndex("search_name", {
       searchField: "name",
       filterFields: ["schoolId", "isArchived", "visibility"],
@@ -376,7 +381,7 @@ const tables = {
     .index("status_scheduledAt", ["status", "scheduledAt"])
     .searchIndex("search_name", {
       searchField: "name",
-      filterFields: ["classId", "status"],
+      filterFields: ["classId", "parentId", "status"],
     }),
 
   schoolClassMaterials: defineTable({
