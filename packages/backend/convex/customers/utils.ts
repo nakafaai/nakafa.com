@@ -1,15 +1,11 @@
-import { components, internal } from "@repo/backend/convex/_generated/api";
+import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import {
   ensurePolarCustomer,
   updatePolarCustomerMetadata,
 } from "@repo/backend/convex/customers/polar";
-import type {
-  GenericActionCtx,
-  GenericDataModel,
-  WithoutSystemFields,
-} from "convex/server";
+import type { WithoutSystemFields } from "convex/server";
 import { ConvexError } from "convex/values";
 
 type PolarMetadata = Record<string, string | number | boolean>;
@@ -35,65 +31,6 @@ export function convertToDatabaseCustomer(customer: {
     userId: customer.userId,
     metadata: customer.metadata,
   };
-}
-
-/**
- * Find app user ID from Polar customer data.
- *
- * Tries to match customer to app user by:
- * 1. externalId (Better Auth user ID)
- * 2. Email in app users table
- * 3. Email in Better Auth table
- *
- * Used by webhooks to sync customer data to correct user.
- */
-export async function findUserIdFromCustomer(
-  ctx: GenericActionCtx<GenericDataModel>,
-  customerData: { externalId?: string | null; email: string }
-): Promise<Id<"users"> | null> {
-  // Try to find by externalId (Better Auth user ID)
-  const authId = customerData.externalId;
-  if (authId) {
-    const user = await ctx.runQuery(internal.users.queries.getUserByAuthId, {
-      authId,
-    });
-    if (user) {
-      return user._id;
-    }
-  }
-
-  // Try to find by email in app users table
-  const user = await ctx.runQuery(internal.users.queries.getUserByEmail, {
-    email: customerData.email,
-  });
-  if (user) {
-    return user._id;
-  }
-
-  // Try to find by email in Better Auth table
-  const authUser = await ctx.runQuery(
-    components.betterAuth.queries.getUserByEmail,
-    {
-      email: customerData.email,
-    }
-  );
-
-  if (!authUser) {
-    return null;
-  }
-
-  const userByAuthId = await ctx.runQuery(
-    internal.users.queries.getUserByAuthId,
-    {
-      authId: authUser._id,
-    }
-  );
-
-  if (!userByAuthId) {
-    return null;
-  }
-
-  return userByAuthId._id;
 }
 
 export async function syncCustomerForUser(

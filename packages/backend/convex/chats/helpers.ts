@@ -111,6 +111,13 @@ export async function insertParts(
   messageId: Id<"messages">,
   parts: PartInput[]
 ): Promise<Id<"parts">[]> {
+  if (parts.length > MAX_CHAT_MESSAGE_PARTS) {
+    throw new ConvexError({
+      code: "CHAT_PART_LIMIT_EXCEEDED",
+      message: `Chat message cannot have more than ${MAX_CHAT_MESSAGE_PARTS} parts.`,
+    });
+  }
+
   const partIds: Id<"parts">[] = [];
 
   for (const part of parts) {

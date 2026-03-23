@@ -16,22 +16,6 @@ import type {
 import { safeGetAppUser } from "@repo/backend/convex/auth";
 import { ConvexError } from "convex/values";
 
-async function getUserByIdentity(
-  ctx: QueryCtx,
-  authId: string | null | undefined
-) {
-  const normalizedAuthId = authId ?? undefined;
-
-  if (!normalizedAuthId) {
-    return null;
-  }
-
-  return await ctx.db
-    .query("users")
-    .withIndex("authId", (q) => q.eq("authId", normalizedAuthId))
-    .unique();
-}
-
 /**
  * Resolve the current app user from the JWT identity without enforcing auth.
  * Returns null when no identity is present or no matching app user exists.
@@ -43,7 +27,10 @@ export async function getOptionalAppUserFromIdentity(ctx: QueryCtx) {
     return null;
   }
 
-  const appUser = await getUserByIdentity(ctx, identity.subject);
+  const appUser = await ctx.db
+    .query("users")
+    .withIndex("authId", (q) => q.eq("authId", identity.subject))
+    .unique();
 
   if (!(appUser && identity)) {
     return null;
