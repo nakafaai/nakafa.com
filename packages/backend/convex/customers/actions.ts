@@ -2,6 +2,11 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { action, internalAction } from "@repo/backend/convex/_generated/server";
 import {
+  createPolarCheckoutSession,
+  createPolarCustomerPortalSession,
+  deletePolarCustomer,
+} from "@repo/backend/convex/customers/polar";
+import {
   requireCustomer,
   syncCustomerForUser,
 } from "@repo/backend/convex/customers/utils";
@@ -50,14 +55,11 @@ export const generateCheckoutLink = action({
     const { appUser } = await requireAuthForAction(ctx);
     const customer = await requireCustomer(ctx, appUser._id);
 
-    const checkout = await ctx.runAction(
-      internal.customers.polar.createCheckoutSession,
-      {
-        customerId: customer.id,
-        productIds: args.productIds,
-        successUrl: args.successUrl,
-      }
-    );
+    const checkout = await createPolarCheckoutSession({
+      customerId: customer.id,
+      productIds: args.productIds,
+      successUrl: args.successUrl,
+    });
 
     return { url: checkout.url };
   },
@@ -70,10 +72,7 @@ export const generateCustomerPortalUrl = action({
     const { appUser } = await requireAuthForAction(ctx);
     const customer = await requireCustomer(ctx, appUser._id);
 
-    return await ctx.runAction(
-      internal.customers.polar.createCustomerPortalSession,
-      { customerId: customer.id }
-    );
+    return await createPolarCustomerPortalSession({ customerId: customer.id });
   },
 });
 
@@ -92,9 +91,7 @@ export const cleanupUserData = internalAction({
     );
 
     if (customer?.id) {
-      await ctx.runAction(internal.customers.polar.deleteCustomer, {
-        id: customer.id,
-      });
+      await deletePolarCustomer(customer.id);
 
       await ctx.runMutation(internal.customers.mutations.deleteCustomerById, {
         id: customer.id,

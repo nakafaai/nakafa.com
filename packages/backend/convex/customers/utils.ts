@@ -1,6 +1,10 @@
 import { components, internal } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
+import {
+  ensurePolarCustomer,
+  updatePolarCustomerMetadata,
+} from "@repo/backend/convex/customers/polar";
 import type {
   GenericActionCtx,
   GenericDataModel,
@@ -99,23 +103,20 @@ export async function syncCustomerForUser(
     user: CustomerSyncUser;
   }
 ): Promise<RequiredCustomer> {
-  const polarCustomer = await ctx.runAction(
-    internal.customers.polar.ensureCustomer,
-    {
-      localCustomerId: args.localCustomerId ?? undefined,
-      externalId: args.user.authId,
-      email: args.user.email,
-      name: args.user.name,
-      metadata: { userId: args.user._id },
-    }
-  );
+  const polarCustomer = await ensurePolarCustomer({
+    localCustomerId: args.localCustomerId ?? undefined,
+    externalId: args.user.authId,
+    email: args.user.email,
+    name: args.user.name,
+    metadata: { userId: args.user._id },
+  });
 
   let syncedPolarCustomer = polarCustomer;
   if (Object.keys(polarCustomer.metadata).length === 0) {
-    syncedPolarCustomer = await ctx.runAction(
-      internal.customers.polar.updateCustomerMetadata,
-      { id: polarCustomer.id, metadata: { userId: args.user._id } }
-    );
+    syncedPolarCustomer = await updatePolarCustomerMetadata({
+      id: polarCustomer.id,
+      metadata: { userId: args.user._id },
+    });
   }
 
   const customer = convertToDatabaseCustomer({
