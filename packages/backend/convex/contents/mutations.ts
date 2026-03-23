@@ -8,13 +8,13 @@ import {
   getContentRefBySlugAndLocale,
   getContentSlug,
 } from "@repo/backend/convex/audioStudies/utils";
-import { safeGetAppUser } from "@repo/backend/convex/auth";
 import {
   articlePopularity,
   subjectPopularity,
 } from "@repo/backend/convex/contents/aggregate";
 import { recordContentViewBySlug } from "@repo/backend/convex/contents/utils";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
+import { getOptionalAppUserFromIdentity } from "@repo/backend/convex/lib/helpers/auth";
 import type { AudioContentRef } from "@repo/backend/convex/lib/validators/audio";
 import {
   contentViewRefValidator,
@@ -237,7 +237,7 @@ export const recordContentView = mutation({
     alreadyViewed: v.boolean(),
   }),
   handler: async (ctx, args) => {
-    const user = await safeGetAppUser(ctx);
+    const user = await getOptionalAppUserFromIdentity(ctx);
     const userId = user?.appUser._id;
 
     return await recordContentViewBySlug(

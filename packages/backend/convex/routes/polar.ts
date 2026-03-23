@@ -2,7 +2,7 @@ import {
   validateEvent,
   WebhookVerificationError,
 } from "@polar-sh/sdk/webhooks";
-import { components, internal } from "@repo/backend/convex/_generated/api";
+import { internal } from "@repo/backend/convex/_generated/api";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { convertToDatabaseCustomer } from "@repo/backend/convex/customers/utils";
 import {
@@ -25,33 +25,13 @@ async function handleCustomerUpsert(
     metadata: Record<string, string | number | boolean>;
   }
 ) {
-  const userByExternalId = customer.externalId
-    ? await ctx.runQuery(internal.users.queries.getUserByAuthId, {
-        authId: customer.externalId,
-      })
-    : null;
-
-  const userByEmail = userByExternalId
-    ? null
-    : await ctx.runQuery(internal.users.queries.getUserByEmail, {
-        email: customer.email,
-      });
-
-  const authUser =
-    userByExternalId || userByEmail
-      ? null
-      : await ctx.runQuery(components.betterAuth.queries.getUserByEmail, {
-          email: customer.email,
-        });
-
-  const userByAuthUser = authUser
-    ? await ctx.runQuery(internal.users.queries.getUserByAuthId, {
-        authId: authUser._id,
-      })
-    : null;
-
-  const userId =
-    userByExternalId?._id ?? userByEmail?._id ?? userByAuthUser?._id;
+  const userId = await ctx.runQuery(
+    internal.customers.queries.getUserIdByPolarCustomer,
+    {
+      email: customer.email,
+      externalId: customer.externalId ?? undefined,
+    }
+  );
 
   if (!userId) {
     return false;

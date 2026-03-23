@@ -66,6 +66,7 @@ triggers.register("audioGenerationQueue", noopHandler);
 triggers.register("creditTransactions", noopHandler);
 triggers.register("creditResetJobs", noopHandler);
 triggers.register("creditResetQueue", noopHandler);
+triggers.register("subjectTrendingBuckets", noopHandler);
 triggers.register("users", noopHandler);
 triggers.register("subscriptions", subscriptionsHandler);
 triggers.register("contentViews", contentViewsHandler);

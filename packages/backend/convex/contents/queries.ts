@@ -1,6 +1,6 @@
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { query } from "@repo/backend/convex/_generated/server";
-import { safeGetAppUser } from "@repo/backend/convex/auth";
+import { getOptionalAppUserFromIdentity } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { recentlyViewedSubjectValidator } from "@repo/backend/convex/lib/validators/trending";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
@@ -22,7 +22,7 @@ export const getRecentlyViewed = query({
     const limit = args.limit ?? 5;
 
     // Get current user
-    const user = await safeGetAppUser(ctx);
+    const user = await getOptionalAppUserFromIdentity(ctx);
     if (!user) {
       return [];
     }
@@ -37,58 +37,55 @@ export const getRecentlyViewed = query({
       )
       .order("desc");
 
-    const seenSubjects = new Set<string>();
-    const limitedViews: Doc<"contentViews">[] = [];
+    const recentViews = await recentViewsQuery.take(limit);
 
-    for await (const view of recentViewsQuery) {
+    if (recentViews.length === 0) {
+      return [];
+    }
+
+    const subjectViews: Array<{
+      lastViewedAt: number;
+      slug: string;
+      subjectId: Id<"subjectSections">;
+    }> = [];
+
+    for (const view of recentViews) {
       if (view.contentRef.type !== "subject") {
         continue;
       }
 
-      if (seenSubjects.has(view.contentRef.id)) {
-        continue;
-      }
-
-      seenSubjects.add(view.contentRef.id);
-      limitedViews.push(view);
-
-      if (limitedViews.length === limit) {
-        break;
-      }
+      subjectViews.push({
+        lastViewedAt: view.lastViewedAt,
+        slug: view.slug,
+        subjectId: view.contentRef.id,
+      });
     }
 
-    if (limitedViews.length === 0) {
+    if (subjectViews.length === 0) {
       return [];
     }
 
-    // Extract subject IDs and batch fetch using convex-helpers
-    const subjectIds = limitedViews
-      .map((view) =>
-        view.contentRef.type === "subject" ? view.contentRef.id : null
-      )
-      .filter((id) => id !== null);
+    const subjects = await getAll(
+      ctx.db,
+      subjectViews.map((subjectView) => subjectView.subjectId)
+    );
 
-    const subjects = await getAll(ctx.db, subjectIds);
+    return subjectViews.flatMap((subjectView, index) => {
+      const subject = subjects[index];
 
-    // Map to results maintaining order from limitedViews
-    const results = limitedViews
-      .map((view, index) => {
-        const subject = subjects[index];
-        if (!subject || view.contentRef.type !== "subject") {
-          return null;
-        }
-        return {
-          id: subject._id,
-          title: subject.title,
-          description: subject.description,
-          slug: view.slug,
-          grade: subject.grade,
-          material: subject.material,
-          lastViewedAt: view.lastViewedAt,
-        };
-      })
-      .filter((subject) => subject !== null);
+      if (!subject) {
+        return [];
+      }
 
-    return results;
+      return {
+        id: subject._id,
+        title: subject.title,
+        description: subject.description,
+        slug: subjectView.slug,
+        grade: subject.grade,
+        material: subject.material,
+        lastViewedAt: subjectView.lastViewedAt,
+      };
+    });
   },
 });

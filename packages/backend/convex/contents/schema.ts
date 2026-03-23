@@ -55,6 +55,22 @@ const tables = {
   }).index("by_contentId", ["contentId"]),
 
   /**
+   * Daily subject view counts used to serve bounded trending queries.
+   * One row per locale, subject, and UTC day bucket.
+   */
+  subjectTrendingBuckets: defineTable({
+    bucketStart: v.number(),
+    contentId: v.id("subjectSections"),
+    locale: localeValidator,
+    updatedAt: v.number(),
+    viewCount: v.number(),
+  }).index("by_locale_bucketStart_contentId", [
+    "locale",
+    "bucketStart",
+    "contentId",
+  ]),
+
+  /**
    * Exercise popularity counts.
    * Updated via triggers when exercise views are recorded.
    */

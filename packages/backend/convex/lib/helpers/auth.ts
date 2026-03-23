@@ -5,7 +5,7 @@
  * 1. requireAuth() - Fast JWT-based (for queries)
  * 2. requireAuthWithSession() - Full session validation (for mutations)
  *
- * @see https://convex-better-auth.netlify.app/basic-usage/authorization
+ * @see https://labs.convex.dev/better-auth/basic-usage/authorization
  */
 import { internal } from "@repo/backend/convex/_generated/api";
 import type {
@@ -20,7 +20,9 @@ import { ConvexError } from "convex/values";
  * Resolve the current app user from the JWT identity without enforcing auth.
  * Returns null when no identity is present or no matching app user exists.
  */
-export async function getOptionalAppUserFromIdentity(ctx: QueryCtx) {
+export async function getOptionalAppUserFromIdentity(
+  ctx: QueryCtx | MutationCtx
+) {
   const identity = await ctx.auth.getUserIdentity();
 
   if (!identity?.subject) {
