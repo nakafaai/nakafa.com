@@ -102,7 +102,7 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
 
           const appUser = await ctx.db
             .query("users")
-            .withIndex("authId", (q) => q.eq("authId", newDoc._id))
+            .withIndex("by_authId", (q) => q.eq("authId", newDoc._id))
             .unique();
 
           if (!appUser) {
@@ -124,7 +124,7 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
         onDelete: async (ctx, authUser) => {
           const userApp = await ctx.db
             .query("users")
-            .withIndex("authId", (q) => q.eq("authId", authUser._id))
+            .withIndex("by_authId", (q) => q.eq("authId", authUser._id))
             .unique();
 
           if (!userApp) {
@@ -207,7 +207,7 @@ export const safeGetAppUser = async (ctx: QueryCtx | MutationCtx) => {
 
   const user = await ctx.db
     .query("users")
-    .withIndex("authId", (q) => q.eq("authId", authUser._id))
+    .withIndex("by_authId", (q) => q.eq("authId", authUser._id))
     .unique();
 
   if (!user) {

@@ -110,7 +110,7 @@ const tables = {
    * Content preview is SNAPSHOT at creation time
    *
    * Query pattern:
-   * .withIndex("recipientId", q => q.eq("recipientId", x))
+   * .withIndex("by_recipientId", q => q.eq("recipientId", x))
    * .order("desc")
    * .paginate(opts)
    */
@@ -138,8 +138,8 @@ const tables = {
 
     // Note: Use _creationTime for when notification was created
   })
-    .index("recipientId", ["recipientId"])
-    .index("actorId", ["actorId"]),
+    .index("by_recipientId", ["recipientId"])
+    .index("by_actorId", ["actorId"]),
 
   /**
    * Denormalized unread counts for O(1) badge display
@@ -151,7 +151,7 @@ const tables = {
     userId: v.id("users"),
     unreadCount: v.number(),
     updatedAt: v.number(),
-  }).index("userId", ["userId"]),
+  }).index("by_userId", ["userId"]),
 
   /**
    * User notification preferences
@@ -171,7 +171,7 @@ const tables = {
     emailDigest: emailDigestTypesValidator, // "daily" | "weekly" | "never"
 
     updatedAt: v.number(),
-  }).index("userId", ["userId"]),
+  }).index("by_userId", ["userId"]),
 
   /**
    * One row per muted entity.

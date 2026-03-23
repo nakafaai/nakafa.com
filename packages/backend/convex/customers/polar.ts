@@ -6,10 +6,8 @@ import { customersGet } from "@polar-sh/sdk/funcs/customersGet.js";
 import { customersGetExternal } from "@polar-sh/sdk/funcs/customersGetExternal.js";
 import { customersUpdate } from "@polar-sh/sdk/funcs/customersUpdate.js";
 import { PolarError } from "@polar-sh/sdk/models/errors/polarerror.js";
-import { internalAction } from "@repo/backend/convex/_generated/server";
 import { polarClient } from "@repo/backend/convex/utils/polar";
-import { ConvexError, v } from "convex/values";
-import { nullable } from "convex-helpers/validators";
+import { ConvexError } from "convex/values";
 
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T/;
 
@@ -28,26 +26,7 @@ function sanitize<T>(data: T): T {
   );
 }
 
-/**
- * Polar metadata validator for action args.
- * Keep values Convex-compatible so the same shape can be stored locally.
- */
-const polarMetadataValueValidator = v.union(
-  v.string(),
-  v.number(),
-  v.boolean()
-);
-const polarMetadataArgsValidator = v.optional(
-  v.record(v.string(), polarMetadataValueValidator)
-);
 type PolarMetadata = Record<string, string | number | boolean>;
-const polarCustomerResultValidator = v.object({
-  id: v.string(),
-  externalId: nullable(v.string()),
-  email: v.string(),
-  name: nullable(v.string()),
-  metadata: v.record(v.string(), polarMetadataValueValidator),
-});
 
 function isMissingPolarCustomer(error: unknown) {
   return error instanceof PolarError && error.statusCode === 404;
@@ -191,18 +170,6 @@ export async function ensurePolarCustomer(args: {
   });
 }
 
-export const ensureCustomer = internalAction({
-  args: {
-    localCustomerId: v.optional(v.string()),
-    externalId: v.string(),
-    email: v.string(),
-    name: v.string(),
-    metadata: polarMetadataArgsValidator,
-  },
-  returns: polarCustomerResultValidator,
-  handler: async (_ctx, args) => ensurePolarCustomer(args),
-});
-
 /**
  * Update customer metadata in Polar
  */
@@ -227,15 +194,6 @@ export async function updatePolarCustomerMetadata(args: {
   const customer = sanitize(result.value);
   return toPolarCustomerResult(customer);
 }
-
-export const updateCustomerMetadata = internalAction({
-  args: {
-    id: v.string(),
-    metadata: v.record(v.string(), polarMetadataValueValidator),
-  },
-  returns: polarCustomerResultValidator,
-  handler: async (_ctx, args) => updatePolarCustomerMetadata(args),
-});
 
 /**
  * Create checkout session in Polar
@@ -266,18 +224,6 @@ export async function createPolarCheckoutSession(args: {
   return { url: result.value.url };
 }
 
-export const createCheckoutSession = internalAction({
-  args: {
-    customerId: v.string(),
-    productIds: v.array(v.string()),
-    successUrl: v.string(),
-    embedOrigin: v.optional(v.string()),
-    subscriptionId: v.optional(v.string()),
-  },
-  returns: v.object({ url: v.string() }),
-  handler: async (_ctx, args) => createPolarCheckoutSession(args),
-});
-
 /**
  * Create customer portal session in Polar
  */
@@ -297,14 +243,6 @@ export async function createPolarCustomerPortalSession(args: {
 
   return { url: result.value.customerPortalUrl };
 }
-
-export const createCustomerPortalSession = internalAction({
-  args: {
-    customerId: v.string(),
-  },
-  returns: v.object({ url: v.string() }),
-  handler: async (_ctx, args) => createPolarCustomerPortalSession(args),
-});
 
 /**
  * Delete customer from Polar.
@@ -326,11 +264,3 @@ export async function deletePolarCustomer(id: string) {
 
   return null;
 }
-
-export const deleteCustomer = internalAction({
-  args: {
-    id: v.string(),
-  },
-  returns: v.null(),
-  handler: async (_ctx, args) => deletePolarCustomer(args.id),
-});

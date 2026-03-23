@@ -13,9 +13,17 @@ import type { Change } from "convex-helpers/server/triggers";
 const productToPlanMap: Record<string, UserPlan> = {
   [products.pro.id]: "pro",
 };
+const MAX_ACTIVE_SUBSCRIPTIONS_PER_CUSTOMER = 10;
 
 function getPlanFromProductId(productId: string): UserPlan {
   return productToPlanMap[productId] ?? "free";
+}
+
+function getHigherPlan(currentPlan: UserPlan, nextPlan: UserPlan): UserPlan {
+  const currentCredits = getPlanCreditConfig(currentPlan).amount;
+  const nextCredits = getPlanCreditConfig(nextPlan).amount;
+
+  return nextCredits > currentCredits ? nextPlan : currentPlan;
 }
 
 /**
@@ -108,8 +116,9 @@ async function syncCustomerPlan(
   const customer = await getOneFrom(
     ctx.db,
     "customers",
-    "id",
-    subscription.customerId
+    "by_polarId",
+    subscription.customerId,
+    "id"
   );
 
   if (!customer) {
@@ -130,15 +139,16 @@ async function syncCustomerPlan(
     return;
   }
 
-  const activeSubscription = await ctx.db
+  const activeSubscriptions = await ctx.db
     .query("subscriptions")
     .withIndex("customerId_status", (q) =>
       q.eq("customerId", subscription.customerId).eq("status", "active")
     )
-    .first();
-  const newPlan = activeSubscription
-    ? getPlanFromProductId(activeSubscription.productId)
-    : "free";
+    .take(MAX_ACTIVE_SUBSCRIPTIONS_PER_CUSTOMER);
+
+  const newPlan = activeSubscriptions.reduce<UserPlan>((highestPlan, row) => {
+    return getHigherPlan(highestPlan, getPlanFromProductId(row.productId));
+  }, "free");
 
   if (newPlan === user.plan) {
     return;

@@ -18,7 +18,7 @@ export const getNotificationPreferences = query({
 
     const preferences = await ctx.db
       .query("notificationPreferences")
-      .withIndex("userId", (q) => q.eq("userId", user.appUser._id))
+      .withIndex("by_userId", (q) => q.eq("userId", user.appUser._id))
       .first();
 
     return {

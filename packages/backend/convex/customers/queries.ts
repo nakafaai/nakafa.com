@@ -17,7 +17,7 @@ export const getCustomerByUserId = internalQuery({
   handler: async (ctx, args) => {
     const customer = await ctx.db
       .query("customers")
-      .withIndex("userId", (q) => q.eq("userId", args.userId))
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
       .unique();
 
     return customer;
@@ -37,7 +37,7 @@ export const getUserIdByPolarCustomer = internalQuery({
     if (externalId) {
       const userByExternalId = await ctx.db
         .query("users")
-        .withIndex("authId", (q) => q.eq("authId", externalId))
+        .withIndex("by_authId", (q) => q.eq("authId", externalId))
         .unique();
 
       if (userByExternalId) {
@@ -47,7 +47,7 @@ export const getUserIdByPolarCustomer = internalQuery({
 
     const userByEmail = await ctx.db
       .query("users")
-      .withIndex("email", (q) => q.eq("email", args.email))
+      .withIndex("by_email", (q) => q.eq("email", args.email))
       .unique();
 
     if (userByEmail) {
@@ -67,7 +67,7 @@ export const getUserIdByPolarCustomer = internalQuery({
 
     const userByAuthId = await ctx.db
       .query("users")
-      .withIndex("authId", (q) => q.eq("authId", authUser._id))
+      .withIndex("by_authId", (q) => q.eq("authId", authUser._id))
       .unique();
 
     return userByAuthId?._id ?? null;

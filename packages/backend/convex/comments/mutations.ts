@@ -29,6 +29,13 @@ export const addComment = mutation({
       ? await ctx.db.get("comments", args.parentId)
       : null;
 
+    if (args.parentId && !parentComment) {
+      throw new ConvexError({
+        code: "COMMENT_PARENT_NOT_FOUND",
+        message: "Reply parent not found.",
+      });
+    }
+
     if (parentComment && parentComment.slug !== cleanedSlug) {
       throw new ConvexError({
         code: "COMMENT_PARENT_MISMATCH",

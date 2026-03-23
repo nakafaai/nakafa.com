@@ -31,7 +31,7 @@ export async function getOptionalAppUserFromIdentity(
 
   const appUser = await ctx.db
     .query("users")
-    .withIndex("authId", (q) => q.eq("authId", identity.subject))
+    .withIndex("by_authId", (q) => q.eq("authId", identity.subject))
     .unique();
 
   if (!(appUser && identity)) {

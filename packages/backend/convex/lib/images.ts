@@ -33,10 +33,9 @@ const CLASS_IMAGE_ENTRIES: [SchoolClassImage, string][] = [
 export const CLASS_IMAGES = new Map(CLASS_IMAGE_ENTRIES);
 
 /**
- * Get a random class image based on a text input
+ * Get a deterministic class image based on a text input.
  *
- * @param text - The text to use for generating the random image
- * @returns A random class image
+ * The same input always maps to the same image.
  */
 export function getRandomClassImage(text: string): SchoolClassImage {
   let hash = 0;

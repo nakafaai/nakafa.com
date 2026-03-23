@@ -31,7 +31,7 @@ export const getUserByAuthId = internalQuery({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("users")
-      .withIndex("authId", (q) => q.eq("authId", args.authId))
+      .withIndex("by_authId", (q) => q.eq("authId", args.authId))
       .unique();
   },
 });
@@ -48,7 +48,7 @@ export const getUserByEmail = internalQuery({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("users")
-      .withIndex("email", (q) => q.eq("email", args.email))
+      .withIndex("by_email", (q) => q.eq("email", args.email))
       .unique();
   },
 });

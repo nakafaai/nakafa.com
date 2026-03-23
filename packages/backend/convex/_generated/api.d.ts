@@ -166,7 +166,6 @@ import type * as users_queries from "../users/queries.js";
 import type * as utils_helper from "../utils/helper.js";
 import type * as utils_logger from "../utils/logger.js";
 import type * as utils_polar from "../utils/polar.js";
-import type * as utils_timing from "../utils/timing.js";
 import type * as utils_type from "../utils/type.js";
 import type * as workflow from "../workflow.js";
 
@@ -335,7 +334,6 @@ declare const fullApi: ApiFromModules<{
   "utils/helper": typeof utils_helper;
   "utils/logger": typeof utils_logger;
   "utils/polar": typeof utils_polar;
-  "utils/timing": typeof utils_timing;
   "utils/type": typeof utils_type;
   workflow: typeof workflow;
 }>;

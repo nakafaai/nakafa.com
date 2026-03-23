@@ -59,7 +59,7 @@ export const populateQueueBatch = internalMutation({
     // This automatically handles cursor management and respects Convex limits
     const results = await ctx.db
       .query("users")
-      .withIndex("plan", (idx) =>
+      .withIndex("by_plan_and_creditsResetAt", (idx) =>
         idx.eq("plan", args.plan).lt("creditsResetAt", args.resetTimestamp)
       )
       .paginate(args.paginationOpts);

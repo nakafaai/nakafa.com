@@ -1,9 +1,9 @@
 /**
- * Safely constructs an object with all required fields.
+ * Asserts that an existing object has no undefined fields.
  * Throws an error if any field is undefined.
  *
  * @param obj - The object to check
- * @returns The same object with `undefined` types removed from values
+ * @returns The same object with `undefined` removed from value types
  * @throws Error if any value is undefined
  */
 export function buildRequiredObject<T extends Record<string, unknown>>(

@@ -30,7 +30,7 @@ export async function createNotification(
 
   const preferencesPromise = ctx.db
     .query("notificationPreferences")
-    .withIndex("userId", (q) => q.eq("userId", args.recipientId))
+    .withIndex("by_userId", (q) => q.eq("userId", args.recipientId))
     .first();
 
   const mutedEntityPromise =
@@ -71,7 +71,7 @@ export async function createNotification(
 
   const existingCount = await ctx.db
     .query("notificationCounts")
-    .withIndex("userId", (q) => q.eq("userId", args.recipientId))
+    .withIndex("by_userId", (q) => q.eq("userId", args.recipientId))
     .unique();
 
   if (existingCount) {

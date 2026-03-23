@@ -14,7 +14,7 @@ import { literals, nullable } from "convex-helpers/validators";
  *
  * @example
  * const audio = await ctx.runQuery(
- *   api.audioStudies.public.getAudioBySlug,
+ *   api.audioStudies.public.queries.getAudioBySlug,
  *   { slug: "quadratic-equations", locale: "en", contentType: "subject" }
  * );
  */

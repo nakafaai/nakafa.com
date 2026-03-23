@@ -17,7 +17,7 @@ export async function notificationsHandler(
 
   const existingCount = await ctx.db
     .query("notificationCounts")
-    .withIndex("userId", (q) => q.eq("userId", change.oldDoc.recipientId))
+    .withIndex("by_userId", (q) => q.eq("userId", change.oldDoc.recipientId))
     .unique();
 
   if (!existingCount) {

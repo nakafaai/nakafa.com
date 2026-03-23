@@ -19,7 +19,7 @@ export const updateNotificationPreferences = mutation({
     const user = await requireAuthWithSession(ctx);
     const preferences = await ctx.db
       .query("notificationPreferences")
-      .withIndex("userId", (q) => q.eq("userId", user.appUser._id))
+      .withIndex("by_userId", (q) => q.eq("userId", user.appUser._id))
       .first();
 
     const updatedAt = Date.now();
@@ -56,7 +56,7 @@ export const setDisabledNotificationTypes = mutation({
     const user = await requireAuthWithSession(ctx);
     const preferences = await ctx.db
       .query("notificationPreferences")
-      .withIndex("userId", (q) => q.eq("userId", user.appUser._id))
+      .withIndex("by_userId", (q) => q.eq("userId", user.appUser._id))
       .first();
 
     const updatedAt = Date.now();

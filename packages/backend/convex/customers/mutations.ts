@@ -15,7 +15,7 @@ export const deleteCustomerById = internalMutation({
   handler: async (ctx, args) => {
     const customer = await ctx.db
       .query("customers")
-      .withIndex("id", (q) => q.eq("id", args.id))
+      .withIndex("by_polarId", (q) => q.eq("id", args.id))
       .unique();
 
     if (!customer) {
@@ -43,7 +43,7 @@ export const upsertCustomer = internalMutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("customers")
-      .withIndex("userId", (q) => q.eq("userId", args.customer.userId))
+      .withIndex("by_userId", (q) => q.eq("userId", args.customer.userId))
       .unique();
 
     if (existing) {

@@ -12,7 +12,7 @@ export const hasActiveSubscription = query({
 
     const customer = await ctx.db
       .query("customers")
-      .withIndex("userId", (q) => q.eq("userId", appUser._id))
+      .withIndex("by_userId", (q) => q.eq("userId", appUser._id))
       .unique();
 
     if (!customer) {

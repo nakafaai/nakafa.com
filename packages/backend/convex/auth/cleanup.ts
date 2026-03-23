@@ -17,7 +17,7 @@ export const cleanupDeletedUser = internalMutation({
   handler: async (ctx, args) => {
     const notificationPreferences = await ctx.db
       .query("notificationPreferences")
-      .withIndex("userId", (q) => q.eq("userId", args.userId))
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
       .take(NOTIFICATION_PREFERENCES_CLEANUP_BATCH_SIZE);
 
     for (const preference of notificationPreferences) {
@@ -61,7 +61,7 @@ export const cleanupDeletedUser = internalMutation({
 
     const notificationCounts = await ctx.db
       .query("notificationCounts")
-      .withIndex("userId", (q) => q.eq("userId", args.userId))
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
       .take(NOTIFICATION_COUNT_CLEANUP_BATCH_SIZE);
 
     for (const count of notificationCounts) {
@@ -80,7 +80,7 @@ export const cleanupDeletedUser = internalMutation({
 
     const notificationsByRecipient = await ctx.db
       .query("notifications")
-      .withIndex("recipientId", (q) => q.eq("recipientId", args.userId))
+      .withIndex("by_recipientId", (q) => q.eq("recipientId", args.userId))
       .take(NOTIFICATION_RECIPIENT_CLEANUP_BATCH_SIZE);
 
     for (const notification of notificationsByRecipient) {
@@ -102,7 +102,7 @@ export const cleanupDeletedUser = internalMutation({
 
     const notificationsByActor = await ctx.db
       .query("notifications")
-      .withIndex("actorId", (q) => q.eq("actorId", args.userId))
+      .withIndex("by_actorId", (q) => q.eq("actorId", args.userId))
       .take(NOTIFICATION_ACTOR_CLEANUP_BATCH_SIZE);
 
     for (const notification of notificationsByActor) {
