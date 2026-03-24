@@ -24,55 +24,16 @@ interface ReplyTo {
   userName: string;
 }
 
-// Jump mode state for bidirectional pagination
-interface JumpModeState {
-  hasMoreAfter: boolean;
-  hasMoreBefore: boolean;
-  isLoadingNewer: boolean;
-  isLoadingOlder: boolean;
-  newestPostId: Id<"schoolClassForumPosts"> | null;
-  oldestPostId: Id<"schoolClassForumPosts"> | null;
-  posts: ForumPost[];
-  targetIndex: number;
-  targetPostId: Id<"schoolClassForumPosts">;
-}
-
-type JumpModeStateOrNull = JumpModeState | null;
-
-interface TransientState {
-  jumpMode: JumpModeStateOrNull;
-}
-
-type State = {
+interface State {
   activeForumId: Id<"schoolClassForums"> | null;
+  jumpTargetPostId: Id<"schoolClassForumPosts"> | null;
   replyTo: ReplyTo | null;
-} & TransientState;
+}
 
 interface Actions {
-  appendNewerPosts: (
-    posts: ForumPost[],
-    hasMore: boolean,
-    newestPostId?: Id<"schoolClassForumPosts">
-  ) => void;
-  appendOlderPosts: (
-    posts: ForumPost[],
-    hasMore: boolean,
-    oldestPostId?: Id<"schoolClassForumPosts">
-  ) => void;
-  // Jump mode actions
   enterJumpMode: (targetPostId: Id<"schoolClassForumPosts">) => void;
   exitJumpMode: () => void;
-  loadNewerPosts: () => void;
-  loadOlderPosts: () => void;
   setActiveForumId: (activeForumId: Id<"schoolClassForums"> | null) => void;
-  setJumpModeData: (data: {
-    posts: ForumPost[];
-    targetIndex: number;
-    hasMoreBefore: boolean;
-    hasMoreAfter: boolean;
-    oldestPostId: Id<"schoolClassForumPosts"> | null;
-    newestPostId: Id<"schoolClassForumPosts"> | null;
-  }) => void;
   setReplyTo: (replyTo: ReplyTo | null) => void;
 }
 
@@ -80,8 +41,8 @@ export type ForumStore = State & Actions;
 
 const initialState: State = {
   activeForumId: null,
+  jumpTargetPostId: null,
   replyTo: null,
-  jumpMode: null,
 };
 
 /**
@@ -94,80 +55,14 @@ export const createForumStore = () =>
 
       setActiveForumId: (activeForumId) => {
         if (get().activeForumId !== activeForumId) {
-          set({ activeForumId, replyTo: null, jumpMode: null });
+          set({ activeForumId, jumpTargetPostId: null, replyTo: null });
         }
       },
 
       setReplyTo: (replyTo) => set({ replyTo }),
 
-      enterJumpMode: (targetPostId) => {
-        set({
-          jumpMode: {
-            targetPostId,
-            posts: [],
-            targetIndex: 0,
-            hasMoreBefore: false,
-            hasMoreAfter: false,
-            oldestPostId: null,
-            newestPostId: null,
-            isLoadingOlder: false,
-            isLoadingNewer: false,
-          },
-        });
-      },
+      enterJumpMode: (targetPostId) => set({ jumpTargetPostId: targetPostId }),
 
-      exitJumpMode: () => set({ jumpMode: null }),
-
-      setJumpModeData: (data) => {
-        const current = get().jumpMode;
-        if (current) {
-          set({ jumpMode: { ...current, ...data } });
-        }
-      },
-
-      loadOlderPosts: () => {
-        const current = get().jumpMode;
-        if (current?.hasMoreBefore && !current.isLoadingOlder) {
-          set({ jumpMode: { ...current, isLoadingOlder: true } });
-        }
-      },
-
-      loadNewerPosts: () => {
-        const current = get().jumpMode;
-        if (current?.hasMoreAfter && !current.isLoadingNewer) {
-          set({ jumpMode: { ...current, isLoadingNewer: true } });
-        }
-      },
-
-      appendOlderPosts: (posts, hasMore, oldestPostId) => {
-        const current = get().jumpMode;
-        if (current) {
-          set({
-            jumpMode: {
-              ...current,
-              posts: [...posts, ...current.posts],
-              targetIndex: current.targetIndex + posts.length,
-              hasMoreBefore: hasMore,
-              oldestPostId: oldestPostId ?? current.oldestPostId,
-              isLoadingOlder: false,
-            },
-          });
-        }
-      },
-
-      appendNewerPosts: (posts, hasMore, newestPostId) => {
-        const current = get().jumpMode;
-        if (current) {
-          set({
-            jumpMode: {
-              ...current,
-              posts: [...current.posts, ...posts],
-              hasMoreAfter: hasMore,
-              newestPostId: newestPostId ?? current.newestPostId,
-              isLoadingNewer: false,
-            },
-          });
-        }
-      },
+      exitJumpMode: () => set({ jumpTargetPostId: null }),
     }))
   );

@@ -25,6 +25,7 @@ import type * as chats_queries from "../chats/queries.js";
 import type * as chats_read from "../chats/read.js";
 import type * as chats_utils from "../chats/utils.js";
 import type * as classes_constants from "../classes/constants.js";
+import type * as classes_forums_internalMutations from "../classes/forums/internalMutations.js";
 import type * as classes_forums_mutations_forums from "../classes/forums/mutations/forums.js";
 import type * as classes_forums_mutations_posts from "../classes/forums/mutations/posts.js";
 import type * as classes_forums_mutations_reactions from "../classes/forums/mutations/reactions.js";
@@ -211,6 +212,7 @@ declare const fullApi: ApiFromModules<{
   "chats/read": typeof chats_read;
   "chats/utils": typeof chats_utils;
   "classes/constants": typeof classes_constants;
+  "classes/forums/internalMutations": typeof classes_forums_internalMutations;
   "classes/forums/mutations/forums": typeof classes_forums_mutations_forums;
   "classes/forums/mutations/posts": typeof classes_forums_mutations_posts;
   "classes/forums/mutations/reactions": typeof classes_forums_mutations_reactions;

@@ -3,131 +3,215 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { usePaginatedQuery, useQuery } from "convex/react";
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForum } from "@/lib/context/use-forum";
+import type { ForumPost } from "@/lib/store/forum";
+
+interface JumpPostsState {
+  hasMoreAfter: boolean;
+  hasMoreBefore: boolean;
+  isLoadingNewer: boolean;
+  isLoadingOlder: boolean;
+  newestPostId: Id<"schoolClassForumPosts"> | null;
+  oldestPostId: Id<"schoolClassForumPosts"> | null;
+  posts: ForumPost[];
+  targetIndex: number;
+  targetPostId: Id<"schoolClassForumPosts">;
+}
 
 /**
- * Handles all forum posts data fetching:
- * - Normal pagination (newest first, reversed for display)
- * - Jump mode (bidirectional pagination around target post)
- * - Older/newer posts loading in jump mode
+ * Build one empty jump-mode state around a target post.
+ */
+function createJumpPostsState(
+  targetPostId: Id<"schoolClassForumPosts">
+): JumpPostsState {
+  return {
+    hasMoreAfter: false,
+    hasMoreBefore: false,
+    isLoadingNewer: false,
+    isLoadingOlder: false,
+    newestPostId: null,
+    oldestPostId: null,
+    posts: [],
+    targetIndex: 0,
+    targetPostId,
+  };
+}
+
+/**
+ * Keep forum post pagination local to the conversation while the store only
+ * tracks jump intent.
  */
 export function useForumPosts(forumId: Id<"schoolClassForums">) {
-  // Jump mode state from store
-  const jumpMode = useForum((s) => s.jumpMode);
-  const setJumpModeData = useForum((s) => s.setJumpModeData);
-  const appendOlderPosts = useForum((s) => s.appendOlderPosts);
-  const appendNewerPosts = useForum((s) => s.appendNewerPosts);
-  const exitJumpMode = useForum((s) => s.exitJumpMode);
-  const loadOlderPosts = useForum((s) => s.loadOlderPosts);
-  const loadNewerPosts = useForum((s) => s.loadNewerPosts);
+  const jumpTargetPostId = useForum((state) => state.jumpTargetPostId);
+  const exitJumpMode = useForum((state) => state.exitJumpMode);
+  const [jumpState, setJumpState] = useState<JumpPostsState | null>(null);
 
-  // Normal pagination mode
+  useEffect(() => {
+    if (!jumpTargetPostId) {
+      setJumpState((current) => (current ? null : current));
+      return;
+    }
+
+    setJumpState((current) => {
+      if (current?.targetPostId === jumpTargetPostId) {
+        return current;
+      }
+
+      return createJumpPostsState(jumpTargetPostId);
+    });
+  }, [jumpTargetPostId]);
+
   const { results, status, loadMore } = usePaginatedQuery(
     api.classes.forums.queries.feed.getForumPosts,
-    jumpMode ? "skip" : { forumId },
+    jumpTargetPostId ? "skip" : { forumId },
     { initialNumItems: 25 }
   );
 
-  // Initial jump data fetch
-  const shouldFetchJumpData = jumpMode !== null && jumpMode.posts.length === 0;
+  const shouldFetchJumpData =
+    jumpState !== null && jumpState.posts.length === 0;
   const jumpInitData = useQuery(
     api.classes.forums.queries.around.getForumPostsAround,
     shouldFetchJumpData
-      ? { forumId, targetPostId: jumpMode.targetPostId }
+      ? { forumId, targetPostId: jumpState.targetPostId }
       : "skip"
   );
 
-  // Initialize jump mode when data arrives
   useEffect(() => {
-    if (shouldFetchJumpData && jumpInitData) {
-      setJumpModeData({
+    if (!(jumpState && jumpInitData && jumpState.posts.length === 0)) {
+      return;
+    }
+
+    setJumpState((current) => {
+      if (!(current && current.targetPostId === jumpState.targetPostId)) {
+        return current;
+      }
+
+      return {
+        ...current,
+        hasMoreAfter: jumpInitData.hasMoreAfter,
+        hasMoreBefore: jumpInitData.hasMoreBefore,
+        newestPostId: jumpInitData.newestPostId,
+        oldestPostId: jumpInitData.oldestPostId,
         posts: jumpInitData.posts,
         targetIndex: jumpInitData.targetIndex,
-        hasMoreBefore: jumpInitData.hasMoreBefore,
-        hasMoreAfter: jumpInitData.hasMoreAfter,
-        oldestPostId: jumpInitData.oldestPostId,
-        newestPostId: jumpInitData.newestPostId,
-      });
-    }
-  }, [shouldFetchJumpData, jumpInitData, setJumpModeData]);
+      };
+    });
+  }, [jumpInitData, jumpState]);
 
-  // Bidirectional pagination queries
   const olderData = useQuery(
     api.classes.forums.queries.older.getForumPostsOlder,
-    jumpMode?.isLoadingOlder === true && jumpMode.oldestPostId
-      ? { forumId, beforePostId: jumpMode.oldestPostId }
+    jumpState?.isLoadingOlder && jumpState.oldestPostId
+      ? { forumId, beforePostId: jumpState.oldestPostId }
       : "skip"
   );
 
   const newerData = useQuery(
     api.classes.forums.queries.newer.getForumPostsNewer,
-    jumpMode?.isLoadingNewer === true && jumpMode.newestPostId
-      ? { forumId, afterPostId: jumpMode.newestPostId }
+    jumpState?.isLoadingNewer && jumpState.newestPostId
+      ? { forumId, afterPostId: jumpState.newestPostId }
       : "skip"
   );
 
-  // Merge older posts when loaded
   useEffect(() => {
-    if (jumpMode?.isLoadingOlder === true && olderData) {
-      appendOlderPosts(
-        olderData.posts,
-        olderData.hasMore,
-        olderData.oldestPostId
-      );
+    if (!olderData) {
+      return;
     }
-  }, [jumpMode?.isLoadingOlder, olderData, appendOlderPosts]);
 
-  // Merge newer posts when loaded
+    setJumpState((current) => {
+      if (!current?.isLoadingOlder) {
+        return current;
+      }
+
+      return {
+        ...current,
+        hasMoreBefore: olderData.hasMore,
+        isLoadingOlder: false,
+        oldestPostId: olderData.oldestPostId ?? current.oldestPostId,
+        posts: [...olderData.posts, ...current.posts],
+        targetIndex: current.targetIndex + olderData.posts.length,
+      };
+    });
+  }, [olderData]);
+
   useEffect(() => {
-    if (jumpMode?.isLoadingNewer === true && newerData) {
-      appendNewerPosts(
-        newerData.posts,
-        newerData.hasMore,
-        newerData.newestPostId
-      );
+    if (!newerData) {
+      return;
     }
-  }, [jumpMode?.isLoadingNewer, newerData, appendNewerPosts]);
 
-  // Determine which posts to show
-  const isJumpMode = jumpMode !== null && jumpMode.posts.length > 0;
+    setJumpState((current) => {
+      if (!current?.isLoadingNewer) {
+        return current;
+      }
+
+      return {
+        ...current,
+        hasMoreAfter: newerData.hasMore,
+        isLoadingNewer: false,
+        newestPostId: newerData.newestPostId ?? current.newestPostId,
+        posts: [...current.posts, ...newerData.posts],
+      };
+    });
+  }, [newerData]);
+
+  const loadOlderPosts = useCallback(() => {
+    setJumpState((current) => {
+      if (!(current?.hasMoreBefore && !current.isLoadingOlder)) {
+        return current;
+      }
+
+      return { ...current, isLoadingOlder: true };
+    });
+  }, []);
+
+  const loadNewerPosts = useCallback(() => {
+    setJumpState((current) => {
+      if (!(current?.hasMoreAfter && !current.isLoadingNewer)) {
+        return current;
+      }
+
+      return { ...current, isLoadingNewer: true };
+    });
+  }, []);
+
+  const isJumpMode = jumpState !== null && jumpState.posts.length > 0;
 
   const posts = useMemo(() => {
-    if (isJumpMode) {
-      return jumpMode.posts;
+    if (isJumpMode && jumpState) {
+      return jumpState.posts;
     }
 
     return [...results].reverse();
-  }, [isJumpMode, jumpMode?.posts, results]);
+  }, [isJumpMode, jumpState, results]);
 
   const hasMoreBefore = isJumpMode
-    ? jumpMode.hasMoreBefore
+    ? (jumpState?.hasMoreBefore ?? false)
     : status === "CanLoadMore" || status === "LoadingMore";
 
-  const hasMoreAfter = isJumpMode ? jumpMode.hasMoreAfter : false;
-  const isLoadingOlder = jumpMode?.isLoadingOlder ?? false;
-  const isLoadingNewer = jumpMode?.isLoadingNewer ?? false;
-  const targetIndex = jumpMode?.targetIndex ?? 0;
+  const hasMoreAfter = isJumpMode ? (jumpState?.hasMoreAfter ?? false) : false;
+  const isLoadingOlder = jumpState?.isLoadingOlder ?? false;
+  const isLoadingNewer = jumpState?.isLoadingNewer ?? false;
+  const targetIndex = jumpState?.targetIndex ?? 0;
 
   const isInitialLoading =
-    (jumpMode !== null && jumpMode.posts.length === 0) ||
-    (jumpMode === null &&
+    (jumpTargetPostId !== null && jumpState?.posts.length === 0) ||
+    (jumpTargetPostId === null &&
       status === "LoadingFirstPage" &&
       results.length === 0);
 
   return {
-    posts,
-    isJumpMode,
-    targetIndex,
-    hasMoreBefore,
-    hasMoreAfter,
-    isLoadingOlder,
-    isLoadingNewer,
-    isInitialLoading,
-    status,
-    loadMore,
-    loadOlderPosts,
-    loadNewerPosts,
     exitJumpMode,
+    hasMoreAfter,
+    hasMoreBefore,
+    isInitialLoading,
+    isJumpMode,
+    isLoadingNewer,
+    isLoadingOlder,
+    loadMore,
+    loadNewerPosts,
+    loadOlderPosts,
+    posts,
+    status,
+    targetIndex,
   };
 }
