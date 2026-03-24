@@ -1,15 +1,15 @@
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
-import { updateForumReadState } from "@repo/backend/convex/triggers/helpers/forums";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { updateForumReadState } from "@repo/backend/convex/classes/forums/utils/readStateWrite";
 import { createNotification } from "@repo/backend/convex/triggers/helpers/notifications";
 import { truncateText } from "@repo/backend/convex/utils/helper";
-import type { GenericMutationCtx } from "convex/server";
 import type { Change } from "convex-helpers/server/triggers";
 
 /**
  * Updates forum counters and last-post metadata after inserting one post.
  */
 async function updateForumAfterInsert(
-  ctx: GenericMutationCtx<DataModel>,
+  ctx: MutationCtx,
   post: NonNullable<Change<DataModel, "schoolClassForumPosts">["newDoc"]>
 ) {
   const forum = await ctx.db.get("schoolClassForums", post.forumId);
@@ -32,7 +32,7 @@ async function updateForumAfterInsert(
  * Updates forum counters and last-post metadata after deleting one post.
  */
 async function updateForumAfterDelete(
-  ctx: GenericMutationCtx<DataModel>,
+  ctx: MutationCtx,
   oldPost: NonNullable<Change<DataModel, "schoolClassForumPosts">["oldDoc"]>
 ) {
   const forum = await ctx.db.get("schoolClassForums", oldPost.forumId);
@@ -59,7 +59,7 @@ async function updateForumAfterDelete(
  * Sends reply and mention notifications for one newly inserted forum post.
  */
 async function notifyForumPostParticipants(
-  ctx: GenericMutationCtx<DataModel>,
+  ctx: MutationCtx,
   {
     forum,
     post,
@@ -121,7 +121,7 @@ async function notifyForumPostParticipants(
  * @param change - The change object containing operation details and document state
  */
 export async function forumPostsHandler(
-  ctx: GenericMutationCtx<DataModel>,
+  ctx: MutationCtx,
   change: Change<DataModel, "schoolClassForumPosts">
 ) {
   const post = change.newDoc;

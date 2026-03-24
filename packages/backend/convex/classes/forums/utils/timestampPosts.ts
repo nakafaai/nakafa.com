@@ -4,6 +4,38 @@ import { FORUM_SAME_TIMESTAMP_POST_LIMIT } from "@repo/backend/convex/classes/fo
 import { ConvexError } from "convex/values";
 
 /**
+ * Find one post inside a same-timestamp post slice.
+ */
+export function findForumPostIndexAtTimestamp(
+  postsAtTimestamp: Array<{ _id: Id<"schoolClassForumPosts"> }>,
+  postId: Id<"schoolClassForumPosts">
+) {
+  return postsAtTimestamp.findIndex((post) => post._id === postId);
+}
+
+/**
+ * Return the posts strictly after one boundary post within a same-timestamp slice.
+ */
+export function getForumPostsAfterBoundaryAtTimestamp(
+  postsAtTimestamp: Array<{
+    _id: Id<"schoolClassForumPosts">;
+    createdBy?: Id<"users">;
+  }>,
+  boundaryPostId: Id<"schoolClassForumPosts">
+) {
+  const boundaryIndex = findForumPostIndexAtTimestamp(
+    postsAtTimestamp,
+    boundaryPostId
+  );
+
+  if (boundaryIndex < 0) {
+    return postsAtTimestamp;
+  }
+
+  return postsAtTimestamp.slice(boundaryIndex + 1);
+}
+
+/**
  * Load all posts in one forum sharing the same creation timestamp.
  */
 export async function getForumPostsAtTimestamp(

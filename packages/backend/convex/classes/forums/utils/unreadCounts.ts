@@ -4,9 +4,15 @@ import {
   FORUM_UNREAD_COUNT_LIMIT,
   FORUM_UNREAD_SCAN_LIMIT,
 } from "@repo/backend/convex/classes/forums/utils/constants";
-import { getForumPostsAtTimestamp } from "@repo/backend/convex/classes/forums/utils/timestampPosts";
+import {
+  getForumPostsAfterBoundaryAtTimestamp,
+  getForumPostsAtTimestamp,
+} from "@repo/backend/convex/classes/forums/utils/timestampPosts";
 import { asyncMap } from "convex-helpers";
 
+/**
+ * Count unread posts for one forum after a stored read boundary.
+ */
 async function getUnreadForumPostCount(
   ctx: QueryCtx,
   {
@@ -26,17 +32,7 @@ async function getUnreadForumPostCount(
     timestamp: lastReadAt,
   });
   const sameTimestampUnreadPosts = lastReadPostId
-    ? (() => {
-        const boundaryIndex = sameTimestampPosts.findIndex(
-          (post) => post._id === lastReadPostId
-        );
-
-        if (boundaryIndex >= 0) {
-          return sameTimestampPosts.slice(boundaryIndex + 1);
-        }
-
-        return sameTimestampPosts;
-      })()
+    ? getForumPostsAfterBoundaryAtTimestamp(sameTimestampPosts, lastReadPostId)
     : [];
 
   let unreadCount = 0;

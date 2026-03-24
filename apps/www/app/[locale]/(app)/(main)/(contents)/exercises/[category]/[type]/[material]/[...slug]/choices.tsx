@@ -159,13 +159,13 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
           <Label
             className={cn(
               buttonVariants({ variant }),
-              "h-auto justify-start font-normal text-base"
+              "h-auto min-w-0 items-start justify-start whitespace-normal text-left font-normal text-base"
             )}
             key={choice.label}
           >
             <Checkbox
               checked={checked}
-              className="cursor-pointer"
+              className="mt-1 shrink-0 cursor-pointer"
               disabled={isInputLocked || isPending}
               onCheckedChange={(checked) => {
                 if (checked) {
@@ -173,7 +173,10 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
                 }
               }}
             />
-            <Response className="h-auto" id={`${id}-${choice.label}`}>
+            <Response
+              className="wrap-anywhere h-auto min-w-0 flex-1 whitespace-normal"
+              id={`${id}-${choice.label}`}
+            >
               {choice.label}
             </Response>
           </Label>

@@ -1,18 +1,10 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import {
-  loadForumWithAccess,
-  loadOpenForumWithAccess,
-} from "@repo/backend/convex/classes/forums/utils/access";
-import {
-  MAX_FORUM_POST_ATTACHMENTS,
-  MAX_FORUM_POST_MENTIONS,
-} from "@repo/backend/convex/classes/forums/utils/constants";
+import { loadOpenForumWithAccess } from "@repo/backend/convex/classes/forums/utils/access";
+import { MAX_FORUM_POST_ATTACHMENTS } from "@repo/backend/convex/classes/forums/utils/constants";
+import { validateForumMentions } from "@repo/backend/convex/classes/forums/utils/mentions";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
-import { isAdmin } from "@repo/backend/convex/lib/helpers/school";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { updateForumReadState } from "@repo/backend/convex/triggers/helpers/forums";
 import { truncateText } from "@repo/backend/convex/utils/helper";
 import { ConvexError, type Infer, v } from "convex/values";
 
@@ -24,84 +16,6 @@ const attachmentArg = v.object({
 });
 
 export type AttachmentArg = Infer<typeof attachmentArg>;
-
-/**
- * Create an upload URL for one new forum post attachment.
- */
-export const generateUploadUrl = mutation({
-  args: {
-    forumId: vv.id("schoolClassForums"),
-  },
-  handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
-    await loadOpenForumWithAccess(ctx, args.forumId, user.appUser._id);
-
-    return await ctx.storage.generateUploadUrl();
-  },
-});
-
-/**
- * Validate forum mentions and return a deduplicated list.
- */
-async function validateForumMentions(
-  ctx: MutationCtx,
-  {
-    forum,
-    mentionedUserIds,
-  }: {
-    forum: Awaited<ReturnType<typeof loadForumWithAccess>>["forum"];
-    mentionedUserIds: Id<"users">[];
-  }
-) {
-  if (mentionedUserIds.length === 0) {
-    return [];
-  }
-
-  const uniqueMentionedUserIds = [...new Set(mentionedUserIds)];
-
-  if (uniqueMentionedUserIds.length > MAX_FORUM_POST_MENTIONS) {
-    throw new ConvexError({
-      code: "FORUM_MENTION_LIMIT_EXCEEDED",
-      message: "Forum post mention count exceeds the supported limit.",
-    });
-  }
-
-  const accessChecks = await Promise.all(
-    uniqueMentionedUserIds.map(async (mentionedUserId) => {
-      const classMember = await ctx.db
-        .query("schoolClassMembers")
-        .withIndex("classId_userId", (q) =>
-          q.eq("classId", forum.classId).eq("userId", mentionedUserId)
-        )
-        .first();
-
-      if (classMember) {
-        return true;
-      }
-
-      const schoolMember = await ctx.db
-        .query("schoolMembers")
-        .withIndex("by_schoolId_and_userId_and_status", (q) =>
-          q
-            .eq("schoolId", forum.schoolId)
-            .eq("userId", mentionedUserId)
-            .eq("status", "active")
-        )
-        .first();
-
-      return isAdmin(schoolMember);
-    })
-  );
-
-  if (accessChecks.every(Boolean)) {
-    return uniqueMentionedUserIds;
-  }
-
-  throw new ConvexError({
-    code: "INVALID_FORUM_MENTION",
-    message: "Mentions must target users who can access this forum.",
-  });
-}
 
 /**
  * Create a new forum post.
@@ -189,39 +103,5 @@ export const createForumPost = mutation({
     }
 
     return postId;
-  },
-});
-
-/**
- * Mark a forum as read through a concrete post boundary.
- */
-export const markForumRead = mutation({
-  args: {
-    forumId: vv.id("schoolClassForums"),
-    lastReadPostId: vv.id("schoolClassForumPosts"),
-  },
-  handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
-    const userId = user.appUser._id;
-    const { forum } = await loadForumWithAccess(ctx, args.forumId, userId);
-    const lastReadPost = await ctx.db.get(
-      "schoolClassForumPosts",
-      args.lastReadPostId
-    );
-
-    if (!lastReadPost || lastReadPost.forumId !== args.forumId) {
-      throw new ConvexError({
-        code: "POST_NOT_FOUND",
-        message: "Read boundary post not found.",
-      });
-    }
-
-    await updateForumReadState(ctx, {
-      classId: forum.classId,
-      forumId: args.forumId,
-      lastReadAt: Math.min(lastReadPost._creationTime, forum.lastPostAt),
-      lastReadPostId: lastReadPost._id,
-      userId,
-    });
   },
 });

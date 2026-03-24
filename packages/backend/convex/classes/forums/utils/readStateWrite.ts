@@ -6,11 +6,7 @@ import type {
 import { shouldAdvanceForumReadBoundary } from "@repo/backend/convex/classes/forums/utils/readBoundary";
 
 /**
- * Helper function to update forum read state (upsert pattern)
- *
- * Updates the read boundary for a user's forum read state.
- * Creates a new record if one doesn't exist.
- * Uses a high-water-mark pattern across timestamp and post boundary.
+ * Move a user's forum read boundary forward when the next boundary is newer.
  */
 export async function updateForumReadState(
   ctx: { db: DatabaseReader & DatabaseWriter },
@@ -29,28 +25,32 @@ export async function updateForumReadState(
     )
     .unique();
 
-  if (existing) {
-    if (
-      await shouldAdvanceForumReadBoundary(ctx.db, {
-        existingLastReadAt: existing.lastReadAt,
-        existingLastReadPostId: existing.lastReadPostId,
-        forumId: args.forumId,
-        nextLastReadAt: args.lastReadAt,
-        nextLastReadPostId: args.lastReadPostId,
-      })
-    ) {
-      await ctx.db.patch("schoolClassForumReadStates", existing._id, {
-        lastReadAt: args.lastReadAt,
-        lastReadPostId: args.lastReadPostId,
-      });
-    }
-  } else {
+  if (!existing) {
     await ctx.db.insert("schoolClassForumReadStates", {
-      forumId: args.forumId,
       classId: args.classId,
-      userId: args.userId,
+      forumId: args.forumId,
       lastReadAt: args.lastReadAt,
       lastReadPostId: args.lastReadPostId,
+      userId: args.userId,
     });
+
+    return;
   }
+
+  if (
+    !(await shouldAdvanceForumReadBoundary(ctx.db, {
+      existingLastReadAt: existing.lastReadAt,
+      existingLastReadPostId: existing.lastReadPostId,
+      forumId: args.forumId,
+      nextLastReadAt: args.lastReadAt,
+      nextLastReadPostId: args.lastReadPostId,
+    }))
+  ) {
+    return;
+  }
+
+  await ctx.db.patch("schoolClassForumReadStates", existing._id, {
+    lastReadAt: args.lastReadAt,
+    lastReadPostId: args.lastReadPostId,
+  });
 }
