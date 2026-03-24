@@ -24,7 +24,9 @@ const ForumPostList = memo(
   ({ forumId }: { forumId: Id<"schoolClassForums"> }) => {
     const user = useUser((state) => state.user);
     // Forum details now come from a single query.
-    const forum = useQuery(api.classes.forums.queries.getForum, { forumId });
+    const forum = useQuery(api.classes.forums.queries.forums.getForum, {
+      forumId,
+    });
 
     if (!(forum && user)) {
       return null;

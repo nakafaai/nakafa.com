@@ -29,7 +29,7 @@ function SchoolClassesForumPostSheetInfoTitle({
 }: {
   forumId: Id<"schoolClassForums">;
 }) {
-  const forum = useQuery(api.classes.forums.queries.getForum, {
+  const forum = useQuery(api.classes.forums.queries.forums.getForum, {
     forumId,
   });
 

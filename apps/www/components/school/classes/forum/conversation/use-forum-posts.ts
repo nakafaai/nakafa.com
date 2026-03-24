@@ -24,7 +24,7 @@ export function useForumPosts(forumId: Id<"schoolClassForums">) {
 
   // Normal pagination mode
   const { results, status, loadMore } = usePaginatedQuery(
-    api.classes.forums.queries.getForumPosts,
+    api.classes.forums.queries.feed.getForumPosts,
     jumpMode ? "skip" : { forumId },
     { initialNumItems: 25 }
   );
@@ -32,7 +32,7 @@ export function useForumPosts(forumId: Id<"schoolClassForums">) {
   // Initial jump data fetch
   const shouldFetchJumpData = jumpMode !== null && jumpMode.posts.length === 0;
   const jumpInitData = useQuery(
-    api.classes.forums.queries.getForumPostsAround,
+    api.classes.forums.queries.windows.getForumPostsAround,
     shouldFetchJumpData
       ? { forumId, targetPostId: jumpMode.targetPostId }
       : "skip"
@@ -54,14 +54,14 @@ export function useForumPosts(forumId: Id<"schoolClassForums">) {
 
   // Bidirectional pagination queries
   const olderData = useQuery(
-    api.classes.forums.queries.getForumPostsOlder,
+    api.classes.forums.queries.windows.getForumPostsOlder,
     jumpMode?.isLoadingOlder === true && jumpMode.oldestPostId
       ? { forumId, beforePostId: jumpMode.oldestPostId }
       : "skip"
   );
 
   const newerData = useQuery(
-    api.classes.forums.queries.getForumPostsNewer,
+    api.classes.forums.queries.windows.getForumPostsNewer,
     jumpMode?.isLoadingNewer === true && jumpMode.newestPostId
       ? { forumId, afterPostId: jumpMode.newestPostId }
       : "skip"

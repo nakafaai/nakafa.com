@@ -127,8 +127,8 @@ function AiChatSidebarChats({
   userId: Id<"users">;
   q?: string;
 }) {
-  const params = useParams();
-  const id = params.id as Id<"chats">;
+  const params = useParams<{ id: Id<"chats"> }>();
+  const id = params.id;
   const { results, status } = usePaginatedQuery(
     api.chats.queries.getChats,
     {

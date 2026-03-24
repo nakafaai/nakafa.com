@@ -12,7 +12,7 @@ import {
 import { useOs } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { AttachmentArg } from "@repo/backend/convex/classes/forums/mutations";
+import type { AttachmentArg } from "@repo/backend/convex/classes/forums/mutations/posts";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -74,10 +74,10 @@ export const ForumPostInput = memo(
 
     const textareaRef = useRef<ComponentRef<typeof InputGroupTextarea>>(null);
     const generateUploadUrl = useMutation(
-      api.classes.forums.mutations.generateUploadUrl
+      api.classes.forums.mutations.posts.generateUploadUrl
     );
     const createPost = useMutation(
-      api.classes.forums.mutations.createForumPost
+      api.classes.forums.mutations.posts.createForumPost
     );
 
     const [

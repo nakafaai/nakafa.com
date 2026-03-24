@@ -3,7 +3,7 @@ import type {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/convex/_generated/server";
-import { shouldAdvanceForumReadBoundary } from "@repo/backend/convex/classes/forums/utils";
+import { shouldAdvanceForumReadBoundary } from "@repo/backend/convex/classes/forums/utils/readBoundary";
 
 /**
  * Helper function to update forum read state (upsert pattern)

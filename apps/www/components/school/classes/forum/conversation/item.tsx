@@ -8,7 +8,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { PostAttachment } from "@repo/backend/convex/classes/forums/utils";
+import type { PostAttachment } from "@repo/backend/convex/classes/forums/utils/posts";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
   Avatar,
@@ -143,7 +143,7 @@ const PostReactions = memo(({ post }: { post: ForumPost }) => {
 
   const [isPending, startTransition] = useTransition();
   const toggleReaction = useMutation(
-    api.classes.forums.mutations.togglePostReaction
+    api.classes.forums.mutations.reactions.togglePostReaction
   );
 
   const handleToggleReaction = (emoji: string) => {
@@ -304,7 +304,7 @@ const PostItemActions = memo(({ post }: { post: ForumPost }) => {
   const [isPending, startTransition] = useTransition();
 
   const toggleReaction = useMutation(
-    api.classes.forums.mutations.togglePostReaction
+    api.classes.forums.mutations.reactions.togglePostReaction
   );
 
   const handleToggleReaction = (emoji: string) => {

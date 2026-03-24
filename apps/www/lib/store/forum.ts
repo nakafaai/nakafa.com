@@ -1,5 +1,5 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import type { PostAttachment } from "@repo/backend/convex/classes/forums/utils";
+import type { PostAttachment } from "@repo/backend/convex/classes/forums/utils/posts";
 import type { UserData } from "@repo/backend/convex/lib/helpers/user";
 import { createStore } from "zustand";
 import { immer } from "zustand/middleware/immer";

@@ -63,7 +63,9 @@ export function SchoolClassesForumNew() {
   const classId = useClass((c) => c.class._id);
   const classMembership = useClass((c) => c.classMembership);
   const schoolMembership = useClass((c) => c.schoolMembership);
-  const createForum = useMutation(api.classes.forums.mutations.createForum);
+  const createForum = useMutation(
+    api.classes.forums.mutations.forums.createForum
+  );
 
   // Get available tags based on user role (school admins get all tags)
   const availableTags = getTagsByRole(

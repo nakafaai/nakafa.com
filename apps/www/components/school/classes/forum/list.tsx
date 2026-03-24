@@ -43,7 +43,7 @@ export function SchoolClassesForumList() {
   const [debouncedQ] = useDebouncedValue(q, DEBOUNCE_TIME);
 
   const { results, status, loadMore } = usePaginatedQuery(
-    api.classes.forums.queries.getForums,
+    api.classes.forums.queries.forums.getForums,
     {
       classId,
       q: debouncedQ,
@@ -155,7 +155,7 @@ export function SchoolClassesForumList() {
 function TopReaction({ forum }: { forum: ForumListItem }) {
   const [isPending, startTransition] = useTransition();
   const toggleReaction = useMutation(
-    api.classes.forums.mutations.toggleForumReaction
+    api.classes.forums.mutations.reactions.toggleForumReaction
   );
 
   // Find the reaction with the highest count
