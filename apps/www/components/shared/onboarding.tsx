@@ -2,7 +2,6 @@
 
 import { PartyIcon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
-import type { AppUser } from "@repo/backend/convex/auth";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Dialog,
@@ -26,6 +25,7 @@ import { useMutation } from "convex/react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
+import type { CurrentUser } from "@/lib/context/use-user";
 import { useUser } from "@/lib/context/use-user";
 import { roles } from "@/lib/data/roles";
 
@@ -41,7 +41,7 @@ export function Onboarding() {
   return <OnboardingContent user={user} />;
 }
 
-function OnboardingContent({ user }: { user: AppUser }) {
+function OnboardingContent({ user }: { user: CurrentUser }) {
   const t = useTranslations("Onboarding");
 
   const [selectedRole, setSelectedRole] = useState<Role | undefined>(undefined);

@@ -1,13 +1,17 @@
 "use client";
 
 import { api } from "@repo/backend/convex/_generated/api";
-import type { AppUser } from "@repo/backend/convex/auth";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
+import type { FunctionReturnType } from "convex/server";
 import { createContext, useContextSelector } from "use-context-selector";
+
+export type CurrentUser = NonNullable<
+  FunctionReturnType<typeof api.auth.getCurrentUser>
+>;
 
 interface UserContextValue {
   isPending: boolean;
-  user: AppUser | null;
+  user: CurrentUser | null;
 }
 
 const UserContext = createContext<UserContextValue | null>(null);

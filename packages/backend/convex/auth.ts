@@ -6,12 +6,7 @@ import {
 import { convex } from "@convex-dev/better-auth/plugins";
 import { components, internal } from "@repo/backend/convex/_generated/api";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
-import {
-  internalAction,
-  type MutationCtx,
-  type QueryCtx,
-  query,
-} from "@repo/backend/convex/_generated/server";
+import { internalAction, query } from "@repo/backend/convex/_generated/server";
 import authConfig from "@repo/backend/convex/auth.config";
 import authSchema from "@repo/backend/convex/betterAuth/schema";
 import {
@@ -195,36 +190,31 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
   betterAuth(createAuthOptions(ctx));
 
 /**
- * Get current logged-in app user with auth data.
- * Returns null if not logged in.
- */
-export const safeGetAppUser = async (ctx: QueryCtx | MutationCtx) => {
-  const authUser = await authComponent.safeGetAuthUser(ctx);
-  if (!authUser) {
-    return null;
-  }
-
-  const user = await ctx.db
-    .query("users")
-    .withIndex("by_authId", (q) => q.eq("authId", authUser._id))
-    .unique();
-
-  if (!user) {
-    return null;
-  }
-
-  return {
-    appUser: user,
-    authUser,
-  };
-};
-
-/**
  * Query to get current logged-in user.
  */
 export const getCurrentUser = query({
   args: {},
-  handler: (ctx) => safeGetAppUser(ctx),
+  handler: async (ctx) => {
+    const authUser = await authComponent.safeGetAuthUser(ctx);
+
+    if (!authUser) {
+      return null;
+    }
+
+    const appUser = await ctx.db
+      .query("users")
+      .withIndex("by_authId", (q) => q.eq("authId", authUser._id))
+      .unique();
+
+    if (!appUser) {
+      return null;
+    }
+
+    return {
+      appUser,
+      authUser,
+    };
+  },
 });
 
 /**
@@ -260,5 +250,3 @@ export const getLatestJwks = internalAction({
 });
 
 export const { onCreate, onUpdate, onDelete } = authComponent.triggersApi();
-
-export type AppUser = NonNullable<Awaited<ReturnType<typeof safeGetAppUser>>>;
