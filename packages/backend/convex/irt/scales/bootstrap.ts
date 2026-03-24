@@ -75,13 +75,13 @@ export async function buildBootstrapScaleItems(
     }
 
     const [questions, existingParams] = await Promise.all([
-      getManyFrom(db, "exerciseQuestions", "by_setId", partSet.setId, "by_setId"),
+      getManyFrom(db, "exerciseQuestions", "by_setId", partSet.setId, "setId"),
       getManyFrom(
         db,
         "exerciseItemParameters",
         "by_setId",
         partSet.setId,
-        "by_setId"
+        "setId"
       ),
     ]);
 

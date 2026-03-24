@@ -117,7 +117,7 @@ export const setNotificationEntityMute = mutation({
     const user = await requireAuthWithSession(ctx);
     const existingRows = await ctx.db
       .query("notificationEntityMutes")
-      .withIndex("by_userId_entityType_entityId", (q) =>
+      .withIndex("by_userId_and_entityType_and_entityId", (q) =>
         q
           .eq("userId", user.appUser._id)
           .eq("entityType", args.entityType)

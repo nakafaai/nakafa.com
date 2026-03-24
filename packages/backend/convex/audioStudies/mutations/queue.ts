@@ -186,7 +186,9 @@ export const startWorkflowsForPendingItems = internalMutation({
 
     const topItem = await ctx.db
       .query("audioGenerationQueue")
-      .withIndex("by_status_and_priorityScore", (q) => q.eq("status", "pending"))
+      .withIndex("by_status_and_priorityScore", (q) =>
+        q.eq("status", "pending")
+      )
       .order("desc")
       .first();
 

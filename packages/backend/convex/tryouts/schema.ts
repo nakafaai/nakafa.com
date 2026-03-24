@@ -40,7 +40,11 @@ const tables = {
       "cycleKey",
       "slug",
     ])
-    .index("by_product_and_locale_and_isActive", ["product", "locale", "isActive"]),
+    .index("by_product_and_locale_and_isActive", [
+      "product",
+      "locale",
+      "isActive",
+    ]),
 
   tryoutPartSets: defineTable({
     tryoutId: v.id("tryouts"),
@@ -72,8 +76,16 @@ const tables = {
     endReason: v.union(attemptEndReasonValidator, v.null()),
   })
     .index("by_status_and_expiresAt", ["status", "expiresAt"])
-    .index("by_userId_and_status_and_expiresAt", ["userId", "status", "expiresAt"])
-    .index("by_userId_and_tryoutId_and_startedAt", ["userId", "tryoutId", "startedAt"])
+    .index("by_userId_and_status_and_expiresAt", [
+      "userId",
+      "status",
+      "expiresAt",
+    ])
+    .index("by_userId_and_tryoutId_and_startedAt", [
+      "userId",
+      "tryoutId",
+      "startedAt",
+    ])
     .index("by_tryoutId_and_scoreStatus_and_status_and_startedAt", [
       "tryoutId",
       "scoreStatus",

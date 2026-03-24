@@ -45,7 +45,11 @@ const tables = {
      * Used to check if audio already exists for specific content.
      * Also covers cross-locale queries via prefix (per Convex best practices).
      */
-    .index("by_contentRefType_and_contentRefId_and_locale", ["contentRef.type", "contentRef.id", "locale"]),
+    .index("by_contentRefType_and_contentRefId_and_locale", [
+      "contentRef.type",
+      "contentRef.id",
+      "locale",
+    ]),
 
   /** Queue for audio generation jobs. */
   audioGenerationQueue: defineTable({
@@ -82,7 +86,11 @@ const tables = {
      * Deduplication check.
      * Ensures content isn't queued multiple times per locale.
      */
-    .index("by_contentRefType_and_contentRefId_and_locale", ["contentRef.type", "contentRef.id", "locale"])
+    .index("by_contentRefType_and_contentRefId_and_locale", [
+      "contentRef.type",
+      "contentRef.id",
+      "locale",
+    ])
     /**
      * Content + status queries by slug (cross-locale).
      * Finds all pending items for a content across ALL locales.

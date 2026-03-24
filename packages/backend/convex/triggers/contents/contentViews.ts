@@ -64,7 +64,7 @@ export async function contentViewsHandler(
 
           const existingBucket = await ctx.db
             .query("subjectTrendingBuckets")
-            .withIndex("by_locale_bucketStart_contentId", (q) =>
+            .withIndex("by_locale_and_bucketStart_and_contentId", (q) =>
               q
                 .eq("locale", view.locale)
                 .eq("bucketStart", bucketStart)

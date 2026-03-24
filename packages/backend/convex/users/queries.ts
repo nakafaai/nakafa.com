@@ -14,9 +14,7 @@ export const getUserById = internalQuery({
     userId: vv.id("users"),
   },
   returns: nullable(vv.doc("users")),
-  handler: async (ctx, args) => {
-    return ctx.db.get("users", args.userId);
-  },
+  handler: (ctx, args) => ctx.db.get("users", args.userId),
 });
 
 /**
@@ -28,12 +26,11 @@ export const getUserByAuthId = internalQuery({
     authId: v.string(),
   },
   returns: nullable(vv.doc("users")),
-  handler: async (ctx, args) => {
-    return ctx.db
+  handler: (ctx, args) =>
+    ctx.db
       .query("users")
       .withIndex("by_authId", (q) => q.eq("authId", args.authId))
-      .unique();
-  },
+      .unique(),
 });
 
 /**
@@ -45,12 +42,11 @@ export const getUserByEmail = internalQuery({
     email: v.string(),
   },
   returns: nullable(vv.doc("users")),
-  handler: async (ctx, args) => {
-    return ctx.db
+  handler: (ctx, args) =>
+    ctx.db
       .query("users")
       .withIndex("by_email", (q) => q.eq("email", args.email))
-      .unique();
-  },
+      .unique(),
 });
 
 /**

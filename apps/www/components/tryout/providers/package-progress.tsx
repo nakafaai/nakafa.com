@@ -45,7 +45,7 @@ export function TryoutPackageProgressProvider({
   const nowMs = useTryoutClock(shouldQuery);
   const { data } = useQueryWithStatus(
     api.tryouts.queries.attempts.getUserInProgressTryouts,
-    shouldQuery ? { locale, product } : "skip"
+    shouldQuery ? { locale, nowMs, product } : "skip"
   );
   const inProgressTryoutSlugs = useMemo(() => {
     const activeSlugs = new Set<string>();

@@ -78,7 +78,9 @@ export const getTryoutDetails = query({
 
     const tryoutPartSets = await ctx.db
       .query("tryoutPartSets")
-      .withIndex("by_tryoutId_and_partIndex", (q) => q.eq("tryoutId", tryout._id))
+      .withIndex("by_tryoutId_and_partIndex", (q) =>
+        q.eq("tryoutId", tryout._id)
+      )
       .take(tryout.partCount + 1);
 
     if (tryoutPartSets.length !== tryout.partCount) {

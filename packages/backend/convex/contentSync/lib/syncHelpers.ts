@@ -242,7 +242,9 @@ export async function deleteExerciseChoicesForQuestion(
 ) {
   const existingChoices = await ctx.db
     .query("exerciseChoices")
-    .withIndex("by_questionId_and_locale", (q) => q.eq("questionId", questionId))
+    .withIndex("by_questionId_and_locale", (q) =>
+      q.eq("questionId", questionId)
+    )
     .take(CONTENT_SYNC_BATCH_LIMITS.exerciseChoices + 1);
 
   if (existingChoices.length > CONTENT_SYNC_BATCH_LIMITS.exerciseChoices) {

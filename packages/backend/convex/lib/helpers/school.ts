@@ -23,7 +23,7 @@ export function isAdmin(
  * Get active school membership for a user.
  * Returns null if user is not an active member.
  */
-export async function getSchoolMembership(
+export function getSchoolMembership(
   ctx: QueryCtx | MutationCtx,
   schoolId: Id<"schools">,
   userId: Id<"users">

@@ -71,13 +71,19 @@ export async function getPublishableScaleSnapshot(
       }
 
       const [questions, itemParams] = await Promise.all([
-        getManyFrom(db, "exerciseQuestions", "by_setId", partSet.setId, "by_setId"),
+        getManyFrom(
+          db,
+          "exerciseQuestions",
+          "by_setId",
+          partSet.setId,
+          "setId"
+        ),
         getManyFrom(
           db,
           "exerciseItemParameters",
           "by_setId",
           partSet.setId,
-          "by_setId"
+          "setId"
         ),
       ]);
 

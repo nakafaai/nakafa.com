@@ -184,7 +184,7 @@ const tables = {
     userId: v.id("users"),
   })
     .index("by_userId", ["userId"])
-    .index("by_userId_entityType_entityId", [
+    .index("by_userId_and_entityType_and_entityId", [
       "userId",
       "entityType",
       "entityId",

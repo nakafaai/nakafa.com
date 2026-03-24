@@ -37,7 +37,7 @@ export async function createNotification(
     entityId && args.entityType !== "system"
       ? ctx.db
           .query("notificationEntityMutes")
-          .withIndex("by_userId_entityType_entityId", (q) =>
+          .withIndex("by_userId_and_entityType_and_entityId", (q) =>
             q
               .eq("userId", args.recipientId)
               .eq("entityType", args.entityType)

@@ -6,14 +6,14 @@ import { ConvexError } from "convex/values";
 import { asyncMap } from "convex-helpers";
 
 /** Hydrate one page of chat messages with their parts. */
-export async function hydrateMessagePage(
+export function hydrateMessagePage(
   db: QueryCtx["db"],
   messages: Array<
     Omit<MessageWithPartsDoc, "parts"> & {
       _id: Id<"messages">;
     }
   >
-): Promise<MessageWithPartsDoc[]> {
+) {
   return asyncMap(messages, async (message) => {
     const parts = await db
       .query("parts")

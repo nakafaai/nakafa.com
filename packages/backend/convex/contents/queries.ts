@@ -29,11 +29,13 @@ export const getRecentlyViewed = query({
 
     const recentViewsQuery = ctx.db
       .query("contentViews")
-      .withIndex("by_userId_and_contentRefType_and_locale_and_lastViewedAt", (q) =>
-        q
-          .eq("userId", user.appUser._id)
-          .eq("contentRef.type", "subject")
-          .eq("locale", args.locale)
+      .withIndex(
+        "by_userId_and_contentRefType_and_locale_and_lastViewedAt",
+        (q) =>
+          q
+            .eq("userId", user.appUser._id)
+            .eq("contentRef.type", "subject")
+            .eq("locale", args.locale)
       )
       .order("desc");
 

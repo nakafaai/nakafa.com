@@ -4,6 +4,10 @@ import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { getFirstIncompleteTryoutPartIndex } from "@repo/backend/convex/tryouts/helpers/scoring";
+import {
+  getEffectiveTryoutAttemptStatus,
+  pickSuggestedPartKey,
+} from "@repo/backend/convex/tryouts/helpers/shared";
 import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
 import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError, type Infer, v } from "convex/values";
@@ -41,32 +45,10 @@ const tryoutPartAttemptRuntimeValidator = v.object({
   answers: v.array(vv.doc("exerciseAnswers")),
 });
 
-type TryoutPartAttemptSummary = Infer<typeof tryoutPartAttemptSummaryValidator>;
-
-/** Picks the most recent in-progress part to resume for a tryout. */
-function pickSuggestedPartKey(partAttempts: TryoutPartAttemptSummary[]) {
-  let suggestedPartKey: TryoutPartAttemptSummary["partKey"] | undefined;
-  let latestActivityAt = Number.NEGATIVE_INFINITY;
-
-  for (const partAttempt of partAttempts) {
-    if (partAttempt.setAttempt.status !== "in-progress") {
-      continue;
-    }
-
-    if (partAttempt.setAttempt.lastActivityAt <= latestActivityAt) {
-      continue;
-    }
-
-    suggestedPartKey = partAttempt.partKey;
-    latestActivityAt = partAttempt.setAttempt.lastActivityAt;
-  }
-
-  return suggestedPartKey;
-}
-
 /** Returns the authenticated user's latest tryout attempt for one tryout slug. */
 export const getUserTryoutAttempt = query({
   args: {
+    nowMs: v.number(),
     product: tryoutProductValidator,
     locale: localeValidator,
     tryoutSlug: v.string(),
@@ -108,9 +90,21 @@ export const getUserTryoutAttempt = query({
       return null;
     }
 
+    const attemptStatus = getEffectiveTryoutAttemptStatus({
+      expiresAt: attempt.expiresAt,
+      now: args.nowMs,
+      status: attempt.status,
+    });
+    const attemptView =
+      attempt.status === attemptStatus
+        ? attempt
+        : { ...attempt, status: attemptStatus };
+
     const tryoutPartSets = await ctx.db
       .query("tryoutPartSets")
-      .withIndex("by_tryoutId_and_partIndex", (q) => q.eq("tryoutId", tryout._id))
+      .withIndex("by_tryoutId_and_partIndex", (q) =>
+        q.eq("tryoutId", tryout._id)
+      )
       .take(tryout.partCount + 1);
 
     if (tryoutPartSets.length !== tryout.partCount) {
@@ -177,12 +171,12 @@ export const getUserTryoutAttempt = query({
     });
     const suggestedPartKey = pickSuggestedPartKey(validPartAttempts);
 
-    if (attempt.status !== "in-progress") {
+    if (attemptView.status !== "in-progress") {
       return {
-        attempt,
+        attempt: attemptView,
         orderedParts,
         partAttempts: validPartAttempts,
-        expiresAtMs: attempt.expiresAt,
+        expiresAtMs: attemptView.expiresAt,
       };
     }
 
@@ -195,11 +189,11 @@ export const getUserTryoutAttempt = query({
     const resumePartKey = suggestedPartKey ?? nextPart?.partKey;
 
     return {
-      attempt,
+      attempt: attemptView,
       orderedParts,
       partAttempts: validPartAttempts,
       resumePartKey,
-      expiresAtMs: attempt.expiresAt,
+      expiresAtMs: attemptView.expiresAt,
     };
   },
 });
@@ -209,6 +203,7 @@ export const getUserTryoutAttempt = query({
  */
 export const getUserInProgressTryouts = query({
   args: {
+    nowMs: v.number(),
     product: tryoutProductValidator,
     locale: localeValidator,
   },
@@ -254,6 +249,10 @@ export const getUserInProgressTryouts = query({
         continue;
       }
 
+      if (tryoutAttempt.expiresAt <= args.nowMs) {
+        continue;
+      }
+
       if (!tryout.isActive) {
         continue;
       }
@@ -275,6 +274,7 @@ export const getUserInProgressTryouts = query({
 /** Returns the authenticated user's runtime state for one tryout part. */
 export const getUserTryoutPartAttempt = query({
   args: {
+    nowMs: v.number(),
     product: tryoutProductValidator,
     locale: localeValidator,
     tryoutSlug: v.string(),
@@ -315,6 +315,16 @@ export const getUserTryoutPartAttempt = query({
       return null;
     }
 
+    const tryoutAttemptStatus = getEffectiveTryoutAttemptStatus({
+      expiresAt: tryoutAttempt.expiresAt,
+      now: args.nowMs,
+      status: tryoutAttempt.status,
+    });
+    const tryoutAttemptView =
+      tryoutAttempt.status === tryoutAttemptStatus
+        ? tryoutAttempt
+        : { ...tryoutAttempt, status: tryoutAttemptStatus };
+
     const currentPartAttempt = await ctx.db
       .query("tryoutPartAttempts")
       .withIndex("by_tryoutAttemptId_and_partKey", (q) =>
@@ -324,9 +334,9 @@ export const getUserTryoutPartAttempt = query({
 
     if (!currentPartAttempt) {
       return {
-        expiresAtMs: tryoutAttempt.expiresAt,
+        expiresAtMs: tryoutAttemptView.expiresAt,
         partAttempt: null,
-        tryoutAttempt,
+        tryoutAttempt: tryoutAttemptView,
       };
     }
 
@@ -351,14 +361,14 @@ export const getUserTryoutPartAttempt = query({
     );
 
     return {
-      expiresAtMs: tryoutAttempt.expiresAt,
+      expiresAtMs: tryoutAttemptView.expiresAt,
       partAttempt: {
         partIndex: currentPartAttempt.partIndex,
         partKey: currentPartAttempt.partKey,
         answers,
         setAttempt,
       },
-      tryoutAttempt,
+      tryoutAttempt: tryoutAttemptView,
     };
   },
 });

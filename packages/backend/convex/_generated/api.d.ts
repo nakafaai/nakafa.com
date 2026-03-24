@@ -173,6 +173,7 @@ import type * as triggers_schools_schools from "../triggers/schools/schools.js";
 import type * as triggers_subscriptions_subscriptions from "../triggers/subscriptions/subscriptions.js";
 import type * as triggers_tryouts_leaderboard from "../triggers/tryouts/leaderboard.js";
 import type * as tryouts_aggregate from "../tryouts/aggregate.js";
+import type * as tryouts_helpers_access from "../tryouts/helpers/access.js";
 import type * as tryouts_helpers_expiry from "../tryouts/helpers/expiry.js";
 import type * as tryouts_helpers_scoring from "../tryouts/helpers/scoring.js";
 import type * as tryouts_helpers_shared from "../tryouts/helpers/shared.js";
@@ -367,6 +368,7 @@ declare const fullApi: ApiFromModules<{
   "triggers/subscriptions/subscriptions": typeof triggers_subscriptions_subscriptions;
   "triggers/tryouts/leaderboard": typeof triggers_tryouts_leaderboard;
   "tryouts/aggregate": typeof tryouts_aggregate;
+  "tryouts/helpers/access": typeof tryouts_helpers_access;
   "tryouts/helpers/expiry": typeof tryouts_helpers_expiry;
   "tryouts/helpers/scoring": typeof tryouts_helpers_scoring;
   "tryouts/helpers/shared": typeof tryouts_helpers_shared;
@@ -534,7 +536,7 @@ export declare const components: {
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
-                    | "by_name"
+                    | "name"
                     | "email"
                     | "emailVerified"
                     | "image"
@@ -677,7 +679,7 @@ export declare const components: {
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
-                    | "by_name"
+                    | "name"
                     | "slug"
                     | "logo"
                     | "createdAt"
@@ -822,7 +824,7 @@ export declare const components: {
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
-                    | "by_name"
+                    | "name"
                     | "email"
                     | "emailVerified"
                     | "image"
@@ -965,7 +967,7 @@ export declare const components: {
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
-                    | "by_name"
+                    | "name"
                     | "slug"
                     | "logo"
                     | "createdAt"
@@ -1207,7 +1209,7 @@ export declare const components: {
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
-                    | "by_name"
+                    | "name"
                     | "email"
                     | "emailVerified"
                     | "image"
@@ -1388,7 +1390,7 @@ export declare const components: {
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
-                    | "by_name"
+                    | "name"
                     | "slug"
                     | "logo"
                     | "createdAt"
@@ -1566,7 +1568,7 @@ export declare const components: {
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
-                    | "by_name"
+                    | "name"
                     | "email"
                     | "emailVerified"
                     | "image"
@@ -1747,7 +1749,7 @@ export declare const components: {
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
-                    | "by_name"
+                    | "name"
                     | "slug"
                     | "logo"
                     | "createdAt"

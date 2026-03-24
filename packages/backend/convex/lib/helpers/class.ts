@@ -16,7 +16,7 @@ import { getSchoolMembership, isAdmin } from "./school";
  * Returns null if user is not a class member.
  * Internal helper - use checkClassAccess or requireClassAccess for public API.
  */
-async function getClassMembership(
+function getClassMembership(
   ctx: QueryCtx | MutationCtx,
   classId: Id<"schoolClasses">,
   userId: Id<"users">

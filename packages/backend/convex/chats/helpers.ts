@@ -92,7 +92,7 @@ export async function deleteMessageBatchFromPoint(
 }
 
 /** Find the persisted message that matches one UI message identifier. */
-export async function getMessageByIdentifier(
+export function getMessageByIdentifier(
   ctx: MutationCtx | QueryCtx,
   chatId: Id<"chats">,
   identifier: string

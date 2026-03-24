@@ -33,7 +33,7 @@ export type TryoutSetCandidate = Pick<
 export type DetectedTryout = Pick<
   Doc<"tryouts">,
   | "cycleKey"
-  | "by_isActive"
+  | "isActive"
   | "label"
   | "locale"
   | "partCount"

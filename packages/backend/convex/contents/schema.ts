@@ -28,7 +28,7 @@ const tables = {
       "lastViewedAt",
     ])
     .index("by_deviceId_and_contentRefId", ["deviceId", "contentRef.id"])
-    .index("by_locale_type_lastViewedAt", [
+    .index("by_locale_and_contentRefType_and_lastViewedAt", [
       "locale",
       "contentRef.type",
       "lastViewedAt",
@@ -64,7 +64,7 @@ const tables = {
     locale: localeValidator,
     updatedAt: v.number(),
     viewCount: v.number(),
-  }).index("by_locale_bucketStart_contentId", [
+  }).index("by_locale_and_bucketStart_and_contentId", [
     "locale",
     "bucketStart",
     "contentId",

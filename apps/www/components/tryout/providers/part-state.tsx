@@ -85,6 +85,7 @@ export function TryoutPartProvider({
     shouldLoadRuntime
       ? {
           locale: tryout.locale,
+          nowMs,
           partKey: part.key,
           product: tryout.product,
           tryoutSlug: tryout.slug,

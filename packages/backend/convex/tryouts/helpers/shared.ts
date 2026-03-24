@@ -9,6 +9,51 @@ export type TryoutMutationCtx = Pick<MutationCtx, "db" | "scheduler">;
 type TryoutDbReader = QueryCtx["db"];
 type TryoutAnswerLoaderDb = QueryCtx["db"] | MutationCtx["db"];
 
+/** Derive the current user-visible tryout status from wall-clock expiry. */
+export function getEffectiveTryoutAttemptStatus({
+  expiresAt,
+  now,
+  status,
+}: Pick<Doc<"tryoutAttempts">, "expiresAt" | "status"> & {
+  now: number;
+}) {
+  if (status !== "in-progress") {
+    return status;
+  }
+
+  if (now < expiresAt) {
+    return status;
+  }
+
+  return "expired";
+}
+
+/** Pick the most recent in-progress part to resume within one tryout. */
+export function pickSuggestedPartKey<
+  PartAttempt extends {
+    partKey: Doc<"tryoutPartAttempts">["partKey"];
+    setAttempt: Pick<Doc<"exerciseAttempts">, "lastActivityAt" | "status">;
+  },
+>(partAttempts: PartAttempt[]) {
+  let suggestedPartKey: PartAttempt["partKey"] | undefined;
+  let latestActivityAt = Number.NEGATIVE_INFINITY;
+
+  for (const partAttempt of partAttempts) {
+    if (partAttempt.setAttempt.status !== "in-progress") {
+      continue;
+    }
+
+    if (partAttempt.setAttempt.lastActivityAt <= latestActivityAt) {
+      continue;
+    }
+
+    suggestedPartKey = partAttempt.partKey;
+    latestActivityAt = partAttempt.setAttempt.lastActivityAt;
+  }
+
+  return suggestedPartKey;
+}
+
 /** Load all persisted part attempts for one tryout within the known part bound. */
 export async function loadBoundedTryoutPartAttempts(
   db: TryoutDbReader | MutationCtx["db"],
@@ -50,7 +95,9 @@ export async function getBoundedExerciseAnswers(
 ) {
   const answers = await db
     .query("exerciseAnswers")
-    .withIndex("by_attemptId_and_exerciseNumber", (q) => q.eq("attemptId", attemptId))
+    .withIndex("by_attemptId_and_exerciseNumber", (q) =>
+      q.eq("attemptId", attemptId)
+    )
     .take(totalExercises + 1);
 
   if (answers.length <= totalExercises) {

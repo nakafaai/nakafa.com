@@ -353,11 +353,13 @@ export const promoteProvisionalTryoutScores = internalMutation({
         ? []
         : await ctx.db
             .query("tryoutAttempts")
-            .withIndex("by_tryoutId_and_scoreStatus_and_status_and_startedAt", (q) =>
-              q
-                .eq("tryoutId", args.tryoutId)
-                .eq("scoreStatus", "provisional")
-                .eq("status", "expired")
+            .withIndex(
+              "by_tryoutId_and_scoreStatus_and_status_and_startedAt",
+              (q) =>
+                q
+                  .eq("tryoutId", args.tryoutId)
+                  .eq("scoreStatus", "provisional")
+                  .eq("status", "expired")
             )
             .order("asc")
             .take(remainingSlots);

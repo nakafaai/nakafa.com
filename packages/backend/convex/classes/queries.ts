@@ -358,7 +358,9 @@ export const getInviteCodes = query({
     if (isAdmin(schoolMembership) || classMembership?.role === "teacher") {
       const inviteCodes = await ctx.db
         .query("schoolClassInviteCodes")
-        .withIndex("by_classId_and_role", (idx) => idx.eq("classId", args.classId))
+        .withIndex("by_classId_and_role", (idx) =>
+          idx.eq("classId", args.classId)
+        )
         .take(SCHOOL_CLASS_INVITE_CODE_ROLES.length + 1);
 
       if (inviteCodes.length > SCHOOL_CLASS_INVITE_CODE_ROLES.length) {

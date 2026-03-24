@@ -241,7 +241,7 @@ export const getUserById = query({
  */
 export const getLatestJwks = internalAction({
   args: {},
-  handler: async (ctx) => {
+  handler: (ctx) => {
     const auth = createAuth(ctx);
     // This method is added by the Convex Better Auth plugin and is
     // available via `auth.api` only, not exposed as a route.
