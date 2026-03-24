@@ -66,6 +66,10 @@ import * as z from "zod/mini";
 import { useForum } from "@/lib/context/use-forum";
 import { useForumScroll } from "@/lib/context/use-forum-scroll";
 
+/**
+ * Handle forum message submission, attachment upload/finalization, and reply
+ * state cleanup for the active conversation.
+ */
 export const ForumPostInput = memo(
   ({ forumId }: { forumId: Id<"schoolClassForums"> }) => {
     const t = useTranslations("School.Classes");

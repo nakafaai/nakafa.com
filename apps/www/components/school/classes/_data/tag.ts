@@ -34,6 +34,9 @@ export const tagList = [
 
 export type TagValue = (typeof tagList)[number]["value"];
 
+/**
+ * Resolve the icon used to represent one forum tag.
+ */
 export function getTagIcon(tag: TagValue) {
   return tagList.find((t) => t.value === tag)?.icon ?? ChatIcon;
 }

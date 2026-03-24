@@ -32,6 +32,10 @@ import { useVirtualItems } from "@/components/school/classes/forum/conversation/
 import { useForum } from "@/lib/context/use-forum";
 import { ForumScrollProvider } from "@/lib/context/use-forum-scroll";
 
+/**
+ * Render one forum conversation with normal pagination, jump-mode loading, and
+ * read-state updates coordinated around the virtualized list.
+ */
 export const ForumPostConversation = memo(
   ({
     forum,

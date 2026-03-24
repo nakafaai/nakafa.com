@@ -29,6 +29,10 @@ import { useForum } from "@/lib/context/use-forum";
 const MIN_WIDTH = 448;
 const MAX_WIDTH = 672;
 
+/**
+ * Show the active forum conversation in a non-modal side sheet so the class
+ * page stays interactive while the thread is open.
+ */
 export function SchoolClassesForumPostSheet() {
   const activeForumId = useForum((f) => f.activeForumId);
   const setActiveForumId = useForum((f) => f.setActiveForumId);
@@ -90,6 +94,9 @@ export function SchoolClassesForumPostSheet() {
   );
 }
 
+/**
+ * Fetch the active forum once and fan it out to the sheet header and content.
+ */
 function SchoolClassesForumPostSheetBody({
   activeForumId,
   onClose,

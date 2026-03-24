@@ -31,6 +31,9 @@ type ForumListItem = Doc<"schoolClassForums"> & {
 
 const DEBOUNCE_TIME = 500;
 
+/**
+ * Render the searchable forum thread list for one class.
+ */
 export function SchoolClassesForumList() {
   const t = useTranslations("School.Classes");
 
@@ -152,6 +155,9 @@ export function SchoolClassesForumList() {
   );
 }
 
+/**
+ * Surface the most-used reaction as a compact shortcut in the forum list.
+ */
 function TopReaction({ forum }: { forum: ForumListItem }) {
   const [isPending, startTransition] = useTransition();
   const toggleReaction = useMutation(

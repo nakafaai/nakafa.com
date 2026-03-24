@@ -204,7 +204,8 @@ export const schoolClassInviteCodeValidator = v.object({
 });
 
 /**
- * School class forum base validator (without system fields)
+ * Stored forum thread state, including denormalized counters used by the class
+ * forum list and conversation sheet.
  */
 export const schoolClassForumValidator = v.object({
   classId: v.id("schoolClasses"),
@@ -223,7 +224,8 @@ export const schoolClassForumValidator = v.object({
 });
 
 /**
- * School class forum post base validator (without system fields)
+ * Stored forum post state, including read-boundary reply metadata and
+ * denormalized reaction counts.
  */
 export const schoolClassForumPostValidator = v.object({
   forumId: v.id("schoolClassForums"),
@@ -346,6 +348,10 @@ const tables = {
     ["forumId"]
   ),
 
+  /**
+   * Tracks uploads that were authorized for one user+forum but not yet claimed
+   * by a successful post mutation.
+   */
   schoolClassForumPendingUploads: defineTable({
     forumId: v.id("schoolClassForums"),
     classId: v.id("schoolClasses"),
@@ -358,6 +364,10 @@ const tables = {
     .index("by_storageId", ["storageId"])
     .index("by_forumId_and_uploadedBy", ["forumId", "uploadedBy"]),
 
+  /**
+   * Stores finalized forum attachments separately so posts do not grow with an
+   * unbounded attachment array.
+   */
   schoolClassForumPostAttachments: defineTable({
     postId: v.id("schoolClassForumPosts"),
     forumId: v.id("schoolClassForums"),
@@ -379,6 +389,10 @@ const tables = {
     .index("postId_userId_emoji", ["postId", "userId", "emoji"])
     .index("by_postId_and_emoji_and_userId", ["postId", "emoji", "userId"]),
 
+  /**
+   * Persists each user's read boundary by forum, using both timestamp and post
+   * id so equal-timestamp posts stay ordered correctly.
+   */
   schoolClassForumReadStates: defineTable({
     forumId: v.id("schoolClassForums"),
     classId: v.id("schoolClasses"),

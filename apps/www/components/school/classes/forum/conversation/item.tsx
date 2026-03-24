@@ -52,6 +52,10 @@ import { useForumScroll } from "@/lib/context/use-forum-scroll";
 import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";
 
+/**
+ * Render one forum post row, including reply/thread context, attachments, and
+ * reaction controls.
+ */
 export const ForumPostItem = memo(
   ({
     post,
@@ -201,6 +205,10 @@ const PostReactions = memo(({ post }: { post: ForumPost }) => {
 });
 PostReactions.displayName = "PostReactions";
 
+/**
+ * Split forum attachments into image previews and file links while tolerating
+ * storage URLs that are temporarily unavailable.
+ */
 const PostAttachments = memo(
   ({ attachments }: { attachments: PostAttachment[] }) => {
     if (attachments.length === 0) {
@@ -268,6 +276,10 @@ const PostAttachments = memo(
 );
 PostAttachments.displayName = "PostAttachments";
 
+/**
+ * Link one reply preview back to its parent post, loading jump mode when the
+ * parent is outside the current window.
+ */
 const PostReplyIndicator = memo(({ post }: { post: ForumPost }) => {
   const { parentId, replyToUser, replyToBody } = post;
   const jumpToPostId = useForumScroll((state) => state.jumpToPostId);
@@ -299,6 +311,10 @@ const PostReplyIndicator = memo(({ post }: { post: ForumPost }) => {
 });
 PostReplyIndicator.displayName = "PostReplyIndicator";
 
+/**
+ * Keep post-level quick actions grouped together so reply and reaction updates
+ * stay close to the post they mutate.
+ */
 const PostItemActions = memo(({ post }: { post: ForumPost }) => {
   const t = useTranslations("Common");
   const setReplyTo = useForum((f) => f.setReplyTo);

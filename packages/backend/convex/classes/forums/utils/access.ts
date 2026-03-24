@@ -26,6 +26,10 @@ export async function loadForum(
   return forum;
 }
 
+/**
+ * Load one forum and reject locked or archived threads before any write path
+ * continues.
+ */
 async function loadOpenForum(
   ctx: QueryCtx | MutationCtx,
   forumId: Id<"schoolClassForums">
@@ -62,7 +66,7 @@ export async function loadForumWithAccess(
 }
 
 /**
- * Load an open forum and verify the user can access its class.
+ * Load an open forum in an active class and verify the user can access it.
  */
 export async function loadOpenForumWithAccess(
   ctx: QueryCtx | MutationCtx,
@@ -82,7 +86,7 @@ export async function loadOpenForumWithAccess(
 }
 
 /**
- * Load a forum in an active class and verify the user can access it.
+ * Load any forum in an active class and verify the user can access it.
  */
 export async function loadActiveForumWithAccess(
   ctx: QueryCtx | MutationCtx,
