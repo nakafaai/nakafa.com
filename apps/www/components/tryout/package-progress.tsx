@@ -1,24 +1,18 @@
 "use client";
 
-import { Badge } from "@repo/design-system/components/ui/badge";
-import { useTranslations } from "next-intl";
 import { useTryoutPackageProgress } from "@/components/tryout/providers/package-progress";
+import { TryoutStatusBadge } from "@/components/tryout/status-badge";
 
-export function TryoutPackageInProgressBadge({
+export function TryoutPackageStatusBadge({
   tryoutSlug,
 }: {
   tryoutSlug: string;
 }) {
-  const tTryouts = useTranslations("Tryouts");
-  const isInProgress = useTryoutPackageProgress((state) =>
-    state.has(tryoutSlug)
-  );
+  const status = useTryoutPackageProgress((state) => state.get(tryoutSlug));
 
-  if (!isInProgress) {
+  if (!status) {
     return null;
   }
 
-  return (
-    <Badge variant="muted">{tTryouts("package-status-in-progress")}</Badge>
-  );
+  return <TryoutStatusBadge status={status} />;
 }

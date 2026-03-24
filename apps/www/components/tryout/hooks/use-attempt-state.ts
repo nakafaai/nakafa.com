@@ -11,6 +11,11 @@ import {
 import type { UseExerciseTimerReturn } from "@/lib/hooks/use-exercise-timer";
 
 type TryoutRemainingTime = UseExerciseTimerReturn["formatted"];
+type TryoutAttemptData = NonNullable<
+  ReturnType<typeof useTryoutAttempt>["data"]
+>;
+type TryoutPartAttempt = TryoutAttemptData["partAttempts"][number];
+type OrderedTryoutPart = TryoutAttemptData["orderedParts"][number];
 
 /** Picks the next part key the student should resume in an active tryout. */
 function getResumePartKey({
@@ -27,7 +32,7 @@ function getResumePartKey({
   }
 
   const activePartAttempts = attemptData.partAttempts.filter(
-    (partAttempt) =>
+    (partAttempt: TryoutPartAttempt) =>
       getEffectivePartAttemptStatus({
         expiresAtMs: attemptData.expiresAtMs,
         nowMs,
@@ -59,14 +64,14 @@ function getResumePartKey({
     }
 
     const nextAvailablePart = attemptData.orderedParts.find(
-      (part) => !locallyEndedPartIndices.has(part.partIndex)
+      (part: OrderedTryoutPart) => !locallyEndedPartIndices.has(part.partIndex)
     );
 
     return nextAvailablePart?.partKey;
   }
 
   activePartAttempts.sort(
-    (left, right) =>
+    (left: TryoutPartAttempt, right: TryoutPartAttempt) =>
       right.setAttempt.lastActivityAt - left.setAttempt.lastActivityAt
   );
 

@@ -2,12 +2,12 @@ import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 
 type TryoutAttemptStatus = NonNullable<
-  FunctionReturnType<typeof api.tryouts.queries.attempts.getUserTryoutAttempt>
+  FunctionReturnType<typeof api.tryouts.queries.me.attempt.getUserTryoutAttempt>
 >["attempt"]["status"];
 type ExerciseAttemptStatus = NonNullable<
   NonNullable<
     FunctionReturnType<
-      typeof api.tryouts.queries.attempts.getUserTryoutPartAttempt
+      typeof api.tryouts.queries.me.part.getUserTryoutPartAttempt
     >
   >["partAttempt"]
 >["setAttempt"]["status"];

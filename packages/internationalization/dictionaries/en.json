@@ -266,7 +266,6 @@
     "package-count": "{count, plural, =0 {No packages yet} =1 {# package} other {# packages}}",
     "cta": "See packages",
     "list-empty": "There are no tryouts showing right now.",
-    "package-status-in-progress": "In progress",
     "available-item-description": "{questions} questions - {parts} parts",
     "year-title": "Year {year}",
     "product-page-description": "See every SNBT package and open the one that fits your goal best.",

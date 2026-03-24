@@ -7,7 +7,7 @@ import { useTryoutClock } from "@/components/tryout/hooks/use-tryout-clock";
 import { useUser } from "@/lib/context/use-user";
 
 type TryoutAttemptQueryArgs = FunctionArgs<
-  typeof api.tryouts.queries.attempts.getUserTryoutAttempt
+  typeof api.tryouts.queries.me.attempt.getUserTryoutAttempt
 >;
 export type TryoutAttemptParams = TryoutAttemptQueryArgs;
 
@@ -19,7 +19,7 @@ export function useTryoutAttempt(params: TryoutAttemptParams | null) {
   const queryArgs: TryoutAttemptQueryArgs | "skip" =
     shouldQuery && params ? params : "skip";
   const queryResult = useQueryWithStatus(
-    api.tryouts.queries.attempts.getUserTryoutAttempt,
+    api.tryouts.queries.me.attempt.getUserTryoutAttempt,
     queryArgs
   );
   const nowMs = useTryoutClock(

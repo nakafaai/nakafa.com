@@ -6,11 +6,11 @@ import {
 } from "@/components/tryout/utils/status";
 
 type TryoutAttemptData = FunctionReturnType<
-  typeof api.tryouts.queries.attempts.getUserTryoutAttempt
+  typeof api.tryouts.queries.me.attempt.getUserTryoutAttempt
 >;
 
 type TryoutPartRuntime = FunctionReturnType<
-  typeof api.tryouts.queries.attempts.getUserTryoutPartAttempt
+  typeof api.tryouts.queries.me.part.getUserTryoutPartAttempt
 >;
 
 type TryoutPartAttempt = Pick<
@@ -188,8 +188,10 @@ export function deriveTryoutSetPartState({
   resumePartKey: string | undefined;
 }) {
   const partAttempt =
-    attemptData?.partAttempts.find((attempt) => attempt.partKey === partKey) ??
-    null;
+    attemptData?.partAttempts.find(
+      (attempt: NonNullable<TryoutAttemptData>["partAttempts"][number]) =>
+        attempt.partKey === partKey
+    ) ?? null;
   const tryoutStatus = effectiveStatus ?? attemptData?.attempt.status;
 
   if (!(attemptData && tryoutStatus)) {

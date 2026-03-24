@@ -30,7 +30,7 @@ import {
   TryoutPackageTitle,
   TryoutPackageYear,
 } from "@/components/tryout/package-list";
-import { TryoutPackageInProgressBadge } from "@/components/tryout/package-progress";
+import { TryoutPackageStatusBadge } from "@/components/tryout/package-progress";
 import { SnbtTryoutIcon } from "@/components/tryout/product-icon";
 import { TryoutPackageProgressProvider } from "@/components/tryout/providers/package-progress";
 import { groupActiveTryoutsByCycle } from "@/components/tryout/utils/package-list";
@@ -64,7 +64,7 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
                   <TryoutCardTitle>
                     {tTryouts("products.snbt.title")}
                   </TryoutCardTitle>
-                  <Badge variant="secondary">
+                  <Badge variant="outline">
                     {tTryouts("package-count", { count: activeTryouts.length })}
                   </Badge>
                 </div>
@@ -92,7 +92,11 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
             {cycleGroups.length === 0 ? (
               <TryoutPackageEmpty>{tTryouts("list-empty")}</TryoutPackageEmpty>
             ) : (
-              <TryoutPackageProgressProvider locale={locale} product={product}>
+              <TryoutPackageProgressProvider
+                locale={locale}
+                product={product}
+                tryoutSlugs={activeTryouts.map((tryout) => tryout.slug)}
+              >
                 {cycleGroups.map((group, index) => (
                   <div
                     className={cn(index > 0 && "border-t")}
@@ -113,7 +117,7 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
                               <TryoutPackageTitle>
                                 {tryout.label}
                               </TryoutPackageTitle>
-                              <TryoutPackageInProgressBadge
+                              <TryoutPackageStatusBadge
                                 tryoutSlug={tryout.slug}
                               />
                             </TryoutPackageHeader>

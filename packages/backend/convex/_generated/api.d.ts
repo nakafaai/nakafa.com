@@ -187,8 +187,12 @@ import type * as tryouts_mutations_attempts from "../tryouts/mutations/attempts.
 import type * as tryouts_mutations_helpers from "../tryouts/mutations/helpers.js";
 import type * as tryouts_products_index from "../tryouts/products/index.js";
 import type * as tryouts_products_snbt from "../tryouts/products/snbt.js";
-import type * as tryouts_queries_attempts from "../tryouts/queries/attempts.js";
 import type * as tryouts_queries_leaderboard from "../tryouts/queries/leaderboard.js";
+import type * as tryouts_queries_me_attempt from "../tryouts/queries/me/attempt.js";
+import type * as tryouts_queries_me_helpers from "../tryouts/queries/me/helpers.js";
+import type * as tryouts_queries_me_packages from "../tryouts/queries/me/packages.js";
+import type * as tryouts_queries_me_part from "../tryouts/queries/me/part.js";
+import type * as tryouts_queries_me_validators from "../tryouts/queries/me/validators.js";
 import type * as tryouts_queries_tryouts from "../tryouts/queries/tryouts.js";
 import type * as tryouts_stats from "../tryouts/stats.js";
 import type * as tryouts_workpool from "../tryouts/workpool.js";
@@ -394,8 +398,12 @@ declare const fullApi: ApiFromModules<{
   "tryouts/mutations/helpers": typeof tryouts_mutations_helpers;
   "tryouts/products/index": typeof tryouts_products_index;
   "tryouts/products/snbt": typeof tryouts_products_snbt;
-  "tryouts/queries/attempts": typeof tryouts_queries_attempts;
   "tryouts/queries/leaderboard": typeof tryouts_queries_leaderboard;
+  "tryouts/queries/me/attempt": typeof tryouts_queries_me_attempt;
+  "tryouts/queries/me/helpers": typeof tryouts_queries_me_helpers;
+  "tryouts/queries/me/packages": typeof tryouts_queries_me_packages;
+  "tryouts/queries/me/part": typeof tryouts_queries_me_part;
+  "tryouts/queries/me/validators": typeof tryouts_queries_me_validators;
   "tryouts/queries/tryouts": typeof tryouts_queries_tryouts;
   "tryouts/stats": typeof tryouts_stats;
   "tryouts/workpool": typeof tryouts_workpool;

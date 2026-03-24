@@ -15,7 +15,7 @@ import {
 import { TryoutStartCountdown } from "@/components/tryout/start-countdown";
 
 type TryoutAttempt = NonNullable<
-  FunctionReturnType<typeof api.tryouts.queries.attempts.getUserTryoutAttempt>
+  FunctionReturnType<typeof api.tryouts.queries.me.attempt.getUserTryoutAttempt>
 >["attempt"];
 type TryoutAttemptStatus = TryoutAttempt["status"];
 
