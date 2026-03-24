@@ -1,9 +1,33 @@
-import { loadForumWithAccess } from "@repo/backend/convex/classes/forums/utils/access";
-import { MAX_FORUM_REACTION_VARIANTS } from "@repo/backend/convex/classes/forums/utils/constants";
+import { loadActiveForumWithAccess } from "@repo/backend/convex/classes/forums/utils/access";
+import {
+  MAX_FORUM_REACTION_VALUE_LENGTH,
+  MAX_FORUM_REACTION_VARIANTS,
+} from "@repo/backend/convex/classes/forums/utils/constants";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { ConvexError, v } from "convex/values";
+
+const FORUM_REACTION_VALUE_PATTERN =
+  /^(?:\p{Regional_Indicator}{2}|[#*0-9]\uFE0F?\u20E3|(?:\p{Emoji_Modifier_Base}\p{Emoji_Modifier}?|\p{Emoji_Presentation}|\p{Emoji}\uFE0F))(?:\u200D(?:\p{Emoji_Modifier_Base}\p{Emoji_Modifier}?|\p{Emoji_Presentation}|\p{Emoji}\uFE0F))*$/u;
+
+/**
+ * Ensure one reaction value is a bounded emoji sequence.
+ */
+function validateForumReactionValue(emoji: string) {
+  if (
+    emoji.length > 0 &&
+    emoji.length <= MAX_FORUM_REACTION_VALUE_LENGTH &&
+    FORUM_REACTION_VALUE_PATTERN.test(emoji)
+  ) {
+    return emoji;
+  }
+
+  throw new ConvexError({
+    code: "FORUM_REACTION_INVALID",
+    message: "Forum reaction must be a supported emoji.",
+  });
+}
 
 /**
  * Toggle one reaction on a forum post.
@@ -14,6 +38,7 @@ export const togglePostReaction = mutation({
     postId: vv.id("schoolClassForumPosts"),
   },
   handler: async (ctx, args) => {
+    const emoji = validateForumReactionValue(args.emoji);
     const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
     const post = await ctx.db.get("schoolClassForumPosts", args.postId);
@@ -25,12 +50,12 @@ export const togglePostReaction = mutation({
       });
     }
 
-    await loadForumWithAccess(ctx, post.forumId, userId);
+    await loadActiveForumWithAccess(ctx, post.forumId, userId);
 
     const existingReaction = await ctx.db
       .query("schoolClassForumPostReactions")
       .withIndex("postId_userId_emoji", (q) =>
-        q.eq("postId", args.postId).eq("userId", userId).eq("emoji", args.emoji)
+        q.eq("postId", args.postId).eq("userId", userId).eq("emoji", emoji)
       )
       .unique();
 
@@ -43,7 +68,7 @@ export const togglePostReaction = mutation({
     }
 
     const hasReactionVariant = post.reactionCounts.some(
-      (reactionCount) => reactionCount.emoji === args.emoji
+      (reactionCount) => reactionCount.emoji === emoji
     );
 
     if (
@@ -57,7 +82,7 @@ export const togglePostReaction = mutation({
     }
 
     await ctx.db.insert("schoolClassForumPostReactions", {
-      emoji: args.emoji,
+      emoji,
       postId: args.postId,
       userId,
     });
@@ -75,17 +100,19 @@ export const toggleForumReaction = mutation({
     forumId: vv.id("schoolClassForums"),
   },
   handler: async (ctx, args) => {
+    const emoji = validateForumReactionValue(args.emoji);
     const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
-    const { forum } = await loadForumWithAccess(ctx, args.forumId, userId);
+    const { forum } = await loadActiveForumWithAccess(
+      ctx,
+      args.forumId,
+      userId
+    );
 
     const existingReaction = await ctx.db
       .query("schoolClassForumReactions")
       .withIndex("forumId_userId_emoji", (q) =>
-        q
-          .eq("forumId", args.forumId)
-          .eq("userId", userId)
-          .eq("emoji", args.emoji)
+        q.eq("forumId", args.forumId).eq("userId", userId).eq("emoji", emoji)
       )
       .unique();
 
@@ -95,7 +122,7 @@ export const toggleForumReaction = mutation({
     }
 
     const hasReactionVariant = forum.reactionCounts.some(
-      (reactionCount) => reactionCount.emoji === args.emoji
+      (reactionCount) => reactionCount.emoji === emoji
     );
 
     if (
@@ -109,7 +136,7 @@ export const toggleForumReaction = mutation({
     }
 
     await ctx.db.insert("schoolClassForumReactions", {
-      emoji: args.emoji,
+      emoji,
       forumId: args.forumId,
       userId,
     });

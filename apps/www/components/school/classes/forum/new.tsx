@@ -8,6 +8,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
+import { MIN_FORUM_THREAD_TEXT_LENGTH } from "@repo/backend/convex/classes/forums/utils/constants";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
@@ -35,11 +36,9 @@ import * as z from "zod/mini";
 import { getTag, getTagsByRole } from "@/components/school/classes/_data/tag";
 import { useClass } from "@/lib/context/use-class";
 
-const MIN_LENGTH = 3;
-
 const formSchema = z.object({
-  title: z.string().check(z.minLength(MIN_LENGTH), z.trim()),
-  body: z.string().check(z.minLength(MIN_LENGTH), z.trim()),
+  title: z.string().check(z.minLength(MIN_FORUM_THREAD_TEXT_LENGTH), z.trim()),
+  body: z.string().check(z.minLength(MIN_FORUM_THREAD_TEXT_LENGTH), z.trim()),
   tag: z.union([
     z.literal("general"),
     z.literal("question"),
@@ -98,7 +97,7 @@ export function SchoolClassesForumNew() {
       }}
     >
       <ButtonGroup>
-        <Button onClick={dialog.open}>
+        <Button onClick={dialog.open} type="button">
           <HugeIcons icon={ChatAdd01Icon} />
           {t("new-forum")}
         </Button>

@@ -1,36 +1,11 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { deleteForumPendingUpload } from "@repo/backend/convex/classes/forums/utils/attachments";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { v } from "convex/values";
 
 const STALE_FORUM_PENDING_UPLOAD_BATCH_SIZE = 25;
 const STALE_FORUM_PENDING_UPLOAD_MAX_AGE_MS = 2 * 60 * 60 * 1000;
-
-/**
- * Delete one stale forum pending upload and its storage file when the file is
- * still unreferenced.
- */
-async function deleteStaleForumPendingUpload(
-  ctx: MutationCtx,
-  upload: Doc<"schoolClassForumPendingUploads">
-) {
-  const storageId = upload.storageId;
-
-  if (storageId) {
-    const existingAttachment = await ctx.db
-      .query("schoolClassForumPostAttachments")
-      .withIndex("by_fileId", (q) => q.eq("fileId", storageId))
-      .first();
-    const metadata = await ctx.db.system.get("_storage", storageId);
-
-    if (!(existingAttachment || !metadata)) {
-      await ctx.storage.delete(storageId);
-    }
-  }
-
-  await ctx.db.delete("schoolClassForumPendingUploads", upload._id);
-}
 
 /**
  * Delete forum pending uploads that stayed unclaimed past the upload URL
@@ -59,7 +34,7 @@ export const cleanupStalePendingUploads = internalMutation({
     }
 
     for (const upload of staleUploads) {
-      await deleteStaleForumPendingUpload(ctx, upload);
+      await deleteForumPendingUpload(ctx, upload);
     }
 
     if (

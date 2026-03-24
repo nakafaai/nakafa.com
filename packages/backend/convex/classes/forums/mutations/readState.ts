@@ -1,4 +1,4 @@
-import { loadForumWithAccess } from "@repo/backend/convex/classes/forums/utils/access";
+import { loadActiveForumWithAccess } from "@repo/backend/convex/classes/forums/utils/access";
 import { updateForumReadState } from "@repo/backend/convex/classes/forums/utils/readStateWrite";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
@@ -16,7 +16,11 @@ export const markForumRead = mutation({
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
-    const { forum } = await loadForumWithAccess(ctx, args.forumId, userId);
+    const { forum } = await loadActiveForumWithAccess(
+      ctx,
+      args.forumId,
+      userId
+    );
     const lastReadPost = await ctx.db.get(
       "schoolClassForumPosts",
       args.lastReadPostId

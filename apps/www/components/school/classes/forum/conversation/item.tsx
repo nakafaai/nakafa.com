@@ -212,23 +212,29 @@ const PostAttachments = memo(
 
     return (
       <div className="flex flex-col gap-1">
-        {images.map((attachment) => (
-          <a
-            className="group/image relative block h-40 w-full max-w-xs overflow-hidden rounded-sm border bg-muted sm:h-48"
-            href={attachment.url ?? "#"}
-            key={attachment._id}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            <Image
-              alt={attachment.name}
-              className="object-cover transition-transform ease-out group-hover/image:scale-105"
-              fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              src={attachment.url ?? ""}
-            />
-          </a>
-        ))}
+        {images.map((attachment) => {
+          if (!attachment.url) {
+            return null;
+          }
+
+          return (
+            <a
+              className="group/image relative block h-40 w-full max-w-xs overflow-hidden rounded-sm border bg-muted sm:h-48"
+              href={attachment.url}
+              key={attachment._id}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              <Image
+                alt={attachment.name}
+                className="object-cover transition-transform ease-out group-hover/image:scale-105"
+                fill
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                src={attachment.url}
+              />
+            </a>
+          );
+        })}
 
         <div className="flex flex-wrap gap-1">
           {files.map((attachment) => (

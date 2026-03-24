@@ -157,11 +157,18 @@ function TopReaction({ forum }: { forum: ForumListItem }) {
   const toggleReaction = useMutation(
     api.classes.forums.mutations.reactions.toggleForumReaction
   );
+  const firstReaction = forum.reactionCounts[0];
 
-  // Find the reaction with the highest count
-  const topReaction = forum.reactionCounts.reduce((max, r) =>
-    r.count > max.count ? r : max
+  if (!firstReaction) {
+    return null;
+  }
+
+  const topReaction = forum.reactionCounts.reduce(
+    (maxReaction, reaction) =>
+      reaction.count > maxReaction.count ? reaction : maxReaction,
+    firstReaction
   );
+
   const isMyReaction = forum.myReactions.includes(topReaction.emoji);
 
   const handleToggle = (e: React.MouseEvent) => {

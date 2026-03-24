@@ -3,6 +3,7 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
+import { loadActiveClass } from "@repo/backend/convex/classes/utils";
 import { requireClassAccess } from "@repo/backend/convex/lib/helpers/class";
 import { ConvexError } from "convex/values";
 
@@ -69,6 +70,27 @@ export async function loadOpenForumWithAccess(
   userId: Id<"users">
 ) {
   const forum = await loadOpenForum(ctx, forumId);
+  await loadActiveClass(ctx, forum.classId);
+  const access = await requireClassAccess(
+    ctx,
+    forum.classId,
+    forum.schoolId,
+    userId
+  );
+
+  return { forum, ...access };
+}
+
+/**
+ * Load a forum in an active class and verify the user can access it.
+ */
+export async function loadActiveForumWithAccess(
+  ctx: QueryCtx | MutationCtx,
+  forumId: Id<"schoolClassForums">,
+  userId: Id<"users">
+) {
+  const forum = await loadForum(ctx, forumId);
+  await loadActiveClass(ctx, forum.classId);
   const access = await requireClassAccess(
     ctx,
     forum.classId,

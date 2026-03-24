@@ -756,6 +756,7 @@
       "assignment": "Assignment",
       "resource": "Resource",
       "create-forum-failed": "Failed to create forum. Please try again.",
+      "create-post-failed": "Failed to send message. Please try again.",
       "unknown-user": "Unknown user",
       "original-message-deleted": "Original message was deleted.",
       "send-message-placeholder": "Send a message...",

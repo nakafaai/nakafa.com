@@ -1,5 +1,10 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import {
+  FORUM_ATTACHMENT_ALLOWED_EXTENSIONS,
+  FORUM_ATTACHMENT_ALLOWED_MIME_TYPES,
+  MAX_FORUM_ATTACHMENT_BYTES,
+} from "@repo/backend/convex/classes/forums/utils/constants";
 import { ConvexError } from "convex/values";
 
 type ForumPendingUploadDoc = Doc<"schoolClassForumPendingUploads">;
@@ -14,6 +19,60 @@ export type ForumAttachmentUpload = ForumPendingUploadDoc & {
   size: NonNullable<ForumPendingUploadDoc["size"]>;
   storageId: NonNullable<ForumPendingUploadDoc["storageId"]>;
 };
+
+function hasAllowedForumAttachmentMimeType(mimeType: string) {
+  if (mimeType.startsWith("image/")) {
+    return true;
+  }
+
+  return FORUM_ATTACHMENT_ALLOWED_MIME_TYPES.some(
+    (allowedMimeType) => allowedMimeType === mimeType
+  );
+}
+
+function hasAllowedForumAttachmentExtension(fileName: string) {
+  const normalizedFileName = fileName.trim().toLowerCase();
+
+  return FORUM_ATTACHMENT_ALLOWED_EXTENSIONS.some((extension) =>
+    normalizedFileName.endsWith(extension)
+  );
+}
+
+/**
+ * Enforce the supported forum attachment size and mime policy server-side.
+ */
+export function validateForumAttachmentPolicy({
+  mimeType,
+  name,
+  size,
+}: {
+  mimeType: string;
+  name: string;
+  size: number;
+}) {
+  if (size > MAX_FORUM_ATTACHMENT_BYTES) {
+    throw new ConvexError({
+      code: "FORUM_ATTACHMENT_TOO_LARGE",
+      message: "Forum post attachment exceeds the supported size limit.",
+    });
+  }
+
+  if (hasAllowedForumAttachmentMimeType(mimeType)) {
+    return;
+  }
+
+  if (
+    mimeType === "application/octet-stream" &&
+    hasAllowedForumAttachmentExtension(name)
+  ) {
+    return;
+  }
+
+  throw new ConvexError({
+    code: "FORUM_ATTACHMENT_TYPE_UNSUPPORTED",
+    message: "Forum post attachment type is not supported.",
+  });
+}
 
 /**
  * Reject duplicate pending upload IDs in one forum post submission.
@@ -128,9 +187,35 @@ export async function resolveForumAttachmentUploads(
 
     const finalizedUpload: ForumAttachmentUpload = upload;
 
+    validateForumAttachmentPolicy(finalizedUpload);
     await validateStoredForumAttachmentMetadata(ctx, finalizedUpload);
     finalizedUploads.push(finalizedUpload);
   }
 
   return finalizedUploads;
+}
+
+/**
+ * Delete one pending forum upload and remove its storage file when nothing else
+ * references it.
+ */
+export async function deleteForumPendingUpload(
+  ctx: MutationCtx,
+  upload: ForumPendingUploadDoc
+) {
+  const storageId = upload.storageId;
+
+  if (storageId) {
+    const existingAttachment = await ctx.db
+      .query("schoolClassForumPostAttachments")
+      .withIndex("by_fileId", (q) => q.eq("fileId", storageId))
+      .first();
+    const metadata = await ctx.db.system.get("_storage", storageId);
+
+    if (!(existingAttachment || !metadata)) {
+      await ctx.storage.delete(storageId);
+    }
+  }
+
+  await ctx.db.delete("schoolClassForumPendingUploads", upload._id);
 }

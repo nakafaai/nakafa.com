@@ -756,6 +756,7 @@
       "assignment": "Tugas",
       "resource": "Sumber",
       "create-forum-failed": "Gagal membuat forum. Silakan coba lagi.",
+      "create-post-failed": "Gagal mengirim pesan. Silakan coba lagi.",
       "unknown-user": "Pengguna tidak dikenal",
       "original-message-deleted": "Pesan asli telah dihapus.",
       "send-message-placeholder": "Kirim pesan...",

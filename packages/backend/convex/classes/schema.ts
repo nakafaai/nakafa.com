@@ -104,6 +104,7 @@ export const schoolClassForumTagValidator = literals(
   "assignment",
   "resource"
 );
+export type SchoolClassForumTag = Infer<typeof schoolClassForumTagValidator>;
 
 /**
  * Forum status validator
@@ -353,7 +354,9 @@ const tables = {
     name: v.optional(v.string()),
     mimeType: v.optional(v.string()),
     size: v.optional(v.number()),
-  }).index("by_storageId", ["storageId"]),
+  })
+    .index("by_storageId", ["storageId"])
+    .index("by_forumId_and_uploadedBy", ["forumId", "uploadedBy"]),
 
   schoolClassForumPostAttachments: defineTable({
     postId: v.id("schoolClassForumPosts"),

@@ -12,6 +12,10 @@ import {
 import { useDisclosure, useOs } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import {
+  MAX_FORUM_ATTACHMENT_BYTES,
+  MAX_FORUM_POST_ATTACHMENTS,
+} from "@repo/backend/convex/classes/forums/utils/constants";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -74,6 +78,9 @@ export const ForumPostInput = memo(
     const generateUploadUrl = useMutation(
       api.classes.forums.mutations.uploads.generateUploadUrl
     );
+    const discardForumUploads = useMutation(
+      api.classes.forums.mutations.uploads.discardForumUploads
+    );
     const saveForumUpload = useMutation(
       api.classes.forums.mutations.uploads.saveForumUpload
     );
@@ -87,8 +94,8 @@ export const ForumPostInput = memo(
     ] = useFileUpload({
       multiple: true,
       accept: "image/*,.pdf,.doc,.docx,.txt",
-      maxSize: 10 * 1024 * 1024,
-      maxFiles: 10,
+      maxSize: MAX_FORUM_ATTACHMENT_BYTES,
+      maxFiles: MAX_FORUM_POST_ATTACHMENTS,
       onError: (errors) => {
         for (const error of errors) {
           toast.error(error, { position: "bottom-center" });
@@ -106,44 +113,35 @@ export const ForumPostInput = memo(
       }
     }, [replyTo]);
 
-    const uploadFiles = useCallback(
-      (filesToUpload: FileWithPreview[]) => {
-        const promises: Promise<Id<"schoolClassForumPendingUploads">>[] = [];
+    const uploadFile = useCallback(
+      async (file: File) => {
+        const { uploadId, uploadUrl } = await generateUploadUrl({ forumId });
 
-        for (const f of filesToUpload) {
-          if (!(f.file instanceof File)) {
-            continue;
-          }
-          const file = f.file;
+        try {
+          const { storageId } = await ky
+            .post(uploadUrl, {
+              headers: { "Content-Type": file.type },
+              body: file,
+            })
+            .json<{ storageId: Id<"_storage"> }>();
 
-          promises.push(
-            (async () => {
-              const { uploadId, uploadUrl } = await generateUploadUrl({
-                forumId,
-              });
-              const { storageId } = await ky
-                .post(uploadUrl, {
-                  headers: { "Content-Type": file.type },
-                  body: file,
-                })
-                .json<{ storageId: Id<"_storage"> }>();
+          await saveForumUpload({
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            storageId,
+            uploadId,
+          });
 
-              await saveForumUpload({
-                name: file.name,
-                size: file.size,
-                type: file.type,
-                storageId,
-                uploadId,
-              });
-
-              return uploadId;
-            })()
+          return uploadId;
+        } catch (error) {
+          await discardForumUploads({ uploadIds: [uploadId] }).catch(
+            () => null
           );
+          throw error;
         }
-
-        return Promise.all(promises);
       },
-      [forumId, generateUploadUrl, saveForumUpload]
+      [discardForumUploads, forumId, generateUploadUrl, saveForumUpload]
     );
 
     const form = useForm({
@@ -161,28 +159,42 @@ export const ForumPostInput = memo(
           return;
         }
 
-        let attachmentUploadIds: Id<"schoolClassForumPendingUploads">[] = [];
-        if (files.length > 0) {
-          attachmentUploadIds = await uploadFiles(files);
+        const attachmentUploadIds: Id<"schoolClassForumPendingUploads">[] = [];
+
+        try {
+          for (const fileWithPreview of files) {
+            if (!(fileWithPreview.file instanceof File)) {
+              continue;
+            }
+
+            attachmentUploadIds.push(await uploadFile(fileWithPreview.file));
+          }
+
+          await createPost({
+            attachmentUploadIds:
+              attachmentUploadIds.length > 0 ? attachmentUploadIds : undefined,
+            forumId,
+            body: value.body,
+            parentId: replyTo?.postId,
+          });
+
+          form.reset();
+          clearFiles();
+          setReplyTo(null);
+          exitJumpMode();
+
+          requestAnimationFrame(() => {
+            scrollToBottom();
+          });
+        } catch {
+          if (attachmentUploadIds.length > 0) {
+            await discardForumUploads({ uploadIds: attachmentUploadIds }).catch(
+              () => null
+            );
+          }
+
+          toast.error(t("create-post-failed"));
         }
-
-        await createPost({
-          attachmentUploadIds:
-            attachmentUploadIds.length > 0 ? attachmentUploadIds : undefined,
-          forumId,
-          body: value.body,
-          parentId: replyTo?.postId,
-        });
-
-        form.reset();
-        clearFiles();
-        setReplyTo(null);
-        exitJumpMode();
-
-        // Auto-scroll to bottom after sending my own message
-        requestAnimationFrame(() => {
-          scrollToBottom();
-        });
       },
     });
 

@@ -1,5 +1,10 @@
 import { loadOpenForumWithAccess } from "@repo/backend/convex/classes/forums/utils/access";
-import { validateStoredForumAttachmentMetadata } from "@repo/backend/convex/classes/forums/utils/attachments";
+import {
+  deleteForumPendingUpload,
+  validateForumAttachmentPolicy,
+  validateStoredForumAttachmentMetadata,
+} from "@repo/backend/convex/classes/forums/utils/attachments";
+import { MAX_FORUM_POST_ATTACHMENTS } from "@repo/backend/convex/classes/forums/utils/constants";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
@@ -14,17 +19,27 @@ export const generateUploadUrl = mutation({
   },
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
-    const { forum } = await loadOpenForumWithAccess(
-      ctx,
-      args.forumId,
-      user.appUser._id
-    );
+    const userId = user.appUser._id;
+    const { forum } = await loadOpenForumWithAccess(ctx, args.forumId, userId);
+    const activePendingUploads = await ctx.db
+      .query("schoolClassForumPendingUploads")
+      .withIndex("by_forumId_and_uploadedBy", (q) =>
+        q.eq("forumId", forum._id).eq("uploadedBy", userId)
+      )
+      .take(MAX_FORUM_POST_ATTACHMENTS);
+
+    if (activePendingUploads.length >= MAX_FORUM_POST_ATTACHMENTS) {
+      throw new ConvexError({
+        code: "FORUM_ATTACHMENT_LIMIT_EXCEEDED",
+        message: "Forum post attachment count exceeds the supported limit.",
+      });
+    }
 
     const uploadUrl = await ctx.storage.generateUploadUrl();
     const uploadId = await ctx.db.insert("schoolClassForumPendingUploads", {
       classId: forum.classId,
       forumId: forum._id,
-      uploadedBy: user.appUser._id,
+      uploadedBy: userId,
     });
 
     return {
@@ -78,6 +93,11 @@ export const saveForumUpload = mutation({
       });
     }
 
+    validateForumAttachmentPolicy({
+      mimeType: args.type,
+      name: args.name,
+      size: args.size,
+    });
     await validateStoredForumAttachmentMetadata(ctx, {
       mimeType: args.type,
       size: args.size,
@@ -119,5 +139,33 @@ export const saveForumUpload = mutation({
     });
 
     return args.uploadId;
+  },
+});
+
+/**
+ * Delete pending forum uploads that should no longer be attached.
+ */
+export const discardForumUploads = mutation({
+  args: {
+    uploadIds: v.array(vv.id("schoolClassForumPendingUploads")),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireAuthWithSession(ctx);
+    const userId = user.appUser._id;
+
+    for (const uploadId of args.uploadIds) {
+      const upload = await ctx.db.get(
+        "schoolClassForumPendingUploads",
+        uploadId
+      );
+
+      if (!upload || upload.uploadedBy !== userId) {
+        continue;
+      }
+
+      await deleteForumPendingUpload(ctx, upload);
+    }
+
+    return null;
   },
 });
