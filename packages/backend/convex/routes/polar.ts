@@ -13,7 +13,7 @@ import {
 } from "@repo/backend/convex/routes/constants";
 import { convertToDatabaseSubscription } from "@repo/backend/convex/subscriptions/utils";
 import { logger } from "@repo/backend/convex/utils/logger";
-import { polarWebhookSecret } from "@repo/backend/convex/utils/polar";
+import { polarWebhookSecret } from "@repo/backend/convex/utils/polar/webhook";
 import type { HonoWithConvex } from "convex-helpers/server/hono";
 
 /**

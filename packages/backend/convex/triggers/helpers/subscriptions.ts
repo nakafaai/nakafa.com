@@ -2,7 +2,7 @@ import type { DataModel, Id } from "@repo/backend/convex/_generated/dataModel";
 import { getPlanCreditConfig } from "@repo/backend/convex/credits/constants";
 import type { UserPlan } from "@repo/backend/convex/users/schema";
 import { logger } from "@repo/backend/convex/utils/logger";
-import { products } from "@repo/backend/convex/utils/polar";
+import { products } from "@repo/backend/convex/utils/polar/products";
 import type { GenericMutationCtx } from "convex/server";
 import { getOneFrom } from "convex-helpers/server/relationships";
 

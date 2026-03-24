@@ -11,7 +11,7 @@ import {
 } from "@repo/backend/convex/customers/utils";
 import { requireAuthForAction } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { products } from "@repo/backend/convex/utils/polar";
+import { products } from "@repo/backend/convex/utils/polar/products";
 import { siteOrigin } from "@repo/backend/convex/utils/site";
 import { ConvexError, v } from "convex/values";
 

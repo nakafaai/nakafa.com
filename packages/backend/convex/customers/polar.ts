@@ -6,7 +6,7 @@ import { customersGet } from "@polar-sh/sdk/funcs/customersGet.js";
 import { customersGetExternal } from "@polar-sh/sdk/funcs/customersGetExternal.js";
 import { customersUpdate } from "@polar-sh/sdk/funcs/customersUpdate.js";
 import { PolarError } from "@polar-sh/sdk/models/errors/polarerror.js";
-import { polarClient } from "@repo/backend/convex/utils/polar";
+import { polarClient } from "@repo/backend/convex/utils/polar/client";
 import { ConvexError } from "convex/values";
 
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T/;
