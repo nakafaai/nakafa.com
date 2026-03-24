@@ -16,10 +16,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@repo/design-system/components/ui/avatar";
-import {
-  Button,
-  buttonVariants,
-} from "@repo/design-system/components/ui/button";
+import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import {
@@ -27,6 +24,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation, usePaginatedQuery } from "convex/react";
 import { useTranslations } from "next-intl";

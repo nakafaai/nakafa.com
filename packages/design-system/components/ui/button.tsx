@@ -5,8 +5,6 @@ import { buttonVariants as buttonVariantsClassName } from "@repo/design-system/l
 import { cn } from "@repo/design-system/lib/utils";
 import type { VariantProps } from "class-variance-authority";
 
-export { buttonVariants } from "@repo/design-system/lib/button";
-
 function Button({
   className,
   variant = "default",

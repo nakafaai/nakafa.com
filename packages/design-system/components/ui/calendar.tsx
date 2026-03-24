@@ -5,11 +5,9 @@ import {
   ArrowLeft01Icon,
   ArrowRight01Icon,
 } from "@hugeicons/core-free-icons";
-import {
-  Button,
-  buttonVariants,
-} from "@repo/design-system/components/ui/button";
+import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "@repo/design-system/lib/utils";
 import * as React from "react";
 import {

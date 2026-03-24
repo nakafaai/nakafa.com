@@ -3,12 +3,10 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 import { Response } from "@repo/design-system/components/ai/response";
-import {
-  type Button,
-  buttonVariants,
-} from "@repo/design-system/components/ui/button";
+import type { Button } from "@repo/design-system/components/ui/button";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import { Label } from "@repo/design-system/components/ui/label";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";

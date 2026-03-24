@@ -1,11 +1,9 @@
 "use client"; // Error boundaries must be Client Components
 
 import { DesignSystemProvider } from "@repo/design-system";
-import {
-  Button,
-  buttonVariants,
-} from "@repo/design-system/components/ui/button";
+import { Button } from "@repo/design-system/components/ui/button";
 import { Particles } from "@repo/design-system/components/ui/particles";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { fonts } from "@repo/design-system/lib/fonts";
 import { cn } from "@repo/design-system/lib/utils";
 import "@repo/design-system/styles/globals.css";
