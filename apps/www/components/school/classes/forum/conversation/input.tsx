@@ -74,7 +74,7 @@ export const ForumPostInput = memo(
 
     const textareaRef = useRef<ComponentRef<typeof InputGroupTextarea>>(null);
     const generateUploadUrl = useMutation(
-      api.classes.forums.mutations.posts.generateUploadUrl
+      api.classes.forums.mutations.uploads.generateUploadUrl
     );
     const createPost = useMutation(
       api.classes.forums.mutations.posts.createForumPost

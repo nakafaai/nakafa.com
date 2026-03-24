@@ -1,5 +1,6 @@
 import { getSlugPath } from "@repo/contents/_lib/articles/slug";
 import { getContent, getReferences } from "@repo/contents/_lib/content";
+import { getContentMetadataWithRaw } from "@repo/contents/_lib/metadata";
 import {
   type FileReadError,
   type GitHubFetchError,
@@ -111,9 +112,8 @@ export function fetchArticleMetadataContext({
   const FilePath = getSlugPath(category, slug);
 
   return Effect.all({
-    content: Effect.orElse(
-      getContent(locale, FilePath, { includeMDX: false }),
-      () => Effect.succeed(null)
+    content: Effect.orElse(getContentMetadataWithRaw(locale, FilePath), () =>
+      Effect.succeed(null)
     ),
     FilePath: Effect.succeed(FilePath),
   });

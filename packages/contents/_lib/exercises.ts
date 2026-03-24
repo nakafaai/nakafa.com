@@ -2,13 +2,13 @@ import { promises as fsPromises } from "node:fs";
 import nodePath from "node:path";
 import { fileURLToPath } from "node:url";
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
-import { getContent } from "@repo/contents/_lib/content";
 import { getFolderChildNames } from "@repo/contents/_lib/fs";
+import { getContentMetadataWithRaw } from "@repo/contents/_lib/metadata";
 import {
   type ChoicesValidationError,
   ExerciseLoadError,
 } from "@repo/contents/_shared/error";
-import type { Locale } from "@repo/contents/_types/content";
+import type { ContentMetadata, Locale } from "@repo/contents/_types/content";
 import {
   type ExercisesChoices,
   ExercisesChoicesSchema,
@@ -17,6 +17,7 @@ import type { Exercise } from "@repo/contents/_types/exercises/shared";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, Option } from "effect";
 import ky from "ky";
+import type React from "react";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = nodePath.dirname(__filename);
@@ -26,6 +27,23 @@ const CHOICES_REGEX =
   /const\s+choices\s*(?::\s*ExercisesChoices\s*)?=\s*({[\s\S]*?});/;
 
 const NUMBER_REGEX = /^\d+$/;
+
+async function loadExerciseContent(
+  locale: Locale,
+  filePath: string,
+  includeMDX: boolean
+): Promise<{
+  default?: React.ReactElement;
+  metadata: ContentMetadata;
+  raw: string;
+}> {
+  if (!includeMDX) {
+    return await Effect.runPromise(getContentMetadataWithRaw(locale, filePath));
+  }
+
+  const { getContent } = await import("@repo/contents/_lib/content");
+  return await Effect.runPromise(getContent(locale, filePath, { includeMDX }));
+}
 
 /**
  * Counts the number of exercises in a given path by scanning for numbered directories.
@@ -206,22 +224,22 @@ function loadExercise(
 
     const [questionContent, answerContent, choicesData] = yield* Effect.all(
       [
-        Effect.mapError(
-          getContent(locale, questionPath, { includeMDX }),
-          () =>
+        Effect.tryPromise({
+          try: () => loadExerciseContent(locale, questionPath, includeMDX),
+          catch: () =>
             new ExerciseLoadError({
               path: questionPath,
               reason: "Failed to load question",
-            })
-        ),
-        Effect.mapError(
-          getContent(locale, answerPath, { includeMDX }),
-          () =>
+            }),
+        }),
+        Effect.tryPromise({
+          try: () => loadExerciseContent(locale, answerPath, includeMDX),
+          catch: () =>
             new ExerciseLoadError({
               path: answerPath,
               reason: "Failed to load answer",
-            })
-        ),
+            }),
+        }),
         getRawChoices(choicesPath),
       ],
       { concurrency: "unbounded" }
@@ -236,12 +254,13 @@ function loadExercise(
       choices: choicesData,
       question: {
         metadata: questionContent.metadata,
-        default: questionContent.default,
+        default:
+          "default" in questionContent ? questionContent.default : undefined,
         raw: questionContent.raw,
       },
       answer: {
         metadata: answerContent.metadata,
-        default: answerContent.default,
+        default: "default" in answerContent ? answerContent.default : undefined,
         raw: answerContent.raw,
       },
     });

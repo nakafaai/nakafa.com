@@ -1,6 +1,6 @@
-import { getContentMetadata } from "@repo/contents/_lib/content";
 import { isYearlessTryOutCollectionSlug } from "@repo/contents/_lib/exercises/slug";
 import { getFolderChildNames } from "@repo/contents/_lib/fs";
+import { getContentMetadata } from "@repo/contents/_lib/metadata";
 import { getPathname } from "@repo/internationalization/src/navigation";
 import { routing } from "@repo/internationalization/src/routing";
 import { MAIN_DOMAIN } from "@repo/next-config/domains";

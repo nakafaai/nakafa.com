@@ -14,13 +14,7 @@ import { ClassContextProvider } from "@/lib/context/use-class";
 import { ForumContextProvider } from "@/lib/context/use-forum";
 
 export default function Layout(
-  props: LayoutProps<"/[locale]/school/[slug]/classes/[id]"> & {
-    params: Promise<{
-      id: Id<"schoolClasses">;
-      locale: string;
-      slug: string;
-    }>;
-  }
+  props: LayoutProps<"/[locale]/school/[slug]/classes/[id]">
 ) {
   const { children, params } = props;
   const { locale, id } = use(params);
@@ -32,7 +26,7 @@ export default function Layout(
   // Enable static rendering
   setRequestLocale(locale);
 
-  const classId = id;
+  const classId = id as Id<"schoolClasses">;
 
   return (
     <ErrorBoundary fallback={<SchoolNotFound />}>

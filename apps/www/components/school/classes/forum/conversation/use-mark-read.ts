@@ -25,7 +25,7 @@ export function useMarkRead({
   isJumpMode: boolean;
 }) {
   const markRead = useMutation(
-    api.classes.forums.mutations.posts.markForumRead
+    api.classes.forums.mutations.readState.markForumRead
   );
   const lastReadPostIdRef = useRef(lastPostId);
   const [retryTick, retryMarkRead] = useReducer(

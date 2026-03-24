@@ -8,14 +8,7 @@ import { use } from "react";
 import { UserHeader } from "@/components/user/header";
 import { UserTabs } from "@/components/user/tabs";
 
-export default function Layout(
-  props: LayoutProps<"/[locale]/user/[id]"> & {
-    params: Promise<{
-      id: Id<"users">;
-      locale: string;
-    }>;
-  }
-) {
+export default function Layout(props: LayoutProps<"/[locale]/user/[id]">) {
   const { children, params } = props;
   const { id, locale } = use(params);
 
@@ -27,7 +20,7 @@ export default function Layout(
   // Enable static rendering
   setRequestLocale(locale);
 
-  const userId = id;
+  const userId = id as Id<"users">;
 
   return (
     <ErrorBoundary fallback={null}>
