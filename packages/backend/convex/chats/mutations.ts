@@ -11,7 +11,7 @@ import tables, {
   chatVisibilityValidator,
 } from "@repo/backend/convex/chats/schema";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
-import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
+import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { ConvexError, v } from "convex/values";
 
@@ -23,7 +23,7 @@ export const createChat = mutation({
   },
   returns: vv.id("chats"),
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
 
     const chatId = await ctx.db.insert("chats", {
       updatedAt: Date.now(),
@@ -44,7 +44,7 @@ export const updateChatTitle = mutation({
   },
   returns: vv.id("chats"),
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
 
     const chat = await ctx.db.get("chats", args.chatId);
     if (!chat) {
@@ -75,7 +75,7 @@ export const updateChatVisibility = mutation({
   },
   returns: vv.id("chats"),
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
 
     const chat = await ctx.db.get("chats", args.chatId);
     if (!chat) {
@@ -115,7 +115,7 @@ export const saveMessage = mutation({
   }),
   handler: async (ctx, args) => {
     const { message, parts } = args;
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
 
     await verifyChatOwnership(ctx, message.chatId, user.appUser._id);
 
@@ -141,7 +141,7 @@ export const deleteMessageBatch = mutation({
   },
   returns: v.object({ hasMore: v.boolean() }),
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
 
     await verifyChatOwnership(ctx, args.chatId, user.appUser._id);
 
@@ -171,7 +171,7 @@ export const createChatWithMessage = mutation({
     partIds: v.array(vv.id("parts")),
   }),
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
 
     const chatId = await ctx.db.insert("chats", {
       updatedAt: Date.now(),
@@ -200,7 +200,7 @@ export const deleteChat = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
 
     const chat = await ctx.db.get("chats", args.chatId);
     if (!chat) {

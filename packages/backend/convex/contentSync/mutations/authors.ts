@@ -1,7 +1,7 @@
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
 import { internalMutation } from "@repo/backend/convex/functions";
-import { slugify } from "@repo/backend/convex/utils/helper";
+import { slugify } from "@repo/backend/convex/utils/text";
 import { v } from "convex/values";
 import { getAll } from "convex-helpers/server/relationships";
 

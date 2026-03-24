@@ -258,3 +258,22 @@ export async function deleteExerciseChoicesForQuestion(
     await ctx.db.delete("exerciseChoices", choice._id);
   }
 }
+
+/** Delete one exercise question together with its sync-managed dependent rows. */
+export async function deleteExerciseQuestion(
+  ctx: MutationCtx,
+  questionId: Id<"exerciseQuestions">
+) {
+  await deleteContentAuthorLinks(ctx, questionId, "exercise");
+  await deleteExerciseChoicesForQuestion(ctx, questionId);
+  await ctx.db.delete("exerciseQuestions", questionId);
+}
+
+/** Delete one subject section together with its sync-managed author links. */
+export async function deleteSubjectSection(
+  ctx: MutationCtx,
+  sectionId: Id<"subjectSections">
+) {
+  await deleteContentAuthorLinks(ctx, sectionId, "subject");
+  await ctx.db.delete("subjectSections", sectionId);
+}

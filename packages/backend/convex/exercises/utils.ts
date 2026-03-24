@@ -3,7 +3,7 @@ import {
   type FinalizedAttemptStatus,
   getAttemptEndReasonFromStatus,
 } from "@repo/backend/convex/lib/attempts";
-import { clampNumber } from "@repo/backend/convex/utils/helper";
+import { clampNumber } from "@repo/backend/convex/utils/number";
 import type { WithoutSystemFields } from "convex/server";
 
 type ExerciseAttemptAggregates = Pick<

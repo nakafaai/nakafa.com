@@ -11,7 +11,7 @@ import {
   paginatedMessagesValidator,
 } from "@repo/backend/convex/chats/schema";
 import {
-  getOptionalAppUserFromIdentity,
+  getOptionalAppUser,
   requireAuth,
 } from "@repo/backend/convex/lib/helpers/auth";
 import { requireChatAccess } from "@repo/backend/convex/lib/helpers/chat";
@@ -31,7 +31,7 @@ export const getChat = query({
   },
   returns: vv.doc("chats"),
   handler: async (ctx, args) => {
-    const viewer = await getOptionalAppUserFromIdentity(ctx);
+    const viewer = await getOptionalAppUser(ctx);
     const viewerUserId = viewer?.appUser._id ?? null;
 
     const chat = await ctx.db.get("chats", args.chatId);
@@ -64,7 +64,7 @@ export const getChats = query({
   returns: paginatedChatsValidator,
   handler: async (ctx, args) => {
     const { userId, q: searchQuery, visibility, type, paginationOpts } = args;
-    const viewer = await getOptionalAppUserFromIdentity(ctx);
+    const viewer = await getOptionalAppUser(ctx);
     const viewerUserId = viewer?.appUser._id ?? null;
     const isOwner = viewerUserId === userId;
 
@@ -158,7 +158,7 @@ export const getChatTitle = query({
       return chat.title ?? null;
     }
 
-    const viewer = await getOptionalAppUserFromIdentity(ctx);
+    const viewer = await getOptionalAppUser(ctx);
     const viewerUserId = viewer?.appUser._id ?? null;
 
     if (viewerUserId !== chat.userId) {
@@ -177,7 +177,7 @@ export const loadMessagesPage = query({
   },
   returns: paginatedMessagesValidator,
   handler: async (ctx, args) => {
-    const viewer = await getOptionalAppUserFromIdentity(ctx);
+    const viewer = await getOptionalAppUser(ctx);
     const viewerUserId = viewer?.appUser._id ?? null;
 
     const chat = await ctx.db.get("chats", args.chatId);

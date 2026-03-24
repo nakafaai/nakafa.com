@@ -52,7 +52,7 @@ export const getSchoolInfoBySlug = query({
     const school = await ctx.db
       .query("schools")
       .withIndex("by_slug", (q) => q.eq("slug", args.slug))
-      .first();
+      .unique();
 
     if (!school) {
       throw new ConvexError({
@@ -81,7 +81,7 @@ export const getSchoolBySlug = query({
     const school = await ctx.db
       .query("schools")
       .withIndex("by_slug", (q) => q.eq("slug", args.slug))
-      .first();
+      .unique();
 
     if (!school) {
       throw new ConvexError({

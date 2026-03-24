@@ -1,11 +1,9 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { updateContentHash } from "@repo/backend/convex/audioStudies/utils";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
 import {
   buildAuthorCache,
-  deleteContentAuthorLinks,
+  deleteSubjectSection,
   syncContentAuthorsWithCache,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
 import { internalMutation } from "@repo/backend/convex/functions";
@@ -67,15 +65,6 @@ const syncSectionSummaryValidator = v.object({
 const deleteResultValidator = v.object({
   deleted: v.number(),
 });
-
-/** Delete one subject section together with its sync-managed author links. */
-async function deleteSubjectSection(
-  ctx: MutationCtx,
-  sectionId: Id<"subjectSections">
-) {
-  await deleteContentAuthorLinks(ctx, sectionId, "subject");
-  await ctx.db.delete("subjectSections", sectionId);
-}
 
 /** Upsert subject topics from the filesystem sync source. */
 export const bulkSyncSubjectTopics = internalMutation({

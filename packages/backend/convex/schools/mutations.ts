@@ -1,8 +1,13 @@
 import { mutation } from "@repo/backend/convex/functions";
-import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
+import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
+import {
+  validateInviteCodeState,
+  validateNotExistingMembership,
+} from "@repo/backend/convex/lib/helpers/invite";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { generateUniqueSlug } from "@repo/backend/convex/schools/utils";
-import { generateNanoId, slugify } from "@repo/backend/convex/utils/helper";
+import { generateNanoId } from "@repo/backend/convex/utils/id";
+import { slugify } from "@repo/backend/convex/utils/text";
 import { ConvexError, v } from "convex/values";
 import { schoolTypeValidator } from "./schema";
 
@@ -25,13 +30,13 @@ export const createSchool = mutation({
     slug: v.string(),
   }),
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
 
     // Check if school with same email already exists
     const existingSchoolByEmail = await ctx.db
       .query("schools")
       .withIndex("by_email", (q) => q.eq("email", args.email))
-      .first();
+      .unique();
 
     if (existingSchoolByEmail) {
       throw new ConvexError({
@@ -102,13 +107,13 @@ export const joinSchool = mutation({
     slug: v.string(),
   }),
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
 
     // Find invite code
     const inviteCode = await ctx.db
       .query("schoolInviteCodes")
       .withIndex("by_code", (q) => q.eq("code", args.code))
-      .first();
+      .unique();
 
     if (!inviteCode) {
       throw new ConvexError({
@@ -117,29 +122,7 @@ export const joinSchool = mutation({
       });
     }
 
-    // Check if code is enabled
-    if (!inviteCode.enabled) {
-      throw new ConvexError({
-        code: "CODE_DISABLED",
-        message: "This invite code has been disabled.",
-      });
-    }
-
-    // Check expiry
-    if (inviteCode.expiresAt && inviteCode.expiresAt < Date.now()) {
-      throw new ConvexError({
-        code: "CODE_EXPIRED",
-        message: "This invite code has expired.",
-      });
-    }
-
-    // Check usage limit
-    if (inviteCode.maxUsage && inviteCode.currentUsage >= inviteCode.maxUsage) {
-      throw new ConvexError({
-        code: "CODE_LIMIT_REACHED",
-        message: "This invite code has reached its usage limit.",
-      });
-    }
+    validateInviteCodeState(inviteCode);
 
     // Get school
     const school = await ctx.db.get("schools", inviteCode.schoolId);
@@ -157,16 +140,11 @@ export const joinSchool = mutation({
     const existingMember = await ctx.db
       .query("schoolMembers")
       .withIndex("by_schoolId_and_userId_and_status", (q) =>
-        q.eq("schoolId", school._id).eq("userId", userId)
+        q.eq("schoolId", school._id).eq("userId", userId).eq("status", "active")
       )
-      .first();
+      .unique();
 
-    if (existingMember) {
-      throw new ConvexError({
-        code: "ALREADY_MEMBER",
-        message: "You are already a member of this school.",
-      });
-    }
+    validateNotExistingMembership(existingMember, "school");
 
     // Add user as member with role from invite code
     await ctx.db.insert("schoolMembers", {

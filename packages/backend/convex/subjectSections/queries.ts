@@ -16,7 +16,7 @@ const MAX_TRENDING_RANGE_DAYS = 31;
  * Get trending subjects for a time range.
  *
  * Timestamps should be rounded to the helper's day bucket for caching.
- * Use getTrendingTimeRange() helper.
+ * Use getTrendingTimeRange(days, nowMs) helper.
  *
  * @see https://docs.convex.dev/understanding/best-practices/#date-in-queries
  * @see https://docs.convex.dev/understanding/best-practices/#only-use-collect-with-a-small-number-of-results

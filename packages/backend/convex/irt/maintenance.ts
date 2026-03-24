@@ -14,7 +14,13 @@ const scaleQualityIntegrityResultValidator = v.object({
   missingQualityCheckTryoutCount: v.number(),
 });
 
-/** Returns whether any set still has missing or oversized calibration cache state. */
+/**
+ * Returns whether any set still has missing or oversized calibration cache
+ * state.
+ *
+ * Operator entrypoint: invoked via `convex run` / package scripts during manual
+ * integrity verification.
+ */
 export const getCalibrationCacheIntegrity = internalQuery({
   args: {},
   returns: calibrationCacheIntegrityResultValidator,
@@ -70,7 +76,12 @@ export const getCalibrationCacheIntegrity = internalQuery({
   },
 });
 
-/** Returns whether any tryout is missing a quality check or still blocked. */
+/**
+ * Returns whether any tryout is missing a quality check or still blocked.
+ *
+ * Operator entrypoint: invoked via `convex run` / package scripts during manual
+ * integrity verification.
+ */
 export const getScaleQualityIntegrity = internalQuery({
   args: {},
   returns: scaleQualityIntegrityResultValidator,

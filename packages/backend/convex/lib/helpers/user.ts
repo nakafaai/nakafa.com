@@ -5,13 +5,18 @@
  */
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import type { userDataValidator } from "@repo/backend/convex/lib/validators/user";
+import type { Infer } from "convex/values";
 import { getAll } from "convex-helpers/server/relationships";
 
-export interface UserData {
-  _id: Id<"users">;
-  email: string;
-  image: string | null | undefined;
-  name: string;
+export type UserData = Infer<typeof userDataValidator>;
+
+/** Load one app user by the persisted Better Auth user ID. */
+export function getAppUserByAuthId(ctx: QueryCtx, authId: string) {
+  return ctx.db
+    .query("users")
+    .withIndex("by_authId", (q) => q.eq("authId", authId))
+    .unique();
 }
 
 /**

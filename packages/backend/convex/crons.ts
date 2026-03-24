@@ -4,7 +4,6 @@ import { cronJobs } from "convex/server";
 
 const crons = cronJobs();
 const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
-const FORUM_PENDING_UPLOAD_CLEANUP_INTERVAL_MINUTES = 30;
 
 /**
  * Populates audio generation queue every 30 minutes.
@@ -117,16 +116,6 @@ crons.interval(
   "sweep expired tryouts",
   { minutes: TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES },
   internal.tryouts.internalMutations.sweepExpiredTryoutAttempts,
-  {}
-);
-
-/**
- * Cleans up stale forum pending uploads in bounded batches.
- */
-crons.interval(
-  "cleanup stale forum pending uploads",
-  { minutes: FORUM_PENDING_UPLOAD_CLEANUP_INTERVAL_MINUTES },
-  internal.classes.forums.internalMutations.cleanupStalePendingUploads,
   {}
 );
 

@@ -15,7 +15,7 @@ import {
 } from "@repo/backend/convex/contents/aggregate";
 import { recordContentViewBySlug } from "@repo/backend/convex/contents/utils";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
-import { getOptionalAppUserFromIdentity } from "@repo/backend/convex/lib/helpers/auth";
+import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
 import type { AudioContentRef } from "@repo/backend/convex/lib/validators/audio";
 import {
   contentViewRefValidator,
@@ -253,7 +253,7 @@ export const recordContentView = mutation({
     alreadyViewed: v.boolean(),
   }),
   handler: async (ctx, args) => {
-    const user = await getOptionalAppUserFromIdentity(ctx);
+    const user = await getOptionalAppUser(ctx);
 
     return recordContentViewBySlug(
       ctx,

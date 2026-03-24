@@ -17,7 +17,9 @@ export type SubscriptionRecurringInterval = Infer<
 
 const tables = {
   subscriptions: defineTable({
+    /** Polar subscription ID persisted for webhook upserts. */
     id: v.string(),
+    /** Polar customer ID linked to the subscription. */
     customerId: v.string(),
     schoolId: v.optional(v.string()),
     createdAt: v.string(),

@@ -13,6 +13,7 @@ export const polarMetadataValidator = v.record(
 
 const tables = {
   customers: defineTable({
+    /** Polar customer ID persisted for webhook and checkout lookups. */
     id: v.string(),
     externalId: nullable(v.string()),
     userId: v.id("users"),

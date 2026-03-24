@@ -1,11 +1,8 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
 import {
   buildAuthorCache,
-  deleteContentAuthorLinks,
-  deleteExerciseChoicesForQuestion,
+  deleteExerciseQuestion,
   replaceExerciseChoices,
   syncContentAuthorsWithCache,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
@@ -79,16 +76,6 @@ const syncQuestionsResultValidator = v.object({
 const deleteResultValidator = v.object({
   deleted: v.number(),
 });
-
-/** Delete one exercise question together with its sync-managed dependent rows. */
-async function deleteExerciseQuestion(
-  ctx: MutationCtx,
-  questionId: Id<"exerciseQuestions">
-) {
-  await deleteContentAuthorLinks(ctx, questionId, "exercise");
-  await deleteExerciseChoicesForQuestion(ctx, questionId);
-  await ctx.db.delete("exerciseQuestions", questionId);
-}
 
 /** Upsert exercise sets from the filesystem sync source. */
 export const bulkSyncExerciseSets = internalMutation({

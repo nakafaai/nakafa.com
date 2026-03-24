@@ -9,13 +9,12 @@ import { getUserMap } from "@repo/backend/convex/lib/helpers/user";
 import { ConvexError } from "convex/values";
 import { asyncMap } from "convex-helpers";
 
-export interface PostAttachment {
-  _id: Id<"schoolClassForumPostAttachments">;
-  mimeType: string;
-  name: string;
-  size: number;
+export type PostAttachment = Pick<
+  Doc<"schoolClassForumPostAttachments">,
+  "_id" | "mimeType" | "name" | "size"
+> & {
   url: string | null;
-}
+};
 
 /**
  * Enrich forum posts with user data, reactions, and attachments.

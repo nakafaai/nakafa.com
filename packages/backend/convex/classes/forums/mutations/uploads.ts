@@ -1,3 +1,5 @@
+import { internal } from "@repo/backend/convex/_generated/api";
+import { STALE_FORUM_PENDING_UPLOAD_MAX_AGE_MS } from "@repo/backend/convex/classes/forums/internalMutations";
 import { loadOpenForumWithAccess } from "@repo/backend/convex/classes/forums/utils/access";
 import {
   deleteForumPendingUpload,
@@ -6,7 +8,7 @@ import {
 } from "@repo/backend/convex/classes/forums/utils/attachments";
 import { MAX_FORUM_POST_ATTACHMENTS } from "@repo/backend/convex/classes/forums/utils/constants";
 import { mutation } from "@repo/backend/convex/functions";
-import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
+import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { ConvexError, v } from "convex/values";
 
@@ -18,7 +20,7 @@ export const generateUploadUrl = mutation({
     forumId: vv.id("schoolClassForums"),
   },
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
     const userId = user.appUser._id;
     const { forum } = await loadOpenForumWithAccess(ctx, args.forumId, userId);
     const activePendingUploads = await ctx.db
@@ -42,6 +44,12 @@ export const generateUploadUrl = mutation({
       uploadedBy: userId,
     });
 
+    await ctx.scheduler.runAfter(
+      STALE_FORUM_PENDING_UPLOAD_MAX_AGE_MS,
+      internal.classes.forums.internalMutations.deleteExpiredPendingUpload,
+      { uploadId }
+    );
+
     return {
       uploadId,
       uploadUrl,
@@ -61,7 +69,7 @@ export const saveForumUpload = mutation({
     type: v.string(),
   },
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
     const userId = user.appUser._id;
     const upload = await ctx.db.get(
       "schoolClassForumPendingUploads",
@@ -150,7 +158,7 @@ export const discardForumUploads = mutation({
     uploadIds: v.array(vv.id("schoolClassForumPendingUploads")),
   },
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
     const userId = user.appUser._id;
 
     for (const uploadId of args.uploadIds) {

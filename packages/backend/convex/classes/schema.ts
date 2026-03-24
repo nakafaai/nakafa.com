@@ -59,6 +59,9 @@ export const schoolClassMaterialStatusValidator = literals(
   "scheduled",
   "archived"
 );
+export type SchoolClassMaterialStatus = Infer<
+  typeof schoolClassMaterialStatusValidator
+>;
 
 /**
  * Class images validator

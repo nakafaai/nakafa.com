@@ -8,13 +8,16 @@ export function getTrendingBucketStart(timestamp: number) {
  * Get day-bucketed timestamps for stable caching and bounded trending reads.
  *
  * @example
- * const { since, until } = getTrendingTimeRange(7); // Last 7 days
+ * const { since, until } = getTrendingTimeRange(7, nowMs); // Last 7 days
  */
-export function getTrendingTimeRange(days: number): {
+export function getTrendingTimeRange(
+  days: number,
+  nowMs: number
+): {
   since: number;
   until: number;
 } {
-  const until = getTrendingBucketStart(Date.now()) + TRENDING_BUCKET_MS;
+  const until = getTrendingBucketStart(nowMs) + TRENDING_BUCKET_MS;
   const since = until - days * TRENDING_BUCKET_MS;
 
   return { since, until };

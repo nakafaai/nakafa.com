@@ -1,6 +1,6 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { query } from "@repo/backend/convex/_generated/server";
-import { getOptionalAppUserFromIdentity } from "@repo/backend/convex/lib/helpers/auth";
+import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { recentlyViewedSubjectValidator } from "@repo/backend/convex/lib/validators/trending";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
@@ -22,7 +22,7 @@ export const getRecentlyViewed = query({
     const limit = args.limit ?? 5;
 
     // Get current user
-    const user = await getOptionalAppUserFromIdentity(ctx);
+    const user = await getOptionalAppUser(ctx);
     if (!user) {
       return [];
     }

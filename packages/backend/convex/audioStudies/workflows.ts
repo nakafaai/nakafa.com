@@ -7,7 +7,7 @@ import {
   setQueueItemFailed,
 } from "@repo/backend/convex/audioStudies/mutations/queue";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { getErrorMessage } from "@repo/backend/convex/utils/helper";
+import { getErrorMessage } from "@repo/backend/convex/utils/error";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { workflow } from "@repo/backend/convex/workflow";
 import { v } from "convex/values";

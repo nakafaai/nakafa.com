@@ -1,7 +1,8 @@
 import { mutation } from "@repo/backend/convex/functions";
-import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
+import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { cleanSlug, truncateText } from "@repo/backend/convex/utils/helper";
+import { truncateText } from "@repo/backend/convex/utils/text";
+import { cleanSlug } from "@repo/utilities/helper";
 import { ConvexError, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
@@ -22,7 +23,7 @@ export const addComment = mutation({
   },
   returns: vv.id("comments"),
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
     const cleanedSlug = cleanSlug(args.slug);
 
     const parentComment = args.parentId
@@ -76,7 +77,7 @@ export const voteOnComment = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
 
     const comment = await ctx.db.get("comments", args.commentId);
 
@@ -122,7 +123,7 @@ export const deleteComment = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
 
     const comment = await ctx.db.get("comments", args.commentId);
     if (!comment) {

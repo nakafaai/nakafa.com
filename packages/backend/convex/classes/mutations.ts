@@ -5,17 +5,22 @@ import {
 } from "@repo/backend/convex/classes/schema";
 import { loadActiveClass } from "@repo/backend/convex/classes/utils";
 import { mutation } from "@repo/backend/convex/functions";
-import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
+import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
+import {
+  validateInviteCodeState,
+  validateNotExistingMembership,
+} from "@repo/backend/convex/lib/helpers/invite";
 import {
   PERMISSIONS,
   requirePermission,
 } from "@repo/backend/convex/lib/helpers/permissions";
+import { getSchoolMembership } from "@repo/backend/convex/lib/helpers/school";
 import {
   getRandomClassImage,
   isValidClassImage,
 } from "@repo/backend/convex/lib/images";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { generateNanoId } from "@repo/backend/convex/utils/helper";
+import { generateNanoId } from "@repo/backend/convex/utils/id";
 import { ConvexError, v } from "convex/values";
 
 /** Create one class and its default teacher/student invite codes. */
@@ -29,7 +34,7 @@ export const createClass = mutation({
   },
   returns: vv.id("schoolClasses"),
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
     const userId = user.appUser._id;
 
     await requirePermission(ctx, PERMISSIONS.CLASS_CREATE, {
@@ -88,13 +93,13 @@ export const joinClass = mutation({
   },
   returns: v.object({ classId: vv.id("schoolClasses") }),
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
     const userId = user.appUser._id;
 
     const inviteCode = await ctx.db
       .query("schoolClassInviteCodes")
       .withIndex("by_code", (q) => q.eq("code", args.code))
-      .first();
+      .unique();
 
     if (!inviteCode) {
       throw new ConvexError({
@@ -103,26 +108,7 @@ export const joinClass = mutation({
       });
     }
 
-    if (!inviteCode.enabled) {
-      throw new ConvexError({
-        code: "CODE_DISABLED",
-        message: "This invite code has been disabled.",
-      });
-    }
-
-    if (inviteCode.expiresAt && inviteCode.expiresAt < Date.now()) {
-      throw new ConvexError({
-        code: "CODE_EXPIRED",
-        message: "This invite code has expired.",
-      });
-    }
-
-    if (inviteCode.maxUsage && inviteCode.currentUsage >= inviteCode.maxUsage) {
-      throw new ConvexError({
-        code: "CODE_LIMIT_REACHED",
-        message: "This invite code has reached its usage limit.",
-      });
-    }
+    validateInviteCodeState(inviteCode);
 
     const classData = await loadActiveClass(ctx, inviteCode.classId);
 
@@ -133,24 +119,15 @@ export const joinClass = mutation({
       .withIndex("by_classId_and_userId", (q) =>
         q.eq("classId", classData._id).eq("userId", userId)
       )
-      .first();
+      .unique();
 
-    if (existingMember) {
-      throw new ConvexError({
-        code: "ALREADY_MEMBER",
-        message: "You are already a member of this class.",
-      });
-    }
+    validateNotExistingMembership(existingMember, "class");
 
-    const schoolMember = await ctx.db
-      .query("schoolMembers")
-      .withIndex("by_schoolId_and_userId_and_status", (q) =>
-        q
-          .eq("schoolId", classData.schoolId)
-          .eq("userId", userId)
-          .eq("status", "active")
-      )
-      .first();
+    const schoolMember = await getSchoolMembership(
+      ctx,
+      classData.schoolId,
+      userId
+    );
 
     if (!schoolMember) {
       throw new ConvexError({
@@ -192,7 +169,7 @@ export const updateClassVisibility = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const { appUser } = await requireAuthWithSession(ctx);
+    const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
 
     const classData = await loadActiveClass(ctx, args.classId);
@@ -218,7 +195,7 @@ export const joinPublicClass = mutation({
   },
   returns: v.object({ classId: vv.id("schoolClasses") }),
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
     const userId = user.appUser._id;
 
     const classData = await loadActiveClass(ctx, args.classId);
@@ -237,24 +214,15 @@ export const joinPublicClass = mutation({
       .withIndex("by_classId_and_userId", (q) =>
         q.eq("classId", classData._id).eq("userId", userId)
       )
-      .first();
+      .unique();
 
-    if (existingMember) {
-      throw new ConvexError({
-        code: "ALREADY_MEMBER",
-        message: "You are already a member of this class.",
-      });
-    }
+    validateNotExistingMembership(existingMember, "class");
 
-    const schoolMember = await ctx.db
-      .query("schoolMembers")
-      .withIndex("by_schoolId_and_userId_and_status", (q) =>
-        q
-          .eq("schoolId", classData.schoolId)
-          .eq("userId", userId)
-          .eq("status", "active")
-      )
-      .first();
+    const schoolMember = await getSchoolMembership(
+      ctx,
+      classData.schoolId,
+      userId
+    );
 
     if (!schoolMember) {
       throw new ConvexError({
@@ -283,7 +251,7 @@ export const updateClassImage = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const { appUser } = await requireAuthWithSession(ctx);
+    const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
 
     const classData = await loadActiveClass(ctx, args.classId);

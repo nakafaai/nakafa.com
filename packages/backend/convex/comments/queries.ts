@@ -1,11 +1,8 @@
 import { query } from "@repo/backend/convex/_generated/server";
-import {
-  attachReplyToUsers,
-  attachUsers,
-} from "@repo/backend/convex/comments/utils";
+import { getUserMap } from "@repo/backend/convex/lib/helpers/user";
 import { userDataValidator } from "@repo/backend/convex/lib/validators/user";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { cleanSlug } from "@repo/backend/convex/utils/helper";
+import { cleanSlug } from "@repo/utilities/helper";
 import {
   paginationOptsValidator,
   paginationResultValidator,
@@ -37,10 +34,14 @@ export const getCommentsBySlug = query({
       .withIndex("by_slug", (q) => q.eq("slug", cleanSlug(args.slug)))
       .order("desc")
       .paginate(args.paginationOpts);
+    const commentUserIds = comments.page.map((comment) => comment.userId);
+    const replyToUserIds = comments.page.flatMap((comment) =>
+      comment.replyToUserId ? [comment.replyToUserId] : []
+    );
 
     const [userMap, replyToUserMap] = await Promise.all([
-      attachUsers(ctx, comments.page),
-      attachReplyToUsers(ctx, comments.page),
+      getUserMap(ctx, commentUserIds),
+      getUserMap(ctx, replyToUserIds),
     ]);
 
     return {

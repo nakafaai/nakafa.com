@@ -12,7 +12,7 @@ import {
   pcmToWav,
 } from "@repo/backend/convex/audioStudies/constants";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { getErrorMessage } from "@repo/backend/convex/utils/helper";
+import { getErrorMessage } from "@repo/backend/convex/utils/error";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { chunkScript, DEFAULT_CHUNK_CONFIG } from "@repo/backend/helpers/chunk";
 import {

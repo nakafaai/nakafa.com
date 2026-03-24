@@ -18,7 +18,7 @@ export function HomeTrending() {
   const locale = useLocale();
 
   const timeRange = useMemo(() => {
-    return getTrendingTimeRange(7);
+    return getTrendingTimeRange(7, Date.now());
   }, []);
 
   const { data, isPending } = useQueryWithStatus(

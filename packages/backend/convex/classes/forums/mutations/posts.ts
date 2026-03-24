@@ -4,9 +4,9 @@ import { resolveForumAttachmentUploads } from "@repo/backend/convex/classes/foru
 import { MAX_FORUM_POST_ATTACHMENTS } from "@repo/backend/convex/classes/forums/utils/constants";
 import { validateForumMentions } from "@repo/backend/convex/classes/forums/utils/mentions";
 import { mutation } from "@repo/backend/convex/functions";
-import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
+import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { truncateText } from "@repo/backend/convex/utils/helper";
+import { truncateText } from "@repo/backend/convex/utils/text";
 import { ConvexError, v } from "convex/values";
 
 /**
@@ -23,7 +23,7 @@ export const createForumPost = mutation({
     parentId: v.optional(vv.id("schoolClassForumPosts")),
   },
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
     const userId = user.appUser._id;
     const attachmentUploadIds = args.attachmentUploadIds ?? [];
 

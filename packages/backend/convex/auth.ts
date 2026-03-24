@@ -1,18 +1,10 @@
-import {
-  type AuthFunctions,
-  createClient,
-  type GenericCtx,
-} from "@convex-dev/better-auth";
+import type { GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
-import { components, internal } from "@repo/backend/convex/_generated/api";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import { internalAction, query } from "@repo/backend/convex/_generated/server";
+import { authComponent } from "@repo/backend/convex/auth/client";
 import authConfig from "@repo/backend/convex/auth.config";
-import authSchema from "@repo/backend/convex/betterAuth/schema";
-import {
-  DEFAULT_USER_CREDITS,
-  DEFAULT_USER_PLAN,
-} from "@repo/backend/convex/credits/constants";
+import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { siteUrl } from "@repo/backend/convex/utils/site";
 import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
@@ -22,126 +14,6 @@ import {
   organization,
   username,
 } from "better-auth/plugins";
-
-const authFunctions: AuthFunctions = internal.auth;
-
-export const authComponent = createClient<DataModel, typeof authSchema>(
-  components.betterAuth,
-  {
-    authFunctions,
-    local: {
-      schema: authSchema,
-    },
-    verbose: false,
-    triggers: {
-      user: {
-        onCreate: async (ctx, authUser) => {
-          // Create app user with denormalized auth data
-          const userId = await ctx.db.insert("users", {
-            email: authUser.email,
-            authId: authUser._id,
-            name: authUser.name,
-            image: authUser.image ?? undefined,
-            plan: DEFAULT_USER_PLAN,
-            credits: DEFAULT_USER_CREDITS,
-            creditsResetAt: Date.now(),
-          });
-
-          // Create default notification preferences
-          await ctx.db.insert("notificationPreferences", {
-            disabledTypes: [],
-            userId,
-            emailEnabled: true,
-            emailDigest: "weekly",
-            updatedAt: Date.now(),
-          });
-
-          await ctx.db.insert("notificationCounts", {
-            userId,
-            unreadCount: 0,
-            updatedAt: Date.now(),
-          });
-
-          await ctx.runMutation(components.betterAuth.mutations.setUserId, {
-            authId: authUser._id,
-            userId,
-          });
-
-          // Sync customer to Polar and local DB
-          await ctx.scheduler.runAfter(
-            0,
-            internal.customers.actions.syncCustomer,
-            { userId }
-          );
-
-          // Send welcome email
-          await ctx.scheduler.runAfter(
-            0,
-            internal.emails.mutations.sendWelcomeEmail,
-            {
-              name: authUser.name,
-              email: authUser.email,
-            }
-          );
-        },
-        onUpdate: async (ctx, newDoc, oldDoc) => {
-          const hasProfileChanges =
-            newDoc.name !== oldDoc.name ||
-            newDoc.image !== oldDoc.image ||
-            newDoc.email !== oldDoc.email;
-
-          if (!hasProfileChanges) {
-            return;
-          }
-
-          const appUser = await ctx.db
-            .query("users")
-            .withIndex("by_authId", (q) => q.eq("authId", newDoc._id))
-            .unique();
-
-          if (!appUser) {
-            return;
-          }
-
-          await ctx.db.patch("users", appUser._id, {
-            email: newDoc.email,
-            name: newDoc.name,
-            image: newDoc.image ?? undefined,
-          });
-
-          await ctx.scheduler.runAfter(
-            0,
-            internal.customers.actions.syncCustomer,
-            { userId: appUser._id }
-          );
-        },
-        onDelete: async (ctx, authUser) => {
-          const userApp = await ctx.db
-            .query("users")
-            .withIndex("by_authId", (q) => q.eq("authId", authUser._id))
-            .unique();
-
-          if (!userApp) {
-            return;
-          }
-
-          await ctx.scheduler.runAfter(
-            0,
-            internal.auth.cleanup.cleanupDeletedUser,
-            { userId: userApp._id }
-          );
-
-          // Delete customer in Polar to prevent email conflicts
-          await ctx.scheduler.runAfter(
-            0,
-            internal.customers.actions.cleanupUserData,
-            { userId: userApp._id }
-          );
-        },
-      },
-    },
-  }
-);
 
 export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
   ({
@@ -194,27 +66,7 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
  */
 export const getCurrentUser = query({
   args: {},
-  handler: async (ctx) => {
-    const authUser = await authComponent.safeGetAuthUser(ctx);
-
-    if (!authUser) {
-      return null;
-    }
-
-    const appUser = await ctx.db
-      .query("users")
-      .withIndex("by_authId", (q) => q.eq("authId", authUser._id))
-      .unique();
-
-    if (!appUser) {
-      return null;
-    }
-
-    return {
-      appUser,
-      authUser,
-    };
-  },
+  handler: (ctx) => getOptionalAppUser(ctx),
 });
 
 /**

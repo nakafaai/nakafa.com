@@ -9,7 +9,7 @@ import {
   computeAttemptDurationSeconds,
 } from "@repo/backend/convex/exercises/utils";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
-import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
+import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { syncTryoutExerciseAttemptExpiry } from "@repo/backend/convex/tryouts/helpers/expiry";
 import { finalizeTryoutPartAttempt } from "@repo/backend/convex/tryouts/helpers/scoring";
@@ -39,7 +39,7 @@ export const startAttempt = mutation({
   },
   returns: vv.id("exerciseAttempts"),
   handler: async (ctx, args) => {
-    const { appUser } = await requireAuthWithSession(ctx);
+    const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
     const now = Date.now();
 
@@ -117,7 +117,7 @@ export const submitAnswer = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const { appUser } = await requireAuthWithSession(ctx);
+    const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
     const now = Date.now();
 
@@ -247,7 +247,7 @@ export const completeAttempt = mutation({
   },
   returns: completeAttemptResultValidator,
   handler: async (ctx, args) => {
-    const { appUser } = await requireAuthWithSession(ctx);
+    const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
     const now = Date.now();
 

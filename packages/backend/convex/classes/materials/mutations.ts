@@ -6,7 +6,7 @@ import {
 import { schoolClassMaterialStatusValidator } from "@repo/backend/convex/classes/schema";
 import { loadActiveClass } from "@repo/backend/convex/classes/utils";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
-import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
+import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import {
   PERMISSIONS,
   requirePermission,
@@ -29,7 +29,7 @@ export const createMaterialGroup = mutation({
     scheduledAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { appUser } = await requireAuthWithSession(ctx);
+    const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
 
     validateScheduledStatus(args.status, args.scheduledAt);
@@ -98,7 +98,7 @@ export const updateMaterialGroup = mutation({
     scheduledAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { appUser } = await requireAuthWithSession(ctx);
+    const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
 
     const group = await loadMaterialGroup(ctx, args.groupId);
@@ -192,7 +192,7 @@ export const deleteMaterialGroup = mutation({
     groupId: vv.id("schoolClassMaterialGroups"),
   },
   handler: async (ctx, args) => {
-    const { appUser } = await requireAuthWithSession(ctx);
+    const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
 
     const group = await loadMaterialGroup(ctx, args.groupId);
@@ -216,7 +216,7 @@ export const reorderMaterialGroup = mutation({
     direction: reorderDirectionValidator,
   },
   handler: async (ctx, args) => {
-    const { appUser } = await requireAuthWithSession(ctx);
+    const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
 
     const group = await loadMaterialGroup(ctx, args.groupId);

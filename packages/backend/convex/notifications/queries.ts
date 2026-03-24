@@ -19,7 +19,7 @@ export const getNotificationPreferences = query({
     const preferences = await ctx.db
       .query("notificationPreferences")
       .withIndex("by_userId", (q) => q.eq("userId", user.appUser._id))
-      .first();
+      .unique();
 
     return {
       emailEnabled: preferences?.emailEnabled ?? true,

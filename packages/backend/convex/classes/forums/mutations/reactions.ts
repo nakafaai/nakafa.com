@@ -1,33 +1,10 @@
 import { loadActiveForumWithAccess } from "@repo/backend/convex/classes/forums/utils/access";
-import {
-  MAX_FORUM_REACTION_VALUE_LENGTH,
-  MAX_FORUM_REACTION_VARIANTS,
-} from "@repo/backend/convex/classes/forums/utils/constants";
+import { MAX_FORUM_REACTION_VARIANTS } from "@repo/backend/convex/classes/forums/utils/constants";
+import { validateForumReactionValue } from "@repo/backend/convex/classes/forums/utils/reactions";
 import { mutation } from "@repo/backend/convex/functions";
-import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
+import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { ConvexError, v } from "convex/values";
-
-const FORUM_REACTION_VALUE_PATTERN =
-  /^(?:\p{Regional_Indicator}{2}|[#*0-9]\uFE0F?\u20E3|(?:\p{Emoji_Modifier_Base}\p{Emoji_Modifier}?|\p{Emoji_Presentation}|\p{Emoji}\uFE0F))(?:\u200D(?:\p{Emoji_Modifier_Base}\p{Emoji_Modifier}?|\p{Emoji_Presentation}|\p{Emoji}\uFE0F))*$/u;
-
-/**
- * Ensure one reaction value is a bounded emoji sequence.
- */
-function validateForumReactionValue(emoji: string) {
-  if (
-    emoji.length > 0 &&
-    emoji.length <= MAX_FORUM_REACTION_VALUE_LENGTH &&
-    FORUM_REACTION_VALUE_PATTERN.test(emoji)
-  ) {
-    return emoji;
-  }
-
-  throw new ConvexError({
-    code: "FORUM_REACTION_INVALID",
-    message: "Forum reaction must be a supported emoji.",
-  });
-}
 
 /**
  * Toggle one reaction on a forum post.
@@ -39,7 +16,7 @@ export const togglePostReaction = mutation({
   },
   handler: async (ctx, args) => {
     const emoji = validateForumReactionValue(args.emoji);
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
     const userId = user.appUser._id;
     const post = await ctx.db.get("schoolClassForumPosts", args.postId);
 
@@ -101,7 +78,7 @@ export const toggleForumReaction = mutation({
   },
   handler: async (ctx, args) => {
     const emoji = validateForumReactionValue(args.emoji);
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
     const userId = user.appUser._id;
     const { forum } = await loadActiveForumWithAccess(
       ctx,

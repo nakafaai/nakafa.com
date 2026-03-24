@@ -2,7 +2,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import { createExerciseAttempt } from "@repo/backend/convex/exercises/helpers";
 import { mutation } from "@repo/backend/convex/functions";
 import { getLatestScaleVersionForTryout } from "@repo/backend/convex/irt/scales/read";
-import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
+import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import {
@@ -34,7 +34,7 @@ export const startTryout = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const { appUser } = await requireAuthWithSession(ctx);
+    const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
     const now = Date.now();
 
@@ -186,7 +186,7 @@ export const startPart = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const { appUser } = await requireAuthWithSession(ctx);
+    const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
     const now = Date.now();
 
@@ -344,7 +344,7 @@ export const completePart = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const { appUser } = await requireAuthWithSession(ctx);
+    const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
     const now = Date.now();
 

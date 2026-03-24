@@ -5,7 +5,7 @@ import {
 import { schoolClassForumTagValidator } from "@repo/backend/convex/classes/schema";
 import { loadActiveClass } from "@repo/backend/convex/classes/utils";
 import { mutation } from "@repo/backend/convex/functions";
-import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
+import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { requireClassAccess } from "@repo/backend/convex/lib/helpers/class";
 import { isAdmin } from "@repo/backend/convex/lib/helpers/school";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
@@ -22,7 +22,7 @@ export const createForum = mutation({
     title: v.string(),
   },
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
     const userId = user.appUser._id;
     const classData = await loadActiveClass(ctx, args.classId);
     const title = args.title.trim();

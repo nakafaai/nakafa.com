@@ -1,7 +1,7 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { mutation } from "@repo/backend/convex/_generated/server";
-import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
+import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import {
   emailDigestTypesValidator,
   notificationEntityIdValidator,
@@ -38,7 +38,7 @@ async function upsertNotificationPreferences(
   const preferences = await ctx.db
     .query("notificationPreferences")
     .withIndex("by_userId", (q) => q.eq("userId", userId))
-    .first();
+    .unique();
   const updatedAt = Date.now();
 
   if (!preferences) {
@@ -67,7 +67,7 @@ export const updateNotificationPreferences = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
     return upsertNotificationPreferences(ctx, {
       createDefaults: {
         disabledTypes: [],
@@ -90,7 +90,7 @@ export const setDisabledNotificationTypes = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
     return upsertNotificationPreferences(ctx, {
       createDefaults: {
         disabledTypes: args.disabledTypes,
@@ -114,7 +114,7 @@ export const setNotificationEntityMute = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
     const existingRows = await ctx.db
       .query("notificationEntityMutes")
       .withIndex("by_userId_and_entityType_and_entityId", (q) =>
