@@ -10,7 +10,7 @@ type ExerciseAttemptAnswerContext = Pick<
 >;
 type CanonicalExerciseAnswer = Pick<
   Doc<"exerciseAnswers">,
-  "isCorrect" | "questionId" | "selectedOptionId" | "textAnswer"
+  "isCorrect" | "by_questionId" | "selectedOptionId" | "textAnswer"
 >;
 
 /**
@@ -79,9 +79,9 @@ async function getSelectedChoice(
   const choices = await getManyFrom(
     db,
     "exerciseChoices",
-    "questionId_locale",
+    "by_questionId_and_locale",
     questionId,
-    "questionId"
+    "by_questionId"
   );
 
   const selectedChoice = choices.find(

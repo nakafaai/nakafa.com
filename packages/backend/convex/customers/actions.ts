@@ -1,5 +1,4 @@
 import { internal } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { action, internalAction } from "@repo/backend/convex/_generated/server";
 import {
   createPolarCheckoutSession,
@@ -80,7 +79,7 @@ function requireAllowedCheckoutProducts(productIds: string[]) {
 export const syncCustomer = internalAction({
   args: { userId: vv.id("users") },
   returns: vv.nullable(vv.id("customers")),
-  handler: async (ctx, args): Promise<Id<"customers"> | null> => {
+  handler: async (ctx, args) => {
     const [user, localCustomer] = await Promise.all([
       ctx.runQuery(internal.users.queries.getUserById, {
         userId: args.userId,
@@ -113,7 +112,7 @@ export const generateCheckoutLink = action({
     successUrl: v.string(),
   },
   returns: v.object({ url: v.string() }),
-  handler: async (ctx, args): Promise<{ url: string }> => {
+  handler: async (ctx, args) => {
     const { appUser } = await requireAuthForAction(ctx);
     const customer = await requireCustomer(ctx, appUser._id);
     const productIds = requireAllowedCheckoutProducts(args.productIds);
@@ -135,11 +134,11 @@ export const generateCheckoutLink = action({
 export const generateCustomerPortalUrl = action({
   args: {},
   returns: v.object({ url: v.string() }),
-  handler: async (ctx): Promise<{ url: string }> => {
+  handler: async (ctx) => {
     const { appUser } = await requireAuthForAction(ctx);
     const customer = await requireCustomer(ctx, appUser._id);
 
-    return await createPolarCustomerPortalSession({ customerId: customer.id });
+    return createPolarCustomerPortalSession({ customerId: customer.id });
   },
 });
 

@@ -36,7 +36,7 @@ export const getForumPostsOlder = query({
       }),
       ctx.db
         .query("schoolClassForumPosts")
-        .withIndex("forumId", (q) =>
+        .withIndex("by_forumId", (q) =>
           q
             .eq("forumId", args.forumId)
             .lt("_creationTime", boundaryPost._creationTime)

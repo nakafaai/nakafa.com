@@ -22,12 +22,12 @@ export const getForumPosts = query({
     const [postsPage, readState] = await Promise.all([
       ctx.db
         .query("schoolClassForumPosts")
-        .withIndex("forumId", (q) => q.eq("forumId", args.forumId))
+        .withIndex("by_forumId", (q) => q.eq("forumId", args.forumId))
         .order("desc")
         .paginate(args.paginationOpts),
       ctx.db
         .query("schoolClassForumReadStates")
-        .withIndex("forumId_userId", (q) =>
+        .withIndex("by_forumId_and_userId", (q) =>
           q.eq("forumId", args.forumId).eq("userId", currentUserId)
         )
         .unique(),

@@ -55,6 +55,6 @@ export const upsertCustomer = internalMutation({
       return existing._id;
     }
 
-    return await ctx.db.insert("customers", args.customer);
+    return ctx.db.insert("customers", args.customer);
   },
 });

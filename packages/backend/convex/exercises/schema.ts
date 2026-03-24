@@ -54,14 +54,14 @@ const tables = {
     totalTime: v.number(),
     scorePercentage: v.number(),
   })
-    .index("userId_origin_slug_scope_startedAt", [
+    .index("by_userId_and_origin_and_slug_and_scope_and_startedAt", [
       "userId",
       "origin",
       "slug",
       "scope",
       "startedAt",
     ])
-    .index("scope_mode_status_startedAt", [
+    .index("by_scope_and_mode_and_status_and_startedAt", [
       "scope",
       "mode",
       "status",
@@ -81,8 +81,8 @@ const tables = {
     answeredAt: v.number(),
     updatedAt: v.number(),
   })
-    .index("attemptId_exerciseNumber", ["attemptId", "exerciseNumber"])
-    .index("questionId", ["questionId"]),
+    .index("by_attemptId_and_exerciseNumber", ["attemptId", "exerciseNumber"])
+    .index("by_questionId", ["questionId"]),
 };
 
 export default tables;

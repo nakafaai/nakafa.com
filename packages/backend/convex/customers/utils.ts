@@ -95,7 +95,7 @@ export async function requireCustomer(
     });
   }
 
-  return await syncCustomerForUser(ctx, {
+  return syncCustomerForUser(ctx, {
     localCustomerId: localCustomer?.id,
     user,
   });

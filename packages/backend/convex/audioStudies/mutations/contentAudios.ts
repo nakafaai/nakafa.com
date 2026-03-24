@@ -49,7 +49,7 @@ async function loadContentAudioRecords(
 ) {
   const records = await ctx.db
     .query("contentAudios")
-    .withIndex("contentRef_locale", (q) =>
+    .withIndex("by_contentRefType_and_contentRefId_and_locale", (q) =>
       q
         .eq("contentRef.type", contentRef.type)
         .eq("contentRef.id", contentRef.id)

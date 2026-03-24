@@ -18,7 +18,7 @@ export async function getMyForumReactions(
   const reactions = await asyncMap(forumIds, (forumId) =>
     ctx.db
       .query("schoolClassForumReactions")
-      .withIndex("forumId_userId_emoji", (q) =>
+      .withIndex("by_forumId_and_userId_and_emoji", (q) =>
         q.eq("forumId", forumId).eq("userId", userId)
       )
       .take(FORUM_REACTION_PREVIEW_BATCH_LIMIT)

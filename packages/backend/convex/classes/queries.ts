@@ -60,7 +60,7 @@ export const getClasses = query({
     }
 
     if (searchQuery && searchQuery.trim().length > 0) {
-      return await ctx.db
+      return ctx.db
         .query("schoolClasses")
         .withSearchIndex("search_name", (q) => {
           let builder = q.search("name", searchQuery).eq("schoolId", schoolId);
@@ -76,9 +76,9 @@ export const getClasses = query({
     }
 
     if (visibility !== undefined && isArchived !== undefined) {
-      return await ctx.db
+      return ctx.db
         .query("schoolClasses")
-        .withIndex("schoolId_visibility_isArchived", (q) =>
+        .withIndex("by_schoolId_and_visibility_and_isArchived", (q) =>
           q
             .eq("schoolId", schoolId)
             .eq("visibility", visibility)
@@ -89,9 +89,9 @@ export const getClasses = query({
     }
 
     if (visibility !== undefined) {
-      return await ctx.db
+      return ctx.db
         .query("schoolClasses")
-        .withIndex("schoolId_visibility_isArchived", (q) =>
+        .withIndex("by_schoolId_and_visibility_and_isArchived", (q) =>
           q.eq("schoolId", schoolId).eq("visibility", visibility)
         )
         .order("desc")
@@ -99,18 +99,18 @@ export const getClasses = query({
     }
 
     if (isArchived !== undefined) {
-      return await ctx.db
+      return ctx.db
         .query("schoolClasses")
-        .withIndex("schoolId_isArchived_visibility", (q) =>
+        .withIndex("by_schoolId_and_isArchived_and_visibility", (q) =>
           q.eq("schoolId", schoolId).eq("isArchived", isArchived)
         )
         .order("desc")
         .paginate(paginationOpts);
     }
 
-    return await ctx.db
+    return ctx.db
       .query("schoolClasses")
-      .withIndex("schoolId_isArchived_visibility", (q) =>
+      .withIndex("by_schoolId_and_isArchived_and_visibility", (q) =>
         q.eq("schoolId", schoolId)
       )
       .order("desc")
@@ -229,7 +229,7 @@ export const getPeople = query({
       );
       const members = await ctx.db
         .query("schoolClassMembers")
-        .withIndex("classId_userId", (idx) => idx.eq("classId", classId))
+        .withIndex("by_classId_and_userId", (idx) => idx.eq("classId", classId))
         .take(boundedMemberCount + 1);
 
       if (expectedMemberCount > MAX_CLASS_MEMBER_SEARCH_RESULTS) {
@@ -302,7 +302,7 @@ export const getPeople = query({
 
     const membersPage = await ctx.db
       .query("schoolClassMembers")
-      .withIndex("classId_userId", (idx) => idx.eq("classId", classId))
+      .withIndex("by_classId_and_userId", (idx) => idx.eq("classId", classId))
       .paginate(paginationOpts);
 
     const userMap = await getUserMap(
@@ -358,7 +358,7 @@ export const getInviteCodes = query({
     if (isAdmin(schoolMembership) || classMembership?.role === "teacher") {
       const inviteCodes = await ctx.db
         .query("schoolClassInviteCodes")
-        .withIndex("classId_role", (idx) => idx.eq("classId", args.classId))
+        .withIndex("by_classId_and_role", (idx) => idx.eq("classId", args.classId))
         .take(SCHOOL_CLASS_INVITE_CODE_ROLES.length + 1);
 
       if (inviteCodes.length > SCHOOL_CLASS_INVITE_CODE_ROLES.length) {

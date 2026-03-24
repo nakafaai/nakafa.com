@@ -45,7 +45,7 @@ const tables = {
      * Used to check if audio already exists for specific content.
      * Also covers cross-locale queries via prefix (per Convex best practices).
      */
-    .index("contentRef_locale", ["contentRef.type", "contentRef.id", "locale"]),
+    .index("by_contentRefType_and_contentRefId_and_locale", ["contentRef.type", "contentRef.id", "locale"]),
 
   /** Queue for audio generation jobs. */
   audioGenerationQueue: defineTable({
@@ -77,29 +77,29 @@ const tables = {
      * Primary queue processing index.
      * Fetches pending items ordered by priority (descending).
      */
-    .index("status_priority", ["status", "priorityScore"])
+    .index("by_status_and_priorityScore", ["status", "priorityScore"])
     /**
      * Deduplication check.
      * Ensures content isn't queued multiple times per locale.
      */
-    .index("contentRef_locale", ["contentRef.type", "contentRef.id", "locale"])
+    .index("by_contentRefType_and_contentRefId_and_locale", ["contentRef.type", "contentRef.id", "locale"])
     /**
      * Content + status queries by slug (cross-locale).
      * Finds all pending items for a content across ALL locales.
      * This enables processing all translations together as one content piece.
      * Per Convex best practices: use specific index ranges for O(log n) performance.
      */
-    .index("slug_status", ["slug", "status"])
+    .index("by_slug_and_status", ["slug", "status"])
     /**
      * Cleanup queries.
      * Removes old completed/failed items.
      */
-    .index("status_completedAt", ["status", "completedAt"])
+    .index("by_status_and_completedAt", ["status", "completedAt"])
     /**
      * Error tracking.
      * Finds items with recent errors for retry.
      */
-    .index("status_updatedAt", ["status", "updatedAt"]),
+    .index("by_status_and_updatedAt", ["status", "updatedAt"]),
 };
 
 export default tables;

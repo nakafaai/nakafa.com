@@ -65,7 +65,7 @@ async function requireTryoutPartAttempt(
 ) {
   const partAttempt = await ctx.db
     .query("tryoutPartAttempts")
-    .withIndex("tryoutAttemptId_partKey", (q) =>
+    .withIndex("by_tryoutAttemptId_and_partKey", (q) =>
       q.eq("tryoutAttemptId", tryoutAttemptId).eq("partKey", partKey)
     )
     .unique();
@@ -140,7 +140,7 @@ export const startTryout = mutation({
 
     const tryout = await ctx.db
       .query("tryouts")
-      .withIndex("product_locale_slug", (q) =>
+      .withIndex("by_product_and_locale_and_slug", (q) =>
         q
           .eq("product", args.product)
           .eq("locale", args.locale)
@@ -166,7 +166,7 @@ export const startTryout = mutation({
       getLatestScaleVersionForTryout(ctx.db, tryout._id),
       ctx.db
         .query("tryoutAttempts")
-        .withIndex("userId_tryoutId_startedAt", (q) =>
+        .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
           q.eq("userId", userId).eq("tryoutId", tryout._id)
         )
         .order("desc")
@@ -218,7 +218,7 @@ export const startTryout = mutation({
 
     const tryoutParts = await ctx.db
       .query("tryoutPartSets")
-      .withIndex("tryoutId_partIndex", (q) => q.eq("tryoutId", tryout._id))
+      .withIndex("by_tryoutId_and_partIndex", (q) => q.eq("tryoutId", tryout._id))
       .take(tryout.partCount + 1);
 
     if (tryoutParts.length !== tryout.partCount) {
@@ -312,7 +312,7 @@ export const startPart = mutation({
 
     const tryoutPartSet = await ctx.db
       .query("tryoutPartSets")
-      .withIndex("tryoutId_partKey", (q) =>
+      .withIndex("by_tryoutId_and_partKey", (q) =>
         q.eq("tryoutId", tryoutAttempt.tryoutId).eq("partKey", args.partKey)
       )
       .unique();
@@ -335,7 +335,7 @@ export const startPart = mutation({
 
     const existingPartAttempt = await ctx.db
       .query("tryoutPartAttempts")
-      .withIndex("tryoutAttemptId_partKey", (q) =>
+      .withIndex("by_tryoutAttemptId_and_partKey", (q) =>
         q
           .eq("tryoutAttemptId", args.tryoutAttemptId)
           .eq("partKey", args.partKey)

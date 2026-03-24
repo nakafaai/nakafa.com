@@ -36,7 +36,7 @@ export async function syncUserTryoutStats({
   });
   const statsRecord = await ctx.db
     .query("userTryoutStats")
-    .withIndex("userId_product_leaderboardNamespace", (q) =>
+    .withIndex("by_userId_and_product_and_leaderboardNamespace", (q) =>
       q
         .eq("userId", userId)
         .eq("product", product)
@@ -101,7 +101,7 @@ export async function syncUserTryoutStats({
   if (bestThetaWouldDrop) {
     const nextBestEntry = await ctx.db
       .query("tryoutLeaderboardEntries")
-      .withIndex("userId_leaderboardNamespace_theta", (q) =>
+      .withIndex("by_userId_and_leaderboardNamespace_and_theta", (q) =>
         q.eq("userId", userId).eq("leaderboardNamespace", leaderboardNamespace)
       )
       .order("desc")
@@ -127,7 +127,7 @@ export async function syncUserTryoutStats({
   if (lastTryoutAtWouldDrop) {
     const latestEntry = await ctx.db
       .query("tryoutLeaderboardEntries")
-      .withIndex("userId_leaderboardNamespace_completedAt", (q) =>
+      .withIndex("by_userId_and_leaderboardNamespace_and_completedAt", (q) =>
         q.eq("userId", userId).eq("leaderboardNamespace", leaderboardNamespace)
       )
       .order("desc")

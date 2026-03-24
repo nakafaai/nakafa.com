@@ -36,7 +36,7 @@ async function loadTryoutPartSetMappings(
 ) {
   const existingMappings = await ctx.db
     .query("tryoutPartSets")
-    .withIndex("tryoutId_partIndex", (q) => q.eq("tryoutId", tryoutId))
+    .withIndex("by_tryoutId_and_partIndex", (q) => q.eq("tryoutId", tryoutId))
     .take(expectedPartCount + 1);
 
   if (existingMappings.length > expectedPartCount) {
@@ -179,7 +179,7 @@ export const bulkSyncTryouts = internalMutation({
     const tryoutCandidateLimit = CONTENT_SYNC_BATCH_LIMITS.tryoutDetectionSets;
     const tryoutCandidateSets = await ctx.db
       .query("exerciseSets")
-      .withIndex("locale_type_exerciseType", (q) =>
+      .withIndex("by_locale_and_type_and_exerciseType", (q) =>
         q
           .eq("locale", args.locale)
           .eq("type", args.product)
@@ -204,7 +204,7 @@ export const bulkSyncTryouts = internalMutation({
     for (const tryout of detectedTryouts) {
       const existingTryout = await ctx.db
         .query("tryouts")
-        .withIndex("product_locale_cycleKey_slug", (q) =>
+        .withIndex("by_product_and_locale_and_cycleKey_and_slug", (q) =>
           q
             .eq("product", tryout.product)
             .eq("locale", tryout.locale)
@@ -286,7 +286,7 @@ export const bulkSyncTryouts = internalMutation({
 
     const activeTryouts = await ctx.db
       .query("tryouts")
-      .withIndex("product_locale_isActive", (q) =>
+      .withIndex("by_product_and_locale_and_isActive", (q) =>
         q
           .eq("product", args.product)
           .eq("locale", args.locale)

@@ -123,7 +123,7 @@ export const bulkSyncExerciseSets = internalMutation({
 
       const existingSet = await ctx.db
         .query("exerciseSets")
-        .withIndex("locale_slug", (q) =>
+        .withIndex("by_locale_and_slug", (q) =>
           q.eq("locale", set.locale).eq("slug", set.slug)
         )
         .unique();
@@ -196,7 +196,7 @@ export const bulkSyncExerciseQuestions = internalMutation({
     for (const question of args.questions) {
       const exerciseSet = await ctx.db
         .query("exerciseSets")
-        .withIndex("locale_slug", (q) =>
+        .withIndex("by_locale_and_slug", (q) =>
           q.eq("locale", question.locale).eq("slug", question.setSlug)
         )
         .unique();
@@ -210,7 +210,7 @@ export const bulkSyncExerciseQuestions = internalMutation({
 
       const existingQuestion = await ctx.db
         .query("exerciseQuestions")
-        .withIndex("locale_slug", (q) =>
+        .withIndex("by_locale_and_slug", (q) =>
           q.eq("locale", question.locale).eq("slug", question.slug)
         )
         .unique();
@@ -323,7 +323,7 @@ export const deleteStaleExerciseSets = internalMutation({
       const setId = args.setIds[index];
       const questions = await ctx.db
         .query("exerciseQuestions")
-        .withIndex("setId", (q) => q.eq("setId", setId))
+        .withIndex("by_setId", (q) => q.eq("setId", setId))
         .take(exerciseSet.questionCount + 1);
 
       if (questions.length > exerciseSet.questionCount) {

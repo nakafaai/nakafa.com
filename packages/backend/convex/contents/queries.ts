@@ -29,7 +29,7 @@ export const getRecentlyViewed = query({
 
     const recentViewsQuery = ctx.db
       .query("contentViews")
-      .withIndex("userId_type_locale_lastViewedAt", (q) =>
+      .withIndex("by_userId_and_contentRefType_and_locale_and_lastViewedAt", (q) =>
         q
           .eq("userId", user.appUser._id)
           .eq("contentRef.type", "subject")

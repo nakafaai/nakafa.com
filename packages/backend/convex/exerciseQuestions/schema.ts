@@ -44,8 +44,8 @@ const tables = {
     /** Last sync timestamp (epoch ms) */
     syncedAt: v.number(),
   })
-    .index("locale_slug", ["locale", "slug"])
-    .index("setId", ["setId"]),
+    .index("by_locale_and_slug", ["locale", "slug"])
+    .index("by_setId", ["setId"]),
 
   /**
    * Normalized multiple choice options.
@@ -61,7 +61,7 @@ const tables = {
     isCorrect: v.boolean(),
     /** Display order (0-based) */
     order: v.number(),
-  }).index("questionId_locale", ["questionId", "locale"]),
+  }).index("by_questionId_and_locale", ["questionId", "locale"]),
 };
 
 export default tables;

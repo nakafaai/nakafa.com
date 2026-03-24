@@ -54,7 +54,7 @@ export const togglePostReaction = mutation({
 
     const existingReaction = await ctx.db
       .query("schoolClassForumPostReactions")
-      .withIndex("postId_userId_emoji", (q) =>
+      .withIndex("by_postId_and_userId_and_emoji", (q) =>
         q.eq("postId", args.postId).eq("userId", userId).eq("emoji", emoji)
       )
       .unique();
@@ -111,7 +111,7 @@ export const toggleForumReaction = mutation({
 
     const existingReaction = await ctx.db
       .query("schoolClassForumReactions")
-      .withIndex("forumId_userId_emoji", (q) =>
+      .withIndex("by_forumId_and_userId_and_emoji", (q) =>
         q.eq("forumId", args.forumId).eq("userId", userId).eq("emoji", emoji)
       )
       .unique();

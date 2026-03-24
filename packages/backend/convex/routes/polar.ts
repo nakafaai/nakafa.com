@@ -74,7 +74,7 @@ async function handlePolarEvent(
   switch (event.type) {
     case "customer.created":
     case "customer.updated": {
-      return await handleCustomerUpsert(ctx, event.data);
+      return handleCustomerUpsert(ctx, event.data);
     }
     case "customer.deleted": {
       await ctx.runMutation(internal.customers.mutations.deleteCustomerById, {

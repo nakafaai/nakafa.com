@@ -140,7 +140,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
-                    | "name"
+                    | "by_name"
                     | "email"
                     | "emailVerified"
                     | "image"
@@ -283,7 +283,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
-                    | "name"
+                    | "by_name"
                     | "slug"
                     | "logo"
                     | "createdAt"
@@ -429,7 +429,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
-                    | "name"
+                    | "by_name"
                     | "email"
                     | "emailVerified"
                     | "image"
@@ -572,7 +572,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
-                    | "name"
+                    | "by_name"
                     | "slug"
                     | "logo"
                     | "createdAt"
@@ -817,7 +817,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
-                    | "name"
+                    | "by_name"
                     | "email"
                     | "emailVerified"
                     | "image"
@@ -998,7 +998,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
-                    | "name"
+                    | "by_name"
                     | "slug"
                     | "logo"
                     | "createdAt"
@@ -1177,7 +1177,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
-                    | "name"
+                    | "by_name"
                     | "email"
                     | "emailVerified"
                     | "image"
@@ -1358,7 +1358,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
-                    | "name"
+                    | "by_name"
                     | "slug"
                     | "logo"
                     | "createdAt"

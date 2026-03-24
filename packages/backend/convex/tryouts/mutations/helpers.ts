@@ -37,7 +37,7 @@ export async function finalizeTryoutAttempt({
     const rawScorePercentage = computeTryoutRawScorePercentage(tryoutAttempt);
     const leaderboardEntry = await ctx.db
       .query("tryoutLeaderboardEntries")
-      .withIndex("tryoutId_userId", (q) =>
+      .withIndex("by_tryoutId_and_userId", (q) =>
         q.eq("tryoutId", tryoutAttempt.tryoutId).eq("userId", userId)
       )
       .unique();
@@ -130,7 +130,7 @@ export async function finalizeTryoutAttempt({
     scoreTarget.scoreStatus === "official"
       ? await ctx.db
           .query("tryoutLeaderboardEntries")
-          .withIndex("tryoutId_userId", (q) =>
+          .withIndex("by_tryoutId_and_userId", (q) =>
             q.eq("tryoutId", tryoutAttempt.tryoutId).eq("userId", userId)
           )
           .unique()

@@ -97,7 +97,7 @@ export async function getMessageByIdentifier(
   chatId: Id<"chats">,
   identifier: string
 ) {
-  return await ctx.db
+  return ctx.db
     .query("messages")
     .withIndex("by_chatId_and_identifier", (q) =>
       q.eq("chatId", chatId).eq("identifier", identifier)

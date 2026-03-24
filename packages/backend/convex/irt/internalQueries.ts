@@ -48,7 +48,7 @@ export const getCalibrationQuestionsForSet = internalQuery({
     const [questions, existingParams] = await Promise.all([
       ctx.db
         .query("exerciseQuestions")
-        .withIndex("setId", (q) => q.eq("setId", args.setId))
+        .withIndex("by_setId", (q) => q.eq("setId", args.setId))
         .take(set.questionCount + 1),
       ctx.db
         .query("exerciseItemParameters")

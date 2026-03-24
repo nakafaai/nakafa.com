@@ -40,7 +40,7 @@ export const getLatestAttemptBySlug = query({
 
     const attempt = await ctx.db
       .query("exerciseAttempts")
-      .withIndex("userId_origin_slug_scope_startedAt", (q) =>
+      .withIndex("by_userId_and_origin_and_slug_and_scope_and_startedAt", (q) =>
         q
           .eq("userId", userId)
           .eq("origin", "standalone")
@@ -57,7 +57,7 @@ export const getLatestAttemptBySlug = query({
     const answers = await getManyFrom(
       ctx.db,
       "exerciseAnswers",
-      "attemptId_exerciseNumber",
+      "by_attemptId_and_exerciseNumber",
       attempt._id,
       "attemptId"
     );
@@ -85,7 +85,7 @@ export const getQuestionAnswerSheetBySlug = query({
 
     const set = await ctx.db
       .query("exerciseSets")
-      .withIndex("locale_slug", (q) =>
+      .withIndex("by_locale_and_slug", (q) =>
         q.eq("locale", args.locale).eq("slug", args.slug)
       )
       .first();
@@ -97,7 +97,7 @@ export const getQuestionAnswerSheetBySlug = query({
     const questions = await getManyFrom(
       ctx.db,
       "exerciseQuestions",
-      "setId",
+      "by_setId",
       set._id
     );
     const orderedQuestions = [...questions].sort((a, b) => a.number - b.number);
@@ -107,9 +107,9 @@ export const getQuestionAnswerSheetBySlug = query({
         const choices = await getManyFrom(
           ctx.db,
           "exerciseChoices",
-          "questionId_locale",
+          "by_questionId_and_locale",
           question._id,
-          "questionId"
+          "by_questionId"
         );
 
         return {

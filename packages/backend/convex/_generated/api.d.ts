@@ -534,7 +534,7 @@ export declare const components: {
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
-                    | "name"
+                    | "by_name"
                     | "email"
                     | "emailVerified"
                     | "image"
@@ -677,7 +677,7 @@ export declare const components: {
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
-                    | "name"
+                    | "by_name"
                     | "slug"
                     | "logo"
                     | "createdAt"
@@ -822,7 +822,7 @@ export declare const components: {
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
-                    | "name"
+                    | "by_name"
                     | "email"
                     | "emailVerified"
                     | "image"
@@ -965,7 +965,7 @@ export declare const components: {
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
-                    | "name"
+                    | "by_name"
                     | "slug"
                     | "logo"
                     | "createdAt"
@@ -1207,7 +1207,7 @@ export declare const components: {
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
-                    | "name"
+                    | "by_name"
                     | "email"
                     | "emailVerified"
                     | "image"
@@ -1388,7 +1388,7 @@ export declare const components: {
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
-                    | "name"
+                    | "by_name"
                     | "slug"
                     | "logo"
                     | "createdAt"
@@ -1566,7 +1566,7 @@ export declare const components: {
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
-                    | "name"
+                    | "by_name"
                     | "email"
                     | "emailVerified"
                     | "image"
@@ -1747,7 +1747,7 @@ export declare const components: {
                 where?: Array<{
                   connector?: "AND" | "OR";
                   field:
-                    | "name"
+                    | "by_name"
                     | "slug"
                     | "logo"
                     | "createdAt"

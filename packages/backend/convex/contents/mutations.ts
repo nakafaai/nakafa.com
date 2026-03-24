@@ -151,7 +151,7 @@ export const populateAudioQueue = internalMutation({
 
         const existingForLocale = await ctx.db
           .query("audioGenerationQueue")
-          .withIndex("contentRef_locale", (q) =>
+          .withIndex("by_contentRefType_and_contentRefId_and_locale", (q) =>
             q
               .eq("contentRef.type", localeContentRef.type)
               .eq("contentRef.id", localeContentRef.id)
@@ -184,7 +184,7 @@ export const populateAudioQueue = internalMutation({
         if (contentHash) {
           const existingAudio = await ctx.db
             .query("contentAudios")
-            .withIndex("contentRef_locale", (q) =>
+            .withIndex("by_contentRefType_and_contentRefId_and_locale", (q) =>
               q
                 .eq("contentRef.type", localeContentRef.type)
                 .eq("contentRef.id", localeContentRef.id)
@@ -255,7 +255,7 @@ export const recordContentView = mutation({
   handler: async (ctx, args) => {
     const user = await getOptionalAppUserFromIdentity(ctx);
 
-    return await recordContentViewBySlug(
+    return recordContentViewBySlug(
       ctx,
       args.contentRef.type,
       args.locale,

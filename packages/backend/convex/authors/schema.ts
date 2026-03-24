@@ -25,7 +25,7 @@ const tables = {
     github: v.optional(v.string()),
     bio: v.optional(v.string()),
     avatarUrl: v.optional(v.string()),
-  }).index("name", ["name"]),
+  }).index("by_name", ["name"]),
 
   /**
    * Join table linking content to authors (N:M relationship).
@@ -36,7 +36,7 @@ const tables = {
    * @example
    * // Get authors for an article
    * const links = await ctx.db.query("contentAuthors")
-   *   .withIndex("contentId_contentType_authorId", q =>
+   *   .withIndex("by_contentId_and_contentType_and_authorId", q =>
    *     q.eq("contentId", article._id).eq("contentType", "article")
    *   ).collect();
    */
@@ -49,12 +49,12 @@ const tables = {
     /** Author ordering: 0 = primary, 1 = secondary, etc. */
     order: v.number(),
   })
-    .index("contentId_contentType_authorId", [
+    .index("by_contentId_and_contentType_and_authorId", [
       "contentId",
       "contentType",
       "authorId",
     ])
-    .index("authorId", ["authorId"]),
+    .index("by_authorId", ["authorId"]),
 };
 
 export default tables;

@@ -20,14 +20,14 @@ const tables = {
     firstViewedAt: v.number(),
     lastViewedAt: v.number(),
   })
-    .index("userId_contentRefId", ["userId", "contentRef.id"])
-    .index("userId_type_locale_lastViewedAt", [
+    .index("by_userId_and_contentRefId", ["userId", "contentRef.id"])
+    .index("by_userId_and_contentRefType_and_locale_and_lastViewedAt", [
       "userId",
       "contentRef.type",
       "locale",
       "lastViewedAt",
     ])
-    .index("deviceId_contentRefId", ["deviceId", "contentRef.id"])
+    .index("by_deviceId_and_contentRefId", ["deviceId", "contentRef.id"])
     .index("by_locale_type_lastViewedAt", [
       "locale",
       "contentRef.type",

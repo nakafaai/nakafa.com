@@ -145,7 +145,7 @@ export const deleteMessageBatch = mutation({
 
     await verifyChatOwnership(ctx, args.chatId, user.appUser._id);
 
-    return await deleteMessageBatchFromPoint(
+    return deleteMessageBatchFromPoint(
       ctx,
       args.chatId,
       args.fromCreationTime

@@ -27,7 +27,7 @@ const tables = {
     contentHash: v.string(),
     /** Last sync timestamp (epoch ms) */
     syncedAt: v.number(),
-  }).index("locale_slug", ["locale", "slug"]),
+  }).index("by_locale_and_slug", ["locale", "slug"]),
 
   /**
    * Normalized article citations.
@@ -46,7 +46,7 @@ const tables = {
     details: v.optional(v.string()),
     /** Position in reference list */
     order: v.number(),
-  }).index("articleId", ["articleId"]),
+  }).index("by_articleId", ["articleId"]),
 };
 
 export default tables;

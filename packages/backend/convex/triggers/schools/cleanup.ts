@@ -14,7 +14,7 @@ export const cleanupDeletedClassMembers = internalMutation({
   handler: async (ctx, args) => {
     const classMembers = await ctx.db
       .query("schoolClassMembers")
-      .withIndex("classId_userId", (q) => q.eq("classId", args.classId))
+      .withIndex("by_classId_and_userId", (q) => q.eq("classId", args.classId))
       .take(SCHOOL_CLASS_MEMBER_CLEANUP_BATCH_SIZE);
 
     for (const member of classMembers) {

@@ -53,7 +53,7 @@ async function getUnreadForumPostCount(
 
   const newerPosts = await ctx.db
     .query("schoolClassForumPosts")
-    .withIndex("forumId", (q) =>
+    .withIndex("by_forumId", (q) =>
       q.eq("forumId", forumId).gt("_creationTime", lastReadAt)
     )
     .take(FORUM_UNREAD_SCAN_LIMIT);
@@ -96,7 +96,7 @@ export async function getForumUnreadCounts(
   const counts = await asyncMap(forums, async (forum) => {
     const readState = await ctx.db
       .query("schoolClassForumReadStates")
-      .withIndex("forumId_userId", (q) =>
+      .withIndex("by_forumId_and_userId", (q) =>
         q.eq("forumId", forum._id).eq("userId", userId)
       )
       .unique();

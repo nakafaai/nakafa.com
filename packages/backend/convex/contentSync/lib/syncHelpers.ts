@@ -44,7 +44,7 @@ export async function buildAuthorCache(
     uniqueNames.map((name) =>
       ctx.db
         .query("authors")
-        .withIndex("name", (q) => q.eq("name", name))
+        .withIndex("by_name", (q) => q.eq("name", name))
         .unique()
         .then((author) => ({ author, name }))
     )
@@ -195,7 +195,7 @@ export async function deleteContentAuthorLinks(
 ) {
   const existingLinks = await ctx.db
     .query("contentAuthors")
-    .withIndex("contentId_contentType_authorId", (q) =>
+    .withIndex("by_contentId_and_contentType_and_authorId", (q) =>
       q.eq("contentId", contentId).eq("contentType", contentType)
     )
     .take(CONTENT_SYNC_BATCH_LIMITS.authors + 1);
@@ -220,7 +220,7 @@ export async function deleteArticleReferencesForArticle(
 ) {
   const existingReferences = await ctx.db
     .query("articleReferences")
-    .withIndex("articleId", (q) => q.eq("articleId", articleId))
+    .withIndex("by_articleId", (q) => q.eq("articleId", articleId))
     .take(CONTENT_SYNC_BATCH_LIMITS.articleReferences + 1);
 
   if (existingReferences.length > CONTENT_SYNC_BATCH_LIMITS.articleReferences) {
@@ -242,7 +242,7 @@ export async function deleteExerciseChoicesForQuestion(
 ) {
   const existingChoices = await ctx.db
     .query("exerciseChoices")
-    .withIndex("questionId_locale", (q) => q.eq("questionId", questionId))
+    .withIndex("by_questionId_and_locale", (q) => q.eq("questionId", questionId))
     .take(CONTENT_SYNC_BATCH_LIMITS.exerciseChoices + 1);
 
   if (existingChoices.length > CONTENT_SYNC_BATCH_LIMITS.exerciseChoices) {

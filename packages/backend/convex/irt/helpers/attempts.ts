@@ -72,7 +72,7 @@ export async function syncCalibrationResponsesForAttemptHandler(
 
   const answers = await ctx.db
     .query("exerciseAnswers")
-    .withIndex("attemptId_exerciseNumber", (q) =>
+    .withIndex("by_attemptId_and_exerciseNumber", (q) =>
       q.eq("attemptId", args.attemptId)
     )
     .take(attempt.totalExercises + 1);
@@ -171,7 +171,7 @@ export async function backfillCalibrationResponsesPageHandler(
 ) {
   const page = await ctx.db
     .query("exerciseAttempts")
-    .withIndex("scope_mode_status_startedAt", (q) =>
+    .withIndex("by_scope_and_mode_and_status_and_startedAt", (q) =>
       q.eq("scope", "set").eq("mode", "simulation").eq("status", "completed")
     )
     .paginate({

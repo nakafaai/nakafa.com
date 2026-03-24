@@ -21,9 +21,9 @@ async function getClassMembership(
   classId: Id<"schoolClasses">,
   userId: Id<"users">
 ) {
-  return await ctx.db
+  return ctx.db
     .query("schoolClassMembers")
-    .withIndex("classId_userId", (q) =>
+    .withIndex("by_classId_and_userId", (q) =>
       q.eq("classId", classId).eq("userId", userId)
     )
     .unique();

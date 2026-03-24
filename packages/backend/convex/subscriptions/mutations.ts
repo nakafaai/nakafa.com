@@ -22,7 +22,7 @@ export const createSubscription = internalMutation({
       return existingSubscription._id;
     }
 
-    return await ctx.db.insert("subscriptions", args.subscription);
+    return ctx.db.insert("subscriptions", args.subscription);
   },
 });
 

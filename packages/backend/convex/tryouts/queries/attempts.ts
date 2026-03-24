@@ -84,7 +84,7 @@ export const getUserTryoutAttempt = query({
     const { appUser } = await requireAuth(ctx);
     const tryout = await ctx.db
       .query("tryouts")
-      .withIndex("product_locale_slug", (q) =>
+      .withIndex("by_product_and_locale_and_slug", (q) =>
         q
           .eq("product", args.product)
           .eq("locale", args.locale)
@@ -98,7 +98,7 @@ export const getUserTryoutAttempt = query({
 
     const attempt = await ctx.db
       .query("tryoutAttempts")
-      .withIndex("userId_tryoutId_startedAt", (q) =>
+      .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
         q.eq("userId", appUser._id).eq("tryoutId", tryout._id)
       )
       .order("desc")
@@ -110,7 +110,7 @@ export const getUserTryoutAttempt = query({
 
     const tryoutPartSets = await ctx.db
       .query("tryoutPartSets")
-      .withIndex("tryoutId_partIndex", (q) => q.eq("tryoutId", tryout._id))
+      .withIndex("by_tryoutId_and_partIndex", (q) => q.eq("tryoutId", tryout._id))
       .take(tryout.partCount + 1);
 
     if (tryoutPartSets.length !== tryout.partCount) {
@@ -138,7 +138,7 @@ export const getUserTryoutAttempt = query({
 
     const partAttempts = await ctx.db
       .query("tryoutPartAttempts")
-      .withIndex("tryoutAttemptId_partIndex", (q) =>
+      .withIndex("by_tryoutAttemptId_and_partIndex", (q) =>
         q.eq("tryoutAttemptId", attempt._id)
       )
       .take(tryout.partCount + 1);
@@ -217,7 +217,7 @@ export const getUserInProgressTryouts = query({
     const { appUser } = await requireAuth(ctx);
     const inProgressAttempts = await ctx.db
       .query("tryoutAttempts")
-      .withIndex("userId_status_expiresAt", (q) =>
+      .withIndex("by_userId_and_status_and_expiresAt", (q) =>
         q.eq("userId", appUser._id).eq("status", "in-progress")
       )
       .take(MAX_IN_PROGRESS_TRYOUTS_PER_USER + 1);
@@ -291,7 +291,7 @@ export const getUserTryoutPartAttempt = query({
     const { appUser } = await requireAuth(ctx);
     const tryout = await ctx.db
       .query("tryouts")
-      .withIndex("product_locale_slug", (q) =>
+      .withIndex("by_product_and_locale_and_slug", (q) =>
         q
           .eq("product", args.product)
           .eq("locale", args.locale)
@@ -305,7 +305,7 @@ export const getUserTryoutPartAttempt = query({
 
     const tryoutAttempt = await ctx.db
       .query("tryoutAttempts")
-      .withIndex("userId_tryoutId_startedAt", (q) =>
+      .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
         q.eq("userId", appUser._id).eq("tryoutId", tryout._id)
       )
       .order("desc")
@@ -317,7 +317,7 @@ export const getUserTryoutPartAttempt = query({
 
     const currentPartAttempt = await ctx.db
       .query("tryoutPartAttempts")
-      .withIndex("tryoutAttemptId_partKey", (q) =>
+      .withIndex("by_tryoutAttemptId_and_partKey", (q) =>
         q.eq("tryoutAttemptId", tryoutAttempt._id).eq("partKey", args.partKey)
       )
       .unique();
@@ -345,7 +345,7 @@ export const getUserTryoutPartAttempt = query({
     const answers = await getManyFrom(
       ctx.db,
       "exerciseAnswers",
-      "attemptId_exerciseNumber",
+      "by_attemptId_and_exerciseNumber",
       currentPartAttempt.setAttemptId,
       "attemptId"
     );

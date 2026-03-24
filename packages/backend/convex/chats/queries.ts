@@ -78,7 +78,7 @@ export const getChats = query({
     const effectiveVisibility = isOwner ? visibility : "public";
 
     if (searchQuery && searchQuery.trim().length > 0) {
-      return await ctx.db
+      return ctx.db
         .query("chats")
         .withSearchIndex("search_title", (q) => {
           let builder = q.search("title", searchQuery).eq("userId", userId);
@@ -97,7 +97,7 @@ export const getChats = query({
     }
 
     if (effectiveVisibility && type) {
-      return await ctx.db
+      return ctx.db
         .query("chats")
         .withIndex("by_userId_and_visibility_and_type", (q) =>
           q
@@ -110,7 +110,7 @@ export const getChats = query({
     }
 
     if (type) {
-      return await ctx.db
+      return ctx.db
         .query("chats")
         .withIndex("by_userId_and_type", (q) =>
           q.eq("userId", userId).eq("type", type)
@@ -120,7 +120,7 @@ export const getChats = query({
     }
 
     if (effectiveVisibility) {
-      return await ctx.db
+      return ctx.db
         .query("chats")
         .withIndex("by_userId_and_visibility", (q) =>
           q.eq("userId", userId).eq("visibility", effectiveVisibility)
@@ -129,7 +129,7 @@ export const getChats = query({
         .paginate(paginationOpts);
     }
 
-    return await ctx.db
+    return ctx.db
       .query("chats")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .order("desc")

@@ -32,15 +32,15 @@ const tables = {
     detectedAt: v.number(),
     syncedAt: v.number(),
   })
-    .index("isActive", ["isActive"])
-    .index("product_locale_slug", ["product", "locale", "slug"])
-    .index("product_locale_cycleKey_slug", [
+    .index("by_isActive", ["isActive"])
+    .index("by_product_and_locale_and_slug", ["product", "locale", "slug"])
+    .index("by_product_and_locale_and_cycleKey_and_slug", [
       "product",
       "locale",
       "cycleKey",
       "slug",
     ])
-    .index("product_locale_isActive", ["product", "locale", "isActive"]),
+    .index("by_product_and_locale_and_isActive", ["product", "locale", "isActive"]),
 
   tryoutPartSets: defineTable({
     tryoutId: v.id("tryouts"),
@@ -49,9 +49,9 @@ const tables = {
     /** Stable public identifier for one part, e.g. `general-reasoning`. */
     partKey: tryoutPartKeyValidator,
   })
-    .index("tryoutId_partIndex", ["tryoutId", "partIndex"])
-    .index("tryoutId_partKey", ["tryoutId", "partKey"])
-    .index("setId", ["setId"]),
+    .index("by_tryoutId_and_partIndex", ["tryoutId", "partIndex"])
+    .index("by_tryoutId_and_partKey", ["tryoutId", "partKey"])
+    .index("by_setId", ["setId"]),
 
   tryoutAttempts: defineTable({
     userId: v.id("users"),
@@ -71,10 +71,10 @@ const tables = {
     completedAt: v.union(v.number(), v.null()),
     endReason: v.union(attemptEndReasonValidator, v.null()),
   })
-    .index("status_expiresAt", ["status", "expiresAt"])
-    .index("userId_status_expiresAt", ["userId", "status", "expiresAt"])
-    .index("userId_tryoutId_startedAt", ["userId", "tryoutId", "startedAt"])
-    .index("tryoutId_scoreStatus_status_startedAt", [
+    .index("by_status_and_expiresAt", ["status", "expiresAt"])
+    .index("by_userId_and_status_and_expiresAt", ["userId", "status", "expiresAt"])
+    .index("by_userId_and_tryoutId_and_startedAt", ["userId", "tryoutId", "startedAt"])
+    .index("by_tryoutId_and_scoreStatus_and_status_and_startedAt", [
       "tryoutId",
       "scoreStatus",
       "status",
@@ -91,9 +91,9 @@ const tables = {
     theta: v.number(),
     thetaSE: v.number(),
   })
-    .index("tryoutAttemptId_partIndex", ["tryoutAttemptId", "partIndex"])
-    .index("tryoutAttemptId_partKey", ["tryoutAttemptId", "partKey"])
-    .index("setAttemptId", ["setAttemptId"]),
+    .index("by_tryoutAttemptId_and_partIndex", ["tryoutAttemptId", "partIndex"])
+    .index("by_tryoutAttemptId_and_partKey", ["tryoutAttemptId", "partKey"])
+    .index("by_setAttemptId", ["setAttemptId"]),
 
   userTryoutStats: defineTable({
     userId: v.id("users"),
@@ -105,7 +105,7 @@ const tables = {
     averageRawScore: v.number(),
     lastTryoutAt: v.number(),
     updatedAt: v.number(),
-  }).index("userId_product_leaderboardNamespace", [
+  }).index("by_userId_and_product_and_leaderboardNamespace", [
     "userId",
     "product",
     "leaderboardNamespace",
@@ -122,13 +122,13 @@ const tables = {
     completedAt: v.number(),
     attemptId: v.id("tryoutAttempts"),
   })
-    .index("tryoutId_userId", ["tryoutId", "userId"])
-    .index("userId_leaderboardNamespace_completedAt", [
+    .index("by_tryoutId_and_userId", ["tryoutId", "userId"])
+    .index("by_userId_and_leaderboardNamespace_and_completedAt", [
       "userId",
       "leaderboardNamespace",
       "completedAt",
     ])
-    .index("userId_leaderboardNamespace_theta", [
+    .index("by_userId_and_leaderboardNamespace_and_theta", [
       "userId",
       "leaderboardNamespace",
       "theta",

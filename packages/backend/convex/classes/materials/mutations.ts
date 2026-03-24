@@ -45,7 +45,7 @@ export const createMaterialGroup = mutation({
     // Get next order using index (efficient: uses .first() not .collect())
     const lastGroup = await ctx.db
       .query("schoolClassMaterialGroups")
-      .withIndex("classId_parentId_order", (q) =>
+      .withIndex("by_classId_and_parentId_and_order", (q) =>
         q.eq("classId", args.classId).eq("parentId", undefined)
       )
       .order("desc")
@@ -234,7 +234,7 @@ export const reorderMaterialGroup = mutation({
       args.direction === "up"
         ? await ctx.db
             .query("schoolClassMaterialGroups")
-            .withIndex("classId_parentId_order", (q) =>
+            .withIndex("by_classId_and_parentId_and_order", (q) =>
               q
                 .eq("classId", group.classId)
                 .eq("parentId", group.parentId)
@@ -244,7 +244,7 @@ export const reorderMaterialGroup = mutation({
             .first()
         : await ctx.db
             .query("schoolClassMaterialGroups")
-            .withIndex("classId_parentId_order", (q) =>
+            .withIndex("by_classId_and_parentId_and_order", (q) =>
               q
                 .eq("classId", group.classId)
                 .eq("parentId", group.parentId)

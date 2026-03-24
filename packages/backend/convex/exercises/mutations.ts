@@ -197,7 +197,7 @@ export const submitAnswer = mutation({
 
     const existingAnswer = await ctx.db
       .query("exerciseAnswers")
-      .withIndex("attemptId_exerciseNumber", (q) =>
+      .withIndex("by_attemptId_and_exerciseNumber", (q) =>
         q
           .eq("attemptId", args.attemptId)
           .eq("exerciseNumber", args.exerciseNumber)
@@ -389,7 +389,7 @@ export const expireAttemptInternal = internalMutation({
 
     const partAttempt = await ctx.db
       .query("tryoutPartAttempts")
-      .withIndex("setAttemptId", (q) => q.eq("setAttemptId", attempt._id))
+      .withIndex("by_setAttemptId", (q) => q.eq("setAttemptId", attempt._id))
       .unique();
 
     if (!partAttempt) {

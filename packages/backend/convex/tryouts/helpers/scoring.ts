@@ -125,7 +125,7 @@ export function buildOperationalIrtResponses({
   answers: Doc<"exerciseAnswers">[];
   itemParamsRecords: Pick<
     Doc<"irtScaleVersionItems">,
-    "questionId" | "difficulty" | "discrimination"
+    "by_questionId" | "difficulty" | "discrimination"
   >[];
 }) {
   const answersByQuestionId = new Map<

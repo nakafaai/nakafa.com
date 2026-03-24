@@ -53,7 +53,7 @@ export const rebuildUserTryoutStats = internalMutation({
   handler: async (ctx, args) => {
     const page = await ctx.db
       .query("tryoutLeaderboardEntries")
-      .withIndex("userId_leaderboardNamespace_completedAt", (q) =>
+      .withIndex("by_userId_and_leaderboardNamespace_and_completedAt", (q) =>
         q
           .eq("userId", args.userId)
           .eq("leaderboardNamespace", args.leaderboardNamespace)
@@ -103,7 +103,7 @@ export const rebuildUserTryoutStats = internalMutation({
 
     const statsRecord = await ctx.db
       .query("userTryoutStats")
-      .withIndex("userId_product_leaderboardNamespace", (q) =>
+      .withIndex("by_userId_and_product_and_leaderboardNamespace", (q) =>
         q
           .eq("userId", args.userId)
           .eq("product", args.product)
@@ -196,7 +196,7 @@ export const sweepExpiredTryoutAttempts = internalMutation({
     const now = Date.now();
     const inProgressAttempts = await ctx.db
       .query("tryoutAttempts")
-      .withIndex("status_expiresAt", (q) =>
+      .withIndex("by_status_and_expiresAt", (q) =>
         q.eq("status", "in-progress").lt("expiresAt", now + 1)
       )
       .take(TRYOUT_EXPIRY_SWEEP_BATCH_SIZE);
@@ -245,7 +245,7 @@ export const updateLeaderboard = internalMutation({
     });
     const existingEntry = await ctx.db
       .query("tryoutLeaderboardEntries")
-      .withIndex("tryoutId_userId", (q) =>
+      .withIndex("by_tryoutId_and_userId", (q) =>
         q
           .eq("tryoutId", tryoutAttempt.tryoutId)
           .eq("userId", tryoutAttempt.userId)
@@ -337,7 +337,7 @@ export const promoteProvisionalTryoutScores = internalMutation({
 
     const completedAttempts = await ctx.db
       .query("tryoutAttempts")
-      .withIndex("tryoutId_scoreStatus_status_startedAt", (q) =>
+      .withIndex("by_tryoutId_and_scoreStatus_and_status_and_startedAt", (q) =>
         q
           .eq("tryoutId", args.tryoutId)
           .eq("scoreStatus", "provisional")
@@ -353,7 +353,7 @@ export const promoteProvisionalTryoutScores = internalMutation({
         ? []
         : await ctx.db
             .query("tryoutAttempts")
-            .withIndex("tryoutId_scoreStatus_status_startedAt", (q) =>
+            .withIndex("by_tryoutId_and_scoreStatus_and_status_and_startedAt", (q) =>
               q
                 .eq("tryoutId", args.tryoutId)
                 .eq("scoreStatus", "provisional")

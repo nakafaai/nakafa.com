@@ -93,7 +93,7 @@ export const joinClass = mutation({
 
     const inviteCode = await ctx.db
       .query("schoolClassInviteCodes")
-      .withIndex("code", (q) => q.eq("code", args.code))
+      .withIndex("by_code", (q) => q.eq("code", args.code))
       .first();
 
     if (!inviteCode) {
@@ -130,7 +130,7 @@ export const joinClass = mutation({
 
     const existingMember = await ctx.db
       .query("schoolClassMembers")
-      .withIndex("classId_userId", (q) =>
+      .withIndex("by_classId_and_userId", (q) =>
         q.eq("classId", classData._id).eq("userId", userId)
       )
       .first();
@@ -175,7 +175,7 @@ export const joinClass = mutation({
         userId,
         schoolId: classData.schoolId,
         role: "student",
-        enrollMethod: "code",
+        enrollMethod: "by_code",
         inviteCodeId: inviteCode._id,
         updatedAt: now,
       });
@@ -234,7 +234,7 @@ export const joinPublicClass = mutation({
 
     const existingMember = await ctx.db
       .query("schoolClassMembers")
-      .withIndex("classId_userId", (q) =>
+      .withIndex("by_classId_and_userId", (q) =>
         q.eq("classId", classData._id).eq("userId", userId)
       )
       .first();

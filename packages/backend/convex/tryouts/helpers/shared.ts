@@ -22,7 +22,7 @@ export async function loadBoundedTryoutPartAttempts(
 ) {
   const partAttempts = await db
     .query("tryoutPartAttempts")
-    .withIndex("tryoutAttemptId_partIndex", (q) =>
+    .withIndex("by_tryoutAttemptId_and_partIndex", (q) =>
       q.eq("tryoutAttemptId", tryoutAttemptId)
     )
     .take(partCount + 1);
@@ -50,7 +50,7 @@ export async function getBoundedExerciseAnswers(
 ) {
   const answers = await db
     .query("exerciseAnswers")
-    .withIndex("attemptId_exerciseNumber", (q) => q.eq("attemptId", attemptId))
+    .withIndex("by_attemptId_and_exerciseNumber", (q) => q.eq("attemptId", attemptId))
     .take(totalExercises + 1);
 
   if (answers.length <= totalExercises) {

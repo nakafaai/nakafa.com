@@ -20,7 +20,7 @@ export async function updateForumReadState(
 ) {
   const existing = await ctx.db
     .query("schoolClassForumReadStates")
-    .withIndex("forumId_userId", (q) =>
+    .withIndex("by_forumId_and_userId", (q) =>
       q.eq("forumId", args.forumId).eq("userId", args.userId)
     )
     .unique();

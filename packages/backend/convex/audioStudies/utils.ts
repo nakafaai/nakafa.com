@@ -83,7 +83,7 @@ export async function updateContentHash(
 ) {
   const audios = await ctx.db
     .query("contentAudios")
-    .withIndex("contentRef_locale", (q) =>
+    .withIndex("by_contentRefType_and_contentRefId_and_locale", (q) =>
       q
         .eq("contentRef.type", contentRef.type)
         .eq("contentRef.id", contentRef.id)
@@ -174,7 +174,7 @@ export async function getContentRefBySlugAndLocale(
     case "article": {
       const article = await ctx.db
         .query("articleContents")
-        .withIndex("locale_slug", (q) =>
+        .withIndex("by_locale_and_slug", (q) =>
           q.eq("locale", locale).eq("slug", slug)
         )
         .first();
@@ -186,7 +186,7 @@ export async function getContentRefBySlugAndLocale(
     case "subject": {
       const section = await ctx.db
         .query("subjectSections")
-        .withIndex("locale_slug", (q) =>
+        .withIndex("by_locale_and_slug", (q) =>
           q.eq("locale", locale).eq("slug", slug)
         )
         .first();

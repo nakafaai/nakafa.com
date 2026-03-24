@@ -28,7 +28,7 @@ export async function completeCalibrationRunHandler(
 
   const questions = await ctx.db
     .query("exerciseQuestions")
-    .withIndex("setId", (q) => q.eq("setId", run.setId))
+    .withIndex("by_setId", (q) => q.eq("setId", run.setId))
     .take(run.questionCount + 1);
 
   if (questions.length > run.questionCount) {
@@ -154,7 +154,7 @@ export async function completeCalibrationRunHandler(
 
   const affectedTryoutSets = await ctx.db
     .query("tryoutPartSets")
-    .withIndex("setId", (q) => q.eq("setId", run.setId))
+    .withIndex("by_setId", (q) => q.eq("setId", run.setId))
     .take(MAX_AFFECTED_TRYOUTS_PER_SET + 1);
 
   if (affectedTryoutSets.length > MAX_AFFECTED_TRYOUTS_PER_SET) {

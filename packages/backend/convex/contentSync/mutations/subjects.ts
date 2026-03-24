@@ -109,7 +109,7 @@ export const bulkSyncSubjectTopics = internalMutation({
 
       const existingTopic = await ctx.db
         .query("subjectTopics")
-        .withIndex("locale_slug", (q) =>
+        .withIndex("by_locale_and_slug", (q) =>
           q.eq("locale", topic.locale).eq("slug", topic.slug)
         )
         .unique();
@@ -180,7 +180,7 @@ export const bulkSyncSubjectSections = internalMutation({
     for (const section of args.sections) {
       const topic = await ctx.db
         .query("subjectTopics")
-        .withIndex("locale_slug", (q) =>
+        .withIndex("by_locale_and_slug", (q) =>
           q.eq("locale", section.locale).eq("slug", section.topicSlug)
         )
         .unique();
@@ -194,7 +194,7 @@ export const bulkSyncSubjectSections = internalMutation({
 
       const existingSection = await ctx.db
         .query("subjectSections")
-        .withIndex("locale_slug", (q) =>
+        .withIndex("by_locale_and_slug", (q) =>
           q.eq("locale", section.locale).eq("slug", section.slug)
         )
         .unique();
@@ -301,7 +301,7 @@ export const deleteStaleSubjectTopics = internalMutation({
       const topicId = args.topicIds[index];
       const sections = await ctx.db
         .query("subjectSections")
-        .withIndex("topicId", (q) => q.eq("topicId", topicId))
+        .withIndex("by_topicId", (q) => q.eq("topicId", topicId))
         .take(topic.sectionCount + 1);
 
       if (sections.length > topic.sectionCount) {

@@ -167,7 +167,7 @@ export const startWorkflowsForPendingItems = internalMutation({
     const maxContentPerDay = getMaxContentPerDay();
     const completedToday = await ctx.db
       .query("audioGenerationQueue")
-      .withIndex("status_completedAt", (q) =>
+      .withIndex("by_status_and_completedAt", (q) =>
         q.eq("status", "completed").gte("completedAt", today)
       )
       .take(maxContentPerDay + 10);
@@ -186,7 +186,7 @@ export const startWorkflowsForPendingItems = internalMutation({
 
     const topItem = await ctx.db
       .query("audioGenerationQueue")
-      .withIndex("status_priority", (q) => q.eq("status", "pending"))
+      .withIndex("by_status_and_priorityScore", (q) => q.eq("status", "pending"))
       .order("desc")
       .first();
 
@@ -197,7 +197,7 @@ export const startWorkflowsForPendingItems = internalMutation({
 
     const contentItems = await ctx.db
       .query("audioGenerationQueue")
-      .withIndex("slug_status", (q) =>
+      .withIndex("by_slug_and_status", (q) =>
         q.eq("slug", topItem.slug).eq("status", "pending")
       )
       .take(AUDIO_QUEUE_PER_SLUG_LIMIT);
@@ -248,13 +248,13 @@ export const cleanup = internalMutation({
       Date.now() - CLEANUP_CONFIG.retentionDays * 24 * 60 * 60 * 1000;
     const completedOldItems = await ctx.db
       .query("audioGenerationQueue")
-      .withIndex("status_updatedAt", (q) =>
+      .withIndex("by_status_and_updatedAt", (q) =>
         q.eq("status", "completed").lt("updatedAt", cutoffDate)
       )
       .take(100);
     const failedOldItems = await ctx.db
       .query("audioGenerationQueue")
-      .withIndex("status_updatedAt", (q) =>
+      .withIndex("by_status_and_updatedAt", (q) =>
         q.eq("status", "failed").lt("updatedAt", cutoffDate)
       )
       .take(100);
@@ -289,7 +289,7 @@ export const resetStuckQueueItems = internalMutation({
     const stuckThreshold = Date.now() - QUEUE_TIMEOUT_MS;
     const stuckItems = await ctx.db
       .query("audioGenerationQueue")
-      .withIndex("status_updatedAt", (q) =>
+      .withIndex("by_status_and_updatedAt", (q) =>
         q.eq("status", "processing").lt("updatedAt", stuckThreshold)
       )
       .take(50);

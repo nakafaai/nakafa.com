@@ -68,7 +68,7 @@ export const getMaterialGroups = query({
     } else if (canSeeAllStatuses) {
       groupsPage = await ctx.db
         .query("schoolClassMaterialGroups")
-        .withIndex("classId_parentId_order", (q) =>
+        .withIndex("by_classId_and_parentId_and_order", (q) =>
           q.eq("classId", classId).eq("parentId", parentId)
         )
         .order("asc")
@@ -76,7 +76,7 @@ export const getMaterialGroups = query({
     } else {
       groupsPage = await ctx.db
         .query("schoolClassMaterialGroups")
-        .withIndex("classId_parentId_status_order", (q) =>
+        .withIndex("by_classId_and_parentId_and_status_and_order", (q) =>
           q
             .eq("classId", classId)
             .eq("parentId", parentId)

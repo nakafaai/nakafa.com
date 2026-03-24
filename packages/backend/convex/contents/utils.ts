@@ -32,7 +32,7 @@ async function recordView(
   const now = Date.now();
   const existingByDevice = await ctx.db
     .query("contentViews")
-    .withIndex("deviceId_contentRefId", (q) =>
+    .withIndex("by_deviceId_and_contentRefId", (q) =>
       q.eq("deviceId", args.deviceId).eq("contentRef.id", contentRef.id)
     )
     .first();
@@ -40,7 +40,7 @@ async function recordView(
   const existingByUser = args.userId
     ? await ctx.db
         .query("contentViews")
-        .withIndex("userId_contentRefId", (q) =>
+        .withIndex("by_userId_and_contentRefId", (q) =>
           q.eq("userId", args.userId).eq("contentRef.id", contentRef.id)
         )
         .first()
@@ -90,7 +90,7 @@ export async function recordContentViewBySlug(
     case "article": {
       const article = await ctx.db
         .query("articleContents")
-        .withIndex("locale_slug", (q) =>
+        .withIndex("by_locale_and_slug", (q) =>
           q.eq("locale", locale).eq("slug", slug)
         )
         .first();
@@ -108,7 +108,7 @@ export async function recordContentViewBySlug(
     case "subject": {
       const section = await ctx.db
         .query("subjectSections")
-        .withIndex("locale_slug", (q) =>
+        .withIndex("by_locale_and_slug", (q) =>
           q.eq("locale", locale).eq("slug", slug)
         )
         .first();
@@ -126,7 +126,7 @@ export async function recordContentViewBySlug(
     case "exercise": {
       const exerciseSet = await ctx.db
         .query("exerciseSets")
-        .withIndex("locale_slug", (q) =>
+        .withIndex("by_locale_and_slug", (q) =>
           q.eq("locale", locale).eq("slug", slug)
         )
         .first();

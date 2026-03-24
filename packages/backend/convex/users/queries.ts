@@ -15,7 +15,7 @@ export const getUserById = internalQuery({
   },
   returns: nullable(vv.doc("users")),
   handler: async (ctx, args) => {
-    return await ctx.db.get("users", args.userId);
+    return ctx.db.get("users", args.userId);
   },
 });
 
@@ -29,7 +29,7 @@ export const getUserByAuthId = internalQuery({
   },
   returns: nullable(vv.doc("users")),
   handler: async (ctx, args) => {
-    return await ctx.db
+    return ctx.db
       .query("users")
       .withIndex("by_authId", (q) => q.eq("authId", args.authId))
       .unique();
@@ -46,7 +46,7 @@ export const getUserByEmail = internalQuery({
   },
   returns: nullable(vv.doc("users")),
   handler: async (ctx, args) => {
-    return await ctx.db
+    return ctx.db
       .query("users")
       .withIndex("by_email", (q) => q.eq("email", args.email))
       .unique();

@@ -34,8 +34,8 @@ const tables = {
     /** Last sync timestamp (epoch ms) */
     syncedAt: v.number(),
   })
-    .index("locale_slug", ["locale", "slug"])
-    .index("locale_type_exerciseType", ["locale", "type", "exerciseType"]),
+    .index("by_locale_and_slug", ["locale", "slug"])
+    .index("by_locale_and_type_and_exerciseType", ["locale", "type", "exerciseType"]),
 };
 
 export default tables;

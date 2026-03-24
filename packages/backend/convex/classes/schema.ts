@@ -39,7 +39,7 @@ export const schoolClassTeacherRoleValidator = v.optional(
  * School class enroll method validator
  */
 export const schoolClassEnrollMethodValidator = v.optional(
-  literals("code", "teacher", "admin", "invite", "public")
+  literals("by_code", "teacher", "admin", "invite", "public")
 );
 
 /**
@@ -303,12 +303,12 @@ export const paginatedPeopleValidator = paginationResultValidator(
 
 const tables = {
   schoolClasses: defineTable(schoolClassValidator)
-    .index("schoolId_isArchived_visibility", [
+    .index("by_schoolId_and_isArchived_and_visibility", [
       "schoolId",
       "isArchived",
       "visibility",
     ])
-    .index("schoolId_visibility_isArchived", [
+    .index("by_schoolId_and_visibility_and_isArchived", [
       "schoolId",
       "visibility",
       "isArchived",
@@ -319,17 +319,21 @@ const tables = {
     }),
 
   schoolClassMembers: defineTable(schoolClassMemberValidator)
-    .index("classId_userId", ["classId", "userId"])
-    .index("schoolId", ["schoolId"]),
+    .index("by_classId_and_userId", ["classId", "userId"])
+    .index("by_schoolId", ["schoolId"]),
 
   schoolClassInviteCodes: defineTable(schoolClassInviteCodeValidator)
-    .index("classId_role", ["classId", "role"])
-    .index("code", ["code"])
-    .index("schoolId", ["schoolId"]),
+    .index("by_classId_and_role", ["classId", "role"])
+    .index("by_code", ["code"])
+    .index("by_schoolId", ["schoolId"]),
 
   schoolClassForums: defineTable(schoolClassForumValidator)
     .index("by_classId_and_lastPostAt", ["classId", "lastPostAt"])
-    .index("classId_status_lastPostAt", ["classId", "status", "lastPostAt"])
+    .index("by_classId_and_status_and_lastPostAt", [
+      "classId",
+      "status",
+      "lastPostAt",
+    ])
     .searchIndex("search_title", {
       searchField: "title",
       filterFields: ["classId", "status"],
@@ -340,11 +344,11 @@ const tables = {
     userId: v.id("users"),
     emoji: v.string(),
   })
-    .index("forumId_userId_emoji", ["forumId", "userId", "emoji"])
+    .index("by_forumId_and_userId_and_emoji", ["forumId", "userId", "emoji"])
     .index("by_forumId_and_emoji_and_userId", ["forumId", "emoji", "userId"]),
 
   schoolClassForumPosts: defineTable(schoolClassForumPostValidator).index(
-    "forumId",
+    "by_forumId",
     ["forumId"]
   ),
 
@@ -378,7 +382,7 @@ const tables = {
     size: v.number(),
     createdBy: v.id("users"),
   })
-    .index("postId", ["postId"])
+    .index("by_postId", ["postId"])
     .index("by_fileId", ["fileId"]),
 
   schoolClassForumPostReactions: defineTable({
@@ -386,7 +390,7 @@ const tables = {
     userId: v.id("users"),
     emoji: v.string(),
   })
-    .index("postId_userId_emoji", ["postId", "userId", "emoji"])
+    .index("by_postId_and_userId_and_emoji", ["postId", "userId", "emoji"])
     .index("by_postId_and_emoji_and_userId", ["postId", "emoji", "userId"]),
 
   /**
@@ -400,18 +404,22 @@ const tables = {
     lastReadAt: v.number(),
     lastReadPostId: v.optional(v.id("schoolClassForumPosts")),
   })
-    .index("forumId_userId", ["forumId", "userId"])
-    .index("classId_userId", ["classId", "userId"]),
+    .index("by_forumId_and_userId", ["forumId", "userId"])
+    .index("by_classId_and_userId", ["classId", "userId"]),
 
   schoolClassMaterialGroups: defineTable(schoolClassMaterialGroupValidator)
-    .index("classId_parentId_order", ["classId", "parentId", "order"])
-    .index("classId_parentId_status_order", [
+    .index("by_classId_and_parentId_and_order", [
+      "classId",
+      "parentId",
+      "order",
+    ])
+    .index("by_classId_and_parentId_and_status_and_order", [
       "classId",
       "parentId",
       "status",
       "order",
     ])
-    .index("status_scheduledAt", ["status", "scheduledAt"])
+    .index("by_status_and_scheduledAt", ["status", "scheduledAt"])
     .searchIndex("search_name", {
       searchField: "name",
       filterFields: ["classId", "parentId", "status"],
@@ -437,14 +445,14 @@ const tables = {
     publishedAt: v.optional(v.number()),
     publishedBy: v.optional(v.id("users")),
   })
-    .index("groupId_status_isPinned_order", [
+    .index("by_groupId_and_status_and_isPinned_and_order", [
       "groupId",
       "status",
       "isPinned",
       "order",
     ])
-    .index("status_scheduledAt", ["status", "scheduledAt"])
-    .index("classId_status", ["classId", "status"])
+    .index("by_status_and_scheduledAt", ["status", "scheduledAt"])
+    .index("by_classId_and_status", ["classId", "status"])
     .searchIndex("search_title", {
       searchField: "title",
       filterFields: ["classId", "groupId", "status"],
@@ -467,8 +475,8 @@ const tables = {
     downloadCount: v.number(),
     uploadedBy: v.id("users"),
   })
-    .index("materialId_type_order", ["materialId", "type", "order"])
-    .index("classId", ["classId"]),
+    .index("by_materialId_and_type_and_order", ["materialId", "type", "order"])
+    .index("by_classId", ["classId"]),
 
   schoolClassMaterialViews: defineTable({
     materialId: v.id("schoolClassMaterials"),
@@ -480,8 +488,8 @@ const tables = {
     hasDownloaded: v.boolean(),
     lastDownloadedAt: v.optional(v.number()),
   })
-    .index("materialId_userId", ["materialId", "userId"])
-    .index("classId_userId", ["classId", "userId"]),
+    .index("by_materialId_and_userId", ["materialId", "userId"])
+    .index("by_classId_and_userId", ["classId", "userId"]),
 };
 
 export default tables;

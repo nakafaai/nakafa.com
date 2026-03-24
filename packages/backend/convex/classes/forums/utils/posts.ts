@@ -40,7 +40,7 @@ export async function enrichForumPosts(
     asyncMap(postIds, (postId) =>
       ctx.db
         .query("schoolClassForumPostAttachments")
-        .withIndex("postId", (q) => q.eq("postId", postId))
+        .withIndex("by_postId", (q) => q.eq("postId", postId))
         .take(MAX_FORUM_POST_ATTACHMENTS + 1)
     ),
   ]);

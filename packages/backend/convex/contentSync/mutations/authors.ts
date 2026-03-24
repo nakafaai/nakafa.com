@@ -33,7 +33,7 @@ export const bulkSyncAuthors = internalMutation({
       uniqueNames.map((name) =>
         ctx.db
           .query("authors")
-          .withIndex("name", (q) => q.eq("name", name))
+          .withIndex("by_name", (q) => q.eq("name", name))
           .unique()
           .then((author) => ({ exists: author !== null, name }))
       )
@@ -86,7 +86,7 @@ export const deleteUnusedAuthors = internalMutation({
       const authorId = args.authorIds[index];
       const linkedContent = await ctx.db
         .query("contentAuthors")
-        .withIndex("authorId", (q) => q.eq("authorId", authorId))
+        .withIndex("by_authorId", (q) => q.eq("authorId", authorId))
         .first();
 
       if (linkedContent) {

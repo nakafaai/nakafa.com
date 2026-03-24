@@ -36,7 +36,7 @@ export const getForumPostsAround = query({
       }),
       ctx.db
         .query("schoolClassForumPosts")
-        .withIndex("forumId", (q) =>
+        .withIndex("by_forumId", (q) =>
           q
             .eq("forumId", args.forumId)
             .lt("_creationTime", targetPost._creationTime)
@@ -45,7 +45,7 @@ export const getForumPostsAround = query({
         .take(limit + 1),
       ctx.db
         .query("schoolClassForumPosts")
-        .withIndex("forumId", (q) =>
+        .withIndex("by_forumId", (q) =>
           q
             .eq("forumId", args.forumId)
             .gt("_creationTime", targetPost._creationTime)

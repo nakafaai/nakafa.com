@@ -17,7 +17,7 @@ export const cleanupDeletedMaterial = internalMutation({
   handler: async (ctx, args) => {
     const attachments = await ctx.db
       .query("schoolClassMaterialAttachments")
-      .withIndex("materialId_type_order", (q) =>
+      .withIndex("by_materialId_and_type_and_order", (q) =>
         q.eq("materialId", args.materialId)
       )
       .take(MATERIAL_ATTACHMENT_CLEANUP_BATCH_SIZE);
@@ -39,7 +39,7 @@ export const cleanupDeletedMaterial = internalMutation({
 
     const views = await ctx.db
       .query("schoolClassMaterialViews")
-      .withIndex("materialId_userId", (q) =>
+      .withIndex("by_materialId_and_userId", (q) =>
         q.eq("materialId", args.materialId)
       )
       .take(MATERIAL_VIEW_CLEANUP_BATCH_SIZE);
@@ -72,7 +72,7 @@ export const cleanupDeletedGroup = internalMutation({
   handler: async (ctx, args) => {
     const childGroups = await ctx.db
       .query("schoolClassMaterialGroups")
-      .withIndex("classId_parentId_order", (q) =>
+      .withIndex("by_classId_and_parentId_and_order", (q) =>
         q.eq("classId", args.classId).eq("parentId", args.groupId)
       )
       .take(MATERIAL_GROUP_CHILD_CLEANUP_BATCH_SIZE);
@@ -93,7 +93,7 @@ export const cleanupDeletedGroup = internalMutation({
 
     const materials = await ctx.db
       .query("schoolClassMaterials")
-      .withIndex("groupId_status_isPinned_order", (q) =>
+      .withIndex("by_groupId_and_status_and_isPinned_and_order", (q) =>
         q.eq("groupId", args.groupId)
       )
       .take(MATERIAL_GROUP_MATERIAL_CLEANUP_BATCH_SIZE);

@@ -40,7 +40,7 @@ export function getLatestScaleVersionForTryout(
 export async function getActiveTryoutsWithoutScale(db: IrtDbReader) {
   const tryouts = await db
     .query("tryouts")
-    .withIndex("isActive", (q) => q.eq("isActive", true))
+    .withIndex("by_isActive", (q) => q.eq("isActive", true))
     .take(MAX_ACTIVE_TRYOUTS_WITHOUT_SCALE + 1);
 
   if (tryouts.length > MAX_ACTIVE_TRYOUTS_WITHOUT_SCALE) {

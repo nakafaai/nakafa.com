@@ -245,7 +245,7 @@ export const getLatestJwks = internalAction({
     const auth = createAuth(ctx);
     // This method is added by the Convex Better Auth plugin and is
     // available via `auth.api` only, not exposed as a route.
-    return await auth.api.getLatestJwks();
+    return auth.api.getLatestJwks();
   },
 });
 

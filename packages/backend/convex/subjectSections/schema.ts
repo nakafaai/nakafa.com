@@ -40,8 +40,8 @@ const tables = {
     /** Last sync timestamp (epoch ms) */
     syncedAt: v.number(),
   })
-    .index("locale_slug", ["locale", "slug"])
-    .index("topicId", ["topicId"]),
+    .index("by_locale_and_slug", ["locale", "slug"])
+    .index("by_topicId", ["topicId"]),
 };
 
 export default tables;

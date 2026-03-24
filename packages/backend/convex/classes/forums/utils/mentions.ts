@@ -35,7 +35,7 @@ export async function validateForumMentions(
     uniqueMentionedUserIds.map(async (mentionedUserId) => {
       const classMember = await ctx.db
         .query("schoolClassMembers")
-        .withIndex("classId_userId", (q) =>
+        .withIndex("by_classId_and_userId", (q) =>
           q.eq("classId", forum.classId).eq("userId", mentionedUserId)
         )
         .first();

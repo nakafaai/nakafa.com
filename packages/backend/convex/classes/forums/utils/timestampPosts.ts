@@ -50,7 +50,7 @@ export async function getForumPostsAtTimestamp(
 ) {
   const posts = await db
     .query("schoolClassForumPosts")
-    .withIndex("forumId", (q) =>
+    .withIndex("by_forumId", (q) =>
       q.eq("forumId", forumId).eq("_creationTime", timestamp)
     )
     .order("asc")

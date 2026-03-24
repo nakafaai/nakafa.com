@@ -66,7 +66,7 @@ export async function evaluateTryoutScaleQuality(
 
   const tryoutPartSets = await db
     .query("tryoutPartSets")
-    .withIndex("tryoutId_partIndex", (q) => q.eq("tryoutId", tryoutId))
+    .withIndex("by_tryoutId_and_partIndex", (q) => q.eq("tryoutId", tryoutId))
     .take(tryout.partCount + 1);
 
   if (tryoutPartSets.length > tryout.partCount) {
@@ -106,7 +106,7 @@ export async function evaluateTryoutScaleQuality(
         .take(set.questionCount + 1),
       db
         .query("exerciseQuestions")
-        .withIndex("setId", (q) => q.eq("setId", set._id))
+        .withIndex("by_setId", (q) => q.eq("setId", set._id))
         .take(set.questionCount + 1),
     ]);
 

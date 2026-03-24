@@ -28,7 +28,7 @@ export async function getSchoolMembership(
   schoolId: Id<"schools">,
   userId: Id<"users">
 ) {
-  return await ctx.db
+  return ctx.db
     .query("schoolMembers")
     .withIndex("by_schoolId_and_userId_and_status", (q) =>
       q.eq("schoolId", schoolId).eq("userId", userId).eq("status", "active")

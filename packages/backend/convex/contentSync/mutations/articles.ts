@@ -80,7 +80,7 @@ export const bulkSyncArticles = internalMutation({
     for (const article of args.articles) {
       const existingArticle = await ctx.db
         .query("articleContents")
-        .withIndex("locale_slug", (q) =>
+        .withIndex("by_locale_and_slug", (q) =>
           q.eq("locale", article.locale).eq("slug", article.slug)
         )
         .unique();

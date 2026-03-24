@@ -96,7 +96,7 @@ export async function syncTryoutExerciseAttemptExpiry(
   const partAttempt = await getOneFrom(
     ctx.db,
     "tryoutPartAttempts",
-    "setAttemptId",
+    "by_setAttemptId",
     attempt._id
   );
 
