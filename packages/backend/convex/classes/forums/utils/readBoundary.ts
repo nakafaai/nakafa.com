@@ -3,6 +3,35 @@ import type { DatabaseReader } from "@repo/backend/convex/_generated/server";
 import { getForumPostsAtTimestamp } from "@repo/backend/convex/classes/forums/utils/timestampPosts";
 
 /**
+ * Compare two post ids inside one same-timestamp forum slice.
+ */
+export function isPostAfterBoundaryInTimestamp(
+  postsAtTimestamp: Array<{ _id: Id<"schoolClassForumPosts"> }>,
+  {
+    boundaryPostId,
+    postId,
+  }: {
+    boundaryPostId: Id<"schoolClassForumPosts">;
+    postId: Id<"schoolClassForumPosts">;
+  }
+) {
+  const boundaryIndex = postsAtTimestamp.findIndex(
+    (post) => post._id === boundaryPostId
+  );
+  const postIndex = postsAtTimestamp.findIndex((post) => post._id === postId);
+
+  if (postIndex < 0) {
+    return false;
+  }
+
+  if (boundaryIndex < 0) {
+    return true;
+  }
+
+  return postIndex > boundaryIndex;
+}
+
+/**
  * Return whether a new read boundary is strictly later than the stored one.
  */
 export async function shouldAdvanceForumReadBoundary(
@@ -41,22 +70,11 @@ export async function shouldAdvanceForumReadBoundary(
     forumId,
     timestamp: nextLastReadAt,
   });
-  const existingIndex = postsAtTimestamp.findIndex(
-    (post) => post._id === existingLastReadPostId
-  );
-  const nextIndex = postsAtTimestamp.findIndex(
-    (post) => post._id === nextLastReadPostId
-  );
 
-  if (nextIndex < 0) {
-    return false;
-  }
-
-  if (existingIndex < 0) {
-    return true;
-  }
-
-  return nextIndex > existingIndex;
+  return isPostAfterBoundaryInTimestamp(postsAtTimestamp, {
+    boundaryPostId: existingLastReadPostId,
+    postId: nextLastReadPostId,
+  });
 }
 
 /**
@@ -90,20 +108,9 @@ export async function isPostAfterForumReadBoundary(
     forumId,
     timestamp: postTime,
   });
-  const lastReadIndex = postsAtTimestamp.findIndex(
-    (timestampPost) => timestampPost._id === lastReadPostId
-  );
-  const postIndex = postsAtTimestamp.findIndex(
-    (timestampPost) => timestampPost._id === postId
-  );
 
-  if (postIndex < 0) {
-    return false;
-  }
-
-  if (lastReadIndex < 0) {
-    return true;
-  }
-
-  return postIndex > lastReadIndex;
+  return isPostAfterBoundaryInTimestamp(postsAtTimestamp, {
+    boundaryPostId: lastReadPostId,
+    postId,
+  });
 }

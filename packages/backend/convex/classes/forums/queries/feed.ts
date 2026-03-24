@@ -1,7 +1,11 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { loadForumWithAccess } from "@repo/backend/convex/classes/forums/utils/access";
 import { enrichForumPosts } from "@repo/backend/convex/classes/forums/utils/posts";
-import { isPostAfterForumReadBoundary } from "@repo/backend/convex/classes/forums/utils/readBoundary";
+import {
+  isPostAfterBoundaryInTimestamp,
+  isPostAfterForumReadBoundary,
+} from "@repo/backend/convex/classes/forums/utils/readBoundary";
+import { getForumPostsAtTimestamp } from "@repo/backend/convex/classes/forums/utils/timestampPosts";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { paginationOptsValidator } from "convex/server";
@@ -38,6 +42,19 @@ export const getForumPosts = query({
       postsPage.page,
       currentUserId
     );
+    const hasBoundaryTimestampPosts =
+      readState?.lastReadPostId !== undefined &&
+      enrichedPosts.some(
+        (post) =>
+          post._creationTime === readState.lastReadAt &&
+          post.createdBy !== currentUserId
+      );
+    const boundaryTimestampPosts = hasBoundaryTimestampPosts
+      ? await getForumPostsAtTimestamp(ctx.db, {
+          forumId: args.forumId,
+          timestamp: readState.lastReadAt,
+        })
+      : null;
 
     async function isUnreadPost(post: (typeof enrichedPosts)[number]) {
       if (post.createdBy === currentUserId) {
@@ -58,6 +75,13 @@ export const getForumPosts = query({
 
       if (!readState.lastReadPostId) {
         return false;
+      }
+
+      if (boundaryTimestampPosts) {
+        return isPostAfterBoundaryInTimestamp(boundaryTimestampPosts, {
+          boundaryPostId: readState.lastReadPostId,
+          postId: post._id,
+        });
       }
 
       return await isPostAfterForumReadBoundary(ctx.db, {
