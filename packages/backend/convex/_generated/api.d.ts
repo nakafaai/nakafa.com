@@ -36,6 +36,7 @@ import type * as classes_forums_queries_forums from "../classes/forums/queries/f
 import type * as classes_forums_queries_newer from "../classes/forums/queries/newer.js";
 import type * as classes_forums_queries_older from "../classes/forums/queries/older.js";
 import type * as classes_forums_utils_access from "../classes/forums/utils/access.js";
+import type * as classes_forums_utils_attachments from "../classes/forums/utils/attachments.js";
 import type * as classes_forums_utils_constants from "../classes/forums/utils/constants.js";
 import type * as classes_forums_utils_mentions from "../classes/forums/utils/mentions.js";
 import type * as classes_forums_utils_postReactions from "../classes/forums/utils/postReactions.js";
@@ -221,6 +222,7 @@ declare const fullApi: ApiFromModules<{
   "classes/forums/queries/newer": typeof classes_forums_queries_newer;
   "classes/forums/queries/older": typeof classes_forums_queries_older;
   "classes/forums/utils/access": typeof classes_forums_utils_access;
+  "classes/forums/utils/attachments": typeof classes_forums_utils_attachments;
   "classes/forums/utils/constants": typeof classes_forums_utils_constants;
   "classes/forums/utils/mentions": typeof classes_forums_utils_mentions;
   "classes/forums/utils/postReactions": typeof classes_forums_utils_postReactions;

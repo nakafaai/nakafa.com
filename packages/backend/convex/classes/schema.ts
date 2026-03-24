@@ -234,7 +234,6 @@ export const schoolClassForumPostValidator = v.object({
   replyToBody: v.optional(v.string()),
   replyCount: v.number(),
   reactionCounts: v.array(schoolClassReactionCountValidator),
-  isDeleted: v.boolean(),
   createdBy: v.id("users"),
   updatedAt: v.number(),
   editedAt: v.optional(v.number()),

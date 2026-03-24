@@ -1,28 +1,23 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { loadOpenForumWithAccess } from "@repo/backend/convex/classes/forums/utils/access";
+import {
+  attachmentArgValidator,
+  validateForumAttachments,
+} from "@repo/backend/convex/classes/forums/utils/attachments";
 import { MAX_FORUM_POST_ATTACHMENTS } from "@repo/backend/convex/classes/forums/utils/constants";
 import { validateForumMentions } from "@repo/backend/convex/classes/forums/utils/mentions";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { truncateText } from "@repo/backend/convex/utils/helper";
-import { ConvexError, type Infer, v } from "convex/values";
-
-const attachmentArg = v.object({
-  name: v.string(),
-  size: v.number(),
-  storageId: v.id("_storage"),
-  type: v.string(),
-});
-
-export type AttachmentArg = Infer<typeof attachmentArg>;
+import { ConvexError, v } from "convex/values";
 
 /**
  * Create a new forum post.
  */
 export const createForumPost = mutation({
   args: {
-    attachments: v.optional(v.array(attachmentArg)),
+    attachments: v.optional(v.array(attachmentArgValidator)),
     body: v.string(),
     forumId: vv.id("schoolClassForums"),
     mentions: v.optional(v.array(vv.id("users"))),
@@ -48,6 +43,9 @@ export const createForumPost = mutation({
     }
 
     const { forum } = await loadOpenForumWithAccess(ctx, args.forumId, userId);
+
+    await validateForumAttachments(ctx, attachments);
+
     const mentions = await validateForumMentions(ctx, {
       forum,
       mentionedUserIds: args.mentions ?? [],
@@ -79,7 +77,6 @@ export const createForumPost = mutation({
       classId: forum.classId,
       createdBy: userId,
       forumId: args.forumId,
-      isDeleted: false,
       mentions,
       parentId: args.parentId,
       reactionCounts: [],

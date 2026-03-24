@@ -27,12 +27,14 @@ async function getUnreadForumPostCount(
     userId: Id<"users">;
   }
 ) {
-  const sameTimestampPosts = await getForumPostsAtTimestamp(ctx.db, {
-    forumId,
-    timestamp: lastReadAt,
-  });
   const sameTimestampUnreadPosts = lastReadPostId
-    ? getForumPostsAfterBoundaryAtTimestamp(sameTimestampPosts, lastReadPostId)
+    ? getForumPostsAfterBoundaryAtTimestamp(
+        await getForumPostsAtTimestamp(ctx.db, {
+          forumId,
+          timestamp: lastReadAt,
+        }),
+        lastReadPostId
+      )
     : [];
 
   let unreadCount = 0;

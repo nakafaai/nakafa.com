@@ -14,6 +14,6 @@ export const generateUploadUrl = mutation({
     const user = await requireAuthWithSession(ctx);
     await loadOpenForumWithAccess(ctx, args.forumId, user.appUser._id);
 
-    return await ctx.storage.generateUploadUrl();
+    return ctx.storage.generateUploadUrl();
   },
 });

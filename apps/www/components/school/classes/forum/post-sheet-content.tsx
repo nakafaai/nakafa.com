@@ -1,32 +1,13 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { useQuery } from "convex/react";
 import { memo } from "react";
 import { ForumPostConversation } from "@/components/school/classes/forum/conversation";
-import { useForum } from "@/lib/context/use-forum";
+import type { Forum } from "@/components/school/classes/forum/conversation/types";
 import { useUser } from "@/lib/context/use-user";
 
-export const SchoolClassesForumPostSheetContent = memo(() => {
-  const activeForumId = useForum((f) => f.activeForumId);
-
-  if (!activeForumId) {
-    return null;
-  }
-
-  return <ForumPostList forumId={activeForumId} />;
-});
-SchoolClassesForumPostSheetContent.displayName =
-  "SchoolClassesForumPostSheetContent";
-
-const ForumPostList = memo(
-  ({ forumId }: { forumId: Id<"schoolClassForums"> }) => {
+export const SchoolClassesForumPostSheetContent = memo(
+  ({ forum }: { forum: Forum | undefined }) => {
     const user = useUser((state) => state.user);
-    // Forum details now come from a single query.
-    const forum = useQuery(api.classes.forums.queries.forums.getForum, {
-      forumId,
-    });
 
     if (!(forum && user)) {
       return null;
@@ -41,4 +22,5 @@ const ForumPostList = memo(
     );
   }
 );
-ForumPostList.displayName = "ForumPostList";
+SchoolClassesForumPostSheetContent.displayName =
+  "SchoolClassesForumPostSheetContent";

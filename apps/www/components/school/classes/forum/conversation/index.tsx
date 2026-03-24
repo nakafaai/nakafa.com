@@ -11,6 +11,7 @@ import {
   memo,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -105,6 +106,11 @@ export const ForumPostConversation = memo(
       scrollRef.current?.scrollToBottom();
     }, []);
 
+    const forumScrollValue = useMemo(
+      () => ({ scrollToPostId, jumpToPostId, scrollToBottom }),
+      [scrollToPostId, jumpToPostId, scrollToBottom]
+    );
+
     // Handlers
     const handleScroll = useCallback(() => {
       const atBottom = scrollRef.current?.isAtBottom() ?? true;
@@ -161,9 +167,7 @@ export const ForumPostConversation = memo(
     }
 
     return (
-      <ForumScrollProvider
-        value={{ scrollToPostId, jumpToPostId, scrollToBottom }}
-      >
+      <ForumScrollProvider value={forumScrollValue}>
         <div className="relative flex size-full flex-col overflow-hidden">
           <VirtualConversation
             floatingContent={

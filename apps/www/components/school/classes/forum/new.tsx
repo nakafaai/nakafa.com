@@ -6,6 +6,7 @@ import {
   ChatAdd01Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
+import { useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
@@ -29,7 +30,6 @@ import { cn } from "@repo/design-system/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 import { toast } from "sonner";
 import * as z from "zod/mini";
 import { getTag, getTagsByRole } from "@/components/school/classes/_data/tag";
@@ -58,7 +58,7 @@ const defaultValues: z.infer<typeof formSchema> = {
 export function SchoolClassesForumNew() {
   const t = useTranslations("School.Classes");
 
-  const [openDialog, setOpenDialog] = useState(false);
+  const [isDialogOpen, dialog] = useDisclosure(false);
 
   const classId = useClass((c) => c.class._id);
   const classMembership = useClass((c) => c.classMembership);
@@ -81,7 +81,7 @@ export function SchoolClassesForumNew() {
     onSubmit: async ({ value }) => {
       try {
         await createForum({ ...value, classId });
-        setOpenDialog(false);
+        dialog.close();
         form.reset();
       } catch {
         toast.error(t("create-forum-failed"));
@@ -98,7 +98,7 @@ export function SchoolClassesForumNew() {
       }}
     >
       <ButtonGroup>
-        <Button onClick={() => setOpenDialog(true)}>
+        <Button onClick={dialog.open}>
           <HugeIcons icon={ChatAdd01Icon} />
           {t("new-forum")}
         </Button>
@@ -121,8 +121,15 @@ export function SchoolClassesForumNew() {
               )}
             </form.Subscribe>
           }
-          open={openDialog}
-          setOpen={setOpenDialog}
+          open={isDialogOpen}
+          setOpen={(open) => {
+            if (open) {
+              dialog.open();
+              return;
+            }
+
+            dialog.close();
+          }}
           title={t("new-forum-title")}
         >
           <FieldGroup>

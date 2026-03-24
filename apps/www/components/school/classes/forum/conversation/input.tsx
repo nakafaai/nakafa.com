@@ -9,10 +9,10 @@ import {
   FileIcon,
   WinkIcon,
 } from "@hugeicons/core-free-icons";
-import { useOs } from "@mantine/hooks";
+import { useDisclosure, useOs } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { AttachmentArg } from "@repo/backend/convex/classes/forums/mutations/posts";
+import type { AttachmentArg } from "@repo/backend/convex/classes/forums/utils/attachments";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -57,12 +57,11 @@ import {
   useCallback,
   useEffect,
   useRef,
-  useState,
 } from "react";
 import { toast } from "sonner";
 import * as z from "zod/mini";
 import { useForum } from "@/lib/context/use-forum";
-import { useForumScrollContext } from "@/lib/context/use-forum-scroll";
+import { useForumScroll } from "@/lib/context/use-forum-scroll";
 
 export const ForumPostInput = memo(
   ({ forumId }: { forumId: Id<"schoolClassForums"> }) => {
@@ -70,7 +69,7 @@ export const ForumPostInput = memo(
     const replyTo = useForum((f) => f.replyTo);
     const setReplyTo = useForum((f) => f.setReplyTo);
     const exitJumpMode = useForum((f) => f.exitJumpMode);
-    const forumScroll = useForumScrollContext();
+    const scrollToBottom = useForumScroll((state) => state.scrollToBottom);
 
     const textareaRef = useRef<ComponentRef<typeof InputGroupTextarea>>(null);
     const generateUploadUrl = useMutation(
@@ -95,7 +94,7 @@ export const ForumPostInput = memo(
       },
     });
 
-    const [emojiOpen, setEmojiOpen] = useState(false);
+    const [isEmojiPickerOpen, emojiPicker] = useDisclosure(false);
     const os = useOs();
     const isMobile = os === "ios" || os === "android";
 
@@ -174,7 +173,7 @@ export const ForumPostInput = memo(
 
         // Auto-scroll to bottom after sending my own message
         requestAnimationFrame(() => {
-          forumScroll?.scrollToBottom();
+          scrollToBottom();
         });
       },
     });
@@ -236,7 +235,17 @@ export const ForumPostInput = memo(
                       value={field.state.value}
                     />
                     <InputGroupAddon align="inline-end">
-                      <Popover onOpenChange={setEmojiOpen} open={emojiOpen}>
+                      <Popover
+                        onOpenChange={(open) => {
+                          if (open) {
+                            emojiPicker.open();
+                            return;
+                          }
+
+                          emojiPicker.close();
+                        }}
+                        open={isEmojiPickerOpen}
+                      >
                         <PopoverTrigger asChild>
                           <InputGroupButton
                             aria-label={t("emoji")}
@@ -262,7 +271,7 @@ export const ForumPostInput = memo(
                             className="h-80"
                             onEmojiSelect={({ emoji }) => {
                               field.handleChange(field.state.value + emoji);
-                              setEmojiOpen(false);
+                              emojiPicker.close();
                               textareaRef.current?.focus();
                             }}
                           >
