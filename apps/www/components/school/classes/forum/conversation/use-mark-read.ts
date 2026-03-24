@@ -4,52 +4,33 @@ import { useDebouncedCallback } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useMutation } from "convex/react";
-import { useEffect, useReducer, useRef } from "react";
+import { useCallback, useRef } from "react";
 
 /**
- * Discord/Slack-style mark-read strategy:
- * - Scroll to bottom → debounced 1s
- * - New messages while at bottom → immediate flush
- * - Scroll away from bottom → cancel pending mark-read
- * - Unmount → automatic flush via flushOnUnmount
+ * Encapsulate forum read-state writes behind explicit event handlers.
  */
-export function useMarkRead({
-  forumId,
-  lastPostId,
-  isAtBottom,
-  isJumpMode,
-}: {
-  forumId: Id<"schoolClassForums">;
-  lastPostId: Id<"schoolClassForumPosts"> | undefined;
-  isAtBottom: boolean;
-  isJumpMode: boolean;
-}) {
+export function useMarkRead({ forumId }: { forumId: Id<"schoolClassForums"> }) {
   const markRead = useMutation(
     api.classes.forums.mutations.readState.markForumRead
   );
-  const lastReadPostIdRef = useRef(lastPostId);
-  const [retryTick, retryMarkRead] = useReducer(
-    (count: number) => count + 1,
-    0
+  const lastSyncedPostIdRef = useRef<Id<"schoolClassForumPosts"> | undefined>(
+    undefined
   );
 
-  lastReadPostIdRef.current = lastPostId;
-
-  // Track if we've already marked read at bottom to prevent duplicate calls
-  const hasMarkedAtBottomRef = useRef(false);
-
   const debouncedMarkRead = useDebouncedCallback(
-    () => {
-      const lastReadPostId = lastReadPostIdRef.current;
-
-      if (lastReadPostId === undefined) {
+    (lastReadPostId: Id<"schoolClassForumPosts">) => {
+      if (lastSyncedPostIdRef.current === lastReadPostId) {
         return;
       }
 
-      return markRead({ forumId, lastReadPostId }).catch(() => {
-        hasMarkedAtBottomRef.current = false;
-        retryMarkRead();
-      });
+      markRead({ forumId, lastReadPostId })
+        .then(() => {
+          lastSyncedPostIdRef.current = lastReadPostId;
+        })
+        .catch(() => {
+          // Keep the previous synced post id so a later bottom/new-post event
+          // can retry naturally.
+        });
     },
     {
       delay: 1000,
@@ -57,37 +38,45 @@ export function useMarkRead({
     }
   );
 
-  // Cancel pending mark-read and reset flag when user scrolls away from bottom
-  useEffect(() => {
-    if (!isAtBottom) {
-      debouncedMarkRead.cancel();
-      hasMarkedAtBottomRef.current = false;
-    }
-  }, [isAtBottom, debouncedMarkRead]);
+  /**
+   * Queue a debounced mark-read when the user reaches the latest visible post.
+   */
+  const scheduleMarkRead = useCallback(
+    (lastReadPostId: Id<"schoolClassForumPosts"> | undefined) => {
+      if (!lastReadPostId) {
+        return;
+      }
 
-  // Primary trigger: mark read when user scrolls to bottom (debounced)
-  const canMarkRead = isAtBottom && !isJumpMode && lastPostId !== undefined;
-  useEffect(() => {
-    if (canMarkRead && !hasMarkedAtBottomRef.current && retryTick >= 0) {
-      hasMarkedAtBottomRef.current = true;
-      debouncedMarkRead();
-    }
-  }, [canMarkRead, debouncedMarkRead, retryTick]);
+      debouncedMarkRead(lastReadPostId);
+    },
+    [debouncedMarkRead]
+  );
 
-  // Real-time trigger: mark read when a newer visible post arrives.
-  const prevLastPostIdRef = useRef(lastPostId);
-  useEffect(() => {
-    const prevPostId = prevLastPostIdRef.current;
-    prevLastPostIdRef.current = lastPostId;
+  /**
+   * Flush immediately when a newer post arrives while the user stays at bottom.
+   */
+  const flushMarkRead = useCallback(
+    (lastReadPostId: Id<"schoolClassForumPosts"> | undefined) => {
+      if (!lastReadPostId) {
+        return;
+      }
 
-    const hasNewerPost =
-      lastPostId !== undefined &&
-      prevPostId !== undefined &&
-      lastPostId !== prevPostId;
-
-    if (hasNewerPost && isAtBottom && !isJumpMode) {
-      debouncedMarkRead();
+      debouncedMarkRead(lastReadPostId);
       debouncedMarkRead.flush();
-    }
-  }, [lastPostId, isAtBottom, isJumpMode, debouncedMarkRead]);
+    },
+    [debouncedMarkRead]
+  );
+
+  /**
+   * Cancel a pending mark-read when the user scrolls away from bottom.
+   */
+  const cancelPendingMarkRead = useCallback(() => {
+    debouncedMarkRead.cancel();
+  }, [debouncedMarkRead]);
+
+  return {
+    cancelPendingMarkRead,
+    flushMarkRead,
+    scheduleMarkRead,
+  };
 }

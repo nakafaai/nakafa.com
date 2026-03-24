@@ -135,7 +135,10 @@ function SchoolClassesForumPostSheetBody({
         </SheetDescription>
       </SheetHeader>
 
-      <SchoolClassesForumPostSheetContent forum={forum} />
+      <SchoolClassesForumPostSheetContent
+        forum={forum}
+        forumId={activeForumId}
+      />
     </>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { usePrevious } from "@mantine/hooks";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   VirtualConversation,
@@ -32,7 +33,15 @@ import { useForum } from "@/lib/context/use-forum";
 import { ForumScrollProvider } from "@/lib/context/use-forum-scroll";
 
 export const ForumPostConversation = memo(
-  ({ forum, currentUserId }: { forum: Forum; currentUserId: Id<"users"> }) => {
+  ({
+    forum,
+    forumId,
+    currentUserId,
+  }: {
+    forum: Forum | undefined;
+    forumId: Id<"schoolClassForums">;
+    currentUserId: Id<"users">;
+  }) => {
     // Data fetching & pagination
     const {
       posts,
@@ -48,7 +57,7 @@ export const ForumPostConversation = memo(
       loadOlderPosts,
       loadNewerPosts,
       exitJumpMode,
-    } = useForumPosts(forum._id);
+    } = useForumPosts(forumId);
 
     // Virtual list items
     const { items, initialScrollIndex, postIdToIndex } = useVirtualItems({
@@ -60,16 +69,12 @@ export const ForumPostConversation = memo(
 
     // Scroll refs and state
     const scrollRef = useRef<VirtualConversationHandle>(null);
-    const [isAtBottom, setIsAtBottom] = useState(false);
     const [isPrepending, setIsPrepending] = useState(false);
 
     const lastPostId = posts.at(-1)?._id;
-    useMarkRead({
-      forumId: forum._id,
-      lastPostId,
-      isAtBottom,
-      isJumpMode,
-    });
+    const previousLastPostId = usePrevious(lastPostId);
+    const { cancelPendingMarkRead, flushMarkRead, scheduleMarkRead } =
+      useMarkRead({ forumId });
 
     // Auto-scroll on new messages
     useAutoScroll({
@@ -114,14 +119,36 @@ export const ForumPostConversation = memo(
     // Handlers
     const handleScroll = useCallback(() => {
       const atBottom = scrollRef.current?.isAtBottom() ?? true;
-      setIsAtBottom(atBottom);
-    }, []);
+
+      if (!atBottom || isJumpMode) {
+        cancelPendingMarkRead();
+        return;
+      }
+
+      scheduleMarkRead(lastPostId);
+    }, [cancelPendingMarkRead, isJumpMode, lastPostId, scheduleMarkRead]);
 
     useEffect(() => {
       if (!isInitialLoading) {
         handleScroll();
       }
     }, [handleScroll, isInitialLoading]);
+
+    useEffect(() => {
+      if (isJumpMode || !lastPostId || !previousLastPostId) {
+        return;
+      }
+
+      if (lastPostId === previousLastPostId) {
+        return;
+      }
+
+      if (!(scrollRef.current?.isAtBottom() ?? true)) {
+        return;
+      }
+
+      flushMarkRead(lastPostId);
+    }, [flushMarkRead, isJumpMode, lastPostId, previousLastPostId]);
 
     const handleScrollToBottom = useCallback(() => {
       if (isJumpMode) {
@@ -212,7 +239,7 @@ export const ForumPostConversation = memo(
               );
             })}
           </VirtualConversation>
-          <ForumPostInput forumId={forum._id} />
+          <ForumPostInput forumId={forumId} />
         </div>
       </ForumScrollProvider>
     );

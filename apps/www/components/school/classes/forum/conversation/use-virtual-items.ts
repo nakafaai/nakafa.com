@@ -22,7 +22,7 @@ export function useVirtualItems({
   isJumpMode,
   targetIndex,
 }: {
-  forum: Forum;
+  forum: Forum | undefined;
   posts: ForumPost[];
   isJumpMode: boolean;
   targetIndex: number;
@@ -65,13 +65,15 @@ export function useVirtualItems({
     const idToIndex = new Map<Id<"schoolClassForumPosts">, number>();
     let scrollIndex: number | "end" = isJumpMode ? 0 : "end";
 
-    result.push({ type: "header", forum });
+    if (forum) {
+      result.push({ type: "header", forum });
+    }
 
     for (const [index, post] of posts.entries()) {
       const prevPost = posts[index - 1];
       const prevDate = prevPost
         ? new Date(prevPost._creationTime).toDateString()
-        : new Date(forum._creationTime).toDateString();
+        : new Date(post._creationTime).toDateString();
       const currentDate = new Date(post._creationTime).toDateString();
 
       if (currentDate !== prevDate) {

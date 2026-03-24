@@ -55,6 +55,7 @@ triggers.register("parts", noopHandler);
 triggers.register("schoolInviteCodes", noopHandler);
 triggers.register("schoolClassInviteCodes", noopHandler);
 triggers.register("schoolClassForums", noopHandler);
+triggers.register("schoolClassForumPendingUploads", noopHandler);
 triggers.register("schoolClassForumReadStates", noopHandler);
 triggers.register("schoolActivityLogs", noopHandler);
 triggers.register("notifications", notificationsHandler);

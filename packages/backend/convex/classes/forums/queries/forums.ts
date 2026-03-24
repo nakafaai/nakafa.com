@@ -84,9 +84,10 @@ export const getForum = query({
     const user = await requireAuth(ctx);
     const currentUserId = user.appUser._id;
     const forum = await loadForum(ctx, args.forumId);
-    const [, forumUserMap, reactionPreviews, myReactionsByForum] =
+    await requireClassAccess(ctx, forum.classId, forum.schoolId, currentUserId);
+
+    const [forumUserMap, reactionPreviews, myReactionsByForum] =
       await Promise.all([
-        requireClassAccess(ctx, forum.classId, forum.schoolId, currentUserId),
         getUserMap(ctx, [forum.createdBy]),
         getForumReactionPreviews(ctx, forum),
         getMyForumReactions(ctx, [forum._id], currentUserId),

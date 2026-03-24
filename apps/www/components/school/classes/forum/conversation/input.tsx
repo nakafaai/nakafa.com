@@ -12,7 +12,6 @@ import {
 import { useDisclosure, useOs } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { AttachmentArg } from "@repo/backend/convex/classes/forums/utils/attachments";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -75,6 +74,9 @@ export const ForumPostInput = memo(
     const generateUploadUrl = useMutation(
       api.classes.forums.mutations.uploads.generateUploadUrl
     );
+    const saveForumUpload = useMutation(
+      api.classes.forums.mutations.uploads.saveForumUpload
+    );
     const createPost = useMutation(
       api.classes.forums.mutations.posts.createForumPost
     );
@@ -106,7 +108,7 @@ export const ForumPostInput = memo(
 
     const uploadFiles = useCallback(
       (filesToUpload: FileWithPreview[]) => {
-        const promises: Promise<AttachmentArg>[] = [];
+        const promises: Promise<Id<"schoolClassForumPendingUploads">>[] = [];
 
         for (const f of filesToUpload) {
           if (!(f.file instanceof File)) {
@@ -116,7 +118,9 @@ export const ForumPostInput = memo(
 
           promises.push(
             (async () => {
-              const uploadUrl = await generateUploadUrl({ forumId });
+              const { uploadId, uploadUrl } = await generateUploadUrl({
+                forumId,
+              });
               const { storageId } = await ky
                 .post(uploadUrl, {
                   headers: { "Content-Type": file.type },
@@ -124,19 +128,22 @@ export const ForumPostInput = memo(
                 })
                 .json<{ storageId: Id<"_storage"> }>();
 
-              return {
-                storageId,
+              await saveForumUpload({
                 name: file.name,
-                type: file.type,
                 size: file.size,
-              };
+                type: file.type,
+                storageId,
+                uploadId,
+              });
+
+              return uploadId;
             })()
           );
         }
 
         return Promise.all(promises);
       },
-      [forumId, generateUploadUrl]
+      [forumId, generateUploadUrl, saveForumUpload]
     );
 
     const form = useForm({
@@ -154,16 +161,17 @@ export const ForumPostInput = memo(
           return;
         }
 
-        let attachments: AttachmentArg[] = [];
+        let attachmentUploadIds: Id<"schoolClassForumPendingUploads">[] = [];
         if (files.length > 0) {
-          attachments = await uploadFiles(files);
+          attachmentUploadIds = await uploadFiles(files);
         }
 
         await createPost({
+          attachmentUploadIds:
+            attachmentUploadIds.length > 0 ? attachmentUploadIds : undefined,
           forumId,
           body: value.body,
           parentId: replyTo?.postId,
-          attachments: attachments.length > 0 ? attachments : undefined,
         });
 
         form.reset();

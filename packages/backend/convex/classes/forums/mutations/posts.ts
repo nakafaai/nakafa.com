@@ -1,9 +1,6 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { loadOpenForumWithAccess } from "@repo/backend/convex/classes/forums/utils/access";
-import {
-  attachmentArgValidator,
-  validateForumAttachments,
-} from "@repo/backend/convex/classes/forums/utils/attachments";
+import { resolveForumAttachmentUploads } from "@repo/backend/convex/classes/forums/utils/attachments";
 import { MAX_FORUM_POST_ATTACHMENTS } from "@repo/backend/convex/classes/forums/utils/constants";
 import { validateForumMentions } from "@repo/backend/convex/classes/forums/utils/mentions";
 import { mutation } from "@repo/backend/convex/functions";
@@ -17,7 +14,9 @@ import { ConvexError, v } from "convex/values";
  */
 export const createForumPost = mutation({
   args: {
-    attachments: v.optional(v.array(attachmentArgValidator)),
+    attachmentUploadIds: v.optional(
+      v.array(vv.id("schoolClassForumPendingUploads"))
+    ),
     body: v.string(),
     forumId: vv.id("schoolClassForums"),
     mentions: v.optional(v.array(vv.id("users"))),
@@ -26,16 +25,16 @@ export const createForumPost = mutation({
   handler: async (ctx, args) => {
     const user = await requireAuthWithSession(ctx);
     const userId = user.appUser._id;
-    const attachments = args.attachments ?? [];
+    const attachmentUploadIds = args.attachmentUploadIds ?? [];
 
-    if (attachments.length > MAX_FORUM_POST_ATTACHMENTS) {
+    if (attachmentUploadIds.length > MAX_FORUM_POST_ATTACHMENTS) {
       throw new ConvexError({
         code: "FORUM_ATTACHMENT_LIMIT_EXCEEDED",
         message: "Forum post attachment count exceeds the supported limit.",
       });
     }
 
-    if (!(args.body.trim().length > 0 || attachments.length > 0)) {
+    if (!(args.body.trim().length > 0 || attachmentUploadIds.length > 0)) {
       throw new ConvexError({
         code: "EMPTY_POST",
         message: "Post must have either a message or attachments.",
@@ -43,8 +42,11 @@ export const createForumPost = mutation({
     }
 
     const { forum } = await loadOpenForumWithAccess(ctx, args.forumId, userId);
-
-    await validateForumAttachments(ctx, attachments);
+    const attachments = await resolveForumAttachmentUploads(ctx, {
+      forumId: args.forumId,
+      uploadIds: attachmentUploadIds,
+      userId,
+    });
 
     const mentions = await validateForumMentions(ctx, {
       forum,
@@ -92,11 +94,13 @@ export const createForumPost = mutation({
         createdBy: userId,
         fileId: attachment.storageId,
         forumId: args.forumId,
-        mimeType: attachment.type,
+        mimeType: attachment.mimeType,
         name: attachment.name,
         postId,
         size: attachment.size,
       });
+
+      await ctx.db.delete("schoolClassForumPendingUploads", attachment._id);
     }
 
     return postId;

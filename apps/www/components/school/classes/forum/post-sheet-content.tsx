@@ -1,15 +1,22 @@
 "use client";
 
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { memo } from "react";
 import { ForumPostConversation } from "@/components/school/classes/forum/conversation";
 import type { Forum } from "@/components/school/classes/forum/conversation/types";
 import { useUser } from "@/lib/context/use-user";
 
 export const SchoolClassesForumPostSheetContent = memo(
-  ({ forum }: { forum: Forum | undefined }) => {
+  ({
+    forum,
+    forumId,
+  }: {
+    forum: Forum | undefined;
+    forumId: Id<"schoolClassForums">;
+  }) => {
     const user = useUser((state) => state.user);
 
-    if (!(forum && user)) {
+    if (!user) {
       return null;
     }
 
@@ -17,7 +24,8 @@ export const SchoolClassesForumPostSheetContent = memo(
       <ForumPostConversation
         currentUserId={user.appUser._id}
         forum={forum}
-        key={forum._id}
+        forumId={forumId}
+        key={forumId}
       />
     );
   }

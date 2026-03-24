@@ -345,6 +345,16 @@ const tables = {
     ["forumId"]
   ),
 
+  schoolClassForumPendingUploads: defineTable({
+    forumId: v.id("schoolClassForums"),
+    classId: v.id("schoolClasses"),
+    uploadedBy: v.id("users"),
+    storageId: v.optional(v.id("_storage")),
+    name: v.optional(v.string()),
+    mimeType: v.optional(v.string()),
+    size: v.optional(v.number()),
+  }).index("by_storageId", ["storageId"]),
+
   schoolClassForumPostAttachments: defineTable({
     postId: v.id("schoolClassForumPosts"),
     forumId: v.id("schoolClassForums"),
@@ -354,7 +364,9 @@ const tables = {
     mimeType: v.string(),
     size: v.number(),
     createdBy: v.id("users"),
-  }).index("postId", ["postId"]),
+  })
+    .index("postId", ["postId"])
+    .index("by_fileId", ["fileId"]),
 
   schoolClassForumPostReactions: defineTable({
     postId: v.id("schoolClassForumPosts"),
