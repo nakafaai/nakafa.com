@@ -1,8 +1,5 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type {
-  MutationCtx,
-  QueryCtx,
-} from "@repo/backend/convex/_generated/server";
+import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import {
   buildFinalizedExerciseAttemptPatch,
   computeAttemptDurationSeconds,
@@ -13,15 +10,19 @@ import {
   getScaleVersionItemsForSet,
 } from "@repo/backend/convex/irt/scales/read";
 import { getAttemptEndReasonFromStatus } from "@repo/backend/convex/lib/attempts";
+import {
+  countCorrectAnswers,
+  getBoundedExerciseAnswers,
+  loadBoundedTryoutPartAttempts,
+  type TryoutMutationCtx,
+} from "@repo/backend/convex/tryouts/helpers/shared";
 import { scaleThetaToTryoutScore } from "@repo/backend/convex/tryouts/products";
 import type { TryoutScoreStatus } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError } from "convex/values";
 import { asyncMap } from "convex-helpers";
-import { getAll, getOneFrom } from "convex-helpers/server/relationships";
+import { getAll } from "convex-helpers/server/relationships";
 
-type TryoutMutationCtx = Pick<MutationCtx, "db" | "scheduler">;
 type TryoutDbReader = QueryCtx["db"];
-type TryoutAnswerLoaderDb = QueryCtx["db"] | MutationCtx["db"];
 type TryoutScoreTarget = Pick<
   Doc<"tryoutAttempts">,
   "scaleVersionId" | "scoreStatus"
@@ -30,8 +31,16 @@ type TryoutScoreTotals = Pick<
   Doc<"tryoutAttempts">,
   "totalCorrect" | "totalQuestions"
 >;
+type FinalizedExerciseAttemptStatus = Exclude<
+  Doc<"exerciseAttempts">["status"],
+  "in-progress"
+>;
+type FinalizedTryoutStatus = Exclude<
+  Doc<"tryoutAttempts">["status"],
+  "in-progress"
+>;
 
-/** Picks the best frozen scale currently available for one tryout attempt. */
+/** Pick the best frozen scale currently available for one tryout attempt. */
 export async function getTryoutScoreTarget(
   db: TryoutDbReader,
   tryoutAttempt: Pick<
@@ -64,16 +73,7 @@ export async function getTryoutScoreTarget(
   };
 }
 
-type FinalizedExerciseAttemptStatus = Exclude<
-  Doc<"exerciseAttempts">["status"],
-  "in-progress"
->;
-type FinalizedTryoutStatus = Exclude<
-  Doc<"tryoutAttempts">["status"],
-  "in-progress"
->;
-
-/** Converts accumulated tryout score totals into a percentage. */
+/** Convert accumulated tryout score totals into a percentage. */
 export function computeTryoutRawScorePercentage({
   totalCorrect,
   totalQuestions,
@@ -85,7 +85,7 @@ export function computeTryoutRawScorePercentage({
   return (totalCorrect / totalQuestions) * 100;
 }
 
-/** Returns the first ordered part index that has not been finalized yet. */
+/** Return the first ordered part index that has not been finalized yet. */
 export function getFirstIncompleteTryoutPartIndex({
   completedPartIndices,
   partCount,
@@ -100,7 +100,7 @@ export function getFirstIncompleteTryoutPartIndex({
   return undefined;
 }
 
-/** Breaks ties between two completed leaderboard scores. */
+/** Break ties between two completed leaderboard scores. */
 export function isBetterLeaderboardScore(
   candidate: Pick<Doc<"tryoutAttempts">, "completedAt" | "theta">,
   currentBest: Pick<Doc<"tryoutAttempts">, "completedAt" | "theta">
@@ -112,45 +112,11 @@ export function isBetterLeaderboardScore(
   return (candidate.completedAt ?? 0) > (currentBest.completedAt ?? 0);
 }
 
-/** Counts correct answers from the shared exercise-attempt answer rows. */
-export function countCorrectAnswers(answers: Doc<"exerciseAnswers">[]) {
-  return answers.reduce(
-    (correctCount, answer) => correctCount + (answer.isCorrect ? 1 : 0),
-    0
-  );
-}
-
-async function getBoundedExerciseAnswers(
-  db: TryoutAnswerLoaderDb,
-  args: {
-    attemptId: Doc<"exerciseAttempts">["_id"];
-    totalExercises: Doc<"exerciseAttempts">["totalExercises"];
-  }
-) {
-  const answers = await db
-    .query("exerciseAnswers")
-    .withIndex("attemptId_exerciseNumber", (q) =>
-      q.eq("attemptId", args.attemptId)
-    )
-    .take(args.totalExercises + 1);
-
-  if (answers.length > args.totalExercises) {
-    throw new ConvexError({
-      code: "TRYOUT_ANSWER_COUNT_EXCEEDED",
-      message: "Exercise answer count exceeds the attempt total exercises.",
-    });
-  }
-
-  return answers;
-}
-
 /**
- * Builds the operational person-scoring payload from frozen tryout item params.
+ * Build the operational person-scoring payload from frozen tryout item params.
  *
  * Unanswered items inside a timed tryout are treated as incorrect here so the
- * operational IRT score reflects the full administered form, not only the
- * subset of items the student answered. See `convex/irt/README.md` for the
- * documented rationale and source links.
+ * operational IRT score reflects the full administered form.
  */
 export function buildOperationalIrtResponses({
   answers,
@@ -359,19 +325,10 @@ export async function syncTryoutAttemptAggregates({
     scaleVersionId ?? tryoutAttempt.scaleVersionId;
   const effectiveScoreStatus = scoreStatus ?? tryoutAttempt.scoreStatus;
   const completedPartIndices = new Set(tryoutAttempt.completedPartIndices);
-  const partAttempts = await ctx.db
-    .query("tryoutPartAttempts")
-    .withIndex("tryoutAttemptId_partIndex", (q) =>
-      q.eq("tryoutAttemptId", tryoutAttemptId)
-    )
-    .take(tryout.partCount + 1);
-
-  if (partAttempts.length > tryout.partCount) {
-    throw new ConvexError({
-      code: "INVALID_ATTEMPT_STATE",
-      message: "Tryout attempt has more part attempts than expected.",
-    });
-  }
+  const partAttempts = await loadBoundedTryoutPartAttempts(ctx.db, {
+    partCount: tryout.partCount,
+    tryoutAttemptId,
+  });
   const finalizedPartAttempts = partAttempts.filter((partAttempt) =>
     completedPartIndices.has(partAttempt.partIndex)
   );
@@ -450,130 +407,5 @@ export async function syncTryoutAttemptAggregates({
     status,
     theta,
     thetaSE: se,
-  };
-}
-
-/** Expires a tryout and every still-open shared set attempt under it. */
-export async function expireTryoutAttempt(
-  ctx: TryoutMutationCtx,
-  tryoutAttempt: Doc<"tryoutAttempts">,
-  now: number
-) {
-  const expiredAtMs = tryoutAttempt.expiresAt;
-  const [scoreTarget, tryout] = await Promise.all([
-    getTryoutScoreTarget(ctx.db, tryoutAttempt),
-    ctx.db.get("tryouts", tryoutAttempt.tryoutId),
-  ]);
-
-  if (!tryout) {
-    throw new ConvexError({
-      code: "TRYOUT_NOT_FOUND",
-      message: "Tryout not found.",
-    });
-  }
-
-  const partAttempts = await ctx.db
-    .query("tryoutPartAttempts")
-    .withIndex("tryoutAttemptId_partIndex", (q) =>
-      q.eq("tryoutAttemptId", tryoutAttempt._id)
-    )
-    .take(tryout.partCount + 1);
-
-  if (partAttempts.length > tryout.partCount) {
-    throw new ConvexError({
-      code: "INVALID_ATTEMPT_STATE",
-      message: "Tryout attempt has more part attempts than expected.",
-    });
-  }
-
-  for (const partAttempt of partAttempts) {
-    if (tryoutAttempt.completedPartIndices.includes(partAttempt.partIndex)) {
-      continue;
-    }
-
-    await finalizeTryoutPartAttempt({
-      ctx,
-      finishedAtMs: expiredAtMs,
-      now,
-      partAttempt,
-      status: "expired",
-      tryoutAttemptId: tryoutAttempt._id,
-    });
-  }
-
-  await syncTryoutAttemptAggregates({
-    completedAtMs: expiredAtMs,
-    ctx,
-    now,
-    scaleVersionId: scoreTarget.scaleVersionId,
-    scoreStatus: scoreTarget.scoreStatus,
-    status: "expired",
-    tryoutAttemptId: tryoutAttempt._id,
-  });
-
-  return expiredAtMs;
-}
-
-/** Reconciles one tryout attempt against its derived expiry window. */
-export async function syncTryoutAttemptExpiry(
-  ctx: TryoutMutationCtx,
-  tryoutAttempt: Doc<"tryoutAttempts">,
-  now: number
-) {
-  const expiredAtMs = tryoutAttempt.expiresAt;
-
-  if (tryoutAttempt.status === "expired") {
-    return { expired: true, expiredAtMs };
-  }
-
-  if (tryoutAttempt.status === "in-progress" && now >= expiredAtMs) {
-    await expireTryoutAttempt(ctx, tryoutAttempt, now);
-    return { expired: true, expiredAtMs };
-  }
-
-  return { expired: false, expiredAtMs };
-}
-
-/** Reconciles a shared exercise attempt that belongs to a tryout part. */
-export async function syncTryoutExerciseAttemptExpiry(
-  ctx: TryoutMutationCtx,
-  attempt: Doc<"exerciseAttempts">,
-  now: number
-) {
-  if (attempt.origin !== "tryout") {
-    return { expired: false, expiredAtMs: undefined };
-  }
-
-  const partAttempt = await getOneFrom(
-    ctx.db,
-    "tryoutPartAttempts",
-    "setAttemptId",
-    attempt._id
-  );
-
-  if (!partAttempt) {
-    throw new ConvexError({
-      code: "INVALID_ATTEMPT_STATE",
-      message: "Tryout exercise attempt is missing its part attempt mapping.",
-    });
-  }
-
-  const tryoutAttempt = await ctx.db.get(
-    "tryoutAttempts",
-    partAttempt.tryoutAttemptId
-  );
-
-  if (!tryoutAttempt) {
-    throw new ConvexError({
-      code: "INVALID_ATTEMPT_STATE",
-      message: "Tryout exercise attempt is missing its parent tryout attempt.",
-    });
-  }
-
-  const tryoutExpiry = await syncTryoutAttemptExpiry(ctx, tryoutAttempt, now);
-
-  return {
-    expired: tryoutExpiry.expired,
-    expiredAtMs: tryoutExpiry.expiredAtMs,
   };
 }

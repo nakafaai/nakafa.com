@@ -11,10 +11,8 @@ import {
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import {
-  finalizeTryoutPartAttempt,
-  syncTryoutExerciseAttemptExpiry,
-} from "@repo/backend/convex/tryouts/helpers";
+import { syncTryoutExerciseAttemptExpiry } from "@repo/backend/convex/tryouts/helpers/expiry";
+import { finalizeTryoutPartAttempt } from "@repo/backend/convex/tryouts/helpers/scoring";
 import { finalizeTryoutAttempt } from "@repo/backend/convex/tryouts/mutations/helpers";
 import { ConvexError, type Infer, v } from "convex/values";
 import { literals } from "convex-helpers/validators";

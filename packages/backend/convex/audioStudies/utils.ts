@@ -1,4 +1,3 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type {
   MutationCtx,
   QueryCtx,
@@ -71,6 +70,46 @@ export function getResetAudioFields(contentHash: string) {
     generationAttempts: 0,
     updatedAt: Date.now(),
   };
+}
+
+/**
+ * Update every locale-specific audio row for one content ref when the content
+ * hash changes, clearing any stale generated file.
+ */
+export async function updateContentHash(
+  ctx: MutationCtx,
+  contentRef: AudioContentRef,
+  newHash: string
+) {
+  const audios = await ctx.db
+    .query("contentAudios")
+    .withIndex("contentRef_locale", (q) =>
+      q
+        .eq("contentRef.type", contentRef.type)
+        .eq("contentRef.id", contentRef.id)
+    )
+    .take(10);
+
+  let updatedCount = 0;
+
+  for (const audio of audios) {
+    if (audio.contentHash === newHash) {
+      continue;
+    }
+
+    if (audio.audioStorageId) {
+      await ctx.storage.delete(audio.audioStorageId);
+    }
+
+    await ctx.db.patch(
+      "contentAudios",
+      audio._id,
+      getResetAudioFields(newHash)
+    );
+    updatedCount += 1;
+  }
+
+  return updatedCount;
 }
 
 /**
@@ -160,114 +199,4 @@ export async function getContentRefBySlugAndLocale(
       return null;
     }
   }
-}
-
-/**
- * Marks a queue item as completed. Idempotent.
- */
-export async function markQueueCompleted(
-  ctx: MutationCtx,
-  queueItemId: Id<"audioGenerationQueue">
-): Promise<null> {
-  const item = await ctx.db.get("audioGenerationQueue", queueItemId);
-
-  if (!item) {
-    return null;
-  }
-
-  if (item.status === "completed") {
-    return null;
-  }
-
-  const now = Date.now();
-  await ctx.db.patch("audioGenerationQueue", queueItemId, {
-    status: "completed",
-    completedAt: now,
-    updatedAt: now,
-  });
-
-  return null;
-}
-
-/**
- * Marks a queue item as failed. Prevents infinite retries by checking maxRetries.
- */
-export async function markQueueFailed(
-  ctx: MutationCtx,
-  queueItemId: Id<"audioGenerationQueue">,
-  error: string
-): Promise<null> {
-  const item = await ctx.db.get("audioGenerationQueue", queueItemId);
-
-  if (!item) {
-    return null;
-  }
-
-  if (item.status === "completed" || item.status === "failed") {
-    return null;
-  }
-
-  const now = Date.now();
-  const newRetryCount = item.retryCount + 1;
-
-  if (newRetryCount >= item.maxRetries) {
-    await ctx.db.patch("audioGenerationQueue", queueItemId, {
-      status: "failed",
-      errorMessage: `Max retries exceeded (${item.maxRetries}): ${error}`,
-      lastErrorAt: now,
-      retryCount: newRetryCount,
-      updatedAt: now,
-    });
-    return null;
-  }
-
-  await ctx.db.patch("audioGenerationQueue", queueItemId, {
-    status: "pending",
-    errorMessage: error,
-    lastErrorAt: now,
-    retryCount: newRetryCount,
-    updatedAt: now,
-  });
-
-  return null;
-}
-
-/**
- * Updates content hash and clears outdated audio data when content changes.
- */
-export async function updateContentHash(
-  ctx: MutationCtx,
-  contentRef: AudioContentRef,
-  newHash: string
-): Promise<number> {
-  const audios = await ctx.db
-    .query("contentAudios")
-    .withIndex("contentRef_locale", (q) =>
-      q
-        .eq("contentRef.type", contentRef.type)
-        .eq("contentRef.id", contentRef.id)
-    )
-    .take(10);
-
-  let updatedCount = 0;
-
-  for (const audio of audios) {
-    if (audio.contentHash === newHash) {
-      continue;
-    }
-
-    if (audio.audioStorageId) {
-      await ctx.storage.delete(audio.audioStorageId);
-    }
-
-    await ctx.db.patch(
-      "contentAudios",
-      audio._id,
-      getResetAudioFields(newHash)
-    );
-
-    updatedCount++;
-  }
-
-  return updatedCount;
 }

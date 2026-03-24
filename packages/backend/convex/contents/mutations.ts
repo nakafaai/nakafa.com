@@ -254,7 +254,6 @@ export const recordContentView = mutation({
   }),
   handler: async (ctx, args) => {
     const user = await getOptionalAppUserFromIdentity(ctx);
-    const userId = user?.appUser._id;
 
     return await recordContentViewBySlug(
       ctx,
@@ -263,7 +262,7 @@ export const recordContentView = mutation({
       args.contentRef.slug,
       {
         deviceId: args.deviceId,
-        userId,
+        userId: user?.appUser._id,
       }
     );
   },

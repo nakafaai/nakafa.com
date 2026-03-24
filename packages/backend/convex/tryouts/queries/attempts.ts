@@ -3,7 +3,7 @@ import { exerciseAttemptStatusValidator } from "@repo/backend/convex/exercises/s
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { getFirstIncompleteTryoutPartIndex } from "@repo/backend/convex/tryouts/helpers";
+import { getFirstIncompleteTryoutPartIndex } from "@repo/backend/convex/tryouts/helpers/scoring";
 import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
 import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError, type Infer, v } from "convex/values";

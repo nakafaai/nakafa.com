@@ -16,6 +16,10 @@ import { logger } from "@repo/backend/convex/utils/logger";
 import { polarWebhookSecret } from "@repo/backend/convex/utils/polar";
 import type { HonoWithConvex } from "convex-helpers/server/hono";
 
+/**
+ * Upsert the local customer row only when the webhook can be matched back to a
+ * known app user.
+ */
 async function handleCustomerUpsert(
   ctx: ActionCtx,
   customer: {
@@ -28,8 +32,11 @@ async function handleCustomerUpsert(
   const userId = await ctx.runQuery(
     internal.customers.queries.getUserIdByPolarCustomer,
     {
-      email: customer.email,
       externalId: customer.externalId ?? undefined,
+      metadataUserId:
+        typeof customer.metadata.userId === "string"
+          ? customer.metadata.userId
+          : undefined,
     }
   );
 
@@ -49,6 +56,10 @@ async function handleCustomerUpsert(
   return true;
 }
 
+/**
+ * Verify one Polar webhook payload, then dispatch the matching customer or
+ * subscription mutation.
+ */
 async function handlePolarEvent(
   ctx: ActionCtx,
   body: string,

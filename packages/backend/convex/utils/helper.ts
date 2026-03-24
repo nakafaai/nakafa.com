@@ -96,8 +96,17 @@ export function truncateText({
  */
 export function getErrorMessage(error: unknown): string {
   if (error instanceof ConvexError) {
-    const data = error.data as { message?: string; code?: string };
-    return data.message ?? JSON.stringify(data);
+    const data = error.data;
+
+    if (typeof data === "object" && data !== null && "message" in data) {
+      const message = data.message;
+
+      if (typeof message === "string") {
+        return message;
+      }
+    }
+
+    return JSON.stringify(data);
   }
 
   if (error instanceof Error) {

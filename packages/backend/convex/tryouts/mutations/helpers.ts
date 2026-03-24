@@ -1,13 +1,13 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { syncTryoutAttemptExpiry } from "@repo/backend/convex/tryouts/helpers/expiry";
 import {
   computeTryoutRawScorePercentage,
   getTryoutScoreTarget,
   isBetterLeaderboardScore,
   syncTryoutAttemptAggregates,
-  syncTryoutAttemptExpiry,
-} from "@repo/backend/convex/tryouts/helpers";
+} from "@repo/backend/convex/tryouts/helpers/scoring";
 import { tryoutLeaderboardWorkpool } from "@repo/backend/convex/tryouts/workpool";
 import { ConvexError } from "convex/values";
 

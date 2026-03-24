@@ -24,7 +24,7 @@ crons.interval(
 crons.interval(
   "process audio generation queue",
   { minutes: 45 },
-  internal.audioStudies.mutations.startWorkflowsForPendingItems,
+  internal.audioStudies.mutations.queue.startWorkflowsForPendingItems,
   {}
 );
 
@@ -34,7 +34,7 @@ crons.interval(
 crons.cron(
   "cleanup audio generation",
   "0 2 * * *",
-  internal.audioStudies.mutations.cleanup,
+  internal.audioStudies.mutations.queue.cleanup,
   {}
 );
 
@@ -44,7 +44,7 @@ crons.cron(
 crons.interval(
   "reset stuck queue items",
   { minutes: 60 },
-  internal.audioStudies.mutations.resetStuckQueueItems,
+  internal.audioStudies.mutations.queue.resetStuckQueueItems,
   {}
 );
 

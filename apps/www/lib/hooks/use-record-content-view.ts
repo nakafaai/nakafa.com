@@ -43,7 +43,6 @@ export function useRecordContentView({
   const documentState = useDocumentVisibility();
   const isVisible = documentState === "visible";
   const viewKey = `${contentView.type}:${locale}:${contentView.slug}`;
-
   const [deviceId] = useLocalStorage({
     key: "nakafa-device-id",
     defaultValue: useMemo(() => `${Date.now()}-${generateNanoId(9)}`, []),

@@ -10,7 +10,8 @@
 
 import type * as audioStudies_actions from "../audioStudies/actions.js";
 import type * as audioStudies_constants from "../audioStudies/constants.js";
-import type * as audioStudies_mutations from "../audioStudies/mutations.js";
+import type * as audioStudies_mutations_contentAudios from "../audioStudies/mutations/contentAudios.js";
+import type * as audioStudies_mutations_queue from "../audioStudies/mutations/queue.js";
 import type * as audioStudies_public_queries from "../audioStudies/public/queries.js";
 import type * as audioStudies_queries from "../audioStudies/queries.js";
 import type * as audioStudies_utils from "../audioStudies/utils.js";
@@ -20,6 +21,9 @@ import type * as auth_cleanup from "../auth/cleanup.js";
 import type * as chats_actions from "../chats/actions.js";
 import type * as chats_constants from "../chats/constants.js";
 import type * as chats_helpers from "../chats/helpers.js";
+import type * as chats_messageParts_dbToUi from "../chats/messageParts/dbToUi.js";
+import type * as chats_messageParts_shared from "../chats/messageParts/shared.js";
+import type * as chats_messageParts_uiToDb from "../chats/messageParts/uiToDb.js";
 import type * as chats_mutations from "../chats/mutations.js";
 import type * as chats_queries from "../chats/queries.js";
 import type * as chats_read from "../chats/read.js";
@@ -169,7 +173,9 @@ import type * as triggers_schools_schools from "../triggers/schools/schools.js";
 import type * as triggers_subscriptions_subscriptions from "../triggers/subscriptions/subscriptions.js";
 import type * as triggers_tryouts_leaderboard from "../triggers/tryouts/leaderboard.js";
 import type * as tryouts_aggregate from "../tryouts/aggregate.js";
-import type * as tryouts_helpers from "../tryouts/helpers.js";
+import type * as tryouts_helpers_expiry from "../tryouts/helpers/expiry.js";
+import type * as tryouts_helpers_scoring from "../tryouts/helpers/scoring.js";
+import type * as tryouts_helpers_shared from "../tryouts/helpers/shared.js";
 import type * as tryouts_internalMutations from "../tryouts/internalMutations.js";
 import type * as tryouts_mutations_attempts from "../tryouts/mutations/attempts.js";
 import type * as tryouts_mutations_helpers from "../tryouts/mutations/helpers.js";
@@ -185,6 +191,7 @@ import type * as users_queries from "../users/queries.js";
 import type * as utils_helper from "../utils/helper.js";
 import type * as utils_logger from "../utils/logger.js";
 import type * as utils_polar from "../utils/polar.js";
+import type * as utils_site from "../utils/site.js";
 import type * as utils_type from "../utils/type.js";
 import type * as workflow from "../workflow.js";
 
@@ -197,7 +204,8 @@ import type {
 declare const fullApi: ApiFromModules<{
   "audioStudies/actions": typeof audioStudies_actions;
   "audioStudies/constants": typeof audioStudies_constants;
-  "audioStudies/mutations": typeof audioStudies_mutations;
+  "audioStudies/mutations/contentAudios": typeof audioStudies_mutations_contentAudios;
+  "audioStudies/mutations/queue": typeof audioStudies_mutations_queue;
   "audioStudies/public/queries": typeof audioStudies_public_queries;
   "audioStudies/queries": typeof audioStudies_queries;
   "audioStudies/utils": typeof audioStudies_utils;
@@ -207,6 +215,9 @@ declare const fullApi: ApiFromModules<{
   "chats/actions": typeof chats_actions;
   "chats/constants": typeof chats_constants;
   "chats/helpers": typeof chats_helpers;
+  "chats/messageParts/dbToUi": typeof chats_messageParts_dbToUi;
+  "chats/messageParts/shared": typeof chats_messageParts_shared;
+  "chats/messageParts/uiToDb": typeof chats_messageParts_uiToDb;
   "chats/mutations": typeof chats_mutations;
   "chats/queries": typeof chats_queries;
   "chats/read": typeof chats_read;
@@ -356,7 +367,9 @@ declare const fullApi: ApiFromModules<{
   "triggers/subscriptions/subscriptions": typeof triggers_subscriptions_subscriptions;
   "triggers/tryouts/leaderboard": typeof triggers_tryouts_leaderboard;
   "tryouts/aggregate": typeof tryouts_aggregate;
-  "tryouts/helpers": typeof tryouts_helpers;
+  "tryouts/helpers/expiry": typeof tryouts_helpers_expiry;
+  "tryouts/helpers/scoring": typeof tryouts_helpers_scoring;
+  "tryouts/helpers/shared": typeof tryouts_helpers_shared;
   "tryouts/internalMutations": typeof tryouts_internalMutations;
   "tryouts/mutations/attempts": typeof tryouts_mutations_attempts;
   "tryouts/mutations/helpers": typeof tryouts_mutations_helpers;
@@ -372,6 +385,7 @@ declare const fullApi: ApiFromModules<{
   "utils/helper": typeof utils_helper;
   "utils/logger": typeof utils_logger;
   "utils/polar": typeof utils_polar;
+  "utils/site": typeof utils_site;
   "utils/type": typeof utils_type;
   workflow: typeof workflow;
 }>;
@@ -1901,20 +1915,7 @@ export declare const components: {
         "query",
         "internal",
         { email: string },
-        null | {
-          _creationTime: number;
-          _id: string;
-          createdAt: number;
-          displayUsername?: null | string;
-          email: string;
-          emailVerified: boolean;
-          image?: null | string;
-          isAnonymous?: null | boolean;
-          name: string;
-          updatedAt: number;
-          userId?: null | string;
-          username?: null | string;
-        }
+        null | { _id: string }
       >;
     };
   };

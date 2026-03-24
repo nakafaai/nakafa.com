@@ -3,11 +3,9 @@ import type { MyUIMessage } from "@repo/ai/types/message";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { CHAT_MESSAGES_PAGE_SIZE } from "@repo/backend/convex/chats/constants";
+import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/messageParts/uiToDb";
 import type { MessageWithPartsDoc } from "@repo/backend/convex/chats/schema";
-import {
-  mapDBMessagesToUIMessages,
-  mapUIMessagePartsToDBParts,
-} from "@repo/backend/convex/chats/utils";
+import { mapDBMessagesToUIMessages } from "@repo/backend/convex/chats/utils";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 
 interface ChatMessagesPage {

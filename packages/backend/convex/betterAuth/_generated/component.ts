@@ -1529,20 +1529,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         "query",
         "internal",
         { email: string },
-        null | {
-          _creationTime: number;
-          _id: string;
-          createdAt: number;
-          displayUsername?: null | string;
-          email: string;
-          emailVerified: boolean;
-          image?: null | string;
-          isAnonymous?: null | boolean;
-          name: string;
-          updatedAt: number;
-          userId?: null | string;
-          username?: null | string;
-        },
+        null | { _id: string },
         Name
       >;
     };

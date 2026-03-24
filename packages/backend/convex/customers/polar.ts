@@ -28,10 +28,12 @@ function sanitize<T>(data: T): T {
 
 type PolarMetadata = Record<string, string | number | boolean>;
 
+/** Identify Polar's not-found response so retries can fall back cleanly. */
 function isMissingPolarCustomer(error: unknown) {
   return error instanceof PolarError && error.statusCode === 404;
 }
 
+/** Normalize the subset of Polar customer fields the app persists locally. */
 function toPolarCustomerResult(customer: {
   id: string;
   externalId?: string | null;
@@ -48,6 +50,10 @@ function toPolarCustomerResult(customer: {
   };
 }
 
+/**
+ * Keep one existing Polar customer aligned with the app's latest email, name,
+ * and metadata, while staying idempotent when nothing changed.
+ */
 async function syncExistingCustomer(
   customer: {
     id: string;
@@ -171,7 +177,7 @@ export async function ensurePolarCustomer(args: {
 }
 
 /**
- * Update customer metadata in Polar
+ * Update only the metadata fields for an already-linked Polar customer.
  */
 export async function updatePolarCustomerMetadata(args: {
   id: string;
@@ -196,7 +202,7 @@ export async function updatePolarCustomerMetadata(args: {
 }
 
 /**
- * Create checkout session in Polar
+ * Create one Polar checkout session for the validated product selection.
  */
 export async function createPolarCheckoutSession(args: {
   customerId: string;
@@ -225,7 +231,7 @@ export async function createPolarCheckoutSession(args: {
 }
 
 /**
- * Create customer portal session in Polar
+ * Create one Polar customer portal session for an existing customer.
  */
 export async function createPolarCustomerPortalSession(args: {
   customerId: string;

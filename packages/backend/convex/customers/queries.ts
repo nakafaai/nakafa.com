@@ -1,4 +1,3 @@
-import { components } from "@repo/backend/convex/_generated/api";
 import { internalQuery } from "@repo/backend/convex/_generated/server";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
@@ -27,49 +26,38 @@ export const getCustomerByUserId = internalQuery({
 /** Resolve the app user for a Polar customer webhook payload. */
 export const getUserIdByPolarCustomer = internalQuery({
   args: {
-    email: v.string(),
     externalId: v.optional(v.string()),
+    metadataUserId: v.optional(v.string()),
   },
   returns: nullable(vv.id("users")),
   handler: async (ctx, args) => {
+    if (args.metadataUserId) {
+      const metadataUserId = ctx.db.normalizeId("users", args.metadataUserId);
+
+      if (metadataUserId) {
+        const userByMetadataId = await ctx.db.get("users", metadataUserId);
+
+        if (userByMetadataId) {
+          return userByMetadataId._id;
+        }
+      }
+    }
+
     const externalId = args.externalId;
 
-    if (externalId) {
-      const userByExternalId = await ctx.db
-        .query("users")
-        .withIndex("by_authId", (q) => q.eq("authId", externalId))
-        .unique();
-
-      if (userByExternalId) {
-        return userByExternalId._id;
-      }
-    }
-
-    const userByEmail = await ctx.db
-      .query("users")
-      .withIndex("by_email", (q) => q.eq("email", args.email))
-      .unique();
-
-    if (userByEmail) {
-      return userByEmail._id;
-    }
-
-    const authUser = await ctx.runQuery(
-      components.betterAuth.queries.getUserByEmail,
-      {
-        email: args.email,
-      }
-    );
-
-    if (!authUser) {
+    if (!externalId) {
       return null;
     }
 
-    const userByAuthId = await ctx.db
+    const userByExternalId = await ctx.db
       .query("users")
-      .withIndex("by_authId", (q) => q.eq("authId", authUser._id))
+      .withIndex("by_authId", (q) => q.eq("authId", externalId))
       .unique();
 
-    return userByAuthId?._id ?? null;
+    if (userByExternalId) {
+      return userByExternalId._id;
+    }
+
+    return null;
   },
 });

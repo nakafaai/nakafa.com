@@ -64,6 +64,7 @@ function estimateInitialTheta(correctCount: number, totalCount: number) {
   return clamp(logit(seededProbability), THETA_SEED_MIN, THETA_SEED_MAX);
 }
 
+/** Solve the symmetric 2x2 linear system used by each logistic Newton step. */
 function solveTwoByTwo({
   a00,
   a01,
@@ -89,6 +90,12 @@ function solveTwoByTwo({
   };
 }
 
+/**
+ * Fit one 2PL item with logistic regression over fixed theta observations.
+ *
+ * The intercept/slope form is converted back to IRT difficulty and
+ * discrimination after each Newton solve converges or hits a guardrail.
+ */
 function fitItemLogistic2PL(
   observations: Array<{ correct: boolean; theta: number }>,
   seed: CalibrationSeed

@@ -1,4 +1,4 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
@@ -18,9 +18,15 @@ const syncTryoutsResultValidator = v.object({
   updated: v.number(),
 });
 
-async function syncTryoutPartSetMappings(
+/** Load and validate the persisted part-set mappings for one tryout. */
+async function loadTryoutPartSetMappings(
   ctx: MutationCtx,
-  args: {
+  {
+    expectedPartCount,
+    parts,
+    tryoutId,
+  }: {
+    expectedPartCount: number;
     parts: Array<{
       partKey: TryoutPartKey;
       setId: Id<"exerciseSets">;
@@ -28,11 +34,9 @@ async function syncTryoutPartSetMappings(
     tryoutId: Id<"tryouts">;
   }
 ) {
-  const tryout = await ctx.db.get("tryouts", args.tryoutId);
-  const expectedPartCount = Math.max(args.parts.length, tryout?.partCount ?? 0);
   const existingMappings = await ctx.db
     .query("tryoutPartSets")
-    .withIndex("tryoutId_partIndex", (q) => q.eq("tryoutId", args.tryoutId))
+    .withIndex("tryoutId_partIndex", (q) => q.eq("tryoutId", tryoutId))
     .take(expectedPartCount + 1);
 
   if (existingMappings.length > expectedPartCount) {
@@ -42,40 +46,45 @@ async function syncTryoutPartSetMappings(
     });
   }
 
-  const mappingsByPartIndex = new Map<
-    number,
-    (typeof existingMappings)[number]
-  >();
+  const mappingsByPartIndex = new Map<number, Doc<"tryoutPartSets">>();
 
   for (const mapping of existingMappings) {
-    if (!args.parts[mapping.partIndex]) {
+    if (!parts[mapping.partIndex]) {
       continue;
     }
 
-    if (!mappingsByPartIndex.has(mapping.partIndex)) {
-      mappingsByPartIndex.set(mapping.partIndex, mapping);
-      continue;
+    if (mappingsByPartIndex.has(mapping.partIndex)) {
+      throw new ConvexError({
+        code: "TRYOUT_PART_SET_DUPLICATE_INDEX",
+        message: "Tryout part set mappings contain duplicate part indexes.",
+      });
     }
 
-    throw new ConvexError({
-      code: "TRYOUT_PART_SET_DUPLICATE_INDEX",
-      message: "Tryout part set mappings contain duplicate part indexes.",
-    });
+    mappingsByPartIndex.set(mapping.partIndex, mapping);
   }
 
-  const hasChanges =
-    existingMappings.length !== args.parts.length ||
-    existingMappings.some(
-      (mapping) =>
-        args.parts[mapping.partIndex]?.setId !== mapping.setId ||
-        args.parts[mapping.partIndex]?.partKey !== mapping.partKey
-    );
+  return { existingMappings, mappingsByPartIndex };
+}
 
-  if (!hasChanges) {
-    return false;
+/** Apply the exact detected part-set mapping shape for one tryout. */
+async function applyTryoutPartSetMappings(
+  ctx: MutationCtx,
+  {
+    existingMappings,
+    mappingsByPartIndex,
+    parts,
+    tryoutId,
+  }: {
+    existingMappings: Doc<"tryoutPartSets">[];
+    mappingsByPartIndex: Map<number, Doc<"tryoutPartSets">>;
+    parts: Array<{
+      partKey: TryoutPartKey;
+      setId: Id<"exerciseSets">;
+    }>;
+    tryoutId: Id<"tryouts">;
   }
-
-  for (const [partIndex, part] of args.parts.entries()) {
+) {
+  for (const [partIndex, part] of parts.entries()) {
     const existingMapping = mappingsByPartIndex.get(partIndex);
 
     if (!existingMapping) {
@@ -83,7 +92,7 @@ async function syncTryoutPartSetMappings(
         partIndex,
         partKey: part.partKey,
         setId: part.setId,
-        tryoutId: args.tryoutId,
+        tryoutId,
       });
       continue;
     }
@@ -101,7 +110,7 @@ async function syncTryoutPartSetMappings(
     });
   }
 
-  const validPartIndexes = new Set(args.parts.map((_, partIndex) => partIndex));
+  const validPartIndexes = new Set(parts.map((_, partIndex) => partIndex));
 
   for (const existingMapping of existingMappings) {
     if (validPartIndexes.has(existingMapping.partIndex)) {
@@ -110,10 +119,51 @@ async function syncTryoutPartSetMappings(
 
     await ctx.db.delete("tryoutPartSets", existingMapping._id);
   }
+}
+
+/** Sync the persisted part-set mapping rows for one detected tryout. */
+async function syncTryoutPartSetMappings(
+  ctx: MutationCtx,
+  args: {
+    parts: Array<{
+      partKey: TryoutPartKey;
+      setId: Id<"exerciseSets">;
+    }>;
+    tryoutId: Id<"tryouts">;
+  }
+) {
+  const tryout = await ctx.db.get("tryouts", args.tryoutId);
+  const expectedPartCount = Math.max(args.parts.length, tryout?.partCount ?? 0);
+  const { existingMappings, mappingsByPartIndex } =
+    await loadTryoutPartSetMappings(ctx, {
+      expectedPartCount,
+      parts: args.parts,
+      tryoutId: args.tryoutId,
+    });
+
+  const hasChanges =
+    existingMappings.length !== args.parts.length ||
+    existingMappings.some(
+      (mapping) =>
+        args.parts[mapping.partIndex]?.setId !== mapping.setId ||
+        args.parts[mapping.partIndex]?.partKey !== mapping.partKey
+    );
+
+  if (!hasChanges) {
+    return false;
+  }
+
+  await applyTryoutPartSetMappings(ctx, {
+    existingMappings,
+    mappingsByPartIndex,
+    parts: args.parts,
+    tryoutId: args.tryoutId,
+  });
 
   return true;
 }
 
+/** Detect, upsert, and deactivate tryouts for one locale/product pair. */
 export const bulkSyncTryouts = internalMutation({
   args: {
     locale: localeValidator,
@@ -188,7 +238,7 @@ export const bulkSyncTryouts = internalMutation({
         }
 
         await ctx.db.patch("tryouts", existingTryout._id, {
-          isActive: true,
+          isActive: tryout.isActive,
           label: tryout.label,
           partCount: tryout.partCount,
           syncedAt: now,

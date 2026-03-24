@@ -1,5 +1,6 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { getSubjects } from "@repo/contents/exercises/high-school/_data/subject";
+import { ConvexError } from "convex/values";
 import type { DetectedTryout, TryoutProductPolicy } from ".";
 
 const HOURS_PER_DAY = 24;
@@ -137,7 +138,10 @@ export const snbtTryoutProductPolicy = {
     questionCount: Doc<"exerciseSets">["questionCount"]
   ) => {
     if (questionCount <= 0) {
-      throw new Error("questionCount must be greater than 0.");
+      throw new ConvexError({
+        code: "TRYOUT_QUESTION_COUNT_INVALID",
+        message: "questionCount must be greater than 0.",
+      });
     }
 
     return questionCount * SNBT_SIMULATION_SECONDS_PER_QUESTION;

@@ -1,15 +1,17 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { createExerciseAttempt } from "@repo/backend/convex/exercises/helpers";
 import { mutation } from "@repo/backend/convex/functions";
 import { getLatestScaleVersionForTryout } from "@repo/backend/convex/irt/scales/read";
 import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
+import { syncTryoutAttemptExpiry } from "@repo/backend/convex/tryouts/helpers/expiry";
 import {
   finalizeTryoutPartAttempt,
   getFirstIncompleteTryoutPartIndex,
-  syncTryoutAttemptExpiry,
-} from "@repo/backend/convex/tryouts/helpers";
+} from "@repo/backend/convex/tryouts/helpers/scoring";
 import { finalizeTryoutAttempt } from "@repo/backend/convex/tryouts/mutations/helpers";
 import {
   computeTryoutExpiresAtMs,
@@ -19,6 +21,109 @@ import {
 } from "@repo/backend/convex/tryouts/products";
 import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError, v } from "convex/values";
+
+/** Load one tryout attempt and verify the authenticated user owns it. */
+async function requireOwnedTryoutAttempt(
+  ctx: MutationCtx,
+  {
+    tryoutAttemptId,
+    userId,
+  }: {
+    tryoutAttemptId: Id<"tryoutAttempts">;
+    userId: Id<"users">;
+  }
+) {
+  const tryoutAttempt = await ctx.db.get("tryoutAttempts", tryoutAttemptId);
+
+  if (!tryoutAttempt) {
+    throw new ConvexError({
+      code: "ATTEMPT_NOT_FOUND",
+      message: "Tryout attempt not found.",
+    });
+  }
+
+  if (tryoutAttempt.userId !== userId) {
+    throw new ConvexError({
+      code: "FORBIDDEN",
+      message: "You do not have access to this tryout attempt.",
+    });
+  }
+
+  return tryoutAttempt;
+}
+
+/** Load one tryout part attempt by stable key within its parent attempt. */
+async function requireTryoutPartAttempt(
+  ctx: MutationCtx,
+  {
+    partKey,
+    tryoutAttemptId,
+  }: {
+    partKey: Doc<"tryoutPartAttempts">["partKey"];
+    tryoutAttemptId: Id<"tryoutAttempts">;
+  }
+) {
+  const partAttempt = await ctx.db
+    .query("tryoutPartAttempts")
+    .withIndex("tryoutAttemptId_partKey", (q) =>
+      q.eq("tryoutAttemptId", tryoutAttemptId).eq("partKey", partKey)
+    )
+    .unique();
+
+  if (!partAttempt) {
+    throw new ConvexError({
+      code: "PART_ATTEMPT_NOT_FOUND",
+      message: "Tryout part attempt not found.",
+    });
+  }
+
+  return partAttempt;
+}
+
+/**
+ * Sync expiry first, then return the latest in-progress attempt snapshot.
+ */
+async function requireActiveTryoutAttemptAfterExpirySync(
+  ctx: MutationCtx,
+  {
+    now,
+    tryoutAttempt,
+  }: {
+    now: number;
+    tryoutAttempt: Doc<"tryoutAttempts">;
+  }
+) {
+  const tryoutExpiry = await syncTryoutAttemptExpiry(ctx, tryoutAttempt, now);
+
+  if (tryoutExpiry.expired) {
+    throw new ConvexError({
+      code: "TRYOUT_EXPIRED",
+      message: "This tryout has expired.",
+      expiresAtMs: tryoutExpiry.expiredAtMs,
+    });
+  }
+
+  const currentTryoutAttempt = await ctx.db.get(
+    "tryoutAttempts",
+    tryoutAttempt._id
+  );
+
+  if (!currentTryoutAttempt) {
+    throw new ConvexError({
+      code: "ATTEMPT_NOT_FOUND",
+      message: "Tryout attempt not found.",
+    });
+  }
+
+  if (currentTryoutAttempt.status !== "in-progress") {
+    throw new ConvexError({
+      code: "INVALID_ATTEMPT_STATUS",
+      message: "Tryout attempt is not in progress.",
+    });
+  }
+
+  return currentTryoutAttempt;
+}
 
 /** Starts or resumes one authenticated tryout attempt for a product slug. */
 export const startTryout = mutation({
@@ -183,24 +288,10 @@ export const startPart = mutation({
     const userId = appUser._id;
     const now = Date.now();
 
-    const tryoutAttempt = await ctx.db.get(
-      "tryoutAttempts",
-      args.tryoutAttemptId
-    );
-
-    if (!tryoutAttempt) {
-      throw new ConvexError({
-        code: "ATTEMPT_NOT_FOUND",
-        message: "Tryout attempt not found.",
-      });
-    }
-
-    if (tryoutAttempt.userId !== userId) {
-      throw new ConvexError({
-        code: "FORBIDDEN",
-        message: "You do not have access to this tryout attempt.",
-      });
-    }
+    const tryoutAttempt = await requireOwnedTryoutAttempt(ctx, {
+      tryoutAttemptId: args.tryoutAttemptId,
+      userId,
+    });
 
     const tryout = await ctx.db.get("tryouts", tryoutAttempt.tryoutId);
 
@@ -211,22 +302,13 @@ export const startPart = mutation({
       });
     }
 
-    const tryoutExpiry = await syncTryoutAttemptExpiry(ctx, tryoutAttempt, now);
-
-    if (tryoutExpiry.expired) {
-      throw new ConvexError({
-        code: "TRYOUT_EXPIRED",
-        message: "This tryout has expired.",
-        expiresAtMs: tryoutExpiry.expiredAtMs,
-      });
-    }
-
-    if (tryoutAttempt.status !== "in-progress") {
-      throw new ConvexError({
-        code: "INVALID_ATTEMPT_STATUS",
-        message: "Tryout attempt is not in progress.",
-      });
-    }
+    const activeTryoutAttempt = await requireActiveTryoutAttemptAfterExpirySync(
+      ctx,
+      {
+        now,
+        tryoutAttempt,
+      }
+    );
 
     const tryoutPartSet = await ctx.db
       .query("tryoutPartSets")
@@ -242,7 +324,9 @@ export const startPart = mutation({
       });
     }
 
-    if (tryoutAttempt.completedPartIndices.includes(tryoutPartSet.partIndex)) {
+    if (
+      activeTryoutAttempt.completedPartIndices.includes(tryoutPartSet.partIndex)
+    ) {
       throw new ConvexError({
         code: "PART_ALREADY_COMPLETED",
         message: "This tryout part has already been completed.",
@@ -362,38 +446,15 @@ export const completePart = mutation({
     const userId = appUser._id;
     const now = Date.now();
 
-    const tryoutAttempt = await ctx.db.get(
-      "tryoutAttempts",
-      args.tryoutAttemptId
-    );
-
-    if (!tryoutAttempt) {
-      throw new ConvexError({
-        code: "ATTEMPT_NOT_FOUND",
-        message: "Tryout attempt not found.",
+    const tryoutAttempt = await requireOwnedTryoutAttempt(ctx, {
+      tryoutAttemptId: args.tryoutAttemptId,
+      userId,
+    });
+    const currentTryoutAttempt =
+      await requireActiveTryoutAttemptAfterExpirySync(ctx, {
+        now,
+        tryoutAttempt,
       });
-    }
-
-    if (tryoutAttempt.userId !== userId) {
-      throw new ConvexError({
-        code: "FORBIDDEN",
-        message: "You do not have access to this tryout attempt.",
-      });
-    }
-
-    await syncTryoutAttemptExpiry(ctx, tryoutAttempt, now);
-
-    const currentTryoutAttempt = await ctx.db.get(
-      "tryoutAttempts",
-      args.tryoutAttemptId
-    );
-
-    if (!currentTryoutAttempt) {
-      throw new ConvexError({
-        code: "ATTEMPT_NOT_FOUND",
-        message: "Tryout attempt not found.",
-      });
-    }
 
     const tryout = await ctx.db.get("tryouts", currentTryoutAttempt.tryoutId);
 
@@ -404,41 +465,15 @@ export const completePart = mutation({
       });
     }
 
-    const partAttempt = await ctx.db
-      .query("tryoutPartAttempts")
-      .withIndex("tryoutAttemptId_partKey", (q) =>
-        q
-          .eq("tryoutAttemptId", args.tryoutAttemptId)
-          .eq("partKey", args.partKey)
-      )
-      .unique();
-
-    if (!partAttempt) {
-      throw new ConvexError({
-        code: "PART_ATTEMPT_NOT_FOUND",
-        message: "Tryout part attempt not found.",
-      });
-    }
+    const partAttempt = await requireTryoutPartAttempt(ctx, {
+      partKey: args.partKey,
+      tryoutAttemptId: args.tryoutAttemptId,
+    });
 
     if (
       currentTryoutAttempt.completedPartIndices.includes(partAttempt.partIndex)
     ) {
       return null;
-    }
-
-    if (currentTryoutAttempt.status === "expired") {
-      throw new ConvexError({
-        code: "TRYOUT_EXPIRED",
-        message: "This tryout has expired.",
-        expiresAtMs: currentTryoutAttempt.expiresAt,
-      });
-    }
-
-    if (currentTryoutAttempt.status !== "in-progress") {
-      throw new ConvexError({
-        code: "INVALID_ATTEMPT_STATUS",
-        message: "Tryout attempt is not in progress.",
-      });
     }
 
     await finalizeTryoutPartAttempt({

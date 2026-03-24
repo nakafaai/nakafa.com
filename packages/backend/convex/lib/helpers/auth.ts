@@ -13,7 +13,7 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
-import { safeGetAppUser } from "@repo/backend/convex/auth";
+import { authComponent } from "@repo/backend/convex/auth";
 import { ConvexError } from "convex/values";
 
 /**
@@ -76,33 +76,28 @@ export async function requireAuth(ctx: QueryCtx) {
  * Best for: Mutations, sensitive operations, security-critical paths
  */
 export async function requireAuthWithSession(ctx: MutationCtx) {
-  const user = await safeGetAppUser(ctx);
+  const authUser = await authComponent.getAuthUser(ctx);
+  const appUser = await ctx.db
+    .query("users")
+    .withIndex("by_authId", (q) => q.eq("authId", authUser._id))
+    .unique();
 
-  if (!user) {
+  if (!appUser) {
     throw new ConvexError({
       code: "UNAUTHORIZED",
-      message: "You must be logged in.",
+      message: "User not found.",
     });
   }
 
-  return user;
+  return { appUser, authUser };
 }
 
-/**
- * Fast authentication for actions using JWT identity.
- */
+/** Session-validated authentication for actions. */
 export async function requireAuthForAction(ctx: ActionCtx) {
-  const identity = await ctx.auth.getUserIdentity();
-
-  if (!identity?.subject) {
-    throw new ConvexError({
-      code: "UNAUTHORIZED",
-      message: "You must be logged in.",
-    });
-  }
+  const authUser = await authComponent.getAuthUser(ctx);
 
   const appUser = await ctx.runQuery(internal.users.queries.getUserByAuthId, {
-    authId: identity.subject,
+    authId: authUser._id,
   });
 
   if (!appUser) {
@@ -112,5 +107,5 @@ export async function requireAuthForAction(ctx: ActionCtx) {
     });
   }
 
-  return { appUser, identity };
+  return { appUser, authUser };
 }

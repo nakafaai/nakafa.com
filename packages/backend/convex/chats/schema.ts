@@ -97,11 +97,9 @@ export const toolStateValidator = literals(
   "input-streaming",
   "input-available",
   "output-available",
-  "output-error",
-  "output-denied",
-  "approval-requested",
-  "approval-responded"
+  "output-error"
 );
+export type ToolState = Infer<typeof toolStateValidator>;
 
 export const partTypeValidator = literals(
   "text",
@@ -114,7 +112,6 @@ export const partTypeValidator = literals(
   "tool-contentAccess",
   "tool-deepResearch",
   "tool-mathCalculation",
-  "dynamic-tool",
   // Data parts
   "data-suggestions",
   "data-get-articles",

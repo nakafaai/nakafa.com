@@ -13,10 +13,16 @@ import {
 import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
 
+const publicCommentUserValidator = v.object({
+  _id: userDataValidator.fields._id,
+  image: userDataValidator.fields.image,
+  name: userDataValidator.fields.name,
+});
+
 const commentWithUserValidator = v.object({
   ...vv.doc("comments").fields,
-  user: nullable(userDataValidator),
-  replyToUser: nullable(userDataValidator),
+  user: nullable(publicCommentUserValidator),
+  replyToUser: nullable(publicCommentUserValidator),
 });
 
 export const getCommentsBySlug = query({
@@ -39,13 +45,30 @@ export const getCommentsBySlug = query({
 
     return {
       ...comments,
-      page: comments.page.map((comment) => ({
-        ...comment,
-        user: userMap.get(comment.userId) ?? null,
-        replyToUser: comment.replyToUserId
-          ? (replyToUserMap.get(comment.replyToUserId) ?? null)
-          : null,
-      })),
+      page: comments.page.map((comment) => {
+        const user = userMap.get(comment.userId);
+        const replyToUser = comment.replyToUserId
+          ? replyToUserMap.get(comment.replyToUserId)
+          : undefined;
+
+        return {
+          ...comment,
+          user: user
+            ? {
+                _id: user._id,
+                image: user.image,
+                name: user.name,
+              }
+            : null,
+          replyToUser: replyToUser
+            ? {
+                _id: replyToUser._id,
+                image: replyToUser.image,
+                name: replyToUser.name,
+              }
+            : null,
+        };
+      }),
     };
   },
 });

@@ -30,7 +30,6 @@ async function recordView(
   args: RecordViewArgs
 ): Promise<RecordViewResult> {
   const now = Date.now();
-
   const existingByDevice = await ctx.db
     .query("contentViews")
     .withIndex("deviceId_contentRefId", (q) =>
@@ -49,24 +48,25 @@ async function recordView(
 
   const existingView = existingByDevice ?? existingByUser;
 
-  if (existingView) {
-    await ctx.db.patch("contentViews", existingView._id, {
+  if (!existingView) {
+    await ctx.db.insert("contentViews", {
+      contentRef,
+      locale: args.locale,
+      slug: args.slug,
+      deviceId: args.deviceId,
+      userId: args.userId,
+      firstViewedAt: now,
       lastViewedAt: now,
     });
-    return { success: true, isNewView: false, alreadyViewed: true };
+
+    return { success: true, isNewView: true, alreadyViewed: false };
   }
 
-  await ctx.db.insert("contentViews", {
-    contentRef,
-    locale: args.locale,
-    slug: args.slug,
-    deviceId: args.deviceId,
-    userId: args.userId,
-    firstViewedAt: now,
+  await ctx.db.patch("contentViews", existingView._id, {
     lastViewedAt: now,
   });
 
-  return { success: true, isNewView: true, alreadyViewed: false };
+  return { success: true, isNewView: false, alreadyViewed: true };
 }
 
 /**

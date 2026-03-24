@@ -3,12 +3,14 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import {
-  computeTryoutRawScorePercentage,
   expireTryoutAttempt,
+  syncTryoutAttemptExpiry,
+} from "@repo/backend/convex/tryouts/helpers/expiry";
+import {
+  computeTryoutRawScorePercentage,
   isBetterLeaderboardScore,
   syncTryoutAttemptAggregates,
-  syncTryoutAttemptExpiry,
-} from "@repo/backend/convex/tryouts/helpers";
+} from "@repo/backend/convex/tryouts/helpers/scoring";
 import {
   getTryoutLeaderboardNamespace,
   tryoutProductValidator,

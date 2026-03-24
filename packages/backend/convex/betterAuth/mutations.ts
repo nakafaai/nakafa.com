@@ -1,5 +1,5 @@
 import { mutation } from "@repo/backend/convex/betterAuth/_generated/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 
 /**
  * Link Better Auth user to app user.
@@ -7,12 +7,21 @@ import { v } from "convex/values";
  */
 export const setUserId = mutation({
   args: {
-    authId: v.id("user"),
+    authId: v.string(),
     userId: v.string(),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    await ctx.db.patch("user", args.authId, {
+    const authId = ctx.db.normalizeId("user", args.authId);
+
+    if (!authId) {
+      throw new ConvexError({
+        code: "BETTER_AUTH_USER_ID_INVALID",
+        message: "Better Auth user ID is invalid.",
+      });
+    }
+
+    await ctx.db.patch("user", authId, {
       userId: args.userId,
     });
 
@@ -33,12 +42,21 @@ export const setUserId = mutation({
  */
 export const updateUserName = mutation({
   args: {
-    authId: v.id("user"),
+    authId: v.string(),
     name: v.string(),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    await ctx.db.patch("user", args.authId, {
+    const authId = ctx.db.normalizeId("user", args.authId);
+
+    if (!authId) {
+      throw new ConvexError({
+        code: "BETTER_AUTH_USER_ID_INVALID",
+        message: "Better Auth user ID is invalid.",
+      });
+    }
+
+    await ctx.db.patch("user", authId, {
       name: args.name,
     });
 
