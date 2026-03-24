@@ -79,18 +79,19 @@ export function TryoutPartProvider({
   const isUserPending = useUser((state) => state.isPending);
   const user = useUser((state) => state.user);
   const shouldLoadRuntime = !isUserPending && Boolean(user);
-  const nowMs = useTryoutClock(shouldLoadRuntime);
   const { data: runtime, isPending: isPartStatePending } = useQueryWithStatus(
     api.tryouts.queries.attempts.getUserTryoutPartAttempt,
     shouldLoadRuntime
       ? {
           locale: tryout.locale,
-          nowMs,
           partKey: part.key,
           product: tryout.product,
           tryoutSlug: tryout.slug,
         }
       : "skip"
+  );
+  const nowMs = useTryoutClock(
+    Boolean(runtime && runtime.tryoutAttempt.status === "in-progress")
   );
   const isRuntimePending = isUserPending || (user ? isPartStatePending : false);
   const startPart = useMutation(api.tryouts.mutations.attempts.startPart);

@@ -31,7 +31,6 @@ const questionAnswerSheetValidator = v.array(
  */
 export const getLatestAttemptBySlug = query({
   args: {
-    nowMs: v.number(),
     slug: v.string(),
   },
   returns: nullable(attemptWithAnswersValidator),
@@ -55,12 +54,6 @@ export const getLatestAttemptBySlug = query({
       return null;
     }
 
-    const effectiveStatus =
-      attempt.status === "in-progress" &&
-      args.nowMs >= attempt.startedAt + attempt.timeLimit * 1000
-        ? "expired"
-        : attempt.status;
-
     const answers = await getManyFrom(
       ctx.db,
       "exerciseAnswers",
@@ -69,10 +62,7 @@ export const getLatestAttemptBySlug = query({
       "attemptId"
     );
     return {
-      attempt:
-        effectiveStatus === attempt.status
-          ? attempt
-          : { ...attempt, status: effectiveStatus },
+      attempt,
       answers,
     };
   },

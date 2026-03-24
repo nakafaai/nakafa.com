@@ -9,19 +9,23 @@ import { useUser } from "@/lib/context/use-user";
 type TryoutAttemptQueryArgs = FunctionArgs<
   typeof api.tryouts.queries.attempts.getUserTryoutAttempt
 >;
-export type TryoutAttemptParams = Omit<TryoutAttemptQueryArgs, "nowMs">;
+export type TryoutAttemptParams = TryoutAttemptQueryArgs;
 
 /** Loads the current user's latest tryout attempt together with a shared clock. */
 export function useTryoutAttempt(params: TryoutAttemptParams | null) {
   const isUserPending = useUser((state) => state.isPending);
   const user = useUser((state) => state.user);
   const shouldQuery = Boolean(params && !isUserPending && user);
-  const nowMs = useTryoutClock(shouldQuery);
   const queryArgs: TryoutAttemptQueryArgs | "skip" =
-    shouldQuery && params ? { ...params, nowMs } : "skip";
+    shouldQuery && params ? params : "skip";
   const queryResult = useQueryWithStatus(
     api.tryouts.queries.attempts.getUserTryoutAttempt,
     queryArgs
+  );
+  const nowMs = useTryoutClock(
+    Boolean(
+      queryResult.data && queryResult.data.attempt.status === "in-progress"
+    )
   );
 
   return {

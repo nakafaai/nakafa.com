@@ -42,11 +42,11 @@ export function TryoutPackageProgressProvider({
   const isUserPending = useUser((state) => state.isPending);
   const user = useUser((state) => state.user);
   const shouldQuery = !isUserPending && Boolean(user);
-  const nowMs = useTryoutClock(shouldQuery);
   const { data } = useQueryWithStatus(
     api.tryouts.queries.attempts.getUserInProgressTryouts,
-    shouldQuery ? { locale, nowMs, product } : "skip"
+    shouldQuery ? { locale, product } : "skip"
   );
+  const nowMs = useTryoutClock(Boolean(data && data.length > 0));
   const inProgressTryoutSlugs = useMemo(() => {
     const activeSlugs = new Set<string>();
 

@@ -9,25 +9,6 @@ export type TryoutMutationCtx = Pick<MutationCtx, "db" | "scheduler">;
 type TryoutDbReader = QueryCtx["db"];
 type TryoutAnswerLoaderDb = QueryCtx["db"] | MutationCtx["db"];
 
-/** Derive the current user-visible tryout status from wall-clock expiry. */
-export function getEffectiveTryoutAttemptStatus({
-  expiresAt,
-  now,
-  status,
-}: Pick<Doc<"tryoutAttempts">, "expiresAt" | "status"> & {
-  now: number;
-}) {
-  if (status !== "in-progress") {
-    return status;
-  }
-
-  if (now < expiresAt) {
-    return status;
-  }
-
-  return "expired";
-}
-
 /** Pick the most recent in-progress part to resume within one tryout. */
 export function pickSuggestedPartKey<
   PartAttempt extends {

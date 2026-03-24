@@ -5,7 +5,6 @@ import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { createContext, useContextSelector } from "use-context-selector";
-import { useTryoutClock } from "@/components/tryout/hooks/use-tryout-clock";
 import { useUser } from "@/lib/context/use-user";
 
 type LatestAttemptResult = FunctionReturnType<
@@ -48,10 +47,9 @@ export function AttemptContextProvider({
   slug: string;
 }) {
   const user = useUser((state) => state.user);
-  const nowMs = useTryoutClock(Boolean(user));
   const { data: results } = useQueryWithStatus(
     api.exercises.queries.getLatestAttemptBySlug,
-    user ? { nowMs, slug } : "skip"
+    user ? { slug } : "skip"
   );
   const { data: answerSheet } = useQueryWithStatus(
     api.exercises.queries.getQuestionAnswerSheetBySlug,
