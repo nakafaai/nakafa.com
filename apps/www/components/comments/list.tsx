@@ -8,8 +8,6 @@ import {
   ThumbsUpIcon,
 } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { UserData } from "@repo/backend/convex/lib/helpers/user";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
   Avatar,
@@ -28,6 +26,7 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation, usePaginatedQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import { formatDistanceToNow } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, useState, useTransition } from "react";
@@ -36,11 +35,9 @@ import { useUser } from "@/lib/context/use-user";
 import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";
 
-type Comment = Doc<"comments">;
-type CommentWithUser = Comment & {
-  user: UserData | null;
-  replyToUser: UserData | null;
-};
+type CommentWithUser = FunctionReturnType<
+  typeof api.comments.queries.getCommentsBySlug
+>["page"][number];
 
 interface Props {
   slug: string;
@@ -121,7 +118,7 @@ function CommentContent({
       )}
     >
       <Avatar className="size-10">
-        <AvatarImage alt={userName} role="presentation" src={userImage} />
+        <AvatarImage alt={userName} src={userImage} />
         <AvatarFallback>{getInitialName(userName)}</AvatarFallback>
       </Avatar>
       <div className="grid min-w-0 flex-1 gap-2">

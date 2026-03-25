@@ -21,8 +21,6 @@ interface Props {
   date?: string;
   /** The description of the content */
   description?: string;
-  /** The github url of the content */
-  githubUrl?: string;
   /** The icon of the title */
   icon?: IconSvgElement;
   /** The link to go some where, it will be shown as a button on top of the title */

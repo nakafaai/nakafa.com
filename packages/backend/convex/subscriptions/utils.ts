@@ -1,5 +1,5 @@
 import type { Subscription } from "@polar-sh/sdk/models/components/subscription.js";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { SubscriptionRecurringInterval } from "@repo/backend/convex/subscriptions/schema";
 import type { WithoutSystemFields } from "convex/server";
 
@@ -26,10 +26,10 @@ function normalizeRecurringInterval(
  */
 function getSchoolIdFromMetadata(
   metadata: Record<string, unknown>
-): Id<"schools"> | undefined {
+): string | undefined {
   const { schoolId } = metadata;
   if (typeof schoolId === "string" && schoolId.length > 0) {
-    return schoolId as Id<"schools">;
+    return schoolId;
   }
 }
 

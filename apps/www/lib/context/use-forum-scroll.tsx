@@ -11,6 +11,7 @@ interface ForumScrollContextValue {
 }
 
 const ForumScrollContext = createContext<ForumScrollContextValue | null>(null);
+const MISSING_FORUM_SCROLL_CONTEXT = Symbol("MISSING_FORUM_SCROLL_CONTEXT");
 
 export function ForumScrollProvider({
   children,
@@ -29,15 +30,15 @@ export function ForumScrollProvider({
 export function useForumScroll<T>(
   selector: (state: ForumScrollContextValue) => T
 ): T {
-  const value = useContextSelector(ForumScrollContext, (ctx) => ctx);
-  if (!value) {
+  const value = useContextSelector(
+    ForumScrollContext,
+    (ctx): T | typeof MISSING_FORUM_SCROLL_CONTEXT =>
+      ctx ? selector(ctx) : MISSING_FORUM_SCROLL_CONTEXT
+  );
+
+  if (value === MISSING_FORUM_SCROLL_CONTEXT) {
     throw new Error("useForumScroll must be used within a ForumScrollProvider");
   }
-  return selector(value);
-}
 
-// Optional: Get the whole context if needed
-export function useForumScrollContext() {
-  const value = useContextSelector(ForumScrollContext, (ctx) => ctx);
   return value;
 }

@@ -17,12 +17,12 @@ export function SchoolClassesPeopleHeader() {
 
 function SchoolClassesPeopleHeaderAction() {
   const classMembership = useClass((state) => state.classMembership);
+  const schoolMembership = useClass((state) => state.schoolMembership);
 
-  if (!classMembership) {
-    return null;
-  }
-
-  if (classMembership.role === "teacher") {
+  if (
+    schoolMembership?.role === "admin" ||
+    classMembership?.role === "teacher"
+  ) {
     return <SchoolClassesPeopleInvite />;
   }
 

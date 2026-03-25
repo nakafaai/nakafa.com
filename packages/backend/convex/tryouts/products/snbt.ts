@@ -1,20 +1,23 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { getSubjects } from "@repo/contents/exercises/high-school/_data/subject";
+import { ConvexError } from "convex/values";
 import type { DetectedTryout, TryoutProductPolicy } from ".";
 
 const HOURS_PER_DAY = 24;
 const MINUTES_PER_HOUR = 60;
 const SECONDS_PER_MINUTE = 60;
 const MILLISECONDS_PER_SECOND = 1000;
+const SNBT_ATTEMPT_WINDOW_DAYS = 3;
 const SNBT_SIMULATION_SECONDS_PER_QUESTION = 90;
-const SNBT_SCORE_MIN = 200;
-const SNBT_SCORE_MAX = 1000;
-const SNBT_SCORE_CENTER = 600;
-const SNBT_SCORE_SCALE = 100;
+const SNBT_REPORT_SCORE_MIN = 100;
+const SNBT_REPORT_SCORE_MAX = 1000;
+const SNBT_REPORT_THETA_MIN = -4;
+const SNBT_REPORT_THETA_MAX = 4;
 const YEARFUL_TRYOUT_SET_SLUG_REGEX =
   /^exercises\/[^/]+\/[^/]+\/[^/]+\/try-out\/(\d{4})\/[^/]+$/;
 
 const SNBT_ATTEMPT_WINDOW_MS =
+  SNBT_ATTEMPT_WINDOW_DAYS *
   HOURS_PER_DAY *
   MINUTES_PER_HOUR *
   SECONDS_PER_MINUTE *
@@ -25,6 +28,7 @@ const snbtPartOrder = new Map(
   snbtPartLabels.map((material, index) => [material, index])
 );
 
+/** Extracts the SNBT cycle year from a yearful tryout set slug. */
 function getSnbtCycleKeyFromSetSlug(setSlug: Doc<"exerciseSets">["slug"]) {
   const match = setSlug.match(YEARFUL_TRYOUT_SET_SLUG_REGEX);
 
@@ -35,6 +39,7 @@ function getSnbtCycleKeyFromSetSlug(setSlug: Doc<"exerciseSets">["slug"]) {
   return match[1];
 }
 
+/** Sorts SNBT tryouts by newest cycle and then by label. */
 function compareSnbtTryouts(
   left: Pick<Doc<"tryouts">, "cycleKey" | "label">,
   right: Pick<Doc<"tryouts">, "cycleKey" | "label">
@@ -45,8 +50,33 @@ function compareSnbtTryouts(
   );
 }
 
+/**
+ * Map the bounded operational theta estimate onto SNBT's public 100-1000
+ * report-score scale.
+ *
+ * The public score intentionally stays anchored to `[-4, 4]` even though the
+ * estimator now integrates over a slightly wider interval. That keeps the user-
+ * facing score range stable while letting latent-theta estimation breathe more
+ * at the tails.
+ */
+function scaleSnbtThetaToScore(theta: Doc<"tryoutAttempts">["theta"]) {
+  const boundedTheta = Math.max(
+    SNBT_REPORT_THETA_MIN,
+    Math.min(SNBT_REPORT_THETA_MAX, theta)
+  );
+  const normalizedTheta =
+    (boundedTheta - SNBT_REPORT_THETA_MIN) /
+    (SNBT_REPORT_THETA_MAX - SNBT_REPORT_THETA_MIN);
+  const scaledScore =
+    SNBT_REPORT_SCORE_MIN +
+    normalizedTheta * (SNBT_REPORT_SCORE_MAX - SNBT_REPORT_SCORE_MIN);
+
+  return Math.round(scaledScore);
+}
+
 /** SNBT policy is derived from the high-school subject source of truth. */
 export const snbtTryoutProductPolicy = {
+  attemptWindowMs: SNBT_ATTEMPT_WINDOW_MS,
   compareTryouts: compareSnbtTryouts,
   detectTryouts: ({ locale, sets }) => {
     const candidateSets = sets.flatMap((set) => {
@@ -112,7 +142,7 @@ export const snbtTryoutProductPolicy = {
         product: "snbt",
         locale,
         cycleKey: firstSet.cycleKey,
-        label: firstSet.setName,
+        label: firstSet.title,
         slug: `${firstSet.cycleKey}-${firstSet.setName}`,
         partCount: sortedSets.length,
         totalQuestionCount,
@@ -126,22 +156,19 @@ export const snbtTryoutProductPolicy = {
 
     return detectedTryouts;
   },
-  getAttemptWindowMs: () => SNBT_ATTEMPT_WINDOW_MS,
   getLeaderboardNamespace: ({ product, locale, cycleKey }) =>
     `${product}:${locale}:${cycleKey}`,
   getPartTimeLimitSeconds: (
     questionCount: Doc<"exerciseSets">["questionCount"]
   ) => {
     if (questionCount <= 0) {
-      throw new Error("questionCount must be greater than 0.");
+      throw new ConvexError({
+        code: "TRYOUT_QUESTION_COUNT_INVALID",
+        message: "questionCount must be greater than 0.",
+      });
     }
 
     return questionCount * SNBT_SIMULATION_SECONDS_PER_QUESTION;
   },
-  scaleThetaToScore: (theta: Doc<"tryoutAttempts">["theta"]) => {
-    const score = SNBT_SCORE_CENTER + theta * SNBT_SCORE_SCALE;
-    return Math.round(
-      Math.max(SNBT_SCORE_MIN, Math.min(SNBT_SCORE_MAX, score))
-    );
-  },
+  scaleThetaToScore: scaleSnbtThetaToScore,
 } satisfies TryoutProductPolicy;

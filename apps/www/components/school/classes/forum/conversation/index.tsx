@@ -1,5 +1,6 @@
 "use client";
 
+import { usePrevious } from "@mantine/hooks";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   VirtualConversation,
@@ -11,6 +12,7 @@ import {
   memo,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -30,14 +32,18 @@ import { useVirtualItems } from "@/components/school/classes/forum/conversation/
 import { useForum } from "@/lib/context/use-forum";
 import { ForumScrollProvider } from "@/lib/context/use-forum-scroll";
 
+/**
+ * Render one forum conversation with normal pagination, jump-mode loading, and
+ * read-state updates coordinated around the virtualized list.
+ */
 export const ForumPostConversation = memo(
   ({
     forum,
-    lastReadAt,
+    forumId,
     currentUserId,
   }: {
-    forum: Forum;
-    lastReadAt: number;
+    forum: Forum | undefined;
+    forumId: Id<"schoolClassForums">;
     currentUserId: Id<"users">;
   }) => {
     // Data fetching & pagination
@@ -55,31 +61,24 @@ export const ForumPostConversation = memo(
       loadOlderPosts,
       loadNewerPosts,
       exitJumpMode,
-    } = useForumPosts(forum._id);
+    } = useForumPosts(forumId);
 
     // Virtual list items
     const { items, initialScrollIndex, postIdToIndex } = useVirtualItems({
       forum,
       posts,
-      currentUserId,
-      lastReadAt,
       isJumpMode,
       targetIndex,
     });
 
     // Scroll refs and state
     const scrollRef = useRef<VirtualConversationHandle>(null);
-    const [isAtBottom, setIsAtBottom] = useState(true);
     const [isPrepending, setIsPrepending] = useState(false);
 
-    // Mark read strategy - use lastPostTime to detect new posts (not pagination)
-    const lastPostTime = posts.at(-1)?._creationTime;
-    useMarkRead({
-      forumId: forum._id,
-      lastPostTime,
-      isAtBottom,
-      isJumpMode,
-    });
+    const lastPostId = posts.at(-1)?._id;
+    const previousLastPostId = usePrevious(lastPostId);
+    const { cancelPendingMarkRead, flushMarkRead, scheduleMarkRead } =
+      useMarkRead({ forumId });
 
     // Auto-scroll on new messages
     useAutoScroll({
@@ -116,11 +115,44 @@ export const ForumPostConversation = memo(
       scrollRef.current?.scrollToBottom();
     }, []);
 
+    const forumScrollValue = useMemo(
+      () => ({ scrollToPostId, jumpToPostId, scrollToBottom }),
+      [scrollToPostId, jumpToPostId, scrollToBottom]
+    );
+
     // Handlers
     const handleScroll = useCallback(() => {
       const atBottom = scrollRef.current?.isAtBottom() ?? true;
-      setIsAtBottom(atBottom);
-    }, []);
+
+      if (!atBottom || isJumpMode) {
+        cancelPendingMarkRead();
+        return;
+      }
+
+      scheduleMarkRead(lastPostId);
+    }, [cancelPendingMarkRead, isJumpMode, lastPostId, scheduleMarkRead]);
+
+    useEffect(() => {
+      if (!isInitialLoading) {
+        handleScroll();
+      }
+    }, [handleScroll, isInitialLoading]);
+
+    useEffect(() => {
+      if (isJumpMode || !lastPostId || !previousLastPostId) {
+        return;
+      }
+
+      if (lastPostId === previousLastPostId) {
+        return;
+      }
+
+      if (!(scrollRef.current?.isAtBottom() ?? true)) {
+        return;
+      }
+
+      flushMarkRead(lastPostId);
+    }, [flushMarkRead, isJumpMode, lastPostId, previousLastPostId]);
 
     const handleScrollToBottom = useCallback(() => {
       if (isJumpMode) {
@@ -166,9 +198,7 @@ export const ForumPostConversation = memo(
     }
 
     return (
-      <ForumScrollProvider
-        value={{ scrollToPostId, jumpToPostId, scrollToBottom }}
-      >
+      <ForumScrollProvider value={forumScrollValue}>
         <div className="relative flex size-full flex-col overflow-hidden">
           <VirtualConversation
             floatingContent={
@@ -213,7 +243,7 @@ export const ForumPostConversation = memo(
               );
             })}
           </VirtualConversation>
-          <ForumPostInput forumId={forum._id} />
+          <ForumPostInput forumId={forumId} />
         </div>
       </ForumScrollProvider>
     );

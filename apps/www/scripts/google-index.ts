@@ -230,7 +230,7 @@ async function submitUrlToGoogle(
 
     logger.error(`❌ Failed to submit ${url} - Status: ${status}`);
     logger.error(
-      `   Response: ${responseText.substring(0, LOG_RESPONSE_MAX_LENGTH)}...`
+      `   Response: ${responseText.slice(0, LOG_RESPONSE_MAX_LENGTH)}...`
     );
 
     if (status === HTTP_STATUS_CODE_TOO_MANY_REQUESTS) {

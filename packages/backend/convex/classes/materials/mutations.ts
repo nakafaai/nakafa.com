@@ -6,7 +6,7 @@ import {
 import { schoolClassMaterialStatusValidator } from "@repo/backend/convex/classes/schema";
 import { loadActiveClass } from "@repo/backend/convex/classes/utils";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
-import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
+import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import {
   PERMISSIONS,
   requirePermission,
@@ -29,7 +29,7 @@ export const createMaterialGroup = mutation({
     scheduledAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { appUser } = await requireAuthWithSession(ctx);
+    const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
 
     validateScheduledStatus(args.status, args.scheduledAt);
@@ -45,7 +45,7 @@ export const createMaterialGroup = mutation({
     // Get next order using index (efficient: uses .first() not .collect())
     const lastGroup = await ctx.db
       .query("schoolClassMaterialGroups")
-      .withIndex("classId_parentId_order", (q) =>
+      .withIndex("by_classId_and_parentId_and_order", (q) =>
         q.eq("classId", args.classId).eq("parentId", undefined)
       )
       .order("desc")
@@ -98,7 +98,7 @@ export const updateMaterialGroup = mutation({
     scheduledAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { appUser } = await requireAuthWithSession(ctx);
+    const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
 
     const group = await loadMaterialGroup(ctx, args.groupId);
@@ -192,7 +192,7 @@ export const deleteMaterialGroup = mutation({
     groupId: vv.id("schoolClassMaterialGroups"),
   },
   handler: async (ctx, args) => {
-    const { appUser } = await requireAuthWithSession(ctx);
+    const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
 
     const group = await loadMaterialGroup(ctx, args.groupId);
@@ -216,7 +216,7 @@ export const reorderMaterialGroup = mutation({
     direction: reorderDirectionValidator,
   },
   handler: async (ctx, args) => {
-    const { appUser } = await requireAuthWithSession(ctx);
+    const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
 
     const group = await loadMaterialGroup(ctx, args.groupId);
@@ -234,7 +234,7 @@ export const reorderMaterialGroup = mutation({
       args.direction === "up"
         ? await ctx.db
             .query("schoolClassMaterialGroups")
-            .withIndex("classId_parentId_order", (q) =>
+            .withIndex("by_classId_and_parentId_and_order", (q) =>
               q
                 .eq("classId", group.classId)
                 .eq("parentId", group.parentId)
@@ -244,7 +244,7 @@ export const reorderMaterialGroup = mutation({
             .first()
         : await ctx.db
             .query("schoolClassMaterialGroups")
-            .withIndex("classId_parentId_order", (q) =>
+            .withIndex("by_classId_and_parentId_and_order", (q) =>
               q
                 .eq("classId", group.classId)
                 .eq("parentId", group.parentId)

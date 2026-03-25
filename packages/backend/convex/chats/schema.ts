@@ -97,11 +97,9 @@ export const toolStateValidator = literals(
   "input-streaming",
   "input-available",
   "output-available",
-  "output-error",
-  "output-denied",
-  "approval-requested",
-  "approval-responded"
+  "output-error"
 );
+export type ToolState = Infer<typeof toolStateValidator>;
 
 export const partTypeValidator = literals(
   "text",
@@ -114,7 +112,6 @@ export const partTypeValidator = literals(
   "tool-contentAccess",
   "tool-deepResearch",
   "tool-mathCalculation",
-  "dynamic-tool",
   // Data parts
   "data-suggestions",
   "data-get-articles",
@@ -261,29 +258,38 @@ const partDocValidator = addFieldsToValidator(
 
 /**
  * Message with parts document validator
- * Used for loadMessages return type - returns raw DB documents
+ * Used for chat transcript query results - returns raw DB documents
  */
 export const messageWithPartsDocValidator = messageDocValidator.extend({
   parts: v.array(partDocValidator),
 });
 export type MessageWithPartsDoc = Infer<typeof messageWithPartsDocValidator>;
 
+/** Paginated chat transcript validator. */
+export const paginatedMessagesValidator = paginationResultValidator(
+  messageWithPartsDocValidator
+);
+
 export const tables = {
   chats: defineTable(chatValidator)
-    .index("userId", ["userId"])
-    .index("userId_visibility", ["userId", "visibility"])
-    .index("userId_type", ["userId", "type"])
-    .index("userId_visibility_type", ["userId", "visibility", "type"])
+    .index("by_userId", ["userId"])
+    .index("by_userId_and_visibility", ["userId", "visibility"])
+    .index("by_userId_and_type", ["userId", "type"])
+    .index("by_userId_and_visibility_and_type", [
+      "userId",
+      "visibility",
+      "type",
+    ])
     .searchIndex("search_title", {
       searchField: "title",
       filterFields: ["userId", "visibility", "type"],
     }),
 
   messages: defineTable(messageValidator)
-    .index("chatId", ["chatId"])
-    .index("chatId_identifier", ["chatId", "identifier"]),
+    .index("by_chatId", ["chatId"])
+    .index("by_chatId_and_identifier", ["chatId", "identifier"]),
 
-  parts: defineTable(partValidator).index("messageId_order", [
+  parts: defineTable(partValidator).index("by_messageId_and_order", [
     "messageId",
     "order",
   ]),

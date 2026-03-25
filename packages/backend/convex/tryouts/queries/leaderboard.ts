@@ -1,3 +1,5 @@
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { query } from "@repo/backend/convex/_generated/server";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
@@ -6,12 +8,85 @@ import {
   tryoutLeaderboard,
 } from "@repo/backend/convex/tryouts/aggregate";
 import {
-  getTryoutLeaderboardNamespace,
+  tryoutProductPolicies,
   tryoutProductValidator,
 } from "@repo/backend/convex/tryouts/products";
 import { v } from "convex/values";
 import { getAll } from "convex-helpers/server/relationships";
 import { nullable } from "convex-helpers/validators";
+
+const DEFAULT_LEADERBOARD_LIMIT = 50;
+const MAX_LEADERBOARD_LIMIT = 100;
+
+const tryoutLeaderboardRowValidator = v.object({
+  rank: v.number(),
+  userId: vv.id("users"),
+  userName: nullable(v.string()),
+  theta: v.number(),
+  irtScore: v.number(),
+  rawScore: v.number(),
+  completedAt: v.number(),
+});
+
+const globalLeaderboardRowValidator = v.object({
+  rank: v.number(),
+  userId: vv.id("users"),
+  userName: nullable(v.string()),
+  averageTheta: v.number(),
+  totalTryoutsCompleted: v.number(),
+  bestTheta: v.number(),
+  averageRawScore: v.number(),
+  lastTryoutAt: v.number(),
+});
+
+/**
+ * Hydrate ranked aggregate IDs back into table rows and aligned user names
+ * while preserving the aggregate-provided ordering.
+ */
+async function loadLeaderboardRows<
+  TableId extends Id<"tryoutLeaderboardEntries"> | Id<"userTryoutStats">,
+  RecordDoc extends { userId: Id<"users"> },
+  Row,
+>({
+  aggregateItems,
+  ctx,
+  loadRecords,
+  mapRow,
+}: {
+  aggregateItems: { id: TableId }[];
+  ctx: QueryCtx;
+  loadRecords: (ids: TableId[]) => Promise<(RecordDoc | null)[]>;
+  mapRow: (args: {
+    rank: number;
+    row: RecordDoc;
+    userName: string | null;
+  }) => Row;
+}) {
+  if (aggregateItems.length === 0) {
+    return [];
+  }
+
+  const records = await loadRecords(aggregateItems.map((item) => item.id));
+  const existingRows = records.flatMap((row) => (row ? [row] : []));
+
+  if (existingRows.length === 0) {
+    return [];
+  }
+
+  const users = await getAll(
+    ctx.db,
+    "users",
+    existingRows.map((row) => row.userId)
+  );
+
+  return existingRows.map((row, index) =>
+    mapRow({
+      rank: index + 1,
+      row,
+      userName: users[index]?.name ?? null,
+    })
+  );
+}
 
 /** Returns ranked official results for one concrete tryout. */
 export const getTryoutLeaderboard = query({
@@ -19,56 +94,37 @@ export const getTryoutLeaderboard = query({
     tryoutId: vv.id("tryouts"),
     limit: v.optional(v.number()),
   },
-  returns: v.array(
-    v.object({
-      rank: v.number(),
-      userId: vv.id("users"),
-      userName: v.string(),
-      theta: v.number(),
-      irtScore: v.number(),
-      rawScore: v.number(),
-      completedAt: v.number(),
-    })
-  ),
+  returns: v.array(tryoutLeaderboardRowValidator),
   handler: async (ctx, args) => {
-    const limit = Math.max(0, Math.min(args.limit ?? 50, 100));
-    const totalCount = await tryoutLeaderboard.count(ctx, {
+    const limit = Math.max(
+      0,
+      Math.min(args.limit ?? DEFAULT_LEADERBOARD_LIMIT, MAX_LEADERBOARD_LIMIT)
+    );
+
+    if (limit === 0) {
+      return [];
+    }
+
+    const { page: aggregateItems } = await tryoutLeaderboard.paginate(ctx, {
       namespace: args.tryoutId,
+      order: "asc",
+      pageSize: limit,
     });
-    const aggregateItems = (
-      await Promise.all(
-        Array.from({ length: Math.min(limit, totalCount) }, async (_, index) =>
-          tryoutLeaderboard.at(ctx, index, {
-            namespace: args.tryoutId,
-          })
-        )
-      )
-    ).flatMap((item) => (item ? [item] : []));
 
-    const leaderboardEntries = await getAll(
-      ctx.db,
-      "tryoutLeaderboardEntries",
-      aggregateItems.map((item) => item.id)
-    );
-    const existingEntries = leaderboardEntries.flatMap((entry) =>
-      entry ? [entry] : []
-    );
-
-    const users = await getAll(
-      ctx.db,
-      "users",
-      existingEntries.map((entry) => entry.userId)
-    );
-
-    return existingEntries.map((entry, index) => ({
-      rank: index + 1,
-      userId: entry.userId,
-      userName: users[index]?.name ?? "Unknown",
-      theta: entry.theta,
-      irtScore: entry.irtScore,
-      rawScore: entry.rawScore,
-      completedAt: entry.completedAt,
-    }));
+    return loadLeaderboardRows({
+      aggregateItems,
+      ctx,
+      loadRecords: (ids) => getAll(ctx.db, "tryoutLeaderboardEntries", ids),
+      mapRow: ({ rank, row, userName }) => ({
+        rank,
+        userId: row.userId,
+        userName,
+        theta: row.theta,
+        irtScore: row.irtScore,
+        rawScore: row.rawScore,
+        completedAt: row.completedAt,
+      }),
+    });
   },
 });
 
@@ -80,97 +136,39 @@ export const getGlobalLeaderboard = query({
     cycleKey: v.string(),
     limit: v.optional(v.number()),
   },
-  returns: v.array(
-    v.object({
-      rank: v.number(),
-      userId: vv.id("users"),
-      userName: v.string(),
-      averageTheta: v.number(),
-      totalTryoutsCompleted: v.number(),
-      bestTheta: v.number(),
-      averageRawScore: v.number(),
-      lastTryoutAt: v.number(),
-    })
-  ),
+  returns: v.array(globalLeaderboardRowValidator),
   handler: async (ctx, args) => {
-    const limit = Math.max(0, Math.min(args.limit ?? 50, 100));
-    const namespace = getTryoutLeaderboardNamespace(args);
-    const totalCount = await globalLeaderboard.count(ctx, {
-      namespace,
-    });
-    const aggregateItems = (
-      await Promise.all(
-        Array.from({ length: Math.min(limit, totalCount) }, async (_, index) =>
-          globalLeaderboard.at(ctx, index, {
-            namespace,
-          })
-        )
-      )
-    ).flatMap((item) => (item ? [item] : []));
-
-    const statsRecords = await getAll(
-      ctx.db,
-      "userTryoutStats",
-      aggregateItems.map((item) => item.id)
-    );
-    const existingStats = statsRecords.flatMap((stats) =>
-      stats ? [stats] : []
+    const limit = Math.max(
+      0,
+      Math.min(args.limit ?? DEFAULT_LEADERBOARD_LIMIT, MAX_LEADERBOARD_LIMIT)
     );
 
-    const users = await getAll(
-      ctx.db,
-      "users",
-      existingStats.map((stats) => stats.userId)
-    );
-
-    return existingStats.map((stats, index) => ({
-      rank: index + 1,
-      userId: stats.userId,
-      userName: users[index]?.name ?? "Unknown",
-      averageTheta: stats.averageTheta,
-      totalTryoutsCompleted: stats.totalTryoutsCompleted,
-      bestTheta: stats.bestTheta,
-      averageRawScore: stats.averageRawScore,
-      lastTryoutAt: stats.lastTryoutAt,
-    }));
-  },
-});
-
-/** Returns one user's rank within a concrete tryout leaderboard. */
-export const getUserTryoutRank = query({
-  args: {
-    tryoutId: vv.id("tryouts"),
-    userId: vv.id("users"),
-  },
-  returns: nullable(
-    v.object({
-      rank: v.number(),
-      totalEntries: v.number(),
-    })
-  ),
-  handler: async (ctx, args) => {
-    const entry = await ctx.db
-      .query("tryoutLeaderboardEntries")
-      .withIndex("tryoutId_userId", (q) =>
-        q.eq("tryoutId", args.tryoutId).eq("userId", args.userId)
-      )
-      .unique();
-
-    if (!entry) {
-      return null;
+    if (limit === 0) {
+      return [];
     }
 
-    const index = await tryoutLeaderboard.indexOf(
-      ctx,
-      [-entry.theta, args.userId],
-      {
-        namespace: args.tryoutId,
-      }
-    );
-    const totalEntries = await tryoutLeaderboard.count(ctx, {
-      namespace: args.tryoutId,
+    const namespace =
+      tryoutProductPolicies[args.product].getLeaderboardNamespace(args);
+    const { page: aggregateItems } = await globalLeaderboard.paginate(ctx, {
+      namespace,
+      order: "asc",
+      pageSize: limit,
     });
 
-    return { rank: index + 1, totalEntries };
+    return loadLeaderboardRows({
+      aggregateItems,
+      ctx,
+      loadRecords: (ids) => getAll(ctx.db, "userTryoutStats", ids),
+      mapRow: ({ rank, row, userName }) => ({
+        rank,
+        userId: row.userId,
+        userName,
+        averageTheta: row.averageTheta,
+        totalTryoutsCompleted: row.totalTryoutsCompleted,
+        bestTheta: row.bestTheta,
+        averageRawScore: row.averageRawScore,
+        lastTryoutAt: row.lastTryoutAt,
+      }),
+    });
   },
 });

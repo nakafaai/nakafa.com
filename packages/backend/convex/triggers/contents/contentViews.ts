@@ -1,4 +1,5 @@
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
+import { getTrendingBucketStart } from "@repo/backend/convex/subjectSections/utils";
 import type { GenericMutationCtx } from "convex/server";
 import type { Change } from "convex-helpers/server/triggers";
 
@@ -58,6 +59,34 @@ export async function contentViewsHandler(
               updatedAt: now,
             });
           }
+
+          const bucketStart = getTrendingBucketStart(view.lastViewedAt);
+
+          const existingBucket = await ctx.db
+            .query("subjectTrendingBuckets")
+            .withIndex("by_locale_and_bucketStart_and_contentId", (q) =>
+              q
+                .eq("locale", view.locale)
+                .eq("bucketStart", bucketStart)
+                .eq("contentId", contentRef.id)
+            )
+            .unique();
+
+          if (existingBucket) {
+            await ctx.db.patch("subjectTrendingBuckets", existingBucket._id, {
+              updatedAt: now,
+              viewCount: existingBucket.viewCount + 1,
+            });
+          } else {
+            await ctx.db.insert("subjectTrendingBuckets", {
+              bucketStart,
+              contentId: contentRef.id,
+              locale: view.locale,
+              updatedAt: now,
+              viewCount: 1,
+            });
+          }
+
           break;
         }
 

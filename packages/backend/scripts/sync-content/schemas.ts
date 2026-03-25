@@ -1,14 +1,20 @@
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import * as z from "zod";
+import { CONTENT_SYNC_BATCH_LIMITS } from "../../convex/contentSync/constants";
 
 export const BATCH_SIZES = {
-  articles: 50,
-  subjectTopics: 50,
-  subjectSections: 20,
-  exerciseSets: 50,
-  exerciseQuestions: 30,
-  staleExerciseSets: 5,
-  staleExerciseQuestions: 100,
+  articles: CONTENT_SYNC_BATCH_LIMITS.articles,
+  authors: CONTENT_SYNC_BATCH_LIMITS.authors,
+  subjectTopics: CONTENT_SYNC_BATCH_LIMITS.subjectTopics,
+  subjectSections: CONTENT_SYNC_BATCH_LIMITS.subjectSections,
+  exerciseSets: CONTENT_SYNC_BATCH_LIMITS.exerciseSets,
+  exerciseQuestions: CONTENT_SYNC_BATCH_LIMITS.exerciseQuestions,
+  staleArticles: CONTENT_SYNC_BATCH_LIMITS.staleArticles,
+  staleSubjectTopics: CONTENT_SYNC_BATCH_LIMITS.staleSubjectTopics,
+  staleSubjectSections: CONTENT_SYNC_BATCH_LIMITS.staleSubjectSections,
+  staleExerciseSets: CONTENT_SYNC_BATCH_LIMITS.staleExerciseSets,
+  staleExerciseQuestions: CONTENT_SYNC_BATCH_LIMITS.staleExerciseQuestions,
+  unusedAuthors: CONTENT_SYNC_BATCH_LIMITS.unusedAuthors,
 } as const;
 
 export const LOCALE_MATERIAL_FILE_REGEX = /\/([a-z]{2})-material\.ts$/;
@@ -71,9 +77,13 @@ export const ContentCountsSchema = z.object({
   tryoutAttempts: z.number(),
   tryoutPartAttempts: z.number(),
   tryoutLeaderboardEntries: z.number(),
+  userTryoutLatestAttempts: z.number(),
   userTryoutStats: z.number(),
   irtCalibrationQueue: z.number(),
+  irtCalibrationAttempts: z.number(),
+  irtCalibrationCacheStats: z.number(),
   irtCalibrationRuns: z.number(),
+  irtScaleQualityChecks: z.number(),
   exerciseItemParameters: z.number(),
   irtScalePublicationQueue: z.number(),
   irtScaleVersions: z.number(),
@@ -89,9 +99,21 @@ export const DataIntegritySchema = z.object({
   questionsWithoutAuthors: z.array(z.string()),
   articlesWithoutReferences: z.array(z.string()),
   sectionsWithoutTopics: z.array(z.string()),
+  activeTryoutsWithoutScale: z.array(z.string()),
   totalQuestions: z.number(),
   totalArticles: z.number(),
   totalSections: z.number(),
+});
+
+export const TryoutScaleIntegritySchema = z.object({
+  activeTryoutsWithoutScale: z.array(
+    z.object({
+      cycleKey: z.string(),
+      locale: z.enum(["en", "id"]),
+      product: z.string(),
+      slug: z.string(),
+    })
+  ),
 });
 
 const StaleItemSchema = z.object({

@@ -2,7 +2,6 @@ import "@/styles/globals.css";
 
 import { AnalyticsProvider } from "@repo/analytics/provider";
 import { DesignSystemProvider } from "@repo/design-system";
-import { ReactScan } from "@repo/design-system/components/ui/react-scan";
 import { Toaster } from "@repo/design-system/components/ui/sonner";
 import { TailwindIndicator } from "@repo/design-system/components/ui/tailwind-indicator";
 import { fonts } from "@repo/design-system/lib/fonts";
@@ -11,7 +10,7 @@ import { EducationalOrgJsonLd } from "@repo/seo/json-ld/educational-org";
 import { WebsiteJsonLd } from "@repo/seo/json-ld/website";
 import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
-import { hasLocale, type Locale, NextIntlClientProvider } from "next-intl";
+import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
 import { AppProviders } from "@/components/providers";
@@ -22,8 +21,13 @@ export async function generateMetadata({
   params: LayoutProps<"/[locale]">["params"];
 }): Promise<Metadata> {
   const { locale } = await params;
+
+  if (!hasLocale(routing.locales, locale)) {
+    notFound();
+  }
+
   const t = await getTranslations({
-    locale: locale as Locale,
+    locale,
     namespace: "Metadata",
   });
 
@@ -157,7 +161,6 @@ export default function Layout(props: LayoutProps<"/[locale]">) {
     <html className={fonts} lang={locale} suppressHydrationWarning>
       <NextIntlClientProvider>
         <head>
-          <ReactScan />
           {/* Add JSON-LD structured data using the JsonLd component */}
           <EducationalOrgJsonLd />
           <WebsiteJsonLd locale={locale} />

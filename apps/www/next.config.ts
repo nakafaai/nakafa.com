@@ -1,3 +1,4 @@
+import path from "node:path";
 import { config, withAnalyzer, withMDX } from "@repo/next-config";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
@@ -9,12 +10,17 @@ const withNextIntl = createNextIntlPlugin(
 
 let nextConfig: NextConfig = {
   ...config,
+  // Next.js recommends outputFileTracingRoot in monorepos so files outside the
+  // app folder are included in the production trace.
+  // Docs: https://nextjs.org/docs/app/api-reference/config/next-config-js/output
+  // `process.cwd()` resolves to the app directory (`apps/www`) during Next.js
+  // config loading, so walking up two levels targets the monorepo root.
+  outputFileTracingRoot: path.join(process.cwd(), "../.."),
   serverExternalPackages: [
     ...(config.serverExternalPackages ?? []),
     "@takumi-rs/image-response",
   ],
   async rewrites() {
-    await Promise.resolve();
     const llmSource = [
       "/:path*.md",
       "/:path*.mdx",
@@ -36,8 +42,6 @@ let nextConfig: NextConfig = {
     ];
   },
   async redirects() {
-    await Promise.resolve();
-
     const redirects = [
       {
         source: "/subject/junior-high-school/:path*",

@@ -1,3 +1,4 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import type { GenericMutationCtx } from "convex/server";
 import type { Change } from "convex-helpers/server/triggers";
@@ -5,10 +6,8 @@ import type { Change } from "convex-helpers/server/triggers";
 /**
  * Trigger handler for schoolClassMaterialGroups table changes.
  *
- * Handles hierarchical deletion of material groups:
+ * Handles lightweight group delete side effects and schedules bounded cleanup:
  * - Cancels any scheduled jobs associated with the group
- * - Recursively deletes all child groups (via trigger cascade)
- * - Deletes all materials in the group (via trigger cascade)
  * - Updates parent's child group count
  *
  * @param ctx - The Convex mutation context with database access
@@ -20,55 +19,38 @@ export async function materialGroupsHandler(
 ) {
   const oldGroup = change.oldDoc;
 
-  switch (change.operation) {
-    case "delete": {
-      if (!oldGroup) {
-        break;
-      }
-
-      if (oldGroup.scheduledJobId) {
-        await ctx.scheduler.cancel(oldGroup.scheduledJobId);
-      }
-
-      const childGroups = await ctx.db
-        .query("schoolClassMaterialGroups")
-        .withIndex("classId_parentId_order", (q) =>
-          q.eq("classId", oldGroup.classId).eq("parentId", change.id)
-        )
-        .collect();
-
-      for (const child of childGroups) {
-        await ctx.db.delete("schoolClassMaterialGroups", child._id);
-      }
-
-      const materials = await ctx.db
-        .query("schoolClassMaterials")
-        .withIndex("groupId_status_isPinned_order", (q) =>
-          q.eq("groupId", change.id)
-        )
-        .collect();
-
-      for (const material of materials) {
-        await ctx.db.delete("schoolClassMaterials", material._id);
-      }
-
-      if (oldGroup.parentId) {
-        const parent = await ctx.db.get(
-          "schoolClassMaterialGroups",
-          oldGroup.parentId
-        );
-        if (parent) {
-          await ctx.db.patch("schoolClassMaterialGroups", oldGroup.parentId, {
-            childGroupCount: Math.max(0, parent.childGroupCount - 1),
-            updatedAt: Date.now(),
-          });
-        }
-      }
-      break;
-    }
-
-    default: {
-      break;
-    }
+  if (change.operation !== "delete" || !oldGroup) {
+    return;
   }
+
+  if (oldGroup.scheduledJobId) {
+    await ctx.scheduler.cancel(oldGroup.scheduledJobId);
+  }
+
+  await ctx.scheduler.runAfter(
+    0,
+    internal.triggers.materials.cleanup.cleanupDeletedGroup,
+    {
+      classId: oldGroup.classId,
+      groupId: change.id,
+    }
+  );
+
+  if (!oldGroup.parentId) {
+    return;
+  }
+
+  const parent = await ctx.db.get(
+    "schoolClassMaterialGroups",
+    oldGroup.parentId
+  );
+
+  if (!parent) {
+    return;
+  }
+
+  await ctx.db.patch("schoolClassMaterialGroups", oldGroup.parentId, {
+    childGroupCount: Math.max(0, parent.childGroupCount - 1),
+    updatedAt: Date.now(),
+  });
 }

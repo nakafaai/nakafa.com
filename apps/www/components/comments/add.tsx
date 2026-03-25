@@ -12,13 +12,11 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@repo/design-system/components/ui/avatar";
-import {
-  Button,
-  buttonVariants,
-} from "@repo/design-system/components/ui/button";
+import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "@repo/design-system/lib/utils";
 import { Link, usePathname } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
@@ -148,11 +146,7 @@ function UserAvatar() {
       title={user.authUser.name}
     >
       <Avatar className="size-8">
-        <AvatarImage
-          alt={user.authUser.name}
-          role="presentation"
-          src={user.authUser.image ?? ""}
-        />
+        <AvatarImage alt={user.authUser.name} src={user.authUser.image ?? ""} />
         <AvatarFallback className="text-xs">
           {getInitialName(user.authUser.name)}
         </AvatarFallback>

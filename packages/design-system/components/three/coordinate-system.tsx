@@ -150,7 +150,7 @@ export function CoordinateSystem({
 
           {/* Lighting */}
           <ambientLight intensity={0.5} />
-          <pointLight castShadow intensity={1} position={[10, 10, 10]} />
+          <pointLight intensity={1} position={[10, 10, 10]} />
 
           {/* Coordinate System */}
           <Axes

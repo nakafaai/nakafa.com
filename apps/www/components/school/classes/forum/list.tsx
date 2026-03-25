@@ -31,6 +31,9 @@ type ForumListItem = Doc<"schoolClassForums"> & {
 
 const DEBOUNCE_TIME = 500;
 
+/**
+ * Render the searchable forum thread list for one class.
+ */
 export function SchoolClassesForumList() {
   const t = useTranslations("School.Classes");
 
@@ -43,7 +46,7 @@ export function SchoolClassesForumList() {
   const [debouncedQ] = useDebouncedValue(q, DEBOUNCE_TIME);
 
   const { results, status, loadMore } = usePaginatedQuery(
-    api.classes.forums.queries.getForums,
+    api.classes.forums.queries.forums.getForums,
     {
       classId,
       q: debouncedQ,
@@ -152,16 +155,26 @@ export function SchoolClassesForumList() {
   );
 }
 
+/**
+ * Surface the most-used reaction as a compact shortcut in the forum list.
+ */
 function TopReaction({ forum }: { forum: ForumListItem }) {
   const [isPending, startTransition] = useTransition();
   const toggleReaction = useMutation(
-    api.classes.forums.mutations.toggleForumReaction
+    api.classes.forums.mutations.reactions.toggleForumReaction
+  );
+  const firstReaction = forum.reactionCounts[0];
+
+  if (!firstReaction) {
+    return null;
+  }
+
+  const topReaction = forum.reactionCounts.reduce(
+    (maxReaction, reaction) =>
+      reaction.count > maxReaction.count ? reaction : maxReaction,
+    firstReaction
   );
 
-  // Find the reaction with the highest count
-  const topReaction = forum.reactionCounts.reduce((max, r) =>
-    r.count > max.count ? r : max
-  );
   const isMyReaction = forum.myReactions.includes(topReaction.emoji);
 
   const handleToggle = (e: React.MouseEvent) => {

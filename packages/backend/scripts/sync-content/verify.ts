@@ -190,6 +190,12 @@ export const verify = async (
         integrity.sectionsWithoutTopics,
         `All ${integrity.totalSections} sections have topics`
       ) && allMatch;
+    allMatch =
+      !logIntegrityList(
+        "active tryouts without published scales",
+        integrity.activeTryoutsWithoutScale,
+        `All ${counts.tryouts} active tryouts have published scales`
+      ) && allMatch;
 
     const articlesWithRefs =
       integrity.totalArticles - integrity.articlesWithoutReferences.length;

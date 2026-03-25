@@ -35,7 +35,7 @@ export async function getMaterials(
 ): Promise<ExercisesMaterialList> {
   try {
     // Strip leading slash if present for consistency
-    const cleanPath = path.startsWith("/") ? path.substring(1) : path;
+    const cleanPath = path.startsWith("/") ? path.slice(1) : path;
 
     const content = await import(
       `@repo/contents/${cleanPath}/_data/${locale}-material.ts`

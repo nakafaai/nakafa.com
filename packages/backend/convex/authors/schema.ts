@@ -1,6 +1,16 @@
 import { contentTypeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { defineTable } from "convex/server";
-import { v } from "convex/values";
+import { type Infer, v } from "convex/values";
+
+/** Polymorphic content IDs supported by the author-link join table. */
+export const contentAuthorContentIdValidator = v.union(
+  v.id("articleContents"),
+  v.id("subjectSections"),
+  v.id("exerciseQuestions")
+);
+export type ContentAuthorContentId = Infer<
+  typeof contentAuthorContentIdValidator
+>;
 
 const tables = {
   /** Shared author profiles, referenced by multiple content types */
@@ -15,7 +25,7 @@ const tables = {
     github: v.optional(v.string()),
     bio: v.optional(v.string()),
     avatarUrl: v.optional(v.string()),
-  }).index("name", ["name"]),
+  }).index("by_name", ["name"]),
 
   /**
    * Join table linking content to authors (N:M relationship).
@@ -26,25 +36,25 @@ const tables = {
    * @example
    * // Get authors for an article
    * const links = await ctx.db.query("contentAuthors")
-   *   .withIndex("contentId_contentType", q =>
+   *   .withIndex("by_contentId_and_contentType_and_authorId", q =>
    *     q.eq("contentId", article._id).eq("contentType", "article")
    *   ).collect();
    */
   contentAuthors: defineTable({
-    /** Document ID from articleContents, subjectContents, or exerciseContents (stored as string for polymorphism) */
-    contentId: v.string(),
+    /** Document ID from articleContents, subjectSections, or exerciseQuestions. */
+    contentId: contentAuthorContentIdValidator,
     /** Discriminator: which table contentId refers to */
     contentType: contentTypeValidator,
     authorId: v.id("authors"),
     /** Author ordering: 0 = primary, 1 = secondary, etc. */
     order: v.number(),
   })
-    .index("contentId_contentType_authorId", [
+    .index("by_contentId_and_contentType_and_authorId", [
       "contentId",
       "contentType",
       "authorId",
     ])
-    .index("authorId", ["authorId"]),
+    .index("by_authorId", ["authorId"]),
 };
 
 export default tables;

@@ -10,6 +10,7 @@ import {
   StaleContentPageSchema,
   StaleContentSchema,
   SubjectSectionIntegrityPageSchema,
+  TryoutScaleIntegritySchema,
   UnusedAuthorsSchema,
 } from "./schemas";
 import type { ConvexConfig, FilesystemSlugs } from "./types";
@@ -71,31 +72,31 @@ export async function getStaleContent(
   ] = await Promise.all([
     collectPages(
       config,
-      "contentSync/queries:listStaleContentPage",
+      "contentSync/queries/stale:listStaleContentPage",
       { tableName: "articleContents" },
       StaleContentPageSchema
     ),
     collectPages(
       config,
-      "contentSync/queries:listStaleContentPage",
+      "contentSync/queries/stale:listStaleContentPage",
       { tableName: "subjectTopics" },
       StaleContentPageSchema
     ),
     collectPages(
       config,
-      "contentSync/queries:listStaleContentPage",
+      "contentSync/queries/stale:listStaleContentPage",
       { tableName: "subjectSections" },
       StaleContentPageSchema
     ),
     collectPages(
       config,
-      "contentSync/queries:listStaleContentPage",
+      "contentSync/queries/stale:listStaleContentPage",
       { tableName: "exerciseSets" },
       StaleContentPageSchema
     ),
     collectPages(
       config,
-      "contentSync/queries:listStaleContentPage",
+      "contentSync/queries/stale:listStaleContentPage",
       { tableName: "exerciseQuestions" },
       StaleContentPageSchema
     ),
@@ -119,45 +120,58 @@ export async function getStaleContent(
 }
 
 export async function getDataIntegrity(config: ConvexConfig) {
-  const [questions, choices, contentAuthors, references, articles, sections] =
-    await Promise.all([
-      collectPages(
-        config,
-        "contentSync/queries:listIntegrityExerciseQuestionsPage",
-        {},
-        ExerciseQuestionIntegrityPageSchema
-      ),
-      collectPages(
-        config,
-        "contentSync/queries:listIntegrityExerciseChoicesPage",
-        {},
-        ExerciseChoiceIntegrityPageSchema
-      ),
-      collectPages(
-        config,
-        "contentSync/queries:listIntegrityContentAuthorsPage",
-        {},
-        ContentAuthorIntegrityPageSchema
-      ),
-      collectPages(
-        config,
-        "contentSync/queries:listIntegrityArticleReferencesPage",
-        {},
-        ArticleReferenceIntegrityPageSchema
-      ),
-      collectPages(
-        config,
-        "contentSync/queries:listIntegrityArticlesPage",
-        {},
-        StaleContentPageSchema
-      ),
-      collectPages(
-        config,
-        "contentSync/queries:listIntegritySubjectSectionsPage",
-        {},
-        SubjectSectionIntegrityPageSchema
-      ),
-    ]);
+  const [
+    questions,
+    choices,
+    contentAuthors,
+    references,
+    articles,
+    sections,
+    tryoutScaleIntegrity,
+  ] = await Promise.all([
+    collectPages(
+      config,
+      "contentSync/queries/integrity:listIntegrityExerciseQuestionsPage",
+      {},
+      ExerciseQuestionIntegrityPageSchema
+    ),
+    collectPages(
+      config,
+      "contentSync/queries/integrity:listIntegrityExerciseChoicesPage",
+      {},
+      ExerciseChoiceIntegrityPageSchema
+    ),
+    collectPages(
+      config,
+      "contentSync/queries/integrity:listIntegrityContentAuthorsPage",
+      {},
+      ContentAuthorIntegrityPageSchema
+    ),
+    collectPages(
+      config,
+      "contentSync/queries/integrity:listIntegrityArticleReferencesPage",
+      {},
+      ArticleReferenceIntegrityPageSchema
+    ),
+    collectPages(
+      config,
+      "contentSync/queries/integrity:listIntegrityArticlesPage",
+      {},
+      StaleContentPageSchema
+    ),
+    collectPages(
+      config,
+      "contentSync/queries/integrity:listIntegritySubjectSectionsPage",
+      {},
+      SubjectSectionIntegrityPageSchema
+    ),
+    runConvexQueryWithArgs(
+      config,
+      "contentSync/queries/tryouts:getTryoutScaleIntegrity",
+      {},
+      TryoutScaleIntegritySchema
+    ),
+  ]);
   const questionIdsWithChoices = new Set(
     choices.map((choice) => choice.questionId)
   );
@@ -183,6 +197,10 @@ export async function getDataIntegrity(config: ConvexConfig) {
     sectionsWithoutTopics: sections
       .filter((section) => !section.topicId)
       .map((section) => `${section.slug} (${section.locale})`),
+    activeTryoutsWithoutScale:
+      tryoutScaleIntegrity.activeTryoutsWithoutScale.map(
+        (tryout) => `${tryout.product}/${tryout.locale}/${tryout.slug}`
+      ),
     totalQuestions: questions.length,
     totalArticles: articles.length,
     totalSections: sections.length,
@@ -193,13 +211,13 @@ export async function getUnusedAuthors(config: ConvexConfig) {
   const [authors, contentAuthors] = await Promise.all([
     collectPages(
       config,
-      "contentSync/queries:listAuthorsPage",
+      "contentSync/queries/authors:listAuthorsPage",
       {},
       AuthorPageSchema
     ),
     collectPages(
       config,
-      "contentSync/queries:listIntegrityContentAuthorsPage",
+      "contentSync/queries/integrity:listIntegrityContentAuthorsPage",
       {},
       ContentAuthorIntegrityPageSchema
     ),

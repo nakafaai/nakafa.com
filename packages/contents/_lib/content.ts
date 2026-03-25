@@ -2,6 +2,7 @@ import { promises as fsPromises } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
+import { extractMetadata } from "@repo/contents/_lib/metadata";
 import {
   FileReadError,
   GitHubFetchError,
@@ -26,7 +27,6 @@ import { createElement } from "react";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const contentsDir = path.dirname(__dirname);
-const METADATA_REGEX = /export const metadata\s*=\s*({[\s\S]*?});/;
 
 /**
  * Validates that a file path is safe and doesn't escape the base directory.
@@ -253,85 +253,6 @@ export function getContents(
   return Effect.forEach(filteredSlugs, (slug) => processSlug(slug, locale), {
     concurrency: "unbounded",
   }).pipe(Effect.map((items) => items.filter((item) => item !== undefined)));
-}
-
-/**
- * Extracts metadata from a content file without loading the MDX component.
- * Useful for preview or list views where full content isn't needed.
- *
- * @param filePath - Relative path without locale or extension
- * @param locale - Target locale
- * @returns Effect that resolves to parsed metadata object, or fails with InvalidPathError, FileReadError, or MetadataParseError
- *
- * @example
- * ```ts
- * const metadata = Effect.runPromise(getContentMetadata("articles/politics/my-article", "en"));
- * console.log(metadata.title, metadata.date);
- * ```
- */
-export function getContentMetadata(
-  filePath: string,
-  locale: Locale
-): Effect.Effect<
-  ContentMetadata,
-  InvalidPathError | FileReadError | MetadataParseError
-> {
-  const cleanPath = cleanSlug(filePath);
-  const fullPath = path.join(contentsDir, `${cleanPath}/${locale}.mdx`);
-
-  if (!fullPath.startsWith(contentsDir)) {
-    return Effect.fail(
-      new InvalidPathError({
-        path: filePath,
-        reason: "Path traversal detected",
-      })
-    );
-  }
-
-  return Effect.gen(function* () {
-    const rawContent = yield* Effect.tryPromise({
-      try: () => fsPromises.readFile(fullPath, "utf8"),
-      catch: (error: unknown) =>
-        new FileReadError({
-          path: fullPath,
-          cause: error,
-        }),
-    });
-
-    const metadata = extractMetadata(rawContent);
-    if (Option.isNone(metadata)) {
-      return yield* Effect.fail(
-        new MetadataParseError({
-          path: fullPath,
-          reason: "No metadata found",
-        })
-      );
-    }
-
-    return metadata.value;
-  });
-}
-
-/**
- * Extracts and parses metadata from raw MDX content using regex.
- * Safely evaluates the metadata export statement.
- *
- * @param rawContent - Raw MDX file content
- * @returns Option containing parsed metadata object, or None if no metadata found or parsing fails
- */
-function extractMetadata(rawContent: string): Option.Option<ContentMetadata> {
-  try {
-    const metadataMatch = rawContent.match(METADATA_REGEX);
-
-    if (!metadataMatch) {
-      return Option.none();
-    }
-
-    const metadataObject = new Function(`return ${metadataMatch[1]}`)();
-    return Option.fromNullable(ContentMetadataSchema.parse(metadataObject));
-  } catch {
-    return Option.none();
-  }
 }
 
 /**

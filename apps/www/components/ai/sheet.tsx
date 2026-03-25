@@ -64,21 +64,14 @@ import {
   usePaginatedQuery,
 } from "convex/react";
 import { useTranslations } from "next-intl";
-import {
-  Activity,
-  memo,
-  useCallback,
-  useEffect,
-  useEffectEvent,
-  useRef,
-  useTransition,
-} from "react";
+import { Activity, memo, useTransition } from "react";
 import { useAi } from "@/lib/context/use-ai";
 import { ChatProvider, useChat } from "@/lib/context/use-chat";
 import { useUser } from "@/lib/context/use-user";
 import { AiChatError } from "./chat-error";
 import { AiChatMessage } from "./chat-message";
 import { AiChatModel } from "./chat-model";
+import { AiChatPaginationTrigger } from "./chat-pagination-trigger";
 import { AiChatPending } from "./chat-pending";
 import { CurrentChatProvider, useCurrentChat } from "./chat-provider";
 import { ChatSpacing } from "./chat-spacing";
@@ -181,7 +174,12 @@ export function AiSheet() {
           <AiSheetNewChat />
         </Activity>
         <Activity mode={activeChatId ? "visible" : "hidden"}>
-          <ErrorBoundary fallback={<AiSheetError />}>
+          <ErrorBoundary
+            fallback={<AiSheetError />}
+            onError={() => {
+              setActiveChatId(null);
+            }}
+          >
             <Authenticated>
               {!!activeChatId && (
                 <CurrentChatProvider chatId={activeChatId}>
@@ -199,14 +197,7 @@ export function AiSheet() {
   );
 }
 
-const AiSheetError = memo(() => {
-  const setActiveChatId = useAi((state) => state.setActiveChatId);
-  useEffect(() => {
-    setActiveChatId(null);
-  }, [setActiveChatId]);
-
-  return null;
-});
+const AiSheetError = memo(() => null);
 AiSheetError.displayName = "AiSheetError";
 
 const AiSheetNewChat = memo(() => {
@@ -215,8 +206,8 @@ const AiSheetNewChat = memo(() => {
   const router = useRouter();
   const pathname = usePathname();
 
+  const queuePendingQuery = useAi((state) => state.queuePendingQuery);
   const setOpen = useAi((state) => state.setOpen);
-  const setQuery = useAi((state) => state.setQuery);
   const setActiveChatId = useAi((state) => state.setActiveChatId);
 
   const user = useUser((s) => s.user);
@@ -241,7 +232,7 @@ const AiSheetNewChat = memo(() => {
         type: "study",
       });
 
-      setQuery(message.text);
+      queuePendingQuery({ chatId, owner: "sheet", query: message.text });
       setActiveChatId(chatId);
     });
   }
@@ -349,7 +340,11 @@ const AiSheetMain = memo(() => {
   }
 
   return (
-    <ChatProvider chatId={chat._id} initialMessages={messages}>
+    <ChatProvider
+      chatId={chat._id}
+      initialMessages={messages}
+      pendingQueryOwner="sheet"
+    >
       <AiSheetMainContent />
     </ChatProvider>
   );
@@ -378,31 +373,6 @@ const AiSheetMainPlaceholder = memo(() => (
 AiSheetMainPlaceholder.displayName = "AiSheetMainPlaceholder";
 
 const AiSheetMainContent = memo(() => {
-  const query = useAi((state) => state.query);
-  const setQuery = useAi((state) => state.setQuery);
-  const setText = useAi((state) => state.setText);
-
-  const sendMessage = useChat((state) => state.chat.sendMessage);
-
-  const lastProcessedQuery = useRef<string | null>(null);
-
-  const handleClearQuery = useCallback(() => {
-    setQuery("");
-    setText("");
-  }, [setQuery, setText]);
-
-  const handleQuery = useEffectEvent((text: string) => {
-    sendMessage({ text });
-    handleClearQuery();
-  });
-
-  useEffect(() => {
-    if (query && query !== lastProcessedQuery.current) {
-      lastProcessedQuery.current = query;
-      handleQuery(query);
-    }
-  }, [query]);
-
   return <AiSheetContent />;
 });
 
@@ -442,11 +412,12 @@ const AiSheetContent = memo(() => {
     <div className="relative flex size-full flex-col overflow-hidden">
       <Conversation>
         <ConversationContent>
-          {messages.map((message) => (
+          {messages.map((message, index) => (
             <Message
               from={message.role === "user" ? "user" : "assistant"}
               key={message.id}
             >
+              {index === 0 ? <AiChatPaginationTrigger /> : null}
               <AiChatMessage message={message} />
             </Message>
           ))}

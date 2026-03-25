@@ -68,7 +68,7 @@ export async function getGradeSubjects(
     const gradePath = getCategoryPath(category);
 
     const cleanPath = gradePath.startsWith("/")
-      ? gradePath.substring(1)
+      ? gradePath.slice(1)
       : gradePath;
 
     const gradeModule = await import(

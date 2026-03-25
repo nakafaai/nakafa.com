@@ -38,7 +38,7 @@ export default function Layout({ children, params }: Props) {
       contentView={{ type: "exercise", slug: cleanedSlug }}
       locale={locale}
     >
-      <ExerciseContextProvider slug={cleanedSlug}>
+      <ExerciseContextProvider key={cleanedSlug} slug={cleanedSlug}>
         <AttemptContextProvider locale={locale} slug={cleanedSlug}>
           {children}
         </AttemptContextProvider>

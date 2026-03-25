@@ -1,7 +1,6 @@
 "use client";
 
 import { api } from "@repo/backend/convex/_generated/api";
-import type { AppUser } from "@repo/backend/convex/auth";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
@@ -10,6 +9,7 @@ import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import * as z from "zod/mini";
 import { FormBlock } from "@/components/shared/form-block";
+import type { CurrentUser } from "@/lib/context/use-user";
 
 const MAX_NAME_LENGTH = 32;
 const MIN_NAME_LENGTH = 3;
@@ -24,7 +24,7 @@ const formSchema = z.object({
     ),
 });
 
-export function UserSettingsName({ user }: { user: AppUser }) {
+export function UserSettingsName({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
 
   const updateUserName = useMutation(api.users.mutations.updateUserName);

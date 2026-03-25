@@ -79,7 +79,7 @@ async function getSelectedChoice(
   const choices = await getManyFrom(
     db,
     "exerciseChoices",
-    "questionId_locale",
+    "by_questionId_and_locale",
     questionId,
     "questionId"
   );

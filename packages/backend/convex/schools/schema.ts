@@ -131,12 +131,16 @@ const activityMetadataValidator = v.optional(v.any());
 
 const tables = {
   schools: defineTable(schoolValidator)
-    .index("slug", ["slug"])
-    .index("email", ["email"]),
+    .index("by_slug", ["slug"])
+    .index("by_email", ["email"]),
 
   schoolMembers: defineTable(schoolMemberValidator)
-    .index("userId_status", ["userId", "status"])
-    .index("schoolId_userId_status", ["schoolId", "userId", "status"]),
+    .index("by_userId_and_status", ["userId", "status"])
+    .index("by_schoolId_and_userId_and_status", [
+      "schoolId",
+      "userId",
+      "status",
+    ]),
 
   schoolInviteCodes: defineTable({
     schoolId: v.id("schools"),
@@ -150,7 +154,7 @@ const tables = {
     createdBy: v.id("users"),
     updatedBy: v.optional(v.id("users")),
     updatedAt: v.number(),
-  }).index("code", ["code"]),
+  }).index("by_code", ["code"]),
 
   schoolActivityLogs: defineTable({
     schoolId: v.id("schools"),
@@ -161,7 +165,7 @@ const tables = {
     metadata: activityMetadataValidator,
     ipAddress: v.optional(v.string()),
     userAgent: v.optional(v.string()),
-  }).index("schoolId", ["schoolId"]),
+  }).index("by_schoolId", ["schoolId"]),
 };
 
 export default tables;

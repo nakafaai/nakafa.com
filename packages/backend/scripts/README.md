@@ -6,10 +6,10 @@ Sync MDX content from filesystem to Convex database.
 
 ```bash
 # Development (syncs all content, cleans stale, verifies)
-pnpm --filter backend sync
+pnpm --filter @repo/backend sync
 
 # Production
-pnpm --filter backend sync:prod
+pnpm --filter @repo/backend sync:prod
 ```
 
 ## Setup
@@ -55,6 +55,7 @@ npx convex deploy
 | `sync:verify` | Verify database matches filesystem |
 | `sync:clean` | Find and remove stale content |
 | `sync:reset` | Delete ALL synced content (requires --force) |
+| `sync:reset:tryouts` | Delete only tryout + IRT runtime data |
 
 ### Production
 
@@ -65,6 +66,7 @@ npx convex deploy
 | `sync:prod:verify` | Verify production database |
 | `sync:prod:clean` | Clean stale content in production |
 | `sync:prod:reset` | Delete ALL content in production (requires --force) |
+| `sync:prod:reset:tryouts` | Delete only tryout + IRT runtime data in production |
 
 ### Options
 
@@ -81,55 +83,55 @@ npx convex deploy
 
 ```bash
 # First time or after major changes
-pnpm --filter backend sync
+pnpm --filter @repo/backend sync
 
 # Daily (only syncs changed files)
-pnpm --filter backend sync:incremental
+pnpm --filter @repo/backend sync:incremental
 
 # Before commit (validates without syncing)
-pnpm --filter backend sync:validate
+pnpm --filter @repo/backend sync:validate
 ```
 
 ### Production
 
 ```bash
 # 1. Validate content
-pnpm --filter backend sync:validate
+pnpm --filter @repo/backend sync:validate
 
 # 2. Deploy functions to production
 cd packages/backend && npx convex deploy
 
 # 3. Sync content to production
-pnpm --filter backend sync:prod
+pnpm --filter @repo/backend sync:prod
 
 # 4. Verify production data
-pnpm --filter backend sync:prod:verify
+pnpm --filter @repo/backend sync:prod:verify
 ```
 
 ### Reset (Start Fresh)
 
 ```bash
 # See what would be deleted (dry run)
-pnpm --filter backend sync:reset
+pnpm --filter @repo/backend sync:reset
 
 # Actually delete all content
-pnpm --filter backend sync:reset --force
+pnpm --filter @repo/backend sync:reset --force
 
 # Delete including authors
-pnpm --filter backend sync:reset --force --authors
+pnpm --filter @repo/backend sync:reset --force --authors
 
 # Re-sync after reset
-pnpm --filter backend sync
+pnpm --filter @repo/backend sync
 ```
 
 For production (use with caution):
 
 ```bash
 # Preview deletion
-pnpm --filter backend sync:prod:reset
+pnpm --filter @repo/backend sync:prod:reset
 
 # Actually delete production content
-pnpm --filter backend sync:prod:reset --force
+pnpm --filter @repo/backend sync:prod:reset --force
 ```
 
 ## Content Structure
@@ -225,8 +227,8 @@ Content hash unchanged. This is normal for `sync:incremental`.
 |------|---------|
 | `sync-content.ts` | Main sync script |
 | `lib/mdxParser.ts` | MDX parsing utilities |
-| `../convex/contentSync/mutations.ts` | Convex sync mutations |
-| `../convex/contentSync/queries.ts` | Convex verification queries |
+| `../convex/contentSync/mutations/` | Convex sync mutations split by concern |
+| `../convex/contentSync/queries/` | Convex verification queries split by concern |
 | `../.sync-state.json` | Dev incremental sync state (gitignored) |
 | `../.sync-state.prod.json` | Prod incremental sync state (gitignored) |
 

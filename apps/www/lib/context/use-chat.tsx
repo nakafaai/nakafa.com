@@ -5,7 +5,12 @@ import type { MyUIMessage } from "@repo/ai/types/message";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { DefaultChatTransport } from "ai";
 import { useTranslations } from "next-intl";
-import { type PropsWithChildren, useMemo } from "react";
+import {
+  type PropsWithChildren,
+  useEffect,
+  useEffectEvent,
+  useMemo,
+} from "react";
 import { toast } from "sonner";
 import { createContext, useContextSelector } from "use-context-selector";
 import { useAi } from "@/lib/context/use-ai";
@@ -21,15 +26,22 @@ export function ChatProvider({
   chatId,
   initialMessages,
   apiUrl = "/api/chat",
+  pendingQueryOwner,
   children,
 }: PropsWithChildren<{
   chatId: Id<"chats">;
   initialMessages: MyUIMessage[];
   apiUrl?: string;
+  pendingQueryOwner?: "page" | "sheet";
 }>) {
   const t = useTranslations("Ai");
 
+  const clearPendingQuery = useAi((state) => state.clearPendingQuery);
   const getModel = useAi((state) => state.getModel);
+  const pendingQuery = useAi((state) => state.pendingQuery);
+  const pendingQueryChatId = useAi((state) => state.pendingQueryChatId);
+  const pendingOwner = useAi((state) => state.pendingQueryOwner);
+  const setText = useAi((state) => state.setText);
 
   const chat = useAiChat<MyUIMessage>({
     id: chatId,
@@ -65,6 +77,34 @@ export function ChatProvider({
       }
     },
   });
+
+  const consumePendingQuery = useEffectEvent((text: string) => {
+    chat.sendMessage({ text });
+    clearPendingQuery();
+    setText("");
+  });
+
+  useEffect(() => {
+    if (!pendingQueryOwner) {
+      return;
+    }
+
+    if (pendingOwner !== pendingQueryOwner) {
+      return;
+    }
+
+    if (pendingQueryChatId !== chatId || !pendingQuery) {
+      return;
+    }
+
+    consumePendingQuery(pendingQuery);
+  }, [
+    chatId,
+    pendingOwner,
+    pendingQuery,
+    pendingQueryChatId,
+    pendingQueryOwner,
+  ]);
 
   const value = useMemo(
     () => ({

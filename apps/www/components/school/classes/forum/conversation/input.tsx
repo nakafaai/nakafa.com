@@ -9,10 +9,13 @@ import {
   FileIcon,
   WinkIcon,
 } from "@hugeicons/core-free-icons";
-import { useOs } from "@mantine/hooks";
+import { useDisclosure, useOs } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { AttachmentArg } from "@repo/backend/convex/classes/forums/mutations";
+import {
+  MAX_FORUM_ATTACHMENT_BYTES,
+  MAX_FORUM_POST_ATTACHMENTS,
+} from "@repo/backend/convex/classes/forums/utils/constants";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -57,27 +60,36 @@ import {
   useCallback,
   useEffect,
   useRef,
-  useState,
 } from "react";
 import { toast } from "sonner";
 import * as z from "zod/mini";
 import { useForum } from "@/lib/context/use-forum";
-import { useForumScrollContext } from "@/lib/context/use-forum-scroll";
+import { useForumScroll } from "@/lib/context/use-forum-scroll";
 
+/**
+ * Handle forum message submission, attachment upload/finalization, and reply
+ * state cleanup for the active conversation.
+ */
 export const ForumPostInput = memo(
   ({ forumId }: { forumId: Id<"schoolClassForums"> }) => {
     const t = useTranslations("School.Classes");
     const replyTo = useForum((f) => f.replyTo);
     const setReplyTo = useForum((f) => f.setReplyTo);
     const exitJumpMode = useForum((f) => f.exitJumpMode);
-    const forumScroll = useForumScrollContext();
+    const scrollToBottom = useForumScroll((state) => state.scrollToBottom);
 
     const textareaRef = useRef<ComponentRef<typeof InputGroupTextarea>>(null);
     const generateUploadUrl = useMutation(
-      api.classes.forums.mutations.generateUploadUrl
+      api.classes.forums.mutations.uploads.generateUploadUrl
+    );
+    const discardForumUploads = useMutation(
+      api.classes.forums.mutations.uploads.discardForumUploads
+    );
+    const saveForumUpload = useMutation(
+      api.classes.forums.mutations.uploads.saveForumUpload
     );
     const createPost = useMutation(
-      api.classes.forums.mutations.createForumPost
+      api.classes.forums.mutations.posts.createForumPost
     );
 
     const [
@@ -86,8 +98,8 @@ export const ForumPostInput = memo(
     ] = useFileUpload({
       multiple: true,
       accept: "image/*,.pdf,.doc,.docx,.txt",
-      maxSize: 10 * 1024 * 1024,
-      maxFiles: 10,
+      maxSize: MAX_FORUM_ATTACHMENT_BYTES,
+      maxFiles: MAX_FORUM_POST_ATTACHMENTS,
       onError: (errors) => {
         for (const error of errors) {
           toast.error(error, { position: "bottom-center" });
@@ -95,7 +107,7 @@ export const ForumPostInput = memo(
       },
     });
 
-    const [emojiOpen, setEmojiOpen] = useState(false);
+    const [isEmojiPickerOpen, emojiPicker] = useDisclosure(false);
     const os = useOs();
     const isMobile = os === "ios" || os === "android";
 
@@ -105,39 +117,35 @@ export const ForumPostInput = memo(
       }
     }, [replyTo]);
 
-    const uploadFiles = useCallback(
-      (filesToUpload: FileWithPreview[]) => {
-        const promises: Promise<AttachmentArg>[] = [];
+    const uploadFile = useCallback(
+      async (file: File) => {
+        const { uploadId, uploadUrl } = await generateUploadUrl({ forumId });
 
-        for (const f of filesToUpload) {
-          if (!(f.file instanceof File)) {
-            continue;
-          }
-          const file = f.file;
+        try {
+          const { storageId } = await ky
+            .post(uploadUrl, {
+              headers: { "Content-Type": file.type },
+              body: file,
+            })
+            .json<{ storageId: Id<"_storage"> }>();
 
-          promises.push(
-            (async () => {
-              const uploadUrl = await generateUploadUrl({ forumId });
-              const { storageId } = await ky
-                .post(uploadUrl, {
-                  headers: { "Content-Type": file.type },
-                  body: file,
-                })
-                .json<{ storageId: Id<"_storage"> }>();
+          await saveForumUpload({
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            storageId,
+            uploadId,
+          });
 
-              return {
-                storageId,
-                name: file.name,
-                type: file.type,
-                size: file.size,
-              };
-            })()
+          return uploadId;
+        } catch (error) {
+          await discardForumUploads({ uploadIds: [uploadId] }).catch(
+            () => null
           );
+          throw error;
         }
-
-        return Promise.all(promises);
       },
-      [forumId, generateUploadUrl]
+      [discardForumUploads, forumId, generateUploadUrl, saveForumUpload]
     );
 
     const form = useForm({
@@ -155,27 +163,42 @@ export const ForumPostInput = memo(
           return;
         }
 
-        let attachments: AttachmentArg[] = [];
-        if (files.length > 0) {
-          attachments = await uploadFiles(files);
+        const attachmentUploadIds: Id<"schoolClassForumPendingUploads">[] = [];
+
+        try {
+          for (const fileWithPreview of files) {
+            if (!(fileWithPreview.file instanceof File)) {
+              continue;
+            }
+
+            attachmentUploadIds.push(await uploadFile(fileWithPreview.file));
+          }
+
+          await createPost({
+            attachmentUploadIds:
+              attachmentUploadIds.length > 0 ? attachmentUploadIds : undefined,
+            forumId,
+            body: value.body,
+            parentId: replyTo?.postId,
+          });
+
+          form.reset();
+          clearFiles();
+          setReplyTo(null);
+          exitJumpMode();
+
+          requestAnimationFrame(() => {
+            scrollToBottom();
+          });
+        } catch {
+          if (attachmentUploadIds.length > 0) {
+            await discardForumUploads({ uploadIds: attachmentUploadIds }).catch(
+              () => null
+            );
+          }
+
+          toast.error(t("create-post-failed"));
         }
-
-        await createPost({
-          forumId,
-          body: value.body,
-          parentId: replyTo?.postId,
-          attachments: attachments.length > 0 ? attachments : undefined,
-        });
-
-        form.reset();
-        clearFiles();
-        setReplyTo(null);
-        exitJumpMode();
-
-        // Auto-scroll to bottom after sending my own message
-        requestAnimationFrame(() => {
-          forumScroll?.scrollToBottom();
-        });
       },
     });
 
@@ -236,7 +259,17 @@ export const ForumPostInput = memo(
                       value={field.state.value}
                     />
                     <InputGroupAddon align="inline-end">
-                      <Popover onOpenChange={setEmojiOpen} open={emojiOpen}>
+                      <Popover
+                        onOpenChange={(open) => {
+                          if (open) {
+                            emojiPicker.open();
+                            return;
+                          }
+
+                          emojiPicker.close();
+                        }}
+                        open={isEmojiPickerOpen}
+                      >
                         <PopoverTrigger asChild>
                           <InputGroupButton
                             aria-label={t("emoji")}
@@ -262,7 +295,7 @@ export const ForumPostInput = memo(
                             className="h-80"
                             onEmojiSelect={({ emoji }) => {
                               field.handleChange(field.state.value + emoji);
-                              setEmojiOpen(false);
+                              emojiPicker.close();
                               textareaRef.current?.focus();
                             }}
                           >

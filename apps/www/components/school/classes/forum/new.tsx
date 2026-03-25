@@ -6,7 +6,9 @@ import {
   ChatAdd01Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
+import { useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
+import { MIN_FORUM_THREAD_TEXT_LENGTH } from "@repo/backend/convex/classes/forums/utils/constants";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
@@ -29,17 +31,14 @@ import { cn } from "@repo/design-system/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 import { toast } from "sonner";
 import * as z from "zod/mini";
 import { getTag, getTagsByRole } from "@/components/school/classes/_data/tag";
 import { useClass } from "@/lib/context/use-class";
 
-const MIN_LENGTH = 3;
-
 const formSchema = z.object({
-  title: z.string().check(z.minLength(MIN_LENGTH), z.trim()),
-  body: z.string().check(z.minLength(MIN_LENGTH), z.trim()),
+  title: z.string().check(z.minLength(MIN_FORUM_THREAD_TEXT_LENGTH), z.trim()),
+  body: z.string().check(z.minLength(MIN_FORUM_THREAD_TEXT_LENGTH), z.trim()),
   tag: z.union([
     z.literal("general"),
     z.literal("question"),
@@ -58,12 +57,14 @@ const defaultValues: z.infer<typeof formSchema> = {
 export function SchoolClassesForumNew() {
   const t = useTranslations("School.Classes");
 
-  const [openDialog, setOpenDialog] = useState(false);
+  const [isDialogOpen, dialog] = useDisclosure(false);
 
   const classId = useClass((c) => c.class._id);
   const classMembership = useClass((c) => c.classMembership);
   const schoolMembership = useClass((c) => c.schoolMembership);
-  const createForum = useMutation(api.classes.forums.mutations.createForum);
+  const createForum = useMutation(
+    api.classes.forums.mutations.forums.createForum
+  );
 
   // Get available tags based on user role (school admins get all tags)
   const availableTags = getTagsByRole(
@@ -79,7 +80,7 @@ export function SchoolClassesForumNew() {
     onSubmit: async ({ value }) => {
       try {
         await createForum({ ...value, classId });
-        setOpenDialog(false);
+        dialog.close();
         form.reset();
       } catch {
         toast.error(t("create-forum-failed"));
@@ -96,7 +97,7 @@ export function SchoolClassesForumNew() {
       }}
     >
       <ButtonGroup>
-        <Button onClick={() => setOpenDialog(true)}>
+        <Button onClick={dialog.open} type="button">
           <HugeIcons icon={ChatAdd01Icon} />
           {t("new-forum")}
         </Button>
@@ -119,8 +120,15 @@ export function SchoolClassesForumNew() {
               )}
             </form.Subscribe>
           }
-          open={openDialog}
-          setOpen={setOpenDialog}
+          open={isDialogOpen}
+          setOpen={(open) => {
+            if (open) {
+              dialog.open();
+              return;
+            }
+
+            dialog.close();
+          }}
           title={t("new-forum-title")}
         >
           <FieldGroup>

@@ -1,9 +1,9 @@
-import { getContents } from "@repo/contents/_lib/content";
 import {
   getMaterialPath,
   getMaterials,
 } from "@repo/contents/_lib/exercises/material";
 import { getFolderChildNames } from "@repo/contents/_lib/fs";
+import { getContentsMetadata } from "@repo/contents/_lib/metadata";
 import { getAllSurah, getSurahName } from "@repo/contents/_lib/quran";
 import {
   type ExercisesCategory,
@@ -35,20 +35,20 @@ export async function GET() {
 
   // Fetch all articles and subjects for all locales in parallel
   const contentPromises = locales.flatMap((locale) => [
-    Effect.runPromise(getContents({ locale, basePath: "articles" })).then(
-      (contents) => ({
-        section: "Articles",
-        locale,
-        contents,
-      })
-    ),
-    Effect.runPromise(getContents({ locale, basePath: "subject" })).then(
-      (contents) => ({
-        section: "Subjects",
-        locale,
-        contents,
-      })
-    ),
+    Effect.runPromise(
+      getContentsMetadata({ locale, basePath: "articles" })
+    ).then((contents) => ({
+      section: "Articles",
+      locale,
+      contents,
+    })),
+    Effect.runPromise(
+      getContentsMetadata({ locale, basePath: "subject" })
+    ).then((contents) => ({
+      section: "Subjects",
+      locale,
+      contents,
+    })),
   ]);
 
   const results = await Promise.all(contentPromises);

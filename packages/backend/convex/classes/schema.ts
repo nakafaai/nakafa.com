@@ -39,7 +39,7 @@ export const schoolClassTeacherRoleValidator = v.optional(
  * School class enroll method validator
  */
 export const schoolClassEnrollMethodValidator = v.optional(
-  literals("code", "teacher", "admin", "invite", "public")
+  literals("by_code", "teacher", "admin", "invite", "public")
 );
 
 /**
@@ -59,6 +59,9 @@ export const schoolClassMaterialStatusValidator = literals(
   "scheduled",
   "archived"
 );
+export type SchoolClassMaterialStatus = Infer<
+  typeof schoolClassMaterialStatusValidator
+>;
 
 /**
  * Class images validator
@@ -104,6 +107,7 @@ export const schoolClassForumTagValidator = literals(
   "assignment",
   "resource"
 );
+export type SchoolClassForumTag = Infer<typeof schoolClassForumTagValidator>;
 
 /**
  * Forum status validator
@@ -203,7 +207,8 @@ export const schoolClassInviteCodeValidator = v.object({
 });
 
 /**
- * School class forum base validator (without system fields)
+ * Stored forum thread state, including denormalized counters used by the class
+ * forum list and conversation sheet.
  */
 export const schoolClassForumValidator = v.object({
   classId: v.id("schoolClasses"),
@@ -214,7 +219,6 @@ export const schoolClassForumValidator = v.object({
   status: schoolClassForumStatusValidator,
   isPinned: v.boolean(),
   postCount: v.number(),
-  participantCount: v.number(),
   reactionCounts: v.array(schoolClassReactionCountValidator),
   lastPostAt: v.number(),
   lastPostBy: v.optional(v.id("users")),
@@ -223,7 +227,8 @@ export const schoolClassForumValidator = v.object({
 });
 
 /**
- * School class forum post base validator (without system fields)
+ * Stored forum post state, including read-boundary reply metadata and
+ * denormalized reaction counts.
  */
 export const schoolClassForumPostValidator = v.object({
   forumId: v.id("schoolClassForums"),
@@ -235,7 +240,6 @@ export const schoolClassForumPostValidator = v.object({
   replyToBody: v.optional(v.string()),
   replyCount: v.number(),
   reactionCounts: v.array(schoolClassReactionCountValidator),
-  isDeleted: v.boolean(),
   createdBy: v.id("users"),
   updatedAt: v.number(),
   editedAt: v.optional(v.number()),
@@ -302,10 +306,15 @@ export const paginatedPeopleValidator = paginationResultValidator(
 
 const tables = {
   schoolClasses: defineTable(schoolClassValidator)
-    .index("schoolId_isArchived_visibility", [
+    .index("by_schoolId_and_isArchived_and_visibility", [
       "schoolId",
       "isArchived",
       "visibility",
+    ])
+    .index("by_schoolId_and_visibility_and_isArchived", [
+      "schoolId",
+      "visibility",
+      "isArchived",
     ])
     .searchIndex("search_name", {
       searchField: "name",
@@ -313,16 +322,21 @@ const tables = {
     }),
 
   schoolClassMembers: defineTable(schoolClassMemberValidator)
-    .index("classId_userId", ["classId", "userId"])
-    .index("schoolId", ["schoolId"]),
+    .index("by_classId_and_userId", ["classId", "userId"])
+    .index("by_schoolId", ["schoolId"]),
 
   schoolClassInviteCodes: defineTable(schoolClassInviteCodeValidator)
-    .index("classId_role", ["classId", "role"])
-    .index("code", ["code"])
-    .index("schoolId", ["schoolId"]),
+    .index("by_classId_and_role", ["classId", "role"])
+    .index("by_code", ["code"])
+    .index("by_schoolId", ["schoolId"]),
 
   schoolClassForums: defineTable(schoolClassForumValidator)
-    .index("classId_status_lastPostAt", ["classId", "status", "lastPostAt"])
+    .index("by_classId_and_lastPostAt", ["classId", "lastPostAt"])
+    .index("by_classId_and_status_and_lastPostAt", [
+      "classId",
+      "status",
+      "lastPostAt",
+    ])
     .searchIndex("search_title", {
       searchField: "title",
       filterFields: ["classId", "status"],
@@ -332,13 +346,35 @@ const tables = {
     forumId: v.id("schoolClassForums"),
     userId: v.id("users"),
     emoji: v.string(),
-  }).index("forumId_userId_emoji", ["forumId", "userId", "emoji"]),
+  })
+    .index("by_forumId_and_userId_and_emoji", ["forumId", "userId", "emoji"])
+    .index("by_forumId_and_emoji_and_userId", ["forumId", "emoji", "userId"]),
 
   schoolClassForumPosts: defineTable(schoolClassForumPostValidator).index(
-    "forumId",
+    "by_forumId",
     ["forumId"]
   ),
 
+  /**
+   * Tracks uploads that were authorized for one user+forum but not yet claimed
+   * by a successful post mutation.
+   */
+  schoolClassForumPendingUploads: defineTable({
+    forumId: v.id("schoolClassForums"),
+    classId: v.id("schoolClasses"),
+    uploadedBy: v.id("users"),
+    storageId: v.optional(v.id("_storage")),
+    name: v.optional(v.string()),
+    mimeType: v.optional(v.string()),
+    size: v.optional(v.number()),
+  })
+    .index("by_storageId", ["storageId"])
+    .index("by_forumId_and_uploadedBy", ["forumId", "uploadedBy"]),
+
+  /**
+   * Stores finalized forum attachments separately so posts do not grow with an
+   * unbounded attachment array.
+   */
   schoolClassForumPostAttachments: defineTable({
     postId: v.id("schoolClassForumPosts"),
     forumId: v.id("schoolClassForums"),
@@ -348,35 +384,48 @@ const tables = {
     mimeType: v.string(),
     size: v.number(),
     createdBy: v.id("users"),
-  }).index("postId", ["postId"]),
+  })
+    .index("by_postId", ["postId"])
+    .index("by_fileId", ["fileId"]),
 
   schoolClassForumPostReactions: defineTable({
     postId: v.id("schoolClassForumPosts"),
     userId: v.id("users"),
     emoji: v.string(),
-  }).index("postId_userId_emoji", ["postId", "userId", "emoji"]),
+  })
+    .index("by_postId_and_userId_and_emoji", ["postId", "userId", "emoji"])
+    .index("by_postId_and_emoji_and_userId", ["postId", "emoji", "userId"]),
 
+  /**
+   * Persists each user's read boundary by forum, using both timestamp and post
+   * id so equal-timestamp posts stay ordered correctly.
+   */
   schoolClassForumReadStates: defineTable({
     forumId: v.id("schoolClassForums"),
     classId: v.id("schoolClasses"),
     userId: v.id("users"),
     lastReadAt: v.number(),
+    lastReadPostId: v.optional(v.id("schoolClassForumPosts")),
   })
-    .index("forumId_userId", ["forumId", "userId"])
-    .index("classId_userId", ["classId", "userId"]),
+    .index("by_forumId_and_userId", ["forumId", "userId"])
+    .index("by_classId_and_userId", ["classId", "userId"]),
 
   schoolClassMaterialGroups: defineTable(schoolClassMaterialGroupValidator)
-    .index("classId_parentId_order", ["classId", "parentId", "order"])
-    .index("classId_parentId_status_order", [
+    .index("by_classId_and_parentId_and_order", [
+      "classId",
+      "parentId",
+      "order",
+    ])
+    .index("by_classId_and_parentId_and_status_and_order", [
       "classId",
       "parentId",
       "status",
       "order",
     ])
-    .index("status_scheduledAt", ["status", "scheduledAt"])
+    .index("by_status_and_scheduledAt", ["status", "scheduledAt"])
     .searchIndex("search_name", {
       searchField: "name",
-      filterFields: ["classId", "status"],
+      filterFields: ["classId", "parentId", "status"],
     }),
 
   schoolClassMaterials: defineTable({
@@ -399,14 +448,14 @@ const tables = {
     publishedAt: v.optional(v.number()),
     publishedBy: v.optional(v.id("users")),
   })
-    .index("groupId_status_isPinned_order", [
+    .index("by_groupId_and_status_and_isPinned_and_order", [
       "groupId",
       "status",
       "isPinned",
       "order",
     ])
-    .index("status_scheduledAt", ["status", "scheduledAt"])
-    .index("classId_status", ["classId", "status"])
+    .index("by_status_and_scheduledAt", ["status", "scheduledAt"])
+    .index("by_classId_and_status", ["classId", "status"])
     .searchIndex("search_title", {
       searchField: "title",
       filterFields: ["classId", "groupId", "status"],
@@ -429,8 +478,8 @@ const tables = {
     downloadCount: v.number(),
     uploadedBy: v.id("users"),
   })
-    .index("materialId_type_order", ["materialId", "type", "order"])
-    .index("classId", ["classId"]),
+    .index("by_materialId_and_type_and_order", ["materialId", "type", "order"])
+    .index("by_classId", ["classId"]),
 
   schoolClassMaterialViews: defineTable({
     materialId: v.id("schoolClassMaterials"),
@@ -442,8 +491,8 @@ const tables = {
     hasDownloaded: v.boolean(),
     lastDownloadedAt: v.optional(v.number()),
   })
-    .index("materialId_userId", ["materialId", "userId"])
-    .index("classId_userId", ["classId", "userId"]),
+    .index("by_materialId_and_userId", ["materialId", "userId"])
+    .index("by_classId_and_userId", ["classId", "userId"]),
 };
 
 export default tables;

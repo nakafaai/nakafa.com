@@ -1,6 +1,6 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import type { GenericMutationCtx } from "convex/server";
-import { asyncMap } from "convex-helpers";
 import type { Change } from "convex-helpers/server/triggers";
 
 /**
@@ -20,26 +20,9 @@ export async function chatsHandler(
     return;
   }
 
-  const messages = await ctx.db
-    .query("messages")
-    .withIndex("chatId", (q) => q.eq("chatId", change.id))
-    .collect();
-
-  // Parallel queries: Fetch all parts for all messages at once
-  // This avoids the N+1 query problem of querying parts sequentially
-  const allParts = await asyncMap(messages, (message) =>
-    ctx.db
-      .query("parts")
-      .withIndex("messageId_order", (q) => q.eq("messageId", message._id))
-      .collect()
+  await ctx.scheduler.runAfter(
+    0,
+    internal.triggers.chats.cleanup.cleanupDeletedChat,
+    { chatId: change.id }
   );
-
-  // Sequential deletes are acceptable - Convex auto-batches writes in transactions
-  for (let i = 0; i < messages.length; i++) {
-    const parts = allParts[i];
-    for (const part of parts) {
-      await ctx.db.delete("parts", part._id);
-    }
-    await ctx.db.delete("messages", messages[i]._id);
-  }
 }

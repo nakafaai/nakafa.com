@@ -1,8 +1,11 @@
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
-import { updateForumReadState } from "@repo/backend/convex/triggers/helpers/forums";
-import { createNotification } from "@repo/backend/convex/triggers/helpers/notifications";
-import { truncateText } from "@repo/backend/convex/utils/helper";
-import type { GenericMutationCtx } from "convex/server";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { updateForumReadState } from "@repo/backend/convex/classes/forums/utils/readStateWrite";
+import {
+  notifyForumPostParticipants,
+  updateForumAfterDelete,
+  updateForumAfterInsert,
+} from "@repo/backend/convex/triggers/helpers/forumPosts";
 import type { Change } from "convex-helpers/server/triggers";
 
 /**
@@ -18,7 +21,7 @@ import type { Change } from "convex-helpers/server/triggers";
  * @param change - The change object containing operation details and document state
  */
 export async function forumPostsHandler(
-  ctx: GenericMutationCtx<DataModel>,
+  ctx: MutationCtx,
   change: Change<DataModel, "schoolClassForumPosts">
 ) {
   const post = change.newDoc;
@@ -30,58 +33,21 @@ export async function forumPostsHandler(
         break;
       }
 
-      const forum = await ctx.db.get("schoolClassForums", post.forumId);
+      const forum = await updateForumAfterInsert(ctx, post);
       if (forum) {
-        await ctx.db.patch("schoolClassForums", post.forumId, {
-          postCount: forum.postCount + 1,
-          lastPostAt: post._creationTime,
-          lastPostBy: post.createdBy,
-          updatedAt: Date.now(),
-        });
-
         await updateForumReadState(ctx, {
           forumId: post.forumId,
           classId: post.classId,
           userId: post.createdBy,
           lastReadAt: post._creationTime,
+          lastReadPostId: post._id,
         });
 
-        const truncatedBody = truncateText({ text: post.body });
-
-        if (
-          post.parentId &&
-          post.replyToUserId &&
-          post.replyToUserId !== post.createdBy
-        ) {
-          await createNotification(ctx, {
-            recipientId: post.replyToUserId,
-            actorId: post.createdBy,
-            type: "post_reply",
-            entityType: "schoolClassForumPosts",
-            entityId: change.id,
-            previewTitle: forum.title,
-            previewBody: truncatedBody,
-          });
-        }
-
-        if (post.mentions.length > 0) {
-          for (const mentionedUserId of post.mentions) {
-            if (
-              mentionedUserId !== post.createdBy &&
-              mentionedUserId !== post.replyToUserId
-            ) {
-              await createNotification(ctx, {
-                recipientId: mentionedUserId,
-                actorId: post.createdBy,
-                type: "post_mention",
-                entityType: "schoolClassForumPosts",
-                entityId: change.id,
-                previewTitle: forum.title,
-                previewBody: truncatedBody,
-              });
-            }
-          }
-        }
+        await notifyForumPostParticipants(ctx, {
+          forum,
+          post,
+          postId: change.id,
+        });
       }
 
       if (post.parentId) {
@@ -104,13 +70,7 @@ export async function forumPostsHandler(
         break;
       }
 
-      const forum = await ctx.db.get("schoolClassForums", oldPost.forumId);
-      if (forum) {
-        await ctx.db.patch("schoolClassForums", oldPost.forumId, {
-          postCount: Math.max(forum.postCount - 1, 0),
-          updatedAt: Date.now(),
-        });
-      }
+      await updateForumAfterDelete(ctx, oldPost);
 
       if (oldPost.parentId) {
         const parentPost = await ctx.db.get(

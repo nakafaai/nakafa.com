@@ -1,12 +1,17 @@
 "use client";
 
 import { api } from "@repo/backend/convex/_generated/api";
-import type { AppUser } from "@repo/backend/convex/auth";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
+import type { FunctionReturnType } from "convex/server";
 import { createContext, useContextSelector } from "use-context-selector";
 
+export type CurrentUser = NonNullable<
+  FunctionReturnType<typeof api.auth.getCurrentUser>
+>;
+
 interface UserContextValue {
-  user: AppUser | null;
+  isPending: boolean;
+  user: CurrentUser | null;
 }
 
 const UserContext = createContext<UserContextValue | null>(null);
@@ -16,10 +21,10 @@ export function UserContextProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const { data: user } = useQueryWithStatus(api.auth.getCurrentUser);
+  const { data: user, isPending } = useQueryWithStatus(api.auth.getCurrentUser);
 
   return (
-    <UserContext.Provider value={{ user: user || null }}>
+    <UserContext.Provider value={{ user: user || null, isPending }}>
       {children}
     </UserContext.Provider>
   );

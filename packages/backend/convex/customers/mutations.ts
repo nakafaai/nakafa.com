@@ -1,7 +1,7 @@
 import { internalMutation } from "@repo/backend/convex/_generated/server";
 import tables from "@repo/backend/convex/customers/schema";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { ConvexError, v } from "convex/values";
+import { v } from "convex/values";
 
 /**
  * Delete a customer by Polar customer ID.
@@ -15,14 +15,11 @@ export const deleteCustomerById = internalMutation({
   handler: async (ctx, args) => {
     const customer = await ctx.db
       .query("customers")
-      .withIndex("id", (q) => q.eq("id", args.id))
+      .withIndex("by_polarId", (q) => q.eq("id", args.id))
       .unique();
 
     if (!customer) {
-      throw new ConvexError({
-        code: "CUSTOMER_NOT_FOUND",
-        message: `Customer not found for id: ${args.id}`,
-      });
+      return null;
     }
 
     await ctx.db.delete("customers", customer._id);
@@ -46,7 +43,7 @@ export const upsertCustomer = internalMutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("customers")
-      .withIndex("userId", (q) => q.eq("userId", args.customer.userId))
+      .withIndex("by_userId", (q) => q.eq("userId", args.customer.userId))
       .unique();
 
     if (existing) {
@@ -58,6 +55,6 @@ export const upsertCustomer = internalMutation({
       return existing._id;
     }
 
-    return await ctx.db.insert("customers", args.customer);
+    return ctx.db.insert("customers", args.customer);
   },
 });

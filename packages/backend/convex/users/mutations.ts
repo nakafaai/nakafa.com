@@ -1,7 +1,7 @@
 import { components } from "@repo/backend/convex/_generated/api";
 import { mutation } from "@repo/backend/convex/_generated/server";
-import { requireAuthWithSession } from "@repo/backend/convex/lib/helpers/auth";
-import { userRoleOptionsValidator } from "@repo/backend/convex/users/schema";
+import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
+import { selfSelectableUserRoleValidator } from "@repo/backend/convex/users/schema";
 import { v } from "convex/values";
 
 /**
@@ -9,11 +9,11 @@ import { v } from "convex/values";
  */
 export const updateUserRole = mutation({
   args: {
-    role: userRoleOptionsValidator,
+    role: selfSelectableUserRoleValidator,
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
     await ctx.db.patch("users", user.appUser._id, {
       role: args.role,
     });
@@ -34,7 +34,7 @@ export const updateUserName = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
 
     // Update Better Auth user table
     await ctx.runMutation(components.betterAuth.mutations.updateUserName, {

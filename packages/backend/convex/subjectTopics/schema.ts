@@ -30,7 +30,7 @@ const tables = {
     sectionCount: v.number(),
     /** Last sync timestamp (epoch ms) */
     syncedAt: v.number(),
-  }).index("locale_slug", ["locale", "slug"]),
+  }).index("by_locale_and_slug", ["locale", "slug"]),
 };
 
 export default tables;

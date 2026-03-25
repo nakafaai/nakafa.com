@@ -78,6 +78,18 @@ export const emailDigestTypesValidator = literals(
   "never" // Don't send email
 );
 
+export const notificationMutedEntityValidator = v.object({
+  entityType: notificationEntityTypesValidator,
+  entityId: notificationEntityIdValidator,
+  mutedAt: v.number(),
+});
+
+export const notificationPreferenceSettingsValidator = v.object({
+  emailEnabled: v.boolean(),
+  emailDigest: emailDigestTypesValidator,
+  disabledTypes: v.array(notificationTypesValidator),
+});
+
 const tables = {
   /**
    * Main notifications table
@@ -85,7 +97,7 @@ const tables = {
    * Design principles (Convex best practices for scale):
    * 1. Generic: Works for ALL entity types (schools, classes, comments, etc.)
    * 2. Minimal fields: No redundant data (isRead derived from readAt)
-   * 3. Single index: recipientId only, sorted by _creationTime
+   * 3. Read paths stay indexed by recipientId and actorId
    * 4. Type-safe: v.id() unions for compile-time validation
    * 5. Denormalized counts: Separate table for O(1) unread badge
    *
@@ -98,7 +110,7 @@ const tables = {
    * Content preview is SNAPSHOT at creation time
    *
    * Query pattern:
-   * .withIndex("recipientId", q => q.eq("recipientId", x))
+   * .withIndex("by_recipientId", q => q.eq("recipientId", x))
    * .order("desc")
    * .paginate(opts)
    */
@@ -125,7 +137,9 @@ const tables = {
     previewBody: v.optional(v.string()),
 
     // Note: Use _creationTime for when notification was created
-  }),
+  })
+    .index("by_recipientId", ["recipientId"])
+    .index("by_actorId", ["actorId"]),
 
   /**
    * Denormalized unread counts for O(1) badge display
@@ -137,7 +151,7 @@ const tables = {
     userId: v.id("users"),
     unreadCount: v.number(),
     updatedAt: v.number(),
-  }).index("userId", ["userId"]),
+  }).index("by_userId", ["userId"]),
 
   /**
    * User notification preferences
@@ -152,25 +166,29 @@ const tables = {
     userId: v.id("users"),
 
     // Email settings (batched digest only, no realtime - too expensive)
+    disabledTypes: v.array(notificationTypesValidator),
     emailEnabled: v.boolean(),
     emailDigest: emailDigestTypesValidator, // "daily" | "weekly" | "never"
 
-    // Type-level controls (opt-out)
-    // e.g., ["post_reaction", "comment_upvote"] - disable noisy notifications
-    disabledTypes: v.array(notificationTypesValidator),
-
-    // Entity-level mutes (muted threads, classes, etc.)
-    // e.g., mute a specific noisy forum thread
-    mutedEntities: v.array(
-      v.object({
-        entityType: notificationEntityTypesValidator,
-        entityId: notificationEntityIdValidator,
-        mutedAt: v.number(),
-      })
-    ),
-
     updatedAt: v.number(),
-  }).index("userId", ["userId"]),
+  }).index("by_userId", ["userId"]),
+
+  /**
+   * One row per muted entity.
+   * Absence means notifications for the entity are allowed.
+   */
+  notificationEntityMutes: defineTable({
+    entityId: notificationEntityIdValidator,
+    entityType: notificationEntityTypesValidator,
+    mutedAt: v.number(),
+    userId: v.id("users"),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_userId_and_entityType_and_entityId", [
+      "userId",
+      "entityType",
+      "entityId",
+    ]),
 };
 
 export default tables;

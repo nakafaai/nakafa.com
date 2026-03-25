@@ -1,17 +1,9 @@
-import {
-  SidebarInset,
-  SidebarProvider,
-} from "@repo/design-system/components/ui/sidebar";
 import { routing } from "@repo/internationalization/src/routing";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { use } from "react";
-import { AiSheet } from "@/components/ai/sheet";
-import { Onboarding } from "@/components/shared/onboarding";
-import { SearchCommand } from "@/components/shared/search-command";
-import { AppSidebar } from "@/components/sidebar/app-sidebar";
-import { Header } from "@/components/sidebar/header";
+import { AppShell } from "@/components/sidebar/app-shell";
 
 export default function Layout(props: LayoutProps<"/[locale]">) {
   const { children, params } = props;
@@ -24,18 +16,5 @@ export default function Layout(props: LayoutProps<"/[locale]">) {
   // Enable static rendering
   setRequestLocale(locale);
 
-  return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <Header />
-        <SearchCommand />
-        <AiSheet />
-        <div className="relative" data-pagefind-body>
-          {children}
-        </div>
-        <Onboarding />
-      </SidebarInset>
-    </SidebarProvider>
-  );
+  return <AppShell>{children}</AppShell>;
 }

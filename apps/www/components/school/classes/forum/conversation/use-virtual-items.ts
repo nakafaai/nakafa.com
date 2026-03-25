@@ -19,20 +19,19 @@ import type {
 export function useVirtualItems({
   forum,
   posts,
-  currentUserId,
-  lastReadAt,
   isJumpMode,
   targetIndex,
 }: {
-  forum: Forum;
+  forum: Forum | undefined;
   posts: ForumPost[];
-  currentUserId: Id<"users">;
-  lastReadAt: number;
   isJumpMode: boolean;
   targetIndex: number;
 }) {
-  const initialLastReadAt = useRef(lastReadAt);
-  const mountTime = useRef(Date.now());
+  const initialLatestPostId = useRef<Id<"schoolClassForumPosts"> | null>(null);
+
+  if (initialLatestPostId.current === null && !isJumpMode && posts.length > 0) {
+    initialLatestPostId.current = posts.at(-1)?._id ?? null;
+  }
 
   // Calculate unread info
   const { firstUnreadIndex, unreadCount } = useMemo(() => {
@@ -41,20 +40,24 @@ export function useVirtualItems({
     }
     let firstIdx = -1;
     let count = 0;
+    let passedInitialLatestPost = initialLatestPostId.current === null;
+
     for (const [i, post] of posts.entries()) {
-      const isUnread =
-        post._creationTime > initialLastReadAt.current &&
-        post._creationTime < mountTime.current &&
-        post.createdBy !== currentUserId;
+      const isUnread = !passedInitialLatestPost && post.isUnread === true;
+
       if (isUnread) {
         if (firstIdx === -1) {
           firstIdx = i;
         }
         count += 1;
       }
+
+      if (post._id === initialLatestPostId.current) {
+        passedInitialLatestPost = true;
+      }
     }
     return { firstUnreadIndex: firstIdx, unreadCount: count };
-  }, [posts, currentUserId, isJumpMode]);
+  }, [posts, isJumpMode]);
 
   // Build virtual items
   const { items, initialScrollIndex, postIdToIndex } = useMemo(() => {
@@ -62,13 +65,15 @@ export function useVirtualItems({
     const idToIndex = new Map<Id<"schoolClassForumPosts">, number>();
     let scrollIndex: number | "end" = isJumpMode ? 0 : "end";
 
-    result.push({ type: "header", forum });
+    if (forum) {
+      result.push({ type: "header", forum });
+    }
 
     for (const [index, post] of posts.entries()) {
       const prevPost = posts[index - 1];
       const prevDate = prevPost
         ? new Date(prevPost._creationTime).toDateString()
-        : new Date(forum._creationTime).toDateString();
+        : new Date(post._creationTime).toDateString();
       const currentDate = new Date(post._creationTime).toDateString();
 
       if (currentDate !== prevDate) {
@@ -106,7 +111,5 @@ export function useVirtualItems({
     items,
     initialScrollIndex,
     postIdToIndex,
-    firstUnreadIndex,
-    unreadCount,
   };
 }

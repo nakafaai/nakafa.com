@@ -34,6 +34,7 @@ export function UserChats({ userId }: { userId: Id<"users"> }) {
 
   return (
     <UserChatsList
+      canDelete={isOwnProfile}
       userId={userId}
       // If viewing own profile, show all chats; otherwise only public ones
       visibility={isOwnProfile ? undefined : "public"}
@@ -42,9 +43,11 @@ export function UserChats({ userId }: { userId: Id<"users"> }) {
 }
 
 export function UserChatsList({
+  canDelete,
   userId,
   visibility,
 }: {
+  canDelete: boolean;
   userId: Id<"users">;
   visibility?: "public" | "private";
 }) {
@@ -101,7 +104,7 @@ export function UserChatsList({
                   addSuffix: true,
                 })}
               </time>
-              <UserChatsListActions chat={chat} />
+              {canDelete ? <UserChatsListActions chat={chat} /> : null}
             </div>
           </div>
         );

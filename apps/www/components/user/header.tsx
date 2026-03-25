@@ -23,11 +23,10 @@ export function UserHeader({ userId }: { userId: Id<"users"> }) {
 
   const { data: user } = useQueryWithStatus(api.auth.getUserById, { userId });
   const currentUser = useUser((state) => state.user);
+  const isCurrentUser = currentUser?.appUser._id === userId;
+  const userEmail = isCurrentUser ? currentUser.authUser.email : null;
 
-  const authUser = user?.authUser;
-  const appUser = user?.appUser;
-
-  if (!(authUser && appUser)) {
+  if (!user) {
     return (
       <header className="flex items-start justify-between gap-4">
         <section className="flex flex-1 items-start gap-4 text-left">
@@ -59,27 +58,24 @@ export function UserHeader({ userId }: { userId: Id<"users"> }) {
       <section className="flex flex-1 items-start gap-4 text-left">
         <Avatar className="size-12 border sm:size-16">
           <AvatarImage
-            alt={authUser.name}
+            alt={user.name}
             role="presentation"
-            src={authUser.image ?? ""}
+            src={user.image ?? ""}
           />
-          <AvatarFallback>{getInitialName(authUser.name)}</AvatarFallback>
+          <AvatarFallback>{getInitialName(user.name)}</AvatarFallback>
         </Avatar>
         <div className="grid text-left">
           <span className="truncate font-semibold text-base sm:text-lg">
-            {authUser.name}
+            {user.name}
           </span>
           <span className="truncate text-muted-foreground text-sm sm:text-base">
-            {authUser.email}
+            {userEmail ?? tCommon("anonymous")}
           </span>
         </div>
       </section>
 
       <Button
-        className={cn(
-          "w-9 sm:w-auto",
-          currentUser?.appUser._id !== appUser._id && "hidden"
-        )}
+        className={cn("w-9 sm:w-auto", !isCurrentUser && "hidden")}
         nativeButton={false}
         render={
           <NavigationLink href="/user/settings">

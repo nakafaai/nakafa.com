@@ -28,7 +28,7 @@ function SubjectIcon() {
   );
 }
 
-function SNBTIcon() {
+export function TryoutIcon() {
   return (
     <div className="relative flex h-18 w-20 items-center justify-center">
       <div className="relative flex h-14 w-16 flex-col justify-between rounded-md border bg-card p-2.5 shadow-xs transition-all ease-out group-hover:-translate-y-1">
@@ -71,12 +71,12 @@ export function HomeExplore() {
 
         <NavigationLink
           className="group flex flex-col items-center gap-2"
-          href="/exercises/high-school/snbt"
+          href="/try-out"
         >
           <div className="flex aspect-[1/0.95] w-full items-center justify-center rounded-xl bg-muted/50 transition-all ease-out group-hover:bg-muted">
-            <SNBTIcon />
+            <TryoutIcon />
           </div>
-          <h2>{t("snbt-tryout")}</h2>
+          <h2>{t("try-out")}</h2>
         </NavigationLink>
       </div>
     </section>

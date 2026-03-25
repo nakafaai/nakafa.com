@@ -37,7 +37,7 @@ export async function generateTitle({ messages }: { messages: MyUIMessage[] }) {
 
     const finalTitle =
       cleanedTitle.length > MAX_TITLE_LENGTH
-        ? `${cleanedTitle.substring(0, TRUNCATED_TITLE_LENGTH)}...`
+        ? `${cleanedTitle.slice(0, TRUNCATED_TITLE_LENGTH)}...`
         : cleanedTitle;
 
     return finalTitle;

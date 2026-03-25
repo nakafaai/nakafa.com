@@ -116,7 +116,7 @@ export const syncArticles = async (
 
     const result = await runConvexMutation(
       config,
-      "contentSync/mutations:bulkSyncArticles",
+      "contentSync/mutations/articles:bulkSyncArticles",
       { articles: batch }
     );
 

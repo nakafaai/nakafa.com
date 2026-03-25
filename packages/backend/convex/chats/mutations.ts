@@ -1,7 +1,8 @@
 import { getModelCreditCost } from "@repo/ai/config/models";
 import { DEFAULT_TITLE } from "@repo/ai/features/constants";
 import {
-  deleteMessageByIdentifier,
+  deleteMessageBatchFromPoint,
+  getMessageByIdentifier,
   insertParts,
   verifyChatOwnership,
 } from "@repo/backend/convex/chats/helpers";
@@ -10,10 +11,7 @@ import tables, {
   chatVisibilityValidator,
 } from "@repo/backend/convex/chats/schema";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
-import {
-  requireAuth,
-  requireAuthWithSession,
-} from "@repo/backend/convex/lib/helpers/auth";
+import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { ConvexError, v } from "convex/values";
 
@@ -25,7 +23,7 @@ export const createChat = mutation({
   },
   returns: vv.id("chats"),
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
 
     const chatId = await ctx.db.insert("chats", {
       updatedAt: Date.now(),
@@ -46,7 +44,6 @@ export const updateChatTitle = mutation({
   },
   returns: vv.id("chats"),
   handler: async (ctx, args) => {
-    // Fast JWT auth — no session DB call needed here
     const user = await requireAuth(ctx);
 
     const chat = await ctx.db.get("chats", args.chatId);
@@ -78,7 +75,7 @@ export const updateChatVisibility = mutation({
   },
   returns: vv.id("chats"),
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
 
     const chat = await ctx.db.get("chats", args.chatId);
     if (!chat) {
@@ -101,10 +98,7 @@ export const updateChatVisibility = mutation({
   },
 });
 
-/**
- * Saves a user message with parts.
- * If an existing message shares the same identifier it is replaced (upsert semantics).
- */
+/** Persist one user message and its parts after any transcript rewrite is complete. */
 export const saveMessage = mutation({
   args: {
     message: tables.messages.validator,
@@ -121,15 +115,9 @@ export const saveMessage = mutation({
   }),
   handler: async (ctx, args) => {
     const { message, parts } = args;
-
-    // Fast JWT auth — no session DB call needed here
     const user = await requireAuth(ctx);
 
     await verifyChatOwnership(ctx, message.chatId, user.appUser._id);
-
-    if (message.identifier) {
-      await deleteMessageByIdentifier(ctx, message.chatId, message.identifier);
-    }
 
     // modelId stored server-side so clients cannot spoof credit calculations
     const messageId = await ctx.db.insert("messages", {
@@ -142,6 +130,22 @@ export const saveMessage = mutation({
     const partIds = await insertParts(ctx, messageId, parts);
 
     return { messageId, partIds };
+  },
+});
+
+/** Delete one bounded transcript-rewrite batch before re-saving a message. */
+export const deleteMessageBatch = mutation({
+  args: {
+    chatId: vv.id("chats"),
+    fromCreationTime: v.number(),
+  },
+  returns: v.object({ hasMore: v.boolean() }),
+  handler: async (ctx, args) => {
+    const user = await requireAuth(ctx);
+
+    await verifyChatOwnership(ctx, args.chatId, user.appUser._id);
+
+    return deleteMessageBatchFromPoint(ctx, args.chatId, args.fromCreationTime);
   },
 });
 
@@ -167,7 +171,6 @@ export const createChatWithMessage = mutation({
     partIds: v.array(vv.id("parts")),
   }),
   handler: async (ctx, args) => {
-    // Fast JWT auth — no session DB call needed here
     const user = await requireAuth(ctx);
 
     const chatId = await ctx.db.insert("chats", {
@@ -197,7 +200,7 @@ export const deleteChat = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const user = await requireAuthWithSession(ctx);
+    const user = await requireAuth(ctx);
 
     const chat = await ctx.db.get("chats", args.chatId);
     if (!chat) {
@@ -259,7 +262,27 @@ export const saveAssistantResponse = internalMutation({
     await verifyChatOwnership(ctx, message.chatId, appUser._id);
 
     if (message.identifier) {
-      await deleteMessageByIdentifier(ctx, message.chatId, message.identifier);
+      const existingMessage = await getMessageByIdentifier(
+        ctx,
+        message.chatId,
+        message.identifier
+      );
+
+      if (existingMessage) {
+        const deleteResult = await deleteMessageBatchFromPoint(
+          ctx,
+          message.chatId,
+          existingMessage._creationTime
+        );
+
+        if (deleteResult.hasMore) {
+          throw new ConvexError({
+            code: "CHAT_ASSISTANT_RESPONSE_REWRITE_EXCEEDED",
+            message:
+              "Assistant response rewrite exceeded the supported batch size.",
+          });
+        }
+      }
     }
 
     let credits = 0;

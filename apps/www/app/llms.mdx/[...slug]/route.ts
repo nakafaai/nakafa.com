@@ -1,10 +1,10 @@
-import { getContent } from "@repo/contents/_lib/content";
 import { getExercisesContent } from "@repo/contents/_lib/exercises";
 import {
   getCurrentMaterial,
   getMaterialPath,
   getMaterials,
 } from "@repo/contents/_lib/exercises/material";
+import { getContentMetadataWithRaw } from "@repo/contents/_lib/metadata";
 import { getAllSurah, getSurah, getSurahName } from "@repo/contents/_lib/quran";
 import { generateSlugOnlyParams } from "@repo/contents/_lib/static-params";
 import { ExercisesCategorySchema } from "@repo/contents/_types/exercises/category";
@@ -64,7 +64,7 @@ export async function GET(
 
   // Handle MDX content
   const content = await Effect.runPromise(
-    Effect.match(getContent(locale, cleanSlug, { includeMDX: false }), {
+    Effect.match(getContentMetadataWithRaw(locale, cleanSlug), {
       onFailure: () => null,
       onSuccess: (data) => data,
     })

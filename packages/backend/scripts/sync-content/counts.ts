@@ -26,9 +26,22 @@ const countTableSpecs: Array<{
     field: "tryoutLeaderboardEntries",
     tableName: "tryoutLeaderboardEntries",
   },
+  {
+    field: "userTryoutLatestAttempts",
+    tableName: "userTryoutLatestAttempts",
+  },
   { field: "userTryoutStats", tableName: "userTryoutStats" },
   { field: "irtCalibrationQueue", tableName: "irtCalibrationQueue" },
+  {
+    field: "irtCalibrationAttempts",
+    tableName: "irtCalibrationAttempts",
+  },
+  {
+    field: "irtCalibrationCacheStats",
+    tableName: "irtCalibrationCacheStats",
+  },
   { field: "irtCalibrationRuns", tableName: "irtCalibrationRuns" },
+  { field: "irtScaleQualityChecks", tableName: "irtScaleQualityChecks" },
   { field: "exerciseItemParameters", tableName: "exerciseItemParameters" },
   {
     field: "irtScalePublicationQueue",
@@ -51,7 +64,7 @@ const countTableDocuments = async (config: ConvexConfig, tableName: string) => {
   while (!isDone) {
     ({ continueCursor, isDone, pageSize } = await runConvexQueryWithArgs(
       config,
-      "contentSync/queries:countTablePage",
+      "contentSync/queries/counts:countTablePage",
       {
         tableName,
         paginationOpts: {

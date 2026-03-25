@@ -14,14 +14,28 @@ type QuestionAnswerSheet = FunctionReturnType<
   typeof api.exercises.queries.getQuestionAnswerSheetBySlug
 >;
 
-interface AttemptContextValue {
+export interface AttemptContextValue {
   answerSheet: QuestionAnswerSheet;
   answers: NonNullable<LatestAttemptResult>["answers"];
   attempt: NonNullable<LatestAttemptResult>["attempt"] | null;
+  isInputLocked: boolean;
+  isReviewMode: boolean;
   slug: string;
 }
 
 const AttemptContext = createContext<AttemptContextValue | null>(null);
+
+export function AttemptProvider({
+  children,
+  value,
+}: {
+  children: React.ReactNode;
+  value: AttemptContextValue;
+}) {
+  return (
+    <AttemptContext.Provider value={value}>{children}</AttemptContext.Provider>
+  );
+}
 
 export function AttemptContextProvider({
   children,
@@ -43,16 +57,18 @@ export function AttemptContextProvider({
   );
 
   return (
-    <AttemptContext.Provider
+    <AttemptProvider
       value={{
         answerSheet: answerSheet ?? [],
         slug,
         attempt: results?.attempt || null,
         answers: results?.answers || [],
+        isInputLocked: false,
+        isReviewMode: false,
       }}
     >
       {children}
-    </AttemptContext.Provider>
+    </AttemptProvider>
   );
 }
 

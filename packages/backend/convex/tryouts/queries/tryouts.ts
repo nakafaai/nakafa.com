@@ -1,13 +1,16 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
+import { loadValidatedTryoutPartSets } from "@repo/backend/convex/tryouts/helpers/parts";
 import {
-  sortTryoutsForProduct,
+  tryoutProductPolicies,
   tryoutProductValidator,
 } from "@repo/backend/convex/tryouts/products";
 import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError, v } from "convex/values";
-import { getAll, getManyFrom } from "convex-helpers/server/relationships";
+import { getAll } from "convex-helpers/server/relationships";
+
+const MAX_ACTIVE_TRYOUTS_PER_PRODUCT = 100;
 
 /** Lists active tryouts for one product and locale. */
 export const getActiveTryouts = query({
@@ -19,15 +22,24 @@ export const getActiveTryouts = query({
   handler: async (ctx, args) => {
     const tryouts = await ctx.db
       .query("tryouts")
-      .withIndex("product_locale_isActive", (q) =>
+      .withIndex("by_product_and_locale_and_isActive", (q) =>
         q
           .eq("product", args.product)
           .eq("locale", args.locale)
           .eq("isActive", true)
       )
-      .collect();
+      .take(MAX_ACTIVE_TRYOUTS_PER_PRODUCT + 1);
 
-    return sortTryoutsForProduct(args.product, tryouts);
+    if (tryouts.length > MAX_ACTIVE_TRYOUTS_PER_PRODUCT) {
+      throw new ConvexError({
+        code: "TOO_MANY_ACTIVE_TRYOUTS",
+        message: "Active tryout list exceeded the supported query limit.",
+      });
+    }
+
+    return [...tryouts].sort(
+      tryoutProductPolicies[args.product].compareTryouts
+    );
   },
 });
 
@@ -47,7 +59,6 @@ export const getTryoutDetails = query({
           partKey: tryoutPartKeyValidator,
           setId: vv.id("exerciseSets"),
           material: v.string(),
-          title: v.string(),
           questionCount: v.number(),
         })
       ),
@@ -56,7 +67,7 @@ export const getTryoutDetails = query({
   handler: async (ctx, args) => {
     const tryout = await ctx.db
       .query("tryouts")
-      .withIndex("product_locale_slug", (q) =>
+      .withIndex("by_product_and_locale_and_slug", (q) =>
         q
           .eq("product", args.product)
           .eq("locale", args.locale)
@@ -68,13 +79,11 @@ export const getTryoutDetails = query({
       return null;
     }
 
-    const tryoutPartSets = await getManyFrom(
-      ctx.db,
-      "tryoutPartSets",
-      "tryoutId_partIndex",
-      tryout._id,
-      "tryoutId"
-    );
+    const tryoutPartSets = await loadValidatedTryoutPartSets(ctx.db, {
+      partCount: tryout.partCount,
+      tryoutId: tryout._id,
+    });
+
     const sets = await getAll(
       ctx.db,
       "exerciseSets",
@@ -96,7 +105,6 @@ export const getTryoutDetails = query({
         partKey: partSet.partKey,
         setId: partSet.setId,
         material: set.material,
-        title: set.title,
         questionCount: set.questionCount,
       };
     });

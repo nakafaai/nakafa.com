@@ -162,7 +162,7 @@ export const useFileUpload = (
 
   const generateUniqueId = useCallback((file: File | FileMetadata): string => {
     if (file instanceof File) {
-      return `${file.name}-${Date.now()}-${Math.random().toString(BASE36_RADIX).substring(RANDOM_STRING_START, RANDOM_STRING_END)}`;
+      return `${file.name}-${Date.now()}-${Math.random().toString(BASE36_RADIX).slice(RANDOM_STRING_START, RANDOM_STRING_END)}`;
     }
     return file.id;
   }, []);

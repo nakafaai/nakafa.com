@@ -1,13 +1,13 @@
 import {
   extractReferences,
   getContent,
-  getContentMetadata,
   getContents,
   getReferences,
   parseModuleMetadata,
   parseReferences,
   validatePath,
 } from "@repo/contents/_lib/content";
+import { getContentMetadata } from "@repo/contents/_lib/metadata";
 import { InvalidPathError } from "@repo/contents/_shared/error";
 import { Effect } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";

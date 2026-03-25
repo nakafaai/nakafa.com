@@ -1,6 +1,7 @@
 "use client";
 
 import { WinkIcon } from "@hugeicons/core-free-icons";
+import { useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
@@ -34,7 +35,7 @@ import {
 import { useMutation } from "convex/react";
 import { format } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
-import { memo, useState, useTransition } from "react";
+import { memo, useTransition } from "react";
 import type { Forum } from "@/components/school/classes/forum/conversation/types";
 import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";
@@ -49,7 +50,7 @@ export const ForumHeader = memo(({ forum }: { forum: Forum }) => {
   return (
     <div className="group flex items-start gap-3 border-primary border-l-2 bg-primary/10 p-4">
       <Avatar className="size-8 shrink-0">
-        <AvatarImage alt={userName} role="presentation" src={userImage} />
+        <AvatarImage alt={userName} src={userImage} />
         <AvatarFallback>{getInitialName(userName)}</AvatarFallback>
       </Avatar>
 
@@ -86,7 +87,7 @@ const ForumReactions = memo(({ forum }: { forum: Forum }) => {
 
   const [isPending, startTransition] = useTransition();
   const toggleReaction = useMutation(
-    api.classes.forums.mutations.toggleForumReaction
+    api.classes.forums.mutations.reactions.toggleForumReaction
   );
 
   const handleToggleReaction = (emoji: string) => {
@@ -146,10 +147,10 @@ ForumReactions.displayName = "ForumReactions";
 const ForumActions = memo(({ forum }: { forum: Forum }) => {
   const t = useTranslations("Common");
 
-  const [isOpen, setIsOpen] = useState(false);
+  const [isReactionPickerOpen, reactionPicker] = useDisclosure(false);
   const [isPending, startTransition] = useTransition();
   const toggleReaction = useMutation(
-    api.classes.forums.mutations.toggleForumReaction
+    api.classes.forums.mutations.reactions.toggleForumReaction
   );
 
   const handleToggleReaction = (emoji: string) => {
@@ -159,7 +160,17 @@ const ForumActions = memo(({ forum }: { forum: Forum }) => {
   };
 
   return (
-    <Popover onOpenChange={setIsOpen} open={isOpen}>
+    <Popover
+      onOpenChange={(open) => {
+        if (open) {
+          reactionPicker.open();
+          return;
+        }
+
+        reactionPicker.close();
+      }}
+      open={isReactionPickerOpen}
+    >
       <Tooltip>
         <TooltipTrigger
           render={
@@ -178,7 +189,7 @@ const ForumActions = memo(({ forum }: { forum: Forum }) => {
           className="h-80"
           onEmojiSelect={({ emoji }) => {
             handleToggleReaction(emoji);
-            setIsOpen(false);
+            reactionPicker.close();
           }}
         >
           <EmojiPickerSearch />

@@ -34,7 +34,6 @@ import {
   Activity,
   type ComponentProps,
   type PropsWithChildren,
-  useEffect,
   useRef,
   useState,
   useTransition,
@@ -65,14 +64,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmShare, setConfirmShare] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [chatTitle, setChatTitle] = useState(chat.title);
-
-  useEffect(() => {
-    if (!chat.title) {
-      return;
-    }
-    setChatTitle(chat.title);
-  }, [chat.title]);
+  const [chatTitle, setChatTitle] = useState("");
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -90,6 +82,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
   const [isPending, startTransition] = useTransition();
 
   const handleEdit = () => {
+    setChatTitle(chat.title ?? "");
     setIsEditing(true);
     setTimeout(() => {
       inputRef.current?.focus();
@@ -98,13 +91,15 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
 
   const handleSave = () => {
     startTransition(async () => {
-      if (!chatTitle) {
+      const nextTitle = chatTitle.trim();
+
+      if (!nextTitle) {
         return;
       }
 
       await updateChatTitle({
         chatId: chat._id,
-        title: chatTitle,
+        title: nextTitle,
       });
       setIsEditing(false);
     });

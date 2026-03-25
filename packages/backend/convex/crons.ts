@@ -3,6 +3,7 @@ import { IRT_AUTOMATION_CRON_INTERVAL_MINUTES } from "@repo/backend/convex/irt/p
 import { cronJobs } from "convex/server";
 
 const crons = cronJobs();
+const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
 
 /**
  * Populates audio generation queue every 30 minutes.
@@ -22,7 +23,7 @@ crons.interval(
 crons.interval(
   "process audio generation queue",
   { minutes: 45 },
-  internal.audioStudies.mutations.startWorkflowsForPendingItems,
+  internal.audioStudies.mutations.queue.startWorkflowsForPendingItems,
   {}
 );
 
@@ -32,7 +33,7 @@ crons.interval(
 crons.cron(
   "cleanup audio generation",
   "0 2 * * *",
-  internal.audioStudies.mutations.cleanup,
+  internal.audioStudies.mutations.queue.cleanup,
   {}
 );
 
@@ -42,7 +43,7 @@ crons.cron(
 crons.interval(
   "reset stuck queue items",
   { minutes: 60 },
-  internal.audioStudies.mutations.resetStuckQueueItems,
+  internal.audioStudies.mutations.queue.resetStuckQueueItems,
   {}
 );
 
@@ -84,7 +85,7 @@ crons.cron(
 crons.interval(
   "drain irt calibration queue",
   { minutes: IRT_AUTOMATION_CRON_INTERVAL_MINUTES },
-  internal.irt.internalMutations.drainCalibrationQueue,
+  internal.irt.mutations.internal.queue.drainCalibrationQueue,
   {}
 );
 
@@ -94,7 +95,27 @@ crons.interval(
 crons.interval(
   "drain irt scale publication queue",
   { minutes: IRT_AUTOMATION_CRON_INTERVAL_MINUTES },
-  internal.irt.internalMutations.drainScalePublicationQueue,
+  internal.irt.mutations.internal.scales.drainScalePublicationQueue,
+  {}
+);
+
+/**
+ * Refreshes persisted IRT scale quality summaries in bounded batches.
+ */
+crons.cron(
+  "rebuild irt scale quality checks",
+  "0 */6 * * *",
+  internal.irt.mutations.internal.scales.rebuildScaleQualityChecksPage,
+  {}
+);
+
+/**
+ * Repairs overdue tryouts whose scheduled expiry was delayed or missed.
+ */
+crons.interval(
+  "sweep expired tryouts",
+  { minutes: TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES },
+  internal.tryouts.mutations.internal.expiry.sweepExpiredTryoutAttempts,
   {}
 );
 

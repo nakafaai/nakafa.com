@@ -1,4 +1,5 @@
 import {
+  MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE,
   MIN_VIEW_THRESHOLD,
   RETRY_CONFIG,
   SUPPORTED_LOCALES,
@@ -8,13 +9,13 @@ import {
   getContentRefBySlugAndLocale,
   getContentSlug,
 } from "@repo/backend/convex/audioStudies/utils";
-import { safeGetAppUser } from "@repo/backend/convex/auth";
 import {
   articlePopularity,
   subjectPopularity,
 } from "@repo/backend/convex/contents/aggregate";
 import { recordContentViewBySlug } from "@repo/backend/convex/contents/utils";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
+import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
 import type { AudioContentRef } from "@repo/backend/convex/lib/validators/audio";
 import {
   contentViewRefValidator,
@@ -47,36 +48,59 @@ export const populateAudioQueue = internalMutation({
     ]);
 
     const totalCount = articleCount + subjectCount;
+
+    if (totalCount === 0) {
+      logger.info("No popular content found for audio queue population");
+      return { processed: 0, queued: 0 };
+    }
+
     logger.info("Fetched popularity counts", {
       articles: articleCount,
+      maxItemsPerType: MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE,
       subjects: subjectCount,
       total: totalCount,
     });
 
     let totalQueued = 0;
+    const articleItems: PopularItem[] = [];
+    for await (const item of articlePopularity.iter(ctx, {
+      namespace: "global",
+      order: "desc",
+      pageSize: 100,
+    })) {
+      if (articleItems.length === MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE) {
+        break;
+      }
 
-    const [articleResults, subjectResults] = await Promise.all([
-      articlePopularity.paginate(ctx, {
-        namespace: "global",
-        order: "desc",
-        pageSize: 100,
-      }),
-      subjectPopularity.paginate(ctx, {
-        namespace: "global",
-        order: "desc",
-        pageSize: 100,
-      }),
-    ]);
+      if (item.sumValue < MIN_VIEW_THRESHOLD) {
+        break;
+      }
 
-    const articleItems: PopularItem[] = articleResults.page.map((item) => ({
-      ref: { type: "article" as const, id: item.key[1] },
-      viewCount: item.sumValue,
-    }));
+      articleItems.push({
+        ref: { type: "article", id: item.key[1] },
+        viewCount: item.sumValue,
+      });
+    }
 
-    const subjectItems: PopularItem[] = subjectResults.page.map((item) => ({
-      ref: { type: "subject" as const, id: item.key[1] },
-      viewCount: item.sumValue,
-    }));
+    const subjectItems: PopularItem[] = [];
+    for await (const item of subjectPopularity.iter(ctx, {
+      namespace: "global",
+      order: "desc",
+      pageSize: 100,
+    })) {
+      if (subjectItems.length === MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE) {
+        break;
+      }
+
+      if (item.sumValue < MIN_VIEW_THRESHOLD) {
+        break;
+      }
+
+      subjectItems.push({
+        ref: { type: "subject", id: item.key[1] },
+        viewCount: item.sumValue,
+      });
+    }
 
     const allItems: PopularItem[] = [...articleItems, ...subjectItems].sort(
       (a, b) => b.viewCount - a.viewCount
@@ -127,7 +151,7 @@ export const populateAudioQueue = internalMutation({
 
         const existingForLocale = await ctx.db
           .query("audioGenerationQueue")
-          .withIndex("contentRef_locale", (q) =>
+          .withIndex("by_contentRefType_and_contentRefId_and_locale", (q) =>
             q
               .eq("contentRef.type", localeContentRef.type)
               .eq("contentRef.id", localeContentRef.id)
@@ -160,7 +184,7 @@ export const populateAudioQueue = internalMutation({
         if (contentHash) {
           const existingAudio = await ctx.db
             .query("contentAudios")
-            .withIndex("contentRef_locale", (q) =>
+            .withIndex("by_contentRefType_and_contentRefId_and_locale", (q) =>
               q
                 .eq("contentRef.type", localeContentRef.type)
                 .eq("contentRef.id", localeContentRef.id)
@@ -229,17 +253,16 @@ export const recordContentView = mutation({
     alreadyViewed: v.boolean(),
   }),
   handler: async (ctx, args) => {
-    const user = await safeGetAppUser(ctx);
-    const userId = user?.appUser._id;
+    const user = await getOptionalAppUser(ctx);
 
-    return await recordContentViewBySlug(
+    return recordContentViewBySlug(
       ctx,
       args.contentRef.type,
       args.locale,
       args.contentRef.slug,
       {
         deviceId: args.deviceId,
-        userId,
+        userId: user?.appUser._id,
       }
     );
   },

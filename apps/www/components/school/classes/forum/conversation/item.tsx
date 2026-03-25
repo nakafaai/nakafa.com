@@ -6,9 +6,10 @@ import {
   FileIcon,
   WinkIcon,
 } from "@hugeicons/core-free-icons";
+import { useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { PostAttachment } from "@repo/backend/convex/classes/forums/utils";
+import type { PostAttachment } from "@repo/backend/convex/classes/forums/utils/posts";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
   Avatar,
@@ -44,13 +45,17 @@ import { useMutation } from "convex/react";
 import { format } from "date-fns";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
-import { Activity, memo, useState, useTransition } from "react";
+import { Activity, memo, useTransition } from "react";
 import type { ForumPost } from "@/components/school/classes/forum/conversation/types";
 import { useForum } from "@/lib/context/use-forum";
-import { useForumScrollContext } from "@/lib/context/use-forum-scroll";
+import { useForumScroll } from "@/lib/context/use-forum-scroll";
 import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";
 
+/**
+ * Render one forum post row, including reply/thread context, attachments, and
+ * reaction controls.
+ */
 export const ForumPostItem = memo(
   ({
     post,
@@ -84,7 +89,7 @@ export const ForumPostItem = memo(
 
         <Activity mode={isFirstInGroup === true ? "visible" : "hidden"}>
           <Avatar className="size-8 shrink-0">
-            <AvatarImage alt={userName} role="presentation" src={userImage} />
+            <AvatarImage alt={userName} src={userImage} />
             <AvatarFallback>{getInitialName(userName)}</AvatarFallback>
           </Avatar>
         </Activity>
@@ -143,7 +148,7 @@ const PostReactions = memo(({ post }: { post: ForumPost }) => {
 
   const [isPending, startTransition] = useTransition();
   const toggleReaction = useMutation(
-    api.classes.forums.mutations.togglePostReaction
+    api.classes.forums.mutations.reactions.togglePostReaction
   );
 
   const handleToggleReaction = (emoji: string) => {
@@ -200,6 +205,10 @@ const PostReactions = memo(({ post }: { post: ForumPost }) => {
 });
 PostReactions.displayName = "PostReactions";
 
+/**
+ * Split forum attachments into image previews and file links while tolerating
+ * storage URLs that are temporarily unavailable.
+ */
 const PostAttachments = memo(
   ({ attachments }: { attachments: PostAttachment[] }) => {
     if (attachments.length === 0) {
@@ -211,25 +220,29 @@ const PostAttachments = memo(
 
     return (
       <div className="flex flex-col gap-1">
-        {images.map((attachment) => (
-          <a
-            className="group/image relative block h-40 w-full max-w-xs overflow-hidden rounded-sm border bg-muted sm:h-48"
-            href={attachment.url ?? "#"}
-            key={attachment._id}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            <Image
-              alt={attachment.name}
-              className="object-cover transition-transform ease-out group-hover/image:scale-105"
-              fetchPriority="high"
-              fill
-              loading="eager"
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              src={attachment.url ?? ""}
-            />
-          </a>
-        ))}
+        {images.map((attachment) => {
+          if (!attachment.url) {
+            return null;
+          }
+
+          return (
+            <a
+              className="group/image relative block h-40 w-full max-w-xs overflow-hidden rounded-sm border bg-muted sm:h-48"
+              href={attachment.url}
+              key={attachment._id}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              <Image
+                alt={attachment.name}
+                className="object-cover transition-transform ease-out group-hover/image:scale-105"
+                fill
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                src={attachment.url}
+              />
+            </a>
+          );
+        })}
 
         <div className="flex flex-wrap gap-1">
           {files.map((attachment) => (
@@ -263,9 +276,13 @@ const PostAttachments = memo(
 );
 PostAttachments.displayName = "PostAttachments";
 
+/**
+ * Link one reply preview back to its parent post, loading jump mode when the
+ * parent is outside the current window.
+ */
 const PostReplyIndicator = memo(({ post }: { post: ForumPost }) => {
   const { parentId, replyToUser, replyToBody } = post;
-  const forumScroll = useForumScrollContext();
+  const jumpToPostId = useForumScroll((state) => state.jumpToPostId);
 
   if (!(parentId && replyToUser)) {
     return null;
@@ -273,7 +290,7 @@ const PostReplyIndicator = memo(({ post }: { post: ForumPost }) => {
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    forumScroll?.jumpToPostId(parentId);
+    jumpToPostId(parentId);
   };
 
   return (
@@ -294,17 +311,21 @@ const PostReplyIndicator = memo(({ post }: { post: ForumPost }) => {
 });
 PostReplyIndicator.displayName = "PostReplyIndicator";
 
+/**
+ * Keep post-level quick actions grouped together so reply and reaction updates
+ * stay close to the post they mutate.
+ */
 const PostItemActions = memo(({ post }: { post: ForumPost }) => {
   const t = useTranslations("Common");
   const setReplyTo = useForum((f) => f.setReplyTo);
 
   const userName = post.user?.name ?? t("anonymous");
 
-  const [isOpen, setIsOpen] = useState(false);
+  const [isReactionPickerOpen, reactionPicker] = useDisclosure(false);
   const [isPending, startTransition] = useTransition();
 
   const toggleReaction = useMutation(
-    api.classes.forums.mutations.togglePostReaction
+    api.classes.forums.mutations.reactions.togglePostReaction
   );
 
   const handleToggleReaction = (emoji: string) => {
@@ -317,10 +338,20 @@ const PostItemActions = memo(({ post }: { post: ForumPost }) => {
     <ButtonGroup
       className={cn(
         "absolute -top-4 right-4 z-1 opacity-0 shadow-xs transition-opacity ease-out group-hover:opacity-100",
-        !!isOpen && "opacity-100"
+        isReactionPickerOpen && "opacity-100"
       )}
     >
-      <Popover onOpenChange={setIsOpen} open={isOpen}>
+      <Popover
+        onOpenChange={(open) => {
+          if (open) {
+            reactionPicker.open();
+            return;
+          }
+
+          reactionPicker.close();
+        }}
+        open={isReactionPickerOpen}
+      >
         <Tooltip>
           <TooltipTrigger
             render={
@@ -339,7 +370,7 @@ const PostItemActions = memo(({ post }: { post: ForumPost }) => {
             className="h-80"
             onEmojiSelect={({ emoji }) => {
               handleToggleReaction(emoji);
-              setIsOpen(false);
+              reactionPicker.close();
             }}
           >
             <EmojiPickerSearch />

@@ -1,48 +1,29 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
-import { useQuery } from "convex/react";
 import { getTagIcon } from "@/components/school/classes/_data/tag";
-import { useForum } from "@/lib/context/use-forum";
+import type { Forum } from "@/components/school/classes/forum/conversation/types";
 
-export function SchoolClassesForumPostSheetInfo() {
-  const activeForumId = useForum((f) => f.activeForumId);
-
-  if (!activeForumId) {
-    return null;
-  }
-
-  return (
-    <div className="flex min-w-0 items-center gap-2 px-2">
-      <div className="flex min-w-0 items-center gap-2 text-base">
-        <SchoolClassesForumPostSheetInfoTitle forumId={activeForumId} />
-      </div>
-    </div>
-  );
-}
-
-function SchoolClassesForumPostSheetInfoTitle({
-  forumId,
+export function SchoolClassesForumPostSheetInfo({
+  forum,
 }: {
-  forumId: Id<"schoolClassForums">;
+  forum: Forum | undefined;
 }) {
-  const forum = useQuery(api.classes.forums.queries.getForum, {
-    forumId,
-  });
-
   if (!forum) {
-    return <Skeleton className="h-4 w-24" />;
+    return (
+      <div className="flex min-w-0 items-center gap-2 px-2">
+        <Skeleton className="h-4 w-24" />
+      </div>
+    );
   }
 
   const Icon = getTagIcon(forum.tag);
 
   return (
-    <>
+    <div className="flex min-w-0 items-center gap-2 px-2 text-base">
       <HugeIcons className="size-4 shrink-0" icon={Icon} />
       <span className="truncate font-medium">{forum.title}</span>
-    </>
+    </div>
   );
 }

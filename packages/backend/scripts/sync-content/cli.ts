@@ -5,6 +5,7 @@ import { getConvexConfig } from "./convexApi";
 import { syncExerciseQuestions, syncExerciseSets } from "./exercises";
 import { log, logError } from "./logging";
 import { reset } from "./reset";
+import { resetTryouts } from "./resetTryouts";
 import { syncSubjectSections, syncSubjectTopics } from "./subjects";
 import type { SyncOptions } from "./types";
 import { validate } from "./validate";
@@ -56,12 +57,16 @@ const printUsage = (): void => {
   log("  sync:verify           - Verify database matches filesystem");
   log("  sync:clean            - Find and remove stale content");
   log("  sync:reset            - Delete ALL synced content (requires --force)");
+  log("  sync:reset:tryouts    - Delete only tryout + IRT runtime data");
   log("\nProduction commands:");
   log("  sync:prod             - Full sync to production");
   log("  sync:prod:incremental - Incremental sync to production");
   log("  sync:prod:verify      - Verify production database");
   log("  sync:prod:clean       - Clean stale content in production");
   log("  sync:prod:reset       - Delete ALL content in production");
+  log(
+    "  sync:prod:reset:tryouts - Delete only tryout + IRT runtime data in production"
+  );
   log("\nOptions:");
   log("  --locale en|id  - Sync specific locale only");
   log("  --force         - Actually delete content (for clean/reset)");
@@ -134,6 +139,9 @@ export const runCommand = async (
       return;
     case "reset":
       await reset(config, options);
+      return;
+    case "reset-tryouts":
+      await resetTryouts(config, options);
       return;
     default:
       logError(`Unknown command: ${type}`);

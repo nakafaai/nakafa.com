@@ -31,7 +31,7 @@ export async function schoolsHandler(
 
       const member = await ctx.db
         .query("schoolMembers")
-        .withIndex("schoolId_userId_status", (q) =>
+        .withIndex("by_schoolId_and_userId_and_status", (q) =>
           q.eq("schoolId", schoolId).eq("userId", school.createdBy)
         )
         .first();
