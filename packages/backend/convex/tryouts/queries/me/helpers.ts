@@ -1,7 +1,11 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { getFirstIncompleteTryoutPartIndex } from "@repo/backend/convex/tryouts/helpers/scoring";
-import { pickSuggestedPartKey } from "@repo/backend/convex/tryouts/helpers/shared";
+import {
+  getBoundedExerciseAnswers,
+  loadBoundedTryoutPartAttempts,
+  pickSuggestedPartKey,
+} from "@repo/backend/convex/tryouts/helpers/shared";
 import type {
   orderedTryoutPartValidator,
   tryoutPartAttemptSummaryValidator,
@@ -102,20 +106,10 @@ export async function loadTryoutPartAttemptSummaries(
     tryoutAttemptId: Id<"tryoutAttempts">;
   }
 ) {
-  const partAttempts = await ctx.db
-    .query("tryoutPartAttempts")
-    .withIndex("by_tryoutAttemptId_and_partIndex", (q) =>
-      q.eq("tryoutAttemptId", tryoutAttemptId)
-    )
-    .take(partCount + 1);
-
-  if (partAttempts.length > partCount) {
-    throw new ConvexError({
-      code: "INVALID_ATTEMPT_STATE",
-      message: "Tryout attempt has more part attempts than expected.",
-    });
-  }
-
+  const partAttempts = await loadBoundedTryoutPartAttempts(ctx.db, {
+    partCount,
+    tryoutAttemptId,
+  });
   const setAttempts = await getAll(
     ctx.db,
     "exerciseAttempts",
@@ -145,6 +139,53 @@ export async function loadTryoutPartAttemptSummaries(
   });
 }
 
+/** Load one part runtime together with its bounded stored answers. */
+export async function loadTryoutPartRuntime(
+  ctx: QueryCtx,
+  {
+    partKey,
+    tryoutAttemptId,
+  }: {
+    partKey: string;
+    tryoutAttemptId: Id<"tryoutAttempts">;
+  }
+) {
+  const currentPartAttempt = await ctx.db
+    .query("tryoutPartAttempts")
+    .withIndex("by_tryoutAttemptId_and_partKey", (q) =>
+      q.eq("tryoutAttemptId", tryoutAttemptId).eq("partKey", partKey)
+    )
+    .unique();
+
+  if (!currentPartAttempt) {
+    return null;
+  }
+
+  const setAttempt = await ctx.db.get(
+    "exerciseAttempts",
+    currentPartAttempt.setAttemptId
+  );
+
+  if (!setAttempt) {
+    throw new ConvexError({
+      code: "INVALID_ATTEMPT_STATE",
+      message: "Tryout part is missing its exercise attempt.",
+    });
+  }
+
+  const answers = await getBoundedExerciseAnswers(ctx.db, {
+    attemptId: currentPartAttempt.setAttemptId,
+    totalExercises: setAttempt.totalExercises,
+  });
+
+  return {
+    answers,
+    partIndex: currentPartAttempt.partIndex,
+    partKey: currentPartAttempt.partKey,
+    setAttempt,
+  };
+}
+
 /** Derive the next resume target for an active tryout attempt. */
 export function resolveResumePartKey({
   completedPartIndices,
@@ -153,7 +194,13 @@ export function resolveResumePartKey({
 }: {
   completedPartIndices: number[];
   orderedParts: OrderedTryoutPart[];
-  partAttempts: TryoutPartAttemptSummary[];
+  partAttempts: Array<{
+    partKey: string;
+    setAttempt: {
+      lastActivityAt: number;
+      status: Doc<"exerciseAttempts">["status"];
+    };
+  }>;
 }) {
   const suggestedPartKey = pickSuggestedPartKey(partAttempts);
   const nextPartIndex = getFirstIncompleteTryoutPartIndex({
