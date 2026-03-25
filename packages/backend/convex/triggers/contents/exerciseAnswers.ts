@@ -72,7 +72,8 @@ export async function exerciseAnswersHandler(
 
     await irtCalibrationSyncWorkpool.enqueueMutation(
       ctx,
-      internal.irt.internalMutations.syncCalibrationResponsesForAttempt,
+      internal.irt.mutations.internal.responses
+        .syncCalibrationResponsesForAttempt,
       {
         attemptId,
       }

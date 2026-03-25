@@ -337,7 +337,7 @@ export async function publishTryoutScaleVersionIfNeeded(
 
   await ctx.scheduler.runAfter(
     0,
-    internal.tryouts.internalMutations.promoteProvisionalTryoutScores,
+    internal.tryouts.mutations.internal.scoring.promoteProvisionalTryoutScores,
     {
       scaleVersionId: scaleVersion._id,
       tryoutId: tryout._id,

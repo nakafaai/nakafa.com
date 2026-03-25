@@ -1,11 +1,11 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import { internalAction } from "@repo/backend/convex/_generated/server";
 import { calibrateTwoPLItems } from "@repo/backend/convex/irt/calibration";
-import type { CalibrationResponse } from "@repo/backend/convex/irt/internalQueries";
 import {
   IRT_MAX_CALIBRATION_ATTEMPTS_PER_RUN,
   IRT_MAX_CALIBRATION_RESPONSES_PER_RUN,
 } from "@repo/backend/convex/irt/policy";
+import type { CalibrationResponse } from "@repo/backend/convex/irt/queries/internal/calibration";
 import { irtCalibrationResultValidator } from "@repo/backend/convex/irt/validators";
 import { ConvexError, type Infer, v } from "convex/values";
 
@@ -26,7 +26,7 @@ export const calibrateSetTwoPL = internalAction({
   returns: irtCalibrationResultValidator,
   handler: async (ctx, args) => {
     const { questions, existingParams } = await ctx.runQuery(
-      internal.irt.internalQueries.getCalibrationQuestionsForSet,
+      internal.irt.queries.internal.calibration.getCalibrationQuestionsForSet,
       {
         setId: args.setId,
       }
@@ -57,7 +57,8 @@ export const calibrateSetTwoPL = internalAction({
 
     while (!isDone) {
       ({ continueCursor, isDone, page } = await ctx.runQuery(
-        internal.irt.internalQueries.getCalibrationResponsesPageForSet,
+        internal.irt.queries.internal.calibration
+          .getCalibrationResponsesPageForSet,
         {
           setId: args.setId,
           paginationOpts: {
@@ -129,7 +130,7 @@ export const calibrateSetTwoPL = internalAction({
       ),
     });
 
-    const result = {
+    return {
       model: "2pl",
       attemptCount: calibration.attemptCount,
       responseCount: calibration.responseCount,
@@ -138,7 +139,5 @@ export const calibrateSetTwoPL = internalAction({
       maxParameterDelta: calibration.maxParameterDelta,
       items: calibration.items,
     } satisfies Infer<typeof irtCalibrationResultValidator>;
-
-    return result;
   },
 });

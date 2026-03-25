@@ -1,6 +1,4 @@
 import { internal } from "@repo/backend/convex/_generated/api";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { createExerciseAttempt } from "@repo/backend/convex/exercises/helpers";
 import { mutation } from "@repo/backend/convex/functions";
 import { getLatestScaleVersionForTryout } from "@repo/backend/convex/irt/scales/read";
@@ -11,277 +9,24 @@ import {
   requireActiveTryoutAttemptAfterExpirySync,
   requireOwnedTryoutAttempt,
 } from "@repo/backend/convex/tryouts/helpers/access";
-import { syncTryoutAttemptExpiry } from "@repo/backend/convex/tryouts/helpers/expiry";
+import {
+  loadPartStartContext,
+  loadStartableSet,
+  loadStartableTryout,
+  loadTryoutPartAttempt,
+  reuseExistingPartAttempt,
+  reuseExistingTryoutAttempt,
+} from "@repo/backend/convex/tryouts/helpers/attemptLifecycle";
+import { finalizeTryoutAttempt } from "@repo/backend/convex/tryouts/helpers/finalize/attempt";
 import { finalizeTryoutPartAttempt } from "@repo/backend/convex/tryouts/helpers/finalize/part";
 import { upsertUserTryoutLatestAttempt } from "@repo/backend/convex/tryouts/helpers/latest";
-import { getFirstIncompleteTryoutPartIndex } from "@repo/backend/convex/tryouts/helpers/metrics";
 import { loadValidatedTryoutPartSets } from "@repo/backend/convex/tryouts/helpers/parts";
-import { finalizeTryoutAttempt } from "@repo/backend/convex/tryouts/mutations/helpers";
 import {
   tryoutProductPolicies,
   tryoutProductValidator,
 } from "@repo/backend/convex/tryouts/products";
 import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError, v } from "convex/values";
-
-async function loadStartableTryout(
-  ctx: MutationCtx,
-  args: {
-    locale: Doc<"tryouts">["locale"];
-    product: Doc<"tryouts">["product"];
-    tryoutSlug: Doc<"tryouts">["slug"];
-  }
-) {
-  const tryout = await ctx.db
-    .query("tryouts")
-    .withIndex("by_product_and_locale_and_slug", (q) =>
-      q
-        .eq("product", args.product)
-        .eq("locale", args.locale)
-        .eq("slug", args.tryoutSlug)
-    )
-    .unique();
-
-  if (!tryout) {
-    throw new ConvexError({
-      code: "TRYOUT_NOT_FOUND",
-      message: "Tryout not found.",
-    });
-  }
-
-  if (!tryout.isActive) {
-    throw new ConvexError({
-      code: "TRYOUT_INACTIVE",
-      message: "This tryout is not currently active.",
-    });
-  }
-
-  return tryout;
-}
-
-async function reuseExistingTryoutAttempt(
-  ctx: MutationCtx,
-  {
-    now,
-    tryout,
-    userId,
-    tryoutAttempt,
-  }: {
-    now: number;
-    tryout: Doc<"tryouts">;
-    userId: Doc<"users">["_id"];
-    tryoutAttempt: Doc<"tryoutAttempts">;
-  }
-) {
-  const tryoutExpiry = await syncTryoutAttemptExpiry(ctx, tryoutAttempt, now);
-
-  if (tryoutExpiry.expired || tryoutAttempt.status !== "in-progress") {
-    return false;
-  }
-
-  const firstIncompletePartIndex = getFirstIncompleteTryoutPartIndex({
-    completedPartIndices: tryoutAttempt.completedPartIndices,
-    partCount: tryout.partCount,
-  });
-
-  if (firstIncompletePartIndex !== undefined) {
-    return true;
-  }
-
-  const completedAttempt = await finalizeTryoutAttempt({
-    ctx,
-    now,
-    tryoutAttempt,
-    userId,
-  });
-
-  if (completedAttempt.status !== "completed") {
-    throw new ConvexError({
-      code: "INVALID_TRYOUT_STATE",
-      message: "Tryout has no incomplete part but could not be finalized.",
-    });
-  }
-
-  return true;
-}
-
-async function loadPartStartContext(
-  ctx: MutationCtx,
-  {
-    now,
-    partKey,
-    tryoutAttemptId,
-    userId,
-  }: {
-    now: number;
-    partKey: Doc<"tryoutPartAttempts">["partKey"];
-    tryoutAttemptId: Doc<"tryoutAttempts">["_id"];
-    userId: Doc<"users">["_id"];
-  }
-) {
-  const tryoutAttempt = await requireOwnedTryoutAttempt(ctx, {
-    tryoutAttemptId,
-    userId,
-  });
-  const activeTryoutAttempt = await requireActiveTryoutAttemptAfterExpirySync(
-    ctx,
-    {
-      now,
-      tryoutAttempt,
-    }
-  );
-  const [tryout, tryoutPartSet] = await Promise.all([
-    ctx.db.get("tryouts", activeTryoutAttempt.tryoutId),
-    ctx.db
-      .query("tryoutPartSets")
-      .withIndex("by_tryoutId_and_partKey", (q) =>
-        q.eq("tryoutId", tryoutAttempt.tryoutId).eq("partKey", partKey)
-      )
-      .unique(),
-  ]);
-
-  if (!tryout) {
-    throw new ConvexError({
-      code: "TRYOUT_NOT_FOUND",
-      message: "Tryout not found.",
-    });
-  }
-
-  if (!tryoutPartSet) {
-    throw new ConvexError({
-      code: "PART_NOT_FOUND",
-      message: "Tryout part not found.",
-    });
-  }
-
-  if (
-    activeTryoutAttempt.completedPartIndices.includes(tryoutPartSet.partIndex)
-  ) {
-    throw new ConvexError({
-      code: "PART_ALREADY_COMPLETED",
-      message: "This tryout part has already been completed.",
-    });
-  }
-
-  return {
-    tryout,
-    tryoutPartSet,
-  };
-}
-
-async function reuseExistingPartAttempt(
-  ctx: MutationCtx,
-  {
-    now,
-    partKey,
-    tryoutAttemptId,
-  }: {
-    now: number;
-    partKey: Doc<"tryoutPartAttempts">["partKey"];
-    tryoutAttemptId: Doc<"tryoutAttempts">["_id"];
-  }
-) {
-  const existingPartAttempt = await ctx.db
-    .query("tryoutPartAttempts")
-    .withIndex("by_tryoutAttemptId_and_partKey", (q) =>
-      q.eq("tryoutAttemptId", tryoutAttemptId).eq("partKey", partKey)
-    )
-    .unique();
-
-  if (!existingPartAttempt) {
-    return false;
-  }
-
-  const existingSetAttempt = await ctx.db.get(
-    "exerciseAttempts",
-    existingPartAttempt.setAttemptId
-  );
-
-  if (!existingSetAttempt) {
-    throw new ConvexError({
-      code: "INVALID_ATTEMPT_STATE",
-      message: "Tryout part attempt exists without its exercise attempt.",
-    });
-  }
-
-  if (existingSetAttempt.status !== "in-progress") {
-    throw new ConvexError({
-      code: "INVALID_ATTEMPT_STATE",
-      message: "Tryout part state is out of sync with its tryout attempt.",
-    });
-  }
-
-  const expiresAtMs =
-    existingSetAttempt.startedAt + existingSetAttempt.timeLimit * 1000;
-
-  if (now < expiresAtMs) {
-    return true;
-  }
-
-  await finalizeTryoutPartAttempt({
-    ctx,
-    finishedAtMs: expiresAtMs,
-    now,
-    partAttempt: existingPartAttempt,
-    status: "expired",
-    tryoutAttemptId,
-  });
-
-  throw new ConvexError({
-    code: "TRYOUT_PART_EXPIRED",
-    message: "This tryout part has already expired.",
-  });
-}
-
-async function loadStartableSet(
-  ctx: MutationCtx,
-  setId: Doc<"exerciseSets">["_id"]
-) {
-  const set = await ctx.db.get("exerciseSets", setId);
-
-  if (!set) {
-    throw new ConvexError({
-      code: "SET_NOT_FOUND",
-      message: "Exercise set not found.",
-    });
-  }
-
-  if (set.questionCount <= 0) {
-    throw new ConvexError({
-      code: "INVALID_ARGUMENT",
-      message: "questionCount must be greater than 0.",
-    });
-  }
-
-  return set;
-}
-
-async function loadTryoutPartAttempt(
-  ctx: MutationCtx,
-  {
-    partKey,
-    tryoutAttemptId,
-  }: {
-    partKey: Doc<"tryoutPartAttempts">["partKey"];
-    tryoutAttemptId: Doc<"tryoutAttempts">["_id"];
-  }
-) {
-  const partAttempt = await ctx.db
-    .query("tryoutPartAttempts")
-    .withIndex("by_tryoutAttemptId_and_partKey", (q) =>
-      q.eq("tryoutAttemptId", tryoutAttemptId).eq("partKey", partKey)
-    )
-    .unique();
-
-  if (!partAttempt) {
-    throw new ConvexError({
-      code: "PART_ATTEMPT_NOT_FOUND",
-      message: "Tryout part attempt not found.",
-    });
-  }
-
-  return partAttempt;
-}
 
 /** Starts or resumes one authenticated tryout attempt for a product slug. */
 export const startTryout = mutation({
@@ -356,7 +101,7 @@ export const startTryout = mutation({
 
     await ctx.scheduler.runAfter(
       expiresAtMs - now,
-      internal.tryouts.internalMutations.expireTryoutAttemptInternal,
+      internal.tryouts.mutations.internal.expiry.expireTryoutAttemptInternal,
       {
         tryoutAttemptId,
         expiresAtMs,

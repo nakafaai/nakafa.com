@@ -85,7 +85,7 @@ crons.cron(
 crons.interval(
   "drain irt calibration queue",
   { minutes: IRT_AUTOMATION_CRON_INTERVAL_MINUTES },
-  internal.irt.internalMutations.drainCalibrationQueue,
+  internal.irt.mutations.internal.queue.drainCalibrationQueue,
   {}
 );
 
@@ -95,7 +95,7 @@ crons.interval(
 crons.interval(
   "drain irt scale publication queue",
   { minutes: IRT_AUTOMATION_CRON_INTERVAL_MINUTES },
-  internal.irt.internalMutations.drainScalePublicationQueue,
+  internal.irt.mutations.internal.scales.drainScalePublicationQueue,
   {}
 );
 
@@ -105,7 +105,7 @@ crons.interval(
 crons.cron(
   "rebuild irt scale quality checks",
   "0 */6 * * *",
-  internal.irt.internalMutations.rebuildScaleQualityChecksPage,
+  internal.irt.mutations.internal.scales.rebuildScaleQualityChecksPage,
   {}
 );
 
@@ -115,7 +115,7 @@ crons.cron(
 crons.interval(
   "sweep expired tryouts",
   { minutes: TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES },
-  internal.tryouts.internalMutations.sweepExpiredTryoutAttempts,
+  internal.tryouts.mutations.internal.expiry.sweepExpiredTryoutAttempts,
   {}
 );
 

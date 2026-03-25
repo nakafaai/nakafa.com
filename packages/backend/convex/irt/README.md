@@ -102,14 +102,18 @@ flowchart TD
 | `estimation.ts` | EAP theta estimation helpers |
 | `policy.ts` | Centralized operational model and convergence policy |
 | `calibration.ts` | Pure TypeScript 2PL calibration math |
-| `internalQueries.ts` | Paginated response extraction for calibration |
-| `maintenance.ts` | Operational cache integrity checks |
-| `internalActions.ts` | Set-level calibration job assembly and execution |
-| `internalMutations.ts` | Run tracking and parameter persistence |
-| `helpers/attempts.ts` | Calibration attempt sync and backfill helpers |
+| `queries/internal/calibration.ts` | Paginated response extraction for calibration |
+| `queries/internal/maintenance.ts` | Operational cache integrity checks |
+| `actions/internal/calibration.ts` | Set-level calibration job assembly and execution |
+| `mutations/internal/responses.ts` | Calibration response cache sync entrypoints |
+| `mutations/internal/cache.ts` | Cache stats rebuild and trim entrypoints |
+| `mutations/internal/queue.ts` | Queue draining and queue cleanup entrypoints |
+| `mutations/internal/runs.ts` | Run completion and failure entrypoints |
+| `mutations/internal/scales.ts` | Scale quality refresh and publication queue entrypoints |
+| `helpers/attempts.ts` | Calibration attempt normalization helpers |
 | `helpers/cache.ts` | Calibration cache readiness and stats helpers |
 | `helpers/queue.ts` | Queue and workflow orchestration helpers |
-| `helpers/runs.ts` | Calibration run completion and failure helpers |
+| `scales/loaders.ts` | Shared invariant-enforcing loaders for scale publication |
 | `scales/bootstrap.ts` | Provisional scale bootstrap helpers |
 | `scales/quality.ts` | Official-scale quality gates and persisted summaries |
 | `scales/read.ts` | Frozen scale lookups and coverage checks |

@@ -73,7 +73,7 @@ export const getCalibrationQuestionsForSet = internalQuery({
 
     return {
       questions: [...questions]
-        .sort((a, b) => a.number - b.number)
+        .sort((left, right) => left.number - right.number)
         .map((question) => ({
           questionId: question._id,
         })),
@@ -89,9 +89,7 @@ export const getCalibrationQuestionsForSet = internalQuery({
   },
 });
 
-/**
- * Load one page of scored responses from completed simulation set attempts.
- */
+/** Load one page of scored responses from completed simulation set attempts. */
 export const getCalibrationResponsesPageForSet = internalQuery({
   args: {
     setId: vv.id("exerciseSets"),

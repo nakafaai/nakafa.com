@@ -4,7 +4,6 @@ import {
   estimateThetaEAP,
   getProvisionalParams,
 } from "@repo/backend/convex/irt/estimation";
-import type { CalibrationResponse } from "@repo/backend/convex/irt/internalQueries";
 import {
   IRT_CALIBRATION_CONVERGENCE_DELTA,
   IRT_CALIBRATION_MAX_ITERATIONS,
@@ -12,6 +11,7 @@ import {
   IRT_MIN_RESPONSES_FOR_CALIBRATED,
   IRT_PROBABILITY_EPSILON,
 } from "@repo/backend/convex/irt/policy";
+import type { CalibrationResponse } from "@repo/backend/convex/irt/queries/internal/calibration";
 
 interface CalibrationSeed {
   difficulty: number;

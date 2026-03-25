@@ -158,7 +158,7 @@ export async function finalizeTryoutAttempt({
   if (isOfficial && scoreTarget.scoreStatus === "official") {
     await tryoutLeaderboardWorkpool.enqueueMutation(
       ctx,
-      internal.tryouts.internalMutations.updateLeaderboard,
+      internal.tryouts.mutations.internal.leaderboard.updateLeaderboard,
       {
         tryoutAttemptId: tryoutAttempt._id,
       }

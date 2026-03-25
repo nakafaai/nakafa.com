@@ -73,7 +73,7 @@ export async function syncUserTryoutStats({
 
     await ctx.scheduler.runAfter(
       0,
-      internal.tryouts.internalMutations.rebuildUserTryoutStats,
+      internal.tryouts.mutations.internal.stats.rebuildUserTryoutStats,
       rebuildJob
     );
 
@@ -143,7 +143,7 @@ export async function syncUserTryoutStats({
   if (needsRebuild) {
     await ctx.scheduler.runAfter(
       0,
-      internal.tryouts.internalMutations.rebuildUserTryoutStats,
+      internal.tryouts.mutations.internal.stats.rebuildUserTryoutStats,
       rebuildJob
     );
 

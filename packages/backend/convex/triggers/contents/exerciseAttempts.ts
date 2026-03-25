@@ -44,7 +44,8 @@ export async function exerciseAttemptsHandler(
 
   await irtCalibrationSyncWorkpool.enqueueMutation(
     ctx,
-    internal.irt.internalMutations.syncCalibrationResponsesForAttempt,
+    internal.irt.mutations.internal.responses
+      .syncCalibrationResponsesForAttempt,
     {
       attemptId,
     }

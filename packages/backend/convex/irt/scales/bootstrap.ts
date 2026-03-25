@@ -2,8 +2,11 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { getProvisionalParams } from "@repo/backend/convex/irt/estimation";
 import { IRT_OPERATIONAL_MODEL } from "@repo/backend/convex/irt/policy";
+import {
+  loadValidatedScaleSetData,
+  loadValidatedScaleTryoutSets,
+} from "@repo/backend/convex/irt/scales/loaders";
 import type { ScaleVersionItemSnapshot } from "@repo/backend/convex/irt/scales/read";
-import { getAll, getManyFrom } from "convex-helpers/server/relationships";
 
 type IrtDbWriter = MutationCtx["db"];
 
@@ -34,7 +37,11 @@ function createBootstrapCalibrationRun(
   });
 }
 
-/** Builds a provisional frozen scale from current item params and bootstrap defaults. */
+/**
+ * Build a provisional frozen scale from current item parameters and bootstrap
+ * defaults when a tryout does not yet qualify for a fully calibrated official
+ * snapshot.
+ */
 export async function buildBootstrapScaleItems(
   db: IrtDbWriter,
   {
@@ -45,52 +52,29 @@ export async function buildBootstrapScaleItems(
     tryoutId: Id<"tryouts">;
   }
 ) {
-  const [tryout, tryoutPartSets] = await Promise.all([
-    db.get("tryouts", tryoutId),
-    getManyFrom(
-      db,
-      "tryoutPartSets",
-      "by_tryoutId_and_partIndex",
-      tryoutId,
-      "tryoutId"
-    ),
-  ]);
+  const tryout = await db.get("tryouts", tryoutId);
 
-  if (!tryout || tryoutPartSets.length === 0) {
+  if (!tryout) {
     return null;
   }
 
-  const sets = await getAll(
-    db,
-    "exerciseSets",
-    tryoutPartSets.map((partSet) => partSet.setId)
-  );
+  const tryoutSets = await loadValidatedScaleTryoutSets(db, tryout);
+
+  if (tryoutSets.length === 0) {
+    return null;
+  }
+
   const items: ScaleVersionItemSnapshot[] = [];
 
-  for (const [index, partSet] of tryoutPartSets.entries()) {
-    const set = sets[index];
-
-    if (!set) {
-      return null;
-    }
-
-    const [questions, existingParams] = await Promise.all([
-      getManyFrom(db, "exerciseQuestions", "by_setId", partSet.setId, "setId"),
-      getManyFrom(
-        db,
-        "exerciseItemParameters",
-        "by_setId",
-        partSet.setId,
-        "setId"
-      ),
-    ]);
+  for (const { partSet, set } of tryoutSets) {
+    const { itemParams, questions } = await loadValidatedScaleSetData(db, set);
 
     if (questions.length === 0) {
       return null;
     }
 
     const paramsByQuestionId = new Map(
-      existingParams.map((params) => [params.questionId, params])
+      itemParams.map((params) => [params.questionId, params])
     );
     const bootstrapRunId = await createBootstrapCalibrationRun(db, {
       now,

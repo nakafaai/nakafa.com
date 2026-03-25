@@ -2,21 +2,22 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { adjustCalibrationCacheAttemptCount } from "@repo/backend/convex/irt/helpers/cache";
-import { IRT_CALIBRATION_RESPONSE_BACKFILL_BATCH_SIZE } from "@repo/backend/convex/irt/policy";
-import { irtCalibrationSyncWorkpool } from "@repo/backend/convex/irt/workpool";
 import { ConvexError } from "convex/values";
 import { getAll } from "convex-helpers/server/relationships";
 
 const MAX_CALIBRATION_ATTEMPT_DUPLICATES = 100;
 
-/** Rebuilds one cached calibration row from a completed simulation attempt. */
-export async function syncCalibrationResponsesForAttemptHandler(
+/**
+ * Remove every cached calibration row tied to one exercise attempt and keep the
+ * per-set cache stats in sync.
+ */
+export async function clearCalibrationResponsesForAttempt(
   ctx: MutationCtx,
   args: {
     attemptId: Id<"exerciseAttempts">;
+    updatedAt: number;
   }
 ) {
-  const now = Date.now();
   const existingAttempts = await ctx.db
     .query("irtCalibrationAttempts")
     .withIndex("by_attemptId", (q) => q.eq("attemptId", args.attemptId))
@@ -45,7 +46,7 @@ export async function syncCalibrationResponsesForAttemptHandler(
     const didAdjustStats = await adjustCalibrationCacheAttemptCount(ctx, {
       setId,
       delta: -removedCount,
-      updatedAt: now,
+      updatedAt: args.updatedAt,
     });
 
     if (didAdjustStats) {
@@ -54,12 +55,23 @@ export async function syncCalibrationResponsesForAttemptHandler(
 
     await ctx.scheduler.runAfter(
       0,
-      internal.irt.internalMutations.rebuildCalibrationCacheStatsForSet,
+      internal.irt.mutations.internal.cache.rebuildCalibrationCacheStatsForSet,
       { setId }
     );
   }
 
-  const attempt = await ctx.db.get("exerciseAttempts", args.attemptId);
+  return null;
+}
+
+/**
+ * Build one normalized calibration cache row from the authoritative scored
+ * answers of a completed simulation set attempt.
+ */
+export async function buildCalibrationAttemptInsert(
+  ctx: MutationCtx,
+  attemptId: Id<"exerciseAttempts">
+) {
+  const attempt = await ctx.db.get("exerciseAttempts", attemptId);
 
   if (
     !attempt ||
@@ -73,7 +85,7 @@ export async function syncCalibrationResponsesForAttemptHandler(
   const answers = await ctx.db
     .query("exerciseAnswers")
     .withIndex("by_attemptId_and_exerciseNumber", (q) =>
-      q.eq("attemptId", args.attemptId)
+      q.eq("attemptId", attemptId)
     )
     .take(attempt.totalExercises + 1);
 
@@ -139,68 +151,44 @@ export async function syncCalibrationResponsesForAttemptHandler(
     };
   });
 
-  await ctx.db.insert("irtCalibrationAttempts", {
-    setId,
-    attemptId: args.attemptId,
+  return {
     responses,
+    setId,
+  };
+}
+
+/** Insert one normalized calibration cache row and update its per-set stats. */
+export async function insertCalibrationAttempt(
+  ctx: MutationCtx,
+  args: {
+    attemptId: Id<"exerciseAttempts">;
+    responses: Array<{
+      isCorrect: boolean;
+      questionId: Id<"exerciseQuestions">;
+    }>;
+    setId: Id<"exerciseSets">;
+    updatedAt: number;
+  }
+) {
+  await ctx.db.insert("irtCalibrationAttempts", {
+    setId: args.setId,
+    attemptId: args.attemptId,
+    responses: args.responses,
   });
 
   const didAdjustStats = await adjustCalibrationCacheAttemptCount(ctx, {
-    setId,
+    setId: args.setId,
     delta: 1,
-    updatedAt: now,
+    updatedAt: args.updatedAt,
   });
 
   if (!didAdjustStats) {
     await ctx.scheduler.runAfter(
       0,
-      internal.irt.internalMutations.rebuildCalibrationCacheStatsForSet,
-      { setId }
+      internal.irt.mutations.internal.cache.rebuildCalibrationCacheStatsForSet,
+      { setId: args.setId }
     );
   }
 
   return null;
-}
-
-/** Enqueues a bounded page of completed simulation attempts for cache backfill. */
-export async function backfillCalibrationResponsesPageHandler(
-  ctx: MutationCtx,
-  args: {
-    cursor?: string;
-  }
-) {
-  const page = await ctx.db
-    .query("exerciseAttempts")
-    .withIndex("by_scope_and_mode_and_status_and_startedAt", (q) =>
-      q.eq("scope", "set").eq("mode", "simulation").eq("status", "completed")
-    )
-    .paginate({
-      cursor: args.cursor ?? null,
-      numItems: IRT_CALIBRATION_RESPONSE_BACKFILL_BATCH_SIZE,
-    });
-
-  for (const attempt of page.page) {
-    await irtCalibrationSyncWorkpool.enqueueMutation(
-      ctx,
-      internal.irt.internalMutations.syncCalibrationResponsesForAttempt,
-      {
-        attemptId: attempt._id,
-      }
-    );
-  }
-
-  if (!page.isDone) {
-    await ctx.scheduler.runAfter(
-      0,
-      internal.irt.internalMutations.backfillCalibrationResponsesPage,
-      {
-        cursor: page.continueCursor,
-      }
-    );
-  }
-
-  return {
-    isDone: page.isDone,
-    processedCount: page.page.length,
-  };
 }

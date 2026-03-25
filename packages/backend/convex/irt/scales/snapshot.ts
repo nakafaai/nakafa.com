@@ -1,7 +1,10 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import {
+  loadValidatedScaleSetData,
+  loadValidatedScaleTryoutSets,
+} from "@repo/backend/convex/irt/scales/loaders";
 import type { ScaleVersionItemSnapshot } from "@repo/backend/convex/irt/scales/read";
-import { getAll, getManyFrom } from "convex-helpers/server/relationships";
 
 type IrtDbReader = QueryCtx["db"];
 
@@ -36,57 +39,29 @@ export function hasPublishedScaleChanged({
   return false;
 }
 
-/** Builds a publishable frozen scale snapshot for one tryout. */
+/**
+ * Build a publishable frozen scale snapshot for one tryout.
+ *
+ * The snapshot only exists when every question across every validated tryout
+ * part has a calibrated item parameter tied to a concrete calibration run.
+ */
 export async function getPublishableScaleSnapshot(
   db: IrtDbReader,
   tryoutId: Id<"tryouts">
 ) {
-  const [tryout, tryoutPartSets] = await Promise.all([
-    db.get("tryouts", tryoutId),
-    getManyFrom(
-      db,
-      "tryoutPartSets",
-      "by_tryoutId_and_partIndex",
-      tryoutId,
-      "tryoutId"
-    ),
-  ]);
+  const tryout = await db.get("tryouts", tryoutId);
 
   if (!tryout) {
     return null;
   }
 
-  const sets = await getAll(
-    db,
-    "exerciseSets",
-    tryoutPartSets.map((partSet) => partSet.setId)
-  );
-
+  const tryoutSets = await loadValidatedScaleTryoutSets(db, tryout);
   const perSetData = await Promise.all(
-    tryoutPartSets.map(async (partSet, index) => {
-      const set = sets[index];
-
-      if (!set) {
-        return null;
-      }
-
-      const [questions, itemParams] = await Promise.all([
-        getManyFrom(
-          db,
-          "exerciseQuestions",
-          "by_setId",
-          partSet.setId,
-          "setId"
-        ),
-        getManyFrom(
-          db,
-          "exerciseItemParameters",
-          "by_setId",
-          partSet.setId,
-          "setId"
-        ),
-      ]);
-
+    tryoutSets.map(async ({ set }) => {
+      const { itemParams, questions } = await loadValidatedScaleSetData(
+        db,
+        set
+      );
       const paramsByQuestionId = new Map(
         itemParams.map((params) => [params.questionId, params])
       );

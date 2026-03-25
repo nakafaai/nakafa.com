@@ -15,7 +15,7 @@ const scaleQualityIntegrityResultValidator = v.object({
 });
 
 /**
- * Returns whether any set still has missing or oversized calibration cache
+ * Return whether any set still has missing or oversized calibration cache
  * state.
  *
  * Operator entrypoint: invoked via `convex run` / package scripts during manual
@@ -77,7 +77,7 @@ export const getCalibrationCacheIntegrity = internalQuery({
 });
 
 /**
- * Returns whether any tryout is missing a quality check or still blocked.
+ * Return whether any tryout is missing a quality check or still blocked.
  *
  * Operator entrypoint: invoked via `convex run` / package scripts during manual
  * integrity verification.

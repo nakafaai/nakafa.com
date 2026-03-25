@@ -1,4 +1,3 @@
-import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type {
   MutationCtx,
@@ -13,8 +12,6 @@ import { ConvexError, v } from "convex/values";
 import { getAll } from "convex-helpers/server/relationships";
 
 type IrtDbReader = QueryCtx["db"] | MutationCtx["db"];
-
-const SCALE_QUALITY_REBUILD_BATCH_SIZE = 100;
 
 export const scaleQualityRebuildResultValidator = v.object({
   isDone: v.boolean(),
@@ -214,58 +211,4 @@ export async function upsertTryoutScaleQualityCheck(
 
   await db.insert("irtScaleQualityChecks", summary);
   return summary;
-}
-
-/** Recomputes one tryout's scale-quality summary. */
-export async function refreshScaleQualityCheckHandler(
-  ctx: MutationCtx,
-  args: {
-    tryoutId: Id<"tryouts">;
-  }
-) {
-  const summary = await evaluateTryoutScaleQuality(ctx.db, {
-    now: Date.now(),
-    tryoutId: args.tryoutId,
-  });
-
-  if (!summary) {
-    return null;
-  }
-
-  await upsertTryoutScaleQualityCheck(ctx.db, summary);
-  return null;
-}
-
-/** Rebuilds all tryout scale-quality summaries in bounded pages. */
-export async function rebuildScaleQualityChecksPageHandler(
-  ctx: MutationCtx,
-  args: {
-    cursor?: string;
-  }
-) {
-  const page = await ctx.db.query("tryouts").paginate({
-    cursor: args.cursor ?? null,
-    numItems: SCALE_QUALITY_REBUILD_BATCH_SIZE,
-  });
-
-  for (const tryout of page.page) {
-    await ctx.scheduler.runAfter(
-      0,
-      internal.irt.internalMutations.refreshScaleQualityCheck,
-      { tryoutId: tryout._id }
-    );
-  }
-
-  if (!page.isDone) {
-    await ctx.scheduler.runAfter(
-      0,
-      internal.irt.internalMutations.rebuildScaleQualityChecksPage,
-      { cursor: page.continueCursor }
-    );
-  }
-
-  return {
-    isDone: page.isDone,
-    processedCount: page.page.length,
-  };
 }
