@@ -55,6 +55,7 @@ npx convex deploy
 | `sync:verify` | Verify database matches filesystem |
 | `sync:clean` | Find and remove stale content |
 | `sync:reset` | Delete ALL synced content (requires --force) |
+| `sync:reset:tryouts` | Delete only tryout + IRT runtime data |
 
 ### Production
 
@@ -65,6 +66,7 @@ npx convex deploy
 | `sync:prod:verify` | Verify production database |
 | `sync:prod:clean` | Clean stale content in production |
 | `sync:prod:reset` | Delete ALL content in production (requires --force) |
+| `sync:prod:reset:tryouts` | Delete only tryout + IRT runtime data in production |
 
 ### Options
 

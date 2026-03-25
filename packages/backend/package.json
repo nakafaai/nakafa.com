@@ -24,11 +24,13 @@
     "sync:verify": "tsx scripts/sync-content.ts verify",
     "sync:clean": "tsx scripts/sync-content.ts clean",
     "sync:reset": "tsx scripts/sync-content.ts reset",
+    "sync:reset:tryouts": "tsx scripts/sync-content.ts reset-tryouts",
     "sync:prod": "tsx scripts/sync-content.ts full --prod",
     "sync:prod:incremental": "tsx scripts/sync-content.ts incremental --prod",
     "sync:prod:verify": "tsx scripts/sync-content.ts verify --prod",
     "sync:prod:clean": "tsx scripts/sync-content.ts clean --prod",
-    "sync:prod:reset": "tsx scripts/sync-content.ts reset --prod"
+    "sync:prod:reset": "tsx scripts/sync-content.ts reset --prod",
+    "sync:prod:reset:tryouts": "tsx scripts/sync-content.ts reset-tryouts --prod"
   },
   "dependencies": {
     "@convex-dev/aggregate": "^0.2.1",

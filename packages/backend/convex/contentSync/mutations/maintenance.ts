@@ -1,6 +1,6 @@
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 
 const RESET_BATCH_SIZE = 500;
 
@@ -54,6 +54,61 @@ async function deleteBatchFromTable(
 
   return { deleted, hasMore };
 }
+
+/**
+ * Delete one bounded batch of tryout part attempts together with their linked
+ * tryout-owned exercise attempts and exercise answers.
+ *
+ * This is intentionally narrower than the full content reset path so operators
+ * can wipe tryout runtime data without touching standalone exercise history.
+ */
+export const deleteTryoutRuntimeBatch = internalMutation({
+  args: {},
+  returns: batchDeleteResultValidator,
+  handler: async (ctx) => {
+    const partAttempts = await ctx.db
+      .query("tryoutPartAttempts")
+      .take(RESET_BATCH_SIZE);
+    let deleted = 0;
+
+    for (const partAttempt of partAttempts) {
+      const exerciseAttempt = await ctx.db.get(
+        "exerciseAttempts",
+        partAttempt.setAttemptId
+      );
+
+      if (exerciseAttempt) {
+        const answers = await ctx.db
+          .query("exerciseAnswers")
+          .withIndex("by_attemptId_and_exerciseNumber", (q) =>
+            q.eq("attemptId", exerciseAttempt._id)
+          )
+          .take(exerciseAttempt.totalExercises + 1);
+
+        if (answers.length > exerciseAttempt.totalExercises) {
+          throw new ConvexError({
+            code: "TRYOUT_EXERCISE_ANSWER_COUNT_EXCEEDED",
+            message:
+              "Tryout exercise answer count exceeds the exercise attempt total exercises.",
+          });
+        }
+
+        for (const answer of answers) {
+          await ctx.db.delete("exerciseAnswers", answer._id);
+        }
+
+        await ctx.db.delete("exerciseAttempts", exerciseAttempt._id);
+      }
+
+      await ctx.db.delete("tryoutPartAttempts", partAttempt._id);
+      deleted += 1;
+    }
+
+    const hasMore = (await ctx.db.query("tryoutPartAttempts").first()) !== null;
+
+    return { deleted, hasMore };
+  },
+});
 
 function makeBatchDeleteMutation(tableName: ResettableTableName) {
   return internalMutation({
