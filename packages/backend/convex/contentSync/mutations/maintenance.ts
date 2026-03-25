@@ -35,6 +35,7 @@ type ResettableTableName =
   | "tryoutPartAttempts"
   | "tryoutPartSets"
   | "tryouts"
+  | "userTryoutLatestAttempts"
   | "userTryoutStats";
 
 async function deleteBatchFromTable(
@@ -74,6 +75,9 @@ export const deleteTryoutPartAttemptsBatch =
   makeBatchDeleteMutation("tryoutPartAttempts");
 export const deleteTryoutLeaderboardEntriesBatch = makeBatchDeleteMutation(
   "tryoutLeaderboardEntries"
+);
+export const deleteUserTryoutLatestAttemptsBatch = makeBatchDeleteMutation(
+  "userTryoutLatestAttempts"
 );
 export const deleteUserTryoutStatsBatch =
   makeBatchDeleteMutation("userTryoutStats");

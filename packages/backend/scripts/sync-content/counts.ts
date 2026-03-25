@@ -26,6 +26,10 @@ const countTableSpecs: Array<{
     field: "tryoutLeaderboardEntries",
     tableName: "tryoutLeaderboardEntries",
   },
+  {
+    field: "userTryoutLatestAttempts",
+    tableName: "userTryoutLatestAttempts",
+  },
   { field: "userTryoutStats", tableName: "userTryoutStats" },
   { field: "irtCalibrationQueue", tableName: "irtCalibrationQueue" },
   {
