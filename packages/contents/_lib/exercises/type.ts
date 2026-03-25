@@ -4,10 +4,11 @@ import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 
 /**
- * Gets the path to the type of the exercises.
- * @param category - The category to get the path for.
- * @param type - The type to get the path for.
- * @returns The path to the type.
+ * Builds the public path for an exercises type page.
+ *
+ * @param category - Exercises category slug
+ * @param type - Exercises type slug
+ * @returns Canonical type path
  */
 export function getExercisesPath(
   category: ExercisesCategory,
@@ -17,12 +18,11 @@ export function getExercisesPath(
 }
 
 /**
- * Gets the subjects (materials) for a given category and type.
- * Imports and calls the getSubjects function from the category's _data/subject.ts.
+ * Loads the material list for a given exercises category and type.
  *
- * @param category - Exercise category (e.g., "high-school")
- * @param type - Exercise type (e.g., "tka", "tkb")
- * @returns Array of subject objects with label and href
+ * @param category - Exercises category slug
+ * @param type - Exercises type slug
+ * @returns Material list with labels and href values, or an empty array when unavailable
  *
  * @example
  * ```ts

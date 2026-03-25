@@ -78,6 +78,9 @@ export function getExerciseCount(filePath: string): Effect.Effect<number> {
   });
 }
 
+/**
+ * Options for loading an exercise set from the contents package.
+ */
 export interface ExerciseContentOptions {
   filePath: string;
   includeMDX?: boolean;

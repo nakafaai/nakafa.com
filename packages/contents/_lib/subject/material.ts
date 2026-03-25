@@ -37,11 +37,12 @@ import { cleanSlug } from "@repo/utilities/helper";
 import type { Locale } from "next-intl";
 
 /**
- * Gets the path to a material.
- * @param category - The category to get the material for.
- * @param grade - The grade to get the material for.
- * @param material - The material to get the path for.
- * @returns The path to the material.
+ * Builds the public path for a subject material page.
+ *
+ * @param category - Subject category slug
+ * @param grade - Grade slug within the category
+ * @param material - Material slug within the grade
+ * @returns Canonical material path
  */
 export function getMaterialPath(
   category: SubjectCategory,
@@ -52,10 +53,11 @@ export function getMaterialPath(
 }
 
 /**
- * Gets the materials for a subject.
- * @param path - The path to the subject.
- * @param locale - The locale to get the materials for.
- * @returns The materials for the subject.
+ * Loads the localized material list for a subject section.
+ *
+ * @param path - Subject material path, with or without a leading slash
+ * @param locale - Locale used to select the `_data/*-material.ts` file
+ * @returns Parsed material list, or an empty list when unavailable
  */
 export async function getMaterials(
   path: string,
@@ -78,9 +80,10 @@ export async function getMaterials(
 }
 
 /**
- * Gets the icon for a material.
- * @param material - The material to get the icon for.
- * @returns The icon for the material.
+ * Resolves the icon used for a subject or exercises material slug.
+ *
+ * @param material - Material slug to map to an icon
+ * @returns Hugeicons icon for the material
  */
 export function getMaterialIcon(material: Material | ExercisesMaterial) {
   switch (material) {
@@ -138,11 +141,11 @@ export function getMaterialIcon(material: Material | ExercisesMaterial) {
 }
 
 /**
- * Gets the current chapter and item from the materials list by path.
- * Evidence: Reuses pattern from exercises/material.ts
- * @param path - The path to search for (can be chapter href or item href)
- * @param materials - The materials list
- * @returns The current chapter and item if found
+ * Finds the active chapter and optional item for a route path.
+ *
+ * @param path - Current route path to match against chapter and item href values
+ * @param materials - Localized subject material list
+ * @returns Matching chapter and item when either is found
  */
 export function getCurrentMaterial(path: string, materials: MaterialList) {
   let currentChapter: (typeof materials)[number] | undefined;

@@ -107,6 +107,9 @@ function getRawContent(
   });
 }
 
+/**
+ * Optional filters and loading behavior for content list queries.
+ */
 export interface ContentOptions {
   basePath?: string;
   includeMDX?: boolean;
@@ -254,11 +257,10 @@ export function getContents(
 }
 
 /**
- * Parses metadata from a loaded module using Zod schema.
- * Pure function - doesn't require path for error context.
+ * Parses and validates the `metadata` export from a dynamically imported module.
  *
- * @param module - The module object to parse metadata from
- * @returns Effect that resolves to parsed metadata, or fails with MetadataParseError
+ * @param module - Module namespace object returned by a dynamic import
+ * @returns Effect that resolves to validated metadata or fails with parse details
  */
 export function parseModuleMetadata(
   module: unknown
@@ -289,10 +291,10 @@ export function parseModuleMetadata(
 }
 
 /**
- * Parses raw references using Zod schema for type safety.
+ * Parses a raw references array with schema validation.
  *
- * @param rawReferences - The raw references array to parse
- * @returns Effect that resolves to a parsed array of Reference objects
+ * @param rawReferences - Untrusted references payload from a module export
+ * @returns Effect that resolves to validated references
  */
 export function parseReferences(
   rawReferences: unknown[]
@@ -307,13 +309,10 @@ export function parseReferences(
 }
 
 /**
- * Safely extracts references from an unknown module object.
+ * Safely extracts the raw `references` export from a module namespace.
  *
- * This function handles the unsafe `any` type from dynamic imports by validating
- * that the module has a `references` property that is an array.
- *
- * @param module - The dynamically imported module object
- * @returns An array of references (may be empty)
+ * @param module - Module namespace returned by dynamic import
+ * @returns Raw references array or an empty array when unavailable
  */
 export function extractReferences(module: unknown): unknown[] {
   if (typeof module === "object" && module !== null && "references" in module) {

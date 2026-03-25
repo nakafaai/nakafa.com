@@ -9,11 +9,12 @@ import { cleanSlug } from "@repo/utilities/helper";
 import type { Locale } from "next-intl";
 
 /**
- * Gets the path to an exercises material.
- * @param category - The category to get the material for.
- * @param type - The type to get the material for.
- * @param material - The material to get the path for.
- * @returns The path to the material.
+ * Builds the public path for an exercises material page.
+ *
+ * @param category - Exercises category slug
+ * @param type - Exercises type slug
+ * @param material - Exercises material slug
+ * @returns Canonical material path
  */
 export function getMaterialPath(
   category: ExercisesCategory,
@@ -24,10 +25,11 @@ export function getMaterialPath(
 }
 
 /**
- * Gets the materials for a subject.
- * @param path - The path to the subject.
- * @param locale - The locale to get the materials for.
- * @returns The materials for the subject.
+ * Loads the localized material list for an exercises section.
+ *
+ * @param path - Exercises material path, with or without a leading slash
+ * @param locale - Locale used to select the `_data/*-material.ts` file
+ * @returns Parsed material list, or an empty list when unavailable
  */
 export async function getMaterials(
   path: string,
@@ -50,10 +52,11 @@ export async function getMaterials(
 }
 
 /**
- * Gets the current material group and optional item from the materials list.
- * @param path - The path to the material.
- * @param materials - The materials list.
- * @returns The current material and item.
+ * Finds the active material group and optional item for a route path.
+ *
+ * @param path - Current route path to match against material href values
+ * @param materials - Localized material list for the section
+ * @returns Matching material group and item when either is found
  */
 export function getCurrentMaterial(
   path: string,

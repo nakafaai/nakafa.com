@@ -21,19 +21,21 @@ const GradeSubjectSchema = z.array(
 );
 
 /**
- * Gets the path to the grade of the subject.
- * @param category - The category to get the path for.
- * @param grade - The grade to get the path for.
- * @returns The path to the grade.
+ * Builds the public path for a subject grade page.
+ *
+ * @param category - Subject category slug
+ * @param grade - Grade slug within the category
+ * @returns Canonical grade path
  */
 export function getGradePath(category: SubjectCategory, grade: Grade) {
   return `/subject/${category}/${grade}` as const;
 }
 
 /**
- * Gets the non-numeric grade.
- * @param grade - The grade to get.
- * @returns The non-numeric grade, or undefined if the grade is numeric.
+ * Narrows a grade value to a non-numeric grade when applicable.
+ *
+ * @param grade - Grade value to inspect
+ * @returns Non-numeric grade label, or `undefined` for numeric grades
  */
 export function getGradeNonNumeric(grade: Grade) {
   const parsedGrade = NonNumericGradeSchema.safeParse(grade);
@@ -46,19 +48,21 @@ export function getGradeNonNumeric(grade: Grade) {
 }
 
 /**
- * Gets the list of grades for a category.
- * @param category - The category to get grades for.
- * @returns An array of grades for the category.
+ * Returns the supported grades for a subject category.
+ *
+ * @param category - Subject category slug
+ * @returns Ordered list of grades for the category
  */
 export function getCategoryGrades(category: SubjectCategory) {
   return CATEGORY_GRADES[category] ?? [];
 }
 
 /**
- * Gets the subjects for a grade.
- * @param category - The category to get the subjects for.
- * @param grade - The grade to get the subjects for.
- * @returns An array of subjects for the grade.
+ * Loads the subject list for a single category and grade.
+ *
+ * @param category - Subject category slug
+ * @param grade - Grade slug within the category
+ * @returns Parsed subject list, or an empty array when unavailable
  */
 export async function getGradeSubjects(
   category: SubjectCategory,
@@ -84,9 +88,10 @@ export async function getGradeSubjects(
 }
 
 /**
- * Gets all grades with their subjects across specified categories.
- * @param categories - Optional array of categories to filter. If not provided, returns all categories.
- * @returns An array of grade objects with category, grade, label, href, and subjects.
+ * Loads grade metadata together with subjects across one or more categories.
+ *
+ * @param categories - Optional category filter; defaults to every subject category
+ * @returns Grade entries with labels, hrefs, and resolved subject lists
  */
 export async function getAllGradesWithSubjects(
   categories?: readonly SubjectCategory[]

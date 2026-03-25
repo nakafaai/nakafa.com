@@ -7,12 +7,13 @@ import type {
 } from "@repo/contents/_types/subject/material";
 
 /**
- * Gets the path to a subject material based on its category, grade, material, and slug.
- * @param category - The category of the subject.
- * @param grade - The grade of the subject.
- * @param material - The material of the subject.
- * @param slug - The slug of the subject.
- * @returns The path to the subject material.
+ * Builds the public path for a nested subject content page.
+ *
+ * @param category - Subject category slug
+ * @param grade - Grade slug within the category
+ * @param material - Material slug within the grade
+ * @param slug - Remaining nested content segments under the material
+ * @returns Canonical content path for the subject route
  */
 export function getSlugPath(
   category: SubjectCategory,
@@ -24,11 +25,11 @@ export function getSlugPath(
 }
 
 /**
- * Gets the previous and next materials for pagination based on the current path.
+ * Builds pagination links between subject material items.
  *
- * @param currentPath - The current path/URL being viewed
- * @param materials - List of material subjects and their items
- * @returns Object containing previous and next navigation items with empty strings if not available
+ * @param currentPath - Current route path being viewed
+ * @param materials - Subject material groups and items in display order
+ * @returns Previous and next navigation targets, or empty items when missing
  *
  * Time Complexity: O(n) where n is total number of items across all subjects
  */

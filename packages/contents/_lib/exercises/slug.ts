@@ -18,12 +18,13 @@ const EXERCISE_YEAR_SEGMENT_REGEX = /^\d{4}$/;
 export const LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR = "2026";
 
 /**
- * Gets the path to a exercises material based on its category, type, material, and slug.
- * @param category - The category of the subject.
- * @param type - The type of the subject.
- * @param material - The material of the exercises.
- * @param slug - The slug of the exercises.
- * @returns The path to the exercises material.
+ * Builds the public path for a nested exercises content page.
+ *
+ * @param category - Exercises category slug
+ * @param type - Exercises type slug
+ * @param material - Exercises material slug
+ * @param slug - Remaining nested content segments under the material
+ * @returns Canonical content path for the exercise route
  */
 export function getSlugPath(
   category: ExercisesCategory,
@@ -90,11 +91,11 @@ export function hasInvalidTryOutYearSlug(slug: readonly string[]) {
 }
 
 /**
- * Gets the previous and next exercise materials for pagination based on the current path.
+ * Builds pagination links between exercise collection items.
  *
- * @param currentPath - The current path/URL being viewed
- * @param materials - List of exercise materials and their items
- * @returns Object containing previous and next navigation items with empty strings if not available
+ * @param currentPath - Current route path being viewed
+ * @param materials - Exercises material groups and items in display order
+ * @returns Previous and next navigation targets, or empty items when missing
  *
  * Time Complexity: O(n) where n is total number of items across all materials
  */
@@ -131,13 +132,13 @@ export function getExercisesPagination(
 }
 
 /**
- * Gets the previous and next exercise numbers for pagination based on the current exercise number.
+ * Builds pagination links between numbered exercises in the same set.
  *
- * @param basePath - The base path of the exercise set (without the number)
- * @param currentNumber - The current exercise number
+ * @param basePath - Exercise set path without the trailing question number
+ * @param currentNumber - Current exercise number in the set
  * @param totalExercises - Total number of exercises in the set
- * @param titleFormatter - Function to format the title for each exercise number
- * @returns Object containing previous and next navigation items with empty strings if not available
+ * @param titleFormatter - Formatter used for navigation item titles
+ * @returns Previous and next navigation targets, or empty items when missing
  */
 export function getExerciseNumberPagination(
   basePath: string,

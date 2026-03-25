@@ -9,22 +9,25 @@ import { formatISO } from "date-fns";
 import type { Locale } from "next-intl";
 
 /**
- * Gets the path to an article based on its category and slug.
- * @param category - The category of the article.
- * @param slug - The slug of article.
- * @returns The path to the article.
+ * Builds the public URL path for an article detail page.
+ *
+ * @param category - Article category slug
+ * @param slug - Article slug within the category
+ * @returns Canonical article path
  */
 export function getSlugPath(category: ArticleCategory, slug: string) {
   return `/articles/${category}/${slug}` as const;
 }
 
 /**
- * Retrieves all articles for a given category, sorted by date (newest first).
- * Uses the MDX cache for efficient slug lookup and imports metadata directly.
+ * Loads all articles in a category and sorts them newest-first.
  *
- * @param category - Article category (can be full path or category name)
- * @param locale - Target locale
- * @returns Array of article metadata with title, description, date, slug, and official status
+ * Metadata is imported directly from MDX modules while the cache is used to
+ * discover available article slugs for the requested locale.
+ *
+ * @param category - Article category slug
+ * @param locale - Locale to read article metadata for
+ * @returns Article summaries with metadata and official-author status
  *
  * @example
  * ```ts

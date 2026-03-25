@@ -2,9 +2,10 @@ import { EvilIcon, News01Icon } from "@hugeicons/core-free-icons";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
 
 /**
- * Gets the icon for the category of the article.
- * @param category - The category to get the icon for.
- * @returns The icon for the category.
+ * Resolves the icon used for an article category.
+ *
+ * @param category - Article category slug
+ * @returns Hugeicons icon for the category
  */
 export function getCategoryIcon(category: ArticleCategory) {
   switch (category) {
@@ -16,9 +17,10 @@ export function getCategoryIcon(category: ArticleCategory) {
 }
 
 /**
- * Gets the path to the category of the article.
- * @param category - The category to get the path for.
- * @returns The path to the category.
+ * Builds the public route for an article category page.
+ *
+ * @param category - Article category slug
+ * @returns Canonical category path
  */
 export function getCategoryPath(category: ArticleCategory) {
   return `/articles/${category}` as const;
