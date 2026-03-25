@@ -10,7 +10,7 @@
     "lodash.merge": "^4.6.2",
     "next-intl": "^4.8.3",
     "react": "^19.2.4",
-    "schema-dts": "^1.1.5",
+    "schema-dts": "^2.0.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {

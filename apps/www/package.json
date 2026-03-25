@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@ai-sdk/devtools": "^0.0.15",
-    "@ai-sdk/react": "^3.0.136",
+    "@ai-sdk/react": "^3.0.140",
     "@convex-dev/better-auth": "^0.11.3",
     "@hugeicons/core-free-icons": "^4.0.0",
     "@hugeicons/react": "^1.1.6",
@@ -46,10 +46,10 @@
     "@takumi-rs/core": "^0.73.1",
     "@takumi-rs/image-response": "^0.73.1",
     "@tanstack/react-form": "^1.28.5",
-    "@tanstack/react-query": "^5.95.0",
-    "@tanstack/react-query-devtools": "^5.95.0",
+    "@tanstack/react-query": "^5.95.2",
+    "@tanstack/react-query-devtools": "^5.95.2",
     "@vercel/functions": "^3.4.3",
-    "ai": "^6.0.134",
+    "ai": "^6.0.138",
     "any-ascii": "^0.3.3",
     "babel-plugin-react-compiler": "^1.0.0",
     "better-auth": "1.5.6",
@@ -86,13 +86,13 @@
     "@types/node": "25.5.0",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
-    "@vitest/coverage-istanbul": "^4.1.0",
-    "@vitest/ui": "^4.1.0",
+    "@vitest/coverage-istanbul": "^4.1.1",
+    "@vitest/ui": "^4.1.1",
     "jsdom": "^29.0.1",
     "pagefind": "^1.4.0",
     "tailwindcss": "^4.2.2",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3",
-    "vitest": "^4.1.0"
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.1"
   }
 }
