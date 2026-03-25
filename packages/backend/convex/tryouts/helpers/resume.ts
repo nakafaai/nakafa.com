@@ -1,7 +1,8 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import { getFirstIncompleteTryoutPartIndex } from "@repo/backend/convex/tryouts/helpers/metrics";
 
 /** Pick the most recent in-progress part to resume within one tryout. */
-export function pickSuggestedPartKey<
+function pickSuggestedPartKey<
   PartAttempt extends {
     partKey: Doc<"tryoutPartAttempts">["partKey"];
     setAttempt: Pick<Doc<"exerciseAttempts">, "lastActivityAt" | "status">;
@@ -24,4 +25,28 @@ export function pickSuggestedPartKey<
   }
 
   return suggestedPartKey;
+}
+
+/** Derive the next resume target for an active tryout attempt. */
+export function resolveResumePartKey({
+  completedPartIndices,
+  orderedParts,
+  partAttempts,
+}: {
+  completedPartIndices: number[];
+  orderedParts: Pick<Doc<"tryoutPartSets">, "partIndex" | "partKey">[];
+  partAttempts: Array<{
+    partKey: Doc<"tryoutPartAttempts">["partKey"];
+    setAttempt: Pick<Doc<"exerciseAttempts">, "lastActivityAt" | "status">;
+  }>;
+}) {
+  const suggestedPartKey = pickSuggestedPartKey(partAttempts);
+  const nextPartIndex = getFirstIncompleteTryoutPartIndex({
+    completedPartIndices,
+    partCount: orderedParts.length,
+  });
+  const nextPart =
+    nextPartIndex === undefined ? undefined : orderedParts[nextPartIndex];
+
+  return suggestedPartKey ?? nextPart?.partKey;
 }

@@ -1,34 +1,21 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
-import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { loadBoundedTryoutPartAttempts } from "@repo/backend/convex/tryouts/helpers/loaders";
 import { loadValidatedTryoutPartSets } from "@repo/backend/convex/tryouts/helpers/parts";
+import { resolveResumePartKey } from "@repo/backend/convex/tryouts/helpers/resume";
+import { loadLatestUserTryoutContext } from "@repo/backend/convex/tryouts/queries/me/helpers";
 import {
-  loadLatestUserTryoutContext,
-  resolveResumePartKey,
-} from "@repo/backend/convex/tryouts/queries/me/helpers";
-import {
-  orderedTryoutPartValidator,
-  tryoutPartAttemptSummaryValidator,
+  userTryoutAttemptResultValidator,
   userTryoutLookupArgs,
 } from "@repo/backend/convex/tryouts/queries/me/validators";
-import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
-import { ConvexError, v } from "convex/values";
+import { ConvexError } from "convex/values";
 import { getAll } from "convex-helpers/server/relationships";
 import { nullable } from "convex-helpers/validators";
 
 /** Returns the authenticated user's latest tryout attempt for one tryout slug. */
 export const getUserTryoutAttempt = query({
   args: userTryoutLookupArgs,
-  returns: nullable(
-    v.object({
-      attempt: vv.doc("tryoutAttempts"),
-      orderedParts: v.array(orderedTryoutPartValidator),
-      partAttempts: v.array(tryoutPartAttemptSummaryValidator),
-      resumePartKey: v.optional(tryoutPartKeyValidator),
-      expiresAtMs: v.number(),
-    })
-  ),
+  returns: nullable(userTryoutAttemptResultValidator),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
     const context = await loadLatestUserTryoutContext(ctx, {

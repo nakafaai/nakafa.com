@@ -1,3 +1,5 @@
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { query } from "@repo/backend/convex/_generated/server";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
@@ -37,12 +39,9 @@ const globalLeaderboardRowValidator = v.object({
   lastTryoutAt: v.number(),
 });
 
-/** Keeps leaderboard list queries bounded and predictable. */
-function resolveLeaderboardLimit(limit: number | undefined) {
-  return Math.max(
-    0,
-    Math.min(limit ?? DEFAULT_LEADERBOARD_LIMIT, MAX_LEADERBOARD_LIMIT)
-  );
+/** Load user names for already-ranked rows while preserving rank order. */
+async function loadLeaderboardUsers(ctx: QueryCtx, userIds: Id<"users">[]) {
+  return getAll(ctx.db, "users", userIds);
 }
 
 /** Returns ranked official results for one concrete tryout. */
@@ -53,7 +52,10 @@ export const getTryoutLeaderboard = query({
   },
   returns: v.array(tryoutLeaderboardRowValidator),
   handler: async (ctx, args) => {
-    const limit = resolveLeaderboardLimit(args.limit);
+    const limit = Math.max(
+      0,
+      Math.min(args.limit ?? DEFAULT_LEADERBOARD_LIMIT, MAX_LEADERBOARD_LIMIT)
+    );
 
     if (limit === 0) {
       return [];
@@ -78,9 +80,8 @@ export const getTryoutLeaderboard = query({
       entry ? [entry] : []
     );
 
-    const users = await getAll(
-      ctx.db,
-      "users",
+    const users = await loadLeaderboardUsers(
+      ctx,
       existingEntries.map((entry) => entry.userId)
     );
 
@@ -106,7 +107,10 @@ export const getGlobalLeaderboard = query({
   },
   returns: v.array(globalLeaderboardRowValidator),
   handler: async (ctx, args) => {
-    const limit = resolveLeaderboardLimit(args.limit);
+    const limit = Math.max(
+      0,
+      Math.min(args.limit ?? DEFAULT_LEADERBOARD_LIMIT, MAX_LEADERBOARD_LIMIT)
+    );
 
     if (limit === 0) {
       return [];
@@ -133,9 +137,8 @@ export const getGlobalLeaderboard = query({
       stats ? [stats] : []
     );
 
-    const users = await getAll(
-      ctx.db,
-      "users",
+    const users = await loadLeaderboardUsers(
+      ctx,
       existingStats.map((stats) => stats.userId)
     );
 

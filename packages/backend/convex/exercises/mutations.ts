@@ -12,7 +12,7 @@ import { internalMutation, mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { syncTryoutExerciseAttemptExpiry } from "@repo/backend/convex/tryouts/helpers/expiry";
-import { finalizeTryoutPartAttempt } from "@repo/backend/convex/tryouts/helpers/scoring";
+import { finalizeTryoutPartAttempt } from "@repo/backend/convex/tryouts/helpers/finalize";
 import { finalizeTryoutAttempt } from "@repo/backend/convex/tryouts/mutations/helpers";
 import { ConvexError, type Infer, v } from "convex/values";
 import { literals } from "convex-helpers/validators";

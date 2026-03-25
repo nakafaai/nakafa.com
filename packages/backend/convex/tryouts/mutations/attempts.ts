@@ -8,14 +8,11 @@ import { vv } from "@repo/backend/convex/lib/validators/vv";
 import {
   requireActiveTryoutAttemptAfterExpirySync,
   requireOwnedTryoutAttempt,
-  requireTryoutPartAttempt,
 } from "@repo/backend/convex/tryouts/helpers/access";
 import { syncTryoutAttemptExpiry } from "@repo/backend/convex/tryouts/helpers/expiry";
+import { finalizeTryoutPartAttempt } from "@repo/backend/convex/tryouts/helpers/finalize";
+import { getFirstIncompleteTryoutPartIndex } from "@repo/backend/convex/tryouts/helpers/metrics";
 import { loadValidatedTryoutPartSets } from "@repo/backend/convex/tryouts/helpers/parts";
-import {
-  finalizeTryoutPartAttempt,
-  getFirstIncompleteTryoutPartIndex,
-} from "@repo/backend/convex/tryouts/helpers/scoring";
 import { finalizeTryoutAttempt } from "@repo/backend/convex/tryouts/mutations/helpers";
 import {
   tryoutProductPolicies,
@@ -87,28 +84,29 @@ export const startTryout = mutation({
       );
 
       if (!tryoutExpiry.expired && existingAttempt.status === "in-progress") {
-        const firstIncompletePartIndex = getFirstIncompleteTryoutPartIndex({
-          completedPartIndices: existingAttempt.completedPartIndices,
-          partCount: tryout.partCount,
+        const hasIncompletePart =
+          getFirstIncompleteTryoutPartIndex({
+            completedPartIndices: existingAttempt.completedPartIndices,
+            partCount: tryout.partCount,
+          }) !== undefined;
+
+        if (hasIncompletePart) {
+          return null;
+        }
+
+        const completedAttempt = await finalizeTryoutAttempt({
+          ctx,
+          now,
+          tryoutAttempt: existingAttempt,
+          userId,
         });
 
-        if (firstIncompletePartIndex === undefined) {
-          const completedAttempt = await finalizeTryoutAttempt({
-            ctx,
-            now,
-            tryoutAttempt: existingAttempt,
-            userId,
+        if (completedAttempt.status !== "completed") {
+          throw new ConvexError({
+            code: "INVALID_TRYOUT_STATE",
+            message:
+              "Tryout has no incomplete part but could not be finalized.",
           });
-
-          if (completedAttempt.status !== "completed") {
-            throw new ConvexError({
-              code: "INVALID_TRYOUT_STATE",
-              message:
-                "Tryout has no incomplete part but could not be finalized.",
-            });
-          }
-
-          return null;
         }
 
         return null;
@@ -333,10 +331,21 @@ export const completePart = mutation({
         tryoutAttempt,
       });
 
-    const partAttempt = await requireTryoutPartAttempt(ctx, {
-      partKey: args.partKey,
-      tryoutAttemptId: args.tryoutAttemptId,
-    });
+    const partAttempt = await ctx.db
+      .query("tryoutPartAttempts")
+      .withIndex("by_tryoutAttemptId_and_partKey", (q) =>
+        q
+          .eq("tryoutAttemptId", args.tryoutAttemptId)
+          .eq("partKey", args.partKey)
+      )
+      .unique();
+
+    if (!partAttempt) {
+      throw new ConvexError({
+        code: "PART_ATTEMPT_NOT_FOUND",
+        message: "Tryout part attempt not found.",
+      });
+    }
 
     if (
       currentTryoutAttempt.completedPartIndices.includes(partAttempt.partIndex)

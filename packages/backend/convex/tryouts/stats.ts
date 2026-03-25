@@ -48,114 +48,108 @@ export async function syncUserTryoutStats({
         .eq("leaderboardNamespace", leaderboardNamespace)
     )
     .unique();
+  const rebuildJob = {
+    leaderboardNamespace,
+    product,
+    userId,
+  };
 
   if (!statsRecord) {
-    if (previousEntry !== null) {
-      await ctx.scheduler.runAfter(
-        0,
-        internal.tryouts.internalMutations.rebuildUserTryoutStats,
-        {
-          leaderboardNamespace,
-          product,
-          userId,
-        }
-      );
+    if (previousEntry === null) {
+      await ctx.db.insert("userTryoutStats", {
+        averageRawScore: nextEntry.rawScore,
+        averageTheta: nextEntry.theta,
+        bestTheta: nextEntry.theta,
+        lastTryoutAt: nextEntry.completedAt,
+        leaderboardNamespace,
+        product,
+        totalTryoutsCompleted: 1,
+        updatedAt: nextEntry.completedAt,
+        userId,
+      });
 
       return;
     }
 
-    await ctx.db.insert("userTryoutStats", {
-      averageRawScore: nextEntry.rawScore,
-      averageTheta: nextEntry.theta,
-      bestTheta: nextEntry.theta,
-      lastTryoutAt: nextEntry.completedAt,
-      leaderboardNamespace,
-      product,
-      totalTryoutsCompleted: 1,
-      updatedAt: nextEntry.completedAt,
-      userId,
-    });
+    await ctx.scheduler.runAfter(
+      0,
+      internal.tryouts.internalMutations.rebuildUserTryoutStats,
+      rebuildJob
+    );
 
     return;
   }
 
+  const currentStats = statsRecord;
+
   const bestThetaWouldDrop =
     previousEntry !== null &&
-    previousEntry.theta === statsRecord.bestTheta &&
+    previousEntry.theta === currentStats.bestTheta &&
     nextEntry.theta < previousEntry.theta;
   const lastTryoutAtWouldDrop =
     previousEntry !== null &&
-    previousEntry.completedAt === statsRecord.lastTryoutAt &&
+    previousEntry.completedAt === currentStats.lastTryoutAt &&
     nextEntry.completedAt < previousEntry.completedAt;
 
-  const previousCount = statsRecord.totalTryoutsCompleted;
+  const previousCount = currentStats.totalTryoutsCompleted;
   const totalTryoutsCompleted = previousEntry
     ? previousCount
     : previousCount + 1;
   const totalTheta =
-    statsRecord.averageTheta * previousCount -
+    currentStats.averageTheta * previousCount -
     (previousEntry?.theta ?? 0) +
     nextEntry.theta;
   const totalRawScore =
-    statsRecord.averageRawScore * previousCount -
+    currentStats.averageRawScore * previousCount -
     (previousEntry?.rawScore ?? 0) +
     nextEntry.rawScore;
-  let bestTheta = Math.max(statsRecord.bestTheta, nextEntry.theta);
-  let lastTryoutAt = Math.max(statsRecord.lastTryoutAt, nextEntry.completedAt);
+  let bestTheta = Math.max(currentStats.bestTheta, nextEntry.theta);
+  let lastTryoutAt = Math.max(currentStats.lastTryoutAt, nextEntry.completedAt);
+  const nextBestEntry = bestThetaWouldDrop
+    ? await ctx.db
+        .query("tryoutLeaderboardEntries")
+        .withIndex("by_userId_and_leaderboardNamespace_and_theta", (q) =>
+          q
+            .eq("userId", userId)
+            .eq("leaderboardNamespace", leaderboardNamespace)
+        )
+        .order("desc")
+        .first()
+    : null;
+  const latestEntry = lastTryoutAtWouldDrop
+    ? await ctx.db
+        .query("tryoutLeaderboardEntries")
+        .withIndex("by_userId_and_leaderboardNamespace_and_completedAt", (q) =>
+          q
+            .eq("userId", userId)
+            .eq("leaderboardNamespace", leaderboardNamespace)
+        )
+        .order("desc")
+        .first()
+    : null;
 
-  if (bestThetaWouldDrop) {
-    const nextBestEntry = await ctx.db
-      .query("tryoutLeaderboardEntries")
-      .withIndex("by_userId_and_leaderboardNamespace_and_theta", (q) =>
-        q.eq("userId", userId).eq("leaderboardNamespace", leaderboardNamespace)
-      )
-      .order("desc")
-      .first();
-
-    if (!nextBestEntry) {
-      await ctx.scheduler.runAfter(
-        0,
-        internal.tryouts.internalMutations.rebuildUserTryoutStats,
-        {
-          leaderboardNamespace,
-          product,
-          userId,
-        }
-      );
-
-      return;
-    }
-
+  if (bestThetaWouldDrop && nextBestEntry) {
     bestTheta = nextBestEntry.theta;
   }
 
-  if (lastTryoutAtWouldDrop) {
-    const latestEntry = await ctx.db
-      .query("tryoutLeaderboardEntries")
-      .withIndex("by_userId_and_leaderboardNamespace_and_completedAt", (q) =>
-        q.eq("userId", userId).eq("leaderboardNamespace", leaderboardNamespace)
-      )
-      .order("desc")
-      .first();
-
-    if (!latestEntry) {
-      await ctx.scheduler.runAfter(
-        0,
-        internal.tryouts.internalMutations.rebuildUserTryoutStats,
-        {
-          leaderboardNamespace,
-          product,
-          userId,
-        }
-      );
-
-      return;
-    }
-
+  if (lastTryoutAtWouldDrop && latestEntry) {
     lastTryoutAt = latestEntry.completedAt;
   }
 
-  await ctx.db.patch("userTryoutStats", statsRecord._id, {
+  if (
+    (bestThetaWouldDrop && !nextBestEntry) ||
+    (lastTryoutAtWouldDrop && !latestEntry)
+  ) {
+    await ctx.scheduler.runAfter(
+      0,
+      internal.tryouts.internalMutations.rebuildUserTryoutStats,
+      rebuildJob
+    );
+
+    return;
+  }
+
+  await ctx.db.patch("userTryoutStats", currentStats._id, {
     totalTryoutsCompleted,
     averageTheta: totalTheta / totalTryoutsCompleted,
     bestTheta,

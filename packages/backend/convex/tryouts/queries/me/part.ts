@@ -1,14 +1,13 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
-import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { getBoundedExerciseAnswers } from "@repo/backend/convex/tryouts/helpers/loaders";
 import { loadLatestUserTryoutContext } from "@repo/backend/convex/tryouts/queries/me/helpers";
 import {
-  tryoutPartAttemptRuntimeValidator,
   userTryoutLookupArgs,
+  userTryoutPartAttemptResultValidator,
 } from "@repo/backend/convex/tryouts/queries/me/validators";
 import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
-import { ConvexError, v } from "convex/values";
+import { ConvexError } from "convex/values";
 import { nullable } from "convex-helpers/validators";
 
 /** Returns the authenticated user's runtime state for one tryout part. */
@@ -17,13 +16,7 @@ export const getUserTryoutPartAttempt = query({
     ...userTryoutLookupArgs,
     partKey: tryoutPartKeyValidator,
   },
-  returns: nullable(
-    v.object({
-      expiresAtMs: v.number(),
-      partAttempt: nullable(tryoutPartAttemptRuntimeValidator),
-      tryoutAttempt: vv.doc("tryoutAttempts"),
-    })
-  ),
+  returns: nullable(userTryoutPartAttemptResultValidator),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
     const context = await loadLatestUserTryoutContext(ctx, {

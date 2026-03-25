@@ -40,9 +40,23 @@ export const tryoutPartAttemptSummaryValidator = v.object({
   setAttempt: tryoutPartAttemptSummarySetAttemptValidator,
 });
 
+export const userTryoutAttemptResultValidator = v.object({
+  attempt: vv.doc("tryoutAttempts"),
+  orderedParts: v.array(orderedTryoutPartValidator),
+  partAttempts: v.array(tryoutPartAttemptSummaryValidator),
+  resumePartKey: v.optional(tryoutPartKeyValidator),
+  expiresAtMs: v.number(),
+});
+
 export const tryoutPartAttemptRuntimeValidator = v.object({
   partIndex: v.number(),
   partKey: tryoutPartKeyValidator,
   setAttempt: vv.doc("exerciseAttempts"),
   answers: v.array(vv.doc("exerciseAnswers")),
+});
+
+export const userTryoutPartAttemptResultValidator = v.object({
+  expiresAtMs: v.number(),
+  partAttempt: v.union(v.null(), tryoutPartAttemptRuntimeValidator),
+  tryoutAttempt: vv.doc("tryoutAttempts"),
 });

@@ -1,10 +1,10 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import { loadBoundedTryoutPartAttempts } from "@repo/backend/convex/tryouts/helpers/loaders";
 import {
   finalizeTryoutPartAttempt,
-  getTryoutScoreTarget,
   syncTryoutAttemptAggregates,
-} from "@repo/backend/convex/tryouts/helpers/scoring";
+} from "@repo/backend/convex/tryouts/helpers/finalize";
+import { getTryoutScoreTarget } from "@repo/backend/convex/tryouts/helpers/irt";
+import { loadBoundedTryoutPartAttempts } from "@repo/backend/convex/tryouts/helpers/loaders";
 import type { TryoutMutationCtx } from "@repo/backend/convex/tryouts/helpers/types";
 import { ConvexError } from "convex/values";
 import { getOneFrom } from "convex-helpers/server/relationships";

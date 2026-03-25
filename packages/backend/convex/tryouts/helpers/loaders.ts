@@ -63,11 +63,3 @@ export async function getBoundedExerciseAnswers(
     message: "Exercise answer count exceeds the attempt total exercises.",
   });
 }
-
-/** Count how many persisted answers are marked correct. */
-export function countCorrectAnswers(answers: Doc<"exerciseAnswers">[]) {
-  return answers.reduce(
-    (correctCount, answer) => correctCount + (answer.isCorrect ? 1 : 0),
-    0
-  );
-}

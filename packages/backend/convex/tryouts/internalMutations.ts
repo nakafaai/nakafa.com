@@ -6,11 +6,11 @@ import {
   expireTryoutAttempt,
   syncTryoutAttemptExpiry,
 } from "@repo/backend/convex/tryouts/helpers/expiry";
+import { syncTryoutAttemptAggregates } from "@repo/backend/convex/tryouts/helpers/finalize";
 import {
   computeTryoutRawScorePercentage,
   isBetterLeaderboardScore,
-  syncTryoutAttemptAggregates,
-} from "@repo/backend/convex/tryouts/helpers/scoring";
+} from "@repo/backend/convex/tryouts/helpers/metrics";
 import {
   tryoutProductPolicies,
   tryoutProductValidator,

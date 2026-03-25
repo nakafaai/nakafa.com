@@ -33,34 +33,6 @@ export async function requireOwnedTryoutAttempt(
   return tryoutAttempt;
 }
 
-/** Load one tryout part attempt by stable key within its parent attempt. */
-export async function requireTryoutPartAttempt(
-  ctx: MutationCtx,
-  {
-    partKey,
-    tryoutAttemptId,
-  }: {
-    partKey: Doc<"tryoutPartAttempts">["partKey"];
-    tryoutAttemptId: Id<"tryoutAttempts">;
-  }
-) {
-  const partAttempt = await ctx.db
-    .query("tryoutPartAttempts")
-    .withIndex("by_tryoutAttemptId_and_partKey", (q) =>
-      q.eq("tryoutAttemptId", tryoutAttemptId).eq("partKey", partKey)
-    )
-    .unique();
-
-  if (!partAttempt) {
-    throw new ConvexError({
-      code: "PART_ATTEMPT_NOT_FOUND",
-      message: "Tryout part attempt not found.",
-    });
-  }
-
-  return partAttempt;
-}
-
 /** Sync expiry first, then return the latest in-progress attempt snapshot. */
 export async function requireActiveTryoutAttemptAfterExpirySync(
   ctx: MutationCtx,

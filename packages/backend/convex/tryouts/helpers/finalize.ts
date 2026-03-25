@@ -1,20 +1,20 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import {
   buildFinalizedExerciseAttemptPatch,
   computeAttemptDurationSeconds,
 } from "@repo/backend/convex/exercises/utils";
 import { estimateThetaEAP } from "@repo/backend/convex/irt/estimation";
-import {
-  getLatestScaleVersionForTryout,
-  getScaleVersionItemsForSet,
-} from "@repo/backend/convex/irt/scales/read";
+import { getScaleVersionItemsForSet } from "@repo/backend/convex/irt/scales/read";
 import { getAttemptEndReasonFromStatus } from "@repo/backend/convex/lib/attempts";
+import { buildOperationalIrtResponses } from "@repo/backend/convex/tryouts/helpers/irt";
 import {
-  countCorrectAnswers,
   getBoundedExerciseAnswers,
   loadBoundedTryoutPartAttempts,
 } from "@repo/backend/convex/tryouts/helpers/loaders";
+import {
+  computeTryoutRawScorePercentage,
+  countCorrectAnswers,
+} from "@repo/backend/convex/tryouts/helpers/metrics";
 import type { TryoutMutationCtx } from "@repo/backend/convex/tryouts/helpers/types";
 import { tryoutProductPolicies } from "@repo/backend/convex/tryouts/products";
 import type { TryoutScoreStatus } from "@repo/backend/convex/tryouts/schema";
@@ -22,15 +22,6 @@ import { ConvexError } from "convex/values";
 import { asyncMap } from "convex-helpers";
 import { getAll } from "convex-helpers/server/relationships";
 
-type TryoutDbReader = QueryCtx["db"];
-type TryoutScoreTarget = Pick<
-  Doc<"tryoutAttempts">,
-  "scaleVersionId" | "scoreStatus"
->;
-type TryoutScoreTotals = Pick<
-  Doc<"tryoutAttempts">,
-  "totalCorrect" | "totalQuestions"
->;
 type FinalizedExerciseAttemptStatus = Exclude<
   Doc<"exerciseAttempts">["status"],
   "in-progress"
@@ -39,116 +30,6 @@ type FinalizedTryoutStatus = Exclude<
   Doc<"tryoutAttempts">["status"],
   "in-progress"
 >;
-
-/** Pick the best frozen scale currently available for one tryout attempt. */
-export async function getTryoutScoreTarget(
-  db: TryoutDbReader,
-  tryoutAttempt: Pick<
-    Doc<"tryoutAttempts">,
-    "_id" | "scaleVersionId" | "tryoutId"
-  >
-): Promise<TryoutScoreTarget> {
-  const [currentScaleVersion, latestScaleVersion] = await Promise.all([
-    db.get("irtScaleVersions", tryoutAttempt.scaleVersionId),
-    getLatestScaleVersionForTryout(db, tryoutAttempt.tryoutId),
-  ]);
-
-  if (!currentScaleVersion) {
-    throw new ConvexError({
-      code: "INVALID_ATTEMPT_STATE",
-      message: "Tryout attempt is missing its scoring scale.",
-    });
-  }
-
-  if (!latestScaleVersion || latestScaleVersion.status !== "official") {
-    return {
-      scaleVersionId: currentScaleVersion._id,
-      scoreStatus: currentScaleVersion.status,
-    };
-  }
-
-  return {
-    scaleVersionId: latestScaleVersion._id,
-    scoreStatus: "official",
-  };
-}
-
-/** Convert accumulated tryout score totals into a percentage. */
-export function computeTryoutRawScorePercentage({
-  totalCorrect,
-  totalQuestions,
-}: TryoutScoreTotals) {
-  if (totalQuestions <= 0) {
-    return 0;
-  }
-
-  return (totalCorrect / totalQuestions) * 100;
-}
-
-/** Return the first ordered part index that has not been finalized yet. */
-export function getFirstIncompleteTryoutPartIndex({
-  completedPartIndices,
-  partCount,
-}: Pick<Doc<"tryoutAttempts">, "completedPartIndices"> &
-  Pick<Doc<"tryouts">, "partCount">) {
-  for (let partIndex = 0; partIndex < partCount; partIndex += 1) {
-    if (!completedPartIndices.includes(partIndex)) {
-      return partIndex;
-    }
-  }
-
-  return undefined;
-}
-
-/** Break ties between two completed leaderboard scores. */
-export function isBetterLeaderboardScore(
-  candidate: Pick<Doc<"tryoutAttempts">, "completedAt" | "theta">,
-  currentBest: Pick<Doc<"tryoutAttempts">, "completedAt" | "theta">
-) {
-  if (candidate.theta !== currentBest.theta) {
-    return candidate.theta > currentBest.theta;
-  }
-
-  return (candidate.completedAt ?? 0) > (currentBest.completedAt ?? 0);
-}
-
-/**
- * Build the operational person-scoring payload from frozen tryout item params.
- *
- * Unanswered items inside a timed tryout are treated as incorrect here so the
- * operational IRT score reflects the full administered form.
- */
-export function buildOperationalIrtResponses({
-  answers,
-  itemParamsRecords,
-}: {
-  answers: Doc<"exerciseAnswers">[];
-  itemParamsRecords: Pick<
-    Doc<"irtScaleVersionItems">,
-    "questionId" | "difficulty" | "discrimination"
-  >[];
-}) {
-  const answersByQuestionId = new Map<
-    NonNullable<Doc<"exerciseAnswers">["questionId"]>,
-    Doc<"exerciseAnswers">
-  >();
-
-  for (const answer of answers) {
-    if (!answer.questionId) {
-      continue;
-    }
-
-    answersByQuestionId.set(answer.questionId, answer);
-  }
-
-  return itemParamsRecords.map((itemParams) => ({
-    correct: answersByQuestionId.get(itemParams.questionId)?.isCorrect ?? false,
-    params: {
-      difficulty: itemParams.difficulty,
-      discrimination: itemParams.discrimination,
-    },
-  }));
-}
 
 /** Finalize one started tryout part from its persisted exercise answers. */
 export async function finalizeTryoutPartAttempt({
@@ -285,7 +166,14 @@ export async function finalizeTryoutPartAttempt({
   };
 }
 
-/** Recompute the persisted tryout aggregates from finalized part attempts. */
+/**
+ * Recompute the persisted tryout aggregate fields from finalized part attempts.
+ *
+ * This helper intentionally re-reads every finalized part, rebuilds the full
+ * IRT response set, then overwrites the parent attempt's derived totals and
+ * score fields in one patch. Optional `scaleVersionId` / `scoreStatus`
+ * overrides are used when promoting provisional attempts to an official scale.
+ */
 export async function syncTryoutAttemptAggregates({
   completedAtMs,
   ctx,

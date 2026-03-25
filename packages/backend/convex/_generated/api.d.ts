@@ -180,10 +180,12 @@ import type * as triggers_tryouts_leaderboard from "../triggers/tryouts/leaderbo
 import type * as tryouts_aggregate from "../tryouts/aggregate.js";
 import type * as tryouts_helpers_access from "../tryouts/helpers/access.js";
 import type * as tryouts_helpers_expiry from "../tryouts/helpers/expiry.js";
+import type * as tryouts_helpers_finalize from "../tryouts/helpers/finalize.js";
+import type * as tryouts_helpers_irt from "../tryouts/helpers/irt.js";
 import type * as tryouts_helpers_loaders from "../tryouts/helpers/loaders.js";
+import type * as tryouts_helpers_metrics from "../tryouts/helpers/metrics.js";
 import type * as tryouts_helpers_parts from "../tryouts/helpers/parts.js";
 import type * as tryouts_helpers_resume from "../tryouts/helpers/resume.js";
-import type * as tryouts_helpers_scoring from "../tryouts/helpers/scoring.js";
 import type * as tryouts_helpers_types from "../tryouts/helpers/types.js";
 import type * as tryouts_internalMutations from "../tryouts/internalMutations.js";
 import type * as tryouts_mutations_attempts from "../tryouts/mutations/attempts.js";
@@ -196,7 +198,6 @@ import type * as tryouts_queries_me_constants from "../tryouts/queries/me/consta
 import type * as tryouts_queries_me_helpers from "../tryouts/queries/me/helpers.js";
 import type * as tryouts_queries_me_packages from "../tryouts/queries/me/packages.js";
 import type * as tryouts_queries_me_part from "../tryouts/queries/me/part.js";
-import type * as tryouts_queries_me_types from "../tryouts/queries/me/types.js";
 import type * as tryouts_queries_me_validators from "../tryouts/queries/me/validators.js";
 import type * as tryouts_queries_tryouts from "../tryouts/queries/tryouts.js";
 import type * as tryouts_stats from "../tryouts/stats.js";
@@ -396,10 +397,12 @@ declare const fullApi: ApiFromModules<{
   "tryouts/aggregate": typeof tryouts_aggregate;
   "tryouts/helpers/access": typeof tryouts_helpers_access;
   "tryouts/helpers/expiry": typeof tryouts_helpers_expiry;
+  "tryouts/helpers/finalize": typeof tryouts_helpers_finalize;
+  "tryouts/helpers/irt": typeof tryouts_helpers_irt;
   "tryouts/helpers/loaders": typeof tryouts_helpers_loaders;
+  "tryouts/helpers/metrics": typeof tryouts_helpers_metrics;
   "tryouts/helpers/parts": typeof tryouts_helpers_parts;
   "tryouts/helpers/resume": typeof tryouts_helpers_resume;
-  "tryouts/helpers/scoring": typeof tryouts_helpers_scoring;
   "tryouts/helpers/types": typeof tryouts_helpers_types;
   "tryouts/internalMutations": typeof tryouts_internalMutations;
   "tryouts/mutations/attempts": typeof tryouts_mutations_attempts;
@@ -412,7 +415,6 @@ declare const fullApi: ApiFromModules<{
   "tryouts/queries/me/helpers": typeof tryouts_queries_me_helpers;
   "tryouts/queries/me/packages": typeof tryouts_queries_me_packages;
   "tryouts/queries/me/part": typeof tryouts_queries_me_part;
-  "tryouts/queries/me/types": typeof tryouts_queries_me_types;
   "tryouts/queries/me/validators": typeof tryouts_queries_me_validators;
   "tryouts/queries/tryouts": typeof tryouts_queries_tryouts;
   "tryouts/stats": typeof tryouts_stats;

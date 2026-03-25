@@ -2,12 +2,12 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { syncTryoutAttemptExpiry } from "@repo/backend/convex/tryouts/helpers/expiry";
+import { syncTryoutAttemptAggregates } from "@repo/backend/convex/tryouts/helpers/finalize";
+import { getTryoutScoreTarget } from "@repo/backend/convex/tryouts/helpers/irt";
 import {
   computeTryoutRawScorePercentage,
-  getTryoutScoreTarget,
   isBetterLeaderboardScore,
-  syncTryoutAttemptAggregates,
-} from "@repo/backend/convex/tryouts/helpers/scoring";
+} from "@repo/backend/convex/tryouts/helpers/metrics";
 import { tryoutLeaderboardWorkpool } from "@repo/backend/convex/tryouts/workpool";
 import { ConvexError } from "convex/values";
 
@@ -19,7 +19,14 @@ type CompleteTryoutResult = Pick<
   rawScorePercentage: number;
 };
 
-/** Finalizes one tryout attempt into its current result state. */
+/**
+ * Finalize one tryout attempt into its current user-visible result state.
+ *
+ * This helper reconciles expiry first, then branches across completed,
+ * expired, and still-in-progress states. For fully completed attempts it also
+ * decides whether the result should count as the user's official leaderboard
+ * score and enqueues leaderboard work when needed.
+ */
 export async function finalizeTryoutAttempt({
   completedAtMs,
   ctx,

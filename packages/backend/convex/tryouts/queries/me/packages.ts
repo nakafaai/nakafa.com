@@ -30,8 +30,7 @@ export const getUserTryoutPackageStatuses = query({
         ])
       ).values()
     ).slice(0, MAX_TRYOUT_STATUS_REQUESTS);
-    const statuses: Array<Infer<typeof tryoutPackageStatusValidator> | null> =
-      [];
+    const statuses: Infer<typeof tryoutPackageStatusValidator>[] = [];
 
     for (
       let startIndex = 0;
@@ -64,9 +63,9 @@ export const getUserTryoutPackageStatuses = query({
         })
       );
 
-      statuses.push(...batchStatuses);
+      statuses.push(...batchStatuses.filter((status) => status !== null));
     }
 
-    return statuses.filter((status) => status !== null);
+    return statuses;
   },
 });
