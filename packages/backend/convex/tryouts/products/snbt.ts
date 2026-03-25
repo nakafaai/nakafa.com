@@ -1,4 +1,8 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import {
+  IRT_OPERATIONAL_THETA_MAX,
+  IRT_OPERATIONAL_THETA_MIN,
+} from "@repo/backend/convex/irt/policy";
 import { getSubjects } from "@repo/contents/exercises/high-school/_data/subject";
 import { ConvexError } from "convex/values";
 import type { DetectedTryout, TryoutProductPolicy } from ".";
@@ -9,10 +13,8 @@ const SECONDS_PER_MINUTE = 60;
 const MILLISECONDS_PER_SECOND = 1000;
 const SNBT_ATTEMPT_WINDOW_DAYS = 3;
 const SNBT_SIMULATION_SECONDS_PER_QUESTION = 90;
-const SNBT_SCORE_MIN = 200;
-const SNBT_SCORE_MAX = 1000;
-const SNBT_SCORE_CENTER = 600;
-const SNBT_SCORE_SCALE = 100;
+const SNBT_REPORT_SCORE_MIN = 100;
+const SNBT_REPORT_SCORE_MAX = 1000;
 const YEARFUL_TRYOUT_SET_SLUG_REGEX =
   /^exercises\/[^/]+\/[^/]+\/[^/]+\/try-out\/(\d{4})\/[^/]+$/;
 
@@ -48,6 +50,25 @@ function compareSnbtTryouts(
     right.cycleKey.localeCompare(left.cycleKey) ||
     left.label.localeCompare(right.label)
   );
+}
+
+/**
+ * Map the bounded operational theta estimate onto SNBT's public 100-1000
+ * report-score scale.
+ */
+function scaleSnbtThetaToScore(theta: Doc<"tryoutAttempts">["theta"]) {
+  const boundedTheta = Math.max(
+    IRT_OPERATIONAL_THETA_MIN,
+    Math.min(IRT_OPERATIONAL_THETA_MAX, theta)
+  );
+  const normalizedTheta =
+    (boundedTheta - IRT_OPERATIONAL_THETA_MIN) /
+    (IRT_OPERATIONAL_THETA_MAX - IRT_OPERATIONAL_THETA_MIN);
+  const scaledScore =
+    SNBT_REPORT_SCORE_MIN +
+    normalizedTheta * (SNBT_REPORT_SCORE_MAX - SNBT_REPORT_SCORE_MIN);
+
+  return Math.round(scaledScore);
 }
 
 /** SNBT policy is derived from the high-school subject source of truth. */
@@ -146,10 +167,5 @@ export const snbtTryoutProductPolicy = {
 
     return questionCount * SNBT_SIMULATION_SECONDS_PER_QUESTION;
   },
-  scaleThetaToScore: (theta: Doc<"tryoutAttempts">["theta"]) => {
-    const score = SNBT_SCORE_CENTER + theta * SNBT_SCORE_SCALE;
-    return Math.round(
-      Math.max(SNBT_SCORE_MIN, Math.min(SNBT_SCORE_MAX, score))
-    );
-  },
+  scaleThetaToScore: scaleSnbtThetaToScore,
 } satisfies TryoutProductPolicy;

@@ -4,6 +4,13 @@
 export const IRT_OPERATIONAL_MODEL = "2pl";
 
 /**
+ * Shared bounded theta support used by operational EAP scoring and any public
+ * report-score transforms built on top of it.
+ */
+export const IRT_OPERATIONAL_THETA_MIN = -4;
+export const IRT_OPERATIONAL_THETA_MAX = 4;
+
+/**
  * Conservative minimum scored responses required before an item is promoted to
  * `calibrated` automatically.
  *

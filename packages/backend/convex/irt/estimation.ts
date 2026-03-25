@@ -1,3 +1,8 @@
+import {
+  IRT_OPERATIONAL_THETA_MAX,
+  IRT_OPERATIONAL_THETA_MIN,
+} from "@repo/backend/convex/irt/policy";
+
 /**
  * Operational IRT estimation helpers.
  *
@@ -17,8 +22,8 @@ export interface Response {
   params: ItemParameters;
 }
 
-const THETA_MIN = -4;
-const THETA_MAX = 4;
+const THETA_MIN = IRT_OPERATIONAL_THETA_MIN;
+const THETA_MAX = IRT_OPERATIONAL_THETA_MAX;
 const THETA_POINTS = 41;
 const THETA_GRID = getThetaGrid();
 
