@@ -187,7 +187,7 @@ export function generateStaticParams() {
     const slug = params.slug;
     return (
       Array.isArray(slug) &&
-      slug.length <= 2 &&
+      slug.length <= 3 &&
       !isYearlessTryOutCollectionSlug(slug)
     );
   });
