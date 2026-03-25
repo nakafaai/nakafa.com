@@ -1,8 +1,10 @@
 "use client";
 
 import { api } from "@repo/backend/convex/_generated/api";
+import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
+import type { Locale } from "next-intl";
 import { type ReactNode, useMemo } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 import { useTryoutClock } from "@/components/tryout/hooks/use-tryout-clock";
@@ -40,11 +42,15 @@ export function useTryoutPackageProgress<T>(
 
 interface TryoutPackageProgressProviderProps {
   children: ReactNode;
+  locale: Locale;
+  product: TryoutProduct;
   tryoutPackages: TryoutPackageStatusQueryArgs["tryoutPackages"];
 }
 
 export function TryoutPackageProgressProvider({
   children,
+  locale,
+  product,
   tryoutPackages,
 }: TryoutPackageProgressProviderProps) {
   const isUserPending = useUser((state) => state.isPending);
@@ -53,7 +59,7 @@ export function TryoutPackageProgressProvider({
     !isUserPending && Boolean(user) && tryoutPackages.length > 0;
   const { data } = useQueryWithStatus(
     api.tryouts.queries.me.packages.getUserTryoutPackageStatuses,
-    shouldQuery ? { tryoutPackages } : "skip"
+    shouldQuery ? { locale, product, tryoutPackages } : "skip"
   );
   const nowMs = useTryoutClock(Boolean(data && data.length > 0));
   const tryoutStatuses = useMemo(() => {

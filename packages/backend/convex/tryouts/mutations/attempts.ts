@@ -11,6 +11,7 @@ import {
 } from "@repo/backend/convex/tryouts/helpers/access";
 import { syncTryoutAttemptExpiry } from "@repo/backend/convex/tryouts/helpers/expiry";
 import { finalizeTryoutPartAttempt } from "@repo/backend/convex/tryouts/helpers/finalize";
+import { upsertUserTryoutLatestAttempt } from "@repo/backend/convex/tryouts/helpers/latest";
 import { getFirstIncompleteTryoutPartIndex } from "@repo/backend/convex/tryouts/helpers/metrics";
 import { loadValidatedTryoutPartSets } from "@repo/backend/convex/tryouts/helpers/parts";
 import { finalizeTryoutAttempt } from "@repo/backend/convex/tryouts/mutations/helpers";
@@ -119,7 +120,7 @@ export const startTryout = mutation({
     });
 
     const expiresAtMs =
-      now + tryoutProductPolicies[tryout.product].getAttemptWindowMs();
+      now + tryoutProductPolicies[tryout.product].attemptWindowMs;
 
     const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
       userId,
@@ -148,6 +149,18 @@ export const startTryout = mutation({
         expiresAtMs,
       }
     );
+
+    await upsertUserTryoutLatestAttempt(ctx, {
+      attempt: {
+        _id: tryoutAttemptId,
+        expiresAt: expiresAtMs,
+        status: "in-progress",
+        tryoutId: tryout._id,
+        userId,
+      },
+      tryout,
+      updatedAt: now,
+    });
 
     return null;
   },

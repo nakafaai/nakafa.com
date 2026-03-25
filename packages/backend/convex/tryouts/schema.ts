@@ -94,6 +94,25 @@ const tables = {
       "startedAt",
     ]),
 
+  userTryoutLatestAttempts: defineTable({
+    userId: v.id("users"),
+    product: tryoutProductValidator,
+    locale: localeValidator,
+    tryoutId: v.id("tryouts"),
+    attemptId: v.id("tryoutAttempts"),
+    slug: v.string(),
+    status: tryoutStatusValidator,
+    expiresAtMs: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_userId_and_product_and_locale_and_tryoutId", [
+      "userId",
+      "product",
+      "locale",
+      "tryoutId",
+    ])
+    .index("by_attemptId", ["attemptId"]),
+
   tryoutPartAttempts: defineTable({
     tryoutAttemptId: v.id("tryoutAttempts"),
     partIndex: v.number(),

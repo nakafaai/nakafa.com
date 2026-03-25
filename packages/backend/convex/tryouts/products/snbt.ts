@@ -52,6 +52,7 @@ function compareSnbtTryouts(
 
 /** SNBT policy is derived from the high-school subject source of truth. */
 export const snbtTryoutProductPolicy = {
+  attemptWindowMs: SNBT_ATTEMPT_WINDOW_MS,
   compareTryouts: compareSnbtTryouts,
   detectTryouts: ({ locale, sets }) => {
     const candidateSets = sets.flatMap((set) => {
@@ -131,7 +132,6 @@ export const snbtTryoutProductPolicy = {
 
     return detectedTryouts;
   },
-  getAttemptWindowMs: () => SNBT_ATTEMPT_WINDOW_MS,
   getLeaderboardNamespace: ({ product, locale, cycleKey }) =>
     `${product}:${locale}:${cycleKey}`,
   getPartTimeLimitSeconds: (

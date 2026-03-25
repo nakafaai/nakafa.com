@@ -123,6 +123,8 @@ export default async function Page({ params }: Props) {
               <TryoutPackageEmpty>{tTryouts("list-empty")}</TryoutPackageEmpty>
             ) : (
               <TryoutPackageProgressProvider
+                locale={locale}
+                product={product}
                 tryoutPackages={activeTryouts.map((tryout) => ({
                   slug: tryout.slug,
                   tryoutId: tryout._id,

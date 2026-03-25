@@ -28,7 +28,6 @@ export const getUserTryoutAttempt = query({
     }
 
     const { attempt, tryout } = context;
-
     const [tryoutPartSets, tryoutPartAttempts] = await Promise.all([
       loadValidatedTryoutPartSets(ctx.db, {
         partCount: tryout.partCount,
@@ -48,29 +47,27 @@ export const getUserTryoutAttempt = query({
       "exerciseAttempts",
       tryoutPartAttempts.map((partAttempt) => partAttempt.setAttemptId)
     );
-    const partAttempts = tryoutPartAttempts.map(
-      (partAttempt: (typeof tryoutPartAttempts)[number], index: number) => {
-        const setAttempt = setAttempts[index];
+    const partAttempts = tryoutPartAttempts.map((partAttempt, index) => {
+      const setAttempt = setAttempts[index];
 
-        if (!setAttempt) {
-          throw new ConvexError({
-            code: "INVALID_ATTEMPT_STATE",
-            message: "Part attempt is missing its exercise attempt.",
-          });
-        }
-
-        return {
-          partIndex: partAttempt.partIndex,
-          partKey: partAttempt.partKey,
-          setAttempt: {
-            lastActivityAt: setAttempt.lastActivityAt,
-            startedAt: setAttempt.startedAt,
-            status: setAttempt.status,
-            timeLimit: setAttempt.timeLimit,
-          },
-        };
+      if (!setAttempt) {
+        throw new ConvexError({
+          code: "INVALID_ATTEMPT_STATE",
+          message: "Part attempt is missing its exercise attempt.",
+        });
       }
-    );
+
+      return {
+        partIndex: partAttempt.partIndex,
+        partKey: partAttempt.partKey,
+        setAttempt: {
+          lastActivityAt: setAttempt.lastActivityAt,
+          startedAt: setAttempt.startedAt,
+          status: setAttempt.status,
+          timeLimit: setAttempt.timeLimit,
+        },
+      };
+    });
 
     if (attempt.status !== "in-progress") {
       return {

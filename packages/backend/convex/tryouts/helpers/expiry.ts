@@ -1,17 +1,17 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   finalizeTryoutPartAttempt,
   syncTryoutAttemptAggregates,
 } from "@repo/backend/convex/tryouts/helpers/finalize";
 import { getTryoutScoreTarget } from "@repo/backend/convex/tryouts/helpers/irt";
 import { loadBoundedTryoutPartAttempts } from "@repo/backend/convex/tryouts/helpers/loaders";
-import type { TryoutMutationCtx } from "@repo/backend/convex/tryouts/helpers/types";
 import { ConvexError } from "convex/values";
 import { getOneFrom } from "convex-helpers/server/relationships";
 
 /** Expire a tryout and every still-open shared set attempt under it. */
 export async function expireTryoutAttempt(
-  ctx: TryoutMutationCtx,
+  ctx: Pick<MutationCtx, "db" | "scheduler">,
   tryoutAttempt: Doc<"tryoutAttempts">,
   now: number
 ) {
@@ -63,7 +63,7 @@ export async function expireTryoutAttempt(
 
 /** Reconcile one tryout attempt against its derived expiry window. */
 export async function syncTryoutAttemptExpiry(
-  ctx: TryoutMutationCtx,
+  ctx: Pick<MutationCtx, "db" | "scheduler">,
   tryoutAttempt: Doc<"tryoutAttempts">,
   now: number
 ) {
@@ -83,7 +83,7 @@ export async function syncTryoutAttemptExpiry(
 
 /** Reconcile a shared exercise attempt that belongs to a tryout part. */
 export async function syncTryoutExerciseAttemptExpiry(
-  ctx: TryoutMutationCtx,
+  ctx: Pick<MutationCtx, "db" | "scheduler">,
   attempt: Doc<"exerciseAttempts">,
   now: number
 ) {

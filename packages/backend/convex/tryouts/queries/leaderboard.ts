@@ -39,9 +39,53 @@ const globalLeaderboardRowValidator = v.object({
   lastTryoutAt: v.number(),
 });
 
-/** Load user names for already-ranked rows while preserving rank order. */
-async function loadLeaderboardUsers(ctx: QueryCtx, userIds: Id<"users">[]) {
-  return getAll(ctx.db, "users", userIds);
+/**
+ * Hydrate ranked aggregate IDs back into table rows and aligned user names
+ * while preserving the aggregate-provided ordering.
+ */
+async function loadLeaderboardRows<
+  TableId extends Id<"tryoutLeaderboardEntries"> | Id<"userTryoutStats">,
+  RecordDoc extends { userId: Id<"users"> },
+  Row,
+>({
+  aggregateItems,
+  ctx,
+  loadRecords,
+  mapRow,
+}: {
+  aggregateItems: { id: TableId }[];
+  ctx: QueryCtx;
+  loadRecords: (ids: TableId[]) => Promise<(RecordDoc | null)[]>;
+  mapRow: (args: {
+    rank: number;
+    row: RecordDoc;
+    userName: string | null;
+  }) => Row;
+}) {
+  if (aggregateItems.length === 0) {
+    return [];
+  }
+
+  const records = await loadRecords(aggregateItems.map((item) => item.id));
+  const existingRows = records.flatMap((row) => (row ? [row] : []));
+
+  if (existingRows.length === 0) {
+    return [];
+  }
+
+  const users = await getAll(
+    ctx.db,
+    "users",
+    existingRows.map((row) => row.userId)
+  );
+
+  return existingRows.map((row, index) =>
+    mapRow({
+      rank: index + 1,
+      row,
+      userName: users[index]?.name ?? null,
+    })
+  );
 }
 
 /** Returns ranked official results for one concrete tryout. */
@@ -67,33 +111,20 @@ export const getTryoutLeaderboard = query({
       pageSize: limit,
     });
 
-    if (aggregateItems.length === 0) {
-      return [];
-    }
-
-    const leaderboardEntries = await getAll(
-      ctx.db,
-      "tryoutLeaderboardEntries",
-      aggregateItems.map((item) => item.id)
-    );
-    const existingEntries = leaderboardEntries.flatMap((entry) =>
-      entry ? [entry] : []
-    );
-
-    const users = await loadLeaderboardUsers(
+    return loadLeaderboardRows({
+      aggregateItems,
       ctx,
-      existingEntries.map((entry) => entry.userId)
-    );
-
-    return existingEntries.map((entry, index) => ({
-      rank: index + 1,
-      userId: entry.userId,
-      userName: users[index]?.name ?? null,
-      theta: entry.theta,
-      irtScore: entry.irtScore,
-      rawScore: entry.rawScore,
-      completedAt: entry.completedAt,
-    }));
+      loadRecords: (ids) => getAll(ctx.db, "tryoutLeaderboardEntries", ids),
+      mapRow: ({ rank, row, userName }) => ({
+        rank,
+        userId: row.userId,
+        userName,
+        theta: row.theta,
+        irtScore: row.irtScore,
+        rawScore: row.rawScore,
+        completedAt: row.completedAt,
+      }),
+    });
   },
 });
 
@@ -124,33 +155,20 @@ export const getGlobalLeaderboard = query({
       pageSize: limit,
     });
 
-    if (aggregateItems.length === 0) {
-      return [];
-    }
-
-    const statsRecords = await getAll(
-      ctx.db,
-      "userTryoutStats",
-      aggregateItems.map((item) => item.id)
-    );
-    const existingStats = statsRecords.flatMap((stats) =>
-      stats ? [stats] : []
-    );
-
-    const users = await loadLeaderboardUsers(
+    return loadLeaderboardRows({
+      aggregateItems,
       ctx,
-      existingStats.map((stats) => stats.userId)
-    );
-
-    return existingStats.map((stats, index) => ({
-      rank: index + 1,
-      userId: stats.userId,
-      userName: users[index]?.name ?? null,
-      averageTheta: stats.averageTheta,
-      totalTryoutsCompleted: stats.totalTryoutsCompleted,
-      bestTheta: stats.bestTheta,
-      averageRawScore: stats.averageRawScore,
-      lastTryoutAt: stats.lastTryoutAt,
-    }));
+      loadRecords: (ids) => getAll(ctx.db, "userTryoutStats", ids),
+      mapRow: ({ rank, row, userName }) => ({
+        rank,
+        userId: row.userId,
+        userName,
+        averageTheta: row.averageTheta,
+        totalTryoutsCompleted: row.totalTryoutsCompleted,
+        bestTheta: row.bestTheta,
+        averageRawScore: row.averageRawScore,
+        lastTryoutAt: row.lastTryoutAt,
+      }),
+    });
   },
 });

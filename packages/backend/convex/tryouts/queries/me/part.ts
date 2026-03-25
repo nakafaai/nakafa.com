@@ -29,7 +29,6 @@ export const getUserTryoutPartAttempt = query({
     }
 
     const { attempt: tryoutAttempt } = context;
-
     const currentPartAttempt = await ctx.db
       .query("tryoutPartAttempts")
       .withIndex("by_tryoutAttemptId_and_partKey", (q) =>

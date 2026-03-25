@@ -1,2 +1,0 @@
-export const TRYOUT_STATUS_BATCH_SIZE = 25;
-export const MAX_TRYOUT_STATUS_REQUESTS = 100;

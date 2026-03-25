@@ -1,4 +1,5 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   buildFinalizedExerciseAttemptPatch,
   computeAttemptDurationSeconds,
@@ -7,6 +8,7 @@ import { estimateThetaEAP } from "@repo/backend/convex/irt/estimation";
 import { getScaleVersionItemsForSet } from "@repo/backend/convex/irt/scales/read";
 import { getAttemptEndReasonFromStatus } from "@repo/backend/convex/lib/attempts";
 import { buildOperationalIrtResponses } from "@repo/backend/convex/tryouts/helpers/irt";
+import { upsertUserTryoutLatestAttempt } from "@repo/backend/convex/tryouts/helpers/latest";
 import {
   getBoundedExerciseAnswers,
   loadBoundedTryoutPartAttempts,
@@ -15,7 +17,6 @@ import {
   computeTryoutRawScorePercentage,
   countCorrectAnswers,
 } from "@repo/backend/convex/tryouts/helpers/metrics";
-import type { TryoutMutationCtx } from "@repo/backend/convex/tryouts/helpers/types";
 import { tryoutProductPolicies } from "@repo/backend/convex/tryouts/products";
 import type { TryoutScoreStatus } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError } from "convex/values";
@@ -40,7 +41,7 @@ export async function finalizeTryoutPartAttempt({
   status,
   tryoutAttemptId,
 }: {
-  ctx: TryoutMutationCtx;
+  ctx: Pick<MutationCtx, "db" | "scheduler">;
   finishedAtMs: number;
   now: number;
   partAttempt: Doc<"tryoutPartAttempts">;
@@ -184,7 +185,7 @@ export async function syncTryoutAttemptAggregates({
   tryoutAttemptId,
 }: {
   completedAtMs: number;
-  ctx: TryoutMutationCtx;
+  ctx: Pick<MutationCtx, "db" | "scheduler">;
   now: number;
   scaleVersionId?: Doc<"tryoutAttempts">["scaleVersionId"];
   scoreStatus?: TryoutScoreStatus;
@@ -282,6 +283,18 @@ export async function syncTryoutAttemptAggregates({
     thetaSE: se,
     totalCorrect,
     totalQuestions,
+  });
+
+  await upsertUserTryoutLatestAttempt(ctx, {
+    attempt: {
+      _id: tryoutAttempt._id,
+      expiresAt: tryoutAttempt.expiresAt,
+      status,
+      tryoutId: tryout._id,
+      userId: tryoutAttempt.userId,
+    },
+    tryout,
+    updatedAt: now,
   });
 
   return {

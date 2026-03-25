@@ -7,6 +7,7 @@ import {
   syncTryoutAttemptExpiry,
 } from "@repo/backend/convex/tryouts/helpers/expiry";
 import { syncTryoutAttemptAggregates } from "@repo/backend/convex/tryouts/helpers/finalize";
+import { upsertUserTryoutLatestAttempt } from "@repo/backend/convex/tryouts/helpers/latest";
 import {
   computeTryoutRawScorePercentage,
   isBetterLeaderboardScore,
@@ -22,6 +23,7 @@ import { ConvexError, v } from "convex/values";
 const TRYOUT_SCORE_PROMOTION_BATCH_SIZE = 100;
 const TRYOUT_EXPIRY_SWEEP_BATCH_SIZE = 100;
 const TRYOUT_STATS_REBUILD_BATCH_SIZE = 100;
+const TRYOUT_LATEST_ATTEMPTS_BACKFILL_BATCH_SIZE = 100;
 
 type UserTryoutStatsSnapshot = Pick<
   Doc<"userTryoutStats">,
@@ -38,6 +40,11 @@ const tryoutStatsRebuildProgressValidator = v.object({
   totalRawScore: v.number(),
   totalTheta: v.number(),
   totalTryoutsCompleted: v.number(),
+});
+
+const latestAttemptsBackfillResultValidator = v.object({
+  isDone: v.boolean(),
+  processedCount: v.number(),
 });
 
 /** Rebuilds one user's aggregate tryout stats in bounded pages. */
@@ -151,6 +158,56 @@ export const rebuildUserTryoutStats = internalMutation({
   },
 });
 
+/** Backfills the latest-attempt projection for existing tryout attempts. */
+export const backfillUserTryoutLatestAttemptsPage = internalMutation({
+  args: {
+    cursor: v.optional(v.string()),
+  },
+  returns: latestAttemptsBackfillResultValidator,
+  handler: async (ctx, args) => {
+    const page = await ctx.db
+      .query("tryoutAttempts")
+      .withIndex("by_userId_and_startedAt")
+      .paginate({
+        cursor: args.cursor ?? null,
+        numItems: TRYOUT_LATEST_ATTEMPTS_BACKFILL_BATCH_SIZE,
+      });
+
+    for (const attempt of page.page) {
+      const tryout = await ctx.db.get("tryouts", attempt.tryoutId);
+
+      if (!tryout) {
+        continue;
+      }
+
+      await upsertUserTryoutLatestAttempt(ctx, {
+        attempt: {
+          _id: attempt._id,
+          expiresAt: attempt.expiresAt,
+          status: attempt.status,
+          tryoutId: attempt.tryoutId,
+          userId: attempt.userId,
+        },
+        tryout,
+        updatedAt: attempt.lastActivityAt,
+      });
+    }
+
+    if (!page.isDone) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.tryouts.internalMutations.backfillUserTryoutLatestAttemptsPage,
+        { cursor: page.continueCursor }
+      );
+    }
+
+    return {
+      isDone: page.isDone,
+      processedCount: page.page.length,
+    };
+  },
+});
+
 /** Scheduler-safe expiry for one in-progress tryout attempt. */
 export const expireTryoutAttemptInternal = internalMutation({
   args: {
@@ -204,6 +261,16 @@ export const sweepExpiredTryoutAttempts = internalMutation({
     for (const tryoutAttempt of inProgressAttempts) {
       await syncTryoutAttemptExpiry(ctx, tryoutAttempt, now);
     }
+
+    if (inProgressAttempts.length < TRYOUT_EXPIRY_SWEEP_BATCH_SIZE) {
+      return null;
+    }
+
+    await ctx.scheduler.runAfter(
+      0,
+      internal.tryouts.internalMutations.sweepExpiredTryoutAttempts,
+      {}
+    );
 
     return null;
   },

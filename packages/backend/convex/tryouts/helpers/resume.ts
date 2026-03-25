@@ -33,7 +33,7 @@ export function resolveResumePartKey({
   orderedParts,
   partAttempts,
 }: {
-  completedPartIndices: number[];
+  completedPartIndices: Doc<"tryoutAttempts">["completedPartIndices"];
   orderedParts: Pick<Doc<"tryoutPartSets">, "partIndex" | "partKey">[];
   partAttempts: Array<{
     partKey: Doc<"tryoutPartAttempts">["partKey"];

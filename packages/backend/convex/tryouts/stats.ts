@@ -24,7 +24,7 @@ export async function syncUserTryoutStats({
   product,
   userId,
 }: {
-  cycleKey: string;
+  cycleKey: Doc<"tryouts">["cycleKey"];
   ctx: Pick<MutationCtx, "db" | "scheduler">;
   locale: Doc<"tryouts">["locale"];
   nextEntry: LeaderboardStatsEntry;
@@ -136,10 +136,11 @@ export async function syncUserTryoutStats({
     lastTryoutAt = latestEntry.completedAt;
   }
 
-  if (
+  const needsRebuild =
     (bestThetaWouldDrop && !nextBestEntry) ||
-    (lastTryoutAtWouldDrop && !latestEntry)
-  ) {
+    (lastTryoutAtWouldDrop && !latestEntry);
+
+  if (needsRebuild) {
     await ctx.scheduler.runAfter(
       0,
       internal.tryouts.internalMutations.rebuildUserTryoutStats,

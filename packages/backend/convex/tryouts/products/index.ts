@@ -58,12 +58,12 @@ type TryoutLeaderboardNamespaceArgs = Pick<
 >;
 
 export interface TryoutProductPolicy {
+  attemptWindowMs: number;
   compareTryouts: (left: TryoutRecord, right: TryoutRecord) => number;
   detectTryouts: (args: {
     locale: TryoutSetCandidate["locale"];
     sets: TryoutSetCandidate[];
   }) => DetectedTryout[];
-  getAttemptWindowMs: () => number;
   getLeaderboardNamespace: (args: TryoutLeaderboardNamespaceArgs) => string;
   getPartTimeLimitSeconds: (
     questionCount: Doc<"exerciseSets">["questionCount"]

@@ -1,9 +1,10 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
-import {
-  MAX_TRYOUT_STATUS_REQUESTS,
-  TRYOUT_STATUS_BATCH_SIZE,
-} from "@repo/backend/convex/tryouts/queries/me/constants";
+import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
+import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
+
+const MAX_TRYOUT_STATUS_REQUESTS = 100;
+
 import {
   tryoutPackageLookupValidator,
   tryoutPackageStatusValidator,
@@ -13,6 +14,8 @@ import { type Infer, v } from "convex/values";
 /** Returns the authenticated user's latest status for the requested tryout packages. */
 export const getUserTryoutPackageStatuses = query({
   args: {
+    locale: localeValidator,
+    product: tryoutProductValidator,
     tryoutPackages: v.array(tryoutPackageLookupValidator),
   },
   returns: v.array(tryoutPackageStatusValidator),
@@ -30,42 +33,31 @@ export const getUserTryoutPackageStatuses = query({
         ])
       ).values()
     ).slice(0, MAX_TRYOUT_STATUS_REQUESTS);
-    const statuses: Infer<typeof tryoutPackageStatusValidator>[] = [];
+    const statuses = await Promise.all(
+      requestedTryoutPackages.map(async ({ slug, tryoutId }) => {
+        const latestAttempt = await ctx.db
+          .query("userTryoutLatestAttempts")
+          .withIndex("by_userId_and_product_and_locale_and_tryoutId", (q) =>
+            q
+              .eq("userId", appUser._id)
+              .eq("product", args.product)
+              .eq("locale", args.locale)
+              .eq("tryoutId", tryoutId)
+          )
+          .unique();
 
-    for (
-      let startIndex = 0;
-      startIndex < requestedTryoutPackages.length;
-      startIndex += TRYOUT_STATUS_BATCH_SIZE
-    ) {
-      const packageBatch = requestedTryoutPackages.slice(
-        startIndex,
-        startIndex + TRYOUT_STATUS_BATCH_SIZE
-      );
-      const batchStatuses = await Promise.all(
-        packageBatch.map(async ({ slug, tryoutId }) => {
-          const attempt = await ctx.db
-            .query("tryoutAttempts")
-            .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
-              q.eq("userId", appUser._id).eq("tryoutId", tryoutId)
-            )
-            .order("desc")
-            .first();
+        if (!latestAttempt) {
+          return null;
+        }
 
-          if (!attempt) {
-            return null;
-          }
+        return {
+          expiresAtMs: latestAttempt.expiresAtMs,
+          slug,
+          status: latestAttempt.status,
+        } satisfies Infer<typeof tryoutPackageStatusValidator>;
+      })
+    );
 
-          return {
-            expiresAtMs: attempt.expiresAt,
-            slug,
-            status: attempt.status,
-          };
-        })
-      );
-
-      statuses.push(...batchStatuses.filter((status) => status !== null));
-    }
-
-    return statuses;
+    return statuses.filter((status) => status !== null);
   },
 });
