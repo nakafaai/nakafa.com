@@ -1,4 +1,3 @@
-import { generateSlugOnlyParams } from "@repo/contents/_lib/static-params";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import type { NextRequest } from "next/server";
@@ -6,12 +5,11 @@ import { hasLocale, type Locale } from "next-intl";
 import { generateOGImage } from "@/app/[locale]/og/[...slug]/og";
 import { getMetadataFromSlug } from "@/lib/utils/system";
 
-export const revalidate = false;
+export const dynamic = "force-static";
+export const revalidate = 3600;
 
 export function generateStaticParams() {
-  return generateSlugOnlyParams({
-    includeOGVariants: true,
-  });
+  return [];
 }
 
 export async function GET(

@@ -6,7 +6,6 @@ import {
 } from "@repo/contents/_lib/exercises/material";
 import { getContentMetadataWithRaw } from "@repo/contents/_lib/metadata";
 import { getAllSurah, getSurah, getSurahName } from "@repo/contents/_lib/quran";
-import { generateSlugOnlyParams } from "@repo/contents/_lib/static-params";
 import { ExercisesCategorySchema } from "@repo/contents/_types/exercises/category";
 import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
 import { ExercisesTypeSchema } from "@repo/contents/_types/exercises/type";
@@ -19,7 +18,8 @@ import { getRawGithubUrl } from "@/lib/utils/github";
 
 const BASE_URL = "https://nakafa.com";
 
-export const revalidate = false;
+export const dynamic = "force-static";
+export const revalidate = 3600;
 
 export async function GET(
   _req: NextRequest,
@@ -386,9 +386,5 @@ function buildMdxResponse({
 }
 
 export function generateStaticParams() {
-  return generateSlugOnlyParams({
-    includeQuran: true,
-    includeExerciseSets: true,
-    includeExerciseNumbers: true,
-  });
+  return [];
 }
