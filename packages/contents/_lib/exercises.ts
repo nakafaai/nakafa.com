@@ -1,6 +1,7 @@
 import { promises as fsPromises } from "node:fs";
 import nodePath from "node:path";
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
+import { getContent } from "@repo/contents/_lib/content";
 import { getFolderChildNames } from "@repo/contents/_lib/fs";
 import { getContentMetadataWithRaw } from "@repo/contents/_lib/metadata";
 import { resolveContentsDir } from "@repo/contents/_lib/root";
@@ -27,6 +28,14 @@ const CHOICES_REGEX =
 const NUMBER_REGEX = /^\d+$/;
 const EXERCISE_CONTENT_SEGMENTS = new Set(["_question", "_answer"]);
 
+/**
+ * Loads one exercise content fragment, either as raw metadata or full MDX.
+ *
+ * @param locale - Locale used to resolve the exercise content file
+ * @param filePath - Exercise question or answer path relative to `packages/contents`
+ * @param includeMDX - Whether to return the compiled MDX element as well
+ * @returns Promise resolving to content metadata, raw source, and optional MDX
+ */
 async function loadExerciseContent(
   locale: Locale,
   filePath: string,
@@ -40,7 +49,6 @@ async function loadExerciseContent(
     return await Effect.runPromise(getContentMetadataWithRaw(locale, filePath));
   }
 
-  const { getContent } = await import("@repo/contents/_lib/content");
   return await Effect.runPromise(getContent(locale, filePath, { includeMDX }));
 }
 
@@ -170,7 +178,12 @@ export function getExercisesContent(
 
     const exercises = yield* Effect.all(
       sortedQuestionNumbers.map((numberStr: string) =>
-        loadExercise(numberStr, cleanPath, locale, includeMDX)
+        loadExercise(
+          Number.parseInt(numberStr, 10),
+          cleanPath,
+          locale,
+          includeMDX
+        )
       )
     );
 
@@ -232,8 +245,17 @@ function getRawChoices(
   });
 }
 
+/**
+ * Loads a single exercise entry from its numbered folder.
+ *
+ * @param exerciseNumber - Exercise number within the set
+ * @param cleanPath - Normalized exercise-set path relative to `packages/contents`
+ * @param locale - Locale used to load the question and answer content
+ * @param includeMDX - Whether to include compiled MDX elements in the result
+ * @returns Effect that resolves to an exercise or `Option.none()` when incomplete
+ */
 function loadExercise(
-  numberStr: string,
+  exerciseNumber: number,
   cleanPath: string,
   locale: Locale,
   includeMDX: boolean
@@ -242,14 +264,9 @@ function loadExercise(
   ExerciseLoadError | ChoicesValidationError
 > {
   return Effect.gen(function* () {
-    const number = Number.parseInt(numberStr, 10);
-    if (Number.isNaN(number)) {
-      return Option.none();
-    }
-
-    const questionPath = `${cleanPath}/${numberStr}/_question`;
-    const answerPath = `${cleanPath}/${numberStr}/_answer`;
-    const choicesPath = `${cleanPath}/${numberStr}/choices.ts`;
+    const questionPath = `${cleanPath}/${exerciseNumber}/_question`;
+    const answerPath = `${cleanPath}/${exerciseNumber}/_answer`;
+    const choicesPath = `${cleanPath}/${exerciseNumber}/choices.ts`;
 
     const [questionContent, answerContent, choicesData] = yield* Effect.all(
       [
@@ -279,7 +296,7 @@ function loadExercise(
     }
 
     return Option.some({
-      number,
+      number: exerciseNumber,
       choices: choicesData,
       question: {
         metadata: questionContent.metadata,
