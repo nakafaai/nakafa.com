@@ -1,8 +1,4 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import {
-  IRT_OPERATIONAL_THETA_MAX,
-  IRT_OPERATIONAL_THETA_MIN,
-} from "@repo/backend/convex/irt/policy";
 import { getSubjects } from "@repo/contents/exercises/high-school/_data/subject";
 import { ConvexError } from "convex/values";
 import type { DetectedTryout, TryoutProductPolicy } from ".";
@@ -15,6 +11,8 @@ const SNBT_ATTEMPT_WINDOW_DAYS = 3;
 const SNBT_SIMULATION_SECONDS_PER_QUESTION = 90;
 const SNBT_REPORT_SCORE_MIN = 100;
 const SNBT_REPORT_SCORE_MAX = 1000;
+const SNBT_REPORT_THETA_MIN = -4;
+const SNBT_REPORT_THETA_MAX = 4;
 const YEARFUL_TRYOUT_SET_SLUG_REGEX =
   /^exercises\/[^/]+\/[^/]+\/[^/]+\/try-out\/(\d{4})\/[^/]+$/;
 
@@ -55,15 +53,20 @@ function compareSnbtTryouts(
 /**
  * Map the bounded operational theta estimate onto SNBT's public 100-1000
  * report-score scale.
+ *
+ * The public score intentionally stays anchored to `[-4, 4]` even though the
+ * estimator now integrates over a slightly wider interval. That keeps the user-
+ * facing score range stable while letting latent-theta estimation breathe more
+ * at the tails.
  */
 function scaleSnbtThetaToScore(theta: Doc<"tryoutAttempts">["theta"]) {
   const boundedTheta = Math.max(
-    IRT_OPERATIONAL_THETA_MIN,
-    Math.min(IRT_OPERATIONAL_THETA_MAX, theta)
+    SNBT_REPORT_THETA_MIN,
+    Math.min(SNBT_REPORT_THETA_MAX, theta)
   );
   const normalizedTheta =
-    (boundedTheta - IRT_OPERATIONAL_THETA_MIN) /
-    (IRT_OPERATIONAL_THETA_MAX - IRT_OPERATIONAL_THETA_MIN);
+    (boundedTheta - SNBT_REPORT_THETA_MIN) /
+    (SNBT_REPORT_THETA_MAX - SNBT_REPORT_THETA_MIN);
   const scaledScore =
     SNBT_REPORT_SCORE_MIN +
     normalizedTheta * (SNBT_REPORT_SCORE_MAX - SNBT_REPORT_SCORE_MIN);

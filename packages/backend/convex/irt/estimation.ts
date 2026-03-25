@@ -1,6 +1,7 @@
 import {
-  IRT_OPERATIONAL_THETA_MAX,
-  IRT_OPERATIONAL_THETA_MIN,
+  IRT_ESTIMATION_THETA_MAX,
+  IRT_ESTIMATION_THETA_MIN,
+  IRT_ESTIMATION_THETA_POINTS,
 } from "@repo/backend/convex/irt/policy";
 
 /**
@@ -8,8 +9,8 @@ import {
  *
  * These routines intentionally favor stable, bounded scoring over mathematically
  * ambitious optimization. The current production scoring path uses a fixed EAP
- * grid on `[-4, 4]`, which keeps ability estimation deterministic and easy to
- * reason about during Convex reads and tryout finalization.
+ * grid on a wider operational interval so extreme response patterns are less
+ * likely to clip against the integration boundary during tryout finalization.
  */
 
 export interface ItemParameters {
@@ -22,9 +23,9 @@ export interface Response {
   params: ItemParameters;
 }
 
-const THETA_MIN = IRT_OPERATIONAL_THETA_MIN;
-const THETA_MAX = IRT_OPERATIONAL_THETA_MAX;
-const THETA_POINTS = 41;
+const THETA_MIN = IRT_ESTIMATION_THETA_MIN;
+const THETA_MAX = IRT_ESTIMATION_THETA_MAX;
+const THETA_POINTS = IRT_ESTIMATION_THETA_POINTS;
 const THETA_GRID = getThetaGrid();
 
 /** Build the fixed theta grid used by every EAP integration pass. */

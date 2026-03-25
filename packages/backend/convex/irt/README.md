@@ -16,6 +16,12 @@ parts we can support with public sources.
   expert psychometric software. The `TAM` documentation shows `2PL`
   calibration and returns `EAP` / `SD.EAP` person estimates:
   https://search.r-project.org/CRAN/refmans/TAM/html/tam.mml.html
+- Bock and Mislevy (1982) is the classic journal reference for `EAP` ability
+  estimation in operational settings:
+  https://doi.org/10.1177/014662168200600405
+- Chalmers (2012) documents `mirt`, a widely used IRT package that also scores
+  with bounded quadrature and exposes configurable `theta_lim` support for EAP:
+  https://doi.org/10.18637/jss.v048.i06
 - Missing-response handling in timed tests is not governed by one universal
   rule. ETS explicitly notes that the mechanism producing missingness must be
   considered for valid inference:
@@ -55,6 +61,9 @@ parts we can support with public sources.
   estimating student theta from a frozen tryout scale
 - Calibration still uses only observed responses from `completed` simulation set
   attempts; unanswered items are not synthesized into the calibration dataset
+- Operational EAP now integrates over `[-6, 6]` with `61` equally spaced nodes,
+  while the public SNBT report score remains a separate `100-1000` transform
+  anchored to `[-4, 4]`
 
 ## Missing-Response Policy
 
@@ -70,6 +79,22 @@ Nakafa currently uses this split policy:
 This is a documented operational choice, not a claim of universal psychometric
 optimality. It matches a public pattern used in large-scale assessment and is
 easier to reason about than silently ignoring blanks in student scoring.
+
+## Theta Bounds And Reporting
+
+- **Estimation support**: Nakafa integrates EAP over `[-6, 6]` with `61` nodes.
+  This follows the general operational practice of bounded quadrature while
+  giving the posterior more tail room than the previous `[-4, 4]` support.
+- **Public report scale**: Nakafa separately maps theta to the user-facing
+  `100-1000` SNBT score using `[-4, 4]` as the reporting anchors.
+
+This separation is intentional:
+
+- the wider estimation support is a psychometric/numerical choice
+- the public `100-1000` score is a product reporting choice
+
+Separating them does not change the underlying IRT model. It only avoids tying
+the public score anchors to the exact quadrature support chosen for EAP.
 
 What this policy does **not** claim:
 

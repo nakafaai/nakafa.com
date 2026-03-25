@@ -4,11 +4,18 @@
 export const IRT_OPERATIONAL_MODEL = "2pl";
 
 /**
- * Shared bounded theta support used by operational EAP scoring and any public
- * report-score transforms built on top of it.
+ * Bounded theta support used by operational EAP estimation.
+ *
+ * Operational IRT software commonly integrates EAP over a finite interval.
+ * Nakafa keeps the estimator support wider than the public report-score anchor
+ * so the latent ability estimate has more room at the tails without forcing the
+ * public score scale to change shape.
  */
-export const IRT_OPERATIONAL_THETA_MIN = -4;
-export const IRT_OPERATIONAL_THETA_MAX = 4;
+export const IRT_ESTIMATION_THETA_MIN = -6;
+export const IRT_ESTIMATION_THETA_MAX = 6;
+
+/** Number of equally spaced quadrature nodes used by the bounded EAP pass. */
+export const IRT_ESTIMATION_THETA_POINTS = 61;
 
 /**
  * Conservative minimum scored responses required before an item is promoted to
