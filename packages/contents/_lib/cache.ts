@@ -1,13 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { resolveContentsDir } from "@repo/contents/_lib/root";
 import { routing } from "@repo/internationalization/src/routing";
 import { Option } from "effect";
 import type { Locale } from "next-intl";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const contentsDir = path.join(__dirname, "..");
+const contentsDir = resolveContentsDir(import.meta.url);
 const MDX_EXTENSION = ".mdx";
 
 type FilePath = string;

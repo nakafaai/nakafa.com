@@ -16,6 +16,19 @@ let nextConfig: NextConfig = {
   // `process.cwd()` resolves to the app directory (`apps/www`) during Next.js
   // config loading, so walking up two levels targets the monorepo root.
   outputFileTracingRoot: path.join(process.cwd(), "../.."),
+  outputFileTracingIncludes: {
+    "/llms.mdx/\\[\\.\\.\\.slug\\]": [
+      "../../packages/contents/{articles,exercises,subject,_data}/**/*",
+    ],
+    "/og/\\[\\.\\.\\.slug\\]": [
+      "../../packages/contents/{articles,exercises,subject,_data}/**/*",
+    ],
+    "/\\[locale\\]/og/\\[\\.\\.\\.slug\\]": [
+      "../../packages/contents/{articles,exercises,subject,_data}/**/*",
+    ],
+    "/\\[locale\\]/exercises/\\[category\\]/\\[type\\]/\\[material\\]/\\[\\.\\.\\.slug\\]":
+      ["../../packages/contents/{articles,exercises,subject,_data}/**/*"],
+  },
   serverExternalPackages: [
     ...(config.serverExternalPackages ?? []),
     "@takumi-rs/image-response",

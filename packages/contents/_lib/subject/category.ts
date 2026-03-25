@@ -8,18 +8,20 @@ import {
 import type { SubjectCategory } from "@repo/contents/_types/subject/category";
 
 /**
- * Gets the path to the category of the subject.
- * @param category - The category to get the path for.
- * @returns The path to the category.
+ * Builds the public path for a subject category page.
+ *
+ * @param category - Subject category slug
+ * @returns Canonical category path
  */
 export function getCategoryPath(category: SubjectCategory) {
   return `/subject/${category}` as const;
 }
 
 /**
- * Gets the icon for the category of the subject.
- * @param category - The category to get the icon for.
- * @returns The icon for the category.
+ * Resolves the icon used for a subject category.
+ *
+ * @param category - Subject category slug
+ * @returns Hugeicons icon for the category
  */
 export function getCategoryIcon(category: SubjectCategory) {
   switch (category) {

@@ -7,7 +7,10 @@ import {
   getMaterialPath,
   getMaterials,
 } from "@repo/contents/_lib/exercises/material";
-import { getSlugPath } from "@repo/contents/_lib/exercises/slug";
+import {
+  getSlugPath,
+  isTryOutCollectionSlug,
+} from "@repo/contents/_lib/exercises/slug";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
 import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
@@ -142,7 +145,10 @@ export function fetchExerciseMetadataContext({
   return Effect.gen(function* () {
     const materialPath = getMaterialPath(category, type, material);
     const lastSlug = slug.at(-1);
-    const isSpecificExercise = lastSlug && isNumber(lastSlug);
+    const isSpecificExercise =
+      lastSlug !== undefined &&
+      isNumber(lastSlug) &&
+      !isTryOutCollectionSlug(slug);
 
     const baseSlug = isSpecificExercise ? slug.slice(0, -1) : slug;
     const FilePath = getSlugPath(category, type, material, slug);

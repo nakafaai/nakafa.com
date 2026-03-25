@@ -1,8 +1,12 @@
 import { promises as fsPromises } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import { extractMetadata } from "@repo/contents/_lib/metadata";
+import {
+  importContentModule,
+  importReferencesModule,
+} from "@repo/contents/_lib/module";
+import { resolveContentsDir } from "@repo/contents/_lib/root";
 import {
   FileReadError,
   GitHubFetchError,
@@ -24,9 +28,7 @@ import { Effect, Either, Option } from "effect";
 import ky from "ky";
 import { createElement } from "react";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const contentsDir = path.dirname(__dirname);
+const contentsDir = resolveContentsDir(import.meta.url);
 
 /**
  * Validates that a file path is safe and doesn't escape the base directory.
@@ -109,6 +111,9 @@ function getRawContent(
   });
 }
 
+/**
+ * Optional filters and loading behavior for content list queries.
+ */
 export interface ContentOptions {
   basePath?: string;
   includeMDX?: boolean;
@@ -151,7 +156,7 @@ export function getContent(
       const raw = yield* getRawContent(contentPath);
 
       const contentModule = yield* Effect.tryPromise({
-        try: () => import(`@repo/contents/${cleanPath}/${locale}.mdx`),
+        try: () => importContentModule(cleanPath, locale),
         catch: (error: unknown) =>
           new ModuleLoadError({
             path: `@repo/contents/${cleanPath}/${locale}.mdx`,
@@ -160,10 +165,13 @@ export function getContent(
       });
 
       const parsedMetadata = yield* parseModuleMetadata(contentModule).pipe(
-        Effect.mapError((error) => ({
-          ...error,
-          path: `@repo/contents/${cleanPath}/${locale}.mdx`,
-        }))
+        Effect.mapError(
+          (error) =>
+            new MetadataParseError({
+              path: `@repo/contents/${cleanPath}/${locale}.mdx`,
+              reason: error.reason,
+            })
+        )
       );
 
       return {
@@ -256,11 +264,10 @@ export function getContents(
 }
 
 /**
- * Parses metadata from a loaded module using Zod schema.
- * Pure function - doesn't require path for error context.
+ * Parses and validates the `metadata` export from a dynamically imported module.
  *
- * @param module - The module object to parse metadata from
- * @returns Effect that resolves to parsed metadata, or fails with MetadataParseError
+ * @param module - Module namespace object returned by a dynamic import
+ * @returns Effect that resolves to validated metadata or fails with parse details
  */
 export function parseModuleMetadata(
   module: unknown
@@ -291,10 +298,10 @@ export function parseModuleMetadata(
 }
 
 /**
- * Parses raw references using Zod schema for type safety.
+ * Parses a raw references array with schema validation.
  *
- * @param rawReferences - The raw references array to parse
- * @returns Effect that resolves to a parsed array of Reference objects
+ * @param rawReferences - Untrusted references payload from a module export
+ * @returns Effect that resolves to validated references
  */
 export function parseReferences(
   rawReferences: unknown[]
@@ -309,13 +316,10 @@ export function parseReferences(
 }
 
 /**
- * Safely extracts references from an unknown module object.
+ * Safely extracts the raw `references` export from a module namespace.
  *
- * This function handles the unsafe `any` type from dynamic imports by validating
- * that the module has a `references` property that is an array.
- *
- * @param module - The dynamically imported module object
- * @returns An array of references (may be empty)
+ * @param module - Module namespace returned by dynamic import
+ * @returns Raw references array or an empty array when unavailable
  */
 export function extractReferences(module: unknown): unknown[] {
   if (typeof module === "object" && module !== null && "references" in module) {
@@ -343,9 +347,8 @@ export function extractReferences(module: unknown): unknown[] {
 export function getReferences(filePath: string): Effect.Effect<Reference[]> {
   return Effect.gen(function* () {
     const cleanPath = cleanSlug(filePath);
-    const refPath = `${cleanPath}/ref`;
     const refModule = yield* Effect.tryPromise({
-      try: () => import(`@repo/contents/${refPath}.ts`),
+      try: () => importReferencesModule(cleanPath),
       catch: () => new Error("Failed to load references"),
     });
 

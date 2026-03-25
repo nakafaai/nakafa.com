@@ -16,14 +16,13 @@ const VERSE_COUNT = 286;
 const JUZ_COUNT = 30;
 
 /**
- * Get a surah by its id, id is 1-114
- * @param id - The id of the surah
- * @returns Effect that resolves to the surah, or fails with SurahNotFoundError
+ * Retrieves a surah by its 1-based number.
+ *
+ * @param id - Surah number in the inclusive range `1..114`
+ * @returns Effect that resolves to the validated surah or fails when missing
  */
-export const getSurah = (
-  id: number
-): Effect.Effect<Surah, SurahNotFoundError> =>
-  Effect.gen(function* () {
+export function getSurah(id: number): Effect.Effect<Surah, SurahNotFoundError> {
+  return Effect.gen(function* () {
     if (id < 1 || id > SURAH_COUNT) {
       return yield* Effect.fail(new SurahNotFoundError({ surahNumber: id }));
     }
@@ -36,40 +35,46 @@ export const getSurah = (
 
     return result.data;
   });
+}
 
 /**
- * Validates and extracts surah data without verses for memory efficiency.
- * Uses schema validation to ensure data integrity.
+ * Validates a surah value and strips its verses for lightweight listing usage.
  *
  * @param surah - Unknown data to validate
- * @returns Validated surah data without verses as Option
+ * @returns Validated surah metadata without verses when parsing succeeds
  *
  * @example
  * ```ts
  * const surahData = validateSurahWithoutVerses(rawData);
  * ```
  */
-export const validateSurahWithoutVerses = (
+export function validateSurahWithoutVerses(
   surah: unknown
-): Option.Option<Omit<Surah, "verses">> =>
-  Option.fromNullable(SurahSchema.omit({ verses: true }).safeParse(surah).data);
+): Option.Option<Omit<Surah, "verses">> {
+  return Option.fromNullable(
+    SurahSchema.omit({ verses: true }).safeParse(surah).data
+  );
+}
 
 /**
- * Get all surahs without verses to reduce memory usage
- * @returns All surahs without verses
+ * Returns all validated surahs without verse payloads.
+ *
+ * @returns Lightweight surah list for indexes and navigation UIs
  */
-export const getAllSurah = (): Omit<Surah, "verses">[] =>
-  quran
+export function getAllSurah(): Omit<Surah, "verses">[] {
+  return quran
     .map(validateSurahWithoutVerses)
     .filter(Option.isSome)
     .map((option) => option.value);
+}
 
 /**
- * Get all verses by juz, juz is 1-30
- * @param juz - The juz to get the verses for
- * @returns The verses for the juz
+ * Returns all verses that belong to a juz.
+ *
+ * @param juz - Juz number in the inclusive range `1..30`
+ * @returns All verses in the juz, or an empty array for invalid input
  */
-export const getVersesByJuz = (juz: number): Verse[] => {
+export function getVersesByJuz(juz: number): Verse[] {
   if (juz < 1 || juz > JUZ_COUNT) {
     return [];
   }
@@ -77,22 +82,23 @@ export const getVersesByJuz = (juz: number): Verse[] => {
   return quran
     .flatMap((surah) => surah.verses)
     .filter((verse) => verse.meta.juz === juz);
-};
+}
 
 /**
- * Get a verse by surah and verse number
- * @param surah - The surah to get the verse for, surah is 1-114
- * @param verse - The verse number to get, verse is 1-286
- * @returns Effect that resolves to the verse, or fails with SurahNotFoundError or VerseNotFoundError
+ * Retrieves a verse by surah number and verse number.
+ *
+ * @param surah - Surah number in the inclusive range `1..114`
+ * @param verse - Verse number validated against the selected surah
+ * @returns Effect that resolves to the verse or fails with a not-found error
  */
-export const getVerseBySurah = ({
+export function getVerseBySurah({
   surah: surahNum,
   verse: verseNum,
 }: {
   surah: number;
   verse: number;
-}): Effect.Effect<Verse, SurahNotFoundError | VerseNotFoundError> =>
-  Effect.gen(function* () {
+}): Effect.Effect<Verse, SurahNotFoundError | VerseNotFoundError> {
+  return Effect.gen(function* () {
     if (surahNum < 1 || surahNum > SURAH_COUNT) {
       return yield* Effect.fail(
         new SurahNotFoundError({ surahNumber: surahNum })
@@ -122,21 +128,26 @@ export const getVerseBySurah = ({
 
     return verse;
   });
+}
 
 /**
- * Get the name of a surah in a given locale
- * @param locale - The locale to get the name in
- * @param name - The surah name object
- * @returns The name of the surah in the given locale
+ * Resolves the most appropriate localized surah name for a locale.
+ *
+ * The transliteration is preferred first, then the translation, and finally the
+ * long Arabic-derived name if no localized variant exists.
+ *
+ * @param locale - Locale used to select the display name
+ * @param name - Surah name payload from Quran data
+ * @returns Best available name for the requested locale
  */
-export const getSurahName = ({
+export function getSurahName({
   locale,
   name,
 }: {
   locale: Locale;
   name: Surah["name"];
-}): string =>
-  pipe(
+}): string {
+  return pipe(
     Object.entries(name.transliteration).find(([key]) => key === locale),
     Option.fromNullable,
     Option.map(([, value]) => value),
@@ -149,3 +160,4 @@ export const getSurahName = ({
     ),
     Option.getOrElse(() => name.long)
   );
+}

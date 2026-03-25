@@ -1,7 +1,7 @@
 import { promises as fsPromises } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
+import { resolveContentsDir } from "@repo/contents/_lib/root";
 import {
   FileReadError,
   InvalidPathError,
@@ -15,11 +15,12 @@ import {
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, Option } from "effect";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const contentsDir = path.dirname(__dirname);
+const contentsDir = resolveContentsDir(import.meta.url);
 const METADATA_REGEX = /export const metadata\s*=\s*({[\s\S]*?});/;
 
+/**
+ * Metadata summary for a content entry without loading its MDX component.
+ */
 export interface ContentMetadataListItem {
   locale: Locale;
   metadata: ContentMetadata;
@@ -27,13 +28,19 @@ export interface ContentMetadataListItem {
   url: string;
 }
 
+/**
+ * Parsed metadata bundled together with the original raw MDX source.
+ */
 export interface ContentMetadataWithRaw {
   metadata: ContentMetadata;
   raw: string;
 }
 
 /**
- * Extract metadata from raw MDX content.
+ * Extracts and validates the `metadata` export from raw MDX source.
+ *
+ * @param rawContent - Raw MDX file contents including the metadata export
+ * @returns Parsed metadata when present and valid, otherwise `Option.none()`
  */
 export function extractMetadata(
   rawContent: string
@@ -53,7 +60,11 @@ export function extractMetadata(
 }
 
 /**
- * Read metadata for a single content file without loading its MDX component.
+ * Reads metadata for one localized content file without importing the MDX module.
+ *
+ * @param filePath - Content slug relative to `packages/contents`
+ * @param locale - Locale of the MDX file to read
+ * @returns Effect that resolves to validated metadata from the target file
  */
 export function getContentMetadata(
   filePath: string,
@@ -99,7 +110,11 @@ export function getContentMetadata(
 }
 
 /**
- * Read raw content and metadata without loading the MDX component module.
+ * Reads raw MDX source together with its parsed metadata.
+ *
+ * @param locale - Locale of the MDX file to read
+ * @param filePath - Content slug relative to `packages/contents`
+ * @returns Effect that resolves to metadata plus the original raw MDX text
  */
 export function getContentMetadataWithRaw(
   locale: Locale,
@@ -148,7 +163,10 @@ export function getContentMetadataWithRaw(
 }
 
 /**
- * List content metadata and URLs without loading MDX components.
+ * Lists metadata and canonical URLs for matching content entries.
+ *
+ * @param options - Optional locale and base-path filters
+ * @returns Effect that resolves to metadata summaries for matching content
  */
 export function getContentsMetadata(
   options: { basePath?: string; locale?: Locale } = {}

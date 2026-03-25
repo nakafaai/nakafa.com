@@ -1,9 +1,10 @@
 import { promises as fsPromises } from "node:fs";
 import nodePath from "node:path";
-import { fileURLToPath } from "node:url";
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
+import { getContent } from "@repo/contents/_lib/content";
 import { getFolderChildNames } from "@repo/contents/_lib/fs";
 import { getContentMetadataWithRaw } from "@repo/contents/_lib/metadata";
+import { resolveContentsDir } from "@repo/contents/_lib/root";
 import {
   type ChoicesValidationError,
   ExerciseLoadError,
@@ -19,15 +20,22 @@ import { Effect, Option } from "effect";
 import ky from "ky";
 import type React from "react";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = nodePath.dirname(__filename);
-const contentsDir = nodePath.dirname(__dirname);
+const contentsDir = resolveContentsDir(import.meta.url);
 
 const CHOICES_REGEX =
   /const\s+choices\s*(?::\s*ExercisesChoices\s*)?=\s*({[\s\S]*?});/;
 
 const NUMBER_REGEX = /^\d+$/;
+const EXERCISE_CONTENT_SEGMENTS = new Set(["_question", "_answer"]);
 
+/**
+ * Loads one exercise content fragment, either as raw metadata or full MDX.
+ *
+ * @param locale - Locale used to resolve the exercise content file
+ * @param filePath - Exercise question or answer path relative to `packages/contents`
+ * @param includeMDX - Whether to return the compiled MDX element as well
+ * @returns Promise resolving to content metadata, raw source, and optional MDX
+ */
 async function loadExerciseContent(
   locale: Locale,
   filePath: string,
@@ -41,7 +49,6 @@ async function loadExerciseContent(
     return await Effect.runPromise(getContentMetadataWithRaw(locale, filePath));
   }
 
-  const { getContent } = await import("@repo/contents/_lib/content");
   return await Effect.runPromise(getContent(locale, filePath, { includeMDX }));
 }
 
@@ -79,10 +86,55 @@ export function getExerciseCount(filePath: string): Effect.Effect<number> {
   });
 }
 
+/**
+ * Options for loading an exercise set from the contents package.
+ */
 export interface ExerciseContentOptions {
   filePath: string;
   includeMDX?: boolean;
   locale: Locale;
+}
+
+/**
+ * Extracts direct exercise numbers for a specific exercise set path.
+ *
+ * Exercise content is stored under numbered folders such as
+ * `set-1/1/_question` and `set-1/1/_answer`. This helper only accepts direct
+ * number segments followed by `_question` or `_answer`, so collection routes
+ * like `try-out/2026` are not misclassified as exercise pages.
+ *
+ * @param slugs - Cached MDX slugs for a locale
+ * @param filePath - Exercise set path relative to `packages/contents`
+ * @returns Sorted list of unique exercise numbers found under the set path
+ */
+export function getExerciseQuestionNumbers(
+  slugs: readonly string[],
+  filePath: string
+): string[] {
+  const cleanPath = cleanSlug(filePath);
+  const exercisePathPrefix = cleanPath === "" ? "" : `${cleanPath}/`;
+  const questionNumbers = new Set<string>();
+
+  for (const slug of slugs) {
+    if (!slug.startsWith(exercisePathPrefix)) {
+      continue;
+    }
+
+    const remainingPath = slug.slice(exercisePathPrefix.length);
+    const pathParts = remainingPath.split("/");
+
+    if (
+      pathParts.length >= 2 &&
+      NUMBER_REGEX.test(pathParts[0]) &&
+      EXERCISE_CONTENT_SEGMENTS.has(pathParts[1])
+    ) {
+      questionNumbers.add(pathParts[0]);
+    }
+  }
+
+  return Array.from(questionNumbers).sort(
+    (a: string, b: string) => Number.parseInt(a, 10) - Number.parseInt(b, 10)
+  );
 }
 
 /**
@@ -115,33 +167,18 @@ export function getExercisesContent(
 
     const allSlugs = getMDXSlugsForLocale(locale);
 
-    const exercisePathPrefix = cleanPath === "" ? "" : `${cleanPath}/`;
-    const questionNumbers = new Set<string>();
+    const sortedQuestionNumbers = getExerciseQuestionNumbers(
+      allSlugs,
+      cleanPath
+    );
 
-    for (const slug of allSlugs) {
-      if (!slug.startsWith(exercisePathPrefix)) {
-        continue;
-      }
-
-      const remainingPath = slug.slice(exercisePathPrefix.length);
-      const pathParts = remainingPath.split("/");
-
-      if (pathParts.length >= 1 && NUMBER_REGEX.test(pathParts[0])) {
-        questionNumbers.add(pathParts[0]);
-      }
-    }
-
-    if (questionNumbers.size === 0) {
+    if (sortedQuestionNumbers.length === 0) {
       return [];
     }
 
-    const sortedQuestionNumbers = Array.from(questionNumbers).sort(
-      (a: string, b: string) => Number.parseInt(a, 10) - Number.parseInt(b, 10)
-    );
-
     const exercises = yield* Effect.all(
-      sortedQuestionNumbers.map((numberStr: string) =>
-        loadExercise(numberStr, cleanPath, locale, includeMDX)
+      sortedQuestionNumbers.map((numberSegment: string) =>
+        loadExercise(numberSegment, cleanPath, locale, includeMDX)
       )
     );
 
@@ -203,8 +240,17 @@ function getRawChoices(
   });
 }
 
+/**
+ * Loads a single exercise entry from its numbered folder.
+ *
+ * @param exerciseNumberSegment - Folder name for the exercise within the set
+ * @param cleanPath - Normalized exercise-set path relative to `packages/contents`
+ * @param locale - Locale used to load the question and answer content
+ * @param includeMDX - Whether to include compiled MDX elements in the result
+ * @returns Effect that resolves to an exercise or `Option.none()` when incomplete
+ */
 function loadExercise(
-  numberStr: string,
+  exerciseNumberSegment: string,
   cleanPath: string,
   locale: Locale,
   includeMDX: boolean
@@ -213,14 +259,11 @@ function loadExercise(
   ExerciseLoadError | ChoicesValidationError
 > {
   return Effect.gen(function* () {
-    const number = Number.parseInt(numberStr, 10);
-    if (Number.isNaN(number)) {
-      return Option.none();
-    }
+    const exerciseNumber = Number.parseInt(exerciseNumberSegment, 10);
 
-    const questionPath = `${cleanPath}/${numberStr}/_question`;
-    const answerPath = `${cleanPath}/${numberStr}/_answer`;
-    const choicesPath = `${cleanPath}/${numberStr}/choices.ts`;
+    const questionPath = `${cleanPath}/${exerciseNumberSegment}/_question`;
+    const answerPath = `${cleanPath}/${exerciseNumberSegment}/_answer`;
+    const choicesPath = `${cleanPath}/${exerciseNumberSegment}/choices.ts`;
 
     const [questionContent, answerContent, choicesData] = yield* Effect.all(
       [
@@ -250,7 +293,7 @@ function loadExercise(
     }
 
     return Option.some({
-      number,
+      number: exerciseNumber,
       choices: choicesData,
       question: {
         metadata: questionContent.metadata,

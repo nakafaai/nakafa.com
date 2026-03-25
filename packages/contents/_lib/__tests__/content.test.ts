@@ -8,17 +8,32 @@ import {
   validatePath,
 } from "@repo/contents/_lib/content";
 import { getContentMetadata } from "@repo/contents/_lib/metadata";
-import { InvalidPathError } from "@repo/contents/_shared/error";
+import {
+  InvalidPathError,
+  MetadataParseError,
+} from "@repo/contents/_shared/error";
+import {
+  ContentMetadataSchema,
+  ReferenceSchema,
+} from "@repo/contents/_types/content";
 import { Effect } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockReadFile, mockFsAccess, mockKyGet, mockGetMDXSlugsForLocale } =
-  vi.hoisted(() => ({
-    mockReadFile: vi.fn(),
-    mockFsAccess: vi.fn(),
-    mockKyGet: vi.fn(),
-    mockGetMDXSlugsForLocale: vi.fn(),
-  }));
+const {
+  mockReadFile,
+  mockFsAccess,
+  mockKyGet,
+  mockGetMDXSlugsForLocale,
+  mockImportContentModule,
+  mockImportReferencesModule,
+} = vi.hoisted(() => ({
+  mockReadFile: vi.fn(),
+  mockFsAccess: vi.fn(),
+  mockKyGet: vi.fn(),
+  mockGetMDXSlugsForLocale: vi.fn(),
+  mockImportContentModule: vi.fn(),
+  mockImportReferencesModule: vi.fn(),
+}));
 
 vi.mock("node:fs", async (importOriginal) => {
   const actual = await importOriginal<typeof import("node:fs")>();
@@ -42,6 +57,11 @@ vi.mock("ky", () => ({
 
 vi.mock("@repo/contents/_lib/cache", () => ({
   getMDXSlugsForLocale: mockGetMDXSlugsForLocale,
+}));
+
+vi.mock("@repo/contents/_lib/module", () => ({
+  importContentModule: mockImportContentModule,
+  importReferencesModule: mockImportReferencesModule,
 }));
 
 vi.mock(
@@ -87,18 +107,26 @@ vi.mock("@repo/contents/test/sub2/en.mdx", () => ({
   default: () => "Sub2 MDX Content",
 }));
 
-import type { Locale } from "next-intl";
+vi.mock("@repo/contents/test-invalid-module/en.mdx", () => ({
+  metadata: {
+    title: "Broken",
+  },
+  default: () => "Broken MDX Content",
+}));
 
 beforeEach(() => {
   mockReadFile.mockResolvedValue("");
   mockFsAccess.mockResolvedValue(undefined);
   mockKyGet.mockRejectedValue(new Error("Network error"));
   mockGetMDXSlugsForLocale.mockReturnValue([]);
+  mockImportContentModule.mockRejectedValue(new Error("Module not found"));
+  mockImportReferencesModule.mockRejectedValue(new Error("Module not found"));
 });
 
 afterEach(() => {
   vi.clearAllMocks();
   mockReadFile.mockReset();
+  vi.restoreAllMocks();
 });
 
 describe("getContentMetadata", () => {
@@ -597,32 +625,19 @@ export const metadata = {
   });
 
   it("should read content with includeMDX: true", async () => {
-    vi.doMock("../content", async (importOriginal) => {
-      const mod = await importOriginal<typeof import("../content")>();
-      return {
-        ...mod,
-        getContent: (locale: Locale, filePath: string, options: any) => {
-          if (filePath === "test/path" && options?.includeMDX === true) {
-            return Effect.succeed({
-              metadata: {
-                title: "Test Title",
-                description: "Test Description",
-                authors: [{ name: "Test Author" }],
-                date: "01/01/2024",
-              },
-              default: "Test MDX Content",
-              raw: "# MDX Content",
-            });
-          }
-          return mod.getContent(locale, filePath, options);
-        },
-      };
+    mockReadFile.mockResolvedValue("# MDX Content");
+    mockImportContentModule.mockResolvedValue({
+      metadata: {
+        title: "Test Title",
+        description: "Test Description",
+        authors: [{ name: "Test Author" }],
+        date: "01/01/2024",
+      },
+      default: () => "Test MDX Content",
     });
 
-    vi.resetModules();
-    const { getContent: getContentWithMock } = await import("../content");
     const content = await Effect.runPromise(
-      getContentWithMock("en", "test/path", {
+      getContent("en", "test/path", {
         includeMDX: true,
       })
     );
@@ -630,6 +645,67 @@ export const metadata = {
     expect(content?.metadata.title).toBe("Test Title");
     expect(content?.default).toBeDefined();
     expect(content?.raw).toBe("# MDX Content");
+  });
+
+  it("should load MDX content directly from a mocked content module", async () => {
+    mockReadFile.mockResolvedValue(`
+export const metadata = {
+  title: "Test Title",
+  description: "Test Description",
+  authors: [{ name: "Test Author" }],
+  date: "01/01/2024"
+};
+
+# Content
+`);
+    mockImportContentModule.mockResolvedValue({
+      metadata: {
+        title: "Test Title",
+        description: "Test Description",
+        authors: [{ name: "Test Author" }],
+        date: "01/01/2024",
+      },
+      default: () => "Test MDX Content",
+    });
+
+    const content = await Effect.runPromise(
+      getContent("en", "testpath", { includeMDX: true })
+    );
+
+    expect(content.metadata.title).toBe("Test Title");
+    expect(content.raw).toContain("# Content");
+    expect(content.default).toBeDefined();
+  });
+
+  it("should preserve the MDX module path when metadata parsing fails in includeMDX mode", async () => {
+    mockReadFile.mockResolvedValue(`
+export const metadata = {
+  title: "Broken"
+};
+
+# Broken
+`);
+    mockImportContentModule.mockResolvedValue({
+      metadata: {
+        title: "Broken",
+      },
+      default: () => "Broken MDX Content",
+    });
+
+    const result = await Effect.runPromise(
+      Effect.match(
+        getContent("en", "test-invalid-module", { includeMDX: true }),
+        {
+          onSuccess: () => null,
+          onFailure: (error) => error,
+        }
+      )
+    );
+
+    expect(result).toBeInstanceOf(MetadataParseError);
+    expect(result).toMatchObject({
+      path: "@repo/contents/test-invalid-module/en.mdx",
+    });
   });
 
   it("should return null when metadata is not found with includeMDX: false", async () => {
@@ -692,11 +768,17 @@ export const metadata = {
   });
 
   it("should return null when metadata is invalid with includeMDX: true", async () => {
-    const { getContent: getContentWithMock } = await import("../content");
+    mockReadFile.mockResolvedValue("# Invalid MDX Content");
+    mockImportContentModule.mockResolvedValue({
+      metadata: {
+        title: "Broken",
+      },
+      default: () => "Broken MDX Content",
+    });
 
     const content = await Effect.runPromise(
       Effect.match(
-        getContentWithMock("en", "test/invalid", {
+        getContent("en", "test/invalid", {
           includeMDX: true,
         }),
         {
@@ -897,6 +979,35 @@ export const metadata = {
     expect(contents[0]?.locale).toBe("en");
   });
 
+  it("should use default options when called without arguments", async () => {
+    mockGetMDXSlugsForLocale.mockReturnValue(["testpath"]);
+    mockReadFile.mockResolvedValue(`
+export const metadata = {
+  title: "Test Title",
+  description: "Test Description",
+  authors: [{ name: "Test Author" }],
+  date: "01/01/2024"
+};
+
+# Content
+`);
+    mockImportContentModule.mockResolvedValue({
+      metadata: {
+        title: "Test Title",
+        description: "Test Description",
+        authors: [{ name: "Test Author" }],
+        date: "01/01/2024",
+      },
+      default: () => "Test MDX Content",
+    });
+
+    const contents = await Effect.runPromise(getContents());
+
+    expect(contents).toHaveLength(1);
+    expect(contents[0]?.slug).toBe("testpath");
+    expect(contents[0]?.locale).toBe("en");
+  });
+
   it("should handle empty nested paths", async () => {
     mockGetMDXSlugsForLocale.mockReturnValue([]);
 
@@ -1057,11 +1168,25 @@ describe("getReferences", () => {
   });
 
   it("should return references when ref file exists", async () => {
+    mockImportReferencesModule.mockResolvedValue({
+      references: [
+        {
+          title: "Test Reference",
+          authors: "Test Author",
+          year: 2024,
+        },
+      ],
+    });
+
     const refs = await Effect.runPromise(
       getReferences("articles/politics/dynastic-politics-asian-values")
     );
-    expect(refs).toBeDefined();
-    expect(Array.isArray(refs)).toBe(true);
+    expect(refs).toHaveLength(1);
+    expect(refs[0]).toMatchObject({
+      title: "Test Reference",
+      authors: "Test Author",
+      year: 2024,
+    });
   });
 
   it("should handle import errors by returning empty array", async () => {
@@ -1485,5 +1610,55 @@ describe("parseModuleMetadata", () => {
       })
     );
     expect(result).toBeInstanceOf(Error);
+  });
+
+  it("should stringify non-Error parse failures", async () => {
+    const parseSpy = vi
+      .spyOn(ContentMetadataSchema, "parse")
+      .mockImplementation(() => {
+        return Function("throw 'plain metadata failure'")() as never;
+      });
+
+    const result = await Effect.runPromise(
+      Effect.match(
+        parseModuleMetadata({
+          metadata: {
+            title: "Valid",
+            description: "Valid",
+            authors: [{ name: "Author" }],
+            date: "01/01/2024",
+          },
+        }),
+        {
+          onSuccess: () => null,
+          onFailure: (error) => error,
+        }
+      )
+    );
+
+    expect(parseSpy).toHaveBeenCalled();
+    expect(result).toBeInstanceOf(MetadataParseError);
+    expect((result as MetadataParseError).reason).toContain(
+      "plain metadata failure"
+    );
+  });
+
+  it("should stringify non-Error reference parse failures", async () => {
+    const arraySpy = vi.spyOn(ReferenceSchema, "array").mockReturnValue({
+      parse() {
+        return Function("throw 'plain reference failure'")() as never;
+      },
+    } as never);
+
+    const result = await Effect.runPromise(
+      Effect.match(parseReferences([{ title: "Example" }]), {
+        onSuccess: () => null,
+        onFailure: (error) => error,
+      })
+    );
+
+    expect(arraySpy).toHaveBeenCalled();
+    expect(result).toBeInstanceOf(Error);
+    expect((result as Error).message).toContain("plain reference failure");
   });
 });
