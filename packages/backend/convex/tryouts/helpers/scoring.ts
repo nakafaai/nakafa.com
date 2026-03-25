@@ -14,9 +14,9 @@ import {
   countCorrectAnswers,
   getBoundedExerciseAnswers,
   loadBoundedTryoutPartAttempts,
-  type TryoutMutationCtx,
-} from "@repo/backend/convex/tryouts/helpers/shared";
-import { scaleThetaToTryoutScore } from "@repo/backend/convex/tryouts/products";
+} from "@repo/backend/convex/tryouts/helpers/loaders";
+import type { TryoutMutationCtx } from "@repo/backend/convex/tryouts/helpers/types";
+import { tryoutProductPolicies } from "@repo/backend/convex/tryouts/products";
 import type { TryoutScoreStatus } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError } from "convex/values";
 import { asyncMap } from "convex-helpers";
@@ -379,10 +379,8 @@ export async function syncTryoutAttemptAggregates({
     0
   );
   const { theta, se } = estimateThetaEAP(allResponses);
-  const irtScore = scaleThetaToTryoutScore({
-    product: tryout.product,
-    theta,
-  });
+  const irtScore =
+    tryoutProductPolicies[tryout.product].scaleThetaToScore(theta);
 
   await ctx.db.patch("tryoutAttempts", tryoutAttemptId, {
     completedAt: completedAtMs,

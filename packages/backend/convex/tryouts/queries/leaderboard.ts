@@ -6,7 +6,7 @@ import {
   tryoutLeaderboard,
 } from "@repo/backend/convex/tryouts/aggregate";
 import {
-  getTryoutLeaderboardNamespace,
+  tryoutProductPolicies,
   tryoutProductValidator,
 } from "@repo/backend/convex/tryouts/products";
 import { v } from "convex/values";
@@ -112,7 +112,8 @@ export const getGlobalLeaderboard = query({
       return [];
     }
 
-    const namespace = getTryoutLeaderboardNamespace(args);
+    const namespace =
+      tryoutProductPolicies[args.product].getLeaderboardNamespace(args);
     const { page: aggregateItems } = await globalLeaderboard.paginate(ctx, {
       namespace,
       order: "asc",

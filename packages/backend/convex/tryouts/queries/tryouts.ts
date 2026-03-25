@@ -1,8 +1,9 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
+import { loadValidatedTryoutPartSets } from "@repo/backend/convex/tryouts/helpers/parts";
 import {
-  sortTryoutsForProduct,
+  tryoutProductPolicies,
   tryoutProductValidator,
 } from "@repo/backend/convex/tryouts/products";
 import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
@@ -36,7 +37,9 @@ export const getActiveTryouts = query({
       });
     }
 
-    return sortTryoutsForProduct(args.product, tryouts);
+    return [...tryouts].sort(
+      tryoutProductPolicies[args.product].compareTryouts
+    );
   },
 });
 
@@ -76,30 +79,10 @@ export const getTryoutDetails = query({
       return null;
     }
 
-    const tryoutPartSets = await ctx.db
-      .query("tryoutPartSets")
-      .withIndex("by_tryoutId_and_partIndex", (q) =>
-        q.eq("tryoutId", tryout._id)
-      )
-      .take(tryout.partCount + 1);
-
-    if (tryoutPartSets.length !== tryout.partCount) {
-      throw new ConvexError({
-        code: "INVALID_TRYOUT_STATE",
-        message: "Tryout part mapping count does not match partCount.",
-      });
-    }
-
-    for (const [partIndex, partSet] of tryoutPartSets.entries()) {
-      if (partSet.partIndex === partIndex) {
-        continue;
-      }
-
-      throw new ConvexError({
-        code: "INVALID_TRYOUT_STATE",
-        message: "Tryout part mappings are out of order.",
-      });
-    }
+    const tryoutPartSets = await loadValidatedTryoutPartSets(ctx.db, {
+      partCount: tryout.partCount,
+      tryoutId: tryout._id,
+    });
 
     const sets = await getAll(
       ctx.db,

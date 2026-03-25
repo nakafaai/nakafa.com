@@ -1,6 +1,6 @@
 import {
-  sortTryoutsForProduct,
   type TryoutProduct,
+  tryoutProductPolicies,
 } from "@repo/backend/convex/tryouts/products";
 import type { TryoutPartKey } from "@repo/backend/convex/tryouts/schema";
 import { getExerciseCount } from "@repo/contents/_lib/exercises";
@@ -148,7 +148,7 @@ async function getStaticSnbtTryouts(locale: Locale): Promise<StaticTryout[]> {
       } satisfies StaticTryout;
     });
 
-  return sortTryoutsForProduct("snbt", tryouts);
+  return [...tryouts].sort(tryoutProductPolicies.snbt.compareTryouts);
 }
 
 /** Returns build-time tryout routes derived from `@repo/contents`. */

@@ -3,9 +3,7 @@ import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
 import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
-import { type Infer, v } from "convex/values";
-
-export const TRYOUT_STATUS_BATCH_SIZE = 25;
+import { v } from "convex/values";
 
 export const userTryoutLookupArgs = {
   product: tryoutProductValidator,
@@ -13,11 +11,10 @@ export const userTryoutLookupArgs = {
   tryoutSlug: v.string(),
 };
 
-export interface UserTryoutLookup {
-  locale: Infer<typeof localeValidator>;
-  product: Infer<typeof tryoutProductValidator>;
-  tryoutSlug: string;
-}
+export const tryoutPackageLookupValidator = v.object({
+  slug: v.string(),
+  tryoutId: vv.id("tryouts"),
+});
 
 export const tryoutPackageStatusValidator = v.object({
   expiresAtMs: v.number(),

@@ -1,7 +1,10 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { getTryoutLeaderboardNamespace } from "@repo/backend/convex/tryouts/products";
+import {
+  type TryoutProduct,
+  tryoutProductPolicies,
+} from "@repo/backend/convex/tryouts/products";
 
 type LeaderboardStatsEntry = Pick<
   Doc<"tryoutLeaderboardEntries">,
@@ -26,10 +29,12 @@ export async function syncUserTryoutStats({
   locale: Doc<"tryouts">["locale"];
   nextEntry: LeaderboardStatsEntry;
   previousEntry: LeaderboardStatsEntry | null;
-  product: Parameters<typeof getTryoutLeaderboardNamespace>[0]["product"];
+  product: TryoutProduct;
   userId: Id<"users">;
 }) {
-  const leaderboardNamespace = getTryoutLeaderboardNamespace({
+  const leaderboardNamespace = tryoutProductPolicies[
+    product
+  ].getLeaderboardNamespace({
     cycleKey,
     locale,
     product,

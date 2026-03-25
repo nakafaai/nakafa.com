@@ -12,7 +12,7 @@ import {
   syncTryoutAttemptAggregates,
 } from "@repo/backend/convex/tryouts/helpers/scoring";
 import {
-  getTryoutLeaderboardNamespace,
+  tryoutProductPolicies,
   tryoutProductValidator,
 } from "@repo/backend/convex/tryouts/products";
 import { syncUserTryoutStats } from "@repo/backend/convex/tryouts/stats";
@@ -238,7 +238,9 @@ export const updateLeaderboard = internalMutation({
       });
     }
 
-    const leaderboardNamespace = getTryoutLeaderboardNamespace({
+    const leaderboardNamespace = tryoutProductPolicies[
+      tryout.product
+    ].getLeaderboardNamespace({
       cycleKey: tryout.cycleKey,
       locale: tryout.locale,
       product: tryout.product,
@@ -373,19 +375,20 @@ export const promoteProvisionalTryoutScores = internalMutation({
     const now = Date.now();
 
     for (const tryoutAttempt of provisionalAttempts) {
-      if (tryoutAttempt.status !== "in-progress") {
-        await syncTryoutAttemptAggregates({
-          completedAtMs: tryoutAttempt.completedAt ?? now,
-          ctx,
-          now,
-          scaleVersionId: scaleVersion._id,
-          scoreStatus: "official",
-          status: tryoutAttempt.status,
-          tryoutAttemptId: tryoutAttempt._id,
-        });
-      }
+      const finalizedStatus =
+        tryoutAttempt.status === "completed" ? "completed" : "expired";
 
-      if (tryoutAttempt.status !== "completed") {
+      await syncTryoutAttemptAggregates({
+        completedAtMs: tryoutAttempt.completedAt ?? now,
+        ctx,
+        now,
+        scaleVersionId: scaleVersion._id,
+        scoreStatus: "official",
+        status: finalizedStatus,
+        tryoutAttemptId: tryoutAttempt._id,
+      });
+
+      if (finalizedStatus !== "completed") {
         continue;
       }
 

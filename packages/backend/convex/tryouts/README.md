@@ -40,7 +40,9 @@ That policy owns:
 Use the generic query/mutation surface in `tryouts/`:
 
 - `queries/tryouts.ts`
-- `queries/attempts.ts`
+- `queries/me/attempt.ts`
+- `queries/me/packages.ts`
+- `queries/me/part.ts`
 - `queries/leaderboard.ts`
 - `mutations/attempts.ts`
 

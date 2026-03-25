@@ -5,7 +5,7 @@ import { internalMutation } from "@repo/backend/convex/functions";
 import { getOrPublishScaleVersionForTryout } from "@repo/backend/convex/irt/scales/publish";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import {
-  detectTryoutsForProduct,
+  tryoutProductPolicies,
   tryoutProductValidator,
 } from "@repo/backend/convex/tryouts/products";
 import { v } from "convex/values";
@@ -47,9 +47,8 @@ export const bulkSyncTryouts = internalMutation({
       unit: "tryout candidate sets",
     });
 
-    const detectedTryouts = detectTryoutsForProduct({
+    const detectedTryouts = tryoutProductPolicies[args.product].detectTryouts({
       locale: args.locale,
-      product: args.product,
       sets: tryoutCandidateSets,
     });
     const detectedSlugs = new Set(detectedTryouts.map((tryout) => tryout.slug));

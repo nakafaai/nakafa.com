@@ -1,10 +1,8 @@
 "use client";
 
 import { api } from "@repo/backend/convex/_generated/api";
-import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
-import type { FunctionReturnType } from "convex/server";
-import type { Locale } from "next-intl";
+import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { type ReactNode, useMemo } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 import { useTryoutClock } from "@/components/tryout/hooks/use-tryout-clock";
@@ -16,6 +14,9 @@ type TryoutPackageStatus = Extract<
     typeof api.tryouts.queries.me.packages.getUserTryoutPackageStatuses
   >[number]["status"],
   "completed" | "in-progress"
+>;
+type TryoutPackageStatusQueryArgs = FunctionArgs<
+  typeof api.tryouts.queries.me.packages.getUserTryoutPackageStatuses
 >;
 
 const TryoutPackageProgressContext = createContext<ReadonlyMap<
@@ -39,23 +40,20 @@ export function useTryoutPackageProgress<T>(
 
 interface TryoutPackageProgressProviderProps {
   children: ReactNode;
-  locale: Locale;
-  product: TryoutProduct;
-  tryoutSlugs: string[];
+  tryoutPackages: TryoutPackageStatusQueryArgs["tryoutPackages"];
 }
 
 export function TryoutPackageProgressProvider({
   children,
-  locale,
-  product,
-  tryoutSlugs,
+  tryoutPackages,
 }: TryoutPackageProgressProviderProps) {
   const isUserPending = useUser((state) => state.isPending);
   const user = useUser((state) => state.user);
-  const shouldQuery = !isUserPending && Boolean(user) && tryoutSlugs.length > 0;
+  const shouldQuery =
+    !isUserPending && Boolean(user) && tryoutPackages.length > 0;
   const { data } = useQueryWithStatus(
     api.tryouts.queries.me.packages.getUserTryoutPackageStatuses,
-    shouldQuery ? { locale, product, tryoutSlugs } : "skip"
+    shouldQuery ? { tryoutPackages } : "skip"
   );
   const nowMs = useTryoutClock(Boolean(data && data.length > 0));
   const tryoutStatuses = useMemo(() => {

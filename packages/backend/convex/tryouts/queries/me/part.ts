@@ -1,16 +1,14 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import {
-  loadLatestUserTryoutContext,
-  loadTryoutPartRuntime,
-} from "@repo/backend/convex/tryouts/queries/me/helpers";
+import { getBoundedExerciseAnswers } from "@repo/backend/convex/tryouts/helpers/loaders";
+import { loadLatestUserTryoutContext } from "@repo/backend/convex/tryouts/queries/me/helpers";
 import {
   tryoutPartAttemptRuntimeValidator,
   userTryoutLookupArgs,
 } from "@repo/backend/convex/tryouts/queries/me/validators";
 import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
 
 /** Returns the authenticated user's runtime state for one tryout part. */
@@ -39,12 +37,14 @@ export const getUserTryoutPartAttempt = query({
 
     const { attempt: tryoutAttempt } = context;
 
-    const runtime = await loadTryoutPartRuntime(ctx, {
-      partKey: args.partKey,
-      tryoutAttemptId: tryoutAttempt._id,
-    });
+    const currentPartAttempt = await ctx.db
+      .query("tryoutPartAttempts")
+      .withIndex("by_tryoutAttemptId_and_partKey", (q) =>
+        q.eq("tryoutAttemptId", tryoutAttempt._id).eq("partKey", args.partKey)
+      )
+      .unique();
 
-    if (!runtime) {
+    if (!currentPartAttempt) {
       return {
         expiresAtMs: tryoutAttempt.expiresAt,
         partAttempt: null,
@@ -52,13 +52,30 @@ export const getUserTryoutPartAttempt = query({
       };
     }
 
+    const setAttempt = await ctx.db.get(
+      "exerciseAttempts",
+      currentPartAttempt.setAttemptId
+    );
+
+    if (!setAttempt) {
+      throw new ConvexError({
+        code: "INVALID_ATTEMPT_STATE",
+        message: "Tryout part is missing its exercise attempt.",
+      });
+    }
+
+    const answers = await getBoundedExerciseAnswers(ctx.db, {
+      attemptId: currentPartAttempt.setAttemptId,
+      totalExercises: setAttempt.totalExercises,
+    });
+
     return {
       expiresAtMs: tryoutAttempt.expiresAt,
       partAttempt: {
-        partIndex: runtime.partIndex,
-        partKey: runtime.partKey,
-        answers: runtime.answers,
-        setAttempt: runtime.setAttempt,
+        partIndex: currentPartAttempt.partIndex,
+        partKey: currentPartAttempt.partKey,
+        answers,
+        setAttempt,
       },
       tryoutAttempt,
     };

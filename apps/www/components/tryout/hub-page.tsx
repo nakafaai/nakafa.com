@@ -93,9 +93,10 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
               <TryoutPackageEmpty>{tTryouts("list-empty")}</TryoutPackageEmpty>
             ) : (
               <TryoutPackageProgressProvider
-                locale={locale}
-                product={product}
-                tryoutSlugs={activeTryouts.map((tryout) => tryout.slug)}
+                tryoutPackages={activeTryouts.map((tryout) => ({
+                  slug: tryout.slug,
+                  tryoutId: tryout._id,
+                }))}
               >
                 {cycleGroups.map((group, index) => (
                   <div

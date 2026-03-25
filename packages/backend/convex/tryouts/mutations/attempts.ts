@@ -11,15 +11,14 @@ import {
   requireTryoutPartAttempt,
 } from "@repo/backend/convex/tryouts/helpers/access";
 import { syncTryoutAttemptExpiry } from "@repo/backend/convex/tryouts/helpers/expiry";
+import { loadValidatedTryoutPartSets } from "@repo/backend/convex/tryouts/helpers/parts";
 import {
   finalizeTryoutPartAttempt,
   getFirstIncompleteTryoutPartIndex,
 } from "@repo/backend/convex/tryouts/helpers/scoring";
 import { finalizeTryoutAttempt } from "@repo/backend/convex/tryouts/mutations/helpers";
 import {
-  computeTryoutExpiresAtMs,
-  computeTryoutPartTimeLimitSeconds,
-  scaleThetaToTryoutScore,
+  tryoutProductPolicies,
   tryoutProductValidator,
 } from "@repo/backend/convex/tryouts/products";
 import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
@@ -116,35 +115,13 @@ export const startTryout = mutation({
       }
     }
 
-    const tryoutParts = await ctx.db
-      .query("tryoutPartSets")
-      .withIndex("by_tryoutId_and_partIndex", (q) =>
-        q.eq("tryoutId", tryout._id)
-      )
-      .take(tryout.partCount + 1);
-
-    if (tryoutParts.length !== tryout.partCount) {
-      throw new ConvexError({
-        code: "INVALID_TRYOUT_STATE",
-        message: "Tryout is missing one or more parts.",
-      });
-    }
-
-    for (const [partIndex, tryoutPart] of tryoutParts.entries()) {
-      if (tryoutPart.partIndex === partIndex) {
-        continue;
-      }
-
-      throw new ConvexError({
-        code: "INVALID_TRYOUT_STATE",
-        message: "Tryout parts are out of order.",
-      });
-    }
-
-    const expiresAtMs = computeTryoutExpiresAtMs({
-      product: tryout.product,
-      startedAtMs: now,
+    await loadValidatedTryoutPartSets(ctx.db, {
+      partCount: tryout.partCount,
+      tryoutId: tryout._id,
     });
+
+    const expiresAtMs =
+      now + tryoutProductPolicies[tryout.product].getAttemptWindowMs();
 
     const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
       userId,
@@ -157,7 +134,7 @@ export const startTryout = mutation({
       totalQuestions: 0,
       theta: 0,
       thetaSE: 1,
-      irtScore: scaleThetaToTryoutScore({ product: tryout.product, theta: 0 }),
+      irtScore: tryoutProductPolicies[tryout.product].scaleThetaToScore(0),
       startedAt: now,
       expiresAt: expiresAtMs,
       lastActivityAt: now,
@@ -195,15 +172,6 @@ export const startPart = mutation({
       userId,
     });
 
-    const tryout = await ctx.db.get("tryouts", tryoutAttempt.tryoutId);
-
-    if (!tryout) {
-      throw new ConvexError({
-        code: "TRYOUT_NOT_FOUND",
-        message: "Tryout not found.",
-      });
-    }
-
     const activeTryoutAttempt = await requireActiveTryoutAttemptAfterExpirySync(
       ctx,
       {
@@ -211,6 +179,14 @@ export const startPart = mutation({
         tryoutAttempt,
       }
     );
+    const tryout = await ctx.db.get("tryouts", activeTryoutAttempt.tryoutId);
+
+    if (!tryout) {
+      throw new ConvexError({
+        code: "TRYOUT_NOT_FOUND",
+        message: "Tryout not found.",
+      });
+    }
 
     const tryoutPartSet = await ctx.db
       .query("tryoutPartSets")
@@ -302,10 +278,9 @@ export const startPart = mutation({
       });
     }
 
-    const timeLimit = computeTryoutPartTimeLimitSeconds({
-      product: tryout.product,
-      questionCount: set.questionCount,
-    });
+    const timeLimit = tryoutProductPolicies[
+      tryout.product
+    ].getPartTimeLimitSeconds(set.questionCount);
 
     const setAttemptId = await createExerciseAttempt(ctx, {
       slug: set.slug,
@@ -357,15 +332,6 @@ export const completePart = mutation({
         now,
         tryoutAttempt,
       });
-
-    const tryout = await ctx.db.get("tryouts", currentTryoutAttempt.tryoutId);
-
-    if (!tryout) {
-      throw new ConvexError({
-        code: "TRYOUT_NOT_FOUND",
-        message: "Tryout not found.",
-      });
-    }
 
     const partAttempt = await requireTryoutPartAttempt(ctx, {
       partKey: args.partKey,

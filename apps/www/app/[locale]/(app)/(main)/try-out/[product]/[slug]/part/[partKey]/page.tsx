@@ -1,7 +1,7 @@
 import {
-  computeTryoutPartTimeLimitSeconds,
   isTryoutProduct,
   type TryoutProduct,
+  tryoutProductPolicies,
   tryoutProducts,
 } from "@repo/backend/convex/tryouts/products";
 import { getExercisesContent } from "@repo/contents/_lib/exercises";
@@ -87,10 +87,9 @@ export default async function Page({ params }: Props) {
   const partLabel = materialLabel.success
     ? tExercises(materialLabel.data)
     : part.partKey;
-  const timeLimitSeconds = computeTryoutPartTimeLimitSeconds({
-    product,
-    questionCount: part.questionCount,
-  });
+  const timeLimitSeconds = tryoutProductPolicies[
+    product
+  ].getPartTimeLimitSeconds(part.questionCount);
   const material = ExercisesMaterialSchema.safeParse(part.partKey);
   const partIcon = material.success
     ? getMaterialIcon(material.data)
