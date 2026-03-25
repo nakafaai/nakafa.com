@@ -157,7 +157,7 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
           <Label
             className={cn(
               buttonVariants({ variant }),
-              "h-auto min-w-0 items-start justify-start whitespace-normal text-left font-normal text-base"
+              "h-auto min-w-0 whitespace-normal text-left font-normal text-base"
             )}
             key={choice.label}
           >

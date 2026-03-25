@@ -6,7 +6,7 @@ import { getMetadataFromSlug } from "@/lib/utils/system";
 import { generateOGImage } from "./og";
 
 export const dynamic = "force-static";
-export const revalidate = 3600;
+export const revalidate = false;
 
 export function generateStaticParams() {
   return [];

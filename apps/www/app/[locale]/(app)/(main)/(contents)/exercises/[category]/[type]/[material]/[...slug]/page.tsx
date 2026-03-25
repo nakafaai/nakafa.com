@@ -66,7 +66,7 @@ import { ExerciseArticle } from "./article";
 import { ExerciseAttempt } from "./attempt";
 
 export const dynamicParams = true;
-export const revalidate = 3600;
+export const revalidate = false;
 
 interface Params {
   category: ExercisesCategory;
