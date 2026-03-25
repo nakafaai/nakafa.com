@@ -14,14 +14,18 @@ export function QuestionAnalytics({
   children: ReactNode;
 }) {
   const attempt = useAttempt((state) => state.attempt);
+  const isInputLocked = useAttempt((state) => state.isInputLocked);
 
   const ref = useIntersection({ threshold: 0.75 });
   const isActive = ref.entry?.isIntersecting ?? false;
-  const timeCounterRef = useRef(0);
+  const timeSpent = useExercise(
+    (state) => state.timeSpent[exerciseNumber] ?? 0
+  );
+  const timeCounterRef = useRef(timeSpent);
 
   const setTimeSpent = useExercise((state) => state.setTimeSpent);
 
-  const hasActiveAttempt = attempt?.status === "in-progress";
+  const hasActiveAttempt = attempt?.status === "in-progress" && !isInputLocked;
 
   const handleTick = useEffectEvent(() => {
     if (isActive && hasActiveAttempt) {

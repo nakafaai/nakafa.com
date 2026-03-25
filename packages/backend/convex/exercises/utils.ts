@@ -1,5 +1,9 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import { clampNumber } from "@repo/backend/convex/utils/helper";
+import {
+  type FinalizedAttemptStatus,
+  getAttemptEndReasonFromStatus,
+} from "@repo/backend/convex/lib/attempts";
+import { clampNumber } from "@repo/backend/convex/utils/number";
 import type { WithoutSystemFields } from "convex/server";
 
 type ExerciseAttemptAggregates = Pick<
@@ -10,6 +14,16 @@ type ExerciseAttemptAggregates = Pick<
 type ExerciseAttemptAggregatesPatch = Pick<
   WithoutSystemFields<Doc<"exerciseAttempts">>,
   "answeredCount" | "correctAnswers" | "totalTime" | "scorePercentage"
+>;
+
+type FinalizedExerciseAttemptPatch = Pick<
+  WithoutSystemFields<Doc<"exerciseAttempts">>,
+  | "completedAt"
+  | "endReason"
+  | "lastActivityAt"
+  | "status"
+  | "totalTime"
+  | "updatedAt"
 >;
 
 /**
@@ -125,4 +139,25 @@ export function computeAttemptDurationSeconds({
   const wallClockSeconds = (completedAtMs - startedAtMs) / 1000;
 
   return Math.max(0, Math.round(wallClockSeconds));
+}
+
+export function buildFinalizedExerciseAttemptPatch({
+  completedAtMs,
+  now,
+  status,
+  totalTime,
+}: {
+  completedAtMs: number;
+  now: number;
+  status: FinalizedAttemptStatus;
+  totalTime: number;
+}): FinalizedExerciseAttemptPatch {
+  return {
+    completedAt: completedAtMs,
+    endReason: getAttemptEndReasonFromStatus(status),
+    lastActivityAt: now,
+    status,
+    totalTime,
+    updatedAt: now,
+  };
 }

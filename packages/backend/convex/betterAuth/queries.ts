@@ -1,7 +1,6 @@
 import { query } from "@repo/backend/convex/betterAuth/_generated/server";
-import schema from "@repo/backend/convex/betterAuth/schema";
 import { v } from "convex/values";
-import { doc, nullable } from "convex-helpers/validators";
+import { nullable } from "convex-helpers/validators";
 
 /**
  * Get Better Auth user by email address.
@@ -11,7 +10,7 @@ export const getUserByEmail = query({
   args: {
     email: v.string(),
   },
-  returns: nullable(doc(schema, "user")),
+  returns: nullable(v.object({ _id: v.id("user") })),
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("user")
@@ -22,6 +21,6 @@ export const getUserByEmail = query({
       return null;
     }
 
-    return user;
+    return { _id: user._id };
   },
 });

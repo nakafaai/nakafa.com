@@ -2,8 +2,6 @@ import { internalQuery } from "@repo/backend/convex/_generated/server";
 import {
   fetchContentForAudio,
   getContentHash as getContentHashHelper,
-  getContentRefBySlugAndLocale as getContentRefBySlugAndLocaleHelper,
-  getContentSlug as getContentSlugHelper,
 } from "@repo/backend/convex/audioStudies/utils";
 import {
   audioContentRefValidator,
@@ -11,7 +9,6 @@ import {
   audioStatusValidator,
   voiceSettingsValidator,
 } from "@repo/backend/convex/lib/validators/audio";
-import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
@@ -139,54 +136,4 @@ export const getContentHash = internalQuery({
   },
   returns: nullable(v.string()),
   handler: async (ctx, args) => getContentHashHelper(ctx, args.contentRef),
-});
-
-/**
- * Get content slug by type and ID.
- * Used to find content in different locales.
- * Returns null if content not found.
- */
-export const getContentSlug = internalQuery({
-  args: {
-    contentRef: audioContentRefValidator,
-  },
-  returns: nullable(v.string()),
-  handler: async (ctx, args) => getContentSlugHelper(ctx, args.contentRef),
-});
-
-/**
- * Verifies audio file exists in storage.
- */
-export const verifyAudioFileExists = internalQuery({
-  args: {
-    contentAudioId: vv.id("contentAudios"),
-  },
-  returns: v.boolean(),
-  handler: async (ctx, args) => {
-    const audio = await ctx.db.get("contentAudios", args.contentAudioId);
-
-    if (!audio?.audioStorageId) {
-      return false;
-    }
-
-    try {
-      await ctx.storage.getUrl(audio.audioStorageId);
-      return true;
-    } catch {
-      return false;
-    }
-  },
-});
-
-/**
- * Gets content reference by slug and locale for cross-locale lookups.
- */
-export const getContentRefBySlugAndLocale = internalQuery({
-  args: {
-    contentRef: audioContentRefValidator,
-    locale: localeValidator,
-  },
-  returns: nullable(audioContentRefValidator),
-  handler: async (ctx, args) =>
-    getContentRefBySlugAndLocaleHelper(ctx, args.contentRef, args.locale),
 });

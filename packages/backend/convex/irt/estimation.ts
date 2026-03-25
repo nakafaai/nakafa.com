@@ -1,8 +1,16 @@
+import {
+  IRT_ESTIMATION_THETA_MAX,
+  IRT_ESTIMATION_THETA_MIN,
+  IRT_ESTIMATION_THETA_POINTS,
+} from "@repo/backend/convex/irt/policy";
+
 /**
- * IRT (Item Response Theory) estimation algorithms.
+ * Operational IRT estimation helpers.
  *
- * Uses EAP (Expected A Posteriori) for ability estimation.
- * Compatible with SNBT scoring methodology.
+ * These routines intentionally favor stable, bounded scoring over mathematically
+ * ambitious optimization. The current production scoring path uses a fixed EAP
+ * grid on a wider operational interval so extreme response patterns are less
+ * likely to clip against the integration boundary during tryout finalization.
  */
 
 export interface ItemParameters {
@@ -15,11 +23,12 @@ export interface Response {
   params: ItemParameters;
 }
 
-const THETA_MIN = -4;
-const THETA_MAX = 4;
-const THETA_POINTS = 41;
+const THETA_MIN = IRT_ESTIMATION_THETA_MIN;
+const THETA_MAX = IRT_ESTIMATION_THETA_MAX;
+const THETA_POINTS = IRT_ESTIMATION_THETA_POINTS;
 const THETA_GRID = getThetaGrid();
 
+/** Build the fixed theta grid used by every EAP integration pass. */
 function getThetaGrid(): number[] {
   const grid: number[] = [];
   const step = (THETA_MAX - THETA_MIN) / (THETA_POINTS - 1);
@@ -52,12 +61,12 @@ function normalPDF(x: number, mean: number, sd: number): number {
 }
 
 /**
- * Estimates ability (θ) using EAP (Expected A Posteriori).
+ * Estimate ability (`theta`) with a bounded Expected A Posteriori pass.
  *
- * @param responses - Array of responses with item parameters
- * @param priorMean - Prior mean for θ (default: 0)
- * @param priorSD - Prior standard deviation for θ (default: 1)
- * @returns Estimated θ and standard error
+ * The implementation multiplies a standard-normal prior by the likelihood at
+ * each fixed theta grid point, normalizes the weights, then returns the
+ * weighted mean and standard deviation. If numerical underflow wipes out the
+ * weights, the caller gets the prior back instead of a misleading extreme.
  */
 export function estimateThetaEAP(
   responses: Response[],
@@ -103,8 +112,8 @@ export function estimateThetaEAP(
 }
 
 /**
- * Returns provisional IRT parameters for new questions.
- * Used before sufficient responses are collected for calibration.
+ * Return the neutral 2PL parameters used before an item has enough evidence to
+ * support calibration.
  */
 export function getProvisionalParams(): ItemParameters {
   return {
@@ -114,11 +123,10 @@ export function getProvisionalParams(): ItemParameters {
 }
 
 /**
- * Estimates difficulty from correct rate (provisional method).
- * Used when item parameters haven't been calibrated yet.
+ * Seed difficulty from the observed correct rate for uncalibrated items.
  *
- * @param correctRate - Proportion of correct responses (0-1)
- * @returns Estimated difficulty parameter
+ * This is only a bootstrap heuristic. Full calibration later replaces this
+ * value with the alternating 2PL estimate.
  */
 export function estimateDifficultyFromCorrectRate(correctRate: number): number {
   const cr = Math.max(0.01, Math.min(0.99, correctRate));

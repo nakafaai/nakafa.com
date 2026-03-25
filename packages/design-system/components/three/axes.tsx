@@ -12,7 +12,10 @@ const textMaterialCache = new Map<string, MeshBasicMaterial>();
 
 function getTextMaterial(color: string): MeshBasicMaterial {
   if (!textMaterialCache.has(color)) {
-    textMaterialCache.set(color, new MeshBasicMaterial({ color }));
+    textMaterialCache.set(
+      color,
+      new MeshBasicMaterial({ color, depthTest: false })
+    );
   }
   const material = textMaterialCache.get(color);
   if (!material) {
@@ -101,9 +104,10 @@ export function Axes({
         color={COLORS.RED}
         font={fontToUse}
         fontSize={labelSize}
-        frustumCulled
+        frustumCulled={false}
         material={redMaterial}
         position={labelPositions.xPos}
+        renderOrder={10}
         visible={showLabels}
       >
         X
@@ -113,9 +117,10 @@ export function Axes({
         color={COLORS.RED}
         font={fontToUse}
         fontSize={labelSize}
-        frustumCulled
+        frustumCulled={false}
         material={redMaterial}
         position={labelPositions.xNeg}
+        renderOrder={10}
         visible={showLabels}
       >
         -X
@@ -127,9 +132,10 @@ export function Axes({
         color={COLORS.GREEN}
         font={fontToUse}
         fontSize={labelSize}
-        frustumCulled
+        frustumCulled={false}
         material={greenMaterial}
         position={labelPositions.yPos}
+        renderOrder={10}
         visible={showLabels}
       >
         Y
@@ -139,9 +145,10 @@ export function Axes({
         color={COLORS.GREEN}
         font={fontToUse}
         fontSize={labelSize}
-        frustumCulled
+        frustumCulled={false}
         material={greenMaterial}
         position={labelPositions.yNeg}
+        renderOrder={10}
         visible={showLabels}
       >
         -Y
@@ -153,9 +160,10 @@ export function Axes({
         color={COLORS.BLUE}
         font={fontToUse}
         fontSize={labelSize}
-        frustumCulled
+        frustumCulled={false}
         material={blueMaterial}
         position={labelPositions.zPos}
+        renderOrder={10}
         visible={!!showZAxis && !!showLabels}
       >
         Z
@@ -165,9 +173,10 @@ export function Axes({
         color={COLORS.BLUE}
         font={fontToUse}
         fontSize={labelSize}
-        frustumCulled
+        frustumCulled={false}
         material={blueMaterial}
         position={labelPositions.zNeg}
+        renderOrder={10}
         visible={!!showZAxis && !!showLabels}
       >
         -Z

@@ -5,9 +5,9 @@ import { customersDelete } from "@polar-sh/sdk/funcs/customersDelete.js";
 import { customersGet } from "@polar-sh/sdk/funcs/customersGet.js";
 import { customersGetExternal } from "@polar-sh/sdk/funcs/customersGetExternal.js";
 import { customersUpdate } from "@polar-sh/sdk/funcs/customersUpdate.js";
-import { internalAction } from "@repo/backend/convex/_generated/server";
-import { polarClient } from "@repo/backend/convex/utils/polar";
-import { ConvexError, v } from "convex/values";
+import { PolarError } from "@polar-sh/sdk/models/errors/polarerror.js";
+import { polarClient } from "@repo/backend/convex/utils/polar/client";
+import { ConvexError } from "convex/values";
 
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T/;
 
@@ -26,194 +26,247 @@ function sanitize<T>(data: T): T {
   );
 }
 
+type PolarMetadata = Record<string, string | number | boolean>;
+
+/** Identify Polar's not-found response so retries can fall back cleanly. */
+function isMissingPolarCustomer(error: unknown) {
+  return error instanceof PolarError && error.statusCode === 404;
+}
+
+/** Normalize the subset of Polar customer fields the app persists locally. */
+function toPolarCustomerResult(customer: {
+  id: string;
+  externalId?: string | null;
+  email: string;
+  metadata?: PolarMetadata | null;
+  name?: string | null;
+}) {
+  return {
+    id: customer.id,
+    externalId: customer.externalId ?? null,
+    email: customer.email,
+    name: customer.name ?? null,
+    metadata: customer.metadata ?? {},
+  };
+}
+
 /**
- * Polar metadata validator for action args.
- * Uses v.any() because this is passed directly to Polar's SDK.
- * The shape is defined by Polar's API, not by us.
+ * Keep one existing Polar customer aligned with the app's latest email, name,
+ * and metadata, while staying idempotent when nothing changed.
  */
-const polarMetadataArgsValidator = v.optional(v.record(v.string(), v.any()));
+async function syncExistingCustomer(
+  customer: {
+    id: string;
+    email: string;
+    metadata?: PolarMetadata | null;
+    name?: string | null;
+  },
+  args: {
+    email: string;
+    metadata?: PolarMetadata;
+    name: string;
+  }
+) {
+  const currentMetadata = JSON.stringify(customer.metadata ?? {});
+  const nextMetadata = JSON.stringify(args.metadata ?? {});
+
+  if (
+    customer.email === args.email &&
+    customer.name === args.name &&
+    currentMetadata === nextMetadata
+  ) {
+    return toPolarCustomerResult(customer);
+  }
+
+  const updateResult = await customersUpdate(polarClient, {
+    id: customer.id,
+    customerUpdate: {
+      email: args.email,
+      metadata: args.metadata,
+      name: args.name,
+    },
+  });
+
+  if (!updateResult.ok) {
+    throw new ConvexError({
+      code: "POLAR_UPDATE_ERROR",
+      message: "Failed to sync customer data in Polar",
+      detail: String(updateResult.error),
+    });
+  }
+
+  return toPolarCustomerResult(sanitize(updateResult.value));
+}
 
 /**
  * Get or create customer in Polar.
  * Idempotent: handles race conditions by checking for existing customer on create failure.
  * Single action that combines get + create logic to reduce runAction overhead.
  */
-export const ensureCustomer = internalAction({
-  args: {
-    localCustomerId: v.optional(v.string()),
-    externalId: v.string(),
-    email: v.string(),
-    name: v.string(),
-    metadata: polarMetadataArgsValidator,
-  },
-  returns: v.any(),
-  handler: async (_ctx, args) => {
-    // 1. If we have a local customer ID, verify it exists in Polar
-    if (args.localCustomerId) {
-      try {
-        const result = await customersGet(polarClient, {
-          id: args.localCustomerId,
-        });
-        if (result.ok) {
-          return sanitize(result.value);
-        }
-      } catch {
-        // Customer doesn't exist in Polar, continue to find/create
-      }
-    }
-
-    // 2. Try to find by externalId (handles case where customer was recreated)
+export async function ensurePolarCustomer(args: {
+  localCustomerId?: string;
+  externalId: string;
+  email: string;
+  name: string;
+  metadata?: PolarMetadata;
+}) {
+  if (args.localCustomerId) {
     try {
-      const result = await customersGetExternal(polarClient, {
-        externalId: args.externalId,
+      const result = await customersGet(polarClient, {
+        id: args.localCustomerId,
       });
       if (result.ok) {
-        return sanitize(result.value);
+        return await syncExistingCustomer(sanitize(result.value), args);
       }
-    } catch {
-      // Not found, continue to create
-    }
-
-    // 3. Create new customer
-    let createError: unknown;
-    try {
-      const createResult = await customersCreate(polarClient, {
-        externalId: args.externalId,
-        email: args.email,
-        name: args.name,
-        metadata: args.metadata,
-      });
-
-      if (createResult.ok) {
-        return sanitize(createResult.value);
-      }
-      createError = createResult.error;
     } catch (error) {
-      // Create threw (network error, duplicate, etc.) - continue to retry
-      createError = error;
-    }
-
-    // 4. If create failed (race condition), try to get by externalId again
-    try {
-      const retryResult = await customersGetExternal(polarClient, {
-        externalId: args.externalId,
-      });
-      if (retryResult.ok) {
-        return sanitize(retryResult.value);
+      if (!isMissingPolarCustomer(error)) {
+        throw error;
       }
-    } catch {
-      // Fall through to error
+    }
+  }
+
+  try {
+    const result = await customersGetExternal(polarClient, {
+      externalId: args.externalId,
+    });
+    if (result.ok) {
+      return await syncExistingCustomer(sanitize(result.value), args);
+    }
+  } catch (error) {
+    if (!isMissingPolarCustomer(error)) {
+      throw error;
+    }
+  }
+
+  let createError: unknown;
+  try {
+    const createResult = await customersCreate(polarClient, {
+      externalId: args.externalId,
+      email: args.email,
+      name: args.name,
+      metadata: args.metadata,
+    });
+
+    if (createResult.ok) {
+      return toPolarCustomerResult(sanitize(createResult.value));
     }
 
+    createError = createResult.error;
+  } catch (error) {
+    createError = error;
+  }
+
+  try {
+    const retryResult = await customersGetExternal(polarClient, {
+      externalId: args.externalId,
+    });
+    if (retryResult.ok) {
+      return await syncExistingCustomer(sanitize(retryResult.value), args);
+    }
+  } catch (error) {
+    if (!isMissingPolarCustomer(error)) {
+      throw error;
+    }
+  }
+
+  throw new ConvexError({
+    code: "POLAR_CUSTOMER_ERROR",
+    message: "Failed to ensure customer in Polar",
+    detail: String(createError),
+  });
+}
+
+/**
+ * Update only the metadata fields for an already-linked Polar customer.
+ */
+export async function updatePolarCustomerMetadata(args: {
+  id: string;
+  metadata: PolarMetadata;
+}) {
+  const result = await customersUpdate(polarClient, {
+    id: args.id,
+    customerUpdate: {
+      metadata: args.metadata,
+    },
+  });
+  if (!result.ok) {
     throw new ConvexError({
-      code: "POLAR_CUSTOMER_ERROR",
-      message: "Failed to ensure customer in Polar",
-      detail: String(createError),
+      code: "POLAR_UPDATE_ERROR",
+      message: "Failed to update customer metadata",
+      detail: String(result.error),
     });
-  },
-});
+  }
+
+  const customer = sanitize(result.value);
+  return toPolarCustomerResult(customer);
+}
 
 /**
- * Update customer metadata in Polar
+ * Create one Polar checkout session for the validated product selection.
  */
-export const updateCustomerMetadata = internalAction({
-  args: {
-    id: v.string(),
-    metadata: v.record(v.string(), v.any()), // Polar SDK metadata - shape defined by Polar
-  },
-  returns: v.any(),
-  handler: async (_ctx, args) => {
-    const result = await customersUpdate(polarClient, {
-      id: args.id,
-      customerUpdate: {
-        metadata: args.metadata,
-      },
+export async function createPolarCheckoutSession(args: {
+  customerId: string;
+  productIds: string[];
+  successUrl: string;
+  embedOrigin?: string;
+  subscriptionId?: string;
+}) {
+  const result = await checkoutsCreate(polarClient, {
+    allowDiscountCodes: true,
+    customerId: args.customerId,
+    products: args.productIds,
+    successUrl: args.successUrl,
+    embedOrigin: args.embedOrigin,
+    subscriptionId: args.subscriptionId,
+  });
+  if (!result.ok) {
+    throw new ConvexError({
+      code: "POLAR_CHECKOUT_ERROR",
+      message: "Failed to create checkout session",
+      detail: String(result.error),
     });
-    if (!result.ok) {
-      throw new ConvexError({
-        code: "POLAR_UPDATE_ERROR",
-        message: "Failed to update customer metadata",
-        detail: String(result.error),
-      });
-    }
-    return sanitize(result.value);
-  },
-});
+  }
+
+  return { url: result.value.url };
+}
 
 /**
- * Create checkout session in Polar
+ * Create one Polar customer portal session for an existing customer.
  */
-export const createCheckoutSession = internalAction({
-  args: {
-    customerId: v.string(),
-    productIds: v.array(v.string()),
-    successUrl: v.string(),
-    embedOrigin: v.optional(v.string()),
-    subscriptionId: v.optional(v.string()),
-  },
-  returns: v.any(),
-  handler: async (_ctx, args) => {
-    const result = await checkoutsCreate(polarClient, {
-      allowDiscountCodes: true,
-      customerId: args.customerId,
-      products: args.productIds,
-      successUrl: args.successUrl,
-      embedOrigin: args.embedOrigin,
-      subscriptionId: args.subscriptionId,
+export async function createPolarCustomerPortalSession(args: {
+  customerId: string;
+}) {
+  const result = await customerSessionsCreate(polarClient, {
+    customerId: args.customerId,
+  });
+  if (!result.ok) {
+    throw new ConvexError({
+      code: "POLAR_PORTAL_ERROR",
+      message: "Failed to create customer portal session",
+      detail: String(result.error),
     });
-    if (!result.ok) {
-      throw new ConvexError({
-        code: "POLAR_CHECKOUT_ERROR",
-        message: "Failed to create checkout session",
-        detail: String(result.error),
-      });
-    }
-    return sanitize(result.value);
-  },
-});
+  }
 
-/**
- * Create customer portal session in Polar
- */
-export const createCustomerPortalSession = internalAction({
-  args: {
-    customerId: v.string(),
-  },
-  returns: v.object({ url: v.string() }),
-  handler: async (_ctx, args) => {
-    const result = await customerSessionsCreate(polarClient, {
-      customerId: args.customerId,
-    });
-    if (!result.ok) {
-      throw new ConvexError({
-        code: "POLAR_PORTAL_ERROR",
-        message: "Failed to create customer portal session",
-        detail: String(result.error),
-      });
-    }
-    return { url: result.value.customerPortalUrl };
-  },
-});
+  return { url: result.value.customerPortalUrl };
+}
 
 /**
  * Delete customer from Polar.
  * Used when user account is deleted to clean up orphaned customers.
  */
-export const deleteCustomer = internalAction({
-  args: {
-    id: v.string(),
-  },
-  returns: v.null(),
-  handler: async (_ctx, args) => {
-    const result = await customersDelete(polarClient, { id: args.id });
-    if (!result.ok) {
-      throw new ConvexError({
-        code: "POLAR_DELETE_ERROR",
-        message: "Failed to delete customer from Polar",
-        detail: String(result.error),
-      });
+export async function deletePolarCustomer(id: string) {
+  const result = await customersDelete(polarClient, { id });
+  if (!result.ok) {
+    if (isMissingPolarCustomer(result.error)) {
+      return null;
     }
 
-    return null;
-  },
-});
+    throw new ConvexError({
+      code: "POLAR_DELETE_ERROR",
+      message: "Failed to delete customer from Polar",
+      detail: String(result.error),
+    });
+  }
+
+  return null;
+}

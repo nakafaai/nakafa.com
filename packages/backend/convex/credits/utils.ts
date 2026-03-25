@@ -2,6 +2,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type { CreditTransactionType } from "@repo/backend/convex/credits/schema";
 import { logger } from "@repo/backend/convex/utils/logger";
+import { ConvexError } from "convex/values";
 
 /**
  * Reset user credits and create transaction record.
@@ -19,7 +20,10 @@ export async function resetUserCredits(
   const user = await ctx.db.get("users", args.userId);
 
   if (!user) {
-    throw new Error(`User not found: ${args.userId}`);
+    throw new ConvexError({
+      code: "USER_NOT_FOUND",
+      message: `User not found: ${args.userId}`,
+    });
   }
 
   if (user.creditsResetAt >= args.resetTimestamp) {

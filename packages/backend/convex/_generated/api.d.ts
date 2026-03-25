@@ -8,24 +8,52 @@
  * @module
  */
 
-import type * as articleContents_mutations from "../articleContents/mutations.js";
-import type * as articleContents_queries from "../articleContents/queries.js";
 import type * as audioStudies_actions from "../audioStudies/actions.js";
 import type * as audioStudies_constants from "../audioStudies/constants.js";
-import type * as audioStudies_mutations from "../audioStudies/mutations.js";
+import type * as audioStudies_helpers_contentAudios from "../audioStudies/helpers/contentAudios.js";
+import type * as audioStudies_mutations_contentAudios from "../audioStudies/mutations/contentAudios.js";
+import type * as audioStudies_mutations_queue from "../audioStudies/mutations/queue.js";
 import type * as audioStudies_public_queries from "../audioStudies/public/queries.js";
 import type * as audioStudies_queries from "../audioStudies/queries.js";
 import type * as audioStudies_utils from "../audioStudies/utils.js";
 import type * as audioStudies_workflows from "../audioStudies/workflows.js";
 import type * as auth from "../auth.js";
+import type * as auth_cleanup from "../auth/cleanup.js";
+import type * as auth_client from "../auth/client.js";
 import type * as chats_actions from "../chats/actions.js";
+import type * as chats_constants from "../chats/constants.js";
 import type * as chats_helpers from "../chats/helpers.js";
+import type * as chats_messageParts_dbToUi from "../chats/messageParts/dbToUi.js";
+import type * as chats_messageParts_shared from "../chats/messageParts/shared.js";
+import type * as chats_messageParts_uiToDb from "../chats/messageParts/uiToDb.js";
 import type * as chats_mutations from "../chats/mutations.js";
 import type * as chats_queries from "../chats/queries.js";
+import type * as chats_read from "../chats/read.js";
 import type * as chats_utils from "../chats/utils.js";
-import type * as classes_forums_mutations from "../classes/forums/mutations.js";
-import type * as classes_forums_queries from "../classes/forums/queries.js";
-import type * as classes_forums_utils from "../classes/forums/utils.js";
+import type * as classes_constants from "../classes/constants.js";
+import type * as classes_forums_internalMutations from "../classes/forums/internalMutations.js";
+import type * as classes_forums_mutations_forums from "../classes/forums/mutations/forums.js";
+import type * as classes_forums_mutations_posts from "../classes/forums/mutations/posts.js";
+import type * as classes_forums_mutations_reactions from "../classes/forums/mutations/reactions.js";
+import type * as classes_forums_mutations_readState from "../classes/forums/mutations/readState.js";
+import type * as classes_forums_mutations_uploads from "../classes/forums/mutations/uploads.js";
+import type * as classes_forums_queries_around from "../classes/forums/queries/around.js";
+import type * as classes_forums_queries_feed from "../classes/forums/queries/feed.js";
+import type * as classes_forums_queries_forums from "../classes/forums/queries/forums.js";
+import type * as classes_forums_queries_newer from "../classes/forums/queries/newer.js";
+import type * as classes_forums_queries_older from "../classes/forums/queries/older.js";
+import type * as classes_forums_utils_access from "../classes/forums/utils/access.js";
+import type * as classes_forums_utils_attachments from "../classes/forums/utils/attachments.js";
+import type * as classes_forums_utils_constants from "../classes/forums/utils/constants.js";
+import type * as classes_forums_utils_mentions from "../classes/forums/utils/mentions.js";
+import type * as classes_forums_utils_postReactions from "../classes/forums/utils/postReactions.js";
+import type * as classes_forums_utils_posts from "../classes/forums/utils/posts.js";
+import type * as classes_forums_utils_reactions from "../classes/forums/utils/reactions.js";
+import type * as classes_forums_utils_readBoundary from "../classes/forums/utils/readBoundary.js";
+import type * as classes_forums_utils_readStateWrite from "../classes/forums/utils/readStateWrite.js";
+import type * as classes_forums_utils_timestampPosts from "../classes/forums/utils/timestampPosts.js";
+import type * as classes_forums_utils_unreadCounts from "../classes/forums/utils/unreadCounts.js";
+import type * as classes_forums_utils_windowing from "../classes/forums/utils/windowing.js";
 import type * as classes_materials_mutations from "../classes/materials/mutations.js";
 import type * as classes_materials_queries from "../classes/materials/queries.js";
 import type * as classes_materials_utils from "../classes/materials/utils.js";
@@ -34,9 +62,21 @@ import type * as classes_queries from "../classes/queries.js";
 import type * as classes_utils from "../classes/utils.js";
 import type * as comments_mutations from "../comments/mutations.js";
 import type * as comments_queries from "../comments/queries.js";
-import type * as comments_utils from "../comments/utils.js";
-import type * as contentSync_mutations from "../contentSync/mutations.js";
-import type * as contentSync_queries from "../contentSync/queries.js";
+import type * as contentSync_constants from "../contentSync/constants.js";
+import type * as contentSync_lib_errors from "../contentSync/lib/errors.js";
+import type * as contentSync_lib_syncHelpers from "../contentSync/lib/syncHelpers.js";
+import type * as contentSync_lib_tryouts from "../contentSync/lib/tryouts.js";
+import type * as contentSync_mutations_articles from "../contentSync/mutations/articles.js";
+import type * as contentSync_mutations_authors from "../contentSync/mutations/authors.js";
+import type * as contentSync_mutations_exercises from "../contentSync/mutations/exercises.js";
+import type * as contentSync_mutations_maintenance from "../contentSync/mutations/maintenance.js";
+import type * as contentSync_mutations_subjects from "../contentSync/mutations/subjects.js";
+import type * as contentSync_mutations_tryouts from "../contentSync/mutations/tryouts.js";
+import type * as contentSync_queries_authors from "../contentSync/queries/authors.js";
+import type * as contentSync_queries_counts from "../contentSync/queries/counts.js";
+import type * as contentSync_queries_integrity from "../contentSync/queries/integrity.js";
+import type * as contentSync_queries_stale from "../contentSync/queries/stale.js";
+import type * as contentSync_queries_tryouts from "../contentSync/queries/tryouts.js";
 import type * as contents_aggregate from "../contents/aggregate.js";
 import type * as contents_mutations from "../contents/mutations.js";
 import type * as contents_queries from "../contents/queries.js";
@@ -60,19 +100,34 @@ import type * as exercises_queries from "../exercises/queries.js";
 import type * as exercises_utils from "../exercises/utils.js";
 import type * as functions from "../functions.js";
 import type * as http from "../http.js";
+import type * as irt_actions_internal_calibration from "../irt/actions/internal/calibration.js";
 import type * as irt_calibration from "../irt/calibration.js";
 import type * as irt_estimation from "../irt/estimation.js";
-import type * as irt_internalActions from "../irt/internalActions.js";
-import type * as irt_internalMutations from "../irt/internalMutations.js";
-import type * as irt_internalQueries from "../irt/internalQueries.js";
+import type * as irt_helpers_attempts from "../irt/helpers/attempts.js";
+import type * as irt_helpers_cache from "../irt/helpers/cache.js";
+import type * as irt_helpers_queue from "../irt/helpers/queue.js";
+import type * as irt_mutations_internal_cache from "../irt/mutations/internal/cache.js";
+import type * as irt_mutations_internal_queue from "../irt/mutations/internal/queue.js";
+import type * as irt_mutations_internal_responses from "../irt/mutations/internal/responses.js";
+import type * as irt_mutations_internal_runs from "../irt/mutations/internal/runs.js";
+import type * as irt_mutations_internal_scales from "../irt/mutations/internal/scales.js";
 import type * as irt_policy from "../irt/policy.js";
-import type * as irt_scaleVersions from "../irt/scaleVersions.js";
-import type * as irt_scoring from "../irt/scoring.js";
+import type * as irt_queries_internal_calibration from "../irt/queries/internal/calibration.js";
+import type * as irt_queries_internal_maintenance from "../irt/queries/internal/maintenance.js";
+import type * as irt_scales_bootstrap from "../irt/scales/bootstrap.js";
+import type * as irt_scales_loaders from "../irt/scales/loaders.js";
+import type * as irt_scales_publish from "../irt/scales/publish.js";
+import type * as irt_scales_quality from "../irt/scales/quality.js";
+import type * as irt_scales_read from "../irt/scales/read.js";
+import type * as irt_scales_snapshot from "../irt/scales/snapshot.js";
 import type * as irt_validators from "../irt/validators.js";
 import type * as irt_workflows from "../irt/workflows.js";
+import type * as irt_workpool from "../irt/workpool.js";
+import type * as lib_attempts from "../lib/attempts.js";
 import type * as lib_helpers_auth from "../lib/helpers/auth.js";
 import type * as lib_helpers_chat from "../lib/helpers/chat.js";
 import type * as lib_helpers_class from "../lib/helpers/class.js";
+import type * as lib_helpers_invite from "../lib/helpers/invite.js";
 import type * as lib_helpers_permissions from "../lib/helpers/permissions.js";
 import type * as lib_helpers_school from "../lib/helpers/school.js";
 import type * as lib_helpers_user from "../lib/helpers/user.js";
@@ -80,7 +135,10 @@ import type * as lib_images from "../lib/images.js";
 import type * as lib_validators_audio from "../lib/validators/audio.js";
 import type * as lib_validators_contents from "../lib/validators/contents.js";
 import type * as lib_validators_trending from "../lib/validators/trending.js";
+import type * as lib_validators_user from "../lib/validators/user.js";
 import type * as lib_validators_vv from "../lib/validators/vv.js";
+import type * as notifications_mutations from "../notifications/mutations.js";
+import type * as notifications_queries from "../notifications/queries.js";
 import type * as polyfills from "../polyfills.js";
 import type * as routes_constants from "../routes/constants.js";
 import type * as routes_middleware_requestId from "../routes/middleware/requestId.js";
@@ -89,47 +147,82 @@ import type * as routes_v1_index from "../routes/v1/index.js";
 import type * as schools_mutations from "../schools/mutations.js";
 import type * as schools_queries from "../schools/queries.js";
 import type * as schools_utils from "../schools/utils.js";
-import type * as snbt_aggregate from "../snbt/aggregate.js";
-import type * as snbt_helpers from "../snbt/helpers.js";
-import type * as snbt_mutations_attempts from "../snbt/mutations/attempts.js";
-import type * as snbt_mutations_leaderboard from "../snbt/mutations/leaderboard.js";
-import type * as snbt_queries_attempts from "../snbt/queries/attempts.js";
-import type * as snbt_queries_leaderboard from "../snbt/queries/leaderboard.js";
-import type * as snbt_queries_tryouts from "../snbt/queries/tryouts.js";
-import type * as subjectSections_mutations from "../subjectSections/mutations.js";
 import type * as subjectSections_queries from "../subjectSections/queries.js";
 import type * as subjectSections_utils from "../subjectSections/utils.js";
 import type * as subscriptions_mutations from "../subscriptions/mutations.js";
 import type * as subscriptions_queries from "../subscriptions/queries.js";
 import type * as subscriptions_utils from "../subscriptions/utils.js";
 import type * as triggers_chats_chats from "../triggers/chats/chats.js";
+import type * as triggers_chats_cleanup from "../triggers/chats/cleanup.js";
+import type * as triggers_comments_cleanup from "../triggers/comments/cleanup.js";
 import type * as triggers_comments_commentVotes from "../triggers/comments/commentVotes.js";
 import type * as triggers_comments_comments from "../triggers/comments/comments.js";
 import type * as triggers_contents_contentViews from "../triggers/contents/contentViews.js";
 import type * as triggers_contents_exerciseAnswers from "../triggers/contents/exerciseAnswers.js";
+import type * as triggers_contents_exerciseAttempts from "../triggers/contents/exerciseAttempts.js";
 import type * as triggers_contents_popularity from "../triggers/contents/popularity.js";
 import type * as triggers_forums_postReactions from "../triggers/forums/postReactions.js";
 import type * as triggers_forums_posts from "../triggers/forums/posts.js";
 import type * as triggers_forums_reactions from "../triggers/forums/reactions.js";
 import type * as triggers_helpers_classes from "../triggers/helpers/classes.js";
-import type * as triggers_helpers_forums from "../triggers/helpers/forums.js";
+import type * as triggers_helpers_forumPosts from "../triggers/helpers/forumPosts.js";
 import type * as triggers_helpers_metadata from "../triggers/helpers/metadata.js";
 import type * as triggers_helpers_notifications from "../triggers/helpers/notifications.js";
+import type * as triggers_helpers_subscriptions from "../triggers/helpers/subscriptions.js";
+import type * as triggers_materials_cleanup from "../triggers/materials/cleanup.js";
 import type * as triggers_materials_groups from "../triggers/materials/groups.js";
 import type * as triggers_materials_materials from "../triggers/materials/materials.js";
 import type * as triggers_noop from "../triggers/noop.js";
+import type * as triggers_notifications_notifications from "../triggers/notifications/notifications.js";
 import type * as triggers_schools_classMembers from "../triggers/schools/classMembers.js";
 import type * as triggers_schools_classes from "../triggers/schools/classes.js";
+import type * as triggers_schools_cleanup from "../triggers/schools/cleanup.js";
 import type * as triggers_schools_members from "../triggers/schools/members.js";
 import type * as triggers_schools_schools from "../triggers/schools/schools.js";
-import type * as triggers_snbt_leaderboard from "../triggers/snbt/leaderboard.js";
 import type * as triggers_subscriptions_subscriptions from "../triggers/subscriptions/subscriptions.js";
+import type * as triggers_tryouts_leaderboard from "../triggers/tryouts/leaderboard.js";
+import type * as tryouts_aggregate from "../tryouts/aggregate.js";
+import type * as tryouts_helpers_access from "../tryouts/helpers/access.js";
+import type * as tryouts_helpers_attemptLifecycle from "../tryouts/helpers/attemptLifecycle.js";
+import type * as tryouts_helpers_expiry from "../tryouts/helpers/expiry.js";
+import type * as tryouts_helpers_finalize_aggregates from "../tryouts/helpers/finalize/aggregates.js";
+import type * as tryouts_helpers_finalize_attempt from "../tryouts/helpers/finalize/attempt.js";
+import type * as tryouts_helpers_finalize_part from "../tryouts/helpers/finalize/part.js";
+import type * as tryouts_helpers_irt from "../tryouts/helpers/irt.js";
+import type * as tryouts_helpers_latest from "../tryouts/helpers/latest.js";
+import type * as tryouts_helpers_loaders from "../tryouts/helpers/loaders.js";
+import type * as tryouts_helpers_metrics from "../tryouts/helpers/metrics.js";
+import type * as tryouts_helpers_parts from "../tryouts/helpers/parts.js";
+import type * as tryouts_helpers_resume from "../tryouts/helpers/resume.js";
+import type * as tryouts_mutations_attempts from "../tryouts/mutations/attempts.js";
+import type * as tryouts_mutations_internal_expiry from "../tryouts/mutations/internal/expiry.js";
+import type * as tryouts_mutations_internal_leaderboard from "../tryouts/mutations/internal/leaderboard.js";
+import type * as tryouts_mutations_internal_scoring from "../tryouts/mutations/internal/scoring.js";
+import type * as tryouts_mutations_internal_stats from "../tryouts/mutations/internal/stats.js";
+import type * as tryouts_products_index from "../tryouts/products/index.js";
+import type * as tryouts_products_snbt from "../tryouts/products/snbt.js";
+import type * as tryouts_queries_leaderboard from "../tryouts/queries/leaderboard.js";
+import type * as tryouts_queries_me_attempt from "../tryouts/queries/me/attempt.js";
+import type * as tryouts_queries_me_helpers from "../tryouts/queries/me/helpers.js";
+import type * as tryouts_queries_me_packages from "../tryouts/queries/me/packages.js";
+import type * as tryouts_queries_me_part from "../tryouts/queries/me/part.js";
+import type * as tryouts_queries_me_validators from "../tryouts/queries/me/validators.js";
+import type * as tryouts_queries_tryouts from "../tryouts/queries/tryouts.js";
+import type * as tryouts_stats from "../tryouts/stats.js";
+import type * as tryouts_workpool from "../tryouts/workpool.js";
 import type * as users_mutations from "../users/mutations.js";
 import type * as users_queries from "../users/queries.js";
-import type * as utils_helper from "../utils/helper.js";
+import type * as utils_error from "../utils/error.js";
+import type * as utils_id from "../utils/id.js";
 import type * as utils_logger from "../utils/logger.js";
-import type * as utils_polar from "../utils/polar.js";
-import type * as utils_timing from "../utils/timing.js";
+import type * as utils_number from "../utils/number.js";
+import type * as utils_polar_client from "../utils/polar/client.js";
+import type * as utils_polar_config from "../utils/polar/config.js";
+import type * as utils_polar_env from "../utils/polar/env.js";
+import type * as utils_polar_products from "../utils/polar/products.js";
+import type * as utils_polar_webhook from "../utils/polar/webhook.js";
+import type * as utils_site from "../utils/site.js";
+import type * as utils_text from "../utils/text.js";
 import type * as utils_type from "../utils/type.js";
 import type * as workflow from "../workflow.js";
 
@@ -140,24 +233,52 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  "articleContents/mutations": typeof articleContents_mutations;
-  "articleContents/queries": typeof articleContents_queries;
   "audioStudies/actions": typeof audioStudies_actions;
   "audioStudies/constants": typeof audioStudies_constants;
-  "audioStudies/mutations": typeof audioStudies_mutations;
+  "audioStudies/helpers/contentAudios": typeof audioStudies_helpers_contentAudios;
+  "audioStudies/mutations/contentAudios": typeof audioStudies_mutations_contentAudios;
+  "audioStudies/mutations/queue": typeof audioStudies_mutations_queue;
   "audioStudies/public/queries": typeof audioStudies_public_queries;
   "audioStudies/queries": typeof audioStudies_queries;
   "audioStudies/utils": typeof audioStudies_utils;
   "audioStudies/workflows": typeof audioStudies_workflows;
   auth: typeof auth;
+  "auth/cleanup": typeof auth_cleanup;
+  "auth/client": typeof auth_client;
   "chats/actions": typeof chats_actions;
+  "chats/constants": typeof chats_constants;
   "chats/helpers": typeof chats_helpers;
+  "chats/messageParts/dbToUi": typeof chats_messageParts_dbToUi;
+  "chats/messageParts/shared": typeof chats_messageParts_shared;
+  "chats/messageParts/uiToDb": typeof chats_messageParts_uiToDb;
   "chats/mutations": typeof chats_mutations;
   "chats/queries": typeof chats_queries;
+  "chats/read": typeof chats_read;
   "chats/utils": typeof chats_utils;
-  "classes/forums/mutations": typeof classes_forums_mutations;
-  "classes/forums/queries": typeof classes_forums_queries;
-  "classes/forums/utils": typeof classes_forums_utils;
+  "classes/constants": typeof classes_constants;
+  "classes/forums/internalMutations": typeof classes_forums_internalMutations;
+  "classes/forums/mutations/forums": typeof classes_forums_mutations_forums;
+  "classes/forums/mutations/posts": typeof classes_forums_mutations_posts;
+  "classes/forums/mutations/reactions": typeof classes_forums_mutations_reactions;
+  "classes/forums/mutations/readState": typeof classes_forums_mutations_readState;
+  "classes/forums/mutations/uploads": typeof classes_forums_mutations_uploads;
+  "classes/forums/queries/around": typeof classes_forums_queries_around;
+  "classes/forums/queries/feed": typeof classes_forums_queries_feed;
+  "classes/forums/queries/forums": typeof classes_forums_queries_forums;
+  "classes/forums/queries/newer": typeof classes_forums_queries_newer;
+  "classes/forums/queries/older": typeof classes_forums_queries_older;
+  "classes/forums/utils/access": typeof classes_forums_utils_access;
+  "classes/forums/utils/attachments": typeof classes_forums_utils_attachments;
+  "classes/forums/utils/constants": typeof classes_forums_utils_constants;
+  "classes/forums/utils/mentions": typeof classes_forums_utils_mentions;
+  "classes/forums/utils/postReactions": typeof classes_forums_utils_postReactions;
+  "classes/forums/utils/posts": typeof classes_forums_utils_posts;
+  "classes/forums/utils/reactions": typeof classes_forums_utils_reactions;
+  "classes/forums/utils/readBoundary": typeof classes_forums_utils_readBoundary;
+  "classes/forums/utils/readStateWrite": typeof classes_forums_utils_readStateWrite;
+  "classes/forums/utils/timestampPosts": typeof classes_forums_utils_timestampPosts;
+  "classes/forums/utils/unreadCounts": typeof classes_forums_utils_unreadCounts;
+  "classes/forums/utils/windowing": typeof classes_forums_utils_windowing;
   "classes/materials/mutations": typeof classes_materials_mutations;
   "classes/materials/queries": typeof classes_materials_queries;
   "classes/materials/utils": typeof classes_materials_utils;
@@ -166,9 +287,21 @@ declare const fullApi: ApiFromModules<{
   "classes/utils": typeof classes_utils;
   "comments/mutations": typeof comments_mutations;
   "comments/queries": typeof comments_queries;
-  "comments/utils": typeof comments_utils;
-  "contentSync/mutations": typeof contentSync_mutations;
-  "contentSync/queries": typeof contentSync_queries;
+  "contentSync/constants": typeof contentSync_constants;
+  "contentSync/lib/errors": typeof contentSync_lib_errors;
+  "contentSync/lib/syncHelpers": typeof contentSync_lib_syncHelpers;
+  "contentSync/lib/tryouts": typeof contentSync_lib_tryouts;
+  "contentSync/mutations/articles": typeof contentSync_mutations_articles;
+  "contentSync/mutations/authors": typeof contentSync_mutations_authors;
+  "contentSync/mutations/exercises": typeof contentSync_mutations_exercises;
+  "contentSync/mutations/maintenance": typeof contentSync_mutations_maintenance;
+  "contentSync/mutations/subjects": typeof contentSync_mutations_subjects;
+  "contentSync/mutations/tryouts": typeof contentSync_mutations_tryouts;
+  "contentSync/queries/authors": typeof contentSync_queries_authors;
+  "contentSync/queries/counts": typeof contentSync_queries_counts;
+  "contentSync/queries/integrity": typeof contentSync_queries_integrity;
+  "contentSync/queries/stale": typeof contentSync_queries_stale;
+  "contentSync/queries/tryouts": typeof contentSync_queries_tryouts;
   "contents/aggregate": typeof contents_aggregate;
   "contents/mutations": typeof contents_mutations;
   "contents/queries": typeof contents_queries;
@@ -192,19 +325,34 @@ declare const fullApi: ApiFromModules<{
   "exercises/utils": typeof exercises_utils;
   functions: typeof functions;
   http: typeof http;
+  "irt/actions/internal/calibration": typeof irt_actions_internal_calibration;
   "irt/calibration": typeof irt_calibration;
   "irt/estimation": typeof irt_estimation;
-  "irt/internalActions": typeof irt_internalActions;
-  "irt/internalMutations": typeof irt_internalMutations;
-  "irt/internalQueries": typeof irt_internalQueries;
+  "irt/helpers/attempts": typeof irt_helpers_attempts;
+  "irt/helpers/cache": typeof irt_helpers_cache;
+  "irt/helpers/queue": typeof irt_helpers_queue;
+  "irt/mutations/internal/cache": typeof irt_mutations_internal_cache;
+  "irt/mutations/internal/queue": typeof irt_mutations_internal_queue;
+  "irt/mutations/internal/responses": typeof irt_mutations_internal_responses;
+  "irt/mutations/internal/runs": typeof irt_mutations_internal_runs;
+  "irt/mutations/internal/scales": typeof irt_mutations_internal_scales;
   "irt/policy": typeof irt_policy;
-  "irt/scaleVersions": typeof irt_scaleVersions;
-  "irt/scoring": typeof irt_scoring;
+  "irt/queries/internal/calibration": typeof irt_queries_internal_calibration;
+  "irt/queries/internal/maintenance": typeof irt_queries_internal_maintenance;
+  "irt/scales/bootstrap": typeof irt_scales_bootstrap;
+  "irt/scales/loaders": typeof irt_scales_loaders;
+  "irt/scales/publish": typeof irt_scales_publish;
+  "irt/scales/quality": typeof irt_scales_quality;
+  "irt/scales/read": typeof irt_scales_read;
+  "irt/scales/snapshot": typeof irt_scales_snapshot;
   "irt/validators": typeof irt_validators;
   "irt/workflows": typeof irt_workflows;
+  "irt/workpool": typeof irt_workpool;
+  "lib/attempts": typeof lib_attempts;
   "lib/helpers/auth": typeof lib_helpers_auth;
   "lib/helpers/chat": typeof lib_helpers_chat;
   "lib/helpers/class": typeof lib_helpers_class;
+  "lib/helpers/invite": typeof lib_helpers_invite;
   "lib/helpers/permissions": typeof lib_helpers_permissions;
   "lib/helpers/school": typeof lib_helpers_school;
   "lib/helpers/user": typeof lib_helpers_user;
@@ -212,7 +360,10 @@ declare const fullApi: ApiFromModules<{
   "lib/validators/audio": typeof lib_validators_audio;
   "lib/validators/contents": typeof lib_validators_contents;
   "lib/validators/trending": typeof lib_validators_trending;
+  "lib/validators/user": typeof lib_validators_user;
   "lib/validators/vv": typeof lib_validators_vv;
+  "notifications/mutations": typeof notifications_mutations;
+  "notifications/queries": typeof notifications_queries;
   polyfills: typeof polyfills;
   "routes/constants": typeof routes_constants;
   "routes/middleware/requestId": typeof routes_middleware_requestId;
@@ -221,47 +372,82 @@ declare const fullApi: ApiFromModules<{
   "schools/mutations": typeof schools_mutations;
   "schools/queries": typeof schools_queries;
   "schools/utils": typeof schools_utils;
-  "snbt/aggregate": typeof snbt_aggregate;
-  "snbt/helpers": typeof snbt_helpers;
-  "snbt/mutations/attempts": typeof snbt_mutations_attempts;
-  "snbt/mutations/leaderboard": typeof snbt_mutations_leaderboard;
-  "snbt/queries/attempts": typeof snbt_queries_attempts;
-  "snbt/queries/leaderboard": typeof snbt_queries_leaderboard;
-  "snbt/queries/tryouts": typeof snbt_queries_tryouts;
-  "subjectSections/mutations": typeof subjectSections_mutations;
   "subjectSections/queries": typeof subjectSections_queries;
   "subjectSections/utils": typeof subjectSections_utils;
   "subscriptions/mutations": typeof subscriptions_mutations;
   "subscriptions/queries": typeof subscriptions_queries;
   "subscriptions/utils": typeof subscriptions_utils;
   "triggers/chats/chats": typeof triggers_chats_chats;
+  "triggers/chats/cleanup": typeof triggers_chats_cleanup;
+  "triggers/comments/cleanup": typeof triggers_comments_cleanup;
   "triggers/comments/commentVotes": typeof triggers_comments_commentVotes;
   "triggers/comments/comments": typeof triggers_comments_comments;
   "triggers/contents/contentViews": typeof triggers_contents_contentViews;
   "triggers/contents/exerciseAnswers": typeof triggers_contents_exerciseAnswers;
+  "triggers/contents/exerciseAttempts": typeof triggers_contents_exerciseAttempts;
   "triggers/contents/popularity": typeof triggers_contents_popularity;
   "triggers/forums/postReactions": typeof triggers_forums_postReactions;
   "triggers/forums/posts": typeof triggers_forums_posts;
   "triggers/forums/reactions": typeof triggers_forums_reactions;
   "triggers/helpers/classes": typeof triggers_helpers_classes;
-  "triggers/helpers/forums": typeof triggers_helpers_forums;
+  "triggers/helpers/forumPosts": typeof triggers_helpers_forumPosts;
   "triggers/helpers/metadata": typeof triggers_helpers_metadata;
   "triggers/helpers/notifications": typeof triggers_helpers_notifications;
+  "triggers/helpers/subscriptions": typeof triggers_helpers_subscriptions;
+  "triggers/materials/cleanup": typeof triggers_materials_cleanup;
   "triggers/materials/groups": typeof triggers_materials_groups;
   "triggers/materials/materials": typeof triggers_materials_materials;
   "triggers/noop": typeof triggers_noop;
+  "triggers/notifications/notifications": typeof triggers_notifications_notifications;
   "triggers/schools/classMembers": typeof triggers_schools_classMembers;
   "triggers/schools/classes": typeof triggers_schools_classes;
+  "triggers/schools/cleanup": typeof triggers_schools_cleanup;
   "triggers/schools/members": typeof triggers_schools_members;
   "triggers/schools/schools": typeof triggers_schools_schools;
-  "triggers/snbt/leaderboard": typeof triggers_snbt_leaderboard;
   "triggers/subscriptions/subscriptions": typeof triggers_subscriptions_subscriptions;
+  "triggers/tryouts/leaderboard": typeof triggers_tryouts_leaderboard;
+  "tryouts/aggregate": typeof tryouts_aggregate;
+  "tryouts/helpers/access": typeof tryouts_helpers_access;
+  "tryouts/helpers/attemptLifecycle": typeof tryouts_helpers_attemptLifecycle;
+  "tryouts/helpers/expiry": typeof tryouts_helpers_expiry;
+  "tryouts/helpers/finalize/aggregates": typeof tryouts_helpers_finalize_aggregates;
+  "tryouts/helpers/finalize/attempt": typeof tryouts_helpers_finalize_attempt;
+  "tryouts/helpers/finalize/part": typeof tryouts_helpers_finalize_part;
+  "tryouts/helpers/irt": typeof tryouts_helpers_irt;
+  "tryouts/helpers/latest": typeof tryouts_helpers_latest;
+  "tryouts/helpers/loaders": typeof tryouts_helpers_loaders;
+  "tryouts/helpers/metrics": typeof tryouts_helpers_metrics;
+  "tryouts/helpers/parts": typeof tryouts_helpers_parts;
+  "tryouts/helpers/resume": typeof tryouts_helpers_resume;
+  "tryouts/mutations/attempts": typeof tryouts_mutations_attempts;
+  "tryouts/mutations/internal/expiry": typeof tryouts_mutations_internal_expiry;
+  "tryouts/mutations/internal/leaderboard": typeof tryouts_mutations_internal_leaderboard;
+  "tryouts/mutations/internal/scoring": typeof tryouts_mutations_internal_scoring;
+  "tryouts/mutations/internal/stats": typeof tryouts_mutations_internal_stats;
+  "tryouts/products/index": typeof tryouts_products_index;
+  "tryouts/products/snbt": typeof tryouts_products_snbt;
+  "tryouts/queries/leaderboard": typeof tryouts_queries_leaderboard;
+  "tryouts/queries/me/attempt": typeof tryouts_queries_me_attempt;
+  "tryouts/queries/me/helpers": typeof tryouts_queries_me_helpers;
+  "tryouts/queries/me/packages": typeof tryouts_queries_me_packages;
+  "tryouts/queries/me/part": typeof tryouts_queries_me_part;
+  "tryouts/queries/me/validators": typeof tryouts_queries_me_validators;
+  "tryouts/queries/tryouts": typeof tryouts_queries_tryouts;
+  "tryouts/stats": typeof tryouts_stats;
+  "tryouts/workpool": typeof tryouts_workpool;
   "users/mutations": typeof users_mutations;
   "users/queries": typeof users_queries;
-  "utils/helper": typeof utils_helper;
+  "utils/error": typeof utils_error;
+  "utils/id": typeof utils_id;
   "utils/logger": typeof utils_logger;
-  "utils/polar": typeof utils_polar;
-  "utils/timing": typeof utils_timing;
+  "utils/number": typeof utils_number;
+  "utils/polar/client": typeof utils_polar_client;
+  "utils/polar/config": typeof utils_polar_config;
+  "utils/polar/env": typeof utils_polar_env;
+  "utils/polar/products": typeof utils_polar_products;
+  "utils/polar/webhook": typeof utils_polar_webhook;
+  "utils/site": typeof utils_site;
+  "utils/text": typeof utils_text;
   "utils/type": typeof utils_type;
   workflow: typeof workflow;
 }>;
@@ -1777,13 +1963,13 @@ export declare const components: {
         "mutation",
         "internal",
         { authId: string; userId: string },
-        any
+        null
       >;
       updateUserName: FunctionReference<
         "mutation",
         "internal",
         { authId: string; name: string },
-        any
+        null
       >;
     };
     queries: {
@@ -1791,20 +1977,7 @@ export declare const components: {
         "query",
         "internal",
         { email: string },
-        null | {
-          _creationTime: number;
-          _id: string;
-          createdAt: number;
-          displayUsername?: null | string;
-          email: string;
-          emailVerified: boolean;
-          image?: null | string;
-          isAnonymous?: null | boolean;
-          name: string;
-          updatedAt: number;
-          userId?: null | string;
-          username?: null | string;
-        }
+        null | { _id: string }
       >;
     };
   };
@@ -2265,6 +2438,202 @@ export declare const components: {
         "internal",
         { from?: number | string; startAsync?: boolean; workflowId: string },
         null
+      >;
+    };
+  };
+  irtCalibrationSyncWorkpool: {
+    config: {
+      update: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+          maxParallelism?: number;
+        },
+        any
+      >;
+    };
+    lib: {
+      cancel: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          id: string;
+          logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+        },
+        any
+      >;
+      cancelAll: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          before?: number;
+          limit?: number;
+          logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+        },
+        any
+      >;
+      enqueue: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          config: {
+            logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+            maxParallelism?: number;
+          };
+          fnArgs: any;
+          fnHandle: string;
+          fnName: string;
+          fnType: "action" | "mutation" | "query";
+          onComplete?: { context?: any; fnHandle: string };
+          retryBehavior?: {
+            base: number;
+            initialBackoffMs: number;
+            maxAttempts: number;
+          };
+          runAt: number;
+        },
+        string
+      >;
+      enqueueBatch: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          config: {
+            logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+            maxParallelism?: number;
+          };
+          items: Array<{
+            fnArgs: any;
+            fnHandle: string;
+            fnName: string;
+            fnType: "action" | "mutation" | "query";
+            onComplete?: { context?: any; fnHandle: string };
+            retryBehavior?: {
+              base: number;
+              initialBackoffMs: number;
+              maxAttempts: number;
+            };
+            runAt: number;
+          }>;
+        },
+        Array<string>
+      >;
+      status: FunctionReference<
+        "query",
+        "internal",
+        { id: string },
+        | { previousAttempts: number; state: "pending" }
+        | { previousAttempts: number; state: "running" }
+        | { state: "finished" }
+      >;
+      statusBatch: FunctionReference<
+        "query",
+        "internal",
+        { ids: Array<string> },
+        Array<
+          | { previousAttempts: number; state: "pending" }
+          | { previousAttempts: number; state: "running" }
+          | { state: "finished" }
+        >
+      >;
+    };
+  };
+  tryoutLeaderboardWorkpool: {
+    config: {
+      update: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+          maxParallelism?: number;
+        },
+        any
+      >;
+    };
+    lib: {
+      cancel: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          id: string;
+          logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+        },
+        any
+      >;
+      cancelAll: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          before?: number;
+          limit?: number;
+          logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+        },
+        any
+      >;
+      enqueue: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          config: {
+            logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+            maxParallelism?: number;
+          };
+          fnArgs: any;
+          fnHandle: string;
+          fnName: string;
+          fnType: "action" | "mutation" | "query";
+          onComplete?: { context?: any; fnHandle: string };
+          retryBehavior?: {
+            base: number;
+            initialBackoffMs: number;
+            maxAttempts: number;
+          };
+          runAt: number;
+        },
+        string
+      >;
+      enqueueBatch: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          config: {
+            logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+            maxParallelism?: number;
+          };
+          items: Array<{
+            fnArgs: any;
+            fnHandle: string;
+            fnName: string;
+            fnType: "action" | "mutation" | "query";
+            onComplete?: { context?: any; fnHandle: string };
+            retryBehavior?: {
+              base: number;
+              initialBackoffMs: number;
+              maxAttempts: number;
+            };
+            runAt: number;
+          }>;
+        },
+        Array<string>
+      >;
+      status: FunctionReference<
+        "query",
+        "internal",
+        { id: string },
+        | { previousAttempts: number; state: "pending" }
+        | { previousAttempts: number; state: "running" }
+        | { state: "finished" }
+      >;
+      statusBatch: FunctionReference<
+        "query",
+        "internal",
+        { ids: Array<string> },
+        Array<
+          | { previousAttempts: number; state: "pending" }
+          | { previousAttempts: number; state: "running" }
+          | { state: "finished" }
+        >
       >;
     };
   };

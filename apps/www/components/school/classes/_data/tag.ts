@@ -5,6 +5,7 @@ import {
   InternetIcon,
   NewsIcon,
 } from "@hugeicons/core-free-icons";
+import { STUDENT_FORUM_TAGS } from "@repo/backend/convex/classes/forums/utils/constants";
 import type { SchoolClassMemberRole } from "@repo/backend/convex/classes/schema";
 import type { SchoolMemberRole } from "@repo/backend/convex/schools/schema";
 
@@ -33,9 +34,9 @@ export const tagList = [
 
 export type TagValue = (typeof tagList)[number]["value"];
 
-// Tags available for students (general discussions and questions only)
-const studentTags: TagValue[] = ["general", "question"];
-
+/**
+ * Resolve the icon used to represent one forum tag.
+ */
 export function getTagIcon(tag: TagValue) {
   return tagList.find((t) => t.value === tag)?.icon ?? ChatIcon;
 }
@@ -53,7 +54,9 @@ export function getTagsByRole(
   if (schoolMemberRole === "admin" || classMemberRole === "teacher") {
     return tagList;
   }
-  return tagList.filter((tag) => studentTags.includes(tag.value));
+  return tagList.filter((tag) =>
+    STUDENT_FORUM_TAGS.some((studentTag) => studentTag === tag.value)
+  );
 }
 
 /**

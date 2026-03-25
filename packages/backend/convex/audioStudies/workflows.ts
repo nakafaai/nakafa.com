@@ -4,10 +4,10 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
 import {
   markQueueCompleted,
-  markQueueFailed,
-} from "@repo/backend/convex/audioStudies/utils";
+  setQueueItemFailed,
+} from "@repo/backend/convex/audioStudies/mutations/queue";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { getErrorMessage } from "@repo/backend/convex/utils/helper";
+import { getErrorMessage } from "@repo/backend/convex/utils/error";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { workflow } from "@repo/backend/convex/workflow";
 import { v } from "convex/values";
@@ -25,7 +25,7 @@ export const generateAudioForQueueItem = workflow.define({
 
     // Step 1: Atomically lock queue item (pending -> processing)
     const queueItem = await step.runMutation(
-      internal.audioStudies.mutations.lockQueueItem,
+      internal.audioStudies.mutations.queue.lockQueueItem,
       {
         queueItemId: args.queueItemId,
       }
@@ -61,16 +61,19 @@ export const generateAudioForQueueItem = workflow.define({
         contentType: queueItem.contentRef.type,
         contentId: queueItem.contentRef.id,
       });
-      await step.runMutation(internal.audioStudies.mutations.markQueueFailed, {
-        queueItemId: args.queueItemId,
-        error: "Content not found",
-      });
+      await step.runMutation(
+        internal.audioStudies.mutations.queue.markQueueFailed,
+        {
+          queueItemId: args.queueItemId,
+          error: "Content not found",
+        }
+      );
       return null;
     }
 
     // Step 3: Get or create audio record (idempotent)
     const audioRecordId = await step.runMutation(
-      internal.audioStudies.mutations.createOrGetAudioRecord,
+      internal.audioStudies.mutations.contentAudios.createOrGetAudioRecord,
       {
         contentRef: queueItem.contentRef,
         locale: queueItem.locale,
@@ -147,7 +150,10 @@ export const handleWorkflowComplete = internalMutation({
         args.result.error
       );
 
-      await markQueueFailed(ctx, args.context.queueItemId, errorMessage);
+      await setQueueItemFailed(ctx, {
+        error: errorMessage,
+        queueItemId: args.context.queueItemId,
+      });
     } else if (args.result.kind === "canceled") {
       logger.info("Audio workflow canceled", {
         queueItemId: args.context.queueItemId,

@@ -1,9 +1,21 @@
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import { api } from "@repo/connection/routes";
+import { routing } from "@repo/internationalization/src/routing";
 import { cleanSlug } from "@repo/utilities/helper";
 import { fetchQuery } from "convex/nextjs";
 
 const QURAN_SLUG_PARTS_COUNT = 3;
+
+function stripLocalePrefix(slug: string) {
+  const slugParts = cleanSlug(slug).split("/");
+  const firstSegment = slugParts[0];
+
+  if (!routing.locales.some((locale) => locale === firstSegment)) {
+    return slugParts;
+  }
+
+  return slugParts.slice(1);
+}
 
 /**
  * Checks whether the given URL corresponds to verified content by querying
@@ -13,14 +25,13 @@ const QURAN_SLUG_PARTS_COUNT = 3;
  */
 export async function getVerified(url: string) {
   const cleanedUrl = cleanSlug(url);
+  const slugParts = stripLocalePrefix(cleanedUrl);
 
-  const slugParts = cleanedUrl.split("/");
-
-  if (slugParts[1] === "quran") {
+  if (slugParts[0] === "quran") {
     if (slugParts.length !== QURAN_SLUG_PARTS_COUNT) {
       return false;
     }
-    const surah = slugParts[2];
+    const surah = slugParts[1];
     const { data: surahData, error: surahError } = await api.contents.getSurah({
       surah: Number.parseInt(surah, 10),
     });
@@ -30,7 +41,7 @@ export async function getVerified(url: string) {
     return surahData !== null;
   }
 
-  if (slugParts[1] === "exercises") {
+  if (slugParts[0] === "exercises") {
     const { data: exercisesData, error: exercisesError } =
       await api.contents.getExercises({
         slug: cleanedUrl,

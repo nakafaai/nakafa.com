@@ -1,0 +1,214 @@
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import type {
+  MutationCtx,
+  QueryCtx,
+} from "@repo/backend/convex/_generated/server";
+import {
+  getCalibrationWindowStartAt,
+  IRT_MIN_ATTEMPTS_FOR_OFFICIAL_SCALE,
+  IRT_MIN_RESPONSES_FOR_CALIBRATED,
+} from "@repo/backend/convex/irt/policy";
+import { ConvexError, v } from "convex/values";
+import { getAll } from "convex-helpers/server/relationships";
+
+type IrtDbReader = QueryCtx["db"] | MutationCtx["db"];
+
+export const scaleQualityRebuildResultValidator = v.object({
+  isDone: v.boolean(),
+  processedCount: v.number(),
+});
+
+function getBlockingReason({
+  calibratedQuestionCount,
+  staleQuestionCount,
+  totalQuestionCount,
+  minAttemptCount,
+}: {
+  calibratedQuestionCount: number;
+  staleQuestionCount: number;
+  totalQuestionCount: number;
+  minAttemptCount: number;
+}) {
+  if (calibratedQuestionCount !== totalQuestionCount) {
+    return "missing-calibrated-items";
+  }
+
+  if (staleQuestionCount > 0) {
+    return "stale-calibration-window";
+  }
+
+  if (minAttemptCount < IRT_MIN_ATTEMPTS_FOR_OFFICIAL_SCALE) {
+    return "insufficient-live-attempts";
+  }
+
+  return null;
+}
+
+/** Evaluates whether one tryout is ready for an official frozen scale. */
+export async function evaluateTryoutScaleQuality(
+  db: IrtDbReader,
+  {
+    now,
+    tryoutId,
+  }: {
+    now: number;
+    tryoutId: Id<"tryouts">;
+  }
+) {
+  const tryout = await db.get("tryouts", tryoutId);
+
+  if (!tryout) {
+    return null;
+  }
+
+  const tryoutPartSets = await db
+    .query("tryoutPartSets")
+    .withIndex("by_tryoutId_and_partIndex", (q) => q.eq("tryoutId", tryoutId))
+    .take(tryout.partCount + 1);
+
+  if (tryoutPartSets.length !== tryout.partCount) {
+    throw new ConvexError({
+      code: "IRT_TRYOUT_PART_COUNT_MISMATCH",
+      message: "Tryout part set count does not match the tryout part count.",
+    });
+  }
+
+  const sets = await getAll(
+    db,
+    "exerciseSets",
+    tryoutPartSets.map((partSet) => partSet.setId)
+  );
+  const liveWindowStartAt = getCalibrationWindowStartAt(now);
+  let calibratedQuestionCount = 0;
+  let staleQuestionCount = 0;
+  let totalQuestionCount = 0;
+  let minAttemptCount = Number.POSITIVE_INFINITY;
+
+  for (const [index] of tryoutPartSets.entries()) {
+    const set = sets[index];
+
+    if (!set) {
+      minAttemptCount = 0;
+      continue;
+    }
+
+    const [cacheStats, itemParams, questions] = await Promise.all([
+      db
+        .query("irtCalibrationCacheStats")
+        .withIndex("by_setId", (q) => q.eq("setId", set._id))
+        .unique(),
+      db
+        .query("exerciseItemParameters")
+        .withIndex("by_setId", (q) => q.eq("setId", set._id))
+        .take(set.questionCount + 1),
+      db
+        .query("exerciseQuestions")
+        .withIndex("by_setId", (q) => q.eq("setId", set._id))
+        .take(set.questionCount + 1),
+    ]);
+
+    if (itemParams.length > set.questionCount) {
+      throw new ConvexError({
+        code: "IRT_ITEM_PARAMETER_COUNT_EXCEEDED",
+        message:
+          "Exercise item parameter count exceeds the set question count.",
+      });
+    }
+
+    if (questions.length > set.questionCount) {
+      throw new ConvexError({
+        code: "IRT_QUESTION_COUNT_EXCEEDED",
+        message: "Exercise question count exceeds the set question count.",
+      });
+    }
+
+    totalQuestionCount += questions.length;
+    minAttemptCount = Math.min(minAttemptCount, cacheStats?.attemptCount ?? 0);
+
+    const itemParamsByQuestionId = new Map(
+      itemParams.map((params) => [params.questionId, params])
+    );
+
+    for (const question of questions) {
+      const params = itemParamsByQuestionId.get(question._id);
+
+      if (
+        !params ||
+        params.calibrationStatus !== "calibrated" ||
+        params.calibrationRunId === undefined ||
+        params.responseCount < IRT_MIN_RESPONSES_FOR_CALIBRATED
+      ) {
+        continue;
+      }
+
+      calibratedQuestionCount += 1;
+
+      if (params.calibratedAt < liveWindowStartAt) {
+        staleQuestionCount += 1;
+      }
+    }
+  }
+
+  if (!Number.isFinite(minAttemptCount)) {
+    minAttemptCount = 0;
+  }
+
+  const blockingReason = getBlockingReason({
+    calibratedQuestionCount,
+    staleQuestionCount,
+    totalQuestionCount,
+    minAttemptCount,
+  });
+
+  return {
+    tryoutId,
+    status: blockingReason ? "blocked" : "passed",
+    blockingReason,
+    totalQuestionCount,
+    calibratedQuestionCount,
+    staleQuestionCount,
+    minAttemptCount,
+    liveWindowStartAt,
+    checkedAt: now,
+  } satisfies Pick<
+    Doc<"irtScaleQualityChecks">,
+    | "tryoutId"
+    | "status"
+    | "blockingReason"
+    | "totalQuestionCount"
+    | "calibratedQuestionCount"
+    | "staleQuestionCount"
+    | "minAttemptCount"
+    | "liveWindowStartAt"
+    | "checkedAt"
+  >;
+}
+
+/** Upserts one tryout's current scale-quality summary. */
+export async function upsertTryoutScaleQualityCheck(
+  db: MutationCtx["db"],
+  summary: NonNullable<Awaited<ReturnType<typeof evaluateTryoutScaleQuality>>>
+) {
+  const existingCheck = await db
+    .query("irtScaleQualityChecks")
+    .withIndex("by_tryoutId", (q) => q.eq("tryoutId", summary.tryoutId))
+    .unique();
+
+  if (existingCheck) {
+    await db.patch("irtScaleQualityChecks", existingCheck._id, {
+      status: summary.status,
+      blockingReason: summary.blockingReason,
+      totalQuestionCount: summary.totalQuestionCount,
+      calibratedQuestionCount: summary.calibratedQuestionCount,
+      staleQuestionCount: summary.staleQuestionCount,
+      minAttemptCount: summary.minAttemptCount,
+      liveWindowStartAt: summary.liveWindowStartAt,
+      checkedAt: summary.checkedAt,
+    });
+
+    return summary;
+  }
+
+  await db.insert("irtScaleQualityChecks", summary);
+  return summary;
+}

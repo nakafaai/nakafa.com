@@ -13,6 +13,13 @@ export const userRoleOptionsValidator = literals(
   "administrator"
 );
 
+/** Roles a normal end user may self-select during onboarding/settings. */
+export const selfSelectableUserRoleValidator = literals(
+  "teacher",
+  "student",
+  "parent"
+);
+
 /**
  * User role validator (nullable) - for return types
  */
@@ -44,9 +51,9 @@ export const userValidator = v.object({
 
 const tables = {
   users: defineTable(userValidator)
-    .index("email", ["email"])
-    .index("authId", ["authId"])
-    .index("plan", ["plan", "creditsResetAt"]),
+    .index("by_email", ["email"])
+    .index("by_authId", ["authId"])
+    .index("by_plan_and_creditsResetAt", ["plan", "creditsResetAt"]),
 };
 
 export default tables;

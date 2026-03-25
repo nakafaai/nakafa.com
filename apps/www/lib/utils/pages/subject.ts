@@ -1,4 +1,5 @@
 import { getContent } from "@repo/contents/_lib/content";
+import { getContentMetadataWithRaw } from "@repo/contents/_lib/metadata";
 import {
   getMaterialPath,
   getMaterials,
@@ -119,9 +120,8 @@ export function getContentMetadataContext({
   const FilePath = getSlugPath(category, grade, material, slug);
 
   return Effect.all({
-    content: Effect.orElse(
-      getContent(locale, FilePath, { includeMDX: false }),
-      () => Effect.succeed(null)
+    content: Effect.orElse(getContentMetadataWithRaw(locale, FilePath), () =>
+      Effect.succeed(null)
     ),
     FilePath: Effect.succeed(FilePath),
   });

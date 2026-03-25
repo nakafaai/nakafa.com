@@ -44,6 +44,7 @@ export const SIDEBAR_KEYBOARD_SHORTCUT = "b";
 export const SIDEBAR_DESKTOP = 1024;
 
 interface SidebarContextProps {
+  isLocked: boolean;
   isMobile: boolean;
   open: boolean;
   openMobile: boolean;
@@ -64,8 +65,14 @@ function useSidebar() {
   return context;
 }
 
+/**
+ * Provides shared sidebar state for the current app shell.
+ *
+ * When `locked` is true, the sidebar stays hidden and ignores toggle actions.
+ */
 function SidebarProvider({
   defaultOpen = true,
+  locked = false,
   sidebarDesktop,
   keyboardShortcut,
   open: openProp,
@@ -77,6 +84,7 @@ function SidebarProvider({
   ...props
 }: React.ComponentProps<"div"> & {
   defaultOpen?: boolean;
+  locked?: boolean;
   open?: boolean;
   sidebarDesktop?: number;
   keyboardShortcut?: string;
@@ -86,15 +94,19 @@ function SidebarProvider({
   const isMobile = useMediaQuery(
     `(max-width: ${sidebarDesktop ?? SIDEBAR_DESKTOP - 1}px)`
   );
-  const [openMobile, setOpenMobile] = useState(false);
+  const [mobileOpen, setMobileOpenState] = useState(false);
+  const isLocked = locked;
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
   const [_open, _setOpen] = useState(defaultOpen);
-  const open = openProp ?? _open;
+  const open = isLocked ? false : (openProp ?? _open);
+  const openMobile = isLocked ? false : mobileOpen;
   const setOpen = useCallback(
     (value: boolean | ((prev: boolean) => boolean)) => {
-      const openState = typeof value === "function" ? value(open) : value;
+      const nextOpen = typeof value === "function" ? value(open) : value;
+      const openState = isLocked ? false : nextOpen;
+
       if (setOpenProp) {
         setOpenProp(openState);
       } else {
@@ -105,23 +117,42 @@ function SidebarProvider({
       // biome-ignore lint/suspicious/noDocumentCookie: using client side cookie
       document.cookie = `${cookieName ?? SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
     },
-    [setOpenProp, open, cookieName]
+    [setOpenProp, open, cookieName, isLocked]
+  );
+  const setOpenMobile = useCallback(
+    (value: boolean | ((prev: boolean) => boolean)) => {
+      const nextOpen = typeof value === "function" ? value(mobileOpen) : value;
+
+      setMobileOpenState(isLocked ? false : nextOpen);
+    },
+    [isLocked, mobileOpen]
   );
 
   // Helper to toggle the sidebar.
-  const toggleSidebar = useCallback(
-    () =>
-      isMobile ? setOpenMobile((prev) => !prev) : setOpen((prev) => !prev),
-    [isMobile, setOpen]
-  );
+  const toggleSidebar = useCallback(() => {
+    if (isLocked) {
+      return;
+    }
+
+    if (isMobile) {
+      setOpenMobile((prev) => !prev);
+      return;
+    }
+
+    setOpen((prev) => !prev);
+  }, [isLocked, isMobile, setOpen, setOpenMobile]);
 
   // Adds a keyboard shortcut to toggle the sidebar.
-  useHotkeys([
-    [
-      `mod+${keyboardShortcut ?? SIDEBAR_KEYBOARD_SHORTCUT}`,
-      () => toggleSidebar(),
-    ],
-  ]);
+  useHotkeys(
+    isLocked
+      ? []
+      : [
+          [
+            `mod+${keyboardShortcut ?? SIDEBAR_KEYBOARD_SHORTCUT}`,
+            () => toggleSidebar(),
+          ],
+        ]
+  );
 
   // We add a state so that we can do data-state="expanded" or "collapsed".
   // This makes it easier to style the sidebar with Tailwind classes.
@@ -133,11 +164,21 @@ function SidebarProvider({
       open,
       setOpen,
       isMobile,
+      isLocked,
       openMobile,
       setOpenMobile,
       toggleSidebar,
     }),
-    [state, open, setOpen, isMobile, openMobile, toggleSidebar]
+    [
+      state,
+      open,
+      setOpen,
+      isMobile,
+      isLocked,
+      openMobile,
+      setOpenMobile,
+      toggleSidebar,
+    ]
   );
 
   return (
@@ -270,7 +311,11 @@ function SidebarTrigger({
 }: React.ComponentProps<typeof Button> & {
   icon?: ComponentProps<typeof HugeIcons>["icon"];
 }) {
-  const { toggleSidebar } = useSidebar();
+  const { isLocked, toggleSidebar } = useSidebar();
+
+  if (isLocked) {
+    return null;
+  }
 
   return (
     <Button
@@ -293,7 +338,11 @@ function SidebarTrigger({
 }
 
 function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
-  const { toggleSidebar } = useSidebar();
+  const { isLocked, toggleSidebar } = useSidebar();
+
+  if (isLocked) {
+    return null;
+  }
 
   return (
     <button

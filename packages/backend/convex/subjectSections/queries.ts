@@ -1,47 +1,22 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { internalQuery, query } from "@repo/backend/convex/_generated/server";
+import { query } from "@repo/backend/convex/_generated/server";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { trendingSubjectValidator } from "@repo/backend/convex/lib/validators/trending";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
+import {
+  getTrendingBucketStart,
+  TRENDING_BUCKET_MS,
+} from "@repo/backend/convex/subjectSections/utils";
+import { ConvexError } from "convex/values";
 import { getAll } from "convex-helpers/server/relationships";
-import { nullable } from "convex-helpers/validators";
 
-/**
- * Get subject section content by ID.
- */
-export const getById = internalQuery({
-  args: {
-    id: vv.id("subjectSections"),
-  },
-  returns: nullable(
-    vv.object({
-      title: vv.string(),
-      description: vv.optional(vv.string()),
-      body: vv.string(),
-      locale: localeValidator,
-      contentHash: vv.string(),
-    })
-  ),
-  handler: async (ctx, args) => {
-    const section = await ctx.db.get("subjectSections", args.id);
-    if (!section) {
-      return null;
-    }
-    return {
-      title: section.title,
-      description: section.description,
-      body: section.body,
-      locale: section.locale,
-      contentHash: section.contentHash,
-    };
-  },
-});
+const MAX_TRENDING_RANGE_DAYS = 31;
 
 /**
  * Get trending subjects for a time range.
  *
- * Timestamps should be rounded to nearest hour for caching.
- * Use getTrendingTimeRange() helper.
+ * Timestamps should be rounded to the helper's day bucket for caching.
+ * Use getTrendingTimeRange(days, nowMs) helper.
  *
  * @see https://docs.convex.dev/understanding/best-practices/#date-in-queries
  * @see https://docs.convex.dev/understanding/best-practices/#only-use-collect-with-a-small-number-of-results
@@ -56,34 +31,43 @@ export const getTrendingSubjects = query({
   },
   returns: vv.array(trendingSubjectValidator),
   handler: async (ctx, args) => {
+    if (args.until <= args.since) {
+      return [];
+    }
+
+    if (
+      args.until - args.since >
+      MAX_TRENDING_RANGE_DAYS * TRENDING_BUCKET_MS
+    ) {
+      throw new ConvexError({
+        code: "INVALID_TRENDING_RANGE",
+        message: `Trending range cannot exceed ${MAX_TRENDING_RANGE_DAYS} days.`,
+      });
+    }
+
     const limit = args.limit ?? 6;
     const minViews = args.minViews ?? 5;
+    const since = getTrendingBucketStart(args.since);
+    const until =
+      getTrendingBucketStart(Math.max(args.since, args.until - 1)) +
+      TRENDING_BUCKET_MS;
 
-    // Use .take() instead of .collect() to prevent unbounded queries
-    // This limits results to MAX_VIEWS most recent views in the range
-    const viewsInRange = await ctx.db
-      .query("contentViews")
-      .withIndex("by_locale_type_lastViewedAt", (q) =>
+    const bucketsInRange = ctx.db
+      .query("subjectTrendingBuckets")
+      .withIndex("by_locale_and_bucketStart_and_contentId", (q) =>
         q
           .eq("locale", args.locale)
-          .eq("contentRef.type", "subject")
-          .gte("lastViewedAt", args.since)
-          .lt("lastViewedAt", args.until)
-      )
-      .take(1000);
+          .gte("bucketStart", since)
+          .lt("bucketStart", until)
+      );
 
     const countBySubject = new Map<Id<"subjectSections">, number>();
-    const slugBySubject = new Map<Id<"subjectSections">, string>();
 
-    for (const view of viewsInRange) {
-      // Type narrowing: index filters by type, but TS needs explicit check
-      if (view.contentRef.type === "subject") {
-        const subjectId = view.contentRef.id;
-        countBySubject.set(subjectId, (countBySubject.get(subjectId) ?? 0) + 1);
-        if (!slugBySubject.has(subjectId)) {
-          slugBySubject.set(subjectId, view.slug);
-        }
-      }
+    for await (const bucket of bucketsInRange) {
+      countBySubject.set(
+        bucket.contentId,
+        (countBySubject.get(bucket.contentId) ?? 0) + bucket.viewCount
+      );
     }
 
     const trendingEntries = Array.from(countBySubject.entries())
@@ -102,7 +86,7 @@ export const getTrendingSubjects = query({
 
     // Map to results maintaining sort order from trendingEntries
     const results = trendingEntries
-      .map(([id, viewCount], index) => {
+      .map(([, viewCount], index) => {
         const subject = subjects[index];
         if (!subject) {
           return null;
@@ -111,7 +95,7 @@ export const getTrendingSubjects = query({
           id: subject._id,
           title: subject.title,
           description: subject.description,
-          slug: slugBySubject.get(id) ?? subject.slug,
+          slug: subject.slug,
           viewCount,
           grade: subject.grade,
           material: subject.material,

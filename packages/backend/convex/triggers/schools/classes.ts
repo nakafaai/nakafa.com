@@ -1,3 +1,4 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import type { DataModel, Id } from "@repo/backend/convex/_generated/dataModel";
 import { buildClassChangesMetadata } from "@repo/backend/convex/triggers/helpers/metadata";
 import type { GenericMutationCtx } from "convex/server";
@@ -96,14 +97,12 @@ export async function schoolClassesHandler(
         },
       });
 
-      const classMembers = await ctx.db
-        .query("schoolClassMembers")
-        .withIndex("classId_userId", (q) => q.eq("classId", classId))
-        .collect();
+      await ctx.scheduler.runAfter(
+        0,
+        internal.triggers.schools.cleanup.cleanupDeletedClassMembers,
+        { classId }
+      );
 
-      for (const member of classMembers) {
-        await ctx.db.delete("schoolClassMembers", member._id);
-      }
       break;
     }
 

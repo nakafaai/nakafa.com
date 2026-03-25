@@ -6,6 +6,8 @@ import {
   Minimize03Icon,
 } from "@hugeicons/core-free-icons";
 import { useMediaQuery } from "@mantine/hooks";
+import { api } from "@repo/backend/convex/_generated/api";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -18,6 +20,7 @@ import {
 } from "@repo/design-system/components/ui/sheet";
 import { useResizable } from "@repo/design-system/hooks/use-resizable";
 import { cn } from "@repo/design-system/lib/utils";
+import { useQuery } from "convex/react";
 import { SchoolClassesForumPostSheetContent } from "@/components/school/classes/forum/post-sheet-content";
 import { SchoolClassesForumPostSheetError } from "@/components/school/classes/forum/post-sheet-error";
 import { SchoolClassesForumPostSheetInfo } from "@/components/school/classes/forum/post-sheet-info";
@@ -26,6 +29,10 @@ import { useForum } from "@/lib/context/use-forum";
 const MIN_WIDTH = 448;
 const MAX_WIDTH = 672;
 
+/**
+ * Show the active forum conversation in a non-modal side sheet so the class
+ * page stays interactive while the thread is open.
+ */
 export function SchoolClassesForumPostSheet() {
   const activeForumId = useForum((f) => f.activeForumId);
   const setActiveForumId = useForum((f) => f.setActiveForumId);
@@ -67,44 +74,78 @@ export function SchoolClassesForumPostSheet() {
           onMouseDown={resizerProps.onMouseDown}
           type="button"
         />
-        <ErrorBoundary fallback={<SchoolClassesForumPostSheetError />}>
-          <SheetHeader className="border-b p-3">
-            <SheetTitle className="flex items-center justify-between gap-2">
-              <SchoolClassesForumPostSheetInfo />
-
-              <div className="flex items-center">
-                <Button
-                  onClick={() => {
-                    setWidth(
-                      width === MAX_WIDTH ? (MIN_WIDTH ?? 0) : (MAX_WIDTH ?? 0)
-                    );
-                  }}
-                  size="icon-sm"
-                  variant="ghost"
-                >
-                  <HugeIcons
-                    icon={width === MAX_WIDTH ? Minimize03Icon : Maximize03Icon}
-                  />
-                  <span className="sr-only">Resize</span>
-                </Button>
-                <Button
-                  onClick={() => setActiveForumId(null)}
-                  size="icon-sm"
-                  variant="ghost"
-                >
-                  <HugeIcons icon={Cancel01Icon} />
-                  <span className="sr-only">Close</span>
-                </Button>
-              </div>
-            </SheetTitle>
-            <SheetDescription className="sr-only">
-              Discuss anything with everyone in the class.
-            </SheetDescription>
-          </SheetHeader>
-
-          <SchoolClassesForumPostSheetContent />
+        <ErrorBoundary
+          fallback={<SchoolClassesForumPostSheetError />}
+          onError={() => {
+            setActiveForumId(null);
+          }}
+        >
+          {activeForumId ? (
+            <SchoolClassesForumPostSheetBody
+              activeForumId={activeForumId}
+              onClose={() => setActiveForumId(null)}
+              setWidth={setWidth}
+              width={width}
+            />
+          ) : null}
         </ErrorBoundary>
       </SheetContent>
     </Sheet>
+  );
+}
+
+/**
+ * Fetch the active forum once and fan it out to the sheet header and content.
+ */
+function SchoolClassesForumPostSheetBody({
+  activeForumId,
+  onClose,
+  setWidth,
+  width,
+}: {
+  activeForumId: Id<"schoolClassForums">;
+  onClose: () => void;
+  setWidth: (nextWidth: number) => void;
+  width: number;
+}) {
+  const forum = useQuery(api.classes.forums.queries.forums.getForum, {
+    forumId: activeForumId,
+  });
+
+  return (
+    <>
+      <SheetHeader className="border-b p-3">
+        <SheetTitle className="flex items-center justify-between gap-2">
+          <SchoolClassesForumPostSheetInfo forum={forum} />
+
+          <div className="flex items-center">
+            <Button
+              onClick={() => {
+                setWidth(width === MAX_WIDTH ? MIN_WIDTH : MAX_WIDTH);
+              }}
+              size="icon-sm"
+              variant="ghost"
+            >
+              <HugeIcons
+                icon={width === MAX_WIDTH ? Minimize03Icon : Maximize03Icon}
+              />
+              <span className="sr-only">Resize</span>
+            </Button>
+            <Button onClick={onClose} size="icon-sm" variant="ghost">
+              <HugeIcons icon={Cancel01Icon} />
+              <span className="sr-only">Close</span>
+            </Button>
+          </div>
+        </SheetTitle>
+        <SheetDescription className="sr-only">
+          Discuss anything with everyone in the class.
+        </SheetDescription>
+      </SheetHeader>
+
+      <SchoolClassesForumPostSheetContent
+        forum={forum}
+        forumId={activeForumId}
+      />
+    </>
   );
 }

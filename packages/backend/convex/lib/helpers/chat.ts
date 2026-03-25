@@ -8,11 +8,12 @@ import { ConvexError } from "convex/values";
 
 /**
  * Require chat access or throw.
- * Throws FORBIDDEN if user doesn't own a private chat.
+ * Public chats are readable by anyone.
+ * Private chats are readable only by the owner.
  */
 export function requireChatAccess(
   chatUserId: Id<"users">,
-  currentUserId: Id<"users">,
+  currentUserId: Id<"users"> | null | undefined,
   visibility: "public" | "private"
 ) {
   if (visibility === "private" && chatUserId !== currentUserId) {

@@ -4,20 +4,23 @@ import { nullable } from "convex-helpers/validators";
 
 /**
  * Polar metadata validator.
- * Uses v.any() because Polar's SDK defines the metadata structure externally.
- * We sync this from Polar webhooks and cannot control their schema changes.
+ * Polar stores flat primitive metadata values.
  */
-export const polarMetadataValidator = v.record(v.string(), v.any());
+export const polarMetadataValidator = v.record(
+  v.string(),
+  v.union(v.string(), v.number(), v.boolean())
+);
 
 const tables = {
   customers: defineTable({
+    /** Polar customer ID persisted for webhook and checkout lookups. */
     id: v.string(),
     externalId: nullable(v.string()),
     userId: v.id("users"),
     metadata: v.optional(polarMetadataValidator),
   })
-    .index("userId", ["userId"])
-    .index("id", ["id"]),
+    .index("by_userId", ["userId"])
+    .index("by_polarId", ["id"]),
 };
 
 export default tables;

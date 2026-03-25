@@ -61,7 +61,6 @@ export function SchoolClassesPeopleList() {
             <Avatar>
               <AvatarImage
                 alt={person.user.name}
-                role="presentation"
                 src={person.user.image ?? ""}
               />
               <AvatarFallback>

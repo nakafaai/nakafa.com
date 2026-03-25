@@ -12,7 +12,7 @@ import {
   pcmToWav,
 } from "@repo/backend/convex/audioStudies/constants";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { getErrorMessage } from "@repo/backend/convex/utils/helper";
+import { getErrorMessage } from "@repo/backend/convex/utils/error";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { chunkScript, DEFAULT_CHUNK_CONFIG } from "@repo/backend/helpers/chunk";
 import {
@@ -35,7 +35,7 @@ export const generateScript = internalAction({
     logger.info("Generating script", { contentAudioId: args.contentAudioId });
 
     const claimed = await ctx.runMutation(
-      internal.audioStudies.mutations.claimScriptGeneration,
+      internal.audioStudies.mutations.contentAudios.claimScriptGeneration,
       { contentAudioId: args.contentAudioId }
     );
 
@@ -126,10 +126,13 @@ export const generateScript = internalAction({
         });
       }
 
-      await ctx.runMutation(internal.audioStudies.mutations.saveScript, {
-        contentAudioId: args.contentAudioId,
-        script,
-      });
+      await ctx.runMutation(
+        internal.audioStudies.mutations.contentAudios.saveScript,
+        {
+          contentAudioId: args.contentAudioId,
+          script,
+        }
+      );
 
       logger.info("Script saved", { contentAudioId: args.contentAudioId });
     } catch (error) {
@@ -138,10 +141,13 @@ export const generateScript = internalAction({
         { contentAudioId: args.contentAudioId },
         error
       );
-      await ctx.runMutation(internal.audioStudies.mutations.markFailed, {
-        contentAudioId: args.contentAudioId,
-        error: getErrorMessage(error),
-      });
+      await ctx.runMutation(
+        internal.audioStudies.mutations.contentAudios.markFailed,
+        {
+          contentAudioId: args.contentAudioId,
+          error: getErrorMessage(error),
+        }
+      );
       throw error;
     }
 
@@ -187,7 +193,7 @@ export const generateSpeech = internalAction({
     logger.info("Generating speech", { contentAudioId: args.contentAudioId });
 
     const claimed = await ctx.runMutation(
-      internal.audioStudies.mutations.claimSpeechGeneration,
+      internal.audioStudies.mutations.contentAudios.claimSpeechGeneration,
       { contentAudioId: args.contentAudioId }
     );
 
@@ -245,6 +251,12 @@ export const generateSpeech = internalAction({
 
       const audioBuffers: Uint8Array[] = [];
       const voiceSettings = audio.voiceSettings ?? getDefaultVoiceSettings();
+      const providerVoiceSettings = {
+        similarityBoost: voiceSettings.similarityBoost,
+        stability: voiceSettings.stability,
+        style: voiceSettings.style,
+        useSpeakerBoost: voiceSettings.useSpeakerBoost,
+      };
 
       for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];
@@ -261,7 +273,7 @@ export const generateSpeech = internalAction({
           outputFormat: PCM_FORMAT.outputFormat,
           providerOptions: {
             elevenlabs: {
-              voiceSettings,
+              voiceSettings: providerVoiceSettings,
             },
           },
         });
@@ -324,12 +336,15 @@ export const generateSpeech = internalAction({
       });
       const storageId = await ctx.storage.store(audioBlob);
 
-      await ctx.runMutation(internal.audioStudies.mutations.saveAudio, {
-        contentAudioId: args.contentAudioId,
-        storageId,
-        duration,
-        size: wavBuffer.byteLength,
-      });
+      await ctx.runMutation(
+        internal.audioStudies.mutations.contentAudios.saveAudio,
+        {
+          contentAudioId: args.contentAudioId,
+          storageId,
+          duration,
+          size: wavBuffer.byteLength,
+        }
+      );
 
       logger.info("Speech saved", {
         contentAudioId: args.contentAudioId,
@@ -344,10 +359,13 @@ export const generateSpeech = internalAction({
         { contentAudioId: args.contentAudioId },
         error
       );
-      await ctx.runMutation(internal.audioStudies.mutations.markFailed, {
-        contentAudioId: args.contentAudioId,
-        error: getErrorMessage(error),
-      });
+      await ctx.runMutation(
+        internal.audioStudies.mutations.contentAudios.markFailed,
+        {
+          contentAudioId: args.contentAudioId,
+          error: getErrorMessage(error),
+        }
+      );
       throw error;
     }
 

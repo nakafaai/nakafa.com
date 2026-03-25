@@ -7,24 +7,21 @@ import {
 import {
   IRT_CALIBRATION_CONVERGENCE_DELTA,
   IRT_CALIBRATION_MAX_ITERATIONS,
+  IRT_ESTIMATION_THETA_MAX,
+  IRT_ESTIMATION_THETA_MIN,
   IRT_MIN_DISCRIMINATION,
   IRT_MIN_RESPONSES_FOR_CALIBRATED,
   IRT_PROBABILITY_EPSILON,
 } from "@repo/backend/convex/irt/policy";
-
-interface CalibrationResponse {
-  attemptId: Id<"exerciseAttempts">;
-  isCorrect: boolean;
-  questionId: Id<"exerciseQuestions">;
-}
+import type { CalibrationResponse } from "@repo/backend/convex/irt/queries/internal/calibration";
 
 interface CalibrationSeed {
   difficulty: number;
   discrimination: number;
 }
 
-const THETA_SEED_MIN = -4;
-const THETA_SEED_MAX = 4;
+const THETA_SEED_MIN = IRT_ESTIMATION_THETA_MIN;
+const THETA_SEED_MAX = IRT_ESTIMATION_THETA_MAX;
 const LOGISTIC_MAX_ITERATIONS = 25;
 const LOGISTIC_CONVERGENCE_DELTA = 1e-4;
 const HESSIAN_EPSILON = 1e-6;
@@ -69,6 +66,7 @@ function estimateInitialTheta(correctCount: number, totalCount: number) {
   return clamp(logit(seededProbability), THETA_SEED_MIN, THETA_SEED_MAX);
 }
 
+/** Solve the symmetric 2x2 linear system used by one logistic Newton step. */
 function solveTwoByTwo({
   a00,
   a01,
@@ -94,6 +92,15 @@ function solveTwoByTwo({
   };
 }
 
+/**
+ * Fit one 2PL item with logistic regression over fixed theta observations.
+ *
+ * The intercept/slope form is converted back to IRT difficulty and
+ * discrimination after each Newton solve converges or hits a guardrail. The
+ * helper deliberately falls back to the incoming seed whenever the Hessian is
+ * singular, the slope collapses below the minimum supported discrimination, or
+ * the optimizer produces non-finite values.
+ */
 function fitItemLogistic2PL(
   observations: Array<{ correct: boolean; theta: number }>,
   seed: CalibrationSeed
@@ -178,36 +185,33 @@ function fitItemLogistic2PL(
  *
  * The pipeline seeds item difficulty from the observed correct rate, estimates
  * person theta with EAP, then refits each item with logistic regression on the
- * current theta estimates until the item parameters stabilize.
+ * current theta estimates until the item parameters stabilize. This is an
+ * operationally bounded routine, not a general-purpose psychometrics engine:
+ * the item update count, convergence delta, discrimination floor, and response
+ * thresholds all come from `policy.ts` so production calibration stays
+ * predictable and reviewable.
  */
 export function calibrateTwoPLItems({
+  responseCount,
   questions,
-  responses,
+  responsesByAttempt,
+  responsesByQuestion,
   existingParams,
 }: {
+  responseCount: number;
   questions: Array<{ questionId: Id<"exerciseQuestions"> }>;
-  responses: CalibrationResponse[];
+  responsesByAttempt: Map<Id<"exerciseAttempts">, CalibrationResponse[]>;
+  responsesByQuestion: Map<Id<"exerciseQuestions">, CalibrationResponse[]>;
   existingParams: Map<Id<"exerciseQuestions">, CalibrationSeed>;
 }) {
   const questionIds = questions.map((question) => question.questionId);
-  const responsesByQuestion = new Map<
-    Id<"exerciseQuestions">,
-    CalibrationResponse[]
-  >();
+
   for (const questionId of questionIds) {
+    if (responsesByQuestion.has(questionId)) {
+      continue;
+    }
+
     responsesByQuestion.set(questionId, []);
-  }
-  const responsesByAttempt = new Map<
-    Id<"exerciseAttempts">,
-    CalibrationResponse[]
-  >();
-
-  for (const response of responses) {
-    responsesByQuestion.get(response.questionId)?.push(response);
-
-    const attemptResponses = responsesByAttempt.get(response.attemptId) ?? [];
-    attemptResponses.push(response);
-    responsesByAttempt.set(response.attemptId, attemptResponses);
   }
 
   let itemParams = new Map(
@@ -340,7 +344,7 @@ export function calibrateTwoPLItems({
 
   return {
     attemptCount: responsesByAttempt.size,
-    responseCount: responses.length,
+    responseCount,
     questionCount: questionIds.length,
     iterationCount,
     maxParameterDelta: Number.isFinite(maxParameterDelta)

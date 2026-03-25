@@ -16,8 +16,8 @@ interface State {
 }
 
 interface Actions {
-  isViewed: (slug: string) => boolean;
-  markAsViewed: (slug: string) => void;
+  isViewed: (key: string) => boolean;
+  markAsViewed: (key: string) => void;
 }
 
 export type ContentViewsStore = State & Actions;
@@ -32,9 +32,9 @@ export const createContentViewsStore = () =>
       immer((set, get) => ({
         ...initialState,
 
-        markAsViewed: (slug) =>
+        markAsViewed: (key) =>
           set((state) => {
-            state.viewedSlugs[slug] = Date.now();
+            state.viewedSlugs[key] = Date.now();
           }),
 
         /**
@@ -42,8 +42,8 @@ export const createContentViewsStore = () =>
          * Returns true if viewed within TTL (30 minutes).
          * Allows re-views after TTL expires to update backend lastViewedAt.
          */
-        isViewed: (slug) => {
-          const viewedAt = get().viewedSlugs[slug];
+        isViewed: (key) => {
+          const viewedAt = get().viewedSlugs[key];
           if (viewedAt === undefined) {
             return false;
           }

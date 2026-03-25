@@ -24,7 +24,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
 import type { ReactElement, ReactNode } from "react";
-import { Fragment, useEffect, useTransition } from "react";
+import { Fragment, useTransition } from "react";
 import { articlesMenu } from "@/components/sidebar/_data/articles";
 import { holyMenu } from "@/components/sidebar/_data/holy";
 import { subjectMenu } from "@/components/sidebar/_data/subject";
@@ -35,6 +35,9 @@ import type { PagefindResult } from "@/types/pagefind";
 
 const DEBOUNCE_TIME = 500;
 
+/**
+ * Renders the global command menu used across the main app shell.
+ */
 export function SearchCommand() {
   const { open, setOpen } = useSearch((state) => ({
     open: state.open,
@@ -130,6 +133,7 @@ function SearchListItems({
   isLoading: boolean;
   results: PagefindResult[];
 }) {
+  const router = useRouter();
   const t = useTranslations("Utils");
   const setOpen = useSearch((state) => state.setOpen);
   const [isPending, startTransition] = useTransition();
@@ -180,7 +184,7 @@ function SearchListItems({
             onSelect={() => {
               startTransition(() => {
                 setOpen(false);
-                window.location.href = subResult.url;
+                router.push(subResult.url);
               });
             }}
             value={`${result.meta.title} ${subResult.title} ${subResult.url}`}
@@ -213,23 +217,6 @@ function DefaultItems() {
   const setOpen = useSearch((state) => state.setOpen);
 
   const [, startTransition] = useTransition();
-
-  useEffect(() => {
-    // prefetch all the links
-    for (const item of subjectMenu) {
-      for (const subItem of item.items) {
-        router.prefetch(subItem.href);
-      }
-    }
-
-    for (const item of articlesMenu) {
-      router.prefetch(item.href);
-    }
-
-    for (const item of holyMenu) {
-      router.prefetch(item.href);
-    }
-  });
 
   return (
     <>

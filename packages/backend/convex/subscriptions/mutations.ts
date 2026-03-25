@@ -15,14 +15,14 @@ export const createSubscription = internalMutation({
   handler: async (ctx, args) => {
     const existingSubscription = await ctx.db
       .query("subscriptions")
-      .withIndex("id", (q) => q.eq("id", args.subscription.id))
+      .withIndex("by_subscriptionId", (q) => q.eq("id", args.subscription.id))
       .unique();
 
     if (existingSubscription) {
       return existingSubscription._id;
     }
 
-    return await ctx.db.insert("subscriptions", args.subscription);
+    return ctx.db.insert("subscriptions", args.subscription);
   },
 });
 
@@ -38,7 +38,7 @@ export const updateSubscription = internalMutation({
   handler: async (ctx, args) => {
     const existingSubscription = await ctx.db
       .query("subscriptions")
-      .withIndex("id", (q) => q.eq("id", args.subscription.id))
+      .withIndex("by_subscriptionId", (q) => q.eq("id", args.subscription.id))
       .unique();
 
     if (!existingSubscription) {

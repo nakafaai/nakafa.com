@@ -1,5 +1,5 @@
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
-import { generateId } from "@repo/backend/convex/utils/helper";
+import { generateId } from "@repo/backend/convex/utils/id";
 import { REQUEST_ID_HEADER } from "@repo/backend/convex/utils/logger";
 import type { MiddlewareHandler } from "hono";
 

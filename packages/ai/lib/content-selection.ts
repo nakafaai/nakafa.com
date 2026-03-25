@@ -131,7 +131,7 @@ function truncateAtBoundary(text: string, maxLength: number): string {
     return text;
   }
 
-  const truncated = text.substring(0, maxLength);
+  const truncated = text.slice(0, maxLength);
 
   // Try different boundaries in order of preference
   const boundaries = [
@@ -158,8 +158,7 @@ function truncateAtBoundary(text: string, maxLength: number): string {
     if (lastIndex > maxLength * boundary.threshold) {
       const cutPoint = boundary.type === "sentence" ? lastIndex + 1 : lastIndex;
       return (
-        truncated.substring(0, cutPoint) +
-        (boundary.type === "word" ? "..." : "")
+        truncated.slice(0, cutPoint) + (boundary.type === "word" ? "..." : "")
       );
     }
   }

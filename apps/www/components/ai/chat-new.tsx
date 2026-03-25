@@ -24,8 +24,8 @@ export function ChatNew() {
   const router = useRouter();
 
   const text = useAi((state) => state.text);
+  const queuePendingQuery = useAi((state) => state.queuePendingQuery);
   const setText = useAi((state) => state.setText);
-  const setQuery = useAi((state) => state.setQuery);
 
   const user = useUser((state) => state.user);
   const createChat = useMutation(api.chats.mutations.createChat);
@@ -48,7 +48,7 @@ export function ChatNew() {
         type: "study",
       });
 
-      setQuery(message.text);
+      queuePendingQuery({ chatId, owner: "page", query: message.text });
 
       router.push(`/chat/${chatId}`);
     });

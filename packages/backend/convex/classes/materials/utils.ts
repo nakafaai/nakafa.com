@@ -3,6 +3,7 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
+import type { SchoolClassMaterialStatus } from "@repo/backend/convex/classes/schema";
 import {
   getUserMap,
   type UserData,
@@ -19,7 +20,7 @@ import { ConvexError } from "convex/values";
  * @throws INVALID_ARGUMENT with message "scheduledAt must be in the future" if status is scheduled but scheduledAt is in the past
  */
 export function validateScheduledStatus(
-  status: string,
+  status: SchoolClassMaterialStatus,
   scheduledAt: number | undefined
 ) {
   if (status !== "scheduled") {

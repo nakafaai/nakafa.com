@@ -13,6 +13,7 @@ import { commentsHandler } from "@repo/backend/convex/triggers/comments/comments
 import { commentVotesHandler } from "@repo/backend/convex/triggers/comments/commentVotes";
 import { contentViewsHandler } from "@repo/backend/convex/triggers/contents/contentViews";
 import { exerciseAnswersHandler } from "@repo/backend/convex/triggers/contents/exerciseAnswers";
+import { exerciseAttemptsHandler } from "@repo/backend/convex/triggers/contents/exerciseAttempts";
 import {
   articlePopularityTrigger,
   exercisePopularityTrigger,
@@ -24,15 +25,16 @@ import { forumReactionsHandler } from "@repo/backend/convex/triggers/forums/reac
 import { materialGroupsHandler } from "@repo/backend/convex/triggers/materials/groups";
 import { materialsHandler } from "@repo/backend/convex/triggers/materials/materials";
 import { noopHandler } from "@repo/backend/convex/triggers/noop";
+import { notificationsHandler } from "@repo/backend/convex/triggers/notifications/notifications";
 import { schoolClassesHandler } from "@repo/backend/convex/triggers/schools/classes";
 import { schoolClassMembersHandler } from "@repo/backend/convex/triggers/schools/classMembers";
 import { schoolMembersHandler } from "@repo/backend/convex/triggers/schools/members";
 import { schoolsHandler } from "@repo/backend/convex/triggers/schools/schools";
+import { subscriptionsHandler } from "@repo/backend/convex/triggers/subscriptions/subscriptions";
 import {
   globalLeaderboardTrigger,
   tryoutLeaderboardTrigger,
-} from "@repo/backend/convex/triggers/snbt/leaderboard";
-import { subscriptionsHandler } from "@repo/backend/convex/triggers/subscriptions/subscriptions";
+} from "@repo/backend/convex/triggers/tryouts/leaderboard";
 import {
   customCtx,
   customMutation,
@@ -53,19 +55,21 @@ triggers.register("parts", noopHandler);
 triggers.register("schoolInviteCodes", noopHandler);
 triggers.register("schoolClassInviteCodes", noopHandler);
 triggers.register("schoolClassForums", noopHandler);
+triggers.register("schoolClassForumPendingUploads", noopHandler);
 triggers.register("schoolClassForumReadStates", noopHandler);
 triggers.register("schoolActivityLogs", noopHandler);
-triggers.register("notifications", noopHandler);
+triggers.register("notifications", notificationsHandler);
 triggers.register("notificationCounts", noopHandler);
+triggers.register("notificationEntityMutes", noopHandler);
 triggers.register("notificationPreferences", noopHandler);
 triggers.register("schoolClassMaterialAttachments", noopHandler);
 triggers.register("schoolClassMaterialViews", noopHandler);
 triggers.register("contentAudios", noopHandler);
 triggers.register("audioGenerationQueue", noopHandler);
-triggers.register("exerciseAttempts", noopHandler);
 triggers.register("creditTransactions", noopHandler);
 triggers.register("creditResetJobs", noopHandler);
 triggers.register("creditResetQueue", noopHandler);
+triggers.register("subjectTrendingBuckets", noopHandler);
 triggers.register("users", noopHandler);
 triggers.register("subscriptions", subscriptionsHandler);
 triggers.register("contentViews", contentViewsHandler);
@@ -76,6 +80,7 @@ triggers.register("subjectPopularity", subjectPopularityTrigger);
 triggers.register("exercisePopularity", exercisePopularityTrigger);
 
 // Active triggers with custom logic
+triggers.register("exerciseAttempts", exerciseAttemptsHandler);
 triggers.register("exerciseAnswers", exerciseAnswersHandler);
 triggers.register("comments", commentsHandler);
 triggers.register("commentVotes", commentVotesHandler);
@@ -90,6 +95,5 @@ triggers.register("schoolClassForumReactions", forumReactionsHandler);
 triggers.register("schoolClassMaterials", materialsHandler);
 triggers.register("schoolClassMaterialGroups", materialGroupsHandler);
 
-// SNBT leaderboard aggregate triggers
-triggers.register("snbtLeaderboard", tryoutLeaderboardTrigger);
-triggers.register("userSnbtStats", globalLeaderboardTrigger);
+triggers.register("tryoutLeaderboardEntries", tryoutLeaderboardTrigger);
+triggers.register("userTryoutStats", globalLeaderboardTrigger);

@@ -1,5 +1,5 @@
-import { getContentMetadata } from "@repo/contents/_lib/content";
 import { getFolderChildNames, getNestedSlugs } from "@repo/contents/_lib/fs";
+import { getContentMetadata } from "@repo/contents/_lib/metadata";
 import type { ContentMetadata } from "@repo/contents/_types/content";
 import { Data, Effect, Option } from "effect";
 import type { Locale } from "next-intl";

@@ -4,12 +4,10 @@ import { Sad02Icon } from "@hugeicons/core-free-icons";
 import { AdaptiveDpr } from "@react-three/drei";
 import { Canvas, type CanvasProps } from "@react-three/fiber";
 import { analytics } from "@repo/analytics/posthog";
-import {
-  Button,
-  buttonVariants,
-} from "@repo/design-system/components/ui/button";
+import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import {
   checkWebGL2Support,
   getDeviceInfoForAnalytics,
@@ -126,7 +124,7 @@ function ThreeCanvasComponent({
           max: 1.0,
           debounce: 100,
         }}
-        shadows
+        shadows="percentage"
         {...props}
       >
         <AdaptiveDpr />

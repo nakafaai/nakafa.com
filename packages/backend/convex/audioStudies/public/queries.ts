@@ -14,7 +14,7 @@ import { literals, nullable } from "convex-helpers/validators";
  *
  * @example
  * const audio = await ctx.runQuery(
- *   api.audioStudies.public.getAudioBySlug,
+ *   api.audioStudies.public.queries.getAudioBySlug,
  *   { slug: "quadratic-equations", locale: "en", contentType: "subject" }
  * );
  */
@@ -41,7 +41,7 @@ export const getAudioBySlug = query({
       case "article": {
         const article = await ctx.db
           .query("articleContents")
-          .withIndex("locale_slug", (q) =>
+          .withIndex("by_locale_and_slug", (q) =>
             q.eq("locale", args.locale).eq("slug", args.slug)
           )
           .first();
@@ -51,7 +51,7 @@ export const getAudioBySlug = query({
       case "subject": {
         const section = await ctx.db
           .query("subjectSections")
-          .withIndex("locale_slug", (q) =>
+          .withIndex("by_locale_and_slug", (q) =>
             q.eq("locale", args.locale).eq("slug", args.slug)
           )
           .first();
@@ -75,7 +75,7 @@ export const getAudioBySlug = query({
     // Query audio record
     const audio = await ctx.db
       .query("contentAudios")
-      .withIndex("contentRef_locale", (q) =>
+      .withIndex("by_contentRefType_and_contentRefId_and_locale", (q) =>
         q
           .eq("contentRef.type", args.contentType)
           .eq("contentRef.id", contentId)

@@ -1,10 +1,8 @@
 "use client"; // Error boundaries must be Client Components
 
-import {
-  Button,
-  buttonVariants,
-} from "@repo/design-system/components/ui/button";
+import { Button } from "@repo/design-system/components/ui/button";
 import { Particles } from "@repo/design-system/components/ui/particles";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";

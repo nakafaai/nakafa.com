@@ -18,13 +18,13 @@ export const calibrateSetTwoPL = workflow.define({
   handler: async (step, args) => {
     try {
       const result = await step.runAction(
-        internal.irt.internalActions.calibrateSetTwoPL,
+        internal.irt.actions.internal.calibration.calibrateSetTwoPL,
         { setId: args.setId },
         { retry: true }
       );
 
       await step.runMutation(
-        internal.irt.internalMutations.completeCalibrationRun,
+        internal.irt.mutations.internal.runs.completeCalibrationRun,
         {
           calibrationRunId: args.calibrationRunId,
           result,
@@ -34,7 +34,7 @@ export const calibrateSetTwoPL = workflow.define({
       return null;
     } catch (error) {
       await step.runMutation(
-        internal.irt.internalMutations.failCalibrationRun,
+        internal.irt.mutations.internal.runs.failCalibrationRun,
         {
           calibrationRunId: args.calibrationRunId,
           error: error instanceof Error ? error.message : String(error),

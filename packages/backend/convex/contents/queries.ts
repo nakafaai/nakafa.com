@@ -1,5 +1,6 @@
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { query } from "@repo/backend/convex/_generated/server";
-import { safeGetAppUser } from "@repo/backend/convex/auth";
+import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { recentlyViewedSubjectValidator } from "@repo/backend/convex/lib/validators/trending";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
@@ -21,72 +22,72 @@ export const getRecentlyViewed = query({
     const limit = args.limit ?? 5;
 
     // Get current user
-    const user = await safeGetAppUser(ctx);
+    const user = await getOptionalAppUser(ctx);
     if (!user) {
       return [];
     }
 
-    const recentViews = await ctx.db
+    const recentViewsQuery = ctx.db
       .query("contentViews")
-      .withIndex("userId_type_locale_lastViewedAt", (q) =>
-        q
-          .eq("userId", user.appUser._id)
-          .eq("contentRef.type", "subject")
-          .eq("locale", args.locale)
+      .withIndex(
+        "by_userId_and_contentRefType_and_locale_and_lastViewedAt",
+        (q) =>
+          q
+            .eq("userId", user.appUser._id)
+            .eq("contentRef.type", "subject")
+            .eq("locale", args.locale)
       )
-      .order("desc")
-      .take(limit * 2); // Take more to handle potential duplicates
+      .order("desc");
 
-    // Remove duplicates (keep most recent view per subject)
-    const seenSubjects = new Set<string>();
-    const uniqueViews = recentViews.filter((view) => {
-      // Type is already filtered by index, but we need to narrow for TypeScript
-      if (view.contentRef.type !== "subject") {
-        return false;
-      }
-      const subjectId = view.contentRef.id;
-      if (seenSubjects.has(subjectId)) {
-        return false;
-      }
-      seenSubjects.add(subjectId);
-      return true;
-    });
+    const recentViews = await recentViewsQuery.take(limit);
 
-    // Limit to requested amount after deduplication
-    const limitedViews = uniqueViews.slice(0, limit);
-
-    if (limitedViews.length === 0) {
+    if (recentViews.length === 0) {
       return [];
     }
 
-    // Extract subject IDs and batch fetch using convex-helpers
-    const subjectIds = limitedViews
-      .map((view) =>
-        view.contentRef.type === "subject" ? view.contentRef.id : null
-      )
-      .filter((id) => id !== null);
+    const subjectViews: Array<{
+      lastViewedAt: number;
+      slug: string;
+      subjectId: Id<"subjectSections">;
+    }> = [];
 
-    const subjects = await getAll(ctx.db, subjectIds);
+    for (const view of recentViews) {
+      if (view.contentRef.type !== "subject") {
+        continue;
+      }
 
-    // Map to results maintaining order from limitedViews
-    const results = limitedViews
-      .map((view, index) => {
-        const subject = subjects[index];
-        if (!subject || view.contentRef.type !== "subject") {
-          return null;
-        }
-        return {
-          id: subject._id,
-          title: subject.title,
-          description: subject.description,
-          slug: view.slug,
-          grade: subject.grade,
-          material: subject.material,
-          lastViewedAt: view.lastViewedAt,
-        };
-      })
-      .filter((subject) => subject !== null);
+      subjectViews.push({
+        lastViewedAt: view.lastViewedAt,
+        slug: view.slug,
+        subjectId: view.contentRef.id,
+      });
+    }
 
-    return results;
+    if (subjectViews.length === 0) {
+      return [];
+    }
+
+    const subjects = await getAll(
+      ctx.db,
+      subjectViews.map((subjectView) => subjectView.subjectId)
+    );
+
+    return subjectViews.flatMap((subjectView, index) => {
+      const subject = subjects[index];
+
+      if (!subject) {
+        return [];
+      }
+
+      return {
+        id: subject._id,
+        title: subject.title,
+        description: subject.description,
+        slug: subjectView.slug,
+        grade: subject.grade,
+        material: subject.material,
+        lastViewedAt: subjectView.lastViewedAt,
+      };
+    });
   },
 });

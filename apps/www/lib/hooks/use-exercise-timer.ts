@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 
 export interface UseExerciseTimerProps {
   attempt: Doc<"exerciseAttempts"> | null;
+  expiresAtMs?: number;
+  nowMs?: number;
   onExpire?: () => void | Promise<void>;
 }
 
@@ -12,31 +14,12 @@ export interface UseExerciseTimerReturn {
     hours: number;
     minutes: number;
     seconds: number;
-    hh: string;
-    mm: string;
-    ss: string;
-    hms: string;
-    ms: string;
   };
   isActive: boolean;
   isExpired: boolean;
-  isLowTime: boolean;
-  progress: number;
-  remainingSeconds: number;
-  totalSeconds: number;
 }
 
-const LOW_TIME_THRESHOLD_SECONDS = 60;
 const UPDATE_INTERVAL_MS = 1000;
-
-/**
- * Formats a time unit as a zero-padded string.
- * @param value - The numeric time unit (hours, minutes, seconds)
- * @returns The time unit formatted as two digits
- */
-function formatTimePart(value: number): string {
-  return String(value).padStart(2, "0");
-}
 
 /**
  * Calculates the remaining time in seconds for an exercise attempt.
@@ -46,7 +29,8 @@ function formatTimePart(value: number): string {
  */
 function calculateRemainingTime(
   attempt: Doc<"exerciseAttempts">,
-  nowMs: number
+  nowMs: number,
+  expiresAtMs?: number
 ): number {
   const timeLimitSeconds = attempt.timeLimit;
 
@@ -54,8 +38,12 @@ function calculateRemainingTime(
     return 0;
   }
 
-  const expiresAtMs = attempt.startedAt + timeLimitSeconds * 1000;
-  const remainingMs = expiresAtMs - nowMs;
+  const attemptExpiresAtMs = attempt.startedAt + timeLimitSeconds * 1000;
+  const effectiveExpiresAtMs =
+    expiresAtMs === undefined
+      ? attemptExpiresAtMs
+      : Math.min(attemptExpiresAtMs, expiresAtMs);
+  const remainingMs = effectiveExpiresAtMs - nowMs;
   return Math.max(0, Math.ceil(remainingMs / 1000));
 }
 
@@ -73,11 +61,6 @@ function formatTime(seconds: number): UseExerciseTimerReturn["formatted"] {
     hours,
     minutes,
     seconds: secs,
-    hh: formatTimePart(hours),
-    mm: formatTimePart(minutes),
-    ss: formatTimePart(secs),
-    hms: `${formatTimePart(hours)}:${formatTimePart(minutes)}:${formatTimePart(secs)}`,
-    ms: `${formatTimePart(minutes)}:${formatTimePart(secs)}`,
   };
 }
 
@@ -89,30 +72,26 @@ function formatTime(seconds: number): UseExerciseTimerReturn["formatted"] {
  */
 export function useExerciseTimer({
   attempt,
+  expiresAtMs,
+  nowMs,
   onExpire,
 }: UseExerciseTimerProps): UseExerciseTimerReturn {
-  const [nowMs, setNowMs] = useState(Date.now);
-  const [hasExpired, setHasExpired] = useState(false);
+  const [localNowMs, setLocalNowMs] = useState(Date.now);
+  const [hasHandledExpiry, setHasHandledExpiry] = useState(false);
+  const currentNowMs = nowMs ?? localNowMs;
+  const usesInternalClock = nowMs === undefined;
 
   const isTimed = attempt?.timeLimit !== undefined && attempt.timeLimit > 0;
 
   const isInProgress = isTimed && attempt.status === "in-progress";
 
   const remainingSeconds =
-    attempt && isInProgress ? calculateRemainingTime(attempt, nowMs) : 0;
-
-  const totalSeconds = isTimed ? attempt.timeLimit : 0;
+    attempt && isInProgress
+      ? calculateRemainingTime(attempt, currentNowMs, expiresAtMs)
+      : 0;
 
   const isActive = isInProgress && remainingSeconds > 0;
-
-  const isExpired =
-    isTimed &&
-    (attempt.status === "expired" || (isInProgress && remainingSeconds === 0));
-
-  const isLowTime =
-    remainingSeconds > 0 && remainingSeconds <= LOW_TIME_THRESHOLD_SECONDS;
-
-  const progress = totalSeconds > 0 ? remainingSeconds / totalSeconds : 0;
+  const isExpired = isInProgress && remainingSeconds === 0;
 
   const interval = useInterval(() => {
     if (!(isActive && attempt)) {
@@ -120,18 +99,35 @@ export function useExerciseTimer({
     }
 
     const now = Date.now();
-    setNowMs(now);
+    setLocalNowMs(now);
 
-    const remaining = calculateRemainingTime(attempt, now);
+    const remaining = calculateRemainingTime(attempt, now, expiresAtMs);
 
-    if (remaining === 0 && !hasExpired) {
-      setHasExpired(true);
+    if (remaining === 0 && !hasHandledExpiry) {
+      setHasHandledExpiry(true);
       onExpire?.();
     }
   }, UPDATE_INTERVAL_MS);
 
   useEffect(() => {
-    if (!isActive) {
+    if (!hasHandledExpiry || isExpired) {
+      return;
+    }
+
+    setHasHandledExpiry(false);
+  }, [hasHandledExpiry, isExpired]);
+
+  useEffect(() => {
+    if (!isExpired || hasHandledExpiry) {
+      return;
+    }
+
+    setHasHandledExpiry(true);
+    onExpire?.();
+  }, [hasHandledExpiry, isExpired, onExpire]);
+
+  useEffect(() => {
+    if (!(usesInternalClock && isActive)) {
       interval.stop();
       return;
     }
@@ -141,7 +137,7 @@ export function useExerciseTimer({
     return () => {
       interval.stop();
     };
-  }, [isActive, interval]);
+  }, [isActive, interval, usesInternalClock]);
 
   const formatted = useMemo(
     () => formatTime(remainingSeconds),
@@ -149,12 +145,8 @@ export function useExerciseTimer({
   );
 
   return {
-    remainingSeconds,
-    totalSeconds,
-    progress,
     isActive,
     isExpired,
-    isLowTime,
     formatted,
   };
 }

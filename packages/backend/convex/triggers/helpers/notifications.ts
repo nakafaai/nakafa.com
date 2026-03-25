@@ -18,15 +18,47 @@ import type { WithoutSystemFields } from "convex/server";
  * - Comment → comment.slug
  * This ensures URLs are always correct even if routing changes.
  *
- * Future enhancements:
- * - Check user preferences (disabledTypes, mutedEntities)
- * - Send push notifications
- * - Send email notifications based on digest settings
+ * Current preference checks:
+ * - Disabled notification types via notificationPreferences.disabledTypes
+ * - Muted entities via notificationEntityMutes
  */
 export async function createNotification(
   ctx: { db: DatabaseReader & DatabaseWriter },
   args: Omit<WithoutSystemFields<Doc<"notifications">>, "readAt">
 ) {
+  const entityId = args.entityId;
+
+  const preferencesPromise = ctx.db
+    .query("notificationPreferences")
+    .withIndex("by_userId", (q) => q.eq("userId", args.recipientId))
+    .first();
+
+  const mutedEntityPromise =
+    entityId && args.entityType !== "system"
+      ? ctx.db
+          .query("notificationEntityMutes")
+          .withIndex("by_userId_and_entityType_and_entityId", (q) =>
+            q
+              .eq("userId", args.recipientId)
+              .eq("entityType", args.entityType)
+              .eq("entityId", entityId)
+          )
+          .first()
+      : Promise.resolve(null);
+
+  const [preferences, mutedEntity] = await Promise.all([
+    preferencesPromise,
+    mutedEntityPromise,
+  ]);
+
+  if (preferences?.disabledTypes.includes(args.type)) {
+    return null;
+  }
+
+  if (mutedEntity) {
+    return null;
+  }
+
   await ctx.db.insert("notifications", {
     recipientId: args.recipientId,
     actorId: args.actorId,
@@ -39,7 +71,7 @@ export async function createNotification(
 
   const existingCount = await ctx.db
     .query("notificationCounts")
-    .withIndex("userId", (q) => q.eq("userId", args.recipientId))
+    .withIndex("by_userId", (q) => q.eq("userId", args.recipientId))
     .unique();
 
   if (existingCount) {

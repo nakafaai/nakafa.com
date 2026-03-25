@@ -12,14 +12,14 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.27.1",
+    "@modelcontextprotocol/sdk": "^1.28.0",
     "@repo/connection": "workspace:*",
     "@repo/contents": "workspace:*",
     "@repo/next-config": "workspace:*",
-    "@t3-oss/env-nextjs": "^0.13.10",
+    "@t3-oss/env-nextjs": "^0.13.11",
     "express": "^5.2.1",
-    "mcp-handler": "1.0.7",
-    "next": "16.1.6",
+    "mcp-handler": "1.1.0",
+    "next": "16.2.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "redis": "^5.11.0",
@@ -29,6 +29,6 @@
     "@repo/typescript-config": "workspace:*",
     "@types/node": "25.5.0",
     "@types/react": "19.2.14",
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.2"
   }
 }

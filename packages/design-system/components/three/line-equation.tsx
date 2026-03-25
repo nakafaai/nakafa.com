@@ -365,9 +365,11 @@ export function LineEquation({
             color={data.color}
             font={fontPath}
             fontSize={data.fontSize}
-            frustumCulled
+            frustumCulled={false}
             key={data.key}
+            material-depthTest={false}
             position={data.position}
+            renderOrder={10}
           >
             {data.text}
           </Text>

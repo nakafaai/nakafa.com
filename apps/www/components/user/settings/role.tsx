@@ -1,7 +1,6 @@
 "use client";
 
 import { api } from "@repo/backend/convex/_generated/api";
-import type { AppUser } from "@repo/backend/convex/auth";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -17,6 +16,7 @@ import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import * as z from "zod/mini";
 import { FormBlock } from "@/components/shared/form-block";
+import type { CurrentUser } from "@/lib/context/use-user";
 import { roles } from "@/lib/data/roles";
 
 const formSchema = z.object({
@@ -24,26 +24,28 @@ const formSchema = z.object({
     z.literal("teacher"),
     z.literal("student"),
     z.literal("parent"),
-    z.literal("administrator"),
   ]),
 });
 const roleSchema = formSchema.shape.role;
 
-export function UserSettingsRole({ user }: { user: AppUser }) {
+export function UserSettingsRole({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
 
   const updateUserRole = useMutation(api.users.mutations.updateUserRole);
+  const initialRole = roles.find(
+    (role) => role.value === user.appUser.role
+  )?.value;
 
   const form = useForm({
     defaultValues: {
-      role: user.appUser.role,
+      role: initialRole,
     },
     validators: {
       onChange: formSchema,
     },
     onSubmit: async ({ value }) => {
       const { role } = value;
-      if (!role) {
+      if (!(role === "teacher" || role === "student" || role === "parent")) {
         return;
       }
 

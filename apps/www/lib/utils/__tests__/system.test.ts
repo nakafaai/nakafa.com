@@ -14,7 +14,7 @@ vi.mock("@repo/contents/_lib/fs", () => ({
   getNestedSlugs: mockGetNestedSlugs,
 }));
 
-vi.mock("@repo/contents/_lib/content", () => ({
+vi.mock("@repo/contents/_lib/metadata", () => ({
   getContentMetadata: mockGetContentMetadata,
 }));
 

@@ -23,14 +23,14 @@ export function isAdmin(
  * Get active school membership for a user.
  * Returns null if user is not an active member.
  */
-export async function getSchoolMembership(
+export function getSchoolMembership(
   ctx: QueryCtx | MutationCtx,
   schoolId: Id<"schools">,
   userId: Id<"users">
 ) {
-  return await ctx.db
+  return ctx.db
     .query("schoolMembers")
-    .withIndex("schoolId_userId_status", (q) =>
+    .withIndex("by_schoolId_and_userId_and_status", (q) =>
       q.eq("schoolId", schoolId).eq("userId", userId).eq("status", "active")
     )
     .unique();

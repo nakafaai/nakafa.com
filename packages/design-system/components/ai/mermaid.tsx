@@ -64,7 +64,7 @@ export const Mermaid = ({ chart, className, config }: MermaidProps) => {
           // biome-ignore lint/suspicious/noBitwiseOperators: "Required for Mermaid"
           return ((acc << SHIFT_5) - acc + char.charCodeAt(0)) | MAGIC_NUMBER;
         }, 0);
-        const uniqueId = `mermaid-${Math.abs(chartHash)}-${Date.now()}-${Math.random().toString(ALPHANUMERIC_BASE).substring(2, RANDOM_STRING_LENGTH)}`;
+        const uniqueId = `mermaid-${Math.abs(chartHash)}-${Date.now()}-${Math.random().toString(ALPHANUMERIC_BASE).slice(2, RANDOM_STRING_LENGTH)}`;
 
         const { svg } = await mermaid.render(uniqueId, chart);
 

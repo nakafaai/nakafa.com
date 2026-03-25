@@ -12,13 +12,13 @@
   "dependencies": {
     "@hugeicons/core-free-icons": "^4.0.0",
     "@hugeicons/react": "^1.1.6",
-    "@mantine/hooks": "^8.3.17",
+    "@mantine/hooks": "^8.3.18",
     "@repo/internationalization": "workspace:*",
     "@repo/utilities": "workspace:*",
     "date-fns": "^4.1.0",
-    "effect": "^3.19.19",
+    "effect": "^3.21.0",
     "ky": "^1.14.3",
-    "motion": "^12.36.0",
+    "motion": "^12.38.0",
     "next-intl": "^4.8.3",
     "react": "19.2.4",
     "react-aria-components": "^1.16.0",
@@ -29,7 +29,7 @@
     "@repo/typescript-config": "workspace:*",
     "@types/node": "25.5.0",
     "@types/react": "^19.2.14",
-    "@vitest/coverage-istanbul": "^4.1.0",
-    "vitest": "^4.1.0"
+    "@vitest/coverage-istanbul": "^4.1.1",
+    "vitest": "^4.1.1"
   }
 }

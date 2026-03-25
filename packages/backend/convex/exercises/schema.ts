@@ -1,3 +1,4 @@
+import { attemptEndReasonValidator } from "@repo/backend/convex/lib/attempts";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
@@ -16,9 +17,9 @@ export const exerciseAttemptScopeValidator = literals("set", "single");
 
 /**
  * Exercise attempt origin validator.
- * Distinguishes standalone exercise attempts from SNBT try-out subject attempts.
+ * Distinguishes standalone exercise attempts from runtime-managed tryout parts.
  */
-export const exerciseAttemptOriginValidator = literals("standalone", "snbt");
+export const exerciseAttemptOriginValidator = literals("standalone", "tryout");
 
 /**
  * Exercise attempt status validator.
@@ -43,7 +44,8 @@ const tables = {
     schedulerId: v.optional(v.id("_scheduled_functions")),
     startedAt: v.number(),
     lastActivityAt: v.number(),
-    completedAt: v.optional(v.number()),
+    completedAt: v.union(v.number(), v.null()),
+    endReason: v.union(attemptEndReasonValidator, v.null()),
     status: exerciseAttemptStatusValidator,
     updatedAt: v.number(),
     totalExercises: v.number(),
@@ -52,15 +54,14 @@ const tables = {
     totalTime: v.number(),
     scorePercentage: v.number(),
   })
-    .index("userId_origin_slug_scope_startedAt", [
+    .index("by_userId_and_origin_and_slug_and_scope_and_startedAt", [
       "userId",
       "origin",
       "slug",
       "scope",
       "startedAt",
     ])
-    .index("slug_scope_mode_status_startedAt", [
-      "slug",
+    .index("by_scope_and_mode_and_status_and_startedAt", [
       "scope",
       "mode",
       "status",
@@ -80,8 +81,8 @@ const tables = {
     answeredAt: v.number(),
     updatedAt: v.number(),
   })
-    .index("attemptId_exerciseNumber", ["attemptId", "exerciseNumber"])
-    .index("questionId", ["questionId"]),
+    .index("by_attemptId_and_exerciseNumber", ["attemptId", "exerciseNumber"])
+    .index("by_questionId", ["questionId"]),
 };
 
 export default tables;

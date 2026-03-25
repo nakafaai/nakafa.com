@@ -56,8 +56,12 @@ const tables = {
   creditTransactions: defineTable(creditTransactionValidator),
 
   creditResetQueue: defineTable(creditResetQueueValidator)
-    .index("status", ["status"])
-    .index("planStatusTimestamp", ["plan", "status", "resetTimestamp"]),
+    .index("by_status", ["status"])
+    .index("by_plan_and_status_and_resetTimestamp", [
+      "plan",
+      "status",
+      "resetTimestamp",
+    ]),
 
   creditResetJobs: defineTable(creditResetJobValidator),
 };

@@ -12,7 +12,7 @@ export const hasActiveSubscription = query({
 
     const customer = await ctx.db
       .query("customers")
-      .withIndex("userId", (q) => q.eq("userId", appUser._id))
+      .withIndex("by_userId", (q) => q.eq("userId", appUser._id))
       .unique();
 
     if (!customer) {
@@ -21,11 +21,14 @@ export const hasActiveSubscription = query({
 
     const subscription = await ctx.db
       .query("subscriptions")
-      .withIndex("customerId_status", (q) =>
-        q.eq("customerId", customer.id).eq("status", "active")
+      .withIndex("by_customerId_and_status_and_productId", (q) =>
+        q
+          .eq("customerId", customer.id)
+          .eq("status", "active")
+          .eq("productId", args.productId)
       )
       .first();
 
-    return subscription?.productId === args.productId;
+    return subscription !== null;
   },
 });

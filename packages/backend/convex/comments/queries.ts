@@ -1,10 +1,8 @@
 import { query } from "@repo/backend/convex/_generated/server";
-import {
-  attachReplyToUsers,
-  attachUsers,
-} from "@repo/backend/convex/comments/utils";
+import { getUserMap } from "@repo/backend/convex/lib/helpers/user";
+import { userDataValidator } from "@repo/backend/convex/lib/validators/user";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { cleanSlug } from "@repo/backend/convex/utils/helper";
+import { cleanSlug } from "@repo/utilities/helper";
 import {
   paginationOptsValidator,
   paginationResultValidator,
@@ -12,21 +10,16 @@ import {
 import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
 
-/**
- * Validator for UserData (subset of user doc used in attachUsers).
- * Matches the UserData interface in lib/userHelpers.ts
- */
-const userDataValidator = v.object({
-  _id: vv.id("users"),
-  name: v.string(),
-  email: v.string(),
-  image: v.optional(nullable(v.string())),
+const publicCommentUserValidator = v.object({
+  _id: userDataValidator.fields._id,
+  image: userDataValidator.fields.image,
+  name: userDataValidator.fields.name,
 });
 
 const commentWithUserValidator = v.object({
   ...vv.doc("comments").fields,
-  user: nullable(userDataValidator),
-  replyToUser: nullable(userDataValidator),
+  user: nullable(publicCommentUserValidator),
+  replyToUser: nullable(publicCommentUserValidator),
 });
 
 export const getCommentsBySlug = query({
@@ -38,24 +31,45 @@ export const getCommentsBySlug = query({
   handler: async (ctx, args) => {
     const comments = await ctx.db
       .query("comments")
-      .withIndex("slug", (q) => q.eq("slug", cleanSlug(args.slug)))
+      .withIndex("by_slug", (q) => q.eq("slug", cleanSlug(args.slug)))
       .order("desc")
       .paginate(args.paginationOpts);
+    const commentUserIds = comments.page.map((comment) => comment.userId);
+    const replyToUserIds = comments.page.flatMap((comment) =>
+      comment.replyToUserId ? [comment.replyToUserId] : []
+    );
 
     const [userMap, replyToUserMap] = await Promise.all([
-      attachUsers(ctx, comments.page),
-      attachReplyToUsers(ctx, comments.page),
+      getUserMap(ctx, commentUserIds),
+      getUserMap(ctx, replyToUserIds),
     ]);
 
     return {
       ...comments,
-      page: comments.page.map((comment) => ({
-        ...comment,
-        user: userMap.get(comment.userId) ?? null,
-        replyToUser: comment.replyToUserId
-          ? (replyToUserMap.get(comment.replyToUserId) ?? null)
-          : null,
-      })),
+      page: comments.page.map((comment) => {
+        const user = userMap.get(comment.userId);
+        const replyToUser = comment.replyToUserId
+          ? replyToUserMap.get(comment.replyToUserId)
+          : undefined;
+
+        return {
+          ...comment,
+          user: user
+            ? {
+                _id: user._id,
+                image: user.image,
+                name: user.name,
+              }
+            : null,
+          replyToUser: replyToUser
+            ? {
+                _id: replyToUser._id,
+                image: replyToUser.image,
+                name: replyToUser.name,
+              }
+            : null,
+        };
+      }),
     };
   },
 });
@@ -69,7 +83,7 @@ export const getCommentsByUserId = query({
   handler: async (ctx, args) =>
     ctx.db
       .query("comments")
-      .withIndex("userId", (q) => q.eq("userId", args.userId))
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
       .order("desc")
       .paginate(args.paginationOpts),
 });
