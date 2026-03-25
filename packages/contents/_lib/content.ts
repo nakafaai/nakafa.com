@@ -2,6 +2,10 @@ import { promises as fsPromises } from "node:fs";
 import path from "node:path";
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import { extractMetadata } from "@repo/contents/_lib/metadata";
+import {
+  importContentModule,
+  importReferencesModule,
+} from "@repo/contents/_lib/module";
 import { resolveContentsDir } from "@repo/contents/_lib/root";
 import {
   FileReadError,
@@ -152,7 +156,7 @@ export function getContent(
       const raw = yield* getRawContent(contentPath);
 
       const contentModule = yield* Effect.tryPromise({
-        try: () => import(`@repo/contents/${cleanPath}/${locale}.mdx`),
+        try: () => importContentModule(cleanPath, locale),
         catch: (error: unknown) =>
           new ModuleLoadError({
             path: `@repo/contents/${cleanPath}/${locale}.mdx`,
@@ -161,10 +165,13 @@ export function getContent(
       });
 
       const parsedMetadata = yield* parseModuleMetadata(contentModule).pipe(
-        Effect.mapError((error) => ({
-          ...error,
-          path: `@repo/contents/${cleanPath}/${locale}.mdx`,
-        }))
+        Effect.mapError(
+          (error) =>
+            new MetadataParseError({
+              path: `@repo/contents/${cleanPath}/${locale}.mdx`,
+              reason: error.reason,
+            })
+        )
       );
 
       return {
@@ -340,9 +347,8 @@ export function extractReferences(module: unknown): unknown[] {
 export function getReferences(filePath: string): Effect.Effect<Reference[]> {
   return Effect.gen(function* () {
     const cleanPath = cleanSlug(filePath);
-    const refPath = `${cleanPath}/ref`;
     const refModule = yield* Effect.tryPromise({
-      try: () => import(`@repo/contents/${refPath}.ts`),
+      try: () => importReferencesModule(cleanPath),
       catch: () => new Error("Failed to load references"),
     });
 
