@@ -84,6 +84,18 @@ export interface ExerciseContentOptions {
   locale: Locale;
 }
 
+/**
+ * Extracts direct exercise numbers for a specific exercise set path.
+ *
+ * Exercise content is stored under numbered folders such as
+ * `set-1/1/_question` and `set-1/1/_answer`. This helper only accepts direct
+ * number segments followed by `_question` or `_answer`, so collection routes
+ * like `try-out/2026` are not misclassified as exercise pages.
+ *
+ * @param slugs - Cached MDX slugs for a locale
+ * @param filePath - Exercise set path relative to `packages/contents`
+ * @returns Sorted list of unique exercise numbers found under the set path
+ */
 export function getExerciseQuestionNumbers(
   slugs: readonly string[],
   filePath: string
