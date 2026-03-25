@@ -65,7 +65,8 @@ import { QuestionAnalytics } from "./analytics";
 import { ExerciseArticle } from "./article";
 import { ExerciseAttempt } from "./attempt";
 
-export const revalidate = false;
+export const dynamicParams = true;
+export const revalidate = 3600;
 
 interface Params {
   category: ExercisesCategory;
@@ -184,7 +185,11 @@ export function generateStaticParams() {
     isDeep: true,
   }).filter((params) => {
     const slug = params.slug;
-    return !(Array.isArray(slug) && isYearlessTryOutCollectionSlug(slug));
+    return (
+      Array.isArray(slug) &&
+      slug.length <= 2 &&
+      !isYearlessTryOutCollectionSlug(slug)
+    );
   });
 }
 
