@@ -177,13 +177,8 @@ export function getExercisesContent(
     }
 
     const exercises = yield* Effect.all(
-      sortedQuestionNumbers.map((numberStr: string) =>
-        loadExercise(
-          Number.parseInt(numberStr, 10),
-          cleanPath,
-          locale,
-          includeMDX
-        )
+      sortedQuestionNumbers.map((numberSegment: string) =>
+        loadExercise(numberSegment, cleanPath, locale, includeMDX)
       )
     );
 
@@ -248,14 +243,14 @@ function getRawChoices(
 /**
  * Loads a single exercise entry from its numbered folder.
  *
- * @param exerciseNumber - Exercise number within the set
+ * @param exerciseNumberSegment - Folder name for the exercise within the set
  * @param cleanPath - Normalized exercise-set path relative to `packages/contents`
  * @param locale - Locale used to load the question and answer content
  * @param includeMDX - Whether to include compiled MDX elements in the result
  * @returns Effect that resolves to an exercise or `Option.none()` when incomplete
  */
 function loadExercise(
-  exerciseNumber: number,
+  exerciseNumberSegment: string,
   cleanPath: string,
   locale: Locale,
   includeMDX: boolean
@@ -264,9 +259,11 @@ function loadExercise(
   ExerciseLoadError | ChoicesValidationError
 > {
   return Effect.gen(function* () {
-    const questionPath = `${cleanPath}/${exerciseNumber}/_question`;
-    const answerPath = `${cleanPath}/${exerciseNumber}/_answer`;
-    const choicesPath = `${cleanPath}/${exerciseNumber}/choices.ts`;
+    const exerciseNumber = Number.parseInt(exerciseNumberSegment, 10);
+
+    const questionPath = `${cleanPath}/${exerciseNumberSegment}/_question`;
+    const answerPath = `${cleanPath}/${exerciseNumberSegment}/_answer`;
+    const choicesPath = `${cleanPath}/${exerciseNumberSegment}/choices.ts`;
 
     const [questionContent, answerContent, choicesData] = yield* Effect.all(
       [
