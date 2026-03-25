@@ -1,8 +1,8 @@
 import { promises as fsPromises } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import { extractMetadata } from "@repo/contents/_lib/metadata";
+import { resolveContentsDir } from "@repo/contents/_lib/root";
 import {
   FileReadError,
   GitHubFetchError,
@@ -24,9 +24,7 @@ import { Effect, Either, Option } from "effect";
 import ky from "ky";
 import { createElement } from "react";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const contentsDir = path.dirname(__dirname);
+const contentsDir = resolveContentsDir(import.meta.url);
 
 /**
  * Validates that a file path is safe and doesn't escape the base directory.

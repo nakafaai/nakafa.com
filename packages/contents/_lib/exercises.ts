@@ -1,9 +1,9 @@
 import { promises as fsPromises } from "node:fs";
 import nodePath from "node:path";
-import { fileURLToPath } from "node:url";
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import { getFolderChildNames } from "@repo/contents/_lib/fs";
 import { getContentMetadataWithRaw } from "@repo/contents/_lib/metadata";
+import { resolveContentsDir } from "@repo/contents/_lib/root";
 import {
   type ChoicesValidationError,
   ExerciseLoadError,
@@ -19,14 +19,13 @@ import { Effect, Option } from "effect";
 import ky from "ky";
 import type React from "react";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = nodePath.dirname(__filename);
-const contentsDir = nodePath.dirname(__dirname);
+const contentsDir = resolveContentsDir(import.meta.url);
 
 const CHOICES_REGEX =
   /const\s+choices\s*(?::\s*ExercisesChoices\s*)?=\s*({[\s\S]*?});/;
 
 const NUMBER_REGEX = /^\d+$/;
+const EXERCISE_CONTENT_SEGMENTS = new Set(["_question", "_answer"]);
 
 async function loadExerciseContent(
   locale: Locale,
@@ -85,6 +84,36 @@ export interface ExerciseContentOptions {
   locale: Locale;
 }
 
+export function getExerciseQuestionNumbers(
+  slugs: readonly string[],
+  filePath: string
+): string[] {
+  const cleanPath = cleanSlug(filePath);
+  const exercisePathPrefix = cleanPath === "" ? "" : `${cleanPath}/`;
+  const questionNumbers = new Set<string>();
+
+  for (const slug of slugs) {
+    if (!slug.startsWith(exercisePathPrefix)) {
+      continue;
+    }
+
+    const remainingPath = slug.slice(exercisePathPrefix.length);
+    const pathParts = remainingPath.split("/");
+
+    if (
+      pathParts.length >= 2 &&
+      NUMBER_REGEX.test(pathParts[0]) &&
+      EXERCISE_CONTENT_SEGMENTS.has(pathParts[1])
+    ) {
+      questionNumbers.add(pathParts[0]);
+    }
+  }
+
+  return Array.from(questionNumbers).sort(
+    (a: string, b: string) => Number.parseInt(a, 10) - Number.parseInt(b, 10)
+  );
+}
+
 /**
  * Retrieves all exercises for a given path, handling _question and _answer subdirectories.
  * Exercise sets are structured with numbered folders containing question/answer pairs.
@@ -115,29 +144,14 @@ export function getExercisesContent(
 
     const allSlugs = getMDXSlugsForLocale(locale);
 
-    const exercisePathPrefix = cleanPath === "" ? "" : `${cleanPath}/`;
-    const questionNumbers = new Set<string>();
+    const sortedQuestionNumbers = getExerciseQuestionNumbers(
+      allSlugs,
+      cleanPath
+    );
 
-    for (const slug of allSlugs) {
-      if (!slug.startsWith(exercisePathPrefix)) {
-        continue;
-      }
-
-      const remainingPath = slug.slice(exercisePathPrefix.length);
-      const pathParts = remainingPath.split("/");
-
-      if (pathParts.length >= 1 && NUMBER_REGEX.test(pathParts[0])) {
-        questionNumbers.add(pathParts[0]);
-      }
-    }
-
-    if (questionNumbers.size === 0) {
+    if (sortedQuestionNumbers.length === 0) {
       return [];
     }
-
-    const sortedQuestionNumbers = Array.from(questionNumbers).sort(
-      (a: string, b: string) => Number.parseInt(a, 10) - Number.parseInt(b, 10)
-    );
 
     const exercises = yield* Effect.all(
       sortedQuestionNumbers.map((numberStr: string) =>

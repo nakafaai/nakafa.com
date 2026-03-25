@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { resolveContentsDir } from "@repo/contents/_lib/root";
 import {
   DirectoryReadError,
   InvalidPathError,
@@ -8,9 +8,7 @@ import {
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect } from "effect";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const contentsDir = path.dirname(__dirname);
+const contentsDir = resolveContentsDir(import.meta.url);
 
 const DEFAULT_EXCLUDE = ["_", "node_modules", ".", "coverage"] as const;
 

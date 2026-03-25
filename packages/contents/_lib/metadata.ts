@@ -1,7 +1,7 @@
 import { promises as fsPromises } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
+import { resolveContentsDir } from "@repo/contents/_lib/root";
 import {
   FileReadError,
   InvalidPathError,
@@ -15,9 +15,7 @@ import {
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, Option } from "effect";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const contentsDir = path.dirname(__dirname);
+const contentsDir = resolveContentsDir(import.meta.url);
 const METADATA_REGEX = /export const metadata\s*=\s*({[\s\S]*?});/;
 
 export interface ContentMetadataListItem {
