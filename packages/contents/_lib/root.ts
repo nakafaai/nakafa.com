@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const CONTENTS_SENTINELS = ["_lib", "articles", "exercises", "subject"];
+const CONTENTS_SENTINELS = ["articles", "exercises", "subject"];
 
 /**
  * Checks whether a directory looks like the `packages/contents` root.
