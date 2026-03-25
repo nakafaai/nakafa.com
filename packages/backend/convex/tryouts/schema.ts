@@ -111,6 +111,12 @@ const tables = {
       "locale",
       "tryoutId",
     ])
+    .index("by_userId_and_product_and_locale_and_updatedAt", [
+      "userId",
+      "product",
+      "locale",
+      "updatedAt",
+    ])
     .index("by_attemptId", ["attemptId"]),
 
   tryoutPartAttempts: defineTable({

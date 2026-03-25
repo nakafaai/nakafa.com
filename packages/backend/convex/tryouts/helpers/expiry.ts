@@ -1,9 +1,7 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import {
-  finalizeTryoutPartAttempt,
-  syncTryoutAttemptAggregates,
-} from "@repo/backend/convex/tryouts/helpers/finalize";
+import { syncTryoutAttemptAggregates } from "@repo/backend/convex/tryouts/helpers/finalize/aggregates";
+import { finalizeTryoutPartAttempt } from "@repo/backend/convex/tryouts/helpers/finalize/part";
 import { getTryoutScoreTarget } from "@repo/backend/convex/tryouts/helpers/irt";
 import { loadBoundedTryoutPartAttempts } from "@repo/backend/convex/tryouts/helpers/loaders";
 import { ConvexError } from "convex/values";

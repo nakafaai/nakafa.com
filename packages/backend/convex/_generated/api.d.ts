@@ -180,7 +180,8 @@ import type * as triggers_tryouts_leaderboard from "../triggers/tryouts/leaderbo
 import type * as tryouts_aggregate from "../tryouts/aggregate.js";
 import type * as tryouts_helpers_access from "../tryouts/helpers/access.js";
 import type * as tryouts_helpers_expiry from "../tryouts/helpers/expiry.js";
-import type * as tryouts_helpers_finalize from "../tryouts/helpers/finalize.js";
+import type * as tryouts_helpers_finalize_aggregates from "../tryouts/helpers/finalize/aggregates.js";
+import type * as tryouts_helpers_finalize_part from "../tryouts/helpers/finalize/part.js";
 import type * as tryouts_helpers_irt from "../tryouts/helpers/irt.js";
 import type * as tryouts_helpers_latest from "../tryouts/helpers/latest.js";
 import type * as tryouts_helpers_loaders from "../tryouts/helpers/loaders.js";
@@ -194,6 +195,7 @@ import type * as tryouts_products_index from "../tryouts/products/index.js";
 import type * as tryouts_products_snbt from "../tryouts/products/snbt.js";
 import type * as tryouts_queries_leaderboard from "../tryouts/queries/leaderboard.js";
 import type * as tryouts_queries_me_attempt from "../tryouts/queries/me/attempt.js";
+import type * as tryouts_queries_me_helpers from "../tryouts/queries/me/helpers.js";
 import type * as tryouts_queries_me_packages from "../tryouts/queries/me/packages.js";
 import type * as tryouts_queries_me_part from "../tryouts/queries/me/part.js";
 import type * as tryouts_queries_me_validators from "../tryouts/queries/me/validators.js";
@@ -395,7 +397,8 @@ declare const fullApi: ApiFromModules<{
   "tryouts/aggregate": typeof tryouts_aggregate;
   "tryouts/helpers/access": typeof tryouts_helpers_access;
   "tryouts/helpers/expiry": typeof tryouts_helpers_expiry;
-  "tryouts/helpers/finalize": typeof tryouts_helpers_finalize;
+  "tryouts/helpers/finalize/aggregates": typeof tryouts_helpers_finalize_aggregates;
+  "tryouts/helpers/finalize/part": typeof tryouts_helpers_finalize_part;
   "tryouts/helpers/irt": typeof tryouts_helpers_irt;
   "tryouts/helpers/latest": typeof tryouts_helpers_latest;
   "tryouts/helpers/loaders": typeof tryouts_helpers_loaders;
@@ -409,6 +412,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/products/snbt": typeof tryouts_products_snbt;
   "tryouts/queries/leaderboard": typeof tryouts_queries_leaderboard;
   "tryouts/queries/me/attempt": typeof tryouts_queries_me_attempt;
+  "tryouts/queries/me/helpers": typeof tryouts_queries_me_helpers;
   "tryouts/queries/me/packages": typeof tryouts_queries_me_packages;
   "tryouts/queries/me/part": typeof tryouts_queries_me_part;
   "tryouts/queries/me/validators": typeof tryouts_queries_me_validators;

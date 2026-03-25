@@ -69,10 +69,10 @@ export async function evaluateTryoutScaleQuality(
     .withIndex("by_tryoutId_and_partIndex", (q) => q.eq("tryoutId", tryoutId))
     .take(tryout.partCount + 1);
 
-  if (tryoutPartSets.length > tryout.partCount) {
+  if (tryoutPartSets.length !== tryout.partCount) {
     throw new ConvexError({
-      code: "IRT_TRYOUT_PART_COUNT_EXCEEDED",
-      message: "Tryout part set count exceeds the tryout part count.",
+      code: "IRT_TRYOUT_PART_COUNT_MISMATCH",
+      message: "Tryout part set count does not match the tryout part count.",
     });
   }
 

@@ -2,7 +2,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { syncTryoutAttemptExpiry } from "@repo/backend/convex/tryouts/helpers/expiry";
-import { syncTryoutAttemptAggregates } from "@repo/backend/convex/tryouts/helpers/finalize";
+import { syncTryoutAttemptAggregates } from "@repo/backend/convex/tryouts/helpers/finalize/aggregates";
 import { getTryoutScoreTarget } from "@repo/backend/convex/tryouts/helpers/irt";
 import {
   computeTryoutRawScorePercentage,

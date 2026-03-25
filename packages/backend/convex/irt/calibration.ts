@@ -64,7 +64,7 @@ function estimateInitialTheta(correctCount: number, totalCount: number) {
   return clamp(logit(seededProbability), THETA_SEED_MIN, THETA_SEED_MAX);
 }
 
-/** Solve the symmetric 2x2 linear system used by each logistic Newton step. */
+/** Solve the symmetric 2x2 linear system used by one logistic Newton step. */
 function solveTwoByTwo({
   a00,
   a01,
@@ -94,7 +94,10 @@ function solveTwoByTwo({
  * Fit one 2PL item with logistic regression over fixed theta observations.
  *
  * The intercept/slope form is converted back to IRT difficulty and
- * discrimination after each Newton solve converges or hits a guardrail.
+ * discrimination after each Newton solve converges or hits a guardrail. The
+ * helper deliberately falls back to the incoming seed whenever the Hessian is
+ * singular, the slope collapses below the minimum supported discrimination, or
+ * the optimizer produces non-finite values.
  */
 function fitItemLogistic2PL(
   observations: Array<{ correct: boolean; theta: number }>,
@@ -180,7 +183,11 @@ function fitItemLogistic2PL(
  *
  * The pipeline seeds item difficulty from the observed correct rate, estimates
  * person theta with EAP, then refits each item with logistic regression on the
- * current theta estimates until the item parameters stabilize.
+ * current theta estimates until the item parameters stabilize. This is an
+ * operationally bounded routine, not a general-purpose psychometrics engine:
+ * the item update count, convergence delta, discrimination floor, and response
+ * thresholds all come from `policy.ts` so production calibration stays
+ * predictable and reviewable.
  */
 export function calibrateTwoPLItems({
   responseCount,

@@ -6,7 +6,7 @@ import {
   expireTryoutAttempt,
   syncTryoutAttemptExpiry,
 } from "@repo/backend/convex/tryouts/helpers/expiry";
-import { syncTryoutAttemptAggregates } from "@repo/backend/convex/tryouts/helpers/finalize";
+import { syncTryoutAttemptAggregates } from "@repo/backend/convex/tryouts/helpers/finalize/aggregates";
 import { upsertUserTryoutLatestAttempt } from "@repo/backend/convex/tryouts/helpers/latest";
 import {
   computeTryoutRawScorePercentage,
