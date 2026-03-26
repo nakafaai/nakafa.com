@@ -16,6 +16,7 @@ interface RecordContentViewArgs {
   userId?: Id<"users">;
 }
 
+/** Result returned after recording one content view. */
 export interface RecordContentViewResult {
   alreadyViewed: boolean;
   isNewView: boolean;
@@ -99,8 +100,8 @@ async function loadContentRefBySlug(
   }
 }
 
-/** Writes the durable content view row and queues first-view analytics. */
-async function writeContentView(
+/** Upserts the durable content view row and queues first-view analytics. */
+async function upsertContentView(
   db: ContentViewsDb,
   contentRef: ContentRef,
   args: RecordContentViewArgs
@@ -151,7 +152,10 @@ async function writeContentView(
   return { success: true, isNewView: false, alreadyViewed: true };
 }
 
-/** Records one content view by localized slug. */
+/**
+ * Records one content view by localized slug.
+ * Throws when the localized content record does not exist.
+ */
 export async function recordContentViewBySlug(
   ctx: Pick<MutationCtx, "db">,
   {
@@ -174,7 +178,7 @@ export async function recordContentViewBySlug(
     type,
   });
 
-  return writeContentView(ctx.db, contentRef, {
+  return upsertContentView(ctx.db, contentRef, {
     deviceId,
     locale,
     slug,
