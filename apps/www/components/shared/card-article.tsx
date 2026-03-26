@@ -6,13 +6,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { slugify } from "@repo/design-system/lib/utils";
-import { Link } from "@repo/internationalization/src/navigation";
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";
 
@@ -27,11 +27,10 @@ export function CardArticle({ category, article }: Props) {
   const id = slugify(article.title);
 
   return (
-    <Link
+    <NavigationLink
       className="group"
       href={`/articles/${category}/${article.slug}`}
       key={article.slug}
-      prefetch
       title={article.title}
     >
       <Card className="relative h-full overflow-hidden">
@@ -66,6 +65,6 @@ export function CardArticle({ category, article }: Props) {
           </Tooltip>
         </CardFooter>
       </Card>
-    </Link>
+    </NavigationLink>
   );
 }

@@ -12,19 +12,21 @@ import {
   StepperTitle,
   StepperTrigger,
 } from "@repo/design-system/components/ui/stepper";
-import { useTranslations } from "next-intl";
 
 interface Props {
+  labels: {
+    delivery: string;
+    election: string;
+    selection: string;
+  };
   title: string;
 }
 
-export function Stage({ title }: Props) {
-  const t = useTranslations("Common");
-
+export function Stage({ title, labels }: Props) {
   const stages = [
-    { step: 1, title: t("selection") },
-    { step: 2, title: t("election") },
-    { step: 3, title: t("delivery") },
+    { step: 1, title: labels.selection },
+    { step: 2, title: labels.election },
+    { step: 3, title: labels.delivery },
   ];
 
   return (
