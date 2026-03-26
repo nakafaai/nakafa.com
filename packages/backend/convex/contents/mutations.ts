@@ -1,5 +1,6 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import {
+  MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE,
   MIN_VIEW_THRESHOLD,
   RETRY_CONFIG,
   SUPPORTED_LOCALES,
@@ -17,7 +18,10 @@ import {
 import { buildContentAnalyticsBatch } from "@repo/backend/convex/contents/helpers/analytics/batch";
 import { applyContentAnalyticsBatch } from "@repo/backend/convex/contents/helpers/analytics/writes";
 import { isContentAnalyticsPartition } from "@repo/backend/convex/contents/helpers/partitions";
-import { popularAudioContentItemValidator } from "@repo/backend/convex/contents/helpers/popularity";
+import {
+  mergePopularAudioContentItems,
+  type PopularAudioContentItem,
+} from "@repo/backend/convex/contents/helpers/popularity";
 import { recordContentViewBySlug } from "@repo/backend/convex/contents/helpers/views";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
 import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
@@ -37,6 +41,11 @@ const contentAnalyticsPartitionResultValidator = v.object({
 
 const scheduleContentAnalyticsPartitionsResultValidator = v.object({
   scheduledPartitions: v.number(),
+});
+
+const populateAudioQueueResultValidator = v.object({
+  processed: v.number(),
+  queued: v.number(),
 });
 
 /** Schedules one worker per idle analytics partition with queued rows. */
@@ -229,22 +238,55 @@ export const processContentAnalyticsPartition = internalMutation({
   },
 });
 
-/** Queues popular content for audio generation across all supported locales. */
-export const enqueuePopularContentForAudio = internalMutation({
-  args: {
-    items: v.array(popularAudioContentItemValidator),
-  },
-  returns: v.object({
-    processed: v.number(),
-    queued: v.number(),
-  }),
-  handler: async (ctx, args) => {
-    if (args.items.length === 0) {
+/**
+ * Reads current popularity rankings, then queues locale-specific audio work.
+ *
+ * This job runs on a cron, so it does not sit on the user-facing content view
+ * write path.
+ */
+export const populateAudioQueue = internalMutation({
+  args: {},
+  returns: populateAudioQueueResultValidator,
+  handler: async (ctx) => {
+    logger.info("Populating audio queue started");
+
+    const [articleRows, subjectRows] = await Promise.all([
+      ctx.db
+        .query("articlePopularity")
+        .withIndex("by_viewCount_and_contentId")
+        .order("desc")
+        .take(MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE),
+      ctx.db
+        .query("subjectPopularity")
+        .withIndex("by_viewCount_and_contentId")
+        .order("desc")
+        .take(MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE),
+    ]);
+
+    const items = mergePopularAudioContentItems([
+      ...articleRows.map(
+        (row) =>
+          ({
+            ref: { type: "article", id: row.contentId },
+            viewCount: row.viewCount,
+          }) satisfies PopularAudioContentItem
+      ),
+      ...subjectRows.map(
+        (row) =>
+          ({
+            ref: { type: "subject", id: row.contentId },
+            viewCount: row.viewCount,
+          }) satisfies PopularAudioContentItem
+      ),
+    ]);
+
+    if (items.length === 0) {
+      logger.info("No popular content found for audio queue population");
       return { processed: 0, queued: 0 };
     }
 
     let totalQueued = 0;
-    const sortedItems = [...args.items].sort(
+    const sortedItems = [...items].sort(
       (left, right) => right.viewCount - left.viewCount
     );
 
@@ -360,7 +402,11 @@ export const enqueuePopularContentForAudio = internalMutation({
       }
     }
 
-    return { processed: sortedItems.length, queued: totalQueued };
+    const result = { processed: sortedItems.length, queued: totalQueued };
+
+    logger.info("Populated audio queue completed", result);
+
+    return result;
   },
 });
 

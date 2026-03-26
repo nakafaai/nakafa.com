@@ -1,28 +1,36 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { getContentAnalyticsPartition } from "@repo/backend/convex/contents/helpers/partitions";
-import type {
-  ContentRef,
-  ContentType,
-  Locale,
+import type { ContentRef } from "@repo/backend/convex/lib/validators/contents";
+import {
+  contentTypeValidator,
+  localeValidator,
 } from "@repo/backend/convex/lib/validators/contents";
-import { ConvexError } from "convex/values";
+import { ConvexError, type Infer, v } from "convex/values";
 
 type ContentViewsDb = MutationCtx["db"];
 
-interface RecordContentViewArgs {
-  deviceId: string;
-  locale: Locale;
-  slug: string;
-  userId?: Id<"users">;
-}
+const recordContentViewBySlugArgsValidator = v.object({
+  deviceId: v.string(),
+  locale: localeValidator,
+  slug: v.string(),
+  type: contentTypeValidator,
+  userId: v.optional(v.id("users")),
+});
+
+type RecordContentViewBySlugArgs = Infer<
+  typeof recordContentViewBySlugArgsValidator
+>;
+
+const recordContentViewResultValidator = v.object({
+  alreadyViewed: v.boolean(),
+  isNewView: v.boolean(),
+  success: v.boolean(),
+});
 
 /** Result returned after recording one content view. */
-export interface RecordContentViewResult {
-  alreadyViewed: boolean;
-  isNewView: boolean;
-  success: boolean;
-}
+export type RecordContentViewResult = Infer<
+  typeof recordContentViewResultValidator
+>;
 
 /** Loads one content reference by localized slug for view recording. */
 async function loadContentRefBySlug(
@@ -31,11 +39,7 @@ async function loadContentRefBySlug(
     locale,
     slug,
     type,
-  }: {
-    locale: Locale;
-    slug: string;
-    type: ContentType;
-  }
+  }: Pick<RecordContentViewBySlugArgs, "locale" | "slug" | "type">
 ): Promise<ContentRef> {
   switch (type) {
     case "article": {
@@ -105,7 +109,7 @@ async function loadContentRefBySlug(
 async function upsertContentView(
   db: ContentViewsDb,
   contentRef: ContentRef,
-  args: RecordContentViewArgs
+  args: Omit<RecordContentViewBySlugArgs, "type">
 ): Promise<RecordContentViewResult> {
   const now = Date.now();
   const existingByDevice = await db
@@ -162,19 +166,7 @@ async function upsertContentView(
  */
 export async function recordContentViewBySlug(
   ctx: Pick<MutationCtx, "db">,
-  {
-    deviceId,
-    locale,
-    slug,
-    type,
-    userId,
-  }: {
-    deviceId: string;
-    locale: Locale;
-    slug: string;
-    type: ContentType;
-    userId?: Id<"users">;
-  }
+  { deviceId, locale, slug, type, userId }: RecordContentViewBySlugArgs
 ): Promise<RecordContentViewResult> {
   const contentRef = await loadContentRefBySlug(ctx.db, {
     locale,

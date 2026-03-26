@@ -21,7 +21,7 @@ crons.interval(
 crons.interval(
   "populate audio generation queue",
   { minutes: 30 },
-  internal.contents.actions.populateAudioQueue,
+  internal.contents.mutations.populateAudioQueue,
   {}
 );
 
