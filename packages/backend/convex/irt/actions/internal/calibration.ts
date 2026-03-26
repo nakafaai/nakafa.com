@@ -5,7 +5,11 @@ import {
   IRT_MAX_CALIBRATION_ATTEMPTS_PER_RUN,
   IRT_MAX_CALIBRATION_RESPONSES_PER_RUN,
 } from "@repo/backend/convex/irt/policy";
-import type { CalibrationResponse } from "@repo/backend/convex/irt/queries/internal/calibration";
+import type {
+  CalibrationResponse,
+  calibrationQuestionsForSetResultValidator,
+  calibrationResponsesPageResultValidator,
+} from "@repo/backend/convex/irt/queries/internal/calibration";
 import { irtCalibrationResultValidator } from "@repo/backend/convex/irt/validators";
 import { ConvexError, type Infer, v } from "convex/values";
 
@@ -25,12 +29,16 @@ export const calibrateSetTwoPL = internalAction({
   },
   returns: irtCalibrationResultValidator,
   handler: async (ctx, args) => {
-    const { questions, existingParams } = await ctx.runQuery(
-      internal.irt.queries.internal.calibration.getCalibrationQuestionsForSet,
-      {
-        setId: args.setId,
-      }
-    );
+    const {
+      questions,
+      existingParams,
+    }: Infer<typeof calibrationQuestionsForSetResultValidator> =
+      await ctx.runQuery(
+        internal.irt.queries.internal.calibration.getCalibrationQuestionsForSet,
+        {
+          setId: args.setId,
+        }
+      );
     const questionIds = questions.map((question) => question.questionId);
     const responsesPerAttemptLimit = Math.max(questionIds.length, 1);
     const attemptPageSize = Math.max(
@@ -56,7 +64,9 @@ export const calibrateSetTwoPL = internalAction({
     let responseCount = 0;
 
     while (!isDone) {
-      ({ continueCursor, isDone, page } = await ctx.runQuery(
+      const responsePage: Infer<
+        typeof calibrationResponsesPageResultValidator
+      > = await ctx.runQuery(
         internal.irt.queries.internal.calibration
           .getCalibrationResponsesPageForSet,
         {
@@ -66,7 +76,11 @@ export const calibrateSetTwoPL = internalAction({
             cursor: continueCursor,
           },
         }
-      ));
+      );
+
+      continueCursor = responsePage.continueCursor;
+      isDone = responsePage.isDone;
+      page = responsePage.page;
 
       for (const response of page) {
         const questionResponses = responsesByQuestion.get(response.questionId);

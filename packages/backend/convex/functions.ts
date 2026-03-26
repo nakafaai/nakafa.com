@@ -11,14 +11,8 @@ import {
 import { chatsHandler } from "@repo/backend/convex/triggers/chats/chats";
 import { commentsHandler } from "@repo/backend/convex/triggers/comments/comments";
 import { commentVotesHandler } from "@repo/backend/convex/triggers/comments/commentVotes";
-import { contentViewsHandler } from "@repo/backend/convex/triggers/contents/contentViews";
 import { exerciseAnswersHandler } from "@repo/backend/convex/triggers/contents/exerciseAnswers";
 import { exerciseAttemptsHandler } from "@repo/backend/convex/triggers/contents/exerciseAttempts";
-import {
-  articlePopularityTrigger,
-  exercisePopularityTrigger,
-  subjectPopularityTrigger,
-} from "@repo/backend/convex/triggers/contents/popularity";
 import { postReactionsHandler } from "@repo/backend/convex/triggers/forums/postReactions";
 import { forumPostsHandler } from "@repo/backend/convex/triggers/forums/posts";
 import { forumReactionsHandler } from "@repo/backend/convex/triggers/forums/reactions";
@@ -66,18 +60,17 @@ triggers.register("schoolClassMaterialAttachments", noopHandler);
 triggers.register("schoolClassMaterialViews", noopHandler);
 triggers.register("contentAudios", noopHandler);
 triggers.register("audioGenerationQueue", noopHandler);
+triggers.register("contentViews", noopHandler);
+triggers.register("contentViewAnalyticsQueue", noopHandler);
+triggers.register("articlePopularity", noopHandler);
+triggers.register("subjectPopularity", noopHandler);
+triggers.register("exercisePopularity", noopHandler);
 triggers.register("creditTransactions", noopHandler);
 triggers.register("creditResetJobs", noopHandler);
 triggers.register("creditResetQueue", noopHandler);
 triggers.register("subjectTrendingBuckets", noopHandler);
 triggers.register("users", noopHandler);
 triggers.register("subscriptions", subscriptionsHandler);
-triggers.register("contentViews", contentViewsHandler);
-
-// Popularity aggregate triggers for trending content
-triggers.register("articlePopularity", articlePopularityTrigger);
-triggers.register("subjectPopularity", subjectPopularityTrigger);
-triggers.register("exercisePopularity", exercisePopularityTrigger);
 
 // Active triggers with custom logic
 triggers.register("exerciseAttempts", exerciseAttemptsHandler);

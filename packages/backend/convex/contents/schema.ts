@@ -35,24 +35,38 @@ const tables = {
     ]),
 
   /**
+   * Append-only queue of new unique views.
+   * A background mutation drains this queue into derived analytics tables.
+   */
+  contentViewAnalyticsQueue: defineTable({
+    contentRef: contentRefValidator,
+    locale: localeValidator,
+    viewedAt: v.number(),
+  }),
+
+  /**
    * Article popularity counts.
-   * Updated via triggers when article views are recorded.
+   * Updated asynchronously from the content analytics queue.
    */
   articlePopularity: defineTable({
     contentId: v.id("articleContents"),
     viewCount: v.number(),
     updatedAt: v.number(),
-  }).index("by_contentId", ["contentId"]),
+  })
+    .index("by_contentId", ["contentId"])
+    .index("by_viewCount_and_contentId", ["viewCount", "contentId"]),
 
   /**
    * Subject popularity counts.
-   * Updated via triggers when subject views are recorded.
+   * Updated asynchronously from the content analytics queue.
    */
   subjectPopularity: defineTable({
     contentId: v.id("subjectSections"),
     viewCount: v.number(),
     updatedAt: v.number(),
-  }).index("by_contentId", ["contentId"]),
+  })
+    .index("by_contentId", ["contentId"])
+    .index("by_viewCount_and_contentId", ["viewCount", "contentId"]),
 
   /**
    * Daily subject view counts used to serve bounded trending queries.
@@ -72,13 +86,15 @@ const tables = {
 
   /**
    * Exercise popularity counts.
-   * Updated via triggers when exercise views are recorded.
+   * Updated asynchronously from the content analytics queue.
    */
   exercisePopularity: defineTable({
     contentId: v.id("exerciseSets"),
     viewCount: v.number(),
     updatedAt: v.number(),
-  }).index("by_contentId", ["contentId"]),
+  })
+    .index("by_contentId", ["contentId"])
+    .index("by_viewCount_and_contentId", ["viewCount", "contentId"]),
 };
 
 export default tables;

@@ -1,5 +1,5 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import {
-  MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE,
   MIN_VIEW_THRESHOLD,
   RETRY_CONFIG,
   SUPPORTED_LOCALES,
@@ -10,13 +10,14 @@ import {
   getContentSlug,
 } from "@repo/backend/convex/audioStudies/utils";
 import {
-  articlePopularity,
-  subjectPopularity,
-} from "@repo/backend/convex/contents/aggregate";
-import { recordContentViewBySlug } from "@repo/backend/convex/contents/utils";
+  applyContentAnalyticsBatch,
+  buildContentAnalyticsBatch,
+  CONTENT_VIEW_ANALYTICS_BATCH_SIZE,
+  popularAudioContentItemValidator,
+} from "@repo/backend/convex/contents/helpers/analytics";
+import { recordContentViewBySlug } from "@repo/backend/convex/contents/helpers/views";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
 import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
-import type { AudioContentRef } from "@repo/backend/convex/lib/validators/audio";
 import {
   contentViewRefValidator,
   localeValidator,
@@ -24,100 +25,82 @@ import {
 import { logger } from "@repo/backend/convex/utils/logger";
 import { v } from "convex/values";
 
-interface PopularItem {
-  ref: AudioContentRef;
-  viewCount: number;
-}
+/**
+ * Drains queued content view analytics into derived popularity tables.
+ *
+ * Content view recording only appends queue rows. This mutation folds queued
+ * rows into the denormalized tables so user-facing writes stay small.
+ */
+
+export const processContentAnalyticsQueue = internalMutation({
+  args: {},
+  returns: v.object({
+    hasMore: v.boolean(),
+    processed: v.number(),
+  }),
+  handler: async (ctx) => {
+    const queueItems = await ctx.db
+      .query("contentViewAnalyticsQueue")
+      .take(CONTENT_VIEW_ANALYTICS_BATCH_SIZE);
+
+    if (queueItems.length === 0) {
+      return { hasMore: false, processed: 0 };
+    }
+
+    const analyticsBatch = buildContentAnalyticsBatch(queueItems);
+
+    await applyContentAnalyticsBatch(ctx, analyticsBatch);
+
+    for (const queueItem of queueItems) {
+      await ctx.db.delete("contentViewAnalyticsQueue", queueItem._id);
+    }
+
+    const hasMore = queueItems.length === CONTENT_VIEW_ANALYTICS_BATCH_SIZE;
+
+    if (hasMore) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.contents.mutations.processContentAnalyticsQueue,
+        {}
+      );
+    }
+
+    logger.info("Processed content analytics queue batch", {
+      hasMore,
+      processed: queueItems.length,
+    });
+
+    return { hasMore, processed: queueItems.length };
+  },
+});
 
 /**
  * Queues popular content for audio generation across all supported locales.
- * Processes articles and subject sections only (exercises excluded).
+ *
+ * The caller supplies already-ranked items so this mutation does not read from
+ * hot popularity tables.
  */
-export const populateAudioQueue = internalMutation({
-  args: {},
+export const enqueuePopularContentForAudio = internalMutation({
+  args: {
+    items: v.array(popularAudioContentItemValidator),
+  },
   returns: v.object({
     processed: v.number(),
     queued: v.number(),
   }),
-  handler: async (ctx) => {
-    logger.info("Populating audio queue started");
-
-    const [articleCount, subjectCount] = await Promise.all([
-      articlePopularity.count(ctx, { namespace: "global" }),
-      subjectPopularity.count(ctx, { namespace: "global" }),
-    ]);
-
-    const totalCount = articleCount + subjectCount;
-
-    if (totalCount === 0) {
-      logger.info("No popular content found for audio queue population");
+  handler: async (ctx, args) => {
+    if (args.items.length === 0) {
       return { processed: 0, queued: 0 };
     }
 
-    logger.info("Fetched popularity counts", {
-      articles: articleCount,
-      maxItemsPerType: MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE,
-      subjects: subjectCount,
-      total: totalCount,
-    });
-
     let totalQueued = 0;
-    const articleItems: PopularItem[] = [];
-    for await (const item of articlePopularity.iter(ctx, {
-      namespace: "global",
-      order: "desc",
-      pageSize: 100,
-    })) {
-      if (articleItems.length === MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE) {
-        break;
-      }
 
-      if (item.sumValue < MIN_VIEW_THRESHOLD) {
-        break;
-      }
-
-      articleItems.push({
-        ref: { type: "article", id: item.key[1] },
-        viewCount: item.sumValue,
-      });
-    }
-
-    const subjectItems: PopularItem[] = [];
-    for await (const item of subjectPopularity.iter(ctx, {
-      namespace: "global",
-      order: "desc",
-      pageSize: 100,
-    })) {
-      if (subjectItems.length === MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE) {
-        break;
-      }
-
-      if (item.sumValue < MIN_VIEW_THRESHOLD) {
-        break;
-      }
-
-      subjectItems.push({
-        ref: { type: "subject", id: item.key[1] },
-        viewCount: item.sumValue,
-      });
-    }
-
-    const allItems: PopularItem[] = [...articleItems, ...subjectItems].sort(
-      (a, b) => b.viewCount - a.viewCount
+    const sortedItems = [...args.items].sort(
+      (left, right) => right.viewCount - left.viewCount
     );
 
-    logger.info("Processing popular content", {
-      articleItems: articleItems.length,
-      subjectItems: subjectItems.length,
-      threshold: MIN_VIEW_THRESHOLD,
-    });
-
-    for (const item of allItems) {
+    for (const item of sortedItems) {
       if (item.viewCount < MIN_VIEW_THRESHOLD) {
-        logger.info("Below threshold, stopping", {
-          viewCount: item.viewCount,
-          threshold: MIN_VIEW_THRESHOLD,
-        });
         break;
       }
 
@@ -228,12 +211,7 @@ export const populateAudioQueue = internalMutation({
       }
     }
 
-    logger.info("Populated audio queue completed", {
-      processed: totalCount,
-      queued: totalQueued,
-    });
-
-    return { processed: totalCount, queued: totalQueued };
+    return { processed: sortedItems.length, queued: totalQueued };
   },
 });
 
@@ -255,15 +233,12 @@ export const recordContentView = mutation({
   handler: async (ctx, args) => {
     const user = await getOptionalAppUser(ctx);
 
-    return recordContentViewBySlug(
-      ctx,
-      args.contentRef.type,
-      args.locale,
-      args.contentRef.slug,
-      {
-        deviceId: args.deviceId,
-        userId: user?.appUser._id,
-      }
-    );
+    return recordContentViewBySlug(ctx, {
+      deviceId: args.deviceId,
+      locale: args.locale,
+      slug: args.contentRef.slug,
+      type: args.contentRef.type,
+      userId: user?.appUser._id,
+    });
   },
 });

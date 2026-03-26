@@ -1,4 +1,5 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   getPlanCreditConfig,
   RESET_WORKFLOW_CONFIG,
@@ -7,6 +8,12 @@ import { logger } from "@repo/backend/convex/utils/logger";
 import { workflow } from "@repo/backend/convex/workflow";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
+
+interface ClaimedQueueItem {
+  credits?: number;
+  queueId: Id<"creditResetQueue">;
+  userId: Id<"users">;
+}
 
 /**
  * Orchestrates the credit reset workflow with fixed worker pool.
@@ -156,7 +163,7 @@ export const processQueue = workflow.define({
     });
 
     while (true) {
-      const items = await step.runMutation(
+      const items: ClaimedQueueItem[] = await step.runMutation(
         internal.credits.mutations.claimQueueItems,
         {
           plan: args.plan,

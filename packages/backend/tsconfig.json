@@ -20,5 +20,5 @@
     }
   },
   "include": ["./**/*"],
-  "exclude": ["./convex/_generated"]
+  "exclude": ["./convex/_generated", "./coverage"]
 }

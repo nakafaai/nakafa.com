@@ -6,13 +6,22 @@ const crons = cronJobs();
 const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
 
 /**
+ * Drains queued content analytics in small batches.
+ */
+crons.interval(
+  "process content analytics queue",
+  { minutes: 1 },
+  internal.contents.mutations.processContentAnalyticsQueue,
+  {}
+);
+
+/**
  * Populates audio generation queue every 30 minutes.
- * Runs in all environments for trending statistics.
  */
 crons.interval(
   "populate audio generation queue",
   { minutes: 30 },
-  internal.contents.mutations.populateAudioQueue,
+  internal.contents.actions.populateAudioQueue,
   {}
 );
 
