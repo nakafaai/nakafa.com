@@ -62,6 +62,7 @@ triggers.register("contentAudios", noopHandler);
 triggers.register("audioGenerationQueue", noopHandler);
 triggers.register("contentViews", noopHandler);
 triggers.register("contentViewAnalyticsQueue", noopHandler);
+triggers.register("contentAnalyticsPartitions", noopHandler);
 triggers.register("articlePopularity", noopHandler);
 triggers.register("subjectPopularity", noopHandler);
 triggers.register("exercisePopularity", noopHandler);

@@ -1,6 +1,6 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import { internalAction } from "@repo/backend/convex/_generated/server";
-import type { PopularAudioContentItem } from "@repo/backend/convex/contents/helpers/analytics";
+import type { PopularAudioContentItem } from "@repo/backend/convex/contents/helpers/popularity";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { type Infer, v } from "convex/values";
 

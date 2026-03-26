@@ -6,12 +6,12 @@ const crons = cronJobs();
 const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
 
 /**
- * Drains queued content analytics in small batches.
+ * Schedules idle content analytics partitions that have queued rows.
  */
 crons.interval(
-  "process content analytics queue",
+  "schedule content analytics partitions",
   { minutes: 1 },
-  internal.contents.mutations.processContentAnalyticsQueue,
+  internal.contents.mutations.scheduleContentAnalyticsPartitions,
   {}
 );
 

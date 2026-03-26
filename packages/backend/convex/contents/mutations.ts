@@ -10,11 +10,19 @@ import {
   getContentSlug,
 } from "@repo/backend/convex/audioStudies/utils";
 import {
+  CONTENT_ANALYTICS_BATCH_SIZE,
+  CONTENT_ANALYTICS_LEASE_DURATION_MS,
+  CONTENT_ANALYTICS_PARTITIONS,
+} from "@repo/backend/convex/contents/constants";
+import {
   applyContentAnalyticsBatch,
   buildContentAnalyticsBatch,
-  CONTENT_VIEW_ANALYTICS_BATCH_SIZE,
-  popularAudioContentItemValidator,
-} from "@repo/backend/convex/contents/helpers/analytics";
+  ensureContentAnalyticsPartitionRow,
+  hasContentAnalyticsBacklog,
+  loadContentAnalyticsQueueBatch,
+} from "@repo/backend/convex/contents/helpers/analyticsQueue";
+import { isContentAnalyticsPartition } from "@repo/backend/convex/contents/helpers/partitions";
+import { popularAudioContentItemValidator } from "@repo/backend/convex/contents/helpers/popularity";
 import { recordContentViewBySlug } from "@repo/backend/convex/contents/helpers/views";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
 import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
@@ -23,28 +31,146 @@ import {
   localeValidator,
 } from "@repo/backend/convex/lib/validators/contents";
 import { logger } from "@repo/backend/convex/utils/logger";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
+
+const contentAnalyticsPartitionResultValidator = v.object({
+  hasMore: v.boolean(),
+  partition: v.number(),
+  processed: v.number(),
+  skipped: v.boolean(),
+});
+
+const scheduleContentAnalyticsPartitionsResultValidator = v.object({
+  scheduledPartitions: v.number(),
+});
 
 /**
- * Drains queued content view analytics into derived popularity tables.
+ * Schedules one worker per idle analytics partition with queued rows.
  *
- * Content view recording only appends queue rows. This mutation folds queued
- * rows into the denormalized tables so user-facing writes stay small.
+ * Partition leases prevent duplicate workers from draining the same partition.
  */
-
-export const processContentAnalyticsQueue = internalMutation({
+export const scheduleContentAnalyticsPartitions = internalMutation({
   args: {},
-  returns: v.object({
-    hasMore: v.boolean(),
-    processed: v.number(),
-  }),
+  returns: scheduleContentAnalyticsPartitionsResultValidator,
   handler: async (ctx) => {
-    const queueItems = await ctx.db
-      .query("contentViewAnalyticsQueue")
-      .take(CONTENT_VIEW_ANALYTICS_BATCH_SIZE);
+    const now = Date.now();
+    let scheduledPartitions = 0;
+
+    for (const partition of CONTENT_ANALYTICS_PARTITIONS) {
+      const partitionRow = await ensureContentAnalyticsPartitionRow(
+        ctx,
+        partition
+      );
+
+      const hasBacklog = await hasContentAnalyticsBacklog(ctx, partition);
+
+      if (!hasBacklog) {
+        continue;
+      }
+
+      if (partitionRow.leaseExpiresAt > now) {
+        continue;
+      }
+
+      const leaseVersion = partitionRow.leaseVersion + 1;
+
+      await ctx.db.patch("contentAnalyticsPartitions", partitionRow._id, {
+        leaseExpiresAt: now + CONTENT_ANALYTICS_LEASE_DURATION_MS,
+        leaseVersion,
+      });
+
+      await ctx.scheduler.runAfter(
+        0,
+        internal.contents.mutations.processContentAnalyticsPartition,
+        {
+          leaseVersion,
+          partition,
+        }
+      );
+
+      scheduledPartitions++;
+    }
+
+    if (scheduledPartitions > 0) {
+      logger.info("Scheduled content analytics partitions", {
+        scheduledPartitions,
+      });
+    }
+
+    return { scheduledPartitions };
+  },
+});
+
+/**
+ * Drains one leased analytics partition into derived popularity tables.
+ *
+ * Each content reference always hashes to the same partition, so one partition
+ * worker owns a content row at a time.
+ */
+export const processContentAnalyticsPartition = internalMutation({
+  args: {
+    leaseVersion: v.number(),
+    partition: v.number(),
+  },
+  returns: contentAnalyticsPartitionResultValidator,
+  handler: async (ctx, args) => {
+    if (!isContentAnalyticsPartition(args.partition)) {
+      throw new ConvexError({
+        code: "INVALID_CONTENT_ANALYTICS_PARTITION",
+        message: "Content analytics partition is out of range.",
+      });
+    }
+
+    const now = Date.now();
+    const partitionRow = await ctx.db
+      .query("contentAnalyticsPartitions")
+      .withIndex("by_partition", (q) => q.eq("partition", args.partition))
+      .unique();
+
+    if (!partitionRow) {
+      return {
+        hasMore: false,
+        partition: args.partition,
+        processed: 0,
+        skipped: true,
+      };
+    }
+
+    if (partitionRow.leaseVersion !== args.leaseVersion) {
+      return {
+        hasMore: false,
+        partition: args.partition,
+        processed: 0,
+        skipped: true,
+      };
+    }
+
+    if (partitionRow.leaseExpiresAt < now) {
+      return {
+        hasMore: false,
+        partition: args.partition,
+        processed: 0,
+        skipped: true,
+      };
+    }
+
+    const queueItems = await loadContentAnalyticsQueueBatch(ctx, {
+      batchSize: CONTENT_ANALYTICS_BATCH_SIZE,
+      partition: args.partition,
+    });
 
     if (queueItems.length === 0) {
-      return { hasMore: false, processed: 0 };
+      await ctx.db.patch("contentAnalyticsPartitions", partitionRow._id, {
+        lastProcessedAt: now,
+        leaseExpiresAt: 0,
+      });
+
+      return {
+        hasMore: false,
+        partition: args.partition,
+        processed: 0,
+        skipped: false,
+      };
     }
 
     const analyticsBatch = buildContentAnalyticsBatch(queueItems);
@@ -55,22 +181,38 @@ export const processContentAnalyticsQueue = internalMutation({
       await ctx.db.delete("contentViewAnalyticsQueue", queueItem._id);
     }
 
-    const hasMore = queueItems.length === CONTENT_VIEW_ANALYTICS_BATCH_SIZE;
+    const hasMore = queueItems.length === CONTENT_ANALYTICS_BATCH_SIZE;
 
     if (hasMore) {
+      await ctx.db.patch("contentAnalyticsPartitions", partitionRow._id, {
+        lastProcessedAt: now,
+        leaseExpiresAt: now + CONTENT_ANALYTICS_LEASE_DURATION_MS,
+      });
+
       await ctx.scheduler.runAfter(
         0,
-        internal.contents.mutations.processContentAnalyticsQueue,
-        {}
+        internal.contents.mutations.processContentAnalyticsPartition,
+        args
       );
+    } else {
+      await ctx.db.patch("contentAnalyticsPartitions", partitionRow._id, {
+        lastProcessedAt: now,
+        leaseExpiresAt: 0,
+      });
     }
 
-    logger.info("Processed content analytics queue batch", {
+    logger.info("Processed content analytics partition batch", {
       hasMore,
+      partition: args.partition,
       processed: queueItems.length,
     });
 
-    return { hasMore, processed: queueItems.length };
+    return {
+      hasMore,
+      partition: args.partition,
+      processed: queueItems.length,
+      skipped: false,
+    };
   },
 });
 

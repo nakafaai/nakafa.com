@@ -36,13 +36,25 @@ const tables = {
 
   /**
    * Append-only queue of new unique views.
-   * A background mutation drains this queue into derived analytics tables.
+   * Queue rows are partitioned so background processors can drain them in parallel.
    */
   contentViewAnalyticsQueue: defineTable({
     contentRef: contentRefValidator,
     locale: localeValidator,
+    partition: v.number(),
     viewedAt: v.number(),
-  }),
+  }).index("by_partition", ["partition"]),
+
+  /**
+   * Lease rows for partitioned analytics queue processing.
+   * One row per partition.
+   */
+  contentAnalyticsPartitions: defineTable({
+    leaseExpiresAt: v.number(),
+    leaseVersion: v.number(),
+    lastProcessedAt: v.optional(v.number()),
+    partition: v.number(),
+  }).index("by_partition", ["partition"]),
 
   /**
    * Article popularity counts.

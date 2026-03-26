@@ -5,7 +5,7 @@ import {
   mergePopularAudioContentItems,
   type PopularAudioContentItem,
   popularAudioContentItemValidator,
-} from "@repo/backend/convex/contents/helpers/analytics";
+} from "@repo/backend/convex/contents/helpers/popularity";
 import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { recentlyViewedSubjectValidator } from "@repo/backend/convex/lib/validators/trending";

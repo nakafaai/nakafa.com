@@ -1,5 +1,6 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { getContentAnalyticsPartition } from "@repo/backend/convex/contents/helpers/partitions";
 import type {
   ContentRef,
   ContentType,
@@ -126,6 +127,8 @@ async function upsertContentView(
   const existingView = existingByDevice ?? existingByUser;
 
   if (!existingView) {
+    const partition = getContentAnalyticsPartition(contentRef);
+
     await db.insert("contentViews", {
       contentRef,
       locale: args.locale,
@@ -139,6 +142,7 @@ async function upsertContentView(
     await db.insert("contentViewAnalyticsQueue", {
       contentRef,
       locale: args.locale,
+      partition,
       viewedAt: now,
     });
 

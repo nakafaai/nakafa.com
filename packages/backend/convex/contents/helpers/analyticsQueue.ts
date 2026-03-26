@@ -1,27 +1,8 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import {
-  MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE,
-  MIN_VIEW_THRESHOLD,
-} from "@repo/backend/convex/audioStudies/constants";
-import { audioContentRefValidator } from "@repo/backend/convex/lib/validators/audio";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { getTrendingBucketStart } from "@repo/backend/convex/subjectSections/utils";
-import type { Infer } from "convex/values";
-import { v } from "convex/values";
-
-/** Number of analytics queue rows processed per mutation. */
-export const CONTENT_VIEW_ANALYTICS_BATCH_SIZE = 250;
-
-/** Ranked content candidate used when filling the audio generation queue. */
-export const popularAudioContentItemValidator = v.object({
-  ref: audioContentRefValidator,
-  viewCount: v.number(),
-});
-
-export type PopularAudioContentItem = Infer<
-  typeof popularAudioContentItemValidator
->;
+import { ConvexError } from "convex/values";
 
 interface SubjectTrendingBucketDelta {
   bucketStart: number;
@@ -44,14 +25,81 @@ function incrementCount<TKey extends string>(
   map.set(key, (map.get(key) ?? 0) + 1);
 }
 
+/** Loads or creates one analytics partition state row. */
+export async function ensureContentAnalyticsPartitionRow(
+  ctx: Pick<MutationCtx, "db">,
+  partition: number
+) {
+  const existingRow = await ctx.db
+    .query("contentAnalyticsPartitions")
+    .withIndex("by_partition", (q) => q.eq("partition", partition))
+    .unique();
+
+  if (existingRow) {
+    return existingRow;
+  }
+
+  const partitionRowId = await ctx.db.insert("contentAnalyticsPartitions", {
+    partition,
+    leaseExpiresAt: 0,
+    leaseVersion: 0,
+  });
+
+  const partitionRow = await ctx.db.get(
+    "contentAnalyticsPartitions",
+    partitionRowId
+  );
+
+  if (!partitionRow) {
+    throw new ConvexError({
+      code: "CONTENT_ANALYTICS_PARTITION_NOT_FOUND",
+      message: "Content analytics partition row was not created.",
+    });
+  }
+
+  return partitionRow;
+}
+
+/** Returns whether a partition currently has queued analytics rows. */
+export async function hasContentAnalyticsBacklog(
+  ctx: Pick<MutationCtx, "db">,
+  partition: number
+) {
+  const queueRows = await ctx.db
+    .query("contentViewAnalyticsQueue")
+    .withIndex("by_partition", (q) => q.eq("partition", partition))
+    .take(1);
+
+  return queueRows.length > 0;
+}
+
+/** Loads one bounded queue batch for a single analytics partition. */
+export async function loadContentAnalyticsQueueBatch(
+  ctx: Pick<MutationCtx, "db">,
+  {
+    batchSize,
+    partition,
+  }: {
+    batchSize: number;
+    partition: number;
+  }
+) {
+  return await ctx.db
+    .query("contentViewAnalyticsQueue")
+    .withIndex("by_partition", (q) => q.eq("partition", partition))
+    .take(batchSize);
+}
+
 /** Applies one article popularity delta to the derived table. */
 async function applyArticlePopularityDelta(
   ctx: MutationCtx,
   {
     contentId,
+    updatedAt,
     viewCount,
   }: {
     contentId: Id<"articleContents">;
+    updatedAt: number;
     viewCount: number;
   }
 ) {
@@ -63,14 +111,14 @@ async function applyArticlePopularityDelta(
   if (!currentRow) {
     await ctx.db.insert("articlePopularity", {
       contentId,
-      updatedAt: Date.now(),
+      updatedAt,
       viewCount,
     });
     return;
   }
 
   await ctx.db.patch("articlePopularity", currentRow._id, {
-    updatedAt: Date.now(),
+    updatedAt,
     viewCount: currentRow.viewCount + viewCount,
   });
 }
@@ -80,9 +128,11 @@ async function applySubjectPopularityDelta(
   ctx: MutationCtx,
   {
     contentId,
+    updatedAt,
     viewCount,
   }: {
     contentId: Id<"subjectSections">;
+    updatedAt: number;
     viewCount: number;
   }
 ) {
@@ -94,14 +144,14 @@ async function applySubjectPopularityDelta(
   if (!currentRow) {
     await ctx.db.insert("subjectPopularity", {
       contentId,
-      updatedAt: Date.now(),
+      updatedAt,
       viewCount,
     });
     return;
   }
 
   await ctx.db.patch("subjectPopularity", currentRow._id, {
-    updatedAt: Date.now(),
+    updatedAt,
     viewCount: currentRow.viewCount + viewCount,
   });
 }
@@ -111,9 +161,11 @@ async function applyExercisePopularityDelta(
   ctx: MutationCtx,
   {
     contentId,
+    updatedAt,
     viewCount,
   }: {
     contentId: Id<"exerciseSets">;
+    updatedAt: number;
     viewCount: number;
   }
 ) {
@@ -125,14 +177,14 @@ async function applyExercisePopularityDelta(
   if (!currentRow) {
     await ctx.db.insert("exercisePopularity", {
       contentId,
-      updatedAt: Date.now(),
+      updatedAt,
       viewCount,
     });
     return;
   }
 
   await ctx.db.patch("exercisePopularity", currentRow._id, {
-    updatedAt: Date.now(),
+    updatedAt,
     viewCount: currentRow.viewCount + viewCount,
   });
 }
@@ -140,32 +192,40 @@ async function applyExercisePopularityDelta(
 /** Applies one locale/day subject trending delta to the derived table. */
 async function applySubjectTrendingBucketDelta(
   ctx: MutationCtx,
-  bucketDelta: SubjectTrendingBucketDelta
+  {
+    bucketStart,
+    contentId,
+    locale,
+    updatedAt,
+    viewCount,
+  }: SubjectTrendingBucketDelta & {
+    updatedAt: number;
+  }
 ) {
   const currentRow = await ctx.db
     .query("subjectTrendingBuckets")
     .withIndex("by_locale_and_bucketStart_and_contentId", (q) =>
       q
-        .eq("locale", bucketDelta.locale)
-        .eq("bucketStart", bucketDelta.bucketStart)
-        .eq("contentId", bucketDelta.contentId)
+        .eq("locale", locale)
+        .eq("bucketStart", bucketStart)
+        .eq("contentId", contentId)
     )
     .unique();
 
   if (!currentRow) {
     await ctx.db.insert("subjectTrendingBuckets", {
-      bucketStart: bucketDelta.bucketStart,
-      contentId: bucketDelta.contentId,
-      locale: bucketDelta.locale,
-      updatedAt: Date.now(),
-      viewCount: bucketDelta.viewCount,
+      bucketStart,
+      contentId,
+      locale,
+      updatedAt,
+      viewCount,
     });
     return;
   }
 
   await ctx.db.patch("subjectTrendingBuckets", currentRow._id, {
-    updatedAt: Date.now(),
-    viewCount: currentRow.viewCount + bucketDelta.viewCount,
+    updatedAt,
+    viewCount: currentRow.viewCount + viewCount,
   });
 }
 
@@ -174,20 +234,37 @@ export async function applyContentAnalyticsBatch(
   ctx: MutationCtx,
   analyticsBatch: ContentAnalyticsBatch
 ) {
+  const updatedAt = Date.now();
+
   for (const [contentId, viewCount] of analyticsBatch.articleViewCounts) {
-    await applyArticlePopularityDelta(ctx, { contentId, viewCount });
+    await applyArticlePopularityDelta(ctx, {
+      contentId,
+      updatedAt,
+      viewCount,
+    });
   }
 
   for (const [contentId, viewCount] of analyticsBatch.subjectViewCounts) {
-    await applySubjectPopularityDelta(ctx, { contentId, viewCount });
+    await applySubjectPopularityDelta(ctx, {
+      contentId,
+      updatedAt,
+      viewCount,
+    });
   }
 
   for (const [contentId, viewCount] of analyticsBatch.exerciseViewCounts) {
-    await applyExercisePopularityDelta(ctx, { contentId, viewCount });
+    await applyExercisePopularityDelta(ctx, {
+      contentId,
+      updatedAt,
+      viewCount,
+    });
   }
 
   for (const bucketDelta of analyticsBatch.subjectTrendingBuckets.values()) {
-    await applySubjectTrendingBucketDelta(ctx, bucketDelta);
+    await applySubjectTrendingBucketDelta(ctx, {
+      ...bucketDelta,
+      updatedAt,
+    });
   }
 }
 
@@ -245,31 +322,4 @@ export function buildContentAnalyticsBatch(
     subjectViewCounts,
     subjectTrendingBuckets,
   };
-}
-
-/** Deduplicates and ranks popularity rows for audio queue consumption. */
-export function mergePopularAudioContentItems(
-  items: PopularAudioContentItem[]
-) {
-  const mergedItems = new Map<string, PopularAudioContentItem>();
-
-  for (const item of items) {
-    const key = `${item.ref.type}:${item.ref.id}`;
-    const existingItem = mergedItems.get(key);
-
-    if (!existingItem) {
-      mergedItems.set(key, {
-        ref: item.ref,
-        viewCount: item.viewCount,
-      });
-      continue;
-    }
-
-    existingItem.viewCount += item.viewCount;
-  }
-
-  return Array.from(mergedItems.values())
-    .filter((item) => item.viewCount >= MIN_VIEW_THRESHOLD)
-    .sort((left, right) => right.viewCount - left.viewCount)
-    .slice(0, MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE * 2);
 }

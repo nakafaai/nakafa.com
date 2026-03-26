@@ -78,7 +78,10 @@ import type * as contentSync_queries_integrity from "../contentSync/queries/inte
 import type * as contentSync_queries_stale from "../contentSync/queries/stale.js";
 import type * as contentSync_queries_tryouts from "../contentSync/queries/tryouts.js";
 import type * as contents_actions from "../contents/actions.js";
-import type * as contents_helpers_analytics from "../contents/helpers/analytics.js";
+import type * as contents_constants from "../contents/constants.js";
+import type * as contents_helpers_analyticsQueue from "../contents/helpers/analyticsQueue.js";
+import type * as contents_helpers_partitions from "../contents/helpers/partitions.js";
+import type * as contents_helpers_popularity from "../contents/helpers/popularity.js";
 import type * as contents_helpers_views from "../contents/helpers/views.js";
 import type * as contents_mutations from "../contents/mutations.js";
 import type * as contents_queries from "../contents/queries.js";
@@ -302,7 +305,10 @@ declare const fullApi: ApiFromModules<{
   "contentSync/queries/stale": typeof contentSync_queries_stale;
   "contentSync/queries/tryouts": typeof contentSync_queries_tryouts;
   "contents/actions": typeof contents_actions;
-  "contents/helpers/analytics": typeof contents_helpers_analytics;
+  "contents/constants": typeof contents_constants;
+  "contents/helpers/analyticsQueue": typeof contents_helpers_analyticsQueue;
+  "contents/helpers/partitions": typeof contents_helpers_partitions;
+  "contents/helpers/popularity": typeof contents_helpers_popularity;
   "contents/helpers/views": typeof contents_helpers_views;
   "contents/mutations": typeof contents_mutations;
   "contents/queries": typeof contents_queries;
