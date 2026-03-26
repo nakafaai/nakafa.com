@@ -17,7 +17,6 @@ import {
   ChartTooltipContent,
 } from "@repo/design-system/components/ui/chart";
 import { format } from "date-fns";
-import { useTranslations } from "next-intl";
 import {
   Bar,
   BarChart,
@@ -34,6 +33,18 @@ interface Props {
   footnote: string;
   title: string;
   yLabel: string;
+}
+
+interface BudgetChartProps extends Omit<Props, "description"> {
+  labels: {
+    budget: string;
+  };
+}
+
+interface FundChartProps extends Props {
+  labels: {
+    fund: string;
+  };
 }
 
 const BudgetChartData = [
@@ -63,12 +74,11 @@ export function BudgetChart({
   title,
   yLabel,
   footnote,
-}: Omit<Props, "description">) {
-  const t = useTranslations("Common");
-
+  labels,
+}: BudgetChartProps) {
   const chartConfig = {
     budget: {
-      label: t("budget"),
+      label: labels.budget,
       color: "var(--chart-4)",
     },
     label: {
@@ -151,12 +161,16 @@ const FundChartData = [
   },
 ];
 
-export function FundChart({ title, description, yLabel, footnote }: Props) {
-  const t = useTranslations("Common");
-
+export function FundChart({
+  title,
+  description,
+  yLabel,
+  footnote,
+  labels,
+}: FundChartProps) {
   const chartConfig = {
     fund: {
-      label: t("fund"),
+      label: labels.fund,
       color: "var(--chart-5)",
     },
     label: {

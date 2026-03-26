@@ -16,7 +16,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@repo/design-system/components/ui/chart";
-import { useTranslations } from "next-intl";
 import {
   Bar,
   BarChart,
@@ -28,10 +27,30 @@ import {
 
 const TICK_LABEL_CHAR_LIMIT = 3;
 
-interface Props {
+interface SharedProps {
   description: string;
   footnote: string;
   title: string;
+}
+
+interface CabinetChartProps extends SharedProps {
+  labels: {
+    cabinet: string;
+  };
+}
+
+interface CompositionChartProps extends SharedProps {
+  labels: {
+    female: string;
+    gender: string;
+    incumbent: string;
+    male: string;
+    minister: string;
+    new: string;
+    nonPoliticians: string;
+    politicalStatus: string;
+    politicians: string;
+  };
 }
 
 const CabinetChartData = [
@@ -45,12 +64,15 @@ const CabinetChartData = [
   { name: "Merah Putih", cabinet: 48 },
 ];
 
-export function CabinetChart({ title, description, footnote }: Props) {
-  const t = useTranslations("Common");
-
+export function CabinetChart({
+  title,
+  description,
+  footnote,
+  labels,
+}: CabinetChartProps) {
   const chartConfig = {
     cabinet: {
-      label: t("cabinet"),
+      label: labels.cabinet,
       color: "var(--chart-1)",
     },
     label: {
@@ -121,38 +143,45 @@ export function CabinetChart({ title, description, footnote }: Props) {
   );
 }
 
-export function CompositionChart({ title, description, footnote }: Props) {
-  const t = useTranslations("Common");
-
-  const MinisterChartData = [{ name: t("minister"), new: 31, incumbent: 18 }];
-  const GenderChartData = [{ name: t("gender"), male: 43, female: 5 }];
+export function CompositionChart({
+  title,
+  description,
+  footnote,
+  labels,
+}: CompositionChartProps) {
+  const MinisterChartData = [{ name: labels.minister, new: 31, incumbent: 18 }];
+  const GenderChartData = [{ name: labels.gender, male: 43, female: 5 }];
   const PoliticalStatusChartData = [
-    { name: t("political-status"), politician: 23, non_politician: 25 },
+    {
+      name: labels.politicalStatus,
+      politician: 23,
+      non_politician: 25,
+    },
   ];
 
   const chartConfig = {
     new: {
-      label: t("new"),
+      label: labels.new,
       color: "var(--chart-1)",
     },
     incumbent: {
-      label: t("incumbent"),
+      label: labels.incumbent,
       color: "var(--chart-2)",
     },
     male: {
-      label: t("male"),
+      label: labels.male,
       color: "var(--chart-1)",
     },
     female: {
-      label: t("female"),
+      label: labels.female,
       color: "var(--chart-2)",
     },
     politician: {
-      label: t("politicians"),
+      label: labels.politicians,
       color: "var(--chart-1)",
     },
     non_politician: {
-      label: t("non-politicians"),
+      label: labels.nonPoliticians,
       color: "var(--chart-2)",
     },
     label: {

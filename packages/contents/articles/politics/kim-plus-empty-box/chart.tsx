@@ -16,7 +16,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@repo/design-system/components/ui/chart";
-import { useTranslations } from "next-intl";
 import {
   Bar,
   BarChart,
@@ -29,12 +28,19 @@ import {
 interface Props {
   description: string;
   footnote: string;
+  labels: {
+    electability: string;
+    notAnswering: string;
+  };
   title: string;
 }
 
-export function ElectabilityChart({ title, description, footnote }: Props) {
-  const t = useTranslations("Common");
-
+export function ElectabilityChart({
+  title,
+  description,
+  footnote,
+  labels,
+}: Props) {
   const electabilityData = [
     {
       name: "Anies Baswedan",
@@ -65,14 +71,14 @@ export function ElectabilityChart({ title, description, footnote }: Props) {
       value: 1,
     },
     {
-      name: t("not-answering"),
+      name: labels.notAnswering,
       value: 16,
     },
   ];
 
   const chartConfig = {
     value: {
-      label: t("electability"),
+      label: labels.electability,
       color: "var(--chart-3)",
     },
     label: {

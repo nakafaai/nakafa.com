@@ -1,6 +1,6 @@
 import { AllahIcon } from "@hugeicons/core-free-icons";
 import { getAllSurah, getSurahName } from "@repo/contents/_lib/quran";
-import { Link } from "@repo/internationalization/src/navigation";
+import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
 import { type Locale, useTranslations } from "next-intl";
@@ -99,11 +99,10 @@ function PageContent({ locale }: { locale: Locale }) {
           {surahs.map((surah) => {
             const title = getSurahName({ locale, name: surah.name });
             return (
-              <Link
+              <NavigationLink
                 className="group flex w-full scroll-mt-28 items-center gap-2 border-t px-6 py-4 transition-colors ease-out first:border-t-0 first:pt-5 last:pb-5 hover:bg-accent hover:text-accent-foreground"
                 href={`/quran/${surah.number}`}
                 key={surah.number}
-                prefetch
                 title={title}
               >
                 <div className="flex w-full items-center justify-between gap-4">
@@ -120,7 +119,7 @@ function PageContent({ locale }: { locale: Locale }) {
                     {surah.name.short}
                   </p>
                 </div>
-              </Link>
+              </NavigationLink>
             );
           })}
         </div>

@@ -7,14 +7,22 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
-import { useTranslations } from "next-intl";
 
 interface Props {
   caption: string;
+  labels: {
+    corruptionIndex: string;
+    country: string;
+    good: string;
+    goodGovernanceIndex: string;
+    governanceQualityCategory: string;
+    judicialEfficiencyIndex: string;
+    low: string;
+    medium: string;
+  };
 }
 
-export function StateTable({ caption }: Props) {
-  const t = useTranslations("Common");
+export function StateTable({ caption, labels }: Props) {
   return (
     <div className="grid grid-cols-1">
       <Table containerClassName="scrollbar-hide">
@@ -22,19 +30,19 @@ export function StateTable({ caption }: Props) {
         <TableHeader className="border-x border-t bg-accent text-accent-foreground">
           <TableRow>
             <TableHead className="border-r text-center">
-              {t("country")}
+              {labels.country}
             </TableHead>
             <TableHead className="border-r text-center">
-              {t("judicial-efficiency-index")}
+              {labels.judicialEfficiencyIndex}
             </TableHead>
             <TableHead className="border-r text-center">
-              {t("corruption-index")}
+              {labels.corruptionIndex}
             </TableHead>
             <TableHead className="border-r text-center">
-              {t("good-governance-index")}
+              {labels.goodGovernanceIndex}
             </TableHead>
             <TableHead className="text-center">
-              {t("governance-quality-category")}
+              {labels.governanceQualityCategory}
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -46,7 +54,7 @@ export function StateTable({ caption }: Props) {
             <TableCell className="border-r text-center">9,00</TableCell>
             <TableCell className="border-r text-center">7,38</TableCell>
             <TableCell className="border-r text-center">7,22</TableCell>
-            <TableCell className="text-center">{t("good")}</TableCell>
+            <TableCell className="text-center">{labels.good}</TableCell>
           </TableRow>
           <TableRow>
             <TableCell className="border-r bg-accent text-center font-medium text-accent-foreground">
@@ -55,7 +63,7 @@ export function StateTable({ caption }: Props) {
             <TableCell className="border-r text-center">10,00</TableCell>
             <TableCell className="border-r text-center">8,22</TableCell>
             <TableCell className="border-r text-center">8,93</TableCell>
-            <TableCell className="text-center">{t("good")}</TableCell>
+            <TableCell className="text-center">{labels.good}</TableCell>
           </TableRow>
           <TableRow>
             <TableCell className="border-r bg-accent text-center font-medium text-accent-foreground">
@@ -64,7 +72,7 @@ export function StateTable({ caption }: Props) {
             <TableCell className="border-r text-center">3,25</TableCell>
             <TableCell className="border-r text-center">5,18</TableCell>
             <TableCell className="border-r text-center">4,89</TableCell>
-            <TableCell className="text-center">{t("medium")}</TableCell>
+            <TableCell className="text-center">{labels.medium}</TableCell>
           </TableRow>
           <TableRow>
             <TableCell className="border-r bg-accent text-center font-medium text-accent-foreground">
@@ -73,7 +81,7 @@ export function StateTable({ caption }: Props) {
             <TableCell className="border-r text-center">4,75</TableCell>
             <TableCell className="border-r text-center">7,92</TableCell>
             <TableCell className="border-r text-center">3,47</TableCell>
-            <TableCell className="text-center">{t("medium")}</TableCell>
+            <TableCell className="text-center">{labels.medium}</TableCell>
           </TableRow>
           <TableRow>
             <TableCell className="border-r bg-accent text-center font-medium text-accent-foreground">
@@ -82,7 +90,7 @@ export function StateTable({ caption }: Props) {
             <TableCell className="border-r text-center">2,50</TableCell>
             <TableCell className="border-r text-center">2,15</TableCell>
             <TableCell className="border-r text-center">2,88</TableCell>
-            <TableCell className="text-center">{t("low")}</TableCell>
+            <TableCell className="text-center">{labels.low}</TableCell>
           </TableRow>
         </TableBody>
       </Table>

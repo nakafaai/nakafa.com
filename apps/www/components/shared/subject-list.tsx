@@ -1,8 +1,8 @@
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cn } from "@repo/design-system/lib/utils";
-import { Link } from "@repo/internationalization/src/navigation";
 import type { ComponentProps } from "react";
 
 interface Props {
@@ -28,7 +28,7 @@ export function SubjectList({
 
 export function SubjectItem({ icon, label, href }: Props) {
   return (
-    <Link className="group block min-w-0" href={href} prefetch title={label}>
+    <NavigationLink className="group block min-w-0" href={href} title={label}>
       <div className="relative overflow-hidden p-6 transition-colors ease-out group-hover:bg-accent group-hover:text-accent-foreground">
         <div className="flex items-center gap-2">
           <HugeIcons className="size-5 shrink-0" icon={icon} />
@@ -41,6 +41,6 @@ export function SubjectItem({ icon, label, href }: Props) {
           />
         </div>
       </div>
-    </Link>
+    </NavigationLink>
   );
 }
