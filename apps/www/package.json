@@ -86,13 +86,13 @@
     "@types/node": "25.5.0",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
-    "@vitest/coverage-istanbul": "^4.1.1",
-    "@vitest/ui": "^4.1.1",
+    "@vitest/coverage-istanbul": "^4.1.2",
+    "@vitest/ui": "^4.1.2",
     "jsdom": "^29.0.1",
     "pagefind": "^1.4.0",
     "tailwindcss": "^4.2.2",
     "tsx": "^4.21.0",
     "typescript": "^6.0.2",
-    "vitest": "^4.1.1"
+    "vitest": "^4.1.2"
   }
 }

@@ -39,7 +39,7 @@
     "@biomejs/biome": "2.4.9",
     "@changesets/changelog-github": "^0.6.0",
     "@changesets/cli": "^2.30.0",
-    "@effect/language-service": "^0.83.1",
+    "@effect/language-service": "^0.84.0",
     "@repo/typescript-config": "workspace:*",
     "@turbo/gen": "^2.8.20",
     "@types/node": "^25.5.0",
