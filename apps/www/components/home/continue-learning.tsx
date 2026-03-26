@@ -16,7 +16,7 @@ export function HomeContinueLearning() {
   const locale = useLocale();
 
   const { data, isPending } = useQueryWithStatus(
-    api.contents.queries.getRecentlyViewed,
+    api.contents.queries.recentViews.getRecentlyViewed,
     {
       locale,
       limit: 5,

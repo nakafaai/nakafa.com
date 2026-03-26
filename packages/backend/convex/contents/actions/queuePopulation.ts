@@ -1,15 +1,12 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import { internalAction } from "@repo/backend/convex/_generated/server";
-import type { PopularAudioContentItem } from "@repo/backend/convex/contents/helpers/popularity";
 import { logger } from "@repo/backend/convex/utils/logger";
-import { type Infer, v } from "convex/values";
+import { v } from "convex/values";
 
 const populateAudioQueueResultValidator = v.object({
   processed: v.number(),
   queued: v.number(),
 });
-
-type PopulateAudioQueueResult = Infer<typeof populateAudioQueueResultValidator>;
 
 /**
  * Reads current popularity rankings, then syncs the audio generation queue.
@@ -21,11 +18,11 @@ type PopulateAudioQueueResult = Infer<typeof populateAudioQueueResultValidator>;
 export const populateAudioQueue = internalAction({
   args: {},
   returns: populateAudioQueueResultValidator,
-  handler: async (ctx): Promise<PopulateAudioQueueResult> => {
+  handler: async (ctx) => {
     logger.info("Populating audio queue started");
 
-    const popularItems: PopularAudioContentItem[] = await ctx.runQuery(
-      internal.contents.queries.getPopularContentForAudioQueue,
+    const popularItems = await ctx.runQuery(
+      internal.contents.queries.audioQueue.getPopularContentForAudioQueue,
       {}
     );
 
@@ -34,12 +31,17 @@ export const populateAudioQueue = internalAction({
       return { processed: 0, queued: 0 };
     }
 
-    const result: PopulateAudioQueueResult = await ctx.runMutation(
-      internal.contents.mutations.enqueuePopularContentForAudio,
+    const enqueueResult = await ctx.runMutation(
+      internal.contents.mutations.audioQueue.enqueuePopularContentForAudio,
       {
         items: popularItems,
       }
     );
+
+    const result = {
+      processed: enqueueResult.processed,
+      queued: enqueueResult.queued,
+    };
 
     logger.info("Populated audio queue completed", result);
 
