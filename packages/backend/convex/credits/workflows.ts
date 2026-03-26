@@ -1,5 +1,4 @@
 import { internal } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   getPlanCreditConfig,
   RESET_WORKFLOW_CONFIG,
@@ -8,12 +7,6 @@ import { logger } from "@repo/backend/convex/utils/logger";
 import { workflow } from "@repo/backend/convex/workflow";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
-
-interface ClaimedQueueItem {
-  credits?: number;
-  queueId: Id<"creditResetQueue">;
-  userId: Id<"users">;
-}
 
 /**
  * Orchestrates the credit reset workflow with fixed worker pool.
@@ -98,20 +91,18 @@ export const orchestrateReset = workflow.define({
 
     // Spawn fixed number of workers (no dynamic scaling - Convex workflow limitation)
     // Workflows don't support setTimeout or Date.now()
-    const workers: Promise<null>[] = [];
-
-    for (let i = 0; i < RESET_WORKFLOW_CONFIG.maxWorkers; i++) {
-      workers.push(
+    const workers = Array.from(
+      { length: RESET_WORKFLOW_CONFIG.maxWorkers },
+      (_, workerId) =>
         step.runWorkflow(internal.credits.workflows.processQueue, {
           jobId,
           plan: args.plan,
           resetTimestamp: args.resetTimestamp,
-          workerId: i,
+          workerId,
           creditAmount: creditConfig.amount,
           grantType: creditConfig.grantType,
         })
-      );
-    }
+    );
 
     logger.info(
       `${creditConfig.jobType} spawned ${RESET_WORKFLOW_CONFIG.maxWorkers} workers`,
@@ -163,7 +154,7 @@ export const processQueue = workflow.define({
     });
 
     while (true) {
-      const items: ClaimedQueueItem[] = await step.runMutation(
+      const items = await step.runMutation(
         internal.credits.mutations.claimQueueItems,
         {
           plan: args.plan,
