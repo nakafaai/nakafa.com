@@ -35,9 +35,7 @@ export function useRecordContentView({
   locale,
   delay = 3000,
 }: UseRecordContentViewOptions) {
-  const recordView = useMutation(
-    api.contents.mutations.views.recordContentView
-  );
+  const recordView = useMutation(api.contents.mutations.recordContentView);
 
   const markAsViewed = useContentViews((s) => s.markAsViewed);
   const isViewed = useContentViews((s) => s.isViewed);

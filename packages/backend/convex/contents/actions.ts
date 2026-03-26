@@ -22,7 +22,7 @@ export const populateAudioQueue = internalAction({
     logger.info("Populating audio queue started");
 
     const popularItems = await ctx.runQuery(
-      internal.contents.queries.audioQueue.getPopularContentForAudioQueue,
+      internal.contents.queries.getPopularContentForAudioQueue,
       {}
     );
 
@@ -31,17 +31,12 @@ export const populateAudioQueue = internalAction({
       return { processed: 0, queued: 0 };
     }
 
-    const enqueueResult = await ctx.runMutation(
-      internal.contents.mutations.audioQueue.enqueuePopularContentForAudio,
+    const result = await ctx.runMutation(
+      internal.contents.mutations.enqueuePopularContentForAudio,
       {
         items: popularItems,
       }
     );
-
-    const result = {
-      processed: enqueueResult.processed,
-      queued: enqueueResult.queued,
-    };
 
     logger.info("Populated audio queue completed", result);
 

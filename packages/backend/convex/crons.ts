@@ -11,7 +11,7 @@ const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
 crons.interval(
   "schedule content analytics partitions",
   { minutes: 1 },
-  internal.contents.mutations.analytics.scheduleContentAnalyticsPartitions,
+  internal.contents.mutations.scheduleContentAnalyticsPartitions,
   {}
 );
 
@@ -21,7 +21,7 @@ crons.interval(
 crons.interval(
   "populate audio generation queue",
   { minutes: 30 },
-  internal.contents.actions.queuePopulation.populateAudioQueue,
+  internal.contents.actions.populateAudioQueue,
   {}
 );
 

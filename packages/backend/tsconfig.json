@@ -4,7 +4,6 @@
     "strict": true,
     "skipLibCheck": true,
     "jsx": "react",
-
     "target": "ESNext",
     "lib": ["ES2022", "dom", "ESNext.Array", "DOM.Iterable"],
     "forceConsistentCasingInFileNames": true,
@@ -13,12 +12,11 @@
     "moduleResolution": "Bundler",
     "isolatedModules": true,
     "noEmit": true,
-
     "paths": {
       "@/*": ["./*"],
       "@repo/*": ["../../packages/*"]
     }
   },
   "include": ["./**/*"],
-  "exclude": ["./convex/_generated", "./coverage"]
+  "exclude": ["./convex/_generated"]
 }
