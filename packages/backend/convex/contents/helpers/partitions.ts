@@ -1,6 +1,7 @@
 import { CONTENT_ANALYTICS_PARTITION_COUNT } from "@repo/backend/convex/contents/constants";
 import type { ContentRef } from "@repo/backend/convex/lib/validators/contents";
 
+/** Maps a stable string key to one configured analytics partition. */
 function getPartitionFromKey(value: string) {
   let partition = 0;
 

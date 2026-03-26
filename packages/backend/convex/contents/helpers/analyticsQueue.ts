@@ -18,6 +18,7 @@ interface ContentAnalyticsBatch {
   subjectViewCounts: Map<Id<"subjectSections">, number>;
 }
 
+/** Increments one aggregated counter inside a mutable batch map. */
 function incrementCount<TKey extends string>(
   map: Map<TKey, number>,
   key: TKey
