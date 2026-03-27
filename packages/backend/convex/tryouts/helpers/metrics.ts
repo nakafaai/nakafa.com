@@ -6,7 +6,7 @@ type TryoutScoreTotals = Pick<
 >;
 
 /** Count how many persisted answers are marked correct. */
-export function countCorrectAnswers(answers: Doc<"exerciseAnswers">[]) {
+export function countCorrectAnswers(answers: Array<{ isCorrect: boolean }>) {
   return answers.reduce(
     (correctCount, answer) => correctCount + (answer.isCorrect ? 1 : 0),
     0

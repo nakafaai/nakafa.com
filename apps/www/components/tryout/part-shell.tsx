@@ -11,7 +11,7 @@ export function TryoutPartSummary({ children }: { children: ReactNode }) {
 }
 
 export function TryoutPartBody({ children }: { children: ReactNode }) {
-  return <div className="flex flex-col gap-5">{children}</div>;
+  return <div className="flex flex-col gap-2">{children}</div>;
 }
 
 export function TryoutPartLead({ children }: { children: ReactNode }) {

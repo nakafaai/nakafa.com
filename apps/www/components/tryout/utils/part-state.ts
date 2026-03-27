@@ -13,8 +13,12 @@ type TryoutPartRuntime = FunctionReturnType<
   typeof api.tryouts.queries.me.part.getUserTryoutPartAttempt
 >;
 
-type TryoutPartAttempt = Pick<
+type TryoutSetPartAttempt = Pick<
   NonNullable<TryoutAttemptData>["partAttempts"][number],
+  "partIndex" | "score" | "setAttempt"
+>;
+type TryoutPartRuntimeAttempt = Pick<
+  NonNullable<NonNullable<TryoutPartRuntime>["partAttempt"]>,
   "partIndex" | "setAttempt"
 >;
 type TryoutAttemptStatus = NonNullable<TryoutAttemptData>["attempt"]["status"];
@@ -39,7 +43,7 @@ function getTryoutPartPageStatus({
   tryout,
 }: {
   isRuntimePending: boolean;
-  partAttempt: TryoutPartAttempt | null;
+  partAttempt: TryoutPartRuntimeAttempt | null;
   tryout: TryoutProgress | null;
 }): TryoutPartUiStatus {
   if (isRuntimePending) {
@@ -83,7 +87,7 @@ function getTryoutSetPartStatus({
   expiresAtMs: number | undefined;
   isRuntimePending: boolean;
   nowMs: number;
-  partAttempt: TryoutPartAttempt | null;
+  partAttempt: TryoutSetPartAttempt | null;
   tryout: TryoutProgress | null;
 }): TryoutPartUiStatus {
   if (isRuntimePending) {
@@ -141,11 +145,14 @@ export function deriveTryoutPartPageState({
       attempt: null,
       canStartPart: false,
       partEndReason: null,
+      score: null,
       status: getTryoutPartPageStatus({
         isRuntimePending,
         partAttempt,
         tryout: null,
       }),
+      tryoutAttemptStatus: null,
+      tryoutScoreStatus: null,
     };
   }
 
@@ -169,7 +176,10 @@ export function deriveTryoutPartPageState({
     attempt: partAttempt?.setAttempt ?? null,
     canStartPart: status === "ready",
     partEndReason,
+    score: runtime.partScore,
     status,
+    tryoutAttemptStatus: runtime.tryoutAttempt.status,
+    tryoutScoreStatus: runtime.tryoutAttempt.scoreStatus,
   };
 }
 
@@ -205,6 +215,7 @@ export function deriveTryoutSetPartState({
 
     return {
       isCurrent: status === "in-progress" || resumePartKey === partKey,
+      score: null,
       status,
     };
   }
@@ -223,6 +234,7 @@ export function deriveTryoutSetPartState({
 
   return {
     isCurrent: status === "in-progress" || resumePartKey === partKey,
+    score: tryoutStatus === "in-progress" ? null : (partAttempt?.score ?? null),
     status,
   };
 }

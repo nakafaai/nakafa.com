@@ -1,6 +1,6 @@
 "use client";
 
-import { Tick01Icon } from "@hugeicons/core-free-icons";
+import { Compass01Icon, Flag03Icon } from "@hugeicons/core-free-icons";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
@@ -22,13 +22,16 @@ export function TryoutStatusBadge({
     case "completed":
       return (
         <Badge variant="secondary">
-          <HugeIcons icon={Tick01Icon} />
+          <HugeIcons icon={Flag03Icon} />
           {tTryouts("part-status-completed")}
         </Badge>
       );
     case "in-progress":
       return (
-        <Badge variant="muted">{tTryouts("part-status-in-progress")}</Badge>
+        <Badge variant="muted">
+          <HugeIcons icon={Compass01Icon} />
+          {tTryouts("part-status-in-progress")}
+        </Badge>
       );
     default: {
       const exhaustiveStatus: never = status;

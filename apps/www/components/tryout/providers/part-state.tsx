@@ -55,9 +55,12 @@ interface TryoutPartContextValue {
     isRuntimePending: boolean;
     part: TryoutPartValue;
     partEndReason: TryoutPartPageState["partEndReason"];
+    score: TryoutPartPageState["score"];
     shouldShowTryoutStartButton: boolean;
     status: TryoutPartUiStatus;
     timer: ReturnType<typeof useExerciseTimer>;
+    tryoutAttemptStatus: TryoutPartPageState["tryoutAttemptStatus"];
+    tryoutScoreStatus: TryoutPartPageState["tryoutScoreStatus"];
     tryout: TryoutValue;
   };
 }
@@ -97,12 +100,20 @@ export function TryoutPartProvider({
   const startPart = useMutation(api.tryouts.mutations.attempts.startPart);
   const completePart = useMutation(api.tryouts.mutations.attempts.completePart);
 
-  const { answers, attempt, canStartPart, partEndReason, status } =
-    deriveTryoutPartPageState({
-      isRuntimePending,
-      nowMs,
-      runtime,
-    });
+  const {
+    answers,
+    attempt,
+    canStartPart,
+    partEndReason,
+    score,
+    status,
+    tryoutAttemptStatus,
+    tryoutScoreStatus,
+  } = deriveTryoutPartPageState({
+    isRuntimePending,
+    nowMs,
+    runtime,
+  });
   const shouldShowTryoutStartButton = !(isRuntimePending || (user && runtime));
 
   const goToSet = useCallback(() => {
@@ -219,9 +230,12 @@ export function TryoutPartProvider({
         isRuntimePending,
         part,
         partEndReason,
+        score,
         shouldShowTryoutStartButton,
         status,
         timer,
+        tryoutAttemptStatus,
+        tryoutScoreStatus,
         tryout,
       },
     }),
@@ -238,9 +252,12 @@ export function TryoutPartProvider({
       isRuntimePending,
       part,
       partEndReason,
+      score,
       shouldShowTryoutStartButton,
       status,
       timer,
+      tryoutAttemptStatus,
+      tryoutScoreStatus,
       tryout,
     ]
   );
