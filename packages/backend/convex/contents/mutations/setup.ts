@@ -18,6 +18,9 @@ export const initializeAnalyticsPartitions = internalMutation({
     let repaired = 0;
 
     for (const partition of CONTENT_ANALYTICS_PARTITIONS) {
+      // Intentionally collect all rows for one partition in this setup/repair
+      // mutation so we can detect and delete duplicate lease rows. This stays
+      // bounded to a single partition and is not part of the runtime hot path.
       const partitionRows = await ctx.db
         .query("contentAnalyticsPartitions")
         .withIndex("by_partition", (q) => q.eq("partition", partition))
