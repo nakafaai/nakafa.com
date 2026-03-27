@@ -39,7 +39,9 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Read Convex MCP code/docs when the change touches MCP or agent tooling.
 - Use Context7 for up-to-date library docs and Ultracite search for lint/style rules.
 ## Core Commands
-- `pnpm dev` - run all workspace `dev` tasks through Turbo
+- `pnpm dev` - run the main web app and Convex backend through Turbo
+- `pnpm dev:web` - run the main web app and Convex backend through Turbo
+- `pnpm dev:all` - run all workspace `dev` tasks through Turbo
 - `pnpm build` - build all packages and apps
 - `pnpm test` - run all workspace tests
 - `pnpm test:watch` - run watch-mode tests where supported
@@ -56,6 +58,8 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - `pnpm --filter mcp dev` - MCP app on `3001`
 - `pnpm --filter email dev` - React Email preview on `3004`
 - `pnpm --filter @repo/backend dev` - Convex dev with tailed logs
+- `pnpm dev` / `pnpm dev:web` - recommended day-to-day combo for `www` + Convex backend
+- `pnpm dev:all` - use when you truly need every app running together
 - There is no single root `typecheck` script; run it in the workspace you changed.
 - `pnpm --filter www typecheck`
 - `pnpm --filter api typecheck`

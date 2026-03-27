@@ -13,7 +13,9 @@
   ],
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "dev": "turbo run dev --filter=www --filter=@repo/backend",
+    "dev:web": "turbo run dev --filter=www --filter=@repo/backend",
+    "dev:all": "turbo run dev",
     "start": "turbo run start",
     "lint": "ultracite check",
     "format": "ultracite fix",
