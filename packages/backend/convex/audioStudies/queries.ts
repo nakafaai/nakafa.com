@@ -1,7 +1,7 @@
 import { internalQuery } from "@repo/backend/convex/_generated/server";
 import {
   fetchContentForAudio,
-  getContentHash as getContentHashHelper,
+  fetchContentHash,
 } from "@repo/backend/convex/audioStudies/utils";
 import {
   audioContentRefValidator,
@@ -135,5 +135,5 @@ export const getContentHash = internalQuery({
     contentRef: audioContentRefValidator,
   },
   returns: nullable(v.string()),
-  handler: async (ctx, args) => getContentHashHelper(ctx, args.contentRef),
+  handler: async (ctx, args) => fetchContentHash(ctx, args.contentRef),
 });

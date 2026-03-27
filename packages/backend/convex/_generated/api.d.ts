@@ -83,8 +83,11 @@ import type * as contents_helpers_analytics_writes from "../contents/helpers/ana
 import type * as contents_helpers_partitions from "../contents/helpers/partitions.js";
 import type * as contents_helpers_popularity from "../contents/helpers/popularity.js";
 import type * as contents_helpers_views from "../contents/helpers/views.js";
-import type * as contents_mutations from "../contents/mutations.js";
-import type * as contents_queries from "../contents/queries.js";
+import type * as contents_mutations_analytics from "../contents/mutations/analytics.js";
+import type * as contents_mutations_audio from "../contents/mutations/audio.js";
+import type * as contents_mutations_views from "../contents/mutations/views.js";
+import type * as contents_queries_audio from "../contents/queries/audio.js";
+import type * as contents_queries_recent from "../contents/queries/recent.js";
 import type * as credits_actions from "../credits/actions.js";
 import type * as credits_constants from "../credits/constants.js";
 import type * as credits_mutations from "../credits/mutations.js";
@@ -310,8 +313,11 @@ declare const fullApi: ApiFromModules<{
   "contents/helpers/partitions": typeof contents_helpers_partitions;
   "contents/helpers/popularity": typeof contents_helpers_popularity;
   "contents/helpers/views": typeof contents_helpers_views;
-  "contents/mutations": typeof contents_mutations;
-  "contents/queries": typeof contents_queries;
+  "contents/mutations/analytics": typeof contents_mutations_analytics;
+  "contents/mutations/audio": typeof contents_mutations_audio;
+  "contents/mutations/views": typeof contents_mutations_views;
+  "contents/queries/audio": typeof contents_queries_audio;
+  "contents/queries/recent": typeof contents_queries_recent;
   "credits/actions": typeof credits_actions;
   "credits/constants": typeof credits_constants;
   "credits/mutations": typeof credits_mutations;
