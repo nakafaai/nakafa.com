@@ -11,21 +11,12 @@ import { internalMutation } from "@repo/backend/convex/functions";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { ConvexError, v } from "convex/values";
 
-const contentAnalyticsPartitionResultValidator = v.object({
-  hasMore: v.boolean(),
-  partition: v.number(),
-  processed: v.number(),
-  skipped: v.boolean(),
-});
-
-const scheduleContentAnalyticsPartitionsResultValidator = v.object({
-  scheduledPartitions: v.number(),
-});
-
 /** Schedules one worker per idle analytics partition with queued rows. */
 export const scheduleContentAnalyticsPartitions = internalMutation({
   args: {},
-  returns: scheduleContentAnalyticsPartitionsResultValidator,
+  returns: v.object({
+    scheduledPartitions: v.number(),
+  }),
   handler: async (ctx) => {
     const now = Date.now();
     let scheduledPartitions = 0;
@@ -107,7 +98,12 @@ export const processContentAnalyticsPartition = internalMutation({
     leaseVersion: v.number(),
     partition: v.number(),
   },
-  returns: contentAnalyticsPartitionResultValidator,
+  returns: v.object({
+    hasMore: v.boolean(),
+    partition: v.number(),
+    processed: v.number(),
+    skipped: v.boolean(),
+  }),
   handler: async (ctx, args) => {
     if (!isContentAnalyticsPartition(args.partition)) {
       throw new ConvexError({

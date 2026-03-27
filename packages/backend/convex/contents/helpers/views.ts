@@ -1,29 +1,32 @@
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { getContentAnalyticsPartition } from "@repo/backend/convex/contents/helpers/partitions";
-import {
-  type ContentRef,
-  contentTypeValidator,
-  localeValidator,
+import type {
+  ContentRef,
+  ContentViewRef,
+  Locale,
 } from "@repo/backend/convex/lib/validators/contents";
-import { ConvexError, type Infer, v } from "convex/values";
+import { ConvexError } from "convex/values";
 
-const contentLookupArgsValidator = v.object({
-  locale: localeValidator,
-  slug: v.string(),
-  type: contentTypeValidator,
-});
+type ContentViewRow = Doc<"contentViews">;
 
-const contentViewWriteArgsValidator = v.object({
-  deviceId: v.string(),
-  locale: localeValidator,
-  slug: v.string(),
-  userId: v.optional(v.id("users")),
-});
+type ContentViewWriteArgs = Pick<
+  ContentViewRow,
+  "deviceId" | "locale" | "slug" | "userId"
+>;
 
 /** Loads one content reference by localized slug for view recording. */
 export async function loadContentRefBySlug(
   db: MutationCtx["db"],
-  { locale, slug, type }: Infer<typeof contentLookupArgsValidator>
+  {
+    locale,
+    slug,
+    type,
+  }: {
+    locale: Locale;
+    slug: ContentViewRow["slug"];
+    type: ContentViewRef["type"];
+  }
 ) {
   switch (type) {
     case "article": {
@@ -93,7 +96,7 @@ export async function loadContentRefBySlug(
 export async function upsertContentView(
   db: MutationCtx["db"],
   contentRef: ContentRef,
-  args: Infer<typeof contentViewWriteArgsValidator>
+  args: ContentViewWriteArgs
 ) {
   const now = Date.now();
   const existingByDevice = await db

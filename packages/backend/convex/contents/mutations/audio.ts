@@ -17,11 +17,6 @@ import { internalMutation } from "@repo/backend/convex/functions";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { v } from "convex/values";
 
-const populateAudioQueueResultValidator = v.object({
-  processed: v.number(),
-  queued: v.number(),
-});
-
 /**
  * Reads current popularity rankings, then queues locale-specific audio work.
  *
@@ -30,7 +25,10 @@ const populateAudioQueueResultValidator = v.object({
  */
 export const populateAudioQueue = internalMutation({
   args: {},
-  returns: populateAudioQueueResultValidator,
+  returns: v.object({
+    processed: v.number(),
+    queued: v.number(),
+  }),
   handler: async (ctx) => {
     logger.info("Populating audio queue started");
 
