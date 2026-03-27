@@ -18,11 +18,10 @@ export const initializeAnalyticsPartitions = internalMutation({
     let repaired = 0;
 
     for (const partition of CONTENT_ANALYTICS_PARTITIONS) {
-      const partitionRows = await Array.fromAsync(
-        ctx.db
-          .query("contentAnalyticsPartitions")
-          .withIndex("by_partition", (q) => q.eq("partition", partition))
-      );
+      const partitionRows = await ctx.db
+        .query("contentAnalyticsPartitions")
+        .withIndex("by_partition", (q) => q.eq("partition", partition))
+        .collect();
 
       partitionRows.sort((left, right) => {
         if (left.leaseVersion !== right.leaseVersion) {

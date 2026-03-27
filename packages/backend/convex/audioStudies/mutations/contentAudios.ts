@@ -11,15 +11,10 @@ import {
   updateContentHash as updateContentAudioHash,
 } from "@repo/backend/convex/audioStudies/utils";
 import { internalMutation } from "@repo/backend/convex/functions";
-import {
-  type AudioStatus,
-  audioContentRefValidator,
-} from "@repo/backend/convex/lib/validators/audio";
+import { audioContentRefValidator } from "@repo/backend/convex/lib/validators/audio";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
-
-type ClaimableStatus = Extract<AudioStatus, "pending" | "script-generated">;
 
 /** Saves generated script. Idempotent. */
 export const saveScript = internalMutation({
@@ -125,17 +120,24 @@ export const markFailed = internalMutation({
       return null;
     }
 
-    let resetStatus: ClaimableStatus;
     if (audio.status === "generating-script") {
-      resetStatus = "pending";
-    } else if (audio.status === "generating-speech") {
-      resetStatus = "script-generated";
-    } else {
+      await ctx.db.patch("contentAudios", args.contentAudioId, {
+        status: "pending",
+        errorMessage: args.error,
+        failedAt: Date.now(),
+        generationAttempts: audio.generationAttempts + 1,
+        updatedAt: Date.now(),
+      });
+
+      return null;
+    }
+
+    if (audio.status !== "generating-speech") {
       return null;
     }
 
     await ctx.db.patch("contentAudios", args.contentAudioId, {
-      status: resetStatus,
+      status: "script-generated",
       errorMessage: args.error,
       failedAt: Date.now(),
       generationAttempts: audio.generationAttempts + 1,

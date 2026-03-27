@@ -45,9 +45,8 @@ export const getAudioAndContentForScriptGeneration = internalQuery({
       return null;
     }
 
-    // Fetch content using discriminated union
-    // TypeScript automatically narrows the type - no assertions needed
     const content = await fetchContentForAudio(ctx, audio.contentRef);
+
     if (!content) {
       return null;
     }
@@ -99,10 +98,7 @@ export const getAudioForSpeechGeneration = internalQuery({
   },
 });
 
-/**
- * Verify content hash matches expected value.
- * Used by actions to check if content changed during generation.
- */
+/** Verify content hash matches expected value for a queued audio job. */
 export const verifyContentHash = internalQuery({
   args: {
     contentAudioId: vv.id("contentAudios"),
@@ -120,16 +116,7 @@ export const verifyContentHash = internalQuery({
   },
 });
 
-/**
- * Get content hash for a content item by type and ID.
- * Used by workflow to fetch hash before creating audio record.
- * Returns null if content not found.
- *
- * Type Safety:
- * - Uses discriminated union (contentRef) for type-safe lookups
- * - TypeScript automatically narrows the id type based on the type discriminator
- * - No type assertions needed - clean TypeScript like JavaScript
- */
+/** Get content hash for a content item by type and ID. */
 export const getContentHash = internalQuery({
   args: {
     contentRef: audioContentRefValidator,

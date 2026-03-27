@@ -1,4 +1,3 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { query } from "@repo/backend/convex/_generated/server";
 import { audioStatusValidator } from "@repo/backend/convex/lib/validators/audio";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
@@ -9,14 +8,6 @@ import { literals, nullable } from "convex-helpers/validators";
 /**
  * Gets audio playback URL and metadata by content slug.
  * Public query - no authentication required.
- *
- * Returns null if content not found or audio not ready.
- *
- * @example
- * const audio = await ctx.runQuery(
- *   api.audioStudies.public.queries.getAudioBySlug,
- *   { slug: "quadratic-equations", locale: "en", contentType: "subject" }
- * );
  */
 export const getAudioBySlug = query({
   args: {
@@ -34,36 +25,85 @@ export const getAudioBySlug = query({
     })
   ),
   handler: async (ctx, args) => {
-    // Find content by slug + locale
-    let contentId: Id<"articleContents"> | Id<"subjectSections"> | null = null;
+    if (args.contentType === "article") {
+      const article = await ctx.db
+        .query("articleContents")
+        .withIndex("by_locale_and_slug", (q) =>
+          q.eq("locale", args.locale).eq("slug", args.slug)
+        )
+        .first();
 
-    switch (args.contentType) {
-      case "article": {
-        const article = await ctx.db
-          .query("articleContents")
-          .withIndex("by_locale_and_slug", (q) =>
-            q.eq("locale", args.locale).eq("slug", args.slug)
-          )
-          .first();
-        contentId = article?._id ?? null;
-        break;
-      }
-      case "subject": {
-        const section = await ctx.db
-          .query("subjectSections")
-          .withIndex("by_locale_and_slug", (q) =>
-            q.eq("locale", args.locale).eq("slug", args.slug)
-          )
-          .first();
-        contentId = section?._id ?? null;
-        break;
-      }
-      default: {
+      if (!article) {
+        logger.debug("Content not found", {
+          slug: args.slug,
+          locale: args.locale,
+          contentType: args.contentType,
+        });
         return null;
       }
+
+      const audio = await ctx.db
+        .query("contentAudios")
+        .withIndex("by_contentRefType_and_contentRefId_and_locale", (q) =>
+          q
+            .eq("contentRef.type", args.contentType)
+            .eq("contentRef.id", article._id)
+            .eq("locale", args.locale)
+        )
+        .first();
+
+      if (!audio) {
+        logger.debug("Audio not found", {
+          slug: args.slug,
+          locale: args.locale,
+        });
+        return null;
+      }
+
+      if (audio.status !== "completed" || !audio.audioStorageId) {
+        logger.debug("Audio not ready", {
+          slug: args.slug,
+          status: audio.status,
+        });
+        return null;
+      }
+
+      const audioUrl = await ctx.storage.getUrl(audio.audioStorageId);
+
+      if (!audioUrl) {
+        logger.warn("Storage URL failed", {
+          slug: args.slug,
+          storageId: audio.audioStorageId,
+        });
+        return null;
+      }
+
+      const duration = audio.audioDuration ? audio.audioDuration / 1000 : 0;
+
+      logger.info("Audio served", {
+        slug: args.slug,
+        locale: args.locale,
+        durationMs: audio.audioDuration,
+        durationSec: duration.toFixed(3),
+      });
+
+      return {
+        audioUrl,
+        duration,
+        status: audio.status,
+        script: audio.script,
+        contentType: args.contentType,
+      };
     }
 
-    if (!contentId) {
+    const section = await ctx.db
+      .query("subjectSections")
+      .withIndex("by_locale_and_slug", (q) =>
+        q.eq("locale", args.locale).eq("slug", args.slug)
+      )
+      .first();
+
+    if (!section) {
       logger.debug("Content not found", {
         slug: args.slug,
         locale: args.locale,
@@ -72,13 +112,12 @@ export const getAudioBySlug = query({
       return null;
     }
 
-    // Query audio record
     const audio = await ctx.db
       .query("contentAudios")
       .withIndex("by_contentRefType_and_contentRefId_and_locale", (q) =>
         q
           .eq("contentRef.type", args.contentType)
-          .eq("contentRef.id", contentId)
+          .eq("contentRef.id", section._id)
           .eq("locale", args.locale)
       )
       .first();
@@ -91,7 +130,6 @@ export const getAudioBySlug = query({
       return null;
     }
 
-    // Only return completed audio
     if (audio.status !== "completed" || !audio.audioStorageId) {
       logger.debug("Audio not ready", {
         slug: args.slug,
@@ -100,7 +138,6 @@ export const getAudioBySlug = query({
       return null;
     }
 
-    // Generate storage URL (expires in 1 hour)
     const audioUrl = await ctx.storage.getUrl(audio.audioStorageId);
 
     if (!audioUrl) {
@@ -111,20 +148,18 @@ export const getAudioBySlug = query({
       return null;
     }
 
-    // Convert milliseconds to seconds for API response
-    // Database stores milliseconds for precision, but API returns seconds for compatibility
-    const durationSec = audio.audioDuration ? audio.audioDuration / 1000 : 0;
+    const duration = audio.audioDuration ? audio.audioDuration / 1000 : 0;
 
     logger.info("Audio served", {
       slug: args.slug,
       locale: args.locale,
       durationMs: audio.audioDuration,
-      durationSec: durationSec.toFixed(3),
+      durationSec: duration.toFixed(3),
     });
 
     return {
       audioUrl,
-      duration: durationSec,
+      duration,
       status: audio.status,
       script: audio.script,
       contentType: args.contentType,
