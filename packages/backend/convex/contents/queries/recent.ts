@@ -1,4 +1,3 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { query } from "@repo/backend/convex/_generated/server";
 import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
@@ -6,12 +5,7 @@ import { recentlyViewedSubjectValidator } from "@repo/backend/convex/lib/validat
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { getAll } from "convex-helpers/server/relationships";
 
-/**
- * Get recently viewed subjects for the current user.
- *
- * Returns the most recently viewed subjects, sorted by lastViewedAt descending.
- * Limited to the specified limit (default: 5).
- */
+/** Returns the current user's recently viewed subjects for one locale. */
 export const getRecentlyViewed = query({
   args: {
     locale: localeValidator,
@@ -20,14 +14,13 @@ export const getRecentlyViewed = query({
   returns: vv.array(recentlyViewedSubjectValidator),
   handler: async (ctx, args) => {
     const limit = args.limit ?? 5;
-
-    // Get current user
     const user = await getOptionalAppUser(ctx);
+
     if (!user) {
       return [];
     }
 
-    const recentViewsQuery = ctx.db
+    const recentViews = await ctx.db
       .query("contentViews")
       .withIndex(
         "by_userId_and_contentRefType_and_locale_and_lastViewedAt",
@@ -37,31 +30,26 @@ export const getRecentlyViewed = query({
             .eq("contentRef.type", "subject")
             .eq("locale", args.locale)
       )
-      .order("desc");
-
-    const recentViews = await recentViewsQuery.take(limit);
+      .order("desc")
+      .take(limit);
 
     if (recentViews.length === 0) {
       return [];
     }
 
-    const subjectViews: Array<{
-      lastViewedAt: number;
-      slug: string;
-      subjectId: Id<"subjectSections">;
-    }> = [];
-
-    for (const view of recentViews) {
+    const subjectViews = recentViews.flatMap((view) => {
       if (view.contentRef.type !== "subject") {
-        continue;
+        return [];
       }
 
-      subjectViews.push({
-        lastViewedAt: view.lastViewedAt,
-        slug: view.slug,
-        subjectId: view.contentRef.id,
-      });
-    }
+      return [
+        {
+          lastViewedAt: view.lastViewedAt,
+          slug: view.slug,
+          subjectId: view.contentRef.id,
+        },
+      ];
+    });
 
     if (subjectViews.length === 0) {
       return [];

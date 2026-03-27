@@ -35,24 +35,50 @@ const tables = {
     ]),
 
   /**
+   * Append-only queue of new unique views.
+   * Queue rows are partitioned so background processors can drain them in parallel.
+   */
+  contentViewAnalyticsQueue: defineTable({
+    contentRef: contentRefValidator,
+    locale: localeValidator,
+    partition: v.number(),
+    viewedAt: v.number(),
+  }).index("by_partition", ["partition"]),
+
+  /**
+   * Lease rows for partitioned analytics queue processing.
+   * One row per partition.
+   */
+  contentAnalyticsPartitions: defineTable({
+    leaseExpiresAt: v.number(),
+    leaseVersion: v.number(),
+    lastProcessedAt: v.optional(v.number()),
+    partition: v.number(),
+  }).index("by_partition", ["partition"]),
+
+  /**
    * Article popularity counts.
-   * Updated via triggers when article views are recorded.
+   * Updated asynchronously from the content analytics queue.
    */
   articlePopularity: defineTable({
     contentId: v.id("articleContents"),
     viewCount: v.number(),
     updatedAt: v.number(),
-  }).index("by_contentId", ["contentId"]),
+  })
+    .index("by_contentId", ["contentId"])
+    .index("by_viewCount_and_contentId", ["viewCount", "contentId"]),
 
   /**
    * Subject popularity counts.
-   * Updated via triggers when subject views are recorded.
+   * Updated asynchronously from the content analytics queue.
    */
   subjectPopularity: defineTable({
     contentId: v.id("subjectSections"),
     viewCount: v.number(),
     updatedAt: v.number(),
-  }).index("by_contentId", ["contentId"]),
+  })
+    .index("by_contentId", ["contentId"])
+    .index("by_viewCount_and_contentId", ["viewCount", "contentId"]),
 
   /**
    * Daily subject view counts used to serve bounded trending queries.
@@ -72,13 +98,15 @@ const tables = {
 
   /**
    * Exercise popularity counts.
-   * Updated via triggers when exercise views are recorded.
+   * Updated asynchronously from the content analytics queue.
    */
   exercisePopularity: defineTable({
     contentId: v.id("exerciseSets"),
     viewCount: v.number(),
     updatedAt: v.number(),
-  }).index("by_contentId", ["contentId"]),
+  })
+    .index("by_contentId", ["contentId"])
+    .index("by_viewCount_and_contentId", ["viewCount", "contentId"]),
 };
 
 export default tables;

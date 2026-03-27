@@ -137,7 +137,7 @@ export async function getContentSlug(
 /**
  * Returns the content hash for a content item by type and ID.
  */
-export async function getContentHash(
+export async function fetchContentHash(
   ctx: QueryCtx,
   contentRef: AudioContentRef
 ): Promise<string | null> {

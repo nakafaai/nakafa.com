@@ -48,7 +48,7 @@ export const generateAudioForQueueItem = workflow.define({
 
     // Step 2: Fetch content hash for cost protection
     const contentHash = await step.runQuery(
-      internal.audioStudies.queries.getContentHash,
+      internal.audioStudies.queries.internal.getContentHash,
       {
         contentRef: queueItem.contentRef,
       }

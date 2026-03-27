@@ -50,25 +50,22 @@ export const calibrateSetTwoPL = internalAction({
       responsesByQuestion.set(questionId, []);
     }
 
-    let continueCursor: string | null = null;
-    let isDone = false;
-    let page: CalibrationResponse[] = [];
     let responseCount = 0;
 
-    while (!isDone) {
-      ({ continueCursor, isDone, page } = await ctx.runQuery(
-        internal.irt.queries.internal.calibration
-          .getCalibrationResponsesPageForSet,
-        {
-          setId: args.setId,
-          paginationOpts: {
-            numItems: attemptPageSize,
-            cursor: continueCursor,
-          },
-        }
-      ));
+    let responsePage = await ctx.runQuery(
+      internal.irt.queries.internal.calibration
+        .getCalibrationResponsesPageForSet,
+      {
+        setId: args.setId,
+        paginationOpts: {
+          numItems: attemptPageSize,
+          cursor: null,
+        },
+      }
+    );
 
-      for (const response of page) {
+    while (true) {
+      for (const response of responsePage.page) {
         const questionResponses = responsesByQuestion.get(response.questionId);
 
         if (!questionResponses) {
@@ -112,6 +109,22 @@ export const calibrateSetTwoPL = internalAction({
             "Calibration attempt volume exceeds the supported action limit.",
         });
       }
+
+      if (responsePage.isDone) {
+        break;
+      }
+
+      responsePage = await ctx.runQuery(
+        internal.irt.queries.internal.calibration
+          .getCalibrationResponsesPageForSet,
+        {
+          setId: args.setId,
+          paginationOpts: {
+            numItems: attemptPageSize,
+            cursor: responsePage.continueCursor,
+          },
+        }
+      );
     }
 
     const calibration = calibrateTwoPLItems({

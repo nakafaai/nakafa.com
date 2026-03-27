@@ -42,10 +42,28 @@ export const orchestrateReset = workflow.define({
     // Following Convex best practice: Use .paginate() for large datasets
     // Reference: https://docs.convex.dev/database/pagination
     let totalUsers = 0;
-    let continueCursor: string | undefined;
+
+    let result = await step.runMutation(
+      internal.credits.mutations.populateQueueBatch,
+      {
+        jobId,
+        plan: args.plan,
+        resetTimestamp: args.resetTimestamp,
+        paginationOpts: {
+          numItems: RESET_WORKFLOW_CONFIG.populateBatchSize,
+          cursor: null,
+        },
+      }
+    );
 
     while (true) {
-      const result = await step.runMutation(
+      totalUsers += result.usersAdded;
+
+      if (result.isDone) {
+        break;
+      }
+
+      result = await step.runMutation(
         internal.credits.mutations.populateQueueBatch,
         {
           jobId,
@@ -53,18 +71,10 @@ export const orchestrateReset = workflow.define({
           resetTimestamp: args.resetTimestamp,
           paginationOpts: {
             numItems: RESET_WORKFLOW_CONFIG.populateBatchSize,
-            cursor: continueCursor ?? null,
+            cursor: result.continueCursor,
           },
         }
       );
-
-      totalUsers += result.usersAdded;
-
-      if (result.isDone) {
-        break;
-      }
-
-      continueCursor = result.continueCursor;
     }
 
     // Update job with total users count
@@ -91,20 +101,18 @@ export const orchestrateReset = workflow.define({
 
     // Spawn fixed number of workers (no dynamic scaling - Convex workflow limitation)
     // Workflows don't support setTimeout or Date.now()
-    const workers: Promise<null>[] = [];
-
-    for (let i = 0; i < RESET_WORKFLOW_CONFIG.maxWorkers; i++) {
-      workers.push(
+    const workers = Array.from(
+      { length: RESET_WORKFLOW_CONFIG.maxWorkers },
+      (_, workerId) =>
         step.runWorkflow(internal.credits.workflows.processQueue, {
           jobId,
           plan: args.plan,
           resetTimestamp: args.resetTimestamp,
-          workerId: i,
+          workerId,
           creditAmount: creditConfig.amount,
           grantType: creditConfig.grantType,
         })
-      );
-    }
+    );
 
     logger.info(
       `${creditConfig.jobType} spawned ${RESET_WORKFLOW_CONFIG.maxWorkers} workers`,
