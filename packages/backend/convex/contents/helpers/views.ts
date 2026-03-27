@@ -1,46 +1,30 @@
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { getContentAnalyticsPartition } from "@repo/backend/convex/contents/helpers/partitions";
-import type { ContentRef } from "@repo/backend/convex/lib/validators/contents";
 import {
+  type ContentRef,
   contentTypeValidator,
   localeValidator,
 } from "@repo/backend/convex/lib/validators/contents";
 import { ConvexError, type Infer, v } from "convex/values";
 
-type ContentViewsDb = MutationCtx["db"];
-
-const recordContentViewBySlugArgsValidator = v.object({
-  deviceId: v.string(),
+const contentLookupArgsValidator = v.object({
   locale: localeValidator,
   slug: v.string(),
   type: contentTypeValidator,
+});
+
+const contentViewWriteArgsValidator = v.object({
+  deviceId: v.string(),
+  locale: localeValidator,
+  slug: v.string(),
   userId: v.optional(v.id("users")),
 });
 
-type RecordContentViewBySlugArgs = Infer<
-  typeof recordContentViewBySlugArgsValidator
->;
-
-const recordContentViewResultValidator = v.object({
-  alreadyViewed: v.boolean(),
-  isNewView: v.boolean(),
-  success: v.boolean(),
-});
-
-/** Result returned after recording one content view. */
-export type RecordContentViewResult = Infer<
-  typeof recordContentViewResultValidator
->;
-
 /** Loads one content reference by localized slug for view recording. */
-async function loadContentRefBySlug(
-  db: ContentViewsDb,
-  {
-    locale,
-    slug,
-    type,
-  }: Pick<RecordContentViewBySlugArgs, "locale" | "slug" | "type">
-): Promise<ContentRef> {
+export async function loadContentRefBySlug(
+  db: MutationCtx["db"],
+  { locale, slug, type }: Infer<typeof contentLookupArgsValidator>
+) {
   switch (type) {
     case "article": {
       const article = await db
@@ -57,7 +41,7 @@ async function loadContentRefBySlug(
         });
       }
 
-      return { type: "article", id: article._id };
+      return { type: "article", id: article._id } satisfies ContentRef;
     }
 
     case "subject": {
@@ -75,7 +59,7 @@ async function loadContentRefBySlug(
         });
       }
 
-      return { type: "subject", id: section._id };
+      return { type: "subject", id: section._id } satisfies ContentRef;
     }
 
     case "exercise": {
@@ -93,7 +77,7 @@ async function loadContentRefBySlug(
         });
       }
 
-      return { type: "exercise", id: exerciseSet._id };
+      return { type: "exercise", id: exerciseSet._id } satisfies ContentRef;
     }
 
     default: {
@@ -106,11 +90,11 @@ async function loadContentRefBySlug(
 }
 
 /** Upserts the durable content view row and queues first-view analytics. */
-async function upsertContentView(
-  db: ContentViewsDb,
+export async function upsertContentView(
+  db: MutationCtx["db"],
   contentRef: ContentRef,
-  args: Omit<RecordContentViewBySlugArgs, "type">
-): Promise<RecordContentViewResult> {
+  args: Infer<typeof contentViewWriteArgsValidator>
+) {
   const now = Date.now();
   const existingByDevice = await db
     .query("contentViews")
@@ -158,26 +142,4 @@ async function upsertContentView(
   });
 
   return { success: true, isNewView: false, alreadyViewed: true };
-}
-
-/**
- * Records one content view by localized slug.
- * Throws when the localized content record does not exist.
- */
-export async function recordContentViewBySlug(
-  ctx: Pick<MutationCtx, "db">,
-  { deviceId, locale, slug, type, userId }: RecordContentViewBySlugArgs
-): Promise<RecordContentViewResult> {
-  const contentRef = await loadContentRefBySlug(ctx.db, {
-    locale,
-    slug,
-    type,
-  });
-
-  return upsertContentView(ctx.db, contentRef, {
-    deviceId,
-    locale,
-    slug,
-    userId,
-  });
 }

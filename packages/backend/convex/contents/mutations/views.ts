@@ -1,4 +1,7 @@
-import { recordContentViewBySlug } from "@repo/backend/convex/contents/helpers/views";
+import {
+  loadContentRefBySlug,
+  upsertContentView,
+} from "@repo/backend/convex/contents/helpers/views";
 import { mutation } from "@repo/backend/convex/functions";
 import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
 import {
@@ -22,11 +25,16 @@ export const recordContentView = mutation({
   handler: async (ctx, args) => {
     const user = await getOptionalAppUser(ctx);
 
-    return await recordContentViewBySlug(ctx, {
-      deviceId: args.deviceId,
+    const contentRef = await loadContentRefBySlug(ctx.db, {
       locale: args.locale,
       slug: args.contentRef.slug,
       type: args.contentRef.type,
+    });
+
+    return await upsertContentView(ctx.db, contentRef, {
+      deviceId: args.deviceId,
+      locale: args.locale,
+      slug: args.contentRef.slug,
       userId: user?.appUser._id,
     });
   },
