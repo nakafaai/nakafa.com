@@ -3,6 +3,7 @@ import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { loadBoundedTryoutPartAttempts } from "@repo/backend/convex/tryouts/helpers/loaders";
 import { loadValidatedTryoutPartSets } from "@repo/backend/convex/tryouts/helpers/parts";
 import { resolveResumePartKey } from "@repo/backend/convex/tryouts/helpers/resume";
+import { tryoutProductPolicies } from "@repo/backend/convex/tryouts/products";
 import { loadLatestUserTryoutContext } from "@repo/backend/convex/tryouts/queries/me/helpers";
 import {
   userTryoutAttemptResultValidator,
@@ -60,6 +61,15 @@ export const getUserTryoutAttempt = query({
       return {
         partIndex: partAttempt.partIndex,
         partKey: partAttempt.partKey,
+        score: attempt.completedPartIndices.includes(partAttempt.partIndex)
+          ? {
+              theta: partAttempt.theta,
+              thetaSE: partAttempt.thetaSE,
+              irtScore: tryoutProductPolicies[tryout.product].scaleThetaToScore(
+                partAttempt.theta
+              ),
+            }
+          : null,
         setAttempt: {
           lastActivityAt: setAttempt.lastActivityAt,
           startedAt: setAttempt.startedAt,

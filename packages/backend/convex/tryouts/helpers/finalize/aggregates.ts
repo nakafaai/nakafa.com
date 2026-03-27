@@ -3,16 +3,13 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { estimateThetaEAP } from "@repo/backend/convex/irt/estimation";
 import { getScaleVersionItemsForSet } from "@repo/backend/convex/irt/scales/read";
 import { getAttemptEndReasonFromStatus } from "@repo/backend/convex/lib/attempts";
-import { buildOperationalIrtResponses } from "@repo/backend/convex/tryouts/helpers/irt";
+import { scoreFinalizedTryoutPart } from "@repo/backend/convex/tryouts/helpers/finalize/score";
 import { upsertUserTryoutLatestAttempt } from "@repo/backend/convex/tryouts/helpers/latest";
 import {
   getBoundedExerciseAnswers,
   loadBoundedTryoutPartAttempts,
 } from "@repo/backend/convex/tryouts/helpers/loaders";
-import {
-  computeTryoutRawScorePercentage,
-  countCorrectAnswers,
-} from "@repo/backend/convex/tryouts/helpers/metrics";
+import { computeTryoutRawScorePercentage } from "@repo/backend/convex/tryouts/helpers/metrics";
 import { tryoutProductPolicies } from "@repo/backend/convex/tryouts/products";
 import type { TryoutScoreStatus } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError } from "convex/values";
@@ -84,7 +81,7 @@ export async function syncTryoutAttemptAggregates({
     "exerciseAttempts",
     finalizedPartAttempts.map((partAttempt) => partAttempt.setAttemptId)
   );
-  const partData = await asyncMap(
+  const partScores = await asyncMap(
     finalizedPartAttempts,
     async (partAttempt, index) => {
       const setAttempt = setAttempts[index];
@@ -107,27 +104,41 @@ export async function syncTryoutAttemptAggregates({
         }),
       ]);
 
-      return {
+      return scoreFinalizedTryoutPart({
         answers,
         itemParamsRecords,
         totalQuestions: setAttempt.totalExercises,
-      };
+      });
     }
   );
-  const allResponses = partData.flatMap((part) =>
-    buildOperationalIrtResponses(part)
-  );
-  const totalCorrect = partData.reduce(
-    (count, part) => count + countCorrectAnswers(part.answers),
+  const allResponses = partScores.flatMap((partScore) => partScore.responses);
+  const totalCorrect = partScores.reduce(
+    (count, partScore) => count + partScore.rawScore,
     0
   );
-  const totalQuestions = partData.reduce(
-    (count, part) => count + part.totalQuestions,
+  const totalQuestions = partScores.reduce(
+    (count, partScore) => count + partScore.totalQuestions,
     0
   );
   const { theta, se } = estimateThetaEAP(allResponses);
   const irtScore =
     tryoutProductPolicies[tryout.product].scaleThetaToScore(theta);
+
+  for (const [index, partAttempt] of finalizedPartAttempts.entries()) {
+    const partScore = partScores[index];
+
+    if (!partScore) {
+      throw new ConvexError({
+        code: "INVALID_ATTEMPT_STATE",
+        message: "Tryout part score is missing during aggregate sync.",
+      });
+    }
+
+    await ctx.db.patch("tryoutPartAttempts", partAttempt._id, {
+      theta: partScore.theta,
+      thetaSE: partScore.thetaSE,
+    });
+  }
 
   await ctx.db.patch("tryoutAttempts", tryoutAttemptId, {
     completedAt: completedAtMs,

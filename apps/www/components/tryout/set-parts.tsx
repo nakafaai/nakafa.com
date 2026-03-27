@@ -7,6 +7,7 @@ import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/materia
 import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import { cn } from "@repo/design-system/lib/utils";
 import type { FunctionReturnType } from "convex/server";
 import { useTranslations } from "next-intl";
@@ -30,7 +31,6 @@ interface TryoutSetPartsProps {
 type TryoutSetPartState = ReturnType<typeof deriveTryoutSetPartState>;
 
 export function TryoutSetParts({ parts }: TryoutSetPartsProps) {
-  const tTryouts = useTranslations("Tryouts");
   const attemptData = useTryoutAttemptState((state) => state.attemptData);
   const effectiveStatus = useTryoutAttemptState(
     (state) => state.effectiveStatus
@@ -39,7 +39,6 @@ export function TryoutSetParts({ parts }: TryoutSetPartsProps) {
   const product = useTryoutAttemptState((state) => state.params.product);
   const resumePartKey = useTryoutAttemptState((state) => state.resumePartKey);
   const tryoutSlug = useTryoutAttemptState((state) => state.params.tryoutSlug);
-  const questionUnitLabel = tTryouts("question-unit");
 
   return (
     <div className="grid divide-y">
@@ -58,7 +57,6 @@ export function TryoutSetParts({ parts }: TryoutSetPartsProps) {
             key={part.partKey}
             part={part}
             partState={partState}
-            questionUnitLabel={questionUnitLabel}
           />
         );
       })}
@@ -70,13 +68,12 @@ function TryoutSetPart({
   href,
   part,
   partState,
-  questionUnitLabel,
 }: {
   href: string;
   part: TryoutSetPartItem;
   partState: TryoutSetPartState;
-  questionUnitLabel: string;
 }) {
+  const tTryouts = useTranslations("Tryouts");
   const partIcon = getTryoutPartIcon(part.material);
 
   return (
@@ -116,8 +113,11 @@ function TryoutSetPart({
             ) : null}
           </div>
           <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground">
-            {part.questionCount} {questionUnitLabel}
+            {part.questionCount} {tTryouts("question-unit")}
           </span>
+          {partState.score ? (
+            <TryoutSetPartScore irtScore={partState.score.irtScore} />
+          ) : null}
         </div>
       </div>
 
@@ -129,6 +129,23 @@ function TryoutSetPart({
         icon={ArrowRight02Icon}
       />
     </NavigationLink>
+  );
+}
+
+function TryoutSetPartScore({ irtScore }: { irtScore: number }) {
+  const tTryouts = useTranslations("Tryouts");
+
+  return (
+    <div className="flex items-center gap-1.5 text-muted-foreground text-xs group-hover:text-accent-foreground">
+      <span>{tTryouts("score-label")}</span>
+      <span className="font-light font-mono text-foreground text-sm tabular-nums leading-none tracking-tight group-hover:text-accent-foreground">
+        <NumberFormat
+          format={{ maximumFractionDigits: 0 }}
+          trend={0}
+          value={irtScore}
+        />
+      </span>
+    </div>
   );
 }
 
