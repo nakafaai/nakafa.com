@@ -78,7 +78,11 @@ function TryoutSetPart({
   partState: TryoutSetPartState;
 }) {
   const tTryouts = useTranslations("Tryouts");
+  const effectiveStatus = useTryoutAttemptState(
+    (state) => state.effectiveStatus
+  );
   const partIcon = getTryoutPartIcon(part.material);
+  const showPartStatusBadge = effectiveStatus === "in-progress";
 
   return (
     <NavigationLink
@@ -110,10 +114,10 @@ function TryoutSetPart({
           <div className="-mt-1 flex flex-1 flex-col gap-0.5">
             <div className="flex flex-wrap items-center gap-2">
               <h3>{part.label}</h3>
-              {partState.status === "completed" ? (
+              {showPartStatusBadge && partState.status === "completed" ? (
                 <TryoutStatusBadge status="completed" />
               ) : null}
-              {partState.status === "in-progress" ? (
+              {showPartStatusBadge && partState.status === "in-progress" ? (
                 <TryoutStatusBadge status="in-progress" />
               ) : null}
             </div>
