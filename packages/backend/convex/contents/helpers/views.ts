@@ -8,13 +8,6 @@ import type {
 } from "@repo/backend/convex/lib/validators/contents";
 import { ConvexError } from "convex/values";
 
-type ContentViewRow = Doc<"contentViews">;
-
-type ContentViewWriteArgs = Pick<
-  ContentViewRow,
-  "deviceId" | "locale" | "slug" | "userId"
->;
-
 /** Loads one content reference by localized slug for view recording. */
 export async function loadContentRefBySlug(
   db: MutationCtx["db"],
@@ -24,7 +17,7 @@ export async function loadContentRefBySlug(
     type,
   }: {
     locale: Locale;
-    slug: ContentViewRow["slug"];
+    slug: Doc<"contentViews">["slug"];
     type: ContentViewRef["type"];
   }
 ) {
@@ -96,7 +89,7 @@ export async function loadContentRefBySlug(
 export async function upsertContentView(
   db: MutationCtx["db"],
   contentRef: ContentRef,
-  args: ContentViewWriteArgs
+  args: Pick<Doc<"contentViews">, "deviceId" | "locale" | "slug" | "userId">
 ) {
   const now = Date.now();
   const existingByDevice = await db
