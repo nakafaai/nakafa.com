@@ -22,31 +22,16 @@ export const scheduleContentAnalyticsPartitions = internalMutation({
     let scheduledPartitions = 0;
 
     for (const partition of CONTENT_ANALYTICS_PARTITIONS) {
-      let partitionRow = await ctx.db
+      const partitionRow = await ctx.db
         .query("contentAnalyticsPartitions")
         .withIndex("by_partition", (q) => q.eq("partition", partition))
         .unique();
 
       if (!partitionRow) {
-        const partitionRowId = await ctx.db.insert(
-          "contentAnalyticsPartitions",
-          {
-            partition,
-            leaseExpiresAt: 0,
-            leaseVersion: 0,
-          }
-        );
-
-        partitionRow = await ctx.db.get(
-          "contentAnalyticsPartitions",
-          partitionRowId
-        );
-      }
-
-      if (!partitionRow) {
         throw new ConvexError({
           code: "CONTENT_ANALYTICS_PARTITION_NOT_FOUND",
-          message: "Content analytics partition row was not created.",
+          message:
+            "Content analytics partition rows are missing. Run initializeAnalyticsPartitions first.",
         });
       }
 
@@ -119,12 +104,11 @@ export const processContentAnalyticsPartition = internalMutation({
       .unique();
 
     if (!partitionRow) {
-      return {
-        hasMore: false,
-        partition: args.partition,
-        processed: 0,
-        skipped: true,
-      };
+      throw new ConvexError({
+        code: "CONTENT_ANALYTICS_PARTITION_NOT_FOUND",
+        message:
+          "Content analytics partition rows are missing. Run initializeAnalyticsPartitions first.",
+      });
     }
 
     if (partitionRow.leaseVersion !== args.leaseVersion) {
