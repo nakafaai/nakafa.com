@@ -42,10 +42,28 @@ export const orchestrateReset = workflow.define({
     // Following Convex best practice: Use .paginate() for large datasets
     // Reference: https://docs.convex.dev/database/pagination
     let totalUsers = 0;
-    let continueCursor: string | undefined;
+
+    let result = await step.runMutation(
+      internal.credits.mutations.populateQueueBatch,
+      {
+        jobId,
+        plan: args.plan,
+        resetTimestamp: args.resetTimestamp,
+        paginationOpts: {
+          numItems: RESET_WORKFLOW_CONFIG.populateBatchSize,
+          cursor: null,
+        },
+      }
+    );
 
     while (true) {
-      const result = await step.runMutation(
+      totalUsers += result.usersAdded;
+
+      if (result.isDone) {
+        break;
+      }
+
+      result = await step.runMutation(
         internal.credits.mutations.populateQueueBatch,
         {
           jobId,
@@ -53,18 +71,10 @@ export const orchestrateReset = workflow.define({
           resetTimestamp: args.resetTimestamp,
           paginationOpts: {
             numItems: RESET_WORKFLOW_CONFIG.populateBatchSize,
-            cursor: continueCursor ?? null,
+            cursor: result.continueCursor,
           },
         }
       );
-
-      totalUsers += result.usersAdded;
-
-      if (result.isDone) {
-        break;
-      }
-
-      continueCursor = result.continueCursor;
     }
 
     // Update job with total users count
