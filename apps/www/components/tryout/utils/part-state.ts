@@ -145,11 +145,14 @@ export function deriveTryoutPartPageState({
       attempt: null,
       canStartPart: false,
       partEndReason: null,
+      score: null,
       status: getTryoutPartPageStatus({
         isRuntimePending,
         partAttempt,
         tryout: null,
       }),
+      tryoutAttemptStatus: null,
+      tryoutScoreStatus: null,
     };
   }
 
@@ -173,7 +176,10 @@ export function deriveTryoutPartPageState({
     attempt: partAttempt?.setAttempt ?? null,
     canStartPart: status === "ready",
     partEndReason,
+    score: runtime.partScore,
     status,
+    tryoutAttemptStatus: runtime.tryoutAttempt.status,
+    tryoutScoreStatus: runtime.tryoutAttempt.scoreStatus,
   };
 }
 

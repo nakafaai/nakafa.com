@@ -1,6 +1,7 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { getBoundedExerciseAnswers } from "@repo/backend/convex/tryouts/helpers/loaders";
+import { tryoutProductPolicies } from "@repo/backend/convex/tryouts/products";
 import { loadLatestUserTryoutContext } from "@repo/backend/convex/tryouts/queries/me/helpers";
 import {
   userTryoutLookupArgs,
@@ -39,6 +40,7 @@ export const getUserTryoutPartAttempt = query({
     if (!currentPartAttempt) {
       return {
         expiresAtMs: tryoutAttempt.expiresAt,
+        partScore: null,
         partAttempt: null,
         tryoutAttempt,
       };
@@ -60,9 +62,23 @@ export const getUserTryoutPartAttempt = query({
       attemptId: currentPartAttempt.setAttemptId,
       totalExercises: setAttempt.totalExercises,
     });
+    const isCompletedPart = tryoutAttempt.completedPartIndices.includes(
+      currentPartAttempt.partIndex
+    );
+    const partScore = isCompletedPart
+      ? {
+          correctAnswers: setAttempt.correctAnswers,
+          theta: currentPartAttempt.theta,
+          thetaSE: currentPartAttempt.thetaSE,
+          irtScore: tryoutProductPolicies[
+            context.tryout.product
+          ].scaleThetaToScore(currentPartAttempt.theta),
+        }
+      : null;
 
     return {
       expiresAtMs: tryoutAttempt.expiresAt,
+      partScore,
       partAttempt: {
         partIndex: currentPartAttempt.partIndex,
         partKey: currentPartAttempt.partKey,

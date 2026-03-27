@@ -159,7 +159,7 @@ function TryoutSetPartScore({
   const tTryouts = useTranslations("Tryouts");
 
   return (
-    <div className="grid grid-cols-2 gap-x-8">
+    <div className="grid max-w-md grid-cols-2 gap-x-8 px-1">
       <TryoutSetPartMetric label={tTryouts("score-label")}>
         <TryoutSetPartScoreNumber value={irtScore} />
       </TryoutSetPartMetric>

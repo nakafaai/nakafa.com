@@ -66,6 +66,7 @@ export const tryoutPartAttemptRuntimeValidator = v.object({
 
 export const userTryoutPartAttemptResultValidator = v.object({
   expiresAtMs: v.number(),
+  partScore: nullable(tryoutPartAttemptScoreSummaryValidator),
   partAttempt: nullable(tryoutPartAttemptRuntimeValidator),
   tryoutAttempt: vv.doc("tryoutAttempts"),
 });
