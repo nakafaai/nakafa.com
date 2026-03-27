@@ -7,10 +7,14 @@ import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/materia
 import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
+import {
+  NumberFormat,
+  NumberFormatGroup,
+} from "@repo/design-system/components/ui/number-flow";
 import { cn } from "@repo/design-system/lib/utils";
 import type { FunctionReturnType } from "convex/server";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import { useTryoutAttemptState } from "@/components/tryout/providers/attempt-state";
 import { TryoutStatusBadge } from "@/components/tryout/status-badge";
 import { deriveTryoutSetPartState } from "@/components/tryout/utils/part-state";
@@ -84,68 +88,146 @@ function TryoutSetPart({
       )}
       href={href}
     >
-      <div className="flex flex-1 items-start gap-3">
-        <div className="relative size-10 shrink-0 overflow-hidden rounded-md">
-          <GradientBlock
-            className="absolute inset-0"
-            colorScheme="vibrant"
-            intensity="medium"
-            keyString={part.partKey}
+      <div className="grid w-full gap-4">
+        <div className="flex flex-1 items-start gap-3">
+          <div className="relative size-10 shrink-0 overflow-hidden rounded-md">
+            <GradientBlock
+              className="absolute inset-0"
+              colorScheme="vibrant"
+              intensity="medium"
+              keyString={part.partKey}
+            />
+            <div className="absolute inset-0 flex items-center justify-center">
+              {partIcon ? (
+                <HugeIcons
+                  className="size-4 text-background drop-shadow-md"
+                  icon={partIcon}
+                />
+              ) : null}
+            </div>
+          </div>
+
+          <div className="-mt-1 flex flex-1 flex-col gap-0.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3>{part.label}</h3>
+              {partState.status === "completed" ? (
+                <TryoutStatusBadge status="completed" />
+              ) : null}
+              {partState.status === "in-progress" ? (
+                <TryoutStatusBadge status="in-progress" />
+              ) : null}
+            </div>
+            <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground">
+              {part.questionCount} {tTryouts("question-unit")}
+            </span>
+          </div>
+
+          <HugeIcons
+            className={cn(
+              "size-4 shrink-0 opacity-0 transition-opacity ease-out group-hover:opacity-100",
+              partState.isCurrent && "opacity-100"
+            )}
+            icon={ArrowRight02Icon}
           />
-          <div className="absolute inset-0 flex items-center justify-center">
-            {partIcon ? (
-              <HugeIcons
-                className="size-4 text-background drop-shadow-md"
-                icon={partIcon}
-              />
-            ) : null}
-          </div>
         </div>
 
-        <div className="-mt-1 flex flex-1 flex-col gap-0.5">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3>{part.label}</h3>
-            {partState.status === "completed" ? (
-              <TryoutStatusBadge status="completed" />
-            ) : null}
-            {partState.status === "in-progress" ? (
-              <TryoutStatusBadge status="in-progress" />
-            ) : null}
-          </div>
-          <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground">
-            {part.questionCount} {tTryouts("question-unit")}
-          </span>
-          {partState.score ? (
-            <TryoutSetPartScore irtScore={partState.score.irtScore} />
-          ) : null}
-        </div>
+        {partState.score ? (
+          <TryoutSetPartScore
+            correctAnswers={partState.score.correctAnswers}
+            irtScore={partState.score.irtScore}
+            totalQuestions={part.questionCount}
+          />
+        ) : null}
       </div>
-
-      <HugeIcons
-        className={cn(
-          "size-4 shrink-0 opacity-0 transition-opacity ease-out group-hover:opacity-100",
-          partState.isCurrent && "opacity-100"
-        )}
-        icon={ArrowRight02Icon}
-      />
     </NavigationLink>
   );
 }
 
-function TryoutSetPartScore({ irtScore }: { irtScore: number }) {
+function TryoutSetPartScore({
+  correctAnswers,
+  irtScore,
+  totalQuestions,
+}: {
+  correctAnswers: number;
+  irtScore: number;
+  totalQuestions: number;
+}) {
   const tTryouts = useTranslations("Tryouts");
 
   return (
-    <div className="flex items-center gap-1.5 text-muted-foreground text-xs group-hover:text-accent-foreground">
-      <span>{tTryouts("score-label")}</span>
-      <span className="font-light font-mono text-foreground text-sm tabular-nums leading-none tracking-tight group-hover:text-accent-foreground">
-        <NumberFormat
-          format={{ maximumFractionDigits: 0 }}
-          trend={0}
-          value={irtScore}
+    <div className="grid gap-x-6 gap-y-2 rounded-sm sm:grid-cols-2 sm:gap-x-8">
+      <TryoutSetPartMetric label={tTryouts("score-label")}>
+        <TryoutSetPartScoreNumber value={irtScore} />
+      </TryoutSetPartMetric>
+
+      <TryoutSetPartMetric label={tTryouts("correct-answers-label")}>
+        <TryoutSetPartScoreFraction
+          correct={correctAnswers}
+          total={totalQuestions}
         />
-      </span>
+      </TryoutSetPartMetric>
     </div>
+  );
+}
+
+function TryoutSetPartMetric({
+  children,
+  label,
+}: {
+  children: ReactNode;
+  label: string;
+}) {
+  return (
+    <div className="flex flex-col text-left">
+      <span className="text-[11px] text-muted-foreground uppercase tracking-wide group-hover:text-accent-foreground/80">
+        {label}
+      </span>
+      {children}
+    </div>
+  );
+}
+
+function TryoutSetPartScoreNumber({ value }: { value: number }) {
+  return (
+    <div className="font-light font-mono text-foreground text-xl tabular-nums leading-none tracking-tighter group-hover:text-accent-foreground sm:text-2xl">
+      <NumberFormat
+        format={{ maximumFractionDigits: 0 }}
+        trend={0}
+        value={value}
+      />
+    </div>
+  );
+}
+
+function TryoutSetPartScoreFraction({
+  correct,
+  total,
+}: {
+  correct: number;
+  total: number;
+}) {
+  return (
+    <NumberFormatGroup>
+      <div className="flex items-center gap-1">
+        <div className="font-light font-mono text-foreground text-xl tabular-nums leading-none tracking-tighter group-hover:text-accent-foreground sm:text-2xl">
+          <NumberFormat
+            format={{ maximumFractionDigits: 0 }}
+            trend={0}
+            value={correct}
+          />
+        </div>
+        <span className="font-light font-mono text-muted-foreground text-xl leading-none group-hover:text-accent-foreground/80 sm:text-2xl">
+          /
+        </span>
+        <div className="font-light font-mono text-foreground text-xl tabular-nums leading-none tracking-tighter group-hover:text-accent-foreground sm:text-2xl">
+          <NumberFormat
+            format={{ maximumFractionDigits: 0 }}
+            trend={0}
+            value={total}
+          />
+        </div>
+      </div>
+    </NumberFormatGroup>
   );
 }
 

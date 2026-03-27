@@ -255,7 +255,7 @@
     "restart-dialog-description": "You will start over. Your previous result stays saved.",
     "start-success": "Tryout started. You can choose which section to work on first.",
     "start-error": "We could not start the tryout yet. Please try again.",
-    "score-label": "IRT score",
+    "score-label": "Score",
     "correct-answers-label": "Correct answers",
     "score-status-provisional": "Not final",
     "score-status-official": "Final",

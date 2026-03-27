@@ -36,6 +36,7 @@ export const tryoutPartAttemptSummarySetAttemptValidator = v.object({
 });
 
 export const tryoutPartAttemptScoreSummaryValidator = v.object({
+  correctAnswers: vv.doc("exerciseAttempts").fields.correctAnswers,
   theta: vv.doc("tryoutPartAttempts").fields.theta,
   thetaSE: vv.doc("tryoutPartAttempts").fields.thetaSE,
   irtScore: vv.doc("tryoutAttempts").fields.irtScore,

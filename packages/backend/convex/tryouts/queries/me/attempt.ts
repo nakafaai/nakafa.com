@@ -63,6 +63,7 @@ export const getUserTryoutAttempt = query({
         partKey: partAttempt.partKey,
         score: attempt.completedPartIndices.includes(partAttempt.partIndex)
           ? {
+              correctAnswers: setAttempt.correctAnswers,
               theta: partAttempt.theta,
               thetaSE: partAttempt.thetaSE,
               irtScore: tryoutProductPolicies[tryout.product].scaleThetaToScore(

@@ -121,7 +121,7 @@ function TryoutScoreMetricFraction({
 }) {
   return (
     <NumberFormatGroup>
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex items-center gap-1">
         <div className="font-light font-mono text-5xl text-foreground tabular-nums leading-none tracking-tighter">
           <NumberFormat
             format={{ maximumFractionDigits: 0 }}
