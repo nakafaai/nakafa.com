@@ -3,8 +3,8 @@ import { MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE } from "@repo/backend/convex/aud
 import {
   mergePopularAudioContentItems,
   type PopularAudioContentItem,
-  popularAudioContentItemValidator,
 } from "@repo/backend/convex/contents/helpers/popularity";
+import { popularAudioContentItemValidator } from "@repo/backend/convex/contents/validators";
 import { v } from "convex/values";
 
 /**

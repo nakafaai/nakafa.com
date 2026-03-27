@@ -2,15 +2,8 @@ import {
   MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE,
   MIN_VIEW_THRESHOLD,
 } from "@repo/backend/convex/audioStudies/constants";
-import { audioContentRefValidator } from "@repo/backend/convex/lib/validators/audio";
+import type { popularAudioContentItemValidator } from "@repo/backend/convex/contents/validators";
 import type { Infer } from "convex/values";
-import { v } from "convex/values";
-
-/** Ranked content candidate used when filling the audio generation queue. */
-export const popularAudioContentItemValidator = v.object({
-  ref: audioContentRefValidator,
-  viewCount: v.number(),
-});
 
 export type PopularAudioContentItem = Infer<
   typeof popularAudioContentItemValidator

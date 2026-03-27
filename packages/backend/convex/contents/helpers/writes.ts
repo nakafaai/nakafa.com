@@ -1,9 +1,79 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import type {
-  ContentAnalyticsBatch,
-  SubjectTrendingBucketDelta,
-} from "@repo/backend/convex/contents/helpers/analytics/batch";
+import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import { getTrendingBucketStart } from "@repo/backend/convex/subjectSections/utils";
+
+/** Increments one aggregated counter inside a mutable batch map. */
+function incrementCount<TKey extends string>(
+  map: Map<TKey, number>,
+  key: TKey
+) {
+  map.set(key, (map.get(key) ?? 0) + 1);
+}
+
+/** Builds one analytics batch from append-only queued unique views. */
+function buildContentAnalyticsBatch(
+  queueItems: Doc<"contentViewAnalyticsQueue">[]
+) {
+  const articleViewCounts = new Map<Id<"articleContents">, number>();
+  const exerciseViewCounts = new Map<Id<"exerciseSets">, number>();
+  const subjectViewCounts = new Map<Id<"subjectSections">, number>();
+  const subjectTrendingBuckets = new Map<
+    string,
+    {
+      bucketStart: number;
+      contentId: Id<"subjectSections">;
+      locale: Locale;
+      viewCount: number;
+    }
+  >();
+
+  for (const queueItem of queueItems) {
+    switch (queueItem.contentRef.type) {
+      case "article": {
+        incrementCount(articleViewCounts, queueItem.contentRef.id);
+        break;
+      }
+
+      case "subject": {
+        incrementCount(subjectViewCounts, queueItem.contentRef.id);
+
+        const bucketStart = getTrendingBucketStart(queueItem.viewedAt);
+        const bucketKey = `${queueItem.locale}:${bucketStart}:${queueItem.contentRef.id}`;
+        const existingBucket = subjectTrendingBuckets.get(bucketKey);
+
+        if (existingBucket) {
+          existingBucket.viewCount += 1;
+          break;
+        }
+
+        subjectTrendingBuckets.set(bucketKey, {
+          bucketStart,
+          contentId: queueItem.contentRef.id,
+          locale: queueItem.locale,
+          viewCount: 1,
+        });
+        break;
+      }
+
+      case "exercise": {
+        incrementCount(exerciseViewCounts, queueItem.contentRef.id);
+        break;
+      }
+
+      default: {
+        break;
+      }
+    }
+  }
+
+  return {
+    articleViewCounts,
+    exerciseViewCounts,
+    subjectViewCounts,
+    subjectTrendingBuckets,
+  };
+}
 
 /** Applies one article popularity delta to the derived table. */
 async function applyArticlePopularityDelta(
@@ -113,8 +183,12 @@ async function applySubjectTrendingBucketDelta(
     locale,
     updatedAt,
     viewCount,
-  }: SubjectTrendingBucketDelta & {
+  }: {
+    bucketStart: number;
+    contentId: Id<"subjectSections">;
+    locale: Locale;
     updatedAt: number;
+    viewCount: number;
   }
 ) {
   const currentRow = await ctx.db
@@ -147,8 +221,9 @@ async function applySubjectTrendingBucketDelta(
 /** Folds queued unique views into derived popularity tables. */
 export async function applyContentAnalyticsBatch(
   ctx: MutationCtx,
-  analyticsBatch: ContentAnalyticsBatch
+  queueItems: Doc<"contentViewAnalyticsQueue">[]
 ) {
+  const analyticsBatch = buildContentAnalyticsBatch(queueItems);
   const updatedAt = Date.now();
 
   for (const [contentId, viewCount] of analyticsBatch.articleViewCounts) {

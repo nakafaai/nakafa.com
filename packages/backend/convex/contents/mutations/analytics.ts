@@ -4,9 +4,8 @@ import {
   CONTENT_ANALYTICS_LEASE_DURATION_MS,
   CONTENT_ANALYTICS_PARTITIONS,
 } from "@repo/backend/convex/contents/constants";
-import { buildContentAnalyticsBatch } from "@repo/backend/convex/contents/helpers/analytics/batch";
-import { applyContentAnalyticsBatch } from "@repo/backend/convex/contents/helpers/analytics/writes";
 import { isContentAnalyticsPartition } from "@repo/backend/convex/contents/helpers/partitions";
+import { applyContentAnalyticsBatch } from "@repo/backend/convex/contents/helpers/writes";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { ConvexError, v } from "convex/values";
@@ -148,10 +147,7 @@ export const processContentAnalyticsPartition = internalMutation({
       };
     }
 
-    await applyContentAnalyticsBatch(
-      ctx,
-      buildContentAnalyticsBatch(queueItems)
-    );
+    await applyContentAnalyticsBatch(ctx, queueItems);
 
     for (const queueItem of queueItems) {
       await ctx.db.delete("contentViewAnalyticsQueue", queueItem._id);
