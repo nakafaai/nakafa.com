@@ -42,7 +42,7 @@
     "@repo/ai": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
-    "ai": "^6.0.140",
+    "ai": "^6.0.141",
     "better-auth": "1.5.6",
     "buffer": "^6.0.3",
     "convex": "^1.34.1",

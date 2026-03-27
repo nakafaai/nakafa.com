@@ -30,7 +30,7 @@
     "@tabler/icons-react": "^3.41.0",
     "@tailwindcss/postcss": "^4.2.2",
     "@types/mdx": "^2.0.13",
-    "ai": "^6.0.140",
+    "ai": "^6.0.141",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
