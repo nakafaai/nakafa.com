@@ -159,7 +159,7 @@ function TryoutSetPartScore({
   const tTryouts = useTranslations("Tryouts");
 
   return (
-    <div className="grid gap-x-6 gap-y-2 rounded-sm sm:grid-cols-2 sm:gap-x-8">
+    <div className="grid grid-cols-2 gap-x-8">
       <TryoutSetPartMetric label={tTryouts("score-label")}>
         <TryoutSetPartScoreNumber value={irtScore} />
       </TryoutSetPartMetric>
@@ -183,7 +183,7 @@ function TryoutSetPartMetric({
 }) {
   return (
     <div className="flex flex-col text-left">
-      <span className="text-[11px] text-muted-foreground uppercase tracking-wide group-hover:text-accent-foreground/80">
+      <span className="text-muted-foreground text-xs group-hover:text-accent-foreground/80">
         {label}
       </span>
       {children}
