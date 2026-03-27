@@ -6,6 +6,16 @@ const crons = cronJobs();
 const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
 
 /**
+ * Ensures analytics partition lease rows exist before workers run.
+ */
+crons.interval(
+  "initialize content analytics partitions",
+  { minutes: 1 },
+  internal.contents.mutations.setup.initializeAnalyticsPartitions,
+  {}
+);
+
+/**
  * Schedules idle content analytics partitions that have queued rows.
  */
 crons.interval(
@@ -21,7 +31,7 @@ crons.interval(
 crons.interval(
   "populate audio generation queue",
   { minutes: 30 },
-  internal.contents.mutations.audio.populateAudioQueue,
+  internal.contents.actions.queue.populateAudioQueue,
   {}
 );
 

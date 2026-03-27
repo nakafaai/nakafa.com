@@ -19,6 +19,7 @@ export const scheduleContentAnalyticsPartitions = internalMutation({
   handler: async (ctx) => {
     const now = Date.now();
     let scheduledPartitions = 0;
+    let missingPartitions = 0;
 
     for (const partition of CONTENT_ANALYTICS_PARTITIONS) {
       const partitionRow = await ctx.db
@@ -27,11 +28,8 @@ export const scheduleContentAnalyticsPartitions = internalMutation({
         .unique();
 
       if (!partitionRow) {
-        throw new ConvexError({
-          code: "CONTENT_ANALYTICS_PARTITION_NOT_FOUND",
-          message:
-            "Content analytics partition rows are missing. Run initializeAnalyticsPartitions first.",
-        });
+        missingPartitions++;
+        continue;
       }
 
       const hasBacklog = await ctx.db
@@ -72,6 +70,15 @@ export const scheduleContentAnalyticsPartitions = internalMutation({
       });
     }
 
+    if (missingPartitions > 0) {
+      logger.warn(
+        "Skipped analytics partitions because setup rows are missing",
+        {
+          missingPartitions,
+        }
+      );
+    }
+
     return { scheduledPartitions };
   },
 });
@@ -103,11 +110,12 @@ export const processContentAnalyticsPartition = internalMutation({
       .unique();
 
     if (!partitionRow) {
-      throw new ConvexError({
-        code: "CONTENT_ANALYTICS_PARTITION_NOT_FOUND",
-        message:
-          "Content analytics partition rows are missing. Run initializeAnalyticsPartitions first.",
-      });
+      return {
+        hasMore: false,
+        partition: args.partition,
+        processed: 0,
+        skipped: true,
+      };
     }
 
     if (partitionRow.leaseVersion !== args.leaseVersion) {

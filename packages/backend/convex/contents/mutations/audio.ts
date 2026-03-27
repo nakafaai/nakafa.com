@@ -1,5 +1,4 @@
 import {
-  MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE,
   MIN_VIEW_THRESHOLD,
   RETRY_CONFIG,
   SUPPORTED_LOCALES,
@@ -9,66 +8,29 @@ import {
   getContentRefBySlugAndLocale,
   getContentSlug,
 } from "@repo/backend/convex/audioStudies/utils";
-import {
-  mergePopularAudioContentItems,
-  type PopularAudioContentItem,
-} from "@repo/backend/convex/contents/helpers/popularity";
+import { popularAudioContentItemValidator } from "@repo/backend/convex/contents/validators";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { v } from "convex/values";
 
 /**
- * Reads current popularity rankings, then queues locale-specific audio work.
- *
- * This job runs on a cron, so it does not sit on the user-facing content view
- * write path.
+ * Queues locale-specific audio work from already-ranked popularity items.
  */
-export const populateAudioQueue = internalMutation({
-  args: {},
+export const enqueuePopularContentForAudio = internalMutation({
+  args: {
+    items: v.array(popularAudioContentItemValidator),
+  },
   returns: v.object({
     processed: v.number(),
     queued: v.number(),
   }),
-  handler: async (ctx) => {
-    logger.info("Populating audio queue started");
-
-    const [articleRows, subjectRows] = await Promise.all([
-      ctx.db
-        .query("articlePopularity")
-        .withIndex("by_viewCount_and_contentId")
-        .order("desc")
-        .take(MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE),
-      ctx.db
-        .query("subjectPopularity")
-        .withIndex("by_viewCount_and_contentId")
-        .order("desc")
-        .take(MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE),
-    ]);
-
-    const items = mergePopularAudioContentItems([
-      ...articleRows.map(
-        (row) =>
-          ({
-            ref: { type: "article", id: row.contentId },
-            viewCount: row.viewCount,
-          }) satisfies PopularAudioContentItem
-      ),
-      ...subjectRows.map(
-        (row) =>
-          ({
-            ref: { type: "subject", id: row.contentId },
-            viewCount: row.viewCount,
-          }) satisfies PopularAudioContentItem
-      ),
-    ]);
-
-    if (items.length === 0) {
-      logger.info("No popular content found for audio queue population");
+  handler: async (ctx, args) => {
+    if (args.items.length === 0) {
       return { processed: 0, queued: 0 };
     }
 
     let totalQueued = 0;
-    const sortedItems = [...items].sort(
+    const sortedItems = [...args.items].sort(
       (left, right) => right.viewCount - left.viewCount
     );
 
@@ -184,10 +146,6 @@ export const populateAudioQueue = internalMutation({
       }
     }
 
-    const result = { processed: sortedItems.length, queued: totalQueued };
-
-    logger.info("Populated audio queue completed", result);
-
-    return result;
+    return { processed: sortedItems.length, queued: totalQueued };
   },
 });

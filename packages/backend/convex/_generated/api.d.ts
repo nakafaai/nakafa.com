@@ -77,6 +77,7 @@ import type * as contentSync_queries_counts from "../contentSync/queries/counts.
 import type * as contentSync_queries_integrity from "../contentSync/queries/integrity.js";
 import type * as contentSync_queries_stale from "../contentSync/queries/stale.js";
 import type * as contentSync_queries_tryouts from "../contentSync/queries/tryouts.js";
+import type * as contents_actions_queue from "../contents/actions/queue.js";
 import type * as contents_constants from "../contents/constants.js";
 import type * as contents_helpers_partitions from "../contents/helpers/partitions.js";
 import type * as contents_helpers_popularity from "../contents/helpers/popularity.js";
@@ -308,6 +309,7 @@ declare const fullApi: ApiFromModules<{
   "contentSync/queries/integrity": typeof contentSync_queries_integrity;
   "contentSync/queries/stale": typeof contentSync_queries_stale;
   "contentSync/queries/tryouts": typeof contentSync_queries_tryouts;
+  "contents/actions/queue": typeof contents_actions_queue;
   "contents/constants": typeof contents_constants;
   "contents/helpers/partitions": typeof contents_helpers_partitions;
   "contents/helpers/popularity": typeof contents_helpers_popularity;
