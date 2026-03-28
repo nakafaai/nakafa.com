@@ -63,24 +63,7 @@ export const upsertCampaignAndLink = internalMutation({
       .query("tryoutAccessLinks")
       .withIndex("by_code", (q) => q.eq("code", code))
       .unique();
-
-    if (
-      existingCampaign &&
-      existingLink &&
-      existingCampaign._id !== existingLink.campaignId
-    ) {
-      throw new ConvexError({
-        code: "EVENT_SETUP_CONFLICT",
-        message:
-          "Event access code already belongs to a different campaign slug.",
-      });
-    }
-
-    const linkedCampaign = existingLink
-      ? await ctx.db.get("tryoutAccessCampaigns", existingLink.campaignId)
-      : null;
-
-    const campaignPatch = {
+    const nextCampaign = {
       enabled: args.campaign.enabled,
       endsAt: args.campaign.endsAt,
       grantDurationDays: args.campaign.grantDurationDays,
@@ -90,34 +73,53 @@ export const upsertCampaignAndLink = internalMutation({
       startsAt: args.campaign.startsAt,
     };
 
-    const targetCampaign = existingCampaign ?? linkedCampaign;
-    const campaignId = targetCampaign
-      ? targetCampaign._id
-      : await ctx.db.insert("tryoutAccessCampaigns", campaignPatch);
+    if (!(existingCampaign || existingLink)) {
+      const campaignId = await ctx.db.insert(
+        "tryoutAccessCampaigns",
+        nextCampaign
+      );
+      const linkId = await ctx.db.insert("tryoutAccessLinks", {
+        campaignId,
+        code,
+        enabled: args.link.enabled,
+        label: args.link.label,
+      });
 
-    if (targetCampaign) {
-      await ctx.db.patch("tryoutAccessCampaigns", campaignId, campaignPatch);
+      return {
+        campaignId,
+        code,
+        linkId,
+      };
     }
 
-    const linkPatch = {
+    if (!(existingCampaign && existingLink)) {
+      throw new ConvexError({
+        code: "EVENT_SETUP_CONFLICT",
+        message: "Event access slug and code must reference the same record.",
+      });
+    }
+
+    if (existingLink.campaignId !== existingCampaign._id) {
+      throw new ConvexError({
+        code: "EVENT_SETUP_CONFLICT",
+        message: "Event access slug and code point to different campaigns.",
+      });
+    }
+
+    const campaignId = existingCampaign._id;
+
+    await ctx.db.patch("tryoutAccessCampaigns", campaignId, nextCampaign);
+    await ctx.db.patch("tryoutAccessLinks", existingLink._id, {
       campaignId,
       code,
       enabled: args.link.enabled,
       label: args.link.label,
-    };
-
-    const linkId = existingLink
-      ? existingLink._id
-      : await ctx.db.insert("tryoutAccessLinks", linkPatch);
-
-    if (existingLink) {
-      await ctx.db.patch("tryoutAccessLinks", linkId, linkPatch);
-    }
+    });
 
     return {
       campaignId,
       code,
-      linkId,
+      linkId: existingLink._id,
     };
   },
 });

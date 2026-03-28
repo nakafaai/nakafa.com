@@ -93,24 +93,8 @@ export async function getTryoutAccessEventByCode(
   };
 }
 
-/** Loads the single grant a user can hold for one campaign. */
-export function getTryoutAccessGrantByCampaign(
-  db: TryoutAccessDbReader,
-  {
-    campaignId,
-    userId,
-  }: Pick<Doc<"tryoutAccessGrants">, "campaignId" | "userId">
-) {
-  return db
-    .query("tryoutAccessGrants")
-    .withIndex("by_userId_and_campaignId", (q) =>
-      q.eq("userId", userId).eq("campaignId", campaignId)
-    )
-    .unique();
-}
-
 /** Resolves whether a user can start a tryout from paid or event access. */
-export async function resolveTryoutAccessState(
+export async function hasTryoutAccess(
   db: TryoutAccessDbReader,
   {
     now,
@@ -148,25 +132,9 @@ export async function resolveTryoutAccessState(
       .first();
 
     if (subscription) {
-      return {
-        canStart: true,
-        endsAt: null,
-        source: "subscription" as const,
-      };
+      return true;
     }
   }
 
-  if (activeGrant) {
-    return {
-      canStart: true,
-      endsAt: activeGrant.endsAt,
-      source: "event" as const,
-    };
-  }
-
-  return {
-    canStart: false,
-    endsAt: null,
-    source: null,
-  };
+  return activeGrant !== null;
 }

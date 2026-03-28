@@ -2,7 +2,6 @@ import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import {
   getTryoutAccessEventByCode,
-  getTryoutAccessGrantByCampaign,
   getTryoutAccessGrantEndsAt,
   getTryoutAccessUnavailableReason,
   isTryoutAccessGrantActive,
@@ -43,10 +42,12 @@ export const redeemEventAccess = mutation({
       });
     }
 
-    const existingGrant = await getTryoutAccessGrantByCampaign(ctx.db, {
-      campaignId: eventAccess.campaign._id,
-      userId: appUser._id,
-    });
+    const existingGrant = await ctx.db
+      .query("tryoutAccessGrants")
+      .withIndex("by_userId_and_campaignId", (q) =>
+        q.eq("userId", appUser._id).eq("campaignId", eventAccess.campaign._id)
+      )
+      .unique();
 
     if (existingGrant) {
       if (isTryoutAccessGrantActive(existingGrant, now)) {

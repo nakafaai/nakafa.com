@@ -15,7 +15,7 @@ import {
 } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
-import { format } from "date-fns";
+import { format, startOfMinute } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -31,35 +31,18 @@ function formatDate(locale: string, value: number) {
   return format(value, "PPP", { locale: getLocale(currentLocale) });
 }
 
-function getUnavailableDescription(
-  reason: "disabled" | "ended" | "invalid-code" | "not-started",
-  tEvent: ReturnType<typeof useTranslations>
-) {
-  if (reason === "disabled") {
-    return tEvent("unavailable-disabled");
-  }
-
-  if (reason === "not-started") {
-    return tEvent("unavailable-not-started");
-  }
-
-  if (reason === "ended") {
-    return tEvent("unavailable-ended");
-  }
-
-  return tEvent("unavailable-invalid-code");
-}
-
 export function EventAccessPage({ code }: Props) {
   const tCommon = useTranslations("Common");
   const tEvent = useTranslations("EventAccess");
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
-  const [queryNow, setQueryNow] = useState(Date.now);
+  const [queryNow, setQueryNow] = useState(() =>
+    startOfMinute(new Date()).getTime()
+  );
   const [isActionPending, startTransition] = useTransition();
   const refreshQueryClock = useInterval(() => {
-    setQueryNow(Date.now());
+    setQueryNow(startOfMinute(new Date()).getTime());
   }, 60_000);
   const { data: pageState, isPending } = useQueryWithStatus(
     api.tryoutAccess.queries.getEventPageState,
@@ -90,8 +73,22 @@ export function EventAccessPage({ code }: Props) {
     }
 
     if (pageState.kind === "unavailable") {
+      let description = tEvent("unavailable-invalid-code");
+
+      if (pageState.reason === "disabled") {
+        description = tEvent("unavailable-disabled");
+      }
+
+      if (pageState.reason === "not-started") {
+        description = tEvent("unavailable-not-started");
+      }
+
+      if (pageState.reason === "ended") {
+        description = tEvent("unavailable-ended");
+      }
+
       return {
-        description: getUnavailableDescription(pageState.reason, tEvent),
+        description,
         primaryCta: null,
         title: tEvent("title"),
       };
@@ -167,7 +164,7 @@ export function EventAccessPage({ code }: Props) {
             position: "bottom-center",
           }
         );
-        setQueryNow(Date.now());
+        setQueryNow(startOfMinute(new Date()).getTime());
       } catch (error) {
         if (error instanceof ConvexError) {
           const errorData = error.data;

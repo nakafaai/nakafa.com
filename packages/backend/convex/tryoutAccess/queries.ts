@@ -5,10 +5,9 @@ import {
 } from "@repo/backend/convex/lib/helpers/auth";
 import {
   getTryoutAccessEventByCode,
-  getTryoutAccessGrantByCampaign,
   getTryoutAccessUnavailableReason,
+  hasTryoutAccess,
   isTryoutAccessGrantActive,
-  resolveTryoutAccessState,
 } from "@repo/backend/convex/tryoutAccess/helpers/access";
 import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
 import { v } from "convex/values";
@@ -76,10 +75,14 @@ export const getEventPageState = query({
     const user = await getOptionalAppUser(ctx);
 
     if (user) {
-      const existingGrant = await getTryoutAccessGrantByCampaign(ctx.db, {
-        campaignId: eventAccess.campaign._id,
-        userId: user.appUser._id,
-      });
+      const existingGrant = await ctx.db
+        .query("tryoutAccessGrants")
+        .withIndex("by_userId_and_campaignId", (q) =>
+          q
+            .eq("userId", user.appUser._id)
+            .eq("campaignId", eventAccess.campaign._id)
+        )
+        .unique();
 
       if (existingGrant) {
         if (isTryoutAccessGrantActive(existingGrant, args.now)) {
@@ -141,12 +144,11 @@ export const getTryoutAccessState = query({
   returns: v.boolean(),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
-    const accessState = await resolveTryoutAccessState(ctx.db, {
+
+    return hasTryoutAccess(ctx.db, {
       now: args.now,
       product: args.product,
       userId: appUser._id,
     });
-
-    return accessState.canStart;
   },
 });

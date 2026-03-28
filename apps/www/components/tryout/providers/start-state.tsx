@@ -9,6 +9,7 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { useAction, useMutation } from "convex/react";
+import { startOfMinute } from "date-fns";
 import { useTranslations } from "next-intl";
 import {
   type PropsWithChildren,
@@ -57,7 +58,9 @@ function useTryoutStartValue(): TryoutStartContextValue {
   const pathname = usePathname();
   const router = useRouter();
   const [isActionPending, startTransition] = useTransition();
-  const [accessQueryNow, setAccessQueryNow] = useState(Date.now);
+  const [accessQueryNow, setAccessQueryNow] = useState(() =>
+    startOfMinute(new Date()).getTime()
+  );
   const [isDialogOpen, { close: closeDialog, open: openDialog }] =
     useDisclosure(false);
   const attemptData = useTryoutAttemptState((state) => state.attemptData);
@@ -71,7 +74,7 @@ function useTryoutStartValue(): TryoutStartContextValue {
   const resumePartKey = useTryoutAttemptState((state) => state.resumePartKey);
   const tryoutSlug = useTryoutAttemptState((state) => state.params.tryoutSlug);
   const refreshAccessClock = useInterval(() => {
-    setAccessQueryNow(Date.now());
+    setAccessQueryNow(startOfMinute(new Date()).getTime());
   }, 60_000);
   const { data: hasAccess, isPending: isAccessPending } = useQueryWithStatus(
     api.tryoutAccess.queries.getTryoutAccessState,
@@ -93,7 +96,7 @@ function useTryoutStartValue(): TryoutStartContextValue {
       return;
     }
 
-    setAccessQueryNow(Date.now());
+    setAccessQueryNow(startOfMinute(new Date()).getTime());
     refreshAccessClock.start();
 
     return () => {
