@@ -7,6 +7,7 @@ import {
   scaleQualityRebuildResultValidator,
   upsertTryoutScaleQualityCheck,
 } from "@repo/backend/convex/irt/scales/quality";
+import { irtScaleQualityRefreshWorkpool } from "@repo/backend/convex/irt/workpool";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
 
@@ -46,8 +47,19 @@ export const rebuildScaleQualityChecksPage = internalMutation({
     });
 
     for (const tryout of page.page) {
-      await ctx.scheduler.runAfter(
-        0,
+      const pendingScalePublication = await ctx.db
+        .query("irtScalePublicationQueue")
+        .withIndex("by_tryoutId_and_enqueuedAt", (q) =>
+          q.eq("tryoutId", tryout._id)
+        )
+        .first();
+
+      if (pendingScalePublication) {
+        continue;
+      }
+
+      await irtScaleQualityRefreshWorkpool.enqueueMutation(
+        ctx,
         internal.irt.mutations.internal.scales.refreshScaleQualityCheck,
         { tryoutId: tryout._id }
       );

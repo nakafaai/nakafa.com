@@ -8,3 +8,11 @@ export const irtCalibrationSyncWorkpool = new Workpool(
     maxParallelism: 1,
   }
 );
+
+/** Serialize scale-quality refresh work to avoid conflicting writes. */
+export const irtScaleQualityRefreshWorkpool = new Workpool(
+  components.irtScaleQualityRefreshWorkpool,
+  {
+    maxParallelism: 1,
+  }
+);
