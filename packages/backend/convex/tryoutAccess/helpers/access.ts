@@ -14,10 +14,12 @@ const tryoutPaidProductIds = {
 
 type TryoutAccessDbReader = MutationCtx["db"] | QueryCtx["db"];
 
+/** Normalizes a public event code so reads and writes share one canonical key. */
 export function normalizeTryoutAccessCode(value: string) {
   return value.trim().toLowerCase();
 }
 
+/** Calculates the event grant end timestamp from the redeem time and duration. */
 export function getTryoutAccessGrantEndsAt(
   redeemedAt: number,
   grantDurationDays: number
@@ -25,6 +27,7 @@ export function getTryoutAccessGrantEndsAt(
   return redeemedAt + grantDurationDays * DAY_IN_MS;
 }
 
+/** Returns true when an event grant still allows tryout access. */
 export function isTryoutAccessGrantActive(
   grant: Pick<Doc<"tryoutAccessGrants">, "endsAt">,
   now: number
@@ -32,6 +35,7 @@ export function isTryoutAccessGrantActive(
   return grant.endsAt > now;
 }
 
+/** Explains why a campaign link cannot currently be redeemed. */
 export function getTryoutAccessUnavailableReason(
   eventAccess: {
     campaign: Pick<
@@ -57,6 +61,7 @@ export function getTryoutAccessUnavailableReason(
   return null;
 }
 
+/** Loads the campaign and link documents for one public event code. */
 export async function getTryoutAccessEventByCode(
   db: TryoutAccessDbReader,
   code: string
@@ -88,6 +93,7 @@ export async function getTryoutAccessEventByCode(
   };
 }
 
+/** Loads the single grant a user can hold for one campaign. */
 export function getTryoutAccessGrantByCampaign(
   db: TryoutAccessDbReader,
   {
@@ -103,6 +109,7 @@ export function getTryoutAccessGrantByCampaign(
     .unique();
 }
 
+/** Resolves whether a user can start a tryout from paid or event access. */
 export async function resolveTryoutAccessState(
   db: TryoutAccessDbReader,
   {

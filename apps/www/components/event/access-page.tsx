@@ -15,16 +15,20 @@ import {
 } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
+import { format } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { getLocale } from "@/lib/utils/date";
 
 interface Props {
   code: string;
 }
 
 function formatDate(locale: string, value: number) {
-  return new Intl.DateTimeFormat(locale, { dateStyle: "long" }).format(value);
+  const currentLocale = locale === "id" ? "id" : "en";
+
+  return format(value, "PPP", { locale: getLocale(currentLocale) });
 }
 
 function getUnavailableDescription(
