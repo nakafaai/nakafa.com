@@ -2,6 +2,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { irtCalibrationResultValidator } from "@repo/backend/convex/irt/validators";
+import { irtScalePublicationQueueWorkpool } from "@repo/backend/convex/irt/workpool";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { ConvexError, v } from "convex/values";
 import { asyncMap } from "convex-helpers";
@@ -10,7 +11,7 @@ const MAX_AFFECTED_TRYOUTS_PER_SET = 100;
 
 /**
  * Persist calibrated item parameters, mark the run complete, and enqueue any
- * affected tryouts for scale publication and quality refresh.
+ * affected tryouts for scale publication.
  */
 export const completeCalibrationRun = internalMutation({
   args: {
@@ -174,23 +175,9 @@ export const completeCalibrationRun = internalMutation({
     await asyncMap(
       [...new Set(affectedTryoutSets.map((tryoutSet) => tryoutSet.tryoutId))],
       async (tryoutId) => {
-        const existingQueueEntry = await ctx.db
-          .query("irtScalePublicationQueue")
-          .withIndex("by_tryoutId_and_enqueuedAt", (q) =>
-            q.eq("tryoutId", tryoutId)
-          )
-          .first();
-
-        if (!existingQueueEntry) {
-          await ctx.db.insert("irtScalePublicationQueue", {
-            tryoutId,
-            enqueuedAt: now,
-          });
-        }
-
-        await ctx.scheduler.runAfter(
-          0,
-          internal.irt.mutations.internal.scales.refreshScaleQualityCheck,
+        await irtScalePublicationQueueWorkpool.enqueueMutation(
+          ctx,
+          internal.irt.mutations.internal.queue.enqueueScalePublication,
           { tryoutId }
         );
 
