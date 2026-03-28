@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowLeft02Icon, Rocket01Icon } from "@hugeicons/core-free-icons";
+import { useInterval } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -15,7 +16,7 @@ import {
 import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 interface Props {
@@ -51,8 +52,11 @@ export function EventAccessPage({ code }: Props) {
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
-  const [queryNow] = useState(() => Date.now());
+  const [queryNow, setQueryNow] = useState(Date.now);
   const [isActionPending, startTransition] = useTransition();
+  const refreshQueryClock = useInterval(() => {
+    setQueryNow(Date.now());
+  }, 60_000);
   const { data: pageState, isPending } = useQueryWithStatus(
     api.tryoutAccess.queries.getEventPageState,
     {
@@ -63,6 +67,14 @@ export function EventAccessPage({ code }: Props) {
   const redeemEventAccess = useMutation(
     api.tryoutAccess.mutations.redeemEventAccess
   );
+
+  useEffect(() => {
+    refreshQueryClock.start();
+
+    return () => {
+      refreshQueryClock.stop();
+    };
+  }, [refreshQueryClock]);
 
   const statusCopy = useMemo(() => {
     if (!pageState) {
@@ -83,7 +95,10 @@ export function EventAccessPage({ code }: Props) {
 
     if (pageState.kind === "sign-in") {
       return {
-        description: tEvent("sign-in-description", { name: pageState.name }),
+        description: tEvent("sign-in-description", {
+          days: pageState.grantDurationDays,
+          name: pageState.name,
+        }),
         primaryCta: tEvent("sign-in-cta"),
         title: pageState.name,
       };
@@ -91,7 +106,10 @@ export function EventAccessPage({ code }: Props) {
 
     if (pageState.kind === "ready") {
       return {
-        description: tEvent("ready-description", { name: pageState.name }),
+        description: tEvent("ready-description", {
+          days: pageState.grantDurationDays,
+          name: pageState.name,
+        }),
         primaryCta: tEvent("redeem-cta"),
         title: pageState.name,
       };
@@ -145,6 +163,7 @@ export function EventAccessPage({ code }: Props) {
             position: "bottom-center",
           }
         );
+        setQueryNow(Date.now());
       } catch (error) {
         if (error instanceof ConvexError) {
           const errorData = error.data;

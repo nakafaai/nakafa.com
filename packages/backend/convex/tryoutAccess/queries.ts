@@ -21,12 +21,6 @@ const tryoutAccessUnavailableReasonValidator = literals(
   "ended"
 );
 
-const tryoutAccessSourceValidator = v.union(
-  v.literal("subscription"),
-  v.literal("event"),
-  v.null()
-);
-
 const eventPageStateValidator = v.union(
   v.object({
     kind: v.literal("unavailable"),
@@ -36,11 +30,13 @@ const eventPageStateValidator = v.union(
   }),
   v.object({
     kind: v.literal("sign-in"),
+    grantDurationDays: v.number(),
     name: v.string(),
     product: tryoutProductValidator,
   }),
   v.object({
     kind: v.literal("ready"),
+    grantDurationDays: v.number(),
     name: v.string(),
     product: tryoutProductValidator,
   }),
@@ -121,6 +117,7 @@ export const getEventPageState = query({
     if (!user) {
       return {
         kind: "sign-in" as const,
+        grantDurationDays: eventAccess.campaign.grantDurationDays,
         name: eventAccess.campaign.name,
         product: eventAccess.campaign.product,
       };
@@ -128,6 +125,7 @@ export const getEventPageState = query({
 
     return {
       kind: "ready" as const,
+      grantDurationDays: eventAccess.campaign.grantDurationDays,
       name: eventAccess.campaign.name,
       product: eventAccess.campaign.product,
     };
@@ -140,18 +138,15 @@ export const getTryoutAccessState = query({
     now: v.number(),
     product: tryoutProductValidator,
   },
-  returns: v.object({
-    canStart: v.boolean(),
-    endsAt: v.union(v.number(), v.null()),
-    source: tryoutAccessSourceValidator,
-  }),
+  returns: v.boolean(),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
-
-    return resolveTryoutAccessState(ctx.db, {
+    const accessState = await resolveTryoutAccessState(ctx.db, {
       now: args.now,
       product: args.product,
       userId: appUser._id,
     });
+
+    return accessState.canStart;
   },
 });

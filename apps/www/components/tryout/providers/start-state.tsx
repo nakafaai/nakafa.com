@@ -1,6 +1,6 @@
 "use client";
 
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure, useInterval } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import { products } from "@repo/backend/convex/utils/polar/products";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
@@ -13,6 +13,7 @@ import { useTranslations } from "next-intl";
 import {
   type PropsWithChildren,
   useCallback,
+  useEffect,
   useMemo,
   useState,
   useTransition,
@@ -56,7 +57,7 @@ function useTryoutStartValue(): TryoutStartContextValue {
   const pathname = usePathname();
   const router = useRouter();
   const [isActionPending, startTransition] = useTransition();
-  const [accessQueryNow] = useState(() => Date.now());
+  const [accessQueryNow, setAccessQueryNow] = useState(Date.now);
   const [isDialogOpen, { close: closeDialog, open: openDialog }] =
     useDisclosure(false);
   const attemptData = useTryoutAttemptState((state) => state.attemptData);
@@ -69,7 +70,10 @@ function useTryoutStartValue(): TryoutStartContextValue {
   const remainingTime = useTryoutAttemptState((state) => state.remainingTime);
   const resumePartKey = useTryoutAttemptState((state) => state.resumePartKey);
   const tryoutSlug = useTryoutAttemptState((state) => state.params.tryoutSlug);
-  const { data: accessState, isPending: isAccessPending } = useQueryWithStatus(
+  const refreshAccessClock = useInterval(() => {
+    setAccessQueryNow(Date.now());
+  }, 60_000);
+  const { data: hasAccess, isPending: isAccessPending } = useQueryWithStatus(
     api.tryoutAccess.queries.getTryoutAccessState,
     !isUserPending && user
       ? {
@@ -78,11 +82,24 @@ function useTryoutStartValue(): TryoutStartContextValue {
         }
       : "skip"
   );
-  const hasAccess = accessState?.canStart;
   const startTryout = useMutation(api.tryouts.mutations.attempts.startTryout);
   const generateCheckoutLink = useAction(
     api.customers.actions.generateCheckoutLink
   );
+
+  useEffect(() => {
+    if (!user) {
+      refreshAccessClock.stop();
+      return;
+    }
+
+    setAccessQueryNow(Date.now());
+    refreshAccessClock.start();
+
+    return () => {
+      refreshAccessClock.stop();
+    };
+  }, [refreshAccessClock, user]);
 
   const isReady = !(
     isUserPending ||
