@@ -5,12 +5,6 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from "@repo/design-system/components/ui/empty";
 import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
@@ -22,7 +16,7 @@ export function HomeContinueLearning() {
   const locale = useLocale();
 
   const { data, isPending } = useQueryWithStatus(
-    api.contents.queries.getRecentlyViewed,
+    api.contents.queries.recent.getRecentlyViewed,
     {
       locale,
       limit: 5,
@@ -34,30 +28,7 @@ export function HomeContinueLearning() {
   }
 
   if (!data || data.length === 0) {
-    return (
-      <section className="flex flex-col gap-4">
-        <h2 className="sr-only px-3">{t("continue-learning")}</h2>
-        <Empty className="items-start md:p-0">
-          <EmptyHeader className="items-start">
-            <EmptyTitle>{t("no-recent-views")}</EmptyTitle>
-            <EmptyDescription>
-              {t("no-recent-views-description")}
-            </EmptyDescription>
-          </EmptyHeader>
-          <Button
-            className="w-fit"
-            nativeButton={false}
-            render={
-              <NavigationLink href="/search">
-                <HugeIcons className="size-4" icon={Search02Icon} />
-                {t("start-learning")}
-              </NavigationLink>
-            }
-            variant="outline"
-          />
-        </Empty>
-      </section>
-    );
+    return null;
   }
 
   return (

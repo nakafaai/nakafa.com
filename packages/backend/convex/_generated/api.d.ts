@@ -13,8 +13,8 @@ import type * as audioStudies_constants from "../audioStudies/constants.js";
 import type * as audioStudies_helpers_contentAudios from "../audioStudies/helpers/contentAudios.js";
 import type * as audioStudies_mutations_contentAudios from "../audioStudies/mutations/contentAudios.js";
 import type * as audioStudies_mutations_queue from "../audioStudies/mutations/queue.js";
-import type * as audioStudies_public_queries from "../audioStudies/public/queries.js";
-import type * as audioStudies_queries from "../audioStudies/queries.js";
+import type * as audioStudies_queries_internal from "../audioStudies/queries/internal.js";
+import type * as audioStudies_queries_public from "../audioStudies/queries/public.js";
 import type * as audioStudies_utils from "../audioStudies/utils.js";
 import type * as audioStudies_workflows from "../audioStudies/workflows.js";
 import type * as auth from "../auth.js";
@@ -77,10 +77,19 @@ import type * as contentSync_queries_counts from "../contentSync/queries/counts.
 import type * as contentSync_queries_integrity from "../contentSync/queries/integrity.js";
 import type * as contentSync_queries_stale from "../contentSync/queries/stale.js";
 import type * as contentSync_queries_tryouts from "../contentSync/queries/tryouts.js";
-import type * as contents_aggregate from "../contents/aggregate.js";
-import type * as contents_mutations from "../contents/mutations.js";
-import type * as contents_queries from "../contents/queries.js";
-import type * as contents_utils from "../contents/utils.js";
+import type * as contents_actions_queue from "../contents/actions/queue.js";
+import type * as contents_constants from "../contents/constants.js";
+import type * as contents_helpers_partitions from "../contents/helpers/partitions.js";
+import type * as contents_helpers_popularity from "../contents/helpers/popularity.js";
+import type * as contents_helpers_views from "../contents/helpers/views.js";
+import type * as contents_helpers_writes from "../contents/helpers/writes.js";
+import type * as contents_mutations_analytics from "../contents/mutations/analytics.js";
+import type * as contents_mutations_audio from "../contents/mutations/audio.js";
+import type * as contents_mutations_setup from "../contents/mutations/setup.js";
+import type * as contents_mutations_views from "../contents/mutations/views.js";
+import type * as contents_queries_audio from "../contents/queries/audio.js";
+import type * as contents_queries_recent from "../contents/queries/recent.js";
+import type * as contents_validators from "../contents/validators.js";
 import type * as credits_actions from "../credits/actions.js";
 import type * as credits_constants from "../credits/constants.js";
 import type * as credits_mutations from "../credits/mutations.js";
@@ -157,10 +166,8 @@ import type * as triggers_chats_cleanup from "../triggers/chats/cleanup.js";
 import type * as triggers_comments_cleanup from "../triggers/comments/cleanup.js";
 import type * as triggers_comments_commentVotes from "../triggers/comments/commentVotes.js";
 import type * as triggers_comments_comments from "../triggers/comments/comments.js";
-import type * as triggers_contents_contentViews from "../triggers/contents/contentViews.js";
 import type * as triggers_contents_exerciseAnswers from "../triggers/contents/exerciseAnswers.js";
 import type * as triggers_contents_exerciseAttempts from "../triggers/contents/exerciseAttempts.js";
-import type * as triggers_contents_popularity from "../triggers/contents/popularity.js";
 import type * as triggers_forums_postReactions from "../triggers/forums/postReactions.js";
 import type * as triggers_forums_posts from "../triggers/forums/posts.js";
 import type * as triggers_forums_reactions from "../triggers/forums/reactions.js";
@@ -188,6 +195,7 @@ import type * as tryouts_helpers_expiry from "../tryouts/helpers/expiry.js";
 import type * as tryouts_helpers_finalize_aggregates from "../tryouts/helpers/finalize/aggregates.js";
 import type * as tryouts_helpers_finalize_attempt from "../tryouts/helpers/finalize/attempt.js";
 import type * as tryouts_helpers_finalize_part from "../tryouts/helpers/finalize/part.js";
+import type * as tryouts_helpers_finalize_score from "../tryouts/helpers/finalize/score.js";
 import type * as tryouts_helpers_irt from "../tryouts/helpers/irt.js";
 import type * as tryouts_helpers_latest from "../tryouts/helpers/latest.js";
 import type * as tryouts_helpers_loaders from "../tryouts/helpers/loaders.js";
@@ -238,8 +246,8 @@ declare const fullApi: ApiFromModules<{
   "audioStudies/helpers/contentAudios": typeof audioStudies_helpers_contentAudios;
   "audioStudies/mutations/contentAudios": typeof audioStudies_mutations_contentAudios;
   "audioStudies/mutations/queue": typeof audioStudies_mutations_queue;
-  "audioStudies/public/queries": typeof audioStudies_public_queries;
-  "audioStudies/queries": typeof audioStudies_queries;
+  "audioStudies/queries/internal": typeof audioStudies_queries_internal;
+  "audioStudies/queries/public": typeof audioStudies_queries_public;
   "audioStudies/utils": typeof audioStudies_utils;
   "audioStudies/workflows": typeof audioStudies_workflows;
   auth: typeof auth;
@@ -302,10 +310,19 @@ declare const fullApi: ApiFromModules<{
   "contentSync/queries/integrity": typeof contentSync_queries_integrity;
   "contentSync/queries/stale": typeof contentSync_queries_stale;
   "contentSync/queries/tryouts": typeof contentSync_queries_tryouts;
-  "contents/aggregate": typeof contents_aggregate;
-  "contents/mutations": typeof contents_mutations;
-  "contents/queries": typeof contents_queries;
-  "contents/utils": typeof contents_utils;
+  "contents/actions/queue": typeof contents_actions_queue;
+  "contents/constants": typeof contents_constants;
+  "contents/helpers/partitions": typeof contents_helpers_partitions;
+  "contents/helpers/popularity": typeof contents_helpers_popularity;
+  "contents/helpers/views": typeof contents_helpers_views;
+  "contents/helpers/writes": typeof contents_helpers_writes;
+  "contents/mutations/analytics": typeof contents_mutations_analytics;
+  "contents/mutations/audio": typeof contents_mutations_audio;
+  "contents/mutations/setup": typeof contents_mutations_setup;
+  "contents/mutations/views": typeof contents_mutations_views;
+  "contents/queries/audio": typeof contents_queries_audio;
+  "contents/queries/recent": typeof contents_queries_recent;
+  "contents/validators": typeof contents_validators;
   "credits/actions": typeof credits_actions;
   "credits/constants": typeof credits_constants;
   "credits/mutations": typeof credits_mutations;
@@ -382,10 +399,8 @@ declare const fullApi: ApiFromModules<{
   "triggers/comments/cleanup": typeof triggers_comments_cleanup;
   "triggers/comments/commentVotes": typeof triggers_comments_commentVotes;
   "triggers/comments/comments": typeof triggers_comments_comments;
-  "triggers/contents/contentViews": typeof triggers_contents_contentViews;
   "triggers/contents/exerciseAnswers": typeof triggers_contents_exerciseAnswers;
   "triggers/contents/exerciseAttempts": typeof triggers_contents_exerciseAttempts;
-  "triggers/contents/popularity": typeof triggers_contents_popularity;
   "triggers/forums/postReactions": typeof triggers_forums_postReactions;
   "triggers/forums/posts": typeof triggers_forums_posts;
   "triggers/forums/reactions": typeof triggers_forums_reactions;
@@ -413,6 +428,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/helpers/finalize/aggregates": typeof tryouts_helpers_finalize_aggregates;
   "tryouts/helpers/finalize/attempt": typeof tryouts_helpers_finalize_attempt;
   "tryouts/helpers/finalize/part": typeof tryouts_helpers_finalize_part;
+  "tryouts/helpers/finalize/score": typeof tryouts_helpers_finalize_score;
   "tryouts/helpers/irt": typeof tryouts_helpers_irt;
   "tryouts/helpers/latest": typeof tryouts_helpers_latest;
   "tryouts/helpers/loaders": typeof tryouts_helpers_loaders;
@@ -2069,6 +2085,20 @@ export declare const components: {
                     | { error: string; kind: "failed" }
                     | { kind: "canceled" };
                   startedAt: number;
+                }
+              | {
+                  args: any;
+                  argsSize: number;
+                  completedAt?: number;
+                  inProgress: boolean;
+                  kind: "sleep";
+                  name: string;
+                  runResult?:
+                    | { kind: "success"; returnValue: any }
+                    | { error: string; kind: "failed" }
+                    | { kind: "canceled" };
+                  startedAt: number;
+                  workId?: string;
                 };
             stepNumber: number;
             workflowId: string;
@@ -2148,6 +2178,20 @@ export declare const components: {
                     | { error: string; kind: "failed" }
                     | { kind: "canceled" };
                   startedAt: number;
+                }
+              | {
+                  args: any;
+                  argsSize: number;
+                  completedAt?: number;
+                  inProgress: boolean;
+                  kind: "sleep";
+                  name: string;
+                  runResult?:
+                    | { kind: "success"; returnValue: any }
+                    | { error: string; kind: "failed" }
+                    | { kind: "canceled" };
+                  startedAt: number;
+                  workId?: string;
                 };
           }>;
           workflowId: string;
@@ -2210,6 +2254,20 @@ export declare const components: {
                   | { error: string; kind: "failed" }
                   | { kind: "canceled" };
                 startedAt: number;
+              }
+            | {
+                args: any;
+                argsSize: number;
+                completedAt?: number;
+                inProgress: boolean;
+                kind: "sleep";
+                name: string;
+                runResult?:
+                  | { kind: "success"; returnValue: any }
+                  | { error: string; kind: "failed" }
+                  | { kind: "canceled" };
+                startedAt: number;
+                workId?: string;
               };
           stepNumber: number;
           workflowId: string;
@@ -2308,6 +2366,20 @@ export declare const components: {
                     | { error: string; kind: "failed" }
                     | { kind: "canceled" };
                   startedAt: number;
+                }
+              | {
+                  args: any;
+                  argsSize: number;
+                  completedAt?: number;
+                  inProgress: boolean;
+                  kind: "sleep";
+                  name: string;
+                  runResult?:
+                    | { kind: "success"; returnValue: any }
+                    | { error: string; kind: "failed" }
+                    | { kind: "canceled" };
+                  startedAt: number;
+                  workId?: string;
                 };
             stepNumber: number;
             workflowId: string;
@@ -2416,7 +2488,7 @@ export declare const components: {
             args: any;
             completedAt?: number;
             eventId?: string;
-            kind: "function" | "workflow" | "event";
+            kind: "function" | "workflow" | "event" | "sleep";
             name: string;
             nestedWorkflowId?: string;
             runResult?:
@@ -2442,6 +2514,202 @@ export declare const components: {
     };
   };
   irtCalibrationSyncWorkpool: {
+    config: {
+      update: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+          maxParallelism?: number;
+        },
+        any
+      >;
+    };
+    lib: {
+      cancel: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          id: string;
+          logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+        },
+        any
+      >;
+      cancelAll: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          before?: number;
+          limit?: number;
+          logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+        },
+        any
+      >;
+      enqueue: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          config: {
+            logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+            maxParallelism?: number;
+          };
+          fnArgs: any;
+          fnHandle: string;
+          fnName: string;
+          fnType: "action" | "mutation" | "query";
+          onComplete?: { context?: any; fnHandle: string };
+          retryBehavior?: {
+            base: number;
+            initialBackoffMs: number;
+            maxAttempts: number;
+          };
+          runAt: number;
+        },
+        string
+      >;
+      enqueueBatch: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          config: {
+            logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+            maxParallelism?: number;
+          };
+          items: Array<{
+            fnArgs: any;
+            fnHandle: string;
+            fnName: string;
+            fnType: "action" | "mutation" | "query";
+            onComplete?: { context?: any; fnHandle: string };
+            retryBehavior?: {
+              base: number;
+              initialBackoffMs: number;
+              maxAttempts: number;
+            };
+            runAt: number;
+          }>;
+        },
+        Array<string>
+      >;
+      status: FunctionReference<
+        "query",
+        "internal",
+        { id: string },
+        | { previousAttempts: number; state: "pending" }
+        | { previousAttempts: number; state: "running" }
+        | { state: "finished" }
+      >;
+      statusBatch: FunctionReference<
+        "query",
+        "internal",
+        { ids: Array<string> },
+        Array<
+          | { previousAttempts: number; state: "pending" }
+          | { previousAttempts: number; state: "running" }
+          | { state: "finished" }
+        >
+      >;
+    };
+  };
+  irtScalePublicationQueueWorkpool: {
+    config: {
+      update: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+          maxParallelism?: number;
+        },
+        any
+      >;
+    };
+    lib: {
+      cancel: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          id: string;
+          logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+        },
+        any
+      >;
+      cancelAll: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          before?: number;
+          limit?: number;
+          logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+        },
+        any
+      >;
+      enqueue: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          config: {
+            logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+            maxParallelism?: number;
+          };
+          fnArgs: any;
+          fnHandle: string;
+          fnName: string;
+          fnType: "action" | "mutation" | "query";
+          onComplete?: { context?: any; fnHandle: string };
+          retryBehavior?: {
+            base: number;
+            initialBackoffMs: number;
+            maxAttempts: number;
+          };
+          runAt: number;
+        },
+        string
+      >;
+      enqueueBatch: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          config: {
+            logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+            maxParallelism?: number;
+          };
+          items: Array<{
+            fnArgs: any;
+            fnHandle: string;
+            fnName: string;
+            fnType: "action" | "mutation" | "query";
+            onComplete?: { context?: any; fnHandle: string };
+            retryBehavior?: {
+              base: number;
+              initialBackoffMs: number;
+              maxAttempts: number;
+            };
+            runAt: number;
+          }>;
+        },
+        Array<string>
+      >;
+      status: FunctionReference<
+        "query",
+        "internal",
+        { id: string },
+        | { previousAttempts: number; state: "pending" }
+        | { previousAttempts: number; state: "running" }
+        | { state: "finished" }
+      >;
+      statusBatch: FunctionReference<
+        "query",
+        "internal",
+        { ids: Array<string> },
+        Array<
+          | { previousAttempts: number; state: "pending" }
+          | { previousAttempts: number; state: "running" }
+          | { state: "finished" }
+        >
+      >;
+    };
+  };
+  irtScaleQualityRefreshWorkpool: {
     config: {
       update: FunctionReference<
         "mutation",
@@ -2783,564 +3051,6 @@ export declare const components: {
             | "failed";
         },
         null
-      >;
-    };
-  };
-  articlePopularity: {
-    btree: {
-      aggregateBetween: FunctionReference<
-        "query",
-        "internal",
-        { k1?: any; k2?: any; namespace?: any },
-        { count: number; sum: number }
-      >;
-      aggregateBetweenBatch: FunctionReference<
-        "query",
-        "internal",
-        { queries: Array<{ k1?: any; k2?: any; namespace?: any }> },
-        Array<{ count: number; sum: number }>
-      >;
-      atNegativeOffset: FunctionReference<
-        "query",
-        "internal",
-        { k1?: any; k2?: any; namespace?: any; offset: number },
-        { k: any; s: number; v: any }
-      >;
-      atOffset: FunctionReference<
-        "query",
-        "internal",
-        { k1?: any; k2?: any; namespace?: any; offset: number },
-        { k: any; s: number; v: any }
-      >;
-      atOffsetBatch: FunctionReference<
-        "query",
-        "internal",
-        {
-          queries: Array<{
-            k1?: any;
-            k2?: any;
-            namespace?: any;
-            offset: number;
-          }>;
-        },
-        Array<{ k: any; s: number; v: any }>
-      >;
-      get: FunctionReference<
-        "query",
-        "internal",
-        { key: any; namespace?: any },
-        null | { k: any; s: number; v: any }
-      >;
-      offset: FunctionReference<
-        "query",
-        "internal",
-        { k1?: any; key: any; namespace?: any },
-        number
-      >;
-      offsetUntil: FunctionReference<
-        "query",
-        "internal",
-        { k2?: any; key: any; namespace?: any },
-        number
-      >;
-      paginate: FunctionReference<
-        "query",
-        "internal",
-        {
-          cursor?: string;
-          k1?: any;
-          k2?: any;
-          limit: number;
-          namespace?: any;
-          order: "asc" | "desc";
-        },
-        {
-          cursor: string;
-          isDone: boolean;
-          page: Array<{ k: any; s: number; v: any }>;
-        }
-      >;
-      paginateNamespaces: FunctionReference<
-        "query",
-        "internal",
-        { cursor?: string; limit: number },
-        { cursor: string; isDone: boolean; page: Array<any> }
-      >;
-      validate: FunctionReference<
-        "query",
-        "internal",
-        { namespace?: any },
-        any
-      >;
-    };
-    inspect: {
-      display: FunctionReference<"query", "internal", { namespace?: any }, any>;
-      dump: FunctionReference<"query", "internal", { namespace?: any }, string>;
-      inspectNode: FunctionReference<
-        "query",
-        "internal",
-        { namespace?: any; node?: string },
-        null
-      >;
-      listTreeNodes: FunctionReference<
-        "query",
-        "internal",
-        { take?: number },
-        Array<{
-          _creationTime: number;
-          _id: string;
-          aggregate?: { count: number; sum: number };
-          items: Array<{ k: any; s: number; v: any }>;
-          subtrees: Array<string>;
-        }>
-      >;
-      listTrees: FunctionReference<
-        "query",
-        "internal",
-        { take?: number },
-        Array<{
-          _creationTime: number;
-          _id: string;
-          maxNodeSize: number;
-          namespace?: any;
-          root: string;
-        }>
-      >;
-    };
-    public: {
-      clear: FunctionReference<
-        "mutation",
-        "internal",
-        { maxNodeSize?: number; namespace?: any; rootLazy?: boolean },
-        null
-      >;
-      delete_: FunctionReference<
-        "mutation",
-        "internal",
-        { key: any; namespace?: any },
-        null
-      >;
-      deleteIfExists: FunctionReference<
-        "mutation",
-        "internal",
-        { key: any; namespace?: any },
-        any
-      >;
-      init: FunctionReference<
-        "mutation",
-        "internal",
-        { maxNodeSize?: number; namespace?: any; rootLazy?: boolean },
-        null
-      >;
-      insert: FunctionReference<
-        "mutation",
-        "internal",
-        { key: any; namespace?: any; summand?: number; value: any },
-        null
-      >;
-      makeRootLazy: FunctionReference<
-        "mutation",
-        "internal",
-        { namespace?: any },
-        null
-      >;
-      replace: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          currentKey: any;
-          namespace?: any;
-          newKey: any;
-          newNamespace?: any;
-          summand?: number;
-          value: any;
-        },
-        null
-      >;
-      replaceOrInsert: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          currentKey: any;
-          namespace?: any;
-          newKey: any;
-          newNamespace?: any;
-          summand?: number;
-          value: any;
-        },
-        any
-      >;
-    };
-  };
-  subjectPopularity: {
-    btree: {
-      aggregateBetween: FunctionReference<
-        "query",
-        "internal",
-        { k1?: any; k2?: any; namespace?: any },
-        { count: number; sum: number }
-      >;
-      aggregateBetweenBatch: FunctionReference<
-        "query",
-        "internal",
-        { queries: Array<{ k1?: any; k2?: any; namespace?: any }> },
-        Array<{ count: number; sum: number }>
-      >;
-      atNegativeOffset: FunctionReference<
-        "query",
-        "internal",
-        { k1?: any; k2?: any; namespace?: any; offset: number },
-        { k: any; s: number; v: any }
-      >;
-      atOffset: FunctionReference<
-        "query",
-        "internal",
-        { k1?: any; k2?: any; namespace?: any; offset: number },
-        { k: any; s: number; v: any }
-      >;
-      atOffsetBatch: FunctionReference<
-        "query",
-        "internal",
-        {
-          queries: Array<{
-            k1?: any;
-            k2?: any;
-            namespace?: any;
-            offset: number;
-          }>;
-        },
-        Array<{ k: any; s: number; v: any }>
-      >;
-      get: FunctionReference<
-        "query",
-        "internal",
-        { key: any; namespace?: any },
-        null | { k: any; s: number; v: any }
-      >;
-      offset: FunctionReference<
-        "query",
-        "internal",
-        { k1?: any; key: any; namespace?: any },
-        number
-      >;
-      offsetUntil: FunctionReference<
-        "query",
-        "internal",
-        { k2?: any; key: any; namespace?: any },
-        number
-      >;
-      paginate: FunctionReference<
-        "query",
-        "internal",
-        {
-          cursor?: string;
-          k1?: any;
-          k2?: any;
-          limit: number;
-          namespace?: any;
-          order: "asc" | "desc";
-        },
-        {
-          cursor: string;
-          isDone: boolean;
-          page: Array<{ k: any; s: number; v: any }>;
-        }
-      >;
-      paginateNamespaces: FunctionReference<
-        "query",
-        "internal",
-        { cursor?: string; limit: number },
-        { cursor: string; isDone: boolean; page: Array<any> }
-      >;
-      validate: FunctionReference<
-        "query",
-        "internal",
-        { namespace?: any },
-        any
-      >;
-    };
-    inspect: {
-      display: FunctionReference<"query", "internal", { namespace?: any }, any>;
-      dump: FunctionReference<"query", "internal", { namespace?: any }, string>;
-      inspectNode: FunctionReference<
-        "query",
-        "internal",
-        { namespace?: any; node?: string },
-        null
-      >;
-      listTreeNodes: FunctionReference<
-        "query",
-        "internal",
-        { take?: number },
-        Array<{
-          _creationTime: number;
-          _id: string;
-          aggregate?: { count: number; sum: number };
-          items: Array<{ k: any; s: number; v: any }>;
-          subtrees: Array<string>;
-        }>
-      >;
-      listTrees: FunctionReference<
-        "query",
-        "internal",
-        { take?: number },
-        Array<{
-          _creationTime: number;
-          _id: string;
-          maxNodeSize: number;
-          namespace?: any;
-          root: string;
-        }>
-      >;
-    };
-    public: {
-      clear: FunctionReference<
-        "mutation",
-        "internal",
-        { maxNodeSize?: number; namespace?: any; rootLazy?: boolean },
-        null
-      >;
-      delete_: FunctionReference<
-        "mutation",
-        "internal",
-        { key: any; namespace?: any },
-        null
-      >;
-      deleteIfExists: FunctionReference<
-        "mutation",
-        "internal",
-        { key: any; namespace?: any },
-        any
-      >;
-      init: FunctionReference<
-        "mutation",
-        "internal",
-        { maxNodeSize?: number; namespace?: any; rootLazy?: boolean },
-        null
-      >;
-      insert: FunctionReference<
-        "mutation",
-        "internal",
-        { key: any; namespace?: any; summand?: number; value: any },
-        null
-      >;
-      makeRootLazy: FunctionReference<
-        "mutation",
-        "internal",
-        { namespace?: any },
-        null
-      >;
-      replace: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          currentKey: any;
-          namespace?: any;
-          newKey: any;
-          newNamespace?: any;
-          summand?: number;
-          value: any;
-        },
-        null
-      >;
-      replaceOrInsert: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          currentKey: any;
-          namespace?: any;
-          newKey: any;
-          newNamespace?: any;
-          summand?: number;
-          value: any;
-        },
-        any
-      >;
-    };
-  };
-  exercisePopularity: {
-    btree: {
-      aggregateBetween: FunctionReference<
-        "query",
-        "internal",
-        { k1?: any; k2?: any; namespace?: any },
-        { count: number; sum: number }
-      >;
-      aggregateBetweenBatch: FunctionReference<
-        "query",
-        "internal",
-        { queries: Array<{ k1?: any; k2?: any; namespace?: any }> },
-        Array<{ count: number; sum: number }>
-      >;
-      atNegativeOffset: FunctionReference<
-        "query",
-        "internal",
-        { k1?: any; k2?: any; namespace?: any; offset: number },
-        { k: any; s: number; v: any }
-      >;
-      atOffset: FunctionReference<
-        "query",
-        "internal",
-        { k1?: any; k2?: any; namespace?: any; offset: number },
-        { k: any; s: number; v: any }
-      >;
-      atOffsetBatch: FunctionReference<
-        "query",
-        "internal",
-        {
-          queries: Array<{
-            k1?: any;
-            k2?: any;
-            namespace?: any;
-            offset: number;
-          }>;
-        },
-        Array<{ k: any; s: number; v: any }>
-      >;
-      get: FunctionReference<
-        "query",
-        "internal",
-        { key: any; namespace?: any },
-        null | { k: any; s: number; v: any }
-      >;
-      offset: FunctionReference<
-        "query",
-        "internal",
-        { k1?: any; key: any; namespace?: any },
-        number
-      >;
-      offsetUntil: FunctionReference<
-        "query",
-        "internal",
-        { k2?: any; key: any; namespace?: any },
-        number
-      >;
-      paginate: FunctionReference<
-        "query",
-        "internal",
-        {
-          cursor?: string;
-          k1?: any;
-          k2?: any;
-          limit: number;
-          namespace?: any;
-          order: "asc" | "desc";
-        },
-        {
-          cursor: string;
-          isDone: boolean;
-          page: Array<{ k: any; s: number; v: any }>;
-        }
-      >;
-      paginateNamespaces: FunctionReference<
-        "query",
-        "internal",
-        { cursor?: string; limit: number },
-        { cursor: string; isDone: boolean; page: Array<any> }
-      >;
-      validate: FunctionReference<
-        "query",
-        "internal",
-        { namespace?: any },
-        any
-      >;
-    };
-    inspect: {
-      display: FunctionReference<"query", "internal", { namespace?: any }, any>;
-      dump: FunctionReference<"query", "internal", { namespace?: any }, string>;
-      inspectNode: FunctionReference<
-        "query",
-        "internal",
-        { namespace?: any; node?: string },
-        null
-      >;
-      listTreeNodes: FunctionReference<
-        "query",
-        "internal",
-        { take?: number },
-        Array<{
-          _creationTime: number;
-          _id: string;
-          aggregate?: { count: number; sum: number };
-          items: Array<{ k: any; s: number; v: any }>;
-          subtrees: Array<string>;
-        }>
-      >;
-      listTrees: FunctionReference<
-        "query",
-        "internal",
-        { take?: number },
-        Array<{
-          _creationTime: number;
-          _id: string;
-          maxNodeSize: number;
-          namespace?: any;
-          root: string;
-        }>
-      >;
-    };
-    public: {
-      clear: FunctionReference<
-        "mutation",
-        "internal",
-        { maxNodeSize?: number; namespace?: any; rootLazy?: boolean },
-        null
-      >;
-      delete_: FunctionReference<
-        "mutation",
-        "internal",
-        { key: any; namespace?: any },
-        null
-      >;
-      deleteIfExists: FunctionReference<
-        "mutation",
-        "internal",
-        { key: any; namespace?: any },
-        any
-      >;
-      init: FunctionReference<
-        "mutation",
-        "internal",
-        { maxNodeSize?: number; namespace?: any; rootLazy?: boolean },
-        null
-      >;
-      insert: FunctionReference<
-        "mutation",
-        "internal",
-        { key: any; namespace?: any; summand?: number; value: any },
-        null
-      >;
-      makeRootLazy: FunctionReference<
-        "mutation",
-        "internal",
-        { namespace?: any },
-        null
-      >;
-      replace: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          currentKey: any;
-          namespace?: any;
-          newKey: any;
-          newNamespace?: any;
-          summand?: number;
-          value: any;
-        },
-        null
-      >;
-      replaceOrInsert: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          currentKey: any;
-          namespace?: any;
-          newKey: any;
-          newNamespace?: any;
-          summand?: number;
-          value: any;
-        },
-        any
       >;
     };
   };

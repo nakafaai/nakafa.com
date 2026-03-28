@@ -4,12 +4,10 @@ import {
   buildFinalizedExerciseAttemptPatch,
   computeAttemptDurationSeconds,
 } from "@repo/backend/convex/exercises/utils";
-import { estimateThetaEAP } from "@repo/backend/convex/irt/estimation";
 import { getScaleVersionItemsForSet } from "@repo/backend/convex/irt/scales/read";
 import { getAttemptEndReasonFromStatus } from "@repo/backend/convex/lib/attempts";
-import { buildOperationalIrtResponses } from "@repo/backend/convex/tryouts/helpers/irt";
+import { scoreFinalizedTryoutPart } from "@repo/backend/convex/tryouts/helpers/finalize/score";
 import { getBoundedExerciseAnswers } from "@repo/backend/convex/tryouts/helpers/loaders";
-import { countCorrectAnswers } from "@repo/backend/convex/tryouts/helpers/metrics";
 import { ConvexError } from "convex/values";
 
 type FinalizedExerciseAttemptStatus = Exclude<
@@ -144,12 +142,11 @@ export async function finalizeTryoutPartAttempt({
       setId: partAttempt.setId,
     }),
   ]);
-  const itemResponses = buildOperationalIrtResponses({
+  const partScore = scoreFinalizedTryoutPart({
     answers,
     itemParamsRecords,
+    totalQuestions: currentSetAttempt.totalExercises,
   });
-  const { theta, se } = estimateThetaEAP(itemResponses);
-  const rawScore = countCorrectAnswers(answers);
   const completedPartIndices = [...tryoutAttempt.completedPartIndices];
 
   if (!completedPartIndices.includes(partAttempt.partIndex)) {
@@ -159,8 +156,8 @@ export async function finalizeTryoutPartAttempt({
 
   await Promise.all([
     ctx.db.patch("tryoutPartAttempts", partAttempt._id, {
-      theta,
-      thetaSE: se,
+      theta: partScore.theta,
+      thetaSE: partScore.thetaSE,
     }),
     ctx.db.patch("tryoutAttempts", tryoutAttempt._id, {
       completedPartIndices,
@@ -173,9 +170,9 @@ export async function finalizeTryoutPartAttempt({
   ]);
 
   return {
-    rawScore,
-    theta,
-    thetaSE: se,
-    totalQuestions: currentSetAttempt.totalExercises,
+    rawScore: partScore.rawScore,
+    theta: partScore.theta,
+    thetaSE: partScore.thetaSE,
+    totalQuestions: partScore.totalQuestions,
   };
 }

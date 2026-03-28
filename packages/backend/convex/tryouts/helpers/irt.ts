@@ -9,6 +9,21 @@ type TryoutScoreTarget = Pick<
   "scaleVersionId" | "scoreStatus"
 >;
 
+export type OperationalIrtAnswer = Pick<
+  Doc<"exerciseAnswers">,
+  "isCorrect" | "questionId"
+>;
+
+export type OperationalIrtItemParamsRecord = Pick<
+  Doc<"irtScaleVersionItems">,
+  "difficulty" | "discrimination" | "questionId"
+>;
+
+export interface OperationalIrtResponseSource {
+  answers: OperationalIrtAnswer[];
+  itemParamsRecords: OperationalIrtItemParamsRecord[];
+}
+
 /** Pick the best frozen scale currently available for one tryout attempt. */
 export async function getTryoutScoreTarget(
   db: TryoutDbReader,
@@ -49,17 +64,8 @@ export async function getTryoutScoreTarget(
 export function buildOperationalIrtResponses({
   answers,
   itemParamsRecords,
-}: {
-  answers: Doc<"exerciseAnswers">[];
-  itemParamsRecords: Pick<
-    Doc<"irtScaleVersionItems">,
-    "questionId" | "difficulty" | "discrimination"
-  >[];
-}) {
-  const answersByQuestionId = new Map<
-    NonNullable<Doc<"exerciseAnswers">["questionId"]>,
-    Doc<"exerciseAnswers">
-  >();
+}: OperationalIrtResponseSource) {
+  const answersByQuestionId = new Map<string, (typeof answers)[number]>();
 
   for (const answer of answers) {
     if (!answer.questionId) {

@@ -41,7 +41,7 @@ interface Props {
 
 export function AiSheetOpen({ audio }: Props) {
   const { data, isPending } = useQueryWithStatus(
-    api.audioStudies.public.queries.getAudioBySlug,
+    api.audioStudies.queries.public.getAudioBySlug,
     audio
       ? {
           slug: cleanSlug(audio.slug),
@@ -70,7 +70,7 @@ function AiToolbar({
   data,
 }: {
   data: NonNullable<
-    FunctionReturnType<typeof api.audioStudies.public.queries.getAudioBySlug>
+    FunctionReturnType<typeof api.audioStudies.queries.public.getAudioBySlug>
   >;
 }) {
   const t = useTranslations("Ai");

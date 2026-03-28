@@ -4,6 +4,7 @@ import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
 import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
 import { v } from "convex/values";
+import { nullable } from "convex-helpers/validators";
 
 export const userTryoutLookupArgs = {
   product: tryoutProductValidator,
@@ -34,9 +35,17 @@ export const tryoutPartAttemptSummarySetAttemptValidator = v.object({
   timeLimit: v.number(),
 });
 
+export const tryoutPartAttemptScoreSummaryValidator = v.object({
+  correctAnswers: vv.doc("exerciseAttempts").fields.correctAnswers,
+  theta: vv.doc("tryoutPartAttempts").fields.theta,
+  thetaSE: vv.doc("tryoutPartAttempts").fields.thetaSE,
+  irtScore: vv.doc("tryoutAttempts").fields.irtScore,
+});
+
 export const tryoutPartAttemptSummaryValidator = v.object({
   partIndex: v.number(),
   partKey: tryoutPartKeyValidator,
+  score: nullable(tryoutPartAttemptScoreSummaryValidator),
   setAttempt: tryoutPartAttemptSummarySetAttemptValidator,
 });
 
@@ -57,6 +66,7 @@ export const tryoutPartAttemptRuntimeValidator = v.object({
 
 export const userTryoutPartAttemptResultValidator = v.object({
   expiresAtMs: v.number(),
-  partAttempt: v.union(v.null(), tryoutPartAttemptRuntimeValidator),
+  partScore: nullable(tryoutPartAttemptScoreSummaryValidator),
+  partAttempt: nullable(tryoutPartAttemptRuntimeValidator),
   tryoutAttempt: vv.doc("tryoutAttempts"),
 });

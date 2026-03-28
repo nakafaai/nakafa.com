@@ -52,7 +52,8 @@ export const generateScript = internalAction({
 
     try {
       const data = await ctx.runQuery(
-        internal.audioStudies.queries.getAudioAndContentForScriptGeneration,
+        internal.audioStudies.queries.internal
+          .getAudioAndContentForScriptGeneration,
         { contentAudioId: args.contentAudioId }
       );
 
@@ -66,7 +67,7 @@ export const generateScript = internalAction({
       const { contentAudio, content } = data;
 
       const hashValidBefore = await ctx.runQuery(
-        internal.audioStudies.queries.verifyContentHash,
+        internal.audioStudies.queries.internal.verifyContentHash,
         {
           contentAudioId: args.contentAudioId,
           expectedHash: contentAudio.contentHash,
@@ -107,7 +108,7 @@ export const generateScript = internalAction({
       });
 
       const hashValidAfter = await ctx.runQuery(
-        internal.audioStudies.queries.verifyContentHash,
+        internal.audioStudies.queries.internal.verifyContentHash,
         {
           contentAudioId: args.contentAudioId,
           expectedHash: contentAudio.contentHash,
@@ -210,7 +211,7 @@ export const generateSpeech = internalAction({
 
     try {
       const audio = await ctx.runQuery(
-        internal.audioStudies.queries.getAudioForSpeechGeneration,
+        internal.audioStudies.queries.internal.getAudioForSpeechGeneration,
         { contentAudioId: args.contentAudioId }
       );
 
@@ -222,7 +223,7 @@ export const generateSpeech = internalAction({
       }
 
       const hashStillValid = await ctx.runQuery(
-        internal.audioStudies.queries.verifyContentHash,
+        internal.audioStudies.queries.internal.verifyContentHash,
         {
           contentAudioId: args.contentAudioId,
           expectedHash: audio.contentHash,
@@ -249,7 +250,6 @@ export const generateSpeech = internalAction({
         scriptLength: audio.script.length,
       });
 
-      const audioBuffers: Uint8Array[] = [];
       const voiceSettings = audio.voiceSettings ?? getDefaultVoiceSettings();
       const providerVoiceSettings = {
         similarityBoost: voiceSettings.similarityBoost,
@@ -258,11 +258,39 @@ export const generateSpeech = internalAction({
         useSpeakerBoost: voiceSettings.useSpeakerBoost,
       };
 
-      for (let i = 0; i < chunks.length; i++) {
-        const chunk = chunks[i];
-        logger.info(`Generating speech chunk ${i + 1}/${chunks.length}`, {
+      if (chunks.length === 0) {
+        throw new ConvexError({
+          code: "AUDIO_SCRIPT_EMPTY",
+          message: "Script chunking returned no content for speech generation.",
+        });
+      }
+
+      const [firstChunk, ...remainingChunks] = chunks;
+
+      logger.info(`Generating speech chunk 1/${chunks.length}`, {
+        contentAudioId: args.contentAudioId,
+        chunkIndex: 1,
+        totalChunks: chunks.length,
+      });
+
+      const firstResult = await aiGenerateSpeech({
+        model: elevenlabs.speech(audio.model),
+        text: firstChunk.text,
+        voice: audio.voiceId,
+        outputFormat: PCM_FORMAT.outputFormat,
+        providerOptions: {
+          elevenlabs: {
+            voiceSettings: providerVoiceSettings,
+          },
+        },
+      });
+
+      const audioBuffers = [new Uint8Array(firstResult.audio.uint8Array)];
+
+      for (const [index, chunk] of remainingChunks.entries()) {
+        logger.info(`Generating speech chunk ${index + 2}/${chunks.length}`, {
           contentAudioId: args.contentAudioId,
-          chunkIndex: i + 1,
+          chunkIndex: index + 2,
           totalChunks: chunks.length,
         });
 
@@ -310,7 +338,7 @@ export const generateSpeech = internalAction({
       });
 
       const hashValidAfter = await ctx.runQuery(
-        internal.audioStudies.queries.verifyContentHash,
+        internal.audioStudies.queries.internal.verifyContentHash,
         {
           contentAudioId: args.contentAudioId,
           expectedHash: audio.contentHash,

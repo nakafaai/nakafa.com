@@ -1,7 +1,6 @@
 "use client";
 
 import type { api } from "@repo/backend/convex/_generated/api";
-import { Badge } from "@repo/design-system/components/ui/badge";
 import {
   NumberFormat,
   NumberFormatGroup,
@@ -12,6 +11,10 @@ import {
   TryoutPartStat,
   TryoutPartStats,
 } from "@/components/tryout/part-shell";
+import {
+  TryoutAttemptStatusBadge,
+  TryoutScoreStatusBadge,
+} from "@/components/tryout/score-badges";
 import { TryoutStartCountdown } from "@/components/tryout/start-countdown";
 
 type TryoutAttempt = NonNullable<
@@ -62,44 +65,6 @@ export function TryoutScoreCard({
   );
 }
 
-function TryoutAttemptStatusBadge({
-  status,
-}: {
-  status: TryoutAttempt["status"];
-}) {
-  const tTryouts = useTranslations("Tryouts");
-
-  if (status === "completed") {
-    return (
-      <Badge variant="secondary">{tTryouts("score-state-completed")}</Badge>
-    );
-  }
-
-  if (status === "expired") {
-    return <Badge variant="outline">{tTryouts("score-state-expired")}</Badge>;
-  }
-
-  return <Badge variant="muted">{tTryouts("part-status-in-progress")}</Badge>;
-}
-
-function TryoutScoreStatusBadge({
-  status,
-}: {
-  status: TryoutAttempt["scoreStatus"];
-}) {
-  const tTryouts = useTranslations("Tryouts");
-
-  if (status === "official") {
-    return (
-      <Badge variant="secondary">{tTryouts("score-status-official")}</Badge>
-    );
-  }
-
-  return (
-    <Badge variant="outline">{tTryouts("score-status-provisional")}</Badge>
-  );
-}
-
 function TryoutScoreMetricNumber({ value }: { value: number }) {
   return (
     <div className="font-light font-mono text-5xl text-foreground tabular-nums leading-none tracking-tighter">
@@ -121,7 +86,7 @@ function TryoutScoreMetricFraction({
 }) {
   return (
     <NumberFormatGroup>
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex items-center gap-1">
         <div className="font-light font-mono text-5xl text-foreground tabular-nums leading-none tracking-tighter">
           <NumberFormat
             format={{ maximumFractionDigits: 0 }}

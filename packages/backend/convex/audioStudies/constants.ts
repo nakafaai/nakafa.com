@@ -19,7 +19,7 @@ import type { Locale } from "@repo/backend/convex/lib/validators/contents";
  * When adding new locales, update this array and the content will be
  * automatically generated for all locales.
  */
-export const SUPPORTED_LOCALES: Locale[] = ["en", "id"];
+export const SUPPORTED_LOCALES = ["en", "id"] satisfies Locale[];
 
 /**
  * Default maximum content pieces to generate per day (across all locales).
