@@ -59,6 +59,26 @@ export const upsertCampaignAndLink = internalMutation({
       .query("tryoutAccessCampaigns")
       .withIndex("by_slug", (q) => q.eq("slug", args.campaign.slug))
       .unique();
+    const existingLink = await ctx.db
+      .query("tryoutAccessLinks")
+      .withIndex("by_code", (q) => q.eq("code", code))
+      .unique();
+
+    if (
+      existingCampaign &&
+      existingLink &&
+      existingCampaign._id !== existingLink.campaignId
+    ) {
+      throw new ConvexError({
+        code: "EVENT_SETUP_CONFLICT",
+        message:
+          "Event access code already belongs to a different campaign slug.",
+      });
+    }
+
+    const linkedCampaign = existingLink
+      ? await ctx.db.get("tryoutAccessCampaigns", existingLink.campaignId)
+      : null;
 
     const campaignPatch = {
       enabled: args.campaign.enabled,
@@ -70,18 +90,14 @@ export const upsertCampaignAndLink = internalMutation({
       startsAt: args.campaign.startsAt,
     };
 
-    const campaignId = existingCampaign
-      ? existingCampaign._id
+    const targetCampaign = existingCampaign ?? linkedCampaign;
+    const campaignId = targetCampaign
+      ? targetCampaign._id
       : await ctx.db.insert("tryoutAccessCampaigns", campaignPatch);
 
-    if (existingCampaign) {
+    if (targetCampaign) {
       await ctx.db.patch("tryoutAccessCampaigns", campaignId, campaignPatch);
     }
-
-    const existingLink = await ctx.db
-      .query("tryoutAccessLinks")
-      .withIndex("by_code", (q) => q.eq("code", code))
-      .unique();
 
     const linkPatch = {
       campaignId,
