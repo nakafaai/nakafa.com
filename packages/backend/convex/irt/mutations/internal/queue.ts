@@ -17,6 +17,33 @@ import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
 import { asyncMap } from "convex-helpers";
 
+/** Enqueue one tryout for scale publication unless it is already queued. */
+export const enqueueScalePublication = internalMutation({
+  args: {
+    tryoutId: vv.id("tryouts"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const existingScalePublicationQueueEntry = await ctx.db
+      .query("irtScalePublicationQueue")
+      .withIndex("by_tryoutId_and_enqueuedAt", (q) =>
+        q.eq("tryoutId", args.tryoutId)
+      )
+      .first();
+
+    if (existingScalePublicationQueueEntry) {
+      return null;
+    }
+
+    await ctx.db.insert("irtScalePublicationQueue", {
+      tryoutId: args.tryoutId,
+      enqueuedAt: Date.now(),
+    });
+
+    return null;
+  },
+});
+
 /** Drain one bounded batch of queued set calibrations. */
 export const drainCalibrationQueue = internalMutation({
   args: {},

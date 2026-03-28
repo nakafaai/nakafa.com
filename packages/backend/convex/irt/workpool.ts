@@ -9,6 +9,14 @@ export const irtCalibrationSyncWorkpool = new Workpool(
   }
 );
 
+/** Serialize scale-publication queue writes to avoid duplicate queue rows. */
+export const irtScalePublicationQueueWorkpool = new Workpool(
+  components.irtScalePublicationQueueWorkpool,
+  {
+    maxParallelism: 1,
+  }
+);
+
 /** Serialize scale-quality refresh work to avoid conflicting writes. */
 export const irtScaleQualityRefreshWorkpool = new Workpool(
   components.irtScaleQualityRefreshWorkpool,
