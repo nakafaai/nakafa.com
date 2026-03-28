@@ -1,6 +1,10 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { normalizeTryoutAccessCode } from "@repo/backend/convex/tryoutAccess/helpers/access";
+import {
+  getTryoutAccessCampaignRedeemStatus,
+  normalizeTryoutAccessCode,
+} from "@repo/backend/convex/tryoutAccess/helpers/access";
 import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
 import { ConvexError, v } from "convex/values";
 
@@ -32,6 +36,8 @@ export const upsertCampaignAndLink = internalMutation({
     linkId: vv.id("tryoutAccessLinks"),
   }),
   handler: async (ctx, args) => {
+    const now = Date.now();
+
     if (args.campaign.endsAt <= args.campaign.startsAt) {
       throw new ConvexError({
         code: "INVALID_CAMPAIGN_WINDOW",
@@ -69,6 +75,7 @@ export const upsertCampaignAndLink = internalMutation({
       grantDurationDays: args.campaign.grantDurationDays,
       name: args.campaign.name,
       product: args.campaign.product,
+      redeemStatus: getTryoutAccessCampaignRedeemStatus(args.campaign, now),
       slug: args.campaign.slug,
       startsAt: args.campaign.startsAt,
     };
@@ -84,6 +91,28 @@ export const upsertCampaignAndLink = internalMutation({
         enabled: args.link.enabled,
         label: args.link.label,
       });
+
+      if (args.campaign.startsAt > now) {
+        await ctx.scheduler.runAfter(
+          args.campaign.startsAt - now,
+          internal.tryoutAccess.mutations.internal.status
+            .syncCampaignRedeemStatus,
+          {
+            campaignId,
+          }
+        );
+      }
+
+      if (args.campaign.endsAt > now) {
+        await ctx.scheduler.runAfter(
+          args.campaign.endsAt - now,
+          internal.tryoutAccess.mutations.internal.status
+            .syncCampaignRedeemStatus,
+          {
+            campaignId,
+          }
+        );
+      }
 
       return {
         campaignId,
@@ -115,6 +144,28 @@ export const upsertCampaignAndLink = internalMutation({
       enabled: args.link.enabled,
       label: args.link.label,
     });
+
+    if (args.campaign.startsAt > now) {
+      await ctx.scheduler.runAfter(
+        args.campaign.startsAt - now,
+        internal.tryoutAccess.mutations.internal.status
+          .syncCampaignRedeemStatus,
+        {
+          campaignId,
+        }
+      );
+    }
+
+    if (args.campaign.endsAt > now) {
+      await ctx.scheduler.runAfter(
+        args.campaign.endsAt - now,
+        internal.tryoutAccess.mutations.internal.status
+          .syncCampaignRedeemStatus,
+        {
+          campaignId,
+        }
+      );
+    }
 
     return {
       campaignId,

@@ -1,7 +1,6 @@
 "use client";
 
 import { ArrowLeft02Icon, Rocket01Icon } from "@hugeicons/core-free-icons";
-import { useInterval } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -15,9 +14,9 @@ import {
 } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
-import { format, startOfMinute } from "date-fns";
+import { format } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useMemo, useTransition } from "react";
 import { toast } from "sonner";
 import { getLocale } from "@/lib/utils/date";
 
@@ -37,31 +36,16 @@ export function EventAccessPage({ code }: Props) {
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
-  const [queryNow, setQueryNow] = useState(() =>
-    startOfMinute(new Date()).getTime()
-  );
   const [isActionPending, startTransition] = useTransition();
-  const refreshQueryClock = useInterval(() => {
-    setQueryNow(startOfMinute(new Date()).getTime());
-  }, 60_000);
   const { data: pageState, isPending } = useQueryWithStatus(
     api.tryoutAccess.queries.getEventPageState,
     {
       code,
-      now: queryNow,
     }
   );
   const redeemEventAccess = useMutation(
-    api.tryoutAccess.mutations.redeemEventAccess
+    api.tryoutAccess.mutations.redeem.redeemEventAccess
   );
-
-  useEffect(() => {
-    refreshQueryClock.start();
-
-    return () => {
-      refreshQueryClock.stop();
-    };
-  }, [refreshQueryClock]);
 
   const statusCopy = useMemo(() => {
     if (!pageState) {
@@ -164,7 +148,6 @@ export function EventAccessPage({ code }: Props) {
             position: "bottom-center",
           }
         );
-        setQueryNow(startOfMinute(new Date()).getTime());
       } catch (error) {
         if (error instanceof ConvexError) {
           const errorData = error.data;

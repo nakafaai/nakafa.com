@@ -1,12 +1,22 @@
 import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
+import { literals } from "convex-helpers/validators";
+
+export const tryoutAccessCampaignRedeemStatusValidator = literals(
+  "scheduled",
+  "active",
+  "ended"
+);
+
+export const tryoutAccessGrantStatusValidator = literals("active", "expired");
 
 export const tryoutAccessCampaignValidator = v.object({
   slug: v.string(),
   name: v.string(),
   product: tryoutProductValidator,
   enabled: v.boolean(),
+  redeemStatus: tryoutAccessCampaignRedeemStatusValidator,
   startsAt: v.number(),
   endsAt: v.number(),
   grantDurationDays: v.number(),
@@ -26,6 +36,7 @@ export const tryoutAccessGrantValidator = v.object({
   product: tryoutProductValidator,
   redeemedAt: v.number(),
   endsAt: v.number(),
+  status: tryoutAccessGrantStatusValidator,
 });
 
 const tables = {
@@ -40,6 +51,7 @@ const tables = {
 
   tryoutAccessGrants: defineTable(tryoutAccessGrantValidator)
     .index("by_userId_and_campaignId", ["userId", "campaignId"])
+    .index("by_userId_and_product_and_status", ["userId", "product", "status"])
     .index("by_userId_and_product_and_endsAt", ["userId", "product", "endsAt"])
     .index("by_linkId", ["linkId"]),
 };

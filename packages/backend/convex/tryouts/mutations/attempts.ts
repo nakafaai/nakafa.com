@@ -5,7 +5,7 @@ import { getLatestScaleVersionForTryout } from "@repo/backend/convex/irt/scales/
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { hasTryoutAccess } from "@repo/backend/convex/tryoutAccess/helpers/access";
+import { hasTryoutAccessNow } from "@repo/backend/convex/tryoutAccess/helpers/access";
 import {
   requireActiveTryoutAttemptAfterExpirySync,
   requireOwnedTryoutAttempt,
@@ -73,7 +73,7 @@ export const startTryout = mutation({
       return null;
     }
 
-    const canStartTryout = await hasTryoutAccess(ctx.db, {
+    const canStartTryout = await hasTryoutAccessNow(ctx.db, {
       now,
       product: tryout.product,
       userId,

@@ -3,8 +3,13 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
+import type {
+  tryoutAccessCampaignRedeemStatusValidator,
+  tryoutAccessGrantStatusValidator,
+} from "@repo/backend/convex/tryoutAccess/schema";
 import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
 import { products } from "@repo/backend/convex/utils/polar/products";
+import type { Infer } from "convex/values";
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
@@ -13,6 +18,10 @@ const tryoutPaidProductIds = {
 } satisfies Record<TryoutProduct, string>;
 
 type TryoutAccessDbReader = MutationCtx["db"] | QueryCtx["db"];
+type TryoutAccessCampaignRedeemStatus = Infer<
+  typeof tryoutAccessCampaignRedeemStatusValidator
+>;
+type TryoutAccessGrantStatus = Infer<typeof tryoutAccessGrantStatusValidator>;
 
 /** Normalizes a public event code so reads and writes share one canonical key. */
 export function normalizeTryoutAccessCode(value: string) {
@@ -27,6 +36,34 @@ export function getTryoutAccessGrantEndsAt(
   return redeemedAt + grantDurationDays * DAY_IN_MS;
 }
 
+/** Resolves the current redeem status for one campaign time window. */
+export function getTryoutAccessCampaignRedeemStatus(
+  campaign: Pick<Doc<"tryoutAccessCampaigns">, "startsAt" | "endsAt">,
+  now: number
+): TryoutAccessCampaignRedeemStatus {
+  if (campaign.startsAt > now) {
+    return "scheduled";
+  }
+
+  if (campaign.endsAt <= now) {
+    return "ended";
+  }
+
+  return "active";
+}
+
+/** Resolves the stored status for one grant end timestamp. */
+export function getTryoutAccessGrantStatus(
+  endsAt: number,
+  now: number
+): TryoutAccessGrantStatus {
+  if (endsAt <= now) {
+    return "expired";
+  }
+
+  return "active";
+}
+
 /** Returns true when an event grant still allows tryout access. */
 export function isTryoutAccessGrantActive(
   grant: Pick<Doc<"tryoutAccessGrants">, "endsAt">,
@@ -36,25 +73,19 @@ export function isTryoutAccessGrantActive(
 }
 
 /** Explains why a campaign link cannot currently be redeemed. */
-export function getTryoutAccessUnavailableReason(
-  eventAccess: {
-    campaign: Pick<
-      Doc<"tryoutAccessCampaigns">,
-      "enabled" | "startsAt" | "endsAt"
-    >;
-    link: Pick<Doc<"tryoutAccessLinks">, "enabled">;
-  },
-  now: number
-) {
+export function getTryoutAccessUnavailableReason(eventAccess: {
+  campaign: Pick<Doc<"tryoutAccessCampaigns">, "enabled" | "redeemStatus">;
+  link: Pick<Doc<"tryoutAccessLinks">, "enabled">;
+}) {
   if (!(eventAccess.link.enabled && eventAccess.campaign.enabled)) {
     return "disabled" as const;
   }
 
-  if (eventAccess.campaign.startsAt > now) {
+  if (eventAccess.campaign.redeemStatus === "scheduled") {
     return "not-started" as const;
   }
 
-  if (eventAccess.campaign.endsAt <= now) {
+  if (eventAccess.campaign.redeemStatus === "ended") {
     return "ended" as const;
   }
 
@@ -95,6 +126,49 @@ export async function getTryoutAccessEventByCode(
 
 /** Resolves whether a user can start a tryout from paid or event access. */
 export async function hasTryoutAccess(
+  db: TryoutAccessDbReader,
+  {
+    product,
+    userId,
+  }: {
+    product: TryoutProduct;
+    userId: Doc<"users">["_id"];
+  }
+) {
+  const [customer, activeGrant] = await Promise.all([
+    db
+      .query("customers")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .unique(),
+    db
+      .query("tryoutAccessGrants")
+      .withIndex("by_userId_and_product_and_status", (q) =>
+        q.eq("userId", userId).eq("product", product).eq("status", "active")
+      )
+      .first(),
+  ]);
+
+  if (customer) {
+    const subscription = await db
+      .query("subscriptions")
+      .withIndex("by_customerId_and_status_and_productId", (q) =>
+        q
+          .eq("customerId", customer.id)
+          .eq("status", "active")
+          .eq("productId", tryoutPaidProductIds[product])
+      )
+      .first();
+
+    if (subscription) {
+      return true;
+    }
+  }
+
+  return activeGrant !== null;
+}
+
+/** Resolves whether a user can start a tryout using server time. */
+export async function hasTryoutAccessNow(
   db: TryoutAccessDbReader,
   {
     now,

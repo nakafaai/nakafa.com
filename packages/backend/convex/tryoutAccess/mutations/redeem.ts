@@ -1,9 +1,11 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import {
+  getTryoutAccessCampaignRedeemStatus,
   getTryoutAccessEventByCode,
   getTryoutAccessGrantEndsAt,
-  getTryoutAccessUnavailableReason,
+  getTryoutAccessGrantStatus,
   isTryoutAccessGrantActive,
 } from "@repo/backend/convex/tryoutAccess/helpers/access";
 import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
@@ -67,26 +69,26 @@ export const redeemEventAccess = mutation({
       };
     }
 
-    const unavailableReason = getTryoutAccessUnavailableReason(
-      eventAccess,
-      now
-    );
-
-    if (unavailableReason === "disabled") {
+    if (!(eventAccess.link.enabled && eventAccess.campaign.enabled)) {
       throw new ConvexError({
         code: "EVENT_DISABLED",
         message: "Event access is currently disabled.",
       });
     }
 
-    if (unavailableReason === "not-started") {
+    const campaignRedeemStatus = getTryoutAccessCampaignRedeemStatus(
+      eventAccess.campaign,
+      now
+    );
+
+    if (campaignRedeemStatus === "scheduled") {
       throw new ConvexError({
         code: "EVENT_NOT_STARTED",
         message: "Event access is not available yet.",
       });
     }
 
-    if (unavailableReason === "ended") {
+    if (campaignRedeemStatus === "ended") {
       throw new ConvexError({
         code: "EVENT_ENDED",
         message: "Event access has ended.",
@@ -98,14 +100,29 @@ export const redeemEventAccess = mutation({
       eventAccess.campaign.grantDurationDays
     );
 
-    await ctx.db.insert("tryoutAccessGrants", {
+    if (eventAccess.campaign.redeemStatus !== campaignRedeemStatus) {
+      await ctx.db.patch("tryoutAccessCampaigns", eventAccess.campaign._id, {
+        redeemStatus: campaignRedeemStatus,
+      });
+    }
+
+    const grantId = await ctx.db.insert("tryoutAccessGrants", {
       campaignId: eventAccess.campaign._id,
       linkId: eventAccess.link._id,
       userId: appUser._id,
       product: eventAccess.campaign.product,
       redeemedAt: now,
       endsAt,
+      status: getTryoutAccessGrantStatus(endsAt, now),
     });
+
+    await ctx.scheduler.runAfter(
+      endsAt - now,
+      internal.tryoutAccess.mutations.internal.status.expireGrant,
+      {
+        grantId,
+      }
+    );
 
     return {
       kind: "active" as const,

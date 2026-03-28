@@ -7,7 +7,6 @@ import {
   getTryoutAccessEventByCode,
   getTryoutAccessUnavailableReason,
   hasTryoutAccess,
-  isTryoutAccessGrantActive,
 } from "@repo/backend/convex/tryoutAccess/helpers/access";
 import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
 import { v } from "convex/values";
@@ -57,7 +56,6 @@ const eventPageStateValidator = v.union(
 export const getEventPageState = query({
   args: {
     code: v.string(),
-    now: v.number(),
   },
   returns: eventPageStateValidator,
   handler: async (ctx, args) => {
@@ -85,7 +83,7 @@ export const getEventPageState = query({
         .unique();
 
       if (existingGrant) {
-        if (isTryoutAccessGrantActive(existingGrant, args.now)) {
+        if (existingGrant.status === "active") {
           return {
             kind: "active" as const,
             endsAt: existingGrant.endsAt,
@@ -103,10 +101,7 @@ export const getEventPageState = query({
       }
     }
 
-    const unavailableReason = getTryoutAccessUnavailableReason(
-      eventAccess,
-      args.now
-    );
+    const unavailableReason = getTryoutAccessUnavailableReason(eventAccess);
 
     if (unavailableReason) {
       return {
@@ -138,7 +133,6 @@ export const getEventPageState = query({
 /** Returns whether the authenticated user can start one tryout product right now. */
 export const getTryoutAccessState = query({
   args: {
-    now: v.number(),
     product: tryoutProductValidator,
   },
   returns: v.boolean(),
@@ -146,7 +140,6 @@ export const getTryoutAccessState = query({
     const { appUser } = await requireAuth(ctx);
 
     return hasTryoutAccess(ctx.db, {
-      now: args.now,
       product: args.product,
       userId: appUser._id,
     });
