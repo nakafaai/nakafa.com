@@ -3,10 +3,7 @@ import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { IRT_OPERATIONAL_MODEL } from "@repo/backend/convex/irt/policy";
 import { buildBootstrapScaleItems } from "@repo/backend/convex/irt/scales/bootstrap";
-import {
-  evaluateTryoutScaleQuality,
-  upsertTryoutScaleQualityCheck,
-} from "@repo/backend/convex/irt/scales/quality";
+import { evaluateTryoutScaleQuality } from "@repo/backend/convex/irt/scales/quality";
 import {
   getLatestScaleVersionForTryout,
   getScaleVersionItems,
@@ -171,25 +168,6 @@ async function getUnchangedOfficialScaleVersion(
   return latestScaleVersion;
 }
 
-async function evaluateAndPersistScaleQuality(
-  db: IrtDbWriter,
-  {
-    now,
-    tryoutId,
-  }: {
-    now: number;
-    tryoutId: Id<"tryouts">;
-  }
-) {
-  const scaleQuality = await evaluateTryoutScaleQuality(db, { now, tryoutId });
-
-  if (scaleQuality) {
-    await upsertTryoutScaleQualityCheck(db, scaleQuality);
-  }
-
-  return scaleQuality;
-}
-
 async function resolveOfficialScaleDecision(
   db: IrtDbWriter,
   {
@@ -250,7 +228,7 @@ export async function getOrPublishScaleVersionForTryout(
     tryoutId: Id<"tryouts">;
   }
 ) {
-  const scaleQuality = await evaluateAndPersistScaleQuality(db, {
+  const scaleQuality = await evaluateTryoutScaleQuality(db, {
     now,
     tryoutId,
   });
@@ -298,7 +276,7 @@ export async function publishTryoutScaleVersionIfNeeded(
 
   const now = Date.now();
 
-  const scaleQuality = await evaluateAndPersistScaleQuality(ctx.db, {
+  const scaleQuality = await evaluateTryoutScaleQuality(ctx.db, {
     now,
     tryoutId: tryout._id,
   });

@@ -97,6 +97,12 @@ export const drainScalePublicationQueue = internalMutation({
     for (const tryoutId of distinctTryoutIds) {
       await publishTryoutScaleVersionIfNeeded(ctx, tryoutId);
 
+      await irtScaleQualityRefreshWorkpool.enqueueMutation(
+        ctx,
+        internal.irt.mutations.internal.scales.refreshScaleQualityCheck,
+        { tryoutId }
+      );
+
       await ctx.scheduler.runAfter(
         0,
         internal.irt.mutations.internal.queue

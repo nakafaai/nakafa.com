@@ -1,8 +1,10 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
 import { syncTryoutPartSetMappings } from "@repo/backend/convex/contentSync/lib/tryouts";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { getOrPublishScaleVersionForTryout } from "@repo/backend/convex/irt/scales/publish";
+import { irtScaleQualityRefreshWorkpool } from "@repo/backend/convex/irt/workpool";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import {
   tryoutProductPolicies,
@@ -83,6 +85,12 @@ export const bulkSyncTryouts = internalMutation({
               now,
               tryoutId: existingTryout._id,
             });
+
+            await irtScaleQualityRefreshWorkpool.enqueueMutation(
+              ctx,
+              internal.irt.mutations.internal.scales.refreshScaleQualityCheck,
+              { tryoutId: existingTryout._id }
+            );
           }
 
           unchanged++;
@@ -103,6 +111,12 @@ export const bulkSyncTryouts = internalMutation({
             tryoutId: existingTryout._id,
           });
         }
+
+        await irtScaleQualityRefreshWorkpool.enqueueMutation(
+          ctx,
+          internal.irt.mutations.internal.scales.refreshScaleQualityCheck,
+          { tryoutId: existingTryout._id }
+        );
 
         updated++;
         continue;
@@ -133,6 +147,12 @@ export const bulkSyncTryouts = internalMutation({
         });
       }
 
+      await irtScaleQualityRefreshWorkpool.enqueueMutation(
+        ctx,
+        internal.irt.mutations.internal.scales.refreshScaleQualityCheck,
+        { tryoutId }
+      );
+
       created++;
     }
 
@@ -162,6 +182,13 @@ export const bulkSyncTryouts = internalMutation({
         isActive: false,
         syncedAt: now,
       });
+
+      await irtScaleQualityRefreshWorkpool.enqueueMutation(
+        ctx,
+        internal.irt.mutations.internal.scales.refreshScaleQualityCheck,
+        { tryoutId: activeTryout._id }
+      );
+
       updated++;
     }
 
