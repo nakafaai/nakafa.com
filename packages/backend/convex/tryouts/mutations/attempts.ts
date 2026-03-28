@@ -5,6 +5,7 @@ import { getLatestScaleVersionForTryout } from "@repo/backend/convex/irt/scales/
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
+import { resolveTryoutAccessState } from "@repo/backend/convex/tryoutAccess/helpers/access";
 import {
   requireActiveTryoutAttemptAfterExpirySync,
   requireOwnedTryoutAttempt,
@@ -70,6 +71,20 @@ export const startTryout = mutation({
       }))
     ) {
       return null;
+    }
+
+    const accessState = await resolveTryoutAccessState(ctx.db, {
+      now,
+      product: tryout.product,
+      userId,
+    });
+
+    if (!accessState.canStart) {
+      throw new ConvexError({
+        code: "TRYOUT_ACCESS_REQUIRED",
+        message:
+          "You need an active event access or Pro subscription to start this tryout.",
+      });
     }
 
     await loadValidatedTryoutPartSets(ctx.db, {

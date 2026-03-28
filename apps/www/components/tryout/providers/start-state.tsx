@@ -14,6 +14,7 @@ import {
   type PropsWithChildren,
   useCallback,
   useMemo,
+  useState,
   useTransition,
 } from "react";
 import { toast } from "sonner";
@@ -38,7 +39,7 @@ interface TryoutStartContextValue {
       | null;
     attemptStatus: TryoutAttemptStateValue["effectiveStatus"];
     hasFinishedAttempt: boolean;
-    hasSubscription: boolean | undefined;
+    hasAccess: boolean | undefined;
     isLoading: boolean;
     isReady: boolean;
     remainingTime: TryoutAttemptStateValue["remainingTime"];
@@ -55,6 +56,7 @@ function useTryoutStartValue(): TryoutStartContextValue {
   const pathname = usePathname();
   const router = useRouter();
   const [isActionPending, startTransition] = useTransition();
+  const [accessQueryNow] = useState(() => Date.now());
   const [isDialogOpen, { close: closeDialog, open: openDialog }] =
     useDisclosure(false);
   const attemptData = useTryoutAttemptState((state) => state.attemptData);
@@ -67,11 +69,16 @@ function useTryoutStartValue(): TryoutStartContextValue {
   const remainingTime = useTryoutAttemptState((state) => state.remainingTime);
   const resumePartKey = useTryoutAttemptState((state) => state.resumePartKey);
   const tryoutSlug = useTryoutAttemptState((state) => state.params.tryoutSlug);
-  const { data: hasSubscription, isPending: isSubscriptionPending } =
-    useQueryWithStatus(
-      api.subscriptions.queries.hasActiveSubscription,
-      !isUserPending && user ? { productId: products.pro.id } : "skip"
-    );
+  const { data: accessState, isPending: isAccessPending } = useQueryWithStatus(
+    api.tryoutAccess.queries.getTryoutAccessState,
+    !isUserPending && user
+      ? {
+          now: accessQueryNow,
+          product,
+        }
+      : "skip"
+  );
+  const hasAccess = accessState?.canStart;
   const startTryout = useMutation(api.tryouts.mutations.attempts.startTryout);
   const generateCheckoutLink = useAction(
     api.customers.actions.generateCheckoutLink
@@ -79,12 +86,12 @@ function useTryoutStartValue(): TryoutStartContextValue {
 
   const isReady = !(
     isUserPending ||
-    (user && (isAttemptPending || isSubscriptionPending))
+    (user && (isAttemptPending || isAccessPending))
   );
   const isLoading =
     isActionPending ||
     isUserPending ||
-    (user ? isAttemptPending || isSubscriptionPending : false);
+    (user ? isAttemptPending || isAccessPending : false);
   const hasFinishedAttempt = Boolean(
     attemptData && attemptStatus !== "in-progress"
   );
@@ -112,7 +119,7 @@ function useTryoutStartValue(): TryoutStartContextValue {
       return;
     }
 
-    if (hasSubscription === false) {
+    if (hasAccess === false) {
       startTransition(async () => {
         try {
           const { url } = await generateCheckoutLink({
@@ -134,7 +141,7 @@ function useTryoutStartValue(): TryoutStartContextValue {
   }, [
     openDialog,
     generateCheckoutLink,
-    hasSubscription,
+    hasAccess,
     pathname,
     product,
     resumePartKey,
@@ -175,7 +182,7 @@ function useTryoutStartValue(): TryoutStartContextValue {
         attempt: attemptData?.attempt ?? null,
         attemptStatus,
         hasFinishedAttempt,
-        hasSubscription,
+        hasAccess,
         isLoading,
         isReady,
         remainingTime,
@@ -187,8 +194,8 @@ function useTryoutStartValue(): TryoutStartContextValue {
       attemptStatus,
       clickCtaAction,
       confirmStartAction,
+      hasAccess,
       hasFinishedAttempt,
-      hasSubscription,
       isActionPending,
       isDialogOpen,
       isLoading,

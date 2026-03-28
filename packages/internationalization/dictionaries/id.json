@@ -421,6 +421,26 @@
     "delete": "Hapus",
     "api-key-deleted": "API key udah dihapus."
   },
+  "EventAccess": {
+    "title": "Akses event partner",
+    "eyebrow": "Akses event partner",
+    "loading-description": "Lagi memeriksa akses event kamu...",
+    "sign-in-description": "{name} siap diklaim. Masuk dulu untuk mengaktifkan akses try out gratis selama 90 hari.",
+    "ready-description": "{name} siap diaktifkan. Begitu diklaim, akses try out gratis kamu aktif selama 90 hari sejak hari ini.",
+    "active-description": "{name} sudah aktif. Kamu bisa mengerjakan try out sampai {date}.",
+    "used-description": "{name} sudah pernah kamu pakai dan masa aksesnya berakhir pada {date}.",
+    "unavailable-invalid-code": "Link event ini nggak valid atau sudah nggak tersedia.",
+    "unavailable-disabled": "Akses event ini sedang dimatikan untuk sementara.",
+    "unavailable-not-started": "Akses event ini belum dibuka. Coba lagi nanti ya.",
+    "unavailable-ended": "Akses event ini sudah berakhir.",
+    "sign-in-cta": "Masuk untuk klaim akses",
+    "redeem-cta": "Aktifkan akses event",
+    "open-tryout-cta": "Buka try out",
+    "view-tryout-cta": "Lihat try out",
+    "browse-tryouts-cta": "Lihat semua try out",
+    "redeem-success": "Akses event aktif sampai {date}.",
+    "redeem-error": "Akses event belum bisa diaktifkan. Coba lagi ya."
+  },
   "Ai": {
     "ask-ai": "Tanya AI",
     "ask-nina": "Tanya Nina",

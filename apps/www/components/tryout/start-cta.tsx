@@ -43,9 +43,7 @@ export function TryoutStartCta() {
   const hasFinishedAttempt = useTryoutStart(
     (state) => state.state.hasFinishedAttempt
   );
-  const hasSubscription = useTryoutStart(
-    (state) => state.state.hasSubscription
-  );
+  const hasAccess = useTryoutStart((state) => state.state.hasAccess);
   const isActionPending = useTryoutStart((state) => state.meta.isActionPending);
   const isLoading = useTryoutStart((state) => state.state.isLoading);
   const isReady = useTryoutStart((state) => state.state.isReady);
@@ -62,7 +60,7 @@ export function TryoutStartCta() {
     label = tTryouts("restart-cta");
   }
 
-  if (hasSubscription === false) {
+  if (hasAccess === false) {
     label = tAuth("get-pro");
   }
 
