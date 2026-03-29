@@ -181,7 +181,7 @@ export function EventAccessPage({ code }: Props) {
               disabled={isActionPending}
               nativeButton={false}
               render={
-                <NavigationLink href={`/try-out/${pageState.product}`}>
+                <NavigationLink href="/try-out">
                   <HugeIcons icon={Rocket01Icon} />
                   {tEvent("open-tryout-cta")}
                 </NavigationLink>
@@ -205,7 +205,7 @@ export function EventAccessPage({ code }: Props) {
             disabled={isActionPending}
             nativeButton={false}
             render={
-              <NavigationLink href={`/try-out/${pageState.product}`}>
+              <NavigationLink href="/try-out">
                 <HugeIcons icon={Rocket01Icon} />
                 {tEvent("view-tryout-cta")}
               </NavigationLink>
