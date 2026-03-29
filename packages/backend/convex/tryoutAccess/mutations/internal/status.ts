@@ -72,11 +72,26 @@ export const sweepStates = internalMutation({
   returns: v.null(),
   handler: async (ctx) => {
     const now = Date.now();
-    const campaigns = await ctx.db.query("tryoutAccessCampaigns").collect();
-    const grants = await ctx.db.query("tryoutAccessGrants").collect();
-    let updatedCampaignCount = 0;
+    const scheduledCampaigns = await ctx.db
+      .query("tryoutAccessCampaigns")
+      .withIndex("by_redeemStatus_and_startsAt", (q) =>
+        q.eq("redeemStatus", "scheduled").lt("startsAt", now + 1)
+      )
+      .take(TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE);
+    const activeCampaigns = await ctx.db
+      .query("tryoutAccessCampaigns")
+      .withIndex("by_redeemStatus_and_endsAt", (q) =>
+        q.eq("redeemStatus", "active").lt("endsAt", now + 1)
+      )
+      .take(TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE);
+    const overdueGrants = await ctx.db
+      .query("tryoutAccessGrants")
+      .withIndex("by_status_and_endsAt", (q) =>
+        q.eq("status", "active").lt("endsAt", now + 1)
+      )
+      .take(TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE);
 
-    for (const campaign of campaigns) {
+    for (const campaign of scheduledCampaigns) {
       const redeemStatus = getTryoutAccessCampaignRedeemStatus(campaign, now);
 
       if (campaign.redeemStatus === redeemStatus) {
@@ -86,16 +101,21 @@ export const sweepStates = internalMutation({
       await ctx.db.patch("tryoutAccessCampaigns", campaign._id, {
         redeemStatus,
       });
-      updatedCampaignCount += 1;
-
-      if (updatedCampaignCount >= TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE) {
-        break;
-      }
     }
 
-    let updatedGrantCount = 0;
+    for (const campaign of activeCampaigns) {
+      const redeemStatus = getTryoutAccessCampaignRedeemStatus(campaign, now);
 
-    for (const grant of grants) {
+      if (campaign.redeemStatus === redeemStatus) {
+        continue;
+      }
+
+      await ctx.db.patch("tryoutAccessCampaigns", campaign._id, {
+        redeemStatus,
+      });
+    }
+
+    for (const grant of overdueGrants) {
       const status = getTryoutAccessGrantStatus(grant.endsAt, now);
 
       if (grant.status === status) {
@@ -105,16 +125,12 @@ export const sweepStates = internalMutation({
       await ctx.db.patch("tryoutAccessGrants", grant._id, {
         status,
       });
-      updatedGrantCount += 1;
-
-      if (updatedGrantCount >= TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE) {
-        break;
-      }
     }
 
     if (
-      updatedCampaignCount < TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE &&
-      updatedGrantCount < TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE
+      scheduledCampaigns.length < TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE &&
+      activeCampaigns.length < TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE &&
+      overdueGrants.length < TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE
     ) {
       return null;
     }

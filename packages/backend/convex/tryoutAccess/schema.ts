@@ -40,10 +40,10 @@ export const tryoutAccessGrantValidator = v.object({
 });
 
 const tables = {
-  tryoutAccessCampaigns: defineTable(tryoutAccessCampaignValidator).index(
-    "by_slug",
-    ["slug"]
-  ),
+  tryoutAccessCampaigns: defineTable(tryoutAccessCampaignValidator)
+    .index("by_slug", ["slug"])
+    .index("by_redeemStatus_and_startsAt", ["redeemStatus", "startsAt"])
+    .index("by_redeemStatus_and_endsAt", ["redeemStatus", "endsAt"]),
 
   tryoutAccessLinks: defineTable(tryoutAccessLinkValidator)
     .index("by_code", ["code"])
@@ -53,6 +53,7 @@ const tables = {
     .index("by_userId_and_campaignId", ["userId", "campaignId"])
     .index("by_userId_and_status", ["userId", "status"])
     .index("by_userId_and_endsAt", ["userId", "endsAt"])
+    .index("by_status_and_endsAt", ["status", "endsAt"])
     .index("by_linkId", ["linkId"]),
 };
 
