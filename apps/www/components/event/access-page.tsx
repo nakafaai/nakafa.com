@@ -5,11 +5,9 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import {
-  usePathname,
-  useRouter,
-} from "@repo/internationalization/src/navigation";
+import { usePathname } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
 import { format } from "date-fns";
@@ -32,7 +30,6 @@ export function EventAccessPage({ code }: Props) {
   const tEvent = useTranslations("EventAccess");
   const locale = useLocale();
   const pathname = usePathname();
-  const router = useRouter();
   const [isActionPending, startTransition] = useTransition();
   const { data: pageState, isPending } = useQueryWithStatus(
     api.tryoutAccess.queries.getEventPageState,
@@ -119,13 +116,14 @@ export function EventAccessPage({ code }: Props) {
           action={
             <Button
               disabled={isActionPending}
-              onClick={() => {
-                router.push("/try-out");
-              }}
-            >
-              <HugeIcons icon={Rocket01Icon} />
-              {tEvent("view-tryout-cta")}
-            </Button>
+              nativeButton={false}
+              render={
+                <NavigationLink href="/try-out">
+                  <HugeIcons icon={Rocket01Icon} />
+                  {tEvent("view-tryout-cta")}
+                </NavigationLink>
+              }
+            />
           }
           description={description}
           title={pageState.name ?? tEvent("title")}
@@ -141,13 +139,14 @@ export function EventAccessPage({ code }: Props) {
           action={
             <Button
               disabled={isActionPending}
-              onClick={() => {
-                router.push(`/auth?redirect=${pathname}`);
-              }}
-            >
-              <HugeIcons icon={Rocket01Icon} />
-              {tEvent("sign-in-cta")}
-            </Button>
+              nativeButton={false}
+              render={
+                <NavigationLink href={`/auth?redirect=${pathname}`}>
+                  <HugeIcons icon={Rocket01Icon} />
+                  {tEvent("sign-in-cta")}
+                </NavigationLink>
+              }
+            />
           }
           description={tEvent("sign-in-description")}
           title={pageState.name}
@@ -180,13 +179,14 @@ export function EventAccessPage({ code }: Props) {
           action={
             <Button
               disabled={isActionPending}
-              onClick={() => {
-                router.push(`/try-out/${pageState.product}`);
-              }}
-            >
-              <HugeIcons icon={Rocket01Icon} />
-              {tEvent("open-tryout-cta")}
-            </Button>
+              nativeButton={false}
+              render={
+                <NavigationLink href={`/try-out/${pageState.product}`}>
+                  <HugeIcons icon={Rocket01Icon} />
+                  {tEvent("open-tryout-cta")}
+                </NavigationLink>
+              }
+            />
           }
           description={tEvent("active-until", {
             date: formatDate(locale, pageState.endsAt),
@@ -203,13 +203,14 @@ export function EventAccessPage({ code }: Props) {
         action={
           <Button
             disabled={isActionPending}
-            onClick={() => {
-              router.push(`/try-out/${pageState.product}`);
-            }}
-          >
-            <HugeIcons icon={Rocket01Icon} />
-            {tEvent("view-tryout-cta")}
-          </Button>
+            nativeButton={false}
+            render={
+              <NavigationLink href={`/try-out/${pageState.product}`}>
+                <HugeIcons icon={Rocket01Icon} />
+                {tEvent("view-tryout-cta")}
+              </NavigationLink>
+            }
+          />
         }
         description={tEvent("ended-at", {
           date: formatDate(locale, pageState.endsAt),
