@@ -2,9 +2,9 @@
 
 import {
   AccessIcon,
-  ArrowRight01Icon,
   EyeIcon,
   Login01Icon,
+  Rocket01Icon,
 } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
@@ -187,7 +187,7 @@ export function EventAccessPage({ code }: Props) {
               nativeButton={false}
               render={
                 <NavigationLink href="/try-out">
-                  <HugeIcons icon={ArrowRight01Icon} />
+                  <HugeIcons icon={Rocket01Icon} />
                   {tEvent("open-tryout-cta")}
                 </NavigationLink>
               }
