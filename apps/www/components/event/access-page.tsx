@@ -44,14 +44,6 @@ export function EventAccessPage({ code }: Props) {
     api.tryoutAccess.mutations.redeem.redeemEventAccess
   );
 
-  function goToAuth() {
-    router.push(`/auth?redirect=${pathname}`);
-  }
-
-  function goToTryout(product: string) {
-    router.push(`/try-out/${product}`);
-  }
-
   function activateAccess() {
     startTransition(async () => {
       try {
@@ -124,9 +116,19 @@ export function EventAccessPage({ code }: Props) {
     return (
       <EventAccessLayout>
         <EventAccessCard
-          badge={tEvent("title")}
+          action={
+            <Button
+              disabled={isActionPending}
+              onClick={() => {
+                router.push("/try-out");
+              }}
+            >
+              <HugeIcons icon={Rocket01Icon} />
+              {tEvent("view-tryout-cta")}
+            </Button>
+          }
           description={description}
-          title={tEvent("title")}
+          title={pageState.name ?? tEvent("title")}
         />
       </EventAccessLayout>
     );
@@ -137,14 +139,17 @@ export function EventAccessPage({ code }: Props) {
       <EventAccessLayout>
         <EventAccessCard
           action={
-            <Button disabled={isActionPending} onClick={goToAuth}>
+            <Button
+              disabled={isActionPending}
+              onClick={() => {
+                router.push(`/auth?redirect=${pathname}`);
+              }}
+            >
               <HugeIcons icon={Rocket01Icon} />
               {tEvent("sign-in-cta")}
             </Button>
           }
-          badge={tEvent("free-days", {
-            days: pageState.grantDurationDays,
-          })}
+          description={tEvent("sign-in-description")}
           title={pageState.name}
         />
       </EventAccessLayout>
@@ -161,9 +166,7 @@ export function EventAccessPage({ code }: Props) {
               {tEvent("redeem-cta")}
             </Button>
           }
-          badge={tEvent("free-days", {
-            days: pageState.grantDurationDays,
-          })}
+          description={tEvent("ready-description")}
           title={pageState.name}
         />
       </EventAccessLayout>
@@ -178,17 +181,16 @@ export function EventAccessPage({ code }: Props) {
             <Button
               disabled={isActionPending}
               onClick={() => {
-                goToTryout(pageState.product);
+                router.push(`/try-out/${pageState.product}`);
               }}
             >
               <HugeIcons icon={Rocket01Icon} />
               {tEvent("open-tryout-cta")}
             </Button>
           }
-          badge={tEvent("active-until", {
+          description={tEvent("active-until", {
             date: formatDate(locale, pageState.endsAt),
           })}
-          description={tEvent("active-state")}
           title={pageState.name}
         />
       </EventAccessLayout>
@@ -202,17 +204,16 @@ export function EventAccessPage({ code }: Props) {
           <Button
             disabled={isActionPending}
             onClick={() => {
-              goToTryout(pageState.product);
+              router.push(`/try-out/${pageState.product}`);
             }}
           >
             <HugeIcons icon={Rocket01Icon} />
             {tEvent("view-tryout-cta")}
           </Button>
         }
-        badge={tEvent("ended-at", {
+        description={tEvent("ended-at", {
           date: formatDate(locale, pageState.endsAt),
         })}
-        description={tEvent("used-state")}
         title={pageState.name}
       />
     </EventAccessLayout>

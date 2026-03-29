@@ -1,9 +1,7 @@
 import { ArrowLeft02Icon } from "@hugeicons/core-free-icons";
-import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Card,
-  CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
@@ -20,9 +18,8 @@ interface EventAccessLayoutProps {
 }
 
 interface EventAccessCardProps {
-  action?: ReactNode;
-  badge: ReactNode;
-  description?: ReactNode;
+  action: ReactNode;
+  description: ReactNode;
   title: ReactNode;
 }
 
@@ -34,10 +31,11 @@ export function EventAccessLayout({ children }: EventAccessLayoutProps) {
       <Particles className="pointer-events-none absolute inset-0 opacity-80" />
       <div className="z-1 m-auto w-full max-w-xl space-y-3 px-6 py-12">
         <Button
+          nativeButton={false}
           render={
-            <NavigationLink href="/try-out">
+            <NavigationLink href="/">
               <HugeIcons icon={ArrowLeft02Icon} />
-              {tCommon("back")}
+              {tCommon("home")}
             </NavigationLink>
           }
           variant="link"
@@ -51,24 +49,16 @@ export function EventAccessLayout({ children }: EventAccessLayoutProps) {
 
 export function EventAccessCard({
   action,
-  badge,
   description,
   title,
 }: EventAccessCardProps) {
   return (
     <Card>
       <CardHeader>
-        <Badge variant="secondary">{badge}</Badge>
         <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
-
-      {description ? (
-        <CardContent>
-          <CardDescription>{description}</CardDescription>
-        </CardContent>
-      ) : null}
-
-      {action ? <CardFooter>{action}</CardFooter> : null}
+      <CardFooter>{action}</CardFooter>
     </Card>
   );
 }
