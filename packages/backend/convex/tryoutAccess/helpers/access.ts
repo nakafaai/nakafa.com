@@ -7,17 +7,22 @@ import type {
   tryoutAccessCampaignRedeemStatusValidator,
   tryoutAccessGrantStatusValidator,
 } from "@repo/backend/convex/tryoutAccess/schema";
-import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
+import {
+  type TryoutProduct,
+  tryoutProducts,
+} from "@repo/backend/convex/tryouts/products";
 import { products } from "@repo/backend/convex/utils/polar/products";
 import type { Infer } from "convex/values";
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
+const MAX_PRODUCT_GRANTS_PER_GRANT = tryoutProducts.length;
 
 const tryoutPaidProductIds = {
   snbt: products.pro.id,
 } satisfies Record<TryoutProduct, string>;
 
 type TryoutAccessDbReader = MutationCtx["db"] | QueryCtx["db"];
+type TryoutAccessDbWriter = MutationCtx["db"];
 type TryoutAccessCampaignRedeemStatus = Infer<
   typeof tryoutAccessCampaignRedeemStatusValidator
 >;
@@ -114,6 +119,37 @@ export async function getTryoutAccessEventByCode(
     campaign,
     link,
   };
+}
+
+/** Synchronizes one summary grant and its product grants to the same status. */
+export async function syncTryoutAccessGrantStatus(
+  db: TryoutAccessDbWriter,
+  grant: Pick<Doc<"tryoutAccessGrants">, "_id" | "endsAt" | "status">,
+  now: number
+) {
+  const status = getTryoutAccessGrantStatus(grant.endsAt, now);
+  const productGrants = await db
+    .query("tryoutAccessProductGrants")
+    .withIndex("by_grantId", (q) => q.eq("grantId", grant._id))
+    .take(MAX_PRODUCT_GRANTS_PER_GRANT);
+
+  if (grant.status !== status) {
+    await db.patch("tryoutAccessGrants", grant._id, {
+      status,
+    });
+  }
+
+  for (const productGrant of productGrants) {
+    if (productGrant.status === status) {
+      continue;
+    }
+
+    await db.patch("tryoutAccessProductGrants", productGrant._id, {
+      status,
+    });
+  }
+
+  return status;
 }
 
 async function hasActiveTryoutSubscription(

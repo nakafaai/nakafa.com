@@ -51,6 +51,18 @@ export function EventAccessPage({ code }: Props) {
       try {
         const result = await redeemEventAccess({ code });
 
+        if (result.kind === "used") {
+          toast.info(
+            tEvent("ended-at", {
+              date: formatDate(locale, result.endsAt),
+            }),
+            {
+              position: "bottom-center",
+            }
+          );
+          return;
+        }
+
         toast.success(
           tEvent("redeem-success", {
             date: formatDate(locale, result.endsAt),

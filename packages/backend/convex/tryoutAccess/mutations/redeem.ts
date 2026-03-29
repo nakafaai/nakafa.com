@@ -6,6 +6,7 @@ import {
   getTryoutAccessEventByCode,
   getTryoutAccessGrantEndsAt,
   getTryoutAccessGrantStatus,
+  syncTryoutAccessGrantStatus,
 } from "@repo/backend/convex/tryoutAccess/helpers/access";
 import { ConvexError, v } from "convex/values";
 
@@ -64,6 +65,8 @@ export const redeemEventAccess = mutation({
           name: eventAccess.campaign.name,
         };
       }
+
+      await syncTryoutAccessGrantStatus(ctx.db, existingGrant, now);
 
       return {
         kind: "used" as const,

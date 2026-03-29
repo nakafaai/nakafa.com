@@ -1,45 +1,13 @@
 import { internal } from "@repo/backend/convex/_generated/api";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import {
   getTryoutAccessCampaignRedeemStatus,
-  getTryoutAccessGrantStatus,
+  syncTryoutAccessGrantStatus,
 } from "@repo/backend/convex/tryoutAccess/helpers/access";
-import { tryoutProducts } from "@repo/backend/convex/tryouts/products";
 import { v } from "convex/values";
 
 const TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE = 100;
-const MAX_PRODUCT_GRANTS_PER_GRANT = tryoutProducts.length;
-
-async function syncGrantStatus(
-  ctx: MutationCtx,
-  grant: Pick<Doc<"tryoutAccessGrants">, "_id" | "endsAt" | "status">,
-  now: number
-) {
-  const status = getTryoutAccessGrantStatus(grant.endsAt, now);
-  const productGrants = await ctx.db
-    .query("tryoutAccessProductGrants")
-    .withIndex("by_grantId", (q) => q.eq("grantId", grant._id))
-    .take(MAX_PRODUCT_GRANTS_PER_GRANT);
-
-  if (grant.status !== status) {
-    await ctx.db.patch("tryoutAccessGrants", grant._id, {
-      status,
-    });
-  }
-
-  for (const productGrant of productGrants) {
-    if (productGrant.status === status) {
-      continue;
-    }
-
-    await ctx.db.patch("tryoutAccessProductGrants", productGrant._id, {
-      status,
-    });
-  }
-}
 
 /** Synchronizes one campaign redeem status from its stored time window. */
 export const syncCampaignRedeemStatus = internalMutation({
@@ -84,7 +52,7 @@ export const expireGrant = internalMutation({
       return null;
     }
 
-    await syncGrantStatus(ctx, grant, Date.now());
+    await syncTryoutAccessGrantStatus(ctx.db, grant, Date.now());
     return null;
   },
 });
@@ -139,7 +107,7 @@ export const sweepStates = internalMutation({
     }
 
     for (const grant of overdueGrants) {
-      await syncGrantStatus(ctx, grant, now);
+      await syncTryoutAccessGrantStatus(ctx.db, grant, now);
     }
 
     if (
