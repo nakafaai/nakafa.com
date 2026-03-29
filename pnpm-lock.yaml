@@ -18,8 +18,8 @@ importers:
         specifier: ^2.30.0
         version: 2.30.0(@types/node@25.5.0)
       '@effect/language-service':
-        specifier: ^0.84.1
-        version: 0.84.1
+        specifier: ^0.84.2
+        version: 0.84.2
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:packages/typescript-config
@@ -42,14 +42,14 @@ importers:
         specifier: ^6.0.2
         version: 6.0.2
       ultracite:
-        specifier: ^7.3.2
-        version: 7.3.2
+        specifier: ^7.4.0
+        version: 7.4.0
 
   apps/api:
     dependencies:
       '@convex-dev/better-auth':
-        specifier: ^0.11.3
-        version: 0.11.3(@standard-schema/spec@1.1.0)(better-auth@1.5.6(@opentelemetry/api@1.9.0)(mongodb@7.1.0)(next@16.2.1(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.1.2)(vue@3.5.30(typescript@6.0.2)))(convex@1.34.1(react@19.2.4))(hono@4.12.9)(react@19.2.4)(typescript@6.0.2)
+        specifier: ^0.11.4
+        version: 0.11.4(@standard-schema/spec@1.1.0)(better-auth@1.5.6(@opentelemetry/api@1.9.0)(mongodb@7.1.0)(next@16.2.1(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.1.2)(vue@3.5.30(typescript@6.0.2)))(convex@1.34.1(react@19.2.4))(hono@4.12.9)(react@19.2.4)(typescript@6.0.2)
       '@repo/backend':
         specifier: workspace:*
         version: link:../../packages/backend
@@ -207,8 +207,8 @@ importers:
         specifier: ^3.0.143
         version: 3.0.143(react@19.2.4)(zod@4.3.6)
       '@convex-dev/better-auth':
-        specifier: ^0.11.3
-        version: 0.11.3(@standard-schema/spec@1.1.0)(better-auth@1.5.6(@opentelemetry/api@1.9.0)(mongodb@7.1.0)(next@16.2.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.1.2)(vue@3.5.30(typescript@6.0.2)))(convex@1.34.1(react@19.2.4))(hono@4.12.9)(react@19.2.4)(typescript@6.0.2)
+        specifier: ^0.11.4
+        version: 0.11.4(@standard-schema/spec@1.1.0)(better-auth@1.5.6(@opentelemetry/api@1.9.0)(mongodb@7.1.0)(next@16.2.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.1.2)(vue@3.5.30(typescript@6.0.2)))(convex@1.34.1(react@19.2.4))(hono@4.12.9)(react@19.2.4)(typescript@6.0.2)
       '@hugeicons/core-free-icons':
         specifier: ^4.0.0
         version: 4.0.0
@@ -537,8 +537,8 @@ importers:
         specifier: ^0.2.1
         version: 0.2.1(convex@1.34.1(react@19.2.4))
       '@convex-dev/better-auth':
-        specifier: ^0.11.3
-        version: 0.11.3(@standard-schema/spec@1.1.0)(better-auth@1.5.6(@opentelemetry/api@1.9.0)(mongodb@7.1.0)(next@16.2.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.1.2)(vue@3.5.30(typescript@5.9.3)))(convex@1.34.1(react@19.2.4))(hono@4.12.9)(react@19.2.4)(typescript@5.9.3)
+        specifier: ^0.11.4
+        version: 0.11.4(@standard-schema/spec@1.1.0)(better-auth@1.5.6(@opentelemetry/api@1.9.0)(mongodb@7.1.0)(next@16.2.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.1.2)(vue@3.5.30(typescript@5.9.3)))(convex@1.34.1(react@19.2.4))(hono@4.12.9)(react@19.2.4)(typescript@5.9.3)
       '@convex-dev/resend':
         specifier: ^0.2.3
         version: 0.2.3(@react-email/render@2.0.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.34.1(react@19.2.4))(hono@4.12.9)(react@19.2.4)(typescript@5.9.3)(zod@4.3.6))(convex@1.34.1(react@19.2.4))(react@19.2.4)
@@ -604,8 +604,8 @@ importers:
         specifier: ^4.1.2
         version: 4.1.2(vitest@4.1.2)
       convex-test:
-        specifier: ^0.0.44
-        version: 0.0.44(convex@1.34.1(react@19.2.4))
+        specifier: ^0.0.45
+        version: 0.0.45(convex@1.34.1(react@19.2.4))
       glob:
         specifier: ^13.0.6
         version: 13.0.6
@@ -867,8 +867,8 @@ importers:
         specifier: ^3.4.16
         version: 3.4.16(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react-resizable-panels:
-        specifier: ^4.7.6
-        version: 4.7.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        specifier: ^4.8.0
+        version: 4.8.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react-syntax-highlighter:
         specifier: ^16.1.1
         version: 16.1.1(react@19.2.4)
@@ -1719,8 +1719,8 @@ packages:
     peerDependencies:
       convex: ^1.24.8
 
-  '@convex-dev/better-auth@0.11.3':
-    resolution: {integrity: sha512-hun3psvKwlrjHGEpr8HiDT72hogaiJovHPGeqHHtZmU8+VYllhEVH/KkD7YNIqq02MFLQXblsd6fPZdDOdcg4A==}
+  '@convex-dev/better-auth@0.11.4':
+    resolution: {integrity: sha512-CsRsM7UaQgQKH1mt4z64QOZUfrhZKNsspkpWjlhqLiIz5THfnM2vaSVMQ3GOddcUvw7AgkNCNR3u8C8HjLQEMA==}
     peerDependencies:
       better-auth: '>=1.5.0 <1.6.0'
       convex: ^1.25.0
@@ -1861,8 +1861,8 @@ packages:
     resolution: {integrity: sha512-NKBGBSIKUG584qrS1tyxVpX/AKJKQw5HgjYEnPLC0QsTw79JrGn+qUr8CXFb955Iy7GUdiiUv1rJ6JBGvaKb6w==}
     engines: {node: '>=18'}
 
-  '@effect/language-service@0.84.1':
-    resolution: {integrity: sha512-YUqjJU24HeYgPV453cR2fDqkZ+zZKMuxGnmxWAPscWJ6gt6FB7JZohMCOczRTIOGPrQMcloJX7BjCaPu+RNhpw==}
+  '@effect/language-service@0.84.2':
+    resolution: {integrity: sha512-l04qNxpiA8rY5yXWckRPJ7Mk5MNerXuNymSFf+IdflfI5i8jgL1bpBNLuP6ijg7wgjdHc/KmTnCj2kT0SCntuA==}
     hasBin: true
 
   '@egjs/agent@2.4.4':
@@ -8042,8 +8042,8 @@ packages:
       zod:
         optional: true
 
-  convex-test@0.0.44:
-    resolution: {integrity: sha512-2tv5XRx1n9z4kKwIiUU1UZgC0UDgUGpqAL2D2Hq45cHJ6HBTemfP2wKPMOcfag6ATFfmyqK3Xau0fKiJCtrdxQ==}
+  convex-test@0.0.45:
+    resolution: {integrity: sha512-e7wjl/1EXWDlbpIbfMqlmpwMwKC8bp+XiKQUk1xeG4u/mIiMLel5u/KaSueHm4zAxLdoyqAjGb6LAOZMqaIlSQ==}
     peerDependencies:
       convex: ^1.32.0
 
@@ -11740,8 +11740,8 @@ packages:
       '@types/react':
         optional: true
 
-  react-resizable-panels@4.7.6:
-    resolution: {integrity: sha512-w3gbmUihfvH2Ho0iV1ULS2c/E/7HW/6g0GihogsIHjZf+JmmyVnKhryB3+I4JSxO8++uD3cKsSpOVTJV+GWEuA==}
+  react-resizable-panels@4.8.0:
+    resolution: {integrity: sha512-2uEABkewb3ky/ZgIlAUxWa1W/LjsK494fdV1QsXxst7CDRHCzo7h22tWWu3NNaBjmiuriOCt3CvhipnaYcpoIw==}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
       react-dom: ^18.0.0 || ^19.0.0
@@ -12839,8 +12839,8 @@ packages:
     resolution: {integrity: sha512-rvKSBiC5zqCCiDZ9kAOszZcDvdAHwwIKJG33Ykj43OKcWsnmcBRL09YTU4nOeHZ8Y2a7l1MgTd08SBe9A8Qj6A==}
     engines: {node: '>=18'}
 
-  ultracite@7.3.2:
-    resolution: {integrity: sha512-JV2TdeBDc1aaj3wFzXLjRcBlUZkXBdShMLAjHh9YLK0rXPSK42CzHqfWXUfibFUAUiUGNwoOFnIpS45EaJAcdg==}
+  ultracite@7.4.0:
+    resolution: {integrity: sha512-PkJVuQ7+Zf9Jwy7+0GyUe7HAvw9VHFAD5HLqD+hP/SQ0a0a/BxYdbpIVAOM295JSwBa8ukx/1kJjlXrPNgXgTw==}
     hasBin: true
     peerDependencies:
       oxlint: ^1.0.0
@@ -14504,7 +14504,7 @@ snapshots:
     dependencies:
       convex: 1.34.1(react@19.2.4)
 
-  '@convex-dev/better-auth@0.11.3(@standard-schema/spec@1.1.0)(better-auth@1.5.6(@opentelemetry/api@1.9.0)(mongodb@7.1.0)(next@16.2.1(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.1.2)(vue@3.5.30(typescript@6.0.2)))(convex@1.34.1(react@19.2.4))(hono@4.12.9)(react@19.2.4)(typescript@6.0.2)':
+  '@convex-dev/better-auth@0.11.4(@standard-schema/spec@1.1.0)(better-auth@1.5.6(@opentelemetry/api@1.9.0)(mongodb@7.1.0)(next@16.2.1(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.1.2)(vue@3.5.30(typescript@6.0.2)))(convex@1.34.1(react@19.2.4))(hono@4.12.9)(react@19.2.4)(typescript@6.0.2)':
     dependencies:
       '@better-fetch/fetch': 1.1.21
       better-auth: 1.5.6(@opentelemetry/api@1.9.0)(mongodb@7.1.0)(next@16.2.1(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.1.2)(vue@3.5.30(typescript@6.0.2))
@@ -14522,7 +14522,7 @@ snapshots:
       - hono
       - typescript
 
-  '@convex-dev/better-auth@0.11.3(@standard-schema/spec@1.1.0)(better-auth@1.5.6(@opentelemetry/api@1.9.0)(mongodb@7.1.0)(next@16.2.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.1.2)(vue@3.5.30(typescript@5.9.3)))(convex@1.34.1(react@19.2.4))(hono@4.12.9)(react@19.2.4)(typescript@5.9.3)':
+  '@convex-dev/better-auth@0.11.4(@standard-schema/spec@1.1.0)(better-auth@1.5.6(@opentelemetry/api@1.9.0)(mongodb@7.1.0)(next@16.2.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.1.2)(vue@3.5.30(typescript@5.9.3)))(convex@1.34.1(react@19.2.4))(hono@4.12.9)(react@19.2.4)(typescript@5.9.3)':
     dependencies:
       '@better-fetch/fetch': 1.1.21
       better-auth: 1.5.6(@opentelemetry/api@1.9.0)(mongodb@7.1.0)(next@16.2.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.1.2)(vue@3.5.30(typescript@5.9.3))
@@ -14540,7 +14540,7 @@ snapshots:
       - hono
       - typescript
 
-  '@convex-dev/better-auth@0.11.3(@standard-schema/spec@1.1.0)(better-auth@1.5.6(@opentelemetry/api@1.9.0)(mongodb@7.1.0)(next@16.2.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.1.2)(vue@3.5.30(typescript@6.0.2)))(convex@1.34.1(react@19.2.4))(hono@4.12.9)(react@19.2.4)(typescript@6.0.2)':
+  '@convex-dev/better-auth@0.11.4(@standard-schema/spec@1.1.0)(better-auth@1.5.6(@opentelemetry/api@1.9.0)(mongodb@7.1.0)(next@16.2.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.1.2)(vue@3.5.30(typescript@6.0.2)))(convex@1.34.1(react@19.2.4))(hono@4.12.9)(react@19.2.4)(typescript@6.0.2)':
     dependencies:
       '@better-fetch/fetch': 1.1.21
       better-auth: 1.5.6(@opentelemetry/api@1.9.0)(mongodb@7.1.0)(next@16.2.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.1.2)(vue@3.5.30(typescript@6.0.2))
@@ -14694,7 +14694,7 @@ snapshots:
     dependencies:
       '@edge-runtime/primitives': 6.0.0
 
-  '@effect/language-service@0.84.1': {}
+  '@effect/language-service@0.84.2': {}
 
   '@egjs/agent@2.4.4': {}
 
@@ -21414,7 +21414,7 @@ snapshots:
       typescript: 6.0.2
       zod: 4.3.6
 
-  convex-test@0.0.44(convex@1.34.1(react@19.2.4)):
+  convex-test@0.0.45(convex@1.34.1(react@19.2.4)):
     dependencies:
       convex: 1.34.1(react@19.2.4)
 
@@ -26468,7 +26468,7 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.14
 
-  react-resizable-panels@4.7.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  react-resizable-panels@4.8.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
@@ -27899,10 +27899,11 @@ snapshots:
 
   uint8array-extras@1.5.0: {}
 
-  ultracite@7.3.2:
+  ultracite@7.4.0:
     dependencies:
       '@clack/prompts': 1.1.0
       commander: 14.0.3
+      cross-spawn: 7.0.6
       deepmerge: 4.3.1
       glob: 13.0.6
       jsonc-parser: 3.3.1

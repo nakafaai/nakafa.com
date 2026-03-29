@@ -4,6 +4,7 @@ import { cronJobs } from "convex/server";
 
 const crons = cronJobs();
 const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
+const TRYOUT_ACCESS_STATUS_SWEEP_INTERVAL_MINUTES = 5;
 
 /**
  * Ensures analytics partition lease rows exist before workers run.
@@ -135,6 +136,16 @@ crons.interval(
   "sweep expired tryouts",
   { minutes: TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES },
   internal.tryouts.mutations.internal.expiry.sweepExpiredTryoutAttempts,
+  {}
+);
+
+/**
+ * Repairs overdue event access campaign and grant statuses.
+ */
+crons.interval(
+  "sweep tryout access statuses",
+  { minutes: TRYOUT_ACCESS_STATUS_SWEEP_INTERVAL_MINUTES },
+  internal.tryoutAccess.mutations.internal.status.sweepStates,
   {}
 );
 

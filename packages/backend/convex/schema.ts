@@ -17,6 +17,7 @@ import schoolsSchema from "@repo/backend/convex/schools/schema";
 import subjectSectionsSchema from "@repo/backend/convex/subjectSections/schema";
 import subjectTopicsSchema from "@repo/backend/convex/subjectTopics/schema";
 import subscriptionsSchema from "@repo/backend/convex/subscriptions/schema";
+import tryoutAccessSchema from "@repo/backend/convex/tryoutAccess/schema";
 import tryoutsSchema from "@repo/backend/convex/tryouts/schema";
 import usersSchema from "@repo/backend/convex/users/schema";
 import { defineSchema } from "convex/server";
@@ -43,6 +44,7 @@ export default defineSchema(
     ...audioStudiesSchema,
     ...creditsSchema,
     ...irtSchema,
+    ...tryoutAccessSchema,
     ...tryoutsSchema,
   },
   {

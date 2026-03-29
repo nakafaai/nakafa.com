@@ -421,6 +421,23 @@
     "delete": "Hapus",
     "api-key-deleted": "API key udah dihapus."
   },
+  "EventAccess": {
+    "title": "Akses event partner",
+    "unavailable-invalid-code": "Link event ini nggak valid atau sudah nggak tersedia.",
+    "unavailable-disabled": "Akses event ini sedang dimatikan untuk sementara.",
+    "unavailable-not-started": "Akses event ini belum dibuka. Coba lagi nanti ya.",
+    "unavailable-ended": "Akses event ini sudah berakhir.",
+    "sign-in-description": "Masuk untuk klaim akses.",
+    "ready-description": "Aktifkan untuk mulai.",
+    "active-until": "Aktif sampai {date}",
+    "ended-at": "Berakhir {date}",
+    "sign-in-cta": "Masuk",
+    "redeem-cta": "Aktifkan",
+    "open-tryout-cta": "Buka",
+    "view-tryout-cta": "Lihat",
+    "redeem-success": "Akses event aktif sampai {date}.",
+    "redeem-error": "Akses event belum bisa diaktifkan. Coba lagi ya."
+  },
   "Ai": {
     "ask-ai": "Tanya AI",
     "ask-nina": "Tanya Nina",
