@@ -8,7 +8,6 @@ import {
   getTryoutAccessGrantStatus,
   isTryoutAccessGrantActive,
 } from "@repo/backend/convex/tryoutAccess/helpers/access";
-import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
 import { ConvexError, v } from "convex/values";
 
 const redeemEventAccessResultValidator = v.union(
@@ -16,13 +15,11 @@ const redeemEventAccessResultValidator = v.union(
     kind: v.literal("active"),
     endsAt: v.number(),
     name: v.string(),
-    product: tryoutProductValidator,
   }),
   v.object({
     kind: v.literal("used"),
     endsAt: v.number(),
     name: v.string(),
-    product: tryoutProductValidator,
   })
 );
 
@@ -44,6 +41,13 @@ export const redeemEventAccess = mutation({
       });
     }
 
+    if (eventAccess.campaign.products.length === 0) {
+      throw new ConvexError({
+        code: "EVENT_PRODUCTS_REQUIRED",
+        message: "Event access campaign products cannot be empty.",
+      });
+    }
+
     const existingGrant = await ctx.db
       .query("tryoutAccessGrants")
       .withIndex("by_userId_and_campaignId", (q) =>
@@ -57,7 +61,6 @@ export const redeemEventAccess = mutation({
           kind: "active" as const,
           endsAt: existingGrant.endsAt,
           name: eventAccess.campaign.name,
-          product: eventAccess.campaign.product,
         };
       }
 
@@ -65,7 +68,6 @@ export const redeemEventAccess = mutation({
         kind: "used" as const,
         endsAt: existingGrant.endsAt,
         name: eventAccess.campaign.name,
-        product: eventAccess.campaign.product,
       };
     }
 
@@ -110,7 +112,7 @@ export const redeemEventAccess = mutation({
       campaignId: eventAccess.campaign._id,
       linkId: eventAccess.link._id,
       userId: appUser._id,
-      product: eventAccess.campaign.product,
+      products: eventAccess.campaign.products,
       redeemedAt: now,
       endsAt,
       status: getTryoutAccessGrantStatus(endsAt, now),
@@ -128,7 +130,6 @@ export const redeemEventAccess = mutation({
       kind: "active" as const,
       endsAt,
       name: eventAccess.campaign.name,
-      product: eventAccess.campaign.product,
     };
   },
 });

@@ -23,32 +23,27 @@ const eventPageStateValidator = v.union(
   v.object({
     kind: v.literal("unavailable"),
     name: v.union(v.string(), v.null()),
-    product: v.union(tryoutProductValidator, v.null()),
     reason: tryoutAccessUnavailableReasonValidator,
   }),
   v.object({
     kind: v.literal("sign-in"),
     grantDurationDays: v.number(),
     name: v.string(),
-    product: tryoutProductValidator,
   }),
   v.object({
     kind: v.literal("ready"),
     grantDurationDays: v.number(),
     name: v.string(),
-    product: tryoutProductValidator,
   }),
   v.object({
     kind: v.literal("active"),
     endsAt: v.number(),
     name: v.string(),
-    product: tryoutProductValidator,
   }),
   v.object({
     kind: v.literal("used"),
     endsAt: v.number(),
     name: v.string(),
-    product: tryoutProductValidator,
   })
 );
 
@@ -65,7 +60,6 @@ export const getEventPageState = query({
       return {
         kind: "unavailable" as const,
         name: null,
-        product: null,
         reason: "invalid-code" as const,
       };
     }
@@ -88,7 +82,6 @@ export const getEventPageState = query({
             kind: "active" as const,
             endsAt: existingGrant.endsAt,
             name: eventAccess.campaign.name,
-            product: eventAccess.campaign.product,
           };
         }
 
@@ -96,7 +89,6 @@ export const getEventPageState = query({
           kind: "used" as const,
           endsAt: existingGrant.endsAt,
           name: eventAccess.campaign.name,
-          product: eventAccess.campaign.product,
         };
       }
     }
@@ -107,7 +99,6 @@ export const getEventPageState = query({
       return {
         kind: "unavailable" as const,
         name: eventAccess.campaign.name,
-        product: eventAccess.campaign.product,
         reason: unavailableReason,
       };
     }
@@ -117,7 +108,6 @@ export const getEventPageState = query({
         kind: "sign-in" as const,
         grantDurationDays: eventAccess.campaign.grantDurationDays,
         name: eventAccess.campaign.name,
-        product: eventAccess.campaign.product,
       };
     }
 
@@ -125,7 +115,6 @@ export const getEventPageState = query({
       kind: "ready" as const,
       grantDurationDays: eventAccess.campaign.grantDurationDays,
       name: eventAccess.campaign.name,
-      product: eventAccess.campaign.product,
     };
   },
 });

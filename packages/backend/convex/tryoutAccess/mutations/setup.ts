@@ -11,7 +11,7 @@ import { ConvexError, v } from "convex/values";
 const tryoutAccessCampaignInputValidator = v.object({
   slug: v.string(),
   name: v.string(),
-  product: tryoutProductValidator,
+  products: v.array(tryoutProductValidator),
   enabled: v.boolean(),
   startsAt: v.number(),
   endsAt: v.number(),
@@ -52,6 +52,14 @@ export const upsertCampaignAndLink = internalMutation({
       });
     }
 
+    if (args.campaign.products.length === 0) {
+      throw new ConvexError({
+        code: "INVALID_EVENT_PRODUCTS",
+        message:
+          "Event access campaign must include at least one tryout product.",
+      });
+    }
+
     const code = normalizeTryoutAccessCode(args.link.code);
 
     if (code.length === 0) {
@@ -74,7 +82,7 @@ export const upsertCampaignAndLink = internalMutation({
       endsAt: args.campaign.endsAt,
       grantDurationDays: args.campaign.grantDurationDays,
       name: args.campaign.name,
-      product: args.campaign.product,
+      products: args.campaign.products,
       redeemStatus: getTryoutAccessCampaignRedeemStatus(args.campaign, now),
       slug: args.campaign.slug,
       startsAt: args.campaign.startsAt,

@@ -12,6 +12,7 @@ import { products } from "@repo/backend/convex/utils/polar/products";
 import type { Infer } from "convex/values";
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
+const MAX_ACTIVE_TRYOUT_ACCESS_GRANTS = 20;
 
 const tryoutPaidProductIds = {
   snbt: products.pro.id,
@@ -142,10 +143,10 @@ export async function hasTryoutAccess(
       .unique(),
     db
       .query("tryoutAccessGrants")
-      .withIndex("by_userId_and_product_and_status", (q) =>
-        q.eq("userId", userId).eq("product", product).eq("status", "active")
+      .withIndex("by_userId_and_status", (q) =>
+        q.eq("userId", userId).eq("status", "active")
       )
-      .first(),
+      .take(MAX_ACTIVE_TRYOUT_ACCESS_GRANTS),
   ]);
 
   if (customer) {
@@ -164,7 +165,13 @@ export async function hasTryoutAccess(
     }
   }
 
-  return activeGrant !== null;
+  for (const grant of activeGrant) {
+    if (grant.products.includes(product)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 /** Resolves whether a user can start a tryout using server time. */
@@ -187,11 +194,11 @@ export async function hasTryoutAccessNow(
       .unique(),
     db
       .query("tryoutAccessGrants")
-      .withIndex("by_userId_and_product_and_endsAt", (q) =>
-        q.eq("userId", userId).eq("product", product).gt("endsAt", now)
+      .withIndex("by_userId_and_endsAt", (q) =>
+        q.eq("userId", userId).gt("endsAt", now)
       )
       .order("desc")
-      .first(),
+      .take(MAX_ACTIVE_TRYOUT_ACCESS_GRANTS),
   ]);
 
   if (customer) {
@@ -210,5 +217,11 @@ export async function hasTryoutAccessNow(
     }
   }
 
-  return activeGrant !== null;
+  for (const grant of activeGrant) {
+    if (grant.products.includes(product)) {
+      return true;
+    }
+  }
+
+  return false;
 }
