@@ -60,6 +60,15 @@ export const upsertCampaignAndLink = internalMutation({
       });
     }
 
+    const uniqueProducts = Array.from(new Set(args.campaign.products));
+
+    if (uniqueProducts.length !== args.campaign.products.length) {
+      throw new ConvexError({
+        code: "DUPLICATE_EVENT_PRODUCTS",
+        message: "Event access campaign products must be unique.",
+      });
+    }
+
     const code = normalizeTryoutAccessCode(args.link.code);
 
     if (code.length === 0) {
@@ -82,7 +91,7 @@ export const upsertCampaignAndLink = internalMutation({
       endsAt: args.campaign.endsAt,
       grantDurationDays: args.campaign.grantDurationDays,
       name: args.campaign.name,
-      products: args.campaign.products,
+      products: uniqueProducts,
       redeemStatus: getTryoutAccessCampaignRedeemStatus(args.campaign, now),
       slug: args.campaign.slug,
       startsAt: args.campaign.startsAt,

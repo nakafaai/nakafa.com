@@ -6,7 +6,6 @@ import {
   getTryoutAccessEventByCode,
   getTryoutAccessGrantEndsAt,
   getTryoutAccessGrantStatus,
-  isTryoutAccessGrantActive,
 } from "@repo/backend/convex/tryoutAccess/helpers/access";
 import { ConvexError, v } from "convex/values";
 
@@ -41,7 +40,9 @@ export const redeemEventAccess = mutation({
       });
     }
 
-    if (eventAccess.campaign.products.length === 0) {
+    const campaignProducts = Array.from(new Set(eventAccess.campaign.products));
+
+    if (campaignProducts.length === 0) {
       throw new ConvexError({
         code: "EVENT_PRODUCTS_REQUIRED",
         message: "Event access campaign products cannot be empty.",
@@ -56,7 +57,7 @@ export const redeemEventAccess = mutation({
       .unique();
 
     if (existingGrant) {
-      if (isTryoutAccessGrantActive(existingGrant, now)) {
+      if (existingGrant.endsAt > now) {
         return {
           kind: "active" as const,
           endsAt: existingGrant.endsAt,
@@ -101,6 +102,7 @@ export const redeemEventAccess = mutation({
       now,
       eventAccess.campaign.grantDurationDays
     );
+    const grantStatus = getTryoutAccessGrantStatus(endsAt, now);
 
     if (eventAccess.campaign.redeemStatus !== campaignRedeemStatus) {
       await ctx.db.patch("tryoutAccessCampaigns", eventAccess.campaign._id, {
@@ -112,11 +114,21 @@ export const redeemEventAccess = mutation({
       campaignId: eventAccess.campaign._id,
       linkId: eventAccess.link._id,
       userId: appUser._id,
-      products: eventAccess.campaign.products,
       redeemedAt: now,
       endsAt,
-      status: getTryoutAccessGrantStatus(endsAt, now),
+      status: grantStatus,
     });
+
+    for (const product of campaignProducts) {
+      await ctx.db.insert("tryoutAccessProductGrants", {
+        campaignId: eventAccess.campaign._id,
+        grantId,
+        product,
+        status: grantStatus,
+        userId: appUser._id,
+        endsAt,
+      });
+    }
 
     await ctx.scheduler.runAfter(
       endsAt - now,

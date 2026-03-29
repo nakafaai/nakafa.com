@@ -33,10 +33,18 @@ export const tryoutAccessGrantValidator = v.object({
   campaignId: v.id("tryoutAccessCampaigns"),
   linkId: v.id("tryoutAccessLinks"),
   userId: v.id("users"),
-  products: v.array(tryoutProductValidator),
   redeemedAt: v.number(),
   endsAt: v.number(),
   status: tryoutAccessGrantStatusValidator,
+});
+
+export const tryoutAccessProductGrantValidator = v.object({
+  campaignId: v.id("tryoutAccessCampaigns"),
+  grantId: v.id("tryoutAccessGrants"),
+  product: tryoutProductValidator,
+  status: tryoutAccessGrantStatusValidator,
+  userId: v.id("users"),
+  endsAt: v.number(),
 });
 
 const tables = {
@@ -51,10 +59,12 @@ const tables = {
 
   tryoutAccessGrants: defineTable(tryoutAccessGrantValidator)
     .index("by_userId_and_campaignId", ["userId", "campaignId"])
-    .index("by_userId_and_status", ["userId", "status"])
-    .index("by_userId_and_endsAt", ["userId", "endsAt"])
-    .index("by_status_and_endsAt", ["status", "endsAt"])
-    .index("by_linkId", ["linkId"]),
+    .index("by_status_and_endsAt", ["status", "endsAt"]),
+
+  tryoutAccessProductGrants: defineTable(tryoutAccessProductGrantValidator)
+    .index("by_grantId", ["grantId"])
+    .index("by_userId_and_product_and_status", ["userId", "product", "status"])
+    .index("by_userId_and_product_and_endsAt", ["userId", "product", "endsAt"]),
 };
 
 export default tables;

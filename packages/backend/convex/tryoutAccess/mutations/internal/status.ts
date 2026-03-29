@@ -1,13 +1,51 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import {
   getTryoutAccessCampaignRedeemStatus,
   getTryoutAccessGrantStatus,
 } from "@repo/backend/convex/tryoutAccess/helpers/access";
+import { tryoutProducts } from "@repo/backend/convex/tryouts/products";
 import { v } from "convex/values";
 
 const TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE = 100;
+const MAX_PRODUCT_GRANTS_PER_GRANT = tryoutProducts.length;
+
+const activeProductGrantRepairResultValidator = v.object({
+  continueCursor: v.union(v.string(), v.null()),
+  grantCount: v.number(),
+  isDone: v.boolean(),
+});
+
+async function syncGrantStatus(
+  ctx: MutationCtx,
+  grant: Pick<Doc<"tryoutAccessGrants">, "_id" | "endsAt" | "status">,
+  now: number
+) {
+  const status = getTryoutAccessGrantStatus(grant.endsAt, now);
+  const productGrants = await ctx.db
+    .query("tryoutAccessProductGrants")
+    .withIndex("by_grantId", (q) => q.eq("grantId", grant._id))
+    .take(MAX_PRODUCT_GRANTS_PER_GRANT);
+
+  if (grant.status !== status) {
+    await ctx.db.patch("tryoutAccessGrants", grant._id, {
+      status,
+    });
+  }
+
+  for (const productGrant of productGrants) {
+    if (productGrant.status === status) {
+      continue;
+    }
+
+    await ctx.db.patch("tryoutAccessProductGrants", productGrant._id, {
+      status,
+    });
+  }
+}
 
 /** Synchronizes one campaign redeem status from its stored time window. */
 export const syncCampaignRedeemStatus = internalMutation({
@@ -39,7 +77,7 @@ export const syncCampaignRedeemStatus = internalMutation({
   },
 });
 
-/** Marks one event grant as expired once its access window ends. */
+/** Marks one event grant and its product grants as expired once access ends. */
 export const expireGrant = internalMutation({
   args: {
     grantId: vv.id("tryoutAccessGrants"),
@@ -52,17 +90,76 @@ export const expireGrant = internalMutation({
       return null;
     }
 
-    const status = getTryoutAccessGrantStatus(grant.endsAt, Date.now());
+    await syncGrantStatus(ctx, grant, Date.now());
+    return null;
+  },
+});
 
-    if (grant.status === status) {
-      return null;
+/** Repairs missing active per-product grant rows from summary grants. */
+export const repairActiveProductGrantsPage = internalMutation({
+  args: {
+    cursor: v.optional(v.string()),
+  },
+  returns: activeProductGrantRepairResultValidator,
+  handler: async (ctx, args) => {
+    const page = await ctx.db
+      .query("tryoutAccessGrants")
+      .withIndex("by_status_and_endsAt", (q) => q.eq("status", "active"))
+      .paginate({
+        cursor: args.cursor ?? null,
+        numItems: TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE,
+      });
+    let grantCount = 0;
+
+    for (const grant of page.page) {
+      const campaign = await ctx.db.get(
+        "tryoutAccessCampaigns",
+        grant.campaignId
+      );
+
+      if (!campaign) {
+        continue;
+      }
+
+      const productGrants = await ctx.db
+        .query("tryoutAccessProductGrants")
+        .withIndex("by_grantId", (q) => q.eq("grantId", grant._id))
+        .take(MAX_PRODUCT_GRANTS_PER_GRANT);
+
+      for (const product of campaign.products) {
+        if (productGrants.some((row) => row.product === product)) {
+          continue;
+        }
+
+        await ctx.db.insert("tryoutAccessProductGrants", {
+          campaignId: grant.campaignId,
+          grantId: grant._id,
+          product,
+          status: grant.status,
+          userId: grant.userId,
+          endsAt: grant.endsAt,
+        });
+      }
+
+      grantCount += 1;
     }
 
-    await ctx.db.patch("tryoutAccessGrants", grant._id, {
-      status,
-    });
+    if (!page.isDone) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.tryoutAccess.mutations.internal.status
+          .repairActiveProductGrantsPage,
+        {
+          cursor: page.continueCursor,
+        }
+      );
+    }
 
-    return null;
+    return {
+      continueCursor: page.continueCursor,
+      grantCount,
+      isDone: page.isDone,
+    };
   },
 });
 
@@ -116,15 +213,7 @@ export const sweepStates = internalMutation({
     }
 
     for (const grant of overdueGrants) {
-      const status = getTryoutAccessGrantStatus(grant.endsAt, now);
-
-      if (grant.status === status) {
-        continue;
-      }
-
-      await ctx.db.patch("tryoutAccessGrants", grant._id, {
-        status,
-      });
+      await syncGrantStatus(ctx, grant, now);
     }
 
     if (

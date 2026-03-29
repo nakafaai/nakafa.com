@@ -3,12 +3,12 @@
 import { useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import { products } from "@repo/backend/convex/utils/polar/products";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import {
   usePathname,
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { useAction, useMutation } from "convex/react";
+import { ConvexError } from "convex/values";
 import { useTranslations } from "next-intl";
 import {
   type PropsWithChildren,
@@ -38,7 +38,6 @@ interface TryoutStartContextValue {
       | null;
     attemptStatus: TryoutAttemptStateValue["effectiveStatus"];
     hasFinishedAttempt: boolean;
-    hasAccess: boolean | undefined;
     isLoading: boolean;
     isReady: boolean;
     remainingTime: TryoutAttemptStateValue["remainingTime"];
@@ -67,27 +66,14 @@ function useTryoutStartValue(): TryoutStartContextValue {
   const remainingTime = useTryoutAttemptState((state) => state.remainingTime);
   const resumePartKey = useTryoutAttemptState((state) => state.resumePartKey);
   const tryoutSlug = useTryoutAttemptState((state) => state.params.tryoutSlug);
-  const { data: hasAccess, isPending: isAccessPending } = useQueryWithStatus(
-    api.tryoutAccess.queries.getTryoutAccessState,
-    !isUserPending && user
-      ? {
-          product,
-        }
-      : "skip"
-  );
   const startTryout = useMutation(api.tryouts.mutations.attempts.startTryout);
   const generateCheckoutLink = useAction(
     api.customers.actions.generateCheckoutLink
   );
 
-  const isReady = !(
-    isUserPending ||
-    (user && (isAttemptPending || isAccessPending))
-  );
+  const isReady = !(isUserPending || (user && isAttemptPending));
   const isLoading =
-    isActionPending ||
-    isUserPending ||
-    (user ? isAttemptPending || isAccessPending : false);
+    isActionPending || isUserPending || (user ? isAttemptPending : false);
   const hasFinishedAttempt = Boolean(
     attemptData && attemptStatus !== "in-progress"
   );
@@ -115,37 +101,8 @@ function useTryoutStartValue(): TryoutStartContextValue {
       return;
     }
 
-    if (hasAccess === false) {
-      startTransition(async () => {
-        try {
-          const { url } = await generateCheckoutLink({
-            productIds: [products.pro.id],
-            successUrl: window.location.href,
-          });
-
-          window.location.href = url;
-        } catch {
-          toast.error(tTryouts("start-error"), {
-            position: "bottom-center",
-          });
-        }
-      });
-      return;
-    }
-
     openDialog();
-  }, [
-    openDialog,
-    generateCheckoutLink,
-    hasAccess,
-    pathname,
-    product,
-    resumePartKey,
-    router,
-    tTryouts,
-    tryoutSlug,
-    user,
-  ]);
+  }, [openDialog, pathname, product, resumePartKey, router, tryoutSlug, user]);
 
   const confirmStartAction = useCallback(() => {
     startTransition(async () => {
@@ -155,13 +112,46 @@ function useTryoutStartValue(): TryoutStartContextValue {
         toast.success(tTryouts("start-success"), {
           position: "bottom-center",
         });
-      } catch {
+      } catch (error) {
+        if (error instanceof ConvexError) {
+          const errorData = error.data;
+
+          if (typeof errorData === "object" && errorData !== null) {
+            const errorCode = "code" in errorData ? errorData.code : undefined;
+
+            if (errorCode === "TRYOUT_ACCESS_REQUIRED") {
+              try {
+                const { url } = await generateCheckoutLink({
+                  productIds: [products.pro.id],
+                  successUrl: window.location.href,
+                });
+
+                window.location.href = url;
+                return;
+              } catch {
+                toast.error(tTryouts("start-error"), {
+                  position: "bottom-center",
+                });
+                return;
+              }
+            }
+          }
+        }
+
         toast.error(tTryouts("start-error"), {
           position: "bottom-center",
         });
       }
     });
-  }, [closeDialog, locale, product, startTryout, tTryouts, tryoutSlug]);
+  }, [
+    closeDialog,
+    generateCheckoutLink,
+    locale,
+    product,
+    startTryout,
+    tTryouts,
+    tryoutSlug,
+  ]);
 
   return useMemo(
     () => ({
@@ -178,7 +168,6 @@ function useTryoutStartValue(): TryoutStartContextValue {
         attempt: attemptData?.attempt ?? null,
         attemptStatus,
         hasFinishedAttempt,
-        hasAccess,
         isLoading,
         isReady,
         remainingTime,
@@ -190,7 +179,6 @@ function useTryoutStartValue(): TryoutStartContextValue {
       attemptStatus,
       clickCtaAction,
       confirmStartAction,
-      hasAccess,
       hasFinishedAttempt,
       isActionPending,
       isDialogOpen,

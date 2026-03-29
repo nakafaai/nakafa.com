@@ -1,14 +1,9 @@
 import { query } from "@repo/backend/convex/_generated/server";
-import {
-  getOptionalAppUser,
-  requireAuth,
-} from "@repo/backend/convex/lib/helpers/auth";
+import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
 import {
   getTryoutAccessEventByCode,
   getTryoutAccessUnavailableReason,
-  hasTryoutAccess,
 } from "@repo/backend/convex/tryoutAccess/helpers/access";
-import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
@@ -27,12 +22,10 @@ const eventPageStateValidator = v.union(
   }),
   v.object({
     kind: v.literal("sign-in"),
-    grantDurationDays: v.number(),
     name: v.string(),
   }),
   v.object({
     kind: v.literal("ready"),
-    grantDurationDays: v.number(),
     name: v.string(),
   }),
   v.object({
@@ -106,31 +99,13 @@ export const getEventPageState = query({
     if (!user) {
       return {
         kind: "sign-in" as const,
-        grantDurationDays: eventAccess.campaign.grantDurationDays,
         name: eventAccess.campaign.name,
       };
     }
 
     return {
       kind: "ready" as const,
-      grantDurationDays: eventAccess.campaign.grantDurationDays,
       name: eventAccess.campaign.name,
     };
-  },
-});
-
-/** Returns whether the authenticated user can start one tryout product right now. */
-export const getTryoutAccessState = query({
-  args: {
-    product: tryoutProductValidator,
-  },
-  returns: v.boolean(),
-  handler: async (ctx, args) => {
-    const { appUser } = await requireAuth(ctx);
-
-    return hasTryoutAccess(ctx.db, {
-      product: args.product,
-      userId: appUser._id,
-    });
   },
 });

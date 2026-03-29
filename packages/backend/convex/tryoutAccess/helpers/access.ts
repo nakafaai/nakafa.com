@@ -12,7 +12,6 @@ import { products } from "@repo/backend/convex/utils/polar/products";
 import type { Infer } from "convex/values";
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
-const MAX_ACTIVE_TRYOUT_ACCESS_GRANTS = 20;
 
 const tryoutPaidProductIds = {
   snbt: products.pro.id,
@@ -63,14 +62,6 @@ export function getTryoutAccessGrantStatus(
   }
 
   return "active";
-}
-
-/** Returns true when an event grant still allows tryout access. */
-export function isTryoutAccessGrantActive(
-  grant: Pick<Doc<"tryoutAccessGrants">, "endsAt">,
-  now: number
-) {
-  return grant.endsAt > now;
 }
 
 /** Explains why a campaign link cannot currently be redeemed. */
@@ -125,8 +116,7 @@ export async function getTryoutAccessEventByCode(
   };
 }
 
-/** Resolves whether a user can start a tryout from paid or event access. */
-export async function hasTryoutAccess(
+async function hasActiveTryoutSubscription(
   db: TryoutAccessDbReader,
   {
     product,
@@ -136,42 +126,26 @@ export async function hasTryoutAccess(
     userId: Doc<"users">["_id"];
   }
 ) {
-  const [customer, activeGrant] = await Promise.all([
-    db
-      .query("customers")
-      .withIndex("by_userId", (q) => q.eq("userId", userId))
-      .unique(),
-    db
-      .query("tryoutAccessGrants")
-      .withIndex("by_userId_and_status", (q) =>
-        q.eq("userId", userId).eq("status", "active")
-      )
-      .take(MAX_ACTIVE_TRYOUT_ACCESS_GRANTS),
-  ]);
+  const customer = await db
+    .query("customers")
+    .withIndex("by_userId", (q) => q.eq("userId", userId))
+    .unique();
 
-  if (customer) {
-    const subscription = await db
-      .query("subscriptions")
-      .withIndex("by_customerId_and_status_and_productId", (q) =>
-        q
-          .eq("customerId", customer.id)
-          .eq("status", "active")
-          .eq("productId", tryoutPaidProductIds[product])
-      )
-      .first();
-
-    if (subscription) {
-      return true;
-    }
+  if (!customer) {
+    return false;
   }
 
-  for (const grant of activeGrant) {
-    if (grant.products.includes(product)) {
-      return true;
-    }
-  }
+  const subscription = await db
+    .query("subscriptions")
+    .withIndex("by_customerId_and_status_and_productId", (q) =>
+      q
+        .eq("customerId", customer.id)
+        .eq("status", "active")
+        .eq("productId", tryoutPaidProductIds[product])
+    )
+    .first();
 
-  return false;
+  return subscription !== null;
 }
 
 /** Resolves whether a user can start a tryout using server time. */
@@ -187,41 +161,16 @@ export async function hasTryoutAccessNow(
     userId: Doc<"users">["_id"];
   }
 ) {
-  const [customer, activeGrant] = await Promise.all([
-    db
-      .query("customers")
-      .withIndex("by_userId", (q) => q.eq("userId", userId))
-      .unique(),
-    db
-      .query("tryoutAccessGrants")
-      .withIndex("by_userId_and_endsAt", (q) =>
-        q.eq("userId", userId).gt("endsAt", now)
-      )
-      .order("desc")
-      .take(MAX_ACTIVE_TRYOUT_ACCESS_GRANTS),
-  ]);
-
-  if (customer) {
-    const subscription = await db
-      .query("subscriptions")
-      .withIndex("by_customerId_and_status_and_productId", (q) =>
-        q
-          .eq("customerId", customer.id)
-          .eq("status", "active")
-          .eq("productId", tryoutPaidProductIds[product])
-      )
-      .first();
-
-    if (subscription) {
-      return true;
-    }
+  if (await hasActiveTryoutSubscription(db, { product, userId })) {
+    return true;
   }
 
-  for (const grant of activeGrant) {
-    if (grant.products.includes(product)) {
-      return true;
-    }
-  }
+  const activeProductGrant = await db
+    .query("tryoutAccessProductGrants")
+    .withIndex("by_userId_and_product_and_endsAt", (q) =>
+      q.eq("userId", userId).eq("product", product).gt("endsAt", now)
+    )
+    .first();
 
-  return false;
+  return activeProductGrant !== null;
 }
