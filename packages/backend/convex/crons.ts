@@ -3,7 +3,6 @@ import { IRT_AUTOMATION_CRON_INTERVAL_MINUTES } from "@repo/backend/convex/irt/p
 import { cronJobs } from "convex/server";
 
 const crons = cronJobs();
-const ACTIVE_TRYOUT_ACCESS_PRODUCT_GRANT_REPAIR_INTERVAL_MINUTES = 15;
 const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
 const TRYOUT_ACCESS_STATUS_SWEEP_INTERVAL_MINUTES = 5;
 
@@ -137,16 +136,6 @@ crons.interval(
   "sweep expired tryouts",
   { minutes: TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES },
   internal.tryouts.mutations.internal.expiry.sweepExpiredTryoutAttempts,
-  {}
-);
-
-/**
- * Repairs missing per-product event grants from active summary grants.
- */
-crons.interval(
-  "repair active tryout access product grants",
-  { minutes: ACTIVE_TRYOUT_ACCESS_PRODUCT_GRANT_REPAIR_INTERVAL_MINUTES },
-  internal.tryoutAccess.mutations.internal.status.repairActiveProductGrantsPage,
   {}
 );
 

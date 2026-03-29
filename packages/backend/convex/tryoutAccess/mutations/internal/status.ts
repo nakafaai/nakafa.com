@@ -13,12 +13,6 @@ import { v } from "convex/values";
 const TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE = 100;
 const MAX_PRODUCT_GRANTS_PER_GRANT = tryoutProducts.length;
 
-const activeProductGrantRepairResultValidator = v.object({
-  continueCursor: v.union(v.string(), v.null()),
-  grantCount: v.number(),
-  isDone: v.boolean(),
-});
-
 async function syncGrantStatus(
   ctx: MutationCtx,
   grant: Pick<Doc<"tryoutAccessGrants">, "_id" | "endsAt" | "status">,
@@ -92,74 +86,6 @@ export const expireGrant = internalMutation({
 
     await syncGrantStatus(ctx, grant, Date.now());
     return null;
-  },
-});
-
-/** Repairs missing active per-product grant rows from summary grants. */
-export const repairActiveProductGrantsPage = internalMutation({
-  args: {
-    cursor: v.optional(v.string()),
-  },
-  returns: activeProductGrantRepairResultValidator,
-  handler: async (ctx, args) => {
-    const page = await ctx.db
-      .query("tryoutAccessGrants")
-      .withIndex("by_status_and_endsAt", (q) => q.eq("status", "active"))
-      .paginate({
-        cursor: args.cursor ?? null,
-        numItems: TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE,
-      });
-    let grantCount = 0;
-
-    for (const grant of page.page) {
-      const campaign = await ctx.db.get(
-        "tryoutAccessCampaigns",
-        grant.campaignId
-      );
-
-      if (!campaign) {
-        continue;
-      }
-
-      const productGrants = await ctx.db
-        .query("tryoutAccessProductGrants")
-        .withIndex("by_grantId", (q) => q.eq("grantId", grant._id))
-        .take(MAX_PRODUCT_GRANTS_PER_GRANT);
-
-      for (const product of campaign.products) {
-        if (productGrants.some((row) => row.product === product)) {
-          continue;
-        }
-
-        await ctx.db.insert("tryoutAccessProductGrants", {
-          campaignId: grant.campaignId,
-          grantId: grant._id,
-          product,
-          status: grant.status,
-          userId: grant.userId,
-          endsAt: grant.endsAt,
-        });
-      }
-
-      grantCount += 1;
-    }
-
-    if (!page.isDone) {
-      await ctx.scheduler.runAfter(
-        0,
-        internal.tryoutAccess.mutations.internal.status
-          .repairActiveProductGrantsPage,
-        {
-          cursor: page.continueCursor,
-        }
-      );
-    }
-
-    return {
-      continueCursor: page.continueCursor,
-      grantCount,
-      isDone: page.isDone,
-    };
   },
 });
 
