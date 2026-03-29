@@ -1,12 +1,10 @@
 "use client";
 
-import { ArrowLeft02Icon, Rocket01Icon } from "@hugeicons/core-free-icons";
+import { Rocket01Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { Particles } from "@repo/design-system/components/ui/particles";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import {
   usePathname,
@@ -15,23 +13,22 @@ import {
 import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
 import { format } from "date-fns";
+import type { Locale } from "next-intl";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo, useTransition } from "react";
+import { useTransition } from "react";
 import { toast } from "sonner";
 import { getLocale } from "@/lib/utils/date";
+import { EventAccessCard, EventAccessLayout } from "./access-card";
 
 interface Props {
   code: string;
 }
 
-function formatDate(locale: string, value: number) {
-  const currentLocale = locale === "id" ? "id" : "en";
-
-  return format(value, "PPP", { locale: getLocale(currentLocale) });
+function formatDate(locale: Locale, value: number) {
+  return format(value, "PPP", { locale: getLocale(locale) });
 }
 
 export function EventAccessPage({ code }: Props) {
-  const tCommon = useTranslations("Common");
   const tEvent = useTranslations("EventAccess");
   const locale = useLocale();
   const pathname = usePathname();
@@ -47,95 +44,15 @@ export function EventAccessPage({ code }: Props) {
     api.tryoutAccess.mutations.redeem.redeemEventAccess
   );
 
-  const statusCopy = useMemo(() => {
-    if (!pageState) {
-      return {
-        description: tEvent("loading-description"),
-        primaryCta: null,
-        title: tEvent("title"),
-      };
-    }
+  function goToAuth() {
+    router.push(`/auth?redirect=${pathname}`);
+  }
 
-    if (pageState.kind === "unavailable") {
-      let description = tEvent("unavailable-invalid-code");
+  function goToTryout(product: string) {
+    router.push(`/try-out/${product}`);
+  }
 
-      if (pageState.reason === "disabled") {
-        description = tEvent("unavailable-disabled");
-      }
-
-      if (pageState.reason === "not-started") {
-        description = tEvent("unavailable-not-started");
-      }
-
-      if (pageState.reason === "ended") {
-        description = tEvent("unavailable-ended");
-      }
-
-      return {
-        description,
-        primaryCta: null,
-        title: tEvent("title"),
-      };
-    }
-
-    if (pageState.kind === "sign-in") {
-      return {
-        description: tEvent("sign-in-description", {
-          days: pageState.grantDurationDays,
-          name: pageState.name,
-        }),
-        primaryCta: tEvent("sign-in-cta"),
-        title: pageState.name,
-      };
-    }
-
-    if (pageState.kind === "ready") {
-      return {
-        description: tEvent("ready-description", {
-          days: pageState.grantDurationDays,
-          name: pageState.name,
-        }),
-        primaryCta: tEvent("redeem-cta"),
-        title: pageState.name,
-      };
-    }
-
-    if (pageState.kind === "active") {
-      return {
-        description: tEvent("active-description", {
-          date: formatDate(locale, pageState.endsAt),
-          name: pageState.name,
-        }),
-        primaryCta: tEvent("open-tryout-cta"),
-        title: pageState.name,
-      };
-    }
-
-    return {
-      description: tEvent("used-description", {
-        date: formatDate(locale, pageState.endsAt),
-        name: pageState.name,
-      }),
-      primaryCta: tEvent("view-tryout-cta"),
-      title: pageState.name,
-    };
-  }, [locale, pageState, tEvent]);
-
-  function handlePrimaryAction() {
-    if (!pageState || pageState.kind === "unavailable") {
-      return;
-    }
-
-    if (pageState.kind === "sign-in") {
-      router.push(`/auth?redirect=${pathname}`);
-      return;
-    }
-
-    if (pageState.kind === "active" || pageState.kind === "used") {
-      router.push(`/try-out/${pageState.product}`);
-      return;
-    }
-
+  function activateAccess() {
     startTransition(async () => {
       try {
         const result = await redeemEventAccess({ code });
@@ -185,62 +102,119 @@ export function EventAccessPage({ code }: Props) {
     });
   }
 
+  if (!pageState || isPending) {
+    return null;
+  }
+
+  if (pageState.kind === "unavailable") {
+    let description = tEvent("unavailable-invalid-code");
+
+    if (pageState.reason === "disabled") {
+      description = tEvent("unavailable-disabled");
+    }
+
+    if (pageState.reason === "not-started") {
+      description = tEvent("unavailable-not-started");
+    }
+
+    if (pageState.reason === "ended") {
+      description = tEvent("unavailable-ended");
+    }
+
+    return (
+      <EventAccessLayout>
+        <EventAccessCard
+          badge={tEvent("title")}
+          description={description}
+          title={tEvent("title")}
+        />
+      </EventAccessLayout>
+    );
+  }
+
+  if (pageState.kind === "sign-in") {
+    return (
+      <EventAccessLayout>
+        <EventAccessCard
+          action={
+            <Button disabled={isActionPending} onClick={goToAuth}>
+              <HugeIcons icon={Rocket01Icon} />
+              {tEvent("sign-in-cta")}
+            </Button>
+          }
+          badge={tEvent("free-days", {
+            days: pageState.grantDurationDays,
+          })}
+          title={pageState.name}
+        />
+      </EventAccessLayout>
+    );
+  }
+
+  if (pageState.kind === "ready") {
+    return (
+      <EventAccessLayout>
+        <EventAccessCard
+          action={
+            <Button disabled={isActionPending} onClick={activateAccess}>
+              <Spinner icon={Rocket01Icon} isLoading={isActionPending} />
+              {tEvent("redeem-cta")}
+            </Button>
+          }
+          badge={tEvent("free-days", {
+            days: pageState.grantDurationDays,
+          })}
+          title={pageState.name}
+        />
+      </EventAccessLayout>
+    );
+  }
+
+  if (pageState.kind === "active") {
+    return (
+      <EventAccessLayout>
+        <EventAccessCard
+          action={
+            <Button
+              disabled={isActionPending}
+              onClick={() => {
+                goToTryout(pageState.product);
+              }}
+            >
+              <HugeIcons icon={Rocket01Icon} />
+              {tEvent("open-tryout-cta")}
+            </Button>
+          }
+          badge={tEvent("active-until", {
+            date: formatDate(locale, pageState.endsAt),
+          })}
+          description={tEvent("active-state")}
+          title={pageState.name}
+        />
+      </EventAccessLayout>
+    );
+  }
+
   return (
-    <main className="relative flex min-h-[calc(100svh-4rem)] items-center justify-center px-6 py-12 sm:py-20">
-      <Particles className="pointer-events-none absolute inset-0 opacity-80" />
-      <div className="z-1 mx-auto flex w-full max-w-xl flex-col gap-6">
-        <NavigationLink
-          className="flex items-center gap-2 text-primary text-sm underline-offset-4 hover:underline"
-          href="/try-out"
-        >
-          <HugeIcons className="size-4" icon={ArrowLeft02Icon} />
-          {tCommon("back")}
-        </NavigationLink>
-
-        <section className="rounded-2xl border bg-card/95 p-6 shadow-sm backdrop-blur-xs sm:p-8">
-          <div className="space-y-6">
-            <div className="space-y-3">
-              <p className="font-medium text-primary text-sm">
-                {tEvent("eyebrow")}
-              </p>
-              <div className="space-y-2">
-                <h1 className="text-balance font-medium text-3xl tracking-tight sm:text-4xl">
-                  {statusCopy.title}
-                </h1>
-                <p className="text-balance text-muted-foreground leading-relaxed">
-                  {statusCopy.description}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3 sm:flex-row">
-              {statusCopy.primaryCta ? (
-                <Button
-                  disabled={isActionPending || isPending}
-                  onClick={handlePrimaryAction}
-                >
-                  <Spinner icon={Rocket01Icon} isLoading={isActionPending} />
-                  {statusCopy.primaryCta}
-                </Button>
-              ) : null}
-
-              <Button
-                nativeButton={false}
-                render={<NavigationLink href="/try-out" />}
-                variant="outline"
-              >
-                {tEvent("browse-tryouts-cta")}
-              </Button>
-            </div>
-
-            {isPending ? (
-              <p className="text-muted-foreground text-sm">
-                {tEvent("loading-description")}
-              </p>
-            ) : null}
-          </div>
-        </section>
-      </div>
-    </main>
+    <EventAccessLayout>
+      <EventAccessCard
+        action={
+          <Button
+            disabled={isActionPending}
+            onClick={() => {
+              goToTryout(pageState.product);
+            }}
+          >
+            <HugeIcons icon={Rocket01Icon} />
+            {tEvent("view-tryout-cta")}
+          </Button>
+        }
+        badge={tEvent("ended-at", {
+          date: formatDate(locale, pageState.endsAt),
+        })}
+        description={tEvent("used-state")}
+        title={pageState.name}
+      />
+    </EventAccessLayout>
   );
 }
