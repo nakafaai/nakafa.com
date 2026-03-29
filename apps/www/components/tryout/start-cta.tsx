@@ -33,7 +33,6 @@ function TryoutStartActionButton({
 }
 
 export function TryoutStartCta() {
-  const tAuth = useTranslations("Auth");
   const tTryouts = useTranslations("Tryouts");
   const attempt = useTryoutStart((state) => state.state.attempt);
   const attemptStatus = useTryoutStart((state) => state.state.attemptStatus);
@@ -42,9 +41,6 @@ export function TryoutStartCta() {
   );
   const hasFinishedAttempt = useTryoutStart(
     (state) => state.state.hasFinishedAttempt
-  );
-  const hasSubscription = useTryoutStart(
-    (state) => state.state.hasSubscription
   );
   const isActionPending = useTryoutStart((state) => state.meta.isActionPending);
   const isLoading = useTryoutStart((state) => state.state.isLoading);
@@ -60,10 +56,6 @@ export function TryoutStartCta() {
 
   if (hasFinishedAttempt) {
     label = tTryouts("restart-cta");
-  }
-
-  if (hasSubscription === false) {
-    label = tAuth("get-pro");
   }
 
   if (resumePartKey) {

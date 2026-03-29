@@ -1,0 +1,70 @@
+import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
+import { defineTable } from "convex/server";
+import { v } from "convex/values";
+import { literals } from "convex-helpers/validators";
+
+export const tryoutAccessCampaignRedeemStatusValidator = literals(
+  "scheduled",
+  "active",
+  "ended"
+);
+
+export const tryoutAccessGrantStatusValidator = literals("active", "expired");
+
+export const tryoutAccessCampaignValidator = v.object({
+  slug: v.string(),
+  name: v.string(),
+  products: v.array(tryoutProductValidator),
+  enabled: v.boolean(),
+  redeemStatus: tryoutAccessCampaignRedeemStatusValidator,
+  startsAt: v.number(),
+  endsAt: v.number(),
+  grantDurationDays: v.number(),
+});
+
+export const tryoutAccessLinkValidator = v.object({
+  campaignId: v.id("tryoutAccessCampaigns"),
+  code: v.string(),
+  label: v.string(),
+  enabled: v.boolean(),
+});
+
+export const tryoutAccessGrantValidator = v.object({
+  campaignId: v.id("tryoutAccessCampaigns"),
+  linkId: v.id("tryoutAccessLinks"),
+  userId: v.id("users"),
+  redeemedAt: v.number(),
+  endsAt: v.number(),
+  status: tryoutAccessGrantStatusValidator,
+});
+
+export const tryoutAccessProductGrantValidator = v.object({
+  campaignId: v.id("tryoutAccessCampaigns"),
+  grantId: v.id("tryoutAccessGrants"),
+  product: tryoutProductValidator,
+  status: tryoutAccessGrantStatusValidator,
+  userId: v.id("users"),
+  endsAt: v.number(),
+});
+
+const tables = {
+  tryoutAccessCampaigns: defineTable(tryoutAccessCampaignValidator)
+    .index("by_slug", ["slug"])
+    .index("by_redeemStatus_and_startsAt", ["redeemStatus", "startsAt"])
+    .index("by_redeemStatus_and_endsAt", ["redeemStatus", "endsAt"]),
+
+  tryoutAccessLinks: defineTable(tryoutAccessLinkValidator)
+    .index("by_code", ["code"])
+    .index("by_campaignId", ["campaignId"]),
+
+  tryoutAccessGrants: defineTable(tryoutAccessGrantValidator)
+    .index("by_userId_and_campaignId", ["userId", "campaignId"])
+    .index("by_status_and_endsAt", ["status", "endsAt"]),
+
+  tryoutAccessProductGrants: defineTable(tryoutAccessProductGrantValidator)
+    .index("by_grantId", ["grantId"])
+    .index("by_userId_and_product_and_status", ["userId", "product", "status"])
+    .index("by_userId_and_product_and_endsAt", ["userId", "product", "endsAt"]),
+};
+
+export default tables;
