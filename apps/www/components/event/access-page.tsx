@@ -1,6 +1,11 @@
 "use client";
 
-import { Rocket01Icon } from "@hugeicons/core-free-icons";
+import {
+  AccessIcon,
+  ArrowRight01Icon,
+  EyeIcon,
+  Login01Icon,
+} from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -119,7 +124,7 @@ export function EventAccessPage({ code }: Props) {
               nativeButton={false}
               render={
                 <NavigationLink href="/try-out">
-                  <HugeIcons icon={Rocket01Icon} />
+                  <HugeIcons icon={EyeIcon} />
                   {tEvent("view-tryout-cta")}
                 </NavigationLink>
               }
@@ -142,7 +147,7 @@ export function EventAccessPage({ code }: Props) {
               nativeButton={false}
               render={
                 <NavigationLink href={`/auth?redirect=${pathname}`}>
-                  <HugeIcons icon={Rocket01Icon} />
+                  <HugeIcons icon={Login01Icon} />
                   {tEvent("sign-in-cta")}
                 </NavigationLink>
               }
@@ -161,7 +166,7 @@ export function EventAccessPage({ code }: Props) {
         <EventAccessCard
           action={
             <Button disabled={isActionPending} onClick={activateAccess}>
-              <Spinner icon={Rocket01Icon} isLoading={isActionPending} />
+              <Spinner icon={AccessIcon} isLoading={isActionPending} />
               {tEvent("redeem-cta")}
             </Button>
           }
@@ -182,7 +187,7 @@ export function EventAccessPage({ code }: Props) {
               nativeButton={false}
               render={
                 <NavigationLink href="/try-out">
-                  <HugeIcons icon={Rocket01Icon} />
+                  <HugeIcons icon={ArrowRight01Icon} />
                   {tEvent("open-tryout-cta")}
                 </NavigationLink>
               }
@@ -206,7 +211,7 @@ export function EventAccessPage({ code }: Props) {
             nativeButton={false}
             render={
               <NavigationLink href="/try-out">
-                <HugeIcons icon={Rocket01Icon} />
+                <HugeIcons icon={EyeIcon} />
                 {tEvent("view-tryout-cta")}
               </NavigationLink>
             }
