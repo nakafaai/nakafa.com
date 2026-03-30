@@ -54,12 +54,11 @@ export const DEFAULT_USER_CREDITS =
 
 /**
  * Workflow configuration for credit reset processing.
- * Note: Convex workflows don't support setTimeout or Date.now(),
- * so we use a fixed number of workers instead of dynamic scaling.
+ * Queue writes and queue claims use the same partition count so each worker
+ * owns one disjoint queue slice.
  */
 export const RESET_WORKFLOW_CONFIG = {
-  maxWorkers: 10,
-  progressReportInterval: 10,
+  partitionCount: 10,
   populateBatchSize: 1000,
   processBatchSize: 100,
 } as const;

@@ -7,16 +7,6 @@ const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
 const TRYOUT_ACCESS_STATUS_SWEEP_INTERVAL_MINUTES = 5;
 
 /**
- * Ensures analytics partition lease rows exist before workers run.
- */
-crons.interval(
-  "initialize content analytics partitions",
-  { minutes: 1 },
-  internal.contents.mutations.setup.initializeAnalyticsPartitions,
-  {}
-);
-
-/**
  * Schedules idle content analytics partitions that have queued rows.
  */
 crons.interval(
@@ -69,7 +59,6 @@ crons.interval(
 
 /**
  * Resets free user credits daily at midnight UTC.
- * Populates queue and starts parallel workers.
  */
 crons.cron(
   "reset free user credits",
@@ -80,7 +69,6 @@ crons.cron(
 
 /**
  * Resets pro user credits monthly on 1st at midnight UTC.
- * Populates queue and starts parallel workers.
  */
 crons.cron(
   "reset pro user credits",

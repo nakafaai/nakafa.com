@@ -9,9 +9,7 @@ import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
 /**
- * Orchestrates the credit reset workflow with fixed worker pool.
- * Note: Convex workflows don't support setTimeout or Date.now(),
- * so we use a fixed number of workers instead of dynamic scaling.
+ * Orchestrates a partitioned credit reset workflow.
  */
 export const orchestrateReset = workflow.define({
   args: {
@@ -25,7 +23,7 @@ export const orchestrateReset = workflow.define({
     logger.info(`Starting ${creditConfig.jobType} credit reset orchestration`, {
       plan: args.plan,
       resetTimestamp: args.resetTimestamp,
-      maxWorkers: RESET_WORKFLOW_CONFIG.maxWorkers,
+      partitionCount: RESET_WORKFLOW_CONFIG.partitionCount,
     });
 
     const jobId = await step.runMutation(
@@ -99,35 +97,30 @@ export const orchestrateReset = workflow.define({
       return null;
     }
 
-    // Spawn fixed number of workers (no dynamic scaling - Convex workflow limitation)
-    // Workflows don't support setTimeout or Date.now()
     const workers = Array.from(
-      { length: RESET_WORKFLOW_CONFIG.maxWorkers },
-      (_, workerId) =>
+      { length: RESET_WORKFLOW_CONFIG.partitionCount },
+      (_, partition) =>
         step.runWorkflow(internal.credits.workflows.processQueue, {
           jobId,
           plan: args.plan,
           resetTimestamp: args.resetTimestamp,
-          workerId,
+          partition,
           creditAmount: creditConfig.amount,
           grantType: creditConfig.grantType,
         })
     );
 
-    logger.info(
-      `${creditConfig.jobType} spawned ${RESET_WORKFLOW_CONFIG.maxWorkers} workers`,
-      {
-        jobId,
-        totalWorkers: RESET_WORKFLOW_CONFIG.maxWorkers,
-      }
-    );
+    logger.info(`${creditConfig.jobType} spawned partition workers`, {
+      jobId,
+      partitionCount: RESET_WORKFLOW_CONFIG.partitionCount,
+    });
 
     // Wait for all workers to complete
     await Promise.all(workers);
 
     logger.info(`${creditConfig.jobType} all workers completed`, {
       jobId,
-      totalWorkersSpawned: RESET_WORKFLOW_CONFIG.maxWorkers,
+      partitionCount: RESET_WORKFLOW_CONFIG.partitionCount,
     });
 
     await step.runMutation(internal.credits.mutations.completeResetJob, {
@@ -148,18 +141,15 @@ export const processQueue = workflow.define({
     jobId: v.id("creditResetJobs"),
     plan: literals("free", "pro"),
     resetTimestamp: v.number(),
-    workerId: v.number(),
+    partition: v.number(),
     creditAmount: v.number(),
     grantType: literals("daily-grant", "monthly-grant"),
   },
   returns: v.null(),
   handler: async (step, args) => {
-    let batchCount = 0;
-    let cumulativeProcessed = 0;
-    let lastReportedCount = 0;
-
-    logger.info(`Worker ${args.workerId} started`, {
+    logger.info("Credit reset partition worker started", {
       jobId: args.jobId,
+      partition: args.partition,
       plan: args.plan,
     });
 
@@ -169,26 +159,15 @@ export const processQueue = workflow.define({
         {
           plan: args.plan,
           resetTimestamp: args.resetTimestamp,
+          partition: args.partition,
           batchSize: RESET_WORKFLOW_CONFIG.processBatchSize,
         }
       );
 
       if (items.length === 0) {
-        // Report any remaining unreported progress before exiting
-        const unreportedCount = cumulativeProcessed - lastReportedCount;
-        if (unreportedCount > 0) {
-          await step.runMutation(
-            internal.credits.mutations.incrementJobProgress,
-            {
-              jobId: args.jobId,
-              increment: unreportedCount,
-            }
-          );
-        }
-
-        logger.info(`Worker ${args.workerId} finished`, {
+        logger.info("Credit reset partition worker finished", {
           jobId: args.jobId,
-          totalProcessed: cumulativeProcessed,
+          partition: args.partition,
         });
         break;
       }
@@ -196,11 +175,7 @@ export const processQueue = workflow.define({
       const result = await step.runMutation(
         internal.credits.mutations.batchResetUserCredits,
         {
-          items: items.map((item) => ({
-            queueId: item.queueId,
-            userId: item.userId,
-            previousBalance: item.credits ?? 0,
-          })),
+          items,
           creditAmount: args.creditAmount,
           grantType: args.grantType,
           resetTimestamp: args.resetTimestamp,
@@ -208,56 +183,12 @@ export const processQueue = workflow.define({
       );
 
       if (result.failureCount > 0) {
-        logger.error(
-          `Worker ${args.workerId} batch had ${result.failureCount} failures`,
-          {
-            jobId: args.jobId,
-            successCount: result.successCount,
-            failureCount: result.failureCount,
-          }
-        );
-      }
-
-      // Count ALL attempted items (successes + failures) for accurate progress tracking
-      cumulativeProcessed += result.successCount + result.failureCount;
-      batchCount++;
-
-      // Report progress every RESET_WORKFLOW_CONFIG.progressReportInterval batches
-      if (batchCount % RESET_WORKFLOW_CONFIG.progressReportInterval === 0) {
-        const unreportedCount = cumulativeProcessed - lastReportedCount;
-        if (unreportedCount > 0) {
-          await step.runMutation(
-            internal.credits.mutations.incrementJobProgress,
-            {
-              jobId: args.jobId,
-              increment: unreportedCount,
-            }
-          );
-          lastReportedCount = cumulativeProcessed;
-        }
-
-        logger.info(`Worker ${args.workerId} progress report`, {
+        logger.error("Credit reset partition batch had failures", {
           jobId: args.jobId,
-          batchCount,
-          reportedCount: unreportedCount,
-          cumulativeProcessed,
+          partition: args.partition,
+          successCount: result.successCount,
+          failureCount: result.failureCount,
         });
-      }
-
-      // Last batch - report any remaining unreported progress
-      if (items.length < RESET_WORKFLOW_CONFIG.processBatchSize) {
-        const unreportedCount = cumulativeProcessed - lastReportedCount;
-        if (unreportedCount > 0) {
-          await step.runMutation(
-            internal.credits.mutations.incrementJobProgress,
-            {
-              jobId: args.jobId,
-              increment: unreportedCount,
-            }
-          );
-        }
-
-        break;
       }
     }
 
