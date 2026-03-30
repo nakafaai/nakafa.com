@@ -36,7 +36,7 @@
     "@convex-dev/aggregate": "^0.2.1",
     "@convex-dev/better-auth": "^0.11.4",
     "@convex-dev/resend": "^0.2.3",
-    "@convex-dev/workflow": "^0.3.8",
+    "@convex-dev/workflow": "^0.3.9",
     "@convex-dev/workpool": "^0.4.6",
     "@polar-sh/sdk": "^0.46.7",
     "@repo/ai": "workspace:*",
@@ -58,7 +58,7 @@
     "@repo/contents": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@vitest/coverage-istanbul": "^4.1.2",
-    "convex-test": "^0.0.45",
+    "convex-test": "^0.0.46",
     "glob": "^13.0.6",
     "tsx": "^4.21.0",
     "vitest": "^4.1.2"
