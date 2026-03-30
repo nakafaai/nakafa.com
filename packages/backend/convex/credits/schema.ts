@@ -29,6 +29,7 @@ export const creditResetQueueValidator = v.object({
   userId: v.id("users"),
   plan: literals("free", "pro"),
   resetTimestamp: v.number(),
+  partition: v.number(),
   status: literals("pending", "processing", "completed", "failed"),
   processedAt: v.optional(v.number()),
   error: v.optional(v.string()),
@@ -57,10 +58,11 @@ const tables = {
 
   creditResetQueue: defineTable(creditResetQueueValidator)
     .index("by_status", ["status"])
-    .index("by_plan_and_status_and_resetTimestamp", [
+    .index("by_plan_and_resetTimestamp_and_partition_and_status", [
       "plan",
-      "status",
       "resetTimestamp",
+      "partition",
+      "status",
     ]),
 
   creditResetJobs: defineTable(creditResetJobValidator),

@@ -14,72 +14,99 @@ import { ConvexError, v } from "convex/values";
 export const scheduleContentAnalyticsPartitions = internalMutation({
   args: {},
   returns: v.object({
-    scheduledPartitions: v.number(),
+    enqueuedPartitions: v.number(),
   }),
   handler: async (ctx) => {
-    const now = Date.now();
-    let scheduledPartitions = 0;
-    let missingPartitions = 0;
-
     for (const partition of CONTENT_ANALYTICS_PARTITIONS) {
-      const partitionRow = await ctx.db
-        .query("contentAnalyticsPartitions")
-        .withIndex("by_partition", (q) => q.eq("partition", partition))
-        .unique();
-
-      if (!partitionRow) {
-        missingPartitions++;
-        continue;
-      }
-
-      const hasBacklog = await ctx.db
-        .query("contentViewAnalyticsQueue")
-        .withIndex("by_partition", (q) => q.eq("partition", partition))
-        .take(1);
-
-      if (hasBacklog.length === 0) {
-        continue;
-      }
-
-      if (partitionRow.leaseExpiresAt > now) {
-        continue;
-      }
-
-      const leaseVersion = partitionRow.leaseVersion + 1;
-
-      await ctx.db.patch("contentAnalyticsPartitions", partitionRow._id, {
-        leaseExpiresAt: now + CONTENT_ANALYTICS_LEASE_DURATION_MS,
-        leaseVersion,
-      });
-
       await ctx.scheduler.runAfter(
         0,
-        internal.contents.mutations.analytics.processContentAnalyticsPartition,
-        {
-          leaseVersion,
-          partition,
-        }
+        internal.contents.mutations.analytics.scheduleContentAnalyticsPartition,
+        { partition }
       );
-
-      scheduledPartitions++;
     }
 
-    if (scheduledPartitions > 0) {
-      logger.info("Scheduled content analytics partitions", {
-        scheduledPartitions,
+    return {
+      enqueuedPartitions: CONTENT_ANALYTICS_PARTITIONS.length,
+    };
+  },
+});
+
+/** Claims one partition lease and starts a worker when backlog exists. */
+export const scheduleContentAnalyticsPartition = internalMutation({
+  args: {
+    partition: v.number(),
+  },
+  returns: v.object({
+    createdPartition: v.boolean(),
+    scheduled: v.boolean(),
+  }),
+  handler: async (ctx, args) => {
+    if (!isContentAnalyticsPartition(args.partition)) {
+      throw new ConvexError({
+        code: "INVALID_CONTENT_ANALYTICS_PARTITION",
+        message: "Content analytics partition is out of range.",
       });
     }
 
-    if (missingPartitions > 0) {
-      logger.warn(
-        "Skipped analytics partitions because setup rows are missing",
-        {
-          missingPartitions,
-        }
-      );
+    const hasBacklog = await ctx.db
+      .query("contentViewAnalyticsQueue")
+      .withIndex("by_partition", (q) => q.eq("partition", args.partition))
+      .take(1);
+
+    if (hasBacklog.length === 0) {
+      return {
+        createdPartition: false,
+        scheduled: false,
+      };
     }
 
-    return { scheduledPartitions };
+    const partitionRow = await ctx.db
+      .query("contentAnalyticsPartitions")
+      .withIndex("by_partition", (q) => q.eq("partition", args.partition))
+      .unique();
+    const now = Date.now();
+
+    let createdPartition = false;
+    let partitionRowId = partitionRow?._id;
+    const leaseExpiresAt = partitionRow?.leaseExpiresAt ?? 0;
+    let leaseVersion = partitionRow?.leaseVersion ?? 0;
+
+    if (!partitionRowId) {
+      partitionRowId = await ctx.db.insert("contentAnalyticsPartitions", {
+        leaseExpiresAt: 0,
+        leaseVersion: 0,
+        partition: args.partition,
+      });
+      createdPartition = true;
+    }
+
+    if (leaseExpiresAt > now) {
+      return {
+        createdPartition,
+        scheduled: false,
+      };
+    }
+
+    leaseVersion += 1;
+
+    await ctx.db.patch("contentAnalyticsPartitions", partitionRowId, {
+      leaseExpiresAt: now + CONTENT_ANALYTICS_LEASE_DURATION_MS,
+      leaseVersion,
+    });
+
+    await ctx.scheduler.runAfter(
+      0,
+      internal.contents.mutations.analytics.processContentAnalyticsPartition,
+      {
+        leaseVersion,
+        partition: args.partition,
+      }
+    );
+
+    return {
+      createdPartition,
+      scheduled: true,
+    };
   },
 });
 
