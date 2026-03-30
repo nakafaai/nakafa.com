@@ -1,4 +1,7 @@
-import { CLEANUP_CONFIG } from "@repo/backend/convex/credits/constants";
+import {
+  CLEANUP_CONFIG,
+  RESET_WORKFLOW_CONFIG,
+} from "@repo/backend/convex/credits/constants";
 import { resetUserCredits } from "@repo/backend/convex/credits/utils";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { logger } from "@repo/backend/convex/utils/logger";
@@ -7,7 +10,7 @@ import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
 /**
- * Create a credit reset job record to track progress.
+ * Create a credit reset job record.
  */
 export const createResetJob = internalMutation({
   args: {
@@ -66,10 +69,19 @@ export const populateQueueBatch = internalMutation({
 
     // Insert users into queue
     for (const user of results.page) {
+      let partition = 0;
+
+      for (const character of user._id) {
+        partition =
+          (partition * 31 + character.charCodeAt(0)) %
+          RESET_WORKFLOW_CONFIG.partitionCount;
+      }
+
       await ctx.db.insert("creditResetQueue", {
         userId: user._id,
         plan: args.plan,
         resetTimestamp: args.resetTimestamp,
+        partition,
         status: "pending",
       });
     }
@@ -113,60 +125,42 @@ export const claimQueueItems = internalMutation({
   args: {
     plan: literals("free", "pro"),
     resetTimestamp: v.number(),
+    partition: v.number(),
     batchSize: v.number(),
   },
   returns: v.array(
     v.object({
       queueId: v.id("creditResetQueue"),
       userId: v.id("users"),
-      credits: v.optional(v.number()),
     })
   ),
   handler: async (ctx, args) => {
     const pendingItems = await ctx.db
       .query("creditResetQueue")
-      .withIndex("by_plan_and_status_and_resetTimestamp", (idx) =>
+      .withIndex("by_plan_and_resetTimestamp_and_partition_and_status", (idx) =>
         idx
           .eq("plan", args.plan)
-          .eq("status", "pending")
           .eq("resetTimestamp", args.resetTimestamp)
+          .eq("partition", args.partition)
+          .eq("status", "pending")
       )
       .take(args.batchSize);
 
-    const claimed = await Promise.all(
-      pendingItems.map(async (item) => {
-        // Check user exists BEFORE marking as processing
-        // This prevents deleted users from getting stuck in 'processing' status
-        const user = await ctx.db.get("users", item.userId);
+    for (const item of pendingItems) {
+      await ctx.db.patch("creditResetQueue", item._id, {
+        status: "processing",
+      });
+    }
 
-        if (!user) {
-          // User deleted - mark as completed so it's not stuck
-          await ctx.db.patch("creditResetQueue", item._id, {
-            status: "completed",
-            processedAt: Date.now(),
-          });
-          return null;
-        }
-
-        // Only mark as processing if user exists
-        await ctx.db.patch("creditResetQueue", item._id, {
-          status: "processing",
-        });
-
-        return {
-          queueId: item._id,
-          userId: item.userId,
-          credits: user.credits,
-        };
-      })
-    );
-
-    return claimed.filter((item) => item !== null);
+    return pendingItems.map((item) => ({
+      queueId: item._id,
+      userId: item.userId,
+    }));
   },
 });
 
 /**
- * Batch process credit resets for multiple users in parallel.
+ * Process one claimed queue batch.
  */
 export const batchResetUserCredits = internalMutation({
   args: {
@@ -174,7 +168,6 @@ export const batchResetUserCredits = internalMutation({
       v.object({
         queueId: v.id("creditResetQueue"),
         userId: v.id("users"),
-        previousBalance: v.number(),
       })
     ),
     creditAmount: v.number(),
@@ -192,78 +185,45 @@ export const batchResetUserCredits = internalMutation({
     ),
   }),
   handler: async (ctx, args) => {
-    const results = await Promise.all(
-      args.items.map(async (item) => {
-        try {
-          await resetUserCredits(ctx, {
-            userId: item.userId,
-            creditAmount: args.creditAmount,
-            grantType: args.grantType,
-            resetTimestamp: args.resetTimestamp,
-          });
-          return { queueId: item.queueId, success: true as const };
-        } catch (error) {
-          const errorMessage =
-            error instanceof Error ? error.message : String(error);
-          return {
-            queueId: item.queueId,
-            success: false as const,
-            error: errorMessage,
-          };
-        }
-      })
-    );
+    let successCount = 0;
+    const failures = args.items
+      .slice(0, 0)
+      .map((item) => ({ queueId: item.queueId, error: "" }));
 
-    const successes = results.filter((r) => r.success);
-    const failures = results.filter((r) => !r.success);
+    for (const item of args.items) {
+      try {
+        await resetUserCredits(ctx, {
+          userId: item.userId,
+          creditAmount: args.creditAmount,
+          grantType: args.grantType,
+          resetTimestamp: args.resetTimestamp,
+        });
 
-    if (successes.length > 0) {
-      for (const success of successes) {
-        await ctx.db.patch("creditResetQueue", success.queueId, {
+        await ctx.db.patch("creditResetQueue", item.queueId, {
           status: "completed",
           processedAt: Date.now(),
         });
-      }
-    }
 
-    if (failures.length > 0) {
-      for (const failure of failures) {
-        await ctx.db.patch("creditResetQueue", failure.queueId, {
+        successCount++;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+
+        failures.push({ queueId: item.queueId, error: errorMessage });
+
+        await ctx.db.patch("creditResetQueue", item.queueId, {
           status: "failed",
-          error: failure.error,
+          error: errorMessage,
           processedAt: Date.now(),
         });
       }
     }
 
     return {
-      successCount: successes.length,
+      successCount,
       failureCount: failures.length,
-      failures: failures.map((f) => ({ queueId: f.queueId, error: f.error })),
+      failures,
     };
-  },
-});
-
-/**
- * Increment job progress counter atomically.
- */
-export const incrementJobProgress = internalMutation({
-  args: {
-    jobId: v.id("creditResetJobs"),
-    increment: v.number(),
-  },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    const job = await ctx.db.get("creditResetJobs", args.jobId);
-    if (!job) {
-      return null;
-    }
-
-    await ctx.db.patch("creditResetJobs", args.jobId, {
-      processedUsers: job.processedUsers + args.increment,
-    });
-
-    return null;
   },
 });
 
@@ -284,12 +244,13 @@ export const completeResetJob = internalMutation({
     await ctx.db.patch("creditResetJobs", args.jobId, {
       status: "completed",
       completedAt: Date.now(),
+      processedUsers: job.totalUsers,
     });
 
     logger.info("Credit reset job completed", {
       jobId: args.jobId,
       totalUsers: job.totalUsers,
-      processedUsers: job.processedUsers,
+      processedUsers: job.totalUsers,
     });
 
     return null;

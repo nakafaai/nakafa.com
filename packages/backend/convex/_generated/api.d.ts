@@ -85,7 +85,6 @@ import type * as contents_helpers_views from "../contents/helpers/views.js";
 import type * as contents_helpers_writes from "../contents/helpers/writes.js";
 import type * as contents_mutations_analytics from "../contents/mutations/analytics.js";
 import type * as contents_mutations_audio from "../contents/mutations/audio.js";
-import type * as contents_mutations_setup from "../contents/mutations/setup.js";
 import type * as contents_mutations_views from "../contents/mutations/views.js";
 import type * as contents_queries_audio from "../contents/queries/audio.js";
 import type * as contents_queries_recent from "../contents/queries/recent.js";
@@ -323,7 +322,6 @@ declare const fullApi: ApiFromModules<{
   "contents/helpers/writes": typeof contents_helpers_writes;
   "contents/mutations/analytics": typeof contents_mutations_analytics;
   "contents/mutations/audio": typeof contents_mutations_audio;
-  "contents/mutations/setup": typeof contents_mutations_setup;
   "contents/mutations/views": typeof contents_mutations_views;
   "contents/queries/audio": typeof contents_queries_audio;
   "contents/queries/recent": typeof contents_queries_recent;
