@@ -63,7 +63,7 @@ export const scheduleContentAnalyticsPartition = internalMutation({
     const partitionRow = await ctx.db
       .query("contentAnalyticsPartitions")
       .withIndex("by_partition", (q) => q.eq("partition", args.partition))
-      .first();
+      .unique();
     const now = Date.now();
 
     let createdPartition = false;
