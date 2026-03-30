@@ -1,11 +1,9 @@
 import { teams } from "@repo/contents/_data/team";
-import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
+import { getContentsMetadata } from "@repo/contents/_lib/metadata";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
-import {
-  type Article,
-  ContentMetadataSchema,
-} from "@repo/contents/_types/content";
+import type { Article } from "@repo/contents/_types/content";
 import { formatISO } from "date-fns";
+import { Effect } from "effect";
 import type { Locale } from "next-intl";
 
 /**
@@ -22,8 +20,8 @@ export function getSlugPath(category: ArticleCategory, slug: string) {
 /**
  * Loads all articles in a category and sorts them newest-first.
  *
- * Metadata is imported directly from MDX modules while the cache is used to
- * discover available article slugs for the requested locale.
+ * Metadata is read through the metadata-only listing path so category pages do
+ * not import every article MDX module just to render cards.
  *
  * @param category - Article category slug
  * @param locale - Locale to read article metadata for
@@ -48,48 +46,39 @@ export async function getArticles(
     return [];
   }
 
-  // Get all article directories under the specified category using cache
-  const allSlugs = getMDXSlugsForLocale(locale);
   const categoryPrefix = `articles/${categoryName}/`;
 
-  const slugs = allSlugs
-    .filter((slug: string) => slug.startsWith(categoryPrefix))
-    .map((slug: string) => slug.slice(categoryPrefix.length).split("/")[0]);
+  return await Effect.runPromise(
+    getContentsMetadata({
+      locale,
+      basePath: `articles/${categoryName}`,
+    }).pipe(
+      Effect.map((entries) => {
+        const articlesBySlug = new Map<string, Article>();
 
-  // Remove duplicates while preserving order
-  const uniqueSlugs = Array.from(new Set(slugs));
+        for (const entry of entries) {
+          const relativePath = entry.slug.slice(categoryPrefix.length);
+          const slug = relativePath.split("/")[0];
 
-  // Process the article data in a single pass
-  const articles = await Promise.all(
-    uniqueSlugs.map(async (slug: string) => {
-      try {
-        // Import the metadata directly
-        const { metadata } = await import(
-          `@repo/contents/articles/${categoryName}/${slug}/${locale}.mdx`
+          if (!slug || articlesBySlug.has(slug)) {
+            continue;
+          }
+
+          const authors = entry.metadata.authors.map((author) => author.name);
+
+          articlesBySlug.set(slug, {
+            title: entry.metadata.title,
+            description: entry.metadata.description ?? "",
+            date: formatISO(new Date(entry.metadata.date)),
+            slug,
+            official: authors.some((author) => teams.has(author)),
+          });
+        }
+
+        return Array.from(articlesBySlug.values()).sort((a, b) =>
+          b.date.localeCompare(a.date)
         );
-
-        const parsedMetadata = ContentMetadataSchema.parse(metadata);
-
-        const authors: string[] = parsedMetadata.authors.map(
-          (author: { name: string }) => author.name
-        );
-
-        return {
-          title: parsedMetadata.title,
-          description: parsedMetadata.description || "",
-          date: formatISO(parsedMetadata.date),
-          slug,
-          official: authors.some((author) => teams.has(author)),
-        };
-      } catch {
-        // TODO: Add monitoring for missing articles
-        return null;
-      }
-    })
+      })
+    )
   );
-
-  // Filter out any null values and sort by date (newest first)
-  return articles
-    .filter((article) => article !== null)
-    .sort((a, b) => b.date.localeCompare(a.date));
 }
