@@ -17,6 +17,11 @@ interface StaticParamsSlugOnly {
   slug: string[];
 }
 
+interface ContentPathCandidate {
+  fullPath: string;
+  slugParts: string[];
+}
+
 interface BaseConfig {
   locales?: readonly Locale[];
 }
@@ -108,6 +113,44 @@ function getAllFolderPaths(basePath: string): Set<string> {
   }
 
   return folderPaths;
+}
+
+/**
+ * Collects top-level and nested content paths once so locale-specific static
+ * param generation can reuse the same filesystem walk.
+ *
+ * This keeps slug-only and locale-param generation from rescanning the same
+ * directory tree for every locale.
+ *
+ * @returns Ordered path candidates rooted at the contents package
+ */
+function getContentPathCandidates(): ContentPathCandidate[] {
+  const topDirs = Effect.runSync(
+    Effect.match(getFolderChildNames("."), {
+      onFailure: () => [],
+      onSuccess: (names) => names,
+    })
+  );
+
+  const candidates: ContentPathCandidate[] = [];
+
+  for (const topDir of topDirs) {
+    candidates.push({
+      fullPath: topDir,
+      slugParts: [topDir],
+    });
+
+    const nestedPaths = getNestedSlugs(topDir);
+
+    for (const pathParts of nestedPaths) {
+      candidates.push({
+        fullPath: `${topDir}/${pathParts.join("/")}`,
+        slugParts: [topDir, ...pathParts],
+      });
+    }
+  }
+
+  return candidates;
 }
 
 /**
@@ -204,13 +247,7 @@ export function generateSlugOnlyParams(
     includeOGVariants = false,
   } = config;
 
-  const topDirs = Effect.runSync(
-    Effect.match(getFolderChildNames("."), {
-      onFailure: () => [],
-      onSuccess: (names) => names,
-    })
-  );
-
+  const contentPathCandidates = getContentPathCandidates();
   const result: StaticParamsSlugOnly[] = [];
 
   const addPath = (locale: Locale, slugParts: string[]) => {
@@ -228,19 +265,9 @@ export function generateSlugOnlyParams(
     const slugs = getMDXSlugsForLocale(locale);
     const localeCache = new Set(slugs);
 
-    for (const topDir of topDirs) {
-      if (localeCache.has(topDir)) {
-        addPath(locale, [topDir]);
-      }
-
-      const nestedPaths = getNestedSlugs(topDir);
-
-      for (const pathParts of nestedPaths) {
-        const fullPath = `${topDir}/${pathParts.join("/")}`;
-
-        if (localeCache.has(fullPath)) {
-          addPath(locale, [topDir, ...pathParts]);
-        }
+    for (const candidate of contentPathCandidates) {
+      if (localeCache.has(candidate.fullPath)) {
+        addPath(locale, candidate.slugParts);
       }
     }
 
@@ -288,14 +315,7 @@ export function generateLocaleParams(
   config: LocaleParamsConfig = {}
 ): StaticParamsWithLocale[] {
   const { locales = routing.locales, includeOGVariants = false } = config;
-
-  const topDirs = Effect.runSync(
-    Effect.match(getFolderChildNames("."), {
-      onFailure: () => [],
-      onSuccess: (names) => names,
-    })
-  );
-
+  const contentPathCandidates = getContentPathCandidates();
   const result: StaticParamsWithLocale[] = [];
 
   const addPath = (locale: Locale, slugParts: string[]) => {
@@ -313,19 +333,9 @@ export function generateLocaleParams(
     const slugs = getMDXSlugsForLocale(locale);
     const localeCache = new Set(slugs);
 
-    for (const topDir of topDirs) {
-      if (localeCache.has(topDir)) {
-        addPath(locale, [topDir]);
-      }
-
-      const nestedPaths = getNestedSlugs(topDir);
-
-      for (const pathParts of nestedPaths) {
-        const fullPath = `${topDir}/${pathParts.join("/")}`;
-
-        if (localeCache.has(fullPath)) {
-          addPath(locale, [topDir, ...pathParts]);
-        }
+    for (const candidate of contentPathCandidates) {
+      if (localeCache.has(candidate.fullPath)) {
+        addPath(locale, candidate.slugParts);
       }
     }
   }

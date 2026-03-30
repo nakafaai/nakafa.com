@@ -11,6 +11,11 @@ import { resolveContentsDir } from "@repo/contents/_lib/root";
 import {
   type ChoicesValidationError,
   ExerciseLoadError,
+  type FileReadError,
+  type GitHubFetchError,
+  type InvalidPathError,
+  type MetadataParseError,
+  type ModuleLoadError,
 } from "@repo/contents/_shared/error";
 import type { ContentMetadata, Locale } from "@repo/contents/_types/content";
 import {
@@ -37,22 +42,29 @@ const EXERCISE_CONTENT_SEGMENTS = new Set(["_question", "_answer"]);
  * @param locale - Locale used to resolve the exercise content file
  * @param filePath - Exercise question or answer path relative to `packages/contents`
  * @param includeMDX - Whether to return the compiled MDX element as well
- * @returns Promise resolving to content metadata, raw source, and optional MDX
+ * @returns Effect resolving to content metadata, raw source, and optional MDX
  */
-async function loadExerciseContent(
+function loadExerciseContent(
   locale: Locale,
   filePath: string,
   includeMDX: boolean
-): Promise<{
-  default?: React.ReactElement;
-  metadata: ContentMetadata;
-  raw: string;
-}> {
+): Effect.Effect<
+  {
+    default?: React.ReactElement;
+    metadata: ContentMetadata;
+    raw: string;
+  },
+  | InvalidPathError
+  | FileReadError
+  | GitHubFetchError
+  | MetadataParseError
+  | ModuleLoadError
+> {
   if (!includeMDX) {
-    return await Effect.runPromise(getContentMetadataWithRaw(locale, filePath));
+    return getContentMetadataWithRaw(locale, filePath);
   }
 
-  return await Effect.runPromise(getContent(locale, filePath, { includeMDX }));
+  return getContent(locale, filePath, { includeMDX });
 }
 
 /**
@@ -270,23 +282,33 @@ function loadExercise(
 
     const [questionContent, answerContent, choicesData] = yield* Effect.all(
       [
-        Effect.tryPromise({
-          try: () => loadExerciseContent(locale, questionPath, includeMDX),
-          catch: () =>
-            new ExerciseLoadError({
-              path: questionPath,
-              reason: "Failed to load question",
-            }),
-        }),
-        Effect.tryPromise({
-          try: () => loadExerciseContent(locale, answerPath, includeMDX),
-          catch: () =>
-            new ExerciseLoadError({
-              path: answerPath,
-              reason: "Failed to load answer",
-            }),
-        }),
-        getRawChoices(choicesPath),
+        loadExerciseContent(locale, questionPath, includeMDX).pipe(
+          Effect.mapError(
+            () =>
+              new ExerciseLoadError({
+                path: questionPath,
+                reason: "Failed to load question",
+              })
+          )
+        ),
+        loadExerciseContent(locale, answerPath, includeMDX).pipe(
+          Effect.mapError(
+            () =>
+              new ExerciseLoadError({
+                path: answerPath,
+                reason: "Failed to load answer",
+              })
+          )
+        ),
+        getRawChoices(choicesPath).pipe(
+          Effect.mapError(
+            () =>
+              new ExerciseLoadError({
+                path: choicesPath,
+                reason: "Failed to load choices",
+              })
+          )
+        ),
       ],
       { concurrency: "unbounded" }
     );
