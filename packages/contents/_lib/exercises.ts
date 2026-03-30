@@ -1,6 +1,9 @@
 import { promises as fsPromises } from "node:fs";
 import nodePath from "node:path";
-import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
+import {
+  getMDXSlugsForLocale,
+  hasPathInCache,
+} from "@repo/contents/_lib/cache";
 import { getContent } from "@repo/contents/_lib/content";
 import { getFolderChildNames } from "@repo/contents/_lib/fs";
 import { getContentMetadataWithRaw } from "@repo/contents/_lib/metadata";
@@ -337,14 +340,27 @@ export function getExerciseByNumber(
   ExerciseLoadError | ChoicesValidationError
 > {
   return Effect.gen(function* () {
-    const exercises = yield* getExercisesContent({
-      locale,
-      filePath,
-      includeMDX,
-    });
+    const cleanPath = cleanSlug(filePath);
+    const exerciseNumberSegment = String(exerciseNumber);
+    const questionPath = `${cleanPath}/${exerciseNumberSegment}/_question`;
+    const answerPath = `${cleanPath}/${exerciseNumberSegment}/_answer`;
 
-    return Option.fromNullable(
-      exercises.find((ex: Exercise) => ex.number === exerciseNumber)
+    // Mirror the old semantics: return none when the exercise number is
+    // missing entirely, but still fail if a partially indexed exercise exists.
+    if (
+      !(
+        hasPathInCache(locale, questionPath) ||
+        hasPathInCache(locale, answerPath)
+      )
+    ) {
+      return Option.none();
+    }
+
+    return yield* loadExercise(
+      exerciseNumberSegment,
+      cleanPath,
+      locale,
+      includeMDX
     );
   });
 }

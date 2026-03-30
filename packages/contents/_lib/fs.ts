@@ -136,6 +136,36 @@ function filterDirectoryNames(
 }
 
 /**
+ * Reads child directory names for internal DFS traversal without constructing
+ * Effect wrappers at each step.
+ *
+ * Returns an empty array for invalid paths or unreadable directories because
+ * `getNestedSlugs()` treats those cases as leaf nodes rather than surfacing an
+ * error.
+ *
+ * @param folder - Relative folder path within `packages/contents`
+ * @param exclude - Optional additional directory names to exclude
+ * @returns Directory names that passed filtering, or an empty array on failure
+ */
+function getFolderChildNamesSync(folder: string, exclude?: string[]): string[] {
+  if (folder.includes("..") || path.isAbsolute(folder)) {
+    return [];
+  }
+
+  const contentDir = path.join(contentsDir, folder);
+
+  try {
+    return filterDirectoryNames(
+      fs.readdirSync(contentDir, { withFileTypes: true }),
+      DEFAULT_EXCLUDE,
+      exclude
+    );
+  } catch {
+    return [];
+  }
+}
+
+/**
  * Gets child directory names for a given folder within the contents directory.
  *
  * @param folder - The relative path to the folder from the contents directory
@@ -179,22 +209,15 @@ export function getNestedSlugs(basePath: string): string[][] {
   const results: string[][] = [];
 
   const stack: [string[], string][] = [[[], cleanBasePath]];
-  let stackIndex = stack.length - 1;
 
-  while (stackIndex >= 0) {
-    const [pathSegments, fullPath] = stack[stackIndex];
-    stack.splice(stackIndex, 1);
-    stackIndex--;
+  for (;;) {
+    const current = stack.pop();
+    if (!current) {
+      break;
+    }
 
-    const children = Effect.runSync(
-      Effect.match(getFolderChildNames(fullPath), {
-        onFailure: (error) => {
-          Effect.logError("Failed to get folder child names", error);
-          return [];
-        },
-        onSuccess: (dirNames) => dirNames,
-      })
-    );
+    const [pathSegments, fullPath] = current;
+    const children = getFolderChildNamesSync(fullPath);
 
     if (children.length === 0) {
       if (pathSegments.length > 0) {
@@ -216,8 +239,6 @@ export function getNestedSlugs(basePath: string): string[][] {
           : `${fullPath}/${child}`;
       stack.push([newSegments, newFullPath]);
     }
-
-    stackIndex = stack.length - 1;
   }
 
   return results;

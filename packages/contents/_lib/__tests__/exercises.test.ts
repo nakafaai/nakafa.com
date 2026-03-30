@@ -8,6 +8,7 @@ const {
   mockGetContentMetadataWithRaw,
   mockGetFolderChildNames,
   mockGetMDXSlugsForLocale,
+  mockHasPathInCache,
   mockKyGet,
   mockReadFile,
   mockResolveContentsDir,
@@ -16,6 +17,7 @@ const {
   mockGetContentMetadataWithRaw: vi.fn(),
   mockGetFolderChildNames: vi.fn(),
   mockGetMDXSlugsForLocale: vi.fn(),
+  mockHasPathInCache: vi.fn(),
   mockKyGet: vi.fn(),
   mockReadFile: vi.fn(),
   mockResolveContentsDir: vi.fn(() => "/virtual/contents"),
@@ -34,6 +36,7 @@ vi.mock("node:fs", async (importOriginal) => {
 
 vi.mock("@repo/contents/_lib/cache", () => ({
   getMDXSlugsForLocale: mockGetMDXSlugsForLocale,
+  hasPathInCache: mockHasPathInCache,
 }));
 
 vi.mock("@repo/contents/_lib/content", () => ({
@@ -112,6 +115,7 @@ async function captureFailure<TSuccess, TError>(
 beforeEach(() => {
   mockResolveContentsDir.mockReturnValue("/virtual/contents");
   mockGetMDXSlugsForLocale.mockReturnValue([]);
+  mockHasPathInCache.mockReturnValue(false);
   mockGetFolderChildNames.mockReturnValue(Effect.succeed([]));
   mockGetContentMetadataWithRaw.mockReset();
   mockGetContent.mockReset();
@@ -494,6 +498,10 @@ describe("getExerciseByNumber", () => {
       `${exerciseBasePath}/2/_question`,
       `${exerciseBasePath}/2/_answer`,
     ]);
+    mockHasPathInCache.mockImplementation(
+      (_locale: string, filePath: string) =>
+        filePath.endsWith("2/_question") || filePath.endsWith("2/_answer")
+    );
     mockGetContentMetadataWithRaw.mockImplementation(
       (_locale: string, filePath: string) => {
         if (filePath.endsWith("1/_question")) {
@@ -532,6 +540,7 @@ describe("getExerciseByNumber", () => {
       `${exerciseBasePath}/1/_question`,
       `${exerciseBasePath}/1/_answer`,
     ]);
+    mockHasPathInCache.mockReturnValue(false);
     mockGetContentMetadataWithRaw.mockReturnValue(
       Effect.succeed(createRawContent("Exercise"))
     );
@@ -549,6 +558,10 @@ describe("getExerciseByNumber", () => {
       `${exerciseBasePath}/1/_question`,
       `${exerciseBasePath}/1/_answer`,
     ]);
+    mockHasPathInCache.mockImplementation(
+      (_locale: string, filePath: string) =>
+        filePath.endsWith("1/_question") || filePath.endsWith("1/_answer")
+    );
     mockGetContent.mockImplementation((_locale: string, filePath: string) => {
       if (filePath.endsWith("1/_question")) {
         return Effect.succeed(createMdxContent("Question 1"));
