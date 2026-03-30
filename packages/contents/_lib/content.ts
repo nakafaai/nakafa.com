@@ -22,6 +22,7 @@ import {
   type ContentWithMDX,
   type Reference,
   ReferenceSchema,
+  type RenderableContent,
 } from "@repo/contents/_types/content";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, Either, Option } from "effect";
@@ -112,12 +113,85 @@ function getRawContent(
 }
 
 /**
+ * Loads a localized MDX module and validates its exported metadata for callers
+ * that only need renderable content.
+ *
+ * This helper intentionally avoids reading the raw `.mdx` file so page render
+ * paths can skip that extra filesystem work when the source text is unused.
+ *
+ * @param cleanPath - Normalized content slug without locale or extension
+ * @param locale - Target locale used to resolve the MDX module
+ * @returns Effect that resolves to validated metadata and compiled MDX content
+ */
+function loadRenderableContentModule(
+  cleanPath: string,
+  locale: Locale
+): Effect.Effect<RenderableContent, MetadataParseError | ModuleLoadError> {
+  return Effect.gen(function* () {
+    const modulePath = `@repo/contents/${cleanPath}/${locale}.mdx`;
+
+    const contentModule = yield* Effect.tryPromise({
+      try: () => importContentModule(cleanPath, locale),
+      catch: (error: unknown) =>
+        new ModuleLoadError({
+          path: modulePath,
+          cause: error,
+        }),
+    });
+
+    const metadata = yield* parseModuleMetadata(contentModule).pipe(
+      Effect.mapError(
+        (error) =>
+          new MetadataParseError({
+            path: modulePath,
+            reason: error.reason,
+          })
+      )
+    );
+
+    return {
+      metadata,
+      default: createElement(contentModule.default),
+    };
+  });
+}
+
+/**
  * Optional filters and loading behavior for content list queries.
  */
 export interface ContentOptions {
   basePath?: string;
   includeMDX?: boolean;
   locale?: Locale;
+}
+
+/**
+ * Retrieves localized MDX content for render-only paths.
+ *
+ * Use this helper when a caller needs validated metadata and the compiled MDX
+ * element but does not consume the raw MDX source. This keeps page-rendering
+ * paths on the lighter module-import path while preserving the existing raw
+ * loading behavior for tooling and export-style callers.
+ *
+ * @param locale - Target locale (e.g. "en", "id")
+ * @param filePath - Relative path without locale or extension
+ * @returns Effect that resolves to renderable metadata and optional MDX element
+ */
+export function getRenderableContent(
+  locale: Locale,
+  filePath: string
+): Effect.Effect<
+  RenderableContent,
+  InvalidPathError | MetadataParseError | ModuleLoadError
+> {
+  const cleanPath = cleanSlug(filePath);
+  const contentPath = `${cleanPath}/${locale}.mdx`;
+
+  return Effect.gen(function* () {
+    yield* validatePath(contentPath, contentsDir);
+
+    return yield* loadRenderableContentModule(cleanPath, locale);
+  });
 }
 
 /**
@@ -153,30 +227,18 @@ export function getContent(
 
   if (includeMDX) {
     return Effect.gen(function* () {
-      const raw = yield* getRawContent(contentPath);
+      yield* validatePath(contentPath, contentsDir);
 
-      const contentModule = yield* Effect.tryPromise({
-        try: () => importContentModule(cleanPath, locale),
-        catch: (error: unknown) =>
-          new ModuleLoadError({
-            path: `@repo/contents/${cleanPath}/${locale}.mdx`,
-            cause: error,
-          }),
-      });
-
-      const parsedMetadata = yield* parseModuleMetadata(contentModule).pipe(
-        Effect.mapError(
-          (error) =>
-            new MetadataParseError({
-              path: `@repo/contents/${cleanPath}/${locale}.mdx`,
-              reason: error.reason,
-            })
-        )
+      const [raw, renderableContent] = yield* Effect.all(
+        [
+          getRawContent(contentPath),
+          loadRenderableContentModule(cleanPath, locale),
+        ],
+        { concurrency: "unbounded" }
       );
 
       return {
-        metadata: parsedMetadata,
-        default: createElement(contentModule.default),
+        ...renderableContent,
         raw,
       };
     });

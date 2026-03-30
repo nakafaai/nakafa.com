@@ -3,6 +3,7 @@ import {
   getContent,
   getContents,
   getReferences,
+  getRenderableContent,
   parseModuleMetadata,
   parseReferences,
   validatePath,
@@ -393,6 +394,49 @@ describe("validatePath", () => {
         validatePath("test/./path", "/base/dir")
       );
       expect(result).toBe("/base/dir/test/path");
+    });
+  });
+});
+
+describe("getRenderableContent", () => {
+  it("should load MDX content without reading the raw source file", async () => {
+    mockImportContentModule.mockResolvedValue({
+      metadata: {
+        title: "Renderable Title",
+        description: "Renderable Description",
+        authors: [{ name: "Renderable Author" }],
+        date: "01/01/2024",
+      },
+      default: () => "Renderable MDX Content",
+    });
+
+    const content = await Effect.runPromise(
+      getRenderableContent("en", "test/path")
+    );
+
+    expect(content.metadata.title).toBe("Renderable Title");
+    expect(content.default).toBeDefined();
+    expect(mockReadFile).not.toHaveBeenCalled();
+  });
+
+  it("should preserve the MDX module path when metadata parsing fails", async () => {
+    mockImportContentModule.mockResolvedValue({
+      metadata: {
+        title: "Broken",
+      },
+      default: () => "Broken MDX Content",
+    });
+
+    const result = await Effect.runPromise(
+      Effect.match(getRenderableContent("en", "test-invalid-module"), {
+        onSuccess: () => null,
+        onFailure: (error) => error,
+      })
+    );
+
+    expect(result).toBeInstanceOf(MetadataParseError);
+    expect(result).toMatchObject({
+      path: "@repo/contents/test-invalid-module/en.mdx",
     });
   });
 });

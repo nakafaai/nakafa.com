@@ -63,6 +63,16 @@ export type ContentWithMDX = Omit<Content, "url" | "locale" | "slug"> & {
   default?: React.ReactElement;
 };
 
+/**
+ * Content payload for page-rendering paths that only need validated metadata
+ * and the compiled MDX element.
+ *
+ * Unlike `ContentWithMDX`, this type intentionally omits the raw MDX source so
+ * render-focused callers can avoid an extra filesystem read when source text is
+ * not consumed.
+ */
+export type RenderableContent = Omit<ContentWithMDX, "raw">;
+
 export type ContentListWithMDX = Content & {
   default?: React.ReactElement;
 };
