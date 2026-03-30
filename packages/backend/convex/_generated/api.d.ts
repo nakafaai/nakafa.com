@@ -91,6 +91,7 @@ import type * as contents_queries_recent from "../contents/queries/recent.js";
 import type * as contents_validators from "../contents/validators.js";
 import type * as credits_actions from "../credits/actions.js";
 import type * as credits_constants from "../credits/constants.js";
+import type * as credits_helpers_queue from "../credits/helpers/queue.js";
 import type * as credits_mutations from "../credits/mutations.js";
 import type * as credits_utils from "../credits/utils.js";
 import type * as credits_workflows from "../credits/workflows.js";
@@ -328,6 +329,7 @@ declare const fullApi: ApiFromModules<{
   "contents/validators": typeof contents_validators;
   "credits/actions": typeof credits_actions;
   "credits/constants": typeof credits_constants;
+  "credits/helpers/queue": typeof credits_helpers_queue;
   "credits/mutations": typeof credits_mutations;
   "credits/utils": typeof credits_utils;
   "credits/workflows": typeof credits_workflows;

@@ -29,7 +29,7 @@ export const creditResetQueueValidator = v.object({
   userId: v.id("users"),
   plan: literals("free", "pro"),
   resetTimestamp: v.number(),
-  partition: v.optional(v.number()),
+  partition: v.number(),
   status: literals("pending", "processing", "completed", "failed"),
   processedAt: v.optional(v.number()),
   error: v.optional(v.string()),

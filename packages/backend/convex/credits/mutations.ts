@@ -1,7 +1,5 @@
-import {
-  CLEANUP_CONFIG,
-  RESET_WORKFLOW_CONFIG,
-} from "@repo/backend/convex/credits/constants";
+import { CLEANUP_CONFIG } from "@repo/backend/convex/credits/constants";
+import { getCreditResetQueuePartition } from "@repo/backend/convex/credits/helpers/queue";
 import { resetUserCredits } from "@repo/backend/convex/credits/utils";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { logger } from "@repo/backend/convex/utils/logger";
@@ -69,19 +67,11 @@ export const populateQueueBatch = internalMutation({
 
     // Insert users into queue
     for (const user of results.page) {
-      let partition = 0;
-
-      for (const character of user._id) {
-        partition =
-          (partition * 31 + character.charCodeAt(0)) %
-          RESET_WORKFLOW_CONFIG.partitionCount;
-      }
-
       await ctx.db.insert("creditResetQueue", {
         userId: user._id,
         plan: args.plan,
         resetTimestamp: args.resetTimestamp,
-        partition,
+        partition: getCreditResetQueuePartition(user._id),
         status: "pending",
       });
     }
