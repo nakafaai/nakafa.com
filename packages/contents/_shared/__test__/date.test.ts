@@ -18,6 +18,7 @@ describe("content date helpers", () => {
   it("rejects invalid or non-canonical date strings", () => {
     expect(parseContentDate("19/03/2024")).toBeNull();
     expect(parseContentDate("2024-03-19")).toBeNull();
+    expect(parseContentDate("3/19/2024")).toBeNull();
     expect(isContentDateString("13/40/2024")).toBe(false);
   });
 

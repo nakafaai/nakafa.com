@@ -1,4 +1,4 @@
-import { getArticles } from "@repo/contents/_lib/articles/slug";
+import { getArticles, getSlugPath } from "@repo/contents/_lib/articles/slug";
 import { formatContentDateISO } from "@repo/contents/_shared/date";
 import { Effect } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -25,6 +25,12 @@ afterEach(() => {
 });
 
 describe("getArticles", () => {
+  it("builds the canonical detail path for a real article category and slug", () => {
+    expect(getSlugPath("politics", "nepotism-in-political-governance")).toBe(
+      "/articles/politics/nepotism-in-political-governance"
+    );
+  });
+
   it("returns sorted article summaries using metadata-only listings", async () => {
     mockGetContentsMetadata.mockReturnValue(
       Effect.succeed([
@@ -124,6 +130,13 @@ describe("getArticles", () => {
     expect(articles).toStrictEqual([]);
   });
 
+  it("returns an empty list for malformed full category paths", async () => {
+    const articles = await getArticles("articles/" as never, "en");
+
+    expect(mockGetContentsMetadata).not.toHaveBeenCalled();
+    expect(articles).toStrictEqual([]);
+  });
+
   it("ignores entries from categories that only share the same prefix", async () => {
     mockGetContentsMetadata.mockReturnValue(
       Effect.succeed([
@@ -191,5 +204,30 @@ describe("getArticles", () => {
     expect(articles).toHaveLength(1);
     expect(articles[0]?.slug).toBe("valid-article");
     expect(articles[0]?.official).toBe(true);
+  });
+
+  it("defaults missing descriptions to an empty string", async () => {
+    mockGetContentsMetadata.mockReturnValue(
+      Effect.succeed([
+        {
+          locale: "en",
+          slug: "articles/politics/no-description",
+          url: "https://nakafa.com/en/articles/politics/no-description",
+          metadata: {
+            title: "No Description",
+            authors: [{ name: "Guest Author" }],
+            date: "05/01/2024",
+          },
+        },
+      ])
+    );
+
+    const articles = await getArticles("politics", "en");
+
+    expect(articles).toHaveLength(1);
+    expect(articles[0]).toMatchObject({
+      slug: "no-description",
+      description: "",
+    });
   });
 });
