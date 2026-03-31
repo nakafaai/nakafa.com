@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
+import { parseContentDate } from "@repo/contents/_shared/date";
 import {
   ContentMetadataSchema,
   type Reference,
@@ -25,17 +26,10 @@ export function computeHash(content: string): string {
 }
 
 export function parseDateToEpoch(dateStr: string): number {
-  const parts = dateStr.split("/");
+  const date = parseContentDate(dateStr);
 
-  if (parts.length !== 3) {
+  if (!date) {
     throw new Error(`Invalid date format: ${dateStr}. Expected MM/DD/YYYY`);
-  }
-
-  const [month, day, year] = parts.map(Number);
-  const date = new Date(year, month - 1, day);
-
-  if (Number.isNaN(date.getTime())) {
-    throw new Error(`Invalid date: ${dateStr}`);
   }
 
   return date.getTime();

@@ -1,5 +1,5 @@
-import { getContent } from "@repo/contents/_lib/content";
 import { getContentMetadataWithRaw } from "@repo/contents/_lib/metadata";
+import { getSubjectContent } from "@repo/contents/_lib/subject/content";
 import {
   getMaterialPath,
   getMaterials,
@@ -75,7 +75,9 @@ export function getContentContext({
     const FilePath = getSlugPath(category, grade, material, slug);
 
     const [content, materials] = yield* Effect.all([
-      Effect.orElse(getContent(locale, FilePath), () => Effect.succeed(null)),
+      Effect.orElse(getSubjectContent(locale, FilePath), () =>
+        Effect.succeed(null)
+      ),
       Effect.tryPromise({
         try: () => getMaterials(materialPath, locale),
         catch: () => new Error("Failed to fetch materials"),

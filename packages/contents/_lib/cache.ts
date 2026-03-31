@@ -22,6 +22,7 @@ interface MDXCacheConfig {
 class MDXCacheRegistry {
   private cache: MDXCache | null = null;
   private readonly config: MDXCacheConfig;
+  private readonly validLocales: Set<string>;
   private isBuilding = false;
 
   constructor(config?: Partial<MDXCacheConfig>) {
@@ -32,6 +33,7 @@ class MDXCacheRegistry {
       exerciseSubdirectories: ["_question", "_answer"],
       ...config,
     };
+    this.validLocales = new Set(routing.locales);
   }
 
   build(): MDXCache {
@@ -91,8 +93,7 @@ class MDXCacheRegistry {
 
   getAllLocales(): Locale[] {
     const cache = this.cache ?? this.build();
-    const locales = Array.from(cache.keys());
-    return locales.filter((locale) => this.isValidLocale(locale));
+    return Array.from(cache.keys());
   }
 
   private buildCacheIteratively(): MDXCache {
@@ -187,8 +188,7 @@ class MDXCacheRegistry {
   }
 
   private isValidLocale(locale: string): locale is Locale {
-    const localeSet = new Set<string>(routing.locales);
-    return localeSet.has(locale);
+    return this.validLocales.has(locale);
   }
 
   private shouldIgnoreDirectory(dirName: string): boolean {

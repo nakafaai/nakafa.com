@@ -10,6 +10,7 @@ import {
   getSlugPath,
 } from "@repo/contents/_lib/subject/slug";
 import { getHeadings } from "@repo/contents/_lib/toc";
+import { formatContentDateISO } from "@repo/contents/_shared/date";
 import type { SubjectCategory } from "@repo/contents/_types/subject/category";
 import type { Grade } from "@repo/contents/_types/subject/grade";
 import type { Material } from "@repo/contents/_types/subject/material";
@@ -17,7 +18,6 @@ import { slugify } from "@repo/design-system/lib/utils";
 import { ArticleJsonLd } from "@repo/seo/json-ld/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
-import { formatISO } from "date-fns";
 import { Effect } from "effect";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
@@ -243,6 +243,7 @@ async function PageContent({
   }
 
   const { metadata, default: Content, raw } = content;
+  const publishedAt = formatContentDateISO(metadata.date) ?? metadata.date;
 
   const pagination = getMaterialsPagination(FilePath, materials);
 
@@ -265,7 +266,7 @@ async function PageContent({
           name: author.name,
           url: `https://nakafa.com/${locale}/contributor`,
         }))}
-        datePublished={formatISO(metadata.date)}
+        datePublished={publishedAt}
         description={metadata.description ?? metadata.subject ?? ""}
         headline={metadata.title}
         image={getOgUrl(locale, FilePath)}
@@ -277,7 +278,7 @@ async function PageContent({
           name: author.name,
           url: `https://nakafa.com/${locale}/contributor`,
         }))}
-        datePublished={formatISO(metadata.date)}
+        datePublished={publishedAt}
         description={metadata.description ?? metadata.subject ?? ""}
         educationalLevel={tSubject(getGradeNonNumeric(grade) ?? "grade", {
           grade,

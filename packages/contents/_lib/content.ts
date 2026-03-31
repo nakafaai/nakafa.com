@@ -1,113 +1,72 @@
-import { promises as fsPromises } from "node:fs";
-import path from "node:path";
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import { extractMetadata } from "@repo/contents/_lib/metadata";
-import {
-  importContentModule,
-  importReferencesModule,
-} from "@repo/contents/_lib/module";
+import { importContentModule } from "@repo/contents/_lib/module";
 import { resolveContentsDir } from "@repo/contents/_lib/root";
 import {
-  FileReadError,
-  GitHubFetchError,
-  InvalidPathError,
+  getRawContent,
+  parseModuleMetadata,
+  validatePath,
+} from "@repo/contents/_lib/scoped";
+import {
+  type FileReadError,
+  type GitHubFetchError,
+  type InvalidPathError,
   MetadataParseError,
   ModuleLoadError,
 } from "@repo/contents/_shared/error";
-import type { Locale } from "@repo/contents/_types/content";
-import {
-  type ContentListWithMDX,
-  type ContentMetadata,
-  ContentMetadataSchema,
-  type ContentWithMDX,
-  type Reference,
-  ReferenceSchema,
+import type {
+  ContentListWithMDX,
+  ContentWithMDX,
+  Locale,
+  RenderableContent,
 } from "@repo/contents/_types/content";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, Either, Option } from "effect";
-import ky from "ky";
 import { createElement } from "react";
 
 const contentsDir = resolveContentsDir(import.meta.url);
 
 /**
- * Validates that a file path is safe and doesn't escape the base directory.
- * This is a security-critical function that prevents path traversal attacks.
+ * Loads a localized MDX module and validates its exported metadata for callers
+ * that only need renderable content.
  *
- * @param filePath - The file path to validate
- * @param basePath - The base directory that the path should be contained within
- * @returns Effect that resolves to the validated full path, or fails with InvalidPathError
+ * This helper intentionally avoids reading the raw `.mdx` file so page render
+ * paths can skip that extra filesystem work when the source text is unused.
  *
- * @example
- * ```ts
- * const fullPath = Effect.runPromise(validatePath("articles/test", "/base/dir"));
- * ```
+ * @param cleanPath - Normalized content slug without locale or extension
+ * @param locale - Target locale used to resolve the MDX module
+ * @returns Effect that resolves to validated metadata and compiled MDX content
  */
-export function validatePath(
-  filePath: string,
-  basePath: string
-): Effect.Effect<string, InvalidPathError> {
-  const cleanPath = cleanSlug(filePath);
+function loadRenderableContentModule(
+  cleanPath: string,
+  locale: Locale
+): Effect.Effect<RenderableContent, MetadataParseError | ModuleLoadError> {
+  return Effect.gen(function* () {
+    const modulePath = `@repo/contents/${cleanPath}/${locale}.mdx`;
 
-  const fullPath = path.join(basePath, cleanPath);
+    const contentModule = yield* Effect.tryPromise({
+      try: () => importContentModule(cleanPath, locale),
+      catch: (error: unknown) =>
+        new ModuleLoadError({
+          path: modulePath,
+          cause: error,
+        }),
+    });
 
-  if (!fullPath.startsWith(basePath)) {
-    return Effect.fail(
-      new InvalidPathError({
-        path: filePath,
-        reason: "Path traversal detected",
-      })
+    const metadata = yield* parseModuleMetadata(contentModule, modulePath).pipe(
+      Effect.mapError(
+        (error) =>
+          new MetadataParseError({
+            path: modulePath,
+            reason: error.reason,
+          })
+      )
     );
-  }
 
-  return Effect.succeed(fullPath);
-}
-
-/**
- * Fetches raw content from local filesystem or falls back to GitHub repository.
- * Prevents path traversal attacks by validating and sanitizing the file path.
- *
- * @param filePath - Relative path to the MDX file (e.g., "articles/politics/my-article")
- * @returns Effect that resolves to raw file content, or fails with InvalidPathError, FileReadError, or GitHubFetchError
- *
- * @example
- * ```ts
- * const content = Effect.runPromise(getRawContent("articles/politics/my-article"));
- * ```
- */
-function getRawContent(
-  filePath: string
-): Effect.Effect<string, InvalidPathError | FileReadError | GitHubFetchError> {
-  const cleanPath = cleanSlug(filePath);
-
-  const fullPathEffect = validatePath(filePath, contentsDir);
-
-  return Effect.flatMap(fullPathEffect, (fullPath) => {
-    const readFileEffect = Effect.tryPromise({
-      try: () => fsPromises.readFile(fullPath, "utf8"),
-      catch: (error: unknown) =>
-        new FileReadError({
-          path: fullPath,
-          cause: error,
-        }),
-    });
-
-    const fetchFromGitHub = Effect.tryPromise({
-      try: () =>
-        ky
-          .get(
-            `https://raw.githubusercontent.com/nakafaai/nakafa.com/refs/heads/main/packages/contents/${cleanPath}`,
-            { cache: "force-cache" }
-          )
-          .text(),
-      catch: (error: unknown) =>
-        new GitHubFetchError({
-          url: `https://raw.githubusercontent.com/nakafaai/nakafa.com/refs/heads/main/packages/contents/${cleanPath}`,
-          cause: error,
-        }),
-    });
-
-    return Effect.catchAll(readFileEffect, () => fetchFromGitHub);
+    return {
+      metadata,
+      default: createElement(contentModule.default),
+    };
   });
 }
 
@@ -153,30 +112,18 @@ export function getContent(
 
   if (includeMDX) {
     return Effect.gen(function* () {
-      const raw = yield* getRawContent(contentPath);
+      yield* validatePath(contentPath, contentsDir);
 
-      const contentModule = yield* Effect.tryPromise({
-        try: () => importContentModule(cleanPath, locale),
-        catch: (error: unknown) =>
-          new ModuleLoadError({
-            path: `@repo/contents/${cleanPath}/${locale}.mdx`,
-            cause: error,
-          }),
-      });
-
-      const parsedMetadata = yield* parseModuleMetadata(contentModule).pipe(
-        Effect.mapError(
-          (error) =>
-            new MetadataParseError({
-              path: `@repo/contents/${cleanPath}/${locale}.mdx`,
-              reason: error.reason,
-            })
-        )
+      const [raw, renderableContent] = yield* Effect.all(
+        [
+          getRawContent(contentPath),
+          loadRenderableContentModule(cleanPath, locale),
+        ],
+        { concurrency: "unbounded" }
       );
 
       return {
-        metadata: parsedMetadata,
-        default: createElement(contentModule.default),
+        ...renderableContent,
         raw,
       };
     });
@@ -184,8 +131,8 @@ export function getContent(
 
   return Effect.gen(function* () {
     const raw = yield* getRawContent(contentPath);
-
     const metadata = extractMetadata(raw);
+
     if (Option.isNone(metadata)) {
       return yield* Effect.fail(
         new MetadataParseError({
@@ -233,6 +180,9 @@ export function getContents(
     ? slugs.filter((slug) => slug.startsWith(basePath))
     : slugs;
 
+  /**
+   * Loads one cached slug into the normalized list response shape.
+   */
   function processSlug(slug: string, contentLocale: Locale) {
     return Effect.gen(function* () {
       const loc: Locale = contentLocale;
@@ -261,100 +211,4 @@ export function getContents(
   return Effect.forEach(filteredSlugs, (slug) => processSlug(slug, locale), {
     concurrency: "unbounded",
   }).pipe(Effect.map((items) => items.filter((item) => item !== undefined)));
-}
-
-/**
- * Parses and validates the `metadata` export from a dynamically imported module.
- *
- * @param module - Module namespace object returned by a dynamic import
- * @returns Effect that resolves to validated metadata or fails with parse details
- */
-export function parseModuleMetadata(
-  module: unknown
-): Effect.Effect<ContentMetadata, MetadataParseError> {
-  return Effect.gen(function* () {
-    if (
-      typeof module !== "object" ||
-      module === null ||
-      !("metadata" in module)
-    ) {
-      return yield* Effect.fail(
-        new MetadataParseError({
-          reason: "Module does not contain metadata property",
-        })
-      );
-    }
-
-    const metadata = module.metadata;
-
-    return yield* Effect.try({
-      try: () => ContentMetadataSchema.parse(metadata),
-      catch: (error: unknown) =>
-        new MetadataParseError({
-          reason: error instanceof Error ? error.message : String(error),
-        }),
-    });
-  });
-}
-
-/**
- * Parses a raw references array with schema validation.
- *
- * @param rawReferences - Untrusted references payload from a module export
- * @returns Effect that resolves to validated references
- */
-export function parseReferences(
-  rawReferences: unknown[]
-): Effect.Effect<Reference[], Error> {
-  return Effect.try({
-    try: () => ReferenceSchema.array().parse(rawReferences),
-    catch: (error: unknown) =>
-      new Error(
-        `Failed to parse references: ${error instanceof Error ? error.message : String(error)}`
-      ),
-  });
-}
-
-/**
- * Safely extracts the raw `references` export from a module namespace.
- *
- * @param module - Module namespace returned by dynamic import
- * @returns Raw references array or an empty array when unavailable
- */
-export function extractReferences(module: unknown): unknown[] {
-  if (typeof module === "object" && module !== null && "references" in module) {
-    const refs = module.references;
-    if (Array.isArray(refs)) {
-      return refs;
-    }
-  }
-  return [];
-}
-
-/**
- * Retrieves references for a content file from its ref.ts module.
- * References are optional; returns empty array if not found.
- *
- * @param filePath - Relative path without locale or extension
- * @returns Effect that produces array of reference objects, or empty array if not found
- *
- * @example
- * ```ts
- * const refs = await Effect.runPromise(getReferences("articles/politics/my-article"));
- * refs.forEach(ref => console.log(ref.title, ref.url));
- * ```
- */
-export function getReferences(filePath: string): Effect.Effect<Reference[]> {
-  return Effect.gen(function* () {
-    const cleanPath = cleanSlug(filePath);
-    const refModule = yield* Effect.tryPromise({
-      try: () => importReferencesModule(cleanPath),
-      catch: () => new Error("Failed to load references"),
-    });
-
-    const rawReferences = extractReferences(refModule);
-    const parsedReferences = yield* parseReferences(rawReferences);
-
-    return parsedReferences;
-  }).pipe(Effect.catchAll(() => Effect.succeed([])));
 }

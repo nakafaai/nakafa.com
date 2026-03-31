@@ -1,9 +1,19 @@
+import { isContentDateString } from "@repo/contents/_shared/date";
 import type React from "react";
 import * as z from "zod";
 
 /** Locale validation schema - single source of truth */
 export const LocaleSchema = z.enum(["en", "id"]);
 export type Locale = z.infer<typeof LocaleSchema>;
+
+/** Supported top-level content roots under `packages/contents/`. */
+export const CONTENT_ROOTS = ["articles", "exercises", "subject"] as const;
+
+/** Runtime validation schema for supported top-level content roots. */
+export const ContentRootSchema = z.enum(CONTENT_ROOTS);
+
+/** Union of supported top-level content roots. */
+export type ContentRoot = z.infer<typeof ContentRootSchema>;
 
 export const ArticleSchema = z.object({
   title: z.string(),
@@ -33,7 +43,9 @@ export const ContentMetadataSchema = z.object({
       name: z.string(),
     })
   ),
-  date: z.string(),
+  date: z.string().refine(isContentDateString, {
+    error: "Invalid content date. Expected MM/DD/YYYY.",
+  }),
   subject: z.string().optional(),
 });
 export type ContentMetadata = z.infer<typeof ContentMetadataSchema>;
@@ -62,6 +74,16 @@ export type Content = z.infer<typeof ContentSchema>;
 export type ContentWithMDX = Omit<Content, "url" | "locale" | "slug"> & {
   default?: React.ReactElement;
 };
+
+/**
+ * Content payload for page-rendering paths that only need validated metadata
+ * and the compiled MDX element.
+ *
+ * Unlike `ContentWithMDX`, this type intentionally omits the raw MDX source so
+ * render-focused callers can avoid an extra filesystem read when source text is
+ * not consumed.
+ */
+export type RenderableContent = Omit<ContentWithMDX, "raw">;
 
 export type ContentListWithMDX = Content & {
   default?: React.ReactElement;

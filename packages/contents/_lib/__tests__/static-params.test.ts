@@ -462,6 +462,27 @@ describe("generateSlugOnlyParams", () => {
     const result = generateSlugOnlyParams({ locales: [] });
     expect(result).toHaveLength(0);
   });
+
+  it("scans nested paths once and reuses them across locales", () => {
+    vi.mocked(getFolderChildNames).mockReturnValue(
+      Effect.succeed(["subject", "articles"])
+    );
+    vi.mocked(getNestedSlugs)
+      .mockReturnValueOnce([["math"], ["math", "algebra"]])
+      .mockReturnValueOnce([["politics"]]);
+    vi.mocked(getMDXSlugsForLocale).mockImplementation((locale: Locale) =>
+      locale === "en"
+        ? ["subject", "subject/math", "articles/politics"]
+        : ["subject", "subject/math/algebra", "articles/politics"]
+    );
+
+    const result = generateSlugOnlyParams({ locales: ["en", "id"] });
+
+    expect(getNestedSlugs).toHaveBeenCalledTimes(2);
+    expect(result.map((entry) => entry.slug.join("/"))).toContain(
+      "id/subject/math/algebra"
+    );
+  });
 });
 
 describe("generateLocaleParams", () => {
@@ -634,5 +655,28 @@ describe("generateLocaleParams", () => {
 
     const result = generateLocaleParams({ locales: [] });
     expect(result).toHaveLength(0);
+  });
+
+  it("reuses nested path discovery across locales", () => {
+    vi.mocked(getFolderChildNames).mockReturnValue(
+      Effect.succeed(["subject", "articles"])
+    );
+    vi.mocked(getNestedSlugs)
+      .mockReturnValueOnce([["math"]])
+      .mockReturnValueOnce([["politics"]]);
+    vi.mocked(getMDXSlugsForLocale).mockImplementation((locale: Locale) =>
+      locale === "en"
+        ? ["subject", "subject/math", "articles/politics"]
+        : ["subject", "articles/politics"]
+    );
+
+    const result = generateLocaleParams({ locales: ["en", "id"] });
+
+    expect(getNestedSlugs).toHaveBeenCalledTimes(2);
+    expect(result).toContainEqual({ locale: "en", slug: ["subject", "math"] });
+    expect(result).toContainEqual({
+      locale: "id",
+      slug: ["articles", "politics"],
+    });
   });
 });

@@ -2,7 +2,7 @@ import {
   getCategoryIcon,
   getCategoryPath,
 } from "@repo/contents/_lib/articles/category";
-import { getArticles } from "@repo/contents/_lib/articles/slug";
+import { getArticleSummaries } from "@repo/contents/_lib/articles/slug";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
@@ -101,7 +101,7 @@ async function PageArticles({
   FilePath: string;
   header: React.ReactNode;
 }) {
-  const articles = await getArticles(category, locale);
+  const articles = await getArticleSummaries(category, locale);
   const t = await getTranslations({ locale, namespace: "Articles" });
 
   return (

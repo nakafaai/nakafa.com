@@ -1,5 +1,6 @@
 import { getContentsMetadata } from "@repo/contents/_lib/metadata";
 import { getAllSurah, getSurahName } from "@repo/contents/_lib/quran";
+import { parseContentDate } from "@repo/contents/_shared/date";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { Feed, type Item } from "feed";
@@ -69,11 +70,16 @@ export async function GET() {
       const locale = pathSegments[0]; // e.g., "en"
       const path = pathSegments.slice(1).join("/"); // e.g., "articles/politics/my-article"
 
+      const publishedAt = parseContentDate(content.metadata.date);
+      if (!publishedAt) {
+        continue;
+      }
+
       feedItems.push({
         title: content.metadata.title,
         description: content.metadata.description ?? content.metadata.title,
         link: content.url,
-        date: new Date(content.metadata.date),
+        date: publishedAt,
         id: content.url,
         author: content.metadata.authors,
         image: `${baseUrl}/${locale}/og/${path}/image.png`,

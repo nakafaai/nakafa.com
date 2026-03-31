@@ -1,11 +1,15 @@
-import { getContent } from "@repo/contents/_lib/content";
+import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import { getExercisesContent } from "@repo/contents/_lib/exercises";
+import { getExerciseContent } from "@repo/contents/_lib/exercises/content";
 import {
   hasInvalidTryOutYearSlug,
   isTryOutCollectionSlug,
   LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
 } from "@repo/contents/_lib/exercises/slug";
-import { generateContentParams } from "@repo/contents/_lib/static-params";
+import {
+  getExerciseNumberPaths,
+  getExerciseSetPaths,
+} from "@repo/contents/_lib/static-params";
 import {
   ChoicesValidationError,
   ExerciseLoadError,
@@ -15,6 +19,7 @@ import {
   MetadataParseError,
 } from "@repo/contents/_shared/error";
 import { LocaleSchema } from "@repo/contents/_types/content";
+import { routing } from "@repo/internationalization/src/routing";
 import { createServiceLogger, logError } from "@repo/utilities/logging";
 import { Effect } from "effect";
 import { NextResponse } from "next/server";
@@ -26,18 +31,30 @@ const EXERCISE_PREFIX_LEN = 3;
 const EXERCISE_TYPE_INDEX = 0;
 const LEGACY_TRY_OUT_SUFFIX_INDEX = 1;
 
+/**
+ * Only prerenders concrete exercise set and exercise number endpoints.
+ * Folder-only prefixes under `exercises/` always 404 in this route and add a
+ * large amount of pointless build work.
+ */
 export function generateStaticParams() {
-  return generateContentParams({
-    basePath: "exercises",
-  }).filter((params) => {
-    // In this route, `params.slug` is everything after `/contents/{locale}/exercises/`:
-    // [category, type, material, ...exerciseSlug]
-    const relativeExerciseSlug = params.slug.slice(EXERCISE_PREFIX_LEN);
+  return routing.locales.flatMap((locale) => {
+    const mdxSlugs = getMDXSlugsForLocale(locale);
+    const exercisePaths = [
+      ...getExerciseSetPaths(mdxSlugs),
+      ...getExerciseNumberPaths(mdxSlugs),
+    ];
 
-    return !isTryOutCollectionSlug(relativeExerciseSlug);
+    return exercisePaths.map((exercisePath) => ({
+      locale,
+      slug: exercisePath.slice("exercises/".length).split("/"),
+    }));
   });
 }
 
+/**
+ * Returns exercise MDX fragments or parsed exercise sets for the API content
+ * route under `/contents/:locale/exercises/*`.
+ */
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ locale: string; slug: string[] }> }
@@ -121,7 +138,7 @@ export async function GET(
   if (isQuestionOrAnswer && exerciseNumber !== null) {
     const mdxPath = `exercises/${basePath}/${exerciseNumber}/${slug.at(-1)}`;
 
-    const program = Effect.match(getContent(validLocale, mdxPath), {
+    const program = Effect.match(getExerciseContent(validLocale, mdxPath), {
       onFailure: (error: unknown) => {
         logError(
           logger,

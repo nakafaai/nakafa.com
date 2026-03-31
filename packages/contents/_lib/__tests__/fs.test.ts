@@ -479,6 +479,13 @@ describe("getNestedSlugs", () => {
     expect(result).toContainEqual(["child"]);
   });
 
+  it("treats invalid nested base paths as leaf nodes and returns no slugs", () => {
+    const result = getNestedSlugs("../subject");
+
+    expect(result).toEqual([]);
+    expect(mockReadDirSync).not.toHaveBeenCalled();
+  });
+
   it("should handle large directory tree (performance test)", () => {
     const dirCount = 100;
     let callCount = 0;

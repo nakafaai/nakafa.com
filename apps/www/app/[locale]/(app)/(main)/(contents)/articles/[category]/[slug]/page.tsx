@@ -1,10 +1,10 @@
 import { getSlugPath } from "@repo/contents/_lib/articles/slug";
 import { getHeadings } from "@repo/contents/_lib/toc";
+import { formatContentDateISO } from "@repo/contents/_shared/date";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
 import { ArticleJsonLd } from "@repo/seo/json-ld/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
-import { formatISO } from "date-fns";
 import { Effect } from "effect";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
@@ -174,6 +174,7 @@ async function PageContent({
   }
 
   const { metadata, default: Content, raw } = content;
+  const publishedAt = formatContentDateISO(metadata.date) ?? metadata.date;
 
   const headings = getHeadings(raw);
 
@@ -194,7 +195,7 @@ async function PageContent({
           name: author.name,
           url: `https://nakafa.com/${locale}/contributor`,
         }))}
-        datePublished={formatISO(metadata.date)}
+        datePublished={publishedAt}
         description={metadata.description ?? ""}
         headline={metadata.title}
         image={getOgUrl(locale, FilePath)}
@@ -206,7 +207,7 @@ async function PageContent({
           name: author.name,
           url: `https://nakafa.com/${locale}/contributor`,
         }))}
-        datePublished={formatISO(metadata.date)}
+        datePublished={publishedAt}
         description={metadata.description ?? ""}
         educationalLevel={tArticles(category)}
         name={metadata.title}
