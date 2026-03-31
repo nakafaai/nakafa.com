@@ -13,6 +13,10 @@ describe("content date helpers", () => {
     expect(parsed?.getFullYear()).toBe(2024);
     expect(parsed?.getMonth()).toBe(2);
     expect(parsed?.getDate()).toBe(19);
+    expect(parsed?.getHours()).toBe(0);
+    expect(parsed?.getMinutes()).toBe(0);
+    expect(parsed?.getSeconds()).toBe(0);
+    expect(parsed?.getMilliseconds()).toBe(0);
   });
 
   it("rejects invalid or non-canonical date strings", () => {

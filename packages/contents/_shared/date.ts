@@ -1,6 +1,7 @@
 import { format, formatISO, isValid, parse } from "date-fns";
 
 export const CONTENT_DATE_FORMAT = "MM/dd/yyyy";
+const CONTENT_DATE_REFERENCE = new Date(0);
 
 /**
  * Parses a repository content date using the canonical `MM/DD/YYYY` format.
@@ -12,7 +13,11 @@ export const CONTENT_DATE_FORMAT = "MM/dd/yyyy";
  * @returns Parsed date when the string strictly matches `MM/DD/YYYY`, else null
  */
 export function parseContentDate(dateString: string): Date | null {
-  const parsedDate = parse(dateString, CONTENT_DATE_FORMAT, new Date());
+  const parsedDate = parse(
+    dateString,
+    CONTENT_DATE_FORMAT,
+    CONTENT_DATE_REFERENCE
+  );
 
   if (!isValid(parsedDate)) {
     return null;
