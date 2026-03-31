@@ -1,9 +1,8 @@
 import { promises as fsPromises } from "node:fs";
 import nodePath from "node:path";
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
-import { getContent } from "@repo/contents/_lib/content";
+import { getExerciseContent } from "@repo/contents/_lib/exercises/content";
 import { getFolderChildNames } from "@repo/contents/_lib/fs";
-import { getContentMetadataWithRaw } from "@repo/contents/_lib/metadata";
 import { resolveContentsDir } from "@repo/contents/_lib/root";
 import {
   type ChoicesValidationError,
@@ -57,11 +56,7 @@ function loadExerciseContent(
   | MetadataParseError
   | ModuleLoadError
 > {
-  if (!includeMDX) {
-    return getContentMetadataWithRaw(locale, filePath);
-  }
-
-  return getContent(locale, filePath, { includeMDX });
+  return getExerciseContent(locale, filePath, { includeMDX });
 }
 
 /**

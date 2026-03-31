@@ -4,8 +4,7 @@ import { createElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
-  mockGetContent,
-  mockGetContentMetadataWithRaw,
+  mockGetExerciseContent,
   mockGetFolderChildNames,
   mockGetMDXSlugsForLocale,
   mockHasPathInCache,
@@ -13,8 +12,7 @@ const {
   mockReadFile,
   mockResolveContentsDir,
 } = vi.hoisted(() => ({
-  mockGetContent: vi.fn(),
-  mockGetContentMetadataWithRaw: vi.fn(),
+  mockGetExerciseContent: vi.fn(),
   mockGetFolderChildNames: vi.fn(),
   mockGetMDXSlugsForLocale: vi.fn(),
   mockHasPathInCache: vi.fn(),
@@ -39,16 +37,12 @@ vi.mock("@repo/contents/_lib/cache", () => ({
   hasPathInCache: mockHasPathInCache,
 }));
 
-vi.mock("@repo/contents/_lib/content", () => ({
-  getContent: mockGetContent,
+vi.mock("@repo/contents/_lib/exercises/content", () => ({
+  getExerciseContent: mockGetExerciseContent,
 }));
 
 vi.mock("@repo/contents/_lib/fs", () => ({
   getFolderChildNames: mockGetFolderChildNames,
-}));
-
-vi.mock("@repo/contents/_lib/metadata", () => ({
-  getContentMetadataWithRaw: mockGetContentMetadataWithRaw,
 }));
 
 vi.mock("@repo/contents/_lib/root", () => ({
@@ -117,8 +111,7 @@ beforeEach(() => {
   mockGetMDXSlugsForLocale.mockReturnValue([]);
   mockHasPathInCache.mockReturnValue(false);
   mockGetFolderChildNames.mockReturnValue(Effect.succeed([]));
-  mockGetContentMetadataWithRaw.mockReset();
-  mockGetContent.mockReset();
+  mockGetExerciseContent.mockReset();
   mockReadFile.mockReset();
   mockKyGet.mockReset();
 });
@@ -226,8 +219,16 @@ describe("getExercisesContent", () => {
       `${exerciseBasePath}/1/_answer`,
       `${exerciseBasePath}/2/_question`,
     ]);
-    mockGetContentMetadataWithRaw.mockImplementation(
-      (_locale: string, filePath: string) => {
+    mockGetExerciseContent.mockImplementation(
+      (
+        _locale: string,
+        filePath: string,
+        options?: { includeMDX?: boolean }
+      ) => {
+        if (options?.includeMDX !== false) {
+          return Effect.fail(new Error("Expected metadata-only load"));
+        }
+
         if (filePath.endsWith("1/_question")) {
           return Effect.succeed(createRawContent("Question 1"));
         }
@@ -263,7 +264,7 @@ describe("getExercisesContent", () => {
     expect(result.map((exercise) => exercise.number)).toStrictEqual([1, 2]);
     expect(result[0]?.question.default).toBeUndefined();
     expect(result[0]?.choices.id[0]?.label).toBe("One ID");
-    expect(mockGetContentMetadataWithRaw).toHaveBeenCalledTimes(4);
+    expect(mockGetExerciseContent).toHaveBeenCalledTimes(4);
   });
 
   it("loads exercises via MDX imports and falls back to GitHub choices when needed", async () => {
@@ -271,13 +272,15 @@ describe("getExercisesContent", () => {
       `${exerciseBasePath}/1/_question`,
       `${exerciseBasePath}/1/_answer`,
     ]);
-    mockGetContent.mockImplementation((_locale: string, filePath: string) => {
-      if (filePath.endsWith("1/_question")) {
-        return Effect.succeed(createMdxContent("Question 1"));
-      }
+    mockGetExerciseContent.mockImplementation(
+      (_locale: string, filePath: string) => {
+        if (filePath.endsWith("1/_question")) {
+          return Effect.succeed(createMdxContent("Question 1"));
+        }
 
-      return Effect.succeed(createMdxContent("Answer 1"));
-    });
+        return Effect.succeed(createMdxContent("Answer 1"));
+      }
+    );
     mockReadFile.mockRejectedValue(new Error("missing choices file"));
     mockKyGet.mockReturnValue({
       text: () => Promise.resolve(createChoicesSource("Remote")),
@@ -298,8 +301,16 @@ describe("getExercisesContent", () => {
       `${exerciseBasePath}/03/_question`,
       `${exerciseBasePath}/03/_answer`,
     ]);
-    mockGetContentMetadataWithRaw.mockImplementation(
-      (_locale: string, filePath: string) => {
+    mockGetExerciseContent.mockImplementation(
+      (
+        _locale: string,
+        filePath: string,
+        options?: { includeMDX?: boolean }
+      ) => {
+        if (options?.includeMDX !== false) {
+          return Effect.fail(new Error("Expected metadata-only load"));
+        }
+
         if (filePath.endsWith("03/_question")) {
           return Effect.succeed(createRawContent("Question 03"));
         }
@@ -325,15 +336,17 @@ describe("getExercisesContent", () => {
 
     expect(result).toHaveLength(1);
     expect(result[0]?.number).toBe(3);
-    expect(mockGetContentMetadataWithRaw).toHaveBeenNthCalledWith(
+    expect(mockGetExerciseContent).toHaveBeenNthCalledWith(
       1,
       "id",
-      `${exerciseBasePath}/03/_question`
+      `${exerciseBasePath}/03/_question`,
+      { includeMDX: false }
     );
-    expect(mockGetContentMetadataWithRaw).toHaveBeenNthCalledWith(
+    expect(mockGetExerciseContent).toHaveBeenNthCalledWith(
       2,
       "id",
-      `${exerciseBasePath}/03/_answer`
+      `${exerciseBasePath}/03/_answer`,
+      { includeMDX: false }
     );
     expect(mockReadFile).toHaveBeenCalledWith(
       "/virtual/contents/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/03/choices.ts",
@@ -346,7 +359,7 @@ describe("getExercisesContent", () => {
       `${exerciseBasePath}/1/_question`,
       `${exerciseBasePath}/1/_answer`,
     ]);
-    mockGetContentMetadataWithRaw.mockReturnValue(
+    mockGetExerciseContent.mockReturnValue(
       Effect.succeed(createRawContent("Exercise"))
     );
     mockReadFile.mockResolvedValue("export const metadata = {};");
@@ -367,7 +380,7 @@ describe("getExercisesContent", () => {
       `${exerciseBasePath}/1/_question`,
       `${exerciseBasePath}/1/_answer`,
     ]);
-    mockGetContentMetadataWithRaw.mockReturnValue(
+    mockGetExerciseContent.mockReturnValue(
       Effect.succeed(createRawContent("Exercise"))
     );
     mockReadFile.mockResolvedValue(
@@ -390,7 +403,7 @@ describe("getExercisesContent", () => {
       `${exerciseBasePath}/1/_question`,
       `${exerciseBasePath}/1/_answer`,
     ]);
-    mockGetContentMetadataWithRaw.mockReturnValue(
+    mockGetExerciseContent.mockReturnValue(
       Effect.succeed(createRawContent("Exercise"))
     );
     mockReadFile.mockResolvedValue(
@@ -413,8 +426,16 @@ describe("getExercisesContent", () => {
       `${exerciseBasePath}/1/_question`,
       `${exerciseBasePath}/1/_answer`,
     ]);
-    mockGetContentMetadataWithRaw.mockImplementation(
-      (_locale: string, filePath: string) => {
+    mockGetExerciseContent.mockImplementation(
+      (
+        _locale: string,
+        filePath: string,
+        options?: { includeMDX?: boolean }
+      ) => {
+        if (options?.includeMDX !== false) {
+          return Effect.fail(new Error("Expected metadata-only load"));
+        }
+
         if (filePath.endsWith("1/_question")) {
           return Effect.fail(new Error("missing question"));
         }
@@ -441,8 +462,16 @@ describe("getExercisesContent", () => {
       `${exerciseBasePath}/1/_question`,
       `${exerciseBasePath}/1/_answer`,
     ]);
-    mockGetContentMetadataWithRaw.mockImplementation(
-      (_locale: string, filePath: string) => {
+    mockGetExerciseContent.mockImplementation(
+      (
+        _locale: string,
+        filePath: string,
+        options?: { includeMDX?: boolean }
+      ) => {
+        if (options?.includeMDX !== false) {
+          return Effect.fail(new Error("Expected metadata-only load"));
+        }
+
         if (filePath.endsWith("1/_answer")) {
           return Effect.fail(new Error("missing answer"));
         }
@@ -469,13 +498,15 @@ describe("getExercisesContent", () => {
       `${exerciseBasePath}/1/_question`,
       `${exerciseBasePath}/1/_answer`,
     ]);
-    mockGetContent.mockImplementation((_locale: string, filePath: string) => {
-      if (filePath.endsWith("1/_question")) {
-        return Effect.succeed(createMdxContent("Question 1"));
-      }
+    mockGetExerciseContent.mockImplementation(
+      (_locale: string, filePath: string) => {
+        if (filePath.endsWith("1/_question")) {
+          return Effect.succeed(createMdxContent("Question 1"));
+        }
 
-      return Effect.succeed(createMdxContent("Answer 1"));
-    });
+        return Effect.succeed(createMdxContent("Answer 1"));
+      }
+    );
     mockReadFile.mockRejectedValue(new Error("missing choices file"));
     mockKyGet.mockImplementation(() => {
       throw new Error("GitHub unavailable");
@@ -502,8 +533,16 @@ describe("getExerciseByNumber", () => {
       (_locale: string, filePath: string) =>
         filePath.endsWith("2/_question") || filePath.endsWith("2/_answer")
     );
-    mockGetContentMetadataWithRaw.mockImplementation(
-      (_locale: string, filePath: string) => {
+    mockGetExerciseContent.mockImplementation(
+      (
+        _locale: string,
+        filePath: string,
+        options?: { includeMDX?: boolean }
+      ) => {
+        if (options?.includeMDX !== false) {
+          return Effect.fail(new Error("Expected metadata-only load"));
+        }
+
         if (filePath.endsWith("1/_question")) {
           return Effect.succeed(createRawContent("Question 1"));
         }
@@ -541,7 +580,7 @@ describe("getExerciseByNumber", () => {
       `${exerciseBasePath}/1/_answer`,
     ]);
     mockHasPathInCache.mockReturnValue(false);
-    mockGetContentMetadataWithRaw.mockReturnValue(
+    mockGetExerciseContent.mockReturnValue(
       Effect.succeed(createRawContent("Exercise"))
     );
     mockReadFile.mockResolvedValue(createChoicesSource("Only"));
@@ -558,8 +597,16 @@ describe("getExerciseByNumber", () => {
       `${exerciseBasePath}/03/_question`,
       `${exerciseBasePath}/03/_answer`,
     ]);
-    mockGetContentMetadataWithRaw.mockImplementation(
-      (_locale: string, filePath: string) => {
+    mockGetExerciseContent.mockImplementation(
+      (
+        _locale: string,
+        filePath: string,
+        options?: { includeMDX?: boolean }
+      ) => {
+        if (options?.includeMDX !== false) {
+          return Effect.fail(new Error("Expected metadata-only load"));
+        }
+
         if (filePath.endsWith("03/_question")) {
           return Effect.succeed(createRawContent("Question 03"));
         }
@@ -581,15 +628,17 @@ describe("getExerciseByNumber", () => {
 
     expect(Option.isSome(result)).toBe(true);
     expect(Option.getOrUndefined(result)?.number).toBe(3);
-    expect(mockGetContentMetadataWithRaw).toHaveBeenNthCalledWith(
+    expect(mockGetExerciseContent).toHaveBeenNthCalledWith(
       1,
       "id",
-      `${exerciseBasePath}/03/_question`
+      `${exerciseBasePath}/03/_question`,
+      { includeMDX: false }
     );
-    expect(mockGetContentMetadataWithRaw).toHaveBeenNthCalledWith(
+    expect(mockGetExerciseContent).toHaveBeenNthCalledWith(
       2,
       "id",
-      `${exerciseBasePath}/03/_answer`
+      `${exerciseBasePath}/03/_answer`,
+      { includeMDX: false }
     );
   });
 
@@ -602,13 +651,15 @@ describe("getExerciseByNumber", () => {
       (_locale: string, filePath: string) =>
         filePath.endsWith("1/_question") || filePath.endsWith("1/_answer")
     );
-    mockGetContent.mockImplementation((_locale: string, filePath: string) => {
-      if (filePath.endsWith("1/_question")) {
-        return Effect.succeed(createMdxContent("Question 1"));
-      }
+    mockGetExerciseContent.mockImplementation(
+      (_locale: string, filePath: string) => {
+        if (filePath.endsWith("1/_question")) {
+          return Effect.succeed(createMdxContent("Question 1"));
+        }
 
-      return Effect.succeed(createMdxContent("Answer 1"));
-    });
+        return Effect.succeed(createMdxContent("Answer 1"));
+      }
+    );
     mockReadFile.mockResolvedValue(createChoicesSource("Default"));
 
     const result = await Effect.runPromise(

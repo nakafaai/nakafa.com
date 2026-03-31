@@ -1,14 +1,11 @@
+import { getContent, getContents } from "@repo/contents/_lib/content";
+import { getContentMetadata } from "@repo/contents/_lib/metadata";
 import {
   extractReferences,
-  getContent,
-  getContents,
-  getReferences,
-  getRenderableContent,
   parseModuleMetadata,
   parseReferences,
   validatePath,
-} from "@repo/contents/_lib/content";
-import { getContentMetadata } from "@repo/contents/_lib/metadata";
+} from "@repo/contents/_lib/scoped";
 import {
   InvalidPathError,
   MetadataParseError,
@@ -26,14 +23,12 @@ const {
   mockKyGet,
   mockGetMDXSlugsForLocale,
   mockImportContentModule,
-  mockImportReferencesModule,
 } = vi.hoisted(() => ({
   mockReadFile: vi.fn(),
   mockFsAccess: vi.fn(),
   mockKyGet: vi.fn(),
   mockGetMDXSlugsForLocale: vi.fn(),
   mockImportContentModule: vi.fn(),
-  mockImportReferencesModule: vi.fn(),
 }));
 
 vi.mock("node:fs", async (importOriginal) => {
@@ -62,21 +57,7 @@ vi.mock("@repo/contents/_lib/cache", () => ({
 
 vi.mock("@repo/contents/_lib/module", () => ({
   importContentModule: mockImportContentModule,
-  importReferencesModule: mockImportReferencesModule,
 }));
-
-vi.mock(
-  "@repo/contents/articles/politics/dynastic-politics-asian-values/ref.ts",
-  () => ({
-    references: [
-      {
-        title: "Test Reference",
-        authors: "Test Author",
-        year: 2024,
-      },
-    ],
-  })
-);
 
 vi.mock("@repo/contents/testpath/en.mdx", () => ({
   metadata: {
@@ -121,7 +102,6 @@ beforeEach(() => {
   mockKyGet.mockRejectedValue(new Error("Network error"));
   mockGetMDXSlugsForLocale.mockReturnValue([]);
   mockImportContentModule.mockRejectedValue(new Error("Module not found"));
-  mockImportReferencesModule.mockRejectedValue(new Error("Module not found"));
 });
 
 afterEach(() => {
@@ -394,49 +374,6 @@ describe("validatePath", () => {
         validatePath("test/./path", "/base/dir")
       );
       expect(result).toBe("/base/dir/test/path");
-    });
-  });
-});
-
-describe("getRenderableContent", () => {
-  it("should load MDX content without reading the raw source file", async () => {
-    mockImportContentModule.mockResolvedValue({
-      metadata: {
-        title: "Renderable Title",
-        description: "Renderable Description",
-        authors: [{ name: "Renderable Author" }],
-        date: "01/01/2024",
-      },
-      default: () => "Renderable MDX Content",
-    });
-
-    const content = await Effect.runPromise(
-      getRenderableContent("en", "test/path")
-    );
-
-    expect(content.metadata.title).toBe("Renderable Title");
-    expect(content.default).toBeDefined();
-    expect(mockReadFile).not.toHaveBeenCalled();
-  });
-
-  it("should preserve the MDX module path when metadata parsing fails", async () => {
-    mockImportContentModule.mockResolvedValue({
-      metadata: {
-        title: "Broken",
-      },
-      default: () => "Broken MDX Content",
-    });
-
-    const result = await Effect.runPromise(
-      Effect.match(getRenderableContent("en", "test-invalid-module"), {
-        onSuccess: () => null,
-        onFailure: (error) => error,
-      })
-    );
-
-    expect(result).toBeInstanceOf(MetadataParseError);
-    expect(result).toMatchObject({
-      path: "@repo/contents/test-invalid-module/en.mdx",
     });
   });
 });
@@ -1190,64 +1127,7 @@ export const metadata = {
   });
 });
 
-describe("getReferences", () => {
-  it("should return empty array when ref file does not exist", async () => {
-    const refs = await Effect.runPromise(getReferences("nonexistent/path"));
-    expect(refs).toEqual([]);
-  });
-
-  it("should handle errors gracefully", async () => {
-    const refs = await Effect.runPromise(getReferences("error/path"));
-    expect(refs).toEqual([]);
-  });
-
-  it("should return empty array for path with special characters", async () => {
-    const refs = await Effect.runPromise(getReferences("test/path/../invalid"));
-    expect(refs).toEqual([]);
-  });
-
-  it("should return empty array for absolute paths", async () => {
-    const refs = await Effect.runPromise(getReferences("/absolute/path"));
-    expect(refs).toEqual([]);
-  });
-
-  it("should return references when ref file exists", async () => {
-    mockImportReferencesModule.mockResolvedValue({
-      references: [
-        {
-          title: "Test Reference",
-          authors: "Test Author",
-          year: 2024,
-        },
-      ],
-    });
-
-    const refs = await Effect.runPromise(
-      getReferences("articles/politics/dynastic-politics-asian-values")
-    );
-    expect(refs).toHaveLength(1);
-    expect(refs[0]).toMatchObject({
-      title: "Test Reference",
-      authors: "Test Author",
-      year: 2024,
-    });
-  });
-
-  it("should handle import errors by returning empty array", async () => {
-    const refs = await Effect.runPromise(getReferences("test/nonexistent"));
-    expect(refs).toEqual([]);
-  });
-
-  it("should handle path traversal attempts", async () => {
-    const refs = await Effect.runPromise(getReferences("../../etc/passwd"));
-    expect(refs).toEqual([]);
-  });
-
-  it("should handle deeply nested paths", async () => {
-    const refs = await Effect.runPromise(getReferences("deep/nested/path"));
-    expect(refs).toEqual([]);
-  });
-
+describe("parseReferences", () => {
   describe("safe parsing with Zod schema", () => {
     it("should successfully parse valid references with all required fields", async () => {
       const rawReferences = [

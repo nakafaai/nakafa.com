@@ -1,5 +1,5 @@
-import { getContents } from "@repo/contents/_lib/content";
 import { generateContentParams } from "@repo/contents/_lib/static-params";
+import { getSubjectContents } from "@repo/contents/_lib/subject/content";
 import {
   FileReadError,
   GitHubFetchError,
@@ -15,12 +15,19 @@ export const revalidate = false;
 
 const logger = createServiceLogger("api-contents");
 
+/**
+ * Generates all locale-aware subject API paths under `/contents/:locale/subject/*`.
+ */
 export function generateStaticParams() {
   return generateContentParams({
     basePath: "subject",
   });
 }
 
+/**
+ * Returns subject content lists for the API content route under
+ * `/contents/:locale/subject/*`.
+ */
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ locale: string; slug: string[] }> }
@@ -40,7 +47,7 @@ export async function GET(
 
   const cleanPath = `subject/${basePath}` as const;
 
-  const program = getContents({
+  const program = getSubjectContents({
     locale: validLocale,
     basePath: cleanPath,
     includeMDX: false,

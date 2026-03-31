@@ -1,5 +1,8 @@
+import {
+  getArticleContent,
+  getArticleReferences,
+} from "@repo/contents/_lib/articles/content";
 import { getSlugPath } from "@repo/contents/_lib/articles/slug";
-import { getContent, getReferences } from "@repo/contents/_lib/content";
 import { getContentMetadataWithRaw } from "@repo/contents/_lib/metadata";
 import {
   type FileReadError,
@@ -70,7 +73,7 @@ export function fetchArticleContext({
   const FilePath = getSlugPath(category, slug);
 
   return Effect.gen(function* () {
-    const content = yield* getContent(locale, FilePath);
+    const content = yield* getArticleContent(locale, FilePath);
 
     if (content === null) {
       return yield* Effect.fail(
@@ -81,7 +84,7 @@ export function fetchArticleContext({
       );
     }
 
-    const references = yield* getReferences(FilePath);
+    const references = yield* getArticleReferences(FilePath);
 
     return { content, references };
   });

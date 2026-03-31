@@ -1,4 +1,4 @@
-import { getContents } from "@repo/contents/_lib/content";
+import { getArticleContents } from "@repo/contents/_lib/articles/content";
 import { generateContentParams } from "@repo/contents/_lib/static-params";
 import {
   FileReadError,
@@ -15,12 +15,19 @@ export const revalidate = false;
 
 const logger = createServiceLogger("api-contents");
 
+/**
+ * Generates all locale-aware article API paths under `/contents/:locale/articles/*`.
+ */
 export function generateStaticParams() {
   return generateContentParams({
     basePath: "articles",
   });
 }
 
+/**
+ * Returns article content lists for the API content route under
+ * `/contents/:locale/articles/*`.
+ */
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ locale: string; slug: string[] }> }
@@ -40,7 +47,7 @@ export async function GET(
 
   const cleanPath = `articles/${basePath}` as const;
 
-  const program = getContents({
+  const program = getArticleContents({
     locale: validLocale,
     basePath: cleanPath,
     includeMDX: false,

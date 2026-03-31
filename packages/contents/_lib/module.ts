@@ -1,20 +1,14 @@
-import type { Locale } from "@repo/contents/_types/content";
+import {
+  type ContentRoot,
+  ContentRootSchema,
+  type Locale,
+} from "@repo/contents/_types/content";
 import type { ComponentType } from "react";
-
-const CONTENT_ROOTS = ["articles", "exercises", "subject"] as const;
-
-type ContentRoot = (typeof CONTENT_ROOTS)[number];
 
 interface ContentModule {
   default: ComponentType;
   metadata?: unknown;
 }
-
-interface ReferencesModule {
-  references?: unknown;
-}
-
-const contentRoots = new Set<string>(CONTENT_ROOTS);
 
 const contentModuleImporters: Record<
   ContentRoot,
@@ -28,13 +22,6 @@ const contentModuleImporters: Record<
     await import(`../subject/${relativePath}/${locale}.mdx`),
 };
 
-const referencesModuleImporters: Partial<
-  Record<ContentRoot, (relativePath: string) => Promise<ReferencesModule>>
-> = {
-  articles: async (relativePath) =>
-    await import(`../articles/${relativePath}/ref.ts`),
-};
-
 /**
  * Checks whether a slug root belongs to the supported content roots.
  *
@@ -42,7 +29,7 @@ const referencesModuleImporters: Partial<
  * @returns True when the root is one of the supported content roots
  */
 function isContentRoot(root: string): root is ContentRoot {
-  return contentRoots.has(root);
+  return ContentRootSchema.safeParse(root).success;
 }
 
 /**
@@ -91,29 +78,4 @@ export function importContentModule(cleanPath: string, locale: Locale) {
   const importer = contentModuleImporters[target.root];
 
   return importer(target.relativePath, locale);
-}
-
-/**
- * Dynamically imports a references module for a content entry.
- *
- * Keep this import relative for the same reason as `importContentModule()`:
- * it keeps Turbopack's dynamic import context scoped to content files.
- *
- * @param cleanPath - Content slug relative to `packages/contents`
- * @returns Imported references module namespace
- */
-export function importReferencesModule(cleanPath: string) {
-  const target = getContentModuleTarget(cleanPath);
-
-  if (!target) {
-    throw new Error(`Unsupported references module path: ${cleanPath}`);
-  }
-
-  const importer = referencesModuleImporters[target.root];
-
-  if (!importer) {
-    throw new Error(`Unsupported references module path: ${cleanPath}`);
-  }
-
-  return importer(target.relativePath);
 }

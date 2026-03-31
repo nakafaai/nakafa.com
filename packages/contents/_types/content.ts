@@ -6,6 +6,15 @@ import * as z from "zod";
 export const LocaleSchema = z.enum(["en", "id"]);
 export type Locale = z.infer<typeof LocaleSchema>;
 
+/** Supported top-level content roots under `packages/contents/`. */
+export const CONTENT_ROOTS = ["articles", "exercises", "subject"] as const;
+
+/** Runtime validation schema for supported top-level content roots. */
+export const ContentRootSchema = z.enum(CONTENT_ROOTS);
+
+/** Union of supported top-level content roots. */
+export type ContentRoot = z.infer<typeof ContentRootSchema>;
+
 export const ArticleSchema = z.object({
   title: z.string(),
   description: z.string(),
