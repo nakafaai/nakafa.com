@@ -1,5 +1,5 @@
 import { getArticles } from "@repo/contents/_lib/articles/slug";
-import { formatISO } from "date-fns";
+import { formatContentDateISO } from "@repo/contents/_shared/date";
 import { Effect } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -36,7 +36,7 @@ describe("getArticles", () => {
             title: "Older Article",
             description: "Older description",
             authors: [{ name: "Guest Author" }],
-            date: new Date("2024-01-02"),
+            date: "01/02/2024",
           },
         },
         {
@@ -47,7 +47,7 @@ describe("getArticles", () => {
             title: "Newer Article",
             description: "Newer description",
             authors: [{ name: "Official Author" }],
-            date: new Date("2024-02-02"),
+            date: "02/02/2024",
           },
         },
       ])
@@ -57,20 +57,20 @@ describe("getArticles", () => {
 
     expect(mockGetContentsMetadata).toHaveBeenCalledWith({
       locale: "en",
-      basePath: "articles/politics",
+      basePath: "articles/politics/",
     });
     expect(articles).toStrictEqual([
       {
         title: "Newer Article",
         description: "Newer description",
-        date: formatISO(new Date("2024-02-02")),
+        date: formatContentDateISO("02/02/2024"),
         slug: "newer-article",
         official: true,
       },
       {
         title: "Older Article",
         description: "Older description",
-        date: formatISO(new Date("2024-01-02")),
+        date: formatContentDateISO("01/02/2024"),
         slug: "older-article",
         official: false,
       },
@@ -88,7 +88,7 @@ describe("getArticles", () => {
             title: "Nested Root",
             description: "Root description",
             authors: [{ name: "Guest Author" }],
-            date: new Date("2024-03-01"),
+            date: "03/01/2024",
           },
         },
         {
@@ -99,7 +99,7 @@ describe("getArticles", () => {
             title: "Nested Appendix",
             description: "Appendix description",
             authors: [{ name: "Official Author" }],
-            date: new Date("2024-03-02"),
+            date: "03/02/2024",
           },
         },
       ])
@@ -119,8 +119,77 @@ describe("getArticles", () => {
 
     expect(mockGetContentsMetadata).toHaveBeenCalledWith({
       locale: "en",
-      basePath: "articles/politics",
+      basePath: "articles/politics/",
     });
     expect(articles).toStrictEqual([]);
+  });
+
+  it("ignores entries from categories that only share the same prefix", async () => {
+    mockGetContentsMetadata.mockReturnValue(
+      Effect.succeed([
+        {
+          locale: "en",
+          slug: "articles/politics/valid-article",
+          url: "https://nakafa.com/en/articles/politics/valid-article",
+          metadata: {
+            title: "Valid Article",
+            description: "Valid description",
+            authors: [{ name: "Guest Author" }],
+            date: "04/01/2024",
+          },
+        },
+        {
+          locale: "en",
+          slug: "articles/politics-extra/should-not-leak",
+          url: "https://nakafa.com/en/articles/politics-extra/should-not-leak",
+          metadata: {
+            title: "Wrong Category",
+            description: "Wrong description",
+            authors: [{ name: "Official Author" }],
+            date: "04/02/2024",
+          },
+        },
+      ])
+    );
+
+    const articles = await getArticles("politics", "en");
+
+    expect(articles).toHaveLength(1);
+    expect(articles[0]?.slug).toBe("valid-article");
+  });
+
+  it("skips entries with invalid dates instead of failing the whole list", async () => {
+    mockGetContentsMetadata.mockReturnValue(
+      Effect.succeed([
+        {
+          locale: "en",
+          slug: "articles/politics/valid-article",
+          url: "https://nakafa.com/en/articles/politics/valid-article",
+          metadata: {
+            title: "Valid Article",
+            description: "Valid description",
+            authors: [{ name: "Official Author" }],
+            date: "04/01/2024",
+          },
+        },
+        {
+          locale: "en",
+          slug: "articles/politics/bad-date-article",
+          url: "https://nakafa.com/en/articles/politics/bad-date-article",
+          metadata: {
+            title: "Bad Date",
+            description: "Broken description",
+            authors: [{ name: "Guest Author" }],
+            date: "not-a-real-date",
+          },
+        },
+      ])
+    );
+
+    const articles = await getArticles("politics", "en");
+
+    expect(articles).toHaveLength(1);
+    expect(articles[0]?.slug).toBe("valid-article");
+    expect(articles[0]?.official).toBe(true);
   });
 });

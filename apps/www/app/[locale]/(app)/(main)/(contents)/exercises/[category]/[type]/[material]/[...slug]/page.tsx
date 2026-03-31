@@ -16,6 +16,7 @@ import {
   isYearlessTryOutCollectionSlug,
   LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
 } from "@repo/contents/_lib/exercises/slug";
+import { formatContentDateISO } from "@repo/contents/_shared/date";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
 import type {
   ExercisesMaterial,
@@ -392,6 +393,9 @@ async function PageContent({
 
   const description = `${t("exercises")} - ${currentMaterialItem.title} - ${currentMaterial.title}`;
   const educationalLevel = `${t(type)} - ${t(category)}`;
+  const publishedAt =
+    formatContentDateISO(exercises[0].question.metadata.date) ??
+    exercises[0].question.metadata.date;
 
   return (
     <>
@@ -406,14 +410,14 @@ async function PageContent({
       />
       <LearningResourceJsonLd
         author={FOUNDER}
-        datePublished={exercises[0].question.metadata.date}
+        datePublished={publishedAt}
         description={description}
         educationalLevel={educationalLevel}
         name={currentMaterialItem.title}
       />
       <ArticleJsonLd
         author={FOUNDER}
-        datePublished={exercises[0].question.metadata.date}
+        datePublished={publishedAt}
         description={description}
         headline={currentMaterialItem.title}
         image={getOgUrl(locale, FilePath)}
@@ -541,6 +545,9 @@ async function SingleExerciseContent({
 
   const description = `${t("exercises")} - ${exercise.question.metadata.title} - ${currentMaterialItem.title}`;
   const educationalLevel = `${t(type)} - ${t(category)}`;
+  const publishedAt =
+    formatContentDateISO(exercise.question.metadata.date) ??
+    exercise.question.metadata.date;
 
   return (
     <>
@@ -564,14 +571,14 @@ async function SingleExerciseContent({
       />
       <LearningResourceJsonLd
         author={FOUNDER}
-        datePublished={exercise.question.metadata.date}
+        datePublished={publishedAt}
         description={description}
         educationalLevel={educationalLevel}
         name={exercise.question.metadata.title}
       />
       <ArticleJsonLd
         author={FOUNDER}
-        datePublished={exercise.question.metadata.date}
+        datePublished={publishedAt}
         description={description}
         headline={exercise.question.metadata.title}
         image={getOgUrl(locale, exerciseFilePath)}

@@ -97,6 +97,18 @@ export const metadata = {
 
     expect(Option.isNone(result)).toBe(true);
   });
+
+  it("returns none when metadata date is not MM/DD/YYYY", () => {
+    const result = extractMetadata(`
+export const metadata = {
+  title: "Broken",
+  authors: [{ name: "Author" }],
+  date: "2024-01-01"
+};
+`);
+
+    expect(Option.isNone(result)).toBe(true);
+  });
 });
 
 describe("getContentMetadataWithRaw", () => {

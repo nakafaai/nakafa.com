@@ -1,8 +1,8 @@
 import { teams } from "@repo/contents/_data/team";
 import { getContentsMetadata } from "@repo/contents/_lib/metadata";
+import { formatContentDateISO } from "@repo/contents/_shared/date";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
 import type { Article } from "@repo/contents/_types/content";
-import { formatISO } from "date-fns";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 
@@ -51,16 +51,25 @@ export async function getArticles(
   return await Effect.runPromise(
     getContentsMetadata({
       locale,
-      basePath: `articles/${categoryName}`,
+      basePath: categoryPrefix,
     }).pipe(
       Effect.map((entries) => {
         const articlesBySlug = new Map<string, Article>();
 
         for (const entry of entries) {
+          if (!entry.slug.startsWith(categoryPrefix)) {
+            continue;
+          }
+
           const relativePath = entry.slug.slice(categoryPrefix.length);
           const slug = relativePath.split("/")[0];
 
           if (!slug || articlesBySlug.has(slug)) {
+            continue;
+          }
+
+          const publishedAt = formatContentDateISO(entry.metadata.date);
+          if (!publishedAt) {
             continue;
           }
 
@@ -69,7 +78,7 @@ export async function getArticles(
           articlesBySlug.set(slug, {
             title: entry.metadata.title,
             description: entry.metadata.description ?? "",
-            date: formatISO(new Date(entry.metadata.date)),
+            date: publishedAt,
             slug,
             official: authors.some((author) => teams.has(author)),
           });

@@ -1,9 +1,6 @@
 import { promises as fsPromises } from "node:fs";
 import nodePath from "node:path";
-import {
-  getMDXSlugsForLocale,
-  hasPathInCache,
-} from "@repo/contents/_lib/cache";
+import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import { getContent } from "@repo/contents/_lib/content";
 import { getFolderChildNames } from "@repo/contents/_lib/fs";
 import { getContentMetadataWithRaw } from "@repo/contents/_lib/metadata";
@@ -363,18 +360,15 @@ export function getExerciseByNumber(
 > {
   return Effect.gen(function* () {
     const cleanPath = cleanSlug(filePath);
-    const exerciseNumberSegment = String(exerciseNumber);
-    const questionPath = `${cleanPath}/${exerciseNumberSegment}/_question`;
-    const answerPath = `${cleanPath}/${exerciseNumberSegment}/_answer`;
+    const allSlugs = getMDXSlugsForLocale(locale);
+    const exerciseNumberSegment = getExerciseQuestionNumbers(
+      allSlugs,
+      cleanPath
+    ).find(
+      (numberSegment) => Number.parseInt(numberSegment, 10) === exerciseNumber
+    );
 
-    // Mirror the old semantics: return none when the exercise number is
-    // missing entirely, but still fail if a partially indexed exercise exists.
-    if (
-      !(
-        hasPathInCache(locale, questionPath) ||
-        hasPathInCache(locale, answerPath)
-      )
-    ) {
+    if (!exerciseNumberSegment) {
       return Option.none();
     }
 

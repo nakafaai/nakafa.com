@@ -553,6 +553,46 @@ describe("getExerciseByNumber", () => {
     expect(Option.isNone(result)).toBe(true);
   });
 
+  it("matches zero-padded exercise folders by numeric exercise number", async () => {
+    mockGetMDXSlugsForLocale.mockReturnValue([
+      `${exerciseBasePath}/03/_question`,
+      `${exerciseBasePath}/03/_answer`,
+    ]);
+    mockGetContentMetadataWithRaw.mockImplementation(
+      (_locale: string, filePath: string) => {
+        if (filePath.endsWith("03/_question")) {
+          return Effect.succeed(createRawContent("Question 03"));
+        }
+
+        return Effect.succeed(createRawContent("Answer 03"));
+      }
+    );
+    mockReadFile.mockImplementation((filePath: string) => {
+      if (filePath.endsWith("03/choices.ts")) {
+        return Promise.resolve(createChoicesSource("Three"));
+      }
+
+      return Promise.reject(new Error(`Unexpected path: ${filePath}`));
+    });
+
+    const result = await Effect.runPromise(
+      getExerciseByNumber("id", exerciseBasePath, 3, false)
+    );
+
+    expect(Option.isSome(result)).toBe(true);
+    expect(Option.getOrUndefined(result)?.number).toBe(3);
+    expect(mockGetContentMetadataWithRaw).toHaveBeenNthCalledWith(
+      1,
+      "id",
+      `${exerciseBasePath}/03/_question`
+    );
+    expect(mockGetContentMetadataWithRaw).toHaveBeenNthCalledWith(
+      2,
+      "id",
+      `${exerciseBasePath}/03/_answer`
+    );
+  });
+
   it("uses the default includeMDX value when the fourth argument is omitted", async () => {
     mockGetMDXSlugsForLocale.mockReturnValue([
       `${exerciseBasePath}/1/_question`,

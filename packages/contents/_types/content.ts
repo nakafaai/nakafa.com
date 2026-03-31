@@ -1,3 +1,4 @@
+import { isContentDateString } from "@repo/contents/_shared/date";
 import type React from "react";
 import * as z from "zod";
 
@@ -33,7 +34,9 @@ export const ContentMetadataSchema = z.object({
       name: z.string(),
     })
   ),
-  date: z.string(),
+  date: z.string().refine(isContentDateString, {
+    error: "Invalid content date. Expected MM/DD/YYYY.",
+  }),
   subject: z.string().optional(),
 });
 export type ContentMetadata = z.infer<typeof ContentMetadataSchema>;
