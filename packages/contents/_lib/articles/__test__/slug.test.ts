@@ -1,4 +1,7 @@
-import { getArticles, getSlugPath } from "@repo/contents/_lib/articles/slug";
+import {
+  getArticleSummaries,
+  getSlugPath,
+} from "@repo/contents/_lib/articles/slug";
 import { formatContentDateISO } from "@repo/contents/_shared/date";
 import { Effect } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -24,7 +27,7 @@ afterEach(() => {
   mockGetContentsMetadata.mockReset();
 });
 
-describe("getArticles", () => {
+describe("getArticleSummaries", () => {
   it("builds the canonical detail path for a real article category and slug", () => {
     expect(getSlugPath("politics", "nepotism-in-political-governance")).toBe(
       "/articles/politics/nepotism-in-political-governance"
@@ -59,7 +62,7 @@ describe("getArticles", () => {
       ])
     );
 
-    const articles = await getArticles("politics", "en");
+    const articles = await getArticleSummaries("politics", "en");
 
     expect(mockGetContentsMetadata).toHaveBeenCalledWith({
       locale: "en",
@@ -111,7 +114,7 @@ describe("getArticles", () => {
       ])
     );
 
-    const articles = await getArticles("politics", "en");
+    const articles = await getArticleSummaries("politics", "en");
 
     expect(articles).toHaveLength(1);
     expect(articles[0]?.slug).toBe("nested-article");
@@ -121,7 +124,10 @@ describe("getArticles", () => {
   it("accepts a full category path and still resolves the category name", async () => {
     mockGetContentsMetadata.mockReturnValue(Effect.succeed([]));
 
-    const articles = await getArticles("articles/politics" as never, "en");
+    const articles = await getArticleSummaries(
+      "articles/politics" as never,
+      "en"
+    );
 
     expect(mockGetContentsMetadata).toHaveBeenCalledWith({
       locale: "en",
@@ -131,7 +137,7 @@ describe("getArticles", () => {
   });
 
   it("returns an empty list for malformed full category paths", async () => {
-    const articles = await getArticles("articles/" as never, "en");
+    const articles = await getArticleSummaries("articles/" as never, "en");
 
     expect(mockGetContentsMetadata).not.toHaveBeenCalled();
     expect(articles).toStrictEqual([]);
@@ -165,7 +171,7 @@ describe("getArticles", () => {
       ])
     );
 
-    const articles = await getArticles("politics", "en");
+    const articles = await getArticleSummaries("politics", "en");
 
     expect(articles).toHaveLength(1);
     expect(articles[0]?.slug).toBe("valid-article");
@@ -199,7 +205,7 @@ describe("getArticles", () => {
       ])
     );
 
-    const articles = await getArticles("politics", "en");
+    const articles = await getArticleSummaries("politics", "en");
 
     expect(articles).toHaveLength(1);
     expect(articles[0]?.slug).toBe("valid-article");
@@ -222,7 +228,7 @@ describe("getArticles", () => {
       ])
     );
 
-    const articles = await getArticles("politics", "en");
+    const articles = await getArticleSummaries("politics", "en");
 
     expect(articles).toHaveLength(1);
     expect(articles[0]).toMatchObject({

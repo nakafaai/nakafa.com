@@ -18,22 +18,22 @@ export function getSlugPath(category: ArticleCategory, slug: string) {
 }
 
 /**
- * Loads all articles in a category and sorts them newest-first.
+ * Loads article summaries for one category and sorts them newest-first.
  *
  * Metadata is read through the metadata-only listing path so category pages do
- * not import every article MDX module just to render cards.
+ * not import every article MDX module just to render article cards.
  *
  * @param category - Article category slug
  * @param locale - Locale to read article metadata for
- * @returns Article summaries with metadata and official-author status
+ * @returns Article card summaries with metadata and official-author status
  *
  * @example
  * ```ts
- * const articles = await getArticles("politics", "en");
+ * const articles = await getArticleSummaries("politics", "en");
  * // Returns: [{ title, description, date, slug, official }, ...]
  * ```
  */
-export async function getArticles(
+export async function getArticleSummaries(
   category: ArticleCategory,
   locale: Locale
 ): Promise<Article[]> {
