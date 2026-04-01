@@ -3,7 +3,8 @@ import { IRT_AUTOMATION_CRON_INTERVAL_MINUTES } from "@repo/backend/convex/irt/p
 import { cronJobs } from "convex/server";
 
 const crons = cronJobs();
-const CREDIT_RESET_PERIOD_REPAIR_INTERVAL_MINUTES = 15;
+const CONTENT_ANALYTICS_BACKSTOP_INTERVAL_MINUTES = 10;
+const CREDIT_RESET_PERIOD_REPAIR_INTERVAL_MINUTES = 1;
 const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
 const TRYOUT_ACCESS_STATUS_SWEEP_INTERVAL_MINUTES = 5;
 
@@ -38,11 +39,11 @@ crons.interval(
 );
 
 /**
- * Schedules idle content analytics partitions that have queued rows.
+ * Backstops content analytics scheduling in case a per-view trigger is missed.
  */
 crons.interval(
   "schedule content analytics partitions",
-  { minutes: 1 },
+  { minutes: CONTENT_ANALYTICS_BACKSTOP_INTERVAL_MINUTES },
   internal.contents.mutations.analytics.scheduleContentAnalyticsPartitions,
   {}
 );

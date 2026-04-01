@@ -61,22 +61,28 @@ export async function getStoredCreditResetTimestamp(
 
 /** Resolves the current reset boundary for write paths. */
 export async function resolveCurrentCreditResetTimestamp(
-  db: CreditDb,
+  db: MutationCtx["db"],
   plan: UserPlan,
   now: number
 ) {
+  const currentResetTimestamp = getCurrentCreditResetTimestamp(plan, now);
   const storedResetTimestamp = await getStoredCreditResetTimestamp(db, plan);
 
-  if (storedResetTimestamp !== null) {
+  if (
+    storedResetTimestamp !== null &&
+    storedResetTimestamp >= currentResetTimestamp
+  ) {
     return storedResetTimestamp;
   }
 
-  return getCurrentCreditResetTimestamp(plan, now);
+  await upsertStoredCreditResetTimestamp(db, plan, currentResetTimestamp);
+
+  return currentResetTimestamp;
 }
 
 /** Resolves one user's effective credit state for the current reset period. */
 export async function resolveEffectiveCreditState(
-  db: CreditDb,
+  db: MutationCtx["db"],
   user: CreditStateUser,
   now: number
 ) {

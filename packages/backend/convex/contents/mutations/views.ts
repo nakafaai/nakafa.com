@@ -1,3 +1,5 @@
+import { internal } from "@repo/backend/convex/_generated/api";
+import { getContentAnalyticsPartition } from "@repo/backend/convex/contents/helpers/partitions";
 import {
   loadContentRefBySlug,
   upsertContentView,
@@ -31,11 +33,23 @@ export const recordContentView = mutation({
       type: args.contentRef.type,
     });
 
-    return await upsertContentView(ctx.db, contentRef, {
+    const result = await upsertContentView(ctx.db, contentRef, {
       deviceId: args.deviceId,
       locale: args.locale,
       slug: args.contentRef.slug,
       userId: user?.appUser._id,
     });
+
+    if (result.isNewView) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.contents.mutations.analytics.scheduleContentAnalyticsPartition,
+        {
+          partition: getContentAnalyticsPartition(contentRef),
+        }
+      );
+    }
+
+    return result;
   },
 });
