@@ -10,7 +10,7 @@ import tables, {
   chatTypeValidator,
   chatVisibilityValidator,
 } from "@repo/backend/convex/chats/schema";
-import { getEffectiveCreditState } from "@repo/backend/convex/credits/constants";
+import { resolveEffectiveCreditState } from "@repo/backend/convex/credits/helpers/state";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
@@ -291,7 +291,11 @@ export const saveAssistantResponse = internalMutation({
     let nextResetTimestamp = appUser.creditsResetAt;
 
     if (message.modelId) {
-      const effectiveCredits = getEffectiveCreditState(appUser);
+      const effectiveCredits = await resolveEffectiveCreditState(
+        ctx.db,
+        appUser,
+        Date.now()
+      );
 
       credits = getModelCreditCost(message.modelId);
       newBalance = effectiveCredits.credits - credits;

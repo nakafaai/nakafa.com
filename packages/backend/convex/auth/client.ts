@@ -5,8 +5,8 @@ import authSchema from "@repo/backend/convex/betterAuth/schema";
 import {
   DEFAULT_USER_CREDITS,
   DEFAULT_USER_PLAN,
-  getCurrentCreditResetTimestamp,
 } from "@repo/backend/convex/credits/constants";
+import { getCurrentCreditResetTimestamp } from "@repo/backend/convex/credits/helpers/state";
 
 const authFunctions: AuthFunctions = internal.auth;
 
@@ -28,7 +28,10 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
             image: authUser.image ?? undefined,
             plan: DEFAULT_USER_PLAN,
             credits: DEFAULT_USER_CREDITS,
-            creditsResetAt: getCurrentCreditResetTimestamp(DEFAULT_USER_PLAN),
+            creditsResetAt: getCurrentCreditResetTimestamp(
+              DEFAULT_USER_PLAN,
+              Date.now()
+            ),
           });
 
           await ctx.db.insert("notificationPreferences", {

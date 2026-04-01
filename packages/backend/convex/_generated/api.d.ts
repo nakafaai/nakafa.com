@@ -90,6 +90,8 @@ import type * as contents_queries_audio from "../contents/queries/audio.js";
 import type * as contents_queries_recent from "../contents/queries/recent.js";
 import type * as contents_validators from "../contents/validators.js";
 import type * as credits_constants from "../credits/constants.js";
+import type * as credits_helpers_state from "../credits/helpers/state.js";
+import type * as credits_mutations from "../credits/mutations.js";
 import type * as crons from "../crons.js";
 import type * as customers_actions from "../customers/actions.js";
 import type * as customers_mutations from "../customers/mutations.js";
@@ -323,6 +325,8 @@ declare const fullApi: ApiFromModules<{
   "contents/queries/recent": typeof contents_queries_recent;
   "contents/validators": typeof contents_validators;
   "credits/constants": typeof credits_constants;
+  "credits/helpers/state": typeof credits_helpers_state;
+  "credits/mutations": typeof credits_mutations;
   crons: typeof crons;
   "customers/actions": typeof customers_actions;
   "customers/mutations": typeof customers_mutations;

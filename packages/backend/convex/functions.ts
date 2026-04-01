@@ -66,6 +66,7 @@ triggers.register("contentAnalyticsPartitions", noopHandler);
 triggers.register("articlePopularity", noopHandler);
 triggers.register("subjectPopularity", noopHandler);
 triggers.register("exercisePopularity", noopHandler);
+triggers.register("creditResetPeriods", noopHandler);
 triggers.register("creditTransactions", noopHandler);
 triggers.register("subjectTrendingBuckets", noopHandler);
 triggers.register("tryoutAccessCampaigns", noopHandler);

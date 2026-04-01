@@ -1,7 +1,7 @@
 import {
   getCurrentCreditResetTimestamp,
-  getEffectiveCreditState,
-} from "@repo/backend/convex/credits/constants";
+  getEffectiveCreditStateForResetTimestamp,
+} from "@repo/backend/convex/credits/helpers/state";
 import { describe, expect, it } from "vitest";
 
 describe("credits constants", () => {
@@ -23,18 +23,16 @@ describe("credits constants", () => {
     });
   });
 
-  describe("getEffectiveCreditState", () => {
+  describe("getEffectiveCreditStateForResetTimestamp", () => {
     it("keeps the stored balance when the reset window is current", () => {
-      const now = Date.UTC(2026, 3, 1, 18, 45, 12);
-
       expect(
-        getEffectiveCreditState(
+        getEffectiveCreditStateForResetTimestamp(
           {
             credits: 7,
             creditsResetAt: Date.UTC(2026, 3, 1, 0, 0, 0),
             plan: "free",
           },
-          now
+          Date.UTC(2026, 3, 1, 0, 0, 0)
         )
       ).toEqual({
         credits: 7,
@@ -43,16 +41,14 @@ describe("credits constants", () => {
     });
 
     it("resets stale positive balances to the current plan amount", () => {
-      const now = Date.UTC(2026, 3, 2, 10, 0, 0);
-
       expect(
-        getEffectiveCreditState(
+        getEffectiveCreditStateForResetTimestamp(
           {
             credits: 99,
             creditsResetAt: Date.UTC(2026, 3, 1, 0, 0, 0),
             plan: "free",
           },
-          now
+          Date.UTC(2026, 3, 2, 0, 0, 0)
         )
       ).toEqual({
         credits: 10,
@@ -61,16 +57,14 @@ describe("credits constants", () => {
     });
 
     it("carries negative balances into the new reset window", () => {
-      const now = Date.UTC(2026, 4, 7, 12, 0, 0);
-
       expect(
-        getEffectiveCreditState(
+        getEffectiveCreditStateForResetTimestamp(
           {
             credits: -5,
             creditsResetAt: Date.UTC(2026, 3, 1, 0, 0, 0),
             plan: "pro",
           },
-          now
+          Date.UTC(2026, 4, 1, 0, 0, 0)
         )
       ).toEqual({
         credits: 2995,

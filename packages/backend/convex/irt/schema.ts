@@ -66,7 +66,9 @@ const tables = {
   irtScaleQualityRefreshQueue: defineTable({
     tryoutId: v.id("tryouts"),
     enqueuedAt: v.number(),
-  }).index("by_enqueuedAt", ["enqueuedAt"]),
+  })
+    .index("by_enqueuedAt", ["enqueuedAt"])
+    .index("by_tryoutId", ["tryoutId"]),
 
   irtScalePublicationQueue: defineTable({
     tryoutId: v.id("tryouts"),

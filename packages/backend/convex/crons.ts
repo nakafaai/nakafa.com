@@ -3,8 +3,39 @@ import { IRT_AUTOMATION_CRON_INTERVAL_MINUTES } from "@repo/backend/convex/irt/p
 import { cronJobs } from "convex/server";
 
 const crons = cronJobs();
+const CREDIT_RESET_PERIOD_REPAIR_INTERVAL_MINUTES = 15;
 const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
 const TRYOUT_ACCESS_STATUS_SWEEP_INTERVAL_MINUTES = 5;
+
+/**
+ * Materializes the current daily reset boundary for free-plan credits.
+ */
+crons.cron(
+  "sync free credit reset period",
+  "0 0 * * *",
+  internal.credits.mutations.syncCreditResetPeriod,
+  { plan: "free" }
+);
+
+/**
+ * Materializes the current monthly reset boundary for pro-plan credits.
+ */
+crons.cron(
+  "sync pro credit reset period",
+  "0 0 1 * *",
+  internal.credits.mutations.syncCreditResetPeriod,
+  { plan: "pro" }
+);
+
+/**
+ * Repairs materialized credit reset periods if an exact-boundary cron was missed.
+ */
+crons.interval(
+  "repair credit reset periods",
+  { minutes: CREDIT_RESET_PERIOD_REPAIR_INTERVAL_MINUTES },
+  internal.credits.mutations.syncAllCreditResetPeriods,
+  {}
+);
 
 /**
  * Schedules idle content analytics partitions that have queued rows.

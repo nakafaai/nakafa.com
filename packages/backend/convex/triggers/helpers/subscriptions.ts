@@ -1,9 +1,9 @@
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
+import { getPlanCreditConfig } from "@repo/backend/convex/credits/constants";
 import {
-  getCurrentCreditResetTimestamp,
-  getEffectiveCreditState,
-  getPlanCreditConfig,
-} from "@repo/backend/convex/credits/constants";
+  resolveCurrentCreditResetTimestamp,
+  resolveEffectiveCreditState,
+} from "@repo/backend/convex/credits/helpers/state";
 import type { UserPlan } from "@repo/backend/convex/users/schema";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { products } from "@repo/backend/convex/utils/polar/products";
@@ -40,7 +40,11 @@ async function applyPlanChange(
 ) {
   const oldCreditConfig = getPlanCreditConfig(user.plan);
   const newCreditConfig = getPlanCreditConfig(newPlan);
-  const nextResetTimestamp = getCurrentCreditResetTimestamp(newPlan);
+  const nextResetTimestamp = await resolveCurrentCreditResetTimestamp(
+    ctx.db,
+    newPlan,
+    Date.now()
+  );
 
   if (newCreditConfig.amount > oldCreditConfig.amount) {
     await ctx.db.patch("users", user._id, {
@@ -104,7 +108,11 @@ async function applyPlanChange(
     return;
   }
 
-  const effectiveCredits = getEffectiveCreditState(user);
+  const effectiveCredits = await resolveEffectiveCreditState(
+    ctx.db,
+    user,
+    Date.now()
+  );
 
   await ctx.db.patch("users", user._id, {
     plan: newPlan,

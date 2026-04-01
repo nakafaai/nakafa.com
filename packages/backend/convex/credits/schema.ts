@@ -1,3 +1,4 @@
+import { userPlanValidator } from "@repo/backend/convex/users/schema";
 import { defineTable } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
@@ -25,8 +26,17 @@ export const creditTransactionValidator = v.object({
   metadata: v.optional(v.record(v.string(), v.any())),
 });
 
+export const creditResetPeriodValidator = v.object({
+  plan: userPlanValidator,
+  resetAt: v.number(),
+});
+
 const tables = {
   creditTransactions: defineTable(creditTransactionValidator),
+
+  creditResetPeriods: defineTable(creditResetPeriodValidator).index("by_plan", [
+    "plan",
+  ]),
 };
 
 export default tables;

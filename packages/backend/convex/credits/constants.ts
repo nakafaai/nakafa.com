@@ -1,4 +1,3 @@
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { UserPlan } from "@repo/backend/convex/users/schema";
 
 /**
@@ -47,42 +46,3 @@ export const DEFAULT_USER_PLAN: UserPlan = "free";
  */
 export const DEFAULT_USER_CREDITS =
   PLAN_CREDIT_CONFIG[DEFAULT_USER_PLAN].amount;
-
-/** Returns the current UTC reset boundary for a plan. */
-export function getCurrentCreditResetTimestamp(
-  plan: UserPlan,
-  now = Date.now()
-) {
-  const resetDate = new Date(now);
-
-  if (plan === "free") {
-    resetDate.setUTCHours(0, 0, 0, 0);
-    return resetDate.getTime();
-  }
-
-  resetDate.setUTCDate(1);
-  resetDate.setUTCHours(0, 0, 0, 0);
-  return resetDate.getTime();
-}
-
-/** Normalizes one user's stored credit state into the current reset period. */
-export function getEffectiveCreditState(
-  user: Pick<Doc<"users">, "credits" | "creditsResetAt" | "plan">,
-  now = Date.now()
-) {
-  const resetTimestamp = getCurrentCreditResetTimestamp(user.plan, now);
-
-  if (user.creditsResetAt >= resetTimestamp) {
-    return {
-      credits: user.credits,
-      creditsResetAt: user.creditsResetAt,
-    };
-  }
-
-  return {
-    credits:
-      PLAN_CREDIT_CONFIG[user.plan].amount +
-      (user.credits < 0 ? user.credits : 0),
-    creditsResetAt: resetTimestamp,
-  };
-}

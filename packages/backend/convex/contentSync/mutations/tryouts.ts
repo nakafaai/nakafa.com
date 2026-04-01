@@ -3,6 +3,7 @@ import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/cons
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
 import { syncTryoutPartSetMappings } from "@repo/backend/convex/contentSync/lib/tryouts";
 import { internalMutation } from "@repo/backend/convex/functions";
+import { enqueueScaleQualityRefresh } from "@repo/backend/convex/irt/helpers/queue";
 import { getOrPublishScaleVersionForTryout } from "@repo/backend/convex/irt/scales/publish";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import {
@@ -86,7 +87,7 @@ export const bulkSyncTryouts = internalMutation({
               tryoutId: existingTryout._id,
             });
 
-            await ctx.db.insert("irtScaleQualityRefreshQueue", {
+            await enqueueScaleQualityRefresh(ctx, {
               tryoutId: existingTryout._id,
               enqueuedAt: now,
             });
@@ -112,7 +113,7 @@ export const bulkSyncTryouts = internalMutation({
           });
         }
 
-        await ctx.db.insert("irtScaleQualityRefreshQueue", {
+        await enqueueScaleQualityRefresh(ctx, {
           tryoutId: existingTryout._id,
           enqueuedAt: now,
         });
@@ -147,7 +148,7 @@ export const bulkSyncTryouts = internalMutation({
         });
       }
 
-      await ctx.db.insert("irtScaleQualityRefreshQueue", {
+      await enqueueScaleQualityRefresh(ctx, {
         tryoutId,
         enqueuedAt: now,
       });
@@ -183,7 +184,7 @@ export const bulkSyncTryouts = internalMutation({
         syncedAt: now,
       });
 
-      await ctx.db.insert("irtScaleQualityRefreshQueue", {
+      await enqueueScaleQualityRefresh(ctx, {
         tryoutId: activeTryout._id,
         enqueuedAt: now,
       });

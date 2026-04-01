@@ -119,3 +119,31 @@ export async function cleanupScalePublicationQueueEntriesBatch(
 
   return queueEntries.length;
 }
+
+/** Enqueues one tryout for scale-quality refresh if it is not already queued. */
+export async function enqueueScaleQualityRefresh(
+  ctx: Pick<MutationCtx, "db">,
+  {
+    enqueuedAt,
+    tryoutId,
+  }: {
+    enqueuedAt: number;
+    tryoutId: Id<"tryouts">;
+  }
+) {
+  const existingEntry = await ctx.db
+    .query("irtScaleQualityRefreshQueue")
+    .withIndex("by_tryoutId", (q) => q.eq("tryoutId", tryoutId))
+    .first();
+
+  if (existingEntry) {
+    return false;
+  }
+
+  await ctx.db.insert("irtScaleQualityRefreshQueue", {
+    tryoutId,
+    enqueuedAt,
+  });
+
+  return true;
+}

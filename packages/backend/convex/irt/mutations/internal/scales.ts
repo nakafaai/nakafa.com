@@ -1,5 +1,6 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import { internalMutation } from "@repo/backend/convex/functions";
+import { enqueueScaleQualityRefresh } from "@repo/backend/convex/irt/helpers/queue";
 import {
   IRT_SCALE_PUBLICATION_QUEUE_BATCH_SIZE,
   IRT_SCALE_QUALITY_REFRESH_QUEUE_BATCH_SIZE,
@@ -51,7 +52,7 @@ export const rebuildScaleQualityChecksPage = internalMutation({
         continue;
       }
 
-      await ctx.db.insert("irtScaleQualityRefreshQueue", {
+      await enqueueScaleQualityRefresh(ctx, {
         tryoutId: tryout._id,
         enqueuedAt,
       });
@@ -85,7 +86,7 @@ export const drainScaleQualityRefreshQueue = internalMutation({
   args: {},
   returns: v.object({
     processedCount: v.number(),
-    refreshedCount: v.number(),
+    scheduledCount: v.number(),
   }),
   handler: async (ctx) => {
     const queueEntries = await ctx.db
@@ -96,23 +97,22 @@ export const drainScaleQualityRefreshQueue = internalMutation({
     if (queueEntries.length === 0) {
       return {
         processedCount: 0,
-        refreshedCount: 0,
+        scheduledCount: 0,
       };
     }
 
     const tryoutIds = [...new Set(queueEntries.map((entry) => entry.tryoutId))];
-    let refreshedCount = 0;
-
-    for (const tryoutId of tryoutIds) {
-      const refreshed = await refreshTryoutScaleQualityCheck(ctx.db, tryoutId);
-
-      if (refreshed) {
-        refreshedCount += 1;
-      }
-    }
 
     for (const queueEntry of queueEntries) {
       await ctx.db.delete("irtScaleQualityRefreshQueue", queueEntry._id);
+    }
+
+    for (const tryoutId of tryoutIds) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.irt.mutations.internal.scales.refreshScaleQualityCheck,
+        { tryoutId }
+      );
     }
 
     if (queueEntries.length === IRT_SCALE_QUALITY_REFRESH_QUEUE_BATCH_SIZE) {
@@ -125,7 +125,7 @@ export const drainScaleQualityRefreshQueue = internalMutation({
 
     return {
       processedCount: queueEntries.length,
-      refreshedCount,
+      scheduledCount: tryoutIds.length,
     };
   },
 });
@@ -148,7 +148,7 @@ export const drainScalePublicationQueue = internalMutation({
     for (const tryoutId of distinctTryoutIds) {
       await publishTryoutScaleVersionIfNeeded(ctx, tryoutId);
 
-      await ctx.db.insert("irtScaleQualityRefreshQueue", {
+      await enqueueScaleQualityRefresh(ctx, {
         tryoutId,
         enqueuedAt,
       });
