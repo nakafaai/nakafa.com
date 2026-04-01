@@ -2,7 +2,6 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
-import { enqueueScaleQualityRefreshQueueEntry } from "@repo/backend/convex/irt/helpers/queue";
 import {
   IRT_QUEUE_SEALING_MS,
   IRT_SCALE_PUBLICATION_QUEUE_BATCH_SIZE,
@@ -61,7 +60,10 @@ export const rebuildScaleQualityChecksPage = internalMutation({
     });
 
     for (const tryout of page.page) {
-      await enqueueScaleQualityRefreshQueueEntry(ctx.db, tryout._id);
+      await ctx.db.insert("irtScaleQualityRefreshQueue", {
+        tryoutId: tryout._id,
+        enqueuedAt: Date.now(),
+      });
     }
 
     if (!page.isDone) {
@@ -156,7 +158,10 @@ export const drainScalePublicationQueue = internalMutation({
         );
 
       await publishTryoutScaleVersionIfNeeded(ctx, tryoutId);
-      await enqueueScaleQualityRefreshQueueEntry(ctx.db, tryoutId);
+      await ctx.db.insert("irtScaleQualityRefreshQueue", {
+        tryoutId,
+        enqueuedAt: Date.now(),
+      });
 
       await ctx.scheduler.runAfter(
         0,

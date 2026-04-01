@@ -4,7 +4,6 @@ import {
   buildFinalizedExerciseAttemptPatch,
   computeAttemptDurationSeconds,
 } from "@repo/backend/convex/exercises/utils";
-import { enqueueCalibrationQueueEntry } from "@repo/backend/convex/irt/helpers/queue";
 import { getScaleVersionItemsForSet } from "@repo/backend/convex/irt/scales/read";
 import { getAttemptEndReasonFromStatus } from "@repo/backend/convex/lib/attempts";
 import { scoreFinalizedTryoutPart } from "@repo/backend/convex/tryouts/helpers/finalize/score";
@@ -164,7 +163,10 @@ export async function finalizeTryoutPartAttempt({
       completedPartIndices,
       lastActivityAt: now,
     }),
-    enqueueCalibrationQueueEntry(ctx.db, partAttempt.setId, now),
+    ctx.db.insert("irtCalibrationQueue", {
+      setId: partAttempt.setId,
+      enqueuedAt: now,
+    }),
   ]);
 
   return {

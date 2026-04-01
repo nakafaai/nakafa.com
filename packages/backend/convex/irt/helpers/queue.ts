@@ -8,42 +8,6 @@ import {
 import { workflow } from "@repo/backend/convex/workflow";
 import { ConvexError } from "convex/values";
 
-/** Appends one calibration queue row. Duplicates are drained safely later. */
-export async function enqueueCalibrationQueueEntry(
-  db: MutationCtx["db"],
-  setId: Id<"exerciseSets">,
-  enqueuedAt = Date.now()
-) {
-  await db.insert("irtCalibrationQueue", {
-    setId,
-    enqueuedAt,
-  });
-}
-
-/** Appends one scale publication queue row. Duplicates are drained safely later. */
-export async function enqueueScalePublicationQueueEntry(
-  db: MutationCtx["db"],
-  tryoutId: Id<"tryouts">,
-  enqueuedAt = Date.now()
-) {
-  await db.insert("irtScalePublicationQueue", {
-    tryoutId,
-    enqueuedAt,
-  });
-}
-
-/** Appends one scale-quality refresh queue row. Duplicates are drained safely later. */
-export async function enqueueScaleQualityRefreshQueueEntry(
-  db: MutationCtx["db"],
-  tryoutId: Id<"tryouts">,
-  enqueuedAt = Date.now()
-) {
-  await db.insert("irtScaleQualityRefreshQueue", {
-    tryoutId,
-    enqueuedAt,
-  });
-}
-
 /** Starts one durable calibration workflow if the set is not already running. */
 export async function startCalibrationRunWorkflow(
   ctx: MutationCtx,

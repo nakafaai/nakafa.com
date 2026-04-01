@@ -1,10 +1,6 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { internalMutation } from "@repo/backend/convex/functions";
-import {
-  enqueueCalibrationQueueEntry,
-  enqueueScalePublicationQueueEntry,
-} from "@repo/backend/convex/irt/helpers/queue";
 import { irtCalibrationResultValidator } from "@repo/backend/convex/irt/validators";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { ConvexError, v } from "convex/values";
@@ -178,7 +174,10 @@ export const completeCalibrationRun = internalMutation({
     await asyncMap(
       [...new Set(affectedTryoutSets.map((tryoutSet) => tryoutSet.tryoutId))],
       async (tryoutId) => {
-        await enqueueScalePublicationQueueEntry(ctx.db, tryoutId);
+        await ctx.db.insert("irtScalePublicationQueue", {
+          tryoutId,
+          enqueuedAt: now,
+        });
 
         return null;
       }
@@ -220,7 +219,10 @@ export const failCalibrationRun = internalMutation({
       updatedAt: Date.now(),
     });
 
-    await enqueueCalibrationQueueEntry(ctx.db, run.setId);
+    await ctx.db.insert("irtCalibrationQueue", {
+      setId: run.setId,
+      enqueuedAt: Date.now(),
+    });
 
     return null;
   },

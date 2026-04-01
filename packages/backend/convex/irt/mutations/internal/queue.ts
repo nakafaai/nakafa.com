@@ -4,7 +4,6 @@ import { prepareCalibrationCacheForSet } from "@repo/backend/convex/irt/helpers/
 import {
   cleanupCalibrationQueueEntriesBatch,
   cleanupScalePublicationQueueEntriesBatch,
-  enqueueScalePublicationQueueEntry,
   getPendingCalibrationQueueQuery,
   startCalibrationRunWorkflow,
 } from "@repo/backend/convex/irt/helpers/queue";
@@ -26,7 +25,10 @@ export const enqueueScalePublication = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    await enqueueScalePublicationQueueEntry(ctx.db, args.tryoutId);
+    await ctx.db.insert("irtScalePublicationQueue", {
+      tryoutId: args.tryoutId,
+      enqueuedAt: Date.now(),
+    });
 
     return null;
   },

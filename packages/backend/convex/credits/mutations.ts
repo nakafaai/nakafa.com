@@ -10,28 +10,6 @@ import { logger } from "@repo/backend/convex/utils/logger";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
-function isSameResetPeriod(
-  plan: "free" | "pro",
-  leftAt: number,
-  rightAt: number
-) {
-  const left = new Date(leftAt);
-  const right = new Date(rightAt);
-
-  if (plan === "free") {
-    return (
-      left.getUTCFullYear() === right.getUTCFullYear() &&
-      left.getUTCMonth() === right.getUTCMonth() &&
-      left.getUTCDate() === right.getUTCDate()
-    );
-  }
-
-  return (
-    left.getUTCFullYear() === right.getUTCFullYear() &&
-    left.getUTCMonth() === right.getUTCMonth()
-  );
-}
-
 /** Starts one credit reset job per plan and schedules its first batch. */
 export const startCreditReset = internalMutation({
   args: {
@@ -43,6 +21,7 @@ export const startCreditReset = internalMutation({
   handler: async (ctx, args) => {
     const resetTimestamp = Date.now();
     const creditConfig = getPlanCreditConfig(args.plan);
+    const resetDate = new Date(resetTimestamp);
     const latestJob = await ctx.db
       .query("creditResetJobs")
       .withIndex("by_jobType_and_startedAt", (q) =>
@@ -71,16 +50,24 @@ export const startCreditReset = internalMutation({
       });
     }
 
-    if (
-      latestJob?.status === "completed" &&
-      isSameResetPeriod(args.plan, latestJob.startedAt, resetTimestamp)
-    ) {
-      logger.info("Credit reset already completed in the current period", {
-        jobId: latestJob._id,
-        jobType: creditConfig.jobType,
-      });
+    if (latestJob?.status === "completed") {
+      const latestJobDate = new Date(latestJob.startedAt);
+      const completedThisPeriod =
+        args.plan === "free"
+          ? latestJobDate.getUTCFullYear() === resetDate.getUTCFullYear() &&
+            latestJobDate.getUTCMonth() === resetDate.getUTCMonth() &&
+            latestJobDate.getUTCDate() === resetDate.getUTCDate()
+          : latestJobDate.getUTCFullYear() === resetDate.getUTCFullYear() &&
+            latestJobDate.getUTCMonth() === resetDate.getUTCMonth();
 
-      return { scheduled: false };
+      if (completedThisPeriod) {
+        logger.info("Credit reset already completed in the current period", {
+          jobId: latestJob._id,
+          jobType: creditConfig.jobType,
+        });
+
+        return { scheduled: false };
+      }
     }
 
     const jobId = await ctx.db.insert("creditResetJobs", {

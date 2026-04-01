@@ -1,7 +1,5 @@
-import {
-  enqueueContentViewEvent,
-  loadContentRefBySlug,
-} from "@repo/backend/convex/contents/helpers/views";
+import { getContentViewEventSegmentStart } from "@repo/backend/convex/contents/helpers/events";
+import { loadContentRefBySlug } from "@repo/backend/convex/contents/helpers/views";
 import { mutation } from "@repo/backend/convex/functions";
 import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
 import {
@@ -27,11 +25,18 @@ export const recordContentView = mutation({
       type: args.contentRef.type,
     });
 
-    return await enqueueContentViewEvent(ctx.db, contentRef, {
+    const viewedAt = Date.now();
+
+    await ctx.db.insert("contentViewEvents", {
+      contentRef,
       deviceId: args.deviceId,
       locale: args.locale,
+      segmentStart: getContentViewEventSegmentStart(viewedAt),
       slug: args.contentRef.slug,
       userId: user?.appUser._id,
+      viewedAt,
     });
+
+    return { success: true };
   },
 });

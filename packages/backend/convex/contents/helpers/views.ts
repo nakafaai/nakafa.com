@@ -1,6 +1,5 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { getContentViewEventSegmentStart } from "@repo/backend/convex/contents/helpers/events";
 import type {
   ContentRef,
   ContentViewRef,
@@ -83,27 +82,6 @@ export async function loadContentRefBySlug(
       });
     }
   }
-}
-
-/** Enqueues one append-only content view event for later processing. */
-export async function enqueueContentViewEvent(
-  db: MutationCtx["db"],
-  contentRef: ContentRef,
-  args: Pick<Doc<"contentViews">, "deviceId" | "locale" | "slug" | "userId">
-) {
-  const viewedAt = Date.now();
-
-  await db.insert("contentViewEvents", {
-    contentRef,
-    deviceId: args.deviceId,
-    locale: args.locale,
-    segmentStart: getContentViewEventSegmentStart(viewedAt),
-    slug: args.slug,
-    userId: args.userId,
-    viewedAt,
-  });
-
-  return { success: true };
 }
 
 /** Upserts the durable content view row from one sealed view event. */
