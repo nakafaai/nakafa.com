@@ -12,7 +12,9 @@
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
     "test": "vitest run",
+    "test:once": "vitest run",
     "test:watch": "vitest watch",
+    "test:debug": "vitest --inspect-brk --no-file-parallelism",
     "test:coverage": "vitest run --coverage",
     "irt:verify:cache": "convex run irt/queries/internal/maintenance:getCalibrationCacheIntegrity",
     "irt:verify:scale": "convex run irt/queries/internal/maintenance:getScaleQualityIntegrity",
@@ -61,6 +63,7 @@
     "convex-test": "^0.0.46",
     "glob": "^13.0.6",
     "tsx": "^4.21.0",
+    "vite": "^8.0.3",
     "vitest": "^4.1.2"
   }
 }

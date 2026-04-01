@@ -6,11 +6,30 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const config = defineConfig({
   test: {
-    environment: "jsdom",
     coverage: {
       enabled: true,
       provider: "istanbul",
     },
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: "convex",
+          include: ["convex/**/*.test.ts"],
+          exclude: ["**/node_modules/**", "coverage/**"],
+          environment: "edge-runtime",
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "backend",
+          include: ["**/*.test.ts"],
+          exclude: ["convex/**", "**/node_modules/**", "coverage/**"],
+          environment: "node",
+        },
+      },
+    ],
   },
   resolve: {
     alias: {
