@@ -31,7 +31,7 @@ export const scheduleContentAnalyticsPartitions = internalMutation({
   },
 });
 
-/** Claims one partition lease and starts a worker when backlog exists. */
+/** Claims one partition lease and starts one bounded drain worker. */
 export const scheduleContentAnalyticsPartition = internalMutation({
   args: {
     partition: v.number(),
@@ -46,18 +46,6 @@ export const scheduleContentAnalyticsPartition = internalMutation({
         code: "INVALID_CONTENT_ANALYTICS_PARTITION",
         message: "Content analytics partition is out of range.",
       });
-    }
-
-    const hasBacklog = await ctx.db
-      .query("contentViewAnalyticsQueue")
-      .withIndex("by_partition", (q) => q.eq("partition", args.partition))
-      .take(1);
-
-    if (hasBacklog.length === 0) {
-      return {
-        createdPartition: false,
-        scheduled: false,
-      };
     }
 
     const partitionRow = await ctx.db

@@ -58,36 +58,6 @@ crons.interval(
 );
 
 /**
- * Resets free user credits daily at midnight UTC.
- */
-crons.cron(
-  "reset free user credits",
-  "0 0 * * *",
-  internal.credits.actions.populateQueue,
-  { plan: "free" }
-);
-
-/**
- * Resets pro user credits monthly on 1st at midnight UTC.
- */
-crons.cron(
-  "reset pro user credits",
-  "0 0 1 * *",
-  internal.credits.actions.populateQueue,
-  { plan: "pro" }
-);
-
-/**
- * Cleans up old credit reset queue items daily at 3 AM UTC.
- */
-crons.cron(
-  "cleanup credit reset queue",
-  "0 3 * * *",
-  internal.credits.mutations.cleanupOldQueueItems,
-  {}
-);
-
-/**
  * Starts queued IRT calibrations in bounded batches.
  */
 crons.interval(
@@ -104,6 +74,16 @@ crons.interval(
   "drain irt scale publication queue",
   { minutes: IRT_AUTOMATION_CRON_INTERVAL_MINUTES },
   internal.irt.mutations.internal.scales.drainScalePublicationQueue,
+  {}
+);
+
+/**
+ * Refreshes queued IRT scale-quality summaries in bounded batches.
+ */
+crons.interval(
+  "drain irt scale quality refresh queue",
+  { minutes: IRT_AUTOMATION_CRON_INTERVAL_MINUTES },
+  internal.irt.mutations.internal.scales.drainScaleQualityRefreshQueue,
   {}
 );
 

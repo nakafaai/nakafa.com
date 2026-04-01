@@ -57,6 +57,9 @@ export const IRT_CALIBRATION_QUEUE_BATCH_SIZE = 5;
 /** Maximum number of distinct tryouts to publish in one queue drain. */
 export const IRT_SCALE_PUBLICATION_QUEUE_BATCH_SIZE = 10;
 
+/** Maximum number of queued scale-quality refresh rows processed in one drain. */
+export const IRT_SCALE_QUALITY_REFRESH_QUEUE_BATCH_SIZE = 25;
+
 /** Maximum number of queue rows deleted in one cleanup mutation. */
 export const IRT_QUEUE_CLEANUP_BATCH_SIZE = 100;
 

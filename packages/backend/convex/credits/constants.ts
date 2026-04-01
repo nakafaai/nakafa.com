@@ -1,4 +1,4 @@
-import type { CreditResetJobType } from "@repo/backend/convex/credits/schema";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { UserPlan } from "@repo/backend/convex/users/schema";
 
 /**
@@ -17,19 +17,15 @@ export const PLAN_CREDIT_CONFIG: Record<
     amount: number;
     /** Grant type for transaction logging */
     grantType: CreditGrantType;
-    /** Job type identifier for credit reset jobs */
-    jobType: CreditResetJobType;
   }
 > = {
   free: {
     amount: 10,
     grantType: "daily-grant",
-    jobType: "free-daily",
   },
   pro: {
     amount: 3000,
     grantType: "monthly-grant",
-    jobType: "pro-monthly",
   },
 };
 
@@ -52,21 +48,41 @@ export const DEFAULT_USER_PLAN: UserPlan = "free";
 export const DEFAULT_USER_CREDITS =
   PLAN_CREDIT_CONFIG[DEFAULT_USER_PLAN].amount;
 
-/**
- * Workflow configuration for credit reset processing.
- * Queue writes and queue claims use the same partition count so each worker
- * owns one disjoint queue slice.
- */
-export const RESET_WORKFLOW_CONFIG = {
-  partitionCount: 10,
-  populateBatchSize: 1000,
-  processBatchSize: 100,
-} as const;
+/** Returns the current UTC reset boundary for a plan. */
+export function getCurrentCreditResetTimestamp(
+  plan: UserPlan,
+  now = Date.now()
+) {
+  const resetDate = new Date(now);
 
-/**
- * Cleanup configuration for old queue items.
- */
-export const CLEANUP_CONFIG = {
-  retentionDays: 7,
-  batchSize: 1000,
-} as const;
+  if (plan === "free") {
+    resetDate.setUTCHours(0, 0, 0, 0);
+    return resetDate.getTime();
+  }
+
+  resetDate.setUTCDate(1);
+  resetDate.setUTCHours(0, 0, 0, 0);
+  return resetDate.getTime();
+}
+
+/** Normalizes one user's stored credit state into the current reset period. */
+export function getEffectiveCreditState(
+  user: Pick<Doc<"users">, "credits" | "creditsResetAt" | "plan">,
+  now = Date.now()
+) {
+  const resetTimestamp = getCurrentCreditResetTimestamp(user.plan, now);
+
+  if (user.creditsResetAt >= resetTimestamp) {
+    return {
+      credits: user.credits,
+      creditsResetAt: user.creditsResetAt,
+    };
+  }
+
+  return {
+    credits:
+      PLAN_CREDIT_CONFIG[user.plan].amount +
+      (user.credits < 0 ? user.credits : 0),
+    creditsResetAt: resetTimestamp,
+  };
+}

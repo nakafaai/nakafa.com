@@ -52,8 +52,7 @@ export const userValidator = v.object({
 const tables = {
   users: defineTable(userValidator)
     .index("by_email", ["email"])
-    .index("by_authId", ["authId"])
-    .index("by_plan_and_creditsResetAt", ["plan", "creditsResetAt"]),
+    .index("by_authId", ["authId"]),
 };
 
 export default tables;

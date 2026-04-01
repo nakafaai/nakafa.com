@@ -10,7 +10,6 @@ app.use(betterAuth);
 app.use(workflow);
 app.use(workpool, { name: "irtCalibrationSyncWorkpool" });
 app.use(workpool, { name: "irtScalePublicationQueueWorkpool" });
-app.use(workpool, { name: "irtScaleQualityRefreshWorkpool" });
 app.use(workpool, { name: "tryoutLeaderboardWorkpool" });
 app.use(resend);
 

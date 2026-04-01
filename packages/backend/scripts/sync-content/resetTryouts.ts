@@ -53,6 +53,12 @@ const RESET_TRYOUT_STEPS: ResetStep[] = [
     resultLabel: "IRT scale quality checks",
   },
   {
+    label: "Deleting IRT scale quality refresh queue...",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteIrtScaleQualityRefreshQueueBatch",
+    resultLabel: "IRT scale quality refresh queue entries",
+  },
+  {
     label: "Deleting IRT calibration queue...",
     mutationPath:
       "contentSync/mutations/maintenance:deleteIrtCalibrationQueueBatch",
@@ -181,6 +187,7 @@ export const resetTryouts = async (
   log(`  IRT Cache Stats:       ${counts.irtCalibrationCacheStats}`);
   log(`  IRT Calibration Runs:  ${counts.irtCalibrationRuns}`);
   log(`  IRT Scale Quality:     ${counts.irtScaleQualityChecks}`);
+  log(`  IRT Scale Quality Q:   ${counts.irtScaleQualityRefreshQueue}`);
   log(`  IRT Item Params:       ${counts.exerciseItemParameters}`);
   log(`  IRT Scale Queue:       ${counts.irtScalePublicationQueue}`);
   log(`  IRT Scale Versions:    ${counts.irtScaleVersions}`);
@@ -199,6 +206,7 @@ export const resetTryouts = async (
     counts.irtCalibrationCacheStats +
     counts.irtCalibrationRuns +
     counts.irtScaleQualityChecks +
+    counts.irtScaleQualityRefreshQueue +
     counts.exerciseItemParameters +
     counts.irtScalePublicationQueue +
     counts.irtScaleVersions +
