@@ -1,6 +1,4 @@
 import { internal } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
 import {
   IRT_SCALE_PUBLICATION_QUEUE_BATCH_SIZE,
@@ -8,31 +6,13 @@ import {
 } from "@repo/backend/convex/irt/policy";
 import { publishTryoutScaleVersionIfNeeded } from "@repo/backend/convex/irt/scales/publish";
 import {
-  evaluateTryoutScaleQuality,
+  refreshTryoutScaleQualityCheck,
   scaleQualityRebuildResultValidator,
-  upsertTryoutScaleQualityCheck,
 } from "@repo/backend/convex/irt/scales/quality";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
 
 const SCALE_QUALITY_REBUILD_BATCH_SIZE = 100;
-
-async function refreshScaleQualityCheckInPlace(
-  db: MutationCtx["db"],
-  tryoutId: Id<"tryouts">
-) {
-  const summary = await evaluateTryoutScaleQuality(db, {
-    now: Date.now(),
-    tryoutId,
-  });
-
-  if (!summary) {
-    return false;
-  }
-
-  await upsertTryoutScaleQualityCheck(db, summary);
-  return true;
-}
 
 /** Recompute and persist one tryout's current official-scale readiness summary. */
 export const refreshScaleQualityCheck = internalMutation({
@@ -41,7 +21,7 @@ export const refreshScaleQualityCheck = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    await refreshScaleQualityCheckInPlace(ctx.db, args.tryoutId);
+    await refreshTryoutScaleQualityCheck(ctx.db, args.tryoutId);
     return null;
   },
 });
@@ -124,7 +104,7 @@ export const drainScaleQualityRefreshQueue = internalMutation({
     let refreshedCount = 0;
 
     for (const tryoutId of tryoutIds) {
-      const refreshed = await refreshScaleQualityCheckInPlace(ctx.db, tryoutId);
+      const refreshed = await refreshTryoutScaleQualityCheck(ctx.db, tryoutId);
 
       if (refreshed) {
         refreshedCount += 1;
