@@ -5,6 +5,7 @@ import authSchema from "@repo/backend/convex/betterAuth/schema";
 import {
   DEFAULT_USER_CREDITS,
   DEFAULT_USER_PLAN,
+  getCurrentCreditResetTimestamp,
 } from "@repo/backend/convex/credits/constants";
 import { userWriteWorkpool } from "@repo/backend/convex/users/workpool";
 
@@ -22,27 +23,27 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
       user: {
         onCreate: async (ctx, authUser) => {
           const userId = await ctx.db.insert("users", {
-            email: authUser.email,
             authId: authUser._id,
-            name: authUser.name,
-            image: authUser.image ?? undefined,
-            plan: DEFAULT_USER_PLAN,
             credits: DEFAULT_USER_CREDITS,
-            creditsResetAt: Date.now(),
+            creditsResetAt: getCurrentCreditResetTimestamp(DEFAULT_USER_PLAN),
+            email: authUser.email,
+            image: authUser.image ?? undefined,
+            name: authUser.name,
+            plan: DEFAULT_USER_PLAN,
           });
 
           await ctx.db.insert("notificationPreferences", {
             disabledTypes: [],
-            userId,
-            emailEnabled: true,
             emailDigest: "weekly",
+            emailEnabled: true,
             updatedAt: Date.now(),
+            userId,
           });
 
           await ctx.db.insert("notificationCounts", {
-            userId,
             unreadCount: 0,
             updatedAt: Date.now(),
+            userId,
           });
 
           await ctx.runMutation(components.betterAuth.mutations.setUserId, {

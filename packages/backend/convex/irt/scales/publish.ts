@@ -2,6 +2,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { IRT_OPERATIONAL_MODEL } from "@repo/backend/convex/irt/policy";
+import { buildBootstrapScaleItems } from "@repo/backend/convex/irt/scales/bootstrap";
 import { evaluateTryoutScaleQuality } from "@repo/backend/convex/irt/scales/quality";
 import {
   getLatestScaleVersionForTryout,
@@ -111,6 +112,33 @@ async function publishOfficialScaleVersion(
   return db.get("irtScaleVersions", scaleVersionId);
 }
 
+async function publishBootstrapScaleVersion(
+  db: IrtDbWriter,
+  {
+    now,
+    tryoutId,
+  }: {
+    now: number;
+    tryoutId: Id<"tryouts">;
+  }
+) {
+  const items = await buildBootstrapScaleItems(db, { now, tryoutId });
+
+  if (!items) {
+    return null;
+  }
+
+  const scaleVersionId = await publishScaleVersion(db, {
+    tryoutId,
+    questionCount: items.length,
+    items,
+    status: "provisional",
+    publishedAt: now,
+  });
+
+  return db.get("irtScaleVersions", scaleVersionId);
+}
+
 async function getUnchangedOfficialScaleVersion(
   db: IrtDbWriter,
   {
@@ -203,24 +231,38 @@ export async function publishTryoutScaleVersionIfNeeded(
   }
 
   const now = Date.now();
+  const latestScaleVersion = await getLatestScaleVersionForTryout(
+    ctx.db,
+    tryout._id
+  );
 
   const scaleQuality = await evaluateTryoutScaleQuality(ctx.db, {
     now,
     tryoutId: tryout._id,
   });
 
-  if (!scaleQuality) {
-    return { kind: "not-ready" as const };
-  }
+  if (!scaleQuality || scaleQuality.status === "blocked") {
+    if (latestScaleVersion) {
+      return {
+        kind: "unchanged" as const,
+        scaleVersionId: latestScaleVersion._id,
+      };
+    }
 
-  if (scaleQuality.status === "blocked") {
-    return { kind: "not-ready" as const };
-  }
+    const bootstrapScaleVersion = await publishBootstrapScaleVersion(ctx.db, {
+      now,
+      tryoutId: tryout._id,
+    });
 
-  const latestScaleVersion = await getLatestScaleVersionForTryout(
-    ctx.db,
-    tryout._id
-  );
+    if (!bootstrapScaleVersion) {
+      return { kind: "not-ready" as const };
+    }
+
+    return {
+      kind: "published" as const,
+      scaleVersionId: bootstrapScaleVersion._id,
+    };
+  }
 
   const officialScaleDecision = await resolveOfficialScaleDecision(ctx.db, {
     latestScaleVersion,
@@ -229,7 +271,26 @@ export async function publishTryoutScaleVersionIfNeeded(
   });
 
   if (officialScaleDecision.kind === "not-ready") {
-    return { kind: "not-ready" as const };
+    if (latestScaleVersion) {
+      return {
+        kind: "unchanged" as const,
+        scaleVersionId: latestScaleVersion._id,
+      };
+    }
+
+    const bootstrapScaleVersion = await publishBootstrapScaleVersion(ctx.db, {
+      now,
+      tryoutId: tryout._id,
+    });
+
+    if (!bootstrapScaleVersion) {
+      return { kind: "not-ready" as const };
+    }
+
+    return {
+      kind: "published" as const,
+      scaleVersionId: bootstrapScaleVersion._id,
+    };
   }
 
   if (officialScaleDecision.kind === "unchanged") {
@@ -241,14 +302,17 @@ export async function publishTryoutScaleVersionIfNeeded(
 
   const scaleVersion = officialScaleDecision.scaleVersion;
 
-  await ctx.scheduler.runAfter(
-    0,
-    internal.tryouts.mutations.internal.scoring.promoteProvisionalTryoutScores,
-    {
-      scaleVersionId: scaleVersion._id,
-      tryoutId: tryout._id,
-    }
-  );
+  if (scaleVersion.status === "official") {
+    await ctx.scheduler.runAfter(
+      0,
+      internal.tryouts.mutations.internal.scoring
+        .promoteProvisionalTryoutScores,
+      {
+        scaleVersionId: scaleVersion._id,
+        tryoutId: tryout._id,
+      }
+    );
+  }
 
   return { kind: "published" as const, scaleVersionId: scaleVersion._id };
 }

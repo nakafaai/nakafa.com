@@ -172,7 +172,7 @@ export const drainScalePublicationQueue = internalMutation({
         });
 
       if (page.page.length === 0) {
-        return null;
+        break;
       }
 
       for (const queueEntry of page.page) {

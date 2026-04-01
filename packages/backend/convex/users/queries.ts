@@ -1,4 +1,5 @@
 import { internalQuery, query } from "@repo/backend/convex/_generated/server";
+import { getEffectiveCreditState } from "@repo/backend/convex/credits/constants";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { getAppUserByAuthId } from "@repo/backend/convex/lib/helpers/user";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
@@ -43,9 +44,11 @@ export const getUserInfoForChat = query({
   }),
   handler: async (ctx) => {
     const user = await requireAuth(ctx);
+    const effectiveCredits = getEffectiveCreditState(user.appUser);
+
     return {
       role: user.appUser.role ?? null,
-      credits: user.appUser.credits,
+      credits: effectiveCredits.credits,
     };
   },
 });

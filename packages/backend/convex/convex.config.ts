@@ -9,6 +9,7 @@ const app = defineApp();
 app.use(betterAuth);
 app.use(workflow);
 app.use(workpool, { name: "contentAnalyticsWorkpool" });
+app.use(workpool, { name: "notificationWorkpool" });
 app.use(workpool, { name: "userWriteWorkpool" });
 app.use(workpool, { name: "irtCalibrationSyncWorkpool" });
 app.use(workpool, { name: "irtScaleMaintenanceWorkpool" });

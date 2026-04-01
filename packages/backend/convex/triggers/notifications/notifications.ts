@@ -1,4 +1,6 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
+import { notificationWorkpool } from "@repo/backend/convex/notifications/workpool";
 import type { GenericMutationCtx } from "convex/server";
 import type { Change } from "convex-helpers/server/triggers";
 
@@ -15,17 +17,9 @@ export async function notificationsHandler(
     return;
   }
 
-  const existingCount = await ctx.db
-    .query("notificationCounts")
-    .withIndex("by_userId", (q) => q.eq("userId", change.oldDoc.recipientId))
-    .unique();
-
-  if (!existingCount) {
-    return;
-  }
-
-  await ctx.db.patch("notificationCounts", existingCount._id, {
-    unreadCount: Math.max(0, existingCount.unreadCount - 1),
-    updatedAt: Date.now(),
-  });
+  await notificationWorkpool.enqueueMutation(
+    ctx,
+    internal.notifications.mutations.decrementUnreadNotificationCount,
+    { userId: change.oldDoc.recipientId }
+  );
 }

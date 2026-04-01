@@ -25,34 +25,8 @@ export const creditTransactionValidator = v.object({
   metadata: v.optional(v.record(v.string(), v.any())),
 });
 
-export const creditResetJobTypeValidator = literals(
-  "free-daily",
-  "pro-monthly"
-);
-
-export type CreditResetJobType = Infer<typeof creditResetJobTypeValidator>;
-
-export const creditResetJobValidator = v.object({
-  jobType: creditResetJobTypeValidator,
-  status: literals("pending", "running", "completed", "failed"),
-  startedAt: v.number(),
-  completedAt: v.optional(v.number()),
-  resetTimestamp: v.number(),
-  totalUsers: v.number(),
-  processedUsers: v.number(),
-  error: v.optional(v.string()),
-});
-
 const tables = {
   creditTransactions: defineTable(creditTransactionValidator),
-
-  creditResetJobs: defineTable(creditResetJobValidator)
-    .index("by_jobType_and_startedAt", ["jobType", "startedAt"])
-    .index("by_jobType_and_status_and_startedAt", [
-      "jobType",
-      "status",
-      "startedAt",
-    ]),
 };
 
 export default tables;

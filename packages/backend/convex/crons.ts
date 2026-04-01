@@ -59,26 +59,6 @@ crons.interval(
 );
 
 /**
- * Resets free user credits daily at midnight UTC.
- */
-crons.cron(
-  "reset free user credits",
-  "0 0 * * *",
-  internal.credits.mutations.startCreditReset,
-  { plan: "free" }
-);
-
-/**
- * Resets pro user credits monthly on 1st at midnight UTC.
- */
-crons.cron(
-  "reset pro user credits",
-  "0 0 1 * *",
-  internal.credits.mutations.startCreditReset,
-  { plan: "pro" }
-);
-
-/**
  * Starts queued IRT calibrations in bounded batches.
  */
 crons.interval(
