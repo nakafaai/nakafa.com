@@ -318,11 +318,17 @@ export const saveAssistantResponse = internalMutation({
           eventType: "usage",
           metadata: {
             chatId: message.chatId,
-            inputTokens: message.inputTokens,
             messageId,
             modelId: message.modelId,
-            outputTokens: message.outputTokens,
-            totalTokens: message.totalTokens,
+            ...(message.inputTokens === undefined
+              ? {}
+              : { inputTokens: message.inputTokens }),
+            ...(message.outputTokens === undefined
+              ? {}
+              : { outputTokens: message.outputTokens }),
+            ...(message.totalTokens === undefined
+              ? {}
+              : { totalTokens: message.totalTokens }),
           },
           transactionType: "usage",
           userId: appUser._id,

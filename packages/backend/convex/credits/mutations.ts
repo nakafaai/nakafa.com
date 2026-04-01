@@ -2,7 +2,10 @@ import {
   getCurrentCreditResetTimestamp,
   getEffectiveCreditState,
 } from "@repo/backend/convex/credits/constants";
-import { creditTransactionTypeValidator } from "@repo/backend/convex/credits/schema";
+import {
+  creditTransactionMetadataValidator,
+  creditTransactionTypeValidator,
+} from "@repo/backend/convex/credits/schema";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { userPlanValidator } from "@repo/backend/convex/users/schema";
 import { ConvexError, v } from "convex/values";
@@ -13,7 +16,7 @@ export const applyCreditBalanceEvent = internalMutation({
   args: {
     amount: v.number(),
     eventType: literals("plan-change", "usage"),
-    metadata: v.optional(v.record(v.string(), v.any())),
+    metadata: creditTransactionMetadataValidator,
     plan: v.optional(userPlanValidator),
     resetTimestamp: v.optional(v.number()),
     transactionType: v.optional(creditTransactionTypeValidator),

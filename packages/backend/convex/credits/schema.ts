@@ -17,12 +17,16 @@ export type CreditTransactionType = Infer<
   typeof creditTransactionTypeValidator
 >;
 
+export const creditTransactionMetadataValidator = v.optional(
+  v.record(v.string(), v.union(v.string(), v.number(), v.boolean()))
+);
+
 export const creditTransactionValidator = v.object({
   userId: v.id("users"),
   amount: v.number(),
   type: creditTransactionTypeValidator,
   balanceAfter: v.number(),
-  metadata: v.optional(v.record(v.string(), v.any())),
+  metadata: creditTransactionMetadataValidator,
 });
 
 const tables = {
