@@ -131,7 +131,10 @@ export async function upsertContentViewFromEvent(
   }
 
   if (!existingByDevice) {
-    return { success: true, isNewView: false, alreadyViewed: true };
+    throw new ConvexError({
+      code: "CONTENT_VIEW_STATE_INVALID",
+      message: "Content view reconciliation reached an impossible state.",
+    });
   }
 
   if (!existingByDevice.userId && args.userId) {

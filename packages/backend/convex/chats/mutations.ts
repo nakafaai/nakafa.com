@@ -1,5 +1,6 @@
 import { getModelCreditCost } from "@repo/ai/config/models";
 import { DEFAULT_TITLE } from "@repo/ai/features/constants";
+import { internal } from "@repo/backend/convex/_generated/api";
 import {
   deleteMessageBatchFromPoint,
   getMessageByIdentifier,
@@ -13,6 +14,7 @@ import tables, {
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
+import { userWriteWorkpool } from "@repo/backend/convex/users/workpool";
 import { ConvexError, v } from "convex/values";
 
 /** Creates a new chat for the authenticated user. */
@@ -307,24 +309,24 @@ export const saveAssistantResponse = internalMutation({
     const partIds = await insertParts(ctx, messageId, parts);
 
     if (message.modelId) {
-      await ctx.db.patch("users", appUser._id, {
-        credits: newBalance,
-      });
-
-      await ctx.db.insert("creditTransactions", {
-        userId: appUser._id,
-        amount: -credits,
-        type: "usage",
-        balanceAfter: newBalance,
-        metadata: {
-          chatId: message.chatId,
-          messageId,
-          modelId: message.modelId,
-          inputTokens: message.inputTokens,
-          outputTokens: message.outputTokens,
-          totalTokens: message.totalTokens,
-        },
-      });
+      await userWriteWorkpool.enqueueMutation(
+        ctx,
+        internal.credits.mutations.applyCreditBalanceEvent,
+        {
+          amount: credits,
+          eventType: "usage",
+          metadata: {
+            chatId: message.chatId,
+            inputTokens: message.inputTokens,
+            messageId,
+            modelId: message.modelId,
+            outputTokens: message.outputTokens,
+            totalTokens: message.totalTokens,
+          },
+          transactionType: "usage",
+          userId: appUser._id,
+        }
+      );
     }
 
     return { messageId, partIds, credits, newBalance };

@@ -1,3 +1,4 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import {
   CONTENT_VIEW_EVENT_BATCH_SIZE,
   CONTENT_VIEW_EVENT_SEGMENT_MS,
@@ -5,9 +6,25 @@ import {
 import { getContentViewEventSegmentStart } from "@repo/backend/convex/contents/helpers/events";
 import { upsertContentViewFromEvent } from "@repo/backend/convex/contents/helpers/views";
 import { applyContentAnalyticsBatch } from "@repo/backend/convex/contents/helpers/writes";
+import { contentAnalyticsWorkpool } from "@repo/backend/convex/contents/workpool";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { v } from "convex/values";
+
+/** Enqueue one serialized sealed-event drain. */
+export const scheduleContentViewEventDrain = internalMutation({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    await contentAnalyticsWorkpool.enqueueMutation(
+      ctx,
+      internal.contents.mutations.analytics.drainContentViewEvents,
+      {}
+    );
+
+    return null;
+  },
+});
 
 /** Drains one bounded batch of sealed content view events. */
 export const drainContentViewEvents = internalMutation({

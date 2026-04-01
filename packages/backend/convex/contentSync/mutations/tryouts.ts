@@ -2,7 +2,6 @@ import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/cons
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
 import { syncTryoutPartSetMappings } from "@repo/backend/convex/contentSync/lib/tryouts";
 import { internalMutation } from "@repo/backend/convex/functions";
-import { getOrPublishScaleVersionForTryout } from "@repo/backend/convex/irt/scales/publish";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import {
   tryoutProductPolicies,
@@ -79,9 +78,9 @@ export const bulkSyncTryouts = internalMutation({
 
         if (!hasChanges) {
           if (existingTryout.isActive) {
-            await getOrPublishScaleVersionForTryout(ctx.db, {
-              now,
+            await ctx.db.insert("irtScalePublicationQueue", {
               tryoutId: existingTryout._id,
+              enqueuedAt: now,
             });
 
             await ctx.db.insert("irtScaleQualityRefreshQueue", {
@@ -103,9 +102,9 @@ export const bulkSyncTryouts = internalMutation({
         });
 
         if (tryout.isActive) {
-          await getOrPublishScaleVersionForTryout(ctx.db, {
-            now,
+          await ctx.db.insert("irtScalePublicationQueue", {
             tryoutId: existingTryout._id,
+            enqueuedAt: now,
           });
         }
 
@@ -137,9 +136,9 @@ export const bulkSyncTryouts = internalMutation({
       });
 
       if (tryout.isActive) {
-        await getOrPublishScaleVersionForTryout(ctx.db, {
-          now,
+        await ctx.db.insert("irtScalePublicationQueue", {
           tryoutId,
+          enqueuedAt: now,
         });
       }
 

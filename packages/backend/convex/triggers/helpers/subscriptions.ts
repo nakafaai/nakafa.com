@@ -1,6 +1,8 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import type { DataModel, Id } from "@repo/backend/convex/_generated/dataModel";
 import { getPlanCreditConfig } from "@repo/backend/convex/credits/constants";
 import type { UserPlan } from "@repo/backend/convex/users/schema";
+import { userWriteWorkpool } from "@repo/backend/convex/users/workpool";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { products } from "@repo/backend/convex/utils/polar/products";
 import type { GenericMutationCtx } from "convex/server";
@@ -37,26 +39,27 @@ async function applyPlanChange(
 ) {
   const oldCreditConfig = getPlanCreditConfig(oldPlan);
   const newCreditConfig = getPlanCreditConfig(newPlan);
+  const resetTimestamp = Date.now();
 
   if (newCreditConfig.amount > oldCreditConfig.amount) {
-    await ctx.db.patch("users", userId, {
-      plan: newPlan,
-      credits: newCreditConfig.amount,
-      creditsResetAt: Date.now(),
-    });
-
-    await ctx.db.insert("creditTransactions", {
-      userId,
-      amount: newCreditConfig.amount,
-      type: "purchase",
-      balanceAfter: newCreditConfig.amount,
-      metadata: {
-        reason: "plan-upgrade",
-        "previous-plan": oldPlan,
-        "new-plan": newPlan,
-        "subscription-id": subscriptionId,
-      },
-    });
+    await userWriteWorkpool.enqueueMutation(
+      ctx,
+      internal.credits.mutations.applyCreditBalanceEvent,
+      {
+        amount: newCreditConfig.amount,
+        eventType: "plan-change",
+        metadata: {
+          reason: "plan-upgrade",
+          "new-plan": newPlan,
+          "previous-plan": oldPlan,
+          "subscription-id": subscriptionId,
+        },
+        plan: newPlan,
+        resetTimestamp,
+        transactionType: "purchase",
+        userId,
+      }
+    );
 
     logger.info("User upgraded with credits", {
       userId,
@@ -70,24 +73,24 @@ async function applyPlanChange(
   }
 
   if (newCreditConfig.amount < oldCreditConfig.amount) {
-    await ctx.db.patch("users", userId, {
-      plan: newPlan,
-      credits: newCreditConfig.amount,
-      creditsResetAt: Date.now(),
-    });
-
-    await ctx.db.insert("creditTransactions", {
-      userId,
-      amount: newCreditConfig.amount,
-      type: newCreditConfig.grantType,
-      balanceAfter: newCreditConfig.amount,
-      metadata: {
-        reason: "plan-downgrade",
-        "previous-plan": oldPlan,
-        "new-plan": newPlan,
-        "subscription-id": subscriptionId,
-      },
-    });
+    await userWriteWorkpool.enqueueMutation(
+      ctx,
+      internal.credits.mutations.applyCreditBalanceEvent,
+      {
+        amount: newCreditConfig.amount,
+        eventType: "plan-change",
+        metadata: {
+          reason: "plan-downgrade",
+          "new-plan": newPlan,
+          "previous-plan": oldPlan,
+          "subscription-id": subscriptionId,
+        },
+        plan: newPlan,
+        resetTimestamp,
+        transactionType: newCreditConfig.grantType,
+        userId,
+      }
+    );
 
     logger.info("User downgraded, credits adjusted", {
       userId,
@@ -100,7 +103,22 @@ async function applyPlanChange(
     return;
   }
 
-  await ctx.db.patch("users", userId, { plan: newPlan });
+  await userWriteWorkpool.enqueueMutation(
+    ctx,
+    internal.credits.mutations.applyCreditBalanceEvent,
+    {
+      amount: 0,
+      eventType: "plan-change",
+      metadata: {
+        reason: "plan-same-tier",
+        "new-plan": newPlan,
+        "previous-plan": oldPlan,
+        "subscription-id": subscriptionId,
+      },
+      plan: newPlan,
+      userId,
+    }
+  );
 
   logger.info("User plan changed (same tier)", {
     userId,

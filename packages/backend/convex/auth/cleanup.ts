@@ -1,5 +1,6 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import { internalMutation } from "@repo/backend/convex/functions";
+import { userWriteWorkpool } from "@repo/backend/convex/users/workpool";
 import { v } from "convex/values";
 
 const NOTIFICATION_PREFERENCES_CLEANUP_BATCH_SIZE = 10;
@@ -125,7 +126,12 @@ export const cleanupDeletedUser = internalMutation({
       return null;
     }
 
-    await ctx.db.delete("users", args.userId);
+    await userWriteWorkpool.enqueueMutation(
+      ctx,
+      internal.users.mutations.deleteUserRecord,
+      { userId: args.userId }
+    );
+
     return null;
   },
 });

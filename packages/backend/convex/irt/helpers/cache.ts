@@ -5,6 +5,7 @@ import {
   getCalibrationAttemptCacheLimit,
   getCalibrationWindowStartAt,
 } from "@repo/backend/convex/irt/policy";
+import { irtCalibrationSyncWorkpool } from "@repo/backend/convex/irt/workpool";
 import { ConvexError, v } from "convex/values";
 
 export const calibrationCacheStatsRebuildProgressValidator = v.object({
@@ -13,7 +14,7 @@ export const calibrationCacheStatsRebuildProgressValidator = v.object({
 
 /** Ensures one set has cache stats and that its calibration cache stays in budget. */
 export async function prepareCalibrationCacheForSet(
-  ctx: Pick<MutationCtx, "db" | "scheduler">,
+  ctx: MutationCtx,
   setId: Id<"exerciseSets">
 ) {
   const now = Date.now();
@@ -32,8 +33,8 @@ export async function prepareCalibrationCacheForSet(
     .unique();
 
   if (!cacheStats) {
-    await ctx.scheduler.runAfter(
-      0,
+    await irtCalibrationSyncWorkpool.enqueueMutation(
+      ctx,
       internal.irt.mutations.internal.cache.rebuildCalibrationCacheStatsForSet,
       { setId }
     );
@@ -58,8 +59,8 @@ export async function prepareCalibrationCacheForSet(
     }
   }
 
-  await ctx.scheduler.runAfter(
-    0,
+  await irtCalibrationSyncWorkpool.enqueueMutation(
+    ctx,
     internal.irt.mutations.internal.cache.trimCalibrationCacheForSet,
     { setId }
   );

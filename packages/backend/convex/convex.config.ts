@@ -8,7 +8,10 @@ import { defineApp } from "convex/server";
 const app = defineApp();
 app.use(betterAuth);
 app.use(workflow);
+app.use(workpool, { name: "contentAnalyticsWorkpool" });
+app.use(workpool, { name: "userWriteWorkpool" });
 app.use(workpool, { name: "irtCalibrationSyncWorkpool" });
+app.use(workpool, { name: "irtScaleMaintenanceWorkpool" });
 app.use(workpool, { name: "tryoutLeaderboardWorkpool" });
 app.use(resend);
 

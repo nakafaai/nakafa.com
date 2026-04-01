@@ -8,3 +8,11 @@ export const irtCalibrationSyncWorkpool = new Workpool(
     maxParallelism: 1,
   }
 );
+
+/** Serialize IRT publication and quality drains so queue batches never overlap. */
+export const irtScaleMaintenanceWorkpool = new Workpool(
+  components.irtScaleMaintenanceWorkpool,
+  {
+    maxParallelism: 1,
+  }
+);

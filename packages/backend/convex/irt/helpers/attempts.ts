@@ -2,6 +2,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { adjustCalibrationCacheAttemptCount } from "@repo/backend/convex/irt/helpers/cache";
+import { irtCalibrationSyncWorkpool } from "@repo/backend/convex/irt/workpool";
 import { ConvexError } from "convex/values";
 import { getAll } from "convex-helpers/server/relationships";
 
@@ -53,8 +54,8 @@ export async function clearCalibrationResponsesForAttempt(
       continue;
     }
 
-    await ctx.scheduler.runAfter(
-      0,
+    await irtCalibrationSyncWorkpool.enqueueMutation(
+      ctx,
       internal.irt.mutations.internal.cache.rebuildCalibrationCacheStatsForSet,
       { setId }
     );
@@ -183,8 +184,8 @@ export async function insertCalibrationAttempt(
   });
 
   if (!didAdjustStats) {
-    await ctx.scheduler.runAfter(
-      0,
+    await irtCalibrationSyncWorkpool.enqueueMutation(
+      ctx,
       internal.irt.mutations.internal.cache.rebuildCalibrationCacheStatsForSet,
       { setId: args.setId }
     );

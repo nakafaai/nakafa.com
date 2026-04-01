@@ -7,6 +7,7 @@ import {
   IRT_CALIBRATION_CACHE_STATS_REBUILD_BATCH_SIZE,
   IRT_CALIBRATION_CACHE_TRIM_BATCH_SIZE,
 } from "@repo/backend/convex/irt/policy";
+import { irtCalibrationSyncWorkpool } from "@repo/backend/convex/irt/workpool";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
 
@@ -40,8 +41,8 @@ export const rebuildCalibrationCacheStatsForSet = internalMutation({
     progress.attemptCount += page.page.length;
 
     if (!page.isDone) {
-      await ctx.scheduler.runAfter(
-        0,
+      await irtCalibrationSyncWorkpool.enqueueMutation(
+        ctx,
         internal.irt.mutations.internal.cache
           .rebuildCalibrationCacheStatsForSet,
         {
@@ -87,8 +88,8 @@ export const rebuildCalibrationCacheStatsForSet = internalMutation({
       return null;
     }
 
-    await ctx.scheduler.runAfter(
-      0,
+    await irtCalibrationSyncWorkpool.enqueueMutation(
+      ctx,
       internal.irt.mutations.internal.cache.trimCalibrationCacheForSet,
       { setId: args.setId }
     );
@@ -120,8 +121,8 @@ export const trimCalibrationCacheForSet = internalMutation({
       .unique();
 
     if (!cacheStats) {
-      await ctx.scheduler.runAfter(
-        0,
+      await irtCalibrationSyncWorkpool.enqueueMutation(
+        ctx,
         internal.irt.mutations.internal.cache
           .rebuildCalibrationCacheStatsForSet,
         { setId: args.setId }
@@ -173,8 +174,8 @@ export const trimCalibrationCacheForSet = internalMutation({
         return null;
       }
 
-      await ctx.scheduler.runAfter(
-        0,
+      await irtCalibrationSyncWorkpool.enqueueMutation(
+        ctx,
         internal.irt.mutations.internal.cache.trimCalibrationCacheForSet,
         args
       );
@@ -215,8 +216,8 @@ export const trimCalibrationCacheForSet = internalMutation({
       return null;
     }
 
-    await ctx.scheduler.runAfter(
-      0,
+    await irtCalibrationSyncWorkpool.enqueueMutation(
+      ctx,
       internal.irt.mutations.internal.cache.trimCalibrationCacheForSet,
       args
     );

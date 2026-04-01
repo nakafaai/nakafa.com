@@ -4,11 +4,133 @@ import {
   CREDIT_RESET_STALE_MS,
   getPlanCreditConfig,
 } from "@repo/backend/convex/credits/constants";
-import { resetUserCredits } from "@repo/backend/convex/credits/utils";
+import { creditTransactionTypeValidator } from "@repo/backend/convex/credits/schema";
 import { internalMutation } from "@repo/backend/convex/functions";
+import { userPlanValidator } from "@repo/backend/convex/users/schema";
+import { userWriteWorkpool } from "@repo/backend/convex/users/workpool";
 import { logger } from "@repo/backend/convex/utils/logger";
-import { v } from "convex/values";
+import { paginationOptsValidator } from "convex/server";
+import { ConvexError, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
+
+/** Applies one serialized credit balance change and writes the matching ledger row. */
+export const applyCreditBalanceEvent = internalMutation({
+  args: {
+    amount: v.number(),
+    eventType: literals("plan-change", "reset-grant", "usage"),
+    metadata: v.optional(v.record(v.string(), v.any())),
+    plan: v.optional(userPlanValidator),
+    resetTimestamp: v.optional(v.number()),
+    transactionType: v.optional(creditTransactionTypeValidator),
+    userId: v.id("users"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get("users", args.userId);
+
+    if (!user) {
+      logger.warn("Skipping credit balance event for missing user", {
+        eventType: args.eventType,
+        userId: args.userId,
+      });
+      return null;
+    }
+
+    if (args.eventType === "usage") {
+      const newBalance = user.credits - args.amount;
+
+      await ctx.db.patch("users", args.userId, {
+        credits: newBalance,
+      });
+
+      await ctx.db.insert("creditTransactions", {
+        userId: args.userId,
+        amount: -args.amount,
+        type: "usage",
+        balanceAfter: newBalance,
+        metadata: args.metadata,
+      });
+
+      return null;
+    }
+
+    if (args.eventType === "reset-grant") {
+      if (args.resetTimestamp === undefined) {
+        throw new ConvexError({
+          code: "CREDIT_RESET_TIMESTAMP_MISSING",
+          message: "Credit reset events require a reset timestamp.",
+        });
+      }
+
+      if (user.creditsResetAt >= args.resetTimestamp) {
+        return null;
+      }
+
+      const previousBalance = user.credits;
+      const debtAdjustment = previousBalance < 0 ? previousBalance : 0;
+      const newBalance = args.amount + debtAdjustment;
+
+      await ctx.db.patch("users", args.userId, {
+        credits: newBalance,
+        creditsResetAt: args.resetTimestamp,
+      });
+
+      await ctx.db.insert("creditTransactions", {
+        userId: args.userId,
+        amount: args.amount,
+        type: args.transactionType ?? "daily-grant",
+        balanceAfter: newBalance,
+        metadata: {
+          ...args.metadata,
+          baseGrant: args.amount,
+          debtAdjustment,
+          previousBalance,
+        },
+      });
+
+      return null;
+    }
+
+    if (!args.plan) {
+      throw new ConvexError({
+        code: "CREDIT_PLAN_MISSING",
+        message: "Plan-change events require a plan.",
+      });
+    }
+
+    const nextCredits =
+      args.resetTimestamp === undefined ? user.credits : args.amount;
+    const nextUserPatch = {
+      plan: args.plan,
+      credits: nextCredits,
+      creditsResetAt: args.resetTimestamp ?? user.creditsResetAt,
+    };
+
+    if (
+      user.plan === nextUserPatch.plan &&
+      user.credits === nextUserPatch.credits &&
+      user.creditsResetAt === nextUserPatch.creditsResetAt
+    ) {
+      return null;
+    }
+
+    await ctx.db.patch("users", args.userId, nextUserPatch);
+
+    if (!args.transactionType) {
+      return null;
+    }
+
+    await ctx.db.insert("creditTransactions", {
+      userId: args.userId,
+      amount: args.amount,
+      type: args.transactionType,
+      balanceAfter: nextCredits,
+      metadata: args.metadata,
+    });
+
+    return null;
+  },
+});
 
 /** Starts one credit reset job per plan and schedules its first batch. */
 export const startCreditReset = internalMutation({
@@ -84,6 +206,10 @@ export const startCreditReset = internalMutation({
       internal.credits.mutations.processCreditResetBatch,
       {
         jobId,
+        paginationOpts: {
+          cursor: null,
+          numItems: CREDIT_RESET_BATCH_SIZE,
+        },
         plan: args.plan,
         resetTimestamp,
       }
@@ -102,6 +228,7 @@ export const startCreditReset = internalMutation({
 /** Resets one bounded batch of users and schedules the next batch if needed. */
 export const processCreditResetBatch = internalMutation({
   args: {
+    paginationOpts: paginationOptsValidator,
     jobId: v.id("creditResetJobs"),
     plan: literals("free", "pro"),
     resetTimestamp: v.number(),
@@ -139,9 +266,9 @@ export const processCreditResetBatch = internalMutation({
       .withIndex("by_plan_and_creditsResetAt", (idx) =>
         idx.eq("plan", args.plan).lt("creditsResetAt", args.resetTimestamp)
       )
-      .take(CREDIT_RESET_BATCH_SIZE);
+      .paginate(args.paginationOpts);
 
-    if (users.length === 0) {
+    if (users.page.length === 0) {
       await ctx.db.patch("creditResetJobs", args.jobId, {
         completedAt: Date.now(),
         status: "completed",
@@ -161,37 +288,83 @@ export const processCreditResetBatch = internalMutation({
 
     const creditConfig = getPlanCreditConfig(args.plan);
 
-    for (const user of users) {
-      await resetUserCredits(ctx, {
-        userId: user._id,
-        creditAmount: creditConfig.amount,
-        grantType: creditConfig.grantType,
-        resetTimestamp: args.resetTimestamp,
+    try {
+      await userWriteWorkpool.enqueueMutationBatch(
+        ctx,
+        internal.credits.mutations.applyCreditBalanceEvent,
+        users.page.map((user) => ({
+          amount: creditConfig.amount,
+          eventType: "reset-grant" as const,
+          resetTimestamp: args.resetTimestamp,
+          transactionType: creditConfig.grantType,
+          userId: user._id,
+        }))
+      );
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
+      await ctx.db.patch("creditResetJobs", args.jobId, {
+        completedAt: Date.now(),
+        error: errorMessage,
+        status: "failed",
+      });
+
+      logger.error("Credit reset batch failed", {
+        error: errorMessage,
+        jobId: args.jobId,
+        plan: args.plan,
+      });
+
+      return {
+        processedUsers: 0,
+        isDone: true,
+      };
+    }
+
+    const processedUsers = job.processedUsers + users.page.length;
+
+    const isDone = users.isDone;
+
+    if (isDone) {
+      await ctx.db.patch("creditResetJobs", args.jobId, {
+        completedAt: Date.now(),
+        processedUsers,
+        status: "completed",
+        totalUsers: processedUsers,
+      });
+    } else {
+      await ctx.db.patch("creditResetJobs", args.jobId, {
+        processedUsers,
+        totalUsers: processedUsers,
       });
     }
 
-    const processedUsers = job.processedUsers + users.length;
-
-    await ctx.db.patch("creditResetJobs", args.jobId, {
-      processedUsers,
-    });
-
-    await ctx.scheduler.runAfter(
-      0,
-      internal.credits.mutations.processCreditResetBatch,
-      args
-    );
+    if (!isDone) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.credits.mutations.processCreditResetBatch,
+        {
+          ...args,
+          paginationOpts: {
+            cursor: users.continueCursor,
+            numItems: CREDIT_RESET_BATCH_SIZE,
+          },
+        }
+      );
+    }
 
     logger.info("Credit reset batch processed", {
       jobId: args.jobId,
+      isDone,
       plan: args.plan,
-      processedBatchSize: users.length,
+      processedBatchSize: users.page.length,
       processedUsers,
     });
 
     return {
-      processedUsers: users.length,
-      isDone: false,
+      processedUsers: users.page.length,
+      isDone,
     };
   },
 });

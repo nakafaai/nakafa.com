@@ -13,6 +13,7 @@ import {
   scaleQualityRebuildResultValidator,
   upsertTryoutScaleQualityCheck,
 } from "@repo/backend/convex/irt/scales/quality";
+import { irtScaleMaintenanceWorkpool } from "@repo/backend/convex/irt/workpool";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { v } from "convex/values";
 
@@ -34,18 +35,6 @@ async function refreshScaleQualityCheckInPlace(
   await upsertTryoutScaleQualityCheck(db, summary);
   return true;
 }
-
-/** Recompute and persist one tryout's current official-scale readiness summary. */
-export const refreshScaleQualityCheck = internalMutation({
-  args: {
-    tryoutId: v.id("tryouts"),
-  },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    await refreshScaleQualityCheckInPlace(ctx.db, args.tryoutId);
-    return null;
-  },
-});
 
 /** Queue every tryout for a later sealed-batch quality refresh. */
 export const rebuildScaleQualityChecksPage = internalMutation({
@@ -78,6 +67,21 @@ export const rebuildScaleQualityChecksPage = internalMutation({
       isDone: page.isDone,
       processedCount: page.page.length,
     };
+  },
+});
+
+/** Enqueue one serialized scale-quality refresh drain. */
+export const scheduleScaleQualityRefreshQueueDrain = internalMutation({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    await irtScaleMaintenanceWorkpool.enqueueMutation(
+      ctx,
+      internal.irt.mutations.internal.scales.drainScaleQualityRefreshQueue,
+      {}
+    );
+
+    return null;
   },
 });
 
@@ -129,33 +133,79 @@ export const drainScaleQualityRefreshQueue = internalMutation({
   },
 });
 
+/** Enqueue one serialized scale-publication drain. */
+export const scheduleScalePublicationQueueDrain = internalMutation({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    await irtScaleMaintenanceWorkpool.enqueueMutation(
+      ctx,
+      internal.irt.mutations.internal.scales.drainScalePublicationQueue,
+      {}
+    );
+
+    return null;
+  },
+});
+
 /** Drain one bounded batch of sealed tryout scale publication rows. */
 export const drainScalePublicationQueue = internalMutation({
   args: {},
   returns: v.null(),
   handler: async (ctx) => {
     const sealedBeforeAt = Date.now() - IRT_QUEUE_SEALING_MS;
-    const queueEntries = await ctx.db
-      .query("irtScalePublicationQueue")
-      .withIndex("by_enqueuedAt", (q) => q.lt("enqueuedAt", sealedBeforeAt))
-      .take(IRT_SCALE_PUBLICATION_QUEUE_BATCH_SIZE);
+    const distinctTryoutIds: Id<"tryouts">[] = [];
+    const throughAtByTryoutId = new Map<string, number>();
+    let cursor: string | null = null;
+    let reachedEnd = false;
 
-    if (queueEntries.length === 0) {
-      return null;
+    while (
+      distinctTryoutIds.length < IRT_SCALE_PUBLICATION_QUEUE_BATCH_SIZE &&
+      !reachedEnd
+    ) {
+      const page = await ctx.db
+        .query("irtScalePublicationQueue")
+        .withIndex("by_enqueuedAt", (q) => q.lt("enqueuedAt", sealedBeforeAt))
+        .paginate({
+          cursor,
+          numItems: IRT_SCALE_PUBLICATION_QUEUE_BATCH_SIZE,
+        });
+
+      if (page.page.length === 0) {
+        return null;
+      }
+
+      for (const queueEntry of page.page) {
+        const tryoutId = queueEntry.tryoutId;
+        const existingThroughAt = throughAtByTryoutId.get(tryoutId) ?? 0;
+        throughAtByTryoutId.set(
+          tryoutId,
+          Math.max(existingThroughAt, queueEntry.enqueuedAt)
+        );
+
+        if (distinctTryoutIds.includes(tryoutId)) {
+          continue;
+        }
+
+        distinctTryoutIds.push(tryoutId);
+
+        if (
+          distinctTryoutIds.length === IRT_SCALE_PUBLICATION_QUEUE_BATCH_SIZE
+        ) {
+          break;
+        }
+      }
+
+      cursor = page.continueCursor;
+      reachedEnd = page.isDone;
     }
 
-    const distinctTryoutIds = [
-      ...new Set(queueEntries.map((entry) => entry.tryoutId)),
-    ];
-
     for (const tryoutId of distinctTryoutIds) {
-      const throughAt = queueEntries
-        .filter((entry) => entry.tryoutId === tryoutId)
-        .reduce(
-          (latestEnqueuedAt, entry) =>
-            Math.max(latestEnqueuedAt, entry.enqueuedAt),
-          0
-        );
+      const throughAt = throughAtByTryoutId.get(tryoutId);
+
+      if (!throughAt) {
+        continue;
+      }
 
       await publishTryoutScaleVersionIfNeeded(ctx, tryoutId);
       await ctx.db.insert("irtScaleQualityRefreshQueue", {

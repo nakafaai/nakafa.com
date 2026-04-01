@@ -2,7 +2,6 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { IRT_OPERATIONAL_MODEL } from "@repo/backend/convex/irt/policy";
-import { buildBootstrapScaleItems } from "@repo/backend/convex/irt/scales/bootstrap";
 import { evaluateTryoutScaleQuality } from "@repo/backend/convex/irt/scales/quality";
 import {
   getLatestScaleVersionForTryout,
@@ -87,34 +86,6 @@ async function publishScaleVersion(
   );
 
   return scaleVersionId;
-}
-
-/** Publishes an initial frozen scale version before enough calibration data exists. */
-async function publishBootstrapScaleVersion(
-  db: IrtDbWriter,
-  {
-    now,
-    tryoutId,
-  }: {
-    now: number;
-    tryoutId: Id<"tryouts">;
-  }
-) {
-  const items = await buildBootstrapScaleItems(db, { now, tryoutId });
-
-  if (!items) {
-    return null;
-  }
-
-  const scaleVersionId = await publishScaleVersion(db, {
-    tryoutId,
-    questionCount: items.length,
-    items,
-    status: "provisional",
-    publishedAt: now,
-  });
-
-  return db.get("irtScaleVersions", scaleVersionId);
 }
 
 async function publishOfficialScaleVersion(
@@ -215,49 +186,6 @@ async function resolveOfficialScaleDecision(
     kind: "published",
     scaleVersion,
   };
-}
-
-/** Returns an existing frozen scale version or publishes the appropriate next one. */
-export async function getOrPublishScaleVersionForTryout(
-  db: IrtDbWriter,
-  {
-    now,
-    tryoutId,
-  }: {
-    now: number;
-    tryoutId: Id<"tryouts">;
-  }
-) {
-  const scaleQuality = await evaluateTryoutScaleQuality(db, {
-    now,
-    tryoutId,
-  });
-
-  const latestScaleVersion = await getLatestScaleVersionForTryout(db, tryoutId);
-
-  if (!scaleQuality || scaleQuality.status === "blocked") {
-    if (latestScaleVersion) {
-      return latestScaleVersion;
-    }
-
-    return publishBootstrapScaleVersion(db, { now, tryoutId });
-  }
-
-  const officialScaleDecision = await resolveOfficialScaleDecision(db, {
-    latestScaleVersion,
-    now,
-    tryoutId,
-  });
-
-  if (officialScaleDecision.kind === "not-ready") {
-    if (latestScaleVersion) {
-      return latestScaleVersion;
-    }
-
-    return publishBootstrapScaleVersion(db, { now, tryoutId });
-  }
-
-  return officialScaleDecision.scaleVersion;
 }
 
 /** Publishes a new official tryout scale if the current frozen version changed. */

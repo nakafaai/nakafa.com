@@ -6,6 +6,7 @@ import {
   DEFAULT_USER_CREDITS,
   DEFAULT_USER_PLAN,
 } from "@repo/backend/convex/credits/constants";
+import { userWriteWorkpool } from "@repo/backend/convex/users/workpool";
 
 const authFunctions: AuthFunctions = internal.auth;
 
@@ -85,11 +86,16 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
             return;
           }
 
-          await ctx.db.patch("users", appUser._id, {
-            email: newDoc.email,
-            name: newDoc.name,
-            image: newDoc.image ?? undefined,
-          });
+          await userWriteWorkpool.enqueueMutation(
+            ctx,
+            internal.users.mutations.applyUserStateUpdate,
+            {
+              email: newDoc.email,
+              image: newDoc.image ?? undefined,
+              name: newDoc.name,
+              userId: appUser._id,
+            }
+          );
 
           await ctx.scheduler.runAfter(
             0,

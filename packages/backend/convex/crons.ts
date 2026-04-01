@@ -13,7 +13,7 @@ const TRYOUT_ACCESS_STATUS_SWEEP_INTERVAL_MINUTES = 5;
 crons.interval(
   "drain sealed content view events",
   { seconds: CONTENT_VIEW_EVENT_CRON_INTERVAL_SECONDS },
-  internal.contents.mutations.analytics.drainContentViewEvents,
+  internal.contents.mutations.analytics.scheduleContentViewEventDrain,
   {}
 );
 
@@ -94,7 +94,7 @@ crons.interval(
 crons.interval(
   "drain irt scale publication queue",
   { minutes: IRT_AUTOMATION_CRON_INTERVAL_MINUTES },
-  internal.irt.mutations.internal.scales.drainScalePublicationQueue,
+  internal.irt.mutations.internal.scales.scheduleScalePublicationQueueDrain,
   {}
 );
 
@@ -104,7 +104,7 @@ crons.interval(
 crons.interval(
   "drain irt scale quality refresh queue",
   { minutes: IRT_AUTOMATION_CRON_INTERVAL_MINUTES },
-  internal.irt.mutations.internal.scales.drainScaleQualityRefreshQueue,
+  internal.irt.mutations.internal.scales.scheduleScaleQualityRefreshQueueDrain,
   {}
 );
 

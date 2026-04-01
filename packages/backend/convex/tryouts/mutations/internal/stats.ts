@@ -3,6 +3,7 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
+import { tryoutLeaderboardWorkpool } from "@repo/backend/convex/tryouts/workpool";
 import { v } from "convex/values";
 
 const TRYOUT_STATS_REBUILD_BATCH_SIZE = 100;
@@ -70,8 +71,8 @@ export const rebuildUserTryoutStats = internalMutation({
     }
 
     if (!page.isDone) {
-      await ctx.scheduler.runAfter(
-        0,
+      await tryoutLeaderboardWorkpool.enqueueMutation(
+        ctx,
         internal.tryouts.mutations.internal.stats.rebuildUserTryoutStats,
         {
           cursor: page.continueCursor,

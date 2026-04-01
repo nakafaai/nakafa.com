@@ -5,6 +5,7 @@ import {
   type TryoutProduct,
   tryoutProductPolicies,
 } from "@repo/backend/convex/tryouts/products";
+import { tryoutLeaderboardWorkpool } from "@repo/backend/convex/tryouts/workpool";
 
 type LeaderboardStatsEntry = Pick<
   Doc<"tryoutLeaderboardEntries">,
@@ -25,7 +26,7 @@ export async function syncUserTryoutStats({
   userId,
 }: {
   cycleKey: Doc<"tryouts">["cycleKey"];
-  ctx: Pick<MutationCtx, "db" | "scheduler">;
+  ctx: MutationCtx;
   locale: Doc<"tryouts">["locale"];
   nextEntry: LeaderboardStatsEntry;
   previousEntry: LeaderboardStatsEntry | null;
@@ -71,8 +72,8 @@ export async function syncUserTryoutStats({
       return;
     }
 
-    await ctx.scheduler.runAfter(
-      0,
+    await tryoutLeaderboardWorkpool.enqueueMutation(
+      ctx,
       internal.tryouts.mutations.internal.stats.rebuildUserTryoutStats,
       rebuildJob
     );
@@ -141,8 +142,8 @@ export async function syncUserTryoutStats({
     (lastTryoutAtWouldDrop && !latestEntry);
 
   if (needsRebuild) {
-    await ctx.scheduler.runAfter(
-      0,
+    await tryoutLeaderboardWorkpool.enqueueMutation(
+      ctx,
       internal.tryouts.mutations.internal.stats.rebuildUserTryoutStats,
       rebuildJob
     );
