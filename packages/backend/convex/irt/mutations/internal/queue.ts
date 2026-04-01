@@ -4,6 +4,7 @@ import { prepareCalibrationCacheForSet } from "@repo/backend/convex/irt/helpers/
 import {
   cleanupCalibrationQueueEntriesBatch,
   cleanupScalePublicationQueueEntriesBatch,
+  enqueueScalePublicationQueueEntry,
   getPendingCalibrationQueueQuery,
   startCalibrationRunWorkflow,
 } from "@repo/backend/convex/irt/helpers/queue";
@@ -12,33 +13,20 @@ import {
   IRT_MAX_CALIBRATION_STALENESS_MS,
   IRT_MIN_COMPLETED_ATTEMPTS_FOR_RECALIBRATION,
   IRT_QUEUE_CLEANUP_BATCH_SIZE,
+  IRT_QUEUE_SEALING_MS,
 } from "@repo/backend/convex/irt/policy";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
 import { asyncMap } from "convex-helpers";
 
-/** Enqueue one tryout for scale publication unless it is already queued. */
+/** Enqueue one tryout for scale publication. Duplicates are drained safely later. */
 export const enqueueScalePublication = internalMutation({
   args: {
     tryoutId: vv.id("tryouts"),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const existingScalePublicationQueueEntry = await ctx.db
-      .query("irtScalePublicationQueue")
-      .withIndex("by_tryoutId_and_enqueuedAt", (q) =>
-        q.eq("tryoutId", args.tryoutId)
-      )
-      .first();
-
-    if (existingScalePublicationQueueEntry) {
-      return null;
-    }
-
-    await ctx.db.insert("irtScalePublicationQueue", {
-      tryoutId: args.tryoutId,
-      enqueuedAt: Date.now(),
-    });
+    await enqueueScalePublicationQueueEntry(ctx.db, args.tryoutId);
 
     return null;
   },
@@ -50,9 +38,10 @@ export const drainCalibrationQueue = internalMutation({
   returns: v.null(),
   handler: async (ctx) => {
     const now = Date.now();
+    const sealedBeforeAt = now - IRT_QUEUE_SEALING_MS;
     const queueEntries = await ctx.db
       .query("irtCalibrationQueue")
-      .withIndex("by_enqueuedAt")
+      .withIndex("by_enqueuedAt", (q) => q.lt("enqueuedAt", sealedBeforeAt))
       .take(
         IRT_CALIBRATION_QUEUE_BATCH_SIZE *
           IRT_MIN_COMPLETED_ATTEMPTS_FOR_RECALIBRATION
@@ -94,6 +83,7 @@ export const drainCalibrationQueue = internalMutation({
       const lastSuccessfulRunStartedAt = latestCompletedRun?.startedAt;
       const pendingQueueEntries = await getPendingCalibrationQueueQuery(ctx, {
         lastSuccessfulRunStartedAt,
+        sealedBeforeAt,
         setId,
       }).take(IRT_MIN_COMPLETED_ATTEMPTS_FOR_RECALIBRATION);
 
@@ -164,13 +154,14 @@ export const cleanupCalibrationQueueEntries = internalMutation({
 /** Delete processed scale-publication queue rows in bounded batches. */
 export const cleanupScalePublicationQueueEntries = internalMutation({
   args: {
+    throughAt: v.number(),
     tryoutId: vv.id("tryouts"),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
     const deletedCount = await cleanupScalePublicationQueueEntriesBatch(
       ctx,
-      args.tryoutId
+      args
     );
 
     if (deletedCount < IRT_QUEUE_CLEANUP_BATCH_SIZE) {

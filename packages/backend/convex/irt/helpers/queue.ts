@@ -8,6 +8,42 @@ import {
 import { workflow } from "@repo/backend/convex/workflow";
 import { ConvexError } from "convex/values";
 
+/** Appends one calibration queue row. Duplicates are drained safely later. */
+export async function enqueueCalibrationQueueEntry(
+  db: MutationCtx["db"],
+  setId: Id<"exerciseSets">,
+  enqueuedAt = Date.now()
+) {
+  await db.insert("irtCalibrationQueue", {
+    setId,
+    enqueuedAt,
+  });
+}
+
+/** Appends one scale publication queue row. Duplicates are drained safely later. */
+export async function enqueueScalePublicationQueueEntry(
+  db: MutationCtx["db"],
+  tryoutId: Id<"tryouts">,
+  enqueuedAt = Date.now()
+) {
+  await db.insert("irtScalePublicationQueue", {
+    tryoutId,
+    enqueuedAt,
+  });
+}
+
+/** Appends one scale-quality refresh queue row. Duplicates are drained safely later. */
+export async function enqueueScaleQualityRefreshQueueEntry(
+  db: MutationCtx["db"],
+  tryoutId: Id<"tryouts">,
+  enqueuedAt = Date.now()
+) {
+  await db.insert("irtScaleQualityRefreshQueue", {
+    tryoutId,
+    enqueuedAt,
+  });
+}
+
 /** Starts one durable calibration workflow if the set is not already running. */
 export async function startCalibrationRunWorkflow(
   ctx: MutationCtx,
@@ -59,23 +95,47 @@ export function getPendingCalibrationQueueQuery(
   ctx: Pick<MutationCtx, "db">,
   {
     lastSuccessfulRunStartedAt,
+    sealedBeforeAt,
     setId,
   }: {
     lastSuccessfulRunStartedAt?: number;
+    sealedBeforeAt?: number;
     setId: Id<"exerciseSets">;
   }
 ) {
+  if (
+    lastSuccessfulRunStartedAt !== undefined &&
+    sealedBeforeAt !== undefined
+  ) {
+    return ctx.db
+      .query("irtCalibrationQueue")
+      .withIndex("by_setId_and_enqueuedAt", (q) =>
+        q
+          .eq("setId", setId)
+          .gt("enqueuedAt", lastSuccessfulRunStartedAt)
+          .lte("enqueuedAt", sealedBeforeAt)
+      );
+  }
+
+  if (lastSuccessfulRunStartedAt !== undefined) {
+    return ctx.db
+      .query("irtCalibrationQueue")
+      .withIndex("by_setId_and_enqueuedAt", (q) =>
+        q.eq("setId", setId).gt("enqueuedAt", lastSuccessfulRunStartedAt)
+      );
+  }
+
+  if (sealedBeforeAt !== undefined) {
+    return ctx.db
+      .query("irtCalibrationQueue")
+      .withIndex("by_setId_and_enqueuedAt", (q) =>
+        q.eq("setId", setId).lte("enqueuedAt", sealedBeforeAt)
+      );
+  }
+
   return ctx.db
     .query("irtCalibrationQueue")
-    .withIndex("by_setId_and_enqueuedAt", (q) => {
-      const setQuery = q.eq("setId", setId);
-
-      if (lastSuccessfulRunStartedAt === undefined) {
-        return setQuery;
-      }
-
-      return setQuery.gt("enqueuedAt", lastSuccessfulRunStartedAt);
-    });
+    .withIndex("by_setId_and_enqueuedAt", (q) => q.eq("setId", setId));
 }
 
 /** Deletes one bounded batch of processed calibration queue rows. */
@@ -106,11 +166,19 @@ export async function cleanupCalibrationQueueEntriesBatch(
 /** Deletes one bounded batch of processed scale-publication queue rows. */
 export async function cleanupScalePublicationQueueEntriesBatch(
   ctx: Pick<MutationCtx, "db">,
-  tryoutId: Id<"tryouts">
+  {
+    throughAt,
+    tryoutId,
+  }: {
+    throughAt: number;
+    tryoutId: Id<"tryouts">;
+  }
 ) {
   const queueEntries = await ctx.db
     .query("irtScalePublicationQueue")
-    .withIndex("by_tryoutId_and_enqueuedAt", (q) => q.eq("tryoutId", tryoutId))
+    .withIndex("by_tryoutId_and_enqueuedAt", (q) =>
+      q.eq("tryoutId", tryoutId).lte("enqueuedAt", throughAt)
+    )
     .take(IRT_QUEUE_CLEANUP_BATCH_SIZE);
 
   for (const entry of queueEntries) {

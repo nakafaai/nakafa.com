@@ -52,21 +52,8 @@ export const DEFAULT_USER_PLAN: UserPlan = "free";
 export const DEFAULT_USER_CREDITS =
   PLAN_CREDIT_CONFIG[DEFAULT_USER_PLAN].amount;
 
-/**
- * Workflow configuration for credit reset processing.
- * Queue writes and queue claims use the same partition count so each worker
- * owns one disjoint queue slice.
- */
-export const RESET_WORKFLOW_CONFIG = {
-  partitionCount: 10,
-  populateBatchSize: 1000,
-  processBatchSize: 100,
-} as const;
+/** Maximum number of users reset in one scheduled mutation. */
+export const CREDIT_RESET_BATCH_SIZE = 100;
 
-/**
- * Cleanup configuration for old queue items.
- */
-export const CLEANUP_CONFIG = {
-  retentionDays: 7,
-  batchSize: 1000,
-} as const;
+/** Treat a running reset job older than this as stale. */
+export const CREDIT_RESET_STALE_MS = 6 * 60 * 60 * 1000;

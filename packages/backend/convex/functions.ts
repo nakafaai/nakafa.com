@@ -67,7 +67,7 @@ triggers.register("subjectPopularity", noopHandler);
 triggers.register("exercisePopularity", noopHandler);
 triggers.register("creditTransactions", noopHandler);
 triggers.register("creditResetJobs", noopHandler);
-triggers.register("creditResetQueue", noopHandler);
+triggers.register("irtScaleQualityRefreshQueue", noopHandler);
 triggers.register("subjectTrendingBuckets", noopHandler);
 triggers.register("tryoutAccessCampaigns", noopHandler);
 triggers.register("tryoutAccessLinks", noopHandler);

@@ -63,6 +63,11 @@ const tables = {
     checkedAt: v.number(),
   }).index("by_tryoutId", ["tryoutId"]),
 
+  irtScaleQualityRefreshQueue: defineTable({
+    tryoutId: v.id("tryouts"),
+    enqueuedAt: v.number(),
+  }).index("by_enqueuedAt", ["enqueuedAt"]),
+
   irtScalePublicationQueue: defineTable({
     tryoutId: v.id("tryouts"),
     enqueuedAt: v.number(),

@@ -1,297 +1,210 @@
-import { CLEANUP_CONFIG } from "@repo/backend/convex/credits/constants";
-import { getCreditResetQueuePartition } from "@repo/backend/convex/credits/helpers/queue";
+import { internal } from "@repo/backend/convex/_generated/api";
+import {
+  CREDIT_RESET_BATCH_SIZE,
+  CREDIT_RESET_STALE_MS,
+  getPlanCreditConfig,
+} from "@repo/backend/convex/credits/constants";
 import { resetUserCredits } from "@repo/backend/convex/credits/utils";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { logger } from "@repo/backend/convex/utils/logger";
-import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
-/**
- * Create a credit reset job record.
- */
-export const createResetJob = internalMutation({
+function isSameResetPeriod(
+  plan: "free" | "pro",
+  leftAt: number,
+  rightAt: number
+) {
+  const left = new Date(leftAt);
+  const right = new Date(rightAt);
+
+  if (plan === "free") {
+    return (
+      left.getUTCFullYear() === right.getUTCFullYear() &&
+      left.getUTCMonth() === right.getUTCMonth() &&
+      left.getUTCDate() === right.getUTCDate()
+    );
+  }
+
+  return (
+    left.getUTCFullYear() === right.getUTCFullYear() &&
+    left.getUTCMonth() === right.getUTCMonth()
+  );
+}
+
+/** Starts one credit reset job per plan and schedules its first batch. */
+export const startCreditReset = internalMutation({
   args: {
-    jobType: literals("free-daily", "pro-monthly"),
-    resetTimestamp: v.number(),
+    plan: literals("free", "pro"),
   },
-  returns: v.id("creditResetJobs"),
+  returns: v.object({
+    scheduled: v.boolean(),
+  }),
   handler: async (ctx, args) => {
+    const resetTimestamp = Date.now();
+    const creditConfig = getPlanCreditConfig(args.plan);
+    const latestJob = await ctx.db
+      .query("creditResetJobs")
+      .withIndex("by_jobType_and_startedAt", (q) =>
+        q.eq("jobType", creditConfig.jobType)
+      )
+      .order("desc")
+      .first();
+
+    if (latestJob?.status === "running") {
+      const jobIsStale =
+        resetTimestamp - latestJob.startedAt > CREDIT_RESET_STALE_MS;
+
+      if (!jobIsStale) {
+        logger.info("Credit reset already running, skipping duplicate start", {
+          jobId: latestJob._id,
+          jobType: creditConfig.jobType,
+        });
+
+        return { scheduled: false };
+      }
+
+      await ctx.db.patch("creditResetJobs", latestJob._id, {
+        completedAt: resetTimestamp,
+        error: "Marked failed because the running job became stale.",
+        status: "failed",
+      });
+    }
+
+    if (
+      latestJob?.status === "completed" &&
+      isSameResetPeriod(args.plan, latestJob.startedAt, resetTimestamp)
+    ) {
+      logger.info("Credit reset already completed in the current period", {
+        jobId: latestJob._id,
+        jobType: creditConfig.jobType,
+      });
+
+      return { scheduled: false };
+    }
+
     const jobId = await ctx.db.insert("creditResetJobs", {
-      jobType: args.jobType,
+      jobType: creditConfig.jobType,
       status: "running",
-      startedAt: Date.now(),
-      resetTimestamp: args.resetTimestamp,
+      startedAt: resetTimestamp,
+      resetTimestamp,
       totalUsers: 0,
       processedUsers: 0,
     });
 
-    logger.info("Credit reset job created", {
+    await ctx.scheduler.runAfter(
+      0,
+      internal.credits.mutations.processCreditResetBatch,
+      {
+        jobId,
+        plan: args.plan,
+        resetTimestamp,
+      }
+    );
+
+    logger.info("Credit reset job started", {
       jobId,
-      jobType: args.jobType,
-      resetTimestamp: args.resetTimestamp,
+      jobType: creditConfig.jobType,
+      resetTimestamp,
     });
 
-    return jobId;
+    return { scheduled: true };
   },
 });
 
-/**
- * Populate queue with a single batch of users.
- * Returns cursor and count for next batch.
- * Following Convex best practice: Keep mutations within limits by batching via workflow.
- * Reference: https://docs.convex.dev/production/state/limits
- */
-export const populateQueueBatch = internalMutation({
+/** Resets one bounded batch of users and schedules the next batch if needed. */
+export const processCreditResetBatch = internalMutation({
   args: {
     jobId: v.id("creditResetJobs"),
     plan: literals("free", "pro"),
     resetTimestamp: v.number(),
-    paginationOpts: paginationOptsValidator,
   },
   returns: v.object({
-    usersAdded: v.number(),
+    processedUsers: v.number(),
     isDone: v.boolean(),
-    continueCursor: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
-    // Use Convex built-in pagination - best practice for large datasets
-    // Reference: https://docs.convex.dev/database/pagination
-    // This automatically handles cursor management and respects Convex limits
-    const results = await ctx.db
+    const job = await ctx.db.get("creditResetJobs", args.jobId);
+
+    if (!job) {
+      return {
+        processedUsers: 0,
+        isDone: true,
+      };
+    }
+
+    if (job.status !== "running") {
+      return {
+        processedUsers: 0,
+        isDone: true,
+      };
+    }
+
+    if (job.resetTimestamp !== args.resetTimestamp) {
+      return {
+        processedUsers: 0,
+        isDone: true,
+      };
+    }
+
+    const users = await ctx.db
       .query("users")
       .withIndex("by_plan_and_creditsResetAt", (idx) =>
         idx.eq("plan", args.plan).lt("creditsResetAt", args.resetTimestamp)
       )
-      .paginate(args.paginationOpts);
+      .take(CREDIT_RESET_BATCH_SIZE);
 
-    // Insert users into queue
-    for (const user of results.page) {
-      await ctx.db.insert("creditResetQueue", {
+    if (users.length === 0) {
+      await ctx.db.patch("creditResetJobs", args.jobId, {
+        completedAt: Date.now(),
+        status: "completed",
+        totalUsers: job.processedUsers,
+      });
+
+      logger.info("Credit reset job completed", {
+        jobId: args.jobId,
+        processedUsers: job.processedUsers,
+      });
+
+      return {
+        processedUsers: 0,
+        isDone: true,
+      };
+    }
+
+    const creditConfig = getPlanCreditConfig(args.plan);
+
+    for (const user of users) {
+      await resetUserCredits(ctx, {
         userId: user._id,
-        plan: args.plan,
+        creditAmount: creditConfig.amount,
+        grantType: creditConfig.grantType,
         resetTimestamp: args.resetTimestamp,
-        partition: getCreditResetQueuePartition(user._id),
-        status: "pending",
       });
     }
 
-    logger.info("Queue batch populated", {
+    const processedUsers = job.processedUsers + users.length;
+
+    await ctx.db.patch("creditResetJobs", args.jobId, {
+      processedUsers,
+    });
+
+    await ctx.scheduler.runAfter(
+      0,
+      internal.credits.mutations.processCreditResetBatch,
+      args
+    );
+
+    logger.info("Credit reset batch processed", {
       jobId: args.jobId,
       plan: args.plan,
-      batchSize: results.page.length,
-      isDone: results.isDone,
+      processedBatchSize: users.length,
+      processedUsers,
     });
 
     return {
-      usersAdded: results.page.length,
-      isDone: results.isDone,
-      continueCursor: results.continueCursor,
-    };
-  },
-});
-
-/**
- * Update job total users count.
- */
-export const updateJobTotalUsers = internalMutation({
-  args: {
-    jobId: v.id("creditResetJobs"),
-    totalUsers: v.number(),
-  },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    await ctx.db.patch("creditResetJobs", args.jobId, {
-      totalUsers: args.totalUsers,
-    });
-    return null;
-  },
-});
-
-/**
- * Atomically claim pending queue items for processing.
- */
-export const claimQueueItems = internalMutation({
-  args: {
-    plan: literals("free", "pro"),
-    resetTimestamp: v.number(),
-    partition: v.number(),
-    batchSize: v.number(),
-  },
-  returns: v.array(
-    v.object({
-      queueId: v.id("creditResetQueue"),
-      userId: v.id("users"),
-    })
-  ),
-  handler: async (ctx, args) => {
-    const pendingItems = await ctx.db
-      .query("creditResetQueue")
-      .withIndex("by_plan_and_resetTimestamp_and_partition_and_status", (idx) =>
-        idx
-          .eq("plan", args.plan)
-          .eq("resetTimestamp", args.resetTimestamp)
-          .eq("partition", args.partition)
-          .eq("status", "pending")
-      )
-      .take(args.batchSize);
-
-    for (const item of pendingItems) {
-      await ctx.db.patch("creditResetQueue", item._id, {
-        status: "processing",
-      });
-    }
-
-    return pendingItems.map((item) => ({
-      queueId: item._id,
-      userId: item.userId,
-    }));
-  },
-});
-
-/**
- * Process one claimed queue batch.
- */
-export const batchResetUserCredits = internalMutation({
-  args: {
-    items: v.array(
-      v.object({
-        queueId: v.id("creditResetQueue"),
-        userId: v.id("users"),
-      })
-    ),
-    creditAmount: v.number(),
-    grantType: literals("daily-grant", "monthly-grant"),
-    resetTimestamp: v.number(),
-  },
-  returns: v.object({
-    successCount: v.number(),
-    failureCount: v.number(),
-    failures: v.array(
-      v.object({
-        queueId: v.id("creditResetQueue"),
-        error: v.string(),
-      })
-    ),
-  }),
-  handler: async (ctx, args) => {
-    let successCount = 0;
-    const failures = args.items
-      .slice(0, 0)
-      .map((item) => ({ queueId: item.queueId, error: "" }));
-
-    for (const item of args.items) {
-      try {
-        await resetUserCredits(ctx, {
-          userId: item.userId,
-          creditAmount: args.creditAmount,
-          grantType: args.grantType,
-          resetTimestamp: args.resetTimestamp,
-        });
-
-        await ctx.db.patch("creditResetQueue", item.queueId, {
-          status: "completed",
-          processedAt: Date.now(),
-        });
-
-        successCount++;
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-
-        failures.push({ queueId: item.queueId, error: errorMessage });
-
-        await ctx.db.patch("creditResetQueue", item.queueId, {
-          status: "failed",
-          error: errorMessage,
-          processedAt: Date.now(),
-        });
-      }
-    }
-
-    return {
-      successCount,
-      failureCount: failures.length,
-      failures,
-    };
-  },
-});
-
-/**
- * Mark job as completed and record completion time.
- */
-export const completeResetJob = internalMutation({
-  args: {
-    jobId: v.id("creditResetJobs"),
-  },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    const job = await ctx.db.get("creditResetJobs", args.jobId);
-    if (!job) {
-      return null;
-    }
-
-    await ctx.db.patch("creditResetJobs", args.jobId, {
-      status: "completed",
-      completedAt: Date.now(),
-      processedUsers: job.totalUsers,
-    });
-
-    logger.info("Credit reset job completed", {
-      jobId: args.jobId,
-      totalUsers: job.totalUsers,
-      processedUsers: job.totalUsers,
-    });
-
-    return null;
-  },
-});
-
-/**
- * Clean up completed and failed queue items older than retention period.
- */
-export const cleanupOldQueueItems = internalMutation({
-  args: {},
-  returns: v.object({
-    completedCount: v.number(),
-    failedCount: v.number(),
-  }),
-  handler: async (ctx) => {
-    const CUTOFF =
-      Date.now() - CLEANUP_CONFIG.retentionDays * 24 * 60 * 60 * 1000;
-
-    // Query and delete old completed items
-    const oldCompletedItems = await ctx.db
-      .query("creditResetQueue")
-      .withIndex("by_status", (idx) =>
-        idx.eq("status", "completed").lt("_creationTime", CUTOFF)
-      )
-      .take(CLEANUP_CONFIG.batchSize);
-
-    for (const item of oldCompletedItems) {
-      await ctx.db.delete("creditResetQueue", item._id);
-    }
-
-    // Query and delete old failed items
-    const oldFailedItems = await ctx.db
-      .query("creditResetQueue")
-      .withIndex("by_status", (idx) =>
-        idx.eq("status", "failed").lt("_creationTime", CUTOFF)
-      )
-      .take(CLEANUP_CONFIG.batchSize);
-
-    for (const item of oldFailedItems) {
-      await ctx.db.delete("creditResetQueue", item._id);
-    }
-
-    logger.info("Cleaned up old queue items", {
-      completedCount: oldCompletedItems.length,
-      failedCount: oldFailedItems.length,
-    });
-
-    return {
-      completedCount: oldCompletedItems.length,
-      failedCount: oldFailedItems.length,
+      processedUsers: users.length,
+      isDone: false,
     };
   },
 });

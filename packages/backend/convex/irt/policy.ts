@@ -57,6 +57,9 @@ export const IRT_CALIBRATION_QUEUE_BATCH_SIZE = 5;
 /** Maximum number of distinct tryouts to publish in one queue drain. */
 export const IRT_SCALE_PUBLICATION_QUEUE_BATCH_SIZE = 10;
 
+/** Maximum number of queued tryouts refreshed in one quality-check drain. */
+export const IRT_SCALE_QUALITY_REFRESH_QUEUE_BATCH_SIZE = 100;
+
 /** Maximum number of queue rows deleted in one cleanup mutation. */
 export const IRT_QUEUE_CLEANUP_BATCH_SIZE = 100;
 
@@ -105,3 +108,6 @@ export function getCalibrationWindowStartAt(now: number) {
 
 /** Interval, in minutes, for the automatic IRT automation crons. */
 export const IRT_AUTOMATION_CRON_INTERVAL_MINUTES = 15;
+
+/** Keep the current queue minute open so drains never read live writes. */
+export const IRT_QUEUE_SEALING_MS = 60 * 1000;
