@@ -148,10 +148,14 @@ export const drainScalePublicationQueue = internalMutation({
     for (const tryoutId of distinctTryoutIds) {
       await publishTryoutScaleVersionIfNeeded(ctx, tryoutId);
 
-      await enqueueScaleQualityRefresh(ctx, {
+      const enqueued = await enqueueScaleQualityRefresh(ctx, {
         tryoutId,
         enqueuedAt,
       });
+
+      if (!enqueued) {
+        continue;
+      }
 
       await ctx.scheduler.runAfter(
         0,

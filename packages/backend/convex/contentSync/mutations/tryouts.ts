@@ -87,11 +87,14 @@ export const bulkSyncTryouts = internalMutation({
               tryoutId: existingTryout._id,
             });
 
-            await enqueueScaleQualityRefresh(ctx, {
+            const enqueued = await enqueueScaleQualityRefresh(ctx, {
               tryoutId: existingTryout._id,
               enqueuedAt: now,
             });
-            enqueuedScaleQualityRefresh = true;
+
+            if (enqueued) {
+              enqueuedScaleQualityRefresh = true;
+            }
           }
 
           unchanged++;
@@ -113,11 +116,14 @@ export const bulkSyncTryouts = internalMutation({
           });
         }
 
-        await enqueueScaleQualityRefresh(ctx, {
+        const enqueued = await enqueueScaleQualityRefresh(ctx, {
           tryoutId: existingTryout._id,
           enqueuedAt: now,
         });
-        enqueuedScaleQualityRefresh = true;
+
+        if (enqueued) {
+          enqueuedScaleQualityRefresh = true;
+        }
 
         updated++;
         continue;
@@ -148,11 +154,14 @@ export const bulkSyncTryouts = internalMutation({
         });
       }
 
-      await enqueueScaleQualityRefresh(ctx, {
+      const enqueued = await enqueueScaleQualityRefresh(ctx, {
         tryoutId,
         enqueuedAt: now,
       });
-      enqueuedScaleQualityRefresh = true;
+
+      if (enqueued) {
+        enqueuedScaleQualityRefresh = true;
+      }
 
       created++;
     }
@@ -184,11 +193,14 @@ export const bulkSyncTryouts = internalMutation({
         syncedAt: now,
       });
 
-      await enqueueScaleQualityRefresh(ctx, {
+      const enqueued = await enqueueScaleQualityRefresh(ctx, {
         tryoutId: activeTryout._id,
         enqueuedAt: now,
       });
-      enqueuedScaleQualityRefresh = true;
+
+      if (enqueued) {
+        enqueuedScaleQualityRefresh = true;
+      }
 
       updated++;
     }
