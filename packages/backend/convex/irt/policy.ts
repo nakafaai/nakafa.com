@@ -57,6 +57,9 @@ export const IRT_CALIBRATION_QUEUE_BATCH_SIZE = 5;
 /** Maximum number of distinct tryouts to publish in one queue drain. */
 export const IRT_SCALE_PUBLICATION_QUEUE_BATCH_SIZE = 10;
 
+/** Maximum number of queue pages scanned while collecting distinct tryouts. */
+export const IRT_SCALE_PUBLICATION_QUEUE_SCAN_PAGE_LIMIT = 5;
+
 /** Maximum number of queued tryouts refreshed in one quality-check drain. */
 export const IRT_SCALE_QUALITY_REFRESH_QUEUE_BATCH_SIZE = 100;
 

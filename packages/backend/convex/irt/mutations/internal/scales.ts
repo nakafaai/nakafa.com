@@ -5,6 +5,7 @@ import { internalMutation } from "@repo/backend/convex/functions";
 import {
   IRT_QUEUE_SEALING_MS,
   IRT_SCALE_PUBLICATION_QUEUE_BATCH_SIZE,
+  IRT_SCALE_PUBLICATION_QUEUE_SCAN_PAGE_LIMIT,
   IRT_SCALE_QUALITY_REFRESH_QUEUE_BATCH_SIZE,
 } from "@repo/backend/convex/irt/policy";
 import { publishTryoutScaleVersionIfNeeded } from "@repo/backend/convex/irt/scales/publish";
@@ -157,10 +158,12 @@ export const drainScalePublicationQueue = internalMutation({
     const distinctTryoutIds: Id<"tryouts">[] = [];
     const throughAtByTryoutId = new Map<string, number>();
     let cursor: string | null = null;
+    let scannedPages = 0;
     let reachedEnd = false;
 
     while (
       distinctTryoutIds.length < IRT_SCALE_PUBLICATION_QUEUE_BATCH_SIZE &&
+      scannedPages < IRT_SCALE_PUBLICATION_QUEUE_SCAN_PAGE_LIMIT &&
       !reachedEnd
     ) {
       const page = await ctx.db
@@ -170,6 +173,7 @@ export const drainScalePublicationQueue = internalMutation({
           cursor,
           numItems: IRT_SCALE_PUBLICATION_QUEUE_BATCH_SIZE,
         });
+      scannedPages += 1;
 
       if (page.page.length === 0) {
         break;

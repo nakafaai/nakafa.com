@@ -11,7 +11,6 @@ import tables, {
   chatTypeValidator,
   chatVisibilityValidator,
 } from "@repo/backend/convex/chats/schema";
-import { getEffectiveCreditState } from "@repo/backend/convex/credits/constants";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
@@ -247,7 +246,6 @@ export const saveAssistantResponse = internalMutation({
     messageId: vv.id("messages"),
     partIds: v.array(vv.id("parts")),
     credits: v.number(),
-    newBalance: v.number(),
   }),
   handler: async (ctx, args) => {
     const { userId, message, parts } = args;
@@ -289,11 +287,9 @@ export const saveAssistantResponse = internalMutation({
     }
 
     let credits = 0;
-    let newBalance = getEffectiveCreditState(appUser).credits;
 
     if (message.modelId) {
       credits = getModelCreditCost(message.modelId);
-      newBalance -= credits;
     }
 
     const messageId = await ctx.db.insert("messages", {
@@ -336,6 +332,6 @@ export const saveAssistantResponse = internalMutation({
       );
     }
 
-    return { messageId, partIds, credits, newBalance };
+    return { messageId, partIds, credits };
   },
 });

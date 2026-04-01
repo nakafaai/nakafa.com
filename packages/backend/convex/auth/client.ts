@@ -91,17 +91,11 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
             ctx,
             internal.users.mutations.applyUserStateUpdate,
             {
+              clearImage: newDoc.image === null,
               email: newDoc.email,
               image: newDoc.image ?? undefined,
               name: newDoc.name,
-              userId: appUser._id,
-            }
-          );
-
-          await ctx.scheduler.runAfter(
-            0,
-            internal.customers.actions.syncCustomer,
-            {
+              syncCustomerAfter: true,
               userId: appUser._id,
             }
           );

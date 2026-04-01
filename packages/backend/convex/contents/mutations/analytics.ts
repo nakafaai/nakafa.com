@@ -95,6 +95,14 @@ export const drainContentViewEvents = internalMutation({
       await ctx.db.delete("contentViewEvents", event._id);
     }
 
+    if (events.length === CONTENT_VIEW_EVENT_BATCH_SIZE) {
+      await contentAnalyticsWorkpool.enqueueMutation(
+        ctx,
+        internal.contents.mutations.analytics.drainContentViewEvents,
+        {}
+      );
+    }
+
     const hasMore = events.length === CONTENT_VIEW_EVENT_BATCH_SIZE;
 
     logger.info("Drained sealed content view events", {

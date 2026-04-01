@@ -11,26 +11,52 @@ import { v } from "convex/values";
 /** Apply one users-table patch through the shared serialized writer. */
 export const applyUserStateUpdate = internalMutation({
   args: {
+    clearImage: v.optional(v.boolean()),
     email: v.optional(v.string()),
     image: v.optional(v.string()),
     name: v.optional(v.string()),
     role: v.optional(selfSelectableUserRoleValidator),
+    syncCustomerAfter: v.optional(v.boolean()),
     userId: v.id("users"),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const patch = {
-      ...(args.email === undefined ? {} : { email: args.email }),
-      ...(args.image === undefined ? {} : { image: args.image }),
-      ...(args.name === undefined ? {} : { name: args.name }),
-      ...(args.role === undefined ? {} : { role: args.role }),
-    };
+    const user = await ctx.db.get("users", args.userId);
 
-    if (Object.keys(patch).length === 0) {
+    if (!user) {
       return null;
     }
 
-    await ctx.db.patch("users", args.userId, patch);
+    let role = user.role;
+    if (args.role !== undefined) {
+      role = args.role;
+    }
+
+    let image = user.image;
+    if (args.clearImage) {
+      image = undefined;
+    } else if (args.image !== undefined) {
+      image = args.image;
+    }
+
+    const nextUser = {
+      authId: user.authId,
+      credits: user.credits,
+      creditsResetAt: user.creditsResetAt,
+      email: args.email ?? user.email,
+      name: args.name ?? user.name,
+      plan: user.plan,
+      ...(role === undefined ? {} : { role }),
+      ...(image === undefined ? {} : { image }),
+    };
+
+    await ctx.db.replace(args.userId, nextUser);
+
+    if (args.syncCustomerAfter) {
+      await ctx.scheduler.runAfter(0, internal.customers.actions.syncCustomer, {
+        userId: args.userId,
+      });
+    }
 
     return null;
   },
