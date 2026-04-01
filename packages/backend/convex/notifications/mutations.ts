@@ -15,16 +15,6 @@ import { ConvexError, v } from "convex/values";
 
 const NOTIFICATION_ENTITY_MUTE_DUPLICATE_LIMIT = 10;
 
-const notificationCreateArgsValidator = v.object({
-  actorId: v.optional(v.id("users")),
-  entityId: v.optional(notificationEntityIdValidator),
-  entityType: notificationEntityTypesValidator,
-  previewBody: v.optional(v.string()),
-  previewTitle: v.optional(v.string()),
-  recipientId: v.id("users"),
-  type: notificationTypesValidator,
-});
-
 /** Patch or create one user's notification preferences inside the shared serializer. */
 export const applyNotificationPreferencesUpdate = internalMutation({
   args: {
@@ -100,7 +90,15 @@ export const incrementUnreadNotificationCount = internalMutation({
 
 /** Create one notification after applying current preference and mute state. */
 export const deliverNotificationIfAllowed = internalMutation({
-  args: notificationCreateArgsValidator,
+  args: {
+    actorId: v.optional(v.id("users")),
+    entityId: v.optional(notificationEntityIdValidator),
+    entityType: notificationEntityTypesValidator,
+    previewBody: v.optional(v.string()),
+    previewTitle: v.optional(v.string()),
+    recipientId: v.id("users"),
+    type: notificationTypesValidator,
+  },
   returns: v.null(),
   handler: async (ctx, args) => {
     const preferences = await ctx.db
