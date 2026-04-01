@@ -1,7 +1,16 @@
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import type {
+  ContentRef,
+  Locale,
+} from "@repo/backend/convex/lib/validators/contents";
 import { getTrendingBucketStart } from "@repo/backend/convex/subjectSections/utils";
+
+interface ContentAnalyticsEvent {
+  contentRef: ContentRef;
+  locale: Locale;
+  viewedAt: number;
+}
 
 /** Increments one aggregated counter inside a mutable batch map. */
 function incrementCount<TKey extends string>(
@@ -12,9 +21,7 @@ function incrementCount<TKey extends string>(
 }
 
 /** Builds one analytics batch from append-only queued unique views. */
-function buildContentAnalyticsBatch(
-  queueItems: Doc<"contentViewAnalyticsQueue">[]
-) {
+function buildContentAnalyticsBatch(events: ContentAnalyticsEvent[]) {
   const articleViewCounts = new Map<Id<"articleContents">, number>();
   const exerciseViewCounts = new Map<Id<"exerciseSets">, number>();
   const subjectViewCounts = new Map<Id<"subjectSections">, number>();
@@ -28,18 +35,18 @@ function buildContentAnalyticsBatch(
     }
   >();
 
-  for (const queueItem of queueItems) {
-    switch (queueItem.contentRef.type) {
+  for (const event of events) {
+    switch (event.contentRef.type) {
       case "article": {
-        incrementCount(articleViewCounts, queueItem.contentRef.id);
+        incrementCount(articleViewCounts, event.contentRef.id);
         break;
       }
 
       case "subject": {
-        incrementCount(subjectViewCounts, queueItem.contentRef.id);
+        incrementCount(subjectViewCounts, event.contentRef.id);
 
-        const bucketStart = getTrendingBucketStart(queueItem.viewedAt);
-        const bucketKey = `${queueItem.locale}:${bucketStart}:${queueItem.contentRef.id}`;
+        const bucketStart = getTrendingBucketStart(event.viewedAt);
+        const bucketKey = `${event.locale}:${bucketStart}:${event.contentRef.id}`;
         const existingBucket = subjectTrendingBuckets.get(bucketKey);
 
         if (existingBucket) {
@@ -49,15 +56,15 @@ function buildContentAnalyticsBatch(
 
         subjectTrendingBuckets.set(bucketKey, {
           bucketStart,
-          contentId: queueItem.contentRef.id,
-          locale: queueItem.locale,
+          contentId: event.contentRef.id,
+          locale: event.locale,
           viewCount: 1,
         });
         break;
       }
 
       case "exercise": {
-        incrementCount(exerciseViewCounts, queueItem.contentRef.id);
+        incrementCount(exerciseViewCounts, event.contentRef.id);
         break;
       }
 
@@ -218,12 +225,12 @@ async function applySubjectTrendingBucketDelta(
   });
 }
 
-/** Folds queued unique views into derived popularity tables. */
+/** Folds new unique views into derived popularity tables. */
 export async function applyContentAnalyticsBatch(
   ctx: MutationCtx,
-  queueItems: Doc<"contentViewAnalyticsQueue">[]
+  events: ContentAnalyticsEvent[]
 ) {
-  const analyticsBatch = buildContentAnalyticsBatch(queueItems);
+  const analyticsBatch = buildContentAnalyticsBatch(events);
   const updatedAt = Date.now();
 
   for (const [contentId, viewCount] of analyticsBatch.articleViewCounts) {

@@ -1,6 +1,6 @@
 import {
+  enqueueContentViewEvent,
   loadContentRefBySlug,
-  upsertContentView,
 } from "@repo/backend/convex/contents/helpers/views";
 import { mutation } from "@repo/backend/convex/functions";
 import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
@@ -17,11 +17,7 @@ export const recordContentView = mutation({
     locale: localeValidator,
     deviceId: v.string(),
   },
-  returns: v.object({
-    success: v.boolean(),
-    isNewView: v.boolean(),
-    alreadyViewed: v.boolean(),
-  }),
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     const user = await getOptionalAppUser(ctx);
 
@@ -31,7 +27,7 @@ export const recordContentView = mutation({
       type: args.contentRef.type,
     });
 
-    return await upsertContentView(ctx.db, contentRef, {
+    return await enqueueContentViewEvent(ctx.db, contentRef, {
       deviceId: args.deviceId,
       locale: args.locale,
       slug: args.contentRef.slug,

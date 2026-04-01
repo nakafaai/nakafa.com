@@ -1,14 +1,8 @@
-/** Number of queued analytics rows processed in one mutation. */
-export const CONTENT_ANALYTICS_BATCH_SIZE = 250;
+/** Number of sealed view events processed in one drain mutation. */
+export const CONTENT_VIEW_EVENT_BATCH_SIZE = 250;
 
-/** Number of independent analytics partitions. */
-export const CONTENT_ANALYTICS_PARTITION_COUNT = 16;
+/** Duration of one append-only view event segment. */
+export const CONTENT_VIEW_EVENT_SEGMENT_MS = 10 * 1000;
 
-/** Duration a partition lease stays active before recovery can reclaim it. */
-export const CONTENT_ANALYTICS_LEASE_DURATION_MS = 5 * 60 * 1000;
-
-/** Stable list of analytics partitions used by cron scheduling. */
-export const CONTENT_ANALYTICS_PARTITIONS = Array.from(
-  { length: CONTENT_ANALYTICS_PARTITION_COUNT },
-  (_, partition) => partition
-);
+/** Cron cadence for draining sealed view event segments. */
+export const CONTENT_VIEW_EVENT_CRON_INTERVAL_SECONDS = 10;

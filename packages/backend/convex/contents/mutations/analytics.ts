@@ -1,224 +1,95 @@
-import { internal } from "@repo/backend/convex/_generated/api";
 import {
-  CONTENT_ANALYTICS_BATCH_SIZE,
-  CONTENT_ANALYTICS_LEASE_DURATION_MS,
-  CONTENT_ANALYTICS_PARTITIONS,
+  CONTENT_VIEW_EVENT_BATCH_SIZE,
+  CONTENT_VIEW_EVENT_SEGMENT_MS,
 } from "@repo/backend/convex/contents/constants";
-import { isContentAnalyticsPartition } from "@repo/backend/convex/contents/helpers/partitions";
+import { getContentViewEventSegmentStart } from "@repo/backend/convex/contents/helpers/events";
+import { upsertContentViewFromEvent } from "@repo/backend/convex/contents/helpers/views";
 import { applyContentAnalyticsBatch } from "@repo/backend/convex/contents/helpers/writes";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { logger } from "@repo/backend/convex/utils/logger";
-import { ConvexError, v } from "convex/values";
+import { v } from "convex/values";
 
-/** Schedules one worker per idle analytics partition with queued rows. */
-export const scheduleContentAnalyticsPartitions = internalMutation({
+/** Drains one bounded batch of sealed content view events. */
+export const drainContentViewEvents = internalMutation({
   args: {},
   returns: v.object({
-    enqueuedPartitions: v.number(),
+    hasMore: v.boolean(),
+    newViews: v.number(),
+    processed: v.number(),
   }),
   handler: async (ctx) => {
-    for (const partition of CONTENT_ANALYTICS_PARTITIONS) {
-      await ctx.scheduler.runAfter(
-        0,
-        internal.contents.mutations.analytics.scheduleContentAnalyticsPartition,
-        { partition }
-      );
-    }
+    const currentSegmentStart = getContentViewEventSegmentStart(Date.now());
+    const sealedBeforeSegmentStart =
+      currentSegmentStart - CONTENT_VIEW_EVENT_SEGMENT_MS;
 
-    return {
-      enqueuedPartitions: CONTENT_ANALYTICS_PARTITIONS.length,
-    };
-  },
-});
-
-/** Claims one partition lease and starts a worker when backlog exists. */
-export const scheduleContentAnalyticsPartition = internalMutation({
-  args: {
-    partition: v.number(),
-  },
-  returns: v.object({
-    createdPartition: v.boolean(),
-    scheduled: v.boolean(),
-  }),
-  handler: async (ctx, args) => {
-    if (!isContentAnalyticsPartition(args.partition)) {
-      throw new ConvexError({
-        code: "INVALID_CONTENT_ANALYTICS_PARTITION",
-        message: "Content analytics partition is out of range.",
-      });
-    }
-
-    const hasBacklog = await ctx.db
-      .query("contentViewAnalyticsQueue")
-      .withIndex("by_partition", (q) => q.eq("partition", args.partition))
-      .take(1);
-
-    if (hasBacklog.length === 0) {
+    if (sealedBeforeSegmentStart <= 0) {
       return {
-        createdPartition: false,
-        scheduled: false,
+        hasMore: false,
+        newViews: 0,
+        processed: 0,
       };
     }
 
-    const partitionRow = await ctx.db
-      .query("contentAnalyticsPartitions")
-      .withIndex("by_partition", (q) => q.eq("partition", args.partition))
-      .unique();
-    const now = Date.now();
+    const events = await ctx.db
+      .query("contentViewEvents")
+      .withIndex("by_segmentStart", (q) =>
+        q.lt("segmentStart", sealedBeforeSegmentStart)
+      )
+      .take(CONTENT_VIEW_EVENT_BATCH_SIZE);
 
-    let createdPartition = false;
-    let partitionRowId = partitionRow?._id;
-    const leaseExpiresAt = partitionRow?.leaseExpiresAt ?? 0;
-    let leaseVersion = partitionRow?.leaseVersion ?? 0;
-
-    if (!partitionRowId) {
-      partitionRowId = await ctx.db.insert("contentAnalyticsPartitions", {
-        leaseExpiresAt: 0,
-        leaseVersion: 0,
-        partition: args.partition,
-      });
-      createdPartition = true;
-    }
-
-    if (leaseExpiresAt > now) {
+    if (events.length === 0) {
       return {
-        createdPartition,
-        scheduled: false,
+        hasMore: false,
+        newViews: 0,
+        processed: 0,
       };
     }
 
-    leaseVersion += 1;
+    const newViewEvents = events.slice(0, 0).map((event) => ({
+      contentRef: event.contentRef,
+      locale: event.locale,
+      viewedAt: event.viewedAt,
+    }));
 
-    await ctx.db.patch("contentAnalyticsPartitions", partitionRowId, {
-      leaseExpiresAt: now + CONTENT_ANALYTICS_LEASE_DURATION_MS,
-      leaseVersion,
-    });
+    for (const event of events) {
+      const result = await upsertContentViewFromEvent(ctx.db, {
+        contentRef: event.contentRef,
+        deviceId: event.deviceId,
+        locale: event.locale,
+        slug: event.slug,
+        userId: event.userId,
+        viewedAt: event.viewedAt,
+      });
 
-    await ctx.scheduler.runAfter(
-      0,
-      internal.contents.mutations.analytics.processContentAnalyticsPartition,
-      {
-        leaseVersion,
-        partition: args.partition,
+      if (result.isNewView) {
+        newViewEvents.push({
+          contentRef: event.contentRef,
+          locale: event.locale,
+          viewedAt: event.viewedAt,
+        });
       }
-    );
-
-    return {
-      createdPartition,
-      scheduled: true,
-    };
-  },
-});
-
-/** Drains one leased analytics partition into derived popularity tables. */
-export const processContentAnalyticsPartition = internalMutation({
-  args: {
-    leaseVersion: v.number(),
-    partition: v.number(),
-  },
-  returns: v.object({
-    hasMore: v.boolean(),
-    partition: v.number(),
-    processed: v.number(),
-    skipped: v.boolean(),
-  }),
-  handler: async (ctx, args) => {
-    if (!isContentAnalyticsPartition(args.partition)) {
-      throw new ConvexError({
-        code: "INVALID_CONTENT_ANALYTICS_PARTITION",
-        message: "Content analytics partition is out of range.",
-      });
     }
 
-    const now = Date.now();
-    const partitionRow = await ctx.db
-      .query("contentAnalyticsPartitions")
-      .withIndex("by_partition", (q) => q.eq("partition", args.partition))
-      .unique();
-
-    if (!partitionRow) {
-      return {
-        hasMore: false,
-        partition: args.partition,
-        processed: 0,
-        skipped: true,
-      };
+    if (newViewEvents.length > 0) {
+      await applyContentAnalyticsBatch(ctx, newViewEvents);
     }
 
-    if (partitionRow.leaseVersion !== args.leaseVersion) {
-      return {
-        hasMore: false,
-        partition: args.partition,
-        processed: 0,
-        skipped: true,
-      };
+    for (const event of events) {
+      await ctx.db.delete("contentViewEvents", event._id);
     }
 
-    if (partitionRow.leaseExpiresAt < now) {
-      return {
-        hasMore: false,
-        partition: args.partition,
-        processed: 0,
-        skipped: true,
-      };
-    }
+    const hasMore = events.length === CONTENT_VIEW_EVENT_BATCH_SIZE;
 
-    const queueItems = await ctx.db
-      .query("contentViewAnalyticsQueue")
-      .withIndex("by_partition", (q) => q.eq("partition", args.partition))
-      .take(CONTENT_ANALYTICS_BATCH_SIZE);
-
-    if (queueItems.length === 0) {
-      await ctx.db.patch("contentAnalyticsPartitions", partitionRow._id, {
-        lastProcessedAt: now,
-        leaseExpiresAt: 0,
-      });
-
-      return {
-        hasMore: false,
-        partition: args.partition,
-        processed: 0,
-        skipped: false,
-      };
-    }
-
-    await applyContentAnalyticsBatch(ctx, queueItems);
-
-    for (const queueItem of queueItems) {
-      await ctx.db.delete("contentViewAnalyticsQueue", queueItem._id);
-    }
-
-    const hasMore = queueItems.length === CONTENT_ANALYTICS_BATCH_SIZE;
-
-    if (hasMore) {
-      await ctx.db.patch("contentAnalyticsPartitions", partitionRow._id, {
-        lastProcessedAt: now,
-        leaseExpiresAt: now + CONTENT_ANALYTICS_LEASE_DURATION_MS,
-      });
-
-      await ctx.scheduler.runAfter(
-        0,
-        internal.contents.mutations.analytics.processContentAnalyticsPartition,
-        args
-      );
-    } else {
-      await ctx.db.patch("contentAnalyticsPartitions", partitionRow._id, {
-        lastProcessedAt: now,
-        leaseExpiresAt: 0,
-      });
-    }
-
-    logger.info("Processed content analytics partition batch", {
+    logger.info("Drained sealed content view events", {
       hasMore,
-      partition: args.partition,
-      processed: queueItems.length,
+      newViews: newViewEvents.length,
+      processed: events.length,
     });
 
     return {
       hasMore,
-      partition: args.partition,
-      processed: queueItems.length,
-      skipped: false,
+      newViews: newViewEvents.length,
+      processed: events.length,
     };
   },
 });

@@ -1,4 +1,5 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import { CONTENT_VIEW_EVENT_CRON_INTERVAL_SECONDS } from "@repo/backend/convex/contents/constants";
 import { IRT_AUTOMATION_CRON_INTERVAL_MINUTES } from "@repo/backend/convex/irt/policy";
 import { cronJobs } from "convex/server";
 
@@ -7,12 +8,12 @@ const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
 const TRYOUT_ACCESS_STATUS_SWEEP_INTERVAL_MINUTES = 5;
 
 /**
- * Schedules idle content analytics partitions that have queued rows.
+ * Drains sealed content view events into durable views and analytics tables.
  */
 crons.interval(
-  "schedule content analytics partitions",
-  { minutes: 1 },
-  internal.contents.mutations.analytics.scheduleContentAnalyticsPartitions,
+  "drain sealed content view events",
+  { seconds: CONTENT_VIEW_EVENT_CRON_INTERVAL_SECONDS },
+  internal.contents.mutations.analytics.drainContentViewEvents,
   {}
 );
 

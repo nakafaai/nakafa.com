@@ -1,6 +1,6 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { getContentAnalyticsPartition } from "@repo/backend/convex/contents/helpers/partitions";
+import { getContentViewEventSegmentStart } from "@repo/backend/convex/contents/helpers/events";
 import type {
   ContentRef,
   ContentViewRef,
@@ -85,17 +85,39 @@ export async function loadContentRefBySlug(
   }
 }
 
-/** Upserts the durable content view row and queues first-view analytics. */
-export async function upsertContentView(
+/** Enqueues one append-only content view event for later processing. */
+export async function enqueueContentViewEvent(
   db: MutationCtx["db"],
   contentRef: ContentRef,
   args: Pick<Doc<"contentViews">, "deviceId" | "locale" | "slug" | "userId">
 ) {
-  const now = Date.now();
+  const viewedAt = Date.now();
+
+  await db.insert("contentViewEvents", {
+    contentRef,
+    deviceId: args.deviceId,
+    locale: args.locale,
+    segmentStart: getContentViewEventSegmentStart(viewedAt),
+    slug: args.slug,
+    userId: args.userId,
+    viewedAt,
+  });
+
+  return { success: true };
+}
+
+/** Upserts the durable content view row from one sealed view event. */
+export async function upsertContentViewFromEvent(
+  db: MutationCtx["db"],
+  args: Pick<
+    Doc<"contentViewEvents">,
+    "contentRef" | "deviceId" | "locale" | "slug" | "userId" | "viewedAt"
+  >
+) {
   const existingByDevice = await db
     .query("contentViews")
     .withIndex("by_deviceId_and_contentRefId", (q) =>
-      q.eq("deviceId", args.deviceId).eq("contentRef.id", contentRef.id)
+      q.eq("deviceId", args.deviceId).eq("contentRef.id", args.contentRef.id)
     )
     .first();
 
@@ -103,38 +125,48 @@ export async function upsertContentView(
     ? await db
         .query("contentViews")
         .withIndex("by_userId_and_contentRefId", (q) =>
-          q.eq("userId", args.userId).eq("contentRef.id", contentRef.id)
+          q.eq("userId", args.userId).eq("contentRef.id", args.contentRef.id)
         )
         .first()
     : null;
 
-  const existingView = existingByDevice ?? existingByUser;
-
-  if (!existingView) {
-    const partition = getContentAnalyticsPartition(contentRef);
-
+  if (!(existingByDevice || existingByUser)) {
     await db.insert("contentViews", {
-      contentRef,
+      contentRef: args.contentRef,
       locale: args.locale,
       slug: args.slug,
       deviceId: args.deviceId,
       userId: args.userId,
-      firstViewedAt: now,
-      lastViewedAt: now,
-    });
-
-    await db.insert("contentViewAnalyticsQueue", {
-      contentRef,
-      locale: args.locale,
-      partition,
-      viewedAt: now,
+      firstViewedAt: args.viewedAt,
+      lastViewedAt: args.viewedAt,
     });
 
     return { success: true, isNewView: true, alreadyViewed: false };
   }
 
-  await db.patch("contentViews", existingView._id, {
-    lastViewedAt: now,
+  if (existingByUser) {
+    await db.patch("contentViews", existingByUser._id, {
+      lastViewedAt: args.viewedAt,
+    });
+
+    return { success: true, isNewView: false, alreadyViewed: true };
+  }
+
+  if (!existingByDevice) {
+    return { success: true, isNewView: false, alreadyViewed: true };
+  }
+
+  if (!existingByDevice.userId && args.userId) {
+    await db.patch("contentViews", existingByDevice._id, {
+      lastViewedAt: args.viewedAt,
+      userId: args.userId,
+    });
+
+    return { success: true, isNewView: false, alreadyViewed: true };
+  }
+
+  await db.patch("contentViews", existingByDevice._id, {
+    lastViewedAt: args.viewedAt,
   });
 
   return { success: true, isNewView: false, alreadyViewed: true };

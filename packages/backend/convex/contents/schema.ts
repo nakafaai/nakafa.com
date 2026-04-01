@@ -35,30 +35,23 @@ const tables = {
     ]),
 
   /**
-   * Append-only queue of new unique views.
-   * Queue rows are partitioned so background processors can drain them in parallel.
+   * Append-only ingress rows for content view recording.
+   * Public mutations only write here. A background drain folds sealed rows into
+   * durable views and derived analytics tables.
    */
-  contentViewAnalyticsQueue: defineTable({
+  contentViewEvents: defineTable({
     contentRef: contentRefValidator,
+    deviceId: v.string(),
     locale: localeValidator,
-    partition: v.number(),
+    segmentStart: v.number(),
+    slug: v.string(),
+    userId: v.optional(v.id("users")),
     viewedAt: v.number(),
-  }).index("by_partition", ["partition"]),
-
-  /**
-   * Lease rows for partitioned analytics queue processing.
-   * One row per partition.
-   */
-  contentAnalyticsPartitions: defineTable({
-    leaseExpiresAt: v.number(),
-    leaseVersion: v.number(),
-    lastProcessedAt: v.optional(v.number()),
-    partition: v.number(),
-  }).index("by_partition", ["partition"]),
+  }).index("by_segmentStart", ["segmentStart"]),
 
   /**
    * Article popularity counts.
-   * Updated asynchronously from the content analytics queue.
+   * Updated asynchronously from sealed content view events.
    */
   articlePopularity: defineTable({
     contentId: v.id("articleContents"),
@@ -70,7 +63,7 @@ const tables = {
 
   /**
    * Subject popularity counts.
-   * Updated asynchronously from the content analytics queue.
+   * Updated asynchronously from sealed content view events.
    */
   subjectPopularity: defineTable({
     contentId: v.id("subjectSections"),
@@ -98,7 +91,7 @@ const tables = {
 
   /**
    * Exercise popularity counts.
-   * Updated asynchronously from the content analytics queue.
+   * Updated asynchronously from sealed content view events.
    */
   exercisePopularity: defineTable({
     contentId: v.id("exerciseSets"),
