@@ -1,6 +1,9 @@
 import { components } from "@repo/backend/convex/_generated/api";
 import { mutation } from "@repo/backend/convex/_generated/server";
-import { resolveEffectiveCreditState } from "@repo/backend/convex/credits/helpers/state";
+import {
+  getCreditResetGrantTransaction,
+  resolveEffectiveCreditState,
+} from "@repo/backend/convex/credits/helpers/state";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import {
   selfSelectableUserRoleValidator,
@@ -72,14 +75,30 @@ export const syncUserInfoForChat = mutation({
       user.appUser,
       Date.now()
     );
+    const creditResetGrant = getCreditResetGrantTransaction(
+      user.appUser,
+      effectiveCredits
+    );
 
     if (
-      effectiveCredits.credits !== user.appUser.credits ||
-      effectiveCredits.creditsResetAt !== user.appUser.creditsResetAt
+      effectiveCredits.credits === user.appUser.credits &&
+      effectiveCredits.creditsResetAt === user.appUser.creditsResetAt
     ) {
-      await ctx.db.patch("users", user.appUser._id, {
+      return {
+        role: user.appUser.role ?? null,
         credits: effectiveCredits.credits,
-        creditsResetAt: effectiveCredits.creditsResetAt,
+      };
+    }
+
+    await ctx.db.patch("users", user.appUser._id, {
+      credits: effectiveCredits.credits,
+      creditsResetAt: effectiveCredits.creditsResetAt,
+    });
+
+    if (creditResetGrant) {
+      await ctx.db.insert("creditTransactions", {
+        userId: user.appUser._id,
+        ...creditResetGrant,
       });
     }
 

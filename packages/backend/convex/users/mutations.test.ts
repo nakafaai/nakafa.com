@@ -153,7 +153,10 @@ describe("users/mutations", () => {
       .mutation(api.users.mutations.syncUserInfoForChat, {});
 
     const repairedUser = await t.query(async (ctx) => {
-      return await ctx.db.get("users", identity.appUserId);
+      return {
+        creditTransactions: await ctx.db.query("creditTransactions").collect(),
+        user: await ctx.db.get("users", identity.appUserId),
+      };
     });
     const storedResetAt = await t.query(async (ctx) => {
       return await getStoredCreditResetTimestamp(ctx.db, "free");
@@ -163,8 +166,18 @@ describe("users/mutations", () => {
       role: "student",
       credits: 7,
     });
-    expect(repairedUser?.credits).toBe(7);
-    expect(repairedUser?.creditsResetAt).toBe(Date.UTC(2026, 3, 2, 0, 0, 0));
+    expect(repairedUser.user?.credits).toBe(7);
+    expect(repairedUser.user?.creditsResetAt).toBe(
+      Date.UTC(2026, 3, 2, 0, 0, 0)
+    );
+    expect(repairedUser.creditTransactions).toEqual([
+      expect.objectContaining({
+        userId: identity.appUserId,
+        amount: 10,
+        type: "daily-grant",
+        balanceAfter: 7,
+      }),
+    ]);
     expect(storedResetAt).toBe(Date.UTC(2026, 3, 2, 0, 0, 0));
 
     vi.useRealTimers();
@@ -195,15 +208,19 @@ describe("users/mutations", () => {
       .mutation(api.users.mutations.syncUserInfoForChat, {});
 
     const appUser = await t.query(async (ctx) => {
-      return await ctx.db.get("users", identity.appUserId);
+      return {
+        creditTransactions: await ctx.db.query("creditTransactions").collect(),
+        user: await ctx.db.get("users", identity.appUserId),
+      };
     });
 
     expect(result).toEqual({
       role: null,
       credits: DEFAULT_USER_CREDITS,
     });
-    expect(appUser?.credits).toBe(DEFAULT_USER_CREDITS);
-    expect(appUser?.creditsResetAt).toBe(Date.UTC(2026, 3, 2, 0, 0, 0));
+    expect(appUser.user?.credits).toBe(DEFAULT_USER_CREDITS);
+    expect(appUser.user?.creditsResetAt).toBe(Date.UTC(2026, 3, 2, 0, 0, 0));
+    expect(appUser.creditTransactions).toHaveLength(0);
 
     vi.useRealTimers();
   });

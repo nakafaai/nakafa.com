@@ -1,4 +1,5 @@
 import {
+  getCreditResetGrantTransaction,
   getCurrentCreditResetTimestamp,
   getStoredCreditResetTimestamp,
   resolveCurrentCreditResetTimestamp,
@@ -167,5 +168,46 @@ describe("credits/helpers/state", () => {
       creditsResetAt: Date.UTC(2026, 3, 2, 0, 0, 0),
     });
     expect(storedResetAt).toBe(Date.UTC(2026, 3, 2, 0, 0, 0));
+  });
+
+  it("returns a grant transaction when a reset window advances", () => {
+    expect(
+      getCreditResetGrantTransaction(
+        {
+          credits: -3,
+          creditsResetAt: Date.UTC(2026, 3, 1, 0, 0, 0),
+          plan: "free",
+        },
+        {
+          credits: 7,
+          creditsResetAt: Date.UTC(2026, 3, 2, 0, 0, 0),
+        }
+      )
+    ).toEqual({
+      amount: 10,
+      type: "daily-grant",
+      balanceAfter: 7,
+      metadata: {
+        "previous-balance": -3,
+        "previous-reset-at": Date.UTC(2026, 3, 1, 0, 0, 0),
+        "reset-at": Date.UTC(2026, 3, 2, 0, 0, 0),
+      },
+    });
+  });
+
+  it("returns null when credits are already in the current reset window", () => {
+    expect(
+      getCreditResetGrantTransaction(
+        {
+          credits: 7,
+          creditsResetAt: Date.UTC(2026, 3, 2, 0, 0, 0),
+          plan: "free",
+        },
+        {
+          credits: 7,
+          creditsResetAt: Date.UTC(2026, 3, 2, 0, 0, 0),
+        }
+      )
+    ).toBeNull();
   });
 });

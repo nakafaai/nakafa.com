@@ -11,6 +11,9 @@ type CreditStateUser = Pick<
   "credits" | "creditsResetAt" | "plan"
 >;
 type CreditDb = QueryCtx["db"] | MutationCtx["db"];
+type EffectiveCreditState = ReturnType<
+  typeof getEffectiveCreditStateForResetTimestamp
+>;
 
 /** Returns the current UTC reset boundary for a plan. */
 export function getCurrentCreditResetTimestamp(plan: UserPlan, now: number) {
@@ -43,6 +46,32 @@ export function getEffectiveCreditStateForResetTimestamp(
       getPlanCreditConfig(user.plan).amount +
       (user.credits < 0 ? user.credits : 0),
     creditsResetAt: resetTimestamp,
+  };
+}
+
+/**
+ * Returns the grant transaction needed when a user crosses into a newer reset
+ * window, or null when no reset happened.
+ */
+export function getCreditResetGrantTransaction(
+  user: CreditStateUser,
+  effectiveState: EffectiveCreditState
+) {
+  if (effectiveState.creditsResetAt === user.creditsResetAt) {
+    return null;
+  }
+
+  const planCreditConfig = getPlanCreditConfig(user.plan);
+
+  return {
+    amount: planCreditConfig.amount,
+    type: planCreditConfig.grantType,
+    balanceAfter: effectiveState.credits,
+    metadata: {
+      "previous-balance": user.credits,
+      "previous-reset-at": user.creditsResetAt,
+      "reset-at": effectiveState.creditsResetAt,
+    },
   };
 }
 

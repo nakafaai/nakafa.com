@@ -363,6 +363,53 @@ describe("irt/mutations/internal/scales", () => {
     expect(refreshQueueCount).toBe(1);
   });
 
+  it("drains refresh work after the last scheduled rebuild page finishes", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(Date.UTC(2026, 3, 2, 12, 0, 0)));
+
+    const t = convexTest(schema, convexModules);
+
+    await t.mutation(async (ctx) => {
+      for (
+        let index = 0;
+        index <= SCALE_QUALITY_REBUILD_BATCH_SIZE;
+        index += 1
+      ) {
+        await insertRealSnbtSet1Tryout(ctx, {
+          partCount: 0,
+          totalQuestionCount: 0,
+          isActive: true,
+          slug: `2026-set-1-drain-${index + 1}`,
+          label: `Set 1 Drain ${index + 1}`,
+        });
+      }
+    });
+
+    await t.mutation(
+      internal.irt.mutations.internal.scales.rebuildScaleQualityChecksPage,
+      {}
+    );
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+
+    const result = await t.query(async (ctx) => {
+      return {
+        qualityCheckCount: (
+          await ctx.db.query("irtScaleQualityChecks").collect()
+        ).length,
+        refreshQueueCount: (
+          await ctx.db.query("irtScaleQualityRefreshQueue").collect()
+        ).length,
+      };
+    });
+
+    expect(result).toEqual({
+      qualityCheckCount: SCALE_QUALITY_REBUILD_BATCH_SIZE + 1,
+      refreshQueueCount: 0,
+    });
+
+    vi.useRealTimers();
+  });
+
   it("schedules a follow-up drain when one full refresh batch is consumed", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(Date.UTC(2026, 3, 2, 12, 0, 0)));

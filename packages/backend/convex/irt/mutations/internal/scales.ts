@@ -54,6 +54,7 @@ export const rebuildScaleQualityChecksPage = internalMutation({
   returns: scaleQualityRebuildResultValidator,
   handler: async (ctx, args) => {
     const enqueuedAt = Date.now();
+    let enqueuedAny = false;
     const page = await ctx.db.query("tryouts").paginate({
       cursor: args.cursor ?? null,
       numItems: SCALE_QUALITY_REBUILD_BATCH_SIZE,
@@ -71,10 +72,12 @@ export const rebuildScaleQualityChecksPage = internalMutation({
         continue;
       }
 
-      await enqueueScaleQualityRefresh(ctx, {
+      const enqueued = await enqueueScaleQualityRefresh(ctx, {
         tryoutId: tryout._id,
         enqueuedAt,
       });
+
+      enqueuedAny = enqueuedAny || enqueued;
     }
 
     if (!page.isDone) {
@@ -85,7 +88,7 @@ export const rebuildScaleQualityChecksPage = internalMutation({
       );
     }
 
-    if (args.cursor === undefined && page.page.length > 0) {
+    if (page.isDone && (args.cursor !== undefined || enqueuedAny)) {
       await ctx.scheduler.runAfter(
         0,
         internal.irt.mutations.internal.scales.drainScaleQualityRefreshQueue,
