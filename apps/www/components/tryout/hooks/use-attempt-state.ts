@@ -68,8 +68,11 @@ function getResumePartKey({
         continue;
       }
 
+      if (partAttempt.setAttempt === null) {
+        continue;
+      }
+
       if (
-        partAttempt.setAttempt !== null &&
         getEffectivePartAttemptStatus({
           expiresAtMs: attemptData.expiresAtMs,
           nowMs,

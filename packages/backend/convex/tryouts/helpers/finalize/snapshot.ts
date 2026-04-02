@@ -117,6 +117,7 @@ export async function buildFinalizedTryoutSnapshot(
       const setAttempt =
         setAttemptsByPartIndex.get(tryoutPartSet.partIndex) ?? null;
       const set = setsByPartIndex.get(tryoutPartSet.partIndex);
+      const effectiveSetId = partAttempt?.setId ?? tryoutPartSet.setId;
 
       if (!set) {
         throw new ConvexError({
@@ -136,12 +137,12 @@ export async function buildFinalizedTryoutSnapshot(
           : [];
       const itemParamsRecords = await getScaleVersionItemsForSet(db, {
         scaleVersionId,
-        setId: tryoutPartSet.setId,
+        setId: effectiveSetId,
       });
       const partScore = scoreFinalizedTryoutPart({
         answers,
         itemParamsRecords,
-        totalQuestions: set.questionCount,
+        totalQuestions: setAttempt?.totalExercises ?? set.questionCount,
       });
 
       return {

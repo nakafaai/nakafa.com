@@ -38,6 +38,27 @@ export const getUserTryoutPartAttempt = query({
         tryoutAttempt.theta
       ),
     };
+    const needsFinalizedRepair =
+      tryoutAttempt.status !== "in-progress" &&
+      (tryoutAttempt.totalQuestions < context.tryout.totalQuestionCount ||
+        tryoutAttempt.completedPartIndices.length < context.tryout.partCount);
+    const finalizedSnapshot = needsFinalizedRepair
+      ? await buildFinalizedTryoutSnapshot(ctx.db, {
+          scaleVersionId: tryoutAttempt.scaleVersionId,
+          tryout: context.tryout,
+          tryoutAttempt,
+        })
+      : null;
+    const repairedTryoutAttempt = finalizedSnapshot
+      ? {
+          ...scoredTryoutAttempt,
+          irtScore: finalizedSnapshot.irtScore,
+          theta: finalizedSnapshot.theta,
+          thetaSE: finalizedSnapshot.thetaSE,
+          totalCorrect: finalizedSnapshot.totalCorrect,
+          totalQuestions: finalizedSnapshot.totalQuestions,
+        }
+      : scoredTryoutAttempt;
     const currentPartAttempt = await ctx.db
       .query("tryoutPartAttempts")
       .withIndex("by_tryoutAttemptId_and_partKey", (q) =>
@@ -46,12 +67,7 @@ export const getUserTryoutPartAttempt = query({
       .unique();
 
     if (!currentPartAttempt) {
-      if (tryoutAttempt.status !== "in-progress") {
-        const finalizedSnapshot = await buildFinalizedTryoutSnapshot(ctx.db, {
-          scaleVersionId: tryoutAttempt.scaleVersionId,
-          tryout: context.tryout,
-          tryoutAttempt,
-        });
+      if (finalizedSnapshot) {
         const partSnapshot = finalizedSnapshot.partSnapshots.find(
           (snapshot) => snapshot.partKey === args.partKey
         );
@@ -67,14 +83,7 @@ export const getUserTryoutPartAttempt = query({
           expiresAtMs: tryoutAttempt.expiresAt,
           partScore: partSnapshot.score,
           partAttempt: null,
-          tryoutAttempt: {
-            ...scoredTryoutAttempt,
-            irtScore: finalizedSnapshot.irtScore,
-            theta: finalizedSnapshot.theta,
-            thetaSE: finalizedSnapshot.thetaSE,
-            totalCorrect: finalizedSnapshot.totalCorrect,
-            totalQuestions: finalizedSnapshot.totalQuestions,
-          },
+          tryoutAttempt: repairedTryoutAttempt,
         };
       }
 
@@ -82,7 +91,7 @@ export const getUserTryoutPartAttempt = query({
         expiresAtMs: tryoutAttempt.expiresAt,
         partScore: null,
         partAttempt: null,
-        tryoutAttempt: scoredTryoutAttempt,
+        tryoutAttempt: repairedTryoutAttempt,
       };
     }
 
@@ -105,17 +114,22 @@ export const getUserTryoutPartAttempt = query({
     const isCompletedPart = tryoutAttempt.completedPartIndices.includes(
       currentPartAttempt.partIndex
     );
-    const partScore = isCompletedPart
-      ? {
-          correctAnswers: setAttempt.correctAnswers,
-          theta: currentPartAttempt.theta,
-          thetaSE: currentPartAttempt.thetaSE,
-          irtScore: getTryoutReportScore(
-            context.tryout.product,
-            currentPartAttempt.theta
-          ),
-        }
-      : null;
+    const repairedPartScore = finalizedSnapshot?.partSnapshots.find(
+      (snapshot) => snapshot.partKey === args.partKey
+    )?.score;
+    let partScore = repairedPartScore ?? null;
+
+    if (!partScore && isCompletedPart) {
+      partScore = {
+        correctAnswers: setAttempt.correctAnswers,
+        theta: currentPartAttempt.theta,
+        thetaSE: currentPartAttempt.thetaSE,
+        irtScore: getTryoutReportScore(
+          context.tryout.product,
+          currentPartAttempt.theta
+        ),
+      };
+    }
 
     return {
       expiresAtMs: tryoutAttempt.expiresAt,
@@ -126,7 +140,7 @@ export const getUserTryoutPartAttempt = query({
         answers,
         setAttempt,
       },
-      tryoutAttempt: scoredTryoutAttempt,
+      tryoutAttempt: repairedTryoutAttempt,
     };
   },
 });
