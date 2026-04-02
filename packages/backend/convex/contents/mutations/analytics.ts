@@ -10,7 +10,7 @@ import { internalMutation } from "@repo/backend/convex/functions";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { ConvexError, v } from "convex/values";
 
-/** Schedules one worker per idle analytics partition with queued rows. */
+/** Schedules one worker attempt per analytics partition. */
 export const scheduleContentAnalyticsPartitions = internalMutation({
   args: {},
   returns: v.object({

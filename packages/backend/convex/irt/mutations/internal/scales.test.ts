@@ -2,6 +2,10 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { enqueueScaleQualityRefresh } from "@repo/backend/convex/irt/helpers/queue";
+import {
+  IRT_SCALE_QUALITY_REFRESH_CLAIM_TIMEOUT_MS,
+  IRT_SCALE_QUALITY_REFRESH_QUEUE_BATCH_SIZE,
+} from "@repo/backend/convex/irt/policy";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
@@ -297,6 +301,128 @@ describe("irt/mutations/internal/scales", () => {
     expect(finalState.queueEntries).toHaveLength(0);
     expect(finalState.qualityCheck).toMatchObject({
       tryoutId,
+      status: "blocked",
+    });
+
+    vi.useRealTimers();
+  });
+
+  it("reclaims a stale claimed queue row when the same tryout is enqueued again", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(Date.UTC(2026, 3, 2, 12, 0, 0)));
+
+    const t = convexTest(schema, convexModules);
+
+    const tryoutId = await t.mutation(async (ctx) => {
+      const tryoutId = await insertRealSnbtSet1Tryout(ctx, {
+        isActive: true,
+        slug: "2026-set-1-stale-claim",
+      });
+
+      await ctx.db.insert("irtScaleQualityRefreshQueue", {
+        tryoutId,
+        enqueuedAt:
+          Date.now() - IRT_SCALE_QUALITY_REFRESH_CLAIM_TIMEOUT_MS - 5000,
+        processingStartedAt:
+          Date.now() - IRT_SCALE_QUALITY_REFRESH_CLAIM_TIMEOUT_MS - 1000,
+      });
+
+      return tryoutId;
+    });
+
+    const result = await t.mutation(async (ctx) => {
+      return {
+        enqueuedAgain: await enqueueScaleQualityRefresh(ctx, {
+          tryoutId,
+          enqueuedAt: Date.now(),
+        }),
+        queueEntries: await ctx.db
+          .query("irtScaleQualityRefreshQueue")
+          .withIndex("by_tryoutId", (q) => q.eq("tryoutId", tryoutId))
+          .collect(),
+      };
+    });
+
+    expect(result.enqueuedAgain).toBe(true);
+    expect(result.queueEntries).toHaveLength(1);
+    expect(result.queueEntries[0]).toMatchObject({
+      tryoutId,
+      enqueuedAt: Date.now(),
+    });
+    expect(result.queueEntries[0]?.processingStartedAt).toBeUndefined();
+
+    vi.useRealTimers();
+  });
+
+  it("drains pending rows even when older claimed rows are still ahead of them", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(Date.UTC(2026, 3, 2, 12, 15, 0)));
+
+    const t = convexTest(schema, convexModules);
+
+    const pendingTryoutId = await t.mutation(async (ctx) => {
+      for (
+        let index = 0;
+        index < IRT_SCALE_QUALITY_REFRESH_QUEUE_BATCH_SIZE * 2;
+        index += 1
+      ) {
+        const claimedTryoutId = await insertRealSnbtSet1Tryout(ctx, {
+          partCount: 0,
+          totalQuestionCount: 0,
+          isActive: true,
+          slug: `2026-set-1-claimed-${index + 1}`,
+          label: `Claimed ${index + 1}`,
+        });
+
+        await ctx.db.insert("irtScaleQualityRefreshQueue", {
+          tryoutId: claimedTryoutId,
+          enqueuedAt: REAL_TRYOUT_DETECTED_AT - index - 10_000,
+          processingStartedAt: REAL_TRYOUT_DETECTED_AT - index - 5000,
+        });
+      }
+
+      const pendingTryoutId = await insertRealSnbtSet1Tryout(ctx, {
+        isActive: true,
+        slug: "2026-set-1-pending-behind-claims",
+      });
+
+      await insertRealSnbtSet1Parts(ctx, pendingTryoutId);
+      await ctx.db.insert("irtScaleQualityRefreshQueue", {
+        tryoutId: pendingTryoutId,
+        enqueuedAt: Date.now() - 1000,
+      });
+
+      return pendingTryoutId;
+    });
+
+    const drainResult = await t.mutation(
+      internal.irt.mutations.internal.scales.drainScaleQualityRefreshQueue,
+      {}
+    );
+
+    expect(drainResult).toEqual({
+      processedCount: 1,
+      scheduledCount: 1,
+    });
+
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+
+    const finalState = await t.query(async (ctx) => {
+      return {
+        qualityCheck: await ctx.db
+          .query("irtScaleQualityChecks")
+          .withIndex("by_tryoutId", (q) => q.eq("tryoutId", pendingTryoutId))
+          .unique(),
+        queueEntries: await ctx.db
+          .query("irtScaleQualityRefreshQueue")
+          .withIndex("by_tryoutId", (q) => q.eq("tryoutId", pendingTryoutId))
+          .collect(),
+      };
+    });
+
+    expect(finalState.queueEntries).toHaveLength(0);
+    expect(finalState.qualityCheck).toMatchObject({
+      tryoutId: pendingTryoutId,
       status: "blocked",
     });
 

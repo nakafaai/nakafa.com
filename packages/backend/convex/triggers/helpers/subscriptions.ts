@@ -1,9 +1,6 @@
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import { getPlanCreditConfig } from "@repo/backend/convex/credits/constants";
-import {
-  resolveCurrentCreditResetTimestamp,
-  resolveEffectiveCreditState,
-} from "@repo/backend/convex/credits/helpers/state";
+import { resolveCurrentCreditResetTimestamp } from "@repo/backend/convex/credits/helpers/state";
 import type { UserPlan } from "@repo/backend/convex/users/schema";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { products } from "@repo/backend/convex/utils/polar/products";
@@ -38,7 +35,7 @@ async function applyPlanChange(
   newPlan: UserPlan,
   subscriptionId: string
 ) {
-  const oldCreditConfig = getPlanCreditConfig(user.plan);
+  const previousPlan = user.plan;
   const newCreditConfig = getPlanCreditConfig(newPlan);
   const nextResetTimestamp = await resolveCurrentCreditResetTimestamp(
     ctx.db,
@@ -46,7 +43,9 @@ async function applyPlanChange(
     Date.now()
   );
 
-  if (newCreditConfig.amount > oldCreditConfig.amount) {
+  // syncCustomerPlan only calls this helper after filtering out no-op changes,
+  // so the current free/pro plan model only has two live transitions left.
+  if (newPlan === "pro") {
     await ctx.db.patch("users", user._id, {
       plan: newPlan,
       credits: newCreditConfig.amount,
@@ -60,7 +59,7 @@ async function applyPlanChange(
       balanceAfter: newCreditConfig.amount,
       metadata: {
         reason: "plan-upgrade",
-        "previous-plan": user.plan,
+        "previous-plan": previousPlan,
         "new-plan": newPlan,
         "subscription-id": subscriptionId,
       },
@@ -70,60 +69,37 @@ async function applyPlanChange(
       userId: user._id,
       subscriptionId,
       creditsGranted: newCreditConfig.amount,
-      previousPlan: user.plan,
+      previousPlan,
       newPlan,
     });
 
     return;
   }
-
-  if (newCreditConfig.amount < oldCreditConfig.amount) {
-    await ctx.db.patch("users", user._id, {
-      plan: newPlan,
-      credits: newCreditConfig.amount,
-      creditsResetAt: nextResetTimestamp,
-    });
-
-    await ctx.db.insert("creditTransactions", {
-      userId: user._id,
-      amount: newCreditConfig.amount,
-      type: newCreditConfig.grantType,
-      balanceAfter: newCreditConfig.amount,
-      metadata: {
-        reason: "plan-downgrade",
-        "previous-plan": user.plan,
-        "new-plan": newPlan,
-        "subscription-id": subscriptionId,
-      },
-    });
-
-    logger.info("User downgraded, credits adjusted", {
-      userId: user._id,
-      subscriptionId,
-      newCredits: newCreditConfig.amount,
-      previousPlan: user.plan,
-      newPlan,
-    });
-
-    return;
-  }
-
-  const effectiveCredits = await resolveEffectiveCreditState(
-    ctx.db,
-    user,
-    Date.now()
-  );
 
   await ctx.db.patch("users", user._id, {
     plan: newPlan,
-    credits: effectiveCredits.credits,
-    creditsResetAt: effectiveCredits.creditsResetAt,
+    credits: newCreditConfig.amount,
+    creditsResetAt: nextResetTimestamp,
   });
 
-  logger.info("User plan changed (same tier)", {
+  await ctx.db.insert("creditTransactions", {
+    userId: user._id,
+    amount: newCreditConfig.amount,
+    type: newCreditConfig.grantType,
+    balanceAfter: newCreditConfig.amount,
+    metadata: {
+      reason: "plan-downgrade",
+      "previous-plan": previousPlan,
+      "new-plan": newPlan,
+      "subscription-id": subscriptionId,
+    },
+  });
+
+  logger.info("User downgraded, credits adjusted", {
     userId: user._id,
     subscriptionId,
-    previousPlan: user.plan,
+    newCredits: newCreditConfig.amount,
+    previousPlan,
     newPlan,
   });
 }

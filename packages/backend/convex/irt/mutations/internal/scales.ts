@@ -126,13 +126,12 @@ export const drainScaleQualityRefreshQueue = internalMutation({
   }),
   handler: async (ctx) => {
     const processingStartedAt = Date.now();
-    const queueCandidates = await ctx.db
+    const queueEntries = await ctx.db
       .query("irtScaleQualityRefreshQueue")
-      .withIndex("by_enqueuedAt")
-      .take(IRT_SCALE_QUALITY_REFRESH_QUEUE_BATCH_SIZE * 2);
-    const queueEntries = queueCandidates
-      .filter((entry) => entry.processingStartedAt === undefined)
-      .slice(0, IRT_SCALE_QUALITY_REFRESH_QUEUE_BATCH_SIZE);
+      .withIndex("by_processingStartedAt_and_enqueuedAt", (q) =>
+        q.eq("processingStartedAt", undefined)
+      )
+      .take(IRT_SCALE_QUALITY_REFRESH_QUEUE_BATCH_SIZE);
 
     if (queueEntries.length === 0) {
       return {

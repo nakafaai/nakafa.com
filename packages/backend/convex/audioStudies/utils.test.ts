@@ -305,8 +305,13 @@ describe("audioStudies/utils", () => {
         id: englishOnlyArticleId,
       });
 
-      if (!englishOnlyLookup) {
-        throw new Error("Expected english-only article lookup to exist");
+      expect(englishOnlyLookup).not.toBeNull();
+
+      if (englishOnlyLookup === null) {
+        return {
+          deletedLookup: null,
+          missingLocalizedLookup: null,
+        };
       }
 
       return {
@@ -431,8 +436,15 @@ describe("audioStudies/utils", () => {
         id: englishOnlyId,
       });
 
-      if (!(translatedLookup && englishOnlyLookup)) {
-        throw new Error("Expected subject lookups to exist");
+      expect(translatedLookup).not.toBeNull();
+      expect(englishOnlyLookup).not.toBeNull();
+
+      if (translatedLookup === null || englishOnlyLookup === null) {
+        return {
+          sameLocale: null,
+          translated: null,
+          missing: null,
+        };
       }
 
       return {
@@ -508,8 +520,10 @@ describe("audioStudies/utils", () => {
         id: englishArticleId,
       });
 
-      if (!englishLookup) {
-        throw new Error("Expected article lookup to exist");
+      expect(englishLookup).not.toBeNull();
+
+      if (englishLookup === null) {
+        return null;
       }
 
       return await getLocalizedAudioContentLookup(ctx, englishLookup, "id");

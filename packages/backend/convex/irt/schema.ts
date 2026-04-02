@@ -69,6 +69,10 @@ const tables = {
     processingStartedAt: v.optional(v.number()),
   })
     .index("by_enqueuedAt", ["enqueuedAt"])
+    .index("by_processingStartedAt_and_enqueuedAt", [
+      "processingStartedAt",
+      "enqueuedAt",
+    ])
     .index("by_tryoutId", ["tryoutId"]),
 
   irtScalePublicationQueue: defineTable({
