@@ -2,22 +2,9 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
+import type { AudioContentLookup } from "@repo/backend/convex/contents/validators";
 import type { AudioContentRef } from "@repo/backend/convex/lib/validators/audio";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
-
-interface ContentData {
-  body: string;
-  description?: string;
-  locale: Locale;
-  title: string;
-}
-
-interface AudioContentLookup {
-  contentHash: string;
-  locale: Locale;
-  ref: AudioContentRef;
-  slug: string;
-}
 
 type AudioContentReaderCtx = Pick<QueryCtx, "db">;
 
@@ -28,7 +15,7 @@ type AudioContentReaderCtx = Pick<QueryCtx, "db">;
 export async function fetchContentForAudio(
   ctx: QueryCtx,
   contentRef: AudioContentRef
-): Promise<ContentData | null> {
+) {
   if (contentRef.type === "article") {
     const article = await ctx.db.get("articleContents", contentRef.id);
 

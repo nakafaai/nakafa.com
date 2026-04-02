@@ -228,6 +228,100 @@ describe("contents/mutations/audio", () => {
     expect(queuedItems.map((item) => item.locale).sort()).toEqual(["en", "id"]);
   });
 
+  it("uses provided source lookup metadata when queueing a subject candidate", async () => {
+    const t = convexTest(schema, convexModules);
+
+    const { englishId } = await t.mutation(async (ctx) => {
+      const englishId = await ctx.db.insert("subjectSections", {
+        topicId: await ctx.db.insert("subjectTopics", {
+          category: "high-school",
+          grade: "10",
+          material: "mathematics",
+          topic: REAL_VECTOR_ADDITION_EN.topic,
+          title: REAL_VECTOR_ADDITION_EN.topicTitle,
+          locale: REAL_VECTOR_ADDITION_EN.locale,
+          slug: REAL_VECTOR_TOPIC_SLUG,
+          sectionCount: REAL_VECTOR_TOPIC_SECTION_COUNT,
+          syncedAt: 1,
+        }),
+        locale: REAL_VECTOR_ADDITION_EN.locale,
+        slug: REAL_VECTOR_SECTION_SLUG,
+        category: "high-school",
+        grade: "10",
+        material: "mathematics",
+        topic: REAL_VECTOR_ADDITION_EN.topic,
+        section: REAL_VECTOR_ADDITION_EN.section,
+        title: REAL_VECTOR_ADDITION_EN.title,
+        description: REAL_VECTOR_ADDITION_EN.description,
+        date: REAL_VECTOR_PUBLISHED_AT,
+        subject: REAL_VECTOR_ADDITION_EN.subject,
+        body: REAL_VECTOR_ADDITION_EN.body,
+        contentHash: REAL_VECTOR_ADDITION_EN.hash,
+        syncedAt: 1,
+      });
+
+      await ctx.db.insert("subjectSections", {
+        topicId: await ctx.db.insert("subjectTopics", {
+          category: "high-school",
+          grade: "10",
+          material: "mathematics",
+          topic: REAL_VECTOR_ADDITION_ID.topic,
+          title: REAL_VECTOR_ADDITION_ID.topicTitle,
+          locale: REAL_VECTOR_ADDITION_ID.locale,
+          slug: REAL_VECTOR_TOPIC_SLUG,
+          sectionCount: REAL_VECTOR_TOPIC_SECTION_COUNT,
+          syncedAt: 1,
+        }),
+        locale: REAL_VECTOR_ADDITION_ID.locale,
+        slug: REAL_VECTOR_SECTION_SLUG,
+        category: "high-school",
+        grade: "10",
+        material: "mathematics",
+        topic: REAL_VECTOR_ADDITION_ID.topic,
+        section: REAL_VECTOR_ADDITION_ID.section,
+        title: REAL_VECTOR_ADDITION_ID.title,
+        description: REAL_VECTOR_ADDITION_ID.description,
+        date: REAL_VECTOR_PUBLISHED_AT,
+        subject: REAL_VECTOR_ADDITION_ID.subject,
+        body: REAL_VECTOR_ADDITION_ID.body,
+        contentHash: REAL_VECTOR_ADDITION_ID.hash,
+        syncedAt: 1,
+      });
+
+      return { englishId };
+    });
+
+    const result = await t.mutation(
+      internal.contents.mutations.audio.enqueuePopularContentForAudio,
+      {
+        items: [
+          {
+            ref: { type: "subject", id: englishId },
+            sourceContent: {
+              contentHash: REAL_VECTOR_ADDITION_EN.hash,
+              locale: "en",
+              ref: { type: "subject", id: englishId },
+              slug: REAL_VECTOR_SECTION_SLUG,
+            },
+            viewCount: 25,
+          },
+        ],
+      }
+    );
+
+    const queuedItems = await t.query(async (ctx) => {
+      return await ctx.db
+        .query("audioGenerationQueue")
+        .withIndex("by_slug_and_status", (q) =>
+          q.eq("slug", REAL_VECTOR_SECTION_SLUG).eq("status", "pending")
+        )
+        .collect();
+    });
+
+    expect(result).toEqual({ processed: 1, queued: 2 });
+    expect(queuedItems).toHaveLength(2);
+  });
+
   it("skips deleted source content", async () => {
     const t = convexTest(schema, convexModules);
 

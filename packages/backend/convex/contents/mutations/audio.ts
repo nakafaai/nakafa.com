@@ -38,7 +38,8 @@ export const enqueuePopularContentForAudio = internalMutation({
         break;
       }
 
-      const sourceContent = await getAudioContentLookup(ctx, item.ref);
+      const sourceContent =
+        item.sourceContent ?? (await getAudioContentLookup(ctx, item.ref));
 
       if (!sourceContent) {
         logger.warn("Content slug not found", {
