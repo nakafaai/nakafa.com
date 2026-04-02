@@ -198,6 +198,7 @@ import type * as tryouts_helpers_finalize_aggregates from "../tryouts/helpers/fi
 import type * as tryouts_helpers_finalize_attempt from "../tryouts/helpers/finalize/attempt.js";
 import type * as tryouts_helpers_finalize_part from "../tryouts/helpers/finalize/part.js";
 import type * as tryouts_helpers_finalize_score from "../tryouts/helpers/finalize/score.js";
+import type * as tryouts_helpers_finalize_snapshot from "../tryouts/helpers/finalize/snapshot.js";
 import type * as tryouts_helpers_irt from "../tryouts/helpers/irt.js";
 import type * as tryouts_helpers_latest from "../tryouts/helpers/latest.js";
 import type * as tryouts_helpers_loaders from "../tryouts/helpers/loaders.js";
@@ -434,6 +435,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/helpers/finalize/attempt": typeof tryouts_helpers_finalize_attempt;
   "tryouts/helpers/finalize/part": typeof tryouts_helpers_finalize_part;
   "tryouts/helpers/finalize/score": typeof tryouts_helpers_finalize_score;
+  "tryouts/helpers/finalize/snapshot": typeof tryouts_helpers_finalize_snapshot;
   "tryouts/helpers/irt": typeof tryouts_helpers_irt;
   "tryouts/helpers/latest": typeof tryouts_helpers_latest;
   "tryouts/helpers/loaders": typeof tryouts_helpers_loaders;

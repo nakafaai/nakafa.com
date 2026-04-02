@@ -1,7 +1,12 @@
 # IRT Calibration Pipeline
 
 This module owns operational IRT scoring policy and durable item calibration for
- exercise sets.
+exercise sets.
+
+## Related Docs
+
+- Explainer Bahasa Indonesia: `./docs/EXPLAINER.id.md`
+- Product policy try out: `../tryouts/docs/PRODUCT_POLICY.id.md`
 
 ## Documented Basis
 

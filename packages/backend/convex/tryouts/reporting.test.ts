@@ -17,6 +17,7 @@ const betterAuthModules = import.meta.glob(["../betterAuth/**/*.ts"]);
 const NOW = Date.UTC(2026, 3, 3, 9, 0, 0);
 const ATTEMPT_WINDOW_MS = 3 * 24 * 60 * 60 * 1000;
 
+/** Creates one Convex test instance with the components these tests depend on. */
 function createTestConvex() {
   const t = convexTest(schema, convexModules);
   registerAggregate(t, "globalLeaderboard");
@@ -25,6 +26,7 @@ function createTestConvex() {
   return t;
 }
 
+/** Seeds one authenticated Better Auth user plus the matching app user row. */
 async function seedAuthenticatedUser(ctx: MutationCtx, suffix: string) {
   const authUser = (await ctx.runMutation(
     components.betterAuth.adapter.create,
@@ -71,6 +73,7 @@ async function seedAuthenticatedUser(ctx: MutationCtx, suffix: string) {
   };
 }
 
+/** Inserts the smallest valid tryout shell plus one published frozen scale. */
 async function insertTryoutSkeleton(
   ctx: MutationCtx,
   slug: string,
@@ -123,6 +126,7 @@ async function insertTryoutSkeleton(
   };
 }
 
+/** Inserts one exercise question row for a test set. */
 async function insertExerciseQuestion(
   ctx: MutationCtx,
   setId: Id<"exerciseSets">,
@@ -147,6 +151,7 @@ async function insertExerciseQuestion(
   });
 }
 
+/** Grants the test user active Pro access through customer/subscription rows. */
 async function grantProAccess(
   ctx: MutationCtx,
   userId: Id<"users">,
@@ -179,6 +184,7 @@ async function grantProAccess(
   });
 }
 
+/** Inserts one completed tryout attempt with a single completed part. */
 async function insertCompletedTryoutAttempt(
   ctx: MutationCtx,
   {
@@ -259,6 +265,7 @@ async function insertCompletedTryoutAttempt(
   };
 }
 
+/** Inserts one completed one-question tryout attempt for aggregate sync tests. */
 async function insertSingleQuestionCompletedAttempt(
   ctx: MutationCtx,
   {
@@ -740,5 +747,220 @@ describe("tryouts/reporting", () => {
     expect(result.completed.irtScore).toBe(500);
     expect(result.expired.irtScore).toBe(500);
     expect(result.inProgress.irtScore).toBe(500);
+  });
+
+  it("treats never-started parts as wrong after tryout expiry in result reads", async () => {
+    const t = createTestConvex();
+    const identity = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(
+        ctx,
+        "expired-missing-parts"
+      );
+      const firstSetId = await ctx.db.insert("exerciseSets", {
+        locale: "id",
+        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/expired-missing-parts-qk",
+        category: "high-school",
+        type: "snbt",
+        material: "quantitative-knowledge",
+        exerciseType: "try-out",
+        setName: "expired-missing-parts-qk",
+        title: "Quantitative Knowledge",
+        questionCount: 1,
+        syncedAt: NOW,
+      });
+      const secondSetId = await ctx.db.insert("exerciseSets", {
+        locale: "id",
+        slug: "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/expired-missing-parts-mr",
+        category: "high-school",
+        type: "snbt",
+        material: "mathematical-reasoning",
+        exerciseType: "try-out",
+        setName: "expired-missing-parts-mr",
+        title: "Mathematical Reasoning",
+        questionCount: 1,
+        syncedAt: NOW,
+      });
+      const tryoutId = await ctx.db.insert("tryouts", {
+        product: "snbt",
+        locale: "id",
+        cycleKey: "2026",
+        slug: "expired-missing-parts",
+        label: "Expired Missing Parts",
+        partCount: 2,
+        totalQuestionCount: 2,
+        isActive: true,
+        detectedAt: NOW,
+        syncedAt: NOW,
+      });
+
+      await ctx.db.insert("tryoutPartSets", {
+        tryoutId,
+        setId: firstSetId,
+        partIndex: 0,
+        partKey: "quantitative-knowledge",
+      });
+      await ctx.db.insert("tryoutPartSets", {
+        tryoutId,
+        setId: secondSetId,
+        partIndex: 1,
+        partKey: "mathematical-reasoning",
+      });
+
+      const scaleVersionId = await ctx.db.insert("irtScaleVersions", {
+        tryoutId,
+        model: "2pl",
+        status: "provisional",
+        questionCount: 2,
+        publishedAt: NOW,
+      });
+      const firstQuestionId = await insertExerciseQuestion(
+        ctx,
+        firstSetId,
+        "expired-missing-parts-qk"
+      );
+      const secondQuestionId = await insertExerciseQuestion(
+        ctx,
+        secondSetId,
+        "expired-missing-parts-mr"
+      );
+      const firstRunId = await ctx.db.insert("irtCalibrationRuns", {
+        setId: firstSetId,
+        model: "2pl",
+        status: "completed",
+        questionCount: 1,
+        responseCount: 200,
+        attemptCount: 200,
+        iterationCount: 1,
+        maxParameterDelta: 0.001,
+        startedAt: NOW,
+        updatedAt: NOW,
+        completedAt: NOW,
+      });
+      const secondRunId = await ctx.db.insert("irtCalibrationRuns", {
+        setId: secondSetId,
+        model: "2pl",
+        status: "completed",
+        questionCount: 1,
+        responseCount: 200,
+        attemptCount: 200,
+        iterationCount: 1,
+        maxParameterDelta: 0.001,
+        startedAt: NOW,
+        updatedAt: NOW,
+        completedAt: NOW,
+      });
+
+      await ctx.db.insert("irtScaleVersionItems", {
+        scaleVersionId,
+        calibrationRunId: firstRunId,
+        questionId: firstQuestionId,
+        setId: firstSetId,
+        difficulty: 0,
+        discrimination: 1,
+      });
+      await ctx.db.insert("irtScaleVersionItems", {
+        scaleVersionId,
+        calibrationRunId: secondRunId,
+        questionId: secondQuestionId,
+        setId: secondSetId,
+        difficulty: 0,
+        discrimination: 1,
+      });
+
+      const setAttemptId = await ctx.db.insert("exerciseAttempts", {
+        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/expired-missing-parts-qk",
+        userId: identity.userId,
+        origin: "tryout",
+        mode: "simulation",
+        scope: "set",
+        timeLimit: 90,
+        startedAt: NOW,
+        lastActivityAt: NOW,
+        completedAt: NOW,
+        endReason: "time-expired",
+        status: "expired",
+        updatedAt: NOW,
+        totalExercises: 1,
+        answeredCount: 0,
+        correctAnswers: 0,
+        totalTime: 90,
+        scorePercentage: 0,
+      });
+      const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
+        userId: identity.userId,
+        tryoutId,
+        scaleVersionId,
+        scoreStatus: "provisional",
+        status: "expired",
+        completedPartIndices: [0],
+        totalCorrect: 0,
+        totalQuestions: 1,
+        theta: 0,
+        thetaSE: 1,
+        startedAt: NOW,
+        expiresAt: NOW + ATTEMPT_WINDOW_MS,
+        lastActivityAt: NOW,
+        completedAt: NOW,
+        endReason: "time-expired",
+      });
+
+      await ctx.db.insert("tryoutPartAttempts", {
+        tryoutAttemptId,
+        partIndex: 0,
+        partKey: "quantitative-knowledge",
+        setAttemptId,
+        setId: firstSetId,
+        theta: 0,
+        thetaSE: 1,
+      });
+      await ctx.db.insert("userTryoutLatestAttempts", {
+        userId: identity.userId,
+        product: "snbt",
+        locale: "id",
+        tryoutId,
+        attemptId: tryoutAttemptId,
+        slug: "expired-missing-parts",
+        status: "expired",
+        expiresAtMs: NOW + ATTEMPT_WINDOW_MS,
+        updatedAt: NOW,
+      });
+
+      return identity;
+    });
+
+    const attemptResult = await t
+      .withIdentity({
+        subject: identity.authUserId,
+        sessionId: identity.sessionId,
+      })
+      .query(api.tryouts.queries.me.attempt.getUserTryoutAttempt, {
+        product: "snbt",
+        locale: "id",
+        tryoutSlug: "expired-missing-parts",
+      });
+
+    expect(attemptResult?.attempt.totalCorrect).toBe(0);
+    expect(attemptResult?.attempt.totalQuestions).toBe(2);
+    expect(attemptResult?.partAttempts).toHaveLength(2);
+    expect(
+      attemptResult?.partAttempts.map((part) => part.score?.correctAnswers)
+    ).toEqual([0, 0]);
+    expect(attemptResult?.partAttempts[1]?.setAttempt).toBeNull();
+
+    const partResult = await t
+      .withIdentity({
+        subject: identity.authUserId,
+        sessionId: identity.sessionId,
+      })
+      .query(api.tryouts.queries.me.part.getUserTryoutPartAttempt, {
+        product: "snbt",
+        locale: "id",
+        tryoutSlug: "expired-missing-parts",
+        partKey: "mathematical-reasoning",
+      });
+
+    expect(partResult?.partAttempt).toBeNull();
+    expect(partResult?.partScore?.correctAnswers).toBe(0);
+    expect(partResult?.tryoutAttempt.totalQuestions).toBe(2);
   });
 });

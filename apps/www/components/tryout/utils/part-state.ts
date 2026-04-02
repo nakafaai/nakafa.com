@@ -110,7 +110,7 @@ function getTryoutSetPartStatus({
   }
 
   if (
-    partAttempt &&
+    partAttempt?.setAttempt &&
     getEffectivePartAttemptStatus({
       expiresAtMs,
       nowMs,
@@ -120,7 +120,7 @@ function getTryoutSetPartStatus({
     return "ended";
   }
 
-  if (partAttempt?.setAttempt.status === "in-progress") {
+  if (partAttempt?.setAttempt?.status === "in-progress") {
     return "in-progress";
   }
 

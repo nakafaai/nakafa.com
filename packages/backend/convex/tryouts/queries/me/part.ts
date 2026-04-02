@@ -1,5 +1,6 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
+import { buildFinalizedTryoutSnapshot } from "@repo/backend/convex/tryouts/helpers/finalize/snapshot";
 import { getBoundedExerciseAnswers } from "@repo/backend/convex/tryouts/helpers/loaders";
 import { getTryoutReportScore } from "@repo/backend/convex/tryouts/helpers/reporting";
 import { loadLatestUserTryoutContext } from "@repo/backend/convex/tryouts/queries/me/helpers";
@@ -45,6 +46,38 @@ export const getUserTryoutPartAttempt = query({
       .unique();
 
     if (!currentPartAttempt) {
+      if (tryoutAttempt.status !== "in-progress") {
+        const finalizedSnapshot = await buildFinalizedTryoutSnapshot(ctx.db, {
+          scaleVersionId: tryoutAttempt.scaleVersionId,
+          tryout: context.tryout,
+          tryoutAttempt,
+        });
+        const partSnapshot = finalizedSnapshot.partSnapshots.find(
+          (snapshot) => snapshot.partKey === args.partKey
+        );
+
+        if (!partSnapshot) {
+          throw new ConvexError({
+            code: "INVALID_TRYOUT_STATE",
+            message: "Tryout part not found for finalized snapshot.",
+          });
+        }
+
+        return {
+          expiresAtMs: tryoutAttempt.expiresAt,
+          partScore: partSnapshot.score,
+          partAttempt: null,
+          tryoutAttempt: {
+            ...scoredTryoutAttempt,
+            irtScore: finalizedSnapshot.irtScore,
+            theta: finalizedSnapshot.theta,
+            thetaSE: finalizedSnapshot.thetaSE,
+            totalCorrect: finalizedSnapshot.totalCorrect,
+            totalQuestions: finalizedSnapshot.totalQuestions,
+          },
+        };
+      }
+
       return {
         expiresAtMs: tryoutAttempt.expiresAt,
         partScore: null,

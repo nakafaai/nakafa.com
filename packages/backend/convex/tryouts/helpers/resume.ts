@@ -5,14 +5,17 @@ import { getFirstIncompleteTryoutPartIndex } from "@repo/backend/convex/tryouts/
 function pickSuggestedPartKey<
   PartAttempt extends {
     partKey: Doc<"tryoutPartAttempts">["partKey"];
-    setAttempt: Pick<Doc<"exerciseAttempts">, "lastActivityAt" | "status">;
+    setAttempt: Pick<
+      Doc<"exerciseAttempts">,
+      "lastActivityAt" | "status"
+    > | null;
   },
 >(partAttempts: PartAttempt[]) {
   let suggestedPartKey: PartAttempt["partKey"] | undefined;
   let latestActivityAt = Number.NEGATIVE_INFINITY;
 
   for (const partAttempt of partAttempts) {
-    if (partAttempt.setAttempt.status !== "in-progress") {
+    if (partAttempt.setAttempt?.status !== "in-progress") {
       continue;
     }
 
@@ -37,7 +40,10 @@ export function resolveResumePartKey({
   orderedParts: Pick<Doc<"tryoutPartSets">, "partIndex" | "partKey">[];
   partAttempts: Array<{
     partKey: Doc<"tryoutPartAttempts">["partKey"];
-    setAttempt: Pick<Doc<"exerciseAttempts">, "lastActivityAt" | "status">;
+    setAttempt: Pick<
+      Doc<"exerciseAttempts">,
+      "lastActivityAt" | "status"
+    > | null;
   }>;
 }) {
   const suggestedPartKey = pickSuggestedPartKey(partAttempts);

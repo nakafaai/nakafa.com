@@ -17,6 +17,24 @@ type TryoutAttemptData = NonNullable<
 type TryoutPartAttempt = TryoutAttemptData["partAttempts"][number];
 type OrderedTryoutPart = TryoutAttemptData["orderedParts"][number];
 
+/** Narrows a part row to the branch where a live set attempt still exists. */
+function isActivePartAttempt(
+  attemptData: TryoutAttemptData,
+  nowMs: number,
+  partAttempt: TryoutPartAttempt
+): partAttempt is TryoutPartAttempt & {
+  setAttempt: NonNullable<TryoutPartAttempt["setAttempt"]>;
+} {
+  return (
+    partAttempt.setAttempt !== null &&
+    getEffectivePartAttemptStatus({
+      expiresAtMs: attemptData.expiresAtMs,
+      nowMs,
+      setAttempt: partAttempt.setAttempt,
+    }) === "in-progress"
+  );
+}
+
 /** Picks the next part key the student should resume in an active tryout. */
 function getResumePartKey({
   attemptData,
@@ -31,13 +49,8 @@ function getResumePartKey({
     return undefined;
   }
 
-  const activePartAttempts = attemptData.partAttempts.filter(
-    (partAttempt: TryoutPartAttempt) =>
-      getEffectivePartAttemptStatus({
-        expiresAtMs: attemptData.expiresAtMs,
-        nowMs,
-        setAttempt: partAttempt.setAttempt,
-      }) === "in-progress"
+  const activePartAttempts = attemptData.partAttempts.filter((partAttempt) =>
+    isActivePartAttempt(attemptData, nowMs, partAttempt)
   );
 
   if (activePartAttempts.length === 0) {
@@ -51,6 +64,7 @@ function getResumePartKey({
       }
 
       if (
+        partAttempt.setAttempt !== null &&
         getEffectivePartAttemptStatus({
           expiresAtMs: attemptData.expiresAtMs,
           nowMs,
@@ -71,7 +85,7 @@ function getResumePartKey({
   }
 
   activePartAttempts.sort(
-    (left: TryoutPartAttempt, right: TryoutPartAttempt) =>
+    (left, right) =>
       right.setAttempt.lastActivityAt - left.setAttempt.lastActivityAt
   );
 

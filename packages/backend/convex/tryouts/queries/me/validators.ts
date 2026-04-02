@@ -51,7 +51,7 @@ export const tryoutPartAttemptSummaryValidator = v.object({
   partIndex: v.number(),
   partKey: tryoutPartKeyValidator,
   score: nullable(tryoutPartAttemptScoreSummaryValidator),
-  setAttempt: tryoutPartAttemptSummarySetAttemptValidator,
+  setAttempt: nullable(tryoutPartAttemptSummarySetAttemptValidator),
 });
 
 export const userTryoutAttemptResultValidator = v.object({

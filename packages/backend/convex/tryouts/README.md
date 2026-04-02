@@ -4,6 +4,12 @@ Generic tryout runtime built on top of the shared `exerciseAttempts` engine.
 Product-specific rules live in `tryouts/products/`, while the runtime tables,
 queries, mutations, IRT publication, and leaderboard flow stay generic.
 
+## Related Docs
+
+- IRT technical basis: `../irt/README.md`
+- IRT explainer: `../irt/docs/EXPLAINER.id.md`
+- Product policy: `./docs/PRODUCT_POLICY.id.md`
+
 ## Core Model
 
 - `tryouts` stores detected tryout definitions for one product and locale
