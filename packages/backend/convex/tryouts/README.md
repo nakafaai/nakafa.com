@@ -41,6 +41,14 @@ That policy owns:
   families like `tkaTryouts`, `cpnsTryouts`, etc.
 - Generic ranking still uses aggregate components for O(log n) rank lookups
 
+## Finalized Attempt Semantics
+
+- Public tryout score is always derived from the attempt's final `theta`
+- If a tryout ends before every part was started, unstarted parts still count as
+  zero-correct timed sections in the finalized tryout score
+- Ended tryout result reads still return those never-started parts so the UI can
+  show full-tryout totals and per-part zero-score summaries
+
 ## Frontend Contract
 
 Use the generic query/mutation surface in `tryouts/`:

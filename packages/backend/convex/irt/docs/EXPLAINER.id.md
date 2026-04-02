@@ -23,6 +23,12 @@ Artinya:
 - sistem tetap aman saat partisipasi masih rendah
 - yang bisa tertunda adalah label `official`, bukan jalannya try out
 
+Kalau try out berakhir saat siswa belum menyentuh semua subtes:
+
+- subtes yang tidak pernah dimulai tetap dihitung sebagai salah semua untuk skor
+  try out final
+- ringkasan per subtes tetap muncul, meskipun subtes itu tidak pernah dibuka
+
 ## Diagram Final
 
 ```mermaid
@@ -117,6 +123,10 @@ Ada dua kemungkinan:
 2. Kalau siswa selesai saat scale masih provisional, hasilnya disimpan dulu
    sebagai provisional, lalu dipromosikan otomatis setelah official scale
    diterbitkan.
+
+Kalau try out berakhir karena waktu habis, sistem tetap menutup hasil pada level
+try out penuh. Jadi bagian yang tidak sempat dimulai tidak dihilangkan dari hasil
+akhir; bagian itu tetap dihitung sebagai jawaban salah semua.
 
 ## Level Data Yang Perlu Dibedakan
 
