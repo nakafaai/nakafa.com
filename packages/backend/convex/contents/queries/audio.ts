@@ -1,10 +1,11 @@
 import { internalQuery } from "@repo/backend/convex/_generated/server";
 import { MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE } from "@repo/backend/convex/audioStudies/constants";
+import { getAudioContentLookup } from "@repo/backend/convex/audioStudies/utils";
+import { mergePopularAudioContentItems } from "@repo/backend/convex/contents/helpers/popularity";
 import {
-  mergePopularAudioContentItems,
   type PopularAudioContentItem,
-} from "@repo/backend/convex/contents/helpers/popularity";
-import { popularAudioContentItemValidator } from "@repo/backend/convex/contents/validators";
+  popularAudioContentItemValidator,
+} from "@repo/backend/convex/contents/validators";
 import { v } from "convex/values";
 
 /**
@@ -29,22 +30,42 @@ export const getPopularContentForAudioQueue = internalQuery({
         .order("desc")
         .take(MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE),
     ]);
+    const sourceItems: PopularAudioContentItem[] = [];
 
-    return mergePopularAudioContentItems([
-      ...articleRows.map(
-        (row) =>
-          ({
-            ref: { type: "article", id: row.contentId },
-            viewCount: row.viewCount,
-          }) satisfies PopularAudioContentItem
-      ),
-      ...subjectRows.map(
-        (row) =>
-          ({
-            ref: { type: "subject", id: row.contentId },
-            viewCount: row.viewCount,
-          }) satisfies PopularAudioContentItem
-      ),
-    ]);
+    for (const row of articleRows) {
+      const sourceContent = await getAudioContentLookup(ctx, {
+        type: "article",
+        id: row.contentId,
+      });
+
+      if (!sourceContent) {
+        continue;
+      }
+
+      sourceItems.push({
+        ref: sourceContent.ref,
+        sourceContent,
+        viewCount: row.viewCount,
+      });
+    }
+
+    for (const row of subjectRows) {
+      const sourceContent = await getAudioContentLookup(ctx, {
+        type: "subject",
+        id: row.contentId,
+      });
+
+      if (!sourceContent) {
+        continue;
+      }
+
+      sourceItems.push({
+        ref: sourceContent.ref,
+        sourceContent,
+        viewCount: row.viewCount,
+      });
+    }
+
+    return mergePopularAudioContentItems(sourceItems);
   },
 });

@@ -3,15 +3,47 @@ import { IRT_AUTOMATION_CRON_INTERVAL_MINUTES } from "@repo/backend/convex/irt/p
 import { cronJobs } from "convex/server";
 
 const crons = cronJobs();
+const CONTENT_ANALYTICS_BACKSTOP_INTERVAL_MINUTES = 10;
+const CREDIT_RESET_PERIOD_REPAIR_INTERVAL_MINUTES = 1;
 const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
 const TRYOUT_ACCESS_STATUS_SWEEP_INTERVAL_MINUTES = 5;
 
 /**
- * Schedules idle content analytics partitions that have queued rows.
+ * Materializes the current daily reset boundary for free-plan credits.
+ */
+crons.cron(
+  "sync free credit reset period",
+  "0 0 * * *",
+  internal.credits.mutations.syncCreditResetPeriod,
+  { plan: "free" }
+);
+
+/**
+ * Materializes the current monthly reset boundary for pro-plan credits.
+ */
+crons.cron(
+  "sync pro credit reset period",
+  "0 0 1 * *",
+  internal.credits.mutations.syncCreditResetPeriod,
+  { plan: "pro" }
+);
+
+/**
+ * Repairs materialized credit reset periods if an exact-boundary cron was missed.
+ */
+crons.interval(
+  "repair credit reset periods",
+  { minutes: CREDIT_RESET_PERIOD_REPAIR_INTERVAL_MINUTES },
+  internal.credits.mutations.syncAllCreditResetPeriods,
+  {}
+);
+
+/**
+ * Backstops content analytics scheduling in case a per-view trigger is missed.
  */
 crons.interval(
   "schedule content analytics partitions",
-  { minutes: 1 },
+  { minutes: CONTENT_ANALYTICS_BACKSTOP_INTERVAL_MINUTES },
   internal.contents.mutations.analytics.scheduleContentAnalyticsPartitions,
   {}
 );
@@ -58,36 +90,6 @@ crons.interval(
 );
 
 /**
- * Resets free user credits daily at midnight UTC.
- */
-crons.cron(
-  "reset free user credits",
-  "0 0 * * *",
-  internal.credits.actions.populateQueue,
-  { plan: "free" }
-);
-
-/**
- * Resets pro user credits monthly on 1st at midnight UTC.
- */
-crons.cron(
-  "reset pro user credits",
-  "0 0 1 * *",
-  internal.credits.actions.populateQueue,
-  { plan: "pro" }
-);
-
-/**
- * Cleans up old credit reset queue items daily at 3 AM UTC.
- */
-crons.cron(
-  "cleanup credit reset queue",
-  "0 3 * * *",
-  internal.credits.mutations.cleanupOldQueueItems,
-  {}
-);
-
-/**
  * Starts queued IRT calibrations in bounded batches.
  */
 crons.interval(
@@ -104,6 +106,16 @@ crons.interval(
   "drain irt scale publication queue",
   { minutes: IRT_AUTOMATION_CRON_INTERVAL_MINUTES },
   internal.irt.mutations.internal.scales.drainScalePublicationQueue,
+  {}
+);
+
+/**
+ * Refreshes queued IRT scale-quality summaries in bounded batches.
+ */
+crons.interval(
+  "drain irt scale quality refresh queue",
+  { minutes: IRT_AUTOMATION_CRON_INTERVAL_MINUTES },
+  internal.irt.mutations.internal.scales.drainScaleQualityRefreshQueue,
   {}
 );
 

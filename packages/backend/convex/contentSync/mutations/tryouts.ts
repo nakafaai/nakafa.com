@@ -3,8 +3,8 @@ import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/cons
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
 import { syncTryoutPartSetMappings } from "@repo/backend/convex/contentSync/lib/tryouts";
 import { internalMutation } from "@repo/backend/convex/functions";
+import { enqueueScaleQualityRefresh } from "@repo/backend/convex/irt/helpers/queue";
 import { getOrPublishScaleVersionForTryout } from "@repo/backend/convex/irt/scales/publish";
-import { irtScaleQualityRefreshWorkpool } from "@repo/backend/convex/irt/workpool";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import {
   tryoutProductPolicies,
@@ -27,6 +27,7 @@ export const bulkSyncTryouts = internalMutation({
   returns: syncTryoutsResultValidator,
   handler: async (ctx, args) => {
     const now = Date.now();
+    let enqueuedScaleQualityRefresh = false;
     let created = 0;
     let unchanged = 0;
     let updated = 0;
@@ -86,11 +87,14 @@ export const bulkSyncTryouts = internalMutation({
               tryoutId: existingTryout._id,
             });
 
-            await irtScaleQualityRefreshWorkpool.enqueueMutation(
-              ctx,
-              internal.irt.mutations.internal.scales.refreshScaleQualityCheck,
-              { tryoutId: existingTryout._id }
-            );
+            const enqueued = await enqueueScaleQualityRefresh(ctx, {
+              tryoutId: existingTryout._id,
+              enqueuedAt: now,
+            });
+
+            if (enqueued) {
+              enqueuedScaleQualityRefresh = true;
+            }
           }
 
           unchanged++;
@@ -112,11 +116,14 @@ export const bulkSyncTryouts = internalMutation({
           });
         }
 
-        await irtScaleQualityRefreshWorkpool.enqueueMutation(
-          ctx,
-          internal.irt.mutations.internal.scales.refreshScaleQualityCheck,
-          { tryoutId: existingTryout._id }
-        );
+        const enqueued = await enqueueScaleQualityRefresh(ctx, {
+          tryoutId: existingTryout._id,
+          enqueuedAt: now,
+        });
+
+        if (enqueued) {
+          enqueuedScaleQualityRefresh = true;
+        }
 
         updated++;
         continue;
@@ -147,11 +154,14 @@ export const bulkSyncTryouts = internalMutation({
         });
       }
 
-      await irtScaleQualityRefreshWorkpool.enqueueMutation(
-        ctx,
-        internal.irt.mutations.internal.scales.refreshScaleQualityCheck,
-        { tryoutId }
-      );
+      const enqueued = await enqueueScaleQualityRefresh(ctx, {
+        tryoutId,
+        enqueuedAt: now,
+      });
+
+      if (enqueued) {
+        enqueuedScaleQualityRefresh = true;
+      }
 
       created++;
     }
@@ -183,13 +193,24 @@ export const bulkSyncTryouts = internalMutation({
         syncedAt: now,
       });
 
-      await irtScaleQualityRefreshWorkpool.enqueueMutation(
-        ctx,
-        internal.irt.mutations.internal.scales.refreshScaleQualityCheck,
-        { tryoutId: activeTryout._id }
-      );
+      const enqueued = await enqueueScaleQualityRefresh(ctx, {
+        tryoutId: activeTryout._id,
+        enqueuedAt: now,
+      });
+
+      if (enqueued) {
+        enqueuedScaleQualityRefresh = true;
+      }
 
       updated++;
+    }
+
+    if (enqueuedScaleQualityRefresh) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.irt.mutations.internal.scales.drainScaleQualityRefreshQueue,
+        {}
+      );
     }
 
     return { created, unchanged, updated };

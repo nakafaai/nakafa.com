@@ -1,5 +1,6 @@
-import type { DataModel, Id } from "@repo/backend/convex/_generated/dataModel";
+import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import { getPlanCreditConfig } from "@repo/backend/convex/credits/constants";
+import { resolveCurrentCreditResetTimestamp } from "@repo/backend/convex/credits/helpers/state";
 import type { UserPlan } from "@repo/backend/convex/users/schema";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { products } from "@repo/backend/convex/utils/polar/products";
@@ -30,82 +31,75 @@ function getHigherPlan(currentPlan: UserPlan, nextPlan: UserPlan): UserPlan {
  */
 async function applyPlanChange(
   ctx: GenericMutationCtx<DataModel>,
-  userId: Id<"users">,
-  oldPlan: UserPlan,
+  user: DataModel["users"]["document"],
   newPlan: UserPlan,
   subscriptionId: string
 ) {
-  const oldCreditConfig = getPlanCreditConfig(oldPlan);
+  const previousPlan = user.plan;
   const newCreditConfig = getPlanCreditConfig(newPlan);
+  const nextResetTimestamp = await resolveCurrentCreditResetTimestamp(
+    ctx.db,
+    newPlan,
+    Date.now()
+  );
 
-  if (newCreditConfig.amount > oldCreditConfig.amount) {
-    await ctx.db.patch("users", userId, {
+  // syncCustomerPlan only calls this helper after filtering out no-op changes,
+  // so the current free/pro plan model only has two live transitions left.
+  if (newPlan === "pro") {
+    await ctx.db.patch("users", user._id, {
       plan: newPlan,
       credits: newCreditConfig.amount,
-      creditsResetAt: Date.now(),
+      creditsResetAt: nextResetTimestamp,
     });
 
     await ctx.db.insert("creditTransactions", {
-      userId,
+      userId: user._id,
       amount: newCreditConfig.amount,
       type: "purchase",
       balanceAfter: newCreditConfig.amount,
       metadata: {
         reason: "plan-upgrade",
-        "previous-plan": oldPlan,
+        "previous-plan": previousPlan,
         "new-plan": newPlan,
         "subscription-id": subscriptionId,
       },
     });
 
     logger.info("User upgraded with credits", {
-      userId,
+      userId: user._id,
       subscriptionId,
       creditsGranted: newCreditConfig.amount,
-      previousPlan: oldPlan,
+      previousPlan,
       newPlan,
     });
 
     return;
   }
 
-  if (newCreditConfig.amount < oldCreditConfig.amount) {
-    await ctx.db.patch("users", userId, {
-      plan: newPlan,
-      credits: newCreditConfig.amount,
-      creditsResetAt: Date.now(),
-    });
+  await ctx.db.patch("users", user._id, {
+    plan: newPlan,
+    credits: newCreditConfig.amount,
+    creditsResetAt: nextResetTimestamp,
+  });
 
-    await ctx.db.insert("creditTransactions", {
-      userId,
-      amount: newCreditConfig.amount,
-      type: newCreditConfig.grantType,
-      balanceAfter: newCreditConfig.amount,
-      metadata: {
-        reason: "plan-downgrade",
-        "previous-plan": oldPlan,
-        "new-plan": newPlan,
-        "subscription-id": subscriptionId,
-      },
-    });
+  await ctx.db.insert("creditTransactions", {
+    userId: user._id,
+    amount: newCreditConfig.amount,
+    type: newCreditConfig.grantType,
+    balanceAfter: newCreditConfig.amount,
+    metadata: {
+      reason: "plan-downgrade",
+      "previous-plan": previousPlan,
+      "new-plan": newPlan,
+      "subscription-id": subscriptionId,
+    },
+  });
 
-    logger.info("User downgraded, credits adjusted", {
-      userId,
-      subscriptionId,
-      newCredits: newCreditConfig.amount,
-      previousPlan: oldPlan,
-      newPlan,
-    });
-
-    return;
-  }
-
-  await ctx.db.patch("users", userId, { plan: newPlan });
-
-  logger.info("User plan changed (same tier)", {
-    userId,
+  logger.info("User downgraded, credits adjusted", {
+    userId: user._id,
     subscriptionId,
-    previousPlan: oldPlan,
+    newCredits: newCreditConfig.amount,
+    previousPlan,
     newPlan,
   });
 }
@@ -156,11 +150,5 @@ export async function syncCustomerPlan(
     return;
   }
 
-  await applyPlanChange(
-    ctx,
-    customer.userId,
-    user.plan,
-    newPlan,
-    subscription.id
-  );
+  await applyPlanChange(ctx, user, newPlan, subscription.id);
 }

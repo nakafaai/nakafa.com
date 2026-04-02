@@ -2,7 +2,7 @@ import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import { api } from "@repo/connection/routes";
 import { routing } from "@repo/internationalization/src/routing";
 import { cleanSlug } from "@repo/utilities/helper";
-import { fetchQuery } from "convex/nextjs";
+import { fetchMutation } from "convex/nextjs";
 
 const QURAN_SLUG_PARTS_COUNT = 3;
 
@@ -69,8 +69,8 @@ export async function getVerified(url: string) {
  * used for access control and credit gating before the chat stream starts.
  */
 export async function getUserInfo(token: string) {
-  const userInfo = await fetchQuery(
-    convexApi.users.queries.getUserInfoForChat,
+  const userInfo = await fetchMutation(
+    convexApi.users.mutations.syncUserInfoForChat,
     {},
     {
       token,

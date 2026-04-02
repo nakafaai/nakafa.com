@@ -25,6 +25,7 @@ type ResettableTableName =
   | "irtCalibrationQueue"
   | "irtCalibrationRuns"
   | "irtScaleQualityChecks"
+  | "irtScaleQualityRefreshQueue"
   | "irtScalePublicationQueue"
   | "irtScaleVersionItems"
   | "irtScaleVersions"
@@ -156,6 +157,9 @@ export const deleteIrtCalibrationCacheStatsBatch = makeBatchDeleteMutation(
 );
 export const deleteIrtScaleQualityChecksBatch = makeBatchDeleteMutation(
   "irtScaleQualityChecks"
+);
+export const deleteIrtScaleQualityRefreshQueueBatch = makeBatchDeleteMutation(
+  "irtScaleQualityRefreshQueue"
 );
 export const deleteExerciseAttemptsBatch =
   makeBatchDeleteMutation("exerciseAttempts");

@@ -1,4 +1,3 @@
-import type { CreditResetJobType } from "@repo/backend/convex/credits/schema";
 import type { UserPlan } from "@repo/backend/convex/users/schema";
 
 /**
@@ -17,19 +16,15 @@ export const PLAN_CREDIT_CONFIG: Record<
     amount: number;
     /** Grant type for transaction logging */
     grantType: CreditGrantType;
-    /** Job type identifier for credit reset jobs */
-    jobType: CreditResetJobType;
   }
 > = {
   free: {
     amount: 10,
     grantType: "daily-grant",
-    jobType: "free-daily",
   },
   pro: {
     amount: 3000,
     grantType: "monthly-grant",
-    jobType: "pro-monthly",
   },
 };
 
@@ -51,22 +46,3 @@ export const DEFAULT_USER_PLAN: UserPlan = "free";
  */
 export const DEFAULT_USER_CREDITS =
   PLAN_CREDIT_CONFIG[DEFAULT_USER_PLAN].amount;
-
-/**
- * Workflow configuration for credit reset processing.
- * Queue writes and queue claims use the same partition count so each worker
- * owns one disjoint queue slice.
- */
-export const RESET_WORKFLOW_CONFIG = {
-  partitionCount: 10,
-  populateBatchSize: 1000,
-  processBatchSize: 100,
-} as const;
-
-/**
- * Cleanup configuration for old queue items.
- */
-export const CLEANUP_CONFIG = {
-  retentionDays: 7,
-  batchSize: 1000,
-} as const;

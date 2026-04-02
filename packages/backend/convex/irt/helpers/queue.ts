@@ -4,6 +4,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   IRT_OPERATIONAL_MODEL,
   IRT_QUEUE_CLEANUP_BATCH_SIZE,
+  IRT_SCALE_QUALITY_REFRESH_CLAIM_TIMEOUT_MS,
 } from "@repo/backend/convex/irt/policy";
 import { workflow } from "@repo/backend/convex/workflow";
 import { ConvexError } from "convex/values";
@@ -118,4 +119,46 @@ export async function cleanupScalePublicationQueueEntriesBatch(
   }
 
   return queueEntries.length;
+}
+
+/** Enqueues one tryout for scale-quality refresh if it is not already queued. */
+export async function enqueueScaleQualityRefresh(
+  ctx: Pick<MutationCtx, "db">,
+  {
+    enqueuedAt,
+    tryoutId,
+  }: {
+    enqueuedAt: number;
+    tryoutId: Id<"tryouts">;
+  }
+) {
+  const now = Date.now();
+  const existingEntry = await ctx.db
+    .query("irtScaleQualityRefreshQueue")
+    .withIndex("by_tryoutId", (q) => q.eq("tryoutId", tryoutId))
+    .first();
+
+  if (!existingEntry) {
+    await ctx.db.insert("irtScaleQualityRefreshQueue", {
+      tryoutId,
+      enqueuedAt,
+    });
+
+    return true;
+  }
+
+  if (
+    existingEntry.processingStartedAt !== undefined &&
+    existingEntry.processingStartedAt <=
+      now - IRT_SCALE_QUALITY_REFRESH_CLAIM_TIMEOUT_MS
+  ) {
+    await ctx.db.replace("irtScaleQualityRefreshQueue", existingEntry._id, {
+      tryoutId,
+      enqueuedAt,
+    });
+
+    return true;
+  }
+
+  return false;
 }

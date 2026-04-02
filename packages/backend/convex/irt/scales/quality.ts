@@ -212,3 +212,24 @@ export async function upsertTryoutScaleQualityCheck(
   await db.insert("irtScaleQualityChecks", summary);
   return summary;
 }
+
+/**
+ * Recomputes one tryout's quality summary and persists it when the tryout
+ * still exists.
+ */
+export async function refreshTryoutScaleQualityCheck(
+  db: MutationCtx["db"],
+  tryoutId: Id<"tryouts">
+) {
+  const summary = await evaluateTryoutScaleQuality(db, {
+    now: Date.now(),
+    tryoutId,
+  });
+
+  if (!summary) {
+    return false;
+  }
+
+  await upsertTryoutScaleQualityCheck(db, summary);
+  return true;
+}

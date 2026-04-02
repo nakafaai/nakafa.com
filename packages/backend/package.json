@@ -12,7 +12,9 @@
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
     "test": "vitest run",
+    "test:once": "vitest run",
     "test:watch": "vitest watch",
+    "test:debug": "vitest --inspect-brk --no-file-parallelism",
     "test:coverage": "vitest run --coverage",
     "irt:verify:cache": "convex run irt/queries/internal/maintenance:getCalibrationCacheIntegrity",
     "irt:verify:scale": "convex run irt/queries/internal/maintenance:getScaleQualityIntegrity",
@@ -42,12 +44,12 @@
     "@repo/ai": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
-    "ai": "^6.0.142",
+    "ai": "^6.0.143",
     "better-auth": "1.5.6",
     "buffer": "^6.0.3",
     "convex": "^1.34.1",
     "convex-helpers": "^0.1.114",
-    "hono": "^4.12.9",
+    "hono": "^4.12.10",
     "jsonrepair": "^3.13.3",
     "nanoid": "^5.1.7",
     "strip-ansi": "^7.2.0",
@@ -61,6 +63,7 @@
     "convex-test": "^0.0.46",
     "glob": "^13.0.6",
     "tsx": "^4.21.0",
+    "vite": "^8.0.3",
     "vitest": "^4.1.2"
   }
 }

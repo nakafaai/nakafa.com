@@ -10,6 +10,10 @@ import tables, {
   chatTypeValidator,
   chatVisibilityValidator,
 } from "@repo/backend/convex/chats/schema";
+import {
+  getCreditResetGrantTransaction,
+  resolveEffectiveCreditState,
+} from "@repo/backend/convex/credits/helpers/state";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
@@ -287,10 +291,24 @@ export const saveAssistantResponse = internalMutation({
 
     let credits = 0;
     let newBalance = appUser.credits;
+    let nextResetTimestamp = appUser.creditsResetAt;
+    let creditResetGrant: ReturnType<typeof getCreditResetGrantTransaction> =
+      null;
 
     if (message.modelId) {
+      const effectiveCredits = await resolveEffectiveCreditState(
+        ctx.db,
+        appUser,
+        Date.now()
+      );
+
       credits = getModelCreditCost(message.modelId);
-      newBalance = appUser.credits - credits;
+      newBalance = effectiveCredits.credits - credits;
+      nextResetTimestamp = effectiveCredits.creditsResetAt;
+      creditResetGrant = getCreditResetGrantTransaction(
+        appUser,
+        effectiveCredits
+      );
     }
 
     const messageId = await ctx.db.insert("messages", {
@@ -306,26 +324,36 @@ export const saveAssistantResponse = internalMutation({
 
     const partIds = await insertParts(ctx, messageId, parts);
 
-    if (message.modelId) {
-      await ctx.db.patch("users", appUser._id, {
-        credits: newBalance,
-      });
+    if (!message.modelId) {
+      return { messageId, partIds, credits, newBalance };
+    }
 
+    await ctx.db.patch("users", appUser._id, {
+      credits: newBalance,
+      creditsResetAt: nextResetTimestamp,
+    });
+
+    if (creditResetGrant) {
       await ctx.db.insert("creditTransactions", {
         userId: appUser._id,
-        amount: -credits,
-        type: "usage",
-        balanceAfter: newBalance,
-        metadata: {
-          chatId: message.chatId,
-          messageId,
-          modelId: message.modelId,
-          inputTokens: message.inputTokens,
-          outputTokens: message.outputTokens,
-          totalTokens: message.totalTokens,
-        },
+        ...creditResetGrant,
       });
     }
+
+    await ctx.db.insert("creditTransactions", {
+      userId: appUser._id,
+      amount: -credits,
+      type: "usage",
+      balanceAfter: newBalance,
+      metadata: {
+        chatId: message.chatId,
+        messageId,
+        modelId: message.modelId,
+        inputTokens: message.inputTokens,
+        outputTokens: message.outputTokens,
+        totalTokens: message.totalTokens,
+      },
+    });
 
     return { messageId, partIds, credits, newBalance };
   },

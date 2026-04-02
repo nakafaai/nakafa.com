@@ -1,3 +1,4 @@
+import { userPlanValidator } from "@repo/backend/convex/users/schema";
 import { defineTable } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
@@ -25,47 +26,17 @@ export const creditTransactionValidator = v.object({
   metadata: v.optional(v.record(v.string(), v.any())),
 });
 
-export const creditResetQueueValidator = v.object({
-  userId: v.id("users"),
-  plan: literals("free", "pro"),
-  resetTimestamp: v.number(),
-  partition: v.number(),
-  status: literals("pending", "processing", "completed", "failed"),
-  processedAt: v.optional(v.number()),
-  error: v.optional(v.string()),
-});
-
-export const creditResetJobTypeValidator = literals(
-  "free-daily",
-  "pro-monthly"
-);
-
-export type CreditResetJobType = Infer<typeof creditResetJobTypeValidator>;
-
-export const creditResetJobValidator = v.object({
-  jobType: creditResetJobTypeValidator,
-  status: literals("pending", "running", "completed", "failed"),
-  startedAt: v.number(),
-  completedAt: v.optional(v.number()),
-  resetTimestamp: v.number(),
-  totalUsers: v.number(),
-  processedUsers: v.number(),
-  error: v.optional(v.string()),
+export const creditResetPeriodValidator = v.object({
+  plan: userPlanValidator,
+  resetAt: v.number(),
 });
 
 const tables = {
   creditTransactions: defineTable(creditTransactionValidator),
 
-  creditResetQueue: defineTable(creditResetQueueValidator)
-    .index("by_status", ["status"])
-    .index("by_plan_and_resetTimestamp_and_partition_and_status", [
-      "plan",
-      "resetTimestamp",
-      "partition",
-      "status",
-    ]),
-
-  creditResetJobs: defineTable(creditResetJobValidator),
+  creditResetPeriods: defineTable(creditResetPeriodValidator).index("by_plan", [
+    "plan",
+  ]),
 };
 
 export default tables;

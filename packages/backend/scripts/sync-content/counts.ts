@@ -42,6 +42,10 @@ const countTableSpecs: Array<{
   },
   { field: "irtCalibrationRuns", tableName: "irtCalibrationRuns" },
   { field: "irtScaleQualityChecks", tableName: "irtScaleQualityChecks" },
+  {
+    field: "irtScaleQualityRefreshQueue",
+    tableName: "irtScaleQualityRefreshQueue",
+  },
   { field: "exerciseItemParameters", tableName: "exerciseItemParameters" },
   {
     field: "irtScalePublicationQueue",
