@@ -2,8 +2,8 @@ import { query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { loadBoundedTryoutPartAttempts } from "@repo/backend/convex/tryouts/helpers/loaders";
 import { loadValidatedTryoutPartSets } from "@repo/backend/convex/tryouts/helpers/parts";
+import { getTryoutReportScore } from "@repo/backend/convex/tryouts/helpers/reporting";
 import { resolveResumePartKey } from "@repo/backend/convex/tryouts/helpers/resume";
-import { tryoutProductPolicies } from "@repo/backend/convex/tryouts/products";
 import { loadLatestUserTryoutContext } from "@repo/backend/convex/tryouts/queries/me/helpers";
 import {
   userTryoutAttemptResultValidator,
@@ -29,6 +29,10 @@ export const getUserTryoutAttempt = query({
     }
 
     const { attempt, tryout } = context;
+    const scoredAttempt = {
+      ...attempt,
+      irtScore: getTryoutReportScore(tryout.product, attempt.theta),
+    };
     const [tryoutPartSets, tryoutPartAttempts] = await Promise.all([
       loadValidatedTryoutPartSets(ctx.db, {
         partCount: tryout.partCount,
@@ -66,9 +70,7 @@ export const getUserTryoutAttempt = query({
               correctAnswers: setAttempt.correctAnswers,
               theta: partAttempt.theta,
               thetaSE: partAttempt.thetaSE,
-              irtScore: tryoutProductPolicies[tryout.product].scaleThetaToScore(
-                partAttempt.theta
-              ),
+              irtScore: getTryoutReportScore(tryout.product, partAttempt.theta),
             }
           : null,
         setAttempt: {
@@ -82,7 +84,7 @@ export const getUserTryoutAttempt = query({
 
     if (attempt.status !== "in-progress") {
       return {
-        attempt,
+        attempt: scoredAttempt,
         orderedParts,
         partAttempts,
         expiresAtMs: attempt.expiresAt,
@@ -90,7 +92,7 @@ export const getUserTryoutAttempt = query({
     }
 
     return {
-      attempt,
+      attempt: scoredAttempt,
       orderedParts,
       partAttempts,
       resumePartKey: resolveResumePartKey({

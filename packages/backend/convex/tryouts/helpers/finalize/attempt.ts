@@ -8,13 +8,12 @@ import {
   computeTryoutRawScorePercentage,
   isBetterLeaderboardScore,
 } from "@repo/backend/convex/tryouts/helpers/metrics";
+import { getTryoutReportScore } from "@repo/backend/convex/tryouts/helpers/reporting";
 import { tryoutLeaderboardWorkpool } from "@repo/backend/convex/tryouts/workpool";
 import { ConvexError } from "convex/values";
 
-type CompleteTryoutResult = Pick<
-  Doc<"tryoutAttempts">,
-  "irtScore" | "status" | "theta"
-> & {
+type CompleteTryoutResult = Pick<Doc<"tryoutAttempts">, "status" | "theta"> & {
+  irtScore: number;
   isOfficial: boolean;
   rawScorePercentage: number;
 };
@@ -40,6 +39,15 @@ export async function finalizeTryoutAttempt({
   tryoutAttempt: Doc<"tryoutAttempts">;
   userId: Id<"users">;
 }): Promise<CompleteTryoutResult> {
+  const tryout = await ctx.db.get("tryouts", tryoutAttempt.tryoutId);
+
+  if (!tryout) {
+    throw new ConvexError({
+      code: "TRYOUT_NOT_FOUND",
+      message: "Tryout not found.",
+    });
+  }
+
   if (tryoutAttempt.status === "completed") {
     const rawScorePercentage = computeTryoutRawScorePercentage(tryoutAttempt);
     const leaderboardEntry = await ctx.db
@@ -55,7 +63,7 @@ export async function finalizeTryoutAttempt({
         tryoutAttempt.scoreStatus === "official" &&
         (!leaderboardEntry || leaderboardEntry.attemptId === tryoutAttempt._id),
       theta: tryoutAttempt.theta,
-      irtScore: tryoutAttempt.irtScore,
+      irtScore: getTryoutReportScore(tryout.product, tryoutAttempt.theta),
       rawScorePercentage,
     };
   }
@@ -65,7 +73,7 @@ export async function finalizeTryoutAttempt({
       status: "expired",
       isOfficial: false,
       theta: tryoutAttempt.theta,
-      irtScore: tryoutAttempt.irtScore,
+      irtScore: getTryoutReportScore(tryout.product, tryoutAttempt.theta),
       rawScorePercentage: computeTryoutRawScorePercentage(tryoutAttempt),
     };
   }
@@ -96,29 +104,19 @@ export async function finalizeTryoutAttempt({
       status: "expired",
       isOfficial: false,
       theta: expiredAttempt.theta,
-      irtScore: expiredAttempt.irtScore,
+      irtScore: getTryoutReportScore(tryout.product, expiredAttempt.theta),
       rawScorePercentage: computeTryoutRawScorePercentage(expiredAttempt),
     };
   }
 
-  const [tryout, scoreTarget] = await Promise.all([
-    ctx.db.get("tryouts", tryoutAttempt.tryoutId),
-    getTryoutScoreTarget(ctx.db, tryoutAttempt),
-  ]);
-
-  if (!tryout) {
-    throw new ConvexError({
-      code: "TRYOUT_NOT_FOUND",
-      message: "Tryout not found.",
-    });
-  }
+  const scoreTarget = await getTryoutScoreTarget(ctx.db, tryoutAttempt);
 
   if (tryoutAttempt.completedPartIndices.length < tryout.partCount) {
     return {
       status: "in-progress",
       isOfficial: false,
       theta: tryoutAttempt.theta,
-      irtScore: tryoutAttempt.irtScore,
+      irtScore: getTryoutReportScore(tryout.product, tryoutAttempt.theta),
       rawScorePercentage: computeTryoutRawScorePercentage(tryoutAttempt),
     };
   }

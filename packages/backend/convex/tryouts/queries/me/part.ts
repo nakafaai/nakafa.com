@@ -1,7 +1,7 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { getBoundedExerciseAnswers } from "@repo/backend/convex/tryouts/helpers/loaders";
-import { tryoutProductPolicies } from "@repo/backend/convex/tryouts/products";
+import { getTryoutReportScore } from "@repo/backend/convex/tryouts/helpers/reporting";
 import { loadLatestUserTryoutContext } from "@repo/backend/convex/tryouts/queries/me/helpers";
 import {
   userTryoutLookupArgs,
@@ -30,6 +30,13 @@ export const getUserTryoutPartAttempt = query({
     }
 
     const { attempt: tryoutAttempt } = context;
+    const scoredTryoutAttempt = {
+      ...tryoutAttempt,
+      irtScore: getTryoutReportScore(
+        context.tryout.product,
+        tryoutAttempt.theta
+      ),
+    };
     const currentPartAttempt = await ctx.db
       .query("tryoutPartAttempts")
       .withIndex("by_tryoutAttemptId_and_partKey", (q) =>
@@ -42,7 +49,7 @@ export const getUserTryoutPartAttempt = query({
         expiresAtMs: tryoutAttempt.expiresAt,
         partScore: null,
         partAttempt: null,
-        tryoutAttempt,
+        tryoutAttempt: scoredTryoutAttempt,
       };
     }
 
@@ -70,9 +77,10 @@ export const getUserTryoutPartAttempt = query({
           correctAnswers: setAttempt.correctAnswers,
           theta: currentPartAttempt.theta,
           thetaSE: currentPartAttempt.thetaSE,
-          irtScore: tryoutProductPolicies[
-            context.tryout.product
-          ].scaleThetaToScore(currentPartAttempt.theta),
+          irtScore: getTryoutReportScore(
+            context.tryout.product,
+            currentPartAttempt.theta
+          ),
         }
       : null;
 
@@ -85,7 +93,7 @@ export const getUserTryoutPartAttempt = query({
         answers,
         setAttempt,
       },
-      tryoutAttempt,
+      tryoutAttempt: scoredTryoutAttempt,
     };
   },
 });

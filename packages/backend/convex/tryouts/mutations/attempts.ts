@@ -106,7 +106,6 @@ export const startTryout = mutation({
       totalQuestions: 0,
       theta: 0,
       thetaSE: 1,
-      irtScore: tryoutProductPolicies[tryout.product].scaleThetaToScore(0),
       startedAt: now,
       expiresAt: expiresAtMs,
       lastActivityAt: now,

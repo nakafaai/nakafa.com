@@ -24,6 +24,11 @@ Artinya, peserta **tetap bisa mengerjakan try out** walaupun data belum cukup
 untuk menyatakan nilainya resmi. Sistem tidak rusak ketika peserta masih sedikit.
 Yang tertunda hanya status **resmi**-nya.
 
+Skor publik try out Nakafa saat ini ditampilkan pada rentang `0-1000`.
+
+- `theta = 0` dipetakan ke skor `500`
+- skor publik adalah transformasi laporan dari `theta`, bukan raw score mentah
+
 ## Jawaban Singkat Untuk Pertanyaan Client
 
 ### 1. Kalau peserta masih sedikit, apakah sistem tetap bisa jalan?

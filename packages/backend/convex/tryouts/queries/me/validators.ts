@@ -39,7 +39,12 @@ export const tryoutPartAttemptScoreSummaryValidator = v.object({
   correctAnswers: vv.doc("exerciseAttempts").fields.correctAnswers,
   theta: vv.doc("tryoutPartAttempts").fields.theta,
   thetaSE: vv.doc("tryoutPartAttempts").fields.thetaSE,
-  irtScore: vv.doc("tryoutAttempts").fields.irtScore,
+  irtScore: v.number(),
+});
+
+export const publicTryoutAttemptValidator = v.object({
+  ...vv.doc("tryoutAttempts").fields,
+  irtScore: v.number(),
 });
 
 export const tryoutPartAttemptSummaryValidator = v.object({
@@ -50,7 +55,7 @@ export const tryoutPartAttemptSummaryValidator = v.object({
 });
 
 export const userTryoutAttemptResultValidator = v.object({
-  attempt: vv.doc("tryoutAttempts"),
+  attempt: publicTryoutAttemptValidator,
   orderedParts: v.array(orderedTryoutPartValidator),
   partAttempts: v.array(tryoutPartAttemptSummaryValidator),
   resumePartKey: v.optional(tryoutPartKeyValidator),
@@ -68,5 +73,5 @@ export const userTryoutPartAttemptResultValidator = v.object({
   expiresAtMs: v.number(),
   partScore: nullable(tryoutPartAttemptScoreSummaryValidator),
   partAttempt: nullable(tryoutPartAttemptRuntimeValidator),
-  tryoutAttempt: vv.doc("tryoutAttempts"),
+  tryoutAttempt: publicTryoutAttemptValidator,
 });

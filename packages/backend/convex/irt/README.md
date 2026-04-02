@@ -62,7 +62,7 @@ parts we can support with public sources.
 - Calibration still uses only observed responses from `completed` simulation set
   attempts; unanswered items are not synthesized into the calibration dataset
 - Operational EAP now integrates over `[-6, 6]` with `61` equally spaced nodes,
-  while the public SNBT report score remains a separate `100-1000` transform
+  while the public SNBT report score remains a separate `0-1000` transform
   anchored to `[-4, 4]`
 
 ## Practical Answers
@@ -127,12 +127,12 @@ easier to reason about than silently ignoring blanks in student scoring.
   This follows the general operational practice of bounded quadrature while
   giving the posterior more tail room than the previous `[-4, 4]` support.
 - **Public report scale**: Nakafa separately maps theta to the user-facing
-  `100-1000` SNBT score using `[-4, 4]` as the reporting anchors.
+  `0-1000` SNBT score using `[-4, 4]` as the reporting anchors.
 
 This separation is intentional:
 
 - the wider estimation support is a psychometric/numerical choice
-- the public `100-1000` score is a product reporting choice
+- the public `0-1000` score is a product reporting choice
 
 Separating them does not change the underlying IRT model. It only avoids tying
 the public score anchors to the exact quadrature support chosen for EAP.

@@ -203,6 +203,7 @@ import type * as tryouts_helpers_latest from "../tryouts/helpers/latest.js";
 import type * as tryouts_helpers_loaders from "../tryouts/helpers/loaders.js";
 import type * as tryouts_helpers_metrics from "../tryouts/helpers/metrics.js";
 import type * as tryouts_helpers_parts from "../tryouts/helpers/parts.js";
+import type * as tryouts_helpers_reporting from "../tryouts/helpers/reporting.js";
 import type * as tryouts_helpers_resume from "../tryouts/helpers/resume.js";
 import type * as tryouts_mutations_attempts from "../tryouts/mutations/attempts.js";
 import type * as tryouts_mutations_internal_expiry from "../tryouts/mutations/internal/expiry.js";
@@ -438,6 +439,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/helpers/loaders": typeof tryouts_helpers_loaders;
   "tryouts/helpers/metrics": typeof tryouts_helpers_metrics;
   "tryouts/helpers/parts": typeof tryouts_helpers_parts;
+  "tryouts/helpers/reporting": typeof tryouts_helpers_reporting;
   "tryouts/helpers/resume": typeof tryouts_helpers_resume;
   "tryouts/mutations/attempts": typeof tryouts_mutations_attempts;
   "tryouts/mutations/internal/expiry": typeof tryouts_mutations_internal_expiry;
