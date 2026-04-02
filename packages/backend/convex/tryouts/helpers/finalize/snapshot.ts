@@ -36,22 +36,6 @@ export interface FinalizedTryoutPartSnapshot {
   setAttempt: ExerciseAttemptSummary | null;
 }
 
-/** Trim one exercise attempt document down to the UI summary fields we expose. */
-function toSetAttemptSummary(
-  setAttempt: Doc<"exerciseAttempts"> | null
-): ExerciseAttemptSummary | null {
-  if (!setAttempt) {
-    return null;
-  }
-
-  return {
-    lastActivityAt: setAttempt.lastActivityAt,
-    startedAt: setAttempt.startedAt,
-    status: setAttempt.status,
-    timeLimit: setAttempt.timeLimit,
-  };
-}
-
 /**
  * Rebuild one finalized tryout snapshot from its frozen scale.
  *
@@ -171,7 +155,14 @@ export async function buildFinalizedTryoutSnapshot(
           theta: partScore.theta,
           thetaSE: partScore.thetaSE,
         },
-        setAttempt: toSetAttemptSummary(setAttempt),
+        setAttempt: setAttempt
+          ? {
+              lastActivityAt: setAttempt.lastActivityAt,
+              startedAt: setAttempt.startedAt,
+              status: setAttempt.status,
+              timeLimit: setAttempt.timeLimit,
+            }
+          : null,
       } satisfies FinalizedTryoutPartSnapshot & {
         rawPartScore: typeof partScore;
       };

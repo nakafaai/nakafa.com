@@ -17,24 +17,6 @@ type TryoutAttemptData = NonNullable<
 type TryoutPartAttempt = TryoutAttemptData["partAttempts"][number];
 type OrderedTryoutPart = TryoutAttemptData["orderedParts"][number];
 
-/** Narrows a part row to the branch where a live set attempt still exists. */
-function isActivePartAttempt(
-  attemptData: TryoutAttemptData,
-  nowMs: number,
-  partAttempt: TryoutPartAttempt
-): partAttempt is TryoutPartAttempt & {
-  setAttempt: NonNullable<TryoutPartAttempt["setAttempt"]>;
-} {
-  return (
-    partAttempt.setAttempt !== null &&
-    getEffectivePartAttemptStatus({
-      expiresAtMs: attemptData.expiresAtMs,
-      nowMs,
-      setAttempt: partAttempt.setAttempt,
-    }) === "in-progress"
-  );
-}
-
 /** Picks the next part key the student should resume in an active tryout. */
 function getResumePartKey({
   attemptData,
@@ -49,9 +31,32 @@ function getResumePartKey({
     return undefined;
   }
 
-  const activePartAttempts = attemptData.partAttempts.filter((partAttempt) =>
-    isActivePartAttempt(attemptData, nowMs, partAttempt)
-  );
+  const activePartAttempts: Array<
+    TryoutPartAttempt & {
+      setAttempt: NonNullable<TryoutPartAttempt["setAttempt"]>;
+    }
+  > = [];
+
+  for (const partAttempt of attemptData.partAttempts) {
+    if (!partAttempt.setAttempt) {
+      continue;
+    }
+
+    if (
+      getEffectivePartAttemptStatus({
+        expiresAtMs: attemptData.expiresAtMs,
+        nowMs,
+        setAttempt: partAttempt.setAttempt,
+      }) !== "in-progress"
+    ) {
+      continue;
+    }
+
+    activePartAttempts.push({
+      ...partAttempt,
+      setAttempt: partAttempt.setAttempt,
+    });
+  }
 
   if (activePartAttempts.length === 0) {
     const locallyEndedPartIndices = new Set(
