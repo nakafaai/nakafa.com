@@ -4,9 +4,8 @@ import {
   SUPPORTED_LOCALES,
 } from "@repo/backend/convex/audioStudies/constants";
 import {
-  fetchContentHash,
-  getContentRefBySlugAndLocale,
-  getContentSlug,
+  getAudioContentLookup,
+  getLocalizedAudioContentLookup,
 } from "@repo/backend/convex/audioStudies/utils";
 import { popularAudioContentItemValidator } from "@repo/backend/convex/contents/validators";
 import { internalMutation } from "@repo/backend/convex/functions";
@@ -39,9 +38,9 @@ export const enqueuePopularContentForAudio = internalMutation({
         break;
       }
 
-      const contentSlug = await getContentSlug(ctx, item.ref);
+      const sourceContent = await getAudioContentLookup(ctx, item.ref);
 
-      if (!contentSlug) {
+      if (!sourceContent) {
         logger.warn("Content slug not found", {
           contentType: item.ref.type,
           contentId: item.ref.id,
@@ -50,13 +49,13 @@ export const enqueuePopularContentForAudio = internalMutation({
       }
 
       for (const locale of SUPPORTED_LOCALES) {
-        const localeContentRef = await getContentRefBySlugAndLocale(
+        const localizedContent = await getLocalizedAudioContentLookup(
           ctx,
-          item.ref,
+          sourceContent,
           locale
         );
 
-        if (!localeContentRef) {
+        if (!localizedContent) {
           logger.debug("Locale content not found", {
             contentType: item.ref.type,
             contentId: item.ref.id,
@@ -65,13 +64,12 @@ export const enqueuePopularContentForAudio = internalMutation({
           continue;
         }
 
-        const contentHash = await fetchContentHash(ctx, localeContentRef);
         const existingQueueItem = await ctx.db
           .query("audioGenerationQueue")
           .withIndex("by_contentRefType_and_contentRefId_and_locale", (q) =>
             q
-              .eq("contentRef.type", localeContentRef.type)
-              .eq("contentRef.id", localeContentRef.id)
+              .eq("contentRef.type", localizedContent.ref.type)
+              .eq("contentRef.id", localizedContent.ref.id)
               .eq("locale", locale)
           )
           .first();
@@ -83,8 +81,8 @@ export const enqueuePopularContentForAudio = internalMutation({
             )
           ) {
             logger.debug("Already in queue", {
-              contentType: localeContentRef.type,
-              contentId: localeContentRef.id,
+              contentType: localizedContent.ref.type,
+              contentId: localizedContent.ref.id,
               locale,
               status: existingQueueItem.status,
             });
@@ -92,41 +90,39 @@ export const enqueuePopularContentForAudio = internalMutation({
           }
 
           logger.info("Replacing completed queue item", {
-            contentType: localeContentRef.type,
-            contentId: localeContentRef.id,
+            contentType: localizedContent.ref.type,
+            contentId: localizedContent.ref.id,
             locale,
           });
           await ctx.db.delete("audioGenerationQueue", existingQueueItem._id);
         }
 
-        if (contentHash) {
-          const existingAudio = await ctx.db
-            .query("contentAudios")
-            .withIndex("by_contentRefType_and_contentRefId_and_locale", (q) =>
-              q
-                .eq("contentRef.type", localeContentRef.type)
-                .eq("contentRef.id", localeContentRef.id)
-                .eq("locale", locale)
-            )
-            .first();
+        const existingAudio = await ctx.db
+          .query("contentAudios")
+          .withIndex("by_contentRefType_and_contentRefId_and_locale", (q) =>
+            q
+              .eq("contentRef.type", localizedContent.ref.type)
+              .eq("contentRef.id", localizedContent.ref.id)
+              .eq("locale", locale)
+          )
+          .first();
 
-          if (
-            existingAudio?.status === "completed" &&
-            existingAudio.contentHash === contentHash
-          ) {
-            logger.debug("Audio already completed for hash", {
-              contentType: localeContentRef.type,
-              contentId: localeContentRef.id,
-              locale,
-            });
-            continue;
-          }
+        if (
+          existingAudio?.status === "completed" &&
+          existingAudio.contentHash === localizedContent.contentHash
+        ) {
+          logger.debug("Audio already completed for hash", {
+            contentType: localizedContent.ref.type,
+            contentId: localizedContent.ref.id,
+            locale,
+          });
+          continue;
         }
 
         await ctx.db.insert("audioGenerationQueue", {
-          contentRef: localeContentRef,
+          contentRef: localizedContent.ref,
           locale,
-          slug: contentSlug,
+          slug: sourceContent.slug,
           priorityScore: item.viewCount * 10,
           status: "pending",
           requestedAt: Date.now(),
@@ -136,8 +132,8 @@ export const enqueuePopularContentForAudio = internalMutation({
         });
 
         logger.info("Added to queue", {
-          contentType: localeContentRef.type,
-          contentId: localeContentRef.id,
+          contentType: localizedContent.ref.type,
+          contentId: localizedContent.ref.id,
           locale,
           priorityScore: item.viewCount * 10,
         });

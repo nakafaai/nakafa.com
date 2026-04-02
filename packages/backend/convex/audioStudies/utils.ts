@@ -12,6 +12,15 @@ interface ContentData {
   title: string;
 }
 
+interface AudioContentLookup {
+  contentHash: string;
+  locale: Locale;
+  ref: AudioContentRef;
+  slug: string;
+}
+
+type AudioContentReaderCtx = Pick<QueryCtx, "db">;
+
 /**
  * Fetches content data for audio generation.
  * Returns null if content not found.
@@ -20,37 +29,33 @@ export async function fetchContentForAudio(
   ctx: QueryCtx,
   contentRef: AudioContentRef
 ): Promise<ContentData | null> {
-  switch (contentRef.type) {
-    case "article": {
-      const article = await ctx.db.get("articleContents", contentRef.id);
-      if (!article) {
-        return null;
-      }
-      return {
-        title: article.title,
-        description: article.description,
-        body: article.body,
-        locale: article.locale,
-      };
-    }
+  if (contentRef.type === "article") {
+    const article = await ctx.db.get("articleContents", contentRef.id);
 
-    case "subject": {
-      const section = await ctx.db.get("subjectSections", contentRef.id);
-      if (!section) {
-        return null;
-      }
-      return {
-        title: section.title,
-        description: section.description,
-        body: section.body,
-        locale: section.locale,
-      };
-    }
-
-    default: {
+    if (!article) {
       return null;
     }
+
+    return {
+      title: article.title,
+      description: article.description,
+      body: article.body,
+      locale: article.locale,
+    };
   }
+
+  const section = await ctx.db.get("subjectSections", contentRef.id);
+
+  if (!section) {
+    return null;
+  }
+
+  return {
+    title: section.title,
+    description: section.description,
+    body: section.body,
+    locale: section.locale,
+  };
 }
 
 /**
@@ -69,6 +74,43 @@ export function getResetAudioFields(contentHash: string) {
     failedAt: undefined,
     generationAttempts: 0,
     updatedAt: Date.now(),
+  };
+}
+
+/**
+ * Loads the minimal audio-related metadata for one content reference.
+ * This keeps hot queueing paths from rereading the same large content row.
+ */
+export async function getAudioContentLookup(
+  ctx: AudioContentReaderCtx,
+  contentRef: AudioContentRef
+): Promise<AudioContentLookup | null> {
+  if (contentRef.type === "article") {
+    const article = await ctx.db.get("articleContents", contentRef.id);
+
+    if (!article) {
+      return null;
+    }
+
+    return {
+      contentHash: article.contentHash,
+      locale: article.locale,
+      ref: { type: "article", id: article._id },
+      slug: article.slug,
+    };
+  }
+
+  const section = await ctx.db.get("subjectSections", contentRef.id);
+
+  if (!section) {
+    return null;
+  }
+
+  return {
+    contentHash: section.contentHash,
+    locale: section.locale,
+    ref: { type: "subject", id: section._id },
+    slug: section.slug,
   };
 }
 
@@ -113,90 +155,53 @@ export async function updateContentHash(
 }
 
 /**
- * Returns the slug for a content item by type and ID.
+ * Resolves one locale-specific content row while reusing the already loaded
+ * source row whenever the requested locale already matches.
  */
-export async function getContentSlug(
-  ctx: QueryCtx,
-  contentRef: AudioContentRef
-): Promise<string | null> {
-  switch (contentRef.type) {
-    case "article": {
-      const article = await ctx.db.get("articleContents", contentRef.id);
-      return article?.slug ?? null;
-    }
-    case "subject": {
-      const section = await ctx.db.get("subjectSections", contentRef.id);
-      return section?.slug ?? null;
-    }
-    default: {
-      return null;
-    }
-  }
-}
-
-/**
- * Returns the content hash for a content item by type and ID.
- */
-export async function fetchContentHash(
-  ctx: QueryCtx,
-  contentRef: AudioContentRef
-): Promise<string | null> {
-  switch (contentRef.type) {
-    case "article": {
-      const article = await ctx.db.get("articleContents", contentRef.id);
-      return article?.contentHash ?? null;
-    }
-    case "subject": {
-      const section = await ctx.db.get("subjectSections", contentRef.id);
-      return section?.contentHash ?? null;
-    }
-    default: {
-      return null;
-    }
-  }
-}
-
-/**
- * Returns the locale-specific content ref by slug and locale.
- */
-export async function getContentRefBySlugAndLocale(
-  ctx: QueryCtx,
-  contentRef: AudioContentRef,
+export async function getLocalizedAudioContentLookup(
+  ctx: AudioContentReaderCtx,
+  sourceContent: AudioContentLookup,
   locale: Locale
-): Promise<AudioContentRef | null> {
-  const slug = await getContentSlug(ctx, contentRef);
+): Promise<AudioContentLookup | null> {
+  if (sourceContent.locale === locale) {
+    return sourceContent;
+  }
 
-  if (!slug) {
+  if (sourceContent.ref.type === "article") {
+    const article = await ctx.db
+      .query("articleContents")
+      .withIndex("by_locale_and_slug", (q) =>
+        q.eq("locale", locale).eq("slug", sourceContent.slug)
+      )
+      .first();
+
+    if (!article) {
+      return null;
+    }
+
+    return {
+      contentHash: article.contentHash,
+      locale: article.locale,
+      ref: { type: "article", id: article._id },
+      slug: article.slug,
+    };
+  }
+
+  const section = await ctx.db
+    .query("subjectSections")
+    .withIndex("by_locale_and_slug", (q) =>
+      q.eq("locale", locale).eq("slug", sourceContent.slug)
+    )
+    .first();
+
+  if (!section) {
     return null;
   }
 
-  switch (contentRef.type) {
-    case "article": {
-      const article = await ctx.db
-        .query("articleContents")
-        .withIndex("by_locale_and_slug", (q) =>
-          q.eq("locale", locale).eq("slug", slug)
-        )
-        .first();
-      if (!article) {
-        return null;
-      }
-      return { type: "article" as const, id: article._id };
-    }
-    case "subject": {
-      const section = await ctx.db
-        .query("subjectSections")
-        .withIndex("by_locale_and_slug", (q) =>
-          q.eq("locale", locale).eq("slug", slug)
-        )
-        .first();
-      if (!section) {
-        return null;
-      }
-      return { type: "subject" as const, id: section._id };
-    }
-    default: {
-      return null;
-    }
-  }
+  return {
+    contentHash: section.contentHash,
+    locale: section.locale,
+    ref: { type: "subject", id: section._id },
+    slug: section.slug,
+  };
 }
