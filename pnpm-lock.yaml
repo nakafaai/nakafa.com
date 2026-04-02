@@ -439,8 +439,8 @@ importers:
         specifier: ^3.0.55
         version: 3.0.55(zod@4.3.6)
       '@ai-sdk/google-vertex':
-        specifier: ^4.0.98
-        version: 4.0.98(zod@4.3.6)
+        specifier: ^4.0.99
+        version: 4.0.99(zod@4.3.6)
       '@ai-sdk/openai':
         specifier: ^3.0.49
         version: 3.0.49(zod@4.3.6)
@@ -1102,8 +1102,8 @@ importers:
 
 packages:
 
-  '@ai-sdk/anthropic@3.0.64':
-    resolution: {integrity: sha512-rwLi/Rsuj2pYniQXIrvClHvXDzgM4UQHHnvHTWEF14efnlKclG/1ghpNC+adsRujAbCTr6gRsSbDE2vEqriV7g==}
+  '@ai-sdk/anthropic@3.0.65':
+    resolution: {integrity: sha512-wUSTNKk5NWjETqNtUT3kBHl+ic0ZSTgGB/Go8A5URRt4Zb1nMLH1135uZT3xnjrCZra0teMq9BhmfZ4Jfw6SdQ==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -1124,8 +1124,8 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/google-vertex@4.0.98':
-    resolution: {integrity: sha512-SOKKEC0Qer5TPWF4xPk+GPL2Sz5WhX8PzBKczE+Tz3W4MQbK7BpWaEG/uBgdRrb6ikB640+6nX0jtLDuC9kG+Q==}
+  '@ai-sdk/google-vertex@4.0.99':
+    resolution: {integrity: sha512-4GlH22XpCF3Z5sh1JN5OG3u62rE4WTyJIJopRxpo6aPgZkNb8a9n9e9OcjBAQsDNc1JtuZDvFmAntWbkWBU4eg==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -13727,7 +13727,7 @@ packages:
 
 snapshots:
 
-  '@ai-sdk/anthropic@3.0.64(zod@4.3.6)':
+  '@ai-sdk/anthropic@3.0.65(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider': 3.0.8
       '@ai-sdk/provider-utils': 4.0.21(zod@4.3.6)
@@ -13752,9 +13752,9 @@ snapshots:
       '@vercel/oidc': 3.1.0
       zod: 4.3.6
 
-  '@ai-sdk/google-vertex@4.0.98(zod@4.3.6)':
+  '@ai-sdk/google-vertex@4.0.99(zod@4.3.6)':
     dependencies:
-      '@ai-sdk/anthropic': 3.0.64(zod@4.3.6)
+      '@ai-sdk/anthropic': 3.0.65(zod@4.3.6)
       '@ai-sdk/google': 3.0.55(zod@4.3.6)
       '@ai-sdk/openai-compatible': 2.0.37(zod@4.3.6)
       '@ai-sdk/provider': 3.0.8
