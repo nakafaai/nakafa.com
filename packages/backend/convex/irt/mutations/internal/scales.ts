@@ -23,20 +23,34 @@ export const refreshScaleQualityCheck = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
+    const queueEntries = await ctx.db
+      .query("irtScaleQualityRefreshQueue")
+      .withIndex("by_tryoutId", (q) => q.eq("tryoutId", args.tryoutId))
+      .take(IRT_SCALE_QUALITY_REFRESH_QUEUE_BATCH_SIZE);
+
     try {
       await refreshTryoutScaleQualityCheck(ctx.db, args.tryoutId);
+
+      for (const queueEntry of queueEntries) {
+        await ctx.db.delete("irtScaleQualityRefreshQueue", queueEntry._id);
+      }
+
       return null;
     } catch (error) {
-      const requeued = await enqueueScaleQualityRefresh(ctx, {
-        tryoutId: args.tryoutId,
-        enqueuedAt: Date.now(),
-      });
+      const requeuedAt = Date.now();
+
+      for (const queueEntry of queueEntries) {
+        await ctx.db.replace("irtScaleQualityRefreshQueue", queueEntry._id, {
+          tryoutId: queueEntry.tryoutId,
+          enqueuedAt: requeuedAt,
+        });
+      }
 
       logger.error(
         "Scale quality refresh failed",
         {
           tryoutId: args.tryoutId,
-          requeued,
+          requeuedAt,
         },
         error
       );
@@ -111,10 +125,14 @@ export const drainScaleQualityRefreshQueue = internalMutation({
     scheduledCount: v.number(),
   }),
   handler: async (ctx) => {
-    const queueEntries = await ctx.db
+    const processingStartedAt = Date.now();
+    const queueCandidates = await ctx.db
       .query("irtScaleQualityRefreshQueue")
       .withIndex("by_enqueuedAt")
-      .take(IRT_SCALE_QUALITY_REFRESH_QUEUE_BATCH_SIZE);
+      .take(IRT_SCALE_QUALITY_REFRESH_QUEUE_BATCH_SIZE * 2);
+    const queueEntries = queueCandidates
+      .filter((entry) => entry.processingStartedAt === undefined)
+      .slice(0, IRT_SCALE_QUALITY_REFRESH_QUEUE_BATCH_SIZE);
 
     if (queueEntries.length === 0) {
       return {
@@ -126,7 +144,9 @@ export const drainScaleQualityRefreshQueue = internalMutation({
     const tryoutIds = [...new Set(queueEntries.map((entry) => entry.tryoutId))];
 
     for (const queueEntry of queueEntries) {
-      await ctx.db.delete("irtScaleQualityRefreshQueue", queueEntry._id);
+      await ctx.db.patch("irtScaleQualityRefreshQueue", queueEntry._id, {
+        processingStartedAt,
+      });
     }
 
     for (const tryoutId of tryoutIds) {
