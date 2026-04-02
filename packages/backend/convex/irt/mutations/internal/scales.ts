@@ -11,6 +11,7 @@ import {
   scaleQualityRebuildResultValidator,
 } from "@repo/backend/convex/irt/scales/quality";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
+import { logger } from "@repo/backend/convex/utils/logger";
 import { v } from "convex/values";
 
 const SCALE_QUALITY_REBUILD_BATCH_SIZE = 100;
@@ -22,7 +23,25 @@ export const refreshScaleQualityCheck = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    await refreshTryoutScaleQualityCheck(ctx.db, args.tryoutId);
+    try {
+      await refreshTryoutScaleQualityCheck(ctx.db, args.tryoutId);
+      return null;
+    } catch (error) {
+      const requeued = await enqueueScaleQualityRefresh(ctx, {
+        tryoutId: args.tryoutId,
+        enqueuedAt: Date.now(),
+      });
+
+      logger.error(
+        "Scale quality refresh failed",
+        {
+          tryoutId: args.tryoutId,
+          requeued,
+        },
+        error
+      );
+    }
+
     return null;
   },
 });

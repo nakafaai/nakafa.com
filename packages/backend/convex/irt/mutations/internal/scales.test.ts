@@ -71,4 +71,57 @@ describe("irt/mutations/internal/scales", () => {
 
     vi.useRealTimers();
   });
+
+  it("re-enqueues failed quality refresh work for a malformed tryout", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(Date.UTC(2026, 3, 2, 11, 30, 0)));
+
+    const t = convexTest(schema, convexModules);
+
+    const tryoutId = await t.mutation(async (ctx) => {
+      const tryoutId = await ctx.db.insert("tryouts", {
+        product: "snbt",
+        locale: "id",
+        cycleKey: "2026",
+        slug: "snbt-2026-bad-tryout",
+        label: "Broken SNBT 2026 Tryout",
+        partCount: 1,
+        totalQuestionCount: 0,
+        isActive: true,
+        detectedAt: Date.now(),
+        syncedAt: Date.now(),
+      });
+
+      await ctx.db.insert("irtScaleQualityRefreshQueue", {
+        tryoutId,
+        enqueuedAt: Date.now() - 1000,
+      });
+
+      return tryoutId;
+    });
+
+    await t.mutation(
+      internal.irt.mutations.internal.scales.drainScaleQualityRefreshQueue,
+      {}
+    );
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+
+    const result = await t.query(async (ctx) => {
+      return {
+        queueEntries: await ctx.db
+          .query("irtScaleQualityRefreshQueue")
+          .withIndex("by_tryoutId", (q) => q.eq("tryoutId", tryoutId))
+          .collect(),
+        qualityCheck: await ctx.db
+          .query("irtScaleQualityChecks")
+          .withIndex("by_tryoutId", (q) => q.eq("tryoutId", tryoutId))
+          .unique(),
+      };
+    });
+
+    expect(result.queueEntries).toHaveLength(1);
+    expect(result.qualityCheck).toBeNull();
+
+    vi.useRealTimers();
+  });
 });

@@ -141,4 +141,31 @@ describe("credits/helpers/state", () => {
       creditsResetAt: Date.UTC(2026, 3, 2, 0, 0, 0),
     });
   });
+
+  it("seeds a missing reset period before resolving effective credits", async () => {
+    const t = convexTest(schema, convexModules);
+    const now = Date.UTC(2026, 3, 2, 10, 0, 0);
+
+    const effectiveState = await t.mutation(async (ctx) => {
+      return await resolveEffectiveCreditState(
+        ctx.db,
+        {
+          credits: -3,
+          creditsResetAt: Date.UTC(2026, 3, 1, 0, 0, 0),
+          plan: "free",
+        },
+        now
+      );
+    });
+
+    const storedResetAt = await t.query(async (ctx) => {
+      return await getStoredCreditResetTimestamp(ctx.db, "free");
+    });
+
+    expect(effectiveState).toEqual({
+      credits: 7,
+      creditsResetAt: Date.UTC(2026, 3, 2, 0, 0, 0),
+    });
+    expect(storedResetAt).toBe(Date.UTC(2026, 3, 2, 0, 0, 0));
+  });
 });
