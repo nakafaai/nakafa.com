@@ -4,6 +4,12 @@ Generic tryout runtime built on top of the shared `exerciseAttempts` engine.
 Product-specific rules live in `tryouts/products/`, while the runtime tables,
 queries, mutations, IRT publication, and leaderboard flow stay generic.
 
+## Related Docs
+
+- IRT technical basis: `../irt/README.md`
+- IRT explainer: `../irt/docs/EXPLAINER.id.md`
+- Product policy: `./docs/PRODUCT_POLICY.id.md`
+
 ## Core Model
 
 - `tryouts` stores detected tryout definitions for one product and locale
@@ -34,6 +40,14 @@ That policy owns:
 - Product-specific rules stay in policy/config instead of creating new table
   families like `tkaTryouts`, `cpnsTryouts`, etc.
 - Generic ranking still uses aggregate components for O(log n) rank lookups
+
+## Finalized Attempt Semantics
+
+- Public tryout score is always derived from the attempt's final `theta`
+- If a tryout ends before every part was started, unstarted parts still count as
+  zero-correct timed sections in the finalized tryout score
+- Ended tryout result reads still return those never-started parts so the UI can
+  show full-tryout totals and per-part zero-score summaries
 
 ## Frontend Contract
 

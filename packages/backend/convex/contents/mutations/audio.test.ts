@@ -1,8 +1,9 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { logger } from "@repo/backend/convex/utils/logger";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const REAL_VECTOR_PUBLISHED_AT = 1_744_416_000_000;
 const REAL_VECTOR_TOPIC_SLUG =
@@ -85,6 +86,16 @@ const REAL_DYNASTIC_ARTICLE_ID_LOCALE = {
 };
 
 describe("contents/mutations/audio", () => {
+  beforeEach(() => {
+    vi.spyOn(logger, "debug").mockImplementation(() => undefined);
+    vi.spyOn(logger, "info").mockImplementation(() => undefined);
+    vi.spyOn(logger, "warn").mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("returns early when there are no popularity items", async () => {
     const t = convexTest(schema, convexModules);
 

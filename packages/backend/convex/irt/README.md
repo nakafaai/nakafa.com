@@ -1,7 +1,12 @@
 # IRT Calibration Pipeline
 
 This module owns operational IRT scoring policy and durable item calibration for
- exercise sets.
+exercise sets.
+
+## Related Docs
+
+- Explainer Bahasa Indonesia: `./docs/EXPLAINER.id.md`
+- Product policy try out: `../tryouts/docs/PRODUCT_POLICY.id.md`
 
 ## Documented Basis
 
@@ -62,8 +67,53 @@ parts we can support with public sources.
 - Calibration still uses only observed responses from `completed` simulation set
   attempts; unanswered items are not synthesized into the calibration dataset
 - Operational EAP now integrates over `[-6, 6]` with `61` equally spaced nodes,
-  while the public SNBT report score remains a separate `100-1000` transform
+  while the public SNBT report score remains a separate `0-1000` transform
   anchored to `[-4, 4]`
+
+## Practical Answers
+
+### Can Nakafa handle a tryout with limited participation?
+
+Yes, but the system deliberately separates **startability** from **official IRT
+readiness**.
+
+- A tryout can stay startable with a frozen `provisional` scale version.
+- A tryout only upgrades to `official` when its current live calibration state
+  passes every quality gate.
+- If participation is still low, the pipeline does **not** force an official
+  result early. It keeps the latest frozen scale, usually `provisional`, until
+  the evidence is strong enough.
+
+In other words, low participation does not break the product. It only delays the
+moment when Nakafa is willing to call the score **official**.
+
+Operational integrity checks should treat that state as healthy as long as the
+tryout still has a published frozen scale version. A `blocked` quality summary
+means "not ready for official publication yet", not "tryout cannot run".
+
+### When does a score become official?
+
+There are two cases:
+
+1. If the latest frozen scale is already `official` when the student finishes,
+   the attempt is finalized as `official` immediately.
+2. If the student finishes while the tryout still uses a `provisional` scale,
+   the attempt is stored as `provisional` first and later auto-promoted when an
+   `official` scale is published for that tryout.
+
+That promotion is automatic. Nakafa re-scores completed provisional attempts
+against the newly published official frozen scale version.
+
+### What must be true before a tryout can publish an official scale?
+
+The current code requires all of the following:
+
+- every tryout question has a `calibrated` item parameter
+- no calibrated question is outside the live calibration window
+- every set in the tryout has at least `200` live calibration attempts
+
+Those checks are enforced in `scales/quality.ts` and used by
+`scales/publish.ts` before any new official scale version is published.
 
 ## Missing-Response Policy
 
@@ -86,12 +136,12 @@ easier to reason about than silently ignoring blanks in student scoring.
   This follows the general operational practice of bounded quadrature while
   giving the posterior more tail room than the previous `[-4, 4]` support.
 - **Public report scale**: Nakafa separately maps theta to the user-facing
-  `100-1000` SNBT score using `[-4, 4]` as the reporting anchors.
+  `0-1000` SNBT score using `[-4, 4]` as the reporting anchors.
 
 This separation is intentional:
 
 - the wider estimation support is a psychometric/numerical choice
-- the public `100-1000` score is a product reporting choice
+- the public `0-1000` score is a product reporting choice
 
 Separating them does not change the underlying IRT model. It only avoids tying
 the public score anchors to the exact quadrature support chosen for EAP.
@@ -119,6 +169,40 @@ flowchart TD
     J -- Yes --> L[publish irtScaleVersion\nand irtScaleVersionItems]
     L --> M[new startTryout binds latest frozen scale]
 ```
+
+## Result Status Lifecycle
+
+```mermaid
+flowchart TD
+    A[startTryout] --> B[get latest frozen scale version]
+    B --> C{scale status}
+    C -- official --> D[attempt starts on official scale]
+    C -- provisional --> E[attempt starts on provisional scale]
+    D --> F[student completes tryout]
+    E --> F
+    F --> G{latest official scale exists at finalize time?}
+    G -- yes --> H[store official score now]
+    G -- no --> I[store provisional score now]
+    I --> J[publish official scale later]
+    J --> K[promote provisional attempts to official]
+```
+
+## Why More Responses Still Matter
+
+More participation does not just increase volume. It increases the chance that a
+tryout can pass the official publication gates **without** lowering quality.
+
+- More completed simulation attempts improve the live calibration cache.
+- More supported items can move from `emerging` / `provisional` to
+  `calibrated`.
+- More recent attempts make it easier to satisfy the live-window freshness gate.
+
+So if a partner asks for more access time, the strongest technical argument is
+not "otherwise Nakafa breaks." The stronger statement is:
+
+> the system can still operate safely with lower participation, but additional
+> high-quality responses improve the chance that the tryout can graduate from a
+> provisional score state to an official IRT-backed score state sooner.
 
 ## Modules
 

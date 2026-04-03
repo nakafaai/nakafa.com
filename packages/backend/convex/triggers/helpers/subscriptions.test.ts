@@ -4,9 +4,10 @@ import { getStoredCreditResetTimestamp } from "@repo/backend/convex/credits/help
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { syncCustomerPlan } from "@repo/backend/convex/triggers/helpers/subscriptions";
+import { logger } from "@repo/backend/convex/utils/logger";
 import { products } from "@repo/backend/convex/utils/polar/products";
 import { convexTest } from "convex-test";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 3, 2, 18, 0, 0);
 
@@ -96,7 +97,13 @@ async function runSyncCustomerPlanBySubscriptionId(
 }
 
 describe("triggers/helpers/subscriptions", () => {
+  beforeEach(() => {
+    vi.spyOn(logger, "info").mockImplementation(() => undefined);
+    vi.spyOn(logger, "warn").mockImplementation(() => undefined);
+  });
+
   afterEach(() => {
+    vi.restoreAllMocks();
     vi.useRealTimers();
   });
 

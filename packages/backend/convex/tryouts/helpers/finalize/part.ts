@@ -138,6 +138,7 @@ export async function finalizeTryoutPartAttempt({
       totalExercises: currentSetAttempt.totalExercises,
     }),
     getScaleVersionItemsForSet(ctx.db, {
+      questionCount: currentSetAttempt.totalExercises,
       scaleVersionId: tryoutAttempt.scaleVersionId,
       setId: partAttempt.setId,
     }),
