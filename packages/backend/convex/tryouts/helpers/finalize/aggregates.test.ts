@@ -1,5 +1,3 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
 import { syncTryoutAttemptAggregates } from "@repo/backend/convex/tryouts/helpers/finalize/aggregates";
 import { getTryoutReportScore } from "@repo/backend/convex/tryouts/helpers/reporting";
@@ -11,110 +9,6 @@ import {
   NOW,
 } from "@repo/backend/convex/tryouts/test.helpers";
 import { describe, expect, it } from "vitest";
-
-async function insertSingleQuestionCompletedAttempt(
-  ctx: MutationCtx,
-  {
-    scaleVersionId,
-    setId,
-    slug,
-    tryoutId,
-    userId,
-  }: {
-    scaleVersionId: Id<"irtScaleVersions">;
-    setId: Id<"exerciseSets">;
-    slug: string;
-    tryoutId: Id<"tryouts">;
-    userId: Id<"users">;
-  }
-) {
-  const questionId = await insertExerciseQuestion(ctx, setId, { slug });
-  const setAttemptId = await ctx.db.insert("exerciseAttempts", {
-    slug: `exercises/high-school/snbt/quantitative-knowledge/try-out/2026/${slug}`,
-    userId,
-    origin: "tryout",
-    mode: "simulation",
-    scope: "set",
-    timeLimit: 90,
-    startedAt: NOW,
-    lastActivityAt: NOW,
-    completedAt: NOW,
-    endReason: "submitted",
-    status: "completed",
-    updatedAt: NOW,
-    totalExercises: 1,
-    answeredCount: 1,
-    correctAnswers: 0,
-    totalTime: 90,
-    scorePercentage: 0,
-  });
-  const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
-    userId,
-    tryoutId,
-    scaleVersionId,
-    scoreStatus: "official",
-    status: "completed",
-    partSetSnapshots: [
-      {
-        partIndex: 0,
-        partKey: "quantitative-knowledge",
-        questionCount: 1,
-        setId,
-      },
-    ],
-    completedPartIndices: [0],
-    totalCorrect: 0,
-    totalQuestions: 1,
-    theta: 0,
-    thetaSE: 1,
-    startedAt: NOW,
-    expiresAt: NOW + ATTEMPT_WINDOW_MS,
-    lastActivityAt: NOW,
-    completedAt: NOW,
-    endReason: "submitted",
-  });
-
-  await ctx.db.insert("exerciseAnswers", {
-    attemptId: setAttemptId,
-    exerciseNumber: 1,
-    questionId,
-    isCorrect: false,
-    timeSpent: 90,
-    answeredAt: NOW,
-    updatedAt: NOW,
-  });
-  await ctx.db.insert("tryoutPartAttempts", {
-    tryoutAttemptId,
-    partIndex: 0,
-    partKey: "quantitative-knowledge",
-    setAttemptId,
-    setId,
-    theta: 0,
-    thetaSE: 1,
-  });
-  await ctx.db.insert("irtScaleVersionItems", {
-    scaleVersionId,
-    calibrationRunId: await ctx.db.insert("irtCalibrationRuns", {
-      setId,
-      model: "2pl",
-      status: "completed",
-      questionCount: 1,
-      responseCount: 200,
-      attemptCount: 200,
-      iterationCount: 1,
-      maxParameterDelta: 0.001,
-      startedAt: NOW,
-      updatedAt: NOW,
-      completedAt: NOW,
-    }),
-    questionId,
-    setId,
-    difficulty: 0,
-    discrimination: 1,
-  });
-
-  return { tryoutAttemptId };
-}
 
 describe("tryouts/helpers/finalize/aggregates", () => {
   it("syncs finalized tryout aggregates without writing a persisted irtScore", async () => {
@@ -129,16 +23,92 @@ describe("tryouts/helpers/finalize/aggregates", () => {
         "2026-reporting-aggregate",
         1
       );
-      const { tryoutAttemptId } = await insertSingleQuestionCompletedAttempt(
-        ctx,
-        {
-          scaleVersionId: tryout.scaleVersionId,
+      const questionId = await insertExerciseQuestion(ctx, tryout.setId, {
+        slug: "2026-reporting-aggregate",
+      });
+      const setAttemptId = await ctx.db.insert("exerciseAttempts", {
+        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/2026-reporting-aggregate",
+        userId: identity.userId,
+        origin: "tryout",
+        mode: "simulation",
+        scope: "set",
+        timeLimit: 90,
+        startedAt: NOW,
+        lastActivityAt: NOW,
+        completedAt: NOW,
+        endReason: "submitted",
+        status: "completed",
+        updatedAt: NOW,
+        totalExercises: 1,
+        answeredCount: 1,
+        correctAnswers: 0,
+        totalTime: 90,
+        scorePercentage: 0,
+      });
+      const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
+        userId: identity.userId,
+        tryoutId: tryout.tryoutId,
+        scaleVersionId: tryout.scaleVersionId,
+        scoreStatus: "official",
+        status: "completed",
+        partSetSnapshots: [
+          {
+            partIndex: 0,
+            partKey: "quantitative-knowledge",
+            questionCount: 1,
+            setId: tryout.setId,
+          },
+        ],
+        completedPartIndices: [0],
+        totalCorrect: 0,
+        totalQuestions: 1,
+        theta: 0,
+        thetaSE: 1,
+        startedAt: NOW,
+        expiresAt: NOW + ATTEMPT_WINDOW_MS,
+        lastActivityAt: NOW,
+        completedAt: NOW,
+        endReason: "submitted",
+      });
+
+      await ctx.db.insert("exerciseAnswers", {
+        attemptId: setAttemptId,
+        exerciseNumber: 1,
+        questionId,
+        isCorrect: false,
+        timeSpent: 90,
+        answeredAt: NOW,
+        updatedAt: NOW,
+      });
+      await ctx.db.insert("tryoutPartAttempts", {
+        tryoutAttemptId,
+        partIndex: 0,
+        partKey: "quantitative-knowledge",
+        setAttemptId,
+        setId: tryout.setId,
+        theta: 0,
+        thetaSE: 1,
+      });
+      await ctx.db.insert("irtScaleVersionItems", {
+        scaleVersionId: tryout.scaleVersionId,
+        calibrationRunId: await ctx.db.insert("irtCalibrationRuns", {
           setId: tryout.setId,
-          slug: "2026-reporting-aggregate",
-          tryoutId: tryout.tryoutId,
-          userId: identity.userId,
-        }
-      );
+          model: "2pl",
+          status: "completed",
+          questionCount: 1,
+          responseCount: 200,
+          attemptCount: 200,
+          iterationCount: 1,
+          maxParameterDelta: 0.001,
+          startedAt: NOW,
+          updatedAt: NOW,
+          completedAt: NOW,
+        }),
+        questionId,
+        setId: tryout.setId,
+        difficulty: 0,
+        discrimination: 1,
+      });
 
       const aggregate = await syncTryoutAttemptAggregates({
         completedAtMs: NOW,

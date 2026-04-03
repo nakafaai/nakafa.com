@@ -75,6 +75,101 @@ describe("tryouts/helpers/finalize/snapshot", () => {
     ).rejects.toThrow("Completed tryout part is missing its part attempt.");
   });
 
+  it("fails when a persisted tryout part is missing its exercise attempt", async () => {
+    const t = createTryoutTestConvex();
+
+    await expect(
+      t.mutation(async (ctx) => {
+        const identity = await seedAuthenticatedUser(ctx, {
+          now: NOW,
+          suffix: "missing-snapshot-exercise-attempt",
+        });
+        const tryout = await insertTryoutSkeleton(
+          ctx,
+          "missing-snapshot-exercise-attempt",
+          1
+        );
+        const setAttemptId = await ctx.db.insert("exerciseAttempts", {
+          slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/missing-snapshot-exercise-attempt",
+          userId: identity.userId,
+          origin: "tryout",
+          mode: "simulation",
+          scope: "set",
+          timeLimit: 90,
+          startedAt: NOW,
+          lastActivityAt: NOW,
+          completedAt: NOW,
+          endReason: "submitted",
+          status: "completed",
+          updatedAt: NOW,
+          totalExercises: 1,
+          answeredCount: 0,
+          correctAnswers: 0,
+          totalTime: 90,
+          scorePercentage: 0,
+        });
+        const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
+          userId: identity.userId,
+          tryoutId: tryout.tryoutId,
+          scaleVersionId: tryout.scaleVersionId,
+          scoreStatus: "official",
+          status: "completed",
+          partSetSnapshots: [
+            {
+              partIndex: 0,
+              partKey: "quantitative-knowledge",
+              questionCount: 1,
+              setId: tryout.setId,
+            },
+          ],
+          completedPartIndices: [0],
+          totalCorrect: 0,
+          totalQuestions: 1,
+          theta: 0,
+          thetaSE: 1,
+          startedAt: NOW,
+          expiresAt: NOW + ATTEMPT_WINDOW_MS,
+          lastActivityAt: NOW,
+          completedAt: NOW,
+          endReason: "submitted",
+        });
+
+        await ctx.db.insert("tryoutPartAttempts", {
+          tryoutAttemptId,
+          partIndex: 0,
+          partKey: "quantitative-knowledge",
+          setAttemptId,
+          setId: tryout.setId,
+          theta: 0,
+          thetaSE: 1,
+        });
+        await ctx.db.delete(setAttemptId);
+
+        return await buildFinalizedTryoutSnapshot(ctx.db, {
+          scaleVersionId: tryout.scaleVersionId,
+          tryout: {
+            _id: tryout.tryoutId,
+            partCount: 1,
+            product: "snbt",
+            totalQuestionCount: 1,
+          },
+          tryoutAttempt: {
+            _id: tryoutAttemptId,
+            completedPartIndices: [0],
+            partSetSnapshots: [
+              {
+                partIndex: 0,
+                partKey: "quantitative-knowledge",
+                questionCount: 1,
+                setId: tryout.setId,
+              },
+            ],
+          },
+        });
+      })
+    ).rejects.toThrow("Tryout part is missing its exercise attempt.");
+  });
+
   it("rebuilds finalized snapshots from persisted part set IDs and attempt question counts", async () => {
     const t = createTryoutTestConvex();
 
