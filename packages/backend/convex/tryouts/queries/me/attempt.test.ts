@@ -527,6 +527,148 @@ describe("tryouts/queries/me/attempt", () => {
     ]);
   });
 
+  it("keeps translated route keys one-to-one when a historical key moves and another key is renamed", async () => {
+    const t = createTryoutTestConvex();
+    const identity = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "ordered-part-key-collision",
+      });
+      const firstSetId = await ctx.db.insert("exerciseSets", {
+        locale: "id",
+        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/ordered-part-key-collision-qk",
+        category: "high-school",
+        type: "snbt",
+        material: "quantitative-knowledge",
+        exerciseType: "try-out",
+        setName: "ordered-part-key-collision-qk",
+        title: "Quantitative Knowledge",
+        questionCount: 10,
+        syncedAt: NOW,
+      });
+      const secondSetId = await ctx.db.insert("exerciseSets", {
+        locale: "id",
+        slug: "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/ordered-part-key-collision-mr",
+        category: "high-school",
+        type: "snbt",
+        material: "mathematical-reasoning",
+        exerciseType: "try-out",
+        setName: "ordered-part-key-collision-mr",
+        title: "Mathematical Reasoning",
+        questionCount: 10,
+        syncedAt: NOW,
+      });
+      const tryoutId = await ctx.db.insert("tryouts", {
+        product: "snbt",
+        locale: "id",
+        cycleKey: "2026",
+        slug: "ordered-part-key-collision",
+        label: "Ordered Part Key Collision",
+        partCount: 2,
+        totalQuestionCount: 20,
+        isActive: true,
+        detectedAt: NOW,
+        syncedAt: NOW,
+      });
+      const scaleVersionId = await ctx.db.insert("irtScaleVersions", {
+        tryoutId,
+        model: "2pl",
+        status: "official",
+        questionCount: 20,
+        publishedAt: NOW,
+      });
+      const firstPartSetId = await ctx.db.insert("tryoutPartSets", {
+        tryoutId,
+        setId: firstSetId,
+        partIndex: 0,
+        partKey: "quantitative-knowledge",
+      });
+      const secondPartSetId = await ctx.db.insert("tryoutPartSets", {
+        tryoutId,
+        setId: secondSetId,
+        partIndex: 1,
+        partKey: "mathematical-reasoning",
+      });
+      const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
+        userId: identity.userId,
+        tryoutId,
+        scaleVersionId,
+        scoreStatus: "official",
+        status: "in-progress",
+        partSetSnapshots: [
+          {
+            partIndex: 0,
+            partKey: "quantitative-knowledge",
+            questionCount: 10,
+            setId: firstSetId,
+          },
+          {
+            partIndex: 1,
+            partKey: "mathematical-reasoning",
+            questionCount: 10,
+            setId: secondSetId,
+          },
+        ],
+        completedPartIndices: [],
+        totalCorrect: 0,
+        totalQuestions: 0,
+        theta: 0,
+        thetaSE: 1,
+        startedAt: NOW,
+        expiresAt: NOW + 30 * 60 * 1000,
+        lastActivityAt: NOW,
+        completedAt: null,
+        endReason: null,
+      });
+
+      await ctx.db.insert("userTryoutLatestAttempts", {
+        userId: identity.userId,
+        product: "snbt",
+        locale: "id",
+        tryoutId,
+        attemptId: tryoutAttemptId,
+        slug: "ordered-part-key-collision",
+        status: "in-progress",
+        expiresAtMs: NOW + 30 * 60 * 1000,
+        updatedAt: NOW,
+      });
+      await ctx.db.patch("tryoutPartSets", firstPartSetId, {
+        partKey: "mathematical-reasoning",
+      });
+      await ctx.db.patch("tryoutPartSets", secondPartSetId, {
+        partKey: "verbal-reasoning",
+      });
+
+      return identity;
+    });
+
+    const result = await t
+      .withIdentity({
+        subject: identity.authUserId,
+        sessionId: identity.sessionId,
+      })
+      .query(api.tryouts.queries.me.attempt.getUserTryoutAttempt, {
+        product: "snbt",
+        locale: "id",
+        tryoutSlug: "ordered-part-key-collision",
+      });
+
+    expect(result?.orderedParts).toEqual([
+      {
+        partIndex: 0,
+        partKey: "verbal-reasoning",
+      },
+      {
+        partIndex: 1,
+        partKey: "mathematical-reasoning",
+      },
+    ]);
+    expect(
+      result?.partAttempts.map((partAttempt) => partAttempt.partKey)
+    ).toEqual(["verbal-reasoning", "mathematical-reasoning"]);
+    expect(result?.resumePartKey).toBe("verbal-reasoning");
+  });
+
   it("uses snapshot length when live tryout partCount shrinks below started parts", async () => {
     const t = createTryoutTestConvex();
     const identity = await t.mutation(async (ctx) => {

@@ -87,6 +87,10 @@ readiness**.
 In other words, low participation does not break the product. It only delays the
 moment when Nakafa is willing to call the score **official**.
 
+Operational integrity checks should treat that state as healthy as long as the
+tryout still has a published frozen scale version. A `blocked` quality summary
+means "not ready for official publication yet", not "tryout cannot run".
+
 ### When does a score become official?
 
 There are two cases:

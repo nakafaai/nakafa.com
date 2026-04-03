@@ -2,7 +2,10 @@ import { query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { buildFinalizedTryoutSnapshot } from "@repo/backend/convex/tryouts/helpers/finalize/snapshot";
 import { loadBoundedTryoutPartAttempts } from "@repo/backend/convex/tryouts/helpers/loaders";
-import { loadValidatedTryoutPartSets } from "@repo/backend/convex/tryouts/helpers/parts";
+import {
+  buildTryoutPartRouteMappings,
+  loadValidatedTryoutPartSets,
+} from "@repo/backend/convex/tryouts/helpers/parts";
 import { getTryoutReportScore } from "@repo/backend/convex/tryouts/helpers/reporting";
 import { resolveResumePartKey } from "@repo/backend/convex/tryouts/helpers/resume";
 import { loadLatestUserTryoutContext } from "@repo/backend/convex/tryouts/queries/me/helpers";
@@ -34,27 +37,14 @@ export const getUserTryoutAttempt = query({
       partCount: tryout.partCount,
       tryoutId: tryout._id,
     });
-    const currentPartKeysBySnapshotIndex = new Map(
-      attempt.partSetSnapshots.map((partSnapshot) => {
-        const currentPartSet =
-          currentPartSets.find(
-            (partSet) => partSet.partKey === partSnapshot.partKey
-          ) ??
-          currentPartSets.find(
-            (partSet) => partSet.partIndex === partSnapshot.partIndex
-          ) ??
-          null;
-
-        return [
-          partSnapshot.partIndex,
-          currentPartSet?.partKey ?? partSnapshot.partKey,
-        ] as const;
-      })
-    );
+    const { currentPartKeyBySnapshotIndex } = buildTryoutPartRouteMappings({
+      currentPartSets,
+      partSetSnapshots: attempt.partSetSnapshots,
+    });
     const orderedParts = attempt.partSetSnapshots.map((partSnapshot) => ({
       partIndex: partSnapshot.partIndex,
       partKey:
-        currentPartKeysBySnapshotIndex.get(partSnapshot.partIndex) ??
+        currentPartKeyBySnapshotIndex.get(partSnapshot.partIndex) ??
         partSnapshot.partKey,
     }));
     const endedAttemptHasUntouchedParts =
@@ -79,7 +69,7 @@ export const getUserTryoutAttempt = query({
         (partSnapshot) => ({
           partIndex: partSnapshot.partIndex,
           partKey:
-            currentPartKeysBySnapshotIndex.get(partSnapshot.partIndex) ??
+            currentPartKeyBySnapshotIndex.get(partSnapshot.partIndex) ??
             partSnapshot.partKey,
           score: partSnapshot.score,
           setAttempt: partSnapshot.setAttempt,
@@ -119,7 +109,7 @@ export const getUserTryoutAttempt = query({
           {
             partIndex: partAttempt.partIndex,
             partKey:
-              currentPartKeysBySnapshotIndex.get(partAttempt.partIndex) ??
+              currentPartKeyBySnapshotIndex.get(partAttempt.partIndex) ??
               partAttempt.partKey,
             score: attempt.completedPartIndices.includes(partAttempt.partIndex)
               ? {

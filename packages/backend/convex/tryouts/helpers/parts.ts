@@ -13,6 +13,85 @@ type CurrentTryoutPartSet = Pick<
   "partIndex" | "partKey"
 >;
 
+function matchTryoutPartRouteKey({
+  currentPartKeyBySnapshotIndex,
+  currentPartSet,
+  snapshot,
+  snapshotByCurrentRouteKey,
+}: {
+  currentPartKeyBySnapshotIndex: Map<number, string>;
+  currentPartSet: CurrentTryoutPartSet;
+  snapshot: TryoutPartSnapshot;
+  snapshotByCurrentRouteKey: Map<string, TryoutPartSnapshot>;
+}) {
+  currentPartKeyBySnapshotIndex.set(snapshot.partIndex, currentPartSet.partKey);
+  snapshotByCurrentRouteKey.set(currentPartSet.partKey, snapshot);
+}
+
+/**
+ * Build a one-to-one translation between current route keys and historical part
+ * snapshots.
+ */
+export function buildTryoutPartRouteMappings({
+  currentPartSets,
+  partSetSnapshots,
+}: {
+  currentPartSets: CurrentTryoutPartSet[];
+  partSetSnapshots: TryoutPartSnapshot[];
+}) {
+  const currentPartKeyBySnapshotIndex = new Map<number, string>();
+  const snapshotByCurrentRouteKey = new Map<string, TryoutPartSnapshot>();
+  const matchedSnapshotIndices = new Set<number>();
+  const unmatchedCurrentPartSets: CurrentTryoutPartSet[] = [];
+
+  for (const currentPartSet of currentPartSets) {
+    const snapshot =
+      partSetSnapshots.find(
+        (partSnapshot) =>
+          !matchedSnapshotIndices.has(partSnapshot.partIndex) &&
+          partSnapshot.partKey === currentPartSet.partKey
+      ) ?? null;
+
+    if (!snapshot) {
+      unmatchedCurrentPartSets.push(currentPartSet);
+      continue;
+    }
+
+    matchedSnapshotIndices.add(snapshot.partIndex);
+    matchTryoutPartRouteKey({
+      currentPartKeyBySnapshotIndex,
+      currentPartSet,
+      snapshot,
+      snapshotByCurrentRouteKey,
+    });
+  }
+
+  const unmatchedSnapshots = partSetSnapshots.filter(
+    (partSnapshot) => !matchedSnapshotIndices.has(partSnapshot.partIndex)
+  );
+
+  for (const [index, currentPartSet] of unmatchedCurrentPartSets.entries()) {
+    const snapshot = unmatchedSnapshots[index];
+
+    if (!snapshot) {
+      break;
+    }
+
+    matchedSnapshotIndices.add(snapshot.partIndex);
+    matchTryoutPartRouteKey({
+      currentPartKeyBySnapshotIndex,
+      currentPartSet,
+      snapshot,
+      snapshotByCurrentRouteKey,
+    });
+  }
+
+  return {
+    currentPartKeyBySnapshotIndex,
+    snapshotByCurrentRouteKey,
+  };
+}
+
 /**
  * Load validated part-set rows for one tryout, enforcing count and ordered
  * `partIndex` invariants in one place.
@@ -66,39 +145,41 @@ export function resolveRequestedTryoutPart({
   partSetSnapshots: TryoutPartSnapshot[];
   requestedPartKey: TryoutPartSnapshot["partKey"];
 }) {
-  const snapshot =
-    partSetSnapshots.find(
-      (partSnapshot) => partSnapshot.partKey === requestedPartKey
-    ) ?? null;
+  const { currentPartKeyBySnapshotIndex, snapshotByCurrentRouteKey } =
+    buildTryoutPartRouteMappings({
+      currentPartSets,
+      partSetSnapshots,
+    });
   const currentPartSet =
     currentPartSets.find((partSet) => partSet.partKey === requestedPartKey) ??
     null;
+  const snapshot = snapshotByCurrentRouteKey.get(requestedPartKey) ?? null;
 
   if (snapshot) {
     return {
-      currentPartKey: currentPartSet?.partKey ?? snapshot.partKey,
+      currentPartKey:
+        currentPartKeyBySnapshotIndex.get(snapshot.partIndex) ??
+        snapshot.partKey,
       currentPartSet,
       snapshot,
     };
   }
 
-  if (!currentPartSet) {
-    return null;
-  }
-
-  const snapshotByIndex =
+  const unmatchedSnapshot =
     partSetSnapshots.find(
-      (partSnapshot) => partSnapshot.partIndex === currentPartSet.partIndex
+      (partSnapshot) =>
+        !currentPartKeyBySnapshotIndex.has(partSnapshot.partIndex) &&
+        partSnapshot.partKey === requestedPartKey
     ) ?? null;
 
-  if (!snapshotByIndex) {
+  if (!unmatchedSnapshot) {
     return null;
   }
 
   return {
-    currentPartKey: currentPartSet.partKey,
-    currentPartSet,
-    snapshot: snapshotByIndex,
+    currentPartKey: unmatchedSnapshot.partKey,
+    currentPartSet: null,
+    snapshot: unmatchedSnapshot,
   };
 }
 
