@@ -211,10 +211,8 @@ describe("tryouts/queries/me/attempt", () => {
       });
       const partAttempt = await ctx.db
         .query("tryoutPartAttempts")
-        .withIndex("by_tryoutAttemptId_and_partKey", (q) =>
-          q
-            .eq("tryoutAttemptId", tryoutAttemptId)
-            .eq("partKey", "quantitative-knowledge")
+        .withIndex("by_tryoutAttemptId_and_partIndex", (q) =>
+          q.eq("tryoutAttemptId", tryoutAttemptId).eq("partIndex", 0)
         )
         .unique();
 

@@ -10,7 +10,7 @@ import { getAll } from "convex-helpers/server/relationships";
 type TryoutDbReader = QueryCtx["db"] | MutationCtx["db"];
 type CurrentTryoutPartSet = Pick<
   Doc<"tryoutPartSets">,
-  "partIndex" | "partKey" | "setId"
+  "partIndex" | "partKey"
 >;
 
 /**

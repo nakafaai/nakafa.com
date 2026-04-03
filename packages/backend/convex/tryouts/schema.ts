@@ -139,7 +139,6 @@ const tables = {
     thetaSE: v.number(),
   })
     .index("by_tryoutAttemptId_and_partIndex", ["tryoutAttemptId", "partIndex"])
-    .index("by_tryoutAttemptId_and_partKey", ["tryoutAttemptId", "partKey"])
     .index("by_setAttemptId", ["setAttemptId"]),
 
   userTryoutStats: defineTable({

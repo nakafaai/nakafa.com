@@ -197,6 +197,9 @@ export async function seedExpiredTryoutWithUntouchedPart(
   ctx: MutationCtx,
   suffix: string
 ) {
+  const expiredAt = NOW - 1;
+  const tryoutStartedAt = expiredAt - ATTEMPT_WINDOW_MS;
+  const setStartedAt = expiredAt - 90 * 1000;
   const identity = await seedAuthenticatedUser(ctx, {
     now: NOW,
     suffix,
@@ -316,12 +319,12 @@ export async function seedExpiredTryoutWithUntouchedPart(
     mode: "simulation",
     scope: "set",
     timeLimit: 90,
-    startedAt: NOW,
-    lastActivityAt: NOW,
-    completedAt: NOW,
+    startedAt: setStartedAt,
+    lastActivityAt: expiredAt,
+    completedAt: expiredAt,
     endReason: "time-expired",
     status: "expired",
-    updatedAt: NOW,
+    updatedAt: expiredAt,
     totalExercises: 1,
     answeredCount: 0,
     correctAnswers: 0,
@@ -353,10 +356,10 @@ export async function seedExpiredTryoutWithUntouchedPart(
     totalQuestions: 1,
     theta: 0,
     thetaSE: 1,
-    startedAt: NOW,
-    expiresAt: NOW + ATTEMPT_WINDOW_MS,
-    lastActivityAt: NOW,
-    completedAt: NOW,
+    startedAt: tryoutStartedAt,
+    expiresAt: expiredAt,
+    lastActivityAt: expiredAt,
+    completedAt: expiredAt,
     endReason: "time-expired",
   });
 
@@ -377,8 +380,8 @@ export async function seedExpiredTryoutWithUntouchedPart(
     attemptId: tryoutAttemptId,
     slug: suffix,
     status: "expired",
-    expiresAtMs: NOW + ATTEMPT_WINDOW_MS,
-    updatedAt: NOW,
+    expiresAtMs: expiredAt,
+    updatedAt: expiredAt,
   });
 
   return {

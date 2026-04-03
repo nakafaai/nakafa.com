@@ -99,7 +99,12 @@ export async function reuseExistingTryoutAttempt(
 }
 
 /**
- * Load the tryout and part-set row needed to start one concrete tryout part.
+ * Load the tryout and historical snapshot needed to start one concrete tryout
+ * part.
+ *
+ * Route resolution still accepts the current public part key, but the returned
+ * part metadata stays bound to the persisted attempt snapshot so content-sync
+ * changes never rewrite an in-progress attempt onto a different set.
  */
 export async function loadPartStartContext(
   ctx: MutationCtx,
@@ -144,16 +149,9 @@ export async function loadPartStartContext(
     partSetSnapshots: activeTryoutAttempt.partSetSnapshots,
     requestedPartKey: partKey,
   });
-  const tryoutPartSet = resolvedPart
-    ? {
-        partIndex: resolvedPart.snapshot.partIndex,
-        partKey: resolvedPart.currentPartKey,
-        setId:
-          resolvedPart.currentPartSet?.setId ?? resolvedPart.snapshot.setId,
-      }
-    : null;
+  const tryoutPartSnapshot = resolvedPart?.snapshot ?? null;
 
-  if (!tryoutPartSet) {
+  if (!tryoutPartSnapshot) {
     throw new ConvexError({
       code: "PART_NOT_FOUND",
       message: "Tryout part not found.",
@@ -161,7 +159,9 @@ export async function loadPartStartContext(
   }
 
   if (
-    activeTryoutAttempt.completedPartIndices.includes(tryoutPartSet.partIndex)
+    activeTryoutAttempt.completedPartIndices.includes(
+      tryoutPartSnapshot.partIndex
+    )
   ) {
     throw new ConvexError({
       code: "PART_ALREADY_COMPLETED",
@@ -171,7 +171,7 @@ export async function loadPartStartContext(
 
   return {
     tryout,
-    tryoutPartSet,
+    tryoutPartSnapshot,
   };
 }
 

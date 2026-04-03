@@ -1,5 +1,6 @@
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
 import { finalizeTryoutAttempt } from "@repo/backend/convex/tryouts/helpers/finalize/attempt";
+import { getTryoutReportScore } from "@repo/backend/convex/tryouts/helpers/reporting";
 import {
   ATTEMPT_WINDOW_MS,
   createTryoutTestConvex,
@@ -9,7 +10,7 @@ import {
 import { describe, expect, it } from "vitest";
 
 describe("tryouts/helpers/finalize/attempt", () => {
-  it("returns derived report scores from finalizeTryoutAttempt across attempt states", async () => {
+  it("returns status-specific finalized tryout summaries across attempt states", async () => {
     const t = createTryoutTestConvex();
     const result = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
@@ -32,10 +33,10 @@ describe("tryouts/helpers/finalize/attempt", () => {
           },
         ],
         completedPartIndices: [0],
-        totalCorrect: 0,
+        totalCorrect: 12,
         totalQuestions: 20,
-        theta: 0,
-        thetaSE: 1,
+        theta: 1.5,
+        thetaSE: 0.3,
         startedAt: NOW,
         expiresAt: NOW + ATTEMPT_WINDOW_MS,
         lastActivityAt: NOW,
@@ -57,10 +58,10 @@ describe("tryouts/helpers/finalize/attempt", () => {
           },
         ],
         completedPartIndices: [],
-        totalCorrect: 0,
+        totalCorrect: 4,
         totalQuestions: 20,
-        theta: 0,
-        thetaSE: 1,
+        theta: -1.25,
+        thetaSE: 0.6,
         startedAt: NOW,
         expiresAt: NOW + ATTEMPT_WINDOW_MS,
         lastActivityAt: NOW,
@@ -83,14 +84,24 @@ describe("tryouts/helpers/finalize/attempt", () => {
         ],
         completedPartIndices: [],
         totalCorrect: 0,
-        totalQuestions: 0,
-        theta: 0,
-        thetaSE: 1,
+        totalQuestions: 5,
+        theta: 0.75,
+        thetaSE: 0.9,
         startedAt: NOW,
         expiresAt: NOW + ATTEMPT_WINDOW_MS,
         lastActivityAt: NOW,
         completedAt: null,
         endReason: null,
+      });
+      await ctx.db.insert("tryoutLeaderboardEntries", {
+        tryoutId: tryout.tryoutId,
+        userId: identity.userId,
+        leaderboardNamespace: "snbt:id:2026",
+        theta: 1.5,
+        thetaSE: 0.3,
+        rawScore: 60,
+        completedAt: NOW,
+        attemptId: completedAttemptId,
       });
       const completedAttempt = await ctx.db.get(
         "tryoutAttempts",
@@ -131,9 +142,27 @@ describe("tryouts/helpers/finalize/attempt", () => {
       };
     });
 
-    expect(result.completed.irtScore).toBe(500);
-    expect(result.expired.irtScore).toBe(500);
-    expect(result.inProgress.irtScore).toBe(500);
+    expect(result.completed).toEqual({
+      status: "completed",
+      isOfficial: true,
+      theta: 1.5,
+      irtScore: getTryoutReportScore("snbt", 1.5),
+      rawScorePercentage: 60,
+    });
+    expect(result.expired).toEqual({
+      status: "expired",
+      isOfficial: false,
+      theta: -1.25,
+      irtScore: getTryoutReportScore("snbt", -1.25),
+      rawScorePercentage: 20,
+    });
+    expect(result.inProgress).toEqual({
+      status: "in-progress",
+      isOfficial: false,
+      theta: 0.75,
+      irtScore: getTryoutReportScore("snbt", 0.75),
+      rawScorePercentage: 0,
+    });
   });
 
   it("keeps an attempt in progress when only the live tryout partCount shrinks", async () => {

@@ -9,7 +9,7 @@ import {
 import { describe, expect, it } from "vitest";
 
 describe("tryouts/helpers/attemptLifecycle", () => {
-  it("loads part start context from the current mapping while preserving snapshot order", async () => {
+  it("loads part start context from the requested current route while preserving snapshot set data", async () => {
     const t = createTryoutTestConvex();
 
     const result = await t.mutation(async (ctx) => {
@@ -80,16 +80,15 @@ describe("tryouts/helpers/attemptLifecycle", () => {
           userId: identity.userId,
         }),
         originalSetId: tryout.setId,
-        replacementSetId,
       };
     });
 
-    expect(result.context.tryoutPartSet).toEqual({
+    expect(result.context.tryoutPartSnapshot).toEqual({
       partIndex: 0,
-      partKey: "mathematical-reasoning",
+      partKey: "quantitative-knowledge",
       setId: expect.any(String),
+      questionCount: 20,
     });
-    expect(result.context.tryoutPartSet.setId).not.toBe(result.originalSetId);
-    expect(result.context.tryoutPartSet.setId).toBe(result.replacementSetId);
+    expect(result.context.tryoutPartSnapshot.setId).toBe(result.originalSetId);
   });
 });

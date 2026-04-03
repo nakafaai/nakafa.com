@@ -90,7 +90,7 @@ describe("tryouts/mutations/attempts", () => {
     ]);
   });
 
-  it("starts an unstarted part against the current mapping after key and set changes", async () => {
+  it("starts an unstarted part from the persisted snapshot after live key and set changes", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
@@ -154,7 +154,7 @@ describe("tryouts/mutations/attempts", () => {
 
       return {
         ...identity,
-        replacementSetId,
+        originalSetId: tryout.setId,
         tryoutAttemptId,
       };
     });
@@ -169,17 +169,30 @@ describe("tryouts/mutations/attempts", () => {
         tryoutAttemptId: state.tryoutAttemptId,
       });
 
-    const partAttempt = await t.query(async (ctx) => {
-      return await ctx.db
+    const result = await t.query(async (ctx) => {
+      const partAttempt = await ctx.db
         .query("tryoutPartAttempts")
         .withIndex("by_tryoutAttemptId_and_partIndex", (q) =>
           q.eq("tryoutAttemptId", state.tryoutAttemptId).eq("partIndex", 0)
         )
         .unique();
+
+      if (!partAttempt) {
+        return null;
+      }
+
+      return {
+        partAttempt,
+        setAttempt: await ctx.db.get(
+          "exerciseAttempts",
+          partAttempt.setAttemptId
+        ),
+      };
     });
 
-    expect(partAttempt?.partKey).toBe("mathematical-reasoning");
-    expect(partAttempt?.setId).toBe(state.replacementSetId);
+    expect(result?.partAttempt.partKey).toBe("quantitative-knowledge");
+    expect(result?.partAttempt.setId).toBe(state.originalSetId);
+    expect(result?.setAttempt?.totalExercises).toBe(20);
   });
 
   it("reuses an already started part after the current route key changes", async () => {

@@ -153,7 +153,7 @@ export const startPart = mutation({
     const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
     const now = Date.now();
-    const { tryout, tryoutPartSet } = await loadPartStartContext(ctx, {
+    const { tryout, tryoutPartSnapshot } = await loadPartStartContext(ctx, {
       now,
       partKey: args.partKey,
       tryoutAttemptId: args.tryoutAttemptId,
@@ -163,14 +163,14 @@ export const startPart = mutation({
     if (
       await reuseExistingPartAttempt(ctx, {
         now,
-        partIndex: tryoutPartSet.partIndex,
+        partIndex: tryoutPartSnapshot.partIndex,
         tryoutAttemptId: args.tryoutAttemptId,
       })
     ) {
       return null;
     }
 
-    const set = await loadStartableSet(ctx, tryoutPartSet.setId);
+    const set = await loadStartableSet(ctx, tryoutPartSnapshot.setId);
 
     const timeLimit = tryoutProductPolicies[
       tryout.product
@@ -189,10 +189,10 @@ export const startPart = mutation({
 
     await ctx.db.insert("tryoutPartAttempts", {
       tryoutAttemptId: args.tryoutAttemptId,
-      partIndex: tryoutPartSet.partIndex,
-      partKey: tryoutPartSet.partKey,
+      partIndex: tryoutPartSnapshot.partIndex,
+      partKey: tryoutPartSnapshot.partKey,
       setAttemptId,
-      setId: tryoutPartSet.setId,
+      setId: tryoutPartSnapshot.setId,
       theta: 0,
       thetaSE: 1,
     });
