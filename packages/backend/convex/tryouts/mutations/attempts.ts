@@ -12,9 +12,7 @@ import {
 } from "@repo/backend/convex/tryouts/helpers/access";
 import {
   loadPartStartContext,
-  loadStartableSet,
   loadStartableTryout,
-  loadTryoutPartAttempt,
   reuseExistingPartAttempt,
   reuseExistingTryoutAttempt,
 } from "@repo/backend/convex/tryouts/helpers/attemptLifecycle";
@@ -142,7 +140,13 @@ export const startTryout = mutation({
   },
 });
 
-/** Starts or resumes one concrete tryout part looked up by stable part key. */
+/**
+ * Starts or resumes one concrete tryout part looked up by stable part key.
+ *
+ * Existing attempts stay bound to the persisted snapshot set ID and question
+ * count so later content-sync changes cannot rewrite their timer or exercise
+ * total.
+ */
 export const startPart = mutation({
   args: {
     tryoutAttemptId: vv.id("tryoutAttempts"),
@@ -170,11 +174,21 @@ export const startPart = mutation({
       return null;
     }
 
-    const set = await loadStartableSet(ctx, tryoutPartSnapshot.setId);
+    const set = await ctx.db.get("exerciseSets", tryoutPartSnapshot.setId);
 
-    const timeLimit = tryoutProductPolicies[
-      tryout.product
-    ].getPartTimeLimitSeconds(set.questionCount);
+    if (!set) {
+      throw new ConvexError({
+        code: "SET_NOT_FOUND",
+        message: "Exercise set not found.",
+      });
+    }
+
+    const questionCount = tryoutPartSnapshot.questionCount;
+
+    const timeLimit =
+      tryoutProductPolicies[tryout.product].getPartTimeLimitSeconds(
+        questionCount
+      );
 
     const setAttemptId = await createExerciseAttempt(ctx, {
       slug: set.slug,
@@ -184,7 +198,7 @@ export const startPart = mutation({
       scope: "set",
       timeLimit,
       startedAt: now,
-      totalExercises: set.questionCount,
+      totalExercises: questionCount,
     });
 
     await ctx.db.insert("tryoutPartAttempts", {
@@ -252,10 +266,21 @@ export const completePart = mutation({
       });
     }
 
-    const partAttempt = await loadTryoutPartAttempt(ctx, {
-      partIndex: resolvedPart.snapshot.partIndex,
-      tryoutAttemptId: args.tryoutAttemptId,
-    });
+    const partAttempt = await ctx.db
+      .query("tryoutPartAttempts")
+      .withIndex("by_tryoutAttemptId_and_partIndex", (q) =>
+        q
+          .eq("tryoutAttemptId", args.tryoutAttemptId)
+          .eq("partIndex", resolvedPart.snapshot.partIndex)
+      )
+      .unique();
+
+    if (!partAttempt) {
+      throw new ConvexError({
+        code: "PART_ATTEMPT_NOT_FOUND",
+        message: "Tryout part attempt not found.",
+      });
+    }
 
     if (
       currentTryoutAttempt.completedPartIndices.includes(partAttempt.partIndex)

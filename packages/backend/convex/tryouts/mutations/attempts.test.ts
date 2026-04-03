@@ -90,7 +90,7 @@ describe("tryouts/mutations/attempts", () => {
     ]);
   });
 
-  it("starts an unstarted part from the persisted snapshot after live key and set changes", async () => {
+  it("starts an unstarted part from the persisted snapshot after live key, set, and count changes", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
@@ -151,6 +151,9 @@ describe("tryouts/mutations/attempts", () => {
         partKey: "mathematical-reasoning",
         setId: replacementSetId,
       });
+      await ctx.db.patch("exerciseSets", tryout.setId, {
+        questionCount: 30,
+      });
 
       return {
         ...identity,
@@ -193,6 +196,7 @@ describe("tryouts/mutations/attempts", () => {
     expect(result?.partAttempt.partKey).toBe("quantitative-knowledge");
     expect(result?.partAttempt.setId).toBe(state.originalSetId);
     expect(result?.setAttempt?.totalExercises).toBe(20);
+    expect(result?.setAttempt?.timeLimit).toBe(20 * 90);
   });
 
   it("reuses an already started part after the current route key changes", async () => {
