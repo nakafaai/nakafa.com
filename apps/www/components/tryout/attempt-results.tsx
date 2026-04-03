@@ -1,8 +1,18 @@
 "use client";
 
+import { PartyIcon, Progress03Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { Button } from "@repo/design-system/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import type { FunctionReturnType } from "convex/server";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -26,7 +36,7 @@ export function TryoutAttemptResults({
   const locale = useTryoutAttemptState((state) => state.params.locale);
   const product = useTryoutAttemptState((state) => state.params.product);
   const tryoutSlug = useTryoutAttemptState((state) => state.params.tryoutSlug);
-  const { data: attemptHistory } = useQueryWithStatus(
+  const { data: rawAttemptHistory } = useQueryWithStatus(
     api.tryouts.queries.me.history.getUserTryoutAttemptHistory,
     {
       locale,
@@ -35,19 +45,31 @@ export function TryoutAttemptResults({
     }
   );
   const [selectedAttemptId, setSelectedAttemptId] = useState("");
+  const attemptHistory = rawAttemptHistory ?? [];
 
-  if (!(attemptHistory && attemptHistory.length > 0)) {
+  if (attemptHistory.length === 0) {
     return (
       <TryoutScoreCard attempt={fallbackAttempt} status={fallbackStatus} />
     );
   }
 
+  const attemptOptions = attemptHistory.map((attempt) => ({
+    ...attempt,
+    icon: attempt.countsForCompetition ? PartyIcon : Progress03Icon,
+    label: attempt.countsForCompetition
+      ? tTryouts("attempt-select-event", {
+          number: attempt.attemptNumber,
+        })
+      : tTryouts("attempt-select-retry", {
+          number: attempt.attemptNumber,
+        }),
+  }));
   const defaultAttempt =
-    attemptHistory.find((attempt) => attempt.countsForCompetition) ??
-    attemptHistory.at(-1) ??
+    attemptOptions.find((attempt) => attempt.countsForCompetition) ??
+    attemptOptions.at(-1) ??
     null;
   const selectedAttempt =
-    attemptHistory.find((attempt) => attempt.attemptId === selectedAttemptId) ??
+    attemptOptions.find((attempt) => attempt.attemptId === selectedAttemptId) ??
     defaultAttempt;
 
   if (!selectedAttempt) {
@@ -64,39 +86,33 @@ export function TryoutAttemptResults({
       />
 
       {attemptHistory.length > 1 ? (
-        <div className="space-y-2">
-          <p className="text-muted-foreground text-sm">
-            {tTryouts("attempt-history-title")}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {attemptHistory.map((attempt) => {
-              const isSelected =
-                attempt.attemptId === selectedAttempt.attemptId;
-
-              return (
-                <Button
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button type="button" variant="outline">
+              <HugeIcons icon={selectedAttempt.icon} />
+              {selectedAttempt.label}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuLabel>
+              {tTryouts("attempt-menu-label")}
+            </DropdownMenuLabel>
+            <DropdownMenuRadioGroup
+              onValueChange={setSelectedAttemptId}
+              value={selectedAttempt.attemptId}
+            >
+              {attemptOptions.map((attempt) => (
+                <DropdownMenuRadioItem
                   key={attempt.attemptId}
-                  onClick={() => setSelectedAttemptId(attempt.attemptId)}
-                  type="button"
-                  variant={isSelected ? "default" : "outline"}
+                  value={attempt.attemptId}
                 >
-                  <span className="flex flex-col items-start text-left">
-                    <span>
-                      {tTryouts("attempt-history-label", {
-                        number: attempt.attemptNumber,
-                      })}
-                    </span>
-                    <span className="text-xs opacity-80">
-                      {attempt.countsForCompetition
-                        ? tTryouts("attempt-history-counted")
-                        : tTryouts("attempt-history-practice")}
-                    </span>
-                  </span>
-                </Button>
-              );
-            })}
-          </div>
-        </div>
+                  <HugeIcons icon={attempt.icon} />
+                  {attempt.label}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
       ) : null}
     </div>
   );
