@@ -13,9 +13,12 @@ import {
 } from "@repo/backend/convex/tryouts/products";
 import { products } from "@repo/backend/convex/utils/polar/products";
 import type { Infer } from "convex/values";
+import { ConvexError } from "convex/values";
+import { getAll } from "convex-helpers/server/relationships";
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 const MAX_PRODUCT_GRANTS_PER_GRANT = tryoutProducts.length;
+const MAX_ACTIVE_PRODUCT_GRANTS_PER_USER = 20;
 
 const tryoutPaidProductIds = {
   snbt: products.pro.id,
@@ -34,11 +37,43 @@ export function normalizeTryoutAccessCode(value: string) {
 }
 
 /** Calculates the event grant end timestamp from the redeem time and duration. */
-export function getTryoutAccessGrantEndsAt(
-  redeemedAt: number,
-  grantDurationDays: number
-) {
-  return redeemedAt + grantDurationDays * DAY_IN_MS;
+export function getTryoutAccessGrantEndsAt({
+  campaign,
+  redeemedAt,
+}: {
+  campaign: Pick<
+    Doc<"tryoutAccessCampaigns">,
+    "campaignKind" | "endsAt" | "grantDurationDays"
+  >;
+  redeemedAt: number;
+}) {
+  if (campaign.campaignKind === "competition") {
+    return campaign.endsAt;
+  }
+
+  if (campaign.grantDurationDays === undefined) {
+    throw new ConvexError({
+      code: "INVALID_CAMPAIGN_WINDOW",
+      message: "Access-pass campaigns must define grantDurationDays.",
+    });
+  }
+
+  return redeemedAt + campaign.grantDurationDays * DAY_IN_MS;
+}
+
+/** Returns the effective access end timestamp stored for one redeemed grant. */
+export function getTryoutAccessGrantEffectiveEndsAt({
+  campaign,
+  endsAt,
+}: {
+  campaign: Pick<Doc<"tryoutAccessCampaigns">, "campaignKind" | "endsAt">;
+  endsAt: number;
+}) {
+  if (campaign.campaignKind !== "competition") {
+    return endsAt;
+  }
+
+  return Math.min(endsAt, campaign.endsAt);
 }
 
 /** Resolves the current redeem status for one campaign time window. */
@@ -124,32 +159,116 @@ export async function getTryoutAccessEventByCode(
 /** Synchronizes one summary grant and its product grants to the same status. */
 export async function syncTryoutAccessGrantStatus(
   db: TryoutAccessDbWriter,
-  grant: Pick<Doc<"tryoutAccessGrants">, "_id" | "endsAt" | "status">,
+  grant: Pick<
+    Doc<"tryoutAccessGrants">,
+    "_id" | "campaignId" | "endsAt" | "status"
+  >,
   now: number
 ) {
-  const status = getTryoutAccessGrantStatus(grant.endsAt, now);
+  const campaign = await db.get("tryoutAccessCampaigns", grant.campaignId);
+  const effectiveEndsAt = campaign
+    ? getTryoutAccessGrantEffectiveEndsAt({
+        campaign,
+        endsAt: grant.endsAt,
+      })
+    : grant.endsAt;
+  const status = getTryoutAccessGrantStatus(effectiveEndsAt, now);
   const productGrants = await db
     .query("tryoutAccessProductGrants")
     .withIndex("by_grantId", (q) => q.eq("grantId", grant._id))
     .take(MAX_PRODUCT_GRANTS_PER_GRANT);
 
-  if (grant.status !== status) {
+  if (grant.endsAt !== effectiveEndsAt || grant.status !== status) {
     await db.patch("tryoutAccessGrants", grant._id, {
+      endsAt: effectiveEndsAt,
       status,
     });
   }
 
   for (const productGrant of productGrants) {
-    if (productGrant.status === status) {
+    if (
+      productGrant.endsAt === effectiveEndsAt &&
+      productGrant.status === status
+    ) {
       continue;
     }
 
     await db.patch("tryoutAccessProductGrants", productGrant._id, {
+      endsAt: effectiveEndsAt,
       status,
     });
   }
 
   return status;
+}
+
+async function loadActiveTryoutEventSources(
+  db: TryoutAccessDbReader,
+  {
+    now,
+    product,
+    userId,
+  }: {
+    now: number;
+    product: TryoutProduct;
+    userId: Doc<"users">["_id"];
+  }
+) {
+  const productGrants = await db
+    .query("tryoutAccessProductGrants")
+    .withIndex("by_userId_and_product_and_endsAt", (q) =>
+      q.eq("userId", userId).eq("product", product).gt("endsAt", now)
+    )
+    .take(MAX_ACTIVE_PRODUCT_GRANTS_PER_USER + 1);
+
+  if (productGrants.length > MAX_ACTIVE_PRODUCT_GRANTS_PER_USER) {
+    throw new ConvexError({
+      code: "TOO_MANY_ACTIVE_EVENT_GRANTS",
+      message: "Too many active event grants exist for one product.",
+    });
+  }
+
+  const campaigns = await getAll(
+    db,
+    "tryoutAccessCampaigns",
+    productGrants.map((productGrant) => productGrant.campaignId)
+  );
+  const eventSources = productGrants.flatMap((productGrant, index) => {
+    const campaign = campaigns[index];
+
+    if (!campaign) {
+      return [];
+    }
+
+    const accessEndsAt = getTryoutAccessGrantEffectiveEndsAt({
+      campaign,
+      endsAt: productGrant.endsAt,
+    });
+
+    if (accessEndsAt <= now) {
+      return [];
+    }
+
+    return [
+      {
+        accessCampaignId: campaign._id,
+        accessCampaignKind: campaign.campaignKind,
+        accessEndsAt,
+        accessGrantId: productGrant.grantId,
+      },
+    ];
+  });
+
+  return {
+    accessPassEventSource:
+      eventSources.find(
+        (eventSource) => eventSource.accessCampaignKind === "access-pass"
+      ) ?? null,
+    competitionEventSource:
+      eventSources.find(
+        (eventSource) => eventSource.accessCampaignKind === "competition"
+      ) ?? null,
+  };
 }
 
 async function hasActiveTryoutSubscription(
@@ -185,7 +304,7 @@ async function hasActiveTryoutSubscription(
 }
 
 /** Resolves whether a user can start a tryout using server time. */
-export async function hasTryoutAccessNow(
+export async function resolveTryoutAccessSources(
   db: TryoutAccessDbReader,
   {
     now,
@@ -197,16 +316,24 @@ export async function hasTryoutAccessNow(
     userId: Doc<"users">["_id"];
   }
 ) {
-  if (await hasActiveTryoutSubscription(db, { product, userId })) {
-    return true;
-  }
+  const [
+    { accessPassEventSource, competitionEventSource },
+    hasActiveSubscription,
+  ] = await Promise.all([
+    loadActiveTryoutEventSources(db, {
+      now,
+      product,
+      userId,
+    }),
+    hasActiveTryoutSubscription(db, {
+      product,
+      userId,
+    }),
+  ]);
 
-  const activeProductGrant = await db
-    .query("tryoutAccessProductGrants")
-    .withIndex("by_userId_and_product_and_endsAt", (q) =>
-      q.eq("userId", userId).eq("product", product).gt("endsAt", now)
-    )
-    .first();
-
-  return activeProductGrant !== null;
+  return {
+    accessPassEventSource,
+    competitionEventSource,
+    hasActiveSubscription,
+  };
 }

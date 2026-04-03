@@ -6,9 +6,12 @@ khususnya saat satu try out bisa diakses lewat dua jalur berbeda:
 - event access
 - Nakafa Pro
 
-Dokumen ini adalah **target policy produk yang direkomendasikan**. Beberapa
-bagian sudah sejalan dengan runtime saat ini, tetapi provenance akses event vs
-subscription belum seluruhnya dipersist di kode sekarang.
+Dokumen ini menjelaskan policy produk yang sekarang menjadi acuan implementasi
+runtime:
+
+- campaign akses dibagi menjadi `competition` dan `access-pass`
+- provenance akses attempt disimpan saat `startTryout`
+- status publik siswa memakai **satu label utama** saja
 
 Dokumen teknikal yang relevan:
 
@@ -62,69 +65,107 @@ Policy ini dibuat supaya:
 - `official` = resmi secara psychometric IRT
 - `Final Event` = final untuk kebutuhan event/kompetisi
 
+## Jenis Campaign
+
+### `competition`
+
+Dipakai untuk event yang harus punya hasil final saat event ditutup.
+
+Aturan runtime:
+
+- redeem hanya saat campaign aktif
+- event close adalah cutoff final event
+- setelah event close:
+  - tidak bisa redeem
+  - tidak bisa start attempt baru dari event
+  - tidak bisa resume attempt event yang masih berjalan
+- attempt pertama yang berasal dari event adalah attempt yang dihitung untuk
+  event
+
+### `access-pass`
+
+Dipakai untuk promo / marketing / grant akses biasa.
+
+Aturan runtime:
+
+- redeem hanya saat campaign aktif
+- setelah redeem, user punya window akses sendiri sesuai `grantDurationDays`
+- campaign end hanya menutup redeem baru
+- hasil publik tetap mengikuti verifikasi IRT biasa
+
 ## Sumber Akses Yang Harus Disimpan
 
 Saat `startTryout`, attempt harus menyimpan provenance akses.
 
-Field yang direkomendasikan di `tryoutAttempts`:
+Field yang disimpan di `tryoutAttempts`:
 
 - `accessKind: "event" | "subscription"`
 - `accessCampaignId?: Id<"tryoutAccessCampaigns">`
+- `accessCampaignKind?: "competition" | "access-pass"`
 - `accessGrantId?: Id<"tryoutAccessGrants">`
+- `accessEndsAt?: number`
+- `countsForCompetition?: boolean`
 
 Kalau user punya event grant dan Pro sekaligus, sistem tidak boleh menebak dari
 state saat ini. Sumber akses attempt harus ditentukan saat attempt dibuat.
 
 ## Decision Matrix Status Publik
 
-### Attempt berbasis subscription / Nakafa Pro
+### Attempt non-competition
+
+Ini mencakup:
+
+- attempt berbasis subscription / Nakafa Pro
+- attempt berbasis `access-pass`
 
 | Kondisi internal | Status publik |
 |------|------|
 | `provisional` | `Estimasi Awal` |
 | `official` | `Terverifikasi IRT` |
 
-User Pro tidak pernah memakai `Final Event`.
+`Final Event` tidak dipakai untuk flow ini.
 
-### Attempt berbasis event
+### Attempt berbasis `competition`
 
-| Kondisi internal | Event masih berjalan? | Status publik |
-|------|------|------|
-| `provisional` | ya | `Estimasi Awal` |
-| `provisional` | tidak | `Final Event` |
-| `official` | ya | `Terverifikasi IRT` |
-| `official` | tidak | `Terverifikasi IRT` |
+| Kondisi event | Status publik |
+|------|------|
+| event belum difinalkan | `Estimasi Awal` |
+| event sudah difinalkan | `Final Event` |
+
+Artinya, untuk competition user tidak melihat badge `Terverifikasi IRT` sebagai
+label utama. Verifikasi IRT tetap boleh berjalan di background, tetapi finalitas
+publiknya tetap mengikuti finalitas event.
 
 ## Decision Matrix Akses
 
 | Kondisi user | Bisa start attempt baru? | Bisa resume attempt aktif? |
 |------|------|------|
-| event aktif | ya | ya |
+| `competition` masih aktif dan belum pernah pakai attempt event | ya | ya |
+| `competition` sudah pernah pakai attempt event | tidak, kecuali punya akses non-event lain | ya, sampai event close |
+| `competition` sudah berakhir | tidak | tidak |
+| `access-pass` masih aktif | ya | ya |
 | Pro aktif | ya | ya |
-| event berakhir, bukan Pro | tidak | ya, selama attempt lama belum expired |
-| Pro habis, bukan event | tidak | ya, selama attempt lama belum expired |
-| tidak punya akses sama sekali | tidak | hanya kalau attempt lama masih aktif dan belum expired |
+| tidak punya akses sama sekali | tidak | hanya kalau attempt non-competition lama masih aktif |
 
 Catatan penting:
 
-- start attempt baru memakai access check saat ini
-- resume attempt lama bergantung pada status attempt yang sudah ada, bukan harus
-  punya akses baru lagi
+- `competition` memakai `expiresAt = min(tryoutWindow, campaign.endsAt)`
+- `access-pass` dan subscription memakai expiry tryout normal
 
 ## Flow Yang Direkomendasikan
 
 ```mermaid
 flowchart TD
-    A[startTryout] --> B[tentukan accessKind saat start]
+    A[startTryout] --> B[tentukan accessKind + campaignKind saat start]
     B --> C[simpan tryoutAttempt + access snapshot]
     C --> D[siswa menyelesaikan tryout]
-    D --> E{internal scoreStatus}
-    E -- official --> F[Terverifikasi IRT]
-    E -- provisional --> G{accessKind}
-    G -- subscription --> H[Estimasi Awal]
-    G -- event --> I{event sudah ditutup?}
-    I -- belum --> H
-    I -- sudah --> J[Final Event]
+    D --> E{campaignKind}
+    E -- competition --> F{resultsStatus}
+    F -- pending --> G[Estimasi Awal]
+    F -- finalized --> H[Final Event]
+    E -- subscription / access-pass --> I{internal scoreStatus}
+    I -- provisional --> G
+    I -- official --> J[Terverifikasi IRT]
 ```
 
 ## Policy Untuk User Yang Punya Event Dan Pro Sekaligus
@@ -133,19 +174,20 @@ flowchart TD
 - satu attempt hanya punya satu `accessKind`
 - jangan tentukan `accessKind` dari status yang berubah setelah attempt dibuat
 
-Rekomendasi UX:
+Aturan runtime yang dipakai:
 
-- kalau user masuk dari halaman / kode event, attempt dibuat sebagai `event`
-- kalau user mulai dari jalur normal subscriber, attempt dibuat sebagai
-  `subscription`
+- kalau ada grant `competition` aktif dan user belum punya counted attempt untuk
+  tryout itu, attempt baru diambil sebagai `event`
+- setelah counted attempt competition sudah ada, start baru hanya boleh memakai
+  akses non-event lain seperti Pro atau `access-pass`
 
 ## Policy Untuk Hasil Setelah Event Ditutup
 
 ### Yang direkomendasikan
 
-- hasil publik event boleh ditutup saat event berakhir
+- hasil publik competition ditutup saat event berakhir
 - internal IRT tetap boleh lanjut membaik di background
-- promosi `provisional -> official` boleh tetap terjadi untuk histori personal
+- badge utama competition tetap `Final Event`
 
 ### Yang tidak direkomendasikan
 
@@ -164,32 +206,34 @@ Maka policy yang direkomendasikan:
 
 - dia tidak bisa start attempt baru
 - dia masih bisa melihat hasil lama
-- kalau attempt lama masih in-progress dan belum expired, dia masih bisa resume
+- kalau attempt lama berbasis competition dan event sudah tutup, dia tidak bisa
+  resume lagi
+- kalau attempt lama non-competition masih in-progress, dia masih bisa resume
 - kalau backend nanti mempromosikan hasil `provisional -> official`, histori
   nilainya tetap bisa ikut diperbarui
 
 ## Policy Komunikasi Ke Client
 
-> Sistem Nakafa tetap bisa menjalankan try out dan menghitung nilai awal meski
-> partisipasi belum besar. Namun, status resmi IRT memang dibuat konservatif.
-> Karena itu, untuk kebutuhan event kami membedakan antara hasil final event dan
-> hasil yang sudah terverifikasi IRT.
+> Sistem Nakafa memisahkan hasil final event dari verifikasi IRT. Event
+> competition bisa ditutup dengan hasil final yang jelas, sementara verifikasi
+> IRT tetap berjalan konservatif di belakang layar.
 
 ## Policy Komunikasi Ke Siswa
 
 ### `Estimasi Awal`
 
-> Nilai ini adalah estimasi awal dan dapat diperbarui setelah verifikasi IRT
-> selesai.
+> Nilai ini adalah estimasi awal dan belum menjadi hasil final untuk event atau
+> verifikasi IRT.
 
 ### `Terverifikasi IRT`
 
-> Nilai ini sudah lolos verifikasi IRT dan menjadi hasil resmi.
+> Nilai ini sudah lolos verifikasi IRT dan menjadi hasil resmi untuk flow
+> non-competition.
 
 ### `Final Event`
 
-> Hasil event ini sudah final. Verifikasi IRT lanjutan, jika ada, tidak
-> memengaruhi hasil event.
+> Hasil competition ini sudah final. Verifikasi IRT lanjutan, jika ada, tidak
+> mengubah hasil final event yang dilihat siswa.
 
 ## Policy Untuk Attempt Lama
 

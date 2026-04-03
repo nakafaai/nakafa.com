@@ -5,7 +5,7 @@ import { getLatestScaleVersionForTryout } from "@repo/backend/convex/irt/scales/
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { hasTryoutAccessNow } from "@repo/backend/convex/tryoutAccess/helpers/access";
+import { resolveTryoutAccessSources } from "@repo/backend/convex/tryoutAccess/helpers/access";
 import {
   requireActiveTryoutAttemptAfterExpirySync,
   requireOwnedTryoutAttempt,
@@ -74,13 +74,61 @@ export const startTryout = mutation({
       return null;
     }
 
-    const canStartTryout = await hasTryoutAccessNow(ctx.db, {
+    const accessSources = await resolveTryoutAccessSources(ctx.db, {
       now,
       product: tryout.product,
       userId,
     });
+    const competitionEventSource = accessSources.competitionEventSource;
+    const accessPassEventSource = accessSources.accessPassEventSource;
+    const competitionAttempt = competitionEventSource
+      ? await ctx.db
+          .query("tryoutAttempts")
+          .withIndex(
+            "by_userId_and_tryoutId_and_accessCampaignId_and_startedAt",
+            (q) =>
+              q
+                .eq("userId", userId)
+                .eq("tryoutId", tryout._id)
+                .eq("accessCampaignId", competitionEventSource.accessCampaignId)
+          )
+          .first()
+      : null;
+    const competitionStartSource =
+      competitionEventSource && !competitionAttempt
+        ? {
+            ...competitionEventSource,
+            accessKind: "event" as const,
+            countsForCompetition: true,
+          }
+        : null;
+    const accessPassStartSource = accessPassEventSource
+      ? {
+          ...accessPassEventSource,
+          accessKind: "event" as const,
+          countsForCompetition: false,
+        }
+      : null;
+    const subscriptionStartSource = accessSources.hasActiveSubscription
+      ? {
+          accessKind: "subscription" as const,
+          countsForCompetition: false,
+        }
+      : null;
+    const accessSource =
+      competitionStartSource ??
+      accessPassStartSource ??
+      subscriptionStartSource;
 
-    if (!canStartTryout) {
+    if (!accessSource) {
+      if (competitionAttempt) {
+        throw new ConvexError({
+          code: "COMPETITION_ATTEMPT_ALREADY_USED",
+          message:
+            "This event only counts your first tryout attempt. You can still review that result anytime.",
+        });
+      }
+
       throw new ConvexError({
         code: "TRYOUT_ACCESS_REQUIRED",
         message:
@@ -92,14 +140,35 @@ export const startTryout = mutation({
       partCount: tryout.partCount,
       tryoutId: tryout._id,
     });
-
-    const expiresAtMs =
+    const attemptWindowEndsAt =
       now + tryoutProductPolicies[tryout.product].attemptWindowMs;
+    const expiresAtMs =
+      accessSource.accessKind === "event"
+        ? Math.min(attemptWindowEndsAt, accessSource.accessEndsAt)
+        : attemptWindowEndsAt;
 
     const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
       userId,
       tryoutId: tryout._id,
       scaleVersionId: scaleVersion._id,
+      accessKind: accessSource.accessKind,
+      accessCampaignId:
+        accessSource.accessKind === "event"
+          ? accessSource.accessCampaignId
+          : undefined,
+      accessCampaignKind:
+        accessSource.accessKind === "event"
+          ? accessSource.accessCampaignKind
+          : undefined,
+      accessGrantId:
+        accessSource.accessKind === "event"
+          ? accessSource.accessGrantId
+          : undefined,
+      accessEndsAt:
+        accessSource.accessKind === "event"
+          ? accessSource.accessEndsAt
+          : undefined,
+      countsForCompetition: accessSource.countsForCompetition,
       scoreStatus: scaleVersion.status,
       status: "in-progress",
       partSetSnapshots,

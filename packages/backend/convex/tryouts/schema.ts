@@ -1,5 +1,6 @@
 import { attemptEndReasonValidator } from "@repo/backend/convex/lib/attempts";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
+import { tryoutAccessCampaignKindValidator } from "@repo/backend/convex/tryoutAccess/schema";
 import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
 import { defineTable } from "convex/server";
 import { type Infer, v } from "convex/values";
@@ -14,6 +15,18 @@ export type TryoutStatus = Infer<typeof tryoutStatusValidator>;
 
 export const tryoutScoreStatusValidator = literals("provisional", "official");
 export type TryoutScoreStatus = Infer<typeof tryoutScoreStatusValidator>;
+
+export const tryoutAccessKindValidator = literals("event", "subscription");
+export type TryoutAccessKind = Infer<typeof tryoutAccessKindValidator>;
+
+export const tryoutPublicResultStatusValidator = literals(
+  "estimated",
+  "verified-irt",
+  "final-event"
+);
+export type TryoutPublicResultStatus = Infer<
+  typeof tryoutPublicResultStatusValidator
+>;
 
 export const tryoutPartKeyValidator = v.string();
 export type TryoutPartKey = Infer<typeof tryoutPartKeyValidator>;
@@ -70,6 +83,12 @@ const tables = {
     userId: v.id("users"),
     tryoutId: v.id("tryouts"),
     scaleVersionId: v.id("irtScaleVersions"),
+    accessKind: v.optional(tryoutAccessKindValidator),
+    accessCampaignId: v.optional(v.id("tryoutAccessCampaigns")),
+    accessCampaignKind: v.optional(tryoutAccessCampaignKindValidator),
+    accessGrantId: v.optional(v.id("tryoutAccessGrants")),
+    accessEndsAt: v.optional(v.number()),
+    countsForCompetition: v.optional(v.boolean()),
     scoreStatus: tryoutScoreStatusValidator,
     status: tryoutStatusValidator,
     partSetSnapshots: v.array(tryoutPartSnapshotValidator),
@@ -94,6 +113,16 @@ const tables = {
     .index("by_userId_and_tryoutId_and_startedAt", [
       "userId",
       "tryoutId",
+      "startedAt",
+    ])
+    .index("by_userId_and_tryoutId_and_accessCampaignId_and_startedAt", [
+      "userId",
+      "tryoutId",
+      "accessCampaignId",
+      "startedAt",
+    ])
+    .index("by_accessCampaignId_and_startedAt", [
+      "accessCampaignId",
       "startedAt",
     ])
     .index("by_tryoutId_and_scoreStatus_and_status_and_startedAt", [

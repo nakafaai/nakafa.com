@@ -6,6 +6,7 @@ import {
   loadValidatedTryoutPartSets,
   resolveRequestedTryoutPart,
 } from "@repo/backend/convex/tryouts/helpers/parts";
+import { getTryoutPublicResultStatus } from "@repo/backend/convex/tryouts/helpers/publicResultStatus";
 import { getTryoutReportScore } from "@repo/backend/convex/tryouts/helpers/reporting";
 import { loadLatestUserTryoutContext } from "@repo/backend/convex/tryouts/queries/me/helpers";
 import {
@@ -35,12 +36,22 @@ export const getUserTryoutPartAttempt = query({
     }
 
     const { attempt: tryoutAttempt } = context;
+    const accessCampaign = tryoutAttempt.accessCampaignId
+      ? await ctx.db.get(
+          "tryoutAccessCampaigns",
+          tryoutAttempt.accessCampaignId
+        )
+      : null;
     const scoredTryoutAttempt = {
       ...tryoutAttempt,
       irtScore: getTryoutReportScore(
         context.tryout.product,
         tryoutAttempt.theta
       ),
+      publicResultStatus: getTryoutPublicResultStatus({
+        accessCampaign,
+        tryoutAttempt,
+      }),
     };
     const endedAttemptHasUntouchedParts =
       tryoutAttempt.status !== "in-progress" &&

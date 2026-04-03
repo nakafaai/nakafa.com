@@ -2,7 +2,10 @@ import { exerciseAttemptStatusValidator } from "@repo/backend/convex/exercises/s
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
-import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
+import {
+  tryoutPartKeyValidator,
+  tryoutPublicResultStatusValidator,
+} from "@repo/backend/convex/tryouts/schema";
 import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
 
@@ -45,6 +48,21 @@ export const tryoutPartAttemptScoreSummaryValidator = v.object({
 export const publicTryoutAttemptValidator = v.object({
   ...vv.doc("tryoutAttempts").fields,
   irtScore: v.number(),
+  publicResultStatus: tryoutPublicResultStatusValidator,
+});
+
+export const publicTryoutAttemptHistoryValidator = v.object({
+  attemptId: vv.id("tryoutAttempts"),
+  attemptNumber: v.number(),
+  completedAt: vv.doc("tryoutAttempts").fields.completedAt,
+  countsForCompetition: v.boolean(),
+  irtScore: v.number(),
+  publicResultStatus: tryoutPublicResultStatusValidator,
+  scoreStatus: vv.doc("tryoutAttempts").fields.scoreStatus,
+  startedAt: vv.doc("tryoutAttempts").fields.startedAt,
+  status: vv.doc("tryoutAttempts").fields.status,
+  totalCorrect: vv.doc("tryoutAttempts").fields.totalCorrect,
+  totalQuestions: vv.doc("tryoutAttempts").fields.totalQuestions,
 });
 
 export const tryoutPartAttemptSummaryValidator = v.object({
@@ -61,6 +79,10 @@ export const userTryoutAttemptResultValidator = v.object({
   resumePartKey: v.optional(tryoutPartKeyValidator),
   expiresAtMs: v.number(),
 });
+
+export const userTryoutAttemptHistoryResultValidator = v.array(
+  publicTryoutAttemptHistoryValidator
+);
 
 export const tryoutPartAttemptRuntimeValidator = v.object({
   partIndex: v.number(),

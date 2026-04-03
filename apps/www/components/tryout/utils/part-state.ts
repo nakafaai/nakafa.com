@@ -152,7 +152,7 @@ export function deriveTryoutPartPageState({
         tryout: null,
       }),
       tryoutAttemptStatus: null,
-      tryoutScoreStatus: null,
+      tryoutPublicResultStatus: null,
     };
   }
 
@@ -179,7 +179,7 @@ export function deriveTryoutPartPageState({
     score: runtime.partScore,
     status,
     tryoutAttemptStatus: runtime.tryoutAttempt.status,
-    tryoutScoreStatus: runtime.tryoutAttempt.scoreStatus,
+    tryoutPublicResultStatus: runtime.tryoutAttempt.publicResultStatus,
   };
 }
 

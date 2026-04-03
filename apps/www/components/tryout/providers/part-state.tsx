@@ -60,7 +60,7 @@ interface TryoutPartContextValue {
     status: TryoutPartUiStatus;
     timer: ReturnType<typeof useExerciseTimer>;
     tryoutAttemptStatus: TryoutPartPageState["tryoutAttemptStatus"];
-    tryoutScoreStatus: TryoutPartPageState["tryoutScoreStatus"];
+    tryoutPublicResultStatus: TryoutPartPageState["tryoutPublicResultStatus"];
     tryout: TryoutValue;
   };
 }
@@ -108,7 +108,7 @@ export function TryoutPartProvider({
     score,
     status,
     tryoutAttemptStatus,
-    tryoutScoreStatus,
+    tryoutPublicResultStatus,
   } = deriveTryoutPartPageState({
     isRuntimePending,
     nowMs,
@@ -235,7 +235,7 @@ export function TryoutPartProvider({
         status,
         timer,
         tryoutAttemptStatus,
-        tryoutScoreStatus,
+        tryoutPublicResultStatus,
         tryout,
       },
     }),
@@ -257,7 +257,7 @@ export function TryoutPartProvider({
       status,
       timer,
       tryoutAttemptStatus,
-      tryoutScoreStatus,
+      tryoutPublicResultStatus,
       tryout,
     ]
   );

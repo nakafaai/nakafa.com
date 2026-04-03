@@ -4,6 +4,7 @@ import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import {
   getTryoutAccessCampaignRedeemStatus,
   getTryoutAccessEventByCode,
+  getTryoutAccessGrantEffectiveEndsAt,
   getTryoutAccessGrantEndsAt,
   getTryoutAccessGrantStatus,
   syncTryoutAccessGrantStatus,
@@ -58,10 +59,15 @@ export const redeemEventAccess = mutation({
       .unique();
 
     if (existingGrant) {
-      if (existingGrant.endsAt > now) {
+      const effectiveEndsAt = getTryoutAccessGrantEffectiveEndsAt({
+        campaign: eventAccess.campaign,
+        endsAt: existingGrant.endsAt,
+      });
+
+      if (effectiveEndsAt > now) {
         return {
           kind: "active" as const,
-          endsAt: existingGrant.endsAt,
+          endsAt: effectiveEndsAt,
           name: eventAccess.campaign.name,
         };
       }
@@ -70,7 +76,7 @@ export const redeemEventAccess = mutation({
 
       return {
         kind: "used" as const,
-        endsAt: existingGrant.endsAt,
+        endsAt: effectiveEndsAt,
         name: eventAccess.campaign.name,
       };
     }
@@ -101,10 +107,10 @@ export const redeemEventAccess = mutation({
       });
     }
 
-    const endsAt = getTryoutAccessGrantEndsAt(
-      now,
-      eventAccess.campaign.grantDurationDays
-    );
+    const endsAt = getTryoutAccessGrantEndsAt({
+      campaign: eventAccess.campaign,
+      redeemedAt: now,
+    });
     const grantStatus = getTryoutAccessGrantStatus(endsAt, now);
 
     if (eventAccess.campaign.redeemStatus !== campaignRedeemStatus) {

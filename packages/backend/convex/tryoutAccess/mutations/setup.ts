@@ -5,6 +5,7 @@ import {
   getTryoutAccessCampaignRedeemStatus,
   normalizeTryoutAccessCode,
 } from "@repo/backend/convex/tryoutAccess/helpers/access";
+import { tryoutAccessCampaignKindValidator } from "@repo/backend/convex/tryoutAccess/schema";
 import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
 import { ConvexError, v } from "convex/values";
 
@@ -12,10 +13,11 @@ const tryoutAccessCampaignInputValidator = v.object({
   slug: v.string(),
   name: v.string(),
   products: v.array(tryoutProductValidator),
+  campaignKind: tryoutAccessCampaignKindValidator,
   enabled: v.boolean(),
   startsAt: v.number(),
   endsAt: v.number(),
-  grantDurationDays: v.number(),
+  grantDurationDays: v.optional(v.number()),
 });
 
 const tryoutAccessLinkInputValidator = v.object({
@@ -45,10 +47,23 @@ export const upsertCampaignAndLink = internalMutation({
       });
     }
 
-    if (args.campaign.grantDurationDays <= 0) {
+    if (
+      args.campaign.campaignKind === "competition" &&
+      args.campaign.grantDurationDays !== undefined
+    ) {
       throw new ConvexError({
         code: "INVALID_GRANT_DURATION",
-        message: "Event access grant duration must be greater than zero.",
+        message: "Competition campaigns cannot define grantDurationDays.",
+      });
+    }
+
+    if (
+      args.campaign.campaignKind === "access-pass" &&
+      (!args.campaign.grantDurationDays || args.campaign.grantDurationDays <= 0)
+    ) {
+      throw new ConvexError({
+        code: "INVALID_GRANT_DURATION",
+        message: "Access-pass campaigns must define a positive grant duration.",
       });
     }
 
@@ -87,11 +102,24 @@ export const upsertCampaignAndLink = internalMutation({
       .withIndex("by_code", (q) => q.eq("code", code))
       .unique();
     const nextCampaign = {
+      campaignKind: args.campaign.campaignKind,
       enabled: args.campaign.enabled,
       endsAt: args.campaign.endsAt,
       grantDurationDays: args.campaign.grantDurationDays,
       name: args.campaign.name,
       products: uniqueProducts,
+      resultsFinalizedAt:
+        existingCampaign &&
+        existingCampaign.campaignKind === args.campaign.campaignKind &&
+        existingCampaign.endsAt === args.campaign.endsAt
+          ? existingCampaign.resultsFinalizedAt
+          : null,
+      resultsStatus:
+        existingCampaign &&
+        existingCampaign.campaignKind === args.campaign.campaignKind &&
+        existingCampaign.endsAt === args.campaign.endsAt
+          ? existingCampaign.resultsStatus
+          : "pending",
       redeemStatus: getTryoutAccessCampaignRedeemStatus(args.campaign, now),
       slug: args.campaign.slug,
       startsAt: args.campaign.startsAt,
@@ -125,6 +153,29 @@ export const upsertCampaignAndLink = internalMutation({
           args.campaign.endsAt - now,
           internal.tryoutAccess.mutations.internal.status
             .syncCampaignRedeemStatus,
+          {
+            campaignId,
+          }
+        );
+      }
+
+      await ctx.scheduler.runAfter(
+        0,
+        internal.tryoutAccess.mutations.internal.status
+          .syncCampaignGrantStatuses,
+        {
+          campaignId,
+        }
+      );
+
+      if (
+        args.campaign.campaignKind === "competition" &&
+        args.campaign.endsAt > now
+      ) {
+        await ctx.scheduler.runAfter(
+          args.campaign.endsAt - now,
+          internal.tryoutAccess.mutations.internal.competition
+            .finalizeCompetitionCampaignResults,
           {
             campaignId,
           }
@@ -178,6 +229,28 @@ export const upsertCampaignAndLink = internalMutation({
         args.campaign.endsAt - now,
         internal.tryoutAccess.mutations.internal.status
           .syncCampaignRedeemStatus,
+        {
+          campaignId,
+        }
+      );
+    }
+
+    await ctx.scheduler.runAfter(
+      0,
+      internal.tryoutAccess.mutations.internal.status.syncCampaignGrantStatuses,
+      {
+        campaignId,
+      }
+    );
+
+    if (
+      args.campaign.campaignKind === "competition" &&
+      args.campaign.endsAt > now
+    ) {
+      await ctx.scheduler.runAfter(
+        args.campaign.endsAt - now,
+        internal.tryoutAccess.mutations.internal.competition
+          .finalizeCompetitionCampaignResults,
         {
           campaignId,
         }

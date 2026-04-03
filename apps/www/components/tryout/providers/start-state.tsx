@@ -119,6 +119,13 @@ function useTryoutStartValue(): TryoutStartContextValue {
           if (typeof errorData === "object" && errorData !== null) {
             const errorCode = "code" in errorData ? errorData.code : undefined;
 
+            if (errorCode === "COMPETITION_ATTEMPT_ALREADY_USED") {
+              toast.info(tTryouts("competition-attempt-used-error"), {
+                position: "bottom-center",
+              });
+              return;
+            }
+
             if (errorCode === "TRYOUT_ACCESS_REQUIRED") {
               try {
                 const { url } = await generateCheckoutLink({

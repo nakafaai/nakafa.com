@@ -3,10 +3,18 @@ import { defineTable } from "convex/server";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
+export const tryoutAccessCampaignKindValidator = literals(
+  "competition",
+  "access-pass"
+);
 export const tryoutAccessCampaignRedeemStatusValidator = literals(
   "scheduled",
   "active",
   "ended"
+);
+export const tryoutAccessCampaignResultsStatusValidator = literals(
+  "pending",
+  "finalized"
 );
 
 export const tryoutAccessGrantStatusValidator = literals("active", "expired");
@@ -15,11 +23,14 @@ export const tryoutAccessCampaignValidator = v.object({
   slug: v.string(),
   name: v.string(),
   products: v.array(tryoutProductValidator),
+  campaignKind: v.optional(tryoutAccessCampaignKindValidator),
   enabled: v.boolean(),
   redeemStatus: tryoutAccessCampaignRedeemStatusValidator,
+  resultsStatus: v.optional(tryoutAccessCampaignResultsStatusValidator),
+  resultsFinalizedAt: v.optional(v.union(v.number(), v.null())),
   startsAt: v.number(),
   endsAt: v.number(),
-  grantDurationDays: v.number(),
+  grantDurationDays: v.optional(v.number()),
 });
 
 export const tryoutAccessLinkValidator = v.object({
@@ -50,6 +61,11 @@ export const tryoutAccessProductGrantValidator = v.object({
 const tables = {
   tryoutAccessCampaigns: defineTable(tryoutAccessCampaignValidator)
     .index("by_slug", ["slug"])
+    .index("by_campaignKind_and_resultsStatus_and_endsAt", [
+      "campaignKind",
+      "resultsStatus",
+      "endsAt",
+    ])
     .index("by_redeemStatus_and_startsAt", ["redeemStatus", "startsAt"])
     .index("by_redeemStatus_and_endsAt", ["redeemStatus", "endsAt"]),
 
@@ -58,6 +74,7 @@ const tables = {
     .index("by_campaignId", ["campaignId"]),
 
   tryoutAccessGrants: defineTable(tryoutAccessGrantValidator)
+    .index("by_campaignId", ["campaignId"])
     .index("by_userId_and_campaignId", ["userId", "campaignId"])
     .index("by_status_and_endsAt", ["status", "endsAt"]),
 
