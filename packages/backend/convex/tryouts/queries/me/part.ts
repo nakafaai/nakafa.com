@@ -38,18 +38,17 @@ export const getUserTryoutPartAttempt = query({
         tryoutAttempt.theta
       ),
     };
-    const needsFinalizedRepair =
+    const endedAttemptHasUntouchedParts =
       tryoutAttempt.status !== "in-progress" &&
-      (tryoutAttempt.totalQuestions < context.tryout.totalQuestionCount ||
-        tryoutAttempt.completedPartIndices.length < context.tryout.partCount);
-    const finalizedSnapshot = needsFinalizedRepair
+      tryoutAttempt.completedPartIndices.length < context.tryout.partCount;
+    const finalizedSnapshot = endedAttemptHasUntouchedParts
       ? await buildFinalizedTryoutSnapshot(ctx.db, {
           scaleVersionId: tryoutAttempt.scaleVersionId,
           tryout: context.tryout,
           tryoutAttempt,
         })
       : null;
-    const repairedTryoutAttempt = finalizedSnapshot
+    const resolvedTryoutAttempt = finalizedSnapshot
       ? {
           ...scoredTryoutAttempt,
           irtScore: finalizedSnapshot.irtScore,
@@ -83,15 +82,22 @@ export const getUserTryoutPartAttempt = query({
           expiresAtMs: tryoutAttempt.expiresAt,
           partScore: partSnapshot.score,
           partAttempt: null,
-          tryoutAttempt: repairedTryoutAttempt,
+          tryoutAttempt: resolvedTryoutAttempt,
         };
+      }
+
+      if (tryoutAttempt.status !== "in-progress") {
+        throw new ConvexError({
+          code: "INVALID_ATTEMPT_STATE",
+          message: "Finalized tryout is missing its part attempt.",
+        });
       }
 
       return {
         expiresAtMs: tryoutAttempt.expiresAt,
         partScore: null,
         partAttempt: null,
-        tryoutAttempt: repairedTryoutAttempt,
+        tryoutAttempt: resolvedTryoutAttempt,
       };
     }
 
@@ -114,10 +120,10 @@ export const getUserTryoutPartAttempt = query({
     const isCompletedPart = tryoutAttempt.completedPartIndices.includes(
       currentPartAttempt.partIndex
     );
-    const repairedPartScore = finalizedSnapshot?.partSnapshots.find(
+    const resolvedPartScore = finalizedSnapshot?.partSnapshots.find(
       (snapshot) => snapshot.partKey === args.partKey
     )?.score;
-    let partScore = repairedPartScore ?? null;
+    let partScore = resolvedPartScore ?? null;
 
     if (!partScore && isCompletedPart) {
       partScore = {
@@ -131,6 +137,13 @@ export const getUserTryoutPartAttempt = query({
       };
     }
 
+    if (!partScore && tryoutAttempt.status !== "in-progress") {
+      throw new ConvexError({
+        code: "INVALID_ATTEMPT_STATE",
+        message: "Finalized tryout part is missing its score.",
+      });
+    }
+
     return {
       expiresAtMs: tryoutAttempt.expiresAt,
       partScore,
@@ -140,7 +153,7 @@ export const getUserTryoutPartAttempt = query({
         answers,
         setAttempt,
       },
-      tryoutAttempt: repairedTryoutAttempt,
+      tryoutAttempt: resolvedTryoutAttempt,
     };
   },
 });

@@ -1,6 +1,7 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { buildFinalizedTryoutSnapshot } from "@repo/backend/convex/tryouts/helpers/finalize/snapshot";
+import { loadBoundedTryoutPartAttempts } from "@repo/backend/convex/tryouts/helpers/loaders";
 import { getTryoutReportScore } from "@repo/backend/convex/tryouts/helpers/reporting";
 import { resolveResumePartKey } from "@repo/backend/convex/tryouts/helpers/resume";
 import { loadLatestUserTryoutContext } from "@repo/backend/convex/tryouts/queries/me/helpers";
@@ -32,12 +33,11 @@ export const getUserTryoutAttempt = query({
       partIndex: partSnapshot.partIndex,
       partKey: partSnapshot.partKey,
     }));
-    const needsFinalizedRepair =
+    const endedAttemptHasUntouchedParts =
       attempt.status !== "in-progress" &&
-      (attempt.totalQuestions < tryout.totalQuestionCount ||
-        attempt.completedPartIndices.length < tryout.partCount);
+      attempt.completedPartIndices.length < tryout.partCount;
 
-    if (needsFinalizedRepair) {
+    if (endedAttemptHasUntouchedParts) {
       const finalizedSnapshot = await buildFinalizedTryoutSnapshot(ctx.db, {
         scaleVersionId: attempt.scaleVersionId,
         tryout,
@@ -68,12 +68,10 @@ export const getUserTryoutAttempt = query({
       };
     }
 
-    const tryoutPartAttempts = await ctx.db
-      .query("tryoutPartAttempts")
-      .withIndex("by_tryoutAttemptId_and_partIndex", (q) =>
-        q.eq("tryoutAttemptId", attempt._id)
-      )
-      .take(tryout.partCount + 1);
+    const tryoutPartAttempts = await loadBoundedTryoutPartAttempts(ctx.db, {
+      partCount: tryout.partCount,
+      tryoutAttemptId: attempt._id,
+    });
     const setAttempts = await getAll(
       ctx.db,
       "exerciseAttempts",
@@ -132,6 +130,17 @@ export const getUserTryoutAttempt = query({
     };
 
     if (attempt.status !== "in-progress") {
+      const missingPart = partAttempts.find(
+        (partAttempt) => !partAttempt.score
+      );
+
+      if (missingPart) {
+        throw new ConvexError({
+          code: "INVALID_ATTEMPT_STATE",
+          message: "Finalized tryout is missing one of its part scores.",
+        });
+      }
+
       return {
         attempt: scoredAttempt,
         orderedParts,

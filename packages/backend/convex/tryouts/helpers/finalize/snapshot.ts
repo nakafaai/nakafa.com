@@ -94,12 +94,21 @@ export async function buildFinalizedTryoutSnapshot(
         partAttemptsByPartIndex.get(partSetSnapshot.partIndex) ?? null;
       const setAttempt =
         setAttemptsByPartIndex.get(partSetSnapshot.partIndex) ?? null;
+      const isCompletedPart = completedPartIndices.has(
+        partSetSnapshot.partIndex
+      );
+
+      if (isCompletedPart && !partAttempt) {
+        throw new ConvexError({
+          code: "INVALID_ATTEMPT_STATE",
+          message: "Completed tryout part is missing its part attempt.",
+        });
+      }
+
       const effectiveSetId = partAttempt?.setId ?? partSetSnapshot.setId;
 
       const answers =
-        partAttempt &&
-        setAttempt &&
-        completedPartIndices.has(partSetSnapshot.partIndex)
+        partAttempt && setAttempt && isCompletedPart
           ? await getBoundedExerciseAnswers(db, {
               attemptId: partAttempt.setAttemptId,
               totalExercises: setAttempt.totalExercises,

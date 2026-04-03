@@ -1051,6 +1051,73 @@ describe("tryouts/reporting", () => {
     expect(startedPartResult?.tryoutAttempt.totalCorrect).toBe(0);
   });
 
+  it("fails when a completed finalized part is missing its persisted part attempt", async () => {
+    const t = createTestConvex();
+
+    await expect(
+      t.mutation(async (ctx) => {
+        const identity = await seedAuthenticatedUser(
+          ctx,
+          "missing-completed-part-attempt"
+        );
+        const tryout = await insertTryoutSkeleton(
+          ctx,
+          "missing-completed-part-attempt",
+          1
+        );
+        const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
+          userId: identity.userId,
+          tryoutId: tryout.tryoutId,
+          scaleVersionId: tryout.scaleVersionId,
+          scoreStatus: "official",
+          status: "completed",
+          partSetSnapshots: [
+            {
+              partIndex: 0,
+              partKey: "quantitative-knowledge",
+              questionCount: 1,
+              setId: tryout.setId,
+            },
+          ],
+          completedPartIndices: [0],
+          totalCorrect: 0,
+          totalQuestions: 1,
+          theta: 0,
+          thetaSE: 1,
+          startedAt: NOW,
+          expiresAt: NOW + ATTEMPT_WINDOW_MS,
+          lastActivityAt: NOW,
+          completedAt: NOW,
+          endReason: "submitted",
+        });
+
+        return await buildFinalizedTryoutSnapshot(ctx.db, {
+          scaleVersionId: tryout.scaleVersionId,
+          tryout: {
+            _id: tryout.tryoutId,
+            partCount: 1,
+            product: "snbt",
+            totalQuestionCount: 1,
+          },
+          tryoutAttempt: {
+            _id: tryoutAttemptId,
+            completedPartIndices: [0],
+            partSetSnapshots: [
+              {
+                partIndex: 0,
+                partKey: "quantitative-knowledge",
+                questionCount: 1,
+                setId: tryout.setId,
+              },
+            ],
+          },
+        });
+      })
+    ).rejects.toThrowError(
+      "Completed tryout part is missing its part attempt."
+    );
+  });
+
   it("rebuilds finalized snapshots from persisted part set IDs and attempt question counts", async () => {
     const t = createTestConvex();
 
