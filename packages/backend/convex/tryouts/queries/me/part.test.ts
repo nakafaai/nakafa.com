@@ -70,6 +70,55 @@ describe("tryouts/queries/me/part", () => {
     expect(result?.tryoutAttempt.irtScore).toBe(500);
   });
 
+  it("returns finalized part data when the current route key was renamed", async () => {
+    const t = createTryoutTestConvex();
+    const identity = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "renamed-part-route",
+      });
+      const tryout = await insertTryoutSkeleton(ctx, "renamed-part-route");
+      const tryoutPartSet = await ctx.db
+        .query("tryoutPartSets")
+        .withIndex("by_tryoutId_and_partIndex", (q) =>
+          q.eq("tryoutId", tryout.tryoutId)
+        )
+        .unique();
+
+      if (!tryoutPartSet) {
+        throw new Error("Expected tryout part set to exist");
+      }
+
+      await insertCompletedTryoutAttempt(ctx, {
+        scaleVersionId: tryout.scaleVersionId,
+        setId: tryout.setId,
+        slug: "renamed-part-route",
+        tryoutId: tryout.tryoutId,
+        userId: identity.userId,
+      });
+      await ctx.db.patch("tryoutPartSets", tryoutPartSet._id, {
+        partKey: "mathematical-reasoning",
+      });
+
+      return identity;
+    });
+
+    const result = await t
+      .withIdentity({
+        subject: identity.authUserId,
+        sessionId: identity.sessionId,
+      })
+      .query(api.tryouts.queries.me.part.getUserTryoutPartAttempt, {
+        product: "snbt",
+        locale: "id",
+        tryoutSlug: "renamed-part-route",
+        partKey: "mathematical-reasoning",
+      });
+
+    expect(result?.partAttempt?.partKey).toBe("mathematical-reasoning");
+    expect(result?.partScore?.irtScore).toBe(500);
+  });
+
   it("returns zero-score summaries for untouched ended parts", async () => {
     const t = createTryoutTestConvex();
     const { identity, tryoutSlug } = await t.mutation(async (ctx) => {
@@ -134,10 +183,21 @@ describe("tryouts/queries/me/part", () => {
         throw new Error("Expected latest tryout attempt to exist");
       }
 
+      const removedPartSet = await ctx.db
+        .query("tryoutPartSets")
+        .withIndex("by_tryoutId_and_partIndex", (q) =>
+          q.eq("tryoutId", latestAttempt.tryoutId).eq("partIndex", 1)
+        )
+        .unique();
+
       await ctx.db.patch("tryouts", latestAttempt.tryoutId, {
         partCount: 1,
         totalQuestionCount: 1,
       });
+
+      if (removedPartSet) {
+        await ctx.db.delete("tryoutPartSets", removedPartSet._id);
+      }
 
       return seeded;
     });
@@ -159,7 +219,7 @@ describe("tryouts/queries/me/part", () => {
     expect(result?.tryoutAttempt.totalQuestions).toBe(2);
   });
 
-  it("throws when an ended snapshot does not contain the requested part key", async () => {
+  it("returns null part state when the requested finalized part key is not in the snapshot", async () => {
     const t = createTryoutTestConvex();
     const identity = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
@@ -211,19 +271,20 @@ describe("tryouts/queries/me/part", () => {
       return identity;
     });
 
-    await expect(
-      t
-        .withIdentity({
-          subject: identity.authUserId,
-          sessionId: identity.sessionId,
-        })
-        .query(api.tryouts.queries.me.part.getUserTryoutPartAttempt, {
-          product: "snbt",
-          locale: "id",
-          tryoutSlug: "missing-snapshot-part-key",
-          partKey: "mathematical-reasoning",
-        })
-    ).rejects.toThrow("Tryout part not found for finalized snapshot.");
+    const result = await t
+      .withIdentity({
+        subject: identity.authUserId,
+        sessionId: identity.sessionId,
+      })
+      .query(api.tryouts.queries.me.part.getUserTryoutPartAttempt, {
+        product: "snbt",
+        locale: "id",
+        tryoutSlug: "missing-snapshot-part-key",
+        partKey: "mathematical-reasoning",
+      });
+
+    expect(result?.partAttempt).toBeNull();
+    expect(result?.partScore).toBeNull();
   });
 
   it("returns null part state for in-progress parts that have not started yet", async () => {
@@ -406,8 +467,8 @@ describe("tryouts/queries/me/part", () => {
         throw new Error("Expected tryout part attempt to exist");
       }
 
-      await ctx.db.patch("tryoutPartAttempts", partAttempt._id, {
-        partIndex: 1,
+      await ctx.db.patch("tryoutAttempts", tryoutAttemptId, {
+        completedPartIndices: [1],
       });
 
       return identity;

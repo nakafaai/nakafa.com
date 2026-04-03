@@ -8,6 +8,10 @@ import { syncTryoutAttemptExpiry } from "@repo/backend/convex/tryouts/helpers/ex
 import { finalizeTryoutAttempt } from "@repo/backend/convex/tryouts/helpers/finalize/attempt";
 import { finalizeTryoutPartAttempt } from "@repo/backend/convex/tryouts/helpers/finalize/part";
 import { getFirstIncompleteTryoutPartIndex } from "@repo/backend/convex/tryouts/helpers/metrics";
+import {
+  loadValidatedTryoutPartSets,
+  resolveRequestedTryoutPart,
+} from "@repo/backend/convex/tryouts/helpers/parts";
 import { ConvexError } from "convex/values";
 
 /** Load one active tryout by product, locale, and slug. */
@@ -54,12 +58,10 @@ export async function reuseExistingTryoutAttempt(
   ctx: MutationCtx,
   {
     now,
-    tryout,
     userId,
     tryoutAttempt,
   }: {
     now: number;
-    tryout: Doc<"tryouts">;
     userId: Doc<"users">["_id"];
     tryoutAttempt: Doc<"tryoutAttempts">;
   }
@@ -72,7 +74,7 @@ export async function reuseExistingTryoutAttempt(
 
   const firstIncompletePartIndex = getFirstIncompleteTryoutPartIndex({
     completedPartIndices: tryoutAttempt.completedPartIndices,
-    partCount: tryout.partCount,
+    partCount: tryoutAttempt.partSetSnapshots.length,
   });
 
   if (firstIncompletePartIndex !== undefined) {
@@ -125,16 +127,6 @@ export async function loadPartStartContext(
     }
   );
   const tryout = await ctx.db.get("tryouts", activeTryoutAttempt.tryoutId);
-  const tryoutPartSetSnapshot = activeTryoutAttempt.partSetSnapshots.find(
-    (snapshot) => snapshot.partKey === partKey
-  );
-  const tryoutPartSet = tryoutPartSetSnapshot
-    ? {
-        partIndex: tryoutPartSetSnapshot.partIndex,
-        partKey: tryoutPartSetSnapshot.partKey,
-        setId: tryoutPartSetSnapshot.setId,
-      }
-    : null;
 
   if (!tryout) {
     throw new ConvexError({
@@ -142,6 +134,24 @@ export async function loadPartStartContext(
       message: "Tryout not found.",
     });
   }
+
+  const currentPartSets = await loadValidatedTryoutPartSets(ctx.db, {
+    partCount: tryout.partCount,
+    tryoutId: tryout._id,
+  });
+  const resolvedPart = resolveRequestedTryoutPart({
+    currentPartSets,
+    partSetSnapshots: activeTryoutAttempt.partSetSnapshots,
+    requestedPartKey: partKey,
+  });
+  const tryoutPartSet = resolvedPart
+    ? {
+        partIndex: resolvedPart.snapshot.partIndex,
+        partKey: resolvedPart.currentPartKey,
+        setId:
+          resolvedPart.currentPartSet?.setId ?? resolvedPart.snapshot.setId,
+      }
+    : null;
 
   if (!tryoutPartSet) {
     throw new ConvexError({
@@ -173,18 +183,18 @@ export async function reuseExistingPartAttempt(
   ctx: MutationCtx,
   {
     now,
-    partKey,
+    partIndex,
     tryoutAttemptId,
   }: {
     now: number;
-    partKey: Doc<"tryoutPartAttempts">["partKey"];
+    partIndex: Doc<"tryoutPartAttempts">["partIndex"];
     tryoutAttemptId: Doc<"tryoutAttempts">["_id"];
   }
 ) {
   const existingPartAttempt = await ctx.db
     .query("tryoutPartAttempts")
-    .withIndex("by_tryoutAttemptId_and_partKey", (q) =>
-      q.eq("tryoutAttemptId", tryoutAttemptId).eq("partKey", partKey)
+    .withIndex("by_tryoutAttemptId_and_partIndex", (q) =>
+      q.eq("tryoutAttemptId", tryoutAttemptId).eq("partIndex", partIndex)
     )
     .unique();
 
@@ -261,17 +271,17 @@ export async function loadStartableSet(
 export async function loadTryoutPartAttempt(
   ctx: MutationCtx,
   {
-    partKey,
+    partIndex,
     tryoutAttemptId,
   }: {
-    partKey: Doc<"tryoutPartAttempts">["partKey"];
+    partIndex: Doc<"tryoutPartAttempts">["partIndex"];
     tryoutAttemptId: Doc<"tryoutAttempts">["_id"];
   }
 ) {
   const partAttempt = await ctx.db
     .query("tryoutPartAttempts")
-    .withIndex("by_tryoutAttemptId_and_partKey", (q) =>
-      q.eq("tryoutAttemptId", tryoutAttemptId).eq("partKey", partKey)
+    .withIndex("by_tryoutAttemptId_and_partIndex", (q) =>
+      q.eq("tryoutAttemptId", tryoutAttemptId).eq("partIndex", partIndex)
     )
     .unique();
 

@@ -121,10 +121,21 @@ describe("tryouts/queries/me/attempt", () => {
         throw new Error("Expected latest tryout attempt to exist");
       }
 
+      const removedPartSet = await ctx.db
+        .query("tryoutPartSets")
+        .withIndex("by_tryoutId_and_partIndex", (q) =>
+          q.eq("tryoutId", latestAttempt.tryoutId).eq("partIndex", 1)
+        )
+        .unique();
+
       await ctx.db.patch("tryouts", latestAttempt.tryoutId, {
         partCount: 1,
         totalQuestionCount: 1,
       });
+
+      if (removedPartSet) {
+        await ctx.db.delete("tryoutPartSets", removedPartSet._id);
+      }
 
       return seeded;
     });
@@ -295,6 +306,89 @@ describe("tryouts/queries/me/attempt", () => {
     expect(result?.resumePartKey).toBe("quantitative-knowledge");
   });
 
+  it("returns the current route part key when mappings rename an in-progress part", async () => {
+    const t = createTryoutTestConvex();
+    const identity = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "resume-current-key",
+      });
+      const tryout = await insertTryoutSkeleton(ctx, "resume-current-key");
+      const tryoutPartSet = await ctx.db
+        .query("tryoutPartSets")
+        .withIndex("by_tryoutId_and_partIndex", (q) =>
+          q.eq("tryoutId", tryout.tryoutId)
+        )
+        .unique();
+
+      if (!tryoutPartSet) {
+        throw new Error("Expected tryout part set to exist");
+      }
+
+      const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
+        userId: identity.userId,
+        tryoutId: tryout.tryoutId,
+        scaleVersionId: tryout.scaleVersionId,
+        scoreStatus: "official",
+        status: "in-progress",
+        partSetSnapshots: [
+          {
+            partIndex: 0,
+            partKey: "quantitative-knowledge",
+            questionCount: 20,
+            setId: tryout.setId,
+          },
+        ],
+        completedPartIndices: [],
+        totalCorrect: 0,
+        totalQuestions: 0,
+        theta: 0,
+        thetaSE: 1,
+        startedAt: NOW,
+        expiresAt: NOW + 30 * 60 * 1000,
+        lastActivityAt: NOW,
+        completedAt: null,
+        endReason: null,
+      });
+
+      await ctx.db.patch("tryoutPartSets", tryoutPartSet._id, {
+        partKey: "mathematical-reasoning",
+      });
+      await ctx.db.insert("userTryoutLatestAttempts", {
+        userId: identity.userId,
+        product: "snbt",
+        locale: "id",
+        tryoutId: tryout.tryoutId,
+        attemptId: tryoutAttemptId,
+        slug: "resume-current-key",
+        status: "in-progress",
+        expiresAtMs: NOW + 30 * 60 * 1000,
+        updatedAt: NOW,
+      });
+
+      return identity;
+    });
+
+    const result = await t
+      .withIdentity({
+        subject: identity.authUserId,
+        sessionId: identity.sessionId,
+      })
+      .query(api.tryouts.queries.me.attempt.getUserTryoutAttempt, {
+        product: "snbt",
+        locale: "id",
+        tryoutSlug: "resume-current-key",
+      });
+
+    expect(result?.resumePartKey).toBe("mathematical-reasoning");
+    expect(result?.orderedParts).toEqual([
+      {
+        partIndex: 0,
+        partKey: "mathematical-reasoning",
+      },
+    ]);
+  });
+
   it("uses snapshot length when live tryout partCount shrinks below started parts", async () => {
     const t = createTryoutTestConvex();
     const identity = await t.mutation(async (ctx) => {
@@ -345,6 +439,20 @@ describe("tryouts/queries/me/attempt", () => {
         questionCount: 2,
         publishedAt: NOW,
       });
+
+      await ctx.db.insert("tryoutPartSets", {
+        tryoutId,
+        setId: firstSetId,
+        partIndex: 0,
+        partKey: "quantitative-knowledge",
+      });
+      await ctx.db.insert("tryoutPartSets", {
+        tryoutId,
+        setId: secondSetId,
+        partIndex: 1,
+        partKey: "mathematical-reasoning",
+      });
+
       const firstSetAttemptId = await ctx.db.insert("exerciseAttempts", {
         slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/in-progress-partcount-shrink-qk",
         userId: identity.userId,
@@ -448,6 +556,16 @@ describe("tryouts/queries/me/attempt", () => {
         partCount: 1,
         totalQuestionCount: 1,
       });
+      const removedPartSet = await ctx.db
+        .query("tryoutPartSets")
+        .withIndex("by_tryoutId_and_partIndex", (q) =>
+          q.eq("tryoutId", tryoutId).eq("partIndex", 1)
+        )
+        .unique();
+
+      if (removedPartSet) {
+        await ctx.db.delete("tryoutPartSets", removedPartSet._id);
+      }
 
       return identity;
     });

@@ -2,6 +2,10 @@ import { query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { buildFinalizedTryoutSnapshot } from "@repo/backend/convex/tryouts/helpers/finalize/snapshot";
 import { getBoundedExerciseAnswers } from "@repo/backend/convex/tryouts/helpers/loaders";
+import {
+  loadValidatedTryoutPartSets,
+  resolveRequestedTryoutPart,
+} from "@repo/backend/convex/tryouts/helpers/parts";
 import { getTryoutReportScore } from "@repo/backend/convex/tryouts/helpers/reporting";
 import { loadLatestUserTryoutContext } from "@repo/backend/convex/tryouts/queries/me/helpers";
 import {
@@ -59,24 +63,47 @@ export const getUserTryoutPartAttempt = query({
           totalQuestions: finalizedSnapshot.totalQuestions,
         }
       : scoredTryoutAttempt;
+    const currentPartSets = await loadValidatedTryoutPartSets(ctx.db, {
+      partCount: context.tryout.partCount,
+      tryoutId: context.tryout._id,
+    });
+    const resolvedPart = resolveRequestedTryoutPart({
+      currentPartSets,
+      partSetSnapshots: tryoutAttempt.partSetSnapshots,
+      requestedPartKey: args.partKey,
+    });
+
+    if (!resolvedPart) {
+      return {
+        expiresAtMs: tryoutAttempt.expiresAt,
+        partScore: null,
+        partAttempt: null,
+        tryoutAttempt: resolvedTryoutAttempt,
+      };
+    }
+
     const currentPartAttempt = await ctx.db
       .query("tryoutPartAttempts")
-      .withIndex("by_tryoutAttemptId_and_partKey", (q) =>
-        q.eq("tryoutAttemptId", tryoutAttempt._id).eq("partKey", args.partKey)
+      .withIndex("by_tryoutAttemptId_and_partIndex", (q) =>
+        q
+          .eq("tryoutAttemptId", tryoutAttempt._id)
+          .eq("partIndex", resolvedPart.snapshot.partIndex)
       )
       .unique();
 
     if (!currentPartAttempt) {
       if (finalizedSnapshot) {
         const partSnapshot = finalizedSnapshot.partSnapshots.find(
-          (snapshot) => snapshot.partKey === args.partKey
+          (snapshot) => snapshot.partIndex === resolvedPart.snapshot.partIndex
         );
 
         if (!partSnapshot) {
-          throw new ConvexError({
-            code: "INVALID_TRYOUT_STATE",
-            message: "Tryout part not found for finalized snapshot.",
-          });
+          return {
+            expiresAtMs: tryoutAttempt.expiresAt,
+            partScore: null,
+            partAttempt: null,
+            tryoutAttempt: resolvedTryoutAttempt,
+          };
         }
 
         return {
@@ -122,7 +149,7 @@ export const getUserTryoutPartAttempt = query({
       currentPartAttempt.partIndex
     );
     const resolvedPartScore = finalizedSnapshot?.partSnapshots.find(
-      (snapshot) => snapshot.partKey === args.partKey
+      (snapshot) => snapshot.partIndex === resolvedPart.snapshot.partIndex
     )?.score;
     let partScore = resolvedPartScore ?? null;
 
@@ -150,7 +177,7 @@ export const getUserTryoutPartAttempt = query({
       partScore,
       partAttempt: {
         partIndex: currentPartAttempt.partIndex,
-        partKey: currentPartAttempt.partKey,
+        partKey: resolvedPart.currentPartKey,
         answers,
         setAttempt,
       },

@@ -8,6 +8,10 @@ import { ConvexError } from "convex/values";
 import { getAll } from "convex-helpers/server/relationships";
 
 type TryoutDbReader = QueryCtx["db"] | MutationCtx["db"];
+type CurrentTryoutPartSet = Pick<
+  Doc<"tryoutPartSets">,
+  "partIndex" | "partKey" | "setId"
+>;
 
 /**
  * Load validated part-set rows for one tryout, enforcing count and ordered
@@ -47,6 +51,58 @@ export async function loadValidatedTryoutPartSets(
   }
 
   return tryoutPartSets;
+}
+
+/**
+ * Resolve one requested route part key against the current tryout mapping first,
+ * then fall back to the historical snapshot key if needed.
+ */
+export function resolveRequestedTryoutPart({
+  currentPartSets,
+  partSetSnapshots,
+  requestedPartKey,
+}: {
+  currentPartSets: CurrentTryoutPartSet[];
+  partSetSnapshots: TryoutPartSnapshot[];
+  requestedPartKey: TryoutPartSnapshot["partKey"];
+}) {
+  const currentPartSet =
+    currentPartSets.find((partSet) => partSet.partKey === requestedPartKey) ??
+    null;
+
+  if (currentPartSet) {
+    const snapshot = partSetSnapshots.find(
+      (partSnapshot) => partSnapshot.partIndex === currentPartSet.partIndex
+    );
+
+    if (snapshot) {
+      return {
+        currentPartKey: currentPartSet.partKey,
+        currentPartSet,
+        snapshot,
+      };
+    }
+  }
+
+  const snapshot =
+    partSetSnapshots.find(
+      (partSnapshot) => partSnapshot.partKey === requestedPartKey
+    ) ?? null;
+
+  if (!snapshot) {
+    return null;
+  }
+
+  const currentPartSetByIndex =
+    currentPartSets.find(
+      (partSet) => partSet.partIndex === snapshot.partIndex
+    ) ?? null;
+
+  return {
+    currentPartKey: currentPartSetByIndex?.partKey ?? snapshot.partKey,
+    currentPartSet: currentPartSetByIndex,
+    snapshot,
+  };
 }
 
 /**

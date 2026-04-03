@@ -608,4 +608,134 @@ describe("tryouts/helpers/finalize/snapshot", () => {
     expect(result.partSnapshots).toHaveLength(2);
     expect(result.totalQuestions).toBe(2);
   });
+
+  it("scores persisted answers even when completedPartIndices is stale", async () => {
+    const t = createTryoutTestConvex();
+
+    const result = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "snapshot-stale-completed-indices",
+      });
+      const tryout = await insertTryoutSkeleton(
+        ctx,
+        "snapshot-stale-completed-indices",
+        1
+      );
+      const questionId = await insertExerciseQuestion(ctx, tryout.setId, {
+        slug: "snapshot-stale-completed-indices",
+      });
+
+      await ctx.db.insert("irtScaleVersionItems", {
+        scaleVersionId: tryout.scaleVersionId,
+        calibrationRunId: await ctx.db.insert("irtCalibrationRuns", {
+          setId: tryout.setId,
+          model: "2pl",
+          status: "completed",
+          questionCount: 1,
+          responseCount: 200,
+          attemptCount: 200,
+          iterationCount: 1,
+          maxParameterDelta: 0.001,
+          startedAt: NOW,
+          updatedAt: NOW,
+          completedAt: NOW,
+        }),
+        questionId,
+        setId: tryout.setId,
+        difficulty: 0,
+        discrimination: 1,
+      });
+
+      const setAttemptId = await ctx.db.insert("exerciseAttempts", {
+        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/snapshot-stale-completed-indices",
+        userId: identity.userId,
+        origin: "tryout",
+        mode: "simulation",
+        scope: "set",
+        timeLimit: 90,
+        startedAt: NOW,
+        lastActivityAt: NOW,
+        completedAt: NOW,
+        endReason: "submitted",
+        status: "completed",
+        updatedAt: NOW,
+        totalExercises: 1,
+        answeredCount: 1,
+        correctAnswers: 1,
+        totalTime: 90,
+        scorePercentage: 100,
+      });
+      const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
+        userId: identity.userId,
+        tryoutId: tryout.tryoutId,
+        scaleVersionId: tryout.scaleVersionId,
+        scoreStatus: "official",
+        status: "expired",
+        partSetSnapshots: [
+          {
+            partIndex: 0,
+            partKey: "quantitative-knowledge",
+            questionCount: 1,
+            setId: tryout.setId,
+          },
+        ],
+        completedPartIndices: [],
+        totalCorrect: 0,
+        totalQuestions: 0,
+        theta: 0,
+        thetaSE: 1,
+        startedAt: NOW,
+        expiresAt: NOW + ATTEMPT_WINDOW_MS,
+        lastActivityAt: NOW,
+        completedAt: NOW,
+        endReason: "time-expired",
+      });
+
+      await ctx.db.insert("exerciseAnswers", {
+        attemptId: setAttemptId,
+        exerciseNumber: 1,
+        questionId,
+        isCorrect: true,
+        timeSpent: 45,
+        answeredAt: NOW,
+        updatedAt: NOW,
+      });
+      await ctx.db.insert("tryoutPartAttempts", {
+        tryoutAttemptId,
+        partIndex: 0,
+        partKey: "quantitative-knowledge",
+        setAttemptId,
+        setId: tryout.setId,
+        theta: 0,
+        thetaSE: 1,
+      });
+
+      return await buildFinalizedTryoutSnapshot(ctx.db, {
+        scaleVersionId: tryout.scaleVersionId,
+        tryout: {
+          _id: tryout.tryoutId,
+          partCount: 1,
+          product: "snbt",
+          totalQuestionCount: 1,
+        },
+        tryoutAttempt: {
+          _id: tryoutAttemptId,
+          completedPartIndices: [],
+          partSetSnapshots: [
+            {
+              partIndex: 0,
+              partKey: "quantitative-knowledge",
+              questionCount: 1,
+              setId: tryout.setId,
+            },
+          ],
+        },
+      });
+    });
+
+    expect(result.totalCorrect).toBe(1);
+    expect(result.totalQuestions).toBe(1);
+    expect(result.partSnapshots[0]?.score.correctAnswers).toBe(1);
+  });
 });

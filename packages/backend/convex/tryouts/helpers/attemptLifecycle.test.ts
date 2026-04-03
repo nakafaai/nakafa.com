@@ -9,7 +9,7 @@ import {
 import { describe, expect, it } from "vitest";
 
 describe("tryouts/helpers/attemptLifecycle", () => {
-  it("loads part start context from the persisted part snapshot after mappings change", async () => {
+  it("loads part start context from the current mapping while preserving snapshot order", async () => {
     const t = createTryoutTestConvex();
 
     const result = await t.mutation(async (ctx) => {
@@ -68,13 +68,14 @@ describe("tryouts/helpers/attemptLifecycle", () => {
       });
 
       await ctx.db.patch("tryoutPartSets", tryoutPartSet._id, {
+        partKey: "mathematical-reasoning",
         setId: replacementSetId,
       });
 
       return {
         context: await loadPartStartContext(ctx, {
           now: NOW,
-          partKey: "quantitative-knowledge",
+          partKey: "mathematical-reasoning",
           tryoutAttemptId,
           userId: identity.userId,
         }),
@@ -85,12 +86,10 @@ describe("tryouts/helpers/attemptLifecycle", () => {
 
     expect(result.context.tryoutPartSet).toEqual({
       partIndex: 0,
-      partKey: "quantitative-knowledge",
+      partKey: "mathematical-reasoning",
       setId: expect.any(String),
     });
-    expect(result.context.tryoutPartSet.setId).toBe(result.originalSetId);
-    expect(result.context.tryoutPartSet.setId).not.toBe(
-      result.replacementSetId
-    );
+    expect(result.context.tryoutPartSet.setId).not.toBe(result.originalSetId);
+    expect(result.context.tryoutPartSet.setId).toBe(result.replacementSetId);
   });
 });

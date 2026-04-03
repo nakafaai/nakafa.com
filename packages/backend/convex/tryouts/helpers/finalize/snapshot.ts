@@ -106,9 +106,8 @@ export async function buildFinalizedTryoutSnapshot(
       }
 
       const effectiveSetId = partAttempt?.setId ?? partSetSnapshot.setId;
-
       const answers =
-        partAttempt && setAttempt && isCompletedPart
+        partAttempt && setAttempt
           ? await getBoundedExerciseAnswers(db, {
               attemptId: partAttempt.setAttemptId,
               totalExercises: setAttempt.totalExercises,

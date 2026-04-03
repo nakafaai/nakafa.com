@@ -21,7 +21,11 @@ import {
 import { finalizeTryoutAttempt } from "@repo/backend/convex/tryouts/helpers/finalize/attempt";
 import { finalizeTryoutPartAttempt } from "@repo/backend/convex/tryouts/helpers/finalize/part";
 import { upsertUserTryoutLatestAttempt } from "@repo/backend/convex/tryouts/helpers/latest";
-import { loadTryoutPartSnapshots } from "@repo/backend/convex/tryouts/helpers/parts";
+import {
+  loadTryoutPartSnapshots,
+  loadValidatedTryoutPartSets,
+  resolveRequestedTryoutPart,
+} from "@repo/backend/convex/tryouts/helpers/parts";
 import {
   tryoutProductPolicies,
   tryoutProductValidator,
@@ -65,7 +69,6 @@ export const startTryout = mutation({
       existingAttempt &&
       (await reuseExistingTryoutAttempt(ctx, {
         now,
-        tryout,
         userId,
         tryoutAttempt: existingAttempt,
       }))
@@ -160,7 +163,7 @@ export const startPart = mutation({
     if (
       await reuseExistingPartAttempt(ctx, {
         now,
-        partKey: args.partKey,
+        partIndex: tryoutPartSet.partIndex,
         tryoutAttemptId: args.tryoutAttemptId,
       })
     ) {
@@ -223,9 +226,34 @@ export const completePart = mutation({
         now,
         tryoutAttempt,
       });
+    const tryout = await ctx.db.get("tryouts", currentTryoutAttempt.tryoutId);
+
+    if (!tryout) {
+      throw new ConvexError({
+        code: "TRYOUT_NOT_FOUND",
+        message: "Tryout not found.",
+      });
+    }
+
+    const currentPartSets = await loadValidatedTryoutPartSets(ctx.db, {
+      partCount: tryout.partCount,
+      tryoutId: tryout._id,
+    });
+    const resolvedPart = resolveRequestedTryoutPart({
+      currentPartSets,
+      partSetSnapshots: currentTryoutAttempt.partSetSnapshots,
+      requestedPartKey: args.partKey,
+    });
+
+    if (!resolvedPart) {
+      throw new ConvexError({
+        code: "PART_ATTEMPT_NOT_FOUND",
+        message: "Tryout part attempt not found.",
+      });
+    }
 
     const partAttempt = await loadTryoutPartAttempt(ctx, {
-      partKey: args.partKey,
+      partIndex: resolvedPart.snapshot.partIndex,
       tryoutAttemptId: args.tryoutAttemptId,
     });
 
