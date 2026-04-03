@@ -40,7 +40,8 @@ export const getUserTryoutPartAttempt = query({
     };
     const endedAttemptHasUntouchedParts =
       tryoutAttempt.status !== "in-progress" &&
-      tryoutAttempt.completedPartIndices.length < context.tryout.partCount;
+      tryoutAttempt.completedPartIndices.length <
+        tryoutAttempt.partSetSnapshots.length;
     const finalizedSnapshot = endedAttemptHasUntouchedParts
       ? await buildFinalizedTryoutSnapshot(ctx.db, {
           scaleVersionId: tryoutAttempt.scaleVersionId,

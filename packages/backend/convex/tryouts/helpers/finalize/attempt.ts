@@ -111,7 +111,10 @@ export async function finalizeTryoutAttempt({
 
   const scoreTarget = await getTryoutScoreTarget(ctx.db, tryoutAttempt);
 
-  if (tryoutAttempt.completedPartIndices.length < tryout.partCount) {
+  if (
+    tryoutAttempt.completedPartIndices.length <
+    tryoutAttempt.partSetSnapshots.length
+  ) {
     return {
       status: "in-progress",
       isOfficial: false,

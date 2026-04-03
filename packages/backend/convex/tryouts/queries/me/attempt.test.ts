@@ -99,6 +99,52 @@ describe("tryouts/queries/me/attempt", () => {
     expect(result?.partAttempts[1]?.setAttempt).toBeNull();
   });
 
+  it("uses the persisted snapshot length when live tryout partCount shrinks", async () => {
+    const t = createTryoutTestConvex();
+    const { identity, tryoutSlug } = await t.mutation(async (ctx) => {
+      const seeded = await seedExpiredTryoutWithUntouchedPart(
+        ctx,
+        "expired-partcount-shrink"
+      );
+      const latestAttempt = await ctx.db
+        .query("userTryoutLatestAttempts")
+        .withIndex("by_userId_and_product_and_locale_and_updatedAt", (q) =>
+          q
+            .eq("userId", seeded.identity.userId)
+            .eq("product", "snbt")
+            .eq("locale", "id")
+        )
+        .order("desc")
+        .first();
+
+      if (!latestAttempt) {
+        throw new Error("Expected latest tryout attempt to exist");
+      }
+
+      await ctx.db.patch("tryouts", latestAttempt.tryoutId, {
+        partCount: 1,
+        totalQuestionCount: 1,
+      });
+
+      return seeded;
+    });
+
+    const result = await t
+      .withIdentity({
+        subject: identity.authUserId,
+        sessionId: identity.sessionId,
+      })
+      .query(api.tryouts.queries.me.attempt.getUserTryoutAttempt, {
+        product: "snbt",
+        locale: "id",
+        tryoutSlug,
+      });
+
+    expect(result?.attempt.totalQuestions).toBe(2);
+    expect(result?.partAttempts).toHaveLength(2);
+    expect(result?.partAttempts[1]?.score?.correctAnswers).toBe(0);
+  });
+
   it("throws when a persisted part attempt is missing its exercise attempt", async () => {
     const t = createTryoutTestConvex();
     const identity = await t.mutation(async (ctx) => {
