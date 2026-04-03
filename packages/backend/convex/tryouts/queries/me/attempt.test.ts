@@ -294,4 +294,178 @@ describe("tryouts/queries/me/attempt", () => {
 
     expect(result?.resumePartKey).toBe("quantitative-knowledge");
   });
+
+  it("uses snapshot length when live tryout partCount shrinks below started parts", async () => {
+    const t = createTryoutTestConvex();
+    const identity = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "in-progress-partcount-shrink",
+      });
+      const firstSetId = await ctx.db.insert("exerciseSets", {
+        locale: "id",
+        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/in-progress-partcount-shrink-qk",
+        category: "high-school",
+        type: "snbt",
+        material: "quantitative-knowledge",
+        exerciseType: "try-out",
+        setName: "in-progress-partcount-shrink-qk",
+        title: "Quantitative Knowledge",
+        questionCount: 1,
+        syncedAt: NOW,
+      });
+      const secondSetId = await ctx.db.insert("exerciseSets", {
+        locale: "id",
+        slug: "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/in-progress-partcount-shrink-mr",
+        category: "high-school",
+        type: "snbt",
+        material: "mathematical-reasoning",
+        exerciseType: "try-out",
+        setName: "in-progress-partcount-shrink-mr",
+        title: "Mathematical Reasoning",
+        questionCount: 1,
+        syncedAt: NOW,
+      });
+      const tryoutId = await ctx.db.insert("tryouts", {
+        product: "snbt",
+        locale: "id",
+        cycleKey: "2026",
+        slug: "in-progress-partcount-shrink",
+        label: "In Progress Partcount Shrink",
+        partCount: 2,
+        totalQuestionCount: 2,
+        isActive: true,
+        detectedAt: NOW,
+        syncedAt: NOW,
+      });
+      const scaleVersionId = await ctx.db.insert("irtScaleVersions", {
+        tryoutId,
+        model: "2pl",
+        status: "official",
+        questionCount: 2,
+        publishedAt: NOW,
+      });
+      const firstSetAttemptId = await ctx.db.insert("exerciseAttempts", {
+        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/in-progress-partcount-shrink-qk",
+        userId: identity.userId,
+        origin: "tryout",
+        mode: "simulation",
+        scope: "set",
+        timeLimit: 90,
+        startedAt: NOW,
+        lastActivityAt: NOW,
+        completedAt: null,
+        endReason: null,
+        status: "in-progress",
+        updatedAt: NOW,
+        totalExercises: 1,
+        answeredCount: 0,
+        correctAnswers: 0,
+        totalTime: 0,
+        scorePercentage: 0,
+      });
+      const secondSetAttemptId = await ctx.db.insert("exerciseAttempts", {
+        slug: "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/in-progress-partcount-shrink-mr",
+        userId: identity.userId,
+        origin: "tryout",
+        mode: "simulation",
+        scope: "set",
+        timeLimit: 90,
+        startedAt: NOW,
+        lastActivityAt: NOW,
+        completedAt: null,
+        endReason: null,
+        status: "in-progress",
+        updatedAt: NOW,
+        totalExercises: 1,
+        answeredCount: 0,
+        correctAnswers: 0,
+        totalTime: 0,
+        scorePercentage: 0,
+      });
+      const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
+        userId: identity.userId,
+        tryoutId,
+        scaleVersionId,
+        scoreStatus: "official",
+        status: "in-progress",
+        partSetSnapshots: [
+          {
+            partIndex: 0,
+            partKey: "quantitative-knowledge",
+            questionCount: 1,
+            setId: firstSetId,
+          },
+          {
+            partIndex: 1,
+            partKey: "mathematical-reasoning",
+            questionCount: 1,
+            setId: secondSetId,
+          },
+        ],
+        completedPartIndices: [],
+        totalCorrect: 0,
+        totalQuestions: 0,
+        theta: 0,
+        thetaSE: 1,
+        startedAt: NOW,
+        expiresAt: NOW + 30 * 60 * 1000,
+        lastActivityAt: NOW,
+        completedAt: null,
+        endReason: null,
+      });
+
+      await ctx.db.insert("tryoutPartAttempts", {
+        tryoutAttemptId,
+        partIndex: 0,
+        partKey: "quantitative-knowledge",
+        setAttemptId: firstSetAttemptId,
+        setId: firstSetId,
+        theta: 0,
+        thetaSE: 1,
+      });
+      await ctx.db.insert("tryoutPartAttempts", {
+        tryoutAttemptId,
+        partIndex: 1,
+        partKey: "mathematical-reasoning",
+        setAttemptId: secondSetAttemptId,
+        setId: secondSetId,
+        theta: 0,
+        thetaSE: 1,
+      });
+      await ctx.db.insert("userTryoutLatestAttempts", {
+        userId: identity.userId,
+        product: "snbt",
+        locale: "id",
+        tryoutId,
+        attemptId: tryoutAttemptId,
+        slug: "in-progress-partcount-shrink",
+        status: "in-progress",
+        expiresAtMs: NOW + 30 * 60 * 1000,
+        updatedAt: NOW,
+      });
+      await ctx.db.patch("tryouts", tryoutId, {
+        partCount: 1,
+        totalQuestionCount: 1,
+      });
+
+      return identity;
+    });
+
+    const result = await t
+      .withIdentity({
+        subject: identity.authUserId,
+        sessionId: identity.sessionId,
+      })
+      .query(api.tryouts.queries.me.attempt.getUserTryoutAttempt, {
+        product: "snbt",
+        locale: "id",
+        tryoutSlug: "in-progress-partcount-shrink",
+      });
+
+    expect(result?.partAttempts).toHaveLength(2);
+    expect(
+      result?.partAttempts.map((partAttempt) => partAttempt.partKey)
+    ).toEqual(["quantitative-knowledge", "mathematical-reasoning"]);
+  });
 });

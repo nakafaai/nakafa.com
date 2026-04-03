@@ -69,7 +69,7 @@ export const getUserTryoutAttempt = query({
     }
 
     const tryoutPartAttempts = await loadBoundedTryoutPartAttempts(ctx.db, {
-      partCount: tryout.partCount,
+      partCount: attempt.partSetSnapshots.length,
       tryoutAttemptId: attempt._id,
     });
     const setAttempts = await getAll(

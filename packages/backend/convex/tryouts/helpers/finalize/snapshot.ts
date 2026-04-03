@@ -62,7 +62,7 @@ export async function buildFinalizedTryoutSnapshot(
   const completedPartIndices = new Set(tryoutAttempt.completedPartIndices);
   const partSetSnapshots = tryoutAttempt.partSetSnapshots;
   const partAttempts = await loadBoundedTryoutPartAttempts(db, {
-    partCount: tryout.partCount,
+    partCount: partSetSnapshots.length,
     tryoutAttemptId: tryoutAttempt._id,
   });
   const setAttempts = await getAll(
