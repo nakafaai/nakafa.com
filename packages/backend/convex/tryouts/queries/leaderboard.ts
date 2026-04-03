@@ -7,11 +7,12 @@ import {
   globalLeaderboard,
   tryoutLeaderboard,
 } from "@repo/backend/convex/tryouts/aggregate";
+import { getTryoutReportScore } from "@repo/backend/convex/tryouts/helpers/reporting";
 import {
   tryoutProductPolicies,
   tryoutProductValidator,
 } from "@repo/backend/convex/tryouts/products";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { getAll } from "convex-helpers/server/relationships";
 import { nullable } from "convex-helpers/validators";
 
@@ -105,6 +106,15 @@ export const getTryoutLeaderboard = query({
       return [];
     }
 
+    const tryout = await ctx.db.get("tryouts", args.tryoutId);
+
+    if (!tryout) {
+      throw new ConvexError({
+        code: "TRYOUT_NOT_FOUND",
+        message: "Tryout not found.",
+      });
+    }
+
     const { page: aggregateItems } = await tryoutLeaderboard.paginate(ctx, {
       namespace: args.tryoutId,
       order: "asc",
@@ -120,7 +130,7 @@ export const getTryoutLeaderboard = query({
         userId: row.userId,
         userName,
         theta: row.theta,
-        irtScore: row.irtScore,
+        irtScore: getTryoutReportScore(tryout.product, row.theta),
         rawScore: row.rawScore,
         completedAt: row.completedAt,
       }),

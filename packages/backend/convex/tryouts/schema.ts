@@ -18,6 +18,15 @@ export type TryoutScoreStatus = Infer<typeof tryoutScoreStatusValidator>;
 export const tryoutPartKeyValidator = v.string();
 export type TryoutPartKey = Infer<typeof tryoutPartKeyValidator>;
 
+export const tryoutPartSnapshotValidator = v.object({
+  partIndex: v.number(),
+  /** Stable public identifier for one part, e.g. `general-reasoning`. */
+  partKey: tryoutPartKeyValidator,
+  questionCount: v.number(),
+  setId: v.id("exerciseSets"),
+});
+export type TryoutPartSnapshot = Infer<typeof tryoutPartSnapshotValidator>;
+
 const tables = {
   tryouts: defineTable({
     product: tryoutProductValidator,
@@ -63,12 +72,12 @@ const tables = {
     scaleVersionId: v.id("irtScaleVersions"),
     scoreStatus: tryoutScoreStatusValidator,
     status: tryoutStatusValidator,
+    partSetSnapshots: v.array(tryoutPartSnapshotValidator),
     completedPartIndices: v.array(v.number()),
     totalCorrect: v.number(),
     totalQuestions: v.number(),
     theta: v.number(),
     thetaSE: v.number(),
-    irtScore: v.number(),
     startedAt: v.number(),
     expiresAt: v.number(),
     lastActivityAt: v.number(),
@@ -130,7 +139,6 @@ const tables = {
     thetaSE: v.number(),
   })
     .index("by_tryoutAttemptId_and_partIndex", ["tryoutAttemptId", "partIndex"])
-    .index("by_tryoutAttemptId_and_partKey", ["tryoutAttemptId", "partKey"])
     .index("by_setAttemptId", ["setAttemptId"]),
 
   userTryoutStats: defineTable({
@@ -155,7 +163,6 @@ const tables = {
     leaderboardNamespace: v.string(),
     theta: v.number(),
     thetaSE: v.number(),
-    irtScore: v.number(),
     rawScore: v.number(),
     completedAt: v.number(),
     attemptId: v.id("tryoutAttempts"),

@@ -31,14 +31,32 @@ function getResumePartKey({
     return undefined;
   }
 
-  const activePartAttempts = attemptData.partAttempts.filter(
-    (partAttempt: TryoutPartAttempt) =>
+  const activePartAttempts: Array<
+    TryoutPartAttempt & {
+      setAttempt: NonNullable<TryoutPartAttempt["setAttempt"]>;
+    }
+  > = [];
+
+  for (const partAttempt of attemptData.partAttempts) {
+    if (!partAttempt.setAttempt) {
+      continue;
+    }
+
+    if (
       getEffectivePartAttemptStatus({
         expiresAtMs: attemptData.expiresAtMs,
         nowMs,
         setAttempt: partAttempt.setAttempt,
-      }) === "in-progress"
-  );
+      }) !== "in-progress"
+    ) {
+      continue;
+    }
+
+    activePartAttempts.push({
+      ...partAttempt,
+      setAttempt: partAttempt.setAttempt,
+    });
+  }
 
   if (activePartAttempts.length === 0) {
     const locallyEndedPartIndices = new Set(
@@ -47,6 +65,10 @@ function getResumePartKey({
 
     for (const partAttempt of attemptData.partAttempts) {
       if (locallyEndedPartIndices.has(partAttempt.partIndex)) {
+        continue;
+      }
+
+      if (partAttempt.setAttempt === null) {
         continue;
       }
 
@@ -71,7 +93,7 @@ function getResumePartKey({
   }
 
   activePartAttempts.sort(
-    (left: TryoutPartAttempt, right: TryoutPartAttempt) =>
+    (left, right) =>
       right.setAttempt.lastActivityAt - left.setAttempt.lastActivityAt
   );
 

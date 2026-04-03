@@ -27,7 +27,7 @@ export async function expireTryoutAttempt(
   }
 
   const partAttempts = await loadBoundedTryoutPartAttempts(ctx.db, {
-    partCount: tryout.partCount,
+    partCount: tryoutAttempt.partSetSnapshots.length,
     tryoutAttemptId: tryoutAttempt._id,
   });
 

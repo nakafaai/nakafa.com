@@ -1,9 +1,13 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
+import { buildFinalizedTryoutSnapshot } from "@repo/backend/convex/tryouts/helpers/finalize/snapshot";
 import { loadBoundedTryoutPartAttempts } from "@repo/backend/convex/tryouts/helpers/loaders";
-import { loadValidatedTryoutPartSets } from "@repo/backend/convex/tryouts/helpers/parts";
+import {
+  buildTryoutPartRouteMappings,
+  loadValidatedTryoutPartSets,
+} from "@repo/backend/convex/tryouts/helpers/parts";
+import { getTryoutReportScore } from "@repo/backend/convex/tryouts/helpers/reporting";
 import { resolveResumePartKey } from "@repo/backend/convex/tryouts/helpers/resume";
-import { tryoutProductPolicies } from "@repo/backend/convex/tryouts/products";
 import { loadLatestUserTryoutContext } from "@repo/backend/convex/tryouts/queries/me/helpers";
 import {
   userTryoutAttemptResultValidator,
@@ -29,60 +33,134 @@ export const getUserTryoutAttempt = query({
     }
 
     const { attempt, tryout } = context;
-    const [tryoutPartSets, tryoutPartAttempts] = await Promise.all([
-      loadValidatedTryoutPartSets(ctx.db, {
-        partCount: tryout.partCount,
-        tryoutId: tryout._id,
-      }),
-      loadBoundedTryoutPartAttempts(ctx.db, {
-        partCount: tryout.partCount,
-        tryoutAttemptId: attempt._id,
-      }),
-    ]);
-    const orderedParts = tryoutPartSets.map((tryoutPartSet) => ({
-      partIndex: tryoutPartSet.partIndex,
-      partKey: tryoutPartSet.partKey,
+    const currentPartSets = await loadValidatedTryoutPartSets(ctx.db, {
+      partCount: tryout.partCount,
+      tryoutId: tryout._id,
+    });
+    const { currentPartKeyBySnapshotIndex } = buildTryoutPartRouteMappings({
+      currentPartSets,
+      partSetSnapshots: attempt.partSetSnapshots,
+    });
+    const orderedParts = attempt.partSetSnapshots.map((partSnapshot) => ({
+      partIndex: partSnapshot.partIndex,
+      partKey:
+        currentPartKeyBySnapshotIndex.get(partSnapshot.partIndex) ??
+        partSnapshot.partKey,
     }));
+    const endedAttemptHasUntouchedParts =
+      attempt.status !== "in-progress" &&
+      attempt.completedPartIndices.length < attempt.partSetSnapshots.length;
+
+    if (endedAttemptHasUntouchedParts) {
+      const finalizedSnapshot = await buildFinalizedTryoutSnapshot(ctx.db, {
+        scaleVersionId: attempt.scaleVersionId,
+        tryout,
+        tryoutAttempt: attempt,
+      });
+      const scoredAttempt = {
+        ...attempt,
+        irtScore: finalizedSnapshot.irtScore,
+        theta: finalizedSnapshot.theta,
+        thetaSE: finalizedSnapshot.thetaSE,
+        totalCorrect: finalizedSnapshot.totalCorrect,
+        totalQuestions: finalizedSnapshot.totalQuestions,
+      };
+      const partAttempts = finalizedSnapshot.partSnapshots.map(
+        (partSnapshot) => ({
+          partIndex: partSnapshot.partIndex,
+          partKey:
+            currentPartKeyBySnapshotIndex.get(partSnapshot.partIndex) ??
+            partSnapshot.partKey,
+          score: partSnapshot.score,
+          setAttempt: partSnapshot.setAttempt,
+        })
+      );
+
+      return {
+        attempt: scoredAttempt,
+        orderedParts,
+        partAttempts,
+        expiresAtMs: attempt.expiresAt,
+      };
+    }
+
+    const tryoutPartAttempts = await loadBoundedTryoutPartAttempts(ctx.db, {
+      partCount: attempt.partSetSnapshots.length,
+      tryoutAttemptId: attempt._id,
+    });
     const setAttempts = await getAll(
       ctx.db,
       "exerciseAttempts",
       tryoutPartAttempts.map((partAttempt) => partAttempt.setAttemptId)
     );
-    const partAttempts = tryoutPartAttempts.map((partAttempt, index) => {
-      const setAttempt = setAttempts[index];
+    const partAttemptsByPartIndex = new Map(
+      tryoutPartAttempts.map((partAttempt, index) => {
+        const setAttempt = setAttempts[index];
 
-      if (!setAttempt) {
+        if (!setAttempt) {
+          throw new ConvexError({
+            code: "INVALID_ATTEMPT_STATE",
+            message: "Part attempt is missing its exercise attempt.",
+          });
+        }
+
+        return [
+          partAttempt.partIndex,
+          {
+            partIndex: partAttempt.partIndex,
+            partKey:
+              currentPartKeyBySnapshotIndex.get(partAttempt.partIndex) ??
+              partAttempt.partKey,
+            score: attempt.completedPartIndices.includes(partAttempt.partIndex)
+              ? {
+                  correctAnswers: setAttempt.correctAnswers,
+                  theta: partAttempt.theta,
+                  thetaSE: partAttempt.thetaSE,
+                  irtScore: getTryoutReportScore(
+                    tryout.product,
+                    partAttempt.theta
+                  ),
+                }
+              : null,
+            setAttempt: {
+              lastActivityAt: setAttempt.lastActivityAt,
+              startedAt: setAttempt.startedAt,
+              status: setAttempt.status,
+              timeLimit: setAttempt.timeLimit,
+            },
+          },
+        ] as const;
+      })
+    );
+    const partAttempts = orderedParts.map((orderedPart) => {
+      return (
+        partAttemptsByPartIndex.get(orderedPart.partIndex) ?? {
+          partIndex: orderedPart.partIndex,
+          partKey: orderedPart.partKey,
+          score: null,
+          setAttempt: null,
+        }
+      );
+    });
+    const scoredAttempt = {
+      ...attempt,
+      irtScore: getTryoutReportScore(tryout.product, attempt.theta),
+    };
+
+    if (attempt.status !== "in-progress") {
+      const missingPart = partAttempts.find(
+        (partAttempt) => !partAttempt.score
+      );
+
+      if (missingPart) {
         throw new ConvexError({
           code: "INVALID_ATTEMPT_STATE",
-          message: "Part attempt is missing its exercise attempt.",
+          message: "Finalized tryout is missing one of its part scores.",
         });
       }
 
       return {
-        partIndex: partAttempt.partIndex,
-        partKey: partAttempt.partKey,
-        score: attempt.completedPartIndices.includes(partAttempt.partIndex)
-          ? {
-              correctAnswers: setAttempt.correctAnswers,
-              theta: partAttempt.theta,
-              thetaSE: partAttempt.thetaSE,
-              irtScore: tryoutProductPolicies[tryout.product].scaleThetaToScore(
-                partAttempt.theta
-              ),
-            }
-          : null,
-        setAttempt: {
-          lastActivityAt: setAttempt.lastActivityAt,
-          startedAt: setAttempt.startedAt,
-          status: setAttempt.status,
-          timeLimit: setAttempt.timeLimit,
-        },
-      };
-    });
-
-    if (attempt.status !== "in-progress") {
-      return {
-        attempt,
+        attempt: scoredAttempt,
         orderedParts,
         partAttempts,
         expiresAtMs: attempt.expiresAt,
@@ -90,7 +168,7 @@ export const getUserTryoutAttempt = query({
     }
 
     return {
-      attempt,
+      attempt: scoredAttempt,
       orderedParts,
       partAttempts,
       resumePartKey: resolveResumePartKey({

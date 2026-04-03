@@ -1,20 +1,11 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { estimateThetaEAP } from "@repo/backend/convex/irt/estimation";
-import { getScaleVersionItemsForSet } from "@repo/backend/convex/irt/scales/read";
 import { getAttemptEndReasonFromStatus } from "@repo/backend/convex/lib/attempts";
-import { scoreFinalizedTryoutPart } from "@repo/backend/convex/tryouts/helpers/finalize/score";
+import { buildFinalizedTryoutSnapshot } from "@repo/backend/convex/tryouts/helpers/finalize/snapshot";
 import { upsertUserTryoutLatestAttempt } from "@repo/backend/convex/tryouts/helpers/latest";
-import {
-  getBoundedExerciseAnswers,
-  loadBoundedTryoutPartAttempts,
-} from "@repo/backend/convex/tryouts/helpers/loaders";
 import { computeTryoutRawScorePercentage } from "@repo/backend/convex/tryouts/helpers/metrics";
-import { tryoutProductPolicies } from "@repo/backend/convex/tryouts/products";
 import type { TryoutScoreStatus } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError } from "convex/values";
-import { asyncMap } from "convex-helpers";
-import { getAll } from "convex-helpers/server/relationships";
 
 type FinalizedTryoutStatus = Exclude<
   Doc<"tryoutAttempts">["status"],
@@ -68,88 +59,39 @@ export async function syncTryoutAttemptAggregates({
   const effectiveScaleVersionId =
     scaleVersionId ?? tryoutAttempt.scaleVersionId;
   const effectiveScoreStatus = scoreStatus ?? tryoutAttempt.scoreStatus;
-  const completedPartIndices = new Set(tryoutAttempt.completedPartIndices);
-  const partAttempts = await loadBoundedTryoutPartAttempts(ctx.db, {
-    partCount: tryout.partCount,
-    tryoutAttemptId,
+  const {
+    irtScore,
+    partSnapshots,
+    theta,
+    thetaSE,
+    totalCorrect,
+    totalQuestions,
+  } = await buildFinalizedTryoutSnapshot(ctx.db, {
+    scaleVersionId: effectiveScaleVersionId,
+    tryout,
+    tryoutAttempt,
   });
-  const finalizedPartAttempts = partAttempts.filter((partAttempt) =>
-    completedPartIndices.has(partAttempt.partIndex)
-  );
-  const setAttempts = await getAll(
-    ctx.db,
-    "exerciseAttempts",
-    finalizedPartAttempts.map((partAttempt) => partAttempt.setAttemptId)
-  );
-  const partScores = await asyncMap(
-    finalizedPartAttempts,
-    async (partAttempt, index) => {
-      const setAttempt = setAttempts[index];
 
-      if (!setAttempt) {
-        throw new ConvexError({
-          code: "INVALID_ATTEMPT_STATE",
-          message: "Tryout part is missing its exercise attempt.",
-        });
-      }
-
-      const [answers, itemParamsRecords] = await Promise.all([
-        getBoundedExerciseAnswers(ctx.db, {
-          attemptId: partAttempt.setAttemptId,
-          totalExercises: setAttempt.totalExercises,
-        }),
-        getScaleVersionItemsForSet(ctx.db, {
-          scaleVersionId: effectiveScaleVersionId,
-          setId: partAttempt.setId,
-        }),
-      ]);
-
-      return scoreFinalizedTryoutPart({
-        answers,
-        itemParamsRecords,
-        totalQuestions: setAttempt.totalExercises,
-      });
-    }
-  );
-  const allResponses = partScores.flatMap((partScore) => partScore.responses);
-  const totalCorrect = partScores.reduce(
-    (count, partScore) => count + partScore.rawScore,
-    0
-  );
-  const totalQuestions = partScores.reduce(
-    (count, partScore) => count + partScore.totalQuestions,
-    0
-  );
-  const { theta, se } = estimateThetaEAP(allResponses);
-  const irtScore =
-    tryoutProductPolicies[tryout.product].scaleThetaToScore(theta);
-
-  for (const [index, partAttempt] of finalizedPartAttempts.entries()) {
-    const partScore = partScores[index];
-
-    if (!partScore) {
-      throw new ConvexError({
-        code: "INVALID_ATTEMPT_STATE",
-        message: "Tryout part score is missing during aggregate sync.",
-      });
+  for (const partSnapshot of partSnapshots) {
+    if (!partSnapshot.partAttempt) {
+      continue;
     }
 
-    await ctx.db.patch("tryoutPartAttempts", partAttempt._id, {
-      theta: partScore.theta,
-      thetaSE: partScore.thetaSE,
+    await ctx.db.patch("tryoutPartAttempts", partSnapshot.partAttempt._id, {
+      theta: partSnapshot.score.theta,
+      thetaSE: partSnapshot.score.thetaSE,
     });
   }
 
   await ctx.db.patch("tryoutAttempts", tryoutAttemptId, {
     completedAt: completedAtMs,
     endReason: getAttemptEndReasonFromStatus(status),
-    irtScore,
     lastActivityAt: now,
     scaleVersionId: effectiveScaleVersionId,
     scoreStatus: effectiveScoreStatus,
     status,
     theta,
-    thetaSE: se,
+    thetaSE,
     totalCorrect,
     totalQuestions,
   });
@@ -174,6 +116,6 @@ export async function syncTryoutAttemptAggregates({
     }),
     status,
     theta,
-    thetaSE: se,
+    thetaSE,
   };
 }

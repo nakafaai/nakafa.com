@@ -1,5 +1,6 @@
 import { internalQuery } from "@repo/backend/convex/_generated/server";
 import { getCalibrationAttemptCacheLimit } from "@repo/backend/convex/irt/policy";
+import { getLatestScaleVersionForTryout } from "@repo/backend/convex/irt/scales/read";
 import { ConvexError, v } from "convex/values";
 
 const MAX_IRT_CACHE_INTEGRITY_SETS = 1000;
@@ -10,8 +11,8 @@ const calibrationCacheIntegrityResultValidator = v.object({
 });
 
 const scaleQualityIntegrityResultValidator = v.object({
-  blockedTryoutCount: v.number(),
   missingQualityCheckTryoutCount: v.number(),
+  unstartableTryoutCount: v.number(),
 });
 
 /**
@@ -77,7 +78,8 @@ export const getCalibrationCacheIntegrity = internalQuery({
 });
 
 /**
- * Return whether any tryout is missing a quality check or still blocked.
+ * Return whether any active tryout is missing a quality check or missing a
+ * frozen published scale.
  *
  * Operator entrypoint: invoked via `convex run` / package scripts during manual
  * integrity verification.
@@ -88,6 +90,7 @@ export const getScaleQualityIntegrity = internalQuery({
   handler: async (ctx) => {
     const tryouts = await ctx.db
       .query("tryouts")
+      .withIndex("by_isActive", (q) => q.eq("isActive", true))
       .take(MAX_IRT_CACHE_INTEGRITY_SETS + 1);
 
     if (tryouts.length > MAX_IRT_CACHE_INTEGRITY_SETS) {
@@ -97,28 +100,30 @@ export const getScaleQualityIntegrity = internalQuery({
       });
     }
 
-    let blockedTryoutCount = 0;
     let missingQualityCheckTryoutCount = 0;
+    let unstartableTryoutCount = 0;
 
     for (const tryout of tryouts) {
-      const qualityCheck = await ctx.db
-        .query("irtScaleQualityChecks")
-        .withIndex("by_tryoutId", (q) => q.eq("tryoutId", tryout._id))
-        .unique();
+      const [qualityCheck, latestScaleVersion] = await Promise.all([
+        ctx.db
+          .query("irtScaleQualityChecks")
+          .withIndex("by_tryoutId", (q) => q.eq("tryoutId", tryout._id))
+          .unique(),
+        getLatestScaleVersionForTryout(ctx.db, tryout._id),
+      ]);
 
       if (!qualityCheck) {
         missingQualityCheckTryoutCount += 1;
-        continue;
       }
 
-      if (qualityCheck.status === "blocked") {
-        blockedTryoutCount += 1;
+      if (!latestScaleVersion) {
+        unstartableTryoutCount += 1;
       }
     }
 
     return {
-      blockedTryoutCount,
       missingQualityCheckTryoutCount,
+      unstartableTryoutCount,
     };
   },
 });

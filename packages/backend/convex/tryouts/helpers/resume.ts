@@ -1,18 +1,27 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { getFirstIncompleteTryoutPartIndex } from "@repo/backend/convex/tryouts/helpers/metrics";
 
-/** Pick the most recent in-progress part to resume within one tryout. */
-function pickSuggestedPartKey<
-  PartAttempt extends {
+/** Derive the next resume target for an active tryout attempt. */
+export function resolveResumePartKey({
+  completedPartIndices,
+  orderedParts,
+  partAttempts,
+}: {
+  completedPartIndices: Doc<"tryoutAttempts">["completedPartIndices"];
+  orderedParts: Pick<Doc<"tryoutPartSets">, "partIndex" | "partKey">[];
+  partAttempts: Array<{
     partKey: Doc<"tryoutPartAttempts">["partKey"];
-    setAttempt: Pick<Doc<"exerciseAttempts">, "lastActivityAt" | "status">;
-  },
->(partAttempts: PartAttempt[]) {
-  let suggestedPartKey: PartAttempt["partKey"] | undefined;
+    setAttempt: Pick<
+      Doc<"exerciseAttempts">,
+      "lastActivityAt" | "status"
+    > | null;
+  }>;
+}) {
+  let suggestedPartKey: Doc<"tryoutPartAttempts">["partKey"] | undefined;
   let latestActivityAt = Number.NEGATIVE_INFINITY;
 
   for (const partAttempt of partAttempts) {
-    if (partAttempt.setAttempt.status !== "in-progress") {
+    if (partAttempt.setAttempt?.status !== "in-progress") {
       continue;
     }
 
@@ -24,23 +33,6 @@ function pickSuggestedPartKey<
     latestActivityAt = partAttempt.setAttempt.lastActivityAt;
   }
 
-  return suggestedPartKey;
-}
-
-/** Derive the next resume target for an active tryout attempt. */
-export function resolveResumePartKey({
-  completedPartIndices,
-  orderedParts,
-  partAttempts,
-}: {
-  completedPartIndices: Doc<"tryoutAttempts">["completedPartIndices"];
-  orderedParts: Pick<Doc<"tryoutPartSets">, "partIndex" | "partKey">[];
-  partAttempts: Array<{
-    partKey: Doc<"tryoutPartAttempts">["partKey"];
-    setAttempt: Pick<Doc<"exerciseAttempts">, "lastActivityAt" | "status">;
-  }>;
-}) {
-  const suggestedPartKey = pickSuggestedPartKey(partAttempts);
   const nextPartIndex = getFirstIncompleteTryoutPartIndex({
     completedPartIndices,
     partCount: orderedParts.length,

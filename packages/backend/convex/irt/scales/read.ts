@@ -101,27 +101,21 @@ export async function getScaleVersionItems(
 export async function getScaleVersionItemsForSet(
   db: MutationCtx["db"] | QueryCtx["db"],
   {
+    questionCount,
     scaleVersionId,
     setId,
-  }: Pick<Doc<"irtScaleVersionItems">, "scaleVersionId" | "setId">
-) {
-  const set = await db.get("exerciseSets", setId);
-
-  if (!set) {
-    throw new ConvexError({
-      code: "IRT_SET_NOT_FOUND",
-      message: "Exercise set not found for scale item lookup.",
-    });
+  }: Pick<Doc<"irtScaleVersionItems">, "scaleVersionId" | "setId"> & {
+    questionCount: number;
   }
-
+) {
   const scaleItems = await db
     .query("irtScaleVersionItems")
     .withIndex("by_scaleVersionId_and_setId_and_questionId", (q) =>
       q.eq("scaleVersionId", scaleVersionId).eq("setId", setId)
     )
-    .take(set.questionCount + 1);
+    .take(questionCount + 1);
 
-  if (scaleItems.length > set.questionCount) {
+  if (scaleItems.length > questionCount) {
     throw new ConvexError({
       code: "IRT_SCALE_ITEM_COUNT_EXCEEDED",
       message: "Frozen scale item count exceeds the set question count.",
