@@ -66,42 +66,39 @@ export function resolveRequestedTryoutPart({
   partSetSnapshots: TryoutPartSnapshot[];
   requestedPartKey: TryoutPartSnapshot["partKey"];
 }) {
-  const currentPartSet =
-    currentPartSets.find((partSet) => partSet.partKey === requestedPartKey) ??
-    null;
-
-  if (currentPartSet) {
-    const snapshot = partSetSnapshots.find(
-      (partSnapshot) => partSnapshot.partIndex === currentPartSet.partIndex
-    );
-
-    if (snapshot) {
-      return {
-        currentPartKey: currentPartSet.partKey,
-        currentPartSet,
-        snapshot,
-      };
-    }
-  }
-
   const snapshot =
     partSetSnapshots.find(
       (partSnapshot) => partSnapshot.partKey === requestedPartKey
     ) ?? null;
+  const currentPartSet =
+    currentPartSets.find((partSet) => partSet.partKey === requestedPartKey) ??
+    null;
 
-  if (!snapshot) {
+  if (snapshot) {
+    return {
+      currentPartKey: currentPartSet?.partKey ?? snapshot.partKey,
+      currentPartSet,
+      snapshot,
+    };
+  }
+
+  if (!currentPartSet) {
     return null;
   }
 
-  const currentPartSetByIndex =
-    currentPartSets.find(
-      (partSet) => partSet.partIndex === snapshot.partIndex
+  const snapshotByIndex =
+    partSetSnapshots.find(
+      (partSnapshot) => partSnapshot.partIndex === currentPartSet.partIndex
     ) ?? null;
 
+  if (!snapshotByIndex) {
+    return null;
+  }
+
   return {
-    currentPartKey: currentPartSetByIndex?.partKey ?? snapshot.partKey,
-    currentPartSet: currentPartSetByIndex,
-    snapshot,
+    currentPartKey: currentPartSet.partKey,
+    currentPartSet,
+    snapshot: snapshotByIndex,
   };
 }
 

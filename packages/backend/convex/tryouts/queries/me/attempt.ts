@@ -34,13 +34,27 @@ export const getUserTryoutAttempt = query({
       partCount: tryout.partCount,
       tryoutId: tryout._id,
     });
-    const currentPartKeysByIndex = new Map(
-      currentPartSets.map((partSet) => [partSet.partIndex, partSet.partKey])
+    const currentPartKeysBySnapshotIndex = new Map(
+      attempt.partSetSnapshots.map((partSnapshot) => {
+        const currentPartSet =
+          currentPartSets.find(
+            (partSet) => partSet.partKey === partSnapshot.partKey
+          ) ??
+          currentPartSets.find(
+            (partSet) => partSet.partIndex === partSnapshot.partIndex
+          ) ??
+          null;
+
+        return [
+          partSnapshot.partIndex,
+          currentPartSet?.partKey ?? partSnapshot.partKey,
+        ] as const;
+      })
     );
     const orderedParts = attempt.partSetSnapshots.map((partSnapshot) => ({
       partIndex: partSnapshot.partIndex,
       partKey:
-        currentPartKeysByIndex.get(partSnapshot.partIndex) ??
+        currentPartKeysBySnapshotIndex.get(partSnapshot.partIndex) ??
         partSnapshot.partKey,
     }));
     const endedAttemptHasUntouchedParts =
@@ -65,7 +79,7 @@ export const getUserTryoutAttempt = query({
         (partSnapshot) => ({
           partIndex: partSnapshot.partIndex,
           partKey:
-            currentPartKeysByIndex.get(partSnapshot.partIndex) ??
+            currentPartKeysBySnapshotIndex.get(partSnapshot.partIndex) ??
             partSnapshot.partKey,
           score: partSnapshot.score,
           setAttempt: partSnapshot.setAttempt,
@@ -105,7 +119,7 @@ export const getUserTryoutAttempt = query({
           {
             partIndex: partAttempt.partIndex,
             partKey:
-              currentPartKeysByIndex.get(partAttempt.partIndex) ??
+              currentPartKeysBySnapshotIndex.get(partAttempt.partIndex) ??
               partAttempt.partKey,
             score: attempt.completedPartIndices.includes(partAttempt.partIndex)
               ? {

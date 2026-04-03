@@ -119,6 +119,196 @@ describe("tryouts/queries/me/part", () => {
     expect(result?.partScore?.irtScore).toBe(500);
   });
 
+  it("matches finalized part routes by key before falling back to part index", async () => {
+    const t = createTryoutTestConvex();
+    const identity = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "reordered-part-route",
+      });
+      const firstSetId = await ctx.db.insert("exerciseSets", {
+        locale: "id",
+        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/reordered-part-route-qk",
+        category: "high-school",
+        type: "snbt",
+        material: "quantitative-knowledge",
+        exerciseType: "try-out",
+        setName: "reordered-part-route-qk",
+        title: "Quantitative Knowledge",
+        questionCount: 10,
+        syncedAt: NOW,
+      });
+      const secondSetId = await ctx.db.insert("exerciseSets", {
+        locale: "id",
+        slug: "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/reordered-part-route-mr",
+        category: "high-school",
+        type: "snbt",
+        material: "mathematical-reasoning",
+        exerciseType: "try-out",
+        setName: "reordered-part-route-mr",
+        title: "Mathematical Reasoning",
+        questionCount: 10,
+        syncedAt: NOW,
+      });
+      const tryoutId = await ctx.db.insert("tryouts", {
+        product: "snbt",
+        locale: "id",
+        cycleKey: "2026",
+        slug: "reordered-part-route",
+        label: "Reordered Part Route",
+        partCount: 2,
+        totalQuestionCount: 20,
+        isActive: true,
+        detectedAt: NOW,
+        syncedAt: NOW,
+      });
+      const scaleVersionId = await ctx.db.insert("irtScaleVersions", {
+        tryoutId,
+        model: "2pl",
+        status: "official",
+        questionCount: 20,
+        publishedAt: NOW,
+      });
+      const firstPartSetId = await ctx.db.insert("tryoutPartSets", {
+        tryoutId,
+        setId: firstSetId,
+        partIndex: 0,
+        partKey: "quantitative-knowledge",
+      });
+      const secondPartSetId = await ctx.db.insert("tryoutPartSets", {
+        tryoutId,
+        setId: secondSetId,
+        partIndex: 1,
+        partKey: "mathematical-reasoning",
+      });
+      const firstSetAttemptId = await ctx.db.insert("exerciseAttempts", {
+        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/reordered-part-route-qk",
+        userId: identity.userId,
+        origin: "tryout",
+        mode: "simulation",
+        scope: "set",
+        timeLimit: 90,
+        startedAt: NOW,
+        lastActivityAt: NOW,
+        completedAt: NOW,
+        endReason: "submitted",
+        status: "completed",
+        updatedAt: NOW,
+        totalExercises: 10,
+        answeredCount: 10,
+        correctAnswers: 7,
+        totalTime: 90,
+        scorePercentage: 70,
+      });
+      const secondSetAttemptId = await ctx.db.insert("exerciseAttempts", {
+        slug: "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/reordered-part-route-mr",
+        userId: identity.userId,
+        origin: "tryout",
+        mode: "simulation",
+        scope: "set",
+        timeLimit: 90,
+        startedAt: NOW,
+        lastActivityAt: NOW,
+        completedAt: NOW,
+        endReason: "submitted",
+        status: "completed",
+        updatedAt: NOW,
+        totalExercises: 10,
+        answeredCount: 10,
+        correctAnswers: 3,
+        totalTime: 90,
+        scorePercentage: 30,
+      });
+      const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
+        userId: identity.userId,
+        tryoutId,
+        scaleVersionId,
+        scoreStatus: "official",
+        status: "completed",
+        partSetSnapshots: [
+          {
+            partIndex: 0,
+            partKey: "quantitative-knowledge",
+            questionCount: 10,
+            setId: firstSetId,
+          },
+          {
+            partIndex: 1,
+            partKey: "mathematical-reasoning",
+            questionCount: 10,
+            setId: secondSetId,
+          },
+        ],
+        completedPartIndices: [0, 1],
+        totalCorrect: 10,
+        totalQuestions: 20,
+        theta: 0,
+        thetaSE: 1,
+        startedAt: NOW,
+        expiresAt: NOW + 30 * 60 * 1000,
+        lastActivityAt: NOW,
+        completedAt: NOW,
+        endReason: "submitted",
+      });
+
+      await ctx.db.insert("tryoutPartAttempts", {
+        tryoutAttemptId,
+        partIndex: 0,
+        partKey: "quantitative-knowledge",
+        setAttemptId: firstSetAttemptId,
+        setId: firstSetId,
+        theta: 0.5,
+        thetaSE: 0.8,
+      });
+      await ctx.db.insert("tryoutPartAttempts", {
+        tryoutAttemptId,
+        partIndex: 1,
+        partKey: "mathematical-reasoning",
+        setAttemptId: secondSetAttemptId,
+        setId: secondSetId,
+        theta: -0.5,
+        thetaSE: 0.9,
+      });
+      await ctx.db.insert("userTryoutLatestAttempts", {
+        userId: identity.userId,
+        product: "snbt",
+        locale: "id",
+        tryoutId,
+        attemptId: tryoutAttemptId,
+        slug: "reordered-part-route",
+        status: "completed",
+        expiresAtMs: NOW + 30 * 60 * 1000,
+        updatedAt: NOW,
+      });
+      await ctx.db.patch("tryoutPartSets", firstPartSetId, {
+        partKey: "mathematical-reasoning",
+        setId: secondSetId,
+      });
+      await ctx.db.patch("tryoutPartSets", secondPartSetId, {
+        partKey: "quantitative-knowledge",
+        setId: firstSetId,
+      });
+
+      return identity;
+    });
+
+    const result = await t
+      .withIdentity({
+        subject: identity.authUserId,
+        sessionId: identity.sessionId,
+      })
+      .query(api.tryouts.queries.me.part.getUserTryoutPartAttempt, {
+        product: "snbt",
+        locale: "id",
+        tryoutSlug: "reordered-part-route",
+        partKey: "quantitative-knowledge",
+      });
+
+    expect(result?.partAttempt?.partIndex).toBe(0);
+    expect(result?.partAttempt?.partKey).toBe("quantitative-knowledge");
+    expect(result?.partScore?.correctAnswers).toBe(7);
+  });
+
   it("returns zero-score summaries for untouched ended parts", async () => {
     const t = createTryoutTestConvex();
     const { identity, tryoutSlug } = await t.mutation(async (ctx) => {
