@@ -227,6 +227,14 @@ async function insertCompletedTryoutAttempt(
     scaleVersionId,
     scoreStatus: "official",
     status: "completed",
+    partSetSnapshots: [
+      {
+        partIndex: 0,
+        partKey: "quantitative-knowledge",
+        questionCount: 20,
+        setId,
+      },
+    ],
     completedPartIndices: [0],
     totalCorrect: 0,
     totalQuestions: 20,
@@ -309,6 +317,14 @@ async function insertSingleQuestionCompletedAttempt(
     scaleVersionId,
     scoreStatus: "official",
     status: "completed",
+    partSetSnapshots: [
+      {
+        partIndex: 0,
+        partKey: "quantitative-knowledge",
+        questionCount: 1,
+        setId,
+      },
+    ],
     completedPartIndices: [0],
     totalCorrect: 0,
     totalQuestions: 1,
@@ -419,6 +435,14 @@ describe("tryouts/reporting", () => {
     }
 
     expect("irtScore" in tryoutAttempt).toBe(false);
+    expect(tryoutAttempt.partSetSnapshots).toEqual([
+      {
+        partIndex: 0,
+        partKey: "quantitative-knowledge",
+        questionCount: 20,
+        setId: expect.any(String),
+      },
+    ]);
   });
 
   it("derives the latest tryout score from theta instead of a stored legacy score", async () => {
@@ -513,6 +537,14 @@ describe("tryouts/reporting", () => {
             scaleVersionId: tryout.scaleVersionId,
             scoreStatus: "official",
             status: "completed",
+            partSetSnapshots: [
+              {
+                partIndex: 0,
+                partKey: "quantitative-knowledge",
+                questionCount: 20,
+                setId: tryout.setId,
+              },
+            ],
             completedPartIndices: [0],
             totalCorrect: 0,
             totalQuestions: 20,
@@ -661,6 +693,14 @@ describe("tryouts/reporting", () => {
         scaleVersionId: tryout.scaleVersionId,
         scoreStatus: "official",
         status: "completed",
+        partSetSnapshots: [
+          {
+            partIndex: 0,
+            partKey: "quantitative-knowledge",
+            questionCount: 20,
+            setId: tryout.setId,
+          },
+        ],
         completedPartIndices: [0],
         totalCorrect: 0,
         totalQuestions: 20,
@@ -678,6 +718,14 @@ describe("tryouts/reporting", () => {
         scaleVersionId: tryout.scaleVersionId,
         scoreStatus: "official",
         status: "expired",
+        partSetSnapshots: [
+          {
+            partIndex: 0,
+            partKey: "quantitative-knowledge",
+            questionCount: 20,
+            setId: tryout.setId,
+          },
+        ],
         completedPartIndices: [],
         totalCorrect: 0,
         totalQuestions: 20,
@@ -695,6 +743,14 @@ describe("tryouts/reporting", () => {
         scaleVersionId: tryout.scaleVersionId,
         scoreStatus: "official",
         status: "in-progress",
+        partSetSnapshots: [
+          {
+            partIndex: 0,
+            partKey: "quantitative-knowledge",
+            questionCount: 20,
+            setId: tryout.setId,
+          },
+        ],
         completedPartIndices: [],
         totalCorrect: 0,
         totalQuestions: 0,
@@ -893,6 +949,20 @@ describe("tryouts/reporting", () => {
         scaleVersionId,
         scoreStatus: "provisional",
         status: "expired",
+        partSetSnapshots: [
+          {
+            partIndex: 0,
+            partKey: "quantitative-knowledge",
+            questionCount: 1,
+            setId: firstSetId,
+          },
+          {
+            partIndex: 1,
+            partKey: "mathematical-reasoning",
+            questionCount: 1,
+            setId: secondSetId,
+          },
+        ],
         completedPartIndices: [0],
         totalCorrect: 0,
         totalQuestions: 1,
@@ -1117,6 +1187,14 @@ describe("tryouts/reporting", () => {
         scaleVersionId,
         scoreStatus: "official",
         status: "completed",
+        partSetSnapshots: [
+          {
+            partIndex: 0,
+            partKey: "quantitative-knowledge",
+            questionCount: 1,
+            setId: originalSetId,
+          },
+        ],
         completedPartIndices: [0],
         totalCorrect: 0,
         totalQuestions: 0,
@@ -1163,6 +1241,14 @@ describe("tryouts/reporting", () => {
         tryoutAttempt: {
           _id: tryoutAttemptId,
           completedPartIndices: [0],
+          partSetSnapshots: [
+            {
+              partIndex: 0,
+              partKey: "quantitative-knowledge",
+              questionCount: 1,
+              setId: originalSetId,
+            },
+          ],
         },
       });
 

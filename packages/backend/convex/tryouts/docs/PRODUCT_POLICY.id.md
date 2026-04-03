@@ -6,6 +6,10 @@ khususnya saat satu try out bisa diakses lewat dua jalur berbeda:
 - event access
 - Nakafa Pro
 
+Dokumen ini adalah **target policy produk yang direkomendasikan**. Beberapa
+bagian sudah sejalan dengan runtime saat ini, tetapi provenance akses event vs
+subscription belum seluruhnya dipersist di kode sekarang.
+
 Dokumen teknikal yang relevan:
 
 - `../README.md`

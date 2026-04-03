@@ -124,15 +124,17 @@ export async function loadPartStartContext(
       tryoutAttempt,
     }
   );
-  const [tryout, tryoutPartSet] = await Promise.all([
-    ctx.db.get("tryouts", activeTryoutAttempt.tryoutId),
-    ctx.db
-      .query("tryoutPartSets")
-      .withIndex("by_tryoutId_and_partKey", (q) =>
-        q.eq("tryoutId", tryoutAttempt.tryoutId).eq("partKey", partKey)
-      )
-      .unique(),
-  ]);
+  const tryout = await ctx.db.get("tryouts", activeTryoutAttempt.tryoutId);
+  const tryoutPartSetSnapshot = activeTryoutAttempt.partSetSnapshots.find(
+    (snapshot) => snapshot.partKey === partKey
+  );
+  const tryoutPartSet = tryoutPartSetSnapshot
+    ? {
+        partIndex: tryoutPartSetSnapshot.partIndex,
+        partKey: tryoutPartSetSnapshot.partKey,
+        setId: tryoutPartSetSnapshot.setId,
+      }
+    : null;
 
   if (!tryout) {
     throw new ConvexError({

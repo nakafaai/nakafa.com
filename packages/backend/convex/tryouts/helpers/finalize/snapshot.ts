@@ -10,7 +10,6 @@ import {
   getBoundedExerciseAnswers,
   loadBoundedTryoutPartAttempts,
 } from "@repo/backend/convex/tryouts/helpers/loaders";
-import { loadValidatedTryoutPartSets } from "@repo/backend/convex/tryouts/helpers/parts";
 import { getTryoutReportScore } from "@repo/backend/convex/tryouts/helpers/reporting";
 import { ConvexError } from "convex/values";
 import { asyncMap } from "convex-helpers";
@@ -54,33 +53,25 @@ export async function buildFinalizedTryoutSnapshot(
       Doc<"tryouts">,
       "_id" | "partCount" | "product" | "totalQuestionCount"
     >;
-    tryoutAttempt: Pick<Doc<"tryoutAttempts">, "_id" | "completedPartIndices">;
+    tryoutAttempt: Pick<
+      Doc<"tryoutAttempts">,
+      "_id" | "completedPartIndices" | "partSetSnapshots"
+    >;
   }
 ) {
   const completedPartIndices = new Set(tryoutAttempt.completedPartIndices);
-  const [tryoutPartSets, partAttempts] = await Promise.all([
-    loadValidatedTryoutPartSets(db, {
-      partCount: tryout.partCount,
-      tryoutId: tryout._id,
-    }),
-    loadBoundedTryoutPartAttempts(db, {
-      partCount: tryout.partCount,
-      tryoutAttemptId: tryoutAttempt._id,
-    }),
-  ]);
+  const partSetSnapshots = tryoutAttempt.partSetSnapshots;
+  const partAttempts = await loadBoundedTryoutPartAttempts(db, {
+    partCount: tryout.partCount,
+    tryoutAttemptId: tryoutAttempt._id,
+  });
   const setAttempts = await getAll(
     db,
     "exerciseAttempts",
     partAttempts.map((partAttempt) => partAttempt.setAttemptId)
   );
-  const sets = await getAll(
-    db,
-    "exerciseSets",
-    tryoutPartSets.map((partSet) => partSet.setId)
-  );
   const setAttemptsByPartIndex = new Map<number, Doc<"exerciseAttempts">>();
   const partAttemptsByPartIndex = new Map<number, Doc<"tryoutPartAttempts">>();
-  const setsByPartIndex = new Map<number, Doc<"exerciseSets">>();
 
   for (const [index, partAttempt] of partAttempts.entries()) {
     const setAttempt = setAttempts[index];
@@ -96,59 +87,41 @@ export async function buildFinalizedTryoutSnapshot(
     setAttemptsByPartIndex.set(partAttempt.partIndex, setAttempt);
   }
 
-  for (const [index, tryoutPartSet] of tryoutPartSets.entries()) {
-    const set = sets[index];
-
-    if (!set) {
-      throw new ConvexError({
-        code: "INVALID_TRYOUT_STATE",
-        message: "Tryout is missing one of its exercise sets.",
-      });
-    }
-
-    setsByPartIndex.set(tryoutPartSet.partIndex, set);
-  }
-
   const partSnapshots = await asyncMap(
-    tryoutPartSets,
-    async (tryoutPartSet) => {
+    partSetSnapshots,
+    async (partSetSnapshot) => {
       const partAttempt =
-        partAttemptsByPartIndex.get(tryoutPartSet.partIndex) ?? null;
+        partAttemptsByPartIndex.get(partSetSnapshot.partIndex) ?? null;
       const setAttempt =
-        setAttemptsByPartIndex.get(tryoutPartSet.partIndex) ?? null;
-      const set = setsByPartIndex.get(tryoutPartSet.partIndex);
-      const effectiveSetId = partAttempt?.setId ?? tryoutPartSet.setId;
-
-      if (!set) {
-        throw new ConvexError({
-          code: "INVALID_TRYOUT_STATE",
-          message: "Tryout part is missing its exercise set snapshot.",
-        });
-      }
+        setAttemptsByPartIndex.get(partSetSnapshot.partIndex) ?? null;
+      const effectiveSetId = partAttempt?.setId ?? partSetSnapshot.setId;
 
       const answers =
         partAttempt &&
         setAttempt &&
-        completedPartIndices.has(tryoutPartSet.partIndex)
+        completedPartIndices.has(partSetSnapshot.partIndex)
           ? await getBoundedExerciseAnswers(db, {
               attemptId: partAttempt.setAttemptId,
               totalExercises: setAttempt.totalExercises,
             })
           : [];
       const itemParamsRecords = await getScaleVersionItemsForSet(db, {
+        questionCount:
+          setAttempt?.totalExercises ?? partSetSnapshot.questionCount,
         scaleVersionId,
         setId: effectiveSetId,
       });
       const partScore = scoreFinalizedTryoutPart({
         answers,
         itemParamsRecords,
-        totalQuestions: setAttempt?.totalExercises ?? set.questionCount,
+        totalQuestions:
+          setAttempt?.totalExercises ?? partSetSnapshot.questionCount,
       });
 
       return {
         partAttempt,
-        partIndex: tryoutPartSet.partIndex,
-        partKey: tryoutPartSet.partKey,
+        partIndex: partSetSnapshot.partIndex,
+        partKey: partSetSnapshot.partKey,
         rawPartScore: partScore,
         score: {
           correctAnswers: partScore.rawScore,

@@ -1,7 +1,6 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { buildFinalizedTryoutSnapshot } from "@repo/backend/convex/tryouts/helpers/finalize/snapshot";
-import { loadValidatedTryoutPartSets } from "@repo/backend/convex/tryouts/helpers/parts";
 import { getTryoutReportScore } from "@repo/backend/convex/tryouts/helpers/reporting";
 import { resolveResumePartKey } from "@repo/backend/convex/tryouts/helpers/resume";
 import { loadLatestUserTryoutContext } from "@repo/backend/convex/tryouts/queries/me/helpers";
@@ -29,13 +28,9 @@ export const getUserTryoutAttempt = query({
     }
 
     const { attempt, tryout } = context;
-    const tryoutPartSets = await loadValidatedTryoutPartSets(ctx.db, {
-      partCount: tryout.partCount,
-      tryoutId: tryout._id,
-    });
-    const orderedParts = tryoutPartSets.map((tryoutPartSet) => ({
-      partIndex: tryoutPartSet.partIndex,
-      partKey: tryoutPartSet.partKey,
+    const orderedParts = attempt.partSetSnapshots.map((partSnapshot) => ({
+      partIndex: partSnapshot.partIndex,
+      partKey: partSnapshot.partKey,
     }));
     const needsFinalizedRepair =
       attempt.status !== "in-progress" &&

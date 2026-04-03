@@ -18,6 +18,15 @@ export type TryoutScoreStatus = Infer<typeof tryoutScoreStatusValidator>;
 export const tryoutPartKeyValidator = v.string();
 export type TryoutPartKey = Infer<typeof tryoutPartKeyValidator>;
 
+export const tryoutPartSnapshotValidator = v.object({
+  partIndex: v.number(),
+  /** Stable public identifier for one part, e.g. `general-reasoning`. */
+  partKey: tryoutPartKeyValidator,
+  questionCount: v.number(),
+  setId: v.id("exerciseSets"),
+});
+export type TryoutPartSnapshot = Infer<typeof tryoutPartSnapshotValidator>;
+
 const tables = {
   tryouts: defineTable({
     product: tryoutProductValidator,
@@ -63,6 +72,7 @@ const tables = {
     scaleVersionId: v.id("irtScaleVersions"),
     scoreStatus: tryoutScoreStatusValidator,
     status: tryoutStatusValidator,
+    partSetSnapshots: v.array(tryoutPartSnapshotValidator),
     completedPartIndices: v.array(v.number()),
     totalCorrect: v.number(),
     totalQuestions: v.number(),

@@ -21,7 +21,7 @@ import {
 import { finalizeTryoutAttempt } from "@repo/backend/convex/tryouts/helpers/finalize/attempt";
 import { finalizeTryoutPartAttempt } from "@repo/backend/convex/tryouts/helpers/finalize/part";
 import { upsertUserTryoutLatestAttempt } from "@repo/backend/convex/tryouts/helpers/latest";
-import { loadValidatedTryoutPartSets } from "@repo/backend/convex/tryouts/helpers/parts";
+import { loadTryoutPartSnapshots } from "@repo/backend/convex/tryouts/helpers/parts";
 import {
   tryoutProductPolicies,
   tryoutProductValidator,
@@ -87,7 +87,7 @@ export const startTryout = mutation({
       });
     }
 
-    await loadValidatedTryoutPartSets(ctx.db, {
+    const partSetSnapshots = await loadTryoutPartSnapshots(ctx.db, {
       partCount: tryout.partCount,
       tryoutId: tryout._id,
     });
@@ -101,6 +101,7 @@ export const startTryout = mutation({
       scaleVersionId: scaleVersion._id,
       scoreStatus: scaleVersion.status,
       status: "in-progress",
+      partSetSnapshots,
       completedPartIndices: [],
       totalCorrect: 0,
       totalQuestions: 0,
