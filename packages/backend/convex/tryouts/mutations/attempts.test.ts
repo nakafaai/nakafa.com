@@ -396,6 +396,128 @@ describe("tryouts/mutations/attempts", () => {
     ).rejects.toThrow("This event only counts your first tryout attempt.");
   });
 
+  it("uses the longest active access-pass window when grants overlap", async () => {
+    const t = createTryoutTestConvex();
+    const state = await t.mutation(async (ctx) => {
+      const currentTime = Date.now();
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "longest-access-pass-window",
+      });
+      const tryout = await insertTryoutSkeleton(
+        ctx,
+        "longest-access-pass-window"
+      );
+      const shorterEndsAt = currentTime + 30 * 60 * 1000;
+      const longerEndsAt = currentTime + 60 * 60 * 1000;
+      const shorterCampaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+        slug: "shorter-access-pass-window",
+        name: "Shorter Access Pass",
+        products: ["snbt"],
+        campaignKind: "access-pass",
+        enabled: true,
+        redeemStatus: "active",
+        resultsStatus: "pending",
+        resultsFinalizedAt: null,
+        startsAt: currentTime - 60 * 1000,
+        endsAt: currentTime + 24 * 60 * 60 * 1000,
+        grantDurationDays: 30,
+      });
+      const longerCampaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+        slug: "longer-access-pass-window",
+        name: "Longer Access Pass",
+        products: ["snbt"],
+        campaignKind: "access-pass",
+        enabled: true,
+        redeemStatus: "active",
+        resultsStatus: "pending",
+        resultsFinalizedAt: null,
+        startsAt: currentTime - 60 * 1000,
+        endsAt: currentTime + 24 * 60 * 60 * 1000,
+        grantDurationDays: 30,
+      });
+      const shorterLinkId = await ctx.db.insert("tryoutAccessLinks", {
+        campaignId: shorterCampaignId,
+        code: "shorter-access-pass-window",
+        label: "Shorter Access Pass",
+        enabled: true,
+      });
+      const longerLinkId = await ctx.db.insert("tryoutAccessLinks", {
+        campaignId: longerCampaignId,
+        code: "longer-access-pass-window",
+        label: "Longer Access Pass",
+        enabled: true,
+      });
+      const shorterGrantId = await ctx.db.insert("tryoutAccessGrants", {
+        campaignId: shorterCampaignId,
+        linkId: shorterLinkId,
+        userId: identity.userId,
+        redeemedAt: currentTime,
+        endsAt: shorterEndsAt,
+        status: "active",
+      });
+      const longerGrantId = await ctx.db.insert("tryoutAccessGrants", {
+        campaignId: longerCampaignId,
+        linkId: longerLinkId,
+        userId: identity.userId,
+        redeemedAt: currentTime,
+        endsAt: longerEndsAt,
+        status: "active",
+      });
+
+      await ctx.db.insert("tryoutAccessProductGrants", {
+        campaignId: shorterCampaignId,
+        grantId: shorterGrantId,
+        product: "snbt",
+        status: "active",
+        userId: identity.userId,
+        endsAt: shorterEndsAt,
+      });
+      await ctx.db.insert("tryoutAccessProductGrants", {
+        campaignId: longerCampaignId,
+        grantId: longerGrantId,
+        product: "snbt",
+        status: "active",
+        userId: identity.userId,
+        endsAt: longerEndsAt,
+      });
+
+      return {
+        ...identity,
+        longerCampaignId,
+        longerEndsAt,
+        longerGrantId,
+        tryoutId: tryout.tryoutId,
+      };
+    });
+
+    await t
+      .withIdentity({
+        subject: state.authUserId,
+        sessionId: state.sessionId,
+      })
+      .mutation(api.tryouts.mutations.attempts.startTryout, {
+        product: "snbt",
+        locale: "id",
+        tryoutSlug: "longest-access-pass-window",
+      });
+
+    const tryoutAttempt = await t.query(async (ctx) => {
+      return await ctx.db
+        .query("tryoutAttempts")
+        .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
+          q.eq("userId", state.userId).eq("tryoutId", state.tryoutId)
+        )
+        .order("desc")
+        .first();
+    });
+
+    expect(tryoutAttempt?.accessCampaignId).toBe(state.longerCampaignId);
+    expect(tryoutAttempt?.accessGrantId).toBe(state.longerGrantId);
+    expect(tryoutAttempt?.accessEndsAt).toBe(state.longerEndsAt);
+    expect(tryoutAttempt?.expiresAt).toBe(state.longerEndsAt);
+  });
+
   it("starts an unstarted part from the persisted snapshot after live key, set, and count changes", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {

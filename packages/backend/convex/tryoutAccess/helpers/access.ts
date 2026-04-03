@@ -258,12 +258,12 @@ async function loadActiveTryoutEventSources(
       },
     ];
   });
+  const accessPassEventSources = eventSources.filter(
+    (eventSource) => eventSource.accessCampaignKind === "access-pass"
+  );
 
   return {
-    accessPassEventSource:
-      eventSources.find(
-        (eventSource) => eventSource.accessCampaignKind === "access-pass"
-      ) ?? null,
+    accessPassEventSource: accessPassEventSources.at(-1) ?? null,
     competitionEventSource:
       eventSources.find(
         (eventSource) => eventSource.accessCampaignKind === "competition"
