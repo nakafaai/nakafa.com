@@ -21,10 +21,10 @@ const countTableSpecs: Array<{
   { field: "tryouts", tableName: "tryouts" },
   { field: "tryoutCatalogEntries", tableName: "tryoutCatalogEntries" },
   { field: "tryoutCatalogMeta", tableName: "tryoutCatalogMeta" },
-  { field: "userTryoutAccessSources", tableName: "userTryoutAccessSources" },
+  { field: "userTryoutEntitlements", tableName: "userTryoutEntitlements" },
   {
-    field: "userTryoutCompetitionUsages",
-    tableName: "userTryoutCompetitionUsages",
+    field: "userTryoutCompetitionClaims",
+    tableName: "userTryoutCompetitionClaims",
   },
   { field: "tryoutPartSets", tableName: "tryoutPartSets" },
   { field: "tryoutAttempts", tableName: "tryoutAttempts" },

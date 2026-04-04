@@ -165,7 +165,7 @@ export async function getDataIntegrity(config: ConvexConfig) {
       {},
       SubjectSectionIntegrityPageSchema
     ),
-    runConvexQueryWithArgs(
+    collectPages(
       config,
       "contentSync/queries/tryouts:getTryoutScaleIntegrity",
       {},
@@ -197,10 +197,9 @@ export async function getDataIntegrity(config: ConvexConfig) {
     sectionsWithoutTopics: sections
       .filter((section) => !section.topicId)
       .map((section) => `${section.slug} (${section.locale})`),
-    activeTryoutsWithoutScale:
-      tryoutScaleIntegrity.activeTryoutsWithoutScale.map(
-        (tryout) => `${tryout.product}/${tryout.locale}/${tryout.slug}`
-      ),
+    activeTryoutsWithoutScale: tryoutScaleIntegrity.map(
+      (tryout) => `${tryout.product}/${tryout.locale}/${tryout.slug}`
+    ),
     totalQuestions: questions.length,
     totalArticles: articles.length,
     totalSections: sections.length,

@@ -5,7 +5,7 @@ import { getLatestScaleVersionForTryout } from "@repo/backend/convex/irt/scales/
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { resolveTryoutAccessSources } from "@repo/backend/convex/tryoutAccess/helpers/access";
+import { resolveTryoutAccessEntitlements } from "@repo/backend/convex/tryoutAccess/helpers/access";
 import {
   requireActiveTryoutAttemptAfterExpirySync,
   requireOwnedTryoutAttempt,
@@ -30,8 +30,6 @@ import {
 } from "@repo/backend/convex/tryouts/products";
 import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError, v } from "convex/values";
-
-const COMPETITION_USAGE_PAGE_SIZE = 50;
 
 /** Starts or resumes one authenticated tryout attempt for a product slug. */
 export const startTryout = mutation({
@@ -76,92 +74,74 @@ export const startTryout = mutation({
       return null;
     }
 
-    const accessSources = await resolveTryoutAccessSources(ctx.db, {
+    const accessEntitlements = await resolveTryoutAccessEntitlements(ctx.db, {
       product: tryout.product,
       userId,
     });
-    const activeCompetitionCampaignIds = new Set(
-      accessSources.competitionEventSources.map(
-        (competitionEventSource) => competitionEventSource.accessCampaignId
-      )
-    );
-    const usedCompetitionCampaignIds = new Set(activeCompetitionCampaignIds);
-
-    usedCompetitionCampaignIds.clear();
-
-    if (
-      activeCompetitionCampaignIds.size > 0 &&
-      usedCompetitionCampaignIds.size < activeCompetitionCampaignIds.size
-    ) {
-      let cursor: string | null = null;
-
-      while (true) {
-        const usagePage = await ctx.db
-          .query("userTryoutCompetitionUsages")
+    const activeCompetitionEntitlement =
+      accessEntitlements.competitionEntitlement?.accessCampaignId &&
+      accessEntitlements.competitionEntitlement.accessGrantId &&
+      accessEntitlements.competitionEntitlement.endsAt > now
+        ? accessEntitlements.competitionEntitlement
+        : null;
+    const activeCompetitionCampaignId =
+      activeCompetitionEntitlement?.accessCampaignId ?? null;
+    const activeCompetitionGrantId =
+      activeCompetitionEntitlement?.accessGrantId ?? null;
+    const competitionClaim = activeCompetitionCampaignId
+      ? await ctx.db
+          .query("userTryoutCompetitionClaims")
           .withIndex("by_userId_and_tryoutId_and_accessCampaignId", (q) =>
-            q.eq("userId", userId).eq("tryoutId", tryout._id)
+            q
+              .eq("userId", userId)
+              .eq("tryoutId", tryout._id)
+              .eq("accessCampaignId", activeCompetitionCampaignId)
           )
-          .paginate({
-            cursor,
-            numItems: COMPETITION_USAGE_PAGE_SIZE,
-          });
-
-        for (const competitionUsage of usagePage.page) {
-          if (
-            !activeCompetitionCampaignIds.has(competitionUsage.accessCampaignId)
-          ) {
-            continue;
+          .unique()
+      : null;
+    const competitionStartSource =
+      activeCompetitionEntitlement &&
+      activeCompetitionCampaignId &&
+      activeCompetitionGrantId &&
+      !competitionClaim
+        ? {
+            accessKind: "event" as const,
+            accessCampaignId: activeCompetitionCampaignId,
+            accessCampaignKind: "competition" as const,
+            accessEndsAt: activeCompetitionEntitlement.endsAt,
+            accessGrantId: activeCompetitionGrantId,
+            countsForCompetition: true,
           }
-
-          usedCompetitionCampaignIds.add(competitionUsage.accessCampaignId);
-
-          if (
-            usedCompetitionCampaignIds.size ===
-            activeCompetitionCampaignIds.size
-          ) {
-            break;
+        : null;
+    const accessPassEntitlement =
+      accessEntitlements.accessPassEntitlement?.accessCampaignId &&
+      accessEntitlements.accessPassEntitlement.accessGrantId &&
+      accessEntitlements.accessPassEntitlement.endsAt > now
+        ? accessEntitlements.accessPassEntitlement
+        : null;
+    const accessPassCampaignId =
+      accessPassEntitlement?.accessCampaignId ?? null;
+    const accessPassGrantId = accessPassEntitlement?.accessGrantId ?? null;
+    const hasUsedCompetitionAttempt = Boolean(competitionClaim);
+    const accessPassStartSource =
+      accessPassEntitlement && accessPassCampaignId && accessPassGrantId
+        ? {
+            accessKind: "event" as const,
+            accessCampaignId: accessPassCampaignId,
+            accessCampaignKind: "access-pass" as const,
+            accessEndsAt: accessPassEntitlement.endsAt,
+            accessGrantId: accessPassGrantId,
+            countsForCompetition: false,
           }
-        }
-
-        if (
-          usagePage.isDone ||
-          usedCompetitionCampaignIds.size === activeCompetitionCampaignIds.size
-        ) {
-          break;
-        }
-
-        cursor = usagePage.continueCursor;
-      }
-    }
-
-    const unusedCompetitionEventSource =
-      accessSources.competitionEventSources.find(
-        (competitionEventSource) =>
-          !usedCompetitionCampaignIds.has(
-            competitionEventSource.accessCampaignId
-          )
-      ) ?? null;
-    const hasUsedCompetitionAttempt = usedCompetitionCampaignIds.size > 0;
-    const competitionStartSource = unusedCompetitionEventSource
-      ? {
-          ...unusedCompetitionEventSource,
-          accessKind: "event" as const,
-          countsForCompetition: true,
-        }
-      : null;
-    const accessPassStartSource = accessSources.accessPassEventSource
-      ? {
-          ...accessSources.accessPassEventSource,
-          accessKind: "event" as const,
-          countsForCompetition: false,
-        }
-      : null;
-    const subscriptionStartSource = accessSources.hasActiveSubscription
-      ? {
-          accessKind: "subscription" as const,
-          countsForCompetition: false,
-        }
-      : null;
+        : null;
+    const subscriptionStartSource =
+      accessEntitlements.subscriptionEntitlement &&
+      accessEntitlements.subscriptionEntitlement.endsAt > now
+        ? {
+            accessKind: "subscription" as const,
+            countsForCompetition: false,
+          }
+        : null;
     const accessSource =
       competitionStartSource ??
       accessPassStartSource ??
@@ -257,12 +237,12 @@ export const startTryout = mutation({
       accessSource.accessKind === "event" &&
       accessSource.accessCampaignKind === "competition"
     ) {
-      await ctx.db.insert("userTryoutCompetitionUsages", {
+      await ctx.db.insert("userTryoutCompetitionClaims", {
         userId,
         tryoutId: tryout._id,
         accessCampaignId: accessSource.accessCampaignId,
         tryoutAttemptId,
-        usedAt: now,
+        claimedAt: now,
       });
     }
 

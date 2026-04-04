@@ -113,43 +113,6 @@ export const enqueueCompetitionCampaignFinalization = internalMutation({
   },
 });
 
-/** Re-sync all stored grants for one campaign after ops changes its rules. */
-export const syncCampaignGrantStatuses = internalMutation({
-  args: {
-    campaignId: vv.id("tryoutAccessCampaigns"),
-    cursor: v.optional(v.string()),
-  },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    const page = await ctx.db
-      .query("tryoutAccessGrants")
-      .withIndex("by_campaignId", (q) => q.eq("campaignId", args.campaignId))
-      .paginate({
-        cursor: args.cursor ?? null,
-        numItems: TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE,
-      });
-    const now = Date.now();
-
-    for (const grant of page.page) {
-      await syncTryoutAccessGrantStatus(ctx.db, grant, now);
-    }
-
-    if (!page.isDone) {
-      await ctx.scheduler.runAfter(
-        0,
-        internal.tryoutAccess.mutations.internal.status
-          .syncCampaignGrantStatuses,
-        {
-          campaignId: args.campaignId,
-          cursor: page.continueCursor,
-        }
-      );
-    }
-
-    return null;
-  },
-});
-
 /** Repairs overdue campaign and grant statuses in bounded batches. */
 export const sweepStates = internalMutation({
   args: {},

@@ -1,5 +1,6 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
+import { syncTryoutAccessGrantStatus } from "@repo/backend/convex/tryoutAccess/helpers/access";
 import {
   createTryoutTestConvex,
   NOW,
@@ -7,7 +8,7 @@ import {
 import { describe, expect, it, vi } from "vitest";
 
 describe("tryoutAccess/mutations/internal/status", () => {
-  it("clamps stored competition grants to the campaign end", async () => {
+  it("clamps stored competition grants and syncs active entitlements", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
       const currentTime = Date.now();
@@ -43,44 +44,40 @@ describe("tryoutAccess/mutations/internal/status", () => {
         endsAt: oldGrantEndsAt,
         status: "active",
       });
-      const productGrantId = await ctx.db.insert("tryoutAccessProductGrants", {
-        campaignId,
-        grantId,
-        product: "snbt",
-        status: "active",
-        userId: identity.userId,
-        endsAt: oldGrantEndsAt,
-      });
 
       return {
         campaignEndsAt,
         campaignId,
         grantId,
-        productGrantId,
       };
     });
 
-    await t.mutation(
-      internal.tryoutAccess.mutations.internal.status.syncCampaignGrantStatuses,
-      {
-        campaignId: state.campaignId,
+    await t.mutation(async (ctx) => {
+      const grant = await ctx.db.get("tryoutAccessGrants", state.grantId);
+
+      if (!grant) {
+        throw new Error("expected grant to exist");
       }
-    );
+
+      await syncTryoutAccessGrantStatus(ctx.db, grant, Date.now());
+    });
 
     const result = await t.query(async (ctx) => {
       return {
+        entitlement: await ctx.db
+          .query("userTryoutEntitlements")
+          .withIndex("by_accessGrantId", (q) =>
+            q.eq("accessGrantId", state.grantId)
+          )
+          .unique(),
         grant: await ctx.db.get("tryoutAccessGrants", state.grantId),
-        productGrant: await ctx.db.get(
-          "tryoutAccessProductGrants",
-          state.productGrantId
-        ),
       };
     });
 
     expect(result.grant?.endsAt).toBe(state.campaignEndsAt);
-    expect(result.productGrant?.endsAt).toBe(state.campaignEndsAt);
     expect(result.grant?.status).toBe("active");
-    expect(result.productGrant?.status).toBe("active");
+    expect(result.entitlement?.endsAt).toBe(state.campaignEndsAt);
+    expect(result.entitlement?.sourceKind).toBe("competition");
   });
 
   it("claims pending competition batches before enqueueing finalizers", async () => {

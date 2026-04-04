@@ -75,8 +75,8 @@ export const ContentCountsSchema = z.object({
   tryouts: z.number(),
   tryoutCatalogEntries: z.number(),
   tryoutCatalogMeta: z.number(),
-  userTryoutAccessSources: z.number(),
-  userTryoutCompetitionUsages: z.number(),
+  userTryoutEntitlements: z.number(),
+  userTryoutCompetitionClaims: z.number(),
   tryoutPartSets: z.number(),
   tryoutAttempts: z.number(),
   tryoutPartAttempts: z.number(),
@@ -111,7 +111,9 @@ export const DataIntegritySchema = z.object({
 });
 
 export const TryoutScaleIntegritySchema = z.object({
-  activeTryoutsWithoutScale: z.array(
+  continueCursor: z.string(),
+  isDone: z.boolean(),
+  page: z.array(
     z.object({
       cycleKey: z.string(),
       locale: z.enum(["en", "id"]),

@@ -1,5 +1,6 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
+import { syncTryoutAccessGrantStatus } from "@repo/backend/convex/tryoutAccess/helpers/access";
 import {
   createTryoutTestConvex,
   NOW,
@@ -7,66 +8,7 @@ import {
 import { describe, expect, it } from "vitest";
 
 describe("tryoutAccess/queries", () => {
-  it("returns active for a competition grant when ops extends the campaign window", async () => {
-    const t = createTryoutTestConvex();
-    const state = await t.mutation(async (ctx) => {
-      const identity = await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "event-page-competition-extended",
-      });
-      const staleEndsAt = NOW - 24 * 60 * 60 * 1000;
-      const extendedEndsAt = NOW + 24 * 60 * 60 * 1000;
-      const campaignId = await ctx.db.insert("tryoutAccessCampaigns", {
-        slug: "event-page-competition-extended",
-        name: "Event Page Competition Extended",
-        products: ["snbt"],
-        campaignKind: "competition",
-        enabled: true,
-        redeemStatus: "active",
-        resultsStatus: "pending",
-        resultsFinalizedAt: null,
-        startsAt: NOW - 7 * 24 * 60 * 60 * 1000,
-        endsAt: extendedEndsAt,
-      });
-      const linkId = await ctx.db.insert("tryoutAccessLinks", {
-        campaignId,
-        code: "event-page-competition-extended",
-        label: "Event Page Competition Extended",
-        enabled: true,
-      });
-
-      await ctx.db.insert("tryoutAccessGrants", {
-        campaignId,
-        linkId,
-        userId: identity.userId,
-        redeemedAt: NOW - 3 * 24 * 60 * 60 * 1000,
-        endsAt: staleEndsAt,
-        status: "expired",
-      });
-
-      return {
-        ...identity,
-        extendedEndsAt,
-      };
-    });
-
-    const result = await t
-      .withIdentity({
-        subject: state.authUserId,
-        sessionId: state.sessionId,
-      })
-      .query(api.tryoutAccess.queries.getEventPageState, {
-        code: "event-page-competition-extended",
-      });
-
-    expect(result).toEqual({
-      kind: "active",
-      endsAt: state.extendedEndsAt,
-      name: "Event Page Competition Extended",
-    });
-  });
-
-  it("returns active when the stored grant is still active", async () => {
+  it("returns active when the grant still has an active entitlement", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
@@ -93,8 +35,7 @@ describe("tryoutAccess/queries", () => {
         label: "Event Page Active",
         enabled: true,
       });
-
-      await ctx.db.insert("tryoutAccessGrants", {
+      const grantId = await ctx.db.insert("tryoutAccessGrants", {
         campaignId,
         linkId,
         userId: identity.userId,
@@ -102,6 +43,19 @@ describe("tryoutAccess/queries", () => {
         endsAt,
         status: "active",
       });
+
+      await syncTryoutAccessGrantStatus(
+        ctx.db,
+        {
+          _id: grantId,
+          campaignId,
+          endsAt,
+          redeemedAt: NOW,
+          status: "active",
+          userId: identity.userId,
+        },
+        NOW
+      );
 
       return {
         ...identity,
@@ -125,7 +79,7 @@ describe("tryoutAccess/queries", () => {
     });
   });
 
-  it("returns used when the stored grant is already expired", async () => {
+  it("returns used when the user already redeemed the campaign but has no active entitlement", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
@@ -152,8 +106,7 @@ describe("tryoutAccess/queries", () => {
         label: "Event Page Used",
         enabled: true,
       });
-
-      await ctx.db.insert("tryoutAccessGrants", {
+      const grantId = await ctx.db.insert("tryoutAccessGrants", {
         campaignId,
         linkId,
         userId: identity.userId,
@@ -161,6 +114,19 @@ describe("tryoutAccess/queries", () => {
         endsAt,
         status: "expired",
       });
+
+      await syncTryoutAccessGrantStatus(
+        ctx.db,
+        {
+          _id: grantId,
+          campaignId,
+          endsAt,
+          redeemedAt: NOW - 3 * 24 * 60 * 60 * 1000,
+          status: "expired",
+          userId: identity.userId,
+        },
+        NOW
+      );
 
       return {
         ...identity,
@@ -181,6 +147,60 @@ describe("tryoutAccess/queries", () => {
       kind: "used",
       endsAt: state.endsAt,
       name: "Event Page Used",
+    });
+  });
+
+  it("returns ready for an authenticated user before redeeming", async () => {
+    const t = createTryoutTestConvex();
+    const identity = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "event-page-ready",
+      });
+
+      await ctx.db.insert("tryoutAccessCampaigns", {
+        slug: "event-page-ready",
+        name: "Event Page Ready",
+        products: ["snbt"],
+        campaignKind: "competition",
+        enabled: true,
+        redeemStatus: "active",
+        resultsStatus: "pending",
+        resultsFinalizedAt: null,
+        startsAt: NOW - 60 * 1000,
+        endsAt: NOW + 24 * 60 * 60 * 1000,
+      });
+      const campaign = await ctx.db
+        .query("tryoutAccessCampaigns")
+        .withIndex("by_slug", (q) => q.eq("slug", "event-page-ready"))
+        .unique();
+
+      if (!campaign) {
+        throw new Error("expected campaign to exist");
+      }
+
+      await ctx.db.insert("tryoutAccessLinks", {
+        campaignId: campaign._id,
+        code: "event-page-ready",
+        label: "Event Page Ready",
+        enabled: true,
+      });
+
+      return identity;
+    });
+
+    const result = await t
+      .withIdentity({
+        subject: identity.authUserId,
+        sessionId: identity.sessionId,
+      })
+      .query(api.tryoutAccess.queries.getEventPageState, {
+        code: "event-page-ready",
+      });
+
+    expect(result).toEqual({
+      kind: "ready",
+      name: "Event Page Ready",
     });
   });
 });

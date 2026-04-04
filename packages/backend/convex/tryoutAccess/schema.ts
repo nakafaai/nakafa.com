@@ -20,6 +20,12 @@ export const tryoutAccessCampaignResultsStatusValidator = literals(
 
 export const tryoutAccessGrantStatusValidator = literals("active", "expired");
 
+export const userTryoutEntitlementSourceKindValidator = literals(
+  "competition",
+  "access-pass",
+  "subscription"
+);
+
 export const tryoutAccessCampaignValidator = v.object({
   slug: v.string(),
   name: v.string(),
@@ -50,43 +56,32 @@ export const tryoutAccessGrantValidator = v.object({
   status: tryoutAccessGrantStatusValidator,
 });
 
-export const tryoutAccessProductGrantValidator = v.object({
-  campaignId: v.id("tryoutAccessCampaigns"),
-  grantId: v.id("tryoutAccessGrants"),
-  product: tryoutProductValidator,
-  status: tryoutAccessGrantStatusValidator,
+export const userTryoutEntitlementValidator = v.object({
   userId: v.id("users"),
+  product: tryoutProductValidator,
+  sourceKind: userTryoutEntitlementSourceKindValidator,
+  accessCampaignId: v.optional(v.id("tryoutAccessCampaigns")),
+  accessGrantId: v.optional(v.id("tryoutAccessGrants")),
+  subscriptionId: v.optional(v.id("subscriptions")),
+  startsAt: v.number(),
   endsAt: v.number(),
 });
 
-export const userTryoutAccessSourceValidator = v.object({
-  userId: v.id("users"),
-  product: tryoutProductValidator,
-  accessCampaignId: v.id("tryoutAccessCampaigns"),
-  accessCampaignKind: tryoutAccessCampaignKindValidator,
-  accessGrantId: v.id("tryoutAccessGrants"),
-  accessEndsAt: v.number(),
-});
-
-export const userTryoutCompetitionUsageValidator = v.object({
+export const userTryoutCompetitionClaimValidator = v.object({
   userId: v.id("users"),
   tryoutId: v.id("tryouts"),
   accessCampaignId: v.id("tryoutAccessCampaigns"),
   tryoutAttemptId: v.id("tryoutAttempts"),
-  usedAt: v.number(),
+  claimedAt: v.number(),
 });
 
 const tables = {
   tryoutAccessCampaigns: defineTable(tryoutAccessCampaignValidator)
     .index("by_slug", ["slug"])
+    .index("by_campaignKind_and_startsAt", ["campaignKind", "startsAt"])
     .index("by_campaignKind_and_resultsStatus_and_endsAt", [
       "campaignKind",
       "resultsStatus",
-      "endsAt",
-    ])
-    .index("by_campaignKind_and_redeemStatus_and_endsAt", [
-      "campaignKind",
-      "redeemStatus",
       "endsAt",
     ])
     .index("by_redeemStatus_and_startsAt", ["redeemStatus", "startsAt"])
@@ -101,22 +96,17 @@ const tables = {
     .index("by_userId_and_campaignId", ["userId", "campaignId"])
     .index("by_status_and_endsAt", ["status", "endsAt"]),
 
-  tryoutAccessProductGrants: defineTable(tryoutAccessProductGrantValidator)
-    .index("by_grantId", ["grantId"])
-    .index("by_userId_and_product_and_status", ["userId", "product", "status"])
-    .index("by_userId_and_product_and_endsAt", ["userId", "product", "endsAt"]),
-
-  userTryoutAccessSources: defineTable(userTryoutAccessSourceValidator)
+  userTryoutEntitlements: defineTable(userTryoutEntitlementValidator)
     .index("by_accessGrantId", ["accessGrantId"])
-    .index("by_accessCampaignId", ["accessCampaignId"])
-    .index("by_userId_and_product_and_accessCampaignKind_and_accessEndsAt", [
+    .index("by_subscriptionId", ["subscriptionId"])
+    .index("by_userId_and_product_and_sourceKind_and_endsAt", [
       "userId",
       "product",
-      "accessCampaignKind",
-      "accessEndsAt",
+      "sourceKind",
+      "endsAt",
     ]),
 
-  userTryoutCompetitionUsages: defineTable(userTryoutCompetitionUsageValidator)
+  userTryoutCompetitionClaims: defineTable(userTryoutCompetitionClaimValidator)
     .index("by_tryoutAttemptId", ["tryoutAttemptId"])
     .index("by_accessCampaignId", ["accessCampaignId"])
     .index("by_userId_and_tryoutId_and_accessCampaignId", [

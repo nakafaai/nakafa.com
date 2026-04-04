@@ -74,6 +74,9 @@ Dipakai untuk event yang harus punya hasil final saat event ditutup.
 Aturan runtime:
 
 - redeem hanya saat campaign aktif
+- competition campaign untuk product yang sama tidak boleh overlap
+- `startsAt`, `endsAt`, `products`, dan `grantDurationDays` tidak boleh diubah
+  setelah campaign pernah diredeem
 - event close adalah cutoff final event
 - setelah event close:
   - tidak bisa redeem

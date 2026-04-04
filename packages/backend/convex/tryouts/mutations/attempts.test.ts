@@ -2,7 +2,10 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
-import { syncTryoutAccessGrantStatus } from "@repo/backend/convex/tryoutAccess/helpers/access";
+import {
+  syncTryoutAccessGrantStatus,
+  syncTryoutSubscriptionEntitlements,
+} from "@repo/backend/convex/tryoutAccess/helpers/access";
 import {
   ATTEMPT_WINDOW_MS,
   createTryoutTestConvex,
@@ -23,7 +26,7 @@ async function insertActiveProSubscription(
     metadata: {},
     userId,
   });
-  await ctx.db.insert("subscriptions", {
+  const subscriptionId = await ctx.db.insert("subscriptions", {
     id: `subscription-${userId}`,
     customerId: `customer-${userId}`,
     createdAt: new Date(NOW).toISOString(),
@@ -41,6 +44,18 @@ async function insertActiveProSubscription(
     checkoutId: null,
     metadata: {},
   });
+
+  await syncTryoutSubscriptionEntitlements(ctx.db, {
+    activeSubscriptions: [
+      {
+        _id: subscriptionId,
+        currentPeriodEnd: null,
+        currentPeriodStart: new Date(NOW).toISOString(),
+        productId: products.pro.id,
+      },
+    ],
+    userId,
+  });
 }
 
 async function insertTryoutAccessGrant(
@@ -49,7 +64,6 @@ async function insertTryoutAccessGrant(
     campaignId,
     endsAt,
     linkId,
-    products,
     status,
     syncedAt,
     userId,
@@ -57,7 +71,6 @@ async function insertTryoutAccessGrant(
     campaignId: Id<"tryoutAccessCampaigns">;
     endsAt: number;
     linkId: Id<"tryoutAccessLinks">;
-    products: "snbt"[];
     status: "active" | "expired";
     syncedAt: number;
     userId: Id<"users">;
@@ -72,24 +85,15 @@ async function insertTryoutAccessGrant(
     status,
   });
 
-  for (const product of products) {
-    await ctx.db.insert("tryoutAccessProductGrants", {
-      campaignId,
-      grantId,
-      product,
-      status,
-      userId,
-      endsAt,
-    });
-  }
-
   await syncTryoutAccessGrantStatus(
     ctx.db,
     {
       _id: grantId,
       campaignId,
       endsAt,
+      redeemedAt: NOW,
       status,
+      userId,
     },
     syncedAt
   );
@@ -191,7 +195,6 @@ describe("tryouts/mutations/attempts", () => {
         campaignId,
         endsAt,
         linkId,
-        products: ["snbt"],
         status: "active",
         syncedAt: currentTime,
         userId: identity.userId,
@@ -264,25 +267,16 @@ describe("tryouts/mutations/attempts", () => {
         label: "Competition Then Pro",
         enabled: true,
       });
-      const grantId = await ctx.db.insert("tryoutAccessGrants", {
+      const grantId = await insertTryoutAccessGrant(ctx, {
         campaignId,
+        endsAt,
         linkId,
-        userId: identity.userId,
-        redeemedAt: NOW,
-        endsAt,
         status: "active",
-      });
-
-      await ctx.db.insert("tryoutAccessProductGrants", {
-        campaignId,
-        grantId,
-        product: "snbt",
-        status: "active",
+        syncedAt: currentTime,
         userId: identity.userId,
-        endsAt,
       });
       await insertActiveProSubscription(ctx, identity.userId);
-      await ctx.db.insert("tryoutAttempts", {
+      const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
         userId: identity.userId,
         tryoutId: tryout.tryoutId,
         scaleVersionId: tryout.scaleVersionId,
@@ -312,6 +306,13 @@ describe("tryouts/mutations/attempts", () => {
         lastActivityAt: NOW,
         completedAt: NOW,
         endReason: "submitted",
+      });
+      await ctx.db.insert("userTryoutCompetitionClaims", {
+        userId: identity.userId,
+        tryoutId: tryout.tryoutId,
+        accessCampaignId: campaignId,
+        tryoutAttemptId,
+        claimedAt: NOW,
       });
 
       return {
@@ -344,147 +345,6 @@ describe("tryouts/mutations/attempts", () => {
     expect(latestAttempt?.accessKind).toBe("subscription");
     expect(latestAttempt?.accessCampaignId).toBeUndefined();
     expect(latestAttempt?.countsForCompetition).toBe(false);
-  });
-
-  it("uses another active competition grant when the earliest one is already spent", async () => {
-    const t = createTryoutTestConvex();
-    const state = await t.mutation(async (ctx) => {
-      const currentTime = Date.now();
-      const identity = await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "competition-multiple-grants",
-      });
-      const tryout = await insertTryoutSkeleton(
-        ctx,
-        "competition-multiple-grants"
-      );
-      const firstEndsAt = currentTime + 60 * 60 * 1000;
-      const secondEndsAt = currentTime + 2 * 60 * 60 * 1000;
-      const firstCampaignId = await ctx.db.insert("tryoutAccessCampaigns", {
-        slug: "competition-multiple-grants-first",
-        name: "Competition Multiple Grants First",
-        products: ["snbt"],
-        campaignKind: "competition",
-        enabled: true,
-        redeemStatus: "active",
-        resultsStatus: "pending",
-        resultsFinalizedAt: null,
-        startsAt: currentTime - 60 * 1000,
-        endsAt: firstEndsAt,
-      });
-      const secondCampaignId = await ctx.db.insert("tryoutAccessCampaigns", {
-        slug: "competition-multiple-grants-second",
-        name: "Competition Multiple Grants Second",
-        products: ["snbt"],
-        campaignKind: "competition",
-        enabled: true,
-        redeemStatus: "active",
-        resultsStatus: "pending",
-        resultsFinalizedAt: null,
-        startsAt: currentTime - 60 * 1000,
-        endsAt: secondEndsAt,
-      });
-      const firstLinkId = await ctx.db.insert("tryoutAccessLinks", {
-        campaignId: firstCampaignId,
-        code: "competition-multiple-grants-first",
-        label: "Competition Multiple Grants First",
-        enabled: true,
-      });
-      const secondLinkId = await ctx.db.insert("tryoutAccessLinks", {
-        campaignId: secondCampaignId,
-        code: "competition-multiple-grants-second",
-        label: "Competition Multiple Grants Second",
-        enabled: true,
-      });
-      const firstGrantId = await insertTryoutAccessGrant(ctx, {
-        campaignId: firstCampaignId,
-        endsAt: firstEndsAt,
-        linkId: firstLinkId,
-        products: ["snbt"],
-        status: "active",
-        syncedAt: currentTime,
-        userId: identity.userId,
-      });
-      const secondGrantId = await insertTryoutAccessGrant(ctx, {
-        campaignId: secondCampaignId,
-        endsAt: secondEndsAt,
-        linkId: secondLinkId,
-        products: ["snbt"],
-        status: "active",
-        syncedAt: currentTime,
-        userId: identity.userId,
-      });
-      const firstTryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
-        userId: identity.userId,
-        tryoutId: tryout.tryoutId,
-        scaleVersionId: tryout.scaleVersionId,
-        accessKind: "event",
-        accessCampaignId: firstCampaignId,
-        accessCampaignKind: "competition",
-        accessGrantId: firstGrantId,
-        accessEndsAt: firstEndsAt,
-        countsForCompetition: true,
-        scoreStatus: "official",
-        status: "completed",
-        partSetSnapshots: [
-          {
-            partIndex: 0,
-            partKey: "quantitative-knowledge",
-            questionCount: 20,
-            setId: tryout.setId,
-          },
-        ],
-        completedPartIndices: [0],
-        totalCorrect: 0,
-        totalQuestions: 20,
-        theta: 0,
-        thetaSE: 1,
-        startedAt: NOW,
-        expiresAt: firstEndsAt,
-        lastActivityAt: NOW,
-        completedAt: NOW,
-        endReason: "submitted",
-      });
-      await ctx.db.insert("userTryoutCompetitionUsages", {
-        userId: identity.userId,
-        tryoutId: tryout.tryoutId,
-        accessCampaignId: firstCampaignId,
-        tryoutAttemptId: firstTryoutAttemptId,
-        usedAt: NOW,
-      });
-
-      return {
-        ...identity,
-        secondCampaignId,
-        secondGrantId,
-        tryoutId: tryout.tryoutId,
-      };
-    });
-
-    await t
-      .withIdentity({
-        subject: state.authUserId,
-        sessionId: state.sessionId,
-      })
-      .mutation(api.tryouts.mutations.attempts.startTryout, {
-        product: "snbt",
-        locale: "id",
-        tryoutSlug: "competition-multiple-grants",
-      });
-
-    const latestAttempt = await t.query(async (ctx) => {
-      return await ctx.db
-        .query("tryoutAttempts")
-        .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
-          q.eq("userId", state.userId).eq("tryoutId", state.tryoutId)
-        )
-        .order("desc")
-        .first();
-    });
-
-    expect(latestAttempt?.accessCampaignId).toBe(state.secondCampaignId);
-    expect(latestAttempt?.accessGrantId).toBe(state.secondGrantId);
-    expect(latestAttempt?.countsForCompetition).toBe(true);
   });
 
   it("rejects another competition attempt when no non-event access remains", async () => {
@@ -522,7 +382,6 @@ describe("tryouts/mutations/attempts", () => {
         campaignId,
         endsAt,
         linkId,
-        products: ["snbt"],
         status: "active",
         syncedAt: currentTime,
         userId: identity.userId,
@@ -558,12 +417,12 @@ describe("tryouts/mutations/attempts", () => {
         completedAt: NOW,
         endReason: "submitted",
       });
-      await ctx.db.insert("userTryoutCompetitionUsages", {
+      await ctx.db.insert("userTryoutCompetitionClaims", {
         userId: identity.userId,
         tryoutId: tryout.tryoutId,
         accessCampaignId: campaignId,
         tryoutAttemptId,
-        usedAt: NOW,
+        claimedAt: NOW,
       });
 
       return identity;
@@ -614,22 +473,13 @@ describe("tryouts/mutations/attempts", () => {
         label: "Ended Competition Attempt",
         enabled: true,
       });
-      const grantId = await ctx.db.insert("tryoutAccessGrants", {
+      const grantId = await insertTryoutAccessGrant(ctx, {
         campaignId,
+        endsAt: endedAt,
         linkId,
-        userId: identity.userId,
-        redeemedAt: NOW,
-        endsAt: endedAt,
         status: "expired",
-      });
-
-      await ctx.db.insert("tryoutAccessProductGrants", {
-        campaignId,
-        grantId,
-        product: "snbt",
-        status: "expired",
+        syncedAt: currentTime,
         userId: identity.userId,
-        endsAt: endedAt,
       });
       await ctx.db.insert("tryoutAttempts", {
         userId: identity.userId,
@@ -738,7 +588,6 @@ describe("tryouts/mutations/attempts", () => {
         campaignId: shorterCampaignId,
         endsAt: shorterEndsAt,
         linkId: shorterLinkId,
-        products: ["snbt"],
         status: "active",
         syncedAt: currentTime,
         userId: identity.userId,
@@ -747,7 +596,6 @@ describe("tryouts/mutations/attempts", () => {
         campaignId: longerCampaignId,
         endsAt: longerEndsAt,
         linkId: longerLinkId,
-        products: ["snbt"],
         status: "active",
         syncedAt: currentTime,
         userId: identity.userId,
@@ -833,7 +681,6 @@ describe("tryouts/mutations/attempts", () => {
           campaignId,
           endsAt,
           linkId,
-          products: ["snbt"],
           status: "active",
           syncedAt: currentTime,
           userId: identity.userId,
@@ -877,84 +724,6 @@ describe("tryouts/mutations/attempts", () => {
     expect(tryoutAttempt?.accessCampaignId).toBe(state.longestCampaignId);
     expect(tryoutAttempt?.accessGrantId).toBe(state.longestGrantId);
     expect(tryoutAttempt?.accessEndsAt).toBe(state.longestEndsAt);
-  });
-
-  it("still starts from a competition grant after ops extends the campaign window", async () => {
-    const t = createTryoutTestConvex();
-    const state = await t.mutation(async (ctx) => {
-      const currentTime = Date.now();
-      const identity = await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "extended-competition-grant",
-      });
-      const tryout = await insertTryoutSkeleton(
-        ctx,
-        "extended-competition-grant"
-      );
-      const staleEndsAt = currentTime - 60 * 1000;
-      const extendedEndsAt = currentTime + 24 * 60 * 60 * 1000;
-      const campaignId = await ctx.db.insert("tryoutAccessCampaigns", {
-        slug: "extended-competition-grant",
-        name: "Extended Competition Grant",
-        products: ["snbt"],
-        campaignKind: "competition",
-        enabled: true,
-        redeemStatus: "active",
-        resultsStatus: "pending",
-        resultsFinalizedAt: null,
-        startsAt: currentTime - 24 * 60 * 60 * 1000,
-        endsAt: extendedEndsAt,
-      });
-      const linkId = await ctx.db.insert("tryoutAccessLinks", {
-        campaignId,
-        code: "extended-competition-grant",
-        label: "Extended Competition Grant",
-        enabled: true,
-      });
-      const grantId = await insertTryoutAccessGrant(ctx, {
-        campaignId,
-        endsAt: staleEndsAt,
-        linkId,
-        products: ["snbt"],
-        status: "expired",
-        syncedAt: currentTime,
-        userId: identity.userId,
-      });
-
-      return {
-        ...identity,
-        campaignId,
-        extendedEndsAt,
-        grantId,
-        tryoutId: tryout.tryoutId,
-      };
-    });
-
-    await t
-      .withIdentity({
-        subject: state.authUserId,
-        sessionId: state.sessionId,
-      })
-      .mutation(api.tryouts.mutations.attempts.startTryout, {
-        product: "snbt",
-        locale: "id",
-        tryoutSlug: "extended-competition-grant",
-      });
-
-    const tryoutAttempt = await t.query(async (ctx) => {
-      return await ctx.db
-        .query("tryoutAttempts")
-        .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
-          q.eq("userId", state.userId).eq("tryoutId", state.tryoutId)
-        )
-        .order("desc")
-        .first();
-    });
-
-    expect(tryoutAttempt?.accessCampaignId).toBe(state.campaignId);
-    expect(tryoutAttempt?.accessGrantId).toBe(state.grantId);
-    expect(tryoutAttempt?.accessEndsAt).toBe(state.extendedEndsAt);
-    expect(tryoutAttempt?.countsForCompetition).toBe(true);
   });
 
   it("starts an unstarted part from the persisted snapshot after live key, set, and count changes", async () => {

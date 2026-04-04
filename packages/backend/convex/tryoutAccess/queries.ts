@@ -71,20 +71,21 @@ export const getEventPageState = query({
         .unique();
 
       if (existingGrant) {
+        const activeEntitlement = await ctx.db
+          .query("userTryoutEntitlements")
+          .withIndex("by_accessGrantId", (q) =>
+            q.eq("accessGrantId", existingGrant._id)
+          )
+          .first();
         const effectiveEndsAt = getTryoutAccessGrantEffectiveEndsAt({
           campaign: eventAccess.campaign,
           endsAt: existingGrant.endsAt,
         });
-        const isCompetitionGrantActive =
-          eventAccess.campaign.campaignKind === "competition" &&
-          eventAccess.campaign.redeemStatus === "active";
-        const isGrantActive =
-          existingGrant.status === "active" || isCompetitionGrantActive;
 
-        if (isGrantActive) {
+        if (activeEntitlement) {
           return {
             kind: "active" as const,
-            endsAt: effectiveEndsAt,
+            endsAt: activeEntitlement.endsAt,
             name: eventAccess.campaign.name,
           };
         }

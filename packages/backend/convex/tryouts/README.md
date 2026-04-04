@@ -22,8 +22,9 @@ queries, mutations, IRT publication, and leaderboard flow stay generic.
   (stable public identity for routes)
 - `tryoutAttempts` stores per-user simulation lifecycle and final IRT result
 - `tryoutPartAttempts` links one runtime part to one shared `exerciseAttempt`
-- `userTryoutAccessSources` stores active event access per user and product
-- `userTryoutCompetitionUsages` stores which competition campaign has already
+- `userTryoutEntitlements` stores active access rows per user and product across
+  `competition`, `access-pass`, and `subscription`
+- `userTryoutCompetitionClaims` stores which competition campaign has already
   counted for one user and tryout
 - `tryoutLeaderboardEntries` stores the current best official result per user
 - `userTryoutStats` stores leaderboard aggregates per product namespace
@@ -48,9 +49,12 @@ That policy owns:
   families like `tkaTryouts`, `cpnsTryouts`, etc.
 - Hub browse reads go through the dedicated catalog tables so Convex can paginate
   in final display order without caller-side `.collect()` or page exhaustion
-- Tryout start reads go through user-scoped access projections instead of broad
-  campaign or attempt scans inside the mutation
+- Tryout start reads go through exact user-scoped entitlements and one
+  competition claim lookup instead of broad campaign or attempt scans inside the
+  mutation
 - Generic ranking still uses aggregate components for O(log n) rank lookups
+- Competition campaign windows are immutable after the first redemption so the
+  runtime never needs to repair old attempts after ops edits campaign policy
 
 ## Catalog Read Model
 

@@ -6,6 +6,7 @@ import type {
 import type {
   tryoutAccessCampaignRedeemStatusValidator,
   tryoutAccessGrantStatusValidator,
+  userTryoutEntitlementSourceKindValidator,
 } from "@repo/backend/convex/tryoutAccess/schema";
 import {
   type TryoutProduct,
@@ -16,8 +17,8 @@ import type { Infer } from "convex/values";
 import { ConvexError } from "convex/values";
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
-const ACTIVE_ACCESS_SOURCE_PAGE_SIZE = 50;
-const MAX_PRODUCT_GRANTS_PER_GRANT = tryoutProducts.length;
+const MAX_PRODUCTS_PER_ACCESS_SOURCE = tryoutProducts.length;
+const MAX_ACTIVE_SUBSCRIPTIONS_PER_CUSTOMER = 10;
 
 const tryoutPaidProductIds = {
   snbt: products.pro.id,
@@ -29,16 +30,14 @@ type TryoutAccessCampaignRedeemStatus = Infer<
   typeof tryoutAccessCampaignRedeemStatusValidator
 >;
 type TryoutAccessGrantStatus = Infer<typeof tryoutAccessGrantStatusValidator>;
-interface TryoutEventSource {
-  accessCampaignId: Doc<"tryoutAccessCampaigns">["_id"];
-  accessCampaignKind: Doc<"tryoutAccessCampaigns">["campaignKind"];
-  accessEndsAt: number;
-  accessGrantId: Doc<"tryoutAccessProductGrants">["grantId"];
-}
+type UserTryoutEntitlementSourceKind = Infer<
+  typeof userTryoutEntitlementSourceKindValidator
+>;
 
-interface ActiveTryoutEventSources {
-  accessPassEventSource: TryoutEventSource | null;
-  competitionEventSources: TryoutEventSource[];
+interface ActiveTryoutEntitlements {
+  accessPassEntitlement: Doc<"userTryoutEntitlements"> | null;
+  competitionEntitlement: Doc<"userTryoutEntitlements"> | null;
+  subscriptionEntitlement: Doc<"userTryoutEntitlements"> | null;
 }
 
 /** Normalizes a public event code so reads and writes share one canonical key. */
@@ -46,7 +45,7 @@ export function normalizeTryoutAccessCode(value: string) {
   return value.trim().toLowerCase();
 }
 
-/** Calculates the event grant end timestamp from the redeem time and duration. */
+/** Calculates the persisted grant end timestamp for one redemption. */
 export function getTryoutAccessGrantEndsAt({
   campaign,
   redeemedAt,
@@ -71,7 +70,7 @@ export function getTryoutAccessGrantEndsAt({
   return redeemedAt + campaign.grantDurationDays * DAY_IN_MS;
 }
 
-/** Returns the current access end timestamp for one redeemed grant. */
+/** Resolves the live end timestamp for one stored grant. */
 export function getTryoutAccessGrantEffectiveEndsAt({
   campaign,
   endsAt,
@@ -166,12 +165,128 @@ export async function getTryoutAccessEventByCode(
   };
 }
 
-/** Synchronizes one summary grant and its product grants to the same status. */
+/** Parses one ISO timestamp string into a millisecond value. */
+function parseTimestamp(value: string | null, fieldName: string) {
+  if (!value) {
+    return null;
+  }
+
+  const parsedValue = Date.parse(value);
+
+  if (!Number.isNaN(parsedValue)) {
+    return parsedValue;
+  }
+
+  throw new ConvexError({
+    code: "INVALID_SUBSCRIPTION_WINDOW",
+    message: `Subscription ${fieldName} must be a valid ISO timestamp.`,
+  });
+}
+
+/** Maps one paid Polar product to the matching tryout product, if any. */
+function getTryoutProductFromPaidProductId(productId: string) {
+  for (const product of tryoutProducts) {
+    if (tryoutPaidProductIds[product] === productId) {
+      return product;
+    }
+  }
+
+  return null;
+}
+
+/** Synchronizes the active entitlement rows for one event grant. */
+async function syncGrantEntitlements(
+  db: TryoutAccessDbWriter,
+  {
+    campaign,
+    effectiveEndsAt,
+    grant,
+    status,
+  }: {
+    campaign: Doc<"tryoutAccessCampaigns"> | null;
+    effectiveEndsAt: number;
+    grant: Pick<
+      Doc<"tryoutAccessGrants">,
+      "_id" | "campaignId" | "endsAt" | "redeemedAt" | "status" | "userId"
+    >;
+    status: TryoutAccessGrantStatus;
+  }
+) {
+  const entitlements = await db
+    .query("userTryoutEntitlements")
+    .withIndex("by_accessGrantId", (q) => q.eq("accessGrantId", grant._id))
+    .take(MAX_PRODUCTS_PER_ACCESS_SOURCE);
+  const entitlementsByProduct = new Map(
+    entitlements.map((entitlement) => [entitlement.product, entitlement])
+  );
+
+  if (!(campaign && status === "active")) {
+    for (const entitlement of entitlements) {
+      await db.delete("userTryoutEntitlements", entitlement._id);
+    }
+
+    return;
+  }
+
+  const sourceKind: UserTryoutEntitlementSourceKind = campaign.campaignKind;
+
+  for (const product of campaign.products) {
+    const currentEntitlement = entitlementsByProduct.get(product);
+    const nextEntitlement = {
+      userId: grant.userId,
+      product,
+      sourceKind,
+      accessCampaignId: grant.campaignId,
+      accessGrantId: grant._id,
+      subscriptionId: undefined,
+      startsAt: grant.redeemedAt,
+      endsAt: effectiveEndsAt,
+    };
+
+    if (!currentEntitlement) {
+      await db.insert("userTryoutEntitlements", nextEntitlement);
+      continue;
+    }
+
+    entitlementsByProduct.delete(product);
+
+    if (
+      currentEntitlement.userId === nextEntitlement.userId &&
+      currentEntitlement.product === nextEntitlement.product &&
+      currentEntitlement.sourceKind === nextEntitlement.sourceKind &&
+      currentEntitlement.accessCampaignId ===
+        nextEntitlement.accessCampaignId &&
+      currentEntitlement.accessGrantId === nextEntitlement.accessGrantId &&
+      currentEntitlement.subscriptionId === nextEntitlement.subscriptionId &&
+      currentEntitlement.startsAt === nextEntitlement.startsAt &&
+      currentEntitlement.endsAt === nextEntitlement.endsAt
+    ) {
+      continue;
+    }
+
+    await db.patch("userTryoutEntitlements", currentEntitlement._id, {
+      userId: nextEntitlement.userId,
+      product: nextEntitlement.product,
+      sourceKind: nextEntitlement.sourceKind,
+      accessCampaignId: nextEntitlement.accessCampaignId,
+      accessGrantId: nextEntitlement.accessGrantId,
+      subscriptionId: nextEntitlement.subscriptionId,
+      startsAt: nextEntitlement.startsAt,
+      endsAt: nextEntitlement.endsAt,
+    });
+  }
+
+  for (const staleEntitlement of entitlementsByProduct.values()) {
+    await db.delete("userTryoutEntitlements", staleEntitlement._id);
+  }
+}
+
+/** Synchronizes the stored grant row and its active entitlement rows. */
 export async function syncTryoutAccessGrantStatus(
   db: TryoutAccessDbWriter,
   grant: Pick<
     Doc<"tryoutAccessGrants">,
-    "_id" | "campaignId" | "endsAt" | "status"
+    "_id" | "campaignId" | "endsAt" | "redeemedAt" | "status" | "userId"
   >,
   now: number
 ) {
@@ -183,17 +298,6 @@ export async function syncTryoutAccessGrantStatus(
       })
     : grant.endsAt;
   const status = getTryoutAccessGrantStatus(effectiveEndsAt, now);
-  const productGrants = await db
-    .query("tryoutAccessProductGrants")
-    .withIndex("by_grantId", (q) => q.eq("grantId", grant._id))
-    .take(MAX_PRODUCT_GRANTS_PER_GRANT);
-  const accessSources = await db
-    .query("userTryoutAccessSources")
-    .withIndex("by_accessGrantId", (q) => q.eq("accessGrantId", grant._id))
-    .take(MAX_PRODUCT_GRANTS_PER_GRANT);
-  const accessSourceByProduct = new Map(
-    accessSources.map((accessSource) => [accessSource.product, accessSource])
-  );
 
   if (grant.endsAt !== effectiveEndsAt || grant.status !== status) {
     await db.patch("tryoutAccessGrants", grant._id, {
@@ -202,187 +306,127 @@ export async function syncTryoutAccessGrantStatus(
     });
   }
 
-  for (const productGrant of productGrants) {
-    const currentAccessSource = accessSourceByProduct.get(productGrant.product);
-
-    if (
-      productGrant.endsAt !== effectiveEndsAt ||
-      productGrant.status !== status
-    ) {
-      await db.patch("tryoutAccessProductGrants", productGrant._id, {
-        endsAt: effectiveEndsAt,
-        status,
-      });
-    }
-
-    if (!(campaign && status === "active")) {
-      if (!currentAccessSource) {
-        continue;
-      }
-
-      await db.delete("userTryoutAccessSources", currentAccessSource._id);
-      accessSourceByProduct.delete(productGrant.product);
-      continue;
-    }
-
-    const nextAccessSource = {
-      userId: productGrant.userId,
-      product: productGrant.product,
-      accessCampaignId: grant.campaignId,
-      accessCampaignKind: campaign.campaignKind,
-      accessGrantId: grant._id,
-      accessEndsAt: effectiveEndsAt,
-    };
-
-    if (!currentAccessSource) {
-      await db.insert("userTryoutAccessSources", nextAccessSource);
-      continue;
-    }
-
-    accessSourceByProduct.delete(productGrant.product);
-
-    if (
-      currentAccessSource.userId === nextAccessSource.userId &&
-      currentAccessSource.product === nextAccessSource.product &&
-      currentAccessSource.accessCampaignId ===
-        nextAccessSource.accessCampaignId &&
-      currentAccessSource.accessCampaignKind ===
-        nextAccessSource.accessCampaignKind &&
-      currentAccessSource.accessGrantId === nextAccessSource.accessGrantId &&
-      currentAccessSource.accessEndsAt === nextAccessSource.accessEndsAt
-    ) {
-      continue;
-    }
-
-    await db.patch("userTryoutAccessSources", currentAccessSource._id, {
-      userId: nextAccessSource.userId,
-      product: nextAccessSource.product,
-      accessCampaignId: nextAccessSource.accessCampaignId,
-      accessCampaignKind: nextAccessSource.accessCampaignKind,
-      accessGrantId: nextAccessSource.accessGrantId,
-      accessEndsAt: nextAccessSource.accessEndsAt,
-    });
-  }
-
-  for (const staleAccessSource of accessSourceByProduct.values()) {
-    await db.delete("userTryoutAccessSources", staleAccessSource._id);
-  }
+  await syncGrantEntitlements(db, {
+    campaign,
+    effectiveEndsAt,
+    grant,
+    status,
+  });
 
   return status;
 }
 
-/**
- * Resolve the active event-based access sources for one user and product.
- *
- * This reads only the user-scoped active-access projection so the tryout start
- * mutation stays bounded even when campaign history grows.
- */
-async function loadActiveTryoutEventSources(
-  db: TryoutAccessDbReader,
+/** Synchronizes the active subscription entitlement rows for one user. */
+export async function syncTryoutSubscriptionEntitlements(
+  db: TryoutAccessDbWriter,
   {
-    product,
+    activeSubscriptions,
     userId,
   }: {
-    product: TryoutProduct;
-    userId: Doc<"users">["_id"];
-  }
-): Promise<ActiveTryoutEventSources> {
-  const accessPassSource = await db
-    .query("userTryoutAccessSources")
-    .withIndex(
-      "by_userId_and_product_and_accessCampaignKind_and_accessEndsAt",
-      (q) =>
-        q
-          .eq("userId", userId)
-          .eq("product", product)
-          .eq("accessCampaignKind", "access-pass")
-    )
-    .order("desc")
-    .first();
-  const competitionEventSources: TryoutEventSource[] = [];
-  let cursor: string | null = null;
-
-  while (true) {
-    const competitionPage = await db
-      .query("userTryoutAccessSources")
-      .withIndex(
-        "by_userId_and_product_and_accessCampaignKind_and_accessEndsAt",
-        (q) =>
-          q
-            .eq("userId", userId)
-            .eq("product", product)
-            .eq("accessCampaignKind", "competition")
-      )
-      .order("desc")
-      .paginate({
-        cursor,
-        numItems: ACTIVE_ACCESS_SOURCE_PAGE_SIZE,
-      });
-
-    competitionEventSources.push(
-      ...competitionPage.page.map((accessSource) => ({
-        accessCampaignId: accessSource.accessCampaignId,
-        accessCampaignKind: accessSource.accessCampaignKind,
-        accessEndsAt: accessSource.accessEndsAt,
-        accessGrantId: accessSource.accessGrantId,
-      }))
-    );
-
-    if (competitionPage.isDone) {
-      break;
-    }
-
-    cursor = competitionPage.continueCursor;
-  }
-
-  return {
-    accessPassEventSource: accessPassSource
-      ? {
-          accessCampaignId: accessPassSource.accessCampaignId,
-          accessCampaignKind: accessPassSource.accessCampaignKind,
-          accessEndsAt: accessPassSource.accessEndsAt,
-          accessGrantId: accessPassSource.accessGrantId,
-        }
-      : null,
-    competitionEventSources,
-  };
-}
-
-/** Checks whether the user currently has an active paid subscription for tryouts. */
-async function hasActiveTryoutSubscription(
-  db: TryoutAccessDbReader,
-  {
-    product,
-    userId,
-  }: {
-    product: TryoutProduct;
+    activeSubscriptions: Pick<
+      Doc<"subscriptions">,
+      "_id" | "currentPeriodEnd" | "currentPeriodStart" | "productId"
+    >[];
     userId: Doc<"users">["_id"];
   }
 ) {
-  const customer = await db
-    .query("customers")
-    .withIndex("by_userId", (q) => q.eq("userId", userId))
-    .unique();
+  const existingEntitlements: Doc<"userTryoutEntitlements">[] = [];
 
-  if (!customer) {
-    return false;
+  for (const product of tryoutProducts) {
+    existingEntitlements.push(
+      ...(await db
+        .query("userTryoutEntitlements")
+        .withIndex("by_userId_and_product_and_sourceKind_and_endsAt", (q) =>
+          q
+            .eq("userId", userId)
+            .eq("product", product)
+            .eq("sourceKind", "subscription")
+        )
+        .take(MAX_ACTIVE_SUBSCRIPTIONS_PER_CUSTOMER + 1))
+    );
   }
 
-  const subscription = await db
-    .query("subscriptions")
-    .withIndex("by_customerId_and_status_and_productId", (q) =>
-      q
-        .eq("customerId", customer.id)
-        .eq("status", "active")
-        .eq("productId", tryoutPaidProductIds[product])
+  const existingEntitlementsBySubscriptionId = new Map(
+    existingEntitlements.flatMap((entitlement) =>
+      entitlement.subscriptionId
+        ? [[entitlement.subscriptionId, entitlement]]
+        : []
     )
-    .first();
+  );
 
-  return subscription !== null;
+  for (const subscription of activeSubscriptions) {
+    const product = getTryoutProductFromPaidProductId(subscription.productId);
+
+    if (!product) {
+      continue;
+    }
+
+    const startsAt = parseTimestamp(
+      subscription.currentPeriodStart,
+      "currentPeriodStart"
+    );
+
+    if (startsAt === null) {
+      continue;
+    }
+
+    const endsAt =
+      parseTimestamp(subscription.currentPeriodEnd, "currentPeriodEnd") ??
+      Number.MAX_SAFE_INTEGER;
+    const currentEntitlement = existingEntitlementsBySubscriptionId.get(
+      subscription._id
+    );
+    const nextEntitlement = {
+      userId,
+      product,
+      sourceKind: "subscription" as const,
+      accessCampaignId: undefined,
+      accessGrantId: undefined,
+      subscriptionId: subscription._id,
+      startsAt,
+      endsAt,
+    };
+
+    if (!currentEntitlement) {
+      await db.insert("userTryoutEntitlements", nextEntitlement);
+      continue;
+    }
+
+    existingEntitlementsBySubscriptionId.delete(subscription._id);
+
+    if (
+      currentEntitlement.userId === nextEntitlement.userId &&
+      currentEntitlement.product === nextEntitlement.product &&
+      currentEntitlement.sourceKind === nextEntitlement.sourceKind &&
+      currentEntitlement.accessCampaignId ===
+        nextEntitlement.accessCampaignId &&
+      currentEntitlement.accessGrantId === nextEntitlement.accessGrantId &&
+      currentEntitlement.subscriptionId === nextEntitlement.subscriptionId &&
+      currentEntitlement.startsAt === nextEntitlement.startsAt &&
+      currentEntitlement.endsAt === nextEntitlement.endsAt
+    ) {
+      continue;
+    }
+
+    await db.patch("userTryoutEntitlements", currentEntitlement._id, {
+      userId: nextEntitlement.userId,
+      product: nextEntitlement.product,
+      sourceKind: nextEntitlement.sourceKind,
+      accessCampaignId: nextEntitlement.accessCampaignId,
+      accessGrantId: nextEntitlement.accessGrantId,
+      subscriptionId: nextEntitlement.subscriptionId,
+      startsAt: nextEntitlement.startsAt,
+      endsAt: nextEntitlement.endsAt,
+    });
+  }
+
+  for (const staleEntitlement of existingEntitlementsBySubscriptionId.values()) {
+    await db.delete("userTryoutEntitlements", staleEntitlement._id);
+  }
 }
 
-/** Resolves whether a user can start a tryout using server time. */
-export async function resolveTryoutAccessSources(
+/** Resolves the current active entitlement rows for one user and product. */
+export async function resolveTryoutAccessEntitlements(
   db: TryoutAccessDbReader,
   {
     product,
@@ -391,24 +435,47 @@ export async function resolveTryoutAccessSources(
     product: TryoutProduct;
     userId: Doc<"users">["_id"];
   }
-): Promise<ActiveTryoutEventSources & { hasActiveSubscription: boolean }> {
+): Promise<ActiveTryoutEntitlements> {
   const [
-    { accessPassEventSource, competitionEventSources },
-    hasActiveSubscription,
+    competitionEntitlement,
+    accessPassEntitlement,
+    subscriptionEntitlement,
   ] = await Promise.all([
-    loadActiveTryoutEventSources(db, {
-      product,
-      userId,
-    }),
-    hasActiveTryoutSubscription(db, {
-      product,
-      userId,
-    }),
+    db
+      .query("userTryoutEntitlements")
+      .withIndex("by_userId_and_product_and_sourceKind_and_endsAt", (q) =>
+        q
+          .eq("userId", userId)
+          .eq("product", product)
+          .eq("sourceKind", "competition")
+      )
+      .order("desc")
+      .first(),
+    db
+      .query("userTryoutEntitlements")
+      .withIndex("by_userId_and_product_and_sourceKind_and_endsAt", (q) =>
+        q
+          .eq("userId", userId)
+          .eq("product", product)
+          .eq("sourceKind", "access-pass")
+      )
+      .order("desc")
+      .first(),
+    db
+      .query("userTryoutEntitlements")
+      .withIndex("by_userId_and_product_and_sourceKind_and_endsAt", (q) =>
+        q
+          .eq("userId", userId)
+          .eq("product", product)
+          .eq("sourceKind", "subscription")
+      )
+      .order("desc")
+      .first(),
   ]);
 
   return {
-    accessPassEventSource,
-    competitionEventSources,
-    hasActiveSubscription,
+    accessPassEntitlement,
+    competitionEntitlement,
+    subscriptionEntitlement,
   };
 }

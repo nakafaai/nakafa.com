@@ -42,9 +42,7 @@ export const redeemEventAccess = mutation({
       });
     }
 
-    const campaignProducts = Array.from(new Set(eventAccess.campaign.products));
-
-    if (campaignProducts.length === 0) {
+    if (eventAccess.campaign.products.length === 0) {
       throw new ConvexError({
         code: "EVENT_PRODUCTS_REQUIRED",
         message: "Event access campaign products cannot be empty.",
@@ -128,24 +126,15 @@ export const redeemEventAccess = mutation({
       status: grantStatus,
     });
 
-    for (const product of campaignProducts) {
-      await ctx.db.insert("tryoutAccessProductGrants", {
-        campaignId: eventAccess.campaign._id,
-        grantId,
-        product,
-        status: grantStatus,
-        userId: appUser._id,
-        endsAt,
-      });
-    }
-
     await syncTryoutAccessGrantStatus(
       ctx.db,
       {
         _id: grantId,
         campaignId: eventAccess.campaign._id,
         endsAt,
+        redeemedAt: now,
         status: grantStatus,
+        userId: appUser._id,
       },
       now
     );

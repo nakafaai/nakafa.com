@@ -2,6 +2,7 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
+import type { FunctionReturnType } from "convex/server";
 import type { ComponentProps, ReactNode } from "react";
 import { useState } from "react";
 import {
@@ -35,6 +36,9 @@ import { ExerciseContextProvider } from "@/lib/context/use-exercise";
 export interface TryoutPartRuntimeProps {
   children: ReactNode;
   icon?: ComponentProps<typeof TryoutPartHead>["icon"];
+  initialRuntime?: FunctionReturnType<
+    typeof api.tryouts.queries.me.part.getUserTryoutPartAttempt
+  > | null;
   part: TryoutPartValue;
   tryout: TryoutValue;
 }
@@ -42,12 +46,17 @@ export interface TryoutPartRuntimeProps {
 export function TryoutPartRuntime({
   children,
   icon,
+  initialRuntime,
   part,
   tryout,
 }: TryoutPartRuntimeProps) {
   return (
     <ExerciseContextProvider slug={part.setSlug}>
-      <TryoutPartProvider part={part} tryout={tryout}>
+      <TryoutPartProvider
+        initialRuntime={initialRuntime}
+        part={part}
+        tryout={tryout}
+      >
         <TryoutPartRuntimeBody icon={icon}>{children}</TryoutPartRuntimeBody>
       </TryoutPartProvider>
     </ExerciseContextProvider>

@@ -62,11 +62,9 @@ Urutan browse sudah dipersist ke katalog.
 Tanggung jawab:
 
 - membaca campaign dan link akses event
-- menentukan grant aktif untuk `competition` atau `access-pass`
-- menyinkronkan status grant dan jendela aktif event
-- mematerialisasi projection user-scoped:
-  - `userTryoutAccessSources`
-  - `userTryoutCompetitionUsages`
+- menentukan entitlement aktif untuk `competition`, `access-pass`, atau Pro
+- menyinkronkan status grant dan entitlement aktif
+- menyimpan claim competition per `{user, tryout, campaign}`
 
 Lapisan ini hanya menjawab pertanyaan:
 
@@ -126,12 +124,12 @@ psychometric internal.
 
 ### Projection Akses
 
-- `userTryoutAccessSources`
-  - projection akses event aktif per `{user, product, campaign}`
-  - dipakai `startTryout` supaya read tetap bounded dan user-scoped
-- `userTryoutCompetitionUsages`
-  - projection bahwa satu competition campaign untuk satu try out sudah terpakai
-  - mencegah scan history attempt di mutation start
+- `userTryoutEntitlements`
+  - entitlement aktif per `{user, product, source}`
+  - dipakai `startTryout` supaya read tetap exact dan bounded
+- `userTryoutCompetitionClaims`
+  - claim bahwa satu campaign competition untuk satu try out sudah terpakai
+  - dipakai `startTryout` tanpa scan history attempt
 
 ### Hasil dan Ranking
 
@@ -159,12 +157,12 @@ psychometric internal.
 ### 3. User menekan mulai
 
 - `startTryout` memverifikasi auth
-- backend membaca projection akses aktif user:
+- backend membaca satu entitlement aktif per source:
   - `competition`
   - `access-pass`
   - Pro subscription
-- backend membaca `userTryoutCompetitionUsages` untuk campaign competition aktif pada
-  try out itu
+- kalau ada entitlement `competition`, backend membaca satu claim competition
+  untuk `{user, tryout, campaign}`
 - backend memilih access source yang sah sesuai policy produk
 - backend mengikat attempt ke frozen scale terbaru yang aman dipakai
 - backend menyimpan snapshot part dan provenance akses
@@ -199,7 +197,7 @@ flowchart TD
     F --> G
     G --> H[User memilih package]
     H --> I[startTryout]
-    I --> J[resolveTryoutAccessSources]
+    I --> J[resolveTryoutAccessEntitlements]
     I --> K[get latest frozen scale]
     J --> L[tryoutAttempts]
     K --> L
@@ -300,6 +298,11 @@ Tidak. Hub membaca meta count kecil dan page katalog kecil.
 
 Tidak. Hub membaca satu ringkasan kecil per user lalu mencocokkannya ke slug row
 yang sedang tampil.
+
+### Apakah competition campaign boleh overlap untuk product yang sama?
+
+Tidak. Satu product hanya boleh punya satu competition campaign aktif pada satu
+window waktu.
 
 ### Apakah `Final Event` sama dengan `official`?
 

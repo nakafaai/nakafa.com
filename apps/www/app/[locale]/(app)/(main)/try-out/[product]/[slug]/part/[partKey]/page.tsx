@@ -106,7 +106,7 @@ export default async function Page({ params }: Props) {
 
   const tryoutLabel = details.tryout.label;
 
-  const materialLabel = ExercisesMaterialSchema.safeParse(contentPart.partKey);
+  const materialLabel = ExercisesMaterialSchema.safeParse(contentPart.material);
   const partLabel = materialLabel.success
     ? tExercises(materialLabel.data)
     : contentPart.partKey;
@@ -123,6 +123,7 @@ export default async function Page({ params }: Props) {
       <div className="space-y-10">
         <TryoutPartRuntime
           icon={partIcon}
+          initialRuntime={runtime}
           part={{
             key: partKey,
             label: partLabel,
