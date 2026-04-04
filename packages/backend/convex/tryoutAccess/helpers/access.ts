@@ -37,6 +37,11 @@ interface TryoutEventSource {
   accessGrantId: Doc<"tryoutAccessProductGrants">["grantId"];
 }
 
+interface ActiveTryoutEventSources {
+  accessPassEventSource: TryoutEventSource | null;
+  competitionEventSources: TryoutEventSource[];
+}
+
 /** Normalizes a public event code so reads and writes share one canonical key. */
 export function normalizeTryoutAccessCode(value: string) {
   return value.trim().toLowerCase();
@@ -219,64 +224,79 @@ async function loadActiveTryoutEventSources(
     product: TryoutProduct;
     userId: Doc<"users">["_id"];
   }
-) {
-  let cursor: string | null = null;
+): Promise<ActiveTryoutEventSources> {
   let accessPassEventSource: TryoutEventSource | null = null;
   const competitionEventSources: TryoutEventSource[] = [];
 
-  while (true) {
-    const productGrantPage = await db
-      .query("tryoutAccessProductGrants")
-      .withIndex("by_userId_and_product_and_endsAt", (q) =>
-        q.eq("userId", userId).eq("product", product).gt("endsAt", now)
-      )
-      .paginate({
-        cursor,
-        numItems: ACTIVE_PRODUCT_GRANT_PAGE_SIZE,
-      });
-    const campaigns = await getAll(
-      db,
-      "tryoutAccessCampaigns",
-      productGrantPage.page.map((productGrant) => productGrant.campaignId)
-    );
+  async function readProductGrantStatusPage(status: "active" | "expired") {
+    let cursor: string | null = null;
 
-    for (const [index, productGrant] of productGrantPage.page.entries()) {
-      const campaign = campaigns[index];
+    while (true) {
+      const productGrantPage = await db
+        .query("tryoutAccessProductGrants")
+        .withIndex("by_userId_and_product_and_status", (q) =>
+          q.eq("userId", userId).eq("product", product).eq("status", status)
+        )
+        .paginate({
+          cursor,
+          numItems: ACTIVE_PRODUCT_GRANT_PAGE_SIZE,
+        });
+      const campaigns = await getAll(
+        db,
+        "tryoutAccessCampaigns",
+        productGrantPage.page.map((productGrant) => productGrant.campaignId)
+      );
 
-      if (!campaign) {
-        continue;
+      for (const [index, productGrant] of productGrantPage.page.entries()) {
+        const campaign = campaigns[index];
+
+        if (!campaign) {
+          continue;
+        }
+
+        const accessEndsAt = getTryoutAccessGrantEffectiveEndsAt({
+          campaign,
+          endsAt: productGrant.endsAt,
+        });
+
+        if (accessEndsAt <= now) {
+          continue;
+        }
+
+        if (status === "expired" && campaign.campaignKind !== "competition") {
+          continue;
+        }
+
+        const eventSource = {
+          accessCampaignId: campaign._id,
+          accessCampaignKind: campaign.campaignKind,
+          accessEndsAt,
+          accessGrantId: productGrant.grantId,
+        };
+
+        if (eventSource.accessCampaignKind === "competition") {
+          competitionEventSources.push(eventSource);
+          continue;
+        }
+
+        if (
+          !accessPassEventSource ||
+          eventSource.accessEndsAt > accessPassEventSource.accessEndsAt
+        ) {
+          accessPassEventSource = eventSource;
+        }
       }
 
-      const accessEndsAt = getTryoutAccessGrantEffectiveEndsAt({
-        campaign,
-        endsAt: productGrant.endsAt,
-      });
-
-      if (accessEndsAt <= now) {
-        continue;
+      if (productGrantPage.isDone) {
+        return;
       }
 
-      const eventSource = {
-        accessCampaignId: campaign._id,
-        accessCampaignKind: campaign.campaignKind,
-        accessEndsAt,
-        accessGrantId: productGrant.grantId,
-      };
-
-      if (eventSource.accessCampaignKind === "competition") {
-        competitionEventSources.push(eventSource);
-        continue;
-      }
-
-      accessPassEventSource = eventSource;
+      cursor = productGrantPage.continueCursor;
     }
-
-    if (productGrantPage.isDone) {
-      break;
-    }
-
-    cursor = productGrantPage.continueCursor;
   }
+
+  await readProductGrantStatusPage("active");
+  await readProductGrantStatusPage("expired");
 
   return {
     accessPassEventSource,
@@ -328,7 +348,7 @@ export async function resolveTryoutAccessSources(
     product: TryoutProduct;
     userId: Doc<"users">["_id"];
   }
-) {
+): Promise<ActiveTryoutEventSources & { hasActiveSubscription: boolean }> {
   const [
     { accessPassEventSource, competitionEventSources },
     hasActiveSubscription,

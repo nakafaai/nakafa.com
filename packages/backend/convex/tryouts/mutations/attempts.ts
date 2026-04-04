@@ -99,7 +99,6 @@ export const startTryout = mutation({
         (_, index) => !competitionAttempts[index]
       ) ?? null;
     const hasUsedCompetitionAttempt = competitionAttempts.some(Boolean);
-    const accessPassEventSource = accessSources.accessPassEventSource;
     const competitionStartSource = unusedCompetitionEventSource
       ? {
           ...unusedCompetitionEventSource,
@@ -107,9 +106,9 @@ export const startTryout = mutation({
           countsForCompetition: true,
         }
       : null;
-    const accessPassStartSource = accessPassEventSource
+    const accessPassStartSource = accessSources.accessPassEventSource
       ? {
-          ...accessPassEventSource,
+          ...accessSources.accessPassEventSource,
           accessKind: "event" as const,
           countsForCompetition: false,
         }

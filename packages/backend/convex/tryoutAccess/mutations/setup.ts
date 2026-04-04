@@ -208,6 +208,14 @@ export const upsertCampaignAndLink = internalMutation({
       });
     }
 
+    if (existingCampaign.campaignKind !== args.campaign.campaignKind) {
+      throw new ConvexError({
+        code: "CAMPAIGN_KIND_IMMUTABLE",
+        message:
+          "Campaign kind cannot change after the campaign has been created.",
+      });
+    }
+
     const campaignId = existingCampaign._id;
 
     await ctx.db.patch("tryoutAccessCampaigns", campaignId, nextCampaign);

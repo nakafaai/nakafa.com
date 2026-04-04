@@ -765,6 +765,92 @@ describe("tryouts/mutations/attempts", () => {
     expect(tryoutAttempt?.accessEndsAt).toBe(state.longestEndsAt);
   });
 
+  it("still starts from a competition grant after ops extends the campaign window", async () => {
+    const t = createTryoutTestConvex();
+    const state = await t.mutation(async (ctx) => {
+      const currentTime = Date.now();
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "extended-competition-grant",
+      });
+      const tryout = await insertTryoutSkeleton(
+        ctx,
+        "extended-competition-grant"
+      );
+      const staleEndsAt = currentTime - 60 * 1000;
+      const extendedEndsAt = currentTime + 24 * 60 * 60 * 1000;
+      const campaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+        slug: "extended-competition-grant",
+        name: "Extended Competition Grant",
+        products: ["snbt"],
+        campaignKind: "competition",
+        enabled: true,
+        redeemStatus: "active",
+        resultsStatus: "pending",
+        resultsFinalizedAt: null,
+        startsAt: currentTime - 24 * 60 * 60 * 1000,
+        endsAt: extendedEndsAt,
+      });
+      const linkId = await ctx.db.insert("tryoutAccessLinks", {
+        campaignId,
+        code: "extended-competition-grant",
+        label: "Extended Competition Grant",
+        enabled: true,
+      });
+      const grantId = await ctx.db.insert("tryoutAccessGrants", {
+        campaignId,
+        linkId,
+        userId: identity.userId,
+        redeemedAt: currentTime - 2 * 24 * 60 * 60 * 1000,
+        endsAt: staleEndsAt,
+        status: "expired",
+      });
+
+      await ctx.db.insert("tryoutAccessProductGrants", {
+        campaignId,
+        grantId,
+        product: "snbt",
+        status: "expired",
+        userId: identity.userId,
+        endsAt: staleEndsAt,
+      });
+
+      return {
+        ...identity,
+        campaignId,
+        extendedEndsAt,
+        grantId,
+        tryoutId: tryout.tryoutId,
+      };
+    });
+
+    await t
+      .withIdentity({
+        subject: state.authUserId,
+        sessionId: state.sessionId,
+      })
+      .mutation(api.tryouts.mutations.attempts.startTryout, {
+        product: "snbt",
+        locale: "id",
+        tryoutSlug: "extended-competition-grant",
+      });
+
+    const tryoutAttempt = await t.query(async (ctx) => {
+      return await ctx.db
+        .query("tryoutAttempts")
+        .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
+          q.eq("userId", state.userId).eq("tryoutId", state.tryoutId)
+        )
+        .order("desc")
+        .first();
+    });
+
+    expect(tryoutAttempt?.accessCampaignId).toBe(state.campaignId);
+    expect(tryoutAttempt?.accessGrantId).toBe(state.grantId);
+    expect(tryoutAttempt?.accessEndsAt).toBe(state.extendedEndsAt);
+    expect(tryoutAttempt?.countsForCompetition).toBe(true);
+  });
+
   it("starts an unstarted part from the persisted snapshot after live key, set, and count changes", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {

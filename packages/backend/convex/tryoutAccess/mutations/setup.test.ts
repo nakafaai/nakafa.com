@@ -71,4 +71,48 @@ describe("tryoutAccess/mutations/setup", () => {
     expect(campaign?.grantDurationDays).toBe(30);
     expect(campaign?.resultsStatus).toBe("pending");
   });
+
+  it("does not allow changing the campaign kind after creation", async () => {
+    const t = createTryoutTestConvex();
+
+    await t.mutation(
+      internal.tryoutAccess.mutations.setup.upsertCampaignAndLink,
+      {
+        campaign: {
+          slug: "immutable-kind",
+          name: "Immutable Kind",
+          products: ["snbt"],
+          campaignKind: "competition",
+          enabled: true,
+          startsAt: NOW,
+          endsAt: NOW + 24 * 60 * 60 * 1000,
+        },
+        link: {
+          code: "immutable-kind",
+          label: "Immutable Kind",
+          enabled: true,
+        },
+      }
+    );
+
+    await expect(
+      t.mutation(internal.tryoutAccess.mutations.setup.upsertCampaignAndLink, {
+        campaign: {
+          slug: "immutable-kind",
+          name: "Immutable Kind",
+          products: ["snbt"],
+          campaignKind: "access-pass",
+          enabled: true,
+          startsAt: NOW,
+          endsAt: NOW + 24 * 60 * 60 * 1000,
+          grantDurationDays: 30,
+        },
+        link: {
+          code: "immutable-kind",
+          label: "Immutable Kind",
+          enabled: true,
+        },
+      })
+    ).rejects.toThrow("CAMPAIGN_KIND_IMMUTABLE");
+  });
 });
