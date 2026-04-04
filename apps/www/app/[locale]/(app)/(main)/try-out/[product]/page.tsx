@@ -8,7 +8,6 @@ import {
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { cn } from "@repo/design-system/lib/utils";
 import { fetchQuery } from "convex/nextjs";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
@@ -23,20 +22,8 @@ import {
   TryoutCardHero,
   TryoutCardTitle,
 } from "@/components/tryout/card";
-import {
-  TryoutPackageCopy,
-  TryoutPackageEmpty,
-  TryoutPackageHeader,
-  TryoutPackageItems,
-  TryoutPackageLink,
-  TryoutPackageMeta,
-  TryoutPackageTitle,
-  TryoutPackageYear,
-} from "@/components/tryout/package-list";
-import { TryoutPackageStatusBadge } from "@/components/tryout/package-progress";
+import { TryoutCatalogList } from "@/components/tryout/catalog-list";
 import { SnbtTryoutIcon } from "@/components/tryout/product-icon";
-import { TryoutPackageProgressProvider } from "@/components/tryout/providers/package-progress";
-import { groupActiveTryoutsByCycle } from "@/components/tryout/utils/package-list";
 
 interface Props {
   params: Promise<{ locale: Locale; product: string }>;
@@ -56,16 +43,14 @@ export default async function Page({ params }: Props) {
   }
   const product: TryoutProduct = productParam;
 
-  const [tCommon, tTryouts, activeTryouts] = await Promise.all([
+  const [tCommon, tTryouts, catalogMeta] = await Promise.all([
     getTranslations({ locale, namespace: "Common" }),
     getTranslations({ locale, namespace: "Tryouts" }),
-    fetchQuery(api.tryouts.queries.tryouts.getActiveTryouts, {
+    fetchQuery(api.tryouts.queries.tryouts.getActiveTryoutCatalogMeta, {
       locale,
       product,
     }),
   ]);
-
-  const cycleGroups = groupActiveTryoutsByCycle(activeTryouts);
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
@@ -107,7 +92,9 @@ export default async function Page({ params }: Props) {
                     {tTryouts("products.snbt.title")}
                   </TryoutCardTitle>
                   <Badge variant="outline">
-                    {tTryouts("package-count", { count: activeTryouts.length })}
+                    {tTryouts("package-count", {
+                      count: catalogMeta.activeCount,
+                    })}
                   </Badge>
                 </div>
 
@@ -119,55 +106,7 @@ export default async function Page({ params }: Props) {
           </TryoutCardHero>
 
           <TryoutCardContent>
-            {cycleGroups.length === 0 ? (
-              <TryoutPackageEmpty>{tTryouts("list-empty")}</TryoutPackageEmpty>
-            ) : (
-              <TryoutPackageProgressProvider
-                locale={locale}
-                product={product}
-                tryoutPackages={activeTryouts.map((tryout) => ({
-                  slug: tryout.slug,
-                  tryoutId: tryout._id,
-                }))}
-              >
-                {cycleGroups.map((group, index) => (
-                  <div
-                    className={cn(index > 0 && "border-t")}
-                    key={group.cycleKey}
-                  >
-                    <TryoutPackageYear>
-                      {tTryouts("year-title", { year: group.cycleKey })}
-                    </TryoutPackageYear>
-
-                    <TryoutPackageItems>
-                      {group.tryouts.map((tryout) => (
-                        <TryoutPackageLink
-                          href={`/try-out/${product}/${tryout.slug}`}
-                          key={tryout._id}
-                        >
-                          <TryoutPackageCopy>
-                            <TryoutPackageHeader>
-                              <TryoutPackageTitle>
-                                {tryout.label}
-                              </TryoutPackageTitle>
-                              <TryoutPackageStatusBadge
-                                tryoutSlug={tryout.slug}
-                              />
-                            </TryoutPackageHeader>
-                            <TryoutPackageMeta>
-                              {tTryouts("available-item-description", {
-                                parts: tryout.partCount,
-                                questions: tryout.totalQuestionCount,
-                              })}
-                            </TryoutPackageMeta>
-                          </TryoutPackageCopy>
-                        </TryoutPackageLink>
-                      ))}
-                    </TryoutPackageItems>
-                  </div>
-                ))}
-              </TryoutPackageProgressProvider>
-            )}
+            <TryoutCatalogList locale={locale} product={product} />
           </TryoutCardContent>
         </TryoutCard>
       </div>

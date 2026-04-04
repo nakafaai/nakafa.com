@@ -27,6 +27,7 @@ const snbtPartLabels = getSubjects("snbt").map((subject) => subject.label);
 const snbtPartOrder = new Map(
   snbtPartLabels.map((material, index) => [material, index])
 );
+const DESCENDING_SORT_MAX_CHAR_CODE = 0xff_ff;
 
 /** Extracts the SNBT cycle year from a yearful tryout set slug. */
 function getSnbtCycleKeyFromSetSlug(setSlug: Doc<"exerciseSets">["slug"]) {
@@ -41,13 +42,32 @@ function getSnbtCycleKeyFromSetSlug(setSlug: Doc<"exerciseSets">["slug"]) {
 
 /** Sorts SNBT tryouts by newest cycle and then by label. */
 function compareSnbtTryouts(
-  left: Pick<Doc<"tryouts">, "cycleKey" | "label">,
-  right: Pick<Doc<"tryouts">, "cycleKey" | "label">
+  left: Pick<Doc<"tryouts">, "cycleKey" | "label" | "slug">,
+  right: Pick<Doc<"tryouts">, "cycleKey" | "label" | "slug">
 ) {
-  return (
-    right.cycleKey.localeCompare(left.cycleKey) ||
-    left.label.localeCompare(right.label)
+  return getSnbtCatalogSortKey(left).localeCompare(
+    getSnbtCatalogSortKey(right)
   );
+}
+
+/**
+ * Invert one routing key so an ascending Convex index preserves descending
+ * cycle order without needing a second fallback sort in the caller.
+ */
+function toDescendingSortKey(value: string) {
+  return Array.from(value, (character) =>
+    String.fromCharCode(DESCENDING_SORT_MAX_CHAR_CODE - character.charCodeAt(0))
+  ).join("");
+}
+
+/**
+ * Build the persisted catalog order used by both Convex pagination and any
+ * local tie-breaking. This keeps the hub order stable across pages.
+ */
+function getSnbtCatalogSortKey(
+  args: Pick<Doc<"tryouts">, "cycleKey" | "label" | "slug">
+) {
+  return `${toDescendingSortKey(args.cycleKey)}:${args.label}:${args.slug}`;
 }
 
 /**
@@ -156,6 +176,7 @@ export const snbtTryoutProductPolicy = {
 
     return detectedTryouts;
   },
+  getCatalogSortKey: getSnbtCatalogSortKey,
   getLeaderboardNamespace: ({ product, locale, cycleKey }) =>
     `${product}:${locale}:${cycleKey}`,
   getPartTimeLimitSeconds: (

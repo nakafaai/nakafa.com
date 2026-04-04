@@ -68,6 +68,34 @@ const tables = {
       "isActive",
     ]),
 
+  tryoutCatalogEntries: defineTable({
+    tryoutId: v.id("tryouts"),
+    product: tryoutProductValidator,
+    locale: localeValidator,
+    cycleKey: v.string(),
+    slug: v.string(),
+    label: v.string(),
+    partCount: v.number(),
+    totalQuestionCount: v.number(),
+    isActive: v.boolean(),
+    catalogSortKey: v.string(),
+    updatedAt: v.number(),
+  })
+    .index("by_tryoutId", ["tryoutId"])
+    .index("by_product_and_locale_and_isActive_and_catalogSortKey", [
+      "product",
+      "locale",
+      "isActive",
+      "catalogSortKey",
+    ]),
+
+  tryoutCatalogMeta: defineTable({
+    product: tryoutProductValidator,
+    locale: localeValidator,
+    activeCount: v.number(),
+    updatedAt: v.number(),
+  }).index("by_product_and_locale", ["product", "locale"]),
+
   tryoutPartSets: defineTable({
     tryoutId: v.id("tryouts"),
     setId: v.id("exerciseSets"),

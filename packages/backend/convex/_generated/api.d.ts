@@ -219,7 +219,6 @@ import type * as tryouts_queries_leaderboard from "../tryouts/queries/leaderboar
 import type * as tryouts_queries_me_attempt from "../tryouts/queries/me/attempt.js";
 import type * as tryouts_queries_me_helpers from "../tryouts/queries/me/helpers.js";
 import type * as tryouts_queries_me_history from "../tryouts/queries/me/history.js";
-import type * as tryouts_queries_me_packages from "../tryouts/queries/me/packages.js";
 import type * as tryouts_queries_me_part from "../tryouts/queries/me/part.js";
 import type * as tryouts_queries_me_validators from "../tryouts/queries/me/validators.js";
 import type * as tryouts_queries_tryouts from "../tryouts/queries/tryouts.js";
@@ -459,7 +458,6 @@ declare const fullApi: ApiFromModules<{
   "tryouts/queries/me/attempt": typeof tryouts_queries_me_attempt;
   "tryouts/queries/me/helpers": typeof tryouts_queries_me_helpers;
   "tryouts/queries/me/history": typeof tryouts_queries_me_history;
-  "tryouts/queries/me/packages": typeof tryouts_queries_me_packages;
   "tryouts/queries/me/part": typeof tryouts_queries_me_part;
   "tryouts/queries/me/validators": typeof tryouts_queries_me_validators;
   "tryouts/queries/tryouts": typeof tryouts_queries_tryouts;

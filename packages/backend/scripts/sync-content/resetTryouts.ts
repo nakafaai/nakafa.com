@@ -88,6 +88,18 @@ const RESET_TRYOUT_STEPS: ResetStep[] = [
     resultLabel: "tryout attempts",
   },
   {
+    label: "Deleting tryout catalog entries...",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteTryoutCatalogEntriesBatch",
+    resultLabel: "tryout catalog entries",
+  },
+  {
+    label: "Deleting tryout catalog meta...",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteTryoutCatalogMetaBatch",
+    resultLabel: "tryout catalog meta rows",
+  },
+  {
     label: "Deleting tryout part sets...",
     mutationPath: "contentSync/mutations/maintenance:deleteTryoutPartSetsBatch",
     resultLabel: "tryout part sets",
@@ -176,6 +188,8 @@ export const resetTryouts = async (
   log(`  Exercise Attempts:     ${counts.exerciseAttempts}`);
   log(`  Exercise Answers:      ${counts.exerciseAnswers}`);
   log(`  Tryouts:               ${counts.tryouts}`);
+  log(`  Tryout Catalog Rows:   ${counts.tryoutCatalogEntries}`);
+  log(`  Tryout Catalog Meta:   ${counts.tryoutCatalogMeta}`);
   log(`  Tryout Part Sets:      ${counts.tryoutPartSets}`);
   log(`  Tryout Attempts:       ${counts.tryoutAttempts}`);
   log(`  Tryout Part Attempts:  ${counts.tryoutPartAttempts}`);
@@ -195,6 +209,8 @@ export const resetTryouts = async (
 
   const totalTryoutAndIrtRows =
     counts.tryouts +
+    counts.tryoutCatalogEntries +
+    counts.tryoutCatalogMeta +
     counts.tryoutPartSets +
     counts.tryoutAttempts +
     counts.tryoutPartAttempts +

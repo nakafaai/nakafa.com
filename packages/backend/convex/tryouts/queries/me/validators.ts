@@ -19,17 +19,6 @@ export const userTryoutLookupArgs = {
   tryoutSlug: v.string(),
 };
 
-export const tryoutPackageLookupValidator = v.object({
-  slug: v.string(),
-  tryoutId: vv.id("tryouts"),
-});
-
-export const tryoutPackageStatusValidator = v.object({
-  expiresAtMs: v.number(),
-  slug: v.string(),
-  status: vv.doc("tryoutAttempts").fields.status,
-});
-
 export const orderedTryoutPartValidator = v.object({
   partIndex: v.number(),
   partKey: tryoutPartKeyValidator,

@@ -73,6 +73,8 @@ export const ContentCountsSchema = z.object({
   exerciseAttempts: z.number(),
   exerciseAnswers: z.number(),
   tryouts: z.number(),
+  tryoutCatalogEntries: z.number(),
+  tryoutCatalogMeta: z.number(),
   tryoutPartSets: z.number(),
   tryoutAttempts: z.number(),
   tryoutPartAttempts: z.number(),

@@ -32,6 +32,8 @@ type ResettableTableName =
   | "subjectSections"
   | "subjectTopics"
   | "tryoutAttempts"
+  | "tryoutCatalogEntries"
+  | "tryoutCatalogMeta"
   | "tryoutLeaderboardEntries"
   | "tryoutPartAttempts"
   | "tryoutPartSets"
@@ -165,6 +167,11 @@ export const deleteExerciseAttemptsBatch =
   makeBatchDeleteMutation("exerciseAttempts");
 export const deleteTryoutAttemptsBatch =
   makeBatchDeleteMutation("tryoutAttempts");
+export const deleteTryoutCatalogEntriesBatch = makeBatchDeleteMutation(
+  "tryoutCatalogEntries"
+);
+export const deleteTryoutCatalogMetaBatch =
+  makeBatchDeleteMutation("tryoutCatalogMeta");
 export const deleteTryoutPartSetsBatch =
   makeBatchDeleteMutation("tryoutPartSets");
 export const deleteIrtScaleVersionsBatch =

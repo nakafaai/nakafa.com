@@ -1,4 +1,5 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
 import { syncTryoutPartSetMappings } from "@repo/backend/convex/contentSync/lib/tryouts";
@@ -7,6 +8,7 @@ import { enqueueScaleQualityRefresh } from "@repo/backend/convex/irt/helpers/que
 import { getOrPublishScaleVersionForTryout } from "@repo/backend/convex/irt/scales/publish";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import {
+  type DetectedTryout,
   tryoutProductPolicies,
   tryoutProductValidator,
 } from "@repo/backend/convex/tryouts/products";
@@ -55,6 +57,72 @@ export const bulkSyncTryouts = internalMutation({
       sets: tryoutCandidateSets,
     });
     const detectedSlugs = new Set(detectedTryouts.map((tryout) => tryout.slug));
+    const activeCatalogCount = detectedTryouts.reduce(
+      (count, tryout) => count + (tryout.isActive ? 1 : 0),
+      0
+    );
+    const syncCatalogEntry = async ({
+      tryout,
+      tryoutId,
+    }: {
+      tryout: DetectedTryout;
+      tryoutId: Id<"tryouts">;
+    }) => {
+      const existingCatalogEntry = await ctx.db
+        .query("tryoutCatalogEntries")
+        .withIndex("by_tryoutId", (q) => q.eq("tryoutId", tryoutId))
+        .unique();
+      const nextCatalogEntry = {
+        tryoutId,
+        product: tryout.product,
+        locale: tryout.locale,
+        cycleKey: tryout.cycleKey,
+        slug: tryout.slug,
+        label: tryout.label,
+        partCount: tryout.partCount,
+        totalQuestionCount: tryout.totalQuestionCount,
+        isActive: tryout.isActive,
+        catalogSortKey:
+          tryoutProductPolicies[tryout.product].getCatalogSortKey(tryout),
+        updatedAt: now,
+      };
+
+      if (!existingCatalogEntry) {
+        await ctx.db.insert("tryoutCatalogEntries", nextCatalogEntry);
+        return true;
+      }
+
+      const hasChanges =
+        existingCatalogEntry.product !== nextCatalogEntry.product ||
+        existingCatalogEntry.locale !== nextCatalogEntry.locale ||
+        existingCatalogEntry.cycleKey !== nextCatalogEntry.cycleKey ||
+        existingCatalogEntry.slug !== nextCatalogEntry.slug ||
+        existingCatalogEntry.label !== nextCatalogEntry.label ||
+        existingCatalogEntry.partCount !== nextCatalogEntry.partCount ||
+        existingCatalogEntry.totalQuestionCount !==
+          nextCatalogEntry.totalQuestionCount ||
+        existingCatalogEntry.isActive !== nextCatalogEntry.isActive ||
+        existingCatalogEntry.catalogSortKey !== nextCatalogEntry.catalogSortKey;
+
+      if (!hasChanges) {
+        return false;
+      }
+
+      await ctx.db.patch("tryoutCatalogEntries", existingCatalogEntry._id, {
+        catalogSortKey: nextCatalogEntry.catalogSortKey,
+        cycleKey: nextCatalogEntry.cycleKey,
+        isActive: nextCatalogEntry.isActive,
+        label: nextCatalogEntry.label,
+        locale: nextCatalogEntry.locale,
+        partCount: nextCatalogEntry.partCount,
+        product: nextCatalogEntry.product,
+        slug: nextCatalogEntry.slug,
+        totalQuestionCount: nextCatalogEntry.totalQuestionCount,
+        updatedAt: now,
+      });
+
+      return true;
+    };
 
     for (const tryout of detectedTryouts) {
       const existingTryout = await ctx.db
@@ -73,11 +141,16 @@ export const bulkSyncTryouts = internalMutation({
           parts: tryout.parts,
           tryoutId: existingTryout._id,
         });
+        const catalogEntryChanged = await syncCatalogEntry({
+          tryout,
+          tryoutId: existingTryout._id,
+        });
         const hasChanges =
           !existingTryout.isActive ||
           existingTryout.label !== tryout.label ||
           existingTryout.partCount !== tryout.partCount ||
           existingTryout.totalQuestionCount !== tryout.totalQuestionCount ||
+          catalogEntryChanged ||
           mappingsChanged;
 
         if (!hasChanges) {
@@ -141,6 +214,10 @@ export const bulkSyncTryouts = internalMutation({
         syncedAt: now,
         totalQuestionCount: tryout.totalQuestionCount,
       });
+      await syncCatalogEntry({
+        tryout,
+        tryoutId,
+      });
 
       await syncTryoutPartSetMappings(ctx, {
         parts: tryout.parts,
@@ -188,10 +265,22 @@ export const bulkSyncTryouts = internalMutation({
         continue;
       }
 
+      const activeCatalogEntry = await ctx.db
+        .query("tryoutCatalogEntries")
+        .withIndex("by_tryoutId", (q) => q.eq("tryoutId", activeTryout._id))
+        .unique();
+
       await ctx.db.patch("tryouts", activeTryout._id, {
         isActive: false,
         syncedAt: now,
       });
+
+      if (activeCatalogEntry?.isActive) {
+        await ctx.db.patch("tryoutCatalogEntries", activeCatalogEntry._id, {
+          isActive: false,
+          updatedAt: now,
+        });
+      }
 
       const enqueued = await enqueueScaleQualityRefresh(ctx, {
         tryoutId: activeTryout._id,
@@ -203,6 +292,27 @@ export const bulkSyncTryouts = internalMutation({
       }
 
       updated++;
+    }
+
+    const existingCatalogMeta = await ctx.db
+      .query("tryoutCatalogMeta")
+      .withIndex("by_product_and_locale", (q) =>
+        q.eq("product", args.product).eq("locale", args.locale)
+      )
+      .unique();
+
+    if (!existingCatalogMeta) {
+      await ctx.db.insert("tryoutCatalogMeta", {
+        activeCount: activeCatalogCount,
+        locale: args.locale,
+        product: args.product,
+        updatedAt: now,
+      });
+    } else if (existingCatalogMeta.activeCount !== activeCatalogCount) {
+      await ctx.db.patch("tryoutCatalogMeta", existingCatalogMeta._id, {
+        activeCount: activeCatalogCount,
+        updatedAt: now,
+      });
     }
 
     if (enqueuedScaleQualityRefresh) {

@@ -49,7 +49,7 @@ export type DetectedTryout = Pick<
 
 type TryoutRecord = Pick<
   Doc<"tryouts">,
-  "cycleKey" | "label" | "locale" | "product"
+  "cycleKey" | "label" | "locale" | "product" | "slug"
 >;
 
 type TryoutLeaderboardNamespaceArgs = Pick<
@@ -64,6 +64,7 @@ export interface TryoutProductPolicy {
     locale: TryoutSetCandidate["locale"];
     sets: TryoutSetCandidate[];
   }) => DetectedTryout[];
+  getCatalogSortKey: (args: TryoutRecord) => string;
   getLeaderboardNamespace: (args: TryoutLeaderboardNamespaceArgs) => string;
   getPartTimeLimitSeconds: (
     questionCount: Doc<"exerciseSets">["questionCount"]
