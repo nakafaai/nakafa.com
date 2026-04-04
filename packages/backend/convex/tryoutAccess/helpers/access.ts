@@ -213,6 +213,13 @@ export async function syncTryoutAccessGrantStatus(
   return status;
 }
 
+/**
+ * Resolve the active event-based access sources for one user and product.
+ *
+ * Competition grants are allowed to revive immediately after an ops extension,
+ * even if the stored grant rows have not yet been re-synced, so we read both
+ * active and expired grant buckets and trust the current campaign window.
+ */
 async function loadActiveTryoutEventSources(
   db: TryoutAccessDbReader,
   {
@@ -228,6 +235,7 @@ async function loadActiveTryoutEventSources(
   let accessPassEventSource: TryoutEventSource | null = null;
   const competitionEventSources: TryoutEventSource[] = [];
 
+  /** Read one stored grant-status bucket and translate rows into live sources. */
   async function readProductGrantStatusPage(status: "active" | "expired") {
     let cursor: string | null = null;
 
@@ -304,6 +312,7 @@ async function loadActiveTryoutEventSources(
   };
 }
 
+/** Checks whether the user currently has an active paid subscription for tryouts. */
 async function hasActiveTryoutSubscription(
   db: TryoutAccessDbReader,
   {

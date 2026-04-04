@@ -42,6 +42,7 @@ const countTablePageResultValidator = v.object({
   pageSize: v.number(),
 });
 
+/** Returns the size of one paginated table slice for sync verification scripts. */
 export const countTablePage = internalQuery({
   args: {
     paginationOpts: paginationOptsValidator,

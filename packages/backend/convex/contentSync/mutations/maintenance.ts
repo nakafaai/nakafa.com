@@ -41,6 +41,7 @@ type ResettableTableName =
   | "userTryoutLatestAttempts"
   | "userTryoutStats";
 
+/** Delete one bounded batch from a content-derived table. */
 async function deleteBatchFromTable(
   ctx: MutationCtx,
   tableName: ResettableTableName
@@ -113,6 +114,7 @@ export const deleteTryoutRuntimeBatch = internalMutation({
   },
 });
 
+/** Create one small internal mutation that deletes a single bounded batch. */
 function makeBatchDeleteMutation(tableName: ResettableTableName) {
   return internalMutation({
     args: {},
