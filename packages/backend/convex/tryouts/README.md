@@ -22,6 +22,9 @@ queries, mutations, IRT publication, and leaderboard flow stay generic.
   (stable public identity for routes)
 - `tryoutAttempts` stores per-user simulation lifecycle and final IRT result
 - `tryoutPartAttempts` links one runtime part to one shared `exerciseAttempt`
+- `userTryoutAccessSources` stores active event access per user and product
+- `userTryoutCompetitionUsages` stores which competition campaign has already
+  counted for one user and tryout
 - `tryoutLeaderboardEntries` stores the current best official result per user
 - `userTryoutStats` stores leaderboard aggregates per product namespace
 
@@ -45,6 +48,8 @@ That policy owns:
   families like `tkaTryouts`, `cpnsTryouts`, etc.
 - Hub browse reads go through the dedicated catalog tables so Convex can paginate
   in final display order without caller-side `.collect()` or page exhaustion
+- Tryout start reads go through user-scoped access projections instead of broad
+  campaign or attempt scans inside the mutation
 - Generic ranking still uses aggregate components for O(log n) rank lookups
 
 ## Catalog Read Model
@@ -92,9 +97,16 @@ Use `getActiveTryoutCatalogPage` with `usePaginatedQuery` on the client and
 let the catalog page query attach latest-attempt badges only for the rows in the
 current page.
 
+The part runtime route is intentionally different.
+It can read runtime state with an authenticated server-side Convex query and then
+load question content from the snapshot-resolved `setSlug`, so historical
+attempts stay bound to their original part mapping even after content sync
+changes.
+
 Frontend routing can stay product-specific, for example:
 
 - `/[locale]/try-out/[product]`
 - `/[locale]/try-out/[product]/[slug]`
+- `/[locale]/try-out/[product]/[slug]/part/[partKey]`
 
 The backend slug remains the detected runtime slug like `2026-set-1`.

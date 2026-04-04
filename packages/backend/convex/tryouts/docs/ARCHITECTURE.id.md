@@ -64,6 +64,9 @@ Tanggung jawab:
 - membaca campaign dan link akses event
 - menentukan grant aktif untuk `competition` atau `access-pass`
 - menyinkronkan status grant dan jendela aktif event
+- mematerialisasi projection user-scoped:
+  - `userTryoutAccessSources`
+  - `userTryoutCompetitionUsages`
 
 Lapisan ini hanya menjawab pertanyaan:
 
@@ -121,6 +124,15 @@ psychometric internal.
 - `userTryoutLatestAttempts`
   - pointer cepat ke status attempt terakhir per user dan try out
 
+### Projection Akses
+
+- `userTryoutAccessSources`
+  - projection akses event aktif per `{user, product, campaign}`
+  - dipakai `startTryout` supaya read tetap bounded dan user-scoped
+- `userTryoutCompetitionUsages`
+  - projection bahwa satu competition campaign untuk satu try out sudah terpakai
+  - mencegah scan history attempt di mutation start
+
 ### Hasil dan Ranking
 
 - `tryoutLeaderboardEntries`
@@ -147,19 +159,22 @@ psychometric internal.
 ### 3. User menekan mulai
 
 - `startTryout` memverifikasi auth
-- backend membaca access source aktif:
+- backend membaca projection akses aktif user:
   - `competition`
   - `access-pass`
   - Pro subscription
+- backend membaca `userTryoutCompetitionUsages` untuk campaign competition aktif pada
+  try out itu
 - backend memilih access source yang sah sesuai policy produk
 - backend mengikat attempt ke frozen scale terbaru yang aman dipakai
 - backend menyimpan snapshot part dan provenance akses
 
 ### 4. User mengerjakan per part
 
+- route part membaca state runtime dengan auth server-side bila token tersedia
 - `startPart` memakai snapshot yang sudah disimpan saat attempt dibuat
-- timer dan jumlah soal tidak boleh menebak dari content live yang mungkin sudah
-  berubah
+- set slug, timer, dan jumlah soal dibaca dari snapshot/runtime mapping, bukan
+  dari definisi static try out saat ini
 - `completePart` menyimpan score part
 
 ### 5. User melihat hasil
@@ -242,10 +257,19 @@ Hub dan halaman produk sekarang mengikuti kontrak ini:
   - group by `cycleKey`
   - load more dengan `Intersection`
 
+Halaman part runtime mengikuti kontrak berbeda:
+
+- page server membaca `getTryoutDetails`
+- jika user login, page juga membaca `queries/me/part.ts` dengan token server-side
+- file content dibaca dari `setSlug` runtime yang sudah resolve dari snapshot
+- route ini sengaja dynamic karena bergantung pada auth, expiry, dan snapshot
+  attempt user
+
 Artinya:
 
 - path lama yang menghabiskan semua page di Next server sudah tidak dipakai lagi
-- query katalog global tidak lagi melakukan join auth per row
+- query katalog global hanya menambahkan latest-attempt badge untuk row pada page
+  aktif
 
 ## Checklist Ops Dan Engineering
 

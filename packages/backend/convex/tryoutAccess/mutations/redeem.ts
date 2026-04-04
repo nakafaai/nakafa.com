@@ -59,6 +59,8 @@ export const redeemEventAccess = mutation({
       .unique();
 
     if (existingGrant) {
+      await syncTryoutAccessGrantStatus(ctx.db, existingGrant, now);
+
       const effectiveEndsAt = getTryoutAccessGrantEffectiveEndsAt({
         campaign: eventAccess.campaign,
         endsAt: existingGrant.endsAt,
@@ -71,8 +73,6 @@ export const redeemEventAccess = mutation({
           name: eventAccess.campaign.name,
         };
       }
-
-      await syncTryoutAccessGrantStatus(ctx.db, existingGrant, now);
 
       return {
         kind: "used" as const,
@@ -138,6 +138,17 @@ export const redeemEventAccess = mutation({
         endsAt,
       });
     }
+
+    await syncTryoutAccessGrantStatus(
+      ctx.db,
+      {
+        _id: grantId,
+        campaignId: eventAccess.campaign._id,
+        endsAt,
+        status: grantStatus,
+      },
+      now
+    );
 
     await ctx.scheduler.runAfter(
       endsAt - now,

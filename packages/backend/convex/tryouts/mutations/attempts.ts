@@ -31,7 +31,7 @@ import {
 import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError, v } from "convex/values";
 
-const COMPETITION_ATTEMPT_SCAN_PAGE_SIZE = 50;
+const COMPETITION_USAGE_PAGE_SIZE = 50;
 
 /** Starts or resumes one authenticated tryout attempt for a product slug. */
 export const startTryout = mutation({
@@ -77,7 +77,6 @@ export const startTryout = mutation({
     }
 
     const accessSources = await resolveTryoutAccessSources(ctx.db, {
-      now,
       product: tryout.product,
       userId,
     });
@@ -86,13 +85,9 @@ export const startTryout = mutation({
         (competitionEventSource) => competitionEventSource.accessCampaignId
       )
     );
-    const usedCompetitionCampaignIds = new Set(
-      existingAttempt?.accessCampaignId &&
-        existingAttempt.accessCampaignKind === "competition" &&
-        activeCompetitionCampaignIds.has(existingAttempt.accessCampaignId)
-        ? [existingAttempt.accessCampaignId]
-        : []
-    );
+    const usedCompetitionCampaignIds = new Set(activeCompetitionCampaignIds);
+
+    usedCompetitionCampaignIds.clear();
 
     if (
       activeCompetitionCampaignIds.size > 0 &&
@@ -101,27 +96,24 @@ export const startTryout = mutation({
       let cursor: string | null = null;
 
       while (true) {
-        const attemptPage = await ctx.db
-          .query("tryoutAttempts")
-          .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
+        const usagePage = await ctx.db
+          .query("userTryoutCompetitionUsages")
+          .withIndex("by_userId_and_tryoutId_and_accessCampaignId", (q) =>
             q.eq("userId", userId).eq("tryoutId", tryout._id)
           )
-          .order("desc")
           .paginate({
             cursor,
-            numItems: COMPETITION_ATTEMPT_SCAN_PAGE_SIZE,
+            numItems: COMPETITION_USAGE_PAGE_SIZE,
           });
 
-        for (const attempt of attemptPage.page) {
+        for (const competitionUsage of usagePage.page) {
           if (
-            attempt.accessCampaignKind !== "competition" ||
-            !attempt.accessCampaignId ||
-            !activeCompetitionCampaignIds.has(attempt.accessCampaignId)
+            !activeCompetitionCampaignIds.has(competitionUsage.accessCampaignId)
           ) {
             continue;
           }
 
-          usedCompetitionCampaignIds.add(attempt.accessCampaignId);
+          usedCompetitionCampaignIds.add(competitionUsage.accessCampaignId);
 
           if (
             usedCompetitionCampaignIds.size ===
@@ -132,13 +124,13 @@ export const startTryout = mutation({
         }
 
         if (
-          attemptPage.isDone ||
+          usagePage.isDone ||
           usedCompetitionCampaignIds.size === activeCompetitionCampaignIds.size
         ) {
           break;
         }
 
-        cursor = attemptPage.continueCursor;
+        cursor = usagePage.continueCursor;
       }
     }
 
@@ -260,6 +252,19 @@ export const startTryout = mutation({
       tryout,
       updatedAt: now,
     });
+
+    if (
+      accessSource.accessKind === "event" &&
+      accessSource.accessCampaignKind === "competition"
+    ) {
+      await ctx.db.insert("userTryoutCompetitionUsages", {
+        userId,
+        tryoutId: tryout._id,
+        accessCampaignId: accessSource.accessCampaignId,
+        tryoutAttemptId,
+        usedAt: now,
+      });
+    }
 
     return null;
   },

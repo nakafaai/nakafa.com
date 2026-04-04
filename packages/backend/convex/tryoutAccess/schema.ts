@@ -59,6 +59,23 @@ export const tryoutAccessProductGrantValidator = v.object({
   endsAt: v.number(),
 });
 
+export const userTryoutAccessSourceValidator = v.object({
+  userId: v.id("users"),
+  product: tryoutProductValidator,
+  accessCampaignId: v.id("tryoutAccessCampaigns"),
+  accessCampaignKind: tryoutAccessCampaignKindValidator,
+  accessGrantId: v.id("tryoutAccessGrants"),
+  accessEndsAt: v.number(),
+});
+
+export const userTryoutCompetitionUsageValidator = v.object({
+  userId: v.id("users"),
+  tryoutId: v.id("tryouts"),
+  accessCampaignId: v.id("tryoutAccessCampaigns"),
+  tryoutAttemptId: v.id("tryoutAttempts"),
+  usedAt: v.number(),
+});
+
 const tables = {
   tryoutAccessCampaigns: defineTable(tryoutAccessCampaignValidator)
     .index("by_slug", ["slug"])
@@ -88,6 +105,25 @@ const tables = {
     .index("by_grantId", ["grantId"])
     .index("by_userId_and_product_and_status", ["userId", "product", "status"])
     .index("by_userId_and_product_and_endsAt", ["userId", "product", "endsAt"]),
+
+  userTryoutAccessSources: defineTable(userTryoutAccessSourceValidator)
+    .index("by_accessGrantId", ["accessGrantId"])
+    .index("by_accessCampaignId", ["accessCampaignId"])
+    .index("by_userId_and_product_and_accessCampaignKind_and_accessEndsAt", [
+      "userId",
+      "product",
+      "accessCampaignKind",
+      "accessEndsAt",
+    ]),
+
+  userTryoutCompetitionUsages: defineTable(userTryoutCompetitionUsageValidator)
+    .index("by_tryoutAttemptId", ["tryoutAttemptId"])
+    .index("by_accessCampaignId", ["accessCampaignId"])
+    .index("by_userId_and_tryoutId_and_accessCampaignId", [
+      "userId",
+      "tryoutId",
+      "accessCampaignId",
+    ]),
 };
 
 export default tables;

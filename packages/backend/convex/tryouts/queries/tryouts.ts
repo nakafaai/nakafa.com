@@ -159,6 +159,7 @@ export const getTryoutDetails = query({
           partIndex: v.number(),
           partKey: tryoutPartKeyValidator,
           setId: vv.id("exerciseSets"),
+          setSlug: vv.doc("exerciseSets").fields.slug,
           material: v.string(),
           questionCount: v.number(),
         })
@@ -205,6 +206,7 @@ export const getTryoutDetails = query({
         partIndex: partSet.partIndex,
         partKey: partSet.partKey,
         setId: partSet.setId,
+        setSlug: set.slug,
         material: set.material,
         questionCount: set.questionCount,
       };

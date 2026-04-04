@@ -90,6 +90,14 @@ export const tryoutPartAttemptRuntimeValidator = v.object({
 
 export const userTryoutPartAttemptResultValidator = v.object({
   expiresAtMs: v.number(),
+  part: nullable(
+    v.object({
+      currentPartKey: tryoutPartKeyValidator,
+      material: vv.doc("exerciseSets").fields.material,
+      questionCount: v.number(),
+      setSlug: vv.doc("exerciseSets").fields.slug,
+    })
+  ),
   partScore: nullable(tryoutPartAttemptScoreSummaryValidator),
   partAttempt: nullable(tryoutPartAttemptRuntimeValidator),
   tryoutAttempt: publicTryoutAttemptValidator,

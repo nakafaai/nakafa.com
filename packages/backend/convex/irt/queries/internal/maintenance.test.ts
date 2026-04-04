@@ -51,10 +51,17 @@ describe("irt/queries/internal/maintenance", () => {
 
     const result = await t.query(
       internal.irt.queries.internal.maintenance.getScaleQualityIntegrity,
-      {}
+      {
+        paginationOpts: {
+          cursor: null,
+          numItems: 100,
+        },
+      }
     );
 
     expect(result).toEqual({
+      continueCursor: expect.any(String),
+      isDone: true,
       missingQualityCheckTryoutCount: 0,
       unstartableTryoutCount: 0,
     });
@@ -69,10 +76,17 @@ describe("irt/queries/internal/maintenance", () => {
 
     const result = await t.query(
       internal.irt.queries.internal.maintenance.getScaleQualityIntegrity,
-      {}
+      {
+        paginationOpts: {
+          cursor: null,
+          numItems: 100,
+        },
+      }
     );
 
     expect(result).toEqual({
+      continueCursor: expect.any(String),
+      isDone: true,
       missingQualityCheckTryoutCount: 1,
       unstartableTryoutCount: 1,
     });

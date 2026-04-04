@@ -2,6 +2,7 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
+import { syncTryoutAccessGrantStatus } from "@repo/backend/convex/tryoutAccess/helpers/access";
 import {
   ATTEMPT_WINDOW_MS,
   createTryoutTestConvex,
@@ -40,6 +41,60 @@ async function insertActiveProSubscription(
     checkoutId: null,
     metadata: {},
   });
+}
+
+async function insertTryoutAccessGrant(
+  ctx: MutationCtx,
+  {
+    campaignId,
+    endsAt,
+    linkId,
+    products,
+    status,
+    syncedAt,
+    userId,
+  }: {
+    campaignId: Id<"tryoutAccessCampaigns">;
+    endsAt: number;
+    linkId: Id<"tryoutAccessLinks">;
+    products: "snbt"[];
+    status: "active" | "expired";
+    syncedAt: number;
+    userId: Id<"users">;
+  }
+) {
+  const grantId = await ctx.db.insert("tryoutAccessGrants", {
+    campaignId,
+    linkId,
+    userId,
+    redeemedAt: NOW,
+    endsAt,
+    status,
+  });
+
+  for (const product of products) {
+    await ctx.db.insert("tryoutAccessProductGrants", {
+      campaignId,
+      grantId,
+      product,
+      status,
+      userId,
+      endsAt,
+    });
+  }
+
+  await syncTryoutAccessGrantStatus(
+    ctx.db,
+    {
+      _id: grantId,
+      campaignId,
+      endsAt,
+      status,
+    },
+    syncedAt
+  );
+
+  return grantId;
 }
 
 describe("tryouts/mutations/attempts", () => {
@@ -132,22 +187,14 @@ describe("tryouts/mutations/attempts", () => {
         label: "Competition First Attempt",
         enabled: true,
       });
-      const grantId = await ctx.db.insert("tryoutAccessGrants", {
+      const grantId = await insertTryoutAccessGrant(ctx, {
         campaignId,
+        endsAt,
         linkId,
-        userId: identity.userId,
-        redeemedAt: NOW,
-        endsAt,
+        products: ["snbt"],
         status: "active",
-      });
-
-      await ctx.db.insert("tryoutAccessProductGrants", {
-        campaignId,
-        grantId,
-        product: "snbt",
-        status: "active",
+        syncedAt: currentTime,
         userId: identity.userId,
-        endsAt,
       });
 
       return {
@@ -349,40 +396,25 @@ describe("tryouts/mutations/attempts", () => {
         label: "Competition Multiple Grants Second",
         enabled: true,
       });
-      const firstGrantId = await ctx.db.insert("tryoutAccessGrants", {
+      const firstGrantId = await insertTryoutAccessGrant(ctx, {
         campaignId: firstCampaignId,
+        endsAt: firstEndsAt,
         linkId: firstLinkId,
-        userId: identity.userId,
-        redeemedAt: NOW,
-        endsAt: firstEndsAt,
+        products: ["snbt"],
         status: "active",
+        syncedAt: currentTime,
+        userId: identity.userId,
       });
-      const secondGrantId = await ctx.db.insert("tryoutAccessGrants", {
+      const secondGrantId = await insertTryoutAccessGrant(ctx, {
         campaignId: secondCampaignId,
+        endsAt: secondEndsAt,
         linkId: secondLinkId,
-        userId: identity.userId,
-        redeemedAt: NOW,
-        endsAt: secondEndsAt,
+        products: ["snbt"],
         status: "active",
-      });
-
-      await ctx.db.insert("tryoutAccessProductGrants", {
-        campaignId: firstCampaignId,
-        grantId: firstGrantId,
-        product: "snbt",
-        status: "active",
+        syncedAt: currentTime,
         userId: identity.userId,
-        endsAt: firstEndsAt,
       });
-      await ctx.db.insert("tryoutAccessProductGrants", {
-        campaignId: secondCampaignId,
-        grantId: secondGrantId,
-        product: "snbt",
-        status: "active",
-        userId: identity.userId,
-        endsAt: secondEndsAt,
-      });
-      await ctx.db.insert("tryoutAttempts", {
+      const firstTryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
         userId: identity.userId,
         tryoutId: tryout.tryoutId,
         scaleVersionId: tryout.scaleVersionId,
@@ -412,6 +444,13 @@ describe("tryouts/mutations/attempts", () => {
         lastActivityAt: NOW,
         completedAt: NOW,
         endReason: "submitted",
+      });
+      await ctx.db.insert("userTryoutCompetitionUsages", {
+        userId: identity.userId,
+        tryoutId: tryout.tryoutId,
+        accessCampaignId: firstCampaignId,
+        tryoutAttemptId: firstTryoutAttemptId,
+        usedAt: NOW,
       });
 
       return {
@@ -479,24 +518,16 @@ describe("tryouts/mutations/attempts", () => {
         label: "Competition Attempt Used",
         enabled: true,
       });
-      const grantId = await ctx.db.insert("tryoutAccessGrants", {
+      const grantId = await insertTryoutAccessGrant(ctx, {
         campaignId,
+        endsAt,
         linkId,
-        userId: identity.userId,
-        redeemedAt: NOW,
-        endsAt,
+        products: ["snbt"],
         status: "active",
-      });
-
-      await ctx.db.insert("tryoutAccessProductGrants", {
-        campaignId,
-        grantId,
-        product: "snbt",
-        status: "active",
+        syncedAt: currentTime,
         userId: identity.userId,
-        endsAt,
       });
-      await ctx.db.insert("tryoutAttempts", {
+      const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
         userId: identity.userId,
         tryoutId: tryout.tryoutId,
         scaleVersionId: tryout.scaleVersionId,
@@ -526,6 +557,13 @@ describe("tryouts/mutations/attempts", () => {
         lastActivityAt: NOW,
         completedAt: NOW,
         endReason: "submitted",
+      });
+      await ctx.db.insert("userTryoutCompetitionUsages", {
+        userId: identity.userId,
+        tryoutId: tryout.tryoutId,
+        accessCampaignId: campaignId,
+        tryoutAttemptId,
+        usedAt: NOW,
       });
 
       return identity;
@@ -696,38 +734,23 @@ describe("tryouts/mutations/attempts", () => {
         label: "Longer Access Pass",
         enabled: true,
       });
-      const shorterGrantId = await ctx.db.insert("tryoutAccessGrants", {
+      await insertTryoutAccessGrant(ctx, {
         campaignId: shorterCampaignId,
+        endsAt: shorterEndsAt,
         linkId: shorterLinkId,
-        userId: identity.userId,
-        redeemedAt: currentTime,
-        endsAt: shorterEndsAt,
+        products: ["snbt"],
         status: "active",
+        syncedAt: currentTime,
+        userId: identity.userId,
       });
-      const longerGrantId = await ctx.db.insert("tryoutAccessGrants", {
+      const longerGrantId = await insertTryoutAccessGrant(ctx, {
         campaignId: longerCampaignId,
+        endsAt: longerEndsAt,
         linkId: longerLinkId,
-        userId: identity.userId,
-        redeemedAt: currentTime,
-        endsAt: longerEndsAt,
+        products: ["snbt"],
         status: "active",
-      });
-
-      await ctx.db.insert("tryoutAccessProductGrants", {
-        campaignId: shorterCampaignId,
-        grantId: shorterGrantId,
-        product: "snbt",
-        status: "active",
+        syncedAt: currentTime,
         userId: identity.userId,
-        endsAt: shorterEndsAt,
-      });
-      await ctx.db.insert("tryoutAccessProductGrants", {
-        campaignId: longerCampaignId,
-        grantId: longerGrantId,
-        product: "snbt",
-        status: "active",
-        userId: identity.userId,
-        endsAt: longerEndsAt,
       });
 
       return {
@@ -806,22 +829,14 @@ describe("tryouts/mutations/attempts", () => {
           label: `Many Access Pass ${index}`,
           enabled: true,
         });
-        const grantId = await ctx.db.insert("tryoutAccessGrants", {
+        const grantId = await insertTryoutAccessGrant(ctx, {
           campaignId,
+          endsAt,
           linkId,
-          userId: identity.userId,
-          redeemedAt: currentTime,
-          endsAt,
+          products: ["snbt"],
           status: "active",
-        });
-
-        await ctx.db.insert("tryoutAccessProductGrants", {
-          campaignId,
-          grantId,
-          product: "snbt",
-          status: "active",
+          syncedAt: currentTime,
           userId: identity.userId,
-          endsAt,
         });
 
         longestCampaignId = campaignId;
@@ -896,22 +911,14 @@ describe("tryouts/mutations/attempts", () => {
         label: "Extended Competition Grant",
         enabled: true,
       });
-      const grantId = await ctx.db.insert("tryoutAccessGrants", {
+      const grantId = await insertTryoutAccessGrant(ctx, {
         campaignId,
+        endsAt: staleEndsAt,
         linkId,
-        userId: identity.userId,
-        redeemedAt: currentTime - 2 * 24 * 60 * 60 * 1000,
-        endsAt: staleEndsAt,
+        products: ["snbt"],
         status: "expired",
-      });
-
-      await ctx.db.insert("tryoutAccessProductGrants", {
-        campaignId,
-        grantId,
-        product: "snbt",
-        status: "expired",
+        syncedAt: currentTime,
         userId: identity.userId,
-        endsAt: staleEndsAt,
       });
 
       return {

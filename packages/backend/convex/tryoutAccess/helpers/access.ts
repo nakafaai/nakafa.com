@@ -14,10 +14,9 @@ import {
 import { products } from "@repo/backend/convex/utils/polar/products";
 import type { Infer } from "convex/values";
 import { ConvexError } from "convex/values";
-import { getAll } from "convex-helpers/server/relationships";
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
-const ACTIVE_PRODUCT_GRANT_PAGE_SIZE = 50;
+const ACTIVE_ACCESS_SOURCE_PAGE_SIZE = 50;
 const MAX_PRODUCT_GRANTS_PER_GRANT = tryoutProducts.length;
 
 const tryoutPaidProductIds = {
@@ -188,6 +187,13 @@ export async function syncTryoutAccessGrantStatus(
     .query("tryoutAccessProductGrants")
     .withIndex("by_grantId", (q) => q.eq("grantId", grant._id))
     .take(MAX_PRODUCT_GRANTS_PER_GRANT);
+  const accessSources = await db
+    .query("userTryoutAccessSources")
+    .withIndex("by_accessGrantId", (q) => q.eq("accessGrantId", grant._id))
+    .take(MAX_PRODUCT_GRANTS_PER_GRANT);
+  const accessSourceByProduct = new Map(
+    accessSources.map((accessSource) => [accessSource.product, accessSource])
+  );
 
   if (grant.endsAt !== effectiveEndsAt || grant.status !== status) {
     await db.patch("tryoutAccessGrants", grant._id, {
@@ -197,17 +203,69 @@ export async function syncTryoutAccessGrantStatus(
   }
 
   for (const productGrant of productGrants) {
+    const currentAccessSource = accessSourceByProduct.get(productGrant.product);
+
     if (
-      productGrant.endsAt === effectiveEndsAt &&
-      productGrant.status === status
+      productGrant.endsAt !== effectiveEndsAt ||
+      productGrant.status !== status
+    ) {
+      await db.patch("tryoutAccessProductGrants", productGrant._id, {
+        endsAt: effectiveEndsAt,
+        status,
+      });
+    }
+
+    if (!(campaign && status === "active")) {
+      if (!currentAccessSource) {
+        continue;
+      }
+
+      await db.delete("userTryoutAccessSources", currentAccessSource._id);
+      accessSourceByProduct.delete(productGrant.product);
+      continue;
+    }
+
+    const nextAccessSource = {
+      userId: productGrant.userId,
+      product: productGrant.product,
+      accessCampaignId: grant.campaignId,
+      accessCampaignKind: campaign.campaignKind,
+      accessGrantId: grant._id,
+      accessEndsAt: effectiveEndsAt,
+    };
+
+    if (!currentAccessSource) {
+      await db.insert("userTryoutAccessSources", nextAccessSource);
+      continue;
+    }
+
+    accessSourceByProduct.delete(productGrant.product);
+
+    if (
+      currentAccessSource.userId === nextAccessSource.userId &&
+      currentAccessSource.product === nextAccessSource.product &&
+      currentAccessSource.accessCampaignId ===
+        nextAccessSource.accessCampaignId &&
+      currentAccessSource.accessCampaignKind ===
+        nextAccessSource.accessCampaignKind &&
+      currentAccessSource.accessGrantId === nextAccessSource.accessGrantId &&
+      currentAccessSource.accessEndsAt === nextAccessSource.accessEndsAt
     ) {
       continue;
     }
 
-    await db.patch("tryoutAccessProductGrants", productGrant._id, {
-      endsAt: effectiveEndsAt,
-      status,
+    await db.patch("userTryoutAccessSources", currentAccessSource._id, {
+      userId: nextAccessSource.userId,
+      product: nextAccessSource.product,
+      accessCampaignId: nextAccessSource.accessCampaignId,
+      accessCampaignKind: nextAccessSource.accessCampaignKind,
+      accessGrantId: nextAccessSource.accessGrantId,
+      accessEndsAt: nextAccessSource.accessEndsAt,
     });
+  }
+
+  for (const staleAccessSource of accessSourceByProduct.values()) {
+    await db.delete("userTryoutAccessSources", staleAccessSource._id);
   }
 
   return status;
@@ -216,160 +274,76 @@ export async function syncTryoutAccessGrantStatus(
 /**
  * Resolve the active event-based access sources for one user and product.
  *
- * Competition grants are allowed to revive immediately after an ops extension,
- * even if the stored grant rows have not yet been re-synced, so we read active
- * product grants first and then check only currently active competition
- * campaigns that could revive an older grant.
+ * This reads only the user-scoped active-access projection so the tryout start
+ * mutation stays bounded even when campaign history grows.
  */
 async function loadActiveTryoutEventSources(
   db: TryoutAccessDbReader,
   {
-    now,
     product,
     userId,
   }: {
-    now: number;
     product: TryoutProduct;
     userId: Doc<"users">["_id"];
   }
 ): Promise<ActiveTryoutEventSources> {
-  let accessPassEventSource: TryoutEventSource | null = null;
+  const accessPassSource = await db
+    .query("userTryoutAccessSources")
+    .withIndex(
+      "by_userId_and_product_and_accessCampaignKind_and_accessEndsAt",
+      (q) =>
+        q
+          .eq("userId", userId)
+          .eq("product", product)
+          .eq("accessCampaignKind", "access-pass")
+    )
+    .order("desc")
+    .first();
   const competitionEventSources: TryoutEventSource[] = [];
-  const seenCompetitionGrantIds = new Set<Doc<"tryoutAccessGrants">["_id"]>();
+  let cursor: string | null = null;
 
-  /** Read currently active product grants and translate rows into live sources. */
-  async function readActiveProductGrantPage() {
-    let cursor: string | null = null;
-
-    while (true) {
-      const productGrantPage = await db
-        .query("tryoutAccessProductGrants")
-        .withIndex("by_userId_and_product_and_status", (q) =>
-          q.eq("userId", userId).eq("product", product).eq("status", "active")
-        )
-        .paginate({
-          cursor,
-          numItems: ACTIVE_PRODUCT_GRANT_PAGE_SIZE,
-        });
-      const campaigns = await getAll(
-        db,
-        "tryoutAccessCampaigns",
-        productGrantPage.page.map((productGrant) => productGrant.campaignId)
-      );
-
-      for (const [index, productGrant] of productGrantPage.page.entries()) {
-        const campaign = campaigns[index];
-
-        if (!campaign) {
-          continue;
-        }
-
-        const accessEndsAt = getTryoutAccessGrantEffectiveEndsAt({
-          campaign,
-          endsAt: productGrant.endsAt,
-        });
-
-        if (accessEndsAt <= now) {
-          continue;
-        }
-
-        const eventSource = {
-          accessCampaignId: campaign._id,
-          accessCampaignKind: campaign.campaignKind,
-          accessEndsAt,
-          accessGrantId: productGrant.grantId,
-        };
-
-        if (eventSource.accessCampaignKind === "competition") {
-          seenCompetitionGrantIds.add(eventSource.accessGrantId);
-          competitionEventSources.push(eventSource);
-          continue;
-        }
-
-        if (
-          !accessPassEventSource ||
-          eventSource.accessEndsAt > accessPassEventSource.accessEndsAt
-        ) {
-          accessPassEventSource = eventSource;
-        }
-      }
-
-      if (productGrantPage.isDone) {
-        return;
-      }
-
-      cursor = productGrantPage.continueCursor;
-    }
-  }
-
-  /**
-   * Check active competition campaigns for grants that were stored as expired
-   * before ops extended the campaign window.
-   */
-  async function readRevivedCompetitionGrantPage() {
-    let cursor: string | null = null;
-
-    while (true) {
-      const campaignPage = await db
-        .query("tryoutAccessCampaigns")
-        .withIndex("by_campaignKind_and_redeemStatus_and_endsAt", (q) =>
+  while (true) {
+    const competitionPage = await db
+      .query("userTryoutAccessSources")
+      .withIndex(
+        "by_userId_and_product_and_accessCampaignKind_and_accessEndsAt",
+        (q) =>
           q
-            .eq("campaignKind", "competition")
-            .eq("redeemStatus", "active")
-            .gt("endsAt", now)
-        )
-        .paginate({
-          cursor,
-          numItems: ACTIVE_PRODUCT_GRANT_PAGE_SIZE,
-        });
+            .eq("userId", userId)
+            .eq("product", product)
+            .eq("accessCampaignKind", "competition")
+      )
+      .order("desc")
+      .paginate({
+        cursor,
+        numItems: ACTIVE_ACCESS_SOURCE_PAGE_SIZE,
+      });
 
-      for (const campaign of campaignPage.page) {
-        if (!campaign.products.includes(product)) {
-          continue;
-        }
+    competitionEventSources.push(
+      ...competitionPage.page.map((accessSource) => ({
+        accessCampaignId: accessSource.accessCampaignId,
+        accessCampaignKind: accessSource.accessCampaignKind,
+        accessEndsAt: accessSource.accessEndsAt,
+        accessGrantId: accessSource.accessGrantId,
+      }))
+    );
 
-        const grant = await db
-          .query("tryoutAccessGrants")
-          .withIndex("by_userId_and_campaignId", (q) =>
-            q.eq("userId", userId).eq("campaignId", campaign._id)
-          )
-          .unique();
-
-        if (!grant || seenCompetitionGrantIds.has(grant._id)) {
-          continue;
-        }
-
-        const accessEndsAt = getTryoutAccessGrantEffectiveEndsAt({
-          campaign,
-          endsAt: grant.endsAt,
-        });
-
-        if (accessEndsAt <= now) {
-          continue;
-        }
-
-        seenCompetitionGrantIds.add(grant._id);
-        competitionEventSources.push({
-          accessCampaignId: campaign._id,
-          accessCampaignKind: campaign.campaignKind,
-          accessEndsAt,
-          accessGrantId: grant._id,
-        });
-      }
-
-      if (campaignPage.isDone) {
-        return;
-      }
-
-      cursor = campaignPage.continueCursor;
+    if (competitionPage.isDone) {
+      break;
     }
-  }
 
-  await readActiveProductGrantPage();
-  await readRevivedCompetitionGrantPage();
+    cursor = competitionPage.continueCursor;
+  }
 
   return {
-    accessPassEventSource,
+    accessPassEventSource: accessPassSource
+      ? {
+          accessCampaignId: accessPassSource.accessCampaignId,
+          accessCampaignKind: accessPassSource.accessCampaignKind,
+          accessEndsAt: accessPassSource.accessEndsAt,
+          accessGrantId: accessPassSource.accessGrantId,
+        }
+      : null,
     competitionEventSources,
   };
 }
@@ -411,11 +385,9 @@ async function hasActiveTryoutSubscription(
 export async function resolveTryoutAccessSources(
   db: TryoutAccessDbReader,
   {
-    now,
     product,
     userId,
   }: {
-    now: number;
     product: TryoutProduct;
     userId: Doc<"users">["_id"];
   }
@@ -425,7 +397,6 @@ export async function resolveTryoutAccessSources(
     hasActiveSubscription,
   ] = await Promise.all([
     loadActiveTryoutEventSources(db, {
-      now,
       product,
       userId,
     }),

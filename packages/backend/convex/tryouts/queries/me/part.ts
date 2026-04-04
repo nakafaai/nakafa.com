@@ -87,11 +87,28 @@ export const getUserTryoutPartAttempt = query({
     if (!resolvedPart) {
       return {
         expiresAtMs: tryoutAttempt.expiresAt,
+        part: null,
         partScore: null,
         partAttempt: null,
         tryoutAttempt: resolvedTryoutAttempt,
       };
     }
+
+    const set = await ctx.db.get("exerciseSets", resolvedPart.snapshot.setId);
+
+    if (!set) {
+      throw new ConvexError({
+        code: "INVALID_TRYOUT_STATE",
+        message: "Tryout part is missing its exercise set.",
+      });
+    }
+
+    const part = {
+      currentPartKey: resolvedPart.currentPartKey,
+      material: set.material,
+      questionCount: resolvedPart.snapshot.questionCount,
+      setSlug: set.slug,
+    };
 
     const currentPartAttempt = await ctx.db
       .query("tryoutPartAttempts")
@@ -111,6 +128,7 @@ export const getUserTryoutPartAttempt = query({
         if (!partSnapshot) {
           return {
             expiresAtMs: tryoutAttempt.expiresAt,
+            part,
             partScore: null,
             partAttempt: null,
             tryoutAttempt: resolvedTryoutAttempt,
@@ -119,6 +137,7 @@ export const getUserTryoutPartAttempt = query({
 
         return {
           expiresAtMs: tryoutAttempt.expiresAt,
+          part,
           partScore: partSnapshot.score,
           partAttempt: null,
           tryoutAttempt: resolvedTryoutAttempt,
@@ -134,6 +153,7 @@ export const getUserTryoutPartAttempt = query({
 
       return {
         expiresAtMs: tryoutAttempt.expiresAt,
+        part,
         partScore: null,
         partAttempt: null,
         tryoutAttempt: resolvedTryoutAttempt,
@@ -185,6 +205,7 @@ export const getUserTryoutPartAttempt = query({
 
     return {
       expiresAtMs: tryoutAttempt.expiresAt,
+      part,
       partScore,
       partAttempt: {
         partIndex: currentPartAttempt.partIndex,

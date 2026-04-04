@@ -1,47 +1,43 @@
 import { internalQuery } from "@repo/backend/convex/_generated/server";
 import { getCalibrationAttemptCacheLimit } from "@repo/backend/convex/irt/policy";
 import { getLatestScaleVersionForTryout } from "@repo/backend/convex/irt/scales/read";
-import { ConvexError, v } from "convex/values";
+import { paginationOptsValidator } from "convex/server";
+import { v } from "convex/values";
 
-const MAX_IRT_CACHE_INTEGRITY_SETS = 1000;
-
-const calibrationCacheIntegrityResultValidator = v.object({
+const calibrationCacheIntegrityPageResultValidator = v.object({
+  continueCursor: v.string(),
+  isDone: v.boolean(),
   missingStatsSetCount: v.number(),
   oversizedSetCount: v.number(),
 });
 
-const scaleQualityIntegrityResultValidator = v.object({
+const scaleQualityIntegrityPageResultValidator = v.object({
+  continueCursor: v.string(),
+  isDone: v.boolean(),
   missingQualityCheckTryoutCount: v.number(),
   unstartableTryoutCount: v.number(),
 });
 
 /**
- * Return whether any set still has missing or oversized calibration cache
- * state.
+ * Return the integrity totals for one bounded page of exercise sets.
  *
- * Operator entrypoint: invoked via `convex run` / package scripts during manual
- * integrity verification.
+ * Operator scripts aggregate these page summaries client-side so each query stays
+ * safely bounded as data grows.
  */
 export const getCalibrationCacheIntegrity = internalQuery({
-  args: {},
-  returns: calibrationCacheIntegrityResultValidator,
-  handler: async (ctx) => {
+  args: {
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: calibrationCacheIntegrityPageResultValidator,
+  handler: async (ctx, args) => {
     const sets = await ctx.db
       .query("exerciseSets")
-      .take(MAX_IRT_CACHE_INTEGRITY_SETS + 1);
-
-    if (sets.length > MAX_IRT_CACHE_INTEGRITY_SETS) {
-      throw new ConvexError({
-        code: "IRT_CACHE_INTEGRITY_SET_LIMIT_EXCEEDED",
-        message:
-          "Too many exercise sets to scan calibration cache integrity safely.",
-      });
-    }
+      .paginate(args.paginationOpts);
 
     let missingStatsSetCount = 0;
     let oversizedSetCount = 0;
 
-    for (const set of sets) {
+    for (const set of sets.page) {
       const cacheStats = await ctx.db
         .query("irtCalibrationCacheStats")
         .withIndex("by_setId", (q) => q.eq("setId", set._id))
@@ -71,6 +67,8 @@ export const getCalibrationCacheIntegrity = internalQuery({
     }
 
     return {
+      continueCursor: sets.continueCursor,
+      isDone: sets.isDone,
       missingStatsSetCount,
       oversizedSetCount,
     };
@@ -78,32 +76,26 @@ export const getCalibrationCacheIntegrity = internalQuery({
 });
 
 /**
- * Return whether any active tryout is missing a quality check or missing a
- * frozen published scale.
+ * Return the integrity totals for one bounded page of active tryouts.
  *
- * Operator entrypoint: invoked via `convex run` / package scripts during manual
- * integrity verification.
+ * Operator scripts aggregate these page summaries client-side so each query stays
+ * safely bounded as data grows.
  */
 export const getScaleQualityIntegrity = internalQuery({
-  args: {},
-  returns: scaleQualityIntegrityResultValidator,
-  handler: async (ctx) => {
+  args: {
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: scaleQualityIntegrityPageResultValidator,
+  handler: async (ctx, args) => {
     const tryouts = await ctx.db
       .query("tryouts")
       .withIndex("by_isActive", (q) => q.eq("isActive", true))
-      .take(MAX_IRT_CACHE_INTEGRITY_SETS + 1);
-
-    if (tryouts.length > MAX_IRT_CACHE_INTEGRITY_SETS) {
-      throw new ConvexError({
-        code: "IRT_SCALE_QUALITY_TRYOUT_LIMIT_EXCEEDED",
-        message: "Too many tryouts to scan scale quality safely.",
-      });
-    }
+      .paginate(args.paginationOpts);
 
     let missingQualityCheckTryoutCount = 0;
     let unstartableTryoutCount = 0;
 
-    for (const tryout of tryouts) {
+    for (const tryout of tryouts.page) {
       const [qualityCheck, latestScaleVersion] = await Promise.all([
         ctx.db
           .query("irtScaleQualityChecks")
@@ -122,6 +114,8 @@ export const getScaleQualityIntegrity = internalQuery({
     }
 
     return {
+      continueCursor: tryouts.continueCursor,
+      isDone: tryouts.isDone,
       missingQualityCheckTryoutCount,
       unstartableTryoutCount,
     };

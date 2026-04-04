@@ -100,6 +100,18 @@ const RESET_TRYOUT_STEPS: ResetStep[] = [
     resultLabel: "tryout catalog meta rows",
   },
   {
+    label: "Deleting user tryout access sources...",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteUserTryoutAccessSourcesBatch",
+    resultLabel: "user tryout access sources",
+  },
+  {
+    label: "Deleting user tryout competition usages...",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteUserTryoutCompetitionUsagesBatch",
+    resultLabel: "user tryout competition usages",
+  },
+  {
     label: "Deleting tryout part sets...",
     mutationPath: "contentSync/mutations/maintenance:deleteTryoutPartSetsBatch",
     resultLabel: "tryout part sets",
@@ -190,6 +202,8 @@ export const resetTryouts = async (
   log(`  Tryouts:               ${counts.tryouts}`);
   log(`  Tryout Catalog Rows:   ${counts.tryoutCatalogEntries}`);
   log(`  Tryout Catalog Meta:   ${counts.tryoutCatalogMeta}`);
+  log(`  User Tryout Access:    ${counts.userTryoutAccessSources}`);
+  log(`  User Competition Use:  ${counts.userTryoutCompetitionUsages}`);
   log(`  Tryout Part Sets:      ${counts.tryoutPartSets}`);
   log(`  Tryout Attempts:       ${counts.tryoutAttempts}`);
   log(`  Tryout Part Attempts:  ${counts.tryoutPartAttempts}`);
@@ -211,6 +225,8 @@ export const resetTryouts = async (
     counts.tryouts +
     counts.tryoutCatalogEntries +
     counts.tryoutCatalogMeta +
+    counts.userTryoutAccessSources +
+    counts.userTryoutCompetitionUsages +
     counts.tryoutPartSets +
     counts.tryoutAttempts +
     counts.tryoutPartAttempts +
