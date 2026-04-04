@@ -7,6 +7,65 @@ import {
 import { describe, expect, it } from "vitest";
 
 describe("tryoutAccess/queries", () => {
+  it("returns active for a competition grant when ops extends the campaign window", async () => {
+    const t = createTryoutTestConvex();
+    const state = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "event-page-competition-extended",
+      });
+      const staleEndsAt = NOW - 24 * 60 * 60 * 1000;
+      const extendedEndsAt = NOW + 24 * 60 * 60 * 1000;
+      const campaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+        slug: "event-page-competition-extended",
+        name: "Event Page Competition Extended",
+        products: ["snbt"],
+        campaignKind: "competition",
+        enabled: true,
+        redeemStatus: "active",
+        resultsStatus: "pending",
+        resultsFinalizedAt: null,
+        startsAt: NOW - 7 * 24 * 60 * 60 * 1000,
+        endsAt: extendedEndsAt,
+      });
+      const linkId = await ctx.db.insert("tryoutAccessLinks", {
+        campaignId,
+        code: "event-page-competition-extended",
+        label: "Event Page Competition Extended",
+        enabled: true,
+      });
+
+      await ctx.db.insert("tryoutAccessGrants", {
+        campaignId,
+        linkId,
+        userId: identity.userId,
+        redeemedAt: NOW - 3 * 24 * 60 * 60 * 1000,
+        endsAt: staleEndsAt,
+        status: "expired",
+      });
+
+      return {
+        ...identity,
+        extendedEndsAt,
+      };
+    });
+
+    const result = await t
+      .withIdentity({
+        subject: state.authUserId,
+        sessionId: state.sessionId,
+      })
+      .query(api.tryoutAccess.queries.getEventPageState, {
+        code: "event-page-competition-extended",
+      });
+
+    expect(result).toEqual({
+      kind: "active",
+      endsAt: state.extendedEndsAt,
+      name: "Event Page Competition Extended",
+    });
+  });
+
   it("returns active when the stored grant is still active", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
