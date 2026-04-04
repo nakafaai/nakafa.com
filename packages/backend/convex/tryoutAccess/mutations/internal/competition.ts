@@ -121,6 +121,7 @@ export const finalizeCompetitionCampaignResults = internalMutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     const campaign = await ctx.db.get("tryoutAccessCampaigns", args.campaignId);
+    const isContinuation = args.cursor !== undefined;
 
     if (
       !campaign ||
@@ -133,6 +134,16 @@ export const finalizeCompetitionCampaignResults = internalMutation({
     const now = Date.now();
 
     if (campaign.endsAt > now) {
+      return null;
+    }
+
+    if (!isContinuation && campaign.resultsStatus === "pending") {
+      await ctx.db.patch("tryoutAccessCampaigns", campaign._id, {
+        resultsStatus: "finalizing",
+      });
+    }
+
+    if (isContinuation && campaign.resultsStatus !== "finalizing") {
       return null;
     }
 

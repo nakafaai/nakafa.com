@@ -4,7 +4,7 @@ import {
   createTryoutTestConvex,
   NOW,
 } from "@repo/backend/convex/tryouts/test.helpers";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 describe("tryoutAccess/mutations/internal/status", () => {
   it("clamps stored competition grants to the campaign end", async () => {
@@ -81,5 +81,82 @@ describe("tryoutAccess/mutations/internal/status", () => {
     expect(result.productGrant?.endsAt).toBe(state.campaignEndsAt);
     expect(result.grant?.status).toBe("active");
     expect(result.productGrant?.status).toBe("active");
+  });
+
+  it("claims pending competition batches before enqueueing finalizers", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(NOW));
+
+    const t = createTryoutTestConvex();
+
+    await t.mutation(async (ctx) => {
+      for (let index = 0; index <= 100; index += 1) {
+        await ctx.db.insert("tryoutAccessCampaigns", {
+          slug: `pending-competition-${index}`,
+          name: `Pending Competition ${index}`,
+          products: ["snbt"],
+          campaignKind: "competition",
+          enabled: true,
+          redeemStatus: "ended",
+          resultsStatus: "pending",
+          resultsFinalizedAt: null,
+          startsAt: NOW - 24 * 60 * 60 * 1000,
+          endsAt: NOW - 1,
+        });
+      }
+    });
+
+    await t.mutation(
+      internal.tryoutAccess.mutations.internal.status.sweepStates,
+      {}
+    );
+
+    const intermediate = await t.query(async (ctx) => {
+      const pendingCount = (
+        await ctx.db
+          .query("tryoutAccessCampaigns")
+          .withIndex("by_campaignKind_and_resultsStatus_and_endsAt", (q) =>
+            q.eq("campaignKind", "competition").eq("resultsStatus", "pending")
+          )
+          .take(102)
+      ).length;
+      const finalizingCount = (
+        await ctx.db
+          .query("tryoutAccessCampaigns")
+          .withIndex("by_campaignKind_and_resultsStatus_and_endsAt", (q) =>
+            q
+              .eq("campaignKind", "competition")
+              .eq("resultsStatus", "finalizing")
+          )
+          .take(102)
+      ).length;
+
+      return {
+        finalizingCount,
+        pendingCount,
+      };
+    });
+
+    expect(intermediate).toEqual({
+      finalizingCount: 100,
+      pendingCount: 1,
+    });
+
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+
+    const finalizedCount = await t.query(async (ctx) => {
+      return (
+        await ctx.db
+          .query("tryoutAccessCampaigns")
+          .withIndex("by_campaignKind_and_resultsStatus_and_endsAt", (q) =>
+            q.eq("campaignKind", "competition").eq("resultsStatus", "finalized")
+          )
+          .take(102)
+      ).length;
+    });
+
+    expect(finalizedCount).toBe(101);
+
+    vi.useRealTimers();
   });
 });

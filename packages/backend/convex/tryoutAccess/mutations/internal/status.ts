@@ -1,4 +1,6 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import {
@@ -8,6 +10,39 @@ import {
 import { v } from "convex/values";
 
 const TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE = 100;
+
+/**
+ * Claim one ended competition campaign for background result finalization.
+ *
+ * Moving the row to `finalizing` before enqueuing the worker prevents later
+ * sweep batches from selecting and scheduling the same campaign again.
+ */
+async function enqueueCompetitionCampaignFinalizationIfNeeded(
+  ctx: Pick<MutationCtx, "db" | "scheduler">,
+  campaign: Doc<"tryoutAccessCampaigns"> | null,
+  now: number
+) {
+  if (
+    !campaign ||
+    campaign.campaignKind !== "competition" ||
+    campaign.resultsStatus !== "pending" ||
+    campaign.endsAt > now
+  ) {
+    return;
+  }
+
+  await ctx.db.patch("tryoutAccessCampaigns", campaign._id, {
+    resultsStatus: "finalizing",
+  });
+  await ctx.scheduler.runAfter(
+    0,
+    internal.tryoutAccess.mutations.internal.competition
+      .finalizeCompetitionCampaignResults,
+    {
+      campaignId: campaign._id,
+    }
+  );
+}
 
 /** Synchronizes one campaign redeem status from its stored time window. */
 export const syncCampaignRedeemStatus = internalMutation({
@@ -53,6 +88,27 @@ export const expireGrant = internalMutation({
     }
 
     await syncTryoutAccessGrantStatus(ctx.db, grant, Date.now());
+    return null;
+  },
+});
+
+/**
+ * Claims one ended competition campaign and queues its result finalizer once.
+ */
+export const enqueueCompetitionCampaignFinalization = internalMutation({
+  args: {
+    campaignId: vv.id("tryoutAccessCampaigns"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const campaign = await ctx.db.get("tryoutAccessCampaigns", args.campaignId);
+
+    await enqueueCompetitionCampaignFinalizationIfNeeded(
+      ctx,
+      campaign,
+      Date.now()
+    );
+
     return null;
   },
 });
@@ -157,13 +213,10 @@ export const sweepStates = internalMutation({
     }
 
     for (const competition of pendingCompetitions) {
-      await ctx.scheduler.runAfter(
-        0,
-        internal.tryoutAccess.mutations.internal.competition
-          .finalizeCompetitionCampaignResults,
-        {
-          campaignId: competition._id,
-        }
+      await enqueueCompetitionCampaignFinalizationIfNeeded(
+        ctx,
+        competition,
+        now
       );
     }
 

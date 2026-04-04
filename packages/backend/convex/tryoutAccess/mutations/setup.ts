@@ -179,8 +179,8 @@ export const upsertCampaignAndLink = internalMutation({
         );
         await ctx.scheduler.runAfter(
           Math.max(0, args.campaign.endsAt - now),
-          internal.tryoutAccess.mutations.internal.competition
-            .finalizeCompetitionCampaignResults,
+          internal.tryoutAccess.mutations.internal.status
+            .enqueueCompetitionCampaignFinalization,
           {
             campaignId,
           }
@@ -267,8 +267,8 @@ export const upsertCampaignAndLink = internalMutation({
       );
       await ctx.scheduler.runAfter(
         Math.max(0, args.campaign.endsAt - now),
-        internal.tryoutAccess.mutations.internal.competition
-          .finalizeCompetitionCampaignResults,
+        internal.tryoutAccess.mutations.internal.status
+          .enqueueCompetitionCampaignFinalization,
         {
           campaignId,
         }

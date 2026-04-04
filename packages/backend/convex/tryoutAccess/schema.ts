@@ -14,6 +14,7 @@ export const tryoutAccessCampaignRedeemStatusValidator = literals(
 );
 export const tryoutAccessCampaignResultsStatusValidator = literals(
   "pending",
+  "finalizing",
   "finalized"
 );
 
