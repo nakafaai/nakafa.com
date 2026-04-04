@@ -135,7 +135,7 @@ export function TryoutCatalogList({ locale, product }: TryoutCatalogListProps) {
   const cycleGroups = groupCatalogEntriesByCycle(catalogEntries);
 
   return (
-    <div>
+    <div className="border-t">
       {cycleGroups.map((group, index) => (
         <div
           className={index > 0 ? "border-t" : undefined}
