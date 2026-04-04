@@ -2,7 +2,6 @@ import { query } from "@repo/backend/convex/_generated/server";
 import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
 import {
   getTryoutAccessEventByCode,
-  getTryoutAccessGrantEffectiveEndsAt,
   getTryoutAccessUnavailableReason,
 } from "@repo/backend/convex/tryoutAccess/helpers/access";
 import { v } from "convex/values";
@@ -48,7 +47,6 @@ export const getEventPageState = query({
   },
   returns: eventPageStateValidator,
   handler: async (ctx, args) => {
-    const now = Date.now();
     const eventAccess = await getTryoutAccessEventByCode(ctx.db, args.code);
 
     if (!eventAccess) {
@@ -72,22 +70,17 @@ export const getEventPageState = query({
         .unique();
 
       if (existingGrant) {
-        const effectiveEndsAt = getTryoutAccessGrantEffectiveEndsAt({
-          campaign: eventAccess.campaign,
-          endsAt: existingGrant.endsAt,
-        });
-
-        if (effectiveEndsAt > now) {
+        if (existingGrant.status === "active") {
           return {
             kind: "active" as const,
-            endsAt: effectiveEndsAt,
+            endsAt: existingGrant.endsAt,
             name: eventAccess.campaign.name,
           };
         }
 
         return {
           kind: "used" as const,
-          endsAt: effectiveEndsAt,
+          endsAt: existingGrant.endsAt,
           name: eventAccess.campaign.name,
         };
       }

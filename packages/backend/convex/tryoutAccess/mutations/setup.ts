@@ -168,12 +168,17 @@ export const upsertCampaignAndLink = internalMutation({
         }
       );
 
-      if (
-        args.campaign.campaignKind === "competition" &&
-        args.campaign.endsAt > now
-      ) {
+      if (args.campaign.campaignKind === "competition") {
         await ctx.scheduler.runAfter(
-          args.campaign.endsAt - now,
+          0,
+          internal.tryoutAccess.mutations.internal.competition
+            .syncCompetitionAttemptWindows,
+          {
+            campaignId,
+          }
+        );
+        await ctx.scheduler.runAfter(
+          Math.max(0, args.campaign.endsAt - now),
           internal.tryoutAccess.mutations.internal.competition
             .finalizeCompetitionCampaignResults,
           {
@@ -243,12 +248,17 @@ export const upsertCampaignAndLink = internalMutation({
       }
     );
 
-    if (
-      args.campaign.campaignKind === "competition" &&
-      args.campaign.endsAt > now
-    ) {
+    if (args.campaign.campaignKind === "competition") {
       await ctx.scheduler.runAfter(
-        args.campaign.endsAt - now,
+        0,
+        internal.tryoutAccess.mutations.internal.competition
+          .syncCompetitionAttemptWindows,
+        {
+          campaignId,
+        }
+      );
+      await ctx.scheduler.runAfter(
+        Math.max(0, args.campaign.endsAt - now),
         internal.tryoutAccess.mutations.internal.competition
           .finalizeCompetitionCampaignResults,
         {

@@ -79,10 +79,9 @@ export const startTryout = mutation({
       product: tryout.product,
       userId,
     });
-    const competitionEventSource = accessSources.competitionEventSource;
-    const accessPassEventSource = accessSources.accessPassEventSource;
-    const competitionAttempt = competitionEventSource
-      ? await ctx.db
+    const competitionAttempts = await Promise.all(
+      accessSources.competitionEventSources.map((competitionEventSource) => {
+        return ctx.db
           .query("tryoutAttempts")
           .withIndex(
             "by_userId_and_tryoutId_and_accessCampaignId_and_startedAt",
@@ -92,16 +91,22 @@ export const startTryout = mutation({
                 .eq("tryoutId", tryout._id)
                 .eq("accessCampaignId", competitionEventSource.accessCampaignId)
           )
-          .first()
+          .first();
+      })
+    );
+    const unusedCompetitionEventSource =
+      accessSources.competitionEventSources.find(
+        (_, index) => !competitionAttempts[index]
+      ) ?? null;
+    const hasUsedCompetitionAttempt = competitionAttempts.some(Boolean);
+    const accessPassEventSource = accessSources.accessPassEventSource;
+    const competitionStartSource = unusedCompetitionEventSource
+      ? {
+          ...unusedCompetitionEventSource,
+          accessKind: "event" as const,
+          countsForCompetition: true,
+        }
       : null;
-    const competitionStartSource =
-      competitionEventSource && !competitionAttempt
-        ? {
-            ...competitionEventSource,
-            accessKind: "event" as const,
-            countsForCompetition: true,
-          }
-        : null;
     const accessPassStartSource = accessPassEventSource
       ? {
           ...accessPassEventSource,
@@ -121,7 +126,7 @@ export const startTryout = mutation({
       subscriptionStartSource;
 
     if (!accessSource) {
-      if (competitionAttempt) {
+      if (hasUsedCompetitionAttempt) {
         throw new ConvexError({
           code: "COMPETITION_ATTEMPT_ALREADY_USED",
           message:
@@ -143,7 +148,8 @@ export const startTryout = mutation({
     const attemptWindowEndsAt =
       now + tryoutProductPolicies[tryout.product].attemptWindowMs;
     const expiresAtMs =
-      accessSource.accessKind === "event"
+      accessSource.accessKind === "event" &&
+      accessSource.accessCampaignKind === "competition"
         ? Math.min(attemptWindowEndsAt, accessSource.accessEndsAt)
         : attemptWindowEndsAt;
 

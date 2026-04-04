@@ -299,6 +299,155 @@ describe("tryouts/mutations/attempts", () => {
     expect(latestAttempt?.countsForCompetition).toBe(false);
   });
 
+  it("uses another active competition grant when the earliest one is already spent", async () => {
+    const t = createTryoutTestConvex();
+    const state = await t.mutation(async (ctx) => {
+      const currentTime = Date.now();
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "competition-multiple-grants",
+      });
+      const tryout = await insertTryoutSkeleton(
+        ctx,
+        "competition-multiple-grants"
+      );
+      const firstEndsAt = currentTime + 60 * 60 * 1000;
+      const secondEndsAt = currentTime + 2 * 60 * 60 * 1000;
+      const firstCampaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+        slug: "competition-multiple-grants-first",
+        name: "Competition Multiple Grants First",
+        products: ["snbt"],
+        campaignKind: "competition",
+        enabled: true,
+        redeemStatus: "active",
+        resultsStatus: "pending",
+        resultsFinalizedAt: null,
+        startsAt: currentTime - 60 * 1000,
+        endsAt: firstEndsAt,
+      });
+      const secondCampaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+        slug: "competition-multiple-grants-second",
+        name: "Competition Multiple Grants Second",
+        products: ["snbt"],
+        campaignKind: "competition",
+        enabled: true,
+        redeemStatus: "active",
+        resultsStatus: "pending",
+        resultsFinalizedAt: null,
+        startsAt: currentTime - 60 * 1000,
+        endsAt: secondEndsAt,
+      });
+      const firstLinkId = await ctx.db.insert("tryoutAccessLinks", {
+        campaignId: firstCampaignId,
+        code: "competition-multiple-grants-first",
+        label: "Competition Multiple Grants First",
+        enabled: true,
+      });
+      const secondLinkId = await ctx.db.insert("tryoutAccessLinks", {
+        campaignId: secondCampaignId,
+        code: "competition-multiple-grants-second",
+        label: "Competition Multiple Grants Second",
+        enabled: true,
+      });
+      const firstGrantId = await ctx.db.insert("tryoutAccessGrants", {
+        campaignId: firstCampaignId,
+        linkId: firstLinkId,
+        userId: identity.userId,
+        redeemedAt: NOW,
+        endsAt: firstEndsAt,
+        status: "active",
+      });
+      const secondGrantId = await ctx.db.insert("tryoutAccessGrants", {
+        campaignId: secondCampaignId,
+        linkId: secondLinkId,
+        userId: identity.userId,
+        redeemedAt: NOW,
+        endsAt: secondEndsAt,
+        status: "active",
+      });
+
+      await ctx.db.insert("tryoutAccessProductGrants", {
+        campaignId: firstCampaignId,
+        grantId: firstGrantId,
+        product: "snbt",
+        status: "active",
+        userId: identity.userId,
+        endsAt: firstEndsAt,
+      });
+      await ctx.db.insert("tryoutAccessProductGrants", {
+        campaignId: secondCampaignId,
+        grantId: secondGrantId,
+        product: "snbt",
+        status: "active",
+        userId: identity.userId,
+        endsAt: secondEndsAt,
+      });
+      await ctx.db.insert("tryoutAttempts", {
+        userId: identity.userId,
+        tryoutId: tryout.tryoutId,
+        scaleVersionId: tryout.scaleVersionId,
+        accessKind: "event",
+        accessCampaignId: firstCampaignId,
+        accessCampaignKind: "competition",
+        accessGrantId: firstGrantId,
+        accessEndsAt: firstEndsAt,
+        countsForCompetition: true,
+        scoreStatus: "official",
+        status: "completed",
+        partSetSnapshots: [
+          {
+            partIndex: 0,
+            partKey: "quantitative-knowledge",
+            questionCount: 20,
+            setId: tryout.setId,
+          },
+        ],
+        completedPartIndices: [0],
+        totalCorrect: 0,
+        totalQuestions: 20,
+        theta: 0,
+        thetaSE: 1,
+        startedAt: NOW,
+        expiresAt: firstEndsAt,
+        lastActivityAt: NOW,
+        completedAt: NOW,
+        endReason: "submitted",
+      });
+
+      return {
+        ...identity,
+        secondCampaignId,
+        secondGrantId,
+        tryoutId: tryout.tryoutId,
+      };
+    });
+
+    await t
+      .withIdentity({
+        subject: state.authUserId,
+        sessionId: state.sessionId,
+      })
+      .mutation(api.tryouts.mutations.attempts.startTryout, {
+        product: "snbt",
+        locale: "id",
+        tryoutSlug: "competition-multiple-grants",
+      });
+
+    const latestAttempt = await t.query(async (ctx) => {
+      return await ctx.db
+        .query("tryoutAttempts")
+        .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
+          q.eq("userId", state.userId).eq("tryoutId", state.tryoutId)
+        )
+        .order("desc")
+        .first();
+    });
+
+    expect(latestAttempt?.accessCampaignId).toBe(state.secondCampaignId);
+    expect(latestAttempt?.accessGrantId).toBe(state.secondGrantId);
+    expect(latestAttempt?.countsForCompetition).toBe(true);
+  });
+
   it("rejects another competition attempt when no non-event access remains", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
@@ -396,7 +545,7 @@ describe("tryouts/mutations/attempts", () => {
     ).rejects.toThrow("This event only counts your first tryout attempt.");
   });
 
-  it("uses the longest active access-pass window when grants overlap", async () => {
+  it("uses the longest active access-pass window without shortening the tryout expiry", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
       const currentTime = Date.now();
@@ -484,6 +633,7 @@ describe("tryouts/mutations/attempts", () => {
 
       return {
         ...identity,
+        earliestAttemptExpiresAt: currentTime + ATTEMPT_WINDOW_MS,
         longerCampaignId,
         longerEndsAt,
         longerGrantId,
@@ -515,7 +665,12 @@ describe("tryouts/mutations/attempts", () => {
     expect(tryoutAttempt?.accessCampaignId).toBe(state.longerCampaignId);
     expect(tryoutAttempt?.accessGrantId).toBe(state.longerGrantId);
     expect(tryoutAttempt?.accessEndsAt).toBe(state.longerEndsAt);
-    expect(tryoutAttempt?.expiresAt).toBe(state.longerEndsAt);
+    expect(tryoutAttempt?.expiresAt).toBeGreaterThanOrEqual(
+      state.earliestAttemptExpiresAt
+    );
+    expect(tryoutAttempt?.expiresAt).toBeLessThan(
+      state.earliestAttemptExpiresAt + 5000
+    );
   });
 
   it("starts an unstarted part from the persisted snapshot after live key, set, and count changes", async () => {

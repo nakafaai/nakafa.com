@@ -120,6 +120,7 @@ function useTryoutStartValue(): TryoutStartContextValue {
             const errorCode = "code" in errorData ? errorData.code : undefined;
 
             if (errorCode === "COMPETITION_ATTEMPT_ALREADY_USED") {
+              closeDialog();
               toast.info(tTryouts("competition-attempt-used-error"), {
                 position: "bottom-center",
               });

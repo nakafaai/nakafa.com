@@ -5,6 +5,7 @@ import {
   createTryoutTestConvex,
   insertTryoutSkeleton,
   NOW,
+  seedExpiredTryoutWithUntouchedPart,
 } from "@repo/backend/convex/tryouts/test.helpers";
 import { describe, expect, it } from "vitest";
 
@@ -141,5 +142,47 @@ describe("tryouts/queries/me/history", () => {
         publicResultStatus: "verified-irt",
       }),
     ]);
+  });
+
+  it("repairs ended history rows from the finalized snapshot when later parts were never started", async () => {
+    const t = createTryoutTestConvex();
+    const { identity, tryoutSlug } = await t.mutation(async (ctx) => {
+      return await seedExpiredTryoutWithUntouchedPart(
+        ctx,
+        "history-finalized-snapshot"
+      );
+    });
+
+    const [attemptResult, historyResult] = await Promise.all([
+      t
+        .withIdentity({
+          subject: identity.authUserId,
+          sessionId: identity.sessionId,
+        })
+        .query(api.tryouts.queries.me.attempt.getUserTryoutAttempt, {
+          product: "snbt",
+          locale: "id",
+          tryoutSlug,
+        }),
+      t
+        .withIdentity({
+          subject: identity.authUserId,
+          sessionId: identity.sessionId,
+        })
+        .query(api.tryouts.queries.me.history.getUserTryoutAttemptHistory, {
+          product: "snbt",
+          locale: "id",
+          tryoutSlug,
+        }),
+    ]);
+
+    expect(historyResult).toHaveLength(1);
+    expect(historyResult[0]?.irtScore).toBe(attemptResult?.attempt.irtScore);
+    expect(historyResult[0]?.totalCorrect).toBe(
+      attemptResult?.attempt.totalCorrect
+    );
+    expect(historyResult[0]?.totalQuestions).toBe(
+      attemptResult?.attempt.totalQuestions
+    );
   });
 });

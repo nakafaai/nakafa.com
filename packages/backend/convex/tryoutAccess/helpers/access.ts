@@ -61,7 +61,7 @@ export function getTryoutAccessGrantEndsAt({
   return redeemedAt + campaign.grantDurationDays * DAY_IN_MS;
 }
 
-/** Returns the effective access end timestamp stored for one redeemed grant. */
+/** Returns the current access end timestamp for one redeemed grant. */
 export function getTryoutAccessGrantEffectiveEndsAt({
   campaign,
   endsAt,
@@ -73,7 +73,7 @@ export function getTryoutAccessGrantEffectiveEndsAt({
     return endsAt;
   }
 
-  return Math.min(endsAt, campaign.endsAt);
+  return campaign.endsAt;
 }
 
 /** Resolves the current redeem status for one campaign time window. */
@@ -261,13 +261,13 @@ async function loadActiveTryoutEventSources(
   const accessPassEventSources = eventSources.filter(
     (eventSource) => eventSource.accessCampaignKind === "access-pass"
   );
+  const competitionEventSources = eventSources.filter(
+    (eventSource) => eventSource.accessCampaignKind === "competition"
+  );
 
   return {
     accessPassEventSource: accessPassEventSources.at(-1) ?? null,
-    competitionEventSource:
-      eventSources.find(
-        (eventSource) => eventSource.accessCampaignKind === "competition"
-      ) ?? null,
+    competitionEventSources,
   };
 }
 
@@ -317,7 +317,7 @@ export async function resolveTryoutAccessSources(
   }
 ) {
   const [
-    { accessPassEventSource, competitionEventSource },
+    { accessPassEventSource, competitionEventSources },
     hasActiveSubscription,
   ] = await Promise.all([
     loadActiveTryoutEventSources(db, {
@@ -333,7 +333,7 @@ export async function resolveTryoutAccessSources(
 
   return {
     accessPassEventSource,
-    competitionEventSource,
+    competitionEventSources,
     hasActiveSubscription,
   };
 }

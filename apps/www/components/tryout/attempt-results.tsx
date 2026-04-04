@@ -18,6 +18,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useTryoutAttemptState } from "@/components/tryout/providers/attempt-state";
 import { TryoutScoreCard } from "@/components/tryout/score-card";
+import { getEffectiveTryoutStatus } from "@/components/tryout/utils/status";
 
 type TryoutAttempt = NonNullable<
   FunctionReturnType<typeof api.tryouts.queries.me.attempt.getUserTryoutAttempt>
@@ -53,6 +54,7 @@ export function TryoutAttemptResults({
     );
   }
 
+  const nowMs = Date.now();
   const attemptOptions = attemptHistory.map((attempt) => ({
     ...attempt,
     icon: attempt.countsForCompetition ? PartyIcon : Progress03Icon,
@@ -63,6 +65,11 @@ export function TryoutAttemptResults({
       : tTryouts("attempt-select-retry", {
           number: attempt.attemptNumber,
         }),
+    status: getEffectiveTryoutStatus({
+      expiresAtMs: attempt.expiresAt,
+      nowMs,
+      status: attempt.status,
+    }),
   }));
   const defaultAttempt =
     attemptOptions.find((attempt) => attempt.countsForCompetition) ??
