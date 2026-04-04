@@ -545,6 +545,105 @@ describe("tryouts/mutations/attempts", () => {
     ).rejects.toThrow("This event only counts your first tryout attempt.");
   });
 
+  it("returns access required after the counted competition campaign has ended", async () => {
+    const t = createTryoutTestConvex();
+    const state = await t.mutation(async (ctx) => {
+      const currentTime = Date.now();
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "ended-competition-attempt",
+      });
+      const tryout = await insertTryoutSkeleton(
+        ctx,
+        "ended-competition-attempt"
+      );
+      const endedAt = currentTime - 60 * 1000;
+      const campaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+        slug: "ended-competition-attempt",
+        name: "Ended Competition Attempt",
+        products: ["snbt"],
+        campaignKind: "competition",
+        enabled: true,
+        redeemStatus: "ended",
+        resultsStatus: "pending",
+        resultsFinalizedAt: null,
+        startsAt: currentTime - 2 * 60 * 60 * 1000,
+        endsAt: endedAt,
+      });
+      const linkId = await ctx.db.insert("tryoutAccessLinks", {
+        campaignId,
+        code: "ended-competition-attempt",
+        label: "Ended Competition Attempt",
+        enabled: true,
+      });
+      const grantId = await ctx.db.insert("tryoutAccessGrants", {
+        campaignId,
+        linkId,
+        userId: identity.userId,
+        redeemedAt: NOW,
+        endsAt: endedAt,
+        status: "expired",
+      });
+
+      await ctx.db.insert("tryoutAccessProductGrants", {
+        campaignId,
+        grantId,
+        product: "snbt",
+        status: "expired",
+        userId: identity.userId,
+        endsAt: endedAt,
+      });
+      await ctx.db.insert("tryoutAttempts", {
+        userId: identity.userId,
+        tryoutId: tryout.tryoutId,
+        scaleVersionId: tryout.scaleVersionId,
+        accessKind: "event",
+        accessCampaignId: campaignId,
+        accessCampaignKind: "competition",
+        accessGrantId: grantId,
+        accessEndsAt: endedAt,
+        countsForCompetition: true,
+        scoreStatus: "official",
+        status: "completed",
+        partSetSnapshots: [
+          {
+            partIndex: 0,
+            partKey: "quantitative-knowledge",
+            questionCount: 20,
+            setId: tryout.setId,
+          },
+        ],
+        completedPartIndices: [0],
+        totalCorrect: 0,
+        totalQuestions: 20,
+        theta: 0,
+        thetaSE: 1,
+        startedAt: NOW,
+        expiresAt: endedAt,
+        lastActivityAt: NOW,
+        completedAt: NOW,
+        endReason: "submitted",
+      });
+
+      return identity;
+    });
+
+    await expect(
+      t
+        .withIdentity({
+          subject: state.authUserId,
+          sessionId: state.sessionId,
+        })
+        .mutation(api.tryouts.mutations.attempts.startTryout, {
+          product: "snbt",
+          locale: "id",
+          tryoutSlug: "ended-competition-attempt",
+        })
+    ).rejects.toThrow(
+      "You need an active event access or Pro subscription to start this tryout."
+    );
+  });
+
   it("uses the longest active access-pass window without shortening the tryout expiry", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {

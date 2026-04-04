@@ -88,7 +88,8 @@ export const startTryout = mutation({
     );
     const usedCompetitionCampaignIds = new Set(
       existingAttempt?.accessCampaignId &&
-        existingAttempt.accessCampaignKind === "competition"
+        existingAttempt.accessCampaignKind === "competition" &&
+        activeCompetitionCampaignIds.has(existingAttempt.accessCampaignId)
         ? [existingAttempt.accessCampaignId]
         : []
     );
