@@ -2,7 +2,6 @@
 
 import { PartyIcon, Progress03Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -13,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { usePaginatedQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -37,76 +37,94 @@ export function TryoutAttemptResults({
   const locale = useTryoutAttemptState((state) => state.params.locale);
   const product = useTryoutAttemptState((state) => state.params.product);
   const tryoutSlug = useTryoutAttemptState((state) => state.params.tryoutSlug);
-  const { data: rawAttemptHistory } = useQueryWithStatus(
+  const {
+    loadMore,
+    results: attemptHistory,
+    status,
+  } = usePaginatedQuery(
     api.tryouts.queries.me.history.getUserTryoutAttemptHistory,
     {
       locale,
       product,
       tryoutSlug,
-    }
+    },
+    { initialNumItems: 25 }
   );
   const [selectedAttemptId, setSelectedAttemptId] = useState("");
-  const attemptHistory = rawAttemptHistory ?? [];
 
-  if (attemptHistory.length === 0) {
+  if (status === "LoadingFirstPage" || attemptHistory.length === 0) {
     return (
       <TryoutScoreCard attempt={fallbackAttempt} status={fallbackStatus} />
     );
   }
 
   const nowMs = Date.now();
-  const attemptOptions = attemptHistory.map((attempt) => ({
-    ...attempt,
-    icon: attempt.countsForCompetition ? PartyIcon : Progress03Icon,
-    label: attempt.countsForCompetition
-      ? tTryouts("attempt-select-event", {
-          number: attempt.attemptNumber,
-        })
-      : tTryouts("attempt-select-retry", {
-          number: attempt.attemptNumber,
-        }),
-    status: getEffectiveTryoutStatus({
-      expiresAtMs: attempt.expiresAt,
-      nowMs,
-      status: attempt.status,
-    }),
-  }));
-  const defaultAttempt =
-    attemptOptions.find((attempt) => attempt.countsForCompetition) ??
-    attemptOptions.at(-1) ??
-    null;
+  const attemptOptions = attemptHistory.map((attempt, index) => {
+    const attemptNumber = index + 1;
+
+    return {
+      ...attempt,
+      attemptNumber,
+      icon: attempt.countsForCompetition ? PartyIcon : Progress03Icon,
+      label: attempt.countsForCompetition
+        ? tTryouts("attempt-select-event", {
+            number: attemptNumber,
+          })
+        : tTryouts("attempt-select-retry", {
+            number: attemptNumber,
+          }),
+      status: getEffectiveTryoutStatus({
+        expiresAtMs: attempt.expiresAt,
+        nowMs,
+        status: attempt.status,
+      }),
+    };
+  });
   const selectedAttempt =
     attemptOptions.find((attempt) => attempt.attemptId === selectedAttemptId) ??
-    defaultAttempt;
-
-  if (!selectedAttempt) {
-    return (
-      <TryoutScoreCard attempt={fallbackAttempt} status={fallbackStatus} />
-    );
-  }
+    null;
+  const displayedAttempt = selectedAttempt ?? fallbackAttempt;
+  const displayedStatus = selectedAttempt?.status ?? fallbackStatus;
+  const triggerIcon =
+    selectedAttempt?.icon ??
+    (fallbackAttempt.countsForCompetition ? PartyIcon : Progress03Icon);
+  const triggerLabel = selectedAttempt?.label ?? tTryouts("attempt-menu-label");
 
   return (
     <div className="space-y-4">
-      <TryoutScoreCard
-        attempt={selectedAttempt}
-        status={selectedAttempt.status}
-      />
+      <TryoutScoreCard attempt={displayedAttempt} status={displayedStatus} />
 
       {attemptHistory.length > 1 ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button type="button" variant="outline">
-              <HugeIcons icon={selectedAttempt.icon} />
-              {selectedAttempt.label}
+              <HugeIcons icon={triggerIcon} />
+              {triggerLabel}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent>
+          <DropdownMenuContent
+            onScroll={(event) => {
+              if (status !== "CanLoadMore") {
+                return;
+              }
+
+              const target = event.currentTarget;
+              const remainingScroll =
+                target.scrollHeight - target.scrollTop - target.clientHeight;
+
+              if (remainingScroll > 48) {
+                return;
+              }
+
+              loadMore(25);
+            }}
+          >
             <DropdownMenuLabel>
               {tTryouts("attempt-menu-label")}
             </DropdownMenuLabel>
             <DropdownMenuRadioGroup
               onValueChange={setSelectedAttemptId}
-              value={selectedAttempt.attemptId}
+              value={selectedAttemptId || undefined}
             >
               {attemptOptions.map((attempt) => (
                 <DropdownMenuRadioItem

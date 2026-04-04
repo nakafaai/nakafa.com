@@ -6,16 +6,13 @@ import { getTryoutReportScore } from "@repo/backend/convex/tryouts/helpers/repor
 import { loadLatestUserTryoutContext } from "@repo/backend/convex/tryouts/queries/me/helpers";
 import {
   userTryoutAttemptHistoryResultValidator,
-  userTryoutLookupArgs,
+  userTryoutHistoryArgs,
 } from "@repo/backend/convex/tryouts/queries/me/validators";
-import { ConvexError } from "convex/values";
 import { getAll } from "convex-helpers/server/relationships";
 
-const MAX_TRYOUT_HISTORY_ATTEMPTS = 100;
-
-/** Returns every stored attempt summary for one tryout, oldest first numbered. */
+/** Returns one oldest-first page of stored attempt summaries for one tryout. */
 export const getUserTryoutAttemptHistory = query({
-  args: userTryoutLookupArgs,
+  args: userTryoutHistoryArgs,
   returns: userTryoutAttemptHistoryResultValidator,
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
@@ -25,7 +22,11 @@ export const getUserTryoutAttemptHistory = query({
     });
 
     if (!context) {
-      return [];
+      return {
+        continueCursor: "",
+        isDone: true,
+        page: [],
+      };
     }
 
     const attempts = await ctx.db
@@ -34,19 +35,12 @@ export const getUserTryoutAttemptHistory = query({
         q.eq("userId", appUser._id).eq("tryoutId", context.tryout._id)
       )
       .order("asc")
-      .take(MAX_TRYOUT_HISTORY_ATTEMPTS + 1);
-
-    if (attempts.length > MAX_TRYOUT_HISTORY_ATTEMPTS) {
-      throw new ConvexError({
-        code: "TOO_MANY_TRYOUT_ATTEMPTS",
-        message: "Tryout attempt history exceeded the supported scan limit.",
-      });
-    }
+      .paginate(args.paginationOpts);
 
     const campaigns = await getAll(
       ctx.db,
       "tryoutAccessCampaigns",
-      attempts.flatMap((attempt) =>
+      attempts.page.flatMap((attempt) =>
         attempt.accessCampaignId ? [attempt.accessCampaignId] : []
       )
     );
@@ -56,45 +50,48 @@ export const getUserTryoutAttemptHistory = query({
       )
     );
 
-    return await Promise.all(
-      attempts.map(async (attempt, index) => {
-        const endedAttemptHasUntouchedParts =
-          attempt.status !== "in-progress" &&
-          attempt.completedPartIndices.length < attempt.partSetSnapshots.length;
-        const finalizedSnapshot = endedAttemptHasUntouchedParts
-          ? await buildFinalizedTryoutSnapshot(ctx.db, {
-              scaleVersionId: attempt.scaleVersionId,
-              tryout: context.tryout,
-              tryoutAttempt: attempt,
-            })
-          : null;
+    return {
+      ...attempts,
+      page: await Promise.all(
+        attempts.page.map(async (attempt) => {
+          const endedAttemptHasUntouchedParts =
+            attempt.status !== "in-progress" &&
+            attempt.completedPartIndices.length <
+              attempt.partSetSnapshots.length;
+          const finalizedSnapshot = endedAttemptHasUntouchedParts
+            ? await buildFinalizedTryoutSnapshot(ctx.db, {
+                scaleVersionId: attempt.scaleVersionId,
+                tryout: context.tryout,
+                tryoutAttempt: attempt,
+              })
+            : null;
 
-        return {
-          attemptId: attempt._id,
-          attemptNumber: index + 1,
-          completedAt: attempt.completedAt,
-          countsForCompetition: attempt.countsForCompetition ?? false,
-          expiresAt: attempt.expiresAt,
-          irtScore: finalizedSnapshot
-            ? finalizedSnapshot.irtScore
-            : getTryoutReportScore(context.tryout.product, attempt.theta),
-          publicResultStatus: getTryoutPublicResultStatus({
-            accessCampaign: attempt.accessCampaignId
-              ? (campaignsById.get(attempt.accessCampaignId) ?? null)
-              : null,
-            tryoutAttempt: attempt,
-          }),
-          scoreStatus: attempt.scoreStatus,
-          startedAt: attempt.startedAt,
-          status: attempt.status,
-          totalCorrect: finalizedSnapshot
-            ? finalizedSnapshot.totalCorrect
-            : attempt.totalCorrect,
-          totalQuestions: finalizedSnapshot
-            ? finalizedSnapshot.totalQuestions
-            : attempt.totalQuestions,
-        };
-      })
-    );
+          return {
+            attemptId: attempt._id,
+            completedAt: attempt.completedAt,
+            countsForCompetition: attempt.countsForCompetition ?? false,
+            expiresAt: attempt.expiresAt,
+            irtScore: finalizedSnapshot
+              ? finalizedSnapshot.irtScore
+              : getTryoutReportScore(context.tryout.product, attempt.theta),
+            publicResultStatus: getTryoutPublicResultStatus({
+              accessCampaign: attempt.accessCampaignId
+                ? (campaignsById.get(attempt.accessCampaignId) ?? null)
+                : null,
+              tryoutAttempt: attempt,
+            }),
+            scoreStatus: attempt.scoreStatus,
+            startedAt: attempt.startedAt,
+            status: attempt.status,
+            totalCorrect: finalizedSnapshot
+              ? finalizedSnapshot.totalCorrect
+              : attempt.totalCorrect,
+            totalQuestions: finalizedSnapshot
+              ? finalizedSnapshot.totalQuestions
+              : attempt.totalQuestions,
+          };
+        })
+      ),
+    };
   },
 });

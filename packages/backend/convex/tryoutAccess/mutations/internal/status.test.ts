@@ -10,12 +10,13 @@ describe("tryoutAccess/mutations/internal/status", () => {
   it("clamps stored competition grants to the campaign end", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
+      const currentTime = Date.now();
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "sync-campaign-grants",
       });
-      const campaignEndsAt = NOW + 24 * 60 * 60 * 1000;
-      const oldGrantEndsAt = NOW + 90 * 24 * 60 * 60 * 1000;
+      const campaignEndsAt = currentTime + 24 * 60 * 60 * 1000;
+      const oldGrantEndsAt = currentTime + 90 * 24 * 60 * 60 * 1000;
       const campaignId = await ctx.db.insert("tryoutAccessCampaigns", {
         slug: "sync-campaign-grants",
         name: "Sync Campaign Grants",
@@ -25,7 +26,7 @@ describe("tryoutAccess/mutations/internal/status", () => {
         redeemStatus: "active",
         resultsStatus: "pending",
         resultsFinalizedAt: null,
-        startsAt: NOW - 60 * 1000,
+        startsAt: currentTime - 60 * 1000,
         endsAt: campaignEndsAt,
       });
       const linkId = await ctx.db.insert("tryoutAccessLinks", {
@@ -38,7 +39,7 @@ describe("tryoutAccess/mutations/internal/status", () => {
         campaignId,
         linkId,
         userId: identity.userId,
-        redeemedAt: NOW,
+        redeemedAt: currentTime,
         endsAt: oldGrantEndsAt,
         status: "active",
       });

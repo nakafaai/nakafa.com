@@ -6,6 +6,10 @@ import {
   tryoutPartKeyValidator,
   tryoutPublicResultStatusValidator,
 } from "@repo/backend/convex/tryouts/schema";
+import {
+  paginationOptsValidator,
+  paginationResultValidator,
+} from "convex/server";
 import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
 
@@ -53,7 +57,6 @@ export const publicTryoutAttemptValidator = v.object({
 
 export const publicTryoutAttemptHistoryValidator = v.object({
   attemptId: vv.id("tryoutAttempts"),
-  attemptNumber: v.number(),
   completedAt: vv.doc("tryoutAttempts").fields.completedAt,
   countsForCompetition: v.boolean(),
   expiresAt: vv.doc("tryoutAttempts").fields.expiresAt,
@@ -81,9 +84,13 @@ export const userTryoutAttemptResultValidator = v.object({
   expiresAtMs: v.number(),
 });
 
-export const userTryoutAttemptHistoryResultValidator = v.array(
-  publicTryoutAttemptHistoryValidator
-);
+export const userTryoutHistoryArgs = {
+  ...userTryoutLookupArgs,
+  paginationOpts: paginationOptsValidator,
+};
+
+export const userTryoutAttemptHistoryResultValidator =
+  paginationResultValidator(publicTryoutAttemptHistoryValidator);
 
 export const tryoutPartAttemptRuntimeValidator = v.object({
   partIndex: v.number(),

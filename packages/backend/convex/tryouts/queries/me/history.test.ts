@@ -1,4 +1,5 @@
 import { api } from "@repo/backend/convex/_generated/api";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
 import {
   ATTEMPT_WINDOW_MS,
@@ -125,19 +126,22 @@ describe("tryouts/queries/me/history", () => {
         sessionId: state.sessionId,
       })
       .query(api.tryouts.queries.me.history.getUserTryoutAttemptHistory, {
+        paginationOpts: {
+          cursor: null,
+          numItems: 10,
+        },
         product: "snbt",
         locale: "id",
         tryoutSlug: "attempt-history",
       });
 
-    expect(result).toEqual([
+    expect(result.isDone).toBe(true);
+    expect(result.page).toEqual([
       expect.objectContaining({
-        attemptNumber: 1,
         countsForCompetition: true,
         publicResultStatus: "final-event",
       }),
       expect.objectContaining({
-        attemptNumber: 2,
         countsForCompetition: false,
         publicResultStatus: "verified-irt",
       }),
@@ -170,19 +174,128 @@ describe("tryouts/queries/me/history", () => {
           sessionId: identity.sessionId,
         })
         .query(api.tryouts.queries.me.history.getUserTryoutAttemptHistory, {
+          paginationOpts: {
+            cursor: null,
+            numItems: 10,
+          },
           product: "snbt",
           locale: "id",
           tryoutSlug,
         }),
     ]);
 
-    expect(historyResult).toHaveLength(1);
-    expect(historyResult[0]?.irtScore).toBe(attemptResult?.attempt.irtScore);
-    expect(historyResult[0]?.totalCorrect).toBe(
+    expect(historyResult.page).toHaveLength(1);
+    expect(historyResult.page[0]?.irtScore).toBe(
+      attemptResult?.attempt.irtScore
+    );
+    expect(historyResult.page[0]?.totalCorrect).toBe(
       attemptResult?.attempt.totalCorrect
     );
-    expect(historyResult[0]?.totalQuestions).toBe(
+    expect(historyResult.page[0]?.totalQuestions).toBe(
       attemptResult?.attempt.totalQuestions
     );
+  });
+
+  it("returns additional history pages instead of throwing at a fixed cap", async () => {
+    const t = createTryoutTestConvex();
+    const state = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "attempt-history-pagination",
+      });
+      const tryout = await insertTryoutSkeleton(
+        ctx,
+        "attempt-history-pagination"
+      );
+      const attemptIds: Id<"tryoutAttempts">[] = [];
+
+      for (let index = 0; index < 3; index += 1) {
+        const attemptId = await ctx.db.insert("tryoutAttempts", {
+          userId: identity.userId,
+          tryoutId: tryout.tryoutId,
+          scaleVersionId: tryout.scaleVersionId,
+          accessKind: "subscription",
+          countsForCompetition: false,
+          scoreStatus: "official",
+          status: "completed",
+          partSetSnapshots: [
+            {
+              partIndex: 0,
+              partKey: "quantitative-knowledge",
+              questionCount: 20,
+              setId: tryout.setId,
+            },
+          ],
+          completedPartIndices: [0],
+          totalCorrect: 10 + index,
+          totalQuestions: 20,
+          theta: index,
+          thetaSE: 0.5,
+          startedAt: NOW + index,
+          expiresAt: NOW + ATTEMPT_WINDOW_MS + index,
+          lastActivityAt: NOW + index,
+          completedAt: NOW + index,
+          endReason: "submitted",
+        });
+
+        attemptIds.push(attemptId);
+      }
+
+      const latestAttemptId = attemptIds.at(-1);
+
+      if (!latestAttemptId) {
+        throw new Error("Latest attempt is required for pagination test.");
+      }
+
+      await ctx.db.insert("userTryoutLatestAttempts", {
+        userId: identity.userId,
+        product: "snbt",
+        locale: "id",
+        tryoutId: tryout.tryoutId,
+        attemptId: latestAttemptId,
+        slug: "attempt-history-pagination",
+        status: "completed",
+        expiresAtMs: NOW + ATTEMPT_WINDOW_MS + 2,
+        updatedAt: NOW + 2,
+      });
+
+      return identity;
+    });
+
+    const firstPage = await t
+      .withIdentity({
+        subject: state.authUserId,
+        sessionId: state.sessionId,
+      })
+      .query(api.tryouts.queries.me.history.getUserTryoutAttemptHistory, {
+        paginationOpts: {
+          cursor: null,
+          numItems: 2,
+        },
+        product: "snbt",
+        locale: "id",
+        tryoutSlug: "attempt-history-pagination",
+      });
+
+    expect(firstPage.isDone).toBe(false);
+    expect(firstPage.page).toHaveLength(2);
+
+    const secondPage = await t
+      .withIdentity({
+        subject: state.authUserId,
+        sessionId: state.sessionId,
+      })
+      .query(api.tryouts.queries.me.history.getUserTryoutAttemptHistory, {
+        paginationOpts: {
+          cursor: firstPage.continueCursor,
+          numItems: 2,
+        },
+        product: "snbt",
+        locale: "id",
+        tryoutSlug: "attempt-history-pagination",
+      });
+
+    expect(secondPage.page).toHaveLength(1);
+    expect(secondPage.isDone).toBe(true);
   });
 });

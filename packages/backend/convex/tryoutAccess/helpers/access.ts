@@ -17,8 +17,8 @@ import { ConvexError } from "convex/values";
 import { getAll } from "convex-helpers/server/relationships";
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
+const ACTIVE_PRODUCT_GRANT_PAGE_SIZE = 50;
 const MAX_PRODUCT_GRANTS_PER_GRANT = tryoutProducts.length;
-const MAX_ACTIVE_PRODUCT_GRANTS_PER_USER = 20;
 
 const tryoutPaidProductIds = {
   snbt: products.pro.id,
@@ -30,6 +30,12 @@ type TryoutAccessCampaignRedeemStatus = Infer<
   typeof tryoutAccessCampaignRedeemStatusValidator
 >;
 type TryoutAccessGrantStatus = Infer<typeof tryoutAccessGrantStatusValidator>;
+interface TryoutEventSource {
+  accessCampaignId: Doc<"tryoutAccessCampaigns">["_id"];
+  accessCampaignKind: Doc<"tryoutAccessCampaigns">["campaignKind"];
+  accessEndsAt: number;
+  accessGrantId: Doc<"tryoutAccessProductGrants">["grantId"];
+}
 
 /** Normalizes a public event code so reads and writes share one canonical key. */
 export function normalizeTryoutAccessCode(value: string) {
@@ -214,59 +220,66 @@ async function loadActiveTryoutEventSources(
     userId: Doc<"users">["_id"];
   }
 ) {
-  const productGrants = await db
-    .query("tryoutAccessProductGrants")
-    .withIndex("by_userId_and_product_and_endsAt", (q) =>
-      q.eq("userId", userId).eq("product", product).gt("endsAt", now)
-    )
-    .take(MAX_ACTIVE_PRODUCT_GRANTS_PER_USER + 1);
+  let cursor: string | null = null;
+  let accessPassEventSource: TryoutEventSource | null = null;
+  const competitionEventSources: TryoutEventSource[] = [];
 
-  if (productGrants.length > MAX_ACTIVE_PRODUCT_GRANTS_PER_USER) {
-    throw new ConvexError({
-      code: "TOO_MANY_ACTIVE_EVENT_GRANTS",
-      message: "Too many active event grants exist for one product.",
-    });
-  }
+  while (true) {
+    const productGrantPage = await db
+      .query("tryoutAccessProductGrants")
+      .withIndex("by_userId_and_product_and_endsAt", (q) =>
+        q.eq("userId", userId).eq("product", product).gt("endsAt", now)
+      )
+      .paginate({
+        cursor,
+        numItems: ACTIVE_PRODUCT_GRANT_PAGE_SIZE,
+      });
+    const campaigns = await getAll(
+      db,
+      "tryoutAccessCampaigns",
+      productGrantPage.page.map((productGrant) => productGrant.campaignId)
+    );
 
-  const campaigns = await getAll(
-    db,
-    "tryoutAccessCampaigns",
-    productGrants.map((productGrant) => productGrant.campaignId)
-  );
-  const eventSources = productGrants.flatMap((productGrant, index) => {
-    const campaign = campaigns[index];
+    for (const [index, productGrant] of productGrantPage.page.entries()) {
+      const campaign = campaigns[index];
 
-    if (!campaign) {
-      return [];
-    }
+      if (!campaign) {
+        continue;
+      }
 
-    const accessEndsAt = getTryoutAccessGrantEffectiveEndsAt({
-      campaign,
-      endsAt: productGrant.endsAt,
-    });
+      const accessEndsAt = getTryoutAccessGrantEffectiveEndsAt({
+        campaign,
+        endsAt: productGrant.endsAt,
+      });
 
-    if (accessEndsAt <= now) {
-      return [];
-    }
+      if (accessEndsAt <= now) {
+        continue;
+      }
 
-    return [
-      {
+      const eventSource = {
         accessCampaignId: campaign._id,
         accessCampaignKind: campaign.campaignKind,
         accessEndsAt,
         accessGrantId: productGrant.grantId,
-      },
-    ];
-  });
-  const accessPassEventSources = eventSources.filter(
-    (eventSource) => eventSource.accessCampaignKind === "access-pass"
-  );
-  const competitionEventSources = eventSources.filter(
-    (eventSource) => eventSource.accessCampaignKind === "competition"
-  );
+      };
+
+      if (eventSource.accessCampaignKind === "competition") {
+        competitionEventSources.push(eventSource);
+        continue;
+      }
+
+      accessPassEventSource = eventSource;
+    }
+
+    if (productGrantPage.isDone) {
+      break;
+    }
+
+    cursor = productGrantPage.continueCursor;
+  }
 
   return {
-    accessPassEventSource: accessPassEventSources.at(-1) ?? null,
+    accessPassEventSource,
     competitionEventSources,
   };
 }

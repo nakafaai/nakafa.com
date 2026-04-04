@@ -673,6 +673,98 @@ describe("tryouts/mutations/attempts", () => {
     );
   });
 
+  it("pages through many active access-pass grants instead of blocking access", async () => {
+    const t = createTryoutTestConvex();
+    const state = await t.mutation(async (ctx) => {
+      const currentTime = Date.now();
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "many-access-pass-grants",
+      });
+      const tryout = await insertTryoutSkeleton(ctx, "many-access-pass-grants");
+      let longestCampaignId = "" as Id<"tryoutAccessCampaigns">;
+      let longestGrantId = "" as Id<"tryoutAccessGrants">;
+      let longestEndsAt = currentTime;
+
+      for (let index = 0; index < 55; index += 1) {
+        const endsAt = currentTime + (index + 1) * 60 * 1000;
+        const campaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+          slug: `many-access-pass-grants-${index}`,
+          name: `Many Access Pass ${index}`,
+          products: ["snbt"],
+          campaignKind: "access-pass",
+          enabled: true,
+          redeemStatus: "active",
+          resultsStatus: "pending",
+          resultsFinalizedAt: null,
+          startsAt: currentTime - 60 * 1000,
+          endsAt: currentTime + 24 * 60 * 60 * 1000,
+          grantDurationDays: 30,
+        });
+        const linkId = await ctx.db.insert("tryoutAccessLinks", {
+          campaignId,
+          code: `many-access-pass-grants-${index}`,
+          label: `Many Access Pass ${index}`,
+          enabled: true,
+        });
+        const grantId = await ctx.db.insert("tryoutAccessGrants", {
+          campaignId,
+          linkId,
+          userId: identity.userId,
+          redeemedAt: currentTime,
+          endsAt,
+          status: "active",
+        });
+
+        await ctx.db.insert("tryoutAccessProductGrants", {
+          campaignId,
+          grantId,
+          product: "snbt",
+          status: "active",
+          userId: identity.userId,
+          endsAt,
+        });
+
+        longestCampaignId = campaignId;
+        longestGrantId = grantId;
+        longestEndsAt = endsAt;
+      }
+
+      return {
+        ...identity,
+        longestCampaignId,
+        longestEndsAt,
+        longestGrantId,
+        tryoutId: tryout.tryoutId,
+      };
+    });
+
+    await t
+      .withIdentity({
+        subject: state.authUserId,
+        sessionId: state.sessionId,
+      })
+      .mutation(api.tryouts.mutations.attempts.startTryout, {
+        product: "snbt",
+        locale: "id",
+        tryoutSlug: "many-access-pass-grants",
+      });
+
+    const tryoutAttempt = await t.query(async (ctx) => {
+      return await ctx.db
+        .query("tryoutAttempts")
+        .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
+          q.eq("userId", state.userId).eq("tryoutId", state.tryoutId)
+        )
+        .order("desc")
+        .first();
+    });
+
+    expect(tryoutAttempt?.accessCampaignId).toBe(state.longestCampaignId);
+    expect(tryoutAttempt?.accessGrantId).toBe(state.longestGrantId);
+    expect(tryoutAttempt?.accessEndsAt).toBe(state.longestEndsAt);
+  });
+
   it("starts an unstarted part from the persisted snapshot after live key, set, and count changes", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
@@ -785,6 +877,7 @@ describe("tryouts/mutations/attempts", () => {
   it("reuses an already started part after the current route key changes", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
+      const currentTime = Date.now();
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "reuse-renamed-part",
@@ -811,12 +904,12 @@ describe("tryouts/mutations/attempts", () => {
         mode: "simulation",
         scope: "set",
         timeLimit: 24 * 60 * 60,
-        startedAt: NOW,
-        lastActivityAt: NOW,
+        startedAt: currentTime,
+        lastActivityAt: currentTime,
         completedAt: null,
         endReason: null,
         status: "in-progress",
-        updatedAt: NOW,
+        updatedAt: currentTime,
         totalExercises: 1,
         answeredCount: 0,
         correctAnswers: 0,
@@ -842,9 +935,9 @@ describe("tryouts/mutations/attempts", () => {
         totalQuestions: 0,
         theta: 0,
         thetaSE: 1,
-        startedAt: NOW,
-        expiresAt: NOW + ATTEMPT_WINDOW_MS,
-        lastActivityAt: NOW,
+        startedAt: currentTime,
+        expiresAt: currentTime + ATTEMPT_WINDOW_MS,
+        lastActivityAt: currentTime,
         completedAt: null,
         endReason: null,
       });
@@ -855,8 +948,8 @@ describe("tryouts/mutations/attempts", () => {
         questionId,
         isCorrect: false,
         timeSpent: 30,
-        answeredAt: NOW,
-        updatedAt: NOW,
+        answeredAt: currentTime,
+        updatedAt: currentTime,
       });
       await ctx.db.insert("tryoutPartAttempts", {
         tryoutAttemptId,
