@@ -31,6 +31,8 @@ import {
 import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError, v } from "convex/values";
 
+const COMPETITION_ATTEMPT_SCAN_PAGE_SIZE = 50;
+
 /** Starts or resumes one authenticated tryout attempt for a product slug. */
 export const startTryout = mutation({
   args: {
@@ -79,26 +81,74 @@ export const startTryout = mutation({
       product: tryout.product,
       userId,
     });
-    const competitionAttempts = await Promise.all(
-      accessSources.competitionEventSources.map((competitionEventSource) => {
-        return ctx.db
-          .query("tryoutAttempts")
-          .withIndex(
-            "by_userId_and_tryoutId_and_accessCampaignId_and_startedAt",
-            (q) =>
-              q
-                .eq("userId", userId)
-                .eq("tryoutId", tryout._id)
-                .eq("accessCampaignId", competitionEventSource.accessCampaignId)
-          )
-          .first();
-      })
+    const activeCompetitionCampaignIds = new Set(
+      accessSources.competitionEventSources.map(
+        (competitionEventSource) => competitionEventSource.accessCampaignId
+      )
     );
+    const usedCompetitionCampaignIds = new Set(
+      existingAttempt?.accessCampaignId &&
+        existingAttempt.accessCampaignKind === "competition"
+        ? [existingAttempt.accessCampaignId]
+        : []
+    );
+
+    if (
+      activeCompetitionCampaignIds.size > 0 &&
+      usedCompetitionCampaignIds.size < activeCompetitionCampaignIds.size
+    ) {
+      let cursor: string | null = null;
+
+      while (true) {
+        const attemptPage = await ctx.db
+          .query("tryoutAttempts")
+          .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
+            q.eq("userId", userId).eq("tryoutId", tryout._id)
+          )
+          .order("desc")
+          .paginate({
+            cursor,
+            numItems: COMPETITION_ATTEMPT_SCAN_PAGE_SIZE,
+          });
+
+        for (const attempt of attemptPage.page) {
+          if (
+            attempt.accessCampaignKind !== "competition" ||
+            !attempt.accessCampaignId ||
+            !activeCompetitionCampaignIds.has(attempt.accessCampaignId)
+          ) {
+            continue;
+          }
+
+          usedCompetitionCampaignIds.add(attempt.accessCampaignId);
+
+          if (
+            usedCompetitionCampaignIds.size ===
+            activeCompetitionCampaignIds.size
+          ) {
+            break;
+          }
+        }
+
+        if (
+          attemptPage.isDone ||
+          usedCompetitionCampaignIds.size === activeCompetitionCampaignIds.size
+        ) {
+          break;
+        }
+
+        cursor = attemptPage.continueCursor;
+      }
+    }
+
     const unusedCompetitionEventSource =
       accessSources.competitionEventSources.find(
-        (_, index) => !competitionAttempts[index]
+        (competitionEventSource) =>
+          !usedCompetitionCampaignIds.has(
+            competitionEventSource.accessCampaignId
+          )
       ) ?? null;
-    const hasUsedCompetitionAttempt = competitionAttempts.some(Boolean);
+    const hasUsedCompetitionAttempt = usedCompetitionCampaignIds.size > 0;
     const competitionStartSource = unusedCompetitionEventSource
       ? {
           ...unusedCompetitionEventSource,
