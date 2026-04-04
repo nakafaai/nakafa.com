@@ -134,11 +134,10 @@ psychometric internal.
 
 - server membaca `getActiveTryoutCatalogMeta`
 - client membaca `getActiveTryoutCatalogPage` dengan `usePaginatedQuery`
-- kalau user login, client membaca latest-attempt badge untuk tryout yang sedang
-  dimuat lewat query terpisah
+- kalau user login, page query menggabungkan latest-attempt badge untuk row yang
+  sedang dimuat
 - setiap page sudah datang dalam urutan final yang benar
-- jika user login, badge row digabung dari latest-attempt projection yang sudah
-  ada
+- jika user login, badge row datang langsung bersama row katalog di page aktif
 
 ### 2. User membuka halaman detail try out
 
@@ -240,7 +239,6 @@ Hub dan halaman produk sekarang mengikuti kontrak ini:
   - baca `getActiveTryoutCatalogMeta`
 - client component:
   - baca `getActiveTryoutCatalogPage` dengan `usePaginatedQuery`
-  - baca `getMyTryoutCatalogStatuses` untuk `tryoutId[]` yang sedang dimuat
   - group by `cycleKey`
   - load more dengan `Intersection`
 

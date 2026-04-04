@@ -2,7 +2,6 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { usePaginatedQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
@@ -21,15 +20,11 @@ import {
 } from "@/components/tryout/package-list";
 import { TryoutStatusBadge } from "@/components/tryout/status-badge";
 import { getEffectiveTryoutStatus } from "@/components/tryout/utils/status";
-import { useUser } from "@/lib/context/use-user";
 
 type ActiveTryoutCatalogPage = FunctionReturnType<
   typeof api.tryouts.queries.tryouts.getActiveTryoutCatalogPage
 >;
 type ActiveTryoutCatalogEntry = ActiveTryoutCatalogPage["page"][number];
-type TryoutCatalogStatusesBySlug = FunctionReturnType<
-  typeof api.tryouts.queries.me.catalog.getMyTryoutCatalogStatuses
->["statusesBySlug"];
 const TRYOUT_CATALOG_PAGE_SIZE = 25;
 
 /** Groups already ordered catalog rows into the year sections shown in the UI. */
@@ -60,7 +55,7 @@ function getTryoutCatalogBadgeStatus({
   latestStatus,
   nowMs,
 }: {
-  latestStatus: TryoutCatalogStatusesBySlug[string] | null;
+  latestStatus: ActiveTryoutCatalogEntry["latestAttempt"];
   nowMs: number;
 }) {
   if (!latestStatus) {
@@ -92,7 +87,6 @@ interface TryoutCatalogListProps {
 /** Renders the paginated tryout catalog for the hub and product pages. */
 export function TryoutCatalogList({ locale, product }: TryoutCatalogListProps) {
   const tTryouts = useTranslations("Tryouts");
-  const user = useUser((state) => state.user);
   const {
     loadMore,
     results: catalogEntries,
@@ -107,20 +101,9 @@ export function TryoutCatalogList({ locale, product }: TryoutCatalogListProps) {
       initialNumItems: TRYOUT_CATALOG_PAGE_SIZE,
     }
   );
-  const { data: catalogStatuses } = useQueryWithStatus(
-    api.tryouts.queries.me.catalog.getMyTryoutCatalogStatuses,
-    user
-      ? {
-          locale,
-          product,
-          tryoutIds: catalogEntries.map((entry) => entry.tryoutId),
-        }
-      : "skip"
-  );
-  const statusesBySlug = catalogStatuses?.statusesBySlug ?? {};
   const nowMs = useTryoutClock(
     catalogEntries.some(
-      (entry) => statusesBySlug[entry.slug]?.status === "in-progress"
+      (entry) => entry.latestAttempt?.status === "in-progress"
     )
   );
 
@@ -148,7 +131,7 @@ export function TryoutCatalogList({ locale, product }: TryoutCatalogListProps) {
           <TryoutPackageItems>
             {group.tryouts.map((tryout) => {
               const badgeStatus = getTryoutCatalogBadgeStatus({
-                latestStatus: statusesBySlug[tryout.slug] ?? null,
+                latestStatus: tryout.latestAttempt,
                 nowMs,
               });
 

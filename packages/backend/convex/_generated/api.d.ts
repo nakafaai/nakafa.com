@@ -217,7 +217,6 @@ import type * as tryouts_products_index from "../tryouts/products/index.js";
 import type * as tryouts_products_snbt from "../tryouts/products/snbt.js";
 import type * as tryouts_queries_leaderboard from "../tryouts/queries/leaderboard.js";
 import type * as tryouts_queries_me_attempt from "../tryouts/queries/me/attempt.js";
-import type * as tryouts_queries_me_catalog from "../tryouts/queries/me/catalog.js";
 import type * as tryouts_queries_me_helpers from "../tryouts/queries/me/helpers.js";
 import type * as tryouts_queries_me_history from "../tryouts/queries/me/history.js";
 import type * as tryouts_queries_me_part from "../tryouts/queries/me/part.js";
@@ -457,7 +456,6 @@ declare const fullApi: ApiFromModules<{
   "tryouts/products/snbt": typeof tryouts_products_snbt;
   "tryouts/queries/leaderboard": typeof tryouts_queries_leaderboard;
   "tryouts/queries/me/attempt": typeof tryouts_queries_me_attempt;
-  "tryouts/queries/me/catalog": typeof tryouts_queries_me_catalog;
   "tryouts/queries/me/helpers": typeof tryouts_queries_me_helpers;
   "tryouts/queries/me/history": typeof tryouts_queries_me_history;
   "tryouts/queries/me/part": typeof tryouts_queries_me_part;

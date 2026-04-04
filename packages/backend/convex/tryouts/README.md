@@ -82,7 +82,6 @@ Use the generic query/mutation surface in `tryouts/`:
 - `queries/tryouts.ts`
 - `queries/tryouts.ts#getActiveTryoutCatalogMeta`
 - `queries/tryouts.ts#getActiveTryoutCatalogPage`
-- `queries/me/catalog.ts#getMyTryoutCatalogStatuses`
 - `queries/me/attempt.ts`
 - `queries/me/part.ts`
 - `queries/leaderboard.ts`
@@ -90,8 +89,8 @@ Use the generic query/mutation surface in `tryouts/`:
 
 The hub should not exhaust all active tryout pages on the server.
 Use `getActiveTryoutCatalogPage` with `usePaginatedQuery` on the client and
-read the authenticated user's latest-attempt badges separately from the existing
-`userTryoutLatestAttempts` projection.
+let the catalog page query attach latest-attempt badges only for the rows in the
+current page.
 
 Frontend routing can stay product-specific, for example:
 
