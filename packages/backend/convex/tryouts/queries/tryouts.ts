@@ -12,6 +12,8 @@ import {
 import { ConvexError, v } from "convex/values";
 import { getAll } from "convex-helpers/server/relationships";
 
+const MAX_TRYOUT_CATALOG_PAGE_SIZE = 25;
+
 const tryoutCatalogLatestAttemptValidator = v.union(
   v.object({
     expiresAtMs: vv.doc("userTryoutLatestAttempts").fields.expiresAtMs,
@@ -65,6 +67,13 @@ export const getActiveTryoutCatalogPage = query({
   },
   returns: paginationResultValidator(activeTryoutCatalogEntryValidator),
   handler: async (ctx, args) => {
+    const paginationOpts = {
+      ...args.paginationOpts,
+      numItems: Math.min(
+        args.paginationOpts.numItems,
+        MAX_TRYOUT_CATALOG_PAGE_SIZE
+      ),
+    };
     const [catalogPage, user] = await Promise.all([
       ctx.db
         .query("tryoutCatalogEntries")
@@ -76,7 +85,7 @@ export const getActiveTryoutCatalogPage = query({
               .eq("locale", args.locale)
               .eq("isActive", true)
         )
-        .paginate(args.paginationOpts),
+        .paginate(paginationOpts),
       getOptionalAppUser(ctx),
     ]);
 

@@ -212,4 +212,88 @@ describe("tryouts/queries/tryouts", () => {
       }),
     ]);
   });
+
+  it("caps authenticated catalog pages to the server-side maximum", async () => {
+    const t = createTryoutTestConvex();
+    const state = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "catalog-page-cap",
+      });
+
+      for (let index = 0; index < 30; index += 1) {
+        const slug = `catalog-page-cap-${index}`;
+        const label = `Catalog Page Cap ${index.toString().padStart(2, "0")}`;
+        const tryoutId = await ctx.db.insert("tryouts", {
+          product: "snbt",
+          locale: "id",
+          cycleKey: "2026",
+          slug,
+          label,
+          partCount: 1,
+          totalQuestionCount: 20,
+          isActive: true,
+          detectedAt: NOW,
+          syncedAt: NOW,
+        });
+
+        await ctx.db.insert("tryoutCatalogEntries", {
+          tryoutId,
+          product: "snbt",
+          locale: "id",
+          cycleKey: "2026",
+          slug,
+          label,
+          partCount: 1,
+          totalQuestionCount: 20,
+          isActive: true,
+          catalogSortKey: tryoutProductPolicies.snbt.getCatalogSortKey({
+            cycleKey: "2026",
+            label,
+            slug,
+          }),
+          updatedAt: NOW,
+        });
+      }
+
+      return identity;
+    });
+
+    const firstPage = await t
+      .withIdentity({
+        subject: state.authUserId,
+        sessionId: state.sessionId,
+      })
+      .query(api.tryouts.queries.tryouts.getActiveTryoutCatalogPage, {
+        paginationOpts: {
+          cursor: null,
+          numItems: 100,
+        },
+        locale: "id",
+        product: "snbt",
+      });
+
+    expect(firstPage.page).toHaveLength(25);
+    expect(firstPage.isDone).toBe(false);
+    expect(firstPage.page.every((entry) => entry.latestAttempt === null)).toBe(
+      true
+    );
+
+    const secondPage = await t
+      .withIdentity({
+        subject: state.authUserId,
+        sessionId: state.sessionId,
+      })
+      .query(api.tryouts.queries.tryouts.getActiveTryoutCatalogPage, {
+        paginationOpts: {
+          cursor: firstPage.continueCursor,
+          numItems: 100,
+        },
+        locale: "id",
+        product: "snbt",
+      });
+
+    expect(secondPage.page).toHaveLength(5);
+    expect(secondPage.isDone).toBe(true);
+  });
 });
