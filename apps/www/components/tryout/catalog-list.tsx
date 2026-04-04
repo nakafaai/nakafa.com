@@ -2,6 +2,7 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
+import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { usePaginatedQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
@@ -20,10 +21,16 @@ import {
 } from "@/components/tryout/package-list";
 import { TryoutStatusBadge } from "@/components/tryout/status-badge";
 import { getEffectiveTryoutStatus } from "@/components/tryout/utils/status";
+import { useUser } from "@/lib/context/use-user";
 
-type ActiveTryoutCatalogEntry = FunctionReturnType<
+type ActiveTryoutCatalogPage = FunctionReturnType<
   typeof api.tryouts.queries.tryouts.getActiveTryoutCatalogPage
->["page"][number];
+>;
+type ActiveTryoutCatalogEntry = ActiveTryoutCatalogPage["page"][number];
+type TryoutCatalogStatusesBySlug = FunctionReturnType<
+  typeof api.tryouts.queries.me.catalog.getMyTryoutCatalogStatuses
+>["statusesBySlug"];
+const TRYOUT_CATALOG_PAGE_SIZE = 25;
 
 /** Groups already ordered catalog rows into the year sections shown in the UI. */
 function groupCatalogEntriesByCycle(
@@ -48,35 +55,83 @@ function groupCatalogEntriesByCycle(
   }));
 }
 
+/** Maps one stored latest-attempt summary to the compact badge shown in the hub. */
+function getTryoutCatalogBadgeStatus({
+  latestStatus,
+  nowMs,
+}: {
+  latestStatus: TryoutCatalogStatusesBySlug[string] | null;
+  nowMs: number;
+}) {
+  if (!latestStatus) {
+    return null;
+  }
+
+  const effectiveStatus = getEffectiveTryoutStatus({
+    expiresAtMs: latestStatus.expiresAtMs,
+    nowMs,
+    status: latestStatus.status,
+  });
+
+  if (effectiveStatus === "in-progress") {
+    return "in-progress" as const;
+  }
+
+  if (effectiveStatus !== null) {
+    return "completed" as const;
+  }
+
+  return null;
+}
+
 interface TryoutCatalogListProps {
   locale: Locale;
   product: TryoutProduct;
 }
 
-/** Renders the reactive tryout catalog page-by-page for the hub and product pages. */
+/** Renders the paginated tryout catalog for the hub and product pages. */
 export function TryoutCatalogList({ locale, product }: TryoutCatalogListProps) {
   const tTryouts = useTranslations("Tryouts");
-  const { loadMore, results, status } = usePaginatedQuery(
+  const user = useUser((state) => state.user);
+  const {
+    loadMore,
+    results: catalogEntries,
+    status: catalogStatus,
+  } = usePaginatedQuery(
     api.tryouts.queries.tryouts.getActiveTryoutCatalogPage,
     {
       locale,
       product,
     },
-    { initialNumItems: 25 }
+    {
+      initialNumItems: TRYOUT_CATALOG_PAGE_SIZE,
+    }
   );
+  const { data: catalogStatuses } = useQueryWithStatus(
+    api.tryouts.queries.me.catalog.getMyTryoutCatalogStatuses,
+    user
+      ? {
+          locale,
+          product,
+        }
+      : "skip"
+  );
+  const statusesBySlug = catalogStatuses?.statusesBySlug ?? {};
   const nowMs = useTryoutClock(
-    results.some((entry) => entry.latestAttempt?.status === "in-progress")
+    catalogEntries.some(
+      (entry) => statusesBySlug[entry.slug]?.status === "in-progress"
+    )
   );
 
-  if (results.length === 0) {
-    if (status === "LoadingFirstPage") {
+  if (catalogEntries.length === 0) {
+    if (catalogStatus === "LoadingFirstPage") {
       return null;
     }
 
     return <TryoutPackageEmpty>{tTryouts("list-empty")}</TryoutPackageEmpty>;
   }
 
-  const cycleGroups = groupCatalogEntriesByCycle(results);
+  const cycleGroups = groupCatalogEntriesByCycle(catalogEntries);
 
   return (
     <div>
@@ -91,20 +146,10 @@ export function TryoutCatalogList({ locale, product }: TryoutCatalogListProps) {
 
           <TryoutPackageItems>
             {group.tryouts.map((tryout) => {
-              const effectiveStatus = tryout.latestAttempt
-                ? getEffectiveTryoutStatus({
-                    expiresAtMs: tryout.latestAttempt.expiresAtMs,
-                    nowMs,
-                    status: tryout.latestAttempt.status,
-                  })
-                : null;
-              let badgeStatus: "completed" | "in-progress" | null = null;
-
-              if (effectiveStatus === "in-progress") {
-                badgeStatus = "in-progress";
-              } else if (effectiveStatus !== null) {
-                badgeStatus = "completed";
-              }
+              const badgeStatus = getTryoutCatalogBadgeStatus({
+                latestStatus: statusesBySlug[tryout.slug] ?? null,
+                nowMs,
+              });
 
               return (
                 <TryoutPackageLink
@@ -132,8 +177,8 @@ export function TryoutCatalogList({ locale, product }: TryoutCatalogListProps) {
         </div>
       ))}
 
-      {status === "CanLoadMore" ? (
-        <Intersection onIntersect={() => loadMore(25)} />
+      {catalogStatus === "CanLoadMore" ? (
+        <Intersection onIntersect={() => loadMore(TRYOUT_CATALOG_PAGE_SIZE)} />
       ) : null}
     </div>
   );

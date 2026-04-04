@@ -17,6 +17,8 @@ queries, mutations, IRT publication, and leaderboard flow stay generic.
 - `tryoutCatalogEntries` stores the small ordered hub rows used by paginated
   browse queries
 - `tryoutCatalogMeta` stores exact active package counts per product and locale
+- `userTryoutCatalogStatuses` stores one compact badge-summary document per user,
+  product, and locale for the hub
 - `tryoutPartSets` maps each tryout to its ordered exercise sets
 - each mapped part keeps both `partIndex` (internal order) and `partKey`
   (stable public identity for routes)
@@ -65,6 +67,9 @@ That policy owns:
   already matches the final user-facing order
 - `tryoutCatalogMeta` stores `activeCount` so the hub badge does not need to
   scan or count the full catalog at read time
+- `userTryoutCatalogStatuses` stores the authenticated user's latest hub badge
+  state keyed by tryout slug, so the hub does not pay per-row latest-attempt
+  lookups
 - content sync is the authoritative writer for both tables
 
 ## Finalized Attempt Semantics
@@ -82,13 +87,16 @@ Use the generic query/mutation surface in `tryouts/`:
 - `queries/tryouts.ts`
 - `queries/tryouts.ts#getActiveTryoutCatalogMeta`
 - `queries/tryouts.ts#getActiveTryoutCatalogPage`
+- `queries/me/catalog.ts#getMyTryoutCatalogStatuses`
 - `queries/me/attempt.ts`
 - `queries/me/part.ts`
 - `queries/leaderboard.ts`
 - `mutations/attempts.ts`
 
 The hub should not exhaust all active tryout pages on the server.
-Use the catalog page query reactively from the client with `usePaginatedQuery`.
+Use `getActiveTryoutCatalogPage` with `usePaginatedQuery` on the client and
+merge the authenticated user's small badge summary from
+`getMyTryoutCatalogStatuses` separately.
 
 Frontend routing can stay product-specific, for example:
 

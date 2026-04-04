@@ -1,11 +1,7 @@
 import { api } from "@repo/backend/convex/_generated/api";
-import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
 import { tryoutProductPolicies } from "@repo/backend/convex/tryouts/products";
 import {
-  ATTEMPT_WINDOW_MS,
   createTryoutTestConvex,
-  insertCompletedTryoutAttempt,
-  insertTryoutSkeleton,
   NOW,
 } from "@repo/backend/convex/tryouts/test.helpers";
 import { describe, expect, it } from "vitest";
@@ -127,9 +123,6 @@ describe("tryouts/queries/tryouts", () => {
       "2026-set-a",
       "2026-set-b",
     ]);
-    expect(
-      firstPage.page.every((tryout) => tryout.latestAttempt === null)
-    ).toBe(true);
 
     const secondPage = await t.query(
       api.tryouts.queries.tryouts.getActiveTryoutCatalogPage,
@@ -147,67 +140,5 @@ describe("tryouts/queries/tryouts", () => {
       "2025-set-c",
     ]);
     expect(secondPage.isDone).toBe(true);
-  });
-
-  it("returns page-local latest attempt status for the authenticated user", async () => {
-    const t = createTryoutTestConvex();
-    const state = await t.mutation(async (ctx) => {
-      const identity = await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "catalog-page-status",
-      });
-      const tryout = await insertTryoutSkeleton(ctx, "catalog-page-status");
-      await insertCompletedTryoutAttempt(ctx, {
-        scaleVersionId: tryout.scaleVersionId,
-        setId: tryout.setId,
-        slug: "catalog-page-status",
-        tryoutId: tryout.tryoutId,
-        userId: identity.userId,
-      });
-
-      await ctx.db.insert("tryoutCatalogEntries", {
-        tryoutId: tryout.tryoutId,
-        product: "snbt",
-        locale: "id",
-        cycleKey: "2026",
-        slug: "catalog-page-status",
-        label: "Catalog Page Status",
-        partCount: 1,
-        totalQuestionCount: 20,
-        isActive: true,
-        catalogSortKey: tryoutProductPolicies.snbt.getCatalogSortKey({
-          cycleKey: "2026",
-          label: "Catalog Page Status",
-          slug: "catalog-page-status",
-        }),
-        updatedAt: NOW,
-      });
-
-      return identity;
-    });
-
-    const result = await t
-      .withIdentity({
-        subject: state.authUserId,
-        sessionId: state.sessionId,
-      })
-      .query(api.tryouts.queries.tryouts.getActiveTryoutCatalogPage, {
-        paginationOpts: {
-          cursor: null,
-          numItems: 10,
-        },
-        locale: "id",
-        product: "snbt",
-      });
-
-    expect(result.page).toEqual([
-      expect.objectContaining({
-        latestAttempt: {
-          expiresAtMs: NOW + ATTEMPT_WINDOW_MS,
-          status: "completed",
-        },
-        slug: "catalog-page-status",
-      }),
-    ]);
   });
 });

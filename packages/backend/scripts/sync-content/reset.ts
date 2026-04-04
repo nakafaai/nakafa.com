@@ -131,6 +131,12 @@ const RESET_STEPS: ResetStep[] = [
     resultLabel: "tryout catalog meta rows",
   },
   {
+    label: "Deleting user tryout catalog statuses...",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteUserTryoutCatalogStatusesBatch",
+    resultLabel: "user tryout catalog statuses",
+  },
+  {
     label: "Deleting tryout part sets...",
     mutationPath: "contentSync/mutations/maintenance:deleteTryoutPartSetsBatch",
     resultLabel: "tryout part sets",
@@ -244,6 +250,7 @@ export const reset = async (
   log(`  Tryouts:               ${counts.tryouts}`);
   log(`  Tryout Catalog Rows:   ${counts.tryoutCatalogEntries}`);
   log(`  Tryout Catalog Meta:   ${counts.tryoutCatalogMeta}`);
+  log(`  User Catalog Status:   ${counts.userTryoutCatalogStatuses}`);
   log(`  Tryout Part Sets:      ${counts.tryoutPartSets}`);
   log(`  Tryout Attempts:       ${counts.tryoutAttempts}`);
   log(`  Tryout Part Attempts:  ${counts.tryoutPartAttempts}`);
@@ -281,6 +288,7 @@ export const reset = async (
     counts.tryouts +
     counts.tryoutCatalogEntries +
     counts.tryoutCatalogMeta +
+    counts.userTryoutCatalogStatuses +
     counts.tryoutPartSets +
     counts.tryoutAttempts +
     counts.tryoutPartAttempts +

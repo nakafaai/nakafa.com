@@ -104,6 +104,10 @@ psychometric internal.
 - `tryoutCatalogMeta`
   - menyimpan `activeCount` per `{product, locale}`
   - dipakai badge jumlah package tanpa scan penuh
+- `userTryoutCatalogStatuses`
+  - satu dokumen kecil per `{user, product, locale}`
+  - menyimpan badge state terbaru per slug
+  - dipakai hub supaya tidak melakukan lookup latest attempt per row
 
 ### Definisi Try Out
 
@@ -134,9 +138,9 @@ psychometric internal.
 
 - server membaca `getActiveTryoutCatalogMeta`
 - client membaca `getActiveTryoutCatalogPage` dengan `usePaginatedQuery`
+- kalau user login, client membaca satu dokumen kecil `getMyTryoutCatalogStatuses`
 - setiap page sudah datang dalam urutan final yang benar
-- jika user login, page itu juga membawa status latest attempt untuk baris yang
-  sedang ditampilkan
+- jika user login, badge row digabung dari ringkasan status per slug
 
 ### 2. User membuka halaman detail try out
 
@@ -237,12 +241,15 @@ Hub dan halaman produk sekarang mengikuti kontrak ini:
   - baca translations
   - baca `getActiveTryoutCatalogMeta`
 - client component:
-  - baca `getActiveTryoutCatalogPage`
+  - baca `getActiveTryoutCatalogPage` dengan `usePaginatedQuery`
+  - baca `getMyTryoutCatalogStatuses` sebagai satu query kecil per product dan locale
   - group by `cycleKey`
   - load more dengan `Intersection`
 
-Artinya path lama yang menghabiskan semua page di Next server sudah tidak
-dipakai lagi.
+Artinya:
+
+- path lama yang menghabiskan semua page di Next server sudah tidak dipakai lagi
+- path lama yang melakukan lookup latest attempt per row juga sudah tidak dipakai lagi
 
 ## Checklist Ops Dan Engineering
 
@@ -271,7 +278,8 @@ Tidak. Hub membaca meta count kecil dan page katalog kecil.
 
 ### Apakah status badge hub membaca semua package status sekaligus?
 
-Tidak. Status latest attempt hanya dibaca untuk row yang sedang ada di page aktif.
+Tidak. Hub membaca satu ringkasan kecil per user lalu mencocokkannya ke slug row
+yang sedang tampil.
 
 ### Apakah `Final Event` sama dengan `official`?
 

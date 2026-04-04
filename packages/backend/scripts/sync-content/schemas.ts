@@ -79,6 +79,7 @@ export const ContentCountsSchema = z.object({
   tryoutAttempts: z.number(),
   tryoutPartAttempts: z.number(),
   tryoutLeaderboardEntries: z.number(),
+  userTryoutCatalogStatuses: z.number(),
   userTryoutLatestAttempts: z.number(),
   userTryoutStats: z.number(),
   irtCalibrationQueue: z.number(),

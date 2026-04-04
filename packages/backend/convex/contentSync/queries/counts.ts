@@ -18,6 +18,7 @@ const countableTableNameValidator = literals(
   "tryoutAttempts",
   "tryoutPartAttempts",
   "tryoutLeaderboardEntries",
+  "userTryoutCatalogStatuses",
   "userTryoutLatestAttempts",
   "userTryoutStats",
   "irtCalibrationQueue",
