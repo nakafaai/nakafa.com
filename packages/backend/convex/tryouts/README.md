@@ -8,6 +8,7 @@ queries, mutations, IRT publication, and leaderboard flow stay generic.
 
 - IRT technical basis: `../irt/README.md`
 - IRT explainer: `../irt/docs/EXPLAINER.id.md`
+- Tryout architecture: `./docs/ARCHITECTURE.id.md`
 - Product policy: `./docs/PRODUCT_POLICY.id.md`
 
 ## Core Model

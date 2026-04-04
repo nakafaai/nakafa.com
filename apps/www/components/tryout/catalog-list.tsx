@@ -25,6 +25,7 @@ type ActiveTryoutCatalogEntry = FunctionReturnType<
   typeof api.tryouts.queries.tryouts.getActiveTryoutCatalogPage
 >["page"][number];
 
+/** Groups already ordered catalog rows into the year sections shown in the UI. */
 function groupCatalogEntriesByCycle(
   entries: readonly ActiveTryoutCatalogEntry[]
 ) {
@@ -52,6 +53,7 @@ interface TryoutCatalogListProps {
   product: TryoutProduct;
 }
 
+/** Renders the reactive tryout catalog page-by-page for the hub and product pages. */
 export function TryoutCatalogList({ locale, product }: TryoutCatalogListProps) {
   const tTryouts = useTranslations("Tryouts");
   const { loadMore, results, status } = usePaginatedQuery(

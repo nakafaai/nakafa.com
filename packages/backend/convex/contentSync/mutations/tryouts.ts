@@ -61,6 +61,8 @@ export const bulkSyncTryouts = internalMutation({
       (count, tryout) => count + (tryout.isActive ? 1 : 0),
       0
     );
+
+    /** Upsert one ordered catalog row for the detected tryout definition. */
     const syncCatalogEntry = async ({
       tryout,
       tryoutId,
