@@ -3,7 +3,7 @@ import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
 import {
-  tryoutCatalogStatusSummaryEntryValidator,
+  tryoutCatalogStatusEntryValidator,
   tryoutPartKeyValidator,
   tryoutPublicResultStatusValidator,
 } from "@repo/backend/convex/tryouts/schema";
@@ -23,13 +23,11 @@ export const userTryoutLookupArgs = {
 export const userTryoutCatalogStatusesArgs = {
   product: tryoutProductValidator,
   locale: localeValidator,
+  tryoutIds: v.array(v.id("tryouts")),
 };
 
 export const userTryoutCatalogStatusesResultValidator = v.object({
-  statusesBySlug: v.record(
-    v.string(),
-    tryoutCatalogStatusSummaryEntryValidator
-  ),
+  statusesBySlug: v.record(v.string(), tryoutCatalogStatusEntryValidator),
 });
 
 export const orderedTryoutPartValidator = v.object({

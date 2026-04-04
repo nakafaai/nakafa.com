@@ -5,24 +5,52 @@ import {
   userTryoutCatalogStatusesResultValidator,
 } from "@repo/backend/convex/tryouts/queries/me/validators";
 
-/** Returns the authenticated user's hub badge summary for one product and locale. */
+/** Returns the authenticated user's hub badge summary for the requested tryout ids. */
 export const getMyTryoutCatalogStatuses = query({
   args: userTryoutCatalogStatusesArgs,
   returns: userTryoutCatalogStatusesResultValidator,
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
-    const catalogStatuses = await ctx.db
-      .query("userTryoutCatalogStatuses")
-      .withIndex("by_userId_and_product_and_locale", (q) =>
-        q
-          .eq("userId", appUser._id)
-          .eq("product", args.product)
-          .eq("locale", args.locale)
-      )
-      .unique();
+    const uniqueTryoutIds = [...new Set(args.tryoutIds)];
+
+    if (uniqueTryoutIds.length === 0) {
+      return {
+        statusesBySlug: {},
+      };
+    }
+
+    const latestAttempts = await Promise.all(
+      uniqueTryoutIds.map((tryoutId) => {
+        return ctx.db
+          .query("userTryoutLatestAttempts")
+          .withIndex("by_userId_and_product_and_locale_and_tryoutId", (q) =>
+            q
+              .eq("userId", appUser._id)
+              .eq("product", args.product)
+              .eq("locale", args.locale)
+              .eq("tryoutId", tryoutId)
+          )
+          .unique();
+      })
+    );
 
     return {
-      statusesBySlug: catalogStatuses?.statusesBySlug ?? {},
+      statusesBySlug: Object.fromEntries(
+        latestAttempts.flatMap((latestAttempt) =>
+          latestAttempt
+            ? [
+                [
+                  latestAttempt.slug,
+                  {
+                    expiresAtMs: latestAttempt.expiresAtMs,
+                    status: latestAttempt.status,
+                    updatedAt: latestAttempt.updatedAt,
+                  },
+                ],
+              ]
+            : []
+        )
+      ),
     };
   },
 });

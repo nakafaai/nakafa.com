@@ -29,10 +29,6 @@ const countTableSpecs: Array<{
     tableName: "tryoutLeaderboardEntries",
   },
   {
-    field: "userTryoutCatalogStatuses",
-    tableName: "userTryoutCatalogStatuses",
-  },
-  {
     field: "userTryoutLatestAttempts",
     tableName: "userTryoutLatestAttempts",
   },

@@ -113,6 +113,7 @@ export function TryoutCatalogList({ locale, product }: TryoutCatalogListProps) {
       ? {
           locale,
           product,
+          tryoutIds: catalogEntries.map((entry) => entry.tryoutId),
         }
       : "skip"
   );

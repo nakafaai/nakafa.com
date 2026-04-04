@@ -31,13 +31,13 @@ export type TryoutPublicResultStatus = Infer<
 export const tryoutPartKeyValidator = v.string();
 export type TryoutPartKey = Infer<typeof tryoutPartKeyValidator>;
 
-export const tryoutCatalogStatusSummaryEntryValidator = v.object({
+export const tryoutCatalogStatusEntryValidator = v.object({
   expiresAtMs: v.number(),
   status: tryoutStatusValidator,
   updatedAt: v.number(),
 });
-export type TryoutCatalogStatusSummaryEntry = Infer<
-  typeof tryoutCatalogStatusSummaryEntryValidator
+export type TryoutCatalogStatusEntry = Infer<
+  typeof tryoutCatalogStatusEntryValidator
 >;
 
 export const tryoutPartSnapshotValidator = v.object({
@@ -193,17 +193,6 @@ const tables = {
       "updatedAt",
     ])
     .index("by_attemptId", ["attemptId"]),
-
-  userTryoutCatalogStatuses: defineTable({
-    userId: v.id("users"),
-    product: tryoutProductValidator,
-    locale: localeValidator,
-    statusesBySlug: v.record(
-      v.string(),
-      tryoutCatalogStatusSummaryEntryValidator
-    ),
-    updatedAt: v.number(),
-  }).index("by_userId_and_product_and_locale", ["userId", "product", "locale"]),
 
   tryoutPartAttempts: defineTable({
     tryoutAttemptId: v.id("tryoutAttempts"),

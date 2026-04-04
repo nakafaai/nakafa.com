@@ -38,7 +38,6 @@ type ResettableTableName =
   | "tryoutPartAttempts"
   | "tryoutPartSets"
   | "tryouts"
-  | "userTryoutCatalogStatuses"
   | "userTryoutLatestAttempts"
   | "userTryoutStats";
 
@@ -137,9 +136,6 @@ export const deleteTryoutLeaderboardEntriesBatch = makeBatchDeleteMutation(
 );
 export const deleteUserTryoutLatestAttemptsBatch = makeBatchDeleteMutation(
   "userTryoutLatestAttempts"
-);
-export const deleteUserTryoutCatalogStatusesBatch = makeBatchDeleteMutation(
-  "userTryoutCatalogStatuses"
 );
 export const deleteUserTryoutStatsBatch =
   makeBatchDeleteMutation("userTryoutStats");

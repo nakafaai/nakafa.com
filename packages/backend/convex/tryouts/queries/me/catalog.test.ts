@@ -1,4 +1,4 @@
-import { api, internal } from "@repo/backend/convex/_generated/api";
+import { api } from "@repo/backend/convex/_generated/api";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
 import {
   ATTEMPT_WINDOW_MS,
@@ -17,22 +17,40 @@ describe("tryouts/queries/me/catalog", () => {
         now: NOW,
         suffix: "catalog-status-query",
       });
-
-      await ctx.db.insert("userTryoutCatalogStatuses", {
-        locale: "id",
-        product: "snbt",
-        statusesBySlug: {
-          "catalog-status-query": {
-            expiresAtMs: NOW + 1000,
-            status: "in-progress",
-            updatedAt: NOW,
-          },
-        },
-        updatedAt: NOW,
+      const tryout = await insertTryoutSkeleton(ctx, "catalog-status-query");
+      const completedAttempt = await insertCompletedTryoutAttempt(ctx, {
+        scaleVersionId: tryout.scaleVersionId,
+        setId: tryout.setId,
+        slug: "catalog-status-query",
+        tryoutId: tryout.tryoutId,
         userId: identity.userId,
       });
+      const latestAttempt = await ctx.db
+        .query("userTryoutLatestAttempts")
+        .withIndex("by_userId_and_product_and_locale_and_tryoutId", (q) =>
+          q
+            .eq("userId", identity.userId)
+            .eq("product", "snbt")
+            .eq("locale", "id")
+            .eq("tryoutId", tryout.tryoutId)
+        )
+        .unique();
 
-      return identity;
+      if (!latestAttempt) {
+        throw new Error("Latest tryout attempt projection is required.");
+      }
+
+      await ctx.db.patch("userTryoutLatestAttempts", latestAttempt._id, {
+        attemptId: completedAttempt.tryoutAttemptId,
+        expiresAtMs: NOW + 1000,
+        status: "in-progress",
+        updatedAt: NOW,
+      });
+
+      return {
+        ...identity,
+        tryoutId: tryout.tryoutId,
+      };
     });
 
     const result = await t
@@ -43,6 +61,7 @@ describe("tryouts/queries/me/catalog", () => {
       .query(api.tryouts.queries.me.catalog.getMyTryoutCatalogStatuses, {
         locale: "id",
         product: "snbt",
+        tryoutIds: [state.tryoutId],
       });
 
     expect(result.statusesBySlug["catalog-status-query"]).toEqual({
@@ -52,31 +71,31 @@ describe("tryouts/queries/me/catalog", () => {
     });
   });
 
-  it("backfills missing hub badge summaries from the latest attempt projection", async () => {
+  it("returns statuses for the requested tryout ids from the latest projection", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
-        suffix: "catalog-status-backfill",
+        suffix: "catalog-status-latest-projection",
       });
-      const tryout = await insertTryoutSkeleton(ctx, "catalog-status-backfill");
+      const tryout = await insertTryoutSkeleton(
+        ctx,
+        "catalog-status-latest-projection"
+      );
 
       await insertCompletedTryoutAttempt(ctx, {
         scaleVersionId: tryout.scaleVersionId,
         setId: tryout.setId,
-        slug: "catalog-status-backfill",
+        slug: "catalog-status-latest-projection",
         tryoutId: tryout.tryoutId,
         userId: identity.userId,
       });
 
-      return identity;
+      return {
+        ...identity,
+        tryoutId: tryout.tryoutId,
+      };
     });
-
-    await t.mutation(
-      internal.tryouts.mutations.internal.catalog
-        .backfillUserTryoutCatalogStatuses,
-      {}
-    );
 
     const result = await t
       .withIdentity({
@@ -86,9 +105,10 @@ describe("tryouts/queries/me/catalog", () => {
       .query(api.tryouts.queries.me.catalog.getMyTryoutCatalogStatuses, {
         locale: "id",
         product: "snbt",
+        tryoutIds: [state.tryoutId],
       });
 
-    expect(result.statusesBySlug["catalog-status-backfill"]).toEqual({
+    expect(result.statusesBySlug["catalog-status-latest-projection"]).toEqual({
       expiresAtMs: NOW + ATTEMPT_WINDOW_MS,
       status: "completed",
       updatedAt: NOW,
