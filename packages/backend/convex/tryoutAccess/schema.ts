@@ -66,6 +66,11 @@ const tables = {
       "resultsStatus",
       "endsAt",
     ])
+    .index("by_campaignKind_and_redeemStatus_and_endsAt", [
+      "campaignKind",
+      "redeemStatus",
+      "endsAt",
+    ])
     .index("by_redeemStatus_and_startsAt", ["redeemStatus", "startsAt"])
     .index("by_redeemStatus_and_endsAt", ["redeemStatus", "endsAt"]),
 

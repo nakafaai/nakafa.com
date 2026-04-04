@@ -217,8 +217,9 @@ export async function syncTryoutAccessGrantStatus(
  * Resolve the active event-based access sources for one user and product.
  *
  * Competition grants are allowed to revive immediately after an ops extension,
- * even if the stored grant rows have not yet been re-synced, so we read both
- * active and expired grant buckets and trust the current campaign window.
+ * even if the stored grant rows have not yet been re-synced, so we read active
+ * product grants first and then check only currently active competition
+ * campaigns that could revive an older grant.
  */
 async function loadActiveTryoutEventSources(
   db: TryoutAccessDbReader,
@@ -234,16 +235,17 @@ async function loadActiveTryoutEventSources(
 ): Promise<ActiveTryoutEventSources> {
   let accessPassEventSource: TryoutEventSource | null = null;
   const competitionEventSources: TryoutEventSource[] = [];
+  const seenCompetitionGrantIds = new Set<Doc<"tryoutAccessGrants">["_id"]>();
 
-  /** Read one stored grant-status bucket and translate rows into live sources. */
-  async function readProductGrantStatusPage(status: "active" | "expired") {
+  /** Read currently active product grants and translate rows into live sources. */
+  async function readActiveProductGrantPage() {
     let cursor: string | null = null;
 
     while (true) {
       const productGrantPage = await db
         .query("tryoutAccessProductGrants")
         .withIndex("by_userId_and_product_and_status", (q) =>
-          q.eq("userId", userId).eq("product", product).eq("status", status)
+          q.eq("userId", userId).eq("product", product).eq("status", "active")
         )
         .paginate({
           cursor,
@@ -271,10 +273,6 @@ async function loadActiveTryoutEventSources(
           continue;
         }
 
-        if (status === "expired" && campaign.campaignKind !== "competition") {
-          continue;
-        }
-
         const eventSource = {
           accessCampaignId: campaign._id,
           accessCampaignKind: campaign.campaignKind,
@@ -283,6 +281,7 @@ async function loadActiveTryoutEventSources(
         };
 
         if (eventSource.accessCampaignKind === "competition") {
+          seenCompetitionGrantIds.add(eventSource.accessGrantId);
           competitionEventSources.push(eventSource);
           continue;
         }
@@ -303,8 +302,71 @@ async function loadActiveTryoutEventSources(
     }
   }
 
-  await readProductGrantStatusPage("active");
-  await readProductGrantStatusPage("expired");
+  /**
+   * Check active competition campaigns for grants that were stored as expired
+   * before ops extended the campaign window.
+   */
+  async function readRevivedCompetitionGrantPage() {
+    let cursor: string | null = null;
+
+    while (true) {
+      const campaignPage = await db
+        .query("tryoutAccessCampaigns")
+        .withIndex("by_campaignKind_and_redeemStatus_and_endsAt", (q) =>
+          q
+            .eq("campaignKind", "competition")
+            .eq("redeemStatus", "active")
+            .gt("endsAt", now)
+        )
+        .paginate({
+          cursor,
+          numItems: ACTIVE_PRODUCT_GRANT_PAGE_SIZE,
+        });
+
+      for (const campaign of campaignPage.page) {
+        if (!campaign.products.includes(product)) {
+          continue;
+        }
+
+        const grant = await db
+          .query("tryoutAccessGrants")
+          .withIndex("by_userId_and_campaignId", (q) =>
+            q.eq("userId", userId).eq("campaignId", campaign._id)
+          )
+          .unique();
+
+        if (!grant || seenCompetitionGrantIds.has(grant._id)) {
+          continue;
+        }
+
+        const accessEndsAt = getTryoutAccessGrantEffectiveEndsAt({
+          campaign,
+          endsAt: grant.endsAt,
+        });
+
+        if (accessEndsAt <= now) {
+          continue;
+        }
+
+        seenCompetitionGrantIds.add(grant._id);
+        competitionEventSources.push({
+          accessCampaignId: campaign._id,
+          accessCampaignKind: campaign.campaignKind,
+          accessEndsAt,
+          accessGrantId: grant._id,
+        });
+      }
+
+      if (campaignPage.isDone) {
+        return;
+      }
+
+      cursor = campaignPage.continueCursor;
+    }
+  }
+
+  await readActiveProductGrantPage();
+  await readRevivedCompetitionGrantPage();
 
   return {
     accessPassEventSource,
