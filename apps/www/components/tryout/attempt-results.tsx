@@ -91,7 +91,7 @@ export function TryoutAttemptResults({
   const triggerLabel = selectedAttempt?.label ?? tTryouts("attempt-menu-label");
 
   return (
-    <div className="space-y-4">
+    <div className="w-full space-y-4">
       <TryoutScoreCard attempt={displayedAttempt} status={displayedStatus} />
 
       {attemptHistory.length > 1 ? (
