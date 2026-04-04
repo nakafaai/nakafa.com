@@ -162,7 +162,38 @@ export const finalizeCompetitionCampaignResults = internalMutation({
         continue;
       }
 
-      await syncTryoutAttemptExpiry(ctx, tryoutAttempt, now);
+      const tryout = await ctx.db.get("tryouts", tryoutAttempt.tryoutId);
+
+      if (!tryout) {
+        throw new ConvexError({
+          code: "TRYOUT_NOT_FOUND",
+          message: "Tryout not found.",
+        });
+      }
+
+      const expectedExpiresAt = Math.min(
+        tryoutAttempt.startedAt +
+          tryoutProductPolicies[tryout.product].attemptWindowMs,
+        campaign.endsAt
+      );
+      const currentTryoutAttempt =
+        tryoutAttempt.accessEndsAt === campaign.endsAt &&
+        tryoutAttempt.expiresAt === expectedExpiresAt
+          ? tryoutAttempt
+          : {
+              ...tryoutAttempt,
+              accessEndsAt: campaign.endsAt,
+              expiresAt: expectedExpiresAt,
+            };
+
+      if (currentTryoutAttempt !== tryoutAttempt) {
+        await ctx.db.patch("tryoutAttempts", tryoutAttempt._id, {
+          accessEndsAt: currentTryoutAttempt.accessEndsAt,
+          expiresAt: currentTryoutAttempt.expiresAt,
+        });
+      }
+
+      await syncTryoutAttemptExpiry(ctx, currentTryoutAttempt, now);
     }
 
     if (!page.isDone) {

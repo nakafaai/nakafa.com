@@ -240,4 +240,143 @@ describe("tryoutAccess/mutations/internal/competition", () => {
     expect(result?.expiresAt).toBe(state.extendedEndsAt);
     expect(latestAttempt?.expiresAtMs).toBe(state.extendedEndsAt);
   });
+
+  it("expires stale in-progress competition attempts against the live campaign cutoff before finalizing", async () => {
+    const t = createTryoutTestConvex();
+    const state = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "competition-finalize-stale-expiry",
+      });
+      const tryout = await insertTryoutSkeleton(
+        ctx,
+        "competition-finalize-stale-expiry"
+      );
+      const campaignEndsAt = NOW - 1;
+      const staleExpiresAt = NOW + 24 * 60 * 60 * 1000;
+      const campaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+        slug: "competition-finalize-stale-expiry",
+        name: "Competition Finalize Stale Expiry",
+        products: ["snbt"],
+        campaignKind: "competition",
+        enabled: true,
+        redeemStatus: "ended",
+        resultsStatus: "pending",
+        resultsFinalizedAt: null,
+        startsAt: NOW - 24 * 60 * 60 * 1000,
+        endsAt: campaignEndsAt,
+      });
+      const linkId = await ctx.db.insert("tryoutAccessLinks", {
+        campaignId,
+        code: "competition-finalize-stale-expiry",
+        label: "Competition Finalize Stale Expiry",
+        enabled: true,
+      });
+      const grantId = await ctx.db.insert("tryoutAccessGrants", {
+        campaignId,
+        linkId,
+        userId: identity.userId,
+        redeemedAt: NOW - 60 * 60 * 1000,
+        endsAt: staleExpiresAt,
+        status: "active",
+      });
+
+      await ctx.db.insert("tryoutAccessProductGrants", {
+        campaignId,
+        grantId,
+        product: "snbt",
+        status: "active",
+        userId: identity.userId,
+        endsAt: staleExpiresAt,
+      });
+
+      const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
+        userId: identity.userId,
+        tryoutId: tryout.tryoutId,
+        scaleVersionId: tryout.scaleVersionId,
+        accessKind: "event",
+        accessCampaignId: campaignId,
+        accessCampaignKind: "competition",
+        accessGrantId: grantId,
+        accessEndsAt: staleExpiresAt,
+        countsForCompetition: true,
+        scoreStatus: "official",
+        status: "in-progress",
+        partSetSnapshots: [
+          {
+            partIndex: 0,
+            partKey: "quantitative-knowledge",
+            questionCount: 20,
+            setId: tryout.setId,
+          },
+        ],
+        completedPartIndices: [],
+        totalCorrect: 0,
+        totalQuestions: 0,
+        theta: 0,
+        thetaSE: 1,
+        startedAt: NOW - 60 * 60 * 1000,
+        expiresAt: staleExpiresAt,
+        lastActivityAt: NOW - 60 * 1000,
+        completedAt: null,
+        endReason: null,
+      });
+      await ctx.db.insert("userTryoutLatestAttempts", {
+        userId: identity.userId,
+        product: "snbt",
+        locale: "id",
+        tryoutId: tryout.tryoutId,
+        attemptId: tryoutAttemptId,
+        slug: "competition-finalize-stale-expiry",
+        status: "in-progress",
+        expiresAtMs: staleExpiresAt,
+        updatedAt: NOW,
+      });
+
+      return {
+        campaignEndsAt,
+        campaignId,
+        tryoutAttemptId,
+        tryoutId: tryout.tryoutId,
+        userId: identity.userId,
+      };
+    });
+
+    await t.mutation(
+      internal.tryoutAccess.mutations.internal.competition
+        .finalizeCompetitionCampaignResults,
+      {
+        campaignId: state.campaignId,
+      }
+    );
+
+    const result = await t.query(async (ctx) => {
+      const latestAttempt = await ctx.db
+        .query("userTryoutLatestAttempts")
+        .withIndex("by_userId_and_product_and_locale_and_tryoutId", (q) =>
+          q
+            .eq("userId", state.userId)
+            .eq("product", "snbt")
+            .eq("locale", "id")
+            .eq("tryoutId", state.tryoutId)
+        )
+        .unique();
+
+      return {
+        campaign: await ctx.db.get("tryoutAccessCampaigns", state.campaignId),
+        latestAttempt,
+        tryoutAttempt: await ctx.db.get(
+          "tryoutAttempts",
+          state.tryoutAttemptId
+        ),
+      };
+    });
+
+    expect(result.campaign?.resultsStatus).toBe("finalized");
+    expect(result.tryoutAttempt?.status).toBe("expired");
+    expect(result.tryoutAttempt?.accessEndsAt).toBe(state.campaignEndsAt);
+    expect(result.tryoutAttempt?.expiresAt).toBe(state.campaignEndsAt);
+    expect(result.latestAttempt?.status).toBe("expired");
+    expect(result.latestAttempt?.expiresAtMs).toBe(state.campaignEndsAt);
+  });
 });
