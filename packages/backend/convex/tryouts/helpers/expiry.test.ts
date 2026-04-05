@@ -42,6 +42,7 @@ describe("tryouts/helpers/expiry", () => {
         syncedAt: NOW,
       });
       const tryoutId = await ctx.db.insert("tryouts", {
+        catalogPosition: 1,
         product: "snbt",
         locale: "id",
         cycleKey: "2026",

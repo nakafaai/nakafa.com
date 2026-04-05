@@ -31,15 +31,6 @@ export type TryoutPublicResultStatus = Infer<
 export const tryoutPartKeyValidator = v.string();
 export type TryoutPartKey = Infer<typeof tryoutPartKeyValidator>;
 
-export const tryoutCatalogStatusEntryValidator = v.object({
-  expiresAtMs: v.number(),
-  status: tryoutStatusValidator,
-  updatedAt: v.number(),
-});
-export type TryoutCatalogStatusEntry = Infer<
-  typeof tryoutCatalogStatusEntryValidator
->;
-
 export const tryoutPartSnapshotValidator = v.object({
   partIndex: v.number(),
   /** Stable public identifier for one part, e.g. `general-reasoning`. */
@@ -60,6 +51,8 @@ const tables = {
     partCount: v.number(),
     totalQuestionCount: v.number(),
     isActive: v.boolean(),
+    /** Dense product-defined browse order used by paginated catalog reads. */
+    catalogPosition: v.number(),
     detectedAt: v.number(),
     syncedAt: v.number(),
   })
@@ -76,27 +69,12 @@ const tables = {
       "product",
       "locale",
       "isActive",
-    ]),
-
-  tryoutCatalogEntries: defineTable({
-    tryoutId: v.id("tryouts"),
-    product: tryoutProductValidator,
-    locale: localeValidator,
-    cycleKey: v.string(),
-    slug: v.string(),
-    label: v.string(),
-    partCount: v.number(),
-    totalQuestionCount: v.number(),
-    isActive: v.boolean(),
-    catalogSortKey: v.string(),
-    updatedAt: v.number(),
-  })
-    .index("by_tryoutId", ["tryoutId"])
-    .index("by_product_and_locale_and_isActive_and_catalogSortKey", [
+    ])
+    .index("by_product_and_locale_and_isActive_and_catalogPosition", [
       "product",
       "locale",
       "isActive",
-      "catalogSortKey",
+      "catalogPosition",
     ]),
 
   tryoutCatalogMeta: defineTable({

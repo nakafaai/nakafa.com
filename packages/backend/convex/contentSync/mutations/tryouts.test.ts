@@ -7,7 +7,7 @@ import { getSubjects } from "@repo/contents/exercises/high-school/_data/subject"
 import { describe, expect, it } from "vitest";
 
 describe("contentSync/mutations/tryouts", () => {
-  it("backfills catalog rows for an unchanged detected tryout", async () => {
+  it("keeps browse order metadata in sync for an unchanged detected tryout", async () => {
     const t = createTryoutTestConvex();
 
     await t.mutation(async (ctx) => {
@@ -21,6 +21,7 @@ describe("contentSync/mutations/tryouts", () => {
         partCount: snbtSubjects.length,
         totalQuestionCount: snbtSubjects.length,
         isActive: true,
+        catalogPosition: 1,
         detectedAt: NOW,
         syncedAt: NOW,
       });
@@ -75,10 +76,10 @@ describe("contentSync/mutations/tryouts", () => {
     );
 
     const state = await t.query(async (ctx) => {
-      const catalogEntry = await ctx.db
-        .query("tryoutCatalogEntries")
+      const tryout = await ctx.db
+        .query("tryouts")
         .withIndex(
-          "by_product_and_locale_and_isActive_and_catalogSortKey",
+          "by_product_and_locale_and_isActive_and_catalogPosition",
           (q) => q.eq("product", "snbt").eq("locale", "id").eq("isActive", true)
         )
         .unique();
@@ -89,12 +90,13 @@ describe("contentSync/mutations/tryouts", () => {
         )
         .unique();
 
-      return { catalogEntry, catalogMeta };
+      return { catalogMeta, tryout };
     });
 
-    expect(result).toEqual({ created: 0, unchanged: 0, updated: 1 });
-    expect(state.catalogEntry).toEqual(
+    expect(result).toEqual({ created: 0, unchanged: 1, updated: 0 });
+    expect(state.tryout).toEqual(
       expect.objectContaining({
+        catalogPosition: 1,
         cycleKey: "2026",
         isActive: true,
         label: "Set 1",

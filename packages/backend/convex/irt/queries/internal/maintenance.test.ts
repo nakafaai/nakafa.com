@@ -9,6 +9,7 @@ const NOW = Date.UTC(2026, 3, 3, 12, 0, 0);
 
 async function insertActiveTryout(ctx: MutationCtx, slug: string) {
   return await ctx.db.insert("tryouts", {
+    catalogPosition: 1,
     product: "snbt",
     locale: "id",
     cycleKey: "2026",

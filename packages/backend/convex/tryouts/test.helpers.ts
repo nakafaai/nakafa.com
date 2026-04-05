@@ -27,7 +27,8 @@ export function createTryoutTestConvex() {
 export async function insertTryoutSkeleton(
   ctx: MutationCtx,
   slug: string,
-  questionCount = 20
+  questionCount = 20,
+  catalogPosition = 1
 ) {
   const setId = await ctx.db.insert("exerciseSets", {
     locale: "id",
@@ -42,6 +43,7 @@ export async function insertTryoutSkeleton(
     syncedAt: NOW,
   });
   const tryoutId = await ctx.db.insert("tryouts", {
+    catalogPosition,
     product: "snbt",
     locale: "id",
     cycleKey: "2026",
@@ -221,6 +223,7 @@ export async function seedExpiredTryoutWithUntouchedPart(
     syncedAt: NOW,
   });
   const tryoutId = await ctx.db.insert("tryouts", {
+    catalogPosition: 1,
     product: "snbt",
     locale: "id",
     cycleKey: "2026",

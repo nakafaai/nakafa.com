@@ -47,10 +47,7 @@ export type DetectedTryout = Pick<
   }>;
 };
 
-type TryoutRecord = Pick<
-  Doc<"tryouts">,
-  "cycleKey" | "label" | "locale" | "product" | "slug"
->;
+type TryoutRecord = Pick<Doc<"tryouts">, "cycleKey" | "label" | "slug">;
 
 type TryoutLeaderboardNamespaceArgs = Pick<
   Doc<"tryouts">,
@@ -64,7 +61,6 @@ export interface TryoutProductPolicy {
     locale: TryoutSetCandidate["locale"];
     sets: TryoutSetCandidate[];
   }) => DetectedTryout[];
-  getCatalogSortKey: (args: TryoutRecord) => string;
   getLeaderboardNamespace: (args: TryoutLeaderboardNamespaceArgs) => string;
   getPartTimeLimitSeconds: (
     questionCount: Doc<"exerciseSets">["questionCount"]

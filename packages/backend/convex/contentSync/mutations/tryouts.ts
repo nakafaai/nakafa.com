@@ -1,5 +1,4 @@
 import { internal } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
 import { syncTryoutPartSetMappings } from "@repo/backend/convex/contentSync/lib/tryouts";
@@ -8,7 +7,6 @@ import { enqueueScaleQualityRefresh } from "@repo/backend/convex/irt/helpers/que
 import { getOrPublishScaleVersionForTryout } from "@repo/backend/convex/irt/scales/publish";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import {
-  type DetectedTryout,
   tryoutProductPolicies,
   tryoutProductValidator,
 } from "@repo/backend/convex/tryouts/products";
@@ -56,77 +54,21 @@ export const bulkSyncTryouts = internalMutation({
       locale: args.locale,
       sets: tryoutCandidateSets,
     });
-    const detectedSlugs = new Set(detectedTryouts.map((tryout) => tryout.slug));
-    const activeCatalogCount = detectedTryouts.reduce(
+    const orderedDetectedTryouts = [...detectedTryouts].sort(
+      tryoutProductPolicies[args.product].compareTryouts
+    );
+    const detectedSlugs = new Set(
+      orderedDetectedTryouts.map((tryout) => tryout.slug)
+    );
+    const activeTryoutCount = orderedDetectedTryouts.reduce(
       (count, tryout) => count + (tryout.isActive ? 1 : 0),
       0
     );
 
-    /** Upsert one ordered catalog row for the detected tryout definition. */
-    const syncCatalogEntry = async ({
-      tryout,
-      tryoutId,
-    }: {
-      tryout: DetectedTryout;
-      tryoutId: Id<"tryouts">;
-    }) => {
-      const existingCatalogEntry = await ctx.db
-        .query("tryoutCatalogEntries")
-        .withIndex("by_tryoutId", (q) => q.eq("tryoutId", tryoutId))
-        .unique();
-      const nextCatalogEntry = {
-        tryoutId,
-        product: tryout.product,
-        locale: tryout.locale,
-        cycleKey: tryout.cycleKey,
-        slug: tryout.slug,
-        label: tryout.label,
-        partCount: tryout.partCount,
-        totalQuestionCount: tryout.totalQuestionCount,
-        isActive: tryout.isActive,
-        catalogSortKey:
-          tryoutProductPolicies[tryout.product].getCatalogSortKey(tryout),
-        updatedAt: now,
-      };
-
-      if (!existingCatalogEntry) {
-        await ctx.db.insert("tryoutCatalogEntries", nextCatalogEntry);
-        return true;
-      }
-
-      const hasChanges =
-        existingCatalogEntry.product !== nextCatalogEntry.product ||
-        existingCatalogEntry.locale !== nextCatalogEntry.locale ||
-        existingCatalogEntry.cycleKey !== nextCatalogEntry.cycleKey ||
-        existingCatalogEntry.slug !== nextCatalogEntry.slug ||
-        existingCatalogEntry.label !== nextCatalogEntry.label ||
-        existingCatalogEntry.partCount !== nextCatalogEntry.partCount ||
-        existingCatalogEntry.totalQuestionCount !==
-          nextCatalogEntry.totalQuestionCount ||
-        existingCatalogEntry.isActive !== nextCatalogEntry.isActive ||
-        existingCatalogEntry.catalogSortKey !== nextCatalogEntry.catalogSortKey;
-
-      if (!hasChanges) {
-        return false;
-      }
-
-      await ctx.db.patch("tryoutCatalogEntries", existingCatalogEntry._id, {
-        catalogSortKey: nextCatalogEntry.catalogSortKey,
-        cycleKey: nextCatalogEntry.cycleKey,
-        isActive: nextCatalogEntry.isActive,
-        label: nextCatalogEntry.label,
-        locale: nextCatalogEntry.locale,
-        partCount: nextCatalogEntry.partCount,
-        product: nextCatalogEntry.product,
-        slug: nextCatalogEntry.slug,
-        totalQuestionCount: nextCatalogEntry.totalQuestionCount,
-        updatedAt: now,
-      });
-
-      return true;
-    };
-
-    for (const tryout of detectedTryouts) {
+    // Persist dense browse positions so the paginated index can serve the final
+    // catalog order directly.
+    for (const [index, tryout] of orderedDetectedTryouts.entries()) {
+      const catalogPosition = index + 1;
       const existingTryout = await ctx.db
         .query("tryouts")
         .withIndex("by_product_and_locale_and_cycleKey_and_slug", (q) =>
@@ -143,16 +85,12 @@ export const bulkSyncTryouts = internalMutation({
           parts: tryout.parts,
           tryoutId: existingTryout._id,
         });
-        const catalogEntryChanged = await syncCatalogEntry({
-          tryout,
-          tryoutId: existingTryout._id,
-        });
         const hasChanges =
-          !existingTryout.isActive ||
+          existingTryout.isActive !== tryout.isActive ||
+          existingTryout.catalogPosition !== catalogPosition ||
           existingTryout.label !== tryout.label ||
           existingTryout.partCount !== tryout.partCount ||
           existingTryout.totalQuestionCount !== tryout.totalQuestionCount ||
-          catalogEntryChanged ||
           mappingsChanged;
 
         if (!hasChanges) {
@@ -177,6 +115,7 @@ export const bulkSyncTryouts = internalMutation({
         }
 
         await ctx.db.patch("tryouts", existingTryout._id, {
+          catalogPosition,
           isActive: tryout.isActive,
           label: tryout.label,
           partCount: tryout.partCount,
@@ -205,6 +144,7 @@ export const bulkSyncTryouts = internalMutation({
       }
 
       const tryoutId = await ctx.db.insert("tryouts", {
+        catalogPosition,
         cycleKey: tryout.cycleKey,
         detectedAt: now,
         isActive: tryout.isActive,
@@ -215,10 +155,6 @@ export const bulkSyncTryouts = internalMutation({
         slug: tryout.slug,
         syncedAt: now,
         totalQuestionCount: tryout.totalQuestionCount,
-      });
-      await syncCatalogEntry({
-        tryout,
-        tryoutId,
       });
 
       await syncTryoutPartSetMappings(ctx, {
@@ -267,22 +203,10 @@ export const bulkSyncTryouts = internalMutation({
         continue;
       }
 
-      const activeCatalogEntry = await ctx.db
-        .query("tryoutCatalogEntries")
-        .withIndex("by_tryoutId", (q) => q.eq("tryoutId", activeTryout._id))
-        .unique();
-
       await ctx.db.patch("tryouts", activeTryout._id, {
         isActive: false,
         syncedAt: now,
       });
-
-      if (activeCatalogEntry?.isActive) {
-        await ctx.db.patch("tryoutCatalogEntries", activeCatalogEntry._id, {
-          isActive: false,
-          updatedAt: now,
-        });
-      }
 
       const enqueued = await enqueueScaleQualityRefresh(ctx, {
         tryoutId: activeTryout._id,
@@ -305,14 +229,14 @@ export const bulkSyncTryouts = internalMutation({
 
     if (!existingCatalogMeta) {
       await ctx.db.insert("tryoutCatalogMeta", {
-        activeCount: activeCatalogCount,
+        activeCount: activeTryoutCount,
         locale: args.locale,
         product: args.product,
         updatedAt: now,
       });
-    } else if (existingCatalogMeta.activeCount !== activeCatalogCount) {
+    } else if (existingCatalogMeta.activeCount !== activeTryoutCount) {
       await ctx.db.patch("tryoutCatalogMeta", existingCatalogMeta._id, {
-        activeCount: activeCatalogCount,
+        activeCount: activeTryoutCount,
         updatedAt: now,
       });
     }

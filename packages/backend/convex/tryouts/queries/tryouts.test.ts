@@ -1,6 +1,5 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
-import { tryoutProductPolicies } from "@repo/backend/convex/tryouts/products";
 import {
   ATTEMPT_WINDOW_MS,
   createTryoutTestConvex,
@@ -21,25 +20,13 @@ describe("tryouts/queries/tryouts", () => {
 
       const tryout = await insertTryoutSkeleton(ctx, "2026-set-a");
 
-      await ctx.db.insert("tryoutCatalogEntries", {
-        tryoutId: tryout.tryoutId,
-        product: "snbt",
-        locale: "id",
-        cycleKey: "2026",
-        slug: "2026-set-a",
+      await ctx.db.patch("tryouts", tryout.tryoutId, {
+        catalogPosition: 1,
         label: "Set A",
-        partCount: 1,
-        totalQuestionCount: 20,
-        isActive: true,
-        catalogSortKey: tryoutProductPolicies.snbt.getCatalogSortKey({
-          cycleKey: "2026",
-          label: "Set A",
-          slug: "2026-set-a",
-        }),
-        updatedAt: NOW,
       });
 
-      const secondTryoutId = await ctx.db.insert("tryouts", {
+      await ctx.db.insert("tryouts", {
+        catalogPosition: 2,
         product: "snbt",
         locale: "id",
         cycleKey: "2026",
@@ -50,24 +37,6 @@ describe("tryouts/queries/tryouts", () => {
         isActive: true,
         detectedAt: NOW,
         syncedAt: NOW,
-      });
-
-      await ctx.db.insert("tryoutCatalogEntries", {
-        tryoutId: secondTryoutId,
-        product: "snbt",
-        locale: "id",
-        cycleKey: "2026",
-        slug: "2026-set-b",
-        label: "Set B",
-        partCount: 1,
-        totalQuestionCount: 20,
-        isActive: true,
-        catalogSortKey: tryoutProductPolicies.snbt.getCatalogSortKey({
-          cycleKey: "2026",
-          label: "Set B",
-          slug: "2026-set-b",
-        }),
-        updatedAt: NOW,
       });
 
       await ctx.db.insert("tryoutCatalogMeta", {
@@ -117,13 +86,29 @@ describe("tryouts/queries/tryouts", () => {
 
     await t.mutation(async (ctx) => {
       const labels = [
-        { cycleKey: "2025", label: "Set C", slug: "2025-set-c" },
-        { cycleKey: "2026", label: "Set B", slug: "2026-set-b" },
-        { cycleKey: "2026", label: "Set A", slug: "2026-set-a" },
+        {
+          catalogPosition: 3,
+          cycleKey: "2025",
+          label: "Set C",
+          slug: "2025-set-c",
+        },
+        {
+          catalogPosition: 2,
+          cycleKey: "2026",
+          label: "Set B",
+          slug: "2026-set-b",
+        },
+        {
+          catalogPosition: 1,
+          cycleKey: "2026",
+          label: "Set A",
+          slug: "2026-set-a",
+        },
       ];
 
       for (const tryout of labels) {
-        const tryoutId = await ctx.db.insert("tryouts", {
+        await ctx.db.insert("tryouts", {
+          catalogPosition: tryout.catalogPosition,
           product: "snbt",
           locale: "id",
           cycleKey: tryout.cycleKey,
@@ -135,25 +120,14 @@ describe("tryouts/queries/tryouts", () => {
           detectedAt: NOW,
           syncedAt: NOW,
         });
-
-        await ctx.db.insert("tryoutCatalogEntries", {
-          tryoutId,
-          product: "snbt",
-          locale: "id",
-          cycleKey: tryout.cycleKey,
-          slug: tryout.slug,
-          label: tryout.label,
-          partCount: 1,
-          totalQuestionCount: 20,
-          isActive: true,
-          catalogSortKey: tryoutProductPolicies.snbt.getCatalogSortKey({
-            cycleKey: tryout.cycleKey,
-            label: tryout.label,
-            slug: tryout.slug,
-          }),
-          updatedAt: NOW,
-        });
       }
+
+      await ctx.db.insert("tryoutCatalogMeta", {
+        product: "snbt",
+        locale: "id",
+        activeCount: labels.length,
+        updatedAt: NOW,
+      });
     });
 
     const firstPage = await t.query(
@@ -211,21 +185,15 @@ describe("tryouts/queries/tryouts", () => {
         userId: identity.userId,
       });
 
-      await ctx.db.insert("tryoutCatalogEntries", {
-        tryoutId: tryout.tryoutId,
+      await ctx.db.patch("tryouts", tryout.tryoutId, {
+        catalogPosition: 1,
+        label: "Catalog Page Status",
+      });
+
+      await ctx.db.insert("tryoutCatalogMeta", {
         product: "snbt",
         locale: "id",
-        cycleKey: "2026",
-        slug: "catalog-page-status",
-        label: "Catalog Page Status",
-        partCount: 1,
-        totalQuestionCount: 20,
-        isActive: true,
-        catalogSortKey: tryoutProductPolicies.snbt.getCatalogSortKey({
-          cycleKey: "2026",
-          label: "Catalog Page Status",
-          slug: "catalog-page-status",
-        }),
+        activeCount: 1,
         updatedAt: NOW,
       });
 
@@ -269,7 +237,8 @@ describe("tryouts/queries/tryouts", () => {
       for (let index = 0; index < 30; index += 1) {
         const slug = `catalog-page-cap-${index}`;
         const label = `Catalog Page Cap ${index.toString().padStart(2, "0")}`;
-        const tryoutId = await ctx.db.insert("tryouts", {
+        await ctx.db.insert("tryouts", {
+          catalogPosition: index + 1,
           product: "snbt",
           locale: "id",
           cycleKey: "2026",
@@ -281,25 +250,14 @@ describe("tryouts/queries/tryouts", () => {
           detectedAt: NOW,
           syncedAt: NOW,
         });
-
-        await ctx.db.insert("tryoutCatalogEntries", {
-          tryoutId,
-          product: "snbt",
-          locale: "id",
-          cycleKey: "2026",
-          slug,
-          label,
-          partCount: 1,
-          totalQuestionCount: 20,
-          isActive: true,
-          catalogSortKey: tryoutProductPolicies.snbt.getCatalogSortKey({
-            cycleKey: "2026",
-            label,
-            slug,
-          }),
-          updatedAt: NOW,
-        });
       }
+
+      await ctx.db.insert("tryoutCatalogMeta", {
+        product: "snbt",
+        locale: "id",
+        activeCount: 30,
+        updatedAt: NOW,
+      });
 
       return identity;
     });

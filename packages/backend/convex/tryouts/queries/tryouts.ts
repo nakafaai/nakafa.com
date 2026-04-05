@@ -26,13 +26,13 @@ const tryoutCatalogLatestAttemptValidator = v.union(
 );
 
 const activeTryoutCatalogEntryValidator = v.object({
-  cycleKey: vv.doc("tryoutCatalogEntries").fields.cycleKey,
-  label: vv.doc("tryoutCatalogEntries").fields.label,
+  cycleKey: vv.doc("tryouts").fields.cycleKey,
+  label: vv.doc("tryouts").fields.label,
   latestAttempt: tryoutCatalogLatestAttemptValidator,
-  partCount: vv.doc("tryoutCatalogEntries").fields.partCount,
-  slug: vv.doc("tryoutCatalogEntries").fields.slug,
-  totalQuestionCount: vv.doc("tryoutCatalogEntries").fields.totalQuestionCount,
-  tryoutId: vv.doc("tryoutCatalogEntries").fields.tryoutId,
+  partCount: vv.doc("tryouts").fields.partCount,
+  slug: vv.doc("tryouts").fields.slug,
+  totalQuestionCount: vv.doc("tryouts").fields.totalQuestionCount,
+  tryoutId: vv.id("tryouts"),
 });
 
 const activeTryoutCatalogSnapshotValidator = v.object({
@@ -41,13 +41,8 @@ const activeTryoutCatalogSnapshotValidator = v.object({
 });
 
 type ActiveTryoutCatalogEntryRecord = Pick<
-  Doc<"tryoutCatalogEntries">,
-  | "cycleKey"
-  | "label"
-  | "partCount"
-  | "slug"
-  | "totalQuestionCount"
-  | "tryoutId"
+  Doc<"tryouts">,
+  "_id" | "cycleKey" | "label" | "partCount" | "slug" | "totalQuestionCount"
 >;
 type ActiveTryoutLatestAttempt = Pick<
   Doc<"tryoutAttempts">,
@@ -75,7 +70,7 @@ function buildActiveTryoutCatalogEntry({
     partCount: entry.partCount,
     slug: entry.slug,
     totalQuestionCount: entry.totalQuestionCount,
-    tryoutId: entry.tryoutId,
+    tryoutId: entry._id,
   };
 }
 
@@ -104,7 +99,7 @@ async function loadActiveTryoutCatalogEntries(
       return ctx.db
         .query("tryoutAttempts")
         .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
-          q.eq("userId", userId).eq("tryoutId", entry.tryoutId)
+          q.eq("userId", userId).eq("tryoutId", entry._id)
         )
         .order("desc")
         .first();
@@ -143,9 +138,9 @@ export const getActiveTryoutCatalogPage = query({
     };
     const [catalogPage, user] = await Promise.all([
       ctx.db
-        .query("tryoutCatalogEntries")
+        .query("tryouts")
         .withIndex(
-          "by_product_and_locale_and_isActive_and_catalogSortKey",
+          "by_product_and_locale_and_isActive_and_catalogPosition",
           (q) =>
             q
               .eq("product", args.product)
@@ -187,9 +182,9 @@ export const getActiveTryoutCatalogSnapshot = query({
     );
     const [catalogEntries, catalogMeta, user] = await Promise.all([
       ctx.db
-        .query("tryoutCatalogEntries")
+        .query("tryouts")
         .withIndex(
-          "by_product_and_locale_and_isActive_and_catalogSortKey",
+          "by_product_and_locale_and_isActive_and_catalogPosition",
           (q) =>
             q
               .eq("product", args.product)

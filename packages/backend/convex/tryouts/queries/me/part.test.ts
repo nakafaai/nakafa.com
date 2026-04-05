@@ -151,6 +151,7 @@ describe("tryouts/queries/me/part", () => {
         syncedAt: NOW,
       });
       const tryoutId = await ctx.db.insert("tryouts", {
+        catalogPosition: 1,
         product: "snbt",
         locale: "id",
         cycleKey: "2026",

@@ -42,6 +42,7 @@ async function insertRealSnbtSet1Tryout(
   overrides?: Partial<typeof REAL_SNBT_SET_1_TRYOUT>
 ) {
   return await ctx.db.insert("tryouts", {
+    catalogPosition: 1,
     product: overrides?.product ?? REAL_SNBT_SET_1_TRYOUT.product,
     locale: overrides?.locale ?? REAL_SNBT_SET_1_TRYOUT.locale,
     cycleKey: overrides?.cycleKey ?? REAL_SNBT_SET_1_TRYOUT.cycleKey,

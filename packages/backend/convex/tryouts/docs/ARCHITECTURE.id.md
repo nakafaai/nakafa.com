@@ -50,12 +50,11 @@ Tanggung jawab:
 
 - mendeteksi try out dari `exerciseSets`
 - menulis `tryouts` dan `tryoutPartSets`
-- menulis read model katalog:
-  - `tryoutCatalogEntries`
-  - `tryoutCatalogMeta`
+- menulis urutan browse `catalogPosition` di `tryouts`
+- menulis `tryoutCatalogMeta`
 
 Artinya hub frontend tidak membaca seluruh `tryouts` lalu menyortir sendiri.
-Urutan browse sudah dipersist ke katalog.
+Urutan browse sudah dipersist di storage layer.
 
 ### `tryoutAccess/`
 
@@ -100,9 +99,9 @@ psychometric internal.
 
 ### Katalog Browse
 
-- `tryoutCatalogEntries`
-  - satu baris kecil untuk satu kartu/package di hub
-  - menyimpan `catalogSortKey` supaya pagination mengikuti urutan produk final
+- `tryouts`
+  - satu dokumen definisi runtime untuk satu package
+  - menyimpan `catalogPosition` supaya pagination mengikuti urutan produk final
 - `tryoutCatalogMeta`
   - menyimpan `activeCount` per `{product, locale}`
   - dipakai badge jumlah package tanpa scan penuh
@@ -202,10 +201,9 @@ flowchart TD
     A[Filesystem content] --> B[content sync]
     B --> C[tryouts]
     B --> D[tryoutPartSets]
-    B --> E[tryoutCatalogEntries]
-    B --> F[tryoutCatalogMeta]
-    E --> G[Hub page query]
-    F --> G
+    B --> E[tryoutCatalogMeta]
+    C --> G[Hub page query]
+    E --> G
     G --> H[User memilih package]
     H --> I[startTryout]
     I --> J[resolveTryoutAccessEntitlements]
@@ -240,7 +238,7 @@ Result competition tidak punya state runtime `finalizing`.
 - cron sweep hanya mem-finalkan competition `pending` yang sudah overdue
 - akibatnya model storage cukup `pending` atau `finalized`
 
-## Kenapa Katalog Punya Tabel Sendiri?
+## Kenapa Katalog Menyimpan Urutan Browse?
 
 Karena hub butuh tiga hal sekaligus:
 
@@ -248,13 +246,13 @@ Karena hub butuh tiga hal sekaligus:
 - exact count untuk badge
 - pagination yang bounded dan murah
 
-Kalau hub membaca `tryouts` langsung lalu menyortir setelah query:
+Kalau hub membaca `tryouts` lalu menyortir setelah query:
 
 - caller harus memuat semua page dulu
 - count badge butuh scan penuh atau workaround
-- urutan final tidak hidup di storage layer
+- urutan final tidak hidup di index storage
 
-Dengan `tryoutCatalogEntries` dan `tryoutCatalogMeta`:
+Dengan `catalogPosition` di `tryouts` dan `tryoutCatalogMeta`:
 
 - query Convex sudah sesuai kebutuhan UI
 - hub bisa paginasi page per page

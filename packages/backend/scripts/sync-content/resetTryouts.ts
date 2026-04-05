@@ -83,12 +83,6 @@ const RESET_TRYOUT_STEPS: ResetStep[] = [
     resultLabel: "tryout attempts",
   },
   {
-    label: "Deleting tryout catalog entries...",
-    mutationPath:
-      "contentSync/mutations/maintenance:deleteTryoutCatalogEntriesBatch",
-    resultLabel: "tryout catalog entries",
-  },
-  {
     label: "Deleting tryout catalog meta...",
     mutationPath:
       "contentSync/mutations/maintenance:deleteTryoutCatalogMetaBatch",
@@ -165,7 +159,7 @@ export const resetTryouts = async (
 ): Promise<void> => {
   log("=== RESET TRYOUTS + IRT ===\n");
   log(
-    "This deletes tryout definitions, catalog read models, attempts, leaderboard rows, and frozen IRT scale data."
+    "This deletes tryout definitions, catalog metadata, attempts, leaderboard rows, and frozen IRT scale data."
   );
   log(
     "Run a full sync afterward so Convex rebuilds the deleted tryout and IRT content tables coherently.\n"
@@ -186,7 +180,6 @@ export const resetTryouts = async (
 
   log("Current tryout + IRT database contents:\n");
   log(`  Tryouts:               ${counts.tryouts}`);
-  log(`  Tryout Catalog Rows:   ${counts.tryoutCatalogEntries}`);
   log(`  Tryout Catalog Meta:   ${counts.tryoutCatalogMeta}`);
   log(
     `  User Entitlements:     ${counts.userTryoutEntitlements} (preserved infra)`
@@ -212,7 +205,6 @@ export const resetTryouts = async (
 
   const totalTryoutAndIrtRows =
     counts.tryouts +
-    counts.tryoutCatalogEntries +
     counts.tryoutCatalogMeta +
     counts.tryoutPartSets +
     counts.tryoutAttempts +

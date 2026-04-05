@@ -395,6 +395,7 @@ describe("tryouts/queries/me/attempt", () => {
         syncedAt: NOW,
       });
       const tryoutId = await ctx.db.insert("tryouts", {
+        catalogPosition: 1,
         product: "snbt",
         locale: "id",
         cycleKey: "2026",
@@ -524,6 +525,7 @@ describe("tryouts/queries/me/attempt", () => {
         syncedAt: NOW,
       });
       const tryoutId = await ctx.db.insert("tryouts", {
+        catalogPosition: 1,
         product: "snbt",
         locale: "id",
         cycleKey: "2026",
@@ -766,6 +768,7 @@ describe("tryouts/queries/me/attempt", () => {
         syncedAt: NOW,
       });
       const tryoutId = await ctx.db.insert("tryouts", {
+        catalogPosition: 1,
         product: "snbt",
         locale: "id",
         cycleKey: "2026",

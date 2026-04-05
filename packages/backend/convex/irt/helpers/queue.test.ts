@@ -37,6 +37,7 @@ async function insertExerciseSet(
 
 async function insertTryout(ctx: MutationCtx, slug: string) {
   return await ctx.db.insert("tryouts", {
+    catalogPosition: 1,
     product: "snbt",
     locale: "id",
     cycleKey: "2026",
