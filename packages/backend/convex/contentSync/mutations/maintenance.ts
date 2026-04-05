@@ -3,6 +3,7 @@ import { internalMutation } from "@repo/backend/convex/functions";
 import { ConvexError, v } from "convex/values";
 
 const RESET_BATCH_SIZE = 500;
+const EVENT_TRYOUT_ENTITLEMENT_BATCH_SIZE = 500;
 
 const batchDeleteResultValidator = v.object({
   deleted: v.number(),
@@ -20,6 +21,9 @@ type ResettableTableName =
   | "exerciseItemParameters"
   | "exerciseQuestions"
   | "exerciseSets"
+  | "tryoutAccessCampaigns"
+  | "tryoutAccessGrants"
+  | "tryoutAccessLinks"
   | "irtCalibrationAttempts"
   | "irtCalibrationCacheStats"
   | "irtCalibrationQueue"
@@ -164,6 +168,13 @@ export const deleteExerciseAttemptsBatch =
   makeBatchDeleteMutation("exerciseAttempts");
 export const deleteTryoutAttemptsBatch =
   makeBatchDeleteMutation("tryoutAttempts");
+export const deleteTryoutAccessCampaignsBatch = makeBatchDeleteMutation(
+  "tryoutAccessCampaigns"
+);
+export const deleteTryoutAccessGrantsBatch =
+  makeBatchDeleteMutation("tryoutAccessGrants");
+export const deleteTryoutAccessLinksBatch =
+  makeBatchDeleteMutation("tryoutAccessLinks");
 export const deleteTryoutCatalogMetaBatch =
   makeBatchDeleteMutation("tryoutCatalogMeta");
 export const deleteTryoutPartSetsBatch =
@@ -182,3 +193,57 @@ export const deleteSubjectTopicsBatch =
   makeBatchDeleteMutation("subjectTopics");
 export const deleteArticlesBatch = makeBatchDeleteMutation("articleContents");
 export const deleteAuthorsBatch = makeBatchDeleteMutation("authors");
+
+/** Delete one bounded batch of event entitlements while preserving subscriptions. */
+export const deleteEventTryoutEntitlementsBatch = internalMutation({
+  args: {},
+  returns: batchDeleteResultValidator,
+  handler: async (ctx) => {
+    const competitionEntitlements = await ctx.db
+      .query("userTryoutEntitlements")
+      .withIndex("by_sourceKind_and_endsAt", (q) =>
+        q.eq("sourceKind", "competition")
+      )
+      .take(EVENT_TRYOUT_ENTITLEMENT_BATCH_SIZE);
+    let deleted = 0;
+
+    for (const entitlement of competitionEntitlements) {
+      await ctx.db.delete("userTryoutEntitlements", entitlement._id);
+      deleted += 1;
+    }
+
+    if (deleted < EVENT_TRYOUT_ENTITLEMENT_BATCH_SIZE) {
+      const accessPassEntitlements = await ctx.db
+        .query("userTryoutEntitlements")
+        .withIndex("by_sourceKind_and_endsAt", (q) =>
+          q.eq("sourceKind", "access-pass")
+        )
+        .take(EVENT_TRYOUT_ENTITLEMENT_BATCH_SIZE - deleted);
+
+      for (const entitlement of accessPassEntitlements) {
+        await ctx.db.delete("userTryoutEntitlements", entitlement._id);
+        deleted += 1;
+      }
+    }
+
+    const hasMoreCompetitionEntitlements =
+      (await ctx.db
+        .query("userTryoutEntitlements")
+        .withIndex("by_sourceKind_and_endsAt", (q) =>
+          q.eq("sourceKind", "competition")
+        )
+        .first()) !== null;
+    const hasMoreAccessPassEntitlements =
+      (await ctx.db
+        .query("userTryoutEntitlements")
+        .withIndex("by_sourceKind_and_endsAt", (q) =>
+          q.eq("sourceKind", "access-pass")
+        )
+        .first()) !== null;
+
+    return {
+      deleted,
+      hasMore: hasMoreCompetitionEntitlements || hasMoreAccessPassEntitlements,
+    };
+  },
+});
