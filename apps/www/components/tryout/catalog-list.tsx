@@ -19,8 +19,10 @@ import {
   TryoutPackageYear,
 } from "@/components/tryout/package-list";
 import { TryoutStatusBadge } from "@/components/tryout/status-badge";
-import { TRYOUT_CATALOG_PAGE_SIZE } from "@/components/tryout/utils/catalog";
-import { getEffectiveTryoutStatus } from "@/components/tryout/utils/status";
+import {
+  getTryoutCatalogBadgeStatus,
+  TRYOUT_CATALOG_PAGE_SIZE,
+} from "@/components/tryout/utils/catalog";
 
 type ActiveTryoutCatalogPage = FunctionReturnType<
   typeof api.tryouts.queries.tryouts.getActiveTryoutCatalogPage
@@ -50,37 +52,9 @@ function groupCatalogEntriesByCycle(
   }));
 }
 
-/** Maps one stored latest-attempt summary to the compact badge shown in the hub. */
-function getTryoutCatalogBadgeStatus({
-  latestStatus,
-  nowMs,
-}: {
-  latestStatus: ActiveTryoutCatalogEntry["latestAttempt"];
-  nowMs: number;
-}) {
-  if (!latestStatus) {
-    return null;
-  }
-
-  const effectiveStatus = getEffectiveTryoutStatus({
-    expiresAtMs: latestStatus.expiresAtMs,
-    nowMs,
-    status: latestStatus.status,
-  });
-
-  if (effectiveStatus === "in-progress") {
-    return "in-progress" as const;
-  }
-
-  if (effectiveStatus !== null) {
-    return "completed" as const;
-  }
-
-  return null;
-}
-
 interface TryoutCatalogListProps {
   initialEntries: readonly ActiveTryoutCatalogEntry[];
+  initialNowMs?: number;
   locale: Locale;
   product: TryoutProduct;
 }
@@ -88,6 +62,7 @@ interface TryoutCatalogListProps {
 /** Renders the paginated tryout catalog for the hub and product pages. */
 export function TryoutCatalogList({
   initialEntries,
+  initialNowMs,
   locale,
   product,
 }: TryoutCatalogListProps) {
@@ -111,7 +86,8 @@ export function TryoutCatalogList({
   const nowMs = useTryoutClock(
     displayedEntries.some(
       (entry) => entry.latestAttempt?.status === "in-progress"
-    )
+    ),
+    initialNowMs
   );
 
   if (displayedEntries.length === 0) {

@@ -283,6 +283,7 @@
     "part-time-label": "Time",
     "part-status-in-progress": "In Progress",
     "part-status-completed": "Completed",
+    "part-status-expired": "Time expired",
     "remaining-time-label": "Time left",
     "time-hours-short": "hr",
     "time-minutes-short": "min",

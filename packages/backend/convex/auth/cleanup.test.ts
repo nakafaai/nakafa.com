@@ -6,7 +6,7 @@ import {
   insertTryoutSkeleton,
   NOW,
 } from "@repo/backend/convex/tryouts/test.helpers";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 describe("auth/cleanup", () => {
   it("deletes the user tryout control row with the app user", async () => {
@@ -18,22 +18,71 @@ describe("auth/cleanup", () => {
       });
     });
 
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("userTryoutControls", {
+        updatedAt: NOW + 1,
+        userId: identity.userId,
+      });
+    });
+
     await t.mutation(internal.auth.cleanup.cleanupDeletedUser, {
       userId: identity.userId,
     });
 
     const result = await t.query(async (ctx) => {
       return {
-        control: await ctx.db
+        controls: await ctx.db
           .query("userTryoutControls")
           .withIndex("by_userId", (q) => q.eq("userId", identity.userId))
-          .unique(),
+          .collect(),
         user: await ctx.db.get("users", identity.userId),
       };
     });
 
     expect(result.user).toBeNull();
-    expect(result.control).toBeNull();
+    expect(result.controls).toHaveLength(0);
+  });
+
+  it("deletes duplicate control rows across scheduled cleanup retries", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(NOW));
+
+    const t = createTryoutTestConvex();
+    const identity = await t.mutation(async (ctx) => {
+      return await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "auth-cleanup-duplicate-controls",
+      });
+    });
+
+    await t.mutation(async (ctx) => {
+      for (let index = 0; index < 26; index += 1) {
+        await ctx.db.insert("userTryoutControls", {
+          updatedAt: NOW + index + 1,
+          userId: identity.userId,
+        });
+      }
+    });
+
+    await t.mutation(internal.auth.cleanup.cleanupDeletedUser, {
+      userId: identity.userId,
+    });
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+
+    const result = await t.query(async (ctx) => {
+      return {
+        controls: await ctx.db
+          .query("userTryoutControls")
+          .withIndex("by_userId", (q) => q.eq("userId", identity.userId))
+          .collect(),
+        user: await ctx.db.get("users", identity.userId),
+      };
+    });
+
+    expect(result.controls).toHaveLength(0);
+    expect(result.user).toBeNull();
+
+    vi.useRealTimers();
   });
 
   it("deletes tryout runtime and access rows with the app user", async () => {

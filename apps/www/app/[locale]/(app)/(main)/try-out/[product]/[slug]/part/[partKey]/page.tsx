@@ -29,6 +29,7 @@ interface Props {
 
 export default async function Page({ params }: Props) {
   const { locale, product: productParam, slug, partKey } = await params;
+  const initialNowMs = Date.now();
 
   setRequestLocale(locale);
 
@@ -128,6 +129,7 @@ export default async function Page({ params }: Props) {
       <div className="space-y-10">
         <TryoutPartRuntime
           icon={partIcon}
+          initialNowMs={initialNowMs}
           initialRuntime={runtime}
           part={{
             key: contentPart.partKey,

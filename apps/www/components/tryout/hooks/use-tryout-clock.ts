@@ -57,19 +57,22 @@ function subscribeDisabled() {
   };
 }
 
-function getEnabledSnapshot() {
-  return currentNowMs === DISABLED_NOW_MS ? Date.now() : currentNowMs;
+function getEnabledSnapshot(initialNowMs: number) {
+  return currentNowMs === DISABLED_NOW_MS ? initialNowMs : currentNowMs;
 }
 
-function getDisabledSnapshot() {
-  return DISABLED_NOW_MS;
+function getDisabledSnapshot(initialNowMs: number) {
+  return initialNowMs;
 }
 
 /** Returns the shared client clock used for expiry-sensitive tryout UI. */
-export function useTryoutClock(enabled = true) {
+export function useTryoutClock(enabled = true, initialNowMs = DISABLED_NOW_MS) {
   return useSyncExternalStore(
     enabled ? subscribeEnabled : subscribeDisabled,
-    enabled ? getEnabledSnapshot : getDisabledSnapshot,
-    getDisabledSnapshot
+    () =>
+      enabled
+        ? getEnabledSnapshot(initialNowMs)
+        : getDisabledSnapshot(initialNowMs),
+    () => getDisabledSnapshot(initialNowMs)
   );
 }

@@ -2,7 +2,6 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
-import { getUserTryoutControl } from "@repo/backend/convex/tryouts/helpers/control";
 import { ConvexError, v } from "convex/values";
 
 const NOTIFICATION_PREFERENCES_CLEANUP_BATCH_SIZE = 10;
@@ -15,6 +14,7 @@ const TRYOUT_LEADERBOARD_CLEANUP_BATCH_SIZE = 25;
 const TRYOUT_STATS_CLEANUP_BATCH_SIZE = 25;
 const TRYOUT_ENTITLEMENT_CLEANUP_BATCH_SIZE = 25;
 const TRYOUT_ACCESS_GRANT_CLEANUP_BATCH_SIZE = 25;
+const TRYOUT_CONTROL_CLEANUP_BATCH_SIZE = 25;
 
 /** Re-schedules user cleanup so each invocation stays within transaction limits. */
 async function scheduleCleanupRetry(
@@ -181,6 +181,23 @@ async function deleteUserTryoutAccessGrantsBatch(
   return accessGrants.length === TRYOUT_ACCESS_GRANT_CLEANUP_BATCH_SIZE;
 }
 
+/** Deletes one bounded batch of tryout control rows for a deleted user. */
+async function deleteUserTryoutControlsBatch(
+  ctx: Pick<MutationCtx, "db">,
+  userId: Id<"users">
+) {
+  const tryoutControls = await ctx.db
+    .query("userTryoutControls")
+    .withIndex("by_userId", (q) => q.eq("userId", userId))
+    .take(TRYOUT_CONTROL_CLEANUP_BATCH_SIZE);
+
+  for (const tryoutControl of tryoutControls) {
+    await ctx.db.delete("userTryoutControls", tryoutControl._id);
+  }
+
+  return tryoutControls.length === TRYOUT_CONTROL_CLEANUP_BATCH_SIZE;
+}
+
 /** Deletes one user's local auth-related rows in bounded batches. */
 export const cleanupDeletedUser = internalMutation({
   args: {
@@ -292,10 +309,9 @@ export const cleanupDeletedUser = internalMutation({
       return null;
     }
 
-    const tryoutControl = await getUserTryoutControl(ctx.db, args.userId);
-
-    if (tryoutControl) {
-      await ctx.db.delete("userTryoutControls", tryoutControl._id);
+    if (await deleteUserTryoutControlsBatch(ctx, args.userId)) {
+      await scheduleCleanupRetry(ctx, args);
+      return null;
     }
 
     const user = await ctx.db.get("users", args.userId);

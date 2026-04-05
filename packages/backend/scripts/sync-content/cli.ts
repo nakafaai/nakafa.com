@@ -49,7 +49,7 @@ const parseArgs = (): { options: SyncOptions; type: string } => {
 
 /** Prints the supported sync-content commands and flags. */
 const printUsage = (): void => {
-  log("\nUsage: pnpm --filter backend sync[:<command>] [options]");
+  log("\nUsage: pnpm --filter @repo/backend sync[:<command>] [options]");
   log("\nCommands:");
   log("  sync                  - Full sync + clean + verify (recommended)");
   log(
@@ -78,10 +78,12 @@ const printUsage = (): void => {
   log("  --sequential    - Run sync phases sequentially (for debugging)");
   log("  --prod          - Target production database");
   log("\nExamples:");
-  log("  pnpm --filter backend sync                 # Full sync to dev");
-  log("  pnpm --filter backend sync:incremental     # Fast daily sync");
-  log("  pnpm --filter backend sync:prod            # Full sync to prod");
-  log("  pnpm --filter backend sync:reset --force   # Delete all content");
+  log("  pnpm --filter @repo/backend sync                 # Full sync to dev");
+  log("  pnpm --filter @repo/backend sync:incremental     # Fast daily sync");
+  log("  pnpm --filter @repo/backend sync:prod            # Full sync to prod");
+  log(
+    "  pnpm --filter @repo/backend sync:reset --force   # Delete all content"
+  );
 };
 
 /** Dispatches one parsed sync-content command to the matching workflow. */

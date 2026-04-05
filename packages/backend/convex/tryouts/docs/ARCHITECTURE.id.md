@@ -122,6 +122,8 @@ psychometric internal.
   - lifecycle attempt level part yang menunjuk ke `exerciseAttempts`
 - `userTryoutControls`
   - owner row per user untuk men-serialize `startTryout` lewat OCC
+  - diverifikasi dan direpair lewat maintenance query/mutation bounded, bukan
+    lewat fallback field tersembunyi di dokumen `users`
 
 ### Projection Akses
 
@@ -145,7 +147,7 @@ psychometric internal.
 
 ### 1. User membuka hub try out
 
-- server membaca `getActiveTryoutCatalogMeta`
+- server membaca `getActiveTryoutCatalogSnapshot`
 - client membaca `getActiveTryoutCatalogPage` dengan `usePaginatedQuery`
 - kalau user login, page query menggabungkan latest-attempt badge untuk row yang
   sedang dimuat
@@ -252,7 +254,7 @@ Hub dan halaman produk sekarang mengikuti kontrak ini:
 
 - server component:
   - baca translations
-  - baca `getActiveTryoutCatalogMeta`
+  - baca `getActiveTryoutCatalogSnapshot`
 - client component:
   - baca `getActiveTryoutCatalogPage` dengan `usePaginatedQuery`
   - group by `cycleKey`

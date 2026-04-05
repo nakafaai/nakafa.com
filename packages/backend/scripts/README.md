@@ -1,6 +1,6 @@
-# Content Sync Scripts
+# Backend Scripts
 
-Sync MDX content from filesystem to Convex database.
+Sync MDX content and run backend maintenance checks for Convex state.
 
 ## Quick Start
 
@@ -72,8 +72,14 @@ npx convex deploy
 
 | Command | Description |
 |---------|-------------|
+| `tryout:verify:controls` | Verify `userTryoutControls` integrity in development |
 | `tryout:repair:controls` | Repair missing or duplicate `userTryoutControls` rows in development |
+| `tryout:verify:controls:prod` | Verify `userTryoutControls` integrity in production |
 | `tryout:repair:controls:prod` | Repair missing or duplicate `userTryoutControls` rows in production |
+| `tryout:verify:access` | Verify campaign/grant time-state integrity in development |
+| `tryout:repair:access` | Run the bounded access status sweeper in development |
+| `tryout:verify:access:prod` | Verify campaign/grant time-state integrity in production |
+| `tryout:repair:access:prod` | Run the bounded access status sweeper in production |
 | `irt:verify:cache` | Verify cached IRT calibration state in development |
 | `irt:verify:scale` | Verify frozen IRT scale coverage in development |
 | `irt:prod:verify:cache` | Verify cached IRT calibration state in production |
@@ -255,13 +261,20 @@ Content hash unchanged. This is normal for `sync:incremental`.
 | Script | Purpose |
 |--------|---------|
 | `sync-content.ts` | Sync MDX content to Convex database |
+| `tryout/controls.ts` | Verify and repair `userTryoutControls` integrity |
+| `tryout/access.ts` | Verify campaign/grant time-state integrity |
+| `irt-verify.ts` | Verify IRT cache and scale integrity |
 
 ## Files
 
 | File | Purpose |
 |------|---------|
 | `sync-content.ts` | Main sync script |
-| `lib/mdxParser.ts` | MDX parsing utilities |
+| `sync-content/` | Shared sync-content helpers, validation, and workflows |
+| `tryout/` | Tryout-specific maintenance scripts split by concern |
+| `tryout/controls.ts` | Dev/prod verify and repair loop for `userTryoutControls` |
+| `tryout/access.ts` | Dev/prod integrity verification for campaigns and grants |
+| `irt-verify.ts` | Dev/prod integrity verification for IRT cache and scale state |
 | `../convex/contentSync/mutations/` | Convex sync mutations split by concern |
 | `../convex/contentSync/queries/` | Convex verification queries split by concern |
 | `../.sync-state.json` | Dev incremental sync state (gitignored) |

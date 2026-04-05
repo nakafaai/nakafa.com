@@ -248,4 +248,40 @@ describe("tryoutAccess/mutations/internal/status", () => {
 
     vi.useRealTimers();
   });
+
+  it("re-enqueues ended competitions that are stuck in finalizing", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(NOW));
+
+    const t = createTryoutTestConvex();
+    const campaignId = await t.mutation(async (ctx) => {
+      return await ctx.db.insert("tryoutAccessCampaigns", {
+        slug: "stuck-finalizing-competition",
+        name: "Stuck Finalizing Competition",
+        products: ["snbt"],
+        campaignKind: "competition",
+        enabled: true,
+        redeemStatus: "ended",
+        resultsStatus: "finalizing",
+        resultsFinalizedAt: null,
+        startsAt: NOW - 24 * 60 * 60 * 1000,
+        endsAt: NOW - 1,
+      });
+    });
+
+    await t.mutation(
+      internal.tryoutAccess.mutations.internal.status.sweepStates,
+      {}
+    );
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+
+    const campaign = await t.query(async (ctx) => {
+      return await ctx.db.get("tryoutAccessCampaigns", campaignId);
+    });
+
+    expect(campaign?.resultsStatus).toBe("finalized");
+    expect(campaign?.resultsFinalizedAt).toBeGreaterThanOrEqual(NOW);
+
+    vi.useRealTimers();
+  });
 });

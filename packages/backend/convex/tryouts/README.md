@@ -58,6 +58,8 @@ That policy owns:
   runtime never needs to repair old attempts after ops edits campaign policy
 - Auth cleanup deletes user-scoped tryout runtime, access, and leaderboard rows
   together so deleted users do not leave orphaned runtime state behind
+- Ops can verify dedicated control-row integrity and access time-state integrity
+  through bounded maintenance queries before and after repairs in dev and prod
 
 ## Catalog Read Model
 
@@ -92,7 +94,7 @@ That policy owns:
 Use the generic query/mutation surface in `tryouts/`:
 
 - `queries/tryouts.ts`
-- `queries/tryouts.ts#getActiveTryoutCatalogMeta`
+- `queries/tryouts.ts#getActiveTryoutCatalogSnapshot`
 - `queries/tryouts.ts#getActiveTryoutCatalogPage`
 - `queries/me/attempt.ts`
 - `queries/me/history.ts`
@@ -101,6 +103,9 @@ Use the generic query/mutation surface in `tryouts/`:
 - `mutations/attempts.ts`
 
 The hub should not exhaust all active tryout pages on the server.
+Use `getActiveTryoutCatalogSnapshot` on the server for the exact count plus the
+first page, then hydrate into `getActiveTryoutCatalogPage` with
+`usePaginatedQuery` on the client.
 Use `getActiveTryoutCatalogPage` with `usePaginatedQuery` on the client and
 let the catalog page query attach latest-attempt badges only for the rows in the
 current page.

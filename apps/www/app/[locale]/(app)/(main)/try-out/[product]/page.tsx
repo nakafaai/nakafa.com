@@ -39,6 +39,7 @@ export function generateStaticParams() {
 /** Renders the server-backed tryout product landing page. */
 export default async function Page({ params }: Props) {
   const { locale, product: productParam } = await params;
+  const initialNowMs = Date.now();
 
   setRequestLocale(locale);
 
@@ -52,24 +53,15 @@ export default async function Page({ params }: Props) {
     getTranslations({ locale, namespace: "Tryouts" }),
     getToken(),
   ]);
-  const [catalogMeta, initialCatalogPage] = await Promise.all([
-    fetchQuery(api.tryouts.queries.tryouts.getActiveTryoutCatalogMeta, {
+  const catalogSnapshot = await fetchQuery(
+    api.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot,
+    {
       locale,
+      pageSize: TRYOUT_CATALOG_PAGE_SIZE,
       product,
-    }),
-    fetchQuery(
-      api.tryouts.queries.tryouts.getActiveTryoutCatalogPage,
-      {
-        locale,
-        paginationOpts: {
-          cursor: null,
-          numItems: TRYOUT_CATALOG_PAGE_SIZE,
-        },
-        product,
-      },
-      token ? { token } : undefined
-    ),
-  ]);
+    },
+    token ? { token } : undefined
+  );
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
@@ -112,7 +104,7 @@ export default async function Page({ params }: Props) {
                   </TryoutCardTitle>
                   <Badge variant="outline">
                     {tTryouts("package-count", {
-                      count: catalogMeta.activeCount,
+                      count: catalogSnapshot.activeCount,
                     })}
                   </Badge>
                 </div>
@@ -126,7 +118,8 @@ export default async function Page({ params }: Props) {
 
           <TryoutCardContent>
             <TryoutCatalogList
-              initialEntries={initialCatalogPage.page}
+              initialEntries={catalogSnapshot.initialPage}
+              initialNowMs={initialNowMs}
               locale={locale}
               product={product}
             />

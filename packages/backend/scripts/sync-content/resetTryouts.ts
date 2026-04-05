@@ -242,9 +242,9 @@ export const resetTryouts = async (
   if (!options.force) {
     log("\nTo delete tryout + IRT data, run:");
     if (options.prod) {
-      log("  pnpm --filter backend sync:prod:reset:tryouts --force");
+      log("  pnpm --filter @repo/backend sync:prod:reset:tryouts --force");
     } else {
-      log("  pnpm --filter backend sync:reset:tryouts --force");
+      log("  pnpm --filter @repo/backend sync:reset:tryouts --force");
     }
     return;
   }

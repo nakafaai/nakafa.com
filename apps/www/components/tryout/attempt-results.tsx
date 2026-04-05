@@ -62,18 +62,15 @@ export function TryoutAttemptResults({
     );
   }
   const attemptOptions = attemptHistory.map((attempt, index) => {
-    const attemptNumber = index + 1;
-
     return {
       ...attempt,
-      attemptNumber,
       icon: attempt.countsForCompetition ? PartyIcon : Progress03Icon,
       label: attempt.countsForCompetition
         ? tTryouts("attempt-select-event", {
-            number: attemptNumber,
+            number: index + 1,
           })
         : tTryouts("attempt-select-retry", {
-            number: attemptNumber,
+            number: index + 1,
           }),
       status: getEffectiveTryoutStatus({
         expiresAtMs: attempt.expiresAt,

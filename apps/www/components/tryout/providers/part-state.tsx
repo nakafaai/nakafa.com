@@ -75,11 +75,13 @@ const TryoutPartContext = createContext<TryoutPartContextValue | null>(null);
 /** Provides one runtime-backed tryout part state tree for the part route. */
 export function TryoutPartProvider({
   children,
+  initialNowMs,
   initialRuntime,
   part,
   tryout,
 }: {
   children: ReactNode;
+  initialNowMs?: number;
   initialRuntime?: TryoutPartRuntime | null;
   part: TryoutPartValue;
   tryout: TryoutValue;
@@ -105,7 +107,8 @@ export function TryoutPartProvider({
   const runtime =
     runtimeData ?? (initialRuntime === undefined ? undefined : initialRuntime);
   const nowMs = useTryoutClock(
-    Boolean(runtime && runtime.tryoutAttempt.status === "in-progress")
+    Boolean(runtime && runtime.tryoutAttempt.status === "in-progress"),
+    initialNowMs
   );
   const isRuntimePending =
     runtime === undefined

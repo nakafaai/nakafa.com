@@ -3,7 +3,8 @@ import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
 
 /**
- * Finalizes one competition campaign once its immutable close time has passed.
+ * Finalizes one claimed competition campaign once its immutable close time has
+ * passed.
  *
  * Competition attempts already store `accessEndsAt` from the campaign close and
  * schedule their own expiry at start, so this mutation only marks the campaign's
@@ -20,7 +21,7 @@ export const finalizeCompetitionCampaignResults = internalMutation({
     if (
       !campaign ||
       campaign.campaignKind !== "competition" ||
-      campaign.resultsStatus === "finalized"
+      campaign.resultsStatus !== "finalizing"
     ) {
       return null;
     }

@@ -3,7 +3,7 @@ import type { FunctionReturnType } from "convex/server";
 import {
   getEffectivePartAttemptStatus,
   getEffectiveTryoutStatus,
-} from "@/components/tryout/utils/status";
+} from "./status";
 
 type TryoutAttemptData = FunctionReturnType<
   typeof api.tryouts.queries.me.attempt.getUserTryoutAttempt
@@ -38,11 +38,15 @@ type TryoutProgress = Pick<
 
 /** Derives the page-level UI status for one tryout part runtime. */
 function getTryoutPartPageStatus({
+  expiresAtMs,
   isRuntimePending,
+  nowMs,
   partAttempt,
   tryout,
 }: {
+  expiresAtMs: number | undefined;
   isRuntimePending: boolean;
+  nowMs: number;
   partAttempt: TryoutPartRuntimeAttempt | null;
   tryout: TryoutProgress | null;
 }): TryoutPartUiStatus {
@@ -65,7 +69,14 @@ function getTryoutPartPageStatus({
     return "ended";
   }
 
-  if (partAttempt?.setAttempt.status === "in-progress") {
+  if (
+    partAttempt?.setAttempt &&
+    getEffectivePartAttemptStatus({
+      expiresAtMs,
+      nowMs,
+      setAttempt: partAttempt.setAttempt,
+    }) === "in-progress"
+  ) {
     return "in-progress";
   }
 
@@ -147,7 +158,9 @@ export function deriveTryoutPartPageState({
       partEndReason: null,
       score: null,
       status: getTryoutPartPageStatus({
+        expiresAtMs: undefined,
         isRuntimePending,
+        nowMs,
         partAttempt,
         tryout: null,
       }),
@@ -165,7 +178,9 @@ export function deriveTryoutPartPageState({
     }),
   };
   const status = getTryoutPartPageStatus({
+    expiresAtMs: runtime.expiresAtMs,
     isRuntimePending,
+    nowMs,
     partAttempt,
     tryout,
   });
@@ -178,7 +193,7 @@ export function deriveTryoutPartPageState({
     partEndReason,
     score: runtime.partScore,
     status,
-    tryoutAttemptStatus: runtime.tryoutAttempt.status,
+    tryoutAttemptStatus: tryout.status,
     tryoutPublicResultStatus: runtime.tryoutAttempt.publicResultStatus,
   };
 }

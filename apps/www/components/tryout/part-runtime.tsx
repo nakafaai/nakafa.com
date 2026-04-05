@@ -36,6 +36,7 @@ import { ExerciseContextProvider } from "@/lib/context/use-exercise";
 export interface TryoutPartRuntimeProps {
   children: ReactNode;
   icon?: ComponentProps<typeof TryoutPartHead>["icon"];
+  initialNowMs?: number;
   initialRuntime?: FunctionReturnType<
     typeof api.tryouts.queries.me.part.getUserTryoutPartAttempt
   > | null;
@@ -46,6 +47,7 @@ export interface TryoutPartRuntimeProps {
 export function TryoutPartRuntime({
   children,
   icon,
+  initialNowMs,
   initialRuntime,
   part,
   tryout,
@@ -53,6 +55,7 @@ export function TryoutPartRuntime({
   return (
     <ExerciseContextProvider slug={part.setSlug}>
       <TryoutPartProvider
+        initialNowMs={initialNowMs}
         initialRuntime={initialRuntime}
         part={part}
         tryout={tryout}

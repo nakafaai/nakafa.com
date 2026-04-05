@@ -191,6 +191,7 @@ import type * as tryoutAccess_mutations_internal_status from "../tryoutAccess/mu
 import type * as tryoutAccess_mutations_redeem from "../tryoutAccess/mutations/redeem.js";
 import type * as tryoutAccess_mutations_setup from "../tryoutAccess/mutations/setup.js";
 import type * as tryoutAccess_queries from "../tryoutAccess/queries.js";
+import type * as tryoutAccess_queries_internal_maintenance from "../tryoutAccess/queries/internal/maintenance.js";
 import type * as tryouts_aggregate from "../tryouts/aggregate.js";
 import type * as tryouts_helpers_access from "../tryouts/helpers/access.js";
 import type * as tryouts_helpers_attemptLifecycle from "../tryouts/helpers/attemptLifecycle.js";
@@ -216,6 +217,7 @@ import type * as tryouts_mutations_internal_scoring from "../tryouts/mutations/i
 import type * as tryouts_mutations_internal_stats from "../tryouts/mutations/internal/stats.js";
 import type * as tryouts_products_index from "../tryouts/products/index.js";
 import type * as tryouts_products_snbt from "../tryouts/products/snbt.js";
+import type * as tryouts_queries_internal_maintenance from "../tryouts/queries/internal/maintenance.js";
 import type * as tryouts_queries_leaderboard from "../tryouts/queries/leaderboard.js";
 import type * as tryouts_queries_me_attempt from "../tryouts/queries/me/attempt.js";
 import type * as tryouts_queries_me_helpers from "../tryouts/queries/me/helpers.js";
@@ -431,6 +433,7 @@ declare const fullApi: ApiFromModules<{
   "tryoutAccess/mutations/redeem": typeof tryoutAccess_mutations_redeem;
   "tryoutAccess/mutations/setup": typeof tryoutAccess_mutations_setup;
   "tryoutAccess/queries": typeof tryoutAccess_queries;
+  "tryoutAccess/queries/internal/maintenance": typeof tryoutAccess_queries_internal_maintenance;
   "tryouts/aggregate": typeof tryouts_aggregate;
   "tryouts/helpers/access": typeof tryouts_helpers_access;
   "tryouts/helpers/attemptLifecycle": typeof tryouts_helpers_attemptLifecycle;
@@ -456,6 +459,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/mutations/internal/stats": typeof tryouts_mutations_internal_stats;
   "tryouts/products/index": typeof tryouts_products_index;
   "tryouts/products/snbt": typeof tryouts_products_snbt;
+  "tryouts/queries/internal/maintenance": typeof tryouts_queries_internal_maintenance;
   "tryouts/queries/leaderboard": typeof tryouts_queries_leaderboard;
   "tryouts/queries/me/attempt": typeof tryouts_queries_me_attempt;
   "tryouts/queries/me/helpers": typeof tryouts_queries_me_helpers;

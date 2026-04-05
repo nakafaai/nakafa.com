@@ -11,60 +11,105 @@ import {
 import { describe, expect, it } from "vitest";
 
 describe("tryouts/queries/tryouts", () => {
-  it("returns the exact active catalog count for one product and locale", async () => {
+  it("returns the active count and first catalog page in one snapshot query", async () => {
     const t = createTryoutTestConvex();
+    const state = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "catalog-snapshot",
+      });
 
-    await t.mutation(async (ctx) => {
-      for (let index = 0; index < 3; index += 1) {
-        const tryoutId = await ctx.db.insert("tryouts", {
-          product: "snbt",
-          locale: "id",
-          cycleKey: "2026",
-          slug: `active-tryout-${index}`,
-          label: `Active Tryout ${index}`,
-          partCount: 1,
-          totalQuestionCount: 20,
-          isActive: true,
-          detectedAt: NOW,
-          syncedAt: NOW,
-        });
+      const tryout = await insertTryoutSkeleton(ctx, "2026-set-a");
 
-        await ctx.db.insert("tryoutCatalogEntries", {
-          tryoutId,
-          product: "snbt",
-          locale: "id",
+      await ctx.db.insert("tryoutCatalogEntries", {
+        tryoutId: tryout.tryoutId,
+        product: "snbt",
+        locale: "id",
+        cycleKey: "2026",
+        slug: "2026-set-a",
+        label: "Set A",
+        partCount: 1,
+        totalQuestionCount: 20,
+        isActive: true,
+        catalogSortKey: tryoutProductPolicies.snbt.getCatalogSortKey({
           cycleKey: "2026",
-          slug: `active-tryout-${index}`,
-          label: `Active Tryout ${index}`,
-          partCount: 1,
-          totalQuestionCount: 20,
-          isActive: true,
-          catalogSortKey: tryoutProductPolicies.snbt.getCatalogSortKey({
-            cycleKey: "2026",
-            label: `Active Tryout ${index}`,
-            slug: `active-tryout-${index}`,
-          }),
-          updatedAt: NOW,
-        });
-      }
+          label: "Set A",
+          slug: "2026-set-a",
+        }),
+        updatedAt: NOW,
+      });
+
+      const secondTryoutId = await ctx.db.insert("tryouts", {
+        product: "snbt",
+        locale: "id",
+        cycleKey: "2026",
+        slug: "2026-set-b",
+        label: "Set B",
+        partCount: 1,
+        totalQuestionCount: 20,
+        isActive: true,
+        detectedAt: NOW,
+        syncedAt: NOW,
+      });
+
+      await ctx.db.insert("tryoutCatalogEntries", {
+        tryoutId: secondTryoutId,
+        product: "snbt",
+        locale: "id",
+        cycleKey: "2026",
+        slug: "2026-set-b",
+        label: "Set B",
+        partCount: 1,
+        totalQuestionCount: 20,
+        isActive: true,
+        catalogSortKey: tryoutProductPolicies.snbt.getCatalogSortKey({
+          cycleKey: "2026",
+          label: "Set B",
+          slug: "2026-set-b",
+        }),
+        updatedAt: NOW,
+      });
 
       await ctx.db.insert("tryoutCatalogMeta", {
         product: "snbt",
         locale: "id",
-        activeCount: 3,
+        activeCount: 2,
         updatedAt: NOW,
       });
+
+      await insertCompletedTryoutAttempt(ctx, {
+        scaleVersionId: tryout.scaleVersionId,
+        setId: tryout.setId,
+        slug: "2026-set-a",
+        tryoutId: tryout.tryoutId,
+        userId: identity.userId,
+      });
+
+      return identity;
     });
 
-    const result = await t.query(
-      api.tryouts.queries.tryouts.getActiveTryoutCatalogMeta,
-      {
+    const snapshot = await t
+      .withIdentity({
+        subject: state.authUserId,
+        sessionId: state.sessionId,
+      })
+      .query(api.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot, {
         locale: "id",
+        pageSize: 1,
         product: "snbt",
-      }
-    );
+      });
 
-    expect(result).toEqual({ activeCount: 3 });
+    expect(snapshot).toEqual({
+      activeCount: 2,
+      initialPage: [
+        expect.objectContaining({
+          latestAttempt: expect.objectContaining({
+            status: "completed",
+          }),
+          slug: "2026-set-a",
+        }),
+      ],
+    });
   });
 
   it("paginates active catalog rows in product order and returns guest rows without status", async () => {

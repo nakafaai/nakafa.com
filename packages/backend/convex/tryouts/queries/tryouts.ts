@@ -1,3 +1,5 @@
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { query } from "@repo/backend/convex/_generated/server";
 import { getOptionalAppUser } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
@@ -33,30 +35,95 @@ const activeTryoutCatalogEntryValidator = v.object({
   tryoutId: vv.doc("tryoutCatalogEntries").fields.tryoutId,
 });
 
-const activeTryoutCatalogMetaValidator = v.object({
+const activeTryoutCatalogSnapshotValidator = v.object({
   activeCount: v.number(),
+  initialPage: v.array(activeTryoutCatalogEntryValidator),
 });
 
-/** Returns the exact active catalog count for one product and locale. */
-export const getActiveTryoutCatalogMeta = query({
-  args: {
-    product: tryoutProductValidator,
-    locale: localeValidator,
-  },
-  returns: activeTryoutCatalogMetaValidator,
-  handler: async (ctx, args) => {
-    const catalogMeta = await ctx.db
-      .query("tryoutCatalogMeta")
-      .withIndex("by_product_and_locale", (q) =>
-        q.eq("product", args.product).eq("locale", args.locale)
-      )
-      .unique();
+type ActiveTryoutCatalogEntryRecord = Pick<
+  Doc<"tryoutCatalogEntries">,
+  | "cycleKey"
+  | "label"
+  | "partCount"
+  | "slug"
+  | "totalQuestionCount"
+  | "tryoutId"
+>;
+type ActiveTryoutLatestAttempt = Pick<
+  Doc<"tryoutAttempts">,
+  "expiresAt" | "lastActivityAt" | "status"
+>;
 
-    return {
-      activeCount: catalogMeta?.activeCount ?? 0,
-    };
-  },
-});
+/** Maps one catalog row and optional latest attempt into the frontend shape. */
+function buildActiveTryoutCatalogEntry({
+  entry,
+  latestAttempt,
+}: {
+  entry: ActiveTryoutCatalogEntryRecord;
+  latestAttempt: ActiveTryoutLatestAttempt | null;
+}) {
+  return {
+    cycleKey: entry.cycleKey,
+    label: entry.label,
+    latestAttempt: latestAttempt
+      ? {
+          expiresAtMs: latestAttempt.expiresAt,
+          status: latestAttempt.status,
+          updatedAt: latestAttempt.lastActivityAt,
+        }
+      : null,
+    partCount: entry.partCount,
+    slug: entry.slug,
+    totalQuestionCount: entry.totalQuestionCount,
+    tryoutId: entry.tryoutId,
+  };
+}
+
+/** Loads the latest attempt rows for one bounded catalog page and optional user. */
+async function loadActiveTryoutCatalogEntries(
+  ctx: QueryCtx,
+  {
+    entries,
+    userId,
+  }: {
+    entries: ActiveTryoutCatalogEntryRecord[];
+    userId: Id<"users"> | null;
+  }
+) {
+  if (!userId) {
+    return entries.map((entry) =>
+      buildActiveTryoutCatalogEntry({
+        entry,
+        latestAttempt: null,
+      })
+    );
+  }
+
+  const latestAttempts = await Promise.all(
+    entries.map((entry) => {
+      return ctx.db
+        .query("tryoutAttempts")
+        .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
+          q.eq("userId", userId).eq("tryoutId", entry.tryoutId)
+        )
+        .order("desc")
+        .first();
+    })
+  );
+
+  return entries.map((entry, index) => {
+    return buildActiveTryoutCatalogEntry({
+      entry,
+      latestAttempt: latestAttempts[index]
+        ? {
+            expiresAt: latestAttempts[index].expiresAt,
+            lastActivityAt: latestAttempts[index].lastActivityAt,
+            status: latestAttempts[index].status,
+          }
+        : null,
+    });
+  });
+}
 
 /** Returns one ordered page of active tryout catalog rows with page-local latest badges. */
 export const getActiveTryoutCatalogPage = query({
@@ -89,53 +156,61 @@ export const getActiveTryoutCatalogPage = query({
       getOptionalAppUser(ctx),
     ]);
 
-    if (!user) {
-      return {
-        ...catalogPage,
-        page: catalogPage.page.map((entry) => ({
-          cycleKey: entry.cycleKey,
-          label: entry.label,
-          latestAttempt: null,
-          partCount: entry.partCount,
-          slug: entry.slug,
-          totalQuestionCount: entry.totalQuestionCount,
-          tryoutId: entry.tryoutId,
-        })),
-      };
-    }
-
-    const latestAttempts = await Promise.all(
-      catalogPage.page.map((entry) => {
-        return ctx.db
-          .query("tryoutAttempts")
-          .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
-            q.eq("userId", user.appUser._id).eq("tryoutId", entry.tryoutId)
-          )
-          .order("desc")
-          .first();
-      })
-    );
-
     return {
       ...catalogPage,
-      page: catalogPage.page.map((entry, index) => {
-        const latestAttempt = latestAttempts[index];
+      page: await loadActiveTryoutCatalogEntries(ctx, {
+        entries: catalogPage.page,
+        userId: user?.appUser._id ?? null,
+      }),
+    };
+  },
+});
 
-        return {
-          cycleKey: entry.cycleKey,
-          label: entry.label,
-          latestAttempt: latestAttempt
-            ? {
-                expiresAtMs: latestAttempt.expiresAt,
-                status: latestAttempt.status,
-                updatedAt: latestAttempt.lastActivityAt,
-              }
-            : null,
-          partCount: entry.partCount,
-          slug: entry.slug,
-          totalQuestionCount: entry.totalQuestionCount,
-          tryoutId: entry.tryoutId,
-        };
+/**
+ * Returns the exact active count plus the first catalog page in one consistent
+ * query for SSR entry pages.
+ */
+export const getActiveTryoutCatalogSnapshot = query({
+  args: {
+    locale: localeValidator,
+    pageSize: v.optional(v.number()),
+    product: tryoutProductValidator,
+  },
+  returns: activeTryoutCatalogSnapshotValidator,
+  handler: async (ctx, args) => {
+    const pageSize = Math.max(
+      0,
+      Math.min(
+        args.pageSize ?? MAX_TRYOUT_CATALOG_PAGE_SIZE,
+        MAX_TRYOUT_CATALOG_PAGE_SIZE
+      )
+    );
+    const [catalogEntries, catalogMeta, user] = await Promise.all([
+      ctx.db
+        .query("tryoutCatalogEntries")
+        .withIndex(
+          "by_product_and_locale_and_isActive_and_catalogSortKey",
+          (q) =>
+            q
+              .eq("product", args.product)
+              .eq("locale", args.locale)
+              .eq("isActive", true)
+        )
+        .take(pageSize),
+      ctx.db
+        .query("tryoutCatalogMeta")
+        .withIndex("by_product_and_locale", (q) =>
+          q.eq("product", args.product).eq("locale", args.locale)
+        )
+        .unique(),
+      getOptionalAppUser(ctx),
+    ]);
+
+    return {
+      activeCount: catalogMeta?.activeCount ?? 0,
+      initialPage: await loadActiveTryoutCatalogEntries(ctx, {
+        entries: catalogEntries,
+        userId: user?.appUser._id ?? null,
       }),
     };
   },

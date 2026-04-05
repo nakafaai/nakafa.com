@@ -1,55 +1,20 @@
-import { internal } from "@repo/backend/convex/_generated/api";
 import { internalMutation } from "@repo/backend/convex/functions";
-import {
-  createUserTryoutControl,
-  getUserTryoutControl,
-} from "@repo/backend/convex/tryouts/helpers/control";
+import { repairUserTryoutControl } from "@repo/backend/convex/tryouts/helpers/control";
 import { v } from "convex/values";
 
-const USER_TRYOUT_CONTROL_REPAIR_PAGE_SIZE = 100;
-
-/**
- * Rebuilds missing user tryout control rows in bounded scheduled pages.
- *
- * This is an operator-facing integrity repair path for environments that need to
- * reconcile existing users with the dedicated `userTryoutControls` owner table.
- */
-export const repairUserTryoutControls = internalMutation({
+/** Repairs one user's control row and one bounded batch of duplicates. */
+export const repairOneUserTryoutControl = internalMutation({
   args: {
-    cursor: v.optional(v.string()),
+    updatedAt: v.number(),
+    userId: v.id("users"),
   },
-  returns: v.null(),
+  returns: v.object({
+    controlId: v.union(v.id("userTryoutControls"), v.null()),
+    controlsCreated: v.number(),
+    duplicatesDeleted: v.number(),
+    hasMoreDuplicates: v.boolean(),
+  }),
   handler: async (ctx, args) => {
-    const userPage = await ctx.db.query("users").paginate({
-      cursor: args.cursor ?? null,
-      numItems: USER_TRYOUT_CONTROL_REPAIR_PAGE_SIZE,
-    });
-
-    for (const user of userPage.page) {
-      const existingControl = await getUserTryoutControl(ctx.db, user._id);
-
-      if (existingControl) {
-        continue;
-      }
-
-      await createUserTryoutControl(ctx.db, {
-        updatedAt: user._creationTime,
-        userId: user._id,
-      });
-    }
-
-    if (userPage.isDone) {
-      return null;
-    }
-
-    await ctx.scheduler.runAfter(
-      0,
-      internal.tryouts.mutations.internal.controls.repairUserTryoutControls,
-      {
-        cursor: userPage.continueCursor,
-      }
-    );
-
-    return null;
+    return await repairUserTryoutControl(ctx.db, args);
   },
 });

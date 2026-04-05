@@ -13,6 +13,21 @@ import { v } from "convex/values";
 
 const TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE = 100;
 
+/** Re-enqueues a claimed competition campaign so finalization can retry safely. */
+async function requeueCompetitionCampaignFinalization(
+  ctx: Pick<MutationCtx, "scheduler">,
+  campaignId: Doc<"tryoutAccessCampaigns">["_id"]
+) {
+  await ctx.scheduler.runAfter(
+    0,
+    internal.tryoutAccess.mutations.internal.competition
+      .finalizeCompetitionCampaignResults,
+    {
+      campaignId,
+    }
+  );
+}
+
 /**
  * Claim one ended competition campaign for background result finalization.
  *
@@ -36,14 +51,7 @@ async function enqueueCompetitionCampaignFinalizationIfNeeded(
   await ctx.db.patch("tryoutAccessCampaigns", campaign._id, {
     resultsStatus: "finalizing",
   });
-  await ctx.scheduler.runAfter(
-    0,
-    internal.tryoutAccess.mutations.internal.competition
-      .finalizeCompetitionCampaignResults,
-    {
-      campaignId: campaign._id,
-    }
-  );
+  await requeueCompetitionCampaignFinalization(ctx, campaign._id);
 }
 
 /** Synchronizes one campaign redeem status from its stored time window. */
@@ -184,6 +192,15 @@ export const sweepStates = internalMutation({
           .lt("endsAt", now + 1)
       )
       .take(TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE);
+    const finalizingCompetitions = await ctx.db
+      .query("tryoutAccessCampaigns")
+      .withIndex("by_campaignKind_and_resultsStatus_and_endsAt", (q) =>
+        q
+          .eq("campaignKind", "competition")
+          .eq("resultsStatus", "finalizing")
+          .lt("endsAt", now + 1)
+      )
+      .take(TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE);
 
     for (const campaign of scheduledCampaigns) {
       const redeemStatus = getTryoutAccessCampaignRedeemStatus(campaign, now);
@@ -221,11 +238,16 @@ export const sweepStates = internalMutation({
       );
     }
 
+    for (const competition of finalizingCompetitions) {
+      await requeueCompetitionCampaignFinalization(ctx, competition._id);
+    }
+
     if (
       scheduledCampaigns.length < TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE &&
       activeCampaigns.length < TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE &&
       overdueGrants.length < TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE &&
-      pendingCompetitions.length < TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE
+      pendingCompetitions.length < TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE &&
+      finalizingCompetitions.length < TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE
     ) {
       return null;
     }

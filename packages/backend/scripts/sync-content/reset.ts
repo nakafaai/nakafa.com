@@ -308,9 +308,9 @@ export const reset = async (
   if (!options.force) {
     log("\nTo delete all content, run:");
     if (options.prod) {
-      log("  pnpm --filter backend sync:reset --prod --force");
+      log("  pnpm --filter @repo/backend sync:reset --prod --force");
     } else {
-      log("  pnpm --filter backend sync:reset --force");
+      log("  pnpm --filter @repo/backend sync:reset --force");
     }
     if (!options.authors) {
       log("\nTo also delete authors, add --authors flag");
@@ -355,8 +355,8 @@ export const reset = async (
 
   log("\nTo re-sync content, run:");
   if (options.prod) {
-    log("  pnpm --filter backend sync:prod");
+    log("  pnpm --filter @repo/backend sync:prod");
   } else {
-    log("  pnpm --filter backend sync");
+    log("  pnpm --filter @repo/backend sync");
   }
 };

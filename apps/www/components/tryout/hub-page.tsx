@@ -27,28 +27,20 @@ import { getToken } from "@/lib/auth/server";
 /** Renders the server-backed tryout hub with an SSR first catalog page. */
 export async function TryoutHubPage({ locale }: { locale: Locale }) {
   const product: TryoutProduct = "snbt";
+  const initialNowMs = Date.now();
   const [tTryouts, token] = await Promise.all([
     getTranslations({ locale, namespace: "Tryouts" }),
     getToken(),
   ]);
-  const [catalogMeta, initialCatalogPage] = await Promise.all([
-    fetchQuery(api.tryouts.queries.tryouts.getActiveTryoutCatalogMeta, {
+  const catalogSnapshot = await fetchQuery(
+    api.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot,
+    {
       locale,
+      pageSize: TRYOUT_CATALOG_PAGE_SIZE,
       product,
-    }),
-    fetchQuery(
-      api.tryouts.queries.tryouts.getActiveTryoutCatalogPage,
-      {
-        locale,
-        paginationOpts: {
-          cursor: null,
-          numItems: TRYOUT_CATALOG_PAGE_SIZE,
-        },
-        product,
-      },
-      token ? { token } : undefined
-    ),
-  ]);
+    },
+    token ? { token } : undefined
+  );
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
@@ -69,7 +61,7 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
                   </TryoutCardTitle>
                   <Badge variant="outline">
                     {tTryouts("package-count", {
-                      count: catalogMeta.activeCount,
+                      count: catalogSnapshot.activeCount,
                     })}
                   </Badge>
                 </div>
@@ -95,7 +87,8 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
 
           <TryoutCardContent>
             <TryoutCatalogList
-              initialEntries={initialCatalogPage.page}
+              initialEntries={catalogSnapshot.initialPage}
+              initialNowMs={initialNowMs}
               locale={locale}
               product={product}
             />
