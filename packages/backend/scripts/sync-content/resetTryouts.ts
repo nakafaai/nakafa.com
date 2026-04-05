@@ -83,16 +83,22 @@ const RESET_TRYOUT_STEPS: ResetStep[] = [
     resultLabel: "tryout attempts",
   },
   {
-    label: "Deleting event tryout entitlements...",
+    label: "Deleting tryout entitlements...",
     mutationPath:
-      "contentSync/mutations/maintenance:deleteEventTryoutEntitlementsBatch",
-    resultLabel: "event tryout entitlements",
+      "contentSync/mutations/maintenance:deleteTryoutEntitlementsBatch",
+    resultLabel: "tryout entitlements",
   },
   {
     label: "Deleting tryout access grants...",
     mutationPath:
       "contentSync/mutations/maintenance:deleteTryoutAccessGrantsBatch",
     resultLabel: "tryout access grants",
+  },
+  {
+    label: "Deleting tryout access campaign products...",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteTryoutAccessCampaignProductsBatch",
+    resultLabel: "tryout access campaign products",
   },
   {
     label: "Deleting tryout access links...",
@@ -183,10 +189,10 @@ export const resetTryouts = async (
 ): Promise<void> => {
   log("=== RESET TRYOUTS + IRT ===\n");
   log(
-    "This deletes tryout definitions, event access rows, catalog metadata, attempts, leaderboard rows, and frozen IRT scale data."
+    "This deletes tryout definitions, access rows, entitlements, catalog metadata, attempts, leaderboard rows, and frozen IRT scale data."
   );
   log(
-    "Run a full sync afterward so Convex rebuilds the deleted tryout and IRT content tables coherently. Subscription entitlements stay preserved.\n"
+    "Run a full sync afterward so Convex rebuilds the deleted tryout and IRT content tables coherently.\n"
   );
 
   if (options.prod) {
@@ -204,13 +210,12 @@ export const resetTryouts = async (
 
   log("Current tryout + IRT database contents:\n");
   log(`  Tryout Access Campaigns: ${counts.tryoutAccessCampaigns}`);
+  log(`  Tryout Access Products:  ${counts.tryoutAccessCampaignProducts}`);
   log(`  Tryout Access Links:    ${counts.tryoutAccessLinks}`);
   log(`  Tryout Access Grants:   ${counts.tryoutAccessGrants}`);
   log(`  Tryouts:               ${counts.tryouts}`);
   log(`  Tryout Catalog Meta:   ${counts.tryoutCatalogMeta}`);
-  log(
-    `  User Entitlements:     ${counts.userTryoutEntitlements} (subscription preserved, event rows cleaned)`
-  );
+  log(`  User Entitlements:     ${counts.userTryoutEntitlements}`);
   log(`  Tryout Part Sets:      ${counts.tryoutPartSets}`);
   log(`  Tryout Attempts:       ${counts.tryoutAttempts}`);
   log(`  Tryout Part Attempts:  ${counts.tryoutPartAttempts}`);
@@ -229,8 +234,10 @@ export const resetTryouts = async (
 
   const totalTryoutAndIrtRows =
     counts.tryoutAccessCampaigns +
+    counts.tryoutAccessCampaignProducts +
     counts.tryoutAccessLinks +
     counts.tryoutAccessGrants +
+    counts.userTryoutEntitlements +
     counts.tryouts +
     counts.tryoutCatalogMeta +
     counts.tryoutPartSets +

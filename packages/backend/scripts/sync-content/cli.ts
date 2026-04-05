@@ -60,7 +60,7 @@ const printUsage = (): void => {
   log("  sync:clean            - Find and remove stale content");
   log("  sync:reset            - Delete ALL synced content (requires --force)");
   log(
-    "  sync:reset:tryouts    - Delete tryout content/read models, event access rows, and IRT scale data, then run a full sync"
+    "  sync:reset:tryouts    - Delete tryout content/read models, access rows, entitlements, and IRT scale data, then run a full sync"
   );
   log("\nProduction commands:");
   log("  sync:prod             - Full sync to production");
@@ -69,7 +69,7 @@ const printUsage = (): void => {
   log("  sync:prod:clean       - Clean stale content in production");
   log("  sync:prod:reset       - Delete ALL content in production");
   log(
-    "  sync:prod:reset:tryouts - Delete tryout content/read models, event access rows, and IRT scale data in production, then run a full sync"
+    "  sync:prod:reset:tryouts - Delete tryout content/read models, access rows, entitlements, and IRT scale data in production, then run a full sync"
   );
   log("\nOptions:");
   log("  --locale en|id  - Sync specific locale only");

@@ -151,7 +151,7 @@ async function deleteUserTryoutEntitlementsBatch(
 ) {
   const entitlements = await ctx.db
     .query("userTryoutEntitlements")
-    .withIndex("by_userId_and_sourceKind_and_subscriptionId", (q) =>
+    .withIndex("by_userId_and_product_and_sourceKind_and_endsAt", (q) =>
       q.eq("userId", userId)
     )
     .take(TRYOUT_ENTITLEMENT_CLEANUP_BATCH_SIZE);

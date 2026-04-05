@@ -30,14 +30,30 @@ describe("tryoutAccess/mutations/setup", () => {
       }
     );
 
-    const campaign = await t.query(async (ctx) => {
-      return await ctx.db.get("tryoutAccessCampaigns", result.campaignId);
+    const state = await t.query(async (ctx) => {
+      return {
+        campaign: await ctx.db.get("tryoutAccessCampaigns", result.campaignId),
+        campaignProducts: await ctx.db
+          .query("tryoutAccessCampaignProducts")
+          .withIndex("by_campaignId", (q) =>
+            q.eq("campaignId", result.campaignId)
+          )
+          .collect(),
+      };
     });
 
-    expect(campaign?.campaignKind).toBe("competition");
-    expect(campaign?.grantDurationDays).toBeUndefined();
-    expect(campaign?.resultsStatus).toBe("pending");
-    expect(campaign?.resultsFinalizedAt).toBeNull();
+    expect(state.campaign?.campaignKind).toBe("competition");
+    expect(state.campaign?.grantDurationDays).toBeUndefined();
+    expect(state.campaign?.resultsStatus).toBe("pending");
+    expect(state.campaign?.resultsFinalizedAt).toBeNull();
+    expect("products" in (state.campaign ?? {})).toBe(false);
+    expect(state.campaignProducts).toEqual([
+      expect.objectContaining({
+        campaignId: result.campaignId,
+        campaignKind: "competition",
+        product: "snbt",
+      }),
+    ]);
   });
 
   it("stores access-pass campaigns with a positive grant duration", async () => {

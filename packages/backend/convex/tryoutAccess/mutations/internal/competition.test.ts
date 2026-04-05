@@ -1,4 +1,5 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import { insertTryoutAccessCampaign } from "@repo/backend/convex/tryoutAccess/test.helpers";
 import {
   createTryoutTestConvex,
   NOW,
@@ -9,7 +10,7 @@ describe("tryoutAccess/mutations/internal/competition", () => {
   it("finalizes ended pending competition campaigns", async () => {
     const t = createTryoutTestConvex();
     const campaignId = await t.mutation(async (ctx) => {
-      return await ctx.db.insert("tryoutAccessCampaigns", {
+      return await insertTryoutAccessCampaign(ctx, {
         slug: "competition-finalize",
         name: "Competition Finalize",
         products: ["snbt"],
@@ -42,7 +43,7 @@ describe("tryoutAccess/mutations/internal/competition", () => {
   it("does not change already finalized competition campaigns", async () => {
     const t = createTryoutTestConvex();
     const campaignId = await t.mutation(async (ctx) => {
-      return await ctx.db.insert("tryoutAccessCampaigns", {
+      return await insertTryoutAccessCampaign(ctx, {
         slug: "competition-pending-not-claimed",
         name: "Competition Pending Not Claimed",
         products: ["snbt"],
@@ -78,7 +79,7 @@ describe("tryoutAccess/mutations/internal/competition", () => {
 
     const t = createTryoutTestConvex();
     const campaignId = await t.mutation(async (ctx) => {
-      return await ctx.db.insert("tryoutAccessCampaigns", {
+      return await insertTryoutAccessCampaign(ctx, {
         slug: "competition-not-finished",
         name: "Competition Not Finished",
         products: ["snbt"],

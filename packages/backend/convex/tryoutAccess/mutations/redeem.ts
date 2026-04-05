@@ -39,7 +39,7 @@ export const redeemEventAccess = mutation({
       });
     }
 
-    if (eventAccess.campaign.products.length === 0) {
+    if (eventAccess.products.length === 0) {
       throw new ConvexError({
         code: "EVENT_PRODUCTS_REQUIRED",
         message: "Event access campaign products cannot be empty.",

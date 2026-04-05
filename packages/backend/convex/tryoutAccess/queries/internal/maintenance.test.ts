@@ -1,4 +1,5 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import { insertTryoutAccessCampaign } from "@repo/backend/convex/tryoutAccess/test.helpers";
 import {
   createTryoutTestConvex,
   NOW,
@@ -18,7 +19,7 @@ describe("tryoutAccess/queries/internal/maintenance", () => {
         name: "Access Integrity",
         plan: "free",
       });
-      const scheduledCampaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+      const scheduledCampaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "scheduled-overdue-campaign",
         name: "Scheduled Overdue Campaign",
         products: ["snbt"],
@@ -37,7 +38,7 @@ describe("tryoutAccess/queries/internal/maintenance", () => {
         enabled: true,
         label: "Scheduled Overdue Campaign",
       });
-      const activeCampaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+      const activeCampaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "active-overdue-campaign",
         name: "Active Overdue Campaign",
         products: ["snbt"],
@@ -70,11 +71,10 @@ describe("tryoutAccess/queries/internal/maintenance", () => {
         sourceKind: "access-pass",
         accessCampaignId: activeCampaignId,
         accessGrantId: undefined,
-        subscriptionId: undefined,
         startsAt: NOW - 24 * 60 * 60 * 1000,
         endsAt: NOW - 1,
       });
-      await ctx.db.insert("tryoutAccessCampaigns", {
+      await insertTryoutAccessCampaign(ctx, {
         slug: "pending-overdue-competition",
         name: "Pending Overdue Competition",
         products: ["snbt"],

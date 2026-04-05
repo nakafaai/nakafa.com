@@ -2,10 +2,8 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
-import {
-  syncTryoutAccessGrantStatus,
-  syncTryoutSubscriptionEntitlements,
-} from "@repo/backend/convex/tryoutAccess/helpers/access";
+import { syncTryoutAccessGrantStatus } from "@repo/backend/convex/tryoutAccess/helpers/access";
+import { insertTryoutAccessCampaign } from "@repo/backend/convex/tryoutAccess/test.helpers";
 import {
   ATTEMPT_WINDOW_MS,
   createTryoutTestConvex,
@@ -16,7 +14,7 @@ import {
 import { products } from "@repo/backend/convex/utils/polar/products";
 import { describe, expect, it } from "vitest";
 
-/** Inserts one active Pro subscription and syncs its tryout entitlement rows. */
+/** Inserts one active Pro subscription for direct runtime access checks. */
 async function insertActiveProSubscription(
   ctx: MutationCtx,
   userId: Id<"users">
@@ -27,7 +25,7 @@ async function insertActiveProSubscription(
     metadata: {},
     userId,
   });
-  const subscriptionId = await ctx.db.insert("subscriptions", {
+  await ctx.db.insert("subscriptions", {
     id: `subscription-${userId}`,
     customerId: `customer-${userId}`,
     createdAt: new Date(NOW).toISOString(),
@@ -44,18 +42,6 @@ async function insertActiveProSubscription(
     productId: products.pro.id,
     checkoutId: null,
     metadata: {},
-  });
-
-  await syncTryoutSubscriptionEntitlements(ctx.db, {
-    activeSubscriptions: [
-      {
-        _id: subscriptionId,
-        currentPeriodEnd: null,
-        currentPeriodStart: new Date(NOW).toISOString(),
-        productId: products.pro.id,
-      },
-    ],
-    userId,
   });
 }
 
@@ -236,7 +222,7 @@ describe("tryouts/mutations/attempts", () => {
         "competition-concurrent-start"
       );
       const endsAt = currentTime + 6 * 60 * 60 * 1000;
-      const campaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+      const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "competition-concurrent-start",
         name: "Competition Concurrent Start",
         products: ["snbt"],
@@ -384,7 +370,7 @@ describe("tryouts/mutations/attempts", () => {
         "competition-first-attempt"
       );
       const endsAt = currentTime + 6 * 60 * 60 * 1000;
-      const campaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+      const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "competition-first-attempt",
         name: "Competition First Attempt",
         products: ["snbt"],
@@ -460,7 +446,7 @@ describe("tryouts/mutations/attempts", () => {
       });
       const tryout = await insertTryoutSkeleton(ctx, "competition-then-pro");
       const endsAt = currentTime + 6 * 60 * 60 * 1000;
-      const campaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+      const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "competition-then-pro",
         name: "Competition Then Pro",
         products: ["snbt"],
@@ -563,7 +549,7 @@ describe("tryouts/mutations/attempts", () => {
         "competition-attempt-used"
       );
       const endsAt = currentTime + 6 * 60 * 60 * 1000;
-      const campaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+      const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "competition-attempt-used",
         name: "Competition Attempt Used",
         products: ["snbt"],
@@ -650,7 +636,7 @@ describe("tryouts/mutations/attempts", () => {
         "ended-competition-attempt"
       );
       const endedAt = currentTime - 60 * 1000;
-      const campaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+      const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "ended-competition-attempt",
         name: "Ended Competition Attempt",
         products: ["snbt"],
@@ -727,6 +713,72 @@ describe("tryouts/mutations/attempts", () => {
     );
   });
 
+  it("ignores stale event entitlements even when the latest row still has campaign provenance", async () => {
+    const t = createTryoutTestConvex();
+    const state = await t.mutation(async (ctx) => {
+      const currentTime = Date.now();
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "stale-event-entitlement",
+      });
+      await insertTryoutSkeleton(ctx, "stale-event-entitlement");
+      const campaignId = await insertTryoutAccessCampaign(ctx, {
+        slug: "stale-event-entitlement",
+        name: "Stale Event Entitlement",
+        products: ["snbt"],
+        campaignKind: "access-pass",
+        enabled: true,
+        redeemStatus: "active",
+        resultsStatus: "pending",
+        resultsFinalizedAt: null,
+        startsAt: currentTime - 60 * 1000,
+        endsAt: currentTime + 24 * 60 * 60 * 1000,
+        grantDurationDays: 30,
+      });
+      const linkId = await ctx.db.insert("tryoutAccessLinks", {
+        campaignId,
+        code: "stale-event-entitlement",
+        label: "Stale Event Entitlement",
+        enabled: true,
+      });
+      const grantId = await ctx.db.insert("tryoutAccessGrants", {
+        campaignId,
+        linkId,
+        userId: identity.userId,
+        redeemedAt: NOW,
+        endsAt: currentTime + 24 * 60 * 60 * 1000,
+        status: "active",
+      });
+
+      await ctx.db.insert("userTryoutEntitlements", {
+        userId: identity.userId,
+        product: "snbt",
+        sourceKind: "access-pass",
+        accessCampaignId: campaignId,
+        accessGrantId: grantId,
+        startsAt: NOW,
+        endsAt: NOW - 1,
+      });
+
+      return identity;
+    });
+
+    await expect(
+      t
+        .withIdentity({
+          subject: state.authUserId,
+          sessionId: state.sessionId,
+        })
+        .mutation(api.tryouts.mutations.attempts.startTryout, {
+          product: "snbt",
+          locale: "id",
+          tryoutSlug: "stale-event-entitlement",
+        })
+    ).rejects.toThrow(
+      "You need an active event access or Pro subscription to start this tryout."
+    );
+  });
+
   it("uses the longest active access-pass window without shortening the tryout expiry", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
@@ -741,7 +793,7 @@ describe("tryouts/mutations/attempts", () => {
       );
       const shorterEndsAt = currentTime + 30 * 60 * 1000;
       const longerEndsAt = currentTime + 60 * 60 * 1000;
-      const shorterCampaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+      const shorterCampaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "shorter-access-pass-window",
         name: "Shorter Access Pass",
         products: ["snbt"],
@@ -754,7 +806,7 @@ describe("tryouts/mutations/attempts", () => {
         endsAt: currentTime + 24 * 60 * 60 * 1000,
         grantDurationDays: 30,
       });
-      const longerCampaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+      const longerCampaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "longer-access-pass-window",
         name: "Longer Access Pass",
         products: ["snbt"],
@@ -853,7 +905,7 @@ describe("tryouts/mutations/attempts", () => {
 
       for (let index = 0; index < 55; index += 1) {
         const endsAt = currentTime + (index + 1) * 60 * 1000;
-        const campaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+        const campaignId = await insertTryoutAccessCampaign(ctx, {
           slug: `many-access-pass-grants-${index}`,
           name: `Many Access Pass ${index}`,
           products: ["snbt"],

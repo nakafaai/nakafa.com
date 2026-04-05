@@ -1,6 +1,7 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
 import { syncTryoutAccessGrantStatus } from "@repo/backend/convex/tryoutAccess/helpers/access";
+import { insertTryoutAccessCampaign } from "@repo/backend/convex/tryoutAccess/test.helpers";
 import {
   createTryoutTestConvex,
   NOW,
@@ -16,7 +17,7 @@ describe("tryoutAccess/queries", () => {
         suffix: "event-page-active",
       });
       const endsAt = NOW + 24 * 60 * 60 * 1000;
-      const campaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+      const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "event-page-active",
         name: "Event Page Active",
         products: ["snbt"],
@@ -87,7 +88,7 @@ describe("tryoutAccess/queries", () => {
         suffix: "event-page-used",
       });
       const endsAt = NOW - 24 * 60 * 60 * 1000;
-      const campaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+      const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "event-page-used",
         name: "Event Page Used",
         products: ["snbt"],
@@ -158,7 +159,7 @@ describe("tryoutAccess/queries", () => {
         suffix: "event-page-ready",
       });
 
-      await ctx.db.insert("tryoutAccessCampaigns", {
+      await insertTryoutAccessCampaign(ctx, {
         slug: "event-page-ready",
         name: "Event Page Ready",
         products: ["snbt"],

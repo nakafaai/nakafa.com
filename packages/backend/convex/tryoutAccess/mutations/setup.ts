@@ -7,14 +7,11 @@ import {
   getTryoutAccessCampaignRedeemStatus,
   normalizeTryoutAccessCode,
 } from "@repo/backend/convex/tryoutAccess/helpers/access";
-import {
-  tryoutAccessCampaignKindValidator,
-  type tryoutAccessCampaignValidator,
-} from "@repo/backend/convex/tryoutAccess/schema";
+import { tryoutAccessCampaignKindValidator } from "@repo/backend/convex/tryoutAccess/schema";
 import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
 import { ConvexError, type Infer, v } from "convex/values";
 
-const COMPETITION_CAMPAIGN_CHECK_PAGE_SIZE = 50;
+const COMPETITION_CAMPAIGN_CHECK_LIMIT = 3;
 
 const tryoutAccessCampaignInputValidator = v.object({
   slug: v.string(),
@@ -96,29 +93,24 @@ async function assertNoOverlappingCompetitionCampaign(
     startsAt: number;
   }
 ) {
-  let cursor: string | null = null;
-
-  while (true) {
-    const competitionPage = await ctx.db
-      .query("tryoutAccessCampaigns")
-      .withIndex("by_campaignKind_and_startsAt", (q) =>
-        q.eq("campaignKind", "competition").lt("startsAt", endsAt)
+  for (const product of products) {
+    const candidates = await ctx.db
+      .query("tryoutAccessCampaignProducts")
+      .withIndex("by_product_and_campaignKind_and_startsAt", (q) =>
+        q
+          .eq("product", product)
+          .eq("campaignKind", "competition")
+          .lt("startsAt", endsAt)
       )
-      .paginate({
-        cursor,
-        numItems: COMPETITION_CAMPAIGN_CHECK_PAGE_SIZE,
-      });
+      .order("desc")
+      .take(COMPETITION_CAMPAIGN_CHECK_LIMIT);
 
-    for (const campaign of competitionPage.page) {
-      if (campaign._id === existingCampaignId) {
+    for (const candidate of candidates) {
+      if (candidate.campaignId === existingCampaignId) {
         continue;
       }
 
-      if (campaign.endsAt <= startsAt) {
-        continue;
-      }
-
-      if (!campaign.products.some((product) => products.includes(product))) {
+      if (candidate.endsAt <= startsAt) {
         continue;
       }
 
@@ -128,51 +120,157 @@ async function assertNoOverlappingCompetitionCampaign(
           "Competition campaigns cannot overlap for the same tryout product.",
       });
     }
+  }
+}
 
-    if (competitionPage.isDone) {
-      return;
+/** Returns whether two campaign product sets are identical. */
+function haveSameCampaignProducts({
+  existingProducts,
+  nextProducts,
+}: {
+  existingProducts: Infer<typeof tryoutProductValidator>[];
+  nextProducts: Infer<typeof tryoutProductValidator>[];
+}) {
+  if (existingProducts.length !== nextProducts.length) {
+    return false;
+  }
+
+  return existingProducts.every(
+    (product, index) => nextProducts[index] === product
+  );
+}
+
+/** Synchronizes one campaign's explicit product membership rows. */
+async function syncTryoutAccessCampaignProducts(
+  ctx: Pick<MutationCtx, "db">,
+  {
+    campaignId,
+    campaignKind,
+    endsAt,
+    products,
+    startsAt,
+  }: {
+    campaignId: Doc<"tryoutAccessCampaigns">["_id"];
+    campaignKind: Infer<typeof tryoutAccessCampaignKindValidator>;
+    endsAt: number;
+    products: Infer<typeof tryoutProductValidator>[];
+    startsAt: number;
+  }
+) {
+  const existingRows = await ctx.db
+    .query("tryoutAccessCampaignProducts")
+    .withIndex("by_campaignId", (q) => q.eq("campaignId", campaignId))
+    .collect();
+  const rowsByProduct = new Map<
+    (typeof products)[number],
+    typeof existingRows
+  >();
+
+  for (const row of existingRows) {
+    const rowsForProduct = rowsByProduct.get(row.product);
+
+    if (rowsForProduct) {
+      rowsForProduct.push(row);
+      continue;
     }
 
-    cursor = competitionPage.continueCursor;
+    rowsByProduct.set(row.product, [row]);
+  }
+
+  for (const product of products) {
+    const existingRowsForProduct = rowsByProduct.get(product) ?? [];
+    const currentRow = existingRowsForProduct[0] ?? null;
+
+    for (const duplicateRow of existingRowsForProduct.slice(1)) {
+      await ctx.db.delete("tryoutAccessCampaignProducts", duplicateRow._id);
+    }
+
+    rowsByProduct.delete(product);
+
+    if (!currentRow) {
+      await ctx.db.insert("tryoutAccessCampaignProducts", {
+        campaignId,
+        product,
+        campaignKind,
+        startsAt,
+        endsAt,
+      });
+      continue;
+    }
+
+    if (
+      currentRow.campaignId === campaignId &&
+      currentRow.product === product &&
+      currentRow.campaignKind === campaignKind &&
+      currentRow.startsAt === startsAt &&
+      currentRow.endsAt === endsAt
+    ) {
+      continue;
+    }
+
+    await ctx.db.patch("tryoutAccessCampaignProducts", currentRow._id, {
+      campaignId,
+      product,
+      campaignKind,
+      startsAt,
+      endsAt,
+    });
+  }
+
+  for (const staleRows of rowsByProduct.values()) {
+    for (const staleRow of staleRows) {
+      await ctx.db.delete("tryoutAccessCampaignProducts", staleRow._id);
+    }
   }
 }
 
 /** Returns whether one campaign rewrite would change its timed access policy. */
 function hasCampaignPolicyChange({
   existingCampaign,
+  existingProducts,
   nextCampaign,
+  nextProducts,
 }: {
   existingCampaign: Pick<
     Doc<"tryoutAccessCampaigns">,
-    "endsAt" | "grantDurationDays" | "products" | "startsAt"
+    "endsAt" | "grantDurationDays" | "startsAt"
   >;
+  existingProducts: Infer<typeof tryoutProductValidator>[];
   nextCampaign: Pick<
-    Infer<typeof tryoutAccessCampaignValidator>,
-    "endsAt" | "grantDurationDays" | "products" | "startsAt"
+    Infer<typeof tryoutAccessCampaignInputValidator>,
+    "endsAt" | "grantDurationDays" | "startsAt"
   >;
+  nextProducts: Infer<typeof tryoutProductValidator>[];
 }) {
   return (
     existingCampaign.startsAt !== nextCampaign.startsAt ||
     existingCampaign.endsAt !== nextCampaign.endsAt ||
     existingCampaign.grantDurationDays !== nextCampaign.grantDurationDays ||
-    existingCampaign.products.length !== nextCampaign.products.length ||
-    existingCampaign.products.some(
-      (product, index) => nextCampaign.products[index] !== product
-    )
+    !haveSameCampaignProducts({
+      existingProducts,
+      nextProducts,
+    })
   );
 }
 
 /** Rejects reusing an old finished competition lifecycle for a new window. */
 function assertCampaignLifecycleCanBeReused({
   existingCampaign,
+  existingProducts,
   nextCampaign,
+  nextProducts,
 }: {
   existingCampaign: Pick<Doc<"tryoutAccessCampaigns">, "resultsStatus"> &
     Pick<
       Doc<"tryoutAccessCampaigns">,
-      "endsAt" | "grantDurationDays" | "products" | "startsAt"
+      "endsAt" | "grantDurationDays" | "startsAt"
     >;
-  nextCampaign: Infer<typeof tryoutAccessCampaignValidator>;
+  existingProducts: Infer<typeof tryoutProductValidator>[];
+  nextCampaign: Pick<
+    Infer<typeof tryoutAccessCampaignInputValidator>,
+    "endsAt" | "grantDurationDays" | "startsAt"
+  >;
+  nextProducts: Infer<typeof tryoutProductValidator>[];
 }) {
   if (existingCampaign.resultsStatus === "pending") {
     return;
@@ -181,7 +279,9 @@ function assertCampaignLifecycleCanBeReused({
   if (
     !hasCampaignPolicyChange({
       existingCampaign,
+      existingProducts,
       nextCampaign,
+      nextProducts,
     })
   ) {
     return;
@@ -200,13 +300,20 @@ async function assertCampaignCanBeUpdated(
   {
     campaignKind,
     existingCampaign,
+    existingProducts,
     existingLink,
     nextCampaign,
+    nextProducts,
   }: {
     campaignKind: Infer<typeof tryoutAccessCampaignKindValidator>;
     existingCampaign: Doc<"tryoutAccessCampaigns">;
+    existingProducts: Infer<typeof tryoutProductValidator>[];
     existingLink: Doc<"tryoutAccessLinks">;
-    nextCampaign: Infer<typeof tryoutAccessCampaignValidator>;
+    nextCampaign: Pick<
+      Infer<typeof tryoutAccessCampaignInputValidator>,
+      "endsAt" | "grantDurationDays" | "startsAt"
+    >;
+    nextProducts: Infer<typeof tryoutProductValidator>[];
   }
 ) {
   if (existingLink.campaignId !== existingCampaign._id) {
@@ -230,13 +337,17 @@ async function assertCampaignCanBeUpdated(
     .first();
   const policyChanged = hasCampaignPolicyChange({
     existingCampaign,
+    existingProducts,
     nextCampaign,
+    nextProducts,
   });
 
   if (!existingGrant) {
     assertCampaignLifecycleCanBeReused({
       existingCampaign,
+      existingProducts,
       nextCampaign,
+      nextProducts,
     });
 
     return;
@@ -314,7 +425,7 @@ export const upsertCampaignAndLink = internalMutation({
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    const uniqueProducts = Array.from(new Set(args.campaign.products));
+    const uniqueProducts = Array.from(new Set(args.campaign.products)).sort();
     assertValidCampaignInput(args.campaign, uniqueProducts);
 
     const code = normalizeTryoutAccessCode(args.link.code);
@@ -334,13 +445,20 @@ export const upsertCampaignAndLink = internalMutation({
       .query("tryoutAccessLinks")
       .withIndex("by_code", (q) => q.eq("code", code))
       .unique();
+    const existingProducts = existingCampaign
+      ? await ctx.db
+          .query("tryoutAccessCampaignProducts")
+          .withIndex("by_campaignId", (q) =>
+            q.eq("campaignId", existingCampaign._id)
+          )
+          .collect()
+      : [];
     const nextCampaign = {
       campaignKind: args.campaign.campaignKind,
       enabled: args.campaign.enabled,
       endsAt: args.campaign.endsAt,
       grantDurationDays: args.campaign.grantDurationDays,
       name: args.campaign.name,
-      products: uniqueProducts,
       resultsFinalizedAt: existingCampaign?.resultsFinalizedAt ?? null,
       resultsStatus: existingCampaign?.resultsStatus ?? "pending",
       redeemStatus: getTryoutAccessCampaignRedeemStatus(args.campaign, now),
@@ -368,11 +486,13 @@ export const upsertCampaignAndLink = internalMutation({
       await assertCampaignCanBeUpdated(ctx, {
         campaignKind: args.campaign.campaignKind,
         existingCampaign,
+        existingProducts: existingProducts.map((row) => row.product),
         existingLink,
         nextCampaign,
+        nextProducts: uniqueProducts,
       });
 
-      await ctx.db.patch(
+      await ctx.db.replace(
         "tryoutAccessCampaigns",
         existingCampaign._id,
         nextCampaign
@@ -382,6 +502,13 @@ export const upsertCampaignAndLink = internalMutation({
         code,
         enabled: args.link.enabled,
         label: args.link.label,
+      });
+      await syncTryoutAccessCampaignProducts(ctx, {
+        campaignId: existingCampaign._id,
+        campaignKind: args.campaign.campaignKind,
+        endsAt: args.campaign.endsAt,
+        products: uniqueProducts,
+        startsAt: args.campaign.startsAt,
       });
 
       await scheduleCampaignStateTransitions(ctx, {
@@ -406,6 +533,13 @@ export const upsertCampaignAndLink = internalMutation({
       code,
       enabled: args.link.enabled,
       label: args.link.label,
+    });
+    await syncTryoutAccessCampaignProducts(ctx, {
+      campaignId,
+      campaignKind: args.campaign.campaignKind,
+      endsAt: args.campaign.endsAt,
+      products: uniqueProducts,
+      startsAt: args.campaign.startsAt,
     });
 
     await scheduleCampaignStateTransitions(ctx, {

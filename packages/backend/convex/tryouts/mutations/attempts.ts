@@ -5,7 +5,10 @@ import { getLatestScaleVersionForTryout } from "@repo/backend/convex/irt/scales/
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { resolveTryoutAccessEntitlements } from "@repo/backend/convex/tryoutAccess/helpers/access";
+import {
+  getActiveTryoutSubscriptionForUserProduct,
+  resolveActiveTryoutEventEntitlements,
+} from "@repo/backend/convex/tryoutAccess/helpers/access";
 import {
   requireActiveTryoutAttemptAfterExpirySync,
   requireOwnedTryoutAttempt,
@@ -73,14 +76,22 @@ export const startTryout = mutation({
       return null;
     }
 
-    const accessEntitlements = await resolveTryoutAccessEntitlements(ctx.db, {
-      product: tryout.product,
-      userId,
-    });
+    const [eventEntitlements, activeSubscription] = await Promise.all([
+      resolveActiveTryoutEventEntitlements(ctx.db, {
+        now,
+        product: tryout.product,
+        userId,
+      }),
+      getActiveTryoutSubscriptionForUserProduct(ctx.db, {
+        now,
+        product: tryout.product,
+        userId,
+      }),
+    ]);
     const activeCompetitionEntitlement =
-      accessEntitlements.competitionEntitlement?.accessCampaignId &&
-      accessEntitlements.competitionEntitlement.accessGrantId
-        ? accessEntitlements.competitionEntitlement
+      eventEntitlements.competitionEntitlement?.accessCampaignId &&
+      eventEntitlements.competitionEntitlement.accessGrantId
+        ? eventEntitlements.competitionEntitlement
         : null;
     const activeCompetitionCampaignId =
       activeCompetitionEntitlement?.accessCampaignId ?? null;
@@ -115,9 +126,9 @@ export const startTryout = mutation({
           }
         : null;
     const accessPassEntitlement =
-      accessEntitlements.accessPassEntitlement?.accessCampaignId &&
-      accessEntitlements.accessPassEntitlement.accessGrantId
-        ? accessEntitlements.accessPassEntitlement
+      eventEntitlements.accessPassEntitlement?.accessCampaignId &&
+      eventEntitlements.accessPassEntitlement.accessGrantId
+        ? eventEntitlements.accessPassEntitlement
         : null;
     const accessPassCampaignId =
       accessPassEntitlement?.accessCampaignId ?? null;
@@ -134,7 +145,7 @@ export const startTryout = mutation({
             countsForCompetition: false,
           }
         : null;
-    const subscriptionStartSource = accessEntitlements.subscriptionEntitlement
+    const subscriptionStartSource = activeSubscription
       ? {
           accessKind: "subscription" as const,
           countsForCompetition: false,

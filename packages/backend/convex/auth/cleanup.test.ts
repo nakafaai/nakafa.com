@@ -1,5 +1,6 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
+import { insertTryoutAccessCampaign } from "@repo/backend/convex/tryoutAccess/test.helpers";
 import {
   createTryoutTestConvex,
   insertCompletedTryoutAttempt,
@@ -29,7 +30,7 @@ describe("auth/cleanup", () => {
           tryoutId,
           userId: identity.userId,
         });
-      const campaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+      const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug,
         name: "Cleanup Runtime Campaign",
         products: ["snbt"],
@@ -98,7 +99,7 @@ describe("auth/cleanup", () => {
           .collect(),
         entitlements: await ctx.db
           .query("userTryoutEntitlements")
-          .withIndex("by_userId_and_sourceKind_and_subscriptionId", (q) =>
+          .withIndex("by_userId_and_product_and_sourceKind_and_endsAt", (q) =>
             q.eq("userId", state.userId)
           )
           .collect(),

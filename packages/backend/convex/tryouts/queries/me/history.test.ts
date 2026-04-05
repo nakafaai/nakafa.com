@@ -1,6 +1,7 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
+import { insertTryoutAccessCampaign } from "@repo/backend/convex/tryoutAccess/test.helpers";
 import {
   ATTEMPT_WINDOW_MS,
   createTryoutTestConvex,
@@ -19,7 +20,7 @@ describe("tryouts/queries/me/history", () => {
         suffix: "attempt-history",
       });
       const tryout = await insertTryoutSkeleton(ctx, "attempt-history");
-      const campaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+      const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "attempt-history",
         name: "Attempt History",
         products: ["snbt"],

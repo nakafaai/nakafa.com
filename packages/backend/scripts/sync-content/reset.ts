@@ -231,9 +231,7 @@ export const reset = async (
   log(`  Exercise Sets:         ${counts.exerciseSets}`);
   log(`  Tryouts:               ${counts.tryouts}`);
   log(`  Tryout Catalog Meta:   ${counts.tryoutCatalogMeta}`);
-  log(
-    `  User Entitlements:     ${counts.userTryoutEntitlements} (preserved infra)`
-  );
+  log(`  User Entitlements:     ${counts.userTryoutEntitlements}`);
   log(`  Tryout Part Sets:      ${counts.tryoutPartSets}`);
   log(`  Tryout Attempts:       ${counts.tryoutAttempts}`);
   log(`  Tryout Part Attempts:  ${counts.tryoutPartAttempts}`);

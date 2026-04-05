@@ -21,8 +21,9 @@ queries, mutations, IRT publication, and leaderboard flow stay generic.
   (stable public identity for routes)
 - `tryoutAttempts` stores per-user simulation lifecycle and final IRT result
 - `tryoutPartAttempts` links one runtime part to one shared `exerciseAttempt`
-- `userTryoutEntitlements` stores active access rows per user and product across
-  `competition`, `access-pass`, and `subscription`
+- `tryoutAccessCampaignProducts` stores explicit campaign-to-product scope rows
+- `userTryoutEntitlements` stores active event access rows per user and product
+  for `competition` and `access-pass`
 - `tryoutLeaderboardEntries` stores the current best official result per user
 - `userTryoutStats` stores leaderboard aggregates per product namespace
 
@@ -50,11 +51,12 @@ That policy owns:
 - Tryout start reads go through exact user-scoped entitlements and one indexed
   `tryoutAttempts` lookup for competition usage instead of projection tables or
   broad scans inside the mutation
-- Start authorization trusts the materialized `userTryoutEntitlements` rows;
-  exact scheduled transitions and overdue repair keep those rows authoritative
+- Event access trusts the materialized `userTryoutEntitlements` rows filtered by
+  active `endsAt` windows, while Pro access reads the canonical active
+  subscription directly from `customers` + `subscriptions`
 - Concurrent `startTryout` calls rely on Convex serializable OCC over the real
   business reads: latest indexed `tryoutAttempts` rows and active indexed
-  entitlement rows
+  event entitlements plus active subscription source-of-truth rows
 - Generic ranking still uses aggregate components for O(log n) rank lookups
 - Competition campaign windows are immutable after the first redemption so the
   runtime never needs to repair old attempts after ops edits campaign policy

@@ -19,6 +19,10 @@ const countTableSpecs: Array<{
   { field: "exerciseAttempts", tableName: "exerciseAttempts" },
   { field: "exerciseAnswers", tableName: "exerciseAnswers" },
   { field: "tryoutAccessCampaigns", tableName: "tryoutAccessCampaigns" },
+  {
+    field: "tryoutAccessCampaignProducts",
+    tableName: "tryoutAccessCampaignProducts",
+  },
   { field: "tryoutAccessLinks", tableName: "tryoutAccessLinks" },
   { field: "tryoutAccessGrants", tableName: "tryoutAccessGrants" },
   { field: "tryouts", tableName: "tryouts" },

@@ -1,5 +1,6 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
+import { insertTryoutAccessCampaign } from "@repo/backend/convex/tryoutAccess/test.helpers";
 import {
   ATTEMPT_WINDOW_MS,
   createTryoutTestConvex,
@@ -633,7 +634,7 @@ describe("tryouts/queries/me/attempt", () => {
         suffix: "final-event-status",
       });
       const tryout = await insertTryoutSkeleton(ctx, "final-event-status");
-      const campaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+      const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "final-event-status",
         name: "Final Event Status",
         products: ["snbt"],

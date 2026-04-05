@@ -12,6 +12,7 @@ const countableTableNameValidator = literals(
   "exerciseAttempts",
   "exerciseAnswers",
   "tryoutAccessCampaigns",
+  "tryoutAccessCampaignProducts",
   "tryoutAccessLinks",
   "tryoutAccessGrants",
   "tryouts",

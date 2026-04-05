@@ -122,9 +122,13 @@ psychometric internal.
 
 ### Projection Akses
 
+- `tryoutAccessCampaignProducts`
+  - relationship table eksplisit antara campaign dan product
+  - dipakai supaya overlap validation dan access reads tetap selective dan
+    bounded
 - `userTryoutEntitlements`
-  - entitlement aktif per `{user, product, source}`
-  - dipakai `startTryout` supaya read tetap exact dan bounded
+  - entitlement aktif per `{user, product, source}` untuk source event saja
+  - dipakai `startTryout` supaya event access read tetap exact dan bounded
 - penggunaan competition dibaca langsung dari `tryoutAttempts`
   - exact read via index `{user, tryout, accessCampaignId, startedAt}`
   - tidak memakai projection claim terpisah
@@ -160,15 +164,19 @@ psychometric internal.
 - backend membaca satu entitlement aktif per source:
   - `competition`
   - `access-pass`
-  - Pro subscription
-- runtime tidak menghitung ulang access aktif dari clock; scheduler exact dan
-  repair bounded menjaga projection entitlement tetap authoritative
+- backend membaca Pro subscription langsung dari source of truth:
+  - `customers`
+  - `subscriptions`
+- runtime tidak mengandalkan latest entitlement row saja; event access difilter
+  dengan `endsAt` aktif di mutation, sementara Pro access dibaca langsung dari
+  subscription canonical yang masih aktif
 - kalau ada entitlement `competition`, backend membaca satu attempt indexed untuk
   `{user, tryout, campaign}`
 - concurrency `startTryout` mengandalkan read business state yang memang nyata:
   - latest attempt via index `{user, tryout, startedAt}`
   - competition usage via index `{user, tryout, campaign, startedAt}`
-  - entitlement aktif via index `{user, product, sourceKind, endsAt}`
+  - event entitlement aktif via index `{user, product, sourceKind, endsAt}`
+  - Pro subscription aktif via `customers` + `subscriptions`
 - Convex OCC yang serializable me-retry mutation kalau salah satu read itu
   berubah oleh start paralel lain, jadi runtime tidak butuh owner row sintetik
 - backend memilih access source yang sah sesuai policy produk
@@ -204,9 +212,11 @@ flowchart TD
     E --> G
     G --> H[User memilih package]
     H --> I[startTryout]
-    I --> J[resolveTryoutAccessEntitlements]
+    I --> J[resolveActiveTryoutEventEntitlements]
+    I --> J2[getActiveTryoutSubscriptionForUserProduct]
     I --> K[get latest frozen scale]
     J --> L[tryoutAttempts]
+    J2 --> L
     K --> L
     L --> M[startPart / completePart]
     M --> N[Result queries]

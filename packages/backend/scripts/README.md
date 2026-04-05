@@ -55,7 +55,7 @@ npx convex deploy
 | `sync:verify` | Verify database matches filesystem |
 | `sync:clean` | Find and remove stale content |
 | `sync:reset` | Delete ALL synced content (requires --force) |
-| `sync:reset:tryouts` | Delete tryout content/read models, event access rows, and IRT scale data, then run a full sync |
+| `sync:reset:tryouts` | Delete tryout content/read models, access rows, entitlements, and IRT scale data, then run a full sync |
 
 ### Production
 
@@ -66,7 +66,7 @@ npx convex deploy
 | `sync:prod:verify` | Verify production database |
 | `sync:prod:clean` | Clean stale content in production |
 | `sync:prod:reset` | Delete ALL content in production (requires --force) |
-| `sync:prod:reset:tryouts` | Delete tryout content/read models, event access rows, and IRT scale data in production, then run a full sync |
+| `sync:prod:reset:tryouts` | Delete tryout content/read models, access rows, entitlements, and IRT scale data in production, then run a full sync |
 
 ### Maintenance
 
@@ -153,7 +153,7 @@ pnpm --filter @repo/backend sync:prod:reset --force
 # Preview the tryout/IRT wipe
 pnpm --filter @repo/backend sync:reset:tryouts
 
-# Actually delete tryout definitions, event access rows, and IRT scale data
+# Actually delete tryout definitions, access rows, entitlements, and IRT scale data
 pnpm --filter @repo/backend sync:reset:tryouts --force
 
 # Then rebuild the deleted tables with a full sync

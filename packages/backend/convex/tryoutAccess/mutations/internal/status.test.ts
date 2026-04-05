@@ -1,6 +1,7 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
 import { syncTryoutAccessGrantStatus } from "@repo/backend/convex/tryoutAccess/helpers/access";
+import { insertTryoutAccessCampaign } from "@repo/backend/convex/tryoutAccess/test.helpers";
 import {
   createTryoutTestConvex,
   NOW,
@@ -18,7 +19,7 @@ describe("tryoutAccess/mutations/internal/status", () => {
       });
       const campaignEndsAt = currentTime + 24 * 60 * 60 * 1000;
       const oldGrantEndsAt = currentTime + 90 * 24 * 60 * 60 * 1000;
-      const campaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+      const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "sync-campaign-grants",
         name: "Sync Campaign Grants",
         products: ["snbt"],
@@ -88,7 +89,7 @@ describe("tryoutAccess/mutations/internal/status", () => {
         suffix: "sync-deduplicate-grant-entitlements",
       });
       const endsAt = NOW + 24 * 60 * 60 * 1000;
-      const campaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+      const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "sync-deduplicate-grant-entitlements",
         name: "Sync Deduplicate Grant Entitlements",
         products: ["snbt"],
@@ -180,7 +181,7 @@ describe("tryoutAccess/mutations/internal/status", () => {
 
     await t.mutation(async (ctx) => {
       for (let index = 0; index <= 100; index += 1) {
-        await ctx.db.insert("tryoutAccessCampaigns", {
+        await insertTryoutAccessCampaign(ctx, {
           slug: `pending-competition-${index}`,
           name: `Pending Competition ${index}`,
           products: ["snbt"],
