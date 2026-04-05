@@ -16,7 +16,6 @@ import {
   reuseExistingPartAttempt,
   reuseExistingTryoutAttempt,
 } from "@repo/backend/convex/tryouts/helpers/attemptLifecycle";
-import { touchUserTryoutControl } from "@repo/backend/convex/tryouts/helpers/control";
 import { finalizeTryoutAttempt } from "@repo/backend/convex/tryouts/helpers/finalize/attempt";
 import { finalizeTryoutPartAttempt } from "@repo/backend/convex/tryouts/helpers/finalize/part";
 import {
@@ -44,10 +43,6 @@ export const startTryout = mutation({
     const userId = appUser._id;
     const now = Date.now();
     const tryout = await loadStartableTryout(ctx, args);
-    await touchUserTryoutControl(ctx.db, {
-      updatedAt: now,
-      userId,
-    });
 
     const [scaleVersion, existingAttempt] = await Promise.all([
       getLatestScaleVersionForTryout(ctx.db, tryout._id),

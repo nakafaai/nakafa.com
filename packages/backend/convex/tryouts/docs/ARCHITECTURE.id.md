@@ -119,12 +119,6 @@ psychometric internal.
   - lifecycle attempt level try out
 - `tryoutPartAttempts`
   - lifecycle attempt level part yang menunjuk ke `exerciseAttempts`
-- `userTryoutControls`
-  - owner row per user untuk men-serialize `startTryout` lewat OCC
-  - diverifikasi dan direpair lewat maintenance query/mutation bounded, bukan
-    lewat fallback field tersembunyi di dokumen `users`
-  - write path runtime mengasumsikan row ini sudah valid; kalau hilang atau
-    duplikat, mutation gagal jelas sampai operator menjalankan repair
 
 ### Projection Akses
 
@@ -169,10 +163,14 @@ psychometric internal.
   - Pro subscription
 - runtime tidak menghitung ulang access aktif dari clock; scheduler exact dan
   repair bounded menjaga projection entitlement tetap authoritative
-- backend men-touch tepat satu `userTryoutControls` row yang sudah harus ada
-  sebagai batas OCC khusus `startTryout`
 - kalau ada entitlement `competition`, backend membaca satu attempt indexed untuk
   `{user, tryout, campaign}`
+- concurrency `startTryout` mengandalkan read business state yang memang nyata:
+  - latest attempt via index `{user, tryout, startedAt}`
+  - competition usage via index `{user, tryout, campaign, startedAt}`
+  - entitlement aktif via index `{user, product, sourceKind, endsAt}`
+- Convex OCC yang serializable me-retry mutation kalau salah satu read itu
+  berubah oleh start paralel lain, jadi runtime tidak butuh owner row sintetik
 - backend memilih access source yang sah sesuai policy produk
 - backend mengikat attempt ke frozen scale terbaru yang aman dipakai
 - backend menyimpan snapshot part dan provenance akses

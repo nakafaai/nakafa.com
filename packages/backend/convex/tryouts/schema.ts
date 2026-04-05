@@ -148,11 +148,6 @@ const tables = {
       "startedAt",
     ]),
 
-  userTryoutControls: defineTable({
-    userId: v.id("users"),
-    updatedAt: v.number(),
-  }).index("by_userId", ["userId"]),
-
   tryoutPartAttempts: defineTable({
     tryoutAttemptId: v.id("tryoutAttempts"),
     partIndex: v.number(),

@@ -6,85 +6,9 @@ import {
   insertTryoutSkeleton,
   NOW,
 } from "@repo/backend/convex/tryouts/test.helpers";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 describe("auth/cleanup", () => {
-  it("deletes the user tryout control row with the app user", async () => {
-    const t = createTryoutTestConvex();
-    const identity = await t.mutation(async (ctx) => {
-      return await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "auth-cleanup-control",
-      });
-    });
-
-    await t.mutation(async (ctx) => {
-      await ctx.db.insert("userTryoutControls", {
-        updatedAt: NOW + 1,
-        userId: identity.userId,
-      });
-    });
-
-    await t.mutation(internal.auth.cleanup.cleanupDeletedUser, {
-      userId: identity.userId,
-    });
-
-    const result = await t.query(async (ctx) => {
-      return {
-        controls: await ctx.db
-          .query("userTryoutControls")
-          .withIndex("by_userId", (q) => q.eq("userId", identity.userId))
-          .collect(),
-        user: await ctx.db.get("users", identity.userId),
-      };
-    });
-
-    expect(result.user).toBeNull();
-    expect(result.controls).toHaveLength(0);
-  });
-
-  it("deletes duplicate control rows across scheduled cleanup retries", async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date(NOW));
-
-    const t = createTryoutTestConvex();
-    const identity = await t.mutation(async (ctx) => {
-      return await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "auth-cleanup-duplicate-controls",
-      });
-    });
-
-    await t.mutation(async (ctx) => {
-      for (let index = 0; index < 26; index += 1) {
-        await ctx.db.insert("userTryoutControls", {
-          updatedAt: NOW + index + 1,
-          userId: identity.userId,
-        });
-      }
-    });
-
-    await t.mutation(internal.auth.cleanup.cleanupDeletedUser, {
-      userId: identity.userId,
-    });
-    await t.finishAllScheduledFunctions(vi.runAllTimers);
-
-    const result = await t.query(async (ctx) => {
-      return {
-        controls: await ctx.db
-          .query("userTryoutControls")
-          .withIndex("by_userId", (q) => q.eq("userId", identity.userId))
-          .collect(),
-        user: await ctx.db.get("users", identity.userId),
-      };
-    });
-
-    expect(result.controls).toHaveLength(0);
-    expect(result.user).toBeNull();
-
-    vi.useRealTimers();
-  });
-
   it("deletes tryout runtime and access rows with the app user", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
@@ -172,10 +96,6 @@ describe("auth/cleanup", () => {
             q.eq("attemptId", state.setAttemptId)
           )
           .collect(),
-        control: await ctx.db
-          .query("userTryoutControls")
-          .withIndex("by_userId", (q) => q.eq("userId", state.userId))
-          .unique(),
         entitlements: await ctx.db
           .query("userTryoutEntitlements")
           .withIndex("by_userId_and_sourceKind_and_subscriptionId", (q) =>
@@ -202,7 +122,6 @@ describe("auth/cleanup", () => {
     });
 
     expect(result.user).toBeNull();
-    expect(result.control).toBeNull();
     expect(result.tryoutAttempt).toBeNull();
     expect(result.tryoutPartAttempts).toHaveLength(0);
     expect(result.exerciseAttempt).toBeNull();

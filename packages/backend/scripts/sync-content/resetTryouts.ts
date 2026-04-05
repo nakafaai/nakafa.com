@@ -184,9 +184,6 @@ export const resetTryouts = async (
   log(
     `  User Entitlements:     ${counts.userTryoutEntitlements} (preserved infra)`
   );
-  log(
-    `  User Tryout Controls:  ${counts.userTryoutControls} (preserved infra)`
-  );
   log(`  Tryout Part Sets:      ${counts.tryoutPartSets}`);
   log(`  Tryout Attempts:       ${counts.tryoutAttempts}`);
   log(`  Tryout Part Attempts:  ${counts.tryoutPartAttempts}`);

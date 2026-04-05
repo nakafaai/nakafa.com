@@ -72,10 +72,6 @@ npx convex deploy
 
 | Command | Description |
 |---------|-------------|
-| `tryout:verify:controls` | Verify `userTryoutControls` integrity in development |
-| `tryout:repair:controls` | Repair missing or duplicate `userTryoutControls` rows in development |
-| `tryout:verify:controls:prod` | Verify `userTryoutControls` integrity in production |
-| `tryout:repair:controls:prod` | Repair missing or duplicate `userTryoutControls` rows in production |
 | `tryout:verify:access` | Verify campaign/grant/entitlement time-state integrity in development |
 | `tryout:repair:access` | Repair overdue campaign/grant states and overdue competition finalization in development |
 | `tryout:verify:access:prod` | Verify campaign/grant/entitlement time-state integrity in production |
@@ -261,7 +257,6 @@ Content hash unchanged. This is normal for `sync:incremental`.
 | Script | Purpose |
 |--------|---------|
 | `sync-content.ts` | Sync MDX content to Convex database |
-| `tryout/controls.ts` | Verify and repair `userTryoutControls` integrity |
 | `tryout/access.ts` | Verify campaign/grant time-state integrity |
 | `irt-verify.ts` | Verify IRT cache and scale integrity |
 
@@ -272,7 +267,6 @@ Content hash unchanged. This is normal for `sync:incremental`.
 | `sync-content.ts` | Main sync script |
 | `sync-content/` | Shared sync-content helpers, validation, and workflows |
 | `tryout/` | Tryout-specific maintenance scripts split by concern |
-| `tryout/controls.ts` | Dev/prod verify and repair loop for `userTryoutControls` |
 | `tryout/access.ts` | Dev/prod integrity verification for campaigns and grants |
 | `irt-verify.ts` | Dev/prod integrity verification for IRT cache and scale state |
 | `../convex/contentSync/mutations/` | Convex sync mutations split by concern |

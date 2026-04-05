@@ -16,16 +16,6 @@ describe("tryoutAccess/mutations/internal/status", () => {
         now: NOW,
         suffix: "sync-campaign-grants",
       });
-      const control = await ctx.db
-        .query("userTryoutControls")
-        .withIndex("by_userId", (q) => q.eq("userId", identity.userId))
-        .unique();
-
-      if (!control) {
-        throw new Error("expected tryout control to exist");
-      }
-
-      await ctx.db.delete("userTryoutControls", control._id);
       const campaignEndsAt = currentTime + 24 * 60 * 60 * 1000;
       const oldGrantEndsAt = currentTime + 90 * 24 * 60 * 60 * 1000;
       const campaignId = await ctx.db.insert("tryoutAccessCampaigns", {
