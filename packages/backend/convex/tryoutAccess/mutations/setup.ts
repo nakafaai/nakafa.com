@@ -11,8 +11,6 @@ import { tryoutAccessCampaignKindValidator } from "@repo/backend/convex/tryoutAc
 import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
 import { ConvexError, type Infer, v } from "convex/values";
 
-const COMPETITION_CAMPAIGN_CHECK_LIMIT = 3;
-
 const tryoutAccessCampaignInputValidator = v.object({
   slug: v.string(),
   name: v.string(),
@@ -78,6 +76,48 @@ function assertValidCampaignInput(
   }
 }
 
+/**
+ * Loads the newest competition campaign-product row whose window starts before a
+ * candidate campaign ends.
+ *
+ * Because competition windows for one product are kept non-overlapping, the
+ * newest such predecessor is the only other row that can overlap the candidate
+ * window.
+ */
+async function getLatestOverlappingCompetitionCandidate(
+  ctx: Pick<MutationCtx, "db">,
+  {
+    endsAt,
+    existingCampaignId,
+    product,
+  }: {
+    endsAt: number;
+    existingCampaignId: string | undefined;
+    product: Infer<typeof tryoutProductValidator>;
+  }
+) {
+  const candidates = await ctx.db
+    .query("tryoutAccessCampaignProducts")
+    .withIndex("by_product_and_campaignKind_and_startsAt", (q) =>
+      q
+        .eq("product", product)
+        .eq("campaignKind", "competition")
+        .lt("startsAt", endsAt)
+    )
+    .order("desc")
+    .take(existingCampaignId ? 2 : 1);
+
+  for (const candidate of candidates) {
+    if (candidate.campaignId === existingCampaignId) {
+      continue;
+    }
+
+    return candidate;
+  }
+
+  return null;
+}
+
 /** Rejects overlapping competition campaigns for any shared tryout product. */
 async function assertNoOverlappingCompetitionCampaign(
   ctx: Pick<MutationCtx, "db">,
@@ -94,32 +134,25 @@ async function assertNoOverlappingCompetitionCampaign(
   }
 ) {
   for (const product of products) {
-    const candidates = await ctx.db
-      .query("tryoutAccessCampaignProducts")
-      .withIndex("by_product_and_campaignKind_and_startsAt", (q) =>
-        q
-          .eq("product", product)
-          .eq("campaignKind", "competition")
-          .lt("startsAt", endsAt)
-      )
-      .order("desc")
-      .take(COMPETITION_CAMPAIGN_CHECK_LIMIT);
+    const candidate = await getLatestOverlappingCompetitionCandidate(ctx, {
+      endsAt,
+      existingCampaignId,
+      product,
+    });
 
-    for (const candidate of candidates) {
-      if (candidate.campaignId === existingCampaignId) {
-        continue;
-      }
-
-      if (candidate.endsAt <= startsAt) {
-        continue;
-      }
-
-      throw new ConvexError({
-        code: "OVERLAPPING_COMPETITION_CAMPAIGN",
-        message:
-          "Competition campaigns cannot overlap for the same tryout product.",
-      });
+    if (!candidate) {
+      continue;
     }
+
+    if (candidate.endsAt <= startsAt) {
+      continue;
+    }
+
+    throw new ConvexError({
+      code: "OVERLAPPING_COMPETITION_CAMPAIGN",
+      message:
+        "Competition campaigns cannot overlap for the same tryout product.",
+    });
   }
 }
 
@@ -263,7 +296,7 @@ function assertCampaignLifecycleCanBeReused({
   existingCampaign: Pick<Doc<"tryoutAccessCampaigns">, "resultsStatus"> &
     Pick<
       Doc<"tryoutAccessCampaigns">,
-      "endsAt" | "grantDurationDays" | "startsAt"
+      "endsAt" | "firstRedeemedAt" | "grantDurationDays" | "startsAt"
     >;
   existingProducts: Infer<typeof tryoutProductValidator>[];
   nextCampaign: Pick<
@@ -295,27 +328,24 @@ function assertCampaignLifecycleCanBeReused({
 }
 
 /** Rejects policy edits once a campaign has already been redeemed. */
-async function assertCampaignCanBeUpdated(
-  ctx: Pick<MutationCtx, "db">,
-  {
-    campaignKind,
-    existingCampaign,
-    existingProducts,
-    existingLink,
-    nextCampaign,
-    nextProducts,
-  }: {
-    campaignKind: Infer<typeof tryoutAccessCampaignKindValidator>;
-    existingCampaign: Doc<"tryoutAccessCampaigns">;
-    existingProducts: Infer<typeof tryoutProductValidator>[];
-    existingLink: Doc<"tryoutAccessLinks">;
-    nextCampaign: Pick<
-      Infer<typeof tryoutAccessCampaignInputValidator>,
-      "endsAt" | "grantDurationDays" | "startsAt"
-    >;
-    nextProducts: Infer<typeof tryoutProductValidator>[];
-  }
-) {
+function assertCampaignCanBeUpdated({
+  campaignKind,
+  existingCampaign,
+  existingProducts,
+  existingLink,
+  nextCampaign,
+  nextProducts,
+}: {
+  campaignKind: Infer<typeof tryoutAccessCampaignKindValidator>;
+  existingCampaign: Doc<"tryoutAccessCampaigns">;
+  existingProducts: Infer<typeof tryoutProductValidator>[];
+  existingLink: Doc<"tryoutAccessLinks">;
+  nextCampaign: Pick<
+    Infer<typeof tryoutAccessCampaignInputValidator>,
+    "endsAt" | "grantDurationDays" | "startsAt"
+  >;
+  nextProducts: Infer<typeof tryoutProductValidator>[];
+}) {
   if (existingLink.campaignId !== existingCampaign._id) {
     throw new ConvexError({
       code: "EVENT_SETUP_CONFLICT",
@@ -331,10 +361,6 @@ async function assertCampaignCanBeUpdated(
     });
   }
 
-  const existingGrant = await ctx.db
-    .query("tryoutAccessGrants")
-    .withIndex("by_campaignId", (q) => q.eq("campaignId", existingCampaign._id))
-    .first();
   const policyChanged = hasCampaignPolicyChange({
     existingCampaign,
     existingProducts,
@@ -342,7 +368,7 @@ async function assertCampaignCanBeUpdated(
     nextProducts,
   });
 
-  if (!existingGrant) {
+  if (existingCampaign.firstRedeemedAt == null) {
     assertCampaignLifecycleCanBeReused({
       existingCampaign,
       existingProducts,
@@ -460,6 +486,7 @@ export const upsertCampaignAndLink = internalMutation({
       grantDurationDays: args.campaign.grantDurationDays,
       name: args.campaign.name,
       resultsFinalizedAt: existingCampaign?.resultsFinalizedAt ?? null,
+      firstRedeemedAt: existingCampaign?.firstRedeemedAt ?? null,
       resultsStatus: existingCampaign?.resultsStatus ?? "pending",
       redeemStatus: getTryoutAccessCampaignRedeemStatus(args.campaign, now),
       slug: args.campaign.slug,
@@ -483,7 +510,7 @@ export const upsertCampaignAndLink = internalMutation({
         });
       }
 
-      await assertCampaignCanBeUpdated(ctx, {
+      assertCampaignCanBeUpdated({
         campaignKind: args.campaign.campaignKind,
         existingCampaign,
         existingProducts: existingProducts.map((row) => row.product),

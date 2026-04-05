@@ -1,4 +1,5 @@
 import { internalQuery } from "@repo/backend/convex/_generated/server";
+import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 
@@ -20,6 +21,18 @@ const tryoutAccessEntitlementIntegrityPageResultValidator = v.object({
   continueCursor: v.string(),
   isDone: v.boolean(),
   overdueEntitlementCount: v.number(),
+});
+
+const competitionCampaignProductPageResultValidator = v.object({
+  continueCursor: v.string(),
+  isDone: v.boolean(),
+  page: v.array(
+    v.object({
+      campaignId: v.id("tryoutAccessCampaigns"),
+      endsAt: v.number(),
+      startsAt: v.number(),
+    })
+  ),
 });
 
 /**
@@ -134,6 +147,36 @@ export const getTryoutAccessEntitlementIntegrity = internalQuery({
       continueCursor: entitlements.continueCursor,
       isDone: entitlements.isDone,
       overdueEntitlementCount,
+    };
+  },
+});
+
+/**
+ * Lists one bounded page of competition campaign-product rows for a product in
+ * `startsAt` order so operator verification can detect adjacent overlaps.
+ */
+export const listCompetitionCampaignProductsByProduct = internalQuery({
+  args: {
+    paginationOpts: paginationOptsValidator,
+    product: tryoutProductValidator,
+  },
+  returns: competitionCampaignProductPageResultValidator,
+  handler: async (ctx, args) => {
+    const rows = await ctx.db
+      .query("tryoutAccessCampaignProducts")
+      .withIndex("by_product_and_campaignKind_and_startsAt", (q) =>
+        q.eq("product", args.product).eq("campaignKind", "competition")
+      )
+      .paginate(args.paginationOpts);
+
+    return {
+      continueCursor: rows.continueCursor,
+      isDone: rows.isDone,
+      page: rows.page.map((row) => ({
+        campaignId: row.campaignId,
+        endsAt: row.endsAt,
+        startsAt: row.startsAt,
+      })),
     };
   },
 });

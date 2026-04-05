@@ -105,6 +105,12 @@ export const redeemEventAccess = mutation({
       status: grantStatus,
     });
 
+    if (eventAccess.campaign.firstRedeemedAt == null) {
+      await ctx.db.patch("tryoutAccessCampaigns", eventAccess.campaign._id, {
+        firstRedeemedAt: now,
+      });
+    }
+
     await syncTryoutAccessGrantEntitlements(
       ctx.db,
       {

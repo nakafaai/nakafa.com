@@ -1,3 +1,4 @@
+import { tryoutProducts } from "@repo/backend/convex/tryouts/products";
 import * as z from "zod";
 import {
   getConvexConfig,
@@ -27,6 +28,18 @@ const tryoutAccessEntitlementIntegrityPageSchema = z.object({
   overdueEntitlementCount: z.number(),
 });
 
+const competitionCampaignProductPageSchema = z.object({
+  continueCursor: z.string(),
+  isDone: z.boolean(),
+  page: z.array(
+    z.object({
+      campaignId: z.string(),
+      endsAt: z.number(),
+      startsAt: z.number(),
+    })
+  ),
+});
+
 type TryoutAccessCampaignIntegrityPage = z.infer<
   typeof tryoutAccessCampaignIntegrityPageSchema
 >;
@@ -35,6 +48,9 @@ type TryoutAccessGrantIntegrityPage = z.infer<
 >;
 type TryoutAccessEntitlementIntegrityPage = z.infer<
   typeof tryoutAccessEntitlementIntegrityPageSchema
+>;
+type CompetitionCampaignProductPage = z.infer<
+  typeof competitionCampaignProductPageSchema
 >;
 
 /** Reads the full access campaign integrity snapshot. */
@@ -144,21 +160,68 @@ async function getTryoutAccessEntitlementIntegrity(prod: boolean) {
   }
 }
 
+/** Reads the full competition overlap integrity snapshot. */
+async function getCompetitionCampaignProductOverlapIntegrity(prod: boolean) {
+  const config = getConvexConfig({ prod });
+  let overlappingCompetitionCampaignProductCount = 0;
+
+  for (const product of tryoutProducts) {
+    let continueCursor: string | null = null;
+    let previousRow: CompetitionCampaignProductPage["page"][number] | null =
+      null;
+
+    while (true) {
+      const page: CompetitionCampaignProductPage = await runConvexQueryWithArgs(
+        config,
+        "tryoutAccess/queries/internal/maintenance:listCompetitionCampaignProductsByProduct",
+        {
+          product,
+          paginationOpts: {
+            cursor: continueCursor,
+            numItems: TRYOUT_ACCESS_PAGE_SIZE,
+          },
+        },
+        competitionCampaignProductPageSchema
+      );
+
+      for (const row of page.page) {
+        if (previousRow && previousRow.endsAt > row.startsAt) {
+          overlappingCompetitionCampaignProductCount += 1;
+        }
+
+        previousRow = row;
+      }
+
+      if (page.isDone) {
+        break;
+      }
+
+      continueCursor = page.continueCursor;
+    }
+  }
+
+  return {
+    overlappingCompetitionCampaignProductCount,
+  };
+}
+
 /** Runs access-state verification for dev or prod. */
 async function main() {
   loadEnvFile();
 
   const flags = process.argv.slice(2);
   const prod = flags.includes("--prod");
-  const [campaigns, entitlements, grants] = await Promise.all([
+  const [campaigns, entitlements, grants, overlap] = await Promise.all([
     getTryoutAccessCampaignIntegrity(prod),
     getTryoutAccessEntitlementIntegrity(prod),
     getTryoutAccessGrantIntegrity(prod),
+    getCompetitionCampaignProductOverlapIntegrity(prod),
   ]);
   const result = {
     ...campaigns,
     ...entitlements,
     ...grants,
+    ...overlap,
   };
 
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
@@ -167,7 +230,8 @@ async function main() {
     result.overdueActiveCampaignCount > 0 ||
     result.overduePendingCompetitionCount > 0 ||
     result.overdueEntitlementCount > 0 ||
-    result.overdueActiveGrantCount > 0
+    result.overdueActiveGrantCount > 0 ||
+    result.overlappingCompetitionCampaignProductCount > 0
       ? 1
       : 0;
 }

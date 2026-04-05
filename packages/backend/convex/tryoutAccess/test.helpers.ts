@@ -11,6 +11,7 @@ export async function insertTryoutAccessCampaign(
     campaignKind,
     enabled,
     endsAt,
+    firstRedeemedAt = null,
     grantDurationDays,
     name,
     products,
@@ -23,6 +24,7 @@ export async function insertTryoutAccessCampaign(
     campaignKind: Infer<typeof tryoutAccessCampaignKindValidator>;
     enabled: boolean;
     endsAt: number;
+    firstRedeemedAt?: number | null;
     grantDurationDays?: number;
     name: string;
     products: Infer<typeof tryoutProductValidator>[];
@@ -37,6 +39,7 @@ export async function insertTryoutAccessCampaign(
     campaignKind,
     enabled,
     endsAt,
+    firstRedeemedAt,
     grantDurationDays,
     name,
     redeemStatus,

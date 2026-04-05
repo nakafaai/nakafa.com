@@ -77,6 +77,8 @@ Aturan runtime:
 - competition campaign untuk product yang sama tidak boleh overlap
 - `startsAt`, `endsAt`, `products`, dan `grantDurationDays` tidak boleh diubah
   setelah campaign pernah diredeem
+  - source of truth-nya adalah `firstRedeemedAt`, bukan keberadaan grant runtime
+    saat ini
 - event close adalah cutoff final event
 - setelah event close:
   - tidak bisa redeem

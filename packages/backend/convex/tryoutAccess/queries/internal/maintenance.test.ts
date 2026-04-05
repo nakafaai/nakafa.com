@@ -139,4 +139,57 @@ describe("tryoutAccess/queries/internal/maintenance", () => {
       overdueActiveGrantCount: 1,
     });
   });
+
+  it("lists competition campaign products in startsAt order for overlap verification", async () => {
+    const t = createTryoutTestConvex();
+
+    await t.mutation(async (ctx) => {
+      await insertTryoutAccessCampaign(ctx, {
+        slug: "competition-order-first",
+        name: "Competition Order First",
+        products: ["snbt"],
+        campaignKind: "competition",
+        enabled: true,
+        redeemStatus: "active",
+        resultsStatus: "pending",
+        resultsFinalizedAt: null,
+        startsAt: NOW,
+        endsAt: NOW + 60 * 60 * 1000,
+      });
+      await insertTryoutAccessCampaign(ctx, {
+        slug: "competition-order-second",
+        name: "Competition Order Second",
+        products: ["snbt"],
+        campaignKind: "competition",
+        enabled: true,
+        redeemStatus: "active",
+        resultsStatus: "pending",
+        resultsFinalizedAt: null,
+        startsAt: NOW + 2 * 60 * 60 * 1000,
+        endsAt: NOW + 3 * 60 * 60 * 1000,
+      });
+    });
+
+    const result = await t.query(
+      internal.tryoutAccess.queries.internal.maintenance
+        .listCompetitionCampaignProductsByProduct,
+      {
+        product: "snbt",
+        paginationOpts: {
+          cursor: null,
+          numItems: 100,
+        },
+      }
+    );
+
+    expect(result.isDone).toBe(true);
+    expect(result.page).toEqual([
+      expect.objectContaining({
+        startsAt: NOW,
+      }),
+      expect.objectContaining({
+        startsAt: NOW + 2 * 60 * 60 * 1000,
+      }),
+    ]);
+  });
 });

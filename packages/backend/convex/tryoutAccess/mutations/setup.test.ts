@@ -1,4 +1,4 @@
-import { internal } from "@repo/backend/convex/_generated/api";
+import { api, internal } from "@repo/backend/convex/_generated/api";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
 import {
   createTryoutTestConvex,
@@ -43,6 +43,7 @@ describe("tryoutAccess/mutations/setup", () => {
     });
 
     expect(state.campaign?.campaignKind).toBe("competition");
+    expect(state.campaign?.firstRedeemedAt).toBeNull();
     expect(state.campaign?.grantDurationDays).toBeUndefined();
     expect(state.campaign?.resultsStatus).toBe("pending");
     expect(state.campaign?.resultsFinalizedAt).toBeNull();
@@ -178,13 +179,14 @@ describe("tryoutAccess/mutations/setup", () => {
 
   it("does not allow changing campaign policy after it has been redeemed", async () => {
     const t = createTryoutTestConvex();
-
-    await t.mutation(async (ctx) => {
-      const identity = await seedAuthenticatedUser(ctx, {
+    const currentTime = Date.now();
+    const identity = await t.mutation(async (ctx) => {
+      const state = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "locked-policy",
       });
-      const result = await ctx.runMutation(
+
+      await ctx.runMutation(
         internal.tryoutAccess.mutations.setup.upsertCampaignAndLink,
         {
           campaign: {
@@ -193,8 +195,8 @@ describe("tryoutAccess/mutations/setup", () => {
             products: ["snbt"],
             campaignKind: "access-pass",
             enabled: true,
-            startsAt: NOW,
-            endsAt: NOW + 24 * 60 * 60 * 1000,
+            startsAt: currentTime - 60 * 1000,
+            endsAt: currentTime + 24 * 60 * 60 * 1000,
             grantDurationDays: 30,
           },
           link: {
@@ -205,15 +207,26 @@ describe("tryoutAccess/mutations/setup", () => {
         }
       );
 
-      await ctx.db.insert("tryoutAccessGrants", {
-        campaignId: result.campaignId,
-        linkId: result.linkId,
-        userId: identity.userId,
-        redeemedAt: NOW,
-        endsAt: NOW + 30 * 24 * 60 * 60 * 1000,
-        status: "active",
-      });
+      return state;
     });
+
+    await t
+      .withIdentity({
+        subject: identity.authUserId,
+        sessionId: identity.sessionId,
+      })
+      .mutation(api.tryoutAccess.mutations.redeem.redeemEventAccess, {
+        code: "locked-policy",
+      });
+
+    const redeemedCampaign = await t.query(async (ctx) => {
+      return await ctx.db
+        .query("tryoutAccessCampaigns")
+        .withIndex("by_slug", (q) => q.eq("slug", "locked-policy"))
+        .unique();
+    });
+
+    expect(redeemedCampaign?.firstRedeemedAt).not.toBeNull();
 
     await expect(
       t.mutation(internal.tryoutAccess.mutations.setup.upsertCampaignAndLink, {
@@ -223,13 +236,80 @@ describe("tryoutAccess/mutations/setup", () => {
           products: ["snbt"],
           campaignKind: "access-pass",
           enabled: true,
-          startsAt: NOW,
-          endsAt: NOW + 2 * 24 * 60 * 60 * 1000,
+          startsAt: currentTime - 60 * 1000,
+          endsAt: currentTime + 2 * 24 * 60 * 60 * 1000,
           grantDurationDays: 45,
         },
         link: {
           code: "locked-policy",
           label: "Locked Policy",
+          enabled: true,
+        },
+      })
+    ).rejects.toThrow("CAMPAIGN_POLICY_IMMUTABLE");
+  });
+
+  it("keeps campaign policy locked after redeemed grants are cleaned up", async () => {
+    const t = createTryoutTestConvex();
+    const currentTime = Date.now();
+    const identity = await t.mutation(async (ctx) => {
+      const state = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "locked-policy-cleanup",
+      });
+
+      await ctx.runMutation(
+        internal.tryoutAccess.mutations.setup.upsertCampaignAndLink,
+        {
+          campaign: {
+            slug: "locked-policy-cleanup",
+            name: "Locked Policy Cleanup",
+            products: ["snbt"],
+            campaignKind: "access-pass",
+            enabled: true,
+            startsAt: currentTime - 60 * 1000,
+            endsAt: currentTime + 24 * 60 * 60 * 1000,
+            grantDurationDays: 30,
+          },
+          link: {
+            code: "locked-policy-cleanup",
+            label: "Locked Policy Cleanup",
+            enabled: true,
+          },
+        }
+      );
+
+      return state;
+    });
+
+    await t
+      .withIdentity({
+        subject: identity.authUserId,
+        sessionId: identity.sessionId,
+      })
+      .mutation(api.tryoutAccess.mutations.redeem.redeemEventAccess, {
+        code: "locked-policy-cleanup",
+      });
+
+    await t.mutation(internal.auth.cleanup.cleanupDeletedUser, {
+      userId: identity.userId,
+    });
+
+    await expect(
+      t.mutation(internal.tryoutAccess.mutations.setup.upsertCampaignAndLink, {
+        campaign: {
+          slug: "locked-policy-cleanup",
+          name: "Locked Policy Cleanup",
+          products: ["snbt"],
+          campaignKind: "access-pass",
+          enabled: true,
+          startsAt: currentTime - 60 * 1000,
+          endsAt: currentTime + 2 * 24 * 60 * 60 * 1000,
+          grantDurationDays: 45,
+        },
+        link: {
+          code: "locked-policy-cleanup",
+          label: "Locked Policy Cleanup",
           enabled: true,
         },
       })

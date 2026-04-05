@@ -72,9 +72,9 @@ npx convex deploy
 
 | Command | Description |
 |---------|-------------|
-| `tryout:verify:access` | Verify campaign/grant/entitlement time-state integrity in development |
+| `tryout:verify:access` | Verify campaign/grant/entitlement time-state integrity and competition overlap integrity in development |
 | `tryout:repair:access` | Repair overdue campaign/grant states and overdue competition finalization in development |
-| `tryout:verify:access:prod` | Verify campaign/grant/entitlement time-state integrity in production |
+| `tryout:verify:access:prod` | Verify campaign/grant/entitlement time-state integrity and competition overlap integrity in production |
 | `tryout:repair:access:prod` | Repair overdue campaign/grant states and overdue competition finalization in production |
 | `irt:verify:cache` | Verify cached IRT calibration state in development |
 | `irt:verify:scale` | Verify frozen IRT scale coverage in development |

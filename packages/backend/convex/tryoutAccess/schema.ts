@@ -32,6 +32,7 @@ export const tryoutAccessCampaignValidator = v.object({
   redeemStatus: tryoutAccessCampaignRedeemStatusValidator,
   resultsStatus: tryoutAccessCampaignResultsStatusValidator,
   resultsFinalizedAt: v.union(v.number(), v.null()),
+  firstRedeemedAt: v.union(v.number(), v.null()),
   startsAt: v.number(),
   endsAt: v.number(),
   grantDurationDays: v.optional(v.number()),
@@ -98,7 +99,7 @@ const tables = {
     .index("by_campaignId", ["campaignId"]),
 
   tryoutAccessGrants: defineTable(tryoutAccessGrantValidator)
-    .index("by_campaignId", ["campaignId"])
+    .index("by_campaignId_and_redeemedAt", ["campaignId", "redeemedAt"])
     .index("by_userId_and_campaignId", ["userId", "campaignId"])
     .index("by_status_and_endsAt", ["status", "endsAt"]),
 

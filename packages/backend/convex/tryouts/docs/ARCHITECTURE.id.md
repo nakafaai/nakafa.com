@@ -327,6 +327,12 @@ yang sedang tampil.
 Tidak. Satu product hanya boleh punya satu competition campaign aktif pada satu
 window waktu.
 
+Overlap divalidasi lewat relation row `tryoutAccessCampaignProducts`, bukan lewat
+scan array `products` di dokumen campaign.
+
+Immutability policy setelah campaign pernah diredeem disimpan durable di field
+`firstRedeemedAt`, jadi cleanup grant tidak bisa menghapus fakta historis itu.
+
 ### Apakah `Final Event` sama dengan `official`?
 
 Tidak. `Final Event` adalah finalitas produk event. `official` adalah finalitas
