@@ -58,7 +58,9 @@ const printUsage = (): void => {
   log("  sync:validate         - Validate content without syncing (for CI)");
   log("  sync:verify           - Verify database matches filesystem");
   log("  sync:clean            - Find and remove stale content");
-  log("  sync:reset            - Delete ALL synced content (requires --force)");
+  log(
+    "  sync:reset            - Delete synced content/runtime rows (authors optional, requires --force)"
+  );
   log(
     "  sync:reset:tryouts    - Delete tryout content/read models, access rows, entitlements, and IRT scale data, then run a full sync"
   );
@@ -67,7 +69,9 @@ const printUsage = (): void => {
   log("  sync:prod:incremental - Incremental sync to production");
   log("  sync:prod:verify      - Verify production database");
   log("  sync:prod:clean       - Clean stale content in production");
-  log("  sync:prod:reset       - Delete ALL content in production");
+  log(
+    "  sync:prod:reset       - Delete synced content/runtime rows in production (authors optional)"
+  );
   log(
     "  sync:prod:reset:tryouts - Delete tryout content/read models, access rows, entitlements, and IRT scale data in production, then run a full sync"
   );

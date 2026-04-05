@@ -22,6 +22,7 @@ export const LOCALE_SUBJECT_MATERIAL_FILE_REGEX = /\/([a-z]{2})-material\.ts$/;
 
 const LocaleSchema = z.union([z.literal("en"), z.literal("id")]);
 
+/** Parses one CLI locale flag into the supported Convex content locale. */
 export const parseLocale = (value: string, context: string): Locale => {
   const result = LocaleSchema.safeParse(value);
   if (!result.success) {

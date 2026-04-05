@@ -113,6 +113,36 @@ const RESET_STEPS: ResetStep[] = [
     resultLabel: "tryout attempts",
   },
   {
+    label: "Deleting tryout entitlements...",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteTryoutEntitlementsBatch",
+    resultLabel: "tryout entitlements",
+  },
+  {
+    label: "Deleting tryout access grants...",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteTryoutAccessGrantsBatch",
+    resultLabel: "tryout access grants",
+  },
+  {
+    label: "Deleting tryout access campaign products...",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteTryoutAccessCampaignProductsBatch",
+    resultLabel: "tryout access campaign products",
+  },
+  {
+    label: "Deleting tryout access links...",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteTryoutAccessLinksBatch",
+    resultLabel: "tryout access links",
+  },
+  {
+    label: "Deleting tryout access campaigns...",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteTryoutAccessCampaignsBatch",
+    resultLabel: "tryout access campaigns",
+  },
+  {
     label: "Deleting tryout catalog meta...",
     mutationPath:
       "contentSync/mutations/maintenance:deleteTryoutCatalogMetaBatch",
@@ -169,6 +199,7 @@ const RESET_STEPS: ResetStep[] = [
   },
 ];
 
+/** Deletes every row exposed by one bounded maintenance mutation. */
 const deleteAllBatched = async (
   config: ConvexConfig,
   mutationPath: string,
@@ -202,6 +233,7 @@ const deleteAllBatched = async (
   return totalDeleted;
 };
 
+/** Deletes the full sync-managed content graph and its derived runtime rows. */
 export const reset = async (
   config: ConvexConfig,
   options: SyncOptions
@@ -229,6 +261,10 @@ export const reset = async (
   log(`  Exercise Questions:    ${counts.exerciseQuestions}`);
   log(`  Exercise Attempts:     ${counts.exerciseAttempts}`);
   log(`  Exercise Sets:         ${counts.exerciseSets}`);
+  log(`  Tryout Access Campaigns:${counts.tryoutAccessCampaigns}`);
+  log(`  Tryout Access Products: ${counts.tryoutAccessCampaignProducts}`);
+  log(`  Tryout Access Links:    ${counts.tryoutAccessLinks}`);
+  log(`  Tryout Access Grants:   ${counts.tryoutAccessGrants}`);
   log(`  Tryouts:               ${counts.tryouts}`);
   log(`  Tryout Catalog Meta:   ${counts.tryoutCatalogMeta}`);
   log(`  User Entitlements:     ${counts.userTryoutEntitlements}`);
@@ -265,8 +301,13 @@ export const reset = async (
     counts.exerciseAnswers;
   const totalRuntime =
     counts.exerciseAttempts +
+    counts.tryoutAccessCampaigns +
+    counts.tryoutAccessCampaignProducts +
+    counts.tryoutAccessLinks +
+    counts.tryoutAccessGrants +
     counts.tryouts +
     counts.tryoutCatalogMeta +
+    counts.userTryoutEntitlements +
     counts.tryoutPartSets +
     counts.tryoutAttempts +
     counts.tryoutPartAttempts +

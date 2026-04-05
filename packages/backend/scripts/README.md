@@ -54,7 +54,7 @@ npx convex deploy
 | `sync:validate` | Validate content without syncing (for CI) |
 | `sync:verify` | Verify database matches filesystem |
 | `sync:clean` | Find and remove stale content |
-| `sync:reset` | Delete ALL synced content (requires --force) |
+| `sync:reset` | Delete synced content/runtime rows (authors optional, requires --force) |
 | `sync:reset:tryouts` | Delete tryout content/read models, access rows, entitlements, and IRT scale data, then run a full sync |
 
 ### Production
@@ -65,7 +65,7 @@ npx convex deploy
 | `sync:prod:incremental` | Incremental sync to production |
 | `sync:prod:verify` | Verify production database |
 | `sync:prod:clean` | Clean stale content in production |
-| `sync:prod:reset` | Delete ALL content in production (requires --force) |
+| `sync:prod:reset` | Delete synced content/runtime rows in production (authors optional, requires --force) |
 | `sync:prod:reset:tryouts` | Delete tryout content/read models, access rows, entitlements, and IRT scale data in production, then run a full sync |
 
 ### Maintenance

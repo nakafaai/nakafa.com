@@ -519,7 +519,7 @@ async function getLatestActiveEventEntitlement(
   }: {
     now: number;
     product: TryoutProduct;
-    sourceKind: Exclude<UserTryoutEntitlementSourceKind, "subscription">;
+    sourceKind: UserTryoutEntitlementSourceKind;
     userId: Doc<"users">["_id"];
   }
 ) {
