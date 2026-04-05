@@ -72,6 +72,33 @@ type TryoutPartRuntime = FunctionReturnType<
 
 const TryoutPartContext = createContext<TryoutPartContextValue | null>(null);
 
+/** Resolves whether the part runtime is still loading for the current viewer. */
+function getIsRuntimePending({
+  hasUser,
+  isPartStatePending,
+  isUserPending,
+  runtime,
+}: {
+  hasUser: boolean;
+  isPartStatePending: boolean;
+  isUserPending: boolean;
+  runtime: TryoutPartRuntime | null | undefined;
+}) {
+  if (runtime !== undefined) {
+    return false;
+  }
+
+  if (isUserPending) {
+    return true;
+  }
+
+  if (!hasUser) {
+    return false;
+  }
+
+  return isPartStatePending;
+}
+
 /** Provides one runtime-backed tryout part state tree for the part route. */
 export function TryoutPartProvider({
   children,
@@ -91,7 +118,8 @@ export function TryoutPartProvider({
   const router = useRouter();
   const isUserPending = useUser((state) => state.isPending);
   const user = useUser((state) => state.user);
-  const shouldLoadRuntime = !isUserPending && Boolean(user);
+  const hasUser = Boolean(user);
+  const shouldLoadRuntime = !isUserPending && hasUser;
   const { data: runtimeData, isPending: isPartStatePending } =
     useQueryWithStatus(
       api.tryouts.queries.me.part.getUserTryoutPartAttempt,
@@ -104,16 +132,24 @@ export function TryoutPartProvider({
           }
         : "skip"
     );
-  const runtime =
-    runtimeData ?? (initialRuntime === undefined ? undefined : initialRuntime);
+  // Keep a confirmed `null` result from the live query. Only fall back to the
+  // SSR snapshot while the client query is still pending.
+  let runtime = initialRuntime;
+
+  if (runtimeData !== undefined) {
+    runtime = runtimeData;
+  }
+
   const nowMs = useTryoutClock(
     Boolean(runtime && runtime.tryoutAttempt.status === "in-progress"),
     initialNowMs
   );
-  const isRuntimePending =
-    runtime === undefined
-      ? isUserPending || (user ? isPartStatePending : false)
-      : false;
+  const isRuntimePending = getIsRuntimePending({
+    hasUser,
+    isPartStatePending,
+    isUserPending,
+    runtime,
+  });
   const startPart = useMutation(api.tryouts.mutations.attempts.startPart);
   const completePart = useMutation(api.tryouts.mutations.attempts.completePart);
 
