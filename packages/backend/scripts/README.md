@@ -55,7 +55,7 @@ npx convex deploy
 | `sync:verify` | Verify database matches filesystem |
 | `sync:clean` | Find and remove stale content |
 | `sync:reset` | Delete ALL synced content (requires --force) |
-| `sync:reset:tryouts` | Delete only tryout + IRT runtime data |
+| `sync:reset:tryouts` | Delete tryout content/read models + IRT scale data, then run a full sync |
 
 ### Production
 
@@ -66,7 +66,18 @@ npx convex deploy
 | `sync:prod:verify` | Verify production database |
 | `sync:prod:clean` | Clean stale content in production |
 | `sync:prod:reset` | Delete ALL content in production (requires --force) |
-| `sync:prod:reset:tryouts` | Delete only tryout + IRT runtime data in production |
+| `sync:prod:reset:tryouts` | Delete tryout content/read models + IRT scale data in production, then run a full sync |
+
+### Maintenance
+
+| Command | Description |
+|---------|-------------|
+| `tryout:repair:controls` | Repair missing or duplicate `userTryoutControls` rows in development |
+| `tryout:repair:controls:prod` | Repair missing or duplicate `userTryoutControls` rows in production |
+| `irt:verify:cache` | Verify cached IRT calibration state in development |
+| `irt:verify:scale` | Verify frozen IRT scale coverage in development |
+| `irt:prod:verify:cache` | Verify cached IRT calibration state in production |
+| `irt:prod:verify:scale` | Verify frozen IRT scale coverage in production |
 
 ### Options
 
@@ -132,6 +143,30 @@ pnpm --filter @repo/backend sync:prod:reset
 
 # Actually delete production content
 pnpm --filter @repo/backend sync:prod:reset --force
+```
+
+### Reset Tryouts + IRT Only
+
+```bash
+# Preview the tryout/IRT wipe
+pnpm --filter @repo/backend sync:reset:tryouts
+
+# Actually delete tryout definitions, catalog rows, and IRT scale data
+pnpm --filter @repo/backend sync:reset:tryouts --force
+
+# Then rebuild the deleted tables with a full sync
+pnpm --filter @repo/backend sync
+```
+
+`sync:reset:tryouts` clears incremental sync state on purpose. Do not follow it
+with `sync:incremental`; run a full sync so Convex rebuilds the deleted tryout
+and IRT tables coherently.
+
+For production (use with caution):
+
+```bash
+pnpm --filter @repo/backend sync:prod:reset:tryouts --force
+pnpm --filter @repo/backend sync:prod
 ```
 
 ## Content Structure

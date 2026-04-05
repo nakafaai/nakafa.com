@@ -137,6 +137,63 @@ async function assertNoOverlappingCompetitionCampaign(
   }
 }
 
+/** Returns whether one campaign rewrite would change its timed access policy. */
+function hasCampaignPolicyChange({
+  existingCampaign,
+  nextCampaign,
+}: {
+  existingCampaign: Pick<
+    Doc<"tryoutAccessCampaigns">,
+    "endsAt" | "grantDurationDays" | "products" | "startsAt"
+  >;
+  nextCampaign: Pick<
+    Infer<typeof tryoutAccessCampaignValidator>,
+    "endsAt" | "grantDurationDays" | "products" | "startsAt"
+  >;
+}) {
+  return (
+    existingCampaign.startsAt !== nextCampaign.startsAt ||
+    existingCampaign.endsAt !== nextCampaign.endsAt ||
+    existingCampaign.grantDurationDays !== nextCampaign.grantDurationDays ||
+    existingCampaign.products.length !== nextCampaign.products.length ||
+    existingCampaign.products.some(
+      (product, index) => nextCampaign.products[index] !== product
+    )
+  );
+}
+
+/** Rejects reusing an old finished competition lifecycle for a new window. */
+function assertCampaignLifecycleCanBeReused({
+  existingCampaign,
+  nextCampaign,
+}: {
+  existingCampaign: Pick<Doc<"tryoutAccessCampaigns">, "resultsStatus"> &
+    Pick<
+      Doc<"tryoutAccessCampaigns">,
+      "endsAt" | "grantDurationDays" | "products" | "startsAt"
+    >;
+  nextCampaign: Infer<typeof tryoutAccessCampaignValidator>;
+}) {
+  if (existingCampaign.resultsStatus === "pending") {
+    return;
+  }
+
+  if (
+    !hasCampaignPolicyChange({
+      existingCampaign,
+      nextCampaign,
+    })
+  ) {
+    return;
+  }
+
+  throw new ConvexError({
+    code: "CAMPAIGN_LIFECYCLE_IMMUTABLE",
+    message:
+      "A finished competition campaign cannot be reused for a new event window.",
+  });
+}
+
 /** Rejects policy edits once a campaign has already been redeemed. */
 async function assertCampaignCanBeUpdated(
   ctx: Pick<MutationCtx, "db">,
@@ -171,19 +228,19 @@ async function assertCampaignCanBeUpdated(
     .query("tryoutAccessGrants")
     .withIndex("by_campaignId", (q) => q.eq("campaignId", existingCampaign._id))
     .first();
+  const policyChanged = hasCampaignPolicyChange({
+    existingCampaign,
+    nextCampaign,
+  });
 
   if (!existingGrant) {
+    assertCampaignLifecycleCanBeReused({
+      existingCampaign,
+      nextCampaign,
+    });
+
     return;
   }
-
-  const policyChanged =
-    existingCampaign.startsAt !== nextCampaign.startsAt ||
-    existingCampaign.endsAt !== nextCampaign.endsAt ||
-    existingCampaign.grantDurationDays !== nextCampaign.grantDurationDays ||
-    existingCampaign.products.length !== nextCampaign.products.length ||
-    existingCampaign.products.some(
-      (product, index) => nextCampaign.products[index] !== product
-    );
 
   if (!policyChanged) {
     return;

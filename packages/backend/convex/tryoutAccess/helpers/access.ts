@@ -18,6 +18,7 @@ import type { Infer } from "convex/values";
 import { ConvexError } from "convex/values";
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
+const SUBSCRIPTION_ENTITLEMENT_SYNC_BATCH_SIZE = 25;
 
 const tryoutPaidProductIds = {
   snbt: products.pro.id,
@@ -217,56 +218,175 @@ function groupEntitlementsByProduct(
   return entitlementsByProduct;
 }
 
-/** Loads every stored subscription entitlement row for one user. */
-async function listUserSubscriptionEntitlements(
-  db: TryoutAccessDbWriter,
-  userId: Doc<"users">["_id"]
-) {
-  const entitlements: Doc<"userTryoutEntitlements">[] = [];
-
-  for await (const entitlement of db
-    .query("userTryoutEntitlements")
-    .withIndex("by_userId_and_sourceKind_and_subscriptionId", (q) =>
-      q.eq("userId", userId).eq("sourceKind", "subscription")
-    )) {
-    entitlements.push(entitlement);
+/** Loads one active subscription whose access window never expires. */
+async function getPerpetualActiveSubscriptionForProduct(
+  db: TryoutAccessDbReader,
+  {
+    customerId,
+    productId,
+  }: {
+    customerId: Doc<"subscriptions">["customerId"];
+    productId: Doc<"subscriptions">["productId"];
   }
-
-  return entitlements;
+) {
+  return await db
+    .query("subscriptions")
+    .withIndex(
+      "by_customerId_and_status_and_productId_and_currentPeriodEnd",
+      (q) =>
+        q
+          .eq("customerId", customerId)
+          .eq("status", "active")
+          .eq("productId", productId)
+          .eq("currentPeriodEnd", null)
+    )
+    .first();
 }
 
-/** Buckets subscription entitlements by subscription ID and invalid leftovers. */
-function groupSubscriptionEntitlements(
-  entitlements: Doc<"userTryoutEntitlements">[]
+/** Loads the active subscription with the latest stored period end for one product. */
+async function getLatestActiveSubscriptionForProduct(
+  db: TryoutAccessDbReader,
+  {
+    customerId,
+    productId,
+  }: {
+    customerId: Doc<"subscriptions">["customerId"];
+    productId: Doc<"subscriptions">["productId"];
+  }
 ) {
-  const entitlementsBySubscriptionId = new Map<
-    Doc<"subscriptions">["_id"],
-    Doc<"userTryoutEntitlements">[]
-  >();
-  const invalidEntitlements: Doc<"userTryoutEntitlements">[] = [];
-
-  for (const entitlement of entitlements) {
-    if (!entitlement.subscriptionId) {
-      invalidEntitlements.push(entitlement);
-      continue;
+  const perpetualSubscription = await getPerpetualActiveSubscriptionForProduct(
+    db,
+    {
+      customerId,
+      productId,
     }
+  );
 
-    const subscriptionEntitlements = entitlementsBySubscriptionId.get(
-      entitlement.subscriptionId
-    );
-
-    if (subscriptionEntitlements) {
-      subscriptionEntitlements.push(entitlement);
-      continue;
-    }
-
-    entitlementsBySubscriptionId.set(entitlement.subscriptionId, [entitlement]);
+  if (perpetualSubscription) {
+    return perpetualSubscription;
   }
 
-  return {
-    entitlementsBySubscriptionId,
-    invalidEntitlements,
-  };
+  return await db
+    .query("subscriptions")
+    .withIndex(
+      "by_customerId_and_status_and_productId_and_currentPeriodEnd",
+      (q) =>
+        q
+          .eq("customerId", customerId)
+          .eq("status", "active")
+          .eq("productId", productId)
+    )
+    .order("desc")
+    .first();
+}
+
+/** Loads the canonical active tryout subscriptions that currently grant access. */
+export async function listCanonicalActiveTryoutSubscriptions(
+  db: TryoutAccessDbReader,
+  {
+    customerId,
+  }: {
+    customerId: Doc<"subscriptions">["customerId"];
+  }
+) {
+  const activeSubscriptions = await Promise.all(
+    tryoutProducts.map(async (product) => {
+      return await getLatestActiveSubscriptionForProduct(db, {
+        customerId,
+        productId: tryoutPaidProductIds[product],
+      });
+    })
+  );
+
+  return activeSubscriptions.filter(
+    (subscription): subscription is Doc<"subscriptions"> =>
+      subscription !== null
+  );
+}
+
+/** Builds the canonical next subscription entitlements for one user. */
+function buildNextSubscriptionEntitlements(
+  activeSubscriptions: Pick<
+    Doc<"subscriptions">,
+    "_id" | "currentPeriodEnd" | "currentPeriodStart" | "productId"
+  >[],
+  userId: Doc<"users">["_id"]
+) {
+  const nextEntitlementsByProduct = new Map<
+    TryoutProduct,
+    {
+      accessCampaignId: undefined;
+      accessGrantId: undefined;
+      endsAt: number;
+      product: TryoutProduct;
+      sourceKind: "subscription";
+      startsAt: number;
+      subscriptionId: Doc<"subscriptions">["_id"];
+      userId: Doc<"users">["_id"];
+    }
+  >();
+
+  for (const subscription of activeSubscriptions) {
+    const product = getTryoutProductFromPaidProductId(subscription.productId);
+
+    if (!product) {
+      continue;
+    }
+
+    const startsAt = parseTimestamp(
+      subscription.currentPeriodStart,
+      "currentPeriodStart"
+    );
+
+    if (startsAt === null) {
+      continue;
+    }
+
+    const endsAt =
+      parseTimestamp(subscription.currentPeriodEnd, "currentPeriodEnd") ??
+      Number.MAX_SAFE_INTEGER;
+    const currentEntitlement = nextEntitlementsByProduct.get(product);
+
+    if (currentEntitlement && currentEntitlement.endsAt >= endsAt) {
+      continue;
+    }
+
+    nextEntitlementsByProduct.set(product, {
+      accessCampaignId: undefined,
+      accessGrantId: undefined,
+      endsAt,
+      product,
+      sourceKind: "subscription",
+      startsAt,
+      subscriptionId: subscription._id,
+      userId,
+    });
+  }
+
+  return nextEntitlementsByProduct;
+}
+
+/** Loads one bounded batch of stored subscription entitlements for one product. */
+async function listSubscriptionEntitlementBatch(
+  db: TryoutAccessDbWriter,
+  {
+    product,
+    userId,
+  }: {
+    product: TryoutProduct;
+    userId: Doc<"users">["_id"];
+  }
+) {
+  return await db
+    .query("userTryoutEntitlements")
+    .withIndex("by_userId_and_product_and_sourceKind_and_endsAt", (q) =>
+      q
+        .eq("userId", userId)
+        .eq("product", product)
+        .eq("sourceKind", "subscription")
+    )
+    .order("desc")
+    .take(SUBSCRIPTION_ENTITLEMENT_SYNC_BATCH_SIZE);
 }
 
 /** Synchronizes the active entitlement rows for one event grant. */
@@ -390,7 +510,10 @@ export async function syncTryoutAccessGrantStatus(
   return status;
 }
 
-/** Synchronizes the active subscription entitlement rows for one user. */
+/**
+ * Synchronizes one bounded batch of subscription entitlements for one user.
+ * Returns `true` when another scheduled batch should continue cleanup.
+ */
 export async function syncTryoutSubscriptionEntitlements(
   db: TryoutAccessDbWriter,
   {
@@ -405,65 +528,48 @@ export async function syncTryoutSubscriptionEntitlements(
     now: number;
     userId: Doc<"users">["_id"];
   }
-) {
+): Promise<boolean> {
   await touchUserTryoutControl(db, {
     updatedAt: now,
     userId,
   });
-  const existingEntitlements = await listUserSubscriptionEntitlements(
-    db,
+  const nextEntitlementsByProduct = buildNextSubscriptionEntitlements(
+    activeSubscriptions,
     userId
   );
-  const { entitlementsBySubscriptionId, invalidEntitlements } =
-    groupSubscriptionEntitlements(existingEntitlements);
+  let hasMore = false;
 
-  for (const invalidEntitlement of invalidEntitlements) {
-    await db.delete("userTryoutEntitlements", invalidEntitlement._id);
-  }
-
-  for (const subscription of activeSubscriptions) {
-    const product = getTryoutProductFromPaidProductId(subscription.productId);
-
-    if (!product) {
-      continue;
-    }
-
-    const startsAt = parseTimestamp(
-      subscription.currentPeriodStart,
-      "currentPeriodStart"
-    );
-
-    if (startsAt === null) {
-      continue;
-    }
-
-    const endsAt =
-      parseTimestamp(subscription.currentPeriodEnd, "currentPeriodEnd") ??
-      Number.MAX_SAFE_INTEGER;
-    const subscriptionEntitlements =
-      entitlementsBySubscriptionId.get(subscription._id) ?? [];
-    const currentEntitlement = subscriptionEntitlements[0] ?? null;
-    const nextEntitlement = {
-      userId,
+  for (const product of tryoutProducts) {
+    const entitlementBatch = await listSubscriptionEntitlementBatch(db, {
       product,
-      sourceKind: "subscription" as const,
-      accessCampaignId: undefined,
-      accessGrantId: undefined,
-      subscriptionId: subscription._id,
-      startsAt,
-      endsAt,
-    };
+      userId,
+    });
+    const currentEntitlement = entitlementBatch[0] ?? null;
+    const staleEntitlements = currentEntitlement
+      ? entitlementBatch.slice(1)
+      : entitlementBatch;
+    const nextEntitlement = nextEntitlementsByProduct.get(product) ?? null;
 
-    for (const duplicateEntitlement of subscriptionEntitlements.slice(1)) {
-      await db.delete("userTryoutEntitlements", duplicateEntitlement._id);
+    if (entitlementBatch.length === SUBSCRIPTION_ENTITLEMENT_SYNC_BATCH_SIZE) {
+      hasMore = true;
+    }
+
+    if (!nextEntitlement) {
+      for (const staleEntitlement of entitlementBatch) {
+        await db.delete("userTryoutEntitlements", staleEntitlement._id);
+      }
+
+      continue;
+    }
+
+    for (const staleEntitlement of staleEntitlements) {
+      await db.delete("userTryoutEntitlements", staleEntitlement._id);
     }
 
     if (!currentEntitlement) {
       await db.insert("userTryoutEntitlements", nextEntitlement);
       continue;
     }
-
-    entitlementsBySubscriptionId.delete(subscription._id);
 
     if (
       currentEntitlement.userId === nextEntitlement.userId &&
@@ -491,11 +597,7 @@ export async function syncTryoutSubscriptionEntitlements(
     });
   }
 
-  for (const staleEntitlements of entitlementsBySubscriptionId.values()) {
-    for (const staleEntitlement of staleEntitlements) {
-      await db.delete("userTryoutEntitlements", staleEntitlement._id);
-    }
-  }
+  return hasMore;
 }
 
 /** Resolves the current active entitlement rows for one user and product. */

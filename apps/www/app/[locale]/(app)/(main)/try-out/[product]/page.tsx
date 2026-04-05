@@ -24,15 +24,19 @@ import {
 } from "@/components/tryout/card";
 import { TryoutCatalogList } from "@/components/tryout/catalog-list";
 import { SnbtTryoutIcon } from "@/components/tryout/product-icon";
+import { TRYOUT_CATALOG_PAGE_SIZE } from "@/components/tryout/utils/catalog";
+import { getToken } from "@/lib/auth/server";
 
 interface Props {
   params: Promise<{ locale: Locale; product: string }>;
 }
 
+/** Enumerates the supported tryout product routes for static route discovery. */
 export function generateStaticParams() {
   return tryoutProducts.map((product) => ({ product }));
 }
 
+/** Renders the server-backed tryout product landing page. */
 export default async function Page({ params }: Props) {
   const { locale, product: productParam } = await params;
 
@@ -43,13 +47,28 @@ export default async function Page({ params }: Props) {
   }
   const product: TryoutProduct = productParam;
 
-  const [tCommon, tTryouts, catalogMeta] = await Promise.all([
+  const [tCommon, tTryouts, token] = await Promise.all([
     getTranslations({ locale, namespace: "Common" }),
     getTranslations({ locale, namespace: "Tryouts" }),
+    getToken(),
+  ]);
+  const [catalogMeta, initialCatalogPage] = await Promise.all([
     fetchQuery(api.tryouts.queries.tryouts.getActiveTryoutCatalogMeta, {
       locale,
       product,
     }),
+    fetchQuery(
+      api.tryouts.queries.tryouts.getActiveTryoutCatalogPage,
+      {
+        locale,
+        paginationOpts: {
+          cursor: null,
+          numItems: TRYOUT_CATALOG_PAGE_SIZE,
+        },
+        product,
+      },
+      token ? { token } : undefined
+    ),
   ]);
 
   return (
@@ -106,7 +125,11 @@ export default async function Page({ params }: Props) {
           </TryoutCardHero>
 
           <TryoutCardContent>
-            <TryoutCatalogList locale={locale} product={product} />
+            <TryoutCatalogList
+              initialEntries={initialCatalogPage.page}
+              locale={locale}
+              product={product}
+            />
           </TryoutCardContent>
         </TryoutCard>
       </div>

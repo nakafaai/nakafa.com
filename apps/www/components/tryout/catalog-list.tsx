@@ -19,13 +19,13 @@ import {
   TryoutPackageYear,
 } from "@/components/tryout/package-list";
 import { TryoutStatusBadge } from "@/components/tryout/status-badge";
+import { TRYOUT_CATALOG_PAGE_SIZE } from "@/components/tryout/utils/catalog";
 import { getEffectiveTryoutStatus } from "@/components/tryout/utils/status";
 
 type ActiveTryoutCatalogPage = FunctionReturnType<
   typeof api.tryouts.queries.tryouts.getActiveTryoutCatalogPage
 >;
 type ActiveTryoutCatalogEntry = ActiveTryoutCatalogPage["page"][number];
-const TRYOUT_CATALOG_PAGE_SIZE = 25;
 
 /** Groups already ordered catalog rows into the year sections shown in the UI. */
 function groupCatalogEntriesByCycle(
@@ -80,12 +80,17 @@ function getTryoutCatalogBadgeStatus({
 }
 
 interface TryoutCatalogListProps {
+  initialEntries: readonly ActiveTryoutCatalogEntry[];
   locale: Locale;
   product: TryoutProduct;
 }
 
 /** Renders the paginated tryout catalog for the hub and product pages. */
-export function TryoutCatalogList({ locale, product }: TryoutCatalogListProps) {
+export function TryoutCatalogList({
+  initialEntries,
+  locale,
+  product,
+}: TryoutCatalogListProps) {
   const tTryouts = useTranslations("Tryouts");
   const {
     loadMore,
@@ -101,21 +106,19 @@ export function TryoutCatalogList({ locale, product }: TryoutCatalogListProps) {
       initialNumItems: TRYOUT_CATALOG_PAGE_SIZE,
     }
   );
+  const displayedEntries =
+    catalogEntries.length > 0 ? catalogEntries : initialEntries;
   const nowMs = useTryoutClock(
-    catalogEntries.some(
+    displayedEntries.some(
       (entry) => entry.latestAttempt?.status === "in-progress"
     )
   );
 
-  if (catalogEntries.length === 0) {
-    if (catalogStatus === "LoadingFirstPage") {
-      return null;
-    }
-
+  if (displayedEntries.length === 0) {
     return <TryoutPackageEmpty>{tTryouts("list-empty")}</TryoutPackageEmpty>;
   }
 
-  const cycleGroups = groupCatalogEntriesByCycle(catalogEntries);
+  const cycleGroups = groupCatalogEntriesByCycle(displayedEntries);
 
   return (
     <div className="border-t">

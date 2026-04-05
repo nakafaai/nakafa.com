@@ -448,4 +448,75 @@ describe("triggers/helpers/subscriptions", () => {
       }),
     ]);
   });
+
+  it("continues subscription entitlement cleanup in scheduled batches", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(NOW));
+
+    const t = convexTest(schema, convexModules);
+
+    const state = await t.mutation(async (ctx) => {
+      const userId = await insertUser(ctx, "subscription-entitlement-batches", {
+        credits: 10,
+        creditsResetAt: Date.UTC(2026, 3, 2, 0, 0, 0),
+        plan: "free",
+      });
+
+      await insertCustomer(
+        ctx,
+        userId,
+        "polar-subscription-entitlement-batches"
+      );
+
+      const proSubscriptionId = await insertSubscription(ctx, {
+        customerId: "polar-subscription-entitlement-batches",
+        productId: products.pro.id,
+        status: "active",
+        subscriptionId: "sub-subscription-entitlement-batches-pro",
+      });
+
+      for (let index = 0; index < 31; index += 1) {
+        await ctx.db.insert("userTryoutEntitlements", {
+          userId,
+          product: "snbt",
+          sourceKind: "subscription",
+          subscriptionId: index % 2 === 0 ? proSubscriptionId : undefined,
+          startsAt: NOW - (index + 1) * 1000,
+          endsAt: NOW - (index + 1) * 1000,
+        });
+      }
+
+      await runSyncCustomerPlanBySubscriptionId(
+        ctx,
+        "sub-subscription-entitlement-batches-pro"
+      );
+
+      return {
+        proSubscriptionId,
+        userId,
+      };
+    });
+
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+
+    const entitlements = await t.query(async (ctx) => {
+      return await ctx.db
+        .query("userTryoutEntitlements")
+        .withIndex("by_userId_and_product_and_sourceKind_and_endsAt", (q) =>
+          q
+            .eq("userId", state.userId)
+            .eq("product", "snbt")
+            .eq("sourceKind", "subscription")
+        )
+        .collect();
+    });
+
+    expect(entitlements).toEqual([
+      expect.objectContaining({
+        product: "snbt",
+        sourceKind: "subscription",
+        subscriptionId: state.proSubscriptionId,
+      }),
+    ]);
+  });
 });

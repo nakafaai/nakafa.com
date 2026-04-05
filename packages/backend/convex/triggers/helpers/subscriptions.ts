@@ -1,7 +1,11 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import { getPlanCreditConfig } from "@repo/backend/convex/credits/constants";
 import { resolveCurrentCreditResetTimestamp } from "@repo/backend/convex/credits/helpers/state";
-import { syncTryoutSubscriptionEntitlements } from "@repo/backend/convex/tryoutAccess/helpers/access";
+import {
+  listCanonicalActiveTryoutSubscriptions,
+  syncTryoutSubscriptionEntitlements,
+} from "@repo/backend/convex/tryoutAccess/helpers/access";
 import type { UserPlan } from "@repo/backend/convex/users/schema";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { products } from "@repo/backend/convex/utils/polar/products";
@@ -105,24 +109,6 @@ async function applyPlanChange(
   });
 }
 
-/** Loads every active subscription row for one Polar customer. */
-async function listActiveSubscriptionsForCustomer(
-  ctx: GenericMutationCtx<DataModel>,
-  customerId: string
-) {
-  const activeSubscriptions: DataModel["subscriptions"]["document"][] = [];
-
-  for await (const subscription of ctx.db
-    .query("subscriptions")
-    .withIndex("by_customerId_and_status", (q) =>
-      q.eq("customerId", customerId).eq("status", "active")
-    )) {
-    activeSubscriptions.push(subscription);
-  }
-
-  return activeSubscriptions;
-}
-
 /** Recompute the effective user plan for one subscription change. */
 export async function syncCustomerPlan(
   ctx: GenericMutationCtx<DataModel>,
@@ -155,20 +141,34 @@ export async function syncCustomerPlan(
   }
 
   const now = Date.now();
-  const activeSubscriptions = await listActiveSubscriptionsForCustomer(
-    ctx,
-    subscription.customerId
+  const activeSubscriptions = await listCanonicalActiveTryoutSubscriptions(
+    ctx.db,
+    {
+      customerId: subscription.customerId,
+    }
   );
 
   const newPlan = activeSubscriptions.reduce<UserPlan>((highestPlan, row) => {
     return getHigherPlan(highestPlan, getPlanFromProductId(row.productId));
   }, "free");
 
-  await syncTryoutSubscriptionEntitlements(ctx.db, {
+  const hasMoreEntitlements = await syncTryoutSubscriptionEntitlements(ctx.db, {
     activeSubscriptions,
     now,
     userId: user._id,
   });
+
+  if (hasMoreEntitlements) {
+    await ctx.scheduler.runAfter(
+      0,
+      internal.tryoutAccess.mutations.internal.status
+        .syncSubscriptionEntitlements,
+      {
+        customerId: subscription.customerId,
+        userId: user._id,
+      }
+    );
+  }
 
   if (newPlan === user.plan) {
     return;

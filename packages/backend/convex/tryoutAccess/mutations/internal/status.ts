@@ -5,7 +5,9 @@ import { internalMutation } from "@repo/backend/convex/functions";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import {
   getTryoutAccessCampaignRedeemStatus,
+  listCanonicalActiveTryoutSubscriptions,
   syncTryoutAccessGrantStatus,
+  syncTryoutSubscriptionEntitlements,
 } from "@repo/backend/convex/tryoutAccess/helpers/access";
 import { v } from "convex/values";
 
@@ -88,6 +90,42 @@ export const expireGrant = internalMutation({
     }
 
     await syncTryoutAccessGrantStatus(ctx.db, grant, Date.now());
+    return null;
+  },
+});
+
+/** Repairs one user's subscription entitlements in bounded scheduled batches. */
+export const syncSubscriptionEntitlements = internalMutation({
+  args: {
+    customerId: v.string(),
+    userId: vv.id("users"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const activeSubscriptions = await listCanonicalActiveTryoutSubscriptions(
+      ctx.db,
+      {
+        customerId: args.customerId,
+      }
+    );
+    const hasMore = await syncTryoutSubscriptionEntitlements(ctx.db, {
+      activeSubscriptions,
+      now,
+      userId: args.userId,
+    });
+
+    if (!hasMore) {
+      return null;
+    }
+
+    await ctx.scheduler.runAfter(
+      0,
+      internal.tryoutAccess.mutations.internal.status
+        .syncSubscriptionEntitlements,
+      args
+    );
+
     return null;
   },
 });

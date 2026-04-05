@@ -219,4 +219,54 @@ describe("tryoutAccess/mutations/setup", () => {
       })
     ).rejects.toThrow("CAMPAIGN_POLICY_IMMUTABLE");
   });
+
+  it("does not allow reusing a finished competition campaign for a new window", async () => {
+    const t = createTryoutTestConvex();
+
+    await t.mutation(async (ctx) => {
+      const result = await ctx.runMutation(
+        internal.tryoutAccess.mutations.setup.upsertCampaignAndLink,
+        {
+          campaign: {
+            slug: "finished-competition-window",
+            name: "Finished Competition Window",
+            products: ["snbt"],
+            campaignKind: "competition",
+            enabled: true,
+            startsAt: NOW,
+            endsAt: NOW + 24 * 60 * 60 * 1000,
+          },
+          link: {
+            code: "finished-competition-window",
+            label: "Finished Competition Window",
+            enabled: true,
+          },
+        }
+      );
+
+      await ctx.db.patch("tryoutAccessCampaigns", result.campaignId, {
+        resultsFinalizedAt: NOW + 2 * 24 * 60 * 60 * 1000,
+        resultsStatus: "finalized",
+      });
+    });
+
+    await expect(
+      t.mutation(internal.tryoutAccess.mutations.setup.upsertCampaignAndLink, {
+        campaign: {
+          slug: "finished-competition-window",
+          name: "Finished Competition Window",
+          products: ["snbt"],
+          campaignKind: "competition",
+          enabled: true,
+          startsAt: NOW + 7 * 24 * 60 * 60 * 1000,
+          endsAt: NOW + 8 * 24 * 60 * 60 * 1000,
+        },
+        link: {
+          code: "finished-competition-window",
+          label: "Finished Competition Window",
+          enabled: true,
+        },
+      })
+    ).rejects.toThrow("CAMPAIGN_LIFECYCLE_IMMUTABLE");
+  });
 });

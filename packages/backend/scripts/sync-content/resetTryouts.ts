@@ -1,6 +1,7 @@
 import { runConvexMutationGeneric } from "./convexApi";
 import { getContentCounts } from "./counts";
 import { formatDuration, log, logSuccess, logWarning } from "./logging";
+import { clearSyncState } from "./runtime";
 import { BatchDeleteResultSchema } from "./schemas";
 import type { ConvexConfig, SyncOptions } from "./types";
 
@@ -117,6 +118,7 @@ const RESET_TRYOUT_STEPS: ResetStep[] = [
   },
 ];
 
+/** Deletes every row reachable by one batch maintenance mutation. */
 const deleteAllBatched = async (
   config: ConvexConfig,
   mutationPath: string,
@@ -153,22 +155,26 @@ const deleteAllBatched = async (
   return totalDeleted;
 };
 
+/**
+ * Deletes the tryout and IRT content/runtime tables that must be rebuilt from a
+ * fresh full sync, then clears incremental sync state.
+ */
 export const resetTryouts = async (
   config: ConvexConfig,
   options: SyncOptions
 ): Promise<void> => {
   log("=== RESET TRYOUTS + IRT ===\n");
   log(
-    "This deletes tryout and IRT runtime data, then lets you resync fresh tryout definitions and scales."
+    "This deletes tryout definitions, catalog read models, attempts, leaderboard rows, and frozen IRT scale data."
   );
   log(
-    "It intentionally keeps unrelated standalone exercise history and other content tables intact.\n"
+    "Run a full sync afterward so Convex rebuilds the deleted tryout and IRT content tables coherently.\n"
   );
 
   if (options.prod) {
     logWarning("PRODUCTION DATABASE SELECTED!");
     logWarning(
-      "This will permanently delete tryout and IRT runtime data in production.\n"
+      "This will permanently delete tryout and IRT content/runtime data in production.\n"
     );
   }
 
@@ -227,7 +233,9 @@ export const resetTryouts = async (
   log(`\n  Total tryout + IRT rows: ${totalTryoutAndIrtRows}`);
 
   if (totalTryoutAndIrtRows === 0) {
-    logSuccess("\nTryout and IRT runtime data is already empty.");
+    logSuccess("\nTryout and IRT sync-managed data is already empty.");
+    clearSyncState(options.prod ?? false);
+    log("Cleared sync state file");
     return;
   }
 
@@ -257,6 +265,19 @@ export const resetTryouts = async (
   }
 
   log("\n=== RESET TRYOUTS + IRT COMPLETE ===\n");
-  logSuccess(`Deleted ${totalDeleted} tryout/IRT rows`);
+  logSuccess(
+    `Deleted ${totalDeleted} tryout/IRT rows across sync-managed tables`
+  );
   log(`Duration: ${formatDuration(performance.now() - startTime)}`);
+  clearSyncState(options.prod ?? false);
+  log("Cleared sync state file");
+
+  log("\nRun a full sync next:");
+
+  if (options.prod) {
+    log("  pnpm --filter @repo/backend sync:prod");
+    return;
+  }
+
+  log("  pnpm --filter @repo/backend sync");
 };

@@ -21,15 +21,33 @@ import {
 import { TryoutCatalogList } from "@/components/tryout/catalog-list";
 import { TryoutHubHeader } from "@/components/tryout/hub-header";
 import { SnbtTryoutIcon } from "@/components/tryout/product-icon";
+import { TRYOUT_CATALOG_PAGE_SIZE } from "@/components/tryout/utils/catalog";
+import { getToken } from "@/lib/auth/server";
 
+/** Renders the server-backed tryout hub with an SSR first catalog page. */
 export async function TryoutHubPage({ locale }: { locale: Locale }) {
   const product: TryoutProduct = "snbt";
-  const [tTryouts, catalogMeta] = await Promise.all([
+  const [tTryouts, token] = await Promise.all([
     getTranslations({ locale, namespace: "Tryouts" }),
+    getToken(),
+  ]);
+  const [catalogMeta, initialCatalogPage] = await Promise.all([
     fetchQuery(api.tryouts.queries.tryouts.getActiveTryoutCatalogMeta, {
       locale,
       product,
     }),
+    fetchQuery(
+      api.tryouts.queries.tryouts.getActiveTryoutCatalogPage,
+      {
+        locale,
+        paginationOpts: {
+          cursor: null,
+          numItems: TRYOUT_CATALOG_PAGE_SIZE,
+        },
+        product,
+      },
+      token ? { token } : undefined
+    ),
   ]);
 
   return (
@@ -76,7 +94,11 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
           </TryoutCardHero>
 
           <TryoutCardContent>
-            <TryoutCatalogList locale={locale} product={product} />
+            <TryoutCatalogList
+              initialEntries={initialCatalogPage.page}
+              locale={locale}
+              product={product}
+            />
           </TryoutCardContent>
         </TryoutCard>
       </div>
