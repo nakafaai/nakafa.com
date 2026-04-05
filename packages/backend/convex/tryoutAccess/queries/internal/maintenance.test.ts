@@ -64,6 +64,16 @@ describe("tryoutAccess/queries/internal/maintenance", () => {
         status: "active",
         userId,
       });
+      await ctx.db.insert("userTryoutEntitlements", {
+        userId,
+        product: "snbt",
+        sourceKind: "access-pass",
+        accessCampaignId: activeCampaignId,
+        accessGrantId: undefined,
+        subscriptionId: undefined,
+        startsAt: NOW - 24 * 60 * 60 * 1000,
+        endsAt: NOW - 1,
+      });
       await ctx.db.insert("tryoutAccessCampaigns", {
         slug: "pending-overdue-competition",
         name: "Pending Overdue Competition",
@@ -76,24 +86,23 @@ describe("tryoutAccess/queries/internal/maintenance", () => {
         startsAt: NOW - 24 * 60 * 60 * 1000,
         endsAt: NOW - 1,
       });
-      await ctx.db.insert("tryoutAccessCampaigns", {
-        slug: "stuck-finalizing-competition",
-        name: "Stuck Finalizing Competition",
-        products: ["snbt"],
-        campaignKind: "competition",
-        enabled: true,
-        redeemStatus: "ended",
-        resultsStatus: "finalizing",
-        resultsFinalizedAt: null,
-        startsAt: NOW - 24 * 60 * 60 * 1000,
-        endsAt: NOW - 1,
-      });
     });
 
-    const [campaigns, grants] = await Promise.all([
+    const [campaigns, entitlements, grants] = await Promise.all([
       t.query(
         internal.tryoutAccess.queries.internal.maintenance
           .getTryoutAccessCampaignIntegrity,
+        {
+          nowMs: NOW,
+          paginationOpts: {
+            cursor: null,
+            numItems: 100,
+          },
+        }
+      ),
+      t.query(
+        internal.tryoutAccess.queries.internal.maintenance
+          .getTryoutAccessEntitlementIntegrity,
         {
           nowMs: NOW,
           paginationOpts: {
@@ -120,7 +129,10 @@ describe("tryoutAccess/queries/internal/maintenance", () => {
       overdueActiveCampaignCount: 1,
       overduePendingCompetitionCount: 1,
       overdueScheduledCampaignCount: 1,
-      stuckFinalizingCompetitionCount: 1,
+    });
+    expect(entitlements).toMatchObject({
+      isDone: true,
+      overdueEntitlementCount: 1,
     });
     expect(grants).toMatchObject({
       isDone: true,

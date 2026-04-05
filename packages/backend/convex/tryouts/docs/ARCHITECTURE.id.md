@@ -124,6 +124,8 @@ psychometric internal.
   - owner row per user untuk men-serialize `startTryout` lewat OCC
   - diverifikasi dan direpair lewat maintenance query/mutation bounded, bukan
     lewat fallback field tersembunyi di dokumen `users`
+  - write path runtime mengasumsikan row ini sudah valid; kalau hilang atau
+    duplikat, mutation gagal jelas sampai operator menjalankan repair
 
 ### Projection Akses
 
@@ -166,6 +168,10 @@ psychometric internal.
   - `competition`
   - `access-pass`
   - Pro subscription
+- runtime tidak menghitung ulang access aktif dari clock; scheduler exact dan
+  repair bounded menjaga projection entitlement tetap authoritative
+- backend men-touch tepat satu `userTryoutControls` row yang sudah harus ada
+  sebagai batas OCC khusus `startTryout`
 - kalau ada entitlement `competition`, backend membaca satu attempt indexed untuk
   `{user, tryout, campaign}`
 - backend memilih access source yang sah sesuai policy produk
@@ -227,6 +233,12 @@ flowchart TD
     I -- belum --> G
     I -- sudah --> J[Terverifikasi IRT]
 ```
+
+Result competition tidak punya state runtime `finalizing`.
+
+- scheduler exact di `endsAt` langsung menjalankan finalizer internal
+- cron sweep hanya mem-finalkan competition `pending` yang sudah overdue
+- akibatnya model storage cukup `pending` atau `finalized`
 
 ## Kenapa Katalog Punya Tabel Sendiri?
 

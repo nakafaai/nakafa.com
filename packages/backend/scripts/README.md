@@ -76,10 +76,10 @@ npx convex deploy
 | `tryout:repair:controls` | Repair missing or duplicate `userTryoutControls` rows in development |
 | `tryout:verify:controls:prod` | Verify `userTryoutControls` integrity in production |
 | `tryout:repair:controls:prod` | Repair missing or duplicate `userTryoutControls` rows in production |
-| `tryout:verify:access` | Verify campaign/grant time-state integrity in development |
-| `tryout:repair:access` | Run the bounded access status sweeper in development |
-| `tryout:verify:access:prod` | Verify campaign/grant time-state integrity in production |
-| `tryout:repair:access:prod` | Run the bounded access status sweeper in production |
+| `tryout:verify:access` | Verify campaign/grant/entitlement time-state integrity in development |
+| `tryout:repair:access` | Repair overdue campaign/grant states and overdue competition finalization in development |
+| `tryout:verify:access:prod` | Verify campaign/grant/entitlement time-state integrity in production |
+| `tryout:repair:access:prod` | Repair overdue campaign/grant states and overdue competition finalization in production |
 | `irt:verify:cache` | Verify cached IRT calibration state in development |
 | `irt:verify:scale` | Verify frozen IRT scale coverage in development |
 | `irt:prod:verify:cache` | Verify cached IRT calibration state in production |

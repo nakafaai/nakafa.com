@@ -8,7 +8,6 @@ import type {
   tryoutAccessGrantStatusValidator,
   userTryoutEntitlementSourceKindValidator,
 } from "@repo/backend/convex/tryoutAccess/schema";
-import { touchUserTryoutControl } from "@repo/backend/convex/tryouts/helpers/control";
 import {
   type TryoutProduct,
   tryoutProducts,
@@ -478,6 +477,23 @@ async function syncGrantEntitlements(
   }
 }
 
+/** Synchronizes the stored entitlement rows for one already-materialized grant. */
+export async function syncTryoutAccessGrantEntitlements(
+  db: TryoutAccessDbWriter,
+  grant: Pick<
+    Doc<"tryoutAccessGrants">,
+    "_id" | "campaignId" | "endsAt" | "redeemedAt" | "status" | "userId"
+  >,
+  campaign: Doc<"tryoutAccessCampaigns"> | null
+) {
+  await syncGrantEntitlements(db, {
+    campaign,
+    endsAt: grant.endsAt,
+    grant,
+    status: grant.status,
+  });
+}
+
 /** Synchronizes the stored grant row and its active entitlement rows. */
 export async function syncTryoutAccessGrantStatus(
   db: TryoutAccessDbWriter,
@@ -488,10 +504,6 @@ export async function syncTryoutAccessGrantStatus(
   now: number
 ) {
   const campaign = await db.get("tryoutAccessCampaigns", grant.campaignId);
-  await touchUserTryoutControl(db, {
-    updatedAt: now,
-    userId: grant.userId,
-  });
   const status = getTryoutAccessGrantStatus(grant.endsAt, now);
 
   if (grant.status !== status) {
@@ -518,21 +530,15 @@ export async function syncTryoutSubscriptionEntitlements(
   db: TryoutAccessDbWriter,
   {
     activeSubscriptions,
-    now,
     userId,
   }: {
     activeSubscriptions: Pick<
       Doc<"subscriptions">,
       "_id" | "currentPeriodEnd" | "currentPeriodStart" | "productId"
     >[];
-    now: number;
     userId: Doc<"users">["_id"];
   }
 ): Promise<boolean> {
-  await touchUserTryoutControl(db, {
-    updatedAt: now,
-    userId,
-  });
   const nextEntitlementsByProduct = buildNextSubscriptionEntitlements(
     activeSubscriptions,
     userId

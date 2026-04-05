@@ -6,45 +6,12 @@ import {
 import { describe, expect, it, vi } from "vitest";
 
 describe("tryoutAccess/mutations/internal/competition", () => {
-  it("finalizes ended competition campaigns after they are claimed", async () => {
+  it("finalizes ended pending competition campaigns", async () => {
     const t = createTryoutTestConvex();
     const campaignId = await t.mutation(async (ctx) => {
       return await ctx.db.insert("tryoutAccessCampaigns", {
         slug: "competition-finalize",
         name: "Competition Finalize",
-        products: ["snbt"],
-        campaignKind: "competition",
-        enabled: true,
-        redeemStatus: "ended",
-        resultsStatus: "finalizing",
-        resultsFinalizedAt: null,
-        startsAt: NOW - 24 * 60 * 60 * 1000,
-        endsAt: NOW - 1,
-      });
-    });
-
-    await t.mutation(
-      internal.tryoutAccess.mutations.internal.competition
-        .finalizeCompetitionCampaignResults,
-      {
-        campaignId,
-      }
-    );
-
-    const campaign = await t.query(async (ctx) => {
-      return await ctx.db.get("tryoutAccessCampaigns", campaignId);
-    });
-
-    expect(campaign?.resultsStatus).toBe("finalized");
-    expect(campaign?.resultsFinalizedAt).toBeGreaterThanOrEqual(NOW);
-  });
-
-  it("does not finalize pending competition campaigns before they are claimed", async () => {
-    const t = createTryoutTestConvex();
-    const campaignId = await t.mutation(async (ctx) => {
-      return await ctx.db.insert("tryoutAccessCampaigns", {
-        slug: "competition-pending-not-claimed",
-        name: "Competition Pending Not Claimed",
         products: ["snbt"],
         campaignKind: "competition",
         enabled: true,
@@ -68,8 +35,41 @@ describe("tryoutAccess/mutations/internal/competition", () => {
       return await ctx.db.get("tryoutAccessCampaigns", campaignId);
     });
 
-    expect(campaign?.resultsStatus).toBe("pending");
-    expect(campaign?.resultsFinalizedAt).toBeNull();
+    expect(campaign?.resultsStatus).toBe("finalized");
+    expect(campaign?.resultsFinalizedAt).toBeGreaterThanOrEqual(NOW);
+  });
+
+  it("does not change already finalized competition campaigns", async () => {
+    const t = createTryoutTestConvex();
+    const campaignId = await t.mutation(async (ctx) => {
+      return await ctx.db.insert("tryoutAccessCampaigns", {
+        slug: "competition-pending-not-claimed",
+        name: "Competition Pending Not Claimed",
+        products: ["snbt"],
+        campaignKind: "competition",
+        enabled: true,
+        redeemStatus: "ended",
+        resultsStatus: "finalized",
+        resultsFinalizedAt: NOW - 1000,
+        startsAt: NOW - 24 * 60 * 60 * 1000,
+        endsAt: NOW - 1,
+      });
+    });
+
+    await t.mutation(
+      internal.tryoutAccess.mutations.internal.competition
+        .finalizeCompetitionCampaignResults,
+      {
+        campaignId,
+      }
+    );
+
+    const campaign = await t.query(async (ctx) => {
+      return await ctx.db.get("tryoutAccessCampaigns", campaignId);
+    });
+
+    expect(campaign?.resultsStatus).toBe("finalized");
+    expect(campaign?.resultsFinalizedAt).toBe(NOW - 1000);
   });
 
   it("does not finalize competition campaigns before they end", async () => {
@@ -85,7 +85,7 @@ describe("tryoutAccess/mutations/internal/competition", () => {
         campaignKind: "competition",
         enabled: true,
         redeemStatus: "active",
-        resultsStatus: "finalizing",
+        resultsStatus: "pending",
         resultsFinalizedAt: null,
         startsAt: NOW - 24 * 60 * 60 * 1000,
         endsAt: NOW + 60 * 60 * 1000,
@@ -104,7 +104,7 @@ describe("tryoutAccess/mutations/internal/competition", () => {
       return await ctx.db.get("tryoutAccessCampaigns", campaignId);
     });
 
-    expect(campaign?.resultsStatus).toBe("finalizing");
+    expect(campaign?.resultsStatus).toBe("pending");
     expect(campaign?.resultsFinalizedAt).toBeNull();
 
     vi.useRealTimers();

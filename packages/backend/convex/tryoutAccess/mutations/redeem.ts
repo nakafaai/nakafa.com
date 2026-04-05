@@ -2,11 +2,9 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import {
-  getTryoutAccessCampaignRedeemStatus,
   getTryoutAccessEventByCode,
   getTryoutAccessGrantEndsAt,
-  getTryoutAccessGrantStatus,
-  syncTryoutAccessGrantStatus,
+  syncTryoutAccessGrantEntitlements,
 } from "@repo/backend/convex/tryoutAccess/helpers/access";
 import { ConvexError, v } from "convex/values";
 
@@ -56,9 +54,7 @@ export const redeemEventAccess = mutation({
       .unique();
 
     if (existingGrant) {
-      await syncTryoutAccessGrantStatus(ctx.db, existingGrant, now);
-
-      if (existingGrant.endsAt > now) {
+      if (existingGrant.status === "active") {
         return {
           kind: "active" as const,
           endsAt: existingGrant.endsAt,
@@ -80,19 +76,14 @@ export const redeemEventAccess = mutation({
       });
     }
 
-    const campaignRedeemStatus = getTryoutAccessCampaignRedeemStatus(
-      eventAccess.campaign,
-      now
-    );
-
-    if (campaignRedeemStatus === "scheduled") {
+    if (eventAccess.campaign.redeemStatus === "scheduled") {
       throw new ConvexError({
         code: "EVENT_NOT_STARTED",
         message: "Event access is not available yet.",
       });
     }
 
-    if (campaignRedeemStatus === "ended") {
+    if (eventAccess.campaign.redeemStatus === "ended") {
       throw new ConvexError({
         code: "EVENT_ENDED",
         message: "Event access has ended.",
@@ -103,13 +94,7 @@ export const redeemEventAccess = mutation({
       campaign: eventAccess.campaign,
       redeemedAt: now,
     });
-    const grantStatus = getTryoutAccessGrantStatus(endsAt, now);
-
-    if (eventAccess.campaign.redeemStatus !== campaignRedeemStatus) {
-      await ctx.db.patch("tryoutAccessCampaigns", eventAccess.campaign._id, {
-        redeemStatus: campaignRedeemStatus,
-      });
-    }
+    const grantStatus = "active" as const;
 
     const grantId = await ctx.db.insert("tryoutAccessGrants", {
       campaignId: eventAccess.campaign._id,
@@ -120,7 +105,7 @@ export const redeemEventAccess = mutation({
       status: grantStatus,
     });
 
-    await syncTryoutAccessGrantStatus(
+    await syncTryoutAccessGrantEntitlements(
       ctx.db,
       {
         _id: grantId,
@@ -130,7 +115,7 @@ export const redeemEventAccess = mutation({
         status: grantStatus,
         userId: appUser._id,
       },
-      now
+      eventAccess.campaign
     );
 
     await ctx.scheduler.runAfter(

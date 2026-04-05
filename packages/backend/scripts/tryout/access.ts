@@ -13,7 +13,6 @@ const tryoutAccessCampaignIntegrityPageSchema = z.object({
   overdueActiveCampaignCount: z.number(),
   overduePendingCompetitionCount: z.number(),
   overdueScheduledCampaignCount: z.number(),
-  stuckFinalizingCompetitionCount: z.number(),
 });
 
 const tryoutAccessGrantIntegrityPageSchema = z.object({
@@ -22,11 +21,20 @@ const tryoutAccessGrantIntegrityPageSchema = z.object({
   overdueActiveGrantCount: z.number(),
 });
 
+const tryoutAccessEntitlementIntegrityPageSchema = z.object({
+  continueCursor: z.string(),
+  isDone: z.boolean(),
+  overdueEntitlementCount: z.number(),
+});
+
 type TryoutAccessCampaignIntegrityPage = z.infer<
   typeof tryoutAccessCampaignIntegrityPageSchema
 >;
 type TryoutAccessGrantIntegrityPage = z.infer<
   typeof tryoutAccessGrantIntegrityPageSchema
+>;
+type TryoutAccessEntitlementIntegrityPage = z.infer<
+  typeof tryoutAccessEntitlementIntegrityPageSchema
 >;
 
 /** Reads the full access campaign integrity snapshot. */
@@ -37,7 +45,6 @@ async function getTryoutAccessCampaignIntegrity(prod: boolean) {
   let overdueActiveCampaignCount = 0;
   let overduePendingCompetitionCount = 0;
   let overdueScheduledCampaignCount = 0;
-  let stuckFinalizingCompetitionCount = 0;
 
   while (true) {
     const page: TryoutAccessCampaignIntegrityPage =
@@ -57,14 +64,12 @@ async function getTryoutAccessCampaignIntegrity(prod: boolean) {
     overdueActiveCampaignCount += page.overdueActiveCampaignCount;
     overduePendingCompetitionCount += page.overduePendingCompetitionCount;
     overdueScheduledCampaignCount += page.overdueScheduledCampaignCount;
-    stuckFinalizingCompetitionCount += page.stuckFinalizingCompetitionCount;
 
     if (page.isDone) {
       return {
         overdueActiveCampaignCount,
         overduePendingCompetitionCount,
         overdueScheduledCampaignCount,
-        stuckFinalizingCompetitionCount,
       };
     }
 
@@ -105,18 +110,54 @@ async function getTryoutAccessGrantIntegrity(prod: boolean) {
   }
 }
 
+/** Reads the full access entitlement integrity snapshot. */
+async function getTryoutAccessEntitlementIntegrity(prod: boolean) {
+  const config = getConvexConfig({ prod });
+  const nowMs = Date.now();
+  let continueCursor: string | null = null;
+  let overdueEntitlementCount = 0;
+
+  while (true) {
+    const page: TryoutAccessEntitlementIntegrityPage =
+      await runConvexQueryWithArgs(
+        config,
+        "tryoutAccess/queries/internal/maintenance:getTryoutAccessEntitlementIntegrity",
+        {
+          nowMs,
+          paginationOpts: {
+            cursor: continueCursor,
+            numItems: TRYOUT_ACCESS_PAGE_SIZE,
+          },
+        },
+        tryoutAccessEntitlementIntegrityPageSchema
+      );
+
+    overdueEntitlementCount += page.overdueEntitlementCount;
+
+    if (page.isDone) {
+      return {
+        overdueEntitlementCount,
+      };
+    }
+
+    continueCursor = page.continueCursor;
+  }
+}
+
 /** Runs access-state verification for dev or prod. */
 async function main() {
   loadEnvFile();
 
   const flags = process.argv.slice(2);
   const prod = flags.includes("--prod");
-  const [campaigns, grants] = await Promise.all([
+  const [campaigns, entitlements, grants] = await Promise.all([
     getTryoutAccessCampaignIntegrity(prod),
+    getTryoutAccessEntitlementIntegrity(prod),
     getTryoutAccessGrantIntegrity(prod),
   ]);
   const result = {
     ...campaigns,
+    ...entitlements,
     ...grants,
   };
 
@@ -125,7 +166,7 @@ async function main() {
     result.overdueScheduledCampaignCount > 0 ||
     result.overdueActiveCampaignCount > 0 ||
     result.overduePendingCompetitionCount > 0 ||
-    result.stuckFinalizingCompetitionCount > 0 ||
+    result.overdueEntitlementCount > 0 ||
     result.overdueActiveGrantCount > 0
       ? 1
       : 0;

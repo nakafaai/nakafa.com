@@ -26,7 +26,8 @@ queries, mutations, IRT publication, and leaderboard flow stay generic.
   `competition`, `access-pass`, and `subscription`
 - `userTryoutControls` serializes tryout starts per user so runtime invariants
   rely on OCC against one dedicated owner row instead of projection-table
-  uniqueness
+  uniqueness; bootstrap creates this row once and maintenance repairs it if ops
+  ever detect corruption
 - `tryoutLeaderboardEntries` stores the current best official result per user
 - `userTryoutStats` stores leaderboard aggregates per product namespace
 
@@ -53,9 +54,17 @@ That policy owns:
 - Tryout start reads go through exact user-scoped entitlements and one indexed
   `tryoutAttempts` lookup for competition usage instead of projection tables or
   broad scans inside the mutation
+- Start authorization trusts the materialized `userTryoutEntitlements` rows;
+  exact scheduled transitions and overdue repair keep those rows authoritative
+- Runtime tryout writes do not self-heal broken control rows; missing or
+  duplicate `userTryoutControls` are explicit integrity failures until the
+  bounded repair path fixes them
 - Generic ranking still uses aggregate components for O(log n) rank lookups
 - Competition campaign windows are immutable after the first redemption so the
   runtime never needs to repair old attempts after ops edits campaign policy
+- Competition result finalization goes straight from `pending` to `finalized`:
+  exact end-time scheduling is primary, and the cron sweep is only overdue
+  repair
 - Auth cleanup deletes user-scoped tryout runtime, access, and leaderboard rows
   together so deleted users do not leave orphaned runtime state behind
 - Ops can verify dedicated control-row integrity and access time-state integrity

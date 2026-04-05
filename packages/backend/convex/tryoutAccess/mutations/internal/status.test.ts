@@ -16,6 +16,16 @@ describe("tryoutAccess/mutations/internal/status", () => {
         now: NOW,
         suffix: "sync-campaign-grants",
       });
+      const control = await ctx.db
+        .query("userTryoutControls")
+        .withIndex("by_userId", (q) => q.eq("userId", identity.userId))
+        .unique();
+
+      if (!control) {
+        throw new Error("expected tryout control to exist");
+      }
+
+      await ctx.db.delete("userTryoutControls", control._id);
       const campaignEndsAt = currentTime + 24 * 60 * 60 * 1000;
       const oldGrantEndsAt = currentTime + 90 * 24 * 60 * 60 * 1000;
       const campaignId = await ctx.db.insert("tryoutAccessCampaigns", {
@@ -172,7 +182,7 @@ describe("tryoutAccess/mutations/internal/status", () => {
     ]);
   });
 
-  it("claims pending competition batches before enqueueing finalizers", async () => {
+  it("finalizes overdue pending competition batches in bounded sweep passes", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(NOW));
 
@@ -209,25 +219,23 @@ describe("tryoutAccess/mutations/internal/status", () => {
           )
           .take(102)
       ).length;
-      const finalizingCount = (
+      const finalizedCount = (
         await ctx.db
           .query("tryoutAccessCampaigns")
           .withIndex("by_campaignKind_and_resultsStatus_and_endsAt", (q) =>
-            q
-              .eq("campaignKind", "competition")
-              .eq("resultsStatus", "finalizing")
+            q.eq("campaignKind", "competition").eq("resultsStatus", "finalized")
           )
           .take(102)
       ).length;
 
       return {
-        finalizingCount,
+        finalizedCount,
         pendingCount,
       };
     });
 
     expect(intermediate).toEqual({
-      finalizingCount: 100,
+      finalizedCount: 100,
       pendingCount: 1,
     });
 
@@ -245,42 +253,6 @@ describe("tryoutAccess/mutations/internal/status", () => {
     });
 
     expect(finalizedCount).toBe(101);
-
-    vi.useRealTimers();
-  });
-
-  it("re-enqueues ended competitions that are stuck in finalizing", async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date(NOW));
-
-    const t = createTryoutTestConvex();
-    const campaignId = await t.mutation(async (ctx) => {
-      return await ctx.db.insert("tryoutAccessCampaigns", {
-        slug: "stuck-finalizing-competition",
-        name: "Stuck Finalizing Competition",
-        products: ["snbt"],
-        campaignKind: "competition",
-        enabled: true,
-        redeemStatus: "ended",
-        resultsStatus: "finalizing",
-        resultsFinalizedAt: null,
-        startsAt: NOW - 24 * 60 * 60 * 1000,
-        endsAt: NOW - 1,
-      });
-    });
-
-    await t.mutation(
-      internal.tryoutAccess.mutations.internal.status.sweepStates,
-      {}
-    );
-    await t.finishAllScheduledFunctions(vi.runAllTimers);
-
-    const campaign = await t.query(async (ctx) => {
-      return await ctx.db.get("tryoutAccessCampaigns", campaignId);
-    });
-
-    expect(campaign?.resultsStatus).toBe("finalized");
-    expect(campaign?.resultsFinalizedAt).toBeGreaterThanOrEqual(NOW);
 
     vi.useRealTimers();
   });

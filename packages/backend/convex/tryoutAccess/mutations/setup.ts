@@ -292,8 +292,8 @@ async function scheduleCampaignStateTransitions(
 
   await ctx.scheduler.runAfter(
     Math.max(0, campaign.endsAt - now),
-    internal.tryoutAccess.mutations.internal.status
-      .enqueueCompetitionCampaignFinalization,
+    internal.tryoutAccess.mutations.internal.competition
+      .finalizeCompetitionCampaignResults,
     {
       campaignId,
     }

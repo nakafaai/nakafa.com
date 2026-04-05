@@ -154,7 +154,6 @@ export async function syncCustomerPlan(
 
   const hasMoreEntitlements = await syncTryoutSubscriptionEntitlements(ctx.db, {
     activeSubscriptions,
-    now,
     userId: user._id,
   });
 

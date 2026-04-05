@@ -55,7 +55,6 @@ async function insertActiveProSubscription(
         productId: products.pro.id,
       },
     ],
-    now: NOW,
     userId,
   });
 }
@@ -105,6 +104,78 @@ async function insertTryoutAccessGrant(
 }
 
 describe("tryouts/mutations/attempts", () => {
+  it("rejects startTryout when the dedicated control row is missing", async () => {
+    const t = createTryoutTestConvex();
+    const state = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "missing-tryout-control",
+      });
+
+      await insertTryoutSkeleton(ctx, "missing-tryout-control");
+      await insertActiveProSubscription(ctx, identity.userId);
+
+      const control = await ctx.db
+        .query("userTryoutControls")
+        .withIndex("by_userId", (q) => q.eq("userId", identity.userId))
+        .unique();
+
+      if (!control) {
+        throw new Error("expected tryout control to exist");
+      }
+
+      await ctx.db.delete("userTryoutControls", control._id);
+
+      return identity;
+    });
+
+    await expect(
+      t
+        .withIdentity({
+          subject: state.authUserId,
+          sessionId: state.sessionId,
+        })
+        .mutation(api.tryouts.mutations.attempts.startTryout, {
+          product: "snbt",
+          locale: "id",
+          tryoutSlug: "missing-tryout-control",
+        })
+    ).rejects.toThrow("Tryout control is missing for this user.");
+  });
+
+  it("rejects startTryout when the dedicated control row is duplicated", async () => {
+    const t = createTryoutTestConvex();
+    const state = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "duplicate-tryout-control",
+      });
+
+      await insertTryoutSkeleton(ctx, "duplicate-tryout-control");
+      await insertActiveProSubscription(ctx, identity.userId);
+
+      await ctx.db.insert("userTryoutControls", {
+        updatedAt: NOW + 1,
+        userId: identity.userId,
+      });
+
+      return identity;
+    });
+
+    await expect(
+      t
+        .withIdentity({
+          subject: state.authUserId,
+          sessionId: state.sessionId,
+        })
+        .mutation(api.tryouts.mutations.attempts.startTryout, {
+          product: "snbt",
+          locale: "id",
+          tryoutSlug: "duplicate-tryout-control",
+        })
+    ).rejects.toThrow("Tryout control is duplicated for this user.");
+  });
+
   it("serializes concurrent starts through the user tryout control row", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {

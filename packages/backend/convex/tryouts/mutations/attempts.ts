@@ -44,17 +44,10 @@ export const startTryout = mutation({
     const userId = appUser._id;
     const now = Date.now();
     const tryout = await loadStartableTryout(ctx, args);
-    const tryoutControl = await touchUserTryoutControl(ctx.db, {
+    await touchUserTryoutControl(ctx.db, {
       updatedAt: now,
       userId,
     });
-
-    if (!tryoutControl) {
-      throw new ConvexError({
-        code: "INVALID_TRYOUT_STATE",
-        message: "Tryout control is missing for this user.",
-      });
-    }
 
     const [scaleVersion, existingAttempt] = await Promise.all([
       getLatestScaleVersionForTryout(ctx.db, tryout._id),
@@ -91,8 +84,7 @@ export const startTryout = mutation({
     });
     const activeCompetitionEntitlement =
       accessEntitlements.competitionEntitlement?.accessCampaignId &&
-      accessEntitlements.competitionEntitlement.accessGrantId &&
-      accessEntitlements.competitionEntitlement.endsAt > now
+      accessEntitlements.competitionEntitlement.accessGrantId
         ? accessEntitlements.competitionEntitlement
         : null;
     const activeCompetitionCampaignId =
@@ -129,8 +121,7 @@ export const startTryout = mutation({
         : null;
     const accessPassEntitlement =
       accessEntitlements.accessPassEntitlement?.accessCampaignId &&
-      accessEntitlements.accessPassEntitlement.accessGrantId &&
-      accessEntitlements.accessPassEntitlement.endsAt > now
+      accessEntitlements.accessPassEntitlement.accessGrantId
         ? accessEntitlements.accessPassEntitlement
         : null;
     const accessPassCampaignId =
@@ -148,14 +139,12 @@ export const startTryout = mutation({
             countsForCompetition: false,
           }
         : null;
-    const subscriptionStartSource =
-      accessEntitlements.subscriptionEntitlement &&
-      accessEntitlements.subscriptionEntitlement.endsAt > now
-        ? {
-            accessKind: "subscription" as const,
-            countsForCompetition: false,
-          }
-        : null;
+    const subscriptionStartSource = accessEntitlements.subscriptionEntitlement
+      ? {
+          accessKind: "subscription" as const,
+          countsForCompetition: false,
+        }
+      : null;
     const accessSource =
       competitionStartSource ??
       accessPassStartSource ??

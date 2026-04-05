@@ -8,13 +8,18 @@ const tryoutAccessCampaignIntegrityPageResultValidator = v.object({
   overdueActiveCampaignCount: v.number(),
   overduePendingCompetitionCount: v.number(),
   overdueScheduledCampaignCount: v.number(),
-  stuckFinalizingCompetitionCount: v.number(),
 });
 
 const tryoutAccessGrantIntegrityPageResultValidator = v.object({
   continueCursor: v.string(),
   isDone: v.boolean(),
   overdueActiveGrantCount: v.number(),
+});
+
+const tryoutAccessEntitlementIntegrityPageResultValidator = v.object({
+  continueCursor: v.string(),
+  isDone: v.boolean(),
+  overdueEntitlementCount: v.number(),
 });
 
 /**
@@ -36,7 +41,6 @@ export const getTryoutAccessCampaignIntegrity = internalQuery({
     let overdueActiveCampaignCount = 0;
     let overduePendingCompetitionCount = 0;
     let overdueScheduledCampaignCount = 0;
-    let stuckFinalizingCompetitionCount = 0;
 
     for (const campaign of campaigns.page) {
       if (
@@ -52,15 +56,10 @@ export const getTryoutAccessCampaignIntegrity = internalQuery({
 
       if (
         campaign.campaignKind === "competition" &&
-        campaign.endsAt <= args.nowMs
+        campaign.endsAt <= args.nowMs &&
+        campaign.resultsStatus === "pending"
       ) {
-        if (campaign.resultsStatus === "pending") {
-          overduePendingCompetitionCount += 1;
-        }
-
-        if (campaign.resultsStatus === "finalizing") {
-          stuckFinalizingCompetitionCount += 1;
-        }
+        overduePendingCompetitionCount += 1;
       }
     }
 
@@ -70,7 +69,6 @@ export const getTryoutAccessCampaignIntegrity = internalQuery({
       overdueActiveCampaignCount,
       overduePendingCompetitionCount,
       overdueScheduledCampaignCount,
-      stuckFinalizingCompetitionCount,
     };
   },
 });
@@ -103,6 +101,39 @@ export const getTryoutAccessGrantIntegrity = internalQuery({
       continueCursor: grants.continueCursor,
       isDone: grants.isDone,
       overdueActiveGrantCount,
+    };
+  },
+});
+
+/**
+ * Returns integrity totals for one bounded page of access entitlements.
+ *
+ * Projection rows should only exist while access is active, so overdue rows are
+ * direct evidence that time-based state drifted away from the materialized
+ * access model.
+ */
+export const getTryoutAccessEntitlementIntegrity = internalQuery({
+  args: {
+    nowMs: v.number(),
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: tryoutAccessEntitlementIntegrityPageResultValidator,
+  handler: async (ctx, args) => {
+    const entitlements = await ctx.db
+      .query("userTryoutEntitlements")
+      .paginate(args.paginationOpts);
+    let overdueEntitlementCount = 0;
+
+    for (const entitlement of entitlements.page) {
+      if (entitlement.endsAt <= args.nowMs) {
+        overdueEntitlementCount += 1;
+      }
+    }
+
+    return {
+      continueCursor: entitlements.continueCursor,
+      isDone: entitlements.isDone,
+      overdueEntitlementCount,
     };
   },
 });
