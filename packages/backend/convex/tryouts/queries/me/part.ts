@@ -6,6 +6,7 @@ import {
   loadValidatedTryoutPartSets,
   resolveRequestedTryoutPart,
 } from "@repo/backend/convex/tryouts/helpers/parts";
+import { getTryoutPublicResultStatus } from "@repo/backend/convex/tryouts/helpers/publicResultStatus";
 import { getTryoutReportScore } from "@repo/backend/convex/tryouts/helpers/reporting";
 import { loadLatestUserTryoutContext } from "@repo/backend/convex/tryouts/queries/me/helpers";
 import {
@@ -35,12 +36,22 @@ export const getUserTryoutPartAttempt = query({
     }
 
     const { attempt: tryoutAttempt } = context;
+    const accessCampaign = tryoutAttempt.accessCampaignId
+      ? await ctx.db.get(
+          "tryoutAccessCampaigns",
+          tryoutAttempt.accessCampaignId
+        )
+      : null;
     const scoredTryoutAttempt = {
       ...tryoutAttempt,
       irtScore: getTryoutReportScore(
         context.tryout.product,
         tryoutAttempt.theta
       ),
+      publicResultStatus: getTryoutPublicResultStatus({
+        accessCampaign,
+        tryoutAttempt,
+      }),
     };
     const endedAttemptHasUntouchedParts =
       tryoutAttempt.status !== "in-progress" &&
@@ -76,11 +87,28 @@ export const getUserTryoutPartAttempt = query({
     if (!resolvedPart) {
       return {
         expiresAtMs: tryoutAttempt.expiresAt,
+        part: null,
         partScore: null,
         partAttempt: null,
         tryoutAttempt: resolvedTryoutAttempt,
       };
     }
+
+    const set = await ctx.db.get("exerciseSets", resolvedPart.snapshot.setId);
+
+    if (!set) {
+      throw new ConvexError({
+        code: "INVALID_TRYOUT_STATE",
+        message: "Tryout part is missing its exercise set.",
+      });
+    }
+
+    const part = {
+      currentPartKey: resolvedPart.currentPartKey,
+      material: set.material,
+      questionCount: resolvedPart.snapshot.questionCount,
+      setSlug: set.slug,
+    };
 
     const currentPartAttempt = await ctx.db
       .query("tryoutPartAttempts")
@@ -100,6 +128,7 @@ export const getUserTryoutPartAttempt = query({
         if (!partSnapshot) {
           return {
             expiresAtMs: tryoutAttempt.expiresAt,
+            part,
             partScore: null,
             partAttempt: null,
             tryoutAttempt: resolvedTryoutAttempt,
@@ -108,6 +137,7 @@ export const getUserTryoutPartAttempt = query({
 
         return {
           expiresAtMs: tryoutAttempt.expiresAt,
+          part,
           partScore: partSnapshot.score,
           partAttempt: null,
           tryoutAttempt: resolvedTryoutAttempt,
@@ -123,6 +153,7 @@ export const getUserTryoutPartAttempt = query({
 
       return {
         expiresAtMs: tryoutAttempt.expiresAt,
+        part,
         partScore: null,
         partAttempt: null,
         tryoutAttempt: resolvedTryoutAttempt,
@@ -174,6 +205,7 @@ export const getUserTryoutPartAttempt = query({
 
     return {
       expiresAtMs: tryoutAttempt.expiresAt,
+      part,
       partScore,
       partAttempt: {
         partIndex: currentPartAttempt.partIndex,

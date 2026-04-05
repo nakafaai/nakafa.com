@@ -46,6 +46,12 @@ const tables = {
       "customerId",
       "status",
       "productId",
+    ])
+    .index("by_customerId_and_status_and_productId_and_currentPeriodEnd", [
+      "customerId",
+      "status",
+      "productId",
+      "currentPeriodEnd",
     ]),
 };
 

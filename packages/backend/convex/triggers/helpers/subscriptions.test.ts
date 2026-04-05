@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 3, 2, 18, 0, 0);
 
+/** Inserts one minimal app user row for subscription-trigger tests. */
 async function insertUser(
   ctx: MutationCtx,
   suffix: string,
@@ -30,6 +31,7 @@ async function insertUser(
   });
 }
 
+/** Inserts one local customer row that links Polar data to an app user. */
 async function insertCustomer(
   ctx: MutationCtx,
   userId: Id<"users">,
@@ -43,6 +45,7 @@ async function insertCustomer(
   });
 }
 
+/** Inserts one subscription row with a stable timestamp window. */
 async function insertSubscription(
   ctx: MutationCtx,
   {
@@ -59,7 +62,7 @@ async function insertSubscription(
 ) {
   const timestamp = new Date(NOW).toISOString();
 
-  await ctx.db.insert("subscriptions", {
+  return await ctx.db.insert("subscriptions", {
     id: subscriptionId,
     customerId,
     createdAt: timestamp,
@@ -79,6 +82,7 @@ async function insertSubscription(
   });
 }
 
+/** Loads one subscription by Polar ID and runs the trigger helper against it. */
 async function runSyncCustomerPlanBySubscriptionId(
   ctx: MutationCtx,
   subscriptionId: string
@@ -360,5 +364,159 @@ describe("triggers/helpers/subscriptions", () => {
       amount: 3000,
       type: "purchase",
     });
+  });
+
+  it("reads every active subscription and removes stale duplicate entitlements", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(NOW));
+
+    const t = convexTest(schema, convexModules);
+
+    const result = await t.mutation(async (ctx) => {
+      const userId = await insertUser(ctx, "many-active-subscriptions", {
+        credits: 10,
+        creditsResetAt: Date.UTC(2026, 3, 2, 0, 0, 0),
+        plan: "free",
+      });
+
+      await insertCustomer(ctx, userId, "polar-many-active-subscriptions");
+
+      for (let index = 0; index < 11; index += 1) {
+        await insertSubscription(ctx, {
+          customerId: "polar-many-active-subscriptions",
+          productId: "free-plan",
+          status: "active",
+          subscriptionId: `sub-many-active-free-${index}`,
+        });
+      }
+
+      const proSubscriptionId = await insertSubscription(ctx, {
+        customerId: "polar-many-active-subscriptions",
+        productId: products.pro.id,
+        status: "active",
+        subscriptionId: "sub-many-active-pro",
+      });
+
+      await ctx.db.insert("userTryoutEntitlements", {
+        userId,
+        product: "snbt",
+        sourceKind: "subscription",
+        startsAt: NOW - 2000,
+        endsAt: NOW - 1000,
+      });
+      await ctx.db.insert("userTryoutEntitlements", {
+        userId,
+        product: "snbt",
+        sourceKind: "subscription",
+        subscriptionId: proSubscriptionId,
+        startsAt: NOW - 2000,
+        endsAt: NOW - 1000,
+      });
+      await ctx.db.insert("userTryoutEntitlements", {
+        userId,
+        product: "snbt",
+        sourceKind: "subscription",
+        subscriptionId: proSubscriptionId,
+        startsAt: NOW - 3000,
+        endsAt: NOW - 1000,
+      });
+
+      await runSyncCustomerPlanBySubscriptionId(ctx, "sub-many-active-free-0");
+
+      return {
+        entitlements: await ctx.db
+          .query("userTryoutEntitlements")
+          .withIndex("by_userId_and_sourceKind_and_subscriptionId", (q) =>
+            q.eq("userId", userId).eq("sourceKind", "subscription")
+          )
+          .collect(),
+        proSubscriptionId,
+        user: await ctx.db.get("users", userId),
+      };
+    });
+
+    expect(result.user).toMatchObject({
+      credits: 3000,
+      plan: "pro",
+      creditsResetAt: Date.UTC(2026, 3, 1, 0, 0, 0),
+    });
+    expect(result.entitlements).toEqual([
+      expect.objectContaining({
+        product: "snbt",
+        sourceKind: "subscription",
+        subscriptionId: result.proSubscriptionId,
+      }),
+    ]);
+  });
+
+  it("continues subscription entitlement cleanup in scheduled batches", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(NOW));
+
+    const t = convexTest(schema, convexModules);
+
+    const state = await t.mutation(async (ctx) => {
+      const userId = await insertUser(ctx, "subscription-entitlement-batches", {
+        credits: 10,
+        creditsResetAt: Date.UTC(2026, 3, 2, 0, 0, 0),
+        plan: "free",
+      });
+
+      await insertCustomer(
+        ctx,
+        userId,
+        "polar-subscription-entitlement-batches"
+      );
+
+      const proSubscriptionId = await insertSubscription(ctx, {
+        customerId: "polar-subscription-entitlement-batches",
+        productId: products.pro.id,
+        status: "active",
+        subscriptionId: "sub-subscription-entitlement-batches-pro",
+      });
+
+      for (let index = 0; index < 31; index += 1) {
+        await ctx.db.insert("userTryoutEntitlements", {
+          userId,
+          product: "snbt",
+          sourceKind: "subscription",
+          subscriptionId: index % 2 === 0 ? proSubscriptionId : undefined,
+          startsAt: NOW - (index + 1) * 1000,
+          endsAt: NOW - (index + 1) * 1000,
+        });
+      }
+
+      await runSyncCustomerPlanBySubscriptionId(
+        ctx,
+        "sub-subscription-entitlement-batches-pro"
+      );
+
+      return {
+        proSubscriptionId,
+        userId,
+      };
+    });
+
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+
+    const entitlements = await t.query(async (ctx) => {
+      return await ctx.db
+        .query("userTryoutEntitlements")
+        .withIndex("by_userId_and_product_and_sourceKind_and_endsAt", (q) =>
+          q
+            .eq("userId", state.userId)
+            .eq("product", "snbt")
+            .eq("sourceKind", "subscription")
+        )
+        .collect();
+    });
+
+    expect(entitlements).toEqual([
+      expect.objectContaining({
+        product: "snbt",
+        sourceKind: "subscription",
+        subscriptionId: state.proSubscriptionId,
+      }),
+    ]);
   });
 });

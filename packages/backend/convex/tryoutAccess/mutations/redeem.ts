@@ -2,11 +2,9 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import {
-  getTryoutAccessCampaignRedeemStatus,
   getTryoutAccessEventByCode,
   getTryoutAccessGrantEndsAt,
-  getTryoutAccessGrantStatus,
-  syncTryoutAccessGrantStatus,
+  syncTryoutAccessGrantEntitlements,
 } from "@repo/backend/convex/tryoutAccess/helpers/access";
 import { ConvexError, v } from "convex/values";
 
@@ -41,9 +39,7 @@ export const redeemEventAccess = mutation({
       });
     }
 
-    const campaignProducts = Array.from(new Set(eventAccess.campaign.products));
-
-    if (campaignProducts.length === 0) {
+    if (eventAccess.campaign.products.length === 0) {
       throw new ConvexError({
         code: "EVENT_PRODUCTS_REQUIRED",
         message: "Event access campaign products cannot be empty.",
@@ -58,15 +54,13 @@ export const redeemEventAccess = mutation({
       .unique();
 
     if (existingGrant) {
-      if (existingGrant.endsAt > now) {
+      if (existingGrant.status === "active") {
         return {
           kind: "active" as const,
           endsAt: existingGrant.endsAt,
           name: eventAccess.campaign.name,
         };
       }
-
-      await syncTryoutAccessGrantStatus(ctx.db, existingGrant, now);
 
       return {
         kind: "used" as const,
@@ -82,36 +76,25 @@ export const redeemEventAccess = mutation({
       });
     }
 
-    const campaignRedeemStatus = getTryoutAccessCampaignRedeemStatus(
-      eventAccess.campaign,
-      now
-    );
-
-    if (campaignRedeemStatus === "scheduled") {
+    if (eventAccess.campaign.redeemStatus === "scheduled") {
       throw new ConvexError({
         code: "EVENT_NOT_STARTED",
         message: "Event access is not available yet.",
       });
     }
 
-    if (campaignRedeemStatus === "ended") {
+    if (eventAccess.campaign.redeemStatus === "ended") {
       throw new ConvexError({
         code: "EVENT_ENDED",
         message: "Event access has ended.",
       });
     }
 
-    const endsAt = getTryoutAccessGrantEndsAt(
-      now,
-      eventAccess.campaign.grantDurationDays
-    );
-    const grantStatus = getTryoutAccessGrantStatus(endsAt, now);
-
-    if (eventAccess.campaign.redeemStatus !== campaignRedeemStatus) {
-      await ctx.db.patch("tryoutAccessCampaigns", eventAccess.campaign._id, {
-        redeemStatus: campaignRedeemStatus,
-      });
-    }
+    const endsAt = getTryoutAccessGrantEndsAt({
+      campaign: eventAccess.campaign,
+      redeemedAt: now,
+    });
+    const grantStatus = "active" as const;
 
     const grantId = await ctx.db.insert("tryoutAccessGrants", {
       campaignId: eventAccess.campaign._id,
@@ -122,16 +105,18 @@ export const redeemEventAccess = mutation({
       status: grantStatus,
     });
 
-    for (const product of campaignProducts) {
-      await ctx.db.insert("tryoutAccessProductGrants", {
+    await syncTryoutAccessGrantEntitlements(
+      ctx.db,
+      {
+        _id: grantId,
         campaignId: eventAccess.campaign._id,
-        grantId,
-        product,
+        endsAt,
+        redeemedAt: now,
         status: grantStatus,
         userId: appUser._id,
-        endsAt,
-      });
-    }
+      },
+      eventAccess.campaign
+    );
 
     await ctx.scheduler.runAfter(
       endsAt - now,

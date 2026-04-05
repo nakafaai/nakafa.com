@@ -72,7 +72,7 @@ triggers.register("subjectTrendingBuckets", noopHandler);
 triggers.register("tryoutAccessCampaigns", noopHandler);
 triggers.register("tryoutAccessLinks", noopHandler);
 triggers.register("tryoutAccessGrants", noopHandler);
-triggers.register("tryoutAccessProductGrants", noopHandler);
+triggers.register("userTryoutEntitlements", noopHandler);
 triggers.register("users", noopHandler);
 triggers.register("subscriptions", subscriptionsHandler);
 

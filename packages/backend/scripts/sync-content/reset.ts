@@ -48,12 +48,6 @@ const RESET_STEPS: ResetStep[] = [
     resultLabel: "tryout leaderboard entries",
   },
   {
-    label: "Deleting user tryout latest attempts...",
-    mutationPath:
-      "contentSync/mutations/maintenance:deleteUserTryoutLatestAttemptsBatch",
-    resultLabel: "user tryout latest attempts",
-  },
-  {
     label: "Deleting user tryout stats...",
     mutationPath:
       "contentSync/mutations/maintenance:deleteUserTryoutStatsBatch",
@@ -117,6 +111,12 @@ const RESET_STEPS: ResetStep[] = [
     label: "Deleting tryout attempts...",
     mutationPath: "contentSync/mutations/maintenance:deleteTryoutAttemptsBatch",
     resultLabel: "tryout attempts",
+  },
+  {
+    label: "Deleting tryout catalog meta...",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteTryoutCatalogMetaBatch",
+    resultLabel: "tryout catalog meta rows",
   },
   {
     label: "Deleting tryout part sets...",
@@ -230,11 +230,14 @@ export const reset = async (
   log(`  Exercise Attempts:     ${counts.exerciseAttempts}`);
   log(`  Exercise Sets:         ${counts.exerciseSets}`);
   log(`  Tryouts:               ${counts.tryouts}`);
+  log(`  Tryout Catalog Meta:   ${counts.tryoutCatalogMeta}`);
+  log(
+    `  User Entitlements:     ${counts.userTryoutEntitlements} (preserved infra)`
+  );
   log(`  Tryout Part Sets:      ${counts.tryoutPartSets}`);
   log(`  Tryout Attempts:       ${counts.tryoutAttempts}`);
   log(`  Tryout Part Attempts:  ${counts.tryoutPartAttempts}`);
   log(`  Tryout Leaderboard:    ${counts.tryoutLeaderboardEntries}`);
-  log(`  User Tryout Latest:    ${counts.userTryoutLatestAttempts}`);
   log(`  User Tryout Stats:     ${counts.userTryoutStats}`);
   log(`  IRT Calibration Queue: ${counts.irtCalibrationQueue}`);
   log(`  IRT Calibration Rows:  ${counts.irtCalibrationAttempts}`);
@@ -265,11 +268,11 @@ export const reset = async (
   const totalRuntime =
     counts.exerciseAttempts +
     counts.tryouts +
+    counts.tryoutCatalogMeta +
     counts.tryoutPartSets +
     counts.tryoutAttempts +
     counts.tryoutPartAttempts +
     counts.tryoutLeaderboardEntries +
-    counts.userTryoutLatestAttempts +
     counts.userTryoutStats +
     counts.irtCalibrationQueue +
     counts.irtCalibrationAttempts +
@@ -294,9 +297,9 @@ export const reset = async (
   if (!options.force) {
     log("\nTo delete all content, run:");
     if (options.prod) {
-      log("  pnpm --filter backend sync:reset --prod --force");
+      log("  pnpm --filter @repo/backend sync:reset --prod --force");
     } else {
-      log("  pnpm --filter backend sync:reset --force");
+      log("  pnpm --filter @repo/backend sync:reset --force");
     }
     if (!options.authors) {
       log("\nTo also delete authors, add --authors flag");
@@ -341,8 +344,8 @@ export const reset = async (
 
   log("\nTo re-sync content, run:");
   if (options.prod) {
-    log("  pnpm --filter backend sync:prod");
+    log("  pnpm --filter @repo/backend sync:prod");
   } else {
-    log("  pnpm --filter backend sync");
+    log("  pnpm --filter @repo/backend sync");
   }
 };

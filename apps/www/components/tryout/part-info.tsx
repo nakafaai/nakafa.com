@@ -26,8 +26,8 @@ export function TryoutPartStatus() {
   const tryoutAttemptStatus = useTryoutPart(
     (state) => state.state.tryoutAttemptStatus
   );
-  const tryoutScoreStatus = useTryoutPart(
-    (state) => state.state.tryoutScoreStatus
+  const tryoutPublicResultStatus = useTryoutPart(
+    (state) => state.state.tryoutPublicResultStatus
   );
 
   if (status === "loading") {
@@ -39,10 +39,10 @@ export function TryoutPartStatus() {
     );
   }
 
-  if (isTryoutFinished && tryoutAttemptStatus && tryoutScoreStatus) {
+  if (isTryoutFinished && tryoutAttemptStatus && tryoutPublicResultStatus) {
     return (
       <div className="flex flex-wrap gap-2">
-        <TryoutScoreStatusBadge status={tryoutScoreStatus} />
+        <TryoutScoreStatusBadge status={tryoutPublicResultStatus} />
         <TryoutAttemptStatusBadge status={tryoutAttemptStatus} />
       </div>
     );

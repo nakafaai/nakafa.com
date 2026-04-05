@@ -2,7 +2,6 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { getAttemptEndReasonFromStatus } from "@repo/backend/convex/lib/attempts";
 import { buildFinalizedTryoutSnapshot } from "@repo/backend/convex/tryouts/helpers/finalize/snapshot";
-import { upsertUserTryoutLatestAttempt } from "@repo/backend/convex/tryouts/helpers/latest";
 import { computeTryoutRawScorePercentage } from "@repo/backend/convex/tryouts/helpers/metrics";
 import type { TryoutScoreStatus } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError } from "convex/values";
@@ -94,18 +93,6 @@ export async function syncTryoutAttemptAggregates({
     thetaSE,
     totalCorrect,
     totalQuestions,
-  });
-
-  await upsertUserTryoutLatestAttempt(ctx, {
-    attempt: {
-      _id: tryoutAttempt._id,
-      expiresAt: tryoutAttempt.expiresAt,
-      status,
-      tryoutId: tryout._id,
-      userId: tryoutAttempt.userId,
-    },
-    tryout,
-    updatedAt: now,
   });
 
   return {

@@ -1,7 +1,8 @@
 import { internalQuery } from "@repo/backend/convex/_generated/server";
-import { getActiveTryoutsWithoutScale } from "@repo/backend/convex/irt/scales/read";
+import { getLatestScaleVersionForTryout } from "@repo/backend/convex/irt/scales/read";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
+import { paginationOptsValidator } from "convex/server";
 import { type Infer, v } from "convex/values";
 
 const tryoutScaleIntegrityItemValidator = v.object({
@@ -15,20 +16,43 @@ type TryoutScaleIntegrityItem = Infer<typeof tryoutScaleIntegrityItemValidator>;
 
 /** Return active tryouts that still do not have a published frozen scale. */
 export const getTryoutScaleIntegrity = internalQuery({
-  args: {},
+  args: {
+    paginationOpts: paginationOptsValidator,
+  },
   returns: v.object({
-    activeTryoutsWithoutScale: v.array(tryoutScaleIntegrityItemValidator),
+    continueCursor: v.string(),
+    isDone: v.boolean(),
+    page: v.array(tryoutScaleIntegrityItemValidator),
   }),
-  handler: async (ctx) => {
-    const tryoutsWithoutScale = await getActiveTryoutsWithoutScale(ctx.db);
-    const activeTryoutsWithoutScale: TryoutScaleIntegrityItem[] =
-      tryoutsWithoutScale.map((tryout) => ({
+  handler: async (ctx, args) => {
+    const tryoutPage = await ctx.db
+      .query("tryouts")
+      .withIndex("by_isActive", (q) => q.eq("isActive", true))
+      .paginate(args.paginationOpts);
+    const activeTryoutsWithoutScale: TryoutScaleIntegrityItem[] = [];
+
+    for (const tryout of tryoutPage.page) {
+      const scaleVersion = await getLatestScaleVersionForTryout(
+        ctx.db,
+        tryout._id
+      );
+
+      if (scaleVersion) {
+        continue;
+      }
+
+      activeTryoutsWithoutScale.push({
         cycleKey: tryout.cycleKey,
         locale: tryout.locale,
         product: tryout.product,
         slug: tryout.slug,
-      }));
+      });
+    }
 
-    return { activeTryoutsWithoutScale };
+    return {
+      continueCursor: tryoutPage.continueCursor,
+      isDone: tryoutPage.isDone,
+      page: activeTryoutsWithoutScale,
+    };
   },
 });

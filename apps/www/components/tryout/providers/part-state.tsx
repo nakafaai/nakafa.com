@@ -5,6 +5,7 @@ import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import { ConvexError } from "convex/values";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
@@ -60,19 +61,55 @@ interface TryoutPartContextValue {
     status: TryoutPartUiStatus;
     timer: ReturnType<typeof useExerciseTimer>;
     tryoutAttemptStatus: TryoutPartPageState["tryoutAttemptStatus"];
-    tryoutScoreStatus: TryoutPartPageState["tryoutScoreStatus"];
+    tryoutPublicResultStatus: TryoutPartPageState["tryoutPublicResultStatus"];
     tryout: TryoutValue;
   };
 }
 
+type TryoutPartRuntime = FunctionReturnType<
+  typeof api.tryouts.queries.me.part.getUserTryoutPartAttempt
+>;
+
 const TryoutPartContext = createContext<TryoutPartContextValue | null>(null);
 
+/** Resolves whether the part runtime is still loading for the current viewer. */
+function getIsRuntimePending({
+  hasUser,
+  isPartStatePending,
+  isUserPending,
+  runtime,
+}: {
+  hasUser: boolean;
+  isPartStatePending: boolean;
+  isUserPending: boolean;
+  runtime: TryoutPartRuntime | null | undefined;
+}) {
+  if (runtime !== undefined) {
+    return false;
+  }
+
+  if (isUserPending) {
+    return true;
+  }
+
+  if (!hasUser) {
+    return false;
+  }
+
+  return isPartStatePending;
+}
+
+/** Provides one runtime-backed tryout part state tree for the part route. */
 export function TryoutPartProvider({
   children,
+  initialNowMs,
+  initialRuntime,
   part,
   tryout,
 }: {
   children: ReactNode;
+  initialNowMs?: number;
+  initialRuntime?: TryoutPartRuntime | null;
   part: TryoutPartValue;
   tryout: TryoutValue;
 }) {
@@ -81,22 +118,38 @@ export function TryoutPartProvider({
   const router = useRouter();
   const isUserPending = useUser((state) => state.isPending);
   const user = useUser((state) => state.user);
-  const shouldLoadRuntime = !isUserPending && Boolean(user);
-  const { data: runtime, isPending: isPartStatePending } = useQueryWithStatus(
-    api.tryouts.queries.me.part.getUserTryoutPartAttempt,
-    shouldLoadRuntime
-      ? {
-          locale: tryout.locale,
-          partKey: part.key,
-          product: tryout.product,
-          tryoutSlug: tryout.slug,
-        }
-      : "skip"
-  );
+  const hasUser = Boolean(user);
+  const shouldLoadRuntime = !isUserPending && hasUser;
+  const { data: runtimeData, isPending: isPartStatePending } =
+    useQueryWithStatus(
+      api.tryouts.queries.me.part.getUserTryoutPartAttempt,
+      shouldLoadRuntime
+        ? {
+            locale: tryout.locale,
+            partKey: part.key,
+            product: tryout.product,
+            tryoutSlug: tryout.slug,
+          }
+        : "skip"
+    );
+  // Keep a confirmed `null` result from the live query. Only fall back to the
+  // SSR snapshot while the client query is still pending.
+  let runtime = initialRuntime;
+
+  if (runtimeData !== undefined) {
+    runtime = runtimeData;
+  }
+
   const nowMs = useTryoutClock(
-    Boolean(runtime && runtime.tryoutAttempt.status === "in-progress")
+    Boolean(runtime && runtime.tryoutAttempt.status === "in-progress"),
+    initialNowMs
   );
-  const isRuntimePending = isUserPending || (user ? isPartStatePending : false);
+  const isRuntimePending = getIsRuntimePending({
+    hasUser,
+    isPartStatePending,
+    isUserPending,
+    runtime,
+  });
   const startPart = useMutation(api.tryouts.mutations.attempts.startPart);
   const completePart = useMutation(api.tryouts.mutations.attempts.completePart);
 
@@ -108,7 +161,7 @@ export function TryoutPartProvider({
     score,
     status,
     tryoutAttemptStatus,
-    tryoutScoreStatus,
+    tryoutPublicResultStatus,
   } = deriveTryoutPartPageState({
     isRuntimePending,
     nowMs,
@@ -235,7 +288,7 @@ export function TryoutPartProvider({
         status,
         timer,
         tryoutAttemptStatus,
-        tryoutScoreStatus,
+        tryoutPublicResultStatus,
         tryout,
       },
     }),
@@ -257,7 +310,7 @@ export function TryoutPartProvider({
       status,
       timer,
       tryoutAttemptStatus,
-      tryoutScoreStatus,
+      tryoutPublicResultStatus,
       tryout,
     ]
   );

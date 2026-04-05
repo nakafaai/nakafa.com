@@ -5,7 +5,7 @@ import { getLatestScaleVersionForTryout } from "@repo/backend/convex/irt/scales/
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { hasTryoutAccessNow } from "@repo/backend/convex/tryoutAccess/helpers/access";
+import { resolveTryoutAccessEntitlements } from "@repo/backend/convex/tryoutAccess/helpers/access";
 import {
   requireActiveTryoutAttemptAfterExpirySync,
   requireOwnedTryoutAttempt,
@@ -18,7 +18,6 @@ import {
 } from "@repo/backend/convex/tryouts/helpers/attemptLifecycle";
 import { finalizeTryoutAttempt } from "@repo/backend/convex/tryouts/helpers/finalize/attempt";
 import { finalizeTryoutPartAttempt } from "@repo/backend/convex/tryouts/helpers/finalize/part";
-import { upsertUserTryoutLatestAttempt } from "@repo/backend/convex/tryouts/helpers/latest";
 import {
   loadTryoutPartSnapshots,
   loadValidatedTryoutPartSets,
@@ -74,13 +73,87 @@ export const startTryout = mutation({
       return null;
     }
 
-    const canStartTryout = await hasTryoutAccessNow(ctx.db, {
-      now,
+    const accessEntitlements = await resolveTryoutAccessEntitlements(ctx.db, {
       product: tryout.product,
       userId,
     });
+    const activeCompetitionEntitlement =
+      accessEntitlements.competitionEntitlement?.accessCampaignId &&
+      accessEntitlements.competitionEntitlement.accessGrantId
+        ? accessEntitlements.competitionEntitlement
+        : null;
+    const activeCompetitionCampaignId =
+      activeCompetitionEntitlement?.accessCampaignId ?? null;
+    const activeCompetitionGrantId =
+      activeCompetitionEntitlement?.accessGrantId ?? null;
+    const competitionAttempt = activeCompetitionCampaignId
+      ? await ctx.db
+          .query("tryoutAttempts")
+          .withIndex(
+            "by_userId_and_tryoutId_and_accessCampaignId_and_startedAt",
+            (q) =>
+              q
+                .eq("userId", userId)
+                .eq("tryoutId", tryout._id)
+                .eq("accessCampaignId", activeCompetitionCampaignId)
+          )
+          .order("desc")
+          .first()
+      : null;
+    const competitionStartSource =
+      activeCompetitionEntitlement &&
+      activeCompetitionCampaignId &&
+      activeCompetitionGrantId &&
+      !competitionAttempt
+        ? {
+            accessKind: "event" as const,
+            accessCampaignId: activeCompetitionCampaignId,
+            accessCampaignKind: "competition" as const,
+            accessEndsAt: activeCompetitionEntitlement.endsAt,
+            accessGrantId: activeCompetitionGrantId,
+            countsForCompetition: true,
+          }
+        : null;
+    const accessPassEntitlement =
+      accessEntitlements.accessPassEntitlement?.accessCampaignId &&
+      accessEntitlements.accessPassEntitlement.accessGrantId
+        ? accessEntitlements.accessPassEntitlement
+        : null;
+    const accessPassCampaignId =
+      accessPassEntitlement?.accessCampaignId ?? null;
+    const accessPassGrantId = accessPassEntitlement?.accessGrantId ?? null;
+    const hasUsedCompetitionAttempt = Boolean(competitionAttempt);
+    const accessPassStartSource =
+      accessPassEntitlement && accessPassCampaignId && accessPassGrantId
+        ? {
+            accessKind: "event" as const,
+            accessCampaignId: accessPassCampaignId,
+            accessCampaignKind: "access-pass" as const,
+            accessEndsAt: accessPassEntitlement.endsAt,
+            accessGrantId: accessPassGrantId,
+            countsForCompetition: false,
+          }
+        : null;
+    const subscriptionStartSource = accessEntitlements.subscriptionEntitlement
+      ? {
+          accessKind: "subscription" as const,
+          countsForCompetition: false,
+        }
+      : null;
+    const accessSource =
+      competitionStartSource ??
+      accessPassStartSource ??
+      subscriptionStartSource;
 
-    if (!canStartTryout) {
+    if (!accessSource) {
+      if (hasUsedCompetitionAttempt) {
+        throw new ConvexError({
+          code: "COMPETITION_ATTEMPT_ALREADY_USED",
+          message:
+            "This event only counts your first tryout attempt. You can still review that result anytime.",
+        });
+      }
+
       throw new ConvexError({
         code: "TRYOUT_ACCESS_REQUIRED",
         message:
@@ -92,14 +165,36 @@ export const startTryout = mutation({
       partCount: tryout.partCount,
       tryoutId: tryout._id,
     });
-
-    const expiresAtMs =
+    const attemptWindowEndsAt =
       now + tryoutProductPolicies[tryout.product].attemptWindowMs;
+    const expiresAtMs =
+      accessSource.accessKind === "event" &&
+      accessSource.accessCampaignKind === "competition"
+        ? Math.min(attemptWindowEndsAt, accessSource.accessEndsAt)
+        : attemptWindowEndsAt;
 
     const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
       userId,
       tryoutId: tryout._id,
       scaleVersionId: scaleVersion._id,
+      accessKind: accessSource.accessKind,
+      accessCampaignId:
+        accessSource.accessKind === "event"
+          ? accessSource.accessCampaignId
+          : undefined,
+      accessCampaignKind:
+        accessSource.accessKind === "event"
+          ? accessSource.accessCampaignKind
+          : undefined,
+      accessGrantId:
+        accessSource.accessKind === "event"
+          ? accessSource.accessGrantId
+          : undefined,
+      accessEndsAt:
+        accessSource.accessKind === "event"
+          ? accessSource.accessEndsAt
+          : undefined,
+      countsForCompetition: accessSource.countsForCompetition,
       scoreStatus: scaleVersion.status,
       status: "in-progress",
       partSetSnapshots,
@@ -123,18 +218,6 @@ export const startTryout = mutation({
         expiresAtMs,
       }
     );
-
-    await upsertUserTryoutLatestAttempt(ctx, {
-      attempt: {
-        _id: tryoutAttemptId,
-        expiresAt: expiresAtMs,
-        status: "in-progress",
-        tryoutId: tryout._id,
-        userId,
-      },
-      tryout,
-      updatedAt: now,
-    });
 
     return null;
   },

@@ -54,9 +54,21 @@ export const bulkSyncTryouts = internalMutation({
       locale: args.locale,
       sets: tryoutCandidateSets,
     });
-    const detectedSlugs = new Set(detectedTryouts.map((tryout) => tryout.slug));
+    const orderedDetectedTryouts = [...detectedTryouts].sort(
+      tryoutProductPolicies[args.product].compareTryouts
+    );
+    const detectedSlugs = new Set(
+      orderedDetectedTryouts.map((tryout) => tryout.slug)
+    );
+    const activeTryoutCount = orderedDetectedTryouts.reduce(
+      (count, tryout) => count + (tryout.isActive ? 1 : 0),
+      0
+    );
 
-    for (const tryout of detectedTryouts) {
+    // Persist dense browse positions so the paginated index can serve the final
+    // catalog order directly.
+    for (const [index, tryout] of orderedDetectedTryouts.entries()) {
+      const catalogPosition = index + 1;
       const existingTryout = await ctx.db
         .query("tryouts")
         .withIndex("by_product_and_locale_and_cycleKey_and_slug", (q) =>
@@ -74,7 +86,8 @@ export const bulkSyncTryouts = internalMutation({
           tryoutId: existingTryout._id,
         });
         const hasChanges =
-          !existingTryout.isActive ||
+          existingTryout.isActive !== tryout.isActive ||
+          existingTryout.catalogPosition !== catalogPosition ||
           existingTryout.label !== tryout.label ||
           existingTryout.partCount !== tryout.partCount ||
           existingTryout.totalQuestionCount !== tryout.totalQuestionCount ||
@@ -102,6 +115,7 @@ export const bulkSyncTryouts = internalMutation({
         }
 
         await ctx.db.patch("tryouts", existingTryout._id, {
+          catalogPosition,
           isActive: tryout.isActive,
           label: tryout.label,
           partCount: tryout.partCount,
@@ -130,6 +144,7 @@ export const bulkSyncTryouts = internalMutation({
       }
 
       const tryoutId = await ctx.db.insert("tryouts", {
+        catalogPosition,
         cycleKey: tryout.cycleKey,
         detectedAt: now,
         isActive: tryout.isActive,
@@ -203,6 +218,27 @@ export const bulkSyncTryouts = internalMutation({
       }
 
       updated++;
+    }
+
+    const existingCatalogMeta = await ctx.db
+      .query("tryoutCatalogMeta")
+      .withIndex("by_product_and_locale", (q) =>
+        q.eq("product", args.product).eq("locale", args.locale)
+      )
+      .unique();
+
+    if (!existingCatalogMeta) {
+      await ctx.db.insert("tryoutCatalogMeta", {
+        activeCount: activeTryoutCount,
+        locale: args.locale,
+        product: args.product,
+        updatedAt: now,
+      });
+    } else if (existingCatalogMeta.activeCount !== activeTryoutCount) {
+      await ctx.db.patch("tryoutCatalogMeta", existingCatalogMeta._id, {
+        activeCount: activeTryoutCount,
+        updatedAt: now,
+      });
     }
 
     if (enqueuedScaleQualityRefresh) {

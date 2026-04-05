@@ -1,22 +1,22 @@
+import { api } from "@repo/backend/convex/_generated/api";
 import {
   isTryoutProduct,
   type TryoutProduct,
   tryoutProductPolicies,
-  tryoutProducts,
 } from "@repo/backend/convex/tryouts/products";
 import { getExercisesContent } from "@repo/contents/_lib/exercises";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
 import { slugify } from "@repo/design-system/lib/utils";
-import { routing } from "@repo/internationalization/src/routing";
+import { fetchQuery } from "convex/nextjs";
 import { Effect } from "effect";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { QuestionAnalytics } from "@/app/[locale]/(app)/(main)/(contents)/exercises/[category]/[type]/[material]/[...slug]/analytics";
 import { ExerciseArticle } from "@/app/[locale]/(app)/(main)/(contents)/exercises/[category]/[type]/[material]/[...slug]/article";
 import { TryoutPartRuntime } from "@/components/tryout/part-runtime";
-import { getStaticTryout, getStaticTryouts } from "@/lib/utils/pages/tryouts";
+import { getToken } from "@/lib/auth/server";
 
 interface Props {
   params: Promise<{
@@ -27,26 +27,9 @@ interface Props {
   }>;
 }
 
-export async function generateStaticParams() {
-  const staticTryouts = await Promise.all(
-    tryoutProducts.map((product) =>
-      getStaticTryouts({ locale: routing.defaultLocale, product })
-    )
-  );
-
-  return staticTryouts.flatMap((tryouts) =>
-    tryouts.flatMap((tryout) =>
-      tryout.parts.map((part) => ({
-        product: tryout.product,
-        slug: tryout.slug,
-        partKey: part.partKey,
-      }))
-    )
-  );
-}
-
 export default async function Page({ params }: Props) {
   const { locale, product: productParam, slug, partKey } = await params;
+  const initialNowMs = Date.now();
 
   setRequestLocale(locale);
 
@@ -55,42 +38,88 @@ export default async function Page({ params }: Props) {
   }
   const product: TryoutProduct = productParam;
 
-  const [tExercises, staticTryout] = await Promise.all([
+  const [tExercises, details, token] = await Promise.all([
     getTranslations({ locale, namespace: "Exercises" }),
-    getStaticTryout({ locale, product, slug }),
+    fetchQuery(api.tryouts.queries.tryouts.getTryoutDetails, {
+      locale,
+      product,
+      slug,
+    }),
+    getToken(),
   ]);
 
-  if (!staticTryout) {
+  if (!details) {
     notFound();
   }
 
-  const part = staticTryout.parts.find((item) => item.partKey === partKey);
+  const runtime = token
+    ? await fetchQuery(
+        api.tryouts.queries.me.part.getUserTryoutPartAttempt,
+        {
+          locale,
+          partKey,
+          product,
+          tryoutSlug: slug,
+        },
+        { token }
+      )
+    : null;
 
-  if (!part) {
+  if (token && runtime && !runtime.part) {
+    redirect(`/try-out/${product}/${slug}`);
+  }
+
+  const currentPart = details.parts.find((item) => item.partKey === partKey);
+  const contentPart = (() => {
+    if (runtime?.part) {
+      return {
+        material: runtime.part.material,
+        partKey: runtime.part.currentPartKey,
+        questionCount: runtime.part.questionCount,
+        setSlug: runtime.part.setSlug,
+      };
+    }
+
+    if (currentPart) {
+      return {
+        material: currentPart.material,
+        partKey: currentPart.partKey,
+        questionCount: currentPart.questionCount,
+        setSlug: currentPart.setSlug,
+      };
+    }
+
+    return null;
+  })();
+
+  if (!contentPart) {
     notFound();
   }
 
   const exercises = await Effect.runPromise(
-    Effect.match(getExercisesContent({ locale, filePath: part.setSlug }), {
-      onFailure: () => [],
-      onSuccess: (data) => data,
-    })
+    Effect.match(
+      getExercisesContent({ locale, filePath: contentPart.setSlug }),
+      {
+        onFailure: () => [],
+        onSuccess: (data) => data,
+      }
+    )
   );
 
   if (exercises.length === 0) {
     notFound();
   }
 
-  const tryoutLabel = staticTryout.label;
+  const tryoutLabel = details.tryout.label;
 
-  const materialLabel = ExercisesMaterialSchema.safeParse(part.partKey);
+  const materialLabel = ExercisesMaterialSchema.safeParse(contentPart.material);
   const partLabel = materialLabel.success
     ? tExercises(materialLabel.data)
-    : part.partKey;
+    : contentPart.partKey;
   const timeLimitSeconds = tryoutProductPolicies[
     product
-  ].getPartTimeLimitSeconds(part.questionCount);
-  const material = ExercisesMaterialSchema.safeParse(part.partKey);
+  ].getPartTimeLimitSeconds(contentPart.questionCount);
+  const material = ExercisesMaterialSchema.safeParse(contentPart.material);
   const partIcon = material.success
     ? getMaterialIcon(material.data)
     : undefined;
@@ -100,15 +129,17 @@ export default async function Page({ params }: Props) {
       <div className="space-y-10">
         <TryoutPartRuntime
           icon={partIcon}
+          initialNowMs={initialNowMs}
+          initialRuntime={runtime}
           part={{
-            key: part.partKey,
+            key: contentPart.partKey,
             label: partLabel,
-            questionCount: part.questionCount,
-            setSlug: part.setSlug,
+            questionCount: contentPart.questionCount,
+            setSlug: contentPart.setSlug,
             timeLimitSeconds,
           }}
           tryout={{
-            cycleKey: staticTryout.cycleKey,
+            cycleKey: details.tryout.cycleKey,
             label: tryoutLabel,
             locale,
             product,

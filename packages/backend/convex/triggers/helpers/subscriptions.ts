@@ -1,6 +1,11 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import { getPlanCreditConfig } from "@repo/backend/convex/credits/constants";
 import { resolveCurrentCreditResetTimestamp } from "@repo/backend/convex/credits/helpers/state";
+import {
+  listCanonicalActiveTryoutSubscriptions,
+  syncTryoutSubscriptionEntitlements,
+} from "@repo/backend/convex/tryoutAccess/helpers/access";
 import type { UserPlan } from "@repo/backend/convex/users/schema";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { products } from "@repo/backend/convex/utils/polar/products";
@@ -10,7 +15,6 @@ import { getOneFrom } from "convex-helpers/server/relationships";
 const productToPlanMap: Record<string, UserPlan> = {
   [products.pro.id]: "pro",
 };
-const MAX_ACTIVE_SUBSCRIPTIONS_PER_CUSTOMER = 10;
 
 /** Map one Polar product ID to the matching app plan tier. */
 function getPlanFromProductId(productId: string): UserPlan {
@@ -33,6 +37,7 @@ async function applyPlanChange(
   ctx: GenericMutationCtx<DataModel>,
   user: DataModel["users"]["document"],
   newPlan: UserPlan,
+  now: number,
   subscriptionId: string
 ) {
   const previousPlan = user.plan;
@@ -40,7 +45,7 @@ async function applyPlanChange(
   const nextResetTimestamp = await resolveCurrentCreditResetTimestamp(
     ctx.db,
     newPlan,
-    Date.now()
+    now
   );
 
   // syncCustomerPlan only calls this helper after filtering out no-op changes,
@@ -135,20 +140,38 @@ export async function syncCustomerPlan(
     return;
   }
 
-  const activeSubscriptions = await ctx.db
-    .query("subscriptions")
-    .withIndex("by_customerId_and_status", (q) =>
-      q.eq("customerId", subscription.customerId).eq("status", "active")
-    )
-    .take(MAX_ACTIVE_SUBSCRIPTIONS_PER_CUSTOMER);
+  const now = Date.now();
+  const activeSubscriptions = await listCanonicalActiveTryoutSubscriptions(
+    ctx.db,
+    {
+      customerId: subscription.customerId,
+    }
+  );
 
   const newPlan = activeSubscriptions.reduce<UserPlan>((highestPlan, row) => {
     return getHigherPlan(highestPlan, getPlanFromProductId(row.productId));
   }, "free");
 
+  const hasMoreEntitlements = await syncTryoutSubscriptionEntitlements(ctx.db, {
+    activeSubscriptions,
+    userId: user._id,
+  });
+
+  if (hasMoreEntitlements) {
+    await ctx.scheduler.runAfter(
+      0,
+      internal.tryoutAccess.mutations.internal.status
+        .syncSubscriptionEntitlements,
+      {
+        customerId: subscription.customerId,
+        userId: user._id,
+      }
+    );
+  }
+
   if (newPlan === user.plan) {
     return;
   }
 
-  await applyPlanChange(ctx, user, newPlan, subscription.id);
+  await applyPlanChange(ctx, user, newPlan, now, subscription.id);
 }

@@ -12,6 +12,7 @@ import { validate } from "./validate";
 import { verify } from "./verify";
 import { syncAll, syncFull, syncIncremental } from "./workflows";
 
+/** Parses one sync-content CLI invocation into a command and option bag. */
 const parseArgs = (): { options: SyncOptions; type: string } => {
   const args = process.argv.slice(2);
   const type = args[0] || "all";
@@ -46,8 +47,9 @@ const parseArgs = (): { options: SyncOptions; type: string } => {
   return { type, options };
 };
 
+/** Prints the supported sync-content commands and flags. */
 const printUsage = (): void => {
-  log("\nUsage: pnpm --filter backend sync[:<command>] [options]");
+  log("\nUsage: pnpm --filter @repo/backend sync[:<command>] [options]");
   log("\nCommands:");
   log("  sync                  - Full sync + clean + verify (recommended)");
   log(
@@ -57,7 +59,9 @@ const printUsage = (): void => {
   log("  sync:verify           - Verify database matches filesystem");
   log("  sync:clean            - Find and remove stale content");
   log("  sync:reset            - Delete ALL synced content (requires --force)");
-  log("  sync:reset:tryouts    - Delete only tryout + IRT runtime data");
+  log(
+    "  sync:reset:tryouts    - Delete tryout content/read models, event access rows, and IRT scale data, then run a full sync"
+  );
   log("\nProduction commands:");
   log("  sync:prod             - Full sync to production");
   log("  sync:prod:incremental - Incremental sync to production");
@@ -65,7 +69,7 @@ const printUsage = (): void => {
   log("  sync:prod:clean       - Clean stale content in production");
   log("  sync:prod:reset       - Delete ALL content in production");
   log(
-    "  sync:prod:reset:tryouts - Delete only tryout + IRT runtime data in production"
+    "  sync:prod:reset:tryouts - Delete tryout content/read models, event access rows, and IRT scale data in production, then run a full sync"
   );
   log("\nOptions:");
   log("  --locale en|id  - Sync specific locale only");
@@ -74,12 +78,15 @@ const printUsage = (): void => {
   log("  --sequential    - Run sync phases sequentially (for debugging)");
   log("  --prod          - Target production database");
   log("\nExamples:");
-  log("  pnpm --filter backend sync                 # Full sync to dev");
-  log("  pnpm --filter backend sync:incremental     # Fast daily sync");
-  log("  pnpm --filter backend sync:prod            # Full sync to prod");
-  log("  pnpm --filter backend sync:reset --force   # Delete all content");
+  log("  pnpm --filter @repo/backend sync                 # Full sync to dev");
+  log("  pnpm --filter @repo/backend sync:incremental     # Fast daily sync");
+  log("  pnpm --filter @repo/backend sync:prod            # Full sync to prod");
+  log(
+    "  pnpm --filter @repo/backend sync:reset --force   # Delete all content"
+  );
 };
 
+/** Dispatches one parsed sync-content command to the matching workflow. */
 export const runCommand = async (
   type: string,
   options: SyncOptions
@@ -150,6 +157,7 @@ export const runCommand = async (
   }
 };
 
+/** Parses process arguments and runs the selected sync-content workflow. */
 export const parseAndRun = async (): Promise<void> => {
   const { type, options } = parseArgs();
   await runCommand(type, options);

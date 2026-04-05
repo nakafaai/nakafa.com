@@ -1,6 +1,7 @@
 import { runConvexMutationGeneric } from "./convexApi";
 import { getContentCounts } from "./counts";
 import { formatDuration, log, logSuccess, logWarning } from "./logging";
+import { clearSyncState } from "./runtime";
 import { BatchDeleteResultSchema } from "./schemas";
 import type { ConvexConfig, SyncOptions } from "./types";
 
@@ -21,12 +22,6 @@ const RESET_TRYOUT_STEPS: ResetStep[] = [
     mutationPath:
       "contentSync/mutations/maintenance:deleteTryoutLeaderboardEntriesBatch",
     resultLabel: "tryout leaderboard entries",
-  },
-  {
-    label: "Deleting user tryout latest attempts...",
-    mutationPath:
-      "contentSync/mutations/maintenance:deleteUserTryoutLatestAttemptsBatch",
-    resultLabel: "user tryout latest attempts",
   },
   {
     label: "Deleting user tryout stats...",
@@ -88,6 +83,36 @@ const RESET_TRYOUT_STEPS: ResetStep[] = [
     resultLabel: "tryout attempts",
   },
   {
+    label: "Deleting event tryout entitlements...",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteEventTryoutEntitlementsBatch",
+    resultLabel: "event tryout entitlements",
+  },
+  {
+    label: "Deleting tryout access grants...",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteTryoutAccessGrantsBatch",
+    resultLabel: "tryout access grants",
+  },
+  {
+    label: "Deleting tryout access links...",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteTryoutAccessLinksBatch",
+    resultLabel: "tryout access links",
+  },
+  {
+    label: "Deleting tryout access campaigns...",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteTryoutAccessCampaignsBatch",
+    resultLabel: "tryout access campaigns",
+  },
+  {
+    label: "Deleting tryout catalog meta...",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteTryoutCatalogMetaBatch",
+    resultLabel: "tryout catalog meta rows",
+  },
+  {
     label: "Deleting tryout part sets...",
     mutationPath: "contentSync/mutations/maintenance:deleteTryoutPartSetsBatch",
     resultLabel: "tryout part sets",
@@ -111,6 +136,7 @@ const RESET_TRYOUT_STEPS: ResetStep[] = [
   },
 ];
 
+/** Deletes every row reachable by one batch maintenance mutation. */
 const deleteAllBatched = async (
   config: ConvexConfig,
   mutationPath: string,
@@ -147,22 +173,26 @@ const deleteAllBatched = async (
   return totalDeleted;
 };
 
+/**
+ * Deletes the tryout and IRT content/runtime tables that must be rebuilt from a
+ * fresh full sync, then clears incremental sync state.
+ */
 export const resetTryouts = async (
   config: ConvexConfig,
   options: SyncOptions
 ): Promise<void> => {
   log("=== RESET TRYOUTS + IRT ===\n");
   log(
-    "This deletes tryout and IRT runtime data, then lets you resync fresh tryout definitions and scales."
+    "This deletes tryout definitions, event access rows, catalog metadata, attempts, leaderboard rows, and frozen IRT scale data."
   );
   log(
-    "It intentionally keeps unrelated standalone exercise history and other content tables intact.\n"
+    "Run a full sync afterward so Convex rebuilds the deleted tryout and IRT content tables coherently. Subscription entitlements stay preserved.\n"
   );
 
   if (options.prod) {
     logWarning("PRODUCTION DATABASE SELECTED!");
     logWarning(
-      "This will permanently delete tryout and IRT runtime data in production.\n"
+      "This will permanently delete tryout, event access, and IRT content/runtime data in production.\n"
     );
   }
 
@@ -173,14 +203,18 @@ export const resetTryouts = async (
   const counts = await getContentCounts(config);
 
   log("Current tryout + IRT database contents:\n");
-  log(`  Exercise Attempts:     ${counts.exerciseAttempts}`);
-  log(`  Exercise Answers:      ${counts.exerciseAnswers}`);
+  log(`  Tryout Access Campaigns: ${counts.tryoutAccessCampaigns}`);
+  log(`  Tryout Access Links:    ${counts.tryoutAccessLinks}`);
+  log(`  Tryout Access Grants:   ${counts.tryoutAccessGrants}`);
   log(`  Tryouts:               ${counts.tryouts}`);
+  log(`  Tryout Catalog Meta:   ${counts.tryoutCatalogMeta}`);
+  log(
+    `  User Entitlements:     ${counts.userTryoutEntitlements} (subscription preserved, event rows cleaned)`
+  );
   log(`  Tryout Part Sets:      ${counts.tryoutPartSets}`);
   log(`  Tryout Attempts:       ${counts.tryoutAttempts}`);
   log(`  Tryout Part Attempts:  ${counts.tryoutPartAttempts}`);
   log(`  Tryout Leaderboard:    ${counts.tryoutLeaderboardEntries}`);
-  log(`  User Tryout Latest:    ${counts.userTryoutLatestAttempts}`);
   log(`  User Tryout Stats:     ${counts.userTryoutStats}`);
   log(`  IRT Calibration Queue: ${counts.irtCalibrationQueue}`);
   log(`  IRT Calibration Rows:  ${counts.irtCalibrationAttempts}`);
@@ -194,12 +228,15 @@ export const resetTryouts = async (
   log(`  IRT Scale Items:       ${counts.irtScaleVersionItems}`);
 
   const totalTryoutAndIrtRows =
+    counts.tryoutAccessCampaigns +
+    counts.tryoutAccessLinks +
+    counts.tryoutAccessGrants +
     counts.tryouts +
+    counts.tryoutCatalogMeta +
     counts.tryoutPartSets +
     counts.tryoutAttempts +
     counts.tryoutPartAttempts +
     counts.tryoutLeaderboardEntries +
-    counts.userTryoutLatestAttempts +
     counts.userTryoutStats +
     counts.irtCalibrationQueue +
     counts.irtCalibrationAttempts +
@@ -215,16 +252,18 @@ export const resetTryouts = async (
   log(`\n  Total tryout + IRT rows: ${totalTryoutAndIrtRows}`);
 
   if (totalTryoutAndIrtRows === 0) {
-    logSuccess("\nTryout and IRT runtime data is already empty.");
+    logSuccess("\nTryout and IRT sync-managed data is already empty.");
+    clearSyncState(options.prod ?? false);
+    log("Cleared sync state file");
     return;
   }
 
   if (!options.force) {
     log("\nTo delete tryout + IRT data, run:");
     if (options.prod) {
-      log("  pnpm --filter backend sync:prod:reset:tryouts --force");
+      log("  pnpm --filter @repo/backend sync:prod:reset:tryouts --force");
     } else {
-      log("  pnpm --filter backend sync:reset:tryouts --force");
+      log("  pnpm --filter @repo/backend sync:reset:tryouts --force");
     }
     return;
   }
@@ -245,6 +284,19 @@ export const resetTryouts = async (
   }
 
   log("\n=== RESET TRYOUTS + IRT COMPLETE ===\n");
-  logSuccess(`Deleted ${totalDeleted} tryout/IRT rows`);
+  logSuccess(
+    `Deleted ${totalDeleted} tryout/IRT rows across sync-managed tables`
+  );
   log(`Duration: ${formatDuration(performance.now() - startTime)}`);
+  clearSyncState(options.prod ?? false);
+  log("Cleared sync state file");
+
+  log("\nRun a full sync next:");
+
+  if (options.prod) {
+    log("  pnpm --filter @repo/backend sync:prod");
+    return;
+  }
+
+  log("  pnpm --filter @repo/backend sync");
 };

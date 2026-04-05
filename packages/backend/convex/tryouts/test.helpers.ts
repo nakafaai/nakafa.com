@@ -1,4 +1,5 @@
 import { register as registerAggregate } from "@convex-dev/aggregate/test";
+import { register as registerWorkpool } from "@convex-dev/workpool/test";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
@@ -15,6 +16,9 @@ export function createTryoutTestConvex() {
 
   registerAggregate(t, "globalLeaderboard");
   registerAggregate(t, "tryoutLeaderboard");
+  registerWorkpool(t, "irtCalibrationSyncWorkpool");
+  registerWorkpool(t, "irtScalePublicationQueueWorkpool");
+  registerWorkpool(t, "tryoutLeaderboardWorkpool");
 
   return t;
 }
@@ -23,7 +27,8 @@ export function createTryoutTestConvex() {
 export async function insertTryoutSkeleton(
   ctx: MutationCtx,
   slug: string,
-  questionCount = 20
+  questionCount = 20,
+  catalogPosition = 1
 ) {
   const setId = await ctx.db.insert("exerciseSets", {
     locale: "id",
@@ -38,6 +43,7 @@ export async function insertTryoutSkeleton(
     syncedAt: NOW,
   });
   const tryoutId = await ctx.db.insert("tryouts", {
+    catalogPosition,
     product: "snbt",
     locale: "id",
     cycleKey: "2026",
@@ -103,7 +109,7 @@ export async function insertExerciseQuestion(
   });
 }
 
-/** Seeds one completed single-part tryout attempt and its latest-attempt pointer. */
+/** Seeds one completed single-part tryout attempt and its part attempt rows. */
 export async function insertCompletedTryoutAttempt(
   ctx: MutationCtx,
   {
@@ -174,18 +180,6 @@ export async function insertCompletedTryoutAttempt(
     theta: 0,
     thetaSE: 1,
   });
-  await ctx.db.insert("userTryoutLatestAttempts", {
-    userId,
-    product: "snbt",
-    locale: "id",
-    tryoutId,
-    attemptId: tryoutAttemptId,
-    slug,
-    status: "completed",
-    expiresAtMs: NOW + ATTEMPT_WINDOW_MS,
-    updatedAt: NOW,
-  });
-
   return {
     setAttemptId,
     tryoutAttemptId,
@@ -229,6 +223,7 @@ export async function seedExpiredTryoutWithUntouchedPart(
     syncedAt: NOW,
   });
   const tryoutId = await ctx.db.insert("tryouts", {
+    catalogPosition: 1,
     product: "snbt",
     locale: "id",
     cycleKey: "2026",
@@ -372,18 +367,6 @@ export async function seedExpiredTryoutWithUntouchedPart(
     theta: 0,
     thetaSE: 1,
   });
-  await ctx.db.insert("userTryoutLatestAttempts", {
-    userId: identity.userId,
-    product: "snbt",
-    locale: "id",
-    tryoutId,
-    attemptId: tryoutAttemptId,
-    slug: suffix,
-    status: "expired",
-    expiresAtMs: expiredAt,
-    updatedAt: expiredAt,
-  });
-
   return {
     identity,
     tryoutSlug: suffix,

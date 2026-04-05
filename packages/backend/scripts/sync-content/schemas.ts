@@ -72,12 +72,16 @@ export const ContentCountsSchema = z.object({
   exerciseQuestions: z.number(),
   exerciseAttempts: z.number(),
   exerciseAnswers: z.number(),
+  tryoutAccessCampaigns: z.number(),
+  tryoutAccessLinks: z.number(),
+  tryoutAccessGrants: z.number(),
   tryouts: z.number(),
+  tryoutCatalogMeta: z.number(),
+  userTryoutEntitlements: z.number(),
   tryoutPartSets: z.number(),
   tryoutAttempts: z.number(),
   tryoutPartAttempts: z.number(),
   tryoutLeaderboardEntries: z.number(),
-  userTryoutLatestAttempts: z.number(),
   userTryoutStats: z.number(),
   irtCalibrationQueue: z.number(),
   irtCalibrationAttempts: z.number(),
@@ -107,7 +111,9 @@ export const DataIntegritySchema = z.object({
 });
 
 export const TryoutScaleIntegritySchema = z.object({
-  activeTryoutsWithoutScale: z.array(
+  continueCursor: z.string(),
+  isDone: z.boolean(),
+  page: z.array(
     z.object({
       cycleKey: z.string(),
       locale: z.enum(["en", "id"]),

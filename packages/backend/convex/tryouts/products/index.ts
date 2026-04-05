@@ -47,10 +47,7 @@ export type DetectedTryout = Pick<
   }>;
 };
 
-type TryoutRecord = Pick<
-  Doc<"tryouts">,
-  "cycleKey" | "label" | "locale" | "product"
->;
+type TryoutRecord = Pick<Doc<"tryouts">, "cycleKey" | "label" | "slug">;
 
 type TryoutLeaderboardNamespaceArgs = Pick<
   Doc<"tryouts">,

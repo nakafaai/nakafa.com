@@ -1,6 +1,7 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
 import {
+  ATTEMPT_WINDOW_MS,
   createTryoutTestConvex,
   insertCompletedTryoutAttempt,
   insertTryoutSkeleton,
@@ -106,29 +107,28 @@ describe("tryouts/queries/me/attempt", () => {
         ctx,
         "expired-partcount-shrink"
       );
-      const latestAttempt = await ctx.db
-        .query("userTryoutLatestAttempts")
-        .withIndex("by_userId_and_product_and_locale_and_updatedAt", (q) =>
+      const tryout = await ctx.db
+        .query("tryouts")
+        .withIndex("by_product_and_locale_and_slug", (q) =>
           q
-            .eq("userId", seeded.identity.userId)
             .eq("product", "snbt")
             .eq("locale", "id")
+            .eq("slug", seeded.tryoutSlug)
         )
-        .order("desc")
-        .first();
+        .unique();
 
-      if (!latestAttempt) {
-        throw new Error("Expected latest tryout attempt to exist");
+      if (!tryout) {
+        throw new Error("Expected tryout to exist");
       }
 
       const removedPartSet = await ctx.db
         .query("tryoutPartSets")
         .withIndex("by_tryoutId_and_partIndex", (q) =>
-          q.eq("tryoutId", latestAttempt.tryoutId).eq("partIndex", 1)
+          q.eq("tryoutId", tryout._id).eq("partIndex", 1)
         )
         .unique();
 
-      await ctx.db.patch("tryouts", latestAttempt.tryoutId, {
+      await ctx.db.patch("tryouts", tryout._id, {
         partCount: 1,
         totalQuestionCount: 1,
       });
@@ -249,7 +249,7 @@ describe("tryouts/queries/me/attempt", () => {
         suffix: "in-progress-resume",
       });
       const tryout = await insertTryoutSkeleton(ctx, "in-progress-resume");
-      const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
+      await ctx.db.insert("tryoutAttempts", {
         userId: identity.userId,
         tryoutId: tryout.tryoutId,
         scaleVersionId: tryout.scaleVersionId,
@@ -273,18 +273,6 @@ describe("tryouts/queries/me/attempt", () => {
         lastActivityAt: NOW,
         completedAt: null,
         endReason: null,
-      });
-
-      await ctx.db.insert("userTryoutLatestAttempts", {
-        userId: identity.userId,
-        product: "snbt",
-        locale: "id",
-        tryoutId: tryout.tryoutId,
-        attemptId: tryoutAttemptId,
-        slug: "in-progress-resume",
-        status: "in-progress",
-        expiresAtMs: NOW + 30 * 60 * 1000,
-        updatedAt: NOW,
       });
 
       return identity;
@@ -323,7 +311,7 @@ describe("tryouts/queries/me/attempt", () => {
         throw new Error("Expected tryout part set to exist");
       }
 
-      const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
+      await ctx.db.insert("tryoutAttempts", {
         userId: identity.userId,
         tryoutId: tryout.tryoutId,
         scaleVersionId: tryout.scaleVersionId,
@@ -352,18 +340,6 @@ describe("tryouts/queries/me/attempt", () => {
       await ctx.db.patch("tryoutPartSets", tryoutPartSet._id, {
         partKey: "mathematical-reasoning",
       });
-      await ctx.db.insert("userTryoutLatestAttempts", {
-        userId: identity.userId,
-        product: "snbt",
-        locale: "id",
-        tryoutId: tryout.tryoutId,
-        attemptId: tryoutAttemptId,
-        slug: "resume-current-key",
-        status: "in-progress",
-        expiresAtMs: NOW + 30 * 60 * 1000,
-        updatedAt: NOW,
-      });
-
       return identity;
     });
 
@@ -419,6 +395,7 @@ describe("tryouts/queries/me/attempt", () => {
         syncedAt: NOW,
       });
       const tryoutId = await ctx.db.insert("tryouts", {
+        catalogPosition: 1,
         product: "snbt",
         locale: "id",
         cycleKey: "2026",
@@ -449,7 +426,7 @@ describe("tryouts/queries/me/attempt", () => {
         partIndex: 1,
         partKey: "mathematical-reasoning",
       });
-      const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
+      await ctx.db.insert("tryoutAttempts", {
         userId: identity.userId,
         tryoutId,
         scaleVersionId,
@@ -481,17 +458,6 @@ describe("tryouts/queries/me/attempt", () => {
         endReason: null,
       });
 
-      await ctx.db.insert("userTryoutLatestAttempts", {
-        userId: identity.userId,
-        product: "snbt",
-        locale: "id",
-        tryoutId,
-        attemptId: tryoutAttemptId,
-        slug: "ordered-part-key-reorder",
-        status: "in-progress",
-        expiresAtMs: NOW + 30 * 60 * 1000,
-        updatedAt: NOW,
-      });
       await ctx.db.patch("tryoutPartSets", firstPartSetId, {
         partKey: "mathematical-reasoning",
         setId: secondSetId,
@@ -559,6 +525,7 @@ describe("tryouts/queries/me/attempt", () => {
         syncedAt: NOW,
       });
       const tryoutId = await ctx.db.insert("tryouts", {
+        catalogPosition: 1,
         product: "snbt",
         locale: "id",
         cycleKey: "2026",
@@ -589,7 +556,7 @@ describe("tryouts/queries/me/attempt", () => {
         partIndex: 1,
         partKey: "mathematical-reasoning",
       });
-      const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
+      await ctx.db.insert("tryoutAttempts", {
         userId: identity.userId,
         tryoutId,
         scaleVersionId,
@@ -621,17 +588,6 @@ describe("tryouts/queries/me/attempt", () => {
         endReason: null,
       });
 
-      await ctx.db.insert("userTryoutLatestAttempts", {
-        userId: identity.userId,
-        product: "snbt",
-        locale: "id",
-        tryoutId,
-        attemptId: tryoutAttemptId,
-        slug: "ordered-part-key-collision",
-        status: "in-progress",
-        expiresAtMs: NOW + 30 * 60 * 1000,
-        updatedAt: NOW,
-      });
       await ctx.db.patch("tryoutPartSets", firstPartSetId, {
         partKey: "mathematical-reasoning",
       });
@@ -669,6 +625,117 @@ describe("tryouts/queries/me/attempt", () => {
     expect(result?.resumePartKey).toBe("verbal-reasoning");
   });
 
+  it("derives the public final-event label for finalized competition attempts", async () => {
+    const t = createTryoutTestConvex();
+    const identity = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "final-event-status",
+      });
+      const tryout = await insertTryoutSkeleton(ctx, "final-event-status");
+      const campaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+        slug: "final-event-status",
+        name: "Final Event Status",
+        products: ["snbt"],
+        campaignKind: "competition",
+        enabled: true,
+        redeemStatus: "ended",
+        resultsStatus: "finalized",
+        resultsFinalizedAt: NOW,
+        startsAt: NOW - 24 * 60 * 60 * 1000,
+        endsAt: NOW - 1,
+      });
+      const linkId = await ctx.db.insert("tryoutAccessLinks", {
+        campaignId,
+        code: "final-event-status",
+        label: "Final Event Status",
+        enabled: true,
+      });
+      const grantId = await ctx.db.insert("tryoutAccessGrants", {
+        campaignId,
+        linkId,
+        userId: identity.userId,
+        redeemedAt: NOW - 24 * 60 * 60 * 1000,
+        endsAt: NOW - 1,
+        status: "expired",
+      });
+      const setAttemptId = await ctx.db.insert("exerciseAttempts", {
+        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/final-event-status",
+        userId: identity.userId,
+        origin: "tryout",
+        mode: "simulation",
+        scope: "set",
+        timeLimit: 1800,
+        startedAt: NOW,
+        lastActivityAt: NOW,
+        completedAt: NOW,
+        endReason: "submitted",
+        status: "completed",
+        updatedAt: NOW,
+        totalExercises: 20,
+        answeredCount: 20,
+        correctAnswers: 12,
+        totalTime: 1800,
+        scorePercentage: 60,
+      });
+      const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
+        userId: identity.userId,
+        tryoutId: tryout.tryoutId,
+        scaleVersionId: tryout.scaleVersionId,
+        accessKind: "event",
+        accessCampaignId: campaignId,
+        accessCampaignKind: "competition",
+        accessGrantId: grantId,
+        accessEndsAt: NOW - 1,
+        countsForCompetition: true,
+        scoreStatus: "provisional",
+        status: "completed",
+        partSetSnapshots: [
+          {
+            partIndex: 0,
+            partKey: "quantitative-knowledge",
+            questionCount: 20,
+            setId: tryout.setId,
+          },
+        ],
+        completedPartIndices: [0],
+        totalCorrect: 12,
+        totalQuestions: 20,
+        theta: 0,
+        thetaSE: 1,
+        startedAt: NOW,
+        expiresAt: NOW + ATTEMPT_WINDOW_MS,
+        lastActivityAt: NOW,
+        completedAt: NOW,
+        endReason: "submitted",
+      });
+      await ctx.db.insert("tryoutPartAttempts", {
+        tryoutAttemptId,
+        partIndex: 0,
+        partKey: "quantitative-knowledge",
+        setAttemptId,
+        setId: tryout.setId,
+        theta: 0,
+        thetaSE: 1,
+      });
+
+      return identity;
+    });
+
+    const result = await t
+      .withIdentity({
+        subject: identity.authUserId,
+        sessionId: identity.sessionId,
+      })
+      .query(api.tryouts.queries.me.attempt.getUserTryoutAttempt, {
+        product: "snbt",
+        locale: "id",
+        tryoutSlug: "final-event-status",
+      });
+
+    expect(result?.attempt.publicResultStatus).toBe("final-event");
+  });
+
   it("uses snapshot length when live tryout partCount shrinks below started parts", async () => {
     const t = createTryoutTestConvex();
     const identity = await t.mutation(async (ctx) => {
@@ -701,6 +768,7 @@ describe("tryouts/queries/me/attempt", () => {
         syncedAt: NOW,
       });
       const tryoutId = await ctx.db.insert("tryouts", {
+        catalogPosition: 1,
         product: "snbt",
         locale: "id",
         cycleKey: "2026",
@@ -820,17 +888,6 @@ describe("tryouts/queries/me/attempt", () => {
         setId: secondSetId,
         theta: 0,
         thetaSE: 1,
-      });
-      await ctx.db.insert("userTryoutLatestAttempts", {
-        userId: identity.userId,
-        product: "snbt",
-        locale: "id",
-        tryoutId,
-        attemptId: tryoutAttemptId,
-        slug: "in-progress-partcount-shrink",
-        status: "in-progress",
-        expiresAtMs: NOW + 30 * 60 * 1000,
-        updatedAt: NOW,
       });
       await ctx.db.patch("tryouts", tryoutId, {
         partCount: 1,

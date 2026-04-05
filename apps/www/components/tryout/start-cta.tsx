@@ -4,8 +4,8 @@ import { Rocket01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useTranslations } from "next-intl";
+import { TryoutAttemptResults } from "@/components/tryout/attempt-results";
 import { useTryoutStart } from "@/components/tryout/providers/start-state";
-import { TryoutScoreCard } from "@/components/tryout/score-card";
 import {
   TryoutStartCountdown,
   TryoutStartCountdownAction,
@@ -65,9 +65,9 @@ export function TryoutStartCta() {
   return (
     <div className="flex w-full flex-col items-start gap-4">
       {attempt && hasFinishedAttempt ? (
-        <TryoutScoreCard
-          attempt={attempt}
-          status={attemptStatus ?? attempt.status}
+        <TryoutAttemptResults
+          fallbackAttempt={attempt}
+          fallbackStatus={attemptStatus ?? attempt.status}
         />
       ) : null}
 
