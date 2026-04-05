@@ -22,7 +22,7 @@ describe("tryoutAccess/mutations/internal/status", () => {
       const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "sync-campaign-grants",
         name: "Sync Campaign Grants",
-        products: ["snbt"],
+        targetProducts: ["snbt"],
         campaignKind: "competition",
         enabled: true,
         redeemStatus: "active",
@@ -92,7 +92,7 @@ describe("tryoutAccess/mutations/internal/status", () => {
       const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "sync-deduplicate-grant-entitlements",
         name: "Sync Deduplicate Grant Entitlements",
-        products: ["snbt"],
+        targetProducts: ["snbt"],
         campaignKind: "access-pass",
         enabled: true,
         redeemStatus: "active",
@@ -184,7 +184,7 @@ describe("tryoutAccess/mutations/internal/status", () => {
         await insertTryoutAccessCampaign(ctx, {
           slug: `pending-competition-${index}`,
           name: `Pending Competition ${index}`,
-          products: ["snbt"],
+          targetProducts: ["snbt"],
           campaignKind: "competition",
           enabled: true,
           redeemStatus: "ended",

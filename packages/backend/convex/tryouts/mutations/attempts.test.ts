@@ -225,7 +225,7 @@ describe("tryouts/mutations/attempts", () => {
       const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "competition-concurrent-start",
         name: "Competition Concurrent Start",
-        products: ["snbt"],
+        targetProducts: ["snbt"],
         campaignKind: "competition",
         enabled: true,
         redeemStatus: "active",
@@ -373,7 +373,7 @@ describe("tryouts/mutations/attempts", () => {
       const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "competition-first-attempt",
         name: "Competition First Attempt",
-        products: ["snbt"],
+        targetProducts: ["snbt"],
         campaignKind: "competition",
         enabled: true,
         redeemStatus: "active",
@@ -449,7 +449,7 @@ describe("tryouts/mutations/attempts", () => {
       const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "competition-then-pro",
         name: "Competition Then Pro",
-        products: ["snbt"],
+        targetProducts: ["snbt"],
         campaignKind: "competition",
         enabled: true,
         redeemStatus: "active",
@@ -552,7 +552,7 @@ describe("tryouts/mutations/attempts", () => {
       const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "competition-attempt-used",
         name: "Competition Attempt Used",
-        products: ["snbt"],
+        targetProducts: ["snbt"],
         campaignKind: "competition",
         enabled: true,
         redeemStatus: "active",
@@ -639,7 +639,7 @@ describe("tryouts/mutations/attempts", () => {
       const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "ended-competition-attempt",
         name: "Ended Competition Attempt",
-        products: ["snbt"],
+        targetProducts: ["snbt"],
         campaignKind: "competition",
         enabled: true,
         redeemStatus: "ended",
@@ -725,7 +725,7 @@ describe("tryouts/mutations/attempts", () => {
       const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "stale-event-entitlement",
         name: "Stale Event Entitlement",
-        products: ["snbt"],
+        targetProducts: ["snbt"],
         campaignKind: "access-pass",
         enabled: true,
         redeemStatus: "active",
@@ -796,7 +796,7 @@ describe("tryouts/mutations/attempts", () => {
       const shorterCampaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "shorter-access-pass-window",
         name: "Shorter Access Pass",
-        products: ["snbt"],
+        targetProducts: ["snbt"],
         campaignKind: "access-pass",
         enabled: true,
         redeemStatus: "active",
@@ -809,7 +809,7 @@ describe("tryouts/mutations/attempts", () => {
       const longerCampaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "longer-access-pass-window",
         name: "Longer Access Pass",
-        products: ["snbt"],
+        targetProducts: ["snbt"],
         campaignKind: "access-pass",
         enabled: true,
         redeemStatus: "active",
@@ -908,7 +908,7 @@ describe("tryouts/mutations/attempts", () => {
         const campaignId = await insertTryoutAccessCampaign(ctx, {
           slug: `many-access-pass-grants-${index}`,
           name: `Many Access Pass ${index}`,
-          products: ["snbt"],
+          targetProducts: ["snbt"],
           campaignKind: "access-pass",
           enabled: true,
           redeemStatus: "active",

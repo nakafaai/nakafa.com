@@ -16,7 +16,7 @@ const COMPETITION_CAMPAIGN_CHECK_PAGE_SIZE = 100;
 const tryoutAccessCampaignInputValidator = v.object({
   slug: v.string(),
   name: v.string(),
-  products: v.array(tryoutProductValidator),
+  targetProducts: v.array(tryoutProductValidator),
   campaignKind: tryoutAccessCampaignKindValidator,
   enabled: v.boolean(),
   startsAt: v.number(),
@@ -33,7 +33,7 @@ const tryoutAccessLinkInputValidator = v.object({
 /** Validates the static policy fields for one campaign input. */
 function assertValidCampaignInput(
   campaign: Infer<typeof tryoutAccessCampaignInputValidator>,
-  uniqueProducts: Infer<typeof tryoutProductValidator>[]
+  uniqueTargetProducts: Infer<typeof tryoutProductValidator>[]
 ) {
   if (campaign.endsAt <= campaign.startsAt) {
     throw new ConvexError({
@@ -62,7 +62,7 @@ function assertValidCampaignInput(
     });
   }
 
-  if (campaign.products.length === 0) {
+  if (campaign.targetProducts.length === 0) {
     throw new ConvexError({
       code: "INVALID_EVENT_PRODUCTS",
       message:
@@ -70,7 +70,7 @@ function assertValidCampaignInput(
     });
   }
 
-  if (uniqueProducts.length !== campaign.products.length) {
+  if (uniqueTargetProducts.length !== campaign.targetProducts.length) {
     throw new ConvexError({
       code: "DUPLICATE_EVENT_PRODUCTS",
       message: "Event access campaign products must be unique.",
@@ -84,16 +84,16 @@ async function assertNoOverlappingCompetitionCampaign(
   {
     endsAt,
     existingCampaignId,
-    products,
+    targetProducts,
     startsAt,
   }: {
     endsAt: number;
     existingCampaignId: string | undefined;
-    products: Infer<typeof tryoutProductValidator>[];
+    targetProducts: Infer<typeof tryoutProductValidator>[];
     startsAt: number;
   }
 ) {
-  for (const product of products) {
+  for (const product of targetProducts) {
     let continueCursor: string | null = null;
 
     while (true) {
@@ -138,17 +138,17 @@ async function assertNoOverlappingCompetitionCampaign(
 /** Returns whether two campaign product sets are identical. */
 function haveSameCampaignProducts({
   existingProducts,
-  nextProducts,
+  nextTargetProducts,
 }: {
   existingProducts: Infer<typeof tryoutProductValidator>[];
-  nextProducts: Infer<typeof tryoutProductValidator>[];
+  nextTargetProducts: Infer<typeof tryoutProductValidator>[];
 }) {
-  if (existingProducts.length !== nextProducts.length) {
+  if (existingProducts.length !== nextTargetProducts.length) {
     return false;
   }
 
   return existingProducts.every(
-    (product, index) => nextProducts[index] === product
+    (product, index) => nextTargetProducts[index] === product
   );
 }
 
@@ -159,13 +159,13 @@ async function syncTryoutAccessCampaignProducts(
     campaignId,
     campaignKind,
     endsAt,
-    products,
+    targetProducts,
     startsAt,
   }: {
     campaignId: Doc<"tryoutAccessCampaigns">["_id"];
     campaignKind: Infer<typeof tryoutAccessCampaignKindValidator>;
     endsAt: number;
-    products: Infer<typeof tryoutProductValidator>[];
+    targetProducts: Infer<typeof tryoutProductValidator>[];
     startsAt: number;
   }
 ) {
@@ -174,7 +174,7 @@ async function syncTryoutAccessCampaignProducts(
     .withIndex("by_campaignId", (q) => q.eq("campaignId", campaignId))
     .collect();
   const rowsByProduct = new Map<
-    (typeof products)[number],
+    (typeof targetProducts)[number],
     typeof existingRows
   >();
 
@@ -189,7 +189,7 @@ async function syncTryoutAccessCampaignProducts(
     rowsByProduct.set(row.product, [row]);
   }
 
-  for (const product of products) {
+  for (const product of targetProducts) {
     const existingRowsForProduct = rowsByProduct.get(product) ?? [];
     const currentRow = existingRowsForProduct[0] ?? null;
 
@@ -241,7 +241,7 @@ function hasCampaignPolicyChange({
   existingCampaign,
   existingProducts,
   nextCampaign,
-  nextProducts,
+  nextTargetProducts,
 }: {
   existingCampaign: Pick<
     Doc<"tryoutAccessCampaigns">,
@@ -252,7 +252,7 @@ function hasCampaignPolicyChange({
     Infer<typeof tryoutAccessCampaignInputValidator>,
     "endsAt" | "grantDurationDays" | "startsAt"
   >;
-  nextProducts: Infer<typeof tryoutProductValidator>[];
+  nextTargetProducts: Infer<typeof tryoutProductValidator>[];
 }) {
   return (
     existingCampaign.startsAt !== nextCampaign.startsAt ||
@@ -260,7 +260,7 @@ function hasCampaignPolicyChange({
     existingCampaign.grantDurationDays !== nextCampaign.grantDurationDays ||
     !haveSameCampaignProducts({
       existingProducts,
-      nextProducts,
+      nextTargetProducts,
     })
   );
 }
@@ -270,7 +270,7 @@ function assertCampaignLifecycleCanBeReused({
   existingCampaign,
   existingProducts,
   nextCampaign,
-  nextProducts,
+  nextTargetProducts,
 }: {
   existingCampaign: Pick<Doc<"tryoutAccessCampaigns">, "resultsStatus"> &
     Pick<
@@ -282,7 +282,7 @@ function assertCampaignLifecycleCanBeReused({
     Infer<typeof tryoutAccessCampaignInputValidator>,
     "endsAt" | "grantDurationDays" | "startsAt"
   >;
-  nextProducts: Infer<typeof tryoutProductValidator>[];
+  nextTargetProducts: Infer<typeof tryoutProductValidator>[];
 }) {
   if (existingCampaign.resultsStatus === "pending") {
     return;
@@ -293,7 +293,7 @@ function assertCampaignLifecycleCanBeReused({
       existingCampaign,
       existingProducts,
       nextCampaign,
-      nextProducts,
+      nextTargetProducts,
     })
   ) {
     return;
@@ -313,7 +313,7 @@ function assertCampaignCanBeUpdated({
   existingProducts,
   existingLink,
   nextCampaign,
-  nextProducts,
+  nextTargetProducts,
 }: {
   campaignKind: Infer<typeof tryoutAccessCampaignKindValidator>;
   existingCampaign: Doc<"tryoutAccessCampaigns">;
@@ -323,7 +323,7 @@ function assertCampaignCanBeUpdated({
     Infer<typeof tryoutAccessCampaignInputValidator>,
     "endsAt" | "grantDurationDays" | "startsAt"
   >;
-  nextProducts: Infer<typeof tryoutProductValidator>[];
+  nextTargetProducts: Infer<typeof tryoutProductValidator>[];
 }) {
   if (existingLink.campaignId !== existingCampaign._id) {
     throw new ConvexError({
@@ -344,7 +344,7 @@ function assertCampaignCanBeUpdated({
     existingCampaign,
     existingProducts,
     nextCampaign,
-    nextProducts,
+    nextTargetProducts,
   });
 
   if (existingCampaign.firstRedeemedAt == null) {
@@ -352,7 +352,7 @@ function assertCampaignCanBeUpdated({
       existingCampaign,
       existingProducts,
       nextCampaign,
-      nextProducts,
+      nextTargetProducts,
     });
 
     return;
@@ -430,8 +430,10 @@ export const upsertCampaignAndLink = internalMutation({
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    const uniqueProducts = Array.from(new Set(args.campaign.products)).sort();
-    assertValidCampaignInput(args.campaign, uniqueProducts);
+    const uniqueTargetProducts = Array.from(
+      new Set(args.campaign.targetProducts)
+    ).sort();
+    assertValidCampaignInput(args.campaign, uniqueTargetProducts);
 
     const code = normalizeTryoutAccessCode(args.link.code);
 
@@ -476,7 +478,7 @@ export const upsertCampaignAndLink = internalMutation({
       await assertNoOverlappingCompetitionCampaign(ctx, {
         endsAt: args.campaign.endsAt,
         existingCampaignId: existingCampaign?._id,
-        products: uniqueProducts,
+        targetProducts: uniqueTargetProducts,
         startsAt: args.campaign.startsAt,
       });
     }
@@ -495,7 +497,7 @@ export const upsertCampaignAndLink = internalMutation({
         existingProducts: existingProducts.map((row) => row.product),
         existingLink,
         nextCampaign,
-        nextProducts: uniqueProducts,
+        nextTargetProducts: uniqueTargetProducts,
       });
 
       await ctx.db.replace(
@@ -513,7 +515,7 @@ export const upsertCampaignAndLink = internalMutation({
         campaignId: existingCampaign._id,
         campaignKind: args.campaign.campaignKind,
         endsAt: args.campaign.endsAt,
-        products: uniqueProducts,
+        targetProducts: uniqueTargetProducts,
         startsAt: args.campaign.startsAt,
       });
 
@@ -544,7 +546,7 @@ export const upsertCampaignAndLink = internalMutation({
       campaignId,
       campaignKind: args.campaign.campaignKind,
       endsAt: args.campaign.endsAt,
-      products: uniqueProducts,
+      targetProducts: uniqueTargetProducts,
       startsAt: args.campaign.startsAt,
     });
 

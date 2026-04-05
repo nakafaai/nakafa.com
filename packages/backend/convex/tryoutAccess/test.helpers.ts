@@ -14,7 +14,7 @@ export async function insertTryoutAccessCampaign(
     firstRedeemedAt = null,
     grantDurationDays,
     name,
-    products,
+    targetProducts,
     redeemStatus,
     resultsFinalizedAt,
     resultsStatus,
@@ -27,7 +27,7 @@ export async function insertTryoutAccessCampaign(
     firstRedeemedAt?: number | null;
     grantDurationDays?: number;
     name: string;
-    products: Infer<typeof tryoutProductValidator>[];
+    targetProducts: Infer<typeof tryoutProductValidator>[];
     redeemStatus: Doc<"tryoutAccessCampaigns">["redeemStatus"];
     resultsFinalizedAt: number | null;
     resultsStatus: Doc<"tryoutAccessCampaigns">["resultsStatus"];
@@ -49,7 +49,7 @@ export async function insertTryoutAccessCampaign(
     startsAt,
   });
 
-  for (const product of products) {
+  for (const product of targetProducts) {
     await ctx.db.insert("tryoutAccessCampaignProducts", {
       campaignId,
       product,

@@ -33,7 +33,7 @@ describe("auth/cleanup", () => {
       const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug,
         name: "Cleanup Runtime Campaign",
-        products: ["snbt"],
+        targetProducts: ["snbt"],
         campaignKind: "access-pass",
         enabled: true,
         redeemStatus: "active",

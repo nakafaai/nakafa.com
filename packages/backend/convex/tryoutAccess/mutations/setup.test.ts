@@ -16,7 +16,7 @@ describe("tryoutAccess/mutations/setup", () => {
         campaign: {
           slug: "competition-yim",
           name: "Competition YIM",
-          products: ["snbt"],
+          targetProducts: ["snbt"],
           campaignKind: "competition",
           enabled: true,
           startsAt: NOW,
@@ -48,6 +48,7 @@ describe("tryoutAccess/mutations/setup", () => {
     expect(state.campaign?.resultsStatus).toBe("pending");
     expect(state.campaign?.resultsFinalizedAt).toBeNull();
     expect("products" in (state.campaign ?? {})).toBe(false);
+    expect("targetProducts" in (state.campaign ?? {})).toBe(false);
     expect(state.campaignProducts).toEqual([
       expect.objectContaining({
         campaignId: result.campaignId,
@@ -66,7 +67,7 @@ describe("tryoutAccess/mutations/setup", () => {
         campaign: {
           slug: "access-pass-yim",
           name: "Access Pass YIM",
-          products: ["snbt"],
+          targetProducts: ["snbt"],
           campaignKind: "access-pass",
           enabled: true,
           startsAt: NOW,
@@ -99,7 +100,7 @@ describe("tryoutAccess/mutations/setup", () => {
         campaign: {
           slug: "immutable-kind",
           name: "Immutable Kind",
-          products: ["snbt"],
+          targetProducts: ["snbt"],
           campaignKind: "competition",
           enabled: true,
           startsAt: NOW,
@@ -118,7 +119,7 @@ describe("tryoutAccess/mutations/setup", () => {
         campaign: {
           slug: "immutable-kind",
           name: "Immutable Kind",
-          products: ["snbt"],
+          targetProducts: ["snbt"],
           campaignKind: "access-pass",
           enabled: true,
           startsAt: NOW,
@@ -143,7 +144,7 @@ describe("tryoutAccess/mutations/setup", () => {
         campaign: {
           slug: "overlap-first",
           name: "Overlap First",
-          products: ["snbt"],
+          targetProducts: ["snbt"],
           campaignKind: "competition",
           enabled: true,
           startsAt: NOW,
@@ -162,7 +163,7 @@ describe("tryoutAccess/mutations/setup", () => {
         campaign: {
           slug: "overlap-second",
           name: "Overlap Second",
-          products: ["snbt"],
+          targetProducts: ["snbt"],
           campaignKind: "competition",
           enabled: true,
           startsAt: NOW + 60 * 60 * 1000,
@@ -186,7 +187,7 @@ describe("tryoutAccess/mutations/setup", () => {
         campaign: {
           slug: "overlap-long-running",
           name: "Overlap Long Running",
-          products: ["snbt"],
+          targetProducts: ["snbt"],
           campaignKind: "competition",
           enabled: true,
           startsAt: NOW,
@@ -209,7 +210,7 @@ describe("tryoutAccess/mutations/setup", () => {
           campaign: {
             slug: `overlap-non-overlap-${index}`,
             name: `Overlap Non Overlap ${index}`,
-            products: ["snbt"],
+            targetProducts: ["snbt"],
             campaignKind: "competition",
             enabled: true,
             startsAt,
@@ -229,7 +230,7 @@ describe("tryoutAccess/mutations/setup", () => {
         campaign: {
           slug: "overlap-hidden-old-campaign",
           name: "Overlap Hidden Old Campaign",
-          products: ["snbt"],
+          targetProducts: ["snbt"],
           campaignKind: "competition",
           enabled: true,
           startsAt: NOW + 5 * 24 * 60 * 60 * 1000,
@@ -259,7 +260,7 @@ describe("tryoutAccess/mutations/setup", () => {
           campaign: {
             slug: "locked-policy",
             name: "Locked Policy",
-            products: ["snbt"],
+            targetProducts: ["snbt"],
             campaignKind: "access-pass",
             enabled: true,
             startsAt: currentTime - 60 * 1000,
@@ -300,7 +301,7 @@ describe("tryoutAccess/mutations/setup", () => {
         campaign: {
           slug: "locked-policy",
           name: "Locked Policy",
-          products: ["snbt"],
+          targetProducts: ["snbt"],
           campaignKind: "access-pass",
           enabled: true,
           startsAt: currentTime - 60 * 1000,
@@ -331,7 +332,7 @@ describe("tryoutAccess/mutations/setup", () => {
           campaign: {
             slug: "locked-policy-cleanup",
             name: "Locked Policy Cleanup",
-            products: ["snbt"],
+            targetProducts: ["snbt"],
             campaignKind: "access-pass",
             enabled: true,
             startsAt: currentTime - 60 * 1000,
@@ -367,7 +368,7 @@ describe("tryoutAccess/mutations/setup", () => {
         campaign: {
           slug: "locked-policy-cleanup",
           name: "Locked Policy Cleanup",
-          products: ["snbt"],
+          targetProducts: ["snbt"],
           campaignKind: "access-pass",
           enabled: true,
           startsAt: currentTime - 60 * 1000,
@@ -393,7 +394,7 @@ describe("tryoutAccess/mutations/setup", () => {
           campaign: {
             slug: "finished-competition-window",
             name: "Finished Competition Window",
-            products: ["snbt"],
+            targetProducts: ["snbt"],
             campaignKind: "competition",
             enabled: true,
             startsAt: NOW,
@@ -418,7 +419,7 @@ describe("tryoutAccess/mutations/setup", () => {
         campaign: {
           slug: "finished-competition-window",
           name: "Finished Competition Window",
-          products: ["snbt"],
+          targetProducts: ["snbt"],
           campaignKind: "competition",
           enabled: true,
           startsAt: NOW + 7 * 24 * 60 * 60 * 1000,

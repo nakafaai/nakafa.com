@@ -22,7 +22,7 @@ describe("tryoutAccess/queries/internal/maintenance", () => {
       const scheduledCampaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "scheduled-overdue-campaign",
         name: "Scheduled Overdue Campaign",
-        products: ["snbt"],
+        targetProducts: ["snbt"],
         campaignKind: "access-pass",
         enabled: true,
         redeemStatus: "scheduled",
@@ -41,7 +41,7 @@ describe("tryoutAccess/queries/internal/maintenance", () => {
       const activeCampaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "active-overdue-campaign",
         name: "Active Overdue Campaign",
-        products: ["snbt"],
+        targetProducts: ["snbt"],
         campaignKind: "access-pass",
         enabled: true,
         redeemStatus: "active",
@@ -77,7 +77,7 @@ describe("tryoutAccess/queries/internal/maintenance", () => {
       await insertTryoutAccessCampaign(ctx, {
         slug: "pending-overdue-competition",
         name: "Pending Overdue Competition",
-        products: ["snbt"],
+        targetProducts: ["snbt"],
         campaignKind: "competition",
         enabled: true,
         redeemStatus: "ended",
@@ -147,7 +147,7 @@ describe("tryoutAccess/queries/internal/maintenance", () => {
       await insertTryoutAccessCampaign(ctx, {
         slug: "competition-order-first",
         name: "Competition Order First",
-        products: ["snbt"],
+        targetProducts: ["snbt"],
         campaignKind: "competition",
         enabled: true,
         redeemStatus: "active",
@@ -159,7 +159,7 @@ describe("tryoutAccess/queries/internal/maintenance", () => {
       await insertTryoutAccessCampaign(ctx, {
         slug: "competition-order-second",
         name: "Competition Order Second",
-        products: ["snbt"],
+        targetProducts: ["snbt"],
         campaignKind: "competition",
         enabled: true,
         redeemStatus: "active",

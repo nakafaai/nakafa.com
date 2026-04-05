@@ -637,7 +637,7 @@ describe("tryouts/queries/me/attempt", () => {
       const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "final-event-status",
         name: "Final Event Status",
-        products: ["snbt"],
+        targetProducts: ["snbt"],
         campaignKind: "competition",
         enabled: true,
         redeemStatus: "ended",

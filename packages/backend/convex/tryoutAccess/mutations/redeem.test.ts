@@ -22,7 +22,7 @@ describe("tryoutAccess/mutations/redeem", () => {
           campaign: {
             slug: "redeem-competition",
             name: "Redeem Competition",
-            products: ["snbt"],
+            targetProducts: ["snbt"],
             campaignKind: "competition",
             enabled: true,
             startsAt: currentTime - 60 * 1000,
@@ -70,7 +70,7 @@ describe("tryoutAccess/mutations/redeem", () => {
           campaign: {
             slug: "redeem-access-pass",
             name: "Redeem Access Pass",
-            products: ["snbt"],
+            targetProducts: ["snbt"],
             campaignKind: "access-pass",
             enabled: true,
             startsAt: currentTime - 60 * 1000,

@@ -20,7 +20,7 @@ describe("tryoutAccess/queries", () => {
       const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "event-page-active",
         name: "Event Page Active",
-        products: ["snbt"],
+        targetProducts: ["snbt"],
         campaignKind: "access-pass",
         enabled: true,
         redeemStatus: "active",
@@ -91,7 +91,7 @@ describe("tryoutAccess/queries", () => {
       const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "event-page-used",
         name: "Event Page Used",
-        products: ["snbt"],
+        targetProducts: ["snbt"],
         campaignKind: "access-pass",
         enabled: true,
         redeemStatus: "ended",
@@ -162,7 +162,7 @@ describe("tryoutAccess/queries", () => {
       await insertTryoutAccessCampaign(ctx, {
         slug: "event-page-ready",
         name: "Event Page Ready",
-        products: ["snbt"],
+        targetProducts: ["snbt"],
         campaignKind: "competition",
         enabled: true,
         redeemStatus: "active",

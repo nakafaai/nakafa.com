@@ -13,7 +13,7 @@ describe("tryoutAccess/mutations/internal/competition", () => {
       return await insertTryoutAccessCampaign(ctx, {
         slug: "competition-finalize",
         name: "Competition Finalize",
-        products: ["snbt"],
+        targetProducts: ["snbt"],
         campaignKind: "competition",
         enabled: true,
         redeemStatus: "ended",
@@ -46,7 +46,7 @@ describe("tryoutAccess/mutations/internal/competition", () => {
       return await insertTryoutAccessCampaign(ctx, {
         slug: "competition-pending-not-claimed",
         name: "Competition Pending Not Claimed",
-        products: ["snbt"],
+        targetProducts: ["snbt"],
         campaignKind: "competition",
         enabled: true,
         redeemStatus: "ended",
@@ -82,7 +82,7 @@ describe("tryoutAccess/mutations/internal/competition", () => {
       return await insertTryoutAccessCampaign(ctx, {
         slug: "competition-not-finished",
         name: "Competition Not Finished",
-        products: ["snbt"],
+        targetProducts: ["snbt"],
         campaignKind: "competition",
         enabled: true,
         redeemStatus: "active",

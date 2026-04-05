@@ -23,7 +23,7 @@ describe("tryouts/queries/me/history", () => {
       const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "attempt-history",
         name: "Attempt History",
-        products: ["snbt"],
+        targetProducts: ["snbt"],
         campaignKind: "competition",
         enabled: true,
         redeemStatus: "ended",
