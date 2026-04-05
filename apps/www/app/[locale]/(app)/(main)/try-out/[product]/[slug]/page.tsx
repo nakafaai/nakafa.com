@@ -74,7 +74,7 @@ export default async function Page({ params }: Props) {
             <TryoutSetParts
               parts={details.parts.map((part) => {
                 const materialLabel = ExercisesMaterialSchema.safeParse(
-                  part.partKey
+                  part.material
                 );
 
                 return {

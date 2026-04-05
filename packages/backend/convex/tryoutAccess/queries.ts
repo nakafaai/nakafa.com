@@ -82,7 +82,7 @@ export const getEventPageState = query({
           endsAt: existingGrant.endsAt,
         });
 
-        if (activeEntitlement) {
+        if (existingGrant.status === "active" && activeEntitlement) {
           return {
             kind: "active" as const,
             endsAt: activeEntitlement.endsAt,

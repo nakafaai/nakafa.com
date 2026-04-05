@@ -8,6 +8,7 @@ import {
 } from "@repo/backend/convex/credits/constants";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { createUserTryoutControl } from "@repo/backend/convex/tryouts/helpers/control";
 import { convexTest } from "convex-test";
 
 const betterAuthModules = import.meta.glob(["./betterAuth/**/*.ts"]);
@@ -82,6 +83,11 @@ export async function seedAuthenticatedUser(
     name: authUser.name,
     plan,
     ...(role ? { role } : {}),
+  });
+
+  await createUserTryoutControl(ctx.db, {
+    updatedAt: now,
+    userId,
   });
 
   return {

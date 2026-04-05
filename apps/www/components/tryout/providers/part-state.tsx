@@ -106,7 +106,9 @@ export function TryoutPartProvider({
     Boolean(runtime && runtime.tryoutAttempt.status === "in-progress")
   );
   const isRuntimePending =
-    isUserPending || (user ? isPartStatePending && !runtime : false);
+    runtime === undefined
+      ? isUserPending || (user ? isPartStatePending : false)
+      : false;
   const startPart = useMutation(api.tryouts.mutations.attempts.startPart);
   const completePart = useMutation(api.tryouts.mutations.attempts.completePart);
 

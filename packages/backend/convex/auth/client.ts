@@ -7,6 +7,7 @@ import {
   DEFAULT_USER_PLAN,
 } from "@repo/backend/convex/credits/constants";
 import { getCurrentCreditResetTimestamp } from "@repo/backend/convex/credits/helpers/state";
+import { createUserTryoutControl } from "@repo/backend/convex/tryouts/helpers/control";
 
 const authFunctions: AuthFunctions = internal.auth;
 
@@ -32,6 +33,11 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
               DEFAULT_USER_PLAN,
               Date.now()
             ),
+          });
+
+          await createUserTryoutControl(ctx.db, {
+            updatedAt: Date.now(),
+            userId,
           });
 
           await ctx.db.insert("notificationPreferences", {

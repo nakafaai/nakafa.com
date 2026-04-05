@@ -16,9 +16,9 @@ const MAX_TRYOUT_CATALOG_PAGE_SIZE = 25;
 
 const tryoutCatalogLatestAttemptValidator = v.union(
   v.object({
-    expiresAtMs: vv.doc("userTryoutLatestAttempts").fields.expiresAtMs,
-    status: vv.doc("userTryoutLatestAttempts").fields.status,
-    updatedAt: vv.doc("userTryoutLatestAttempts").fields.updatedAt,
+    expiresAtMs: vv.doc("tryoutAttempts").fields.expiresAt,
+    status: vv.doc("tryoutAttempts").fields.status,
+    updatedAt: vv.doc("tryoutAttempts").fields.lastActivityAt,
   }),
   v.null()
 );
@@ -107,15 +107,12 @@ export const getActiveTryoutCatalogPage = query({
     const latestAttempts = await Promise.all(
       catalogPage.page.map((entry) => {
         return ctx.db
-          .query("userTryoutLatestAttempts")
-          .withIndex("by_userId_and_product_and_locale_and_tryoutId", (q) =>
-            q
-              .eq("userId", user.appUser._id)
-              .eq("product", args.product)
-              .eq("locale", args.locale)
-              .eq("tryoutId", entry.tryoutId)
+          .query("tryoutAttempts")
+          .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
+            q.eq("userId", user.appUser._id).eq("tryoutId", entry.tryoutId)
           )
-          .unique();
+          .order("desc")
+          .first();
       })
     );
 
@@ -129,9 +126,9 @@ export const getActiveTryoutCatalogPage = query({
           label: entry.label,
           latestAttempt: latestAttempt
             ? {
-                expiresAtMs: latestAttempt.expiresAtMs,
+                expiresAtMs: latestAttempt.expiresAt,
                 status: latestAttempt.status,
-                updatedAt: latestAttempt.updatedAt,
+                updatedAt: latestAttempt.lastActivityAt,
               }
             : null,
           partCount: entry.partCount,

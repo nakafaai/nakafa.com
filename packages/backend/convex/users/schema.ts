@@ -47,6 +47,7 @@ export const userValidator = v.object({
   plan: userPlanValidator,
   credits: v.number(),
   creditsResetAt: v.number(),
+  tryoutStateUpdatedAt: v.optional(v.number()),
 });
 
 const tables = {

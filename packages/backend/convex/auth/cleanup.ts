@@ -1,5 +1,6 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import { internalMutation } from "@repo/backend/convex/functions";
+import { getUserTryoutControl } from "@repo/backend/convex/tryouts/helpers/control";
 import { v } from "convex/values";
 
 const NOTIFICATION_PREFERENCES_CLEANUP_BATCH_SIZE = 10;
@@ -123,6 +124,12 @@ export const cleanupDeletedUser = internalMutation({
 
     if (!user) {
       return null;
+    }
+
+    const tryoutControl = await getUserTryoutControl(ctx.db, args.userId);
+
+    if (tryoutControl) {
+      await ctx.db.delete("userTryoutControls", tryoutControl._id);
     }
 
     await ctx.db.delete("users", args.userId);

@@ -10,7 +10,9 @@ import {
 } from "@repo/backend/convex/tryouts/queries/me/validators";
 import { getAll } from "convex-helpers/server/relationships";
 
-/** Returns one oldest-first page of stored attempt summaries for one tryout. */
+const MAX_TRYOUT_HISTORY_PAGE_SIZE = 25;
+
+/** Returns one newest-first page of stored attempt summaries for one tryout. */
 export const getUserTryoutAttemptHistory = query({
   args: userTryoutHistoryArgs,
   returns: userTryoutAttemptHistoryResultValidator,
@@ -34,8 +36,14 @@ export const getUserTryoutAttemptHistory = query({
       .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
         q.eq("userId", appUser._id).eq("tryoutId", context.tryout._id)
       )
-      .order("asc")
-      .paginate(args.paginationOpts);
+      .order("desc")
+      .paginate({
+        ...args.paginationOpts,
+        numItems: Math.min(
+          args.paginationOpts.numItems,
+          MAX_TRYOUT_HISTORY_PAGE_SIZE
+        ),
+      });
 
     const campaigns = await getAll(
       ctx.db,

@@ -34,12 +34,11 @@ type ResettableTableName =
   | "tryoutAttempts"
   | "tryoutCatalogEntries"
   | "tryoutCatalogMeta"
-  | "userTryoutCompetitionClaims"
+  | "userTryoutEntitlements"
   | "tryoutLeaderboardEntries"
   | "tryoutPartAttempts"
   | "tryoutPartSets"
   | "tryouts"
-  | "userTryoutLatestAttempts"
   | "userTryoutStats";
 
 /** Delete one bounded batch from a content-derived table. */
@@ -137,9 +136,6 @@ export const deleteTryoutPartAttemptsBatch =
 export const deleteTryoutLeaderboardEntriesBatch = makeBatchDeleteMutation(
   "tryoutLeaderboardEntries"
 );
-export const deleteUserTryoutLatestAttemptsBatch = makeBatchDeleteMutation(
-  "userTryoutLatestAttempts"
-);
 export const deleteUserTryoutStatsBatch =
   makeBatchDeleteMutation("userTryoutStats");
 export const deleteIrtScalePublicationQueueBatch = makeBatchDeleteMutation(
@@ -175,8 +171,8 @@ export const deleteTryoutCatalogEntriesBatch = makeBatchDeleteMutation(
 );
 export const deleteTryoutCatalogMetaBatch =
   makeBatchDeleteMutation("tryoutCatalogMeta");
-export const deleteUserTryoutCompetitionClaimsBatch = makeBatchDeleteMutation(
-  "userTryoutCompetitionClaims"
+export const deleteUserTryoutEntitlementsBatch = makeBatchDeleteMutation(
+  "userTryoutEntitlements"
 );
 export const deleteTryoutPartSetsBatch =
   makeBatchDeleteMutation("tryoutPartSets");

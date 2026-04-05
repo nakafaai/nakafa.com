@@ -48,12 +48,6 @@ const RESET_STEPS: ResetStep[] = [
     resultLabel: "tryout leaderboard entries",
   },
   {
-    label: "Deleting user tryout latest attempts...",
-    mutationPath:
-      "contentSync/mutations/maintenance:deleteUserTryoutLatestAttemptsBatch",
-    resultLabel: "user tryout latest attempts",
-  },
-  {
     label: "Deleting user tryout stats...",
     mutationPath:
       "contentSync/mutations/maintenance:deleteUserTryoutStatsBatch",
@@ -129,12 +123,6 @@ const RESET_STEPS: ResetStep[] = [
     mutationPath:
       "contentSync/mutations/maintenance:deleteTryoutCatalogMetaBatch",
     resultLabel: "tryout catalog meta rows",
-  },
-  {
-    label: "Deleting user tryout competition claims...",
-    mutationPath:
-      "contentSync/mutations/maintenance:deleteUserTryoutCompetitionClaimsBatch",
-    resultLabel: "user tryout competition claims",
   },
   {
     label: "Deleting tryout part sets...",
@@ -250,13 +238,16 @@ export const reset = async (
   log(`  Tryouts:               ${counts.tryouts}`);
   log(`  Tryout Catalog Rows:   ${counts.tryoutCatalogEntries}`);
   log(`  Tryout Catalog Meta:   ${counts.tryoutCatalogMeta}`);
-  log(`  User Entitlements:     ${counts.userTryoutEntitlements}`);
-  log(`  Competition Claims:    ${counts.userTryoutCompetitionClaims}`);
+  log(
+    `  User Entitlements:     ${counts.userTryoutEntitlements} (preserved infra)`
+  );
+  log(
+    `  User Tryout Controls:  ${counts.userTryoutControls} (preserved infra)`
+  );
   log(`  Tryout Part Sets:      ${counts.tryoutPartSets}`);
   log(`  Tryout Attempts:       ${counts.tryoutAttempts}`);
   log(`  Tryout Part Attempts:  ${counts.tryoutPartAttempts}`);
   log(`  Tryout Leaderboard:    ${counts.tryoutLeaderboardEntries}`);
-  log(`  User Tryout Latest:    ${counts.userTryoutLatestAttempts}`);
   log(`  User Tryout Stats:     ${counts.userTryoutStats}`);
   log(`  IRT Calibration Queue: ${counts.irtCalibrationQueue}`);
   log(`  IRT Calibration Rows:  ${counts.irtCalibrationAttempts}`);
@@ -289,12 +280,10 @@ export const reset = async (
     counts.tryouts +
     counts.tryoutCatalogEntries +
     counts.tryoutCatalogMeta +
-    counts.userTryoutCompetitionClaims +
     counts.tryoutPartSets +
     counts.tryoutAttempts +
     counts.tryoutPartAttempts +
     counts.tryoutLeaderboardEntries +
-    counts.userTryoutLatestAttempts +
     counts.userTryoutStats +
     counts.irtCalibrationQueue +
     counts.irtCalibrationAttempts +

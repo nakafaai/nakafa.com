@@ -16,6 +16,8 @@
     "test:watch": "vitest watch",
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
     "test:coverage": "vitest run --coverage",
+    "tryout:repair:controls": "convex run tryouts/mutations/internal/controls:repairUserTryoutControls {}",
+    "tryout:repair:controls:prod": "convex run tryouts/mutations/internal/controls:repairUserTryoutControls {} --prod",
     "irt:verify:cache": "tsx scripts/irt-verify.ts cache",
     "irt:verify:scale": "tsx scripts/irt-verify.ts scale",
     "irt:prod:verify:cache": "tsx scripts/irt-verify.ts cache --prod",

@@ -119,17 +119,17 @@ psychometric internal.
   - lifecycle attempt level try out
 - `tryoutPartAttempts`
   - lifecycle attempt level part yang menunjuk ke `exerciseAttempts`
-- `userTryoutLatestAttempts`
-  - pointer cepat ke status attempt terakhir per user dan try out
+- `userTryoutControls`
+  - owner row per user untuk men-serialize `startTryout` lewat OCC
 
 ### Projection Akses
 
 - `userTryoutEntitlements`
   - entitlement aktif per `{user, product, source}`
   - dipakai `startTryout` supaya read tetap exact dan bounded
-- `userTryoutCompetitionClaims`
-  - claim bahwa satu campaign competition untuk satu try out sudah terpakai
-  - dipakai `startTryout` tanpa scan history attempt
+- penggunaan competition dibaca langsung dari `tryoutAttempts`
+  - exact read via index `{user, tryout, accessCampaignId, startedAt}`
+  - tidak memakai projection claim terpisah
 
 ### Hasil dan Ranking
 

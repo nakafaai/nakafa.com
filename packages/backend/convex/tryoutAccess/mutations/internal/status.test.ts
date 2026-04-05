@@ -8,7 +8,7 @@ import {
 import { describe, expect, it, vi } from "vitest";
 
 describe("tryoutAccess/mutations/internal/status", () => {
-  it("clamps stored competition grants and syncs active entitlements", async () => {
+  it("keeps immutable competition grants and syncs active entitlements", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
       const currentTime = Date.now();
@@ -46,9 +46,9 @@ describe("tryoutAccess/mutations/internal/status", () => {
       });
 
       return {
-        campaignEndsAt,
         campaignId,
         grantId,
+        oldGrantEndsAt,
       };
     });
 
@@ -74,9 +74,9 @@ describe("tryoutAccess/mutations/internal/status", () => {
       };
     });
 
-    expect(result.grant?.endsAt).toBe(state.campaignEndsAt);
+    expect(result.grant?.endsAt).toBe(state.oldGrantEndsAt);
     expect(result.grant?.status).toBe("active");
-    expect(result.entitlement?.endsAt).toBe(state.campaignEndsAt);
+    expect(result.entitlement?.endsAt).toBe(state.oldGrantEndsAt);
     expect(result.entitlement?.sourceKind).toBe("competition");
   });
 

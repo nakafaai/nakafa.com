@@ -16,9 +16,9 @@ import {
   reuseExistingPartAttempt,
   reuseExistingTryoutAttempt,
 } from "@repo/backend/convex/tryouts/helpers/attemptLifecycle";
+import { loadOrCreateUserTryoutControl } from "@repo/backend/convex/tryouts/helpers/control";
 import { finalizeTryoutAttempt } from "@repo/backend/convex/tryouts/helpers/finalize/attempt";
 import { finalizeTryoutPartAttempt } from "@repo/backend/convex/tryouts/helpers/finalize/part";
-import { upsertUserTryoutLatestAttempt } from "@repo/backend/convex/tryouts/helpers/latest";
 import {
   loadTryoutPartSnapshots,
   loadValidatedTryoutPartSets,
@@ -44,6 +44,21 @@ export const startTryout = mutation({
     const userId = appUser._id;
     const now = Date.now();
     const tryout = await loadStartableTryout(ctx, args);
+    const tryoutControl = await loadOrCreateUserTryoutControl(ctx.db, {
+      updatedAt: now,
+      userId,
+    });
+
+    if (!tryoutControl) {
+      throw new ConvexError({
+        code: "INVALID_TRYOUT_STATE",
+        message: "Tryout control is missing for this user.",
+      });
+    }
+
+    await ctx.db.patch("userTryoutControls", tryoutControl._id, {
+      updatedAt: now,
+    });
 
     const [scaleVersion, existingAttempt] = await Promise.all([
       getLatestScaleVersionForTryout(ctx.db, tryout._id),
@@ -88,22 +103,25 @@ export const startTryout = mutation({
       activeCompetitionEntitlement?.accessCampaignId ?? null;
     const activeCompetitionGrantId =
       activeCompetitionEntitlement?.accessGrantId ?? null;
-    const competitionClaim = activeCompetitionCampaignId
+    const competitionAttempt = activeCompetitionCampaignId
       ? await ctx.db
-          .query("userTryoutCompetitionClaims")
-          .withIndex("by_userId_and_tryoutId_and_accessCampaignId", (q) =>
-            q
-              .eq("userId", userId)
-              .eq("tryoutId", tryout._id)
-              .eq("accessCampaignId", activeCompetitionCampaignId)
+          .query("tryoutAttempts")
+          .withIndex(
+            "by_userId_and_tryoutId_and_accessCampaignId_and_startedAt",
+            (q) =>
+              q
+                .eq("userId", userId)
+                .eq("tryoutId", tryout._id)
+                .eq("accessCampaignId", activeCompetitionCampaignId)
           )
-          .unique()
+          .order("desc")
+          .first()
       : null;
     const competitionStartSource =
       activeCompetitionEntitlement &&
       activeCompetitionCampaignId &&
       activeCompetitionGrantId &&
-      !competitionClaim
+      !competitionAttempt
         ? {
             accessKind: "event" as const,
             accessCampaignId: activeCompetitionCampaignId,
@@ -122,7 +140,7 @@ export const startTryout = mutation({
     const accessPassCampaignId =
       accessPassEntitlement?.accessCampaignId ?? null;
     const accessPassGrantId = accessPassEntitlement?.accessGrantId ?? null;
-    const hasUsedCompetitionAttempt = Boolean(competitionClaim);
+    const hasUsedCompetitionAttempt = Boolean(competitionAttempt);
     const accessPassStartSource =
       accessPassEntitlement && accessPassCampaignId && accessPassGrantId
         ? {
@@ -220,31 +238,6 @@ export const startTryout = mutation({
         expiresAtMs,
       }
     );
-
-    await upsertUserTryoutLatestAttempt(ctx, {
-      attempt: {
-        _id: tryoutAttemptId,
-        expiresAt: expiresAtMs,
-        status: "in-progress",
-        tryoutId: tryout._id,
-        userId,
-      },
-      tryout,
-      updatedAt: now,
-    });
-
-    if (
-      accessSource.accessKind === "event" &&
-      accessSource.accessCampaignKind === "competition"
-    ) {
-      await ctx.db.insert("userTryoutCompetitionClaims", {
-        userId,
-        tryoutId: tryout._id,
-        accessCampaignId: accessSource.accessCampaignId,
-        tryoutAttemptId,
-        claimedAt: now,
-      });
-    }
 
     return null;
   },

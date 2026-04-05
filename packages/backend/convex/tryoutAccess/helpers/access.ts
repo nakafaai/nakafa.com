@@ -8,6 +8,7 @@ import type {
   tryoutAccessGrantStatusValidator,
   userTryoutEntitlementSourceKindValidator,
 } from "@repo/backend/convex/tryoutAccess/schema";
+import { loadOrCreateUserTryoutControl } from "@repo/backend/convex/tryouts/helpers/control";
 import {
   type TryoutProduct,
   tryoutProducts,
@@ -70,19 +71,15 @@ export function getTryoutAccessGrantEndsAt({
   return redeemedAt + campaign.grantDurationDays * DAY_IN_MS;
 }
 
-/** Resolves the live end timestamp for one stored grant. */
+/** Resolves the effective end timestamp for one stored grant. */
 export function getTryoutAccessGrantEffectiveEndsAt({
-  campaign,
+  campaign: _campaign,
   endsAt,
 }: {
   campaign: Pick<Doc<"tryoutAccessCampaigns">, "campaignKind" | "endsAt">;
   endsAt: number;
 }) {
-  if (campaign.campaignKind !== "competition") {
-    return endsAt;
-  }
-
-  return campaign.endsAt;
+  return endsAt;
 }
 
 /** Resolves the current redeem status for one campaign time window. */
@@ -291,6 +288,16 @@ export async function syncTryoutAccessGrantStatus(
   now: number
 ) {
   const campaign = await db.get("tryoutAccessCampaigns", grant.campaignId);
+  const tryoutControl = await loadOrCreateUserTryoutControl(db, {
+    updatedAt: now,
+    userId: grant.userId,
+  });
+
+  if (tryoutControl) {
+    await db.patch("userTryoutControls", tryoutControl._id, {
+      updatedAt: now,
+    });
+  }
   const effectiveEndsAt = campaign
     ? getTryoutAccessGrantEffectiveEndsAt({
         campaign,
@@ -330,6 +337,18 @@ export async function syncTryoutSubscriptionEntitlements(
     userId: Doc<"users">["_id"];
   }
 ) {
+  const now = Date.now();
+  const tryoutControl = await loadOrCreateUserTryoutControl(db, {
+    updatedAt: now,
+    userId,
+  });
+
+  if (tryoutControl) {
+    await db.patch("userTryoutControls", tryoutControl._id, {
+      updatedAt: now,
+    });
+  }
+
   const existingEntitlements: Doc<"userTryoutEntitlements">[] = [];
 
   for (const product of tryoutProducts) {

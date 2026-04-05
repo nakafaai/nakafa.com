@@ -16,6 +16,7 @@ import { usePaginatedQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { useTryoutClock } from "@/components/tryout/hooks/use-tryout-clock";
 import { useTryoutAttemptState } from "@/components/tryout/providers/attempt-state";
 import { TryoutScoreCard } from "@/components/tryout/score-card";
 import { getEffectiveTryoutStatus } from "@/components/tryout/utils/status";
@@ -51,14 +52,15 @@ export function TryoutAttemptResults({
     { initialNumItems: 25 }
   );
   const [selectedAttemptId, setSelectedAttemptId] = useState("");
+  const nowMs = useTryoutClock(
+    attemptHistory.some((attempt) => attempt.status === "in-progress")
+  );
 
   if (status === "LoadingFirstPage" || attemptHistory.length === 0) {
     return (
       <TryoutScoreCard attempt={fallbackAttempt} status={fallbackStatus} />
     );
   }
-
-  const nowMs = Date.now();
   const attemptOptions = attemptHistory.map((attempt, index) => {
     const attemptNumber = index + 1;
 
@@ -83,12 +85,21 @@ export function TryoutAttemptResults({
   const selectedAttempt =
     attemptOptions.find((attempt) => attempt.attemptId === selectedAttemptId) ??
     null;
+  const fallbackOption =
+    attemptOptions.find(
+      (attempt) => attempt.attemptId === fallbackAttempt._id
+    ) ?? null;
   const displayedAttempt = selectedAttempt ?? fallbackAttempt;
-  const displayedStatus = selectedAttempt?.status ?? fallbackStatus;
+  const displayedStatus =
+    selectedAttempt?.status ?? fallbackOption?.status ?? fallbackStatus;
   const triggerIcon =
     selectedAttempt?.icon ??
+    fallbackOption?.icon ??
     (fallbackAttempt.countsForCompetition ? PartyIcon : Progress03Icon);
-  const triggerLabel = selectedAttempt?.label ?? tTryouts("attempt-menu-label");
+  const triggerLabel =
+    selectedAttempt?.label ??
+    fallbackOption?.label ??
+    tTryouts("attempt-menu-label");
 
   return (
     <div className="w-full space-y-4">

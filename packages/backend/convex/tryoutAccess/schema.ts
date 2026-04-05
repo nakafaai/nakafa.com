@@ -67,14 +67,6 @@ export const userTryoutEntitlementValidator = v.object({
   endsAt: v.number(),
 });
 
-export const userTryoutCompetitionClaimValidator = v.object({
-  userId: v.id("users"),
-  tryoutId: v.id("tryouts"),
-  accessCampaignId: v.id("tryoutAccessCampaigns"),
-  tryoutAttemptId: v.id("tryoutAttempts"),
-  claimedAt: v.number(),
-});
-
 const tables = {
   tryoutAccessCampaigns: defineTable(tryoutAccessCampaignValidator)
     .index("by_slug", ["slug"])
@@ -104,15 +96,6 @@ const tables = {
       "product",
       "sourceKind",
       "endsAt",
-    ]),
-
-  userTryoutCompetitionClaims: defineTable(userTryoutCompetitionClaimValidator)
-    .index("by_tryoutAttemptId", ["tryoutAttemptId"])
-    .index("by_accessCampaignId", ["accessCampaignId"])
-    .index("by_userId_and_tryoutId_and_accessCampaignId", [
-      "userId",
-      "tryoutId",
-      "accessCampaignId",
     ]),
 };
 

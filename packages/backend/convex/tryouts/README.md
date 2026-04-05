@@ -24,8 +24,9 @@ queries, mutations, IRT publication, and leaderboard flow stay generic.
 - `tryoutPartAttempts` links one runtime part to one shared `exerciseAttempt`
 - `userTryoutEntitlements` stores active access rows per user and product across
   `competition`, `access-pass`, and `subscription`
-- `userTryoutCompetitionClaims` stores which competition campaign has already
-  counted for one user and tryout
+- `userTryoutControls` serializes tryout starts per user so runtime invariants
+  rely on OCC against one dedicated owner row instead of projection-table
+  uniqueness
 - `tryoutLeaderboardEntries` stores the current best official result per user
 - `userTryoutStats` stores leaderboard aggregates per product namespace
 

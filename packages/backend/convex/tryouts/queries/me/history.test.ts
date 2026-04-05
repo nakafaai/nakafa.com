@@ -77,7 +77,7 @@ describe("tryouts/queries/me/history", () => {
         completedAt: NOW,
         endReason: "submitted",
       });
-      const latestAttemptId = await ctx.db.insert("tryoutAttempts", {
+      await ctx.db.insert("tryoutAttempts", {
         userId: identity.userId,
         tryoutId: tryout.tryoutId,
         scaleVersionId: tryout.scaleVersionId,
@@ -105,18 +105,6 @@ describe("tryouts/queries/me/history", () => {
         endReason: "submitted",
       });
 
-      await ctx.db.insert("userTryoutLatestAttempts", {
-        userId: identity.userId,
-        product: "snbt",
-        locale: "id",
-        tryoutId: tryout.tryoutId,
-        attemptId: latestAttemptId,
-        slug: "attempt-history",
-        status: "completed",
-        expiresAtMs: NOW + ATTEMPT_WINDOW_MS,
-        updatedAt: NOW + 1,
-      });
-
       return identity;
     });
 
@@ -138,12 +126,12 @@ describe("tryouts/queries/me/history", () => {
     expect(result.isDone).toBe(true);
     expect(result.page).toEqual([
       expect.objectContaining({
-        countsForCompetition: true,
-        publicResultStatus: "final-event",
-      }),
-      expect.objectContaining({
         countsForCompetition: false,
         publicResultStatus: "verified-irt",
+      }),
+      expect.objectContaining({
+        countsForCompetition: true,
+        publicResultStatus: "final-event",
       }),
     ]);
   });
@@ -240,24 +228,6 @@ describe("tryouts/queries/me/history", () => {
 
         attemptIds.push(attemptId);
       }
-
-      const latestAttemptId = attemptIds.at(-1);
-
-      if (!latestAttemptId) {
-        throw new Error("Latest attempt is required for pagination test.");
-      }
-
-      await ctx.db.insert("userTryoutLatestAttempts", {
-        userId: identity.userId,
-        product: "snbt",
-        locale: "id",
-        tryoutId: tryout.tryoutId,
-        attemptId: latestAttemptId,
-        slug: "attempt-history-pagination",
-        status: "completed",
-        expiresAtMs: NOW + ATTEMPT_WINDOW_MS + 2,
-        updatedAt: NOW + 2,
-      });
 
       return identity;
     });

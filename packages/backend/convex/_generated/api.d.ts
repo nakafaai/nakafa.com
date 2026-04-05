@@ -194,6 +194,7 @@ import type * as tryoutAccess_queries from "../tryoutAccess/queries.js";
 import type * as tryouts_aggregate from "../tryouts/aggregate.js";
 import type * as tryouts_helpers_access from "../tryouts/helpers/access.js";
 import type * as tryouts_helpers_attemptLifecycle from "../tryouts/helpers/attemptLifecycle.js";
+import type * as tryouts_helpers_control from "../tryouts/helpers/control.js";
 import type * as tryouts_helpers_expiry from "../tryouts/helpers/expiry.js";
 import type * as tryouts_helpers_finalize_aggregates from "../tryouts/helpers/finalize/aggregates.js";
 import type * as tryouts_helpers_finalize_attempt from "../tryouts/helpers/finalize/attempt.js";
@@ -201,7 +202,6 @@ import type * as tryouts_helpers_finalize_part from "../tryouts/helpers/finalize
 import type * as tryouts_helpers_finalize_score from "../tryouts/helpers/finalize/score.js";
 import type * as tryouts_helpers_finalize_snapshot from "../tryouts/helpers/finalize/snapshot.js";
 import type * as tryouts_helpers_irt from "../tryouts/helpers/irt.js";
-import type * as tryouts_helpers_latest from "../tryouts/helpers/latest.js";
 import type * as tryouts_helpers_loaders from "../tryouts/helpers/loaders.js";
 import type * as tryouts_helpers_metrics from "../tryouts/helpers/metrics.js";
 import type * as tryouts_helpers_parts from "../tryouts/helpers/parts.js";
@@ -209,6 +209,7 @@ import type * as tryouts_helpers_publicResultStatus from "../tryouts/helpers/pub
 import type * as tryouts_helpers_reporting from "../tryouts/helpers/reporting.js";
 import type * as tryouts_helpers_resume from "../tryouts/helpers/resume.js";
 import type * as tryouts_mutations_attempts from "../tryouts/mutations/attempts.js";
+import type * as tryouts_mutations_internal_controls from "../tryouts/mutations/internal/controls.js";
 import type * as tryouts_mutations_internal_expiry from "../tryouts/mutations/internal/expiry.js";
 import type * as tryouts_mutations_internal_leaderboard from "../tryouts/mutations/internal/leaderboard.js";
 import type * as tryouts_mutations_internal_scoring from "../tryouts/mutations/internal/scoring.js";
@@ -433,6 +434,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/aggregate": typeof tryouts_aggregate;
   "tryouts/helpers/access": typeof tryouts_helpers_access;
   "tryouts/helpers/attemptLifecycle": typeof tryouts_helpers_attemptLifecycle;
+  "tryouts/helpers/control": typeof tryouts_helpers_control;
   "tryouts/helpers/expiry": typeof tryouts_helpers_expiry;
   "tryouts/helpers/finalize/aggregates": typeof tryouts_helpers_finalize_aggregates;
   "tryouts/helpers/finalize/attempt": typeof tryouts_helpers_finalize_attempt;
@@ -440,7 +442,6 @@ declare const fullApi: ApiFromModules<{
   "tryouts/helpers/finalize/score": typeof tryouts_helpers_finalize_score;
   "tryouts/helpers/finalize/snapshot": typeof tryouts_helpers_finalize_snapshot;
   "tryouts/helpers/irt": typeof tryouts_helpers_irt;
-  "tryouts/helpers/latest": typeof tryouts_helpers_latest;
   "tryouts/helpers/loaders": typeof tryouts_helpers_loaders;
   "tryouts/helpers/metrics": typeof tryouts_helpers_metrics;
   "tryouts/helpers/parts": typeof tryouts_helpers_parts;
@@ -448,6 +449,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/helpers/reporting": typeof tryouts_helpers_reporting;
   "tryouts/helpers/resume": typeof tryouts_helpers_resume;
   "tryouts/mutations/attempts": typeof tryouts_mutations_attempts;
+  "tryouts/mutations/internal/controls": typeof tryouts_mutations_internal_controls;
   "tryouts/mutations/internal/expiry": typeof tryouts_mutations_internal_expiry;
   "tryouts/mutations/internal/leaderboard": typeof tryouts_mutations_internal_leaderboard;
   "tryouts/mutations/internal/scoring": typeof tryouts_mutations_internal_scoring;

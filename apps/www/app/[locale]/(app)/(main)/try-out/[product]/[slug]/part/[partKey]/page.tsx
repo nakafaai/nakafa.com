@@ -10,7 +10,7 @@ import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/materia
 import { slugify } from "@repo/design-system/lib/utils";
 import { fetchQuery } from "convex/nextjs";
 import { Effect } from "effect";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { QuestionAnalytics } from "@/app/[locale]/(app)/(main)/(contents)/exercises/[category]/[type]/[material]/[...slug]/analytics";
@@ -63,6 +63,11 @@ export default async function Page({ params }: Props) {
         { token }
       )
     : null;
+
+  if (token && runtime && !runtime.part) {
+    redirect(`/try-out/${product}/${slug}`);
+  }
+
   const currentPart = details.parts.find((item) => item.partKey === partKey);
   const contentPart = (() => {
     if (runtime?.part) {
@@ -125,7 +130,7 @@ export default async function Page({ params }: Props) {
           icon={partIcon}
           initialRuntime={runtime}
           part={{
-            key: partKey,
+            key: contentPart.partKey,
             label: partLabel,
             questionCount: contentPart.questionCount,
             setSlug: contentPart.setSlug,

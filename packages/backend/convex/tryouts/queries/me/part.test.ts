@@ -269,17 +269,6 @@ describe("tryouts/queries/me/part", () => {
         theta: -0.5,
         thetaSE: 0.9,
       });
-      await ctx.db.insert("userTryoutLatestAttempts", {
-        userId: identity.userId,
-        product: "snbt",
-        locale: "id",
-        tryoutId,
-        attemptId: tryoutAttemptId,
-        slug: "reordered-part-route",
-        status: "completed",
-        expiresAtMs: NOW + 30 * 60 * 1000,
-        updatedAt: NOW,
-      });
       await ctx.db.patch("tryoutPartSets", firstPartSetId, {
         partKey: "mathematical-reasoning",
         setId: secondSetId,
@@ -358,29 +347,28 @@ describe("tryouts/queries/me/part", () => {
         ctx,
         "expired-partcount-shrink"
       );
-      const latestAttempt = await ctx.db
-        .query("userTryoutLatestAttempts")
-        .withIndex("by_userId_and_product_and_locale_and_updatedAt", (q) =>
+      const tryout = await ctx.db
+        .query("tryouts")
+        .withIndex("by_product_and_locale_and_slug", (q) =>
           q
-            .eq("userId", seeded.identity.userId)
             .eq("product", "snbt")
             .eq("locale", "id")
+            .eq("slug", seeded.tryoutSlug)
         )
-        .order("desc")
-        .first();
+        .unique();
 
-      if (!latestAttempt) {
-        throw new Error("Expected latest tryout attempt to exist");
+      if (!tryout) {
+        throw new Error("Expected tryout to exist");
       }
 
       const removedPartSet = await ctx.db
         .query("tryoutPartSets")
         .withIndex("by_tryoutId_and_partIndex", (q) =>
-          q.eq("tryoutId", latestAttempt.tryoutId).eq("partIndex", 1)
+          q.eq("tryoutId", tryout._id).eq("partIndex", 1)
         )
         .unique();
 
-      await ctx.db.patch("tryouts", latestAttempt.tryoutId, {
+      await ctx.db.patch("tryouts", tryout._id, {
         partCount: 1,
         totalQuestionCount: 1,
       });
@@ -420,7 +408,7 @@ describe("tryouts/queries/me/part", () => {
         ctx,
         "missing-snapshot-part-key"
       );
-      const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
+      await ctx.db.insert("tryoutAttempts", {
         userId: identity.userId,
         tryoutId: tryout.tryoutId,
         scaleVersionId: tryout.scaleVersionId,
@@ -444,18 +432,6 @@ describe("tryouts/queries/me/part", () => {
         lastActivityAt: NOW,
         completedAt: NOW,
         endReason: "time-expired",
-      });
-
-      await ctx.db.insert("userTryoutLatestAttempts", {
-        userId: identity.userId,
-        product: "snbt",
-        locale: "id",
-        tryoutId: tryout.tryoutId,
-        attemptId: tryoutAttemptId,
-        slug: "missing-snapshot-part-key",
-        status: "expired",
-        expiresAtMs: NOW + 30 * 60 * 1000,
-        updatedAt: NOW,
       });
 
       return identity;
@@ -485,7 +461,7 @@ describe("tryouts/queries/me/part", () => {
         suffix: "in-progress-part",
       });
       const tryout = await insertTryoutSkeleton(ctx, "in-progress-part");
-      const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
+      await ctx.db.insert("tryoutAttempts", {
         userId: identity.userId,
         tryoutId: tryout.tryoutId,
         scaleVersionId: tryout.scaleVersionId,
@@ -509,18 +485,6 @@ describe("tryouts/queries/me/part", () => {
         lastActivityAt: NOW,
         completedAt: null,
         endReason: null,
-      });
-
-      await ctx.db.insert("userTryoutLatestAttempts", {
-        userId: identity.userId,
-        product: "snbt",
-        locale: "id",
-        tryoutId: tryout.tryoutId,
-        attemptId: tryoutAttemptId,
-        slug: "in-progress-part",
-        status: "in-progress",
-        expiresAtMs: NOW + 30 * 60 * 1000,
-        updatedAt: NOW,
       });
 
       return identity;
