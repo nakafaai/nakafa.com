@@ -91,6 +91,11 @@ const tables = {
   userTryoutEntitlements: defineTable(userTryoutEntitlementValidator)
     .index("by_accessGrantId", ["accessGrantId"])
     .index("by_subscriptionId", ["subscriptionId"])
+    .index("by_userId_and_sourceKind_and_subscriptionId", [
+      "userId",
+      "sourceKind",
+      "subscriptionId",
+    ])
     .index("by_userId_and_product_and_sourceKind_and_endsAt", [
       "userId",
       "product",

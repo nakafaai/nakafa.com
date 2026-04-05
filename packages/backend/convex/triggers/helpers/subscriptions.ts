@@ -11,7 +11,6 @@ import { getOneFrom } from "convex-helpers/server/relationships";
 const productToPlanMap: Record<string, UserPlan> = {
   [products.pro.id]: "pro",
 };
-const MAX_ACTIVE_SUBSCRIPTIONS_PER_CUSTOMER = 10;
 
 /** Map one Polar product ID to the matching app plan tier. */
 function getPlanFromProductId(productId: string): UserPlan {
@@ -34,6 +33,7 @@ async function applyPlanChange(
   ctx: GenericMutationCtx<DataModel>,
   user: DataModel["users"]["document"],
   newPlan: UserPlan,
+  now: number,
   subscriptionId: string
 ) {
   const previousPlan = user.plan;
@@ -41,7 +41,7 @@ async function applyPlanChange(
   const nextResetTimestamp = await resolveCurrentCreditResetTimestamp(
     ctx.db,
     newPlan,
-    Date.now()
+    now
   );
 
   // syncCustomerPlan only calls this helper after filtering out no-op changes,
@@ -105,6 +105,24 @@ async function applyPlanChange(
   });
 }
 
+/** Loads every active subscription row for one Polar customer. */
+async function listActiveSubscriptionsForCustomer(
+  ctx: GenericMutationCtx<DataModel>,
+  customerId: string
+) {
+  const activeSubscriptions: DataModel["subscriptions"]["document"][] = [];
+
+  for await (const subscription of ctx.db
+    .query("subscriptions")
+    .withIndex("by_customerId_and_status", (q) =>
+      q.eq("customerId", customerId).eq("status", "active")
+    )) {
+    activeSubscriptions.push(subscription);
+  }
+
+  return activeSubscriptions;
+}
+
 /** Recompute the effective user plan for one subscription change. */
 export async function syncCustomerPlan(
   ctx: GenericMutationCtx<DataModel>,
@@ -136,12 +154,11 @@ export async function syncCustomerPlan(
     return;
   }
 
-  const activeSubscriptions = await ctx.db
-    .query("subscriptions")
-    .withIndex("by_customerId_and_status", (q) =>
-      q.eq("customerId", subscription.customerId).eq("status", "active")
-    )
-    .take(MAX_ACTIVE_SUBSCRIPTIONS_PER_CUSTOMER);
+  const now = Date.now();
+  const activeSubscriptions = await listActiveSubscriptionsForCustomer(
+    ctx,
+    subscription.customerId
+  );
 
   const newPlan = activeSubscriptions.reduce<UserPlan>((highestPlan, row) => {
     return getHigherPlan(highestPlan, getPlanFromProductId(row.productId));
@@ -149,6 +166,7 @@ export async function syncCustomerPlan(
 
   await syncTryoutSubscriptionEntitlements(ctx.db, {
     activeSubscriptions,
+    now,
     userId: user._id,
   });
 
@@ -156,5 +174,5 @@ export async function syncCustomerPlan(
     return;
   }
 
-  await applyPlanChange(ctx, user, newPlan, subscription.id);
+  await applyPlanChange(ctx, user, newPlan, now, subscription.id);
 }

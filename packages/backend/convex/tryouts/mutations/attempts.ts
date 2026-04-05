@@ -16,7 +16,7 @@ import {
   reuseExistingPartAttempt,
   reuseExistingTryoutAttempt,
 } from "@repo/backend/convex/tryouts/helpers/attemptLifecycle";
-import { loadOrCreateUserTryoutControl } from "@repo/backend/convex/tryouts/helpers/control";
+import { touchUserTryoutControl } from "@repo/backend/convex/tryouts/helpers/control";
 import { finalizeTryoutAttempt } from "@repo/backend/convex/tryouts/helpers/finalize/attempt";
 import { finalizeTryoutPartAttempt } from "@repo/backend/convex/tryouts/helpers/finalize/part";
 import {
@@ -44,7 +44,7 @@ export const startTryout = mutation({
     const userId = appUser._id;
     const now = Date.now();
     const tryout = await loadStartableTryout(ctx, args);
-    const tryoutControl = await loadOrCreateUserTryoutControl(ctx.db, {
+    const tryoutControl = await touchUserTryoutControl(ctx.db, {
       updatedAt: now,
       userId,
     });
@@ -55,10 +55,6 @@ export const startTryout = mutation({
         message: "Tryout control is missing for this user.",
       });
     }
-
-    await ctx.db.patch("userTryoutControls", tryoutControl._id, {
-      updatedAt: now,
-    });
 
     const [scaleVersion, existingAttempt] = await Promise.all([
       getLatestScaleVersionForTryout(ctx.db, tryout._id),

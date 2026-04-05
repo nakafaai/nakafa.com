@@ -50,8 +50,8 @@ export async function getUserTryoutControl(
 }
 
 /**
- * Loads the steady-state owner row, repairing older deployments that still miss
- * this row by taking one OCC turn on the user document.
+ * Loads the steady-state owner row, repairing rare missing-owner corruption by
+ * taking one OCC turn on the user document before creating the control row.
  */
 export async function loadOrCreateUserTryoutControl(
   db: TryoutControlDb,
@@ -99,4 +99,33 @@ export async function loadOrCreateUserTryoutControl(
     code: "INVALID_TRYOUT_STATE",
     message: "Tryout control is missing for this user.",
   });
+}
+
+/**
+ * Records one serialized tryout-state touch on the user's dedicated control row.
+ */
+export async function touchUserTryoutControl(
+  db: TryoutControlDb,
+  {
+    updatedAt,
+    userId,
+  }: {
+    updatedAt: number;
+    userId: Id<"users">;
+  }
+) {
+  const control = await loadOrCreateUserTryoutControl(db, {
+    updatedAt,
+    userId,
+  });
+
+  if (!control) {
+    return null;
+  }
+
+  await db.patch("userTryoutControls", control._id, {
+    updatedAt,
+  });
+
+  return control;
 }

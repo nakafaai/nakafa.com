@@ -50,12 +50,14 @@ That policy owns:
   families like `tkaTryouts`, `cpnsTryouts`, etc.
 - Hub browse reads go through the dedicated catalog tables so Convex can paginate
   in final display order without caller-side `.collect()` or page exhaustion
-- Tryout start reads go through exact user-scoped entitlements and one
-  competition claim lookup instead of broad campaign or attempt scans inside the
-  mutation
+- Tryout start reads go through exact user-scoped entitlements and one indexed
+  `tryoutAttempts` lookup for competition usage instead of projection tables or
+  broad scans inside the mutation
 - Generic ranking still uses aggregate components for O(log n) rank lookups
 - Competition campaign windows are immutable after the first redemption so the
   runtime never needs to repair old attempts after ops edits campaign policy
+- Auth cleanup deletes user-scoped tryout runtime, access, and leaderboard rows
+  together so deleted users do not leave orphaned runtime state behind
 
 ## Catalog Read Model
 
@@ -93,6 +95,7 @@ Use the generic query/mutation surface in `tryouts/`:
 - `queries/tryouts.ts#getActiveTryoutCatalogMeta`
 - `queries/tryouts.ts#getActiveTryoutCatalogPage`
 - `queries/me/attempt.ts`
+- `queries/me/history.ts`
 - `queries/me/part.ts`
 - `queries/leaderboard.ts`
 - `mutations/attempts.ts`

@@ -135,7 +135,7 @@ export function deriveTryoutPartPageState({
 }: {
   nowMs: number;
   isRuntimePending: boolean;
-  runtime: TryoutPartRuntime | undefined;
+  runtime: TryoutPartRuntime | null | undefined;
 }) {
   const partAttempt = runtime?.partAttempt ?? null;
 

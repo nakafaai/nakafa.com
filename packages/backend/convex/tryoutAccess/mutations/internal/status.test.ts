@@ -80,6 +80,98 @@ describe("tryoutAccess/mutations/internal/status", () => {
     expect(result.entitlement?.sourceKind).toBe("competition");
   });
 
+  it("deletes duplicate grant entitlements while keeping one canonical row", async () => {
+    const t = createTryoutTestConvex();
+    const state = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "sync-deduplicate-grant-entitlements",
+      });
+      const endsAt = NOW + 24 * 60 * 60 * 1000;
+      const campaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+        slug: "sync-deduplicate-grant-entitlements",
+        name: "Sync Deduplicate Grant Entitlements",
+        products: ["snbt"],
+        campaignKind: "access-pass",
+        enabled: true,
+        redeemStatus: "active",
+        resultsStatus: "pending",
+        resultsFinalizedAt: null,
+        startsAt: NOW - 60 * 1000,
+        endsAt: NOW + 7 * 24 * 60 * 60 * 1000,
+        grantDurationDays: 30,
+      });
+      const linkId = await ctx.db.insert("tryoutAccessLinks", {
+        campaignId,
+        code: "sync-deduplicate-grant-entitlements",
+        label: "Sync Deduplicate Grant Entitlements",
+        enabled: true,
+      });
+      const grantId = await ctx.db.insert("tryoutAccessGrants", {
+        campaignId,
+        linkId,
+        userId: identity.userId,
+        redeemedAt: NOW,
+        endsAt,
+        status: "active",
+      });
+
+      await ctx.db.insert("userTryoutEntitlements", {
+        userId: identity.userId,
+        product: "snbt",
+        sourceKind: "access-pass",
+        accessCampaignId: campaignId,
+        accessGrantId: grantId,
+        startsAt: NOW - 1000,
+        endsAt,
+      });
+      await ctx.db.insert("userTryoutEntitlements", {
+        userId: identity.userId,
+        product: "snbt",
+        sourceKind: "access-pass",
+        accessCampaignId: campaignId,
+        accessGrantId: grantId,
+        startsAt: NOW - 2000,
+        endsAt,
+      });
+
+      return {
+        campaignId,
+        grantId,
+        userId: identity.userId,
+      };
+    });
+
+    await t.mutation(async (ctx) => {
+      const grant = await ctx.db.get("tryoutAccessGrants", state.grantId);
+
+      if (!grant) {
+        throw new Error("expected grant to exist");
+      }
+
+      await syncTryoutAccessGrantStatus(ctx.db, grant, NOW);
+    });
+
+    const entitlements = await t.query(async (ctx) => {
+      return await ctx.db
+        .query("userTryoutEntitlements")
+        .withIndex("by_accessGrantId", (q) =>
+          q.eq("accessGrantId", state.grantId)
+        )
+        .collect();
+    });
+
+    expect(entitlements).toEqual([
+      expect.objectContaining({
+        accessCampaignId: state.campaignId,
+        accessGrantId: state.grantId,
+        product: "snbt",
+        sourceKind: "access-pass",
+        userId: state.userId,
+      }),
+    ]);
+  });
+
   it("claims pending competition batches before enqueueing finalizers", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(NOW));

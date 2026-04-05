@@ -16,6 +16,7 @@ import {
 import { products } from "@repo/backend/convex/utils/polar/products";
 import { describe, expect, it } from "vitest";
 
+/** Inserts one active Pro subscription and syncs its tryout entitlement rows. */
 async function insertActiveProSubscription(
   ctx: MutationCtx,
   userId: Id<"users">
@@ -54,10 +55,12 @@ async function insertActiveProSubscription(
         productId: products.pro.id,
       },
     ],
+    now: NOW,
     userId,
   });
 }
 
+/** Inserts one access grant row and materializes the matching entitlement rows. */
 async function insertTryoutAccessGrant(
   ctx: MutationCtx,
   {

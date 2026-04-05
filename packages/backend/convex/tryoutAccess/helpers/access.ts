@@ -8,7 +8,7 @@ import type {
   tryoutAccessGrantStatusValidator,
   userTryoutEntitlementSourceKindValidator,
 } from "@repo/backend/convex/tryoutAccess/schema";
-import { loadOrCreateUserTryoutControl } from "@repo/backend/convex/tryouts/helpers/control";
+import { touchUserTryoutControl } from "@repo/backend/convex/tryouts/helpers/control";
 import {
   type TryoutProduct,
   tryoutProducts,
@@ -18,8 +18,6 @@ import type { Infer } from "convex/values";
 import { ConvexError } from "convex/values";
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
-const MAX_PRODUCTS_PER_ACCESS_SOURCE = tryoutProducts.length;
-const MAX_ACTIVE_SUBSCRIPTIONS_PER_CUSTOMER = 10;
 
 const tryoutPaidProductIds = {
   snbt: products.pro.id,
@@ -69,17 +67,6 @@ export function getTryoutAccessGrantEndsAt({
   }
 
   return redeemedAt + campaign.grantDurationDays * DAY_IN_MS;
-}
-
-/** Resolves the effective end timestamp for one stored grant. */
-export function getTryoutAccessGrantEffectiveEndsAt({
-  campaign: _campaign,
-  endsAt,
-}: {
-  campaign: Pick<Doc<"tryoutAccessCampaigns">, "campaignKind" | "endsAt">;
-  endsAt: number;
-}) {
-  return endsAt;
 }
 
 /** Resolves the current redeem status for one campaign time window. */
@@ -191,17 +178,108 @@ function getTryoutProductFromPaidProductId(productId: string) {
   return null;
 }
 
+/** Loads every entitlement row currently linked to one access grant. */
+async function listGrantEntitlements(
+  db: TryoutAccessDbWriter,
+  grantId: Doc<"tryoutAccessGrants">["_id"]
+) {
+  const entitlements: Doc<"userTryoutEntitlements">[] = [];
+
+  for await (const entitlement of db
+    .query("userTryoutEntitlements")
+    .withIndex("by_accessGrantId", (q) => q.eq("accessGrantId", grantId))) {
+    entitlements.push(entitlement);
+  }
+
+  return entitlements;
+}
+
+/** Buckets entitlement rows by product so sync can keep one canonical row. */
+function groupEntitlementsByProduct(
+  entitlements: Doc<"userTryoutEntitlements">[]
+) {
+  const entitlementsByProduct = new Map<
+    TryoutProduct,
+    Doc<"userTryoutEntitlements">[]
+  >();
+
+  for (const entitlement of entitlements) {
+    const productEntitlements = entitlementsByProduct.get(entitlement.product);
+
+    if (productEntitlements) {
+      productEntitlements.push(entitlement);
+      continue;
+    }
+
+    entitlementsByProduct.set(entitlement.product, [entitlement]);
+  }
+
+  return entitlementsByProduct;
+}
+
+/** Loads every stored subscription entitlement row for one user. */
+async function listUserSubscriptionEntitlements(
+  db: TryoutAccessDbWriter,
+  userId: Doc<"users">["_id"]
+) {
+  const entitlements: Doc<"userTryoutEntitlements">[] = [];
+
+  for await (const entitlement of db
+    .query("userTryoutEntitlements")
+    .withIndex("by_userId_and_sourceKind_and_subscriptionId", (q) =>
+      q.eq("userId", userId).eq("sourceKind", "subscription")
+    )) {
+    entitlements.push(entitlement);
+  }
+
+  return entitlements;
+}
+
+/** Buckets subscription entitlements by subscription ID and invalid leftovers. */
+function groupSubscriptionEntitlements(
+  entitlements: Doc<"userTryoutEntitlements">[]
+) {
+  const entitlementsBySubscriptionId = new Map<
+    Doc<"subscriptions">["_id"],
+    Doc<"userTryoutEntitlements">[]
+  >();
+  const invalidEntitlements: Doc<"userTryoutEntitlements">[] = [];
+
+  for (const entitlement of entitlements) {
+    if (!entitlement.subscriptionId) {
+      invalidEntitlements.push(entitlement);
+      continue;
+    }
+
+    const subscriptionEntitlements = entitlementsBySubscriptionId.get(
+      entitlement.subscriptionId
+    );
+
+    if (subscriptionEntitlements) {
+      subscriptionEntitlements.push(entitlement);
+      continue;
+    }
+
+    entitlementsBySubscriptionId.set(entitlement.subscriptionId, [entitlement]);
+  }
+
+  return {
+    entitlementsBySubscriptionId,
+    invalidEntitlements,
+  };
+}
+
 /** Synchronizes the active entitlement rows for one event grant. */
 async function syncGrantEntitlements(
   db: TryoutAccessDbWriter,
   {
     campaign,
-    effectiveEndsAt,
+    endsAt,
     grant,
     status,
   }: {
     campaign: Doc<"tryoutAccessCampaigns"> | null;
-    effectiveEndsAt: number;
+    endsAt: number;
     grant: Pick<
       Doc<"tryoutAccessGrants">,
       "_id" | "campaignId" | "endsAt" | "redeemedAt" | "status" | "userId"
@@ -209,13 +287,8 @@ async function syncGrantEntitlements(
     status: TryoutAccessGrantStatus;
   }
 ) {
-  const entitlements = await db
-    .query("userTryoutEntitlements")
-    .withIndex("by_accessGrantId", (q) => q.eq("accessGrantId", grant._id))
-    .take(MAX_PRODUCTS_PER_ACCESS_SOURCE);
-  const entitlementsByProduct = new Map(
-    entitlements.map((entitlement) => [entitlement.product, entitlement])
-  );
+  const entitlements = await listGrantEntitlements(db, grant._id);
+  const entitlementsByProduct = groupEntitlementsByProduct(entitlements);
 
   if (!(campaign && status === "active")) {
     for (const entitlement of entitlements) {
@@ -228,7 +301,8 @@ async function syncGrantEntitlements(
   const sourceKind: UserTryoutEntitlementSourceKind = campaign.campaignKind;
 
   for (const product of campaign.products) {
-    const currentEntitlement = entitlementsByProduct.get(product);
+    const productEntitlements = entitlementsByProduct.get(product) ?? [];
+    const currentEntitlement = productEntitlements[0] ?? null;
     const nextEntitlement = {
       userId: grant.userId,
       product,
@@ -237,8 +311,12 @@ async function syncGrantEntitlements(
       accessGrantId: grant._id,
       subscriptionId: undefined,
       startsAt: grant.redeemedAt,
-      endsAt: effectiveEndsAt,
+      endsAt,
     };
+
+    for (const duplicateEntitlement of productEntitlements.slice(1)) {
+      await db.delete("userTryoutEntitlements", duplicateEntitlement._id);
+    }
 
     if (!currentEntitlement) {
       await db.insert("userTryoutEntitlements", nextEntitlement);
@@ -273,8 +351,10 @@ async function syncGrantEntitlements(
     });
   }
 
-  for (const staleEntitlement of entitlementsByProduct.values()) {
-    await db.delete("userTryoutEntitlements", staleEntitlement._id);
+  for (const staleEntitlements of entitlementsByProduct.values()) {
+    for (const staleEntitlement of staleEntitlements) {
+      await db.delete("userTryoutEntitlements", staleEntitlement._id);
+    }
   }
 }
 
@@ -288,34 +368,21 @@ export async function syncTryoutAccessGrantStatus(
   now: number
 ) {
   const campaign = await db.get("tryoutAccessCampaigns", grant.campaignId);
-  const tryoutControl = await loadOrCreateUserTryoutControl(db, {
+  await touchUserTryoutControl(db, {
     updatedAt: now,
     userId: grant.userId,
   });
+  const status = getTryoutAccessGrantStatus(grant.endsAt, now);
 
-  if (tryoutControl) {
-    await db.patch("userTryoutControls", tryoutControl._id, {
-      updatedAt: now,
-    });
-  }
-  const effectiveEndsAt = campaign
-    ? getTryoutAccessGrantEffectiveEndsAt({
-        campaign,
-        endsAt: grant.endsAt,
-      })
-    : grant.endsAt;
-  const status = getTryoutAccessGrantStatus(effectiveEndsAt, now);
-
-  if (grant.endsAt !== effectiveEndsAt || grant.status !== status) {
+  if (grant.status !== status) {
     await db.patch("tryoutAccessGrants", grant._id, {
-      endsAt: effectiveEndsAt,
       status,
     });
   }
 
   await syncGrantEntitlements(db, {
     campaign,
-    effectiveEndsAt,
+    endsAt: grant.endsAt,
     grant,
     status,
   });
@@ -328,50 +395,31 @@ export async function syncTryoutSubscriptionEntitlements(
   db: TryoutAccessDbWriter,
   {
     activeSubscriptions,
+    now,
     userId,
   }: {
     activeSubscriptions: Pick<
       Doc<"subscriptions">,
       "_id" | "currentPeriodEnd" | "currentPeriodStart" | "productId"
     >[];
+    now: number;
     userId: Doc<"users">["_id"];
   }
 ) {
-  const now = Date.now();
-  const tryoutControl = await loadOrCreateUserTryoutControl(db, {
+  await touchUserTryoutControl(db, {
     updatedAt: now,
     userId,
   });
-
-  if (tryoutControl) {
-    await db.patch("userTryoutControls", tryoutControl._id, {
-      updatedAt: now,
-    });
-  }
-
-  const existingEntitlements: Doc<"userTryoutEntitlements">[] = [];
-
-  for (const product of tryoutProducts) {
-    existingEntitlements.push(
-      ...(await db
-        .query("userTryoutEntitlements")
-        .withIndex("by_userId_and_product_and_sourceKind_and_endsAt", (q) =>
-          q
-            .eq("userId", userId)
-            .eq("product", product)
-            .eq("sourceKind", "subscription")
-        )
-        .take(MAX_ACTIVE_SUBSCRIPTIONS_PER_CUSTOMER + 1))
-    );
-  }
-
-  const existingEntitlementsBySubscriptionId = new Map(
-    existingEntitlements.flatMap((entitlement) =>
-      entitlement.subscriptionId
-        ? [[entitlement.subscriptionId, entitlement]]
-        : []
-    )
+  const existingEntitlements = await listUserSubscriptionEntitlements(
+    db,
+    userId
   );
+  const { entitlementsBySubscriptionId, invalidEntitlements } =
+    groupSubscriptionEntitlements(existingEntitlements);
+
+  for (const invalidEntitlement of invalidEntitlements) {
+    await db.delete("userTryoutEntitlements", invalidEntitlement._id);
+  }
 
   for (const subscription of activeSubscriptions) {
     const product = getTryoutProductFromPaidProductId(subscription.productId);
@@ -392,9 +440,9 @@ export async function syncTryoutSubscriptionEntitlements(
     const endsAt =
       parseTimestamp(subscription.currentPeriodEnd, "currentPeriodEnd") ??
       Number.MAX_SAFE_INTEGER;
-    const currentEntitlement = existingEntitlementsBySubscriptionId.get(
-      subscription._id
-    );
+    const subscriptionEntitlements =
+      entitlementsBySubscriptionId.get(subscription._id) ?? [];
+    const currentEntitlement = subscriptionEntitlements[0] ?? null;
     const nextEntitlement = {
       userId,
       product,
@@ -406,12 +454,16 @@ export async function syncTryoutSubscriptionEntitlements(
       endsAt,
     };
 
+    for (const duplicateEntitlement of subscriptionEntitlements.slice(1)) {
+      await db.delete("userTryoutEntitlements", duplicateEntitlement._id);
+    }
+
     if (!currentEntitlement) {
       await db.insert("userTryoutEntitlements", nextEntitlement);
       continue;
     }
 
-    existingEntitlementsBySubscriptionId.delete(subscription._id);
+    entitlementsBySubscriptionId.delete(subscription._id);
 
     if (
       currentEntitlement.userId === nextEntitlement.userId &&
@@ -439,8 +491,10 @@ export async function syncTryoutSubscriptionEntitlements(
     });
   }
 
-  for (const staleEntitlement of existingEntitlementsBySubscriptionId.values()) {
-    await db.delete("userTryoutEntitlements", staleEntitlement._id);
+  for (const staleEntitlements of entitlementsBySubscriptionId.values()) {
+    for (const staleEntitlement of staleEntitlements) {
+      await db.delete("userTryoutEntitlements", staleEntitlement._id);
+    }
   }
 }
 

@@ -64,7 +64,8 @@ Tanggung jawab:
 - membaca campaign dan link akses event
 - menentukan entitlement aktif untuk `competition`, `access-pass`, atau Pro
 - menyinkronkan status grant dan entitlement aktif
-- menyimpan claim competition per `{user, tryout, campaign}`
+- menjaga state akses event tetap materialized lewat grant, entitlement, dan
+  status campaign yang dischedule di Convex
 
 Lapisan ini hanya menjawab pertanyaan:
 
@@ -130,6 +131,8 @@ psychometric internal.
 - penggunaan competition dibaca langsung dari `tryoutAttempts`
   - exact read via index `{user, tryout, accessCampaignId, startedAt}`
   - tidak memakai projection claim terpisah
+- saat user dihapus, runtime user-scoped ini ikut dibersihkan dalam batch
+  bounded supaya tidak meninggalkan orphan rows
 
 ### Hasil dan Ranking
 
@@ -161,8 +164,8 @@ psychometric internal.
   - `competition`
   - `access-pass`
   - Pro subscription
-- kalau ada entitlement `competition`, backend membaca satu claim competition
-  untuk `{user, tryout, campaign}`
+- kalau ada entitlement `competition`, backend membaca satu attempt indexed untuk
+  `{user, tryout, campaign}`
 - backend memilih access source yang sah sesuai policy produk
 - backend mengikat attempt ke frozen scale terbaru yang aman dipakai
 - backend menyimpan snapshot part dan provenance akses

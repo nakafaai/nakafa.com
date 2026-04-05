@@ -72,6 +72,7 @@ type TryoutPartRuntime = FunctionReturnType<
 
 const TryoutPartContext = createContext<TryoutPartContextValue | null>(null);
 
+/** Provides one runtime-backed tryout part state tree for the part route. */
 export function TryoutPartProvider({
   children,
   initialRuntime,
@@ -101,7 +102,8 @@ export function TryoutPartProvider({
           }
         : "skip"
     );
-  const runtime = runtimeData ?? initialRuntime ?? undefined;
+  const runtime =
+    runtimeData ?? (initialRuntime === undefined ? undefined : initialRuntime);
   const nowMs = useTryoutClock(
     Boolean(runtime && runtime.tryoutAttempt.status === "in-progress")
   );
