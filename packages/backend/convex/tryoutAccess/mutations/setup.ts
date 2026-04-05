@@ -11,6 +11,8 @@ import { tryoutAccessCampaignKindValidator } from "@repo/backend/convex/tryoutAc
 import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
 import { ConvexError, type Infer, v } from "convex/values";
 
+const COMPETITION_CAMPAIGN_CHECK_PAGE_SIZE = 100;
+
 const tryoutAccessCampaignInputValidator = v.object({
   slug: v.string(),
   name: v.string(),
@@ -76,48 +78,6 @@ function assertValidCampaignInput(
   }
 }
 
-/**
- * Loads the newest competition campaign-product row whose window starts before a
- * candidate campaign ends.
- *
- * Because competition windows for one product are kept non-overlapping, the
- * newest such predecessor is the only other row that can overlap the candidate
- * window.
- */
-async function getLatestOverlappingCompetitionCandidate(
-  ctx: Pick<MutationCtx, "db">,
-  {
-    endsAt,
-    existingCampaignId,
-    product,
-  }: {
-    endsAt: number;
-    existingCampaignId: string | undefined;
-    product: Infer<typeof tryoutProductValidator>;
-  }
-) {
-  const candidates = await ctx.db
-    .query("tryoutAccessCampaignProducts")
-    .withIndex("by_product_and_campaignKind_and_startsAt", (q) =>
-      q
-        .eq("product", product)
-        .eq("campaignKind", "competition")
-        .lt("startsAt", endsAt)
-    )
-    .order("desc")
-    .take(existingCampaignId ? 2 : 1);
-
-  for (const candidate of candidates) {
-    if (candidate.campaignId === existingCampaignId) {
-      continue;
-    }
-
-    return candidate;
-  }
-
-  return null;
-}
-
 /** Rejects overlapping competition campaigns for any shared tryout product. */
 async function assertNoOverlappingCompetitionCampaign(
   ctx: Pick<MutationCtx, "db">,
@@ -134,25 +94,44 @@ async function assertNoOverlappingCompetitionCampaign(
   }
 ) {
   for (const product of products) {
-    const candidate = await getLatestOverlappingCompetitionCandidate(ctx, {
-      endsAt,
-      existingCampaignId,
-      product,
-    });
+    let continueCursor: string | null = null;
 
-    if (!candidate) {
-      continue;
+    while (true) {
+      const page = await ctx.db
+        .query("tryoutAccessCampaignProducts")
+        .withIndex("by_product_and_campaignKind_and_startsAt", (q) =>
+          q
+            .eq("product", product)
+            .eq("campaignKind", "competition")
+            .lt("startsAt", endsAt)
+        )
+        .paginate({
+          cursor: continueCursor,
+          numItems: COMPETITION_CAMPAIGN_CHECK_PAGE_SIZE,
+        });
+
+      for (const candidate of page.page) {
+        if (candidate.campaignId === existingCampaignId) {
+          continue;
+        }
+
+        if (candidate.endsAt <= startsAt) {
+          continue;
+        }
+
+        throw new ConvexError({
+          code: "OVERLAPPING_COMPETITION_CAMPAIGN",
+          message:
+            "Competition campaigns cannot overlap for the same tryout product.",
+        });
+      }
+
+      if (page.isDone) {
+        break;
+      }
+
+      continueCursor = page.continueCursor;
     }
-
-    if (candidate.endsAt <= startsAt) {
-      continue;
-    }
-
-    throw new ConvexError({
-      code: "OVERLAPPING_COMPETITION_CAMPAIGN",
-      message:
-        "Competition campaigns cannot overlap for the same tryout product.",
-    });
   }
 }
 

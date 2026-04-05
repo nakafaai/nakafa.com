@@ -177,6 +177,73 @@ describe("tryoutAccess/mutations/setup", () => {
     ).rejects.toThrow("OVERLAPPING_COMPETITION_CAMPAIGN");
   });
 
+  it("rejects overlaps with an older long-running competition campaign", async () => {
+    const t = createTryoutTestConvex();
+
+    await t.mutation(
+      internal.tryoutAccess.mutations.setup.upsertCampaignAndLink,
+      {
+        campaign: {
+          slug: "overlap-long-running",
+          name: "Overlap Long Running",
+          products: ["snbt"],
+          campaignKind: "competition",
+          enabled: true,
+          startsAt: NOW,
+          endsAt: NOW + 10 * 24 * 60 * 60 * 1000,
+        },
+        link: {
+          code: "overlap-long-running",
+          label: "Overlap Long Running",
+          enabled: true,
+        },
+      }
+    );
+
+    for (let index = 0; index < 4; index += 1) {
+      const startsAt = NOW + (index + 10) * 24 * 60 * 60 * 1000;
+
+      await t.mutation(
+        internal.tryoutAccess.mutations.setup.upsertCampaignAndLink,
+        {
+          campaign: {
+            slug: `overlap-non-overlap-${index}`,
+            name: `Overlap Non Overlap ${index}`,
+            products: ["snbt"],
+            campaignKind: "competition",
+            enabled: true,
+            startsAt,
+            endsAt: startsAt + 24 * 60 * 60 * 1000,
+          },
+          link: {
+            code: `overlap-non-overlap-${index}`,
+            label: `Overlap Non Overlap ${index}`,
+            enabled: true,
+          },
+        }
+      );
+    }
+
+    await expect(
+      t.mutation(internal.tryoutAccess.mutations.setup.upsertCampaignAndLink, {
+        campaign: {
+          slug: "overlap-hidden-old-campaign",
+          name: "Overlap Hidden Old Campaign",
+          products: ["snbt"],
+          campaignKind: "competition",
+          enabled: true,
+          startsAt: NOW + 5 * 24 * 60 * 60 * 1000,
+          endsAt: NOW + 11 * 24 * 60 * 60 * 1000,
+        },
+        link: {
+          code: "overlap-hidden-old-campaign",
+          label: "Overlap Hidden Old Campaign",
+          enabled: true,
+        },
+      })
+    ).rejects.toThrow("OVERLAPPING_COMPETITION_CAMPAIGN");
+  });
+
   it("does not allow changing campaign policy after it has been redeemed", async () => {
     const t = createTryoutTestConvex();
     const currentTime = Date.now();

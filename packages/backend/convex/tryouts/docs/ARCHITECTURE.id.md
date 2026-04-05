@@ -328,7 +328,9 @@ Tidak. Satu product hanya boleh punya satu competition campaign aktif pada satu
 window waktu.
 
 Overlap divalidasi lewat relation row `tryoutAccessCampaignProducts`, bukan lewat
-scan array `products` di dokumen campaign.
+scan array `products` di dokumen campaign. Validation membaca semua candidate
+row yang relevan secara paginated untuk product itu, jadi write path tidak
+bergantung pada asumsi predecessor-only.
 
 Immutability policy setelah campaign pernah diredeem disimpan durable di field
 `firstRedeemedAt`, jadi cleanup grant tidak bisa menghapus fakta historis itu.
