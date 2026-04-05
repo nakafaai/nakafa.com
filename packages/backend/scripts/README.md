@@ -257,7 +257,7 @@ Content hash unchanged. This is normal for `sync:incremental`.
 | Script | Purpose |
 |--------|---------|
 | `sync-content.ts` | Sync MDX content to Convex database |
-| `tryout/access.ts` | Verify campaign/grant time-state integrity |
+| `tryout/access.ts` | Verify campaign/grant/entitlement time-state and competition overlap integrity |
 | `irt-verify.ts` | Verify IRT cache and scale integrity |
 
 ## Files
@@ -267,7 +267,7 @@ Content hash unchanged. This is normal for `sync:incremental`.
 | `sync-content.ts` | Main sync script |
 | `sync-content/` | Shared sync-content helpers, validation, and workflows |
 | `tryout/` | Tryout-specific maintenance scripts split by concern |
-| `tryout/access.ts` | Dev/prod integrity verification for campaigns and grants |
+| `tryout/access.ts` | Dev/prod integrity verification for campaigns, grants, entitlements, and competition overlap |
 | `irt-verify.ts` | Dev/prod integrity verification for IRT cache and scale state |
 | `../convex/contentSync/mutations/` | Convex sync mutations split by concern |
 | `../convex/contentSync/queries/` | Convex verification queries split by concern |
