@@ -68,7 +68,7 @@ function useTryoutStartValue(): TryoutStartContextValue {
   const tryoutSlug = useTryoutAttemptState((state) => state.params.tryoutSlug);
   const startTryout = useMutation(api.tryouts.mutations.attempts.startTryout);
   const generateCheckoutLink = useAction(
-    api.customers.actions.generateCheckoutLink
+    api.customers.actions.public.generateCheckoutLink
   );
 
   const isReady = !(isUserPending || (user && isAttemptPending));

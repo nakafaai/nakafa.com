@@ -61,7 +61,7 @@ export async function syncCustomerForUser(
     userId: args.user._id,
   });
   const localCustomerId = await ctx.runMutation(
-    internal.customers.mutations.upsertCustomer,
+    internal.customers.mutations.internal.upsertCustomer,
     {
       customer,
     }
@@ -85,7 +85,12 @@ export async function requireCustomer(
 ): Promise<RequiredCustomer> {
   const [user, localCustomer] = await Promise.all([
     ctx.runQuery(internal.users.queries.getUserById, { userId }),
-    ctx.runQuery(internal.customers.queries.getCustomerByUserId, { userId }),
+    ctx.runQuery(
+      internal.customers.queries.internal.customer.getCustomerByUserId,
+      {
+        userId,
+      }
+    ),
   ]);
 
   if (!user) {

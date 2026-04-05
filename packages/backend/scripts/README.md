@@ -76,6 +76,10 @@ npx convex deploy
 | `tryout:repair:access` | Repair overdue campaign/grant states and overdue competition finalization in development |
 | `tryout:verify:access:prod` | Verify campaign/grant/entitlement time-state integrity and competition overlap integrity in production |
 | `tryout:repair:access:prod` | Repair overdue campaign/grant states and overdue competition finalization in production |
+| `customers:verify` | Verify user/customer/subscription cohesion in development |
+| `customers:repair` | Repair missing customer rows and clean safe stale Polar customers in development |
+| `customers:verify:prod` | Verify user/customer/subscription cohesion in production |
+| `customers:repair:prod` | Repair missing customer rows and clean safe stale Polar customers in production |
 | `irt:verify:cache` | Verify cached IRT calibration state in development |
 | `irt:verify:scale` | Verify frozen IRT scale coverage in development |
 | `irt:prod:verify:cache` | Verify cached IRT calibration state in production |
@@ -257,6 +261,8 @@ Content hash unchanged. This is normal for `sync:incremental`.
 | Script | Purpose |
 |--------|---------|
 | `sync-content.ts` | Sync MDX content to Convex database |
+| `customers/verify.ts` | Verify user/customer/subscription cohesion |
+| `customers/repair.ts` | Repair missing customer rows and clean safe stale Polar customers |
 | `tryout/access.ts` | Verify campaign/grant/entitlement time-state and competition overlap integrity |
 | `irt-verify.ts` | Verify IRT cache and scale integrity |
 
@@ -266,6 +272,9 @@ Content hash unchanged. This is normal for `sync:incremental`.
 |------|---------|
 | `sync-content.ts` | Main sync script |
 | `sync-content/` | Shared sync-content helpers, validation, and workflows |
+| `customers/` | Customer cohesion verification and repair scripts |
+| `customers/verify.ts` | Dev/prod verification for user/customer/subscription cohesion |
+| `customers/repair.ts` | Dev/prod repair for missing customer rows and safe stale Polar customers |
 | `tryout/` | Tryout-specific maintenance scripts split by concern |
 | `tryout/access.ts` | Dev/prod integrity verification for campaigns, grants, entitlements, and competition overlap |
 | `irt-verify.ts` | Dev/prod integrity verification for IRT cache and scale state |

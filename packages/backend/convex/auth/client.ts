@@ -55,7 +55,7 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
 
           await ctx.scheduler.runAfter(
             0,
-            internal.customers.actions.syncCustomer,
+            internal.customers.actions.internal.syncCustomer,
             {
               userId,
             }
@@ -97,7 +97,7 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
 
           await ctx.scheduler.runAfter(
             0,
-            internal.customers.actions.syncCustomer,
+            internal.customers.actions.internal.syncCustomer,
             {
               userId: appUser._id,
             }
@@ -123,7 +123,7 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
 
           await ctx.scheduler.runAfter(
             0,
-            internal.customers.actions.cleanupUserData,
+            internal.customers.actions.internal.cleanupUserData,
             { userId: userApp._id }
           );
         },
