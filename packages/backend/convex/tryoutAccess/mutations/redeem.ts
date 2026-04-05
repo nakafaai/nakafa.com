@@ -2,6 +2,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import {
+  getTryoutAccessCampaignRedeemStatus,
   getTryoutAccessEventByCode,
   getTryoutAccessGrantEndsAt,
   syncTryoutAccessGrantEntitlements,
@@ -76,14 +77,19 @@ export const redeemEventAccess = mutation({
       });
     }
 
-    if (eventAccess.campaign.redeemStatus === "scheduled") {
+    const campaignRedeemStatus = getTryoutAccessCampaignRedeemStatus(
+      eventAccess.campaign,
+      now
+    );
+
+    if (campaignRedeemStatus === "scheduled") {
       throw new ConvexError({
         code: "EVENT_NOT_STARTED",
         message: "Event access is not available yet.",
       });
     }
 
-    if (eventAccess.campaign.redeemStatus === "ended") {
+    if (campaignRedeemStatus === "ended") {
       throw new ConvexError({
         code: "EVENT_ENDED",
         message: "Event access has ended.",

@@ -129,6 +129,8 @@ psychometric internal.
 - `userTryoutEntitlements`
   - entitlement aktif per `{user, product, source}` untuk source event saja
   - dipakai `startTryout` supaya event access read tetap exact dan bounded
+- redeem event access memverifikasi window aktif dari `startsAt`/`endsAt` di
+  mutation, bukan hanya percaya `redeemStatus` yang tersimpan
 - penggunaan competition dibaca langsung dari `tryoutAttempts`
   - exact read via index `{user, tryout, accessCampaignId, startedAt}`
   - tidak memakai projection claim terpisah
