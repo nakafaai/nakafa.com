@@ -2,6 +2,7 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import { products } from "@repo/backend/convex/utils/polar/products";
+import { getPathname } from "@repo/internationalization/src/navigation";
 import type { FunctionArgs } from "convex/server";
 import { ConvexError } from "convex/values";
 import {
@@ -52,18 +53,38 @@ function getStartTryoutErrorCode(error: unknown): StartTryoutErrorCode {
   return "UNKNOWN";
 }
 
-/** Builds a trusted absolute checkout return URL from one internal app path. */
-function getCheckoutSuccessUrl(returnPath: string) {
+/** Builds a trusted absolute checkout return URL from one localized app path. */
+function getCheckoutSuccessUrl({
+  locale,
+  returnPath,
+}: {
+  locale: StartTryoutInput["locale"];
+  returnPath: string;
+}) {
   if (!returnPath.startsWith("/") || returnPath.startsWith("//")) {
     return null;
   }
 
-  return new URL(returnPath, env.SITE_URL).toString();
+  const localizedPath = getPathname({
+    href: returnPath,
+    locale,
+  });
+
+  return new URL(localizedPath, env.SITE_URL).toString();
 }
 
 /** Creates the checkout URL used when the tryout requires paid access. */
-async function getCheckoutUrl(returnPath: string) {
-  const successUrl = getCheckoutSuccessUrl(returnPath);
+async function getCheckoutUrl({
+  locale,
+  returnPath,
+}: {
+  locale: StartTryoutInput["locale"];
+  returnPath: string;
+}) {
+  const successUrl = getCheckoutSuccessUrl({
+    locale,
+    returnPath,
+  });
 
   if (!successUrl) {
     return null;
@@ -106,7 +127,10 @@ export async function startTryout({
       return { code: "UNKNOWN", ok: false };
     }
 
-    const checkoutUrl = await getCheckoutUrl(returnPath);
+    const checkoutUrl = await getCheckoutUrl({
+      locale: args.locale,
+      returnPath,
+    });
 
     if (!checkoutUrl) {
       return { code: "UNKNOWN", ok: false };
