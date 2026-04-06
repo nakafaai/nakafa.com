@@ -3,15 +3,14 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
 import tables from "@repo/backend/convex/customers/schema";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
+import type { WithoutSystemFields } from "convex/server";
 import { v } from "convex/values";
-
-type CustomerRecord = Omit<Doc<"customers">, "_creationTime" | "_id">;
 
 /** Patches one local customer row to the latest Polar-backed fields. */
 async function patchCustomerRow(
   ctx: MutationCtx,
   customer: Pick<Doc<"customers">, "_id">,
-  nextCustomer: CustomerRecord
+  nextCustomer: WithoutSystemFields<Doc<"customers">>
 ) {
   await ctx.db.patch("customers", customer._id, {
     externalId: nextCustomer.externalId,

@@ -50,20 +50,40 @@ function isDuplicatePolarCustomerEmailError(error: unknown) {
   );
 }
 
-/** Normalize the subset of Polar customer fields the app persists locally. */
-function toPolarCustomerResult(customer: {
-  id: string;
+/** Normalizes one Polar customer response into the subset persisted locally. */
+function normalizeStoredPolarCustomer(customer: {
+  email?: string | null;
   externalId?: string | null;
-  email: string;
-  metadata?: PolarMetadata | null;
+  id: string;
+  metadata?: Record<string, unknown> | null;
   name?: string | null;
 }) {
+  if (typeof customer.email !== "string") {
+    throw new ConvexError({
+      code: "POLAR_CUSTOMER_ERROR",
+      message: "Polar customer is missing a valid email address.",
+      detail: JSON.stringify({ polarCustomerId: customer.id }),
+    });
+  }
+
+  const metadataEntries = Object.entries(customer.metadata ?? {}).filter(
+    (entry): entry is [string, string | number | boolean] => {
+      const value = entry[1];
+
+      return (
+        typeof value === "string" ||
+        typeof value === "number" ||
+        typeof value === "boolean"
+      );
+    }
+  );
+
   return {
-    id: customer.id,
-    externalId: customer.externalId ?? null,
     email: customer.email,
+    externalId: customer.externalId ?? null,
+    id: customer.id,
+    metadata: Object.fromEntries(metadataEntries),
     name: customer.name ?? null,
-    metadata: customer.metadata ?? {},
   };
 }
 
@@ -84,7 +104,7 @@ async function findPolarCustomerByEmail(email: string) {
     return null;
   }
 
-  return sanitize(customer);
+  return normalizeStoredPolarCustomer(sanitize(customer));
 }
 
 /**
@@ -95,8 +115,8 @@ async function syncExistingCustomer(
   customer: {
     externalId?: string | null;
     id: string;
-    email: string;
-    metadata?: PolarMetadata | null;
+    email?: string | null;
+    metadata?: Record<string, unknown> | null;
     name?: string | null;
   },
   args: {
@@ -106,32 +126,36 @@ async function syncExistingCustomer(
     name: string;
   }
 ) {
-  const currentMetadata = JSON.stringify(customer.metadata ?? {});
+  const normalizedCustomer = normalizeStoredPolarCustomer(customer);
+  const currentMetadata = JSON.stringify(normalizedCustomer.metadata);
   const nextMetadata = JSON.stringify(args.metadata ?? {});
 
-  if (customer.externalId && customer.externalId !== args.externalId) {
+  if (
+    normalizedCustomer.externalId &&
+    normalizedCustomer.externalId !== args.externalId
+  ) {
     throw new ConvexError({
       code: "POLAR_CUSTOMER_EMAIL_CONFLICT",
       message:
         "This email is already linked to a different Polar customer identity.",
       detail: JSON.stringify({
-        existingExternalId: customer.externalId,
-        polarCustomerId: customer.id,
+        existingExternalId: normalizedCustomer.externalId,
+        polarCustomerId: normalizedCustomer.id,
       }),
     });
   }
 
   if (
-    customer.email === args.email &&
-    customer.name === args.name &&
+    normalizedCustomer.email === args.email &&
+    normalizedCustomer.name === args.name &&
     currentMetadata === nextMetadata &&
-    customer.externalId === args.externalId
+    normalizedCustomer.externalId === args.externalId
   ) {
-    return toPolarCustomerResult(customer);
+    return normalizedCustomer;
   }
 
   const updateResult = await customersUpdate(polarClient, {
-    id: customer.id,
+    id: normalizedCustomer.id,
     customerUpdate: {
       email: args.email,
       externalId: args.externalId,
@@ -148,7 +172,7 @@ async function syncExistingCustomer(
     });
   }
 
-  return toPolarCustomerResult(sanitize(updateResult.value));
+  return normalizeStoredPolarCustomer(sanitize(updateResult.value));
 }
 
 /**
@@ -169,7 +193,7 @@ export async function ensurePolarCustomer(args: {
         id: args.localCustomerId,
       });
       if (result.ok) {
-        return await syncExistingCustomer(sanitize(result.value), args);
+        return await syncExistingCustomer(result.value, args);
       }
     } catch (error) {
       if (!isMissingPolarCustomer(error)) {
@@ -183,7 +207,7 @@ export async function ensurePolarCustomer(args: {
       externalId: args.externalId,
     });
     if (result.ok) {
-      return await syncExistingCustomer(sanitize(result.value), args);
+      return await syncExistingCustomer(result.value, args);
     }
   } catch (error) {
     if (!isMissingPolarCustomer(error)) {
@@ -201,7 +225,7 @@ export async function ensurePolarCustomer(args: {
     });
 
     if (createResult.ok) {
-      return toPolarCustomerResult(sanitize(createResult.value));
+      return normalizeStoredPolarCustomer(sanitize(createResult.value));
     }
 
     createError = createResult.error;
@@ -222,7 +246,7 @@ export async function ensurePolarCustomer(args: {
       externalId: args.externalId,
     });
     if (retryResult.ok) {
-      return await syncExistingCustomer(sanitize(retryResult.value), args);
+      return await syncExistingCustomer(retryResult.value, args);
     }
   } catch (error) {
     if (!isMissingPolarCustomer(error)) {
@@ -259,7 +283,7 @@ export async function updatePolarCustomerMetadata(args: {
   }
 
   const customer = sanitize(result.value);
-  return toPolarCustomerResult(customer);
+  return normalizeStoredPolarCustomer(customer);
 }
 
 /**

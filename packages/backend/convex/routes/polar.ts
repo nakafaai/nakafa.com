@@ -25,8 +25,7 @@ async function handleCustomerUpsert(
   customer: {
     id: string;
     externalId?: string | null;
-    email: string;
-    metadata: Record<string, string | number | boolean>;
+    metadata?: Record<string, string | number | boolean> | null;
   }
 ) {
   const userId = await ctx.runQuery(
@@ -34,7 +33,7 @@ async function handleCustomerUpsert(
     {
       externalId: customer.externalId ?? undefined,
       metadataUserId:
-        typeof customer.metadata.userId === "string"
+        typeof customer.metadata?.userId === "string"
           ? customer.metadata.userId
           : undefined,
     }
@@ -48,7 +47,7 @@ async function handleCustomerUpsert(
     customer: convertToDatabaseCustomer({
       id: customer.id,
       externalId: customer.externalId,
-      metadata: customer.metadata,
+      metadata: customer.metadata ?? {},
       userId,
     }),
   });

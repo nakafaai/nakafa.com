@@ -8,16 +8,16 @@
   },
   "dependencies": {
     "@ai-sdk/devtools": "^0.0.15",
-    "@ai-sdk/elevenlabs": "^2.0.26",
-    "@ai-sdk/gateway": "^3.0.85",
-    "@ai-sdk/google": "^3.0.55",
-    "@ai-sdk/google-vertex": "^4.0.99",
-    "@ai-sdk/openai": "^3.0.49",
-    "@ai-sdk/react": "^3.0.145",
+    "@ai-sdk/elevenlabs": "^2.0.27",
+    "@ai-sdk/gateway": "^3.0.88",
+    "@ai-sdk/google": "^3.0.58",
+    "@ai-sdk/google-vertex": "^4.0.102",
+    "@ai-sdk/openai": "^3.0.50",
+    "@ai-sdk/react": "^3.0.148",
     "@mendable/firecrawl-js": "^4.18.1",
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
-    "ai": "^6.0.143",
+    "ai": "^6.0.146",
     "convex": "^1.34.1",
     "dedent": "^1.7.2",
     "gpt-tokenizer": "^3.4.0",
@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "25.5.0",
+    "@types/node": "25.5.2",
     "@types/react": "19.2.14",
     "@types/react-dom": "^19.2.3"
   }
