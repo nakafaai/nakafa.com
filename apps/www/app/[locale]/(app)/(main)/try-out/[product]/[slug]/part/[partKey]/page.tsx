@@ -8,7 +8,7 @@ import { getExercisesContent } from "@repo/contents/_lib/exercises";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
 import { slugify } from "@repo/design-system/lib/utils";
-import { fetchQuery } from "convex/nextjs";
+import { fetchQuery, preloadedQueryResult } from "convex/nextjs";
 import { Effect } from "effect";
 import { notFound, redirect } from "next/navigation";
 import type { Locale } from "next-intl";
@@ -16,7 +16,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { QuestionAnalytics } from "@/app/[locale]/(app)/(main)/(contents)/exercises/[category]/[type]/[material]/[...slug]/analytics";
 import { ExerciseArticle } from "@/app/[locale]/(app)/(main)/(contents)/exercises/[category]/[type]/[material]/[...slug]/article";
 import { TryoutPartRuntime } from "@/components/tryout/part-runtime";
-import { getToken } from "@/lib/auth/server";
+import { getToken, preloadAuthQuery } from "@/lib/auth/server";
 
 interface Props {
   params: Promise<{
@@ -52,18 +52,20 @@ export default async function Page({ params }: Props) {
     notFound();
   }
 
-  const runtime = token
-    ? await fetchQuery(
+  const preloadedRuntime = token
+    ? await preloadAuthQuery(
         api.tryouts.queries.me.part.getUserTryoutPartAttempt,
         {
           locale,
           partKey,
           product,
           tryoutSlug: slug,
-        },
-        { token }
+        }
       )
-    : null;
+    : undefined;
+  const runtime = preloadedRuntime
+    ? preloadedQueryResult(preloadedRuntime)
+    : undefined;
 
   if (token && runtime && !runtime.part) {
     redirect(`/try-out/${product}/${slug}`);
@@ -130,7 +132,6 @@ export default async function Page({ params }: Props) {
         <TryoutPartRuntime
           icon={partIcon}
           initialNowMs={initialNowMs}
-          initialRuntime={runtime}
           part={{
             key: contentPart.partKey,
             label: partLabel,
@@ -138,6 +139,7 @@ export default async function Page({ params }: Props) {
             setSlug: contentPart.setSlug,
             timeLimitSeconds,
           }}
+          preloadedRuntime={preloadedRuntime}
           tryout={{
             cycleKey: details.tryout.cycleKey,
             label: tryoutLabel,
