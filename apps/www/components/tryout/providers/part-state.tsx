@@ -1,14 +1,10 @@
 "use client";
 
 import { usePreloadedAuthQuery } from "@convex-dev/better-auth/nextjs/client";
-import { api } from "@repo/backend/convex/_generated/api";
+import type { api } from "@repo/backend/convex/_generated/api";
 import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
-import {
-  getPathname,
-  useRouter,
-} from "@repo/internationalization/src/navigation";
+import { useRouter } from "@repo/internationalization/src/navigation";
 import type { Preloaded } from "convex/react";
-import { useMutation } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
@@ -20,7 +16,10 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { createContext, useContextSelector } from "use-context-selector";
-import { completeTryoutPart } from "@/components/tryout/actions/part";
+import {
+  completeTryoutPart,
+  startTryoutPart,
+} from "@/components/tryout/actions/part";
 import { useTryoutClock } from "@/components/tryout/hooks/use-tryout-clock";
 import { useTryoutStartFlow } from "@/components/tryout/hooks/use-tryout-start-flow";
 import type {
@@ -94,12 +93,14 @@ function useResolvedTryoutPartValue({
   hasAuthenticatedRoute,
   initialNowMs,
   part,
+  partKeys,
   runtime,
   tryout,
 }: {
   hasAuthenticatedRoute: boolean;
   initialNowMs?: number;
   part: TryoutPartValue;
+  partKeys: readonly string[];
   runtime: TryoutPartRuntime | null;
   tryout: TryoutValue;
 }) {
@@ -114,6 +115,7 @@ function useResolvedTryoutPartValue({
     setDialogOpenAction,
   } = useTryoutStartFlow({
     access: hasAuthenticatedRoute ? "authenticated" : "anonymous",
+    partKeys,
     params: {
       locale: tryout.locale,
       product: tryout.product,
@@ -124,7 +126,6 @@ function useResolvedTryoutPartValue({
     Boolean(runtime && runtime.tryoutAttempt.status === "in-progress"),
     initialNowMs
   );
-  const startPart = useMutation(api.tryouts.mutations.attempts.startPart);
   const {
     answers,
     attempt,
@@ -140,11 +141,6 @@ function useResolvedTryoutPartValue({
   });
   const shouldShowTryoutStartControls = status === "needs-tryout";
   const setHref = `/try-out/${tryout.product}/${tryout.slug}`;
-  const setPath = getPathname({
-    forcePrefix: true,
-    href: setHref,
-    locale: tryout.locale,
-  });
 
   const goToSet = useCallback(() => {
     router.push(setHref);
@@ -174,21 +170,35 @@ function useResolvedTryoutPartValue({
     }
 
     startTransition(async () => {
-      try {
-        await startPart({
-          partKey: part.key,
-          tryoutAttemptId: runtime.tryoutAttempt._id,
-        });
+      const result = await startTryoutPart({
+        locale: tryout.locale,
+        partKey: part.key,
+        partKeys,
+        product: tryout.product,
+        tryoutAttemptId: runtime.tryoutAttempt._id,
+        tryoutSlug: tryout.slug,
+      });
+
+      if (result.ok) {
         toast.success(tTryouts("start-part-success"), {
           position: "bottom-center",
         });
-      } catch {
-        toast.error(tTryouts("start-part-error"), {
-          position: "bottom-center",
-        });
+        return;
       }
+
+      toast.error(tTryouts("start-part-error"), {
+        position: "bottom-center",
+      });
     });
-  }, [part.key, runtime, startPart, tTryouts]);
+  }, [
+    part.key,
+    partKeys,
+    runtime,
+    tTryouts,
+    tryout.locale,
+    tryout.product,
+    tryout.slug,
+  ]);
 
   const completePartAction = useCallback(() => {
     startTransition(async () => {
@@ -197,9 +207,12 @@ function useResolvedTryoutPartValue({
       }
 
       const result = await completeTryoutPart({
+        locale: tryout.locale,
         partKey: part.key,
-        redirectTo: setPath,
+        partKeys,
+        product: tryout.product,
         tryoutAttemptId: runtime.tryoutAttempt._id,
+        tryoutSlug: tryout.slug,
       });
 
       if (result.ok) {
@@ -224,7 +237,17 @@ function useResolvedTryoutPartValue({
         position: "bottom-center",
       });
     });
-  }, [attempt, goToSet, part.key, runtime, setPath, tTryouts]);
+  }, [
+    attempt,
+    goToSet,
+    part.key,
+    partKeys,
+    runtime,
+    tTryouts,
+    tryout.locale,
+    tryout.product,
+    tryout.slug,
+  ]);
 
   return useMemo(
     () => ({
@@ -293,11 +316,13 @@ function PreloadedTryoutPartProvider({
   children,
   initialNowMs,
   part,
+  partKeys,
   preloadedRuntime,
   tryout,
 }: PropsWithChildren<{
   initialNowMs?: number;
   part: TryoutPartValue;
+  partKeys: readonly string[];
   preloadedRuntime: PreloadedTryoutPartRuntime;
   tryout: TryoutValue;
 }>) {
@@ -306,6 +331,7 @@ function PreloadedTryoutPartProvider({
     hasAuthenticatedRoute: true,
     initialNowMs,
     part,
+    partKeys,
     runtime,
     tryout,
   });
@@ -322,16 +348,19 @@ function AnonymousTryoutPartProvider({
   children,
   initialNowMs,
   part,
+  partKeys,
   tryout,
 }: PropsWithChildren<{
   initialNowMs?: number;
   part: TryoutPartValue;
+  partKeys: readonly string[];
   tryout: TryoutValue;
 }>) {
   const value = useResolvedTryoutPartValue({
     hasAuthenticatedRoute: false,
     initialNowMs,
     part,
+    partKeys,
     runtime: null,
     tryout,
   });
@@ -348,11 +377,13 @@ export function TryoutPartProvider({
   children,
   initialNowMs,
   part,
+  partKeys,
   preloadedRuntime,
   tryout,
 }: PropsWithChildren<{
   initialNowMs?: number;
   part: TryoutPartValue;
+  partKeys: readonly string[];
   preloadedRuntime?: PreloadedTryoutPartRuntime;
   tryout: TryoutValue;
 }>) {
@@ -361,6 +392,7 @@ export function TryoutPartProvider({
       <PreloadedTryoutPartProvider
         initialNowMs={initialNowMs}
         part={part}
+        partKeys={partKeys}
         preloadedRuntime={preloadedRuntime}
         tryout={tryout}
       >
@@ -373,6 +405,7 @@ export function TryoutPartProvider({
     <AnonymousTryoutPartProvider
       initialNowMs={initialNowMs}
       part={part}
+      partKeys={partKeys}
       tryout={tryout}
     >
       {children}

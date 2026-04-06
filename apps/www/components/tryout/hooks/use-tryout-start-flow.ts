@@ -1,18 +1,17 @@
 "use client";
 
 import { useDisclosure } from "@mantine/hooks";
-import { api } from "@repo/backend/convex/_generated/api";
-import { products } from "@repo/backend/convex/utils/polar/products";
+import type { api } from "@repo/backend/convex/_generated/api";
 import {
   usePathname,
   useRouter,
 } from "@repo/internationalization/src/navigation";
-import { useAction, useConvexAuth, useMutation } from "convex/react";
+import { useConvexAuth } from "convex/react";
 import type { FunctionArgs } from "convex/server";
-import { ConvexError } from "convex/values";
 import { useTranslations } from "next-intl";
 import { useCallback, useTransition } from "react";
 import { toast } from "sonner";
+import { startTryout } from "@/components/tryout/actions/tryout";
 
 export type TryoutStartParams = FunctionArgs<
   typeof api.tryouts.mutations.attempts.startTryout
@@ -26,10 +25,12 @@ export type TryoutRouteAccess = "anonymous" | "authenticated";
  */
 export function useTryoutStartFlow({
   access,
+  partKeys,
   params,
   resumePartKey,
 }: {
   access: TryoutRouteAccess;
+  partKeys: readonly string[];
   params: TryoutStartParams;
   resumePartKey?: string;
 }) {
@@ -40,10 +41,6 @@ export function useTryoutStartFlow({
   const [isActionPending, startTransition] = useTransition();
   const [isDialogOpen, { close: closeDialog, open: openDialog }] =
     useDisclosure(false);
-  const startTryout = useMutation(api.tryouts.mutations.attempts.startTryout);
-  const generateCheckoutLink = useAction(
-    api.customers.actions.public.generateCheckoutLink
-  );
   const isAuthPending = access === "authenticated" && isLoading;
   const isStartBlocked = isActionPending || isAuthPending;
 
@@ -100,61 +97,46 @@ export function useTryoutStartFlow({
     }
 
     startTransition(async () => {
-      try {
-        await startTryout(params);
+      const result = await startTryout({
+        ...params,
+        partKeys,
+        successUrl: window.location.href,
+      });
+
+      if (result.ok) {
         closeDialog();
         toast.success(tTryouts("start-success"), {
           position: "bottom-center",
         });
-      } catch (error) {
-        if (error instanceof ConvexError) {
-          const errorData = error.data;
+        return;
+      }
 
-          if (typeof errorData === "object" && errorData !== null) {
-            const errorCode = "code" in errorData ? errorData.code : undefined;
-
-            if (errorCode === "COMPETITION_ATTEMPT_ALREADY_USED") {
-              closeDialog();
-              toast.info(tTryouts("competition-attempt-used-error"), {
-                position: "bottom-center",
-              });
-              return;
-            }
-
-            if (errorCode === "TRYOUT_ACCESS_REQUIRED") {
-              try {
-                const { url } = await generateCheckoutLink({
-                  productIds: [products.pro.id],
-                  successUrl: window.location.href,
-                });
-
-                window.location.href = url;
-                return;
-              } catch {
-                toast.error(tTryouts("start-error"), {
-                  position: "bottom-center",
-                });
-                return;
-              }
-            }
-          }
-        }
-
-        toast.error(tTryouts("start-error"), {
+      if (result.code === "COMPETITION_ATTEMPT_ALREADY_USED") {
+        closeDialog();
+        toast.info(tTryouts("competition-attempt-used-error"), {
           position: "bottom-center",
         });
+        return;
       }
+
+      if (result.code === "TRYOUT_ACCESS_REQUIRED") {
+        window.location.href = result.url;
+        return;
+      }
+
+      toast.error(tTryouts("start-error"), {
+        position: "bottom-center",
+      });
     });
   }, [
     access,
     closeDialog,
-    generateCheckoutLink,
     isAuthenticated,
     isLoading,
+    partKeys,
     params,
     pathname,
     router,
-    startTryout,
     tTryouts,
   ]);
 

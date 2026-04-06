@@ -116,6 +116,7 @@ export default async function Page({ params }: Props) {
   }
 
   const tryoutLabel = details.tryout.label;
+  const partKeys = details.parts.map((part) => part.partKey);
 
   const materialLabel = ExercisesMaterialSchema.safeParse(contentPart.material);
   const partLabel = materialLabel.success
@@ -139,6 +140,7 @@ export default async function Page({ params }: Props) {
         setSlug: contentPart.setSlug,
         timeLimitSeconds,
       }}
+      partKeys={partKeys}
       preloadedRuntime={preloadedRuntime}
       tryout={{
         cycleKey: details.tryout.cycleKey,

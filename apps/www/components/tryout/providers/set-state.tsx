@@ -80,11 +80,13 @@ function useResolvedTryoutSetValue({
   attemptData,
   hasAuthenticatedRoute,
   initialNowMs,
+  partKeys,
   params,
 }: {
   attemptData: TryoutAttemptData | null;
   hasAuthenticatedRoute: boolean;
   initialNowMs?: number;
+  partKeys: readonly string[];
   params: TryoutSetParams;
 }) {
   const nowMs = useTryoutClock(
@@ -118,6 +120,7 @@ function useResolvedTryoutSetValue({
     setDialogOpenAction,
   } = useTryoutStartFlow({
     access: hasAuthenticatedRoute ? "authenticated" : "anonymous",
+    partKeys,
     params,
     resumePartKey,
   });
@@ -169,10 +172,12 @@ function useResolvedTryoutSetValue({
 function PreloadedTryoutSetProvider({
   children,
   initialNowMs,
+  partKeys,
   params,
   preloadedAttempt,
 }: PropsWithChildren<{
   initialNowMs?: number;
+  partKeys: readonly string[];
   params: TryoutSetParams;
   preloadedAttempt: PreloadedTryoutAttempt;
 }>) {
@@ -181,6 +186,7 @@ function PreloadedTryoutSetProvider({
     attemptData,
     hasAuthenticatedRoute: true,
     initialNowMs,
+    partKeys,
     params,
   });
 
@@ -195,15 +201,18 @@ function PreloadedTryoutSetProvider({
 function AnonymousTryoutSetProvider({
   children,
   initialNowMs,
+  partKeys,
   params,
 }: PropsWithChildren<{
   initialNowMs?: number;
+  partKeys: readonly string[];
   params: TryoutSetParams;
 }>) {
   const value = useResolvedTryoutSetValue({
     attemptData: null,
     hasAuthenticatedRoute: false,
     initialNowMs,
+    partKeys,
     params,
   });
 
@@ -218,10 +227,12 @@ function AnonymousTryoutSetProvider({
 export function TryoutSetProvider({
   children,
   initialNowMs,
+  partKeys,
   params,
   preloadedAttempt,
 }: PropsWithChildren<{
   initialNowMs?: number;
+  partKeys: readonly string[];
   params: TryoutSetParams;
   preloadedAttempt?: PreloadedTryoutAttempt;
 }>) {
@@ -230,6 +241,7 @@ export function TryoutSetProvider({
       <PreloadedTryoutSetProvider
         initialNowMs={initialNowMs}
         params={params}
+        partKeys={partKeys}
         preloadedAttempt={preloadedAttempt}
       >
         {children}
@@ -238,7 +250,11 @@ export function TryoutSetProvider({
   }
 
   return (
-    <AnonymousTryoutSetProvider initialNowMs={initialNowMs} params={params}>
+    <AnonymousTryoutSetProvider
+      initialNowMs={initialNowMs}
+      params={params}
+      partKeys={partKeys}
+    >
       {children}
     </AnonymousTryoutSetProvider>
   );

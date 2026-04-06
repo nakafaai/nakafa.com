@@ -61,6 +61,7 @@ export default async function Page({ params }: Props) {
     : undefined;
 
   const tryoutLabel = details.tryout.label;
+  const partKeys = details.parts.map((part) => part.partKey);
 
   return (
     <TryoutSetProvider
@@ -70,6 +71,7 @@ export default async function Page({ params }: Props) {
         product,
         tryoutSlug: details.tryout.slug,
       }}
+      partKeys={partKeys}
       preloadedAttempt={preloadedAttempt}
     >
       <TryoutSetShell>
