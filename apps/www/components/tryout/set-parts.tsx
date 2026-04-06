@@ -15,7 +15,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import type { FunctionReturnType } from "convex/server";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
-import { useTryoutAttemptState } from "@/components/tryout/providers/attempt-state";
+import { useTryoutSet } from "@/components/tryout/providers/set-state";
 import { TryoutStatusBadge } from "@/components/tryout/status-badge";
 import { deriveTryoutSetPartState } from "@/components/tryout/utils/part-state";
 
@@ -34,15 +34,14 @@ interface TryoutSetPartsProps {
 
 type TryoutSetPartState = ReturnType<typeof deriveTryoutSetPartState>;
 
+/** Renders the full list of parts for one tryout set. */
 export function TryoutSetParts({ parts }: TryoutSetPartsProps) {
-  const attemptData = useTryoutAttemptState((state) => state.attemptData);
-  const effectiveStatus = useTryoutAttemptState(
-    (state) => state.effectiveStatus
-  );
-  const nowMs = useTryoutAttemptState((state) => state.nowMs);
-  const product = useTryoutAttemptState((state) => state.params.product);
-  const resumePartKey = useTryoutAttemptState((state) => state.resumePartKey);
-  const tryoutSlug = useTryoutAttemptState((state) => state.params.tryoutSlug);
+  const attemptData = useTryoutSet((state) => state.state.attemptData);
+  const effectiveStatus = useTryoutSet((state) => state.state.effectiveStatus);
+  const nowMs = useTryoutSet((state) => state.state.nowMs);
+  const product = useTryoutSet((state) => state.params.product);
+  const resumePartKey = useTryoutSet((state) => state.state.resumePartKey);
+  const tryoutSlug = useTryoutSet((state) => state.params.tryoutSlug);
 
   return (
     <div className="grid divide-y">
@@ -68,6 +67,7 @@ export function TryoutSetParts({ parts }: TryoutSetPartsProps) {
   );
 }
 
+/** Renders one navigable tryout part row with its current status. */
 function TryoutSetPart({
   href,
   part,
@@ -78,9 +78,7 @@ function TryoutSetPart({
   partState: TryoutSetPartState;
 }) {
   const tTryouts = useTranslations("Tryouts");
-  const effectiveStatus = useTryoutAttemptState(
-    (state) => state.effectiveStatus
-  );
+  const effectiveStatus = useTryoutSet((state) => state.state.effectiveStatus);
   const partIcon = getTryoutPartIcon(part.material);
   const showPartStatusBadge = effectiveStatus === "in-progress";
 
@@ -147,6 +145,7 @@ function TryoutSetPart({
   );
 }
 
+/** Renders the score summary shown for a completed tryout part row. */
 function TryoutSetPartScore({
   correctAnswers,
   irtScore,
@@ -174,6 +173,7 @@ function TryoutSetPartScore({
   );
 }
 
+/** Renders one labeled metric inside the part score summary. */
 function TryoutSetPartMetric({
   children,
   label,
@@ -191,6 +191,7 @@ function TryoutSetPartMetric({
   );
 }
 
+/** Renders the IRT score number for one completed part. */
 function TryoutSetPartScoreNumber({ value }: { value: number }) {
   return (
     <div className="font-light font-mono text-foreground text-xl tabular-nums leading-none tracking-tighter group-hover:text-accent-foreground sm:text-2xl">
@@ -203,6 +204,7 @@ function TryoutSetPartScoreNumber({ value }: { value: number }) {
   );
 }
 
+/** Renders the correct-answer fraction for one completed part. */
 function TryoutSetPartScoreFraction({
   correct,
   total,

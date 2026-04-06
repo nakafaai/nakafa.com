@@ -2,7 +2,7 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
-import type { Preloaded } from "convex/react";
+import { useTranslations } from "next-intl";
 import type { ComponentProps, ReactNode } from "react";
 import { useState } from "react";
 import {
@@ -22,57 +22,35 @@ import {
   TryoutPartLead,
   TryoutPartSummary,
 } from "@/components/tryout/part-shell";
-import { TryoutAttemptStateProvider } from "@/components/tryout/providers/attempt-state";
+import { useTryoutPart } from "@/components/tryout/providers/part-state";
 import {
-  TryoutPartProvider,
-  type TryoutPartValue,
-  type TryoutValue,
-  useTryoutPart,
-} from "@/components/tryout/providers/part-state";
-import { TryoutStartButton } from "@/components/tryout/start-button";
+  TryoutStartActionButton,
+  TryoutStartConfirmDialog,
+} from "@/components/tryout/start-controls";
 import { AttemptProvider } from "@/lib/context/use-attempt";
 import { ExerciseContextProvider } from "@/lib/context/use-exercise";
 
 export interface TryoutPartRuntimeProps {
   children: ReactNode;
   icon?: ComponentProps<typeof TryoutPartHead>["icon"];
-  initialNowMs?: number;
-  part: TryoutPartValue;
-  preloadedRuntime?: Preloaded<
-    typeof api.tryouts.queries.me.part.getUserTryoutPartAttempt
-  >;
-  tryout: TryoutValue;
 }
 
-export function TryoutPartRuntime({
-  children,
-  icon,
-  initialNowMs,
-  preloadedRuntime,
-  part,
-  tryout,
-}: TryoutPartRuntimeProps) {
+/** Renders the full part runtime view from the active part-route providers. */
+export function TryoutPartRuntime({ children, icon }: TryoutPartRuntimeProps) {
+  const setSlug = useTryoutPart((state) => state.state.part.setSlug);
+
   return (
-    <ExerciseContextProvider slug={part.setSlug}>
-      <TryoutPartProvider
-        initialNowMs={initialNowMs}
-        part={part}
-        preloadedRuntime={preloadedRuntime}
-        tryout={tryout}
-      >
-        <TryoutPartRuntimeBody icon={icon} initialNowMs={initialNowMs}>
-          {children}
-        </TryoutPartRuntimeBody>
-      </TryoutPartProvider>
+    <ExerciseContextProvider slug={setSlug}>
+      <TryoutPartRuntimeBody icon={icon}>{children}</TryoutPartRuntimeBody>
     </ExerciseContextProvider>
   );
 }
 
+/** Renders the runtime body after the route providers have resolved state. */
 function TryoutPartRuntimeBody({
   children,
   icon,
-  initialNowMs,
-}: Pick<TryoutPartRuntimeProps, "children" | "icon" | "initialNowMs">) {
+}: Pick<TryoutPartRuntimeProps, "children" | "icon">) {
   const attempt = useTryoutPart((state) => state.state.attempt);
   const answers = useTryoutPart((state) => state.state.answers);
   const isInputLocked = useTryoutPart((state) => state.state.isAwaitingExpiry);
@@ -109,7 +87,7 @@ function TryoutPartRuntimeBody({
 
         <div className="space-y-12">
           <TryoutPartCompletionControls />
-          <TryoutPartSummaryCard initialNowMs={initialNowMs} />
+          <TryoutPartSummaryCard />
           {shouldShowQuestions ? children : null}
         </div>
       </div>
@@ -117,6 +95,7 @@ function TryoutPartRuntimeBody({
   );
 }
 
+/** Owns the completion dialog visibility for the sticky part controls. */
 function TryoutPartCompletionControls() {
   const [isCompleteDialogOpen, setCompleteDialogOpen] = useState(false);
 
@@ -131,9 +110,8 @@ function TryoutPartCompletionControls() {
   );
 }
 
-function TryoutPartSummaryCard({
-  initialNowMs,
-}: Pick<TryoutPartRuntimeProps, "initialNowMs">) {
+/** Renders the summary card shown whenever the current part is not in progress. */
+function TryoutPartSummaryCard() {
   const status = useTryoutPart((state) => state.state.status);
 
   if (status === "in-progress") {
@@ -150,7 +128,7 @@ function TryoutPartSummaryCard({
         </TryoutPartLead>
 
         <TryoutPartCtas>
-          <TryoutPartTryoutStartButton initialNowMs={initialNowMs} />
+          <TryoutPartTryoutStartControls />
           <TryoutPartStartCta />
           <TryoutPartBackCta />
         </TryoutPartCtas>
@@ -159,26 +137,52 @@ function TryoutPartSummaryCard({
   );
 }
 
-function TryoutPartTryoutStartButton({
-  initialNowMs,
-}: Pick<TryoutPartRuntimeProps, "initialNowMs">) {
-  const shouldShowTryoutStartButton = useTryoutPart(
-    (state) => state.state.shouldShowTryoutStartButton
+/** Renders the route-level start controls when this part has no active tryout. */
+function TryoutPartTryoutStartControls() {
+  const tTryouts = useTranslations("Tryouts");
+  const clickTryoutStartAction = useTryoutPart(
+    (state) => state.actions.clickTryoutStartAction
   );
-  const tryout = useTryoutPart((state) => state.state.tryout);
+  const confirmTryoutStartAction = useTryoutPart(
+    (state) => state.actions.confirmTryoutStartAction
+  );
+  const setTryoutStartDialogOpenAction = useTryoutPart(
+    (state) => state.actions.setTryoutStartDialogOpenAction
+  );
+  const isActionPending = useTryoutPart((state) => state.meta.isActionPending);
+  const isStartBlocked = useTryoutPart((state) => state.meta.isStartBlocked);
+  const isTryoutStartDialogOpen = useTryoutPart(
+    (state) => state.meta.isTryoutStartDialogOpen
+  );
+  const shouldShowTryoutStartControls = useTryoutPart(
+    (state) => state.state.shouldShowTryoutStartControls
+  );
 
-  if (!shouldShowTryoutStartButton) {
+  if (!shouldShowTryoutStartControls) {
     return null;
   }
 
   return (
-    <TryoutAttemptStateProvider
-      initialNowMs={initialNowMs}
-      locale={tryout.locale}
-      product={tryout.product}
-      tryoutSlug={tryout.slug}
-    >
-      <TryoutStartButton />
-    </TryoutAttemptStateProvider>
+    <>
+      <TryoutStartActionButton
+        className="w-full sm:w-auto"
+        isBlocked={isStartBlocked}
+        isPending={isActionPending}
+        label={tTryouts("start-cta")}
+        onClickAction={clickTryoutStartAction}
+      />
+
+      <TryoutStartConfirmDialog
+        cancelLabel={tTryouts("cancel-cta")}
+        confirmLabel={tTryouts("start-cta")}
+        description={tTryouts("start-dialog-description")}
+        isBlocked={isStartBlocked}
+        isOpen={isTryoutStartDialogOpen}
+        isPending={isActionPending}
+        onConfirmAction={confirmTryoutStartAction}
+        setOpenAction={setTryoutStartDialogOpenAction}
+        title={tTryouts("start-dialog-title")}
+      />
+    </>
   );
 }

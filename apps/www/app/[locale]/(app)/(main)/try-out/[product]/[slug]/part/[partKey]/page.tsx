@@ -16,6 +16,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { QuestionAnalytics } from "@/app/[locale]/(app)/(main)/(contents)/exercises/[category]/[type]/[material]/[...slug]/analytics";
 import { ExerciseArticle } from "@/app/[locale]/(app)/(main)/(contents)/exercises/[category]/[type]/[material]/[...slug]/article";
 import { TryoutPartRuntime } from "@/components/tryout/part-runtime";
+import { TryoutPartShellBoundary } from "@/components/tryout/part-shell-boundary";
+import { TryoutPartProvider } from "@/components/tryout/providers/part-state";
 import { getToken, preloadAuthQuery } from "@/lib/auth/server";
 
 interface Props {
@@ -27,6 +29,7 @@ interface Props {
   }>;
 }
 
+/** Renders one tryout part page with an authenticated runtime preload when available. */
 export default async function Page({ params }: Props) {
   const { locale, product: productParam, slug, partKey } = await params;
   const initialNowMs = Date.now();
@@ -127,50 +130,53 @@ export default async function Page({ params }: Props) {
     : undefined;
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
-      <div className="space-y-10">
-        <TryoutPartRuntime
-          icon={partIcon}
-          initialNowMs={initialNowMs}
-          part={{
-            key: contentPart.partKey,
-            label: partLabel,
-            questionCount: contentPart.questionCount,
-            setSlug: contentPart.setSlug,
-            timeLimitSeconds,
-          }}
-          preloadedRuntime={preloadedRuntime}
-          tryout={{
-            cycleKey: details.tryout.cycleKey,
-            label: tryoutLabel,
-            locale,
-            product,
-            slug,
-          }}
-        >
-          {exercises.map((exercise) => {
-            const id = slugify(
-              tExercises("number-count", { count: exercise.number })
-            );
+    <TryoutPartProvider
+      initialNowMs={initialNowMs}
+      part={{
+        key: contentPart.partKey,
+        label: partLabel,
+        questionCount: contentPart.questionCount,
+        setSlug: contentPart.setSlug,
+        timeLimitSeconds,
+      }}
+      preloadedRuntime={preloadedRuntime}
+      tryout={{
+        cycleKey: details.tryout.cycleKey,
+        label: tryoutLabel,
+        locale,
+        product,
+        slug,
+      }}
+    >
+      <TryoutPartShellBoundary>
+        <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
+          <div className="space-y-10">
+            <TryoutPartRuntime icon={partIcon}>
+              {exercises.map((exercise) => {
+                const id = slugify(
+                  tExercises("number-count", { count: exercise.number })
+                );
 
-            return (
-              <QuestionAnalytics
-                exerciseNumber={exercise.number}
-                key={exercise.number}
-              >
-                <ExerciseArticle
-                  exercise={exercise}
-                  id={id}
-                  locale={locale}
-                  srLabel={tExercises("number-count", {
-                    count: exercise.number,
-                  })}
-                />
-              </QuestionAnalytics>
-            );
-          })}
-        </TryoutPartRuntime>
-      </div>
-    </div>
+                return (
+                  <QuestionAnalytics
+                    exerciseNumber={exercise.number}
+                    key={exercise.number}
+                  >
+                    <ExerciseArticle
+                      exercise={exercise}
+                      id={id}
+                      locale={locale}
+                      srLabel={tExercises("number-count", {
+                        count: exercise.number,
+                      })}
+                    />
+                  </QuestionAnalytics>
+                );
+              })}
+            </TryoutPartRuntime>
+          </div>
+        </div>
+      </TryoutPartShellBoundary>
+    </TryoutPartProvider>
   );
 }

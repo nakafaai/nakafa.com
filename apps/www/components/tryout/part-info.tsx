@@ -4,7 +4,6 @@ import {
   NumberFormat,
   NumberFormatGroup,
 } from "@repo/design-system/components/ui/number-flow";
-import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import { useTranslations } from "next-intl";
 import { Fragment } from "react";
 import {
@@ -18,6 +17,7 @@ import {
 } from "@/components/tryout/score-badges";
 import { TryoutStatusBadge } from "@/components/tryout/status-badge";
 
+/** Renders the visible status badges for the current part route. */
 export function TryoutPartStatus() {
   const isTryoutFinished = useTryoutPart(
     (state) => state.state.isTryoutFinished
@@ -29,15 +29,6 @@ export function TryoutPartStatus() {
   const tryoutPublicResultStatus = useTryoutPart(
     (state) => state.state.tryoutPublicResultStatus
   );
-
-  if (status === "loading") {
-    return (
-      <div className="flex flex-wrap gap-2">
-        <Skeleton className="h-7 w-28 rounded-md" />
-        <Skeleton className="h-7 w-20 rounded-md" />
-      </div>
-    );
-  }
 
   if (isTryoutFinished && tryoutAttemptStatus && tryoutPublicResultStatus) {
     return (
@@ -55,28 +46,19 @@ export function TryoutPartStatus() {
   return null;
 }
 
+/** Renders the summary metrics for the current part route. */
 export function TryoutPartMetrics() {
   const tTryouts = useTranslations("Tryouts");
   const isTryoutFinished = useTryoutPart(
     (state) => state.state.isTryoutFinished
   );
   const score = useTryoutPart((state) => state.state.score);
-  const status = useTryoutPart((state) => state.state.status);
   const questionCount = useTryoutPart(
     (state) => state.state.part.questionCount
   );
   const timeLimitSeconds = useTryoutPart(
     (state) => state.state.part.timeLimitSeconds
   );
-
-  if (status === "loading") {
-    return (
-      <TryoutPartStats>
-        <Skeleton className="h-28 rounded-xl" />
-        <Skeleton className="h-28 rounded-xl" />
-      </TryoutPartStats>
-    );
-  }
 
   if (isTryoutFinished && score) {
     return (
@@ -108,6 +90,7 @@ export function TryoutPartMetrics() {
   );
 }
 
+/** Renders one large number metric inside the part summary. */
 function TryoutMetricNumber({ value }: { value: number }) {
   return (
     <div className="font-light font-mono text-5xl text-foreground tabular-nums leading-none tracking-tighter">
@@ -120,6 +103,7 @@ function TryoutMetricNumber({ value }: { value: number }) {
   );
 }
 
+/** Renders the duration metric for one part in `hh:mm:ss` or `mm:ss`. */
 function TryoutMetricTime({ totalSeconds }: { totalSeconds: number }) {
   const segments = getTimeSegments(totalSeconds);
 
@@ -147,6 +131,7 @@ function TryoutMetricTime({ totalSeconds }: { totalSeconds: number }) {
   );
 }
 
+/** Renders a correct-answer fraction metric for one completed part. */
 function TryoutMetricFraction({
   correct,
   total,

@@ -5,23 +5,13 @@ import {
   type TryoutProduct,
   tryoutProducts,
 } from "@repo/backend/convex/tryouts/products";
-import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { fetchQuery } from "convex/nextjs";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import {
-  TryoutCard,
-  TryoutCardArt,
-  TryoutCardBody,
-  TryoutCardContent,
-  TryoutCardCopy,
-  TryoutCardDescription,
-  TryoutCardHero,
-  TryoutCardTitle,
-} from "@/components/tryout/card";
+import { TryoutCatalogCard } from "@/components/tryout/catalog-card";
 import { TryoutCatalogList } from "@/components/tryout/catalog-list";
 import { SnbtTryoutIcon } from "@/components/tryout/product-icon";
 import { TRYOUT_CATALOG_PAGE_SIZE } from "@/components/tryout/utils/catalog";
@@ -90,41 +80,21 @@ export default async function Page({ params }: Props) {
           </p>
         </header>
 
-        <TryoutCard>
-          <TryoutCardHero>
-            <TryoutCardArt>
-              <SnbtTryoutIcon />
-            </TryoutCardArt>
-
-            <TryoutCardBody className="gap-0">
-              <TryoutCardCopy>
-                <div className="flex flex-wrap items-center gap-2">
-                  <TryoutCardTitle>
-                    {tTryouts("products.snbt.title")}
-                  </TryoutCardTitle>
-                  <Badge variant="outline">
-                    {tTryouts("package-count", {
-                      count: catalogSnapshot.activeCount,
-                    })}
-                  </Badge>
-                </div>
-
-                <TryoutCardDescription>
-                  {tTryouts("products.snbt.description")}
-                </TryoutCardDescription>
-              </TryoutCardCopy>
-            </TryoutCardBody>
-          </TryoutCardHero>
-
-          <TryoutCardContent>
-            <TryoutCatalogList
-              initialEntries={catalogSnapshot.initialPage}
-              initialNowMs={initialNowMs}
-              locale={locale}
-              product={product}
-            />
-          </TryoutCardContent>
-        </TryoutCard>
+        <TryoutCatalogCard
+          activeCountLabel={tTryouts("package-count", {
+            count: catalogSnapshot.activeCount,
+          })}
+          art={<SnbtTryoutIcon />}
+          description={tTryouts("products.snbt.description")}
+          title={tTryouts("products.snbt.title")}
+        >
+          <TryoutCatalogList
+            initialEntries={catalogSnapshot.initialPage}
+            initialNowMs={initialNowMs}
+            locale={locale}
+            product={product}
+          />
+        </TryoutCatalogCard>
       </div>
     </div>
   );

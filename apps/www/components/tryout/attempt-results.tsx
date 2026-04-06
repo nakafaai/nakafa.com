@@ -12,11 +12,11 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { usePaginatedQuery } from "convex/react";
+import { useConvexAuth, usePaginatedQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useTryoutAttemptState } from "@/components/tryout/providers/attempt-state";
+import { useTryoutSet } from "@/components/tryout/providers/set-state";
 import { TryoutScoreCard } from "@/components/tryout/score-card";
 import { getEffectiveTryoutStatus } from "@/components/tryout/utils/status";
 
@@ -29,26 +29,31 @@ interface Props {
   fallbackStatus: TryoutAttempt["status"];
 }
 
+/** Renders the current attempt scorecard and lazily loads older authenticated attempts. */
 export function TryoutAttemptResults({
   fallbackAttempt,
   fallbackStatus,
 }: Props) {
   const tTryouts = useTranslations("Tryouts");
-  const locale = useTryoutAttemptState((state) => state.params.locale);
-  const product = useTryoutAttemptState((state) => state.params.product);
-  const tryoutSlug = useTryoutAttemptState((state) => state.params.tryoutSlug);
-  const nowMs = useTryoutAttemptState((state) => state.nowMs);
+  const locale = useTryoutSet((state) => state.params.locale);
+  const product = useTryoutSet((state) => state.params.product);
+  const tryoutSlug = useTryoutSet((state) => state.params.tryoutSlug);
+  const nowMs = useTryoutSet((state) => state.state.nowMs);
+  const { isAuthenticated, isLoading } = useConvexAuth();
+  const shouldLoadAttemptHistory = !isLoading && isAuthenticated;
   const {
     loadMore,
     results: attemptHistory,
     status,
   } = usePaginatedQuery(
     api.tryouts.queries.me.history.getUserTryoutAttemptHistory,
-    {
-      locale,
-      product,
-      tryoutSlug,
-    },
+    shouldLoadAttemptHistory
+      ? {
+          locale,
+          product,
+          tryoutSlug,
+        }
+      : "skip",
     { initialNumItems: 25 }
   );
   const [selectedAttemptId, setSelectedAttemptId] = useState("");
