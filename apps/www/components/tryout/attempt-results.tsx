@@ -16,7 +16,6 @@ import { usePaginatedQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useTryoutClock } from "@/components/tryout/hooks/use-tryout-clock";
 import { useTryoutAttemptState } from "@/components/tryout/providers/attempt-state";
 import { TryoutScoreCard } from "@/components/tryout/score-card";
 import { getEffectiveTryoutStatus } from "@/components/tryout/utils/status";
@@ -38,6 +37,7 @@ export function TryoutAttemptResults({
   const locale = useTryoutAttemptState((state) => state.params.locale);
   const product = useTryoutAttemptState((state) => state.params.product);
   const tryoutSlug = useTryoutAttemptState((state) => state.params.tryoutSlug);
+  const nowMs = useTryoutAttemptState((state) => state.nowMs);
   const {
     loadMore,
     results: attemptHistory,
@@ -52,9 +52,6 @@ export function TryoutAttemptResults({
     { initialNumItems: 25 }
   );
   const [selectedAttemptId, setSelectedAttemptId] = useState("");
-  const nowMs = useTryoutClock(
-    attemptHistory.some((attempt) => attempt.status === "in-progress")
-  );
 
   if (status === "LoadingFirstPage" || attemptHistory.length === 0) {
     return (
