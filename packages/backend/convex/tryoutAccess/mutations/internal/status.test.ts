@@ -12,7 +12,7 @@ describe("tryoutAccess/mutations/internal/status", () => {
   it("keeps immutable competition grants and syncs active entitlements", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
-      const currentTime = Date.now();
+      const currentTime = NOW;
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "sync-campaign-grants",
@@ -60,7 +60,7 @@ describe("tryoutAccess/mutations/internal/status", () => {
         throw new Error("expected grant to exist");
       }
 
-      await syncTryoutAccessGrantStatus(ctx.db, grant, Date.now());
+      await syncTryoutAccessGrantStatus(ctx.db, grant, NOW);
     });
 
     const result = await t.query(async (ctx) => {
@@ -100,7 +100,7 @@ describe("tryoutAccess/mutations/internal/status", () => {
         resultsFinalizedAt: null,
         startsAt: NOW - 60 * 1000,
         endsAt: NOW + 7 * 24 * 60 * 60 * 1000,
-        grantDurationDays: 30,
+        grantDurationDays: 7,
       });
       const linkId = await ctx.db.insert("tryoutAccessLinks", {
         campaignId,

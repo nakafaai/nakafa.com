@@ -18,18 +18,19 @@ let nextConfig: NextConfig = {
   outputFileTracingRoot: path.join(process.cwd(), "../.."),
   outputFileTracingIncludes: {
     "/llms.mdx/\\[\\.\\.\\.slug\\]": [
-      "../../packages/contents/{articles,exercises,subject,_data}/**/*",
+      "../../packages/contents/{articles,exercises,subject}/**/*",
+      "../../packages/contents/_data/quran.ts",
     ],
     "/og/\\[\\.\\.\\.slug\\]": [
-      "../../packages/contents/{articles,exercises,subject,_data}/**/*",
+      "../../packages/contents/{articles,exercises,subject}/**/*",
     ],
     "/\\[locale\\]/og/\\[\\.\\.\\.slug\\]": [
-      "../../packages/contents/{articles,exercises,subject,_data}/**/*",
+      "../../packages/contents/{articles,exercises,subject}/**/*",
     ],
     "/\\[locale\\]/exercises/\\[category\\]/\\[type\\]/\\[material\\]/\\[\\.\\.\\.slug\\]":
-      ["../../packages/contents/{articles,exercises,subject,_data}/**/*"],
+      ["../../packages/contents/{articles,exercises,subject}/**/*"],
     "/\\[locale\\]/try-out/\\[product\\]/\\[slug\\]/part/\\[partKey\\]": [
-      "../../packages/contents/{articles,exercises,subject,_data}/**/*",
+      "../../packages/contents/{articles,exercises,subject}/**/*",
     ],
   },
   serverExternalPackages: [

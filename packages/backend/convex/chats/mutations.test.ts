@@ -2,15 +2,16 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 3, 2, 12, 0, 0);
 
 describe("chats/mutations", () => {
-  it("records a reset grant before the usage transaction when credits roll into a new window", async () => {
-    vi.useFakeTimers();
+  beforeEach(() => {
     vi.setSystemTime(new Date(NOW));
+  });
 
+  it("records a reset grant before the usage transaction when credits roll into a new window", async () => {
     const t = convexTest(schema, convexModules);
 
     const { chatId, userId } = await t.mutation(async (ctx) => {
@@ -84,7 +85,5 @@ describe("chats/mutations", () => {
         }),
       }),
     ]);
-
-    vi.useRealTimers();
   });
 });

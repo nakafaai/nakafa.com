@@ -12,7 +12,7 @@ import {
   NOW,
 } from "@repo/backend/convex/tryouts/test.helpers";
 import { products } from "@repo/backend/convex/utils/polar/products";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /** Inserts one active Pro subscription for direct runtime access checks. */
 async function insertActiveProSubscription(
@@ -90,6 +90,11 @@ async function insertTryoutAccessGrant(
 }
 
 describe("tryouts/mutations/attempts", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(NOW));
+  });
+
   it("reuses one in-progress attempt when the same tryout starts concurrently", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
@@ -212,7 +217,7 @@ describe("tryouts/mutations/attempts", () => {
   it("creates only one counted competition attempt when the same event start races", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
-      const currentTime = Date.now();
+      const currentTime = NOW;
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "competition-concurrent-start",
@@ -360,7 +365,7 @@ describe("tryouts/mutations/attempts", () => {
   it("uses competition event access for the first attempt and clamps expiry to the event end", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
-      const currentTime = Date.now();
+      const currentTime = NOW;
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "competition-first-attempt",
@@ -439,7 +444,7 @@ describe("tryouts/mutations/attempts", () => {
   it("falls back to Pro access after the counted competition attempt already exists", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
-      const currentTime = Date.now();
+      const currentTime = NOW;
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "competition-then-pro",
@@ -539,7 +544,7 @@ describe("tryouts/mutations/attempts", () => {
   it("rejects another competition attempt when no non-event access remains", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
-      const currentTime = Date.now();
+      const currentTime = NOW;
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "competition-attempt-used",
@@ -626,7 +631,7 @@ describe("tryouts/mutations/attempts", () => {
   it("returns access required after the counted competition campaign has ended", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
-      const currentTime = Date.now();
+      const currentTime = NOW;
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "ended-competition-attempt",
@@ -716,7 +721,7 @@ describe("tryouts/mutations/attempts", () => {
   it("ignores stale event entitlements even when the latest row still has campaign provenance", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
-      const currentTime = Date.now();
+      const currentTime = NOW;
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "stale-event-entitlement",
@@ -782,7 +787,7 @@ describe("tryouts/mutations/attempts", () => {
   it("uses the longest active access-pass window without shortening the tryout expiry", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
-      const currentTime = Date.now();
+      const currentTime = NOW;
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "longest-access-pass-window",
@@ -893,7 +898,7 @@ describe("tryouts/mutations/attempts", () => {
   it("pages through many active access-pass grants instead of blocking access", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
-      const currentTime = Date.now();
+      const currentTime = NOW;
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "many-access-pass-grants",
@@ -1085,7 +1090,7 @@ describe("tryouts/mutations/attempts", () => {
   it("reuses an already started part after the current route key changes", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
-      const currentTime = Date.now();
+      const currentTime = NOW;
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "reuse-renamed-part",

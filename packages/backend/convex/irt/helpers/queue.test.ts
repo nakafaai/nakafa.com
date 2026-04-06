@@ -102,7 +102,6 @@ describe("irt/helpers/queue", () => {
   });
 
   it("creates a new calibration run and starts the workflow", async () => {
-    vi.useFakeTimers();
     vi.setSystemTime(new Date(NOW));
 
     const t = convexTest(schema, convexModules);
@@ -337,7 +336,6 @@ describe("irt/helpers/queue", () => {
   });
 
   it("reclaims a stale claimed quality refresh row", async () => {
-    vi.useFakeTimers();
     vi.setSystemTime(new Date(NOW));
 
     const t = convexTest(schema, convexModules);

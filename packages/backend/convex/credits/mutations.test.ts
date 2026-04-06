@@ -2,11 +2,14 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("credits/mutations", () => {
+  beforeEach(() => {
+    vi.useRealTimers();
+  });
+
   it("syncs one plan reset period to the current boundary", async () => {
-    vi.useFakeTimers();
     vi.setSystemTime(new Date(Date.UTC(2026, 3, 2, 10, 0, 0)));
 
     const t = convexTest(schema, convexModules);
@@ -26,12 +29,9 @@ describe("credits/mutations", () => {
       plan: "free",
       resetAt: Date.UTC(2026, 3, 2, 0, 0, 0),
     });
-
-    vi.useRealTimers();
   });
 
   it("syncs all credit reset periods", async () => {
-    vi.useFakeTimers();
     vi.setSystemTime(new Date(Date.UTC(2026, 3, 18, 10, 0, 0)));
 
     const t = convexTest(schema, convexModules);
@@ -55,7 +55,5 @@ describe("credits/mutations", () => {
         }),
       ])
     );
-
-    vi.useRealTimers();
   });
 });

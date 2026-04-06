@@ -112,7 +112,6 @@ describe("triggers/helpers/subscriptions", () => {
   });
 
   it("returns without side effects when the customer is missing", async () => {
-    vi.useFakeTimers();
     vi.setSystemTime(new Date(NOW));
 
     const t = convexTest(schema, convexModules);
@@ -141,7 +140,6 @@ describe("triggers/helpers/subscriptions", () => {
   });
 
   it("returns without side effects when the customer user is missing", async () => {
-    vi.useFakeTimers();
     vi.setSystemTime(new Date(NOW));
 
     const t = convexTest(schema, convexModules);
@@ -173,7 +171,6 @@ describe("triggers/helpers/subscriptions", () => {
   });
 
   it("returns early when the derived plan is unchanged", async () => {
-    vi.useFakeTimers();
     vi.setSystemTime(new Date(NOW));
 
     const t = convexTest(schema, convexModules);
@@ -212,7 +209,6 @@ describe("triggers/helpers/subscriptions", () => {
   });
 
   it("upgrades a free user to pro and records a purchase transaction", async () => {
-    vi.useFakeTimers();
     vi.setSystemTime(new Date(NOW));
 
     const t = convexTest(schema, convexModules);
@@ -263,7 +259,6 @@ describe("triggers/helpers/subscriptions", () => {
   });
 
   it("downgrades a pro user to free and records the reset grant transaction", async () => {
-    vi.useFakeTimers();
     vi.setSystemTime(new Date(NOW));
 
     const t = convexTest(schema, convexModules);
@@ -314,7 +309,6 @@ describe("triggers/helpers/subscriptions", () => {
   });
 
   it("picks the highest plan across overlapping active subscriptions", async () => {
-    vi.useFakeTimers();
     vi.setSystemTime(new Date(NOW));
 
     const t = convexTest(schema, convexModules);

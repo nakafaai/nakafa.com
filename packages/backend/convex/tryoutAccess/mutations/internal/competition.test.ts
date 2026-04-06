@@ -74,7 +74,6 @@ describe("tryoutAccess/mutations/internal/competition", () => {
   });
 
   it("does not finalize competition campaigns before they end", async () => {
-    vi.useFakeTimers();
     vi.setSystemTime(new Date(NOW));
 
     const t = createTryoutTestConvex();
@@ -107,7 +106,5 @@ describe("tryoutAccess/mutations/internal/competition", () => {
 
     expect(campaign?.resultsStatus).toBe("pending");
     expect(campaign?.resultsFinalizedAt).toBeNull();
-
-    vi.useRealTimers();
   });
 });

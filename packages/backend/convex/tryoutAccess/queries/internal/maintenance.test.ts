@@ -30,7 +30,7 @@ describe("tryoutAccess/queries/internal/maintenance", () => {
         resultsFinalizedAt: null,
         startsAt: NOW - 1,
         endsAt: NOW + 24 * 60 * 60 * 1000,
-        grantDurationDays: 30,
+        grantDurationDays: 7,
       });
       await ctx.db.insert("tryoutAccessLinks", {
         campaignId: scheduledCampaignId,
@@ -49,7 +49,7 @@ describe("tryoutAccess/queries/internal/maintenance", () => {
         resultsFinalizedAt: null,
         startsAt: NOW - 24 * 60 * 60 * 1000,
         endsAt: NOW - 1,
-        grantDurationDays: 30,
+        grantDurationDays: 7,
       });
       const activeLinkId = await ctx.db.insert("tryoutAccessLinks", {
         campaignId: activeCampaignId,

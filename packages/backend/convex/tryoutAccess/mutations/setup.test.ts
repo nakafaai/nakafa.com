@@ -72,7 +72,7 @@ describe("tryoutAccess/mutations/setup", () => {
           enabled: true,
           startsAt: NOW,
           endsAt: NOW + 24 * 60 * 60 * 1000,
-          grantDurationDays: 30,
+          grantDurationDays: 7,
         },
         link: {
           code: "access-pass-yim",
@@ -87,7 +87,7 @@ describe("tryoutAccess/mutations/setup", () => {
     });
 
     expect(campaign?.campaignKind).toBe("access-pass");
-    expect(campaign?.grantDurationDays).toBe(30);
+    expect(campaign?.grantDurationDays).toBe(7);
     expect(campaign?.resultsStatus).toBe("pending");
   });
 
@@ -124,7 +124,7 @@ describe("tryoutAccess/mutations/setup", () => {
           enabled: true,
           startsAt: NOW,
           endsAt: NOW + 24 * 60 * 60 * 1000,
-          grantDurationDays: 30,
+          grantDurationDays: 7,
         },
         link: {
           code: "immutable-kind",
@@ -247,7 +247,7 @@ describe("tryoutAccess/mutations/setup", () => {
 
   it("does not allow changing campaign policy after it has been redeemed", async () => {
     const t = createTryoutTestConvex();
-    const currentTime = Date.now();
+    const currentTime = NOW;
     const identity = await t.mutation(async (ctx) => {
       const state = await seedAuthenticatedUser(ctx, {
         now: NOW,
@@ -265,7 +265,7 @@ describe("tryoutAccess/mutations/setup", () => {
             enabled: true,
             startsAt: currentTime - 60 * 1000,
             endsAt: currentTime + 24 * 60 * 60 * 1000,
-            grantDurationDays: 30,
+            grantDurationDays: 7,
           },
           link: {
             code: "locked-policy",
@@ -306,7 +306,7 @@ describe("tryoutAccess/mutations/setup", () => {
           enabled: true,
           startsAt: currentTime - 60 * 1000,
           endsAt: currentTime + 2 * 24 * 60 * 60 * 1000,
-          grantDurationDays: 45,
+          grantDurationDays: 14,
         },
         link: {
           code: "locked-policy",
@@ -319,7 +319,7 @@ describe("tryoutAccess/mutations/setup", () => {
 
   it("keeps campaign policy locked after redeemed grants are cleaned up", async () => {
     const t = createTryoutTestConvex();
-    const currentTime = Date.now();
+    const currentTime = NOW;
     const identity = await t.mutation(async (ctx) => {
       const state = await seedAuthenticatedUser(ctx, {
         now: NOW,
@@ -337,7 +337,7 @@ describe("tryoutAccess/mutations/setup", () => {
             enabled: true,
             startsAt: currentTime - 60 * 1000,
             endsAt: currentTime + 24 * 60 * 60 * 1000,
-            grantDurationDays: 30,
+            grantDurationDays: 7,
           },
           link: {
             code: "locked-policy-cleanup",
@@ -373,7 +373,7 @@ describe("tryoutAccess/mutations/setup", () => {
           enabled: true,
           startsAt: currentTime - 60 * 1000,
           endsAt: currentTime + 2 * 24 * 60 * 60 * 1000,
-          grantDurationDays: 45,
+          grantDurationDays: 14,
         },
         link: {
           code: "locked-policy-cleanup",

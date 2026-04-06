@@ -10,10 +10,14 @@ const config = defineConfig({
       enabled: true,
       provider: "istanbul",
     },
+    setupFiles: ["./vitest.setup.ts"],
     projects: [
       {
         extends: true,
         test: {
+          coverage: {
+            reportsDirectory: "./coverage/convex",
+          },
           name: "convex",
           include: ["convex/**/*.test.ts"],
           exclude: ["**/node_modules/**", "coverage/**"],
@@ -23,6 +27,9 @@ const config = defineConfig({
       {
         extends: true,
         test: {
+          coverage: {
+            reportsDirectory: "./coverage/backend",
+          },
           name: "backend",
           include: ["**/*.test.ts"],
           exclude: ["convex/**", "**/node_modules/**", "coverage/**"],

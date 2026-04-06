@@ -7,7 +7,8 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 
-export const NOW = Date.UTC(2026, 3, 3, 9, 0, 0);
+/** Anchors tryout tests to the current runtime clock. */
+export const NOW = Date.now();
 export const ATTEMPT_WINDOW_MS = 3 * 24 * 60 * 60 * 1000;
 
 /** Builds the Convex test instance used by tryout backend tests. */

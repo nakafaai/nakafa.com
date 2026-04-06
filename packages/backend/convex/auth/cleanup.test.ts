@@ -2,14 +2,18 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
 import { insertTryoutAccessCampaign } from "@repo/backend/convex/tryoutAccess/test.helpers";
 import {
+  ATTEMPT_WINDOW_MS,
   createTryoutTestConvex,
-  insertCompletedTryoutAttempt,
   insertTryoutSkeleton,
   NOW,
 } from "@repo/backend/convex/tryouts/test.helpers";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("auth/cleanup", () => {
+  beforeEach(() => {
+    vi.setSystemTime(new Date(NOW));
+  });
+
   it("deletes tryout runtime and access rows with the app user", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
@@ -22,14 +26,60 @@ describe("auth/cleanup", () => {
         ctx,
         slug
       );
-      const { setAttemptId, tryoutAttemptId } =
-        await insertCompletedTryoutAttempt(ctx, {
-          scaleVersionId,
-          setId,
-          slug,
-          tryoutId,
-          userId: identity.userId,
-        });
+      const setAttemptId = await ctx.db.insert("exerciseAttempts", {
+        slug: `exercises/high-school/snbt/quantitative-knowledge/try-out/2026/${slug}`,
+        userId: identity.userId,
+        origin: "tryout",
+        mode: "simulation",
+        scope: "set",
+        timeLimit: 1800,
+        startedAt: NOW,
+        lastActivityAt: NOW,
+        completedAt: null,
+        endReason: null,
+        status: "in-progress",
+        updatedAt: NOW,
+        totalExercises: 20,
+        answeredCount: 1,
+        correctAnswers: 1,
+        totalTime: 30,
+        scorePercentage: 100,
+      });
+      const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
+        userId: identity.userId,
+        tryoutId,
+        scaleVersionId,
+        scoreStatus: "official",
+        status: "in-progress",
+        partSetSnapshots: [
+          {
+            partIndex: 0,
+            partKey: "quantitative-knowledge",
+            questionCount: 20,
+            setId,
+          },
+        ],
+        completedPartIndices: [],
+        totalCorrect: 1,
+        totalQuestions: 1,
+        theta: 0,
+        thetaSE: 1,
+        startedAt: NOW,
+        expiresAt: NOW + ATTEMPT_WINDOW_MS,
+        lastActivityAt: NOW,
+        completedAt: null,
+        endReason: null,
+      });
+
+      await ctx.db.insert("tryoutPartAttempts", {
+        tryoutAttemptId,
+        partIndex: 0,
+        partKey: "quantitative-knowledge",
+        setAttemptId,
+        setId,
+        theta: 0,
+        thetaSE: 1,
+      });
       const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug,
         name: "Cleanup Runtime Campaign",
@@ -41,7 +91,7 @@ describe("auth/cleanup", () => {
         resultsFinalizedAt: null,
         startsAt: NOW - 60 * 1000,
         endsAt: NOW + 24 * 60 * 60 * 1000,
-        grantDurationDays: 30,
+        grantDurationDays: 7,
       });
       const linkId = await ctx.db.insert("tryoutAccessLinks", {
         campaignId,

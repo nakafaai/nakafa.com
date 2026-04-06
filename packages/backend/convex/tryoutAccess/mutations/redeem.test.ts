@@ -10,7 +10,7 @@ describe("tryoutAccess/mutations/redeem", () => {
   it("redeems competition access until the campaign end", async () => {
     const t = createTryoutTestConvex();
     const identity = await t.mutation(async (ctx) => {
-      const currentTime = Date.now();
+      const currentTime = NOW;
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "redeem-competition",
@@ -58,7 +58,7 @@ describe("tryoutAccess/mutations/redeem", () => {
   it("redeems access-pass access using the configured grant duration", async () => {
     const t = createTryoutTestConvex();
     const identity = await t.mutation(async (ctx) => {
-      const currentTime = Date.now();
+      const currentTime = NOW;
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "redeem-access-pass",
@@ -75,7 +75,7 @@ describe("tryoutAccess/mutations/redeem", () => {
             enabled: true,
             startsAt: currentTime - 60 * 1000,
             endsAt: currentTime + 24 * 60 * 60 * 1000,
-            grantDurationDays: 30,
+            grantDurationDays: 7,
           },
           link: {
             code: "redeem-access-pass",
@@ -87,7 +87,7 @@ describe("tryoutAccess/mutations/redeem", () => {
 
       return {
         ...identity,
-        earliestEndsAt: currentTime + 30 * 24 * 60 * 60 * 1000,
+        earliestEndsAt: currentTime + 7 * 24 * 60 * 60 * 1000,
       };
     });
 
@@ -108,7 +108,7 @@ describe("tryoutAccess/mutations/redeem", () => {
   it("redeems once the real campaign window has started even if stored redeemStatus is still scheduled", async () => {
     const t = createTryoutTestConvex();
     const identity = await t.mutation(async (ctx) => {
-      const currentTime = Date.now();
+      const currentTime = NOW;
       const state = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "redeem-stale-scheduled",
@@ -159,7 +159,7 @@ describe("tryoutAccess/mutations/redeem", () => {
   it("rejects once the real campaign window has ended even if stored redeemStatus is still active", async () => {
     const t = createTryoutTestConvex();
     const identity = await t.mutation(async (ctx) => {
-      const currentTime = Date.now();
+      const currentTime = NOW;
       const state = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "redeem-stale-active",
