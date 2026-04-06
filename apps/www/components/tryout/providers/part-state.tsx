@@ -3,11 +3,13 @@
 import { usePreloadedAuthQuery } from "@convex-dev/better-auth/nextjs/client";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
-import { useRouter } from "@repo/internationalization/src/navigation";
+import {
+  getPathname,
+  useRouter,
+} from "@repo/internationalization/src/navigation";
 import type { Preloaded } from "convex/react";
 import { useMutation } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { ConvexError } from "convex/values";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import {
@@ -18,6 +20,7 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { createContext, useContextSelector } from "use-context-selector";
+import { completeTryoutPart } from "@/components/tryout/actions/part";
 import { useTryoutClock } from "@/components/tryout/hooks/use-tryout-clock";
 import { useTryoutStartFlow } from "@/components/tryout/hooks/use-tryout-start-flow";
 import type {
@@ -122,7 +125,6 @@ function useResolvedTryoutPartValue({
     initialNowMs
   );
   const startPart = useMutation(api.tryouts.mutations.attempts.startPart);
-  const completePart = useMutation(api.tryouts.mutations.attempts.completePart);
   const {
     answers,
     attempt,
@@ -137,23 +139,16 @@ function useResolvedTryoutPartValue({
     runtime,
   });
   const shouldShowTryoutStartControls = status === "needs-tryout";
+  const setHref = `/try-out/${tryout.product}/${tryout.slug}`;
+  const setPath = getPathname({
+    forcePrefix: true,
+    href: setHref,
+    locale: tryout.locale,
+  });
 
   const goToSet = useCallback(() => {
-    router.push(`/try-out/${tryout.product}/${tryout.slug}`);
-  }, [router, tryout.product, tryout.slug]);
-
-  const completeCurrentPart = useCallback(async () => {
-    if (!(runtime && attempt)) {
-      return false;
-    }
-
-    await completePart({
-      partKey: part.key,
-      tryoutAttemptId: runtime.tryoutAttempt._id,
-    });
-
-    return true;
-  }, [attempt, completePart, part.key, runtime]);
+    router.push(setHref);
+  }, [router, setHref]);
 
   const timer = useExerciseTimer({
     attempt,
@@ -197,42 +192,39 @@ function useResolvedTryoutPartValue({
 
   const completePartAction = useCallback(() => {
     startTransition(async () => {
-      try {
-        const didCompletePart = await completeCurrentPart();
+      if (!(runtime && attempt)) {
+        return;
+      }
 
-        if (!didCompletePart) {
-          return;
-        }
+      const result = await completeTryoutPart({
+        partKey: part.key,
+        redirectTo: setPath,
+        tryoutAttemptId: runtime.tryoutAttempt._id,
+      });
 
+      if (result.ok) {
         goToSet();
         toast.success(tTryouts("complete-part-success"), {
           position: "bottom-center",
         });
-      } catch (error) {
-        if (error instanceof ConvexError) {
-          const errorData = error.data;
+        return;
+      }
 
-          if (typeof errorData === "object" && errorData !== null) {
-            const errorCode = "code" in errorData ? errorData.code : undefined;
-
-            if (
-              errorCode === "TRYOUT_EXPIRED" ||
-              errorCode === "TRYOUT_PART_EXPIRED"
-            ) {
-              toast.info(tTryouts("part-head-processing-expiry"), {
-                position: "bottom-center",
-              });
-              return;
-            }
-          }
-        }
-
-        toast.error(tTryouts("complete-part-error"), {
+      if (
+        result.code === "TRYOUT_EXPIRED" ||
+        result.code === "TRYOUT_PART_EXPIRED"
+      ) {
+        toast.info(tTryouts("part-head-processing-expiry"), {
           position: "bottom-center",
         });
+        return;
       }
+
+      toast.error(tTryouts("complete-part-error"), {
+        position: "bottom-center",
+      });
     });
-  }, [completeCurrentPart, goToSet, tTryouts]);
+  }, [attempt, goToSet, part.key, runtime, setPath, tTryouts]);
 
   return useMemo(
     () => ({
