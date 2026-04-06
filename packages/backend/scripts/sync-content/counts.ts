@@ -18,17 +18,22 @@ const countTableSpecs: Array<{
   { field: "exerciseQuestions", tableName: "exerciseQuestions" },
   { field: "exerciseAttempts", tableName: "exerciseAttempts" },
   { field: "exerciseAnswers", tableName: "exerciseAnswers" },
+  { field: "tryoutAccessCampaigns", tableName: "tryoutAccessCampaigns" },
+  {
+    field: "tryoutAccessCampaignProducts",
+    tableName: "tryoutAccessCampaignProducts",
+  },
+  { field: "tryoutAccessLinks", tableName: "tryoutAccessLinks" },
+  { field: "tryoutAccessGrants", tableName: "tryoutAccessGrants" },
   { field: "tryouts", tableName: "tryouts" },
+  { field: "tryoutCatalogMeta", tableName: "tryoutCatalogMeta" },
+  { field: "userTryoutEntitlements", tableName: "userTryoutEntitlements" },
   { field: "tryoutPartSets", tableName: "tryoutPartSets" },
   { field: "tryoutAttempts", tableName: "tryoutAttempts" },
   { field: "tryoutPartAttempts", tableName: "tryoutPartAttempts" },
   {
     field: "tryoutLeaderboardEntries",
     tableName: "tryoutLeaderboardEntries",
-  },
-  {
-    field: "userTryoutLatestAttempts",
-    tableName: "userTryoutLatestAttempts",
   },
   { field: "userTryoutStats", tableName: "userTryoutStats" },
   { field: "irtCalibrationQueue", tableName: "irtCalibrationQueue" },
@@ -59,6 +64,7 @@ const countTableSpecs: Array<{
   { field: "exerciseChoices", tableName: "exerciseChoices" },
 ];
 
+/** Counts every document in one Convex table through bounded paginated reads. */
 const countTableDocuments = async (config: ConvexConfig, tableName: string) => {
   let count = 0;
   let continueCursor: string | null = null;
@@ -85,6 +91,7 @@ const countTableDocuments = async (config: ConvexConfig, tableName: string) => {
   return count;
 };
 
+/** Loads the current row counts for every sync-managed content/runtime table. */
 export const getContentCounts = async (
   config: ConvexConfig
 ): Promise<ContentCounts> => {

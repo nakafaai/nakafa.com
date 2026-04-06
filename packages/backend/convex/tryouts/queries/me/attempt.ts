@@ -6,6 +6,7 @@ import {
   buildTryoutPartRouteMappings,
   loadValidatedTryoutPartSets,
 } from "@repo/backend/convex/tryouts/helpers/parts";
+import { getTryoutPublicResultStatus } from "@repo/backend/convex/tryouts/helpers/publicResultStatus";
 import { getTryoutReportScore } from "@repo/backend/convex/tryouts/helpers/reporting";
 import { resolveResumePartKey } from "@repo/backend/convex/tryouts/helpers/resume";
 import { loadLatestUserTryoutContext } from "@repo/backend/convex/tryouts/queries/me/helpers";
@@ -33,6 +34,9 @@ export const getUserTryoutAttempt = query({
     }
 
     const { attempt, tryout } = context;
+    const accessCampaign = attempt.accessCampaignId
+      ? await ctx.db.get("tryoutAccessCampaigns", attempt.accessCampaignId)
+      : null;
     const currentPartSets = await loadValidatedTryoutPartSets(ctx.db, {
       partCount: tryout.partCount,
       tryoutId: tryout._id,
@@ -60,6 +64,10 @@ export const getUserTryoutAttempt = query({
       const scoredAttempt = {
         ...attempt,
         irtScore: finalizedSnapshot.irtScore,
+        publicResultStatus: getTryoutPublicResultStatus({
+          accessCampaign,
+          tryoutAttempt: attempt,
+        }),
         theta: finalizedSnapshot.theta,
         thetaSE: finalizedSnapshot.thetaSE,
         totalCorrect: finalizedSnapshot.totalCorrect,
@@ -145,6 +153,10 @@ export const getUserTryoutAttempt = query({
     const scoredAttempt = {
       ...attempt,
       irtScore: getTryoutReportScore(tryout.product, attempt.theta),
+      publicResultStatus: getTryoutPublicResultStatus({
+        accessCampaign,
+        tryoutAttempt: attempt,
+      }),
     };
 
     if (attempt.status !== "in-progress") {

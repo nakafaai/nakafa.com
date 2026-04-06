@@ -70,7 +70,7 @@ export const getConvexConfig = (options: SyncOptions = {}): ConvexConfig => {
 
 const requestConvex = async <T>(
   config: ConvexConfig,
-  endpoint: "mutation" | "query",
+  endpoint: "action" | "mutation" | "query",
   functionPath: string,
   args: Record<string, unknown>,
   schema: z.ZodType<T>
@@ -130,4 +130,13 @@ export const runConvexQueryWithArgs = <T>(
   schema: z.ZodType<T>
 ): Promise<T> => {
   return requestConvex(config, "query", functionPath, args, schema);
+};
+
+export const runConvexActionWithArgs = <T>(
+  config: ConvexConfig,
+  functionPath: string,
+  args: Record<string, unknown>,
+  schema: z.ZodType<T>
+): Promise<T> => {
+  return requestConvex(config, "action", functionPath, args, schema);
 };

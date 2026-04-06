@@ -2,10 +2,8 @@ import { api } from "@repo/backend/convex/_generated/api";
 import {
   isTryoutProduct,
   type TryoutProduct,
-  tryoutProducts,
 } from "@repo/backend/convex/tryouts/products";
 import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
-import { routing } from "@repo/internationalization/src/routing";
 import { fetchQuery } from "convex/nextjs";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
@@ -15,29 +13,15 @@ import { TryoutPageMeta } from "@/components/tryout/page-meta";
 import { TryoutAttemptStateProvider } from "@/components/tryout/providers/attempt-state";
 import { TryoutSetParts } from "@/components/tryout/set-parts";
 import { TryoutStartButton } from "@/components/tryout/start-button";
-import { getStaticTryouts } from "@/lib/utils/pages/tryouts";
+import { getToken, preloadAuthQuery } from "@/lib/auth/server";
 
 interface Props {
   params: Promise<{ locale: Locale; product: string; slug: string }>;
 }
 
-export async function generateStaticParams() {
-  const staticTryouts = await Promise.all(
-    tryoutProducts.map((product) =>
-      getStaticTryouts({ locale: routing.defaultLocale, product })
-    )
-  );
-
-  return staticTryouts.flatMap((tryouts) =>
-    tryouts.map((tryout) => ({
-      product: tryout.product,
-      slug: tryout.slug,
-    }))
-  );
-}
-
 export default async function Page({ params }: Props) {
   const { locale, product: productParam, slug } = await params;
+  const initialNowMs = Date.now();
 
   setRequestLocale(locale);
 
@@ -46,7 +30,7 @@ export default async function Page({ params }: Props) {
   }
   const product: TryoutProduct = productParam;
 
-  const [tCommon, tExercises, tTryouts, details] = await Promise.all([
+  const [tCommon, tExercises, tTryouts, details, token] = await Promise.all([
     getTranslations({ locale, namespace: "Common" }),
     getTranslations({ locale, namespace: "Exercises" }),
     getTranslations({ locale, namespace: "Tryouts" }),
@@ -55,11 +39,23 @@ export default async function Page({ params }: Props) {
       product,
       slug,
     }),
+    getToken(),
   ]);
 
   if (!details) {
     notFound();
   }
+
+  const preloadedAttempt = token
+    ? await preloadAuthQuery(
+        api.tryouts.queries.me.attempt.getUserTryoutAttempt,
+        {
+          locale,
+          product,
+          tryoutSlug: slug,
+        }
+      )
+    : undefined;
 
   const tryoutLabel = details.tryout.label;
 
@@ -67,7 +63,9 @@ export default async function Page({ params }: Props) {
     <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
       <div className="space-y-10">
         <TryoutAttemptStateProvider
+          initialNowMs={initialNowMs}
           locale={locale}
+          preloadedAttempt={preloadedAttempt}
           product={product}
           tryoutSlug={details.tryout.slug}
         >
@@ -92,7 +90,7 @@ export default async function Page({ params }: Props) {
             <TryoutSetParts
               parts={details.parts.map((part) => {
                 const materialLabel = ExercisesMaterialSchema.safeParse(
-                  part.partKey
+                  part.material
                 );
 
                 return {

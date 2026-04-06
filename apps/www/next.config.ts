@@ -28,6 +28,9 @@ let nextConfig: NextConfig = {
     ],
     "/\\[locale\\]/exercises/\\[category\\]/\\[type\\]/\\[material\\]/\\[\\.\\.\\.slug\\]":
       ["../../packages/contents/{articles,exercises,subject,_data}/**/*"],
+    "/\\[locale\\]/try-out/\\[product\\]/\\[slug\\]/part/\\[partKey\\]": [
+      "../../packages/contents/{articles,exercises,subject,_data}/**/*",
+    ],
   },
   serverExternalPackages: [
     ...(config.serverExternalPackages ?? []),

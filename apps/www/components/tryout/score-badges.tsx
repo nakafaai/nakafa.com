@@ -53,15 +53,24 @@ export function TryoutAttemptStatusBadge({
 export function TryoutScoreStatusBadge({
   status,
 }: {
-  status: TryoutAttempt["scoreStatus"];
+  status: TryoutAttempt["publicResultStatus"];
 }) {
   const tTryouts = useTranslations("Tryouts");
 
-  if (status === "official") {
+  if (status === "verified-irt") {
     return (
       <Badge variant="default">
         <HugeIcons icon={Certificate02Icon} />
-        {tTryouts("score-status-official")}
+        {tTryouts("score-status-verified-irt")}
+      </Badge>
+    );
+  }
+
+  if (status === "final-event") {
+    return (
+      <Badge variant="secondary">
+        <HugeIcons icon={Flag03Icon} />
+        {tTryouts("score-status-final-event")}
       </Badge>
     );
   }
@@ -69,7 +78,7 @@ export function TryoutScoreStatusBadge({
   return (
     <Badge variant="destructive">
       <HugeIcons icon={Comet02Icon} />
-      {tTryouts("score-status-provisional")}
+      {tTryouts("score-status-estimated")}
     </Badge>
   );
 }

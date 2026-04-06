@@ -2,6 +2,7 @@
 
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
+import type { Preloaded } from "convex/react";
 import type { ComponentProps, ReactNode } from "react";
 import { useState } from "react";
 import {
@@ -35,20 +36,33 @@ import { ExerciseContextProvider } from "@/lib/context/use-exercise";
 export interface TryoutPartRuntimeProps {
   children: ReactNode;
   icon?: ComponentProps<typeof TryoutPartHead>["icon"];
+  initialNowMs?: number;
   part: TryoutPartValue;
+  preloadedRuntime?: Preloaded<
+    typeof api.tryouts.queries.me.part.getUserTryoutPartAttempt
+  >;
   tryout: TryoutValue;
 }
 
 export function TryoutPartRuntime({
   children,
   icon,
+  initialNowMs,
+  preloadedRuntime,
   part,
   tryout,
 }: TryoutPartRuntimeProps) {
   return (
     <ExerciseContextProvider slug={part.setSlug}>
-      <TryoutPartProvider part={part} tryout={tryout}>
-        <TryoutPartRuntimeBody icon={icon}>{children}</TryoutPartRuntimeBody>
+      <TryoutPartProvider
+        initialNowMs={initialNowMs}
+        part={part}
+        preloadedRuntime={preloadedRuntime}
+        tryout={tryout}
+      >
+        <TryoutPartRuntimeBody icon={icon} initialNowMs={initialNowMs}>
+          {children}
+        </TryoutPartRuntimeBody>
       </TryoutPartProvider>
     </ExerciseContextProvider>
   );
@@ -57,7 +71,8 @@ export function TryoutPartRuntime({
 function TryoutPartRuntimeBody({
   children,
   icon,
-}: Pick<TryoutPartRuntimeProps, "children" | "icon">) {
+  initialNowMs,
+}: Pick<TryoutPartRuntimeProps, "children" | "icon" | "initialNowMs">) {
   const attempt = useTryoutPart((state) => state.state.attempt);
   const answers = useTryoutPart((state) => state.state.answers);
   const isInputLocked = useTryoutPart((state) => state.state.isAwaitingExpiry);
@@ -94,7 +109,7 @@ function TryoutPartRuntimeBody({
 
         <div className="space-y-12">
           <TryoutPartCompletionControls />
-          <TryoutPartSummaryCard />
+          <TryoutPartSummaryCard initialNowMs={initialNowMs} />
           {shouldShowQuestions ? children : null}
         </div>
       </div>
@@ -116,7 +131,9 @@ function TryoutPartCompletionControls() {
   );
 }
 
-function TryoutPartSummaryCard() {
+function TryoutPartSummaryCard({
+  initialNowMs,
+}: Pick<TryoutPartRuntimeProps, "initialNowMs">) {
   const status = useTryoutPart((state) => state.state.status);
 
   if (status === "in-progress") {
@@ -133,7 +150,7 @@ function TryoutPartSummaryCard() {
         </TryoutPartLead>
 
         <TryoutPartCtas>
-          <TryoutPartTryoutStartButton />
+          <TryoutPartTryoutStartButton initialNowMs={initialNowMs} />
           <TryoutPartStartCta />
           <TryoutPartBackCta />
         </TryoutPartCtas>
@@ -142,7 +159,9 @@ function TryoutPartSummaryCard() {
   );
 }
 
-function TryoutPartTryoutStartButton() {
+function TryoutPartTryoutStartButton({
+  initialNowMs,
+}: Pick<TryoutPartRuntimeProps, "initialNowMs">) {
   const shouldShowTryoutStartButton = useTryoutPart(
     (state) => state.state.shouldShowTryoutStartButton
   );
@@ -154,6 +173,7 @@ function TryoutPartTryoutStartButton() {
 
   return (
     <TryoutAttemptStateProvider
+      initialNowMs={initialNowMs}
       locale={tryout.locale}
       product={tryout.product}
       tryoutSlug={tryout.slug}

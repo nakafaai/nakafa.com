@@ -27,7 +27,6 @@ const snbtPartLabels = getSubjects("snbt").map((subject) => subject.label);
 const snbtPartOrder = new Map(
   snbtPartLabels.map((material, index) => [material, index])
 );
-
 /** Extracts the SNBT cycle year from a yearful tryout set slug. */
 function getSnbtCycleKeyFromSetSlug(setSlug: Doc<"exerciseSets">["slug"]) {
   const match = setSlug.match(YEARFUL_TRYOUT_SET_SLUG_REGEX);
@@ -41,13 +40,22 @@ function getSnbtCycleKeyFromSetSlug(setSlug: Doc<"exerciseSets">["slug"]) {
 
 /** Sorts SNBT tryouts by newest cycle and then by label. */
 function compareSnbtTryouts(
-  left: Pick<Doc<"tryouts">, "cycleKey" | "label">,
-  right: Pick<Doc<"tryouts">, "cycleKey" | "label">
+  left: Pick<Doc<"tryouts">, "cycleKey" | "label" | "slug">,
+  right: Pick<Doc<"tryouts">, "cycleKey" | "label" | "slug">
 ) {
-  return (
-    right.cycleKey.localeCompare(left.cycleKey) ||
-    left.label.localeCompare(right.label)
-  );
+  const cycleComparison = right.cycleKey.localeCompare(left.cycleKey);
+
+  if (cycleComparison !== 0) {
+    return cycleComparison;
+  }
+
+  const labelComparison = left.label.localeCompare(right.label);
+
+  if (labelComparison !== 0) {
+    return labelComparison;
+  }
+
+  return left.slug.localeCompare(right.slug);
 }
 
 /**

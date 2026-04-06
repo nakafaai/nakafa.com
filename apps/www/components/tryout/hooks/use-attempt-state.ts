@@ -1,120 +1,41 @@
 "use client";
 
+import type { api } from "@repo/backend/convex/_generated/api";
+import type { Preloaded } from "convex/react";
+import { usePreloadedQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import {
   type TryoutAttemptParams,
   useTryoutAttempt,
 } from "@/components/tryout/hooks/use-tryout-attempt";
-import {
-  getEffectivePartAttemptStatus,
-  getEffectiveTryoutStatus,
-} from "@/components/tryout/utils/status";
+import { useTryoutClock } from "@/components/tryout/hooks/use-tryout-clock";
+import { getEffectiveTryoutStatus } from "@/components/tryout/utils/status";
 import type { UseExerciseTimerReturn } from "@/lib/hooks/use-exercise-timer";
 
+type TryoutAttemptData =
+  | FunctionReturnType<
+      typeof api.tryouts.queries.me.attempt.getUserTryoutAttempt
+    >
+  | undefined;
 type TryoutRemainingTime = UseExerciseTimerReturn["formatted"];
-type TryoutAttemptData = NonNullable<
-  ReturnType<typeof useTryoutAttempt>["data"]
+type PreloadedTryoutAttempt = Preloaded<
+  typeof api.tryouts.queries.me.attempt.getUserTryoutAttempt
 >;
-type TryoutPartAttempt = TryoutAttemptData["partAttempts"][number];
-type OrderedTryoutPart = TryoutAttemptData["orderedParts"][number];
 
-/** Picks the next part key the student should resume in an active tryout. */
-function getResumePartKey({
+/** Derives shared CTA state from one resolved or pending tryout attempt source. */
+function useResolvedTryoutAttemptStateValue({
   attemptData,
-  effectiveStatus,
-  nowMs,
+  initialNowMs,
+  isAttemptPending,
 }: {
-  attemptData: ReturnType<typeof useTryoutAttempt>["data"] | undefined;
-  effectiveStatus: ReturnType<typeof getEffectiveTryoutStatus> | undefined;
-  nowMs: number;
+  attemptData: TryoutAttemptData;
+  initialNowMs?: number;
+  isAttemptPending: boolean;
 }) {
-  if (!(attemptData && effectiveStatus === "in-progress")) {
-    return undefined;
-  }
-
-  const activePartAttempts: Array<
-    TryoutPartAttempt & {
-      setAttempt: NonNullable<TryoutPartAttempt["setAttempt"]>;
-    }
-  > = [];
-
-  for (const partAttempt of attemptData.partAttempts) {
-    if (!partAttempt.setAttempt) {
-      continue;
-    }
-
-    if (
-      getEffectivePartAttemptStatus({
-        expiresAtMs: attemptData.expiresAtMs,
-        nowMs,
-        setAttempt: partAttempt.setAttempt,
-      }) !== "in-progress"
-    ) {
-      continue;
-    }
-
-    activePartAttempts.push({
-      ...partAttempt,
-      setAttempt: partAttempt.setAttempt,
-    });
-  }
-
-  if (activePartAttempts.length === 0) {
-    const locallyEndedPartIndices = new Set(
-      attemptData.attempt.completedPartIndices
-    );
-
-    for (const partAttempt of attemptData.partAttempts) {
-      if (locallyEndedPartIndices.has(partAttempt.partIndex)) {
-        continue;
-      }
-
-      if (partAttempt.setAttempt === null) {
-        continue;
-      }
-
-      if (
-        getEffectivePartAttemptStatus({
-          expiresAtMs: attemptData.expiresAtMs,
-          nowMs,
-          setAttempt: partAttempt.setAttempt,
-        }) === "in-progress"
-      ) {
-        continue;
-      }
-
-      locallyEndedPartIndices.add(partAttempt.partIndex);
-    }
-
-    const nextAvailablePart = attemptData.orderedParts.find(
-      (part: OrderedTryoutPart) => !locallyEndedPartIndices.has(part.partIndex)
-    );
-
-    return nextAvailablePart?.partKey;
-  }
-
-  activePartAttempts.sort(
-    (left, right) =>
-      right.setAttempt.lastActivityAt - left.setAttempt.lastActivityAt
+  const nowMs = useTryoutClock(
+    Boolean(attemptData && attemptData.attempt.status === "in-progress"),
+    initialNowMs
   );
-
-  return activePartAttempts[0]?.partKey;
-}
-
-/** Derives the current tryout CTA state from the user's latest attempt. */
-export function useTryoutAttemptStateValue({
-  locale,
-  product,
-  tryoutSlug,
-}: TryoutAttemptParams) {
-  const {
-    data: attemptData,
-    isPending: isAttemptPending,
-    nowMs,
-  } = useTryoutAttempt({
-    locale,
-    product,
-    tryoutSlug,
-  });
 
   const effectiveStatus = attemptData
     ? getEffectiveTryoutStatus({
@@ -124,11 +45,8 @@ export function useTryoutAttemptStateValue({
       })
     : undefined;
   const isTryoutInProgress = effectiveStatus === "in-progress";
-  const resumePartKey = getResumePartKey({
-    attemptData,
-    effectiveStatus,
-    nowMs,
-  });
+  const resumePartKey =
+    effectiveStatus === "in-progress" ? attemptData?.resumePartKey : undefined;
 
   let remainingTime: TryoutRemainingTime | null = null;
 
@@ -155,6 +73,46 @@ export function useTryoutAttemptStateValue({
   };
 }
 
+/** Derives the current tryout CTA state from the user's latest attempt. */
+export function useTryoutAttemptStateValue({
+  initialNowMs,
+  locale,
+  product,
+  tryoutSlug,
+}: TryoutAttemptParams & { initialNowMs?: number }) {
+  const { data: attemptData, isPending: isAttemptPending } = useTryoutAttempt(
+    {
+      locale,
+      product,
+      tryoutSlug,
+    },
+    initialNowMs
+  );
+
+  return useResolvedTryoutAttemptStateValue({
+    attemptData,
+    initialNowMs,
+    isAttemptPending,
+  });
+}
+
+/** Derives the current tryout CTA state from an authenticated preloaded attempt. */
+export function usePreloadedTryoutAttemptStateValue({
+  initialNowMs,
+  preloadedAttempt,
+}: {
+  initialNowMs?: number;
+  preloadedAttempt: PreloadedTryoutAttempt;
+}) {
+  const attemptData = usePreloadedQuery(preloadedAttempt);
+
+  return useResolvedTryoutAttemptStateValue({
+    attemptData,
+    initialNowMs,
+    isAttemptPending: false,
+  });
+}
+
 export type TryoutAttemptStateValue = ReturnType<
-  typeof useTryoutAttemptStateValue
+  typeof useResolvedTryoutAttemptStateValue
 >;

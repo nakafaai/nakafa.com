@@ -6,6 +6,7 @@ exercise sets.
 ## Related Docs
 
 - Explainer Bahasa Indonesia: `./docs/EXPLAINER.id.md`
+- Architecture Bahasa Indonesia: `./docs/ARCHITECTURE.id.md`
 - Product policy try out: `../tryouts/docs/PRODUCT_POLICY.id.md`
 
 ## Documented Basis

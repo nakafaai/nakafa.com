@@ -48,10 +48,10 @@ export function ProButton() {
     currentUser ? { productId: products.pro.id } : "skip"
   );
   const generateCheckoutLink = useAction(
-    api.customers.actions.generateCheckoutLink
+    api.customers.actions.public.generateCheckoutLink
   );
   const generateCustomerPortalUrl = useAction(
-    api.customers.actions.generateCustomerPortalUrl
+    api.customers.actions.public.generateCustomerPortalUrl
   );
 
   const handleCheckout = () => {

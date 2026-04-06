@@ -4,7 +4,9 @@ import { customersCreate } from "@polar-sh/sdk/funcs/customersCreate.js";
 import { customersDelete } from "@polar-sh/sdk/funcs/customersDelete.js";
 import { customersGet } from "@polar-sh/sdk/funcs/customersGet.js";
 import { customersGetExternal } from "@polar-sh/sdk/funcs/customersGetExternal.js";
+import { customersList } from "@polar-sh/sdk/funcs/customersList.js";
 import { customersUpdate } from "@polar-sh/sdk/funcs/customersUpdate.js";
+import { HTTPValidationError } from "@polar-sh/sdk/models/errors/httpvalidationerror.js";
 import { PolarError } from "@polar-sh/sdk/models/errors/polarerror.js";
 import { polarClient } from "@repo/backend/convex/utils/polar/client";
 import { ConvexError } from "convex/values";
@@ -33,6 +35,21 @@ function isMissingPolarCustomer(error: unknown) {
   return error instanceof PolarError && error.statusCode === 404;
 }
 
+/** Detect Polar's exact duplicate-email validation failure. */
+function isDuplicatePolarCustomerEmailError(error: unknown) {
+  if (!(error instanceof HTTPValidationError)) {
+    return false;
+  }
+
+  return (error.detail ?? []).some(
+    (detail) =>
+      detail.loc.length === 2 &&
+      detail.loc[0] === "body" &&
+      detail.loc[1] === "email" &&
+      detail.msg === "A customer with this email address already exists."
+  );
+}
+
 /** Normalize the subset of Polar customer fields the app persists locally. */
 function toPolarCustomerResult(customer: {
   id: string;
@@ -50,12 +67,33 @@ function toPolarCustomerResult(customer: {
   };
 }
 
+/** Loads the exact Polar customer that already owns one email address. */
+async function findPolarCustomerByEmail(email: string) {
+  const page = await customersList(polarClient, {
+    email,
+    limit: 1,
+  });
+
+  if (!page.ok) {
+    throw page.error;
+  }
+
+  const customer = page.value.result.items[0] ?? null;
+
+  if (!customer) {
+    return null;
+  }
+
+  return sanitize(customer);
+}
+
 /**
  * Keep one existing Polar customer aligned with the app's latest email, name,
  * and metadata, while staying idempotent when nothing changed.
  */
 async function syncExistingCustomer(
   customer: {
+    externalId?: string | null;
     id: string;
     email: string;
     metadata?: PolarMetadata | null;
@@ -63,6 +101,7 @@ async function syncExistingCustomer(
   },
   args: {
     email: string;
+    externalId: string;
     metadata?: PolarMetadata;
     name: string;
   }
@@ -70,10 +109,23 @@ async function syncExistingCustomer(
   const currentMetadata = JSON.stringify(customer.metadata ?? {});
   const nextMetadata = JSON.stringify(args.metadata ?? {});
 
+  if (customer.externalId && customer.externalId !== args.externalId) {
+    throw new ConvexError({
+      code: "POLAR_CUSTOMER_EMAIL_CONFLICT",
+      message:
+        "This email is already linked to a different Polar customer identity.",
+      detail: JSON.stringify({
+        existingExternalId: customer.externalId,
+        polarCustomerId: customer.id,
+      }),
+    });
+  }
+
   if (
     customer.email === args.email &&
     customer.name === args.name &&
-    currentMetadata === nextMetadata
+    currentMetadata === nextMetadata &&
+    customer.externalId === args.externalId
   ) {
     return toPolarCustomerResult(customer);
   }
@@ -82,6 +134,7 @@ async function syncExistingCustomer(
     id: customer.id,
     customerUpdate: {
       email: args.email,
+      externalId: args.externalId,
       metadata: args.metadata,
       name: args.name,
     },
@@ -154,6 +207,14 @@ export async function ensurePolarCustomer(args: {
     createError = createResult.error;
   } catch (error) {
     createError = error;
+  }
+
+  if (isDuplicatePolarCustomerEmailError(createError)) {
+    const existingCustomer = await findPolarCustomerByEmail(args.email);
+
+    if (existingCustomer) {
+      return await syncExistingCustomer(existingCustomer, args);
+    }
   }
 
   try {
@@ -251,11 +312,14 @@ export async function createPolarCustomerPortalSession(args: {
 }
 
 /**
- * Delete customer from Polar.
+ * Delete customer from Polar and anonymize PII so stale emails can be reused.
  * Used when user account is deleted to clean up orphaned customers.
  */
 export async function deletePolarCustomer(id: string) {
-  const result = await customersDelete(polarClient, { id });
+  const result = await customersDelete(polarClient, {
+    anonymize: true,
+    id,
+  });
   if (!result.ok) {
     if (isMissingPolarCustomer(result.error)) {
       return null;

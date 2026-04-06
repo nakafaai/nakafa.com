@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 3, 2, 18, 0, 0);
 
+/** Inserts one minimal app user row for subscription-trigger tests. */
 async function insertUser(
   ctx: MutationCtx,
   suffix: string,
@@ -30,6 +31,7 @@ async function insertUser(
   });
 }
 
+/** Inserts one local customer row that links Polar data to an app user. */
 async function insertCustomer(
   ctx: MutationCtx,
   userId: Id<"users">,
@@ -43,6 +45,7 @@ async function insertCustomer(
   });
 }
 
+/** Inserts one subscription row with a stable timestamp window. */
 async function insertSubscription(
   ctx: MutationCtx,
   {
@@ -59,7 +62,7 @@ async function insertSubscription(
 ) {
   const timestamp = new Date(NOW).toISOString();
 
-  await ctx.db.insert("subscriptions", {
+  return await ctx.db.insert("subscriptions", {
     id: subscriptionId,
     customerId,
     createdAt: timestamp,
@@ -79,6 +82,7 @@ async function insertSubscription(
   });
 }
 
+/** Loads one subscription by Polar ID and runs the trigger helper against it. */
 async function runSyncCustomerPlanBySubscriptionId(
   ctx: MutationCtx,
   subscriptionId: string

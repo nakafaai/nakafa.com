@@ -4,7 +4,9 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { useMutation } from "convex/react";
+import type { Preloaded } from "convex/react";
+import { useMutation, usePreloadedQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import { ConvexError } from "convex/values";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
@@ -60,20 +62,86 @@ interface TryoutPartContextValue {
     status: TryoutPartUiStatus;
     timer: ReturnType<typeof useExerciseTimer>;
     tryoutAttemptStatus: TryoutPartPageState["tryoutAttemptStatus"];
-    tryoutScoreStatus: TryoutPartPageState["tryoutScoreStatus"];
+    tryoutPublicResultStatus: TryoutPartPageState["tryoutPublicResultStatus"];
     tryout: TryoutValue;
   };
 }
 
+type TryoutPartRuntime = FunctionReturnType<
+  typeof api.tryouts.queries.me.part.getUserTryoutPartAttempt
+>;
+type PreloadedTryoutPartRuntime = Preloaded<
+  typeof api.tryouts.queries.me.part.getUserTryoutPartAttempt
+>;
+
 const TryoutPartContext = createContext<TryoutPartContextValue | null>(null);
 
-export function TryoutPartProvider({
-  children,
+/** Resolves whether the part runtime is still loading for the current viewer. */
+function getIsRuntimePending({
+  hasUser,
+  isPartStatePending,
+  isUserPending,
+  runtime,
+}: {
+  hasUser: boolean;
+  isPartStatePending: boolean;
+  isUserPending: boolean;
+  runtime: TryoutPartRuntime | null | undefined;
+}) {
+  if (runtime !== undefined) {
+    return false;
+  }
+
+  if (isUserPending) {
+    return true;
+  }
+
+  if (!hasUser) {
+    return false;
+  }
+
+  return isPartStatePending;
+}
+
+/** Resolves whether the fallback tryout-start CTA should be shown. */
+function getShouldShowTryoutStartButton({
+  hasUser,
+  isRuntimePending,
+  isUserPending,
+  runtime,
+}: {
+  hasUser: boolean;
+  isRuntimePending: boolean;
+  isUserPending: boolean;
+  runtime: TryoutPartRuntime | null | undefined;
+}) {
+  if (isUserPending) {
+    return false;
+  }
+
+  if (isRuntimePending) {
+    return false;
+  }
+
+  if (!hasUser) {
+    return true;
+  }
+
+  return runtime === null;
+}
+
+/** Builds the shared tryout part context from one resolved runtime source. */
+function useResolvedTryoutPartValue({
+  initialNowMs,
+  isPartStatePending,
   part,
+  runtime,
   tryout,
 }: {
-  children: ReactNode;
+  initialNowMs?: number;
+  isPartStatePending: boolean;
   part: TryoutPartValue;
+  runtime: TryoutPartRuntime | null | undefined;
   tryout: TryoutValue;
 }) {
   const tTryouts = useTranslations("Tryouts");
@@ -81,22 +149,17 @@ export function TryoutPartProvider({
   const router = useRouter();
   const isUserPending = useUser((state) => state.isPending);
   const user = useUser((state) => state.user);
-  const shouldLoadRuntime = !isUserPending && Boolean(user);
-  const { data: runtime, isPending: isPartStatePending } = useQueryWithStatus(
-    api.tryouts.queries.me.part.getUserTryoutPartAttempt,
-    shouldLoadRuntime
-      ? {
-          locale: tryout.locale,
-          partKey: part.key,
-          product: tryout.product,
-          tryoutSlug: tryout.slug,
-        }
-      : "skip"
-  );
+  const hasUser = Boolean(user);
   const nowMs = useTryoutClock(
-    Boolean(runtime && runtime.tryoutAttempt.status === "in-progress")
+    Boolean(runtime && runtime.tryoutAttempt.status === "in-progress"),
+    initialNowMs
   );
-  const isRuntimePending = isUserPending || (user ? isPartStatePending : false);
+  const isRuntimePending = getIsRuntimePending({
+    hasUser,
+    isPartStatePending,
+    isUserPending,
+    runtime,
+  });
   const startPart = useMutation(api.tryouts.mutations.attempts.startPart);
   const completePart = useMutation(api.tryouts.mutations.attempts.completePart);
 
@@ -108,13 +171,18 @@ export function TryoutPartProvider({
     score,
     status,
     tryoutAttemptStatus,
-    tryoutScoreStatus,
+    tryoutPublicResultStatus,
   } = deriveTryoutPartPageState({
     isRuntimePending,
     nowMs,
     runtime,
   });
-  const shouldShowTryoutStartButton = !(isRuntimePending || (user && runtime));
+  const shouldShowTryoutStartButton = getShouldShowTryoutStartButton({
+    hasUser,
+    isRuntimePending,
+    isUserPending,
+    runtime,
+  });
 
   const goToSet = useCallback(() => {
     router.push(`/try-out/${tryout.product}/${tryout.slug}`);
@@ -211,7 +279,7 @@ export function TryoutPartProvider({
     });
   }, [completeCurrentPart, goToSet, tTryouts]);
 
-  const value = useMemo(
+  return useMemo(
     () => ({
       actions: {
         completePart: handleCompletePart,
@@ -235,7 +303,7 @@ export function TryoutPartProvider({
         status,
         timer,
         tryoutAttemptStatus,
-        tryoutScoreStatus,
+        tryoutPublicResultStatus,
         tryout,
       },
     }),
@@ -257,15 +325,118 @@ export function TryoutPartProvider({
       status,
       timer,
       tryoutAttemptStatus,
-      tryoutScoreStatus,
+      tryoutPublicResultStatus,
       tryout,
     ]
   );
+}
+
+/** Hydrates part runtime state from a server-preloaded authenticated query. */
+function PreloadedTryoutPartProvider({
+  children,
+  initialNowMs,
+  part,
+  preloadedRuntime,
+  tryout,
+}: {
+  children: ReactNode;
+  initialNowMs?: number;
+  part: TryoutPartValue;
+  preloadedRuntime: PreloadedTryoutPartRuntime;
+  tryout: TryoutValue;
+}) {
+  const runtime = usePreloadedQuery(preloadedRuntime);
+  const value = useResolvedTryoutPartValue({
+    initialNowMs,
+    isPartStatePending: false,
+    part,
+    runtime,
+    tryout,
+  });
 
   return (
     <TryoutPartContext.Provider value={value}>
       {children}
     </TryoutPartContext.Provider>
+  );
+}
+
+/** Loads reactive part runtime state on the client when no preload is available. */
+function LiveTryoutPartProvider({
+  children,
+  initialNowMs,
+  part,
+  tryout,
+}: {
+  children: ReactNode;
+  initialNowMs?: number;
+  part: TryoutPartValue;
+  tryout: TryoutValue;
+}) {
+  const isUserPending = useUser((state) => state.isPending);
+  const user = useUser((state) => state.user);
+  const shouldLoadRuntime = !isUserPending && Boolean(user);
+  const { data: runtime, isPending: isPartStatePending } = useQueryWithStatus(
+    api.tryouts.queries.me.part.getUserTryoutPartAttempt,
+    shouldLoadRuntime
+      ? {
+          locale: tryout.locale,
+          partKey: part.key,
+          product: tryout.product,
+          tryoutSlug: tryout.slug,
+        }
+      : "skip"
+  );
+  const value = useResolvedTryoutPartValue({
+    initialNowMs,
+    isPartStatePending,
+    part,
+    runtime,
+    tryout,
+  });
+
+  return (
+    <TryoutPartContext.Provider value={value}>
+      {children}
+    </TryoutPartContext.Provider>
+  );
+}
+
+/** Provides one runtime-backed tryout part state tree for the part route. */
+export function TryoutPartProvider({
+  children,
+  initialNowMs,
+  part,
+  preloadedRuntime,
+  tryout,
+}: {
+  children: ReactNode;
+  initialNowMs?: number;
+  part: TryoutPartValue;
+  preloadedRuntime?: PreloadedTryoutPartRuntime;
+  tryout: TryoutValue;
+}) {
+  if (preloadedRuntime) {
+    return (
+      <PreloadedTryoutPartProvider
+        initialNowMs={initialNowMs}
+        part={part}
+        preloadedRuntime={preloadedRuntime}
+        tryout={tryout}
+      >
+        {children}
+      </PreloadedTryoutPartProvider>
+    );
+  }
+
+  return (
+    <LiveTryoutPartProvider
+      initialNowMs={initialNowMs}
+      part={part}
+      tryout={tryout}
+    >
+      {children}
+    </LiveTryoutPartProvider>
   );
 }
 

@@ -5,6 +5,7 @@ import {
   getTryoutAccessCampaignRedeemStatus,
   syncTryoutAccessGrantStatus,
 } from "@repo/backend/convex/tryoutAccess/helpers/access";
+import { finalizeCompetitionCampaignResultsIfNeeded } from "@repo/backend/convex/tryoutAccess/mutations/internal/competition";
 import { v } from "convex/values";
 
 const TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE = 100;
@@ -81,6 +82,15 @@ export const sweepStates = internalMutation({
         q.eq("status", "active").lt("endsAt", now + 1)
       )
       .take(TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE);
+    const pendingCompetitions = await ctx.db
+      .query("tryoutAccessCampaigns")
+      .withIndex("by_campaignKind_and_resultsStatus_and_endsAt", (q) =>
+        q
+          .eq("campaignKind", "competition")
+          .eq("resultsStatus", "pending")
+          .lt("endsAt", now + 1)
+      )
+      .take(TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE);
 
     for (const campaign of scheduledCampaigns) {
       const redeemStatus = getTryoutAccessCampaignRedeemStatus(campaign, now);
@@ -110,10 +120,19 @@ export const sweepStates = internalMutation({
       await syncTryoutAccessGrantStatus(ctx.db, grant, now);
     }
 
+    for (const competition of pendingCompetitions) {
+      await finalizeCompetitionCampaignResultsIfNeeded(
+        ctx.db,
+        competition,
+        now
+      );
+    }
+
     if (
       scheduledCampaigns.length < TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE &&
       activeCampaigns.length < TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE &&
-      overdueGrants.length < TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE
+      overdueGrants.length < TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE &&
+      pendingCompetitions.length < TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE
     ) {
       return null;
     }

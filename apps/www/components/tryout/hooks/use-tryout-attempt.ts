@@ -12,7 +12,10 @@ type TryoutAttemptQueryArgs = FunctionArgs<
 export type TryoutAttemptParams = TryoutAttemptQueryArgs;
 
 /** Loads the current user's latest tryout attempt together with a shared clock. */
-export function useTryoutAttempt(params: TryoutAttemptParams | null) {
+export function useTryoutAttempt(
+  params: TryoutAttemptParams | null,
+  initialNowMs?: number
+) {
   const isUserPending = useUser((state) => state.isPending);
   const user = useUser((state) => state.user);
   const shouldQuery = Boolean(params && !isUserPending && user);
@@ -25,7 +28,8 @@ export function useTryoutAttempt(params: TryoutAttemptParams | null) {
   const nowMs = useTryoutClock(
     Boolean(
       queryResult.data && queryResult.data.attempt.status === "in-progress"
-    )
+    ),
+    initialNowMs
   );
 
   return {

@@ -23,6 +23,10 @@ Artinya:
 - sistem tetap aman saat partisipasi masih rendah
 - yang bisa tertunda adalah label `official`, bukan jalannya try out
 
+Untuk campaign `competition`, produk bisa memakai label publik `Final Event`
+tanpa menunggu `official` IRT. Jadi finalitas event dan verifikasi psychometric
+tetap dipisah.
+
 Kalau try out berakhir saat siswa belum menyentuh semua subtes:
 
 - subtes yang tidak pernah dimulai tetap dihitung sebagai salah semua untuk skor

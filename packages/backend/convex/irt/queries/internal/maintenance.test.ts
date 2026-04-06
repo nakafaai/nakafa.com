@@ -9,6 +9,7 @@ const NOW = Date.UTC(2026, 3, 3, 12, 0, 0);
 
 async function insertActiveTryout(ctx: MutationCtx, slug: string) {
   return await ctx.db.insert("tryouts", {
+    catalogPosition: 1,
     product: "snbt",
     locale: "id",
     cycleKey: "2026",
@@ -51,10 +52,17 @@ describe("irt/queries/internal/maintenance", () => {
 
     const result = await t.query(
       internal.irt.queries.internal.maintenance.getScaleQualityIntegrity,
-      {}
+      {
+        paginationOpts: {
+          cursor: null,
+          numItems: 100,
+        },
+      }
     );
 
     expect(result).toEqual({
+      continueCursor: expect.any(String),
+      isDone: true,
       missingQualityCheckTryoutCount: 0,
       unstartableTryoutCount: 0,
     });
@@ -69,10 +77,17 @@ describe("irt/queries/internal/maintenance", () => {
 
     const result = await t.query(
       internal.irt.queries.internal.maintenance.getScaleQualityIntegrity,
-      {}
+      {
+        paginationOpts: {
+          cursor: null,
+          numItems: 100,
+        },
+      }
     );
 
     expect(result).toEqual({
+      continueCursor: expect.any(String),
+      isDone: true,
       missingQualityCheckTryoutCount: 1,
       unstartableTryoutCount: 1,
     });

@@ -48,12 +48,6 @@ const RESET_STEPS: ResetStep[] = [
     resultLabel: "tryout leaderboard entries",
   },
   {
-    label: "Deleting user tryout latest attempts...",
-    mutationPath:
-      "contentSync/mutations/maintenance:deleteUserTryoutLatestAttemptsBatch",
-    resultLabel: "user tryout latest attempts",
-  },
-  {
     label: "Deleting user tryout stats...",
     mutationPath:
       "contentSync/mutations/maintenance:deleteUserTryoutStatsBatch",
@@ -119,6 +113,42 @@ const RESET_STEPS: ResetStep[] = [
     resultLabel: "tryout attempts",
   },
   {
+    label: "Deleting tryout entitlements...",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteTryoutEntitlementsBatch",
+    resultLabel: "tryout entitlements",
+  },
+  {
+    label: "Deleting tryout access grants...",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteTryoutAccessGrantsBatch",
+    resultLabel: "tryout access grants",
+  },
+  {
+    label: "Deleting tryout access campaign products...",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteTryoutAccessCampaignProductsBatch",
+    resultLabel: "tryout access campaign products",
+  },
+  {
+    label: "Deleting tryout access links...",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteTryoutAccessLinksBatch",
+    resultLabel: "tryout access links",
+  },
+  {
+    label: "Deleting tryout access campaigns...",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteTryoutAccessCampaignsBatch",
+    resultLabel: "tryout access campaigns",
+  },
+  {
+    label: "Deleting tryout catalog meta...",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteTryoutCatalogMetaBatch",
+    resultLabel: "tryout catalog meta rows",
+  },
+  {
     label: "Deleting tryout part sets...",
     mutationPath: "contentSync/mutations/maintenance:deleteTryoutPartSetsBatch",
     resultLabel: "tryout part sets",
@@ -169,6 +199,7 @@ const RESET_STEPS: ResetStep[] = [
   },
 ];
 
+/** Deletes every row exposed by one bounded maintenance mutation. */
 const deleteAllBatched = async (
   config: ConvexConfig,
   mutationPath: string,
@@ -202,6 +233,7 @@ const deleteAllBatched = async (
   return totalDeleted;
 };
 
+/** Deletes the full sync-managed content graph and its derived runtime rows. */
 export const reset = async (
   config: ConvexConfig,
   options: SyncOptions
@@ -229,12 +261,17 @@ export const reset = async (
   log(`  Exercise Questions:    ${counts.exerciseQuestions}`);
   log(`  Exercise Attempts:     ${counts.exerciseAttempts}`);
   log(`  Exercise Sets:         ${counts.exerciseSets}`);
+  log(`  Tryout Access Campaigns:${counts.tryoutAccessCampaigns}`);
+  log(`  Tryout Access Products: ${counts.tryoutAccessCampaignProducts}`);
+  log(`  Tryout Access Links:    ${counts.tryoutAccessLinks}`);
+  log(`  Tryout Access Grants:   ${counts.tryoutAccessGrants}`);
   log(`  Tryouts:               ${counts.tryouts}`);
+  log(`  Tryout Catalog Meta:   ${counts.tryoutCatalogMeta}`);
+  log(`  User Entitlements:     ${counts.userTryoutEntitlements}`);
   log(`  Tryout Part Sets:      ${counts.tryoutPartSets}`);
   log(`  Tryout Attempts:       ${counts.tryoutAttempts}`);
   log(`  Tryout Part Attempts:  ${counts.tryoutPartAttempts}`);
   log(`  Tryout Leaderboard:    ${counts.tryoutLeaderboardEntries}`);
-  log(`  User Tryout Latest:    ${counts.userTryoutLatestAttempts}`);
   log(`  User Tryout Stats:     ${counts.userTryoutStats}`);
   log(`  IRT Calibration Queue: ${counts.irtCalibrationQueue}`);
   log(`  IRT Calibration Rows:  ${counts.irtCalibrationAttempts}`);
@@ -264,12 +301,17 @@ export const reset = async (
     counts.exerciseAnswers;
   const totalRuntime =
     counts.exerciseAttempts +
+    counts.tryoutAccessCampaigns +
+    counts.tryoutAccessCampaignProducts +
+    counts.tryoutAccessLinks +
+    counts.tryoutAccessGrants +
     counts.tryouts +
+    counts.tryoutCatalogMeta +
+    counts.userTryoutEntitlements +
     counts.tryoutPartSets +
     counts.tryoutAttempts +
     counts.tryoutPartAttempts +
     counts.tryoutLeaderboardEntries +
-    counts.userTryoutLatestAttempts +
     counts.userTryoutStats +
     counts.irtCalibrationQueue +
     counts.irtCalibrationAttempts +
@@ -294,9 +336,9 @@ export const reset = async (
   if (!options.force) {
     log("\nTo delete all content, run:");
     if (options.prod) {
-      log("  pnpm --filter backend sync:reset --prod --force");
+      log("  pnpm --filter @repo/backend sync:reset --prod --force");
     } else {
-      log("  pnpm --filter backend sync:reset --force");
+      log("  pnpm --filter @repo/backend sync:reset --force");
     }
     if (!options.authors) {
       log("\nTo also delete authors, add --authors flag");
@@ -341,8 +383,8 @@ export const reset = async (
 
   log("\nTo re-sync content, run:");
   if (options.prod) {
-    log("  pnpm --filter backend sync:prod");
+    log("  pnpm --filter @repo/backend sync:prod");
   } else {
-    log("  pnpm --filter backend sync");
+    log("  pnpm --filter @repo/backend sync");
   }
 };

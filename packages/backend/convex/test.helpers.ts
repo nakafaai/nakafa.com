@@ -11,7 +11,7 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
 
 const betterAuthModules = import.meta.glob(["./betterAuth/**/*.ts"]);
-const DEFAULT_SESSION_DURATION_MS = 24 * 60 * 60 * 1000;
+const DEFAULT_SESSION_DURATION_MS = 365 * 24 * 60 * 60 * 1000;
 
 /** Builds a Convex test instance with the Better Auth component registered. */
 export function createConvexTestWithBetterAuth() {

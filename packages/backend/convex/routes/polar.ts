@@ -30,7 +30,7 @@ async function handleCustomerUpsert(
   }
 ) {
   const userId = await ctx.runQuery(
-    internal.customers.queries.getUserIdByPolarCustomer,
+    internal.customers.queries.internal.customer.getUserIdByPolarCustomer,
     {
       externalId: customer.externalId ?? undefined,
       metadataUserId:
@@ -44,7 +44,7 @@ async function handleCustomerUpsert(
     return false;
   }
 
-  await ctx.runMutation(internal.customers.mutations.upsertCustomer, {
+  await ctx.runMutation(internal.customers.mutations.internal.upsertCustomer, {
     customer: convertToDatabaseCustomer({
       id: customer.id,
       externalId: customer.externalId,
@@ -77,9 +77,12 @@ async function handlePolarEvent(
       return handleCustomerUpsert(ctx, event.data);
     }
     case "customer.deleted": {
-      await ctx.runMutation(internal.customers.mutations.deleteCustomerById, {
-        id: event.data.id,
-      });
+      await ctx.runMutation(
+        internal.customers.mutations.internal.deleteCustomerById,
+        {
+          id: event.data.id,
+        }
+      );
       return true;
     }
     case "subscription.created": {

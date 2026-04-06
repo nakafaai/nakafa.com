@@ -68,7 +68,7 @@ function useTryoutStartValue(): TryoutStartContextValue {
   const tryoutSlug = useTryoutAttemptState((state) => state.params.tryoutSlug);
   const startTryout = useMutation(api.tryouts.mutations.attempts.startTryout);
   const generateCheckoutLink = useAction(
-    api.customers.actions.generateCheckoutLink
+    api.customers.actions.public.generateCheckoutLink
   );
 
   const isReady = !(isUserPending || (user && isAttemptPending));
@@ -118,6 +118,14 @@ function useTryoutStartValue(): TryoutStartContextValue {
 
           if (typeof errorData === "object" && errorData !== null) {
             const errorCode = "code" in errorData ? errorData.code : undefined;
+
+            if (errorCode === "COMPETITION_ATTEMPT_ALREADY_USED") {
+              closeDialog();
+              toast.info(tTryouts("competition-attempt-used-error"), {
+                position: "bottom-center",
+              });
+              return;
+            }
 
             if (errorCode === "TRYOUT_ACCESS_REQUIRED") {
               try {
