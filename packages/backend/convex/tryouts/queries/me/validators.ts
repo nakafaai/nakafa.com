@@ -2,7 +2,14 @@ import { exerciseAttemptStatusValidator } from "@repo/backend/convex/exercises/s
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
-import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
+import {
+  tryoutPartKeyValidator,
+  tryoutPublicResultStatusValidator,
+} from "@repo/backend/convex/tryouts/schema";
+import {
+  paginationOptsValidator,
+  paginationResultValidator,
+} from "convex/server";
 import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
 
@@ -11,17 +18,6 @@ export const userTryoutLookupArgs = {
   locale: localeValidator,
   tryoutSlug: v.string(),
 };
-
-export const tryoutPackageLookupValidator = v.object({
-  slug: v.string(),
-  tryoutId: vv.id("tryouts"),
-});
-
-export const tryoutPackageStatusValidator = v.object({
-  expiresAtMs: v.number(),
-  slug: v.string(),
-  status: vv.doc("tryoutAttempts").fields.status,
-});
 
 export const orderedTryoutPartValidator = v.object({
   partIndex: v.number(),
@@ -39,23 +35,51 @@ export const tryoutPartAttemptScoreSummaryValidator = v.object({
   correctAnswers: vv.doc("exerciseAttempts").fields.correctAnswers,
   theta: vv.doc("tryoutPartAttempts").fields.theta,
   thetaSE: vv.doc("tryoutPartAttempts").fields.thetaSE,
-  irtScore: vv.doc("tryoutAttempts").fields.irtScore,
+  irtScore: v.number(),
+});
+
+export const publicTryoutAttemptValidator = v.object({
+  ...vv.doc("tryoutAttempts").fields,
+  irtScore: v.number(),
+  publicResultStatus: tryoutPublicResultStatusValidator,
+});
+
+export const publicTryoutAttemptHistoryValidator = v.object({
+  attemptId: vv.id("tryoutAttempts"),
+  completedAt: vv.doc("tryoutAttempts").fields.completedAt,
+  countsForCompetition: v.boolean(),
+  expiresAt: vv.doc("tryoutAttempts").fields.expiresAt,
+  irtScore: v.number(),
+  publicResultStatus: tryoutPublicResultStatusValidator,
+  scoreStatus: vv.doc("tryoutAttempts").fields.scoreStatus,
+  startedAt: vv.doc("tryoutAttempts").fields.startedAt,
+  status: vv.doc("tryoutAttempts").fields.status,
+  totalCorrect: vv.doc("tryoutAttempts").fields.totalCorrect,
+  totalQuestions: vv.doc("tryoutAttempts").fields.totalQuestions,
 });
 
 export const tryoutPartAttemptSummaryValidator = v.object({
   partIndex: v.number(),
   partKey: tryoutPartKeyValidator,
   score: nullable(tryoutPartAttemptScoreSummaryValidator),
-  setAttempt: tryoutPartAttemptSummarySetAttemptValidator,
+  setAttempt: nullable(tryoutPartAttemptSummarySetAttemptValidator),
 });
 
 export const userTryoutAttemptResultValidator = v.object({
-  attempt: vv.doc("tryoutAttempts"),
+  attempt: publicTryoutAttemptValidator,
   orderedParts: v.array(orderedTryoutPartValidator),
   partAttempts: v.array(tryoutPartAttemptSummaryValidator),
   resumePartKey: v.optional(tryoutPartKeyValidator),
   expiresAtMs: v.number(),
 });
+
+export const userTryoutHistoryArgs = {
+  ...userTryoutLookupArgs,
+  paginationOpts: paginationOptsValidator,
+};
+
+export const userTryoutAttemptHistoryResultValidator =
+  paginationResultValidator(publicTryoutAttemptHistoryValidator);
 
 export const tryoutPartAttemptRuntimeValidator = v.object({
   partIndex: v.number(),
@@ -66,7 +90,15 @@ export const tryoutPartAttemptRuntimeValidator = v.object({
 
 export const userTryoutPartAttemptResultValidator = v.object({
   expiresAtMs: v.number(),
+  part: nullable(
+    v.object({
+      currentPartKey: tryoutPartKeyValidator,
+      material: vv.doc("exerciseSets").fields.material,
+      questionCount: v.number(),
+      setSlug: vv.doc("exerciseSets").fields.slug,
+    })
+  ),
   partScore: nullable(tryoutPartAttemptScoreSummaryValidator),
   partAttempt: nullable(tryoutPartAttemptRuntimeValidator),
-  tryoutAttempt: vv.doc("tryoutAttempts"),
+  tryoutAttempt: publicTryoutAttemptValidator,
 });

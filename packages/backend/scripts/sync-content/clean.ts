@@ -168,9 +168,9 @@ const cleanUnusedAuthors = async (
 
   log("\nTo delete unused authors, run:");
   if (options.prod) {
-    log("  pnpm --filter backend sync:prod:clean --force --authors");
+    log("  pnpm --filter @repo/backend sync:prod:clean --force --authors");
   } else {
-    log("  pnpm --filter backend sync:clean --force --authors");
+    log("  pnpm --filter @repo/backend sync:clean --force --authors");
   }
 };
 
@@ -263,10 +263,10 @@ export const clean = async (
       );
     } else if (options.prod) {
       log("\nTo delete stale content, run:");
-      log("  pnpm --filter backend sync:prod:clean --force");
+      log("  pnpm --filter @repo/backend sync:prod:clean --force");
     } else {
       log("\nTo delete stale content, run:");
-      log("  pnpm --filter backend sync:clean --force");
+      log("  pnpm --filter @repo/backend sync:clean --force");
     }
   }
 

@@ -80,5 +80,5 @@ export function TryoutCardContent({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  return <div className={cn("border-t", className)} {...props} />;
+  return <div className={cn(className)} {...props} />;
 }

@@ -18,7 +18,7 @@
   "devDependencies": {
     "@react-email/preview-server": "^5.2.10",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "25.5.0",
+    "@types/node": "25.5.2",
     "@types/react": "19.2.14",
     "typescript": "^6.0.2"
   }

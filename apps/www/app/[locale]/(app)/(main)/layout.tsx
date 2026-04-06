@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { use } from "react";
-import { AppShell } from "@/components/sidebar/app-shell";
+import { MainShellBoundary } from "@/components/sidebar/main-shell-boundary";
 
 export default function Layout(props: LayoutProps<"/[locale]">) {
   const { children, params } = props;
@@ -16,5 +16,5 @@ export default function Layout(props: LayoutProps<"/[locale]">) {
   // Enable static rendering
   setRequestLocale(locale);
 
-  return <AppShell>{children}</AppShell>;
+  return <MainShellBoundary>{children}</MainShellBoundary>;
 }

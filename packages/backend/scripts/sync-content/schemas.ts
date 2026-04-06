@@ -22,6 +22,7 @@ export const LOCALE_SUBJECT_MATERIAL_FILE_REGEX = /\/([a-z]{2})-material\.ts$/;
 
 const LocaleSchema = z.union([z.literal("en"), z.literal("id")]);
 
+/** Parses one CLI locale flag into the supported Convex content locale. */
 export const parseLocale = (value: string, context: string): Locale => {
   const result = LocaleSchema.safeParse(value);
   if (!result.success) {
@@ -72,12 +73,17 @@ export const ContentCountsSchema = z.object({
   exerciseQuestions: z.number(),
   exerciseAttempts: z.number(),
   exerciseAnswers: z.number(),
+  tryoutAccessCampaigns: z.number(),
+  tryoutAccessCampaignProducts: z.number(),
+  tryoutAccessLinks: z.number(),
+  tryoutAccessGrants: z.number(),
   tryouts: z.number(),
+  tryoutCatalogMeta: z.number(),
+  userTryoutEntitlements: z.number(),
   tryoutPartSets: z.number(),
   tryoutAttempts: z.number(),
   tryoutPartAttempts: z.number(),
   tryoutLeaderboardEntries: z.number(),
-  userTryoutLatestAttempts: z.number(),
   userTryoutStats: z.number(),
   irtCalibrationQueue: z.number(),
   irtCalibrationAttempts: z.number(),
@@ -107,7 +113,9 @@ export const DataIntegritySchema = z.object({
 });
 
 export const TryoutScaleIntegritySchema = z.object({
-  activeTryoutsWithoutScale: z.array(
+  continueCursor: z.string(),
+  isDone: z.boolean(),
+  page: z.array(
     z.object({
       cycleKey: z.string(),
       locale: z.enum(["en", "id"]),

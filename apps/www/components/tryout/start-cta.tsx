@@ -1,11 +1,9 @@
 "use client";
 
-import { Rocket01Icon } from "@hugeicons/core-free-icons";
-import { Button } from "@repo/design-system/components/ui/button";
-import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useTranslations } from "next-intl";
-import { useTryoutStart } from "@/components/tryout/providers/start-state";
-import { TryoutScoreCard } from "@/components/tryout/score-card";
+import { TryoutAttemptResults } from "@/components/tryout/attempt-results";
+import { useTryoutSet } from "@/components/tryout/providers/set-state";
+import { TryoutStartActionButton } from "@/components/tryout/start-controls";
 import {
   TryoutStartCountdown,
   TryoutStartCountdownAction,
@@ -13,44 +11,21 @@ import {
   TryoutStartCountdownTime,
 } from "@/components/tryout/start-countdown";
 
-function TryoutStartActionButton({
-  isActionPending,
-  isLoading,
-  label,
-  onClickAction,
-}: {
-  isActionPending: boolean;
-  isLoading: boolean;
-  label: string;
-  onClickAction: () => void;
-}) {
-  return (
-    <Button disabled={isLoading} onClick={onClickAction}>
-      <Spinner icon={Rocket01Icon} isLoading={isActionPending} />
-      {label}
-    </Button>
-  );
-}
-
+/** Renders the full set-route start CTA, including countdown and past results. */
 export function TryoutStartCta() {
   const tTryouts = useTranslations("Tryouts");
-  const attempt = useTryoutStart((state) => state.state.attempt);
-  const attemptStatus = useTryoutStart((state) => state.state.attemptStatus);
-  const clickCtaAction = useTryoutStart(
-    (state) => state.actions.clickCtaAction
+  const attempt = useTryoutSet((state) => state.state.attempt);
+  const effectiveStatus = useTryoutSet((state) => state.state.effectiveStatus);
+  const clickStartAction = useTryoutSet(
+    (state) => state.actions.clickStartAction
   );
-  const hasFinishedAttempt = useTryoutStart(
+  const hasFinishedAttempt = useTryoutSet(
     (state) => state.state.hasFinishedAttempt
   );
-  const isActionPending = useTryoutStart((state) => state.meta.isActionPending);
-  const isLoading = useTryoutStart((state) => state.state.isLoading);
-  const isReady = useTryoutStart((state) => state.state.isReady);
-  const remainingTime = useTryoutStart((state) => state.state.remainingTime);
-  const resumePartKey = useTryoutStart((state) => state.state.resumePartKey);
-
-  if (!isReady) {
-    return null;
-  }
+  const isActionPending = useTryoutSet((state) => state.meta.isActionPending);
+  const isStartBlocked = useTryoutSet((state) => state.meta.isStartBlocked);
+  const remainingTime = useTryoutSet((state) => state.state.remainingTime);
+  const resumePartKey = useTryoutSet((state) => state.state.resumePartKey);
 
   let label = tTryouts("start-cta");
 
@@ -65,9 +40,9 @@ export function TryoutStartCta() {
   return (
     <div className="flex w-full flex-col items-start gap-4">
       {attempt && hasFinishedAttempt ? (
-        <TryoutScoreCard
-          attempt={attempt}
-          status={attemptStatus ?? attempt.status}
+        <TryoutAttemptResults
+          fallbackAttempt={attempt}
+          fallbackStatus={effectiveStatus ?? attempt.status}
         />
       ) : null}
 
@@ -96,20 +71,20 @@ export function TryoutStartCta() {
           {resumePartKey ? (
             <TryoutStartCountdownAction>
               <TryoutStartActionButton
-                isActionPending={isActionPending}
-                isLoading={isLoading}
+                isBlocked={isStartBlocked}
+                isPending={isActionPending}
                 label={label}
-                onClickAction={clickCtaAction}
+                onClickAction={clickStartAction}
               />
             </TryoutStartCountdownAction>
           ) : null}
         </TryoutStartCountdown>
       ) : (
         <TryoutStartActionButton
-          isActionPending={isActionPending}
-          isLoading={isLoading}
+          isBlocked={isStartBlocked}
+          isPending={isActionPending}
           label={label}
-          onClickAction={clickCtaAction}
+          onClickAction={clickStartAction}
         />
       )}
     </div>

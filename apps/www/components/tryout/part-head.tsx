@@ -10,6 +10,7 @@ interface TryoutPartHeadProps {
   icon?: ComponentProps<typeof TryoutPageHeader>["icon"];
 }
 
+/** Renders the descriptive header for the current tryout part route. */
 export function TryoutPartHead({ icon }: TryoutPartHeadProps) {
   const tCommon = useTranslations("Common");
   const tTryouts = useTranslations("Tryouts");
@@ -24,15 +25,12 @@ export function TryoutPartHead({ icon }: TryoutPartHeadProps) {
   const status = useTryoutPart((state) => state.state.status);
   const tryout = useTryoutPart((state) => state.state.tryout);
 
-  let description = tTryouts("part-head-loading");
+  let description = tTryouts("part-head-needs-tryout");
 
   if (status === "in-progress" && isAwaitingExpiry) {
     description = tTryouts("part-head-processing-expiry");
   } else {
     switch (status) {
-      case "loading":
-        description = tTryouts("part-head-loading");
-        break;
       case "needs-tryout":
         description = tTryouts("part-head-needs-tryout");
         break;
@@ -60,7 +58,7 @@ export function TryoutPartHead({ icon }: TryoutPartHeadProps) {
         description = tTryouts("part-head-ready");
         break;
       default:
-        description = tTryouts("part-head-loading");
+        description = tTryouts("part-head-needs-tryout");
         break;
     }
   }

@@ -4,12 +4,14 @@ import { getStoredCreditResetTimestamp } from "@repo/backend/convex/credits/help
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { syncCustomerPlan } from "@repo/backend/convex/triggers/helpers/subscriptions";
+import { logger } from "@repo/backend/convex/utils/logger";
 import { products } from "@repo/backend/convex/utils/polar/products";
 import { convexTest } from "convex-test";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 3, 2, 18, 0, 0);
 
+/** Inserts one minimal app user row for subscription-trigger tests. */
 async function insertUser(
   ctx: MutationCtx,
   suffix: string,
@@ -29,6 +31,7 @@ async function insertUser(
   });
 }
 
+/** Inserts one local customer row that links Polar data to an app user. */
 async function insertCustomer(
   ctx: MutationCtx,
   userId: Id<"users">,
@@ -42,6 +45,7 @@ async function insertCustomer(
   });
 }
 
+/** Inserts one subscription row with a stable timestamp window. */
 async function insertSubscription(
   ctx: MutationCtx,
   {
@@ -58,7 +62,7 @@ async function insertSubscription(
 ) {
   const timestamp = new Date(NOW).toISOString();
 
-  await ctx.db.insert("subscriptions", {
+  return await ctx.db.insert("subscriptions", {
     id: subscriptionId,
     customerId,
     createdAt: timestamp,
@@ -78,6 +82,7 @@ async function insertSubscription(
   });
 }
 
+/** Loads one subscription by Polar ID and runs the trigger helper against it. */
 async function runSyncCustomerPlanBySubscriptionId(
   ctx: MutationCtx,
   subscriptionId: string
@@ -96,12 +101,17 @@ async function runSyncCustomerPlanBySubscriptionId(
 }
 
 describe("triggers/helpers/subscriptions", () => {
+  beforeEach(() => {
+    vi.spyOn(logger, "info").mockImplementation(() => undefined);
+    vi.spyOn(logger, "warn").mockImplementation(() => undefined);
+  });
+
   afterEach(() => {
+    vi.restoreAllMocks();
     vi.useRealTimers();
   });
 
   it("returns without side effects when the customer is missing", async () => {
-    vi.useFakeTimers();
     vi.setSystemTime(new Date(NOW));
 
     const t = convexTest(schema, convexModules);
@@ -130,7 +140,6 @@ describe("triggers/helpers/subscriptions", () => {
   });
 
   it("returns without side effects when the customer user is missing", async () => {
-    vi.useFakeTimers();
     vi.setSystemTime(new Date(NOW));
 
     const t = convexTest(schema, convexModules);
@@ -162,7 +171,6 @@ describe("triggers/helpers/subscriptions", () => {
   });
 
   it("returns early when the derived plan is unchanged", async () => {
-    vi.useFakeTimers();
     vi.setSystemTime(new Date(NOW));
 
     const t = convexTest(schema, convexModules);
@@ -201,7 +209,6 @@ describe("triggers/helpers/subscriptions", () => {
   });
 
   it("upgrades a free user to pro and records a purchase transaction", async () => {
-    vi.useFakeTimers();
     vi.setSystemTime(new Date(NOW));
 
     const t = convexTest(schema, convexModules);
@@ -252,7 +259,6 @@ describe("triggers/helpers/subscriptions", () => {
   });
 
   it("downgrades a pro user to free and records the reset grant transaction", async () => {
-    vi.useFakeTimers();
     vi.setSystemTime(new Date(NOW));
 
     const t = convexTest(schema, convexModules);
@@ -303,7 +309,6 @@ describe("triggers/helpers/subscriptions", () => {
   });
 
   it("picks the highest plan across overlapping active subscriptions", async () => {
-    vi.useFakeTimers();
     vi.setSystemTime(new Date(NOW));
 
     const t = convexTest(schema, convexModules);

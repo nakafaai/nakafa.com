@@ -5,8 +5,7 @@ import {
   getTryoutAccessCampaignRedeemStatus,
   getTryoutAccessEventByCode,
   getTryoutAccessGrantEndsAt,
-  getTryoutAccessGrantStatus,
-  syncTryoutAccessGrantStatus,
+  syncTryoutAccessGrantEntitlements,
 } from "@repo/backend/convex/tryoutAccess/helpers/access";
 import { ConvexError, v } from "convex/values";
 
@@ -41,9 +40,7 @@ export const redeemEventAccess = mutation({
       });
     }
 
-    const campaignProducts = Array.from(new Set(eventAccess.campaign.products));
-
-    if (campaignProducts.length === 0) {
+    if (eventAccess.products.length === 0) {
       throw new ConvexError({
         code: "EVENT_PRODUCTS_REQUIRED",
         message: "Event access campaign products cannot be empty.",
@@ -58,15 +55,13 @@ export const redeemEventAccess = mutation({
       .unique();
 
     if (existingGrant) {
-      if (existingGrant.endsAt > now) {
+      if (existingGrant.status === "active") {
         return {
           kind: "active" as const,
           endsAt: existingGrant.endsAt,
           name: eventAccess.campaign.name,
         };
       }
-
-      await syncTryoutAccessGrantStatus(ctx.db, existingGrant, now);
 
       return {
         kind: "used" as const,
@@ -101,17 +96,11 @@ export const redeemEventAccess = mutation({
       });
     }
 
-    const endsAt = getTryoutAccessGrantEndsAt(
-      now,
-      eventAccess.campaign.grantDurationDays
-    );
-    const grantStatus = getTryoutAccessGrantStatus(endsAt, now);
-
-    if (eventAccess.campaign.redeemStatus !== campaignRedeemStatus) {
-      await ctx.db.patch("tryoutAccessCampaigns", eventAccess.campaign._id, {
-        redeemStatus: campaignRedeemStatus,
-      });
-    }
+    const endsAt = getTryoutAccessGrantEndsAt({
+      campaign: eventAccess.campaign,
+      redeemedAt: now,
+    });
+    const grantStatus = "active" as const;
 
     const grantId = await ctx.db.insert("tryoutAccessGrants", {
       campaignId: eventAccess.campaign._id,
@@ -122,16 +111,24 @@ export const redeemEventAccess = mutation({
       status: grantStatus,
     });
 
-    for (const product of campaignProducts) {
-      await ctx.db.insert("tryoutAccessProductGrants", {
-        campaignId: eventAccess.campaign._id,
-        grantId,
-        product,
-        status: grantStatus,
-        userId: appUser._id,
-        endsAt,
+    if (eventAccess.campaign.firstRedeemedAt == null) {
+      await ctx.db.patch("tryoutAccessCampaigns", eventAccess.campaign._id, {
+        firstRedeemedAt: now,
       });
     }
+
+    await syncTryoutAccessGrantEntitlements(
+      ctx.db,
+      {
+        _id: grantId,
+        campaignId: eventAccess.campaign._id,
+        endsAt,
+        redeemedAt: now,
+        status: grantStatus,
+        userId: appUser._id,
+      },
+      eventAccess.campaign
+    );
 
     await ctx.scheduler.runAfter(
       endsAt - now,

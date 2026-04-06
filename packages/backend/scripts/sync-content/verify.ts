@@ -224,9 +224,9 @@ export const verify = async (
 
     logError("Content mismatch detected!");
     if (options.prod) {
-      log("\nRun 'pnpm --filter backend sync:prod' to fix");
+      log("\nRun 'pnpm --filter @repo/backend sync:prod' to fix");
     } else {
-      log("\nRun 'pnpm --filter backend sync' to fix");
+      log("\nRun 'pnpm --filter @repo/backend sync' to fix");
     }
     process.exit(1);
   } catch (error) {

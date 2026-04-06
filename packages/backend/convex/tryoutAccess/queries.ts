@@ -70,10 +70,17 @@ export const getEventPageState = query({
         .unique();
 
       if (existingGrant) {
-        if (existingGrant.status === "active") {
+        const activeEntitlement = await ctx.db
+          .query("userTryoutEntitlements")
+          .withIndex("by_accessGrantId", (q) =>
+            q.eq("accessGrantId", existingGrant._id)
+          )
+          .first();
+
+        if (existingGrant.status === "active" && activeEntitlement) {
           return {
             kind: "active" as const,
-            endsAt: existingGrant.endsAt,
+            endsAt: activeEntitlement.endsAt,
             name: eventAccess.campaign.name,
           };
         }

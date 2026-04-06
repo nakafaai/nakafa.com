@@ -12,12 +12,12 @@
   "dependencies": {
     "@hugeicons/core-free-icons": "^4.1.1",
     "@hugeicons/react": "^1.1.6",
-    "@mantine/hooks": "^9.0.0",
+    "@mantine/hooks": "^9.0.1",
     "@repo/internationalization": "workspace:*",
     "@repo/utilities": "workspace:*",
     "date-fns": "^4.1.0",
     "effect": "^3.21.0",
-    "ky": "^1.14.3",
+    "ky": "^2.0.0",
     "motion": "^12.38.0",
     "next-intl": "^4.9.0",
     "react": "19.2.4",
@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "25.5.0",
+    "@types/node": "25.5.2",
     "@types/react": "^19.2.14",
     "@vitest/coverage-istanbul": "^4.1.2",
     "vitest": "^4.1.2"

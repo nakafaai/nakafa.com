@@ -51,7 +51,7 @@ export function AiChatModel() {
   const user = useUser((s) => s.user);
 
   const generateCheckoutLink = useAction(
-    api.customers.actions.generateCheckoutLink
+    api.customers.actions.public.generateCheckoutLink
   );
 
   const model = useAi((state) => state.model);

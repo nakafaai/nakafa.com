@@ -1,5 +1,6 @@
 import { attemptEndReasonValidator } from "@repo/backend/convex/lib/attempts";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
+import { tryoutAccessCampaignKindValidator } from "@repo/backend/convex/tryoutAccess/schema";
 import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
 import { defineTable } from "convex/server";
 import { type Infer, v } from "convex/values";
@@ -15,8 +16,29 @@ export type TryoutStatus = Infer<typeof tryoutStatusValidator>;
 export const tryoutScoreStatusValidator = literals("provisional", "official");
 export type TryoutScoreStatus = Infer<typeof tryoutScoreStatusValidator>;
 
+export const tryoutAccessKindValidator = literals("event", "subscription");
+export type TryoutAccessKind = Infer<typeof tryoutAccessKindValidator>;
+
+export const tryoutPublicResultStatusValidator = literals(
+  "estimated",
+  "verified-irt",
+  "final-event"
+);
+export type TryoutPublicResultStatus = Infer<
+  typeof tryoutPublicResultStatusValidator
+>;
+
 export const tryoutPartKeyValidator = v.string();
 export type TryoutPartKey = Infer<typeof tryoutPartKeyValidator>;
+
+export const tryoutPartSnapshotValidator = v.object({
+  partIndex: v.number(),
+  /** Stable public identifier for one part, e.g. `general-reasoning`. */
+  partKey: tryoutPartKeyValidator,
+  questionCount: v.number(),
+  setId: v.id("exerciseSets"),
+});
+export type TryoutPartSnapshot = Infer<typeof tryoutPartSnapshotValidator>;
 
 const tables = {
   tryouts: defineTable({
@@ -29,10 +51,13 @@ const tables = {
     partCount: v.number(),
     totalQuestionCount: v.number(),
     isActive: v.boolean(),
+    /** Dense product-defined browse order used by paginated catalog reads. */
+    catalogPosition: v.number(),
     detectedAt: v.number(),
     syncedAt: v.number(),
   })
     .index("by_isActive", ["isActive"])
+    .index("by_product_and_isActive", ["product", "isActive"])
     .index("by_product_and_locale_and_slug", ["product", "locale", "slug"])
     .index("by_product_and_locale_and_cycleKey_and_slug", [
       "product",
@@ -44,7 +69,20 @@ const tables = {
       "product",
       "locale",
       "isActive",
+    ])
+    .index("by_product_and_locale_and_isActive_and_catalogPosition", [
+      "product",
+      "locale",
+      "isActive",
+      "catalogPosition",
     ]),
+
+  tryoutCatalogMeta: defineTable({
+    product: tryoutProductValidator,
+    locale: localeValidator,
+    activeCount: v.number(),
+    updatedAt: v.number(),
+  }).index("by_product_and_locale", ["product", "locale"]),
 
   tryoutPartSets: defineTable({
     tryoutId: v.id("tryouts"),
@@ -61,14 +99,20 @@ const tables = {
     userId: v.id("users"),
     tryoutId: v.id("tryouts"),
     scaleVersionId: v.id("irtScaleVersions"),
+    accessKind: v.optional(tryoutAccessKindValidator),
+    accessCampaignId: v.optional(v.id("tryoutAccessCampaigns")),
+    accessCampaignKind: v.optional(tryoutAccessCampaignKindValidator),
+    accessGrantId: v.optional(v.id("tryoutAccessGrants")),
+    accessEndsAt: v.optional(v.number()),
+    countsForCompetition: v.optional(v.boolean()),
     scoreStatus: tryoutScoreStatusValidator,
     status: tryoutStatusValidator,
+    partSetSnapshots: v.array(tryoutPartSnapshotValidator),
     completedPartIndices: v.array(v.number()),
     totalCorrect: v.number(),
     totalQuestions: v.number(),
     theta: v.number(),
     thetaSE: v.number(),
-    irtScore: v.number(),
     startedAt: v.number(),
     expiresAt: v.number(),
     lastActivityAt: v.number(),
@@ -87,37 +131,22 @@ const tables = {
       "tryoutId",
       "startedAt",
     ])
+    .index("by_userId_and_tryoutId_and_accessCampaignId_and_startedAt", [
+      "userId",
+      "tryoutId",
+      "accessCampaignId",
+      "startedAt",
+    ])
+    .index("by_accessCampaignId_and_startedAt", [
+      "accessCampaignId",
+      "startedAt",
+    ])
     .index("by_tryoutId_and_scoreStatus_and_status_and_startedAt", [
       "tryoutId",
       "scoreStatus",
       "status",
       "startedAt",
     ]),
-
-  userTryoutLatestAttempts: defineTable({
-    userId: v.id("users"),
-    product: tryoutProductValidator,
-    locale: localeValidator,
-    tryoutId: v.id("tryouts"),
-    attemptId: v.id("tryoutAttempts"),
-    slug: v.string(),
-    status: tryoutStatusValidator,
-    expiresAtMs: v.number(),
-    updatedAt: v.number(),
-  })
-    .index("by_userId_and_product_and_locale_and_tryoutId", [
-      "userId",
-      "product",
-      "locale",
-      "tryoutId",
-    ])
-    .index("by_userId_and_product_and_locale_and_updatedAt", [
-      "userId",
-      "product",
-      "locale",
-      "updatedAt",
-    ])
-    .index("by_attemptId", ["attemptId"]),
 
   tryoutPartAttempts: defineTable({
     tryoutAttemptId: v.id("tryoutAttempts"),
@@ -130,7 +159,6 @@ const tables = {
     thetaSE: v.number(),
   })
     .index("by_tryoutAttemptId_and_partIndex", ["tryoutAttemptId", "partIndex"])
-    .index("by_tryoutAttemptId_and_partKey", ["tryoutAttemptId", "partKey"])
     .index("by_setAttemptId", ["setAttemptId"]),
 
   userTryoutStats: defineTable({
@@ -155,7 +183,6 @@ const tables = {
     leaderboardNamespace: v.string(),
     theta: v.number(),
     thetaSE: v.number(),
-    irtScore: v.number(),
     rawScore: v.number(),
     completedAt: v.number(),
     attemptId: v.id("tryoutAttempts"),

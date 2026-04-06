@@ -1,6 +1,6 @@
-# Content Sync Scripts
+# Backend Scripts
 
-Sync MDX content from filesystem to Convex database.
+Sync MDX content and run backend maintenance checks for Convex state.
 
 ## Quick Start
 
@@ -54,8 +54,8 @@ npx convex deploy
 | `sync:validate` | Validate content without syncing (for CI) |
 | `sync:verify` | Verify database matches filesystem |
 | `sync:clean` | Find and remove stale content |
-| `sync:reset` | Delete ALL synced content (requires --force) |
-| `sync:reset:tryouts` | Delete only tryout + IRT runtime data |
+| `sync:reset` | Delete synced content/runtime rows (authors optional, requires --force) |
+| `sync:reset:tryouts` | Delete tryout content/read models, access rows, entitlements, and IRT scale data, then run a full sync |
 
 ### Production
 
@@ -65,8 +65,25 @@ npx convex deploy
 | `sync:prod:incremental` | Incremental sync to production |
 | `sync:prod:verify` | Verify production database |
 | `sync:prod:clean` | Clean stale content in production |
-| `sync:prod:reset` | Delete ALL content in production (requires --force) |
-| `sync:prod:reset:tryouts` | Delete only tryout + IRT runtime data in production |
+| `sync:prod:reset` | Delete synced content/runtime rows in production (authors optional, requires --force) |
+| `sync:prod:reset:tryouts` | Delete tryout content/read models, access rows, entitlements, and IRT scale data in production, then run a full sync |
+
+### Maintenance
+
+| Command | Description |
+|---------|-------------|
+| `tryout:verify:access` | Verify campaign/grant/entitlement time-state integrity and competition overlap integrity in development |
+| `tryout:repair:access` | Repair overdue campaign/grant states and overdue competition finalization in development |
+| `tryout:verify:access:prod` | Verify campaign/grant/entitlement time-state integrity and competition overlap integrity in production |
+| `tryout:repair:access:prod` | Repair overdue campaign/grant states and overdue competition finalization in production |
+| `customers:verify` | Verify user/customer/subscription cohesion in development |
+| `customers:repair` | Repair missing customer rows and clean safe stale Polar customers in development |
+| `customers:verify:prod` | Verify user/customer/subscription cohesion in production |
+| `customers:repair:prod` | Repair missing customer rows and clean safe stale Polar customers in production |
+| `irt:verify:cache` | Verify cached IRT calibration state in development |
+| `irt:verify:scale` | Verify frozen IRT scale coverage in development |
+| `irt:prod:verify:cache` | Verify cached IRT calibration state in production |
+| `irt:prod:verify:scale` | Verify frozen IRT scale coverage in production |
 
 ### Options
 
@@ -132,6 +149,30 @@ pnpm --filter @repo/backend sync:prod:reset
 
 # Actually delete production content
 pnpm --filter @repo/backend sync:prod:reset --force
+```
+
+### Reset Tryouts + IRT Only
+
+```bash
+# Preview the tryout/IRT wipe
+pnpm --filter @repo/backend sync:reset:tryouts
+
+# Actually delete tryout definitions, access rows, entitlements, and IRT scale data
+pnpm --filter @repo/backend sync:reset:tryouts --force
+
+# Then rebuild the deleted tables with a full sync
+pnpm --filter @repo/backend sync
+```
+
+`sync:reset:tryouts` clears incremental sync state on purpose. Do not follow it
+with `sync:incremental`; run a full sync so Convex rebuilds the deleted tryout
+and IRT tables coherently.
+
+For production (use with caution):
+
+```bash
+pnpm --filter @repo/backend sync:prod:reset:tryouts --force
+pnpm --filter @repo/backend sync:prod
 ```
 
 ## Content Structure
@@ -220,13 +261,23 @@ Content hash unchanged. This is normal for `sync:incremental`.
 | Script | Purpose |
 |--------|---------|
 | `sync-content.ts` | Sync MDX content to Convex database |
+| `customers/verify.ts` | Verify user/customer/subscription cohesion |
+| `customers/repair.ts` | Repair missing customer rows and clean safe stale Polar customers |
+| `tryout/access.ts` | Verify campaign/grant/entitlement time-state and competition overlap integrity |
+| `irt-verify.ts` | Verify IRT cache and scale integrity |
 
 ## Files
 
 | File | Purpose |
 |------|---------|
 | `sync-content.ts` | Main sync script |
-| `lib/mdxParser.ts` | MDX parsing utilities |
+| `sync-content/` | Shared sync-content helpers, validation, and workflows |
+| `customers/` | Customer cohesion verification and repair scripts |
+| `customers/verify.ts` | Dev/prod verification for user/customer/subscription cohesion |
+| `customers/repair.ts` | Dev/prod repair for missing customer rows and safe stale Polar customers |
+| `tryout/` | Tryout-specific maintenance scripts split by concern |
+| `tryout/access.ts` | Dev/prod integrity verification for campaigns, grants, entitlements, and competition overlap |
+| `irt-verify.ts` | Dev/prod integrity verification for IRT cache and scale state |
 | `../convex/contentSync/mutations/` | Convex sync mutations split by concern |
 | `../convex/contentSync/queries/` | Convex verification queries split by concern |
 | `../.sync-state.json` | Dev incremental sync state (gitignored) |

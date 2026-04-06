@@ -10,16 +10,19 @@ import { Onboarding } from "@/components/shared/onboarding";
 import { SearchCommand } from "@/components/shared/search-command";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { Header } from "@/components/sidebar/header";
-import { useTryoutSidebarLocked } from "@/components/tryout/hooks/use-sidebar-locked";
 
 /**
  * Renders the persistent app shell for the main student area.
  */
-export function AppShell({ children }: { children: ReactNode }) {
-  const isSidebarLocked = useTryoutSidebarLocked();
-
+export function AppShell({
+  children,
+  locked = false,
+}: {
+  children: ReactNode;
+  locked?: boolean;
+}) {
   return (
-    <SidebarProvider locked={isSidebarLocked}>
+    <SidebarProvider locked={locked}>
       <AppSidebar />
       <SidebarInset>
         <Header />

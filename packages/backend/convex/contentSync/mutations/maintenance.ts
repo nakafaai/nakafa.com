@@ -3,6 +3,7 @@ import { internalMutation } from "@repo/backend/convex/functions";
 import { ConvexError, v } from "convex/values";
 
 const RESET_BATCH_SIZE = 500;
+const EVENT_TRYOUT_ENTITLEMENT_BATCH_SIZE = 500;
 
 const batchDeleteResultValidator = v.object({
   deleted: v.number(),
@@ -20,6 +21,10 @@ type ResettableTableName =
   | "exerciseItemParameters"
   | "exerciseQuestions"
   | "exerciseSets"
+  | "tryoutAccessCampaigns"
+  | "tryoutAccessCampaignProducts"
+  | "tryoutAccessGrants"
+  | "tryoutAccessLinks"
   | "irtCalibrationAttempts"
   | "irtCalibrationCacheStats"
   | "irtCalibrationQueue"
@@ -32,13 +37,14 @@ type ResettableTableName =
   | "subjectSections"
   | "subjectTopics"
   | "tryoutAttempts"
+  | "tryoutCatalogMeta"
   | "tryoutLeaderboardEntries"
   | "tryoutPartAttempts"
   | "tryoutPartSets"
   | "tryouts"
-  | "userTryoutLatestAttempts"
   | "userTryoutStats";
 
+/** Delete one bounded batch from a content-derived table. */
 async function deleteBatchFromTable(
   ctx: MutationCtx,
   tableName: ResettableTableName
@@ -111,6 +117,7 @@ export const deleteTryoutRuntimeBatch = internalMutation({
   },
 });
 
+/** Create one small internal mutation that deletes a single bounded batch. */
 function makeBatchDeleteMutation(tableName: ResettableTableName) {
   return internalMutation({
     args: {},
@@ -131,9 +138,6 @@ export const deleteTryoutPartAttemptsBatch =
   makeBatchDeleteMutation("tryoutPartAttempts");
 export const deleteTryoutLeaderboardEntriesBatch = makeBatchDeleteMutation(
   "tryoutLeaderboardEntries"
-);
-export const deleteUserTryoutLatestAttemptsBatch = makeBatchDeleteMutation(
-  "userTryoutLatestAttempts"
 );
 export const deleteUserTryoutStatsBatch =
   makeBatchDeleteMutation("userTryoutStats");
@@ -165,6 +169,18 @@ export const deleteExerciseAttemptsBatch =
   makeBatchDeleteMutation("exerciseAttempts");
 export const deleteTryoutAttemptsBatch =
   makeBatchDeleteMutation("tryoutAttempts");
+export const deleteTryoutAccessCampaignsBatch = makeBatchDeleteMutation(
+  "tryoutAccessCampaigns"
+);
+export const deleteTryoutAccessCampaignProductsBatch = makeBatchDeleteMutation(
+  "tryoutAccessCampaignProducts"
+);
+export const deleteTryoutAccessGrantsBatch =
+  makeBatchDeleteMutation("tryoutAccessGrants");
+export const deleteTryoutAccessLinksBatch =
+  makeBatchDeleteMutation("tryoutAccessLinks");
+export const deleteTryoutCatalogMetaBatch =
+  makeBatchDeleteMutation("tryoutCatalogMeta");
 export const deleteTryoutPartSetsBatch =
   makeBatchDeleteMutation("tryoutPartSets");
 export const deleteIrtScaleVersionsBatch =
@@ -181,3 +197,26 @@ export const deleteSubjectTopicsBatch =
   makeBatchDeleteMutation("subjectTopics");
 export const deleteArticlesBatch = makeBatchDeleteMutation("articleContents");
 export const deleteAuthorsBatch = makeBatchDeleteMutation("authors");
+
+/** Delete one bounded batch of stored tryout entitlements. */
+export const deleteTryoutEntitlementsBatch = internalMutation({
+  args: {},
+  returns: batchDeleteResultValidator,
+  handler: async (ctx) => {
+    const entitlements = await ctx.db
+      .query("userTryoutEntitlements")
+      .take(EVENT_TRYOUT_ENTITLEMENT_BATCH_SIZE);
+
+    for (const entitlement of entitlements) {
+      await ctx.db.delete("userTryoutEntitlements", entitlement._id);
+    }
+
+    const hasMore =
+      (await ctx.db.query("userTryoutEntitlements").first()) !== null;
+
+    return {
+      deleted: entitlements.length,
+      hasMore,
+    };
+  },
+});

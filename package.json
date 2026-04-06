@@ -29,7 +29,7 @@
     "boundaries": "turbo run boundaries",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "bump-deps": "pnpm dlx npm-check-updates --deep -u -x recharts",
+    "bump-deps": "pnpm dlx npm-check-updates --deep -u -x recharts,better-auth",
     "bump-ui": "pnpm dlx shadcn@latest add --all --overwrite -c packages/design-system",
     "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules apps/*/.turbo packages/*/.turbo .turbo .next apps/*/.next apps/*/.react-email packages/*/.react-email",
     "clean:ts": "find . -name '*.tsbuildinfo' -type f -delete && find . -name 'tsconfig.tsbuildinfo' -type f -delete",
@@ -43,13 +43,13 @@
     "@changesets/cli": "^2.30.0",
     "@effect/language-service": "^0.84.3",
     "@repo/typescript-config": "workspace:*",
-    "@turbo/gen": "^2.9.3",
-    "@types/node": "^25.5.0",
+    "@turbo/gen": "^2.9.4",
+    "@types/node": "^25.5.2",
     "depcheck": "^1.4.7",
     "tsup": "^8.5.1",
-    "turbo": "^2.9.3",
+    "turbo": "^2.9.4",
     "typescript": "^6.0.2",
-    "ultracite": "^7.4.2"
+    "ultracite": "^7.4.3"
   },
   "engines": {
     "node": ">=22"

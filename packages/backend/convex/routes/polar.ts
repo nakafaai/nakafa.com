@@ -25,16 +25,15 @@ async function handleCustomerUpsert(
   customer: {
     id: string;
     externalId?: string | null;
-    email: string;
-    metadata: Record<string, string | number | boolean>;
+    metadata?: Record<string, string | number | boolean> | null;
   }
 ) {
   const userId = await ctx.runQuery(
-    internal.customers.queries.getUserIdByPolarCustomer,
+    internal.customers.queries.internal.customer.getUserIdByPolarCustomer,
     {
       externalId: customer.externalId ?? undefined,
       metadataUserId:
-        typeof customer.metadata.userId === "string"
+        typeof customer.metadata?.userId === "string"
           ? customer.metadata.userId
           : undefined,
     }
@@ -44,11 +43,11 @@ async function handleCustomerUpsert(
     return false;
   }
 
-  await ctx.runMutation(internal.customers.mutations.upsertCustomer, {
+  await ctx.runMutation(internal.customers.mutations.internal.upsertCustomer, {
     customer: convertToDatabaseCustomer({
       id: customer.id,
       externalId: customer.externalId,
-      metadata: customer.metadata,
+      metadata: customer.metadata ?? {},
       userId,
     }),
   });
@@ -77,9 +76,12 @@ async function handlePolarEvent(
       return handleCustomerUpsert(ctx, event.data);
     }
     case "customer.deleted": {
-      await ctx.runMutation(internal.customers.mutations.deleteCustomerById, {
-        id: event.data.id,
-      });
+      await ctx.runMutation(
+        internal.customers.mutations.internal.deleteCustomerById,
+        {
+          id: event.data.id,
+        }
+      );
       return true;
     }
     case "subscription.created": {

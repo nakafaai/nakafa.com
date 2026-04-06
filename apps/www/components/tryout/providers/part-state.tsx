@@ -1,24 +1,31 @@
 "use client";
 
+import { usePreloadedAuthQuery } from "@convex-dev/better-auth/nextjs/client";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { useRouter } from "@repo/internationalization/src/navigation";
+import type { Preloaded } from "convex/react";
 import { useMutation } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import { ConvexError } from "convex/values";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { type ReactNode, useCallback, useMemo, useTransition } from "react";
+import {
+  type PropsWithChildren,
+  useCallback,
+  useMemo,
+  useTransition,
+} from "react";
 import { toast } from "sonner";
 import { createContext, useContextSelector } from "use-context-selector";
 import { useTryoutClock } from "@/components/tryout/hooks/use-tryout-clock";
+import { useTryoutStartFlow } from "@/components/tryout/hooks/use-tryout-start-flow";
 import type {
   TryoutPartPageState,
   TryoutPartUiStatus,
 } from "@/components/tryout/utils/part-state";
 import { deriveTryoutPartPageState } from "@/components/tryout/utils/part-state";
 import { getEffectiveTryoutStatus } from "@/components/tryout/utils/status";
-import { useUser } from "@/lib/context/use-user";
 import { useExerciseTimer } from "@/lib/hooks/use-exercise-timer";
 
 export interface TryoutPartValue {
@@ -39,67 +46,83 @@ export interface TryoutValue {
 
 interface TryoutPartContextValue {
   actions: {
+    clickTryoutStartAction: () => void;
     completePart: () => void;
+    confirmTryoutStartAction: () => void;
     goToSet: () => void;
+    setTryoutStartDialogOpenAction: (open: boolean) => void;
     startPart: () => void;
   };
   meta: {
     isActionPending: boolean;
+    isStartBlocked: boolean;
+    isTryoutStartDialogOpen: boolean;
   };
   state: {
     answers: TryoutPartPageState["answers"];
     attempt: TryoutPartPageState["attempt"];
     canStartPart: boolean;
     isAwaitingExpiry: boolean;
+    isTryoutActive: boolean;
     isTryoutFinished: boolean;
-    isRuntimePending: boolean;
     part: TryoutPartValue;
     partEndReason: TryoutPartPageState["partEndReason"];
     score: TryoutPartPageState["score"];
-    shouldShowTryoutStartButton: boolean;
+    shouldShowTryoutStartControls: boolean;
     status: TryoutPartUiStatus;
     timer: ReturnType<typeof useExerciseTimer>;
     tryoutAttemptStatus: TryoutPartPageState["tryoutAttemptStatus"];
-    tryoutScoreStatus: TryoutPartPageState["tryoutScoreStatus"];
+    tryoutPublicResultStatus: TryoutPartPageState["tryoutPublicResultStatus"];
     tryout: TryoutValue;
   };
 }
 
+type TryoutPartRuntime = FunctionReturnType<
+  typeof api.tryouts.queries.me.part.getUserTryoutPartAttempt
+>;
+type PreloadedTryoutPartRuntime = Preloaded<
+  typeof api.tryouts.queries.me.part.getUserTryoutPartAttempt
+>;
+
 const TryoutPartContext = createContext<TryoutPartContextValue | null>(null);
 
-export function TryoutPartProvider({
-  children,
+/** Builds the full part-route state from one server-owned runtime snapshot. */
+function useResolvedTryoutPartValue({
+  hasAuthenticatedRoute,
+  initialNowMs,
   part,
+  runtime,
   tryout,
 }: {
-  children: ReactNode;
+  hasAuthenticatedRoute: boolean;
+  initialNowMs?: number;
   part: TryoutPartValue;
+  runtime: TryoutPartRuntime | null;
   tryout: TryoutValue;
 }) {
   const tTryouts = useTranslations("Tryouts");
-  const [isActionPending, startTransition] = useTransition();
   const router = useRouter();
-  const isUserPending = useUser((state) => state.isPending);
-  const user = useUser((state) => state.user);
-  const shouldLoadRuntime = !isUserPending && Boolean(user);
-  const { data: runtime, isPending: isPartStatePending } = useQueryWithStatus(
-    api.tryouts.queries.me.part.getUserTryoutPartAttempt,
-    shouldLoadRuntime
-      ? {
-          locale: tryout.locale,
-          partKey: part.key,
-          product: tryout.product,
-          tryoutSlug: tryout.slug,
-        }
-      : "skip"
-  );
+  const [isActionPending, startTransition] = useTransition();
+  const {
+    clickStartAction,
+    confirmStartAction,
+    isDialogOpen,
+    isStartBlocked,
+    setDialogOpenAction,
+  } = useTryoutStartFlow({
+    access: hasAuthenticatedRoute ? "authenticated" : "anonymous",
+    params: {
+      locale: tryout.locale,
+      product: tryout.product,
+      tryoutSlug: tryout.slug,
+    },
+  });
   const nowMs = useTryoutClock(
-    Boolean(runtime && runtime.tryoutAttempt.status === "in-progress")
+    Boolean(runtime && runtime.tryoutAttempt.status === "in-progress"),
+    initialNowMs
   );
-  const isRuntimePending = isUserPending || (user ? isPartStatePending : false);
   const startPart = useMutation(api.tryouts.mutations.attempts.startPart);
   const completePart = useMutation(api.tryouts.mutations.attempts.completePart);
-
   const {
     answers,
     attempt,
@@ -108,13 +131,12 @@ export function TryoutPartProvider({
     score,
     status,
     tryoutAttemptStatus,
-    tryoutScoreStatus,
+    tryoutPublicResultStatus,
   } = deriveTryoutPartPageState({
-    isRuntimePending,
     nowMs,
     runtime,
   });
-  const shouldShowTryoutStartButton = !(isRuntimePending || (user && runtime));
+  const shouldShowTryoutStartControls = status === "needs-tryout";
 
   const goToSet = useCallback(() => {
     router.push(`/try-out/${tryout.product}/${tryout.slug}`);
@@ -141,6 +163,7 @@ export function TryoutPartProvider({
   const isAwaitingExpiry = Boolean(
     attempt && attempt.status === "in-progress" && timer.isExpired
   );
+  const isTryoutActive = tryoutAttemptStatus === "in-progress";
   const isTryoutFinished = Boolean(
     runtime &&
       getEffectiveTryoutStatus({
@@ -150,7 +173,7 @@ export function TryoutPartProvider({
       }) !== "in-progress"
   );
 
-  const handleStartPart = useCallback(() => {
+  const startPartAction = useCallback(() => {
     if (!runtime) {
       return;
     }
@@ -172,7 +195,7 @@ export function TryoutPartProvider({
     });
   }, [part.key, runtime, startPart, tTryouts]);
 
-  const handleCompletePart = useCallback(() => {
+  const completePartAction = useCallback(() => {
     startTransition(async () => {
       try {
         const didCompletePart = await completeCurrentPart();
@@ -211,56 +234,89 @@ export function TryoutPartProvider({
     });
   }, [completeCurrentPart, goToSet, tTryouts]);
 
-  const value = useMemo(
+  return useMemo(
     () => ({
       actions: {
-        completePart: handleCompletePart,
+        clickTryoutStartAction: clickStartAction,
+        completePart: completePartAction,
+        confirmTryoutStartAction: confirmStartAction,
         goToSet,
-        startPart: handleStartPart,
+        setTryoutStartDialogOpenAction: setDialogOpenAction,
+        startPart: startPartAction,
       },
       meta: {
         isActionPending,
+        isStartBlocked,
+        isTryoutStartDialogOpen: isDialogOpen,
       },
       state: {
         answers,
         attempt,
         canStartPart,
         isAwaitingExpiry,
+        isTryoutActive,
         isTryoutFinished,
-        isRuntimePending,
         part,
         partEndReason,
         score,
-        shouldShowTryoutStartButton,
+        shouldShowTryoutStartControls,
         status,
         timer,
-        tryoutAttemptStatus,
-        tryoutScoreStatus,
         tryout,
+        tryoutAttemptStatus,
+        tryoutPublicResultStatus,
       },
     }),
     [
       answers,
       attempt,
       canStartPart,
+      clickStartAction,
+      completePartAction,
+      confirmStartAction,
       goToSet,
-      handleCompletePart,
-      handleStartPart,
-      isAwaitingExpiry,
-      isTryoutFinished,
       isActionPending,
-      isRuntimePending,
+      isAwaitingExpiry,
+      isDialogOpen,
+      isStartBlocked,
+      isTryoutActive,
+      isTryoutFinished,
       part,
       partEndReason,
       score,
-      shouldShowTryoutStartButton,
+      setDialogOpenAction,
+      shouldShowTryoutStartControls,
+      startPartAction,
       status,
       timer,
-      tryoutAttemptStatus,
-      tryoutScoreStatus,
       tryout,
+      tryoutAttemptStatus,
+      tryoutPublicResultStatus,
     ]
   );
+}
+
+/** Hydrates one authenticated part route from its server-preloaded runtime. */
+function PreloadedTryoutPartProvider({
+  children,
+  initialNowMs,
+  part,
+  preloadedRuntime,
+  tryout,
+}: PropsWithChildren<{
+  initialNowMs?: number;
+  part: TryoutPartValue;
+  preloadedRuntime: PreloadedTryoutPartRuntime;
+  tryout: TryoutValue;
+}>) {
+  const runtime = usePreloadedAuthQuery(preloadedRuntime) ?? null;
+  const value = useResolvedTryoutPartValue({
+    hasAuthenticatedRoute: true,
+    initialNowMs,
+    part,
+    runtime,
+    tryout,
+  });
 
   return (
     <TryoutPartContext.Provider value={value}>
@@ -269,7 +325,70 @@ export function TryoutPartProvider({
   );
 }
 
-/** Selects a slice of the active tryout part context. */
+/** Provides the anonymous part route state when no authenticated runtime exists. */
+function AnonymousTryoutPartProvider({
+  children,
+  initialNowMs,
+  part,
+  tryout,
+}: PropsWithChildren<{
+  initialNowMs?: number;
+  part: TryoutPartValue;
+  tryout: TryoutValue;
+}>) {
+  const value = useResolvedTryoutPartValue({
+    hasAuthenticatedRoute: false,
+    initialNowMs,
+    part,
+    runtime: null,
+    tryout,
+  });
+
+  return (
+    <TryoutPartContext.Provider value={value}>
+      {children}
+    </TryoutPartContext.Provider>
+  );
+}
+
+/** Provides the full part-route runtime and fallback start state. */
+export function TryoutPartProvider({
+  children,
+  initialNowMs,
+  part,
+  preloadedRuntime,
+  tryout,
+}: PropsWithChildren<{
+  initialNowMs?: number;
+  part: TryoutPartValue;
+  preloadedRuntime?: PreloadedTryoutPartRuntime;
+  tryout: TryoutValue;
+}>) {
+  if (preloadedRuntime) {
+    return (
+      <PreloadedTryoutPartProvider
+        initialNowMs={initialNowMs}
+        part={part}
+        preloadedRuntime={preloadedRuntime}
+        tryout={tryout}
+      >
+        {children}
+      </PreloadedTryoutPartProvider>
+    );
+  }
+
+  return (
+    <AnonymousTryoutPartProvider
+      initialNowMs={initialNowMs}
+      part={part}
+      tryout={tryout}
+    >
+      {children}
+    </AnonymousTryoutPartProvider>
+  );
+}
+
+/** Selects one slice of the active part-route state. */
 export function useTryoutPart<T>(
   selector: (state: TryoutPartContextValue) => T
 ) {

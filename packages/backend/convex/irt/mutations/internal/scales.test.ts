@@ -8,8 +8,9 @@ import {
 } from "@repo/backend/convex/irt/policy";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { logger } from "@repo/backend/convex/utils/logger";
 import { convexTest } from "convex-test";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const REAL_SNBT_SET_1_TRYOUT = {
   product: "snbt" as const,
@@ -41,6 +42,7 @@ async function insertRealSnbtSet1Tryout(
   overrides?: Partial<typeof REAL_SNBT_SET_1_TRYOUT>
 ) {
   return await ctx.db.insert("tryouts", {
+    catalogPosition: 1,
     product: overrides?.product ?? REAL_SNBT_SET_1_TRYOUT.product,
     locale: overrides?.locale ?? REAL_SNBT_SET_1_TRYOUT.locale,
     cycleKey: overrides?.cycleKey ?? REAL_SNBT_SET_1_TRYOUT.cycleKey,
@@ -109,6 +111,15 @@ async function insertRealSnbtSet1Parts(
 }
 
 describe("irt/mutations/internal/scales", () => {
+  beforeEach(() => {
+    vi.spyOn(logger, "error").mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
   it("returns zero work when the quality refresh queue is empty", async () => {
     const t = convexTest(schema, convexModules);
 
@@ -190,8 +201,6 @@ describe("irt/mutations/internal/scales", () => {
       staleQuestionCount: 0,
       minAttemptCount: 0,
     });
-
-    vi.useRealTimers();
   });
 
   it("re-enqueues failed quality refresh work for a malformed tryout", async () => {
@@ -236,8 +245,6 @@ describe("irt/mutations/internal/scales", () => {
     expect(result.queueEntries).toHaveLength(1);
     expect(result.queueEntries[0]?.processingStartedAt).toBeUndefined();
     expect(result.qualityCheck).toBeNull();
-
-    vi.useRealTimers();
   });
 
   it("keeps a claimed queue row so the same tryout cannot be re-enqueued mid-refresh", async () => {
@@ -303,8 +310,6 @@ describe("irt/mutations/internal/scales", () => {
       tryoutId,
       status: "blocked",
     });
-
-    vi.useRealTimers();
   });
 
   it("reclaims a stale claimed queue row when the same tryout is enqueued again", async () => {
@@ -350,8 +355,6 @@ describe("irt/mutations/internal/scales", () => {
       enqueuedAt: Date.now(),
     });
     expect(result.queueEntries[0]?.processingStartedAt).toBeUndefined();
-
-    vi.useRealTimers();
   });
 
   it("drains pending rows even when older claimed rows are still ahead of them", async () => {

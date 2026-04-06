@@ -9,7 +9,7 @@ const SECONDS_PER_MINUTE = 60;
 const MILLISECONDS_PER_SECOND = 1000;
 const SNBT_ATTEMPT_WINDOW_DAYS = 3;
 const SNBT_SIMULATION_SECONDS_PER_QUESTION = 90;
-const SNBT_REPORT_SCORE_MIN = 100;
+const SNBT_REPORT_SCORE_MIN = 0;
 const SNBT_REPORT_SCORE_MAX = 1000;
 const SNBT_REPORT_THETA_MIN = -4;
 const SNBT_REPORT_THETA_MAX = 4;
@@ -27,7 +27,6 @@ const snbtPartLabels = getSubjects("snbt").map((subject) => subject.label);
 const snbtPartOrder = new Map(
   snbtPartLabels.map((material, index) => [material, index])
 );
-
 /** Extracts the SNBT cycle year from a yearful tryout set slug. */
 function getSnbtCycleKeyFromSetSlug(setSlug: Doc<"exerciseSets">["slug"]) {
   const match = setSlug.match(YEARFUL_TRYOUT_SET_SLUG_REGEX);
@@ -41,17 +40,26 @@ function getSnbtCycleKeyFromSetSlug(setSlug: Doc<"exerciseSets">["slug"]) {
 
 /** Sorts SNBT tryouts by newest cycle and then by label. */
 function compareSnbtTryouts(
-  left: Pick<Doc<"tryouts">, "cycleKey" | "label">,
-  right: Pick<Doc<"tryouts">, "cycleKey" | "label">
+  left: Pick<Doc<"tryouts">, "cycleKey" | "label" | "slug">,
+  right: Pick<Doc<"tryouts">, "cycleKey" | "label" | "slug">
 ) {
-  return (
-    right.cycleKey.localeCompare(left.cycleKey) ||
-    left.label.localeCompare(right.label)
-  );
+  const cycleComparison = right.cycleKey.localeCompare(left.cycleKey);
+
+  if (cycleComparison !== 0) {
+    return cycleComparison;
+  }
+
+  const labelComparison = left.label.localeCompare(right.label);
+
+  if (labelComparison !== 0) {
+    return labelComparison;
+  }
+
+  return left.slug.localeCompare(right.slug);
 }
 
 /**
- * Map the bounded operational theta estimate onto SNBT's public 100-1000
+ * Map the bounded operational theta estimate onto SNBT's public 0-1000
  * report-score scale.
  *
  * The public score intentionally stays anchored to `[-4, 4]` even though the

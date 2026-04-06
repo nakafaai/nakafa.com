@@ -20,6 +20,7 @@ import { useStickyVisibility } from "@/lib/hooks/use-sticky-visibility";
 
 type TryoutPartDialogSetter = Dispatch<SetStateAction<boolean>>;
 
+/** Renders the sticky countdown and completion controls for an active part. */
 export function TryoutPartSticky({
   setCompleteDialogOpenAction,
 }: {
@@ -87,16 +88,14 @@ export function TryoutPartSticky({
   );
 }
 
+/** Renders the primary CTA for starting the current part attempt. */
 export function TryoutPartStartCta() {
   const tTryouts = useTranslations("Tryouts");
-  const isRuntimePending = useTryoutPart(
-    (state) => state.state.isRuntimePending
-  );
   const canStartPart = useTryoutPart((state) => state.state.canStartPart);
   const isActionPending = useTryoutPart((state) => state.meta.isActionPending);
   const startPart = useTryoutPart((state) => state.actions.startPart);
 
-  if (isRuntimePending || !canStartPart) {
+  if (!canStartPart) {
     return null;
   }
 
@@ -113,17 +112,11 @@ export function TryoutPartStartCta() {
   );
 }
 
+/** Renders the CTA that returns the student to the set overview. */
 export function TryoutPartBackCta() {
   const tTryouts = useTranslations("Tryouts");
-  const isRuntimePending = useTryoutPart(
-    (state) => state.state.isRuntimePending
-  );
   const status = useTryoutPart((state) => state.state.status);
   const goToSet = useTryoutPart((state) => state.actions.goToSet);
-
-  if (isRuntimePending) {
-    return null;
-  }
 
   switch (status) {
     case "completed":
@@ -141,6 +134,7 @@ export function TryoutPartBackCta() {
   );
 }
 
+/** Renders the confirmation dialog for completing the current part. */
 export function TryoutPartDialog({
   isCompleteDialogOpen,
   setCompleteDialogOpenAction,

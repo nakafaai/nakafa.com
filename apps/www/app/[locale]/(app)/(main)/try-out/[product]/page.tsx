@@ -5,49 +5,31 @@ import {
   type TryoutProduct,
   tryoutProducts,
 } from "@repo/backend/convex/tryouts/products";
-import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { cn } from "@repo/design-system/lib/utils";
 import { fetchQuery } from "convex/nextjs";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import {
-  TryoutCard,
-  TryoutCardArt,
-  TryoutCardBody,
-  TryoutCardContent,
-  TryoutCardCopy,
-  TryoutCardDescription,
-  TryoutCardHero,
-  TryoutCardTitle,
-} from "@/components/tryout/card";
-import {
-  TryoutPackageCopy,
-  TryoutPackageEmpty,
-  TryoutPackageHeader,
-  TryoutPackageItems,
-  TryoutPackageLink,
-  TryoutPackageMeta,
-  TryoutPackageTitle,
-  TryoutPackageYear,
-} from "@/components/tryout/package-list";
-import { TryoutPackageStatusBadge } from "@/components/tryout/package-progress";
+import { TryoutCatalogCard } from "@/components/tryout/catalog-card";
+import { TryoutCatalogList } from "@/components/tryout/catalog-list";
 import { SnbtTryoutIcon } from "@/components/tryout/product-icon";
-import { TryoutPackageProgressProvider } from "@/components/tryout/providers/package-progress";
-import { groupActiveTryoutsByCycle } from "@/components/tryout/utils/package-list";
+import { TRYOUT_CATALOG_PAGE_SIZE } from "@/components/tryout/utils/catalog";
+import { getToken } from "@/lib/auth/server";
 
 interface Props {
   params: Promise<{ locale: Locale; product: string }>;
 }
 
+/** Enumerates the supported tryout product routes for static route discovery. */
 export function generateStaticParams() {
   return tryoutProducts.map((product) => ({ product }));
 }
 
+/** Renders the server-backed tryout product landing page. */
 export default async function Page({ params }: Props) {
   const { locale, product: productParam } = await params;
+  const initialNowMs = Date.now();
 
   setRequestLocale(locale);
 
@@ -56,16 +38,20 @@ export default async function Page({ params }: Props) {
   }
   const product: TryoutProduct = productParam;
 
-  const [tCommon, tTryouts, activeTryouts] = await Promise.all([
+  const [tCommon, tTryouts, token] = await Promise.all([
     getTranslations({ locale, namespace: "Common" }),
     getTranslations({ locale, namespace: "Tryouts" }),
-    fetchQuery(api.tryouts.queries.tryouts.getActiveTryouts, {
-      locale,
-      product,
-    }),
+    getToken(),
   ]);
-
-  const cycleGroups = groupActiveTryoutsByCycle(activeTryouts);
+  const catalogSnapshot = await fetchQuery(
+    api.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot,
+    {
+      locale,
+      pageSize: TRYOUT_CATALOG_PAGE_SIZE,
+      product,
+    },
+    token ? { token } : undefined
+  );
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
@@ -94,82 +80,21 @@ export default async function Page({ params }: Props) {
           </p>
         </header>
 
-        <TryoutCard>
-          <TryoutCardHero>
-            <TryoutCardArt>
-              <SnbtTryoutIcon />
-            </TryoutCardArt>
-
-            <TryoutCardBody className="gap-0">
-              <TryoutCardCopy>
-                <div className="flex flex-wrap items-center gap-2">
-                  <TryoutCardTitle>
-                    {tTryouts("products.snbt.title")}
-                  </TryoutCardTitle>
-                  <Badge variant="outline">
-                    {tTryouts("package-count", { count: activeTryouts.length })}
-                  </Badge>
-                </div>
-
-                <TryoutCardDescription>
-                  {tTryouts("products.snbt.description")}
-                </TryoutCardDescription>
-              </TryoutCardCopy>
-            </TryoutCardBody>
-          </TryoutCardHero>
-
-          <TryoutCardContent>
-            {cycleGroups.length === 0 ? (
-              <TryoutPackageEmpty>{tTryouts("list-empty")}</TryoutPackageEmpty>
-            ) : (
-              <TryoutPackageProgressProvider
-                locale={locale}
-                product={product}
-                tryoutPackages={activeTryouts.map((tryout) => ({
-                  slug: tryout.slug,
-                  tryoutId: tryout._id,
-                }))}
-              >
-                {cycleGroups.map((group, index) => (
-                  <div
-                    className={cn(index > 0 && "border-t")}
-                    key={group.cycleKey}
-                  >
-                    <TryoutPackageYear>
-                      {tTryouts("year-title", { year: group.cycleKey })}
-                    </TryoutPackageYear>
-
-                    <TryoutPackageItems>
-                      {group.tryouts.map((tryout) => (
-                        <TryoutPackageLink
-                          href={`/try-out/${product}/${tryout.slug}`}
-                          key={tryout._id}
-                        >
-                          <TryoutPackageCopy>
-                            <TryoutPackageHeader>
-                              <TryoutPackageTitle>
-                                {tryout.label}
-                              </TryoutPackageTitle>
-                              <TryoutPackageStatusBadge
-                                tryoutSlug={tryout.slug}
-                              />
-                            </TryoutPackageHeader>
-                            <TryoutPackageMeta>
-                              {tTryouts("available-item-description", {
-                                parts: tryout.partCount,
-                                questions: tryout.totalQuestionCount,
-                              })}
-                            </TryoutPackageMeta>
-                          </TryoutPackageCopy>
-                        </TryoutPackageLink>
-                      ))}
-                    </TryoutPackageItems>
-                  </div>
-                ))}
-              </TryoutPackageProgressProvider>
-            )}
-          </TryoutCardContent>
-        </TryoutCard>
+        <TryoutCatalogCard
+          activeCountLabel={tTryouts("package-count", {
+            count: catalogSnapshot.activeCount,
+          })}
+          art={<SnbtTryoutIcon />}
+          description={tTryouts("products.snbt.description")}
+          title={tTryouts("products.snbt.title")}
+        >
+          <TryoutCatalogList
+            initialEntries={catalogSnapshot.initialPage}
+            initialNowMs={initialNowMs}
+            locale={locale}
+            product={product}
+          />
+        </TryoutCatalogCard>
       </div>
     </div>
   );
