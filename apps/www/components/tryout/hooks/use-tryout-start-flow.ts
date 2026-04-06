@@ -100,7 +100,7 @@ export function useTryoutStartFlow({
       const result = await startTryout({
         ...params,
         partKeys,
-        successUrl: window.location.href,
+        returnPath: pathname,
       });
 
       if (result.ok) {

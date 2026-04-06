@@ -9,6 +9,7 @@ import {
   revalidateTryoutSet,
   type TryoutSetRouteInput,
 } from "@/components/tryout/actions/revalidate";
+import { env } from "@/env";
 import { fetchAuthAction, fetchAuthMutation } from "@/lib/auth/server";
 
 type StartTryoutArgs = FunctionArgs<
@@ -22,7 +23,7 @@ type StartTryoutErrorCode =
 
 /** Input required to start one tryout attempt and refresh its route family. */
 export interface StartTryoutInput extends StartTryoutArgs, TryoutSetRouteInput {
-  successUrl: string;
+  returnPath: string;
 }
 
 /** Result returned after attempting to start one tryout attempt. */
@@ -51,8 +52,23 @@ function getStartTryoutErrorCode(error: unknown): StartTryoutErrorCode {
   return "UNKNOWN";
 }
 
+/** Builds a trusted absolute checkout return URL from one internal app path. */
+function getCheckoutSuccessUrl(returnPath: string) {
+  if (!returnPath.startsWith("/") || returnPath.startsWith("//")) {
+    return null;
+  }
+
+  return new URL(returnPath, env.SITE_URL).toString();
+}
+
 /** Creates the checkout URL used when the tryout requires paid access. */
-async function getCheckoutUrl(successUrl: string) {
+async function getCheckoutUrl(returnPath: string) {
+  const successUrl = getCheckoutSuccessUrl(returnPath);
+
+  if (!successUrl) {
+    return null;
+  }
+
   try {
     const result = await fetchAuthAction(
       api.customers.actions.public.generateCheckoutLink,
@@ -74,7 +90,7 @@ async function getCheckoutUrl(successUrl: string) {
  */
 export async function startTryout({
   partKeys,
-  successUrl,
+  returnPath,
   ...args
 }: StartTryoutInput): Promise<StartTryoutResult> {
   try {
@@ -90,7 +106,7 @@ export async function startTryout({
       return { code: "UNKNOWN", ok: false };
     }
 
-    const checkoutUrl = await getCheckoutUrl(successUrl);
+    const checkoutUrl = await getCheckoutUrl(returnPath);
 
     if (!checkoutUrl) {
       return { code: "UNKNOWN", ok: false };
