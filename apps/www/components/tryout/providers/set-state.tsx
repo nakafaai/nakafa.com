@@ -27,6 +27,7 @@ interface TryoutSetContextValue {
   actions: {
     clickStartAction: () => void;
     confirmStartAction: () => void;
+    prefetchAuthAction: () => void;
     setDialogOpenAction: (open: boolean) => void;
   };
   meta: {
@@ -117,6 +118,7 @@ function useResolvedTryoutSetValue({
     isActionPending,
     isDialogOpen,
     isStartBlocked,
+    prefetchAuthAction,
     setDialogOpenAction,
   } = useTryoutStartFlow({
     access: hasAuthenticatedRoute ? "authenticated" : "anonymous",
@@ -130,6 +132,7 @@ function useResolvedTryoutSetValue({
       actions: {
         clickStartAction,
         confirmStartAction,
+        prefetchAuthAction,
         setDialogOpenAction,
       },
       meta: {
@@ -161,6 +164,7 @@ function useResolvedTryoutSetValue({
       isStartBlocked,
       nowMs,
       params,
+      prefetchAuthAction,
       remainingTime,
       resumePartKey,
       setDialogOpenAction,

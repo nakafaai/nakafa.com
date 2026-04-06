@@ -4,25 +4,24 @@ import { Rocket01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import type { ComponentProps, ReactNode } from "react";
+
+interface TryoutStartActionButtonProps
+  extends Omit<ComponentProps<typeof Button>, "children"> {
+  children: ReactNode;
+  isPending: boolean;
+}
 
 /** Renders one shared start action button for tryout entry points. */
 export function TryoutStartActionButton({
-  className,
-  isBlocked,
+  children,
   isPending,
-  label,
-  onClickAction,
-}: {
-  className?: string;
-  isBlocked: boolean;
-  isPending: boolean;
-  label: string;
-  onClickAction: () => void;
-}) {
+  ...props
+}: TryoutStartActionButtonProps) {
   return (
-    <Button className={className} disabled={isBlocked} onClick={onClickAction}>
+    <Button {...props}>
       <Spinner icon={Rocket01Icon} isLoading={isPending} />
-      {label}
+      {children}
     </Button>
   );
 }
@@ -61,10 +60,14 @@ export function TryoutStartConfirmDialog({
           >
             {cancelLabel}
           </Button>
-          <Button disabled={isBlocked} onClick={onConfirmAction} type="button">
-            <Spinner icon={Rocket01Icon} isLoading={isPending} />
+          <TryoutStartActionButton
+            disabled={isBlocked}
+            isPending={isPending}
+            onClick={onConfirmAction}
+            type="button"
+          >
             {confirmLabel}
-          </Button>
+          </TryoutStartActionButton>
         </div>
       }
       open={isOpen}

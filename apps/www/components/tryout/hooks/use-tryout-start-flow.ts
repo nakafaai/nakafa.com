@@ -41,6 +41,7 @@ export function useTryoutStartFlow({
   const [isActionPending, startTransition] = useTransition();
   const [isDialogOpen, { close: closeDialog, open: openDialog }] =
     useDisclosure(false);
+  const authHref = `/auth?redirect=${pathname}`;
   const isAuthPending = access === "authenticated" && isLoading;
   const isStartBlocked = isActionPending || isAuthPending;
 
@@ -62,7 +63,7 @@ export function useTryoutStartFlow({
     }
 
     if (access === "anonymous" || !isAuthenticated) {
-      router.push(`/auth?redirect=${pathname}`);
+      router.push(authHref);
       return;
     }
 
@@ -76,15 +77,27 @@ export function useTryoutStartFlow({
     openDialog();
   }, [
     access,
+    authHref,
     isAuthenticated,
     isLoading,
     openDialog,
     params.product,
     params.tryoutSlug,
-    pathname,
     resumePartKey,
     router,
   ]);
+
+  const prefetchAuthAction = useCallback(() => {
+    if (access === "authenticated" && isLoading) {
+      return;
+    }
+
+    if (access === "authenticated" && isAuthenticated) {
+      return;
+    }
+
+    router.prefetch(authHref);
+  }, [access, authHref, isAuthenticated, isLoading, router]);
 
   const confirmStartAction = useCallback(() => {
     if (access === "authenticated" && isLoading) {
@@ -92,7 +105,7 @@ export function useTryoutStartFlow({
     }
 
     if (access === "anonymous" || !isAuthenticated) {
-      router.push(`/auth?redirect=${pathname}`);
+      router.push(authHref);
       return;
     }
 
@@ -136,6 +149,7 @@ export function useTryoutStartFlow({
     partKeys,
     params,
     pathname,
+    authHref,
     router,
     tTryouts,
   ]);
@@ -146,6 +160,7 @@ export function useTryoutStartFlow({
     isActionPending,
     isDialogOpen,
     isStartBlocked,
+    prefetchAuthAction,
     setDialogOpenAction,
   };
 }
