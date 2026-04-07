@@ -5,6 +5,7 @@ import {
 } from "@repo/backend/convex/tryouts/products";
 import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
 import { fetchQuery } from "convex/nextjs";
+import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -33,17 +34,36 @@ export default async function Page({ params }: Props) {
   }
   const product: TryoutProduct = productParam;
 
-  const [tCommon, tExercises, tTryouts, details, token] = await Promise.all([
-    getTranslations({ locale, namespace: "Common" }),
-    getTranslations({ locale, namespace: "Exercises" }),
-    getTranslations({ locale, namespace: "Tryouts" }),
-    fetchQuery(api.tryouts.queries.tryouts.getTryoutDetails, {
-      locale,
-      product,
-      slug,
-    }),
-    getToken(),
-  ]);
+  const { tCommon, tExercises, tTryouts, details, token } =
+    await Effect.runPromise(
+      Effect.all({
+        tCommon: Effect.tryPromise({
+          try: () => getTranslations({ locale, namespace: "Common" }),
+          catch: () => new Error("Failed to load common translations"),
+        }),
+        tExercises: Effect.tryPromise({
+          try: () => getTranslations({ locale, namespace: "Exercises" }),
+          catch: () => new Error("Failed to load exercise translations"),
+        }),
+        tTryouts: Effect.tryPromise({
+          try: () => getTranslations({ locale, namespace: "Tryouts" }),
+          catch: () => new Error("Failed to load tryout translations"),
+        }),
+        details: Effect.tryPromise({
+          try: () =>
+            fetchQuery(api.tryouts.queries.tryouts.getTryoutDetails, {
+              locale,
+              product,
+              slug,
+            }),
+          catch: () => new Error("Failed to load tryout details"),
+        }),
+        token: Effect.tryPromise({
+          try: () => getToken(),
+          catch: () => new Error("Failed to load user token"),
+        }),
+      })
+    );
 
   if (!details) {
     notFound();

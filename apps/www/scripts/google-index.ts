@@ -30,6 +30,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { Effect } from "effect";
 import { JWT } from "google-auth-library";
 import {
   baseRoutes,
@@ -161,9 +162,17 @@ async function getUnsubmittedUrls(): Promise<{
   // Get all entries asynchronously - simplified to only locale-prefixed routes
   // Per Google best practices: sitemaps should only contain URLs you want indexed
   // https://www.sitemaps.org/protocol.html
-  const routePromises = allBaseRoutes.map((route) => getEntries(route));
-
-  const routeArrays = await Promise.all(routePromises);
+  const routeArrays = await Effect.runPromise(
+    Effect.all(
+      allBaseRoutes.map((route) =>
+        Effect.tryPromise({
+          try: () => getEntries(route),
+          catch: () =>
+            new Error(`Failed to load sitemap entries for route ${route}`),
+        })
+      )
+    )
+  );
 
   const allEntries = routeArrays.flat();
 

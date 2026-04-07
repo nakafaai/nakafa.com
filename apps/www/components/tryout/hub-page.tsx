@@ -5,6 +5,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { fetchQuery } from "convex/nextjs";
+import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { TryoutCatalogCard } from "@/components/tryout/catalog-card";
@@ -18,25 +19,56 @@ import { getToken } from "@/lib/auth/server";
 export async function TryoutHubPage({ locale }: { locale: Locale }) {
   const product: TryoutProduct = "snbt";
   const initialNowMs = Date.now();
-  const [tHome, tTryouts, token] = await Promise.all([
-    getTranslations({ locale, namespace: "Home" }),
-    getTranslations({ locale, namespace: "Tryouts" }),
-    getToken(),
-  ]);
-  const [catalogSnapshot, currentUser] = await Promise.all([
-    fetchQuery(
-      api.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot,
-      {
-        locale,
-        pageSize: TRYOUT_CATALOG_PAGE_SIZE,
-        product,
-      },
-      token ? { token } : undefined
-    ),
-    token
-      ? fetchQuery(api.auth.getCurrentUser, {}, { token })
-      : Promise.resolve(null),
-  ]);
+  const { tHome, tTryouts, catalogSnapshot, currentUser } =
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const { tHome, tTryouts, token } = yield* Effect.all(
+          {
+            tHome: Effect.tryPromise({
+              try: () => getTranslations({ locale, namespace: "Home" }),
+              catch: () => new Error("Failed to load home translations"),
+            }),
+            tTryouts: Effect.tryPromise({
+              try: () => getTranslations({ locale, namespace: "Tryouts" }),
+              catch: () => new Error("Failed to load tryout translations"),
+            }),
+            token: Effect.tryPromise({
+              try: () => getToken(),
+              catch: () => new Error("Failed to load user token"),
+            }),
+          },
+          { concurrency: "unbounded" }
+        );
+
+        const { catalogSnapshot, currentUser } = yield* Effect.all(
+          {
+            catalogSnapshot: Effect.tryPromise({
+              try: () =>
+                fetchQuery(
+                  api.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot,
+                  {
+                    locale,
+                    pageSize: TRYOUT_CATALOG_PAGE_SIZE,
+                    product,
+                  },
+                  token ? { token } : undefined
+                ),
+              catch: () =>
+                new Error("Failed to load active tryout catalog snapshot"),
+            }),
+            currentUser: token
+              ? Effect.tryPromise({
+                  try: () => fetchQuery(api.auth.getCurrentUser, {}, { token }),
+                  catch: () => new Error("Failed to load current user"),
+                })
+              : Effect.succeed(null),
+          },
+          { concurrency: "unbounded" }
+        );
+
+        return { tHome, tTryouts, token, catalogSnapshot, currentUser };
+      })
+    );
   const userName = currentUser?.appUser.name ?? tHome("guest");
 
   return (

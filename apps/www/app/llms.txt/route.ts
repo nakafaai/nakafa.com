@@ -34,24 +34,26 @@ export async function GET() {
   scanned.push("---");
 
   // Fetch all articles and subjects for all locales in parallel
-  const contentPromises = locales.flatMap((locale) => [
-    Effect.runPromise(
-      getContentsMetadata({ locale, basePath: "articles" })
-    ).then((contents) => ({
-      section: "Articles",
-      locale,
-      contents,
-    })),
-    Effect.runPromise(
-      getContentsMetadata({ locale, basePath: "subject" })
-    ).then((contents) => ({
-      section: "Subjects",
-      locale,
-      contents,
-    })),
+  const contentRequests = locales.flatMap((locale) => [
+    Effect.map(
+      getContentsMetadata({ locale, basePath: "articles" }),
+      (contents) => ({
+        section: "Articles",
+        locale,
+        contents,
+      })
+    ),
+    Effect.map(
+      getContentsMetadata({ locale, basePath: "subject" }),
+      (contents) => ({
+        section: "Subjects",
+        locale,
+        contents,
+      })
+    ),
   ]);
 
-  const results = await Promise.all(contentPromises);
+  const results = await Effect.runPromise(Effect.all(contentRequests));
 
   // Group results by section
   const map = new Map<string, string[]>();

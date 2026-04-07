@@ -16,6 +16,7 @@ import type { ParsedHeading } from "@repo/contents/_types/toc";
 import { slugify } from "@repo/design-system/lib/utils";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
+import { Effect } from "effect";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -139,10 +140,18 @@ async function PageContent({
   const gradePath = getGradePath(category, grade);
   const FilePath = getMaterialPath(category, grade, material);
 
-  const [materials, t] = await Promise.all([
-    getMaterials(FilePath, locale),
-    getTranslations({ locale, namespace: "Subject" }),
-  ]);
+  const { materials, t } = await Effect.runPromise(
+    Effect.all({
+      materials: Effect.tryPromise({
+        try: () => getMaterials(FilePath, locale),
+        catch: () => new Error("Failed to load materials"),
+      }),
+      t: Effect.tryPromise({
+        try: () => getTranslations({ locale, namespace: "Subject" }),
+        catch: () => new Error("Failed to load Subject translations"),
+      }),
+    })
+  );
 
   const chapters: ParsedHeading[] = materials.map((mat) => ({
     label: mat.title,

@@ -44,6 +44,7 @@ import {
   type Tool,
 } from "ai";
 import { fetchAction, fetchMutation } from "convex/nextjs";
+import { Effect } from "effect";
 import { getTranslations } from "next-intl/server";
 import * as z from "zod";
 import { getToken } from "@/lib/auth/server";
@@ -150,10 +151,20 @@ export async function POST(req: Request) {
     country: geo.country ?? "Unknown",
   };
 
-  const [verified, userInfo] = await Promise.all([
-    shouldVerify ? getVerified(url) : Promise.resolve(false),
-    getUserInfo(token),
-  ]);
+  const { verified, userInfo } = await Effect.runPromise(
+    Effect.all({
+      verified: shouldVerify
+        ? Effect.tryPromise({
+            try: () => getVerified(url),
+            catch: () => new Error("Failed to verify URL"),
+          })
+        : Effect.succeed(false),
+      userInfo: Effect.tryPromise({
+        try: () => getUserInfo(token),
+        catch: () => new Error("Failed to load user info"),
+      }),
+    })
+  );
 
   if (!hasEnoughCredits(userInfo.credits, selectedModel)) {
     return new Response(CHAT_ERRORS.INSUFFICIENT_CREDITS.code, {

@@ -71,19 +71,23 @@ export async function generateMetadata({
   const FilePath = getSlugPath(category, grade, material, slug);
   const materialPath = getMaterialPath(category, grade, material);
 
-  // Fetch content and materials in parallel
-  const [{ content }, materials] = await Promise.all([
-    Effect.runPromise(
-      Effect.match(
+  const { context, materials } = await Effect.runPromise(
+    Effect.all({
+      context: Effect.match(
         getContentMetadataContext({ locale, category, grade, material, slug }),
         {
           onFailure: () => ({ content: null, FilePath }),
           onSuccess: (data) => data,
         }
-      )
-    ),
-    getMaterials(materialPath, locale).catch(() => []),
-  ]);
+      ),
+      materials: Effect.tryPromise({
+        try: () => getMaterials(materialPath, locale),
+        catch: () => [],
+      }),
+    })
+  );
+
+  const { content } = context;
 
   const metadata = content?.metadata ?? null;
 
@@ -197,35 +201,39 @@ async function PageContent({
   material: Material;
   slug: string[];
 }) {
-  const [tCommon, tSubject] = await Promise.all([
-    getTranslations({ locale, namespace: "Common" }),
-    getTranslations({ locale, namespace: "Subject" }),
-  ]);
+  const FilePath = getSlugPath(category, grade, material, slug);
+  const materialPath = getMaterialPath(category, grade, material);
 
   if (slug.length === 1) {
     // Means it only contains the chapter name, not the section name
     // The slugs usually have 2 items, chapter and section
     // In the future, we can add a new page specifically for the section
-    const materialPath = getSlugPath(category, grade, material, []);
-    redirect(materialPath);
+    redirect(getSlugPath(category, grade, material, []));
   }
 
-  const FilePath = getSlugPath(category, grade, material, slug);
-  const materialPath = getMaterialPath(category, grade, material);
-
-  const result = await Effect.runPromise(
-    Effect.match(
-      getContentContext({ locale, category, grade, material, slug }),
-      {
-        onFailure: () => ({
-          content: null,
-          materials: null,
-          materialPath,
-          FilePath,
-        }),
-        onSuccess: (data) => data,
-      }
-    )
+  const { tCommon, tSubject, result } = await Effect.runPromise(
+    Effect.all({
+      tCommon: Effect.tryPromise({
+        try: () => getTranslations({ locale, namespace: "Common" }),
+        catch: () => new Error("Failed to load Common translations"),
+      }),
+      tSubject: Effect.tryPromise({
+        try: () => getTranslations({ locale, namespace: "Subject" }),
+        catch: () => new Error("Failed to load Subject translations"),
+      }),
+      result: Effect.match(
+        getContentContext({ locale, category, grade, material, slug }),
+        {
+          onFailure: () => ({
+            content: null,
+            materials: null,
+            materialPath,
+            FilePath,
+          }),
+          onSuccess: (data) => data,
+        }
+      ),
+    })
   );
 
   const { content, materials } = result;

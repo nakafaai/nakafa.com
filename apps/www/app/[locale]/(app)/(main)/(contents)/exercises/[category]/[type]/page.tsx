@@ -7,6 +7,7 @@ import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
+import { Effect } from "effect";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -113,10 +114,18 @@ async function PageContent({
 }) {
   const FilePath = getExercisesPath(category, type);
 
-  const [subjects, t] = await Promise.all([
-    getSubjects(category, type),
-    getTranslations({ locale, namespace: "Exercises" }),
-  ]);
+  const { subjects, t } = await Effect.runPromise(
+    Effect.all({
+      subjects: Effect.tryPromise({
+        try: () => getSubjects(category, type),
+        catch: () => new Error("Failed to load subjects"),
+      }),
+      t: Effect.tryPromise({
+        try: () => getTranslations({ locale, namespace: "Exercises" }),
+        catch: () => new Error("Failed to load Exercises translations"),
+      }),
+    })
+  );
 
   return (
     <>

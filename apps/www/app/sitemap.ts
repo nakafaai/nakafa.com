@@ -259,11 +259,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Generate sitemap entries ONLY for routes with locale prefixes
   // This follows Google's best practice for international sites
   // Source: https://developers.google.com/search/docs/specialty/international/localized-versions
-  const routePromises = allBaseRoutes.map(
-    async (route) => await getEntries(route, MAIN_DOMAIN)
+  const routeArrays = await Effect.runPromise(
+    Effect.all(
+      allBaseRoutes.map((route) =>
+        Effect.tryPromise({
+          try: () => getEntries(route, MAIN_DOMAIN),
+          catch: () => new Error(`Failed to load sitemap entries for ${route}`),
+        })
+      )
+    )
   );
-
-  const routeArrays = await Promise.all(routePromises);
 
   const allEntries = routeArrays.flat();
 

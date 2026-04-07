@@ -14,34 +14,46 @@ const baseUrl = "https://nakafa.com";
 export async function GET() {
   const locales = routing.locales;
 
-  const [t, tCommon] = await Promise.all([
-    getTranslations({
-      namespace: "Metadata",
-      locale: routing.defaultLocale,
-    }),
-    getTranslations({
-      namespace: "Common",
-      locale: routing.defaultLocale,
-    }),
-  ]);
+  const { t, tCommon } = await Effect.runPromise(
+    Effect.all({
+      t: Effect.tryPromise({
+        try: () =>
+          getTranslations({
+            namespace: "Metadata",
+            locale: routing.defaultLocale,
+          }),
+        catch: () => new Error("Failed to load metadata translations"),
+      }),
+      tCommon: Effect.tryPromise({
+        try: () =>
+          getTranslations({
+            namespace: "Common",
+            locale: routing.defaultLocale,
+          }),
+        catch: () => new Error("Failed to load common translations"),
+      }),
+    })
+  );
 
   // Fetch all articles and subjects for all locales in parallel
-  const contentPromises = locales.flatMap((locale) => [
-    Effect.runPromise(
-      getContentsMetadata({ locale, basePath: "articles" })
-    ).then((contents) => ({
-      locale,
-      contents,
-    })),
-    Effect.runPromise(
-      getContentsMetadata({ locale, basePath: "subject" })
-    ).then((contents) => ({
-      locale,
-      contents,
-    })),
+  const contentRequests = locales.flatMap((locale) => [
+    Effect.map(
+      getContentsMetadata({ locale, basePath: "articles" }),
+      (contents) => ({
+        locale,
+        contents,
+      })
+    ),
+    Effect.map(
+      getContentsMetadata({ locale, basePath: "subject" }),
+      (contents) => ({
+        locale,
+        contents,
+      })
+    ),
   ]);
 
-  const results = await Promise.all(contentPromises);
+  const results = await Effect.runPromise(Effect.all(contentRequests));
 
   const feed = new Feed({
     title: t("title"),

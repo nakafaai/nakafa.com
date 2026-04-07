@@ -145,10 +145,18 @@ async function PageContent({
   category: ArticleCategory;
   slug: string;
 }) {
-  const [tCommon, tArticles] = await Promise.all([
-    getTranslations({ locale, namespace: "Common" }),
-    getTranslations({ locale, namespace: "Articles" }),
-  ]);
+  const { tCommon, tArticles } = await Effect.runPromise(
+    Effect.all({
+      tCommon: Effect.tryPromise({
+        try: () => getTranslations({ locale, namespace: "Common" }),
+        catch: () => new Error("Failed to load Common translations"),
+      }),
+      tArticles: Effect.tryPromise({
+        try: () => getTranslations({ locale, namespace: "Articles" }),
+        catch: () => new Error("Failed to load Articles translations"),
+      }),
+    })
+  );
 
   const FilePath = getSlugPath(category, slug);
 

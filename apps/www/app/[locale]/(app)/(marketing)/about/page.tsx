@@ -3,6 +3,7 @@ import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import { EducationalOrgJsonLd } from "@repo/seo/json-ld/educational-org";
 import { FAQPageJsonLd } from "@repo/seo/json-ld/faq-page";
 import type { ListItem } from "@repo/seo/types";
+import { Effect } from "effect";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -82,13 +83,30 @@ export default function Page({ params }: Props) {
 }
 
 async function AboutPageContent({ locale }: { locale: Locale }) {
-  const [t, tCommon, tSubject, tExercises, tFaq] = await Promise.all([
-    getTranslations({ locale, namespace: "About" }),
-    getTranslations({ locale, namespace: "Common" }),
-    getTranslations({ locale, namespace: "Subject" }),
-    getTranslations({ locale, namespace: "Exercises" }),
-    getTranslations({ locale, namespace: "Faq" }),
-  ]);
+  const { t, tCommon, tSubject, tExercises, tFaq } = await Effect.runPromise(
+    Effect.all({
+      t: Effect.tryPromise({
+        try: () => getTranslations({ locale, namespace: "About" }),
+        catch: () => new Error("Failed to load about translations"),
+      }),
+      tCommon: Effect.tryPromise({
+        try: () => getTranslations({ locale, namespace: "Common" }),
+        catch: () => new Error("Failed to load common translations"),
+      }),
+      tSubject: Effect.tryPromise({
+        try: () => getTranslations({ locale, namespace: "Subject" }),
+        catch: () => new Error("Failed to load subject translations"),
+      }),
+      tExercises: Effect.tryPromise({
+        try: () => getTranslations({ locale, namespace: "Exercises" }),
+        catch: () => new Error("Failed to load exercise translations"),
+      }),
+      tFaq: Effect.tryPromise({
+        try: () => getTranslations({ locale, namespace: "Faq" }),
+        catch: () => new Error("Failed to load FAQ translations"),
+      }),
+    })
+  );
 
   const breadcrumbItems: ListItem[] = [
     {

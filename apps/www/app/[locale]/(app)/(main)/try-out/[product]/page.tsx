@@ -8,6 +8,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { fetchQuery } from "convex/nextjs";
+import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -38,11 +39,25 @@ export default async function Page({ params }: Props) {
   }
   const product: TryoutProduct = productParam;
 
-  const [tCommon, tTryouts, token] = await Promise.all([
-    getTranslations({ locale, namespace: "Common" }),
-    getTranslations({ locale, namespace: "Tryouts" }),
-    getToken(),
-  ]);
+  const { tCommon, tTryouts, token } = await Effect.runPromise(
+    Effect.all(
+      {
+        tCommon: Effect.tryPromise({
+          try: () => getTranslations({ locale, namespace: "Common" }),
+          catch: () => new Error("Failed to load common translations"),
+        }),
+        tTryouts: Effect.tryPromise({
+          try: () => getTranslations({ locale, namespace: "Tryouts" }),
+          catch: () => new Error("Failed to load tryout translations"),
+        }),
+        token: Effect.tryPromise({
+          try: () => getToken(),
+          catch: () => new Error("Failed to load user token"),
+        }),
+      },
+      { concurrency: "unbounded" }
+    )
+  );
   const catalogSnapshot = await fetchQuery(
     api.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot,
     {

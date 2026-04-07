@@ -7,6 +7,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
+import { Effect } from "effect";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -29,10 +30,18 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
-  const [tCommon, tSubject] = await Promise.all([
-    getTranslations({ locale, namespace: "Common" }),
-    getTranslations({ locale, namespace: "Subject" }),
-  ]);
+  const { tCommon, tSubject } = await Effect.runPromise(
+    Effect.all({
+      tCommon: Effect.tryPromise({
+        try: () => getTranslations({ locale, namespace: "Common" }),
+        catch: () => new Error("Failed to load Common translations"),
+      }),
+      tSubject: Effect.tryPromise({
+        try: () => getTranslations({ locale, namespace: "Subject" }),
+        catch: () => new Error("Failed to load Subject translations"),
+      }),
+    })
+  );
 
   const path = `/${locale}/subject`;
   const title = tCommon("subject");
@@ -64,11 +73,22 @@ export default function Page({ params }: Props) {
 }
 
 async function PageContent({ locale }: { locale: Locale }) {
-  const [allGrades, tCommon, tSubject] = await Promise.all([
-    getAllGradesWithSubjects(CATEGORY_ORDER),
-    getTranslations({ locale, namespace: "Common" }),
-    getTranslations({ locale, namespace: "Subject" }),
-  ]);
+  const { allGrades, tCommon, tSubject } = await Effect.runPromise(
+    Effect.all({
+      allGrades: Effect.tryPromise({
+        try: () => getAllGradesWithSubjects(CATEGORY_ORDER),
+        catch: () => new Error("Failed to load grade subjects"),
+      }),
+      tCommon: Effect.tryPromise({
+        try: () => getTranslations({ locale, namespace: "Common" }),
+        catch: () => new Error("Failed to load Common translations"),
+      }),
+      tSubject: Effect.tryPromise({
+        try: () => getTranslations({ locale, namespace: "Subject" }),
+        catch: () => new Error("Failed to load Subject translations"),
+      }),
+    })
+  );
 
   const groupedByCategory = new Map(
     CATEGORY_ORDER.map((category) => [

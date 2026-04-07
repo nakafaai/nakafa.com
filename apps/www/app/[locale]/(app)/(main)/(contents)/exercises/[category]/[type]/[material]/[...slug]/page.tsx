@@ -339,11 +339,29 @@ async function PageContent({
   material: ExercisesMaterial;
   slug: string[];
 }) {
-  const t = await getTranslations({ locale, namespace: "Exercises" });
-
   const materialPath = getMaterialPath(category, type, material);
   const FilePath = getSlugPath(category, type, material, slug);
-  const materialGroups = await getMaterials(materialPath, locale);
+
+  const { t, materialGroups, exercises } = await Effect.runPromise(
+    Effect.all({
+      t: Effect.tryPromise({
+        try: () => getTranslations({ locale, namespace: "Exercises" }),
+        catch: () => new Error("Failed to load Exercises translations"),
+      }),
+      materialGroups: Effect.tryPromise({
+        try: () => getMaterials(materialPath, locale),
+        catch: () => new Error("Failed to load exercise materials"),
+      }),
+      exercises: Effect.match(
+        getExercisesContent({ locale, filePath: FilePath }),
+        {
+          onFailure: () => [],
+          onSuccess: (data) => data,
+        }
+      ),
+    })
+  );
+
   const { currentMaterial: matchedMaterial, currentMaterialItem: matchedItem } =
     getCurrentMaterial(FilePath, materialGroups);
 
@@ -359,13 +377,6 @@ async function PageContent({
       />
     );
   }
-
-  const exercises = await Effect.runPromise(
-    Effect.match(getExercisesContent({ locale, filePath: FilePath }), {
-      onFailure: () => [],
-      onSuccess: (data) => data,
-    })
-  );
 
   if (exercises.length === 0 || !matchedMaterial || !matchedItem) {
     return (

@@ -1,4 +1,5 @@
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
+import { Effect } from "effect";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
@@ -12,10 +13,18 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
-  const [tCommon, tTryouts] = await Promise.all([
-    getTranslations({ locale, namespace: "Common" }),
-    getTranslations({ locale, namespace: "Tryouts" }),
-  ]);
+  const { tCommon, tTryouts } = await Effect.runPromise(
+    Effect.all({
+      tCommon: Effect.tryPromise({
+        try: () => getTranslations({ locale, namespace: "Common" }),
+        catch: () => new Error("Failed to load common translations"),
+      }),
+      tTryouts: Effect.tryPromise({
+        try: () => getTranslations({ locale, namespace: "Tryouts" }),
+        catch: () => new Error("Failed to load tryout translations"),
+      }),
+    })
+  );
 
   const path = `/${locale}/try-out`;
   const title = tCommon("try-out");

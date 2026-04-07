@@ -1,4 +1,5 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { Effect } from "effect";
 import type { PagefindResult, PagefindSearchOptions } from "@/types/pagefind";
 import { usePagefind } from "../context/use-pagefind";
 
@@ -21,7 +22,16 @@ async function fetchSearchResults(query: string): Promise<PagefindResult[]> {
     return [];
   }
 
-  const data = await Promise.all(response.results.map((o) => o.data()));
+  const data = await Effect.runPromise(
+    Effect.all(
+      response.results.map((o) =>
+        Effect.tryPromise({
+          try: () => o.data(),
+          catch: () => new Error("Failed to load search result data"),
+        })
+      )
+    )
+  );
 
   return data.map((newData) => ({
     ...newData,

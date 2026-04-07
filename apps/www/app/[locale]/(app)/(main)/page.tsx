@@ -1,5 +1,6 @@
 import { Particles } from "@repo/design-system/components/ui/particles";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
+import { Effect } from "effect";
 import { redirect } from "next/navigation";
 import { type Locale, useTranslations } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
@@ -41,7 +42,20 @@ async function Main({
 }: {
   searchParams: Promise<{ from: string }>;
 }) {
-  const [{ from }, token] = await Promise.all([searchParams, getToken()]);
+  const { fromQuery, token } = await Effect.runPromise(
+    Effect.all({
+      fromQuery: Effect.tryPromise({
+        try: () => searchParams,
+        catch: () => new Error("Failed to load search params"),
+      }),
+      token: Effect.tryPromise({
+        try: () => getToken(),
+        catch: () => new Error("Failed to load user token"),
+      }),
+    })
+  );
+
+  const { from } = fromQuery;
 
   // If no user token and from about page, goes to auth
   if (!token && from === "/about") {

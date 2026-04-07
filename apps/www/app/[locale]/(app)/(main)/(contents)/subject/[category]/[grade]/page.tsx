@@ -8,6 +8,7 @@ import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import type { SubjectCategory } from "@repo/contents/_types/subject/category";
 import type { Grade } from "@repo/contents/_types/subject/grade";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
+import { Effect } from "effect";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -127,11 +128,22 @@ async function PageContent({
 }) {
   const FilePath = getGradePath(category, grade);
 
-  const [subjects, tCommon, tSubject] = await Promise.all([
-    getGradeSubjects(category, grade),
-    getTranslations({ locale, namespace: "Common" }),
-    getTranslations({ locale, namespace: "Subject" }),
-  ]);
+  const { subjects, tCommon, tSubject } = await Effect.runPromise(
+    Effect.all({
+      subjects: Effect.tryPromise({
+        try: () => getGradeSubjects(category, grade),
+        catch: () => new Error("Failed to load subject list"),
+      }),
+      tCommon: Effect.tryPromise({
+        try: () => getTranslations({ locale, namespace: "Common" }),
+        catch: () => new Error("Failed to load Common translations"),
+      }),
+      tSubject: Effect.tryPromise({
+        try: () => getTranslations({ locale, namespace: "Subject" }),
+        catch: () => new Error("Failed to load Subject translations"),
+      }),
+    })
+  );
 
   return (
     <>
