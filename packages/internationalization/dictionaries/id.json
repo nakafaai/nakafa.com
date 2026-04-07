@@ -255,7 +255,7 @@
     "restart-dialog-description": "Kamu akan mulai dari awal. Hasil sebelumnya tetap tersimpan.",
     "start-success": "Try out dimulai. Sekarang kamu bisa pilih bagian yang mau dikerjakan dulu.",
     "start-error": "Try out belum bisa dimulai. Coba lagi ya.",
-    "score-label": "Nilai",
+    "score-label": "Nilai IRT",
     "correct-answers-label": "Jawaban benar",
     "score-status-estimated": "Estimasi Awal",
     "score-status-verified-irt": "Terverifikasi IRT",
