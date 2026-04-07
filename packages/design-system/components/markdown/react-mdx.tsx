@@ -150,7 +150,7 @@ export const reactMdxComponents: Options["components"] = {
   ol: memo(
     ({ ...props }) => (
       <ol
-        className="my-4 list-decimal space-y-4 pl-4.25 last:mb-0"
+        className="my-4 list-decimal space-y-4 pl-4.5 last:mb-0"
         data-nakafa="ordered-list"
         {...props}
       />
@@ -160,7 +160,7 @@ export const reactMdxComponents: Options["components"] = {
   ul: memo(
     ({ ...props }) => (
       <ul
-        className="my-4 list-disc space-y-4 pl-4.25 last:mb-0"
+        className="my-4 list-disc space-y-4 pl-4.5 last:mb-0"
         data-nakafa="unordered-list"
         {...props}
       />
@@ -192,7 +192,7 @@ export const reactMdxComponents: Options["components"] = {
   blockquote: memo(
     ({ ...props }) => (
       <blockquote
-        className="my-4 border-l-2 pl-4 italic"
+        className="my-4 rounded-r-xl border-foreground border-l-2 bg-muted p-4 italic"
         data-nakafa="quote"
         {...props}
       />

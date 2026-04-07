@@ -60,10 +60,10 @@ export const components = {
   ),
   p: (props: ParagraphProps) => <Paragraph {...props} />,
   ol: (props: ListProps) => (
-    <ol className="my-4 list-decimal space-y-4 pl-4.25 last:mb-0" {...props} />
+    <ol className="my-4 list-decimal space-y-4 pl-4.5 last:mb-0" {...props} />
   ),
   ul: (props: ListProps) => (
-    <ul className="my-4 list-disc space-y-4 pl-4.25 last:mb-0" {...props} />
+    <ul className="my-4 list-disc space-y-4 pl-4.5 last:mb-0" {...props} />
   ),
   li: (props: ListItemProps) => (
     <li className="space-y-4 text-pretty pl-1 leading-relaxed" {...props} />
@@ -71,7 +71,10 @@ export const components = {
   em: (props: EmProps) => <em className="font-medium" {...props} />,
   strong: (props: StrongProps) => <strong className="font-medium" {...props} />,
   blockquote: (props: BlockquoteProps) => (
-    <blockquote className="my-4 border-l-2 pl-4 italic" {...props} />
+    <blockquote
+      className="my-4 rounded-r-xl border-foreground border-l-2 bg-muted p-4 italic"
+      {...props}
+    />
   ),
   a: Anchor,
   CodeBlock: CodeBlockMdx,
