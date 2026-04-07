@@ -277,7 +277,7 @@
     "part-head-completed": "This section is done. You can now review the answers and explanations below.",
     "part-head-completed-pending-review": "This section is done. Answers and explanations will open after the whole tryout is finished.",
     "part-head-completed-time-expired": "Time ran out, but your answers were submitted automatically. You can still review the explanations below.",
-    "part-head-completed-time-expired-pending-review": "Time ran out for this section and your answers were submitted automatically. Answers and explanations will open after the whole tryout is finished.",
+    "part-head-completed-time-expired-pending-review": "Time ran out and your answers were submitted automatically, but explanations will open after the tryout finishes.",
     "part-head-ended": "This tryout is finished. Open this section to review the questions and explanations.",
     "part-questions-label": "Questions",
     "part-time-label": "Time",

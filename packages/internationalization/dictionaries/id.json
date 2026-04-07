@@ -277,7 +277,7 @@
     "part-head-completed": "Bagian ini sudah selesai. Kamu sekarang bisa cek jawaban dan pembahasannya di bawah.",
     "part-head-completed-pending-review": "Bagian ini sudah selesai. Jawaban dan pembahasan baru bisa dibuka setelah seluruh try out selesai.",
     "part-head-completed-time-expired": "Waktu habis, tapi jawabanmu sudah dikumpulkan otomatis. Kamu tetap bisa cek pembahasannya di bawah.",
-    "part-head-completed-time-expired-pending-review": "Waktu bagian ini habis dan jawabanmu sudah dikumpulkan otomatis. Jawaban dan pembahasan baru bisa dibuka setelah seluruh try out selesai.",
+    "part-head-completed-time-expired-pending-review": "Waktu habis dan jawaban otomatis tersimpan, namun pembahasan baru bisa dibuka setelah try out selesai.",
     "part-head-ended": "Try out ini sudah selesai. Buka bagian ini untuk lihat soal dan pembahasannya.",
     "part-questions-label": "Soal",
     "part-time-label": "Waktu",
