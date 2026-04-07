@@ -15,24 +15,29 @@ export async function GET() {
   const locales = routing.locales;
 
   const { t, tCommon } = await Effect.runPromise(
-    Effect.all({
-      t: Effect.tryPromise({
-        try: () =>
-          getTranslations({
-            namespace: "Metadata",
-            locale: routing.defaultLocale,
-          }),
-        catch: () => new Error("Failed to load metadata translations"),
-      }),
-      tCommon: Effect.tryPromise({
-        try: () =>
-          getTranslations({
-            namespace: "Common",
-            locale: routing.defaultLocale,
-          }),
-        catch: () => new Error("Failed to load common translations"),
-      }),
-    })
+    Effect.all(
+      {
+        t: Effect.tryPromise({
+          try: () =>
+            getTranslations({
+              namespace: "Metadata",
+              locale: routing.defaultLocale,
+            }),
+          catch: () => new Error("Failed to load metadata translations"),
+        }),
+        tCommon: Effect.tryPromise({
+          try: () =>
+            getTranslations({
+              namespace: "Common",
+              locale: routing.defaultLocale,
+            }),
+          catch: () => new Error("Failed to load common translations"),
+        }),
+      },
+      {
+        concurrency: "unbounded",
+      }
+    )
   );
 
   // Fetch all articles and subjects for all locales in parallel
@@ -53,7 +58,11 @@ export async function GET() {
     ),
   ]);
 
-  const results = await Effect.runPromise(Effect.all(contentRequests));
+  const results = await Effect.runPromise(
+    Effect.all(contentRequests, {
+      concurrency: "unbounded",
+    })
+  );
 
   const feed = new Feed({
     title: t("title"),

@@ -96,12 +96,17 @@ export function fetchExerciseContext({
   const materialPath = getMaterialPath(category, type, material);
   const FilePath = getSlugPath(category, type, material, slug);
 
-  return Effect.all({
-    materials: Effect.tryPromise({
-      try: () => getMaterials(materialPath, locale),
-      catch: () => new Error("Failed to fetch materials"),
-    }),
-  }).pipe(
+  return Effect.all(
+    {
+      materials: Effect.tryPromise({
+        try: () => getMaterials(materialPath, locale),
+        catch: () => new Error("Failed to fetch materials"),
+      }),
+    },
+    {
+      concurrency: "unbounded",
+    }
+  ).pipe(
     Effect.flatMap(({ materials }) => {
       const { currentMaterial, currentMaterialItem } = getCurrentMaterial(
         FilePath,

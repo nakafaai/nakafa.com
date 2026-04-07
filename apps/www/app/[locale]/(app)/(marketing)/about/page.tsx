@@ -84,28 +84,33 @@ export default function Page({ params }: Props) {
 
 async function AboutPageContent({ locale }: { locale: Locale }) {
   const { t, tCommon, tSubject, tExercises, tFaq } = await Effect.runPromise(
-    Effect.all({
-      t: Effect.tryPromise({
-        try: () => getTranslations({ locale, namespace: "About" }),
-        catch: () => new Error("Failed to load about translations"),
-      }),
-      tCommon: Effect.tryPromise({
-        try: () => getTranslations({ locale, namespace: "Common" }),
-        catch: () => new Error("Failed to load common translations"),
-      }),
-      tSubject: Effect.tryPromise({
-        try: () => getTranslations({ locale, namespace: "Subject" }),
-        catch: () => new Error("Failed to load subject translations"),
-      }),
-      tExercises: Effect.tryPromise({
-        try: () => getTranslations({ locale, namespace: "Exercises" }),
-        catch: () => new Error("Failed to load exercise translations"),
-      }),
-      tFaq: Effect.tryPromise({
-        try: () => getTranslations({ locale, namespace: "Faq" }),
-        catch: () => new Error("Failed to load FAQ translations"),
-      }),
-    })
+    Effect.all(
+      {
+        t: Effect.tryPromise({
+          try: () => getTranslations({ locale, namespace: "About" }),
+          catch: () => new Error("Failed to load about translations"),
+        }),
+        tCommon: Effect.tryPromise({
+          try: () => getTranslations({ locale, namespace: "Common" }),
+          catch: () => new Error("Failed to load common translations"),
+        }),
+        tSubject: Effect.tryPromise({
+          try: () => getTranslations({ locale, namespace: "Subject" }),
+          catch: () => new Error("Failed to load subject translations"),
+        }),
+        tExercises: Effect.tryPromise({
+          try: () => getTranslations({ locale, namespace: "Exercises" }),
+          catch: () => new Error("Failed to load exercise translations"),
+        }),
+        tFaq: Effect.tryPromise({
+          try: () => getTranslations({ locale, namespace: "Faq" }),
+          catch: () => new Error("Failed to load FAQ translations"),
+        }),
+      },
+      {
+        concurrency: "unbounded",
+      }
+    )
   );
 
   const breadcrumbItems: ListItem[] = [

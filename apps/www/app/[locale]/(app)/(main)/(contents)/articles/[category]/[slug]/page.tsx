@@ -146,16 +146,21 @@ async function PageContent({
   slug: string;
 }) {
   const { tCommon, tArticles } = await Effect.runPromise(
-    Effect.all({
-      tCommon: Effect.tryPromise({
-        try: () => getTranslations({ locale, namespace: "Common" }),
-        catch: () => new Error("Failed to load Common translations"),
-      }),
-      tArticles: Effect.tryPromise({
-        try: () => getTranslations({ locale, namespace: "Articles" }),
-        catch: () => new Error("Failed to load Articles translations"),
-      }),
-    })
+    Effect.all(
+      {
+        tCommon: Effect.tryPromise({
+          try: () => getTranslations({ locale, namespace: "Common" }),
+          catch: () => new Error("Failed to load Common translations"),
+        }),
+        tArticles: Effect.tryPromise({
+          try: () => getTranslations({ locale, namespace: "Articles" }),
+          catch: () => new Error("Failed to load Articles translations"),
+        }),
+      },
+      {
+        concurrency: "unbounded",
+      }
+    )
   );
 
   const FilePath = getSlugPath(category, slug);

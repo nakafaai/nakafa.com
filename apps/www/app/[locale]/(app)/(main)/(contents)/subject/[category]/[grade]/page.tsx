@@ -129,20 +129,25 @@ async function PageContent({
   const FilePath = getGradePath(category, grade);
 
   const { subjects, tCommon, tSubject } = await Effect.runPromise(
-    Effect.all({
-      subjects: Effect.tryPromise({
-        try: () => getGradeSubjects(category, grade),
-        catch: () => new Error("Failed to load subject list"),
-      }),
-      tCommon: Effect.tryPromise({
-        try: () => getTranslations({ locale, namespace: "Common" }),
-        catch: () => new Error("Failed to load Common translations"),
-      }),
-      tSubject: Effect.tryPromise({
-        try: () => getTranslations({ locale, namespace: "Subject" }),
-        catch: () => new Error("Failed to load Subject translations"),
-      }),
-    })
+    Effect.all(
+      {
+        subjects: Effect.tryPromise({
+          try: () => getGradeSubjects(category, grade),
+          catch: () => new Error("Failed to load subject list"),
+        }),
+        tCommon: Effect.tryPromise({
+          try: () => getTranslations({ locale, namespace: "Common" }),
+          catch: () => new Error("Failed to load Common translations"),
+        }),
+        tSubject: Effect.tryPromise({
+          try: () => getTranslations({ locale, namespace: "Subject" }),
+          catch: () => new Error("Failed to load Subject translations"),
+        }),
+      },
+      {
+        concurrency: "unbounded",
+      }
+    )
   );
 
   return (

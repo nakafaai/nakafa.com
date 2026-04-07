@@ -29,7 +29,10 @@ async function fetchSearchResults(query: string): Promise<PagefindResult[]> {
           try: () => o.data(),
           catch: () => new Error("Failed to load search result data"),
         })
-      )
+      ),
+      {
+        concurrency: "unbounded",
+      }
     )
   );
 

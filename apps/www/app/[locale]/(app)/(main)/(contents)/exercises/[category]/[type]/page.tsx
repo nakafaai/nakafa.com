@@ -115,16 +115,21 @@ async function PageContent({
   const FilePath = getExercisesPath(category, type);
 
   const { subjects, t } = await Effect.runPromise(
-    Effect.all({
-      subjects: Effect.tryPromise({
-        try: () => getSubjects(category, type),
-        catch: () => new Error("Failed to load subjects"),
-      }),
-      t: Effect.tryPromise({
-        try: () => getTranslations({ locale, namespace: "Exercises" }),
-        catch: () => new Error("Failed to load Exercises translations"),
-      }),
-    })
+    Effect.all(
+      {
+        subjects: Effect.tryPromise({
+          try: () => getSubjects(category, type),
+          catch: () => new Error("Failed to load subjects"),
+        }),
+        t: Effect.tryPromise({
+          try: () => getTranslations({ locale, namespace: "Exercises" }),
+          catch: () => new Error("Failed to load Exercises translations"),
+        }),
+      },
+      {
+        concurrency: "unbounded",
+      }
+    )
   );
 
   return (

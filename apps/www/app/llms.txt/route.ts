@@ -53,7 +53,11 @@ export async function GET() {
     ),
   ]);
 
-  const results = await Effect.runPromise(Effect.all(contentRequests));
+  const results = await Effect.runPromise(
+    Effect.all(contentRequests, {
+      concurrency: "unbounded",
+    })
+  );
 
   // Group results by section
   const map = new Map<string, string[]>();

@@ -43,16 +43,21 @@ async function Main({
   searchParams: Promise<{ from: string }>;
 }) {
   const { fromQuery, token } = await Effect.runPromise(
-    Effect.all({
-      fromQuery: Effect.tryPromise({
-        try: () => searchParams,
-        catch: () => new Error("Failed to load search params"),
-      }),
-      token: Effect.tryPromise({
-        try: () => getToken(),
-        catch: () => new Error("Failed to load user token"),
-      }),
-    })
+    Effect.all(
+      {
+        fromQuery: Effect.tryPromise({
+          try: () => searchParams,
+          catch: () => new Error("Failed to load search params"),
+        }),
+        token: Effect.tryPromise({
+          try: () => getToken(),
+          catch: () => new Error("Failed to load user token"),
+        }),
+      },
+      {
+        concurrency: "unbounded",
+      }
+    )
   );
 
   const { from } = fromQuery;

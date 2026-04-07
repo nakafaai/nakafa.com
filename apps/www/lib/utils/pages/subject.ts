@@ -121,10 +121,15 @@ export function getContentMetadataContext({
 > {
   const FilePath = getSlugPath(category, grade, material, slug);
 
-  return Effect.all({
-    content: Effect.orElse(getContentMetadataWithRaw(locale, FilePath), () =>
-      Effect.succeed(null)
-    ),
-    FilePath: Effect.succeed(FilePath),
-  });
+  return Effect.all(
+    {
+      content: Effect.orElse(getContentMetadataWithRaw(locale, FilePath), () =>
+        Effect.succeed(null)
+      ),
+      FilePath: Effect.succeed(FilePath),
+    },
+    {
+      concurrency: "unbounded",
+    }
+  );
 }

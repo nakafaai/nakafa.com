@@ -124,7 +124,10 @@ async function getUnsubmittedUrls(service: "indexNow" | "bing"): Promise<{
           catch: () =>
             new Error(`Failed to load sitemap entries for route ${route}`),
         })
-      )
+      ),
+      {
+        concurrency: "unbounded",
+      }
     )
   );
 

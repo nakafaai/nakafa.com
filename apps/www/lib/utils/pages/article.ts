@@ -114,10 +114,15 @@ export function fetchArticleMetadataContext({
 > {
   const FilePath = getSlugPath(category, slug);
 
-  return Effect.all({
-    content: Effect.orElse(getContentMetadataWithRaw(locale, FilePath), () =>
-      Effect.succeed(null)
-    ),
-    FilePath: Effect.succeed(FilePath),
-  });
+  return Effect.all(
+    {
+      content: Effect.orElse(getContentMetadataWithRaw(locale, FilePath), () =>
+        Effect.succeed(null)
+      ),
+      FilePath: Effect.succeed(FilePath),
+    },
+    {
+      concurrency: "unbounded",
+    }
+  );
 }

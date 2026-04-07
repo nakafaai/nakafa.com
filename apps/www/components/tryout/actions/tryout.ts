@@ -99,7 +99,10 @@ function getCheckoutUrl({
           successUrl,
         }),
       catch: () => null,
-    }).pipe(Effect.map((result) => result?.url ?? null))
+    }).pipe(
+      Effect.map((result) => result?.url ?? null),
+      Effect.catchAll(() => Effect.succeed(null))
+    )
   );
 }
 

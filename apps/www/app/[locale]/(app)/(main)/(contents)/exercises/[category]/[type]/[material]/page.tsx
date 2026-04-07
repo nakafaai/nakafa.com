@@ -145,16 +145,21 @@ async function PageContent({
   const FilePath = getMaterialPath(category, type, material);
 
   const { materials, t } = await Effect.runPromise(
-    Effect.all({
-      materials: Effect.tryPromise({
-        try: () => getMaterials(FilePath, locale),
-        catch: () => new Error("Failed to load exercise materials"),
-      }),
-      t: Effect.tryPromise({
-        try: () => getTranslations({ locale, namespace: "Exercises" }),
-        catch: () => new Error("Failed to load Exercises translations"),
-      }),
-    })
+    Effect.all(
+      {
+        materials: Effect.tryPromise({
+          try: () => getMaterials(FilePath, locale),
+          catch: () => new Error("Failed to load exercise materials"),
+        }),
+        t: Effect.tryPromise({
+          try: () => getTranslations({ locale, namespace: "Exercises" }),
+          catch: () => new Error("Failed to load Exercises translations"),
+        }),
+      },
+      {
+        concurrency: "unbounded",
+      }
+    )
   );
 
   const chapters: ParsedHeading[] = materials.map((mat) => ({

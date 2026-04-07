@@ -75,9 +75,14 @@ export function fetchSurahMetadataContext({
   FetchSurahMetadataContextOutput,
   never
 > {
-  return Effect.all({
-    surahData: Effect.orElse(getSurah(surah), () => Effect.succeed(null)),
-  });
+  return Effect.all(
+    {
+      surahData: Effect.orElse(getSurah(surah), () => Effect.succeed(null)),
+    },
+    {
+      concurrency: "unbounded",
+    }
+  );
 }
 
 /**

@@ -342,24 +342,22 @@ async function PageContent({
   const materialPath = getMaterialPath(category, type, material);
   const FilePath = getSlugPath(category, type, material, slug);
 
-  const { t, materialGroups, exercises } = await Effect.runPromise(
-    Effect.all({
-      t: Effect.tryPromise({
-        try: () => getTranslations({ locale, namespace: "Exercises" }),
-        catch: () => new Error("Failed to load Exercises translations"),
-      }),
-      materialGroups: Effect.tryPromise({
-        try: () => getMaterials(materialPath, locale),
-        catch: () => new Error("Failed to load exercise materials"),
-      }),
-      exercises: Effect.match(
-        getExercisesContent({ locale, filePath: FilePath }),
-        {
-          onFailure: () => [],
-          onSuccess: (data) => data,
-        }
-      ),
-    })
+  const { t, materialGroups } = await Effect.runPromise(
+    Effect.all(
+      {
+        t: Effect.tryPromise({
+          try: () => getTranslations({ locale, namespace: "Exercises" }),
+          catch: () => new Error("Failed to load Exercises translations"),
+        }),
+        materialGroups: Effect.tryPromise({
+          try: () => getMaterials(materialPath, locale),
+          catch: () => new Error("Failed to load exercise materials"),
+        }),
+      },
+      {
+        concurrency: "unbounded",
+      }
+    )
   );
 
   const { currentMaterial: matchedMaterial, currentMaterialItem: matchedItem } =
@@ -378,7 +376,26 @@ async function PageContent({
     );
   }
 
-  if (exercises.length === 0 || !matchedMaterial || !matchedItem) {
+  if (!(matchedMaterial && matchedItem)) {
+    return (
+      <LayoutMaterial>
+        <LayoutMaterialContent>
+          <LayoutMaterialMain className="py-24">
+            <ComingSoon />
+          </LayoutMaterialMain>
+        </LayoutMaterialContent>
+      </LayoutMaterial>
+    );
+  }
+
+  const exercises = await Effect.runPromise(
+    Effect.match(getExercisesContent({ locale, filePath: FilePath }), {
+      onFailure: () => [],
+      onSuccess: (data) => data,
+    })
+  );
+
+  if (exercises.length === 0) {
     return (
       <LayoutMaterial>
         <LayoutMaterialContent>
@@ -508,11 +525,16 @@ async function SingleExerciseContent({
   const FilePath = getSlugPath(category, type, material, slug);
   const exerciseFilePath = `${FilePath}/${exerciseNumber}`;
 
-  const singleExerciseEffect = Effect.all([
-    getExerciseByNumber(locale, FilePath, exerciseNumber),
-    fetchExerciseContext({ locale, category, type, material, slug }),
-    getExercisesContent({ locale, filePath: FilePath }),
-  ]);
+  const singleExerciseEffect = Effect.all(
+    [
+      getExerciseByNumber(locale, FilePath, exerciseNumber),
+      fetchExerciseContext({ locale, category, type, material, slug }),
+      getExercisesContent({ locale, filePath: FilePath }),
+    ],
+    {
+      concurrency: "unbounded",
+    }
+  );
 
   const [exerciseOption, exerciseContext, exercises] = await Effect.runPromise(
     Effect.match(singleExerciseEffect, {

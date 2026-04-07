@@ -42,25 +42,30 @@ export default async function Page({ params }: Props) {
   const product: TryoutProduct = productParam;
 
   const { tExercises, details, token } = await Effect.runPromise(
-    Effect.all({
-      tExercises: Effect.tryPromise({
-        try: () => getTranslations({ locale, namespace: "Exercises" }),
-        catch: () => new Error("Failed to load exercise translations"),
-      }),
-      details: Effect.tryPromise({
-        try: () =>
-          fetchQuery(api.tryouts.queries.tryouts.getTryoutDetails, {
-            locale,
-            product,
-            slug,
-          }),
-        catch: () => new Error("Failed to load tryout details"),
-      }),
-      token: Effect.tryPromise({
-        try: () => getToken(),
-        catch: () => new Error("Failed to load user token"),
-      }),
-    })
+    Effect.all(
+      {
+        tExercises: Effect.tryPromise({
+          try: () => getTranslations({ locale, namespace: "Exercises" }),
+          catch: () => new Error("Failed to load exercise translations"),
+        }),
+        details: Effect.tryPromise({
+          try: () =>
+            fetchQuery(api.tryouts.queries.tryouts.getTryoutDetails, {
+              locale,
+              product,
+              slug,
+            }),
+          catch: () => new Error("Failed to load tryout details"),
+        }),
+        token: Effect.tryPromise({
+          try: () => getToken(),
+          catch: () => new Error("Failed to load user token"),
+        }),
+      },
+      {
+        concurrency: "unbounded",
+      }
+    )
   );
 
   if (!details) {

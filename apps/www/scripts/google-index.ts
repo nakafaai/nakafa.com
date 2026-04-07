@@ -170,7 +170,10 @@ async function getUnsubmittedUrls(): Promise<{
           catch: () =>
             new Error(`Failed to load sitemap entries for route ${route}`),
         })
-      )
+      ),
+      {
+        concurrency: "unbounded",
+      }
     )
   );
 

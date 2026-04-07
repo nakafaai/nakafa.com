@@ -72,19 +72,30 @@ export async function generateMetadata({
   const materialPath = getMaterialPath(category, grade, material);
 
   const { context, materials } = await Effect.runPromise(
-    Effect.all({
-      context: Effect.match(
-        getContentMetadataContext({ locale, category, grade, material, slug }),
-        {
-          onFailure: () => ({ content: null, FilePath }),
-          onSuccess: (data) => data,
-        }
-      ),
-      materials: Effect.tryPromise({
-        try: () => getMaterials(materialPath, locale),
-        catch: () => [],
-      }),
-    })
+    Effect.all(
+      {
+        context: Effect.match(
+          getContentMetadataContext({
+            locale,
+            category,
+            grade,
+            material,
+            slug,
+          }),
+          {
+            onFailure: () => ({ content: null, FilePath }),
+            onSuccess: (data) => data,
+          }
+        ),
+        materials: Effect.tryPromise({
+          try: () => getMaterials(materialPath, locale),
+          catch: () => [],
+        }),
+      },
+      {
+        concurrency: "unbounded",
+      }
+    )
   );
 
   const { content } = context;
@@ -212,28 +223,33 @@ async function PageContent({
   }
 
   const { tCommon, tSubject, result } = await Effect.runPromise(
-    Effect.all({
-      tCommon: Effect.tryPromise({
-        try: () => getTranslations({ locale, namespace: "Common" }),
-        catch: () => new Error("Failed to load Common translations"),
-      }),
-      tSubject: Effect.tryPromise({
-        try: () => getTranslations({ locale, namespace: "Subject" }),
-        catch: () => new Error("Failed to load Subject translations"),
-      }),
-      result: Effect.match(
-        getContentContext({ locale, category, grade, material, slug }),
-        {
-          onFailure: () => ({
-            content: null,
-            materials: null,
-            materialPath,
-            FilePath,
-          }),
-          onSuccess: (data) => data,
-        }
-      ),
-    })
+    Effect.all(
+      {
+        tCommon: Effect.tryPromise({
+          try: () => getTranslations({ locale, namespace: "Common" }),
+          catch: () => new Error("Failed to load Common translations"),
+        }),
+        tSubject: Effect.tryPromise({
+          try: () => getTranslations({ locale, namespace: "Subject" }),
+          catch: () => new Error("Failed to load Subject translations"),
+        }),
+        result: Effect.match(
+          getContentContext({ locale, category, grade, material, slug }),
+          {
+            onFailure: () => ({
+              content: null,
+              materials: null,
+              materialPath,
+              FilePath,
+            }),
+            onSuccess: (data) => data,
+          }
+        ),
+      },
+      {
+        concurrency: "unbounded",
+      }
+    )
   );
 
   const { content, materials } = result;

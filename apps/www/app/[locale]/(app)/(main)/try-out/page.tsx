@@ -14,16 +14,21 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const { tCommon, tTryouts } = await Effect.runPromise(
-    Effect.all({
-      tCommon: Effect.tryPromise({
-        try: () => getTranslations({ locale, namespace: "Common" }),
-        catch: () => new Error("Failed to load common translations"),
-      }),
-      tTryouts: Effect.tryPromise({
-        try: () => getTranslations({ locale, namespace: "Tryouts" }),
-        catch: () => new Error("Failed to load tryout translations"),
-      }),
-    })
+    Effect.all(
+      {
+        tCommon: Effect.tryPromise({
+          try: () => getTranslations({ locale, namespace: "Common" }),
+          catch: () => new Error("Failed to load common translations"),
+        }),
+        tTryouts: Effect.tryPromise({
+          try: () => getTranslations({ locale, namespace: "Tryouts" }),
+          catch: () => new Error("Failed to load tryout translations"),
+        }),
+      },
+      {
+        concurrency: "unbounded",
+      }
+    )
   );
 
   const path = `/${locale}/try-out`;

@@ -266,7 +266,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           try: () => getEntries(route, MAIN_DOMAIN),
           catch: () => new Error(`Failed to load sitemap entries for ${route}`),
         })
-      )
+      ),
+      {
+        concurrency: "unbounded",
+      }
     )
   );
 

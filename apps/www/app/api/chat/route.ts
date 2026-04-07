@@ -152,18 +152,23 @@ export async function POST(req: Request) {
   };
 
   const { verified, userInfo } = await Effect.runPromise(
-    Effect.all({
-      verified: shouldVerify
-        ? Effect.tryPromise({
-            try: () => getVerified(url),
-            catch: () => new Error("Failed to verify URL"),
-          })
-        : Effect.succeed(false),
-      userInfo: Effect.tryPromise({
-        try: () => getUserInfo(token),
-        catch: () => new Error("Failed to load user info"),
-      }),
-    })
+    Effect.all(
+      {
+        verified: shouldVerify
+          ? Effect.tryPromise({
+              try: () => getVerified(url),
+              catch: () => new Error("Failed to verify URL"),
+            })
+          : Effect.succeed(false),
+        userInfo: Effect.tryPromise({
+          try: () => getUserInfo(token),
+          catch: () => new Error("Failed to load user info"),
+        }),
+      },
+      {
+        concurrency: "unbounded",
+      }
+    )
   );
 
   if (!hasEnoughCredits(userInfo.credits, selectedModel)) {
