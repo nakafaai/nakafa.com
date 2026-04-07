@@ -17,7 +17,7 @@ export function AuthLogout() {
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
-          router.push("/");
+          router.replace("/");
         },
       },
     });

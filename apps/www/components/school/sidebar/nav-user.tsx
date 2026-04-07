@@ -50,7 +50,7 @@ export function SchoolSidebarNavUser() {
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
-          router.push(authHref);
+          router.replace(authHref);
         },
       },
     });
