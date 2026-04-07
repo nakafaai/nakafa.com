@@ -29,7 +29,7 @@ Detailed patterns for creating exercises at Nakafa.
 - `general-reasoning`: Penalaran Umum
 - `indonesian-language`: Bahasa Indonesia
 - `english-language`: Bahasa Inggris
-- `general-knowledge`: Pengetahuan Umum
+- `general-knowledge`: Pengetahuan dan Pemahaman Umum
 - `reading-and-writing-skills`: Literasi Membaca dan Menulis
 
 ## File Structure Pattern
