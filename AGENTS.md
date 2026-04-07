@@ -2,7 +2,9 @@
 
 Build for longevity.
 Favor readable, skimmable, well-verified code over speed or cleverness.
+
 ## Source Of Truth
+
 - Use retrieval-led reasoning first. Read the repo, configs, docs, and generated files before changing code.
 - No Cursor rules were found in `.cursor/rules/` or `.cursorrules` when this guide was updated.
 - No Copilot instructions were found in `.github/copilot-instructions.md` when this guide was updated.
@@ -12,7 +14,9 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - For Convex work, read `packages/backend/convex/_generated/ai/guidelines.md` before making changes.
 - For structural work, skim recent `git log` first so you do not reintroduce old patterns.
 - Verify behavior from actual code and docs, not memory.
+
 ## Stack And Layout
+
 - Package manager: `pnpm@10.33.0`
 - Runtime: Node `>=22`
 - Monorepo: Turborepo
@@ -25,7 +29,9 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - App-local alias: `@/*`
 - Cross-package alias: `@repo/*`
 - Educational MDX content lives in `packages/contents/`
+
 ## Required Reading
+
 - Convex best practices: `https://docs.convex.dev/understanding/best-practices/`
 - Convex Workflow: `https://www.convex.dev/components/workflow`
 - Convex cron jobs: `https://docs.convex.dev/scheduling/cron-jobs`
@@ -38,6 +44,7 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Read installed Convex node modules when behavior matters.
 - Read Convex MCP code/docs when the change touches MCP or agent tooling.
 - Use Context7 for up-to-date library docs and Ultracite search for lint/style rules.
+- 
 ## Core Commands
 - `pnpm dev` - run the main web app and Convex backend through Turbo
 - `pnpm dev:web` - run the main web app and Convex backend through Turbo
@@ -52,7 +59,9 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - `pnpm format:doctor` - run `ultracite doctor`
 - `pnpm analyze` - run analyze tasks
 - `pnpm boundaries` - run workspace boundaries checks
+
 ## Focused Commands
+
 - `pnpm --filter www dev` - Next.js app on `3000`
 - `pnpm --filter api dev` - Next.js API app on `3002`
 - `pnpm --filter mcp dev` - MCP app on `3001`
@@ -73,7 +82,9 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Add `-t "test name"` to run one named test.
 - Use `pnpm --filter <workspace> test` for the whole workspace suite.
 - Convex helpers: `pnpm --filter @repo/backend setup`, `seed`, `deploy`, `insights`
+
 ## Workflow Expectations
+
 - Read the touched package's `package.json`, config files, and nearby code before editing.
 - Follow existing local patterns before inventing new abstractions.
 - Keep changes cohesive across frontend, Convex backend, and dev/prod behavior.
@@ -81,7 +92,9 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Prefer small, direct helpers over abstraction layers.
 - Use early returns to keep logic flat and skimmable.
 - Run the smallest useful verification set after changes, then expand if risk is high.
+
 ## Formatting And Imports
+
 - Formatting is owned by Biome through Ultracite. Run `pnpm format` instead of hand-formatting.
 - Use spaces for indentation.
 - Use double quotes for strings and JSX attributes.
@@ -91,7 +104,9 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Prefer direct file imports over adding new barrel layers unless the existing API already exposes one.
 - Group imports clearly: external, workspace, then app-local.
 - Respect existing file naming in the touched area; naming-convention lint rules are intentionally relaxed.
+
 ## TypeScript Rules
+
 - TypeScript is strict across the repo.
 - Prefer derived and inferred types over manual annotations.
 - Do not add redundant type annotations just to restate what TypeScript already knows.
@@ -100,7 +115,9 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Avoid type assertions and workaround casts whenever possible.
 - Keep public function inputs and outputs obvious.
 - Use meaningful names instead of magic values or anonymous tuple-like objects.
+
 ## Readability And Errors
+
 - Optimize for code that is easy to skim.
 - Prefer obvious control flow over clever one-liners.
 - Keep functions focused and narrow in responsibility.
@@ -111,7 +128,17 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Use descriptive error messages and handle edge cases deliberately.
 - Do not catch errors just to rethrow the same thing.
 - Remove `console.log`, `debugger`, and `alert` from production code.
+
 ## React And Next.js
+
+<!-- BEGIN:nextjs-agent-rules -->
+ 
+### Next.js: ALWAYS read docs before coding
+ 
+Before any Next.js work, find and read the relevant doc in `node_modules/next/dist/docs/`. Your training data is outdated — the docs are the source of truth.
+ 
+<!-- END:nextjs-agent-rules -->
+
 - Follow existing Next.js and React 19 conventions already present in the repo.
 - Use function components.
 - Add `"use client"` only when the component truly needs client-side features.
@@ -121,7 +148,9 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Use semantic HTML and accessible component APIs.
 - Prefer Next.js primitives like `<Image>` when appropriate.
 - Keep server/client boundaries explicit and minimal.
+
 ## Convex Rules
+
 - Follow official Convex docs and the generated AI guidelines exactly.
 - Use shared helpers and validators in `packages/backend/convex/lib/`.
 - Use auth helpers from `packages/backend/convex/lib/helpers/auth.ts`; do not reach for raw `ctx.auth` patterns first.
@@ -130,7 +159,9 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Prefer installed helpers/components when they fit: Better Auth, Workflow, Aggregate, Workpool, `convex-helpers`.
 - Keep pagination, relationships, aggregates, workflows, and cron jobs aligned with official patterns.
 - Make Convex schema and index names explicit and readable.
+
 ## Testing Rules
+
 - Vitest is the standard test runner.
 - Existing tests live in `__tests__/`, `__test__/`, and `*.test.ts(x)` files.
 - Use `describe`, `it`/`test`, and focused assertions.
@@ -138,7 +169,9 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Do not leave `.only` or `.skip` in committed code.
 - When changing business logic, add or update the nearest relevant test.
 - After risky changes, run the affected workspace suite, not just one file.
+
 ## MDX And Content Rules
+
 - Content is primarily Indonesian unless context requires English.
 - Start content headings at `h2`; keep maximum depth at `h3`.
 - Use inline code for programming syntax.
@@ -147,7 +180,9 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - `NumberLine` and `LineEquation` require explicit imports from the design system.
 - Keep list formatting simple with hyphen bullets.
 - Leave blank lines between prose paragraphs and math blocks.
+
 ## Git And Final Verification
+
 - Never overwrite or revert user changes you did not make.
 - Never use destructive git commands unless explicitly asked.
 - Never commit unless the user explicitly asks for a commit.
