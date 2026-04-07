@@ -1,4 +1,3 @@
-import { Particles } from "@repo/design-system/components/ui/particles";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { redirect } from "next/navigation";
 import { type Locale, useTranslations } from "next-intl";
@@ -27,7 +26,6 @@ export default function Page({ params, searchParams }: Props) {
         className="relative min-h-[calc(100svh-4rem)] lg:min-h-svh"
         data-pagefind-ignore
       >
-        <Particles className="pointer-events-none absolute inset-0 opacity-50" />
         <Suspense>
           <Main searchParams={searchParams} />
         </Suspense>
