@@ -3,6 +3,7 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionArgs } from "convex/server";
 import { ConvexError } from "convex/values";
+import { Effect } from "effect";
 import {
   revalidateTryoutOverview,
   revalidateTryoutSet,
@@ -49,12 +50,21 @@ export async function startTryoutPart({
   partKeys,
   ...args
 }: StartTryoutPartInput): Promise<StartTryoutPartResult> {
-  try {
-    await fetchAuthMutation(api.tryouts.mutations.attempts.startPart, {
-      partKey: args.partKey,
-      tryoutAttemptId: args.tryoutAttemptId,
-    });
-  } catch {
+  const result = await Effect.runPromise(
+    Effect.tryPromise({
+      try: () =>
+        fetchAuthMutation(api.tryouts.mutations.attempts.startPart, {
+          partKey: args.partKey,
+          tryoutAttemptId: args.tryoutAttemptId,
+        }),
+      catch: () => false,
+    }).pipe(
+      Effect.map(() => true),
+      Effect.catchAll(() => Effect.succeed(false))
+    )
+  );
+
+  if (!result) {
     return { ok: false };
   }
 
@@ -99,25 +109,49 @@ export async function completeTryoutPart({
   partKeys,
   ...args
 }: CompleteTryoutPartInput): Promise<CompleteTryoutPartResult> {
-  try {
-    await fetchAuthMutation(api.tryouts.mutations.attempts.completePart, {
-      partKey: args.partKey,
-      tryoutAttemptId: args.tryoutAttemptId,
+  const completeResult = await Effect.runPromise(
+    Effect.tryPromise({
+      try: () =>
+        fetchAuthMutation(api.tryouts.mutations.attempts.completePart, {
+          partKey: args.partKey,
+          tryoutAttemptId: args.tryoutAttemptId,
+        }),
+      catch: (error) => error,
+    }).pipe(
+      Effect.map(() => true),
+      Effect.catchAll((error) =>
+        Effect.succeed(getCompleteTryoutPartErrorCode(error))
+      )
+    )
+  );
+
+  if (completeResult === true) {
+    revalidateTryoutOverview({
+      locale: args.locale,
+      product: args.product,
     });
-  } catch (error) {
-    return { code: getCompleteTryoutPartErrorCode(error), ok: false };
+    revalidateTryoutSet({
+      locale: args.locale,
+      partKeys,
+      product: args.product,
+      tryoutSlug: args.tryoutSlug,
+    });
+
+    return { ok: true };
   }
 
-  revalidateTryoutOverview({
-    locale: args.locale,
-    product: args.product,
-  });
-  revalidateTryoutSet({
-    locale: args.locale,
-    partKeys,
-    product: args.product,
-    tryoutSlug: args.tryoutSlug,
-  });
+  if (
+    completeResult === "TRYOUT_EXPIRED" ||
+    completeResult === "TRYOUT_PART_EXPIRED"
+  ) {
+    return {
+      code: completeResult,
+      ok: false,
+    };
+  }
 
-  return { ok: true };
+  return {
+    code: "UNKNOWN",
+    ok: false,
+  };
 }

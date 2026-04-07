@@ -5,6 +5,7 @@ import { products } from "@repo/backend/convex/utils/polar/products";
 import { getPathname } from "@repo/internationalization/src/navigation";
 import type { FunctionArgs } from "convex/server";
 import { ConvexError } from "convex/values";
+import { Effect } from "effect";
 import {
   revalidateTryoutOverview,
   revalidateTryoutSet,
@@ -74,7 +75,7 @@ function getCheckoutSuccessUrl({
 }
 
 /** Creates the checkout URL used when the tryout requires paid access. */
-async function getCheckoutUrl({
+function getCheckoutUrl({
   locale,
   returnPath,
 }: {
@@ -87,22 +88,19 @@ async function getCheckoutUrl({
   });
 
   if (!successUrl) {
-    return null;
+    return Promise.resolve(null);
   }
 
-  try {
-    const result = await fetchAuthAction(
-      api.customers.actions.public.generateCheckoutLink,
-      {
-        productIds: [products.pro.id],
-        successUrl,
-      }
-    );
-
-    return result.url;
-  } catch {
-    return null;
-  }
+  return Effect.runPromise(
+    Effect.tryPromise({
+      try: () =>
+        fetchAuthAction(api.customers.actions.public.generateCheckoutLink, {
+          productIds: [products.pro.id],
+          successUrl,
+        }),
+      catch: () => null,
+    }).pipe(Effect.map((result) => result?.url ?? null))
+  );
 }
 
 /**
@@ -114,45 +112,56 @@ export async function startTryout({
   returnPath,
   ...args
 }: StartTryoutInput): Promise<StartTryoutResult> {
-  try {
-    await fetchAuthMutation(api.tryouts.mutations.attempts.startTryout, args);
-  } catch (error) {
-    const errorCode = getStartTryoutErrorCode(error);
+  const result = await Effect.runPromise(
+    Effect.tryPromise({
+      try: () =>
+        fetchAuthMutation(api.tryouts.mutations.attempts.startTryout, args),
+      catch: (error) => error,
+    }).pipe(
+      Effect.map(() => true),
+      Effect.catchAll((error) => Effect.succeed(getStartTryoutErrorCode(error)))
+    )
+  );
 
-    if (errorCode === "COMPETITION_ATTEMPT_ALREADY_USED") {
-      return { code: errorCode, ok: false };
-    }
+  if (result === true) {
+    revalidateTryoutOverview({
+      locale: args.locale,
+      product: args.product,
+    });
+    revalidateTryoutSet({
+      locale: args.locale,
+      partKeys,
+      product: args.product,
+      tryoutSlug: args.tryoutSlug,
+    });
 
-    if (errorCode !== "TRYOUT_ACCESS_REQUIRED") {
-      return { code: "UNKNOWN", ok: false };
-    }
+    return { ok: true };
+  }
 
+  if (result === "COMPETITION_ATTEMPT_ALREADY_USED") {
+    return {
+      code: "COMPETITION_ATTEMPT_ALREADY_USED",
+      ok: false,
+    };
+  }
+
+  if (result === "TRYOUT_ACCESS_REQUIRED") {
     const checkoutUrl = await getCheckoutUrl({
       locale: args.locale,
       returnPath,
     });
 
-    if (!checkoutUrl) {
-      return { code: "UNKNOWN", ok: false };
+    if (checkoutUrl) {
+      return {
+        code: "TRYOUT_ACCESS_REQUIRED",
+        ok: false,
+        url: checkoutUrl,
+      };
     }
-
-    return {
-      code: "TRYOUT_ACCESS_REQUIRED",
-      ok: false,
-      url: checkoutUrl,
-    };
   }
 
-  revalidateTryoutOverview({
-    locale: args.locale,
-    product: args.product,
-  });
-  revalidateTryoutSet({
-    locale: args.locale,
-    partKeys,
-    product: args.product,
-    tryoutSlug: args.tryoutSlug,
-  });
-
-  return { ok: true };
+  return {
+    code: "UNKNOWN",
+    ok: false,
+  };
 }
