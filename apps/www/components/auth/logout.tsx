@@ -12,6 +12,7 @@ export function AuthLogout() {
 
   const router = useRouter();
 
+  /** Signs the user out and returns them to the public home page on success. */
   async function handleSignOut() {
     await authClient.signOut({
       fetchOptions: {

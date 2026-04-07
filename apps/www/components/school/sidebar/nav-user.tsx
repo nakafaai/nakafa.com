@@ -43,18 +43,23 @@ export function SchoolSidebarNavUser() {
   const user = useUser((state) => state.user);
 
   const { isMobile } = useSidebar();
+  const authHref = `/auth?redirect=${pathname}`;
 
+  /** Signs the user out and leaves the current SSR-auth page immediately on success. */
   async function handleSignOut() {
-    await authClient.signOut();
-    router.replace(`/auth?redirect=${pathname}`);
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.replace(authHref);
+        },
+      },
+    });
   }
 
   if (!user) {
     return (
       <SidebarMenuItem>
-        <SidebarMenuButton
-          onClick={() => router.push(`/auth?redirect=${pathname}`)}
-        >
+        <SidebarMenuButton onClick={() => router.push(authHref)}>
           <HugeIcons icon={Login01Icon} />
           {t("login")}
         </SidebarMenuButton>

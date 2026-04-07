@@ -1,13 +1,11 @@
 "use client";
 
 import { usePreloadedAuthQuery } from "@convex-dev/better-auth/nextjs/client";
-import { api } from "@repo/backend/convex/_generated/api";
+import type { api } from "@repo/backend/convex/_generated/api";
 import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import type { Preloaded } from "convex/react";
-import { useMutation } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { ConvexError } from "convex/values";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import {
@@ -18,6 +16,10 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { createContext, useContextSelector } from "use-context-selector";
+import {
+  completeTryoutPart,
+  startTryoutPart,
+} from "@/components/tryout/actions/part";
 import { useTryoutClock } from "@/components/tryout/hooks/use-tryout-clock";
 import { useTryoutStartFlow } from "@/components/tryout/hooks/use-tryout-start-flow";
 import type {
@@ -91,12 +93,14 @@ function useResolvedTryoutPartValue({
   hasAuthenticatedRoute,
   initialNowMs,
   part,
+  partKeys,
   runtime,
   tryout,
 }: {
   hasAuthenticatedRoute: boolean;
   initialNowMs?: number;
   part: TryoutPartValue;
+  partKeys: readonly string[];
   runtime: TryoutPartRuntime | null;
   tryout: TryoutValue;
 }) {
@@ -111,6 +115,7 @@ function useResolvedTryoutPartValue({
     setDialogOpenAction,
   } = useTryoutStartFlow({
     access: hasAuthenticatedRoute ? "authenticated" : "anonymous",
+    partKeys,
     params: {
       locale: tryout.locale,
       product: tryout.product,
@@ -121,8 +126,6 @@ function useResolvedTryoutPartValue({
     Boolean(runtime && runtime.tryoutAttempt.status === "in-progress"),
     initialNowMs
   );
-  const startPart = useMutation(api.tryouts.mutations.attempts.startPart);
-  const completePart = useMutation(api.tryouts.mutations.attempts.completePart);
   const {
     answers,
     attempt,
@@ -137,23 +140,11 @@ function useResolvedTryoutPartValue({
     runtime,
   });
   const shouldShowTryoutStartControls = status === "needs-tryout";
+  const setHref = `/try-out/${tryout.product}/${tryout.slug}`;
 
   const goToSet = useCallback(() => {
-    router.push(`/try-out/${tryout.product}/${tryout.slug}`);
-  }, [router, tryout.product, tryout.slug]);
-
-  const completeCurrentPart = useCallback(async () => {
-    if (!(runtime && attempt)) {
-      return false;
-    }
-
-    await completePart({
-      partKey: part.key,
-      tryoutAttemptId: runtime.tryoutAttempt._id,
-    });
-
-    return true;
-  }, [attempt, completePart, part.key, runtime]);
+    router.push(setHref);
+  }, [router, setHref]);
 
   const timer = useExerciseTimer({
     attempt,
@@ -179,60 +170,84 @@ function useResolvedTryoutPartValue({
     }
 
     startTransition(async () => {
-      try {
-        await startPart({
-          partKey: part.key,
-          tryoutAttemptId: runtime.tryoutAttempt._id,
-        });
+      const result = await startTryoutPart({
+        locale: tryout.locale,
+        partKey: part.key,
+        partKeys,
+        product: tryout.product,
+        tryoutAttemptId: runtime.tryoutAttempt._id,
+        tryoutSlug: tryout.slug,
+      });
+
+      if (result.ok) {
         toast.success(tTryouts("start-part-success"), {
           position: "bottom-center",
         });
-      } catch {
-        toast.error(tTryouts("start-part-error"), {
-          position: "bottom-center",
-        });
+        return;
       }
+
+      toast.error(tTryouts("start-part-error"), {
+        position: "bottom-center",
+      });
     });
-  }, [part.key, runtime, startPart, tTryouts]);
+  }, [
+    part.key,
+    partKeys,
+    runtime,
+    tTryouts,
+    tryout.locale,
+    tryout.product,
+    tryout.slug,
+  ]);
 
   const completePartAction = useCallback(() => {
     startTransition(async () => {
-      try {
-        const didCompletePart = await completeCurrentPart();
+      if (!(runtime && attempt)) {
+        return;
+      }
 
-        if (!didCompletePart) {
-          return;
-        }
+      const result = await completeTryoutPart({
+        locale: tryout.locale,
+        partKey: part.key,
+        partKeys,
+        product: tryout.product,
+        tryoutAttemptId: runtime.tryoutAttempt._id,
+        tryoutSlug: tryout.slug,
+      });
 
+      if (result.ok) {
         goToSet();
         toast.success(tTryouts("complete-part-success"), {
           position: "bottom-center",
         });
-      } catch (error) {
-        if (error instanceof ConvexError) {
-          const errorData = error.data;
+        return;
+      }
 
-          if (typeof errorData === "object" && errorData !== null) {
-            const errorCode = "code" in errorData ? errorData.code : undefined;
-
-            if (
-              errorCode === "TRYOUT_EXPIRED" ||
-              errorCode === "TRYOUT_PART_EXPIRED"
-            ) {
-              toast.info(tTryouts("part-head-processing-expiry"), {
-                position: "bottom-center",
-              });
-              return;
-            }
-          }
-        }
-
-        toast.error(tTryouts("complete-part-error"), {
+      if (
+        result.code === "TRYOUT_EXPIRED" ||
+        result.code === "TRYOUT_PART_EXPIRED"
+      ) {
+        toast.info(tTryouts("part-head-processing-expiry"), {
           position: "bottom-center",
         });
+        return;
       }
+
+      toast.error(tTryouts("complete-part-error"), {
+        position: "bottom-center",
+      });
     });
-  }, [completeCurrentPart, goToSet, tTryouts]);
+  }, [
+    attempt,
+    goToSet,
+    part.key,
+    partKeys,
+    runtime,
+    tTryouts,
+    tryout.locale,
+    tryout.product,
+    tryout.slug,
+  ]);
 
   return useMemo(
     () => ({
@@ -301,11 +316,13 @@ function PreloadedTryoutPartProvider({
   children,
   initialNowMs,
   part,
+  partKeys,
   preloadedRuntime,
   tryout,
 }: PropsWithChildren<{
   initialNowMs?: number;
   part: TryoutPartValue;
+  partKeys: readonly string[];
   preloadedRuntime: PreloadedTryoutPartRuntime;
   tryout: TryoutValue;
 }>) {
@@ -314,6 +331,7 @@ function PreloadedTryoutPartProvider({
     hasAuthenticatedRoute: true,
     initialNowMs,
     part,
+    partKeys,
     runtime,
     tryout,
   });
@@ -330,16 +348,19 @@ function AnonymousTryoutPartProvider({
   children,
   initialNowMs,
   part,
+  partKeys,
   tryout,
 }: PropsWithChildren<{
   initialNowMs?: number;
   part: TryoutPartValue;
+  partKeys: readonly string[];
   tryout: TryoutValue;
 }>) {
   const value = useResolvedTryoutPartValue({
     hasAuthenticatedRoute: false,
     initialNowMs,
     part,
+    partKeys,
     runtime: null,
     tryout,
   });
@@ -356,11 +377,13 @@ export function TryoutPartProvider({
   children,
   initialNowMs,
   part,
+  partKeys,
   preloadedRuntime,
   tryout,
 }: PropsWithChildren<{
   initialNowMs?: number;
   part: TryoutPartValue;
+  partKeys: readonly string[];
   preloadedRuntime?: PreloadedTryoutPartRuntime;
   tryout: TryoutValue;
 }>) {
@@ -369,6 +392,7 @@ export function TryoutPartProvider({
       <PreloadedTryoutPartProvider
         initialNowMs={initialNowMs}
         part={part}
+        partKeys={partKeys}
         preloadedRuntime={preloadedRuntime}
         tryout={tryout}
       >
@@ -381,6 +405,7 @@ export function TryoutPartProvider({
     <AnonymousTryoutPartProvider
       initialNowMs={initialNowMs}
       part={part}
+      partKeys={partKeys}
       tryout={tryout}
     >
       {children}

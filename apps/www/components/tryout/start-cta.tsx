@@ -24,6 +24,9 @@ export function TryoutStartCta() {
   );
   const isActionPending = useTryoutSet((state) => state.meta.isActionPending);
   const isStartBlocked = useTryoutSet((state) => state.meta.isStartBlocked);
+  const prefetchAuthAction = useTryoutSet(
+    (state) => state.actions.prefetchAuthAction
+  );
   const remainingTime = useTryoutSet((state) => state.state.remainingTime);
   const resumePartKey = useTryoutSet((state) => state.state.resumePartKey);
 
@@ -71,21 +74,27 @@ export function TryoutStartCta() {
           {resumePartKey ? (
             <TryoutStartCountdownAction>
               <TryoutStartActionButton
-                isBlocked={isStartBlocked}
+                disabled={isStartBlocked}
                 isPending={isActionPending}
-                label={label}
-                onClickAction={clickStartAction}
-              />
+                onClick={clickStartAction}
+                onFocus={prefetchAuthAction}
+                onMouseEnter={prefetchAuthAction}
+              >
+                {label}
+              </TryoutStartActionButton>
             </TryoutStartCountdownAction>
           ) : null}
         </TryoutStartCountdown>
       ) : (
         <TryoutStartActionButton
-          isBlocked={isStartBlocked}
+          disabled={isStartBlocked}
           isPending={isActionPending}
-          label={label}
-          onClickAction={clickStartAction}
-        />
+          onClick={clickStartAction}
+          onFocus={prefetchAuthAction}
+          onMouseEnter={prefetchAuthAction}
+        >
+          {label}
+        </TryoutStartActionButton>
       )}
     </div>
   );

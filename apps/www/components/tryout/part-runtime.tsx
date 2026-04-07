@@ -166,11 +166,12 @@ function TryoutPartTryoutStartControls() {
     <>
       <TryoutStartActionButton
         className="w-full sm:w-auto"
-        isBlocked={isStartBlocked}
+        disabled={isStartBlocked}
         isPending={isActionPending}
-        label={tTryouts("start-cta")}
-        onClickAction={clickTryoutStartAction}
-      />
+        onClick={clickTryoutStartAction}
+      >
+        {tTryouts("start-cta")}
+      </TryoutStartActionButton>
 
       <TryoutStartConfirmDialog
         cancelLabel={tTryouts("cancel-cta")}
