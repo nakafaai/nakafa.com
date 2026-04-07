@@ -57,10 +57,16 @@ export default async function Page({ params }: Props) {
             }),
           catch: () => new Error("Failed to load tryout details"),
         }),
-        token: Effect.tryPromise({
-          try: () => getToken(),
-          catch: () => new Error("Failed to load user token"),
-        }),
+        token: Effect.match(
+          Effect.tryPromise({
+            try: () => getToken(),
+            catch: () => new Error("Failed to load user token"),
+          }),
+          {
+            onFailure: () => null,
+            onSuccess: (token) => token,
+          }
+        ),
       },
       {
         concurrency: "unbounded",

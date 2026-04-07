@@ -45,14 +45,26 @@ async function Main({
   const { fromQuery, token } = await Effect.runPromise(
     Effect.all(
       {
-        fromQuery: Effect.tryPromise({
-          try: () => searchParams,
-          catch: () => new Error("Failed to load search params"),
-        }),
-        token: Effect.tryPromise({
-          try: () => getToken(),
-          catch: () => new Error("Failed to load user token"),
-        }),
+        fromQuery: Effect.match(
+          Effect.tryPromise({
+            try: () => searchParams,
+            catch: () => new Error("Failed to load search params"),
+          }),
+          {
+            onFailure: () => ({ from: "" }),
+            onSuccess: (query) => query,
+          }
+        ),
+        token: Effect.match(
+          Effect.tryPromise({
+            try: () => getToken(),
+            catch: () => new Error("Failed to load user token"),
+          }),
+          {
+            onFailure: () => null,
+            onSuccess: (token) => token,
+          }
+        ),
       },
       {
         concurrency: "unbounded",

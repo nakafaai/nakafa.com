@@ -32,30 +32,45 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
               try: () => getTranslations({ locale, namespace: "Tryouts" }),
               catch: () => new Error("Failed to load tryout translations"),
             }),
-            token: Effect.tryPromise({
-              try: () => getToken(),
-              catch: () => new Error("Failed to load user token"),
-            }),
+            token: Effect.match(
+              Effect.tryPromise({
+                try: () => getToken(),
+                catch: () => new Error("Failed to load user token"),
+              }),
+              {
+                onFailure: () => null,
+                onSuccess: (token) => token,
+              }
+            ),
           },
           { concurrency: "unbounded" }
         );
 
         const { catalogSnapshot, currentUser } = yield* Effect.all(
           {
-            catalogSnapshot: Effect.tryPromise({
-              try: () =>
-                fetchQuery(
-                  api.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot,
-                  {
-                    locale,
-                    pageSize: TRYOUT_CATALOG_PAGE_SIZE,
-                    product,
-                  },
-                  token ? { token } : undefined
-                ),
-              catch: () =>
-                new Error("Failed to load active tryout catalog snapshot"),
-            }),
+            catalogSnapshot: Effect.match(
+              Effect.tryPromise({
+                try: () =>
+                  fetchQuery(
+                    api.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot,
+                    {
+                      locale,
+                      pageSize: TRYOUT_CATALOG_PAGE_SIZE,
+                      product,
+                    },
+                    token ? { token } : undefined
+                  ),
+                catch: () =>
+                  new Error("Failed to load active tryout catalog snapshot"),
+              }),
+              {
+                onFailure: () => ({
+                  activeCount: 0,
+                  initialPage: [],
+                }),
+                onSuccess: (snapshot) => snapshot,
+              }
+            ),
             currentUser: token
               ? Effect.tryPromise({
                   try: () => fetchQuery(api.auth.getCurrentUser, {}, { token }),
