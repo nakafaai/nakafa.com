@@ -119,7 +119,7 @@ async function PageContent({
       {
         subjects: Effect.tryPromise({
           try: () => getSubjects(category, type),
-          catch: () => new Error("Failed to load subjects"),
+          catch: () => new Error("Failed to fetch exercise subjects"),
         }),
         t: Effect.tryPromise({
           try: () => getTranslations({ locale, namespace: "Exercises" }),

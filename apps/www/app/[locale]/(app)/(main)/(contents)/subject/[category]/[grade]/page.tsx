@@ -131,10 +131,13 @@ async function PageContent({
   const { subjects, tCommon, tSubject } = await Effect.runPromise(
     Effect.all(
       {
-        subjects: Effect.tryPromise({
-          try: () => getGradeSubjects(category, grade),
-          catch: () => new Error("Failed to load subject list"),
-        }),
+        subjects: Effect.orElse(
+          Effect.tryPromise({
+            try: () => getGradeSubjects(category, grade),
+            catch: () => new Error("Failed to load subject grades"),
+          }),
+          () => Effect.succeed([])
+        ),
         tCommon: Effect.tryPromise({
           try: () => getTranslations({ locale, namespace: "Common" }),
           catch: () => new Error("Failed to load Common translations"),

@@ -4,6 +4,7 @@ import {
   getAllGradesWithSubjects,
   getGradeNonNumeric,
 } from "@repo/contents/_lib/subject/grade";
+import { SubjectCategorySchema } from "@repo/contents/_types/subject/category";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
@@ -18,7 +19,9 @@ import { getGradeIcon } from "./icons";
 
 export const revalidate = false;
 
-const CATEGORY_ORDER = ["middle-school", "high-school", "university"] as const;
+const CATEGORY_ORDER = SubjectCategorySchema.options.filter(
+  (category) => category !== "elementary-school"
+);
 
 interface Params {
   locale: Locale;
@@ -81,10 +84,13 @@ async function PageContent({ locale }: { locale: Locale }) {
   const { allGrades, tCommon, tSubject } = await Effect.runPromise(
     Effect.all(
       {
-        allGrades: Effect.tryPromise({
-          try: () => getAllGradesWithSubjects(CATEGORY_ORDER),
-          catch: () => new Error("Failed to load grade subjects"),
-        }),
+        allGrades: Effect.orElse(
+          Effect.tryPromise({
+            try: () => getAllGradesWithSubjects(CATEGORY_ORDER),
+            catch: () => new Error("Failed to load all grades with subjects"),
+          }),
+          () => Effect.succeed([])
+        ),
         tCommon: Effect.tryPromise({
           try: () => getTranslations({ locale, namespace: "Common" }),
           catch: () => new Error("Failed to load Common translations"),
@@ -111,7 +117,7 @@ async function PageContent({ locale }: { locale: Locale }) {
     <>
       <BreadcrumbJsonLd
         breadcrumbItems={allGrades.map((grade, index) => ({
-          "@type": "ListItem" as const,
+          "@type": "ListItem",
           "@id": `https://nakafa.com/${locale}${grade.href}`,
           position: index + 1,
           name: tSubject(getGradeNonNumeric(grade.grade) ?? "grade", {

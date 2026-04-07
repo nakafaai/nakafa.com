@@ -121,8 +121,7 @@ async function getUnsubmittedUrls(service: "indexNow" | "bing"): Promise<{
       allBaseRoutes.map((route) =>
         Effect.tryPromise({
           try: () => getEntries(route),
-          catch: () =>
-            new Error(`Failed to load sitemap entries for route ${route}`),
+          catch: () => [],
         })
       ),
       {

@@ -98,10 +98,13 @@ export function fetchExerciseContext({
 
   return Effect.all(
     {
-      materials: Effect.tryPromise({
-        try: () => getMaterials(materialPath, locale),
-        catch: () => new Error("Failed to fetch materials"),
-      }),
+      materials: Effect.orElse(
+        Effect.tryPromise({
+          try: () => getMaterials(materialPath, locale),
+          catch: () => new Error("Failed to load exercise materials"),
+        }),
+        () => Effect.succeed([])
+      ),
     },
     {
       concurrency: "unbounded",
@@ -160,10 +163,13 @@ export function fetchExerciseMetadataContext({
     const exerciseSetPath = getSlugPath(category, type, material, baseSlug);
 
     const [materials, exerciseOption, exerciseCount] = yield* Effect.all([
-      Effect.tryPromise({
-        try: () => getMaterials(materialPath, locale),
-        catch: () => new Error("Failed to fetch materials"),
-      }),
+      Effect.orElse(
+        Effect.tryPromise({
+          try: () => getMaterials(materialPath, locale),
+          catch: () => new Error("Failed to load exercise materials"),
+        }),
+        () => Effect.succeed([])
+      ),
       isSpecificExercise
         ? getExerciseByNumber(
             locale,

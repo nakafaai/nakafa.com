@@ -349,10 +349,13 @@ async function PageContent({
           try: () => getTranslations({ locale, namespace: "Exercises" }),
           catch: () => new Error("Failed to load Exercises translations"),
         }),
-        materialGroups: Effect.tryPromise({
-          try: () => getMaterials(materialPath, locale),
-          catch: () => new Error("Failed to load exercise materials"),
-        }),
+        materialGroups: Effect.orElse(
+          Effect.tryPromise({
+            try: () => getMaterials(materialPath, locale),
+            catch: () => new Error("Failed to load exercise materials"),
+          }),
+          () => Effect.succeed([])
+        ),
       },
       {
         concurrency: "unbounded",

@@ -264,7 +264,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       allBaseRoutes.map((route) =>
         Effect.tryPromise({
           try: () => getEntries(route, MAIN_DOMAIN),
-          catch: () => new Error(`Failed to load sitemap entries for ${route}`),
+          catch: () => [],
         })
       ),
       {

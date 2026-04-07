@@ -63,7 +63,7 @@ export async function generateMetadata({
 
   let ogUrl: string = getOgUrl(locale, FilePath);
 
-  const publicPath = `/open-graph/subject/${locale}-${material}.png` as const;
+  const publicPath = `/open-graph/subject/${locale}-${material}.png`;
   const fullPathToCheck = path.join(process.cwd(), `public${publicPath}`);
 
   // if the og image exists in public directory, use it
@@ -143,10 +143,13 @@ async function PageContent({
   const { materials, t } = await Effect.runPromise(
     Effect.all(
       {
-        materials: Effect.tryPromise({
-          try: () => getMaterials(FilePath, locale),
-          catch: () => new Error("Failed to load materials"),
-        }),
+        materials: Effect.orElse(
+          Effect.tryPromise({
+            try: () => getMaterials(FilePath, locale),
+            catch: () => new Error("Failed to load subject materials"),
+          }),
+          () => Effect.succeed([])
+        ),
         t: Effect.tryPromise({
           try: () => getTranslations({ locale, namespace: "Subject" }),
           catch: () => new Error("Failed to load Subject translations"),

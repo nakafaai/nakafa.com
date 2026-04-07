@@ -78,10 +78,13 @@ export function getContentContext({
       Effect.orElse(getSubjectContent(locale, FilePath), () =>
         Effect.succeed(null)
       ),
-      Effect.tryPromise({
-        try: () => getMaterials(materialPath, locale),
-        catch: () => new Error("Failed to fetch materials"),
-      }),
+      Effect.orElse(
+        Effect.tryPromise({
+          try: () => getMaterials(materialPath, locale),
+          catch: () => new Error("Failed to load subject materials"),
+        }),
+        () => Effect.succeed([])
+      ),
     ]);
 
     if (content === null) {
