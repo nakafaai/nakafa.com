@@ -28,11 +28,11 @@ export function Grade7Icon() {
         <div className="h-1 w-full rounded-full bg-sky-500/20 dark:bg-sky-400/20" />
         <div className="h-1 w-2/3 rounded-full bg-sky-500/20 dark:bg-sky-400/20" />
 
-        <div className="absolute top-2 -right-2 z-20 flex h-8 w-8 items-center justify-center rounded-full border-2 border-card bg-sky-500 text-white shadow-xs transition-all ease-out group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:scale-110 dark:bg-sky-600">
+        <div className="absolute top-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full border-2 border-card bg-sky-500 text-white shadow-xs transition-all ease-out group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:scale-110 dark:bg-sky-600">
           <HugeIcons className="size-4.5" icon={Books02Icon} />
         </div>
 
-        <div className="absolute -bottom-2 -left-3 z-20 flex h-11 w-11 items-center justify-center rounded-full border-2 border-card bg-sky-500 text-white shadow-xs transition-all ease-out group-hover:-translate-x-1 group-hover:translate-y-1 group-hover:scale-110 dark:bg-sky-600">
+        <div className="absolute -bottom-2 -left-3 flex h-11 w-11 items-center justify-center rounded-full border-2 border-card bg-sky-500 text-white shadow-xs transition-all ease-out group-hover:-translate-x-1 group-hover:translate-y-1 group-hover:scale-110 dark:bg-sky-600">
           <HugeIcons className="size-5.5" icon={BookOpen02Icon} />
         </div>
       </div>
@@ -50,11 +50,11 @@ export function Grade8Icon() {
           <div className="h-4 w-1/2 rounded-md bg-violet-500/20 dark:bg-violet-400/20" />
         </div>
 
-        <div className="absolute top-1/2 -right-2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border-2 border-card bg-violet-500 text-white shadow-xs transition-all ease-out group-hover:translate-x-1 group-hover:scale-110 dark:bg-violet-600">
+        <div className="absolute top-1/2 -right-2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border-2 border-card bg-violet-500 text-white shadow-xs transition-all ease-out group-hover:translate-x-1 group-hover:scale-110 dark:bg-violet-600">
           <HugeIcons className="size-4.5" icon={QuillWrite02Icon} />
         </div>
 
-        <div className="absolute -bottom-2 -left-3 z-20 flex h-11 w-11 items-center justify-center rounded-full border-2 border-card bg-violet-500 text-white shadow-xs transition-all ease-out group-hover:-translate-x-1 group-hover:translate-y-1 group-hover:scale-110 dark:bg-violet-600">
+        <div className="absolute -bottom-2 -left-3 flex h-11 w-11 items-center justify-center rounded-full border-2 border-card bg-violet-500 text-white shadow-xs transition-all ease-out group-hover:-translate-x-1 group-hover:translate-y-1 group-hover:scale-110 dark:bg-violet-600">
           <HugeIcons className="size-5.5" icon={CalculatorIcon} />
         </div>
       </div>
@@ -70,11 +70,11 @@ export function Grade9Icon() {
         <div className="h-1 w-full rounded-full bg-emerald-500/20 dark:bg-emerald-400/20" />
         <div className="h-1 w-4/5 rounded-full bg-emerald-500/20 dark:bg-emerald-400/20" />
 
-        <div className="absolute -right-2 -bottom-2 z-20 flex h-8 w-8 items-center justify-center rounded-full border-2 border-card bg-emerald-500 text-white shadow-xs transition-all ease-out group-hover:translate-x-1 group-hover:translate-y-1 group-hover:scale-110 dark:bg-emerald-600">
+        <div className="absolute -right-2 -bottom-2 flex h-8 w-8 items-center justify-center rounded-full border-2 border-card bg-emerald-500 text-white shadow-xs transition-all ease-out group-hover:translate-x-1 group-hover:translate-y-1 group-hover:scale-110 dark:bg-emerald-600">
           <HugeIcons className="size-4.5" icon={MicroscopeIcon} />
         </div>
 
-        <div className="absolute top-1 -left-3 z-20 flex h-11 w-11 items-center justify-center rounded-full border-2 border-card bg-emerald-500 text-white shadow-xs transition-all ease-out group-hover:-translate-x-1 group-hover:-translate-y-1 group-hover:scale-110 dark:bg-emerald-600">
+        <div className="absolute top-1 -left-3 flex h-11 w-11 items-center justify-center rounded-full border-2 border-card bg-emerald-500 text-white shadow-xs transition-all ease-out group-hover:-translate-x-1 group-hover:-translate-y-1 group-hover:scale-110 dark:bg-emerald-600">
           <HugeIcons className="size-5.5" icon={Chemistry01Icon} />
         </div>
       </div>
@@ -92,11 +92,11 @@ export function Grade10Icon() {
         </div>
         <div className="h-1 w-full rounded-full bg-amber-500/20 dark:bg-amber-400/20" />
 
-        <div className="absolute top-0 -right-2 z-20 flex h-8 w-8 items-center justify-center rounded-full border-2 border-card bg-amber-500 text-white shadow-xs transition-all ease-out group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:scale-110 dark:bg-amber-600">
+        <div className="absolute top-0 -right-2 flex h-8 w-8 items-center justify-center rounded-full border-2 border-card bg-amber-500 text-white shadow-xs transition-all ease-out group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:scale-110 dark:bg-amber-600">
           <HugeIcons className="size-4.5" icon={Brain02Icon} />
         </div>
 
-        <div className="absolute -bottom-2 -left-3 z-20 flex h-11 w-11 items-center justify-center rounded-full border-2 border-card bg-amber-500 text-white shadow-xs transition-all ease-out group-hover:-translate-x-1 group-hover:translate-y-1 group-hover:scale-110 dark:bg-amber-600">
+        <div className="absolute -bottom-2 -left-3 flex h-11 w-11 items-center justify-center rounded-full border-2 border-card bg-amber-500 text-white shadow-xs transition-all ease-out group-hover:-translate-x-1 group-hover:translate-y-1 group-hover:scale-110 dark:bg-amber-600">
           <HugeIcons className="size-5.5" icon={Atom02Icon} />
         </div>
       </div>
@@ -112,11 +112,11 @@ export function Grade11Icon() {
         <div className="h-4 w-full rounded-md bg-fuchsia-500/20 dark:bg-fuchsia-400/20" />
         <div className="h-1 w-2/3 rounded-full bg-fuchsia-500/20 dark:bg-fuchsia-400/20" />
 
-        <div className="absolute -right-1.5 bottom-1 z-20 flex h-8 w-8 items-center justify-center rounded-full border-2 border-card bg-fuchsia-500 text-white shadow-xs transition-all ease-out group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:scale-110 dark:bg-fuchsia-600">
+        <div className="absolute -right-1.5 bottom-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-card bg-fuchsia-500 text-white shadow-xs transition-all ease-out group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:scale-110 dark:bg-fuchsia-600">
           <HugeIcons className="size-4.5" icon={Globe02Icon} />
         </div>
 
-        <div className="absolute -bottom-2.5 -left-3 z-20 flex h-11 w-11 items-center justify-center rounded-full border-2 border-card bg-fuchsia-500 text-white shadow-xs transition-all ease-out group-hover:-translate-x-1 group-hover:translate-y-1 group-hover:scale-110 dark:bg-fuchsia-600">
+        <div className="absolute -bottom-2.5 -left-3 flex h-11 w-11 items-center justify-center rounded-full border-2 border-card bg-fuchsia-500 text-white shadow-xs transition-all ease-out group-hover:-translate-x-1 group-hover:translate-y-1 group-hover:scale-110 dark:bg-fuchsia-600">
           <HugeIcons className="size-5.5" icon={DnaIcon} />
         </div>
       </div>
@@ -135,11 +135,11 @@ export function Grade12Icon() {
           <div className="h-1 w-full rounded-full bg-indigo-500/20 dark:bg-indigo-400/20" />
         </div>
 
-        <div className="absolute top-2 -right-2 z-20 flex h-8 w-8 items-center justify-center rounded-full border-2 border-card bg-indigo-500 text-white shadow-xs transition-all ease-out group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:scale-110 dark:bg-indigo-600">
+        <div className="absolute top-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full border-2 border-card bg-indigo-500 text-white shadow-xs transition-all ease-out group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:scale-110 dark:bg-indigo-600">
           <HugeIcons className="size-4.5" icon={PiIcon} />
         </div>
 
-        <div className="absolute -bottom-2 -left-3 z-20 flex h-11 w-11 items-center justify-center rounded-full border-2 border-card bg-indigo-500 text-white shadow-xs transition-all ease-out group-hover:-translate-x-1 group-hover:translate-y-1 group-hover:scale-110 dark:bg-indigo-600">
+        <div className="absolute -bottom-2 -left-3 flex h-11 w-11 items-center justify-center rounded-full border-2 border-card bg-indigo-500 text-white shadow-xs transition-all ease-out group-hover:-translate-x-1 group-hover:translate-y-1 group-hover:scale-110 dark:bg-indigo-600">
           <HugeIcons className="size-5.5" icon={SchoolIcon} />
         </div>
       </div>
@@ -155,11 +155,11 @@ export function BachelorIcon() {
         <div className="mx-auto h-1 w-6 rounded-full bg-cyan-500/20 dark:bg-cyan-400/20" />
         <div className="mx-auto h-1 w-4 rounded-full bg-cyan-500/20 dark:bg-cyan-400/20" />
 
-        <div className="absolute top-1 -right-2 z-20 flex h-8 w-8 items-center justify-center rounded-full border-2 border-card bg-cyan-500 text-white shadow-xs transition-all ease-out group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:scale-110 dark:bg-cyan-600">
+        <div className="absolute top-1 -right-2 flex h-8 w-8 items-center justify-center rounded-full border-2 border-card bg-cyan-500 text-white shadow-xs transition-all ease-out group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:scale-110 dark:bg-cyan-600">
           <HugeIcons className="size-4.5" icon={DiplomaIcon} />
         </div>
 
-        <div className="absolute -bottom-2 -left-3 z-20 flex h-11 w-11 items-center justify-center rounded-full border-2 border-card bg-cyan-500 text-white shadow-xs transition-all ease-out group-hover:-translate-x-1 group-hover:translate-y-1 group-hover:scale-110 dark:bg-cyan-600">
+        <div className="absolute -bottom-2 -left-3 flex h-11 w-11 items-center justify-center rounded-full border-2 border-card bg-cyan-500 text-white shadow-xs transition-all ease-out group-hover:-translate-x-1 group-hover:translate-y-1 group-hover:scale-110 dark:bg-cyan-600">
           <HugeIcons className="size-5.5" icon={Mortarboard01Icon} />
         </div>
       </div>
