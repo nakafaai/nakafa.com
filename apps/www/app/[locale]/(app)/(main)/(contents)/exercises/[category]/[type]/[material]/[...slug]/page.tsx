@@ -66,7 +66,6 @@ import { QuestionAnalytics } from "./analytics";
 import { ExerciseArticle } from "./article";
 import { ExerciseAttempt } from "./attempt";
 
-export const dynamicParams = true;
 export const revalidate = false;
 
 interface Params {
