@@ -25,12 +25,20 @@ import {
 import { cn } from "@repo/design-system/lib/utils";
 import { useConvexAuth, usePaginatedQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
+import { format } from "date-fns";
+import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { useQueryState } from "nuqs";
-import { type ReactNode, useState, useTransition } from "react";
+import {
+  type ComponentProps,
+  type ReactNode,
+  useState,
+  useTransition,
+} from "react";
 import { tryoutSearchParsers } from "@/components/tryout/nuqs/attempt";
 import { useTryoutSet } from "@/components/tryout/providers/set-state";
 import { TryoutScoreCard } from "@/components/tryout/score-card";
+import { getLocale } from "@/lib/utils/date";
 
 type TryoutAttempt = NonNullable<
   FunctionReturnType<typeof api.tryouts.queries.me.attempt.getUserTryoutAttempt>
@@ -42,7 +50,7 @@ type TryoutAttemptHistoryItem = FunctionReturnType<
 
 interface AttemptOption {
   attemptId: string;
-  icon: typeof PartyIcon | typeof Progress03Icon;
+  icon: NonNullable<ComponentProps<typeof HugeIcons>["icon"]>;
   label: string;
   subtitle: string;
 }
@@ -51,14 +59,6 @@ interface Props {
   children?: ReactNode;
   fallbackAttempt: TryoutAttempt;
   fallbackStatus: TryoutAttempt["status"];
-}
-
-/** Format one stored attempt timestamp for the history picker. */
-function formatAttemptTimestamp(locale: string, value: number) {
-  return new Intl.DateTimeFormat(locale, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(value);
 }
 
 /** Build one selectable history option from one history row. */
@@ -71,7 +71,7 @@ function getAttemptOption({
     TryoutAttemptHistoryItem,
     "attemptId" | "countsForCompetition" | "startedAt"
   >;
-  locale: string;
+  locale: Locale;
   tTryouts: ReturnType<typeof useTranslations<"Tryouts">>;
 }) {
   return {
@@ -80,7 +80,9 @@ function getAttemptOption({
     label: attempt.countsForCompetition
       ? tTryouts("attempt-select-event")
       : tTryouts("attempt-select-retry"),
-    subtitle: formatAttemptTimestamp(locale, attempt.startedAt),
+    subtitle: format(attempt.startedAt, "PPp", {
+      locale: getLocale(locale),
+    }),
   } satisfies AttemptOption;
 }
 
