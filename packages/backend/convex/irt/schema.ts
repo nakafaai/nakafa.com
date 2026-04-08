@@ -31,8 +31,7 @@ const tables = {
   })
     .index("by_enqueuedAt", ["enqueuedAt"])
     .index("by_setId_and_enqueuedAt", ["setId", "enqueuedAt"])
-    .index("by_attemptId_and_enqueuedAt", ["attemptId", "enqueuedAt"])
-    .index("by_setId_and_attemptId", ["setId", "attemptId"]),
+    .index("by_attemptId_and_enqueuedAt", ["attemptId", "enqueuedAt"]),
 
   irtCalibrationAttempts: defineTable({
     setId: v.id("exerciseSets"),

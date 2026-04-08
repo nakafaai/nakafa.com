@@ -49,6 +49,7 @@ type CalibrationQueueEntryIntegrityPage = z.infer<
   typeof calibrationQueueEntryIntegrityPageSchema
 >;
 
+/** Aggregate paginated calibration-cache integrity totals for one deployment. */
 async function getCalibrationCacheIntegrity(prod: boolean) {
   const config = getConvexConfig({ prod });
   let continueCursor: string | null = null;
@@ -82,6 +83,7 @@ async function getCalibrationCacheIntegrity(prod: boolean) {
   }
 }
 
+/** Aggregate paginated scale-quality integrity totals for one deployment. */
 async function getScaleQualityIntegrity(prod: boolean) {
   const config = getConvexConfig({ prod });
   let continueCursor: string | null = null;
@@ -115,6 +117,7 @@ async function getScaleQualityIntegrity(prod: boolean) {
   }
 }
 
+/** Aggregate paginated queue-integrity totals for one deployment. */
 async function getCalibrationQueueIntegrity(prod: boolean) {
   const config = getConvexConfig({ prod });
   let attemptCursor: string | null = null;
@@ -181,6 +184,7 @@ async function getCalibrationQueueIntegrity(prod: boolean) {
   }
 }
 
+/** Parse CLI flags and print one IRT integrity summary. */
 async function main() {
   loadEnvFile();
 

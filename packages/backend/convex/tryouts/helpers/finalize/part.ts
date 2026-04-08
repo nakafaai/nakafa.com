@@ -15,6 +15,12 @@ type FinalizedExerciseAttemptStatus = Exclude<
   "in-progress"
 >;
 
+/**
+ * Finalize the backing exercise set attempt when the part is still open.
+ *
+ * The helper keeps the set attempt lifecycle in one place so part finalization
+ * can always score against the persisted final attempt state.
+ */
 async function finalizeExerciseSetAttemptIfNeeded(
   ctx: Pick<MutationCtx, "db" | "scheduler">,
   {
