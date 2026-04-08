@@ -29,12 +29,7 @@ import { format } from "date-fns";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { useQueryState } from "nuqs";
-import {
-  type ComponentProps,
-  type ReactNode,
-  useState,
-  useTransition,
-} from "react";
+import { type ComponentProps, type ReactNode, useTransition } from "react";
 import { tryoutSearchParsers } from "@/components/tryout/nuqs/attempt";
 import { useTryoutSet } from "@/components/tryout/providers/set-state";
 import { TryoutScoreCard } from "@/components/tryout/score-card";
@@ -132,9 +127,7 @@ function TryoutAttemptHistoryControls({
     (state) => state.state.initialAttemptHistory
   );
   const { isAuthenticated, isLoading } = useConvexAuth();
-  const [hasLoadedLiveHistory, setHasLoadedLiveHistory] = useState(false);
-  const shouldLoadAttemptHistory =
-    !isLoading && isAuthenticated && hasLoadedLiveHistory;
+  const shouldLoadAttemptHistory = !isLoading && isAuthenticated;
   const {
     loadMore,
     results: attemptHistory,
@@ -150,7 +143,6 @@ function TryoutAttemptHistoryControls({
       : "skip",
     { initialNumItems: 25 }
   );
-  const [isOpen, setIsOpen] = useState(false);
   const [isSelectingAttempt, startTransition] = useTransition();
   const [, setSelectedAttemptId] = useQueryState(
     "attempt",
@@ -165,9 +157,7 @@ function TryoutAttemptHistoryControls({
 
   const activeAttemptId = fallbackAttempt._id;
   const visibleAttemptHistory =
-    !hasLoadedLiveHistory || status === "LoadingFirstPage"
-      ? initialAttemptHistory
-      : attemptHistory;
+    status === "LoadingFirstPage" ? initialAttemptHistory : attemptHistory;
   const latestAttemptId =
     visibleAttemptHistory[0]?.attemptId ?? fallbackAttempt._id;
   const attemptOptions: AttemptOption[] = [];
@@ -204,18 +194,10 @@ function TryoutAttemptHistoryControls({
   return (
     <div className="flex w-full flex-wrap items-center gap-3">
       {visibleAttemptHistory.length > 1 ? (
-        <Popover
-          onOpenChange={(nextOpen) => {
-            setIsOpen(nextOpen);
-
-            if (nextOpen) {
-              setHasLoadedLiveHistory(true);
-            }
-          }}
-          open={isOpen}
-        >
+        <Popover>
           <PopoverTrigger asChild>
             <Button
+              className="group [&[data-state=open]_.tryout-history-chevron]:rotate-180"
               disabled={isSelectingAttempt || status === "LoadingFirstPage"}
               type="button"
               variant="outline"
@@ -223,10 +205,7 @@ function TryoutAttemptHistoryControls({
               <HugeIcons icon={Progress03Icon} />
               {tTryouts("attempt-menu-label")}
               <HugeIcons
-                className={cn(
-                  "ml-auto size-4 transition-transform ease-out",
-                  isOpen && "rotate-180"
-                )}
+                className="tryout-history-chevron ml-auto size-4 transition-transform ease-out"
                 icon={ArrowDown01Icon}
               />
             </Button>
@@ -272,7 +251,6 @@ function TryoutAttemptHistoryControls({
                               startTransition,
                             }
                           );
-                          setIsOpen(false);
                         }}
                       />
                     );
