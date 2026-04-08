@@ -198,7 +198,13 @@ export const completeCalibrationRun = internalMutation({
   },
 });
 
-/** Mark one calibration run failed and requeue its set if needed. */
+/**
+ * Mark one calibration run failed.
+ *
+ * Failed runs leave their pending attempt-owned queue rows untouched, so the
+ * next queue drain can retry from the same pending evidence without creating a
+ * second queue ownership path.
+ */
 export const failCalibrationRun = internalMutation({
   args: {
     calibrationRunId: vv.id("irtCalibrationRuns"),
@@ -220,18 +226,6 @@ export const failCalibrationRun = internalMutation({
       error: args.error,
       updatedAt: Date.now(),
     });
-
-    const existingQueueEntry = await ctx.db
-      .query("irtCalibrationQueue")
-      .withIndex("by_setId_and_enqueuedAt", (q) => q.eq("setId", run.setId))
-      .first();
-
-    if (!existingQueueEntry) {
-      await ctx.db.insert("irtCalibrationQueue", {
-        setId: run.setId,
-        enqueuedAt: Date.now(),
-      });
-    }
 
     return null;
   },

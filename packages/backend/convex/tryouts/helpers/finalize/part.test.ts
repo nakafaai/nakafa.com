@@ -131,15 +131,7 @@ describe("tryouts/helpers/finalize/part", () => {
         "tryoutAttempts",
         tryoutAttemptId
       );
-      const calibrationQueue = await ctx.db
-        .query("irtCalibrationQueue")
-        .withIndex("by_setId_and_enqueuedAt", (q) =>
-          q.eq("setId", tryout.setId)
-        )
-        .collect();
-
       return {
-        calibrationQueue,
         finalizedPart,
         storedPartAttempt,
         storedTryoutAttempt,
@@ -150,6 +142,5 @@ describe("tryouts/helpers/finalize/part", () => {
     expect(result.finalizedPart.rawScore).toBe(1);
     expect(result.storedTryoutAttempt?.completedPartIndices).toEqual([0]);
     expect(result.storedPartAttempt?.theta).toBe(result.finalizedPart.theta);
-    expect(result.calibrationQueue).toHaveLength(1);
   });
 });

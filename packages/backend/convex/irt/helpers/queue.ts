@@ -9,6 +9,8 @@ import {
 import { workflow } from "@repo/backend/convex/workflow";
 import { ConvexError } from "convex/values";
 
+const MAX_CALIBRATION_QUEUE_ROWS_PER_ATTEMPT = 2;
+
 /** Starts one durable calibration workflow if the set is not already running. */
 export async function startCalibrationRunWorkflow(
   ctx: MutationCtx,
@@ -53,6 +55,98 @@ export async function startCalibrationRunWorkflow(
   });
 
   return calibrationRunId;
+}
+
+/**
+ * Returns the single pending queue row for one attempt.
+ *
+ * Multiple rows for the same attempt indicate a broken queue invariant and are
+ * rejected explicitly so the operator can repair the data instead of silently
+ * continuing with ambiguous state.
+ */
+export async function getPendingCalibrationQueueEntryForAttempt(
+  ctx: Pick<MutationCtx, "db">,
+  attemptId: Id<"exerciseAttempts">
+) {
+  const queueEntries = await ctx.db
+    .query("irtCalibrationQueue")
+    .withIndex("by_attemptId_and_enqueuedAt", (q) =>
+      q.eq("attemptId", attemptId)
+    )
+    .take(MAX_CALIBRATION_QUEUE_ROWS_PER_ATTEMPT);
+
+  if (queueEntries.length <= 1) {
+    return queueEntries[0] ?? null;
+  }
+
+  throw new ConvexError({
+    code: "IRT_CALIBRATION_QUEUE_DUPLICATE_ATTEMPT",
+    message: "Multiple pending calibration queue rows exist for one attempt.",
+  });
+}
+
+/**
+ * Ensure one attempt owns exactly one pending queue row for its current set.
+ *
+ * Repeated syncs preserve the original enqueue timestamp so the documented
+ * staleness gate still measures how long the pending calibration evidence has
+ * been waiting, not how recently one answer was edited.
+ */
+export async function ensurePendingCalibrationQueueEntry(
+  ctx: Pick<MutationCtx, "db">,
+  {
+    attemptId,
+    enqueuedAt,
+    setId,
+  }: {
+    attemptId: Id<"exerciseAttempts">;
+    enqueuedAt: number;
+    setId: Id<"exerciseSets">;
+  }
+) {
+  const existingQueueEntry = await getPendingCalibrationQueueEntryForAttempt(
+    ctx,
+    attemptId
+  );
+
+  if (!existingQueueEntry) {
+    await ctx.db.insert("irtCalibrationQueue", {
+      setId,
+      attemptId,
+      enqueuedAt,
+    });
+
+    return null;
+  }
+
+  if (existingQueueEntry.setId === setId) {
+    return null;
+  }
+
+  await ctx.db.patch("irtCalibrationQueue", existingQueueEntry._id, {
+    setId,
+    enqueuedAt,
+  });
+
+  return null;
+}
+
+/** Remove the pending calibration queue row for one attempt, if it exists. */
+export async function removePendingCalibrationQueueEntry(
+  ctx: Pick<MutationCtx, "db">,
+  attemptId: Id<"exerciseAttempts">
+) {
+  const existingQueueEntry = await getPendingCalibrationQueueEntryForAttempt(
+    ctx,
+    attemptId
+  );
+
+  if (!existingQueueEntry) {
+    return null;
+  }
+
+  await ctx.db.delete("irtCalibrationQueue", existingQueueEntry._id);
+  return null;
 }
 
 /** Returns the pending calibration queue rows that are newer than the last successful run. */

@@ -4,6 +4,10 @@ import {
   clearCalibrationResponsesForAttempt,
   insertCalibrationAttempt,
 } from "@repo/backend/convex/irt/helpers/attempts";
+import {
+  ensurePendingCalibrationQueueEntry,
+  removePendingCalibrationQueueEntry,
+} from "@repo/backend/convex/irt/helpers/queue";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
 
@@ -34,6 +38,7 @@ export const syncCalibrationResponsesForAttempt = internalMutation({
     );
 
     if (!calibrationAttempt) {
+      await removePendingCalibrationQueueEntry(ctx, args.attemptId);
       return null;
     }
 
@@ -42,6 +47,11 @@ export const syncCalibrationResponsesForAttempt = internalMutation({
       responses: calibrationAttempt.responses,
       setId: calibrationAttempt.setId,
       updatedAt: now,
+    });
+    await ensurePendingCalibrationQueueEntry(ctx, {
+      attemptId: args.attemptId,
+      enqueuedAt: now,
+      setId: calibrationAttempt.setId,
     });
 
     return null;

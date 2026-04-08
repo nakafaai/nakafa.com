@@ -157,8 +157,8 @@ What this policy does **not** claim:
 
 ```mermaid
 flowchart TD
-    A[completeSubject] --> B[enqueue set in irtCalibrationQueue]
-    B --> C[cron drains calibration queue]
+    A[completed simulation set sync] --> B[upsert pending attempt rows in irtCalibrationQueue]
+    B --> C[cron drains calibration queue by set]
     C --> D[start calibration workflow]
     D --> E[load completed simulation set responses]
     E --> F[run set-level 2PL calibration]
@@ -245,7 +245,7 @@ flowchart TD
     H -- Yes --> I[completeCalibrationRun]
     I --> J[persist params and queue tryouts]
     H -- No --> K[failCalibrationRun]
-    K --> L[mark failed and requeue set]
+    K --> L[mark failed and leave pending attempts queued]
 ```
 
 ## Notes
@@ -255,6 +255,8 @@ flowchart TD
 - `irtCalibrationAttempts` is an operational cache, not the source of truth; the
   queue drainer trims each set back to a bounded working window before a new
   calibration run starts
+- `irtCalibrationQueue` stores pending calibration ownership per attempt, while
+  queue draining still batches work per set
 - This pipeline improves item parameters and freezes official scales, but it does
   not attempt additional cross-form equating/linking for unique-item tryouts
 - If Nakafa later wants a more advanced treatment of timed omissions, the next

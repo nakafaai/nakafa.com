@@ -1,4 +1,8 @@
-import { internalQuery } from "@repo/backend/convex/_generated/server";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import {
+  internalQuery,
+  type QueryCtx,
+} from "@repo/backend/convex/_generated/server";
 import { getCalibrationAttemptCacheLimit } from "@repo/backend/convex/irt/policy";
 import { getLatestScaleVersionForTryout } from "@repo/backend/convex/irt/scales/read";
 import { paginationOptsValidator } from "convex/server";
@@ -17,6 +21,47 @@ const scaleQualityIntegrityPageResultValidator = v.object({
   missingQualityCheckTryoutCount: v.number(),
   unstartableTryoutCount: v.number(),
 });
+
+const calibrationQueueAttemptIntegrityPageResultValidator = v.object({
+  continueCursor: v.string(),
+  duplicatePendingAttemptCount: v.number(),
+  isDone: v.boolean(),
+  missingPendingQueueAttemptCount: v.number(),
+  staleAttemptQueueSetCount: v.number(),
+});
+
+const calibrationQueueEntryIntegrityPageResultValidator = v.object({
+  continueCursor: v.string(),
+  isDone: v.boolean(),
+  orphanedQueueEntryCount: v.number(),
+  staleQueueEntryCount: v.number(),
+});
+
+/** Return the latest successful calibration run start time for one set. */
+async function getLatestCompletedCalibrationRunStartedAt(
+  ctx: QueryCtx,
+  latestCompletedRunStartedAtBySetId: Map<
+    Id<"exerciseSets">,
+    number | undefined
+  >,
+  setId: Id<"exerciseSets">
+) {
+  if (latestCompletedRunStartedAtBySetId.has(setId)) {
+    return latestCompletedRunStartedAtBySetId.get(setId);
+  }
+
+  const latestCompletedRun = await ctx.db
+    .query("irtCalibrationRuns")
+    .withIndex("by_setId_and_status_and_startedAt", (q) =>
+      q.eq("setId", setId).eq("status", "completed")
+    )
+    .order("desc")
+    .first();
+  const startedAt = latestCompletedRun?.startedAt;
+
+  latestCompletedRunStartedAtBySetId.set(setId, startedAt);
+  return startedAt;
+}
 
 /**
  * Return the integrity totals for one bounded page of exercise sets.
@@ -118,6 +163,129 @@ export const getScaleQualityIntegrity = internalQuery({
       isDone: tryouts.isDone,
       missingQualityCheckTryoutCount,
       unstartableTryoutCount,
+    };
+  },
+});
+
+/**
+ * Return queue-integrity totals for one bounded page of cached calibration
+ * attempts.
+ */
+export const getCalibrationQueueAttemptIntegrity = internalQuery({
+  args: {
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: calibrationQueueAttemptIntegrityPageResultValidator,
+  handler: async (ctx, args) => {
+    const attempts = await ctx.db
+      .query("irtCalibrationAttempts")
+      .paginate(args.paginationOpts);
+    const latestCompletedRunStartedAtBySetId = new Map<
+      Id<"exerciseSets">,
+      number | undefined
+    >();
+    let duplicatePendingAttemptCount = 0;
+    let missingPendingQueueAttemptCount = 0;
+    let staleAttemptQueueSetCount = 0;
+
+    for (const attempt of attempts.page) {
+      const latestCompletedRunStartedAt =
+        await getLatestCompletedCalibrationRunStartedAt(
+          ctx,
+          latestCompletedRunStartedAtBySetId,
+          attempt.setId
+        );
+
+      if (
+        latestCompletedRunStartedAt !== undefined &&
+        attempt._creationTime <= latestCompletedRunStartedAt
+      ) {
+        continue;
+      }
+
+      const queueEntries = await ctx.db
+        .query("irtCalibrationQueue")
+        .withIndex("by_attemptId_and_enqueuedAt", (q) =>
+          q.eq("attemptId", attempt.attemptId)
+        )
+        .take(2);
+
+      if (queueEntries.length === 0) {
+        missingPendingQueueAttemptCount += 1;
+        continue;
+      }
+
+      if (queueEntries.length > 1) {
+        duplicatePendingAttemptCount += 1;
+        continue;
+      }
+
+      if (queueEntries[0]?.setId !== attempt.setId) {
+        staleAttemptQueueSetCount += 1;
+      }
+    }
+
+    return {
+      continueCursor: attempts.continueCursor,
+      duplicatePendingAttemptCount,
+      isDone: attempts.isDone,
+      missingPendingQueueAttemptCount,
+      staleAttemptQueueSetCount,
+    };
+  },
+});
+
+/** Return queue-integrity totals for one bounded page of queue rows. */
+export const getCalibrationQueueEntryIntegrity = internalQuery({
+  args: {
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: calibrationQueueEntryIntegrityPageResultValidator,
+  handler: async (ctx, args) => {
+    const queueEntries = await ctx.db
+      .query("irtCalibrationQueue")
+      .withIndex("by_enqueuedAt")
+      .paginate(args.paginationOpts);
+    const latestCompletedRunStartedAtBySetId = new Map<
+      Id<"exerciseSets">,
+      number | undefined
+    >();
+    let orphanedQueueEntryCount = 0;
+    let staleQueueEntryCount = 0;
+
+    for (const queueEntry of queueEntries.page) {
+      const queueAttemptId = queueEntry.attemptId;
+
+      const attempt = await ctx.db
+        .query("irtCalibrationAttempts")
+        .withIndex("by_attemptId", (q) => q.eq("attemptId", queueAttemptId))
+        .unique();
+
+      if (!attempt || attempt.setId !== queueEntry.setId) {
+        orphanedQueueEntryCount += 1;
+        continue;
+      }
+
+      const latestCompletedRunStartedAt =
+        await getLatestCompletedCalibrationRunStartedAt(
+          ctx,
+          latestCompletedRunStartedAtBySetId,
+          queueEntry.setId
+        );
+
+      if (
+        latestCompletedRunStartedAt !== undefined &&
+        queueEntry.enqueuedAt <= latestCompletedRunStartedAt
+      ) {
+        staleQueueEntryCount += 1;
+      }
+    }
+
+    return {
+      continueCursor: queueEntries.continueCursor,
+      isDone: queueEntries.isDone,
+      orphanedQueueEntryCount,
+      staleQueueEntryCount,
     };
   },
 });
