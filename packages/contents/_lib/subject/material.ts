@@ -32,7 +32,10 @@ import type {
   Material,
   MaterialList,
 } from "@repo/contents/_types/subject/material";
-import { MaterialListSchema } from "@repo/contents/_types/subject/material";
+import {
+  MaterialListSchema,
+  MaterialSchema,
+} from "@repo/contents/_types/subject/material";
 import { cleanSlug } from "@repo/utilities/helper";
 import type { Locale } from "next-intl";
 
@@ -170,4 +173,15 @@ export function getCurrentMaterial(path: string, materials: MaterialList) {
   }
 
   return { currentChapter, currentItem };
+}
+
+/** Narrows one subject material route segment to the supported material union. */
+export function parseMaterial(value: string) {
+  const parsedMaterial = MaterialSchema.safeParse(value);
+
+  if (!parsedMaterial.success) {
+    return null;
+  }
+
+  return parsedMaterial.data;
 }

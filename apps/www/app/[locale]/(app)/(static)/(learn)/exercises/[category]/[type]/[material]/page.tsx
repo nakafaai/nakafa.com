@@ -1,10 +1,15 @@
 import fs from "node:fs";
 import path from "node:path";
+import { parseExercisesCategory } from "@repo/contents/_lib/exercises/category";
 import {
   getMaterialPath,
   getMaterials,
+  parseExercisesMaterial,
 } from "@repo/contents/_lib/exercises/material";
-import { getExercisesPath } from "@repo/contents/_lib/exercises/type";
+import {
+  getExercisesPath,
+  parseExercisesType,
+} from "@repo/contents/_lib/exercises/type";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
 import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
@@ -14,6 +19,7 @@ import { slugify } from "@repo/design-system/lib/utils";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
@@ -29,6 +35,7 @@ import {
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
 import { RefContent } from "@/components/shared/ref-content";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { createSEODescription } from "@/lib/utils/seo/descriptions";
@@ -37,23 +44,33 @@ import { getStaticParams } from "@/lib/utils/system";
 
 export const revalidate = false;
 
-interface Params {
-  category: ExercisesCategory;
-  locale: Locale;
-  material: ExercisesMaterial;
-  type: ExercisesType;
-}
+async function getResolvedParams(
+  params: PageProps<"/[locale]/exercises/[category]/[type]/[material]">["params"]
+) {
+  const {
+    locale: rawLocale,
+    category: rawCategory,
+    type: rawType,
+    material: rawMaterial,
+  } = await params;
+  const locale = getLocaleOrThrow(rawLocale);
+  const category = parseExercisesCategory(rawCategory);
+  const type = parseExercisesType(rawType);
+  const material = parseExercisesMaterial(rawMaterial);
 
-interface Props {
-  params: Promise<Params>;
+  if (!(category && type && material)) {
+    notFound();
+  }
+
+  return { category, locale, material, type };
 }
 
 export async function generateMetadata({
   params,
 }: {
-  params: Props["params"];
+  params: PageProps<"/[locale]/exercises/[category]/[type]/[material]">["params"];
 }): Promise<Metadata> {
-  const { locale, category, type, material } = await params;
+  const { locale, category, type, material } = await getResolvedParams(params);
   const t = await getTranslations({ locale, namespace: "Exercises" });
 
   const FilePath = getMaterialPath(category, type, material);
@@ -113,8 +130,24 @@ export function generateStaticParams() {
   });
 }
 
-export default function Page({ params }: Props) {
-  const { locale, category, type, material } = use(params);
+export default function Page(
+  props: PageProps<"/[locale]/exercises/[category]/[type]/[material]">
+) {
+  const { params } = props;
+  const {
+    locale: rawLocale,
+    category: rawCategory,
+    type: rawType,
+    material: rawMaterial,
+  } = use(params);
+  const locale = getLocaleOrThrow(rawLocale);
+  const category = parseExercisesCategory(rawCategory);
+  const type = parseExercisesType(rawType);
+  const material = parseExercisesMaterial(rawMaterial);
+
+  if (!(category && type && material)) {
+    notFound();
+  }
 
   // Enable static rendering
   setRequestLocale(locale);

@@ -1,13 +1,18 @@
-import { getCategoryIcon } from "@repo/contents/_lib/exercises/category";
+import {
+  getCategoryIcon,
+  parseExercisesCategory,
+} from "@repo/contents/_lib/exercises/category";
 import {
   getExercisesPath,
   getSubjects,
+  parseExercisesType,
 } from "@repo/contents/_lib/exercises/type";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
@@ -17,6 +22,7 @@ import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
 import { SubjectItem, SubjectList } from "@/components/shared/subject-list";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { createSEODescription } from "@/lib/utils/seo/descriptions";
@@ -25,18 +31,31 @@ import { getStaticParams } from "@/lib/utils/system";
 
 export const revalidate = false;
 
-interface Params {
-  category: ExercisesCategory;
-  locale: Locale;
-  type: ExercisesType;
+async function getResolvedParams(
+  params: PageProps<"/[locale]/exercises/[category]/[type]">["params"]
+) {
+  const {
+    locale: rawLocale,
+    category: rawCategory,
+    type: rawType,
+  } = await params;
+  const locale = getLocaleOrThrow(rawLocale);
+  const category = parseExercisesCategory(rawCategory);
+  const type = parseExercisesType(rawType);
+
+  if (!(category && type)) {
+    notFound();
+  }
+
+  return { category, locale, type };
 }
 
-interface Props {
-  params: Promise<Params>;
-}
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { locale, category, type } = await params;
+export async function generateMetadata({
+  params,
+}: {
+  params: PageProps<"/[locale]/exercises/[category]/[type]">["params"];
+}): Promise<Metadata> {
+  const { locale, category, type } = await getResolvedParams(params);
   const t = await getTranslations({ locale, namespace: "Exercises" });
 
   const FilePath = getExercisesPath(category, type);
@@ -93,8 +112,22 @@ export function generateStaticParams() {
   });
 }
 
-export default function Page({ params }: Props) {
-  const { locale, category, type } = use(params);
+export default function Page(
+  props: PageProps<"/[locale]/exercises/[category]/[type]">
+) {
+  const { params } = props;
+  const {
+    locale: rawLocale,
+    category: rawCategory,
+    type: rawType,
+  } = use(params);
+  const locale = getLocaleOrThrow(rawLocale);
+  const category = parseExercisesCategory(rawCategory);
+  const type = parseExercisesType(rawType);
+
+  if (!(category && type)) {
+    notFound();
+  }
 
   // Enable static rendering
   setRequestLocale(locale);

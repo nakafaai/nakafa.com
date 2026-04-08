@@ -1,3 +1,4 @@
+import { parseArticleCategory } from "@repo/contents/_lib/articles/category";
 import { getSlugPath } from "@repo/contents/_lib/articles/slug";
 import { getHeadings } from "@repo/contents/_lib/toc";
 import { formatContentDateISO } from "@repo/contents/_shared/date";
@@ -7,6 +8,7 @@ import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
 import { Effect } from "effect";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
@@ -21,6 +23,7 @@ import {
   LayoutMaterialMain,
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
 import {
@@ -33,20 +36,26 @@ import { getStaticParams } from "@/lib/utils/system";
 
 export const revalidate = false;
 
-interface Props {
-  params: Promise<{
-    locale: Locale;
-    category: ArticleCategory;
-    slug: string;
-  }>;
+async function getResolvedParams(
+  params: PageProps<"/[locale]/articles/[category]/[slug]">["params"]
+) {
+  const { locale: rawLocale, category: rawCategory, slug } = await params;
+  const locale = getLocaleOrThrow(rawLocale);
+  const category = parseArticleCategory(rawCategory);
+
+  if (!category) {
+    notFound();
+  }
+
+  return { category, locale, slug };
 }
 
 export async function generateMetadata({
   params,
 }: {
-  params: Props["params"];
+  params: PageProps<"/[locale]/articles/[category]/[slug]">["params"];
 }): Promise<Metadata> {
-  const { locale, category, slug } = await params;
+  const { locale, category, slug } = await getResolvedParams(params);
   const t = await getTranslations({ locale, namespace: "Articles" });
 
   const { content, FilePath } = await Effect.runPromise(
@@ -127,8 +136,17 @@ export function generateStaticParams() {
   });
 }
 
-export default function Page({ params }: Props) {
-  const { locale, category, slug } = use(params);
+export default function Page(
+  props: PageProps<"/[locale]/articles/[category]/[slug]">
+) {
+  const { params } = props;
+  const { locale: rawLocale, category: rawCategory, slug } = use(params);
+  const locale = getLocaleOrThrow(rawLocale);
+  const category = parseArticleCategory(rawCategory);
+
+  if (!category) {
+    notFound();
+  }
 
   // Enable static rendering
   setRequestLocale(locale);

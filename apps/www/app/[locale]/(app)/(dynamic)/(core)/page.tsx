@@ -8,14 +8,12 @@ import { HomeExplore } from "@/components/home/explore";
 import { HomeHeader } from "@/components/home/header";
 import { HomeTrending } from "@/components/home/trending";
 import { getToken } from "@/lib/auth/server";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 
-interface Props {
-  params: Promise<{ locale: Locale }>;
-  searchParams: Promise<{ from: string }>;
-}
-
-export default function Page({ params, searchParams }: Props) {
-  const { locale } = use(params);
+export default function Page(props: PageProps<"/[locale]">) {
+  const { params, searchParams } = props;
+  const { locale: rawLocale } = use(params);
+  const locale = getLocaleOrThrow(rawLocale);
 
   setRequestLocale(locale);
 
@@ -37,9 +35,16 @@ export default function Page({ params, searchParams }: Props) {
 async function Main({
   searchParams,
 }: {
-  searchParams: Promise<{ from: string }>;
+  searchParams: PageProps<"/[locale]">["searchParams"];
 }) {
-  const [{ from }, token] = await Promise.all([searchParams, getToken()]);
+  const [searchParamsValue, token] = await Promise.all([
+    searchParams,
+    getToken(),
+  ]);
+  const from =
+    typeof searchParamsValue?.from === "string"
+      ? searchParamsValue.from
+      : undefined;
 
   // If no user token and from about page, goes to auth
   if (!token && from === "/about") {

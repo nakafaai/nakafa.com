@@ -6,15 +6,14 @@ import { Auth } from "@/components/auth";
 import { FeaturesDithering } from "@/components/marketing/about/features.client";
 import { Theme } from "@/components/marketing/shared/footer-action";
 import { BackButton } from "@/components/shared/back-button";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 export const revalidate = false;
 
-interface Props {
-  params: Promise<{ locale: Locale }>;
-}
-
-export default function Page({ params }: Props) {
-  const { locale } = use(params);
+export default function Page(props: PageProps<"/[locale]/auth">) {
+  const { params } = props;
+  const { locale: rawLocale } = use(params);
+  const locale = getLocaleOrThrow(rawLocale);
 
   // Enable static rendering
   setRequestLocale(locale);

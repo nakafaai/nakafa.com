@@ -1,9 +1,14 @@
-import { getGradeNonNumeric } from "@repo/contents/_lib/subject/grade";
+import { parseSubjectCategory } from "@repo/contents/_lib/subject/category";
+import {
+  getGradeNonNumeric,
+  parseGrade,
+} from "@repo/contents/_lib/subject/grade";
 import {
   getCurrentMaterial,
   getMaterialIcon,
   getMaterialPath,
   getMaterials,
+  parseMaterial,
 } from "@repo/contents/_lib/subject/material";
 import {
   getMaterialsPagination,
@@ -20,7 +25,7 @@ import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
 import { Effect } from "effect";
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
@@ -36,6 +41,7 @@ import {
   LayoutMaterialPagination,
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
 import {
@@ -48,24 +54,35 @@ import { getStaticParams } from "@/lib/utils/system";
 
 export const revalidate = false;
 
-interface Params {
-  category: SubjectCategory;
-  grade: Grade;
-  locale: Locale;
-  material: Material;
-  slug: string[];
-}
+async function getResolvedParams(
+  params: PageProps<"/[locale]/subject/[category]/[grade]/[material]/[...slug]">["params"]
+) {
+  const {
+    locale: rawLocale,
+    category: rawCategory,
+    grade: rawGrade,
+    material: rawMaterial,
+    slug,
+  } = await params;
+  const locale = getLocaleOrThrow(rawLocale);
+  const category = parseSubjectCategory(rawCategory);
+  const grade = parseGrade(rawGrade);
+  const material = parseMaterial(rawMaterial);
 
-interface Props {
-  params: Promise<Params>;
+  if (!(category && grade && material)) {
+    notFound();
+  }
+
+  return { category, grade, locale, material, slug };
 }
 
 export async function generateMetadata({
   params,
 }: {
-  params: Props["params"];
+  params: PageProps<"/[locale]/subject/[category]/[grade]/[material]/[...slug]">["params"];
 }): Promise<Metadata> {
-  const { locale, category, grade, material, slug } = await params;
+  const { locale, category, grade, material, slug } =
+    await getResolvedParams(params);
   const t = await getTranslations({ locale, namespace: "Subject" });
 
   const FilePath = getSlugPath(category, grade, material, slug);
@@ -167,8 +184,25 @@ export function generateStaticParams() {
   });
 }
 
-export default function Page({ params }: Props) {
-  const { locale, category, grade, material, slug } = use(params);
+export default function Page(
+  props: PageProps<"/[locale]/subject/[category]/[grade]/[material]/[...slug]">
+) {
+  const { params } = props;
+  const {
+    locale: rawLocale,
+    category: rawCategory,
+    grade: rawGrade,
+    material: rawMaterial,
+    slug,
+  } = use(params);
+  const locale = getLocaleOrThrow(rawLocale);
+  const category = parseSubjectCategory(rawCategory);
+  const grade = parseGrade(rawGrade);
+  const material = parseMaterial(rawMaterial);
+
+  if (!(category && grade && material)) {
+    notFound();
+  }
 
   // Enable static rendering
   setRequestLocale(locale);

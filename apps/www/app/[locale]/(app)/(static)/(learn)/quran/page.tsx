@@ -10,23 +10,16 @@ import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 export const revalidate = false;
-
-interface Params {
-  locale: Locale;
-}
-
-interface Props {
-  params: Promise<Params>;
-}
 
 export async function generateMetadata({
   params,
 }: {
-  params: Props["params"];
+  params: PageProps<"/[locale]/quran">["params"];
 }): Promise<Metadata> {
-  const { locale } = await params;
+  const locale = getLocaleOrThrow((await params).locale);
 
   const t = await getTranslations({ locale, namespace: "Holy" });
 
@@ -64,8 +57,10 @@ export async function generateMetadata({
   };
 }
 
-export default function Page({ params }: Props) {
-  const { locale } = use(params);
+export default function Page(props: PageProps<"/[locale]/quran">) {
+  const { params } = props;
+  const { locale: rawLocale } = use(params);
+  const locale = getLocaleOrThrow(rawLocale);
 
   // Enable static rendering
   setRequestLocale(locale);

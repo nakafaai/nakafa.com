@@ -2,10 +2,12 @@ import {
   getExerciseByNumber,
   getExercisesContent,
 } from "@repo/contents/_lib/exercises";
+import { parseExercisesCategory } from "@repo/contents/_lib/exercises/category";
 import {
   getCurrentMaterial,
   getMaterialPath,
   getMaterials,
+  parseExercisesMaterial,
 } from "@repo/contents/_lib/exercises/material";
 import {
   getExerciseNumberPagination,
@@ -16,6 +18,7 @@ import {
   isYearlessTryOutCollectionSlug,
   LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
 } from "@repo/contents/_lib/exercises/slug";
+import { parseExercisesType } from "@repo/contents/_lib/exercises/type";
 import { formatContentDateISO } from "@repo/contents/_shared/date";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
 import type {
@@ -33,7 +36,7 @@ import { FOUNDER } from "@repo/seo/json-ld/constants";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
 import { Effect, Option } from "effect";
 import type { Metadata } from "next";
-import { permanentRedirect } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
@@ -52,6 +55,7 @@ import {
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
 import { RefContent } from "@/components/shared/ref-content";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { isNumber } from "@/lib/utils/number";
@@ -68,24 +72,35 @@ import { ExerciseAttempt } from "./attempt";
 
 export const revalidate = false;
 
-interface Params {
-  category: ExercisesCategory;
-  locale: Locale;
-  material: ExercisesMaterial;
-  slug: string[];
-  type: ExercisesType;
-}
+async function getResolvedParams(
+  params: PageProps<"/[locale]/exercises/[category]/[type]/[material]/[...slug]">["params"]
+) {
+  const {
+    locale: rawLocale,
+    category: rawCategory,
+    type: rawType,
+    material: rawMaterial,
+    slug,
+  } = await params;
+  const locale = getLocaleOrThrow(rawLocale);
+  const category = parseExercisesCategory(rawCategory);
+  const type = parseExercisesType(rawType);
+  const material = parseExercisesMaterial(rawMaterial);
 
-interface Props {
-  params: Promise<Params>;
+  if (!(category && type && material)) {
+    notFound();
+  }
+
+  return { category, locale, material, slug, type };
 }
 
 export async function generateMetadata({
   params,
 }: {
-  params: Props["params"];
+  params: PageProps<"/[locale]/exercises/[category]/[type]/[material]/[...slug]">["params"];
 }): Promise<Metadata> {
-  const { locale, category, type, material, slug } = await params;
+  const { locale, category, type, material, slug } =
+    await getResolvedParams(params);
 
   const {
     isSpecificExercise,
@@ -193,8 +208,25 @@ export function generateStaticParams() {
   });
 }
 
-export default function Page({ params }: Props) {
-  const { locale, category, type, material, slug } = use(params);
+export default function Page(
+  props: PageProps<"/[locale]/exercises/[category]/[type]/[material]/[...slug]">
+) {
+  const { params } = props;
+  const {
+    locale: rawLocale,
+    category: rawCategory,
+    type: rawType,
+    material: rawMaterial,
+    slug,
+  } = use(params);
+  const locale = getLocaleOrThrow(rawLocale);
+  const category = parseExercisesCategory(rawCategory);
+  const type = parseExercisesType(rawType);
+  const material = parseExercisesMaterial(rawMaterial);
+
+  if (!(category && type && material)) {
+    notFound();
+  }
 
   // Enable static rendering
   setRequestLocale(locale);

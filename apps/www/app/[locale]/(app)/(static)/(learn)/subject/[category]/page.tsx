@@ -1,12 +1,9 @@
+import { parseSubjectCategory } from "@repo/contents/_lib/subject/category";
 import { notFound } from "next/navigation";
-import type { Locale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { use } from "react";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getStaticParams } from "@/lib/utils/system";
-
-interface Props {
-  params: Promise<{ locale: Locale }>;
-}
 
 export function generateStaticParams() {
   return getStaticParams({
@@ -15,8 +12,15 @@ export function generateStaticParams() {
   });
 }
 
-export default function Page({ params }: Props) {
-  const { locale } = use(params);
+export default function Page(props: PageProps<"/[locale]/subject/[category]">) {
+  const { params } = props;
+  const { locale: rawLocale, category: rawCategory } = use(params);
+  const locale = getLocaleOrThrow(rawLocale);
+  const category = parseSubjectCategory(rawCategory);
+
+  if (!category) {
+    notFound();
+  }
 
   // Enable static rendering
   setRequestLocale(locale);

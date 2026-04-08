@@ -1,31 +1,31 @@
+import { parseSubjectCategory } from "@repo/contents/_lib/subject/category";
+import { parseGrade } from "@repo/contents/_lib/subject/grade";
+import { parseMaterial } from "@repo/contents/_lib/subject/material";
 import { getSlugPath } from "@repo/contents/_lib/subject/slug";
-import type { SubjectCategory } from "@repo/contents/_types/subject/category";
-import type { Grade } from "@repo/contents/_types/subject/grade";
-import type { Material } from "@repo/contents/_types/subject/material";
-import { routing } from "@repo/internationalization/src/routing";
 import { cleanSlug } from "@repo/utilities/helper";
 import { notFound } from "next/navigation";
-import { hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { use } from "react";
 import { ContentViewTracker } from "@/components/tracking/content-view-tracker";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 
-type Props =
-  LayoutProps<"/[locale]/subject/[category]/[grade]/[material]/[...slug]"> & {
-    params: Promise<{
-      category: SubjectCategory;
-      grade: Grade;
-      locale: string;
-      material: Material;
-      slug: string[];
-    }>;
-  };
-
-export default function Layout(props: Props) {
+export default function Layout(
+  props: LayoutProps<"/[locale]/subject/[category]/[grade]/[material]/[...slug]">
+) {
   const { children, params } = props;
-  const { locale, category, grade, material, slug } = use(params);
+  const {
+    locale: rawLocale,
+    category: rawCategory,
+    grade: rawGrade,
+    material: rawMaterial,
+    slug,
+  } = use(params);
+  const locale = getLocaleOrThrow(rawLocale);
+  const category = parseSubjectCategory(rawCategory);
+  const grade = parseGrade(rawGrade);
+  const material = parseMaterial(rawMaterial);
 
-  if (!hasLocale(routing.locales, locale)) {
+  if (!(category && grade && material)) {
     notFound();
   }
 

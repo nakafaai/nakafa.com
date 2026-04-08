@@ -1,17 +1,15 @@
 import { Particles } from "@repo/design-system/components/ui/particles";
-import type { Locale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { Suspense, use } from "react";
 import { School } from "@/components/school";
 import { SchoolLoader } from "@/components/school/loader";
 import { ComingSoon } from "@/components/shared/coming-soon";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 
-interface Props {
-  params: Promise<{ locale: Locale }>;
-}
-
-export default function Page({ params }: Props) {
-  const { locale } = use(params);
+export default function Page(props: PageProps<"/[locale]/school">) {
+  const { params } = props;
+  const { locale: rawLocale } = use(params);
+  const locale = getLocaleOrThrow(rawLocale);
 
   setRequestLocale(locale);
 

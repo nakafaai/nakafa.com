@@ -18,16 +18,17 @@ import { Schools } from "@/components/marketing/about/schools";
 import { Blocker } from "@/components/marketing/shared/blocker";
 import { exercisesMenu } from "@/components/sidebar/_data/exercises";
 import { subjectMenu } from "@/components/sidebar/_data/subject";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 export const dynamic = "force-static";
 export const revalidate = false;
 
-interface Props {
-  params: Promise<{ locale: Locale }>;
-}
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { locale } = await params;
+export async function generateMetadata({
+  params,
+}: {
+  params: PageProps<"/[locale]/about">["params"];
+}): Promise<Metadata> {
+  const locale = getLocaleOrThrow((await params).locale);
   const t = await getTranslations({ locale, namespace: "About" });
 
   return {
@@ -72,8 +73,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default function Page({ params }: Props) {
-  const { locale } = use(params);
+export default function Page(props: PageProps<"/[locale]/about">) {
+  const { params } = props;
+  const { locale: rawLocale } = use(params);
+  const locale = getLocaleOrThrow(rawLocale);
 
   // Enable static rendering
   setRequestLocale(locale);

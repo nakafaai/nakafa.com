@@ -1,14 +1,11 @@
 import { redirect } from "@repo/internationalization/src/navigation";
-import type { Locale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { use } from "react";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 
-interface Props {
-  params: Promise<{ locale: Locale }>;
-}
-
-export default function Page({ params }: Props) {
-  const { locale } = use(params);
+export default function Page(props: PageProps<"/[locale]/home">) {
+  const { params } = props;
+  const locale = getLocaleOrThrow(use(params).locale);
 
   // Enable static rendering
   setRequestLocale(locale);

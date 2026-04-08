@@ -3,16 +3,17 @@ import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 export const dynamic = "force-static";
 export const revalidate = false;
 
-interface Props {
-  params: Promise<{ locale: Locale }>;
-}
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { locale } = await params;
+export async function generateMetadata({
+  params,
+}: {
+  params: PageProps<"/[locale]/security-policy">["params"];
+}): Promise<Metadata> {
+  const locale = getLocaleOrThrow((await params).locale);
   const t = await getTranslations({ locale, namespace: "Legal" });
 
   return {
@@ -24,8 +25,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default function Page({ params }: Props) {
-  const { locale } = use(params);
+export default function Page(props: PageProps<"/[locale]/security-policy">) {
+  const { params } = props;
+  const locale = getLocaleOrThrow(use(params).locale);
 
   // Enable static rendering
   setRequestLocale(locale);

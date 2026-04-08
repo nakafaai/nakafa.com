@@ -1,26 +1,21 @@
+import { parseArticleCategory } from "@repo/contents/_lib/articles/category";
 import { getSlugPath } from "@repo/contents/_lib/articles/slug";
-import type { ArticleCategory } from "@repo/contents/_types/articles/category";
-import { routing } from "@repo/internationalization/src/routing";
 import { cleanSlug } from "@repo/utilities/helper";
 import { notFound } from "next/navigation";
-import { hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { use } from "react";
 import { ContentViewTracker } from "@/components/tracking/content-view-tracker";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 
-type Props = LayoutProps<"/[locale]/articles/[category]/[slug]"> & {
-  params: Promise<{
-    category: ArticleCategory;
-    locale: string;
-    slug: string;
-  }>;
-};
-
-export default function Layout(props: Props) {
+export default function Layout(
+  props: LayoutProps<"/[locale]/articles/[category]/[slug]">
+) {
   const { children, params } = props;
-  const { locale, category, slug } = use(params);
+  const { locale: rawLocale, category: rawCategory, slug } = use(params);
+  const locale = getLocaleOrThrow(rawLocale);
+  const category = parseArticleCategory(rawCategory);
 
-  if (!hasLocale(routing.locales, locale)) {
+  if (!category) {
     notFound();
   }
 

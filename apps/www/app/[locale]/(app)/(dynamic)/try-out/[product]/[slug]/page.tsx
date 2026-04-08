@@ -9,7 +9,6 @@ import { fetchQuery, preloadQuery } from "convex/nextjs";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import type { SearchParams } from "nuqs/server";
 import { TryoutSetProvider } from "@/components/tryout/providers/set-provider";
 import { TryoutSetParts } from "@/components/tryout/set-parts";
 import { TryoutSetRouteShell } from "@/components/tryout/set-route-shell";
@@ -21,12 +20,11 @@ import { loadTryoutSearchParams } from "@/components/tryout/utils/attempt-search
 import { getTryoutProductHref } from "@/components/tryout/utils/routes";
 import { getToken } from "@/lib/auth/server";
 
-type Props = PageProps<"/[locale]/try-out/[product]/[slug]"> & {
-  searchParams: Promise<SearchParams>;
-};
-
 /** Renders one tryout set page with a native Convex preload when authenticated. */
-export default async function Page({ params, searchParams }: Props) {
+export default async function Page(
+  props: PageProps<"/[locale]/try-out/[product]/[slug]">
+) {
+  const { params, searchParams } = props;
   const { locale, product: productParam, slug } = await params;
   const initialNowMs = Date.now();
 

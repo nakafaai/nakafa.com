@@ -13,22 +13,19 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGradeIcon } from "./icons";
 
 export const revalidate = false;
 
 const CATEGORY_ORDER = ["middle-school", "high-school", "university"] as const;
 
-interface Params {
-  locale: Locale;
-}
-
-interface Props {
-  params: Promise<Params>;
-}
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { locale } = await params;
+export async function generateMetadata({
+  params,
+}: {
+  params: PageProps<"/[locale]/subject">["params"];
+}): Promise<Metadata> {
+  const locale = getLocaleOrThrow((await params).locale);
   const [tCommon, tSubject] = await Promise.all([
     getTranslations({ locale, namespace: "Common" }),
     getTranslations({ locale, namespace: "Subject" }),
@@ -55,8 +52,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default function Page({ params }: Props) {
-  const { locale } = use(params);
+export default function Page(props: PageProps<"/[locale]/subject">) {
+  const { params } = props;
+  const { locale: rawLocale } = use(params);
+  const locale = getLocaleOrThrow(rawLocale);
 
   setRequestLocale(locale);
 

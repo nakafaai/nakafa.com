@@ -1,12 +1,14 @@
 import {
   getCategoryIcon,
   getCategoryPath,
+  parseArticleCategory,
 } from "@repo/contents/_lib/articles/category";
 import { getArticleSummaries } from "@repo/contents/_lib/articles/slug";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { type Locale, useTranslations } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
@@ -16,18 +18,33 @@ import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { getStaticParams } from "@/lib/utils/system";
 
 export const revalidate = false;
 
-interface Props {
-  params: Promise<{ locale: Locale; category: ArticleCategory }>;
+async function getResolvedParams(
+  params: PageProps<"/[locale]/articles/[category]">["params"]
+) {
+  const { locale: rawLocale, category: rawCategory } = await params;
+  const locale = getLocaleOrThrow(rawLocale);
+  const category = parseArticleCategory(rawCategory);
+
+  if (!category) {
+    notFound();
+  }
+
+  return { category, locale };
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { locale, category } = await params;
+export async function generateMetadata({
+  params,
+}: {
+  params: PageProps<"/[locale]/articles/[category]">["params"];
+}): Promise<Metadata> {
+  const { locale, category } = await getResolvedParams(params);
   const t = await getTranslations({ locale, namespace: "Articles" });
 
   const FilePath = getCategoryPath(category);
@@ -64,8 +81,17 @@ export function generateStaticParams() {
   });
 }
 
-export default function Page({ params }: Props) {
-  const { locale, category } = use(params);
+export default function Page(
+  props: PageProps<"/[locale]/articles/[category]">
+) {
+  const { params } = props;
+  const { locale: rawLocale, category: rawCategory } = use(params);
+  const locale = getLocaleOrThrow(rawLocale);
+  const category = parseArticleCategory(rawCategory);
+
+  if (!category) {
+    notFound();
+  }
 
   // Enable static rendering
   setRequestLocale(locale);

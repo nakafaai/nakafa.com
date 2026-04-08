@@ -1,20 +1,20 @@
 import type { Metadata } from "next";
-import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Suspense, use } from "react";
 import { HomeHeader } from "@/components/home/header";
 import { InputSearch } from "@/components/search/input";
 import { SearchListItems } from "@/components/search/results";
 import { BackButton } from "@/components/shared/back-button";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 export const revalidate = false;
 
-interface Props {
-  params: Promise<{ locale: Locale }>;
-}
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { locale } = await params;
+export async function generateMetadata({
+  params,
+}: {
+  params: PageProps<"/[locale]/search">["params"];
+}): Promise<Metadata> {
+  const locale = getLocaleOrThrow((await params).locale);
   const t = await getTranslations({ locale, namespace: "Utils" });
 
   return {
@@ -26,12 +26,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default function Page({
-  params,
-}: {
-  params: Promise<{ locale: Locale }>;
-}) {
-  const { locale } = use(params);
+export default function Page(props: PageProps<"/[locale]/search">) {
+  const { params } = props;
+  const { locale: rawLocale } = use(params);
+  const locale = getLocaleOrThrow(rawLocale);
 
   // Enable static rendering
   setRequestLocale(locale);

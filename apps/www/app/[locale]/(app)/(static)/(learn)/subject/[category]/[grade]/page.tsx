@@ -1,14 +1,19 @@
-import { getCategoryIcon } from "@repo/contents/_lib/subject/category";
+import {
+  getCategoryIcon,
+  parseSubjectCategory,
+} from "@repo/contents/_lib/subject/category";
 import {
   getGradeNonNumeric,
   getGradePath,
   getGradeSubjects,
+  parseGrade,
 } from "@repo/contents/_lib/subject/grade";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import type { SubjectCategory } from "@repo/contents/_types/subject/category";
 import type { Grade } from "@repo/contents/_types/subject/grade";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
@@ -18,6 +23,7 @@ import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
 import { SubjectItem, SubjectList } from "@/components/shared/subject-list";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { createSEOTitle } from "@/lib/utils/seo/titles";
@@ -25,18 +31,31 @@ import { getStaticParams } from "@/lib/utils/system";
 
 export const revalidate = false;
 
-interface Params {
-  category: SubjectCategory;
-  grade: Grade;
-  locale: Locale;
+async function getResolvedParams(
+  params: PageProps<"/[locale]/subject/[category]/[grade]">["params"]
+) {
+  const {
+    locale: rawLocale,
+    category: rawCategory,
+    grade: rawGrade,
+  } = await params;
+  const locale = getLocaleOrThrow(rawLocale);
+  const category = parseSubjectCategory(rawCategory);
+  const grade = parseGrade(rawGrade);
+
+  if (!(category && grade)) {
+    notFound();
+  }
+
+  return { category, grade, locale };
 }
 
-interface Props {
-  params: Promise<Params>;
-}
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { locale, category, grade } = await params;
+export async function generateMetadata({
+  params,
+}: {
+  params: PageProps<"/[locale]/subject/[category]/[grade]">["params"];
+}): Promise<Metadata> {
+  const { locale, category, grade } = await getResolvedParams(params);
   const t = await getTranslations({ locale, namespace: "Subject" });
 
   const FilePath = getGradePath(category, grade);
@@ -107,8 +126,22 @@ export function generateStaticParams() {
   });
 }
 
-export default function Page({ params }: Props) {
-  const { locale, category, grade } = use(params);
+export default function Page(
+  props: PageProps<"/[locale]/subject/[category]/[grade]">
+) {
+  const { params } = props;
+  const {
+    locale: rawLocale,
+    category: rawCategory,
+    grade: rawGrade,
+  } = use(params);
+  const locale = getLocaleOrThrow(rawLocale);
+  const category = parseSubjectCategory(rawCategory);
+  const grade = parseGrade(rawGrade);
+
+  if (!(category && grade)) {
+    notFound();
+  }
 
   // Enable static rendering
   setRequestLocale(locale);

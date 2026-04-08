@@ -1,7 +1,6 @@
 import { askSeo } from "@repo/seo/ask";
 import { FAQPageJsonLd } from "@repo/seo/json-ld/faq-page";
 import type { Metadata } from "next";
-import type { Locale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { use } from "react";
 import { AskCta } from "@/components/ask/cta";
@@ -11,6 +10,7 @@ import {
   LayoutMaterialContent,
   LayoutMaterialMain,
 } from "@/components/shared/layout-material";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { convertSlugToTitle } from "@/lib/utils/helper";
 
 export const dynamic = "force-static";
@@ -18,19 +18,13 @@ export const revalidate = false;
 
 const askData = askSeo();
 
-interface Props {
-  params: Promise<{
-    locale: Locale;
-    slug: string;
-  }>;
-}
-
 export async function generateMetadata({
   params,
 }: {
-  params: Props["params"];
+  params: PageProps<"/[locale]/ask/[slug]">["params"];
 }): Promise<Metadata> {
-  const { locale, slug } = await params;
+  const { locale: rawLocale, slug } = await params;
+  const locale = getLocaleOrThrow(rawLocale);
 
   const seoData = askData.find((data) => data.slug === slug);
 
@@ -62,8 +56,10 @@ export function generateStaticParams() {
   }));
 }
 
-export default function Page({ params }: Props) {
-  const { locale, slug } = use(params);
+export default function Page(props: PageProps<"/[locale]/ask/[slug]">) {
+  const { params } = props;
+  const { locale: rawLocale, slug } = use(params);
+  const locale = getLocaleOrThrow(rawLocale);
 
   // Enable static rendering
   setRequestLocale(locale);

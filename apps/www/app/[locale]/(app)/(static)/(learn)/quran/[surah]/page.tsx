@@ -23,6 +23,7 @@ import { QuranInterpretation } from "@/components/shared/quran-interpretation";
 import { QuranText } from "@/components/shared/quran-text";
 import { RefContent } from "@/components/shared/ref-content";
 import { WindowVirtualized } from "@/components/shared/window-virtualized";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 import {
   fetchSurahContext,
   fetchSurahMetadataContext,
@@ -33,19 +34,13 @@ import type { SEOContext } from "@/lib/utils/seo/types";
 
 export const revalidate = false;
 
-interface Props {
-  params: Promise<{
-    locale: Locale;
-    surah: string;
-  }>;
-}
-
 export async function generateMetadata({
   params,
 }: {
-  params: Props["params"];
+  params: PageProps<"/[locale]/quran/[surah]">["params"];
 }): Promise<Metadata> {
-  const { locale, surah } = await params;
+  const { locale: rawLocale, surah } = await params;
+  const locale = getLocaleOrThrow(rawLocale);
 
   const t = await getTranslations({ locale, namespace: "Holy" });
 
@@ -123,8 +118,10 @@ export function generateStaticParams() {
   }));
 }
 
-export default function Page({ params }: Props) {
-  const { locale, surah } = use(params);
+export default function Page(props: PageProps<"/[locale]/quran/[surah]">) {
+  const { params } = props;
+  const { locale: rawLocale, surah } = use(params);
+  const locale = getLocaleOrThrow(rawLocale);
 
   // Enable static rendering
   setRequestLocale(locale);

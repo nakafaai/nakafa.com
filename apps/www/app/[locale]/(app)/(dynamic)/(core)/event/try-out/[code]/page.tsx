@@ -1,14 +1,14 @@
-import type { Locale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { use } from "react";
 import { EventAccessPage } from "@/components/event/access-page";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 
-interface Props {
-  params: Promise<{ code: string; locale: Locale }>;
-}
-
-export default function Page({ params }: Props) {
-  const { code, locale } = use(params);
+export default function Page(
+  props: PageProps<"/[locale]/event/try-out/[code]">
+) {
+  const { params } = props;
+  const { code, locale: rawLocale } = use(params);
+  const locale = getLocaleOrThrow(rawLocale);
 
   // Enable static rendering
   setRequestLocale(locale);

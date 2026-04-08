@@ -14,7 +14,6 @@ import { Effect } from "effect";
 import { notFound, redirect } from "next/navigation";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import type { SearchParams } from "nuqs/server";
 import { QuestionAnalytics } from "@/app/[locale]/(app)/(static)/(learn)/exercises/[category]/[type]/[material]/[...slug]/analytics";
 import { ExerciseArticle } from "@/app/[locale]/(app)/(static)/(learn)/exercises/[category]/[type]/[material]/[...slug]/article";
 import { TryoutPartRouteShell } from "@/components/tryout/part-route-shell";
@@ -27,12 +26,11 @@ import {
 } from "@/components/tryout/utils/routes";
 import { getToken } from "@/lib/auth/server";
 
-type Props = PageProps<"/[locale]/try-out/[product]/[slug]/part/[partKey]"> & {
-  searchParams: Promise<SearchParams>;
-};
-
 /** Renders one tryout part page with a native Convex preload when authenticated. */
-export default async function Page({ params, searchParams }: Props) {
+export default async function Page(
+  props: PageProps<"/[locale]/try-out/[product]/[slug]/part/[partKey]">
+) {
+  const { params, searchParams } = props;
   const { locale, product: productParam, slug, partKey } = await params;
   const initialNowMs = Date.now();
 

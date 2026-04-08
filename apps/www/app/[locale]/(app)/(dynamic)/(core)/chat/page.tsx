@@ -1,20 +1,18 @@
 import { Particles } from "@repo/design-system/components/ui/particles";
-import type { Locale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { use } from "react";
 import { ChatNew } from "@/components/ai/chat-new";
 import { HomeTitle } from "@/components/ai/title";
 import { Videos } from "@/components/ai/videos";
 import { Weather } from "@/components/ai/weather";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 export const revalidate = false;
 
-interface Props {
-  params: Promise<{ locale: Locale }>;
-}
-
-export default function Page({ params }: Props) {
-  const { locale } = use(params);
+export default function Page(props: PageProps<"/[locale]/chat">) {
+  const { params } = props;
+  const { locale: rawLocale } = use(params);
+  const locale = getLocaleOrThrow(rawLocale);
 
   // Enable static rendering
   setRequestLocale(locale);

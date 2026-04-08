@@ -4,6 +4,7 @@ import {
   SwatchIcon,
 } from "@hugeicons/core-free-icons";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
+import { ExercisesCategorySchema } from "@repo/contents/_types/exercises/category";
 
 /**
  * Builds the public path for an exercises category page.
@@ -30,4 +31,15 @@ export function getCategoryIcon(category: ExercisesCategory) {
     default:
       return PropertyEditIcon;
   }
+}
+
+/** Narrows one exercises category route segment to the supported category union. */
+export function parseExercisesCategory(value: string) {
+  const parsedCategory = ExercisesCategorySchema.safeParse(value);
+
+  if (!parsedCategory.success) {
+    return null;
+  }
+
+  return parsedCategory.data;
 }

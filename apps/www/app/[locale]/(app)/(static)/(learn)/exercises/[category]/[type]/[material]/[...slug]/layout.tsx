@@ -1,34 +1,34 @@
+import { parseExercisesCategory } from "@repo/contents/_lib/exercises/category";
+import { parseExercisesMaterial } from "@repo/contents/_lib/exercises/material";
 import { getSlugPath } from "@repo/contents/_lib/exercises/slug";
-import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
-import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
-import type { ExercisesType } from "@repo/contents/_types/exercises/type";
-import { routing } from "@repo/internationalization/src/routing";
+import { parseExercisesType } from "@repo/contents/_lib/exercises/type";
 import { cleanSlug } from "@repo/utilities/helper";
 import { notFound } from "next/navigation";
-import { hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { use } from "react";
 import { ContentViewTracker } from "@/components/tracking/content-view-tracker";
 import { AttemptContextProvider } from "@/lib/context/use-attempt";
 import { ExerciseContextProvider } from "@/lib/context/use-exercise";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { isNumber } from "@/lib/utils/number";
 
-type Props =
-  LayoutProps<"/[locale]/exercises/[category]/[type]/[material]/[...slug]"> & {
-    params: Promise<{
-      category: ExercisesCategory;
-      locale: string;
-      material: ExercisesMaterial;
-      slug: string[];
-      type: ExercisesType;
-    }>;
-  };
-
-export default function Layout(props: Props) {
+export default function Layout(
+  props: LayoutProps<"/[locale]/exercises/[category]/[type]/[material]/[...slug]">
+) {
   const { children, params } = props;
-  const { locale, category, type, material, slug } = use(params);
+  const {
+    locale: rawLocale,
+    category: rawCategory,
+    type: rawType,
+    material: rawMaterial,
+    slug,
+  } = use(params);
+  const locale = getLocaleOrThrow(rawLocale);
+  const category = parseExercisesCategory(rawCategory);
+  const type = parseExercisesType(rawType);
+  const material = parseExercisesMaterial(rawMaterial);
 
-  if (!hasLocale(routing.locales, locale)) {
+  if (!(category && type && material)) {
     notFound();
   }
 
