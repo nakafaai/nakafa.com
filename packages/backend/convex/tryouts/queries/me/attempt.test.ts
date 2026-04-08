@@ -70,6 +70,167 @@ describe("tryouts/queries/me/attempt", () => {
     expect(result?.partAttempts[0]?.score?.irtScore).toBe(500);
   });
 
+  it("returns the explicitly selected historical attempt instead of the latest one", async () => {
+    const t = createTryoutTestConvex();
+    const state = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "selected-historical-attempt",
+      });
+      const tryout = await insertTryoutSkeleton(
+        ctx,
+        "selected-historical-attempt"
+      );
+      const olderAttempt = await insertCompletedTryoutAttempt(ctx, {
+        scaleVersionId: tryout.scaleVersionId,
+        setId: tryout.setId,
+        slug: "selected-historical-attempt-older",
+        tryoutId: tryout.tryoutId,
+        userId: identity.userId,
+      });
+      const latestAttempt = await insertCompletedTryoutAttempt(ctx, {
+        scaleVersionId: tryout.scaleVersionId,
+        setId: tryout.setId,
+        slug: "selected-historical-attempt-latest",
+        tryoutId: tryout.tryoutId,
+        userId: identity.userId,
+      });
+      const olderPartAttempt = await ctx.db
+        .query("tryoutPartAttempts")
+        .withIndex("by_tryoutAttemptId_and_partIndex", (q) =>
+          q
+            .eq("tryoutAttemptId", olderAttempt.tryoutAttemptId)
+            .eq("partIndex", 0)
+        )
+        .unique();
+      const latestPartAttempt = await ctx.db
+        .query("tryoutPartAttempts")
+        .withIndex("by_tryoutAttemptId_and_partIndex", (q) =>
+          q
+            .eq("tryoutAttemptId", latestAttempt.tryoutAttemptId)
+            .eq("partIndex", 0)
+        )
+        .unique();
+
+      if (!(olderPartAttempt && latestPartAttempt)) {
+        throw new Error("Expected both part attempts to exist");
+      }
+
+      await ctx.db.patch("tryoutAttempts", olderAttempt.tryoutAttemptId, {
+        completedAt: NOW,
+        lastActivityAt: NOW,
+        startedAt: NOW,
+        theta: -1,
+        totalCorrect: 3,
+      });
+      await ctx.db.patch("exerciseAttempts", olderAttempt.setAttemptId, {
+        correctAnswers: 3,
+      });
+      await ctx.db.patch("tryoutPartAttempts", olderPartAttempt._id, {
+        theta: -1.25,
+        thetaSE: 0.75,
+      });
+      await ctx.db.patch("tryoutAttempts", latestAttempt.tryoutAttemptId, {
+        completedAt: NOW + 1000,
+        lastActivityAt: NOW + 1000,
+        startedAt: NOW + 1000,
+        theta: 1,
+        totalCorrect: 9,
+      });
+      await ctx.db.patch("exerciseAttempts", latestAttempt.setAttemptId, {
+        correctAnswers: 9,
+      });
+      await ctx.db.patch("tryoutPartAttempts", latestPartAttempt._id, {
+        theta: 0.75,
+        thetaSE: 0.35,
+      });
+
+      return {
+        identity,
+        olderAttemptId: olderAttempt.tryoutAttemptId,
+      };
+    });
+
+    const result = await t
+      .withIdentity({
+        subject: state.identity.authUserId,
+        sessionId: state.identity.sessionId,
+      })
+      .query(api.tryouts.queries.me.attempt.getUserTryoutAttempt, {
+        attemptId: state.olderAttemptId,
+        product: "snbt",
+        locale: "id",
+        tryoutSlug: "selected-historical-attempt",
+      });
+
+    expect(result?.attempt._id).toBe(state.olderAttemptId);
+    expect(result?.attempt.totalCorrect).toBe(3);
+    expect(result?.partAttempts[0]?.score?.theta).toBe(-1.25);
+  });
+
+  it("falls back to the latest attempt when the selected attempt belongs to a different tryout", async () => {
+    const t = createTryoutTestConvex();
+    const state = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "selected-attempt-fallback",
+      });
+      const requestedTryout = await insertTryoutSkeleton(
+        ctx,
+        "selected-attempt-fallback-requested"
+      );
+      const otherTryout = await insertTryoutSkeleton(
+        ctx,
+        "selected-attempt-fallback-other"
+      );
+      const requestedAttempt = await insertCompletedTryoutAttempt(ctx, {
+        scaleVersionId: requestedTryout.scaleVersionId,
+        setId: requestedTryout.setId,
+        slug: "selected-attempt-fallback-requested",
+        tryoutId: requestedTryout.tryoutId,
+        userId: identity.userId,
+      });
+      const otherAttempt = await insertCompletedTryoutAttempt(ctx, {
+        scaleVersionId: otherTryout.scaleVersionId,
+        setId: otherTryout.setId,
+        slug: "selected-attempt-fallback-other",
+        tryoutId: otherTryout.tryoutId,
+        userId: identity.userId,
+      });
+
+      await ctx.db.patch("tryoutAttempts", requestedAttempt.tryoutAttemptId, {
+        completedAt: NOW + 1000,
+        lastActivityAt: NOW + 1000,
+        startedAt: NOW + 1000,
+        totalCorrect: 7,
+      });
+      await ctx.db.patch("tryoutAttempts", otherAttempt.tryoutAttemptId, {
+        totalCorrect: 1,
+      });
+
+      return {
+        identity,
+        otherAttemptId: otherAttempt.tryoutAttemptId,
+        requestedAttemptId: requestedAttempt.tryoutAttemptId,
+      };
+    });
+
+    const result = await t
+      .withIdentity({
+        subject: state.identity.authUserId,
+        sessionId: state.identity.sessionId,
+      })
+      .query(api.tryouts.queries.me.attempt.getUserTryoutAttempt, {
+        attemptId: state.otherAttemptId,
+        product: "snbt",
+        locale: "id",
+        tryoutSlug: "selected-attempt-fallback-requested",
+      });
+
+    expect(result?.attempt._id).toBe(state.requestedAttemptId);
+    expect(result?.attempt.totalCorrect).toBe(7);
+  });
+
   it("treats never-started parts as wrong after tryout expiry in attempt reads", async () => {
     const t = createTryoutTestConvex();
     const { identity, tryoutSlug } = await t.mutation(async (ctx) => {

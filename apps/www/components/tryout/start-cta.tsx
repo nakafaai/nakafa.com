@@ -40,62 +40,57 @@ export function TryoutStartCta() {
     label = tTryouts("continue-cta");
   }
 
-  return (
-    <div className="flex w-full flex-col items-start gap-4">
-      {attempt && hasFinishedAttempt ? (
-        <TryoutAttemptResults
-          fallbackAttempt={attempt}
-          fallbackStatus={effectiveStatus ?? attempt.status}
+  let content = (
+    <TryoutStartActionButton
+      disabled={isStartBlocked}
+      isPending={isActionPending}
+      onClick={clickStartAction}
+      onFocus={prefetchAuthAction}
+      onMouseEnter={prefetchAuthAction}
+    >
+      {label}
+    </TryoutStartActionButton>
+  );
+
+  if (attempt && hasFinishedAttempt) {
+    content = (
+      <TryoutAttemptResults
+        action={content}
+        fallbackAttempt={attempt}
+        fallbackStatus={effectiveStatus ?? attempt.status}
+      />
+    );
+  } else if (remainingTime) {
+    content = (
+      <TryoutStartCountdown>
+        <TryoutStartCountdownTime
+          segments={[
+            {
+              label: tTryouts("time-hours-short"),
+              value: remainingTime.hours,
+            },
+            {
+              label: tTryouts("time-minutes-short"),
+              value: remainingTime.minutes,
+            },
+            {
+              label: tTryouts("time-seconds-short"),
+              value: remainingTime.seconds,
+            },
+          ]}
         />
-      ) : null}
+        <TryoutStartCountdownMeta>
+          {tTryouts("remaining-time-label")}
+        </TryoutStartCountdownMeta>
 
-      {remainingTime ? (
-        <TryoutStartCountdown>
-          <TryoutStartCountdownTime
-            segments={[
-              {
-                label: tTryouts("time-hours-short"),
-                value: remainingTime.hours,
-              },
-              {
-                label: tTryouts("time-minutes-short"),
-                value: remainingTime.minutes,
-              },
-              {
-                label: tTryouts("time-seconds-short"),
-                value: remainingTime.seconds,
-              },
-            ]}
-          />
-          <TryoutStartCountdownMeta>
-            {tTryouts("remaining-time-label")}
-          </TryoutStartCountdownMeta>
+        {resumePartKey ? (
+          <TryoutStartCountdownAction>{content}</TryoutStartCountdownAction>
+        ) : null}
+      </TryoutStartCountdown>
+    );
+  }
 
-          {resumePartKey ? (
-            <TryoutStartCountdownAction>
-              <TryoutStartActionButton
-                disabled={isStartBlocked}
-                isPending={isActionPending}
-                onClick={clickStartAction}
-                onFocus={prefetchAuthAction}
-                onMouseEnter={prefetchAuthAction}
-              >
-                {label}
-              </TryoutStartActionButton>
-            </TryoutStartCountdownAction>
-          ) : null}
-        </TryoutStartCountdown>
-      ) : (
-        <TryoutStartActionButton
-          disabled={isStartBlocked}
-          isPending={isActionPending}
-          onClick={clickStartAction}
-          onFocus={prefetchAuthAction}
-          onMouseEnter={prefetchAuthAction}
-        >
-          {label}
-        </TryoutStartActionButton>
-      )}
-    </div>
+  return (
+    <div className="flex w-full flex-col items-start gap-4">{content}</div>
   );
 }

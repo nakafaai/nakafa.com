@@ -5,6 +5,7 @@ import { insertTryoutAccessCampaign } from "@repo/backend/convex/tryoutAccess/te
 import {
   ATTEMPT_WINDOW_MS,
   createTryoutTestConvex,
+  insertCompletedTryoutAttempt,
   insertTryoutSkeleton,
   NOW,
   seedExpiredTryoutWithUntouchedPart,
@@ -268,5 +269,93 @@ describe("tryouts/queries/me/history", () => {
 
     expect(secondPage.page).toHaveLength(1);
     expect(secondPage.isDone).toBe(true);
+  });
+
+  it("lets one history row resolve the matching selected attempt query", async () => {
+    const t = createTryoutTestConvex();
+    const state = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "attempt-history-selection",
+      });
+      const tryout = await insertTryoutSkeleton(
+        ctx,
+        "attempt-history-selection"
+      );
+      const olderAttempt = await insertCompletedTryoutAttempt(ctx, {
+        scaleVersionId: tryout.scaleVersionId,
+        setId: tryout.setId,
+        slug: "attempt-history-selection-older",
+        tryoutId: tryout.tryoutId,
+        userId: identity.userId,
+      });
+      const latestAttempt = await insertCompletedTryoutAttempt(ctx, {
+        scaleVersionId: tryout.scaleVersionId,
+        setId: tryout.setId,
+        slug: "attempt-history-selection-latest",
+        tryoutId: tryout.tryoutId,
+        userId: identity.userId,
+      });
+
+      await ctx.db.patch("tryoutAttempts", olderAttempt.tryoutAttemptId, {
+        completedAt: NOW,
+        lastActivityAt: NOW,
+        startedAt: NOW,
+        totalCorrect: 4,
+      });
+      await ctx.db.patch("exerciseAttempts", olderAttempt.setAttemptId, {
+        correctAnswers: 4,
+      });
+      await ctx.db.patch("tryoutAttempts", latestAttempt.tryoutAttemptId, {
+        completedAt: NOW + 1,
+        lastActivityAt: NOW + 1,
+        startedAt: NOW + 1,
+        totalCorrect: 9,
+      });
+      await ctx.db.patch("exerciseAttempts", latestAttempt.setAttemptId, {
+        correctAnswers: 9,
+      });
+
+      return {
+        identity,
+        latestAttempt: latestAttempt.tryoutAttemptId,
+        olderAttempt: olderAttempt.tryoutAttemptId,
+      };
+    });
+
+    const history = await t
+      .withIdentity({
+        subject: state.identity.authUserId,
+        sessionId: state.identity.sessionId,
+      })
+      .query(api.tryouts.queries.me.history.getUserTryoutAttemptHistory, {
+        paginationOpts: {
+          cursor: null,
+          numItems: 10,
+        },
+        product: "snbt",
+        locale: "id",
+        tryoutSlug: "attempt-history-selection",
+      });
+    const selectedHistoryRow = history.page.find(
+      (row) => row.attemptId === state.olderAttempt
+    );
+
+    const selectedAttempt = await t
+      .withIdentity({
+        subject: state.identity.authUserId,
+        sessionId: state.identity.sessionId,
+      })
+      .query(api.tryouts.queries.me.attempt.getUserTryoutAttempt, {
+        attemptId: selectedHistoryRow?.attemptId,
+        product: "snbt",
+        locale: "id",
+        tryoutSlug: "attempt-history-selection",
+      });
+
+    expect(history.page[0]?.attemptId).toBe(state.latestAttempt);
+    expect(selectedHistoryRow?.attemptId).toBe(state.olderAttempt);
+    expect(selectedAttempt?.attempt._id).toBe(state.olderAttempt);
+    expect(selectedAttempt?.attempt.totalCorrect).toBe(4);
   });
 });

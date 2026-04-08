@@ -118,6 +118,7 @@ export function useTryoutStartFlow({
 
       if (result.ok) {
         closeDialog();
+        router.replace(pathname);
         toast.success(tTryouts("start-success"), {
           position: "bottom-center",
         });

@@ -13,8 +13,13 @@ import { Effect } from "effect";
 import { notFound, redirect } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import type { SearchParams } from "nuqs/server";
 import { QuestionAnalytics } from "@/app/[locale]/(app)/(main)/(contents)/exercises/[category]/[type]/[material]/[...slug]/analytics";
 import { ExerciseArticle } from "@/app/[locale]/(app)/(main)/(contents)/exercises/[category]/[type]/[material]/[...slug]/article";
+import {
+  getTryoutHistoryHref,
+  loadTryoutSearchParams,
+} from "@/components/tryout/nuqs/attempt";
 import { TryoutPartRuntime } from "@/components/tryout/part-runtime";
 import { TryoutPartShellBoundary } from "@/components/tryout/part-shell-boundary";
 import { TryoutPartProvider } from "@/components/tryout/providers/part-state";
@@ -27,10 +32,11 @@ interface Props {
     product: string;
     slug: string;
   }>;
+  searchParams: Promise<SearchParams>;
 }
 
 /** Renders one tryout part page with an authenticated runtime preload when available. */
-export default async function Page({ params }: Props) {
+export default async function Page({ params, searchParams }: Props) {
   const { locale, product: productParam, slug, partKey } = await params;
   const initialNowMs = Date.now();
 
@@ -55,10 +61,12 @@ export default async function Page({ params }: Props) {
     notFound();
   }
 
+  const { attempt } = await loadTryoutSearchParams(searchParams);
   const preloadedRuntime = token
     ? await preloadAuthQuery(
         api.tryouts.queries.me.part.getUserTryoutPartAttempt,
         {
+          attemptId: attempt ?? undefined,
           locale,
           partKey,
           product,
@@ -71,7 +79,7 @@ export default async function Page({ params }: Props) {
     : undefined;
 
   if (token && runtime && !runtime.part) {
-    redirect(`/try-out/${product}/${slug}`);
+    redirect(getTryoutHistoryHref(`/try-out/${product}/${slug}`, attempt));
   }
 
   const currentPart = details.parts.find((item) => item.partKey === partKey);

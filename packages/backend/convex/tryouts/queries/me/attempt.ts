@@ -9,7 +9,7 @@ import {
 import { getTryoutPublicResultStatus } from "@repo/backend/convex/tryouts/helpers/publicResultStatus";
 import { getTryoutReportScore } from "@repo/backend/convex/tryouts/helpers/reporting";
 import { resolveResumePartKey } from "@repo/backend/convex/tryouts/helpers/resume";
-import { loadLatestUserTryoutContext } from "@repo/backend/convex/tryouts/queries/me/helpers";
+import { loadResolvedUserTryoutContext } from "@repo/backend/convex/tryouts/queries/me/helpers";
 import {
   userTryoutAttemptResultValidator,
   userTryoutLookupArgs,
@@ -18,13 +18,16 @@ import { ConvexError } from "convex/values";
 import { getAll } from "convex-helpers/server/relationships";
 import { nullable } from "convex-helpers/validators";
 
-/** Returns the authenticated user's latest tryout attempt for one tryout slug. */
+/**
+ * Returns the authenticated user's selected tryout attempt, falling back to the
+ * latest attempt when no valid selection is provided.
+ */
 export const getUserTryoutAttempt = query({
   args: userTryoutLookupArgs,
   returns: nullable(userTryoutAttemptResultValidator),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
-    const context = await loadLatestUserTryoutContext(ctx, {
+    const context = await loadResolvedUserTryoutContext(ctx, {
       ...args,
       userId: appUser._id,
     });

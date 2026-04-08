@@ -3,7 +3,7 @@ import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { buildFinalizedTryoutSnapshot } from "@repo/backend/convex/tryouts/helpers/finalize/snapshot";
 import { getTryoutPublicResultStatus } from "@repo/backend/convex/tryouts/helpers/publicResultStatus";
 import { getTryoutReportScore } from "@repo/backend/convex/tryouts/helpers/reporting";
-import { loadLatestUserTryoutContext } from "@repo/backend/convex/tryouts/queries/me/helpers";
+import { loadResolvedUserTryoutContext } from "@repo/backend/convex/tryouts/queries/me/helpers";
 import {
   userTryoutAttemptHistoryResultValidator,
   userTryoutHistoryArgs,
@@ -18,7 +18,7 @@ export const getUserTryoutAttemptHistory = query({
   returns: userTryoutAttemptHistoryResultValidator,
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
-    const context = await loadLatestUserTryoutContext(ctx, {
+    const context = await loadResolvedUserTryoutContext(ctx, {
       ...args,
       userId: appUser._id,
     });

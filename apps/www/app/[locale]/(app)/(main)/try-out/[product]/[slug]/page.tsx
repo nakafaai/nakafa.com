@@ -8,6 +8,8 @@ import { fetchQuery } from "convex/nextjs";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import type { SearchParams } from "nuqs/server";
+import { loadTryoutSearchParams } from "@/components/tryout/nuqs/attempt";
 import { TryoutPageHeader } from "@/components/tryout/page-header";
 import { TryoutPageMeta } from "@/components/tryout/page-meta";
 import { TryoutSetProvider } from "@/components/tryout/providers/set-state";
@@ -19,10 +21,11 @@ import { getToken, preloadAuthQuery } from "@/lib/auth/server";
 
 interface Props {
   params: Promise<{ locale: Locale; product: string; slug: string }>;
+  searchParams: Promise<SearchParams>;
 }
 
 /** Renders one tryout set page with an authenticated attempt preload when available. */
-export default async function Page({ params }: Props) {
+export default async function Page({ params, searchParams }: Props) {
   const { locale, product: productParam, slug } = await params;
   const initialNowMs = Date.now();
 
@@ -49,10 +52,12 @@ export default async function Page({ params }: Props) {
     notFound();
   }
 
+  const { attempt } = await loadTryoutSearchParams(searchParams);
   const preloadedAttempt = token
     ? await preloadAuthQuery(
         api.tryouts.queries.me.attempt.getUserTryoutAttempt,
         {
+          attemptId: attempt ?? undefined,
           locale,
           product,
           tryoutSlug: slug,

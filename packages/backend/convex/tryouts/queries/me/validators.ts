@@ -14,6 +14,7 @@ import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
 
 export const userTryoutLookupArgs = {
+  attemptId: v.optional(v.string()),
   product: tryoutProductValidator,
   locale: localeValidator,
   tryoutSlug: v.string(),

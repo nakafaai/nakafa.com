@@ -14,7 +14,12 @@ import {
 import { cn } from "@repo/design-system/lib/utils";
 import type { FunctionReturnType } from "convex/server";
 import { useTranslations } from "next-intl";
+import { useQueryState } from "nuqs";
 import type { ReactNode } from "react";
+import {
+  getTryoutHistoryHref,
+  tryoutSearchParsers,
+} from "@/components/tryout/nuqs/attempt";
 import { useTryoutSet } from "@/components/tryout/providers/set-state";
 import { TryoutStatusBadge } from "@/components/tryout/status-badge";
 import { deriveTryoutSetPartState } from "@/components/tryout/utils/part-state";
@@ -42,6 +47,10 @@ export function TryoutSetParts({ parts }: TryoutSetPartsProps) {
   const product = useTryoutSet((state) => state.params.product);
   const resumePartKey = useTryoutSet((state) => state.state.resumePartKey);
   const tryoutSlug = useTryoutSet((state) => state.params.tryoutSlug);
+  const [selectedAttemptId] = useQueryState(
+    "attempt",
+    tryoutSearchParsers.attempt
+  );
 
   return (
     <div className="grid divide-y">
@@ -56,7 +65,10 @@ export function TryoutSetParts({ parts }: TryoutSetPartsProps) {
 
         return (
           <TryoutSetPart
-            href={`/try-out/${product}/${tryoutSlug}/part/${part.partKey}`}
+            href={getTryoutHistoryHref(
+              `/try-out/${product}/${tryoutSlug}/part/${part.partKey}`,
+              selectedAttemptId
+            )}
             key={part.partKey}
             part={part}
             partState={partState}

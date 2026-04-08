@@ -20,7 +20,7 @@ type PreloadedTryoutAttempt = Preloaded<
 type TryoutRemainingTime = UseExerciseTimerReturn["formatted"];
 
 export type TryoutSetParams = FunctionArgs<
-  typeof api.tryouts.queries.me.attempt.getUserTryoutAttempt
+  typeof api.tryouts.mutations.attempts.startTryout
 >;
 
 interface TryoutSetContextValue {

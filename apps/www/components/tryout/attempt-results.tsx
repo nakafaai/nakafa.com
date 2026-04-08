@@ -1,44 +1,116 @@
 "use client";
 
-import { PartyIcon, Progress03Icon } from "@hugeicons/core-free-icons";
+import {
+  PartyIcon,
+  Progress03Icon,
+  Tick01Icon,
+} from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
+  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { cn } from "@repo/design-system/lib/utils";
 import { useConvexAuth, usePaginatedQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useQueryState } from "nuqs";
+import { type ReactNode, useTransition } from "react";
+import { tryoutSearchParsers } from "@/components/tryout/nuqs/attempt";
 import { useTryoutSet } from "@/components/tryout/providers/set-state";
 import { TryoutScoreCard } from "@/components/tryout/score-card";
-import { getEffectiveTryoutStatus } from "@/components/tryout/utils/status";
 
 type TryoutAttempt = NonNullable<
   FunctionReturnType<typeof api.tryouts.queries.me.attempt.getUserTryoutAttempt>
 >["attempt"];
 
+type TryoutAttemptHistoryItem = FunctionReturnType<
+  typeof api.tryouts.queries.me.history.getUserTryoutAttemptHistory
+>["page"][number];
+
 interface Props {
+  action?: ReactNode;
   fallbackAttempt: TryoutAttempt;
   fallbackStatus: TryoutAttempt["status"];
 }
 
-/** Renders the current attempt scorecard and lazily loads older authenticated attempts. */
+interface AttemptOption {
+  attemptId: string;
+  icon: typeof PartyIcon | typeof Progress03Icon;
+  label: string;
+  subtitle: string;
+}
+
+/** Format one attempt timestamp for the history picker. */
+function formatAttemptTimestamp(locale: string, value: number) {
+  return new Intl.DateTimeFormat(locale, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(value);
+}
+
+/** Build one dropdown option from one stored history row. */
+function getAttemptOption({
+  attempt,
+  locale,
+  tTryouts,
+}: {
+  attempt: Pick<
+    TryoutAttemptHistoryItem,
+    "attemptId" | "countsForCompetition" | "startedAt"
+  >;
+  locale: string;
+  tTryouts: ReturnType<typeof useTranslations<"Tryouts">>;
+}): AttemptOption {
+  return {
+    attemptId: attempt.attemptId,
+    icon: attempt.countsForCompetition ? PartyIcon : Progress03Icon,
+    label: attempt.countsForCompetition
+      ? tTryouts("attempt-select-event")
+      : tTryouts("attempt-select-retry"),
+    subtitle: formatAttemptTimestamp(locale, attempt.startedAt),
+  };
+}
+
+/**
+ * Render the selected tryout scorecard and the controls for browsing older
+ * attempts.
+ */
 export function TryoutAttemptResults({
+  action,
   fallbackAttempt,
   fallbackStatus,
 }: Props) {
+  return (
+    <div className="w-full space-y-4">
+      <TryoutScoreCard attempt={fallbackAttempt} status={fallbackStatus} />
+      <TryoutAttemptHistoryControls
+        action={action}
+        fallbackAttempt={fallbackAttempt}
+      />
+    </div>
+  );
+}
+
+/** Render the history picker next to the primary finished-attempt action. */
+function TryoutAttemptHistoryControls({
+  action,
+  fallbackAttempt,
+}: {
+  action?: ReactNode;
+  fallbackAttempt: TryoutAttempt;
+}) {
   const tTryouts = useTranslations("Tryouts");
   const locale = useTryoutSet((state) => state.params.locale);
   const product = useTryoutSet((state) => state.params.product);
   const tryoutSlug = useTryoutSet((state) => state.params.tryoutSlug);
-  const nowMs = useTryoutSet((state) => state.state.nowMs);
   const { isAuthenticated, isLoading } = useConvexAuth();
   const shouldLoadAttemptHistory = !isLoading && isAuthenticated;
   const {
@@ -56,63 +128,55 @@ export function TryoutAttemptResults({
       : "skip",
     { initialNumItems: 25 }
   );
-  const [selectedAttemptId, setSelectedAttemptId] = useState("");
+  const [isPending, startTransition] = useTransition();
+  const [, setSelectedAttemptId] = useQueryState(
+    "attempt",
+    tryoutSearchParsers.attempt
+  );
 
-  if (status === "LoadingFirstPage" || attemptHistory.length === 0) {
-    return (
-      <TryoutScoreCard attempt={fallbackAttempt} status={fallbackStatus} />
+  if (!(action || attemptHistory.length > 1)) {
+    return null;
+  }
+
+  const latestAttemptId = attemptHistory[0]?.attemptId ?? fallbackAttempt._id;
+  const activeAttemptId = fallbackAttempt._id;
+  const attemptOptions = attemptHistory.map((attempt) =>
+    getAttemptOption({
+      attempt,
+      locale,
+      tTryouts,
+    })
+  );
+
+  if (
+    !attemptOptions.some((attempt) => attempt.attemptId === activeAttemptId)
+  ) {
+    attemptOptions.unshift(
+      getAttemptOption({
+        attempt: {
+          attemptId: fallbackAttempt._id,
+          countsForCompetition: fallbackAttempt.countsForCompetition ?? false,
+          startedAt: fallbackAttempt.startedAt,
+        },
+        locale,
+        tTryouts,
+      })
     );
   }
-  const attemptOptions = attemptHistory.map((attempt, index) => {
-    return {
-      ...attempt,
-      icon: attempt.countsForCompetition ? PartyIcon : Progress03Icon,
-      label: attempt.countsForCompetition
-        ? tTryouts("attempt-select-event", {
-            number: index + 1,
-          })
-        : tTryouts("attempt-select-retry", {
-            number: index + 1,
-          }),
-      status: getEffectiveTryoutStatus({
-        expiresAtMs: attempt.expiresAt,
-        nowMs,
-        status: attempt.status,
-      }),
-    };
-  });
-  const selectedAttempt =
-    attemptOptions.find((attempt) => attempt.attemptId === selectedAttemptId) ??
-    null;
-  const fallbackOption =
-    attemptOptions.find(
-      (attempt) => attempt.attemptId === fallbackAttempt._id
-    ) ?? null;
-  const displayedAttempt = selectedAttempt ?? fallbackAttempt;
-  const displayedStatus =
-    selectedAttempt?.status ?? fallbackOption?.status ?? fallbackStatus;
-  const triggerIcon =
-    selectedAttempt?.icon ??
-    fallbackOption?.icon ??
-    (fallbackAttempt.countsForCompetition ? PartyIcon : Progress03Icon);
-  const triggerLabel =
-    selectedAttempt?.label ??
-    fallbackOption?.label ??
-    tTryouts("attempt-menu-label");
 
   return (
-    <div className="w-full space-y-4">
-      <TryoutScoreCard attempt={displayedAttempt} status={displayedStatus} />
-
+    <div className="flex w-full flex-wrap items-center gap-3">
       {attemptHistory.length > 1 ? (
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
-            <Button type="button" variant="outline">
-              <HugeIcons icon={triggerIcon} />
-              {triggerLabel}
+            <Button disabled={isPending} type="button" variant="outline">
+              <HugeIcons icon={Progress03Icon} />
+              {tTryouts("attempt-menu-label")}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
+            align="start"
+            className="max-h-64 min-w-64"
             onScroll={(event) => {
               if (status !== "CanLoadMore") {
                 return;
@@ -132,23 +196,50 @@ export function TryoutAttemptResults({
             <DropdownMenuLabel>
               {tTryouts("attempt-menu-label")}
             </DropdownMenuLabel>
-            <DropdownMenuRadioGroup
-              onValueChange={setSelectedAttemptId}
-              value={selectedAttemptId || undefined}
-            >
-              {attemptOptions.map((attempt) => (
-                <DropdownMenuRadioItem
-                  key={attempt.attemptId}
-                  value={attempt.attemptId}
-                >
-                  <HugeIcons icon={attempt.icon} />
-                  {attempt.label}
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
+            <DropdownMenuGroup>
+              {attemptOptions.map((attempt) => {
+                const isSelected = attempt.attemptId === activeAttemptId;
+
+                return (
+                  <DropdownMenuItem
+                    className="cursor-pointer"
+                    key={attempt.attemptId}
+                    onSelect={() => {
+                      setSelectedAttemptId(
+                        attempt.attemptId === latestAttemptId
+                          ? null
+                          : attempt.attemptId,
+                        {
+                          shallow: false,
+                          startTransition,
+                        }
+                      );
+                    }}
+                  >
+                    <HugeIcons icon={attempt.icon} />
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <span>{attempt.label}</span>
+                      <span className="truncate text-muted-foreground text-xs">
+                        {attempt.subtitle}
+                      </span>
+                    </div>
+                    <DropdownMenuShortcut>
+                      <HugeIcons
+                        className={cn(
+                          "size-4 transition-opacity ease-out",
+                          isSelected ? "opacity-100" : "opacity-0"
+                        )}
+                        icon={Tick01Icon}
+                      />
+                    </DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       ) : null}
+      {action}
     </div>
   );
 }

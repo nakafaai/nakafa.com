@@ -8,6 +8,7 @@ import type { Preloaded } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
+import { useQueryState } from "nuqs";
 import {
   type PropsWithChildren,
   useCallback,
@@ -22,6 +23,10 @@ import {
 } from "@/components/tryout/actions/part";
 import { useTryoutClock } from "@/components/tryout/hooks/use-tryout-clock";
 import { useTryoutStartFlow } from "@/components/tryout/hooks/use-tryout-start-flow";
+import {
+  getTryoutHistoryHref,
+  tryoutSearchParsers,
+} from "@/components/tryout/nuqs/attempt";
 import type {
   TryoutPartPageState,
   TryoutPartUiStatus,
@@ -126,6 +131,10 @@ function useResolvedTryoutPartValue({
     Boolean(runtime && runtime.tryoutAttempt.status === "in-progress"),
     initialNowMs
   );
+  const [selectedAttemptId] = useQueryState(
+    "attempt",
+    tryoutSearchParsers.attempt
+  );
   const {
     answers,
     attempt,
@@ -140,7 +149,10 @@ function useResolvedTryoutPartValue({
     runtime,
   });
   const shouldShowTryoutStartControls = status === "needs-tryout";
-  const setHref = `/try-out/${tryout.product}/${tryout.slug}`;
+  const setHref = getTryoutHistoryHref(
+    `/try-out/${tryout.product}/${tryout.slug}`,
+    selectedAttemptId
+  );
 
   const goToSet = useCallback(() => {
     router.push(setHref);
