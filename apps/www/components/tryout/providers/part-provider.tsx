@@ -22,15 +22,16 @@ import {
 } from "@/components/tryout/actions/part";
 import { useTryoutClock } from "@/components/tryout/hooks/use-tryout-clock";
 import { useTryoutStartFlow } from "@/components/tryout/hooks/use-tryout-start-flow";
-import {
-  getTryoutHistoryHref,
-  tryoutSearchParsers,
-} from "@/components/tryout/nuqs/attempt";
+import { tryoutSearchParsers } from "@/components/tryout/utils/attempt-search";
 import type {
   TryoutPartPageState,
   TryoutPartUiStatus,
 } from "@/components/tryout/utils/part-state";
 import { deriveTryoutPartPageState } from "@/components/tryout/utils/part-state";
+import {
+  getTryoutHistoryHref,
+  getTryoutSetHref,
+} from "@/components/tryout/utils/routes";
 import { getEffectiveTryoutStatus } from "@/components/tryout/utils/status";
 import { useExerciseTimer } from "@/lib/hooks/use-exercise-timer";
 
@@ -149,7 +150,10 @@ function useResolvedTryoutPartValue({
   });
   const shouldShowTryoutStartControls = status === "needs-tryout";
   const setHref = getTryoutHistoryHref(
-    `/try-out/${tryout.product}/${tryout.slug}`,
+    getTryoutSetHref({
+      product: tryout.product,
+      tryoutSlug: tryout.slug,
+    }),
     selectedAttemptId
   );
 

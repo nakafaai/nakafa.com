@@ -17,6 +17,7 @@ import { TryoutCatalogCard } from "@/components/tryout/catalog-card";
 import { TryoutCatalogList } from "@/components/tryout/catalog-list";
 import { SnbtTryoutIcon } from "@/components/tryout/product-icon";
 import { TRYOUT_CATALOG_PAGE_SIZE } from "@/components/tryout/utils/catalog";
+import { getTryoutHubHref } from "@/components/tryout/utils/routes";
 import { getToken } from "@/lib/auth/server";
 
 /** Enumerates the supported tryout product routes for static route discovery. */
@@ -66,7 +67,7 @@ export default async function Page(
             <NavigationLink
               aria-label={tCommon("back")}
               className="w-fit font-medium text-primary text-sm underline-offset-4 hover:underline"
-              href="/try-out"
+              href={getTryoutHubHref()}
               title={tCommon("back")}
             >
               {tCommon("back")}

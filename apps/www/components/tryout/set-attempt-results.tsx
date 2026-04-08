@@ -30,9 +30,9 @@ import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { useQueryState } from "nuqs";
 import { type ComponentProps, type ReactNode, useTransition } from "react";
-import { tryoutSearchParsers } from "@/components/tryout/nuqs/attempt";
-import { useTryoutSet } from "@/components/tryout/providers/set-state";
+import { useTryoutSet } from "@/components/tryout/providers/set-provider";
 import { TryoutScoreCard } from "@/components/tryout/score-card";
+import { tryoutSearchParsers } from "@/components/tryout/utils/attempt-search";
 import { getLocale } from "@/lib/utils/date";
 
 type TryoutAttempt = NonNullable<
@@ -267,7 +267,7 @@ function TryoutAttemptHistoryControls({
 }
 
 /** Render the finished tryout scorecard with history controls. */
-export function TryoutAttemptResults({
+export function TryoutSetAttemptResults({
   children,
   fallbackAttempt,
   fallbackStatus,

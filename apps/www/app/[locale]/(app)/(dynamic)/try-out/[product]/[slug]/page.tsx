@@ -10,14 +10,15 @@ import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { SearchParams } from "nuqs/server";
-import { loadTryoutSearchParams } from "@/components/tryout/nuqs/attempt";
-import { TryoutPageHeader } from "@/components/tryout/page-header";
-import { TryoutPageMeta } from "@/components/tryout/page-meta";
-import { TryoutSetProvider } from "@/components/tryout/providers/set-state";
+import { TryoutSetProvider } from "@/components/tryout/providers/set-provider";
 import { TryoutSetParts } from "@/components/tryout/set-parts";
-import { TryoutSetShell } from "@/components/tryout/set-shell";
+import { TryoutSetRouteShell } from "@/components/tryout/set-route-shell";
+import { TryoutPageHeader } from "@/components/tryout/shared/page-header";
+import { TryoutPageMeta } from "@/components/tryout/shared/page-meta";
 import { TryoutStartCta } from "@/components/tryout/start-cta";
 import { TryoutStartDialog } from "@/components/tryout/start-dialog";
+import { loadTryoutSearchParams } from "@/components/tryout/utils/attempt-search";
+import { getTryoutProductHref } from "@/components/tryout/utils/routes";
 import { getToken } from "@/lib/auth/server";
 
 type Props = PageProps<"/[locale]/try-out/[product]/[slug]"> & {
@@ -84,13 +85,16 @@ export default async function Page({ params, searchParams }: Props) {
       partKeys={partKeys}
       preloadedSetView={preloadedSetView}
     >
-      <TryoutSetShell>
+      <TryoutSetRouteShell>
         <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
           <div className="space-y-10">
             <div className="space-y-6">
               <TryoutPageHeader
                 description={tTryouts("slug-description")}
-                link={{ href: `/try-out/${product}`, label: tCommon("back") }}
+                link={{
+                  href: getTryoutProductHref(product),
+                  label: tCommon("back"),
+                }}
                 meta={
                   <TryoutPageMeta
                     cycleKey={details.tryout.cycleKey}
@@ -126,7 +130,7 @@ export default async function Page({ params, searchParams }: Props) {
             </section>
           </div>
         </div>
-      </TryoutSetShell>
+      </TryoutSetRouteShell>
     </TryoutSetProvider>
   );
 }

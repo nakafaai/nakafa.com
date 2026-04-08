@@ -16,13 +16,14 @@ import type { FunctionReturnType } from "convex/server";
 import { useTranslations } from "next-intl";
 import { useQueryState } from "nuqs";
 import type { ReactNode } from "react";
+import { useTryoutSet } from "@/components/tryout/providers/set-provider";
+import { TryoutStatusBadge } from "@/components/tryout/shared/status-badge";
+import { tryoutSearchParsers } from "@/components/tryout/utils/attempt-search";
+import { deriveTryoutSetPartState } from "@/components/tryout/utils/part-state";
 import {
   getTryoutHistoryHref,
-  tryoutSearchParsers,
-} from "@/components/tryout/nuqs/attempt";
-import { useTryoutSet } from "@/components/tryout/providers/set-state";
-import { TryoutStatusBadge } from "@/components/tryout/status-badge";
-import { deriveTryoutSetPartState } from "@/components/tryout/utils/part-state";
+  getTryoutPartHref,
+} from "@/components/tryout/utils/routes";
 
 type TryoutSetPartItem = Pick<
   NonNullable<
@@ -66,7 +67,11 @@ export function TryoutSetParts({ parts }: TryoutSetPartsProps) {
         return (
           <TryoutSetPart
             href={getTryoutHistoryHref(
-              `/try-out/${product}/${tryoutSlug}/part/${part.partKey}`,
+              getTryoutPartHref({
+                partKey: part.partKey,
+                product,
+                tryoutSlug,
+              }),
               selectedAttemptId
             )}
             key={part.partKey}

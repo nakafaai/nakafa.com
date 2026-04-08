@@ -17,13 +17,14 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { SearchParams } from "nuqs/server";
 import { QuestionAnalytics } from "@/app/[locale]/(app)/(static)/(learn)/exercises/[category]/[type]/[material]/[...slug]/analytics";
 import { ExerciseArticle } from "@/app/[locale]/(app)/(static)/(learn)/exercises/[category]/[type]/[material]/[...slug]/article";
+import { TryoutPartRouteShell } from "@/components/tryout/part-route-shell";
+import { TryoutPartRuntime } from "@/components/tryout/part-runtime";
+import { TryoutPartProvider } from "@/components/tryout/providers/part-provider";
+import { loadTryoutSearchParams } from "@/components/tryout/utils/attempt-search";
 import {
   getTryoutHistoryHref,
-  loadTryoutSearchParams,
-} from "@/components/tryout/nuqs/attempt";
-import { TryoutPartRuntime } from "@/components/tryout/part-runtime";
-import { TryoutPartShellBoundary } from "@/components/tryout/part-shell-boundary";
-import { TryoutPartProvider } from "@/components/tryout/providers/part-state";
+  getTryoutSetHref,
+} from "@/components/tryout/utils/routes";
 import { getToken } from "@/lib/auth/server";
 
 type Props = PageProps<"/[locale]/try-out/[product]/[slug]/part/[partKey]"> & {
@@ -79,7 +80,12 @@ export default async function Page({ params, searchParams }: Props) {
     : undefined;
 
   if (token && runtime && !runtime.part) {
-    redirect(getTryoutHistoryHref(`/try-out/${product}/${slug}`, attempt));
+    redirect(
+      getTryoutHistoryHref(
+        getTryoutSetHref({ product, tryoutSlug: slug }),
+        attempt
+      )
+    );
   }
 
   const currentPart = details.parts.find((item) => item.partKey === partKey);
@@ -158,7 +164,7 @@ export default async function Page({ params, searchParams }: Props) {
         slug,
       }}
     >
-      <TryoutPartShellBoundary>
+      <TryoutPartRouteShell>
         <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
           <div className="space-y-10">
             <TryoutPartRuntime icon={partIcon}>
@@ -186,7 +192,7 @@ export default async function Page({ params, searchParams }: Props) {
             </TryoutPartRuntime>
           </div>
         </div>
-      </TryoutPartShellBoundary>
+      </TryoutPartRouteShell>
     </TryoutPartProvider>
   );
 }
