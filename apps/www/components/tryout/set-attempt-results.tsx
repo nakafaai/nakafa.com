@@ -2,7 +2,6 @@
 
 import {
   ArrowDown01Icon,
-  PartyIcon,
   Progress03Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
@@ -30,7 +29,7 @@ import { format } from "date-fns";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { useQueryState } from "nuqs";
-import { type ComponentProps, type ReactNode, useTransition } from "react";
+import { type ReactNode, useTransition } from "react";
 import { useTryoutSet } from "@/components/tryout/providers/set-provider";
 import { TryoutScoreCard } from "@/components/tryout/score-card";
 import { tryoutSearchParsers } from "@/components/tryout/utils/attempt-search";
@@ -46,7 +45,6 @@ type TryoutAttemptHistoryItem = FunctionReturnType<
 
 interface AttemptOption {
   attemptId: string;
-  icon: NonNullable<ComponentProps<typeof HugeIcons>["icon"]>;
   label: string;
   subtitle: string;
 }
@@ -74,7 +72,6 @@ function getAttemptOption({
 }) {
   return {
     attemptId: attempt.attemptId,
-    icon: attempt.countsForCompetition ? PartyIcon : Progress03Icon,
     label: tTryouts("attempt-select-label", { number: attemptNumber }),
     subtitle: format(attempt.startedAt, "PPp", {
       locale: getLocale(locale),
@@ -94,7 +91,6 @@ function TryoutAttemptHistoryItem({
 }) {
   return (
     <CommandItem className="cursor-pointer" onSelect={onSelect}>
-      <HugeIcons icon={attempt.icon} />
       <div className="flex min-w-0 flex-1 flex-col">
         <span>{attempt.label}</span>
         <span className="truncate text-muted-foreground text-xs">
