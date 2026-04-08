@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
-import { ConvexAppProviders } from "@/components/providers";
 
 export async function generateMetadata({
   params,
@@ -57,17 +56,16 @@ export async function generateMetadata({
   };
 }
 
-/** Renders the school subtree inside the ambient Convex/user providers. */
+/** Renders the school subtree after locale and metadata setup. */
 export default function Layout(props: LayoutProps<"/[locale]/school">) {
   const { children, params } = props;
   const { locale } = use(params);
-  // Ensure that the incoming `locale` is valid
+
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
 
-  // Enable static rendering
   setRequestLocale(locale);
 
-  return <ConvexAppProviders>{children}</ConvexAppProviders>;
+  return children;
 }

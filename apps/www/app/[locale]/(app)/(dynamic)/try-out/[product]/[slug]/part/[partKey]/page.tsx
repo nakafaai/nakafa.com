@@ -8,14 +8,15 @@ import { getExercisesContent } from "@repo/contents/_lib/exercises";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
 import { slugify } from "@repo/design-system/lib/utils";
+import { routing } from "@repo/internationalization/src/routing";
 import { fetchQuery, preloadedQueryResult, preloadQuery } from "convex/nextjs";
 import { Effect } from "effect";
 import { notFound, redirect } from "next/navigation";
-import type { Locale } from "next-intl";
+import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { SearchParams } from "nuqs/server";
-import { QuestionAnalytics } from "@/app/[locale]/(app)/(main)/(contents)/exercises/[category]/[type]/[material]/[...slug]/analytics";
-import { ExerciseArticle } from "@/app/[locale]/(app)/(main)/(contents)/exercises/[category]/[type]/[material]/[...slug]/article";
+import { QuestionAnalytics } from "@/app/[locale]/(app)/(static)/(learn)/exercises/[category]/[type]/[material]/[...slug]/analytics";
+import { ExerciseArticle } from "@/app/[locale]/(app)/(static)/(learn)/exercises/[category]/[type]/[material]/[...slug]/article";
 import {
   getTryoutHistoryHref,
   loadTryoutSearchParams,
@@ -25,20 +26,18 @@ import { TryoutPartShellBoundary } from "@/components/tryout/part-shell-boundary
 import { TryoutPartProvider } from "@/components/tryout/providers/part-state";
 import { getToken } from "@/lib/auth/server";
 
-interface Props {
-  params: Promise<{
-    locale: Locale;
-    partKey: string;
-    product: string;
-    slug: string;
-  }>;
+type Props = PageProps<"/[locale]/try-out/[product]/[slug]/part/[partKey]"> & {
   searchParams: Promise<SearchParams>;
-}
+};
 
 /** Renders one tryout part page with a native Convex preload when authenticated. */
 export default async function Page({ params, searchParams }: Props) {
   const { locale, product: productParam, slug, partKey } = await params;
   const initialNowMs = Date.now();
+
+  if (!hasLocale(routing.locales, locale)) {
+    notFound();
+  }
 
   setRequestLocale(locale);
 

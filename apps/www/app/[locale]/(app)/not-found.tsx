@@ -4,6 +4,7 @@ import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "@repo/design-system/lib/utils";
 import { getTranslations } from "next-intl/server";
 
+/** Renders the shared app-level not-found state for static and dynamic routes. */
 export default async function NotFound() {
   const t = await getTranslations("NotFound");
 
