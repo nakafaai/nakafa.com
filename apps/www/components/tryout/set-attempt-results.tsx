@@ -22,6 +22,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
 import { useConvexAuth, usePaginatedQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
@@ -59,6 +60,7 @@ interface Props {
 /** Build one selectable history option from one history row. */
 function getAttemptOption({
   attempt,
+  attemptNumber,
   locale,
   tTryouts,
 }: {
@@ -66,15 +68,14 @@ function getAttemptOption({
     TryoutAttemptHistoryItem,
     "attemptId" | "countsForCompetition" | "startedAt"
   >;
+  attemptNumber: number;
   locale: Locale;
   tTryouts: ReturnType<typeof useTranslations<"Tryouts">>;
 }) {
   return {
     attemptId: attempt.attemptId,
     icon: attempt.countsForCompetition ? PartyIcon : Progress03Icon,
-    label: attempt.countsForCompetition
-      ? tTryouts("attempt-select-event")
-      : tTryouts("attempt-select-retry"),
+    label: tTryouts("attempt-select-label", { number: attemptNumber }),
     subtitle: format(attempt.startedAt, "PPp", {
       locale: getLocale(locale),
     }),
@@ -166,6 +167,7 @@ function TryoutAttemptHistoryControls({
   for (const historyAttempt of visibleAttemptHistory) {
     const attemptOption = getAttemptOption({
       attempt: historyAttempt,
+      attemptNumber: attemptOptions.length + 1,
       locale,
       tTryouts,
     });
@@ -185,6 +187,7 @@ function TryoutAttemptHistoryControls({
           countsForCompetition: fallbackAttempt.countsForCompetition ?? false,
           startedAt: fallbackAttempt.startedAt,
         },
+        attemptNumber: attemptOptions.length + 1,
         locale,
         tTryouts,
       })
@@ -202,7 +205,11 @@ function TryoutAttemptHistoryControls({
               type="button"
               variant="outline"
             >
-              <HugeIcons icon={Progress03Icon} />
+              <Spinner
+                className="size-4"
+                icon={Progress03Icon}
+                isLoading={isSelectingAttempt}
+              />
               {tTryouts("attempt-menu-label")}
               <HugeIcons
                 className="tryout-history-chevron ml-auto size-4 transition-transform ease-out"
@@ -212,7 +219,9 @@ function TryoutAttemptHistoryControls({
           </PopoverTrigger>
           <PopoverContent align="start" className="w-80 p-0">
             <Command>
-              <CommandInput placeholder={tTryouts("attempt-menu-label")} />
+              <CommandInput
+                placeholder={tTryouts("attempt-menu-search-placeholder")}
+              />
               <CommandList
                 className="max-h-64"
                 onScroll={(event) => {
