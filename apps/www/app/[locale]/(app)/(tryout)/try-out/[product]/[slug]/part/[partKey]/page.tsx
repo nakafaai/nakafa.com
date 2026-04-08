@@ -8,7 +8,7 @@ import { getExercisesContent } from "@repo/contents/_lib/exercises";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
 import { slugify } from "@repo/design-system/lib/utils";
-import { fetchQuery, preloadedQueryResult } from "convex/nextjs";
+import { fetchQuery, preloadedQueryResult, preloadQuery } from "convex/nextjs";
 import { Effect } from "effect";
 import { notFound, redirect } from "next/navigation";
 import type { Locale } from "next-intl";
@@ -23,7 +23,7 @@ import {
 import { TryoutPartRuntime } from "@/components/tryout/part-runtime";
 import { TryoutPartShellBoundary } from "@/components/tryout/part-shell-boundary";
 import { TryoutPartProvider } from "@/components/tryout/providers/part-state";
-import { getToken, preloadAuthQuery } from "@/lib/auth/server";
+import { getToken } from "@/lib/auth/server";
 
 interface Props {
   params: Promise<{
@@ -35,7 +35,7 @@ interface Props {
   searchParams: Promise<SearchParams>;
 }
 
-/** Renders one tryout part page with an authenticated runtime preload when available. */
+/** Renders one tryout part page with a native Convex preload when authenticated. */
 export default async function Page({ params, searchParams }: Props) {
   const { locale, product: productParam, slug, partKey } = await params;
   const initialNowMs = Date.now();
@@ -63,7 +63,7 @@ export default async function Page({ params, searchParams }: Props) {
 
   const { attempt } = await loadTryoutSearchParams(searchParams);
   const preloadedRuntime = token
-    ? await preloadAuthQuery(
+    ? await preloadQuery(
         api.tryouts.queries.me.part.getUserTryoutPartAttempt,
         {
           attemptId: attempt ?? undefined,
@@ -71,7 +71,8 @@ export default async function Page({ params, searchParams }: Props) {
           partKey,
           product,
           tryoutSlug: slug,
-        }
+        },
+        { token }
       )
     : undefined;
   const runtime = preloadedRuntime

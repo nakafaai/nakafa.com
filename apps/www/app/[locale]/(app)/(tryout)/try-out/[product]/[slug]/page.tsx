@@ -4,7 +4,7 @@ import {
   type TryoutProduct,
 } from "@repo/backend/convex/tryouts/products";
 import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
-import { fetchQuery } from "convex/nextjs";
+import { fetchQuery, preloadQuery } from "convex/nextjs";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -17,14 +17,14 @@ import { TryoutSetParts } from "@/components/tryout/set-parts";
 import { TryoutSetShell } from "@/components/tryout/set-shell";
 import { TryoutStartCta } from "@/components/tryout/start-cta";
 import { TryoutStartDialog } from "@/components/tryout/start-dialog";
-import { getToken, preloadAuthQuery } from "@/lib/auth/server";
+import { getToken } from "@/lib/auth/server";
 
 interface Props {
   params: Promise<{ locale: Locale; product: string; slug: string }>;
   searchParams: Promise<SearchParams>;
 }
 
-/** Renders one tryout set page with an authenticated attempt preload when available. */
+/** Renders one tryout set page with a native Convex preload when authenticated. */
 export default async function Page({ params, searchParams }: Props) {
   const { locale, product: productParam, slug } = await params;
   const initialNowMs = Date.now();
@@ -54,14 +54,15 @@ export default async function Page({ params, searchParams }: Props) {
 
   const { attempt } = await loadTryoutSearchParams(searchParams);
   const preloadedSetView = token
-    ? await preloadAuthQuery(
+    ? await preloadQuery(
         api.tryouts.queries.me.setView.getUserTryoutSetView,
         {
           attemptId: attempt ?? undefined,
           locale,
           product,
           tryoutSlug: slug,
-        }
+        },
+        { token }
       )
     : undefined;
 

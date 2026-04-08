@@ -5,7 +5,9 @@ import { setRequestLocale } from "next-intl/server";
 import { use } from "react";
 import { Footer } from "@/components/marketing/shared/footer";
 import { Header } from "@/components/marketing/shared/header";
+import { ConvexAppProviders } from "@/components/providers";
 
+/** Renders the marketing subtree inside the ambient Convex/user providers. */
 export default function Layout(props: LayoutProps<"/[locale]">) {
   const { children, params } = props;
   const { locale } = use(params);
@@ -18,13 +20,15 @@ export default function Layout(props: LayoutProps<"/[locale]">) {
   setRequestLocale(locale);
 
   return (
-    <main
-      className="flex min-h-screen w-full flex-1 flex-col"
-      data-marketing-page
-    >
-      <Header />
-      {children}
-      <Footer />
-    </main>
+    <ConvexAppProviders>
+      <main
+        className="flex min-h-screen w-full flex-1 flex-col"
+        data-marketing-page
+      >
+        <Header />
+        {children}
+        <Footer />
+      </main>
+    </ConvexAppProviders>
   );
 }

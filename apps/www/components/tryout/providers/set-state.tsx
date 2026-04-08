@@ -1,8 +1,7 @@
 "use client";
 
-import { usePreloadedAuthQuery } from "@convex-dev/better-auth/nextjs/client";
 import type { api } from "@repo/backend/convex/_generated/api";
-import type { Preloaded } from "convex/react";
+import { type Preloaded, usePreloadedQuery } from "convex/react";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { type PropsWithChildren, useMemo } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
@@ -181,7 +180,7 @@ function useResolvedTryoutSetValue({
   );
 }
 
-/** Hydrates one authenticated set route from its server-preloaded attempt. */
+/** Hydrates one authenticated set route from its native Convex preload. */
 function PreloadedTryoutSetProvider({
   children,
   initialNowMs,
@@ -194,7 +193,7 @@ function PreloadedTryoutSetProvider({
   params: TryoutSetParams;
   preloadedSetView: PreloadedTryoutSetView;
 }>) {
-  const setViewData = usePreloadedAuthQuery(preloadedSetView) ?? null;
+  const setViewData = usePreloadedQuery(preloadedSetView) ?? null;
   const value = useResolvedTryoutSetValue({
     hasAuthenticatedRoute: true,
     initialNowMs,

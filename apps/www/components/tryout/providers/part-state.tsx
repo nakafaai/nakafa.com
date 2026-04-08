@@ -1,10 +1,9 @@
 "use client";
 
-import { usePreloadedAuthQuery } from "@convex-dev/better-auth/nextjs/client";
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import type { Preloaded } from "convex/react";
+import { type Preloaded, usePreloadedQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
@@ -323,7 +322,7 @@ function useResolvedTryoutPartValue({
   );
 }
 
-/** Hydrates one authenticated part route from its server-preloaded runtime. */
+/** Hydrates one authenticated part route from its native Convex preload. */
 function PreloadedTryoutPartProvider({
   children,
   initialNowMs,
@@ -338,7 +337,7 @@ function PreloadedTryoutPartProvider({
   preloadedRuntime: PreloadedTryoutPartRuntime;
   tryout: TryoutValue;
 }>) {
-  const runtime = usePreloadedAuthQuery(preloadedRuntime) ?? null;
+  const runtime = usePreloadedQuery(preloadedRuntime) ?? null;
   const value = useResolvedTryoutPartValue({
     hasAuthenticatedRoute: true,
     initialNowMs,
