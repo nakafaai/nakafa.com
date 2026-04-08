@@ -107,3 +107,7 @@ export async function loadResolvedUserTryoutContext(
 
   return { attempt, tryout };
 }
+
+export type ResolvedUserTryoutContext = NonNullable<
+  Awaited<ReturnType<typeof loadResolvedUserTryoutContext>>
+>;

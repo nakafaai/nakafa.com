@@ -8,7 +8,7 @@ import {
 } from "@repo/backend/convex/tryouts/helpers/parts";
 import { getTryoutPublicResultStatus } from "@repo/backend/convex/tryouts/helpers/publicResultStatus";
 import { getTryoutReportScore } from "@repo/backend/convex/tryouts/helpers/reporting";
-import { loadResolvedUserTryoutContext } from "@repo/backend/convex/tryouts/queries/me/helpers";
+import { loadResolvedUserTryoutContext } from "@repo/backend/convex/tryouts/queries/me/helpers/context";
 import {
   userTryoutLookupArgs,
   userTryoutPartAttemptResultValidator,

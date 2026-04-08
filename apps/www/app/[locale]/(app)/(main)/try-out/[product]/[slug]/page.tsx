@@ -53,9 +53,9 @@ export default async function Page({ params, searchParams }: Props) {
   }
 
   const { attempt } = await loadTryoutSearchParams(searchParams);
-  const preloadedAttempt = token
+  const preloadedSetView = token
     ? await preloadAuthQuery(
-        api.tryouts.queries.me.attempt.getUserTryoutAttempt,
+        api.tryouts.queries.me.setView.getUserTryoutSetView,
         {
           attemptId: attempt ?? undefined,
           locale,
@@ -77,7 +77,7 @@ export default async function Page({ params, searchParams }: Props) {
         tryoutSlug: details.tryout.slug,
       }}
       partKeys={partKeys}
-      preloadedAttempt={preloadedAttempt}
+      preloadedSetView={preloadedSetView}
     >
       <TryoutSetShell>
         <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">

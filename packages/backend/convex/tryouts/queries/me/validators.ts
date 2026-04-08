@@ -82,6 +82,11 @@ export const userTryoutHistoryArgs = {
 export const userTryoutAttemptHistoryResultValidator =
   paginationResultValidator(publicTryoutAttemptHistoryValidator);
 
+export const userTryoutSetViewResultValidator = v.object({
+  attemptData: userTryoutAttemptResultValidator,
+  initialHistory: userTryoutAttemptHistoryResultValidator,
+});
+
 export const tryoutPartAttemptRuntimeValidator = v.object({
   partIndex: v.number(),
   partKey: tryoutPartKeyValidator,

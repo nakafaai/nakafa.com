@@ -11,13 +11,17 @@ import { useTryoutStartFlow } from "@/components/tryout/hooks/use-tryout-start-f
 import { getEffectiveTryoutStatus } from "@/components/tryout/utils/status";
 import type { UseExerciseTimerReturn } from "@/lib/hooks/use-exercise-timer";
 
-type TryoutAttemptData = FunctionReturnType<
-  typeof api.tryouts.queries.me.attempt.getUserTryoutAttempt
+type TryoutSetViewData = FunctionReturnType<
+  typeof api.tryouts.queries.me.setView.getUserTryoutSetView
 >;
-type PreloadedTryoutAttempt = Preloaded<
-  typeof api.tryouts.queries.me.attempt.getUserTryoutAttempt
+type PreloadedTryoutSetView = Preloaded<
+  typeof api.tryouts.queries.me.setView.getUserTryoutSetView
 >;
+type TryoutSetAttemptData = NonNullable<TryoutSetViewData>["attemptData"];
 type TryoutRemainingTime = UseExerciseTimerReturn["formatted"];
+type InitialTryoutAttemptHistory = NonNullable<
+  NonNullable<TryoutSetViewData>["initialHistory"]["page"]
+>;
 
 export type TryoutSetParams = FunctionArgs<
   typeof api.tryouts.mutations.attempts.startTryout
@@ -37,10 +41,11 @@ interface TryoutSetContextValue {
   };
   params: TryoutSetParams;
   state: {
-    attempt: NonNullable<TryoutAttemptData>["attempt"] | null;
-    attemptData: TryoutAttemptData | null;
+    attempt: TryoutSetAttemptData["attempt"] | null;
+    attemptData: TryoutSetAttemptData | null;
     effectiveStatus: ReturnType<typeof getEffectiveTryoutStatus> | undefined;
     hasFinishedAttempt: boolean;
+    initialAttemptHistory: InitialTryoutAttemptHistory;
     isTryoutActive: boolean;
     nowMs: number;
     remainingTime: TryoutRemainingTime | null;
@@ -56,7 +61,7 @@ function getRemainingTime({
   effectiveStatus,
   nowMs,
 }: {
-  attemptData: TryoutAttemptData | null;
+  attemptData: TryoutSetAttemptData | null;
   effectiveStatus: ReturnType<typeof getEffectiveTryoutStatus> | undefined;
   nowMs: number;
 }) {
@@ -78,18 +83,20 @@ function getRemainingTime({
 
 /** Builds the full set-route state from one server-owned attempt snapshot. */
 function useResolvedTryoutSetValue({
-  attemptData,
   hasAuthenticatedRoute,
   initialNowMs,
   partKeys,
   params,
+  setViewData,
 }: {
-  attemptData: TryoutAttemptData | null;
   hasAuthenticatedRoute: boolean;
   initialNowMs?: number;
   partKeys: readonly string[];
   params: TryoutSetParams;
+  setViewData: TryoutSetViewData | null;
 }) {
+  const attemptData = setViewData?.attemptData ?? null;
+  const initialAttemptHistory = setViewData?.initialHistory.page ?? [];
   const nowMs = useTryoutClock(
     Boolean(attemptData && attemptData.attempt.status === "in-progress"),
     initialNowMs
@@ -146,6 +153,7 @@ function useResolvedTryoutSetValue({
         attemptData,
         effectiveStatus,
         hasFinishedAttempt,
+        initialAttemptHistory,
         isTryoutActive,
         nowMs,
         remainingTime,
@@ -158,6 +166,7 @@ function useResolvedTryoutSetValue({
       confirmStartAction,
       effectiveStatus,
       hasFinishedAttempt,
+      initialAttemptHistory,
       isTryoutActive,
       isActionPending,
       isDialogOpen,
@@ -178,20 +187,20 @@ function PreloadedTryoutSetProvider({
   initialNowMs,
   partKeys,
   params,
-  preloadedAttempt,
+  preloadedSetView,
 }: PropsWithChildren<{
   initialNowMs?: number;
   partKeys: readonly string[];
   params: TryoutSetParams;
-  preloadedAttempt: PreloadedTryoutAttempt;
+  preloadedSetView: PreloadedTryoutSetView;
 }>) {
-  const attemptData = usePreloadedAuthQuery(preloadedAttempt) ?? null;
+  const setViewData = usePreloadedAuthQuery(preloadedSetView) ?? null;
   const value = useResolvedTryoutSetValue({
-    attemptData,
     hasAuthenticatedRoute: true,
     initialNowMs,
     partKeys,
     params,
+    setViewData,
   });
 
   return (
@@ -213,11 +222,11 @@ function AnonymousTryoutSetProvider({
   params: TryoutSetParams;
 }>) {
   const value = useResolvedTryoutSetValue({
-    attemptData: null,
     hasAuthenticatedRoute: false,
     initialNowMs,
     partKeys,
     params,
+    setViewData: null,
   });
 
   return (
@@ -233,20 +242,20 @@ export function TryoutSetProvider({
   initialNowMs,
   partKeys,
   params,
-  preloadedAttempt,
+  preloadedSetView,
 }: PropsWithChildren<{
   initialNowMs?: number;
   partKeys: readonly string[];
   params: TryoutSetParams;
-  preloadedAttempt?: PreloadedTryoutAttempt;
+  preloadedSetView?: PreloadedTryoutSetView;
 }>) {
-  if (preloadedAttempt) {
+  if (preloadedSetView) {
     return (
       <PreloadedTryoutSetProvider
         initialNowMs={initialNowMs}
         params={params}
         partKeys={partKeys}
-        preloadedAttempt={preloadedAttempt}
+        preloadedSetView={preloadedSetView}
       >
         {children}
       </PreloadedTryoutSetProvider>

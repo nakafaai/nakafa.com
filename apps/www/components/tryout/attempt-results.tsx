@@ -128,8 +128,13 @@ function TryoutAttemptHistoryControls({
   const locale = useTryoutSet((state) => state.params.locale);
   const product = useTryoutSet((state) => state.params.product);
   const tryoutSlug = useTryoutSet((state) => state.params.tryoutSlug);
+  const initialAttemptHistory = useTryoutSet(
+    (state) => state.state.initialAttemptHistory
+  );
   const { isAuthenticated, isLoading } = useConvexAuth();
-  const shouldLoadAttemptHistory = !isLoading && isAuthenticated;
+  const [hasLoadedLiveHistory, setHasLoadedLiveHistory] = useState(false);
+  const shouldLoadAttemptHistory =
+    !isLoading && isAuthenticated && hasLoadedLiveHistory;
   const {
     loadMore,
     results: attemptHistory,
@@ -152,23 +157,37 @@ function TryoutAttemptHistoryControls({
     tryoutSearchParsers.attempt
   );
 
-  if (!(children || attemptHistory.length > 1)) {
+  if (
+    !(children || attemptHistory.length > 1 || initialAttemptHistory.length > 1)
+  ) {
     return null;
   }
 
-  const latestAttemptId = attemptHistory[0]?.attemptId ?? fallbackAttempt._id;
   const activeAttemptId = fallbackAttempt._id;
-  const attemptOptions = attemptHistory.map((attempt) =>
-    getAttemptOption({
-      attempt,
+  const visibleAttemptHistory =
+    !hasLoadedLiveHistory || status === "LoadingFirstPage"
+      ? initialAttemptHistory
+      : attemptHistory;
+  const latestAttemptId =
+    visibleAttemptHistory[0]?.attemptId ?? fallbackAttempt._id;
+  const attemptOptions: AttemptOption[] = [];
+  let hasActiveAttempt = false;
+
+  for (const historyAttempt of visibleAttemptHistory) {
+    const attemptOption = getAttemptOption({
+      attempt: historyAttempt,
       locale,
       tTryouts,
-    })
-  );
+    });
 
-  if (
-    !attemptOptions.some((attempt) => attempt.attemptId === activeAttemptId)
-  ) {
+    attemptOptions.push(attemptOption);
+
+    if (attemptOption.attemptId === activeAttemptId) {
+      hasActiveAttempt = true;
+    }
+  }
+
+  if (!hasActiveAttempt) {
     attemptOptions.unshift(
       getAttemptOption({
         attempt: {
@@ -184,8 +203,17 @@ function TryoutAttemptHistoryControls({
 
   return (
     <div className="flex w-full flex-wrap items-center gap-3">
-      {attemptHistory.length > 1 ? (
-        <Popover onOpenChange={setIsOpen} open={isOpen}>
+      {visibleAttemptHistory.length > 1 ? (
+        <Popover
+          onOpenChange={(nextOpen) => {
+            setIsOpen(nextOpen);
+
+            if (nextOpen) {
+              setHasLoadedLiveHistory(true);
+            }
+          }}
+          open={isOpen}
+        >
           <PopoverTrigger asChild>
             <Button
               disabled={isSelectingAttempt || status === "LoadingFirstPage"}
@@ -228,25 +256,27 @@ function TryoutAttemptHistoryControls({
               >
                 <CommandEmpty>{tTryouts("attempt-menu-empty")}</CommandEmpty>
                 <CommandGroup heading={tTryouts("attempt-menu-label")}>
-                  {attemptOptions.map((attempt) => (
-                    <TryoutAttemptHistoryItem
-                      attempt={attempt}
-                      isSelected={attempt.attemptId === activeAttemptId}
-                      key={attempt.attemptId}
-                      onSelect={() => {
-                        setSelectedAttemptId(
-                          attempt.attemptId === latestAttemptId
-                            ? null
-                            : attempt.attemptId,
-                          {
-                            shallow: false,
-                            startTransition,
-                          }
-                        );
-                        setIsOpen(false);
-                      }}
-                    />
-                  ))}
+                  {attemptOptions.map((attemptOption) => {
+                    return (
+                      <TryoutAttemptHistoryItem
+                        attempt={attemptOption}
+                        isSelected={attemptOption.attemptId === activeAttemptId}
+                        key={attemptOption.attemptId}
+                        onSelect={() => {
+                          setSelectedAttemptId(
+                            attemptOption.attemptId === latestAttemptId
+                              ? null
+                              : attemptOption.attemptId,
+                            {
+                              shallow: false,
+                              startTransition,
+                            }
+                          );
+                          setIsOpen(false);
+                        }}
+                      />
+                    );
+                  })}
                 </CommandGroup>
               </CommandList>
             </Command>
