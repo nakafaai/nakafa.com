@@ -198,7 +198,7 @@ function TryoutAttemptHistoryControls({
           <PopoverTrigger asChild>
             <Button
               className="group [&[data-state=open]_.tryout-history-chevron]:rotate-180"
-              disabled={isSelectingAttempt || status === "LoadingFirstPage"}
+              disabled={isSelectingAttempt}
               type="button"
               variant="outline"
             >
