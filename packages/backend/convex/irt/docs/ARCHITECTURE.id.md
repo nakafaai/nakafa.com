@@ -66,7 +66,7 @@ Kalau definisi try out berubah, pipeline IRT juga membaca perubahan itu melalui
 ### Kalibrasi dan Queue
 
 - `irtCalibrationQueue`
-  - antrian set yang perlu diproses ulang
+  - antrian attempt pending yang dikelompokkan ulang per set saat diproses
 - `irtCalibrationAttempts`
   - cache respons untuk kebutuhan kalibrasi
 - `irtCalibrationCacheStats`
@@ -110,8 +110,11 @@ Kalau definisi try out berubah, pipeline IRT juga membaca perubahan itu melalui
 
 ### 2. Respons masuk ke jalur kalibrasi
 
-- respons set yang relevan masuk ke `irtCalibrationQueue`
-- queue drainer memilih set yang perlu diproses
+- sync respons attempt yang relevan menulis cache `irtCalibrationAttempts`
+- sync yang sama memastikan `irtCalibrationQueue` punya satu row pending per
+  attempt
+- queue drainer lalu memilih set yang punya pending attempt yang cukup atau
+  sudah stale
 
 ### 3. Workflow kalibrasi berjalan
 
@@ -139,8 +142,8 @@ Kalau definisi try out berubah, pipeline IRT juga membaca perubahan itu melalui
 ```mermaid
 flowchart TD
     A[User completes tryout part] --> B[exerciseAnswers / exerciseAttempts]
-    B --> C[enqueue set into irtCalibrationQueue]
-    C --> D[queue drainer]
+    B --> C[sync attempt cache + queue ownership]
+    C --> D[queue drainer by set]
     D --> E[start calibration workflow]
     E --> F[irtCalibrationRuns]
     F --> G[calculate item params]

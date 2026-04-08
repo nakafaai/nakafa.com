@@ -164,10 +164,6 @@ export async function finalizeTryoutPartAttempt({
       completedPartIndices,
       lastActivityAt: now,
     }),
-    ctx.db.insert("irtCalibrationQueue", {
-      setId: partAttempt.setId,
-      enqueuedAt: now,
-    }),
   ]);
 
   return {
