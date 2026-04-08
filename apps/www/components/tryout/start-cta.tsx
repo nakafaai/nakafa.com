@@ -40,28 +40,45 @@ export function TryoutStartCta() {
     label = tTryouts("continue-cta");
   }
 
-  let content = (
-    <TryoutStartActionButton
-      disabled={isStartBlocked}
-      isPending={isActionPending}
-      onClick={clickStartAction}
-      onFocus={prefetchAuthAction}
-      onMouseEnter={prefetchAuthAction}
-    >
-      {label}
-    </TryoutStartActionButton>
-  );
-
   if (attempt && hasFinishedAttempt) {
-    content = (
-      <TryoutAttemptResults
-        action={content}
-        fallbackAttempt={attempt}
-        fallbackStatus={effectiveStatus ?? attempt.status}
-      />
+    return (
+      <div className="flex w-full flex-col items-start gap-4">
+        <TryoutAttemptResults
+          fallbackAttempt={attempt}
+          fallbackStatus={effectiveStatus ?? attempt.status}
+        >
+          <TryoutStartActionButton
+            disabled={isStartBlocked}
+            isPending={isActionPending}
+            onClick={clickStartAction}
+            onFocus={prefetchAuthAction}
+            onMouseEnter={prefetchAuthAction}
+          >
+            {label}
+          </TryoutStartActionButton>
+        </TryoutAttemptResults>
+      </div>
     );
-  } else if (remainingTime) {
-    content = (
+  }
+
+  if (!remainingTime) {
+    return (
+      <div className="flex w-full flex-col items-start gap-4">
+        <TryoutStartActionButton
+          disabled={isStartBlocked}
+          isPending={isActionPending}
+          onClick={clickStartAction}
+          onFocus={prefetchAuthAction}
+          onMouseEnter={prefetchAuthAction}
+        >
+          {label}
+        </TryoutStartActionButton>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex w-full flex-col items-start gap-4">
       <TryoutStartCountdown>
         <TryoutStartCountdownTime
           segments={[
@@ -84,13 +101,19 @@ export function TryoutStartCta() {
         </TryoutStartCountdownMeta>
 
         {resumePartKey ? (
-          <TryoutStartCountdownAction>{content}</TryoutStartCountdownAction>
+          <TryoutStartCountdownAction>
+            <TryoutStartActionButton
+              disabled={isStartBlocked}
+              isPending={isActionPending}
+              onClick={clickStartAction}
+              onFocus={prefetchAuthAction}
+              onMouseEnter={prefetchAuthAction}
+            >
+              {label}
+            </TryoutStartActionButton>
+          </TryoutStartCountdownAction>
         ) : null}
       </TryoutStartCountdown>
-    );
-  }
-
-  return (
-    <div className="flex w-full flex-col items-start gap-4">{content}</div>
+    </div>
   );
 }

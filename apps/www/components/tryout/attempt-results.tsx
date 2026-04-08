@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ArrowDown01Icon,
   PartyIcon,
   Progress03Icon,
   Tick01Icon,
@@ -8,21 +9,25 @@ import {
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuShortcut,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@repo/design-system/components/ui/command";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@repo/design-system/components/ui/popover";
 import { cn } from "@repo/design-system/lib/utils";
 import { useConvexAuth, usePaginatedQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useTranslations } from "next-intl";
 import { useQueryState } from "nuqs";
-import { type ReactNode, useTransition } from "react";
+import { type ReactNode, useState, useTransition } from "react";
 import { tryoutSearchParsers } from "@/components/tryout/nuqs/attempt";
 import { useTryoutSet } from "@/components/tryout/providers/set-state";
 import { TryoutScoreCard } from "@/components/tryout/score-card";
@@ -35,12 +40,6 @@ type TryoutAttemptHistoryItem = FunctionReturnType<
   typeof api.tryouts.queries.me.history.getUserTryoutAttemptHistory
 >["page"][number];
 
-interface Props {
-  action?: ReactNode;
-  fallbackAttempt: TryoutAttempt;
-  fallbackStatus: TryoutAttempt["status"];
-}
-
 interface AttemptOption {
   attemptId: string;
   icon: typeof PartyIcon | typeof Progress03Icon;
@@ -48,7 +47,13 @@ interface AttemptOption {
   subtitle: string;
 }
 
-/** Format one attempt timestamp for the history picker. */
+interface Props {
+  children?: ReactNode;
+  fallbackAttempt: TryoutAttempt;
+  fallbackStatus: TryoutAttempt["status"];
+}
+
+/** Format one stored attempt timestamp for the history picker. */
 function formatAttemptTimestamp(locale: string, value: number) {
   return new Intl.DateTimeFormat(locale, {
     dateStyle: "medium",
@@ -56,7 +61,7 @@ function formatAttemptTimestamp(locale: string, value: number) {
   }).format(value);
 }
 
-/** Build one dropdown option from one stored history row. */
+/** Build one selectable history option from one history row. */
 function getAttemptOption({
   attempt,
   locale,
@@ -68,7 +73,7 @@ function getAttemptOption({
   >;
   locale: string;
   tTryouts: ReturnType<typeof useTranslations<"Tryouts">>;
-}): AttemptOption {
+}) {
   return {
     attemptId: attempt.attemptId,
     icon: attempt.countsForCompetition ? PartyIcon : Progress03Icon,
@@ -76,35 +81,45 @@ function getAttemptOption({
       ? tTryouts("attempt-select-event")
       : tTryouts("attempt-select-retry"),
     subtitle: formatAttemptTimestamp(locale, attempt.startedAt),
-  };
+  } satisfies AttemptOption;
 }
 
-/**
- * Render the selected tryout scorecard and the controls for browsing older
- * attempts.
- */
-export function TryoutAttemptResults({
-  action,
-  fallbackAttempt,
-  fallbackStatus,
-}: Props) {
+/** Render one selectable attempt row inside the history picker. */
+function TryoutAttemptHistoryItem({
+  attempt,
+  isSelected,
+  onSelect,
+}: {
+  attempt: AttemptOption;
+  isSelected: boolean;
+  onSelect: () => void;
+}) {
   return (
-    <div className="w-full space-y-4">
-      <TryoutScoreCard attempt={fallbackAttempt} status={fallbackStatus} />
-      <TryoutAttemptHistoryControls
-        action={action}
-        fallbackAttempt={fallbackAttempt}
+    <CommandItem className="cursor-pointer" onSelect={onSelect}>
+      <HugeIcons icon={attempt.icon} />
+      <div className="flex min-w-0 flex-1 flex-col">
+        <span>{attempt.label}</span>
+        <span className="truncate text-muted-foreground text-xs">
+          {attempt.subtitle}
+        </span>
+      </div>
+      <HugeIcons
+        className={cn(
+          "ml-auto size-4 opacity-0 transition-opacity ease-out",
+          isSelected && "opacity-100"
+        )}
+        icon={Tick01Icon}
       />
-    </div>
+    </CommandItem>
   );
 }
 
-/** Render the history picker next to the primary finished-attempt action. */
+/** Render the history picker and the finished-attempt action row. */
 function TryoutAttemptHistoryControls({
-  action,
+  children,
   fallbackAttempt,
 }: {
-  action?: ReactNode;
+  children?: ReactNode;
   fallbackAttempt: TryoutAttempt;
 }) {
   const tTryouts = useTranslations("Tryouts");
@@ -128,13 +143,14 @@ function TryoutAttemptHistoryControls({
       : "skip",
     { initialNumItems: 25 }
   );
-  const [isPending, startTransition] = useTransition();
+  const [isOpen, setIsOpen] = useState(false);
+  const [isSelectingAttempt, startTransition] = useTransition();
   const [, setSelectedAttemptId] = useQueryState(
     "attempt",
     tryoutSearchParsers.attempt
   );
 
-  if (!(action || attemptHistory.length > 1)) {
+  if (!(children || attemptHistory.length > 1)) {
     return null;
   }
 
@@ -167,79 +183,91 @@ function TryoutAttemptHistoryControls({
   return (
     <div className="flex w-full flex-wrap items-center gap-3">
       {attemptHistory.length > 1 ? (
-        <DropdownMenu modal={false}>
-          <DropdownMenuTrigger asChild>
-            <Button disabled={isPending} type="button" variant="outline">
+        <Popover onOpenChange={setIsOpen} open={isOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              disabled={isSelectingAttempt || status === "LoadingFirstPage"}
+              type="button"
+              variant="outline"
+            >
               <HugeIcons icon={Progress03Icon} />
               {tTryouts("attempt-menu-label")}
+              <HugeIcons
+                className={cn(
+                  "ml-auto size-4 transition-transform ease-out",
+                  isOpen && "rotate-180"
+                )}
+                icon={ArrowDown01Icon}
+              />
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="start"
-            className="max-h-64 min-w-64"
-            onScroll={(event) => {
-              if (status !== "CanLoadMore") {
-                return;
-              }
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-80 p-0">
+            <Command>
+              <CommandInput placeholder={tTryouts("attempt-menu-label")} />
+              <CommandList
+                className="max-h-64"
+                onScroll={(event) => {
+                  if (status !== "CanLoadMore") {
+                    return;
+                  }
 
-              const target = event.currentTarget;
-              const remainingScroll =
-                target.scrollHeight - target.scrollTop - target.clientHeight;
+                  const target = event.currentTarget;
+                  const remainingScroll =
+                    target.scrollHeight -
+                    target.scrollTop -
+                    target.clientHeight;
 
-              if (remainingScroll > 48) {
-                return;
-              }
+                  if (remainingScroll > 48) {
+                    return;
+                  }
 
-              loadMore(25);
-            }}
-          >
-            <DropdownMenuLabel>
-              {tTryouts("attempt-menu-label")}
-            </DropdownMenuLabel>
-            <DropdownMenuGroup>
-              {attemptOptions.map((attempt) => {
-                const isSelected = attempt.attemptId === activeAttemptId;
-
-                return (
-                  <DropdownMenuItem
-                    className="cursor-pointer"
-                    key={attempt.attemptId}
-                    onSelect={() => {
-                      setSelectedAttemptId(
-                        attempt.attemptId === latestAttemptId
-                          ? null
-                          : attempt.attemptId,
-                        {
-                          shallow: false,
-                          startTransition,
-                        }
-                      );
-                    }}
-                  >
-                    <HugeIcons icon={attempt.icon} />
-                    <div className="flex min-w-0 flex-1 flex-col">
-                      <span>{attempt.label}</span>
-                      <span className="truncate text-muted-foreground text-xs">
-                        {attempt.subtitle}
-                      </span>
-                    </div>
-                    <DropdownMenuShortcut>
-                      <HugeIcons
-                        className={cn(
-                          "size-4 transition-opacity ease-out",
-                          isSelected ? "opacity-100" : "opacity-0"
-                        )}
-                        icon={Tick01Icon}
-                      />
-                    </DropdownMenuShortcut>
-                  </DropdownMenuItem>
-                );
-              })}
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
+                  loadMore(25);
+                }}
+              >
+                <CommandEmpty>{tTryouts("attempt-menu-empty")}</CommandEmpty>
+                <CommandGroup heading={tTryouts("attempt-menu-label")}>
+                  {attemptOptions.map((attempt) => (
+                    <TryoutAttemptHistoryItem
+                      attempt={attempt}
+                      isSelected={attempt.attemptId === activeAttemptId}
+                      key={attempt.attemptId}
+                      onSelect={() => {
+                        setSelectedAttemptId(
+                          attempt.attemptId === latestAttemptId
+                            ? null
+                            : attempt.attemptId,
+                          {
+                            shallow: false,
+                            startTransition,
+                          }
+                        );
+                        setIsOpen(false);
+                      }}
+                    />
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
       ) : null}
-      {action}
+      {children}
+    </div>
+  );
+}
+
+/** Render the finished tryout scorecard with history controls. */
+export function TryoutAttemptResults({
+  children,
+  fallbackAttempt,
+  fallbackStatus,
+}: Props) {
+  return (
+    <div className="w-full space-y-4">
+      <TryoutScoreCard attempt={fallbackAttempt} status={fallbackStatus} />
+      <TryoutAttemptHistoryControls fallbackAttempt={fallbackAttempt}>
+        {children}
+      </TryoutAttemptHistoryControls>
     </div>
   );
 }
