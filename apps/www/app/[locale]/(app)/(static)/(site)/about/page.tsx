@@ -20,9 +20,6 @@ import { exercisesMenu } from "@/components/sidebar/_data/exercises";
 import { subjectMenu } from "@/components/sidebar/_data/subject";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
-export const dynamic = "force-static";
-export const revalidate = false;
-
 export async function generateMetadata({
   params,
 }: {

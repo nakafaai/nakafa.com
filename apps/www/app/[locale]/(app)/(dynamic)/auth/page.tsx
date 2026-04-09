@@ -1,22 +1,13 @@
 import { Button } from "@repo/design-system/components/ui/button";
 import { type Locale, useTranslations } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
-import { use } from "react";
+import { getLocale } from "next-intl/server";
 import { Auth } from "@/components/auth";
 import { FeaturesDithering } from "@/components/marketing/about/features.client";
 import { Theme } from "@/components/marketing/shared/footer-action";
 import { BackButton } from "@/components/shared/back-button";
-import { getLocaleOrThrow } from "@/lib/i18n/params";
 
-export const revalidate = false;
-
-export default function Page(props: PageProps<"/[locale]/auth">) {
-  const { params } = props;
-  const { locale: rawLocale } = use(params);
-  const locale = getLocaleOrThrow(rawLocale);
-
-  // Enable static rendering
-  setRequestLocale(locale);
+export default async function Page() {
+  const locale = await getLocale();
 
   return (
     <main className="relative grid h-svh lg:grid-cols-7" data-pagefind-ignore>

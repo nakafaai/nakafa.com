@@ -12,8 +12,6 @@ import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
-export const revalidate = false;
-
 export async function generateMetadata({
   params,
 }: {

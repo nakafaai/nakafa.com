@@ -6,6 +6,7 @@ import {
 } from "@repo/design-system/components/ui/sidebar";
 import type { ReactNode } from "react";
 import { AiSheet } from "@/components/ai/sheet";
+import { AppProviders } from "@/components/providers";
 import { Onboarding } from "@/components/shared/onboarding";
 import { SearchCommand } from "@/components/shared/search-command";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
@@ -22,17 +23,19 @@ export function AppShell({
   locked?: boolean;
 }) {
   return (
-    <SidebarProvider locked={locked}>
-      <AppSidebar />
-      <SidebarInset>
-        <Header />
-        <SearchCommand />
-        <AiSheet />
-        <div className="relative" data-pagefind-body>
-          {children}
-        </div>
-        <Onboarding />
-      </SidebarInset>
-    </SidebarProvider>
+    <AppProviders>
+      <SidebarProvider locked={locked}>
+        <AppSidebar />
+        <SidebarInset>
+          <Header />
+          <SearchCommand />
+          <AiSheet />
+          <div className="relative" data-pagefind-body>
+            {children}
+          </div>
+          <Onboarding />
+        </SidebarInset>
+      </SidebarProvider>
+    </AppProviders>
   );
 }

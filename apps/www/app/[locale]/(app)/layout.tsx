@@ -1,7 +1,6 @@
 import { routing } from "@repo/internationalization/src/routing";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
 
 /**
  * Binds the validated locale to the full authenticated app subtree.
@@ -17,8 +16,6 @@ export default async function Layout(props: LayoutProps<"/[locale]">) {
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
-
-  setRequestLocale(locale);
 
   return children;
 }

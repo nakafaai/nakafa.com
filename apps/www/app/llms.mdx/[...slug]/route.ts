@@ -18,9 +18,6 @@ import { getRawGithubUrl } from "@/lib/utils/github";
 
 const BASE_URL = "https://nakafa.com";
 
-export const dynamic = "force-static";
-export const revalidate = false;
-
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ slug: string[] }> }

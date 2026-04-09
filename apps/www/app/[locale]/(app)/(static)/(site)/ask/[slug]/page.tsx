@@ -13,9 +13,6 @@ import {
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { convertSlugToTitle } from "@/lib/utils/helper";
 
-export const dynamic = "force-static";
-export const revalidate = false;
-
 const askData = askSeo();
 
 export async function generateMetadata({

@@ -29,8 +29,6 @@ import { createSEODescription } from "@/lib/utils/seo/descriptions";
 import { createSEOTitle } from "@/lib/utils/seo/titles";
 import { getStaticParams } from "@/lib/utils/system";
 
-export const revalidate = false;
-
 async function getResolvedParams(
   params: PageProps<"/[locale]/exercises/[category]/[type]">["params"]
 ) {

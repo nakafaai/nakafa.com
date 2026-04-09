@@ -4,11 +4,12 @@ import { cn, slugify } from "@repo/design-system/lib/utils";
 import { BookJsonLd } from "@repo/seo/json-ld/book";
 import { Effect } from "effect";
 import type { Metadata } from "next";
+import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
-import { type Locale, useTranslations } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
-import { use } from "react";
-import { AiSheetOpen } from "@/components/ai/sheet-open";
+import type { Locale } from "next-intl";
+import { getTranslations } from "next-intl/server";
+import type { ReactNode } from "react";
+import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
 import {
   LayoutMaterial,
   LayoutMaterialContent,
@@ -32,8 +33,6 @@ import {
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
 
-export const revalidate = false;
-
 export async function generateMetadata({
   params,
 }: {
@@ -42,7 +41,7 @@ export async function generateMetadata({
   const { locale: rawLocale, surah } = await params;
   const locale = getLocaleOrThrow(rawLocale);
 
-  const t = await getTranslations({ locale, namespace: "Holy" });
+  const t = await getTranslations("Holy");
 
   const path = `/${locale}/quran/${surah}`;
 
@@ -73,14 +72,7 @@ export async function generateMetadata({
     };
   }
 
-  const surahMetadataContext = await Effect.runPromise(
-    Effect.match(fetchSurahMetadataContext({ surah: surahNumber }), {
-      onFailure: () => null,
-      onSuccess: (data) => data,
-    })
-  );
-
-  const surahData = surahMetadataContext?.surahData ?? null;
+  const surahData = await getSurahMetadataData({ surah: surahNumber });
   if (!surahData) {
     return {
       alternates,
@@ -119,18 +111,58 @@ export function generateStaticParams() {
 }
 
 export default function Page(props: PageProps<"/[locale]/quran/[surah]">) {
-  const { params } = props;
-  const { locale: rawLocale, surah } = use(params);
-  const locale = getLocaleOrThrow(rawLocale);
-
-  // Enable static rendering
-  setRequestLocale(locale);
-
-  return <PageContent locale={locale} surah={surah} />;
+  return <ResolvedSurahPage params={props.params} />;
 }
 
-function PageContent({ locale, surah }: { locale: Locale; surah: string }) {
-  const t = useTranslations("Holy");
+async function ResolvedSurahPage({
+  params,
+}: {
+  params: PageProps<"/[locale]/quran/[surah]">["params"];
+}) {
+  const { locale: rawLocale, surah } = await params;
+  const locale = getLocaleOrThrow(rawLocale);
+
+  return (
+    <CachedSurahShell
+      footer={<RefContent key={`refs:${surah}`} />}
+      locale={locale}
+      surah={surah}
+      toolbar={<DeferredAiSheetOpen key={`audio:${surah}`} />}
+    />
+  );
+}
+
+async function getSurahMetadataData({ surah }: { surah: number }) {
+  "use cache";
+
+  cacheLife("max");
+
+  const surahMetadataContext = await Effect.runPromise(
+    Effect.match(fetchSurahMetadataContext({ surah }), {
+      onFailure: () => null,
+      onSuccess: (data) => data,
+    })
+  );
+
+  return surahMetadataContext?.surahData ?? null;
+}
+
+async function CachedSurahShell({
+  locale,
+  surah,
+  footer,
+  toolbar,
+}: {
+  locale: Locale;
+  surah: string;
+  footer: ReactNode;
+  toolbar: ReactNode;
+}) {
+  "use cache";
+
+  cacheLife("max");
+
+  const t = await getTranslations("Holy");
 
   const surahNumber = Number(surah);
 
@@ -138,17 +170,15 @@ function PageContent({ locale, surah }: { locale: Locale; surah: string }) {
     notFound();
   }
 
-  const result = use(
-    Effect.runPromise(
-      Effect.match(fetchSurahContext({ surah: surahNumber }), {
-        onFailure: () => ({
-          surahData: null,
-          prevSurah: null,
-          nextSurah: null,
-        }),
-        onSuccess: (data) => data,
-      })
-    )
+  const result = await Effect.runPromise(
+    Effect.match(fetchSurahContext({ surah: surahNumber }), {
+      onFailure: () => ({
+        surahData: null,
+        prevSurah: null,
+        nextSurah: null,
+      }),
+      onSuccess: (data) => data,
+    })
   );
 
   const { surahData, prevSurah, nextSurah } = result;
@@ -286,10 +316,8 @@ function PageContent({ locale, surah }: { locale: Locale; surah: string }) {
           <LayoutMaterialPagination
             pagination={paginationWithLocalizedTitles}
           />
-          <LayoutMaterialFooter>
-            <RefContent />
-          </LayoutMaterialFooter>
-          <AiSheetOpen />
+          <LayoutMaterialFooter>{footer}</LayoutMaterialFooter>
+          {toolbar}
         </LayoutMaterialContent>
         <LayoutMaterialToc
           chapters={{

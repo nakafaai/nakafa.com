@@ -5,9 +5,6 @@ import { hasLocale, type Locale } from "next-intl";
 import { generateOGImage } from "@/app/[locale]/og/[...slug]/og";
 import { getMetadataFromSlug } from "@/lib/utils/system";
 
-export const dynamic = "force-static";
-export const revalidate = false;
-
 export function generateStaticParams() {
   return [];
 }

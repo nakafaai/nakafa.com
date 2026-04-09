@@ -9,9 +9,6 @@ import { LayoutContent } from "@/components/shared/layout-content";
 import { contributors } from "@/lib/data/contributor";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
-export const dynamic = "force-static";
-export const revalidate = false;
-
 export async function generateMetadata({
   params,
 }: {

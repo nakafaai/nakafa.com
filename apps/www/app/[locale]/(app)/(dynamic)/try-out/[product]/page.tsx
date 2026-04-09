@@ -31,7 +31,6 @@ export default async function Page(
 ) {
   const { params } = props;
   const { locale, product: productParam } = await params;
-  const initialNowMs = Date.now();
 
   if (!hasLocale(routing.locales, locale)) {
     notFound();
@@ -49,6 +48,9 @@ export default async function Page(
     getTranslations({ locale, namespace: "Tryouts" }),
     getToken(),
   ]);
+
+  const initialNowMs = Date.now();
+
   const catalogSnapshot = await fetchQuery(
     api.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot,
     {

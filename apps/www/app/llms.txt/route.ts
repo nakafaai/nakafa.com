@@ -22,8 +22,6 @@ import { Effect } from "effect";
 
 const BASE_URL = "https://nakafa.com";
 
-export const revalidate = false;
-
 export async function GET() {
   const locales = routing.locales;
   const scanned: string[] = [];

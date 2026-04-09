@@ -26,7 +26,6 @@ export default async function Page(
 ) {
   const { params, searchParams } = props;
   const { locale, product: productParam, slug } = await params;
-  const initialNowMs = Date.now();
 
   if (!hasLocale(routing.locales, locale)) {
     notFound();
@@ -54,6 +53,8 @@ export default async function Page(
   if (!details) {
     notFound();
   }
+
+  const initialNowMs = Date.now();
 
   const { attempt } = await loadTryoutSearchParams(searchParams);
   const preloadedSetView = token

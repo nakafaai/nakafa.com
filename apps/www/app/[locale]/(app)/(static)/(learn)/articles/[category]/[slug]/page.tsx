@@ -8,12 +8,13 @@ import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
 import { Effect } from "effect";
 import type { Metadata } from "next";
+import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
-import { use } from "react";
-import { AiSheetOpen } from "@/components/ai/sheet-open";
-import { Comments } from "@/components/comments";
+import { getTranslations } from "next-intl/server";
+import type { ReactNode } from "react";
+import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
+import { DeferredComments } from "@/components/comments/deferred";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import {
   LayoutMaterial,
@@ -33,8 +34,6 @@ import {
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
 import { getStaticParams } from "@/lib/utils/system";
-
-export const revalidate = false;
 
 async function getResolvedParams(
   params: PageProps<"/[locale]/articles/[category]/[slug]">["params"]
@@ -58,22 +57,18 @@ export async function generateMetadata({
   const { locale, category, slug } = await getResolvedParams(params);
   const t = await getTranslations({ locale, namespace: "Articles" });
 
-  const { content, FilePath } = await Effect.runPromise(
-    Effect.match(fetchArticleMetadataContext({ locale, category, slug }), {
-      onFailure: () => ({
-        content: null,
-        FilePath: getSlugPath(category, slug),
-      }),
-      onSuccess: (data) => data,
-    })
-  );
+  const { content, filePath } = await getArticleMetadataData({
+    locale,
+    category,
+    slug,
+  });
 
-  const path = `/${locale}${FilePath}`;
+  const path = `/${locale}${filePath}`;
   const alternates = {
     canonical: path,
   };
   const image = {
-    url: getOgUrl(locale, FilePath),
+    url: getOgUrl(locale, filePath),
     width: 1200,
     height: 630,
   };
@@ -128,33 +123,7 @@ export async function generateMetadata({
   };
 }
 
-// Generate bottom-up static params
-export function generateStaticParams() {
-  return getStaticParams({
-    basePath: "articles",
-    paramNames: ["category", "slug"],
-  });
-}
-
-export default function Page(
-  props: PageProps<"/[locale]/articles/[category]/[slug]">
-) {
-  const { params } = props;
-  const { locale: rawLocale, category: rawCategory, slug } = use(params);
-  const locale = getLocaleOrThrow(rawLocale);
-  const category = parseArticleCategory(rawCategory);
-
-  if (!category) {
-    notFound();
-  }
-
-  // Enable static rendering
-  setRequestLocale(locale);
-
-  return <PageContent category={category} locale={locale} slug={slug} />;
-}
-
-async function PageContent({
+async function getArticleMetadataData({
   locale,
   category,
   slug,
@@ -163,9 +132,78 @@ async function PageContent({
   category: ArticleCategory;
   slug: string;
 }) {
+  "use cache";
+
+  cacheLife("max");
+
+  return Effect.runPromise(
+    Effect.match(fetchArticleMetadataContext({ locale, category, slug }), {
+      onFailure: () => ({
+        content: null,
+        filePath: getSlugPath(category, slug),
+      }),
+      onSuccess: ({ content, FilePath }) => ({
+        content,
+        filePath: FilePath,
+      }),
+    })
+  );
+}
+
+// Generate bottom-up static params
+export function generateStaticParams() {
+  return getStaticParams({
+    basePath: "articles",
+    paramNames: ["category", "slug"],
+  });
+}
+
+export default async function Page({
+  params,
+}: PageProps<"/[locale]/articles/[category]/[slug]">) {
+  const { locale, category, slug } = await getResolvedParams(params);
+  const filePath = getSlugPath(category, slug);
+
+  return (
+    <CachedArticleShell
+      category={category}
+      footer={<DeferredComments key={`comments:${filePath}`} slug={filePath} />}
+      locale={locale}
+      slug={slug}
+      toolbar={
+        <DeferredAiSheetOpen
+          audio={{
+            locale,
+            slug: filePath,
+            contentType: "article",
+          }}
+          key={`audio:${filePath}`}
+        />
+      }
+    />
+  );
+}
+
+async function CachedArticleShell({
+  locale,
+  category,
+  slug,
+  footer,
+  toolbar,
+}: {
+  locale: Locale;
+  category: ArticleCategory;
+  slug: string;
+  footer: ReactNode;
+  toolbar: ReactNode;
+}) {
+  "use cache";
+
+  cacheLife("max");
+
   const [tCommon, tArticles] = await Promise.all([
-    getTranslations({ locale, namespace: "Common" }),
-    getTranslations({ locale, namespace: "Articles" }),
+    getTranslations("Common"),
+    getTranslations("Articles"),
   ]);
 
   const FilePath = getSlugPath(category, slug);
@@ -246,16 +284,8 @@ async function PageContent({
             {headings.length === 0 && <ComingSoon />}
             {headings.length > 0 && Content}
           </LayoutMaterialMain>
-          <LayoutMaterialFooter>
-            <Comments slug={FilePath} />
-          </LayoutMaterialFooter>
-          <AiSheetOpen
-            audio={{
-              locale,
-              slug: FilePath,
-              contentType: "article",
-            }}
-          />
+          <LayoutMaterialFooter>{footer}</LayoutMaterialFooter>
+          {toolbar}
         </LayoutMaterialContent>
         <LayoutMaterialToc
           chapters={{

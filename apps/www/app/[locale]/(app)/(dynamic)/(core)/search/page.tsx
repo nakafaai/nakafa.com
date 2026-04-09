@@ -7,8 +7,6 @@ import { SearchListItems } from "@/components/search/results";
 import { BackButton } from "@/components/shared/back-button";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
-export const revalidate = false;
-
 export async function generateMetadata({
   params,
 }: {

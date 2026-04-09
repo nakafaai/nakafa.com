@@ -16,8 +16,6 @@ import { LayoutContent } from "@/components/shared/layout-content";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGradeIcon } from "./icons";
 
-export const revalidate = false;
-
 const CATEGORY_ORDER = ["middle-school", "high-school", "university"] as const;
 
 export async function generateMetadata({

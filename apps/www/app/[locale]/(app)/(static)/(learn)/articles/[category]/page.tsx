@@ -8,6 +8,7 @@ import type { ArticleCategory } from "@repo/contents/_types/articles/category";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import type { Metadata } from "next";
+import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import { type Locale, useTranslations } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -23,8 +24,6 @@ import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { getStaticParams } from "@/lib/utils/system";
 
-export const revalidate = false;
-
 async function getResolvedParams(
   params: PageProps<"/[locale]/articles/[category]">["params"]
 ) {
@@ -37,6 +36,14 @@ async function getResolvedParams(
   }
 
   return { category, locale };
+}
+
+async function getCategoryArticles(category: ArticleCategory, locale: Locale) {
+  "use cache";
+
+  cacheLife("max");
+
+  return getArticleSummaries(category, locale);
 }
 
 export async function generateMetadata({
@@ -127,7 +134,7 @@ async function PageArticles({
   FilePath: string;
   header: React.ReactNode;
 }) {
-  const articles = await getArticleSummaries(category, locale);
+  const articles = await getCategoryArticles(category, locale);
   const t = await getTranslations({ locale, namespace: "Articles" });
 
   return (

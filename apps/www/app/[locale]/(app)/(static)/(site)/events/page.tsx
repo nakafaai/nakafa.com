@@ -3,9 +3,6 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
-export const dynamic = "force-static";
-export const revalidate = false;
-
 export async function generateMetadata({
   params,
 }: {

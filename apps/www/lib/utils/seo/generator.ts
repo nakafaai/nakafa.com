@@ -5,6 +5,7 @@ import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import type { Grade } from "@repo/contents/_types/subject/grade";
 import type { Material } from "@repo/contents/_types/subject/material";
 import { Effect } from "effect";
+import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { createSEODescription } from "./descriptions";
@@ -322,6 +323,10 @@ export async function generateSEOMetadata(
   context: SEOContext,
   locale: Locale
 ): Promise<SEOMetadata> {
+  "use cache";
+
+  cacheLife("max");
+
   const { type } = context;
 
   const effect = Effect.gen(function* () {

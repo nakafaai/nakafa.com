@@ -36,12 +36,13 @@ import { FOUNDER } from "@repo/seo/json-ld/constants";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
 import { Effect, Option } from "effect";
 import type { Metadata } from "next";
+import { cacheLife } from "next/cache";
 import { notFound, permanentRedirect } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { use } from "react";
-import { AiSheetOpen } from "@/components/ai/sheet-open";
-import { Comments } from "@/components/comments";
+import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
+import { DeferredComments } from "@/components/comments/deferred";
 import { CardMaterial } from "@/components/shared/card-material";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { ContainerList } from "@/components/shared/container-list";
@@ -69,8 +70,6 @@ import { getStaticParams } from "@/lib/utils/system";
 import { QuestionAnalytics } from "./analytics";
 import { ExerciseArticle } from "./article";
 import { ExerciseAttempt } from "./attempt";
-
-export const revalidate = false;
 
 async function getResolvedParams(
   params: PageProps<"/[locale]/exercises/[category]/[type]/[material]/[...slug]">["params"]
@@ -109,22 +108,7 @@ export async function generateMetadata({
     FilePath,
     currentMaterial,
     currentMaterialItem,
-  } = await Effect.runPromise(
-    Effect.match(
-      fetchExerciseMetadataContext({ locale, category, type, material, slug }),
-      {
-        onFailure: () => ({
-          isSpecificExercise: false,
-          exerciseTitle: undefined,
-          exerciseCount: 0,
-          FilePath: getSlugPath(category, type, material, slug),
-          currentMaterial: undefined,
-          currentMaterialItem: undefined,
-        }),
-        onSuccess: (data) => data,
-      }
-    )
-  );
+  } = await getExerciseMetadataData({ locale, category, type, material, slug });
 
   const urlPath = `/${locale}${FilePath}`;
   const image = {
@@ -190,6 +174,41 @@ export async function generateMetadata({
       images: [image],
     },
   };
+}
+
+async function getExerciseMetadataData({
+  locale,
+  category,
+  type,
+  material,
+  slug,
+}: {
+  locale: Locale;
+  category: ExercisesCategory;
+  type: ExercisesType;
+  material: ExercisesMaterial;
+  slug: string[];
+}) {
+  "use cache";
+
+  cacheLife("max");
+
+  return Effect.runPromise(
+    Effect.match(
+      fetchExerciseMetadataContext({ locale, category, type, material, slug }),
+      {
+        onFailure: () => ({
+          isSpecificExercise: false,
+          exerciseTitle: undefined,
+          exerciseCount: 0,
+          FilePath: getSlugPath(category, type, material, slug),
+          currentMaterial: undefined,
+          currentMaterialItem: undefined,
+        }),
+        onSuccess: (data) => data,
+      }
+    )
+  );
 }
 
 export function generateStaticParams() {
@@ -290,6 +309,10 @@ async function YearGroupContent({
   materialPath: string;
   type: ExercisesType;
 }) {
+  "use cache";
+
+  cacheLife("max");
+
   const t = await getTranslations({ locale, namespace: "Exercises" });
   const headingId = slugify(currentMaterial.title);
 
@@ -370,6 +393,10 @@ async function PageContent({
   material: ExercisesMaterial;
   slug: string[];
 }) {
+  "use cache";
+
+  cacheLife("max");
+
   const t = await getTranslations({ locale, namespace: "Exercises" });
 
   const materialPath = getMaterialPath(category, type, material);
@@ -487,9 +514,9 @@ async function PageContent({
           </LayoutMaterialMain>
           <LayoutMaterialPagination pagination={pagination} />
           <LayoutMaterialFooter>
-            <Comments slug={FilePath} />
+            <DeferredComments slug={FilePath} />
           </LayoutMaterialFooter>
-          <AiSheetOpen />
+          <DeferredAiSheetOpen />
         </LayoutMaterialContent>
         <LayoutMaterialToc
           chapters={{
@@ -523,6 +550,10 @@ async function SingleExerciseContent({
   slug: string[];
   exerciseNumber: number;
 }) {
+  "use cache";
+
+  cacheLife("max");
+
   const t = await getTranslations({ locale, namespace: "Exercises" });
 
   const FilePath = getSlugPath(category, type, material, slug);
@@ -637,9 +668,9 @@ async function SingleExerciseContent({
           </LayoutMaterialMain>
           <LayoutMaterialPagination pagination={pagination} />
           <LayoutMaterialFooter>
-            <Comments slug={exerciseFilePath} />
+            <DeferredComments slug={exerciseFilePath} />
           </LayoutMaterialFooter>
-          <AiSheetOpen />
+          <DeferredAiSheetOpen />
         </LayoutMaterialContent>
         <LayoutMaterialToc
           chapters={{

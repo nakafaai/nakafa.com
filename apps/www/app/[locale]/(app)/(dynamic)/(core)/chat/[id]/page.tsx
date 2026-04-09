@@ -2,11 +2,9 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { fetchQuery } from "convex/nextjs";
 import type { Metadata } from "next";
-import { setRequestLocale } from "next-intl/server";
-import { cache, use } from "react";
+import { cache } from "react";
 import { AiChatPage } from "@/components/ai/chat-page";
 import { getToken } from "@/lib/auth/server";
-import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 const getChatTitle = cache(async (id: Id<"chats">) => {
   const token = await getToken();
@@ -41,13 +39,10 @@ export async function generateMetadata({
   }
 }
 
-export default function Page(props: PageProps<"/[locale]/chat/[id]">) {
-  const { params } = props;
-  const { locale: rawLocale, id } = use(params);
-  const locale = getLocaleOrThrow(rawLocale);
-
-  // Enable static rendering
-  setRequestLocale(locale);
+export default async function Page({
+  params,
+}: PageProps<"/[locale]/chat/[id]">) {
+  const { id } = await params;
 
   return <AiChatPage chatId={id as Id<"chats">} />;
 }

@@ -29,8 +29,6 @@ import { getOgUrl } from "@/lib/utils/metadata";
 import { createSEOTitle } from "@/lib/utils/seo/titles";
 import { getStaticParams } from "@/lib/utils/system";
 
-export const revalidate = false;
-
 async function getResolvedParams(
   params: PageProps<"/[locale]/subject/[category]/[grade]">["params"]
 ) {

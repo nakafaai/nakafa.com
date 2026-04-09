@@ -25,12 +25,13 @@ import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
 import { Effect } from "effect";
 import type { Metadata } from "next";
+import { cacheLife } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import type { Locale } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
-import { use } from "react";
-import { AiSheetOpen } from "@/components/ai/sheet-open";
-import { Comments } from "@/components/comments";
+import { getTranslations } from "next-intl/server";
+import type { ReactNode } from "react";
+import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
+import { DeferredComments } from "@/components/comments/deferred";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import {
   LayoutMaterial,
@@ -51,8 +52,6 @@ import {
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
 import { getStaticParams } from "@/lib/utils/system";
-
-export const revalidate = false;
 
 async function getResolvedParams(
   params: PageProps<"/[locale]/subject/[category]/[grade]/[material]/[...slug]">["params"]
@@ -83,43 +82,21 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale, category, grade, material, slug } =
     await getResolvedParams(params);
-  const t = await getTranslations({ locale, namespace: "Subject" });
+  const t = await getTranslations("Subject");
 
-  const FilePath = getSlugPath(category, grade, material, slug);
-  const materialPath = getMaterialPath(category, grade, material);
+  const { chapter, filePath, metadata, path } = await getSubjectMetadataData({
+    locale,
+    category,
+    grade,
+    material,
+    slug,
+  });
 
-  // Fetch content and materials in parallel
-  const [{ content }, materials] = await Promise.all([
-    Effect.runPromise(
-      Effect.match(
-        getContentMetadataContext({ locale, category, grade, material, slug }),
-        {
-          onFailure: () => ({ content: null, FilePath }),
-          onSuccess: (data) => data,
-        }
-      )
-    ),
-    getMaterials(materialPath, locale).catch(() => []),
-  ]);
-
-  const metadata = content?.metadata ?? null;
-
-  // Get chapter title from materials using getCurrentMaterial
-  let chapter: string | undefined;
-  if (slug.length > 0 && materials.length > 0) {
-    const chapterPath = getSlugPath(category, grade, material, [
-      slug.at(0) ?? "",
-    ]);
-    const { currentChapter } = getCurrentMaterial(chapterPath, materials);
-    chapter = currentChapter?.title;
-  }
-
-  const path = `/${locale}${FilePath}`;
   const alternates = {
     canonical: path,
   };
   const image = {
-    url: getOgUrl(locale, FilePath),
+    url: getOgUrl(locale, filePath),
     width: 1200,
     height: 630,
   };
@@ -187,38 +164,46 @@ export function generateStaticParams() {
 export default function Page(
   props: PageProps<"/[locale]/subject/[category]/[grade]/[material]/[...slug]">
 ) {
-  const { params } = props;
-  const {
-    locale: rawLocale,
-    category: rawCategory,
-    grade: rawGrade,
-    material: rawMaterial,
-    slug,
-  } = use(params);
-  const locale = getLocaleOrThrow(rawLocale);
-  const category = parseSubjectCategory(rawCategory);
-  const grade = parseGrade(rawGrade);
-  const material = parseMaterial(rawMaterial);
+  return <ResolvedPage params={props.params} />;
+}
 
-  if (!(category && grade && material)) {
-    notFound();
+async function ResolvedPage({
+  params,
+}: {
+  params: PageProps<"/[locale]/subject/[category]/[grade]/[material]/[...slug]">["params"];
+}) {
+  const { locale, category, grade, material, slug } =
+    await getResolvedParams(params);
+
+  if (slug.length === 1) {
+    redirect(getSlugPath(category, grade, material, []));
   }
 
-  // Enable static rendering
-  setRequestLocale(locale);
+  const filePath = getSlugPath(category, grade, material, slug);
 
   return (
-    <PageContent
+    <CachedSubjectShell
       category={category}
+      footer={<DeferredComments key={`comments:${filePath}`} slug={filePath} />}
       grade={grade}
       locale={locale}
       material={material}
       slug={slug}
+      toolbar={
+        <DeferredAiSheetOpen
+          audio={{
+            locale,
+            slug: filePath,
+            contentType: "subject",
+          }}
+          key={`audio:${filePath}`}
+        />
+      }
     />
   );
 }
 
-async function PageContent({
+async function getSubjectMetadataData({
   locale,
   category,
   grade,
@@ -231,18 +216,68 @@ async function PageContent({
   material: Material;
   slug: string[];
 }) {
-  const [tCommon, tSubject] = await Promise.all([
-    getTranslations({ locale, namespace: "Common" }),
-    getTranslations({ locale, namespace: "Subject" }),
+  "use cache";
+
+  cacheLife("max");
+
+  const filePath = getSlugPath(category, grade, material, slug);
+  const materialPath = getMaterialPath(category, grade, material);
+
+  const [{ content }, materials] = await Promise.all([
+    Effect.runPromise(
+      Effect.match(
+        getContentMetadataContext({ locale, category, grade, material, slug }),
+        {
+          onFailure: () => ({ content: null, FilePath: filePath }),
+          onSuccess: (data) => data,
+        }
+      )
+    ),
+    getMaterials(materialPath, locale).catch(() => []),
   ]);
 
-  if (slug.length === 1) {
-    // Means it only contains the chapter name, not the section name
-    // The slugs usually have 2 items, chapter and section
-    // In the future, we can add a new page specifically for the section
-    const materialPath = getSlugPath(category, grade, material, []);
-    redirect(materialPath);
-  }
+  const metadata = content?.metadata ?? null;
+  const chapterPath = getSlugPath(category, grade, material, [
+    slug.at(0) ?? "",
+  ]);
+  const chapter =
+    slug.length > 0 && materials.length > 0
+      ? getCurrentMaterial(chapterPath, materials).currentChapter?.title
+      : undefined;
+
+  return {
+    metadata,
+    chapter,
+    filePath,
+    path: `/${locale}${filePath}`,
+  };
+}
+
+async function CachedSubjectShell({
+  locale,
+  category,
+  grade,
+  material,
+  slug,
+  footer,
+  toolbar,
+}: {
+  locale: Locale;
+  category: SubjectCategory;
+  grade: Grade;
+  material: Material;
+  slug: string[];
+  footer: ReactNode;
+  toolbar: ReactNode;
+}) {
+  "use cache";
+
+  cacheLife("max");
+
+  const [tCommon, tSubject] = await Promise.all([
+    getTranslations("Common"),
+    getTranslations("Subject"),
+  ]);
 
   const FilePath = getSlugPath(category, grade, material, slug);
   const materialPath = getMaterialPath(category, grade, material);
@@ -336,16 +371,8 @@ async function PageContent({
             {headings.length > 0 && Content}
           </LayoutMaterialMain>
           <LayoutMaterialPagination pagination={pagination} />
-          <LayoutMaterialFooter>
-            <Comments slug={FilePath} />
-          </LayoutMaterialFooter>
-          <AiSheetOpen
-            audio={{
-              locale,
-              slug: FilePath,
-              contentType: "subject",
-            }}
-          />
+          <LayoutMaterialFooter>{footer}</LayoutMaterialFooter>
+          {toolbar}
         </LayoutMaterialContent>
         <LayoutMaterialToc
           chapters={{

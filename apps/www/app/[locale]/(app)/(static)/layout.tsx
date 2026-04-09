@@ -1,7 +1,6 @@
 import { routing } from "@repo/internationalization/src/routing";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
 import { ConvexAppProviders } from "@/components/providers";
 
 /**
@@ -21,8 +20,6 @@ export default async function Layout(props: LayoutProps<"/[locale]">) {
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
-
-  setRequestLocale(locale);
 
   return <ConvexAppProviders>{children}</ConvexAppProviders>;
 }
