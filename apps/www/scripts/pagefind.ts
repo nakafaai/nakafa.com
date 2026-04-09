@@ -21,7 +21,25 @@ const mdxParser = remark().use(remarkMdx);
 
 /**
  * Builds the production Pagefind bundle from source-of-truth content instead of
- * Next.js PPR HTML shells.
+ * scanning Next.js build artifacts.
+ *
+ * Why this exists:
+ * - With Next.js Cache Components / PPR, some build artifacts under
+ *   `.next/server/app` do not contain fully rendered learn-page DOM.
+ * - Pagefind's HTML scan mode indexes HTML files, so shell-oriented artifacts
+ *   can under-index content or index inconsistent payloads.
+ * - Pagefind exposes an official custom-record API, so we can index the content
+ *   we actually own rather than scrape implementation-specific build output.
+ *
+ * References:
+ * - Next.js Cache Components guide:
+ *   https://nextjs.org/docs/app/getting-started/cache-components
+ * - Next.js `use cache` directive:
+ *   https://nextjs.org/docs/app/api-reference/directives/use-cache
+ * - Pagefind indexing docs:
+ *   https://pagefind.app/docs/indexing/
+ * - Installed Pagefind API surface:
+ *   `apps/www/node_modules/pagefind/types/index.d.ts`
  */
 async function main() {
   const { createIndex } = await import("pagefind");
@@ -141,6 +159,15 @@ async function addSubjectRecords(index: PagefindIndex) {
 
 /**
  * Indexes exercise set pages from the assembled exercise source.
+ *
+ * The current search corpus intentionally includes:
+ * - question titles
+ * - question bodies
+ * - localized choice labels
+ * - answer explanations
+ *
+ * This matches the exercise source layout under `packages/contents/exercises/*`
+ * where each numbered item contains `_question`, `_answer`, and `choices.ts`.
  */
 async function addExerciseRecords(index: PagefindIndex) {
   const records = (
@@ -241,6 +268,9 @@ async function addQuranRecords(index: PagefindIndex) {
 
 /**
  * Adds records to Pagefind sequentially and returns the count of successful URLs.
+ *
+ * Pagefind writes deterministic bundles from custom records via
+ * `index.addCustomRecord(...)` + `index.writeFiles(...)`.
  */
 async function addRecords(index: PagefindIndex, records: CustomRecord[]) {
   let count = 0;
@@ -266,6 +296,10 @@ async function addRecords(index: PagefindIndex, records: CustomRecord[]) {
 
 /**
  * Extracts unique exercise-set paths from question slugs.
+ *
+ * Exercise content is stored as numbered items like
+ * `.../set-1/12/_question`. We index one record per set, not one record per
+ * question directory.
  */
 function getExerciseSetPaths(locale: (typeof routing.locales)[number]) {
   const paths = new Set<string>();
@@ -285,6 +319,12 @@ function getExerciseSetPaths(locale: (typeof routing.locales)[number]) {
 
 /**
  * Converts MDX source into searchable plain text with a remark MDX AST.
+ *
+ * References:
+ * - remark parser:
+ *   https://github.com/remarkjs/remark/tree/main/packages/remark
+ * - remark-mdx parser extension:
+ *   https://mdxjs.com/packages/remark-mdx/
  */
 function extractMdxText(source: string) {
   const tree = mdxParser.parse(source);
@@ -294,6 +334,9 @@ function extractMdxText(source: string) {
 
 /**
  * Reads text content from a markdown or MDX AST node.
+ *
+ * We intentionally skip MDX ESM / expression nodes so imports, metadata exports,
+ * and JSX expressions don't leak into search records.
  */
 function readNode(node: unknown): string {
   const current = readRecord(node);
