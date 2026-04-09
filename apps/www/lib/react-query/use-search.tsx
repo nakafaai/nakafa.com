@@ -1,9 +1,8 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { normalizePagefindResult } from "@/lib/utils/pagefind";
 import type { PagefindResult, PagefindSearchOptions } from "@/types/pagefind";
 import { usePagefind } from "../context/use-pagefind";
 
-const HTML_EXT_REGEX = /\.html$/;
-const HTML_ANCHOR_REGEX = /\.html#/;
 const SEARCH_OPTIONS: PagefindSearchOptions = {};
 
 async function fetchSearchResults(query: string): Promise<PagefindResult[]> {
@@ -23,15 +22,7 @@ async function fetchSearchResults(query: string): Promise<PagefindResult[]> {
 
   const data = await Promise.all(response.results.map((o) => o.data()));
 
-  return data.map((newData) => ({
-    ...newData,
-    sub_results: newData.sub_results.map((r) => {
-      const url = r.url
-        .replace(HTML_EXT_REGEX, "")
-        .replace(HTML_ANCHOR_REGEX, "#");
-      return { ...r, url };
-    }),
-  }));
+  return data.map(normalizePagefindResult);
 }
 
 export function useSearchQuery({
