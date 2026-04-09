@@ -70,6 +70,96 @@ describe("tryouts/queries/me/part", () => {
     expect(result?.tryoutAttempt.irtScore).toBe(500);
   });
 
+  it("returns the explicitly selected historical part runtime instead of the latest one", async () => {
+    const t = createTryoutTestConvex();
+    const state = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "selected-historical-part",
+      });
+      const tryout = await insertTryoutSkeleton(
+        ctx,
+        "selected-historical-part"
+      );
+      const olderAttempt = await insertCompletedTryoutAttempt(ctx, {
+        scaleVersionId: tryout.scaleVersionId,
+        setId: tryout.setId,
+        slug: "selected-historical-part-older",
+        tryoutId: tryout.tryoutId,
+        userId: identity.userId,
+      });
+      const latestAttempt = await insertCompletedTryoutAttempt(ctx, {
+        scaleVersionId: tryout.scaleVersionId,
+        setId: tryout.setId,
+        slug: "selected-historical-part-latest",
+        tryoutId: tryout.tryoutId,
+        userId: identity.userId,
+      });
+      const olderPartAttempt = await ctx.db
+        .query("tryoutPartAttempts")
+        .withIndex("by_tryoutAttemptId_and_partIndex", (q) =>
+          q
+            .eq("tryoutAttemptId", olderAttempt.tryoutAttemptId)
+            .eq("partIndex", 0)
+        )
+        .unique();
+      const latestPartAttempt = await ctx.db
+        .query("tryoutPartAttempts")
+        .withIndex("by_tryoutAttemptId_and_partIndex", (q) =>
+          q
+            .eq("tryoutAttemptId", latestAttempt.tryoutAttemptId)
+            .eq("partIndex", 0)
+        )
+        .unique();
+
+      if (!(olderPartAttempt && latestPartAttempt)) {
+        throw new Error("Expected both part attempts to exist");
+      }
+
+      await ctx.db.patch("tryoutAttempts", olderAttempt.tryoutAttemptId, {
+        completedAt: NOW,
+        lastActivityAt: NOW,
+        startedAt: NOW,
+        totalCorrect: 2,
+      });
+      await ctx.db.patch("tryoutAttempts", latestAttempt.tryoutAttemptId, {
+        completedAt: NOW + 1000,
+        lastActivityAt: NOW + 1000,
+        startedAt: NOW + 1000,
+        totalCorrect: 8,
+      });
+      await ctx.db.patch("tryoutPartAttempts", olderPartAttempt._id, {
+        theta: -0.9,
+        thetaSE: 0.6,
+      });
+      await ctx.db.patch("tryoutPartAttempts", latestPartAttempt._id, {
+        theta: 0.8,
+        thetaSE: 0.3,
+      });
+
+      return {
+        identity,
+        olderAttemptId: olderAttempt.tryoutAttemptId,
+      };
+    });
+
+    const result = await t
+      .withIdentity({
+        subject: state.identity.authUserId,
+        sessionId: state.identity.sessionId,
+      })
+      .query(api.tryouts.queries.me.part.getUserTryoutPartAttempt, {
+        attemptId: state.olderAttemptId,
+        product: "snbt",
+        locale: "id",
+        tryoutSlug: "selected-historical-part",
+        partKey: "quantitative-knowledge",
+      });
+
+    expect(result?.tryoutAttempt._id).toBe(state.olderAttemptId);
+    expect(result?.partScore?.theta).toBe(-0.9);
+  });
+
   it("returns finalized part data when the current route key was renamed", async () => {
     const t = createTryoutTestConvex();
     const identity = await t.mutation(async (ctx) => {
@@ -241,6 +331,7 @@ describe("tryouts/queries/me/part", () => {
           },
         ],
         completedPartIndices: [0, 1],
+        attemptNumber: 1,
         totalCorrect: 10,
         totalQuestions: 20,
         theta: 0,
@@ -424,6 +515,7 @@ describe("tryouts/queries/me/part", () => {
           },
         ],
         completedPartIndices: [],
+        attemptNumber: 1,
         totalCorrect: 0,
         totalQuestions: 0,
         theta: 0,
@@ -477,6 +569,7 @@ describe("tryouts/queries/me/part", () => {
           },
         ],
         completedPartIndices: [],
+        attemptNumber: 1,
         totalCorrect: 0,
         totalQuestions: 0,
         theta: 0,

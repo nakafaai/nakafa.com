@@ -8,7 +8,7 @@ import {
 } from "@repo/backend/convex/tryouts/helpers/parts";
 import { getTryoutPublicResultStatus } from "@repo/backend/convex/tryouts/helpers/publicResultStatus";
 import { getTryoutReportScore } from "@repo/backend/convex/tryouts/helpers/reporting";
-import { loadLatestUserTryoutContext } from "@repo/backend/convex/tryouts/queries/me/helpers";
+import { loadResolvedUserTryoutContext } from "@repo/backend/convex/tryouts/queries/me/helpers/context";
 import {
   userTryoutLookupArgs,
   userTryoutPartAttemptResultValidator,
@@ -17,7 +17,10 @@ import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
 import { ConvexError } from "convex/values";
 import { nullable } from "convex-helpers/validators";
 
-/** Returns the authenticated user's runtime state for one tryout part. */
+/**
+ * Returns the authenticated user's runtime state for one selected tryout part,
+ * falling back to the latest attempt when no valid selection is provided.
+ */
 export const getUserTryoutPartAttempt = query({
   args: {
     ...userTryoutLookupArgs,
@@ -26,7 +29,7 @@ export const getUserTryoutPartAttempt = query({
   returns: nullable(userTryoutPartAttemptResultValidator),
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
-    const context = await loadLatestUserTryoutContext(ctx, {
+    const context = await loadResolvedUserTryoutContext(ctx, {
       ...args,
       userId: appUser._id,
     });
@@ -36,6 +39,8 @@ export const getUserTryoutPartAttempt = query({
     }
 
     const { attempt: tryoutAttempt } = context;
+    const attemptNumber = tryoutAttempt.attemptNumber;
+
     const accessCampaign = tryoutAttempt.accessCampaignId
       ? await ctx.db.get(
           "tryoutAccessCampaigns",
@@ -44,6 +49,7 @@ export const getUserTryoutPartAttempt = query({
       : null;
     const scoredTryoutAttempt = {
       ...tryoutAttempt,
+      attemptNumber,
       irtScore: getTryoutReportScore(
         context.tryout.product,
         tryoutAttempt.theta

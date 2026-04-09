@@ -2,9 +2,10 @@
 
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
-import { TryoutPageHeader } from "@/components/tryout/page-header";
-import { TryoutPageMeta } from "@/components/tryout/page-meta";
-import { useTryoutPart } from "@/components/tryout/providers/part-state";
+import { useTryoutPart } from "@/components/tryout/providers/part-provider";
+import { TryoutPageHeader } from "@/components/tryout/shared/page-header";
+import { TryoutPageMeta } from "@/components/tryout/shared/page-meta";
+import { getTryoutSetHref } from "@/components/tryout/utils/routes";
 
 interface TryoutPartHeadProps {
   icon?: ComponentProps<typeof TryoutPageHeader>["icon"];
@@ -68,7 +69,10 @@ export function TryoutPartHead({ icon }: TryoutPartHeadProps) {
       description={description}
       icon={icon}
       link={{
-        href: `/try-out/${tryout.product}/${tryout.slug}`,
+        href: getTryoutSetHref({
+          product: tryout.product,
+          tryoutSlug: tryout.slug,
+        }),
         label: tCommon("back"),
       }}
       meta={

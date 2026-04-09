@@ -1,7 +1,10 @@
 import type { SubjectCategory } from "@repo/contents/_types/subject/category";
 import { SubjectCategorySchema } from "@repo/contents/_types/subject/category";
 import type { Grade } from "@repo/contents/_types/subject/grade";
-import { NonNumericGradeSchema } from "@repo/contents/_types/subject/grade";
+import {
+  GradeSchema,
+  NonNumericGradeSchema,
+} from "@repo/contents/_types/subject/grade";
 import { MaterialSchema } from "@repo/contents/_types/subject/material";
 import * as z from "zod";
 import { getCategoryPath } from "./category";
@@ -116,4 +119,15 @@ export async function getAllGradesWithSubjects(
     href: getGradePath(category, grade),
     subjects: subjectsResults[index],
   }));
+}
+
+/** Narrows one subject grade route segment to the supported grade union. */
+export function parseGrade(value: string) {
+  const parsedGrade = GradeSchema.safeParse(value);
+
+  if (!parsedGrade.success) {
+    return null;
+  }
+
+  return parsedGrade.data;
 }

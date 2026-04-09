@@ -1,8 +1,8 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useTryoutSet } from "@/components/tryout/providers/set-state";
-import { TryoutStartConfirmDialog } from "@/components/tryout/start-controls";
+import { useTryoutSet } from "@/components/tryout/providers/set-provider";
+import { TryoutStartConfirmDialog } from "@/components/tryout/shared/start-controls";
 
 /** Renders the confirmation dialog for starting or restarting one tryout. */
 export function TryoutStartDialog() {

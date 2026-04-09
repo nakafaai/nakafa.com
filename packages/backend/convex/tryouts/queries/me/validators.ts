@@ -14,6 +14,7 @@ import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
 
 export const userTryoutLookupArgs = {
+  attemptId: v.optional(v.string()),
   product: tryoutProductValidator,
   locale: localeValidator,
   tryoutSlug: v.string(),
@@ -40,16 +41,19 @@ export const tryoutPartAttemptScoreSummaryValidator = v.object({
 
 export const publicTryoutAttemptValidator = v.object({
   ...vv.doc("tryoutAttempts").fields,
+  attemptNumber: v.number(),
   irtScore: v.number(),
   publicResultStatus: tryoutPublicResultStatusValidator,
 });
 
 export const publicTryoutAttemptHistoryValidator = v.object({
   attemptId: vv.id("tryoutAttempts"),
+  attemptNumber: v.number(),
   completedAt: vv.doc("tryoutAttempts").fields.completedAt,
   countsForCompetition: v.boolean(),
   expiresAt: vv.doc("tryoutAttempts").fields.expiresAt,
   irtScore: v.number(),
+  isLatest: v.boolean(),
   publicResultStatus: tryoutPublicResultStatusValidator,
   scoreStatus: vv.doc("tryoutAttempts").fields.scoreStatus,
   startedAt: vv.doc("tryoutAttempts").fields.startedAt,
@@ -80,6 +84,11 @@ export const userTryoutHistoryArgs = {
 
 export const userTryoutAttemptHistoryResultValidator =
   paginationResultValidator(publicTryoutAttemptHistoryValidator);
+
+export const userTryoutSetViewResultValidator = v.object({
+  attemptData: userTryoutAttemptResultValidator,
+  initialHistory: userTryoutAttemptHistoryResultValidator,
+});
 
 export const tryoutPartAttemptRuntimeValidator = v.object({
   partIndex: v.number(),

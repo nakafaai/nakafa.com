@@ -79,6 +79,7 @@ describe("tryouts/helpers/finalize/part", () => {
           },
         ],
         completedPartIndices: [],
+        attemptNumber: 1,
         totalCorrect: 0,
         totalQuestions: 0,
         theta: 0,
