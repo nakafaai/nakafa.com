@@ -60,6 +60,7 @@ describe("auth/cleanup", () => {
           },
         ],
         completedPartIndices: [],
+        attemptNumber: 1,
         totalCorrect: 1,
         totalQuestions: 1,
         theta: 0,

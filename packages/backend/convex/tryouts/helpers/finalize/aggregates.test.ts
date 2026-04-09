@@ -60,6 +60,7 @@ describe("tryouts/helpers/finalize/aggregates", () => {
           },
         ],
         completedPartIndices: [0],
+        attemptNumber: 1,
         totalCorrect: 0,
         totalQuestions: 1,
         theta: 0,
