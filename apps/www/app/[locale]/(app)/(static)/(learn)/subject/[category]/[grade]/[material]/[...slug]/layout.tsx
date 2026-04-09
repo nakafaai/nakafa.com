@@ -4,7 +4,7 @@ import { parseMaterial } from "@repo/contents/_lib/subject/material";
 import { getSlugPath } from "@repo/contents/_lib/subject/slug";
 import { cleanSlug } from "@repo/utilities/helper";
 import { notFound } from "next/navigation";
-import { setRequestLocale } from "next-intl/server";
+
 import { use } from "react";
 import { ContentViewTracker } from "@/components/tracking/content-view-tracker";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
@@ -28,8 +28,6 @@ export default function Layout(
   if (!(category && grade && material)) {
     notFound();
   }
-
-  setRequestLocale(locale);
 
   const filePath = getSlugPath(category, grade, material, slug);
   const cleanedSlug = cleanSlug(filePath);

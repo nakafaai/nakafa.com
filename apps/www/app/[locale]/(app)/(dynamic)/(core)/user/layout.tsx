@@ -1,7 +1,7 @@
 import { routing } from "@repo/internationalization/src/routing";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
+
 import { use } from "react";
 
 export default function Layout(props: LayoutProps<"/[locale]/user">) {
@@ -13,7 +13,6 @@ export default function Layout(props: LayoutProps<"/[locale]/user">) {
   }
 
   // Enable static rendering
-  setRequestLocale(locale);
 
   return (
     <main

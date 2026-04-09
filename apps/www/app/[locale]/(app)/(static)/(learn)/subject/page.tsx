@@ -9,7 +9,7 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { use } from "react";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
@@ -54,8 +54,6 @@ export default function Page(props: PageProps<"/[locale]/subject">) {
   const { params } = props;
   const { locale: rawLocale } = use(params);
   const locale = getLocaleOrThrow(rawLocale);
-
-  setRequestLocale(locale);
 
   return <PageContent locale={locale} />;
 }

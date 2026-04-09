@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Suspense, use } from "react";
+import { getTranslations } from "next-intl/server";
+import { Suspense } from "react";
 import { HomeHeader } from "@/components/home/header";
 import { InputSearch } from "@/components/search/input";
 import { SearchListItems } from "@/components/search/results";
@@ -24,14 +24,7 @@ export async function generateMetadata({
   };
 }
 
-export default function Page(props: PageProps<"/[locale]/search">) {
-  const { params } = props;
-  const { locale: rawLocale } = use(params);
-  const locale = getLocaleOrThrow(rawLocale);
-
-  // Enable static rendering
-  setRequestLocale(locale);
-
+export default function Page() {
   return (
     <div
       className="relative min-h-[calc(100svh-4rem)] lg:min-h-svh"

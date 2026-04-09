@@ -1,22 +1,13 @@
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
-import { use } from "react";
-import { getLocaleOrThrow } from "@/lib/i18n/params";
 import SchoolCreateImage from "@/public/school-create.png";
 import SchoolJoinImage from "@/public/school-join.png";
 
 const IMAGE_WIDTH = 238;
 const IMAGE_HEIGHT = 134;
 
-export default function Page(props: PageProps<"/[locale]/school/onboarding">) {
-  const { params } = props;
-  const { locale: rawLocale } = use(params);
-  const locale = getLocaleOrThrow(rawLocale);
-
-  setRequestLocale(locale);
-
+export default function Page() {
   const t = useTranslations("School.Onboarding");
 
   return (

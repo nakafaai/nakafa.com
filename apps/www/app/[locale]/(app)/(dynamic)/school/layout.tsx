@@ -2,7 +2,7 @@ import { routing } from "@repo/internationalization/src/routing";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { use } from "react";
 
 export async function generateMetadata({
@@ -64,8 +64,6 @@ export default function Layout(props: LayoutProps<"/[locale]/school">) {
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
-
-  setRequestLocale(locale);
 
   return children;
 }

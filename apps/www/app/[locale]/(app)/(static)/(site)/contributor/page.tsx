@@ -2,8 +2,7 @@ import { LoveKoreanFingerIcon } from "@hugeicons/core-free-icons";
 import { Avatar } from "@repo/design-system/components/contributor/avatar";
 import type { Metadata } from "next";
 import { useTranslations } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
-import { use } from "react";
+import { getTranslations } from "next-intl/server";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { contributors } from "@/lib/data/contributor";
@@ -26,13 +25,7 @@ export async function generateMetadata({
   };
 }
 
-export default function Page(props: PageProps<"/[locale]/contributor">) {
-  const { params } = props;
-  const locale = getLocaleOrThrow(use(params).locale);
-
-  // Enable static rendering
-  setRequestLocale(locale);
-
+export default function Page() {
   return (
     <>
       <PageHeader />

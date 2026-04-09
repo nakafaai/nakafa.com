@@ -1,7 +1,7 @@
 import { routing } from "@repo/internationalization/src/routing";
 import { notFound } from "next/navigation";
 import { hasLocale, useTranslations } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
+
 import { use } from "react";
 import { UserSettingsTabs } from "@/components/user/settings/tabs";
 
@@ -15,7 +15,6 @@ export default function Layout(props: LayoutProps<"/[locale]/user/settings">) {
   }
 
   // Enable static rendering
-  setRequestLocale(locale);
 
   const t = useTranslations("Auth");
 

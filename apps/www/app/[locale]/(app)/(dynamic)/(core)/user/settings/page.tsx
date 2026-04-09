@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations, setRequestLocale } from "next-intl/server";
-import { use } from "react";
+import { getTranslations } from "next-intl/server";
 import { UserSettingsProfilePage } from "@/components/user/settings/profile-page";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
@@ -18,13 +17,6 @@ export async function generateMetadata({
   };
 }
 
-export default function Page(props: PageProps<"/[locale]/user/settings">) {
-  const { params } = props;
-  const { locale: rawLocale } = use(params);
-  const locale = getLocaleOrThrow(rawLocale);
-
-  // Enable static rendering
-  setRequestLocale(locale);
-
+export default function Page() {
   return <UserSettingsProfilePage />;
 }

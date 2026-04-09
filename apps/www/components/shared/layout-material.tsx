@@ -1,7 +1,6 @@
 import type { ParsedHeading } from "@repo/contents/_types/toc";
 import { cn } from "@repo/design-system/lib/utils";
 import type { ComponentProps, ReactNode } from "react";
-import { VirtualProvider } from "@/lib/context/use-virtual";
 import { FooterContent } from "./footer-content";
 import { HeaderContent } from "./header-content";
 import { LayoutContent } from "./layout-content";
@@ -81,9 +80,5 @@ export function LayoutMaterialToc({
 }
 
 export function LayoutMaterial({ className, ...props }: ComponentProps<"div">) {
-  return (
-    <VirtualProvider>
-      <div className={cn("flex", className)} {...props} />
-    </VirtualProvider>
-  );
+  return <div className={cn("flex", className)} {...props} />;
 }

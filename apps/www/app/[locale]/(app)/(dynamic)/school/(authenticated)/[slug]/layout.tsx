@@ -5,7 +5,7 @@ import { fetchQuery } from "convex/nextjs";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
+
 import { cache, use } from "react";
 import { SchoolNotFound } from "@/components/school/not-found";
 import { SchoolContextProvider } from "@/lib/context/use-school";
@@ -46,7 +46,6 @@ export default function Layout(props: LayoutProps<"/[locale]/school/[slug]">) {
   }
 
   // Enable static rendering
-  setRequestLocale(locale);
 
   return (
     <ErrorBoundary fallback={<SchoolNotFound />}>

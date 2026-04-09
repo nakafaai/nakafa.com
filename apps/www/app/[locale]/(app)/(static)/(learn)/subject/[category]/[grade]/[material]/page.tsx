@@ -22,7 +22,7 @@ import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { use } from "react";
 import { CardMaterial } from "@/components/shared/card-material";
 import { ComingSoon } from "@/components/shared/coming-soon";
@@ -141,8 +141,6 @@ export default function Page(
   if (!(category && grade && material)) {
     notFound();
   }
-
-  setRequestLocale(locale);
 
   return (
     <PageContent

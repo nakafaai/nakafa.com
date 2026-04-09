@@ -8,7 +8,7 @@ import { routing } from "@repo/internationalization/src/routing";
 import { fetchQuery, preloadQuery } from "convex/nextjs";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { TryoutSetProvider } from "@/components/tryout/providers/set-provider";
 import { TryoutSetParts } from "@/components/tryout/set-parts";
 import { TryoutSetRouteShell } from "@/components/tryout/set-route-shell";
@@ -30,8 +30,6 @@ export default async function Page(
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
-
-  setRequestLocale(locale);
 
   if (!isTryoutProduct(productParam)) {
     notFound();

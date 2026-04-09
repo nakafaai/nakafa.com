@@ -1,7 +1,7 @@
 import { askSeo } from "@repo/seo/ask";
 import { FAQPageJsonLd } from "@repo/seo/json-ld/faq-page";
 import type { Metadata } from "next";
-import { setRequestLocale } from "next-intl/server";
+
 import { use } from "react";
 import { AskCta } from "@/components/ask/cta";
 import { AskListItems } from "@/components/ask/results";
@@ -59,7 +59,6 @@ export default function Page(props: PageProps<"/[locale]/ask/[slug]">) {
   const locale = getLocaleOrThrow(rawLocale);
 
   // Enable static rendering
-  setRequestLocale(locale);
 
   const seoData = askData.find((data) => data.slug === slug);
 

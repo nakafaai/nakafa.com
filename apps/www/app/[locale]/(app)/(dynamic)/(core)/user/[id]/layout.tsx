@@ -3,7 +3,7 @@ import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary"
 import { routing } from "@repo/internationalization/src/routing";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
+
 import { use } from "react";
 import { UserHeader } from "@/components/user/header";
 import { UserTabs } from "@/components/user/tabs";
@@ -18,7 +18,6 @@ export default function Layout(props: LayoutProps<"/[locale]/user/[id]">) {
   }
 
   // Enable static rendering
-  setRequestLocale(locale);
 
   const userId = id as Id<"users">;
 

@@ -4,7 +4,7 @@ import { getSlugPath } from "@repo/contents/_lib/exercises/slug";
 import { parseExercisesType } from "@repo/contents/_lib/exercises/type";
 import { cleanSlug } from "@repo/utilities/helper";
 import { notFound } from "next/navigation";
-import { setRequestLocale } from "next-intl/server";
+
 import { use } from "react";
 import { ContentViewTracker } from "@/components/tracking/content-view-tracker";
 import { AttemptContextProvider } from "@/lib/context/use-attempt";
@@ -31,8 +31,6 @@ export default function Layout(
   if (!(category && type && material)) {
     notFound();
   }
-
-  setRequestLocale(locale);
 
   const lastSlug = slug.at(-1);
   const baseSlug = lastSlug && isNumber(lastSlug) ? slug.slice(0, -1) : slug;

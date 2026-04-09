@@ -2,7 +2,7 @@ import { Particles } from "@repo/design-system/components/ui/particles";
 import { routing } from "@repo/internationalization/src/routing";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
+
 import { use } from "react";
 
 export default function Layout(
@@ -16,7 +16,6 @@ export default function Layout(
   }
 
   // Enable static rendering
-  setRequestLocale(locale);
 
   return (
     <main className="relative flex min-h-svh">

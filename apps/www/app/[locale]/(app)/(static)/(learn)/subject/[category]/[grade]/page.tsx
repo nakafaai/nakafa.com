@@ -15,7 +15,7 @@ import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { use } from "react";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { FooterContent } from "@/components/shared/footer-content";
@@ -142,7 +142,6 @@ export default function Page(
   }
 
   // Enable static rendering
-  setRequestLocale(locale);
 
   return <PageContent category={category} grade={grade} locale={locale} />;
 }

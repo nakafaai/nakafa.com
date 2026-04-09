@@ -5,7 +5,7 @@ import {
 import { routing } from "@repo/internationalization/src/routing";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
+
 import { use } from "react";
 import { SchoolSidebar } from "@/components/school/sidebar";
 
@@ -18,7 +18,6 @@ export default function Layout(props: LayoutProps<"/[locale]/school/[slug]">) {
   }
 
   // Enable static rendering
-  setRequestLocale(locale);
 
   return (
     <SidebarProvider>

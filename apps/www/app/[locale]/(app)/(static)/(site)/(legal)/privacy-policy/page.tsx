@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { use } from "react";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
@@ -27,7 +27,6 @@ export default function Page(props: PageProps<"/[locale]/privacy-policy">) {
   const locale = getLocaleOrThrow(use(params).locale);
 
   // Enable static rendering
-  setRequestLocale(locale);
 
   return <PageContent locale={locale} />;
 }

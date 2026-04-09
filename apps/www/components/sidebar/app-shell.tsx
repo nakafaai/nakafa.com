@@ -30,9 +30,7 @@ export function AppShell({
           <Header />
           <SearchCommand />
           <AiSheet />
-          <div className="relative" data-pagefind-body>
-            {children}
-          </div>
+          <div className="relative">{children}</div>
           <Onboarding />
         </SidebarInset>
       </SidebarProvider>

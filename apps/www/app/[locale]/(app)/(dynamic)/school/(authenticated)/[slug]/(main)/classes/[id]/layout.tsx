@@ -3,7 +3,7 @@ import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary"
 import { routing } from "@repo/internationalization/src/routing";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
+
 import { use } from "react";
 import { SchoolClassesForumPostSheet } from "@/components/school/classes/forum/post-sheet";
 import { SchoolClassesHeaderInfo } from "@/components/school/classes/info";
@@ -24,7 +24,6 @@ export default function Layout(
   }
 
   // Enable static rendering
-  setRequestLocale(locale);
 
   const classId = id as Id<"schoolClasses">;
 

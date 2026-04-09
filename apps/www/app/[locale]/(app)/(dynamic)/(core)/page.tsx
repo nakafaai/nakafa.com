@@ -1,7 +1,7 @@
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { redirect } from "next/navigation";
 import { type Locale, useTranslations } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
+
 import { Suspense, use } from "react";
 import { HomeContinueLearning } from "@/components/home/continue-learning";
 import { HomeExplore } from "@/components/home/explore";
@@ -14,8 +14,6 @@ export default function Page(props: PageProps<"/[locale]">) {
   const { params, searchParams } = props;
   const { locale: rawLocale } = use(params);
   const locale = getLocaleOrThrow(rawLocale);
-
-  setRequestLocale(locale);
 
   return (
     <>

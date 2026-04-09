@@ -13,7 +13,7 @@ import { fetchQuery, preloadedQueryResult, preloadQuery } from "convex/nextjs";
 import { Effect } from "effect";
 import { notFound, redirect } from "next/navigation";
 import { hasLocale } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { QuestionAnalytics } from "@/app/[locale]/(app)/(static)/(learn)/exercises/[category]/[type]/[material]/[...slug]/analytics";
 import { ExerciseArticle } from "@/app/[locale]/(app)/(static)/(learn)/exercises/[category]/[type]/[material]/[...slug]/article";
 import { TryoutPartRouteShell } from "@/components/tryout/part-route-shell";
@@ -36,8 +36,6 @@ export default async function Page(
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
-
-  setRequestLocale(locale);
 
   if (!isTryoutProduct(productParam)) {
     notFound();

@@ -2,20 +2,9 @@ import { ArrowLeft02Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { useTranslations } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
-import { use } from "react";
-import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { SchoolOnboardingJoinForm } from "./form";
 
-export default function Page(
-  props: PageProps<"/[locale]/school/onboarding/join">
-) {
-  const { params } = props;
-  const { locale: rawLocale } = use(params);
-  const locale = getLocaleOrThrow(rawLocale);
-
-  setRequestLocale(locale);
-
+export default function Page() {
   const t = useTranslations("School.Onboarding");
 
   return (

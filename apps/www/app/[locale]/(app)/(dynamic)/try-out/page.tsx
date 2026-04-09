@@ -3,7 +3,7 @@ import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { hasLocale, useTranslations } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { use } from "react";
 import { AppShell } from "@/components/sidebar/app-shell";
 import { TryoutHubPage } from "@/components/tryout/hub-page";
@@ -52,8 +52,6 @@ export default function Page(props: PageProps<"/[locale]/try-out">) {
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
-
-  setRequestLocale(locale);
 
   return (
     <AppShell>

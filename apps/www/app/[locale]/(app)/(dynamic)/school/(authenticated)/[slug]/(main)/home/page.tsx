@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations, setRequestLocale } from "next-intl/server";
-import { use } from "react";
+import { getTranslations } from "next-intl/server";
 import { SchoolLayoutContent } from "@/components/school/layout-content";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
@@ -17,12 +16,6 @@ export async function generateMetadata({
   };
 }
 
-export default function Page(props: PageProps<"/[locale]/school/[slug]/home">) {
-  const { params } = props;
-  const { locale: rawLocale } = use(params);
-  const locale = getLocaleOrThrow(rawLocale);
-
-  setRequestLocale(locale);
-
+export default function Page() {
   return <SchoolLayoutContent />;
 }

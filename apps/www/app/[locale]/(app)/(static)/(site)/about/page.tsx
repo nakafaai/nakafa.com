@@ -5,7 +5,7 @@ import { FAQPageJsonLd } from "@repo/seo/json-ld/faq-page";
 import type { ListItem } from "@repo/seo/types";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { use } from "react";
 import { Ai } from "@/components/marketing/about/ai";
 import { Community } from "@/components/marketing/about/community";
@@ -76,7 +76,6 @@ export default function Page(props: PageProps<"/[locale]/about">) {
   const locale = getLocaleOrThrow(rawLocale);
 
   // Enable static rendering
-  setRequestLocale(locale);
 
   return <AboutPageContent locale={locale} />;
 }

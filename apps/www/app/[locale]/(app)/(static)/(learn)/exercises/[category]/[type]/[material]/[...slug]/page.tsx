@@ -39,7 +39,7 @@ import type { Metadata } from "next";
 import { cacheLife } from "next/cache";
 import { notFound, permanentRedirect } from "next/navigation";
 import type { Locale } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { use } from "react";
 import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
 import { DeferredComments } from "@/components/comments/deferred";
@@ -248,7 +248,6 @@ export default function Page(
   }
 
   // Enable static rendering
-  setRequestLocale(locale);
 
   if (hasInvalidTryOutYearSlug(slug)) {
     const tryOutSuffixIndex = 1;

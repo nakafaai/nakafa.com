@@ -11,7 +11,7 @@ import type { Metadata } from "next";
 import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import { type Locale, useTranslations } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { use } from "react";
 import { CardArticle } from "@/components/shared/card-article";
 import { ContainerList } from "@/components/shared/container-list";
@@ -101,7 +101,6 @@ export default function Page(
   }
 
   // Enable static rendering
-  setRequestLocale(locale);
 
   const FilePath = getCategoryPath(category);
 

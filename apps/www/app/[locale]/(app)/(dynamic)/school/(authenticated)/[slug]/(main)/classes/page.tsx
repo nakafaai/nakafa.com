@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations, setRequestLocale } from "next-intl/server";
-import { use } from "react";
+import { getTranslations } from "next-intl/server";
 import { SchoolClassesHeader } from "@/components/school/classes/header";
 import { SchoolClassesList } from "@/components/school/classes/list";
 import { SchoolLayoutContent } from "@/components/school/layout-content";
@@ -19,15 +18,7 @@ export async function generateMetadata({
   };
 }
 
-export default function Page(
-  props: PageProps<"/[locale]/school/[slug]/classes">
-) {
-  const { params } = props;
-  const { locale: rawLocale } = use(params);
-  const locale = getLocaleOrThrow(rawLocale);
-
-  setRequestLocale(locale);
-
+export default function Page() {
   return (
     <div className="relative">
       <SchoolClassesHeader />
