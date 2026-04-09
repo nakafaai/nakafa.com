@@ -54,7 +54,7 @@
     "@repo/ai": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
-    "ai": "^6.0.149",
+    "ai": "^6.0.154",
     "better-auth": "1.5.3",
     "buffer": "^6.0.3",
     "convex": "^1.34.1",
@@ -69,11 +69,11 @@
     "@edge-runtime/vm": "^5.0.0",
     "@repo/contents": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@vitest/coverage-istanbul": "^4.1.3",
+    "@vitest/coverage-istanbul": "^4.1.4",
     "convex-test": "^0.0.47",
     "glob": "^13.0.6",
     "tsx": "^4.21.0",
-    "vite": "^8.0.6",
-    "vitest": "^4.1.3"
+    "vite": "^8.0.8",
+    "vitest": "^4.1.4"
   }
 }
