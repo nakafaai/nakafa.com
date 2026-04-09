@@ -26,8 +26,6 @@ export default function Page(props: PageProps<"/[locale]/security-policy">) {
   const { params } = props;
   const locale = getLocaleOrThrow(use(params).locale);
 
-  // Enable static rendering
-
   return <PageContent locale={locale} />;
 }
 
@@ -40,7 +38,7 @@ async function PageContent({ locale }: { locale: Locale }) {
     }
 
     return (
-      <main className="mx-auto max-w-3xl px-6 py-20" data-pagefind-ignore>
+      <main className="mx-auto max-w-3xl px-6 py-20">
         <Content />
       </main>
     );

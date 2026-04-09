@@ -7,8 +7,6 @@ export default function Page(props: PageProps<"/[locale]/home">) {
   const { params } = props;
   const locale = getLocaleOrThrow(use(params).locale);
 
-  // Enable static rendering
-
   // This is empty page, redirect to home page
   redirect({ href: "/about", locale });
 }

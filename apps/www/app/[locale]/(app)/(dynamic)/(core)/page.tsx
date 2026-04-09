@@ -18,10 +18,7 @@ export default function Page(props: PageProps<"/[locale]">) {
   return (
     <>
       <PageBreadcrumb locale={locale} />
-      <div
-        className="relative min-h-[calc(100svh-4rem)] lg:min-h-svh"
-        data-pagefind-ignore
-      >
+      <div className="relative min-h-[calc(100svh-4rem)] lg:min-h-svh">
         <Suspense>
           <Main searchParams={searchParams} />
         </Suspense>

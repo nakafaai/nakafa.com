@@ -28,10 +28,7 @@ export default function GlobalError({
       <body>
         <DesignSystemProvider>
           <div className="relative">
-            <div
-              className="relative flex h-svh items-center justify-center"
-              data-pagefind-ignore
-            >
+            <div className="relative flex h-svh items-center justify-center">
               <Particles className="pointer-events-none absolute inset-0 opacity-80" />
               <div className="mx-6 rounded-xl border bg-card/30 p-6 shadow-sm backdrop-blur-xs">
                 <div className="space-y-4 text-center">

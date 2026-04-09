@@ -17,8 +17,6 @@ export default function Layout(props: LayoutProps<"/[locale]/school/[slug]">) {
     notFound();
   }
 
-  // Enable static rendering
-
   return (
     <SidebarProvider>
       <SchoolSidebar />

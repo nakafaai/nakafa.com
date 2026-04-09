@@ -58,8 +58,6 @@ export default function Page(props: PageProps<"/[locale]/ask/[slug]">) {
   const { locale: rawLocale, slug } = use(params);
   const locale = getLocaleOrThrow(rawLocale);
 
-  // Enable static rendering
-
   const seoData = askData.find((data) => data.slug === slug);
 
   const title = seoData?.locales[locale].title ?? convertSlugToTitle(slug);
@@ -80,7 +78,7 @@ export default function Page(props: PageProps<"/[locale]/ask/[slug]">) {
         ]}
         url={`https://nakafa.com/${locale}/ask/${slug}`}
       />
-      <div data-pagefind-ignore>
+      <div>
         <LayoutMaterial>
           <LayoutMaterialContent>
             <div className="relative py-20">

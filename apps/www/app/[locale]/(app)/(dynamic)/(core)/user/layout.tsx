@@ -12,13 +12,8 @@ export default function Layout(props: LayoutProps<"/[locale]/user">) {
     notFound();
   }
 
-  // Enable static rendering
-
   return (
-    <main
-      className="relative mx-auto min-h-[calc(100svh-4rem)] max-w-3xl px-6 py-10 sm:py-20 lg:min-h-svh"
-      data-pagefind-ignore
-    >
+    <main className="relative mx-auto min-h-[calc(100svh-4rem)] max-w-3xl px-6 py-10 sm:py-20 lg:min-h-svh">
       {children}
     </main>
   );

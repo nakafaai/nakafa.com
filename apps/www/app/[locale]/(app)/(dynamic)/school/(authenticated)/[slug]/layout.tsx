@@ -45,8 +45,6 @@ export default function Layout(props: LayoutProps<"/[locale]/school/[slug]">) {
     notFound();
   }
 
-  // Enable static rendering
-
   return (
     <ErrorBoundary fallback={<SchoolNotFound />}>
       <SchoolContextProvider slug={decodeURIComponent(slug)}>

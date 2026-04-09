@@ -56,7 +56,7 @@ export default function Page(props: PageProps<"/[locale]/try-out">) {
   return (
     <AppShell>
       <PageBreadcrumb locale={locale} />
-      <div className="min-h-svh" data-pagefind-ignore>
+      <div className="min-h-svh">
         <TryoutHubPage locale={locale} />
       </div>
     </AppShell>

@@ -7,7 +7,5 @@ export default function Page(
   const { params } = props;
   const { code } = use(params);
 
-  // Enable static rendering
-
   return <EventAccessPage code={code} />;
 }

@@ -247,8 +247,6 @@ export default function Page(
     notFound();
   }
 
-  // Enable static rendering
-
   if (hasInvalidTryOutYearSlug(slug)) {
     const tryOutSuffixIndex = 1;
     const legacyTryOutSuffix = slug.slice(tryOutSuffixIndex);

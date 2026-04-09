@@ -15,8 +15,6 @@ export default function Layout(
     notFound();
   }
 
-  // Enable static rendering
-
   return (
     <main className="relative flex min-h-svh">
       <Particles className="pointer-events-none absolute inset-0 -z-1 opacity-80" />

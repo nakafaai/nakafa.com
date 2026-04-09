@@ -60,8 +60,6 @@ export default function Page(props: PageProps<"/[locale]/quran">) {
   const { locale: rawLocale } = use(params);
   const locale = getLocaleOrThrow(rawLocale);
 
-  // Enable static rendering
-
   return <PageContent locale={locale} />;
 }
 

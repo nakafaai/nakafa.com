@@ -75,8 +75,6 @@ export default function Page(props: PageProps<"/[locale]/about">) {
   const { locale: rawLocale } = use(params);
   const locale = getLocaleOrThrow(rawLocale);
 
-  // Enable static rendering
-
   return <AboutPageContent locale={locale} />;
 }
 
@@ -163,7 +161,7 @@ async function AboutPageContent({ locale }: { locale: Locale }) {
         }))}
         url={`https://nakafa.com/${locale}/about`}
       />
-      <div className="relative grid" data-pagefind-ignore>
+      <div className="relative grid">
         <Hero />
         <Logos />
         <Features />

@@ -14,8 +14,6 @@ export default function Layout(props: LayoutProps<"/[locale]/user/settings">) {
     notFound();
   }
 
-  // Enable static rendering
-
   const t = useTranslations("Auth");
 
   return (

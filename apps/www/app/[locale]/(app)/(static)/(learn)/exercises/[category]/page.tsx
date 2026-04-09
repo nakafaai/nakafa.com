@@ -22,8 +22,6 @@ export default function Page(
     notFound();
   }
 
-  // Enable static rendering
-
   // Return 404 for empty exercise category pages
   // This prevents soft 404s and tells Google these pages don't exist
   // Source: https://developers.google.com/search/docs/crawling-indexing/soft-404s

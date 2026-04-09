@@ -12,6 +12,9 @@ interface Props {
 }
 
 export function ExerciseArticle({ exercise, locale, id, srLabel }: Props) {
+  const Question = exercise.question.default;
+  const Answer = exercise.answer.default;
+
   return (
     <article aria-labelledby={`exercise-${id}-title`}>
       <div className="flex items-center gap-4">
@@ -32,7 +35,7 @@ export function ExerciseArticle({ exercise, locale, id, srLabel }: Props) {
         <ExerciseAnswerAction exerciseNumber={exercise.number} />
       </div>
 
-      <section className="my-6">{exercise.question.default}</section>
+      <section className="my-6">{Question ? <Question /> : null}</section>
 
       <section className="my-8">
         <ExerciseChoices
@@ -43,7 +46,7 @@ export function ExerciseArticle({ exercise, locale, id, srLabel }: Props) {
       </section>
 
       <ExerciseAnswer exerciseNumber={exercise.number}>
-        {exercise.answer.default}
+        {Answer ? <Answer /> : null}
       </ExerciseAnswer>
     </article>
   );

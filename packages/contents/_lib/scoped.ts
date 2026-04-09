@@ -23,7 +23,7 @@ import {
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, Option } from "effect";
 import ky from "ky";
-import { type ComponentType, createElement } from "react";
+import type { ComponentType } from "react";
 
 const contentsDir = resolveContentsDir(import.meta.url);
 
@@ -253,7 +253,7 @@ export function getScopedContent(
 
       return {
         metadata,
-        default: createElement(contentModule.default),
+        default: contentModule.default,
         raw,
       };
     }

@@ -10,7 +10,7 @@ export default async function Page() {
   const locale = await getLocale();
 
   return (
-    <main className="relative grid h-svh lg:grid-cols-7" data-pagefind-ignore>
+    <main className="relative grid h-svh lg:grid-cols-7">
       <div className="col-span-3 flex flex-col gap-4 p-6 sm:p-12">
         <div className="flex items-center justify-between">
           <BackButton />

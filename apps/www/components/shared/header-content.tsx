@@ -47,7 +47,7 @@ export function HeaderContent({
 }: Props) {
   const showFooter = authors || date;
   return (
-    <header className="relative py-20" data-pagefind-ignore>
+    <header className="relative py-20">
       <div className="z-10 mx-auto max-w-3xl space-y-6 px-6">
         <div className="flex flex-col gap-3">
           {!!link && (

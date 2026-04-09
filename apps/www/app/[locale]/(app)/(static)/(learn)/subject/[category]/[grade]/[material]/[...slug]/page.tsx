@@ -368,7 +368,7 @@ async function CachedSubjectShell({
           />
           <LayoutMaterialMain>
             {headings.length === 0 && <ComingSoon />}
-            {headings.length > 0 && Content}
+            {headings.length > 0 && Content ? <Content /> : null}
           </LayoutMaterialMain>
           <LayoutMaterialPagination pagination={pagination} />
           <LayoutMaterialFooter>{footer}</LayoutMaterialFooter>

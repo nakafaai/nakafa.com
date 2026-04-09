@@ -17,8 +17,6 @@ export default function Layout(props: LayoutProps<"/[locale]/user/[id]">) {
     notFound();
   }
 
-  // Enable static rendering
-
   const userId = id as Id<"users">;
 
   return (

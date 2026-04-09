@@ -20,8 +20,6 @@ export default function Page(props: PageProps<"/[locale]/subject/[category]">) {
     notFound();
   }
 
-  // Enable static rendering
-
   // Return 404 for empty category pages
   // This prevents soft 404s and tells Google these pages don't exist
   // Source: https://developers.google.com/search/docs/crawling-indexing/soft-404s

@@ -26,10 +26,7 @@ export async function generateMetadata({
 
 export default function Page() {
   return (
-    <div
-      className="relative min-h-[calc(100svh-4rem)] lg:min-h-svh"
-      data-pagefind-ignore
-    >
+    <div className="relative min-h-[calc(100svh-4rem)] lg:min-h-svh">
       <div className="mx-auto w-full max-w-3xl px-6 py-24">
         <div className="relative space-y-12">
           <HomeHeader />

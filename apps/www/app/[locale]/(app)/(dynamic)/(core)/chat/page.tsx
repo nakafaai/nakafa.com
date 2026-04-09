@@ -6,10 +6,7 @@ import { Weather } from "@/components/ai/weather";
 
 export default function Page() {
   return (
-    <div
-      className="relative flex size-full min-h-[calc(100svh-4rem)] items-center justify-center lg:min-h-svh"
-      data-pagefind-ignore
-    >
+    <div className="relative flex size-full min-h-[calc(100svh-4rem)] items-center justify-center lg:min-h-svh">
       <Particles className="pointer-events-none absolute inset-0 opacity-80" />
       <div className="mx-auto w-full max-w-xl px-6">
         <div className="relative flex h-full flex-col space-y-4">

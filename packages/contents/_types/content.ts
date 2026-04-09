@@ -72,7 +72,7 @@ export const ContentSchema = z.object({
 export type Content = z.infer<typeof ContentSchema>;
 
 export type ContentWithMDX = Omit<Content, "url" | "locale" | "slug"> & {
-  default?: React.ReactElement;
+  default?: React.ComponentType;
 };
 
 /**
@@ -86,5 +86,5 @@ export type ContentWithMDX = Omit<Content, "url" | "locale" | "slug"> & {
 export type RenderableContent = Omit<ContentWithMDX, "raw">;
 
 export type ContentListWithMDX = Content & {
-  default?: React.ReactElement;
+  default?: React.ComponentType;
 };

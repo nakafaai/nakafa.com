@@ -282,7 +282,7 @@ async function CachedArticleShell({
           />
           <LayoutMaterialMain>
             {headings.length === 0 && <ComingSoon />}
-            {headings.length > 0 && Content}
+            {headings.length > 0 && Content ? <Content /> : null}
           </LayoutMaterialMain>
           <LayoutMaterialFooter>{footer}</LayoutMaterialFooter>
           {toolbar}

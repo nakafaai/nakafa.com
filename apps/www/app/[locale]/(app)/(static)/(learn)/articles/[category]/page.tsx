@@ -100,8 +100,6 @@ export default function Page(
     notFound();
   }
 
-  // Enable static rendering
-
   const FilePath = getCategoryPath(category);
 
   return (

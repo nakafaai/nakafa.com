@@ -23,8 +23,6 @@ export default function Layout(
     notFound();
   }
 
-  // Enable static rendering
-
   const classId = id as Id<"schoolClasses">;
 
   return (

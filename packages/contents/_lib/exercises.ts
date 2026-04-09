@@ -7,13 +7,8 @@ import { resolveContentsDir } from "@repo/contents/_lib/root";
 import {
   type ChoicesValidationError,
   ExerciseLoadError,
-  type FileReadError,
-  type GitHubFetchError,
-  type InvalidPathError,
-  type MetadataParseError,
-  type ModuleLoadError,
 } from "@repo/contents/_shared/error";
-import type { ContentMetadata, Locale } from "@repo/contents/_types/content";
+import type { Locale } from "@repo/contents/_types/content";
 import {
   type ExercisesChoices,
   ExercisesChoicesSchema,
@@ -22,7 +17,6 @@ import type { Exercise } from "@repo/contents/_types/exercises/shared";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, Option } from "effect";
 import ky from "ky";
-import type React from "react";
 
 const contentsDir = resolveContentsDir(import.meta.url);
 
@@ -44,18 +38,7 @@ function loadExerciseContent(
   locale: Locale,
   filePath: string,
   includeMDX: boolean
-): Effect.Effect<
-  {
-    default?: React.ReactElement;
-    metadata: ContentMetadata;
-    raw: string;
-  },
-  | InvalidPathError
-  | FileReadError
-  | GitHubFetchError
-  | MetadataParseError
-  | ModuleLoadError
-> {
+) {
   return getExerciseContent(locale, filePath, { includeMDX });
 }
 

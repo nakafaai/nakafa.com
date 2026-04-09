@@ -13,7 +13,7 @@ export function FooterContent({
   childrenClassName,
 }: Props) {
   return (
-    <footer className={cn("relative py-20", className)} data-pagefind-ignore>
+    <footer className={cn("relative py-20", className)}>
       <div className={cn("z-10 mx-auto max-w-3xl px-6", childrenClassName)}>
         {children}
       </div>

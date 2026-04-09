@@ -13,7 +13,5 @@ export default function Layout(props: LayoutProps<"/[locale]/school">) {
     notFound();
   }
 
-  // Enable static rendering
-
   return <LayoutAuth>{children}</LayoutAuth>;
 }

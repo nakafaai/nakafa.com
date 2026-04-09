@@ -147,8 +147,6 @@ export default function Page(
     notFound();
   }
 
-  // Enable static rendering
-
   return (
     <PageContent
       category={category}
