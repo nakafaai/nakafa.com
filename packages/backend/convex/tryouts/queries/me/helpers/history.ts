@@ -72,9 +72,7 @@ async function loadTryoutAccessCampaignsById(
   );
 }
 
-/**
- * Build one public history row for the picker-friendly tryout history contract.
- */
+/** Build one public history row for the tryout history picker. */
 async function buildTryoutAttemptHistoryRow(
   ctx: QueryCtx,
   {
@@ -131,9 +129,7 @@ async function buildTryoutAttemptHistoryRow(
   };
 }
 
-/**
- * Build public history rows for one raw history page plus an optional selected row.
- */
+/** Build public history rows for one raw newest-first history page. */
 async function buildTryoutAttemptHistoryRows(
   ctx: QueryCtx,
   {
@@ -164,49 +160,11 @@ async function buildTryoutAttemptHistoryRows(
   );
 }
 
-/**
- * Pin the active attempt first on the initial picker page and drop duplicates on
- * later pages.
- */
-function buildPickerReadyHistoryPage<
-  Row extends { attemptId: Id<"tryoutAttempts"> },
->({
-  activeAttemptId,
-  cursor,
-  rows,
-}: {
-  activeAttemptId: Id<"tryoutAttempts">;
-  cursor: string | null;
-  rows: Row[];
-}) {
-  if (rows.length === 0) {
-    return rows;
-  }
-
-  if (cursor !== null) {
-    return rows.filter((row) => row.attemptId !== activeAttemptId);
-  }
-
-  const activeRow = rows.find((row) => row.attemptId === activeAttemptId);
-
-  if (!activeRow) {
-    return rows;
-  }
-
-  return [
-    activeRow,
-    ...rows.filter((row) => row.attemptId !== activeAttemptId),
-  ];
-}
-
-/**
- * Load one picker-ready history page for the selected tryout attempt.
- */
+/** Load one stable newest-first history page for one tryout. */
 export async function loadUserTryoutAttemptHistoryPage(
   ctx: QueryCtx,
   {
     paginationOpts,
-    selectedAttempt,
     tryout,
     userId,
   }: {
@@ -214,7 +172,6 @@ export async function loadUserTryoutAttemptHistoryPage(
       cursor: string | null;
       numItems: number;
     };
-    selectedAttempt: Doc<"tryoutAttempts">;
     tryout: Doc<"tryouts">;
     userId: Id<"users">;
   }
@@ -230,25 +187,21 @@ export async function loadUserTryoutAttemptHistoryPage(
       userId,
     }),
   ]);
-  const latestAttemptId = latestAttempt?._id ?? selectedAttempt._id;
-  const shouldIncludeSelectedAttempt =
-    paginationOpts.cursor === null &&
-    !rawHistoryPage.page.some((attempt) => attempt._id === selectedAttempt._id);
-  const attemptsToSummarize = shouldIncludeSelectedAttempt
-    ? [selectedAttempt, ...rawHistoryPage.page]
-    : rawHistoryPage.page;
-  const rows = await buildTryoutAttemptHistoryRows(ctx, {
-    attempts: attemptsToSummarize,
-    latestAttemptId,
-    tryout,
-  });
+  if (rawHistoryPage.page.length === 0) {
+    return {
+      ...rawHistoryPage,
+      page: [],
+    };
+  }
+
+  const latestAttemptId = latestAttempt?._id ?? rawHistoryPage.page[0]._id;
 
   return {
     ...rawHistoryPage,
-    page: buildPickerReadyHistoryPage({
-      activeAttemptId: selectedAttempt._id,
-      cursor: paginationOpts.cursor,
-      rows,
+    page: await buildTryoutAttemptHistoryRows(ctx, {
+      attempts: rawHistoryPage.page,
+      latestAttemptId,
+      tryout,
     }),
   };
 }

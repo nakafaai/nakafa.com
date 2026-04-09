@@ -9,7 +9,7 @@ import {
 import { describe, expect, it } from "vitest";
 
 describe("tryouts/queries/me/setView", () => {
-  it("returns the selected attempt together with the picker-ready first history page", async () => {
+  it("returns the selected attempt together with the stable newest-first first history page", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
@@ -98,8 +98,8 @@ describe("tryouts/queries/me/setView", () => {
         isLatest: row.isLatest,
       }))
     ).toEqual([
-      { attemptId: state.olderAttemptId, attemptNumber: 1, isLatest: false },
       { attemptId: state.latestAttemptId, attemptNumber: 2, isLatest: true },
+      { attemptId: state.olderAttemptId, attemptNumber: 1, isLatest: false },
     ]);
   });
 });

@@ -278,7 +278,7 @@ describe("tryouts/queries/me/history", () => {
     expect(secondPage.isDone).toBe(true);
   });
 
-  it("pins the selected attempt first for the history picker", async () => {
+  it("keeps newest-first history order while selected attempts still resolve", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
@@ -345,7 +345,9 @@ describe("tryouts/queries/me/history", () => {
         locale: "id",
         tryoutSlug: "attempt-history-selection",
       });
-    const selectedHistoryRow = history.page[0];
+    const selectedHistoryRow = history.page.find(
+      (row) => row.attemptId === state.olderAttempt
+    );
 
     const selectedAttempt = await t
       .withIdentity({
@@ -359,12 +361,12 @@ describe("tryouts/queries/me/history", () => {
         tryoutSlug: "attempt-history-selection",
       });
 
-    expect(history.page[0]?.attemptId).toBe(state.olderAttempt);
-    expect(history.page[0]?.attemptNumber).toBe(1);
-    expect(history.page[0]?.isLatest).toBe(false);
-    expect(history.page[1]?.attemptId).toBe(state.latestAttempt);
-    expect(history.page[1]?.attemptNumber).toBe(2);
-    expect(history.page[1]?.isLatest).toBe(true);
+    expect(history.page[0]?.attemptId).toBe(state.latestAttempt);
+    expect(history.page[0]?.attemptNumber).toBe(2);
+    expect(history.page[0]?.isLatest).toBe(true);
+    expect(history.page[1]?.attemptId).toBe(state.olderAttempt);
+    expect(history.page[1]?.attemptNumber).toBe(1);
+    expect(history.page[1]?.isLatest).toBe(false);
     expect(selectedHistoryRow?.attemptId).toBe(state.olderAttempt);
     expect(selectedHistoryRow?.attemptNumber).toBe(1);
     expect(selectedAttempt?.attempt._id).toBe(state.olderAttempt);
@@ -372,7 +374,7 @@ describe("tryouts/queries/me/history", () => {
     expect(selectedAttempt?.attempt.totalCorrect).toBe(4);
   });
 
-  it("drops the selected attempt from later pages after pinning it on page one", async () => {
+  it("keeps paginated history slices stable when the selected attempt is older", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
@@ -446,12 +448,12 @@ describe("tryouts/queries/me/history", () => {
       });
 
     expect(firstPage.page.map((row) => row.attemptId)).toEqual([
-      state.oldestAttempt,
       state.latestAttempt,
       state.middleAttempt,
     ]);
-    expect(firstPage.page[0]?.isLatest).toBe(false);
-    expect(firstPage.page[1]?.isLatest).toBe(true);
+    expect(firstPage.page).toHaveLength(2);
+    expect(firstPage.page[0]?.isLatest).toBe(true);
+    expect(firstPage.page[1]?.isLatest).toBe(false);
 
     const secondPage = await t
       .withIdentity({
@@ -469,7 +471,9 @@ describe("tryouts/queries/me/history", () => {
         tryoutSlug: "attempt-history-filter-selected",
       });
 
-    expect(secondPage.page).toEqual([]);
+    expect(secondPage.page.map((row) => row.attemptId)).toEqual([
+      state.oldestAttempt,
+    ]);
     expect(secondPage.isDone).toBe(true);
   });
 });

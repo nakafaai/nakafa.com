@@ -2,8 +2,8 @@
 
 import {
   ArrowDown01Icon,
-  Progress03Icon,
   Tick01Icon,
+  TransactionHistoryIcon,
 } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -156,7 +156,7 @@ function TryoutAttemptHistoryControls({
             >
               <Spinner
                 className="size-4"
-                icon={Progress03Icon}
+                icon={TransactionHistoryIcon}
                 isLoading={isSelectingAttempt}
               />
               {tTryouts("attempt-select-label", {
