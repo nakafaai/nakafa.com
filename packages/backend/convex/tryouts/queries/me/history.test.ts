@@ -13,7 +13,7 @@ import {
 import { describe, expect, it } from "vitest";
 
 describe("tryouts/queries/me/history", () => {
-  it("returns numbered attempts and the single public status label for each row", async () => {
+  it("returns oldest-first attempt numbers on newest-first history rows", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
@@ -69,6 +69,7 @@ describe("tryouts/queries/me/history", () => {
           },
         ],
         completedPartIndices: [0],
+        attemptNumber: 1,
         totalCorrect: 10,
         totalQuestions: 20,
         theta: 0,
@@ -96,6 +97,7 @@ describe("tryouts/queries/me/history", () => {
           },
         ],
         completedPartIndices: [0],
+        attemptNumber: 2,
         totalCorrect: 12,
         totalQuestions: 20,
         theta: 1,
@@ -128,10 +130,12 @@ describe("tryouts/queries/me/history", () => {
     expect(result.isDone).toBe(true);
     expect(result.page).toEqual([
       expect.objectContaining({
+        attemptNumber: 2,
         countsForCompetition: false,
         publicResultStatus: "verified-irt",
       }),
       expect.objectContaining({
+        attemptNumber: 1,
         countsForCompetition: true,
         publicResultStatus: "final-event",
       }),
@@ -217,6 +221,7 @@ describe("tryouts/queries/me/history", () => {
             },
           ],
           completedPartIndices: [0],
+          attemptNumber: index + 1,
           totalCorrect: 10 + index,
           totalQuestions: 20,
           theta: index,
@@ -354,8 +359,11 @@ describe("tryouts/queries/me/history", () => {
       });
 
     expect(history.page[0]?.attemptId).toBe(state.latestAttempt);
+    expect(history.page[0]?.attemptNumber).toBe(2);
     expect(selectedHistoryRow?.attemptId).toBe(state.olderAttempt);
+    expect(selectedHistoryRow?.attemptNumber).toBe(1);
     expect(selectedAttempt?.attempt._id).toBe(state.olderAttempt);
+    expect(selectedAttempt?.attempt.attemptNumber).toBe(1);
     expect(selectedAttempt?.attempt.totalCorrect).toBe(4);
   });
 });

@@ -176,6 +176,9 @@ export const startTryout = mutation({
       partCount: tryout.partCount,
       tryoutId: tryout._id,
     });
+    const attemptNumber = existingAttempt
+      ? existingAttempt.attemptNumber + 1
+      : 1;
     const attemptWindowEndsAt =
       now + tryoutProductPolicies[tryout.product].attemptWindowMs;
     const expiresAtMs =
@@ -210,6 +213,7 @@ export const startTryout = mutation({
       status: "in-progress",
       partSetSnapshots,
       completedPartIndices: [],
+      attemptNumber,
       totalCorrect: 0,
       totalQuestions: 0,
       theta: 0,

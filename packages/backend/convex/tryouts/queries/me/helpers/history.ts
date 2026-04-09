@@ -53,6 +53,8 @@ export async function loadUserTryoutAttemptHistoryPage(
     ...attempts,
     page: await Promise.all(
       attempts.page.map(async (attempt) => {
+        const attemptNumber = attempt.attemptNumber;
+
         const endedAttemptHasUntouchedParts =
           attempt.status !== "in-progress" &&
           attempt.completedPartIndices.length < attempt.partSetSnapshots.length;
@@ -66,6 +68,7 @@ export async function loadUserTryoutAttemptHistoryPage(
 
         return {
           attemptId: attempt._id,
+          attemptNumber,
           completedAt: attempt.completedAt,
           countsForCompetition: attempt.countsForCompetition ?? false,
           expiresAt: attempt.expiresAt,

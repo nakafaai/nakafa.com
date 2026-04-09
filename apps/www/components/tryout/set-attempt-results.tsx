@@ -58,21 +58,19 @@ interface Props {
 /** Build one selectable history option from one history row. */
 function getAttemptOption({
   attempt,
-  attemptNumber,
   locale,
   tTryouts,
 }: {
   attempt: Pick<
     TryoutAttemptHistoryItem,
-    "attemptId" | "countsForCompetition" | "startedAt"
+    "attemptId" | "attemptNumber" | "startedAt"
   >;
-  attemptNumber: number;
   locale: Locale;
   tTryouts: ReturnType<typeof useTranslations<"Tryouts">>;
 }) {
   return {
     attemptId: attempt.attemptId,
-    label: tTryouts("attempt-select-label", { number: attemptNumber }),
+    label: tTryouts("attempt-select-label", { number: attempt.attemptNumber }),
     subtitle: format(attempt.startedAt, "PPp", {
       locale: getLocale(locale),
     }),
@@ -163,7 +161,6 @@ function TryoutAttemptHistoryControls({
   for (const historyAttempt of visibleAttemptHistory) {
     const attemptOption = getAttemptOption({
       attempt: historyAttempt,
-      attemptNumber: attemptOptions.length + 1,
       locale,
       tTryouts,
     });
@@ -180,10 +177,9 @@ function TryoutAttemptHistoryControls({
       getAttemptOption({
         attempt: {
           attemptId: fallbackAttempt._id,
-          countsForCompetition: fallbackAttempt.countsForCompetition ?? false,
+          attemptNumber: fallbackAttempt.attemptNumber,
           startedAt: fallbackAttempt.startedAt,
         },
-        attemptNumber: attemptOptions.length + 1,
         locale,
         tTryouts,
       })

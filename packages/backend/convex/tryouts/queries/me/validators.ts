@@ -41,12 +41,14 @@ export const tryoutPartAttemptScoreSummaryValidator = v.object({
 
 export const publicTryoutAttemptValidator = v.object({
   ...vv.doc("tryoutAttempts").fields,
+  attemptNumber: v.number(),
   irtScore: v.number(),
   publicResultStatus: tryoutPublicResultStatusValidator,
 });
 
 export const publicTryoutAttemptHistoryValidator = v.object({
   attemptId: vv.id("tryoutAttempts"),
+  attemptNumber: v.number(),
   completedAt: vv.doc("tryoutAttempts").fields.completedAt,
   countsForCompetition: v.boolean(),
   expiresAt: vv.doc("tryoutAttempts").fields.expiresAt,

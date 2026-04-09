@@ -71,10 +71,16 @@ describe("tryouts/queries/me/setView", () => {
       });
 
     expect(result?.attemptData.attempt._id).toBe(state.olderAttemptId);
+    expect(result?.attemptData.attempt.attemptNumber).toBe(1);
     expect(result?.attemptData.attempt.totalCorrect).toBe(4);
-    expect(result?.initialHistory.page.map((row) => row.attemptId)).toEqual([
-      state.latestAttemptId,
-      state.olderAttemptId,
+    expect(
+      result?.initialHistory.page.map((row) => ({
+        attemptId: row.attemptId,
+        attemptNumber: row.attemptNumber,
+      }))
+    ).toEqual([
+      { attemptId: state.latestAttemptId, attemptNumber: 2 },
+      { attemptId: state.olderAttemptId, attemptNumber: 1 },
     ]);
   });
 });

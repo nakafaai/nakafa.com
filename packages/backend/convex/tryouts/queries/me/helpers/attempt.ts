@@ -21,6 +21,8 @@ export async function buildUserTryoutAttemptResult(
   context: ResolvedUserTryoutContext
 ) {
   const { attempt, tryout } = context;
+  const attemptNumber = attempt.attemptNumber;
+
   const accessCampaign = attempt.accessCampaignId
     ? await ctx.db.get("tryoutAccessCampaigns", attempt.accessCampaignId)
     : null;
@@ -50,6 +52,7 @@ export async function buildUserTryoutAttemptResult(
     });
     const scoredAttempt = {
       ...attempt,
+      attemptNumber,
       irtScore: finalizedSnapshot.irtScore,
       publicResultStatus: getTryoutPublicResultStatus({
         accessCampaign,
@@ -139,6 +142,7 @@ export async function buildUserTryoutAttemptResult(
   });
   const scoredAttempt = {
     ...attempt,
+    attemptNumber,
     irtScore: getTryoutReportScore(tryout.product, attempt.theta),
     publicResultStatus: getTryoutPublicResultStatus({
       accessCampaign,
