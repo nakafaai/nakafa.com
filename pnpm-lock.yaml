@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       '@biomejs/biome':
-        specifier: 2.4.10
-        version: 2.4.10
+        specifier: 2.4.11
+        version: 2.4.11
       '@changesets/changelog-github':
         specifier: ^0.6.0
         version: 0.6.0
@@ -121,8 +121,8 @@ importers:
   apps/email:
     dependencies:
       '@react-email/components':
-        specifier: 1.0.11
-        version: 1.0.11(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+        specifier: 1.0.12
+        version: 1.0.12(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@repo/email':
         specifier: workspace:*
         version: link:../../packages/email
@@ -439,11 +439,11 @@ importers:
         specifier: ^3.0.94
         version: 3.0.94(zod@4.3.6)
       '@ai-sdk/google':
-        specifier: ^3.0.60
-        version: 3.0.60(zod@4.3.6)
+        specifier: ^3.0.61
+        version: 3.0.61(zod@4.3.6)
       '@ai-sdk/google-vertex':
-        specifier: ^4.0.105
-        version: 4.0.105(zod@4.3.6)
+        specifier: ^4.0.106
+        version: 4.0.106(zod@4.3.6)
       '@ai-sdk/openai':
         specifier: ^3.0.52
         version: 3.0.52(zod@4.3.6)
@@ -504,10 +504,10 @@ importers:
         version: 0.13.11(typescript@6.0.2)(zod@4.3.6)
       '@vercel/analytics':
         specifier: ^2.0.1
-        version: 2.0.1(next@16.2.3(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(nuxt@4.3.1(@biomejs/biome@2.4.10)(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@parcel/watcher@2.5.4)(@types/node@25.5.2)(@vercel/functions@3.4.3)(@vue/compiler-sfc@3.5.30)(cac@6.7.14)(commander@13.1.0)(db0@0.3.4)(ioredis@5.10.0)(lightningcss@1.32.0)(magicast@0.5.2)(rolldown@1.0.0-rc.15)(rollup@4.55.1)(terser@5.44.1)(tsx@4.21.0)(typescript@6.0.2)(vite@8.0.8(@types/node@25.5.2)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(yaml@2.8.2))(react@19.2.5)(vue-router@4.6.4(vue@3.5.30(typescript@6.0.2)))(vue@3.5.30(typescript@6.0.2))
+        version: 2.0.1(next@16.2.3(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(nuxt@4.3.1(@biomejs/biome@2.4.11)(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@parcel/watcher@2.5.4)(@types/node@25.5.2)(@vercel/functions@3.4.3)(@vue/compiler-sfc@3.5.30)(cac@6.7.14)(commander@13.1.0)(db0@0.3.4)(ioredis@5.10.0)(lightningcss@1.32.0)(magicast@0.5.2)(rolldown@1.0.0-rc.15)(rollup@4.55.1)(terser@5.44.1)(tsx@4.21.0)(typescript@6.0.2)(vite@8.0.8(@types/node@25.5.2)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(yaml@2.8.2))(react@19.2.5)(vue-router@4.6.4(vue@3.5.30(typescript@6.0.2)))(vue@3.5.30(typescript@6.0.2))
       posthog-js:
-        specifier: ^1.366.0
-        version: 1.366.0
+        specifier: ^1.366.1
+        version: 1.366.1
       posthog-node:
         specifier: ^5.29.2
         version: 5.29.2(rxjs@7.8.2)
@@ -544,7 +544,7 @@ importers:
         version: 0.11.4(@standard-schema/spec@1.1.0)(better-auth@1.5.3(mongodb@7.1.0)(next@16.2.3(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vitest@4.1.4)(vue@3.5.30(typescript@5.9.3)))(convex@1.34.1(react@19.2.5))(hono@4.12.12)(react@19.2.5)(typescript@5.9.3)
       '@convex-dev/resend':
         specifier: ^0.2.3
-        version: 0.2.3(@react-email/render@2.0.5(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.34.1(react@19.2.5))(hono@4.12.12)(react@19.2.5)(typescript@5.9.3)(zod@4.3.6))(convex@1.34.1(react@19.2.5))(react@19.2.5)
+        version: 0.2.3(@react-email/render@2.0.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.34.1(react@19.2.5))(hono@4.12.12)(react@19.2.5)(typescript@5.9.3)(zod@4.3.6))(convex@1.34.1(react@19.2.5))(react@19.2.5)
       '@convex-dev/workflow':
         specifier: ^0.3.9
         version: 0.3.9(@convex-dev/workpool@0.4.6(convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.34.1(react@19.2.5))(hono@4.12.12)(react@19.2.5)(typescript@5.9.3)(zod@4.3.6))(convex@1.34.1(react@19.2.5)))(convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.34.1(react@19.2.5))(hono@4.12.12)(react@19.2.5)(typescript@5.9.3)(zod@4.3.6))(convex@1.34.1(react@19.2.5))
@@ -970,8 +970,8 @@ importers:
   packages/email:
     dependencies:
       '@react-email/components':
-        specifier: 1.0.11
-        version: 1.0.11(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+        specifier: 1.0.12
+        version: 1.0.12(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@t3-oss/env-nextjs':
         specifier: ^0.13.11
         version: 0.13.11(typescript@6.0.2)(zod@4.3.6)
@@ -983,7 +983,7 @@ importers:
         version: 19.2.5(react@19.2.5)
       resend:
         specifier: ^6.10.0
-        version: 6.10.0(@react-email/render@2.0.5(react-dom@19.2.5(react@19.2.5))(react@19.2.5))
+        version: 6.10.0(@react-email/render@2.0.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5))
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -1127,14 +1127,14 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/google-vertex@4.0.105':
-    resolution: {integrity: sha512-AHY56ePzPvp2Tva39NiruhW9ETBFnwwHPjj/3jv3+XwiaTNtYTrGjXdhbvnCSAZ+I8riM4K3eck8jxHfTRRG/w==}
+  '@ai-sdk/google-vertex@4.0.106':
+    resolution: {integrity: sha512-Aeso2nLreRxZljTehZg+pnOP+VqYXTDPb375468DNDyutuVUyyBsicWRf2ChLCIN7ATY4ek0RNCUjLATrvR9Iw==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/google@3.0.60':
-    resolution: {integrity: sha512-ye/hG0LeO24VmjLbfgkFZV8V8k/l4nVBODutpJQkFPyUiGOCbFtFUTgxSeC7+njrk5+HhgyHrzJay4zmhwMH+w==}
+  '@ai-sdk/google@3.0.61':
+    resolution: {integrity: sha512-jEKU1Mjcy5CoicejdJQIzM0ntYwyXR8vtYgAZYriKaOuLAiAhiiU538++fGU3CC9HJH/mL1OfsCwMM3gFiCNsw==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -1521,59 +1521,59 @@ packages:
   '@better-fetch/fetch@1.1.21':
     resolution: {integrity: sha512-/ImESw0sskqlVR94jB+5+Pxjf+xBwDZF/N5+y2/q4EqD7IARUTSpPfIo8uf39SYpCxyOCtbyYpUrZ3F/k0zT4A==}
 
-  '@biomejs/biome@2.4.10':
-    resolution: {integrity: sha512-xxA3AphFQ1geij4JTHXv4EeSTda1IFn22ye9LdyVPoJU19fNVl0uzfEuhsfQ4Yue/0FaLs2/ccVi4UDiE7R30w==}
+  '@biomejs/biome@2.4.11':
+    resolution: {integrity: sha512-nWxHX8tf3Opb/qRgZpBbsTOqOodkbrkJ7S+JxJAruxOReaDPPmPuLBAGQ8vigyUgo0QBB+oQltNEAvalLcjggA==}
     engines: {node: '>=14.21.3'}
     hasBin: true
 
-  '@biomejs/cli-darwin-arm64@2.4.10':
-    resolution: {integrity: sha512-vuzzI1cWqDVzOMIkYyHbKqp+AkQq4K7k+UCXWpkYcY/HDn1UxdsbsfgtVpa40shem8Kax4TLDLlx8kMAecgqiw==}
+  '@biomejs/cli-darwin-arm64@2.4.11':
+    resolution: {integrity: sha512-wOt+ed+L2dgZanWyL6i29qlXMc088N11optzpo10peayObBaAshbTcxKUchzEMp9QSY8rh5h6VfAFE3WTS1rqg==}
     engines: {node: '>=14.21.3'}
     cpu: [arm64]
     os: [darwin]
 
-  '@biomejs/cli-darwin-x64@2.4.10':
-    resolution: {integrity: sha512-14fzASRo+BPotwp7nWULy2W5xeUyFnTaq1V13Etrrxkrih+ez/2QfgFm5Ehtf5vSjtgx/IJycMMpn5kPd5ZNaA==}
+  '@biomejs/cli-darwin-x64@2.4.11':
+    resolution: {integrity: sha512-gZ6zR8XmZlExfi/Pz/PffmdpWOQ8Qhy7oBztgkR8/ylSRyLwfRPSadmiVCV8WQ8PoJ2MWUy2fgID9zmtgUUJmw==}
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [darwin]
 
-  '@biomejs/cli-linux-arm64-musl@2.4.10':
-    resolution: {integrity: sha512-WrJY6UuiSD/Dh+nwK2qOTu8kdMDlLV3dLMmychIghHPAysWFq1/DGC1pVZx8POE3ZkzKR3PUUnVrtZfMfaJjyQ==}
+  '@biomejs/cli-linux-arm64-musl@2.4.11':
+    resolution: {integrity: sha512-+Sbo1OAmlegtdwqFE8iOxFIWLh1B3OEgsuZfBpyyN/kWuqZ8dx9ZEes6zVnDMo+zRHF2wLynRVhoQmV7ohxl2Q==}
     engines: {node: '>=14.21.3'}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@biomejs/cli-linux-arm64@2.4.10':
-    resolution: {integrity: sha512-7MH1CMW5uuxQ/s7FLST63qF8B3Hgu2HRdZ7tA1X1+mk+St4JOuIrqdhIBnnyqeyWJNI+Bww7Es5QZ0wIc1Cmkw==}
+  '@biomejs/cli-linux-arm64@2.4.11':
+    resolution: {integrity: sha512-avdJaEElXrKceK0va9FkJ4P5ci3N01TGkc6ni3P8l3BElqbOz42Wg2IyX3gbh0ZLEd4HVKEIrmuVu/AMuSeFFA==}
     engines: {node: '>=14.21.3'}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@biomejs/cli-linux-x64-musl@2.4.10':
-    resolution: {integrity: sha512-kDTi3pI6PBN6CiczsWYOyP2zk0IJI08EWEQyDMQWW221rPaaEz6FvjLhnU07KMzLv8q3qSuoB93ua6inSQ55Tw==}
+  '@biomejs/cli-linux-x64-musl@2.4.11':
+    resolution: {integrity: sha512-bexd2IklK7ZgPhrz6jXzpIL6dEAH9MlJU1xGTrypx+FICxrXUp4CqtwfiuoDKse+UlgAlWtzML3jrMqeEAHEhA==}
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@biomejs/cli-linux-x64@2.4.10':
-    resolution: {integrity: sha512-tZLvEEi2u9Xu1zAqRjTcpIDGVtldigVvzug2fTuPG0ME/g8/mXpRPcNgLB22bGn6FvLJpHHnqLnwliOu8xjYrg==}
+  '@biomejs/cli-linux-x64@2.4.11':
+    resolution: {integrity: sha512-TagWV0iomp5LnEnxWFg4nQO+e52Fow349vaX0Q/PIcX6Zhk4GGBgp3qqZ8PVkpC+cuehRctMf3+6+FgQ8jCEFQ==}
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@biomejs/cli-win32-arm64@2.4.10':
-    resolution: {integrity: sha512-umwQU6qPzH+ISTf/eHyJ/QoQnJs3V9Vpjz2OjZXe9MVBZ7prgGafMy7yYeRGnlmDAn87AKTF3Q6weLoMGpeqdQ==}
+  '@biomejs/cli-win32-arm64@2.4.11':
+    resolution: {integrity: sha512-RJhaTnY8byzxDt4bDVb7AFPHkPcjOPK3xBip4ZRTrN3TEfyhjLRm3r3mqknqydgVTB74XG8l4jMLwEACEeihVg==}
     engines: {node: '>=14.21.3'}
     cpu: [arm64]
     os: [win32]
 
-  '@biomejs/cli-win32-x64@2.4.10':
-    resolution: {integrity: sha512-aW/JU5GuyH4uxMrNYpoC2kjaHlyJGLgIa3XkhPEZI0uKhZhJZU8BuEyJmvgzSPQNGozBwWjC972RaNdcJ9KyJg==}
+  '@biomejs/cli-win32-x64@2.4.11':
+    resolution: {integrity: sha512-A8D3JM/00C2KQgUV3oj8Ba15EHEYwebAGCy5Sf9GAjr5Y3+kJIYOiESoqRDeuRZueuMdCsbLZIUqmPhpYXJE9A==}
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [win32]
@@ -1679,14 +1679,8 @@ packages:
   '@chevrotain/utils@11.1.1':
     resolution: {integrity: sha512-71eTYMzYXYSFPrbg/ZwftSaSDld7UYlS8OQa3lNnn9jzNtpFbaReRRyghzqS7rI3CDaorqpPJJcXGHK+FE1TVQ==}
 
-  '@clack/core@1.1.0':
-    resolution: {integrity: sha512-SVcm4Dqm2ukn64/8Gub2wnlA5nS2iWJyCkdNHcvNHPIeBTGojpdJ+9cZKwLfmqy7irD4N5qLteSilJlE0WLAtA==}
-
   '@clack/core@1.2.0':
     resolution: {integrity: sha512-qfxof/3T3t9DPU/Rj3OmcFyZInceqj/NVtO9rwIuJqCUgh32gwPjpFQQp/ben07qKlhpwq7GzfWpST4qdJ5Drg==}
-
-  '@clack/prompts@1.1.0':
-    resolution: {integrity: sha512-pkqbPGtohJAvm4Dphs2M8xE29ggupihHdy1x84HNojZuMtFsHiUlRvqD24tM2+XmI+61LlfNceM3Wr7U5QES5g==}
 
   '@clack/prompts@1.2.0':
     resolution: {integrity: sha512-4jmztR9fMqPMjz6H/UZXj0zEmE43ha1euENwkckKKel4XpSfokExPo5AiVStdHSAlHekz4d0CA/r45Ok1E4D3w==}
@@ -3139,12 +3133,6 @@ packages:
     resolution: {integrity: sha512-EFd6cVbHsgLa6wa4RljGj6Wk75qoHxUSyc5asLyyPSyuhIcdS2Q3Phw6ImS1q+CkALthJRShiYfKANcQMuMqsQ==}
     engines: {node: '>=18'}
 
-  '@napi-rs/wasm-runtime@1.1.2':
-    resolution: {integrity: sha512-sNXv5oLJ7ob93xkZ1XnxisYhGYXfaG9f65/ZgYuAu3qt7b3NadcOEhLvx28hv31PgX8SZJRYrAIPQilQmFpLVw==}
-    peerDependencies:
-      '@emnapi/core': ^1.7.1
-      '@emnapi/runtime': ^1.7.1
-
   '@napi-rs/wasm-runtime@1.1.3':
     resolution: {integrity: sha512-xK9sGVbJWYb08+mTJt3/YV24WxvxpXcXtP6B172paPZ+Ts69Re9dAr7lKwJoeIx8OoeuimEiRZ7umkiUVClmmQ==}
     peerDependencies:
@@ -4017,8 +4005,8 @@ packages:
   '@posthog/core@1.25.2':
     resolution: {integrity: sha512-h2FO7ut/BbfwpAXWpwdDHTzQgUo9ibDFEs6ZO+3cI3KPWQt5XwczK1OLAuPprcjm8T/jl0SH8jSFo5XdU4RbTg==}
 
-  '@posthog/types@1.366.0':
-    resolution: {integrity: sha512-PIVnZktxesFFI3AWQqNZp/jrHNfpUe7iefTZnbF2vbYCewFT1n7hgkpU1Bd4zyJKiK1yckm+jkOJeH6gUem1ag==}
+  '@posthog/types@1.366.1':
+    resolution: {integrity: sha512-a5cQpQ4ESKgaw9YkSxvGpejrZ/+rd8Nsu86KPiFET8CBxrWcobTLacp5e1N5nuAL4VB4ZgmvmKSYcdWs3bv7lA==}
 
   '@primer/octicons@19.21.1':
     resolution: {integrity: sha512-7tgtBkCNcg75YJnckinzvES+uxysYQCe+CHSEnzr3VYgxttzKRvfmrnVogl3aEuHCQP4xhiE9k2lFDhYwGtTzQ==}
@@ -5396,8 +5384,8 @@ packages:
     peerDependencies:
       react: ^18.0 || ^19.0 || ^19.0.0-rc
 
-  '@react-email/components@1.0.11':
-    resolution: {integrity: sha512-s0CX31+S/u1MhBWYFAuZru0NHNExTY+OeZC9OrGyzl8PGQ0Iz/4gq3O4rHUVuA1D7FjAcPbwG1Up0yey/Xh6dw==}
+  '@react-email/components@1.0.12':
+    resolution: {integrity: sha512-tH18JhPDWgE+3jnYkzyB6ZrZdfNnEsFe4PwmuXmlOw4NGIysP8wPY5aXZg++pTG9qUabXg1nzX/FGHGkObH8xQ==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       react: ^18.0 || ^19.0 || ^19.0.0-rc
@@ -5465,8 +5453,8 @@ packages:
     peerDependencies:
       react: ^18.0 || ^19.0 || ^19.0.0-rc
 
-  '@react-email/render@2.0.5':
-    resolution: {integrity: sha512-oAsSpY/vYt9ReDcRQDBLxENwCNAklkE6bvP5Kl9ZlmVr/RZpfhloJp8xc/OZki/YF2nisRRX50aEy8P9v3R5GA==}
+  '@react-email/render@2.0.6':
+    resolution: {integrity: sha512-xOzaYkH3jLZKqN5MqrTXYnmqBYUnZSVbkxdb5PGGmDcK6sKDVMliaDiSwfXajRC9JtSHTcGc2tmGLHWuCgVpog==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       react: ^18.0 || ^19.0 || ^19.0.0-rc
@@ -6071,9 +6059,6 @@ packages:
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [win32]
-
-  '@rolldown/pluginutils@1.0.0-rc.13':
-    resolution: {integrity: sha512-3ngTAv6F/Py35BsYbeeLeecvhMKdsKm4AoOETVhAA+Qc8nrA2I0kF7oa93mE9qnIurngOSpMnQ0x2nQY2FPviA==}
 
   '@rolldown/pluginutils@1.0.0-rc.15':
     resolution: {integrity: sha512-UromN0peaE53IaBRe9W7CjrZgXl90fqGpK+mIZbA3qSTeYqg3pqpROBdIPvOG3F5ereDHNwoHBI2e50n1BDr1g==}
@@ -8711,9 +8696,6 @@ packages:
   es-set-tostringtag@2.1.0:
     resolution: {integrity: sha512-j6vWzfrGVfyXxge+O0x5sh6cvxAog0a/4Rdd2K36zCMV5eJ+/+tOAngRO8cODMNWbVRdVlmGZQL2YS3yR8bIUA==}
     engines: {node: '>= 0.4'}
-
-  es-toolkit@1.43.0:
-    resolution: {integrity: sha512-SKCT8AsWvYzBBuUqMk4NPwFlSdqLpJwmy6AP322ERn8W2YLIB6JBXnwMI2Qsh2gfphT3q7EKAxKb23cvFHFwKA==}
 
   es-toolkit@1.45.1:
     resolution: {integrity: sha512-/jhoOj/Fx+A+IIyDNOvO3TItGmlMKhtX8ISAHKE90c4b/k1tqaqEZ+uUqfpU8DMnW5cgNJv606zS55jGvza0Xw==}
@@ -11400,8 +11382,8 @@ packages:
     resolution: {integrity: sha512-7a70Nsot+EMX9fFU3064K/kdHWZqGVY+BADLyXc8Dfv+mTLLVl6JzJpPaCZ2kQL9gIJvKXSLMHhqdRRjwQeFtw==}
     engines: {node: ^10 || ^12 || >=14}
 
-  posthog-js@1.366.0:
-    resolution: {integrity: sha512-WEr71LAdpxPYVUJADF8lRXnOXqYWi0aZbfN32GuqZiGW7rYADzkjAPTOy2RbkBTjmA6c4Em8vEbccSPzZa0abg==}
+  posthog-js@1.366.1:
+    resolution: {integrity: sha512-+yWGZ3qTxEZMWc2ibYGshDXChtlPPuThoOXsfAYl1lec/UujZOx8N1PzT0dSECP5Wdc7iJKUTOjGUimxSoJfUg==}
 
   posthog-node@5.29.2:
     resolution: {integrity: sha512-rI7kkF0XqDc0G1qjx+Hb4iuY9NAlL+XQNoGOpnEpRNTUcXvjY6WlsRGZ9m2whgc39emrrYdszi/YT8wZkr2xsg==}
@@ -13772,10 +13754,10 @@ snapshots:
       '@vercel/oidc': 3.1.0
       zod: 4.3.6
 
-  '@ai-sdk/google-vertex@4.0.105(zod@4.3.6)':
+  '@ai-sdk/google-vertex@4.0.106(zod@4.3.6)':
     dependencies:
       '@ai-sdk/anthropic': 3.0.68(zod@4.3.6)
-      '@ai-sdk/google': 3.0.60(zod@4.3.6)
+      '@ai-sdk/google': 3.0.61(zod@4.3.6)
       '@ai-sdk/openai-compatible': 2.0.41(zod@4.3.6)
       '@ai-sdk/provider': 3.0.8
       '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
@@ -13784,7 +13766,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@ai-sdk/google@3.0.60(zod@4.3.6)':
+  '@ai-sdk/google@3.0.61(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider': 3.0.8
       '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
@@ -14277,39 +14259,39 @@ snapshots:
 
   '@better-fetch/fetch@1.1.21': {}
 
-  '@biomejs/biome@2.4.10':
+  '@biomejs/biome@2.4.11':
     optionalDependencies:
-      '@biomejs/cli-darwin-arm64': 2.4.10
-      '@biomejs/cli-darwin-x64': 2.4.10
-      '@biomejs/cli-linux-arm64': 2.4.10
-      '@biomejs/cli-linux-arm64-musl': 2.4.10
-      '@biomejs/cli-linux-x64': 2.4.10
-      '@biomejs/cli-linux-x64-musl': 2.4.10
-      '@biomejs/cli-win32-arm64': 2.4.10
-      '@biomejs/cli-win32-x64': 2.4.10
+      '@biomejs/cli-darwin-arm64': 2.4.11
+      '@biomejs/cli-darwin-x64': 2.4.11
+      '@biomejs/cli-linux-arm64': 2.4.11
+      '@biomejs/cli-linux-arm64-musl': 2.4.11
+      '@biomejs/cli-linux-x64': 2.4.11
+      '@biomejs/cli-linux-x64-musl': 2.4.11
+      '@biomejs/cli-win32-arm64': 2.4.11
+      '@biomejs/cli-win32-x64': 2.4.11
 
-  '@biomejs/cli-darwin-arm64@2.4.10':
+  '@biomejs/cli-darwin-arm64@2.4.11':
     optional: true
 
-  '@biomejs/cli-darwin-x64@2.4.10':
+  '@biomejs/cli-darwin-x64@2.4.11':
     optional: true
 
-  '@biomejs/cli-linux-arm64-musl@2.4.10':
+  '@biomejs/cli-linux-arm64-musl@2.4.11':
     optional: true
 
-  '@biomejs/cli-linux-arm64@2.4.10':
+  '@biomejs/cli-linux-arm64@2.4.11':
     optional: true
 
-  '@biomejs/cli-linux-x64-musl@2.4.10':
+  '@biomejs/cli-linux-x64-musl@2.4.11':
     optional: true
 
-  '@biomejs/cli-linux-x64@2.4.10':
+  '@biomejs/cli-linux-x64@2.4.11':
     optional: true
 
-  '@biomejs/cli-win32-arm64@2.4.10':
+  '@biomejs/cli-win32-arm64@2.4.11':
     optional: true
 
-  '@biomejs/cli-win32-x64@2.4.10':
+  '@biomejs/cli-win32-x64@2.4.11':
     optional: true
 
   '@bomb.sh/tab@0.0.12(cac@6.7.14)(citty@0.2.0)(commander@13.1.0)':
@@ -14504,21 +14486,10 @@ snapshots:
 
   '@chevrotain/utils@11.1.1': {}
 
-  '@clack/core@1.1.0':
-    dependencies:
-      sisteransi: 1.0.5
-    optional: true
-
   '@clack/core@1.2.0':
     dependencies:
       fast-wrap-ansi: 0.1.6
       sisteransi: 1.0.5
-
-  '@clack/prompts@1.1.0':
-    dependencies:
-      '@clack/core': 1.1.0
-      sisteransi: 1.0.5
-    optional: true
 
   '@clack/prompts@1.2.0':
     dependencies:
@@ -14576,14 +14547,14 @@ snapshots:
     optionalDependencies:
       react: 19.2.5
 
-  '@convex-dev/resend@0.2.3(@react-email/render@2.0.5(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.34.1(react@19.2.5))(hono@4.12.12)(react@19.2.5)(typescript@5.9.3)(zod@4.3.6))(convex@1.34.1(react@19.2.5))(react@19.2.5)':
+  '@convex-dev/resend@0.2.3(@react-email/render@2.0.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.34.1(react@19.2.5))(hono@4.12.12)(react@19.2.5)(typescript@5.9.3)(zod@4.3.6))(convex@1.34.1(react@19.2.5))(react@19.2.5)':
     dependencies:
       '@convex-dev/rate-limiter': 0.3.2(convex@1.34.1(react@19.2.5))(react@19.2.5)
       '@convex-dev/workpool': 0.3.1(convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.34.1(react@19.2.5))(hono@4.12.12)(react@19.2.5)(typescript@5.9.3)(zod@4.3.6))(convex@1.34.1(react@19.2.5))
       convex: 1.34.1(react@19.2.5)
       convex-helpers: 0.1.114(@standard-schema/spec@1.1.0)(convex@1.34.1(react@19.2.5))(hono@4.12.12)(react@19.2.5)(typescript@5.9.3)(zod@4.3.6)
       remeda: 2.33.1
-      resend: 6.7.0(@react-email/render@2.0.5(react-dom@19.2.5(react@19.2.5))(react@19.2.5))
+      resend: 6.7.0(@react-email/render@2.0.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5))
       svix: 1.84.1
     transitivePeerDependencies:
       - '@react-email/render'
@@ -15654,7 +15625,7 @@ snapshots:
       '@lobehub/emojilib': 1.0.0
       antd-style: 4.1.0(@types/react@19.2.14)(antd@6.1.4(date-fns@4.1.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       emoji-regex: 10.6.0
-      es-toolkit: 1.43.0
+      es-toolkit: 1.45.1
       lucide-react: 0.562.0(react@19.2.5)
       react: 19.2.5
       react-dom: 19.2.5(react@19.2.5)
@@ -15709,7 +15680,7 @@ snapshots:
       clsx: 2.1.1
       dayjs: 1.11.19
       emoji-mart: 5.6.0
-      es-toolkit: 1.43.0
+      es-toolkit: 1.45.1
       fast-deep-equal: 3.1.3
       immer: 11.1.4
       katex: 0.16.45
@@ -15918,13 +15889,6 @@ snapshots:
       outvariant: 1.4.3
       strict-event-emitter: 0.5.1
 
-  '@napi-rs/wasm-runtime@1.1.2(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)':
-    dependencies:
-      '@emnapi/core': 1.9.2
-      '@emnapi/runtime': 1.9.2
-      '@tybys/wasm-util': 0.10.1
-    optional: true
-
   '@napi-rs/wasm-runtime@1.1.3(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)':
     dependencies:
       '@emnapi/core': 1.9.2
@@ -16038,7 +16002,7 @@ snapshots:
   '@nuxt/cli@3.33.1(@nuxt/schema@4.3.1)(cac@6.7.14)(commander@13.1.0)(magicast@0.5.2)':
     dependencies:
       '@bomb.sh/tab': 0.0.12(cac@6.7.14)(citty@0.2.0)(commander@13.1.0)
-      '@clack/prompts': 1.1.0
+      '@clack/prompts': 1.2.0
       c12: 3.3.3(magicast@0.5.2)
       citty: 0.2.0
       confbox: 0.2.4
@@ -16088,7 +16052,7 @@ snapshots:
 
   '@nuxt/devtools-wizard@3.2.3':
     dependencies:
-      '@clack/prompts': 1.1.0
+      '@clack/prompts': 1.2.0
       consola: 3.4.2
       diff: 8.0.3
       execa: 8.0.1
@@ -16166,7 +16130,7 @@ snapshots:
       - magicast
     optional: true
 
-  '@nuxt/nitro-server@4.3.1(@vercel/functions@3.4.3)(db0@0.3.4)(ioredis@5.10.0)(magicast@0.5.2)(nuxt@4.3.1(@biomejs/biome@2.4.10)(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@parcel/watcher@2.5.4)(@types/node@25.5.2)(@vercel/functions@3.4.3)(@vue/compiler-sfc@3.5.30)(cac@6.7.14)(commander@13.1.0)(db0@0.3.4)(ioredis@5.10.0)(lightningcss@1.32.0)(magicast@0.5.2)(rolldown@1.0.0-rc.15)(rollup@4.55.1)(terser@5.44.1)(tsx@4.21.0)(typescript@6.0.2)(vite@8.0.8(@types/node@25.5.2)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(yaml@2.8.2))(rolldown@1.0.0-rc.15)(typescript@6.0.2)':
+  '@nuxt/nitro-server@4.3.1(@vercel/functions@3.4.3)(db0@0.3.4)(ioredis@5.10.0)(magicast@0.5.2)(nuxt@4.3.1(@biomejs/biome@2.4.11)(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@parcel/watcher@2.5.4)(@types/node@25.5.2)(@vercel/functions@3.4.3)(@vue/compiler-sfc@3.5.30)(cac@6.7.14)(commander@13.1.0)(db0@0.3.4)(ioredis@5.10.0)(lightningcss@1.32.0)(magicast@0.5.2)(rolldown@1.0.0-rc.15)(rollup@4.55.1)(terser@5.44.1)(tsx@4.21.0)(typescript@6.0.2)(vite@8.0.8(@types/node@25.5.2)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(yaml@2.8.2))(rolldown@1.0.0-rc.15)(typescript@6.0.2)':
     dependencies:
       '@nuxt/devalue': 2.0.2
       '@nuxt/kit': 4.3.1(magicast@0.5.2)
@@ -16184,7 +16148,7 @@ snapshots:
       klona: 2.0.6
       mocked-exports: 0.1.1
       nitropack: 2.13.1(@vercel/functions@3.4.3)(rolldown@1.0.0-rc.15)
-      nuxt: 4.3.1(@biomejs/biome@2.4.10)(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@parcel/watcher@2.5.4)(@types/node@25.5.2)(@vercel/functions@3.4.3)(@vue/compiler-sfc@3.5.30)(cac@6.7.14)(commander@13.1.0)(db0@0.3.4)(ioredis@5.10.0)(lightningcss@1.32.0)(magicast@0.5.2)(rolldown@1.0.0-rc.15)(rollup@4.55.1)(terser@5.44.1)(tsx@4.21.0)(typescript@6.0.2)(vite@8.0.8(@types/node@25.5.2)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(yaml@2.8.2)
+      nuxt: 4.3.1(@biomejs/biome@2.4.11)(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@parcel/watcher@2.5.4)(@types/node@25.5.2)(@vercel/functions@3.4.3)(@vue/compiler-sfc@3.5.30)(cac@6.7.14)(commander@13.1.0)(db0@0.3.4)(ioredis@5.10.0)(lightningcss@1.32.0)(magicast@0.5.2)(rolldown@1.0.0-rc.15)(rollup@4.55.1)(terser@5.44.1)(tsx@4.21.0)(typescript@6.0.2)(vite@8.0.8(@types/node@25.5.2)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(yaml@2.8.2)
       ohash: 2.0.11
       pathe: 2.0.3
       pkg-types: 2.3.0
@@ -16252,7 +16216,7 @@ snapshots:
       std-env: 3.10.0
     optional: true
 
-  '@nuxt/vite-builder@4.3.1(@biomejs/biome@2.4.10)(@types/node@25.5.2)(lightningcss@1.32.0)(magicast@0.5.2)(nuxt@4.3.1(@biomejs/biome@2.4.10)(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@parcel/watcher@2.5.4)(@types/node@25.5.2)(@vercel/functions@3.4.3)(@vue/compiler-sfc@3.5.30)(cac@6.7.14)(commander@13.1.0)(db0@0.3.4)(ioredis@5.10.0)(lightningcss@1.32.0)(magicast@0.5.2)(rolldown@1.0.0-rc.15)(rollup@4.55.1)(terser@5.44.1)(tsx@4.21.0)(typescript@6.0.2)(vite@8.0.8(@types/node@25.5.2)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(yaml@2.8.2))(rolldown@1.0.0-rc.15)(rollup@4.55.1)(terser@5.44.1)(tsx@4.21.0)(typescript@6.0.2)(vue@3.5.30(typescript@6.0.2))(yaml@2.8.2)':
+  '@nuxt/vite-builder@4.3.1(@biomejs/biome@2.4.11)(@types/node@25.5.2)(lightningcss@1.32.0)(magicast@0.5.2)(nuxt@4.3.1(@biomejs/biome@2.4.11)(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@parcel/watcher@2.5.4)(@types/node@25.5.2)(@vercel/functions@3.4.3)(@vue/compiler-sfc@3.5.30)(cac@6.7.14)(commander@13.1.0)(db0@0.3.4)(ioredis@5.10.0)(lightningcss@1.32.0)(magicast@0.5.2)(rolldown@1.0.0-rc.15)(rollup@4.55.1)(terser@5.44.1)(tsx@4.21.0)(typescript@6.0.2)(vite@8.0.8(@types/node@25.5.2)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(yaml@2.8.2))(rolldown@1.0.0-rc.15)(rollup@4.55.1)(terser@5.44.1)(tsx@4.21.0)(typescript@6.0.2)(vue@3.5.30(typescript@6.0.2))(yaml@2.8.2)':
     dependencies:
       '@nuxt/kit': 4.3.1(magicast@0.5.2)
       '@rollup/plugin-replace': 6.0.3(rollup@4.55.1)
@@ -16271,7 +16235,7 @@ snapshots:
       magic-string: 0.30.21
       mlly: 1.8.0
       mocked-exports: 0.1.1
-      nuxt: 4.3.1(@biomejs/biome@2.4.10)(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@parcel/watcher@2.5.4)(@types/node@25.5.2)(@vercel/functions@3.4.3)(@vue/compiler-sfc@3.5.30)(cac@6.7.14)(commander@13.1.0)(db0@0.3.4)(ioredis@5.10.0)(lightningcss@1.32.0)(magicast@0.5.2)(rolldown@1.0.0-rc.15)(rollup@4.55.1)(terser@5.44.1)(tsx@4.21.0)(typescript@6.0.2)(vite@8.0.8(@types/node@25.5.2)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(yaml@2.8.2)
+      nuxt: 4.3.1(@biomejs/biome@2.4.11)(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@parcel/watcher@2.5.4)(@types/node@25.5.2)(@vercel/functions@3.4.3)(@vue/compiler-sfc@3.5.30)(cac@6.7.14)(commander@13.1.0)(db0@0.3.4)(ioredis@5.10.0)(lightningcss@1.32.0)(magicast@0.5.2)(rolldown@1.0.0-rc.15)(rollup@4.55.1)(terser@5.44.1)(tsx@4.21.0)(typescript@6.0.2)(vite@8.0.8(@types/node@25.5.2)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(yaml@2.8.2)
       pathe: 2.0.3
       pkg-types: 2.3.0
       postcss: 8.5.9
@@ -16282,7 +16246,7 @@ snapshots:
       unenv: 2.0.0-rc.24
       vite: 7.3.1(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
       vite-node: 5.3.0(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
-      vite-plugin-checker: 0.12.0(@biomejs/biome@2.4.10)(typescript@6.0.2)(vite@7.3.1(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))
+      vite-plugin-checker: 0.12.0(@biomejs/biome@2.4.11)(typescript@6.0.2)(vite@7.3.1(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))
       vue: 3.5.30(typescript@6.0.2)
       vue-bundle-renderer: 2.2.0
     optionalDependencies:
@@ -16448,7 +16412,7 @@ snapshots:
 
   '@oxc-minify/binding-wasm32-wasi@0.112.0(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)':
     dependencies:
-      '@napi-rs/wasm-runtime': 1.1.2(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)
+      '@napi-rs/wasm-runtime': 1.1.3(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)
     transitivePeerDependencies:
       - '@emnapi/core'
       - '@emnapi/runtime'
@@ -16513,7 +16477,7 @@ snapshots:
 
   '@oxc-parser/binding-wasm32-wasi@0.112.0(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)':
     dependencies:
-      '@napi-rs/wasm-runtime': 1.1.2(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)
+      '@napi-rs/wasm-runtime': 1.1.3(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)
     transitivePeerDependencies:
       - '@emnapi/core'
       - '@emnapi/runtime'
@@ -16583,7 +16547,7 @@ snapshots:
 
   '@oxc-transform/binding-wasm32-wasi@0.112.0(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)':
     dependencies:
-      '@napi-rs/wasm-runtime': 1.1.2(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)
+      '@napi-rs/wasm-runtime': 1.1.3(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)
     transitivePeerDependencies:
       - '@emnapi/core'
       - '@emnapi/runtime'
@@ -16723,7 +16687,7 @@ snapshots:
 
   '@posthog/core@1.25.2': {}
 
-  '@posthog/types@1.366.0': {}
+  '@posthog/types@1.366.1': {}
 
   '@primer/octicons@19.21.1':
     dependencies:
@@ -18547,7 +18511,7 @@ snapshots:
     dependencies:
       react: 19.2.5
 
-  '@react-email/components@1.0.11(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
+  '@react-email/components@1.0.12(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
     dependencies:
       '@react-email/body': 0.3.0(react@19.2.5)
       '@react-email/button': 0.2.1(react@19.2.5)
@@ -18564,7 +18528,7 @@ snapshots:
       '@react-email/link': 0.0.13(react@19.2.5)
       '@react-email/markdown': 0.0.18(react@19.2.5)
       '@react-email/preview': 0.0.14(react@19.2.5)
-      '@react-email/render': 2.0.5(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      '@react-email/render': 2.0.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@react-email/row': 0.0.13(react@19.2.5)
       '@react-email/section': 0.0.17(react@19.2.5)
       '@react-email/tailwind': 2.0.7(@react-email/body@0.3.0(react@19.2.5))(@react-email/button@0.2.1(react@19.2.5))(@react-email/code-block@0.2.1(react@19.2.5))(@react-email/code-inline@0.0.6(react@19.2.5))(@react-email/container@0.0.16(react@19.2.5))(@react-email/heading@0.0.16(react@19.2.5))(@react-email/hr@0.0.12(react@19.2.5))(@react-email/img@0.0.12(react@19.2.5))(@react-email/link@0.0.13(react@19.2.5))(@react-email/preview@0.0.14(react@19.2.5))(@react-email/text@0.1.6(react@19.2.5))(react@19.2.5)
@@ -18628,7 +18592,7 @@ snapshots:
     dependencies:
       react: 19.2.5
 
-  '@react-email/render@2.0.5(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
+  '@react-email/render@2.0.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
     dependencies:
       html-to-text: 9.0.5
       prettier: 3.7.4
@@ -19298,9 +19262,6 @@ snapshots:
     optional: true
 
   '@rolldown/binding-win32-x64-msvc@1.0.0-rc.15':
-    optional: true
-
-  '@rolldown/pluginutils@1.0.0-rc.13':
     optional: true
 
   '@rolldown/pluginutils@1.0.0-rc.15': {}
@@ -20206,10 +20167,10 @@ snapshots:
       '@use-gesture/core': 10.3.1
       react: 19.2.5
 
-  '@vercel/analytics@2.0.1(next@16.2.3(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(nuxt@4.3.1(@biomejs/biome@2.4.10)(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@parcel/watcher@2.5.4)(@types/node@25.5.2)(@vercel/functions@3.4.3)(@vue/compiler-sfc@3.5.30)(cac@6.7.14)(commander@13.1.0)(db0@0.3.4)(ioredis@5.10.0)(lightningcss@1.32.0)(magicast@0.5.2)(rolldown@1.0.0-rc.15)(rollup@4.55.1)(terser@5.44.1)(tsx@4.21.0)(typescript@6.0.2)(vite@8.0.8(@types/node@25.5.2)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(yaml@2.8.2))(react@19.2.5)(vue-router@4.6.4(vue@3.5.30(typescript@6.0.2)))(vue@3.5.30(typescript@6.0.2))':
+  '@vercel/analytics@2.0.1(next@16.2.3(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(nuxt@4.3.1(@biomejs/biome@2.4.11)(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@parcel/watcher@2.5.4)(@types/node@25.5.2)(@vercel/functions@3.4.3)(@vue/compiler-sfc@3.5.30)(cac@6.7.14)(commander@13.1.0)(db0@0.3.4)(ioredis@5.10.0)(lightningcss@1.32.0)(magicast@0.5.2)(rolldown@1.0.0-rc.15)(rollup@4.55.1)(terser@5.44.1)(tsx@4.21.0)(typescript@6.0.2)(vite@8.0.8(@types/node@25.5.2)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(yaml@2.8.2))(react@19.2.5)(vue-router@4.6.4(vue@3.5.30(typescript@6.0.2)))(vue@3.5.30(typescript@6.0.2))':
     optionalDependencies:
       next: 16.2.3(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
-      nuxt: 4.3.1(@biomejs/biome@2.4.10)(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@parcel/watcher@2.5.4)(@types/node@25.5.2)(@vercel/functions@3.4.3)(@vue/compiler-sfc@3.5.30)(cac@6.7.14)(commander@13.1.0)(db0@0.3.4)(ioredis@5.10.0)(lightningcss@1.32.0)(magicast@0.5.2)(rolldown@1.0.0-rc.15)(rollup@4.55.1)(terser@5.44.1)(tsx@4.21.0)(typescript@6.0.2)(vite@8.0.8(@types/node@25.5.2)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(yaml@2.8.2)
+      nuxt: 4.3.1(@biomejs/biome@2.4.11)(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@parcel/watcher@2.5.4)(@types/node@25.5.2)(@vercel/functions@3.4.3)(@vue/compiler-sfc@3.5.30)(cac@6.7.14)(commander@13.1.0)(db0@0.3.4)(ioredis@5.10.0)(lightningcss@1.32.0)(magicast@0.5.2)(rolldown@1.0.0-rc.15)(rollup@4.55.1)(terser@5.44.1)(tsx@4.21.0)(typescript@6.0.2)(vite@8.0.8(@types/node@25.5.2)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(yaml@2.8.2)
       react: 19.2.5
       vue: 3.5.30(typescript@6.0.2)
       vue-router: 4.6.4(vue@3.5.30(typescript@6.0.2))
@@ -20254,7 +20215,7 @@ snapshots:
       '@babel/core': 7.29.0
       '@babel/plugin-syntax-typescript': 7.28.6(@babel/core@7.29.0)
       '@babel/plugin-transform-typescript': 7.28.6(@babel/core@7.29.0)
-      '@rolldown/pluginutils': 1.0.0-rc.13
+      '@rolldown/pluginutils': 1.0.0-rc.15
       '@vue/babel-plugin-jsx': 2.0.1(@babel/core@7.29.0)
       vite: 7.3.1(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
       vue: 3.5.30(typescript@6.0.2)
@@ -22097,8 +22058,6 @@ snapshots:
       get-intrinsic: 1.3.0
       has-tostringtag: 1.0.2
       hasown: 2.0.2
-
-  es-toolkit@1.43.0: {}
 
   es-toolkit@1.45.1: {}
 
@@ -25106,16 +25065,16 @@ snapshots:
     optionalDependencies:
       next: 16.2.3(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
 
-  nuxt@4.3.1(@biomejs/biome@2.4.10)(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@parcel/watcher@2.5.4)(@types/node@25.5.2)(@vercel/functions@3.4.3)(@vue/compiler-sfc@3.5.30)(cac@6.7.14)(commander@13.1.0)(db0@0.3.4)(ioredis@5.10.0)(lightningcss@1.32.0)(magicast@0.5.2)(rolldown@1.0.0-rc.15)(rollup@4.55.1)(terser@5.44.1)(tsx@4.21.0)(typescript@6.0.2)(vite@8.0.8(@types/node@25.5.2)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(yaml@2.8.2):
+  nuxt@4.3.1(@biomejs/biome@2.4.11)(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@parcel/watcher@2.5.4)(@types/node@25.5.2)(@vercel/functions@3.4.3)(@vue/compiler-sfc@3.5.30)(cac@6.7.14)(commander@13.1.0)(db0@0.3.4)(ioredis@5.10.0)(lightningcss@1.32.0)(magicast@0.5.2)(rolldown@1.0.0-rc.15)(rollup@4.55.1)(terser@5.44.1)(tsx@4.21.0)(typescript@6.0.2)(vite@8.0.8(@types/node@25.5.2)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(yaml@2.8.2):
     dependencies:
       '@dxup/nuxt': 0.3.2(magicast@0.5.2)
       '@nuxt/cli': 3.33.1(@nuxt/schema@4.3.1)(cac@6.7.14)(commander@13.1.0)(magicast@0.5.2)
       '@nuxt/devtools': 3.2.3(vite@8.0.8(@types/node@25.5.2)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(vue@3.5.30(typescript@6.0.2))
       '@nuxt/kit': 4.3.1(magicast@0.5.2)
-      '@nuxt/nitro-server': 4.3.1(@vercel/functions@3.4.3)(db0@0.3.4)(ioredis@5.10.0)(magicast@0.5.2)(nuxt@4.3.1(@biomejs/biome@2.4.10)(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@parcel/watcher@2.5.4)(@types/node@25.5.2)(@vercel/functions@3.4.3)(@vue/compiler-sfc@3.5.30)(cac@6.7.14)(commander@13.1.0)(db0@0.3.4)(ioredis@5.10.0)(lightningcss@1.32.0)(magicast@0.5.2)(rolldown@1.0.0-rc.15)(rollup@4.55.1)(terser@5.44.1)(tsx@4.21.0)(typescript@6.0.2)(vite@8.0.8(@types/node@25.5.2)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(yaml@2.8.2))(rolldown@1.0.0-rc.15)(typescript@6.0.2)
+      '@nuxt/nitro-server': 4.3.1(@vercel/functions@3.4.3)(db0@0.3.4)(ioredis@5.10.0)(magicast@0.5.2)(nuxt@4.3.1(@biomejs/biome@2.4.11)(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@parcel/watcher@2.5.4)(@types/node@25.5.2)(@vercel/functions@3.4.3)(@vue/compiler-sfc@3.5.30)(cac@6.7.14)(commander@13.1.0)(db0@0.3.4)(ioredis@5.10.0)(lightningcss@1.32.0)(magicast@0.5.2)(rolldown@1.0.0-rc.15)(rollup@4.55.1)(terser@5.44.1)(tsx@4.21.0)(typescript@6.0.2)(vite@8.0.8(@types/node@25.5.2)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(yaml@2.8.2))(rolldown@1.0.0-rc.15)(typescript@6.0.2)
       '@nuxt/schema': 4.3.1
       '@nuxt/telemetry': 2.7.0(@nuxt/kit@4.3.1(magicast@0.5.2))
-      '@nuxt/vite-builder': 4.3.1(@biomejs/biome@2.4.10)(@types/node@25.5.2)(lightningcss@1.32.0)(magicast@0.5.2)(nuxt@4.3.1(@biomejs/biome@2.4.10)(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@parcel/watcher@2.5.4)(@types/node@25.5.2)(@vercel/functions@3.4.3)(@vue/compiler-sfc@3.5.30)(cac@6.7.14)(commander@13.1.0)(db0@0.3.4)(ioredis@5.10.0)(lightningcss@1.32.0)(magicast@0.5.2)(rolldown@1.0.0-rc.15)(rollup@4.55.1)(terser@5.44.1)(tsx@4.21.0)(typescript@6.0.2)(vite@8.0.8(@types/node@25.5.2)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(yaml@2.8.2))(rolldown@1.0.0-rc.15)(rollup@4.55.1)(terser@5.44.1)(tsx@4.21.0)(typescript@6.0.2)(vue@3.5.30(typescript@6.0.2))(yaml@2.8.2)
+      '@nuxt/vite-builder': 4.3.1(@biomejs/biome@2.4.11)(@types/node@25.5.2)(lightningcss@1.32.0)(magicast@0.5.2)(nuxt@4.3.1(@biomejs/biome@2.4.11)(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@parcel/watcher@2.5.4)(@types/node@25.5.2)(@vercel/functions@3.4.3)(@vue/compiler-sfc@3.5.30)(cac@6.7.14)(commander@13.1.0)(db0@0.3.4)(ioredis@5.10.0)(lightningcss@1.32.0)(magicast@0.5.2)(rolldown@1.0.0-rc.15)(rollup@4.55.1)(terser@5.44.1)(tsx@4.21.0)(typescript@6.0.2)(vite@8.0.8(@types/node@25.5.2)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(yaml@2.8.2))(rolldown@1.0.0-rc.15)(rollup@4.55.1)(terser@5.44.1)(tsx@4.21.0)(typescript@6.0.2)(vue@3.5.30(typescript@6.0.2))(yaml@2.8.2)
       '@unhead/vue': 2.1.12(vue@3.5.30(typescript@6.0.2))
       '@vue/shared': 3.5.30
       c12: 3.3.3(magicast@0.5.2)
@@ -25851,7 +25810,7 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  posthog-js@1.366.0:
+  posthog-js@1.366.1:
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/api-logs': 0.208.0
@@ -25859,7 +25818,7 @@ snapshots:
       '@opentelemetry/resources': 2.3.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-logs': 0.208.0(@opentelemetry/api@1.9.0)
       '@posthog/core': 1.25.2
-      '@posthog/types': 1.366.0
+      '@posthog/types': 1.366.1
       core-js: 3.47.0
       dompurify: 3.3.2
       fflate: 0.4.8
@@ -26849,18 +26808,18 @@ snapshots:
 
   reselect@5.1.1: {}
 
-  resend@6.10.0(@react-email/render@2.0.5(react-dom@19.2.5(react@19.2.5))(react@19.2.5)):
+  resend@6.10.0(@react-email/render@2.0.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5)):
     dependencies:
       postal-mime: 2.7.4
       svix: 1.88.0
     optionalDependencies:
-      '@react-email/render': 2.0.5(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      '@react-email/render': 2.0.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
 
-  resend@6.7.0(@react-email/render@2.0.5(react-dom@19.2.5(react@19.2.5))(react@19.2.5)):
+  resend@6.7.0(@react-email/render@2.0.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5)):
     dependencies:
       svix: 1.84.1
     optionalDependencies:
-      '@react-email/render': 2.0.5(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      '@react-email/render': 2.0.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
 
   resize-observer-polyfill@1.5.1: {}
 
@@ -28286,7 +28245,7 @@ snapshots:
       - yaml
     optional: true
 
-  vite-plugin-checker@0.12.0(@biomejs/biome@2.4.10)(typescript@6.0.2)(vite@7.3.1(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)):
+  vite-plugin-checker@0.12.0(@biomejs/biome@2.4.11)(typescript@6.0.2)(vite@7.3.1(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)):
     dependencies:
       '@babel/code-frame': 7.29.0
       chokidar: 4.0.3
@@ -28298,7 +28257,7 @@ snapshots:
       vite: 7.3.1(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
       vscode-uri: 3.1.0
     optionalDependencies:
-      '@biomejs/biome': 2.4.10
+      '@biomejs/biome': 2.4.11
       typescript: 6.0.2
     optional: true
 
