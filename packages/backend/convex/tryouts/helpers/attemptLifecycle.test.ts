@@ -56,6 +56,7 @@ describe("tryouts/helpers/attemptLifecycle", () => {
           },
         ],
         completedPartIndices: [],
+        attemptNumber: 1,
         totalCorrect: 0,
         totalQuestions: 0,
         theta: 0,

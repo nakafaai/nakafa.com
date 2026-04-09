@@ -1,14 +1,10 @@
 "use client";
 
+import { normalizeLocalizedInternalHref } from "@repo/internationalization/src/href";
 import { Link } from "@repo/internationalization/src/navigation";
-import { routing } from "@repo/internationalization/src/routing";
 import { useSelectedLayoutSegment } from "next/navigation";
 import type { ComponentProps } from "react";
 import { useMemo } from "react";
-
-const EXTERNAL_URL_REGEX = /^https?:\/\//;
-const PROTOCOL_RELATIVE_REGEX = /^\/\//;
-const MAIL_OR_TEL_REGEX = /^(mailto:|tel:)/;
 
 /**
  * A navigation link component that is styled to look like a button.
@@ -26,40 +22,11 @@ export default function NavigationLink({
   const pathname = selectedLayoutSegment ? `/${selectedLayoutSegment}` : "/";
 
   const cleanHref = useMemo(() => {
-    let result = href;
-    const hrefString = typeof href === "string" ? href : href.toString();
-
-    const hrefSplit = hrefString.split("/");
-    const firstSegment = hrefString.startsWith("/")
-      ? hrefSplit[1]
-      : hrefSplit[0];
-
-    // if in href still containing locale, remove it, because <Link> supports built-in locale
-    const locale = routing.locales.find((l) => l === firstSegment);
-    if (locale) {
-      result = hrefString.replace(`/${locale}`, ""); // remove locale from href
+    if (typeof href !== "string") {
+      return href;
     }
 
-    if (typeof result === "string") {
-      const isExternal = EXTERNAL_URL_REGEX.test(result);
-      const isProtocolRelative = PROTOCOL_RELATIVE_REGEX.test(result);
-      const isHash = result.startsWith("#");
-      const isMailOrTel = MAIL_OR_TEL_REGEX.test(result);
-
-      const shouldNormalize =
-        result.length > 0 &&
-        !result.startsWith("/") &&
-        !isExternal &&
-        !isProtocolRelative &&
-        !isHash &&
-        !isMailOrTel;
-
-      if (shouldNormalize) {
-        result = `/${result}`;
-      }
-    }
-
-    return result;
+    return normalizeLocalizedInternalHref(href);
   }, [href]);
 
   // More accurate active state check - exact match or starts with the href followed by /

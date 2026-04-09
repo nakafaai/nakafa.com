@@ -11,6 +11,32 @@ import {
 export const NOW = Date.now();
 export const ATTEMPT_WINDOW_MS = 3 * 24 * 60 * 60 * 1000;
 
+/** Load the next oldest-first attempt number for one user and tryout. */
+async function getNextTryoutAttemptNumber(
+  ctx: MutationCtx,
+  {
+    tryoutId,
+    userId,
+  }: {
+    tryoutId: Id<"tryouts">;
+    userId: Id<"users">;
+  }
+) {
+  const latestAttempt = await ctx.db
+    .query("tryoutAttempts")
+    .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
+      q.eq("userId", userId).eq("tryoutId", tryoutId)
+    )
+    .order("desc")
+    .first();
+
+  if (!latestAttempt) {
+    return 1;
+  }
+
+  return latestAttempt.attemptNumber + 1;
+}
+
 /** Builds the Convex test instance used by tryout backend tests. */
 export function createTryoutTestConvex() {
   const t = createConvexTestWithBetterAuth();
@@ -161,6 +187,7 @@ export async function insertCompletedTryoutAttempt(
       },
     ],
     completedPartIndices: [0],
+    attemptNumber: await getNextTryoutAttemptNumber(ctx, { tryoutId, userId }),
     totalCorrect: 0,
     totalQuestions: 20,
     theta: 0,
@@ -348,6 +375,10 @@ export async function seedExpiredTryoutWithUntouchedPart(
       },
     ],
     completedPartIndices: [0],
+    attemptNumber: await getNextTryoutAttemptNumber(ctx, {
+      tryoutId,
+      userId: identity.userId,
+    }),
     totalCorrect: 0,
     totalQuestions: 1,
     theta: 0,

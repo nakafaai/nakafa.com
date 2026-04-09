@@ -7,7 +7,12 @@ import {
   userTryoutHistoryArgs,
 } from "@repo/backend/convex/tryouts/queries/me/validators";
 
-/** Returns one newest-first page of stored attempt summaries for one tryout. */
+/**
+ * Returns one stable newest-first history page for the tryout history picker.
+ *
+ * The selected attempt affects the route state, while the list order stays
+ * chronological and the true latest attempt is flagged with `isLatest`.
+ */
 export const getUserTryoutAttemptHistory = query({
   args: userTryoutHistoryArgs,
   returns: userTryoutAttemptHistoryResultValidator,

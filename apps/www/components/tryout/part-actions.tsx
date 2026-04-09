@@ -15,7 +15,7 @@ import { useTranslations } from "next-intl";
 import type { Dispatch, SetStateAction } from "react";
 import { Countdown } from "@/components/exercise/attempt-countdown";
 import { ExerciseStats } from "@/components/exercise/attempt-stats";
-import { useTryoutPart } from "@/components/tryout/providers/part-state";
+import { useTryoutPart } from "@/components/tryout/providers/part-provider";
 import { useStickyVisibility } from "@/lib/hooks/use-sticky-visibility";
 
 type TryoutPartDialogSetter = Dispatch<SetStateAction<boolean>>;

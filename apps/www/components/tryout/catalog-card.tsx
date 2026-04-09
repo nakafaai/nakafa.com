@@ -9,7 +9,7 @@ import {
   TryoutCardDescription,
   TryoutCardHero,
   TryoutCardTitle,
-} from "@/components/tryout/card";
+} from "@/components/tryout/shared/card";
 
 /** Renders the shared catalog card used by tryout hub and product routes. */
 export function TryoutCatalogCard({

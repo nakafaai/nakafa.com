@@ -6,6 +6,7 @@ import {
   UniversityIcon,
 } from "@hugeicons/core-free-icons";
 import type { SubjectCategory } from "@repo/contents/_types/subject/category";
+import { SubjectCategorySchema } from "@repo/contents/_types/subject/category";
 
 /**
  * Builds the public path for a subject category page.
@@ -36,4 +37,15 @@ export function getCategoryIcon(category: SubjectCategory) {
     default:
       return GraduationScrollIcon;
   }
+}
+
+/** Narrows one subject category route segment to the supported category union. */
+export function parseSubjectCategory(value: string) {
+  const parsedCategory = SubjectCategorySchema.safeParse(value);
+
+  if (!parsedCategory.success) {
+    return null;
+  }
+
+  return parsedCategory.data;
 }

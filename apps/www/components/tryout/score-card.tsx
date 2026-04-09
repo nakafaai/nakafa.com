@@ -10,12 +10,12 @@ import { useTranslations } from "next-intl";
 import {
   TryoutPartStat,
   TryoutPartStats,
-} from "@/components/tryout/part-shell";
+} from "@/components/tryout/part-summary";
 import {
   TryoutAttemptStatusBadge,
   TryoutScoreStatusBadge,
-} from "@/components/tryout/score-badges";
-import { TryoutStartCountdown } from "@/components/tryout/start-countdown";
+} from "@/components/tryout/shared/score-badges";
+import { TryoutStartCountdown } from "@/components/tryout/shared/start-countdown";
 
 type TryoutAttempt = NonNullable<
   FunctionReturnType<typeof api.tryouts.queries.me.attempt.getUserTryoutAttempt>

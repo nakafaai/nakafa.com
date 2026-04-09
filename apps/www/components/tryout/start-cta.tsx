@@ -1,15 +1,15 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { TryoutAttemptResults } from "@/components/tryout/attempt-results";
-import { useTryoutSet } from "@/components/tryout/providers/set-state";
-import { TryoutStartActionButton } from "@/components/tryout/start-controls";
+import { useTryoutSet } from "@/components/tryout/providers/set-provider";
+import { TryoutSetAttemptResults } from "@/components/tryout/set-attempt-results";
+import { TryoutStartActionButton } from "@/components/tryout/shared/start-controls";
 import {
   TryoutStartCountdown,
   TryoutStartCountdownAction,
   TryoutStartCountdownMeta,
   TryoutStartCountdownTime,
-} from "@/components/tryout/start-countdown";
+} from "@/components/tryout/shared/start-countdown";
 
 /** Renders the full set-route start CTA, including countdown and past results. */
 export function TryoutStartCta() {
@@ -43,7 +43,7 @@ export function TryoutStartCta() {
   if (attempt && hasFinishedAttempt) {
     return (
       <div className="flex w-full flex-col items-start gap-4">
-        <TryoutAttemptResults
+        <TryoutSetAttemptResults
           fallbackAttempt={attempt}
           fallbackStatus={effectiveStatus ?? attempt.status}
         >
@@ -56,7 +56,7 @@ export function TryoutStartCta() {
           >
             {label}
           </TryoutStartActionButton>
-        </TryoutAttemptResults>
+        </TryoutSetAttemptResults>
       </div>
     );
   }

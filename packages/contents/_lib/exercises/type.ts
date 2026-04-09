@@ -2,6 +2,7 @@ import { getCategoryPath } from "@repo/contents/_lib/exercises/category";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
 import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
+import { ExercisesTypeSchema } from "@repo/contents/_types/exercises/type";
 
 /**
  * Builds the public path for an exercises type page.
@@ -54,4 +55,15 @@ export async function getSubjects(
   } catch {
     return [];
   }
+}
+
+/** Narrows one exercises type route segment to the supported type union. */
+export function parseExercisesType(value: string) {
+  const parsedType = ExercisesTypeSchema.safeParse(value);
+
+  if (!parsedType.success) {
+    return null;
+  }
+
+  return parsedType.data;
 }

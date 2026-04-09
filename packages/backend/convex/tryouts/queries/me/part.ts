@@ -39,6 +39,8 @@ export const getUserTryoutPartAttempt = query({
     }
 
     const { attempt: tryoutAttempt } = context;
+    const attemptNumber = tryoutAttempt.attemptNumber;
+
     const accessCampaign = tryoutAttempt.accessCampaignId
       ? await ctx.db.get(
           "tryoutAccessCampaigns",
@@ -47,6 +49,7 @@ export const getUserTryoutPartAttempt = query({
       : null;
     const scoredTryoutAttempt = {
       ...tryoutAttempt,
+      attemptNumber,
       irtScore: getTryoutReportScore(
         context.tryout.product,
         tryoutAttempt.theta
