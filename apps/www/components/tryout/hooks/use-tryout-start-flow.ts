@@ -12,6 +12,7 @@ import { useTranslations } from "next-intl";
 import { useCallback, useTransition } from "react";
 import { toast } from "sonner";
 import { startTryout } from "@/components/tryout/actions/tryout";
+import { getTryoutPartHref } from "@/components/tryout/utils/routes";
 
 export type TryoutStartParams = FunctionArgs<
   typeof api.tryouts.mutations.attempts.startTryout
@@ -69,7 +70,11 @@ export function useTryoutStartFlow({
 
     if (resumePartKey) {
       router.push(
-        `/try-out/${params.product}/${params.tryoutSlug}/part/${resumePartKey}`
+        getTryoutPartHref({
+          partKey: resumePartKey,
+          product: params.product,
+          tryoutSlug: params.tryoutSlug,
+        })
       );
       return;
     }
@@ -118,6 +123,7 @@ export function useTryoutStartFlow({
 
       if (result.ok) {
         closeDialog();
+        router.replace(pathname);
         toast.success(tTryouts("start-success"), {
           position: "bottom-center",
         });

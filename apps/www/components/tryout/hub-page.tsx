@@ -12,6 +12,7 @@ import { TryoutCatalogList } from "@/components/tryout/catalog-list";
 import { TryoutHubHeader } from "@/components/tryout/hub-header";
 import { SnbtTryoutIcon } from "@/components/tryout/product-icon";
 import { TRYOUT_CATALOG_PAGE_SIZE } from "@/components/tryout/utils/catalog";
+import { getTryoutProductHref } from "@/components/tryout/utils/routes";
 import { getToken } from "@/lib/auth/server";
 
 /** Renders the server-backed tryout hub with an SSR first catalog page. */
@@ -53,7 +54,7 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
             <Button
               nativeButton={false}
               render={
-                <NavigationLink href={`/try-out/${product}`}>
+                <NavigationLink href={getTryoutProductHref(product)}>
                   {tTryouts("cta")}
                   <HugeIcons className="size-4" icon={ArrowRight02Icon} />
                 </NavigationLink>

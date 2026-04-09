@@ -17,12 +17,13 @@ import {
   TryoutPackageMeta,
   TryoutPackageTitle,
   TryoutPackageYear,
-} from "@/components/tryout/package-list";
-import { TryoutStatusBadge } from "@/components/tryout/status-badge";
+} from "@/components/tryout/shared/package-list";
+import { TryoutStatusBadge } from "@/components/tryout/shared/status-badge";
 import {
   getTryoutCatalogBadgeStatus,
   TRYOUT_CATALOG_PAGE_SIZE,
 } from "@/components/tryout/utils/catalog";
+import { getTryoutSetHref } from "@/components/tryout/utils/routes";
 
 type ActiveTryoutCatalogPage = FunctionReturnType<
   typeof api.tryouts.queries.tryouts.getActiveTryoutCatalogPage
@@ -116,7 +117,10 @@ export function TryoutCatalogList({
 
               return (
                 <TryoutPackageLink
-                  href={`/try-out/${product}/${tryout.slug}`}
+                  href={getTryoutSetHref({
+                    product,
+                    tryoutSlug: tryout.slug,
+                  })}
                   key={tryout.tryoutId}
                 >
                   <TryoutPackageCopy>

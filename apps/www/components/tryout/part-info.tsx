@@ -9,13 +9,13 @@ import { Fragment } from "react";
 import {
   TryoutPartStat,
   TryoutPartStats,
-} from "@/components/tryout/part-shell";
-import { useTryoutPart } from "@/components/tryout/providers/part-state";
+} from "@/components/tryout/part-summary";
+import { useTryoutPart } from "@/components/tryout/providers/part-provider";
 import {
   TryoutAttemptStatusBadge,
   TryoutScoreStatusBadge,
-} from "@/components/tryout/score-badges";
-import { TryoutStatusBadge } from "@/components/tryout/status-badge";
+} from "@/components/tryout/shared/score-badges";
+import { TryoutStatusBadge } from "@/components/tryout/shared/status-badge";
 
 /** Renders the visible status badges for the current part route. */
 export function TryoutPartStatus() {

@@ -16,11 +16,11 @@ function SubjectIcon() {
         <div className="h-1 w-full rounded-full bg-chart-1/30" />
         <div className="h-1 w-3/4 rounded-full bg-chart-1/30" />
 
-        <div className="absolute -right-2 bottom-1 z-20 flex h-5.5 w-5.5 items-center justify-center rounded-full border-2 border-card bg-chart-3 text-background shadow-xs transition-all ease-out group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:scale-110">
+        <div className="absolute -right-2 bottom-1 flex h-5.5 w-5.5 items-center justify-center rounded-full border-2 border-card bg-chart-3 text-background shadow-xs transition-all ease-out group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:scale-110">
           <HugeIcons className="size-3" icon={Atom02Icon} />
         </div>
 
-        <div className="absolute -bottom-2 -left-2 z-20 flex h-9 w-9 items-center justify-center rounded-full border-2 border-card bg-chart-1 text-background shadow-xs transition-all ease-out group-hover:-translate-x-1 group-hover:translate-y-1 group-hover:scale-110">
+        <div className="absolute -bottom-2 -left-2 flex h-9 w-9 items-center justify-center rounded-full border-2 border-card bg-chart-1 text-background shadow-xs transition-all ease-out group-hover:-translate-x-1 group-hover:translate-y-1 group-hover:scale-110">
           <HugeIcons className="size-4.5" icon={Books02Icon} />
         </div>
       </div>
@@ -41,11 +41,11 @@ export function TryoutIcon() {
         </div>
         <div className="h-0.75 w-full rounded-full bg-chart-2/30" />
 
-        <div className="absolute -bottom-2 -left-2 z-20 flex h-9 w-9 items-center justify-center rounded-full border-2 border-card bg-chart-2 text-background shadow-xs transition-all ease-out group-hover:-translate-x-1 group-hover:translate-y-1 group-hover:scale-110">
+        <div className="absolute -bottom-2 -left-2 flex h-9 w-9 items-center justify-center rounded-full border-2 border-card bg-chart-2 text-background shadow-xs transition-all ease-out group-hover:-translate-x-1 group-hover:translate-y-1 group-hover:scale-110">
           <HugeIcons className="size-4.5" icon={Timer02Icon} />
         </div>
 
-        <div className="absolute -top-2 -right-2 z-20 flex h-6 w-6 items-center justify-center rounded-full border-2 border-card bg-chart-5 text-background shadow-xs transition-all ease-out group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:scale-110">
+        <div className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full border-2 border-card bg-chart-5 text-background shadow-xs transition-all ease-out group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:scale-110">
           <HugeIcons className="size-3.5" icon={Target01Icon} />
         </div>
       </div>

@@ -21,12 +21,12 @@ import {
   TryoutPartCtas,
   TryoutPartLead,
   TryoutPartSummary,
-} from "@/components/tryout/part-shell";
-import { useTryoutPart } from "@/components/tryout/providers/part-state";
+} from "@/components/tryout/part-summary";
+import { useTryoutPart } from "@/components/tryout/providers/part-provider";
 import {
   TryoutStartActionButton,
   TryoutStartConfirmDialog,
-} from "@/components/tryout/start-controls";
+} from "@/components/tryout/shared/start-controls";
 import { AttemptProvider } from "@/lib/context/use-attempt";
 import { ExerciseContextProvider } from "@/lib/context/use-exercise";
 

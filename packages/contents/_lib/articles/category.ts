@@ -1,5 +1,6 @@
 import { EvilIcon, News01Icon } from "@hugeicons/core-free-icons";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
+import { ArticleCategorySchema } from "@repo/contents/_types/articles/category";
 
 /**
  * Resolves the icon used for an article category.
@@ -24,4 +25,15 @@ export function getCategoryIcon(category: ArticleCategory) {
  */
 export function getCategoryPath(category: ArticleCategory) {
   return `/articles/${category}` as const;
+}
+
+/** Narrows one article category route segment to the supported category union. */
+export function parseArticleCategory(value: string) {
+  const parsedCategory = ArticleCategorySchema.safeParse(value);
+
+  if (!parsedCategory.success) {
+    return null;
+  }
+
+  return parsedCategory.data;
 }

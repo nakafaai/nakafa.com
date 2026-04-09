@@ -1,15 +1,15 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { TryoutAttemptResults } from "@/components/tryout/attempt-results";
-import { useTryoutSet } from "@/components/tryout/providers/set-state";
-import { TryoutStartActionButton } from "@/components/tryout/start-controls";
+import { useTryoutSet } from "@/components/tryout/providers/set-provider";
+import { TryoutSetAttemptResults } from "@/components/tryout/set-attempt-results";
+import { TryoutStartActionButton } from "@/components/tryout/shared/start-controls";
 import {
   TryoutStartCountdown,
   TryoutStartCountdownAction,
   TryoutStartCountdownMeta,
   TryoutStartCountdownTime,
-} from "@/components/tryout/start-countdown";
+} from "@/components/tryout/shared/start-countdown";
 
 /** Renders the full set-route start CTA, including countdown and past results. */
 export function TryoutStartCta() {
@@ -40,52 +40,30 @@ export function TryoutStartCta() {
     label = tTryouts("continue-cta");
   }
 
-  return (
-    <div className="flex w-full flex-col items-start gap-4">
-      {attempt && hasFinishedAttempt ? (
-        <TryoutAttemptResults
+  if (attempt && hasFinishedAttempt) {
+    return (
+      <div className="flex w-full flex-col items-start gap-4">
+        <TryoutSetAttemptResults
           fallbackAttempt={attempt}
           fallbackStatus={effectiveStatus ?? attempt.status}
-        />
-      ) : null}
+        >
+          <TryoutStartActionButton
+            disabled={isStartBlocked}
+            isPending={isActionPending}
+            onClick={clickStartAction}
+            onFocus={prefetchAuthAction}
+            onMouseEnter={prefetchAuthAction}
+          >
+            {label}
+          </TryoutStartActionButton>
+        </TryoutSetAttemptResults>
+      </div>
+    );
+  }
 
-      {remainingTime ? (
-        <TryoutStartCountdown>
-          <TryoutStartCountdownTime
-            segments={[
-              {
-                label: tTryouts("time-hours-short"),
-                value: remainingTime.hours,
-              },
-              {
-                label: tTryouts("time-minutes-short"),
-                value: remainingTime.minutes,
-              },
-              {
-                label: tTryouts("time-seconds-short"),
-                value: remainingTime.seconds,
-              },
-            ]}
-          />
-          <TryoutStartCountdownMeta>
-            {tTryouts("remaining-time-label")}
-          </TryoutStartCountdownMeta>
-
-          {resumePartKey ? (
-            <TryoutStartCountdownAction>
-              <TryoutStartActionButton
-                disabled={isStartBlocked}
-                isPending={isActionPending}
-                onClick={clickStartAction}
-                onFocus={prefetchAuthAction}
-                onMouseEnter={prefetchAuthAction}
-              >
-                {label}
-              </TryoutStartActionButton>
-            </TryoutStartCountdownAction>
-          ) : null}
-        </TryoutStartCountdown>
-      ) : (
+  if (!remainingTime) {
+    return (
+      <div className="flex w-full flex-col items-start gap-4">
         <TryoutStartActionButton
           disabled={isStartBlocked}
           isPending={isActionPending}
@@ -95,7 +73,47 @@ export function TryoutStartCta() {
         >
           {label}
         </TryoutStartActionButton>
-      )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex w-full flex-col items-start gap-4">
+      <TryoutStartCountdown>
+        <TryoutStartCountdownTime
+          segments={[
+            {
+              label: tTryouts("time-hours-short"),
+              value: remainingTime.hours,
+            },
+            {
+              label: tTryouts("time-minutes-short"),
+              value: remainingTime.minutes,
+            },
+            {
+              label: tTryouts("time-seconds-short"),
+              value: remainingTime.seconds,
+            },
+          ]}
+        />
+        <TryoutStartCountdownMeta>
+          {tTryouts("remaining-time-label")}
+        </TryoutStartCountdownMeta>
+
+        {resumePartKey ? (
+          <TryoutStartCountdownAction>
+            <TryoutStartActionButton
+              disabled={isStartBlocked}
+              isPending={isActionPending}
+              onClick={clickStartAction}
+              onFocus={prefetchAuthAction}
+              onMouseEnter={prefetchAuthAction}
+            >
+              {label}
+            </TryoutStartActionButton>
+          </TryoutStartCountdownAction>
+        ) : null}
+      </TryoutStartCountdown>
     </div>
   );
 }

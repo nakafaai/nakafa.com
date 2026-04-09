@@ -4,7 +4,10 @@ import {
   cleanupCalibrationQueueEntriesBatch,
   cleanupScalePublicationQueueEntriesBatch,
   enqueueScaleQualityRefresh,
+  ensurePendingCalibrationQueueEntry,
+  getPendingCalibrationQueueEntryForAttempt,
   getPendingCalibrationQueueQuery,
+  removePendingCalibrationQueueEntry,
   startCalibrationRunWorkflow,
 } from "@repo/backend/convex/irt/helpers/queue";
 import { IRT_SCALE_QUALITY_REFRESH_CLAIM_TIMEOUT_MS } from "@repo/backend/convex/irt/policy";
@@ -16,6 +19,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 3, 2, 16, 0, 0);
 
+/** Insert one exercise set for queue helper tests. */
 async function insertExerciseSet(
   ctx: MutationCtx,
   slugSuffix: string,
@@ -35,6 +39,58 @@ async function insertExerciseSet(
   });
 }
 
+/** Insert one lightweight user for queue helper tests. */
+async function insertUser(ctx: MutationCtx, suffix: string) {
+  return await ctx.db.insert("users", {
+    email: `${suffix}@example.com`,
+    authId: `auth-${suffix}`,
+    name: `User ${suffix}`,
+    plan: "free",
+    credits: 0,
+    creditsResetAt: NOW,
+  });
+}
+
+/** Insert one completed standalone simulation set attempt for queue tests. */
+async function insertCompletedSimulationAttempt(
+  ctx: MutationCtx,
+  {
+    setId,
+    slugSuffix,
+  }: {
+    setId: Id<"exerciseSets">;
+    slugSuffix: string;
+  }
+) {
+  const userId = await insertUser(ctx, `queue-${slugSuffix}`);
+  const set = await ctx.db.get("exerciseSets", setId);
+
+  if (!set) {
+    throw new Error("Expected exercise set to exist");
+  }
+
+  return await ctx.db.insert("exerciseAttempts", {
+    slug: set.slug,
+    userId,
+    origin: "standalone",
+    mode: "simulation",
+    scope: "set",
+    timeLimit: 90,
+    startedAt: NOW - 60_000,
+    lastActivityAt: NOW - 1000,
+    completedAt: NOW,
+    endReason: "submitted",
+    status: "completed",
+    updatedAt: NOW,
+    totalExercises: set.questionCount,
+    answeredCount: set.questionCount,
+    correctAnswers: 0,
+    totalTime: 0,
+    scorePercentage: 0,
+  });
+}
+
+/** Insert one lightweight tryout row for queue helper tests. */
 async function insertTryout(ctx: MutationCtx, slug: string) {
   return await ctx.db.insert("tryouts", {
     catalogPosition: 1,
@@ -154,13 +210,23 @@ describe("irt/helpers/queue", () => {
 
     const queueEntries = await t.mutation(async (ctx) => {
       const setId = await insertExerciseSet(ctx, "no-cutoff");
+      const firstAttemptId = await insertCompletedSimulationAttempt(ctx, {
+        setId,
+        slugSuffix: "no-cutoff-1",
+      });
+      const secondAttemptId = await insertCompletedSimulationAttempt(ctx, {
+        setId,
+        slugSuffix: "no-cutoff-2",
+      });
 
       await ctx.db.insert("irtCalibrationQueue", {
         setId,
+        attemptId: firstAttemptId,
         enqueuedAt: NOW - 2000,
       });
       await ctx.db.insert("irtCalibrationQueue", {
         setId,
+        attemptId: secondAttemptId,
         enqueuedAt: NOW - 1000,
       });
 
@@ -179,17 +245,32 @@ describe("irt/helpers/queue", () => {
 
     const queueEntries = await t.mutation(async (ctx) => {
       const setId = await insertExerciseSet(ctx, "with-cutoff");
+      const firstAttemptId = await insertCompletedSimulationAttempt(ctx, {
+        setId,
+        slugSuffix: "with-cutoff-1",
+      });
+      const secondAttemptId = await insertCompletedSimulationAttempt(ctx, {
+        setId,
+        slugSuffix: "with-cutoff-2",
+      });
+      const thirdAttemptId = await insertCompletedSimulationAttempt(ctx, {
+        setId,
+        slugSuffix: "with-cutoff-3",
+      });
 
       await ctx.db.insert("irtCalibrationQueue", {
         setId,
+        attemptId: firstAttemptId,
         enqueuedAt: NOW - 3000,
       });
       await ctx.db.insert("irtCalibrationQueue", {
         setId,
+        attemptId: secondAttemptId,
         enqueuedAt: NOW - 2000,
       });
       await ctx.db.insert("irtCalibrationQueue", {
         setId,
+        attemptId: thirdAttemptId,
         enqueuedAt: NOW - 1000,
       });
 
@@ -212,17 +293,32 @@ describe("irt/helpers/queue", () => {
         ctx,
         "cleanup-calibration-other"
       );
+      const firstAttemptId = await insertCompletedSimulationAttempt(ctx, {
+        setId,
+        slugSuffix: "cleanup-calibration-1",
+      });
+      const secondAttemptId = await insertCompletedSimulationAttempt(ctx, {
+        setId,
+        slugSuffix: "cleanup-calibration-2",
+      });
+      const otherAttemptId = await insertCompletedSimulationAttempt(ctx, {
+        setId: otherSetId,
+        slugSuffix: "cleanup-calibration-3",
+      });
 
       await ctx.db.insert("irtCalibrationQueue", {
         setId,
+        attemptId: firstAttemptId,
         enqueuedAt: NOW - 3000,
       });
       await ctx.db.insert("irtCalibrationQueue", {
         setId,
+        attemptId: secondAttemptId,
         enqueuedAt: NOW - 1000,
       });
       await ctx.db.insert("irtCalibrationQueue", {
         setId: otherSetId,
+        attemptId: otherAttemptId,
         enqueuedAt: NOW - 3000,
       });
 
@@ -250,6 +346,73 @@ describe("irt/helpers/queue", () => {
     expect(result.remainingForSet).toHaveLength(1);
     expect(result.remainingForSet[0]?.enqueuedAt).toBe(NOW - 1000);
     expect(result.remainingForOtherSet).toHaveLength(1);
+  });
+
+  it("keeps one queue row per attempt and preserves the first enqueue time", async () => {
+    const t = convexTest(schema, convexModules);
+
+    const result = await t.mutation(async (ctx) => {
+      const setId = await insertExerciseSet(ctx, "attempt-owned");
+      const attemptId = await insertCompletedSimulationAttempt(ctx, {
+        setId,
+        slugSuffix: "attempt-owned",
+      });
+
+      await ensurePendingCalibrationQueueEntry(ctx, {
+        attemptId,
+        enqueuedAt: NOW - 3000,
+        setId,
+      });
+      await ensurePendingCalibrationQueueEntry(ctx, {
+        attemptId,
+        enqueuedAt: NOW - 1000,
+        setId,
+      });
+
+      const queueEntry = await getPendingCalibrationQueueEntryForAttempt(
+        ctx,
+        attemptId
+      );
+
+      return {
+        queueEntry,
+        queueEntries: await ctx.db
+          .query("irtCalibrationQueue")
+          .withIndex("by_attemptId_and_enqueuedAt", (q) =>
+            q.eq("attemptId", attemptId)
+          )
+          .collect(),
+      };
+    });
+
+    expect(result.queueEntries).toHaveLength(1);
+    expect(result.queueEntry).toMatchObject({
+      attemptId: result.queueEntries[0]?.attemptId,
+      enqueuedAt: NOW - 3000,
+    });
+  });
+
+  it("removes one attempt-owned queue row", async () => {
+    const t = convexTest(schema, convexModules);
+
+    const result = await t.mutation(async (ctx) => {
+      const setId = await insertExerciseSet(ctx, "remove-attempt-owned");
+      const attemptId = await insertCompletedSimulationAttempt(ctx, {
+        setId,
+        slugSuffix: "remove-attempt-owned",
+      });
+
+      await ensurePendingCalibrationQueueEntry(ctx, {
+        attemptId,
+        enqueuedAt: NOW,
+        setId,
+      });
+      await removePendingCalibrationQueueEntry(ctx, attemptId);
+
+      return await getPendingCalibrationQueueEntryForAttempt(ctx, attemptId);
+    });
+
+    expect(result).toBeNull();
   });
 
   it("cleans one bounded batch of publication queue rows for one tryout", async () => {

@@ -109,6 +109,8 @@ const tables = {
     status: tryoutStatusValidator,
     partSetSnapshots: v.array(tryoutPartSnapshotValidator),
     completedPartIndices: v.array(v.number()),
+    /** Oldest-first attempt ordinal for one user and tryout. */
+    attemptNumber: v.number(),
     totalCorrect: v.number(),
     totalQuestions: v.number(),
     theta: v.number(),

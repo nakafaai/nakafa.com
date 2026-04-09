@@ -21,13 +21,35 @@ const scaleQualityIntegrityPageSchema = z.object({
   unstartableTryoutCount: z.number(),
 });
 
+const calibrationQueueAttemptIntegrityPageSchema = z.object({
+  continueCursor: z.string(),
+  duplicatePendingAttemptCount: z.number(),
+  isDone: z.boolean(),
+  missingPendingQueueAttemptCount: z.number(),
+  staleAttemptQueueSetCount: z.number(),
+});
+
+const calibrationQueueEntryIntegrityPageSchema = z.object({
+  continueCursor: z.string(),
+  isDone: z.boolean(),
+  orphanedQueueEntryCount: z.number(),
+  staleQueueEntryCount: z.number(),
+});
+
 type CalibrationCacheIntegrityPage = z.infer<
   typeof calibrationCacheIntegrityPageSchema
 >;
 type ScaleQualityIntegrityPage = z.infer<
   typeof scaleQualityIntegrityPageSchema
 >;
+type CalibrationQueueAttemptIntegrityPage = z.infer<
+  typeof calibrationQueueAttemptIntegrityPageSchema
+>;
+type CalibrationQueueEntryIntegrityPage = z.infer<
+  typeof calibrationQueueEntryIntegrityPageSchema
+>;
 
+/** Aggregate paginated calibration-cache integrity totals for one deployment. */
 async function getCalibrationCacheIntegrity(prod: boolean) {
   const config = getConvexConfig({ prod });
   let continueCursor: string | null = null;
@@ -61,6 +83,7 @@ async function getCalibrationCacheIntegrity(prod: boolean) {
   }
 }
 
+/** Aggregate paginated scale-quality integrity totals for one deployment. */
 async function getScaleQualityIntegrity(prod: boolean) {
   const config = getConvexConfig({ prod });
   let continueCursor: string | null = null;
@@ -94,20 +117,95 @@ async function getScaleQualityIntegrity(prod: boolean) {
   }
 }
 
+/** Aggregate paginated queue-integrity totals for one deployment. */
+async function getCalibrationQueueIntegrity(prod: boolean) {
+  const config = getConvexConfig({ prod });
+  let attemptCursor: string | null = null;
+  let duplicatePendingAttemptCount = 0;
+  let entryCursor: string | null = null;
+  let missingPendingQueueAttemptCount = 0;
+  let orphanedQueueEntryCount = 0;
+  let staleAttemptQueueSetCount = 0;
+  let staleQueueEntryCount = 0;
+
+  while (true) {
+    const page: CalibrationQueueAttemptIntegrityPage =
+      await runConvexQueryWithArgs(
+        config,
+        "irt/queries/internal/maintenance:getCalibrationQueueAttemptIntegrity",
+        {
+          paginationOpts: {
+            cursor: attemptCursor,
+            numItems: IRT_VERIFY_PAGE_SIZE,
+          },
+        },
+        calibrationQueueAttemptIntegrityPageSchema
+      );
+
+    duplicatePendingAttemptCount += page.duplicatePendingAttemptCount;
+    missingPendingQueueAttemptCount += page.missingPendingQueueAttemptCount;
+    staleAttemptQueueSetCount += page.staleAttemptQueueSetCount;
+
+    if (page.isDone) {
+      break;
+    }
+
+    attemptCursor = page.continueCursor;
+  }
+
+  while (true) {
+    const page: CalibrationQueueEntryIntegrityPage =
+      await runConvexQueryWithArgs(
+        config,
+        "irt/queries/internal/maintenance:getCalibrationQueueEntryIntegrity",
+        {
+          paginationOpts: {
+            cursor: entryCursor,
+            numItems: IRT_VERIFY_PAGE_SIZE,
+          },
+        },
+        calibrationQueueEntryIntegrityPageSchema
+      );
+
+    orphanedQueueEntryCount += page.orphanedQueueEntryCount;
+    staleQueueEntryCount += page.staleQueueEntryCount;
+
+    if (page.isDone) {
+      return {
+        duplicatePendingAttemptCount,
+        missingPendingQueueAttemptCount,
+        orphanedQueueEntryCount,
+        staleAttemptQueueSetCount,
+        staleQueueEntryCount,
+      };
+    }
+
+    entryCursor = page.continueCursor;
+  }
+}
+
+/** Parse CLI flags and print one IRT integrity summary. */
 async function main() {
   loadEnvFile();
 
   const [kind, ...flags] = process.argv.slice(2);
   const prod = flags.includes("--prod");
 
-  if (!(kind === "cache" || kind === "scale")) {
-    throw new Error("Usage: tsx scripts/irt-verify.ts <cache|scale> [--prod]");
+  if (!(kind === "cache" || kind === "queue" || kind === "scale")) {
+    throw new Error(
+      "Usage: tsx scripts/irt-verify.ts <cache|queue|scale> [--prod]"
+    );
   }
 
-  const result =
-    kind === "cache"
-      ? await getCalibrationCacheIntegrity(prod)
-      : await getScaleQualityIntegrity(prod);
+  let result: unknown;
+
+  if (kind === "cache") {
+    result = await getCalibrationCacheIntegrity(prod);
+  } else if (kind === "queue") {
+    result = await getCalibrationQueueIntegrity(prod);
+  } else {
+    result = await getScaleQualityIntegrity(prod);
+  }
 
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
 }

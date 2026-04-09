@@ -3,7 +3,10 @@ import type {
   ExercisesMaterial,
   ExercisesMaterialList,
 } from "@repo/contents/_types/exercises/material";
-import { ExercisesMaterialListSchema } from "@repo/contents/_types/exercises/material";
+import {
+  ExercisesMaterialListSchema,
+  ExercisesMaterialSchema,
+} from "@repo/contents/_types/exercises/material";
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import { cleanSlug } from "@repo/utilities/helper";
 import type { Locale } from "next-intl";
@@ -87,4 +90,15 @@ export function getCurrentMaterial(
   }
 
   return { currentMaterial, currentMaterialItem };
+}
+
+/** Narrows one exercises material route segment to the supported material union. */
+export function parseExercisesMaterial(value: string) {
+  const parsedMaterial = ExercisesMaterialSchema.safeParse(value);
+
+  if (!parsedMaterial.success) {
+    return null;
+  }
+
+  return parsedMaterial.data;
 }
