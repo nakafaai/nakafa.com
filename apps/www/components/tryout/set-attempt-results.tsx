@@ -26,7 +26,6 @@ import { cn } from "@repo/design-system/lib/utils";
 import { useConvexAuth, usePaginatedQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { format } from "date-fns";
-import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { useQueryState } from "nuqs";
 import { type ReactNode, useTransition } from "react";
@@ -39,12 +38,9 @@ type TryoutAttempt = NonNullable<
   FunctionReturnType<typeof api.tryouts.queries.me.attempt.getUserTryoutAttempt>
 >["attempt"];
 
-type TryoutAttemptHistoryItem = FunctionReturnType<
-  typeof api.tryouts.queries.me.history.getUserTryoutAttemptHistory
->["page"][number];
-
 interface AttemptOption {
   attemptId: string;
+  isLatest: boolean;
   label: string;
   subtitle: string;
 }
@@ -53,28 +49,6 @@ interface Props {
   children?: ReactNode;
   fallbackAttempt: TryoutAttempt;
   fallbackStatus: TryoutAttempt["status"];
-}
-
-/** Build one selectable history option from one history row. */
-function getAttemptOption({
-  attempt,
-  locale,
-  tTryouts,
-}: {
-  attempt: Pick<
-    TryoutAttemptHistoryItem,
-    "attemptId" | "attemptNumber" | "startedAt"
-  >;
-  locale: Locale;
-  tTryouts: ReturnType<typeof useTranslations<"Tryouts">>;
-}) {
-  return {
-    attemptId: attempt.attemptId,
-    label: tTryouts("attempt-select-label", { number: attempt.attemptNumber }),
-    subtitle: format(attempt.startedAt, "PPp", {
-      locale: getLocale(locale),
-    }),
-  } satisfies AttemptOption;
 }
 
 /** Render one selectable attempt row inside the history picker. */
@@ -131,6 +105,7 @@ function TryoutAttemptHistoryControls({
     api.tryouts.queries.me.history.getUserTryoutAttemptHistory,
     shouldLoadAttemptHistory
       ? {
+          attemptId: fallbackAttempt._id,
           locale,
           product,
           tryoutSlug,
@@ -153,38 +128,20 @@ function TryoutAttemptHistoryControls({
   const activeAttemptId = fallbackAttempt._id;
   const visibleAttemptHistory =
     status === "LoadingFirstPage" ? initialAttemptHistory : attemptHistory;
-  const latestAttemptId =
-    visibleAttemptHistory[0]?.attemptId ?? fallbackAttempt._id;
-  const attemptOptions: AttemptOption[] = [];
-  let hasActiveAttempt = false;
-
-  for (const historyAttempt of visibleAttemptHistory) {
-    const attemptOption = getAttemptOption({
-      attempt: historyAttempt,
-      locale,
-      tTryouts,
-    });
-
-    attemptOptions.push(attemptOption);
-
-    if (attemptOption.attemptId === activeAttemptId) {
-      hasActiveAttempt = true;
-    }
-  }
-
-  if (!hasActiveAttempt) {
-    attemptOptions.unshift(
-      getAttemptOption({
-        attempt: {
-          attemptId: fallbackAttempt._id,
-          attemptNumber: fallbackAttempt.attemptNumber,
-          startedAt: fallbackAttempt.startedAt,
-        },
-        locale,
-        tTryouts,
-      })
-    );
-  }
+  const activeAttemptNumber =
+    visibleAttemptHistory.find(
+      (historyAttempt) => historyAttempt.attemptId === activeAttemptId
+    )?.attemptNumber ?? fallbackAttempt.attemptNumber;
+  const attemptOptions = visibleAttemptHistory.map((historyAttempt) => ({
+    attemptId: historyAttempt.attemptId,
+    isLatest: historyAttempt.isLatest,
+    label: tTryouts("attempt-select-label", {
+      number: historyAttempt.attemptNumber,
+    }),
+    subtitle: format(historyAttempt.startedAt, "PPp", {
+      locale: getLocale(locale),
+    }),
+  }));
 
   return (
     <div className="flex w-full flex-wrap items-center gap-3">
@@ -202,7 +159,9 @@ function TryoutAttemptHistoryControls({
                 icon={Progress03Icon}
                 isLoading={isSelectingAttempt}
               />
-              {tTryouts("attempt-menu-label")}
+              {tTryouts("attempt-select-label", {
+                number: activeAttemptNumber,
+              })}
               <HugeIcons
                 className="tryout-history-chevron ml-auto size-4 transition-transform ease-out"
                 icon={ArrowDown01Icon}
@@ -244,7 +203,7 @@ function TryoutAttemptHistoryControls({
                         key={attemptOption.attemptId}
                         onSelect={() => {
                           setSelectedAttemptId(
-                            attemptOption.attemptId === latestAttemptId
+                            attemptOption.isLatest
                               ? null
                               : attemptOption.attemptId,
                             {

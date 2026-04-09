@@ -1,8 +1,8 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 
-/** Load the latest attempt for one user and tryout. */
-async function loadLatestUserTryoutAttempt(
+/** Load the latest stored attempt for one user and tryout. */
+export async function loadLatestUserTryoutAttempt(
   ctx: QueryCtx,
   {
     tryoutId,

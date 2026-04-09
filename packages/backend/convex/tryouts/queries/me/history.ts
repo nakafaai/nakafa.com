@@ -7,7 +7,12 @@ import {
   userTryoutHistoryArgs,
 } from "@repo/backend/convex/tryouts/queries/me/validators";
 
-/** Returns one newest-first page of stored attempt summaries for one tryout. */
+/**
+ * Returns one selection-aware history page for the tryout history picker.
+ *
+ * The initial page always starts with the resolved active attempt, while the
+ * true latest attempt is flagged explicitly with `isLatest`.
+ */
 export const getUserTryoutAttemptHistory = query({
   args: userTryoutHistoryArgs,
   returns: userTryoutAttemptHistoryResultValidator,
@@ -28,6 +33,7 @@ export const getUserTryoutAttemptHistory = query({
 
     return await loadUserTryoutAttemptHistoryPage(ctx, {
       paginationOpts: args.paginationOpts,
+      selectedAttempt: context.attempt,
       tryout: context.tryout,
       userId: appUser._id,
     });

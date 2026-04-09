@@ -12,8 +12,8 @@ import { nullable } from "convex-helpers/validators";
 const INITIAL_TRYOUT_HISTORY_PAGE_SIZE = 25;
 
 /**
- * Returns the selected tryout attempt and the first history page from one
- * cohesive server-owned route query.
+ * Returns the selected tryout attempt and the first picker-ready history page
+ * from one cohesive server-owned route query.
  */
 export const getUserTryoutSetView = query({
   args: userTryoutLookupArgs,
@@ -36,6 +36,7 @@ export const getUserTryoutSetView = query({
           cursor: null,
           numItems: INITIAL_TRYOUT_HISTORY_PAGE_SIZE,
         },
+        selectedAttempt: context.attempt,
         tryout: context.tryout,
         userId: appUser._id,
       }),
