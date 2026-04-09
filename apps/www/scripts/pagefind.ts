@@ -8,7 +8,6 @@ import {
 } from "@repo/contents/_lib/exercises/material";
 import { getSurah, getSurahName } from "@repo/contents/_lib/quran";
 import { routing } from "@repo/internationalization/src/routing";
-import { askSeo } from "@repo/seo/ask";
 import { Effect } from "effect";
 import type { CustomRecord, PagefindIndex } from "pagefind";
 import { remark } from "remark";
@@ -42,7 +41,6 @@ async function main() {
   let words = 0;
 
   for (const add of [
-    addAskRecords,
     addArticleRecords,
     addSubjectRecords,
     addExerciseRecords,
@@ -62,28 +60,6 @@ async function main() {
   console.log(
     `Indexed ${count} source records and ${words} words into ${write.outputPath}`
   );
-}
-
-/**
- * Indexes SEO landing pages served from the ask dataset.
- */
-function addAskRecords(index: PagefindIndex) {
-  const records = askSeo().flatMap((entry) =>
-    routing.locales.map((locale) => {
-      const localized = entry.locales[locale];
-
-      return {
-        url: `/${locale}/ask/${entry.slug}`,
-        language: locale,
-        meta: { title: localized.title },
-        content: normalizeText(
-          `${localized.title}\n\n${localized.description}`
-        ),
-      };
-    })
-  );
-
-  return addRecords(index, records);
 }
 
 /**

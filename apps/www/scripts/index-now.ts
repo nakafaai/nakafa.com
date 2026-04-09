@@ -4,7 +4,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   baseRoutes,
-  getAskRoutes,
   getContentRoutes,
   getEntries,
   getQuranRoutes,
@@ -101,15 +100,9 @@ async function getUnsubmittedUrls(service: "indexNow" | "bing"): Promise<{
   // Get all URLs from sitemap
   const routes = getContentRoutes();
   const quranRoutes = getQuranRoutes();
-  const askRoutes = getAskRoutes();
 
   // Deduplicate all base routes (contentRoutes might include "/" which is also in baseRoutes)
-  const allBaseRoutesSet = new Set([
-    ...baseRoutes,
-    ...routes,
-    ...quranRoutes,
-    ...askRoutes,
-  ]);
+  const allBaseRoutesSet = new Set([...baseRoutes, ...routes, ...quranRoutes]);
   const allBaseRoutes = Array.from(allBaseRoutesSet);
 
   // Get all entries asynchronously - simplified to only locale-prefixed routes

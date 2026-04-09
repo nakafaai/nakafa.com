@@ -5,7 +5,6 @@ import { parseContentDate } from "@repo/contents/_shared/date";
 import { getPathname } from "@repo/internationalization/src/navigation";
 import { routing } from "@repo/internationalization/src/routing";
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
-import { askSeo } from "@repo/seo/ask";
 import { Effect } from "effect";
 import type { MetadataRoute } from "next";
 import type { Locale } from "next-intl";
@@ -119,10 +118,6 @@ export function getQuranRoutes(): string[] {
   return Array.from({ length: 114 }, (_, index) => `/quran/${index + 1}`);
 }
 
-export function getAskRoutes(): string[] {
-  return askSeo().map((data) => `/ask/${data.slug}`);
-}
-
 // Function to recursively get all directories
 export function getContentRoutes(currentPath = ""): string[] {
   const children = Effect.runSync(
@@ -159,8 +154,7 @@ export async function getEntries(
   if (
     routeString !== "/" &&
     !baseRoutes.includes(routeString) &&
-    !routeString.startsWith("/quran") &&
-    !routeString.startsWith("/ask/")
+    !routeString.startsWith("/quran")
   ) {
     try {
       // This is likely educational content, get actual modification date
@@ -179,9 +173,6 @@ export async function getEntries(
     }
   } else if (routeString.startsWith("/quran")) {
     // Quran content is very stable, set to founding date
-    lastModified = new Date("2025-01-01");
-  } else if (routeString.startsWith("/ask/")) {
-    // Ask content is very stable, set to founding date
     lastModified = new Date("2025-01-01");
   } else if (routeString.startsWith("/about")) {
     // About page is very stable, set to founding date
@@ -245,14 +236,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     return !isInvalidYearlessTryOutRoute;
   });
   const quranRoutes = getQuranRoutes();
-  const askRoutes = getAskRoutes();
 
   // Deduplicate all base routes (contentRoutes might include "/" which is also in baseRoutes)
   const allBaseRoutesSet = new Set([
     ...baseRoutes,
     ...contentRoutes,
     ...quranRoutes,
-    ...askRoutes,
   ]);
   const allBaseRoutes = Array.from(allBaseRoutesSet);
 
