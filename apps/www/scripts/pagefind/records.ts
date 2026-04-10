@@ -111,6 +111,14 @@ export async function addSubjectRecords(index: PagefindIndex) {
 
 /**
  * Indexes exercise set pages from assembled source records.
+ *
+ * The exercise search corpus intentionally keeps:
+ * - question titles
+ * - question bodies
+ * - answer explanations
+ *
+ * We intentionally exclude choice labels because they are low-signal text for
+ * search relevance and tend to add noise without adding much retrieval value.
  */
 export async function addExerciseRecords(index: PagefindIndex) {
   const records = (
@@ -155,7 +163,6 @@ export async function addExerciseRecords(index: PagefindIndex) {
                 ...exercises.flatMap((exercise) => [
                   exercise.question.metadata.title,
                   extractMdxText(exercise.question.raw),
-                  ...exercise.choices[locale].map((choice) => choice.label),
                   extractMdxText(exercise.answer.raw),
                 ]),
               ].join("\n\n"),
