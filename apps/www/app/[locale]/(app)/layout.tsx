@@ -1,13 +1,23 @@
 import { routing } from "@repo/internationalization/src/routing";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
+import { Suspense } from "react";
+import { ConvexAppProviders } from "@/components/providers";
+import { getToken } from "@/lib/auth/server";
 
 /**
- * Binds the validated locale to the full authenticated app subtree.
+ * Binds the validated locale to the shared authenticated app subtree.
  *
- * Keeping this locale setup at the shared `(app)` segment lets nested route
- * groups focus on shell and provider ownership instead of repeating the same
- * request setup in every child layout.
+ * With Cache Components enabled, static and dynamic content can coexist in the
+ * same route tree. Seeding the Better Auth token once at the shared `(app)`
+ * boundary keeps the outer route structure simple while preserving authenticated
+ * Convex SSR where it is needed.
+ *
+ * References:
+ * - Convex App Router SSR:
+ *   https://docs.convex.dev/client/nextjs/app-router/server-rendering
+ * - Next.js Cache Components / mixed static-dynamic routes:
+ *   @.agents/skills/next-cache-components/SKILL.md
  */
 export default async function Layout(props: LayoutProps<"/[locale]">) {
   const { children, params } = props;
@@ -17,5 +27,18 @@ export default async function Layout(props: LayoutProps<"/[locale]">) {
     notFound();
   }
 
-  return children;
+  return (
+    <Suspense fallback={null}>
+      <AuthLayout>{children}</AuthLayout>
+    </Suspense>
+  );
+}
+
+/** Seeds the shared Convex user subtree with the current request token. */
+async function AuthLayout({ children }: { children: React.ReactNode }) {
+  const token = await getToken();
+
+  return (
+    <ConvexAppProviders initialToken={token}>{children}</ConvexAppProviders>
+  );
 }
