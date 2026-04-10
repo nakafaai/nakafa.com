@@ -128,6 +128,42 @@ export function getExerciseQuestionNumbers(
 }
 
 /**
+ * Extracts unique exercise-set paths for one locale from cached exercise slugs.
+ *
+ * Exercise content is stored as numbered folders containing `_question` or
+ * `_answer` entries. This helper strips the trailing number/content segments so
+ * callers can work at the set level without re-encoding path rules.
+ *
+ * @param locale - Locale whose cached exercise slugs should be scanned
+ * @returns Sorted list of unique exercise set paths
+ */
+export function getExerciseSetPaths(locale: Locale): string[] {
+  const setPaths = new Set<string>();
+
+  for (const slug of getMDXSlugsForLocale(locale)) {
+    const pathParts = cleanSlug(slug).split("/");
+
+    if (pathParts.length < 2) {
+      continue;
+    }
+
+    const [numberSegment, contentSegment] = pathParts.slice(-2);
+
+    if (!NUMBER_REGEX.test(numberSegment)) {
+      continue;
+    }
+
+    if (!EXERCISE_CONTENT_SEGMENTS.has(contentSegment)) {
+      continue;
+    }
+
+    setPaths.add(pathParts.slice(0, -2).join("/"));
+  }
+
+  return [...setPaths].sort();
+}
+
+/**
  * Retrieves all exercises for a given path, handling _question and _answer subdirectories.
  * Exercise sets are structured with numbered folders containing question/answer pairs.
  *

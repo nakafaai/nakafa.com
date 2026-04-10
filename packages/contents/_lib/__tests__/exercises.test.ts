@@ -59,6 +59,7 @@ import {
   getExerciseByNumber,
   getExerciseCount,
   getExerciseQuestionNumbers,
+  getExerciseSetPaths,
   getExercisesContent,
 } from "@repo/contents/_lib/exercises";
 
@@ -200,6 +201,48 @@ describe("getExerciseQuestionNumbers", () => {
     );
 
     expect(result).toStrictEqual(["3"]);
+  });
+});
+
+describe("getExerciseSetPaths", () => {
+  it("collects unique exercise set paths from question and answer slugs", () => {
+    mockGetMDXSlugsForLocale.mockReturnValue([
+      `${exerciseBasePath}/1/_question`,
+      `${exerciseBasePath}/1/_answer`,
+      `${exerciseBasePath}/2/_question`,
+      "exercises/high-school/snbt/general-knowledge/try-out/2026/set-2/1/_answer",
+    ]);
+
+    const result = getExerciseSetPaths("id");
+
+    expect(result).toStrictEqual([
+      "exercises/high-school/snbt/general-knowledge/try-out/2026/set-2",
+      exerciseBasePath,
+    ]);
+  });
+
+  it("ignores exercise collection folders and unrelated slugs", () => {
+    mockGetMDXSlugsForLocale.mockReturnValue([
+      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026",
+      `${exerciseBasePath}/1/choices`,
+      "articles/politics/dynastic-politics-asian-values",
+    ]);
+
+    const result = getExerciseSetPaths("en");
+
+    expect(result).toStrictEqual([]);
+  });
+
+  it("ignores malformed exercise slugs without trailing segments", () => {
+    mockGetMDXSlugsForLocale.mockReturnValue([
+      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/_question",
+      "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
+      "exercises",
+    ]);
+
+    const result = getExerciseSetPaths("en");
+
+    expect(result).toStrictEqual([]);
   });
 });
 
