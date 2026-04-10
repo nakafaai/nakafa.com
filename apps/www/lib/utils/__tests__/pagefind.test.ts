@@ -134,6 +134,66 @@ describe("normalizePagefindResult", () => {
       }).sub_results[0]?.excerpt
     ).toBe("<mark>Logaritma</mark> adalah operasi matematika...");
   });
+
+  it("keeps empty html excerpts unchanged", () => {
+    expect(
+      normalizePagefindResult({
+        excerpt: "...",
+        meta: {
+          title: "Matematika",
+        },
+        raw_url: "/id/subject/logarithm-definition.html",
+        sub_results: [
+          {
+            excerpt: "<mark></mark>",
+            title: "Pengertian Logaritma",
+            url: "/id/subject/logarithm-definition.html#pengertian-logaritma",
+          },
+        ],
+        url: "/id/subject/logarithm-definition.html",
+      }).sub_results[0]?.excerpt
+    ).toBe("<mark></mark>");
+  });
+
+  it("keeps excerpts intact when the title is not repeated at the start", () => {
+    expect(
+      normalizePagefindResult({
+        excerpt: "...",
+        meta: {
+          title: "Matematika",
+        },
+        raw_url: "/id/subject/logarithm-definition.html",
+        sub_results: [
+          {
+            excerpt: "Materi ini menjelaskan <mark>logaritma</mark> dasar.",
+            title: "Pengertian Logaritma",
+            url: "/id/subject/logarithm-definition.html#pengertian-logaritma",
+          },
+        ],
+        url: "/id/subject/logarithm-definition.html",
+      }).sub_results[0]?.excerpt
+    ).toBe("Materi ini menjelaskan <mark>logaritma</mark> dasar.");
+  });
+
+  it("trims repeated title prefixes that end inside a text token", () => {
+    expect(
+      normalizePagefindResult({
+        excerpt: "...",
+        meta: {
+          title: "Matematika",
+        },
+        raw_url: "/id/subject/logarithm-definition.html",
+        sub_results: [
+          {
+            excerpt: "PengertianLogaritma adalah operasi matematika.",
+            title: "Pengertian",
+            url: "/id/subject/logarithm-definition.html#pengertian-logaritma",
+          },
+        ],
+        url: "/id/subject/logarithm-definition.html",
+      }).sub_results[0]?.excerpt
+    ).toBe("Logaritma adalah operasi matematika.");
+  });
 });
 
 describe("getPagefindSectionResults", () => {
@@ -184,6 +244,18 @@ describe("getPagefindSectionResults", () => {
 
     expect(result).toHaveLength(1);
     expect(result[0]?.title).toBe("Set 1");
+  });
+
+  it("returns an empty array when there are no sub results", () => {
+    const result = getPagefindSectionResults({
+      excerpt: "...",
+      meta: { title: "Set 1" },
+      raw_url: "/id/exercises/set-1.html",
+      sub_results: [],
+      url: "/id/exercises/set-1.html",
+    });
+
+    expect(result).toStrictEqual([]);
   });
 });
 
