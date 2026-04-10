@@ -11,6 +11,7 @@ import {
   QuillWrite01Icon,
   YoutubeIcon,
 } from "@hugeicons/core-free-icons";
+import { useDisclosure } from "@mantine/hooks";
 import type { Reference } from "@repo/contents/_types/content";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -37,7 +38,7 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { cleanupUrl, cn, formatUrl } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useLayoutEffect } from "react";
 
 interface Props {
   /** The className of the references. */
@@ -50,12 +51,25 @@ interface Props {
   title?: string;
 }
 
+/**
+ * Renders reference actions for learn pages.
+ *
+ * The bibliography sheet is transient UI, so it resets closed when Next hides
+ * the page through Cache Components state preservation.
+ *
+ * References:
+ * - Next.js preserving UI state with Cache Components:
+ *   `apps/www/node_modules/next/dist/docs/01-app/02-guides/preserving-ui-state.md`
+ * - Mantine `useDisclosure`:
+ *   https://mantine.dev/hooks/use-disclosure/
+ */
 export function RefContent({ title, references, githubUrl, className }: Props) {
   const t = useTranslations("Common");
+  const [open, { close, set, toggle }] = useDisclosure(false);
+  const referenceList = references ?? [];
+  const showSheet = Boolean(referenceList.length && title);
 
-  const [open, setOpen] = useState<boolean>(false);
-
-  const showSheet = references && title;
+  useLayoutEffect(() => close, [close]);
 
   return (
     <>
@@ -74,13 +88,13 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
           aria-label="Reference actions"
           className="flex flex-wrap items-center gap-2"
         >
-          {!!showSheet && (
+          {showSheet ? (
             <Tooltip>
               <TooltipTrigger
                 render={
                   <Button
                     aria-label={t("bibliography")}
-                    onClick={() => setOpen(!open)}
+                    onClick={toggle}
                     size="icon"
                     variant="outline"
                   >
@@ -93,7 +107,7 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
                 <p>{t("bibliography")}</p>
               </TooltipContent>
             </Tooltip>
-          )}
+          ) : null}
 
           <Tooltip>
             <TooltipTrigger
@@ -178,13 +192,13 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
         </nav>
       </section>
 
-      {!!showSheet && (
-        <Sheet modal={false} onOpenChange={setOpen} open={open}>
+      {showSheet ? (
+        <Sheet modal={false} onOpenChange={set} open={open}>
           <SheetContent className="w-full sm:max-w-xl">
             <div className="flex h-full flex-col">
               <SheetHeader>
                 <SheetTitle className="text-xl">
-                  {references.length} {t("references")}
+                  {referenceList.length} {t("references")}
                 </SheetTitle>
                 <SheetDescription>{title}</SheetDescription>
               </SheetHeader>
@@ -194,7 +208,7 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
               <div className="flex flex-1 flex-col overflow-hidden">
                 <ScrollArea className="h-full px-4">
                   <div className="flex flex-col gap-4 py-4">
-                    {references.map((reference) => {
+                    {referenceList.map((reference) => {
                       const url = reference.url
                         ? formatUrl(reference.url)
                         : t("no-website");
@@ -281,7 +295,7 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
             </div>
           </SheetContent>
         </Sheet>
-      )}
+      ) : null}
     </>
   );
 }

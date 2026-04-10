@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowDown01Icon, StopIcon } from "@hugeicons/core-free-icons";
+import { useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -14,16 +15,30 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
-import { useState, useTransition } from "react";
+import { useLayoutEffect, useTransition } from "react";
 import { toast } from "sonner";
 import { useAttempt } from "@/lib/context/use-attempt";
 import { useExercise } from "@/lib/context/use-exercise";
 import { useUser } from "@/lib/context/use-user";
 
+/**
+ * Renders the completion controls for one exercise set.
+ *
+ * The completion dialog is transient UI, so it resets closed when Next hides
+ * the page through Cache Components state preservation.
+ *
+ * References:
+ * - Next.js preserving UI state with Cache Components:
+ *   `apps/www/node_modules/next/dist/docs/01-app/02-guides/preserving-ui-state.md`
+ * - Mantine `useDisclosure`:
+ *   https://mantine.dev/hooks/use-disclosure/
+ */
 export function CompleteExerciseButton() {
   const t = useTranslations("Exercises");
-  const [open, setOpen] = useState(false);
+  const [open, { close, open: openDialog, set }] = useDisclosure(false);
   const [isPending, startTransition] = useTransition();
+
+  useLayoutEffect(() => close, [close]);
 
   const showStats = useExercise((state) => state.showStats);
   const setShowStats = useExercise((state) => state.setShowStats);
@@ -55,7 +70,7 @@ export function CompleteExerciseButton() {
 
       try {
         await completeAttempt({ attemptId: attempt._id });
-        setOpen(false);
+        close();
         resetTimeSpent();
         setShowStats(true);
       } catch {
@@ -70,7 +85,7 @@ export function CompleteExerciseButton() {
     <ButtonGroup>
       <Button
         disabled={isPending}
-        onClick={() => setOpen(true)}
+        onClick={openDialog}
         type="button"
         variant="destructive"
       >
@@ -106,7 +121,7 @@ export function CompleteExerciseButton() {
           </Button>
         }
         open={open}
-        setOpen={setOpen}
+        setOpen={set}
         title={t("complete-exercise-title")}
       >
         <div className="flex flex-col gap-2">

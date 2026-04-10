@@ -24,7 +24,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
 import type { ReactElement, ReactNode } from "react";
-import { Fragment, useTransition } from "react";
+import { Fragment, useLayoutEffect, useTransition } from "react";
 import { articlesMenu } from "@/components/sidebar/_data/articles";
 import { holyMenu } from "@/components/sidebar/_data/holy";
 import { subjectMenu } from "@/components/sidebar/_data/subject";
@@ -47,6 +47,12 @@ export function SearchCommand() {
     open: state.open,
     setOpen: state.setOpen,
   }));
+
+  useLayoutEffect(() => {
+    return () => {
+      setOpen(false);
+    };
+  }, [setOpen]);
 
   useHotkeys([
     ["/", () => setOpen(true)],

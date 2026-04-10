@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
+import { useDisclosure } from "@mantine/hooks";
 import {
   Collapsible,
   CollapsibleContent,
@@ -23,65 +24,75 @@ import { usePathname } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
 import { subjectMenu } from "./_data/subject";
 
-function MenuItem() {
+/**
+ * Renders one subject category inside the app sidebar.
+ *
+ * We keep the design-system collapsible so the animation stays intact, but we
+ * key the collapsible by pathname. This gives Base UI a fresh panel instance on
+ * every route change while preserving the logical open/closed choice in React
+ * state.
+ *
+ * References:
+ * - Next.js preserving UI state with Cache Components:
+ *   `apps/www/node_modules/next/dist/docs/01-app/02-guides/preserving-ui-state.md`
+ * - React guidance on simplifying effects when render identity is enough:
+ *   https://react.dev/learn/you-might-not-need-an-effect
+ * - Mantine `useDisclosure`:
+ *   https://mantine.dev/hooks/use-disclosure/
+ * - Installed Base UI collapsible panel internals:
+ *   `packages/design-system/node_modules/@base-ui/react/esm/collapsible/panel/useCollapsiblePanel.js`
+ */
+function SubjectMenuItem({ item }: { item: (typeof subjectMenu)[number] }) {
   const pathname = usePathname();
   const t = useTranslations("Subject");
+  const [isOpen, { set }] = useDisclosure(
+    item.items.some((subItem) => pathname.includes(subItem.href))
+  );
 
   return (
-    <SidebarMenu>
-      {subjectMenu.map((item) => {
-        return (
-          <Collapsible
-            key={item.title}
-            render={
-              <SidebarMenuItem>
-                <CollapsibleTrigger
-                  render={
-                    <SidebarMenuButton
-                      className="group"
-                      tooltip={t(item.title)}
-                    >
-                      {!!item.icon && <HugeIcons icon={item.icon} />}
-                      <span className="truncate">{t(item.title)}</span>
-                      <HugeIcons
-                        className="ml-auto transition-transform duration-200 group-data-panel-open:rotate-90"
-                        icon={ArrowRight01Icon}
-                      />
-                    </SidebarMenuButton>
-                  }
-                />
-                <CollapsibleContent>
-                  <SidebarMenuSub>
-                    {item.items.map((subItem) => {
-                      let title = "";
-                      // Only grade that has value
-                      if ("value" in subItem) {
-                        title = t(subItem.title, { grade: subItem.value });
-                      } else {
-                        title = t(subItem.title);
-                      }
+    <Collapsible
+      key={`${item.title}:${pathname}`}
+      onOpenChange={set}
+      open={isOpen}
+    >
+      <SidebarMenuItem>
+        <CollapsibleTrigger
+          render={
+            <SidebarMenuButton className="group" tooltip={t(item.title)}>
+              {!!item.icon && <HugeIcons icon={item.icon} />}
+              <span className="truncate">{t(item.title)}</span>
+              <HugeIcons
+                className="ml-auto transition-transform duration-200 group-data-panel-open:rotate-90"
+                icon={ArrowRight01Icon}
+              />
+            </SidebarMenuButton>
+          }
+        />
+        <CollapsibleContent>
+          <SidebarMenuSub>
+            {item.items.map((subItem) => {
+              const title =
+                "value" in subItem
+                  ? t(subItem.title, { grade: subItem.value })
+                  : t(subItem.title);
 
-                      return (
-                        <SidebarMenuSubItem key={title}>
-                          <SidebarMenuSubButton
-                            asChild
-                            isActive={pathname.includes(subItem.href)}
-                          >
-                            <NavigationLink href={subItem.href} title={title}>
-                              <span>{title}</span>
-                            </NavigationLink>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      );
-                    })}
-                  </SidebarMenuSub>
-                </CollapsibleContent>
-              </SidebarMenuItem>
-            }
-          />
-        );
-      })}
-    </SidebarMenu>
+              return (
+                <SidebarMenuSubItem key={title}>
+                  <SidebarMenuSubButton
+                    asChild
+                    isActive={pathname.includes(subItem.href)}
+                  >
+                    <NavigationLink href={subItem.href} title={title}>
+                      <span>{title}</span>
+                    </NavigationLink>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+              );
+            })}
+          </SidebarMenuSub>
+        </CollapsibleContent>
+      </SidebarMenuItem>
+    </Collapsible>
   );
 }
 
@@ -92,7 +103,11 @@ export function NavSubject() {
     <SidebarGroup>
       <SidebarGroupLabel>{t("subject")}</SidebarGroupLabel>
       <SidebarGroupContent>
-        <MenuItem />
+        <SidebarMenu>
+          {subjectMenu.map((item) => (
+            <SubjectMenuItem item={item} key={item.title} />
+          ))}
+        </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
   );

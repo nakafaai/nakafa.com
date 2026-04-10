@@ -8,6 +8,7 @@ import {
   Tick01Icon,
   Timer02Icon,
 } from "@hugeicons/core-free-icons";
+import { useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -37,7 +38,7 @@ import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { formatDuration } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
-import { Activity, useState } from "react";
+import { Activity, useLayoutEffect } from "react";
 import { toast } from "sonner";
 import * as z from "zod/mini";
 import { useAttempt } from "@/lib/context/use-attempt";
@@ -63,12 +64,26 @@ const defaultValues = ({
   timeLimit,
 });
 
+/**
+ * Renders the start-attempt controls for one exercise set.
+ *
+ * The start dialog is transient UI, so it resets closed when Next hides the
+ * page through Cache Components state preservation.
+ *
+ * References:
+ * - Next.js preserving UI state with Cache Components:
+ *   `apps/www/node_modules/next/dist/docs/01-app/02-guides/preserving-ui-state.md`
+ * - Mantine `useDisclosure`:
+ *   https://mantine.dev/hooks/use-disclosure/
+ */
 export function StartExerciseButton({
   totalExercises,
 }: StartExerciseButtonProps) {
   const t = useTranslations("Exercises");
-  const [open, setOpen] = useState(false);
+  const [open, { close, open: openDialog, set }] = useDisclosure(false);
   const locale = useLocale();
+
+  useLayoutEffect(() => close, [close]);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -106,7 +121,7 @@ export function StartExerciseButton({
           totalExercises,
           timeLimit,
         });
-        setOpen(false);
+        close();
         resetTimeSpent();
         setShowStats(true);
         toast.success(t("start-exercise-success"), {
@@ -129,7 +144,7 @@ export function StartExerciseButton({
       }}
     >
       <ButtonGroup>
-        <Button onClick={() => setOpen(true)} type="button">
+        <Button onClick={openDialog} type="button">
           <HugeIcons icon={Rocket01Icon} />
           {t("start")}
         </Button>
@@ -174,7 +189,7 @@ export function StartExerciseButton({
           </form.Subscribe>
         }
         open={open}
-        setOpen={setOpen}
+        setOpen={set}
         title={t("start-exercise-title")}
       >
         <FieldGroup>
