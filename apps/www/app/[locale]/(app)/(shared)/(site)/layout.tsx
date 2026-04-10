@@ -4,7 +4,6 @@ import { hasLocale } from "next-intl";
 import { use } from "react";
 import { Footer } from "@/components/marketing/shared/footer";
 import { Header } from "@/components/marketing/shared/header";
-import { AppProviders } from "@/components/providers";
 
 /** Renders the marketing subtree inside its dedicated site shell. */
 export default function Layout(props: LayoutProps<"/[locale]">) {
@@ -15,15 +14,13 @@ export default function Layout(props: LayoutProps<"/[locale]">) {
   }
 
   return (
-    <AppProviders>
-      <main
-        className="flex min-h-screen w-full flex-1 flex-col"
-        data-marketing-page
-      >
-        <Header />
-        {children}
-        <Footer />
-      </main>
-    </AppProviders>
+    <main
+      className="flex min-h-screen w-full flex-1 flex-col"
+      data-marketing-page
+    >
+      <Header />
+      {children}
+      <Footer />
+    </main>
   );
 }

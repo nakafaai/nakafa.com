@@ -2,7 +2,7 @@ import { routing } from "@repo/internationalization/src/routing";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
 import { Suspense } from "react";
-import { ConvexAppProviders } from "@/components/providers";
+import { AppProviders } from "@/components/providers/app";
 import { getToken } from "@/lib/auth/server";
 
 /**
@@ -34,11 +34,9 @@ export default async function Layout(props: LayoutProps<"/[locale]">) {
   );
 }
 
-/** Seeds the shared Convex user subtree with the current request token. */
+/** Seeds the shared app runtime subtree with the current request token. */
 async function AuthLayout({ children }: { children: React.ReactNode }) {
   const token = await getToken();
 
-  return (
-    <ConvexAppProviders initialToken={token}>{children}</ConvexAppProviders>
-  );
+  return <AppProviders initialToken={token}>{children}</AppProviders>;
 }
