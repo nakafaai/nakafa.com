@@ -3,6 +3,7 @@ import nodePath from "node:path";
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import { getExerciseContent } from "@repo/contents/_lib/exercises/content";
 import { getFolderChildNames } from "@repo/contents/_lib/fs";
+import { extractMetadata } from "@repo/contents/_lib/metadata";
 import { resolveContentsDir } from "@repo/contents/_lib/root";
 import {
   type ChoicesValidationError,
@@ -15,7 +16,7 @@ import {
 } from "@repo/contents/_types/exercises/choices";
 import type { Exercise } from "@repo/contents/_types/exercises/shared";
 import { cleanSlug } from "@repo/utilities/helper";
-import { Effect, Option } from "effect";
+import { Effect, Either, Option } from "effect";
 import ky from "ky";
 
 const contentsDir = resolveContentsDir(import.meta.url);
@@ -40,6 +41,157 @@ function loadExerciseContent(
   includeMDX: boolean
 ) {
   return getExerciseContent(locale, filePath, { includeMDX });
+}
+
+/**
+ * Reads one exercise choices file, falling back to the GitHub raw copy when
+ * the local file is unavailable.
+ */
+async function readExerciseChoices(choicesPath: string) {
+  const fullPath = nodePath.join(contentsDir, choicesPath);
+
+  if (!fullPath.startsWith(contentsDir)) {
+    return null;
+  }
+
+  const raw = await fsPromises
+    .readFile(fullPath, "utf8")
+    .catch(() =>
+      ky
+        .get(
+          `https://raw.githubusercontent.com/nakafaai/nakafa.com/refs/heads/main/packages/contents/${choicesPath}`,
+          { cache: "force-cache" }
+        )
+        .text()
+    );
+
+  const match = raw.match(CHOICES_REGEX);
+
+  if (!match?.[1]) {
+    return null;
+  }
+
+  const choicesObject = Either.try({
+    try: () => new Function(`return ${match[1]}`)(),
+    catch: () => null,
+  });
+
+  if (Either.isLeft(choicesObject)) {
+    return null;
+  }
+
+  const parsed = ExercisesChoicesSchema.safeParse(choicesObject.right);
+  return parsed.success ? parsed.data : null;
+}
+
+/**
+ * Reads one exercise MDX file as raw text and parses its metadata without
+ * importing the compiled MDX module.
+ */
+async function readExerciseContentData(locale: Locale, filePath: string) {
+  const cleanPath = cleanSlug(filePath);
+  const fullPath = nodePath.join(contentsDir, `${cleanPath}/${locale}.mdx`);
+
+  if (!fullPath.startsWith(contentsDir)) {
+    return null;
+  }
+
+  const raw = await fsPromises.readFile(fullPath, "utf8").catch(() => null);
+
+  if (raw === null) {
+    return null;
+  }
+
+  const metadata = extractMetadata(raw);
+
+  if (Option.isNone(metadata)) {
+    return null;
+  }
+
+  return {
+    metadata: metadata.value,
+    raw,
+  };
+}
+
+/**
+ * Loads one plain exercise row by combining raw question metadata, raw answer
+ * metadata, and parsed choices.
+ */
+async function loadExerciseData(
+  exerciseNumberSegment: string,
+  cleanPath: string,
+  locale: Locale
+) {
+  const exerciseNumber = Number.parseInt(exerciseNumberSegment, 10);
+  const questionPath = `${cleanPath}/${exerciseNumberSegment}/_question`;
+  const answerPath = `${cleanPath}/${exerciseNumberSegment}/_answer`;
+  const choicesPath = `${cleanPath}/${exerciseNumberSegment}/choices.ts`;
+
+  const [question, answer, choices] = await Promise.all([
+    readExerciseContentData(locale, questionPath),
+    readExerciseContentData(locale, answerPath),
+    readExerciseChoices(choicesPath),
+  ]);
+
+  if (!(question && answer && choices)) {
+    return null;
+  }
+
+  return {
+    answer,
+    choices,
+    number: exerciseNumber,
+    question,
+  } satisfies Exercise;
+}
+
+/**
+ * Loads the plain renderable exercise rows for one exercise set without
+ * importing compiled MDX modules.
+ */
+export async function getRenderableExercisesContent(
+  locale: Locale,
+  filePath: string
+) {
+  const cleanPath = cleanSlug(filePath);
+  const exerciseNumbers = getExerciseQuestionNumbers(
+    getMDXSlugsForLocale(locale),
+    cleanPath
+  );
+
+  if (exerciseNumbers.length === 0) {
+    return [];
+  }
+
+  const exercises = await Promise.all(
+    exerciseNumbers.map((exerciseNumber) =>
+      loadExerciseData(exerciseNumber, cleanPath, locale)
+    )
+  );
+
+  return exercises.filter((exercise) => exercise !== null);
+}
+
+/**
+ * Loads one plain renderable exercise row by its number within an exercise set.
+ */
+export function getRenderableExerciseByNumber(
+  locale: Locale,
+  filePath: string,
+  exerciseNumber: number
+) {
+  const cleanPath = cleanSlug(filePath);
+  const numberSegment = getExerciseQuestionNumbers(
+    getMDXSlugsForLocale(locale),
+    cleanPath
+  ).find((segment) => Number.parseInt(segment, 10) === exerciseNumber);
+
+  if (!numberSegment) {
+    return null;
+  }
+
+  return loadExerciseData(numberSegment, cleanPath, locale);
 }
 
 /**

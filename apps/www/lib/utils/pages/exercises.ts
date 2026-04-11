@@ -1,6 +1,8 @@
 import {
   getExerciseByNumber,
   getExerciseCount,
+  getRenderableExerciseByNumber,
+  getRenderableExercisesContent,
 } from "@repo/contents/_lib/exercises";
 import {
   getCurrentMaterial,
@@ -16,6 +18,7 @@ import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
+import { cache } from "react";
 import { isNumber } from "@/lib/utils/number";
 
 /**
@@ -71,6 +74,24 @@ export interface FetchExerciseMetadataContextOutput {
   /** All available materials for the given category/type/material */
   materials: Awaited<ReturnType<typeof getMaterials>>;
 }
+
+/**
+ * Loads the plain exercise rows for one exercise set once per request.
+ */
+export const getRenderableExerciseSet = cache(
+  (locale: Locale, filePath: string) => {
+    return getRenderableExercisesContent(locale, filePath);
+  }
+);
+
+/**
+ * Loads one plain exercise row by number once per request.
+ */
+export const getRenderableExercise = cache(
+  (locale: Locale, filePath: string, exerciseNumber: number) => {
+    return getRenderableExerciseByNumber(locale, filePath, exerciseNumber);
+  }
+);
 
 /**
  * Fetches the exercise context including materials, current material, and current material item.
