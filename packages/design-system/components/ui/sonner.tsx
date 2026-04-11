@@ -24,7 +24,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
         ),
         info: (
           <HugeIcons
-            className="size-4 text-muted"
+            className="size-4 text-foreground"
             icon={InformationCircleIcon}
           />
         ),
