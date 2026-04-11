@@ -1,6 +1,6 @@
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
-import { getExercisesContent } from "@repo/contents/_lib/exercises";
 import { getExerciseContent } from "@repo/contents/_lib/exercises/content";
+import { getExercisesContent } from "@repo/contents/_lib/exercises/set";
 import {
   hasInvalidTryOutYearSlug,
   isTryOutCollectionSlug,
@@ -11,8 +11,6 @@ import {
   getExerciseSetPaths,
 } from "@repo/contents/_lib/static-params";
 import {
-  ChoicesValidationError,
-  ExerciseLoadError,
   FileReadError,
   GitHubFetchError,
   InvalidPathError,
@@ -199,15 +197,9 @@ export async function GET(
           }
         );
 
-        const statusCode =
-          error instanceof ExerciseLoadError ||
-          error instanceof ChoicesValidationError
-            ? 500
-            : 500;
-
         return NextResponse.json(
           { error: "Failed to fetch exercises content." },
-          { status: statusCode }
+          { status: 500 }
         );
       },
       onSuccess: (content) => {
@@ -221,10 +213,7 @@ export async function GET(
         const result =
           exerciseNumber === null
             ? content
-            : content.filter(
-                (exercise: { number: number }) =>
-                  exercise.number === exerciseNumber
-              );
+            : content.filter((exercise) => exercise.number === exerciseNumber);
 
         if (exerciseNumber !== null && result.length === 0) {
           return NextResponse.json(

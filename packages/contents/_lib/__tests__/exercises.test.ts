@@ -56,14 +56,18 @@ vi.mock("ky", () => ({
 }));
 
 import {
-  getExerciseByNumber,
   getExerciseCount,
   getExerciseQuestionNumbers,
   getExerciseSetPaths,
-  getExercisesContent,
+} from "@repo/contents/_lib/exercises/collection";
+import {
   getRenderableExerciseByNumber,
   getRenderableExercisesContent,
-} from "@repo/contents/_lib/exercises";
+} from "@repo/contents/_lib/exercises/renderable";
+import {
+  getExerciseByNumber,
+  getExercisesContent,
+} from "@repo/contents/_lib/exercises/set";
 
 const exerciseBasePath =
   "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1";

@@ -1,13 +1,11 @@
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import { getContent } from "@repo/contents/_lib/content";
-import {
-  getExerciseSetPaths,
-  getExercisesContent,
-} from "@repo/contents/_lib/exercises";
+import { getExerciseSetPaths } from "@repo/contents/_lib/exercises/collection";
 import {
   getCurrentMaterial,
   getMaterials as getExerciseMaterials,
 } from "@repo/contents/_lib/exercises/material";
+import { getExercisesContent } from "@repo/contents/_lib/exercises/set";
 import { getSurah, getSurahName } from "@repo/contents/_lib/quran";
 import { ContentRootSchema } from "@repo/contents/_types/content";
 import { routing } from "@repo/internationalization/src/routing";

@@ -1,14 +1,14 @@
-import {
-  getExerciseByNumber,
-  getExerciseCount,
-  getRenderableExerciseByNumber,
-  getRenderableExercisesContent,
-} from "@repo/contents/_lib/exercises";
+import { getExerciseCount } from "@repo/contents/_lib/exercises/collection";
 import {
   getCurrentMaterial,
   getMaterialPath,
   getMaterials,
 } from "@repo/contents/_lib/exercises/material";
+import {
+  getRenderableExerciseByNumber,
+  getRenderableExercisesContent,
+} from "@repo/contents/_lib/exercises/renderable";
+import { getExerciseByNumber } from "@repo/contents/_lib/exercises/set";
 import {
   getSlugPath,
   isTryOutCollectionSlug,

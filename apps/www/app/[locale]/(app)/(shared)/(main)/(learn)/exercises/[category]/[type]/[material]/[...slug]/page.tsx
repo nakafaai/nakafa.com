@@ -1,5 +1,5 @@
-import { getExerciseCount } from "@repo/contents/_lib/exercises";
 import { parseExercisesCategory } from "@repo/contents/_lib/exercises/category";
+import { getExerciseCount } from "@repo/contents/_lib/exercises/collection";
 import {
   getCurrentMaterial,
   getMaterialPath,

@@ -1,9 +1,9 @@
-import { getExercisesContent } from "@repo/contents/_lib/exercises";
 import {
   getCurrentMaterial,
   getMaterialPath,
   getMaterials,
 } from "@repo/contents/_lib/exercises/material";
+import { getExercisesContent } from "@repo/contents/_lib/exercises/set";
 import { getContentMetadataWithRaw } from "@repo/contents/_lib/metadata";
 import { getAllSurah, getSurah, getSurahName } from "@repo/contents/_lib/quran";
 import { ExercisesCategorySchema } from "@repo/contents/_types/exercises/category";

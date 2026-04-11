@@ -4,7 +4,7 @@ import {
   type TryoutProduct,
   tryoutProductPolicies,
 } from "@repo/backend/convex/tryouts/products";
-import { getExercisesContent } from "@repo/contents/_lib/exercises";
+import { getExercisesContent } from "@repo/contents/_lib/exercises/set";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
 import { slugify } from "@repo/design-system/lib/utils";
