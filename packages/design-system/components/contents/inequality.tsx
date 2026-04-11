@@ -14,7 +14,10 @@ interface Props {
   description: ReactNode;
   title: ReactNode;
 }
-
+/**
+ * Renders one card-wrapped inequality visualization with a shared coordinate
+ * system shell.
+ */
 export function Inequality({ title, description, data }: Props) {
   return (
     <Card>

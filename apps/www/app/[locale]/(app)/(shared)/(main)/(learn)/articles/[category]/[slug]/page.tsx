@@ -1,5 +1,7 @@
 import { parseArticleCategory } from "@repo/contents/_lib/articles/category";
+import { getArticleReferences } from "@repo/contents/_lib/articles/content";
 import { getSlugPath } from "@repo/contents/_lib/articles/slug";
+import { importContentModule } from "@repo/contents/_lib/module";
 import { getHeadings } from "@repo/contents/_lib/toc";
 import { formatContentDateISO } from "@repo/contents/_shared/date";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
@@ -27,10 +29,7 @@ import {
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
-import {
-  fetchArticleContext,
-  fetchArticleMetadataContext,
-} from "@/lib/utils/pages/article";
+import { fetchArticleMetadataContext } from "@/lib/utils/pages/article";
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
 import { getStaticParams } from "@/lib/utils/system";
@@ -163,6 +162,8 @@ export default async function Page({
 }: PageProps<"/[locale]/articles/[category]/[slug]">) {
   const { locale, category, slug } = await getResolvedParams(params);
   const filePath = getSlugPath(category, slug);
+  const content = await importContentModule(filePath, locale).catch(() => null);
+  const Content = content?.default;
 
   return (
     <CachedArticleShell
@@ -180,7 +181,9 @@ export default async function Page({
           key={`audio:${filePath}`}
         />
       }
-    />
+    >
+      {Content ? <Content /> : null}
+    </CachedArticleShell>
   );
 }
 
@@ -188,12 +191,14 @@ async function CachedArticleShell({
   locale,
   category,
   slug,
+  children,
   footer,
   toolbar,
 }: {
   locale: Locale;
   category: ArticleCategory;
   slug: string;
+  children: ReactNode;
   footer: ReactNode;
   toolbar: ReactNode;
 }) {
@@ -208,16 +213,22 @@ async function CachedArticleShell({
 
   const FilePath = getSlugPath(category, slug);
 
-  const result = await Effect.runPromise(
-    Effect.match(fetchArticleContext({ locale, category, slug }), {
-      onFailure: () => ({ content: null, references: null }),
-      onSuccess: (data) => data,
-    })
-  );
+  const [content, references] = await Promise.all([
+    Effect.runPromise(
+      Effect.match(fetchArticleMetadataContext({ locale, category, slug }), {
+        onFailure: () => ({ content: null, FilePath }),
+        onSuccess: (data) => data,
+      })
+    ),
+    Effect.runPromise(
+      Effect.match(getArticleReferences(FilePath), {
+        onFailure: () => [],
+        onSuccess: (data) => data,
+      })
+    ),
+  ]);
 
-  const { content, references } = result;
-
-  if (!content) {
+  if (!(content.content && children !== null)) {
     return (
       <LayoutMaterial>
         <LayoutMaterialContent>
@@ -229,7 +240,7 @@ async function CachedArticleShell({
     );
   }
 
-  const { metadata, default: Content, raw } = content;
+  const { metadata, raw } = content.content;
   const publishedAt = formatContentDateISO(metadata.date) ?? metadata.date;
 
   const headings = getHeadings(raw);
@@ -282,7 +293,7 @@ async function CachedArticleShell({
           />
           <LayoutMaterialMain>
             {headings.length === 0 && <ComingSoon />}
-            {headings.length > 0 && Content ? <Content /> : null}
+            {headings.length > 0 ? children : null}
           </LayoutMaterialMain>
           <LayoutMaterialFooter>{footer}</LayoutMaterialFooter>
           {toolbar}

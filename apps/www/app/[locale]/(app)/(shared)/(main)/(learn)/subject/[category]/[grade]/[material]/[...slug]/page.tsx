@@ -1,3 +1,4 @@
+import { importContentModule } from "@repo/contents/_lib/module";
 import { parseSubjectCategory } from "@repo/contents/_lib/subject/category";
 import {
   getGradeNonNumeric,
@@ -45,10 +46,7 @@ import {
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl } from "@/lib/utils/metadata";
-import {
-  getContentContext,
-  getContentMetadataContext,
-} from "@/lib/utils/pages/subject";
+import { getContentMetadataContext } from "@/lib/utils/pages/subject";
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
 import { getStaticParams } from "@/lib/utils/system";
@@ -161,13 +159,7 @@ export function generateStaticParams() {
   });
 }
 
-export default function Page(
-  props: PageProps<"/[locale]/subject/[category]/[grade]/[material]/[...slug]">
-) {
-  return <ResolvedPage params={props.params} />;
-}
-
-async function ResolvedPage({
+export default async function Page({
   params,
 }: {
   params: PageProps<"/[locale]/subject/[category]/[grade]/[material]/[...slug]">["params"];
@@ -180,6 +172,8 @@ async function ResolvedPage({
   }
 
   const filePath = getSlugPath(category, grade, material, slug);
+  const content = await importContentModule(filePath, locale).catch(() => null);
+  const Content = content?.default;
 
   return (
     <CachedSubjectShell
@@ -199,7 +193,9 @@ async function ResolvedPage({
           key={`audio:${filePath}`}
         />
       }
-    />
+    >
+      {Content ? <Content /> : null}
+    </CachedSubjectShell>
   );
 }
 
@@ -259,6 +255,7 @@ async function CachedSubjectShell({
   grade,
   material,
   slug,
+  children,
   footer,
   toolbar,
 }: {
@@ -267,6 +264,7 @@ async function CachedSubjectShell({
   grade: Grade;
   material: Material;
   slug: string[];
+  children: ReactNode;
   footer: ReactNode;
   toolbar: ReactNode;
 }) {
@@ -282,24 +280,20 @@ async function CachedSubjectShell({
   const FilePath = getSlugPath(category, grade, material, slug);
   const materialPath = getMaterialPath(category, grade, material);
 
-  const result = await Effect.runPromise(
-    Effect.match(
-      getContentContext({ locale, category, grade, material, slug }),
-      {
-        onFailure: () => ({
-          content: null,
-          materials: null,
-          materialPath,
-          FilePath,
-        }),
-        onSuccess: (data) => data,
-      }
-    )
-  );
+  const [content, materials] = await Promise.all([
+    Effect.runPromise(
+      Effect.match(
+        getContentMetadataContext({ locale, category, grade, material, slug }),
+        {
+          onFailure: () => ({ content: null, FilePath }),
+          onSuccess: (data) => data,
+        }
+      )
+    ),
+    getMaterials(materialPath, locale).catch(() => null),
+  ]);
 
-  const { content, materials } = result;
-
-  if (!(content && materials)) {
+  if (!(content.content && materials && children !== null)) {
     return (
       <LayoutMaterial>
         <LayoutMaterialContent>
@@ -311,7 +305,7 @@ async function CachedSubjectShell({
     );
   }
 
-  const { metadata, default: Content, raw } = content;
+  const { metadata, raw } = content.content;
   const publishedAt = formatContentDateISO(metadata.date) ?? metadata.date;
 
   const pagination = getMaterialsPagination(FilePath, materials);
@@ -368,7 +362,7 @@ async function CachedSubjectShell({
           />
           <LayoutMaterialMain>
             {headings.length === 0 && <ComingSoon />}
-            {headings.length > 0 && Content ? <Content /> : null}
+            {headings.length > 0 ? children : null}
           </LayoutMaterialMain>
           <LayoutMaterialPagination pagination={pagination} />
           <LayoutMaterialFooter>{footer}</LayoutMaterialFooter>

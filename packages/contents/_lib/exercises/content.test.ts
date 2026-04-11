@@ -24,7 +24,6 @@ describe("getExerciseContent", () => {
 
     expect(mockGetScopedContent).toHaveBeenCalledWith(
       "exercises",
-      expect.any(Function),
       "en",
       "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/1/_question",
       { includeMDX: false }
@@ -39,7 +38,6 @@ describe("getExerciseContent", () => {
 
     expect(mockGetScopedContent).toHaveBeenCalledWith(
       "exercises",
-      expect.any(Function),
       "en",
       "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/1/_question",
       {}

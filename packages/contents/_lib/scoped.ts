@@ -2,6 +2,7 @@ import { promises as fsPromises } from "node:fs";
 import path from "node:path";
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import { extractMetadata } from "@repo/contents/_lib/metadata";
+import { importContentModule } from "@repo/contents/_lib/module";
 import { resolveContentsDir } from "@repo/contents/_lib/root";
 import {
   FileReadError,
@@ -23,14 +24,8 @@ import {
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, Option } from "effect";
 import ky from "ky";
-import type { ComponentType } from "react";
 
 const contentsDir = resolveContentsDir(import.meta.url);
-
-interface ScopedContentModule {
-  default: ComponentType;
-  metadata?: unknown;
-}
 
 interface ScopedReferencesModule {
   references?: unknown;
@@ -41,11 +36,6 @@ interface ScopedContentTarget {
   contentPath: string;
   relativePath: string;
 }
-
-type ScopedContentImporter = (
-  relativePath: string,
-  locale: Locale
-) => Promise<ScopedContentModule>;
 
 type ScopedReferencesImporter = (
   relativePath: string
@@ -213,7 +203,6 @@ export function parseReferences(
  */
 export function getScopedContent(
   root: ContentRoot,
-  importContentModule: ScopedContentImporter,
   locale: Locale,
   filePath: string,
   options: { includeMDX?: boolean } = {}
@@ -235,7 +224,7 @@ export function getScopedContent(
         [
           getRawContent(target.contentPath),
           Effect.tryPromise({
-            try: () => importContentModule(target.relativePath, locale),
+            try: () => importContentModule(target.cleanPath, locale),
             catch: (error: unknown) =>
               new ModuleLoadError({
                 path: `@repo/contents/${target.contentPath}`,
@@ -283,7 +272,6 @@ export function getScopedContent(
  */
 export function getScopedContents(
   root: ContentRoot,
-  importContentModule: ScopedContentImporter,
   options: {
     basePath?: string;
     includeMDX?: boolean;
@@ -302,7 +290,7 @@ export function getScopedContents(
   function processSlug(slug: string, contentLocale: Locale) {
     return Effect.gen(function* () {
       const content = yield* Effect.either(
-        getScopedContent(root, importContentModule, contentLocale, slug, {
+        getScopedContent(root, contentLocale, slug, {
           includeMDX,
         })
       );

@@ -12,15 +12,7 @@ export function getSubjectContent(
   filePath: string,
   options: { includeMDX?: boolean } = {}
 ) {
-  return getScopedContent(
-    "subject",
-    /* istanbul ignore next: Vitest/Vite cannot execute nested variable dynamic imports here. */
-    async (relativePath, contentLocale) =>
-      await import(`../../subject/${relativePath}/${contentLocale}.mdx`),
-    locale,
-    filePath,
-    options
-  );
+  return getScopedContent("subject", locale, filePath, options);
 }
 
 /**
@@ -30,11 +22,5 @@ export function getSubjectContent(
 export function getSubjectContents(
   options: { basePath?: string; includeMDX?: boolean; locale?: Locale } = {}
 ) {
-  return getScopedContents(
-    "subject",
-    /* istanbul ignore next: Vitest/Vite cannot execute nested variable dynamic imports here. */
-    async (relativePath, contentLocale) =>
-      await import(`../../subject/${relativePath}/${contentLocale}.mdx`),
-    options
-  );
+  return getScopedContents("subject", options);
 }

@@ -31,7 +31,6 @@ describe("getArticleContent", () => {
 
     expect(mockGetScopedContent).toHaveBeenCalledWith(
       "articles",
-      expect.any(Function),
       "en",
       "articles/politics/test-article",
       { includeMDX: false }
@@ -43,7 +42,6 @@ describe("getArticleContent", () => {
 
     expect(mockGetScopedContent).toHaveBeenCalledWith(
       "articles",
-      expect.any(Function),
       "en",
       "articles/politics/test-article",
       {}
@@ -63,25 +61,17 @@ describe("getArticleContents", () => {
       locale: "en",
     });
 
-    expect(mockGetScopedContents).toHaveBeenCalledWith(
-      "articles",
-      expect.any(Function),
-      {
-        basePath: "articles/politics",
-        includeMDX: false,
-        locale: "en",
-      }
-    );
+    expect(mockGetScopedContents).toHaveBeenCalledWith("articles", {
+      basePath: "articles/politics",
+      includeMDX: false,
+      locale: "en",
+    });
   });
 
   it("delegates article list loading with default options", () => {
     getArticleContents();
 
-    expect(mockGetScopedContents).toHaveBeenCalledWith(
-      "articles",
-      expect.any(Function),
-      {}
-    );
+    expect(mockGetScopedContents).toHaveBeenCalledWith("articles", {});
   });
 });
 

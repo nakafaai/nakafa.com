@@ -1,5 +1,8 @@
+import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import {
   getExerciseByNumber,
+  getExerciseCount,
+  getExerciseQuestionNumbers,
   getExercisesContent,
 } from "@repo/contents/_lib/exercises";
 import { parseExercisesCategory } from "@repo/contents/_lib/exercises/category";
@@ -19,6 +22,7 @@ import {
   LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
 } from "@repo/contents/_lib/exercises/slug";
 import { parseExercisesType } from "@repo/contents/_lib/exercises/type";
+import { importContentModule } from "@repo/contents/_lib/module";
 import { formatContentDateISO } from "@repo/contents/_shared/date";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
 import type {
@@ -40,7 +44,7 @@ import { cacheLife } from "next/cache";
 import { notFound, permanentRedirect } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { use } from "react";
+import type { ReactNode } from "react";
 import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
 import { DeferredComments } from "@/components/comments/deferred";
 import { CardMaterial } from "@/components/shared/card-material";
@@ -227,25 +231,12 @@ export function generateStaticParams() {
   });
 }
 
-export default function Page(
-  props: PageProps<"/[locale]/exercises/[category]/[type]/[material]/[...slug]">
-) {
-  const { params } = props;
-  const {
-    locale: rawLocale,
-    category: rawCategory,
-    type: rawType,
-    material: rawMaterial,
-    slug,
-  } = use(params);
-  const locale = getLocaleOrThrow(rawLocale);
-  const category = parseExercisesCategory(rawCategory);
-  const type = parseExercisesType(rawType);
-  const material = parseExercisesMaterial(rawMaterial);
-
-  if (!(category && type && material)) {
-    notFound();
-  }
+export default async function Page({
+  params,
+}: PageProps<"/[locale]/exercises/[category]/[type]/[material]/[...slug]">) {
+  const { locale, category, type, material, slug } =
+    await getResolvedParams(params);
+  const t = await getTranslations({ locale, namespace: "Exercises" });
 
   if (hasInvalidTryOutYearSlug(slug)) {
     const tryOutSuffixIndex = 1;
@@ -268,17 +259,64 @@ export default function Page(
   if (!isTryOutCollectionSlug(slug) && lastSlug && isNumber(lastSlug)) {
     const exerciseNumber = Number.parseInt(lastSlug, 10);
     const baseSlug = slug.slice(0, -1);
+    const filePath = getSlugPath(category, type, material, baseSlug);
+    const [question, answer] = await Promise.all([
+      importContentModule(
+        `${filePath}/${exerciseNumber}/_question`,
+        locale
+      ).catch(() => null),
+      importContentModule(
+        `${filePath}/${exerciseNumber}/_answer`,
+        locale
+      ).catch(() => null),
+    ]);
+    const Question = question?.default;
+    const Answer = answer?.default;
+
     return (
       <SingleExerciseContent
+        answerContent={Answer ? <Answer /> : null}
         category={category}
         exerciseNumber={exerciseNumber}
         locale={locale}
         material={material}
+        questionContent={Question ? <Question /> : null}
         slug={baseSlug}
         type={type}
       />
     );
   }
+
+  const filePath = getSlugPath(category, type, material, slug);
+  const exerciseNumbers = getExerciseQuestionNumbers(
+    getMDXSlugsForLocale(locale),
+    filePath
+  );
+  const exerciseArticles = await Promise.all(
+    exerciseNumbers.map(async (numberSegment) => {
+      const exerciseNumber = Number.parseInt(numberSegment, 10);
+      const [question, answer] = await Promise.all([
+        importContentModule(
+          `${filePath}/${numberSegment}/_question`,
+          locale
+        ).catch(() => null),
+        importContentModule(
+          `${filePath}/${numberSegment}/_answer`,
+          locale
+        ).catch(() => null),
+      ]);
+      const Question = question?.default;
+      const Answer = answer?.default;
+      const id = slugify(`exercise-${exerciseNumber}`);
+
+      return {
+        id,
+        exerciseNumber,
+        questionContent: Question ? <Question /> : null,
+        answerContent: Answer ? <Answer /> : null,
+      };
+    })
+  );
 
   return (
     <PageContent
@@ -287,7 +325,23 @@ export default function Page(
       material={material}
       slug={slug}
       type={type}
-    />
+    >
+      {exerciseArticles.map((article) => (
+        <QuestionAnalytics
+          exerciseNumber={article.exerciseNumber}
+          key={article.exerciseNumber}
+        >
+          <ExerciseArticle
+            answerContent={article.answerContent}
+            choices={[]}
+            exerciseNumber={article.exerciseNumber}
+            id={article.id}
+            questionContent={article.questionContent}
+            srLabel={t("number-count", { count: article.exerciseNumber })}
+          />
+        </QuestionAnalytics>
+      ))}
+    </PageContent>
   );
 }
 
@@ -383,12 +437,14 @@ async function PageContent({
   type,
   material,
   slug,
+  children,
 }: {
   locale: Locale;
   category: ExercisesCategory;
   type: ExercisesType;
   material: ExercisesMaterial;
   slug: string[];
+  children: ReactNode;
 }) {
   "use cache";
 
@@ -416,10 +472,13 @@ async function PageContent({
   }
 
   const exercises = await Effect.runPromise(
-    Effect.match(getExercisesContent({ locale, filePath: FilePath }), {
-      onFailure: () => [],
-      onSuccess: (data) => data,
-    })
+    Effect.match(
+      getExercisesContent({ locale, filePath: FilePath, includeMDX: false }),
+      {
+        onFailure: () => [],
+        onSuccess: (data) => data,
+      }
+    )
   );
 
   if (exercises.length === 0 || !matchedMaterial || !matchedItem) {
@@ -491,23 +550,7 @@ async function PageContent({
           <LayoutMaterialMain as="section" className="space-y-12">
             <ExerciseAttempt totalExercises={exercises.length} />
 
-            {exercises.map((exercise) => {
-              const id = slugify(t("number-count", { count: exercise.number }));
-
-              return (
-                <QuestionAnalytics
-                  exerciseNumber={exercise.number}
-                  key={exercise.number}
-                >
-                  <ExerciseArticle
-                    exercise={exercise}
-                    id={id}
-                    locale={locale}
-                    srLabel={t("number-count", { count: exercise.number })}
-                  />
-                </QuestionAnalytics>
-              );
-            })}
+            {children}
           </LayoutMaterialMain>
           <LayoutMaterialPagination pagination={pagination} />
           <LayoutMaterialFooter>
@@ -533,19 +576,23 @@ async function PageContent({
 }
 
 async function SingleExerciseContent({
+  answerContent,
   locale,
   category,
   type,
   material,
   slug,
   exerciseNumber,
+  questionContent,
 }: {
+  answerContent: ReactNode;
   locale: Locale;
   category: ExercisesCategory;
   type: ExercisesType;
   material: ExercisesMaterial;
   slug: string[];
   exerciseNumber: number;
+  questionContent: ReactNode;
 }) {
   "use cache";
 
@@ -557,24 +604,18 @@ async function SingleExerciseContent({
   const exerciseFilePath = `${FilePath}/${exerciseNumber}`;
 
   const singleExerciseEffect = Effect.all([
-    getExerciseByNumber(locale, FilePath, exerciseNumber),
+    getExerciseByNumber(locale, FilePath, exerciseNumber, false),
     fetchExerciseContext({ locale, category, type, material, slug }),
-    getExercisesContent({ locale, filePath: FilePath }),
+    getExerciseCount(FilePath),
   ]);
 
-  const [exerciseOption, exerciseContext, exercises] = await Effect.runPromise(
-    Effect.match(singleExerciseEffect, {
-      onFailure: () => {
-        const emptyResult: [Option.Option<Exercise>, null, null] = [
-          Option.none(),
-          null,
-          null,
-        ];
-        return emptyResult;
-      },
-      onSuccess: (data) => data,
-    })
-  );
+  const [exerciseOption, exerciseContext, exerciseCount] =
+    await Effect.runPromise(
+      Effect.match(singleExerciseEffect, {
+        onFailure: () => [Option.none<Exercise>(), null, 0],
+        onSuccess: (data) => data,
+      })
+    );
 
   if (Option.isNone(exerciseOption) || !exerciseContext) {
     return (
@@ -592,7 +633,7 @@ async function SingleExerciseContent({
 
   const { currentMaterialItem } = exerciseContext;
 
-  const totalExercises = exercises?.length ?? 0;
+  const totalExercises = exerciseCount;
   const pagination = getExerciseNumberPagination(
     FilePath,
     exerciseNumber,
@@ -655,11 +696,12 @@ async function SingleExerciseContent({
 
           <LayoutMaterialMain>
             <ExerciseAttempt totalExercises={totalExercises} />
-
             <ExerciseArticle
-              exercise={exercise}
+              answerContent={answerContent}
+              choices={exercise.choices[locale]}
+              exerciseNumber={exercise.number}
               id={id}
-              locale={locale}
+              questionContent={questionContent}
               srLabel={t("number-count", { count: exercise.number })}
             />
           </LayoutMaterialMain>

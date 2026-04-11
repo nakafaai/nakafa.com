@@ -169,6 +169,8 @@ export default async function Page(
                 const id = slugify(
                   tExercises("number-count", { count: exercise.number })
                 );
+                const Question = exercise.question.default;
+                const Answer = exercise.answer.default;
 
                 return (
                   <QuestionAnalytics
@@ -176,9 +178,11 @@ export default async function Page(
                     key={exercise.number}
                   >
                     <ExerciseArticle
-                      exercise={exercise}
+                      answerContent={Answer ? <Answer /> : null}
+                      choices={exercise.choices[locale]}
+                      exerciseNumber={exercise.number}
                       id={id}
-                      locale={locale}
+                      questionContent={Question ? <Question /> : null}
                       srLabel={tExercises("number-count", {
                         count: exercise.number,
                       })}

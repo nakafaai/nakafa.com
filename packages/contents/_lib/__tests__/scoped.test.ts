@@ -12,13 +12,17 @@ import {
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockGetMDXSlugsForLocale, mockKyGet, mockReadFile } = vi.hoisted(
-  () => ({
-    mockGetMDXSlugsForLocale: vi.fn(),
-    mockKyGet: vi.fn(),
-    mockReadFile: vi.fn(),
-  })
-);
+const {
+  mockGetMDXSlugsForLocale,
+  mockImportContentModule,
+  mockKyGet,
+  mockReadFile,
+} = vi.hoisted(() => ({
+  mockGetMDXSlugsForLocale: vi.fn(),
+  mockImportContentModule: vi.fn(),
+  mockKyGet: vi.fn(),
+  mockReadFile: vi.fn(),
+}));
 
 vi.mock("@repo/contents/_lib/cache", () => ({
   getMDXSlugsForLocale: mockGetMDXSlugsForLocale,
@@ -41,6 +45,10 @@ vi.mock("ky", () => ({
   },
 }));
 
+vi.mock("@repo/contents/_lib/module", () => ({
+  importContentModule: mockImportContentModule,
+}));
+
 const rawMetadataSource = `
 export const metadata = {
   title: "Raw Title",
@@ -53,9 +61,11 @@ export const metadata = {
 describe("scoped content helpers", () => {
   beforeEach(() => {
     mockGetMDXSlugsForLocale.mockReset();
+    mockImportContentModule.mockReset();
     mockReadFile.mockReset();
     mockKyGet.mockReset();
     mockGetMDXSlugsForLocale.mockReturnValue([]);
+    mockImportContentModule.mockRejectedValue(new Error("Module not found"));
     mockReadFile.mockResolvedValue(rawMetadataSource);
     mockKyGet.mockImplementation(() => {
       throw new Error("Unexpected GitHub fetch");
@@ -63,24 +73,14 @@ describe("scoped content helpers", () => {
   });
 
   it("loads raw metadata without calling the scoped importer", async () => {
-    const importer = vi.fn(() =>
-      Promise.reject(new Error("should not import"))
-    );
-
     const result = await Effect.runPromise(
-      getScopedContent(
-        "articles",
-        importer,
-        "en",
-        "articles/politics/test-article",
-        {
-          includeMDX: false,
-        }
-      )
+      getScopedContent("articles", "en", "articles/politics/test-article", {
+        includeMDX: false,
+      })
     );
 
     expect(result.metadata.title).toBe("Raw Title");
-    expect(importer).not.toHaveBeenCalled();
+    expect(mockImportContentModule).not.toHaveBeenCalled();
   });
 
   it("falls back to GitHub when the local raw content read fails", async () => {
@@ -92,7 +92,6 @@ describe("scoped content helpers", () => {
     const result = await Effect.runPromise(
       getScopedContent(
         "subject",
-        () => Promise.reject(new Error("should not import")),
         "en",
         "subject/high-school/10/mathematics/algebra/basic-concept",
         { includeMDX: false }
@@ -113,7 +112,6 @@ describe("scoped content helpers", () => {
       Effect.flip(
         getScopedContent(
           "subject",
-          () => Promise.reject(new Error("should not import")),
           "en",
           "subject/high-school/10/mathematics/algebra/basic-concept",
           { includeMDX: false }
@@ -129,7 +127,6 @@ describe("scoped content helpers", () => {
       Effect.flip(
         getScopedContent(
           "articles",
-          () => Promise.reject(new Error("should not import")),
           "en",
           "subject/high-school/10/mathematics/algebra/basic-concept",
           { includeMDX: false }
@@ -143,13 +140,9 @@ describe("scoped content helpers", () => {
   it("fails when a scoped file path attempts path traversal", async () => {
     const failure = await Effect.runPromise(
       Effect.flip(
-        getScopedContent(
-          "articles",
-          () => Promise.reject(new Error("should not import")),
-          "en",
-          "articles/../../secret",
-          { includeMDX: false }
-        )
+        getScopedContent("articles", "en", "articles/../../secret", {
+          includeMDX: false,
+        })
       )
     );
 
@@ -163,7 +156,6 @@ describe("scoped content helpers", () => {
       Effect.flip(
         getScopedContent(
           "exercises",
-          () => Promise.reject(new Error("should not import")),
           "en",
           "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/1/_question",
           { includeMDX: false }
@@ -175,28 +167,24 @@ describe("scoped content helpers", () => {
   });
 
   it("loads scoped MDX content with the provided importer", async () => {
-    const importer = vi.fn(() =>
-      Promise.resolve({
-        metadata: {
-          title: "Scoped Title",
-          description: "Scoped Description",
-          authors: [{ name: "Author" }],
-          date: "01/01/2024",
-        },
-        default: () => "Scoped MDX",
-      })
-    );
+    mockImportContentModule.mockResolvedValue({
+      metadata: {
+        title: "Scoped Title",
+        description: "Scoped Description",
+        authors: [{ name: "Author" }],
+        date: "01/01/2024",
+      },
+      default: () => "Scoped MDX",
+    });
 
     const result = await Effect.runPromise(
-      getScopedContent(
-        "articles",
-        importer,
-        "en",
-        "articles/politics/test-article"
-      )
+      getScopedContent("articles", "en", "articles/politics/test-article")
     );
 
-    expect(importer).toHaveBeenCalledWith("politics/test-article", "en");
+    expect(mockImportContentModule).toHaveBeenCalledWith(
+      "articles/politics/test-article",
+      "en"
+    );
     expect(result.metadata.title).toBe("Scoped Title");
     expect(result.default).toBeTruthy();
   });
@@ -207,10 +195,10 @@ describe("scoped content helpers", () => {
       "articles/science/another-article",
     ]);
 
-    const importer = vi.fn((relativePath: string) =>
+    mockImportContentModule.mockImplementation((cleanPath: string) =>
       Promise.resolve({
         metadata: {
-          title: relativePath,
+          title: cleanPath,
           description: "Scoped Description",
           authors: [{ name: "Author" }],
           date: "01/01/2024",
@@ -220,7 +208,7 @@ describe("scoped content helpers", () => {
     );
 
     const result = await Effect.runPromise(
-      getScopedContents("articles", importer, {
+      getScopedContents("articles", {
         basePath: "articles/politics",
         locale: "en",
       })
@@ -231,7 +219,10 @@ describe("scoped content helpers", () => {
     expect(result[0]?.url).toBe(
       "https://nakafa.com/en/articles/politics/test-article"
     );
-    expect(importer).toHaveBeenCalledWith("politics/test-article", "en");
+    expect(mockImportContentModule).toHaveBeenCalledWith(
+      "articles/politics/test-article",
+      "en"
+    );
   });
 
   it("omits scoped list entries that fail to load", async () => {
@@ -240,14 +231,14 @@ describe("scoped content helpers", () => {
       "subject/high-school/10/math/geometry",
     ]);
 
-    const importer = vi.fn((relativePath: string) => {
-      if (relativePath === "high-school/10/math/geometry") {
+    mockImportContentModule.mockImplementation((cleanPath: string) => {
+      if (cleanPath === "subject/high-school/10/math/geometry") {
         return Promise.reject(new Error("broken module"));
       }
 
       return Promise.resolve({
         metadata: {
-          title: relativePath,
+          title: cleanPath,
           description: "Scoped Description",
           authors: [{ name: "Author" }],
           date: "01/01/2024",
@@ -257,7 +248,7 @@ describe("scoped content helpers", () => {
     });
 
     const result = await Effect.runPromise(
-      getScopedContents("subject", importer, {
+      getScopedContents("subject", {
         locale: "en",
       })
     );
@@ -272,21 +263,17 @@ describe("scoped content helpers", () => {
       "subject/high-school/10/math/algebra",
     ]);
 
-    const importer = vi.fn(() =>
-      Promise.resolve({
-        metadata: {
-          title: "Scoped Title",
-          description: "Scoped Description",
-          authors: [{ name: "Author" }],
-          date: "01/01/2024",
-        },
-        default: () => "Scoped MDX",
-      })
-    );
+    mockImportContentModule.mockResolvedValue({
+      metadata: {
+        title: "Scoped Title",
+        description: "Scoped Description",
+        authors: [{ name: "Author" }],
+        date: "01/01/2024",
+      },
+      default: () => "Scoped MDX",
+    });
 
-    const result = await Effect.runPromise(
-      getScopedContents("articles", importer)
-    );
+    const result = await Effect.runPromise(getScopedContents("articles"));
 
     expect(result).toHaveLength(1);
     expect(result[0]?.slug).toBe("articles/politics/test-article");
@@ -295,12 +282,7 @@ describe("scoped content helpers", () => {
   it("fails with ModuleLoadError when the scoped importer throws", async () => {
     const failure = await Effect.runPromise(
       Effect.flip(
-        getScopedContent(
-          "articles",
-          () => Promise.reject(new Error("boom")),
-          "en",
-          "articles/politics/test-article"
-        )
+        getScopedContent("articles", "en", "articles/politics/test-article")
       )
     );
 
@@ -308,18 +290,14 @@ describe("scoped content helpers", () => {
   });
 
   it("fails with MetadataParseError when the scoped MDX module metadata is invalid", async () => {
+    mockImportContentModule.mockResolvedValue({
+      metadata: { title: "Broken" },
+      default: () => "Broken MDX",
+    });
+
     const failure = await Effect.runPromise(
       Effect.flip(
-        getScopedContent(
-          "articles",
-          () =>
-            Promise.resolve({
-              metadata: { title: "Broken" },
-              default: () => "Broken MDX",
-            }),
-          "en",
-          "articles/politics/test-article"
-        )
+        getScopedContent("articles", "en", "articles/politics/test-article")
       )
     );
 
@@ -327,17 +305,13 @@ describe("scoped content helpers", () => {
   });
 
   it("fails with MetadataParseError when the scoped MDX module has no metadata export", async () => {
+    mockImportContentModule.mockResolvedValue({
+      default: () => "Broken MDX",
+    });
+
     const failure = await Effect.runPromise(
       Effect.flip(
-        getScopedContent(
-          "articles",
-          () =>
-            Promise.resolve({
-              default: () => "Broken MDX",
-            }),
-          "en",
-          "articles/politics/test-article"
-        )
+        getScopedContent("articles", "en", "articles/politics/test-article")
       )
     );
 

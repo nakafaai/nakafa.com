@@ -21,6 +21,9 @@ interface Props {
   title: ReactNode;
 }
 
+/**
+ * Renders one interactive line-equation card with the shared coordinate system.
+ */
 export function LineEquation({
   title,
   description,

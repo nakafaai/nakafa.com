@@ -20,6 +20,9 @@ interface Props {
   vectors: ComponentProps<typeof Vector>[];
 }
 
+/**
+ * Renders one interactive 3D vector card with the shared coordinate system.
+ */
 export function Vector3d({
   title,
   description,

@@ -1,20 +1,27 @@
-import type { Exercise } from "@repo/contents/_types/exercises/shared";
+import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 import type { Locale } from "next-intl";
+import type { ReactNode } from "react";
 import { ExerciseAnswerAction } from "./actions";
 import { ExerciseAnswer } from "./answer";
 import { ExerciseChoices } from "./choices";
 
 interface Props {
-  exercise: Exercise;
+  answerContent: ReactNode;
+  choices: ExercisesChoices[Locale];
+  exerciseNumber: number;
   id: string;
-  locale: Locale;
+  questionContent: ReactNode;
   srLabel: string;
 }
 
-export function ExerciseArticle({ exercise, locale, id, srLabel }: Props) {
-  const Question = exercise.question.default;
-  const Answer = exercise.answer.default;
-
+export function ExerciseArticle({
+  answerContent,
+  choices,
+  exerciseNumber,
+  id,
+  questionContent,
+  srLabel,
+}: Props) {
   return (
     <article aria-labelledby={`exercise-${id}-title`}>
       <div className="flex items-center gap-4">
@@ -25,28 +32,28 @@ export function ExerciseArticle({ exercise, locale, id, srLabel }: Props) {
         >
           <div className="flex size-9 items-center justify-center rounded-full border border-primary bg-secondary text-secondary-foreground">
             <span className="font-mono text-xs tracking-tighter">
-              {exercise.number}
+              {exerciseNumber}
             </span>
             <h2 className="sr-only" id={`exercise-${id}-title`}>
               {srLabel}
             </h2>
           </div>
         </a>
-        <ExerciseAnswerAction exerciseNumber={exercise.number} />
+        <ExerciseAnswerAction exerciseNumber={exerciseNumber} />
       </div>
 
-      <section className="my-6">{Question ? <Question /> : null}</section>
+      <section className="my-6">{questionContent}</section>
 
       <section className="my-8">
         <ExerciseChoices
-          choices={exercise.choices[locale]}
-          exerciseNumber={exercise.number}
+          choices={choices}
+          exerciseNumber={exerciseNumber}
           id={id}
         />
       </section>
 
-      <ExerciseAnswer exerciseNumber={exercise.number}>
-        {Answer ? <Answer /> : null}
+      <ExerciseAnswer exerciseNumber={exerciseNumber}>
+        {answerContent}
       </ExerciseAnswer>
     </article>
   );
