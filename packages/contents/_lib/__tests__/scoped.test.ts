@@ -319,23 +319,29 @@ describe("scoped content helpers", () => {
   });
 
   it("parses scoped references successfully", async () => {
+    const importReferencesModule = vi.fn(() =>
+      Promise.resolve({
+        references: [
+          {
+            title: "Scoped Reference",
+            authors: "Reference Author",
+            year: 2024,
+          },
+        ],
+      })
+    );
+
     const result = await Effect.runPromise(
       getScopedReferences(
         "articles",
-        () =>
-          Promise.resolve({
-            references: [
-              {
-                title: "Scoped Reference",
-                authors: "Reference Author",
-                year: 2024,
-              },
-            ],
-          }),
+        importReferencesModule,
         "articles/politics/test-article"
       )
     );
 
+    expect(importReferencesModule).toHaveBeenCalledWith(
+      "politics/test-article"
+    );
     expect(result).toStrictEqual([
       {
         title: "Scoped Reference",
