@@ -2,7 +2,7 @@ import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import { getExerciseQuestionNumbers } from "@repo/contents/_lib/exercises/collection";
 import { getExerciseContent } from "@repo/contents/_lib/exercises/content";
 import {
-  getExerciseEntryPaths,
+  loadExerciseEntry,
   readExerciseChoices,
 } from "@repo/contents/_lib/exercises/source";
 import { ExerciseLoadError } from "@repo/contents/_shared/error";
@@ -20,23 +20,6 @@ export interface ExerciseContentOptions {
 }
 
 /**
- * Loads one localized exercise content fragment through the scoped exercises
- * MDX loader.
- *
- * @param locale - Locale used to resolve the content fragment
- * @param filePath - Exercise question or answer path relative to `packages/contents`
- * @param includeMDX - Whether to include the compiled MDX component
- * @returns Effect resolving to the content fragment
- */
-function loadExerciseContentFragment(
-  locale: Locale,
-  filePath: string,
-  includeMDX: boolean
-) {
-  return getExerciseContent(locale, filePath, { includeMDX });
-}
-
-/**
  * Loads one exercise row from its numbered directory inside a set.
  *
  * @param exerciseNumberSegment - Numbered folder name inside the exercise set
@@ -51,65 +34,60 @@ function loadExercise(
   locale: Locale,
   includeMDX: boolean
 ) {
-  return Effect.gen(function* () {
-    const exerciseNumber = Number.parseInt(exerciseNumberSegment, 10);
-    const { answerPath, choicesPath, questionPath } = getExerciseEntryPaths(
-      cleanPath,
-      exerciseNumberSegment
-    );
-
-    const [questionContent, answerContent, choicesData] = yield* Effect.all(
-      [
-        loadExerciseContentFragment(locale, questionPath, includeMDX).pipe(
-          Effect.mapError(
-            () =>
-              new ExerciseLoadError({
-                path: questionPath,
-                reason: "Failed to load question",
-              })
-          )
-        ),
-        loadExerciseContentFragment(locale, answerPath, includeMDX).pipe(
-          Effect.mapError(
-            () =>
-              new ExerciseLoadError({
-                path: answerPath,
-                reason: "Failed to load answer",
-              })
-          )
-        ),
-        Effect.tryPromise({
-          try: () => readExerciseChoices(choicesPath),
-          catch: () =>
+  return loadExerciseEntry(cleanPath, exerciseNumberSegment, {
+    loadQuestion: (questionPath) =>
+      getExerciseContent(locale, questionPath, { includeMDX }).pipe(
+        Effect.mapError(
+          () =>
             new ExerciseLoadError({
-              path: choicesPath,
-              reason: "Failed to load choices",
-            }),
-        }),
-      ],
-      { concurrency: "unbounded" }
-    );
+              path: questionPath,
+              reason: "Failed to load question",
+            })
+        )
+      ),
+    loadAnswer: (answerPath) =>
+      getExerciseContent(locale, answerPath, { includeMDX }).pipe(
+        Effect.mapError(
+          () =>
+            new ExerciseLoadError({
+              path: answerPath,
+              reason: "Failed to load answer",
+            })
+        )
+      ),
+    loadChoices: (choicesPath) =>
+      Effect.tryPromise({
+        try: () => readExerciseChoices(choicesPath),
+        catch: () =>
+          new ExerciseLoadError({
+            path: choicesPath,
+            reason: "Failed to load choices",
+          }),
+      }),
+  }).pipe(
+    Effect.map((exercise) => {
+      if (Option.isNone(exercise)) {
+        return Option.none();
+      }
 
-    if (!(questionContent && answerContent && choicesData)) {
-      return Option.none();
-    }
+      const { answer, choices, number, question } = exercise.value;
 
-    return Option.some({
-      number: exerciseNumber,
-      choices: choicesData,
-      question: {
-        metadata: questionContent.metadata,
-        default:
-          "default" in questionContent ? questionContent.default : undefined,
-        raw: questionContent.raw,
-      },
-      answer: {
-        metadata: answerContent.metadata,
-        default: "default" in answerContent ? answerContent.default : undefined,
-        raw: answerContent.raw,
-      },
-    });
-  });
+      return Option.some({
+        answer: {
+          metadata: answer.metadata,
+          default: "default" in answer ? answer.default : undefined,
+          raw: answer.raw,
+        },
+        choices,
+        number,
+        question: {
+          metadata: question.metadata,
+          default: "default" in question ? question.default : undefined,
+          raw: question.raw,
+        },
+      });
+    })
+  );
 }
 
 /**

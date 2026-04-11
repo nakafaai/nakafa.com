@@ -5,15 +5,20 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import { cn, slugify } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import { useAttempt } from "@/lib/context/use-attempt";
 import { useExercise } from "@/lib/context/use-exercise";
 
-interface Props {
-  children: React.ReactNode;
+interface ExerciseAnswerProps {
+  children: ReactNode;
   exerciseNumber: number;
 }
 
-export function ExerciseAnswer({ children, exerciseNumber }: Props) {
+/** Renders the explanation section for one exercise when the active attempt allows it. */
+export function ExerciseAnswer({
+  children,
+  exerciseNumber,
+}: ExerciseAnswerProps) {
   const t = useTranslations("Exercises");
   const showAnswer = useExercise(
     (state) => state.visibleExplanations[exerciseNumber] ?? false

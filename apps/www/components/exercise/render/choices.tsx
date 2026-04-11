@@ -16,15 +16,19 @@ import { toast } from "sonner";
 import { useAttempt } from "@/lib/context/use-attempt";
 import { useExercise } from "@/lib/context/use-exercise";
 
-interface Props {
+interface ExerciseChoicesProps {
   choices: ExercisesChoices[keyof ExercisesChoices];
   exerciseNumber: number;
   id: string;
 }
 
-export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
+/** Renders the selectable choices for one exercise and submits answers to Convex. */
+export function ExerciseChoices({
+  choices,
+  exerciseNumber,
+  id,
+}: ExerciseChoicesProps) {
   const t = useTranslations("Exercises");
-
   const [isPending, startTransition] = useTransition();
 
   const attempt = useAttempt((state) => state.attempt);
@@ -32,20 +36,19 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
   const answerSheet = useAttempt((state) => state.answerSheet);
   const isInputLocked = useAttempt((state) => state.isInputLocked);
   const isReviewMode = useAttempt((state) => state.isReviewMode);
-
   const submitAttempt = useMutation(api.exercises.mutations.submitAnswer);
   const timeSpent = useExercise(
     (state) => state.timeSpent[exerciseNumber] ?? 0
   );
 
   const currentAnswer = answers.find(
-    (a) => a.exerciseNumber === exerciseNumber
+    (answer) => answer.exerciseNumber === exerciseNumber
   );
   const answerSheetEntry = answerSheet.find(
     (entry) => entry.exerciseNumber === exerciseNumber
   );
 
-  function handleSubmit({ index }: { index: number }) {
+  function handleSubmit(index: number) {
     if (!attempt) {
       toast.info(t("attempt-not-found"), { position: "bottom-center" });
       return;
@@ -58,7 +61,6 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
       return;
     }
 
-    // If the attempt is not in progress, tell user to start new attempt
     if (attempt.status !== "in-progress") {
       toast.info(t("attempt-not-in-progress"), { position: "bottom-center" });
       return;
@@ -167,7 +169,7 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
               disabled={isInputLocked || isPending}
               onCheckedChange={(checked) => {
                 if (checked) {
-                  handleSubmit({ index });
+                  handleSubmit(index);
                 }
               }}
             />

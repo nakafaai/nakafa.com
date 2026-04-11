@@ -1,11 +1,11 @@
 import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 import type { Locale } from "next-intl";
 import type { ReactNode } from "react";
-import { ExerciseAnswerAction } from "./actions";
-import { ExerciseAnswer } from "./answer";
-import { ExerciseChoices } from "./choices";
+import { ExerciseAnswer } from "@/components/exercise/render/answer";
+import { ExerciseAnswerAction } from "@/components/exercise/render/answer-action";
+import { ExerciseChoices } from "@/components/exercise/render/choices";
 
-interface Props {
+interface ExerciseArticleProps {
   answerContent: ReactNode;
   choices: ExercisesChoices[Locale];
   exerciseNumber: number;
@@ -14,6 +14,7 @@ interface Props {
   srLabel: string;
 }
 
+/** Renders one exercise article with question, answer controls, choices, and explanation. */
 export function ExerciseArticle({
   answerContent,
   choices,
@@ -21,7 +22,7 @@ export function ExerciseArticle({
   id,
   questionContent,
   srLabel,
-}: Props) {
+}: ExerciseArticleProps) {
   return (
     <article aria-labelledby={`exercise-${id}-title`}>
       <div className="flex items-center gap-4">

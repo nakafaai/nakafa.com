@@ -8,11 +8,14 @@ import { useTranslations } from "next-intl";
 import { useAttempt } from "@/lib/context/use-attempt";
 import { useExercise } from "@/lib/context/use-exercise";
 
-interface Props {
+interface ExerciseAnswerActionProps {
   exerciseNumber: number;
 }
 
-export function ExerciseAnswerAction({ exerciseNumber }: Props) {
+/** Toggles one exercise explanation and keeps the hash anchored to the active section. */
+export function ExerciseAnswerAction({
+  exerciseNumber,
+}: ExerciseAnswerActionProps) {
   const t = useTranslations("Exercises");
   const toggleAnswer = useExercise((state) => state.toggleAnswer);
   const showAnswer = useExercise(

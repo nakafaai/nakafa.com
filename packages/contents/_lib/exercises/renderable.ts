@@ -1,12 +1,13 @@
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import { getExerciseQuestionNumbers } from "@repo/contents/_lib/exercises/collection";
 import {
-  getExerciseEntryPaths,
+  loadExerciseEntry,
   readExerciseChoices,
   readExerciseContentData,
 } from "@repo/contents/_lib/exercises/source";
 import type { Locale } from "@repo/contents/_types/content";
 import { cleanSlug } from "@repo/utilities/helper";
+import { Effect, Option } from "effect";
 
 /**
  * Loads one plain exercise row from raw MDX metadata and parsed choices.
@@ -16,33 +17,27 @@ import { cleanSlug } from "@repo/utilities/helper";
  * @param locale - Locale used to resolve the exercise content files
  * @returns Plain exercise row, or `null` when any required source is missing
  */
-async function loadRenderableExercise(
+function loadRenderableExercise(
   exerciseNumberSegment: string,
   cleanPath: string,
   locale: Locale
 ) {
-  const exerciseNumber = Number.parseInt(exerciseNumberSegment, 10);
-  const { answerPath, choicesPath, questionPath } = getExerciseEntryPaths(
-    cleanPath,
-    exerciseNumberSegment
+  return Effect.runPromise(
+    loadExerciseEntry(cleanPath, exerciseNumberSegment, {
+      loadQuestion: (questionPath) =>
+        Effect.promise(() => readExerciseContentData(locale, questionPath)),
+      loadAnswer: (answerPath) =>
+        Effect.promise(() => readExerciseContentData(locale, answerPath)),
+      loadChoices: (choicesPath) =>
+        Effect.promise(() =>
+          readExerciseChoices(choicesPath).catch(() => null)
+        ),
+    }).pipe(
+      Effect.map((exercise) =>
+        Option.isSome(exercise) ? exercise.value : null
+      )
+    )
   );
-
-  const [question, answer, choices] = await Promise.all([
-    readExerciseContentData(locale, questionPath),
-    readExerciseContentData(locale, answerPath),
-    readExerciseChoices(choicesPath).catch(() => null),
-  ]);
-
-  if (!(question && answer && choices)) {
-    return null;
-  }
-
-  return {
-    answer,
-    choices,
-    number: exerciseNumber,
-    question,
-  };
 }
 
 /**
