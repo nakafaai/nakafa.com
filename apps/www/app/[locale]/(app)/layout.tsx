@@ -8,10 +8,11 @@ import { getToken } from "@/lib/auth/server";
 /**
  * Binds the validated locale to the shared authenticated app subtree.
  *
- * With Cache Components enabled, runtime request data must sit behind a
- * Suspense boundary. This layout keeps the shared provider tree stable by
- * rendering the app providers immediately, then streams in the authenticated
- * token once it resolves for routes that need SSR-authenticated Convex state.
+ * Every route in the `(app)` group relies on `useUser()` through the shared app
+ * shell, so this layout resolves the Better Auth token once and mounts a single
+ * provider tree behind a real Suspense boundary. The fallback stays intentionally
+ * small so we do not duplicate the full app subtree while the request token
+ * resolves.
  *
  * References:
  * - Convex App Router SSR:
@@ -21,7 +22,6 @@ import { getToken } from "@/lib/auth/server";
  */
 export default async function Layout(props: LayoutProps<"/[locale]">) {
   const { children, params } = props;
-  const tokenPromise = getToken();
   const { locale } = await params;
 
   if (!hasLocale(routing.locales, locale)) {
@@ -29,10 +29,8 @@ export default async function Layout(props: LayoutProps<"/[locale]">) {
   }
 
   return (
-    <Suspense fallback={<AppProviders>{children}</AppProviders>}>
-      <AuthenticatedAppProviders tokenPromise={tokenPromise}>
-        {children}
-      </AuthenticatedAppProviders>
+    <Suspense fallback={<div className="min-h-svh bg-background" />}>
+      <AuthenticatedAppProviders>{children}</AuthenticatedAppProviders>
     </Suspense>
   );
 }
@@ -40,12 +38,10 @@ export default async function Layout(props: LayoutProps<"/[locale]">) {
 /** Resolves the request token before mounting the authenticated app providers. */
 async function AuthenticatedAppProviders({
   children,
-  tokenPromise,
 }: {
   children: React.ReactNode;
-  tokenPromise: ReturnType<typeof getToken>;
 }) {
-  const token = await tokenPromise;
+  const token = await getToken();
 
   return <AppProviders initialToken={token}>{children}</AppProviders>;
 }

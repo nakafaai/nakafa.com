@@ -8,25 +8,19 @@ import { useTranslations } from "next-intl";
 import { useAttempt } from "@/lib/context/use-attempt";
 import { useExercise } from "@/lib/context/use-exercise";
 
-interface ExerciseAnswerActionProps {
-  exerciseNumber: number;
-}
-
 /** Toggles one exercise explanation and keeps the hash anchored to the active section. */
 export function ExerciseAnswerAction({
   exerciseNumber,
-}: ExerciseAnswerActionProps) {
+}: {
+  exerciseNumber: number;
+}) {
   const t = useTranslations("Exercises");
   const toggleAnswer = useExercise((state) => state.toggleAnswer);
   const showAnswer = useExercise(
     (state) => state.visibleExplanations[exerciseNumber] ?? false
   );
 
-  const mustDisable = useAttempt(
-    (state) =>
-      state.attempt?.status === "in-progress" &&
-      state.attempt?.mode === "simulation"
-  );
+  const mustDisable = useAttempt((state) => state.isSimulationInProgress);
 
   return (
     <div className="flex items-center gap-2">

@@ -11,6 +11,7 @@ import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
 import { DeferredComments } from "@/components/comments/deferred";
+import { ExerciseEntry } from "@/components/exercise/entry";
 import {
   LayoutMaterial,
   LayoutMaterialContent,
@@ -23,7 +24,6 @@ import {
 import { getOgUrl } from "@/lib/utils/metadata";
 import { ExerciseAttempt } from "./attempt";
 import type { ExerciseRouteData } from "./data";
-import { SingleExerciseArticle } from "./entry";
 
 /** Renders the standalone single-exercise variant for one learn route. */
 export async function SingleExercisePage({
@@ -98,7 +98,7 @@ export async function SingleExercisePage({
           />
           <LayoutMaterialMain>
             <ExerciseAttempt totalExercises={data.exerciseCount} />
-            <SingleExerciseArticle
+            <ExerciseEntry
               exercise={data.exercise}
               locale={locale}
               setPath={data.setPath}

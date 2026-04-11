@@ -5,15 +5,6 @@ import { ExerciseAnswerAction } from "@/components/exercise/item/action";
 import { ExerciseAnswer } from "@/components/exercise/item/answer";
 import { ExerciseChoices } from "@/components/exercise/item/choices";
 
-interface ExerciseArticleProps {
-  answerContent: ReactNode;
-  choices: ExercisesChoices[Locale];
-  exerciseNumber: number;
-  id: string;
-  questionContent: ReactNode;
-  srLabel: string;
-}
-
 /** Renders one exercise article with question, answer controls, choices, and explanation. */
 export function ExerciseArticle({
   answerContent,
@@ -22,7 +13,14 @@ export function ExerciseArticle({
   id,
   questionContent,
   srLabel,
-}: ExerciseArticleProps) {
+}: {
+  answerContent: ReactNode;
+  choices: ExercisesChoices[Locale];
+  exerciseNumber: number;
+  id: string;
+  questionContent: ReactNode;
+  srLabel: string;
+}) {
   return (
     <article aria-labelledby={`exercise-${id}-title`}>
       <div className="flex items-center gap-4">

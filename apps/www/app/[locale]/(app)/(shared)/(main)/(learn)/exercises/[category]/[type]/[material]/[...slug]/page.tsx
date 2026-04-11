@@ -19,6 +19,7 @@ import { YearGroupPage } from "./group";
 import { ExerciseSetPage } from "./set";
 import { SingleExercisePage } from "./single";
 
+/** Builds the fallback metadata shape when exercise route resolution fails. */
 const metadataFallback = ({
   category,
   material,

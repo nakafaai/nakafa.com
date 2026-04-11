@@ -1,31 +1,52 @@
 "use client";
 
-import { useIntersection, useInterval } from "@mantine/hooks";
-import type { ReactNode } from "react";
-import { useEffect, useEffectEvent, useRef } from "react";
+import { useInterval } from "@mantine/hooks";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { useAttempt } from "@/lib/context/use-attempt";
 import { useExercise } from "@/lib/context/use-exercise";
 
-interface QuestionAnalyticsProps {
-  children: ReactNode;
-  exerciseNumber: number;
-}
-
 /** Tracks visible time for one rendered exercise while the active attempt is running. */
 export function QuestionAnalytics({
-  children,
   exerciseNumber,
-}: QuestionAnalyticsProps) {
-  const attempt = useAttempt((state) => state.attempt);
+  targetId,
+}: {
+  exerciseNumber: number;
+  targetId: string;
+}) {
   const isInputLocked = useAttempt((state) => state.isInputLocked);
-  const ref = useIntersection({ threshold: 0.75 });
-  const isActive = ref.entry?.isIntersecting ?? false;
+  const isAttemptInProgress = useAttempt((state) => state.isAttemptInProgress);
+  const [isActive, setIsActive] = useState(false);
   const timeSpent = useExercise(
     (state) => state.timeSpent[exerciseNumber] ?? 0
   );
   const timeCounterRef = useRef(timeSpent);
   const setTimeSpent = useExercise((state) => state.setTimeSpent);
-  const hasActiveAttempt = attempt?.status === "in-progress" && !isInputLocked;
+  const hasActiveAttempt = isAttemptInProgress && !isInputLocked;
+
+  useEffect(() => {
+    timeCounterRef.current = timeSpent;
+  }, [timeSpent]);
+
+  useEffect(() => {
+    const target = document.getElementById(targetId);
+
+    if (!target) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsActive(entry?.isIntersecting ?? false);
+      },
+      { threshold: 0.75 }
+    );
+
+    observer.observe(target);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [targetId]);
 
   const handleTick = useEffectEvent(() => {
     if (isActive && hasActiveAttempt) {
@@ -41,11 +62,13 @@ export function QuestionAnalytics({
   useEffect(() => {
     if (isActive && hasActiveAttempt) {
       interval.start();
-      return;
+      return () => {
+        interval.stop();
+      };
     }
 
     interval.stop();
   }, [hasActiveAttempt, interval, isActive]);
 
-  return <div ref={ref.ref}>{children}</div>;
+  return null;
 }

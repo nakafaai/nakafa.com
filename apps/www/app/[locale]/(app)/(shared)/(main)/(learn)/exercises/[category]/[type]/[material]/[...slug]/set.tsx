@@ -12,6 +12,7 @@ import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
 import { DeferredComments } from "@/components/comments/deferred";
+import { ExerciseTrackedEntry } from "@/components/exercise/entry";
 import {
   LayoutMaterial,
   LayoutMaterialContent,
@@ -24,7 +25,6 @@ import {
 import { getOgUrl } from "@/lib/utils/metadata";
 import { ExerciseAttempt } from "./attempt";
 import type { ExerciseRouteData } from "./data";
-import { ExerciseSetArticle } from "./entry";
 
 /** Renders the exercise-set variant for one learn route. */
 export async function ExerciseSetPage({
@@ -90,7 +90,7 @@ export async function ExerciseSetPage({
             <ExerciseAttempt totalExercises={data.exercises.length} />
 
             {data.exercises.map((exercise) => (
-              <ExerciseSetArticle
+              <ExerciseTrackedEntry
                 exercise={exercise}
                 key={exercise.number}
                 locale={locale}
