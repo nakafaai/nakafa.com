@@ -13,11 +13,11 @@ import { getOgUrl } from "@/lib/utils/metadata";
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
 import { getStaticParams } from "@/lib/utils/system";
-import { ExerciseSetPage } from "./exercise-set-page";
-import { MissingExercisePage } from "./missing-page";
-import { getExerciseRouteData, getResolvedParams } from "./page-data";
-import { SingleExercisePage } from "./single-exercise-page";
-import { YearGroupPage } from "./year-group-page";
+import { getExerciseRouteData, getResolvedParams } from "./data";
+import { MissingExercisePage } from "./empty";
+import { YearGroupPage } from "./group";
+import { ExerciseSetPage } from "./set";
+import { SingleExercisePage } from "./single";
 
 const metadataFallback = ({
   category,

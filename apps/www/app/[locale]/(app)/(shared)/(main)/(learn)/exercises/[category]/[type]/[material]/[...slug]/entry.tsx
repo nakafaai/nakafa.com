@@ -2,8 +2,8 @@ import { importContentModule } from "@repo/contents/_lib/module";
 import type { ExerciseWithoutDefaults } from "@repo/contents/_types/exercises/shared";
 import { slugify } from "@repo/design-system/lib/utils";
 import type { Locale } from "next-intl";
-import { ExerciseArticle } from "@/components/exercise/render/article";
-import { QuestionAnalytics } from "@/components/exercise/render/question-analytics";
+import { QuestionAnalytics } from "@/components/exercise/item/analytics";
+import { ExerciseArticle } from "@/components/exercise/item/article";
 
 async function getExerciseContentModules(
   locale: Locale,

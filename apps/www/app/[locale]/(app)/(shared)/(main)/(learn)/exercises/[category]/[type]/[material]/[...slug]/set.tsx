@@ -23,8 +23,8 @@ import {
 } from "@/components/shared/layout-material";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { ExerciseAttempt } from "./attempt";
-import type { ExerciseRouteData } from "./page-data";
-import { ExerciseSetArticle } from "./rendered-article";
+import type { ExerciseRouteData } from "./data";
+import { ExerciseSetArticle } from "./entry";
 
 /** Renders the exercise-set variant for one learn route. */
 export async function ExerciseSetPage({

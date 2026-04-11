@@ -22,8 +22,8 @@ import {
 } from "@/components/shared/layout-material";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { ExerciseAttempt } from "./attempt";
-import type { ExerciseRouteData } from "./page-data";
-import { SingleExerciseArticle } from "./rendered-article";
+import type { ExerciseRouteData } from "./data";
+import { SingleExerciseArticle } from "./entry";
 
 /** Renders the standalone single-exercise variant for one learn route. */
 export async function SingleExercisePage({

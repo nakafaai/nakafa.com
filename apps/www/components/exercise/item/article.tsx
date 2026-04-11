@@ -1,9 +1,9 @@
 import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 import type { Locale } from "next-intl";
 import type { ReactNode } from "react";
-import { ExerciseAnswer } from "@/components/exercise/render/answer";
-import { ExerciseAnswerAction } from "@/components/exercise/render/answer-action";
-import { ExerciseChoices } from "@/components/exercise/render/choices";
+import { ExerciseAnswerAction } from "@/components/exercise/item/action";
+import { ExerciseAnswer } from "@/components/exercise/item/answer";
+import { ExerciseChoices } from "@/components/exercise/item/choices";
 
 interface ExerciseArticleProps {
   answerContent: ReactNode;

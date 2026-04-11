@@ -17,7 +17,7 @@ import {
 } from "@/components/shared/layout-material";
 import { RefContent } from "@/components/shared/ref-content";
 import { getGithubUrl } from "@/lib/utils/github";
-import type { ExerciseRouteData } from "./page-data";
+import type { ExerciseRouteData } from "./data";
 
 /** Renders the year-group overview variant for one exercises route. */
 export async function YearGroupPage({
