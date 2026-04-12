@@ -1,13 +1,8 @@
-import { generateSlugOnlyParams } from "@repo/contents/_lib/static-params";
 import { routing } from "@repo/internationalization/src/routing";
 import type { NextRequest } from "next/server";
 import { hasLocale, type Locale } from "next-intl";
-import { generateOGImage } from "@/app/[locale]/og/[...slug]/og";
+import { generateOGImage } from "@/lib/og";
 import { getCachedMetadataFromSlug } from "@/lib/utils/system";
-
-export function generateStaticParams() {
-  return generateSlugOnlyParams({ includeOGVariants: true });
-}
 
 export async function GET(
   _req: NextRequest,

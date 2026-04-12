@@ -27,39 +27,6 @@ async function getLogoDataUrl() {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(logo)}`;
 }
 
-/** Generates one OG image response with cached persistent assets. */
-export async function generateOGImage(
-  options: GenerateProps & { width?: number; height?: number }
-) {
-  const { title, description, width = 1200, height = 630 } = options;
-  const logoDataUrl = await getLogoDataUrl();
-
-  return new ImageResponse(
-    <OgImage
-      description={description}
-      icon={
-        <div
-          style={{
-            width: 48,
-            height: 48,
-            backgroundImage: `url(${logoDataUrl})`,
-            backgroundSize: "contain",
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "center",
-            borderRadius: "50%",
-          }}
-        />
-      }
-      title={title}
-    />,
-    {
-      width,
-      height,
-      fetchedResources: [],
-    }
-  );
-}
-
 function OgImage(props: GenerateProps) {
   const {
     title,
@@ -181,10 +148,43 @@ function OgImage(props: GenerateProps) {
               opacity: 0.8,
             }}
           >
-            Copyright © Nakafa
+            Copyright Nakafa
           </span>
         </div>
       </div>
     </div>
+  );
+}
+
+/** Generates one OG image response with cached persistent assets. */
+export async function generateOGImage(
+  options: GenerateProps & { width?: number; height?: number }
+) {
+  const { title, description, width = 1200, height = 630 } = options;
+  const logoDataUrl = await getLogoDataUrl();
+
+  return new ImageResponse(
+    <OgImage
+      description={description}
+      icon={
+        <div
+          style={{
+            width: 48,
+            height: 48,
+            backgroundImage: `url(${logoDataUrl})`,
+            backgroundSize: "contain",
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "center",
+            borderRadius: "50%",
+          }}
+        />
+      }
+      title={title}
+    />,
+    {
+      width,
+      height,
+      fetchedResources: [],
+    }
   );
 }

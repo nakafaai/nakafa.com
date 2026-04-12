@@ -329,21 +329,6 @@ describe("generateSlugOnlyParams", () => {
     expect(slugPaths).toContain("en/exercises/math/set-1/2");
   });
 
-  it("should include OG variants when includeOGVariants is true", () => {
-    vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["subject"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([]);
-    vi.mocked(getMDXSlugsForLocale).mockReturnValue(["subject"]);
-
-    const result = generateSlugOnlyParams({
-      includeOGVariants: true,
-      locales: ["en"],
-    });
-    const slugPaths = result.map((r) => r.slug.join("/"));
-
-    expect(slugPaths).toContain("en/image.png");
-    expect(slugPaths).toContain("en/subject/image.png");
-  });
-
   it("should handle all options together (llms.mdx use case)", () => {
     vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["subject"]));
     vi.mocked(getNestedSlugs).mockReturnValue([]);
@@ -513,21 +498,6 @@ describe("generateLocaleParams", () => {
     expect(result[0].locale).toBe("en");
   });
 
-  it("should include OG variants when includeOGVariants is true", () => {
-    vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["subject"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([]);
-    vi.mocked(getMDXSlugsForLocale).mockReturnValue(["subject"]);
-
-    const result = generateLocaleParams({
-      includeOGVariants: true,
-      locales: ["en"],
-    });
-    const slugPaths = result.map((r) => r.slug.join("/"));
-
-    expect(slugPaths).toContain("image.png");
-    expect(slugPaths).toContain("subject/image.png");
-  });
-
   it("should handle multiple locales", () => {
     vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["subject"]));
     vi.mocked(getNestedSlugs).mockReturnValue([]);
@@ -616,26 +586,6 @@ describe("generateLocaleParams", () => {
     expect(slugPaths).toContain("subject");
     expect(slugPaths).toContain("subject/math");
     expect(slugPaths).not.toContain("subject/biology");
-  });
-
-  it("should include nested paths with OG variants", () => {
-    vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["subject"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([["math"]]);
-    vi.mocked(getMDXSlugsForLocale).mockReturnValue([
-      "subject",
-      "subject/math",
-    ]);
-
-    const result = generateLocaleParams({
-      locales: ["en"],
-      includeOGVariants: true,
-    });
-    const slugPaths = result.map((r) => r.slug.join("/"));
-
-    expect(slugPaths).toContain("subject");
-    expect(slugPaths).toContain("subject/image.png");
-    expect(slugPaths).toContain("subject/math");
-    expect(slugPaths).toContain("subject/math/image.png");
   });
 
   it("should handle error gracefully", () => {
