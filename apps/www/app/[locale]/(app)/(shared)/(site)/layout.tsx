@@ -1,17 +1,12 @@
-import { routing } from "@repo/internationalization/src/routing";
-import { notFound } from "next/navigation";
-import { hasLocale } from "next-intl";
 import { use } from "react";
 import { Footer } from "@/components/marketing/shared/footer";
 import { Header } from "@/components/marketing/shared/header";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 /** Renders the marketing subtree inside its dedicated site shell. */
 export default function Layout(props: LayoutProps<"/[locale]">) {
   const { children, params } = props;
-  const { locale } = use(params);
-  if (!hasLocale(routing.locales, locale)) {
-    notFound();
-  }
+  getLocaleOrThrow(use(params).locale);
 
   return (
     <main

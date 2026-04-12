@@ -1,22 +1,18 @@
-import { routing } from "@repo/internationalization/src/routing";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { hasLocale, useTranslations } from "next-intl";
+import type { Locale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { use } from "react";
 import { TryoutHubPage } from "@/components/tryout/hub-page";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 export async function generateMetadata({
   params,
 }: {
   params: PageProps<"/[locale]/try-out">["params"];
 }): Promise<Metadata> {
-  const { locale } = await params;
-
-  if (!hasLocale(routing.locales, locale)) {
-    notFound();
-  }
+  const locale = getLocaleOrThrow((await params).locale);
 
   const [tCommon, tTryouts] = await Promise.all([
     getTranslations({ locale, namespace: "Common" }),
@@ -45,12 +41,7 @@ export async function generateMetadata({
 }
 
 export default function Page(props: PageProps<"/[locale]/try-out">) {
-  const { params } = props;
-  const { locale } = use(params);
-
-  if (!hasLocale(routing.locales, locale)) {
-    notFound();
-  }
+  const locale = getLocaleOrThrow(use(props.params).locale);
 
   return (
     <>
@@ -60,11 +51,7 @@ export default function Page(props: PageProps<"/[locale]/try-out">) {
   );
 }
 
-function PageBreadcrumb({
-  locale,
-}: {
-  locale: Awaited<PageProps<"/[locale]/try-out">["params"]>["locale"];
-}) {
+function PageBreadcrumb({ locale }: { locale: Locale }) {
   const tCommon = useTranslations("Common");
 
   return (
