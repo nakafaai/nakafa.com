@@ -11,7 +11,6 @@ import { hasLocale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { TryoutSetProvider } from "@/components/tryout/providers/set-provider";
 import { TryoutSetParts } from "@/components/tryout/set-parts";
-import { TryoutSetRouteShell } from "@/components/tryout/set-route-shell";
 import { TryoutPageHeader } from "@/components/tryout/shared/page-header";
 import { TryoutPageMeta } from "@/components/tryout/shared/page-meta";
 import { TryoutStartCta } from "@/components/tryout/start-cta";
@@ -82,52 +81,50 @@ export default async function Page(
       partKeys={partKeys}
       preloadedSetView={preloadedSetView}
     >
-      <TryoutSetRouteShell>
-        <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
-          <div className="space-y-10">
-            <div className="space-y-6">
-              <TryoutPageHeader
-                description={tTryouts("slug-description")}
-                link={{
-                  href: getTryoutProductHref(product),
-                  label: tCommon("back"),
-                }}
-                meta={
-                  <TryoutPageMeta
-                    cycleKey={details.tryout.cycleKey}
-                    product={product}
-                  />
-                }
-                title={tryoutLabel}
-              />
-              <div>
-                <TryoutStartCta />
-                <TryoutStartDialog />
-              </div>
+      <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
+        <div className="space-y-10">
+          <div className="space-y-6">
+            <TryoutPageHeader
+              description={tTryouts("slug-description")}
+              link={{
+                href: getTryoutProductHref(product),
+                label: tCommon("back"),
+              }}
+              meta={
+                <TryoutPageMeta
+                  cycleKey={details.tryout.cycleKey}
+                  product={product}
+                />
+              }
+              title={tryoutLabel}
+            />
+            <div>
+              <TryoutStartCta />
+              <TryoutStartDialog />
             </div>
-
-            <section className="overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
-              <TryoutSetParts
-                parts={details.parts.map((part) => {
-                  const materialLabel = ExercisesMaterialSchema.safeParse(
-                    part.material
-                  );
-
-                  return {
-                    partIndex: part.partIndex,
-                    partKey: part.partKey,
-                    label: materialLabel.success
-                      ? tExercises(materialLabel.data)
-                      : part.partKey,
-                    material: part.material,
-                    questionCount: part.questionCount,
-                  };
-                })}
-              />
-            </section>
           </div>
+
+          <section className="overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
+            <TryoutSetParts
+              parts={details.parts.map((part) => {
+                const materialLabel = ExercisesMaterialSchema.safeParse(
+                  part.material
+                );
+
+                return {
+                  partIndex: part.partIndex,
+                  partKey: part.partKey,
+                  label: materialLabel.success
+                    ? tExercises(materialLabel.data)
+                    : part.partKey,
+                  material: part.material,
+                  questionCount: part.questionCount,
+                };
+              })}
+            />
+          </section>
         </div>
-      </TryoutSetRouteShell>
+      </div>
     </TryoutSetProvider>
   );
 }

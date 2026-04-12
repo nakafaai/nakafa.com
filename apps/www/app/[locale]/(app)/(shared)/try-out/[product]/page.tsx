@@ -12,7 +12,6 @@ import { fetchQuery } from "convex/nextjs";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { AppShell } from "@/components/sidebar/app-shell";
 import { TryoutCatalogCard } from "@/components/tryout/catalog-card";
 import { TryoutCatalogList } from "@/components/tryout/catalog-list";
 import { SnbtTryoutIcon } from "@/components/tryout/product-icon";
@@ -60,50 +59,48 @@ export default async function Page(
   );
 
   return (
-    <AppShell>
-      <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
-        <div className="space-y-10">
-          <header className="flex flex-col gap-3">
-            <NavigationLink
-              aria-label={tCommon("back")}
-              className="w-fit font-medium text-primary text-sm underline-offset-4 hover:underline"
-              href={getTryoutHubHref()}
-              title={tCommon("back")}
-            >
-              {tCommon("back")}
-            </NavigationLink>
-
-            <div className="flex items-start gap-2">
-              <HugeIcons
-                className="hidden size-7 shrink-0 translate-y-1 sm:block"
-                icon={Certificate02Icon}
-              />
-              <h1 className="text-pretty font-medium text-3xl tracking-tight">
-                {tTryouts("products.snbt.title")}
-              </h1>
-            </div>
-            <p className="max-w-2xl text-muted-foreground">
-              {tTryouts("product-page-description")}
-            </p>
-          </header>
-
-          <TryoutCatalogCard
-            activeCountLabel={tTryouts("package-count", {
-              count: catalogSnapshot.activeCount,
-            })}
-            art={<SnbtTryoutIcon />}
-            description={tTryouts("products.snbt.description")}
-            title={tTryouts("products.snbt.title")}
+    <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
+      <div className="space-y-10">
+        <header className="flex flex-col gap-3">
+          <NavigationLink
+            aria-label={tCommon("back")}
+            className="w-fit font-medium text-primary text-sm underline-offset-4 hover:underline"
+            href={getTryoutHubHref()}
+            title={tCommon("back")}
           >
-            <TryoutCatalogList
-              initialEntries={catalogSnapshot.initialPage}
-              initialNowMs={initialNowMs}
-              locale={locale}
-              product={product}
+            {tCommon("back")}
+          </NavigationLink>
+
+          <div className="flex items-start gap-2">
+            <HugeIcons
+              className="hidden size-7 shrink-0 translate-y-1 sm:block"
+              icon={Certificate02Icon}
             />
-          </TryoutCatalogCard>
-        </div>
+            <h1 className="text-pretty font-medium text-3xl tracking-tight">
+              {tTryouts("products.snbt.title")}
+            </h1>
+          </div>
+          <p className="max-w-2xl text-muted-foreground">
+            {tTryouts("product-page-description")}
+          </p>
+        </header>
+
+        <TryoutCatalogCard
+          activeCountLabel={tTryouts("package-count", {
+            count: catalogSnapshot.activeCount,
+          })}
+          art={<SnbtTryoutIcon />}
+          description={tTryouts("products.snbt.description")}
+          title={tTryouts("products.snbt.title")}
+        >
+          <TryoutCatalogList
+            initialEntries={catalogSnapshot.initialPage}
+            initialNowMs={initialNowMs}
+            locale={locale}
+            product={product}
+          />
+        </TryoutCatalogCard>
       </div>
-    </AppShell>
+    </div>
   );
 }

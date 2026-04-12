@@ -5,7 +5,7 @@ import { resolveContentsDir } from "@repo/contents/_lib/root";
 import type { Locale } from "@repo/contents/_types/content";
 import { ExercisesChoicesSchema } from "@repo/contents/_types/exercises/choices";
 import { cleanSlug } from "@repo/utilities/helper";
-import { Either, Option } from "effect";
+import { Effect, Either, Option } from "effect";
 import ky from "ky";
 
 const contentsDir = resolveContentsDir(import.meta.url);
@@ -28,6 +28,48 @@ export function getExerciseEntryPaths(
     answerPath: `${cleanPath}/${exerciseNumberSegment}/_answer`,
     choicesPath: `${cleanPath}/${exerciseNumberSegment}/choices.ts`,
   };
+}
+
+/**
+ * Loads one exercise entry by composing question, answer, and choices loaders
+ * for the numbered folder inside an exercise set.
+ */
+export function loadExerciseEntry<TQuestion, TAnswer, TChoices, TError>(
+  cleanPath: string,
+  exerciseNumberSegment: string,
+  options: {
+    loadAnswer: (filePath: string) => Effect.Effect<TAnswer | null, TError>;
+    loadChoices: (filePath: string) => Effect.Effect<TChoices | null, TError>;
+    loadQuestion: (filePath: string) => Effect.Effect<TQuestion | null, TError>;
+  }
+) {
+  return Effect.gen(function* () {
+    const exerciseNumber = Number.parseInt(exerciseNumberSegment, 10);
+    const { answerPath, choicesPath, questionPath } = getExerciseEntryPaths(
+      cleanPath,
+      exerciseNumberSegment
+    );
+
+    const [question, answer, choices] = yield* Effect.all(
+      [
+        options.loadQuestion(questionPath),
+        options.loadAnswer(answerPath),
+        options.loadChoices(choicesPath),
+      ],
+      { concurrency: "unbounded" }
+    );
+
+    if (!(question && answer && choices)) {
+      return Option.none();
+    }
+
+    return Option.some({
+      answer,
+      choices,
+      number: exerciseNumber,
+      question,
+    });
+  });
 }
 
 /**

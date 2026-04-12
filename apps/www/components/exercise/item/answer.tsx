@@ -3,38 +3,35 @@
 import { Link05Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Separator } from "@repo/design-system/components/ui/separator";
-import { cn, slugify } from "@repo/design-system/lib/utils";
+import { slugify } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import { useAttempt } from "@/lib/context/use-attempt";
 import { useExercise } from "@/lib/context/use-exercise";
 
-interface Props {
-  children: React.ReactNode;
+/** Renders the explanation section for one exercise when the active attempt allows it. */
+export function ExerciseAnswer({
+  children,
+  exerciseNumber,
+}: {
+  children: ReactNode;
   exerciseNumber: number;
-}
-
-export function ExerciseAnswer({ children, exerciseNumber }: Props) {
+}) {
   const t = useTranslations("Exercises");
   const showAnswer = useExercise(
     (state) => state.visibleExplanations[exerciseNumber] ?? false
   );
 
-  const mustHide = useAttempt(
-    (state) =>
-      state.attempt?.status === "in-progress" &&
-      state.attempt?.mode === "simulation"
-  );
+  const mustHide = useAttempt((state) => state.isSimulationInProgress);
+
+  if (mustHide || !showAnswer) {
+    return null;
+  }
 
   const id = slugify(`${t("explanation")}-${exerciseNumber}`);
 
   return (
-    <section
-      className={cn(
-        "space-y-6",
-        showAnswer ? "visible" : "hidden",
-        mustHide && "hidden"
-      )}
-    >
+    <section className="space-y-6">
       <Separator orientation="horizontal" />
       <div className="space-y-6">
         <h3 className="scroll-mt-44 font-medium text-lg" id={id}>

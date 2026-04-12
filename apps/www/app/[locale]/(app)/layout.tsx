@@ -8,10 +8,11 @@ import { getToken } from "@/lib/auth/server";
 /**
  * Binds the validated locale to the shared authenticated app subtree.
  *
- * With Cache Components enabled, static and dynamic content can coexist in the
- * same route tree. Seeding the Better Auth token once at the shared `(app)`
- * boundary keeps the outer route structure simple while preserving authenticated
- * Convex SSR where it is needed.
+ * Every route in the `(app)` group relies on `useUser()` through the shared app
+ * shell, so this layout resolves the Better Auth token once and mounts a single
+ * provider tree behind a real Suspense boundary. The fallback stays intentionally
+ * small so we do not duplicate the full app subtree while the request token
+ * resolves.
  *
  * References:
  * - Convex App Router SSR:
@@ -28,14 +29,18 @@ export default async function Layout(props: LayoutProps<"/[locale]">) {
   }
 
   return (
-    <Suspense fallback={null}>
-      <AuthLayout>{children}</AuthLayout>
+    <Suspense fallback={<div className="min-h-svh bg-background" />}>
+      <AuthenticatedAppProviders>{children}</AuthenticatedAppProviders>
     </Suspense>
   );
 }
 
-/** Seeds the shared app runtime subtree with the current request token. */
-async function AuthLayout({ children }: { children: React.ReactNode }) {
+/** Resolves the request token before mounting the authenticated app providers. */
+async function AuthenticatedAppProviders({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const token = await getToken();
 
   return <AppProviders initialToken={token}>{children}</AppProviders>;

@@ -16,37 +16,38 @@ import { toast } from "sonner";
 import { useAttempt } from "@/lib/context/use-attempt";
 import { useExercise } from "@/lib/context/use-exercise";
 
-interface Props {
+/** Renders the selectable choices for one exercise and submits answers to Convex. */
+export function ExerciseChoices({
+  choices,
+  exerciseNumber,
+  id,
+}: {
   choices: ExercisesChoices[keyof ExercisesChoices];
   exerciseNumber: number;
   id: string;
-}
-
-export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
+}) {
   const t = useTranslations("Exercises");
-
   const [isPending, startTransition] = useTransition();
 
-  const attempt = useAttempt((state) => state.attempt);
-  const answers = useAttempt((state) => state.answers);
-  const answerSheet = useAttempt((state) => state.answerSheet);
+  const attemptId = useAttempt((state) => state.attemptId);
+  const attemptMode = useAttempt((state) => state.attemptMode);
+  const attemptStatus = useAttempt((state) => state.attemptStatus);
+  const currentAnswer = useAttempt(
+    (state) => state.answerByExercise.get(exerciseNumber) ?? null
+  );
+  const answerSheetEntry = useAttempt(
+    (state) => state.answerSheetByExercise.get(exerciseNumber) ?? null
+  );
   const isInputLocked = useAttempt((state) => state.isInputLocked);
   const isReviewMode = useAttempt((state) => state.isReviewMode);
-
   const submitAttempt = useMutation(api.exercises.mutations.submitAnswer);
   const timeSpent = useExercise(
     (state) => state.timeSpent[exerciseNumber] ?? 0
   );
 
-  const currentAnswer = answers.find(
-    (a) => a.exerciseNumber === exerciseNumber
-  );
-  const answerSheetEntry = answerSheet.find(
-    (entry) => entry.exerciseNumber === exerciseNumber
-  );
-
-  function handleSubmit({ index }: { index: number }) {
-    if (!attempt) {
+  /** Submits one selected option for the current exercise. */
+  function handleSubmit(index: number) {
+    if (!attemptId) {
       toast.info(t("attempt-not-found"), { position: "bottom-center" });
       return;
     }
@@ -58,8 +59,7 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
       return;
     }
 
-    // If the attempt is not in progress, tell user to start new attempt
-    if (attempt.status !== "in-progress") {
+    if (attemptStatus !== "in-progress") {
       toast.info(t("attempt-not-in-progress"), { position: "bottom-center" });
       return;
     }
@@ -76,7 +76,7 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
     startTransition(async () => {
       try {
         await submitAttempt({
-          attemptId: attempt._id,
+          attemptId,
           exerciseNumber,
           questionId: answerSheetEntry.questionId,
           selectedOptionId: option.optionKey,
@@ -139,9 +139,9 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
 
         const shouldShowReviewState =
           isReviewMode ||
-          attempt?.mode === "practice" ||
-          attempt?.status === "completed" ||
-          attempt?.status === "expired";
+          attemptMode === "practice" ||
+          attemptStatus === "completed" ||
+          attemptStatus === "expired";
 
         if (shouldShowReviewState) {
           if (checked && currentAnswer && !currentAnswer.isCorrect) {
@@ -167,7 +167,7 @@ export function ExerciseChoices({ id, exerciseNumber, choices }: Props) {
               disabled={isInputLocked || isPending}
               onCheckedChange={(checked) => {
                 if (checked) {
-                  handleSubmit({ index });
+                  handleSubmit(index);
                 }
               }}
             />
