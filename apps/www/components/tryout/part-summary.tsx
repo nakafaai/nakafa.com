@@ -4,8 +4,8 @@ import type { ReactNode } from "react";
 
 export function TryoutPartSummary({ children }: { children: ReactNode }) {
   return (
-    <section className="rounded-xl border bg-card p-5 shadow-sm">
-      <div className="space-y-6">{children}</div>
+    <section className="space-y-4 rounded-xl border bg-card p-5 shadow-sm">
+      {children}
     </section>
   );
 }
