@@ -1,6 +1,11 @@
 import { normalizeLocalizedInternalHref } from "@repo/internationalization/src/href";
 import { describe, expect, it } from "vitest";
-import { getPagefindSubResultHref, normalizePagefindResult } from "../pagefind";
+import {
+  getPagefindSectionResults,
+  getPagefindSubResultHref,
+  hasPagefindExcerpt,
+  normalizePagefindResult,
+} from "../pagefind";
 
 describe("normalizeLocalizedInternalHref", () => {
   it("strips the leading locale from internal hrefs", () => {
@@ -99,6 +104,169 @@ describe("normalizePagefindResult", () => {
       }).sub_results[0]?.url
     ).toBe(
       "/subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition#pengertian-logaritma"
+    );
+  });
+
+  it("removes repeated section titles from sub-result excerpts", () => {
+    expect(
+      normalizePagefindResult({
+        excerpt: "...",
+        meta: {
+          title: "Matematika",
+        },
+        raw_url:
+          "/id/subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition.html",
+        sub_results: [
+          {
+            anchor: {
+              element: "h2",
+              id: "pengertian-logaritma",
+              location: 1,
+              text: "Pengertian Logaritma",
+            },
+            excerpt:
+              "Pengertian <mark>Logaritma.</mark> <mark>Logaritma</mark> adalah operasi matematika...",
+            title: "Pengertian Logaritma",
+            url: "/id/subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition.html#pengertian-logaritma",
+          },
+        ],
+        url: "/id/subject/high-school/10/mathematics/exponential-logarithm/logarithm-definition.html",
+      }).sub_results[0]?.excerpt
+    ).toBe("<mark>Logaritma</mark> adalah operasi matematika...");
+  });
+
+  it("keeps empty html excerpts unchanged", () => {
+    expect(
+      normalizePagefindResult({
+        excerpt: "...",
+        meta: {
+          title: "Matematika",
+        },
+        raw_url: "/id/subject/logarithm-definition.html",
+        sub_results: [
+          {
+            excerpt: "<mark></mark>",
+            title: "Pengertian Logaritma",
+            url: "/id/subject/logarithm-definition.html#pengertian-logaritma",
+          },
+        ],
+        url: "/id/subject/logarithm-definition.html",
+      }).sub_results[0]?.excerpt
+    ).toBe("<mark></mark>");
+  });
+
+  it("keeps excerpts intact when the title is not repeated at the start", () => {
+    expect(
+      normalizePagefindResult({
+        excerpt: "...",
+        meta: {
+          title: "Matematika",
+        },
+        raw_url: "/id/subject/logarithm-definition.html",
+        sub_results: [
+          {
+            excerpt: "Materi ini menjelaskan <mark>logaritma</mark> dasar.",
+            title: "Pengertian Logaritma",
+            url: "/id/subject/logarithm-definition.html#pengertian-logaritma",
+          },
+        ],
+        url: "/id/subject/logarithm-definition.html",
+      }).sub_results[0]?.excerpt
+    ).toBe("Materi ini menjelaskan <mark>logaritma</mark> dasar.");
+  });
+
+  it("trims repeated title prefixes that end inside a text token", () => {
+    expect(
+      normalizePagefindResult({
+        excerpt: "...",
+        meta: {
+          title: "Matematika",
+        },
+        raw_url: "/id/subject/logarithm-definition.html",
+        sub_results: [
+          {
+            excerpt: "PengertianLogaritma adalah operasi matematika.",
+            title: "Pengertian",
+            url: "/id/subject/logarithm-definition.html#pengertian-logaritma",
+          },
+        ],
+        url: "/id/subject/logarithm-definition.html",
+      }).sub_results[0]?.excerpt
+    ).toBe("Logaritma adalah operasi matematika.");
+  });
+});
+
+describe("getPagefindSectionResults", () => {
+  it("drops a duplicate title row when anchored section hits exist", () => {
+    const result = getPagefindSectionResults({
+      excerpt: "...",
+      meta: { title: "Definisi Logaritma" },
+      raw_url: "/id/subject/logarithm-definition.html",
+      sub_results: [
+        {
+          excerpt: "Ringkasan...",
+          title: "Definisi Logaritma",
+          url: "/id/subject/logarithm-definition.html",
+        },
+        {
+          anchor: {
+            element: "h2",
+            id: "pengertian-logaritma",
+            location: 1,
+            text: "Pengertian Logaritma",
+          },
+          excerpt: "Isi...",
+          title: "Pengertian Logaritma",
+          url: "/id/subject/logarithm-definition.html#pengertian-logaritma",
+        },
+      ],
+      url: "/id/subject/logarithm-definition.html",
+    });
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.title).toBe("Pengertian Logaritma");
+  });
+
+  it("keeps the first item clickable when no section hits exist", () => {
+    const result = getPagefindSectionResults({
+      excerpt: "...",
+      meta: { title: "Set 1" },
+      raw_url: "/id/exercises/set-1.html",
+      sub_results: [
+        {
+          excerpt: "Ringkasan...",
+          title: "Set 1",
+          url: "/id/exercises/set-1.html",
+        },
+      ],
+      url: "/id/exercises/set-1.html",
+    });
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.title).toBe("Set 1");
+  });
+
+  it("returns an empty array when there are no sub results", () => {
+    const result = getPagefindSectionResults({
+      excerpt: "...",
+      meta: { title: "Set 1" },
+      raw_url: "/id/exercises/set-1.html",
+      sub_results: [],
+      url: "/id/exercises/set-1.html",
+    });
+
+    expect(result).toStrictEqual([]);
+  });
+});
+
+describe("hasPagefindExcerpt", () => {
+  it("returns false for empty excerpt markup", () => {
+    expect(hasPagefindExcerpt("<mark></mark>")).toBe(false);
+  });
+
+  it("returns true when excerpt contains visible text", () => {
+    expect(hasPagefindExcerpt("<mark>Logaritma</mark> adalah operasi")).toBe(
+      true
     );
   });
 });

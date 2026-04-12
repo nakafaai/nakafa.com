@@ -11,6 +11,10 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 import { Fragment, type ReactElement } from "react";
+import {
+  getPagefindSectionResults,
+  hasPagefindExcerpt,
+} from "@/lib/utils/pagefind";
 import type { PagefindResult } from "@/types/pagefind";
 
 interface Props {
@@ -73,39 +77,51 @@ export function SearchResults({
     <div className="flex flex-col gap-3 rounded-xl border py-4 shadow-sm">
       {results.map((result, index) => (
         <Fragment key={result.url}>
-          <div className="space-y-2">
-            <h2 className="px-4 font-medium text-muted-foreground text-sm">
-              {result.meta.title}
-            </h2>
-            <div className="flex flex-col gap-1">
-              {result.sub_results.map((subResult, subIndex) => (
-                <NavigationLink
-                  className={cn(
-                    "group flex flex-col gap-2 p-2 px-4 text-sm transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
-                  )}
-                  href={subResult.url}
-                  // biome-ignore lint/suspicious/noArrayIndexKey: URL+title may not be unique, need index for stability
-                  key={`${subResult.url}-${subResult.title}-${subIndex}`}
-                >
-                  <div className="flex items-center gap-2">
-                    <HugeIcons
-                      className="size-4 shrink-0 text-muted-foreground group-hover:text-accent-foreground"
-                      icon={FileIcon}
-                    />
-                    <span className="line-clamp-1">{subResult.title}</span>
-                  </div>
-                  <p
-                    className="line-clamp-3 text-muted-foreground text-sm group-hover:text-accent-foreground group-data-[selected=true]:text-accent-foreground"
-                    // biome-ignore lint/security/noDangerouslySetInnerHtml: It's fine
-                    dangerouslySetInnerHTML={{ __html: subResult.excerpt }}
-                  />
-                </NavigationLink>
-              ))}
-            </div>
-          </div>
+          <ResultGroup result={result} />
           {index !== results.length - 1 && <Separator />}
         </Fragment>
       ))}
+    </div>
+  );
+}
+
+/** Renders one grouped Pagefind result with optional summary copy. */
+function ResultGroup({ result }: { result: PagefindResult }) {
+  const sectionResults = getPagefindSectionResults(result);
+
+  return (
+    <div className="space-y-2">
+      <h2 className="px-4 font-medium text-muted-foreground text-sm">
+        {result.meta.title}
+      </h2>
+      <div className="flex flex-col gap-1">
+        {sectionResults.map((subResult, subIndex) => (
+          <NavigationLink
+            className={cn(
+              "group flex flex-col gap-2 p-2 px-4 text-sm transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
+            )}
+            href={subResult.url}
+            // biome-ignore lint/suspicious/noArrayIndexKey: URL+title may not be unique, need index for stability
+            key={`${subResult.url}-${subResult.title}-${subIndex}`}
+          >
+            <div className="flex items-center gap-2">
+              <HugeIcons
+                className="size-4 shrink-0 text-muted-foreground group-hover:text-accent-foreground"
+                icon={FileIcon}
+              />
+              <span className="line-clamp-1">{subResult.title}</span>
+            </div>
+            <p
+              className={cn(
+                "line-clamp-3 text-muted-foreground text-sm group-hover:text-accent-foreground group-data-[selected=true]:text-accent-foreground",
+                !hasPagefindExcerpt(subResult.excerpt) && "hidden"
+              )}
+              // biome-ignore lint/security/noDangerouslySetInnerHtml: Pagefind returns highlighted HTML excerpts
+              dangerouslySetInnerHTML={{ __html: subResult.excerpt }}
+            />
+          </NavigationLink>
+        ))}
+      </div>
     </div>
   );
 }

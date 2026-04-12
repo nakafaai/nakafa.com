@@ -38,7 +38,7 @@ type Props = ComponentProps<typeof Sidebar>;
 
 export function AiChatSidebar({ ...props }: Props) {
   return (
-    <div data-pagefind-ignore>
+    <div>
       <SidebarProvider
         cookieName="sidebar_state:ai-chat"
         keyboardShortcut="h"

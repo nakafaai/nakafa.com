@@ -10,6 +10,7 @@ const withNextIntl = createNextIntlPlugin(
 
 let nextConfig: NextConfig = {
   ...config,
+  cacheComponents: true,
   // Next.js recommends outputFileTracingRoot in monorepos so files outside the
   // app folder are included in the production trace.
   // Docs: https://nextjs.org/docs/app/api-reference/config/next-config-js/output
@@ -35,7 +36,7 @@ let nextConfig: NextConfig = {
   },
   serverExternalPackages: [
     ...(config.serverExternalPackages ?? []),
-    "@takumi-rs/image-response",
+    "@takumi-rs/core",
   ],
   async rewrites() {
     const llmSource = [
@@ -103,6 +104,11 @@ let nextConfig: NextConfig = {
         },
       ];
     });
+  },
+  experimental: {
+    ...config.experimental,
+    globalNotFound: true,
+    rootParams: true,
   },
 };
 

@@ -1,4 +1,7 @@
+"use client";
+
 import { BookOpen02Icon } from "@hugeicons/core-free-icons";
+import { useDisclosure } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Drawer,
@@ -9,16 +12,32 @@ import {
 } from "@repo/design-system/components/ui/drawer";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
+import { useLayoutEffect } from "react";
 
 interface Props {
   interpretation: string;
 }
 
+/**
+ * Renders the tafsir drawer for one verse.
+ *
+ * The drawer is transient UI, so it resets closed when Next hides the page
+ * through Cache Components state preservation.
+ *
+ * References:
+ * - Next.js preserving UI state with Cache Components:
+ *   `apps/www/node_modules/next/dist/docs/01-app/02-guides/preserving-ui-state.md`
+ * - Mantine `useDisclosure`:
+ *   https://mantine.dev/hooks/use-disclosure/
+ */
 export function QuranInterpretation({ interpretation }: Props) {
   const t = useTranslations("Holy");
+  const [open, { close, set }] = useDisclosure(false);
+
+  useLayoutEffect(() => close, [close]);
 
   return (
-    <Drawer>
+    <Drawer onOpenChange={set} open={open}>
       <DrawerTrigger asChild className="cursor-pointer">
         <Button size="icon" variant="outline">
           <HugeIcons icon={BookOpen02Icon} />

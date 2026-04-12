@@ -7,7 +7,7 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { Claude, Gemini, Github, OpenAI } from "@lobehub/icons";
-import { useClipboard } from "@mantine/hooks";
+import { useClipboard, useDisclosure } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -19,10 +19,22 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
 import { Link } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useLayoutEffect } from "react";
 import { toast } from "sonner";
 import { getGithubUrl } from "@/lib/utils/github";
 
+/**
+ * Renders open/share actions for one content page.
+ *
+ * The dropdown is transient UI, so it resets closed when Next hides the page
+ * through Cache Components state preservation.
+ *
+ * References:
+ * - Next.js preserving UI state with Cache Components:
+ *   `apps/www/node_modules/next/dist/docs/01-app/02-guides/preserving-ui-state.md`
+ * - Mantine `useDisclosure`:
+ *   https://mantine.dev/hooks/use-disclosure/
+ */
 export function OpenContent({
   slug,
   content,
@@ -32,7 +44,9 @@ export function OpenContent({
 }) {
   const t = useTranslations("Common");
   const clipboard = useClipboard({ timeout: 500 });
-  const [open, setOpen] = useState(false);
+  const [open, { close, set }] = useDisclosure(false);
+
+  useLayoutEffect(() => close, [close]);
 
   const handleCopy = () => {
     if (!content) {
@@ -83,7 +97,7 @@ export function OpenContent({
         {t("copy-content")}
       </Button>
 
-      <DropdownMenu onOpenChange={setOpen} open={open}>
+      <DropdownMenu onOpenChange={set} open={open}>
         <DropdownMenuTrigger asChild>
           <Button
             aria-label={t("open")}

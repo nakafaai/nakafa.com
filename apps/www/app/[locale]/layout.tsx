@@ -11,25 +11,16 @@ import { WebsiteJsonLd } from "@repo/seo/json-ld/website";
 import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
-import { use } from "react";
-import { AppProviders } from "@/components/providers";
+import { getLocale, getMessages, getTranslations } from "next-intl/server";
 
-export async function generateMetadata({
-  params,
-}: {
-  params: LayoutProps<"/[locale]">["params"];
-}): Promise<Metadata> {
-  const { locale } = await params;
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
 
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
 
-  const t = await getTranslations({
-    locale,
-    namespace: "Metadata",
-  });
+  const t = await getTranslations("Metadata");
 
   return {
     title: {
@@ -146,20 +137,18 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
-export default function Layout(props: LayoutProps<"/[locale]">) {
-  const { children, params } = props;
-  const { locale } = use(params);
-  // Ensure that the incoming `locale` is valid
+export default async function Layout({ children }: LayoutProps<"/[locale]">) {
+  const locale = await getLocale();
+
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
 
-  // Enable static rendering
-  setRequestLocale(locale);
+  const messages = await getMessages();
 
   return (
     <html className={fonts} lang={locale} suppressHydrationWarning>
-      <NextIntlClientProvider>
+      <NextIntlClientProvider locale={locale} messages={messages}>
         <head>
           {/* Add JSON-LD structured data using the JsonLd component */}
           <EducationalOrgJsonLd />
@@ -168,9 +157,7 @@ export default function Layout(props: LayoutProps<"/[locale]">) {
         <body className="relative">
           <AnalyticsProvider>
             <div className="isolate">
-              <AppProviders>
-                <DesignSystemProvider>{children}</DesignSystemProvider>
-              </AppProviders>
+              <DesignSystemProvider>{children}</DesignSystemProvider>
             </div>
 
             <Toaster />

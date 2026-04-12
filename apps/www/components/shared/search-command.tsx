@@ -24,13 +24,17 @@ import { cn } from "@repo/design-system/lib/utils";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
 import type { ReactElement, ReactNode } from "react";
-import { Fragment, useTransition } from "react";
+import { Fragment, useLayoutEffect, useTransition } from "react";
 import { articlesMenu } from "@/components/sidebar/_data/articles";
 import { holyMenu } from "@/components/sidebar/_data/holy";
 import { subjectMenu } from "@/components/sidebar/_data/subject";
 import { getErrorMessage, usePagefind } from "@/lib/context/use-pagefind";
 import { useSearch } from "@/lib/context/use-search";
 import { useSearchQuery } from "@/lib/react-query/use-search";
+import {
+  getPagefindSectionResults,
+  hasPagefindExcerpt,
+} from "@/lib/utils/pagefind";
 import type { PagefindResult } from "@/types/pagefind";
 
 const DEBOUNCE_TIME = 500;
@@ -43,6 +47,12 @@ export function SearchCommand() {
     open: state.open,
     setOpen: state.setOpen,
   }));
+
+  useLayoutEffect(() => {
+    return () => {
+      setOpen(false);
+    };
+  }, [setOpen]);
 
   useHotkeys([
     ["/", () => setOpen(true)],
@@ -174,38 +184,62 @@ function SearchListItems({
 
   return results.map((result, index) => (
     <Fragment key={result.url}>
-      <CommandGroup heading={result.meta.title}>
-        {result.sub_results.map((subResult, index) => (
-          <CommandItem
-            className="group cursor-pointer flex-col items-start"
-            disabled={isPending}
-            // biome-ignore lint/suspicious/noArrayIndexKey: URL+title may not be unique, need index for stability
-            key={`${subResult.url}-${subResult.title}-${index}`}
-            onSelect={() => {
-              startTransition(() => {
-                setOpen(false);
-                router.push(subResult.url);
-              });
-            }}
-            value={`${result.meta.title} ${subResult.title} ${subResult.url}`}
-          >
-            <div className="flex items-center gap-2">
-              <HugeIcons icon={FileIcon} />
-              <span className="line-clamp-1">{subResult.title}</span>
-            </div>
-            <p
-              className="line-clamp-3 text-muted-foreground text-xs group-data-[selected=true]:text-accent-foreground"
-              // biome-ignore lint/security/noDangerouslySetInnerHtml: It's fine
-              dangerouslySetInnerHTML={{ __html: subResult.excerpt }}
-            />
-          </CommandItem>
-        ))}
-      </CommandGroup>
+      <SearchResultGroup
+        isPending={isPending}
+        onSelect={(url) => {
+          startTransition(() => {
+            setOpen(false);
+            router.push(url);
+          });
+        }}
+        result={result}
+      />
       {results.length > 1 && index !== results.length - 1 && (
         <CommandSeparator alwaysRender className="my-2" />
       )}
     </Fragment>
   ));
+}
+
+/** Renders one grouped search result inside the command palette. */
+function SearchResultGroup({
+  result,
+  onSelect,
+  isPending,
+}: {
+  result: PagefindResult;
+  onSelect: (url: string) => void;
+  isPending: boolean;
+}) {
+  const sectionResults = getPagefindSectionResults(result);
+
+  return (
+    <CommandGroup heading={result.meta.title}>
+      {sectionResults.map((subResult, subIndex) => (
+        <CommandItem
+          className="group cursor-pointer flex-col items-start"
+          disabled={isPending}
+          // biome-ignore lint/suspicious/noArrayIndexKey: URL+title may not be unique, need index for stability
+          key={`${subResult.url}-${subResult.title}-${subIndex}`}
+          onSelect={() => onSelect(subResult.url)}
+          value={`${result.meta.title} ${subResult.title} ${subResult.url}`}
+        >
+          <div className="flex items-center gap-2">
+            <HugeIcons icon={FileIcon} />
+            <span className="line-clamp-1">{subResult.title}</span>
+          </div>
+          <p
+            className={cn(
+              "line-clamp-3 text-muted-foreground text-xs group-data-[selected=true]:text-accent-foreground",
+              !hasPagefindExcerpt(subResult.excerpt) && "hidden"
+            )}
+            // biome-ignore lint/security/noDangerouslySetInnerHtml: Pagefind returns highlighted HTML excerpts
+            dangerouslySetInnerHTML={{ __html: subResult.excerpt }}
+          />
+        </CommandItem>
+      ))}
+    </CommandGroup>
+  );
 }
 
 function DefaultItems() {

@@ -117,7 +117,7 @@ export function SidebarRight({
   ...props
 }: SidebarRightProps) {
   return (
-    <aside data-pagefind-ignore>
+    <aside>
       <SidebarProvider
         cookieName="sidebar_state:right"
         keyboardShortcut="x"

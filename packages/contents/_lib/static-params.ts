@@ -33,13 +33,10 @@ interface ContentPathsConfig extends BaseConfig {
 interface SlugOnlyConfig extends BaseConfig {
   includeExerciseNumbers?: boolean;
   includeExerciseSets?: boolean;
-  includeOGVariants?: boolean;
   includeQuran?: boolean;
 }
 
-interface LocaleParamsConfig extends BaseConfig {
-  includeOGVariants?: boolean;
-}
+interface LocaleParamsConfig extends BaseConfig {}
 
 /**
  * Extracts unique exercise set paths from MDX cache entries.
@@ -228,12 +225,6 @@ export function generateContentParams(
  *   });
  * }
  *
- * // For /og route (locale in slug with image.png variants)
- * export function generateStaticParams() {
- *   return generateSlugOnlyParams({
- *     includeOGVariants: true,
- *   });
- * }
  * ```
  */
 export function generateSlugOnlyParams(
@@ -244,7 +235,6 @@ export function generateSlugOnlyParams(
     includeQuran = false,
     includeExerciseSets = false,
     includeExerciseNumbers = false,
-    includeOGVariants = false,
   } = config;
 
   const contentPathCandidates = getContentPathCandidates();
@@ -252,16 +242,9 @@ export function generateSlugOnlyParams(
 
   const addPath = (locale: Locale, slugParts: string[]) => {
     result.push({ slug: [locale, ...slugParts] });
-    if (includeOGVariants && slugParts.length > 0) {
-      result.push({ slug: [locale, ...slugParts, "image.png"] });
-    }
   };
 
   for (const locale of locales) {
-    if (includeOGVariants) {
-      result.push({ slug: [locale, "image.png"] });
-    }
-
     const slugs = getMDXSlugsForLocale(locale);
     const localeCache = new Set(slugs);
 
@@ -303,33 +286,20 @@ export function generateSlugOnlyParams(
  *
  * @example
  * ```ts
- * // For /[locale]/og route
- * export function generateStaticParams() {
- *   return generateLocaleParams({
- *     includeOGVariants: true,
- *   });
- * }
  * ```
  */
 export function generateLocaleParams(
   config: LocaleParamsConfig = {}
 ): StaticParamsWithLocale[] {
-  const { locales = routing.locales, includeOGVariants = false } = config;
+  const { locales = routing.locales } = config;
   const contentPathCandidates = getContentPathCandidates();
   const result: StaticParamsWithLocale[] = [];
 
   const addPath = (locale: Locale, slugParts: string[]) => {
     result.push({ locale, slug: slugParts });
-    if (includeOGVariants && slugParts.length > 0) {
-      result.push({ locale, slug: [...slugParts, "image.png"] });
-    }
   };
 
   for (const locale of locales) {
-    if (includeOGVariants) {
-      result.push({ locale, slug: ["image.png"] });
-    }
-
     const slugs = getMDXSlugsForLocale(locale);
     const localeCache = new Set(slugs);
 

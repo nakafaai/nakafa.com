@@ -1,5 +1,3 @@
-"use client";
-
 import { NumberLine } from "@repo/design-system/components/contents/number-line";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import type { ComponentProps } from "react";

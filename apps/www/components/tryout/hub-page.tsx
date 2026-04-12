@@ -18,12 +18,14 @@ import { getToken } from "@/lib/auth/server";
 /** Renders the server-backed tryout hub with an SSR first catalog page. */
 export async function TryoutHubPage({ locale }: { locale: Locale }) {
   const product: TryoutProduct = "snbt";
-  const initialNowMs = Date.now();
   const [tHome, tTryouts, token] = await Promise.all([
     getTranslations({ locale, namespace: "Home" }),
     getTranslations({ locale, namespace: "Tryouts" }),
     getToken(),
   ]);
+
+  const initialNowMs = Date.now();
+
   const [catalogSnapshot, currentUser] = await Promise.all([
     fetchQuery(
       api.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot,

@@ -1,10 +1,11 @@
 {
-  "extends": "@repo/typescript-config/nextjs.json",
+  "extends": "@repo/typescript-config/react-library.json",
   "compilerOptions": {
     "paths": {
       "@repo/*": ["../*"],
       "@repo/email/*": ["./*"]
-    }
+    },
+    "types": ["node"]
   },
   "include": ["./**/*.ts", "./**/*.tsx"],
   "exclude": ["node_modules"]

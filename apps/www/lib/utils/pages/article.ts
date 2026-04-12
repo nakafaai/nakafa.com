@@ -1,24 +1,17 @@
-import {
-  getArticleContent,
-  getArticleReferences,
-} from "@repo/contents/_lib/articles/content";
 import { getSlugPath } from "@repo/contents/_lib/articles/slug";
 import { getContentMetadataWithRaw } from "@repo/contents/_lib/metadata";
-import {
-  type FileReadError,
-  type GitHubFetchError,
+import type {
+  FileReadError,
+  GitHubFetchError,
   InvalidPathError,
-  type MetadataParseError,
-  type ModuleLoadError,
+  MetadataParseError,
+  ModuleLoadError,
 } from "@repo/contents/_shared/error";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
-import type { ContentWithMDX, Reference } from "@repo/contents/_types/content";
+import type { ContentWithMDX } from "@repo/contents/_types/content";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 
-/**
- * Input parameters for fetching article context.
- */
 export interface FetchArticleContextInput {
   /** The article category */
   category: ArticleCategory;
@@ -29,16 +22,6 @@ export interface FetchArticleContextInput {
 }
 
 /**
- * Output data containing fetched article context.
- */
-export interface FetchArticleContextOutput {
-  /** The content data with MDX component */
-  content: ContentWithMDX;
-  /** The list of references for the article */
-  references: Reference[];
-}
-
-/**
  * Output data containing fetched article metadata context.
  */
 export interface FetchArticleMetadataContextOutput {
@@ -46,48 +29,6 @@ export interface FetchArticleMetadataContextOutput {
   content: ContentWithMDX | null;
   /** The full file path to the content file */
   FilePath: ReturnType<typeof getSlugPath>;
-}
-
-/**
- * Fetches the article context including content data and references.
- * Returns an error if the content is not found.
- *
- * @param input - The input parameters for fetching article context
- * @param input.locale - The locale for localized content
- * @param input.category - The article category
- * @param input.slug - The article slug
- * @returns An Effect that resolves to the article context or fails with an Error
- */
-export function fetchArticleContext({
-  locale,
-  category,
-  slug,
-}: FetchArticleContextInput): Effect.Effect<
-  FetchArticleContextOutput,
-  | InvalidPathError
-  | FileReadError
-  | GitHubFetchError
-  | MetadataParseError
-  | ModuleLoadError
-> {
-  const FilePath = getSlugPath(category, slug);
-
-  return Effect.gen(function* () {
-    const content = yield* getArticleContent(locale, FilePath);
-
-    if (content === null) {
-      return yield* Effect.fail(
-        new InvalidPathError({
-          path: FilePath,
-          reason: "Article content not found",
-        })
-      );
-    }
-
-    const references = yield* getArticleReferences(FilePath);
-
-    return { content, references };
-  });
 }
 
 /**

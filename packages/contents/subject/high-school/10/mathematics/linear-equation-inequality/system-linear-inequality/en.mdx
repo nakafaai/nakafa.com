@@ -1,5 +1,4 @@
 import { Inequality } from "@repo/design-system/components/contents/inequality";
-import { condition1, condition2 } from "./inequality-functions";
 import { getColor } from "@repo/design-system/lib/color";
 
 export const metadata = {
@@ -176,7 +175,6 @@ The purple region (the intersection of the blue and red areas) is the solution t
     {
       is2D: true,
       boundaryLine2D: [1, 1, -10],
-      condition: condition1,
       xRange: [-15, 15],
       yRange: [-15, 15],
       zRange: [-0.05, 0.05],
@@ -190,7 +188,6 @@ The purple region (the intersection of the blue and red areas) is the solution t
     {
       is2D: true,
       boundaryLine2D: [-15, -9, 120],
-      condition: condition2,
       xRange: [-15, 15],
       yRange: [-15, 15],
       zRange: [-0.05, 0.05],

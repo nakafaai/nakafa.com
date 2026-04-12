@@ -2,6 +2,7 @@ import { promises as fsPromises } from "node:fs";
 import path from "node:path";
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import { extractMetadata } from "@repo/contents/_lib/metadata";
+import { importContentModule } from "@repo/contents/_lib/module";
 import { resolveContentsDir } from "@repo/contents/_lib/root";
 import {
   FileReadError,
@@ -23,29 +24,21 @@ import {
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, Option } from "effect";
 import ky from "ky";
-import { type ComponentType, createElement } from "react";
 
 const contentsDir = resolveContentsDir(import.meta.url);
-
-interface ScopedContentModule {
-  default: ComponentType;
-  metadata?: unknown;
-}
 
 interface ScopedReferencesModule {
   references?: unknown;
 }
 
-interface ScopedContentTarget {
+interface ScopedPathTarget {
   cleanPath: string;
-  contentPath: string;
   relativePath: string;
 }
 
-type ScopedContentImporter = (
-  relativePath: string,
-  locale: Locale
-) => Promise<ScopedContentModule>;
+interface ScopedContentTarget extends ScopedPathTarget {
+  contentPath: string;
+}
 
 type ScopedReferencesImporter = (
   relativePath: string
@@ -115,14 +108,15 @@ export function getRawContent(
 }
 
 /**
- * Normalizes one content path for a specific root and locale so root-scoped
- * loaders can share the same path validation rules.
+ * Normalizes one content path for a specific top-level root.
+ *
+ * This is the shared root-membership guard for both localized MDX loaders and
+ * locale-agnostic siblings like article `ref.ts` modules.
  */
-function getScopedContentTarget(
+function getScopedPathTarget(
   root: ContentRoot,
-  filePath: string,
-  locale: Locale
-): Effect.Effect<ScopedContentTarget, InvalidPathError> {
+  filePath: string
+): Effect.Effect<ScopedPathTarget, InvalidPathError> {
   const cleanPath = cleanSlug(filePath);
   const rootPrefix = `${root}/`;
 
@@ -139,9 +133,29 @@ function getScopedContentTarget(
 
   return Effect.succeed({
     cleanPath,
-    contentPath: `${cleanPath}/${locale}.mdx`,
     relativePath,
   });
+}
+
+/**
+ * Builds the localized MDX target for one root-scoped content entry.
+ *
+ * @param root - Top-level content root that owns the path
+ * @param filePath - Content slug relative to `packages/contents`
+ * @param locale - Locale used to resolve the MDX file
+ * @returns Root-validated content target including the localized MDX path
+ */
+function getScopedContentTarget(
+  root: ContentRoot,
+  filePath: string,
+  locale: Locale
+): Effect.Effect<ScopedContentTarget, InvalidPathError> {
+  return getScopedPathTarget(root, filePath).pipe(
+    Effect.map((target) => ({
+      ...target,
+      contentPath: `${target.cleanPath}/${locale}.mdx`,
+    }))
+  );
 }
 
 /**
@@ -213,7 +227,6 @@ export function parseReferences(
  */
 export function getScopedContent(
   root: ContentRoot,
-  importContentModule: ScopedContentImporter,
   locale: Locale,
   filePath: string,
   options: { includeMDX?: boolean } = {}
@@ -235,7 +248,7 @@ export function getScopedContent(
         [
           getRawContent(target.contentPath),
           Effect.tryPromise({
-            try: () => importContentModule(target.relativePath, locale),
+            try: () => importContentModule(target.cleanPath, locale),
             catch: (error: unknown) =>
               new ModuleLoadError({
                 path: `@repo/contents/${target.contentPath}`,
@@ -253,7 +266,7 @@ export function getScopedContent(
 
       return {
         metadata,
-        default: createElement(contentModule.default),
+        default: contentModule.default,
         raw,
       };
     }
@@ -283,7 +296,6 @@ export function getScopedContent(
  */
 export function getScopedContents(
   root: ContentRoot,
-  importContentModule: ScopedContentImporter,
   options: {
     basePath?: string;
     includeMDX?: boolean;
@@ -302,7 +314,7 @@ export function getScopedContents(
   function processSlug(slug: string, contentLocale: Locale) {
     return Effect.gen(function* () {
       const content = yield* Effect.either(
-        getScopedContent(root, importContentModule, contentLocale, slug, {
+        getScopedContent(root, contentLocale, slug, {
           includeMDX,
         })
       );
@@ -333,6 +345,10 @@ export function getScopedContents(
 /**
  * Loads references from one fixed top-level root and gracefully falls back to an
  * empty list when the references module is missing or invalid.
+ *
+ * Article references live in one shared `ref.ts` file per article directory, so
+ * this loader only needs the root-relative directory path and does not depend on
+ * locale-specific MDX resolution.
  */
 export function getScopedReferences(
   root: Extract<ContentRoot, "articles">,
@@ -340,7 +356,7 @@ export function getScopedReferences(
   filePath: string
 ): Effect.Effect<Reference[]> {
   return Effect.gen(function* () {
-    const target = yield* getScopedContentTarget(root, filePath, "en");
+    const target = yield* getScopedPathTarget(root, filePath);
 
     const referencesModule = yield* Effect.tryPromise({
       try: () => importReferencesModule(target.relativePath),

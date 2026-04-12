@@ -35,10 +35,6 @@ export class ExerciseLoadError extends Data.TaggedError("ExerciseLoadError")<{
   readonly reason: string;
 }> {}
 
-export class ChoicesValidationError extends Data.TaggedError(
-  "ChoicesValidationError"
-)<{ readonly path: string; readonly errors: unknown }> {}
-
 export class SurahNotFoundError extends Data.TaggedError("SurahNotFoundError")<{
   readonly surahNumber: number;
 }> {}

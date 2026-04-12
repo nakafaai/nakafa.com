@@ -8,6 +8,7 @@ import {
   LayerIcon,
   QuillWrite01Icon,
 } from "@hugeicons/core-free-icons";
+import { useDisclosure } from "@mantine/hooks";
 import type { Reference } from "@repo/contents/_types/content";
 import {
   Card,
@@ -32,31 +33,41 @@ import {
 } from "@repo/design-system/components/ui/sidebar";
 import { cleanupUrl, formatUrl } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useLayoutEffect } from "react";
 
 interface Props {
   references: Reference[];
   title: string;
 }
 
+/**
+ * Renders the bibliography action inside the sidebar.
+ *
+ * The sheet is transient UI, so it resets closed when Next hides the page
+ * through Cache Components state preservation.
+ *
+ * References:
+ * - Next.js preserving UI state with Cache Components:
+ *   `apps/www/node_modules/next/dist/docs/01-app/02-guides/preserving-ui-state.md`
+ * - Mantine `useDisclosure`:
+ *   https://mantine.dev/hooks/use-disclosure/
+ */
 export function ReferenceButton({ references, title }: Props) {
   const t = useTranslations("Common");
+  const [open, { close, set, toggle }] = useDisclosure(false);
 
-  const [open, setOpen] = useState<boolean>(false);
+  useLayoutEffect(() => close, [close]);
 
   return (
     <>
       <SidebarMenuItem>
-        <SidebarMenuButton
-          onClick={() => setOpen(!open)}
-          tooltip={t("bibliography")}
-        >
+        <SidebarMenuButton onClick={toggle} tooltip={t("bibliography")}>
           <HugeIcons className="size-4 shrink-0" icon={LayerIcon} />
           <span className="truncate">{t("bibliography")}</span>
         </SidebarMenuButton>
       </SidebarMenuItem>
 
-      <Sheet modal={false} onOpenChange={setOpen} open={open}>
+      <Sheet modal={false} onOpenChange={set} open={open}>
         <SheetContent className="w-full sm:max-w-xl">
           <div className="flex h-full flex-col">
             <SheetHeader>
