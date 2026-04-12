@@ -35,25 +35,25 @@ export default async function Page(
   }
   const product: TryoutProduct = productParam;
 
-  const [tCommon, tExercises, tTryouts, details, token] = await Promise.all([
-    getTranslations({ locale, namespace: "Common" }),
-    getTranslations({ locale, namespace: "Exercises" }),
-    getTranslations({ locale, namespace: "Tryouts" }),
-    fetchQuery(api.tryouts.queries.tryouts.getTryoutDetails, {
-      locale,
-      product,
-      slug,
-    }),
-    getToken(),
-  ]);
+  const [{ attempt }, tCommon, tExercises, tTryouts, details, token] =
+    await Promise.all([
+      loadTryoutSearchParams(searchParams),
+      getTranslations({ locale, namespace: "Common" }),
+      getTranslations({ locale, namespace: "Exercises" }),
+      getTranslations({ locale, namespace: "Tryouts" }),
+      fetchQuery(api.tryouts.queries.tryouts.getTryoutDetails, {
+        locale,
+        product,
+        slug,
+      }),
+      getToken(),
+    ]);
 
   if (!details) {
     notFound();
   }
 
   const initialNowMs = Date.now();
-
-  const { attempt } = await loadTryoutSearchParams(searchParams);
   const preloadedSetView = token
     ? await preloadQuery(
         api.tryouts.queries.me.setView.getUserTryoutSetView,

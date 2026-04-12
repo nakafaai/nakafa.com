@@ -20,7 +20,7 @@ import {
 import { getToken } from "@/lib/auth/server";
 import { getTryoutExercises, getTryoutPartData } from "./data";
 
-/** Preloads the authenticated tryout runtime when the current request has a token. */
+/** Preloads the authenticated tryout runtime with vanilla Convex server preloading. */
 async function getTryoutRuntime(
   token: Awaited<ReturnType<typeof getToken>>,
   args: {
@@ -79,9 +79,9 @@ export async function TryoutPartBody({
     notFound();
   }
 
-  const [token, { attempt }] = await Promise.all([
-    getToken(),
+  const [{ attempt }, token] = await Promise.all([
     loadTryoutSearchParams(searchParams),
+    getToken(),
   ]);
   const initialNowMs = Date.now();
   const { preloadedRuntime, runtime } = await getTryoutRuntime(token, {
@@ -92,7 +92,7 @@ export async function TryoutPartBody({
     slug,
   });
 
-  if (token && runtime && !runtime.part) {
+  if (runtime && !runtime.part) {
     redirect(
       getTryoutHistoryHref(
         getTryoutSetHref({ product, tryoutSlug: slug }),
