@@ -234,8 +234,8 @@ importers:
         specifier: ^3.1.1
         version: 3.1.1(@types/react@19.2.14)(react@19.2.5)
       '@paper-design/shaders-react':
-        specifier: ^0.0.73
-        version: 0.0.73(@types/react@19.2.14)(react@19.2.5)
+        specifier: ^0.0.74
+        version: 0.0.74(@types/react@19.2.14)(react@19.2.5)
       '@repo/ai':
         specifier: workspace:*
         version: link:../../packages/ai
@@ -3877,8 +3877,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@paper-design/shaders-react@0.0.73':
-    resolution: {integrity: sha512-xL4xnAH8Wq1Sltyx9p+DrfkfAreMqXLEOdM0t1lGm6utWUFELj/0mCVGxOUdIhyO6j/ICL8A+GnVyRsoT43Vdw==}
+  '@paper-design/shaders-react@0.0.74':
+    resolution: {integrity: sha512-p9ud9widOGQjrVBiNvGNrr0ICKkytFj4bkLd3dRKaNOHZreUYj76yaQQS+Monlpz3BuLiI/4Tvikbrs8gcJUVw==}
     peerDependencies:
       '@types/react': ^18 || ^19
       react: ^18 || ^19
@@ -3886,8 +3886,8 @@ packages:
       '@types/react':
         optional: true
 
-  '@paper-design/shaders@0.0.73':
-    resolution: {integrity: sha512-afxlr0AEmKEIqEZP0p6b9ifvYkzwk/skYz3xQwsjppzl300sJ+CWGxzX9R7IjD2M/1eItO8gel4YjINqO6T3Ew==}
+  '@paper-design/shaders@0.0.74':
+    resolution: {integrity: sha512-8w8HJasgkRc6qb9cyQ8IWYrO66FEawCVkRhWXsrOetqZKHibONXN4em/hGEcgThY+b5mED4oplU/GglVdUH+uw==}
 
   '@parcel/watcher-android-arm64@2.5.4':
     resolution: {integrity: sha512-hoh0vx4v+b3BNI7Cjoy2/B0ARqcwVNrzN/n7DLq9ZB4I3lrsvhrkCViJyfTj/Qi5xM9YFiH4AmHGK6pgH1ss7g==}
@@ -16593,14 +16593,14 @@ snapshots:
   '@pagefind/windows-x64@1.5.2':
     optional: true
 
-  '@paper-design/shaders-react@0.0.73(@types/react@19.2.14)(react@19.2.5)':
+  '@paper-design/shaders-react@0.0.74(@types/react@19.2.14)(react@19.2.5)':
     dependencies:
-      '@paper-design/shaders': 0.0.73
+      '@paper-design/shaders': 0.0.74
       react: 19.2.5
     optionalDependencies:
       '@types/react': 19.2.14
 
-  '@paper-design/shaders@0.0.73': {}
+  '@paper-design/shaders@0.0.74': {}
 
   '@parcel/watcher-android-arm64@2.5.4':
     optional: true
