@@ -226,7 +226,7 @@ export const startTryout = mutation({
     });
 
     await ctx.scheduler.runAfter(
-      expiresAtMs - now,
+      Math.max(0, expiresAtMs - now),
       internal.tryouts.mutations.internal.expiry.expireTryoutAttemptInternal,
       {
         tryoutAttemptId,

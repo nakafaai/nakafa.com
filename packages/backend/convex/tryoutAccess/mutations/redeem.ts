@@ -131,7 +131,7 @@ export const redeemEventAccess = mutation({
     );
 
     await ctx.scheduler.runAfter(
-      endsAt - now,
+      Math.max(0, endsAt - now),
       internal.tryoutAccess.mutations.internal.status.expireGrant,
       {
         grantId,
