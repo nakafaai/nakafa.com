@@ -6,16 +6,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const config = defineConfig({
   test: {
-    coverage: {
-      enabled: true,
-      provider: "istanbul",
-    },
     setupFiles: ["./vitest.setup.ts"],
     projects: [
       {
         extends: true,
         test: {
           coverage: {
+            enabled: true,
+            provider: "istanbul",
             reportsDirectory: "./coverage/convex",
           },
           name: "convex",
@@ -28,6 +26,8 @@ const config = defineConfig({
         extends: true,
         test: {
           coverage: {
+            enabled: true,
+            provider: "istanbul",
             reportsDirectory: "./coverage/backend",
           },
           name: "backend",
