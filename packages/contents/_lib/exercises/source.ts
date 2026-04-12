@@ -19,7 +19,7 @@ const CHOICES_REGEX =
  * @param exerciseNumberSegment - Numbered exercise directory inside the set
  * @returns Root-relative question, answer, and choices paths for the exercise
  */
-export function getExerciseEntryPaths(
+function getExerciseEntryPaths(
   cleanPath: string,
   exerciseNumberSegment: string
 ) {

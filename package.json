@@ -41,15 +41,15 @@
     "@biomejs/biome": "2.4.11",
     "@changesets/changelog-github": "^0.6.0",
     "@changesets/cli": "^2.30.0",
-    "@effect/language-service": "^0.85.0",
+    "@effect/language-service": "^0.85.1",
     "@repo/typescript-config": "workspace:*",
-    "@turbo/gen": "^2.9.5",
-    "@types/node": "^25.5.2",
+    "@turbo/gen": "^2.9.6",
+    "@types/node": "^25.6.0",
     "depcheck": "^1.4.7",
     "tsup": "^8.5.1",
-    "turbo": "^2.9.5",
+    "turbo": "^2.9.6",
     "typescript": "^6.0.2",
-    "ultracite": "^7.4.4"
+    "ultracite": "^7.5.6"
   },
   "engines": {
     "node": ">=22"
