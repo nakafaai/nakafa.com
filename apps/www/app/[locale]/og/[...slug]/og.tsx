@@ -1,8 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { ImageSource } from "@takumi-rs/core";
 import { ImageResponse } from "@takumi-rs/image-response";
 import anyAscii from "any-ascii";
+import { cacheLife } from "next/cache";
 import type { ReactNode } from "react";
 
 interface GenerateProps {
@@ -14,48 +14,57 @@ interface GenerateProps {
   title: ReactNode;
 }
 
-const logo = await readFile(join(process.cwd(), "public", "logo.svg"));
+/** Loads the shared logo asset as a serializable data URL for OG rendering. */
+async function getLogoDataUrl() {
+  "use cache";
 
-const persistentImages: ImageSource[] = [
-  {
-    src: "logo",
-    data: logo,
-  },
-];
+  cacheLife("max");
 
-export function generateOGImage(
+  const logo = await readFile(
+    join(process.cwd(), "public", "logo.svg"),
+    "utf8"
+  );
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(logo)}`;
+}
+
+/** Generates one OG image response with cached persistent assets. */
+export async function generateOGImage(
   options: GenerateProps & { width?: number; height?: number }
-): Response {
+) {
   const { title, description, width = 1200, height = 630 } = options;
+  const logoDataUrl = await getLogoDataUrl();
 
   return new ImageResponse(
-    <OgImage description={description} title={title} />,
+    <OgImage
+      description={description}
+      icon={
+        <div
+          style={{
+            width: 48,
+            height: 48,
+            backgroundImage: `url(${logoDataUrl})`,
+            backgroundSize: "contain",
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "center",
+            borderRadius: "50%",
+          }}
+        />
+      }
+      title={title}
+    />,
     {
       width,
       height,
-      persistentImages,
       fetchedResources: [],
     }
   );
 }
 
-export function OgImage(props: GenerateProps) {
+function OgImage(props: GenerateProps) {
   const {
     title,
     description,
-    icon = (
-      <div
-        style={{
-          width: 48,
-          height: 48,
-          backgroundImage: "url(logo)",
-          backgroundSize: "contain",
-          backgroundRepeat: "no-repeat",
-          backgroundPosition: "center",
-          borderRadius: "50%",
-        }}
-      />
-    ),
+    icon,
     primaryColor = "hsla(21.74, 66%, 55%, 1)",
     primaryTextColor = "hsla(21.74, 66%, 55%, 1)",
     site = "Nakafa",
@@ -172,7 +181,7 @@ export function OgImage(props: GenerateProps) {
               opacity: 0.8,
             }}
           >
-            Copyright © {new Date().getFullYear()} Nakafa
+            Copyright © Nakafa
           </span>
         </div>
       </div>
