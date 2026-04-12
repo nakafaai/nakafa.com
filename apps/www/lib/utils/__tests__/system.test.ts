@@ -1,13 +1,26 @@
 import { Effect } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getMetadataFromSlug, getStaticParams } from "../system";
+import {
+  getCachedMetadataFromSlug,
+  getMetadataFromSlug,
+  getStaticParams,
+} from "../system";
 
-const { mockGetFolderChildNames, mockGetNestedSlugs, mockGetContentMetadata } =
-  vi.hoisted(() => ({
-    mockGetFolderChildNames: vi.fn(),
-    mockGetNestedSlugs: vi.fn(),
-    mockGetContentMetadata: vi.fn(),
-  }));
+const {
+  mockCacheLife,
+  mockGetFolderChildNames,
+  mockGetNestedSlugs,
+  mockGetContentMetadata,
+} = vi.hoisted(() => ({
+  mockCacheLife: vi.fn(),
+  mockGetFolderChildNames: vi.fn(),
+  mockGetNestedSlugs: vi.fn(),
+  mockGetContentMetadata: vi.fn(),
+}));
+
+vi.mock("next/cache", () => ({
+  cacheLife: mockCacheLife,
+}));
 
 vi.mock("@repo/contents/_lib/fs", () => ({
   getFolderChildNames: mockGetFolderChildNames,
@@ -74,6 +87,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.clearAllMocks();
+  mockCacheLife.mockReset();
   mockGetFolderChildNames.mockReset();
   mockGetNestedSlugs.mockReset();
   mockGetContentMetadata.mockReset();
@@ -1061,6 +1075,33 @@ describe("getMetadataFromSlug", () => {
 
       expect(result.title).toBe("Made with Love");
       expect(result.description).toBe("Short description");
+    });
+  });
+});
+
+describe("getCachedMetadataFromSlug", () => {
+  it("sets the max cache profile and resolves metadata", async () => {
+    mockGetContentMetadata.mockReturnValue(
+      Effect.succeed({
+        title: "Cached Title",
+        description: "Cached Description",
+        authors: [{ name: "Nakafa" }],
+        date: "04/12/2026",
+      })
+    );
+
+    const result = await getCachedMetadataFromSlug("en", [
+      "articles",
+      "politics",
+      "cached",
+    ]);
+
+    expect(mockCacheLife).toHaveBeenCalledWith("max");
+    expect(result).toEqual({
+      title: "Cached Title",
+      description: "Cached Description",
+      authors: [{ name: "Nakafa" }],
+      date: "04/12/2026",
     });
   });
 });
