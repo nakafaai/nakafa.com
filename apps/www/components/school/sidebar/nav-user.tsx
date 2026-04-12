@@ -45,7 +45,7 @@ export function SchoolSidebarNavUser() {
   const { isMobile } = useSidebar();
   const authHref = `/auth?redirect=${pathname}`;
 
-  /** Signs the user out and leaves the current SSR-auth page immediately on success. */
+  /** Signs the user out and leaves the shared authenticated app subtree on success. */
   async function handleSignOut() {
     await authClient.signOut({
       fetchOptions: {

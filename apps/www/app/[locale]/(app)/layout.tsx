@@ -8,11 +8,11 @@ import { getToken } from "@/lib/auth/server";
 /**
  * Binds the validated locale to the shared authenticated app subtree.
  *
- * Every route in the `(app)` group relies on `useUser()` through the shared app
- * shell, so this layout resolves the Better Auth token once and mounts a single
- * provider tree behind a real Suspense boundary. The fallback stays intentionally
- * small so we do not duplicate the full app subtree while the request token
- * resolves.
+ * Every route in the `(app)` group relies on the shared authenticated runtime,
+ * so this layout resolves the Better Auth token once and mounts a single
+ * provider tree behind a real Suspense boundary. The public `/auth` page lives
+ * outside this subtree so account switches fully remount the auth provider
+ * instead of preserving stale authenticated client state through navigation.
  *
  * References:
  * - Convex App Router SSR:
