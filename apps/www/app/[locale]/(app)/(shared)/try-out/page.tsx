@@ -55,9 +55,7 @@ export default function Page(props: PageProps<"/[locale]/try-out">) {
   return (
     <>
       <PageBreadcrumb locale={locale} />
-      <div className="min-h-svh">
-        <TryoutHubPage locale={locale} />
-      </div>
+      <TryoutHubPage locale={locale} />
     </>
   );
 }
