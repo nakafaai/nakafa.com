@@ -1,20 +1,14 @@
-import { routing } from "@repo/internationalization/src/routing";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { hasLocale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { use } from "react";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 export async function generateMetadata({
   params,
 }: {
   params: LayoutProps<"/[locale]/school">["params"];
 }): Promise<Metadata> {
-  const { locale } = await params;
-
-  if (!hasLocale(routing.locales, locale)) {
-    notFound();
-  }
+  const locale = getLocaleOrThrow((await params).locale);
 
   const t = await getTranslations({
     locale,
@@ -59,11 +53,7 @@ export async function generateMetadata({
 /** Renders the school subtree after locale and metadata setup. */
 export default function Layout(props: LayoutProps<"/[locale]/school">) {
   const { children, params } = props;
-  const { locale } = use(params);
-
-  if (!hasLocale(routing.locales, locale)) {
-    notFound();
-  }
+  getLocaleOrThrow(use(params).locale);
 
   return children;
 }

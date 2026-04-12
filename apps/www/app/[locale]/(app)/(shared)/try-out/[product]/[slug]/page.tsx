@@ -4,10 +4,8 @@ import {
   type TryoutProduct,
 } from "@repo/backend/convex/tryouts/products";
 import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
-import { routing } from "@repo/internationalization/src/routing";
 import { fetchQuery, preloadQuery } from "convex/nextjs";
 import { notFound } from "next/navigation";
-import { hasLocale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { TryoutSetProvider } from "@/components/tryout/providers/set-provider";
 import { TryoutSetParts } from "@/components/tryout/set-parts";
@@ -18,42 +16,40 @@ import { TryoutStartDialog } from "@/components/tryout/start-dialog";
 import { loadTryoutSearchParams } from "@/components/tryout/utils/attempt-search";
 import { getTryoutProductHref } from "@/components/tryout/utils/routes";
 import { getToken } from "@/lib/auth/server";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 /** Renders one tryout set page with a native Convex preload when authenticated. */
 export default async function Page(
   props: PageProps<"/[locale]/try-out/[product]/[slug]">
 ) {
   const { params, searchParams } = props;
-  const { locale, product: productParam, slug } = await params;
-
-  if (!hasLocale(routing.locales, locale)) {
-    notFound();
-  }
+  const { locale: rawLocale, product: productParam, slug } = await params;
+  const locale = getLocaleOrThrow(rawLocale);
 
   if (!isTryoutProduct(productParam)) {
     notFound();
   }
   const product: TryoutProduct = productParam;
 
-  const [tCommon, tExercises, tTryouts, details, token] = await Promise.all([
-    getTranslations({ locale, namespace: "Common" }),
-    getTranslations({ locale, namespace: "Exercises" }),
-    getTranslations({ locale, namespace: "Tryouts" }),
-    fetchQuery(api.tryouts.queries.tryouts.getTryoutDetails, {
-      locale,
-      product,
-      slug,
-    }),
-    getToken(),
-  ]);
+  const [{ attempt }, tCommon, tExercises, tTryouts, details, token] =
+    await Promise.all([
+      loadTryoutSearchParams(searchParams),
+      getTranslations({ locale, namespace: "Common" }),
+      getTranslations({ locale, namespace: "Exercises" }),
+      getTranslations({ locale, namespace: "Tryouts" }),
+      fetchQuery(api.tryouts.queries.tryouts.getTryoutDetails, {
+        locale,
+        product,
+        slug,
+      }),
+      getToken(),
+    ]);
 
   if (!details) {
     notFound();
   }
 
   const initialNowMs = Date.now();
-
-  const { attempt } = await loadTryoutSearchParams(searchParams);
   const preloadedSetView = token
     ? await preloadQuery(
         api.tryouts.queries.me.setView.getUserTryoutSetView,

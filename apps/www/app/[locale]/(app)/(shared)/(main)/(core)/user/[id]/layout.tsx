@@ -1,21 +1,14 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
-import { routing } from "@repo/internationalization/src/routing";
-import { notFound } from "next/navigation";
-import { hasLocale } from "next-intl";
-
 import { use } from "react";
 import { UserHeader } from "@/components/user/header";
 import { UserTabs } from "@/components/user/tabs";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 export default function Layout(props: LayoutProps<"/[locale]/user/[id]">) {
   const { children, params } = props;
   const { id, locale } = use(params);
-
-  // Ensure that the incoming `locale` is valid
-  if (!hasLocale(routing.locales, locale)) {
-    notFound();
-  }
+  getLocaleOrThrow(locale);
 
   const userId = id as Id<"users">;
 

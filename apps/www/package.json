@@ -28,7 +28,7 @@
     "@mantine/hooks": "^9.0.1",
     "@mdx-js/loader": "^3.1.1",
     "@mdx-js/react": "^3.1.1",
-    "@paper-design/shaders-react": "^0.0.73",
+    "@paper-design/shaders-react": "^0.0.74",
     "@repo/ai": "workspace:*",
     "@repo/analytics": "workspace:*",
     "@repo/backend": "workspace:*",

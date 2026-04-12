@@ -9,7 +9,7 @@ import {
 import { useConvexAuth } from "convex/react";
 import type { FunctionArgs } from "convex/server";
 import { useTranslations } from "next-intl";
-import { useCallback, useTransition } from "react";
+import { useCallback, useLayoutEffect, useTransition } from "react";
 import { toast } from "sonner";
 import { startTryout } from "@/components/tryout/actions/tryout";
 import { getTryoutPartHref } from "@/components/tryout/utils/routes";
@@ -46,6 +46,12 @@ export function useTryoutStartFlow({
   const isAuthPending = access === "authenticated" && isLoading;
   const isStartBlocked = isActionPending || isAuthPending;
 
+  useLayoutEffect(() => {
+    return () => {
+      closeDialog();
+    };
+  }, [closeDialog]);
+
   const setDialogOpenAction = useCallback(
     (open: boolean) => {
       if (open) {
@@ -59,16 +65,18 @@ export function useTryoutStartFlow({
   );
 
   const clickStartAction = useCallback(() => {
-    if (access === "authenticated" && isLoading) {
+    if (isAuthPending) {
       return;
     }
 
-    if (access === "anonymous" || !isAuthenticated) {
+    if (!isAuthenticated) {
+      closeDialog();
       router.push(authHref);
       return;
     }
 
     if (resumePartKey) {
+      closeDialog();
       router.push(
         getTryoutPartHref({
           partKey: resumePartKey,
@@ -81,10 +89,10 @@ export function useTryoutStartFlow({
 
     openDialog();
   }, [
-    access,
     authHref,
+    closeDialog,
     isAuthenticated,
-    isLoading,
+    isAuthPending,
     openDialog,
     params.product,
     params.tryoutSlug,
@@ -93,23 +101,24 @@ export function useTryoutStartFlow({
   ]);
 
   const prefetchAuthAction = useCallback(() => {
-    if (access === "authenticated" && isLoading) {
+    if (isAuthPending) {
       return;
     }
 
-    if (access === "authenticated" && isAuthenticated) {
+    if (isAuthenticated) {
       return;
     }
 
     router.prefetch(authHref);
-  }, [access, authHref, isAuthenticated, isLoading, router]);
+  }, [authHref, isAuthenticated, isAuthPending, router]);
 
   const confirmStartAction = useCallback(() => {
-    if (access === "authenticated" && isLoading) {
+    if (isAuthPending) {
       return;
     }
 
-    if (access === "anonymous" || !isAuthenticated) {
+    if (!isAuthenticated) {
+      closeDialog();
       router.push(authHref);
       return;
     }
@@ -139,6 +148,7 @@ export function useTryoutStartFlow({
       }
 
       if (result.code === "TRYOUT_ACCESS_REQUIRED") {
+        closeDialog();
         window.location.href = result.url;
         return;
       }
@@ -148,10 +158,9 @@ export function useTryoutStartFlow({
       });
     });
   }, [
-    access,
     closeDialog,
     isAuthenticated,
-    isLoading,
+    isAuthPending,
     partKeys,
     params,
     pathname,

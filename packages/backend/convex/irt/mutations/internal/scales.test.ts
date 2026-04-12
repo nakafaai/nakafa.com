@@ -433,132 +433,150 @@ describe("irt/mutations/internal/scales", () => {
   });
 
   it("queues refresh work for eligible tryouts and skips ones already pending publication", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(Date.UTC(2026, 3, 2, 12, 30, 0)));
+
     const t = convexTest(schema, convexModules);
+    try {
+      const { eligibleTryoutId, queuedTryoutId } = await t.mutation(
+        async (ctx) => {
+          const eligibleTryoutId = await insertRealSnbtSet1Tryout(ctx, {
+            partCount: 0,
+            totalQuestionCount: 0,
+            isActive: true,
+          });
+          const queuedTryoutId = await insertRealSnbtSet1Tryout(ctx, {
+            partCount: 0,
+            totalQuestionCount: 0,
+            isActive: true,
+            slug: "2026-set-1-pending-publication",
+            label: "Set 1 Pending Publication",
+          });
 
-    const { eligibleTryoutId, queuedTryoutId } = await t.mutation(
-      async (ctx) => {
-        const eligibleTryoutId = await insertRealSnbtSet1Tryout(ctx, {
-          partCount: 0,
-          totalQuestionCount: 0,
-          isActive: true,
-        });
-        const queuedTryoutId = await insertRealSnbtSet1Tryout(ctx, {
-          partCount: 0,
-          totalQuestionCount: 0,
-          isActive: true,
-          slug: "2026-set-1-pending-publication",
-          label: "Set 1 Pending Publication",
-        });
+          await ctx.db.insert("irtScalePublicationQueue", {
+            tryoutId: queuedTryoutId,
+            enqueuedAt: REAL_TRYOUT_DETECTED_AT - 1000,
+          });
 
-        await ctx.db.insert("irtScalePublicationQueue", {
-          tryoutId: queuedTryoutId,
-          enqueuedAt: REAL_TRYOUT_DETECTED_AT - 1000,
-        });
+          return { eligibleTryoutId, queuedTryoutId };
+        }
+      );
 
-        return { eligibleTryoutId, queuedTryoutId };
-      }
-    );
-
-    const result = await t.mutation(
-      internal.irt.mutations.internal.scales.rebuildScaleQualityChecksPage,
-      {}
-    );
-
-    const queueEntries = await t.query(async (ctx) => {
-      return await ctx.db
-        .query("irtScaleQualityRefreshQueue")
-        .withIndex("by_enqueuedAt")
-        .collect();
-    });
-
-    expect(result).toEqual({
-      isDone: true,
-      processedCount: 2,
-    });
-    expect(queueEntries).toHaveLength(1);
-    expect(queueEntries[0]?.tryoutId).toBe(eligibleTryoutId);
-    expect(queueEntries[0]?.tryoutId).not.toBe(queuedTryoutId);
-  });
-
-  it("schedules follow-up rebuild pages when the first page is full", async () => {
-    const t = convexTest(schema, convexModules);
-
-    const firstPageResult = await t.mutation(async (ctx) => {
-      for (
-        let index = 0;
-        index <= SCALE_QUALITY_REBUILD_BATCH_SIZE;
-        index += 1
-      ) {
-        await insertRealSnbtSet1Tryout(ctx, {
-          partCount: 0,
-          totalQuestionCount: 0,
-          isActive: true,
-          slug: `2026-set-1-page-${index + 1}`,
-          label: `Set 1 Page ${index + 1}`,
-        });
-      }
-
-      return await ctx.runMutation(
+      const result = await t.mutation(
         internal.irt.mutations.internal.scales.rebuildScaleQualityChecksPage,
         {}
       );
-    });
 
-    const refreshQueueCount = await t.query(async (ctx) => {
-      return (await ctx.db.query("irtScaleQualityRefreshQueue").collect())
-        .length;
-    });
+      const queueEntries = await t.query(async (ctx) => {
+        return await ctx.db
+          .query("irtScaleQualityRefreshQueue")
+          .withIndex("by_enqueuedAt")
+          .collect();
+      });
 
-    expect(firstPageResult).toEqual({
-      isDone: false,
-      processedCount: SCALE_QUALITY_REBUILD_BATCH_SIZE,
-    });
-    expect(refreshQueueCount).toBe(SCALE_QUALITY_REBUILD_BATCH_SIZE);
+      expect(result).toEqual({
+        isDone: true,
+        processedCount: 2,
+      });
+      expect(queueEntries).toHaveLength(1);
+      expect(queueEntries[0]?.tryoutId).toBe(eligibleTryoutId);
+      expect(queueEntries[0]?.tryoutId).not.toBe(queuedTryoutId);
+    } finally {
+      await t.finishAllScheduledFunctions(vi.runAllTimers);
+    }
+  });
+
+  it("schedules follow-up rebuild pages when the first page is full", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(Date.UTC(2026, 3, 2, 12, 35, 0)));
+
+    const t = convexTest(schema, convexModules);
+    try {
+      const firstPageResult = await t.mutation(async (ctx) => {
+        for (
+          let index = 0;
+          index <= SCALE_QUALITY_REBUILD_BATCH_SIZE;
+          index += 1
+        ) {
+          await insertRealSnbtSet1Tryout(ctx, {
+            partCount: 0,
+            totalQuestionCount: 0,
+            isActive: true,
+            slug: `2026-set-1-page-${index + 1}`,
+            label: `Set 1 Page ${index + 1}`,
+          });
+        }
+
+        return await ctx.runMutation(
+          internal.irt.mutations.internal.scales.rebuildScaleQualityChecksPage,
+          {}
+        );
+      });
+
+      const refreshQueueCount = await t.query(async (ctx) => {
+        return (await ctx.db.query("irtScaleQualityRefreshQueue").collect())
+          .length;
+      });
+
+      expect(firstPageResult).toEqual({
+        isDone: false,
+        processedCount: SCALE_QUALITY_REBUILD_BATCH_SIZE,
+      });
+      expect(refreshQueueCount).toBe(SCALE_QUALITY_REBUILD_BATCH_SIZE);
+    } finally {
+      await t.finishAllScheduledFunctions(vi.runAllTimers);
+    }
   });
 
   it("processes a follow-up rebuild page from a real pagination cursor", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(Date.UTC(2026, 3, 2, 12, 40, 0)));
+
     const t = convexTest(schema, convexModules);
+    try {
+      const continueCursor = await t.mutation(async (ctx) => {
+        for (
+          let index = 0;
+          index <= SCALE_QUALITY_REBUILD_BATCH_SIZE;
+          index += 1
+        ) {
+          await insertRealSnbtSet1Tryout(ctx, {
+            partCount: 0,
+            totalQuestionCount: 0,
+            isActive: true,
+            slug: `2026-set-1-followup-${index + 1}`,
+            label: `Set 1 Follow-up ${index + 1}`,
+          });
+        }
 
-    const continueCursor = await t.mutation(async (ctx) => {
-      for (
-        let index = 0;
-        index <= SCALE_QUALITY_REBUILD_BATCH_SIZE;
-        index += 1
-      ) {
-        await insertRealSnbtSet1Tryout(ctx, {
-          partCount: 0,
-          totalQuestionCount: 0,
-          isActive: true,
-          slug: `2026-set-1-followup-${index + 1}`,
-          label: `Set 1 Follow-up ${index + 1}`,
+        const page = await ctx.db.query("tryouts").paginate({
+          cursor: null,
+          numItems: SCALE_QUALITY_REBUILD_BATCH_SIZE,
         });
-      }
 
-      const page = await ctx.db.query("tryouts").paginate({
-        cursor: null,
-        numItems: SCALE_QUALITY_REBUILD_BATCH_SIZE,
+        return page.continueCursor;
       });
 
-      return page.continueCursor;
-    });
+      const secondPageResult = await t.mutation(
+        internal.irt.mutations.internal.scales.rebuildScaleQualityChecksPage,
+        {
+          cursor: continueCursor,
+        }
+      );
 
-    const secondPageResult = await t.mutation(
-      internal.irt.mutations.internal.scales.rebuildScaleQualityChecksPage,
-      {
-        cursor: continueCursor,
-      }
-    );
+      const refreshQueueCount = await t.query(async (ctx) => {
+        return (await ctx.db.query("irtScaleQualityRefreshQueue").collect())
+          .length;
+      });
 
-    const refreshQueueCount = await t.query(async (ctx) => {
-      return (await ctx.db.query("irtScaleQualityRefreshQueue").collect())
-        .length;
-    });
-
-    expect(secondPageResult).toEqual({
-      isDone: true,
-      processedCount: 1,
-    });
-    expect(refreshQueueCount).toBe(1);
+      expect(secondPageResult).toEqual({
+        isDone: true,
+        processedCount: 1,
+      });
+      expect(refreshQueueCount).toBe(1);
+    } finally {
+      await t.finishAllScheduledFunctions(vi.runAllTimers);
+    }
   });
 
   it("drains refresh work after the last scheduled rebuild page finishes", async () => {

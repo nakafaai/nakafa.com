@@ -1,44 +1,31 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import { fetchQuery } from "convex/nextjs";
 import { redirect } from "next/navigation";
+import type { ReactNode } from "react";
 import { getToken } from "@/lib/auth/server";
 
-interface Props {
-  /**
-   * The children is the landing page for Nakafa School.
-   */
-  children: React.ReactNode;
-}
-
-export async function School({ children }: Props) {
+/** Resolves the authenticated school landing redirects before rendering children. */
+export async function School({ children }: { children: ReactNode }) {
   const token = await getToken();
 
   if (token) {
-    const memberships = await fetchQuery(
-      api.schools.queries.getSchoolMemberships,
+    const schools = await fetchQuery(
+      api.schools.queries.getMySchools,
       {},
-      { token }
+      {
+        token,
+      }
     );
 
-    if (memberships.length === 0) {
+    if (schools.length === 0) {
       redirect("/school/onboarding");
     }
 
-    // If has 1 school membership, redirect to school page
-    if (memberships.length === 1) {
-      const membership = memberships[0];
-      const school = await fetchQuery(
-        api.schools.queries.getSchool,
-        { schoolId: membership.schoolId },
-        { token }
-      );
-      if (school) {
-        redirect(`/school/${school.slug}`);
-      }
+    if (schools.length === 1) {
+      redirect(`/school/${schools[0].slug}`);
     }
 
-    // If has multiple school memberships, redirect to school selection page
-    if (memberships.length > 1) {
+    if (schools.length > 1) {
       redirect("/school/select");
     }
   }

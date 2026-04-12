@@ -7,10 +7,8 @@ import {
 } from "@repo/backend/convex/tryouts/products";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { routing } from "@repo/internationalization/src/routing";
 import { fetchQuery } from "convex/nextjs";
 import { notFound } from "next/navigation";
-import { hasLocale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { TryoutCatalogCard } from "@/components/tryout/catalog-card";
 import { TryoutCatalogList } from "@/components/tryout/catalog-list";
@@ -18,6 +16,7 @@ import { SnbtTryoutIcon } from "@/components/tryout/product-icon";
 import { TRYOUT_CATALOG_PAGE_SIZE } from "@/components/tryout/utils/catalog";
 import { getTryoutHubHref } from "@/components/tryout/utils/routes";
 import { getToken } from "@/lib/auth/server";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 /** Enumerates the supported tryout product routes for static route discovery. */
 export function generateStaticParams() {
@@ -29,11 +28,8 @@ export default async function Page(
   props: PageProps<"/[locale]/try-out/[product]">
 ) {
   const { params } = props;
-  const { locale, product: productParam } = await params;
-
-  if (!hasLocale(routing.locales, locale)) {
-    notFound();
-  }
+  const { locale: rawLocale, product: productParam } = await params;
+  const locale = getLocaleOrThrow(rawLocale);
 
   if (!isTryoutProduct(productParam)) {
     notFound();

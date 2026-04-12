@@ -1,7 +1,8 @@
 "use client";
 
 import type { api } from "@repo/backend/convex/_generated/api";
-import { type Preloaded, usePreloadedQuery } from "convex/react";
+import { preloadedQueryResult } from "convex/nextjs";
+import { type Preloaded, useConvexAuth, usePreloadedQuery } from "convex/react";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { type PropsWithChildren, useMemo } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
@@ -180,22 +181,23 @@ function useResolvedTryoutSetValue({
   );
 }
 
-/** Hydrates one authenticated set route from its native Convex preload. */
-function PreloadedTryoutSetProvider({
+/** Resolves one set-route context from already available route state. */
+function ResolvedTryoutSetProvider({
   children,
+  hasAuthenticatedRoute,
   initialNowMs,
   partKeys,
   params,
-  preloadedSetView,
+  setViewData,
 }: PropsWithChildren<{
+  hasAuthenticatedRoute: boolean;
   initialNowMs?: number;
   partKeys: readonly string[];
   params: TryoutSetParams;
-  preloadedSetView: PreloadedTryoutSetView;
+  setViewData: TryoutSetViewData | null;
 }>) {
-  const setViewData = usePreloadedQuery(preloadedSetView) ?? null;
   const value = useResolvedTryoutSetValue({
-    hasAuthenticatedRoute: true,
+    hasAuthenticatedRoute,
     initialNowMs,
     partKeys,
     params,
@@ -209,29 +211,103 @@ function PreloadedTryoutSetProvider({
   );
 }
 
-/** Provides the anonymous set route state when no authenticated preload exists. */
-function AnonymousTryoutSetProvider({
+/** Subscribes the authenticated set route to its live vanilla Convex query. */
+function LivePreloadedTryoutSetProvider({
   children,
   initialNowMs,
   partKeys,
   params,
+  preloadedSetView,
 }: PropsWithChildren<{
   initialNowMs?: number;
   partKeys: readonly string[];
   params: TryoutSetParams;
+  preloadedSetView: PreloadedTryoutSetView;
 }>) {
-  const value = useResolvedTryoutSetValue({
-    hasAuthenticatedRoute: false,
-    initialNowMs,
-    partKeys,
-    params,
-    setViewData: null,
-  });
+  const setViewData = usePreloadedQuery(preloadedSetView) ?? null;
 
   return (
-    <TryoutSetContext.Provider value={value}>
+    <ResolvedTryoutSetProvider
+      hasAuthenticatedRoute
+      initialNowMs={initialNowMs}
+      params={params}
+      partKeys={partKeys}
+      setViewData={setViewData}
+    >
       {children}
-    </TryoutSetContext.Provider>
+    </ResolvedTryoutSetProvider>
+  );
+}
+
+/** Hydrates one authenticated set route from its native Convex preload. */
+function PreloadedTryoutSetProvider({
+  children,
+  initialNowMs,
+  partKeys,
+  params,
+  preloadedSetView,
+}: PropsWithChildren<{
+  initialNowMs?: number;
+  partKeys: readonly string[];
+  params: TryoutSetParams;
+  preloadedSetView: PreloadedTryoutSetView;
+}>) {
+  const { isAuthenticated, isLoading } = useConvexAuth();
+  const initialSetViewData = useMemo(
+    () => preloadedQueryResult(preloadedSetView),
+    [preloadedSetView]
+  );
+
+  /**
+   * Keep tryout route hydration on vanilla Convex primitives.
+   *
+   * `usePreloadedQuery()` eagerly starts the live query as soon as it mounts
+   * (`convex/src/react/hydration.tsx`). That behavior is correct only after the
+   * Convex auth client is ready. Returning from an external checkout like Polar
+   * can briefly leave the browser in an authenticated-but-still-loading state,
+   * which is when the protected `me.*` queries used to throw `Unauthenticated`.
+   *
+   * The route already owns a server snapshot, so the safest and least invasive
+   * fix is to keep rendering that snapshot while auth is loading and only mount
+   * the reactive vanilla Convex query once auth is ready.
+   */
+  if (isLoading) {
+    return (
+      <ResolvedTryoutSetProvider
+        hasAuthenticatedRoute
+        initialNowMs={initialNowMs}
+        params={params}
+        partKeys={partKeys}
+        setViewData={initialSetViewData}
+      >
+        {children}
+      </ResolvedTryoutSetProvider>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <ResolvedTryoutSetProvider
+        hasAuthenticatedRoute={false}
+        initialNowMs={initialNowMs}
+        params={params}
+        partKeys={partKeys}
+        setViewData={null}
+      >
+        {children}
+      </ResolvedTryoutSetProvider>
+    );
+  }
+
+  return (
+    <LivePreloadedTryoutSetProvider
+      initialNowMs={initialNowMs}
+      params={params}
+      partKeys={partKeys}
+      preloadedSetView={preloadedSetView}
+    >
+      {children}
+    </LivePreloadedTryoutSetProvider>
   );
 }
 
@@ -262,13 +338,15 @@ export function TryoutSetProvider({
   }
 
   return (
-    <AnonymousTryoutSetProvider
+    <ResolvedTryoutSetProvider
+      hasAuthenticatedRoute={false}
       initialNowMs={initialNowMs}
       params={params}
       partKeys={partKeys}
+      setViewData={null}
     >
       {children}
-    </AnonymousTryoutSetProvider>
+    </ResolvedTryoutSetProvider>
   );
 }
 

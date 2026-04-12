@@ -3,7 +3,8 @@
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { type Preloaded, usePreloadedQuery } from "convex/react";
+import { preloadedQueryResult } from "convex/nextjs";
+import { type Preloaded, useConvexAuth, usePreloadedQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
@@ -326,6 +327,70 @@ function useResolvedTryoutPartValue({
   );
 }
 
+/** Resolves one part-route context from already available route state. */
+function ResolvedTryoutPartProvider({
+  children,
+  hasAuthenticatedRoute,
+  initialNowMs,
+  part,
+  partKeys,
+  runtime,
+  tryout,
+}: PropsWithChildren<{
+  hasAuthenticatedRoute: boolean;
+  initialNowMs?: number;
+  part: TryoutPartValue;
+  partKeys: readonly string[];
+  runtime: TryoutPartRuntime | null;
+  tryout: TryoutValue;
+}>) {
+  const value = useResolvedTryoutPartValue({
+    hasAuthenticatedRoute,
+    initialNowMs,
+    part,
+    partKeys,
+    runtime,
+    tryout,
+  });
+
+  return (
+    <TryoutPartContext.Provider value={value}>
+      {children}
+    </TryoutPartContext.Provider>
+  );
+}
+
+/** Subscribes the authenticated part route to its live vanilla Convex query. */
+function LivePreloadedTryoutPartProvider({
+  children,
+  initialNowMs,
+  part,
+  partKeys,
+  preloadedRuntime,
+  tryout,
+}: PropsWithChildren<{
+  initialNowMs?: number;
+  part: TryoutPartValue;
+  partKeys: readonly string[];
+  preloadedRuntime: PreloadedTryoutPartRuntime;
+  tryout: TryoutValue;
+}>) {
+  const runtime = usePreloadedQuery(preloadedRuntime) ?? null;
+
+  return (
+    <ResolvedTryoutPartProvider
+      hasAuthenticatedRoute
+      initialNowMs={initialNowMs}
+      part={part}
+      partKeys={partKeys}
+      runtime={runtime}
+      tryout={tryout}
+    >
+      {children}
+    </ResolvedTryoutPartProvider>
+  );
+}
+
 /** Hydrates one authenticated part route from its native Convex preload. */
 function PreloadedTryoutPartProvider({
   children,
@@ -341,49 +406,60 @@ function PreloadedTryoutPartProvider({
   preloadedRuntime: PreloadedTryoutPartRuntime;
   tryout: TryoutValue;
 }>) {
-  const runtime = usePreloadedQuery(preloadedRuntime) ?? null;
-  const value = useResolvedTryoutPartValue({
-    hasAuthenticatedRoute: true,
-    initialNowMs,
-    part,
-    partKeys,
-    runtime,
-    tryout,
-  });
-
-  return (
-    <TryoutPartContext.Provider value={value}>
-      {children}
-    </TryoutPartContext.Provider>
+  const { isAuthenticated, isLoading } = useConvexAuth();
+  const initialRuntime = useMemo(
+    () => preloadedQueryResult(preloadedRuntime),
+    [preloadedRuntime]
   );
-}
 
-/** Provides the anonymous part route state when no authenticated runtime exists. */
-function AnonymousTryoutPartProvider({
-  children,
-  initialNowMs,
-  part,
-  partKeys,
-  tryout,
-}: PropsWithChildren<{
-  initialNowMs?: number;
-  part: TryoutPartValue;
-  partKeys: readonly string[];
-  tryout: TryoutValue;
-}>) {
-  const value = useResolvedTryoutPartValue({
-    hasAuthenticatedRoute: false,
-    initialNowMs,
-    part,
-    partKeys,
-    runtime: null,
-    tryout,
-  });
+  /**
+   * Keep the protected tryout runtime on vanilla Convex preloading.
+   *
+   * These part routes are allowed to survive external navigation through Next's
+   * preserved UI model. We therefore keep the server snapshot visible while the
+   * Convex auth client is still bootstrapping and only mount the live protected
+   * query after auth is definitely ready.
+   */
+  if (isLoading) {
+    return (
+      <ResolvedTryoutPartProvider
+        hasAuthenticatedRoute
+        initialNowMs={initialNowMs}
+        part={part}
+        partKeys={partKeys}
+        runtime={initialRuntime}
+        tryout={tryout}
+      >
+        {children}
+      </ResolvedTryoutPartProvider>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <ResolvedTryoutPartProvider
+        hasAuthenticatedRoute={false}
+        initialNowMs={initialNowMs}
+        part={part}
+        partKeys={partKeys}
+        runtime={null}
+        tryout={tryout}
+      >
+        {children}
+      </ResolvedTryoutPartProvider>
+    );
+  }
 
   return (
-    <TryoutPartContext.Provider value={value}>
+    <LivePreloadedTryoutPartProvider
+      initialNowMs={initialNowMs}
+      part={part}
+      partKeys={partKeys}
+      preloadedRuntime={preloadedRuntime}
+      tryout={tryout}
+    >
       {children}
-    </TryoutPartContext.Provider>
+    </LivePreloadedTryoutPartProvider>
   );
 }
 
@@ -417,14 +493,16 @@ export function TryoutPartProvider({
   }
 
   return (
-    <AnonymousTryoutPartProvider
+    <ResolvedTryoutPartProvider
+      hasAuthenticatedRoute={false}
       initialNowMs={initialNowMs}
       part={part}
       partKeys={partKeys}
+      runtime={null}
       tryout={tryout}
     >
       {children}
-    </AnonymousTryoutPartProvider>
+    </ResolvedTryoutPartProvider>
   );
 }
 

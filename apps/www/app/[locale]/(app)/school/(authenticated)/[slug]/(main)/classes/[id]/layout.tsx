@@ -1,9 +1,5 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
-import { routing } from "@repo/internationalization/src/routing";
-import { notFound } from "next/navigation";
-import { hasLocale } from "next-intl";
-
 import { use } from "react";
 import { SchoolClassesForumPostSheet } from "@/components/school/classes/forum/post-sheet";
 import { SchoolClassesHeaderInfo } from "@/components/school/classes/info";
@@ -17,11 +13,7 @@ export default function Layout(
   props: LayoutProps<"/[locale]/school/[slug]/classes/[id]">
 ) {
   const { children, params } = props;
-  const { locale, id } = use(params);
-  if (!hasLocale(routing.locales, locale)) {
-    // Ensure that the incoming `locale` is valid
-    notFound();
-  }
+  const { id } = use(params);
 
   const classId = id as Id<"schoolClasses">;
 

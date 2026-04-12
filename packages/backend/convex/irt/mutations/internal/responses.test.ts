@@ -4,7 +4,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 3, 4, 10, 0, 0);
 
@@ -98,6 +98,11 @@ async function insertCompletedSimulationAttempt(
 }
 
 describe("irt/mutations/internal/responses", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(NOW));
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
     vi.useRealTimers();
@@ -105,164 +110,171 @@ describe("irt/mutations/internal/responses", () => {
 
   it("syncs one completed simulation attempt into cache and queue ownership", async () => {
     const t = convexTest(schema, convexModules);
+    try {
+      const result = await t.mutation(async (ctx) => {
+        const { questionId, setId } = await insertSetWithQuestion(ctx, "sync");
+        const attemptId = await insertCompletedSimulationAttempt(ctx, {
+          setId,
+          slugSuffix: "sync",
+        });
 
-    const result = await t.mutation(async (ctx) => {
-      const { questionId, setId } = await insertSetWithQuestion(ctx, "sync");
-      const attemptId = await insertCompletedSimulationAttempt(ctx, {
-        setId,
-        slugSuffix: "sync",
+        await ctx.db.insert("exerciseAnswers", {
+          attemptId,
+          exerciseNumber: 1,
+          questionId,
+          isCorrect: true,
+          timeSpent: 45,
+          answeredAt: NOW,
+          updatedAt: NOW,
+        });
+
+        await ctx.runMutation(
+          internal.irt.mutations.internal.responses
+            .syncCalibrationResponsesForAttempt,
+          { attemptId }
+        );
+
+        return {
+          cachedAttempt: await ctx.db
+            .query("irtCalibrationAttempts")
+            .withIndex("by_attemptId", (q) => q.eq("attemptId", attemptId))
+            .unique(),
+          queueEntry: await ctx.db
+            .query("irtCalibrationQueue")
+            .withIndex("by_attemptId_and_enqueuedAt", (q) =>
+              q.eq("attemptId", attemptId)
+            )
+            .unique(),
+        };
       });
 
-      await ctx.db.insert("exerciseAnswers", {
-        attemptId,
-        exerciseNumber: 1,
-        questionId,
-        isCorrect: true,
-        timeSpent: 45,
-        answeredAt: NOW,
-        updatedAt: NOW,
+      expect(result.cachedAttempt).toMatchObject({
+        responses: [{ isCorrect: true }],
       });
+      expect(result.queueEntry).toMatchObject({
+        attemptId: result.cachedAttempt?.attemptId,
+        setId: result.cachedAttempt?.setId,
+      });
+    } finally {
+      await t.finishAllScheduledFunctions(vi.runAllTimers);
+    }
+  });
 
-      await ctx.runMutation(
-        internal.irt.mutations.internal.responses
-          .syncCalibrationResponsesForAttempt,
-        { attemptId }
-      );
+  it("preserves the first enqueue time across repeated syncs", async () => {
+    const t = convexTest(schema, convexModules);
+    try {
+      const result = await t.mutation(async (ctx) => {
+        const { questionId, setId } = await insertSetWithQuestion(
+          ctx,
+          "preserve-enqueue"
+        );
+        const attemptId = await insertCompletedSimulationAttempt(ctx, {
+          setId,
+          slugSuffix: "preserve-enqueue",
+        });
 
-      return {
-        cachedAttempt: await ctx.db
-          .query("irtCalibrationAttempts")
-          .withIndex("by_attemptId", (q) => q.eq("attemptId", attemptId))
-          .unique(),
-        queueEntry: await ctx.db
+        await ctx.db.insert("exerciseAnswers", {
+          attemptId,
+          exerciseNumber: 1,
+          questionId,
+          isCorrect: true,
+          timeSpent: 45,
+          answeredAt: NOW,
+          updatedAt: NOW,
+        });
+
+        await ctx.runMutation(
+          internal.irt.mutations.internal.responses
+            .syncCalibrationResponsesForAttempt,
+          { attemptId }
+        );
+        const firstQueueEntry = await ctx.db
           .query("irtCalibrationQueue")
           .withIndex("by_attemptId_and_enqueuedAt", (q) =>
             q.eq("attemptId", attemptId)
           )
-          .unique(),
-      };
-    });
+          .unique();
 
-    expect(result.cachedAttempt).toMatchObject({
-      responses: [{ isCorrect: true }],
-    });
-    expect(result.queueEntry).toMatchObject({
-      attemptId: result.cachedAttempt?.attemptId,
-      setId: result.cachedAttempt?.setId,
-    });
-  });
+        vi.setSystemTime(new Date(NOW + 5000));
 
-  it("preserves the first enqueue time across repeated syncs", async () => {
-    vi.setSystemTime(new Date(NOW));
+        await ctx.runMutation(
+          internal.irt.mutations.internal.responses
+            .syncCalibrationResponsesForAttempt,
+          { attemptId }
+        );
 
-    const t = convexTest(schema, convexModules);
+        const secondQueueEntry = await ctx.db
+          .query("irtCalibrationQueue")
+          .withIndex("by_attemptId_and_enqueuedAt", (q) =>
+            q.eq("attemptId", attemptId)
+          )
+          .unique();
 
-    const result = await t.mutation(async (ctx) => {
-      const { questionId, setId } = await insertSetWithQuestion(
-        ctx,
-        "preserve-enqueue"
-      );
-      const attemptId = await insertCompletedSimulationAttempt(ctx, {
-        setId,
-        slugSuffix: "preserve-enqueue",
+        return {
+          firstQueueEntry,
+          secondQueueEntry,
+        };
       });
 
-      await ctx.db.insert("exerciseAnswers", {
-        attemptId,
-        exerciseNumber: 1,
-        questionId,
-        isCorrect: true,
-        timeSpent: 45,
-        answeredAt: NOW,
-        updatedAt: NOW,
-      });
-
-      await ctx.runMutation(
-        internal.irt.mutations.internal.responses
-          .syncCalibrationResponsesForAttempt,
-        { attemptId }
-      );
-      const firstQueueEntry = await ctx.db
-        .query("irtCalibrationQueue")
-        .withIndex("by_attemptId_and_enqueuedAt", (q) =>
-          q.eq("attemptId", attemptId)
-        )
-        .unique();
-
-      vi.setSystemTime(new Date(NOW + 5000));
-
-      await ctx.runMutation(
-        internal.irt.mutations.internal.responses
-          .syncCalibrationResponsesForAttempt,
-        { attemptId }
-      );
-
-      const secondQueueEntry = await ctx.db
-        .query("irtCalibrationQueue")
-        .withIndex("by_attemptId_and_enqueuedAt", (q) =>
-          q.eq("attemptId", attemptId)
-        )
-        .unique();
-
-      return {
-        firstQueueEntry,
-        secondQueueEntry,
-      };
-    });
-
-    expect(result.firstQueueEntry?.enqueuedAt).toBe(NOW);
-    expect(result.secondQueueEntry?.enqueuedAt).toBe(NOW);
+      expect(result.firstQueueEntry?.enqueuedAt).toBe(NOW);
+      expect(result.secondQueueEntry?.enqueuedAt).toBe(NOW);
+    } finally {
+      await t.finishAllScheduledFunctions(vi.runAllTimers);
+    }
   });
 
   it("removes queue ownership when the attempt no longer has scored answers", async () => {
     const t = convexTest(schema, convexModules);
+    try {
+      const result = await t.mutation(async (ctx) => {
+        const { questionId, setId } = await insertSetWithQuestion(
+          ctx,
+          "remove-queue"
+        );
+        const attemptId = await insertCompletedSimulationAttempt(ctx, {
+          setId,
+          slugSuffix: "remove-queue",
+        });
+        const answerId = await ctx.db.insert("exerciseAnswers", {
+          attemptId,
+          exerciseNumber: 1,
+          questionId,
+          isCorrect: true,
+          timeSpent: 45,
+          answeredAt: NOW,
+          updatedAt: NOW,
+        });
 
-    const result = await t.mutation(async (ctx) => {
-      const { questionId, setId } = await insertSetWithQuestion(
-        ctx,
-        "remove-queue"
-      );
-      const attemptId = await insertCompletedSimulationAttempt(ctx, {
-        setId,
-        slugSuffix: "remove-queue",
+        await ctx.runMutation(
+          internal.irt.mutations.internal.responses
+            .syncCalibrationResponsesForAttempt,
+          { attemptId }
+        );
+        await ctx.db.delete("exerciseAnswers", answerId);
+        await ctx.runMutation(
+          internal.irt.mutations.internal.responses
+            .syncCalibrationResponsesForAttempt,
+          { attemptId }
+        );
+
+        return {
+          cachedAttempt: await ctx.db
+            .query("irtCalibrationAttempts")
+            .withIndex("by_attemptId", (q) => q.eq("attemptId", attemptId))
+            .unique(),
+          queueEntry: await ctx.db
+            .query("irtCalibrationQueue")
+            .withIndex("by_attemptId_and_enqueuedAt", (q) =>
+              q.eq("attemptId", attemptId)
+            )
+            .unique(),
+        };
       });
-      const answerId = await ctx.db.insert("exerciseAnswers", {
-        attemptId,
-        exerciseNumber: 1,
-        questionId,
-        isCorrect: true,
-        timeSpent: 45,
-        answeredAt: NOW,
-        updatedAt: NOW,
-      });
 
-      await ctx.runMutation(
-        internal.irt.mutations.internal.responses
-          .syncCalibrationResponsesForAttempt,
-        { attemptId }
-      );
-      await ctx.db.delete("exerciseAnswers", answerId);
-      await ctx.runMutation(
-        internal.irt.mutations.internal.responses
-          .syncCalibrationResponsesForAttempt,
-        { attemptId }
-      );
-
-      return {
-        cachedAttempt: await ctx.db
-          .query("irtCalibrationAttempts")
-          .withIndex("by_attemptId", (q) => q.eq("attemptId", attemptId))
-          .unique(),
-        queueEntry: await ctx.db
-          .query("irtCalibrationQueue")
-          .withIndex("by_attemptId_and_enqueuedAt", (q) =>
-            q.eq("attemptId", attemptId)
-          )
-          .unique(),
-      };
-    });
-
-    expect(result.cachedAttempt).toBeNull();
-    expect(result.queueEntry).toBeNull();
+      expect(result.cachedAttempt).toBeNull();
+      expect(result.queueEntry).toBeNull();
+    } finally {
+      await t.finishAllScheduledFunctions(vi.runAllTimers);
+    }
   });
 });
