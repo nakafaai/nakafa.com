@@ -9,7 +9,14 @@ interface VirtualContextType {
   virtualRef: RefObject<WindowVirtualizerHandle | null>;
 }
 
-const VirtualContext = createContext<VirtualContextType | undefined>(undefined);
+const fallbackVirtualRef = {
+  current: null,
+} satisfies RefObject<WindowVirtualizerHandle | null>;
+
+const VirtualContext = createContext<VirtualContextType>({
+  scrollToIndex: () => undefined,
+  virtualRef: fallbackVirtualRef,
+});
 
 export function VirtualProvider({ children }: { children: React.ReactNode }) {
   const virtualRef = useRef<WindowVirtualizerHandle>(null);
@@ -34,9 +41,5 @@ export function VirtualProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useVirtual<T>(selector: (context: VirtualContextType) => T): T {
-  const context = useContextSelector(VirtualContext, (value) => value);
-  if (context === undefined) {
-    throw new Error("useVirtual must be used within a VirtualProvider.");
-  }
-  return selector(context);
+  return useContextSelector(VirtualContext, selector);
 }

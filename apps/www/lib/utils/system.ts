@@ -2,6 +2,7 @@ import { getFolderChildNames, getNestedSlugs } from "@repo/contents/_lib/fs";
 import { getContentMetadata } from "@repo/contents/_lib/metadata";
 import type { ContentMetadata } from "@repo/contents/_types/content";
 import { Data, Effect, Option } from "effect";
+import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 
@@ -185,4 +186,19 @@ export function getMetadataFromSlug(
 
     return { ...metadataValue, title, description };
   });
+}
+
+/**
+ * Resolves one content metadata payload inside a Cache Components-safe helper for
+ * route handlers that need static image generation.
+ */
+export async function getCachedMetadataFromSlug(
+  locale: Locale,
+  slug: string[]
+) {
+  "use cache";
+
+  cacheLife("max");
+
+  return await Effect.runPromise(getMetadataFromSlug(locale, slug));
 }

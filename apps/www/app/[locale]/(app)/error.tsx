@@ -22,10 +22,7 @@ export default function ErrorPage({
   }, [error]);
 
   return (
-    <div
-      className="relative flex h-[calc(100svh-4rem)] items-center justify-center lg:h-svh"
-      data-pagefind-ignore
-    >
+    <div className="relative flex h-[calc(100svh-4rem)] items-center justify-center lg:h-svh">
       <Particles className="pointer-events-none absolute inset-0 opacity-80" />
       <div className="mx-6 rounded-xl border bg-card/30 p-6 shadow-sm backdrop-blur-xs">
         <div className="space-y-4 text-center">

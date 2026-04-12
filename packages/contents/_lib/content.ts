@@ -22,7 +22,6 @@ import type {
 } from "@repo/contents/_types/content";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, Either, Option } from "effect";
-import { createElement } from "react";
 
 const contentsDir = resolveContentsDir(import.meta.url);
 
@@ -65,7 +64,7 @@ function loadRenderableContentModule(
 
     return {
       metadata,
-      default: createElement(contentModule.default),
+      default: contentModule.default,
     };
   });
 }

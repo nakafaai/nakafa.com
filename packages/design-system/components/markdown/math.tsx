@@ -2,13 +2,17 @@ import {
   ScrollArea,
   ScrollBar,
 } from "@repo/design-system/components/ui/scroll-area";
+import { cn } from "@repo/design-system/lib/utils";
 import type { HTMLAttributes } from "react";
 import {
   BlockMath as BlockMathReactKatex,
   InlineMath as InlineMathReactKatex,
   type MathComponentProps,
 } from "react-katex";
-import { cn } from "../../lib/utils";
+
+/**
+ * Renders one KaTeX block without the surrounding card shell.
+ */
 
 export function BlockMathKatex(props: MathComponentProps) {
   return (
@@ -19,6 +23,9 @@ export function BlockMathKatex(props: MathComponentProps) {
   );
 }
 
+/**
+ * Groups consecutive math blocks with the shared vertical spacing.
+ */
 export function MathContainer({
   className,
   ...props
@@ -28,6 +35,10 @@ export function MathContainer({
   );
 }
 
+/**
+ * Renders one block-math card with native horizontal scrolling for wide
+ * formulas.
+ */
 export function BlockMath({
   className,
   ...props
@@ -39,7 +50,7 @@ export function BlockMath({
         className
       )}
     >
-      <ScrollArea className="grid" type="hover">
+      <ScrollArea className="grid">
         <div className="px-4">
           <BlockMathReactKatex
             errorColor="var(--color-muted-foreground)"
@@ -52,6 +63,9 @@ export function BlockMath({
   );
 }
 
+/**
+ * Renders one inline KaTeX expression.
+ */
 export function InlineMath(props: MathComponentProps) {
   return (
     <InlineMathReactKatex

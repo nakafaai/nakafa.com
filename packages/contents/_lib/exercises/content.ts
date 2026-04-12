@@ -9,13 +9,5 @@ export function getExerciseContent(
   filePath: string,
   options: { includeMDX?: boolean } = {}
 ) {
-  return getScopedContent(
-    "exercises",
-    /* istanbul ignore next: Vitest/Vite cannot execute nested variable dynamic imports here. */
-    async (relativePath, contentLocale) =>
-      await import(`../../exercises/${relativePath}/${contentLocale}.mdx`),
-    locale,
-    filePath,
-    options
-  );
+  return getScopedContent("exercises", locale, filePath, options);
 }

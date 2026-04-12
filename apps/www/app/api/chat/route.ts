@@ -196,7 +196,7 @@ export async function POST(req: Request) {
 
   sessionLogger.info("Chat session started");
 
-  const t = await getTranslations("Ai");
+  const t = await getTranslations({ locale, namespace: "Ai" });
 
   const stream = createUIMessageStream<MyUIMessage>({
     onError: (error) => {

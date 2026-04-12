@@ -22,6 +22,7 @@ import {
   type ReactNode,
   Suspense,
   useCallback,
+  useLayoutEffect,
   useMemo,
   useState,
 } from "react";
@@ -87,6 +88,7 @@ export function CoordinateSystem({
   const [play, setPlay] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [canvasKey, setCanvasKey] = useState(0);
 
   // Color mapping based on color scheme
   const gridColors = useMemo(() => {
@@ -128,6 +130,19 @@ export function CoordinateSystem({
     setIsDragging(false);
   }, []);
 
+  // Cache Components preserve hidden page DOM with Activity. Reset the canvas
+  // when this visualization is hidden so revisiting the page mounts a fresh
+  // WebGL scene instead of preserving a stale one.
+  useLayoutEffect(() => {
+    return () => {
+      setCanvasKey((key) => key + 1);
+      setIsDragging(false);
+      setPlay(false);
+      setSceneReady(false);
+      setShowGrid(initialShowGrid);
+    };
+  }, [initialShowGrid]);
+
   return (
     <div
       className={cn(
@@ -139,6 +154,7 @@ export function CoordinateSystem({
       onPointerUp={handlePointerUp}
     >
       <ThreeCanvas
+        key={canvasKey}
         onCreated={() =>
           setTimeout(() => setSceneReady(true), SCENE_READY_DELAY)
         }

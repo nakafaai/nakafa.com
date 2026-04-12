@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowRight01Icon, PaintBoardIcon } from "@hugeicons/core-free-icons";
-import { useMediaQuery } from "@mantine/hooks";
+import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +20,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import { IconCircleFilled } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
+import { useLayoutEffect } from "react";
 
 const BASE_THEMES_COUNT = 3;
 
@@ -39,13 +40,16 @@ export function ThemeMenu() {
   const t = useTranslations("Common");
 
   const isMobile = useMediaQuery("(max-width: 640px)");
+  const [open, { close, set }] = useDisclosure(false);
+
+  useLayoutEffect(() => close, [close]);
 
   function isActive(value: string) {
     return currentTheme === value;
   }
 
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={set} open={open}>
       <SidebarMenuItem>
         <DropdownMenuTrigger asChild>
           <SidebarMenuButton tooltip={t("theme")}>

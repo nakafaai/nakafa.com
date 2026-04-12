@@ -1,6 +1,6 @@
 import { ArrowUpRight01Icon, InLoveIcon } from "@hugeicons/core-free-icons";
 import { SiYoutube } from "@icons-pack/react-simple-icons";
-import { YouTubeEmbed } from "@next/third-parties/google";
+import { YoutubePlayer } from "@repo/design-system/components/markdown/youtube-player";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Card,
@@ -26,7 +26,7 @@ export function Youtube({ videoId }: Props) {
         </CardTitle>
       </CardHeader>
       <div className="aspect-video">
-        <YouTubeEmbed videoid={videoId} />
+        <YoutubePlayer videoId={videoId} />
       </div>
       <CardFooter className="flex-wrap gap-2 border-t pb-6">
         <Button

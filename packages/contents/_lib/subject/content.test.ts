@@ -29,7 +29,6 @@ describe("getSubjectContent", () => {
 
     expect(mockGetScopedContent).toHaveBeenCalledWith(
       "subject",
-      expect.any(Function),
       "en",
       "subject/high-school/10/mathematics/algebra/basic-concept",
       { includeMDX: false }
@@ -44,7 +43,6 @@ describe("getSubjectContent", () => {
 
     expect(mockGetScopedContent).toHaveBeenCalledWith(
       "subject",
-      expect.any(Function),
       "en",
       "subject/high-school/10/mathematics/algebra/basic-concept",
       {}
@@ -64,24 +62,16 @@ describe("getSubjectContents", () => {
       locale: "en",
     });
 
-    expect(mockGetScopedContents).toHaveBeenCalledWith(
-      "subject",
-      expect.any(Function),
-      {
-        basePath: "subject/high-school",
-        includeMDX: false,
-        locale: "en",
-      }
-    );
+    expect(mockGetScopedContents).toHaveBeenCalledWith("subject", {
+      basePath: "subject/high-school",
+      includeMDX: false,
+      locale: "en",
+    });
   });
 
   it("delegates subject list loading with default options", () => {
     getSubjectContents();
 
-    expect(mockGetScopedContents).toHaveBeenCalledWith(
-      "subject",
-      expect.any(Function),
-      {}
-    );
+    expect(mockGetScopedContents).toHaveBeenCalledWith("subject", {});
   });
 });

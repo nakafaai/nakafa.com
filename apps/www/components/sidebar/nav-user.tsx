@@ -10,6 +10,7 @@ import {
   Settings01Icon,
   UserIcon,
 } from "@hugeicons/core-free-icons";
+import { useDisclosure } from "@mantine/hooks";
 import {
   Avatar,
   AvatarFallback,
@@ -35,6 +36,7 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
+import { useLayoutEffect } from "react";
 import { authClient } from "@/lib/auth/client";
 import { useUser } from "@/lib/context/use-user";
 import { getInitialName } from "@/lib/utils/helper";
@@ -50,9 +52,12 @@ export function NavUser() {
 
   const router = useRouter();
   const user = useUser((state) => state.user);
+  const [open, { close, set }] = useDisclosure(false);
 
   const { isMobile } = useSidebar();
   const authHref = `/auth?redirect=${pathname}`;
+
+  useLayoutEffect(() => close, [close]);
 
   /** Signs the user out and leaves the current SSR-auth page immediately on success. */
   async function handleSignOut() {
@@ -78,7 +83,7 @@ export function NavUser() {
 
   return (
     <SidebarMenuItem>
-      <DropdownMenu>
+      <DropdownMenu onOpenChange={set} open={open}>
         <DropdownMenuTrigger asChild>
           <SidebarMenuButton className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
             <Avatar className="size-6">

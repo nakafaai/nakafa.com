@@ -1,7 +1,9 @@
-"use client";
-
 import { cn } from "@repo/design-system/lib/utils";
 import type * as React from "react";
+
+/**
+ * Renders the responsive table container used by markdown and content tables.
+ */
 
 function Table({
   containerClassName,
@@ -25,6 +27,9 @@ function Table({
   );
 }
 
+/**
+ * Renders the semantic table header section.
+ */
 function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   return (
     <thead
@@ -35,6 +40,9 @@ function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   );
 }
 
+/**
+ * Renders the semantic table body section.
+ */
 function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
   return (
     <tbody
@@ -45,6 +53,9 @@ function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
   );
 }
 
+/**
+ * Renders the semantic table footer section.
+ */
 function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
   return (
     <tfoot
@@ -58,6 +69,9 @@ function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
   );
 }
 
+/**
+ * Renders one table row with the shared Nakafa table styles.
+ */
 function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
   return (
     <tr
@@ -71,6 +85,9 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
   );
 }
 
+/**
+ * Renders one table heading cell.
+ */
 function TableHead({ className, ...props }: React.ComponentProps<"th">) {
   return (
     <th
@@ -84,6 +101,9 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
   );
 }
 
+/**
+ * Renders one table data cell.
+ */
 function TableCell({ className, ...props }: React.ComponentProps<"td">) {
   return (
     <td
@@ -97,6 +117,9 @@ function TableCell({ className, ...props }: React.ComponentProps<"td">) {
   );
 }
 
+/**
+ * Renders the optional table caption.
+ */
 function TableCaption({
   className,
   ...props

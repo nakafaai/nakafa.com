@@ -5,6 +5,7 @@ import {
   ArrowRight02Icon,
   Link04Icon,
 } from "@hugeicons/core-free-icons";
+import { useDisclosure } from "@mantine/hooks";
 import type { MaterialList } from "@repo/contents/_types/subject/material";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -21,14 +22,43 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn, slugify } from "@repo/design-system/lib/utils";
 import { Link } from "@repo/internationalization/src/navigation";
-import { useState } from "react";
+import { useLayoutEffect, useState } from "react";
 
 interface Props {
   material: MaterialList[number];
 }
 
+/**
+ * Renders one expandable material card on the subject material index page.
+ *
+ * The card defaults to open, and resets back to open when Next.js hides the
+ * page through Cache Components state preservation. This keeps the material list
+ * behaving like a transient disclosure instead of persisting a collapsed state
+ * across route transitions.
+ *
+ * We also remount the Base UI collapsible root on hide. Its panel measures and
+ * caches `scrollHeight` for height transitions, and under preserved hidden DOM a
+ * stale zero-height measurement can survive the route transition even after
+ * `open` is reset to `true`.
+ *
+ * References:
+ * - Next.js preserving UI state with Cache Components:
+ *   `apps/www/node_modules/next/dist/docs/01-app/02-guides/preserving-ui-state.md`
+ * - Base UI collapsible component docs:
+ *   https://base-ui.com/react/components/collapsible
+ * - Installed Base UI panel measurement logic:
+ *   `packages/design-system/node_modules/@base-ui/react/esm/collapsible/panel/useCollapsiblePanel.js`
+ */
 export function CardMaterial({ material }: Props) {
-  const [isOpen, setIsOpen] = useState<boolean>(true);
+  const [isOpen, { open, set, toggle }] = useDisclosure(true);
+  const [panelKey, setPanelKey] = useState(0);
+
+  useLayoutEffect(() => {
+    return () => {
+      open();
+      setPanelKey((key) => key + 1);
+    };
+  }, [open]);
 
   const id = slugify(material.title);
 
@@ -63,7 +93,7 @@ export function CardMaterial({ material }: Props) {
           <Button
             aria-label={isOpen ? "Close content" : "Open content"}
             className="group shrink-0"
-            onClick={() => setIsOpen(!isOpen)}
+            onClick={toggle}
             size="icon"
             variant="ghost"
           >
@@ -80,7 +110,7 @@ export function CardMaterial({ material }: Props) {
           </Button>
         </div>
       </CardHeader>
-      <Collapsible onOpenChange={setIsOpen} open={isOpen}>
+      <Collapsible key={panelKey} onOpenChange={set} open={isOpen}>
         <CollapsibleContent>
           <CardContent className="border-t px-0">
             <ul className="divide-y">

@@ -1,16 +1,8 @@
 import { routing } from "@repo/internationalization/src/routing";
-import { Effect } from "effect";
 import type { NextRequest } from "next/server";
 import { hasLocale, type Locale } from "next-intl";
-import { getMetadataFromSlug } from "@/lib/utils/system";
-import { generateOGImage } from "./og";
-
-export const dynamic = "force-static";
-export const revalidate = false;
-
-export function generateStaticParams() {
-  return [];
-}
+import { generateOGImage } from "@/lib/og";
+import { getCachedMetadataFromSlug } from "@/lib/utils/system";
 
 export async function GET(
   _req: NextRequest,
@@ -24,11 +16,12 @@ export async function GET(
 
   const contentSlug = slug.at(-1) === "image.png" ? slug.slice(0, -1) : slug;
 
-  const { title, description } = await Effect.runPromise(
-    getMetadataFromSlug(cleanedLocale, contentSlug)
+  const { title, description } = await getCachedMetadataFromSlug(
+    cleanedLocale,
+    contentSlug
   );
 
-  return generateOGImage({
+  return await generateOGImage({
     title,
     description,
   });
