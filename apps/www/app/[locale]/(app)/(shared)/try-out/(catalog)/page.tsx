@@ -5,7 +5,6 @@ import { notFound } from "next/navigation";
 import { hasLocale, useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { use } from "react";
-import { AppShell } from "@/components/sidebar/app-shell";
 import { TryoutHubPage } from "@/components/tryout/hub-page";
 
 export async function generateMetadata({
@@ -54,12 +53,12 @@ export default function Page(props: PageProps<"/[locale]/try-out">) {
   }
 
   return (
-    <AppShell>
+    <>
       <PageBreadcrumb locale={locale} />
       <div className="min-h-svh">
         <TryoutHubPage locale={locale} />
       </div>
-    </AppShell>
+    </>
   );
 }
 

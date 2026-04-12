@@ -90,6 +90,12 @@ export const userTryoutSetViewResultValidator = v.object({
   initialHistory: userTryoutAttemptHistoryResultValidator,
 });
 
+export const userTryoutSessionResultValidator = v.object({
+  attemptId: vv.id("tryoutAttempts"),
+  expiresAtMs: vv.doc("tryoutAttempts").fields.expiresAt,
+  status: vv.doc("tryoutAttempts").fields.status,
+});
+
 export const tryoutPartAttemptRuntimeValidator = v.object({
   partIndex: v.number(),
   partKey: tryoutPartKeyValidator,

@@ -10,7 +10,6 @@ import { notFound, redirect } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { ExerciseTrackedEntry } from "@/components/exercise/entry";
-import { TryoutPartRouteShell } from "@/components/tryout/part-route-shell";
 import { TryoutPartRuntime } from "@/components/tryout/part-runtime";
 import { TryoutPartProvider } from "@/components/tryout/providers/part-provider";
 import { loadTryoutSearchParams } from "@/components/tryout/utils/attempt-search";
@@ -153,25 +152,23 @@ export async function TryoutPartBody({
         slug,
       }}
     >
-      <TryoutPartRouteShell>
-        <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
-          <div className="space-y-10">
-            <TryoutPartRuntime icon={partIcon}>
-              {exercises.map((exercise) => (
-                <ExerciseTrackedEntry
-                  exercise={exercise}
-                  key={exercise.number}
-                  locale={locale}
-                  setPath={contentPart.setSlug}
-                  srLabel={tExercises("number-count", {
-                    count: exercise.number,
-                  })}
-                />
-              ))}
-            </TryoutPartRuntime>
-          </div>
+      <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
+        <div className="space-y-10">
+          <TryoutPartRuntime icon={partIcon}>
+            {exercises.map((exercise) => (
+              <ExerciseTrackedEntry
+                exercise={exercise}
+                key={exercise.number}
+                locale={locale}
+                setPath={contentPart.setSlug}
+                srLabel={tExercises("number-count", {
+                  count: exercise.number,
+                })}
+              />
+            ))}
+          </TryoutPartRuntime>
         </div>
-      </TryoutPartRouteShell>
+      </div>
     </TryoutPartProvider>
   );
 }

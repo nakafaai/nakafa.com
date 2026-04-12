@@ -224,6 +224,7 @@ import type * as tryouts_queries_me_helpers_context from "../tryouts/queries/me/
 import type * as tryouts_queries_me_helpers_history from "../tryouts/queries/me/helpers/history.js";
 import type * as tryouts_queries_me_history from "../tryouts/queries/me/history.js";
 import type * as tryouts_queries_me_part from "../tryouts/queries/me/part.js";
+import type * as tryouts_queries_me_session from "../tryouts/queries/me/session.js";
 import type * as tryouts_queries_me_setView from "../tryouts/queries/me/setView.js";
 import type * as tryouts_queries_me_validators from "../tryouts/queries/me/validators.js";
 import type * as tryouts_queries_tryouts from "../tryouts/queries/tryouts.js";
@@ -468,6 +469,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/queries/me/helpers/history": typeof tryouts_queries_me_helpers_history;
   "tryouts/queries/me/history": typeof tryouts_queries_me_history;
   "tryouts/queries/me/part": typeof tryouts_queries_me_part;
+  "tryouts/queries/me/session": typeof tryouts_queries_me_session;
   "tryouts/queries/me/setView": typeof tryouts_queries_me_setView;
   "tryouts/queries/me/validators": typeof tryouts_queries_me_validators;
   "tryouts/queries/tryouts": typeof tryouts_queries_tryouts;
