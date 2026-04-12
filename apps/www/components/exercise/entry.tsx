@@ -125,7 +125,10 @@ export function ExerciseTrackedEntry({
 
   return (
     <>
-      <QuestionAnalytics exerciseNumber={exercise.number} targetId={id} />
+      <QuestionAnalytics
+        articleId={`exercise-${id}`}
+        exerciseNumber={exercise.number}
+      />
       <ExerciseEntryBody
         exercise={exercise}
         id={id}

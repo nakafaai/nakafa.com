@@ -7,11 +7,11 @@ import { useExercise } from "@/lib/context/use-exercise";
 
 /** Tracks visible time for one rendered exercise while the active attempt is running. */
 export function QuestionAnalytics({
+  articleId,
   exerciseNumber,
-  targetId,
 }: {
+  articleId: string;
   exerciseNumber: number;
-  targetId: string;
 }) {
   const isInputLocked = useAttempt((state) => state.isInputLocked);
   const isAttemptInProgress = useAttempt((state) => state.isAttemptInProgress);
@@ -28,7 +28,7 @@ export function QuestionAnalytics({
   }, [timeSpent]);
 
   useEffect(() => {
-    const target = document.getElementById(targetId);
+    const target = document.getElementById(articleId);
 
     if (!target) {
       return;
@@ -46,7 +46,7 @@ export function QuestionAnalytics({
     return () => {
       observer.disconnect();
     };
-  }, [targetId]);
+  }, [articleId]);
 
   const handleTick = useEffectEvent(() => {
     if (isActive && hasActiveAttempt) {
