@@ -1,6 +1,5 @@
-import { routing } from "@repo/internationalization/src/routing";
-import { notFound, redirect } from "next/navigation";
-import { hasLocale } from "next-intl";
+import { redirect } from "next/navigation";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 export default async function Page(
   props: PageProps<"/[locale]/school/[slug]">
@@ -8,9 +7,7 @@ export default async function Page(
   const { params } = props;
   const { locale, slug } = await params;
 
-  if (!hasLocale(routing.locales, locale)) {
-    notFound();
-  }
+  const validLocale = getLocaleOrThrow(locale);
 
-  redirect(`/${locale}/school/${slug}/home`);
+  redirect(`/${validLocale}/school/${slug}/home`);
 }

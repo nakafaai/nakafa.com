@@ -1,17 +1,5 @@
-import { routing } from "@repo/internationalization/src/routing";
-import { notFound } from "next/navigation";
-import { hasLocale } from "next-intl";
-
-import { use } from "react";
 import { LayoutAuth } from "./auth";
 
-export default function Layout(props: LayoutProps<"/[locale]/school">) {
-  const { children, params } = props;
-  const { locale } = use(params);
-  if (!hasLocale(routing.locales, locale)) {
-    // Ensure that the incoming `locale` is valid
-    notFound();
-  }
-
+export default function Layout({ children }: LayoutProps<"/[locale]/school">) {
   return <LayoutAuth>{children}</LayoutAuth>;
 }
