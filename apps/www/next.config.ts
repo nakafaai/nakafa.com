@@ -36,7 +36,7 @@ let nextConfig: NextConfig = {
   },
   serverExternalPackages: [
     ...(config.serverExternalPackages ?? []),
-    "@takumi-rs/image-response",
+    "@takumi-rs/core",
   ],
   async rewrites() {
     const llmSource = [

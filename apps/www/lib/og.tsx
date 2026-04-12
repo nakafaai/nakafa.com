@@ -1,9 +1,9 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { ImageResponse } from "@takumi-rs/image-response";
 import anyAscii from "any-ascii";
 import { cacheLife } from "next/cache";
 import type { ReactNode } from "react";
+import { ImageResponse } from "takumi-js/response";
 
 interface GenerateProps {
   description?: ReactNode;
@@ -27,6 +27,7 @@ async function getLogoDataUrl() {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(logo)}`;
 }
 
+/** Renders the shared Open Graph image layout from already-resolved content. */
 function OgImage(props: GenerateProps) {
   const {
     title,
