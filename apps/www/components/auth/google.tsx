@@ -11,6 +11,7 @@ interface Props {
   redirect?: string;
 }
 
+/** Renders the Google sign-in button with one sanitized internal callback URL. */
 export function AuthGoogle({ redirect }: Props) {
   const t = useTranslations("Auth");
 
@@ -18,6 +19,7 @@ export function AuthGoogle({ redirect }: Props) {
 
   const callbackURL = redirect ?? redirectQuery ?? "/";
 
+  /** Starts the Better Auth Google flow with one safe callback destination. */
   function handleGoogleSignIn() {
     const validCallbackURL = getSafeInternalRedirectPath(callbackURL) ?? "/";
 

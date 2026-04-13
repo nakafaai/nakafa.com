@@ -18,6 +18,8 @@ const syncTryoutsResultValidator = v.object({
   updated: v.number(),
 });
 
+const SCALE_QUALITY_QUEUE_DRAIN_DELAY_MS = 1;
+
 /** Detect, upsert, and deactivate tryouts for one locale/product pair. */
 export const bulkSyncTryouts = internalMutation({
   args: {
@@ -242,8 +244,10 @@ export const bulkSyncTryouts = internalMutation({
     }
 
     if (enqueuedScaleQualityRefresh) {
+      // A positive delay keeps the drain effectively immediate while avoiding
+      // same-timestamp scheduler edge cases in JavaScript test runtimes.
       await ctx.scheduler.runAfter(
-        0,
+        SCALE_QUALITY_QUEUE_DRAIN_DELAY_MS,
         internal.irt.mutations.internal.scales.drainScaleQualityRefreshQueue,
         {}
       );

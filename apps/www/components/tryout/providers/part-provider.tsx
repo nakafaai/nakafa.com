@@ -158,6 +158,7 @@ function useResolvedTryoutPartValue({
     selectedAttemptId
   );
 
+  /** Returns to the set page while preserving the selected attempt in search. */
   const goToSet = useCallback(() => {
     router.push(setHref);
   }, [router, setHref]);
@@ -180,6 +181,7 @@ function useResolvedTryoutPartValue({
       }) !== "in-progress"
   );
 
+  /** Starts or resumes the current part through the server action contract. */
   const startPartAction = useCallback(() => {
     if (!runtime) {
       return;
@@ -223,6 +225,7 @@ function useResolvedTryoutPartValue({
     tryout.slug,
   ]);
 
+  /** Completes the current part and routes back to the set when it succeeds. */
   const completePartAction = useCallback(() => {
     startTransition(async () => {
       if (!(runtime && attempt)) {

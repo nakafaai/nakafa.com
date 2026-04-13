@@ -56,6 +56,7 @@ export function useTryoutStartFlow({
     };
   }, [closeDialog]);
 
+  /** Keeps the dialog state aligned with route preservation and unmounts. */
   const setDialogOpenAction = useCallback(
     (open: boolean) => {
       if (open) {
@@ -68,6 +69,7 @@ export function useTryoutStartFlow({
     [closeDialog, openDialog]
   );
 
+  /** Opens auth, resumes an attempt, or opens the start dialog based on state. */
   const clickStartAction = useCallback(() => {
     if (isAuthPending) {
       return;
@@ -104,6 +106,7 @@ export function useTryoutStartFlow({
     router,
   ]);
 
+  /** Prefetches the auth route for anonymous users when the CTA becomes relevant. */
   const prefetchAuthAction = useCallback(() => {
     if (isAuthPending) {
       return;
@@ -116,6 +119,7 @@ export function useTryoutStartFlow({
     router.prefetch(authHref);
   }, [authHref, isAuthenticated, isAuthPending, router]);
 
+  /** Starts the tryout and maps the server result into the route-level UX. */
   const confirmStartAction = useCallback(() => {
     if (isAuthPending) {
       return;
