@@ -207,8 +207,8 @@ importers:
         specifier: ^0.0.15
         version: 0.0.15
       '@ai-sdk/react':
-        specifier: ^3.0.160
-        version: 3.0.160(react@19.2.5)(zod@4.3.6)
+        specifier: ^3.0.161
+        version: 3.0.161(react@19.2.5)(zod@4.3.6)
       '@convex-dev/better-auth':
         specifier: ^0.11.4
         version: 0.11.4(@standard-schema/spec@1.1.0)(better-auth@1.5.3(mongodb@7.1.0)(next@16.2.3(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vitest@4.1.4)(vue@3.5.30(typescript@6.0.2)))(convex@1.35.1(react@19.2.5))(hono@4.12.12)(react@19.2.5)(typescript@6.0.2)
@@ -234,8 +234,8 @@ importers:
         specifier: ^3.1.1
         version: 3.1.1(@types/react@19.2.14)(react@19.2.5)
       '@paper-design/shaders-react':
-        specifier: ^0.0.74
-        version: 0.0.74(@types/react@19.2.14)(react@19.2.5)
+        specifier: ^0.0.75
+        version: 0.0.75(@types/react@19.2.14)(react@19.2.5)
       '@repo/ai':
         specifier: workspace:*
         version: link:../../packages/ai
@@ -291,8 +291,8 @@ importers:
         specifier: ^3.4.3
         version: 3.4.3
       ai:
-        specifier: ^6.0.158
-        version: 6.0.158(zod@4.3.6)
+        specifier: ^6.0.159
+        version: 6.0.159(zod@4.3.6)
       any-ascii:
         specifier: ^0.3.3
         version: 0.3.3
@@ -366,8 +366,8 @@ importers:
         specifier: ^2.0.7
         version: 2.0.7(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       takumi-js:
-        specifier: ^1.0.8
-        version: 1.0.8(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+        specifier: ^1.0.9
+        version: 1.0.9(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       use-context-selector:
         specifier: ^2.0.0
         version: 2.0.0(react@19.2.5)(scheduler@0.27.0)
@@ -439,20 +439,20 @@ importers:
         specifier: ^2.0.29
         version: 2.0.29(zod@4.3.6)
       '@ai-sdk/gateway':
-        specifier: ^3.0.95
-        version: 3.0.95(zod@4.3.6)
+        specifier: ^3.0.96
+        version: 3.0.96(zod@4.3.6)
       '@ai-sdk/google':
-        specifier: ^3.0.62
-        version: 3.0.62(zod@4.3.6)
+        specifier: ^3.0.63
+        version: 3.0.63(zod@4.3.6)
       '@ai-sdk/google-vertex':
-        specifier: ^4.0.108
-        version: 4.0.108(zod@4.3.6)
+        specifier: ^4.0.109
+        version: 4.0.109(zod@4.3.6)
       '@ai-sdk/openai':
         specifier: ^3.0.52
         version: 3.0.52(zod@4.3.6)
       '@ai-sdk/react':
-        specifier: ^3.0.160
-        version: 3.0.160(react@19.2.5)(zod@4.3.6)
+        specifier: ^3.0.161
+        version: 3.0.161(react@19.2.5)(zod@4.3.6)
       '@mendable/firecrawl-js':
         specifier: ^4.18.2
         version: 4.18.2
@@ -463,8 +463,8 @@ importers:
         specifier: ^0.13.11
         version: 0.13.11(typescript@6.0.2)(zod@4.3.6)
       ai:
-        specifier: ^6.0.158
-        version: 6.0.158(zod@4.3.6)
+        specifier: ^6.0.159
+        version: 6.0.159(zod@4.3.6)
       convex:
         specifier: ^1.35.1
         version: 1.35.1(react@19.2.5)
@@ -509,8 +509,8 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1(next@16.2.3(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(nuxt@4.3.1(@biomejs/biome@2.4.11)(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@parcel/watcher@2.5.4)(@types/node@25.6.0)(@vercel/functions@3.4.3)(@vue/compiler-sfc@3.5.30)(cac@6.7.14)(commander@13.1.0)(db0@0.3.4)(ioredis@5.10.0)(lightningcss@1.32.0)(magicast@0.5.2)(rolldown@1.0.0-rc.15)(rollup@4.55.1)(terser@5.44.1)(tsx@4.21.0)(typescript@6.0.2)(vite@8.0.8(@types/node@25.6.0)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(yaml@2.8.2))(react@19.2.5)(vue-router@4.6.4(vue@3.5.30(typescript@6.0.2)))(vue@3.5.30(typescript@6.0.2))
       posthog-js:
-        specifier: ^1.367.0
-        version: 1.367.0
+        specifier: ^1.368.0
+        version: 1.368.0
       posthog-node:
         specifier: ^5.29.2
         version: 5.29.2(rxjs@7.8.2)
@@ -567,8 +567,8 @@ importers:
         specifier: ^0.13.11
         version: 0.13.11(typescript@5.9.3)(zod@4.3.6)
       ai:
-        specifier: ^6.0.158
-        version: 6.0.158(zod@4.3.6)
+        specifier: ^6.0.159
+        version: 6.0.159(zod@4.3.6)
       better-auth:
         specifier: 1.5.3
         version: 1.5.3(mongodb@7.1.0)(next@16.2.3(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vitest@4.1.4)(vue@3.5.30(typescript@5.9.3))
@@ -754,10 +754,10 @@ importers:
         version: 1.2.2(@types/react@19.2.14)(react@19.2.5)
       '@react-three/drei':
         specifier: ^10.7.7
-        version: 10.7.7(@react-three/fiber@9.5.0(@types/react@19.2.14)(immer@11.1.4)(react-dom@19.2.5(react@19.2.5))(react-native@0.83.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.5))(react@19.2.5)(three@0.183.2))(@types/react@19.2.14)(@types/three@0.183.1)(immer@11.1.4)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(three@0.183.2)
+        version: 10.7.7(@react-three/fiber@9.6.0(@types/react@19.2.14)(immer@11.1.4)(react-dom@19.2.5(react@19.2.5))(react-native@0.83.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.5))(react@19.2.5)(three@0.183.2))(@types/react@19.2.14)(@types/three@0.183.1)(immer@11.1.4)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(three@0.183.2)
       '@react-three/fiber':
-        specifier: ^9.5.0
-        version: 9.5.0(@types/react@19.2.14)(immer@11.1.4)(react-dom@19.2.5(react@19.2.5))(react-native@0.83.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.5))(react@19.2.5)(three@0.183.2)
+        specifier: ^9.6.0
+        version: 9.6.0(@types/react@19.2.14)(immer@11.1.4)(react-dom@19.2.5(react@19.2.5))(react-native@0.83.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.5))(react@19.2.5)(three@0.183.2)
       '@repo/analytics':
         specifier: workspace:*
         version: link:../analytics
@@ -777,8 +777,8 @@ importers:
         specifier: ^2.0.13
         version: 2.0.13
       ai:
-        specifier: ^6.0.158
-        version: 6.0.158(zod@4.3.6)
+        specifier: ^6.0.159
+        version: 6.0.159(zod@4.3.6)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -1130,20 +1130,20 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/gateway@3.0.95':
-    resolution: {integrity: sha512-ZmUNNbZl3V42xwQzPaNUi+s8eqR2lnrxf0bvB6YbLXpLjHYv0k2Y78t12cNOfY0bxGeuVVTLyk856uLuQIuXEQ==}
+  '@ai-sdk/gateway@3.0.96':
+    resolution: {integrity: sha512-BDiVEMUVHGpngReeigzLyJobG0TvzYbNGzdHI8JYBZHrjOX4aL6qwIls7z3p7V4TuXVWUCbG8TSWEe7ksX4Vhw==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/google-vertex@4.0.108':
-    resolution: {integrity: sha512-4aJazfFrMHffi/S1UriJeK5lkXFrCV+b8nGaTbe3lNMptjdtW1OXzaez2KW0B0ILe3Eug8RcEyorg7u9Ar7xjA==}
+  '@ai-sdk/google-vertex@4.0.109':
+    resolution: {integrity: sha512-QzQ+DgOoSYlkU4mK0H+iaCaW1bl5zOimH9X2E2oylcVyUtAdCuduQ959Uw1ygW3l09J2K/ceEDtK8OUPHyOA7g==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/google@3.0.62':
-    resolution: {integrity: sha512-cC9HAjR5WZxjqGyEJrJqFTlVqyPE9UOFmmGdf5dINaimgfPmzqXYN1qTYEJ+1knbyTVsNMub0KAF5SOqqtO8IQ==}
+  '@ai-sdk/google@3.0.63':
+    resolution: {integrity: sha512-RfOZWVMYSPu2sPRfGajrauWAZ9BSaRopSn+AszkKWQ1MFj8nhaXvCqRHB5pBQUaHTfZKagvOmMpNfa/s3gPLgQ==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -1170,8 +1170,8 @@ packages:
     resolution: {integrity: sha512-oGMAgGoQdBXbZqNG0Ze56CHjDZ1IDYOwGYxYjO5KLSlz5HiNQ9udIXsPZ61VWaHGZ5XW/jyjmr6t2xz2jGVwbQ==}
     engines: {node: '>=18'}
 
-  '@ai-sdk/react@3.0.160':
-    resolution: {integrity: sha512-ZDD42ggZYyBJjiX3PAl03t58uMJsIgreHfRhbdQR0hyuGlxcg1nXS5OvPRQUejNyGz/cM24/uGzt3Mn5ncdoOQ==}
+  '@ai-sdk/react@3.0.161':
+    resolution: {integrity: sha512-lFIZm7OggwNZD08Yz8ip0EPgmEn/lKZOB2MrKjzDpq6BT8gUX17TfaaUi9IICN8nOeLOZQqJKrWNnTXjcvElBw==}
     engines: {node: '>=18'}
     peerDependencies:
       react: ^18 || ~19.0.1 || ~19.1.2 || ^19.2.1
@@ -3880,8 +3880,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@paper-design/shaders-react@0.0.74':
-    resolution: {integrity: sha512-p9ud9widOGQjrVBiNvGNrr0ICKkytFj4bkLd3dRKaNOHZreUYj76yaQQS+Monlpz3BuLiI/4Tvikbrs8gcJUVw==}
+  '@paper-design/shaders-react@0.0.75':
+    resolution: {integrity: sha512-s8EcUHpmWkbSFjrXwBLkej/SoaJux3h1eLR/53a4t9ReXPMsyItZpAR+30PMwUhbp+zJQ3+BNia44DO2/8jmtA==}
     peerDependencies:
       '@types/react': ^18 || ^19
       react: ^18 || ^19
@@ -3889,8 +3889,8 @@ packages:
       '@types/react':
         optional: true
 
-  '@paper-design/shaders@0.0.74':
-    resolution: {integrity: sha512-8w8HJasgkRc6qb9cyQ8IWYrO66FEawCVkRhWXsrOetqZKHibONXN4em/hGEcgThY+b5mED4oplU/GglVdUH+uw==}
+  '@paper-design/shaders@0.0.75':
+    resolution: {integrity: sha512-fBCxeqK791Jin0MatZgNQEsn+zIBVBLVz7P0WUqRv8Ho0nmUx1zhOe3NR7mmbeXcmexGgR7U3YP3cYgyOCLVNQ==}
 
   '@parcel/watcher-android-arm64@2.5.4':
     resolution: {integrity: sha512-hoh0vx4v+b3BNI7Cjoy2/B0ARqcwVNrzN/n7DLq9ZB4I3lrsvhrkCViJyfTj/Qi5xM9YFiH4AmHGK6pgH1ss7g==}
@@ -4011,8 +4011,8 @@ packages:
   '@posthog/core@1.25.2':
     resolution: {integrity: sha512-h2FO7ut/BbfwpAXWpwdDHTzQgUo9ibDFEs6ZO+3cI3KPWQt5XwczK1OLAuPprcjm8T/jl0SH8jSFo5XdU4RbTg==}
 
-  '@posthog/types@1.367.0':
-    resolution: {integrity: sha512-FUcTEAeKhuHKyCcTQPx/sTN3s8S+PusPsiP8T/LrG/T7pDkwMfNZG0/P630JX6fT6qiW0moVvVSsaXgZDJF7wg==}
+  '@posthog/types@1.368.0':
+    resolution: {integrity: sha512-ORuGmgEmEkwaf/bEI4mOlrzIdOSJJ44vuz+XHPFycmt5Y6swjTXH/1NmIKas5KdKi/SOaKGvSkHGqUv7hHcNaw==}
 
   '@primer/octicons@19.21.1':
     resolution: {integrity: sha512-7tgtBkCNcg75YJnckinzvES+uxysYQCe+CHSEnzr3VYgxttzKRvfmrnVogl3aEuHCQP4xhiE9k2lFDhYwGtTzQ==}
@@ -5744,8 +5744,8 @@ packages:
       react-dom:
         optional: true
 
-  '@react-three/fiber@9.5.0':
-    resolution: {integrity: sha512-FiUzfYW4wB1+PpmsE47UM+mCads7j2+giRBltfwH7SNhah95rqJs3ltEs9V3pP8rYdS0QlNne+9Aj8dS/SiaIA==}
+  '@react-three/fiber@9.6.0':
+    resolution: {integrity: sha512-90abYK2q5/qDM+GACs9zRvc5KhEEpEWqWlHSd64zTPNxg+9wCJvTfyD9x2so7hlQhjRYO1Fa6flR3BC/kpTFkA==}
     peerDependencies:
       expo: '>=43.0'
       expo-asset: '>=8.4'
@@ -6627,64 +6627,64 @@ packages:
     peerDependencies:
       tailwindcss: '>=3.0.0 || insiders || >=4.0.0-alpha.20 || >=4.0.0-beta.1'
 
-  '@takumi-rs/core-darwin-arm64@1.0.8':
-    resolution: {integrity: sha512-+t9NunGjVlEvFWW+swlWfJpwGyo0tacGtX1P5wxYw8ZYUwYbqBvOqUn0jwHRTJmo0M9Dys69xlTm8j1X7ae/gA==}
+  '@takumi-rs/core-darwin-arm64@1.0.9':
+    resolution: {integrity: sha512-yOzafcUfoHx2+iR9zhN1TaqweD2Mf14me20qqrDFxtDA2LgJjiv8S7IubXhG4E0As0fDns8iM5NMcq7liVqeQQ==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [arm64]
     os: [darwin]
 
-  '@takumi-rs/core-darwin-x64@1.0.8':
-    resolution: {integrity: sha512-6hvv7bcCCFYNcd7T61wps5RNk9DcTAx1fwcVkgNI5YTwNVfdd4jUJ78zi3ifR5Lin40bzLOJ15b4C5u85tPDFg==}
+  '@takumi-rs/core-darwin-x64@1.0.9':
+    resolution: {integrity: sha512-cgs2b2BmNe+wH73p8vqL2S0XBTv5s/L1YTQZ/vGQrbwIzgSmz4bq/Y4I0nLsiBF2lExUQMedhrixplvjThuhow==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [x64]
     os: [darwin]
 
-  '@takumi-rs/core-linux-arm64-gnu@1.0.8':
-    resolution: {integrity: sha512-v+4TyBdejPOp88jbiLrAXtfudb8irF97pATwRWw2qt0MhKCx+52/iXbSfQxxpMQ0Z5MleqaoxiUrlnBqclKTpQ==}
+  '@takumi-rs/core-linux-arm64-gnu@1.0.9':
+    resolution: {integrity: sha512-v1pgv+a9pY8CKeROx7wUshvTr9JDqx6rbXrkvWCUw7u/5VGsLHcJwoxPMTbcyx36Fc0fKxxuXOGPM+1RBGZpvw==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@takumi-rs/core-linux-arm64-musl@1.0.8':
-    resolution: {integrity: sha512-uTpjEzr6w+RJcqY+lpb31MzwsUcJVJ7uFehR8A8rNFImyt6TAT0ZEPwZeA7744mDBXnsAnM8AUcSbkkiGCrtZg==}
+  '@takumi-rs/core-linux-arm64-musl@1.0.9':
+    resolution: {integrity: sha512-L6aXsre2/GIf80UBAWJgKIQtp6NPzBSBfYLQqVd3dKlT4PSu+SJrlEV5SQkIuP067F/9VJ0JIocvwdh1+gGf+Q==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@takumi-rs/core-linux-x64-gnu@1.0.8':
-    resolution: {integrity: sha512-oiTi9MRso3V4tLfhbYDGA+1Z7YmWsCpTteNWKrhNRvP0Kk7fZkkHz389PyTkt9uQRaP5Ii6JlQJmoJaid6aQmg==}
+  '@takumi-rs/core-linux-x64-gnu@1.0.9':
+    resolution: {integrity: sha512-a6iVjLxaNC86Fw7s74SA48BLIGQrCDkWJu1p1y3E0uQ+vFzTW00M9jKjjHAETjslkE7uCf87ACk7BME68F/evQ==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@takumi-rs/core-linux-x64-musl@1.0.8':
-    resolution: {integrity: sha512-hS5F/fgdo0vEV/Un5bA7U1T47XBsL75s9jE6dUBRqXITuj9+biJVvG37Xs0bb5XxHYrKPfvaQyglyfmgzhiGjA==}
+  '@takumi-rs/core-linux-x64-musl@1.0.9':
+    resolution: {integrity: sha512-o6lLpmJ6lSE3zj78p6m2Phbcb1xGkPApgmoHNHh+7QJrJkrzOvIlD7EmfiAjI98hDtW+nPFD3MPyEE+ntLpkCg==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@takumi-rs/core-win32-arm64-msvc@1.0.8':
-    resolution: {integrity: sha512-yjtPIHAK/4bQD7adNRHWNfvS8SacqRMiGRA/6AomMo2DrGzD4gNykmeUZrGVeo+AO2hhtPJNOOmiToda7iAprw==}
+  '@takumi-rs/core-win32-arm64-msvc@1.0.9':
+    resolution: {integrity: sha512-IvrE++Xn0IXqkPI+ERo+WhUBETB9mYYjYI4HlPEYOkNV4WiRYw01TdIddrtmmYgocExUCJHS/AIHvodfGU7Z7Q==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [arm64]
     os: [win32]
 
-  '@takumi-rs/core-win32-x64-msvc@1.0.8':
-    resolution: {integrity: sha512-W8qDOE+abj8NvvJlrElg5VvSVrr/MeZZm8HZSYzjNC5U17mNEDCjFbJBlfS+WocdxBHPcfhzJ8gjdSX2qkdKyA==}
+  '@takumi-rs/core-win32-x64-msvc@1.0.9':
+    resolution: {integrity: sha512-FUvDxIaegUrjaZwppzQcClunw9sqNsh+t0c+kgsLJc/hnCVlGMvSIYaIHlrj4K7qlo4NyIQTqA1DMYDcLXUYAQ==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [x64]
     os: [win32]
 
-  '@takumi-rs/core@1.0.8':
-    resolution: {integrity: sha512-2sOt45Mw/ymuDCyil0jscWS9hSRKgztOJGF1MfGYRrAQTzEA8txPzQh4petkiIOo0EcU0NYWAQHdvneDT+r67Q==}
+  '@takumi-rs/core@1.0.9':
+    resolution: {integrity: sha512-jTXaO8nnzN9javu7lA0hmzkZtShMVQFuQOxY4jsgA2ylDbqcES+G41EQBoVJVyvcwRLRTvqOxPuya2LrCB6SAA==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
 
-  '@takumi-rs/helpers@1.0.8':
-    resolution: {integrity: sha512-IRGrcqKOSoFavJp2pdCJWfvWtWZiRTE9cHM9y4zi3liQcRZ+Mk7h86+YodYl8FpA7rJCCk5Itdzm8wPCDYPDUg==}
+  '@takumi-rs/helpers@1.0.9':
+    resolution: {integrity: sha512-Q4O5eINwqybLXI2LE3VO4qk8/7eLmV51oG3S8DfGJJjHI5mRx/aQ91RfvFnsvFDWByrswBnBet46IyXnQU2s4A==}
     peerDependencies:
       react: ^19.2.5
       react-dom: ^18.0.0 || ^19.0.0
@@ -6692,8 +6692,8 @@ packages:
       react-dom:
         optional: true
 
-  '@takumi-rs/wasm@1.0.8':
-    resolution: {integrity: sha512-1YKYVQ+PiIwg7PhycdBoa8Zo2/ORMk36QA+Ts80tRZSua2SIX7K10zq+NEndHF5rwxsiCqr7CbfmRHoetLt/mA==}
+  '@takumi-rs/wasm@1.0.9':
+    resolution: {integrity: sha512-GdCzb0G2WauDfJhLYHQ2Y+56d0kWS7okxzgEeZAlzzYay10r/zduBNdhRcgRSU5Xo8tYYKQyh9FnxHV1nj8zIA==}
 
   '@tanstack/devtools-event-client@0.4.3':
     resolution: {integrity: sha512-OZI6QyULw0FI0wjgmeYzCIfbgPsOEzwJtCpa69XrfLMtNXLGnz3d/dIabk7frg0TmHo+Ah49w5I4KC7Tufwsvw==}
@@ -7308,8 +7308,8 @@ packages:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  ai@6.0.158:
-    resolution: {integrity: sha512-gLTp1UXFtMqKUi3XHs33K7UFglbvojkxF/aq337TxnLGOhHIW9+GyP2jwW4hYX87f1es+wId3VQoPRRu9zEStQ==}
+  ai@6.0.159:
+    resolution: {integrity: sha512-S18ozG7Dkm3Ud1tzOtAK5acczD4vygfml80RkpM9VWMFpvAFwAKSHaGYkATvPQHIE+VpD1tJY9zcTXLZ/zR5cw==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -11394,8 +11394,8 @@ packages:
     resolution: {integrity: sha512-7a70Nsot+EMX9fFU3064K/kdHWZqGVY+BADLyXc8Dfv+mTLLVl6JzJpPaCZ2kQL9gIJvKXSLMHhqdRRjwQeFtw==}
     engines: {node: ^10 || ^12 || >=14}
 
-  posthog-js@1.367.0:
-    resolution: {integrity: sha512-jWNwB8XjlVUC9PbGaIlmsyohUDMBrwf7cvLuOY3lIOmWVO3L6VxTE3GZShjxpFKQtmWcPxFbf1hcbct1YCb6xg==}
+  posthog-js@1.368.0:
+    resolution: {integrity: sha512-Smh2Q49oIOzGph73A3dLXCjepze8Nk0ApPtbJvbARFXI8XQp0mD+ia0RFcYQ25m2+PA1ViE8pR+Ga8yG7awzsw==}
 
   posthog-node@5.29.2:
     resolution: {integrity: sha512-rI7kkF0XqDc0G1qjx+Hb4iuY9NAlL+XQNoGOpnEpRNTUcXvjY6WlsRGZ9m2whgc39emrrYdszi/YT8wZkr2xsg==}
@@ -12594,8 +12594,8 @@ packages:
   tailwindcss@4.2.2:
     resolution: {integrity: sha512-KWBIxs1Xb6NoLdMVqhbhgwZf2PGBpPEiwOqgI4pFIYbNTfBXiKYyWoTsXgBQ9WFg/OlhnvHaY+AEpW7wSmFo2Q==}
 
-  takumi-js@1.0.8:
-    resolution: {integrity: sha512-MdfjLQMp8RoxmssFiS/hFBW/MuwE4kK3JT3apduFrFt9kAHPa530GTZU6C7uNVxI6DJODwtPwEbuo+GCIEiuog==}
+  takumi-js@1.0.9:
+    resolution: {integrity: sha512-R3PdMihWL30EYfHiqQq3yRyvEjyZrbUndtfV0lCaK4UJXdZuvPffEfc11iyQg3hzfrNXi5i/RBsTfJFR1/jQTg==}
 
   tapable@2.3.0:
     resolution: {integrity: sha512-g9ljZiwki/LfxmQADO3dEY1CbpmXT5Hm2fJ+QaGKwSXUylMybePR7/67YW7jOrrvjEgL1Fmz5kzyAjWVWLlucg==}
@@ -13765,17 +13765,17 @@ snapshots:
       '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
       zod: 4.3.6
 
-  '@ai-sdk/gateway@3.0.95(zod@4.3.6)':
+  '@ai-sdk/gateway@3.0.96(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider': 3.0.8
       '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
       '@vercel/oidc': 3.1.0
       zod: 4.3.6
 
-  '@ai-sdk/google-vertex@4.0.108(zod@4.3.6)':
+  '@ai-sdk/google-vertex@4.0.109(zod@4.3.6)':
     dependencies:
       '@ai-sdk/anthropic': 3.0.69(zod@4.3.6)
-      '@ai-sdk/google': 3.0.62(zod@4.3.6)
+      '@ai-sdk/google': 3.0.63(zod@4.3.6)
       '@ai-sdk/openai-compatible': 2.0.41(zod@4.3.6)
       '@ai-sdk/provider': 3.0.8
       '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
@@ -13784,7 +13784,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@ai-sdk/google@3.0.62(zod@4.3.6)':
+  '@ai-sdk/google@3.0.63(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider': 3.0.8
       '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
@@ -13813,10 +13813,10 @@ snapshots:
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/react@3.0.160(react@19.2.5)(zod@4.3.6)':
+  '@ai-sdk/react@3.0.161(react@19.2.5)(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
-      ai: 6.0.158(zod@4.3.6)
+      ai: 6.0.159(zod@4.3.6)
       react: 19.2.5
       swr: 2.3.8(react@19.2.5)
       throttleit: 2.1.0
@@ -13839,7 +13839,7 @@ snapshots:
 
   '@ant-design/cssinjs@2.0.2(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       '@emotion/hash': 0.8.0
       '@emotion/unitless': 0.7.5
       '@rc-component/util': 1.7.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -14736,7 +14736,7 @@ snapshots:
   '@emotion/babel-plugin@11.13.5':
     dependencies:
       '@babel/helper-module-imports': 7.28.6
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       '@emotion/hash': 0.9.2
       '@emotion/memoize': 0.9.0
       '@emotion/serialize': 1.3.3
@@ -14779,7 +14779,7 @@ snapshots:
 
   '@emotion/react@11.14.0(@types/react@19.2.14)(react@19.2.5)':
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       '@emotion/babel-plugin': 11.13.5
       '@emotion/cache': 11.14.0
       '@emotion/serialize': 1.3.3
@@ -16592,14 +16592,14 @@ snapshots:
   '@pagefind/windows-x64@1.5.2':
     optional: true
 
-  '@paper-design/shaders-react@0.0.74(@types/react@19.2.14)(react@19.2.5)':
+  '@paper-design/shaders-react@0.0.75(@types/react@19.2.14)(react@19.2.5)':
     dependencies:
-      '@paper-design/shaders': 0.0.74
+      '@paper-design/shaders': 0.0.75
       react: 19.2.5
     optionalDependencies:
       '@types/react': 19.2.14
 
-  '@paper-design/shaders@0.0.74': {}
+  '@paper-design/shaders@0.0.75': {}
 
   '@parcel/watcher-android-arm64@2.5.4':
     optional: true
@@ -16696,7 +16696,7 @@ snapshots:
 
   '@posthog/core@1.25.2': {}
 
-  '@posthog/types@1.367.0': {}
+  '@posthog/types@1.368.0': {}
 
   '@primer/octicons@19.21.1':
     dependencies:
@@ -18972,12 +18972,12 @@ snapshots:
       react: 19.2.5
       react-dom: 19.2.5(react@19.2.5)
 
-  '@react-three/drei@10.7.7(@react-three/fiber@9.5.0(@types/react@19.2.14)(immer@11.1.4)(react-dom@19.2.5(react@19.2.5))(react-native@0.83.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.5))(react@19.2.5)(three@0.183.2))(@types/react@19.2.14)(@types/three@0.183.1)(immer@11.1.4)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(three@0.183.2)':
+  '@react-three/drei@10.7.7(@react-three/fiber@9.6.0(@types/react@19.2.14)(immer@11.1.4)(react-dom@19.2.5(react@19.2.5))(react-native@0.83.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.5))(react@19.2.5)(three@0.183.2))(@types/react@19.2.14)(@types/three@0.183.1)(immer@11.1.4)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(three@0.183.2)':
     dependencies:
       '@babel/runtime': 7.28.6
       '@mediapipe/tasks-vision': 0.10.17
       '@monogrid/gainmap-js': 3.4.0(three@0.183.2)
-      '@react-three/fiber': 9.5.0(@types/react@19.2.14)(immer@11.1.4)(react-dom@19.2.5(react@19.2.5))(react-native@0.83.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.5))(react@19.2.5)(three@0.183.2)
+      '@react-three/fiber': 9.6.0(@types/react@19.2.14)(immer@11.1.4)(react-dom@19.2.5(react@19.2.5))(react-native@0.83.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.5))(react@19.2.5)(three@0.183.2)
       '@use-gesture/react': 10.3.1(react@19.2.5)
       camera-controls: 3.1.2(three@0.183.2)
       cross-env: 7.0.3
@@ -19005,9 +19005,9 @@ snapshots:
       - '@types/three'
       - immer
 
-  '@react-three/fiber@9.5.0(@types/react@19.2.14)(immer@11.1.4)(react-dom@19.2.5(react@19.2.5))(react-native@0.83.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.5))(react@19.2.5)(three@0.183.2)':
+  '@react-three/fiber@9.6.0(@types/react@19.2.14)(immer@11.1.4)(react-dom@19.2.5(react@19.2.5))(react-native@0.83.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.5))(react@19.2.5)(three@0.183.2)':
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       '@types/webxr': 0.5.24
       base64-js: 1.5.1
       buffer: 6.0.3
@@ -19018,7 +19018,7 @@ snapshots:
       suspend-react: 0.1.3(react@19.2.5)
       three: 0.183.2
       use-sync-external-store: 1.6.0(react@19.2.5)
-      zustand: 5.0.10(@types/react@19.2.14)(immer@11.1.4)(react@19.2.5)(use-sync-external-store@1.6.0(react@19.2.5))
+      zustand: 5.0.12(@types/react@19.2.14)(immer@11.1.4)(react@19.2.5)(use-sync-external-store@1.6.0(react@19.2.5))
     optionalDependencies:
       react-dom: 19.2.5(react@19.2.5)
       react-native: 0.83.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.5)
@@ -19735,55 +19735,55 @@ snapshots:
       postcss-selector-parser: 6.0.10
       tailwindcss: 4.2.2
 
-  '@takumi-rs/core-darwin-arm64@1.0.8':
+  '@takumi-rs/core-darwin-arm64@1.0.9':
     optional: true
 
-  '@takumi-rs/core-darwin-x64@1.0.8':
+  '@takumi-rs/core-darwin-x64@1.0.9':
     optional: true
 
-  '@takumi-rs/core-linux-arm64-gnu@1.0.8':
+  '@takumi-rs/core-linux-arm64-gnu@1.0.9':
     optional: true
 
-  '@takumi-rs/core-linux-arm64-musl@1.0.8':
+  '@takumi-rs/core-linux-arm64-musl@1.0.9':
     optional: true
 
-  '@takumi-rs/core-linux-x64-gnu@1.0.8':
+  '@takumi-rs/core-linux-x64-gnu@1.0.9':
     optional: true
 
-  '@takumi-rs/core-linux-x64-musl@1.0.8':
+  '@takumi-rs/core-linux-x64-musl@1.0.9':
     optional: true
 
-  '@takumi-rs/core-win32-arm64-msvc@1.0.8':
+  '@takumi-rs/core-win32-arm64-msvc@1.0.9':
     optional: true
 
-  '@takumi-rs/core-win32-x64-msvc@1.0.8':
+  '@takumi-rs/core-win32-x64-msvc@1.0.9':
     optional: true
 
-  '@takumi-rs/core@1.0.8(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
+  '@takumi-rs/core@1.0.9(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@takumi-rs/helpers': 1.0.8(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      '@takumi-rs/helpers': 1.0.9(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
     optionalDependencies:
-      '@takumi-rs/core-darwin-arm64': 1.0.8
-      '@takumi-rs/core-darwin-x64': 1.0.8
-      '@takumi-rs/core-linux-arm64-gnu': 1.0.8
-      '@takumi-rs/core-linux-arm64-musl': 1.0.8
-      '@takumi-rs/core-linux-x64-gnu': 1.0.8
-      '@takumi-rs/core-linux-x64-musl': 1.0.8
-      '@takumi-rs/core-win32-arm64-msvc': 1.0.8
-      '@takumi-rs/core-win32-x64-msvc': 1.0.8
+      '@takumi-rs/core-darwin-arm64': 1.0.9
+      '@takumi-rs/core-darwin-x64': 1.0.9
+      '@takumi-rs/core-linux-arm64-gnu': 1.0.9
+      '@takumi-rs/core-linux-arm64-musl': 1.0.9
+      '@takumi-rs/core-linux-x64-gnu': 1.0.9
+      '@takumi-rs/core-linux-x64-musl': 1.0.9
+      '@takumi-rs/core-win32-arm64-msvc': 1.0.9
+      '@takumi-rs/core-win32-x64-msvc': 1.0.9
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@takumi-rs/helpers@1.0.8(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
+  '@takumi-rs/helpers@1.0.9(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
     dependencies:
       react: 19.2.5
     optionalDependencies:
       react-dom: 19.2.5(react@19.2.5)
 
-  '@takumi-rs/wasm@1.0.8(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
+  '@takumi-rs/wasm@1.0.9(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@takumi-rs/helpers': 1.0.8(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      '@takumi-rs/helpers': 1.0.9(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
     transitivePeerDependencies:
       - react
       - react-dom
@@ -20558,9 +20558,9 @@ snapshots:
       screenfull: 5.2.0
       tslib: 2.8.1
 
-  ai@6.0.158(zod@4.3.6):
+  ai@6.0.159(zod@4.3.6):
     dependencies:
-      '@ai-sdk/gateway': 3.0.95(zod@4.3.6)
+      '@ai-sdk/gateway': 3.0.96(zod@4.3.6)
       '@ai-sdk/provider': 3.0.8
       '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
       '@opentelemetry/api': 1.9.0
@@ -20828,7 +20828,7 @@ snapshots:
 
   babel-plugin-macros@3.1.0:
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       cosmiconfig: 7.1.0
       resolve: 1.22.11
 
@@ -21910,7 +21910,7 @@ snapshots:
 
   dom-helpers@5.2.1:
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       csstype: 3.2.3
 
   dom-serializer@2.0.0:
@@ -25823,7 +25823,7 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  posthog-js@1.367.0:
+  posthog-js@1.368.0:
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/api-logs': 0.208.0
@@ -25831,7 +25831,7 @@ snapshots:
       '@opentelemetry/resources': 2.3.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-logs': 0.208.0(@opentelemetry/api@1.9.0)
       '@posthog/core': 1.25.2
-      '@posthog/types': 1.367.0
+      '@posthog/types': 1.368.0
       core-js: 3.47.0
       dompurify: 3.3.2
       fflate: 0.4.8
@@ -27606,11 +27606,11 @@ snapshots:
 
   tailwindcss@4.2.2: {}
 
-  takumi-js@1.0.8(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
+  takumi-js@1.0.9(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
     dependencies:
-      '@takumi-rs/core': 1.0.8(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
-      '@takumi-rs/helpers': 1.0.8(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
-      '@takumi-rs/wasm': 1.0.8(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      '@takumi-rs/core': 1.0.9(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      '@takumi-rs/helpers': 1.0.9(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      '@takumi-rs/wasm': 1.0.9(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
     transitivePeerDependencies:
       - react
       - react-dom
