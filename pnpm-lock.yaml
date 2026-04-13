@@ -225,8 +225,8 @@ importers:
         specifier: ^5.4.0
         version: 5.4.0(@lobehub/ui@4.17.0)(@types/react@19.2.14)(antd@6.1.4(date-fns@4.1.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@mantine/hooks':
-        specifier: ^9.0.1
-        version: 9.0.1(react@19.2.5)
+        specifier: ^9.0.2
+        version: 9.0.2(react@19.2.5)
       '@mdx-js/loader':
         specifier: ^3.1.1
         version: 3.1.1
@@ -366,8 +366,8 @@ importers:
         specifier: ^2.0.7
         version: 2.0.7(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       takumi-js:
-        specifier: ^1.0.7
-        version: 1.0.7(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+        specifier: ^1.0.8
+        version: 1.0.8(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       use-context-selector:
         specifier: ^2.0.0
         version: 2.0.0(react@19.2.5)(scheduler@0.27.0)
@@ -659,8 +659,8 @@ importers:
         specifier: ^1.1.6
         version: 1.1.6(react@19.2.5)
       '@mantine/hooks':
-        specifier: ^9.0.1
-        version: 9.0.1(react@19.2.5)
+        specifier: ^9.0.2
+        version: 9.0.2(react@19.2.5)
       '@repo/internationalization':
         specifier: workspace:*
         version: link:../internationalization
@@ -732,8 +732,8 @@ importers:
         specifier: ^1.86.0
         version: 1.86.0
       '@mantine/hooks':
-        specifier: ^9.0.1
-        version: 9.0.1(react@19.2.5)
+        specifier: ^9.0.2
+        version: 9.0.2(react@19.2.5)
       '@next/third-parties':
         specifier: 16.2.3
         version: 16.2.3(next@16.2.3(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react@19.2.5)
@@ -758,6 +758,9 @@ importers:
       '@react-three/fiber':
         specifier: ^9.5.0
         version: 9.5.0(@types/react@19.2.14)(immer@11.1.4)(react-dom@19.2.5(react@19.2.5))(react-native@0.83.1(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.5))(react@19.2.5)(three@0.183.2)
+      '@repo/analytics':
+        specifier: workspace:*
+        version: link:../analytics
       '@repo/internationalization':
         specifier: workspace:*
         version: link:../internationalization
@@ -985,8 +988,8 @@ importers:
         specifier: 19.2.5
         version: 19.2.5(react@19.2.5)
       resend:
-        specifier: ^6.10.0
-        version: 6.10.0(@react-email/render@2.0.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5))
+        specifier: ^6.11.0
+        version: 6.11.0(@react-email/render@2.0.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5))
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -3071,8 +3074,8 @@ packages:
       react: ^19.0.0
       react-dom: ^19.0.0
 
-  '@mantine/hooks@9.0.1':
-    resolution: {integrity: sha512-WM/GbSD8MxZoy3X2IdrbxLq0/0ca4zMA5m7lGw9k1Vecqt1dC/nBed0IJd/w2HGs6avGs9CPlvQ8C4yBEcSnLA==}
+  '@mantine/hooks@9.0.2':
+    resolution: {integrity: sha512-luCVX4okiAZaSxuBYPtyPJJT8RwZyM2JUkSD4KWefzzcDbkKGHT4d4pHrvViwn5QcH2dY2j/42lj7ZTGX2yncw==}
     peerDependencies:
       react: ^19.2.0
 
@@ -6624,64 +6627,64 @@ packages:
     peerDependencies:
       tailwindcss: '>=3.0.0 || insiders || >=4.0.0-alpha.20 || >=4.0.0-beta.1'
 
-  '@takumi-rs/core-darwin-arm64@1.0.7':
-    resolution: {integrity: sha512-hzEU8jcHABmrBSI1UTcfdj0Du8aTB+gZ4yS9pEV8dk+Bb7HxnUK3tso/h5DabyymdrnuLCRruqj87gRl/MJJ+g==}
+  '@takumi-rs/core-darwin-arm64@1.0.8':
+    resolution: {integrity: sha512-+t9NunGjVlEvFWW+swlWfJpwGyo0tacGtX1P5wxYw8ZYUwYbqBvOqUn0jwHRTJmo0M9Dys69xlTm8j1X7ae/gA==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [arm64]
     os: [darwin]
 
-  '@takumi-rs/core-darwin-x64@1.0.7':
-    resolution: {integrity: sha512-2ZE9m3q89rWAZ9ge1wfBU0Mgq4s5j09g7gplbg2Fx5cQSXjYTnpLo6D+TaPi+SqczKU+maKWuHO4qe2xw45R6Q==}
+  '@takumi-rs/core-darwin-x64@1.0.8':
+    resolution: {integrity: sha512-6hvv7bcCCFYNcd7T61wps5RNk9DcTAx1fwcVkgNI5YTwNVfdd4jUJ78zi3ifR5Lin40bzLOJ15b4C5u85tPDFg==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [x64]
     os: [darwin]
 
-  '@takumi-rs/core-linux-arm64-gnu@1.0.7':
-    resolution: {integrity: sha512-VPUNglZjtdmXLatUjq/03eopZk00ubX3mpUbj6urgApMW4uA1o9JrMZenFOc8IDRv1kCEOg1HtkyhZX1uWzAsQ==}
+  '@takumi-rs/core-linux-arm64-gnu@1.0.8':
+    resolution: {integrity: sha512-v+4TyBdejPOp88jbiLrAXtfudb8irF97pATwRWw2qt0MhKCx+52/iXbSfQxxpMQ0Z5MleqaoxiUrlnBqclKTpQ==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@takumi-rs/core-linux-arm64-musl@1.0.7':
-    resolution: {integrity: sha512-yy0RbT60ZP2OtLpfyW0qERiupBjcs0HbSBCa1qpiLCzuIVRgPLa5PADUXHIoNto7CwYz8UZ9h9XoWzqHGE77zg==}
+  '@takumi-rs/core-linux-arm64-musl@1.0.8':
+    resolution: {integrity: sha512-uTpjEzr6w+RJcqY+lpb31MzwsUcJVJ7uFehR8A8rNFImyt6TAT0ZEPwZeA7744mDBXnsAnM8AUcSbkkiGCrtZg==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@takumi-rs/core-linux-x64-gnu@1.0.7':
-    resolution: {integrity: sha512-wAwA+XWcFbkM33JPsQ/ll9gLRXA+MmysbWdX7tnN9E+2ewsnflsKJiPx5VGmNlH2ZplqHwBT8hanEEIRoitCmQ==}
+  '@takumi-rs/core-linux-x64-gnu@1.0.8':
+    resolution: {integrity: sha512-oiTi9MRso3V4tLfhbYDGA+1Z7YmWsCpTteNWKrhNRvP0Kk7fZkkHz389PyTkt9uQRaP5Ii6JlQJmoJaid6aQmg==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@takumi-rs/core-linux-x64-musl@1.0.7':
-    resolution: {integrity: sha512-xt1QT1kfIVNM2r0JCgAZwpIobYGbnCb4OfauPG5vI5hIO/kblekk+ucD9CEDAaCn6tcfmErpOpE5HmRAzBLIZA==}
+  '@takumi-rs/core-linux-x64-musl@1.0.8':
+    resolution: {integrity: sha512-hS5F/fgdo0vEV/Un5bA7U1T47XBsL75s9jE6dUBRqXITuj9+biJVvG37Xs0bb5XxHYrKPfvaQyglyfmgzhiGjA==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@takumi-rs/core-win32-arm64-msvc@1.0.7':
-    resolution: {integrity: sha512-aLOK1wk7fNniOcdCIGkzjG+Knw4+Un8p++f/ETd4pON5G4A+rljWjvDVJwyGJ4UyzbdLrMwNQPwgKE6k1cn34w==}
+  '@takumi-rs/core-win32-arm64-msvc@1.0.8':
+    resolution: {integrity: sha512-yjtPIHAK/4bQD7adNRHWNfvS8SacqRMiGRA/6AomMo2DrGzD4gNykmeUZrGVeo+AO2hhtPJNOOmiToda7iAprw==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [arm64]
     os: [win32]
 
-  '@takumi-rs/core-win32-x64-msvc@1.0.7':
-    resolution: {integrity: sha512-lp1eAO8BFNisZ8kv+vYMvFCtC3aJm8sokuAWiPi4jCLy+N3cKm6uIYEbZmqVcgzpZJ5POKfxwi7bEmyRAXnsMA==}
+  '@takumi-rs/core-win32-x64-msvc@1.0.8':
+    resolution: {integrity: sha512-W8qDOE+abj8NvvJlrElg5VvSVrr/MeZZm8HZSYzjNC5U17mNEDCjFbJBlfS+WocdxBHPcfhzJ8gjdSX2qkdKyA==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [x64]
     os: [win32]
 
-  '@takumi-rs/core@1.0.7':
-    resolution: {integrity: sha512-3cSyyumsTRtZY4O2Lm1XWBKxbDkYNg/A1Ce7qsCOvKqy4Zu7S53MMYTchPRZ1h13KqHeb40P6ZI6WXqbaV+lUw==}
+  '@takumi-rs/core@1.0.8':
+    resolution: {integrity: sha512-2sOt45Mw/ymuDCyil0jscWS9hSRKgztOJGF1MfGYRrAQTzEA8txPzQh4petkiIOo0EcU0NYWAQHdvneDT+r67Q==}
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
 
-  '@takumi-rs/helpers@1.0.7':
-    resolution: {integrity: sha512-+oFCKunKgtFbL8Ate9IiOvwXr6JII/YJq/IVzu4LRb9RZg3yL9tNUS5w15UcTq2DQz2AHTkbinf9E5f5ZqxX8w==}
+  '@takumi-rs/helpers@1.0.8':
+    resolution: {integrity: sha512-IRGrcqKOSoFavJp2pdCJWfvWtWZiRTE9cHM9y4zi3liQcRZ+Mk7h86+YodYl8FpA7rJCCk5Itdzm8wPCDYPDUg==}
     peerDependencies:
       react: ^19.2.5
       react-dom: ^18.0.0 || ^19.0.0
@@ -6689,8 +6692,8 @@ packages:
       react-dom:
         optional: true
 
-  '@takumi-rs/wasm@1.0.7':
-    resolution: {integrity: sha512-G7lyuZpkMceBjRJfHc5XEBppeukCGcXAoS5LCvyqDc0dl/L8q2DNXU2Wwp/7848YwUhtg1esuCb5kAqU0yhySg==}
+  '@takumi-rs/wasm@1.0.8':
+    resolution: {integrity: sha512-1YKYVQ+PiIwg7PhycdBoa8Zo2/ORMk36QA+Ts80tRZSua2SIX7K10zq+NEndHF5rwxsiCqr7CbfmRHoetLt/mA==}
 
   '@tanstack/devtools-event-client@0.4.3':
     resolution: {integrity: sha512-OZI6QyULw0FI0wjgmeYzCIfbgPsOEzwJtCpa69XrfLMtNXLGnz3d/dIabk7frg0TmHo+Ah49w5I4KC7Tufwsvw==}
@@ -11994,8 +11997,8 @@ packages:
   reselect@5.1.1:
     resolution: {integrity: sha512-K/BG6eIky/SBpzfHZv/dd+9JBFiS4SWV7FIujVyJRux6e45+73RaUHXLmIR1f7WOMaQ0U1km6qwklRQxpJJY0w==}
 
-  resend@6.10.0:
-    resolution: {integrity: sha512-i7CwZpYj4Oho1RxsTpLcCUkO08+HiL4NXrm6jLJ2WzJ89UGI8eROSieLONJA3hnUrf1OYnCyfq5F6POnHUMv1Q==}
+  resend@6.11.0:
+    resolution: {integrity: sha512-S9gxOccfwc+E6Cr3q28Gu8NkiIjYlYPlj9rqk4zkIuzlEoh8sWu/IvJSg7U7t+o3g0Ov2IOCzcneUaCi/M/WdQ==}
     engines: {node: '>=20'}
     peerDependencies:
       '@react-email/render': '*'
@@ -12563,8 +12566,8 @@ packages:
   svix@1.84.1:
     resolution: {integrity: sha512-K8DPPSZaW/XqXiz1kEyzSHYgmGLnhB43nQCMeKjWGCUpLIpAMMM8kx3rVVOSm6Bo6EHyK1RQLPT4R06skM/MlQ==}
 
-  svix@1.88.0:
-    resolution: {integrity: sha512-vm/JrrUd3bVyBE+3L33TIyVSs8gS5fYx7lrISvKlDJXTYX1ACH4REX8P1tHxsSKoZi/rvifM1t0XRc5Vc45THw==}
+  svix@1.90.0:
+    resolution: {integrity: sha512-ljkZuyy2+IBEoESkIpn8sLM+sxJHQcPxlZFxU+nVDhltNfUMisMBzWX/UR8SjEnzoI28ZjCzMbmYAPwSTucoMw==}
 
   swr@2.3.8:
     resolution: {integrity: sha512-gaCPRVoMq8WGDcWj9p4YWzCMPHzE0WNl6W8ADIx9c3JBEIdMkJGMzW+uzXvxHMltwcYACr9jP+32H8/hgwMR7w==}
@@ -12591,8 +12594,8 @@ packages:
   tailwindcss@4.2.2:
     resolution: {integrity: sha512-KWBIxs1Xb6NoLdMVqhbhgwZf2PGBpPEiwOqgI4pFIYbNTfBXiKYyWoTsXgBQ9WFg/OlhnvHaY+AEpW7wSmFo2Q==}
 
-  takumi-js@1.0.7:
-    resolution: {integrity: sha512-XCyYHbLg7XrbN4xGROuuHdr9NtdSo2fGRGrVjguaKOsTMNzvUAzlVhbpgNtU3MRSYW5y4em3xYbm81pMlf46uQ==}
+  takumi-js@1.0.8:
+    resolution: {integrity: sha512-MdfjLQMp8RoxmssFiS/hFBW/MuwE4kK3JT3apduFrFt9kAHPa530GTZU6C7uNVxI6DJODwtPwEbuo+GCIEiuog==}
 
   tapable@2.3.0:
     resolution: {integrity: sha512-g9ljZiwki/LfxmQADO3dEY1CbpmXT5Hm2fJ+QaGKwSXUylMybePR7/67YW7jOrrvjEgL1Fmz5kzyAjWVWLlucg==}
@@ -13829,7 +13832,7 @@ snapshots:
   '@ant-design/cssinjs-utils@2.0.2(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
     dependencies:
       '@ant-design/cssinjs': 2.0.2(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       '@rc-component/util': 1.7.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       react: 19.2.5
       react-dom: 19.2.5(react@19.2.5)
@@ -13861,7 +13864,7 @@ snapshots:
 
   '@ant-design/react-slick@2.0.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       clsx: 2.1.1
       json2mq: 0.2.0
       react: 19.2.5
@@ -15739,7 +15742,7 @@ snapshots:
       - supports-color
       - vue
 
-  '@mantine/hooks@9.0.1(react@19.2.5)':
+  '@mantine/hooks@9.0.2(react@19.2.5)':
     dependencies:
       react: 19.2.5
 
@@ -17497,7 +17500,7 @@ snapshots:
 
   '@rc-component/async-validator@5.1.0':
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
 
   '@rc-component/cascader@1.11.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
     dependencies:
@@ -17517,7 +17520,7 @@ snapshots:
 
   '@rc-component/collapse@1.1.2(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       '@rc-component/motion': 1.1.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@rc-component/util': 1.7.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       clsx: 2.1.1
@@ -17619,7 +17622,7 @@ snapshots:
 
   '@rc-component/mini-decimal@1.1.0':
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
 
   '@rc-component/motion@1.1.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
     dependencies:
@@ -17644,7 +17647,7 @@ snapshots:
 
   '@rc-component/overflow@1.0.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       '@rc-component/resize-observer': 1.0.1(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@rc-component/util': 1.7.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       clsx: 2.1.1
@@ -17673,7 +17676,7 @@ snapshots:
 
   '@rc-component/portal@1.1.2(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       classnames: 2.5.1
       rc-util: 5.44.4(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       react: 19.2.5
@@ -17695,7 +17698,7 @@ snapshots:
 
   '@rc-component/qrcode@1.1.1(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       react: 19.2.5
       react-dom: 19.2.5(react@19.2.5)
 
@@ -17714,7 +17717,7 @@ snapshots:
 
   '@rc-component/segmented@1.3.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       '@rc-component/motion': 1.1.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@rc-component/util': 1.7.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       clsx: 2.1.1
@@ -17819,7 +17822,7 @@ snapshots:
 
   '@rc-component/trigger@2.3.1(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       '@rc-component/portal': 1.1.2(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       classnames: 2.5.1
       rc-motion: 2.9.5(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -17854,7 +17857,7 @@ snapshots:
 
   '@rc-component/virtual-list@1.0.2(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       '@rc-component/resize-observer': 1.0.1(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@rc-component/util': 1.7.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       clsx: 2.1.1
@@ -19732,55 +19735,55 @@ snapshots:
       postcss-selector-parser: 6.0.10
       tailwindcss: 4.2.2
 
-  '@takumi-rs/core-darwin-arm64@1.0.7':
+  '@takumi-rs/core-darwin-arm64@1.0.8':
     optional: true
 
-  '@takumi-rs/core-darwin-x64@1.0.7':
+  '@takumi-rs/core-darwin-x64@1.0.8':
     optional: true
 
-  '@takumi-rs/core-linux-arm64-gnu@1.0.7':
+  '@takumi-rs/core-linux-arm64-gnu@1.0.8':
     optional: true
 
-  '@takumi-rs/core-linux-arm64-musl@1.0.7':
+  '@takumi-rs/core-linux-arm64-musl@1.0.8':
     optional: true
 
-  '@takumi-rs/core-linux-x64-gnu@1.0.7':
+  '@takumi-rs/core-linux-x64-gnu@1.0.8':
     optional: true
 
-  '@takumi-rs/core-linux-x64-musl@1.0.7':
+  '@takumi-rs/core-linux-x64-musl@1.0.8':
     optional: true
 
-  '@takumi-rs/core-win32-arm64-msvc@1.0.7':
+  '@takumi-rs/core-win32-arm64-msvc@1.0.8':
     optional: true
 
-  '@takumi-rs/core-win32-x64-msvc@1.0.7':
+  '@takumi-rs/core-win32-x64-msvc@1.0.8':
     optional: true
 
-  '@takumi-rs/core@1.0.7(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
+  '@takumi-rs/core@1.0.8(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@takumi-rs/helpers': 1.0.7(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      '@takumi-rs/helpers': 1.0.8(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
     optionalDependencies:
-      '@takumi-rs/core-darwin-arm64': 1.0.7
-      '@takumi-rs/core-darwin-x64': 1.0.7
-      '@takumi-rs/core-linux-arm64-gnu': 1.0.7
-      '@takumi-rs/core-linux-arm64-musl': 1.0.7
-      '@takumi-rs/core-linux-x64-gnu': 1.0.7
-      '@takumi-rs/core-linux-x64-musl': 1.0.7
-      '@takumi-rs/core-win32-arm64-msvc': 1.0.7
-      '@takumi-rs/core-win32-x64-msvc': 1.0.7
+      '@takumi-rs/core-darwin-arm64': 1.0.8
+      '@takumi-rs/core-darwin-x64': 1.0.8
+      '@takumi-rs/core-linux-arm64-gnu': 1.0.8
+      '@takumi-rs/core-linux-arm64-musl': 1.0.8
+      '@takumi-rs/core-linux-x64-gnu': 1.0.8
+      '@takumi-rs/core-linux-x64-musl': 1.0.8
+      '@takumi-rs/core-win32-arm64-msvc': 1.0.8
+      '@takumi-rs/core-win32-x64-msvc': 1.0.8
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@takumi-rs/helpers@1.0.7(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
+  '@takumi-rs/helpers@1.0.8(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
     dependencies:
       react: 19.2.5
     optionalDependencies:
       react-dom: 19.2.5(react@19.2.5)
 
-  '@takumi-rs/wasm@1.0.7(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
+  '@takumi-rs/wasm@1.0.8(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@takumi-rs/helpers': 1.0.7(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      '@takumi-rs/helpers': 1.0.8(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
     transitivePeerDependencies:
       - react
       - react-dom
@@ -20542,7 +20545,7 @@ snapshots:
 
   ahooks@3.9.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       '@types/js-cookie': 3.0.6
       dayjs: 1.11.19
       intersection-observer: 0.12.2
@@ -20624,7 +20627,7 @@ snapshots:
       '@ant-design/fast-color': 3.0.0
       '@ant-design/icons': 6.1.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@ant-design/react-slick': 2.0.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       '@rc-component/cascader': 1.11.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@rc-component/checkbox': 1.0.1(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@rc-component/collapse': 1.1.2(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -24217,7 +24220,7 @@ snapshots:
 
   metro-runtime@0.83.3:
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       flow-enums-runtime: 0.0.6
     optional: true
 
@@ -26030,7 +26033,7 @@ snapshots:
 
   rc-collapse@4.0.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       classnames: 2.5.1
       rc-motion: 2.9.5(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       rc-util: 5.44.4(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -26039,7 +26042,7 @@ snapshots:
 
   rc-dialog@9.6.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       '@rc-component/portal': 1.1.2(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       classnames: 2.5.1
       rc-motion: 2.9.5(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -26049,14 +26052,14 @@ snapshots:
 
   rc-footer@0.6.8(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       classnames: 2.5.1
       react: 19.2.5
       react-dom: 19.2.5(react@19.2.5)
 
   rc-image@7.12.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       '@rc-component/portal': 1.1.2(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       classnames: 2.5.1
       rc-dialog: 9.6.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -26067,7 +26070,7 @@ snapshots:
 
   rc-input-number@9.5.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       '@rc-component/mini-decimal': 1.1.0
       classnames: 2.5.1
       rc-input: 1.8.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -26077,7 +26080,7 @@ snapshots:
 
   rc-input@1.8.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       classnames: 2.5.1
       rc-util: 5.44.4(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       react: 19.2.5
@@ -26085,7 +26088,7 @@ snapshots:
 
   rc-menu@9.16.1(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       '@rc-component/trigger': 2.3.1(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       classnames: 2.5.1
       rc-motion: 2.9.5(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -26096,7 +26099,7 @@ snapshots:
 
   rc-motion@2.9.5(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       classnames: 2.5.1
       rc-util: 5.44.4(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       react: 19.2.5
@@ -26104,7 +26107,7 @@ snapshots:
 
   rc-overflow@1.5.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       classnames: 2.5.1
       rc-resize-observer: 1.4.3(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       rc-util: 5.44.4(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -26113,7 +26116,7 @@ snapshots:
 
   rc-resize-observer@1.4.3(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       classnames: 2.5.1
       rc-util: 5.44.4(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       react: 19.2.5
@@ -26122,7 +26125,7 @@ snapshots:
 
   rc-util@5.44.4(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       react: 19.2.5
       react-dom: 19.2.5(react@19.2.5)
       react-is: 18.3.1
@@ -26827,10 +26830,10 @@ snapshots:
 
   reselect@5.1.1: {}
 
-  resend@6.10.0(@react-email/render@2.0.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5)):
+  resend@6.11.0(@react-email/render@2.0.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5)):
     dependencies:
       postal-mime: 2.7.4
-      svix: 1.88.0
+      svix: 1.90.0
     optionalDependencies:
       '@react-email/render': 2.0.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
 
@@ -27579,7 +27582,7 @@ snapshots:
       standardwebhooks: 1.0.0
       uuid: 10.0.0
 
-  svix@1.88.0:
+  svix@1.90.0:
     dependencies:
       standardwebhooks: 1.0.0
       uuid: 10.0.0
@@ -27603,11 +27606,11 @@ snapshots:
 
   tailwindcss@4.2.2: {}
 
-  takumi-js@1.0.7(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
+  takumi-js@1.0.8(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
     dependencies:
-      '@takumi-rs/core': 1.0.7(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
-      '@takumi-rs/helpers': 1.0.7(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
-      '@takumi-rs/wasm': 1.0.7(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      '@takumi-rs/core': 1.0.8(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      '@takumi-rs/helpers': 1.0.8(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      '@takumi-rs/wasm': 1.0.8(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
     transitivePeerDependencies:
       - react
       - react-dom
