@@ -195,8 +195,15 @@ function useResolvedTryoutPartValue({
         tryoutSlug: tryout.slug,
       });
 
-      if (result.ok) {
+      if (result.kind === "started") {
         toast.success(tTryouts("start-part-success"), {
+          position: "bottom-center",
+        });
+        return;
+      }
+
+      if (result.kind === "tryout-expired" || result.kind === "part-expired") {
+        toast.info(tTryouts("part-head-processing-expiry"), {
           position: "bottom-center",
         });
         return;
@@ -231,7 +238,7 @@ function useResolvedTryoutPartValue({
         tryoutSlug: tryout.slug,
       });
 
-      if (result.ok) {
+      if (result.kind === "completed") {
         goToSet();
         toast.success(tTryouts("complete-part-success"), {
           position: "bottom-center",
@@ -239,10 +246,7 @@ function useResolvedTryoutPartValue({
         return;
       }
 
-      if (
-        result.code === "TRYOUT_EXPIRED" ||
-        result.code === "TRYOUT_PART_EXPIRED"
-      ) {
+      if (result.kind === "tryout-expired") {
         toast.info(tTryouts("part-head-processing-expiry"), {
           position: "bottom-center",
         });

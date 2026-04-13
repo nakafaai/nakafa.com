@@ -5,6 +5,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { useTranslations } from "next-intl";
 import { useQueryState } from "nuqs";
 import { authClient } from "@/lib/auth/client";
+import { getSafeInternalRedirectPath } from "@/lib/auth/utils";
 
 interface Props {
   redirect?: string;
@@ -18,7 +19,8 @@ export function AuthGoogle({ redirect }: Props) {
   const callbackURL = redirect ?? redirectQuery ?? "/";
 
   function handleGoogleSignIn() {
-    const validCallbackURL = checkIfValidUrl(callbackURL) ? callbackURL : "/";
+    const validCallbackURL = getSafeInternalRedirectPath(callbackURL) ?? "/";
+
     authClient.signIn.social({
       provider: "google",
       callbackURL: validCallbackURL,
@@ -31,9 +33,4 @@ export function AuthGoogle({ redirect }: Props) {
       {t("continue-with-google")}
     </Button>
   );
-}
-
-function checkIfValidUrl(url: string): boolean {
-  // Somehow, if callbackURL contains a comma, the sign in fails (edge case?)
-  return !url.includes(",");
 }

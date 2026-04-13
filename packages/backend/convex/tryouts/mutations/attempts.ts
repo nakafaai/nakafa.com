@@ -31,7 +31,51 @@ import {
   tryoutProductValidator,
 } from "@repo/backend/convex/tryouts/products";
 import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
+import { getConvexErrorCode } from "@repo/backend/convex/utils/error";
+import { logger } from "@repo/backend/convex/utils/logger";
 import { ConvexError, v } from "convex/values";
+
+const startTryoutResultValidator = v.union(
+  v.object({
+    kind: v.literal("started"),
+  }),
+  v.object({
+    kind: v.literal("competition-attempt-used"),
+  }),
+  v.object({
+    kind: v.literal("requires-access"),
+  }),
+  v.object({
+    kind: v.literal("not-ready"),
+  }),
+  v.object({
+    kind: v.literal("not-found"),
+  }),
+  v.object({
+    kind: v.literal("inactive"),
+  })
+);
+
+const startPartResultValidator = v.union(
+  v.object({
+    kind: v.literal("started"),
+  }),
+  v.object({
+    kind: v.literal("tryout-expired"),
+  }),
+  v.object({
+    kind: v.literal("part-expired"),
+  })
+);
+
+const completePartResultValidator = v.union(
+  v.object({
+    kind: v.literal("completed"),
+  }),
+  v.object({
+    kind: v.literal("tryout-expired"),
+  })
+);
 
 /** Starts or resumes one authenticated tryout attempt for a product slug. */
 export const startTryout = mutation({
@@ -40,12 +84,42 @@ export const startTryout = mutation({
     locale: localeValidator,
     tryoutSlug: v.string(),
   },
-  returns: v.null(),
+  returns: startTryoutResultValidator,
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
     const now = Date.now();
-    const tryout = await loadStartableTryout(ctx, args);
+    let tryout: Awaited<ReturnType<typeof loadStartableTryout>>;
+
+    try {
+      tryout = await loadStartableTryout(ctx, args);
+    } catch (error) {
+      const errorCode = getConvexErrorCode(error);
+
+      if (errorCode === "TRYOUT_NOT_FOUND") {
+        logger.warn("Tryout start denied because the tryout was not found", {
+          locale: args.locale,
+          product: args.product,
+          tryoutSlug: args.tryoutSlug,
+          userId,
+        });
+
+        return { kind: "not-found" as const };
+      }
+
+      if (errorCode === "TRYOUT_INACTIVE") {
+        logger.warn("Tryout start denied because the tryout is inactive", {
+          locale: args.locale,
+          product: args.product,
+          tryoutSlug: args.tryoutSlug,
+          userId,
+        });
+
+        return { kind: "inactive" as const };
+      }
+
+      throw error;
+    }
 
     const [scaleVersion, existingAttempt] = await Promise.all([
       getLatestScaleVersionForTryout(ctx.db, tryout._id),
@@ -59,10 +133,15 @@ export const startTryout = mutation({
     ]);
 
     if (!scaleVersion) {
-      throw new ConvexError({
-        code: "TRYOUT_NOT_READY",
-        message: "This tryout is not ready for official scoring yet.",
+      logger.warn("Tryout start denied because scoring is not ready", {
+        locale: args.locale,
+        product: args.product,
+        tryoutId: tryout._id,
+        tryoutSlug: tryout.slug,
+        userId,
       });
+
+      return { kind: "not-ready" as const };
     }
 
     if (
@@ -73,7 +152,7 @@ export const startTryout = mutation({
         tryoutAttempt: existingAttempt,
       }))
     ) {
-      return null;
+      return { kind: "started" as const };
     }
 
     const [eventEntitlements, activeSubscription] = await Promise.all([
@@ -158,18 +237,35 @@ export const startTryout = mutation({
 
     if (!accessSource) {
       if (hasUsedCompetitionAttempt) {
-        throw new ConvexError({
-          code: "COMPETITION_ATTEMPT_ALREADY_USED",
-          message:
-            "This event only counts your first tryout attempt. You can still review that result anytime.",
-        });
+        logger.warn(
+          "Tryout start denied because the counted competition attempt was already used",
+          {
+            accessCampaignId: activeCompetitionCampaignId ?? undefined,
+            locale: args.locale,
+            product: args.product,
+            tryoutId: tryout._id,
+            tryoutSlug: tryout.slug,
+            userId,
+          }
+        );
+
+        return { kind: "competition-attempt-used" as const };
       }
 
-      throw new ConvexError({
-        code: "TRYOUT_ACCESS_REQUIRED",
-        message:
-          "You need an active event access or Pro subscription to start this tryout.",
-      });
+      logger.warn(
+        "Tryout start denied because no active access source was found",
+        {
+          accessPassCampaignId: accessPassCampaignId ?? undefined,
+          activeCompetitionCampaignId: activeCompetitionCampaignId ?? undefined,
+          locale: args.locale,
+          product: args.product,
+          tryoutId: tryout._id,
+          tryoutSlug: tryout.slug,
+          userId,
+        }
+      );
+
+      return { kind: "requires-access" as const };
     }
 
     const partSetSnapshots = await loadTryoutPartSnapshots(ctx.db, {
@@ -234,7 +330,7 @@ export const startTryout = mutation({
       }
     );
 
-    return null;
+    return { kind: "started" as const };
   },
 });
 
@@ -250,26 +346,60 @@ export const startPart = mutation({
     tryoutAttemptId: vv.id("tryoutAttempts"),
     partKey: tryoutPartKeyValidator,
   },
-  returns: v.null(),
+  returns: startPartResultValidator,
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
     const now = Date.now();
-    const { tryout, tryoutPartSnapshot } = await loadPartStartContext(ctx, {
-      now,
-      partKey: args.partKey,
-      tryoutAttemptId: args.tryoutAttemptId,
-      userId,
-    });
+    let tryout: Awaited<ReturnType<typeof loadPartStartContext>>["tryout"];
+    let tryoutPartSnapshot: Awaited<
+      ReturnType<typeof loadPartStartContext>
+    >["tryoutPartSnapshot"];
 
-    if (
-      await reuseExistingPartAttempt(ctx, {
+    try {
+      ({ tryout, tryoutPartSnapshot } = await loadPartStartContext(ctx, {
         now,
-        partIndex: tryoutPartSnapshot.partIndex,
+        partKey: args.partKey,
         tryoutAttemptId: args.tryoutAttemptId,
-      })
-    ) {
-      return null;
+        userId,
+      }));
+    } catch (error) {
+      if (getConvexErrorCode(error) === "TRYOUT_EXPIRED") {
+        logger.warn("Tryout part start denied because the tryout expired", {
+          partKey: args.partKey,
+          tryoutAttemptId: args.tryoutAttemptId,
+          userId,
+        });
+
+        return { kind: "tryout-expired" as const };
+      }
+
+      throw error;
+    }
+
+    try {
+      if (
+        await reuseExistingPartAttempt(ctx, {
+          now,
+          partIndex: tryoutPartSnapshot.partIndex,
+          tryoutAttemptId: args.tryoutAttemptId,
+        })
+      ) {
+        return { kind: "started" as const };
+      }
+    } catch (error) {
+      if (getConvexErrorCode(error) === "TRYOUT_PART_EXPIRED") {
+        logger.warn("Tryout part start denied because the part expired", {
+          partIndex: tryoutPartSnapshot.partIndex,
+          partKey: tryoutPartSnapshot.partKey,
+          tryoutAttemptId: args.tryoutAttemptId,
+          userId,
+        });
+
+        return { kind: "part-expired" as const };
+      }
+
+      throw error;
     }
 
     const set = await ctx.db.get("exerciseSets", tryoutPartSnapshot.setId);
@@ -282,7 +412,6 @@ export const startPart = mutation({
     }
 
     const questionCount = tryoutPartSnapshot.questionCount;
-
     const timeLimit =
       tryoutProductPolicies[tryout.product].getPartTimeLimitSeconds(
         questionCount
@@ -313,7 +442,7 @@ export const startPart = mutation({
       lastActivityAt: now,
     });
 
-    return null;
+    return { kind: "started" as const };
   },
 });
 
@@ -323,21 +452,45 @@ export const completePart = mutation({
     tryoutAttemptId: vv.id("tryoutAttempts"),
     partKey: tryoutPartKeyValidator,
   },
-  returns: v.null(),
+  returns: completePartResultValidator,
   handler: async (ctx, args) => {
     const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
     const now = Date.now();
+    let currentTryoutAttempt: Awaited<
+      ReturnType<typeof requireActiveTryoutAttemptAfterExpirySync>
+    >;
 
-    const tryoutAttempt = await requireOwnedTryoutAttempt(ctx, {
-      tryoutAttemptId: args.tryoutAttemptId,
-      userId,
-    });
-    const currentTryoutAttempt =
-      await requireActiveTryoutAttemptAfterExpirySync(ctx, {
-        now,
-        tryoutAttempt,
+    try {
+      const tryoutAttempt = await requireOwnedTryoutAttempt(ctx, {
+        tryoutAttemptId: args.tryoutAttemptId,
+        userId,
       });
+
+      currentTryoutAttempt = await requireActiveTryoutAttemptAfterExpirySync(
+        ctx,
+        {
+          now,
+          tryoutAttempt,
+        }
+      );
+    } catch (error) {
+      if (getConvexErrorCode(error) === "TRYOUT_EXPIRED") {
+        logger.warn(
+          "Tryout part completion denied because the tryout expired",
+          {
+            partKey: args.partKey,
+            tryoutAttemptId: args.tryoutAttemptId,
+            userId,
+          }
+        );
+
+        return { kind: "tryout-expired" as const };
+      }
+
+      throw error;
+    }
+
     const tryout = await ctx.db.get("tryouts", currentTryoutAttempt.tryoutId);
 
     if (!tryout) {
@@ -383,7 +536,7 @@ export const completePart = mutation({
     if (
       currentTryoutAttempt.completedPartIndices.includes(partAttempt.partIndex)
     ) {
-      return null;
+      return { kind: "completed" as const };
     }
 
     await finalizeTryoutPartAttempt({
@@ -414,6 +567,6 @@ export const completePart = mutation({
       userId,
     });
 
-    return null;
+    return { kind: "completed" as const };
   },
 });
