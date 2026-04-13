@@ -7,6 +7,7 @@ import {
   Tick01Icon,
   UnavailableIcon,
 } from "@hugeicons/core-free-icons";
+import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -49,6 +50,58 @@ export function EventAccessPage({ code }: Props) {
     api.tryoutAccess.mutations.redeem.redeemEventAccess
   );
 
+  /** Reports unexpected redeem failures while preserving user-facing toast flows. */
+  function handleRedeemError(error: unknown) {
+    if (error instanceof ConvexError) {
+      const errorData = error.data;
+
+      if (typeof errorData === "object" && errorData !== null) {
+        const errorCode = "code" in errorData ? errorData.code : undefined;
+
+        if (errorCode === "EVENT_DISABLED") {
+          toast.error(tEvent("unavailable-disabled"), {
+            position: "bottom-center",
+          });
+          return;
+        }
+
+        if (errorCode === "EVENT_NOT_STARTED") {
+          toast.error(tEvent("unavailable-not-started"), {
+            position: "bottom-center",
+          });
+          return;
+        }
+
+        if (errorCode === "EVENT_ENDED") {
+          toast.error(tEvent("unavailable-ended"), {
+            position: "bottom-center",
+          });
+          return;
+        }
+
+        captureException(error, {
+          ...(typeof errorCode === "string"
+            ? { convex_error_code: errorCode }
+            : {}),
+          source: "event-access-redeem",
+        });
+
+        toast.error(tEvent("redeem-error"), {
+          position: "bottom-center",
+        });
+        return;
+      }
+    }
+
+    captureException(error, {
+      source: "event-access-redeem",
+    });
+
+    toast.error(tEvent("redeem-error"), {
+      position: "bottom-center",
+    });
+  }
+
   /** Redeems the current event code and lets the live page state refresh the UI. */
   function activateAccess() {
     startTransition(async () => {
@@ -76,38 +129,7 @@ export function EventAccessPage({ code }: Props) {
           }
         );
       } catch (error) {
-        if (error instanceof ConvexError) {
-          const errorData = error.data;
-
-          if (typeof errorData === "object" && errorData !== null) {
-            const errorCode = "code" in errorData ? errorData.code : undefined;
-
-            if (errorCode === "EVENT_DISABLED") {
-              toast.error(tEvent("unavailable-disabled"), {
-                position: "bottom-center",
-              });
-              return;
-            }
-
-            if (errorCode === "EVENT_NOT_STARTED") {
-              toast.error(tEvent("unavailable-not-started"), {
-                position: "bottom-center",
-              });
-              return;
-            }
-
-            if (errorCode === "EVENT_ENDED") {
-              toast.error(tEvent("unavailable-ended"), {
-                position: "bottom-center",
-              });
-              return;
-            }
-          }
-        }
-
-        toast.error(tEvent("redeem-error"), {
-          position: "bottom-center",
-        });
+        handleRedeemError(error);
       }
     });
   }

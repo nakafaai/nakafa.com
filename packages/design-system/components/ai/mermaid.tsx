@@ -1,5 +1,6 @@
 "use client";
 
+import { captureException } from "@repo/analytics/posthog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
 import type { MermaidConfig } from "mermaid";
@@ -72,6 +73,11 @@ export const Mermaid = ({ chart, className, config }: MermaidProps) => {
         setSvgContent(svg);
         setLastValidSvg(svg);
       } catch (err) {
+        captureException(err, {
+          has_cached_svg: Boolean(lastValidSvg || svgContent),
+          source: "mermaid-render",
+        });
+
         // Silently fail and keep the last valid SVG
         // Don't update svgContent here - just keep what we have
 

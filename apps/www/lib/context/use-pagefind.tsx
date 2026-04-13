@@ -1,5 +1,6 @@
 "use client";
 
+import { captureException } from "@repo/analytics/posthog";
 import { addBasePath } from "next/dist/client/add-base-path";
 import {
   type ReactElement,
@@ -102,7 +103,19 @@ async function importPagefind() {
       throw new Error("Pagefind init not found.");
     }
     await window.pagefind.init();
-  } catch {
+  } catch (error) {
+    if (
+      !(
+        process.env.NODE_ENV !== "production" &&
+        error instanceof Error &&
+        error.message.includes("Failed to fetch")
+      )
+    ) {
+      captureException(error, {
+        source: "pagefind-import",
+      });
+    }
+
     window.pagefind = {
       debouncedSearch: () => Promise.resolve(null),
       destroy: () => Promise.resolve(),
