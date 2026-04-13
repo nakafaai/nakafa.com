@@ -179,6 +179,10 @@ export async function POST(req: Request) {
   /**
    * Forward one chat-route runtime error to PostHog without interrupting the
    * user-facing stream or background persistence flow.
+   *
+   * Related docs:
+   * https://posthog.com/docs/error-tracking/capture
+   * https://posthog.com/docs/error-tracking/installation/nextjs
    */
   function reportChatErrorToPostHog(error: unknown, source: string) {
     captureServerException(error, undefined, { source }).catch(

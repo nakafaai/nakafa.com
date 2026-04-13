@@ -24,6 +24,14 @@ const PagefindContext = createContext<PagefindContextType | undefined>(
 
 /**
  * Provide the shared Pagefind readiness and initialization error state.
+ *
+ * Source of truth:
+ * `apps/www/package.json` runs `tsx scripts/pagefind/index.ts` in `postbuild`.
+ * `apps/www/scripts/pagefind/build.ts` writes the browser bundle to
+ * `public/_pagefind`.
+ *
+ * Related docs:
+ * https://pagefind.app/docs/indexing/
  */
 export function PagefindProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
@@ -108,6 +116,14 @@ const DEV_SEARCH_NOTICE = (
 /**
  * Detect the expected development case where the generated Pagefind bundle does
  * not exist yet because `next dev` does not run the app's `postbuild` step.
+ *
+ * Source of truth:
+ * `apps/www/package.json` only runs the Pagefind build in `postbuild`.
+ * `apps/www/scripts/pagefind/build.ts` writes the runtime bundle to
+ * `public/_pagefind`.
+ *
+ * Related docs:
+ * https://pagefind.app/docs/indexing/
  */
 async function hasMissingDevelopmentPagefindBundle() {
   if (process.env.NODE_ENV === "production") {
@@ -127,6 +143,13 @@ async function hasMissingDevelopmentPagefindBundle() {
 
 /**
  * Import and initialize the generated Pagefind browser bundle.
+ *
+ * Source of truth:
+ * `apps/www/scripts/pagefind/build.ts` writes the browser assets to
+ * `public/_pagefind`, which the app serves at `/_pagefind`.
+ *
+ * Related docs:
+ * https://pagefind.app/docs/indexing/
  */
 async function importPagefind() {
   window.pagefind = await import(

@@ -16,6 +16,12 @@ const SourceContext = createContext<{
 
 /**
  * Derive the readable domain label shown for one source link.
+ *
+ * `URL.canParse()` lets us validate the input without a `try`/`catch`, and it
+ * returns the same success/failure result as constructing `new URL(...)`.
+ *
+ * Related docs:
+ * https://developer.mozilla.org/en-US/docs/Web/API/URL/canParse_static
  */
 function getSourceDomain(href: string) {
   if (typeof URL.canParse === "function" && URL.canParse(href)) {

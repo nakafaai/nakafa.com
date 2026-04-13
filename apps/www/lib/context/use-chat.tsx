@@ -24,6 +24,17 @@ interface ChatContextValue {
 
 const ChatContext = createContext<ChatContextValue | undefined>(undefined);
 
+/**
+ * Provide the shared AI chat instance for one chat route or sheet.
+ *
+ * Source of truth:
+ * `apps/www/node_modules/ai/src/ui/http-chat-transport.ts`
+ * throws `new Error(await response.text())` for non-2xx responses, so this
+ * provider can compare the exact backend error code returned by `/api/chat`.
+ *
+ * Related docs:
+ * https://ai-sdk.dev/docs/reference/ai-sdk-ui/use-chat
+ */
 export function ChatProvider({
   chatId,
   initialMessages,
@@ -68,7 +79,7 @@ export function ChatProvider({
       },
     }),
     onError: (error) => {
-      const errorCode = error.message?.trim();
+      const errorCode = error.message.trim();
 
       if (errorCode === CHAT_ERRORS.INSUFFICIENT_CREDITS.code) {
         toast.error(t("insufficient-credits"), { position: "bottom-center" });

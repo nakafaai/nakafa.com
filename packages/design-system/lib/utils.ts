@@ -121,6 +121,15 @@ export function save(
 
 /**
  * Gets the country name from a country code
+ *
+ * Source of truth:
+ * `packages/design-system/node_modules/country-code-lookup/index.js`
+ * only accepts numeric, ISO-2, or ISO-3 inputs for `byIso()` and throws for
+ * unsupported string lengths.
+ *
+ * Related docs:
+ * https://github.com/richorama/country-code-lookup
+ *
  * @param countryCode - The country code to get the name from
  * @returns The country name
  */

@@ -31,6 +31,13 @@ export function getInitialName(name?: string) {
 /**
  * Converts a URL slug to a readable title.
  * Handles URL encoding, various separators, and proper capitalization.
+ *
+ * We guard invalid percent escapes before calling `decodeURIComponent()` because
+ * malformed sequences throw `URIError`.
+ *
+ * Related docs:
+ * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/decodeURIComponent
+ *
  * @param slug - The URL slug to convert
  * @returns A clean, readable title
  */
