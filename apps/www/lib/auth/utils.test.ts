@@ -17,7 +17,12 @@ describe("lib/auth/utils", () => {
       expect(getSafeInternalRedirectPath(null)).toBeNull();
       expect(getSafeInternalRedirectPath("https://nakafa.com/id")).toBeNull();
       expect(getSafeInternalRedirectPath("//nakafa.com/id")).toBeNull();
-      expect(getSafeInternalRedirectPath("/id,evil")).toBeNull();
+    });
+
+    it("keeps valid internal paths even when they contain commas", () => {
+      expect(getSafeInternalRedirectPath("/id/search?q=a,b")).toBe(
+        "/id/search?q=a,b"
+      );
     });
   });
 

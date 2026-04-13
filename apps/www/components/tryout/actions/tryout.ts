@@ -133,13 +133,32 @@ export async function startTryout({
   returnPath,
   ...args
 }: StartTryoutInput): Promise<StartTryoutResult> {
-  let result: StartTryoutMutationResult;
-
   try {
-    result = await fetchAuthMutation(
+    const result = await fetchAuthMutation(
       api.tryouts.mutations.attempts.startTryout,
       args
     );
+
+    if (result.kind !== "started") {
+      return await getStartTryoutResult({
+        locale: args.locale,
+        returnPath,
+        startResult: result,
+      });
+    }
+
+    revalidateTryoutOverview({
+      locale: args.locale,
+      product: args.product,
+    });
+    revalidateTryoutSet({
+      locale: args.locale,
+      partKeys,
+      product: args.product,
+      tryoutSlug: args.tryoutSlug,
+    });
+
+    return result;
   } catch (error) {
     await captureServerException(error, undefined, {
       locale: args.locale,
@@ -150,25 +169,4 @@ export async function startTryout({
 
     return { kind: "unknown" };
   }
-
-  if (result.kind !== "started") {
-    return await getStartTryoutResult({
-      locale: args.locale,
-      returnPath,
-      startResult: result,
-    });
-  }
-
-  revalidateTryoutOverview({
-    locale: args.locale,
-    product: args.product,
-  });
-  revalidateTryoutSet({
-    locale: args.locale,
-    partKeys,
-    product: args.product,
-    tryoutSlug: args.tryoutSlug,
-  });
-
-  return result;
 }

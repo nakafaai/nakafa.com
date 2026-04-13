@@ -89,37 +89,41 @@ export const startTryout = mutation({
     const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
     const now = Date.now();
-    let tryout: Awaited<ReturnType<typeof loadStartableTryout>>;
+    const startableTryout = await loadStartableTryout(ctx, args).catch(
+      (error) => {
+        const errorCode = getConvexErrorCode(error);
 
-    try {
-      tryout = await loadStartableTryout(ctx, args);
-    } catch (error) {
-      const errorCode = getConvexErrorCode(error);
+        if (errorCode === "TRYOUT_NOT_FOUND") {
+          logger.warn("Tryout start denied because the tryout was not found", {
+            locale: args.locale,
+            product: args.product,
+            tryoutSlug: args.tryoutSlug,
+            userId,
+          });
 
-      if (errorCode === "TRYOUT_NOT_FOUND") {
-        logger.warn("Tryout start denied because the tryout was not found", {
-          locale: args.locale,
-          product: args.product,
-          tryoutSlug: args.tryoutSlug,
-          userId,
-        });
+          return { kind: "not-found" as const };
+        }
 
-        return { kind: "not-found" as const };
+        if (errorCode === "TRYOUT_INACTIVE") {
+          logger.warn("Tryout start denied because the tryout is inactive", {
+            locale: args.locale,
+            product: args.product,
+            tryoutSlug: args.tryoutSlug,
+            userId,
+          });
+
+          return { kind: "inactive" as const };
+        }
+
+        throw error;
       }
+    );
 
-      if (errorCode === "TRYOUT_INACTIVE") {
-        logger.warn("Tryout start denied because the tryout is inactive", {
-          locale: args.locale,
-          product: args.product,
-          tryoutSlug: args.tryoutSlug,
-          userId,
-        });
-
-        return { kind: "inactive" as const };
-      }
-
-      throw error;
+    if ("kind" in startableTryout) {
+      return startableTryout;
     }
+
+    const tryout = startableTryout;
 
     const [scaleVersion, existingAttempt] = await Promise.all([
       getLatestScaleVersionForTryout(ctx.db, tryout._id),
@@ -351,19 +355,12 @@ export const startPart = mutation({
     const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
     const now = Date.now();
-    let tryout: Awaited<ReturnType<typeof loadPartStartContext>>["tryout"];
-    let tryoutPartSnapshot: Awaited<
-      ReturnType<typeof loadPartStartContext>
-    >["tryoutPartSnapshot"];
-
-    try {
-      ({ tryout, tryoutPartSnapshot } = await loadPartStartContext(ctx, {
-        now,
-        partKey: args.partKey,
-        tryoutAttemptId: args.tryoutAttemptId,
-        userId,
-      }));
-    } catch (error) {
+    const partStartContext = await loadPartStartContext(ctx, {
+      now,
+      partKey: args.partKey,
+      tryoutAttemptId: args.tryoutAttemptId,
+      userId,
+    }).catch((error) => {
       if (getConvexErrorCode(error) === "TRYOUT_EXPIRED") {
         logger.warn("Tryout part start denied because the tryout expired", {
           partKey: args.partKey,
@@ -375,19 +372,18 @@ export const startPart = mutation({
       }
 
       throw error;
+    });
+
+    if ("kind" in partStartContext) {
+      return partStartContext;
     }
 
-    try {
-      if (
-        await reuseExistingPartAttempt(ctx, {
-          now,
-          partIndex: tryoutPartSnapshot.partIndex,
-          tryoutAttemptId: args.tryoutAttemptId,
-        })
-      ) {
-        return { kind: "started" as const };
-      }
-    } catch (error) {
+    const { tryout, tryoutPartSnapshot } = partStartContext;
+    const existingPartAttempt = await reuseExistingPartAttempt(ctx, {
+      now,
+      partIndex: tryoutPartSnapshot.partIndex,
+      tryoutAttemptId: args.tryoutAttemptId,
+    }).catch((error) => {
       if (getConvexErrorCode(error) === "TRYOUT_PART_EXPIRED") {
         logger.warn("Tryout part start denied because the part expired", {
           partIndex: tryoutPartSnapshot.partIndex,
@@ -400,6 +396,17 @@ export const startPart = mutation({
       }
 
       throw error;
+    });
+
+    if (
+      typeof existingPartAttempt === "object" &&
+      existingPartAttempt !== null
+    ) {
+      return existingPartAttempt;
+    }
+
+    if (existingPartAttempt) {
+      return { kind: "started" as const };
     }
 
     const set = await ctx.db.get("exerciseSets", tryoutPartSnapshot.setId);
@@ -457,38 +464,35 @@ export const completePart = mutation({
     const { appUser } = await requireAuth(ctx);
     const userId = appUser._id;
     const now = Date.now();
-    let currentTryoutAttempt: Awaited<
-      ReturnType<typeof requireActiveTryoutAttemptAfterExpirySync>
-    >;
-
-    try {
-      const tryoutAttempt = await requireOwnedTryoutAttempt(ctx, {
-        tryoutAttemptId: args.tryoutAttemptId,
-        userId,
-      });
-
-      currentTryoutAttempt = await requireActiveTryoutAttemptAfterExpirySync(
-        ctx,
-        {
+    const currentTryoutAttempt = await requireOwnedTryoutAttempt(ctx, {
+      tryoutAttemptId: args.tryoutAttemptId,
+      userId,
+    })
+      .then((tryoutAttempt) =>
+        requireActiveTryoutAttemptAfterExpirySync(ctx, {
           now,
           tryoutAttempt,
+        })
+      )
+      .catch((error) => {
+        if (getConvexErrorCode(error) === "TRYOUT_EXPIRED") {
+          logger.warn(
+            "Tryout part completion denied because the tryout expired",
+            {
+              partKey: args.partKey,
+              tryoutAttemptId: args.tryoutAttemptId,
+              userId,
+            }
+          );
+
+          return { kind: "tryout-expired" as const };
         }
-      );
-    } catch (error) {
-      if (getConvexErrorCode(error) === "TRYOUT_EXPIRED") {
-        logger.warn(
-          "Tryout part completion denied because the tryout expired",
-          {
-            partKey: args.partKey,
-            tryoutAttemptId: args.tryoutAttemptId,
-            userId,
-          }
-        );
 
-        return { kind: "tryout-expired" as const };
-      }
+        throw error;
+      });
 
-      throw error;
+    if ("kind" in currentTryoutAttempt) {
+      return currentTryoutAttempt;
     }
 
     const tryout = await ctx.db.get("tryouts", currentTryoutAttempt.tryoutId);

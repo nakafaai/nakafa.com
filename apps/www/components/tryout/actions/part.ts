@@ -70,13 +70,23 @@ export async function startTryoutPart({
   partKeys,
   ...args
 }: StartTryoutPartInput): Promise<StartTryoutPartResult> {
-  let result: StartPartMutationResult;
-
   try {
-    result = await fetchAuthMutation(api.tryouts.mutations.attempts.startPart, {
-      partKey: args.partKey,
-      tryoutAttemptId: args.tryoutAttemptId,
+    const result = await fetchAuthMutation(
+      api.tryouts.mutations.attempts.startPart,
+      {
+        partKey: args.partKey,
+        tryoutAttemptId: args.tryoutAttemptId,
+      }
+    );
+
+    revalidateTryoutRoutes({
+      locale: args.locale,
+      partKeys,
+      product: args.product,
+      tryoutSlug: args.tryoutSlug,
     });
+
+    return result;
   } catch (error) {
     await captureServerException(error, undefined, {
       locale: args.locale,
@@ -89,15 +99,6 @@ export async function startTryoutPart({
 
     return { kind: "unknown" };
   }
-
-  revalidateTryoutRoutes({
-    locale: args.locale,
-    partKeys,
-    product: args.product,
-    tryoutSlug: args.tryoutSlug,
-  });
-
-  return result;
 }
 
 /**
@@ -108,16 +109,23 @@ export async function completeTryoutPart({
   partKeys,
   ...args
 }: CompleteTryoutPartInput): Promise<CompleteTryoutPartResult> {
-  let result: CompletePartMutationResult;
-
   try {
-    result = await fetchAuthMutation(
+    const result = await fetchAuthMutation(
       api.tryouts.mutations.attempts.completePart,
       {
         partKey: args.partKey,
         tryoutAttemptId: args.tryoutAttemptId,
       }
     );
+
+    revalidateTryoutRoutes({
+      locale: args.locale,
+      partKeys,
+      product: args.product,
+      tryoutSlug: args.tryoutSlug,
+    });
+
+    return result;
   } catch (error) {
     await captureServerException(error, undefined, {
       locale: args.locale,
@@ -130,13 +138,4 @@ export async function completeTryoutPart({
 
     return { kind: "unknown" };
   }
-
-  revalidateTryoutRoutes({
-    locale: args.locale,
-    partKeys,
-    product: args.product,
-    tryoutSlug: args.tryoutSlug,
-  });
-
-  return result;
 }

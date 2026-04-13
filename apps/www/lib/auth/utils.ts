@@ -8,7 +8,7 @@ export function getSafeInternalRedirectPath(value: string | null | undefined) {
     return null;
   }
 
-  if (!value.startsWith("/") || value.startsWith("//") || value.includes(",")) {
+  if (!value.startsWith("/") || value.startsWith("//")) {
     return null;
   }
 
