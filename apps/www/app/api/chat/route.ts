@@ -185,7 +185,7 @@ export async function POST(req: Request) {
    * https://posthog.com/docs/error-tracking/installation/nextjs
    */
   function reportChatErrorToPostHog(error: unknown, source: string) {
-    captureServerException(error, undefined, { source }).catch(
+    captureServerException(error, userInfo.userId, { source }).catch(
       (captureError) => {
         logError(
           sessionLogger,

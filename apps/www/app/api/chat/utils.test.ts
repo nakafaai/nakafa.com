@@ -151,11 +151,19 @@ describe("app/api/chat/utils", () => {
   });
 
   it("fetches chat user info through the sync mutation", async () => {
-    vi.mocked(fetchMutation).mockResolvedValue({ role: "student", credits: 7 });
+    vi.mocked(fetchMutation).mockResolvedValue({
+      role: "student",
+      credits: 7,
+      userId: "user_123",
+    });
 
     const userInfo = await getUserInfo("test-token");
 
-    expect(userInfo).toEqual({ role: "student", credits: 7 });
+    expect(userInfo).toEqual({
+      role: "student",
+      credits: 7,
+      userId: "user_123",
+    });
     expect(fetchMutation).toHaveBeenCalledWith(
       convexApi.users.mutations.syncUserInfoForChat,
       {},

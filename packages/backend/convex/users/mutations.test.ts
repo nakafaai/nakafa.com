@@ -102,6 +102,7 @@ describe("users/mutations", () => {
     expect(result).toEqual({
       role: "student",
       credits: 7,
+      userId: identity.userId,
     });
     expect(repairedUser.user?.credits).toBe(7);
     expect(repairedUser.user?.creditsResetAt).toBe(
@@ -150,6 +151,7 @@ describe("users/mutations", () => {
     expect(result).toEqual({
       role: null,
       credits: DEFAULT_USER_CREDITS,
+      userId: identity.userId,
     });
     expect(appUser.user?.credits).toBe(DEFAULT_USER_CREDITS);
     expect(appUser.user?.creditsResetAt).toBe(Date.UTC(2026, 3, 2, 0, 0, 0));

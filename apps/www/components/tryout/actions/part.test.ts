@@ -7,6 +7,8 @@ const tryoutAttemptId = "tryoutAttemptId" as TryoutAttemptId;
 
 const mocks = vi.hoisted(() => ({
   captureServerException: vi.fn(),
+  cookies: vi.fn(),
+  extractDistinctIdFromPostHogCookie: vi.fn(),
   fetchAuthMutation: vi.fn(),
   revalidateTryoutOverview: vi.fn(),
   revalidateTryoutSet: vi.fn(),
@@ -14,6 +16,11 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@repo/analytics/posthog/server", () => ({
   captureServerException: mocks.captureServerException,
+  extractDistinctIdFromPostHogCookie: mocks.extractDistinctIdFromPostHogCookie,
+}));
+
+vi.mock("next/headers", () => ({
+  cookies: mocks.cookies,
 }));
 
 vi.mock("@/lib/auth/server", () => ({
@@ -28,6 +35,10 @@ vi.mock("@/components/tryout/actions/revalidate", () => ({
 describe("components/tryout/actions/part", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.cookies.mockResolvedValue({
+      toString: () => "ph_cookie=user_123",
+    });
+    mocks.extractDistinctIdFromPostHogCookie.mockReturnValue("user_123");
   });
 
   it("revalidates routes after starting a part", async () => {
@@ -88,7 +99,7 @@ describe("components/tryout/actions/part", () => {
     expect(result).toEqual({ kind: "unknown" });
     expect(mocks.captureServerException).toHaveBeenCalledWith(
       error,
-      undefined,
+      "user_123",
       {
         locale: "id",
         part_key: "mathematical-reasoning",
@@ -141,7 +152,7 @@ describe("components/tryout/actions/part", () => {
     expect(result).toEqual({ kind: "unknown" });
     expect(mocks.captureServerException).toHaveBeenCalledWith(
       error,
-      undefined,
+      "user_123",
       {
         locale: "id",
         part_key: "mathematical-reasoning",

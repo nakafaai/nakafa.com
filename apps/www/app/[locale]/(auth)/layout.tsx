@@ -2,6 +2,7 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { type ReactNode, Suspense } from "react";
 import { ConvexProvider } from "@/components/providers/convex";
 import { getToken } from "@/lib/auth/server";
+import { UserContextProvider } from "@/lib/context/use-user";
 
 /**
  * Mounts the minimal auth-capable runtime for the standalone `/auth` route.
@@ -27,7 +28,9 @@ async function AuthPageProviders({ children }: { children: ReactNode }) {
 
   return (
     <NuqsAdapter>
-      <ConvexProvider initialToken={token}>{children}</ConvexProvider>
+      <ConvexProvider initialToken={token}>
+        <UserContextProvider>{children}</UserContextProvider>
+      </ConvexProvider>
     </NuqsAdapter>
   );
 }

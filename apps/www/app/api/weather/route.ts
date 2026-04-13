@@ -3,7 +3,10 @@ import {
   DEFAULT_LONGITUDE,
   getWeather,
 } from "@repo/ai/clients/weather/client";
-import { captureServerException } from "@repo/analytics/posthog/server";
+import {
+  captureServerException,
+  extractDistinctIdFromPostHogCookie,
+} from "@repo/analytics/posthog/server";
 import { CorsValidator } from "@repo/security/lib/cors-validator";
 import {
   createServiceLogger,
@@ -58,9 +61,13 @@ export async function POST(req: Request) {
     return NextResponse.json(weather);
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
-    await captureServerException(err, undefined, {
-      source: "weather-api",
-    });
+    await captureServerException(
+      err,
+      extractDistinctIdFromPostHogCookie(req.headers.get("cookie")),
+      {
+        source: "weather-api",
+      }
+    );
 
     logError(apiLogger, err, {
       context: "weather_api",
