@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { startTryout } from "./tryout";
 
 const mocks = vi.hoisted(() => ({
+  after: vi.fn(async (callback) => await callback()),
   captureServerException: vi.fn(),
   cookies: vi.fn(),
   extractDistinctIdFromPostHogCookie: vi.fn(),
@@ -15,6 +16,10 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@repo/analytics/posthog/server", () => ({
   captureServerException: mocks.captureServerException,
   extractDistinctIdFromPostHogCookie: mocks.extractDistinctIdFromPostHogCookie,
+}));
+
+vi.mock("next/server", () => ({
+  after: mocks.after,
 }));
 
 vi.mock("next/headers", () => ({

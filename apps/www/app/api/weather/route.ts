@@ -15,7 +15,7 @@ import {
   logHttpRequest,
 } from "@repo/utilities/logging";
 import { geolocation } from "@vercel/functions";
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 
 const corsValidator = new CorsValidator();
 
@@ -61,13 +61,15 @@ export async function POST(req: Request) {
     return NextResponse.json(weather);
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
-    await captureServerException(
-      err,
-      extractDistinctIdFromPostHogCookie(req.headers.get("cookie")),
-      {
-        source: "weather-api",
-      }
-    );
+    after(async () => {
+      await captureServerException(
+        err,
+        extractDistinctIdFromPostHogCookie(req.headers.get("cookie")),
+        {
+          source: "weather-api",
+        }
+      );
+    });
 
     logError(apiLogger, err, {
       context: "weather_api",

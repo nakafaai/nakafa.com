@@ -9,6 +9,7 @@ import { products } from "@repo/backend/convex/utils/polar/products";
 import { getPathname } from "@repo/internationalization/src/navigation";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { cookies } from "next/headers";
+import { after } from "next/server";
 import {
   revalidateTryoutOverview,
   revalidateTryoutSet,
@@ -90,14 +91,16 @@ async function getCheckoutUrl({
 
     return result.url;
   } catch (error) {
-    await captureServerException(
-      error,
-      extractDistinctIdFromPostHogCookie((await cookies()).toString()),
-      {
-        source: "tryout-checkout-url",
-        success_url: successUrl,
-      }
-    );
+    after(async () => {
+      await captureServerException(
+        error,
+        extractDistinctIdFromPostHogCookie((await cookies()).toString()),
+        {
+          source: "tryout-checkout-url",
+          success_url: successUrl,
+        }
+      );
+    });
 
     return null;
   }
@@ -168,16 +171,18 @@ export async function startTryout({
 
     return result;
   } catch (error) {
-    await captureServerException(
-      error,
-      extractDistinctIdFromPostHogCookie((await cookies()).toString()),
-      {
-        locale: args.locale,
-        product: args.product,
-        source: "start-tryout",
-        tryout_slug: args.tryoutSlug,
-      }
-    );
+    after(async () => {
+      await captureServerException(
+        error,
+        extractDistinctIdFromPostHogCookie((await cookies()).toString()),
+        {
+          locale: args.locale,
+          product: args.product,
+          source: "start-tryout",
+          tryout_slug: args.tryoutSlug,
+        }
+      );
+    });
 
     return { kind: "unknown" };
   }

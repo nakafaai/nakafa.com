@@ -33,8 +33,9 @@ export function UserContextProvider({
 }) {
   const { data: user, isPending } = useQueryWithStatus(api.auth.getCurrentUser);
   const currentUser = user ?? null;
-  const appUser = currentUser?.appUser ?? null;
-  const authUser = currentUser?.authUser ?? null;
+  const userId = currentUser?.appUser._id ?? null;
+  const userEmail = currentUser?.authUser.email ?? null;
+  const userName = currentUser?.authUser.name ?? null;
 
   useEffect(() => {
     if (isPending) {
@@ -43,7 +44,7 @@ export function UserContextProvider({
 
     const trackedUserId = analytics.get_property("$user_id");
 
-    if (!appUser) {
+    if (!userId) {
       if (trackedUserId) {
         analytics.reset();
       }
@@ -51,22 +52,22 @@ export function UserContextProvider({
       return;
     }
 
-    if (!authUser) {
+    if (userEmail === null || userName === null) {
       return;
     }
 
     const personProperties = {
-      email: authUser.email,
-      name: authUser.name,
+      email: userEmail,
+      name: userName,
     };
 
-    if (trackedUserId !== appUser._id) {
-      analytics.identify(appUser._id, personProperties);
+    if (trackedUserId !== userId) {
+      analytics.identify(userId, personProperties);
       return;
     }
 
     analytics.setPersonProperties(personProperties);
-  }, [appUser, authUser, isPending]);
+  }, [isPending, userEmail, userId, userName]);
 
   return (
     <UserContext.Provider value={{ user: currentUser, isPending }}>
