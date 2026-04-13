@@ -4,7 +4,8 @@ import {
   AccessIcon,
   EyeIcon,
   Login01Icon,
-  Rocket01Icon,
+  Tick01Icon,
+  UnavailableIcon,
 } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
@@ -27,10 +28,12 @@ interface Props {
   code: string;
 }
 
-function formatDate(locale: Locale, value: number) {
+/** Formats one event timestamp into the active locale's long-date label. */
+function formatEventAccessDate(locale: Locale, value: number) {
   return format(value, "PPP", { locale: getLocale(locale) });
 }
 
+/** Renders the public event-access landing page for one access code. */
 export function EventAccessPage({ code }: Props) {
   const tEvent = useTranslations("EventAccess");
   const locale = useLocale();
@@ -46,6 +49,7 @@ export function EventAccessPage({ code }: Props) {
     api.tryoutAccess.mutations.redeem.redeemEventAccess
   );
 
+  /** Redeems the current event code and lets the live page state refresh the UI. */
   function activateAccess() {
     startTransition(async () => {
       try {
@@ -54,7 +58,7 @@ export function EventAccessPage({ code }: Props) {
         if (result.kind === "used") {
           toast.info(
             tEvent("ended-at", {
-              date: formatDate(locale, result.endsAt),
+              date: formatEventAccessDate(locale, result.endsAt),
             }),
             {
               position: "bottom-center",
@@ -65,7 +69,7 @@ export function EventAccessPage({ code }: Props) {
 
         toast.success(
           tEvent("redeem-success", {
-            date: formatDate(locale, result.endsAt),
+            date: formatEventAccessDate(locale, result.endsAt),
           }),
           {
             position: "bottom-center",
@@ -132,11 +136,10 @@ export function EventAccessPage({ code }: Props) {
         <EventAccessCard
           action={
             <Button
-              disabled={isActionPending}
               nativeButton={false}
               render={
                 <NavigationLink href="/try-out">
-                  <HugeIcons icon={EyeIcon} />
+                  <HugeIcons icon={UnavailableIcon} />
                   {tEvent("view-tryout-cta")}
                 </NavigationLink>
               }
@@ -155,7 +158,6 @@ export function EventAccessPage({ code }: Props) {
         <EventAccessCard
           action={
             <Button
-              disabled={isActionPending}
               nativeButton={false}
               render={
                 <NavigationLink href={`/auth?redirect=${pathname}`}>
@@ -194,19 +196,13 @@ export function EventAccessPage({ code }: Props) {
       <EventAccessLayout>
         <EventAccessCard
           action={
-            <Button
-              disabled={isActionPending}
-              nativeButton={false}
-              render={
-                <NavigationLink href="/try-out">
-                  <HugeIcons icon={Rocket01Icon} />
-                  {tEvent("open-tryout-cta")}
-                </NavigationLink>
-              }
-            />
+            <Button disabled>
+              <HugeIcons icon={Tick01Icon} />
+              {tEvent("already-active-cta")}
+            </Button>
           }
           description={tEvent("active-until", {
-            date: formatDate(locale, pageState.endsAt),
+            date: formatEventAccessDate(locale, pageState.endsAt),
           })}
           title={pageState.name}
         />
@@ -219,7 +215,6 @@ export function EventAccessPage({ code }: Props) {
       <EventAccessCard
         action={
           <Button
-            disabled={isActionPending}
             nativeButton={false}
             render={
               <NavigationLink href="/try-out">
@@ -230,7 +225,7 @@ export function EventAccessPage({ code }: Props) {
           />
         }
         description={tEvent("ended-at", {
-          date: formatDate(locale, pageState.endsAt),
+          date: formatEventAccessDate(locale, pageState.endsAt),
         })}
         title={pageState.name}
       />

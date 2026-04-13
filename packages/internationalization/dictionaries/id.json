@@ -440,7 +440,7 @@
     "ended-at": "Berakhir {date}",
     "sign-in-cta": "Masuk",
     "redeem-cta": "Aktifkan",
-    "open-tryout-cta": "Buka",
+    "already-active-cta": "Sudah aktif",
     "view-tryout-cta": "Lihat",
     "redeem-success": "Akses event aktif sampai {date}.",
     "redeem-error": "Akses event belum bisa diaktifkan. Coba lagi ya."

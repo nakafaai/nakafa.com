@@ -440,7 +440,7 @@
     "ended-at": "Ended {date}",
     "sign-in-cta": "Continue",
     "redeem-cta": "Activate",
-    "open-tryout-cta": "Open",
+    "already-active-cta": "Already active",
     "view-tryout-cta": "View",
     "redeem-success": "Event access is active until {date}.",
     "redeem-error": "We could not activate this event access yet. Please try again."
