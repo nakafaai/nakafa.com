@@ -1,3 +1,4 @@
+import { captureServerException } from "@repo/analytics/posthog/server";
 import { importContentModule } from "@repo/contents/_lib/module";
 import { parseSubjectCategory } from "@repo/contents/_lib/subject/category";
 import {
@@ -172,7 +173,17 @@ export default async function Page({
   }
 
   const filePath = getSlugPath(category, grade, material, slug);
-  const content = await importContentModule(filePath, locale).catch(() => null);
+  const content = await importContentModule(filePath, locale).catch(
+    async (error) => {
+      await captureServerException(error, undefined, {
+        file_path: filePath,
+        locale,
+        source: "subject-content-module",
+      });
+
+      return null;
+    }
+  );
   const Content = content?.default;
 
   return (
@@ -229,7 +240,15 @@ async function getSubjectMetadataData({
         }
       )
     ),
-    getMaterials(materialPath, locale).catch(() => []),
+    getMaterials(materialPath, locale).catch(async (error) => {
+      await captureServerException(error, undefined, {
+        locale,
+        material_path: materialPath,
+        source: "subject-metadata-materials",
+      });
+
+      return [];
+    }),
   ]);
 
   const metadata = content?.metadata ?? null;
@@ -290,7 +309,15 @@ async function CachedSubjectShell({
         }
       )
     ),
-    getMaterials(materialPath, locale).catch(() => null),
+    getMaterials(materialPath, locale).catch(async (error) => {
+      await captureServerException(error, undefined, {
+        locale,
+        material_path: materialPath,
+        source: "subject-shell-materials",
+      });
+
+      return null;
+    }),
   ]);
 
   if (!(content.content && materials && children !== null)) {

@@ -1,3 +1,4 @@
+import { captureServerException } from "@repo/analytics/posthog/server";
 import { importContentModule } from "@repo/contents/_lib/module";
 import type { ExerciseWithoutDefaults } from "@repo/contents/_types/exercises/shared";
 import { slugify } from "@repo/design-system/lib/utils";
@@ -16,10 +17,18 @@ async function QuestionContent({
   locale: Locale;
   setPath: string;
 }) {
-  const question = await importContentModule(
-    `${setPath}/${exerciseNumber}/_question`,
-    locale
-  ).catch(() => null);
+  const questionPath = `${setPath}/${exerciseNumber}/_question`;
+  const question = await importContentModule(questionPath, locale).catch(
+    async (error) => {
+      await captureServerException(error, undefined, {
+        exercise_number: exerciseNumber,
+        locale,
+        source: "exercise-question-module",
+      });
+
+      return null;
+    }
+  );
   const Question = question?.default;
 
   return Question ? <Question /> : null;
@@ -35,10 +44,18 @@ async function AnswerContent({
   locale: Locale;
   setPath: string;
 }) {
-  const answer = await importContentModule(
-    `${setPath}/${exerciseNumber}/_answer`,
-    locale
-  ).catch(() => null);
+  const answerPath = `${setPath}/${exerciseNumber}/_answer`;
+  const answer = await importContentModule(answerPath, locale).catch(
+    async (error) => {
+      await captureServerException(error, undefined, {
+        exercise_number: exerciseNumber,
+        locale,
+        source: "exercise-answer-module",
+      });
+
+      return null;
+    }
+  );
   const Answer = answer?.default;
 
   return Answer ? <Answer /> : null;

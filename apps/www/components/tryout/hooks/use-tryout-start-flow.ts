@@ -13,6 +13,7 @@ import { useCallback, useLayoutEffect, useTransition } from "react";
 import { toast } from "sonner";
 import { startTryout } from "@/components/tryout/actions/tryout";
 import { getTryoutPartHref } from "@/components/tryout/utils/routes";
+import { getSafeInternalRedirectPath } from "@/lib/auth/utils";
 
 export type TryoutStartParams = FunctionArgs<
   typeof api.tryouts.mutations.attempts.startTryout
@@ -42,7 +43,10 @@ export function useTryoutStartFlow({
   const [isActionPending, startTransition] = useTransition();
   const [isDialogOpen, { close: closeDialog, open: openDialog }] =
     useDisclosure(false);
-  const authHref = `/auth?redirect=${pathname}`;
+  const safeRedirectPath = getSafeInternalRedirectPath(pathname) ?? "/";
+  const authHref = `/auth?${new URLSearchParams({
+    redirect: safeRedirectPath,
+  }).toString()}`;
   const isAuthPending = access === "authenticated" && isLoading;
   const isStartBlocked = isActionPending || isAuthPending;
 
@@ -52,6 +56,7 @@ export function useTryoutStartFlow({
     };
   }, [closeDialog]);
 
+  /** Keeps the dialog state aligned with route preservation and unmounts. */
   const setDialogOpenAction = useCallback(
     (open: boolean) => {
       if (open) {
@@ -64,6 +69,7 @@ export function useTryoutStartFlow({
     [closeDialog, openDialog]
   );
 
+  /** Opens auth, resumes an attempt, or opens the start dialog based on state. */
   const clickStartAction = useCallback(() => {
     if (isAuthPending) {
       return;
@@ -100,6 +106,7 @@ export function useTryoutStartFlow({
     router,
   ]);
 
+  /** Prefetches the auth route for anonymous users when the CTA becomes relevant. */
   const prefetchAuthAction = useCallback(() => {
     if (isAuthPending) {
       return;
@@ -112,6 +119,7 @@ export function useTryoutStartFlow({
     router.prefetch(authHref);
   }, [authHref, isAuthenticated, isAuthPending, router]);
 
+  /** Starts the tryout and maps the server result into the route-level UX. */
   const confirmStartAction = useCallback(() => {
     if (isAuthPending) {
       return;
@@ -130,7 +138,7 @@ export function useTryoutStartFlow({
         returnPath: pathname,
       });
 
-      if (result.ok) {
+      if (result.kind === "started") {
         closeDialog();
         router.replace(pathname);
         toast.success(tTryouts("start-success"), {
@@ -139,7 +147,7 @@ export function useTryoutStartFlow({
         return;
       }
 
-      if (result.code === "COMPETITION_ATTEMPT_ALREADY_USED") {
+      if (result.kind === "competition-attempt-used") {
         closeDialog();
         toast.info(tTryouts("competition-attempt-used-error"), {
           position: "bottom-center",
@@ -147,9 +155,23 @@ export function useTryoutStartFlow({
         return;
       }
 
-      if (result.code === "TRYOUT_ACCESS_REQUIRED") {
+      if (result.kind === "requires-access") {
         closeDialog();
         window.location.href = result.url;
+        return;
+      }
+
+      if (result.kind === "not-ready") {
+        toast.error(tTryouts("start-not-ready-error"), {
+          position: "bottom-center",
+        });
+        return;
+      }
+
+      if (result.kind === "inactive" || result.kind === "not-found") {
+        toast.error(tTryouts("start-unavailable-error"), {
+          position: "bottom-center",
+        });
         return;
       }
 

@@ -14,6 +14,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 const URL_REGEX = /^https?:\/\//i;
+const NUMERIC_COUNTRY_CODE_PATTERN = /^\d+$/;
 
 /**
  * Formats a URL
@@ -120,6 +121,15 @@ export function save(
 
 /**
  * Gets the country name from a country code
+ *
+ * Source of truth:
+ * `packages/design-system/node_modules/country-code-lookup/index.js`
+ * only accepts numeric, ISO-2, or ISO-3 inputs for `byIso()` and throws for
+ * unsupported string lengths.
+ *
+ * Related docs:
+ * https://github.com/richorama/country-code-lookup
+ *
  * @param countryCode - The country code to get the name from
  * @returns The country name
  */
@@ -129,12 +139,21 @@ export function getCountryName(
   if (!countryCode) {
     return;
   }
-  try {
-    const country = lookup.byIso(countryCode) || lookup.byFips(countryCode);
-    return country ? country.country : countryCode;
-  } catch {
+
+  const normalizedCountryCode = countryCode.trim();
+  const isIsoCandidate =
+    NUMERIC_COUNTRY_CODE_PATTERN.test(normalizedCountryCode) ||
+    normalizedCountryCode.length === 2 ||
+    normalizedCountryCode.length === 3;
+
+  if (!isIsoCandidate) {
     return countryCode;
   }
+
+  const country =
+    lookup.byIso(normalizedCountryCode) || lookup.byFips(normalizedCountryCode);
+
+  return country ? country.country : countryCode;
 }
 
 /**

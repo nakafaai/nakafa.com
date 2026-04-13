@@ -1,3 +1,4 @@
+import { captureServerException } from "@repo/analytics/posthog/server";
 import {
   getSlugPath,
   hasInvalidTryOutYearSlug,
@@ -55,7 +56,15 @@ export async function generateMetadata({
     type,
     material,
     slug.join("/")
-  ).catch(() => metadataFallback({ category, material, pagePath, type }));
+  ).catch(async (error) => {
+    await captureServerException(error, undefined, {
+      locale,
+      page_path: pagePath,
+      source: "exercise-route-metadata",
+    });
+
+    return metadataFallback({ category, material, pagePath, type });
+  });
 
   const urlPath = `/${locale}${data.pagePath}`;
   const image = {

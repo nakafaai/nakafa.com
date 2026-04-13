@@ -10,6 +10,7 @@ import {
   WinkIcon,
 } from "@hugeicons/core-free-icons";
 import { useDisclosure, useOs } from "@mantine/hooks";
+import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
@@ -140,7 +141,12 @@ export const ForumPostInput = memo(
           return uploadId;
         } catch (error) {
           await discardForumUploads({ uploadIds: [uploadId] }).catch(
-            () => null
+            (cleanupError) => {
+              captureException(cleanupError, {
+                source: "forum-upload-discard-single",
+              });
+              return null;
+            }
           );
           throw error;
         }
@@ -190,12 +196,21 @@ export const ForumPostInput = memo(
           requestAnimationFrame(() => {
             scrollToBottom();
           });
-        } catch {
+        } catch (error) {
           if (attachmentUploadIds.length > 0) {
             await discardForumUploads({ uploadIds: attachmentUploadIds }).catch(
-              () => null
+              (cleanupError) => {
+                captureException(cleanupError, {
+                  source: "forum-upload-discard-batch",
+                });
+                return null;
+              }
             );
           }
+
+          captureException(error, {
+            source: "forum-post-submit",
+          });
 
           toast.error(t("create-post-failed"));
         }

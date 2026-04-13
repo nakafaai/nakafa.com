@@ -1,5 +1,6 @@
 "use client";
 
+import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 import { Response } from "@repo/design-system/components/ai/response";
@@ -84,6 +85,10 @@ export function ExerciseChoices({
         });
       } catch (error) {
         if (!(error instanceof ConvexError)) {
+          captureException(error, {
+            source: "exercise-submit-answer",
+          });
+
           toast.error(t("submit-answer-error"), {
             position: "bottom-center",
           });
@@ -93,6 +98,10 @@ export function ExerciseChoices({
         const errorData = error.data;
 
         if (!(typeof errorData === "object" && errorData !== null)) {
+          captureException(error, {
+            source: "exercise-submit-answer",
+          });
+
           toast.error(t("submit-answer-error"), {
             position: "bottom-center",
           });
@@ -114,6 +123,13 @@ export function ExerciseChoices({
           });
           return;
         }
+
+        captureException(error, {
+          ...(typeof errorCode === "string"
+            ? { convex_error_code: errorCode }
+            : {}),
+          source: "exercise-submit-answer",
+        });
 
         toast.error(t("submit-answer-error"), {
           position: "bottom-center",

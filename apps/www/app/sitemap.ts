@@ -1,3 +1,4 @@
+import { captureServerException } from "@repo/analytics/posthog/server";
 import { isYearlessTryOutCollectionSlug } from "@repo/contents/_lib/exercises/slug";
 import { getFolderChildNames } from "@repo/contents/_lib/fs";
 import { getContentMetadata } from "@repo/contents/_lib/metadata";
@@ -54,8 +55,12 @@ async function getContentLastModified(
         return metadataDate;
       }
     }
-  } catch {
-    // If content doesn't exist or parsing fails, use fallback
+  } catch (error) {
+    await captureServerException(error, undefined, {
+      content_path: contentPath,
+      locale,
+      source: "sitemap-content-last-modified",
+    });
   }
 
   // Return a reasonable default (6 months ago)
@@ -162,9 +167,12 @@ export async function getEntries(
         ? routeString.slice(1)
         : routeString;
       lastModified = await getContentLastModified(contentPath);
-    } catch {
-      // If we can't get the actual date, use a reasonable fallback
-      // Educational content typically doesn't change very frequently
+    } catch (error) {
+      await captureServerException(error, undefined, {
+        route: routeString,
+        source: "sitemap-route-entry",
+      });
+
       const threeMonthsAgo = new Date();
       threeMonthsAgo.setMonth(
         threeMonthsAgo.getMonth() - MONTHS_IN_CONTENT_FALLBACK

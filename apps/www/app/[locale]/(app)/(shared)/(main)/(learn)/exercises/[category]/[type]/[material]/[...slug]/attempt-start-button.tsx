@@ -9,6 +9,7 @@ import {
   Timer02Icon,
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
+import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -127,7 +128,11 @@ export function StartExerciseButton({
         toast.success(t("start-exercise-success"), {
           position: "bottom-center",
         });
-      } catch {
+      } catch (error) {
+        captureException(error, {
+          source: "exercise-start-attempt",
+        });
+
         toast.error(t("start-exercise-error"), {
           position: "bottom-center",
         });

@@ -6,6 +6,7 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { SiGnometerminal } from "@icons-pack/react-simple-icons";
+import { captureException } from "@repo/analytics/posthog";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { languageIconMap } from "@repo/design-system/lib/programming";
@@ -228,6 +229,19 @@ export const CodeBlock = ({
           startTransition(() => {
             setHtml(light);
             setDarkHtml(dark);
+          });
+        }
+      })
+      .catch((error) => {
+        captureException(error, {
+          language,
+          source: "ai-code-block-highlight",
+        });
+
+        if (mounted.current) {
+          startTransition(() => {
+            setHtml("");
+            setDarkHtml("");
           });
         }
       });
@@ -652,6 +666,10 @@ export const CodeBlockDownloadButton = ({
       save(filename, code, mimeType);
       onDownload?.();
     } catch (error) {
+      captureException(error, {
+        language: language ?? "plain-text",
+        source: "ai-code-block-download",
+      });
       onError?.(error as Error);
     }
   }
@@ -688,7 +706,12 @@ export const CodeBlockCopyButton = ({
 
   async function copyToClipboard() {
     if (typeof window === "undefined" || !navigator?.clipboard?.writeText) {
-      onError?.(new Error("Clipboard API not available"));
+      const error = new Error("Clipboard API not available");
+
+      captureException(error, {
+        source: "ai-code-block-copy",
+      });
+      onError?.(error);
       return;
     }
 
@@ -703,6 +726,9 @@ export const CodeBlockCopyButton = ({
         );
       }
     } catch (error) {
+      captureException(error, {
+        source: "ai-code-block-copy",
+      });
       onError?.(error as Error);
     }
   }

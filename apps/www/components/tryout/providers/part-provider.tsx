@@ -158,6 +158,7 @@ function useResolvedTryoutPartValue({
     selectedAttemptId
   );
 
+  /** Returns to the set page while preserving the selected attempt in search. */
   const goToSet = useCallback(() => {
     router.push(setHref);
   }, [router, setHref]);
@@ -180,6 +181,7 @@ function useResolvedTryoutPartValue({
       }) !== "in-progress"
   );
 
+  /** Starts or resumes the current part through the server action contract. */
   const startPartAction = useCallback(() => {
     if (!runtime) {
       return;
@@ -195,8 +197,15 @@ function useResolvedTryoutPartValue({
         tryoutSlug: tryout.slug,
       });
 
-      if (result.ok) {
+      if (result.kind === "started") {
         toast.success(tTryouts("start-part-success"), {
+          position: "bottom-center",
+        });
+        return;
+      }
+
+      if (result.kind === "tryout-expired" || result.kind === "part-expired") {
+        toast.info(tTryouts("part-head-processing-expiry"), {
           position: "bottom-center",
         });
         return;
@@ -216,6 +225,7 @@ function useResolvedTryoutPartValue({
     tryout.slug,
   ]);
 
+  /** Completes the current part and routes back to the set when it succeeds. */
   const completePartAction = useCallback(() => {
     startTransition(async () => {
       if (!(runtime && attempt)) {
@@ -231,7 +241,7 @@ function useResolvedTryoutPartValue({
         tryoutSlug: tryout.slug,
       });
 
-      if (result.ok) {
+      if (result.kind === "completed") {
         goToSet();
         toast.success(tTryouts("complete-part-success"), {
           position: "bottom-center",
@@ -239,10 +249,7 @@ function useResolvedTryoutPartValue({
         return;
       }
 
-      if (
-        result.code === "TRYOUT_EXPIRED" ||
-        result.code === "TRYOUT_PART_EXPIRED"
-      ) {
+      if (result.kind === "tryout-expired") {
         toast.info(tTryouts("part-head-processing-expiry"), {
           position: "bottom-center",
         });

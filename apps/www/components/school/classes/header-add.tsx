@@ -7,6 +7,7 @@ import {
   Tick01Icon,
   ViewIcon,
 } from "@hugeicons/core-free-icons";
+import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
@@ -94,7 +95,11 @@ export function SchoolClassesHeaderAdd() {
         router.push(`${pathname}/${classId}`);
         setOpen(false);
         form.reset();
-      } catch {
+      } catch (error) {
+        captureException(error, {
+          source: "school-class-create",
+        });
+
         toast.error(t("create-class-failed"));
       }
     },

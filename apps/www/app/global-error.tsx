@@ -1,5 +1,6 @@
 "use client"; // Error boundaries must be Client Components
 
+import { captureException } from "@repo/analytics/posthog";
 import { DesignSystemProvider } from "@repo/design-system";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Particles } from "@repo/design-system/components/ui/particles";
@@ -18,8 +19,10 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Log the error to an error reporting service
-    console.error(error);
+    captureException(error, {
+      source: "next-global-error",
+      ...(error.digest ? { nextjs_digest: error.digest } : {}),
+    });
   }, [error]);
 
   return (

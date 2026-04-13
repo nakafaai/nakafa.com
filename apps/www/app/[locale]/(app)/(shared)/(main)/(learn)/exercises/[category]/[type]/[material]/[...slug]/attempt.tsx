@@ -1,5 +1,6 @@
 "use client";
 
+import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
@@ -27,8 +28,10 @@ export function ExerciseAttempt({ totalExercises }: Props) {
       if (attempt) {
         try {
           await completeAttempt({ attemptId: attempt._id });
-        } catch {
-          // Ignore error
+        } catch (error) {
+          captureException(error, {
+            source: "exercise-expire-attempt",
+          });
         }
       }
     },

@@ -1,3 +1,4 @@
+import { captureServerException } from "@repo/analytics/posthog/server";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { fetchQuery } from "convex/nextjs";
@@ -36,7 +37,12 @@ export async function generateMetadata({
         absolute: title,
       },
     };
-  } catch {
+  } catch (error) {
+    await captureServerException(error, undefined, {
+      chat_id: id,
+      source: "chat-page-metadata",
+    });
+
     return defaultMetadata;
   }
 }

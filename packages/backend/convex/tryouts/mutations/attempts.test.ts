@@ -362,6 +362,35 @@ describe("tryouts/mutations/attempts", () => {
     ]);
   });
 
+  it("returns not-ready when the tryout has no published scale version", async () => {
+    const t = createTryoutTestConvex();
+    const identity = await t.mutation(async (ctx) => {
+      const state = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "missing-scale-version",
+      });
+      const tryout = await insertTryoutSkeleton(ctx, "missing-scale-version");
+
+      await insertActiveProSubscription(ctx, state.userId);
+      await ctx.db.delete("irtScaleVersions", tryout.scaleVersionId);
+
+      return state;
+    });
+
+    const result = await t
+      .withIdentity({
+        subject: identity.authUserId,
+        sessionId: identity.sessionId,
+      })
+      .mutation(api.tryouts.mutations.attempts.startTryout, {
+        product: "snbt",
+        locale: "id",
+        tryoutSlug: "missing-scale-version",
+      });
+
+    expect(result).toEqual({ kind: "not-ready" });
+  });
+
   it("uses competition event access for the first attempt and clamps expiry to the event end", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
@@ -616,18 +645,18 @@ describe("tryouts/mutations/attempts", () => {
       return identity;
     });
 
-    await expect(
-      t
-        .withIdentity({
-          subject: state.authUserId,
-          sessionId: state.sessionId,
-        })
-        .mutation(api.tryouts.mutations.attempts.startTryout, {
-          product: "snbt",
-          locale: "id",
-          tryoutSlug: "competition-attempt-used",
-        })
-    ).rejects.toThrow("This event only counts your first tryout attempt.");
+    const result = await t
+      .withIdentity({
+        subject: state.authUserId,
+        sessionId: state.sessionId,
+      })
+      .mutation(api.tryouts.mutations.attempts.startTryout, {
+        product: "snbt",
+        locale: "id",
+        tryoutSlug: "competition-attempt-used",
+      });
+
+    expect(result).toEqual({ kind: "competition-attempt-used" });
   });
 
   it("returns access required after the counted competition campaign has ended", async () => {
@@ -705,20 +734,18 @@ describe("tryouts/mutations/attempts", () => {
       return identity;
     });
 
-    await expect(
-      t
-        .withIdentity({
-          subject: state.authUserId,
-          sessionId: state.sessionId,
-        })
-        .mutation(api.tryouts.mutations.attempts.startTryout, {
-          product: "snbt",
-          locale: "id",
-          tryoutSlug: "ended-competition-attempt",
-        })
-    ).rejects.toThrow(
-      "You need an active event access or Pro subscription to start this tryout."
-    );
+    const result = await t
+      .withIdentity({
+        subject: state.authUserId,
+        sessionId: state.sessionId,
+      })
+      .mutation(api.tryouts.mutations.attempts.startTryout, {
+        product: "snbt",
+        locale: "id",
+        tryoutSlug: "ended-competition-attempt",
+      });
+
+    expect(result).toEqual({ kind: "requires-access" });
   });
 
   it("ignores stale event entitlements even when the latest row still has campaign provenance", async () => {
@@ -771,20 +798,18 @@ describe("tryouts/mutations/attempts", () => {
       return identity;
     });
 
-    await expect(
-      t
-        .withIdentity({
-          subject: state.authUserId,
-          sessionId: state.sessionId,
-        })
-        .mutation(api.tryouts.mutations.attempts.startTryout, {
-          product: "snbt",
-          locale: "id",
-          tryoutSlug: "stale-event-entitlement",
-        })
-    ).rejects.toThrow(
-      "You need an active event access or Pro subscription to start this tryout."
-    );
+    const result = await t
+      .withIdentity({
+        subject: state.authUserId,
+        sessionId: state.sessionId,
+      })
+      .mutation(api.tryouts.mutations.attempts.startTryout, {
+        product: "snbt",
+        locale: "id",
+        tryoutSlug: "stale-event-entitlement",
+      });
+
+    expect(result).toEqual({ kind: "requires-access" });
   });
 
   it("uses the longest active access-pass window without shortening the tryout expiry", async () => {
@@ -1212,6 +1237,89 @@ describe("tryouts/mutations/attempts", () => {
     expect(result[0]?.setAttemptId).toBe(state.setAttemptId);
   });
 
+  it("returns part-expired when the existing part timer already elapsed", async () => {
+    const t = createTryoutTestConvex();
+    const state = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "part-already-expired",
+      });
+      const tryout = await insertTryoutSkeleton(ctx, "part-already-expired", 1);
+      const setAttemptId = await ctx.db.insert("exerciseAttempts", {
+        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/part-already-expired",
+        userId: identity.userId,
+        origin: "tryout",
+        mode: "simulation",
+        scope: "set",
+        timeLimit: 90,
+        startedAt: NOW - 91_000,
+        lastActivityAt: NOW - 91_000,
+        completedAt: null,
+        endReason: null,
+        status: "in-progress",
+        updatedAt: NOW - 91_000,
+        totalExercises: 1,
+        answeredCount: 0,
+        correctAnswers: 0,
+        totalTime: 0,
+        scorePercentage: 0,
+      });
+      const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
+        userId: identity.userId,
+        tryoutId: tryout.tryoutId,
+        scaleVersionId: tryout.scaleVersionId,
+        scoreStatus: "official",
+        status: "in-progress",
+        partSetSnapshots: [
+          {
+            partIndex: 0,
+            partKey: "quantitative-knowledge",
+            questionCount: 1,
+            setId: tryout.setId,
+          },
+        ],
+        completedPartIndices: [],
+        attemptNumber: 1,
+        totalCorrect: 0,
+        totalQuestions: 0,
+        theta: 0,
+        thetaSE: 1,
+        startedAt: NOW,
+        expiresAt: NOW + ATTEMPT_WINDOW_MS,
+        lastActivityAt: NOW,
+        completedAt: null,
+        endReason: null,
+      });
+
+      await ctx.db.insert("tryoutPartAttempts", {
+        tryoutAttemptId,
+        partIndex: 0,
+        partKey: "quantitative-knowledge",
+        setAttemptId,
+        setId: tryout.setId,
+        theta: 0,
+        thetaSE: 1,
+      });
+
+      return {
+        ...identity,
+        tryoutAttemptId,
+      };
+    });
+
+    const result = await t
+      .withIdentity({
+        subject: state.authUserId,
+        sessionId: state.sessionId,
+      })
+      .mutation(api.tryouts.mutations.attempts.startPart, {
+        partKey: "quantitative-knowledge",
+        tryoutAttemptId: state.tryoutAttemptId,
+      });
+
+    expect(result).toEqual({ kind: "part-expired" });
+  });
+
   it("completes a renamed part by its stable part index", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
@@ -1351,6 +1459,64 @@ describe("tryouts/mutations/attempts", () => {
     });
 
     expect(result?.completedPartIndices).toEqual([0]);
+  });
+
+  it("returns tryout-expired when completing a part after the tryout expires", async () => {
+    const t = createTryoutTestConvex();
+    const state = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "complete-expired-tryout",
+      });
+      const tryout = await insertTryoutSkeleton(
+        ctx,
+        "complete-expired-tryout",
+        1
+      );
+      const tryoutAttemptId = await ctx.db.insert("tryoutAttempts", {
+        userId: identity.userId,
+        tryoutId: tryout.tryoutId,
+        scaleVersionId: tryout.scaleVersionId,
+        scoreStatus: "official",
+        status: "in-progress",
+        partSetSnapshots: [
+          {
+            partIndex: 0,
+            partKey: "quantitative-knowledge",
+            questionCount: 1,
+            setId: tryout.setId,
+          },
+        ],
+        completedPartIndices: [],
+        attemptNumber: 1,
+        totalCorrect: 0,
+        totalQuestions: 0,
+        theta: 0,
+        thetaSE: 1,
+        startedAt: NOW - ATTEMPT_WINDOW_MS - 1,
+        expiresAt: NOW - 1,
+        lastActivityAt: NOW - 1,
+        completedAt: null,
+        endReason: null,
+      });
+
+      return {
+        ...identity,
+        tryoutAttemptId,
+      };
+    });
+
+    const result = await t
+      .withIdentity({
+        subject: state.authUserId,
+        sessionId: state.sessionId,
+      })
+      .mutation(api.tryouts.mutations.attempts.completePart, {
+        partKey: "quantitative-knowledge",
+        tryoutAttemptId: state.tryoutAttemptId,
+      });
+
+    expect(result).toEqual({ kind: "tryout-expired" });
   });
 
   it("reuses a partially completed attempt after live partCount shrinks", async () => {

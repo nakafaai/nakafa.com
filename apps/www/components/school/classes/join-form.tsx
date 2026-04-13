@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowLeft02Icon, InLoveIcon } from "@hugeicons/core-free-icons";
+import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { SchoolClassVisibility } from "@repo/backend/convex/classes/schema";
@@ -50,7 +51,11 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
     startTransition(async () => {
       try {
         await joinPublicClass({ classId });
-      } catch {
+      } catch (error) {
+        captureException(error, {
+          source: "school-class-join-public",
+        });
+
         toast.error(t("join-class-failed"));
       }
     });
@@ -64,7 +69,11 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
     onSubmit: async ({ value }) => {
       try {
         await joinClass(value);
-      } catch {
+      } catch (error) {
+        captureException(error, {
+          source: "school-class-join-private",
+        });
+
         toast.error(t("join-class-failed"));
       }
     },

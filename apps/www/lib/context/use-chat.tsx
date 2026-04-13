@@ -2,6 +2,7 @@
 
 import { type UseChatHelpers, useChat as useAiChat } from "@ai-sdk/react";
 import type { MyUIMessage } from "@repo/ai/types/message";
+import { captureException } from "@repo/analytics/posthog";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { DefaultChatTransport } from "ai";
 import { useTranslations } from "next-intl";
@@ -13,6 +14,7 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { createContext, useContextSelector } from "use-context-selector";
+import { CHAT_ERRORS } from "@/app/api/chat/constants";
 import { useAi } from "@/lib/context/use-ai";
 import { getLocale, getPathname } from "@/lib/utils/browser";
 
@@ -22,6 +24,17 @@ interface ChatContextValue {
 
 const ChatContext = createContext<ChatContextValue | undefined>(undefined);
 
+/**
+ * Provide the shared AI chat instance for one chat route or sheet.
+ *
+ * Source of truth:
+ * `apps/www/node_modules/ai/src/ui/http-chat-transport.ts`
+ * throws `new Error(await response.text())` for non-2xx responses, so this
+ * provider can compare the exact backend error code returned by `/api/chat`.
+ *
+ * Related docs:
+ * https://ai-sdk.dev/docs/reference/ai-sdk-ui/use-chat
+ */
 export function ChatProvider({
   chatId,
   initialMessages,
@@ -66,15 +79,18 @@ export function ChatProvider({
       },
     }),
     onError: (error) => {
-      // Check for specific error codes in the error message
-      // Our API returns JSON with error codes like { error: "INSUFFICIENT_CREDITS" }
-      const errorMessage = error.message ?? "";
+      const errorCode = error.message.trim();
 
-      if (errorMessage.includes("INSUFFICIENT_CREDITS")) {
+      if (errorCode === CHAT_ERRORS.INSUFFICIENT_CREDITS.code) {
         toast.error(t("insufficient-credits"), { position: "bottom-center" });
-      } else {
-        toast.error(t("error-message"), { position: "bottom-center" });
+        return;
       }
+
+      captureException(error, {
+        source: "chat-provider-send-message",
+      });
+
+      toast.error(t("error-message"), { position: "bottom-center" });
     },
   });
 

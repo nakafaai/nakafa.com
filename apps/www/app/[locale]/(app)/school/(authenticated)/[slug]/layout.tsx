@@ -1,3 +1,4 @@
+import { captureServerException } from "@repo/analytics/posthog/server";
 import { api } from "@repo/backend/convex/_generated/api";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { fetchQuery } from "convex/nextjs";
@@ -28,7 +29,12 @@ export async function generateMetadata({
         absolute: schoolInfo.name,
       },
     };
-  } catch {
+  } catch (error) {
+    await captureServerException(error, undefined, {
+      slug,
+      source: "school-layout-metadata",
+    });
+
     return defaultMetadata;
   }
 }

@@ -1,8 +1,8 @@
 "use server";
 
+import { captureServerException } from "@repo/analytics/posthog/server";
 import { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionArgs } from "convex/server";
-import { ConvexError } from "convex/values";
+import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import {
   revalidateTryoutOverview,
   revalidateTryoutSet,
@@ -13,15 +13,15 @@ import { fetchAuthMutation } from "@/lib/auth/server";
 type StartPartArgs = FunctionArgs<
   typeof api.tryouts.mutations.attempts.startPart
 >;
-
+type StartPartMutationResult = FunctionReturnType<
+  typeof api.tryouts.mutations.attempts.startPart
+>;
 type CompletePartArgs = FunctionArgs<
   typeof api.tryouts.mutations.attempts.completePart
 >;
-
-type CompletePartErrorCode =
-  | "TRYOUT_EXPIRED"
-  | "TRYOUT_PART_EXPIRED"
-  | "UNKNOWN";
+type CompletePartMutationResult = FunctionReturnType<
+  typeof api.tryouts.mutations.attempts.completePart
+>;
 
 /** Input required to start one tryout part and refresh its route family. */
 export interface StartTryoutPartInput
@@ -29,7 +29,9 @@ export interface StartTryoutPartInput
     TryoutSetRouteInput {}
 
 /** Result returned after attempting to start one tryout part. */
-export type StartTryoutPartResult = { ok: true } | { ok: false };
+export type StartTryoutPartResult =
+  | StartPartMutationResult
+  | { kind: "unknown" };
 
 /** Input required to complete one tryout part and refresh its route family. */
 export interface CompleteTryoutPartInput
@@ -38,57 +40,65 @@ export interface CompleteTryoutPartInput
 
 /** Result returned after attempting to complete one tryout part on the server. */
 export type CompleteTryoutPartResult =
-  | { ok: true }
-  | { code: CompletePartErrorCode; ok: false };
+  | CompletePartMutationResult
+  | { kind: "unknown" };
+
+/** Revalidates the tryout routes that depend on one attempt's live runtime state. */
+function revalidateTryoutRoutes({
+  locale,
+  partKeys,
+  product,
+  tryoutSlug,
+}: TryoutSetRouteInput) {
+  revalidateTryoutOverview({
+    locale,
+    product,
+  });
+  revalidateTryoutSet({
+    locale,
+    partKeys,
+    product,
+    tryoutSlug,
+  });
+}
 
 /**
  * Starts one tryout part through Better Auth's official server utilities and
- * invalidates the tryout set routes that render its runtime state.
+ * invalidates the tryout routes whenever the runtime state changed.
  */
 export async function startTryoutPart({
   partKeys,
   ...args
 }: StartTryoutPartInput): Promise<StartTryoutPartResult> {
   try {
-    await fetchAuthMutation(api.tryouts.mutations.attempts.startPart, {
-      partKey: args.partKey,
-      tryoutAttemptId: args.tryoutAttemptId,
-    });
-  } catch {
-    return { ok: false };
-  }
-
-  revalidateTryoutSet({
-    locale: args.locale,
-    partKeys,
-    product: args.product,
-    tryoutSlug: args.tryoutSlug,
-  });
-
-  return { ok: true };
-}
-
-/**
- * Normalizes Convex and runtime failures into the small set of UI error codes
- * the tryout flow already knows how to render.
- */
-function getCompleteTryoutPartErrorCode(error: unknown): CompletePartErrorCode {
-  if (error instanceof ConvexError) {
-    const errorData = error.data;
-
-    if (typeof errorData === "object" && errorData !== null) {
-      const errorCode = "code" in errorData ? errorData.code : undefined;
-
-      if (
-        errorCode === "TRYOUT_EXPIRED" ||
-        errorCode === "TRYOUT_PART_EXPIRED"
-      ) {
-        return errorCode;
+    const result = await fetchAuthMutation(
+      api.tryouts.mutations.attempts.startPart,
+      {
+        partKey: args.partKey,
+        tryoutAttemptId: args.tryoutAttemptId,
       }
-    }
-  }
+    );
 
-  return "UNKNOWN";
+    revalidateTryoutRoutes({
+      locale: args.locale,
+      partKeys,
+      product: args.product,
+      tryoutSlug: args.tryoutSlug,
+    });
+
+    return result;
+  } catch (error) {
+    await captureServerException(error, undefined, {
+      locale: args.locale,
+      part_key: args.partKey,
+      product: args.product,
+      source: "start-tryout-part",
+      tryout_attempt_id: args.tryoutAttemptId,
+      tryout_slug: args.tryoutSlug,
+    });
+
+    return { kind: "unknown" };
+  }
 }
 
 /**
@@ -100,24 +110,32 @@ export async function completeTryoutPart({
   ...args
 }: CompleteTryoutPartInput): Promise<CompleteTryoutPartResult> {
   try {
-    await fetchAuthMutation(api.tryouts.mutations.attempts.completePart, {
-      partKey: args.partKey,
-      tryoutAttemptId: args.tryoutAttemptId,
+    const result = await fetchAuthMutation(
+      api.tryouts.mutations.attempts.completePart,
+      {
+        partKey: args.partKey,
+        tryoutAttemptId: args.tryoutAttemptId,
+      }
+    );
+
+    revalidateTryoutRoutes({
+      locale: args.locale,
+      partKeys,
+      product: args.product,
+      tryoutSlug: args.tryoutSlug,
     });
+
+    return result;
   } catch (error) {
-    return { code: getCompleteTryoutPartErrorCode(error), ok: false };
+    await captureServerException(error, undefined, {
+      locale: args.locale,
+      part_key: args.partKey,
+      product: args.product,
+      source: "complete-tryout-part",
+      tryout_attempt_id: args.tryoutAttemptId,
+      tryout_slug: args.tryoutSlug,
+    });
+
+    return { kind: "unknown" };
   }
-
-  revalidateTryoutOverview({
-    locale: args.locale,
-    product: args.product,
-  });
-  revalidateTryoutSet({
-    locale: args.locale,
-    partKeys,
-    product: args.product,
-    tryoutSlug: args.tryoutSlug,
-  });
-
-  return { ok: true };
 }

@@ -105,6 +105,59 @@ describe("tryoutAccess/mutations/redeem", () => {
     expect(result.endsAt).toBeLessThan(identity.earliestEndsAt + 5000);
   });
 
+  it("returns already-active when the current user already has an active grant", async () => {
+    const t = createTryoutTestConvex();
+    const identity = await t.mutation(async (ctx) => {
+      const currentTime = NOW;
+      const state = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "redeem-already-active",
+      });
+
+      await ctx.runMutation(
+        internal.tryoutAccess.mutations.setup.upsertCampaignAndLink,
+        {
+          campaign: {
+            slug: "redeem-already-active",
+            name: "Redeem Already Active",
+            targetProducts: ["snbt"],
+            campaignKind: "competition",
+            enabled: true,
+            startsAt: currentTime - 60 * 1000,
+            endsAt: currentTime + 24 * 60 * 60 * 1000,
+          },
+          link: {
+            code: "redeem-already-active",
+            label: "Redeem Already Active",
+            enabled: true,
+          },
+        }
+      );
+
+      return state;
+    });
+
+    await t
+      .withIdentity({
+        subject: identity.authUserId,
+        sessionId: identity.sessionId,
+      })
+      .mutation(api.tryoutAccess.mutations.redeem.redeemEventAccess, {
+        code: "redeem-already-active",
+      });
+
+    const result = await t
+      .withIdentity({
+        subject: identity.authUserId,
+        sessionId: identity.sessionId,
+      })
+      .mutation(api.tryoutAccess.mutations.redeem.redeemEventAccess, {
+        code: "redeem-already-active",
+      });
+
+    expect(result.kind).toBe("already-active");
+  });
+
   it("redeems once the real campaign window has started even if stored redeemStatus is still scheduled", async () => {
     const t = createTryoutTestConvex();
     const identity = await t.mutation(async (ctx) => {
@@ -195,15 +248,18 @@ describe("tryoutAccess/mutations/redeem", () => {
       return state;
     });
 
-    await expect(
-      t
-        .withIdentity({
-          subject: identity.authUserId,
-          sessionId: identity.sessionId,
-        })
-        .mutation(api.tryoutAccess.mutations.redeem.redeemEventAccess, {
-          code: "redeem-stale-active",
-        })
-    ).rejects.toThrow("EVENT_ENDED");
+    const result = await t
+      .withIdentity({
+        subject: identity.authUserId,
+        sessionId: identity.sessionId,
+      })
+      .mutation(api.tryoutAccess.mutations.redeem.redeemEventAccess, {
+        code: "redeem-stale-active",
+      });
+
+    expect(result).toEqual({
+      kind: "ended",
+      name: "Redeem Stale Active",
+    });
   });
 });

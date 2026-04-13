@@ -5,6 +5,7 @@ import {
   useLocalStorage,
   useTimeout,
 } from "@mantine/hooks";
+import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import type {
   ContentViewRef,
@@ -59,8 +60,13 @@ export function useRecordContentView({
           deviceId,
         });
         markAsViewed(viewKey);
-      } catch {
-        // View tracking is non-critical
+      } catch (error) {
+        captureException(error, {
+          locale,
+          slug: contentView.slug,
+          source: "record-content-view",
+          type: contentView.type,
+        });
       }
     },
     delay,

@@ -7,6 +7,7 @@ import {
   getTryoutAccessGrantEndsAt,
   syncTryoutAccessGrantEntitlements,
 } from "@repo/backend/convex/tryoutAccess/helpers/access";
+import { logger } from "@repo/backend/convex/utils/logger";
 import { ConvexError, v } from "convex/values";
 
 const redeemEventAccessResultValidator = v.union(
@@ -16,9 +17,29 @@ const redeemEventAccessResultValidator = v.union(
     name: v.string(),
   }),
   v.object({
+    kind: v.literal("already-active"),
+    endsAt: v.number(),
+    name: v.string(),
+  }),
+  v.object({
     kind: v.literal("used"),
     endsAt: v.number(),
     name: v.string(),
+  }),
+  v.object({
+    kind: v.literal("disabled"),
+    name: v.string(),
+  }),
+  v.object({
+    kind: v.literal("not-started"),
+    name: v.string(),
+  }),
+  v.object({
+    kind: v.literal("ended"),
+    name: v.string(),
+  }),
+  v.object({
+    kind: v.literal("not-found"),
   })
 );
 
@@ -34,10 +55,12 @@ export const redeemEventAccess = mutation({
     const eventAccess = await getTryoutAccessEventByCode(ctx.db, args.code);
 
     if (!eventAccess) {
-      throw new ConvexError({
-        code: "EVENT_NOT_FOUND",
-        message: "Event access link not found.",
+      logger.warn("Event access redeem denied because the code was not found", {
+        code: args.code,
+        userId: appUser._id,
       });
+
+      return { kind: "not-found" as const };
     }
 
     if (eventAccess.products.length === 0) {
@@ -56,12 +79,29 @@ export const redeemEventAccess = mutation({
 
     if (existingGrant) {
       if (existingGrant.status === "active") {
+        logger.info("Event access already active for the current user", {
+          campaignId: eventAccess.campaign._id,
+          code: args.code,
+          grantId: existingGrant._id,
+          userId: appUser._id,
+        });
+
         return {
-          kind: "active" as const,
+          kind: "already-active" as const,
           endsAt: existingGrant.endsAt,
           name: eventAccess.campaign.name,
         };
       }
+
+      logger.warn(
+        "Event access redeem denied because the code was already used",
+        {
+          campaignId: eventAccess.campaign._id,
+          code: args.code,
+          grantId: existingGrant._id,
+          userId: appUser._id,
+        }
+      );
 
       return {
         kind: "used" as const,
@@ -71,10 +111,19 @@ export const redeemEventAccess = mutation({
     }
 
     if (!(eventAccess.link.enabled && eventAccess.campaign.enabled)) {
-      throw new ConvexError({
-        code: "EVENT_DISABLED",
-        message: "Event access is currently disabled.",
-      });
+      logger.warn(
+        "Event access redeem denied because the campaign is disabled",
+        {
+          campaignId: eventAccess.campaign._id,
+          code: args.code,
+          userId: appUser._id,
+        }
+      );
+
+      return {
+        kind: "disabled" as const,
+        name: eventAccess.campaign.name,
+      };
     }
 
     const campaignRedeemStatus = getTryoutAccessCampaignRedeemStatus(
@@ -83,17 +132,32 @@ export const redeemEventAccess = mutation({
     );
 
     if (campaignRedeemStatus === "scheduled") {
-      throw new ConvexError({
-        code: "EVENT_NOT_STARTED",
-        message: "Event access is not available yet.",
-      });
+      logger.warn(
+        "Event access redeem denied because the campaign has not started yet",
+        {
+          campaignId: eventAccess.campaign._id,
+          code: args.code,
+          userId: appUser._id,
+        }
+      );
+
+      return {
+        kind: "not-started" as const,
+        name: eventAccess.campaign.name,
+      };
     }
 
     if (campaignRedeemStatus === "ended") {
-      throw new ConvexError({
-        code: "EVENT_ENDED",
-        message: "Event access has ended.",
+      logger.warn("Event access redeem denied because the campaign has ended", {
+        campaignId: eventAccess.campaign._id,
+        code: args.code,
+        userId: appUser._id,
       });
+
+      return {
+        kind: "ended" as const,
+        name: eventAccess.campaign.name,
+      };
     }
 
     const endsAt = getTryoutAccessGrantEndsAt({
@@ -137,6 +201,13 @@ export const redeemEventAccess = mutation({
         grantId,
       }
     );
+
+    logger.info("Event access redeemed", {
+      campaignId: eventAccess.campaign._id,
+      code: args.code,
+      grantId,
+      userId: appUser._id,
+    });
 
     return {
       kind: "active" as const,
