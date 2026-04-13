@@ -105,6 +105,22 @@ export const useAudioPlayerTime = () => {
   return time;
 };
 
+/**
+ * Own a single browser audio element and keep its playback state in React.
+ *
+ * Because this component synchronizes with the external `HTMLAudioElement`
+ * API, it must stop playback during unmount so navigation does not leave audio
+ * playing after the UI disappears.
+ *
+ * `useEffect` is intentional here. This cleanup synchronizes with an external
+ * system, but it does not measure layout or block a visual reflow before paint.
+ * React recommends preferring `useEffect` when possible and reserving
+ * `useLayoutEffect` for pre-paint layout work.
+ *
+ * Related docs:
+ * https://react.dev/reference/react/useEffect
+ * https://react.dev/reference/react/useLayoutEffect
+ */
 export function AudioPlayerProvider<TData = unknown>({
   children,
 }: {
@@ -251,6 +267,23 @@ export function AudioPlayerProvider<TData = unknown>({
       setPlaybackRateState(audioRef.current.playbackRate);
     }
   });
+
+  useEffect(() => {
+    const audio = audioRef.current;
+
+    return () => {
+      playPromiseRef.current = null;
+
+      if (!audio) {
+        return;
+      }
+
+      audio.pause();
+      audio.currentTime = 0;
+      audio.removeAttribute("src");
+      audio.load();
+    };
+  }, []);
 
   const isPlaying = !paused;
   const isBuffering =
@@ -522,15 +555,21 @@ export interface AudioPlayerInitializerProps<TData = unknown> {
   item: AudioPlayerItem<TData>;
 }
 
+/**
+ * Preload one audio item as soon as the surrounding player mounts.
+ *
+ * Related docs:
+ * https://react.dev/reference/react/useEffect
+ */
 export function AudioPlayerInitializer<TData = unknown>({
   item,
 }: AudioPlayerInitializerProps<TData>) {
-  const player = useAudioPlayer<TData>();
+  const { setActiveItem } = useAudioPlayer<TData>();
 
   useEffect(() => {
     // Set the active item immediately on mount so audio can preload
-    player.setActiveItem(item);
-  }, [item, player]);
+    setActiveItem(item);
+  }, [item, setActiveItem]);
 
   return null;
 }
