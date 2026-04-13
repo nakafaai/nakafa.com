@@ -3,7 +3,8 @@ import posthog from "posthog-js";
 
 export const initializeAnalytics = () => {
   posthog.init(keys().NEXT_PUBLIC_POSTHOG_KEY, {
-    api_host: keys().NEXT_PUBLIC_POSTHOG_HOST,
-    defaults: "2025-11-30",
+    api_host: keys().NEXT_PUBLIC_POSTHOG_API_HOST,
+    ui_host: keys().NEXT_PUBLIC_POSTHOG_UI_HOST,
+    defaults: "2026-01-30",
   });
 };
