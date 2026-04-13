@@ -7,6 +7,7 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
+import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { MIN_FORUM_THREAD_TEXT_LENGTH } from "@repo/backend/convex/classes/forums/utils/constants";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -82,7 +83,11 @@ export function SchoolClassesForumNew() {
         await createForum({ ...value, classId });
         dialog.close();
         form.reset();
-      } catch {
+      } catch (error) {
+        captureException(error, {
+          source: "school-forum-create",
+        });
+
         toast.error(t("create-forum-failed"));
       }
     },

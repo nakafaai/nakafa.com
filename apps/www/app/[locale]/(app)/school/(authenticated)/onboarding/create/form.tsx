@@ -1,6 +1,7 @@
 "use client";
 
 import { PartyIcon } from "@hugeicons/core-free-icons";
+import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -78,7 +79,11 @@ export function SchoolOnboardingCreateForm() {
       try {
         const { slug } = await createSchool(value);
         router.push(`/school/${slug}`);
-      } catch {
+      } catch (error) {
+        captureException(error, {
+          source: "school-onboarding-create",
+        });
+
         toast.error(t("school-creation-failed"));
       }
     },

@@ -14,6 +14,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 const URL_REGEX = /^https?:\/\//i;
+const NUMERIC_COUNTRY_CODE_PATTERN = /^\d+$/;
 
 /**
  * Formats a URL
@@ -129,12 +130,21 @@ export function getCountryName(
   if (!countryCode) {
     return;
   }
-  try {
-    const country = lookup.byIso(countryCode) || lookup.byFips(countryCode);
-    return country ? country.country : countryCode;
-  } catch {
+
+  const normalizedCountryCode = countryCode.trim();
+  const isIsoCandidate =
+    NUMERIC_COUNTRY_CODE_PATTERN.test(normalizedCountryCode) ||
+    normalizedCountryCode.length === 2 ||
+    normalizedCountryCode.length === 3;
+
+  if (!isIsoCandidate) {
     return countryCode;
   }
+
+  const country =
+    lookup.byIso(normalizedCountryCode) || lookup.byFips(normalizedCountryCode);
+
+  return country ? country.country : countryCode;
 }
 
 /**

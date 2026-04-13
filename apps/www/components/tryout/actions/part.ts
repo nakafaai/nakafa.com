@@ -1,5 +1,6 @@
 "use server";
 
+import { captureServerException } from "@repo/analytics/posthog/server";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionArgs } from "convex/server";
 import { ConvexError } from "convex/values";
@@ -54,7 +55,13 @@ export async function startTryoutPart({
       partKey: args.partKey,
       tryoutAttemptId: args.tryoutAttemptId,
     });
-  } catch {
+  } catch (error) {
+    await captureServerException(error, undefined, {
+      part_key: args.partKey,
+      source: "start-tryout-part",
+      tryout_attempt_id: args.tryoutAttemptId,
+    });
+
     return { ok: false };
   }
 
@@ -105,7 +112,17 @@ export async function completeTryoutPart({
       tryoutAttemptId: args.tryoutAttemptId,
     });
   } catch (error) {
-    return { code: getCompleteTryoutPartErrorCode(error), ok: false };
+    const errorCode = getCompleteTryoutPartErrorCode(error);
+
+    if (errorCode === "UNKNOWN") {
+      await captureServerException(error, undefined, {
+        part_key: args.partKey,
+        source: "complete-tryout-part",
+        tryout_attempt_id: args.tryoutAttemptId,
+      });
+    }
+
+    return { code: errorCode, ok: false };
   }
 
   revalidateTryoutOverview({

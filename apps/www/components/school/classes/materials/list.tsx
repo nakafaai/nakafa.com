@@ -16,6 +16,7 @@ import {
   Time04Icon,
 } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
+import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { PERMISSIONS } from "@repo/backend/convex/lib/helpers/permissions";
 import { Badge } from "@repo/design-system/components/ui/badge";
@@ -377,7 +378,12 @@ function EditMaterialGroupDialog({
             value.status === "scheduled" ? value.scheduledAt : undefined,
         });
         setOpen(false);
-      } catch {
+      } catch (error) {
+        captureException(error, {
+          group_id: group._id,
+          source: "school-material-group-update",
+        });
+
         toast.error(t("update-material-group-failed"));
       }
     },

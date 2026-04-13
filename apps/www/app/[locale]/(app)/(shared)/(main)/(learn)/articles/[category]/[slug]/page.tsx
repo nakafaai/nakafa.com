@@ -1,3 +1,4 @@
+import { captureServerException } from "@repo/analytics/posthog/server";
 import { parseArticleCategory } from "@repo/contents/_lib/articles/category";
 import { getArticleReferences } from "@repo/contents/_lib/articles/content";
 import { getSlugPath } from "@repo/contents/_lib/articles/slug";
@@ -162,7 +163,17 @@ export default async function Page({
 }: PageProps<"/[locale]/articles/[category]/[slug]">) {
   const { locale, category, slug } = await getResolvedParams(params);
   const filePath = getSlugPath(category, slug);
-  const content = await importContentModule(filePath, locale).catch(() => null);
+  const content = await importContentModule(filePath, locale).catch(
+    async (error) => {
+      await captureServerException(error, undefined, {
+        file_path: filePath,
+        locale,
+        source: "article-content-module",
+      });
+
+      return null;
+    }
+  );
   const Content = content?.default;
 
   return (

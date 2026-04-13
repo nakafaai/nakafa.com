@@ -7,6 +7,7 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import * as SliderPrimitive from "@radix-ui/react-slider";
+import { captureException } from "@repo/analytics/posthog";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -152,8 +153,10 @@ export function AudioPlayerProvider<TData = unknown>({
     if (playPromiseRef.current) {
       try {
         await playPromiseRef.current;
-      } catch {
-        // log error
+      } catch (error) {
+        captureException(error, {
+          source: "audio-player-await-play",
+        });
       }
     }
 
@@ -203,8 +206,10 @@ export function AudioPlayerProvider<TData = unknown>({
     if (playPromiseRef.current) {
       try {
         await playPromiseRef.current;
-      } catch {
-        // log error
+      } catch (error) {
+        captureException(error, {
+          source: "audio-player-await-pause",
+        });
       }
     }
 

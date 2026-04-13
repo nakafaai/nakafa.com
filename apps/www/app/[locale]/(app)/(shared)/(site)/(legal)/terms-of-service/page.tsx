@@ -1,3 +1,4 @@
+import { captureServerException } from "@repo/analytics/posthog/server";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
@@ -42,7 +43,12 @@ async function PageContent({ locale }: { locale: Locale }) {
         <Content />
       </main>
     );
-  } catch {
+  } catch (error) {
+    await captureServerException(error, undefined, {
+      locale,
+      source: "terms-of-service-content",
+    });
+
     notFound();
   }
 }

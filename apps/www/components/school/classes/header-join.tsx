@@ -1,6 +1,7 @@
 "use client";
 
 import { InLoveIcon, Rocket01Icon } from "@hugeicons/core-free-icons";
+import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
@@ -53,7 +54,11 @@ export function SchoolClassesHeaderJoin() {
         router.push(`${pathname}/${classId}`);
         setOpen(false);
         form.reset();
-      } catch {
+      } catch (error) {
+        captureException(error, {
+          source: "school-class-join-header",
+        });
+
         toast.error(t("join-class-failed"));
       }
     },

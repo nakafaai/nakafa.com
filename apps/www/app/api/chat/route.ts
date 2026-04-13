@@ -23,6 +23,7 @@ import { nakafaSuggestions } from "@repo/ai/prompt/suggestions";
 import type { ComponentUsage } from "@repo/ai/schema/metadata";
 import type { ToolName } from "@repo/ai/schema/tools";
 import type { MyUIMessage } from "@repo/ai/types/message";
+import { captureServerException } from "@repo/analytics/posthog/server";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/messageParts/uiToDb";
@@ -175,6 +176,27 @@ export async function POST(req: Request) {
     url,
   });
 
+  /**
+   * Forward one chat-route runtime error to PostHog without interrupting the
+   * user-facing stream or background persistence flow.
+   */
+  function reportChatErrorToPostHog(error: unknown, source: string) {
+    captureServerException(error, undefined, { source }).catch(
+      (captureError) => {
+        logError(
+          sessionLogger,
+          captureError instanceof Error
+            ? captureError
+            : new Error(String(captureError)),
+          {
+            errorLocation: "posthog-capture",
+            source,
+          }
+        );
+      }
+    );
+  }
+
   const chatId = await saveOrCreateChat({ chatId: id, message, token });
   const messages = await loadMessages({ chatId, token });
   const isFirstMessage = messages.length === 1;
@@ -200,6 +222,8 @@ export async function POST(req: Request) {
 
   const stream = createUIMessageStream<MyUIMessage>({
     onError: (error) => {
+      reportChatErrorToPostHog(error, "chat-api-stream");
+
       if (error instanceof Error) {
         logError(sessionLogger, error, {
           errorLocation: "createUIMessageStream",
@@ -227,6 +251,8 @@ export async function POST(req: Request) {
               )
             )
             .catch((error) => {
+              reportChatErrorToPostHog(error, "chat-api-generate-title");
+
               logError(
                 sessionLogger,
                 error instanceof Error ? error : new Error(String(error)),
@@ -257,6 +283,8 @@ export async function POST(req: Request) {
           },
           { token }
         ).catch((error) => {
+          reportChatErrorToPostHog(error, "chat-api-save-assistant-response");
+
           logError(
             sessionLogger,
             error instanceof Error ? error : new Error(String(error)),
@@ -426,6 +454,8 @@ export async function POST(req: Request) {
             }
           },
           onError: (error) => {
+            reportChatErrorToPostHog(error, "chat-api-message-stream");
+
             if (error instanceof Error) {
               logError(sessionLogger, error, {
                 errorLocation: "toUIMessageStream",

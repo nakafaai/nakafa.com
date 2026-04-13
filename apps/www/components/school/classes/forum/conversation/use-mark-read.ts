@@ -1,6 +1,7 @@
 "use client";
 
 import { useDebouncedCallback } from "@mantine/hooks";
+import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useMutation } from "convex/react";
@@ -27,7 +28,13 @@ export function useMarkRead({ forumId }: { forumId: Id<"schoolClassForums"> }) {
         .then(() => {
           lastSyncedPostIdRef.current = lastReadPostId;
         })
-        .catch(() => {
+        .catch((error) => {
+          captureException(error, {
+            forum_id: forumId,
+            last_read_post_id: lastReadPostId,
+            source: "forum-mark-read",
+          });
+
           // Keep the previous synced post id so a later bottom/new-post event
           // can retry naturally.
         });

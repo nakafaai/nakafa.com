@@ -8,6 +8,7 @@ import {
   Tick01Icon,
   Time04Icon,
 } from "@hugeicons/core-free-icons";
+import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
@@ -93,7 +94,11 @@ export function SchoolClassesMaterialsNew() {
         });
         setOpenDialog(false);
         form.reset();
-      } catch {
+      } catch (error) {
+        captureException(error, {
+          source: "school-material-group-create",
+        });
+
         toast.error(t("create-material-group-failed"));
       }
     },

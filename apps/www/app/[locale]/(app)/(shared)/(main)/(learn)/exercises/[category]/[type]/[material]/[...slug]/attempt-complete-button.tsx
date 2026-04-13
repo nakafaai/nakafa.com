@@ -2,6 +2,7 @@
 
 import { ArrowDown01Icon, StopIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
+import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -73,7 +74,11 @@ export function CompleteExerciseButton() {
         close();
         resetTimeSpent();
         setShowStats(true);
-      } catch {
+      } catch (error) {
+        captureException(error, {
+          source: "exercise-complete-attempt",
+        });
+
         toast.error(t("complete-exercise-error"), {
           position: "bottom-center",
         });

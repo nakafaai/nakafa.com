@@ -98,6 +98,10 @@ export function ExerciseChoices({
         const errorData = error.data;
 
         if (!(typeof errorData === "object" && errorData !== null)) {
+          captureException(error, {
+            source: "exercise-submit-answer",
+          });
+
           toast.error(t("submit-answer-error"), {
             position: "bottom-center",
           });

@@ -1,6 +1,7 @@
 "use client";
 
 import { Cancel01Icon, PaintBrush04Icon } from "@hugeicons/core-free-icons";
+import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { SchoolClassImage } from "@repo/backend/convex/classes/schema";
 import { PERMISSIONS } from "@repo/backend/convex/lib/helpers/permissions";
@@ -87,8 +88,11 @@ function InfoCustomizeButton() {
           classId,
           image,
         });
-      } catch {
-        // handle error here
+      } catch (error) {
+        captureException(error, {
+          image,
+          source: "school-class-image-update",
+        });
       }
     });
   };

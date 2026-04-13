@@ -14,6 +14,17 @@ const SourceContext = createContext<{
   domain: string;
 } | null>(null);
 
+/**
+ * Derive the readable domain label shown for one source link.
+ */
+function getSourceDomain(href: string) {
+  if (typeof URL.canParse === "function" && URL.canParse(href)) {
+    return new URL(href).hostname;
+  }
+
+  return href.split("/").pop() || href;
+}
+
 function useSourceContext() {
   const ctx = useContext(SourceContext);
   if (!ctx) {
@@ -28,12 +39,7 @@ export interface SourceProps {
 }
 
 export function Source({ href, children }: SourceProps) {
-  let domain = "";
-  try {
-    domain = new URL(href).hostname;
-  } catch {
-    domain = href.split("/").pop() || href;
-  }
+  const domain = getSourceDomain(href);
 
   return (
     <SourceContext.Provider value={{ href, domain }}>

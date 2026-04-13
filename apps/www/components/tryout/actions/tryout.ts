@@ -1,5 +1,6 @@
 "use server";
 
+import { captureServerException } from "@repo/analytics/posthog/server";
 import { api } from "@repo/backend/convex/_generated/api";
 import { products } from "@repo/backend/convex/utils/polar/products";
 import { getPathname } from "@repo/internationalization/src/navigation";
@@ -100,7 +101,12 @@ async function getCheckoutUrl({
     );
 
     return result.url;
-  } catch {
+  } catch (error) {
+    await captureServerException(error, undefined, {
+      source: "tryout-checkout-url",
+      success_url: successUrl,
+    });
+
     return null;
   }
 }
@@ -124,6 +130,13 @@ export async function startTryout({
     }
 
     if (errorCode !== "TRYOUT_ACCESS_REQUIRED") {
+      await captureServerException(error, undefined, {
+        locale: args.locale,
+        product: args.product,
+        source: "start-tryout",
+        tryout_slug: args.tryoutSlug,
+      });
+
       return { code: "UNKNOWN", ok: false };
     }
 
