@@ -1,5 +1,6 @@
 "use client"; // Error boundaries must be Client Components
 
+import { captureException } from "@repo/analytics/posthog";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Particles } from "@repo/design-system/components/ui/particles";
 import { buttonVariants } from "@repo/design-system/lib/button";
@@ -17,8 +18,10 @@ export default function ErrorPage({
   const t = useTranslations("Error");
 
   useEffect(() => {
-    // Log the error to an error reporting service
-    console.error(error);
+    captureException(error, {
+      source: "next-segment-error",
+      ...(error.digest ? { nextjs_digest: error.digest } : {}),
+    });
   }, [error]);
 
   return (

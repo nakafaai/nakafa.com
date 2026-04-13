@@ -25,6 +25,7 @@
     "@radix-ui/react-use-controllable-state": "^1.2.2",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
+    "@repo/analytics": "workspace:*",
     "@repo/internationalization": "workspace:*",
     "@shikijs/transformers": "^4.0.2",
     "@tabler/icons-react": "^3.41.1",

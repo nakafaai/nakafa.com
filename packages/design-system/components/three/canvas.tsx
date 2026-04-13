@@ -5,6 +5,7 @@ import { AdaptiveDpr } from "@react-three/drei";
 import { Canvas, type CanvasProps } from "@react-three/fiber";
 import { analytics } from "@repo/analytics/posthog";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
@@ -17,7 +18,6 @@ import { cn } from "@repo/design-system/lib/utils";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
-import { ErrorBoundary } from "react-error-boundary";
 
 function ErrorFallback({
   error,

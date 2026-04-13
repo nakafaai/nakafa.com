@@ -3,6 +3,7 @@
 import { Copy01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
 import { type IconType, SiGnometerminal } from "@icons-pack/react-simple-icons";
 import { useControllableState } from "@radix-ui/react-use-controllable-state";
+import { captureException } from "@repo/analytics/posthog";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
@@ -491,7 +492,16 @@ export const CodeBlockContent = ({
       return;
     }
 
-    highlight(children, language, themes).then(setHtml).catch(console.error);
+    highlight(children, language, themes)
+      .then(setHtml)
+      .catch((error) => {
+        setHtml(null);
+        captureException(error, {
+          component: "CodeBlockContent",
+          language: language ?? "plain-text",
+          source: "code-block-highlight",
+        });
+      });
   }, [children, themes, syntaxHighlighting, language]);
 
   if (!(syntaxHighlighting && html)) {
