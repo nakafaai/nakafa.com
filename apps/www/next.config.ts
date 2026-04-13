@@ -1,5 +1,11 @@
 import path from "node:path";
-import { config, withAnalyzer, withMDX } from "@repo/next-config";
+import { createPostHogProxyRewrites } from "@repo/analytics/posthog/config";
+import {
+  config,
+  createSecurityHeaders,
+  withAnalyzer,
+  withMDX,
+} from "@repo/next-config";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 import { env } from "@/env";
@@ -8,9 +14,106 @@ const withNextIntl = createNextIntlPlugin(
   "../../packages/internationalization/src/request.ts"
 );
 
+/**
+ * Build the rewrite rules for SEO assets and the same-origin PostHog proxy.
+ *
+ * References:
+ * https://posthog.com/docs/advanced/proxy/nextjs
+ * https://posthog.com/docs/advanced/proxy/vercel
+ */
+function createAppRewrites() {
+  const llmSource = [
+    "/:path*.md",
+    "/:path*.mdx",
+    "/:path*.txt",
+    "/:path*/llms.txt",
+  ];
+  const llmDestination = "/llms.mdx/:path*";
+  const ogSource = ["/:path*.png", "/:path*.og", "/:path*/image.png"];
+  const ogDestination = "/og/:path*";
+
+  return [
+    // PostHog requires the specific static and array rewrites to come before the
+    // catch-all analytics rewrite so asset cache headers are preserved.
+    ...createPostHogProxyRewrites(env.POSTHOG_PROXY_HOST),
+    ...llmSource.map((source) => ({
+      source,
+      destination: llmDestination,
+    })),
+    ...ogSource.map((source) => ({
+      source,
+      destination: ogDestination,
+    })),
+  ];
+}
+
+/**
+ * Build the localized redirect list shared by all supported locales.
+ */
+function createLocalizedRedirects() {
+  const redirects = [
+    {
+      source: "/subject/junior-high-school/:path*",
+      destination: "/subject/middle-school/:path*",
+      permanent: true,
+    },
+    {
+      source: "/subject/senior-high-school/:path*",
+      destination: "/subject/high-school/:path*",
+      permanent: true,
+    },
+    {
+      source: "/exercises/high-school/snbt/quantitative-reasoning/:path*",
+      destination: "/exercises/high-school/snbt/quantitative-knowledge/:path*",
+      permanent: true,
+    },
+    {
+      source: "/discord",
+      destination: "https://discord.gg/CPCSfKhvfQ",
+      permanent: false,
+    },
+    {
+      source: "/community",
+      destination: "https://discord.gg/CPCSfKhvfQ",
+      permanent: false,
+    },
+  ] as const;
+
+  return redirects.flatMap(({ source, destination, permanent }) => {
+    const isExternal = destination.startsWith("http");
+    return [
+      {
+        source,
+        destination,
+        permanent,
+      },
+      {
+        source: `/:locale${source}`,
+        destination: isExternal ? destination : `/:locale${destination}`,
+        permanent,
+      },
+    ];
+  });
+}
+
+/**
+ * Return the shared security headers for all application responses.
+ */
+function createAppHeaders() {
+  return [
+    {
+      source: "/:path*",
+      headers: createSecurityHeaders(),
+    },
+  ];
+}
+
 let nextConfig: NextConfig = {
   ...config,
   cacheComponents: true,
+  // PostHog's same-origin proxy endpoints include trailing slashes such as
+  // `/i/v0/e/`, so Next.js slash normalization must be disabled.
+  skipTrailingSlashRedirect: true,
   // Next.js recommends outputFileTracingRoot in monorepos so files outside the
   // app folder are included in the production trace.
   // Docs: https://nextjs.org/docs/app/api-reference/config/next-config-js/output
@@ -38,73 +141,9 @@ let nextConfig: NextConfig = {
     ...(config.serverExternalPackages ?? []),
     "@takumi-rs/core",
   ],
-  async rewrites() {
-    const llmSource = [
-      "/:path*.md",
-      "/:path*.mdx",
-      "/:path*.txt",
-      "/:path*/llms.txt",
-    ];
-    const llmDestination = "/llms.mdx/:path*";
-    const ogSource = ["/:path*.png", "/:path*.og", "/:path*/image.png"];
-    const ogDestination = "/og/:path*";
-    return [
-      ...llmSource.map((source) => ({
-        source,
-        destination: llmDestination,
-      })),
-      ...ogSource.map((source) => ({
-        source,
-        destination: ogDestination,
-      })),
-    ];
-  },
-  async redirects() {
-    const redirects = [
-      {
-        source: "/subject/junior-high-school/:path*",
-        destination: "/subject/middle-school/:path*",
-        permanent: true,
-      },
-      {
-        source: "/subject/senior-high-school/:path*",
-        destination: "/subject/high-school/:path*",
-        permanent: true,
-      },
-      {
-        source: "/exercises/high-school/snbt/quantitative-reasoning/:path*",
-        destination:
-          "/exercises/high-school/snbt/quantitative-knowledge/:path*",
-        permanent: true,
-      },
-      {
-        source: "/discord",
-        destination: "https://discord.gg/CPCSfKhvfQ",
-        permanent: false,
-      },
-      {
-        source: "/community",
-        destination: "https://discord.gg/CPCSfKhvfQ",
-        permanent: false,
-      },
-    ] as const;
-
-    return redirects.flatMap(({ source, destination, permanent }) => {
-      const isExternal = destination.startsWith("http");
-      return [
-        {
-          source,
-          destination,
-          permanent,
-        },
-        {
-          source: `/:locale${source}`,
-          destination: isExternal ? destination : `/:locale${destination}`,
-          permanent,
-        },
-      ];
-    });
-  },
+  rewrites: createAppRewrites,
+  redirects: createLocalizedRedirects,
+  headers: createAppHeaders,
   experimental: {
     ...config.experimental,
     globalNotFound: true,

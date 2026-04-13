@@ -1,8 +1,13 @@
 "use server";
 
-import { captureServerException } from "@repo/analytics/posthog/server";
+import {
+  captureServerException,
+  extractDistinctIdFromPostHogCookie,
+} from "@repo/analytics/posthog/server";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
+import { cookies } from "next/headers";
+import { after } from "next/server";
 import {
   revalidateTryoutOverview,
   revalidateTryoutSet,
@@ -88,13 +93,19 @@ export async function startTryoutPart({
 
     return result;
   } catch (error) {
-    await captureServerException(error, undefined, {
-      locale: args.locale,
-      part_key: args.partKey,
-      product: args.product,
-      source: "start-tryout-part",
-      tryout_attempt_id: args.tryoutAttemptId,
-      tryout_slug: args.tryoutSlug,
+    after(async () => {
+      await captureServerException(
+        error,
+        extractDistinctIdFromPostHogCookie((await cookies()).toString()),
+        {
+          locale: args.locale,
+          part_key: args.partKey,
+          product: args.product,
+          source: "start-tryout-part",
+          tryout_attempt_id: args.tryoutAttemptId,
+          tryout_slug: args.tryoutSlug,
+        }
+      );
     });
 
     return { kind: "unknown" };
@@ -127,13 +138,19 @@ export async function completeTryoutPart({
 
     return result;
   } catch (error) {
-    await captureServerException(error, undefined, {
-      locale: args.locale,
-      part_key: args.partKey,
-      product: args.product,
-      source: "complete-tryout-part",
-      tryout_attempt_id: args.tryoutAttemptId,
-      tryout_slug: args.tryoutSlug,
+    after(async () => {
+      await captureServerException(
+        error,
+        extractDistinctIdFromPostHogCookie((await cookies()).toString()),
+        {
+          locale: args.locale,
+          part_key: args.partKey,
+          product: args.product,
+          source: "complete-tryout-part",
+          tryout_attempt_id: args.tryoutAttemptId,
+          tryout_slug: args.tryoutSlug,
+        }
+      );
     });
 
     return { kind: "unknown" };

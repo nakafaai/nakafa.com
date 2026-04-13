@@ -67,6 +67,7 @@ export const syncUserInfoForChat = mutation({
   returns: v.object({
     role: nullable(userRoleValidator),
     credits: v.number(),
+    userId: v.id("users"),
   }),
   handler: async (ctx) => {
     const user = await requireAuth(ctx);
@@ -87,6 +88,7 @@ export const syncUserInfoForChat = mutation({
       return {
         role: user.appUser.role ?? null,
         credits: effectiveCredits.credits,
+        userId: user.appUser._id,
       };
     }
 
@@ -105,6 +107,7 @@ export const syncUserInfoForChat = mutation({
     return {
       role: user.appUser.role ?? null,
       credits: effectiveCredits.credits,
+      userId: user.appUser._id,
     };
   },
 });

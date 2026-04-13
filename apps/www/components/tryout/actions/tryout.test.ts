@@ -2,7 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { startTryout } from "./tryout";
 
 const mocks = vi.hoisted(() => ({
+  after: vi.fn(async (callback) => await callback()),
   captureServerException: vi.fn(),
+  cookies: vi.fn(),
+  extractDistinctIdFromPostHogCookie: vi.fn(),
   fetchAuthAction: vi.fn(),
   fetchAuthMutation: vi.fn(),
   getPathname: vi.fn(),
@@ -12,6 +15,15 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@repo/analytics/posthog/server", () => ({
   captureServerException: mocks.captureServerException,
+  extractDistinctIdFromPostHogCookie: mocks.extractDistinctIdFromPostHogCookie,
+}));
+
+vi.mock("next/server", () => ({
+  after: mocks.after,
+}));
+
+vi.mock("next/headers", () => ({
+  cookies: mocks.cookies,
 }));
 
 vi.mock("@/lib/auth/server", () => ({
@@ -45,6 +57,10 @@ vi.mock("@/env", () => ({
 describe("components/tryout/actions/tryout", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.cookies.mockResolvedValue({
+      toString: () => "ph_cookie=user_123",
+    });
+    mocks.extractDistinctIdFromPostHogCookie.mockReturnValue("user_123");
     mocks.getPathname.mockImplementation((args) => args.href);
   });
 
@@ -127,7 +143,7 @@ describe("components/tryout/actions/tryout", () => {
     expect(result).toEqual({ kind: "unknown" });
     expect(mocks.captureServerException).toHaveBeenCalledWith(
       error,
-      undefined,
+      "user_123",
       {
         source: "tryout-checkout-url",
         success_url: "https://nakafa.com/id/try-out/snbt/2026-set-1",
@@ -166,7 +182,7 @@ describe("components/tryout/actions/tryout", () => {
     expect(result).toEqual({ kind: "unknown" });
     expect(mocks.captureServerException).toHaveBeenCalledWith(
       error,
-      undefined,
+      "user_123",
       {
         locale: "id",
         product: "snbt",
