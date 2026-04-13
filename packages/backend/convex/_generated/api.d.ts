@@ -215,6 +215,7 @@ import type * as tryouts_mutations_internal_expiry from "../tryouts/mutations/in
 import type * as tryouts_mutations_internal_leaderboard from "../tryouts/mutations/internal/leaderboard.js";
 import type * as tryouts_mutations_internal_scoring from "../tryouts/mutations/internal/scoring.js";
 import type * as tryouts_mutations_internal_stats from "../tryouts/mutations/internal/stats.js";
+import type * as tryouts_mutations_validators from "../tryouts/mutations/validators.js";
 import type * as tryouts_products_index from "../tryouts/products/index.js";
 import type * as tryouts_products_snbt from "../tryouts/products/snbt.js";
 import type * as tryouts_queries_leaderboard from "../tryouts/queries/leaderboard.js";
@@ -460,6 +461,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/mutations/internal/leaderboard": typeof tryouts_mutations_internal_leaderboard;
   "tryouts/mutations/internal/scoring": typeof tryouts_mutations_internal_scoring;
   "tryouts/mutations/internal/stats": typeof tryouts_mutations_internal_stats;
+  "tryouts/mutations/validators": typeof tryouts_mutations_validators;
   "tryouts/products/index": typeof tryouts_products_index;
   "tryouts/products/snbt": typeof tryouts_products_snbt;
   "tryouts/queries/leaderboard": typeof tryouts_queries_leaderboard;
