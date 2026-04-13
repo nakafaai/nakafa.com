@@ -35,7 +35,7 @@ function createAppRewrites() {
   return [
     // PostHog requires the specific static and array rewrites to come before the
     // catch-all analytics rewrite so asset cache headers are preserved.
-    ...createPostHogProxyRewrites(env.NEXT_PUBLIC_POSTHOG_API_HOST),
+    ...createPostHogProxyRewrites(env.POSTHOG_PROXY_HOST),
     ...llmSource.map((source) => ({
       source,
       destination: llmDestination,

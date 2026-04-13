@@ -25,7 +25,7 @@ export function proxy(request: NextRequest) {
     const redirectUrl = new URL(request.url);
     redirectUrl.pathname = pathname.replace(TRAILING_SLASH_PATTERN, "");
 
-    return NextResponse.redirect(redirectUrl);
+    return NextResponse.redirect(redirectUrl, 308);
   }
 
   return handleLocalizedRequest(request);

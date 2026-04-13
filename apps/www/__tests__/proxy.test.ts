@@ -40,7 +40,7 @@ describe("proxy", () => {
     const response = proxy(new NextRequest("http://localhost:3000/en/search/"));
 
     expect(localeMiddleware).not.toHaveBeenCalled();
-    expect(response.status).toBe(307);
+    expect(response.status).toBe(308);
     expect(response.headers.get("location")).toBe(
       "http://localhost:3000/en/search"
     );

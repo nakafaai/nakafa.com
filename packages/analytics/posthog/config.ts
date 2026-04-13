@@ -27,16 +27,17 @@ export function isPostHogProxyPathname(pathname: string) {
 /**
  * Build the rewrite rules required by PostHog's Next.js reverse-proxy docs.
  *
- * `apiHost` is Nakafa's managed PostHog proxy origin (`t.nakafa.com`). Vercel
- * fetches that upstream server-side while the browser only sees `nakafa.com`.
+ * `proxyHost` is Nakafa's managed PostHog proxy origin (`t.nakafa.com`).
+ * Vercel fetches that upstream server-side while the browser only sees
+ * `nakafa.com`.
  *
  * References:
  * https://posthog.com/docs/advanced/proxy/managed-reverse-proxy
  * https://posthog.com/docs/advanced/proxy/nextjs
  * https://posthog.com/docs/advanced/proxy/vercel
  */
-export function createPostHogProxyRewrites(apiHost: string) {
-  const postHogOrigin = new URL(apiHost).origin;
+export function createPostHogProxyRewrites(proxyHost: string) {
+  const postHogOrigin = new URL(proxyHost).origin;
 
   return [
     {

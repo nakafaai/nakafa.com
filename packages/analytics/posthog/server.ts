@@ -9,7 +9,7 @@ type ServerExceptionProperties = Record<string | number, unknown>;
 const COOKIE_SPLIT_PATTERN = /;\s*/;
 
 export const analytics = new PostHog(keys().NEXT_PUBLIC_POSTHOG_KEY, {
-  host: keys().NEXT_PUBLIC_POSTHOG_API_HOST,
+  host: keys().POSTHOG_PROXY_HOST,
 
   // Don't batch events and flush immediately - we're running in a serverless environment
   flushAt: 1,
