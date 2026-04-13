@@ -27,6 +27,11 @@ import {
   resolveRequestedTryoutPart,
 } from "@repo/backend/convex/tryouts/helpers/parts";
 import {
+  completePartResultValidator,
+  startPartResultValidator,
+  startTryoutResultValidator,
+} from "@repo/backend/convex/tryouts/mutations/validators";
+import {
   tryoutProductPolicies,
   tryoutProductValidator,
 } from "@repo/backend/convex/tryouts/products";
@@ -34,48 +39,6 @@ import { tryoutPartKeyValidator } from "@repo/backend/convex/tryouts/schema";
 import { getConvexErrorCode } from "@repo/backend/convex/utils/error";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { ConvexError, v } from "convex/values";
-
-const startTryoutResultValidator = v.union(
-  v.object({
-    kind: v.literal("started"),
-  }),
-  v.object({
-    kind: v.literal("competition-attempt-used"),
-  }),
-  v.object({
-    kind: v.literal("requires-access"),
-  }),
-  v.object({
-    kind: v.literal("not-ready"),
-  }),
-  v.object({
-    kind: v.literal("not-found"),
-  }),
-  v.object({
-    kind: v.literal("inactive"),
-  })
-);
-
-const startPartResultValidator = v.union(
-  v.object({
-    kind: v.literal("started"),
-  }),
-  v.object({
-    kind: v.literal("tryout-expired"),
-  }),
-  v.object({
-    kind: v.literal("part-expired"),
-  })
-);
-
-const completePartResultValidator = v.union(
-  v.object({
-    kind: v.literal("completed"),
-  }),
-  v.object({
-    kind: v.literal("tryout-expired"),
-  })
-);
 
 /** Starts or resumes one authenticated tryout attempt for a product slug. */
 export const startTryout = mutation({
