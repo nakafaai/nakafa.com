@@ -31,11 +31,7 @@ export default function Layout(props: LayoutProps<"/[locale]/school/[slug]">) {
   const { children, params } = props;
   const { slug } = use(params);
 
-  return (
-    <SchoolRouteBoundary slug={decodeURIComponent(slug)}>
-      {children}
-    </SchoolRouteBoundary>
-  );
+  return <SchoolRouteBoundary slug={slug}>{children}</SchoolRouteBoundary>;
 }
 
 /**
