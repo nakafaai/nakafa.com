@@ -42,8 +42,8 @@ importers:
         specifier: ^6.0.2
         version: 6.0.2
       ultracite:
-        specifier: ^7.5.6
-        version: 7.5.6
+        specifier: ^7.5.8
+        version: 7.5.8
 
   apps/api:
     dependencies:
@@ -182,8 +182,8 @@ importers:
         specifier: ^19.2.5
         version: 19.2.5(react@19.2.5)
       redis:
-        specifier: ^5.11.0
-        version: 5.11.0
+        specifier: ^5.12.0
+        version: 5.12.0(@opentelemetry/api@1.9.0)
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -509,8 +509,8 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1(next@16.2.3(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(nuxt@4.3.1(@biomejs/biome@2.4.11)(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@parcel/watcher@2.5.4)(@types/node@25.6.0)(@vercel/functions@3.4.3)(@vue/compiler-sfc@3.5.30)(cac@6.7.14)(commander@13.1.0)(db0@0.3.4)(ioredis@5.10.0)(lightningcss@1.32.0)(magicast@0.5.2)(rolldown@1.0.0-rc.15)(rollup@4.55.1)(terser@5.44.1)(tsx@4.21.0)(typescript@6.0.2)(vite@8.0.8(@types/node@25.6.0)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))(yaml@2.8.2))(react@19.2.5)(vue-router@4.6.4(vue@3.5.30(typescript@6.0.2)))(vue@3.5.30(typescript@6.0.2))
       posthog-js:
-        specifier: ^1.368.0
-        version: 1.368.0
+        specifier: ^1.368.2
+        version: 1.368.2
       posthog-node:
         specifier: ^5.29.2
         version: 5.29.2(rxjs@7.8.2)
@@ -549,8 +549,8 @@ importers:
         specifier: ^0.2.3
         version: 0.2.3(@react-email/render@2.0.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.35.1(react@19.2.5))(hono@4.12.12)(react@19.2.5)(typescript@5.9.3)(zod@4.3.6))(convex@1.35.1(react@19.2.5))(react@19.2.5)
       '@convex-dev/workflow':
-        specifier: ^0.3.9
-        version: 0.3.9(@convex-dev/workpool@0.4.6(convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.35.1(react@19.2.5))(hono@4.12.12)(react@19.2.5)(typescript@5.9.3)(zod@4.3.6))(convex@1.35.1(react@19.2.5)))(convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.35.1(react@19.2.5))(hono@4.12.12)(react@19.2.5)(typescript@5.9.3)(zod@4.3.6))(convex@1.35.1(react@19.2.5))
+        specifier: ^0.3.10
+        version: 0.3.10(@convex-dev/workpool@0.4.6(convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.35.1(react@19.2.5))(hono@4.12.12)(react@19.2.5)(typescript@5.9.3)(zod@4.3.6))(convex@1.35.1(react@19.2.5)))(convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.35.1(react@19.2.5))(hono@4.12.12)(react@19.2.5)(typescript@5.9.3)(zod@4.3.6))(convex@1.35.1(react@19.2.5))
       '@convex-dev/workpool':
         specifier: ^0.4.6
         version: 0.4.6(convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.35.1(react@19.2.5))(hono@4.12.12)(react@19.2.5)(typescript@5.9.3)(zod@4.3.6))(convex@1.35.1(react@19.2.5))
@@ -610,8 +610,8 @@ importers:
         specifier: ^4.1.4
         version: 4.1.4(vitest@4.1.4)
       convex-test:
-        specifier: ^0.0.47
-        version: 0.0.47(convex@1.35.1(react@19.2.5))
+        specifier: ^0.0.48
+        version: 0.0.48(convex@1.35.1(react@19.2.5))
       glob:
         specifier: ^13.0.6
         version: 13.0.6
@@ -1731,8 +1731,8 @@ packages:
       convex: ^1.24.8
       convex-helpers: ^0.1.106
 
-  '@convex-dev/workflow@0.3.9':
-    resolution: {integrity: sha512-jkNhQni+mdeh5E3ZfDrmFXUodCmr1PfJAtFhLVw8zxbQQt1Yk4yr3JXAPOvVxMG2jqIwERyzD71XTaFGebDzuQ==}
+  '@convex-dev/workflow@0.3.10':
+    resolution: {integrity: sha512-FXZV4WZIXAaBt3AoMjgwAMjvbI3Z4iyXjZ3rZHjV95ZZZ1joevZdiJpRYPHqeudeXn9KIoeo2ltuo+r3OtmZ+w==}
     peerDependencies:
       '@convex-dev/workpool': ^0.3.0 || ^0.4.0
       convex: ^1.31.7
@@ -4011,8 +4011,8 @@ packages:
   '@posthog/core@1.25.2':
     resolution: {integrity: sha512-h2FO7ut/BbfwpAXWpwdDHTzQgUo9ibDFEs6ZO+3cI3KPWQt5XwczK1OLAuPprcjm8T/jl0SH8jSFo5XdU4RbTg==}
 
-  '@posthog/types@1.368.0':
-    resolution: {integrity: sha512-ORuGmgEmEkwaf/bEI4mOlrzIdOSJJ44vuz+XHPFycmt5Y6swjTXH/1NmIKas5KdKi/SOaKGvSkHGqUv7hHcNaw==}
+  '@posthog/types@1.368.2':
+    resolution: {integrity: sha512-QOukv/OCFdiOJmsr8GQ/Y/20vpkcS4JuGd5Hsh8/qP6mhWwUMtEKAiGEgfyLZKeuFm7zc6rqZpCXTJYL9AW1tQ==}
 
   '@primer/octicons@19.21.1':
     resolution: {integrity: sha512-7tgtBkCNcg75YJnckinzvES+uxysYQCe+CHSEnzr3VYgxttzKRvfmrnVogl3aEuHCQP4xhiE9k2lFDhYwGtTzQ==}
@@ -5914,23 +5914,26 @@ packages:
     peerDependencies:
       '@redis/client': ^1.0.0
 
-  '@redis/bloom@5.11.0':
-    resolution: {integrity: sha512-KYiVilAhAFN3057afUb/tfYJpsEyTkQB+tQcn5gVVA7DgcNOAj8lLxe4j8ov8BF6I9C1Fe/kwlbuAICcTMX8Lw==}
-    engines: {node: '>= 18'}
+  '@redis/bloom@5.12.0':
+    resolution: {integrity: sha512-C8z5xoSaPlwm6zMkbDgP1Z8R3EFAianzKtcPYmU1zUAn29zu3siNDQGnXHtEoySkzqsAZEjtDCHKWMnVJ7KnhA==}
+    engines: {node: '>= 18.19.0'}
     peerDependencies:
-      '@redis/client': ^5.11.0
+      '@redis/client': ^5.12.0
 
   '@redis/client@1.6.1':
     resolution: {integrity: sha512-/KCsg3xSlR+nCK8/8ZYSknYxvXHwubJrU82F3Lm1Fp6789VQ0/3RJKfsmRXjqfaTA++23CvC3hqmqe/2GEt6Kw==}
     engines: {node: '>=14'}
 
-  '@redis/client@5.11.0':
-    resolution: {integrity: sha512-GHoprlNQD51Xq2Ztd94HHV94MdFZQ3CVrpA04Fz8MVoHM0B7SlbmPEVIjwTbcv58z8QyjnrOuikS0rWF03k5dQ==}
-    engines: {node: '>= 18'}
+  '@redis/client@5.12.0':
+    resolution: {integrity: sha512-rFtRx68ZOtFO6aQwEfMaje3dh/x6BOr0kAauIiTimUw+A6RVbx5QVLbYHQXL+hlxondnm8dbNV6lsgzShg3yKQ==}
+    engines: {node: '>= 18.19.0'}
     peerDependencies:
       '@node-rs/xxhash': ^1.1.0
+      '@opentelemetry/api': '>=1 <2'
     peerDependenciesMeta:
       '@node-rs/xxhash':
+        optional: true
+      '@opentelemetry/api':
         optional: true
 
   '@redis/graph@1.1.1':
@@ -5943,33 +5946,33 @@ packages:
     peerDependencies:
       '@redis/client': ^1.0.0
 
-  '@redis/json@5.11.0':
-    resolution: {integrity: sha512-1iAy9kAtcD0quB21RbPTbUqqy+T2Uu2JxucwE+B4A+VaDbIRvpZR6DMqV8Iqaws2YxJYB3GC5JVNzPYio2ErUg==}
-    engines: {node: '>= 18'}
+  '@redis/json@5.12.0':
+    resolution: {integrity: sha512-V60ENKoyp2q5qH0OPW4kSPwtsgz5Z0XTzZWAGKNB7ghrGXfZmb0QBFPWrmy4oYn/y4wQa9bj7UjtoNMMdZmfeg==}
+    engines: {node: '>= 18.19.0'}
     peerDependencies:
-      '@redis/client': ^5.11.0
+      '@redis/client': ^5.12.0
 
   '@redis/search@1.2.0':
     resolution: {integrity: sha512-tYoDBbtqOVigEDMAcTGsRlMycIIjwMCgD8eR2t0NANeQmgK/lvxNAvYyb6bZDD4frHRhIHkJu2TBRvB0ERkOmw==}
     peerDependencies:
       '@redis/client': ^1.0.0
 
-  '@redis/search@5.11.0':
-    resolution: {integrity: sha512-g1l7f3Rnyk/xI99oGHIgWHSKFl45Re5YTIcO8j/JE8olz389yUFyz2+A6nqVy/Zi031VgPDWscbbgOk8hlhZ3g==}
-    engines: {node: '>= 18'}
+  '@redis/search@5.12.0':
+    resolution: {integrity: sha512-H37wP2iYHG6IPMcBec/XrHQLM5/y0W/hN+6Hwq37RnAOMtO6FQAHWc0OEQorE2U1CddHHl191bSE5Id7X2R9YA==}
+    engines: {node: '>= 18.19.0'}
     peerDependencies:
-      '@redis/client': ^5.11.0
+      '@redis/client': ^5.12.0
 
   '@redis/time-series@1.1.0':
     resolution: {integrity: sha512-c1Q99M5ljsIuc4YdaCwfUEXsofakb9c8+Zse2qxTadu8TalLXuAESzLvFAvNVbkmSlvlzIQOLpBCmWI9wTOt+g==}
     peerDependencies:
       '@redis/client': ^1.0.0
 
-  '@redis/time-series@5.11.0':
-    resolution: {integrity: sha512-TWFeOcU4xkj0DkndnOyhtxvX1KWD+78UHT3XX3x3XRBUGWeQrKo3jqzDsZwxbggUgf9yLJr/akFHXru66X5UQA==}
-    engines: {node: '>= 18'}
+  '@redis/time-series@5.12.0':
+    resolution: {integrity: sha512-KI3TRWzYpkJcX+HvugEKBlphIR2LAGv5gGcJAg77bP24uXqSPTJcLsxSbnfJTbgb1RRThK5TMaXhaKMXv8Pi2Q==}
+    engines: {node: '>= 18.19.0'}
     peerDependencies:
-      '@redis/client': ^5.11.0
+      '@redis/client': ^5.12.0
 
   '@rolldown/binding-android-arm64@1.0.0-rc.15':
     resolution: {integrity: sha512-YYe6aWruPZDtHNpwu7+qAHEMbQ/yRl6atqb/AhznLTnD3UY99Q1jE7ihLSahNWkF4EqRPVC4SiR4O0UkLK02tA==}
@@ -8046,8 +8049,8 @@ packages:
       zod:
         optional: true
 
-  convex-test@0.0.47:
-    resolution: {integrity: sha512-EBJQ2Ys2sHWFCZYYO1bAqudrrMW3y+SP7BF2+E5rYIGVntU4v+EoWxx1h/X+2ISMKvecf4RJLV6ojBvWNUFDcw==}
+  convex-test@0.0.48:
+    resolution: {integrity: sha512-ewAkXwNJE0TpHAfHJt38NR6ZsArqdzd4HUy9BxegKENvupYwWCVJezFfkIJoYaZThqPABEfmiChvG8KCqCTm5w==}
     peerDependencies:
       convex: ^1.32.0
 
@@ -11394,8 +11397,8 @@ packages:
     resolution: {integrity: sha512-7a70Nsot+EMX9fFU3064K/kdHWZqGVY+BADLyXc8Dfv+mTLLVl6JzJpPaCZ2kQL9gIJvKXSLMHhqdRRjwQeFtw==}
     engines: {node: ^10 || ^12 || >=14}
 
-  posthog-js@1.368.0:
-    resolution: {integrity: sha512-Smh2Q49oIOzGph73A3dLXCjepze8Nk0ApPtbJvbARFXI8XQp0mD+ia0RFcYQ25m2+PA1ViE8pR+Ga8yG7awzsw==}
+  posthog-js@1.368.2:
+    resolution: {integrity: sha512-0gfMmZWA9Z2IGtgc2b9uRGap6+9ib5iNhyjtq4qRqtVKF6JKlhqEaml3p+c+cOIWi1Ym/gJ55VngKil9TGYJhQ==}
 
   posthog-node@5.29.2:
     resolution: {integrity: sha512-rI7kkF0XqDc0G1qjx+Hb4iuY9NAlL+XQNoGOpnEpRNTUcXvjY6WlsRGZ9m2whgc39emrrYdszi/YT8wZkr2xsg==}
@@ -11905,9 +11908,9 @@ packages:
   redis@4.7.1:
     resolution: {integrity: sha512-S1bJDnqLftzHXHP8JsT5II/CtHWQrASX5K96REjWjlmWKrviSOLWmM7QnRLstAWsu1VBBV1ffV6DzCvxNP0UJQ==}
 
-  redis@5.11.0:
-    resolution: {integrity: sha512-YwXjATVDT+AuxcyfOwZn046aml9jMlQPvU1VXIlLDVAExe0u93aTfPYSeRgG4p9Q/Jlkj+LXJ1XEoFV+j2JKcQ==}
-    engines: {node: '>= 18'}
+  redis@5.12.0:
+    resolution: {integrity: sha512-XH3VYpC2T7LJDtxC53EGz7I7Bl5L4H1Vl13ssD8rJUAs1ItLNBf9+/XrftiOCDuI6mqRSUUhLuVq8VM9uH+spQ==}
+    engines: {node: '>= 18.19.0'}
 
   refractor@5.0.0:
     resolution: {integrity: sha512-QXOrHQF5jOpjjLfiNk5GFnWhRXvxjUVnlFxkeDmewR5sXkr3iM46Zo+CnRR8B+MDVqkULW4EcLVcRBNOPXHosw==}
@@ -12864,12 +12867,15 @@ packages:
     resolution: {integrity: sha512-rvKSBiC5zqCCiDZ9kAOszZcDvdAHwwIKJG33Ykj43OKcWsnmcBRL09YTU4nOeHZ8Y2a7l1MgTd08SBe9A8Qj6A==}
     engines: {node: '>=18'}
 
-  ultracite@7.5.6:
-    resolution: {integrity: sha512-lWHFAq7NP2tUxANFMcJW5JW14NsQ7EKlYz4+NTSUGD16a52j6yBkIenv0A+qpFBzpCXmZ0SdD0Bjh3yNkY8dGA==}
+  ultracite@7.5.8:
+    resolution: {integrity: sha512-wX7YNyKj6wInPF54Nz+DCJ3lSwXUEal9fImBsPZxkfwmHCdfHk3M+OAomanqTcF2jWDmnDKeRoUpDJY5ab2p2g==}
     hasBin: true
     peerDependencies:
+      oxfmt: '>=0.1.0'
       oxlint: ^1.0.0
     peerDependenciesMeta:
+      oxfmt:
+        optional: true
       oxlint:
         optional: true
 
@@ -14581,7 +14587,7 @@ snapshots:
       - '@react-email/render'
       - react
 
-  '@convex-dev/workflow@0.3.9(@convex-dev/workpool@0.4.6(convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.35.1(react@19.2.5))(hono@4.12.12)(react@19.2.5)(typescript@5.9.3)(zod@4.3.6))(convex@1.35.1(react@19.2.5)))(convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.35.1(react@19.2.5))(hono@4.12.12)(react@19.2.5)(typescript@5.9.3)(zod@4.3.6))(convex@1.35.1(react@19.2.5))':
+  '@convex-dev/workflow@0.3.10(@convex-dev/workpool@0.4.6(convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.35.1(react@19.2.5))(hono@4.12.12)(react@19.2.5)(typescript@5.9.3)(zod@4.3.6))(convex@1.35.1(react@19.2.5)))(convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.35.1(react@19.2.5))(hono@4.12.12)(react@19.2.5)(typescript@5.9.3)(zod@4.3.6))(convex@1.35.1(react@19.2.5))':
     dependencies:
       '@convex-dev/workpool': 0.4.6(convex-helpers@0.1.114(@standard-schema/spec@1.1.0)(convex@1.35.1(react@19.2.5))(hono@4.12.12)(react@19.2.5)(typescript@5.9.3)(zod@4.3.6))(convex@1.35.1(react@19.2.5))
       async-channel: 0.2.0
@@ -16696,7 +16702,7 @@ snapshots:
 
   '@posthog/core@1.25.2': {}
 
-  '@posthog/types@1.368.0': {}
+  '@posthog/types@1.368.2': {}
 
   '@primer/octicons@19.21.1':
     dependencies:
@@ -19182,9 +19188,9 @@ snapshots:
     dependencies:
       '@redis/client': 1.6.1
 
-  '@redis/bloom@5.11.0(@redis/client@5.11.0)':
+  '@redis/bloom@5.12.0(@redis/client@5.12.0(@opentelemetry/api@1.9.0))':
     dependencies:
-      '@redis/client': 5.11.0
+      '@redis/client': 5.12.0(@opentelemetry/api@1.9.0)
 
   '@redis/client@1.6.1':
     dependencies:
@@ -19192,9 +19198,11 @@ snapshots:
       generic-pool: 3.9.0
       yallist: 4.0.0
 
-  '@redis/client@5.11.0':
+  '@redis/client@5.12.0(@opentelemetry/api@1.9.0)':
     dependencies:
       cluster-key-slot: 1.1.2
+    optionalDependencies:
+      '@opentelemetry/api': 1.9.0
 
   '@redis/graph@1.1.1(@redis/client@1.6.1)':
     dependencies:
@@ -19204,25 +19212,25 @@ snapshots:
     dependencies:
       '@redis/client': 1.6.1
 
-  '@redis/json@5.11.0(@redis/client@5.11.0)':
+  '@redis/json@5.12.0(@redis/client@5.12.0(@opentelemetry/api@1.9.0))':
     dependencies:
-      '@redis/client': 5.11.0
+      '@redis/client': 5.12.0(@opentelemetry/api@1.9.0)
 
   '@redis/search@1.2.0(@redis/client@1.6.1)':
     dependencies:
       '@redis/client': 1.6.1
 
-  '@redis/search@5.11.0(@redis/client@5.11.0)':
+  '@redis/search@5.12.0(@redis/client@5.12.0(@opentelemetry/api@1.9.0))':
     dependencies:
-      '@redis/client': 5.11.0
+      '@redis/client': 5.12.0(@opentelemetry/api@1.9.0)
 
   '@redis/time-series@1.1.0(@redis/client@1.6.1)':
     dependencies:
       '@redis/client': 1.6.1
 
-  '@redis/time-series@5.11.0(@redis/client@5.11.0)':
+  '@redis/time-series@5.12.0(@redis/client@5.12.0(@opentelemetry/api@1.9.0))':
     dependencies:
-      '@redis/client': 5.11.0
+      '@redis/client': 5.12.0(@opentelemetry/api@1.9.0)
 
   '@rolldown/binding-android-arm64@1.0.0-rc.15':
     optional: true
@@ -21390,7 +21398,7 @@ snapshots:
       typescript: 6.0.2
       zod: 4.3.6
 
-  convex-test@0.0.47(convex@1.35.1(react@19.2.5)):
+  convex-test@0.0.48(convex@1.35.1(react@19.2.5)):
     dependencies:
       convex: 1.35.1(react@19.2.5)
 
@@ -25823,7 +25831,7 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  posthog-js@1.368.0:
+  posthog-js@1.368.2:
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/api-logs': 0.208.0
@@ -25831,7 +25839,7 @@ snapshots:
       '@opentelemetry/resources': 2.3.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-logs': 0.208.0(@opentelemetry/api@1.9.0)
       '@posthog/core': 1.25.2
-      '@posthog/types': 1.368.0
+      '@posthog/types': 1.368.2
       core-js: 3.47.0
       dompurify: 3.3.2
       fflate: 0.4.8
@@ -26668,15 +26676,16 @@ snapshots:
       '@redis/search': 1.2.0(@redis/client@1.6.1)
       '@redis/time-series': 1.1.0(@redis/client@1.6.1)
 
-  redis@5.11.0:
+  redis@5.12.0(@opentelemetry/api@1.9.0):
     dependencies:
-      '@redis/bloom': 5.11.0(@redis/client@5.11.0)
-      '@redis/client': 5.11.0
-      '@redis/json': 5.11.0(@redis/client@5.11.0)
-      '@redis/search': 5.11.0(@redis/client@5.11.0)
-      '@redis/time-series': 5.11.0(@redis/client@5.11.0)
+      '@redis/bloom': 5.12.0(@redis/client@5.12.0(@opentelemetry/api@1.9.0))
+      '@redis/client': 5.12.0(@opentelemetry/api@1.9.0)
+      '@redis/json': 5.12.0(@redis/client@5.12.0(@opentelemetry/api@1.9.0))
+      '@redis/search': 5.12.0(@redis/client@5.12.0(@opentelemetry/api@1.9.0))
+      '@redis/time-series': 5.12.0(@redis/client@5.12.0(@opentelemetry/api@1.9.0))
     transitivePeerDependencies:
       - '@node-rs/xxhash'
+      - '@opentelemetry/api'
 
   refractor@5.0.0:
     dependencies:
@@ -27897,7 +27906,7 @@ snapshots:
 
   uint8array-extras@1.5.0: {}
 
-  ultracite@7.5.6:
+  ultracite@7.5.8:
     dependencies:
       '@clack/prompts': 1.2.0
       commander: 14.0.3

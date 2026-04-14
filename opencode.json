@@ -12,6 +12,14 @@
       "type": "remote",
       "url": "https://docs.ultracite.ai/mcp"
     },
+    "posthog": {
+      "type": "remote",
+      "url": "https://mcp-eu.posthog.com/mcp",
+      "oauth": false,
+      "headers": {
+        "Authorization": "Bearer {env:POSTHOG_MCP_API_KEY}"
+      }
+    },
     "convex": {
       "type": "local",
       "command": ["npx", "-y", "convex@latest", "mcp", "start"]
