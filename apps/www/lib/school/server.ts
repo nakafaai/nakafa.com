@@ -2,6 +2,7 @@ import { captureServerException } from "@repo/analytics/posthog/server";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { ConvexError } from "convex/values";
+import { cache } from "react";
 import { fetchAuthQuery } from "@/lib/auth/server";
 
 const SCHOOL_SWITCHER_PAGE_SIZE = 20;
@@ -27,24 +28,28 @@ function hasConvexErrorCode(error: unknown, allowedCodes: readonly string[]) {
  * Returns `null` when the slug cannot be resolved for the current viewer so the
  * route can decide whether to render a 404 state.
  */
-export async function getSchoolRouteSnapshot({ slug }: { slug: string }) {
-  try {
-    return await fetchAuthQuery(api.schools.queries.getSchoolBySlug, { slug });
-  } catch (error) {
-    if (
-      hasConvexErrorCode(error, ["SCHOOL_NOT_FOUND", "MEMBERSHIP_NOT_FOUND"])
-    ) {
-      return null;
+export const getSchoolRouteSnapshot = cache(
+  async function getSchoolRouteSnapshot(slug: string) {
+    try {
+      return await fetchAuthQuery(api.schools.queries.getSchoolBySlug, {
+        slug,
+      });
+    } catch (error) {
+      if (
+        hasConvexErrorCode(error, ["SCHOOL_NOT_FOUND", "MEMBERSHIP_NOT_FOUND"])
+      ) {
+        return null;
+      }
+
+      await captureServerException(error, undefined, {
+        slug,
+        source: "school-route-boundary",
+      });
+
+      throw error;
     }
-
-    await captureServerException(error, undefined, {
-      slug,
-      source: "school-route-boundary",
-    });
-
-    throw error;
   }
-}
+);
 
 /**
  * Load the authenticated class route snapshot.

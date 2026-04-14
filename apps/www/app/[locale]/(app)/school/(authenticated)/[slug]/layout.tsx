@@ -13,7 +13,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const defaultMetadata = {};
 
-  const schoolRoute = await getSchoolRouteSnapshot({ slug });
+  const schoolRoute = await getSchoolRouteSnapshot(slug);
 
   if (!schoolRoute) {
     return defaultMetadata;
@@ -49,7 +49,7 @@ async function SchoolRouteBoundary({
   children: React.ReactNode;
   slug: string;
 }) {
-  const value = await getSchoolRouteSnapshot({ slug });
+  const value = await getSchoolRouteSnapshot(slug);
 
   if (!value) {
     notFound();
