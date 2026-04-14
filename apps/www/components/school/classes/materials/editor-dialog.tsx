@@ -7,6 +7,7 @@ import {
   Time04Icon,
 } from "@hugeicons/core-free-icons";
 import { captureException } from "@repo/analytics/posthog";
+import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Calendar } from "@repo/design-system/components/ui/calendar";
 import {
@@ -32,6 +33,7 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { cn } from "@repo/design-system/lib/utils";
 import { useForm } from "@tanstack/react-form";
+import { useMutation } from "convex/react";
 import { startOfDay } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity } from "react";
@@ -40,19 +42,22 @@ import {
   getMaterialStatus,
   materialStatusList,
 } from "@/components/school/classes/_data/material-status";
+import { useClass } from "@/lib/context/use-class";
 import {
   type MaterialGroupFormValues,
   materialGroupFormSchema,
 } from "./schema";
+import type { MaterialGroup } from "./types";
 import {
   formatScheduledAt,
+  getDefaultScheduledAt,
   getMinTime,
   getTimeString,
   updateDate,
   updateTime,
 } from "./utils";
 
-interface MaterialGroupEditorDialogProps {
+interface MaterialGroupDialogShellProps {
   defaultValues: MaterialGroupFormValues;
   description: string;
   errorContext: Record<string, string>;
@@ -65,11 +70,98 @@ interface MaterialGroupEditorDialogProps {
   title: string;
 }
 
-/**
- * Render the shared material-group editor dialog used by both create and edit
- * flows.
- */
-export function MaterialGroupEditorDialog({
+/** Render the material-group create dialog for the active class. */
+export function CreateMaterialGroupDialog({
+  open,
+  setOpen,
+}: {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+}) {
+  const t = useTranslations("School.Classes");
+  const classId = useClass((state) => state.class._id);
+  const createMaterialGroup = useMutation(
+    api.classes.materials.mutations.createMaterialGroup
+  );
+
+  return (
+    <MaterialGroupDialogShell
+      defaultValues={{
+        name: "",
+        description: "",
+        status: "published",
+        scheduledAt: getDefaultScheduledAt(),
+      }}
+      description={t("new-module-description")}
+      errorContext={{ source: "school-material-group-create" }}
+      errorMessage={t("create-material-group-failed")}
+      formId="school-classes-materials-new-form"
+      onSubmit={async (value) => {
+        await createMaterialGroup({
+          ...value,
+          classId,
+          scheduledAt:
+            value.status === "scheduled" ? value.scheduledAt : undefined,
+        });
+      }}
+      open={open}
+      setOpen={setOpen}
+      submitLabel={t("create")}
+      title={t("new-module-title")}
+    />
+  );
+}
+
+/** Render the material-group edit dialog for one existing group. */
+export function EditMaterialGroupDialog({
+  group,
+  open,
+  setOpen,
+}: {
+  group: MaterialGroup;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+}) {
+  const t = useTranslations("School.Classes");
+  const updateMaterialGroup = useMutation(
+    api.classes.materials.mutations.updateMaterialGroup
+  );
+
+  return (
+    <MaterialGroupDialogShell
+      defaultValues={{
+        name: group.name,
+        description: group.description,
+        status: group.status,
+        scheduledAt: group.scheduledAt,
+      }}
+      description={t("edit-material-description")}
+      errorContext={{
+        group_id: group._id,
+        source: "school-material-group-update",
+      }}
+      errorMessage={t("update-material-group-failed")}
+      formId={`edit-material-group-${group._id}`}
+      onSubmit={async (value) => {
+        await updateMaterialGroup({
+          groupId: group._id,
+          name: value.name,
+          description: value.description,
+          status: value.status,
+          scheduledAt:
+            value.status === "scheduled" ? value.scheduledAt : undefined,
+        });
+      }}
+      open={open}
+      setOpen={setOpen}
+      submitLabel={t("save")}
+      title={t("edit-material-title")}
+    />
+  );
+}
+
+/** Render the shared material-group form shell used by create and edit variants. */
+function MaterialGroupDialogShell({
   defaultValues,
   description,
   errorContext,
@@ -80,7 +172,7 @@ export function MaterialGroupEditorDialog({
   setOpen,
   submitLabel,
   title,
-}: MaterialGroupEditorDialogProps) {
+}: MaterialGroupDialogShellProps) {
   const t = useTranslations("School.Classes");
   const locale = useLocale();
 

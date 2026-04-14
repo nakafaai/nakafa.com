@@ -30,7 +30,7 @@ import type { ComponentProps } from "react";
 import { Activity, useState, useTransition } from "react";
 import { getMaterialStatus } from "@/components/school/classes/_data/material-status";
 import { getLocale } from "@/lib/utils/date";
-import { MaterialGroupEditorDialog } from "./editor-dialog";
+import { EditMaterialGroupDialog } from "./editor-dialog";
 import type { MaterialGroup } from "./types";
 import { formatScheduledAt } from "./utils";
 
@@ -221,56 +221,5 @@ function MaterialGroupActions({
         setOpen={setEditOpen}
       />
     </div>
-  );
-}
-
-/** Render the edit dialog for one material group. */
-function EditMaterialGroupDialog({
-  group,
-  open,
-  setOpen,
-}: {
-  group: MaterialGroup;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-}) {
-  const t = useTranslations("School.Classes");
-
-  const updateGroup = useMutation(
-    api.classes.materials.mutations.updateMaterialGroup
-  );
-
-  const defaultValues = {
-    name: group.name,
-    description: group.description,
-    status: group.status,
-    scheduledAt: group.scheduledAt,
-  };
-
-  return (
-    <MaterialGroupEditorDialog
-      defaultValues={defaultValues}
-      description={t("edit-material-description")}
-      errorContext={{
-        group_id: group._id,
-        source: "school-material-group-update",
-      }}
-      errorMessage={t("update-material-group-failed")}
-      formId={`edit-material-group-${group._id}`}
-      onSubmit={async (value) => {
-        await updateGroup({
-          groupId: group._id,
-          name: value.name,
-          description: value.description,
-          status: value.status,
-          scheduledAt:
-            value.status === "scheduled" ? value.scheduledAt : undefined,
-        });
-      }}
-      open={open}
-      setOpen={setOpen}
-      submitLabel={t("save")}
-      title={t("edit-material-title")}
-    />
   );
 }
