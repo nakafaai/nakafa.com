@@ -5,6 +5,7 @@ import { fetchQuery } from "convex/nextjs";
 import type { Metadata } from "next";
 import { cache, use } from "react";
 import { SchoolNotFound } from "@/components/school/not-found";
+import { getToken } from "@/lib/auth/server";
 import { SchoolContextProvider } from "@/lib/context/use-school";
 
 const getSchoolInfo = cache(async (slug: string) =>
@@ -39,15 +40,53 @@ export async function generateMetadata({
   }
 }
 
+/** Bind the resolved school route snapshot to the school subtree. */
 export default function Layout(props: LayoutProps<"/[locale]/school/[slug]">) {
   const { children, params } = props;
   const { slug } = use(params);
 
   return (
-    <ErrorBoundary fallback={<SchoolNotFound />}>
-      <SchoolContextProvider slug={decodeURIComponent(slug)}>
-        {children}
-      </SchoolContextProvider>
-    </ErrorBoundary>
+    <SchoolRouteBoundary slug={decodeURIComponent(slug)}>
+      {children}
+    </SchoolRouteBoundary>
   );
+}
+
+/**
+ * Resolve the authenticated school route snapshot on the server before mounting
+ * the school client subtree.
+ */
+async function SchoolRouteBoundary({
+  children,
+  slug,
+}: {
+  children: React.ReactNode;
+  slug: string;
+}) {
+  const token = await getToken();
+
+  if (!token) {
+    return <SchoolNotFound />;
+  }
+
+  try {
+    const value = await fetchQuery(
+      api.schools.queries.getSchoolBySlug,
+      { slug },
+      { token }
+    );
+
+    return (
+      <ErrorBoundary fallback={<SchoolNotFound />}>
+        <SchoolContextProvider value={value}>{children}</SchoolContextProvider>
+      </ErrorBoundary>
+    );
+  } catch (error) {
+    await captureServerException(error, undefined, {
+      slug,
+      source: "school-route-boundary",
+    });
+
+    return <SchoolNotFound />;
+  }
 }

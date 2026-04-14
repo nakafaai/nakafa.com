@@ -5,7 +5,13 @@ import type { ReactNode } from "react";
 import { getToken } from "@/lib/auth/server";
 
 /** Resolves the authenticated school landing redirects before rendering children. */
-export async function School({ children }: { children: ReactNode }) {
+export async function School({
+  children,
+  locale,
+}: {
+  children: ReactNode;
+  locale: string;
+}) {
   const token = await getToken();
 
   if (token) {
@@ -18,15 +24,15 @@ export async function School({ children }: { children: ReactNode }) {
     );
 
     if (schools.length === 0) {
-      redirect("/school/onboarding");
+      redirect(`/${locale}/school/onboarding`);
     }
 
     if (schools.length === 1) {
-      redirect(`/school/${schools[0].slug}`);
+      redirect(`/${locale}/school/${schools[0].slug}`);
     }
 
     if (schools.length > 1) {
-      redirect("/school/select");
+      redirect(`/${locale}/school/select`);
     }
   }
 

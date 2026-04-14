@@ -21,9 +21,11 @@ import {
 import { useResizable } from "@repo/design-system/hooks/use-resizable";
 import { cn } from "@repo/design-system/lib/utils";
 import { useQuery } from "convex/react";
+import { useQueryState } from "nuqs";
 import { SchoolClassesForumPostSheetContent } from "@/components/school/classes/forum/post-sheet-content";
 import { SchoolClassesForumPostSheetError } from "@/components/school/classes/forum/post-sheet-error";
 import { SchoolClassesForumPostSheetInfo } from "@/components/school/classes/forum/post-sheet-info";
+import { forumSearchParsers } from "@/components/school/classes/forum/search-params";
 import { useForum } from "@/lib/context/use-forum";
 
 const MIN_WIDTH = 448;
@@ -34,8 +36,13 @@ const MAX_WIDTH = 672;
  * page stays interactive while the thread is open.
  */
 export function SchoolClassesForumPostSheet() {
-  const activeForumId = useForum((f) => f.activeForumId);
-  const setActiveForumId = useForum((f) => f.setActiveForumId);
+  const exitJumpMode = useForum((f) => f.exitJumpMode);
+  const setReplyTo = useForum((f) => f.setReplyTo);
+  const [forumId, setForumId] = useQueryState(
+    "forum",
+    forumSearchParsers.forum
+  );
+  const activeForumId = (forumId as Id<"schoolClassForums"> | null) ?? null;
 
   const isMobile = useMediaQuery("(max-width: 768px)");
 
@@ -45,13 +52,19 @@ export function SchoolClassesForumPostSheet() {
     maxWidth: MAX_WIDTH,
   });
 
+  function handleClose() {
+    exitJumpMode();
+    setReplyTo(null);
+    setForumId(null);
+  }
+
   return (
     <Sheet
       disablePointerDismissal
       modal={false}
       onOpenChange={(open) => {
         if (!open) {
-          setActiveForumId(null);
+          handleClose();
         }
       }}
       open={!!activeForumId}
@@ -77,13 +90,13 @@ export function SchoolClassesForumPostSheet() {
         <ErrorBoundary
           fallback={<SchoolClassesForumPostSheetError />}
           onError={() => {
-            setActiveForumId(null);
+            handleClose();
           }}
         >
           {activeForumId ? (
             <SchoolClassesForumPostSheetBody
               activeForumId={activeForumId}
-              onClose={() => setActiveForumId(null)}
+              onClose={handleClose}
               setWidth={setWidth}
               width={width}
             />

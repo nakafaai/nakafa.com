@@ -4,6 +4,10 @@ import { getSchoolMembership } from "@repo/backend/convex/lib/helpers/school";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { ConvexError, v } from "convex/values";
 import { getAll } from "convex-helpers/server/relationships";
+import {
+  schoolBySlugResultValidator,
+  schoolInfoResultValidator,
+} from "./validators";
 
 const MAX_ACTIVE_SCHOOL_MEMBERSHIPS = 100;
 
@@ -47,7 +51,7 @@ export const getSchoolInfoBySlug = query({
   args: {
     slug: v.string(),
   },
-  returns: v.object({ name: v.string() }),
+  returns: schoolInfoResultValidator,
   handler: async (ctx, args) => {
     const school = await ctx.db
       .query("schools")
@@ -71,10 +75,7 @@ export const getSchoolBySlug = query({
   args: {
     slug: v.string(),
   },
-  returns: v.object({
-    school: vv.doc("schools"),
-    membership: vv.doc("schoolMembers"),
-  }),
+  returns: schoolBySlugResultValidator,
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
 

@@ -15,11 +15,15 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { useMutation, usePaginatedQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
-import { useQueryStates } from "nuqs";
+import { useQueryState, useQueryStates } from "nuqs";
 import { Activity, useTransition } from "react";
 import { getTagIcon } from "@/components/school/classes/_data/tag";
+import { forumSearchParsers } from "@/components/school/classes/forum/search-params";
+import {
+  SchoolContentLoading,
+  SchoolContentState,
+} from "@/components/school/content-state";
 import { useClass } from "@/lib/context/use-class";
-import { useForum } from "@/lib/context/use-forum";
 import { searchParsers } from "@/lib/nuqs/search";
 import { getLocale } from "@/lib/utils/date";
 
@@ -36,12 +40,13 @@ const DEBOUNCE_TIME = 500;
  */
 export function SchoolClassesForumList() {
   const t = useTranslations("School.Classes");
+  const tCommon = useTranslations("School.Common");
 
   const locale = useLocale();
 
   const classId = useClass((state) => state.class._id);
   const [{ q }] = useQueryStates(searchParsers);
-  const setActiveForumId = useForum((f) => f.setActiveForumId);
+  const [, setForumId] = useQueryState("forum", forumSearchParsers.forum);
 
   const [debouncedQ] = useDebouncedValue(q, DEBOUNCE_TIME);
 
@@ -55,16 +60,20 @@ export function SchoolClassesForumList() {
   );
 
   if (status === "LoadingFirstPage") {
-    return null;
+    return (
+      <SchoolContentLoading
+        description={tCommon("loading-content-description")}
+        title={tCommon("loading-content")}
+      />
+    );
   }
 
   if (results.length === 0) {
     return (
-      <div className="py-12">
-        <p className="text-center text-muted-foreground text-sm">
-          {t("no-forum-found")}
-        </p>
-      </div>
+      <SchoolContentState
+        description={t("new-forum-description")}
+        title={t("no-forum-found")}
+      />
     );
   }
 
@@ -77,7 +86,9 @@ export function SchoolClassesForumList() {
             <div className="group relative" key={forum._id}>
               <button
                 className="absolute inset-0 z-0 cursor-pointer"
-                onClick={() => setActiveForumId(forum._id)}
+                onClick={() => {
+                  setForumId(forum._id);
+                }}
                 type="button"
               >
                 <span className="sr-only">{forum.title}</span>

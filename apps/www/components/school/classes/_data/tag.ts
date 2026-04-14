@@ -42,16 +42,21 @@ export function getTagIcon(tag: TagValue) {
 }
 
 /**
- * Get available tags based on user's effective role.
- * School admins and teachers can use all tags.
- * Students can only use general and question tags.
+ * Get the forum tags visible to the current viewer.
+ *
+ * The moderation permission stays the primary source of truth, with the role
+ * fallback kept aligned with the backend tag-access rule.
  */
 export function getTagsByRole(
+  canModerateForum: boolean,
   classMemberRole: SchoolClassMemberRole,
   schoolMemberRole: SchoolMemberRole
 ) {
-  // School admins or class teachers get all tags
-  if (schoolMemberRole === "admin" || classMemberRole === "teacher") {
+  if (
+    canModerateForum ||
+    schoolMemberRole === "admin" ||
+    classMemberRole === "teacher"
+  ) {
     return tagList;
   }
   return tagList.filter((tag) =>

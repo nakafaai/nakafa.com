@@ -13,14 +13,20 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { usePaginatedQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
+import {
+  SchoolContentLoading,
+  SchoolContentState,
+} from "@/components/school/content-state";
 import { useClass } from "@/lib/context/use-class";
 import { searchParsers } from "@/lib/nuqs/search";
 import { getInitialName } from "@/lib/utils/helper";
 
 const DEBOUNCE_TIME = 500;
 
+/** Render the paginated class roster for the active class. */
 export function SchoolClassesPeopleList() {
   const t = useTranslations("School.Classes");
+  const tCommon = useTranslations("School.Common");
 
   const classId = useClass((state) => state.class._id);
   const [{ q }] = useQueryStates(searchParsers);
@@ -37,16 +43,20 @@ export function SchoolClassesPeopleList() {
   );
 
   if (status === "LoadingFirstPage") {
-    return null;
+    return (
+      <SchoolContentLoading
+        description={tCommon("loading-content-description")}
+        title={tCommon("loading-content")}
+      />
+    );
   }
 
   if (results.length === 0) {
     return (
-      <div className="py-12">
-        <p className="text-center text-muted-foreground text-sm">
-          {t("no-people-found")}
-        </p>
-      </div>
+      <SchoolContentState
+        description={t("invite-student-description")}
+        title={t("no-people-found")}
+      />
     );
   }
 

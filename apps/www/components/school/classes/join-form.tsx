@@ -16,6 +16,10 @@ import { Input } from "@repo/design-system/components/ui/input";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Particles } from "@repo/design-system/components/ui/particles";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import {
+  usePathname,
+  useRouter,
+} from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
@@ -37,8 +41,11 @@ interface Props {
   visibility: SchoolClassVisibility;
 }
 
+/** Render the class-join screen when the viewer is in the school but not the class. */
 export function SchoolClassesJoinForm({ classId, visibility }: Props) {
   const t = useTranslations("School.Classes");
+  const pathname = usePathname();
+  const router = useRouter();
   const schoolSlug = useSchool((state) => state.school.slug);
 
   const [isPending, startTransition] = useTransition();
@@ -51,6 +58,8 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
     startTransition(async () => {
       try {
         await joinPublicClass({ classId });
+        router.replace(pathname);
+        router.refresh();
       } catch (error) {
         captureException(error, {
           source: "school-class-join-public",
@@ -69,6 +78,8 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
     onSubmit: async ({ value }) => {
       try {
         await joinClass(value);
+        router.replace(pathname);
+        router.refresh();
       } catch (error) {
         captureException(error, {
           source: "school-class-join-private",

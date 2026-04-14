@@ -52,6 +52,10 @@ import { toast } from "sonner";
 import * as z from "zod/mini";
 import { useSchool } from "@/lib/context/use-school";
 import { subjectList } from "./_data/subject";
+import {
+  getAcademicYearList,
+  getCurrentAcademicYear,
+} from "./header-add-utils";
 
 const MIN_NAME_LENGTH = 3;
 
@@ -356,28 +360,3 @@ export function SchoolClassesHeaderAdd() {
 }
 
 const visibilityList = ["private", "public"] as const;
-
-function getCurrentAcademicYear() {
-  const date = new Date();
-  const currentYear = date.getFullYear();
-  const currentMonth = date.getMonth();
-
-  // Academic year starts in July (month index 6)
-  const startYear = currentMonth >= 6 ? currentYear : currentYear - 1;
-  return `${startYear}/${startYear + 1}`;
-}
-
-function getAcademicYearList() {
-  const date = new Date();
-  const currentYear = date.getFullYear();
-  const currentMonth = date.getMonth();
-
-  // Academic year starts in July (month index 6)
-  const startYear = currentMonth >= 6 ? currentYear : currentYear - 1;
-
-  // Return 2 previous years, current year, and next 2 years
-  return Array.from({ length: 5 }, (_, i) => {
-    const year = startYear - 2 + i;
-    return `${year}/${year + 1}`;
-  });
-}

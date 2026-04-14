@@ -41,13 +41,19 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import { useState } from "react";
+import {
+  SchoolContentLoading,
+  SchoolContentState,
+} from "@/components/school/content-state";
 import { useSchool } from "@/lib/context/use-school";
 import { searchParsers } from "@/lib/nuqs/search";
 
 const DEBOUNCE_TIME = 300;
 
+/** Render the paginated class directory for the active school. */
 export function SchoolClassesList() {
   const t = useTranslations("School.Classes");
+  const tCommon = useTranslations("School.Common");
 
   const schoolId = useSchool((state) => state.school._id);
   const [{ q }] = useQueryStates(searchParsers);
@@ -64,16 +70,20 @@ export function SchoolClassesList() {
   );
 
   if (status === "LoadingFirstPage") {
-    return null;
+    return (
+      <SchoolContentLoading
+        description={tCommon("loading-content-description")}
+        title={tCommon("loading-content")}
+      />
+    );
   }
 
   if (results.length === 0) {
     return (
-      <div className="py-12">
-        <p className="text-center text-muted-foreground text-sm">
-          {t("no-classes-found")}
-        </p>
-      </div>
+      <SchoolContentState
+        description={t("create-class-description")}
+        title={t("no-classes-found")}
+      />
     );
   }
 
@@ -89,6 +99,7 @@ export function SchoolClassesList() {
   );
 }
 
+/** Render one class card within the school class directory. */
 function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
   const pathname = usePathname();
   const [imageError, setImageError] = useState(false);

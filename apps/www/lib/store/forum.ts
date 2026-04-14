@@ -25,7 +25,6 @@ interface ReplyTo {
 }
 
 interface State {
-  activeForumId: Id<"schoolClassForums"> | null;
   jumpTargetPostId: Id<"schoolClassForumPosts"> | null;
   replyTo: ReplyTo | null;
 }
@@ -33,14 +32,12 @@ interface State {
 interface Actions {
   enterJumpMode: (targetPostId: Id<"schoolClassForumPosts">) => void;
   exitJumpMode: () => void;
-  setActiveForumId: (activeForumId: Id<"schoolClassForums"> | null) => void;
   setReplyTo: (replyTo: ReplyTo | null) => void;
 }
 
 export type ForumStore = State & Actions;
 
 const initialState: State = {
-  activeForumId: null,
   jumpTargetPostId: null,
   replyTo: null,
 };
@@ -50,14 +47,8 @@ const initialState: State = {
  */
 export const createForumStore = () =>
   createStore<ForumStore>()(
-    immer((set, get) => ({
+    immer((set) => ({
       ...initialState,
-
-      setActiveForumId: (activeForumId) => {
-        if (get().activeForumId !== activeForumId) {
-          set({ activeForumId, jumpTargetPostId: null, replyTo: null });
-        }
-      },
 
       setReplyTo: (replyTo) => set({ replyTo }),
 
