@@ -13,12 +13,18 @@ import { SchoolSidebarNavYours } from "@/components/school/sidebar/nav-yours";
 import { SchoolSwitcher } from "@/components/school/sidebar/school-switcher";
 import { LangMenu } from "@/components/sidebar/lang-menu";
 import { ThemeMenu } from "@/components/sidebar/theme-menu";
+import { getSchoolSwitcherPage } from "@/lib/school/server";
 
-export function SchoolSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
+/** Render the School sidebar and preload the switcher shell page on the server. */
+export async function SchoolSidebar({
+  ...props
+}: ComponentProps<typeof Sidebar>) {
+  const initialSchoolPage = await getSchoolSwitcherPage();
+
   return (
     <Sidebar className={cn("z-20", props.className)} side="left" {...props}>
       <SidebarHeader className="border-b">
-        <SchoolSwitcher />
+        <SchoolSwitcher initialSchoolPage={initialSchoolPage} />
       </SidebarHeader>
       <SidebarContent>
         <SchoolSidebarNavYours />

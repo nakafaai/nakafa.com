@@ -835,6 +835,8 @@
       "school-creation-failed": "Failed to create school. Please try with a different email.",
       "add-school": "Add school",
       "schools": "Schools",
+      "search-school-placeholder": "Search schools...",
+      "no-schools-found": "No schools found.",
       "school-joining-failed": "Failed to join school. Make sure the code is correct."
     }
   },

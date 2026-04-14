@@ -5,6 +5,8 @@ import { fetchQuery } from "convex/nextjs";
 import { cache } from "react";
 import { fetchAuthQuery } from "@/lib/auth/server";
 
+const SCHOOL_SWITCHER_PAGE_SIZE = 20;
+
 /** Load school metadata by slug without throwing into route components. */
 export const getSchoolInfoBySlug = cache(async (slug: string) => {
   try {
@@ -55,6 +57,24 @@ export async function getClassRouteSnapshot({
     await captureServerException(error, undefined, {
       classId,
       source: "school-class-route-boundary",
+    });
+
+    return null;
+  }
+}
+
+/** Load the first school-switcher page for the authenticated school shell. */
+export async function getSchoolSwitcherPage() {
+  try {
+    return await fetchAuthQuery(api.schools.queries.getMySchoolsPage, {
+      paginationOpts: {
+        cursor: null,
+        numItems: SCHOOL_SWITCHER_PAGE_SIZE,
+      },
+    });
+  } catch (error) {
+    await captureServerException(error, undefined, {
+      source: "school-switcher-page",
     });
 
     return null;

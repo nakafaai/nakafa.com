@@ -835,6 +835,8 @@
       "school-creation-failed": "Gagal membuat sekolah. Silakan coba dengan email yang berbeda.",
       "add-school": "Tambah sekolah",
       "schools": "Sekolah",
+      "search-school-placeholder": "Cari sekolah...",
+      "no-schools-found": "Tidak ada sekolah.",
       "school-joining-failed": "Gagal bergabung sekolah. Pastikan kode yang kamu masukkan benar."
     }
   },

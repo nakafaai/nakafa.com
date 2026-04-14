@@ -27,7 +27,10 @@ export function SchoolContextProvider({
 }) {
   return (
     <SchoolContext.Provider
-      value={{ school: value.school, schoolMembership: value.membership }}
+      value={{
+        school: value.school,
+        schoolMembership: value.membership,
+      }}
     >
       {children}
     </SchoolContext.Provider>

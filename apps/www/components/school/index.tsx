@@ -1,8 +1,7 @@
 import { api } from "@repo/backend/convex/_generated/api";
-import { fetchQuery } from "convex/nextjs";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
-import { getToken } from "@/lib/auth/server";
+import { fetchAuthQuery, getToken } from "@/lib/auth/server";
 
 /** Resolves the authenticated school landing redirects before rendering children. */
 export async function School({
@@ -15,23 +14,20 @@ export async function School({
   const token = await getToken();
 
   if (token) {
-    const schools = await fetchQuery(
-      api.schools.queries.getMySchools,
-      {},
-      {
-        token,
-      }
+    const landingState = await fetchAuthQuery(
+      api.schools.queries.getMySchoolLandingState,
+      {}
     );
 
-    if (schools.length === 0) {
+    if (landingState.kind === "none") {
       redirect(`/${locale}/school/onboarding`);
     }
 
-    if (schools.length === 1) {
-      redirect(`/${locale}/school/${schools[0].slug}`);
+    if (landingState.kind === "single") {
+      redirect(`/${locale}/school/${landingState.slug}`);
     }
 
-    if (schools.length > 1) {
+    if (landingState.kind === "multiple") {
       redirect(`/${locale}/school/select`);
     }
   }

@@ -30,27 +30,43 @@ import {
   useSidebar,
 } from "@repo/design-system/components/ui/sidebar";
 import { cn } from "@repo/design-system/lib/utils";
-import { useQuery } from "convex/react";
+import { useRouter } from "@repo/internationalization/src/navigation";
+import { useConvexAuth, usePaginatedQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import { useTranslations } from "next-intl";
-import { useMemo } from "react";
+import { useState } from "react";
 import { useSchool } from "@/lib/context/use-school";
 
-export function SchoolSwitcher() {
+type SchoolSwitcherPage = FunctionReturnType<
+  typeof api.schools.queries.getMySchoolsPage
+>;
+
+/** Render the school switcher with a server-preloaded first page. */
+export function SchoolSwitcher({
+  initialSchoolPage,
+}: {
+  initialSchoolPage: SchoolSwitcherPage | null;
+}) {
   const { isMobile } = useSidebar();
-
   const t = useTranslations("School.Onboarding");
-
-  const currentSchool = useSchool((s) => s.school);
-  const schools = useQuery(api.schools.queries.getMySchools);
-
-  const mySchools = useMemo(() => schools ?? [], [schools]);
+  const router = useRouter();
+  const currentSchool = useSchool((state) => state.school);
+  const { isAuthenticated, isLoading } = useConvexAuth();
+  const [open, setOpen] = useState(false);
+  const { results, status, loadMore } = usePaginatedQuery(
+    api.schools.queries.getMySchoolsPage,
+    isAuthenticated && !isLoading ? {} : "skip",
+    { initialNumItems: 20 }
+  );
+  const schools =
+    results.length > 0 ? results : (initialSchoolPage?.page ?? []);
 
   const currentSchoolIcon = getSchoolIcon(currentSchool.type);
 
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <DropdownMenu>
+        <DropdownMenu onOpenChange={setOpen} open={open}>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton size="lg">
               <div className="flex aspect-square size-8 items-center justify-center rounded-sm border bg-foreground text-background">
@@ -74,35 +90,56 @@ export function SchoolSwitcher() {
             <DropdownMenuLabel className="text-muted-foreground text-xs">
               {t("schools")}
             </DropdownMenuLabel>
-            {mySchools.map((school) => {
-              const schoolIconItem = getSchoolIcon(school.type);
+            <div
+              className="max-h-64 overflow-y-auto"
+              onScroll={(event) => {
+                const target = event.currentTarget;
+                const remainingScroll =
+                  target.scrollHeight - target.scrollTop - target.clientHeight;
 
-              return (
-                <DropdownMenuItem
-                  asChild
-                  className="cursor-pointer"
-                  key={school._id}
-                >
-                  <NavigationLink href={`/school/${school.slug}`}>
-                    <HugeIcons className="shrink-0" icon={schoolIconItem} />
-                    <span className="truncate">{school.name}</span>
-                    <HugeIcons
-                      className={cn(
-                        "ml-auto size-4 opacity-0 transition-opacity ease-out",
-                        currentSchool._id === school._id && "opacity-100"
-                      )}
-                      icon={Tick01Icon}
-                    />
-                  </NavigationLink>
-                </DropdownMenuItem>
-              );
-            })}
+                if (remainingScroll > 48) {
+                  return;
+                }
+
+                if (status === "CanLoadMore") {
+                  loadMore(20);
+                }
+              }}
+            >
+              {schools.map((school) => {
+                const schoolIcon = getSchoolIcon(school.type);
+
+                return (
+                  <DropdownMenuItem
+                    asChild
+                    className="cursor-pointer"
+                    key={school._id}
+                  >
+                    <NavigationLink href={`/school/${school.slug}`}>
+                      <HugeIcons className="shrink-0" icon={schoolIcon} />
+                      <span className="truncate">{school.name}</span>
+                      <HugeIcons
+                        className={cn(
+                          "ml-auto size-4 opacity-0 transition-opacity ease-out",
+                          currentSchool._id === school._id && "opacity-100"
+                        )}
+                        icon={Tick01Icon}
+                      />
+                    </NavigationLink>
+                  </DropdownMenuItem>
+                );
+              })}
+            </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild className="cursor-pointer">
-              <NavigationLink href="/school/onboarding">
-                <HugeIcons className="shrink-0" icon={Add01Icon} />
-                <span className="truncate">{t("add-school")}</span>
-              </NavigationLink>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onSelect={() => {
+                router.push("/school/onboarding");
+                setOpen(false);
+              }}
+            >
+              <HugeIcons className="shrink-0" icon={Add01Icon} />
+              <span className="truncate">{t("add-school")}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -111,6 +148,7 @@ export function SchoolSwitcher() {
   );
 }
 
+/** Return the icon used for one school type in the school switcher. */
 function getSchoolIcon(type: Doc<"schools">["type"]) {
   switch (type) {
     case "elementary-school":
