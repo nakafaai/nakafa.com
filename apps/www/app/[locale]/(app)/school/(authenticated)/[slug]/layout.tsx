@@ -1,16 +1,13 @@
-import { captureServerException } from "@repo/analytics/posthog/server";
-import { api } from "@repo/backend/convex/_generated/api";
-import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
-import { fetchQuery } from "convex/nextjs";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { cache, use } from "react";
-import { SchoolNotFound } from "@/components/school/not-found";
-import { getToken } from "@/lib/auth/server";
 import { SchoolContextProvider } from "@/lib/context/use-school";
+import {
+  getSchoolInfoBySlug,
+  getSchoolRouteSnapshot,
+} from "@/lib/school/server";
 
-const getSchoolInfo = cache(async (slug: string) =>
-  fetchQuery(api.schools.queries.getSchoolInfoBySlug, { slug })
-);
+const getSchoolInfo = cache(getSchoolInfoBySlug);
 
 export async function generateMetadata({
   params,
@@ -20,24 +17,17 @@ export async function generateMetadata({
   const { slug } = await params;
   const defaultMetadata = {};
 
-  try {
-    const schoolInfo = await getSchoolInfo(slug);
-    if (!schoolInfo) {
-      return defaultMetadata;
-    }
-    return {
-      title: {
-        absolute: schoolInfo.name,
-      },
-    };
-  } catch (error) {
-    await captureServerException(error, undefined, {
-      slug,
-      source: "school-layout-metadata",
-    });
+  const schoolInfo = await getSchoolInfo(slug);
 
+  if (!schoolInfo) {
     return defaultMetadata;
   }
+
+  return {
+    title: {
+      absolute: schoolInfo.name,
+    },
+  };
 }
 
 /** Bind the resolved school route snapshot to the school subtree. */
@@ -63,30 +53,13 @@ async function SchoolRouteBoundary({
   children: React.ReactNode;
   slug: string;
 }) {
-  const token = await getToken();
+  const value = await getSchoolRouteSnapshot({ slug });
 
-  if (!token) {
-    return <SchoolNotFound />;
+  if (!value) {
+    notFound();
   }
 
-  try {
-    const value = await fetchQuery(
-      api.schools.queries.getSchoolBySlug,
-      { slug },
-      { token }
-    );
-
-    return (
-      <ErrorBoundary fallback={<SchoolNotFound />}>
-        <SchoolContextProvider value={value}>{children}</SchoolContextProvider>
-      </ErrorBoundary>
-    );
-  } catch (error) {
-    await captureServerException(error, undefined, {
-      slug,
-      source: "school-route-boundary",
-    });
-
-    return <SchoolNotFound />;
-  }
+  return (
+    <SchoolContextProvider value={value}>{children}</SchoolContextProvider>
+  );
 }

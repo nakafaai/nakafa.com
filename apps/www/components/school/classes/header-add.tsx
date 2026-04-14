@@ -49,29 +49,14 @@ import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
-import * as z from "zod/mini";
 import { useSchool } from "@/lib/context/use-school";
 import { subjectList } from "./_data/subject";
 import {
-  getAcademicYearList,
-  getCurrentAcademicYear,
-} from "./header-add-utils";
-
-const MIN_NAME_LENGTH = 3;
-
-const formSchema = z.object({
-  name: z.string().check(z.minLength(MIN_NAME_LENGTH), z.trim()),
-  subject: z.string().check(z.minLength(MIN_NAME_LENGTH), z.trim()),
-  year: z.string().check(z.minLength(MIN_NAME_LENGTH), z.trim()),
-  visibility: z.enum(["public", "private"]),
-});
-
-const defaultValues: z.infer<typeof formSchema> = {
-  name: "",
-  subject: "",
-  year: getCurrentAcademicYear(),
-  visibility: "private",
-};
+  classCreateDefaultValues,
+  classCreateFormSchema,
+  classVisibilityList,
+} from "./header-add-schema";
+import { getAcademicYearList } from "./header-add-utils";
 
 export function SchoolClassesHeaderAdd() {
   const t = useTranslations("School.Classes");
@@ -86,9 +71,9 @@ export function SchoolClassesHeaderAdd() {
   const createClass = useMutation(api.classes.mutations.createClass);
 
   const form = useForm({
-    defaultValues,
+    defaultValues: classCreateDefaultValues,
     validators: {
-      onChange: formSchema,
+      onChange: classCreateFormSchema,
     },
     onSubmit: async ({ value }) => {
       try {
@@ -331,7 +316,7 @@ export function SchoolClassesHeaderAdd() {
                       align="start"
                       className="w-(--radix-dropdown-menu-trigger-width)"
                     >
-                      {visibilityList.map((visibility) => (
+                      {classVisibilityList.map((visibility) => (
                         <DropdownMenuItem
                           className="cursor-pointer"
                           key={visibility}
@@ -358,5 +343,3 @@ export function SchoolClassesHeaderAdd() {
     </form>
   );
 }
-
-const visibilityList = ["private", "public"] as const;

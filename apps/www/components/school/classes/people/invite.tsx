@@ -2,8 +2,6 @@
 
 import {
   Copy01Icon,
-  StudentIcon,
-  TeacherIcon,
   Tick01Icon,
   UserAdd01Icon,
 } from "@hugeicons/core-free-icons";
@@ -26,14 +24,20 @@ import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useClass } from "@/lib/context/use-class";
+import {
+  type InviteRole,
+  inviteRoleList,
+  mapInviteCodesByRole,
+} from "./invite-data";
 
+/** Render the class invite flow for teacher and student join codes. */
 export function SchoolClassesPeopleInvite() {
   const t = useTranslations("School.Classes");
 
   const classId = useClass((state) => state.class._id);
 
   const [openInviteDialog, setOpenInviteDialog] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<Role>("student");
+  const [selectedRole, setSelectedRole] = useState<InviteRole>("student");
 
   const clipboard = useClipboard({ timeout: 500 });
 
@@ -41,13 +45,10 @@ export function SchoolClassesPeopleInvite() {
     classId,
   });
 
-  // Create map of invite codes by role for O(1) lookup with type safety
-  const inviteCodesByRole = useMemo(() => {
-    if (!inviteCodes) {
-      return new Map<Role, NonNullable<typeof inviteCodes>[number]>();
-    }
-    return new Map(inviteCodes.map((c) => [c.role, c] as const));
-  }, [inviteCodes]);
+  const inviteCodesByRole = useMemo(
+    () => mapInviteCodesByRole(inviteCodes),
+    [inviteCodes]
+  );
 
   const code = useMemo(
     () => inviteCodesByRole.get(selectedRole)?.code ?? "",
@@ -66,7 +67,7 @@ export function SchoolClassesPeopleInvite() {
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>{t("role")}</DropdownMenuLabel>
           <DropdownMenuGroup>
-            {roles.map((role) => (
+            {inviteRoleList.map((role) => (
               <DropdownMenuItem
                 className="cursor-pointer"
                 key={role.value}
@@ -83,37 +84,61 @@ export function SchoolClassesPeopleInvite() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <ResponsiveDialog
-        description={t(`invite-${selectedRole}-description`)}
-        footer={
-          <Button
-            onClick={() => {
-              if (code) {
-                clipboard.copy(code);
-                toast.success(t("invite-code-copied"), {
-                  position: "bottom-center",
-                });
-              }
-            }}
-          >
-            <HugeIcons icon={clipboard.copied ? Tick01Icon : Copy01Icon} />
-            {t("copy")}
-          </Button>
-        }
+      <InviteCodeDialog
+        code={code}
+        copied={clipboard.copied}
+        onCopy={() => {
+          if (!code) {
+            return;
+          }
+
+          clipboard.copy(code);
+          toast.success(t("invite-code-copied"), {
+            position: "bottom-center",
+          });
+        }}
         open={openInviteDialog}
+        role={selectedRole}
         setOpen={setOpenInviteDialog}
-        title={t(`invite-${selectedRole}-title`)}
-      >
-        <div className="flex items-center justify-center rounded-md border px-4 py-8">
-          <p className="font-medium text-3xl tracking-tighter">{code}</p>
-        </div>
-      </ResponsiveDialog>
+      />
     </ButtonGroup>
   );
 }
 
-const roles = [
-  { value: "teacher", icon: TeacherIcon },
-  { value: "student", icon: StudentIcon },
-] as const;
-type Role = (typeof roles)[number]["value"];
+/** Render the dialog that shows and copies one selected class invite code. */
+function InviteCodeDialog({
+  code,
+  copied,
+  onCopy,
+  open,
+  role,
+  setOpen,
+}: {
+  code: string;
+  copied: boolean;
+  onCopy: () => void;
+  open: boolean;
+  role: InviteRole;
+  setOpen: (open: boolean) => void;
+}) {
+  const t = useTranslations("School.Classes");
+
+  return (
+    <ResponsiveDialog
+      description={t(`invite-${role}-description`)}
+      footer={
+        <Button onClick={onCopy}>
+          <HugeIcons icon={copied ? Tick01Icon : Copy01Icon} />
+          {t("copy")}
+        </Button>
+      }
+      open={open}
+      setOpen={setOpen}
+      title={t(`invite-${role}-title`)}
+    >
+      <div className="flex items-center justify-center rounded-md border px-4 py-8">
+        <p className="font-medium text-3xl tracking-tighter">{code}</p>
+      </div>
+    </ResponsiveDialog>
+  );
+}
