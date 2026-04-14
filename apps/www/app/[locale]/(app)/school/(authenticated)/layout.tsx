@@ -1,6 +1,9 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getToken } from "@/lib/auth/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+
+const AUTH_REDIRECT_PATH_COOKIE = "auth_redirect_path";
 
 /**
  * Guards the authenticated Nakafa School subtree on the server so hydration
@@ -14,7 +17,11 @@ export default async function Layout({
   const token = await getToken();
 
   if (!token) {
-    redirect(`/${locale}/auth?redirect=/school`);
+    const pathname =
+      (await cookies()).get(AUTH_REDIRECT_PATH_COOKIE)?.value ??
+      `/${locale}/school`;
+
+    redirect(`/${locale}/auth?redirect=${encodeURIComponent(pathname)}`);
   }
 
   return children;
