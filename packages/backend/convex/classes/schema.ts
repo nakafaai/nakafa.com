@@ -267,19 +267,6 @@ export const schoolClassMaterialGroupValidator = v.object({
 });
 
 /**
- * Class info validator (for public info without auth)
- */
-export const classInfoValidator = nullable(
-  v.object({
-    name: v.string(),
-    subject: v.string(),
-    year: v.string(),
-    image: schoolClassImageValidator,
-    visibility: schoolClassVisibilityValidator,
-  })
-);
-
-/**
  * User data validator (for joined user info in class members)
  */
 const classMemberUserValidator = v.object({

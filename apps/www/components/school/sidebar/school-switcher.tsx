@@ -45,7 +45,7 @@ type SchoolSwitcherPage = FunctionReturnType<
 export function SchoolSwitcher({
   initialSchoolPage,
 }: {
-  initialSchoolPage: SchoolSwitcherPage | null;
+  initialSchoolPage: SchoolSwitcherPage;
 }) {
   const { isMobile } = useSidebar();
   const t = useTranslations("School.Onboarding");
@@ -55,11 +55,10 @@ export function SchoolSwitcher({
   const [open, setOpen] = useState(false);
   const { results, status, loadMore } = usePaginatedQuery(
     api.schools.queries.getMySchoolsPage,
-    isAuthenticated && !isLoading ? {} : "skip",
+    open && isAuthenticated && !isLoading ? {} : "skip",
     { initialNumItems: 20 }
   );
-  const schools =
-    results.length > 0 ? results : (initialSchoolPage?.page ?? []);
+  const schools = results.length > 0 ? results : initialSchoolPage.page;
 
   const currentSchoolIcon = getSchoolIcon(currentSchool.type);
 

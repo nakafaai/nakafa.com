@@ -1,25 +1,25 @@
 import { captureServerException } from "@repo/analytics/posthog/server";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { fetchQuery } from "convex/nextjs";
-import { cache } from "react";
+import { ConvexError } from "convex/values";
 import { fetchAuthQuery } from "@/lib/auth/server";
 
 const SCHOOL_SWITCHER_PAGE_SIZE = 20;
 
-/** Load school metadata by slug without throwing into route components. */
-export const getSchoolInfoBySlug = cache(async (slug: string) => {
-  try {
-    return await fetchQuery(api.schools.queries.getSchoolInfoBySlug, { slug });
-  } catch (error) {
-    await captureServerException(error, undefined, {
-      slug,
-      source: "school-layout-metadata",
-    });
-
-    return null;
+/** Return whether an unknown error is one expected Convex application error. */
+function hasConvexErrorCode(error: unknown, allowedCodes: readonly string[]) {
+  if (!(error instanceof ConvexError)) {
+    return false;
   }
-});
+
+  const data = error.data;
+
+  if (typeof data !== "object" || data === null || !("code" in data)) {
+    return false;
+  }
+
+  return typeof data.code === "string" && allowedCodes.includes(data.code);
+}
 
 /**
  * Load the authenticated school route snapshot.
@@ -31,12 +31,18 @@ export async function getSchoolRouteSnapshot({ slug }: { slug: string }) {
   try {
     return await fetchAuthQuery(api.schools.queries.getSchoolBySlug, { slug });
   } catch (error) {
+    if (
+      hasConvexErrorCode(error, ["SCHOOL_NOT_FOUND", "MEMBERSHIP_NOT_FOUND"])
+    ) {
+      return null;
+    }
+
     await captureServerException(error, undefined, {
       slug,
       source: "school-route-boundary",
     });
 
-    return null;
+    throw error;
   }
 }
 
@@ -54,12 +60,22 @@ export async function getClassRouteSnapshot({
   try {
     return await fetchAuthQuery(api.classes.queries.getClassRoute, { classId });
   } catch (error) {
+    if (
+      hasConvexErrorCode(error, [
+        "ACCESS_DENIED",
+        "CLASS_ARCHIVED",
+        "CLASS_NOT_FOUND",
+      ])
+    ) {
+      return null;
+    }
+
     await captureServerException(error, undefined, {
       classId,
       source: "school-class-route-boundary",
     });
 
-    return null;
+    throw error;
   }
 }
 
@@ -77,6 +93,6 @@ export async function getSchoolSwitcherPage() {
       source: "school-switcher-page",
     });
 
-    return null;
+    throw error;
   }
 }

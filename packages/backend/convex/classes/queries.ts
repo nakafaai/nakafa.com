@@ -6,12 +6,7 @@ import {
   schoolClassVisibilityValidator,
 } from "@repo/backend/convex/classes/schema";
 import { loadActiveClass, loadClass } from "@repo/backend/convex/classes/utils";
-import {
-  classAccessResultValidator,
-  classInfoValidator,
-  classMembershipResultValidator,
-  classRouteResultValidator,
-} from "@repo/backend/convex/classes/validators";
+import { classRouteResultValidator } from "@repo/backend/convex/classes/validators";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import {
   checkClassAccess,
@@ -119,79 +114,6 @@ export const getClasses = query({
       )
       .order("desc")
       .paginate(paginationOpts);
-  },
-});
-
-/** Return the public class metadata used before access checks complete. */
-export const getClassInfo = query({
-  args: {
-    classId: vv.id("schoolClasses"),
-  },
-  returns: classInfoValidator,
-  handler: async (ctx, args) => {
-    const classData = await ctx.db.get("schoolClasses", args.classId);
-
-    if (!classData) {
-      return null;
-    }
-
-    return {
-      name: classData.name,
-      subject: classData.subject,
-      year: classData.year,
-      image: classData.image,
-      visibility: classData.visibility,
-    };
-  },
-});
-
-/** Return whether the current user can open one class page. */
-export const verifyClassMembership = query({
-  args: {
-    classId: vv.id("schoolClasses"),
-  },
-  returns: classAccessResultValidator,
-  handler: async (ctx, args) => {
-    const user = await requireAuth(ctx);
-
-    const classData = await ctx.db.get("schoolClasses", args.classId);
-    if (!classData) {
-      return { allow: false };
-    }
-
-    const { hasAccess, schoolMembership } = await checkClassAccess(
-      ctx,
-      args.classId,
-      classData.schoolId,
-      user.appUser._id
-    );
-
-    return { allow: hasAccess && !!schoolMembership };
-  },
-});
-
-/** Load one class together with the viewer's school and class memberships. */
-export const getClass = query({
-  args: {
-    classId: vv.id("schoolClasses"),
-  },
-  returns: classMembershipResultValidator,
-  handler: async (ctx, args) => {
-    const user = await requireAuth(ctx);
-
-    const classData = await loadClass(ctx, args.classId);
-    const { classMembership, schoolMembership } = await requireClassAccess(
-      ctx,
-      args.classId,
-      classData.schoolId,
-      user.appUser._id
-    );
-
-    return {
-      class: classData,
-      classMembership,
-      schoolMembership,
-    };
   },
 });
 

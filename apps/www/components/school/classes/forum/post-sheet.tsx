@@ -43,7 +43,7 @@ export function SchoolClassesForumPostSheet() {
     "forum",
     forumSearchParsers.forum
   );
-  const activeForumId = (forumId as Id<"schoolClassForums"> | null) ?? null;
+  const activeForumId = forumId ?? null;
 
   const isMobile = useMediaQuery("(max-width: 768px)");
 

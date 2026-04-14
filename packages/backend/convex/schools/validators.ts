@@ -5,11 +5,6 @@ import {
 } from "convex/server";
 import { v } from "convex/values";
 
-/** Lightweight school identity payload used by slug lookups. */
-export const schoolInfoResultValidator = v.object({
-  name: v.string(),
-});
-
 /** Authenticated school route snapshot returned by slug lookups. */
 export const schoolBySlugResultValidator = v.object({
   school: vv.doc("schools"),

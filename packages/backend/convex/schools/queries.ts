@@ -1,77 +1,16 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { getSchoolMembership } from "@repo/backend/convex/lib/helpers/school";
-import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { ConvexError, v } from "convex/values";
 import { getAll } from "convex-helpers/server/relationships";
 import {
   mySchoolsPageArgs,
   mySchoolsPageResultValidator,
   schoolBySlugResultValidator,
-  schoolInfoResultValidator,
   schoolLandingStateResultValidator,
 } from "./validators";
 
-/**
- * Get a school by its ID. Requires authentication.
- */
-export const getSchool = query({
-  args: {
-    schoolId: vv.id("schools"),
-  },
-  returns: vv.doc("schools"),
-  handler: async (ctx, args) => {
-    const user = await requireAuth(ctx);
-
-    const school = await ctx.db.get("schools", args.schoolId);
-    if (!school) {
-      throw new ConvexError({
-        code: "SCHOOL_NOT_FOUND",
-        message: `School not found for schoolId: ${args.schoolId}`,
-      });
-    }
-
-    const membership = await getSchoolMembership(
-      ctx,
-      args.schoolId,
-      user.appUser._id
-    );
-
-    if (!membership) {
-      throw new ConvexError({
-        code: "ACCESS_DENIED",
-        message: "You must be a member of this school to view it.",
-      });
-    }
-
-    return school;
-  },
-});
-
-export const getSchoolInfoBySlug = query({
-  args: {
-    slug: v.string(),
-  },
-  returns: schoolInfoResultValidator,
-  handler: async (ctx, args) => {
-    const school = await ctx.db
-      .query("schools")
-      .withIndex("by_slug", (q) => q.eq("slug", args.slug))
-      .unique();
-
-    if (!school) {
-      throw new ConvexError({
-        code: "SCHOOL_NOT_FOUND",
-        message: `School not found for slug: ${args.slug}`,
-      });
-    }
-
-    return {
-      name: school.name,
-    };
-  },
-});
-
+/** Return the authenticated school route snapshot resolved from one slug. */
 export const getSchoolBySlug = query({
   args: {
     slug: v.string(),

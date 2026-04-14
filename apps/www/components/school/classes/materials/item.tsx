@@ -22,7 +22,9 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cn } from "@repo/design-system/lib/utils";
+import { usePathname } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
@@ -58,12 +60,20 @@ export function MaterialGroupCard({
 }) {
   const t = useTranslations("School.Classes");
   const locale = useLocale();
+  const pathname = usePathname();
 
   const statusInfo = getMaterialStatus(group.status);
   const StatusIcon = statusInfo.icon;
 
   return (
     <div className="group relative">
+      <NavigationLink
+        className="absolute inset-0 z-0 cursor-pointer"
+        href={`${pathname}/${group._id}`}
+      >
+        <span className="sr-only">{group.name}</span>
+      </NavigationLink>
+
       <Activity mode={canManage ? "visible" : "hidden"}>
         <MaterialGroupActions
           className="absolute top-4 right-4 z-1"
@@ -73,7 +83,7 @@ export function MaterialGroupCard({
 
       <div
         className={cn(
-          "flex flex-col gap-3 p-4 transition-colors ease-out group-hover:bg-accent/20",
+          "pointer-events-none flex flex-col gap-3 p-4 transition-colors ease-out group-hover:bg-accent/20",
           canManage && "pr-14"
         )}
       >

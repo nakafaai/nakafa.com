@@ -45,21 +45,7 @@ export const classRouteResultValidator = v.union(
   classRouteJoinValidator
 );
 
-/** Return shape for lightweight class-access checks. */
-export const classAccessResultValidator = v.object({
-  allow: v.boolean(),
-});
-
-/** Return shape for the authenticated class membership snapshot. */
-export const classMembershipResultValidator = v.object({
-  class: vv.doc("schoolClasses"),
-  classMembership: nullable(vv.doc("schoolClassMembers")),
-  schoolMembership: vv.doc("schoolMembers"),
-});
-
 /** Return shape for class join mutations. */
 export const classJoinMutationResultValidator = v.object({
   classId: vv.id("schoolClasses"),
 });
-
-export { classInfoValidator } from "@repo/backend/convex/classes/schema";

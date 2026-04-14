@@ -16,9 +16,14 @@ export default function Layout(
   const { children, params } = props;
   const { id } = use(params);
 
-  const classId = id as Id<"schoolClasses">;
+  return (
+    <ClassRouteBoundary classId={toClassId(id)}>{children}</ClassRouteBoundary>
+  );
+}
 
-  return <ClassRouteBoundary classId={classId}>{children}</ClassRouteBoundary>;
+/** Normalize one dynamic route param into the class id type expected by Convex. */
+function toClassId(id: string): Id<"schoolClasses"> {
+  return id as Id<"schoolClasses">;
 }
 
 /**

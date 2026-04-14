@@ -1,14 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { cache, use } from "react";
+import { use } from "react";
 import { SchoolContextProvider } from "@/lib/context/use-school";
-import {
-  getSchoolInfoBySlug,
-  getSchoolRouteSnapshot,
-} from "@/lib/school/server";
+import { getSchoolRouteSnapshot } from "@/lib/school/server";
 
-const getSchoolInfo = cache(getSchoolInfoBySlug);
-
+/** Generate the school page title from the slug-resolved school metadata. */
 export async function generateMetadata({
   params,
 }: {
@@ -17,15 +13,15 @@ export async function generateMetadata({
   const { slug } = await params;
   const defaultMetadata = {};
 
-  const schoolInfo = await getSchoolInfo(slug);
+  const schoolRoute = await getSchoolRouteSnapshot({ slug });
 
-  if (!schoolInfo) {
+  if (!schoolRoute) {
     return defaultMetadata;
   }
 
   return {
     title: {
-      absolute: schoolInfo.name,
+      absolute: schoolRoute.school.name,
     },
   };
 }
