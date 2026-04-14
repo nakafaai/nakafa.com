@@ -218,7 +218,7 @@ function MaterialGroupActions({
       <EditMaterialGroupDialog
         group={group}
         open={editOpen}
-        setOpen={setEditOpen}
+        setOpenAction={setEditOpen}
       />
     </div>
   );

@@ -99,7 +99,7 @@ export function SchoolClassesPeopleInvite() {
         }}
         open={openInviteDialog}
         role={selectedRole}
-        setOpen={setOpenInviteDialog}
+        setOpenAction={setOpenInviteDialog}
       />
     </ButtonGroup>
   );
@@ -112,14 +112,14 @@ function InviteCodeDialog({
   onCopy,
   open,
   role,
-  setOpen,
+  setOpenAction,
 }: {
   code: string;
   copied: boolean;
   onCopy: () => void;
   open: boolean;
   role: InviteRole;
-  setOpen: (open: boolean) => void;
+  setOpenAction: (open: boolean) => void;
 }) {
   const t = useTranslations("School.Classes");
 
@@ -133,7 +133,7 @@ function InviteCodeDialog({
         </Button>
       }
       open={open}
-      setOpen={setOpen}
+      setOpen={setOpenAction}
       title={t(`invite-${role}-title`)}
     >
       <div className="flex items-center justify-center rounded-md border px-4 py-8">

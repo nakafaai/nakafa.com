@@ -20,7 +20,10 @@ export function SchoolClassesMaterialsNew() {
         {t("new-module")}
       </Button>
 
-      <CreateMaterialGroupDialog open={openDialog} setOpen={setOpenDialog} />
+      <CreateMaterialGroupDialog
+        open={openDialog}
+        setOpenAction={setOpenDialog}
+      />
     </ButtonGroup>
   );
 }

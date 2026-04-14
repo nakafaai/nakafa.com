@@ -24,45 +24,13 @@ import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import * as z from "zod/mini";
+import {
+  schoolCreateDefaultValues,
+  schoolCreateFormSchema,
+  schoolTypeSchema,
+} from "./schema";
 
-const MIN_NAME_LENGTH = 3;
-const MAX_NAME_LENGTH = 64;
-
-const formSchema = z.object({
-  name: z
-    .string()
-    .check(
-      z.minLength(MIN_NAME_LENGTH),
-      z.maxLength(MAX_NAME_LENGTH),
-      z.trim()
-    ),
-  email: z.string().check(z.email()),
-  phone: z.string().check(z.minLength(1), z.trim()),
-  address: z.string().check(z.minLength(1), z.trim()),
-  city: z.string().check(z.minLength(1), z.trim()),
-  province: z.string().check(z.minLength(1), z.trim()),
-  type: z.union([
-    z.literal("elementary-school"),
-    z.literal("middle-school"),
-    z.literal("high-school"),
-    z.literal("vocational-school"),
-    z.literal("university"),
-    z.literal("other"),
-  ]),
-});
-const typeSchema = formSchema.shape.type;
-
-const defaultValues: z.infer<typeof formSchema> = {
-  name: "",
-  email: "",
-  phone: "",
-  address: "",
-  city: "",
-  province: "",
-  type: "high-school",
-};
-
+/** Render the onboarding form for creating a new school. */
 export function SchoolOnboardingCreateForm() {
   const t = useTranslations("School.Onboarding");
 
@@ -71,9 +39,9 @@ export function SchoolOnboardingCreateForm() {
   const createSchool = useMutation(api.schools.mutations.createSchool);
 
   const form = useForm({
-    defaultValues,
+    defaultValues: schoolCreateDefaultValues,
     validators: {
-      onChange: formSchema,
+      onChange: schoolCreateFormSchema,
     },
     onSubmit: async ({ value }) => {
       try {
@@ -260,7 +228,7 @@ export function SchoolOnboardingCreateForm() {
                 <Select
                   name={field.name}
                   onValueChange={(value) => {
-                    const parsed = typeSchema.safeParse(value);
+                    const parsed = schoolTypeSchema.safeParse(value);
                     if (parsed.success) {
                       field.handleChange(parsed.data);
                     }

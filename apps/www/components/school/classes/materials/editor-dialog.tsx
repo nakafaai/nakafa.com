@@ -65,7 +65,7 @@ interface MaterialGroupDialogShellProps {
   formId: string;
   onSubmit: (value: MaterialGroupFormValues) => Promise<void>;
   open: boolean;
-  setOpen: (open: boolean) => void;
+  setOpenAction: (open: boolean) => void;
   submitLabel: string;
   title: string;
 }
@@ -73,10 +73,10 @@ interface MaterialGroupDialogShellProps {
 /** Render the material-group create dialog for the active class. */
 export function CreateMaterialGroupDialog({
   open,
-  setOpen,
+  setOpenAction,
 }: {
   open: boolean;
-  setOpen: (open: boolean) => void;
+  setOpenAction: (open: boolean) => void;
 }) {
   const t = useTranslations("School.Classes");
   const classId = useClass((state) => state.class._id);
@@ -105,7 +105,7 @@ export function CreateMaterialGroupDialog({
         });
       }}
       open={open}
-      setOpen={setOpen}
+      setOpenAction={setOpenAction}
       submitLabel={t("create")}
       title={t("new-module-title")}
     />
@@ -116,11 +116,11 @@ export function CreateMaterialGroupDialog({
 export function EditMaterialGroupDialog({
   group,
   open,
-  setOpen,
+  setOpenAction,
 }: {
   group: MaterialGroup;
   open: boolean;
-  setOpen: (open: boolean) => void;
+  setOpenAction: (open: boolean) => void;
 }) {
   const t = useTranslations("School.Classes");
   const updateMaterialGroup = useMutation(
@@ -153,7 +153,7 @@ export function EditMaterialGroupDialog({
         });
       }}
       open={open}
-      setOpen={setOpen}
+      setOpenAction={setOpenAction}
       submitLabel={t("save")}
       title={t("edit-material-title")}
     />
@@ -169,7 +169,7 @@ function MaterialGroupDialogShell({
   formId,
   onSubmit,
   open,
-  setOpen,
+  setOpenAction,
   submitLabel,
   title,
 }: MaterialGroupDialogShellProps) {
@@ -184,7 +184,7 @@ function MaterialGroupDialogShell({
     onSubmit: async ({ value }) => {
       try {
         await onSubmit(value);
-        setOpen(false);
+        setOpenAction(false);
       } catch (error) {
         captureException(error, errorContext);
         toast.error(errorMessage);
@@ -219,7 +219,7 @@ function MaterialGroupDialogShell({
           </form.Subscribe>
         }
         open={open}
-        setOpen={setOpen}
+        setOpen={setOpenAction}
         title={title}
       >
         <FieldGroup>
