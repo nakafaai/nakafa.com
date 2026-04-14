@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Add01Icon,
   ArrowDown01Icon,
   Calendar03Icon,
   Tick01Icon,
@@ -9,6 +10,7 @@ import {
 import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   Command,
   CommandEmpty,
@@ -116,7 +118,7 @@ export function CreateSchoolClassDialog({
                 form="school-classes-header-add-form"
                 type="submit"
               >
-                <Spinner isLoading={isSubmitting} />
+                <Spinner icon={Add01Icon} isLoading={isSubmitting} />
                 {t("create")}
               </Button>
             )}
@@ -163,7 +165,7 @@ export function CreateSchoolClassDialog({
                   <FieldLabel htmlFor="school-classes-header-add-subject">
                     {t("subject-label")}
                   </FieldLabel>
-                  <div className="flex gap-2">
+                  <ButtonGroup>
                     <Input
                       aria-invalid={isInvalid}
                       id="school-classes-header-add-subject"
@@ -184,6 +186,7 @@ export function CreateSchoolClassDialog({
                         <Button
                           aria-label="Select subject"
                           size="icon"
+                          type="button"
                           variant="outline"
                         >
                           <HugeIcons
@@ -230,7 +233,7 @@ export function CreateSchoolClassDialog({
                         </Command>
                       </PopoverContent>
                     </Popover>
-                  </div>
+                  </ButtonGroup>
                 </Field>
               );
             }}
@@ -254,6 +257,7 @@ export function CreateSchoolClassDialog({
                         className="w-full font-normal"
                         id="school-classes-header-add-year"
                         name={field.name}
+                        type="button"
                         variant="outline"
                       >
                         <HugeIcons icon={Calendar03Icon} />
@@ -306,6 +310,7 @@ export function CreateSchoolClassDialog({
                         className="w-full font-normal"
                         id="school-classes-header-add-visibility"
                         name={field.name}
+                        type="button"
                         variant="outline"
                       >
                         <HugeIcons icon={ViewIcon} />

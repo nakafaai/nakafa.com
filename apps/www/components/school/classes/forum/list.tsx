@@ -19,11 +19,8 @@ import { useQueryState, useQueryStates } from "nuqs";
 import { Activity, useTransition } from "react";
 import { getTagIcon } from "@/components/school/classes/_data/tag";
 import { forumSearchParsers } from "@/components/school/classes/forum/search-params";
-import {
-  SchoolContentLoading,
-  SchoolContentState,
-} from "@/components/school/content-state";
 import { useClass } from "@/lib/context/use-class";
+import { useForum } from "@/lib/context/use-forum";
 import { searchParsers } from "@/lib/nuqs/search";
 import { getLocale } from "@/lib/utils/date";
 
@@ -40,11 +37,13 @@ const DEBOUNCE_TIME = 500;
  */
 export function SchoolClassesForumList() {
   const t = useTranslations("School.Classes");
-  const tCommon = useTranslations("School.Common");
 
   const locale = useLocale();
 
   const classId = useClass((state) => state.class._id);
+  const resetConversationState = useForum(
+    (state) => state.resetConversationState
+  );
   const [{ q }] = useQueryStates(searchParsers);
   const [, setForumId] = useQueryState("forum", forumSearchParsers.forum);
 
@@ -60,20 +59,16 @@ export function SchoolClassesForumList() {
   );
 
   if (status === "LoadingFirstPage") {
-    return (
-      <SchoolContentLoading
-        description={tCommon("loading-content-description")}
-        title={tCommon("loading-content")}
-      />
-    );
+    return null;
   }
 
   if (results.length === 0) {
     return (
-      <SchoolContentState
-        description={t("new-forum-description")}
-        title={t("no-forum-found")}
-      />
+      <div className="py-12">
+        <p className="text-center text-muted-foreground text-sm">
+          {t("no-forum-found")}
+        </p>
+      </div>
     );
   }
 
@@ -87,6 +82,7 @@ export function SchoolClassesForumList() {
               <button
                 className="absolute inset-0 z-0 cursor-pointer"
                 onClick={() => {
+                  resetConversationState();
                   setForumId(forum._id);
                 }}
                 type="button"

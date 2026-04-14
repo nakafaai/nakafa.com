@@ -650,21 +650,13 @@
   "School": {
     "Common": {
       "home": "Beranda",
-      "home-description": "Pantau sekolahmu dari satu tempat.",
-      "home-empty-title": "Dasbor sekolahmu hampir siap",
-      "home-empty-description": "Kelas dan pembaruan akan muncul di sini.",
       "learning": "Belajar",
       "classes": "Kelas",
       "nakafa-materials": "Materi Nakafa",
       "yours": "Kamu",
       "notifications": "Notifikasi",
-      "notifications-description": "Lihat pembaruan sekolah di satu kotak masuk.",
-      "notifications-empty-title": "Belum ada notifikasi sekolah",
-      "notifications-empty-description": "Pembaruan baru akan muncul di sini.",
       "preparing-school": "Menyiapkan sekolahmu",
-      "preparing-school-description": "Tunggu sebentar ya, kami sedang menyiapkan semuanya untukmu.",
-      "loading-content": "Memuat konten",
-      "loading-content-description": "Tunggu sebentar ya."
+      "preparing-school-description": "Tunggu sebentar ya, kami sedang menyiapkan semuanya untukmu."
     },
     "Classes": {
       "classes": "Kelas",

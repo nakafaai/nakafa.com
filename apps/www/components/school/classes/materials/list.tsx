@@ -7,10 +7,6 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { usePaginatedQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
-import {
-  SchoolContentLoading,
-  SchoolContentState,
-} from "@/components/school/content-state";
 import { useClass } from "@/lib/context/use-class";
 import { useClassPermissions } from "@/lib/hooks/use-class-permissions";
 import { searchParsers } from "@/lib/nuqs/search";
@@ -21,7 +17,6 @@ const DEBOUNCE_TIME = 500;
 /** Render the paginated material-group list for the active class. */
 export function SchoolClassesMaterialsList() {
   const t = useTranslations("School.Classes");
-  const tCommon = useTranslations("School.Common");
 
   const [{ q }] = useQueryStates(searchParsers);
 
@@ -42,20 +37,16 @@ export function SchoolClassesMaterialsList() {
   const canManage = can(PERMISSIONS.CONTENT_EDIT);
 
   if (status === "LoadingFirstPage") {
-    return (
-      <SchoolContentLoading
-        description={tCommon("loading-content-description")}
-        title={tCommon("loading-content")}
-      />
-    );
+    return null;
   }
 
   if (results.length === 0) {
     return (
-      <SchoolContentState
-        description={t("new-module-description")}
-        title={t("no-materials-found")}
-      />
+      <div className="py-12">
+        <p className="text-center text-muted-foreground text-sm">
+          {t("no-materials-found")}
+        </p>
+      </div>
     );
   }
 

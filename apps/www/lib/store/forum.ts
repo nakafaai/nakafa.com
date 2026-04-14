@@ -32,6 +32,7 @@ interface State {
 interface Actions {
   enterJumpMode: (targetPostId: Id<"schoolClassForumPosts">) => void;
   exitJumpMode: () => void;
+  resetConversationState: () => void;
   setReplyTo: (replyTo: ReplyTo | null) => void;
 }
 
@@ -55,5 +56,7 @@ export const createForumStore = () =>
       enterJumpMode: (targetPostId) => set({ jumpTargetPostId: targetPostId }),
 
       exitJumpMode: () => set({ jumpTargetPostId: null }),
+
+      resetConversationState: () => set(initialState),
     }))
   );

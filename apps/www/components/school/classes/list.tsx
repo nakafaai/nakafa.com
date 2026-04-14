@@ -41,7 +41,6 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import { useState } from "react";
-import { SchoolContentState } from "@/components/school/content-state";
 import { useSchool } from "@/lib/context/use-school";
 import { searchParsers } from "@/lib/nuqs/search";
 
@@ -71,10 +70,11 @@ export function SchoolClassesList() {
 
   if (results.length === 0) {
     return (
-      <SchoolContentState
-        description={t("create-class-description")}
-        title={t("no-classes-found")}
-      />
+      <div className="py-12">
+        <p className="text-center text-muted-foreground text-sm">
+          {t("no-classes-found")}
+        </p>
+      </div>
     );
   }
 

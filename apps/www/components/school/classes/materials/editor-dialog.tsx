@@ -1,8 +1,10 @@
 "use client";
 
 import {
+  Add01Icon,
   ArrowDown01Icon,
   Calendar03Icon,
+  Edit01Icon,
   Tick01Icon,
   Time04Icon,
 } from "@hugeicons/core-free-icons";
@@ -66,6 +68,7 @@ interface MaterialGroupDialogShellProps {
   onSubmit: (value: MaterialGroupFormValues) => Promise<void>;
   open: boolean;
   setOpenAction: (open: boolean) => void;
+  submitIcon: React.ComponentProps<typeof HugeIcons>["icon"];
   submitLabel: string;
   title: string;
 }
@@ -106,6 +109,7 @@ export function CreateMaterialGroupDialog({
       }}
       open={open}
       setOpenAction={setOpenAction}
+      submitIcon={Add01Icon}
       submitLabel={t("create")}
       title={t("new-module-title")}
     />
@@ -154,6 +158,7 @@ export function EditMaterialGroupDialog({
       }}
       open={open}
       setOpenAction={setOpenAction}
+      submitIcon={Edit01Icon}
       submitLabel={t("save")}
       title={t("edit-material-title")}
     />
@@ -170,6 +175,7 @@ function MaterialGroupDialogShell({
   onSubmit,
   open,
   setOpenAction,
+  submitIcon,
   submitLabel,
   title,
 }: MaterialGroupDialogShellProps) {
@@ -184,6 +190,7 @@ function MaterialGroupDialogShell({
     onSubmit: async ({ value }) => {
       try {
         await onSubmit(value);
+        form.reset();
         setOpenAction(false);
       } catch (error) {
         captureException(error, errorContext);
@@ -212,7 +219,7 @@ function MaterialGroupDialogShell({
                 form={formId}
                 type="submit"
               >
-                <Spinner isLoading={isSubmitting} />
+                <Spinner icon={submitIcon} isLoading={isSubmitting} />
                 {submitLabel}
               </Button>
             )}
@@ -293,6 +300,7 @@ function MaterialGroupDialogShell({
                         className="w-full font-normal"
                         id={`${formId}-status`}
                         name={field.name}
+                        type="button"
                         variant="outline"
                       >
                         <HugeIcons icon={currentStatus.icon} />
@@ -350,6 +358,7 @@ function MaterialGroupDialogShell({
                               className="w-full font-normal"
                               id={`${formId}-scheduled-at`}
                               name={field.name}
+                              type="button"
                               variant="outline"
                             >
                               <HugeIcons icon={Calendar03Icon} />

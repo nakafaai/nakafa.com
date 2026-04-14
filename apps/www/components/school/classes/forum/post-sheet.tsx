@@ -36,8 +36,9 @@ const MAX_WIDTH = 672;
  * page stays interactive while the thread is open.
  */
 export function SchoolClassesForumPostSheet() {
-  const exitJumpMode = useForum((f) => f.exitJumpMode);
-  const setReplyTo = useForum((f) => f.setReplyTo);
+  const resetConversationState = useForum(
+    (state) => state.resetConversationState
+  );
   const [forumId, setForumId] = useQueryState(
     "forum",
     forumSearchParsers.forum
@@ -53,8 +54,7 @@ export function SchoolClassesForumPostSheet() {
   });
 
   function handleClose() {
-    exitJumpMode();
-    setReplyTo(null);
+    resetConversationState();
     setForumId(null);
   }
 

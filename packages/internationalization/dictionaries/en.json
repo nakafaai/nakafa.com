@@ -650,21 +650,13 @@
   "School": {
     "Common": {
       "home": "Home",
-      "home-description": "Track your school in one place.",
-      "home-empty-title": "Your school dashboard is almost ready",
-      "home-empty-description": "Classes and updates will show up here.",
       "learning": "Learning",
       "classes": "Classes",
       "nakafa-materials": "Nakafa Materials",
       "yours": "Yours",
       "notifications": "Notifications",
-      "notifications-description": "See school updates in one inbox.",
-      "notifications-empty-title": "No school notifications yet",
-      "notifications-empty-description": "New updates will appear here.",
       "preparing-school": "Preparing your school",
-      "preparing-school-description": "Please wait while we set things up for you.",
-      "loading-content": "Loading content",
-      "loading-content-description": "Please wait a moment."
+      "preparing-school-description": "Please wait while we set things up for you."
     },
     "Classes": {
       "classes": "Classes",
