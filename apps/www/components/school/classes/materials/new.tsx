@@ -2,7 +2,6 @@
 
 import { FolderAddIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -14,8 +13,8 @@ export function SchoolClassesMaterialsNew() {
   const [openDialog, setOpenDialog] = useState(false);
 
   return (
-    <ButtonGroup>
-      <Button onClick={() => setOpenDialog(true)}>
+    <div>
+      <Button onClick={() => setOpenDialog(true)} type="button">
         <HugeIcons icon={FolderAddIcon} />
         {t("new-module")}
       </Button>
@@ -24,6 +23,6 @@ export function SchoolClassesMaterialsNew() {
         open={openDialog}
         setOpenAction={setOpenDialog}
       />
-    </ButtonGroup>
+    </div>
   );
 }

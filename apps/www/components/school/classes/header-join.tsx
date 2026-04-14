@@ -4,7 +4,6 @@ import { InLoveIcon, Rocket01Icon } from "@hugeicons/core-free-icons";
 import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
-import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   Field,
   FieldGroup,
@@ -72,12 +71,10 @@ export function SchoolClassesHeaderJoin() {
         form.handleSubmit();
       }}
     >
-      <ButtonGroup>
-        <Button onClick={() => setOpen(true)}>
-          <HugeIcons icon={Rocket01Icon} />
-          <span className="hidden sm:inline">{t("join-class")}</span>
-        </Button>
-      </ButtonGroup>
+      <Button onClick={() => setOpen(true)} type="button">
+        <HugeIcons icon={Rocket01Icon} />
+        <span className="hidden sm:inline">{t("join-class")}</span>
+      </Button>
 
       <ResponsiveDialog
         description={t("join-class-description")}

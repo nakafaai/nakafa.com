@@ -2,7 +2,6 @@
 
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -15,12 +14,10 @@ export function SchoolClassesHeaderAdd() {
 
   return (
     <>
-      <ButtonGroup>
-        <Button onClick={() => setOpen(true)}>
-          <HugeIcons icon={Add01Icon} />
-          <span className="hidden sm:inline">{t("create-class")}</span>
-        </Button>
-      </ButtonGroup>
+      <Button onClick={() => setOpen(true)} type="button">
+        <HugeIcons icon={Add01Icon} />
+        <span className="hidden sm:inline">{t("create-class")}</span>
+      </Button>
 
       <CreateSchoolClassDialog open={open} setOpenAction={setOpen} />
     </>
