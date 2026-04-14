@@ -6,7 +6,10 @@ import {
   schoolClassVisibilityValidator,
 } from "@repo/backend/convex/classes/schema";
 import { loadActiveClass, loadClass } from "@repo/backend/convex/classes/utils";
-import { classRouteResultValidator } from "@repo/backend/convex/classes/validators";
+import {
+  type ClassRouteResult,
+  classRouteResultValidator,
+} from "@repo/backend/convex/classes/validators";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import {
   checkClassAccess,
@@ -126,15 +129,24 @@ export const getClasses = query({
  */
 export const getClassRoute = query({
   args: {
-    classId: vv.id("schoolClasses"),
+    classId: v.string(),
   },
   returns: classRouteResultValidator,
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
-    const classData = await loadActiveClass(ctx, args.classId);
+    const classId = ctx.db.normalizeId("schoolClasses", args.classId);
+
+    if (!classId) {
+      throw new ConvexError({
+        code: "CLASS_NOT_FOUND",
+        message: `Class not found for classId: ${args.classId}`,
+      });
+    }
+
+    const classData = await loadActiveClass(ctx, classId);
     const { classMembership, schoolMembership } = await checkClassAccess(
       ctx,
-      args.classId,
+      classId,
       classData.schoolId,
       user.appUser._id
     );
@@ -147,16 +159,18 @@ export const getClassRoute = query({
     }
 
     if (classMembership || isAdmin(schoolMembership)) {
-      return {
-        kind: "accessible" as const,
+      const accessibleRoute = {
+        kind: "accessible",
         class: classData,
         classMembership,
         schoolMembership,
-      };
+      } satisfies ClassRouteResult;
+
+      return accessibleRoute;
     }
 
-    return {
-      kind: "joinRequired" as const,
+    const joinRequiredRoute = {
+      kind: "joinRequired",
       class: {
         _id: classData._id,
         image: classData.image,
@@ -166,7 +180,9 @@ export const getClassRoute = query({
         year: classData.year,
       },
       schoolMembership,
-    };
+    } satisfies ClassRouteResult;
+
+    return joinRequiredRoute;
   },
 });
 

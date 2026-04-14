@@ -87,6 +87,11 @@ describe("classes/queries:getClassRoute", () => {
       .query(api.classes.queries.getClassRoute, { classId: identity.classId });
 
     expect(result.kind).toBe("accessible");
+
+    if (result.kind !== "accessible") {
+      throw new Error("Expected an accessible class route snapshot.");
+    }
+
     expect(result.class._id).toBe(identity.classId);
     expect(result.classMembership?.role).toBe("teacher");
     expect(result.schoolMembership.role).toBe("teacher");

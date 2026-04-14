@@ -6,32 +6,46 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 export function buildSchoolChangesMetadata(
   oldSchool: Doc<"schools">,
   school: Doc<"schools">
-): Record<string, string | undefined> | null {
-  const fields = [
-    "name",
-    "email",
-    "phone",
-    "address",
-    "city",
-    "province",
-    "type",
-  ] as const;
+) {
+  const nameChanged = oldSchool.name !== school.name;
+  const emailChanged = oldSchool.email !== school.email;
+  const phoneChanged = oldSchool.phone !== school.phone;
+  const addressChanged = oldSchool.address !== school.address;
+  const cityChanged = oldSchool.city !== school.city;
+  const provinceChanged = oldSchool.province !== school.province;
+  const typeChanged = oldSchool.type !== school.type;
+  const hasChanges = [
+    nameChanged,
+    emailChanged,
+    phoneChanged,
+    addressChanged,
+    cityChanged,
+    provinceChanged,
+    typeChanged,
+  ].some(Boolean);
 
-  const changes: Record<string, string | undefined> = {
-    schoolName: school.name,
-  };
-  let hasChanges = false;
-
-  for (const field of fields) {
-    if (oldSchool[field] !== school[field]) {
-      hasChanges = true;
-      const capitalized = field.charAt(0).toUpperCase() + field.slice(1);
-      changes[`old${capitalized}`] = oldSchool[field];
-      changes[`new${capitalized}`] = school[field];
-    }
+  if (!hasChanges) {
+    return null;
   }
 
-  return hasChanges ? changes : null;
+  return {
+    schoolName: school.name,
+    ...(nameChanged ? { oldName: oldSchool.name, newName: school.name } : {}),
+    ...(emailChanged
+      ? { oldEmail: oldSchool.email, newEmail: school.email }
+      : {}),
+    ...(phoneChanged
+      ? { oldPhone: oldSchool.phone, newPhone: school.phone }
+      : {}),
+    ...(addressChanged
+      ? { oldAddress: oldSchool.address, newAddress: school.address }
+      : {}),
+    ...(cityChanged ? { oldCity: oldSchool.city, newCity: school.city } : {}),
+    ...(provinceChanged
+      ? { oldProvince: oldSchool.province, newProvince: school.province }
+      : {}),
+    ...(typeChanged ? { oldType: oldSchool.type, newType: school.type } : {}),
+  };
 }
 
 /**
@@ -40,22 +54,38 @@ export function buildSchoolChangesMetadata(
 export function buildClassChangesMetadata(
   oldClassDoc: Doc<"schoolClasses">,
   classDoc: Doc<"schoolClasses">
-): Record<string, string | number | undefined> | null {
-  const fields = ["name", "subject", "year", "visibility"] as const;
+) {
+  const nameChanged = oldClassDoc.name !== classDoc.name;
+  const subjectChanged = oldClassDoc.subject !== classDoc.subject;
+  const yearChanged = oldClassDoc.year !== classDoc.year;
+  const visibilityChanged = oldClassDoc.visibility !== classDoc.visibility;
+  const hasChanges = [
+    nameChanged,
+    subjectChanged,
+    yearChanged,
+    visibilityChanged,
+  ].some(Boolean);
 
-  const changes: Record<string, string | number | undefined> = {
-    className: classDoc.name,
-  };
-  let hasChanges = false;
-
-  for (const field of fields) {
-    if (oldClassDoc[field] !== classDoc[field]) {
-      hasChanges = true;
-      const capitalized = field.charAt(0).toUpperCase() + field.slice(1);
-      changes[`old${capitalized}`] = oldClassDoc[field];
-      changes[`new${capitalized}`] = classDoc[field];
-    }
+  if (!hasChanges) {
+    return null;
   }
 
-  return hasChanges ? changes : null;
+  return {
+    className: classDoc.name,
+    ...(nameChanged
+      ? { oldName: oldClassDoc.name, newName: classDoc.name }
+      : {}),
+    ...(subjectChanged
+      ? { oldSubject: oldClassDoc.subject, newSubject: classDoc.subject }
+      : {}),
+    ...(yearChanged
+      ? { oldYear: oldClassDoc.year, newYear: classDoc.year }
+      : {}),
+    ...(visibilityChanged
+      ? {
+          oldVisibility: oldClassDoc.visibility,
+          newVisibility: classDoc.visibility,
+        }
+      : {}),
+  };
 }

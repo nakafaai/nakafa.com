@@ -1,6 +1,5 @@
 import { captureServerException } from "@repo/analytics/posthog/server";
 import { api } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { ConvexError } from "convex/values";
 import { cache } from "react";
 import { fetchAuthQuery } from "@/lib/auth/server";
@@ -57,11 +56,7 @@ export const getSchoolRouteSnapshot = cache(
  * Returns `null` when the class cannot be resolved for the current viewer so
  * the route can delegate to Next's native not-found handling.
  */
-export async function getClassRouteSnapshot({
-  classId,
-}: {
-  classId: Id<"schoolClasses">;
-}) {
+export async function getClassRouteSnapshot({ classId }: { classId: string }) {
   try {
     return await fetchAuthQuery(api.classes.queries.getClassRoute, { classId });
   } catch (error) {

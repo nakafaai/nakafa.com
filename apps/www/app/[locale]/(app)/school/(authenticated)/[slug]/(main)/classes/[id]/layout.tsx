@@ -1,4 +1,3 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { notFound } from "next/navigation";
 import { use } from "react";
 import { SchoolClassesForumPostSheet } from "@/components/school/classes/forum/post-sheet";
@@ -16,14 +15,7 @@ export default function Layout(
   const { children, params } = props;
   const { id } = use(params);
 
-  return (
-    <ClassRouteBoundary classId={toClassId(id)}>{children}</ClassRouteBoundary>
-  );
-}
-
-/** Normalize one dynamic route param into the class id type expected by Convex. */
-function toClassId(id: string): Id<"schoolClasses"> {
-  return id as Id<"schoolClasses">;
+  return <ClassRouteBoundary classId={id}>{children}</ClassRouteBoundary>;
 }
 
 /**
@@ -35,7 +27,7 @@ async function ClassRouteBoundary({
   classId,
 }: {
   children: React.ReactNode;
-  classId: Id<"schoolClasses">;
+  classId: string;
 }) {
   const value = await getClassRouteSnapshot({ classId });
 

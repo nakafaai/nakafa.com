@@ -1,3 +1,8 @@
+import {
+  schoolClassEnrollMethodValidator,
+  schoolClassMemberRoleValidator,
+  schoolClassTeacherRoleValidator,
+} from "@repo/backend/convex/classes/schema";
 import { defineTable } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
@@ -80,7 +85,6 @@ export const schoolActivityActionValidator = literals(
   "school_created",
   "school_updated",
   "school_deleted",
-  "school_code_regenerated",
   "member_invited",
   "member_joined",
   "member_removed",
@@ -89,45 +93,119 @@ export const schoolActivityActionValidator = literals(
   "class_updated",
   "class_archived",
   "class_deleted",
-  "class_code_regenerated",
   "class_member_added",
   "class_member_removed",
-  "class_member_role_changed",
-  "class_member_permissions_changed",
-  "parent_linked",
-  "parent_unlinked",
-  "parent_permissions_changed",
-  "assignment_created",
-  "assignment_updated",
-  "assignment_deleted",
-  "assignment_published",
-  "progress_updated",
-  "assignment_completed"
+  "class_member_role_changed"
 );
 
 /**
- * School activity entity type validator
+ * School activity entity type validator.
  */
 export const schoolActivityEntityTypeValidator = literals(
   "schools",
   "schoolMembers",
-  "classes",
-  "classMembers",
-  "parentStudents",
-  "assignments",
-  "progresses"
+  "schoolClasses",
+  "schoolClassMembers"
 );
 
-/**
- * Activity log metadata validator.
- * Uses v.any() because metadata varies by action type (polymorphic):
- * - member_role_changed: { oldRole, newRole }
- * - member_invited: { email, role }
- * - class_created: { className, subject }
- * - etc.
- * Full typing would require discriminated unions per action type.
- */
-const activityMetadataValidator = v.optional(v.any());
+const schoolRoleMetadataValidator = v.object({
+  role: schoolMemberRoleValidator,
+});
+
+const classRoleMetadataValidator = v.object({
+  role: schoolClassMemberRoleValidator,
+});
+
+const schoolActivityMetadataValidator = v.optional(
+  v.union(
+    v.object({
+      schoolName: v.string(),
+      memberId: v.optional(v.string()),
+    }),
+    v.object({
+      schoolName: v.string(),
+    }),
+    v.object({
+      schoolName: v.string(),
+      oldName: v.optional(v.string()),
+      newName: v.optional(v.string()),
+      oldEmail: v.optional(v.string()),
+      newEmail: v.optional(v.string()),
+      oldPhone: v.optional(v.string()),
+      newPhone: v.optional(v.string()),
+      oldAddress: v.optional(v.string()),
+      newAddress: v.optional(v.string()),
+      oldCity: v.optional(v.string()),
+      newCity: v.optional(v.string()),
+      oldProvince: v.optional(v.string()),
+      newProvince: v.optional(v.string()),
+      oldType: v.optional(schoolTypeValidator),
+      newType: v.optional(schoolTypeValidator),
+    }),
+    v.object({
+      ...schoolRoleMetadataValidator.fields,
+      joinedAt: v.number(),
+    }),
+    v.object({
+      invitedUserId: v.string(),
+      ...schoolRoleMetadataValidator.fields,
+      invitedAt: v.optional(v.number()),
+    }),
+    v.object({
+      oldRole: schoolMemberRoleValidator,
+      newRole: schoolMemberRoleValidator,
+    }),
+    v.object({
+      removedUserId: v.string(),
+      ...schoolRoleMetadataValidator.fields,
+      removedAt: v.optional(v.number()),
+    }),
+    v.object({
+      className: v.string(),
+      subject: v.string(),
+      year: v.string(),
+    }),
+    v.object({
+      className: v.string(),
+      isArchived: v.boolean(),
+      archivedAt: v.optional(v.number()),
+    }),
+    v.object({
+      className: v.string(),
+      oldName: v.optional(v.string()),
+      newName: v.optional(v.string()),
+      oldSubject: v.optional(v.string()),
+      newSubject: v.optional(v.string()),
+      oldYear: v.optional(v.string()),
+      newYear: v.optional(v.string()),
+      oldVisibility: v.optional(v.string()),
+      newVisibility: v.optional(v.string()),
+    }),
+    v.object({
+      classId: v.string(),
+      addedUserId: v.string(),
+      ...classRoleMetadataValidator.fields,
+      teacherRole: schoolClassTeacherRoleValidator,
+      enrollMethod: schoolClassEnrollMethodValidator,
+    }),
+    v.object({
+      classId: v.string(),
+      oldRole: schoolClassMemberRoleValidator,
+      newRole: schoolClassMemberRoleValidator,
+    }),
+    v.object({
+      classId: v.string(),
+      oldTeacherRole: schoolClassTeacherRoleValidator,
+      newTeacherRole: schoolClassTeacherRoleValidator,
+    }),
+    v.object({
+      classId: v.string(),
+      removedUserId: v.string(),
+      ...classRoleMetadataValidator.fields,
+      removedAt: v.optional(v.number()),
+    })
+  )
+);
 
 const tables = {
   schools: defineTable(schoolValidator)
@@ -162,7 +240,7 @@ const tables = {
     action: schoolActivityActionValidator,
     entityType: schoolActivityEntityTypeValidator,
     entityId: v.string(),
-    metadata: activityMetadataValidator,
+    metadata: schoolActivityMetadataValidator,
     ipAddress: v.optional(v.string()),
     userAgent: v.optional(v.string()),
   }).index("by_schoolId", ["schoolId"]),

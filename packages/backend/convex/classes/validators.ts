@@ -3,6 +3,7 @@ import {
   schoolClassVisibilityValidator,
 } from "@repo/backend/convex/classes/schema";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
+import type { Infer } from "convex/values";
 import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
 
@@ -44,6 +45,7 @@ export const classRouteResultValidator = v.union(
   classRouteAccessibleValidator,
   classRouteJoinValidator
 );
+export type ClassRouteResult = Infer<typeof classRouteResultValidator>;
 
 /** Return shape for class join mutations. */
 export const classJoinMutationResultValidator = v.object({

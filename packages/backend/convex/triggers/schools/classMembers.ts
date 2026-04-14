@@ -50,7 +50,7 @@ export async function schoolClassMembersHandler(
         schoolId: member.schoolId,
         userId: member.addedBy ?? member.userId,
         action: "class_member_added",
-        entityType: "classMembers",
+        entityType: "schoolClassMembers",
         entityId: change.id,
         metadata: {
           classId: member.classId,
@@ -80,7 +80,7 @@ export async function schoolClassMembersHandler(
           schoolId: member.schoolId,
           userId: member.userId,
           action: "class_member_role_changed",
-          entityType: "classMembers",
+          entityType: "schoolClassMembers",
           entityId: change.id,
           metadata: {
             classId: member.classId,
@@ -103,7 +103,7 @@ export async function schoolClassMembersHandler(
         schoolId: oldMember.schoolId,
         userId: oldMember.removedBy ?? oldMember.userId,
         action: "class_member_removed",
-        entityType: "classMembers",
+        entityType: "schoolClassMembers",
         entityId: change.id,
         metadata: {
           classId: oldMember.classId,

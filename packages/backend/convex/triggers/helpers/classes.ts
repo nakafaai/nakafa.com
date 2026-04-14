@@ -66,7 +66,7 @@ export async function handleRoleChange(
     schoolId: member.schoolId,
     userId: member.userId,
     action: "class_member_role_changed",
-    entityType: "classMembers",
+    entityType: "schoolClassMembers",
     entityId: memberId,
     metadata: {
       classId: member.classId,

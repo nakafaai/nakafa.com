@@ -33,7 +33,7 @@ export async function schoolClassesHandler(
         schoolId: classDoc.schoolId,
         userId: classDoc.createdBy,
         action: "class_created",
-        entityType: "classes",
+        entityType: "schoolClasses",
         entityId: classId,
         metadata: {
           className: classDoc.name,
@@ -55,7 +55,7 @@ export async function schoolClassesHandler(
           userId:
             classDoc.archivedBy ?? classDoc.updatedBy ?? classDoc.createdBy,
           action: "class_archived",
-          entityType: "classes",
+          entityType: "schoolClasses",
           entityId: classId,
           metadata: {
             className: classDoc.name,
@@ -71,7 +71,7 @@ export async function schoolClassesHandler(
           schoolId: classDoc.schoolId,
           userId: classDoc.updatedBy ?? classDoc.createdBy,
           action: "class_updated",
-          entityType: "classes",
+          entityType: "schoolClasses",
           entityId: classId,
           metadata: changesMetadata,
         });
@@ -88,7 +88,7 @@ export async function schoolClassesHandler(
         schoolId: oldClassDoc.schoolId,
         userId: oldClassDoc.updatedBy ?? oldClassDoc.createdBy,
         action: "class_deleted",
-        entityType: "classes",
+        entityType: "schoolClasses",
         entityId: classId,
         metadata: {
           className: oldClassDoc.name,
