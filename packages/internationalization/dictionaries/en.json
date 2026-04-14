@@ -650,27 +650,27 @@
   "School": {
     "Common": {
       "home": "Home",
-      "home-description": "Track classes, activity, and upcoming school work from one place.",
+      "home-description": "Track your school in one place.",
       "home-empty-title": "Your school dashboard is almost ready",
-      "home-empty-description": "Once classes, materials, and discussions are active, this page will surface the most important updates for your school.",
+      "home-empty-description": "Classes and updates will show up here.",
       "learning": "Learning",
       "classes": "Classes",
       "nakafa-materials": "Nakafa Materials",
       "yours": "Yours",
       "notifications": "Notifications",
-      "notifications-description": "Follow class mentions, discussions, and school updates in one inbox.",
+      "notifications-description": "See school updates in one inbox.",
       "notifications-empty-title": "No school notifications yet",
-      "notifications-empty-description": "New forum activity, invites, and future assessment updates will appear here once your school starts using them.",
+      "notifications-empty-description": "New updates will appear here.",
       "preparing-school": "Preparing your school",
       "preparing-school-description": "Please wait while we set things up for you.",
       "loading-content": "Loading content",
-      "loading-content-description": "Please wait while we load the latest school data."
+      "loading-content-description": "Please wait a moment."
     },
     "Classes": {
       "classes": "Classes",
       "search-placeholder": "Search classes...",
       "create-class": "Create class",
-      "create-class-description": "Set up a new class to organize students and track their progress throughout the academic year.",
+      "create-class-description": "Create a new class.",
       "create": "Create",
       "name-label": "Name",
       "name-placeholder": "Class 10A",

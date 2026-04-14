@@ -650,27 +650,27 @@
   "School": {
     "Common": {
       "home": "Beranda",
-      "home-description": "Pantau kelas, aktivitas, dan pekerjaan sekolah dari satu tempat.",
+      "home-description": "Pantau sekolahmu dari satu tempat.",
       "home-empty-title": "Dasbor sekolahmu hampir siap",
-      "home-empty-description": "Setelah kelas, materi, dan diskusi mulai aktif, halaman ini akan menampilkan ringkasan terpenting untuk sekolahmu.",
+      "home-empty-description": "Kelas dan pembaruan akan muncul di sini.",
       "learning": "Belajar",
       "classes": "Kelas",
       "nakafa-materials": "Materi Nakafa",
       "yours": "Kamu",
       "notifications": "Notifikasi",
-      "notifications-description": "Pantau mention kelas, diskusi, dan pembaruan sekolah dalam satu kotak masuk.",
+      "notifications-description": "Lihat pembaruan sekolah di satu kotak masuk.",
       "notifications-empty-title": "Belum ada notifikasi sekolah",
-      "notifications-empty-description": "Aktivitas forum, undangan, dan pembaruan asesmen di masa depan akan muncul di sini saat sekolahmu mulai memakainya.",
+      "notifications-empty-description": "Pembaruan baru akan muncul di sini.",
       "preparing-school": "Menyiapkan sekolahmu",
       "preparing-school-description": "Tunggu sebentar ya, kami sedang menyiapkan semuanya untukmu.",
       "loading-content": "Memuat konten",
-      "loading-content-description": "Tunggu sebentar ya, kami sedang memuat data sekolah terbaru."
+      "loading-content-description": "Tunggu sebentar ya."
     },
     "Classes": {
       "classes": "Kelas",
       "search-placeholder": "Cari kelas...",
       "create-class": "Buat kelas",
-      "create-class-description": "Siapkan kelas baru untuk mengorganisir siswa dan melacak kemajuan mereka selama tahun ajaran.",
+      "create-class-description": "Buat kelas baru.",
       "create": "Buat",
       "name-label": "Nama",
       "name-placeholder": "Kelas 10A",

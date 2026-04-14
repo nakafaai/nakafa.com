@@ -3,7 +3,7 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { fetchQuery } from "convex/nextjs";
 import { cache } from "react";
-import { getToken } from "@/lib/auth/server";
+import { fetchAuthQuery } from "@/lib/auth/server";
 
 /** Load school metadata by slug without throwing into route components. */
 export const getSchoolInfoBySlug = cache(async (slug: string) => {
@@ -26,18 +26,8 @@ export const getSchoolInfoBySlug = cache(async (slug: string) => {
  * route can decide whether to render a 404 state.
  */
 export async function getSchoolRouteSnapshot({ slug }: { slug: string }) {
-  const token = await getToken();
-
-  if (!token) {
-    return null;
-  }
-
   try {
-    return await fetchQuery(
-      api.schools.queries.getSchoolBySlug,
-      { slug },
-      { token }
-    );
+    return await fetchAuthQuery(api.schools.queries.getSchoolBySlug, { slug });
   } catch (error) {
     await captureServerException(error, undefined, {
       slug,
@@ -59,18 +49,8 @@ export async function getClassRouteSnapshot({
 }: {
   classId: Id<"schoolClasses">;
 }) {
-  const token = await getToken();
-
-  if (!token) {
-    return null;
-  }
-
   try {
-    return await fetchQuery(
-      api.classes.queries.getClassRoute,
-      { classId },
-      { token }
-    );
+    return await fetchAuthQuery(api.classes.queries.getClassRoute, { classId });
   } catch (error) {
     await captureServerException(error, undefined, {
       classId,
