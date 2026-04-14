@@ -15,7 +15,6 @@
     "posthog": {
       "type": "remote",
       "url": "https://mcp-eu.posthog.com/mcp",
-      "oauth": false,
       "headers": {
         "Authorization": "Bearer {env:POSTHOG_MCP_API_KEY}"
       }
