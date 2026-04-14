@@ -662,7 +662,7 @@
       "classes": "Kelas",
       "search-placeholder": "Cari kelas...",
       "create-class": "Buat kelas",
-      "create-class-description": "Siapkan kelas baru untuk mengorganisir siswa dan melacak kemajuan mereka selama tahun ajaran.",
+      "create-class-description": "Buat kelas baru.",
       "create": "Buat",
       "name-label": "Nama",
       "name-placeholder": "Kelas 10A",
@@ -835,6 +835,8 @@
       "school-creation-failed": "Gagal membuat sekolah. Silakan coba dengan email yang berbeda.",
       "add-school": "Tambah sekolah",
       "schools": "Sekolah",
+      "search-school-placeholder": "Cari sekolah...",
+      "no-schools-found": "Tidak ada sekolah.",
       "school-joining-failed": "Gagal bergabung sekolah. Pastikan kode yang kamu masukkan benar."
     }
   },

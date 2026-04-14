@@ -139,7 +139,8 @@ const tables = {
     // Note: Use _creationTime for when notification was created
   })
     .index("by_recipientId", ["recipientId"])
-    .index("by_actorId", ["actorId"]),
+    .index("by_actorId", ["actorId"])
+    .index("by_entityType_and_entityId", ["entityType", "entityId"]),
 
   /**
    * Denormalized unread counts for O(1) badge display
@@ -184,6 +185,7 @@ const tables = {
     userId: v.id("users"),
   })
     .index("by_userId", ["userId"])
+    .index("by_entityType_and_entityId", ["entityType", "entityId"])
     .index("by_userId_and_entityType_and_entityId", [
       "userId",
       "entityType",

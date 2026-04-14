@@ -662,7 +662,7 @@
       "classes": "Classes",
       "search-placeholder": "Search classes...",
       "create-class": "Create class",
-      "create-class-description": "Set up a new class to organize students and track their progress throughout the academic year.",
+      "create-class-description": "Create a new class.",
       "create": "Create",
       "name-label": "Name",
       "name-placeholder": "Class 10A",
@@ -835,6 +835,8 @@
       "school-creation-failed": "Failed to create school. Please try with a different email.",
       "add-school": "Add school",
       "schools": "Schools",
+      "search-school-placeholder": "Search schools...",
+      "no-schools-found": "No schools found.",
       "school-joining-failed": "Failed to join school. Make sure the code is correct."
     }
   },

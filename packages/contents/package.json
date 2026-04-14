@@ -17,7 +17,7 @@
     "@repo/utilities": "workspace:*",
     "date-fns": "^4.1.0",
     "effect": "^3.21.0",
-    "ky": "^2.0.0",
+    "ky": "^2.0.1",
     "motion": "^12.38.0",
     "next-intl": "^4.9.1",
     "react": "19.2.5",

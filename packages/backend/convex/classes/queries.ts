@@ -1,12 +1,15 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { SCHOOL_CLASS_INVITE_CODE_ROLES } from "@repo/backend/convex/classes/constants";
 import {
-  classInfoValidator,
   paginatedClassesValidator,
   paginatedPeopleValidator,
   schoolClassVisibilityValidator,
 } from "@repo/backend/convex/classes/schema";
-import { loadClass } from "@repo/backend/convex/classes/utils";
+import { loadActiveClass, loadClass } from "@repo/backend/convex/classes/utils";
+import {
+  type ClassRouteResult,
+  classRouteResultValidator,
+} from "@repo/backend/convex/classes/validators";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import {
   checkClassAccess,
@@ -20,7 +23,6 @@ import { getUserMap } from "@repo/backend/convex/lib/helpers/user";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
-import { nullable } from "convex-helpers/validators";
 
 const MAX_CLASS_MEMBER_SEARCH_RESULTS = 500;
 
@@ -118,80 +120,69 @@ export const getClasses = query({
   },
 });
 
-/** Return the public class metadata used before access checks complete. */
-export const getClassInfo = query({
+/**
+ * Resolve the full route state for one class page.
+ *
+ * The class shell needs one stable backend contract so the frontend can render
+ * either the joined class experience or the join screen without stitching
+ * together multiple client-side queries.
+ */
+export const getClassRoute = query({
   args: {
-    classId: vv.id("schoolClasses"),
+    classId: v.string(),
   },
-  returns: classInfoValidator,
-  handler: async (ctx, args) => {
-    const classData = await ctx.db.get("schoolClasses", args.classId);
-
-    if (!classData) {
-      return null;
-    }
-
-    return {
-      name: classData.name,
-      subject: classData.subject,
-      year: classData.year,
-      image: classData.image,
-      visibility: classData.visibility,
-    };
-  },
-});
-
-/** Return whether the current user can open one class page. */
-export const verifyClassMembership = query({
-  args: {
-    classId: vv.id("schoolClasses"),
-  },
-  returns: v.object({ allow: v.boolean() }),
+  returns: classRouteResultValidator,
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
+    const classId = ctx.db.normalizeId("schoolClasses", args.classId);
 
-    const classData = await ctx.db.get("schoolClasses", args.classId);
-    if (!classData) {
-      return { allow: false };
+    if (!classId) {
+      throw new ConvexError({
+        code: "CLASS_NOT_FOUND",
+        message: `Class not found for classId: ${args.classId}`,
+      });
     }
 
-    const { hasAccess, schoolMembership } = await checkClassAccess(
+    const classData = await loadActiveClass(ctx, classId);
+    const { classMembership, schoolMembership } = await checkClassAccess(
       ctx,
-      args.classId,
+      classId,
       classData.schoolId,
       user.appUser._id
     );
 
-    return { allow: hasAccess && !!schoolMembership };
-  },
-});
+    if (!schoolMembership) {
+      throw new ConvexError({
+        code: "ACCESS_DENIED",
+        message: "You must be a member of this school to access this class.",
+      });
+    }
 
-/** Load one class together with the viewer's school and class memberships. */
-export const getClass = query({
-  args: {
-    classId: vv.id("schoolClasses"),
-  },
-  returns: v.object({
-    class: vv.doc("schoolClasses"),
-    classMembership: nullable(vv.doc("schoolClassMembers")),
-    schoolMembership: vv.doc("schoolMembers"),
-  }),
-  handler: async (ctx, args) => {
-    const user = await requireAuth(ctx);
+    if (classMembership || isAdmin(schoolMembership)) {
+      const accessibleRoute = {
+        kind: "accessible",
+        class: classData,
+        classMembership,
+        schoolMembership,
+      } satisfies ClassRouteResult;
 
-    const classData = await loadClass(ctx, args.classId);
-    const { classMembership, schoolMembership } = await requireClassAccess(
-      ctx,
-      args.classId,
-      classData.schoolId,
-      user.appUser._id
-    );
+      return accessibleRoute;
+    }
 
-    return {
-      class: classData,
-      classMembership,
+    const joinRequiredRoute = {
+      kind: "joinRequired",
+      class: {
+        _id: classData._id,
+        image: classData.image,
+        name: classData.name,
+        subject: classData.subject,
+        visibility: classData.visibility,
+        year: classData.year,
+      },
       schoolMembership,
-    };
+    } satisfies ClassRouteResult;
+
+    return joinRequiredRoute;
   },
 });
 

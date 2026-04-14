@@ -10,7 +10,7 @@ import type { Change } from "convex-helpers/server/triggers";
  * Manages class lifecycle events and activity logging:
  * - On insert: Logs class creation with metadata
  * - On update: Logs archive/unarchive events and field changes
- * - On delete: Logs class deletion and removes all class members
+ * - On delete: Logs class deletion and schedules bounded cleanup of class-owned data
  *
  * @param ctx - The Convex mutation context with database access
  * @param change - The change object containing operation details and document state
@@ -33,7 +33,7 @@ export async function schoolClassesHandler(
         schoolId: classDoc.schoolId,
         userId: classDoc.createdBy,
         action: "class_created",
-        entityType: "classes",
+        entityType: "schoolClasses",
         entityId: classId,
         metadata: {
           className: classDoc.name,
@@ -55,7 +55,7 @@ export async function schoolClassesHandler(
           userId:
             classDoc.archivedBy ?? classDoc.updatedBy ?? classDoc.createdBy,
           action: "class_archived",
-          entityType: "classes",
+          entityType: "schoolClasses",
           entityId: classId,
           metadata: {
             className: classDoc.name,
@@ -71,7 +71,7 @@ export async function schoolClassesHandler(
           schoolId: classDoc.schoolId,
           userId: classDoc.updatedBy ?? classDoc.createdBy,
           action: "class_updated",
-          entityType: "classes",
+          entityType: "schoolClasses",
           entityId: classId,
           metadata: changesMetadata,
         });
@@ -88,7 +88,7 @@ export async function schoolClassesHandler(
         schoolId: oldClassDoc.schoolId,
         userId: oldClassDoc.updatedBy ?? oldClassDoc.createdBy,
         action: "class_deleted",
-        entityType: "classes",
+        entityType: "schoolClasses",
         entityId: classId,
         metadata: {
           className: oldClassDoc.name,
@@ -99,7 +99,7 @@ export async function schoolClassesHandler(
 
       await ctx.scheduler.runAfter(
         0,
-        internal.triggers.schools.cleanup.cleanupDeletedClassMembers,
+        internal.triggers.schools.cleanup.cleanupDeletedClass,
         { classId }
       );
 

@@ -16,16 +16,9 @@ import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import * as z from "zod/mini";
+import { schoolJoinDefaultValues, schoolJoinFormSchema } from "./schema";
 
-const formSchema = z.object({
-  code: z.string().check(z.minLength(1), z.trim()),
-});
-
-const defaultValues: z.infer<typeof formSchema> = {
-  code: "",
-};
-
+/** Render the onboarding form for joining an existing school. */
 export function SchoolOnboardingJoinForm() {
   const t = useTranslations("School.Onboarding");
 
@@ -33,9 +26,9 @@ export function SchoolOnboardingJoinForm() {
   const joinSchool = useMutation(api.schools.mutations.joinSchool);
 
   const form = useForm({
-    defaultValues,
+    defaultValues: schoolJoinDefaultValues,
     validators: {
-      onChange: formSchema,
+      onChange: schoolJoinFormSchema,
     },
     onSubmit: async ({ value }) => {
       try {

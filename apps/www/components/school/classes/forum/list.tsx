@@ -15,9 +15,10 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { useMutation, usePaginatedQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
-import { useQueryStates } from "nuqs";
+import { useQueryState, useQueryStates } from "nuqs";
 import { Activity, useTransition } from "react";
 import { getTagIcon } from "@/components/school/classes/_data/tag";
+import { forumSearchParsers } from "@/components/school/classes/forum/search-params";
 import { useClass } from "@/lib/context/use-class";
 import { useForum } from "@/lib/context/use-forum";
 import { searchParsers } from "@/lib/nuqs/search";
@@ -40,8 +41,11 @@ export function SchoolClassesForumList() {
   const locale = useLocale();
 
   const classId = useClass((state) => state.class._id);
+  const resetConversationState = useForum(
+    (state) => state.resetConversationState
+  );
   const [{ q }] = useQueryStates(searchParsers);
-  const setActiveForumId = useForum((f) => f.setActiveForumId);
+  const [, setForumId] = useQueryState("forum", forumSearchParsers.forum);
 
   const [debouncedQ] = useDebouncedValue(q, DEBOUNCE_TIME);
 
@@ -77,7 +81,10 @@ export function SchoolClassesForumList() {
             <div className="group relative" key={forum._id}>
               <button
                 className="absolute inset-0 z-0 cursor-pointer"
-                onClick={() => setActiveForumId(forum._id)}
+                onClick={() => {
+                  resetConversationState();
+                  setForumId(forum._id);
+                }}
                 type="button"
               >
                 <span className="sr-only">{forum.title}</span>

@@ -1,46 +1,32 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
+import type { api } from "@repo/backend/convex/_generated/api";
+import type { FunctionReturnType } from "convex/server";
 import { createContext, useContextSelector } from "use-context-selector";
 
-interface ClassContextValue {
-  class: Doc<"schoolClasses">;
-  classMembership: Doc<"schoolClassMembers"> | null;
-  schoolMembership: Doc<"schoolMembers"> | null;
-}
+type ClassContextValue = Extract<
+  FunctionReturnType<typeof api.classes.queries.getClassRoute>,
+  { kind: "accessible" }
+>;
 
 const ClassContext = createContext<ClassContextValue | null>(null);
 
+/**
+ * Provide the resolved class route snapshot to the class client subtree.
+ */
 export function ClassContextProvider({
   children,
-  classId,
+  value,
 }: {
   children: React.ReactNode;
-  classId: Id<"schoolClasses">;
+  value: ClassContextValue;
 }) {
-  const { data: results } = useQueryWithStatus(api.classes.queries.getClass, {
-    classId,
-  });
-
-  const classData = results?.class;
-  const classMembership = results?.classMembership ?? null;
-  const schoolMembership = results?.schoolMembership ?? null;
-
-  if (!(classData && schoolMembership)) {
-    return null;
-  }
-
   return (
-    <ClassContext.Provider
-      value={{ class: classData, classMembership, schoolMembership }}
-    >
-      {children}
-    </ClassContext.Provider>
+    <ClassContext.Provider value={value}>{children}</ClassContext.Provider>
   );
 }
 
+/** Reads one selected value from the resolved class route snapshot. */
 export function useClass<T>(selector: (state: ClassContextValue) => T) {
   const context = useContextSelector(ClassContext, (value) => value);
   if (!context) {

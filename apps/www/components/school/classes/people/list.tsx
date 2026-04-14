@@ -19,6 +19,7 @@ import { getInitialName } from "@/lib/utils/helper";
 
 const DEBOUNCE_TIME = 500;
 
+/** Render the paginated class roster for the active class. */
 export function SchoolClassesPeopleList() {
   const t = useTranslations("School.Classes");
 

@@ -3,40 +3,31 @@
 import { Button } from "@repo/design-system/components/ui/button";
 import { Particles } from "@repo/design-system/components/ui/particles";
 import { usePathname } from "@repo/internationalization/src/navigation";
-import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
 import { useLocale, useTranslations } from "next-intl";
 import { AuthGoogle } from "@/components/auth/google";
-import { SchoolLoader } from "@/components/school/loader";
 
-export function LayoutAuth({ children }: { children: React.ReactNode }) {
+/** Renders the shared Nakafa School sign-in screen for unauthenticated users. */
+export function SchoolAuthScreen() {
   const pathname = usePathname();
+
   return (
-    <>
-      <Authenticated>{children}</Authenticated>
+    <div className="relative flex h-svh items-center justify-center">
+      <Particles className="pointer-events-none absolute inset-0 opacity-80" />
+      <div className="mx-auto max-w-lg px-6">
+        <div className="relative flex h-full flex-col items-center gap-6">
+          <SchoolAuthScreenTitle />
 
-      <Unauthenticated>
-        <div className="relative flex h-svh items-center justify-center">
-          <Particles className="pointer-events-none absolute inset-0 opacity-80" />
-          <div className="mx-auto max-w-lg px-6">
-            <div className="relative flex h-full flex-col items-center gap-6">
-              <Title />
+          <AuthGoogle redirect={pathname} />
 
-              <AuthGoogle redirect={pathname} />
-
-              <Footer />
-            </div>
-          </div>
+          <SchoolAuthScreenFooter />
         </div>
-      </Unauthenticated>
-
-      <AuthLoading>
-        <SchoolLoader />
-      </AuthLoading>
-    </>
+      </div>
+    </div>
   );
 }
 
-function Title() {
+/** Renders the title block for the shared Nakafa School sign-in screen. */
+function SchoolAuthScreenTitle() {
   const t = useTranslations("Metadata");
 
   return (
@@ -47,7 +38,8 @@ function Title() {
   );
 }
 
-function Footer() {
+/** Renders the legal footer for the shared Nakafa School sign-in screen. */
+function SchoolAuthScreenFooter() {
   const tLegal = useTranslations("Legal");
   const locale = useLocale();
 

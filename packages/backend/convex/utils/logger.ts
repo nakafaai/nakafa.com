@@ -4,6 +4,8 @@
  */
 const REQUEST_ID_HEADER = "X-Request-ID";
 const RESERVED_CONTEXT_FIELDS = new Set(["requestId", "userId"]);
+const IS_VITEST =
+  typeof process !== "undefined" && process.env.VITEST === "true";
 
 type LogLevel = "info" | "warn" | "error" | "debug";
 
@@ -45,6 +47,10 @@ class Logger {
    * @param context - Optional context (requestId, userId, etc.)
    */
   info(message: string, context?: LogContext): void {
+    if (IS_VITEST) {
+      return;
+    }
+
     console.info(this.formatMessage("info", message, context));
   }
 
@@ -54,6 +60,10 @@ class Logger {
    * @param context - Optional context
    */
   warn(message: string, context?: LogContext): void {
+    if (IS_VITEST) {
+      return;
+    }
+
     console.warn(this.formatMessage("warn", message, context));
   }
 
@@ -84,6 +94,10 @@ class Logger {
    * @param context - Optional context
    */
   debug(message: string, context?: LogContext): void {
+    if (IS_VITEST) {
+      return;
+    }
+
     console.debug(this.formatMessage("debug", message, context));
   }
 }

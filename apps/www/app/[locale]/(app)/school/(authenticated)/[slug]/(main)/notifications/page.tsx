@@ -16,6 +16,7 @@ export async function generateMetadata({
   };
 }
 
+/** Render the school notification shell until inbox data is connected. */
 export default function Page() {
   return <SchoolLayoutContent />;
 }

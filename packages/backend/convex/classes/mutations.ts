@@ -4,6 +4,7 @@ import {
   schoolClassVisibilityValidator,
 } from "@repo/backend/convex/classes/schema";
 import { loadActiveClass } from "@repo/backend/convex/classes/utils";
+import { classJoinMutationResultValidator } from "@repo/backend/convex/classes/validators";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import {
@@ -91,7 +92,7 @@ export const joinClass = mutation({
   args: {
     code: v.string(),
   },
-  returns: v.object({ classId: vv.id("schoolClasses") }),
+  returns: classJoinMutationResultValidator,
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
     const userId = user.appUser._id;
@@ -193,7 +194,7 @@ export const joinPublicClass = mutation({
   args: {
     classId: vv.id("schoolClasses"),
   },
-  returns: v.object({ classId: vv.id("schoolClasses") }),
+  returns: classJoinMutationResultValidator,
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
     const userId = user.appUser._id;

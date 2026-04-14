@@ -1,104 +1,41 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { getSchoolMembership } from "@repo/backend/convex/lib/helpers/school";
-import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { ConvexError, v } from "convex/values";
 import { getAll } from "convex-helpers/server/relationships";
+import {
+  mySchoolsPageArgs,
+  mySchoolsPageResultValidator,
+  schoolBySlugResultValidator,
+  schoolLandingStateResultValidator,
+} from "./validators";
 
-const MAX_ACTIVE_SCHOOL_MEMBERSHIPS = 100;
-
-/**
- * Get a school by its ID. Requires authentication.
- */
-export const getSchool = query({
+/** Return the authenticated school route snapshot resolved from one slug. */
+export const getSchoolBySlug = query({
   args: {
-    schoolId: vv.id("schools"),
+    slug: v.string(),
   },
-  returns: vv.doc("schools"),
+  returns: schoolBySlugResultValidator,
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
 
-    const school = await ctx.db.get("schools", args.schoolId);
+    const school = await ctx.db
+      .query("schools")
+      .withIndex("by_slug", (q) => q.eq("slug", args.slug))
+      .unique();
+
     if (!school) {
       throw new ConvexError({
         code: "SCHOOL_NOT_FOUND",
-        message: `School not found for schoolId: ${args.schoolId}`,
+        message: `School not found for slug: ${args.slug}`,
       });
     }
 
     const membership = await getSchoolMembership(
       ctx,
-      args.schoolId,
+      school._id,
       user.appUser._id
     );
-
-    if (!membership) {
-      throw new ConvexError({
-        code: "ACCESS_DENIED",
-        message: "You must be a member of this school to view it.",
-      });
-    }
-
-    return school;
-  },
-});
-
-export const getSchoolInfoBySlug = query({
-  args: {
-    slug: v.string(),
-  },
-  returns: v.object({ name: v.string() }),
-  handler: async (ctx, args) => {
-    const school = await ctx.db
-      .query("schools")
-      .withIndex("by_slug", (q) => q.eq("slug", args.slug))
-      .unique();
-
-    if (!school) {
-      throw new ConvexError({
-        code: "SCHOOL_NOT_FOUND",
-        message: `School not found for slug: ${args.slug}`,
-      });
-    }
-
-    return {
-      name: school.name,
-    };
-  },
-});
-
-export const getSchoolBySlug = query({
-  args: {
-    slug: v.string(),
-  },
-  returns: v.object({
-    school: vv.doc("schools"),
-    membership: vv.doc("schoolMembers"),
-  }),
-  handler: async (ctx, args) => {
-    const user = await requireAuth(ctx);
-
-    const school = await ctx.db
-      .query("schools")
-      .withIndex("by_slug", (q) => q.eq("slug", args.slug))
-      .unique();
-
-    if (!school) {
-      throw new ConvexError({
-        code: "SCHOOL_NOT_FOUND",
-        message: `School not found for slug: ${args.slug}`,
-      });
-    }
-
-    const membership = await ctx.db
-      .query("schoolMembers")
-      .withIndex("by_schoolId_and_userId_and_status", (q) =>
-        q
-          .eq("schoolId", school._id)
-          .eq("userId", user.appUser._id)
-          .eq("status", "active")
-      )
-      .unique();
 
     if (!membership) {
       throw new ConvexError({
@@ -107,65 +44,87 @@ export const getSchoolBySlug = query({
       });
     }
 
-    return { school, membership };
+    return {
+      school,
+      membership,
+    };
   },
 });
 
 /**
- * Get all school memberships for the current user.
- * Uses userId_status index for better query performance.
+ * Get the current user's school landing state for the public school entry route.
  */
-export const getSchoolMemberships = query({
+export const getMySchoolLandingState = query({
   args: {},
-  returns: v.array(vv.doc("schoolMembers")),
+  returns: schoolLandingStateResultValidator,
   handler: async (ctx) => {
     const user = await requireAuth(ctx);
-
-    // Use the new userId_status index instead of filter
     const memberships = await ctx.db
       .query("schoolMembers")
       .withIndex("by_userId_and_status", (q) =>
         q.eq("userId", user.appUser._id).eq("status", "active")
       )
-      .take(MAX_ACTIVE_SCHOOL_MEMBERSHIPS + 1);
+      .take(2);
 
-    if (memberships.length > MAX_ACTIVE_SCHOOL_MEMBERSHIPS) {
+    if (memberships.length === 0) {
+      return { kind: "none" as const };
+    }
+
+    if (memberships.length > 1) {
+      return { kind: "multiple" as const };
+    }
+
+    const school = await ctx.db.get("schools", memberships[0].schoolId);
+
+    if (!school) {
       throw new ConvexError({
-        code: "SCHOOL_MEMBERSHIP_LIMIT_EXCEEDED",
-        message: "Too many active school memberships to load safely.",
+        code: "SCHOOL_NOT_FOUND",
+        message: `School not found for schoolId: ${memberships[0].schoolId}`,
       });
     }
 
-    return memberships;
+    return {
+      kind: "single" as const,
+      slug: school.slug,
+    };
   },
 });
 
-export const getMySchools = query({
-  args: {},
-  returns: v.array(vv.doc("schools")),
-  handler: async (ctx) => {
+/** Get the current user's schools as a paginated list of summaries. */
+export const getMySchoolsPage = query({
+  args: mySchoolsPageArgs,
+  returns: mySchoolsPageResultValidator,
+  handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
 
-    // Get all active memberships using userId_status index
     const memberships = await ctx.db
       .query("schoolMembers")
       .withIndex("by_userId_and_status", (q) =>
         q.eq("userId", user.appUser._id).eq("status", "active")
       )
-      .take(MAX_ACTIVE_SCHOOL_MEMBERSHIPS + 1);
+      .paginate(args.paginationOpts);
 
-    if (memberships.length > MAX_ACTIVE_SCHOOL_MEMBERSHIPS) {
-      throw new ConvexError({
-        code: "SCHOOL_MEMBERSHIP_LIMIT_EXCEEDED",
-        message: "Too many active school memberships to load safely.",
-      });
-    }
+    const schools = await getAll(
+      ctx.db,
+      memberships.page.map((membership) => membership.schoolId)
+    );
 
-    // Batch fetch all schools at once using getAll
-    const schoolIds = memberships.map((m) => m.schoolId);
-    const schools = await getAll(ctx.db, schoolIds);
+    return {
+      ...memberships,
+      page: schools.flatMap((school) => {
+        if (!school) {
+          return [];
+        }
 
-    // Filter out null values (in case a school was deleted)
-    return schools.filter((school) => school !== null);
+        return [
+          {
+            _id: school._id,
+            name: school.name,
+            slug: school.slug,
+            type: school.type,
+          },
+        ];
+      }),
+    };
   },
 });

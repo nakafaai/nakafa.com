@@ -35,7 +35,7 @@ describe("lib/auth/utils", () => {
       expect(isAuthError(new Error("auth timeout"))).toBe(true);
     });
 
-    it("does not treat structured Convex error data as auth by default", () => {
+    it("detects structured Convex auth errors by code", () => {
       expect(
         isAuthError(
           new ConvexError({
@@ -43,7 +43,31 @@ describe("lib/auth/utils", () => {
             message: "Unauthenticated",
           })
         )
+      ).toBe(true);
+    });
+
+    it("detects structured Convex auth errors by message", () => {
+      expect(
+        isAuthError(
+          new ConvexError({
+            message: "auth session expired",
+          })
+        )
+      ).toBe(true);
+    });
+
+    it("ignores structured Convex errors without auth-related code or message", () => {
+      expect(
+        isAuthError(
+          new ConvexError({
+            reason: "network timeout",
+          })
+        )
       ).toBe(false);
+    });
+
+    it("ignores Convex errors with null data", () => {
+      expect(isAuthError(new ConvexError(null))).toBe(false);
     });
 
     it("ignores unrelated runtime errors", () => {

@@ -46,6 +46,7 @@ import { searchParsers } from "@/lib/nuqs/search";
 
 const DEBOUNCE_TIME = 300;
 
+/** Render the paginated class directory for the active school. */
 export function SchoolClassesList() {
   const t = useTranslations("School.Classes");
 
@@ -89,6 +90,7 @@ export function SchoolClassesList() {
   );
 }
 
+/** Render one class card within the school class directory. */
 function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
   const pathname = usePathname();
   const [imageError, setImageError] = useState(false);

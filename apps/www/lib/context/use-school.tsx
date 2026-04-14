@@ -1,44 +1,43 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
+import type { api } from "@repo/backend/convex/_generated/api";
+import type { FunctionReturnType } from "convex/server";
 import { createContext, useContextSelector } from "use-context-selector";
-import { SchoolLoader } from "@/components/school/loader";
+
+type SchoolRouteValue = FunctionReturnType<
+  typeof api.schools.queries.getSchoolBySlug
+>;
 
 interface SchoolContextValue {
-  school: Doc<"schools">;
-  schoolMembership: Doc<"schoolMembers">;
+  school: SchoolRouteValue["school"];
+  schoolMembership: SchoolRouteValue["membership"];
 }
 
 const SchoolContext = createContext<SchoolContextValue | null>(null);
 
+/**
+ * Provide the resolved school route snapshot to the school client subtree.
+ */
 export function SchoolContextProvider({
   children,
-  slug,
+  value,
 }: {
   children: React.ReactNode;
-  slug: string;
+  value: SchoolRouteValue;
 }) {
-  const { data: results } = useQueryWithStatus(
-    api.schools.queries.getSchoolBySlug,
-    { slug }
-  );
-
-  const school = results?.school;
-  const schoolMembership = results?.membership;
-
-  if (!(school && schoolMembership)) {
-    return <SchoolLoader />;
-  }
-
   return (
-    <SchoolContext.Provider value={{ school, schoolMembership }}>
+    <SchoolContext.Provider
+      value={{
+        school: value.school,
+        schoolMembership: value.membership,
+      }}
+    >
       {children}
     </SchoolContext.Provider>
   );
 }
 
+/** Reads one selected value from the resolved school route snapshot. */
 export function useSchool<T>(selector: (state: SchoolContextValue) => T) {
   const context = useContextSelector(SchoolContext, (value) => value);
   if (!context) {

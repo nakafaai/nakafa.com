@@ -6,6 +6,7 @@ import createMiddleware from "next-intl/middleware";
 
 const handleLocalizedRequest = createMiddleware(routing);
 const TRAILING_SLASH_PATTERN = /\/+$/;
+const AUTH_REDIRECT_PATH_COOKIE = "auth_redirect_path";
 
 /**
  * Run locale routing while leaving the same-origin PostHog proxy untouched.
@@ -27,6 +28,8 @@ export function proxy(request: NextRequest) {
 
     return NextResponse.redirect(redirectUrl, 308);
   }
+
+  request.cookies.set(AUTH_REDIRECT_PATH_COOKIE, pathname);
 
   return handleLocalizedRequest(request);
 }

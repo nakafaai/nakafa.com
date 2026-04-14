@@ -18,26 +18,17 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@repo/design-system/components/ui/sheet";
-import { useMutation, useQuery } from "convex/react";
+import { useRouter } from "@repo/internationalization/src/navigation";
+import { useMutation } from "convex/react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { useClass } from "@/lib/context/use-class";
 import { useClassPermissions } from "@/lib/hooks/use-class-permissions";
 
+/** Render the active class hero using the resolved class route snapshot. */
 export function SchoolClassesHeaderInfo() {
-  const classId = useClass((state) => state.class._id);
-  const classInfo = useQuery(api.classes.queries.getClassInfo, {
-    classId,
-  });
-
-  if (!classInfo) {
-    return (
-      <div className="mx-auto w-full max-w-3xl px-6 pt-6 pb-3">
-        <div className="relative h-40 overflow-hidden rounded-md bg-[color-mix(in_oklch,var(--primary)_2.5%,var(--background))] sm:h-48" />
-      </div>
-    );
-  }
+  const classInfo = useClass((state) => state.class);
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 pt-6 pb-3">
@@ -70,9 +61,11 @@ export function SchoolClassesHeaderInfo() {
   );
 }
 
+/** Render the class image customization sheet for users who can edit the class. */
 function InfoCustomizeButton() {
   const t = useTranslations("Common");
   const [open, setOpen] = useState(false);
+  const router = useRouter();
 
   const [isPending, startTransition] = useTransition();
   const { can } = useClassPermissions();
@@ -88,6 +81,7 @@ function InfoCustomizeButton() {
           classId,
           image,
         });
+        router.refresh();
       } catch (error) {
         captureException(error, {
           image,
@@ -160,6 +154,7 @@ function InfoCustomizeButton() {
   );
 }
 
+/** Return the selectable class cover images shown in the customization sheet. */
 function getImageList() {
   return Array.from(CLASS_IMAGES.entries()).map(([key, src]) => ({
     value: key,
