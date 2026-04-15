@@ -95,7 +95,7 @@ export const ForumPostItem = memo(
         </Activity>
         <Activity mode={isFirstInGroup === true ? "hidden" : "visible"}>
           <time
-            className="mt-0.5 w-8 shrink-0 text-center text-muted-foreground text-xs"
+            className="mt-1 w-8 shrink-0 text-center text-muted-foreground text-xs"
             title={format(post._creationTime, "PPpp", {
               locale: getLocale(locale),
             })}
