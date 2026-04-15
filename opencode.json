@@ -25,7 +25,14 @@
     },
     "plate": {
       "type": "local",
-      "command": ["npx", "-y", "shadcn@latest", "mcp"]
+      "command": [
+        "npx",
+        "-y",
+        "shadcn@latest",
+        "mcp",
+        "--cwd",
+        "packages/design-system"
+      ]
     }
   }
 }
