@@ -1,5 +1,5 @@
 import { query } from "@repo/backend/convex/_generated/server";
-import { listVisibleQuestionBanks } from "@repo/backend/convex/assessments/helpers/questionBank";
+import { listVisibleQuestionBanks } from "@repo/backend/convex/assessments/helpers/bank";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { requirePermission } from "@repo/backend/convex/lib/helpers/permissions";
 import { vv } from "@repo/backend/convex/lib/validators/vv";

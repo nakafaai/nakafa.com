@@ -28,7 +28,6 @@ export type Permission =
   | "assessment:create"
   | "assessment:update"
   | "assessment:publish"
-  | "assessment:archive"
   | "assessment:delete"
   | "assessment:monitor"
   | "assessment:grade"
@@ -51,7 +50,6 @@ export const PERMISSIONS = {
   ASSESSMENT_CREATE: "assessment:create",
   ASSESSMENT_UPDATE: "assessment:update",
   ASSESSMENT_PUBLISH: "assessment:publish",
-  ASSESSMENT_ARCHIVE: "assessment:archive",
   ASSESSMENT_DELETE: "assessment:delete",
   ASSESSMENT_MONITOR: "assessment:monitor",
   ASSESSMENT_GRADE: "assessment:grade",
@@ -79,7 +77,6 @@ export const ROLE_PERMISSIONS: Record<
     "assessment:create",
     "assessment:update",
     "assessment:publish",
-    "assessment:archive",
     "assessment:delete",
     "assessment:monitor",
     "assessment:grade",
@@ -121,7 +118,6 @@ export const ROLE_PERMISSIONS: Record<
     "assessment:create",
     "assessment:update",
     "assessment:publish",
-    "assessment:archive",
     "assessment:delete",
     "assessment:monitor",
     "assessment:grade",
@@ -142,7 +138,6 @@ export const ROLE_PERMISSIONS: Record<
     "class:delete",
     "member:remove",
     "content:delete",
-    "assessment:archive",
     "assessment:delete",
     "forum:moderate",
   ],

@@ -21,7 +21,7 @@ export function SchoolClassesAssessmentsList() {
   const canManage = can(PERMISSIONS.ASSESSMENT_UPDATE);
 
   const { results, status, loadMore } = usePaginatedQuery(
-    api.assessments.queries.public.assessmentList.listAssessments,
+    api.assessments.queries.public.list.listAssessments,
     canManage
       ? {
           schoolId,

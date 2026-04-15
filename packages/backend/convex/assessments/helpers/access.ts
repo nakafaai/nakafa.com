@@ -33,7 +33,6 @@ export function requireAssessmentPermission(
     | "assessment:create"
     | "assessment:update"
     | "assessment:publish"
-    | "assessment:archive"
     | "assessment:delete"
     | "assessment:monitor"
     | "assessment:grade"

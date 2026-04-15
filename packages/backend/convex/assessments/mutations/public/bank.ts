@@ -1,4 +1,4 @@
-import { requireRichContentSize } from "@repo/backend/convex/assessments/helpers/richContent";
+import { requireRichContentSize } from "@repo/backend/convex/assessments/helpers/content";
 import { richContentValidator } from "@repo/backend/convex/assessments/schema";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";

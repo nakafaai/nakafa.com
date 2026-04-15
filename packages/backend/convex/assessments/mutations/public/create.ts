@@ -1,8 +1,8 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { requireRichContentSize } from "@repo/backend/convex/assessments/helpers/content";
 import { validateScheduledStatus } from "@repo/backend/convex/assessments/helpers/publishing";
-import { requireRichContentSize } from "@repo/backend/convex/assessments/helpers/richContent";
 import { richContentValidator } from "@repo/backend/convex/assessments/schema";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
