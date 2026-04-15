@@ -103,10 +103,7 @@ export function CreateAssessmentDialog({
           title: initialAssessment.title,
           description: initialAssessment.description?.text ?? "",
           mode: initialAssessment.mode,
-          status:
-            initialAssessment.status === "archived"
-              ? "draft"
-              : initialAssessment.status,
+          status: initialAssessment.status,
           scheduledAt: initialAssessment.scheduledAt ?? getDefaultScheduledAt(),
         }}
         description={t("edit-assessment-description")}

@@ -18,6 +18,7 @@ import type * as assessments_mutations_internal_publishing from "../assessments/
 import type * as assessments_mutations_public_archive from "../assessments/mutations/public/archive.js";
 import type * as assessments_mutations_public_assign from "../assessments/mutations/public/assign.js";
 import type * as assessments_mutations_public_create from "../assessments/mutations/public/create.js";
+import type * as assessments_mutations_public_delete from "../assessments/mutations/public/delete.js";
 import type * as assessments_mutations_public_questionBanks from "../assessments/mutations/public/questionBanks.js";
 import type * as assessments_mutations_public_questions from "../assessments/mutations/public/questions.js";
 import type * as assessments_mutations_public_reorder from "../assessments/mutations/public/reorder.js";
@@ -290,6 +291,7 @@ declare const fullApi: ApiFromModules<{
   "assessments/mutations/public/archive": typeof assessments_mutations_public_archive;
   "assessments/mutations/public/assign": typeof assessments_mutations_public_assign;
   "assessments/mutations/public/create": typeof assessments_mutations_public_create;
+  "assessments/mutations/public/delete": typeof assessments_mutations_public_delete;
   "assessments/mutations/public/questionBanks": typeof assessments_mutations_public_questionBanks;
   "assessments/mutations/public/questions": typeof assessments_mutations_public_questions;
   "assessments/mutations/public/reorder": typeof assessments_mutations_public_reorder;

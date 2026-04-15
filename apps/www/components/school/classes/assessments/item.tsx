@@ -138,8 +138,8 @@ function AssessmentActions({
   const reorderAssessment = useMutation(
     api.assessments.mutations.public.reorder.reorderAssessment
   );
-  const archiveAssessment = useMutation(
-    api.assessments.mutations.public.archive.archiveAssessment
+  const deleteAssessment = useMutation(
+    api.assessments.mutations.public.delete.deleteAssessment
   );
 
   function handleMoveUp() {
@@ -162,13 +162,13 @@ function AssessmentActions({
     });
   }
 
-  function handleArchive() {
+  function handleDelete() {
     startTransition(async () => {
-      await archiveAssessment({
+      await deleteAssessment({
         schoolId: assessment.schoolId,
         assessmentId: assessment._id,
       });
-      toast.success(schoolT("assessment-archived"));
+      toast.success(schoolT("assessment-deleted"));
     });
   }
 
@@ -218,7 +218,7 @@ function AssessmentActions({
             <DropdownMenuItem
               className="cursor-pointer"
               disabled={isPending}
-              onSelect={handleArchive}
+              onSelect={handleDelete}
               variant="destructive"
             >
               <HugeIcons icon={Delete02Icon} />

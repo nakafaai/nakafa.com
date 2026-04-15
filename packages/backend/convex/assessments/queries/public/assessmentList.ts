@@ -22,33 +22,19 @@ export const listAssessments = query({
     });
 
     if (args.classId) {
-      const results = await ctx.db
+      return ctx.db
         .query("schoolAssessments")
         .withIndex("by_schoolId_and_classId_and_order", (q) =>
           q.eq("schoolId", args.schoolId).eq("classId", args.classId)
         )
         .paginate(args.paginationOpts);
-
-      return {
-        ...results,
-        page: results.page.filter(
-          (assessment) => assessment.status !== "archived"
-        ),
-      };
     }
 
-    const results = await ctx.db
+    return ctx.db
       .query("schoolAssessments")
       .withIndex("by_schoolId_and_order", (q) =>
         q.eq("schoolId", args.schoolId)
       )
       .paginate(args.paginationOpts);
-
-    return {
-      ...results,
-      page: results.page.filter(
-        (assessment) => assessment.status !== "archived"
-      ),
-    };
   },
 });

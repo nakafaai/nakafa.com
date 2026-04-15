@@ -34,6 +34,7 @@ export function requireAssessmentPermission(
     | "assessment:update"
     | "assessment:publish"
     | "assessment:archive"
+    | "assessment:delete"
     | "assessment:monitor"
     | "assessment:grade"
     | "assessment:release"

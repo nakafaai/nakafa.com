@@ -29,6 +29,7 @@ export type Permission =
   | "assessment:update"
   | "assessment:publish"
   | "assessment:archive"
+  | "assessment:delete"
   | "assessment:monitor"
   | "assessment:grade"
   | "assessment:release"
@@ -51,6 +52,7 @@ export const PERMISSIONS = {
   ASSESSMENT_UPDATE: "assessment:update",
   ASSESSMENT_PUBLISH: "assessment:publish",
   ASSESSMENT_ARCHIVE: "assessment:archive",
+  ASSESSMENT_DELETE: "assessment:delete",
   ASSESSMENT_MONITOR: "assessment:monitor",
   ASSESSMENT_GRADE: "assessment:grade",
   ASSESSMENT_RELEASE: "assessment:release",
@@ -78,6 +80,7 @@ export const ROLE_PERMISSIONS: Record<
     "assessment:update",
     "assessment:publish",
     "assessment:archive",
+    "assessment:delete",
     "assessment:monitor",
     "assessment:grade",
     "assessment:release",
@@ -98,6 +101,7 @@ export const ROLE_PERMISSIONS: Record<
     "assessment:create",
     "assessment:update",
     "assessment:publish",
+    "assessment:delete",
     "assessment:monitor",
     "assessment:grade",
     "assessment:release",
@@ -118,6 +122,7 @@ export const ROLE_PERMISSIONS: Record<
     "assessment:update",
     "assessment:publish",
     "assessment:archive",
+    "assessment:delete",
     "assessment:monitor",
     "assessment:grade",
     "assessment:release",
@@ -138,6 +143,7 @@ export const ROLE_PERMISSIONS: Record<
     "member:remove",
     "content:delete",
     "assessment:archive",
+    "assessment:delete",
     "forum:moderate",
   ],
 };
