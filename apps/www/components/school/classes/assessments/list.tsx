@@ -22,12 +22,10 @@ export function SchoolClassesAssessmentsList() {
 
   const { results, status, loadMore } = usePaginatedQuery(
     api.assessments.queries.public.list.listAssessments,
-    canManage
-      ? {
-          schoolId,
-          classId,
-        }
-      : "skip",
+    {
+      schoolId,
+      classId,
+    },
     { initialNumItems: 20 }
   );
 
@@ -44,25 +42,20 @@ export function SchoolClassesAssessmentsList() {
     );
   });
 
-  if (!canManage) {
-    return (
-      <div className="py-12">
-        <p className="text-pretty text-center text-muted-foreground text-sm">
-          {t("assessments-teacher-only")}
-        </p>
-      </div>
-    );
-  }
-
   if (status === "LoadingFirstPage") {
     return null;
   }
 
   if (filteredResults.length === 0) {
+    const emptyMessage =
+      canManage || q
+        ? t("no-assessments-found")
+        : t("assessments-teacher-only");
+
     return (
       <div className="py-12">
         <p className="text-pretty text-center text-muted-foreground text-sm">
-          {t("no-assessments-found")}
+          {emptyMessage}
         </p>
       </div>
     );

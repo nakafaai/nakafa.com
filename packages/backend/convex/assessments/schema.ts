@@ -614,6 +614,12 @@ const schema = {
       "classId",
       "status",
     ])
+    .index("by_schoolId_and_classId_and_status_and_order", [
+      "schoolId",
+      "classId",
+      "status",
+      "order",
+    ])
     .index("by_schoolId_and_classId_and_order", [
       "schoolId",
       "classId",
