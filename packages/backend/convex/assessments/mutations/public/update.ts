@@ -30,7 +30,8 @@ export const updateAssessment = mutation({
       v.union(
         v.literal("draft"),
         v.literal("published"),
-        v.literal("scheduled")
+        v.literal("scheduled"),
+        v.literal("archived")
       )
     ),
     scheduledAt: v.optional(v.number()),

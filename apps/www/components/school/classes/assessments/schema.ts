@@ -12,6 +12,7 @@ export const assessmentStatusSchema = z.union([
   z.literal("draft"),
   z.literal("published"),
   z.literal("scheduled"),
+  z.literal("archived"),
 ]);
 
 export const createAssessmentFormSchema = z
