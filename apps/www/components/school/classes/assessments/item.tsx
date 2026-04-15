@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  ArrowDown02Icon,
   ArrowTurnForwardIcon,
+  ArrowUp02Icon,
   Delete02Icon,
   Edit01Icon,
   File02Icon,
@@ -127,9 +129,32 @@ function AssessmentActions({
   const schoolT = useTranslations("School.Classes");
   const [isPending, startTransition] = useTransition();
   const [editOpen, setEditOpen] = useState(false);
+  const reorderAssessment = useMutation(
+    api.assessments.mutations.public.reorder.reorderAssessment
+  );
   const archiveAssessment = useMutation(
     api.assessments.mutations.public.archive.archiveAssessment
   );
+
+  function handleMoveUp() {
+    startTransition(async () => {
+      await reorderAssessment({
+        schoolId: assessment.schoolId,
+        assessmentId: assessment._id,
+        direction: "up",
+      });
+    });
+  }
+
+  function handleMoveDown() {
+    startTransition(async () => {
+      await reorderAssessment({
+        schoolId: assessment.schoolId,
+        assessmentId: assessment._id,
+        direction: "down",
+      });
+    });
+  }
 
   function handleArchive() {
     startTransition(async () => {
@@ -164,6 +189,22 @@ function AssessmentActions({
             >
               <HugeIcons icon={Edit01Icon} />
               {t("edit")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              disabled={isPending}
+              onSelect={handleMoveUp}
+            >
+              <HugeIcons icon={ArrowUp02Icon} />
+              {t("move-up")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              disabled={isPending}
+              onSelect={handleMoveDown}
+            >
+              <HugeIcons icon={ArrowDown02Icon} />
+              {t("move-down")}
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />

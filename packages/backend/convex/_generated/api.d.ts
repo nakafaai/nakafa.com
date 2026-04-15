@@ -20,6 +20,7 @@ import type * as assessments_mutations_public_assign from "../assessments/mutati
 import type * as assessments_mutations_public_create from "../assessments/mutations/public/create.js";
 import type * as assessments_mutations_public_questionBanks from "../assessments/mutations/public/questionBanks.js";
 import type * as assessments_mutations_public_questions from "../assessments/mutations/public/questions.js";
+import type * as assessments_mutations_public_reorder from "../assessments/mutations/public/reorder.js";
 import type * as assessments_mutations_public_saveResponse from "../assessments/mutations/public/saveResponse.js";
 import type * as assessments_mutations_public_sections from "../assessments/mutations/public/sections.js";
 import type * as assessments_mutations_public_startAttempt from "../assessments/mutations/public/startAttempt.js";
@@ -291,6 +292,7 @@ declare const fullApi: ApiFromModules<{
   "assessments/mutations/public/create": typeof assessments_mutations_public_create;
   "assessments/mutations/public/questionBanks": typeof assessments_mutations_public_questionBanks;
   "assessments/mutations/public/questions": typeof assessments_mutations_public_questions;
+  "assessments/mutations/public/reorder": typeof assessments_mutations_public_reorder;
   "assessments/mutations/public/saveResponse": typeof assessments_mutations_public_saveResponse;
   "assessments/mutations/public/sections": typeof assessments_mutations_public_sections;
   "assessments/mutations/public/startAttempt": typeof assessments_mutations_public_startAttempt;

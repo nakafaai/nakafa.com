@@ -174,6 +174,7 @@ export const schoolAssessmentValidator = v.object({
   classId: v.optional(v.id("schoolClasses")),
   title: v.string(),
   slug: v.string(),
+  order: v.number(),
   description: v.optional(richContentValidator),
   mode: assessmentModeValidator,
   status: assessmentStatusValidator,
@@ -613,6 +614,12 @@ const schema = {
       "classId",
       "status",
     ])
+    .index("by_schoolId_and_classId_and_order", [
+      "schoolId",
+      "classId",
+      "order",
+    ])
+    .index("by_schoolId_and_order", ["schoolId", "order"])
     .index("by_schoolId_and_updatedAt", ["schoolId", "updatedAt"])
     .index("by_schoolId_and_classId_and_updatedAt", [
       "schoolId",

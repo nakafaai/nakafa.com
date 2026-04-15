@@ -24,10 +24,9 @@ export const listAssessments = query({
     if (args.classId) {
       const results = await ctx.db
         .query("schoolAssessments")
-        .withIndex("by_schoolId_and_classId_and_updatedAt", (q) =>
+        .withIndex("by_schoolId_and_classId_and_order", (q) =>
           q.eq("schoolId", args.schoolId).eq("classId", args.classId)
         )
-        .order("desc")
         .paginate(args.paginationOpts);
 
       return {
@@ -40,10 +39,9 @@ export const listAssessments = query({
 
     const results = await ctx.db
       .query("schoolAssessments")
-      .withIndex("by_schoolId_and_updatedAt", (q) =>
+      .withIndex("by_schoolId_and_order", (q) =>
         q.eq("schoolId", args.schoolId)
       )
-      .order("desc")
       .paginate(args.paginationOpts);
 
     return {

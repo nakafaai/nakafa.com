@@ -55,12 +55,18 @@ export const createAssessment = mutation({
     const now = Date.now();
     const isPublished = args.status === "published";
     const isScheduled = args.status === "scheduled";
+    const order = await getNextAssessmentOrder(
+      ctx,
+      args.schoolId,
+      args.classId
+    );
 
     const assessmentId = await ctx.db.insert("schoolAssessments", {
       schoolId: args.schoolId,
       classId: args.classId,
       title: args.title,
       slug,
+      order,
       description: args.description,
       mode: args.mode,
       status: args.status,
@@ -117,4 +123,27 @@ async function generateUniqueAssessmentSlug(
 
     suffix += 1;
   }
+}
+
+/** Compute the next authored assessment order within one school/class scope. */
+async function getNextAssessmentOrder(
+  ctx: MutationCtx,
+  schoolId: Id<"schools">,
+  classId?: Id<"schoolClasses">
+) {
+  const lastAssessment = classId
+    ? await ctx.db
+        .query("schoolAssessments")
+        .withIndex("by_schoolId_and_classId_and_order", (q) =>
+          q.eq("schoolId", schoolId).eq("classId", classId)
+        )
+        .order("desc")
+        .first()
+    : await ctx.db
+        .query("schoolAssessments")
+        .withIndex("by_schoolId_and_order", (q) => q.eq("schoolId", schoolId))
+        .order("desc")
+        .first();
+
+  return (lastAssessment?.order ?? -1) + 1;
 }
