@@ -22,10 +22,20 @@ export const assessmentStatusList = [
   },
 ] as const;
 
+const archivedAssessmentStatus = {
+  icon: Notebook01Icon,
+  labelKey: "status-archived",
+  value: "archived",
+} as const;
+
 /** Return the configured assessment status metadata for one status value. */
 export function getAssessmentStatus(
-  value: (typeof assessmentStatusList)[number]["value"]
+  value: (typeof assessmentStatusList)[number]["value"] | "archived"
 ) {
+  if (value === "archived") {
+    return archivedAssessmentStatus;
+  }
+
   return (
     assessmentStatusList.find((status) => status.value === value) ??
     assessmentStatusList[0]

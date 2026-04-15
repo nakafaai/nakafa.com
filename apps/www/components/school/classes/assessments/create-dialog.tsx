@@ -5,6 +5,7 @@ import {
   ArrowDown01Icon,
   AssignmentsIcon,
   Calendar03Icon,
+  Edit01Icon,
   LibraryIcon,
   Notebook01Icon,
   Rocket01Icon,
@@ -52,6 +53,7 @@ import {
   type CreateAssessmentFormValues,
   createAssessmentFormSchema,
 } from "@/components/school/classes/assessments/schema";
+import type { Assessment } from "@/components/school/classes/assessments/types";
 import {
   formatScheduledAt,
   getDefaultScheduledAt,
@@ -98,14 +100,18 @@ interface AssessmentDialogShellProps {
   onSubmit: (value: CreateAssessmentFormValues) => Promise<void>;
   open: boolean;
   setOpenAction: (open: boolean) => void;
+  submitIcon: React.ComponentProps<typeof HugeIcons>["icon"];
+  submitLabel: string;
   title: string;
 }
 
 /** Render the assessment create dialog for the active class. */
 export function CreateAssessmentDialog({
+  initialAssessment,
   open,
   setOpenAction,
 }: {
+  initialAssessment?: Assessment;
   open: boolean;
   setOpenAction: (open: boolean) => void;
 }) {
@@ -115,6 +121,54 @@ export function CreateAssessmentDialog({
   const createAssessment = useMutation(
     api.assessments.mutations.public.create.createAssessment
   );
+  const updateAssessment = useMutation(
+    api.assessments.mutations.public.update.updateAssessment
+  );
+
+  if (initialAssessment) {
+    return (
+      <AssessmentDialogShell
+        defaultValues={{
+          title: initialAssessment.title,
+          description: initialAssessment.description?.text ?? "",
+          mode: initialAssessment.mode,
+          status:
+            initialAssessment.status === "archived"
+              ? "draft"
+              : initialAssessment.status,
+          scheduledAt: initialAssessment.scheduledAt ?? getDefaultScheduledAt(),
+        }}
+        description={t("edit-assessment-description")}
+        errorMessage={t("update-assessment-failed")}
+        formId={`school-assessment-edit-${initialAssessment._id}`}
+        onSubmit={async (value) => {
+          await updateAssessment({
+            schoolId,
+            assessmentId: initialAssessment._id,
+            title: value.title,
+            description: value.description
+              ? {
+                  format: "plate-v1",
+                  json: JSON.stringify([
+                    { type: "p", children: [{ text: value.description }] },
+                  ]),
+                  text: value.description,
+                }
+              : undefined,
+            status: value.status,
+            scheduledAt:
+              value.status === "scheduled" ? value.scheduledAt : undefined,
+          });
+          toast.success(t("assessment-updated"));
+        }}
+        open={open}
+        setOpenAction={setOpenAction}
+        submitIcon={Edit01Icon}
+        submitLabel={t("save")}
+        title={t("edit-assessment-title")}
+      />
+    );
+  }
 
   return (
     <AssessmentDialogShell
@@ -150,6 +204,8 @@ export function CreateAssessmentDialog({
       }}
       open={open}
       setOpenAction={setOpenAction}
+      submitIcon={Add01Icon}
+      submitLabel={t("create")}
       title={t("create-assessment")}
     />
   );
@@ -164,6 +220,8 @@ function AssessmentDialogShell({
   onSubmit,
   open,
   setOpenAction,
+  submitIcon,
+  submitLabel,
   title,
 }: AssessmentDialogShellProps) {
   const t = useTranslations("School.Classes");
@@ -212,8 +270,8 @@ function AssessmentDialogShell({
                     form={formId}
                     type="submit"
                   >
-                    <Spinner icon={Add01Icon} isLoading={isSubmitting} />
-                    {t("create")}
+                    <Spinner icon={submitIcon} isLoading={isSubmitting} />
+                    {submitLabel}
                   </Button>
                 )}
               </form.Subscribe>

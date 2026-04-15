@@ -1,7 +1,9 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import {
   requireAssessment,
   requireAssessmentPermission,
 } from "@repo/backend/convex/assessments/helpers/access";
+import { validateScheduledStatus } from "@repo/backend/convex/assessments/helpers/publishing";
 import { requireRichContentSize } from "@repo/backend/convex/assessments/helpers/richContent";
 import { richContentValidator } from "@repo/backend/convex/assessments/schema";
 import { mutation } from "@repo/backend/convex/functions";
@@ -14,11 +16,15 @@ export const updateAssessment = mutation({
     schoolId: v.id("schools"),
     assessmentId: v.id("schoolAssessments"),
     title: v.optional(v.string()),
-    slug: v.optional(v.string()),
     description: v.optional(richContentValidator),
-    questionBankScope: v.optional(
-      v.union(v.literal("class"), v.literal("school"))
+    status: v.optional(
+      v.union(
+        v.literal("draft"),
+        v.literal("published"),
+        v.literal("scheduled")
+      )
     ),
+    scheduledAt: v.optional(v.number()),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
@@ -48,31 +54,48 @@ export const updateAssessment = mutation({
       requireRichContentSize(args.description, "Assessment description");
     }
 
-    const nextSlug = args.slug;
+    const nextStatus = args.status ?? assessment.status;
+    const nextScheduledAt = args.scheduledAt ?? assessment.scheduledAt;
 
-    if (nextSlug && nextSlug !== assessment.slug) {
-      const existing = await ctx.db
-        .query("schoolAssessments")
-        .withIndex("by_schoolId_and_slug", (q) =>
-          q.eq("schoolId", args.schoolId).eq("slug", nextSlug)
-        )
-        .unique();
+    validateScheduledStatus(nextStatus, nextScheduledAt);
 
-      if (existing && existing._id !== assessment._id) {
-        throw new ConvexError({
-          code: "ASSESSMENT_SLUG_CONFLICT",
-          message: `Assessment slug already exists for slug: ${nextSlug}`,
-        });
-      }
+    const now = Date.now();
+    const wasScheduled = assessment.status === "scheduled";
+    const willBeScheduled = nextStatus === "scheduled";
+    const timeChanged = nextScheduledAt !== assessment.scheduledAt;
+    const needsCancel = wasScheduled && (!willBeScheduled || timeChanged);
+    const needsSchedule = willBeScheduled && (!wasScheduled || timeChanged);
+    const isNewlyPublished =
+      nextStatus === "published" && assessment.status !== "published";
+
+    let scheduledJobId = assessment.scheduledJobId;
+
+    if (needsCancel && assessment.scheduledJobId) {
+      await ctx.scheduler.cancel(assessment.scheduledJobId);
+      scheduledJobId = undefined;
+    }
+
+    if (needsSchedule && nextScheduledAt) {
+      scheduledJobId = await ctx.scheduler.runAfter(
+        Math.max(nextScheduledAt - now, 0),
+        internal.assessments.mutations.internal.publishing.publishAssessment,
+        {
+          assessmentId: args.assessmentId,
+          publishedBy: user.appUser._id,
+        }
+      );
     }
 
     await ctx.db.patch("schoolAssessments", args.assessmentId, {
       title: args.title,
-      slug: args.slug,
       description: args.description,
-      questionBankScope: args.questionBankScope,
+      status: nextStatus,
+      scheduledAt: willBeScheduled ? nextScheduledAt : undefined,
+      scheduledJobId: willBeScheduled ? scheduledJobId : undefined,
+      publishedAt: isNewlyPublished ? now : assessment.publishedAt,
+      publishedBy: isNewlyPublished ? user.appUser._id : assessment.publishedBy,
       updatedBy: user.appUser._id,
-      updatedAt: Date.now(),
+      updatedAt: now,
     });
 
     return null;
