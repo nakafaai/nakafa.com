@@ -6,7 +6,7 @@ import createMiddleware from "next-intl/middleware";
 
 const handleLocalizedRequest = createMiddleware(routing);
 const TRAILING_SLASH_PATTERN = /\/+$/;
-const AUTH_REDIRECT_PATH_COOKIE = "auth_redirect_path";
+const AUTH_REDIRECT_PATH_COOKIE = "auth-redirect-path";
 
 /**
  * Run locale routing while leaving the same-origin PostHog proxy untouched.

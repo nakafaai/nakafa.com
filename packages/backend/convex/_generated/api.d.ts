@@ -8,6 +8,27 @@
  * @module
  */
 
+import type * as assessments_helpers_access from "../assessments/helpers/access.js";
+import type * as assessments_helpers_attempts from "../assessments/helpers/attempts.js";
+import type * as assessments_helpers_authoring from "../assessments/helpers/authoring.js";
+import type * as assessments_helpers_questionBank from "../assessments/helpers/questionBank.js";
+import type * as assessments_helpers_richContent from "../assessments/helpers/richContent.js";
+import type * as assessments_mutations_public_archive from "../assessments/mutations/public/archive.js";
+import type * as assessments_mutations_public_assign from "../assessments/mutations/public/assign.js";
+import type * as assessments_mutations_public_create from "../assessments/mutations/public/create.js";
+import type * as assessments_mutations_public_questionBanks from "../assessments/mutations/public/questionBanks.js";
+import type * as assessments_mutations_public_questions from "../assessments/mutations/public/questions.js";
+import type * as assessments_mutations_public_saveResponse from "../assessments/mutations/public/saveResponse.js";
+import type * as assessments_mutations_public_sections from "../assessments/mutations/public/sections.js";
+import type * as assessments_mutations_public_startAttempt from "../assessments/mutations/public/startAttempt.js";
+import type * as assessments_mutations_public_submitAttempt from "../assessments/mutations/public/submitAttempt.js";
+import type * as assessments_mutations_public_update from "../assessments/mutations/public/update.js";
+import type * as assessments_mutations_public_version from "../assessments/mutations/public/version.js";
+import type * as assessments_queries_public_assessmentList from "../assessments/queries/public/assessmentList.js";
+import type * as assessments_queries_public_assignment from "../assessments/queries/public/assignment.js";
+import type * as assessments_queries_public_authoring from "../assessments/queries/public/authoring.js";
+import type * as assessments_queries_public_questionBanks from "../assessments/queries/public/questionBanks.js";
+import type * as assessments_validators from "../assessments/validators.js";
 import type * as audioStudies_actions from "../audioStudies/actions.js";
 import type * as audioStudies_constants from "../audioStudies/constants.js";
 import type * as audioStudies_helpers_contentAudios from "../audioStudies/helpers/contentAudios.js";
@@ -256,6 +277,27 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "assessments/helpers/access": typeof assessments_helpers_access;
+  "assessments/helpers/attempts": typeof assessments_helpers_attempts;
+  "assessments/helpers/authoring": typeof assessments_helpers_authoring;
+  "assessments/helpers/questionBank": typeof assessments_helpers_questionBank;
+  "assessments/helpers/richContent": typeof assessments_helpers_richContent;
+  "assessments/mutations/public/archive": typeof assessments_mutations_public_archive;
+  "assessments/mutations/public/assign": typeof assessments_mutations_public_assign;
+  "assessments/mutations/public/create": typeof assessments_mutations_public_create;
+  "assessments/mutations/public/questionBanks": typeof assessments_mutations_public_questionBanks;
+  "assessments/mutations/public/questions": typeof assessments_mutations_public_questions;
+  "assessments/mutations/public/saveResponse": typeof assessments_mutations_public_saveResponse;
+  "assessments/mutations/public/sections": typeof assessments_mutations_public_sections;
+  "assessments/mutations/public/startAttempt": typeof assessments_mutations_public_startAttempt;
+  "assessments/mutations/public/submitAttempt": typeof assessments_mutations_public_submitAttempt;
+  "assessments/mutations/public/update": typeof assessments_mutations_public_update;
+  "assessments/mutations/public/version": typeof assessments_mutations_public_version;
+  "assessments/queries/public/assessmentList": typeof assessments_queries_public_assessmentList;
+  "assessments/queries/public/assignment": typeof assessments_queries_public_assignment;
+  "assessments/queries/public/authoring": typeof assessments_queries_public_authoring;
+  "assessments/queries/public/questionBanks": typeof assessments_queries_public_questionBanks;
+  "assessments/validators": typeof assessments_validators;
   "audioStudies/actions": typeof audioStudies_actions;
   "audioStudies/constants": typeof audioStudies_constants;
   "audioStudies/helpers/contentAudios": typeof audioStudies_helpers_contentAudios;

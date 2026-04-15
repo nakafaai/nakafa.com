@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getToken } from "@/lib/auth/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
-const AUTH_REDIRECT_PATH_COOKIE = "auth_redirect_path";
+const AUTH_REDIRECT_PATH_COOKIE = "auth-redirect-path";
 
 /**
  * Guards the authenticated Nakafa School subtree on the server so hydration

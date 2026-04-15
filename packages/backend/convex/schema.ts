@@ -1,4 +1,5 @@
 import articleContentsSchema from "@repo/backend/convex/articleContents/schema";
+import assessmentsSchema from "@repo/backend/convex/assessments/schema";
 import audioStudiesSchema from "@repo/backend/convex/audioStudies/schema";
 import authorsSchema from "@repo/backend/convex/authors/schema";
 import bookmarksSchema from "@repo/backend/convex/bookmarks/schema";
@@ -30,6 +31,7 @@ export default defineSchema(
     ...customersSchema,
     ...subscriptionsSchema,
     ...schoolsSchema,
+    ...assessmentsSchema,
     ...classesSchema,
     ...notificationsSchema,
     ...bookmarksSchema,
