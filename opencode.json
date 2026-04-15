@@ -22,6 +22,10 @@
     "convex": {
       "type": "local",
       "command": ["npx", "-y", "convex@latest", "mcp", "start"]
+    },
+    "plate": {
+      "type": "local",
+      "command": ["npx", "-y", "shadcn@latest", "mcp"]
     }
   }
 }

@@ -21,7 +21,7 @@
     "motion": "^12.38.0",
     "next-intl": "^4.9.1",
     "react": "19.2.5",
-    "react-aria-components": "^1.16.0",
+    "react-aria-components": "^1.17.0",
     "recharts": "^2.15.4",
     "zod": "^4.3.6"
   },
