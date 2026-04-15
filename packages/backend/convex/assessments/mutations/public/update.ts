@@ -8,7 +8,7 @@ import { requireRichContentSize } from "@repo/backend/convex/assessments/helpers
 import { richContentValidator } from "@repo/backend/convex/assessments/schema";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
-import { ConvexError, v } from "convex/values";
+import { v } from "convex/values";
 
 /** Update one authored assessment while it remains editable. */
 export const updateAssessment = mutation({
@@ -53,13 +53,6 @@ export const updateAssessment = mutation({
       args.assessmentId
     );
 
-    if (assessment.status === "archived") {
-      throw new ConvexError({
-        code: "ASSESSMENT_ARCHIVED",
-        message: "Archived assessments cannot be updated.",
-      });
-    }
-
     if (args.description) {
       requireRichContentSize(args.description, "Assessment description");
     }
@@ -97,9 +90,9 @@ export const updateAssessment = mutation({
     }
 
     await ctx.db.patch("schoolAssessments", args.assessmentId, {
-      title: args.title,
-      description: args.description,
-      mode: args.mode,
+      title: args.title ?? assessment.title,
+      description: args.description ?? assessment.description,
+      mode: args.mode ?? assessment.mode,
       status: nextStatus,
       scheduledAt: willBeScheduled ? nextScheduledAt : undefined,
       scheduledJobId: willBeScheduled ? scheduledJobId : undefined,
