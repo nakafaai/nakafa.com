@@ -23,6 +23,11 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@repo/design-system/components/ui/tooltip";
 import { cn } from "@repo/design-system/lib/utils";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
@@ -109,15 +114,27 @@ export function MaterialGroupCard({
         </div>
 
         <div className="flex items-center gap-3 text-muted-foreground text-sm">
-          <div className="flex items-center gap-1">
-            <HugeIcons className="size-3.5" icon={File01Icon} />
-            <span className="tracking-tight">{group.materialCount}</span>
-          </div>
+          <Tooltip>
+            <TooltipTrigger>
+              <div className="pointer-events-auto relative z-1 flex items-center gap-1">
+                <HugeIcons className="size-3.5" icon={File01Icon} />
+                <span className="tracking-tight">{group.materialCount}</span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">{t("material-items")}</TooltipContent>
+          </Tooltip>
 
-          <div className="flex items-center gap-1">
-            <HugeIcons className="size-3.5" icon={Folder01Icon} />
-            <span className="tracking-tight">{group.childGroupCount}</span>
-          </div>
+          <Tooltip>
+            <TooltipTrigger>
+              <div className="pointer-events-auto relative z-1 flex items-center gap-1">
+                <HugeIcons className="size-3.5" icon={Folder01Icon} />
+                <span className="tracking-tight">{group.childGroupCount}</span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              {t("material-groups")}
+            </TooltipContent>
+          </Tooltip>
 
           <time className="min-w-0 truncate tracking-tight">
             {formatDistanceToNow(group.updatedAt, {

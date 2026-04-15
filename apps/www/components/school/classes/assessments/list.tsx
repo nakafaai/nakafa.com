@@ -47,7 +47,7 @@ export function SchoolClassesAssessmentsList() {
   if (!canManage) {
     return (
       <div className="py-12">
-        <p className="text-center text-muted-foreground text-sm">
+        <p className="text-center text-muted-foreground text-pretty text-sm">
           {t("assessments-teacher-only")}
         </p>
       </div>
@@ -61,7 +61,7 @@ export function SchoolClassesAssessmentsList() {
   if (filteredResults.length === 0) {
     return (
       <div className="py-12">
-        <p className="text-center text-muted-foreground text-sm">
+        <p className="text-center text-muted-foreground text-pretty text-sm">
           {t("no-assessments-found")}
         </p>
       </div>

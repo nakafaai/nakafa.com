@@ -79,7 +79,7 @@ export function SchoolClassesPeopleList() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Badge variant="secondary">
+            <Badge variant={person.role === "teacher" ? "secondary" : "muted"}>
               <HugeIcons
                 icon={person.role === "teacher" ? TeacherIcon : StudentIcon}
               />
