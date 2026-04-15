@@ -91,7 +91,7 @@ export function SchoolClassesForumList() {
               </button>
 
               <div className="pointer-events-none flex flex-col gap-3 p-4 transition-colors ease-out group-hover:bg-accent/20">
-                <Badge variant="muted">
+                <Badge variant="outline">
                   <HugeIcons icon={Icon} />
                   {t(forum.tag)}
                 </Badge>

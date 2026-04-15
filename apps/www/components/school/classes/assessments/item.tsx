@@ -75,12 +75,24 @@ export function AssessmentCard({
           canManage && "pr-14"
         )}
       >
-        <Badge className="w-fit" variant={getBadgeVariant(assessment.status)}>
-          <HugeIcons className="size-3" icon={statusInfo.icon} />
-          {assessment.status === "scheduled" && assessment.scheduledAt
-            ? formatScheduledAt(assessment.scheduledAt, locale)
-            : t(statusInfo.labelKey)}
-        </Badge>
+        <div className="flex flex-wrap items-center gap-2">
+          <Activity mode={canManage ? "visible" : "hidden"}>
+            <Badge
+              className="w-fit"
+              variant={getBadgeVariant(assessment.status)}
+            >
+              <HugeIcons className="size-3" icon={statusInfo.icon} />
+              {assessment.status === "scheduled" && assessment.scheduledAt
+                ? formatScheduledAt(assessment.scheduledAt, locale)
+                : t(statusInfo.labelKey)}
+            </Badge>
+          </Activity>
+
+          <Badge className="w-fit" variant="outline">
+            <HugeIcons className="size-3" icon={File02Icon} />
+            {t(`assessment-mode-${assessment.mode}`)}
+          </Badge>
+        </div>
 
         <div className="grid gap-1 text-left">
           <h3 className="min-w-0 truncate font-medium">{assessment.title}</h3>
@@ -98,13 +110,6 @@ export function AssessmentCard({
         </div>
 
         <div className="flex items-center gap-3 text-muted-foreground text-sm">
-          <div className="flex items-center gap-1">
-            <HugeIcons className="size-3.5" icon={File02Icon} />
-            <span className="tracking-tight">
-              {t(`assessment-mode-${assessment.mode}`)}
-            </span>
-          </div>
-
           <time className="min-w-0 truncate tracking-tight">
             {formatDistanceToNow(assessment.updatedAt, {
               addSuffix: true,
