@@ -121,10 +121,9 @@ describe("assessments runtime", () => {
         schoolId: seeded.schoolId,
         classId: seeded.classId,
         title: "Exam 1",
-        slug: "exam-1",
         description: PARAGRAPH,
         mode: "exam",
-        questionBankScope: "class",
+        status: "draft",
       }
     );
 

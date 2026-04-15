@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  AssignmentsIcon,
   BookOpen02Icon,
   MessageMultiple02Icon,
   UserMultipleIcon,
@@ -31,6 +32,11 @@ export function SchoolClassesTabs() {
         icon: BookOpen02Icon,
         label: t("materials"),
         href: `/school/${slug}/classes/${id}/materials`,
+      },
+      {
+        icon: AssignmentsIcon,
+        label: t("assessments"),
+        href: `/school/${slug}/classes/${id}/assessments`,
       },
       {
         icon: UserMultipleIcon,

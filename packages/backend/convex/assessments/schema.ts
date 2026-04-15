@@ -32,6 +32,7 @@ export type AssessmentMode = Infer<typeof assessmentModeValidator>;
 /** Assessment authoring lifecycle states. */
 export const assessmentStatusValidator = literals(
   "draft",
+  "scheduled",
   "published",
   "archived"
 );
@@ -181,6 +182,10 @@ export const schoolAssessmentValidator = v.object({
   createdBy: v.id("users"),
   updatedBy: v.optional(v.id("users")),
   archivedBy: v.optional(v.id("users")),
+  scheduledAt: v.optional(v.number()),
+  scheduledJobId: v.optional(v.id("_scheduled_functions")),
+  publishedAt: v.optional(v.number()),
+  publishedBy: v.optional(v.id("users")),
   updatedAt: v.number(),
   archivedAt: v.optional(v.number()),
 });
@@ -607,6 +612,12 @@ const schema = {
       "schoolId",
       "classId",
       "status",
+    ])
+    .index("by_schoolId_and_updatedAt", ["schoolId", "updatedAt"])
+    .index("by_schoolId_and_classId_and_updatedAt", [
+      "schoolId",
+      "classId",
+      "updatedAt",
     ]),
   schoolAssessmentVersions: defineTable(schoolAssessmentVersionValidator).index(
     "by_assessmentId_and_versionNumber",

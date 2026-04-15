@@ -10,9 +10,6 @@ export const listAssessments = query({
   args: {
     schoolId: v.id("schools"),
     classId: v.optional(v.id("schoolClasses")),
-    status: v.optional(
-      v.union(v.literal("draft"), v.literal("published"), v.literal("archived"))
-    ),
     paginationOpts: paginationOptsValidator,
   },
   returns: paginatedSchoolAssessmentsValidator,
@@ -24,25 +21,36 @@ export const listAssessments = query({
       schoolId: args.schoolId,
     });
 
-    const status = args.status ?? "draft";
-
     if (args.classId) {
-      return ctx.db
+      const results = await ctx.db
         .query("schoolAssessments")
-        .withIndex("by_schoolId_and_classId_and_status", (q) =>
-          q
-            .eq("schoolId", args.schoolId)
-            .eq("classId", args.classId)
-            .eq("status", status)
+        .withIndex("by_schoolId_and_classId_and_updatedAt", (q) =>
+          q.eq("schoolId", args.schoolId).eq("classId", args.classId)
         )
+        .order("desc")
         .paginate(args.paginationOpts);
+
+      return {
+        ...results,
+        page: results.page.filter(
+          (assessment) => assessment.status !== "archived"
+        ),
+      };
     }
 
-    return ctx.db
+    const results = await ctx.db
       .query("schoolAssessments")
-      .withIndex("by_schoolId_and_status", (q) =>
-        q.eq("schoolId", args.schoolId).eq("status", status)
+      .withIndex("by_schoolId_and_updatedAt", (q) =>
+        q.eq("schoolId", args.schoolId)
       )
+      .order("desc")
       .paginate(args.paginationOpts);
+
+    return {
+      ...results,
+      page: results.page.filter(
+        (assessment) => assessment.status !== "archived"
+      ),
+    };
   },
 });

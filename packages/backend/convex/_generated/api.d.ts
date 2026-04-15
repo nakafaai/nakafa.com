@@ -11,8 +11,10 @@
 import type * as assessments_helpers_access from "../assessments/helpers/access.js";
 import type * as assessments_helpers_attempts from "../assessments/helpers/attempts.js";
 import type * as assessments_helpers_authoring from "../assessments/helpers/authoring.js";
+import type * as assessments_helpers_publishing from "../assessments/helpers/publishing.js";
 import type * as assessments_helpers_questionBank from "../assessments/helpers/questionBank.js";
 import type * as assessments_helpers_richContent from "../assessments/helpers/richContent.js";
+import type * as assessments_mutations_internal_publishing from "../assessments/mutations/internal/publishing.js";
 import type * as assessments_mutations_public_archive from "../assessments/mutations/public/archive.js";
 import type * as assessments_mutations_public_assign from "../assessments/mutations/public/assign.js";
 import type * as assessments_mutations_public_create from "../assessments/mutations/public/create.js";
@@ -280,8 +282,10 @@ declare const fullApi: ApiFromModules<{
   "assessments/helpers/access": typeof assessments_helpers_access;
   "assessments/helpers/attempts": typeof assessments_helpers_attempts;
   "assessments/helpers/authoring": typeof assessments_helpers_authoring;
+  "assessments/helpers/publishing": typeof assessments_helpers_publishing;
   "assessments/helpers/questionBank": typeof assessments_helpers_questionBank;
   "assessments/helpers/richContent": typeof assessments_helpers_richContent;
+  "assessments/mutations/internal/publishing": typeof assessments_mutations_internal_publishing;
   "assessments/mutations/public/archive": typeof assessments_mutations_public_archive;
   "assessments/mutations/public/assign": typeof assessments_mutations_public_assign;
   "assessments/mutations/public/create": typeof assessments_mutations_public_create;

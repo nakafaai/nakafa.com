@@ -1,9 +1,14 @@
+import { internal } from "@repo/backend/convex/_generated/api";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { validateScheduledStatus } from "@repo/backend/convex/assessments/helpers/publishing";
 import { requireRichContentSize } from "@repo/backend/convex/assessments/helpers/richContent";
 import { richContentValidator } from "@repo/backend/convex/assessments/schema";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { requirePermission } from "@repo/backend/convex/lib/helpers/permissions";
-import { ConvexError, v } from "convex/values";
+import { slugify } from "@repo/backend/convex/utils/text";
+import { v } from "convex/values";
 
 /** Create one new authored assessment in one school scope. */
 export const createAssessment = mutation({
@@ -11,7 +16,6 @@ export const createAssessment = mutation({
     schoolId: v.id("schools"),
     classId: v.optional(v.id("schoolClasses")),
     title: v.string(),
-    slug: v.string(),
     description: v.optional(richContentValidator),
     mode: v.union(
       v.literal("practice"),
@@ -20,7 +24,12 @@ export const createAssessment = mutation({
       v.literal("exam"),
       v.literal("tryout")
     ),
-    questionBankScope: v.union(v.literal("class"), v.literal("school")),
+    status: v.union(
+      v.literal("draft"),
+      v.literal("published"),
+      v.literal("scheduled")
+    ),
+    scheduledAt: v.optional(v.number()),
   },
   returns: v.id("schoolAssessments"),
   handler: async (ctx, args) => {
@@ -36,32 +45,76 @@ export const createAssessment = mutation({
       requireRichContentSize(args.description, "Assessment description");
     }
 
-    const existing = await ctx.db
-      .query("schoolAssessments")
-      .withIndex("by_schoolId_and_slug", (q) =>
-        q.eq("schoolId", args.schoolId).eq("slug", args.slug)
-      )
-      .unique();
+    validateScheduledStatus(args.status, args.scheduledAt);
 
-    if (existing) {
-      throw new ConvexError({
-        code: "ASSESSMENT_SLUG_CONFLICT",
-        message: `Assessment slug already exists for slug: ${args.slug}`,
-      });
-    }
+    const slug = await generateUniqueAssessmentSlug(
+      ctx,
+      args.schoolId,
+      slugify(args.title)
+    );
+    const now = Date.now();
+    const isPublished = args.status === "published";
+    const isScheduled = args.status === "scheduled";
 
-    return ctx.db.insert("schoolAssessments", {
+    const assessmentId = await ctx.db.insert("schoolAssessments", {
       schoolId: args.schoolId,
       classId: args.classId,
       title: args.title,
-      slug: args.slug,
+      slug,
       description: args.description,
       mode: args.mode,
-      status: "draft",
-      questionBankScope: args.questionBankScope,
+      status: args.status,
+      questionBankScope: args.classId ? "class" : "school",
       createdBy: user.appUser._id,
       updatedBy: user.appUser._id,
-      updatedAt: Date.now(),
+      scheduledAt: isScheduled ? args.scheduledAt : undefined,
+      publishedAt: isPublished ? now : undefined,
+      publishedBy: isPublished ? user.appUser._id : undefined,
+      updatedAt: now,
     });
+
+    if (isScheduled && args.scheduledAt) {
+      const scheduledJobId = await ctx.scheduler.runAfter(
+        Math.max(args.scheduledAt - now, 0),
+        internal.assessments.mutations.internal.publishing.publishAssessment,
+        {
+          assessmentId,
+          publishedBy: user.appUser._id,
+        }
+      );
+
+      await ctx.db.patch("schoolAssessments", assessmentId, {
+        scheduledJobId,
+      });
+    }
+
+    return assessmentId;
   },
 });
+
+/** Generate one school-local unique assessment slug from a title-derived base slug. */
+async function generateUniqueAssessmentSlug(
+  ctx: MutationCtx,
+  schoolId: Id<"schools">,
+  baseSlug: string
+) {
+  const safeBaseSlug = baseSlug || "assessment";
+  let suffix = 0;
+
+  while (true) {
+    const candidateSlug =
+      suffix === 0 ? safeBaseSlug : `${safeBaseSlug}-${suffix}`;
+    const existing = await ctx.db
+      .query("schoolAssessments")
+      .withIndex("by_schoolId_and_slug", (q) =>
+        q.eq("schoolId", schoolId).eq("slug", candidateSlug)
+      )
+      .unique();
+
+    if (!existing) {
+      return candidateSlug;
+    }
+
+    suffix += 1;
+  }
+}
