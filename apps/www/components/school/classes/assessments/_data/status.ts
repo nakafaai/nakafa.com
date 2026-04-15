@@ -1,29 +1,30 @@
 import {
-  Calendar03Icon,
-  Notebook01Icon,
+  ArchiveIcon,
+  NoteEditIcon,
   Rocket01Icon,
+  TimeScheduleIcon,
 } from "@hugeicons/core-free-icons";
 
 export const assessmentStatusList = [
   {
-    icon: Notebook01Icon,
+    icon: NoteEditIcon,
     labelKey: "status-draft",
     value: "draft",
   },
   {
     icon: Rocket01Icon,
-    labelKey: "status-publish-now",
+    labelKey: "status-published",
     value: "published",
   },
   {
-    icon: Calendar03Icon,
+    icon: TimeScheduleIcon,
     labelKey: "status-schedule",
     value: "scheduled",
   },
 ] as const;
 
 const archivedAssessmentStatus = {
-  icon: Notebook01Icon,
+  icon: ArchiveIcon,
   labelKey: "status-archived",
   value: "archived",
 } as const;

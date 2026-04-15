@@ -3,13 +3,8 @@
 import {
   Add01Icon,
   ArrowDown01Icon,
-  AssignmentsIcon,
   Calendar03Icon,
   Edit01Icon,
-  LibraryIcon,
-  Notebook01Icon,
-  Rocket01Icon,
-  SchoolIcon,
   Tick01Icon,
   Time04Icon,
 } from "@hugeicons/core-free-icons";
@@ -46,6 +41,10 @@ import { useLocale, useTranslations } from "next-intl";
 import { Activity } from "react";
 import { toast } from "sonner";
 import {
+  assessmentModeList,
+  getAssessmentMode,
+} from "@/components/school/classes/assessments/_data/mode";
+import {
   assessmentStatusList,
   getAssessmentStatus,
 } from "@/components/school/classes/assessments/_data/status";
@@ -63,34 +62,6 @@ import {
   updateTime,
 } from "@/components/school/classes/assessments/utils";
 import { useClass } from "@/lib/context/use-class";
-
-const assessmentModeList = [
-  {
-    icon: Notebook01Icon,
-    labelKey: "assessment-mode-practice",
-    value: "practice",
-  },
-  {
-    icon: AssignmentsIcon,
-    labelKey: "assessment-mode-assignment",
-    value: "assignment",
-  },
-  {
-    icon: LibraryIcon,
-    labelKey: "assessment-mode-quiz",
-    value: "quiz",
-  },
-  {
-    icon: SchoolIcon,
-    labelKey: "assessment-mode-exam",
-    value: "exam",
-  },
-  {
-    icon: Rocket01Icon,
-    labelKey: "assessment-mode-tryout",
-    value: "tryout",
-  },
-] as const;
 
 interface AssessmentDialogShellProps {
   defaultValues: CreateAssessmentFormValues;
@@ -155,6 +126,7 @@ export function CreateAssessmentDialog({
                   text: value.description,
                 }
               : undefined,
+            mode: value.mode,
             status: value.status,
             scheduledAt:
               value.status === "scheduled" ? value.scheduledAt : undefined,
@@ -344,10 +316,7 @@ function AssessmentDialogShell({
 
               <form.Field name="mode">
                 {(field) => {
-                  const currentMode =
-                    assessmentModeList.find(
-                      (option) => option.value === field.state.value
-                    ) ?? assessmentModeList[0];
+                  const currentMode = getAssessmentMode(field.state.value);
                   const isInvalid =
                     Boolean(field.state.meta.isTouched) &&
                     Boolean(!field.state.meta.isValid);

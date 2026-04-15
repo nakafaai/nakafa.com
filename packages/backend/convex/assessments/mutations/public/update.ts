@@ -17,6 +17,15 @@ export const updateAssessment = mutation({
     assessmentId: v.id("schoolAssessments"),
     title: v.optional(v.string()),
     description: v.optional(richContentValidator),
+    mode: v.optional(
+      v.union(
+        v.literal("practice"),
+        v.literal("assignment"),
+        v.literal("quiz"),
+        v.literal("exam"),
+        v.literal("tryout")
+      )
+    ),
     status: v.optional(
       v.union(
         v.literal("draft"),
@@ -89,6 +98,7 @@ export const updateAssessment = mutation({
     await ctx.db.patch("schoolAssessments", args.assessmentId, {
       title: args.title,
       description: args.description,
+      mode: args.mode,
       status: nextStatus,
       scheduledAt: willBeScheduled ? nextScheduledAt : undefined,
       scheduledJobId: willBeScheduled ? scheduledJobId : undefined,

@@ -6,7 +6,6 @@ import {
   ArrowUp02Icon,
   Delete02Icon,
   Edit01Icon,
-  File02Icon,
   MoreHorizontalIcon,
 } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -28,6 +27,7 @@ import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { Activity, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { getAssessmentMode } from "@/components/school/classes/assessments/_data/mode";
 import { getAssessmentStatus } from "@/components/school/classes/assessments/_data/status";
 import { CreateAssessmentDialog } from "@/components/school/classes/assessments/create-dialog";
 import type { Assessment } from "@/components/school/classes/assessments/types";
@@ -58,6 +58,7 @@ export function AssessmentCard({
 }) {
   const t = useTranslations("School.Classes");
   const locale = useLocale();
+  const modeInfo = getAssessmentMode(assessment.mode);
   const statusInfo = getAssessmentStatus(assessment.status);
 
   return (
@@ -89,8 +90,8 @@ export function AssessmentCard({
           </Activity>
 
           <Badge className="w-fit" variant="outline">
-            <HugeIcons className="size-3" icon={File02Icon} />
-            {t(`assessment-mode-${assessment.mode}`)}
+            <HugeIcons className="size-3" icon={modeInfo.icon} />
+            {t(modeInfo.labelKey)}
           </Badge>
         </div>
 
