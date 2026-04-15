@@ -1,13 +1,11 @@
 import { internal } from "@repo/backend/convex/_generated/api";
-import {
-  requireAssessment,
-  requireAssessmentPermission,
-} from "@repo/backend/convex/assessments/helpers/access";
+import { requireAssessment } from "@repo/backend/convex/assessments/helpers/access";
 import { requireRichContentSize } from "@repo/backend/convex/assessments/helpers/content";
 import { validateScheduledStatus } from "@repo/backend/convex/assessments/helpers/publishing";
 import { richContentValidator } from "@repo/backend/convex/assessments/schema";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
+import { requirePermission } from "@repo/backend/convex/lib/helpers/permissions";
 import { v } from "convex/values";
 
 /** Update one authored assessment while it remains editable. */
@@ -40,18 +38,17 @@ export const updateAssessment = mutation({
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
 
-    await requireAssessmentPermission(
-      ctx,
-      user.appUser._id,
-      args.schoolId,
-      "assessment:update"
-    );
-
     const assessment = await requireAssessment(
       ctx,
       args.schoolId,
       args.assessmentId
     );
+
+    await requirePermission(ctx, "assessment:update", {
+      userId: user.appUser._id,
+      schoolId: assessment.schoolId,
+      classId: assessment.classId,
+    });
 
     if (args.description) {
       requireRichContentSize(args.description, "Assessment description");

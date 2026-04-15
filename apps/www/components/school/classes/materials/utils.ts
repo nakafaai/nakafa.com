@@ -14,8 +14,18 @@ export function getTimeString(timestamp: number) {
 
 /** Update the time portion of a timestamp. Returns original if result would be in the past. */
 export function updateTime(timestamp: number, timeString: string) {
+  if (!timeString) {
+    return timestamp;
+  }
+
   const [hours, minutes] = timeString.split(":").map(Number);
+
+  if (!(Number.isFinite(hours) && Number.isFinite(minutes))) {
+    return timestamp;
+  }
+
   const newTimestamp = set(timestamp, { hours, minutes, seconds: 0 }).getTime();
+
   return newTimestamp <= Date.now() ? timestamp : newTimestamp;
 }
 
@@ -24,14 +34,26 @@ export function updateDate(timestamp: number | undefined, newDate: Date) {
   const hours = timestamp ? getHours(timestamp) : 8;
   const minutes = timestamp ? getMinutes(timestamp) : 0;
   const newTimestamp = set(newDate, { hours, minutes, seconds: 0 }).getTime();
-  if (newTimestamp <= Date.now()) {
+
+  if (newTimestamp > Date.now()) {
+    return newTimestamp;
+  }
+
+  const nextHour = getHours(new Date()) + 1;
+
+  if (nextHour < 24) {
     return set(newDate, {
-      hours: getHours(new Date()) + 1,
+      hours: nextHour,
       minutes: 0,
       seconds: 0,
     }).getTime();
   }
-  return newTimestamp;
+
+  return set(addDays(newDate, 1), {
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  }).getTime();
 }
 
 /** Get default scheduled time (tomorrow at 8:00). */

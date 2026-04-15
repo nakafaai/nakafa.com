@@ -15,30 +15,36 @@ export async function loadAuthoredAssessment(
     return null;
   }
 
-  const currentVersion = assessment.currentVersionId
-    ? await ctx.db.get("schoolAssessmentVersions", assessment.currentVersionId)
-    : null;
-
-  const sections = await ctx.db
-    .query("schoolAssessmentSections")
-    .withIndex("by_assessmentId_and_order", (q) =>
-      q.eq("assessmentId", assessmentId)
-    )
-    .collect();
-
-  const questions = await ctx.db
-    .query("schoolAssessmentQuestions")
-    .withIndex("by_assessmentId_and_sectionId_and_order", (q) =>
-      q.eq("assessmentId", assessmentId)
-    )
-    .collect();
-
-  const questionIds = new Set(questions.map((question) => question._id));
-
-  const [choices, rubricCriteria] = await Promise.all([
-    collectRowsByQuestionId(ctx, "schoolAssessmentChoices", questionIds),
-    collectRowsByQuestionId(ctx, "schoolAssessmentRubricCriteria", questionIds),
-  ]);
+  const [currentVersion, sections, questions, choices, rubricCriteria] =
+    await Promise.all([
+      assessment.currentVersionId
+        ? ctx.db.get("schoolAssessmentVersions", assessment.currentVersionId)
+        : Promise.resolve(null),
+      ctx.db
+        .query("schoolAssessmentSections")
+        .withIndex("by_assessmentId_and_order", (q) =>
+          q.eq("assessmentId", assessmentId)
+        )
+        .collect(),
+      ctx.db
+        .query("schoolAssessmentQuestions")
+        .withIndex("by_assessmentId_and_sectionId_and_order", (q) =>
+          q.eq("assessmentId", assessmentId)
+        )
+        .collect(),
+      ctx.db
+        .query("schoolAssessmentChoices")
+        .withIndex("by_assessmentId_and_questionId_and_order", (q) =>
+          q.eq("assessmentId", assessmentId)
+        )
+        .collect(),
+      ctx.db
+        .query("schoolAssessmentRubricCriteria")
+        .withIndex("by_assessmentId_and_questionId_and_order", (q) =>
+          q.eq("assessmentId", assessmentId)
+        )
+        .collect(),
+    ]);
 
   return {
     assessment,
@@ -48,21 +54,6 @@ export async function loadAuthoredAssessment(
     choices,
     rubricCriteria,
   };
-}
-
-/** Collect all rows that belong to a known set of question ids. */
-async function collectRowsByQuestionId<
-  TableName extends
-    | "schoolAssessmentChoices"
-    | "schoolAssessmentRubricCriteria",
->(
-  ctx: QueryCtx | MutationCtx,
-  tableName: TableName,
-  questionIds: Set<Id<"schoolAssessmentQuestions">>
-) {
-  const rows = await ctx.db.query(tableName).collect();
-
-  return rows.filter((row) => questionIds.has(row.questionId));
 }
 
 /** Compute the next version number for one authored assessment. */

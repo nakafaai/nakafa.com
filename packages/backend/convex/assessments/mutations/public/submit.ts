@@ -26,6 +26,15 @@ export const submitAttempt = mutation({
       return null;
     }
 
+    const assignment = await ctx.db.get(
+      "schoolAssessmentAssignments",
+      attempt.assignmentId
+    );
+
+    if (!assignment) {
+      throw new Error(`Expected assignment for attemptId: ${args.attemptId}`);
+    }
+
     const responses = await ctx.db
       .query("schoolAssessmentResponses")
       .withIndex("by_attemptId_and_questionId", (q) =>
@@ -79,15 +88,35 @@ export const submitAttempt = mutation({
       });
     }
 
+    let hasEssayQuestions = false;
+
+    if (assignment.gradingMode === "hybrid") {
+      const versionQuestions = await ctx.db
+        .query("schoolAssessmentVersionQuestions")
+        .withIndex("by_versionId_and_sectionId_and_order", (q) =>
+          q.eq("versionId", attempt.versionId)
+        )
+        .collect();
+
+      hasEssayQuestions = versionQuestions.some(
+        (question) => question.questionType === "essay"
+      );
+    }
+
+    const gradingStatus =
+      assignment.gradingMode === "manual" ||
+      (assignment.gradingMode === "hybrid" && hasEssayQuestions)
+        ? "awaiting-manual-review"
+        : "auto-graded";
+
+    const submittedAt = Date.now();
+
     await ctx.db.patch("schoolAssessmentAttempts", args.attemptId, {
       status: "submitted",
-      gradingStatus:
-        attempt.gradingStatus === "awaiting-manual-review"
-          ? "awaiting-manual-review"
-          : "auto-graded",
+      gradingStatus,
       score: autoScore,
-      submittedAt: Date.now(),
-      completedAt: Date.now(),
+      submittedAt,
+      completedAt: submittedAt,
     });
 
     return null;

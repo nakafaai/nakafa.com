@@ -1,13 +1,11 @@
 import { enUS, id } from "date-fns/locale";
 import type { Locale } from "next-intl";
 
+/** Map the active app locale to a date-fns locale object. */
 export function getLocale(locale: Locale) {
-  switch (locale) {
-    case "en":
-      return enUS;
-    case "id":
-      return id;
-    default:
-      return enUS;
+  if (locale === "id") {
+    return id;
   }
+
+  return enUS;
 }

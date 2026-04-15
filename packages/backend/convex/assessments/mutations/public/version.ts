@@ -1,7 +1,4 @@
-import {
-  requireAssessment,
-  requireAssessmentPermission,
-} from "@repo/backend/convex/assessments/helpers/access";
+import { requireAssessment } from "@repo/backend/convex/assessments/helpers/access";
 import {
   getNextAssessmentVersionNumber,
   getTotalVersionPoints,
@@ -9,6 +6,7 @@ import {
 } from "@repo/backend/convex/assessments/helpers/authoring";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
+import { requirePermission } from "@repo/backend/convex/lib/helpers/permissions";
 import { v } from "convex/values";
 
 /** Freeze the current authored tree into a new immutable version. */
@@ -56,18 +54,18 @@ export const createAssessmentVersion = mutation({
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
 
-    await requireAssessmentPermission(
-      ctx,
-      user.appUser._id,
-      args.schoolId,
-      "assessment:publish"
-    );
-
     const assessment = await requireAssessment(
       ctx,
       args.schoolId,
       args.assessmentId
     );
+
+    await requirePermission(ctx, "assessment:publish", {
+      userId: user.appUser._id,
+      schoolId: assessment.schoolId,
+      classId: assessment.classId,
+    });
+
     const authored = await loadAuthoredAssessment(ctx, args.assessmentId);
 
     if (!authored) {

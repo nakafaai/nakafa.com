@@ -4,11 +4,12 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { requireRichContentSize } from "@repo/backend/convex/assessments/helpers/content";
 import { validateScheduledStatus } from "@repo/backend/convex/assessments/helpers/publishing";
 import { richContentValidator } from "@repo/backend/convex/assessments/schema";
+import { loadActiveClass } from "@repo/backend/convex/classes/utils";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { requirePermission } from "@repo/backend/convex/lib/helpers/permissions";
 import { slugify } from "@repo/backend/convex/utils/text";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 
 /** Create one new authored assessment in one school scope. */
 export const createAssessment = mutation({
@@ -35,11 +36,21 @@ export const createAssessment = mutation({
   returns: v.id("schoolAssessments"),
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
+    const classData = args.classId
+      ? await loadActiveClass(ctx, args.classId)
+      : null;
+
+    if (classData && classData.schoolId !== args.schoolId) {
+      throw new ConvexError({
+        code: "CLASS_NOT_FOUND",
+        message: "Class not found in this school.",
+      });
+    }
 
     await requirePermission(ctx, "assessment:create", {
       userId: user.appUser._id,
       schoolId: args.schoolId,
-      classId: args.classId,
+      classId: classData?._id,
     });
 
     if (args.description) {
@@ -59,19 +70,19 @@ export const createAssessment = mutation({
     const order = await getNextAssessmentOrder(
       ctx,
       args.schoolId,
-      args.classId
+      classData?._id
     );
 
     const assessmentId = await ctx.db.insert("schoolAssessments", {
       schoolId: args.schoolId,
-      classId: args.classId,
+      classId: classData?._id,
       title: args.title,
       slug,
       order,
       description: args.description,
       mode: args.mode,
       status: args.status,
-      questionBankScope: args.classId ? "class" : "school",
+      questionBankScope: classData ? "class" : "school",
       createdBy: user.appUser._id,
       updatedBy: user.appUser._id,
       scheduledAt: isScheduled ? args.scheduledAt : undefined,

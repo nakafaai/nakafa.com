@@ -80,6 +80,43 @@ describe("assessments/mutations/public/delete", () => {
     );
 
     await teacherClient.mutation(
+      api.assessments.mutations.public.questions.createQuestion,
+      {
+        schoolId: seeded.schoolId,
+        assessmentId,
+        sectionId,
+        questionType: "essay",
+        source: "manual",
+        stem: PARAGRAPH,
+        points: 5,
+        required: true,
+        shuffleChoices: false,
+        choices: [],
+        rubricCriteria: [
+          {
+            label: "Accuracy",
+            description: PARAGRAPH,
+            maxScore: 5,
+          },
+        ],
+      }
+    );
+
+    await teacherClient.mutation(
+      api.assessments.mutations.public.version.createAssessmentVersion,
+      {
+        schoolId: seeded.schoolId,
+        assessmentId,
+        timingPolicy: { perSection: false },
+        gradingMode: "hybrid",
+        monitoringMode: "basic",
+        releaseMode: "manual",
+        rankingScope: "none",
+        retakePolicy: { allowRetake: false },
+      }
+    );
+
+    await teacherClient.mutation(
       api.assessments.mutations.public.delete.deleteAssessment,
       {
         schoolId: seeded.schoolId,
@@ -88,8 +125,25 @@ describe("assessments/mutations/public/delete", () => {
     );
 
     const deletedState = await t.query(async (ctx) => {
-      const [assessment, sections, questions] = await Promise.all([
+      const [
+        assessment,
+        versions,
+        sections,
+        questions,
+        versionSections,
+        versionQuestions,
+        choices,
+        versionChoices,
+        rubricCriteria,
+        versionRubricCriteria,
+      ] = await Promise.all([
         ctx.db.get("schoolAssessments", assessmentId),
+        ctx.db
+          .query("schoolAssessmentVersions")
+          .withIndex("by_assessmentId_and_versionNumber", (q) =>
+            q.eq("assessmentId", assessmentId)
+          )
+          .collect(),
         ctx.db
           .query("schoolAssessmentSections")
           .withIndex("by_assessmentId_and_order", (q) =>
@@ -102,13 +156,68 @@ describe("assessments/mutations/public/delete", () => {
             q.eq("assessmentId", assessmentId)
           )
           .collect(),
+        ctx.db
+          .query("schoolAssessmentVersionSections")
+          .withIndex("by_assessmentId_and_versionId_and_order", (q) =>
+            q.eq("assessmentId", assessmentId)
+          )
+          .collect(),
+        ctx.db
+          .query("schoolAssessmentVersionQuestions")
+          .withIndex(
+            "by_assessmentId_and_versionId_and_sectionId_and_order",
+            (q) => q.eq("assessmentId", assessmentId)
+          )
+          .collect(),
+        ctx.db
+          .query("schoolAssessmentChoices")
+          .withIndex("by_assessmentId_and_questionId_and_order", (q) =>
+            q.eq("assessmentId", assessmentId)
+          )
+          .collect(),
+        ctx.db
+          .query("schoolAssessmentVersionChoices")
+          .withIndex("by_assessmentId_and_questionId_and_order", (q) =>
+            q.eq("assessmentId", assessmentId)
+          )
+          .collect(),
+        ctx.db
+          .query("schoolAssessmentRubricCriteria")
+          .withIndex("by_assessmentId_and_questionId_and_order", (q) =>
+            q.eq("assessmentId", assessmentId)
+          )
+          .collect(),
+        ctx.db
+          .query("schoolAssessmentVersionRubricCriteria")
+          .withIndex("by_assessmentId_and_questionId_and_order", (q) =>
+            q.eq("assessmentId", assessmentId)
+          )
+          .collect(),
       ]);
 
-      return { assessment, questions, sections };
+      return {
+        assessment,
+        choices,
+        questions,
+        rubricCriteria,
+        sections,
+        versionChoices,
+        versionQuestions,
+        versionRubricCriteria,
+        versionSections,
+        versions,
+      };
     });
 
     expect(deletedState.assessment).toBeNull();
+    expect(deletedState.choices).toHaveLength(0);
     expect(deletedState.sections).toHaveLength(0);
     expect(deletedState.questions).toHaveLength(0);
+    expect(deletedState.rubricCriteria).toHaveLength(0);
+    expect(deletedState.versionChoices).toHaveLength(0);
+    expect(deletedState.versionQuestions).toHaveLength(0);
+    expect(deletedState.versionRubricCriteria).toHaveLength(0);
+    expect(deletedState.versionSections).toHaveLength(0);
+    expect(deletedState.versions).toHaveLength(0);
   });
 });

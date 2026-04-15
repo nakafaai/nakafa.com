@@ -1,9 +1,10 @@
 import { requireRichContentSize } from "@repo/backend/convex/assessments/helpers/content";
 import { richContentValidator } from "@repo/backend/convex/assessments/schema";
+import { loadActiveClass } from "@repo/backend/convex/classes/utils";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { requirePermission } from "@repo/backend/convex/lib/helpers/permissions";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 
 /** Create one reusable question bank in class or school scope. */
 export const createQuestionBank = mutation({
@@ -18,10 +19,35 @@ export const createQuestionBank = mutation({
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
 
+    if (args.scope === "class" && !args.classId) {
+      throw new ConvexError({
+        code: "CLASS_NOT_FOUND",
+        message: "Class banks require a class.",
+      });
+    }
+
+    if (args.scope === "school" && args.classId) {
+      throw new ConvexError({
+        code: "INVALID_QUESTION_BANK_SCOPE",
+        message: "School banks cannot be scoped to a class.",
+      });
+    }
+
+    const classData = args.classId
+      ? await loadActiveClass(ctx, args.classId)
+      : null;
+
+    if (classData && classData.schoolId !== args.schoolId) {
+      throw new ConvexError({
+        code: "CLASS_NOT_FOUND",
+        message: "Class not found in this school.",
+      });
+    }
+
     await requirePermission(ctx, "assessment:create", {
       userId: user.appUser._id,
       schoolId: args.schoolId,
-      classId: args.classId,
+      classId: classData?._id,
     });
 
     if (args.description) {
@@ -30,7 +56,7 @@ export const createQuestionBank = mutation({
 
     return ctx.db.insert("schoolAssessmentQuestionBanks", {
       schoolId: args.schoolId,
-      classId: args.classId,
+      classId: classData?._id,
       scope: args.scope,
       title: args.title,
       description: args.description,
@@ -62,10 +88,37 @@ export const createQuestionBankEntry = mutation({
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
 
+    const classData = args.classId
+      ? await loadActiveClass(ctx, args.classId)
+      : null;
+
+    if (classData && classData.schoolId !== args.schoolId) {
+      throw new ConvexError({
+        code: "CLASS_NOT_FOUND",
+        message: "Class not found in this school.",
+      });
+    }
+
+    const bank = await ctx.db.get("schoolAssessmentQuestionBanks", args.bankId);
+
+    if (!bank || bank.schoolId !== args.schoolId) {
+      throw new ConvexError({
+        code: "QUESTION_BANK_NOT_FOUND",
+        message: "Question bank not found in this school.",
+      });
+    }
+
+    if (bank.classId !== classData?._id) {
+      throw new ConvexError({
+        code: "QUESTION_BANK_NOT_FOUND",
+        message: "Question bank not found for this class scope.",
+      });
+    }
+
     await requirePermission(ctx, "assessment:create", {
       userId: user.appUser._id,
-      schoolId: args.schoolId,
-      classId: args.classId,
+      schoolId: bank.schoolId,
+      classId: bank.classId,
     });
 
     requireRichContentSize(args.stem, "Question bank stem");
@@ -75,9 +128,9 @@ export const createQuestionBankEntry = mutation({
     }
 
     return ctx.db.insert("schoolAssessmentQuestionBankEntries", {
-      schoolId: args.schoolId,
-      classId: args.classId,
-      bankId: args.bankId,
+      schoolId: bank.schoolId,
+      classId: bank.classId,
+      bankId: bank._id,
       questionType: args.questionType,
       stem: args.stem,
       explanation: args.explanation,

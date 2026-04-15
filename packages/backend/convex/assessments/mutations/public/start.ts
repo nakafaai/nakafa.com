@@ -41,13 +41,13 @@ export const startAttempt = mutation({
 
     const inProgressAttempt = await ctx.db
       .query("schoolAssessmentAttempts")
-      .withIndex("by_studentId_and_assignmentId", (q) =>
+      .withIndex("by_assignmentId_and_studentId_and_status", (q) =>
         q
-          .eq("studentId", user.appUser._id)
           .eq("assignmentId", args.assignmentId)
+          .eq("studentId", user.appUser._id)
+          .eq("status", "in-progress")
       )
-      .filter((q) => q.eq(q.field("status"), "in-progress"))
-      .first();
+      .unique();
 
     if (inProgressAttempt) {
       return inProgressAttempt._id;

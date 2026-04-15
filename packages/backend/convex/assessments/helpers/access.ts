@@ -3,7 +3,6 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
-import { requirePermission } from "@repo/backend/convex/lib/helpers/permissions";
 import { ConvexError } from "convex/values";
 
 /** Assert that one authored assessment exists for the given school. */
@@ -22,24 +21,4 @@ export async function requireAssessment(
   }
 
   return assessment;
-}
-
-/** Require authored assessment management permission in one school scope. */
-export function requireAssessmentPermission(
-  ctx: QueryCtx | MutationCtx,
-  userId: Id<"users">,
-  schoolId: Id<"schools">,
-  permission:
-    | "assessment:create"
-    | "assessment:update"
-    | "assessment:publish"
-    | "assessment:delete"
-    | "assessment:monitor"
-    | "assessment:grade"
-    | "assessment:release"
-) {
-  return requirePermission(ctx, permission, {
-    userId,
-    schoolId,
-  });
 }

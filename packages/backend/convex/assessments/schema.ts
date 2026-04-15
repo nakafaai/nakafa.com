@@ -636,7 +636,13 @@ const schema = {
   ),
   schoolAssessmentVersionSections: defineTable(
     schoolAssessmentVersionSectionValidator
-  ).index("by_versionId_and_order", ["versionId", "order"]),
+  )
+    .index("by_versionId_and_order", ["versionId", "order"])
+    .index("by_assessmentId_and_versionId_and_order", [
+      "assessmentId",
+      "versionId",
+      "order",
+    ]),
   schoolAssessmentQuestions: defineTable(schoolAssessmentQuestionValidator)
     .index("by_assessmentId_and_sectionId_and_order", [
       "assessmentId",
@@ -652,20 +658,47 @@ const schema = {
       "sectionId",
       "order",
     ])
+    .index("by_assessmentId_and_versionId_and_sectionId_and_order", [
+      "assessmentId",
+      "versionId",
+      "sectionId",
+      "order",
+    ])
     .index("by_sourceQuestionId", ["sourceQuestionId"]),
-  schoolAssessmentChoices: defineTable(schoolAssessmentChoiceValidator).index(
-    "by_questionId_and_order",
-    ["questionId", "order"]
-  ),
+  schoolAssessmentChoices: defineTable(schoolAssessmentChoiceValidator)
+    .index("by_questionId_and_order", ["questionId", "order"])
+    .index("by_assessmentId_and_questionId_and_order", [
+      "assessmentId",
+      "questionId",
+      "order",
+    ]),
   schoolAssessmentVersionChoices: defineTable(
     schoolAssessmentVersionChoiceValidator
-  ).index("by_questionId_and_order", ["questionId", "order"]),
+  )
+    .index("by_questionId_and_order", ["questionId", "order"])
+    .index("by_assessmentId_and_questionId_and_order", [
+      "assessmentId",
+      "questionId",
+      "order",
+    ]),
   schoolAssessmentRubricCriteria: defineTable(
     schoolAssessmentRubricCriterionValidator
-  ).index("by_questionId_and_order", ["questionId", "order"]),
+  )
+    .index("by_questionId_and_order", ["questionId", "order"])
+    .index("by_assessmentId_and_questionId_and_order", [
+      "assessmentId",
+      "questionId",
+      "order",
+    ]),
   schoolAssessmentVersionRubricCriteria: defineTable(
     schoolAssessmentVersionRubricCriterionValidator
-  ).index("by_questionId_and_order", ["questionId", "order"]),
+  )
+    .index("by_questionId_and_order", ["questionId", "order"])
+    .index("by_assessmentId_and_questionId_and_order", [
+      "assessmentId",
+      "questionId",
+      "order",
+    ]),
   schoolAssessmentQuestionBanks: defineTable(
     schoolAssessmentQuestionBankValidator
   )
@@ -689,6 +722,11 @@ const schema = {
       "assignmentId",
       "studentId",
       "attemptNumber",
+    ])
+    .index("by_assignmentId_and_studentId_and_status", [
+      "assignmentId",
+      "studentId",
+      "status",
     ])
     .index("by_assignmentId_and_status", ["assignmentId", "status"])
     .index("by_studentId_and_assignmentId", ["studentId", "assignmentId"]),

@@ -1,11 +1,9 @@
-import {
-  requireAssessment,
-  requireAssessmentPermission,
-} from "@repo/backend/convex/assessments/helpers/access";
+import { requireAssessment } from "@repo/backend/convex/assessments/helpers/access";
 import { requireRichContentSize } from "@repo/backend/convex/assessments/helpers/content";
 import { richContentValidator } from "@repo/backend/convex/assessments/schema";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
+import { requirePermission } from "@repo/backend/convex/lib/helpers/permissions";
 import { ConvexError, v } from "convex/values";
 
 /** Create one authored question with its structured options or rubric criteria. */
@@ -49,15 +47,33 @@ export const createQuestion = mutation({
   returns: v.id("schoolAssessmentQuestions"),
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
-
-    await requireAssessmentPermission(
+    const assessment = await requireAssessment(
       ctx,
-      user.appUser._id,
       args.schoolId,
-      "assessment:update"
+      args.assessmentId
     );
 
-    await requireAssessment(ctx, args.schoolId, args.assessmentId);
+    await requirePermission(ctx, "assessment:update", {
+      userId: user.appUser._id,
+      schoolId: assessment.schoolId,
+      classId: assessment.classId,
+    });
+
+    const section = await ctx.db.get(
+      "schoolAssessmentSections",
+      args.sectionId
+    );
+
+    if (
+      !section ||
+      section.assessmentId !== assessment._id ||
+      section.schoolId !== assessment.schoolId
+    ) {
+      throw new ConvexError({
+        code: "SECTION_NOT_FOUND",
+        message: "Section not found for this assessment.",
+      });
+    }
 
     requireRichContentSize(args.stem, "Question stem");
 
@@ -79,22 +95,23 @@ export const createQuestion = mutation({
       });
     }
 
-    const questionOrder = await ctx.db
+    const lastQuestion = await ctx.db
       .query("schoolAssessmentQuestions")
       .withIndex("by_assessmentId_and_sectionId_and_order", (q) =>
-        q.eq("assessmentId", args.assessmentId).eq("sectionId", args.sectionId)
+        q.eq("assessmentId", args.assessmentId).eq("sectionId", section._id)
       )
-      .collect();
+      .order("desc")
+      .first();
 
     const questionId = await ctx.db.insert("schoolAssessmentQuestions", {
       schoolId: args.schoolId,
       assessmentId: args.assessmentId,
-      sectionId: args.sectionId,
+      sectionId: section._id,
       questionType: args.questionType,
       source: args.source,
       stem: args.stem,
       explanation: args.explanation,
-      order: questionOrder.length,
+      order: (lastQuestion?.order ?? -1) + 1,
       points: args.points,
       required: args.required,
       shuffleChoices: args.shuffleChoices,

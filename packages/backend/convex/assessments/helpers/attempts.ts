@@ -29,7 +29,7 @@ export async function requireAssignmentTarget(
   return target;
 }
 
-/** Require one published assignment and its target class access. */
+/** Require one assignment and its target class access. */
 export async function requireAccessibleAssignment(
   ctx: QueryCtx | MutationCtx,
   assignmentId: Id<"schoolAssessmentAssignments">,
@@ -63,8 +63,8 @@ export async function getNextAttemptNumber(
 ) {
   const latestAttempt = await ctx.db
     .query("schoolAssessmentAttempts")
-    .withIndex("by_studentId_and_assignmentId", (q) =>
-      q.eq("studentId", studentId).eq("assignmentId", assignmentId)
+    .withIndex("by_assignmentId_and_studentId_and_attemptNumber", (q) =>
+      q.eq("assignmentId", assignmentId).eq("studentId", studentId)
     )
     .order("desc")
     .first();

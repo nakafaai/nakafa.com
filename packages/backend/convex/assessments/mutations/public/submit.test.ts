@@ -222,4 +222,163 @@ describe("assessments/mutations/public/submit", () => {
     expect(submittedAttempt?.status).toBe("submitted");
     expect(submittedAttempt?.score).toBe(10);
   });
+
+  it("keeps hybrid essay attempts awaiting manual review", async () => {
+    vi.setSystemTime(new Date(NOW));
+
+    const t = createConvexTestWithBetterAuth();
+    const seeded = await t.mutation(async (ctx) => {
+      const teacher = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "hybrid-teacher",
+      });
+      const student = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "hybrid-student",
+      });
+      const schoolId = await insertSchool(ctx, teacher.userId);
+      const classId = await insertClass(ctx, schoolId, teacher.userId);
+
+      await ctx.db.insert("schoolMembers", {
+        schoolId,
+        userId: teacher.userId,
+        role: "admin",
+        status: "active",
+        joinedAt: NOW,
+        updatedAt: NOW,
+      });
+      await ctx.db.insert("schoolMembers", {
+        schoolId,
+        userId: student.userId,
+        role: "student",
+        status: "active",
+        joinedAt: NOW,
+        updatedAt: NOW,
+      });
+      await ctx.db.insert("schoolClassMembers", {
+        classId,
+        schoolId,
+        userId: teacher.userId,
+        role: "teacher",
+        teacherRole: "primary",
+        updatedAt: NOW,
+      });
+      await ctx.db.insert("schoolClassMembers", {
+        classId,
+        schoolId,
+        userId: student.userId,
+        role: "student",
+        updatedAt: NOW,
+      });
+
+      return { classId, schoolId, student, teacher };
+    });
+
+    const teacherClient = t.withIdentity({
+      subject: seeded.teacher.authUserId,
+      sessionId: seeded.teacher.sessionId,
+    });
+    const studentClient = t.withIdentity({
+      subject: seeded.student.authUserId,
+      sessionId: seeded.student.sessionId,
+    });
+
+    const assessmentId = await teacherClient.mutation(
+      api.assessments.mutations.public.create.createAssessment,
+      {
+        schoolId: seeded.schoolId,
+        classId: seeded.classId,
+        title: "Essay 1",
+        description: PARAGRAPH,
+        mode: "assignment",
+        status: "draft",
+      }
+    );
+
+    const sectionId = await teacherClient.mutation(
+      api.assessments.mutations.public.sections.createSection,
+      {
+        schoolId: seeded.schoolId,
+        assessmentId,
+        title: "Section A",
+      }
+    );
+
+    await teacherClient.mutation(
+      api.assessments.mutations.public.questions.createQuestion,
+      {
+        schoolId: seeded.schoolId,
+        assessmentId,
+        sectionId,
+        questionType: "essay",
+        source: "manual",
+        stem: PARAGRAPH,
+        points: 10,
+        required: true,
+        shuffleChoices: false,
+        choices: [],
+        rubricCriteria: [
+          {
+            label: "Accuracy",
+            description: PARAGRAPH,
+            maxScore: 10,
+          },
+        ],
+      }
+    );
+
+    const versionId = await teacherClient.mutation(
+      api.assessments.mutations.public.version.createAssessmentVersion,
+      {
+        schoolId: seeded.schoolId,
+        assessmentId,
+        timingPolicy: { perSection: false },
+        gradingMode: "hybrid",
+        monitoringMode: "basic",
+        releaseMode: "manual",
+        rankingScope: "none",
+        retakePolicy: { allowRetake: false },
+      }
+    );
+
+    const assignmentId = await teacherClient.mutation(
+      api.assessments.mutations.public.assign.createAssignment,
+      {
+        schoolId: seeded.schoolId,
+        assessmentId,
+        versionId,
+        title: "Essay 1 Publish",
+        classIds: [seeded.classId],
+        timingPolicy: { durationMinutes: 60, perSection: false },
+        gradingMode: "hybrid",
+        monitoringMode: "basic",
+        releaseMode: "manual",
+        rankingScope: "none",
+        retakePolicy: { allowRetake: false },
+      }
+    );
+
+    const attemptId = await studentClient.mutation(
+      api.assessments.mutations.public.start.startAttempt,
+      {
+        assignmentId,
+        classId: seeded.classId,
+      }
+    );
+
+    await studentClient.mutation(
+      api.assessments.mutations.public.submit.submitAttempt,
+      {
+        attemptId,
+      }
+    );
+
+    const submittedAttempt = await t.query(async (ctx) => {
+      return await ctx.db.get("schoolAssessmentAttempts", attemptId);
+    });
+
+    expect(submittedAttempt?.gradingStatus).toBe("awaiting-manual-review");
+    expect(submittedAttempt?.score).toBe(0);
+    expect(submittedAttempt?.status).toBe("submitted");
+  });
 });

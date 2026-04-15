@@ -1,8 +1,8 @@
 import { query } from "@repo/backend/convex/_generated/server";
-import { requireAssessmentPermission } from "@repo/backend/convex/assessments/helpers/access";
 import { loadAuthoredAssessment } from "@repo/backend/convex/assessments/helpers/authoring";
 import { authoredAssessmentValidator } from "@repo/backend/convex/assessments/validators";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
+import { requirePermission } from "@repo/backend/convex/lib/helpers/permissions";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
 
@@ -15,14 +15,18 @@ export const getAuthoredAssessment = query({
   returns: v.union(authoredAssessmentValidator, v.null()),
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
+    const authored = await loadAuthoredAssessment(ctx, args.assessmentId);
 
-    await requireAssessmentPermission(
-      ctx,
-      user.appUser._id,
-      args.schoolId,
-      "assessment:update"
-    );
+    if (!authored || authored.assessment.schoolId !== args.schoolId) {
+      return null;
+    }
 
-    return loadAuthoredAssessment(ctx, args.assessmentId);
+    await requirePermission(ctx, "assessment:update", {
+      userId: user.appUser._id,
+      schoolId: authored.assessment.schoolId,
+      classId: authored.assessment.classId,
+    });
+
+    return authored;
   },
 });

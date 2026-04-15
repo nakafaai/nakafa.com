@@ -138,4 +138,76 @@ describe("assessments/mutations/public/update", () => {
     expect(updatedAssessment?.title).toBe("Archive Me Again");
     expect(updatedAssessment?.status).toBe("draft");
   });
+
+  it("allows a class teacher to update a class-scoped assessment", async () => {
+    vi.setSystemTime(new Date(NOW));
+
+    const t = createConvexTestWithBetterAuth();
+    const seeded = await t.mutation(async (ctx) => {
+      const admin = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "class-admin",
+      });
+      const teacher = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "class-teacher",
+      });
+      const schoolId = await insertSchool(ctx, admin.userId);
+      const classId = await insertClass(ctx, schoolId, admin.userId);
+
+      await ctx.db.insert("schoolMembers", {
+        schoolId,
+        userId: admin.userId,
+        role: "admin",
+        status: "active",
+        joinedAt: NOW,
+        updatedAt: NOW,
+      });
+      await ctx.db.insert("schoolClassMembers", {
+        classId,
+        schoolId,
+        userId: teacher.userId,
+        role: "teacher",
+        updatedAt: NOW,
+      });
+
+      return { admin, classId, schoolId, teacher };
+    });
+
+    const adminClient = t.withIdentity({
+      subject: seeded.admin.authUserId,
+      sessionId: seeded.admin.sessionId,
+    });
+    const teacherClient = t.withIdentity({
+      subject: seeded.teacher.authUserId,
+      sessionId: seeded.teacher.sessionId,
+    });
+
+    const assessmentId = await adminClient.mutation(
+      api.assessments.mutations.public.create.createAssessment,
+      {
+        schoolId: seeded.schoolId,
+        classId: seeded.classId,
+        title: "Class Assessment",
+        description: PARAGRAPH,
+        mode: "assignment",
+        status: "draft",
+      }
+    );
+
+    await teacherClient.mutation(
+      api.assessments.mutations.public.update.updateAssessment,
+      {
+        schoolId: seeded.schoolId,
+        assessmentId,
+        title: "Updated by Teacher",
+      }
+    );
+
+    const updatedAssessment = await t.query(async (ctx) => {
+      return await ctx.db.get("schoolAssessments", assessmentId);
+    });
+
+    expect(updatedAssessment?.title).toBe("Updated by Teacher");
+  });
 });

@@ -1,11 +1,9 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import {
-  requireAssessment,
-  requireAssessmentPermission,
-} from "@repo/backend/convex/assessments/helpers/access";
+import { requireAssessment } from "@repo/backend/convex/assessments/helpers/access";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
+import { requirePermission } from "@repo/backend/convex/lib/helpers/permissions";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
@@ -28,12 +26,11 @@ export const reorderAssessment = mutation({
       args.assessmentId
     );
 
-    await requireAssessmentPermission(
-      ctx,
-      user.appUser._id,
-      args.schoolId,
-      "assessment:update"
-    );
+    await requirePermission(ctx, "assessment:update", {
+      userId: user.appUser._id,
+      schoolId: assessment.schoolId,
+      classId: assessment.classId,
+    });
 
     const adjacentAssessment = assessment.classId
       ? await findAdjacentClassAssessment(ctx, assessment, args.direction)

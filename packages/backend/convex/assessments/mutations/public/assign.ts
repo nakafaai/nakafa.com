@@ -1,10 +1,9 @@
-import {
-  requireAssessment,
-  requireAssessmentPermission,
-} from "@repo/backend/convex/assessments/helpers/access";
+import { requireAssessment } from "@repo/backend/convex/assessments/helpers/access";
+import { loadActiveClass } from "@repo/backend/convex/classes/utils";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
-import { v } from "convex/values";
+import { requirePermission } from "@repo/backend/convex/lib/helpers/permissions";
+import { ConvexError, v } from "convex/values";
 
 /** Publish one immutable version to one or more class targets. */
 export const createAssignment = mutation({
@@ -50,19 +49,69 @@ export const createAssignment = mutation({
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
 
-    await requireAssessmentPermission(
+    if (args.classIds.length === 0) {
+      throw new ConvexError({
+        code: "ASSIGNMENT_TARGET_REQUIRED",
+        message: "Select at least one class target.",
+      });
+    }
+
+    const assessment = await requireAssessment(
       ctx,
-      user.appUser._id,
       args.schoolId,
-      "assessment:publish"
+      args.assessmentId
     );
 
-    await requireAssessment(ctx, args.schoolId, args.assessmentId);
+    await requirePermission(ctx, "assessment:publish", {
+      userId: user.appUser._id,
+      schoolId: assessment.schoolId,
+      classId: assessment.classId,
+    });
+
+    const version = await ctx.db.get(
+      "schoolAssessmentVersions",
+      args.versionId
+    );
+
+    if (
+      !version ||
+      version.assessmentId !== assessment._id ||
+      version.schoolId !== assessment.schoolId
+    ) {
+      throw new ConvexError({
+        code: "ASSESSMENT_VERSION_NOT_FOUND",
+        message: "Assessment version not found for this assessment.",
+      });
+    }
+
+    const targetIds = new Set(args.classIds);
+
+    if (targetIds.size !== args.classIds.length) {
+      throw new ConvexError({
+        code: "DUPLICATE_CLASS_TARGET",
+        message: "Each class can only be assigned once.",
+      });
+    }
+
+    const targetClasses = await Promise.all(
+      args.classIds.map((classId) => loadActiveClass(ctx, classId))
+    );
+
+    if (
+      targetClasses.some(
+        (classData) => classData.schoolId !== assessment.schoolId
+      )
+    ) {
+      throw new ConvexError({
+        code: "CLASS_NOT_FOUND",
+        message: "Class not found in this school.",
+      });
+    }
 
     const assignmentId = await ctx.db.insert("schoolAssessmentAssignments", {
       schoolId: args.schoolId,
       assessmentId: args.assessmentId,
-      versionId: args.versionId,
+      versionId: version._id,
       title: args.title,
       status: args.opensAt ? "scheduled" : "published",
       opensAt: args.opensAt,
