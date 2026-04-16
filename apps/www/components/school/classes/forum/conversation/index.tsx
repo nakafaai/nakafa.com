@@ -230,7 +230,7 @@ export const ForumPostConversation = memo(
               }
 
               if (item.type === "spacer") {
-                return <div className="h-4" key="spacer" />;
+                return <div className="h-12" key="spacer" />;
               }
 
               return (
