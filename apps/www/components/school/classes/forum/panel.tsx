@@ -1,0 +1,57 @@
+"use client";
+
+import { api } from "@repo/backend/convex/_generated/api";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
+import { useRouter } from "@repo/internationalization/src/navigation";
+import { useQuery } from "convex/react";
+import { useParams, useSearchParams } from "next/navigation";
+import { SchoolClassesDetailPanel } from "@/components/school/classes/detail-panel";
+import { SchoolClassesForumPanelContent } from "@/components/school/classes/forum/panel-content";
+import { SchoolClassesForumPanelError } from "@/components/school/classes/forum/panel-error";
+import { SchoolClassesForumPanelInfo } from "@/components/school/classes/forum/panel-info";
+import { useForum } from "@/lib/context/use-forum";
+
+/**
+ * Render the active forum conversation inside the reusable class detail slot,
+ * routing back to the forum feed when the panel closes.
+ */
+export function SchoolClassesForumPanel({
+  forumId,
+}: {
+  forumId: Id<"schoolClassForums">;
+}) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { id, slug } = useParams<{ id: string; slug: string }>();
+  const resetConversationState = useForum(
+    (state) => state.resetConversationState
+  );
+  const forum = useQuery(api.classes.forums.queries.forums.getForum, {
+    forumId,
+  });
+  const search = searchParams.toString();
+  const closeHref = `/school/${slug}/classes/${id}/forum${search ? `?${search}` : ""}`;
+
+  function handleClose() {
+    resetConversationState();
+    router.replace(closeHref);
+  }
+
+  return (
+    <ErrorBoundary
+      fallback={<SchoolClassesForumPanelError />}
+      onError={() => {
+        handleClose();
+      }}
+    >
+      <SchoolClassesDetailPanel
+        description="Discuss anything with everyone in the class."
+        onClose={handleClose}
+        title={<SchoolClassesForumPanelInfo forum={forum} />}
+      >
+        <SchoolClassesForumPanelContent forum={forum} forumId={forumId} />
+      </SchoolClassesDetailPanel>
+    </ErrorBoundary>
+  );
+}

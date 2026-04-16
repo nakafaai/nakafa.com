@@ -6,7 +6,7 @@ import { ForumPostConversation } from "@/components/school/classes/forum/convers
 import type { Forum } from "@/components/school/classes/forum/conversation/types";
 import { useUser } from "@/lib/context/use-user";
 
-export const SchoolClassesForumPostSheetContent = memo(
+export const SchoolClassesForumPanelContent = memo(
   ({
     forum,
     forumId,
@@ -30,5 +30,4 @@ export const SchoolClassesForumPostSheetContent = memo(
     );
   }
 );
-SchoolClassesForumPostSheetContent.displayName =
-  "SchoolClassesForumPostSheetContent";
+SchoolClassesForumPanelContent.displayName = "SchoolClassesForumPanelContent";

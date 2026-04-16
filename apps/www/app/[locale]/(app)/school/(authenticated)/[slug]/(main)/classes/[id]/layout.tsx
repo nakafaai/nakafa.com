@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
 import { use } from "react";
-import { SchoolClassesForumPostSheet } from "@/components/school/classes/forum/post-sheet";
 import { SchoolClassesHeaderInfo } from "@/components/school/classes/info";
 import { SchoolClassesJoinForm } from "@/components/school/classes/join-form";
 import { SchoolClassesTabs } from "@/components/school/classes/tabs";
+import { SchoolClassesWorkspaceShell } from "@/components/school/classes/workspace-shell";
 import { ClassContextProvider } from "@/lib/context/use-class";
 import { ForumContextProvider } from "@/lib/context/use-forum";
 import { getClassRouteSnapshot } from "@/lib/school/server";
@@ -12,11 +12,20 @@ import { getClassRouteSnapshot } from "@/lib/school/server";
 export default function Layout(
   props: LayoutProps<"/[locale]/school/[slug]/classes/[id]">
 ) {
-  const { children, params } = props;
+  const { children, panel, params } = props;
   const { id } = use(params);
 
-  return <ClassRouteBoundary classId={id}>{children}</ClassRouteBoundary>;
+  return (
+    <ClassRouteBoundary classId={id} panel={panel}>
+      {children}
+    </ClassRouteBoundary>
+  );
 }
+
+type ClassLayoutSlots = Pick<
+  LayoutProps<"/[locale]/school/[slug]/classes/[id]">,
+  "children" | "panel"
+>;
 
 /**
  * Resolve the class route snapshot on the server so the client subtree only
@@ -25,8 +34,8 @@ export default function Layout(
 async function ClassRouteBoundary({
   children,
   classId,
-}: {
-  children: React.ReactNode;
+  panel,
+}: ClassLayoutSlots & {
   classId: string;
 }) {
   const value = await getClassRouteSnapshot({ classId });
@@ -46,12 +55,12 @@ async function ClassRouteBoundary({
 
   return (
     <ClassContextProvider value={value}>
-      <SchoolClassesHeaderInfo />
-      <SchoolClassesTabs />
-
       <ForumContextProvider key={classId}>
-        <SchoolClassesForumPostSheet />
-        {children}
+        <SchoolClassesWorkspaceShell panel={panel}>
+          <SchoolClassesHeaderInfo />
+          <SchoolClassesTabs />
+          {children}
+        </SchoolClassesWorkspaceShell>
       </ForumContextProvider>
     </ClassContextProvider>
   );

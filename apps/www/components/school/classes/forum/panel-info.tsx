@@ -5,7 +5,8 @@ import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import { getTagIcon } from "@/components/school/classes/_data/tag";
 import type { Forum } from "@/components/school/classes/forum/conversation/types";
 
-export function SchoolClassesForumPostSheetInfo({
+/** Render the active forum title row in the class detail panel header. */
+export function SchoolClassesForumPanelInfo({
   forum,
 }: {
   forum: Forum | undefined;

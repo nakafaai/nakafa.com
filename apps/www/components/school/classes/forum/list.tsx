@@ -12,13 +12,15 @@ import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
+import { cn } from "@repo/design-system/lib/utils";
+import { useRouter } from "@repo/internationalization/src/navigation";
 import { useMutation, usePaginatedQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
+import { useParams, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useQueryState, useQueryStates } from "nuqs";
+import { useQueryStates } from "nuqs";
 import { Activity, useTransition } from "react";
 import { getTagIcon } from "@/components/school/classes/_data/tag";
-import { forumSearchParsers } from "@/components/school/classes/forum/search-params";
 import { useClass } from "@/lib/context/use-class";
 import { useForum } from "@/lib/context/use-forum";
 import { searchParsers } from "@/lib/nuqs/search";
@@ -39,13 +41,19 @@ export function SchoolClassesForumList() {
   const t = useTranslations("School.Classes");
 
   const locale = useLocale();
+  const router = useRouter();
+  const routeParams = useParams<{
+    forumId?: string;
+    id: string;
+    slug: string;
+  }>();
+  const searchParams = useSearchParams();
 
   const classId = useClass((state) => state.class._id);
   const resetConversationState = useForum(
     (state) => state.resetConversationState
   );
   const [{ q }] = useQueryStates(searchParsers);
-  const [, setForumId] = useQueryState("forum", forumSearchParsers.forum);
 
   const [debouncedQ] = useDebouncedValue(q, DEBOUNCE_TIME);
 
@@ -77,20 +85,29 @@ export function SchoolClassesForumList() {
       <section className="flex flex-col divide-y overflow-hidden rounded-md border shadow-sm">
         {results.map((forum) => {
           const Icon = getTagIcon(forum.tag);
+          const search = searchParams.toString();
+          const href = `/school/${routeParams.slug}/classes/${routeParams.id}/forum/${forum._id}${search ? `?${search}` : ""}`;
+          const isActive = routeParams.forumId === forum._id;
+
           return (
             <div className="group relative" key={forum._id}>
               <button
                 className="absolute inset-0 z-0 cursor-pointer"
                 onClick={() => {
                   resetConversationState();
-                  setForumId(forum._id);
+                  router.push(href);
                 }}
                 type="button"
               >
                 <span className="sr-only">{forum.title}</span>
               </button>
 
-              <div className="pointer-events-none flex flex-col gap-3 p-4 transition-colors ease-out group-hover:bg-accent/20">
+              <div
+                className={cn(
+                  "pointer-events-none flex flex-col gap-3 p-4 transition-colors ease-out group-hover:bg-accent/20",
+                  isActive && "bg-accent/20"
+                )}
+              >
                 <Badge variant="outline">
                   <HugeIcons icon={Icon} />
                   {t(forum.tag)}

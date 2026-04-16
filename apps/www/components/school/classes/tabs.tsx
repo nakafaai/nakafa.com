@@ -48,7 +48,10 @@ export function SchoolClassesTabs() {
   );
 
   const defaultValue = useMemo(
-    () => tabs.find((tab) => pathname === tab.href)?.href || tabs[0]?.href,
+    () =>
+      tabs.find(
+        (tab) => pathname === tab.href || pathname.startsWith(`${tab.href}/`)
+      )?.href || tabs[0]?.href,
     [pathname, tabs]
   );
 
