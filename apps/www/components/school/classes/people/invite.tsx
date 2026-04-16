@@ -5,7 +5,7 @@ import {
   Tick01Icon,
   UserAdd01Icon,
 } from "@hugeicons/core-free-icons";
-import { useClipboard } from "@mantine/hooks";
+import { useClipboard, useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
@@ -36,7 +36,7 @@ export function SchoolClassesPeopleInvite() {
 
   const classId = useClass((state) => state.class._id);
 
-  const [openInviteDialog, setOpenInviteDialog] = useState(false);
+  const [openInviteDialog, inviteDialogHandlers] = useDisclosure(false);
   const [selectedRole, setSelectedRole] = useState<InviteRole>("student");
 
   const clipboard = useClipboard({ timeout: 500 });
@@ -73,7 +73,7 @@ export function SchoolClassesPeopleInvite() {
                 key={role.value}
                 onSelect={() => {
                   setSelectedRole(role.value);
-                  setOpenInviteDialog(true);
+                  inviteDialogHandlers.open();
                 }}
               >
                 <HugeIcons icon={role.icon} />
@@ -99,7 +99,7 @@ export function SchoolClassesPeopleInvite() {
         }}
         open={openInviteDialog}
         role={selectedRole}
-        setOpenAction={setOpenInviteDialog}
+        setOpenAction={inviteDialogHandlers.set}
       />
     </ButtonGroup>
   );

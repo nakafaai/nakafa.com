@@ -8,6 +8,7 @@ import {
   Edit01Icon,
   MoreHorizontalIcon,
 } from "@hugeicons/core-free-icons";
+import { useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -25,7 +26,7 @@ import { useMutation } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
-import { Activity, useState, useTransition } from "react";
+import { Activity, useTransition } from "react";
 import { toast } from "sonner";
 import { getAssessmentMode } from "@/components/school/classes/assessments/_data/mode";
 import { getAssessmentStatus } from "@/components/school/classes/assessments/_data/status";
@@ -135,8 +136,8 @@ function AssessmentActions({
   const t = useTranslations("Common");
   const schoolT = useTranslations("School.Classes");
   const [isPending, startTransition] = useTransition();
-  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
+  const [confirmDeleteOpen, confirmDeleteHandlers] = useDisclosure(false);
+  const [editOpen, editHandlers] = useDisclosure(false);
   const reorderAssessment = useMutation(
     api.assessments.mutations.public.reorder.reorderAssessment
   );
@@ -197,7 +198,7 @@ function AssessmentActions({
             <DropdownMenuItem
               className="cursor-pointer"
               disabled={isPending}
-              onSelect={() => setEditOpen(true)}
+              onSelect={editHandlers.open}
             >
               <HugeIcons icon={Edit01Icon} />
               {t("edit")}
@@ -224,7 +225,7 @@ function AssessmentActions({
             <DropdownMenuItem
               className="cursor-pointer"
               disabled={isPending}
-              onSelect={() => setConfirmDeleteOpen(true)}
+              onSelect={confirmDeleteHandlers.open}
               variant="destructive"
             >
               <HugeIcons icon={Delete02Icon} />
@@ -237,7 +238,7 @@ function AssessmentActions({
       <CreateAssessmentDialog
         initialAssessment={assessment}
         open={editOpen}
-        setOpenAction={setEditOpen}
+        setOpenAction={editHandlers.set}
       />
 
       <SchoolClassesDeleteDialog
@@ -245,7 +246,7 @@ function AssessmentActions({
         isPending={isPending}
         onConfirmAction={handleDelete}
         open={confirmDeleteOpen}
-        setOpenAction={setConfirmDeleteOpen}
+        setOpenAction={confirmDeleteHandlers.set}
         title={schoolT("delete-assessment-title")}
       />
     </div>

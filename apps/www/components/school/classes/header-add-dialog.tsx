@@ -7,6 +7,7 @@ import {
   Tick01Icon,
   ViewIcon,
 } from "@hugeicons/core-free-icons";
+import { useDisclosure } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -47,7 +48,6 @@ import {
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 import { toast } from "sonner";
 import { useSchool } from "@/lib/context/use-school";
 import { subjectList } from "./_data/subject";
@@ -71,7 +71,7 @@ export function CreateSchoolClassDialog({
   const pathname = usePathname();
   const schoolId = useSchool((state) => state.school._id);
   const createClass = useMutation(api.classes.mutations.createClass);
-  const [subjectPopoverOpen, setSubjectPopoverOpen] = useState(false);
+  const [subjectPopoverOpen, subjectPopoverHandlers] = useDisclosure(false);
 
   const form = useForm({
     defaultValues: classCreateDefaultValues,
@@ -179,7 +179,7 @@ export function CreateSchoolClassDialog({
                     />
 
                     <Popover
-                      onOpenChange={setSubjectPopoverOpen}
+                      onOpenChange={subjectPopoverHandlers.set}
                       open={subjectPopoverOpen}
                     >
                       <PopoverTrigger asChild>
@@ -214,7 +214,7 @@ export function CreateSchoolClassDialog({
                                   key={subject}
                                   onSelect={() => {
                                     field.handleChange(t(subject));
-                                    setSubjectPopoverOpen(false);
+                                    subjectPopoverHandlers.close();
                                   }}
                                 >
                                   <span>{t(subject)}</span>

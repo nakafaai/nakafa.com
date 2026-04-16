@@ -10,6 +10,7 @@ import {
   Folder01Icon,
   MoreHorizontalIcon,
 } from "@hugeicons/core-free-icons";
+import { useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -34,7 +35,7 @@ import { useMutation } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
-import { Activity, useState, useTransition } from "react";
+import { Activity, useTransition } from "react";
 import { toast } from "sonner";
 import { getMaterialStatus } from "@/components/school/classes/_data/material-status";
 import { SchoolClassesDeleteDialog } from "@/components/school/classes/delete-dialog";
@@ -162,8 +163,8 @@ function MaterialGroupActions({
   const schoolT = useTranslations("School.Classes");
 
   const [isPending, startTransition] = useTransition();
-  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
+  const [confirmDeleteOpen, confirmDeleteHandlers] = useDisclosure(false);
+  const [editOpen, editHandlers] = useDisclosure(false);
 
   const reorderGroup = useMutation(
     api.classes.materials.mutations.reorderMaterialGroup
@@ -214,7 +215,7 @@ function MaterialGroupActions({
             <DropdownMenuItem
               className="cursor-pointer"
               disabled={isPending}
-              onSelect={() => setEditOpen(true)}
+              onSelect={editHandlers.open}
             >
               <HugeIcons icon={Edit01Icon} />
               {t("edit")}
@@ -241,7 +242,7 @@ function MaterialGroupActions({
             <DropdownMenuItem
               className="cursor-pointer"
               disabled={isPending}
-              onSelect={() => setConfirmDeleteOpen(true)}
+              onSelect={confirmDeleteHandlers.open}
               variant="destructive"
             >
               <HugeIcons icon={Delete02Icon} />
@@ -254,7 +255,7 @@ function MaterialGroupActions({
       <EditMaterialGroupDialog
         group={group}
         open={editOpen}
-        setOpenAction={setEditOpen}
+        setOpenAction={editHandlers.set}
       />
 
       <SchoolClassesDeleteDialog
@@ -262,7 +263,7 @@ function MaterialGroupActions({
         isPending={isPending}
         onConfirmAction={handleDelete}
         open={confirmDeleteOpen}
-        setOpenAction={setConfirmDeleteOpen}
+        setOpenAction={confirmDeleteHandlers.set}
         title={schoolT("delete-material-title")}
       />
     </div>

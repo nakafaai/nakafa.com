@@ -1,6 +1,7 @@
 "use client";
 
 import { Cancel01Icon, PaintBrush04Icon } from "@hugeicons/core-free-icons";
+import { useDisclosure } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { SchoolClassImage } from "@repo/backend/convex/classes/schema";
@@ -22,7 +23,7 @@ import { useRouter } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { useClass } from "@/lib/context/use-class";
 import { useClassPermissions } from "@/lib/hooks/use-class-permissions";
 
@@ -64,7 +65,7 @@ export function SchoolClassesHeaderInfo() {
 /** Render the class image customization sheet for users who can edit the class. */
 function InfoCustomizeButton() {
   const t = useTranslations("Common");
-  const [open, setOpen] = useState(false);
+  const [open, openHandlers] = useDisclosure(false);
   const router = useRouter();
 
   const [isPending, startTransition] = useTransition();
@@ -96,7 +97,7 @@ function InfoCustomizeButton() {
   }
 
   return (
-    <Sheet modal={false} onOpenChange={setOpen} open={open}>
+    <Sheet modal={false} onOpenChange={openHandlers.set} open={open}>
       <SheetTrigger
         render={
           <Button size="sm" variant="outline">
@@ -115,7 +116,7 @@ function InfoCustomizeButton() {
 
             <div className="flex items-center">
               <Button
-                onClick={() => setOpen(false)}
+                onClick={openHandlers.close}
                 size="icon-sm"
                 variant="ghost"
               >
