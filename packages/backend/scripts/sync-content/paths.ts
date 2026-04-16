@@ -14,6 +14,5 @@ export const getSyncStateFile = (isProd: boolean): string => {
   return path.resolve(BACKEND_DIR, filename);
 };
 
-export const getBackendEnvFilePath = (): string => {
-  return path.resolve(BACKEND_DIR, ".env.local");
-};
+export const getBackendEnvFilePath = (): string =>
+  path.resolve(BACKEND_DIR, ".env.local");

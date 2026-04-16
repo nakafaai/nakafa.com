@@ -16,9 +16,9 @@ const CONTENTS_SENTINELS = ["articles", "exercises", "subject"];
  * @returns True when the directory contains the expected contents structure
  */
 function isContentsDirectory(directory: string) {
-  return CONTENTS_SENTINELS.every((entry) => {
-    return fs.existsSync(path.join(directory, entry));
-  });
+  return CONTENTS_SENTINELS.every((entry) =>
+    fs.existsSync(path.join(directory, entry))
+  );
 }
 
 /**

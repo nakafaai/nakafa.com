@@ -30,12 +30,13 @@ export function QuranAudio({ audio }: Props) {
     interrupt: true,
   });
 
-  useLayoutEffect(() => {
-    return () => {
+  useLayoutEffect(
+    () => () => {
       stop();
       setIsPlaying(false);
-    };
-  }, [stop]);
+    },
+    [stop]
+  );
 
   function handleToggle() {
     if (isPlaying) {

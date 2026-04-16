@@ -42,14 +42,15 @@ describe("tryouts/mutations/internal/leaderboard", () => {
       }
     );
 
-    const leaderboardEntry = await t.query(async (ctx) => {
-      return await ctx.db
-        .query("tryoutLeaderboardEntries")
-        .withIndex("by_tryoutId_and_userId", (q) =>
-          q.eq("tryoutId", state.tryoutId).eq("userId", state.userId)
-        )
-        .unique();
-    });
+    const leaderboardEntry = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("tryoutLeaderboardEntries")
+          .withIndex("by_tryoutId_and_userId", (q) =>
+            q.eq("tryoutId", state.tryoutId).eq("userId", state.userId)
+          )
+          .unique()
+    );
 
     expect(leaderboardEntry).not.toBeNull();
     expect(leaderboardEntry?.theta).toBe(0);

@@ -53,9 +53,9 @@ describe("assessments/mutations/public/create", () => {
       }
     );
 
-    const assessment = await t.query(async (ctx) => {
-      return await ctx.db.get("schoolAssessments", assessmentId);
-    });
+    const assessment = await t.query(
+      async (ctx) => await ctx.db.get("schoolAssessments", assessmentId)
+    );
 
     expect(assessment?.slug).toBe("assessment-1");
     expect(assessment?.order).toBe(0);

@@ -170,27 +170,29 @@ describe("assessments/mutations/public/submit", () => {
       }
     );
 
-    const versionQuestion = await t.query(async (ctx) => {
-      return await ctx.db
-        .query("schoolAssessmentVersionQuestions")
-        .withIndex("by_versionId_and_sectionId_and_order", (q) =>
-          q.eq("versionId", versionId)
-        )
-        .first();
-    });
+    const versionQuestion = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("schoolAssessmentVersionQuestions")
+          .withIndex("by_versionId_and_sectionId_and_order", (q) =>
+            q.eq("versionId", versionId)
+          )
+          .first()
+    );
 
     if (!versionQuestion) {
       throw new Error("Expected one version question.");
     }
 
-    const correctChoice = await t.query(async (ctx) => {
-      return await ctx.db
-        .query("schoolAssessmentVersionChoices")
-        .withIndex("by_questionId_and_order", (q) =>
-          q.eq("questionId", versionQuestion._id)
-        )
-        .first();
-    });
+    const correctChoice = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("schoolAssessmentVersionChoices")
+          .withIndex("by_questionId_and_order", (q) =>
+            q.eq("questionId", versionQuestion._id)
+          )
+          .first()
+    );
 
     if (!correctChoice) {
       throw new Error("Expected one version choice.");
@@ -214,9 +216,9 @@ describe("assessments/mutations/public/submit", () => {
       }
     );
 
-    const submittedAttempt = await t.query(async (ctx) => {
-      return await ctx.db.get("schoolAssessmentAttempts", attemptId);
-    });
+    const submittedAttempt = await t.query(
+      async (ctx) => await ctx.db.get("schoolAssessmentAttempts", attemptId)
+    );
 
     expect(assignment.assignment._id).toBe(assignmentId);
     expect(submittedAttempt?.status).toBe("submitted");
@@ -373,9 +375,9 @@ describe("assessments/mutations/public/submit", () => {
       }
     );
 
-    const submittedAttempt = await t.query(async (ctx) => {
-      return await ctx.db.get("schoolAssessmentAttempts", attemptId);
-    });
+    const submittedAttempt = await t.query(
+      async (ctx) => await ctx.db.get("schoolAssessmentAttempts", attemptId)
+    );
 
     expect(submittedAttempt?.gradingStatus).toBe("awaiting-manual-review");
     expect(submittedAttempt?.score).toBe(0);

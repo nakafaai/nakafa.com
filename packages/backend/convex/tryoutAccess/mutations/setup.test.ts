@@ -30,17 +30,15 @@ describe("tryoutAccess/mutations/setup", () => {
       }
     );
 
-    const state = await t.query(async (ctx) => {
-      return {
-        campaign: await ctx.db.get("tryoutAccessCampaigns", result.campaignId),
-        campaignProducts: await ctx.db
-          .query("tryoutAccessCampaignProducts")
-          .withIndex("by_campaignId", (q) =>
-            q.eq("campaignId", result.campaignId)
-          )
-          .collect(),
-      };
-    });
+    const state = await t.query(async (ctx) => ({
+      campaign: await ctx.db.get("tryoutAccessCampaigns", result.campaignId),
+      campaignProducts: await ctx.db
+        .query("tryoutAccessCampaignProducts")
+        .withIndex("by_campaignId", (q) =>
+          q.eq("campaignId", result.campaignId)
+        )
+        .collect(),
+    }));
 
     expect(state.campaign?.campaignKind).toBe("competition");
     expect(state.campaign?.firstRedeemedAt).toBeNull();
@@ -82,9 +80,10 @@ describe("tryoutAccess/mutations/setup", () => {
       }
     );
 
-    const campaign = await t.query(async (ctx) => {
-      return await ctx.db.get("tryoutAccessCampaigns", result.campaignId);
-    });
+    const campaign = await t.query(
+      async (ctx) =>
+        await ctx.db.get("tryoutAccessCampaigns", result.campaignId)
+    );
 
     expect(campaign?.campaignKind).toBe("access-pass");
     expect(campaign?.grantDurationDays).toBe(7);
@@ -287,12 +286,13 @@ describe("tryoutAccess/mutations/setup", () => {
         code: "locked-policy",
       });
 
-    const redeemedCampaign = await t.query(async (ctx) => {
-      return await ctx.db
-        .query("tryoutAccessCampaigns")
-        .withIndex("by_slug", (q) => q.eq("slug", "locked-policy"))
-        .unique();
-    });
+    const redeemedCampaign = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("tryoutAccessCampaigns")
+          .withIndex("by_slug", (q) => q.eq("slug", "locked-policy"))
+          .unique()
+    );
 
     expect(redeemedCampaign?.firstRedeemedAt).not.toBeNull();
 

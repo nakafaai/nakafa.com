@@ -111,9 +111,10 @@ describe("schools/queries:getMySchoolLandingState", () => {
     vi.setSystemTime(new Date(NOW));
 
     const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation(async (ctx) => {
-      return await seedAuthenticatedUser(ctx, { now: NOW, suffix: "none" });
-    });
+    const identity = await t.mutation(
+      async (ctx) =>
+        await seedAuthenticatedUser(ctx, { now: NOW, suffix: "none" })
+    );
 
     const result = await t
       .withIdentity({

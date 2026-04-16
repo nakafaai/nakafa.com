@@ -12,12 +12,13 @@ import { describe, expect, it } from "vitest";
 describe("tryouts/queries/me/part", () => {
   it("returns null when the user has no latest part context for the requested tryout", async () => {
     const t = createTryoutTestConvex();
-    const identity = await t.mutation(async (ctx) => {
-      return await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "no-part-attempt",
-      });
-    });
+    const identity = await t.mutation(
+      async (ctx) =>
+        await seedAuthenticatedUser(ctx, {
+          now: NOW,
+          suffix: "no-part-attempt",
+        })
+    );
 
     const result = await t
       .withIdentity({
@@ -392,12 +393,10 @@ describe("tryouts/queries/me/part", () => {
 
   it("returns zero-score summaries for untouched ended parts", async () => {
     const t = createTryoutTestConvex();
-    const { identity, tryoutSlug } = await t.mutation(async (ctx) => {
-      return await seedExpiredTryoutWithUntouchedPart(
-        ctx,
-        "expired-missing-parts"
-      );
-    });
+    const { identity, tryoutSlug } = await t.mutation(
+      async (ctx) =>
+        await seedExpiredTryoutWithUntouchedPart(ctx, "expired-missing-parts")
+    );
 
     const untouchedPartResult = await t
       .withIdentity({

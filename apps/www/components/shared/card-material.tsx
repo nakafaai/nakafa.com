@@ -53,12 +53,13 @@ export function CardMaterial({ material }: Props) {
   const [isOpen, { open, set, toggle }] = useDisclosure(true);
   const [panelKey, setPanelKey] = useState(0);
 
-  useLayoutEffect(() => {
-    return () => {
+  useLayoutEffect(
+    () => () => {
       open();
       setPanelKey((key) => key + 1);
-    };
-  }, [open]);
+    },
+    [open]
+  );
 
   const id = slugify(material.title);
 

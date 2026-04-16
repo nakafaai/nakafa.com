@@ -66,9 +66,9 @@ describe("assessments/mutations/internal/publishing", () => {
       );
     });
 
-    const assessment = await t.query(async (ctx) => {
-      return await ctx.db.get("schoolAssessments", assessmentId);
-    });
+    const assessment = await t.query(
+      async (ctx) => await ctx.db.get("schoolAssessments", assessmentId)
+    );
 
     expect(assessment?.status).toBe("published");
     expect(assessment?.scheduledAt).toBeUndefined();

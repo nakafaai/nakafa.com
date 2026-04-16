@@ -249,9 +249,7 @@ export function AudioPlayerProvider<TData = unknown>({
   }, []);
 
   const isItemActive = useCallback(
-    (id: string | number | null) => {
-      return activeItem?.id === id;
-    },
+    (id: string | number | null) => activeItem?.id === id,
     [activeItem]
   );
 
@@ -471,39 +469,37 @@ const PlayButton = ({
   onClick,
   loading,
   ...otherProps
-}: PlayButtonProps) => {
-  return (
-    <Button
-      {...otherProps}
-      aria-label={playing ? "Pause" : "Play"}
-      className={cn("relative", className)}
-      onClick={(e) => {
-        onPlayingChange(!playing);
-        onClick?.(e);
-      }}
-      type="button"
-    >
-      {playing ? (
-        <HugeIcons
-          aria-hidden="true"
-          className={cn("size-4", loading && "opacity-0")}
-          icon={PauseIcon}
-        />
-      ) : (
-        <HugeIcons
-          aria-hidden="true"
-          className={cn("size-4", loading && "opacity-0")}
-          icon={PlayIcon}
-        />
-      )}
-      {loading && (
-        <div className="absolute inset-0 flex items-center justify-center rounded-[inherit] backdrop-blur-xs">
-          <Spinner />
-        </div>
-      )}
-    </Button>
-  );
-};
+}: PlayButtonProps) => (
+  <Button
+    {...otherProps}
+    aria-label={playing ? "Pause" : "Play"}
+    className={cn("relative", className)}
+    onClick={(e) => {
+      onPlayingChange(!playing);
+      onClick?.(e);
+    }}
+    type="button"
+  >
+    {playing ? (
+      <HugeIcons
+        aria-hidden="true"
+        className={cn("size-4", loading && "opacity-0")}
+        icon={PauseIcon}
+      />
+    ) : (
+      <HugeIcons
+        aria-hidden="true"
+        className={cn("size-4", loading && "opacity-0")}
+        icon={PlayIcon}
+      />
+    )}
+    {loading && (
+      <div className="absolute inset-0 flex items-center justify-center rounded-[inherit] backdrop-blur-xs">
+        <Spinner />
+      </div>
+    )}
+  </Button>
+);
 
 export interface AudioPlayerButtonProps<TData = unknown>
   extends React.ComponentProps<typeof Button> {

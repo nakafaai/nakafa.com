@@ -23,9 +23,11 @@ import {
 } from "./schemas";
 import type { ValidationResult } from "./types";
 
-const createValidationResult = (): ValidationResult => {
-  return { valid: 0, invalid: 0, errors: [] };
-};
+const createValidationResult = (): ValidationResult => ({
+  valid: 0,
+  invalid: 0,
+  errors: [],
+});
 
 const validateArticles = async (): Promise<ValidationResult> => {
   const files = await globFiles("articles/**/*.mdx");

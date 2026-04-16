@@ -52,7 +52,7 @@ const SuggestionsPartButton = memo(
 );
 SuggestionsPartButton.displayName = "SuggestionsPartButton";
 
-const SuggestionsPartContent = memo(({ content }: { content: string }) => {
-  return content;
-});
+const SuggestionsPartContent = memo(
+  ({ content }: { content: string }) => content
+);
 SuggestionsPartContent.displayName = "SuggestionsPartContent";

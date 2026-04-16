@@ -15,9 +15,9 @@ describe("credits/helpers/state", () => {
   it("returns null when no stored reset period exists", async () => {
     const t = convexTest(schema, convexModules);
 
-    const resetTimestamp = await t.query(async (ctx) => {
-      return await getStoredCreditResetTimestamp(ctx.db, "free");
-    });
+    const resetTimestamp = await t.query(
+      async (ctx) => await getStoredCreditResetTimestamp(ctx.db, "free")
+    );
 
     expect(resetTimestamp).toBeNull();
   });
@@ -30,12 +30,13 @@ describe("credits/helpers/state", () => {
       await upsertStoredCreditResetTimestamp(ctx.db, "free", resetAt);
     });
 
-    const storedPeriod = await t.query(async (ctx) => {
-      return await ctx.db
-        .query("creditResetPeriods")
-        .withIndex("by_plan", (q) => q.eq("plan", "free"))
-        .unique();
-    });
+    const storedPeriod = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("creditResetPeriods")
+          .withIndex("by_plan", (q) => q.eq("plan", "free"))
+          .unique()
+    );
 
     expect(storedPeriod).toMatchObject({
       plan: "free",
@@ -52,12 +53,13 @@ describe("credits/helpers/state", () => {
       await upsertStoredCreditResetTimestamp(ctx.db, "free", resetAt);
     });
 
-    const periods = await t.query(async (ctx) => {
-      return await ctx.db
-        .query("creditResetPeriods")
-        .withIndex("by_plan", (q) => q.eq("plan", "free"))
-        .collect();
-    });
+    const periods = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("creditResetPeriods")
+          .withIndex("by_plan", (q) => q.eq("plan", "free"))
+          .collect()
+    );
 
     expect(periods).toHaveLength(1);
     expect(periods[0]?.resetAt).toBe(resetAt);
@@ -73,9 +75,9 @@ describe("credits/helpers/state", () => {
       await upsertStoredCreditResetTimestamp(ctx.db, "free", secondResetAt);
     });
 
-    const storedResetAt = await t.query(async (ctx) => {
-      return await getStoredCreditResetTimestamp(ctx.db, "free");
-    });
+    const storedResetAt = await t.query(
+      async (ctx) => await getStoredCreditResetTimestamp(ctx.db, "free")
+    );
 
     expect(storedResetAt).toBe(secondResetAt);
   });
@@ -89,9 +91,10 @@ describe("credits/helpers/state", () => {
       await upsertStoredCreditResetTimestamp(ctx.db, "free", resetAt);
     });
 
-    const resolvedResetAt = await t.mutation(async (ctx) => {
-      return await resolveCurrentCreditResetTimestamp(ctx.db, "free", now);
-    });
+    const resolvedResetAt = await t.mutation(
+      async (ctx) =>
+        await resolveCurrentCreditResetTimestamp(ctx.db, "free", now)
+    );
 
     expect(resolvedResetAt).toBe(resetAt);
   });
@@ -106,13 +109,14 @@ describe("credits/helpers/state", () => {
       await upsertStoredCreditResetTimestamp(ctx.db, "free", staleResetAt);
     });
 
-    const resolvedResetAt = await t.mutation(async (ctx) => {
-      return await resolveCurrentCreditResetTimestamp(ctx.db, "free", now);
-    });
+    const resolvedResetAt = await t.mutation(
+      async (ctx) =>
+        await resolveCurrentCreditResetTimestamp(ctx.db, "free", now)
+    );
 
-    const storedResetAt = await t.query(async (ctx) => {
-      return await getStoredCreditResetTimestamp(ctx.db, "free");
-    });
+    const storedResetAt = await t.query(
+      async (ctx) => await getStoredCreditResetTimestamp(ctx.db, "free")
+    );
 
     expect(resolvedResetAt).toBe(currentResetAt);
     expect(storedResetAt).toBe(currentResetAt);
@@ -147,21 +151,22 @@ describe("credits/helpers/state", () => {
     const t = convexTest(schema, convexModules);
     const now = Date.UTC(2026, 3, 2, 10, 0, 0);
 
-    const effectiveState = await t.mutation(async (ctx) => {
-      return await resolveEffectiveCreditState(
-        ctx.db,
-        {
-          credits: -3,
-          creditsResetAt: Date.UTC(2026, 3, 1, 0, 0, 0),
-          plan: "free",
-        },
-        now
-      );
-    });
+    const effectiveState = await t.mutation(
+      async (ctx) =>
+        await resolveEffectiveCreditState(
+          ctx.db,
+          {
+            credits: -3,
+            creditsResetAt: Date.UTC(2026, 3, 1, 0, 0, 0),
+            plan: "free",
+          },
+          now
+        )
+    );
 
-    const storedResetAt = await t.query(async (ctx) => {
-      return await getStoredCreditResetTimestamp(ctx.db, "free");
-    });
+    const storedResetAt = await t.query(
+      async (ctx) => await getStoredCreditResetTimestamp(ctx.db, "free")
+    );
 
     expect(effectiveState).toEqual({
       credits: 7,

@@ -57,9 +57,9 @@ describe("customers/mutations", () => {
       }
     );
 
-    const customers = await t.query(async (ctx) => {
-      return await ctx.db.query("customers").collect();
-    });
+    const customers = await t.query(
+      async (ctx) => await ctx.db.query("customers").collect()
+    );
 
     expect(customers).toHaveLength(1);
     expect(customers[0]).toMatchObject({

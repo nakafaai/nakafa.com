@@ -11,12 +11,13 @@ export function YoutubePlayer({ videoId }: { videoId: string }) {
   const [embedKey, setEmbedKey] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  useLayoutEffect(() => {
-    return () => {
+  useLayoutEffect(
+    () => () => {
       containerRef.current?.replaceChildren();
       setEmbedKey((key) => key + 1);
-    };
-  }, []);
+    },
+    []
+  );
 
   return (
     <div ref={containerRef}>

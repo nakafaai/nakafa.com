@@ -116,11 +116,10 @@ function StatsProgress({
 }) {
   const t = useTranslations("Exercises");
 
-  const answeredCount = answers.filter((answer) => {
-    return (
+  const answeredCount = answers.filter(
+    (answer) =>
       answer.selectedOptionId !== undefined || answer.textAnswer !== undefined
-    );
-  }).length;
+  ).length;
   const totalCount = attempt.totalExercises;
   const progress = totalCount > 0 ? (answeredCount / totalCount) * 100 : 0;
 

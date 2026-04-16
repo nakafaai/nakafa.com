@@ -19,12 +19,13 @@ describe("users/mutations", () => {
 
   it("updates the authenticated user's role", async () => {
     const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation(async (ctx) => {
-      return await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        role: "student",
-      });
-    });
+    const identity = await t.mutation(
+      async (ctx) =>
+        await seedAuthenticatedUser(ctx, {
+          now: NOW,
+          role: "student",
+        })
+    );
 
     await t
       .withIdentity({
@@ -35,18 +36,18 @@ describe("users/mutations", () => {
         role: "teacher",
       });
 
-    const appUser = await t.query(async (ctx) => {
-      return await ctx.db.get("users", identity.userId);
-    });
+    const appUser = await t.query(
+      async (ctx) => await ctx.db.get("users", identity.userId)
+    );
 
     expect(appUser?.role).toBe("teacher");
   });
 
   it("updates the authenticated user's name in auth and app tables", async () => {
     const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation(async (ctx) => {
-      return await seedAuthenticatedUser(ctx, { now: NOW });
-    });
+    const identity = await t.mutation(
+      async (ctx) => await seedAuthenticatedUser(ctx, { now: NOW })
+    );
 
     await t
       .withIdentity({
@@ -57,15 +58,13 @@ describe("users/mutations", () => {
         name: "Nabil Akbarazzima Fatih",
       });
 
-    const result = await t.query(async (ctx) => {
-      return {
-        authUser: (await ctx.runQuery(components.betterAuth.adapter.findOne, {
-          model: "user",
-          where: [{ field: "_id", value: identity.authUserId }],
-        })) as { name: string } | null,
-        appUser: await ctx.db.get("users", identity.userId),
-      };
-    });
+    const result = await t.query(async (ctx) => ({
+      authUser: (await ctx.runQuery(components.betterAuth.adapter.findOne, {
+        model: "user",
+        where: [{ field: "_id", value: identity.authUserId }],
+      })) as { name: string } | null,
+      appUser: await ctx.db.get("users", identity.userId),
+    }));
 
     expect(result.authUser?.name).toBe("Nabil Akbarazzima Fatih");
     expect(result.appUser?.name).toBe("Nabil Akbarazzima Fatih");
@@ -73,14 +72,15 @@ describe("users/mutations", () => {
 
   it("repairs stale chat credit state when the reset period row is missing", async () => {
     const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation(async (ctx) => {
-      return await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        credits: -3,
-        creditsResetAt: Date.UTC(2026, 3, 1, 0, 0, 0),
-        role: "student",
-      });
-    });
+    const identity = await t.mutation(
+      async (ctx) =>
+        await seedAuthenticatedUser(ctx, {
+          now: NOW,
+          credits: -3,
+          creditsResetAt: Date.UTC(2026, 3, 1, 0, 0, 0),
+          role: "student",
+        })
+    );
 
     const result = await t
       .withIdentity({
@@ -89,15 +89,13 @@ describe("users/mutations", () => {
       })
       .mutation(api.users.mutations.syncUserInfoForChat, {});
 
-    const repairedUser = await t.query(async (ctx) => {
-      return {
-        creditTransactions: await ctx.db.query("creditTransactions").collect(),
-        user: await ctx.db.get("users", identity.userId),
-      };
-    });
-    const storedResetAt = await t.query(async (ctx) => {
-      return await getStoredCreditResetTimestamp(ctx.db, "free");
-    });
+    const repairedUser = await t.query(async (ctx) => ({
+      creditTransactions: await ctx.db.query("creditTransactions").collect(),
+      user: await ctx.db.get("users", identity.userId),
+    }));
+    const storedResetAt = await t.query(
+      async (ctx) => await getStoredCreditResetTimestamp(ctx.db, "free")
+    );
 
     expect(result).toEqual({
       role: "student",
@@ -141,12 +139,10 @@ describe("users/mutations", () => {
       })
       .mutation(api.users.mutations.syncUserInfoForChat, {});
 
-    const appUser = await t.query(async (ctx) => {
-      return {
-        creditTransactions: await ctx.db.query("creditTransactions").collect(),
-        user: await ctx.db.get("users", identity.userId),
-      };
-    });
+    const appUser = await t.query(async (ctx) => ({
+      creditTransactions: await ctx.db.query("creditTransactions").collect(),
+      user: await ctx.db.get("users", identity.userId),
+    }));
 
     expect(result).toEqual({
       role: null,

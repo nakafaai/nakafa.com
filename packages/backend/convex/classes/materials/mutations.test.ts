@@ -71,9 +71,9 @@ describe("classes/materials/mutations", () => {
       );
     });
 
-    const group = await t.query(async (ctx) => {
-      return await ctx.db.get("schoolClassMaterialGroups", groupId);
-    });
+    const group = await t.query(
+      async (ctx) => await ctx.db.get("schoolClassMaterialGroups", groupId)
+    );
 
     expect(group?.status).toBe("published");
     expect(group?.scheduledAt).toBeUndefined();
@@ -147,15 +147,13 @@ describe("classes/materials/mutations", () => {
       }
     );
 
-    const deletedState = await t.query(async (ctx) => {
-      return {
-        group: await ctx.db.get("schoolClassMaterialGroups", groupId),
-        scheduledJob: await ctx.db.system.get(
-          "_scheduled_functions",
-          scheduledJobId
-        ),
-      };
-    });
+    const deletedState = await t.query(async (ctx) => ({
+      group: await ctx.db.get("schoolClassMaterialGroups", groupId),
+      scheduledJob: await ctx.db.system.get(
+        "_scheduled_functions",
+        scheduledJobId
+      ),
+    }));
 
     expect(deletedState.group).toBeNull();
     expect(deletedState.scheduledJob?.state).toEqual(

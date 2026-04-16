@@ -63,9 +63,9 @@ describe("assessments/mutations/public/update", () => {
       }
     );
 
-    const updatedAssessment = await t.query(async (ctx) => {
-      return await ctx.db.get("schoolAssessments", assessmentId);
-    });
+    const updatedAssessment = await t.query(
+      async (ctx) => await ctx.db.get("schoolAssessments", assessmentId)
+    );
 
     expect(updatedAssessment?.title).toBe("Updated Assessment");
     expect(updatedAssessment?.mode).toBe("tryout");
@@ -131,9 +131,9 @@ describe("assessments/mutations/public/update", () => {
       }
     );
 
-    const updatedAssessment = await t.query(async (ctx) => {
-      return await ctx.db.get("schoolAssessments", assessmentId);
-    });
+    const updatedAssessment = await t.query(
+      async (ctx) => await ctx.db.get("schoolAssessments", assessmentId)
+    );
 
     expect(updatedAssessment?.title).toBe("Archive Me Again");
     expect(updatedAssessment?.status).toBe("draft");
@@ -204,9 +204,9 @@ describe("assessments/mutations/public/update", () => {
       }
     );
 
-    const updatedAssessment = await t.query(async (ctx) => {
-      return await ctx.db.get("schoolAssessments", assessmentId);
-    });
+    const updatedAssessment = await t.query(
+      async (ctx) => await ctx.db.get("schoolAssessments", assessmentId)
+    );
 
     expect(updatedAssessment?.title).toBe("Updated by Teacher");
   });

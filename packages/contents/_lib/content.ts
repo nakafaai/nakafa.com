@@ -190,7 +190,7 @@ export function getContents(
       );
 
       if (Either.isLeft(content)) {
-        return undefined;
+        return;
       }
 
       const url = new URL(`/${loc}/${slug}`, "https://nakafa.com");

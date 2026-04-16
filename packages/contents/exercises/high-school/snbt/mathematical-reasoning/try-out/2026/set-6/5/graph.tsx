@@ -30,8 +30,8 @@ export function Graph({ title, description }: GraphProps) {
   const COLOR_LABEL = getColor("SLATE");
 
   // Helper to generate circle points in XZ plane (Base on ground y=0)
-  const createCircle = (cx: number, cz: number, r: number) => {
-    return Array.from({ length: SEGMENTS + 1 }, (_, i) => {
+  const createCircle = (cx: number, cz: number, r: number) =>
+    Array.from({ length: SEGMENTS + 1 }, (_, i) => {
       const angle = (i / SEGMENTS) * Math.PI * 2;
       return {
         x: cx + r * Math.cos(angle),
@@ -39,7 +39,6 @@ export function Graph({ title, description }: GraphProps) {
         z: cz + r * Math.sin(angle),
       };
     });
-  };
 
   // Cone 1 Geometry (Center P1 at C1_X, 0, 0)
   const cone1Base = createCircle(C1_X, 0, R1);

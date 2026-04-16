@@ -144,9 +144,11 @@ export async function syncCustomerPlan(
     }
   );
 
-  const newPlan = activeSubscriptions.reduce<UserPlan>((highestPlan, row) => {
-    return getHigherPlan(highestPlan, getPlanFromProductId(row.productId));
-  }, "free");
+  const newPlan = activeSubscriptions.reduce<UserPlan>(
+    (highestPlan, row) =>
+      getHigherPlan(highestPlan, getPlanFromProductId(row.productId)),
+    "free"
+  );
 
   if (newPlan === user.plan) {
     return;

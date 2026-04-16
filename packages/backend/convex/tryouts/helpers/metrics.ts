@@ -37,7 +37,7 @@ export function getFirstIncompleteTryoutPartIndex({
     }
   }
 
-  return undefined;
+  return;
 }
 
 /** Break ties between two completed leaderboard scores. */

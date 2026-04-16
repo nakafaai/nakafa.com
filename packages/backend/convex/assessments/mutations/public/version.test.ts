@@ -67,9 +67,9 @@ describe("assessments/mutations/public/version", () => {
       }
     );
 
-    const assessment = await t.query(async (ctx) => {
-      return await ctx.db.get("schoolAssessments", assessmentId);
-    });
+    const assessment = await t.query(
+      async (ctx) => await ctx.db.get("schoolAssessments", assessmentId)
+    );
 
     expect(assessment?.currentVersionId).toBe(versionId);
     expect(assessment?.status).toBe("published");
@@ -145,15 +145,13 @@ describe("assessments/mutations/public/version", () => {
       }
     );
 
-    const state = await t.query(async (ctx) => {
-      return {
-        assessment: await ctx.db.get("schoolAssessments", assessmentId),
-        scheduledJob: await ctx.db.system.get(
-          "_scheduled_functions",
-          scheduledJobId
-        ),
-      };
-    });
+    const state = await t.query(async (ctx) => ({
+      assessment: await ctx.db.get("schoolAssessments", assessmentId),
+      scheduledJob: await ctx.db.system.get(
+        "_scheduled_functions",
+        scheduledJobId
+      ),
+    }));
 
     expect(state.assessment?.status).toBe("published");
     expect(state.assessment?.scheduledAt).toBeUndefined();
@@ -204,9 +202,9 @@ describe("assessments/mutations/public/version", () => {
       }
     );
 
-    const originalAssessment = await t.query(async (ctx) => {
-      return await ctx.db.get("schoolAssessments", assessmentId);
-    });
+    const originalAssessment = await t.query(
+      async (ctx) => await ctx.db.get("schoolAssessments", assessmentId)
+    );
 
     vi.setSystemTime(new Date(NOW + 60_000));
 
@@ -224,9 +222,9 @@ describe("assessments/mutations/public/version", () => {
       }
     );
 
-    const assessment = await t.query(async (ctx) => {
-      return await ctx.db.get("schoolAssessments", assessmentId);
-    });
+    const assessment = await t.query(
+      async (ctx) => await ctx.db.get("schoolAssessments", assessmentId)
+    );
 
     expect(originalAssessment?.publishedAt).toBe(NOW);
     expect(assessment?.publishedAt).toBe(originalAssessment?.publishedAt);

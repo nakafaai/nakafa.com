@@ -281,15 +281,13 @@ describe("assessments/mutations/public/delete", () => {
       }
     );
 
-    const deletedState = await t.query(async (ctx) => {
-      return {
-        assessment: await ctx.db.get("schoolAssessments", assessmentId),
-        scheduledJob: await ctx.db.system.get(
-          "_scheduled_functions",
-          scheduledJobId
-        ),
-      };
-    });
+    const deletedState = await t.query(async (ctx) => ({
+      assessment: await ctx.db.get("schoolAssessments", assessmentId),
+      scheduledJob: await ctx.db.system.get(
+        "_scheduled_functions",
+        scheduledJobId
+      ),
+    }));
 
     expect(deletedState.assessment).toBeNull();
     expect(deletedState.scheduledJob?.state).toEqual(
