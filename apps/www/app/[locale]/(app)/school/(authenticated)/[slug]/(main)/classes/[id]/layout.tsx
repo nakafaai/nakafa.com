@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import type { ReactNode } from "react";
 import { use } from "react";
 import { SchoolClassesHeaderInfo } from "@/components/school/classes/info";
 import { SchoolClassesJoinForm } from "@/components/school/classes/join-form";
@@ -9,10 +10,15 @@ import { ForumContextProvider } from "@/lib/context/use-forum";
 import { getClassRouteSnapshot } from "@/lib/school/server";
 
 /** Bind the resolved class route snapshot to the class subtree. */
-export default function Layout(
-  props: LayoutProps<"/[locale]/school/[slug]/classes/[id]">
-) {
-  const { children, panel, params } = props;
+export default function Layout({
+  children,
+  panel,
+  params,
+}: {
+  children: ReactNode;
+  panel: ReactNode;
+  params: LayoutProps<"/[locale]/school/[slug]/classes/[id]">["params"];
+}) {
   const { id } = use(params);
 
   return (
@@ -22,11 +28,6 @@ export default function Layout(
   );
 }
 
-type ClassLayoutSlots = Pick<
-  LayoutProps<"/[locale]/school/[slug]/classes/[id]">,
-  "children" | "panel"
->;
-
 /**
  * Resolve the class route snapshot on the server so the client subtree only
  * consumes stable class state.
@@ -35,8 +36,10 @@ async function ClassRouteBoundary({
   children,
   classId,
   panel,
-}: ClassLayoutSlots & {
+}: {
+  children: ReactNode;
   classId: string;
+  panel: ReactNode;
 }) {
   const value = await getClassRouteSnapshot({ classId });
 

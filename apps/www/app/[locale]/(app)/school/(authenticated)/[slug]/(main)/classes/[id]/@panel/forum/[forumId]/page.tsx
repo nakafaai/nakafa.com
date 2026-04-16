@@ -1,6 +1,7 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { SchoolClassesForumPanel } from "@/components/school/classes/forum/panel";
+import { SchoolClassesForumPanelSlot } from "@/components/school/classes/forum/panel-slot";
 
+/** Render the active forum conversation as the optional class detail branch. */
 export default async function Page({
   params,
 }: {
@@ -8,5 +9,5 @@ export default async function Page({
 }) {
   const { forumId } = await params;
 
-  return <SchoolClassesForumPanel forumId={forumId} />;
+  return <SchoolClassesForumPanelSlot forumId={forumId} />;
 }

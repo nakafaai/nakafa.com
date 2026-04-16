@@ -13,7 +13,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { cn } from "@repo/design-system/lib/utils";
-import { useRouter } from "@repo/internationalization/src/navigation";
+import { Link } from "@repo/internationalization/src/navigation";
 import { useMutation, usePaginatedQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
 import { useParams, useSearchParams } from "next/navigation";
@@ -41,7 +41,6 @@ export function SchoolClassesForumList() {
   const t = useTranslations("School.Classes");
 
   const locale = useLocale();
-  const router = useRouter();
   const routeParams = useParams<{
     forumId?: string;
     id: string;
@@ -91,20 +90,19 @@ export function SchoolClassesForumList() {
 
           return (
             <div className="group relative" key={forum._id}>
-              <button
-                className="absolute inset-0 z-0 cursor-pointer"
-                onClick={() => {
-                  resetConversationState();
-                  router.push(href);
-                }}
-                type="button"
+              <Link
+                aria-current={isActive ? "page" : undefined}
+                className="absolute inset-0 z-0 rounded-md focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                href={href}
+                onNavigate={() => resetConversationState()}
+                prefetch
               >
                 <span className="sr-only">{forum.title}</span>
-              </button>
+              </Link>
 
               <div
                 className={cn(
-                  "pointer-events-none flex flex-col gap-3 p-4 transition-colors ease-out group-hover:bg-accent/20",
+                  "pointer-events-none flex flex-col gap-3 p-4 transition-colors ease-out group-focus-within:bg-accent/20 group-hover:bg-accent/20",
                   isActive && "bg-accent/20"
                 )}
               >

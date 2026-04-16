@@ -13,7 +13,14 @@ import {
 } from "@repo/design-system/components/ui/sheet";
 import type { ReactNode } from "react";
 
-const SCHOOL_CLASSES_DETAIL_PANEL_BREAKPOINT = 1280;
+export const SCHOOL_CLASSES_DETAIL_PANEL_BREAKPOINT = 1280;
+
+interface SchoolClassesDetailPanelProps {
+  children: ReactNode;
+  description: string;
+  onClose: () => void;
+  title: ReactNode;
+}
 
 /**
  * Render one class detail panel inline on wide screens and as a sheet on
@@ -24,52 +31,21 @@ export function SchoolClassesDetailPanel({
   description,
   onClose,
   title,
-}: {
-  children: ReactNode;
-  description: string;
-  onClose: () => void;
-  title: ReactNode;
-}) {
+}: SchoolClassesDetailPanelProps) {
   const isCompact = useMediaQuery(
     `(max-width: ${SCHOOL_CLASSES_DETAIL_PANEL_BREAKPOINT - 1}px)`
   );
 
-  const desktopHeader = (
-    <div className="border-b p-3">
-      <div className="flex items-center justify-between gap-2">
-        {title}
-
-        <div className="flex items-center">
-          <Button onClick={onClose} size="icon-sm" variant="ghost">
-            <HugeIcons icon={Cancel01Icon} />
-            <span className="sr-only">Close</span>
-          </Button>
-        </div>
-      </div>
-      <p className="sr-only">{description}</p>
-    </div>
-  );
-
-  const mobileHeader = (
-    <SheetHeader className="border-b p-3">
-      <SheetTitle className="flex items-center justify-between gap-2">
-        {title}
-
-        <div className="flex items-center">
-          <Button onClick={onClose} size="icon-sm" variant="ghost">
-            <HugeIcons icon={Cancel01Icon} />
-            <span className="sr-only">Close</span>
-          </Button>
-        </div>
-      </SheetTitle>
-      <SheetDescription className="sr-only">{description}</SheetDescription>
-    </SheetHeader>
-  );
-
   if (!isCompact) {
     return (
-      <aside className="sticky top-0 hidden h-svh w-[28rem] min-w-0 shrink-0 flex-col border-l bg-background xl:flex">
-        {desktopHeader}
+      <aside className="sticky top-0 hidden h-svh w-full min-w-0 flex-col bg-background xl:flex">
+        <div className="border-b p-3">
+          <div className="flex items-center justify-between gap-2">
+            {title}
+            <SchoolClassesDetailPanelCloseButton onClose={onClose} />
+          </div>
+          <p className="sr-only">{description}</p>
+        </div>
         {children}
       </aside>
     );
@@ -89,9 +65,31 @@ export function SchoolClassesDetailPanel({
         showCloseButton={false}
         style={{ width: "100%" }}
       >
-        {mobileHeader}
+        <SheetHeader className="border-b p-3">
+          <SheetTitle className="flex items-center justify-between gap-2">
+            {title}
+            <SchoolClassesDetailPanelCloseButton onClose={onClose} />
+          </SheetTitle>
+          <SheetDescription className="sr-only">{description}</SheetDescription>
+        </SheetHeader>
         {children}
       </SheetContent>
     </Sheet>
+  );
+}
+
+/** Render the shared close action for the class detail panel header. */
+function SchoolClassesDetailPanelCloseButton({
+  onClose,
+}: {
+  onClose: () => void;
+}) {
+  return (
+    <div className="flex items-center">
+      <Button onClick={onClose} size="icon-sm" variant="ghost">
+        <HugeIcons icon={Cancel01Icon} />
+        <span className="sr-only">Close</span>
+      </Button>
+    </div>
   );
 }

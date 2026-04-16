@@ -53,4 +53,11 @@ function ResizableHandle({
   );
 }
 
-export { ResizableHandle, ResizablePanel, ResizablePanelGroup };
+const useResizableDefaultLayout = ResizablePrimitive.useDefaultLayout;
+
+export {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+  useResizableDefaultLayout,
+};
