@@ -6,6 +6,7 @@ import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary"
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useQuery } from "convex/react";
 import { useParams, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { SchoolClassesDetailPanel } from "@/components/school/classes/detail-panel";
 import { SchoolClassesForumPanelContent } from "@/components/school/classes/forum/panel-content";
 import { SchoolClassesForumPanelError } from "@/components/school/classes/forum/panel-error";
@@ -21,6 +22,7 @@ export function SchoolClassesForumPanel({
 }: {
   forumId: Id<"schoolClassForums">;
 }) {
+  const t = useTranslations("School.Classes");
   const router = useRouter();
   const searchParams = useSearchParams();
   const { id, slug } = useParams<{ id: string; slug: string }>();
@@ -46,7 +48,7 @@ export function SchoolClassesForumPanel({
       }}
     >
       <SchoolClassesDetailPanel
-        description="Discuss anything with everyone in the class."
+        description={t("forum-panel-description")}
         onClose={handleClose}
         title={<SchoolClassesForumPanelInfo forum={forum} />}
       >
