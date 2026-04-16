@@ -11,9 +11,9 @@ import {
   useSchoolClassesWorkspaceIsCompact,
 } from "@/components/school/classes/workspace-shell";
 
-const SCHOOL_CLASSES_FORUM_PANEL_SLOT_DEFAULT_SIZE = "28rem";
-const SCHOOL_CLASSES_FORUM_PANEL_SLOT_MAX_SIZE = "40rem";
-const SCHOOL_CLASSES_FORUM_PANEL_SLOT_MIN_SIZE = "22rem";
+const SCHOOL_CLASSES_FORUM_PANEL_SLOT_DEFAULT_SIZE = "36rem";
+const SCHOOL_CLASSES_FORUM_PANEL_SLOT_MAX_SIZE = "44rem";
+const SCHOOL_CLASSES_FORUM_PANEL_SLOT_MIN_SIZE = "28rem";
 
 /**
  * Render the forum detail slot as either a mobile sheet or the full desktop

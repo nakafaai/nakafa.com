@@ -1,6 +1,4 @@
-import { SchoolClassesForumPageContent } from "@/components/school/classes/forum/page-content";
-
-/** Render the forum feed page while the selected thread panel is open. */
+/** Match the selected forum route while the shared forum layout stays mounted. */
 export default function Page() {
-  return <SchoolClassesForumPageContent />;
+  return null;
 }
