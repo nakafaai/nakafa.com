@@ -72,6 +72,8 @@ export const createAssessmentVersion = mutation({
       throw new Error("Expected authored assessment tree to exist.");
     }
 
+    const now = Date.now();
+
     const versionNumber = await getNextAssessmentVersionNumber(
       ctx,
       args.assessmentId
@@ -93,7 +95,7 @@ export const createAssessmentVersion = mutation({
       totalPoints: getTotalVersionPoints(authored.questions),
       totalQuestionCount: authored.questions.length,
       createdBy: user.appUser._id,
-      createdAt: Date.now(),
+      createdAt: now,
     });
 
     const versionSectionIds = new Map();
@@ -178,11 +180,21 @@ export const createAssessmentVersion = mutation({
       });
     }
 
+    const isNewlyPublished = assessment.status !== "published";
+
+    if (assessment.status === "scheduled" && assessment.scheduledJobId) {
+      await ctx.scheduler.cancel(assessment.scheduledJobId);
+    }
+
     await ctx.db.patch("schoolAssessments", args.assessmentId, {
       currentVersionId: versionId,
       status: "published",
+      scheduledAt: undefined,
+      scheduledJobId: undefined,
+      publishedAt: isNewlyPublished ? now : assessment.publishedAt,
+      publishedBy: isNewlyPublished ? user.appUser._id : assessment.publishedBy,
       updatedBy: user.appUser._id,
-      updatedAt: Date.now(),
+      updatedAt: now,
     });
 
     return versionId;

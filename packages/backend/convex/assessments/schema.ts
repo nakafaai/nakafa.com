@@ -36,6 +36,7 @@ export const assessmentStatusValidator = literals(
   "published",
   "archived"
 );
+export type AssessmentStatus = Infer<typeof assessmentStatusValidator>;
 
 /** Delivery visibility for assignments. */
 export const assessmentAssignmentStatusValidator = literals(

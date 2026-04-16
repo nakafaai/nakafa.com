@@ -220,4 +220,80 @@ describe("assessments/mutations/public/delete", () => {
     expect(deletedState.versionSections).toHaveLength(0);
     expect(deletedState.versions).toHaveLength(0);
   });
+
+  it("cancels the pending publish job before deleting a scheduled assessment", async () => {
+    vi.setSystemTime(new Date(NOW));
+
+    const t = createConvexTestWithBetterAuth();
+    const seeded = await t.mutation(async (ctx) => {
+      const teacher = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "scheduled-delete-teacher",
+      });
+      const schoolId = await insertSchool(ctx, teacher.userId);
+      const classId = await insertClass(ctx, schoolId, teacher.userId);
+
+      await ctx.db.insert("schoolMembers", {
+        schoolId,
+        userId: teacher.userId,
+        role: "admin",
+        status: "active",
+        joinedAt: NOW,
+        updatedAt: NOW,
+      });
+
+      return { classId, schoolId, teacher };
+    });
+
+    const teacherClient = t.withIdentity({
+      subject: seeded.teacher.authUserId,
+      sessionId: seeded.teacher.sessionId,
+    });
+
+    const assessmentId = await teacherClient.mutation(
+      api.assessments.mutations.public.create.createAssessment,
+      {
+        schoolId: seeded.schoolId,
+        classId: seeded.classId,
+        title: "Delete Scheduled Assessment",
+        description: PARAGRAPH,
+        mode: "assignment",
+        status: "scheduled",
+        scheduledAt: NOW + 60_000,
+      }
+    );
+
+    const scheduledJobId = await t.query(async (ctx) => {
+      const assessment = await ctx.db.get("schoolAssessments", assessmentId);
+
+      return assessment?.scheduledJobId;
+    });
+
+    if (!scheduledJobId) {
+      throw new Error("Expected scheduled assessment job id.");
+    }
+
+    await teacherClient.mutation(
+      api.assessments.mutations.public.delete.deleteAssessment,
+      {
+        schoolId: seeded.schoolId,
+        assessmentId,
+      }
+    );
+
+    const deletedState = await t.query(async (ctx) => {
+      return {
+        assessment: await ctx.db.get("schoolAssessments", assessmentId),
+        scheduledJob: await ctx.db.system.get(
+          "_scheduled_functions",
+          scheduledJobId
+        ),
+      };
+    });
+
+    expect(deletedState.assessment).toBeNull();
+    expect(deletedState.scheduledJob?.state).toEqual(
+      expect.objectContaining({ kind: "canceled" })
+    );
+  });
 });

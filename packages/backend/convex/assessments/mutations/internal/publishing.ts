@@ -16,12 +16,15 @@ export const publishAssessment = internalMutation({
       return null;
     }
 
+    const now = Date.now();
+
     await ctx.db.patch("schoolAssessments", args.assessmentId, {
       status: "published",
+      scheduledAt: undefined,
       scheduledJobId: undefined,
-      publishedAt: Date.now(),
+      publishedAt: now,
       publishedBy: args.publishedBy,
-      updatedAt: Date.now(),
+      updatedAt: now,
       updatedBy: args.publishedBy,
     });
 

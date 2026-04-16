@@ -39,6 +39,10 @@ export const deleteAssessment = mutation({
       });
     }
 
+    if (assessment.status === "scheduled" && assessment.scheduledJobId) {
+      await ctx.scheduler.cancel(assessment.scheduledJobId);
+    }
+
     const [
       versions,
       sections,
