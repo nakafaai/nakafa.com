@@ -35,7 +35,9 @@ import { formatDistanceToNow } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { Activity, useState, useTransition } from "react";
+import { toast } from "sonner";
 import { getMaterialStatus } from "@/components/school/classes/_data/material-status";
+import { SchoolClassesDeleteDialog } from "@/components/school/classes/delete-dialog";
 import { getLocale } from "@/lib/utils/date";
 import { EditMaterialGroupDialog } from "./editor-dialog";
 import type { MaterialGroup } from "./types";
@@ -157,8 +159,10 @@ function MaterialGroupActions({
   group: MaterialGroup;
 }) {
   const t = useTranslations("Common");
+  const schoolT = useTranslations("School.Classes");
 
   const [isPending, startTransition] = useTransition();
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
 
   const reorderGroup = useMutation(
@@ -181,8 +185,13 @@ function MaterialGroupActions({
   }
 
   function handleDelete() {
-    startTransition(() => {
-      deleteGroup({ groupId: group._id });
+    startTransition(async () => {
+      try {
+        await deleteGroup({ groupId: group._id });
+        toast.success(schoolT("material-deleted"));
+      } catch {
+        toast.error(schoolT("delete-material-failed"));
+      }
     });
   }
 
@@ -232,7 +241,7 @@ function MaterialGroupActions({
             <DropdownMenuItem
               className="cursor-pointer"
               disabled={isPending}
-              onSelect={handleDelete}
+              onSelect={() => setConfirmDeleteOpen(true)}
               variant="destructive"
             >
               <HugeIcons icon={Delete02Icon} />
@@ -246,6 +255,15 @@ function MaterialGroupActions({
         group={group}
         open={editOpen}
         setOpenAction={setEditOpen}
+      />
+
+      <SchoolClassesDeleteDialog
+        description={schoolT("delete-material-description")}
+        isPending={isPending}
+        onConfirmAction={handleDelete}
+        open={confirmDeleteOpen}
+        setOpenAction={setConfirmDeleteOpen}
+        title={schoolT("delete-material-title")}
       />
     </div>
   );

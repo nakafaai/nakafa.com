@@ -32,6 +32,7 @@ import { getAssessmentStatus } from "@/components/school/classes/assessments/_da
 import { CreateAssessmentDialog } from "@/components/school/classes/assessments/create-dialog";
 import type { Assessment } from "@/components/school/classes/assessments/types";
 import { formatScheduledAt } from "@/components/school/classes/assessments/utils";
+import { SchoolClassesDeleteDialog } from "@/components/school/classes/delete-dialog";
 import { getLocale } from "@/lib/utils/date";
 
 /** Return the badge variant used for one assessment status. */
@@ -134,6 +135,7 @@ function AssessmentActions({
   const t = useTranslations("Common");
   const schoolT = useTranslations("School.Classes");
   const [isPending, startTransition] = useTransition();
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const reorderAssessment = useMutation(
     api.assessments.mutations.public.reorder.reorderAssessment
@@ -164,11 +166,15 @@ function AssessmentActions({
 
   function handleDelete() {
     startTransition(async () => {
-      await deleteAssessment({
-        schoolId: assessment.schoolId,
-        assessmentId: assessment._id,
-      });
-      toast.success(schoolT("assessment-deleted"));
+      try {
+        await deleteAssessment({
+          schoolId: assessment.schoolId,
+          assessmentId: assessment._id,
+        });
+        toast.success(schoolT("assessment-deleted"));
+      } catch {
+        toast.error(schoolT("delete-assessment-failed"));
+      }
     });
   }
 
@@ -218,7 +224,7 @@ function AssessmentActions({
             <DropdownMenuItem
               className="cursor-pointer"
               disabled={isPending}
-              onSelect={handleDelete}
+              onSelect={() => setConfirmDeleteOpen(true)}
               variant="destructive"
             >
               <HugeIcons icon={Delete02Icon} />
@@ -232,6 +238,15 @@ function AssessmentActions({
         initialAssessment={assessment}
         open={editOpen}
         setOpenAction={setEditOpen}
+      />
+
+      <SchoolClassesDeleteDialog
+        description={schoolT("delete-assessment-description")}
+        isPending={isPending}
+        onConfirmAction={handleDelete}
+        open={confirmDeleteOpen}
+        setOpenAction={setConfirmDeleteOpen}
+        title={schoolT("delete-assessment-title")}
       />
     </div>
   );
