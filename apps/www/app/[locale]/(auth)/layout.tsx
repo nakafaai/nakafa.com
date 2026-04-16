@@ -16,7 +16,7 @@ import { UserContextProvider } from "@/lib/context/use-user";
  */
 export default function Layout({ children }: LayoutProps<"/[locale]">) {
   return (
-    <Suspense fallback={<div className="min-h-svh bg-background" />}>
+    <Suspense fallback={null}>
       <AuthPageProviders>{children}</AuthPageProviders>
     </Suspense>
   );

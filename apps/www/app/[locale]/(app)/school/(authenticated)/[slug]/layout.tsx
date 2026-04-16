@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { use } from "react";
+import { Suspense } from "react";
 import { SchoolContextProvider } from "@/lib/context/use-school";
 import { getSchoolRouteSnapshot } from "@/lib/school/server";
 
@@ -29,7 +29,25 @@ export async function generateMetadata({
 /** Bind the resolved school route snapshot to the school subtree. */
 export default function Layout(props: LayoutProps<"/[locale]/school/[slug]">) {
   const { children, params } = props;
-  const { slug } = use(params);
+
+  return (
+    <Suspense fallback={null}>
+      <ResolvedSchoolRouteBoundary params={params}>
+        {children}
+      </ResolvedSchoolRouteBoundary>
+    </Suspense>
+  );
+}
+
+/** Read the school slug from the route params inside a Suspense boundary. */
+async function ResolvedSchoolRouteBoundary({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: LayoutProps<"/[locale]/school/[slug]">["params"];
+}) {
+  const { slug } = await params;
 
   return <SchoolRouteBoundary slug={slug}>{children}</SchoolRouteBoundary>;
 }

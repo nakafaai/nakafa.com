@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
-import { use } from "react";
+import { Suspense } from "react";
 import { SchoolClassesHeaderInfo } from "@/components/school/classes/info";
 import { SchoolClassesJoinForm } from "@/components/school/classes/join-form";
 import { SchoolClassesTabs } from "@/components/school/classes/tabs";
@@ -19,7 +19,26 @@ export default function Layout({
   panel: ReactNode;
   params: LayoutProps<"/[locale]/school/[slug]/classes/[id]">["params"];
 }) {
-  const { id } = use(params);
+  return (
+    <Suspense fallback={null}>
+      <ResolvedClassRouteBoundary panel={panel} params={params}>
+        {children}
+      </ResolvedClassRouteBoundary>
+    </Suspense>
+  );
+}
+
+/** Resolve the class route params inside Suspense before loading class data. */
+async function ResolvedClassRouteBoundary({
+  children,
+  panel,
+  params,
+}: {
+  children: ReactNode;
+  panel: ReactNode;
+  params: LayoutProps<"/[locale]/school/[slug]/classes/[id]">["params"];
+}) {
+  const { id } = await params;
 
   return (
     <ClassRouteBoundary classId={id} panel={panel}>
