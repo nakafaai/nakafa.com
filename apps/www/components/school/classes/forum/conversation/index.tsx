@@ -80,17 +80,15 @@ export const ForumPostConversation = memo(
           restoreView: latestConversationView.current,
         })
       );
-    const [conversationSessionVersion, setConversationSessionVersion] =
-      useState(0);
     const initialAnchorSettledRef = useRef(false);
     const pendingScrollIntentRef = useRef<PendingScrollIntent | null>(null);
 
     const {
       hasMoreAfter,
       hasMoreBefore,
+      isAtLatestEdge,
       isInitialLoading,
       isJumpMode,
-      isLiveConnected,
       isLoadingNewer,
       isLoadingOlder,
       loadNewerPosts,
@@ -98,12 +96,24 @@ export const ForumPostConversation = memo(
       posts,
       showLatestPosts,
     } = useForumPosts({ forumId, mode: conversationIntent });
+    const baselineLatestPostIdRef = useRef<Id<"schoolClassForumPosts"> | null>(
+      null
+    );
+
+    if (
+      baselineLatestPostIdRef.current === null &&
+      isAtLatestEdge &&
+      posts.length > 0
+    ) {
+      baselineLatestPostIdRef.current = posts.at(-1)?._id ?? null;
+    }
 
     const { dateToIndex, headerIndex, items, postIdToIndex, unreadIndex } =
       useVirtualItems({
+        baselineLatestPostId: baselineLatestPostIdRef.current,
         forum,
         posts,
-        isDetachedMode: !isLiveConnected,
+        isDetachedMode: !isAtLatestEdge,
       });
     const latestItemsRef = useRef(items);
     latestItemsRef.current = items;
@@ -219,12 +229,12 @@ export const ForumPostConversation = memo(
     useEffect(() => {
       if (
         initialAnchorSettledRef.current &&
-        isLiveConnected &&
+        isAtLatestEdge &&
         conversationIntent.kind !== "live"
       ) {
         setConversationIntent({ kind: "live" });
       }
-    }, [conversationIntent.kind, isLiveConnected]);
+    }, [conversationIntent.kind, isAtLatestEdge]);
 
     useEffect(() => {
       const pendingScrollIntent = pendingScrollIntentRef.current;
@@ -234,7 +244,7 @@ export const ForumPostConversation = memo(
       }
 
       if (pendingScrollIntent.kind === "bottom") {
-        if (!isLiveConnected) {
+        if (!isAtLatestEdge) {
           return;
         }
 
@@ -258,7 +268,7 @@ export const ForumPostConversation = memo(
         });
       });
       pendingScrollIntentRef.current = null;
-    }, [isLiveConnected, postIdToIndex]);
+    }, [isAtLatestEdge, postIdToIndex]);
 
     /** Marks the thread as read only while the live edge remains visible. */
     const handleScroll = useCallback(
@@ -269,7 +279,7 @@ export const ForumPostConversation = memo(
 
         const atBottom = scrollRef.current?.isAtBottom() ?? true;
 
-        if (!(initialAnchorSettledRef.current && atBottom && isLiveConnected)) {
+        if (!(initialAnchorSettledRef.current && atBottom && isAtLatestEdge)) {
           cancelPendingMarkRead();
           return;
         }
@@ -279,7 +289,7 @@ export const ForumPostConversation = memo(
       [
         cancelPendingMarkRead,
         captureCurrentConversationView,
-        isLiveConnected,
+        isAtLatestEdge,
         lastPostId,
         scheduleMarkRead,
       ]
@@ -307,7 +317,7 @@ export const ForumPostConversation = memo(
         scrollRef.current?.isAtBottom() ??
         (initialView ? initialView.kind === "bottom" : false);
 
-      if (!(atBottom && isLiveConnected)) {
+      if (!(atBottom && isAtLatestEdge)) {
         cancelPendingMarkRead();
         return;
       }
@@ -317,7 +327,7 @@ export const ForumPostConversation = memo(
       cancelPendingMarkRead,
       captureCurrentConversationView,
       conversationIntent,
-      isLiveConnected,
+      isAtLatestEdge,
       items,
       lastPostId,
       persistConversationView,
@@ -334,11 +344,7 @@ export const ForumPostConversation = memo(
       persistConversationView(captureCurrentConversationView());
     }, [captureCurrentConversationView, persistConversationView]);
 
-    /**
-     * Next Activity preserves refs across soft-nav hide/show cycles. Reset the
-     * transient conversation session on hide so explicit reopen restores from
-     * the saved snapshot instead of stale preserved controller state.
-     */
+    /** Persists the latest fallback snapshot when the conversation hides. */
     useLayoutEffect(
       () => () => {
         const latestView = captureConversationView({
@@ -352,16 +358,6 @@ export const ForumPostConversation = memo(
         } else {
           persistConversationView();
         }
-
-        pendingScrollIntentRef.current = null;
-        initialAnchorSettledRef.current = false;
-        setIsPrepending(false);
-        setConversationIntent(
-          createForumConversationMode({
-            restoreView: latestConversationView.current,
-          })
-        );
-        setConversationSessionVersion((version) => version + 1);
       },
       [persistConversationView]
     );
@@ -370,7 +366,7 @@ export const ForumPostConversation = memo(
       if (
         !(
           initialAnchorSettledRef.current &&
-          isLiveConnected &&
+          isAtLatestEdge &&
           lastPostId &&
           previousLastPostId
         )
@@ -387,7 +383,7 @@ export const ForumPostConversation = memo(
       }
 
       flushMarkRead(lastPostId);
-    }, [flushMarkRead, isLiveConnected, lastPostId, previousLastPostId]);
+    }, [flushMarkRead, isAtLatestEdge, lastPostId, previousLastPostId]);
 
     /** Loads newer history below the current transcript window. */
     const handleScrollToBottom = useCallback(() => {
@@ -423,10 +419,9 @@ export const ForumPostConversation = memo(
                 <JumpModeIndicator onExit={scrollToLatest} />
               </Activity>
             }
-            followLatest={isLiveConnected}
+            followLatest={isAtLatestEdge}
             hideScrollButton={isJumpMode}
             initialAnchor={initialAnchor}
-            key={conversationSessionVersion}
             onInitialAnchorSettled={handleInitialAnchorSettled}
             onScroll={handleScroll}
             onScrollEnd={handleScrollEnd}

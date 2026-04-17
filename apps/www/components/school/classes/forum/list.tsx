@@ -52,13 +52,22 @@ export function SchoolClassesForumList() {
   const clearTransientConversationState = useForum(
     (state) => state.clearTransientConversationState
   );
+  const restartConversationSession = useForum(
+    (state) => state.restartConversationSession
+  );
   const [{ q }] = useQueryStates(searchParsers);
 
   const [debouncedQ] = useDebouncedValue(q, DEBOUNCE_TIME);
 
   /** Clears transient reply and jump state before forum route navigation. */
-  function handleForumNavigate() {
+  function handleForumNavigate(nextForumId: Id<"schoolClassForums">) {
     clearTransientConversationState();
+
+    if (!(routeParams.forumId && routeParams.forumId !== nextForumId)) {
+      return;
+    }
+
+    restartConversationSession(routeParams.forumId);
   }
 
   const { results, status, loadMore } = usePaginatedQuery(
@@ -99,7 +108,7 @@ export function SchoolClassesForumList() {
                 aria-current={isActive ? "page" : undefined}
                 className="absolute inset-0 z-0 rounded-md focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 href={href}
-                onNavigate={handleForumNavigate}
+                onNavigate={() => handleForumNavigate(forum._id)}
                 prefetch
               >
                 <span className="sr-only">{forum.title}</span>

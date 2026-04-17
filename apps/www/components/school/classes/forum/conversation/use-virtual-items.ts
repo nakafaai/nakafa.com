@@ -1,7 +1,7 @@
 "use client";
 
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { useMemo, useRef } from "react";
+import { useMemo } from "react";
 import type {
   Forum,
   ForumPost,
@@ -17,24 +17,16 @@ import type {
  * - Bottom spacer
  */
 export function useVirtualItems({
+  baselineLatestPostId,
   forum,
   posts,
   isDetachedMode,
 }: {
+  baselineLatestPostId: Id<"schoolClassForumPosts"> | null;
   forum: Forum | undefined;
   isDetachedMode: boolean;
   posts: ForumPost[];
 }) {
-  const initialLatestPostId = useRef<Id<"schoolClassForumPosts"> | null>(null);
-
-  if (
-    initialLatestPostId.current === null &&
-    !isDetachedMode &&
-    posts.length > 0
-  ) {
-    initialLatestPostId.current = posts.at(-1)?._id ?? null;
-  }
-
   // Calculate unread info
   const { firstUnreadIndex, unreadCount } = useMemo(() => {
     if (isDetachedMode) {
@@ -42,10 +34,10 @@ export function useVirtualItems({
     }
     let firstIdx = -1;
     let count = 0;
-    let passedInitialLatestPost = initialLatestPostId.current === null;
+    let passedBaselineLatestPost = baselineLatestPostId === null;
 
     for (const [i, post] of posts.entries()) {
-      const isUnread = !passedInitialLatestPost && post.isUnread === true;
+      const isUnread = !passedBaselineLatestPost && post.isUnread === true;
 
       if (isUnread) {
         if (firstIdx === -1) {
@@ -54,12 +46,12 @@ export function useVirtualItems({
         count += 1;
       }
 
-      if (post._id === initialLatestPostId.current) {
-        passedInitialLatestPost = true;
+      if (post._id === baselineLatestPostId) {
+        passedBaselineLatestPost = true;
       }
     }
     return { firstUnreadIndex: firstIdx, unreadCount: count };
-  }, [isDetachedMode, posts]);
+  }, [baselineLatestPostId, isDetachedMode, posts]);
 
   // Build virtual items
   const { dateToIndex, headerIndex, items, postIdToIndex, unreadIndex } =

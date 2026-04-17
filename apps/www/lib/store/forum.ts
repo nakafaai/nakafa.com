@@ -58,6 +58,7 @@ interface PersistedForumState {
 }
 
 interface State {
+  conversationSessionVersions: Partial<Record<Id<"schoolClassForums">, number>>;
   replyTo: ReplyTo | null;
   savedConversationViews: Partial<
     Record<Id<"schoolClassForums">, ForumConversationView>
@@ -66,6 +67,7 @@ interface State {
 
 interface Actions {
   clearTransientConversationState: () => void;
+  restartConversationSession: (forumId: Id<"schoolClassForums">) => void;
   saveConversationView: (
     forumId: Id<"schoolClassForums">,
     view: ForumConversationView
@@ -76,6 +78,7 @@ interface Actions {
 export type ForumStore = State & Actions;
 
 const initialState: State = {
+  conversationSessionVersions: {},
   savedConversationViews: {},
   replyTo: null,
 };
@@ -93,36 +96,23 @@ function isSameConversationView(
     return false;
   }
 
-  switch (left.kind) {
-    case "bottom":
-      return true;
-    case "header":
-      if (right.kind !== "header") {
-        return false;
-      }
-      return left.postId === right.postId && left.offset === right.offset;
-    case "date":
-      if (right.kind !== "date") {
-        return false;
-      }
-      return (
-        left.date === right.date &&
-        left.postId === right.postId &&
-        left.offset === right.offset
-      );
-    case "unread":
-      if (right.kind !== "unread") {
-        return false;
-      }
-      return left.postId === right.postId && left.offset === right.offset;
-    case "post":
-      if (right.kind !== "post") {
-        return false;
-      }
-      return left.postId === right.postId && left.offset === right.offset;
-    default:
-      return false;
+  if (left.kind === "bottom") {
+    return true;
   }
+
+  if (left.kind === "date" && right.kind === "date") {
+    return (
+      left.date === right.date &&
+      left.postId === right.postId &&
+      left.offset === right.offset
+    );
+  }
+
+  return (
+    right.kind === left.kind &&
+    left.postId === right.postId &&
+    left.offset === right.offset
+  );
 }
 
 /**
@@ -141,6 +131,12 @@ export const createForumStore = (classId: string) =>
           }),
 
         setReplyTo: (replyTo) => set({ replyTo }),
+
+        restartConversationSession: (forumId) =>
+          set((state) => {
+            state.conversationSessionVersions[forumId] =
+              (state.conversationSessionVersions[forumId] ?? 0) + 1;
+          }),
 
         saveConversationView: (forumId, view) => {
           const savedView = get().savedConversationViews[forumId];

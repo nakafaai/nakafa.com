@@ -10,8 +10,8 @@ import type { ForumPost } from "@/lib/store/forum";
 interface TimelineState {
   hasMoreAfter: boolean;
   hasMoreBefore: boolean;
+  isAtLatestEdge: boolean;
   isJumpMode: boolean;
-  isLiveConnected: boolean;
   newestPostId: Id<"schoolClassForumPosts"> | null;
   oldestPostId: Id<"schoolClassForumPosts"> | null;
   posts: ForumPost[];
@@ -30,8 +30,8 @@ function createLiveTimelineState(
   return {
     hasMoreAfter: false,
     hasMoreBefore,
+    isAtLatestEdge: true,
     isJumpMode: false,
-    isLiveConnected: true,
     newestPostId: posts.at(-1)?._id ?? null,
     oldestPostId: posts[0]?._id ?? null,
     posts,
@@ -54,13 +54,13 @@ function createFocusedTimelineState({
   posts: ForumPost[];
   targetKind: TargetRequest["kind"];
 }): TimelineState {
-  const isLiveConnected = !hasMoreAfter;
+  const isAtLatestEdge = !hasMoreAfter;
 
   return {
     hasMoreAfter,
     hasMoreBefore,
-    isJumpMode: targetKind === "jump" && !isLiveConnected,
-    isLiveConnected,
+    isAtLatestEdge,
+    isJumpMode: targetKind === "jump" && !isAtLatestEdge,
     newestPostId,
     oldestPostId,
     posts,
@@ -135,14 +135,14 @@ function syncTimelineWithLivePosts({
   livePosts: ForumPost[];
 }) {
   if (current.posts.length === 0) {
-    if (!current.isLiveConnected) {
+    if (!current.isAtLatestEdge) {
       return current;
     }
 
     return createLiveTimelineState(livePosts, liveHasMoreBefore);
   }
 
-  const nextPosts = current.isLiveConnected
+  const nextPosts = current.isAtLatestEdge
     ? appendUniquePosts(current.posts, livePosts)
     : replaceMatchingPosts(current.posts, livePosts);
 
@@ -152,8 +152,8 @@ function syncTimelineWithLivePosts({
 
   return {
     ...current,
-    hasMoreAfter: current.isLiveConnected ? false : current.hasMoreAfter,
-    isJumpMode: current.isLiveConnected ? false : current.isJumpMode,
+    hasMoreAfter: current.isAtLatestEdge ? false : current.hasMoreAfter,
+    isJumpMode: current.isAtLatestEdge ? false : current.isJumpMode,
     newestPostId: nextPosts.posts.at(-1)?._id ?? null,
     oldestPostId: nextPosts.posts[0]?._id ?? null,
     posts: nextPosts.posts,
@@ -228,7 +228,7 @@ export function useForumPosts({
     }
 
     setTimeline((current) => {
-      if (current?.isLiveConnected) {
+      if (current?.isAtLatestEdge) {
         return syncTimelineWithLivePosts({
           current: { ...current, hasMoreAfter: false, isJumpMode: false },
           liveHasMoreBefore,
@@ -334,13 +334,13 @@ export function useForumPosts({
       }
 
       const nextPosts = appendUniquePosts(current.posts, newerData.posts);
-      const isLiveConnected = !newerData.hasMore;
+      const isAtLatestEdge = !newerData.hasMore;
 
       return {
         ...current,
         hasMoreAfter: newerData.hasMore,
-        isJumpMode: isLiveConnected ? false : current.isJumpMode,
-        isLiveConnected,
+        isAtLatestEdge,
+        isJumpMode: isAtLatestEdge ? false : current.isJumpMode,
         newestPostId: newerData.newestPostId ?? current.newestPostId,
         posts: nextPosts.posts,
       };
@@ -390,7 +390,7 @@ export function useForumPosts({
     setNewerRequestPostId(null);
     setTargetRequest(null);
     setTimeline((current) => {
-      if (current?.isLiveConnected) {
+      if (current?.isAtLatestEdge) {
         return syncTimelineWithLivePosts({
           current: { ...current, hasMoreAfter: false, isJumpMode: false },
           liveHasMoreBefore,
@@ -411,9 +411,9 @@ export function useForumPosts({
   return {
     hasMoreAfter: timeline?.hasMoreAfter ?? false,
     hasMoreBefore: timeline?.hasMoreBefore ?? false,
+    isAtLatestEdge: timeline?.isAtLatestEdge ?? false,
     isInitialLoading,
     isJumpMode: timeline?.isJumpMode ?? false,
-    isLiveConnected: timeline?.isLiveConnected ?? false,
     isLoadingNewer: newerRequestPostId !== null,
     isLoadingOlder: olderRequestPostId !== null,
     loadNewerPosts,

@@ -29,6 +29,9 @@ export function SchoolClassesForumPanel({
   const clearTransientConversationState = useForum(
     (state) => state.clearTransientConversationState
   );
+  const restartConversationSession = useForum(
+    (state) => state.restartConversationSession
+  );
   const forum = useQuery(api.classes.forums.queries.forums.getForum, {
     forumId,
   });
@@ -38,6 +41,7 @@ export function SchoolClassesForumPanel({
   /** Clears transient reply and jump state before returning to the forum list. */
   function handleClose() {
     clearTransientConversationState();
+    restartConversationSession(forumId);
     router.replace(closeHref);
   }
 
