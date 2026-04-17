@@ -40,8 +40,12 @@ export const VIRTUAL_CONVERSATION_BOTTOM_THRESHOLD = 50;
 
 interface VirtualConversationContextValue {
   isAtBottom: boolean;
+  scrollButtonAction: () => void;
+  scrollButtonAriaLabel: string;
   scrollToBottom: () => void;
 }
+
+const DEFAULT_SCROLL_BUTTON_ARIA_LABEL = "Scroll to bottom";
 
 export type VirtualConversationAnchor =
   | {
@@ -76,6 +80,8 @@ export type VirtualConversationProps = Omit<VListProps, "ref" | "shift"> & {
   initialAnchor?: VirtualConversationAnchor;
   scrollRef?: RefObject<VirtualConversationHandle | null>;
   hideScrollButton?: boolean;
+  scrollButtonAriaLabel?: string;
+  scrollButtonAction?: () => void;
   floatingContent?: ReactNode;
   /**
    * Enable shift mode for reverse infinite scrolling.
@@ -101,6 +107,8 @@ export const VirtualConversation = memo(
     initialAnchor = { kind: "bottom" },
     scrollRef,
     hideScrollButton = false,
+    scrollButtonAriaLabel = DEFAULT_SCROLL_BUTTON_ARIA_LABEL,
+    scrollButtonAction,
     floatingContent,
     shift = false,
     ...props
@@ -334,9 +342,11 @@ export const VirtualConversation = memo(
     const contextValue = useMemo(
       () => ({
         isAtBottom,
+        scrollButtonAriaLabel,
+        scrollButtonAction: scrollButtonAction ?? scrollToBottom,
         scrollToBottom,
       }),
-      [isAtBottom, scrollToBottom]
+      [isAtBottom, scrollButtonAction, scrollButtonAriaLabel, scrollToBottom]
     );
 
     useImperativeHandle(
@@ -385,7 +395,8 @@ export type VirtualConversationScrollButtonProps = ComponentProps<
 /** Renders the floating "scroll to bottom" affordance for the active list. */
 export const VirtualConversationScrollButton = memo(
   ({ className, ...props }: VirtualConversationScrollButtonProps) => {
-    const { isAtBottom, scrollToBottom } = useVirtualConversation();
+    const { isAtBottom, scrollButtonAction, scrollButtonAriaLabel } =
+      useVirtualConversation();
 
     if (isAtBottom) {
       return null;
@@ -393,19 +404,19 @@ export const VirtualConversationScrollButton = memo(
 
     return (
       <Button
-        aria-label="Scroll to bottom"
+        aria-label={scrollButtonAriaLabel}
         className={cn(
           "absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full",
           className
         )}
-        onClick={scrollToBottom}
+        onClick={scrollButtonAction}
         size="icon"
         type="button"
         variant="outline"
         {...props}
       >
         <HugeIcons icon={ArrowDown02Icon} />
-        <span className="sr-only">Scroll to bottom</span>
+        <span className="sr-only">{scrollButtonAriaLabel}</span>
       </Button>
     );
   }

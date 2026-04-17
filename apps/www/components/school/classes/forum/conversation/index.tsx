@@ -7,6 +7,7 @@ import {
   type VirtualConversationHandle,
   VirtualConversationPlaceholder,
 } from "@repo/design-system/components/ui/virtual-conversation";
+import { useTranslations } from "next-intl";
 import {
   Activity,
   memo,
@@ -65,6 +66,7 @@ export const ForumPostConversation = memo(
     forumId: Id<"schoolClassForums">;
     currentUserId: Id<"users">;
   }) => {
+    const t = useTranslations("Common");
     const forumStore = useForumStoreApi();
     const saveConversationView = useForum(
       (state) => state.saveConversationView
@@ -427,6 +429,8 @@ export const ForumPostConversation = memo(
             onScrollEnd={handleScrollEnd}
             onScrollToBottom={handleScrollToBottom}
             onScrollToTop={handleScrollToTop}
+            scrollButtonAction={scrollToLatest}
+            scrollButtonAriaLabel={t("back-to-latest")}
             scrollRef={scrollRef}
             shift={isPrepending}
           >
