@@ -6,6 +6,13 @@ import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { cn } from "@repo/design-system/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 
+/** Returns the single focusable control owned by one input group. */
+function getInputGroupControl(parentElement: HTMLElement | null) {
+  return parentElement?.querySelector<HTMLElement>(
+    '[data-slot="input-group-control"]'
+  );
+}
+
 function InputGroup({ className, ...props }: React.ComponentProps<"fieldset">) {
   return (
     <fieldset
@@ -14,10 +21,10 @@ function InputGroup({ className, ...props }: React.ComponentProps<"fieldset">) {
         "h-9 min-w-0 has-[>textarea]:h-auto",
 
         // Variants based on alignment.
-        "has-[>[data-align=inline-start]]:[&>input]:pl-2",
-        "has-[>[data-align=inline-end]]:[&>input]:pr-2",
-        "has-[>[data-align=block-start]]:h-auto has-[>[data-align=block-start]]:flex-col has-[>[data-align=block-start]]:[&>input]:pb-3",
-        "has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-end]]:flex-col has-[>[data-align=block-end]]:[&>input]:pt-3",
+        "has-[>[data-align=inline-start]]:[&>[data-slot=input-group-control]]:pl-2",
+        "has-[>[data-align=inline-end]]:[&>[data-slot=input-group-control]]:pr-2",
+        "has-[>[data-align=block-start]]:h-auto has-[>[data-align=block-start]]:flex-col has-[>[data-align=block-start]]:[&>[data-slot=input-group-control]]:pb-3",
+        "has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-end]]:flex-col has-[>[data-align=block-end]]:[&>[data-slot=input-group-control]]:pt-3",
 
         // Focus state.
         "has-[[data-slot=input-group-control]:focus-visible]:border-ring has-[[data-slot=input-group-control]:focus-visible]:ring-[3px] has-[[data-slot=input-group-control]:focus-visible]:ring-ring/50",
@@ -43,9 +50,9 @@ const inputGroupAddonVariants = cva(
         "inline-end":
           "order-last pr-3 has-[>button]:mr-[-0.45rem] has-[>kbd]:mr-[-0.35rem]",
         "block-start":
-          "order-first w-full justify-start px-3 pt-3 group-has-[>input]/input-group:pt-2.5 [.border-b]:pb-3",
+          "order-first w-full justify-start px-3 pt-3 group-has-[>[data-slot=input-group-control]]/input-group:pt-2.5 [.border-b]:pb-3",
         "block-end":
-          "order-last w-full justify-start px-3 pb-3 group-has-[>input]/input-group:pb-2.5 [.border-t]:pt-3",
+          "order-last w-full justify-start px-3 pb-3 group-has-[>[data-slot=input-group-control]]/input-group:pb-2.5 [.border-t]:pt-3",
       },
     },
     defaultVariants: {
@@ -60,6 +67,9 @@ function InputGroupAddon({
   ...props
 }: React.ComponentProps<"fieldset"> &
   VariantProps<typeof inputGroupAddonVariants>) {
+  // Addons are rendered after the single control in DOM order. The `align`
+  // prop handles visual positioning while the addon forwards stray clicks to
+  // the group's focusable control.
   return (
     <fieldset
       className={cn(inputGroupAddonVariants({ align }), className)}
@@ -69,13 +79,15 @@ function InputGroupAddon({
         if ((e.target as HTMLElement).closest("button")) {
           return;
         }
-        e.currentTarget.parentElement?.querySelector("input")?.focus();
+
+        getInputGroupControl(e.currentTarget.parentElement)?.focus();
       }}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
+
           if (!(e.target as HTMLElement).closest("button")) {
-            e.currentTarget.parentElement?.querySelector("input")?.focus();
+            getInputGroupControl(e.currentTarget.parentElement)?.focus();
           }
         }
       }}

@@ -311,6 +311,7 @@
   },
   "Utils": {
     "search": "Cari",
+    "clear-search": "Hapus pencarian",
     "search-bar-placeholder": "Cari konten...",
     "search-placeholder": "Temukan apa yang kamu inginkan...",
     "search-not-found": "Yah, nggak nemu apa-apa nih.",

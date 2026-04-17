@@ -192,6 +192,7 @@ export const ForumPostInput = memo(
           setReplyTo(null);
 
           requestAnimationFrame(() => {
+            textareaRef.current?.focus();
             scrollToLatest();
           });
         } catch (error) {
@@ -211,6 +212,10 @@ export const ForumPostInput = memo(
           });
 
           toast.error(t("create-post-failed"));
+
+          requestAnimationFrame(() => {
+            textareaRef.current?.focus();
+          });
         }
       },
     });
@@ -258,16 +263,25 @@ export const ForumPostInput = memo(
                       aria-label={t("send-message-placeholder")}
                       autoFocus
                       className="scrollbar-hide max-h-36 min-h-0"
-                      disabled={isSubmitting}
                       name={field.name}
                       onChange={(e) => field.handleChange(e.target.value)}
                       onKeyDown={(e) => {
+                        if (e.nativeEvent.isComposing) {
+                          return;
+                        }
+
                         if (e.key === "Enter" && !e.shiftKey) {
                           e.preventDefault();
+
+                          if (submitDisabled) {
+                            return;
+                          }
+
                           form.handleSubmit();
                         }
                       }}
                       placeholder={t("send-message-placeholder")}
+                      readOnly={isSubmitting}
                       ref={textareaRef}
                       value={field.state.value}
                     />
