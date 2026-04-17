@@ -99,22 +99,25 @@ export const ForumPostConversation = memo(
       showLatestPosts,
     } = useForumPosts({ forumId, mode: conversationIntent });
 
-    const { items, postIdToIndex, unreadIndex } = useVirtualItems({
-      forum,
-      posts,
-      isDetachedMode: !isLiveConnected,
-    });
+    const { dateToIndex, headerIndex, items, postIdToIndex, unreadIndex } =
+      useVirtualItems({
+        forum,
+        posts,
+        isDetachedMode: !isLiveConnected,
+      });
     const latestItemsRef = useRef(items);
     latestItemsRef.current = items;
     const initialAnchor = useMemo(
       () =>
         createInitialConversationAnchor({
+          dateToIndex,
           existingView: latestConversationView.current,
+          headerIndex,
           mode: conversationIntent,
           postIdToIndex,
           unreadIndex,
         }),
-      [conversationIntent, postIdToIndex, unreadIndex]
+      [conversationIntent, dateToIndex, headerIndex, postIdToIndex, unreadIndex]
     );
 
     const scrollRef = useRef<VirtualConversationHandle>(null);

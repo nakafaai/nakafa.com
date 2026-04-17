@@ -30,6 +30,22 @@ export type ForumConversationView =
       kind: "bottom";
     }
   | {
+      kind: "header";
+      offset: number;
+      postId: Id<"schoolClassForumPosts"> | null;
+    }
+  | {
+      date: number;
+      kind: "date";
+      offset: number;
+      postId: Id<"schoolClassForumPosts">;
+    }
+  | {
+      kind: "unread";
+      offset: number;
+      postId: Id<"schoolClassForumPosts">;
+    }
+  | {
       kind: "post";
       offset: number;
       postId: Id<"schoolClassForumPosts">;
@@ -77,11 +93,36 @@ function isSameConversationView(
     return false;
   }
 
-  if (left.kind === "bottom" || right.kind === "bottom") {
-    return true;
+  switch (left.kind) {
+    case "bottom":
+      return true;
+    case "header":
+      if (right.kind !== "header") {
+        return false;
+      }
+      return left.postId === right.postId && left.offset === right.offset;
+    case "date":
+      if (right.kind !== "date") {
+        return false;
+      }
+      return (
+        left.date === right.date &&
+        left.postId === right.postId &&
+        left.offset === right.offset
+      );
+    case "unread":
+      if (right.kind !== "unread") {
+        return false;
+      }
+      return left.postId === right.postId && left.offset === right.offset;
+    case "post":
+      if (right.kind !== "post") {
+        return false;
+      }
+      return left.postId === right.postId && left.offset === right.offset;
+    default:
+      return false;
   }
-
-  return left.postId === right.postId && left.offset === right.offset;
 }
 
 /**

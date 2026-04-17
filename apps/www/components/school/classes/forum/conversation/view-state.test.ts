@@ -9,8 +9,10 @@ import {
 } from "@/components/school/classes/forum/conversation/view-state";
 import type { ForumConversationView } from "@/lib/store/forum";
 
+const headerPostId = "post_header" as Id<"schoolClassForumPosts">;
 const postAId = "post_a" as Id<"schoolClassForumPosts">;
 const postBId = "post_b" as Id<"schoolClassForumPosts">;
+const dateKey = 1_744_775_200_000;
 
 function createItems(): VirtualItem[] {
   return [
@@ -21,10 +23,19 @@ function createItems(): VirtualItem[] {
         title: "Forum",
       },
     } as VirtualItem,
+    { type: "date", date: dateKey } as VirtualItem,
     { type: "unread", count: 2 } as VirtualItem,
     {
       type: "post",
       isFirstInGroup: true,
+      post: {
+        _id: headerPostId,
+        body: "Header post",
+      },
+    } as VirtualItem,
+    {
+      type: "post",
+      isFirstInGroup: false,
       post: {
         _id: postAId,
         body: "A",
@@ -42,20 +53,33 @@ function createItems(): VirtualItem[] {
   ];
 }
 
+function createLookup() {
+  return {
+    dateToIndex: new Map([[dateKey, 1]]),
+    headerIndex: 0,
+    postIdToIndex: new Map([
+      [headerPostId, 3],
+      [postAId, 4],
+      [postBId, 5],
+    ]),
+    unreadIndex: 2,
+  };
+}
+
 function createHandle(overrides?: {
   distanceFromBottom?: number;
   findItemIndex?: number;
   offsets?: number[];
   scrollOffset?: number;
 }) {
-  const offsets = overrides?.offsets ?? [0, 40, 80, 140, 220];
+  const offsets = overrides?.offsets ?? [0, 80, 120, 160, 240, 320, 420];
 
   return {
     current: {
-      findItemIndex: () => overrides?.findItemIndex ?? 1,
-      getDistanceFromBottom: () => overrides?.distanceFromBottom ?? 120,
+      findItemIndex: () => overrides?.findItemIndex ?? 0,
+      getDistanceFromBottom: () => overrides?.distanceFromBottom ?? 200,
       getItemOffset: (index: number) => offsets[index] ?? 0,
-      getScrollOffset: () => overrides?.scrollOffset ?? 90,
+      getScrollOffset: () => overrides?.scrollOffset ?? 0,
       isAtBottom: () => false,
       scrollToBottom: () => undefined,
       scrollToIndex: () => undefined,
@@ -65,89 +89,213 @@ function createHandle(overrides?: {
 
 describe("forum conversation view state", () => {
   it("falls back to live mode when no saved restore view exists", () => {
-    expect(
-      createForumConversationMode({
-        restoreView: null,
-      })
-    ).toEqual({ kind: "live" });
-  });
-
-  it("uses restore mode when a saved post snapshot exists", () => {
-    const restoreView = {
-      kind: "post",
-      offset: 14,
-      postId: postAId,
-    } satisfies ForumConversationView;
-
-    expect(
-      createForumConversationMode({
-        restoreView,
-      })
-    ).toEqual({ kind: "restore", postId: postAId, view: restoreView });
-  });
-
-  it("restores the saved anchor before falling back to unread", () => {
-    const restoreView = {
-      kind: "post",
-      offset: 18,
-      postId: postBId,
-    } satisfies ForumConversationView;
-
-    expect(
-      createInitialConversationAnchor({
-        existingView: restoreView,
-        mode: { kind: "restore", postId: postBId, view: restoreView },
-        postIdToIndex: new Map([
-          [postAId, 2],
-          [postBId, 3],
-        ]),
-        unreadIndex: 1,
-      })
-    ).toEqual({
-      kind: "index",
-      index: 3,
-      align: "start",
-      offset: 18,
+    expect(createForumConversationMode({ restoreView: null })).toEqual({
+      kind: "live",
     });
   });
 
-  it("centers a jump target and falls back to bottom when the target is missing", () => {
+  it("uses restore mode for any saved semantic view", () => {
+    const headerView = {
+      kind: "header",
+      offset: 12,
+      postId: headerPostId,
+    } satisfies ForumConversationView;
+
+    const unreadView = {
+      kind: "unread",
+      offset: 4,
+      postId: headerPostId,
+    } satisfies ForumConversationView;
+
+    expect(createForumConversationMode({ restoreView: headerView })).toEqual({
+      kind: "restore",
+      postId: headerPostId,
+      view: headerView,
+    });
+
+    expect(createForumConversationMode({ restoreView: unreadView })).toEqual({
+      kind: "restore",
+      postId: headerPostId,
+      view: unreadView,
+    });
+  });
+
+  it("resolves restore anchors for header, date, unread, and post views", () => {
+    const lookup = createLookup();
+
     expect(
       createInitialConversationAnchor({
+        ...lookup,
         existingView: null,
-        mode: { kind: "jump", postId: postAId },
-        postIdToIndex: new Map([[postAId, 2]]),
+        mode: {
+          kind: "restore",
+          postId: headerPostId,
+          view: { kind: "header", offset: 14, postId: headerPostId },
+        },
+      })
+    ).toEqual({ kind: "index", index: 0, align: "start", offset: 14 });
+
+    expect(
+      createInitialConversationAnchor({
+        ...lookup,
+        existingView: null,
+        mode: {
+          kind: "restore",
+          postId: headerPostId,
+          view: {
+            kind: "date",
+            date: dateKey,
+            offset: 10,
+            postId: headerPostId,
+          },
+        },
+      })
+    ).toEqual({ kind: "index", index: 1, align: "start", offset: 10 });
+
+    expect(
+      createInitialConversationAnchor({
+        ...lookup,
+        existingView: null,
+        mode: {
+          kind: "restore",
+          postId: headerPostId,
+          view: { kind: "unread", offset: 8, postId: headerPostId },
+        },
+      })
+    ).toEqual({ kind: "index", index: 2, align: "start", offset: 8 });
+
+    expect(
+      createInitialConversationAnchor({
+        ...lookup,
+        existingView: null,
+        mode: {
+          kind: "restore",
+          postId: postAId,
+          view: { kind: "post", offset: 6, postId: postAId },
+        },
+      })
+    ).toEqual({ kind: "index", index: 4, align: "start", offset: 6 });
+  });
+
+  it("falls back from missing semantic separators to the associated post or bottom", () => {
+    expect(
+      createInitialConversationAnchor({
+        dateToIndex: new Map(),
+        existingView: null,
+        headerIndex: null,
+        mode: {
+          kind: "restore",
+          postId: headerPostId,
+          view: {
+            kind: "date",
+            date: dateKey,
+            offset: 3,
+            postId: headerPostId,
+          },
+        },
+        postIdToIndex: new Map([[headerPostId, 7]]),
         unreadIndex: null,
       })
-    ).toEqual({
-      kind: "index",
-      index: 2,
-      align: "center",
-    });
+    ).toEqual({ kind: "index", index: 7, align: "start", offset: 3 });
 
     expect(
       createInitialConversationAnchor({
+        dateToIndex: new Map(),
         existingView: null,
-        mode: { kind: "jump", postId: postAId },
+        headerIndex: null,
+        mode: {
+          kind: "restore",
+          postId: headerPostId,
+          view: { kind: "header", offset: 3, postId: headerPostId },
+        },
         postIdToIndex: new Map(),
-        unreadIndex: 1,
+        unreadIndex: null,
+      })
+    ).toEqual({ kind: "bottom" });
+
+    expect(
+      createInitialConversationAnchor({
+        dateToIndex: new Map(),
+        existingView: null,
+        headerIndex: null,
+        mode: {
+          kind: "restore",
+          postId: headerPostId,
+          view: {
+            kind: "date",
+            date: dateKey,
+            offset: 5,
+            postId: headerPostId,
+          },
+        },
+        postIdToIndex: new Map(),
+        unreadIndex: null,
+      })
+    ).toEqual({ kind: "bottom" });
+
+    expect(
+      createInitialConversationAnchor({
+        dateToIndex: new Map(),
+        existingView: null,
+        headerIndex: null,
+        mode: {
+          kind: "restore",
+          postId: headerPostId,
+          view: { kind: "unread", offset: 5, postId: headerPostId },
+        },
+        postIdToIndex: new Map(),
+        unreadIndex: null,
+      })
+    ).toEqual({ kind: "bottom" });
+
+    expect(
+      createInitialConversationAnchor({
+        dateToIndex: new Map(),
+        existingView: null,
+        headerIndex: null,
+        mode: {
+          kind: "restore",
+          postId: headerPostId,
+          view: { kind: "post", offset: 5, postId: headerPostId },
+        },
+        postIdToIndex: new Map(),
+        unreadIndex: null,
       })
     ).toEqual({ kind: "bottom" });
   });
 
-  it("keeps bottom snapshots ahead of unread and falls back to bottom without unread", () => {
+  it("centers jump targets and keeps live bottom/unread fallbacks", () => {
+    const lookup = createLookup();
+
     expect(
       createInitialConversationAnchor({
+        ...lookup,
+        existingView: null,
+        mode: { kind: "jump", postId: postAId },
+      })
+    ).toEqual({ kind: "index", index: 4, align: "center" });
+
+    expect(
+      createInitialConversationAnchor({
+        ...lookup,
         existingView: { kind: "bottom" },
         mode: { kind: "live" },
-        postIdToIndex: new Map(),
-        unreadIndex: 1,
       })
     ).toEqual({ kind: "bottom" });
 
     expect(
       createInitialConversationAnchor({
+        ...lookup,
         existingView: null,
+        mode: { kind: "live" },
+      })
+    ).toEqual({ kind: "index", index: 2, align: "center" });
+
+    expect(
+      createInitialConversationAnchor({
+        dateToIndex: new Map(),
+        existingView: null,
+        headerIndex: null,
         mode: { kind: "live" },
         postIdToIndex: new Map(),
         unreadIndex: null,
@@ -155,51 +303,20 @@ describe("forum conversation view state", () => {
     ).toEqual({ kind: "bottom" });
   });
 
-  it("anchors live mode to the unread separator when no bottom snapshot exists", () => {
-    expect(
-      createInitialConversationAnchor({
-        existingView: null,
-        mode: { kind: "live" },
-        postIdToIndex: new Map(),
-        unreadIndex: 1,
-      })
-    ).toEqual({
-      kind: "index",
-      index: 1,
-      align: "center",
-    });
-  });
-
-  it("creates the first unread snapshot when no saved view exists", () => {
-    const items = createItems();
-
-    expect(
-      createInitialConversationView({
-        existingView: null,
-        items,
-        mode: { kind: "live" },
-        unreadIndex: 1,
-      })
-    ).toEqual({
-      kind: "post",
-      offset: 0,
-      postId: postAId,
-    });
-  });
-
-  it("preserves restore, jump, and bottom snapshots on fresh mounts", () => {
+  it("creates fallback snapshots for restore, jump, bottom, and unread openings", () => {
     const restoreView = {
-      kind: "post",
-      offset: 6,
-      postId: postBId,
+      kind: "date",
+      date: dateKey,
+      offset: 7,
+      postId: headerPostId,
     } satisfies ForumConversationView;
 
     expect(
       createInitialConversationView({
         existingView: null,
         items: createItems(),
-        mode: { kind: "restore", postId: postBId, view: restoreView },
-        unreadIndex: 1,
+        mode: { kind: "restore", postId: headerPostId, view: restoreView },
+        unreadIndex: 2,
       })
     ).toEqual(restoreView);
 
@@ -208,7 +325,7 @@ describe("forum conversation view state", () => {
         existingView: null,
         items: createItems(),
         mode: { kind: "jump", postId: postAId },
-        unreadIndex: 1,
+        unreadIndex: 2,
       })
     ).toEqual({ kind: "post", offset: 0, postId: postAId });
 
@@ -217,33 +334,39 @@ describe("forum conversation view state", () => {
         existingView: { kind: "bottom" },
         items: createItems(),
         mode: { kind: "live" },
-        unreadIndex: 1,
+        unreadIndex: 2,
       })
     ).toEqual({ kind: "bottom" });
+
+    expect(
+      createInitialConversationView({
+        existingView: null,
+        items: createItems(),
+        mode: { kind: "live" },
+        unreadIndex: 2,
+      })
+    ).toEqual({ kind: "unread", offset: 0, postId: headerPostId });
   });
 
-  it("falls back to bottom when unread markers do not resolve to a post", () => {
+  it("falls back to bottom when unread markers cannot resolve to a post", () => {
     expect(
       createInitialConversationView({
         existingView: null,
         items: [
           { type: "header", forum: {} } as VirtualItem,
-          { type: "spacer" },
-        ],
-        mode: { kind: "live" },
-        unreadIndex: null,
-      })
-    ).toEqual({ kind: "bottom" });
-
-    expect(
-      createInitialConversationView({
-        existingView: null,
-        items: [
-          { type: "header", forum: {} } as VirtualItem,
-          { type: "spacer" },
+          { type: "spacer" } as VirtualItem,
         ],
         mode: { kind: "live" },
         unreadIndex: 0,
+      })
+    ).toEqual({ kind: "bottom" });
+
+    expect(
+      createInitialConversationView({
+        existingView: null,
+        items: createItems(),
+        mode: { kind: "live" },
+        unreadIndex: null,
       })
     ).toEqual({ kind: "bottom" });
   });
@@ -273,72 +396,180 @@ describe("forum conversation view state", () => {
     ).toBeNull();
   });
 
-  it("captures the first visible post even when separators occupy the top edge", () => {
+  it("captures semantic top-edge items for header, date, unread, and post", () => {
+    const items = createItems();
+
     expect(
       captureConversationView({
-        items: createItems(),
+        items,
+        offset: 10,
+        scrollRef: createHandle({
+          findItemIndex: 0,
+          offsets: [0, 80, 120, 160, 240, 320, 420],
+          scrollOffset: 10,
+        }),
+      })
+    ).toEqual({ kind: "header", offset: 10, postId: headerPostId });
+
+    expect(
+      captureConversationView({
+        items,
         offset: 90,
         scrollRef: createHandle({
           findItemIndex: 1,
-          offsets: [0, 40, 80, 140, 220],
+          offsets: [0, 80, 120, 160, 240, 320, 420],
           scrollOffset: 90,
         }),
       })
     ).toEqual({
-      kind: "post",
+      kind: "date",
+      date: dateKey,
       offset: 10,
-      postId: postAId,
+      postId: headerPostId,
     });
-  });
 
-  it("walks backward when the visible edge sits below the final post", () => {
     expect(
       captureConversationView({
-        items: createItems(),
-        offset: 230,
+        items,
+        offset: 130,
         scrollRef: createHandle({
-          findItemIndex: 4,
-          offsets: [0, 40, 80, 140, 220],
-          scrollOffset: 230,
+          findItemIndex: 2,
+          offsets: [0, 80, 120, 160, 240, 320, 420],
+          scrollOffset: 130,
+        }),
+      })
+    ).toEqual({ kind: "unread", offset: 10, postId: headerPostId });
+
+    expect(
+      captureConversationView({
+        items,
+        offset: 170,
+        scrollRef: createHandle({
+          findItemIndex: 3,
+          offsets: [0, 80, 120, 160, 240, 320, 420],
+          scrollOffset: 170,
+        }),
+      })
+    ).toEqual({ kind: "post", offset: 10, postId: headerPostId });
+  });
+
+  it("repositions the measured visible index when the virtualizer start index is stale", () => {
+    const items = createItems();
+
+    expect(
+      captureConversationView({
+        items,
+        offset: 90,
+        scrollRef: createHandle({
+          findItemIndex: 3,
+          offsets: [0, 80, 120, 160, 240, 320, 420],
+          scrollOffset: 90,
         }),
       })
     ).toEqual({
-      kind: "post",
-      offset: 90,
-      postId: postBId,
+      kind: "date",
+      date: dateKey,
+      offset: 10,
+      postId: headerPostId,
     });
-  });
 
-  it("walks backward through measured offsets before choosing the first visible post", () => {
     expect(
       captureConversationView({
-        items: createItems(),
-        offset: 85,
+        items,
+        offset: 170,
         scrollRef: createHandle({
-          findItemIndex: 4,
-          offsets: [0, 40, 80, 140, 220],
-          scrollOffset: 85,
+          findItemIndex: 0,
+          offsets: [0, 80, 120, 160, 240, 320, 420],
+          scrollOffset: 170,
         }),
       })
-    ).toEqual({
-      kind: "post",
-      offset: 5,
-      postId: postAId,
-    });
+    ).toEqual({ kind: "post", offset: 10, postId: headerPostId });
   });
 
-  it("returns null when no rendered post can anchor the viewport", () => {
+  it("falls forward from non-anchor items and backward from trailing spacer positions", () => {
+    const items = createItems();
+
+    expect(
+      captureConversationView({
+        items,
+        offset: 430,
+        scrollRef: createHandle({
+          findItemIndex: 6,
+          offsets: [0, 80, 120, 160, 240, 320, 420],
+          scrollOffset: 430,
+        }),
+      })
+    ).toEqual({ kind: "post", offset: 110, postId: postBId });
+
     expect(
       captureConversationView({
         items: [
           { type: "header", forum: {} } as VirtualItem,
-          { type: "spacer" },
+          { type: "spacer" } as VirtualItem,
         ],
-        offset: 50,
+        offset: 20,
+        scrollRef: createHandle({
+          findItemIndex: 0,
+          offsets: [0, 80],
+          scrollOffset: 20,
+        }),
+      })
+    ).toEqual({ kind: "header", offset: 20, postId: null });
+  });
+
+  it("returns null when only non-restorable separator items remain around the viewport", () => {
+    expect(
+      captureConversationView({
+        items: [
+          { type: "date", date: dateKey } as VirtualItem,
+          { type: "spacer" } as VirtualItem,
+        ],
+        offset: 120,
         scrollRef: createHandle({
           findItemIndex: 1,
-          offsets: [0, 40],
-          scrollOffset: 50,
+          offsets: [0, 80],
+          scrollOffset: 120,
+        }),
+      })
+    ).toBeNull();
+
+    expect(
+      captureConversationView({
+        items: [
+          { type: "unread", count: 1 } as VirtualItem,
+          { type: "spacer" } as VirtualItem,
+        ],
+        offset: 120,
+        scrollRef: createHandle({
+          findItemIndex: 1,
+          offsets: [0, 80],
+          scrollOffset: 120,
+        }),
+      })
+    ).toBeNull();
+
+    expect(
+      captureConversationView({
+        items: [{ type: "spacer" } as VirtualItem],
+        offset: 10,
+        scrollRef: createHandle({
+          findItemIndex: 0,
+          offsets: [0],
+          scrollOffset: 10,
+        }),
+      })
+    ).toBeNull();
+
+    const sparseItems = new Array(1) as VirtualItem[];
+
+    expect(
+      captureConversationView({
+        items: sparseItems,
+        offset: 10,
+        scrollRef: createHandle({
+          findItemIndex: 0,
+          offsets: [0],
+          scrollOffset: 10,
         }),
       })
     ).toBeNull();

@@ -19,7 +19,7 @@ interface TimelineState {
 
 interface TargetRequest {
   kind: Exclude<ForumConversationMode["kind"], "live">;
-  postId: Id<"schoolClassForumPosts">;
+  postId: Id<"schoolClassForumPosts"> | null;
 }
 
 /** Creates one live-edge timeline from the reactive latest page. */
@@ -243,11 +243,28 @@ export function useForumPosts({
 
   const focusedInitData = useQuery(
     api.classes.forums.queries.around.getForumPostsAround,
-    targetRequest ? { forumId, targetPostId: targetRequest.postId } : "skip"
+    targetRequest?.postId
+      ? { forumId, targetPostId: targetRequest.postId }
+      : "skip"
   );
 
   useEffect(() => {
-    if (!(focusedInitData && targetRequest)) {
+    if (
+      !(
+        targetRequest &&
+        !targetRequest.postId &&
+        liveStatus !== "LoadingFirstPage"
+      )
+    ) {
+      return;
+    }
+
+    setTimeline(createLiveTimelineState(livePosts, liveHasMoreBefore));
+    setTargetRequest(null);
+  }, [targetRequest, liveHasMoreBefore, livePosts, liveStatus]);
+
+  useEffect(() => {
+    if (!(focusedInitData && targetRequest?.postId)) {
       return;
     }
 

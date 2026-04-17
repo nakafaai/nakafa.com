@@ -10,6 +10,11 @@ import type { ForumConversationView } from "@/lib/store/forum";
 
 const bottomThreshold = VIRTUAL_CONVERSATION_BOTTOM_THRESHOLD;
 
+type RestorableConversationView = Exclude<
+  ForumConversationView,
+  { kind: "bottom" }
+>;
+
 export type ForumConversationMode =
   | {
       kind: "jump";
@@ -20,9 +25,59 @@ export type ForumConversationMode =
     }
   | {
       kind: "restore";
-      postId: Id<"schoolClassForumPosts">;
-      view: Extract<ForumConversationView, { kind: "post" }>;
+      postId: Id<"schoolClassForumPosts"> | null;
+      view: RestorableConversationView;
     };
+
+/** Finds the first post id after one virtual item index. */
+function findNextPostId(
+  items: VirtualItem[],
+  startIndex: number
+): Id<"schoolClassForumPosts"> | null {
+  for (let index = startIndex + 1; index < items.length; index += 1) {
+    const item = items[index];
+
+    if (item?.type === "post") {
+      return item.post._id;
+    }
+  }
+
+  return null;
+}
+
+/** Resolves the primary post id used to bootstrap restore data windows. */
+function getRestoreTargetPostId(view: RestorableConversationView) {
+  return view.postId;
+}
+
+/** Resolves one saved semantic view back into the current virtual item index. */
+function resolveConversationAnchorIndex({
+  dateToIndex,
+  headerIndex,
+  postIdToIndex,
+  unreadIndex,
+  view,
+}: {
+  dateToIndex: Map<number, number>;
+  headerIndex: number | null;
+  postIdToIndex: Map<Id<"schoolClassForumPosts">, number>;
+  unreadIndex: number | null;
+  view: RestorableConversationView;
+}) {
+  if (view.kind === "header") {
+    return headerIndex;
+  }
+
+  if (view.kind === "date") {
+    return dateToIndex.get(view.date) ?? postIdToIndex.get(view.postId) ?? null;
+  }
+
+  if (view.kind === "unread") {
+    return unreadIndex ?? postIdToIndex.get(view.postId) ?? null;
+  }
+
+  return postIdToIndex.get(view.postId) ?? null;
+}
 
 /** Chooses the fresh-mount conversation mode from one saved view snapshot. */
 export function createForumConversationMode({
@@ -30,8 +85,12 @@ export function createForumConversationMode({
 }: {
   restoreView: ForumConversationView | null;
 }): ForumConversationMode {
-  if (restoreView?.kind === "post") {
-    return { kind: "restore", postId: restoreView.postId, view: restoreView };
+  if (restoreView && restoreView.kind !== "bottom") {
+    return {
+      kind: "restore",
+      postId: getRestoreTargetPostId(restoreView),
+      view: restoreView,
+    };
   }
 
   return { kind: "live" };
@@ -39,20 +98,33 @@ export function createForumConversationMode({
 
 /** Resolves the first virtual list anchor for a fresh conversation mount. */
 export function createInitialConversationAnchor({
+  dateToIndex,
   existingView,
+  headerIndex,
   mode,
   postIdToIndex,
   unreadIndex,
 }: {
+  dateToIndex: Map<number, number>;
   existingView: ForumConversationView | null;
+  headerIndex: number | null;
   mode: ForumConversationMode;
   postIdToIndex: Map<Id<"schoolClassForumPosts">, number>;
   unreadIndex: number | null;
 }): VirtualConversationAnchor {
   if (mode.kind !== "live") {
-    const index = postIdToIndex.get(mode.postId);
+    const index =
+      mode.kind === "jump"
+        ? postIdToIndex.get(mode.postId)
+        : resolveConversationAnchorIndex({
+            dateToIndex,
+            headerIndex,
+            postIdToIndex,
+            unreadIndex,
+            view: mode.view,
+          });
 
-    if (index === undefined) {
+    if (index === undefined || index === null) {
       return { kind: "bottom" };
     }
 
@@ -120,7 +192,7 @@ export function createInitialConversationView({
   }
 
   return {
-    kind: "post",
+    kind: "unread",
     offset: 0,
     postId: unreadPost.post._id,
   };
@@ -156,6 +228,74 @@ function findVisibleItemIndexAtOffset({
 }
 
 /** Captures one session-restorable view from the virtualized viewport. */
+function createConversationViewAtIndex({
+  currentOffset,
+  handle,
+  index,
+  items,
+}: {
+  currentOffset: number;
+  handle: VirtualConversationHandle;
+  index: number;
+  items: VirtualItem[];
+}): ForumConversationView | null {
+  const item = items[index];
+
+  if (!item) {
+    return null;
+  }
+
+  const offset = Math.max(0, currentOffset - handle.getItemOffset(index));
+
+  if (item.type === "header") {
+    return {
+      kind: "header",
+      offset,
+      postId: findNextPostId(items, index),
+    };
+  }
+
+  if (item.type === "date") {
+    const postId = findNextPostId(items, index);
+
+    if (!postId) {
+      return null;
+    }
+
+    return {
+      kind: "date",
+      date: item.date,
+      offset,
+      postId,
+    };
+  }
+
+  if (item.type === "unread") {
+    const postId = findNextPostId(items, index);
+
+    if (!postId) {
+      return null;
+    }
+
+    return {
+      kind: "unread",
+      offset,
+      postId,
+    };
+  }
+
+  if (item.type === "post") {
+    return {
+      kind: "post",
+      postId: item.post._id,
+      offset,
+    };
+  }
+
+  return null;
+}
+
+/** Captures one session-restorable view from the virtualized viewport. */
 export function captureConversationView({
   items,
   offset,
@@ -188,31 +328,29 @@ export function captureConversationView({
   }
 
   for (let index = visibleIndex; index < items.length; index += 1) {
-    const item = items[index];
+    const view = createConversationViewAtIndex({
+      currentOffset,
+      handle,
+      index,
+      items,
+    });
 
-    if (item.type !== "post") {
-      continue;
+    if (view) {
+      return view;
     }
-
-    return {
-      kind: "post",
-      postId: item.post._id,
-      offset: Math.max(0, currentOffset - handle.getItemOffset(index)),
-    };
   }
 
   for (let index = visibleIndex - 1; index >= 0; index -= 1) {
-    const item = items[index];
+    const view = createConversationViewAtIndex({
+      currentOffset,
+      handle,
+      index,
+      items,
+    });
 
-    if (item.type !== "post") {
-      continue;
+    if (view) {
+      return view;
     }
-
-    return {
-      kind: "post",
-      postId: item.post._id,
-      offset: Math.max(0, currentOffset - handle.getItemOffset(index)),
-    };
   }
 
   return null;

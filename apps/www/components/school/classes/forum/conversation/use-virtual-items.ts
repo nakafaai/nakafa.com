@@ -62,50 +62,59 @@ export function useVirtualItems({
   }, [isDetachedMode, posts]);
 
   // Build virtual items
-  const { items, postIdToIndex, unreadIndex } = useMemo(() => {
-    const result: VirtualItem[] = [];
-    const idToIndex = new Map<Id<"schoolClassForumPosts">, number>();
-    let nextUnreadIndex: number | null = null;
+  const { dateToIndex, headerIndex, items, postIdToIndex, unreadIndex } =
+    useMemo(() => {
+      const result: VirtualItem[] = [];
+      const dateToIndex = new Map<number, number>();
+      let nextHeaderIndex: number | null = null;
+      const idToIndex = new Map<Id<"schoolClassForumPosts">, number>();
+      let nextUnreadIndex: number | null = null;
 
-    if (forum) {
-      result.push({ type: "header", forum });
-    }
-
-    for (const [index, post] of posts.entries()) {
-      const prevPost = posts[index - 1];
-      const prevDate = prevPost
-        ? new Date(prevPost._creationTime).toDateString()
-        : new Date(post._creationTime).toDateString();
-      const currentDate = new Date(post._creationTime).toDateString();
-
-      if (currentDate !== prevDate) {
-        result.push({ type: "date", date: post._creationTime });
+      if (forum) {
+        nextHeaderIndex = result.length;
+        result.push({ type: "header", forum });
       }
 
-      if (!isDetachedMode && index === firstUnreadIndex) {
-        result.push({ type: "unread", count: unreadCount });
-        nextUnreadIndex = result.length - 1;
+      for (const [index, post] of posts.entries()) {
+        const prevPost = posts[index - 1];
+        const prevDate = prevPost
+          ? new Date(prevPost._creationTime).toDateString()
+          : new Date(post._creationTime).toDateString();
+        const currentDate = new Date(post._creationTime).toDateString();
+
+        if (currentDate !== prevDate) {
+          dateToIndex.set(post._creationTime, result.length);
+          result.push({ type: "date", date: post._creationTime });
+        }
+
+        if (!isDetachedMode && index === firstUnreadIndex) {
+          result.push({ type: "unread", count: unreadCount });
+          nextUnreadIndex = result.length - 1;
+        }
+
+        const isFirstInGroup =
+          currentDate !== prevDate ||
+          !prevPost ||
+          prevPost.createdBy !== post.createdBy;
+
+        idToIndex.set(post._id, result.length);
+        result.push({ type: "post", post, isFirstInGroup });
       }
 
-      const isFirstInGroup =
-        currentDate !== prevDate ||
-        !prevPost ||
-        prevPost.createdBy !== post.createdBy;
+      result.push({ type: "spacer" });
 
-      idToIndex.set(post._id, result.length);
-      result.push({ type: "post", post, isFirstInGroup });
-    }
-
-    result.push({ type: "spacer" });
-
-    return {
-      items: result,
-      postIdToIndex: idToIndex,
-      unreadIndex: nextUnreadIndex,
-    };
-  }, [forum, posts, firstUnreadIndex, unreadCount, isDetachedMode]);
+      return {
+        items: result,
+        dateToIndex,
+        headerIndex: nextHeaderIndex,
+        postIdToIndex: idToIndex,
+        unreadIndex: nextUnreadIndex,
+      };
+    }, [forum, posts, firstUnreadIndex, unreadCount, isDetachedMode]);
 
   return {
+    dateToIndex,
+    headerIndex,
     items,
     postIdToIndex,
     unreadIndex,
