@@ -22,6 +22,11 @@ import { ForumHeader } from "@/components/school/classes/forum/conversation/head
 import { ForumPostInput } from "@/components/school/classes/forum/conversation/input";
 import { ForumPostItem } from "@/components/school/classes/forum/conversation/item";
 import {
+  resolveScrollCommand,
+  type ScrollCommand,
+  shouldPersistBottomConversationView,
+} from "@/components/school/classes/forum/conversation/scroll-command";
+import {
   DateSeparator,
   JumpModeIndicator,
   UnreadSeparator,
@@ -40,17 +45,6 @@ import {
 import { useForum, useForumStoreApi } from "@/lib/context/use-forum";
 import { ForumScrollProvider } from "@/lib/context/use-forum-scroll";
 import type { ForumConversationView } from "@/lib/store/forum";
-
-type PendingScrollIntent =
-  | {
-      kind: "bottom";
-    }
-  | {
-      align: "center" | "start";
-      kind: "post";
-      offset?: number;
-      postId: Id<"schoolClassForumPosts">;
-    };
 
 /**
  * Render one forum conversation with explicit live/restore/jump modes and a
@@ -81,7 +75,11 @@ export const ForumPostConversation = memo(
         })
       );
     const initialAnchorSettledRef = useRef(false);
-    const pendingScrollIntentRef = useRef<PendingScrollIntent | null>(null);
+    const nextScrollCommandIdRef = useRef(0);
+    const pendingBottomPersistenceIdRef = useRef<number | null>(null);
+    const [scrollCommand, setScrollCommand] = useState<ScrollCommand | null>(
+      null
+    );
 
     const {
       hasMoreAfter,
@@ -168,6 +166,36 @@ export const ForumPostConversation = memo(
       [forumId, saveConversationView]
     );
 
+    /** Commits a confirmed latest-edge landing into the persisted view store. */
+    const persistBottomConversationView = useCallback(() => {
+      const bottomView = { kind: "bottom" } satisfies ForumConversationView;
+
+      pendingBottomPersistenceIdRef.current = null;
+      latestConversationView.current = bottomView;
+      persistConversationView(bottomView);
+    }, [persistConversationView]);
+
+    /** Persists a latest-edge command only after the viewport actually reaches bottom. */
+    const maybePersistBottomConversationView = useCallback(
+      (atBottom: boolean) => {
+        if (
+          !shouldPersistBottomConversationView({
+            hasPendingBottomPersistence:
+              pendingBottomPersistenceIdRef.current !== null,
+            isAtBottom: atBottom,
+            isAtLatestEdge,
+            isInitialAnchorSettled: initialAnchorSettledRef.current,
+          })
+        ) {
+          return false;
+        }
+
+        persistBottomConversationView();
+        return true;
+      },
+      [isAtLatestEdge, persistBottomConversationView]
+    );
+
     /** Scrolls to one rendered post in the current virtual list. */
     const scrollToPostId = useCallback(
       (postId: Id<"schoolClassForumPosts">) => {
@@ -195,16 +223,19 @@ export const ForumPostConversation = memo(
         latestConversationView.current = nextView;
         persistConversationView(nextView);
 
+        pendingBottomPersistenceIdRef.current = null;
+        nextScrollCommandIdRef.current += 1;
+        setScrollCommand({
+          align: "center",
+          id: nextScrollCommandIdRef.current,
+          kind: "post",
+          postId,
+        });
+
         if (index !== undefined) {
-          scrollRef.current?.scrollToIndex(index, { align: "center" });
           return;
         }
 
-        pendingScrollIntentRef.current = {
-          kind: "post",
-          postId,
-          align: "center",
-        };
         setConversationIntent({ kind: "jump", postId });
       },
       [persistConversationView, postIdToIndex]
@@ -212,14 +243,12 @@ export const ForumPostConversation = memo(
 
     /** Returns the conversation to the live latest-post edge. */
     const scrollToLatest = useCallback(() => {
-      const nextView = { kind: "bottom" } satisfies ForumConversationView;
-
-      latestConversationView.current = nextView;
-      persistConversationView(nextView);
-      pendingScrollIntentRef.current = { kind: "bottom" };
+      pendingBottomPersistenceIdRef.current = null;
+      nextScrollCommandIdRef.current += 1;
+      setScrollCommand({ id: nextScrollCommandIdRef.current, kind: "bottom" });
       setConversationIntent({ kind: "live" });
       showLatestPosts();
-    }, [persistConversationView, showLatestPosts]);
+    }, [showLatestPosts]);
 
     const forumScrollValue = useMemo(
       () => ({ scrollToPostId, jumpToPostId, scrollToLatest }),
@@ -236,39 +265,34 @@ export const ForumPostConversation = memo(
       }
     }, [conversationIntent.kind, isAtLatestEdge]);
 
-    useEffect(() => {
-      const pendingScrollIntent = pendingScrollIntentRef.current;
+    useLayoutEffect(() => {
+      const resolvedScrollCommand = resolveScrollCommand({
+        command: scrollCommand,
+        isAtLatestEdge,
+        postIdToIndex,
+      });
 
-      if (!pendingScrollIntent) {
+      if (!resolvedScrollCommand) {
         return;
       }
 
-      if (pendingScrollIntent.kind === "bottom") {
-        if (!isAtLatestEdge) {
-          return;
-        }
-
+      if (resolvedScrollCommand.kind === "bottom") {
+        pendingBottomPersistenceIdRef.current = resolvedScrollCommand.commandId;
         requestAnimationFrame(() => {
           scrollRef.current?.scrollToBottom();
         });
-        pendingScrollIntentRef.current = null;
-        return;
-      }
-
-      const index = postIdToIndex.get(pendingScrollIntent.postId);
-
-      if (index === undefined) {
+        setScrollCommand(null);
         return;
       }
 
       requestAnimationFrame(() => {
-        scrollRef.current?.scrollToIndex(index, {
-          align: pendingScrollIntent.align,
-          offset: pendingScrollIntent.offset,
+        scrollRef.current?.scrollToIndex(resolvedScrollCommand.index, {
+          align: resolvedScrollCommand.align,
+          offset: resolvedScrollCommand.offset,
         });
       });
-      pendingScrollIntentRef.current = null;
-    }, [isAtLatestEdge, postIdToIndex]);
+      setScrollCommand(null);
+    }, [isAtLatestEdge, postIdToIndex, scrollCommand]);
 
     /** Marks the thread as read only while the live edge remains visible. */
     const handleScroll = useCallback(
@@ -278,6 +302,7 @@ export const ForumPostConversation = memo(
         }
 
         const atBottom = scrollRef.current?.isAtBottom() ?? true;
+        maybePersistBottomConversationView(atBottom);
 
         if (!(initialAnchorSettledRef.current && atBottom && isAtLatestEdge)) {
           cancelPendingMarkRead();
@@ -291,6 +316,7 @@ export const ForumPostConversation = memo(
         captureCurrentConversationView,
         isAtLatestEdge,
         lastPostId,
+        maybePersistBottomConversationView,
         scheduleMarkRead,
       ]
     );
@@ -341,8 +367,20 @@ export const ForumPostConversation = memo(
         return;
       }
 
+      if (
+        maybePersistBottomConversationView(
+          scrollRef.current?.isAtBottom() ?? false
+        )
+      ) {
+        return;
+      }
+
       persistConversationView(captureCurrentConversationView());
-    }, [captureCurrentConversationView, persistConversationView]);
+    }, [
+      captureCurrentConversationView,
+      maybePersistBottomConversationView,
+      persistConversationView,
+    ]);
 
     /** Persists the latest fallback snapshot when the conversation hides. */
     useLayoutEffect(
@@ -358,6 +396,9 @@ export const ForumPostConversation = memo(
         } else {
           persistConversationView();
         }
+
+        pendingBottomPersistenceIdRef.current = null;
+        setScrollCommand(null);
       },
       [persistConversationView]
     );
