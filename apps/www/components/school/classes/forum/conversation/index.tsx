@@ -12,6 +12,7 @@ import {
   memo,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -25,16 +26,34 @@ import {
   UnreadSeparator,
 } from "@/components/school/classes/forum/conversation/separators";
 import type { Forum } from "@/components/school/classes/forum/conversation/types";
-import { useAutoScroll } from "@/components/school/classes/forum/conversation/use-auto-scroll";
 import { useForumPosts } from "@/components/school/classes/forum/conversation/use-forum-posts";
 import { useMarkRead } from "@/components/school/classes/forum/conversation/use-mark-read";
 import { useVirtualItems } from "@/components/school/classes/forum/conversation/use-virtual-items";
-import { useForum } from "@/lib/context/use-forum";
+import {
+  captureConversationView,
+  createForumConversationMode,
+  createInitialConversationAnchor,
+  createInitialConversationView,
+  type ForumConversationMode,
+} from "@/components/school/classes/forum/conversation/view-state";
+import { useForum, useForumStoreApi } from "@/lib/context/use-forum";
 import { ForumScrollProvider } from "@/lib/context/use-forum-scroll";
+import type { ForumConversationView } from "@/lib/store/forum";
+
+type PendingScrollIntent =
+  | {
+      kind: "bottom";
+    }
+  | {
+      align: "center" | "start";
+      kind: "post";
+      offset?: number;
+      postId: Id<"schoolClassForumPosts">;
+    };
 
 /**
- * Render one forum conversation with normal pagination, jump-mode loading, and
- * read-state updates coordinated around the virtualized list.
+ * Render one forum conversation with explicit live/restore/jump modes and a
+ * serializable scroll snapshot model.
  */
 export const ForumPostConversation = memo(
   ({
@@ -46,32 +65,56 @@ export const ForumPostConversation = memo(
     forumId: Id<"schoolClassForums">;
     currentUserId: Id<"users">;
   }) => {
-    // Data fetching & pagination
-    const {
-      posts,
-      isJumpMode,
-      targetIndex,
-      hasMoreBefore,
-      hasMoreAfter,
-      isLoadingOlder,
-      isLoadingNewer,
-      isInitialLoading,
-      status,
-      loadMore,
-      loadOlderPosts,
-      loadNewerPosts,
-      exitJumpMode,
-    } = useForumPosts(forumId);
+    const forumStore = useForumStoreApi();
+    const saveConversationView = useForum(
+      (state) => state.saveConversationView
+    );
+    const latestConversationView = useRef<ForumConversationView | null>(
+      forumStore.getState().savedConversationViews[forumId] ?? null
+    );
+    const [conversationIntent, setConversationIntent] =
+      useState<ForumConversationMode>(() =>
+        createForumConversationMode({
+          restoreView: latestConversationView.current,
+        })
+      );
+    const [conversationSessionVersion, setConversationSessionVersion] =
+      useState(0);
+    const initialAnchorSettledRef = useRef(false);
+    const pendingScrollIntentRef = useRef<PendingScrollIntent | null>(null);
 
-    // Virtual list items
-    const { items, initialScrollIndex, postIdToIndex } = useVirtualItems({
+    const {
+      hasMoreAfter,
+      hasMoreBefore,
+      isInitialLoading,
+      isJumpMode,
+      isLiveConnected,
+      isLoadingNewer,
+      isLoadingOlder,
+      loadNewerPosts,
+      loadOlderPosts,
+      posts,
+      showLatestPosts,
+    } = useForumPosts({ forumId, mode: conversationIntent });
+
+    const { items, postIdToIndex, unreadIndex } = useVirtualItems({
       forum,
       posts,
-      isJumpMode,
-      targetIndex,
+      isDetachedMode: !isLiveConnected,
     });
+    const latestItemsRef = useRef(items);
+    latestItemsRef.current = items;
+    const initialAnchor = useMemo(
+      () =>
+        createInitialConversationAnchor({
+          existingView: latestConversationView.current,
+          mode: conversationIntent,
+          postIdToIndex,
+          unreadIndex,
+        }),
+      [conversationIntent, postIdToIndex, unreadIndex]
+    );
 
-    // Scroll refs and state
     const scrollRef = useRef<VirtualConversationHandle>(null);
     const [isPrepending, setIsPrepending] = useState(false);
 
@@ -80,66 +123,253 @@ export const ForumPostConversation = memo(
     const { cancelPendingMarkRead, flushMarkRead, scheduleMarkRead } =
       useMarkRead({ forumId });
 
-    // Auto-scroll on new messages
-    useAutoScroll({
-      postsLength: posts.length,
-      isJumpMode,
-      scrollRef,
-    });
+    /** Captures the current session-restorable viewport into one local ref. */
+    const captureCurrentConversationView = useCallback(
+      (offset?: number) => {
+        const view = captureConversationView({ items, offset, scrollRef });
 
-    // Scroll callbacks
+        if (!view) {
+          return null;
+        }
+
+        latestConversationView.current = view;
+        return view;
+      },
+      [items]
+    );
+
+    /** Saves the latest session-restorable conversation snapshot when needed. */
+    const persistConversationView = useCallback(
+      (view?: ForumConversationView | null) => {
+        const nextView = view ?? latestConversationView.current;
+
+        if (!nextView) {
+          return;
+        }
+
+        latestConversationView.current = nextView;
+        saveConversationView(forumId, nextView);
+      },
+      [forumId, saveConversationView]
+    );
+
+    /** Scrolls to one rendered post in the current virtual list. */
     const scrollToPostId = useCallback(
       (postId: Id<"schoolClassForumPosts">) => {
         const index = postIdToIndex.get(postId);
-        if (index !== undefined) {
-          scrollRef.current?.scrollToIndex(index);
+
+        if (index === undefined) {
+          return;
         }
+
+        scrollRef.current?.scrollToIndex(index, { align: "center" });
       },
       [postIdToIndex]
     );
 
-    const enterJumpMode = useForum((s) => s.enterJumpMode);
+    /** Opens a post directly or switches the conversation into jump mode. */
     const jumpToPostId = useCallback(
       (postId: Id<"schoolClassForumPosts">) => {
         const index = postIdToIndex.get(postId);
-        if (index === undefined) {
-          enterJumpMode(postId);
-        } else {
-          scrollRef.current?.scrollToIndex(index);
+        const nextView = {
+          kind: "post",
+          offset: 0,
+          postId,
+        } satisfies ForumConversationView;
+
+        latestConversationView.current = nextView;
+        persistConversationView(nextView);
+
+        if (index !== undefined) {
+          scrollRef.current?.scrollToIndex(index, { align: "center" });
+          return;
         }
+
+        pendingScrollIntentRef.current = {
+          kind: "post",
+          postId,
+          align: "center",
+        };
+        setConversationIntent({ kind: "jump", postId });
       },
-      [postIdToIndex, enterJumpMode]
+      [persistConversationView, postIdToIndex]
     );
 
-    const scrollToBottom = useCallback(() => {
-      scrollRef.current?.scrollToBottom();
-    }, []);
+    /** Returns the conversation to the live latest-post edge. */
+    const scrollToLatest = useCallback(() => {
+      const nextView = { kind: "bottom" } satisfies ForumConversationView;
+
+      latestConversationView.current = nextView;
+      persistConversationView(nextView);
+      pendingScrollIntentRef.current = { kind: "bottom" };
+      setConversationIntent({ kind: "live" });
+      showLatestPosts();
+    }, [persistConversationView, showLatestPosts]);
 
     const forumScrollValue = useMemo(
-      () => ({ scrollToPostId, jumpToPostId, scrollToBottom }),
-      [scrollToPostId, jumpToPostId, scrollToBottom]
+      () => ({ scrollToPostId, jumpToPostId, scrollToLatest }),
+      [jumpToPostId, scrollToLatest, scrollToPostId]
     );
 
-    // Handlers
-    const handleScroll = useCallback(() => {
-      const atBottom = scrollRef.current?.isAtBottom() ?? true;
+    useEffect(() => {
+      if (
+        initialAnchorSettledRef.current &&
+        isLiveConnected &&
+        conversationIntent.kind !== "live"
+      ) {
+        setConversationIntent({ kind: "live" });
+      }
+    }, [conversationIntent.kind, isLiveConnected]);
 
-      if (!atBottom || isJumpMode) {
+    useEffect(() => {
+      const pendingScrollIntent = pendingScrollIntentRef.current;
+
+      if (!pendingScrollIntent) {
+        return;
+      }
+
+      if (pendingScrollIntent.kind === "bottom") {
+        if (!isLiveConnected) {
+          return;
+        }
+
+        requestAnimationFrame(() => {
+          scrollRef.current?.scrollToBottom();
+        });
+        pendingScrollIntentRef.current = null;
+        return;
+      }
+
+      const index = postIdToIndex.get(pendingScrollIntent.postId);
+
+      if (index === undefined) {
+        return;
+      }
+
+      requestAnimationFrame(() => {
+        scrollRef.current?.scrollToIndex(index, {
+          align: pendingScrollIntent.align,
+          offset: pendingScrollIntent.offset,
+        });
+      });
+      pendingScrollIntentRef.current = null;
+    }, [isLiveConnected, postIdToIndex]);
+
+    /** Marks the thread as read only while the live edge remains visible. */
+    const handleScroll = useCallback(
+      (offset: number) => {
+        if (initialAnchorSettledRef.current) {
+          captureCurrentConversationView(offset);
+        }
+
+        const atBottom = scrollRef.current?.isAtBottom() ?? true;
+
+        if (!(initialAnchorSettledRef.current && atBottom && isLiveConnected)) {
+          cancelPendingMarkRead();
+          return;
+        }
+
+        scheduleMarkRead(lastPostId);
+      },
+      [
+        cancelPendingMarkRead,
+        captureCurrentConversationView,
+        isLiveConnected,
+        lastPostId,
+        scheduleMarkRead,
+      ]
+    );
+
+    /** Finalizes one fresh-mount anchor before live scroll syncing begins. */
+    const handleInitialAnchorSettled = useCallback(() => {
+      initialAnchorSettledRef.current = true;
+
+      const initialView =
+        captureCurrentConversationView() ??
+        createInitialConversationView({
+          existingView: latestConversationView.current,
+          items,
+          mode: conversationIntent,
+          unreadIndex,
+        });
+
+      if (initialView) {
+        latestConversationView.current = initialView;
+        persistConversationView(initialView);
+      }
+
+      const atBottom =
+        scrollRef.current?.isAtBottom() ??
+        (initialView ? initialView.kind === "bottom" : false);
+
+      if (!(atBottom && isLiveConnected)) {
         cancelPendingMarkRead();
         return;
       }
 
       scheduleMarkRead(lastPostId);
-    }, [cancelPendingMarkRead, isJumpMode, lastPostId, scheduleMarkRead]);
+    }, [
+      cancelPendingMarkRead,
+      captureCurrentConversationView,
+      conversationIntent,
+      isLiveConnected,
+      items,
+      lastPostId,
+      persistConversationView,
+      scheduleMarkRead,
+      unreadIndex,
+    ]);
 
-    useEffect(() => {
-      if (!isInitialLoading) {
-        handleScroll();
+    /** Saves the latest fallback snapshot when scrolling settles or the route hides. */
+    const handleScrollEnd = useCallback(() => {
+      if (!initialAnchorSettledRef.current) {
+        return;
       }
-    }, [handleScroll, isInitialLoading]);
+
+      persistConversationView(captureCurrentConversationView());
+    }, [captureCurrentConversationView, persistConversationView]);
+
+    /**
+     * Next Activity preserves refs across soft-nav hide/show cycles. Reset the
+     * transient conversation session on hide so explicit reopen restores from
+     * the saved snapshot instead of stale preserved controller state.
+     */
+    useLayoutEffect(
+      () => () => {
+        const latestView = captureConversationView({
+          items: latestItemsRef.current,
+          scrollRef,
+        });
+
+        if (latestView) {
+          latestConversationView.current = latestView;
+          persistConversationView(latestView);
+        } else {
+          persistConversationView();
+        }
+
+        pendingScrollIntentRef.current = null;
+        initialAnchorSettledRef.current = false;
+        setIsPrepending(false);
+        setConversationIntent(
+          createForumConversationMode({
+            restoreView: latestConversationView.current,
+          })
+        );
+        setConversationSessionVersion((version) => version + 1);
+      },
+      [persistConversationView]
+    );
 
     useEffect(() => {
-      if (isJumpMode || !lastPostId || !previousLastPostId) {
+      if (
+        !(
+          initialAnchorSettledRef.current &&
+          isLiveConnected &&
+          lastPostId &&
+          previousLastPostId
+        )
+      ) {
         return;
       }
 
@@ -152,48 +382,30 @@ export const ForumPostConversation = memo(
       }
 
       flushMarkRead(lastPostId);
-    }, [flushMarkRead, isJumpMode, lastPostId, previousLastPostId]);
+    }, [flushMarkRead, isLiveConnected, lastPostId, previousLastPostId]);
 
+    /** Loads newer history below the current transcript window. */
     const handleScrollToBottom = useCallback(() => {
-      if (isJumpMode) {
-        if (hasMoreAfter && !isLoadingNewer) {
-          loadNewerPosts();
-        } else if (!hasMoreAfter) {
-          exitJumpMode();
-        }
+      if (hasMoreAfter && !isLoadingNewer) {
+        loadNewerPosts();
       }
-    }, [
-      isJumpMode,
-      hasMoreAfter,
-      isLoadingNewer,
-      loadNewerPosts,
-      exitJumpMode,
-    ]);
+    }, [hasMoreAfter, isLoadingNewer, loadNewerPosts]);
 
+    /** Loads older items above the current transcript window when needed. */
     const handleScrollToTop = useCallback(() => {
-      if (isJumpMode && hasMoreBefore && !isLoadingOlder) {
-        loadOlderPosts();
-      } else if (!isJumpMode && status === "CanLoadMore") {
+      if (hasMoreBefore && !isLoadingOlder) {
         setIsPrepending(true);
-        loadMore(25);
+        loadOlderPosts();
       }
-    }, [
-      isJumpMode,
-      hasMoreBefore,
-      isLoadingOlder,
-      loadOlderPosts,
-      status,
-      loadMore,
-    ]);
+    }, [hasMoreBefore, isLoadingOlder, loadOlderPosts]);
 
-    // Reset isPrepending when loading completes
     useEffect(() => {
-      if (isPrepending && status !== "LoadingMore") {
+      if (isPrepending && !isLoadingOlder) {
         setIsPrepending(false);
       }
-    }, [isPrepending, status]);
+    }, [isLoadingOlder, isPrepending]);
 
-    if (isInitialLoading) {
+    if (isInitialLoading || !forum) {
       return <VirtualConversationPlaceholder />;
     }
 
@@ -203,12 +415,16 @@ export const ForumPostConversation = memo(
           <VirtualConversation
             floatingContent={
               <Activity mode={isJumpMode ? "visible" : "hidden"}>
-                <JumpModeIndicator onExit={exitJumpMode} />
+                <JumpModeIndicator onExit={scrollToLatest} />
               </Activity>
             }
+            followLatest={isLiveConnected}
             hideScrollButton={isJumpMode}
-            initialScroll={initialScrollIndex}
+            initialAnchor={initialAnchor}
+            key={conversationSessionVersion}
+            onInitialAnchorSettled={handleInitialAnchorSettled}
             onScroll={handleScroll}
+            onScrollEnd={handleScrollEnd}
             onScrollToBottom={handleScrollToBottom}
             onScrollToTop={handleScrollToTop}
             scrollRef={scrollRef}

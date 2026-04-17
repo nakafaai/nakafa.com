@@ -26,8 +26,8 @@ export function SchoolClassesForumPanel({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { id, slug } = useParams<{ id: string; slug: string }>();
-  const resetConversationState = useForum(
-    (state) => state.resetConversationState
+  const clearTransientConversationState = useForum(
+    (state) => state.clearTransientConversationState
   );
   const forum = useQuery(api.classes.forums.queries.forums.getForum, {
     forumId,
@@ -35,8 +35,9 @@ export function SchoolClassesForumPanel({
   const search = searchParams.toString();
   const closeHref = `/school/${slug}/classes/${id}/forum${search ? `?${search}` : ""}`;
 
+  /** Clears transient reply and jump state before returning to the forum list. */
   function handleClose() {
-    resetConversationState();
+    clearTransientConversationState();
     router.replace(closeHref);
   }
 

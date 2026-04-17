@@ -19,23 +19,25 @@ import type {
 export function useVirtualItems({
   forum,
   posts,
-  isJumpMode,
-  targetIndex,
+  isDetachedMode,
 }: {
   forum: Forum | undefined;
+  isDetachedMode: boolean;
   posts: ForumPost[];
-  isJumpMode: boolean;
-  targetIndex: number;
 }) {
   const initialLatestPostId = useRef<Id<"schoolClassForumPosts"> | null>(null);
 
-  if (initialLatestPostId.current === null && !isJumpMode && posts.length > 0) {
+  if (
+    initialLatestPostId.current === null &&
+    !isDetachedMode &&
+    posts.length > 0
+  ) {
     initialLatestPostId.current = posts.at(-1)?._id ?? null;
   }
 
   // Calculate unread info
   const { firstUnreadIndex, unreadCount } = useMemo(() => {
-    if (isJumpMode) {
+    if (isDetachedMode) {
       return { firstUnreadIndex: -1, unreadCount: 0 };
     }
     let firstIdx = -1;
@@ -57,13 +59,13 @@ export function useVirtualItems({
       }
     }
     return { firstUnreadIndex: firstIdx, unreadCount: count };
-  }, [posts, isJumpMode]);
+  }, [isDetachedMode, posts]);
 
   // Build virtual items
-  const { items, initialScrollIndex, postIdToIndex } = useMemo(() => {
+  const { items, postIdToIndex, unreadIndex } = useMemo(() => {
     const result: VirtualItem[] = [];
     const idToIndex = new Map<Id<"schoolClassForumPosts">, number>();
-    let scrollIndex: number | "end" = isJumpMode ? 0 : "end";
+    let nextUnreadIndex: number | null = null;
 
     if (forum) {
       result.push({ type: "header", forum });
@@ -80,19 +82,15 @@ export function useVirtualItems({
         result.push({ type: "date", date: post._creationTime });
       }
 
-      if (!isJumpMode && index === firstUnreadIndex) {
+      if (!isDetachedMode && index === firstUnreadIndex) {
         result.push({ type: "unread", count: unreadCount });
-        scrollIndex = result.length - 1;
+        nextUnreadIndex = result.length - 1;
       }
 
       const isFirstInGroup =
         currentDate !== prevDate ||
         !prevPost ||
         prevPost.createdBy !== post.createdBy;
-
-      if (isJumpMode && index === targetIndex) {
-        scrollIndex = result.length;
-      }
 
       idToIndex.set(post._id, result.length);
       result.push({ type: "post", post, isFirstInGroup });
@@ -102,14 +100,14 @@ export function useVirtualItems({
 
     return {
       items: result,
-      initialScrollIndex: scrollIndex,
       postIdToIndex: idToIndex,
+      unreadIndex: nextUnreadIndex,
     };
-  }, [forum, posts, firstUnreadIndex, unreadCount, isJumpMode, targetIndex]);
+  }, [forum, posts, firstUnreadIndex, unreadCount, isDetachedMode]);
 
   return {
     items,
-    initialScrollIndex,
     postIdToIndex,
+    unreadIndex,
   };
 }

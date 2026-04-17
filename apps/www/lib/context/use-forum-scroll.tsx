@@ -6,13 +6,14 @@ import { createContext, useContextSelector } from "use-context-selector";
 
 interface ForumScrollContextValue {
   jumpToPostId: (postId: Id<"schoolClassForumPosts">) => void;
-  scrollToBottom: () => void;
+  scrollToLatest: () => void;
   scrollToPostId: (postId: Id<"schoolClassForumPosts">) => void;
 }
 
 const ForumScrollContext = createContext<ForumScrollContextValue | null>(null);
 const MISSING_FORUM_SCROLL_CONTEXT = Symbol("MISSING_FORUM_SCROLL_CONTEXT");
 
+/** Provides scroll actions for the active forum conversation subtree. */
 export function ForumScrollProvider({
   children,
   value,
@@ -27,6 +28,7 @@ export function ForumScrollProvider({
   );
 }
 
+/** Reads one selected scroll action from the active forum conversation. */
 export function useForumScroll<T>(
   selector: (state: ForumScrollContextValue) => T
 ): T {

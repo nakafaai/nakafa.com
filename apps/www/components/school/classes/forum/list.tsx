@@ -6,7 +6,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { UserData } from "@repo/backend/convex/lib/helpers/user";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -42,19 +42,24 @@ export function SchoolClassesForumList() {
 
   const locale = useLocale();
   const routeParams = useParams<{
-    forumId?: string;
+    forumId?: Id<"schoolClassForums">;
     id: string;
     slug: string;
   }>();
   const searchParams = useSearchParams();
 
   const classId = useClass((state) => state.class._id);
-  const resetConversationState = useForum(
-    (state) => state.resetConversationState
+  const clearTransientConversationState = useForum(
+    (state) => state.clearTransientConversationState
   );
   const [{ q }] = useQueryStates(searchParsers);
 
   const [debouncedQ] = useDebouncedValue(q, DEBOUNCE_TIME);
+
+  /** Clears transient reply and jump state before forum route navigation. */
+  function handleForumNavigate() {
+    clearTransientConversationState();
+  }
 
   const { results, status, loadMore } = usePaginatedQuery(
     api.classes.forums.queries.forums.getForums,
@@ -94,7 +99,7 @@ export function SchoolClassesForumList() {
                 aria-current={isActive ? "page" : undefined}
                 className="absolute inset-0 z-0 rounded-md focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 href={href}
-                onNavigate={() => resetConversationState()}
+                onNavigate={handleForumNavigate}
                 prefetch
               >
                 <span className="sr-only">{forum.title}</span>

@@ -4,214 +4,404 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { usePaginatedQuery, useQuery } from "convex/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useForum } from "@/lib/context/use-forum";
+import type { ForumConversationMode } from "@/components/school/classes/forum/conversation/view-state";
 import type { ForumPost } from "@/lib/store/forum";
 
-interface JumpPostsState {
+interface TimelineState {
   hasMoreAfter: boolean;
   hasMoreBefore: boolean;
-  isLoadingNewer: boolean;
-  isLoadingOlder: boolean;
+  isJumpMode: boolean;
+  isLiveConnected: boolean;
   newestPostId: Id<"schoolClassForumPosts"> | null;
   oldestPostId: Id<"schoolClassForumPosts"> | null;
   posts: ForumPost[];
-  targetIndex: number;
-  targetPostId: Id<"schoolClassForumPosts">;
 }
 
-/**
- * Build one empty jump-mode state around a target post.
- */
-function createJumpPostsState(
-  targetPostId: Id<"schoolClassForumPosts">
-): JumpPostsState {
+interface TargetRequest {
+  kind: Exclude<ForumConversationMode["kind"], "live">;
+  postId: Id<"schoolClassForumPosts">;
+}
+
+/** Creates one live-edge timeline from the reactive latest page. */
+function createLiveTimelineState(
+  posts: ForumPost[],
+  hasMoreBefore: boolean
+): TimelineState {
   return {
     hasMoreAfter: false,
-    hasMoreBefore: false,
-    isLoadingNewer: false,
-    isLoadingOlder: false,
-    newestPostId: null,
-    oldestPostId: null,
-    posts: [],
-    targetIndex: 0,
-    targetPostId,
+    hasMoreBefore,
+    isJumpMode: false,
+    isLiveConnected: true,
+    newestPostId: posts.at(-1)?._id ?? null,
+    oldestPostId: posts[0]?._id ?? null,
+    posts,
+  };
+}
+
+/** Creates one detached timeline window around a restored or jumped post. */
+function createFocusedTimelineState({
+  hasMoreAfter,
+  hasMoreBefore,
+  newestPostId,
+  oldestPostId,
+  posts,
+  targetKind,
+}: {
+  hasMoreAfter: boolean;
+  hasMoreBefore: boolean;
+  newestPostId: Id<"schoolClassForumPosts"> | null;
+  oldestPostId: Id<"schoolClassForumPosts"> | null;
+  posts: ForumPost[];
+  targetKind: TargetRequest["kind"];
+}): TimelineState {
+  const isLiveConnected = !hasMoreAfter;
+
+  return {
+    hasMoreAfter,
+    hasMoreBefore,
+    isJumpMode: targetKind === "jump" && !isLiveConnected,
+    isLiveConnected,
+    newestPostId,
+    oldestPostId,
+    posts,
+  };
+}
+
+/** Replaces matching posts in one timeline with fresher copies from another list. */
+function replaceMatchingPosts(current: ForumPost[], incoming: ForumPost[]) {
+  if (incoming.length === 0 || current.length === 0) {
+    return { changed: false, posts: current };
+  }
+
+  const incomingById = new Map(incoming.map((post) => [post._id, post]));
+  let changed = false;
+  const posts = current.map((post) => {
+    const nextPost = incomingById.get(post._id);
+
+    if (!nextPost || nextPost === post) {
+      return post;
+    }
+
+    changed = true;
+    return nextPost;
+  });
+
+  return { changed, posts };
+}
+
+/** Prepends older posts without duplicating ids already present in the window. */
+function prependUniquePosts(current: ForumPost[], incoming: ForumPost[]) {
+  const { changed, posts } = replaceMatchingPosts(current, incoming);
+  const existingIds = new Set(posts.map((post) => post._id));
+  const prepended = incoming.filter((post) => !existingIds.has(post._id));
+
+  if (prepended.length === 0) {
+    return { changed, posts };
+  }
+
+  return {
+    changed: true,
+    posts: [...prepended, ...posts],
+  };
+}
+
+/** Appends newer posts without duplicating ids already present in the window. */
+function appendUniquePosts(current: ForumPost[], incoming: ForumPost[]) {
+  const { changed, posts } = replaceMatchingPosts(current, incoming);
+  const existingIds = new Set(posts.map((post) => post._id));
+  const appended = incoming.filter((post) => !existingIds.has(post._id));
+
+  if (appended.length === 0) {
+    return { changed, posts };
+  }
+
+  return {
+    changed: true,
+    posts: [...posts, ...appended],
   };
 }
 
 /**
- * Keep forum post pagination local to the conversation while the store only
- * tracks jump intent.
+ * Syncs the detached or connected timeline with the reactive latest page while
+ * preserving already loaded history and avoiding hard source swaps.
  */
-export function useForumPosts(forumId: Id<"schoolClassForums">) {
-  const jumpTargetPostId = useForum((state) => state.jumpTargetPostId);
-  const exitJumpMode = useForum((state) => state.exitJumpMode);
-  const [jumpState, setJumpState] = useState<JumpPostsState | null>(null);
-
-  useEffect(() => {
-    if (!jumpTargetPostId) {
-      setJumpState((current) => (current ? null : current));
-      return;
+function syncTimelineWithLivePosts({
+  current,
+  liveHasMoreBefore,
+  livePosts,
+}: {
+  current: TimelineState;
+  liveHasMoreBefore: boolean;
+  livePosts: ForumPost[];
+}) {
+  if (current.posts.length === 0) {
+    if (!current.isLiveConnected) {
+      return current;
     }
 
-    setJumpState((current) => {
-      if (current?.targetPostId === jumpTargetPostId) {
-        return current;
-      }
+    return createLiveTimelineState(livePosts, liveHasMoreBefore);
+  }
 
-      return createJumpPostsState(jumpTargetPostId);
-    });
-  }, [jumpTargetPostId]);
+  const nextPosts = current.isLiveConnected
+    ? appendUniquePosts(current.posts, livePosts)
+    : replaceMatchingPosts(current.posts, livePosts);
 
-  const { results, status, loadMore } = usePaginatedQuery(
+  if (!nextPosts.changed) {
+    return current;
+  }
+
+  return {
+    ...current,
+    hasMoreAfter: current.isLiveConnected ? false : current.hasMoreAfter,
+    isJumpMode: current.isLiveConnected ? false : current.isJumpMode,
+    newestPostId: nextPosts.posts.at(-1)?._id ?? null,
+    oldestPostId: nextPosts.posts[0]?._id ?? null,
+    posts: nextPosts.posts,
+  };
+}
+
+/**
+ * Keeps one mounted client-side transcript window and merges restore/jump/live
+ * data into it so scroll continuity does not depend on swapping list modes.
+ */
+export function useForumPosts({
+  forumId,
+  mode,
+}: {
+  forumId: Id<"schoolClassForums">;
+  mode: ForumConversationMode;
+}) {
+  const { results: liveResults, status: liveStatus } = usePaginatedQuery(
     api.classes.forums.queries.feed.getForumPosts,
-    jumpTargetPostId ? "skip" : { forumId },
+    { forumId },
     { initialNumItems: 25 }
   );
+  const livePosts = useMemo(() => [...liveResults].reverse(), [liveResults]);
+  const liveHasMoreBefore =
+    liveStatus === "CanLoadMore" || liveStatus === "LoadingMore";
 
-  const shouldFetchJumpData =
-    jumpState !== null && jumpState.posts.length === 0;
-  const jumpInitData = useQuery(
-    api.classes.forums.queries.around.getForumPostsAround,
-    shouldFetchJumpData
-      ? { forumId, targetPostId: jumpState.targetPostId }
-      : "skip"
+  const [timeline, setTimeline] = useState<TimelineState | null>(null);
+  const [targetRequest, setTargetRequest] = useState<TargetRequest | null>(
+    mode.kind === "live" ? null : { kind: mode.kind, postId: mode.postId }
   );
+  const [shouldPromoteToLatest, setShouldPromoteToLatest] = useState(false);
+  const [olderRequestPostId, setOlderRequestPostId] =
+    useState<Id<"schoolClassForumPosts"> | null>(null);
+  const [newerRequestPostId, setNewerRequestPostId] =
+    useState<Id<"schoolClassForumPosts"> | null>(null);
 
   useEffect(() => {
-    if (!(jumpState && jumpInitData && jumpState.posts.length === 0)) {
+    if (mode.kind === "live") {
       return;
     }
 
-    setJumpState((current) => {
-      if (!(current && current.targetPostId === jumpState.targetPostId)) {
+    setTargetRequest((current) => {
+      if (current?.kind === mode.kind && current.postId === mode.postId) {
         return current;
       }
 
-      return {
-        ...current,
-        hasMoreAfter: jumpInitData.hasMoreAfter,
-        hasMoreBefore: jumpInitData.hasMoreBefore,
-        newestPostId: jumpInitData.newestPostId,
-        oldestPostId: jumpInitData.oldestPostId,
-        posts: jumpInitData.posts,
-        targetIndex: jumpInitData.targetIndex,
-      };
+      return { kind: mode.kind, postId: mode.postId };
     });
-  }, [jumpInitData, jumpState]);
+  }, [mode]);
+
+  useEffect(() => {
+    setTimeline((current) => {
+      if (current === null) {
+        if (mode.kind !== "live" || liveStatus === "LoadingFirstPage") {
+          return current;
+        }
+
+        return createLiveTimelineState(livePosts, liveHasMoreBefore);
+      }
+
+      return syncTimelineWithLivePosts({
+        current,
+        liveHasMoreBefore,
+        livePosts,
+      });
+    });
+  }, [liveHasMoreBefore, livePosts, liveStatus, mode.kind]);
+
+  useEffect(() => {
+    if (!(shouldPromoteToLatest && liveStatus !== "LoadingFirstPage")) {
+      return;
+    }
+
+    setTimeline((current) => {
+      if (current?.isLiveConnected) {
+        return syncTimelineWithLivePosts({
+          current: { ...current, hasMoreAfter: false, isJumpMode: false },
+          liveHasMoreBefore,
+          livePosts,
+        });
+      }
+
+      return createLiveTimelineState(livePosts, liveHasMoreBefore);
+    });
+    setShouldPromoteToLatest(false);
+  }, [shouldPromoteToLatest, liveHasMoreBefore, livePosts, liveStatus]);
+
+  const focusedInitData = useQuery(
+    api.classes.forums.queries.around.getForumPostsAround,
+    targetRequest ? { forumId, targetPostId: targetRequest.postId } : "skip"
+  );
+
+  useEffect(() => {
+    if (!(focusedInitData && targetRequest)) {
+      return;
+    }
+
+    setTimeline(
+      createFocusedTimelineState({
+        hasMoreAfter: focusedInitData.hasMoreAfter,
+        hasMoreBefore: focusedInitData.hasMoreBefore,
+        newestPostId: focusedInitData.newestPostId,
+        oldestPostId: focusedInitData.oldestPostId,
+        posts: focusedInitData.posts,
+        targetKind: targetRequest.kind,
+      })
+    );
+    setOlderRequestPostId(null);
+    setNewerRequestPostId(null);
+    setTargetRequest(null);
+  }, [focusedInitData, targetRequest]);
 
   const olderData = useQuery(
     api.classes.forums.queries.older.getForumPostsOlder,
-    jumpState?.isLoadingOlder && jumpState.oldestPostId
-      ? { forumId, beforePostId: jumpState.oldestPostId }
-      : "skip"
-  );
-
-  const newerData = useQuery(
-    api.classes.forums.queries.newer.getForumPostsNewer,
-    jumpState?.isLoadingNewer && jumpState.newestPostId
-      ? { forumId, afterPostId: jumpState.newestPostId }
-      : "skip"
+    olderRequestPostId ? { forumId, beforePostId: olderRequestPostId } : "skip"
   );
 
   useEffect(() => {
-    if (!olderData) {
+    if (!(olderData && olderRequestPostId)) {
       return;
     }
 
-    setJumpState((current) => {
-      if (!current?.isLoadingOlder) {
+    setTimeline((current) => {
+      if (!(current && current.oldestPostId === olderRequestPostId)) {
         return current;
+      }
+
+      const nextPosts = prependUniquePosts(current.posts, olderData.posts);
+
+      if (!nextPosts.changed) {
+        return {
+          ...current,
+          hasMoreBefore: olderData.hasMore,
+          oldestPostId: olderData.oldestPostId ?? current.oldestPostId,
+        };
       }
 
       return {
         ...current,
         hasMoreBefore: olderData.hasMore,
-        isLoadingOlder: false,
         oldestPostId: olderData.oldestPostId ?? current.oldestPostId,
-        posts: [...olderData.posts, ...current.posts],
-        targetIndex: current.targetIndex + olderData.posts.length,
+        posts: nextPosts.posts,
       };
     });
-  }, [olderData]);
+    setOlderRequestPostId(null);
+  }, [olderData, olderRequestPostId]);
+
+  const newerData = useQuery(
+    api.classes.forums.queries.newer.getForumPostsNewer,
+    newerRequestPostId ? { forumId, afterPostId: newerRequestPostId } : "skip"
+  );
 
   useEffect(() => {
-    if (!newerData) {
+    if (!(newerData && newerRequestPostId)) {
       return;
     }
 
-    setJumpState((current) => {
-      if (!current?.isLoadingNewer) {
+    setTimeline((current) => {
+      if (!(current && current.newestPostId === newerRequestPostId)) {
         return current;
       }
+
+      const nextPosts = appendUniquePosts(current.posts, newerData.posts);
+      const isLiveConnected = !newerData.hasMore;
 
       return {
         ...current,
         hasMoreAfter: newerData.hasMore,
-        isLoadingNewer: false,
+        isJumpMode: isLiveConnected ? false : current.isJumpMode,
+        isLiveConnected,
         newestPostId: newerData.newestPostId ?? current.newestPostId,
-        posts: [...current.posts, ...newerData.posts],
+        posts: nextPosts.posts,
       };
     });
-  }, [newerData]);
+    setNewerRequestPostId(null);
+  }, [newerData, newerRequestPostId]);
 
+  /** Loads older history above the current transcript window. */
   const loadOlderPosts = useCallback(() => {
-    setJumpState((current) => {
-      if (!(current?.hasMoreBefore && !current.isLoadingOlder)) {
-        return current;
+    setOlderRequestPostId((currentRequestPostId) => {
+      if (currentRequestPostId) {
+        return currentRequestPostId;
       }
 
-      return { ...current, isLoadingOlder: true };
-    });
-  }, []);
+      if (!(timeline?.hasMoreBefore && timeline.oldestPostId)) {
+        return null;
+      }
 
+      return timeline.oldestPostId;
+    });
+  }, [timeline]);
+
+  /** Loads newer history below the current transcript window. */
   const loadNewerPosts = useCallback(() => {
-    setJumpState((current) => {
-      if (!(current?.hasMoreAfter && !current.isLoadingNewer)) {
-        return current;
+    setNewerRequestPostId((currentRequestPostId) => {
+      if (currentRequestPostId) {
+        return currentRequestPostId;
       }
 
-      return { ...current, isLoadingNewer: true };
+      if (!(timeline?.hasMoreAfter && timeline.newestPostId)) {
+        return null;
+      }
+
+      return timeline.newestPostId;
     });
-  }, []);
+  }, [timeline]);
 
-  const isJumpMode = jumpState !== null && jumpState.posts.length > 0;
-
-  const posts = useMemo(() => {
-    if (isJumpMode && jumpState) {
-      return jumpState.posts;
+  /** Promotes the transcript back to the reactive live latest window. */
+  const showLatestPosts = useCallback(() => {
+    if (liveStatus === "LoadingFirstPage") {
+      setShouldPromoteToLatest(true);
+      return false;
     }
 
-    return [...results].reverse();
-  }, [isJumpMode, jumpState, results]);
+    setShouldPromoteToLatest(false);
+    setOlderRequestPostId(null);
+    setNewerRequestPostId(null);
+    setTargetRequest(null);
+    setTimeline((current) => {
+      if (current?.isLiveConnected) {
+        return syncTimelineWithLivePosts({
+          current: { ...current, hasMoreAfter: false, isJumpMode: false },
+          liveHasMoreBefore,
+          livePosts,
+        });
+      }
 
-  const hasMoreBefore = isJumpMode
-    ? (jumpState?.hasMoreBefore ?? false)
-    : status === "CanLoadMore" || status === "LoadingMore";
+      return createLiveTimelineState(livePosts, liveHasMoreBefore);
+    });
 
-  const hasMoreAfter = isJumpMode ? (jumpState?.hasMoreAfter ?? false) : false;
-  const isLoadingOlder = jumpState?.isLoadingOlder ?? false;
-  const isLoadingNewer = jumpState?.isLoadingNewer ?? false;
-  const targetIndex = jumpState?.targetIndex ?? 0;
+    return true;
+  }, [liveHasMoreBefore, livePosts, liveStatus]);
 
   const isInitialLoading =
-    (jumpTargetPostId !== null && jumpState?.posts.length === 0) ||
-    (jumpTargetPostId === null &&
-      status === "LoadingFirstPage" &&
-      results.length === 0);
+    timeline === null &&
+    (mode.kind === "live" ? liveStatus === "LoadingFirstPage" : true);
 
   return {
-    exitJumpMode,
-    hasMoreAfter,
-    hasMoreBefore,
+    hasMoreAfter: timeline?.hasMoreAfter ?? false,
+    hasMoreBefore: timeline?.hasMoreBefore ?? false,
     isInitialLoading,
-    isJumpMode,
-    isLoadingNewer,
-    isLoadingOlder,
-    loadMore,
+    isJumpMode: timeline?.isJumpMode ?? false,
+    isLiveConnected: timeline?.isLiveConnected ?? false,
+    isLoadingNewer: newerRequestPostId !== null,
+    isLoadingOlder: olderRequestPostId !== null,
     loadNewerPosts,
     loadOlderPosts,
-    posts,
-    status,
-    targetIndex,
+    posts: timeline?.posts ?? [],
+    showLatestPosts,
   };
 }

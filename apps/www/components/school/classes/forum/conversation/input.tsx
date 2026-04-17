@@ -76,8 +76,7 @@ export const ForumPostInput = memo(
     const t = useTranslations("School.Classes");
     const replyTo = useForum((f) => f.replyTo);
     const setReplyTo = useForum((f) => f.setReplyTo);
-    const exitJumpMode = useForum((f) => f.exitJumpMode);
-    const scrollToBottom = useForumScroll((state) => state.scrollToBottom);
+    const scrollToLatest = useForumScroll((state) => state.scrollToLatest);
 
     const textareaRef = useRef<ComponentRef<typeof InputGroupTextarea>>(null);
     const generateUploadUrl = useMutation(
@@ -191,10 +190,9 @@ export const ForumPostInput = memo(
           form.reset();
           clearFiles();
           setReplyTo(null);
-          exitJumpMode();
 
           requestAnimationFrame(() => {
-            scrollToBottom();
+            scrollToLatest();
           });
         } catch (error) {
           if (attachmentUploadIds.length > 0) {

@@ -77,7 +77,7 @@ async function ClassRouteBoundary({
 
   return (
     <ClassContextProvider value={value}>
-      <ForumContextProvider key={classId}>
+      <ForumContextProvider classId={classId} key={classId}>
         <SchoolClassesWorkspaceShell panel={panel}>
           <SchoolClassesHeaderInfo />
           <SchoolClassesTabs />

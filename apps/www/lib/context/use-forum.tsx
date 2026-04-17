@@ -11,19 +11,35 @@ type ForumStoreApi = ReturnType<typeof createForumStore>;
 export const ForumContext = createContext<ForumStoreApi | null>(null);
 
 /** Provides one class-scoped forum store instance. */
-export function ForumContextProvider({ children }: { children: ReactNode }) {
-  const [store] = useState(() => createForumStore());
+export function ForumContextProvider({
+  children,
+  classId,
+}: {
+  children: ReactNode;
+  classId: string;
+}) {
+  const [store] = useState(() => createForumStore(classId));
 
   return (
     <ForumContext.Provider value={store}>{children}</ForumContext.Provider>
   );
 }
 
+/** Reads the raw forum store API for one class route subtree. */
+export function useForumStoreApi() {
+  const ctx = useContextSelector(ForumContext, (context) => context);
+
+  if (!ctx) {
+    throw new Error(
+      "useForumStoreApi must be used within a ForumContextProvider"
+    );
+  }
+
+  return ctx;
+}
+
 /** Reads one selected slice from the forum store. */
 export function useForum<T>(selector: (state: ForumStore) => T): T {
-  const ctx = useContextSelector(ForumContext, (context) => context);
-  if (!ctx) {
-    throw new Error("useForum must be used within a ForumContextProvider");
-  }
+  const ctx = useForumStoreApi();
   return useStore(ctx, useShallow(selector));
 }

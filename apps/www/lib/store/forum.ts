@@ -2,6 +2,7 @@ import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { PostAttachment } from "@repo/backend/convex/classes/forums/utils/posts";
 import type { UserData } from "@repo/backend/convex/lib/helpers/user";
 import { createStore } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
 export interface ReactionWithUsers {
@@ -24,39 +25,101 @@ interface ReplyTo {
   userName: string;
 }
 
+export type ForumConversationView =
+  | {
+      kind: "bottom";
+    }
+  | {
+      kind: "post";
+      offset: number;
+      postId: Id<"schoolClassForumPosts">;
+    };
+
+interface PersistedForumState {
+  savedConversationViews: Partial<
+    Record<Id<"schoolClassForums">, ForumConversationView>
+  >;
+}
+
 interface State {
-  jumpTargetPostId: Id<"schoolClassForumPosts"> | null;
   replyTo: ReplyTo | null;
+  savedConversationViews: Partial<
+    Record<Id<"schoolClassForums">, ForumConversationView>
+  >;
 }
 
 interface Actions {
-  enterJumpMode: (targetPostId: Id<"schoolClassForumPosts">) => void;
-  exitJumpMode: () => void;
-  resetConversationState: () => void;
+  clearTransientConversationState: () => void;
+  saveConversationView: (
+    forumId: Id<"schoolClassForums">,
+    view: ForumConversationView
+  ) => void;
   setReplyTo: (replyTo: ReplyTo | null) => void;
 }
 
 export type ForumStore = State & Actions;
 
 const initialState: State = {
-  jumpTargetPostId: null,
+  savedConversationViews: {},
   replyTo: null,
 };
 
+/** Compares two saved forum conversation views by value. */
+function isSameConversationView(
+  left: ForumConversationView | undefined,
+  right: ForumConversationView | undefined
+) {
+  if (!(left && right)) {
+    return left === right;
+  }
+
+  if (left.kind !== right.kind) {
+    return false;
+  }
+
+  if (left.kind === "bottom" || right.kind === "bottom") {
+    return true;
+  }
+
+  return left.postId === right.postId && left.offset === right.offset;
+}
+
 /**
- * Creates one transient forum UI store for a single class route subtree.
+ * Creates one class-scoped forum UI store with transient interaction state and
+ * session-backed conversation snapshots for real remounts.
  */
-export const createForumStore = () =>
+export const createForumStore = (classId: string) =>
   createStore<ForumStore>()(
-    immer((set) => ({
-      ...initialState,
+    persist(
+      immer((set, get) => ({
+        ...initialState,
 
-      setReplyTo: (replyTo) => set({ replyTo }),
+        clearTransientConversationState: () =>
+          set({
+            replyTo: initialState.replyTo,
+          }),
 
-      enterJumpMode: (targetPostId) => set({ jumpTargetPostId: targetPostId }),
+        setReplyTo: (replyTo) => set({ replyTo }),
 
-      exitJumpMode: () => set({ jumpTargetPostId: null }),
+        saveConversationView: (forumId, view) => {
+          const savedView = get().savedConversationViews[forumId];
 
-      resetConversationState: () => set(initialState),
-    }))
+          if (isSameConversationView(savedView, view)) {
+            return;
+          }
+
+          set((state) => {
+            state.savedConversationViews[forumId] = view;
+          });
+        },
+      })),
+      {
+        name: `forum-ui:${classId}`,
+        partialize: (state): PersistedForumState => ({
+          savedConversationViews: state.savedConversationViews,
+        }),
+        storage: createJSONStorage(() => sessionStorage),
+        version: 1,
+      }
+    )
   );
