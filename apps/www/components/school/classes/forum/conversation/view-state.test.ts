@@ -80,6 +80,7 @@ function createHandle(overrides?: {
       getDistanceFromBottom: () => overrides?.distanceFromBottom ?? 200,
       getItemOffset: (index: number) => offsets[index] ?? 0,
       getScrollOffset: () => overrides?.scrollOffset ?? 0,
+      getViewportSize: () => 400,
       isAtBottom: () => false,
       scrollToBottom: () => undefined,
       scrollToIndex: () => undefined,

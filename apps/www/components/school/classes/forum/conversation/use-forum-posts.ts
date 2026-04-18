@@ -7,6 +7,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ForumConversationMode } from "@/components/school/classes/forum/conversation/view-state";
 import type { ForumPost } from "@/lib/store/forum";
 
+/** Keep restore, jump, and detached browsing windows aligned with the live feed size. */
+const FORUM_CONVERSATION_WINDOW = 25;
+
 interface TimelineState {
   hasMoreAfter: boolean;
   hasMoreBefore: boolean;
@@ -174,7 +177,7 @@ export function useForumPosts({
   const { results: liveResults, status: liveStatus } = usePaginatedQuery(
     api.classes.forums.queries.feed.getForumPosts,
     { forumId },
-    { initialNumItems: 25 }
+    { initialNumItems: FORUM_CONVERSATION_WINDOW }
   );
   const livePosts = useMemo(() => [...liveResults].reverse(), [liveResults]);
   const liveHasMoreBefore =
@@ -244,7 +247,11 @@ export function useForumPosts({
   const focusedInitData = useQuery(
     api.classes.forums.queries.around.getForumPostsAround,
     targetRequest?.postId
-      ? { forumId, targetPostId: targetRequest.postId }
+      ? {
+          forumId,
+          limit: FORUM_CONVERSATION_WINDOW,
+          targetPostId: targetRequest.postId,
+        }
       : "skip"
   );
 
@@ -285,7 +292,13 @@ export function useForumPosts({
 
   const olderData = useQuery(
     api.classes.forums.queries.older.getForumPostsOlder,
-    olderRequestPostId ? { forumId, beforePostId: olderRequestPostId } : "skip"
+    olderRequestPostId
+      ? {
+          beforePostId: olderRequestPostId,
+          forumId,
+          limit: FORUM_CONVERSATION_WINDOW,
+        }
+      : "skip"
   );
 
   useEffect(() => {
@@ -320,7 +333,13 @@ export function useForumPosts({
 
   const newerData = useQuery(
     api.classes.forums.queries.newer.getForumPostsNewer,
-    newerRequestPostId ? { forumId, afterPostId: newerRequestPostId } : "skip"
+    newerRequestPostId
+      ? {
+          afterPostId: newerRequestPostId,
+          forumId,
+          limit: FORUM_CONVERSATION_WINDOW,
+        }
+      : "skip"
   );
 
   useEffect(() => {

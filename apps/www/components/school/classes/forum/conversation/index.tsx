@@ -26,6 +26,7 @@ import {
   type ScrollCommand,
   shouldPersistBottomConversationView,
 } from "@/components/school/classes/forum/conversation/scroll-command";
+import { getForumPrefetchDistance } from "@/components/school/classes/forum/conversation/scroll-policy";
 import {
   DateSeparator,
   JumpModeIndicator,
@@ -75,8 +76,7 @@ export const ForumPostConversation = memo(
         })
       );
     const initialAnchorSettledRef = useRef(false);
-    const nextScrollCommandIdRef = useRef(0);
-    const pendingBottomPersistenceIdRef = useRef<number | null>(null);
+    const persistBottomOnArrivalRef = useRef(false);
     const [scrollCommand, setScrollCommand] = useState<ScrollCommand | null>(
       null
     );
@@ -130,6 +130,9 @@ export const ForumPostConversation = memo(
 
     const scrollRef = useRef<VirtualConversationHandle>(null);
     const [isPrepending, setIsPrepending] = useState(false);
+    const previousScrollOffsetRef = useRef(0);
+    const wasInBottomPrefetchZoneRef = useRef(false);
+    const wasInTopPrefetchZoneRef = useRef(false);
 
     const lastPostId = posts.at(-1)?._id;
     const previousLastPostId = usePrevious(lastPostId);
@@ -170,7 +173,7 @@ export const ForumPostConversation = memo(
     const persistBottomConversationView = useCallback(() => {
       const bottomView = { kind: "bottom" } satisfies ForumConversationView;
 
-      pendingBottomPersistenceIdRef.current = null;
+      persistBottomOnArrivalRef.current = false;
       latestConversationView.current = bottomView;
       persistConversationView(bottomView);
     }, [persistConversationView]);
@@ -180,8 +183,7 @@ export const ForumPostConversation = memo(
       (atBottom: boolean) => {
         if (
           !shouldPersistBottomConversationView({
-            hasPendingBottomPersistence:
-              pendingBottomPersistenceIdRef.current !== null,
+            hasPendingBottomPersistence: persistBottomOnArrivalRef.current,
             isAtBottom: atBottom,
             isAtLatestEdge,
             isInitialAnchorSettled: initialAnchorSettledRef.current,
@@ -194,20 +196,6 @@ export const ForumPostConversation = memo(
         return true;
       },
       [isAtLatestEdge, persistBottomConversationView]
-    );
-
-    /** Scrolls to one rendered post in the current virtual list. */
-    const scrollToPostId = useCallback(
-      (postId: Id<"schoolClassForumPosts">) => {
-        const index = postIdToIndex.get(postId);
-
-        if (index === undefined) {
-          return;
-        }
-
-        scrollRef.current?.scrollToIndex(index, { align: "center" });
-      },
-      [postIdToIndex]
     );
 
     /** Opens a post directly or switches the conversation into jump mode. */
@@ -223,11 +211,9 @@ export const ForumPostConversation = memo(
         latestConversationView.current = nextView;
         persistConversationView(nextView);
 
-        pendingBottomPersistenceIdRef.current = null;
-        nextScrollCommandIdRef.current += 1;
+        persistBottomOnArrivalRef.current = false;
         setScrollCommand({
           align: "center",
-          id: nextScrollCommandIdRef.current,
           kind: "post",
           postId,
         });
@@ -243,16 +229,15 @@ export const ForumPostConversation = memo(
 
     /** Returns the conversation to the live latest-post edge. */
     const scrollToLatest = useCallback(() => {
-      pendingBottomPersistenceIdRef.current = null;
-      nextScrollCommandIdRef.current += 1;
-      setScrollCommand({ id: nextScrollCommandIdRef.current, kind: "bottom" });
+      persistBottomOnArrivalRef.current = false;
+      setScrollCommand({ kind: "bottom" });
       setConversationIntent({ kind: "live" });
       showLatestPosts();
     }, [showLatestPosts]);
 
     const forumScrollValue = useMemo(
-      () => ({ scrollToPostId, jumpToPostId, scrollToLatest }),
-      [jumpToPostId, scrollToLatest, scrollToPostId]
+      () => ({ jumpToPostId, scrollToLatest }),
+      [jumpToPostId, scrollToLatest]
     );
 
     useEffect(() => {
@@ -277,7 +262,7 @@ export const ForumPostConversation = memo(
       }
 
       if (resolvedScrollCommand.kind === "bottom") {
-        pendingBottomPersistenceIdRef.current = resolvedScrollCommand.commandId;
+        persistBottomOnArrivalRef.current = true;
         requestAnimationFrame(() => {
           scrollRef.current?.scrollToBottom();
         });
@@ -301,10 +286,49 @@ export const ForumPostConversation = memo(
           captureCurrentConversationView(offset);
         }
 
-        const atBottom = scrollRef.current?.isAtBottom() ?? true;
+        const handle = scrollRef.current;
+        const atBottom = handle?.isAtBottom() ?? true;
         maybePersistBottomConversationView(atBottom);
 
-        if (!(initialAnchorSettledRef.current && atBottom && isAtLatestEdge)) {
+        if (!(initialAnchorSettledRef.current && handle)) {
+          previousScrollOffsetRef.current = offset;
+          return;
+        }
+
+        const previousOffset = previousScrollOffsetRef.current;
+        const viewportSize = handle.getViewportSize();
+        const prefetchDistance = getForumPrefetchDistance(viewportSize);
+        const isMovingUp = offset < previousOffset;
+        const isMovingDown = offset > previousOffset;
+        const isNearTop = offset <= prefetchDistance;
+        const isNearBottom = handle.getDistanceFromBottom() <= prefetchDistance;
+        const shouldLoadOlder =
+          hasMoreBefore &&
+          !isLoadingOlder &&
+          isMovingUp &&
+          isNearTop &&
+          !wasInTopPrefetchZoneRef.current;
+        const shouldLoadNewer =
+          hasMoreAfter &&
+          !isLoadingNewer &&
+          isMovingDown &&
+          isNearBottom &&
+          !wasInBottomPrefetchZoneRef.current;
+
+        previousScrollOffsetRef.current = offset;
+        wasInTopPrefetchZoneRef.current = isNearTop;
+        wasInBottomPrefetchZoneRef.current = isNearBottom;
+
+        if (shouldLoadOlder) {
+          setIsPrepending(true);
+          loadOlderPosts();
+        }
+
+        if (shouldLoadNewer) {
+          loadNewerPosts();
+        }
+
+        if (!(atBottom && isAtLatestEdge)) {
           cancelPendingMarkRead();
           return;
         }
@@ -314,8 +338,14 @@ export const ForumPostConversation = memo(
       [
         cancelPendingMarkRead,
         captureCurrentConversationView,
+        hasMoreAfter,
+        hasMoreBefore,
         isAtLatestEdge,
+        isLoadingNewer,
+        isLoadingOlder,
         lastPostId,
+        loadNewerPosts,
+        loadOlderPosts,
         maybePersistBottomConversationView,
         scheduleMarkRead,
       ]
@@ -342,6 +372,11 @@ export const ForumPostConversation = memo(
       const atBottom =
         scrollRef.current?.isAtBottom() ??
         (initialView ? initialView.kind === "bottom" : false);
+
+      previousScrollOffsetRef.current =
+        scrollRef.current?.getScrollOffset() ?? 0;
+      wasInTopPrefetchZoneRef.current = false;
+      wasInBottomPrefetchZoneRef.current = false;
 
       if (!(atBottom && isAtLatestEdge)) {
         cancelPendingMarkRead();
@@ -397,7 +432,10 @@ export const ForumPostConversation = memo(
           persistConversationView();
         }
 
-        pendingBottomPersistenceIdRef.current = null;
+        persistBottomOnArrivalRef.current = false;
+        previousScrollOffsetRef.current = 0;
+        wasInTopPrefetchZoneRef.current = false;
+        wasInBottomPrefetchZoneRef.current = false;
         setScrollCommand(null);
       },
       [persistConversationView]
@@ -426,21 +464,6 @@ export const ForumPostConversation = memo(
       flushMarkRead(lastPostId);
     }, [flushMarkRead, isAtLatestEdge, lastPostId, previousLastPostId]);
 
-    /** Loads newer history below the current transcript window. */
-    const handleScrollToBottom = useCallback(() => {
-      if (hasMoreAfter && !isLoadingNewer) {
-        loadNewerPosts();
-      }
-    }, [hasMoreAfter, isLoadingNewer, loadNewerPosts]);
-
-    /** Loads older items above the current transcript window when needed. */
-    const handleScrollToTop = useCallback(() => {
-      if (hasMoreBefore && !isLoadingOlder) {
-        setIsPrepending(true);
-        loadOlderPosts();
-      }
-    }, [hasMoreBefore, isLoadingOlder, loadOlderPosts]);
-
     useEffect(() => {
       if (isPrepending && !isLoadingOlder) {
         setIsPrepending(false);
@@ -466,8 +489,6 @@ export const ForumPostConversation = memo(
             onInitialAnchorSettled={handleInitialAnchorSettled}
             onScroll={handleScroll}
             onScrollEnd={handleScrollEnd}
-            onScrollToBottom={handleScrollToBottom}
-            onScrollToTop={handleScrollToTop}
             scrollButtonAction={scrollToLatest}
             scrollButtonAriaLabel={t("back-to-latest")}
             scrollRef={scrollRef}

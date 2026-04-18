@@ -2,20 +2,17 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 
 export type ScrollCommand =
   | {
-      id: number;
       kind: "bottom";
     }
   | {
       align: "center" | "start";
-      id: number;
       kind: "post";
       offset?: number;
       postId: Id<"schoolClassForumPosts">;
     };
 
-export type ResolvedScrollCommand =
+type ResolvedScrollCommand =
   | {
-      commandId: number;
       kind: "bottom";
     }
   | {
@@ -44,7 +41,7 @@ export function resolveScrollCommand({
       return null;
     }
 
-    return { commandId: command.id, kind: "bottom" };
+    return { kind: "bottom" };
   }
 
   const index = postIdToIndex.get(command.postId);

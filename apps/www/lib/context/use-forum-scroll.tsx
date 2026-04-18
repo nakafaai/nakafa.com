@@ -7,7 +7,6 @@ import { createContext, useContextSelector } from "use-context-selector";
 interface ForumScrollContextValue {
   jumpToPostId: (postId: Id<"schoolClassForumPosts">) => void;
   scrollToLatest: () => void;
-  scrollToPostId: (postId: Id<"schoolClassForumPosts">) => void;
 }
 
 const ForumScrollContext = createContext<ForumScrollContextValue | null>(null);

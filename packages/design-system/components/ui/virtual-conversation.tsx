@@ -31,6 +31,7 @@ export interface VirtualConversationHandle {
   getDistanceFromBottom: () => number;
   getItemOffset: (index: number) => number;
   getScrollOffset: () => number;
+  getViewportSize: () => number;
   isAtBottom: () => boolean;
   scrollToBottom: () => void;
   scrollToIndex: (index: number, options?: ScrollToIndexOpts) => void;
@@ -42,7 +43,6 @@ interface VirtualConversationContextValue {
   isAtBottom: boolean;
   scrollButtonAction: () => void;
   scrollButtonAriaLabel: string;
-  scrollToBottom: () => void;
 }
 
 const DEFAULT_SCROLL_BUTTON_ARIA_LABEL = "Scroll to bottom";
@@ -62,7 +62,7 @@ const VirtualConversationContext =
   createContext<VirtualConversationContextValue | null>(null);
 
 /** Reads the scroll controls for the active virtual conversation. */
-export function useVirtualConversation() {
+function useVirtualConversation() {
   const context = useContext(VirtualConversationContext);
   if (!context) {
     throw new Error(
@@ -75,8 +75,6 @@ export function useVirtualConversation() {
 export type VirtualConversationProps = Omit<VListProps, "ref" | "shift"> & {
   followLatest?: boolean;
   onInitialAnchorSettled?: () => void;
-  onScrollToTop?: () => void;
-  onScrollToBottom?: () => void;
   initialAnchor?: VirtualConversationAnchor;
   scrollRef?: RefObject<VirtualConversationHandle | null>;
   hideScrollButton?: boolean;
@@ -102,8 +100,6 @@ export const VirtualConversation = memo(
     followLatest = true,
     onInitialAnchorSettled,
     onScroll,
-    onScrollToTop,
-    onScrollToBottom,
     initialAnchor = { kind: "bottom" },
     scrollRef,
     hideScrollButton = false,
@@ -125,11 +121,8 @@ export const VirtualConversation = memo(
     const hasNotifiedInitialAnchor = useRef(false);
     const isAtBottomRef = useRef(initialAnchor.kind === "bottom");
     const isBottomPinnedRef = useRef(initialAnchor.kind === "bottom");
-    const hasScrolledToTop = useRef(false);
-    const hasScrolledToBottom = useRef(false);
     const previousChildCount = useRef(childCount);
     const previousContainerHeight = useRef(0);
-    const prevScrollOffset = useRef(0);
 
     /** Notifies consumers once the fresh-mount anchor has been applied. */
     const notifyInitialAnchorSettled = useCallback(() => {
@@ -306,37 +299,11 @@ export const VirtualConversation = memo(
           isAtBottomRef.current = atBottom;
           isBottomPinnedRef.current = followLatest && atBottom;
           setIsAtBottom(atBottom);
-
-          // Track scroll direction
-          const isScrollingUp = offset < prevScrollOffset.current;
-          const isScrollingDown = offset > prevScrollOffset.current;
-          prevScrollOffset.current = offset;
-
-          // Trigger onScrollToTop when scrolling UP near top
-          if (offset < 100 && isScrollingUp && !hasScrolledToTop.current) {
-            hasScrolledToTop.current = true;
-            onScrollToTop?.();
-          } else if (offset >= 100) {
-            hasScrolledToTop.current = false;
-          }
-
-          // Trigger onScrollToBottom when scrolling DOWN near bottom
-          if (atBottom && isScrollingDown && !hasScrolledToBottom.current) {
-            hasScrolledToBottom.current = true;
-            onScrollToBottom?.();
-          } else if (!atBottom) {
-            hasScrolledToBottom.current = false;
-          }
         }
+
         onScroll?.(offset);
       },
-      [
-        followLatest,
-        measureDistanceFromBottom,
-        onScroll,
-        onScrollToTop,
-        onScrollToBottom,
-      ]
+      [followLatest, measureDistanceFromBottom, onScroll]
     );
 
     const contextValue = useMemo(
@@ -344,7 +311,6 @@ export const VirtualConversation = memo(
         isAtBottom,
         scrollButtonAriaLabel,
         scrollButtonAction: scrollButtonAction ?? scrollToBottom,
-        scrollToBottom,
       }),
       [isAtBottom, scrollButtonAction, scrollButtonAriaLabel, scrollToBottom]
     );
@@ -358,6 +324,7 @@ export const VirtualConversation = memo(
         getItemOffset: (index: number) =>
           listRef.current?.getItemOffset(index) ?? 0,
         getScrollOffset: () => listRef.current?.scrollOffset ?? 0,
+        getViewportSize: () => listRef.current?.viewportSize ?? 0,
         scrollToIndex,
         scrollToBottom,
         isAtBottom: () => isAtBottomRef.current,
@@ -388,12 +355,10 @@ export const VirtualConversation = memo(
 );
 VirtualConversation.displayName = "VirtualConversation";
 
-export type VirtualConversationScrollButtonProps = ComponentProps<
-  typeof Button
->;
+type VirtualConversationScrollButtonProps = ComponentProps<typeof Button>;
 
 /** Renders the floating "scroll to bottom" affordance for the active list. */
-export const VirtualConversationScrollButton = memo(
+const VirtualConversationScrollButton = memo(
   ({ className, ...props }: VirtualConversationScrollButtonProps) => {
     const { isAtBottom, scrollButtonAction, scrollButtonAriaLabel } =
       useVirtualConversation();

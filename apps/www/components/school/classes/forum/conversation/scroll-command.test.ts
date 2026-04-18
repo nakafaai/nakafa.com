@@ -20,7 +20,7 @@ describe("forum conversation scroll command", () => {
   });
 
   it("waits to run bottom commands until the latest edge is active", () => {
-    const command = { id: 1, kind: "bottom" } satisfies ScrollCommand;
+    const command = { kind: "bottom" } satisfies ScrollCommand;
 
     expect(
       resolveScrollCommand({
@@ -36,13 +36,12 @@ describe("forum conversation scroll command", () => {
         isAtLatestEdge: true,
         postIdToIndex: new Map(),
       })
-    ).toEqual({ commandId: 1, kind: "bottom" });
+    ).toEqual({ kind: "bottom" });
   });
 
   it("waits to run post commands until the target item is rendered", () => {
     const command = {
       align: "center",
-      id: 2,
       kind: "post",
       offset: 12,
       postId,
