@@ -7,6 +7,7 @@ import {
   validateStoredForumAttachmentMetadata,
 } from "@repo/backend/convex/classes/forums/utils/attachments";
 import { MAX_FORUM_POST_ATTACHMENTS } from "@repo/backend/convex/classes/forums/utils/constants";
+import { forumUploadUrlResultValidator } from "@repo/backend/convex/classes/forums/validators";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
@@ -19,6 +20,7 @@ export const generateUploadUrl = mutation({
   args: {
     forumId: vv.id("schoolClassForums"),
   },
+  returns: forumUploadUrlResultValidator,
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
     const userId = user.appUser._id;
@@ -68,6 +70,7 @@ export const saveForumUpload = mutation({
     size: v.number(),
     type: v.string(),
   },
+  returns: vv.id("schoolClassForumPendingUploads"),
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
     const userId = user.appUser._id;
@@ -157,6 +160,7 @@ export const discardForumUploads = mutation({
   args: {
     uploadIds: v.array(vv.id("schoolClassForumPendingUploads")),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
     const userId = user.appUser._id;

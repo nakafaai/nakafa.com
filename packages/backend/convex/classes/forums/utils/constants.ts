@@ -12,9 +12,6 @@ export const MAX_FORUM_REACTION_VARIANTS = 20;
 export const MAX_FORUM_REACTION_VALUE_LENGTH = 32;
 export const FORUM_REACTION_PREVIEW_LIMIT = 10;
 export const FORUM_REACTION_PREVIEW_BATCH_LIMIT = 20;
-export const FORUM_SAME_TIMESTAMP_POST_LIMIT = 200;
-export const FORUM_UNREAD_SCAN_LIMIT = 200;
-export const FORUM_UNREAD_COUNT_LIMIT = 26;
 
 /** Tags that students are allowed to create directly. */
 export const STUDENT_FORUM_TAGS = [

@@ -25,7 +25,6 @@ export const deleteExpiredPendingUpload = internalMutation({
     }
 
     await deleteForumPendingUpload(ctx, upload);
-
     return null;
   },
 });

@@ -5,6 +5,10 @@ import {
   getMyForumReactions,
 } from "@repo/backend/convex/classes/forums/utils/reactions";
 import { getForumUnreadCounts } from "@repo/backend/convex/classes/forums/utils/unreadCounts";
+import {
+  forumDetailValidator,
+  paginatedForumsValidator,
+} from "@repo/backend/convex/classes/forums/validators";
 import { loadClass } from "@repo/backend/convex/classes/utils";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { requireClassAccess } from "@repo/backend/convex/lib/helpers/class";
@@ -22,6 +26,7 @@ export const getForums = query({
     paginationOpts: paginationOptsValidator,
     q: v.optional(v.string()),
   },
+  returns: paginatedForumsValidator,
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
     const classData = await loadClass(ctx, args.classId);
@@ -32,12 +37,13 @@ export const getForums = query({
       user.appUser._id
     );
 
+    const searchQuery = args.q?.trim();
     const forumsPage =
-      args.q && args.q.trim().length > 0
+      searchQuery && searchQuery.length > 0
         ? await ctx.db
             .query("schoolClassForums")
             .withSearchIndex("search_title", (q) =>
-              q.search("title", args.q ?? "").eq("classId", args.classId)
+              q.search("title", searchQuery).eq("classId", args.classId)
             )
             .paginate(args.paginationOpts)
         : await ctx.db
@@ -80,6 +86,7 @@ export const getForum = query({
   args: {
     forumId: vv.id("schoolClassForums"),
   },
+  returns: forumDetailValidator,
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
     const currentUserId = user.appUser._id;

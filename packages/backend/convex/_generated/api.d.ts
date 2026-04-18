@@ -56,6 +56,7 @@ import type * as chats_queries from "../chats/queries.js";
 import type * as chats_read from "../chats/read.js";
 import type * as chats_utils from "../chats/utils.js";
 import type * as classes_constants from "../classes/constants.js";
+import type * as classes_forums_aggregate from "../classes/forums/aggregate.js";
 import type * as classes_forums_internalMutations from "../classes/forums/internalMutations.js";
 import type * as classes_forums_mutations_forums from "../classes/forums/mutations/forums.js";
 import type * as classes_forums_mutations_posts from "../classes/forums/mutations/posts.js";
@@ -76,9 +77,9 @@ import type * as classes_forums_utils_posts from "../classes/forums/utils/posts.
 import type * as classes_forums_utils_reactions from "../classes/forums/utils/reactions.js";
 import type * as classes_forums_utils_readBoundary from "../classes/forums/utils/readBoundary.js";
 import type * as classes_forums_utils_readStateWrite from "../classes/forums/utils/readStateWrite.js";
-import type * as classes_forums_utils_timestampPosts from "../classes/forums/utils/timestampPosts.js";
 import type * as classes_forums_utils_unreadCounts from "../classes/forums/utils/unreadCounts.js";
 import type * as classes_forums_utils_windowing from "../classes/forums/utils/windowing.js";
+import type * as classes_forums_validators from "../classes/forums/validators.js";
 import type * as classes_materials_mutations from "../classes/materials/mutations.js";
 import type * as classes_materials_queries from "../classes/materials/queries.js";
 import type * as classes_materials_utils from "../classes/materials/utils.js";
@@ -329,6 +330,7 @@ declare const fullApi: ApiFromModules<{
   "chats/read": typeof chats_read;
   "chats/utils": typeof chats_utils;
   "classes/constants": typeof classes_constants;
+  "classes/forums/aggregate": typeof classes_forums_aggregate;
   "classes/forums/internalMutations": typeof classes_forums_internalMutations;
   "classes/forums/mutations/forums": typeof classes_forums_mutations_forums;
   "classes/forums/mutations/posts": typeof classes_forums_mutations_posts;
@@ -349,9 +351,9 @@ declare const fullApi: ApiFromModules<{
   "classes/forums/utils/reactions": typeof classes_forums_utils_reactions;
   "classes/forums/utils/readBoundary": typeof classes_forums_utils_readBoundary;
   "classes/forums/utils/readStateWrite": typeof classes_forums_utils_readStateWrite;
-  "classes/forums/utils/timestampPosts": typeof classes_forums_utils_timestampPosts;
   "classes/forums/utils/unreadCounts": typeof classes_forums_utils_unreadCounts;
   "classes/forums/utils/windowing": typeof classes_forums_utils_windowing;
+  "classes/forums/validators": typeof classes_forums_validators;
   "classes/materials/mutations": typeof classes_materials_mutations;
   "classes/materials/queries": typeof classes_materials_queries;
   "classes/materials/utils": typeof classes_materials_utils;
@@ -583,4 +585,6 @@ export declare const components: {
   resend: import("@convex-dev/resend/_generated/component.js").ComponentApi<"resend">;
   tryoutLeaderboard: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"tryoutLeaderboard">;
   globalLeaderboard: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"globalLeaderboard">;
+  forumPostsBySequence: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"forumPostsBySequence">;
+  forumPostsByAuthorSequence: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"forumPostsByAuthorSequence">;
 };

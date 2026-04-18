@@ -33,6 +33,7 @@ type ForumListItem = Doc<"schoolClassForums"> & {
 };
 
 const DEBOUNCE_TIME = 500;
+const FORUM_UNREAD_BADGE_LIMIT = 25;
 
 /**
  * Render the searchable forum thread list for one class.
@@ -134,7 +135,9 @@ export function SchoolClassesForumList() {
                       mode={forum.unreadCount > 0 ? "visible" : "hidden"}
                     >
                       <Badge variant="destructive">
-                        {forum.unreadCount > 25 ? "25+" : forum.unreadCount}
+                        {forum.unreadCount > FORUM_UNREAD_BADGE_LIMIT
+                          ? `${FORUM_UNREAD_BADGE_LIMIT}+`
+                          : forum.unreadCount}
                       </Badge>
                     </Activity>
                   </div>

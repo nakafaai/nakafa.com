@@ -1,7 +1,7 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { loadForumWithAccess } from "@repo/backend/convex/classes/forums/utils/access";
 import { enrichForumPosts } from "@repo/backend/convex/classes/forums/utils/posts";
-import { annotateUnreadForumPosts } from "@repo/backend/convex/classes/forums/utils/readBoundary";
+import { paginatedForumFeedValidator } from "@repo/backend/convex/classes/forums/validators";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { paginationOptsValidator } from "convex/server";
@@ -14,6 +14,7 @@ export const getForumPosts = query({
     forumId: vv.id("schoolClassForums"),
     paginationOpts: paginationOptsValidator,
   },
+  returns: paginatedForumFeedValidator,
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
     const currentUserId = user.appUser._id;
@@ -22,7 +23,9 @@ export const getForumPosts = query({
     const [postsPage, readState] = await Promise.all([
       ctx.db
         .query("schoolClassForumPosts")
-        .withIndex("by_forumId", (q) => q.eq("forumId", args.forumId))
+        .withIndex("by_forumId_and_sequence", (q) =>
+          q.eq("forumId", args.forumId)
+        )
         .order("desc")
         .paginate(args.paginationOpts),
       ctx.db
@@ -38,15 +41,15 @@ export const getForumPosts = query({
       postsPage.page,
       currentUserId
     );
+    const lastReadSequence = readState?.lastReadSequence ?? 0;
 
     return {
       ...postsPage,
-      page: await annotateUnreadForumPosts(ctx.db, {
-        currentUserId,
-        forumId: args.forumId,
-        posts: enrichedPosts,
-        readState,
-      }),
+      page: enrichedPosts.map((post) => ({
+        ...post,
+        isUnread:
+          post.createdBy !== currentUserId && post.sequence > lastReadSequence,
+      })),
     };
   },
 });

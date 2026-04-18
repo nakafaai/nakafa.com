@@ -12,6 +12,7 @@
     "moduleResolution": "Bundler",
     "isolatedModules": true,
     "noEmit": true,
+    "types": ["node"],
     "paths": {
       "@/*": ["./*"],
       "@repo/*": ["../../packages/*"]

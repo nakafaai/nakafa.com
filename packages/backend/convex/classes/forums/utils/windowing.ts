@@ -1,4 +1,4 @@
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import {
   DEFAULT_FORUM_POST_WINDOW,
@@ -7,33 +7,29 @@ import {
 import { ConvexError } from "convex/values";
 
 /**
- * Clamp forum jump-window requests to a small bounded range.
+ * Resolve one public forum post window request into a bounded integer page
+ * size.
  */
-export function clampForumPostWindow(limit: number | undefined) {
+export function resolveForumPostWindow(limit: number | undefined) {
   if (limit === undefined) {
     return DEFAULT_FORUM_POST_WINDOW;
   }
 
-  return Math.min(Math.max(limit, 1), MAX_FORUM_POST_WINDOW);
-}
-
-/**
- * Find the boundary post inside one same-timestamp forum slice.
- */
-export function getBoundaryPostIndex(
-  posts: Doc<"schoolClassForumPosts">[],
-  boundaryPostId: Id<"schoolClassForumPosts">
-) {
-  const boundaryIndex = posts.findIndex((post) => post._id === boundaryPostId);
-
-  if (boundaryIndex < 0) {
+  if (!Number.isInteger(limit)) {
     throw new ConvexError({
-      code: "POST_NOT_FOUND",
-      message: "Boundary post not found.",
+      code: "FORUM_POST_WINDOW_INVALID",
+      message: "Forum post window must be an integer.",
     });
   }
 
-  return boundaryIndex;
+  if (limit < 1 || limit > MAX_FORUM_POST_WINDOW) {
+    throw new ConvexError({
+      code: "FORUM_POST_WINDOW_INVALID",
+      message: `Forum post window must be between 1 and ${MAX_FORUM_POST_WINDOW}.`,
+    });
+  }
+
+  return limit;
 }
 
 /**

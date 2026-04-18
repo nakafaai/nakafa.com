@@ -1,12 +1,11 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { loadForumWithAccess } from "@repo/backend/convex/classes/forums/utils/access";
 import { enrichForumPosts } from "@repo/backend/convex/classes/forums/utils/posts";
-import { getForumPostsAtTimestamp } from "@repo/backend/convex/classes/forums/utils/timestampPosts";
 import {
-  clampForumPostWindow,
-  getBoundaryPostIndex,
   loadForumBoundaryPost,
+  resolveForumPostWindow,
 } from "@repo/backend/convex/classes/forums/utils/windowing";
+import { forumPostsOlderResultValidator } from "@repo/backend/convex/classes/forums/validators";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
@@ -20,8 +19,9 @@ export const getForumPostsOlder = query({
     forumId: vv.id("schoolClassForums"),
     limit: v.optional(v.number()),
   },
+  returns: forumPostsOlderResultValidator,
   handler: async (ctx, args) => {
-    const limit = clampForumPostWindow(args.limit);
+    const limit = resolveForumPostWindow(args.limit);
     const user = await requireAuth(ctx);
     await loadForumWithAccess(ctx, args.forumId, user.appUser._id);
 
@@ -29,40 +29,19 @@ export const getForumPostsOlder = query({
       forumId: args.forumId,
       postId: args.beforePostId,
     });
-    const [postsAtBoundaryTime, olderPosts] = await Promise.all([
-      getForumPostsAtTimestamp(ctx.db, {
-        forumId: args.forumId,
-        timestamp: boundaryPost._creationTime,
-      }),
-      ctx.db
-        .query("schoolClassForumPosts")
-        .withIndex("by_forumId", (q) =>
-          q
-            .eq("forumId", args.forumId)
-            .lt("_creationTime", boundaryPost._creationTime)
-        )
-        .order("desc")
-        .take(limit + 1),
-    ]);
-
-    const boundaryIndex = getBoundaryPostIndex(
-      postsAtBoundaryTime,
-      args.beforePostId
-    );
-    const sameTimeOlderPosts = postsAtBoundaryTime.slice(0, boundaryIndex);
-    const visibleSameTimeOlderPosts = sameTimeOlderPosts.slice(-limit);
-    const remainingOlderSlots = limit - visibleSameTimeOlderPosts.length;
-    const visibleOlderPosts = olderPosts
-      .slice(0, remainingOlderSlots)
-      .reverse();
-    const posts = [...visibleOlderPosts, ...visibleSameTimeOlderPosts];
+    const olderPostsDesc = await ctx.db
+      .query("schoolClassForumPosts")
+      .withIndex("by_forumId_and_sequence", (q) =>
+        q.eq("forumId", args.forumId).lt("sequence", boundaryPost.sequence)
+      )
+      .order("desc")
+      .take(limit + 1);
+    const visibleOlderPosts = olderPostsDesc.slice(0, limit).reverse();
 
     return {
-      hasMore:
-        sameTimeOlderPosts.length > visibleSameTimeOlderPosts.length ||
-        olderPosts.length > remainingOlderSlots,
-      oldestPostId: posts[0]?._id,
-      posts: await enrichForumPosts(ctx, posts, user.appUser._id),
+      hasMore: olderPostsDesc.length > limit,
+      oldestPostId: visibleOlderPosts[0]?._id ?? null,
+      posts: await enrichForumPosts(ctx, visibleOlderPosts, user.appUser._id),
     };
   },
 });
