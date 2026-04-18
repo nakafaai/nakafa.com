@@ -6,7 +6,7 @@ import {
   createForumConversationMode,
   createInitialConversationAnchor,
   createInitialConversationView,
-} from "@/components/school/classes/forum/conversation/view-state";
+} from "@/components/school/classes/forum/conversation/utils/view";
 import type { ForumConversationView } from "@/lib/store/forum";
 
 const headerPostId = "post_header" as Id<"schoolClassForumPosts">;

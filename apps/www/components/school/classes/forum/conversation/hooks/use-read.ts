@@ -87,3 +87,5 @@ export function useMarkRead({ forumId }: { forumId: Id<"schoolClassForums"> }) {
     scheduleMarkRead,
   };
 }
+
+export { useMarkRead as useRead };

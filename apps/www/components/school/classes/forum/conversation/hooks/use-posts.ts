@@ -5,21 +5,18 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { usePaginatedQuery, useQuery } from "convex/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  createFocusedTimelineState,
+  createFocusedWindowArgs,
+  FORUM_CONVERSATION_WINDOW,
+} from "@/components/school/classes/forum/conversation/utils/focused";
+import {
   createInitialTimelineSessionState,
   replaceTimelineSession,
   type TimelineState,
   updateTimelineWithinSession,
-} from "@/components/school/classes/forum/conversation/timeline-session";
-import type { ForumConversationMode } from "@/components/school/classes/forum/conversation/view-state";
+} from "@/components/school/classes/forum/conversation/utils/session";
+import type { ForumConversationMode } from "@/components/school/classes/forum/conversation/utils/view";
 import type { ForumPost } from "@/lib/store/forum";
-
-/** Keep restore, jump, and detached browsing windows aligned with the live feed size. */
-const FORUM_CONVERSATION_WINDOW = 25;
-
-interface TargetRequest {
-  kind: Exclude<ForumConversationMode["kind"], "live">;
-  postId: Id<"schoolClassForumPosts"> | null;
-}
 
 /** Creates one live-edge timeline from the reactive latest page. */
 function createLiveTimelineState(
@@ -33,35 +30,6 @@ function createLiveTimelineState(
     isJumpMode: false,
     newestPostId: posts.at(-1)?._id ?? null,
     oldestPostId: posts[0]?._id ?? null,
-    posts,
-  };
-}
-
-/** Creates one detached timeline window around a restored or jumped post. */
-function createFocusedTimelineState({
-  hasMoreAfter,
-  hasMoreBefore,
-  newestPostId,
-  oldestPostId,
-  posts,
-  targetKind,
-}: {
-  hasMoreAfter: boolean;
-  hasMoreBefore: boolean;
-  newestPostId: Id<"schoolClassForumPosts"> | null;
-  oldestPostId: Id<"schoolClassForumPosts"> | null;
-  posts: ForumPost[];
-  targetKind: TargetRequest["kind"];
-}): TimelineState {
-  const isAtLatestEdge = !hasMoreAfter;
-
-  return {
-    hasMoreAfter,
-    hasMoreBefore,
-    isAtLatestEdge,
-    isJumpMode: targetKind === "jump" && !isAtLatestEdge,
-    newestPostId,
-    oldestPostId,
     posts,
   };
 }
@@ -160,8 +128,8 @@ function syncTimelineWithLivePosts({
 }
 
 /**
- * Keeps one client-side transcript session synchronized with live/jump/restore
- * data, remounting only when the semantic transcript source itself changes.
+ * Keeps one client-side transcript session synchronized with live, restore, and
+ * paginated history updates while exposing an imperative focused-window replace.
  */
 export function useForumPosts({
   forumId,
@@ -182,9 +150,6 @@ export function useForumPosts({
   const [timelineSession, setTimelineSession] = useState(
     createInitialTimelineSessionState
   );
-  const [targetRequest, setTargetRequest] = useState<TargetRequest | null>(
-    mode.kind === "live" ? null : { kind: mode.kind, postId: mode.postId }
-  );
   const [shouldPromoteToLatest, setShouldPromoteToLatest] = useState(false);
   const [olderRequestPostId, setOlderRequestPostId] =
     useState<Id<"schoolClassForumPosts"> | null>(null);
@@ -192,20 +157,28 @@ export function useForumPosts({
     useState<Id<"schoolClassForumPosts"> | null>(null);
 
   const timeline = timelineSession.timeline;
+  const restoreTargetPostId = mode.kind === "restore" ? mode.postId : null;
+  const shouldLoadRestoreFocusedWindow =
+    timeline === null &&
+    mode.kind === "restore" &&
+    restoreTargetPostId !== null;
+  const restoreFocusedWindow = useQuery(
+    api.classes.forums.queries.around.getForumPostsAround,
+    shouldLoadRestoreFocusedWindow
+      ? createFocusedWindowArgs({
+          forumId,
+          targetPostId: restoreTargetPostId,
+        })
+      : "skip"
+  );
 
-  useEffect(() => {
-    if (mode.kind === "live") {
-      return;
-    }
-
-    setTargetRequest((current) => {
-      if (current?.kind === mode.kind && current.postId === mode.postId) {
-        return current;
-      }
-
-      return { kind: mode.kind, postId: mode.postId };
-    });
-  }, [mode]);
+  /** Replaces the mounted transcript session with one focused detached window. */
+  const replaceWithFocusedTimeline = useCallback((timeline: TimelineState) => {
+    setShouldPromoteToLatest(false);
+    setOlderRequestPostId(null);
+    setNewerRequestPostId(null);
+    setTimelineSession((current) => replaceTimelineSession(current, timeline));
+  }, []);
 
   useEffect(() => {
     setTimelineSession((current) => {
@@ -261,59 +234,48 @@ export function useForumPosts({
     setShouldPromoteToLatest(false);
   }, [shouldPromoteToLatest, liveHasMoreBefore, livePosts, liveStatus]);
 
-  const focusedInitData = useQuery(
-    api.classes.forums.queries.around.getForumPostsAround,
-    targetRequest?.postId
-      ? {
-          forumId,
-          limit: FORUM_CONVERSATION_WINDOW,
-          targetPostId: targetRequest.postId,
-        }
-      : "skip"
-  );
-
   useEffect(() => {
     if (
       !(
-        targetRequest &&
-        !targetRequest.postId &&
-        liveStatus !== "LoadingFirstPage"
+        timeline === null &&
+        mode.kind === "restore" &&
+        restoreTargetPostId === null
       )
     ) {
       return;
     }
 
-    setTimelineSession((current) =>
-      replaceTimelineSession(
-        current,
-        createLiveTimelineState(livePosts, liveHasMoreBefore)
-      )
-    );
-    setTargetRequest(null);
-  }, [targetRequest, liveHasMoreBefore, livePosts, liveStatus]);
-
-  useEffect(() => {
-    if (!(focusedInitData && targetRequest?.postId)) {
+    if (liveStatus === "LoadingFirstPage") {
       return;
     }
 
-    setTimelineSession((current) =>
-      replaceTimelineSession(
-        current,
-        createFocusedTimelineState({
-          hasMoreAfter: focusedInitData.hasMoreAfter,
-          hasMoreBefore: focusedInitData.hasMoreBefore,
-          newestPostId: focusedInitData.newestPostId,
-          oldestPostId: focusedInitData.oldestPostId,
-          posts: focusedInitData.posts,
-          targetKind: targetRequest.kind,
-        })
-      )
+    replaceWithFocusedTimeline(
+      createLiveTimelineState(livePosts, liveHasMoreBefore)
     );
-    setOlderRequestPostId(null);
-    setNewerRequestPostId(null);
-    setTargetRequest(null);
-  }, [focusedInitData, targetRequest]);
+  }, [
+    liveHasMoreBefore,
+    livePosts,
+    liveStatus,
+    mode.kind,
+    restoreTargetPostId,
+    replaceWithFocusedTimeline,
+    timeline,
+  ]);
+
+  useEffect(() => {
+    if (
+      !(timeline === null && mode.kind === "restore" && restoreFocusedWindow)
+    ) {
+      return;
+    }
+
+    replaceWithFocusedTimeline(
+      createFocusedTimelineState({
+        aroundResult: restoreFocusedWindow,
+        targetKind: "restore",
+      })
+    );
+  }, [mode.kind, replaceWithFocusedTimeline, restoreFocusedWindow, timeline]);
 
   const olderData = useQuery(
     api.classes.forums.queries.older.getForumPostsOlder,
@@ -436,7 +398,6 @@ export function useForumPosts({
     setShouldPromoteToLatest(false);
     setOlderRequestPostId(null);
     setNewerRequestPostId(null);
-    setTargetRequest(null);
     setTimelineSession((current) => {
       if (current.timeline?.isAtLatestEdge) {
         return updateTimelineWithinSession(current, (timeline) => {
@@ -476,7 +437,10 @@ export function useForumPosts({
     loadNewerPosts,
     loadOlderPosts,
     posts: timeline?.posts ?? [],
+    replaceWithFocusedTimeline,
     showLatestPosts,
     timelineSessionVersion: timelineSession.sessionVersion,
   };
 }
+
+export { useForumPosts as usePosts };

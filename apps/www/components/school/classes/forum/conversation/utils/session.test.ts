@@ -5,7 +5,7 @@ import {
   replaceTimelineSession,
   type TimelineState,
   updateTimelineWithinSession,
-} from "@/components/school/classes/forum/conversation/timeline-session";
+} from "@/components/school/classes/forum/conversation/utils/session";
 
 const oldestPostId = "post_oldest" as Id<"schoolClassForumPosts">;
 const newestPostId = "post_newest" as Id<"schoolClassForumPosts">;

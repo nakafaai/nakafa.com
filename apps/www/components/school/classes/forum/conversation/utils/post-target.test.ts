@@ -7,7 +7,7 @@ import {
   resolvePendingPostTargetIndex,
   resolvePendingPostTargetProgress,
   shouldRetryPendingPostTarget,
-} from "@/components/school/classes/forum/conversation/post-target";
+} from "@/components/school/classes/forum/conversation/utils/post-target";
 
 const postId = "post_1" as Id<"schoolClassForumPosts">;
 

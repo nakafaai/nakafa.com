@@ -4,7 +4,7 @@ import {
   resolveScrollCommand,
   type ScrollCommand,
   shouldPersistBottomConversationView,
-} from "@/components/school/classes/forum/conversation/scroll-command";
+} from "@/components/school/classes/forum/conversation/utils/scroll-command";
 
 const postId = "post_1" as Id<"schoolClassForumPosts">;
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getForumPrefetchDistance } from "@/components/school/classes/forum/conversation/scroll-policy";
+import { getForumPrefetchDistance } from "@/components/school/classes/forum/conversation/utils/scroll-policy";
 
 describe("forum conversation scroll policy", () => {
   it("uses the minimum prefetch distance on small viewports", () => {

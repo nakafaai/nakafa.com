@@ -109,3 +109,5 @@ export function useVirtualItems({
     unreadIndex,
   };
 }
+
+export { useVirtualItems as useItems };
