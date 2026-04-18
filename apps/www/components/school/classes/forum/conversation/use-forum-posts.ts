@@ -4,21 +4,17 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { usePaginatedQuery, useQuery } from "convex/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  createInitialTimelineSessionState,
+  replaceTimelineSession,
+  type TimelineState,
+  updateTimelineWithinSession,
+} from "@/components/school/classes/forum/conversation/timeline-session";
 import type { ForumConversationMode } from "@/components/school/classes/forum/conversation/view-state";
 import type { ForumPost } from "@/lib/store/forum";
 
 /** Keep restore, jump, and detached browsing windows aligned with the live feed size. */
 const FORUM_CONVERSATION_WINDOW = 25;
-
-interface TimelineState {
-  hasMoreAfter: boolean;
-  hasMoreBefore: boolean;
-  isAtLatestEdge: boolean;
-  isJumpMode: boolean;
-  newestPostId: Id<"schoolClassForumPosts"> | null;
-  oldestPostId: Id<"schoolClassForumPosts"> | null;
-  posts: ForumPost[];
-}
 
 interface TargetRequest {
   kind: Exclude<ForumConversationMode["kind"], "live">;
@@ -164,8 +160,8 @@ function syncTimelineWithLivePosts({
 }
 
 /**
- * Keeps one mounted client-side transcript window and merges restore/jump/live
- * data into it so scroll continuity does not depend on swapping list modes.
+ * Keeps one client-side transcript session synchronized with live/jump/restore
+ * data, remounting only when the semantic transcript source itself changes.
  */
 export function useForumPosts({
   forumId,
@@ -183,7 +179,9 @@ export function useForumPosts({
   const liveHasMoreBefore =
     liveStatus === "CanLoadMore" || liveStatus === "LoadingMore";
 
-  const [timeline, setTimeline] = useState<TimelineState | null>(null);
+  const [timelineSession, setTimelineSession] = useState(
+    createInitialTimelineSessionState
+  );
   const [targetRequest, setTargetRequest] = useState<TargetRequest | null>(
     mode.kind === "live" ? null : { kind: mode.kind, postId: mode.postId }
   );
@@ -192,6 +190,8 @@ export function useForumPosts({
     useState<Id<"schoolClassForumPosts"> | null>(null);
   const [newerRequestPostId, setNewerRequestPostId] =
     useState<Id<"schoolClassForumPosts"> | null>(null);
+
+  const timeline = timelineSession.timeline;
 
   useEffect(() => {
     if (mode.kind === "live") {
@@ -208,19 +208,27 @@ export function useForumPosts({
   }, [mode]);
 
   useEffect(() => {
-    setTimeline((current) => {
-      if (current === null) {
+    setTimelineSession((current) => {
+      if (current.timeline === null) {
         if (mode.kind !== "live" || liveStatus === "LoadingFirstPage") {
           return current;
         }
 
-        return createLiveTimelineState(livePosts, liveHasMoreBefore);
+        return updateTimelineWithinSession(current, () =>
+          createLiveTimelineState(livePosts, liveHasMoreBefore)
+        );
       }
 
-      return syncTimelineWithLivePosts({
-        current,
-        liveHasMoreBefore,
-        livePosts,
+      return updateTimelineWithinSession(current, (timeline) => {
+        if (!timeline) {
+          return timeline;
+        }
+
+        return syncTimelineWithLivePosts({
+          current: timeline,
+          liveHasMoreBefore,
+          livePosts,
+        });
       });
     });
   }, [liveHasMoreBefore, livePosts, liveStatus, mode.kind]);
@@ -230,16 +238,25 @@ export function useForumPosts({
       return;
     }
 
-    setTimeline((current) => {
-      if (current?.isAtLatestEdge) {
-        return syncTimelineWithLivePosts({
-          current: { ...current, hasMoreAfter: false, isJumpMode: false },
-          liveHasMoreBefore,
-          livePosts,
+    setTimelineSession((current) => {
+      if (current.timeline?.isAtLatestEdge) {
+        return updateTimelineWithinSession(current, (timeline) => {
+          if (!timeline) {
+            return timeline;
+          }
+
+          return syncTimelineWithLivePosts({
+            current: { ...timeline, hasMoreAfter: false, isJumpMode: false },
+            liveHasMoreBefore,
+            livePosts,
+          });
         });
       }
 
-      return createLiveTimelineState(livePosts, liveHasMoreBefore);
+      return replaceTimelineSession(
+        current,
+        createLiveTimelineState(livePosts, liveHasMoreBefore)
+      );
     });
     setShouldPromoteToLatest(false);
   }, [shouldPromoteToLatest, liveHasMoreBefore, livePosts, liveStatus]);
@@ -266,7 +283,12 @@ export function useForumPosts({
       return;
     }
 
-    setTimeline(createLiveTimelineState(livePosts, liveHasMoreBefore));
+    setTimelineSession((current) =>
+      replaceTimelineSession(
+        current,
+        createLiveTimelineState(livePosts, liveHasMoreBefore)
+      )
+    );
     setTargetRequest(null);
   }, [targetRequest, liveHasMoreBefore, livePosts, liveStatus]);
 
@@ -275,15 +297,18 @@ export function useForumPosts({
       return;
     }
 
-    setTimeline(
-      createFocusedTimelineState({
-        hasMoreAfter: focusedInitData.hasMoreAfter,
-        hasMoreBefore: focusedInitData.hasMoreBefore,
-        newestPostId: focusedInitData.newestPostId,
-        oldestPostId: focusedInitData.oldestPostId,
-        posts: focusedInitData.posts,
-        targetKind: targetRequest.kind,
-      })
+    setTimelineSession((current) =>
+      replaceTimelineSession(
+        current,
+        createFocusedTimelineState({
+          hasMoreAfter: focusedInitData.hasMoreAfter,
+          hasMoreBefore: focusedInitData.hasMoreBefore,
+          newestPostId: focusedInitData.newestPostId,
+          oldestPostId: focusedInitData.oldestPostId,
+          posts: focusedInitData.posts,
+          targetKind: targetRequest.kind,
+        })
+      )
     );
     setOlderRequestPostId(null);
     setNewerRequestPostId(null);
@@ -306,28 +331,30 @@ export function useForumPosts({
       return;
     }
 
-    setTimeline((current) => {
-      if (!(current && current.oldestPostId === olderRequestPostId)) {
-        return current;
-      }
+    setTimelineSession((current) =>
+      updateTimelineWithinSession(current, (timeline) => {
+        if (!(timeline && timeline.oldestPostId === olderRequestPostId)) {
+          return timeline;
+        }
 
-      const nextPosts = prependUniquePosts(current.posts, olderData.posts);
+        const nextPosts = prependUniquePosts(timeline.posts, olderData.posts);
 
-      if (!nextPosts.changed) {
+        if (!nextPosts.changed) {
+          return {
+            ...timeline,
+            hasMoreBefore: olderData.hasMore,
+            oldestPostId: olderData.oldestPostId ?? timeline.oldestPostId,
+          };
+        }
+
         return {
-          ...current,
+          ...timeline,
           hasMoreBefore: olderData.hasMore,
-          oldestPostId: olderData.oldestPostId ?? current.oldestPostId,
+          oldestPostId: olderData.oldestPostId ?? timeline.oldestPostId,
+          posts: nextPosts.posts,
         };
-      }
-
-      return {
-        ...current,
-        hasMoreBefore: olderData.hasMore,
-        oldestPostId: olderData.oldestPostId ?? current.oldestPostId,
-        posts: nextPosts.posts,
-      };
-    });
+      })
+    );
     setOlderRequestPostId(null);
   }, [olderData, olderRequestPostId]);
 
@@ -347,23 +374,25 @@ export function useForumPosts({
       return;
     }
 
-    setTimeline((current) => {
-      if (!(current && current.newestPostId === newerRequestPostId)) {
-        return current;
-      }
+    setTimelineSession((current) =>
+      updateTimelineWithinSession(current, (timeline) => {
+        if (!(timeline && timeline.newestPostId === newerRequestPostId)) {
+          return timeline;
+        }
 
-      const nextPosts = appendUniquePosts(current.posts, newerData.posts);
-      const isAtLatestEdge = !newerData.hasMore;
+        const nextPosts = appendUniquePosts(timeline.posts, newerData.posts);
+        const isAtLatestEdge = !newerData.hasMore;
 
-      return {
-        ...current,
-        hasMoreAfter: newerData.hasMore,
-        isAtLatestEdge,
-        isJumpMode: isAtLatestEdge ? false : current.isJumpMode,
-        newestPostId: newerData.newestPostId ?? current.newestPostId,
-        posts: nextPosts.posts,
-      };
-    });
+        return {
+          ...timeline,
+          hasMoreAfter: newerData.hasMore,
+          isAtLatestEdge,
+          isJumpMode: isAtLatestEdge ? false : timeline.isJumpMode,
+          newestPostId: newerData.newestPostId ?? timeline.newestPostId,
+          posts: nextPosts.posts,
+        };
+      })
+    );
     setNewerRequestPostId(null);
   }, [newerData, newerRequestPostId]);
 
@@ -408,16 +437,25 @@ export function useForumPosts({
     setOlderRequestPostId(null);
     setNewerRequestPostId(null);
     setTargetRequest(null);
-    setTimeline((current) => {
-      if (current?.isAtLatestEdge) {
-        return syncTimelineWithLivePosts({
-          current: { ...current, hasMoreAfter: false, isJumpMode: false },
-          liveHasMoreBefore,
-          livePosts,
+    setTimelineSession((current) => {
+      if (current.timeline?.isAtLatestEdge) {
+        return updateTimelineWithinSession(current, (timeline) => {
+          if (!timeline) {
+            return timeline;
+          }
+
+          return syncTimelineWithLivePosts({
+            current: { ...timeline, hasMoreAfter: false, isJumpMode: false },
+            liveHasMoreBefore,
+            livePosts,
+          });
         });
       }
 
-      return createLiveTimelineState(livePosts, liveHasMoreBefore);
+      return replaceTimelineSession(
+        current,
+        createLiveTimelineState(livePosts, liveHasMoreBefore)
+      );
     });
 
     return true;
@@ -439,5 +477,6 @@ export function useForumPosts({
     loadOlderPosts,
     posts: timeline?.posts ?? [],
     showLatestPosts,
+    timelineSessionVersion: timelineSession.sessionVersion,
   };
 }

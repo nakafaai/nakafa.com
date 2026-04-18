@@ -1,14 +1,11 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import {
-  VIRTUAL_CONVERSATION_BOTTOM_THRESHOLD,
-  type VirtualConversationAnchor,
-  type VirtualConversationHandle,
+import type {
+  VirtualConversationAnchor,
+  VirtualConversationHandle,
 } from "@repo/design-system/components/ui/virtual-conversation";
 import type { RefObject } from "react";
 import type { VirtualItem } from "@/components/school/classes/forum/conversation/types";
 import type { ForumConversationView } from "@/lib/store/forum";
-
-const bottomThreshold = VIRTUAL_CONVERSATION_BOTTOM_THRESHOLD;
 
 type RestorableConversationView = Exclude<
   ForumConversationView,
@@ -311,7 +308,7 @@ export function captureConversationView({
     return null;
   }
 
-  if (handle.getDistanceFromBottom() <= bottomThreshold) {
+  if (handle.isAtBottom()) {
     return { kind: "bottom" };
   }
 

@@ -4,6 +4,7 @@ import { usePrevious } from "@mantine/hooks";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   VirtualConversation,
+  type VirtualConversationAnchor,
   type VirtualConversationHandle,
   VirtualConversationPlaceholder,
 } from "@repo/design-system/components/ui/virtual-conversation";
@@ -21,6 +22,11 @@ import {
 import { ForumHeader } from "@/components/school/classes/forum/conversation/header";
 import { ForumPostInput } from "@/components/school/classes/forum/conversation/input";
 import { ForumPostItem } from "@/components/school/classes/forum/conversation/item";
+import {
+  createPendingPostTarget,
+  type PendingPostTarget,
+  resolvePendingPostTargetProgress,
+} from "@/components/school/classes/forum/conversation/post-target";
 import {
   resolveScrollCommand,
   type ScrollCommand,
@@ -46,6 +52,22 @@ import {
 import { useForum, useForumStoreApi } from "@/lib/context/use-forum";
 import { ForumScrollProvider } from "@/lib/context/use-forum-scroll";
 import type { ForumConversationView } from "@/lib/store/forum";
+
+const FORUM_READ_STATE_NEAR_BOTTOM_THRESHOLD = 50;
+
+/** Returns whether the live transcript is close enough to bottom for read-state UX. */
+function isNearForumReadStateBottom(
+  handle: VirtualConversationHandle | null | undefined
+) {
+  if (!handle) {
+    return false;
+  }
+
+  return (
+    handle.isAtBottom() ||
+    handle.getDistanceFromBottom() <= FORUM_READ_STATE_NEAR_BOTTOM_THRESHOLD
+  );
+}
 
 /**
  * Render one forum conversation with explicit live/restore/jump modes and a
@@ -93,6 +115,7 @@ export const ForumPostConversation = memo(
       loadOlderPosts,
       posts,
       showLatestPosts,
+      timelineSessionVersion,
     } = useForumPosts({ forumId, mode: conversationIntent });
     const baselineLatestPostIdRef = useRef<Id<"schoolClassForumPosts"> | null>(
       null
@@ -115,24 +138,44 @@ export const ForumPostConversation = memo(
       });
     const latestItemsRef = useRef(items);
     latestItemsRef.current = items;
-    const initialAnchor = useMemo(
-      () =>
-        createInitialConversationAnchor({
-          dateToIndex,
-          existingView: latestConversationView.current,
-          headerIndex,
-          mode: conversationIntent,
-          postIdToIndex,
-          unreadIndex,
-        }),
-      [conversationIntent, dateToIndex, headerIndex, postIdToIndex, unreadIndex]
-    );
+
+    const [hasPendingPostTarget, setHasPendingPostTarget] = useState(false);
+    const pendingPostTargetRef = useRef<PendingPostTarget | null>(null);
+    const pendingLatestSessionRef = useRef(false);
+    const previousTimelineSessionVersionRef = useRef(timelineSessionVersion);
 
     const scrollRef = useRef<VirtualConversationHandle>(null);
     const [isPrepending, setIsPrepending] = useState(false);
     const previousScrollOffsetRef = useRef(0);
     const wasInBottomPrefetchZoneRef = useRef(false);
     const wasInTopPrefetchZoneRef = useRef(false);
+
+    /** Resets transient scroll refs whenever one semantic transcript session remounts. */
+    function resetTimelineSessionState() {
+      initialAnchorSettledRef.current = false;
+      persistBottomOnArrivalRef.current = pendingLatestSessionRef.current;
+      previousScrollOffsetRef.current = 0;
+      wasInTopPrefetchZoneRef.current = false;
+      wasInBottomPrefetchZoneRef.current = false;
+    }
+
+    if (previousTimelineSessionVersionRef.current !== timelineSessionVersion) {
+      previousTimelineSessionVersionRef.current = timelineSessionVersion;
+      resetTimelineSessionState();
+    }
+
+    /** Resolves the fresh-mount anchor for the current transcript session. */
+    const initialAnchor: VirtualConversationAnchor =
+      pendingLatestSessionRef.current
+        ? { kind: "bottom" }
+        : createInitialConversationAnchor({
+            dateToIndex,
+            existingView: latestConversationView.current,
+            headerIndex,
+            mode: conversationIntent,
+            postIdToIndex,
+            unreadIndex,
+          });
 
     const lastPostId = posts.at(-1)?._id;
     const previousLastPostId = usePrevious(lastPostId);
@@ -169,6 +212,56 @@ export const ForumPostConversation = memo(
       [forumId, saveConversationView]
     );
 
+    /** Registers one post target that must visibly land before settling the conversation. */
+    const registerPendingPostTarget = useCallback(
+      (pendingPostTarget: PendingPostTarget) => {
+        pendingPostTargetRef.current = pendingPostTarget;
+        setHasPendingPostTarget(true);
+      },
+      []
+    );
+
+    /** Clears the current pending post target after it lands or the flow changes. */
+    const clearPendingPostTarget = useCallback(() => {
+      if (!pendingPostTargetRef.current) {
+        return;
+      }
+
+      pendingPostTargetRef.current = null;
+      setHasPendingPostTarget(false);
+    }, []);
+
+    /** Ensures the current pending post target is visible before the conversation can settle. */
+    const settlePendingPostTarget = useCallback(() => {
+      const progress = resolvePendingPostTargetProgress({
+        handle: scrollRef.current,
+        pendingPostTarget: pendingPostTargetRef.current,
+        postIdToIndex,
+      });
+
+      if (progress.kind === "idle") {
+        return true;
+      }
+
+      if (progress.kind === "settled") {
+        clearPendingPostTarget();
+        return true;
+      }
+
+      if (progress.kind === "waiting") {
+        return false;
+      }
+
+      pendingPostTargetRef.current = progress.nextPendingPostTarget;
+      requestAnimationFrame(() => {
+        scrollRef.current?.scrollToIndex(progress.index, {
+          align: progress.align,
+          offset: progress.offset,
+        });
+      });
+      return false;
+    }, [clearPendingPostTarget, postIdToIndex]);
+
     /** Commits a confirmed latest-edge landing into the persisted view store. */
     const persistBottomConversationView = useCallback(() => {
       const bottomView = { kind: "bottom" } satisfies ForumConversationView;
@@ -202,6 +295,12 @@ export const ForumPostConversation = memo(
     const jumpToPostId = useCallback(
       (postId: Id<"schoolClassForumPosts">) => {
         const index = postIdToIndex.get(postId);
+        const pendingPostTarget = createPendingPostTarget({
+          align: "center",
+          postId,
+          reason:
+            index === undefined ? "jump-session" : "in-session-post-command",
+        });
         const nextView = {
           kind: "post",
           offset: 0,
@@ -211,29 +310,41 @@ export const ForumPostConversation = memo(
         latestConversationView.current = nextView;
         persistConversationView(nextView);
 
+        pendingLatestSessionRef.current = false;
         persistBottomOnArrivalRef.current = false;
-        setScrollCommand({
-          align: "center",
-          kind: "post",
-          postId,
-        });
+        registerPendingPostTarget(pendingPostTarget);
 
         if (index !== undefined) {
+          setScrollCommand({
+            align: "center",
+            kind: "post",
+            postId,
+          });
           return;
         }
 
+        setScrollCommand(null);
         setConversationIntent({ kind: "jump", postId });
       },
-      [persistConversationView, postIdToIndex]
+      [persistConversationView, postIdToIndex, registerPendingPostTarget]
     );
 
     /** Returns the conversation to the live latest-post edge. */
     const scrollToLatest = useCallback(() => {
-      persistBottomOnArrivalRef.current = false;
-      setScrollCommand({ kind: "bottom" });
+      persistBottomOnArrivalRef.current = true;
+      clearPendingPostTarget();
+
+      if (isAtLatestEdge) {
+        pendingLatestSessionRef.current = false;
+        scrollRef.current?.scrollToBottom();
+        return;
+      }
+
+      pendingLatestSessionRef.current = true;
+      setScrollCommand(null);
       setConversationIntent({ kind: "live" });
       showLatestPosts();
-    }, [showLatestPosts]);
+    }, [clearPendingPostTarget, isAtLatestEdge, showLatestPosts]);
 
     const forumScrollValue = useMemo(
       () => ({ jumpToPostId, scrollToLatest }),
@@ -242,31 +353,26 @@ export const ForumPostConversation = memo(
 
     useEffect(() => {
       if (
-        initialAnchorSettledRef.current &&
-        isAtLatestEdge &&
-        conversationIntent.kind !== "live"
+        !(
+          initialAnchorSettledRef.current &&
+          !hasPendingPostTarget &&
+          isAtLatestEdge &&
+          conversationIntent.kind !== "live"
+        )
       ) {
-        setConversationIntent({ kind: "live" });
+        return;
       }
-    }, [conversationIntent.kind, isAtLatestEdge]);
+
+      setConversationIntent({ kind: "live" });
+    }, [conversationIntent.kind, hasPendingPostTarget, isAtLatestEdge]);
 
     useLayoutEffect(() => {
       const resolvedScrollCommand = resolveScrollCommand({
         command: scrollCommand,
-        isAtLatestEdge,
         postIdToIndex,
       });
 
       if (!resolvedScrollCommand) {
-        return;
-      }
-
-      if (resolvedScrollCommand.kind === "bottom") {
-        persistBottomOnArrivalRef.current = true;
-        requestAnimationFrame(() => {
-          scrollRef.current?.scrollToBottom();
-        });
-        setScrollCommand(null);
         return;
       }
 
@@ -277,17 +383,23 @@ export const ForumPostConversation = memo(
         });
       });
       setScrollCommand(null);
-    }, [isAtLatestEdge, postIdToIndex, scrollCommand]);
+    }, [postIdToIndex, scrollCommand]);
 
     /** Marks the thread as read only while the live edge remains visible. */
     const handleScroll = useCallback(
       (offset: number) => {
+        if (pendingPostTargetRef.current) {
+          previousScrollOffsetRef.current = offset;
+          return;
+        }
+
         if (initialAnchorSettledRef.current) {
           captureCurrentConversationView(offset);
         }
 
         const handle = scrollRef.current;
-        const atBottom = handle?.isAtBottom() ?? true;
+        const atBottom = handle?.isAtBottom() ?? false;
+        const isNearReadStateBottom = isNearForumReadStateBottom(handle);
         maybePersistBottomConversationView(atBottom);
 
         if (!(initialAnchorSettledRef.current && handle)) {
@@ -301,7 +413,8 @@ export const ForumPostConversation = memo(
         const isMovingUp = offset < previousOffset;
         const isMovingDown = offset > previousOffset;
         const isNearTop = offset <= prefetchDistance;
-        const isNearBottom = handle.getDistanceFromBottom() <= prefetchDistance;
+        const isNearPrefetchBottom =
+          handle.getDistanceFromBottom() <= prefetchDistance;
         const shouldLoadOlder =
           hasMoreBefore &&
           !isLoadingOlder &&
@@ -312,12 +425,12 @@ export const ForumPostConversation = memo(
           hasMoreAfter &&
           !isLoadingNewer &&
           isMovingDown &&
-          isNearBottom &&
+          isNearPrefetchBottom &&
           !wasInBottomPrefetchZoneRef.current;
 
         previousScrollOffsetRef.current = offset;
         wasInTopPrefetchZoneRef.current = isNearTop;
-        wasInBottomPrefetchZoneRef.current = isNearBottom;
+        wasInBottomPrefetchZoneRef.current = isNearPrefetchBottom;
 
         if (shouldLoadOlder) {
           setIsPrepending(true);
@@ -328,7 +441,7 @@ export const ForumPostConversation = memo(
           loadNewerPosts();
         }
 
-        if (!(atBottom && isAtLatestEdge)) {
+        if (!(isNearReadStateBottom && isAtLatestEdge)) {
           cancelPendingMarkRead();
           return;
         }
@@ -351,8 +464,12 @@ export const ForumPostConversation = memo(
       ]
     );
 
-    /** Finalizes one fresh-mount anchor before live scroll syncing begins. */
-    const handleInitialAnchorSettled = useCallback(() => {
+    /** Finalizes one anchor-ready conversation session after any pending jump lands. */
+    const finalizeConversationReady = useCallback(() => {
+      if (initialAnchorSettledRef.current) {
+        return;
+      }
+
       initialAnchorSettledRef.current = true;
 
       const initialView =
@@ -369,20 +486,22 @@ export const ForumPostConversation = memo(
         persistConversationView(initialView);
       }
 
-      const atBottom =
-        scrollRef.current?.isAtBottom() ??
-        (initialView ? initialView.kind === "bottom" : false);
+      const isNearReadStateBottom = scrollRef.current
+        ? isNearForumReadStateBottom(scrollRef.current)
+        : initialView?.kind === "bottom";
 
       previousScrollOffsetRef.current =
         scrollRef.current?.getScrollOffset() ?? 0;
       wasInTopPrefetchZoneRef.current = false;
       wasInBottomPrefetchZoneRef.current = false;
 
-      if (!(atBottom && isAtLatestEdge)) {
+      if (!(isNearReadStateBottom && isAtLatestEdge)) {
+        pendingLatestSessionRef.current = false;
         cancelPendingMarkRead();
         return;
       }
 
+      pendingLatestSessionRef.current = false;
       scheduleMarkRead(lastPostId);
     }, [
       cancelPendingMarkRead,
@@ -396,9 +515,23 @@ export const ForumPostConversation = memo(
       unreadIndex,
     ]);
 
+    /** Waits for any pending jump target before the forum controller settles. */
+    const handleVirtualAnchorReady = useCallback(() => {
+      if (!settlePendingPostTarget()) {
+        return;
+      }
+
+      finalizeConversationReady();
+    }, [finalizeConversationReady, settlePendingPostTarget]);
+
     /** Saves the latest fallback snapshot when scrolling settles or the route hides. */
     const handleScrollEnd = useCallback(() => {
+      if (!settlePendingPostTarget()) {
+        return;
+      }
+
       if (!initialAnchorSettledRef.current) {
+        finalizeConversationReady();
         return;
       }
 
@@ -413,17 +546,21 @@ export const ForumPostConversation = memo(
       persistConversationView(captureCurrentConversationView());
     }, [
       captureCurrentConversationView,
+      finalizeConversationReady,
       maybePersistBottomConversationView,
       persistConversationView,
+      settlePendingPostTarget,
     ]);
 
     /** Persists the latest fallback snapshot when the conversation hides. */
     useLayoutEffect(
       () => () => {
-        const latestView = captureConversationView({
-          items: latestItemsRef.current,
-          scrollRef,
-        });
+        const latestView = pendingPostTargetRef.current
+          ? null
+          : captureConversationView({
+              items: latestItemsRef.current,
+              scrollRef,
+            });
 
         if (latestView) {
           latestConversationView.current = latestView;
@@ -432,6 +569,8 @@ export const ForumPostConversation = memo(
           persistConversationView();
         }
 
+        pendingPostTargetRef.current = null;
+        pendingLatestSessionRef.current = false;
         persistBottomOnArrivalRef.current = false;
         previousScrollOffsetRef.current = 0;
         wasInTopPrefetchZoneRef.current = false;
@@ -457,7 +596,7 @@ export const ForumPostConversation = memo(
         return;
       }
 
-      if (!(scrollRef.current?.isAtBottom() ?? true)) {
+      if (!isNearForumReadStateBottom(scrollRef.current)) {
         return;
       }
 
@@ -479,14 +618,17 @@ export const ForumPostConversation = memo(
         <div className="relative flex size-full flex-col overflow-hidden">
           <VirtualConversation
             floatingContent={
-              <Activity mode={isJumpMode ? "visible" : "hidden"}>
+              <Activity
+                mode={isJumpMode || hasPendingPostTarget ? "visible" : "hidden"}
+              >
                 <JumpModeIndicator onExit={scrollToLatest} />
               </Activity>
             }
             followLatest={isAtLatestEdge}
-            hideScrollButton={isJumpMode}
+            hideScrollButton={isJumpMode || hasPendingPostTarget}
             initialAnchor={initialAnchor}
-            onInitialAnchorSettled={handleInitialAnchorSettled}
+            key={timelineSessionVersion}
+            onInitialAnchorSettled={handleVirtualAnchorReady}
             onScroll={handleScroll}
             onScrollEnd={handleScrollEnd}
             scrollButtonAction={scrollToLatest}
@@ -507,10 +649,6 @@ export const ForumPostConversation = memo(
 
               if (item.type === "unread") {
                 return <UnreadSeparator count={item.count} key="unread" />;
-              }
-
-              if (item.type === "spacer") {
-                return <div className="h-12" key="spacer" />;
               }
 
               return (

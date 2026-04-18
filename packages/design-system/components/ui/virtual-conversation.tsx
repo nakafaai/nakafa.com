@@ -37,7 +37,7 @@ export interface VirtualConversationHandle {
   scrollToIndex: (index: number, options?: ScrollToIndexOpts) => void;
 }
 
-export const VIRTUAL_CONVERSATION_BOTTOM_THRESHOLD = 50;
+const VIRTUAL_CONVERSATION_BOTTOM_EPSILON = 2;
 
 interface VirtualConversationContextValue {
   isAtBottom: boolean;
@@ -60,6 +60,11 @@ export type VirtualConversationAnchor =
 
 const VirtualConversationContext =
   createContext<VirtualConversationContextValue | null>(null);
+
+/** Returns whether one measured distance should count as the exact bottom edge. */
+function isAtConversationBottom(distanceFromBottom: number) {
+  return distanceFromBottom <= VIRTUAL_CONVERSATION_BOTTOM_EPSILON;
+}
 
 /** Reads the scroll controls for the active virtual conversation. */
 function useVirtualConversation() {
@@ -100,6 +105,7 @@ export const VirtualConversation = memo(
     followLatest = true,
     onInitialAnchorSettled,
     onScroll,
+    onScrollEnd,
     initialAnchor = { kind: "bottom" },
     scrollRef,
     hideScrollButton = false,
@@ -121,6 +127,8 @@ export const VirtualConversation = memo(
     const hasNotifiedInitialAnchor = useRef(false);
     const isAtBottomRef = useRef(initialAnchor.kind === "bottom");
     const isBottomPinnedRef = useRef(initialAnchor.kind === "bottom");
+    const hasPendingBottomSettleRef = useRef(false);
+    const hasPendingInitialBottomAnchorRef = useRef(false);
     const previousChildCount = useRef(childCount);
     const previousContainerHeight = useRef(0);
 
@@ -136,21 +144,17 @@ export const VirtualConversation = memo(
       });
     }, [onInitialAnchorSettled]);
 
-    /** Scrolls the list to the latest item and pins future viewport resizes. */
-    const scrollToBottom = useCallback(
-      (smooth = true) => {
-        if (!listRef.current || childCount === 0) {
-          return;
-        }
+    /** Finalizes one pending bottom scroll and notifies any waiting initial anchor. */
+    const settlePendingBottomScroll = useCallback(() => {
+      hasPendingBottomSettleRef.current = false;
 
-        isBottomPinnedRef.current = followLatest;
-        listRef.current.scrollToIndex(childCount - 1, {
-          align: "end",
-          smooth,
-        });
-      },
-      [childCount, followLatest]
-    );
+      if (!hasPendingInitialBottomAnchorRef.current) {
+        return;
+      }
+
+      hasPendingInitialBottomAnchorRef.current = false;
+      notifyInitialAnchorSettled();
+    }, [notifyInitialAnchorSettled]);
 
     /** Measures the current distance from the live bottom edge. */
     const measureDistanceFromBottom = useCallback((offset?: number) => {
@@ -166,6 +170,49 @@ export const VirtualConversation = memo(
       );
     }, []);
 
+    /** Synchronizes the exact-bottom state from the current measured geometry. */
+    const syncBottomState = useCallback(
+      (offset?: number) => {
+        const distanceFromBottom = measureDistanceFromBottom(offset);
+        const atBottom = isAtConversationBottom(distanceFromBottom);
+
+        isAtBottomRef.current = atBottom;
+
+        if (!hasPendingBottomSettleRef.current || atBottom) {
+          isBottomPinnedRef.current = followLatest && atBottom;
+        }
+
+        setIsAtBottom(atBottom);
+
+        if (atBottom) {
+          settlePendingBottomScroll();
+        }
+
+        return atBottom;
+      },
+      [followLatest, measureDistanceFromBottom, settlePendingBottomScroll]
+    );
+
+    /** Scrolls the list to the latest item and pins future viewport resizes. */
+    const scrollToBottom = useCallback(
+      (smooth = true) => {
+        if (!listRef.current || childCount === 0) {
+          return;
+        }
+
+        hasPendingBottomSettleRef.current = true;
+        isBottomPinnedRef.current = followLatest;
+        listRef.current.scrollToIndex(childCount - 1, {
+          align: "end",
+          smooth,
+        });
+        requestAnimationFrame(() => {
+          syncBottomState();
+        });
+      },
+      [childCount, followLatest, syncBottomState]
+    );
+
     /** Scrolls to one item index without enabling bottom pinning. */
     const scrollToIndex = useCallback(
       (index: number, options?: ScrollToIndexOpts) => {
@@ -173,6 +220,8 @@ export const VirtualConversation = memo(
           return;
         }
 
+        hasPendingBottomSettleRef.current = false;
+        hasPendingInitialBottomAnchorRef.current = false;
         isBottomPinnedRef.current = false;
         listRef.current.scrollToIndex(index, options);
       },
@@ -194,8 +243,8 @@ export const VirtualConversation = memo(
       hasInitialAnchor.current = true;
 
       if (initialAnchor.kind === "bottom") {
+        hasPendingInitialBottomAnchorRef.current = true;
         scrollToBottom(false);
-        notifyInitialAnchorSettled();
         return;
       }
 
@@ -282,7 +331,12 @@ export const VirtualConversation = memo(
     }, [childCount, followLatest, scrollToBottom]);
 
     useLayoutEffect(() => {
-      if (!(followLatest && isAtBottomRef.current)) {
+      if (
+        !(
+          followLatest &&
+          (isAtBottomRef.current || hasPendingBottomSettleRef.current)
+        )
+      ) {
         isBottomPinnedRef.current = false;
         return;
       }
@@ -293,18 +347,27 @@ export const VirtualConversation = memo(
     const handleScroll = useCallback(
       (offset: number) => {
         if (listRef.current) {
-          const distanceFromBottom = measureDistanceFromBottom(offset);
-          const atBottom =
-            distanceFromBottom < VIRTUAL_CONVERSATION_BOTTOM_THRESHOLD;
-          isAtBottomRef.current = atBottom;
-          isBottomPinnedRef.current = followLatest && atBottom;
-          setIsAtBottom(atBottom);
+          syncBottomState(offset);
         }
 
         onScroll?.(offset);
       },
-      [followLatest, measureDistanceFromBottom, onScroll]
+      [onScroll, syncBottomState]
     );
+
+    /** Retries bottom alignment until the exact bottom anchor has truly settled. */
+    const handleScrollEnd = useCallback(() => {
+      const atBottom = syncBottomState();
+
+      if (hasPendingBottomSettleRef.current && !atBottom && childCount > 0) {
+        requestAnimationFrame(() => {
+          scrollToBottom(false);
+        });
+        return;
+      }
+
+      onScrollEnd?.();
+    }, [childCount, onScrollEnd, scrollToBottom, syncBottomState]);
 
     const contextValue = useMemo(
       () => ({
@@ -338,6 +401,7 @@ export const VirtualConversation = memo(
           <VList
             className={cn("scrollbar-hide size-full", className)}
             onScroll={handleScroll}
+            onScrollEnd={handleScrollEnd}
             ref={listRef}
             shift={shift}
             {...props}

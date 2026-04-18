@@ -13,30 +13,9 @@ describe("forum conversation scroll command", () => {
     expect(
       resolveScrollCommand({
         command: null,
-        isAtLatestEdge: true,
         postIdToIndex: new Map(),
       })
     ).toBeNull();
-  });
-
-  it("waits to run bottom commands until the latest edge is active", () => {
-    const command = { kind: "bottom" } satisfies ScrollCommand;
-
-    expect(
-      resolveScrollCommand({
-        command,
-        isAtLatestEdge: false,
-        postIdToIndex: new Map(),
-      })
-    ).toBeNull();
-
-    expect(
-      resolveScrollCommand({
-        command,
-        isAtLatestEdge: true,
-        postIdToIndex: new Map(),
-      })
-    ).toEqual({ kind: "bottom" });
   });
 
   it("waits to run post commands until the target item is rendered", () => {
@@ -50,7 +29,6 @@ describe("forum conversation scroll command", () => {
     expect(
       resolveScrollCommand({
         command,
-        isAtLatestEdge: false,
         postIdToIndex: new Map(),
       })
     ).toBeNull();
@@ -58,7 +36,6 @@ describe("forum conversation scroll command", () => {
     expect(
       resolveScrollCommand({
         command,
-        isAtLatestEdge: false,
         postIdToIndex: new Map([[postId, 7]]),
       })
     ).toEqual({

@@ -1,47 +1,29 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 
-export type ScrollCommand =
-  | {
-      kind: "bottom";
-    }
-  | {
-      align: "center" | "start";
-      kind: "post";
-      offset?: number;
-      postId: Id<"schoolClassForumPosts">;
-    };
+export interface ScrollCommand {
+  align: "center" | "start";
+  kind: "post";
+  offset?: number;
+  postId: Id<"schoolClassForumPosts">;
+}
 
-type ResolvedScrollCommand =
-  | {
-      kind: "bottom";
-    }
-  | {
-      align: "center" | "start";
-      index: number;
-      kind: "post";
-      offset?: number;
-    };
+interface ResolvedScrollCommand {
+  align: "center" | "start";
+  index: number;
+  kind: "post";
+  offset?: number;
+}
 
 /** Resolves one reactive scroll command only when the viewport has enough data to execute it. */
 export function resolveScrollCommand({
   command,
-  isAtLatestEdge,
   postIdToIndex,
 }: {
   command: ScrollCommand | null;
-  isAtLatestEdge: boolean;
   postIdToIndex: Map<Id<"schoolClassForumPosts">, number>;
 }): ResolvedScrollCommand | null {
   if (!command) {
     return null;
-  }
-
-  if (command.kind === "bottom") {
-    if (!isAtLatestEdge) {
-      return null;
-    }
-
-    return { kind: "bottom" };
   }
 
   const index = postIdToIndex.get(command.postId);

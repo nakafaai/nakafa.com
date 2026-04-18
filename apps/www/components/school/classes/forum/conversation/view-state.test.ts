@@ -49,7 +49,6 @@ function createItems(): VirtualItem[] {
         body: "B",
       },
     } as VirtualItem,
-    { type: "spacer" } as VirtualItem,
   ];
 }
 
@@ -69,10 +68,11 @@ function createLookup() {
 function createHandle(overrides?: {
   distanceFromBottom?: number;
   findItemIndex?: number;
+  isAtBottom?: boolean;
   offsets?: number[];
   scrollOffset?: number;
 }) {
-  const offsets = overrides?.offsets ?? [0, 80, 120, 160, 240, 320, 420];
+  const offsets = overrides?.offsets ?? [0, 80, 120, 160, 240, 320];
 
   return {
     current: {
@@ -81,7 +81,7 @@ function createHandle(overrides?: {
       getItemOffset: (index: number) => offsets[index] ?? 0,
       getScrollOffset: () => overrides?.scrollOffset ?? 0,
       getViewportSize: () => 400,
-      isAtBottom: () => false,
+      isAtBottom: () => overrides?.isAtBottom ?? false,
       scrollToBottom: () => undefined,
       scrollToIndex: () => undefined,
     },
@@ -353,10 +353,7 @@ describe("forum conversation view state", () => {
     expect(
       createInitialConversationView({
         existingView: null,
-        items: [
-          { type: "header", forum: {} } as VirtualItem,
-          { type: "spacer" } as VirtualItem,
-        ],
+        items: [{ type: "header", forum: {} } as VirtualItem],
         mode: { kind: "live" },
         unreadIndex: 0,
       })
@@ -372,11 +369,24 @@ describe("forum conversation view state", () => {
     ).toEqual({ kind: "bottom" });
   });
 
-  it("captures bottom snapshots with the shared bottom threshold", () => {
+  it("captures bottom snapshots only when exact bottom is confirmed", () => {
     expect(
       captureConversationView({
         items: createItems(),
-        scrollRef: createHandle({ distanceFromBottom: 20 }),
+        offset: 330,
+        scrollRef: createHandle({
+          distanceFromBottom: 20,
+          findItemIndex: 5,
+          isAtBottom: false,
+          scrollOffset: 330,
+        }),
+      })
+    ).toEqual({ kind: "post", offset: 10, postId: postBId });
+
+    expect(
+      captureConversationView({
+        items: createItems(),
+        scrollRef: createHandle({ distanceFromBottom: 20, isAtBottom: true }),
       })
     ).toEqual({ kind: "bottom" });
   });
@@ -406,7 +416,7 @@ describe("forum conversation view state", () => {
         offset: 10,
         scrollRef: createHandle({
           findItemIndex: 0,
-          offsets: [0, 80, 120, 160, 240, 320, 420],
+          offsets: [0, 80, 120, 160, 240, 320],
           scrollOffset: 10,
         }),
       })
@@ -418,7 +428,7 @@ describe("forum conversation view state", () => {
         offset: 90,
         scrollRef: createHandle({
           findItemIndex: 1,
-          offsets: [0, 80, 120, 160, 240, 320, 420],
+          offsets: [0, 80, 120, 160, 240, 320],
           scrollOffset: 90,
         }),
       })
@@ -435,7 +445,7 @@ describe("forum conversation view state", () => {
         offset: 130,
         scrollRef: createHandle({
           findItemIndex: 2,
-          offsets: [0, 80, 120, 160, 240, 320, 420],
+          offsets: [0, 80, 120, 160, 240, 320],
           scrollOffset: 130,
         }),
       })
@@ -447,7 +457,7 @@ describe("forum conversation view state", () => {
         offset: 170,
         scrollRef: createHandle({
           findItemIndex: 3,
-          offsets: [0, 80, 120, 160, 240, 320, 420],
+          offsets: [0, 80, 120, 160, 240, 320],
           scrollOffset: 170,
         }),
       })
@@ -463,7 +473,7 @@ describe("forum conversation view state", () => {
         offset: 90,
         scrollRef: createHandle({
           findItemIndex: 3,
-          offsets: [0, 80, 120, 160, 240, 320, 420],
+          offsets: [0, 80, 120, 160, 240, 320],
           scrollOffset: 90,
         }),
       })
@@ -480,83 +490,94 @@ describe("forum conversation view state", () => {
         offset: 170,
         scrollRef: createHandle({
           findItemIndex: 0,
-          offsets: [0, 80, 120, 160, 240, 320, 420],
+          offsets: [0, 80, 120, 160, 240, 320],
           scrollOffset: 170,
         }),
       })
     ).toEqual({ kind: "post", offset: 10, postId: headerPostId });
   });
 
-  it("falls forward from non-anchor items and backward from trailing spacer positions", () => {
+  it("falls backward from trailing viewport positions to the last restorable item", () => {
     const items = createItems();
 
     expect(
       captureConversationView({
         items,
-        offset: 430,
+        offset: 330,
         scrollRef: createHandle({
-          findItemIndex: 6,
-          offsets: [0, 80, 120, 160, 240, 320, 420],
-          scrollOffset: 430,
+          findItemIndex: 5,
+          offsets: [0, 80, 120, 160, 240, 320],
+          scrollOffset: 330,
         }),
       })
-    ).toEqual({ kind: "post", offset: 110, postId: postBId });
+    ).toEqual({ kind: "post", offset: 10, postId: postBId });
 
     expect(
       captureConversationView({
-        items: [
-          { type: "header", forum: {} } as VirtualItem,
-          { type: "spacer" } as VirtualItem,
-        ],
+        items: [{ type: "header", forum: {} } as VirtualItem],
         offset: 20,
         scrollRef: createHandle({
           findItemIndex: 0,
-          offsets: [0, 80],
+          offsets: [0],
           scrollOffset: 20,
         }),
       })
     ).toEqual({ kind: "header", offset: 20, postId: null });
   });
 
+  it("falls backward when forward scanning only sees non-restorable items", () => {
+    expect(
+      captureConversationView({
+        items: [
+          { type: "header", forum: {} } as VirtualItem,
+          { type: "date", date: dateKey } as VirtualItem,
+        ],
+        offset: 90,
+        scrollRef: createHandle({
+          findItemIndex: 1,
+          offsets: [0, 80],
+          scrollOffset: 90,
+        }),
+      })
+    ).toEqual({ kind: "header", offset: 90, postId: null });
+  });
+
   it("returns null when only non-restorable separator items remain around the viewport", () => {
+    expect(
+      captureConversationView({
+        items: [{ type: "date", date: dateKey } as VirtualItem],
+        offset: 120,
+        scrollRef: createHandle({
+          findItemIndex: 0,
+          offsets: [0],
+          scrollOffset: 120,
+        }),
+      })
+    ).toBeNull();
+
+    expect(
+      captureConversationView({
+        items: [{ type: "unread", count: 1 } as VirtualItem],
+        offset: 120,
+        scrollRef: createHandle({
+          findItemIndex: 0,
+          offsets: [0],
+          scrollOffset: 120,
+        }),
+      })
+    ).toBeNull();
+
     expect(
       captureConversationView({
         items: [
           { type: "date", date: dateKey } as VirtualItem,
-          { type: "spacer" } as VirtualItem,
-        ],
-        offset: 120,
-        scrollRef: createHandle({
-          findItemIndex: 1,
-          offsets: [0, 80],
-          scrollOffset: 120,
-        }),
-      })
-    ).toBeNull();
-
-    expect(
-      captureConversationView({
-        items: [
           { type: "unread", count: 1 } as VirtualItem,
-          { type: "spacer" } as VirtualItem,
         ],
         offset: 120,
         scrollRef: createHandle({
           findItemIndex: 1,
           offsets: [0, 80],
           scrollOffset: 120,
-        }),
-      })
-    ).toBeNull();
-
-    expect(
-      captureConversationView({
-        items: [{ type: "spacer" } as VirtualItem],
-        offset: 10,
-        scrollRef: createHandle({
-          findItemIndex: 0,
-          offsets: [0],
-          scrollOffset: 10,
         }),
       })
     ).toBeNull();
@@ -566,6 +587,18 @@ describe("forum conversation view state", () => {
     expect(
       captureConversationView({
         items: sparseItems,
+        offset: 10,
+        scrollRef: createHandle({
+          findItemIndex: 0,
+          offsets: [0],
+          scrollOffset: 10,
+        }),
+      })
+    ).toBeNull();
+
+    expect(
+      captureConversationView({
+        items: [{ type: "unknown" } as unknown as VirtualItem],
         offset: 10,
         scrollRef: createHandle({
           findItemIndex: 0,

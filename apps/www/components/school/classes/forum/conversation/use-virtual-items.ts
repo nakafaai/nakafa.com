@@ -14,7 +14,6 @@ import type {
  * - Date separators
  * - Unread separator
  * - Post items with grouping
- * - Bottom spacer
  */
 export function useVirtualItems({
   baselineLatestPostId,
@@ -92,8 +91,6 @@ export function useVirtualItems({
         idToIndex.set(post._id, result.length);
         result.push({ type: "post", post, isFirstInGroup });
       }
-
-      result.push({ type: "spacer" });
 
       return {
         items: result,
