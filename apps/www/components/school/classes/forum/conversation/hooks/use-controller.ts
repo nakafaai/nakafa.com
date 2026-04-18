@@ -25,6 +25,12 @@ import type {
   VirtualItem,
 } from "@/components/school/classes/forum/conversation/types";
 import {
+  type BackStack,
+  clearBackStack,
+  popBackView,
+  pushBackView,
+} from "@/components/school/classes/forum/conversation/utils/back-stack";
+import {
   createFocusedTimelineState,
   createFocusedWindowArgs,
 } from "@/components/school/classes/forum/conversation/utils/focused";
@@ -44,7 +50,9 @@ import {
   createForumConversationMode,
   createInitialConversationAnchor,
   createInitialConversationView,
+  createRestoreConversationAnchor,
   type ForumConversationMode,
+  type RestorableConversationView,
 } from "@/components/school/classes/forum/conversation/utils/view";
 import { useForum, useForumStoreApi } from "@/lib/context/use-forum";
 import type { ForumConversationView } from "@/lib/store/forum";
@@ -57,7 +65,9 @@ interface ForumScrollValue {
 }
 
 interface UseControllerResult {
+  canGoBack: boolean;
   forumScrollValue: ForumScrollValue;
+  goBack: () => void;
   handleScroll: (offset: number) => void;
   handleScrollEnd: () => void;
   handleVirtualAnchorReady: () => void;
@@ -65,7 +75,6 @@ interface UseControllerResult {
   initialAnchor: VirtualConversationAnchor;
   isAtLatestEdge: boolean;
   isInitialLoading: boolean;
-  isJumpMode: boolean;
   isPrepending: boolean;
   items: VirtualItem[];
   scrollRef: RefObject<VirtualConversationHandle | null>;
@@ -117,7 +126,6 @@ export function useController({
     hasMoreBefore,
     isAtLatestEdge,
     isInitialLoading,
-    isJumpMode,
     isLoadingNewer,
     isLoadingOlder,
     loadNewerPosts,
@@ -149,6 +157,8 @@ export function useController({
   const latestItemsRef = useRef(items);
   latestItemsRef.current = items;
 
+  const [canGoBack, setCanGoBack] = useState(false);
+  const backStackRef = useRef<BackStack>(clearBackStack());
   const [hasPendingPostTarget, setHasPendingPostTarget] = useState(false);
   const pendingPostTargetRef = useRef<PendingPostTarget | null>(null);
   const jumpRequestIdRef = useRef(0);
@@ -223,6 +233,47 @@ export function useController({
     },
     [forumId, saveConversationView]
   );
+
+  /** Returns whether one captured view is safe to use as a transient back target. */
+  const isBackTarget = useCallback((view: ForumConversationView | null) => {
+    if (!view) {
+      return false;
+    }
+
+    if (view.kind === "bottom") {
+      return true;
+    }
+
+    return view.postId !== null;
+  }, []);
+
+  /** Applies one new transient back stack and keeps the UI flag in sync. */
+  const applyBackStack = useCallback((backStack: BackStack) => {
+    backStackRef.current = backStack;
+    setCanGoBack(backStack.length > 0);
+  }, []);
+
+  /** Clears the transient jump-back history after the user returns to latest. */
+  const clearJumpHistory = useCallback(() => {
+    applyBackStack(clearBackStack());
+  }, [applyBackStack]);
+
+  /** Pushes the current viewport snapshot so the next reply jump can return here. */
+  const pushCurrentViewToBackStack = useCallback(() => {
+    const currentView =
+      captureCurrentConversationView() ?? latestConversationView.current;
+
+    if (!(currentView && isBackTarget(currentView))) {
+      return;
+    }
+
+    applyBackStack(
+      pushBackView({
+        backStack: backStackRef.current,
+        view: currentView,
+      })
+    );
+  }, [applyBackStack, captureCurrentConversationView, isBackTarget]);
 
   /** Registers one post target that must visibly land before settling the conversation. */
   const registerPendingPostTarget = useCallback(
@@ -332,6 +383,7 @@ export function useController({
         postId,
       } satisfies ForumConversationView;
 
+      pushCurrentViewToBackStack();
       latestConversationView.current = nextView;
       persistConversationView(nextView);
 
@@ -392,6 +444,7 @@ export function useController({
       postIdToIndex,
       registerPendingPostTarget,
       replaceWithFocusedTimeline,
+      pushCurrentViewToBackStack,
     ]
   );
 
@@ -400,6 +453,7 @@ export function useController({
     persistBottomOnArrivalRef.current = true;
     cancelPendingJumpRequest();
     clearPendingPostTarget();
+    clearJumpHistory();
 
     if (isAtLatestEdge) {
       pendingLatestSessionRef.current = false;
@@ -414,8 +468,117 @@ export function useController({
   }, [
     cancelPendingJumpRequest,
     clearPendingPostTarget,
+    clearJumpHistory,
     isAtLatestEdge,
     showLatestPosts,
+  ]);
+
+  /** Restores one saved semantic view locally when its anchor is already loaded. */
+  const restoreConversationViewLocally = useCallback(
+    (view: RestorableConversationView) => {
+      const anchor = createRestoreConversationAnchor({
+        dateToIndex,
+        headerIndex,
+        postIdToIndex,
+        unreadIndex,
+        view,
+      });
+
+      if (!anchor) {
+        return false;
+      }
+
+      latestConversationView.current = view;
+      persistConversationView(view);
+      requestAnimationFrame(() => {
+        scrollRef.current?.scrollToIndex(anchor.index, {
+          align: anchor.align,
+          offset: anchor.offset,
+        });
+      });
+      return true;
+    },
+    [
+      dateToIndex,
+      headerIndex,
+      persistConversationView,
+      postIdToIndex,
+      unreadIndex,
+    ]
+  );
+
+  /** Returns the conversation to the most recent transient pre-jump position. */
+  const goBack = useCallback(() => {
+    const { backStack, view } = popBackView(backStackRef.current);
+
+    if (!(view && isBackTarget(view))) {
+      return;
+    }
+
+    applyBackStack(backStack);
+    cancelPendingJumpRequest();
+    clearPendingPostTarget();
+    pendingLatestSessionRef.current = false;
+    persistBottomOnArrivalRef.current = false;
+    setScrollCommand(null);
+
+    if (view.kind === "bottom") {
+      scrollToLatest();
+      return;
+    }
+
+    if (restoreConversationViewLocally(view)) {
+      return;
+    }
+
+    if (view.postId === null) {
+      persistConversationView(view);
+      return;
+    }
+
+    const restoreRequestId = beginPendingJumpRequest();
+
+    latestConversationView.current = view;
+    setConversationIntent({ kind: "restore", postId: view.postId, view });
+    convex
+      .query(
+        api.classes.forums.queries.around.getForumPostsAround,
+        createFocusedWindowArgs({
+          forumId,
+          targetPostId: view.postId,
+        })
+      )
+      .then((aroundResult) => {
+        if (jumpRequestIdRef.current !== restoreRequestId) {
+          return;
+        }
+
+        replaceWithFocusedTimeline(
+          createFocusedTimelineState({
+            aroundResult,
+            targetKind: "restore",
+          })
+        );
+      })
+      .catch(() => {
+        if (jumpRequestIdRef.current !== restoreRequestId) {
+          return;
+        }
+
+        persistConversationView(view);
+      });
+  }, [
+    applyBackStack,
+    beginPendingJumpRequest,
+    cancelPendingJumpRequest,
+    clearPendingPostTarget,
+    convex,
+    forumId,
+    isBackTarget,
+    persistConversationView,
+    replaceWithFocusedTimeline,
+    restoreConversationViewLocally,
+    scrollToLatest,
   ]);
 
   const forumScrollValue = useMemo(
@@ -641,6 +804,7 @@ export function useController({
       }
 
       pendingPostTargetRef.current = null;
+      clearJumpHistory();
       cancelPendingJumpRequest();
       pendingLatestSessionRef.current = false;
       persistBottomOnArrivalRef.current = false;
@@ -649,7 +813,7 @@ export function useController({
       wasInBottomPrefetchZoneRef.current = false;
       setScrollCommand(null);
     },
-    [cancelPendingJumpRequest, persistConversationView]
+    [cancelPendingJumpRequest, clearJumpHistory, persistConversationView]
   );
 
   useEffect(() => {
@@ -682,7 +846,9 @@ export function useController({
   }, [isLoadingOlder, isPrepending]);
 
   return {
+    canGoBack,
     forumScrollValue,
+    goBack,
     handleScroll,
     handleScrollEnd,
     handleVirtualAnchorReady,
@@ -690,7 +856,6 @@ export function useController({
     initialAnchor,
     isAtLatestEdge,
     isInitialLoading,
-    isJumpMode,
     isPrepending,
     items,
     scrollRef,

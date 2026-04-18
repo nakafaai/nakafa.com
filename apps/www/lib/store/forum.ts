@@ -4,6 +4,7 @@ import type { UserData } from "@repo/backend/convex/lib/helpers/user";
 import { createStore } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
+import { areConversationViewsEqual } from "@/components/school/classes/forum/conversation/utils/view";
 
 export interface ReactionWithUsers {
   count: number;
@@ -83,38 +84,6 @@ const initialState: State = {
   replyTo: null,
 };
 
-/** Compares two saved forum conversation views by value. */
-function isSameConversationView(
-  left: ForumConversationView | undefined,
-  right: ForumConversationView | undefined
-) {
-  if (!(left && right)) {
-    return left === right;
-  }
-
-  if (left.kind !== right.kind) {
-    return false;
-  }
-
-  if (left.kind === "bottom") {
-    return true;
-  }
-
-  if (left.kind === "date" && right.kind === "date") {
-    return (
-      left.date === right.date &&
-      left.postId === right.postId &&
-      left.offset === right.offset
-    );
-  }
-
-  return (
-    right.kind === left.kind &&
-    left.postId === right.postId &&
-    left.offset === right.offset
-  );
-}
-
 /**
  * Creates one class-scoped forum UI store with transient interaction state and
  * session-backed conversation snapshots for real remounts.
@@ -141,7 +110,7 @@ export const createForumStore = (classId: string) =>
         saveConversationView: (forumId, view) => {
           const savedView = get().savedConversationViews[forumId];
 
-          if (isSameConversationView(savedView, view)) {
+          if (areConversationViewsEqual(savedView, view)) {
             return;
           }
 

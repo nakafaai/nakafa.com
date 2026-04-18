@@ -6,14 +6,14 @@ import {
   VirtualConversationPlaceholder,
 } from "@repo/design-system/components/ui/virtual-conversation";
 import { useTranslations } from "next-intl";
-import { Activity, memo } from "react";
+import { memo } from "react";
 import { ForumHeader } from "@/components/school/classes/forum/conversation/header";
 import { useController } from "@/components/school/classes/forum/conversation/hooks/use-controller";
 import { ForumPostInput } from "@/components/school/classes/forum/conversation/input";
 import { ForumPostItem } from "@/components/school/classes/forum/conversation/item";
+import { JumpBar } from "@/components/school/classes/forum/conversation/jump-bar";
 import {
   DateSeparator,
-  JumpModeIndicator,
   UnreadSeparator,
 } from "@/components/school/classes/forum/conversation/separators";
 import type { Forum } from "@/components/school/classes/forum/conversation/types";
@@ -32,7 +32,9 @@ export const ForumPostConversation = memo(
   }) => {
     const t = useTranslations("Common");
     const {
+      canGoBack,
       forumScrollValue,
+      goBack,
       handleScroll,
       handleScrollEnd,
       handleVirtualAnchorReady,
@@ -40,7 +42,6 @@ export const ForumPostConversation = memo(
       initialAnchor,
       isAtLatestEdge,
       isInitialLoading,
-      isJumpMode,
       isPrepending,
       items,
       scrollRef,
@@ -60,14 +61,16 @@ export const ForumPostConversation = memo(
         <div className="relative flex size-full flex-col overflow-hidden">
           <VirtualConversation
             floatingContent={
-              <Activity
-                mode={isJumpMode || hasPendingPostTarget ? "visible" : "hidden"}
-              >
-                <JumpModeIndicator onExit={scrollToLatest} />
-              </Activity>
+              canGoBack && !hasPendingPostTarget ? (
+                <JumpBar
+                  canGoBack={canGoBack}
+                  onBack={goBack}
+                  onLatest={scrollToLatest}
+                />
+              ) : null
             }
             followLatest={isAtLatestEdge}
-            hideScrollButton={isJumpMode || hasPendingPostTarget}
+            hideScrollButton={canGoBack || hasPendingPostTarget}
             initialAnchor={initialAnchor}
             key={timelineSessionVersion}
             onInitialAnchorSettled={handleVirtualAnchorReady}

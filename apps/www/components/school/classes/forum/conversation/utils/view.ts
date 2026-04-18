@@ -7,10 +7,43 @@ import type { RefObject } from "react";
 import type { VirtualItem } from "@/components/school/classes/forum/conversation/types";
 import type { ForumConversationView } from "@/lib/store/forum";
 
-type RestorableConversationView = Exclude<
+export type RestorableConversationView = Exclude<
   ForumConversationView,
   { kind: "bottom" }
 >;
+
+type RestoreConversationAnchor = Extract<
+  VirtualConversationAnchor,
+  { kind: "index" }
+>;
+
+/** Compares two saved forum conversation views by value. */
+export function areConversationViewsEqual(
+  left: ForumConversationView | undefined | null,
+  right: ForumConversationView | undefined | null
+) {
+  if (!(left && right)) {
+    return left === right;
+  }
+
+  if (left.kind !== right.kind) {
+    return false;
+  }
+
+  if (left.kind === "bottom" || right.kind === "bottom") {
+    return left.kind === right.kind;
+  }
+
+  if (left.kind === "date" && right.kind === "date") {
+    return (
+      left.date === right.date &&
+      left.postId === right.postId &&
+      left.offset === right.offset
+    );
+  }
+
+  return left.postId === right.postId && left.offset === right.offset;
+}
 
 export type ForumConversationMode =
   | {
@@ -48,7 +81,7 @@ function getRestoreTargetPostId(view: RestorableConversationView) {
 }
 
 /** Resolves one saved semantic view back into the current virtual item index. */
-function resolveConversationAnchorIndex({
+function resolveConversationViewIndex({
   dateToIndex,
   headerIndex,
   postIdToIndex,
@@ -74,6 +107,40 @@ function resolveConversationAnchorIndex({
   }
 
   return postIdToIndex.get(view.postId) ?? null;
+}
+
+/** Resolves one saved semantic view into a precise local restore anchor. */
+export function createRestoreConversationAnchor({
+  dateToIndex,
+  headerIndex,
+  postIdToIndex,
+  unreadIndex,
+  view,
+}: {
+  dateToIndex: Map<number, number>;
+  headerIndex: number | null;
+  postIdToIndex: Map<Id<"schoolClassForumPosts">, number>;
+  unreadIndex: number | null;
+  view: RestorableConversationView;
+}): RestoreConversationAnchor | null {
+  const index = resolveConversationViewIndex({
+    dateToIndex,
+    headerIndex,
+    postIdToIndex,
+    unreadIndex,
+    view,
+  });
+
+  if (index === undefined || index === null) {
+    return null;
+  }
+
+  return {
+    kind: "index",
+    index,
+    align: "start",
+    offset: view.offset,
+  };
 }
 
 /** Chooses the fresh-mount conversation mode from one saved view snapshot. */
@@ -110,28 +177,22 @@ export function createInitialConversationAnchor({
   unreadIndex: number | null;
 }): VirtualConversationAnchor {
   if (mode.kind !== "live") {
-    const index =
-      mode.kind === "jump"
-        ? postIdToIndex.get(mode.postId)
-        : resolveConversationAnchorIndex({
-            dateToIndex,
-            headerIndex,
-            postIdToIndex,
-            unreadIndex,
-            view: mode.view,
-          });
+    if (mode.kind === "restore") {
+      return (
+        createRestoreConversationAnchor({
+          dateToIndex,
+          headerIndex,
+          postIdToIndex,
+          unreadIndex,
+          view: mode.view,
+        }) ?? { kind: "bottom" }
+      );
+    }
+
+    const index = postIdToIndex.get(mode.postId);
 
     if (index === undefined || index === null) {
       return { kind: "bottom" };
-    }
-
-    if (mode.kind === "restore") {
-      return {
-        kind: "index",
-        index,
-        align: "start",
-        offset: mode.view.offset,
-      };
     }
 
     return { kind: "index", index, align: "center" };

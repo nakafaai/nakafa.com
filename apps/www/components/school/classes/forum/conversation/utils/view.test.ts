@@ -2,10 +2,12 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { describe, expect, it } from "vitest";
 import type { VirtualItem } from "@/components/school/classes/forum/conversation/types";
 import {
+  areConversationViewsEqual,
   captureConversationView,
   createForumConversationMode,
   createInitialConversationAnchor,
   createInitialConversationView,
+  createRestoreConversationAnchor,
 } from "@/components/school/classes/forum/conversation/utils/view";
 import type { ForumConversationView } from "@/lib/store/forum";
 
@@ -119,6 +121,45 @@ describe("forum conversation view state", () => {
       postId: headerPostId,
       view: unreadView,
     });
+  });
+
+  it("compares conversation views by semantic value", () => {
+    expect(
+      areConversationViewsEqual({ kind: "bottom" }, { kind: "bottom" })
+    ).toBe(true);
+
+    expect(
+      areConversationViewsEqual(
+        { kind: "post", offset: 4, postId: postAId },
+        { kind: "post", offset: 4, postId: postAId }
+      )
+    ).toBe(true);
+
+    expect(
+      areConversationViewsEqual(
+        { kind: "date", date: dateKey, offset: 4, postId: postAId },
+        { kind: "date", date: dateKey, offset: 5, postId: postAId }
+      )
+    ).toBe(false);
+  });
+
+  it("creates exact restore anchors from saved semantic views", () => {
+    expect(
+      createRestoreConversationAnchor({
+        ...createLookup(),
+        view: { kind: "post", offset: 6, postId: postAId },
+      })
+    ).toEqual({ kind: "index", index: 4, align: "start", offset: 6 });
+
+    expect(
+      createRestoreConversationAnchor({
+        dateToIndex: new Map(),
+        headerIndex: null,
+        postIdToIndex: new Map(),
+        unreadIndex: null,
+        view: { kind: "post", offset: 6, postId: postAId },
+      })
+    ).toBeNull();
   });
 
   it("resolves restore anchors for header, date, unread, and post views", () => {
@@ -275,6 +316,17 @@ describe("forum conversation view state", () => {
         mode: { kind: "jump", postId: postAId },
       })
     ).toEqual({ kind: "index", index: 4, align: "center" });
+
+    expect(
+      createInitialConversationAnchor({
+        dateToIndex: new Map(),
+        existingView: null,
+        headerIndex: null,
+        mode: { kind: "jump", postId: postAId },
+        postIdToIndex: new Map(),
+        unreadIndex: null,
+      })
+    ).toEqual({ kind: "bottom" });
 
     expect(
       createInitialConversationAnchor({
