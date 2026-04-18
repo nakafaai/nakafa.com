@@ -17,4 +17,10 @@ export type VirtualItem =
   | { type: "header"; forum: Forum }
   | { type: "date"; date: number }
   | { type: "unread"; count: number }
-  | { type: "post"; post: ForumPost; isFirstInGroup: boolean };
+  | {
+      type: "post";
+      post: ForumPost;
+      isFirstInGroup: boolean;
+      isLastInGroup: boolean;
+      showContinuationTime: boolean;
+    };

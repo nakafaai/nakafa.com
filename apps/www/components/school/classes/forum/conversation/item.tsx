@@ -60,10 +60,14 @@ export const ForumPostItem = memo(
   ({
     post,
     isFirstInGroup,
+    isLastInGroup,
+    showContinuationTime,
     currentUserId,
   }: {
     post: ForumPost;
     isFirstInGroup: boolean;
+    isLastInGroup: boolean;
+    showContinuationTime: boolean;
     currentUserId: Id<"users">;
   }) => {
     const t = useTranslations("Common");
@@ -79,7 +83,9 @@ export const ForumPostItem = memo(
     return (
       <div
         className={cn(
-          "group relative flex items-start gap-3 border-l-2 border-l-transparent px-4 py-2 transition-colors ease-out hover:bg-accent/20",
+          "group relative flex items-start gap-3 border-l-2 border-l-transparent px-4 py-1 transition-colors ease-out hover:bg-accent/20",
+          isFirstInGroup === true && "mt-3",
+          isLastInGroup === true && "mb-3",
           isReplyToMe === true && "border-primary bg-primary/10",
           isReplyTo === true && "border-secondary bg-secondary/10"
         )}
@@ -87,22 +93,28 @@ export const ForumPostItem = memo(
       >
         <PostItemActions post={post} />
 
-        <Activity mode={isFirstInGroup === true ? "visible" : "hidden"}>
-          <Avatar className="size-8 shrink-0">
-            <AvatarImage alt={userName} src={userImage} />
-            <AvatarFallback>{getInitialName(userName)}</AvatarFallback>
-          </Avatar>
-        </Activity>
-        <Activity mode={isFirstInGroup === true ? "hidden" : "visible"}>
+        <div className="w-8 shrink-0">
+          <Activity mode={isFirstInGroup === true ? "visible" : "hidden"}>
+            <Avatar className="size-8 shrink-0">
+              <AvatarImage alt={userName} src={userImage} />
+              <AvatarFallback>{getInitialName(userName)}</AvatarFallback>
+            </Avatar>
+          </Activity>
           <time
-            className="mt-1 w-8 shrink-0 text-center text-muted-foreground text-xs"
+            className={cn(
+              "mt-1 block w-full text-center text-muted-foreground text-xs",
+              isFirstInGroup === true && "hidden",
+              isFirstInGroup !== true &&
+                showContinuationTime !== true &&
+                "invisible"
+            )}
             title={format(post._creationTime, "PPpp", {
               locale: getLocale(locale),
             })}
           >
             {format(post._creationTime, "HH:mm", { locale: getLocale(locale) })}
           </time>
-        </Activity>
+        </div>
 
         <div className="grid min-w-0 flex-1 gap-2">
           <div className="grid gap-1">

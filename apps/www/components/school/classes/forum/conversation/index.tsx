@@ -100,8 +100,10 @@ export const ForumPostConversation = memo(
                 <ForumPostItem
                   currentUserId={currentUserId}
                   isFirstInGroup={item.isFirstInGroup}
+                  isLastInGroup={item.isLastInGroup}
                   key={item.post._id}
                   post={item.post}
+                  showContinuationTime={item.showContinuationTime}
                 />
               );
             })}
