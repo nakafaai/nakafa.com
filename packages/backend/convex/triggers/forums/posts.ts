@@ -12,10 +12,7 @@ import {
 } from "@repo/backend/convex/triggers/helpers/forumPosts";
 import type { Change } from "convex-helpers/server/triggers";
 
-/**
- * Keep forum unread aggregates in sync for posts that already have a migrated
- * sequence.
- */
+/** Keep forum unread aggregates in sync with every forum post change. */
 async function syncForumPostAggregates(
   ctx: MutationCtx,
   change: Change<DataModel, "schoolClassForumPosts">
@@ -24,7 +21,7 @@ async function syncForumPostAggregates(
   const post = change.newDoc;
 
   if (change.operation === "insert") {
-    if (post?.sequence === undefined) {
+    if (!post) {
       return;
     }
 
@@ -34,7 +31,7 @@ async function syncForumPostAggregates(
   }
 
   if (change.operation === "update") {
-    if (!(oldPost?.sequence !== undefined && post?.sequence !== undefined)) {
+    if (!(oldPost && post)) {
       return;
     }
 
@@ -43,7 +40,7 @@ async function syncForumPostAggregates(
     return;
   }
 
-  if (oldPost?.sequence === undefined) {
+  if (!oldPost) {
     return;
   }
 
@@ -79,7 +76,7 @@ export async function forumPostsHandler(
       }
 
       const forum = await updateForumAfterInsert(ctx, post);
-      if (forum && post.sequence !== undefined) {
+      if (forum) {
         await updateForumReadState(ctx, {
           forumId: post.forumId,
           classId: post.classId,

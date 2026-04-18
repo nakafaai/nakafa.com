@@ -75,13 +75,11 @@ export const createForumPost = mutation({
     }
 
     const now = Date.now();
-    const sequence = forum.nextPostSequence ?? forum.postCount + 1;
+    const sequence = forum.nextPostSequence;
 
-    if (forum.nextPostSequence !== undefined) {
-      await ctx.db.patch("schoolClassForums", forum._id, {
-        nextPostSequence: sequence + 1,
-      });
-    }
+    await ctx.db.patch("schoolClassForums", forum._id, {
+      nextPostSequence: sequence + 1,
+    });
 
     const postId = await ctx.db.insert("schoolClassForumPosts", {
       body: args.body,
