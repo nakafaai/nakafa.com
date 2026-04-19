@@ -5,6 +5,10 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
 import {
+  getIndexAnchorOffset,
+  isIndexAnchorSettled,
+} from "@repo/design-system/lib/virtual-anchor";
+import {
   Children,
   type ComponentProps,
   createContext,
@@ -129,6 +133,10 @@ export const VirtualConversation = memo(
     const isBottomPinnedRef = useRef(initialAnchor.kind === "bottom");
     const hasPendingBottomSettleRef = useRef(false);
     const hasPendingInitialBottomAnchorRef = useRef(false);
+    const pendingInitialIndexAnchorRef = useRef<Extract<
+      VirtualConversationAnchor,
+      { kind: "index" }
+    > | null>(null);
     const previousChildCount = useRef(childCount);
     const previousContainerHeight = useRef(0);
 
@@ -228,6 +236,45 @@ export const VirtualConversation = memo(
       []
     );
 
+    /** Finalizes one pending exact index anchor after measurement catches up. */
+    const settlePendingIndexAnchor = useCallback(() => {
+      const anchor = pendingInitialIndexAnchorRef.current;
+
+      if (!(anchor && listRef.current)) {
+        return true;
+      }
+
+      const expectedOffset = getIndexAnchorOffset({
+        anchor,
+        itemOffset: listRef.current.getItemOffset(anchor.index),
+      });
+
+      if (expectedOffset === null) {
+        pendingInitialIndexAnchorRef.current = null;
+        notifyInitialAnchorSettled();
+        return true;
+      }
+
+      if (
+        isIndexAnchorSettled({
+          actualOffset: listRef.current.scrollOffset,
+          expectedOffset,
+        })
+      ) {
+        pendingInitialIndexAnchorRef.current = null;
+        notifyInitialAnchorSettled();
+        return true;
+      }
+
+      requestAnimationFrame(() => {
+        scrollToIndex(anchor.index, {
+          align: anchor.align,
+          offset: anchor.offset,
+        });
+      });
+      return false;
+    }, [notifyInitialAnchorSettled, scrollToIndex]);
+
     /** Applies the first anchor only after the list has measurable geometry. */
     const applyInitialAnchor = useCallback(() => {
       if (
@@ -248,16 +295,19 @@ export const VirtualConversation = memo(
         return;
       }
 
+      pendingInitialIndexAnchorRef.current = initialAnchor;
       scrollToIndex(initialAnchor.index, {
         align: initialAnchor.align,
         offset: initialAnchor.offset,
       });
-      notifyInitialAnchorSettled();
+      requestAnimationFrame(() => {
+        settlePendingIndexAnchor();
+      });
     }, [
       childCount,
       containerHeight,
       initialAnchor,
-      notifyInitialAnchorSettled,
+      settlePendingIndexAnchor,
       scrollToBottom,
       scrollToIndex,
     ]);
@@ -296,7 +346,8 @@ export const VirtualConversation = memo(
       }
 
       applyInitialAnchor();
-    }, [applyInitialAnchor, measurementVersion]);
+      settlePendingIndexAnchor();
+    }, [applyInitialAnchor, measurementVersion, settlePendingIndexAnchor]);
 
     useLayoutEffect(() => {
       if (previousContainerHeight.current === containerHeight) {
@@ -308,11 +359,17 @@ export const VirtualConversation = memo(
       if (
         !(followLatest && hasInitialAnchor.current && isBottomPinnedRef.current)
       ) {
+        settlePendingIndexAnchor();
         return;
       }
 
       scrollToBottom(false);
-    }, [containerHeight, followLatest, scrollToBottom]);
+    }, [
+      containerHeight,
+      followLatest,
+      scrollToBottom,
+      settlePendingIndexAnchor,
+    ]);
 
     useLayoutEffect(() => {
       if (previousChildCount.current === childCount) {
@@ -324,11 +381,12 @@ export const VirtualConversation = memo(
       if (
         !(followLatest && hasInitialAnchor.current && isBottomPinnedRef.current)
       ) {
+        settlePendingIndexAnchor();
         return;
       }
 
       scrollToBottom(false);
-    }, [childCount, followLatest, scrollToBottom]);
+    }, [childCount, followLatest, scrollToBottom, settlePendingIndexAnchor]);
 
     useLayoutEffect(() => {
       if (
@@ -366,8 +424,18 @@ export const VirtualConversation = memo(
         return;
       }
 
+      if (!settlePendingIndexAnchor()) {
+        return;
+      }
+
       onScrollEnd?.();
-    }, [childCount, onScrollEnd, scrollToBottom, syncBottomState]);
+    }, [
+      childCount,
+      onScrollEnd,
+      scrollToBottom,
+      settlePendingIndexAnchor,
+      syncBottomState,
+    ]);
 
     const contextValue = useMemo(
       () => ({

@@ -99,6 +99,7 @@
     "reply": "Reply",
     "replying-to-user": "Replying to <name></name>",
     "new-messages": "{count, plural, =1 {# new message} other {# new messages}}",
+    "left-off-here": "You left off here",
     "cancel": "Cancel",
     "like": "Like",
     "dislike": "Dislike",

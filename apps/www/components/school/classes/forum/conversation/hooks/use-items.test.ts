@@ -6,6 +6,7 @@ import {
   buildVirtualItems,
   useVirtualItems,
 } from "@/components/school/classes/forum/conversation/hooks/use-items";
+import type { UnreadCue } from "@/components/school/classes/forum/conversation/hooks/use-unread";
 import type {
   Forum,
   ForumPost,
@@ -100,11 +101,10 @@ describe("use-items grouping", () => {
     ];
 
     const items = buildVirtualItems({
-      firstUnreadIndex: -1,
       forum: undefined,
       isDetachedMode: false,
       posts,
-      unreadCount: 0,
+      unreadCue: null,
     }).items.filter((item) => item.type === "post");
 
     expect(items).toEqual([
@@ -138,11 +138,10 @@ describe("use-items grouping", () => {
     ];
 
     const items = buildVirtualItems({
-      firstUnreadIndex: -1,
       forum: undefined,
       isDetachedMode: false,
       posts,
-      unreadCount: 0,
+      unreadCue: null,
     }).items.filter((item) => item.type === "post");
 
     expect(items).toEqual([
@@ -187,10 +186,14 @@ describe("use-items grouping", () => {
 
     function TestComponent() {
       result = useVirtualItems({
-        baselineLatestPostId: posts[1]._id,
         forum,
         isDetachedMode: false,
         posts,
+        unreadCue: {
+          count: 1,
+          postId: posts[0]._id,
+          status: "new",
+        },
       });
 
       return null;
@@ -207,7 +210,7 @@ describe("use-items grouping", () => {
     expect(hookResult.unreadIndex).toBe(1);
     expect(hookResult.items).toEqual([
       expect.objectContaining({ type: "header" }),
-      expect.objectContaining({ type: "unread", count: 1 }),
+      expect.objectContaining({ type: "unread", count: 1, status: "new" }),
       expect.objectContaining({
         type: "post",
         isFirstInGroup: true,
@@ -241,11 +244,14 @@ describe("use-items grouping", () => {
     ];
 
     const items = buildVirtualItems({
-      firstUnreadIndex: -1,
       forum: undefined,
       isDetachedMode: true,
       posts,
-      unreadCount: 0,
+      unreadCue: {
+        count: 1,
+        postId: posts[1]._id,
+        status: "new",
+      },
     }).items;
 
     expect(items).toEqual([
@@ -281,10 +287,14 @@ describe("use-items grouping", () => {
 
     function TestComponent() {
       result = useVirtualItems({
-        baselineLatestPostId: posts[0]._id,
         forum: undefined,
         isDetachedMode: true,
         posts,
+        unreadCue: {
+          count: 1,
+          postId: posts[0]._id,
+          status: "new",
+        },
       });
 
       return null;
@@ -312,26 +322,16 @@ describe("use-items grouping", () => {
     });
   });
 
-  it("counts multiple unread posts before the baseline latest post once the first index is set", () => {
+  it("renders a historical unread cue without shifting its anchor post", () => {
     const container = document.createElement("div");
     const root = createRoot(container);
     const posts = [
-      {
-        ...createPost({
-          createdBy: authorAId,
-          createdTime: dayOne,
-          id: "post_1",
-        }),
-        isUnread: true,
-      },
-      {
-        ...createPost({
-          createdBy: authorAId,
-          createdTime: dayOne + 60_000,
-          id: "post_2",
-        }),
-        isUnread: true,
-      },
+      createPost({ createdBy: authorAId, createdTime: dayOne, id: "post_1" }),
+      createPost({
+        createdBy: authorAId,
+        createdTime: dayOne + 60_000,
+        id: "post_2",
+      }),
       createPost({
         createdBy: authorAId,
         createdTime: dayOne + 120_000,
@@ -339,13 +339,18 @@ describe("use-items grouping", () => {
       }),
     ];
     let result: ReturnType<typeof useVirtualItems> | null = null;
+    const unreadCue = {
+      count: 2,
+      postId: posts[0]._id,
+      status: "history",
+    } satisfies UnreadCue;
 
     function TestComponent() {
       result = useVirtualItems({
-        baselineLatestPostId: posts[2]._id,
         forum: undefined,
         isDetachedMode: false,
         posts,
+        unreadCue,
       });
 
       return null;
@@ -360,7 +365,7 @@ describe("use-items grouping", () => {
 
     expect(hookResult.unreadIndex).toBe(0);
     expect(hookResult.items[0]).toEqual(
-      expect.objectContaining({ type: "unread", count: 2 })
+      expect.objectContaining({ type: "unread", count: 2, status: "history" })
     );
 
     act(() => {

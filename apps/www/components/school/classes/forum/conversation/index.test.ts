@@ -78,6 +78,7 @@ function createControllerResult(overrides?: {
   items?: VirtualItem[];
 }) {
   return {
+    acknowledgeUnreadCue: vi.fn(),
     canGoBack: overrides?.canGoBack ?? false,
     forumScrollValue: {
       jumpToPostId: vi.fn(),
@@ -235,7 +236,7 @@ describe("conversation/index", () => {
         items: [
           { forum: createForum(), type: "header" },
           { date: Date.UTC(2026, 3, 20, 0, 0, 0), type: "date" },
-          { count: 2, type: "unread" },
+          { count: 2, status: "new", type: "unread" },
           {
             isFirstInGroup: true,
             isLastInGroup: true,

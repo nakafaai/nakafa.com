@@ -33,6 +33,7 @@ export const ForumPostConversation = memo(
   }) => {
     const t = useTranslations("Common");
     const {
+      acknowledgeUnreadCue,
       canGoBack,
       forumScrollValue,
       goBack,
@@ -105,7 +106,13 @@ export const ForumPostConversation = memo(
               }
 
               if (item.type === "unread") {
-                return <UnreadSeparator count={item.count} key="unread" />;
+                return (
+                  <UnreadSeparator
+                    count={item.count}
+                    key="unread"
+                    status={item.status}
+                  />
+                );
               }
 
               return (
@@ -120,7 +127,10 @@ export const ForumPostConversation = memo(
               );
             })}
           </VirtualConversation>
-          <ForumPostInput forumId={forumId} />
+          <ForumPostInput
+            acknowledgeUnreadCue={acknowledgeUnreadCue}
+            forumId={forumId}
+          />
         </div>
       </ForumScrollProvider>
     );

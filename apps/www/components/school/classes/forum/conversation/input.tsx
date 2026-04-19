@@ -72,7 +72,13 @@ import { useForumScroll } from "@/lib/context/use-forum-scroll";
  * state cleanup for the active conversation.
  */
 export const ForumPostInput = memo(
-  ({ forumId }: { forumId: Id<"schoolClassForums"> }) => {
+  ({
+    acknowledgeUnreadCue,
+    forumId,
+  }: {
+    acknowledgeUnreadCue: () => void;
+    forumId: Id<"schoolClassForums">;
+  }) => {
     const t = useTranslations("School.Classes");
     const replyTo = useForum((f) => f.replyTo);
     const setReplyTo = useForum((f) => f.setReplyTo);
@@ -187,6 +193,7 @@ export const ForumPostInput = memo(
             parentId: replyTo?.postId,
           });
 
+          acknowledgeUnreadCue();
           form.reset();
           clearFiles();
           setReplyTo(null);

@@ -16,7 +16,7 @@ export type Forum = Doc<"schoolClassForums"> & {
 export type VirtualItem =
   | { type: "header"; forum: Forum }
   | { type: "date"; date: number }
-  | { type: "unread"; count: number }
+  | { type: "unread"; count: number; status: "history" | "new" }
   | {
       type: "post";
       post: ForumPost;

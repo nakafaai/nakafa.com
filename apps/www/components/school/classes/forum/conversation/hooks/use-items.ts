@@ -1,60 +1,23 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useMemo } from "react";
+import type { UnreadCue } from "@/components/school/classes/forum/conversation/hooks/use-unread";
 import type {
   Forum,
   ForumPost,
   VirtualItem,
 } from "@/components/school/classes/forum/conversation/types";
 
-/** Calculates unread boundaries for one live forum transcript window. */
-function getUnreadWindow({
-  baselineLatestPostId,
-  isDetachedMode,
-  posts,
-}: {
-  baselineLatestPostId: Id<"schoolClassForumPosts"> | null;
-  isDetachedMode: boolean;
-  posts: ForumPost[];
-}) {
-  if (isDetachedMode) {
-    return { firstUnreadIndex: -1, unreadCount: 0 };
-  }
-
-  let firstIdx = -1;
-  let count = 0;
-  let passedBaselineLatestPost = baselineLatestPostId === null;
-
-  for (const [i, post] of posts.entries()) {
-    const isUnread = !passedBaselineLatestPost && post.isUnread === true;
-
-    if (isUnread) {
-      if (firstIdx === -1) {
-        firstIdx = i;
-      }
-      count += 1;
-    }
-
-    if (post._id === baselineLatestPostId) {
-      passedBaselineLatestPost = true;
-    }
-  }
-
-  return { firstUnreadIndex: firstIdx, unreadCount: count };
-}
-
 /** Builds the semantic virtual transcript items for one forum conversation. */
 export function buildVirtualItems({
-  firstUnreadIndex,
   forum,
   isDetachedMode,
   posts,
-  unreadCount,
+  unreadCue,
 }: {
-  firstUnreadIndex: number;
   forum: Forum | undefined;
   isDetachedMode: boolean;
   posts: ForumPost[];
-  unreadCount: number;
+  unreadCue: UnreadCue | null;
 }) {
   const result: VirtualItem[] = [];
   const dateToIndex = new Map<number, number>();
@@ -87,8 +50,12 @@ export function buildVirtualItems({
       result.push({ type: "date", date: post._creationTime });
     }
 
-    if (!isDetachedMode && index === firstUnreadIndex) {
-      result.push({ type: "unread", count: unreadCount });
+    if (!isDetachedMode && unreadCue?.postId === post._id) {
+      result.push({
+        type: "unread",
+        count: unreadCue.count,
+        status: unreadCue.status,
+      });
       nextUnreadIndex = result.length - 1;
     }
 
@@ -130,37 +97,26 @@ export function buildVirtualItems({
  * - Post items with grouping
  */
 export function useVirtualItems({
-  baselineLatestPostId,
   forum,
   posts,
   isDetachedMode,
+  unreadCue,
 }: {
-  baselineLatestPostId: Id<"schoolClassForumPosts"> | null;
   forum: Forum | undefined;
   isDetachedMode: boolean;
   posts: ForumPost[];
+  unreadCue: UnreadCue | null;
 }) {
-  const { firstUnreadIndex, unreadCount } = useMemo(
-    () =>
-      getUnreadWindow({
-        baselineLatestPostId,
-        isDetachedMode,
-        posts,
-      }),
-    [baselineLatestPostId, isDetachedMode, posts]
-  );
-
   const { dateToIndex, headerIndex, items, postIdToIndex, unreadIndex } =
     useMemo(
       () =>
         buildVirtualItems({
-          firstUnreadIndex,
           forum,
           isDetachedMode,
           posts,
-          unreadCount,
+          unreadCue,
         }),
-      [forum, posts, firstUnreadIndex, unreadCount, isDetachedMode]
+      [forum, isDetachedMode, posts, unreadCue]
     );
 
   return {

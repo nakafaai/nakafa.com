@@ -20,6 +20,7 @@ import { usePosts } from "@/components/school/classes/forum/conversation/hooks/u
 import { useRead } from "@/components/school/classes/forum/conversation/hooks/use-read";
 import { useScroll } from "@/components/school/classes/forum/conversation/hooks/use-scroll";
 import { useTarget } from "@/components/school/classes/forum/conversation/hooks/use-target";
+import { useUnread } from "@/components/school/classes/forum/conversation/hooks/use-unread";
 import { useView } from "@/components/school/classes/forum/conversation/hooks/use-view";
 import type {
   Forum,
@@ -45,6 +46,7 @@ interface ForumScrollValue {
 }
 
 interface UseControllerResult {
+  acknowledgeUnreadCue: () => void;
   canGoBack: boolean;
   forumScrollValue: ForumScrollValue;
   goBack: () => void;
@@ -112,12 +114,18 @@ export function useController({
     baselineLatestPostIdRef.current = posts.at(-1)?._id ?? null;
   }
 
+  const { acknowledgeUnreadCue, unreadCue } = useUnread({
+    baselineLatestPostId: baselineLatestPostIdRef.current,
+    isDetachedMode: !isAtLatestEdge,
+    isInitialLoading,
+    posts,
+  });
   const { dateToIndex, headerIndex, items, postIdToIndex, unreadIndex } =
     useItems({
-      baselineLatestPostId: baselineLatestPostIdRef.current,
       forum,
       isDetachedMode: !isAtLatestEdge,
       posts,
+      unreadCue,
     });
   const latestItemsRef = useRef(items);
   latestItemsRef.current = items;
@@ -488,6 +496,7 @@ export function useController({
   );
 
   return {
+    acknowledgeUnreadCue,
     canGoBack,
     forumScrollValue,
     goBack,
