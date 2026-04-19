@@ -4,6 +4,10 @@ import { ArrowDown02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
+import type {
+  VirtualConversationAnchor,
+  VirtualConversationHandle,
+} from "@repo/design-system/types/virtual";
 import {
   getIndexAnchorOffset,
   isIndexAnchorSettled,
@@ -30,17 +34,6 @@ import {
   type VListProps,
 } from "virtua";
 
-export interface VirtualConversationHandle {
-  findItemIndex: (offset: number) => number;
-  getDistanceFromBottom: () => number;
-  getItemOffset: (index: number) => number;
-  getScrollOffset: () => number;
-  getViewportSize: () => number;
-  isAtBottom: () => boolean;
-  scrollToBottom: () => void;
-  scrollToIndex: (index: number, options?: ScrollToIndexOpts) => void;
-}
-
 const VIRTUAL_CONVERSATION_BOTTOM_EPSILON = 2;
 
 interface VirtualConversationContextValue {
@@ -50,17 +43,6 @@ interface VirtualConversationContextValue {
 }
 
 const DEFAULT_SCROLL_BUTTON_ARIA_LABEL = "Scroll to bottom";
-
-export type VirtualConversationAnchor =
-  | {
-      kind: "bottom";
-    }
-  | {
-      align?: ScrollToIndexOpts["align"];
-      index: number;
-      kind: "index";
-      offset?: number;
-    };
 
 const VirtualConversationContext =
   createContext<VirtualConversationContextValue | null>(null);

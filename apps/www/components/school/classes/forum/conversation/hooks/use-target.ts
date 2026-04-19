@@ -1,5 +1,5 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { VirtualConversationHandle } from "@repo/design-system/components/ui/virtual-conversation";
+import type { VirtualConversationHandle } from "@repo/design-system/types/virtual";
 import { type RefObject, useCallback, useRef, useState } from "react";
 import {
   type PendingPostTarget,

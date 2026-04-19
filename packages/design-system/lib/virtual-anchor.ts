@@ -1,4 +1,4 @@
-import type { VirtualConversationAnchor } from "@repo/design-system/components/ui/virtual-conversation";
+import type { VirtualConversationAnchor } from "@repo/design-system/types/virtual";
 
 const INDEX_ANCHOR_SETTLE_EPSILON = 2;
 

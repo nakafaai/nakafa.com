@@ -3,7 +3,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type {
   VirtualConversationAnchor,
   VirtualConversationHandle,
-} from "@repo/design-system/components/ui/virtual-conversation";
+} from "@repo/design-system/types/virtual";
 import { useConvex } from "convex/react";
 import {
   type RefObject,

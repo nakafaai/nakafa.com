@@ -1,5 +1,5 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { VirtualConversationHandle } from "@repo/design-system/components/ui/virtual-conversation";
+import type { VirtualConversationHandle } from "@repo/design-system/types/virtual";
 import type { ScrollCommand } from "@/components/school/classes/forum/conversation/utils/scroll-command";
 
 const DEFAULT_PENDING_POST_TARGET_RETRIES = 3;

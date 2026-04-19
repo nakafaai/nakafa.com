@@ -1,4 +1,4 @@
-import type { VirtualConversationHandle } from "@repo/design-system/components/ui/virtual-conversation";
+import type { VirtualConversationHandle } from "@repo/design-system/types/virtual";
 import type { RefObject } from "react";
 
 type LatestScrollHandle = Pick<VirtualConversationHandle, "scrollToBottom">;

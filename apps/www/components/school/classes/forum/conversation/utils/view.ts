@@ -2,7 +2,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type {
   VirtualConversationAnchor,
   VirtualConversationHandle,
-} from "@repo/design-system/components/ui/virtual-conversation";
+} from "@repo/design-system/types/virtual";
 import type { RefObject } from "react";
 import type { VirtualItem } from "@/components/school/classes/forum/conversation/types";
 import type { ForumConversationView } from "@/lib/store/forum";
