@@ -1,5 +1,3 @@
-"use client";
-
 import { useDebouncedCallback } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
