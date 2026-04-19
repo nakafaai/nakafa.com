@@ -38,16 +38,14 @@ export const ForumPostConversation = memo(
       forumScrollValue,
       goBack,
       handleScroll,
-      handleScrollEnd,
-      handleVirtualAnchorReady,
       highlightedPostId,
-      initialAnchor,
       isAtBottom,
       isAtLatestEdge,
       isConversationRevealed,
       isInitialLoading,
-      isPrepending,
       items,
+      containerRef,
+      registerPostElement,
       scrollRef,
       scrollToLatest,
       timelineSessionVersion,
@@ -72,6 +70,24 @@ export const ForumPostConversation = memo(
           )}
         >
           <VirtualConversation
+            containerRef={containerRef}
+            estimateSize={(index) => {
+              const item = items[index];
+
+              if (!item) {
+                return 120;
+              }
+
+              if (item.type === "header") {
+                return 120;
+              }
+
+              if (item.type === "date" || item.type === "unread") {
+                return 48;
+              }
+
+              return 160;
+            }}
             floatingContent={
               showJumpBack ? (
                 <JumpBar
@@ -82,17 +98,12 @@ export const ForumPostConversation = memo(
                 />
               ) : null
             }
-            followLatest={isAtLatestEdge}
             hideScrollButton={canGoBack}
-            initialAnchor={initialAnchor}
             key={timelineSessionVersion}
-            onInitialAnchorSettled={handleVirtualAnchorReady}
             onScroll={handleScroll}
-            onScrollEnd={handleScrollEnd}
             scrollButtonAction={scrollToLatest}
             scrollButtonAriaLabel={t("back-to-latest")}
             scrollRef={scrollRef}
-            shift={isPrepending}
           >
             {items.map((item) => {
               if (item.type === "header") {
@@ -123,6 +134,9 @@ export const ForumPostConversation = memo(
                   isLastInGroup={item.isLastInGroup}
                   key={item.post._id}
                   post={item.post}
+                  rowRef={(element) => {
+                    registerPostElement(item.post._id, element);
+                  }}
                   showContinuationTime={item.showContinuationTime}
                 />
               );

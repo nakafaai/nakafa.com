@@ -3,15 +3,14 @@
 import { ArrowDown02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
-import {
-  getIndexAnchorOffset,
-  isIndexAnchorSettled,
-} from "@repo/design-system/lib/virtual-anchor";
 import type {
   VirtualConversationAnchor,
   VirtualConversationHandle,
+  VirtualScrollToIndexOptions,
 } from "@repo/design-system/types/virtual";
+import { useVirtualizer, type VirtualItem } from "@tanstack/react-virtual";
 import {
   Children,
   type ComponentProps,
@@ -27,14 +26,11 @@ import {
   useRef,
   useState,
 } from "react";
-import {
-  type ScrollToIndexOpts,
-  VList,
-  type VListHandle,
-  type VListProps,
-} from "virtua";
 
+const DEFAULT_ESTIMATED_ITEM_SIZE = 120;
+const DEFAULT_SCROLL_BUTTON_ARIA_LABEL = "Scroll to bottom";
 const VIRTUAL_CONVERSATION_BOTTOM_EPSILON = 2;
+const INDEX_ANCHOR_SETTLE_EPSILON = 2;
 
 interface VirtualConversationContextValue {
   isAtBottom: boolean;
@@ -42,12 +38,10 @@ interface VirtualConversationContextValue {
   scrollButtonAriaLabel: string;
 }
 
-const DEFAULT_SCROLL_BUTTON_ARIA_LABEL = "Scroll to bottom";
-
 const VirtualConversationContext =
   createContext<VirtualConversationContextValue | null>(null);
 
-/** Returns whether one measured distance should count as the exact bottom edge. */
+/** Returns whether the measured distance should count as the exact bottom edge. */
 function isAtConversationBottom(distanceFromBottom: number) {
   return distanceFromBottom <= VIRTUAL_CONVERSATION_BOTTOM_EPSILON;
 }
@@ -55,375 +49,450 @@ function isAtConversationBottom(distanceFromBottom: number) {
 /** Reads the scroll controls for the active virtual conversation. */
 function useVirtualConversation() {
   const context = useContext(VirtualConversationContext);
+
   if (!context) {
     throw new Error(
       "useVirtualConversation must be used within VirtualConversation"
     );
   }
+
   return context;
 }
 
-export type VirtualConversationProps = Omit<VListProps, "ref" | "shift"> & {
-  followLatest?: boolean;
-  onInitialAnchorSettled?: () => void;
-  initialAnchor?: VirtualConversationAnchor;
-  scrollRef?: RefObject<VirtualConversationHandle | null>;
-  hideScrollButton?: boolean;
-  scrollButtonAriaLabel?: string;
-  scrollButtonAction?: () => void;
+/** Returns one absolute measurement for the given item index, if known. */
+function getMeasuredVirtualItem(
+  measurements: VirtualItem[],
+  index: number
+): VirtualItem | null {
+  return measurements[index] ?? null;
+}
+
+/** Resolves one target scroll offset for the requested item alignment. */
+function getScrollOffsetForItem({
+  item,
+  offset,
+  scrollHeight,
+  viewportHeight,
+  align,
+}: {
+  item: VirtualItem;
+  offset: number;
+  scrollHeight: number;
+  viewportHeight: number;
+  align: NonNullable<VirtualScrollToIndexOptions["align"]>;
+}) {
+  const maxScrollTop = Math.max(0, scrollHeight - viewportHeight);
+  let scrollTop = item.start - offset;
+
+  if (align === "center") {
+    scrollTop = item.start - (viewportHeight - item.size) / 2 + offset;
+  }
+
+  if (align === "end") {
+    scrollTop = item.end - viewportHeight + offset;
+  }
+
+  if (align === "auto") {
+    const itemTop = item.start;
+    const itemBottom = item.end;
+    const currentTop = 0;
+    const currentBottom = viewportHeight;
+
+    if (itemTop >= currentTop && itemBottom <= currentBottom) {
+      scrollTop = item.start - offset;
+    } else if (itemTop < currentTop) {
+      scrollTop = item.start - offset;
+    } else {
+      scrollTop = item.end - viewportHeight + offset;
+    }
+  }
+
+  return Math.min(Math.max(0, scrollTop), maxScrollTop);
+}
+
+export type VirtualConversationProps = Omit<
+  ComponentProps<"div">,
+  "children" | "onScroll"
+> & {
+  children: ReactNode;
+  containerRef?: RefObject<HTMLDivElement | null>;
+  estimateSize?: (index: number) => number;
   floatingContent?: ReactNode;
-  /**
-   * Enable shift mode for reverse infinite scrolling.
-   * When true, scroll position is maintained from END when items prepend.
-   * Should be false when at bottom to avoid layout issues with new messages.
-   */
-  shift?: boolean;
+  followLatest?: boolean;
+  hideScrollButton?: boolean;
+  initialAnchor?: VirtualConversationAnchor;
+  onInitialAnchorSettled?: () => void;
+  onScroll?: (offset: number) => void;
+  onScrollEnd?: () => void;
+  overscan?: number;
+  scrollButtonAction?: () => void;
+  scrollButtonAriaLabel?: string;
+  scrollRef?: RefObject<VirtualConversationHandle | null>;
 };
 
-/**
- * Renders one virtualized conversation list with measurement-aware initial
- * positioning and bottom pinning while the viewport height settles.
- */
+/** Renders one virtualized conversation list powered by TanStack Virtual. */
 export const VirtualConversation = memo(
   ({
     className,
     children,
+    containerRef,
+    estimateSize,
+    floatingContent,
     followLatest = true,
+    hideScrollButton = false,
+    initialAnchor = { kind: "bottom" },
     onInitialAnchorSettled,
     onScroll,
     onScrollEnd,
-    initialAnchor = { kind: "bottom" },
-    scrollRef,
-    hideScrollButton = false,
-    scrollButtonAriaLabel = DEFAULT_SCROLL_BUTTON_ARIA_LABEL,
+    overscan = 6,
     scrollButtonAction,
-    floatingContent,
-    shift = false,
+    scrollButtonAriaLabel = DEFAULT_SCROLL_BUTTON_ARIA_LABEL,
+    scrollRef,
     ...props
   }: VirtualConversationProps) => {
-    const childCount = Children.count(children);
-    const containerRef = useRef<HTMLDivElement>(null);
-    const listRef = useRef<VListHandle>(null);
-    const [containerHeight, setContainerHeight] = useState(0);
-    const [measurementVersion, setMeasurementVersion] = useState(0);
-    const [isAtBottom, setIsAtBottom] = useState(
-      initialAnchor.kind === "bottom"
+    const items = useMemo(() => Children.toArray(children), [children]);
+    const itemKeys = useMemo(
+      () =>
+        items.map((item, index) => {
+          if (
+            typeof item === "object" &&
+            item &&
+            "key" in item &&
+            item.key != null
+          ) {
+            return String(item.key);
+          }
+
+          return String(index);
+        }),
+      [items]
     );
-    const hasInitialAnchor = useRef(false);
-    const hasNotifiedInitialAnchor = useRef(false);
+    const scrollElementRef = useRef<HTMLDivElement>(null);
+    const pendingInitialAnchorRef = useRef<VirtualConversationAnchor | null>(
+      initialAnchor
+    );
+    const hasInitialAnchorRef = useRef(false);
+    const hasNotifiedInitialAnchorRef = useRef(false);
     const isAtBottomRef = useRef(initialAnchor.kind === "bottom");
     const isBottomPinnedRef = useRef(initialAnchor.kind === "bottom");
     const hasPendingBottomSettleRef = useRef(false);
-    const hasPendingInitialBottomAnchorRef = useRef(false);
-    const pendingInitialIndexAnchorRef = useRef<Extract<
-      VirtualConversationAnchor,
-      { kind: "index" }
-    > | null>(null);
-    const previousChildCount = useRef(childCount);
-    const previousContainerHeight = useRef(0);
+    const previousContainerHeightRef = useRef(0);
+    const previousItemCountRef = useRef(items.length);
+    const [isAtBottom, setIsAtBottom] = useState(
+      initialAnchor.kind === "bottom"
+    );
+    const virtualizer = useVirtualizer<HTMLDivElement, HTMLDivElement>({
+      count: items.length,
+      estimateSize: estimateSize ?? (() => DEFAULT_ESTIMATED_ITEM_SIZE),
+      getItemKey: (index) => itemKeys[index] ?? index,
+      getScrollElement: () => scrollElementRef.current,
+      overscan,
+      useAnimationFrameWithResizeObserver: false,
+      useScrollendEvent: false,
+    });
+    virtualizer.shouldAdjustScrollPositionOnItemSizeChange = (
+      item,
+      _delta,
+      instance
+    ) =>
+      instance.scrollDirection === "backward" &&
+      item.start < (instance.scrollOffset ?? 0);
+    const virtualItems = virtualizer.getVirtualItems();
+    const paddingTop = virtualItems[0]?.start ?? 0;
+    /** Writes both the internal and forwarded scroll container refs. */
+    const setScrollElementRef = useCallback(
+      (node: HTMLDivElement | null) => {
+        scrollElementRef.current = node;
 
-    /** Notifies consumers once the fresh-mount anchor has been applied. */
+        if (!containerRef) {
+          return;
+        }
+
+        containerRef.current = node;
+      },
+      [containerRef]
+    );
+
+    /** Measures the current distance between the viewport and the bottom edge. */
+    const getDistanceFromBottom = useCallback(() => {
+      const viewportHeight = virtualizer.scrollRect?.height ?? 0;
+      const scrollOffset = virtualizer.scrollOffset ?? 0;
+
+      return Math.max(
+        0,
+        virtualizer.getTotalSize() - viewportHeight - scrollOffset
+      );
+    }, [virtualizer]);
+
+    /** Syncs the bottom state and followLatest pinning from current measurements. */
+    const syncBottomState = useCallback(() => {
+      const atBottom = isAtConversationBottom(getDistanceFromBottom());
+
+      isAtBottomRef.current = atBottom;
+
+      if (!hasPendingBottomSettleRef.current || atBottom) {
+        isBottomPinnedRef.current = followLatest && atBottom;
+      }
+
+      setIsAtBottom((currentIsAtBottom) =>
+        currentIsAtBottom === atBottom ? currentIsAtBottom : atBottom
+      );
+
+      if (atBottom) {
+        hasPendingBottomSettleRef.current = false;
+      }
+
+      return atBottom;
+    }, [followLatest, getDistanceFromBottom]);
+
+    /** Scrolls to one item index using measured TanStack offsets plus local offset. */
+    const scrollToIndex = useCallback(
+      (index: number, options?: VirtualScrollToIndexOptions) => {
+        const measurement = getMeasuredVirtualItem(
+          virtualizer.measurementsCache,
+          index
+        );
+        const container = scrollElementRef.current;
+
+        if (!(measurement && container)) {
+          return false;
+        }
+
+        hasPendingBottomSettleRef.current = false;
+        isBottomPinnedRef.current = false;
+        virtualizer.scrollToOffset(
+          getScrollOffsetForItem({
+            align: options?.align ?? "start",
+            item: measurement,
+            offset: options?.offset ?? 0,
+            scrollHeight: virtualizer.getTotalSize(),
+            viewportHeight: container.clientHeight,
+          }),
+          { behavior: options?.smooth ? "smooth" : "auto" }
+        );
+        return true;
+      },
+      [virtualizer]
+    );
+
+    /** Scrolls the list to its latest edge and arms bottom pinning. */
+    const scrollToBottom = useCallback(
+      (smooth = true) => {
+        if (items.length === 0) {
+          return false;
+        }
+
+        hasPendingBottomSettleRef.current = true;
+        isBottomPinnedRef.current = followLatest;
+        virtualizer.scrollToIndex(items.length - 1, {
+          align: "end",
+          behavior: smooth ? "smooth" : "auto",
+        });
+        return true;
+      },
+      [followLatest, items.length, virtualizer]
+    );
+
+    /** Finalizes the first anchor once it has visibly landed. */
+    const maybeSettleInitialAnchor = useCallback(() => {
+      const pendingInitialAnchor = pendingInitialAnchorRef.current;
+
+      if (!(pendingInitialAnchor && scrollElementRef.current)) {
+        return true;
+      }
+
+      if (pendingInitialAnchor.kind === "bottom") {
+        if (!isAtConversationBottom(getDistanceFromBottom())) {
+          scrollToBottom(false);
+          return false;
+        }
+
+        pendingInitialAnchorRef.current = null;
+        return true;
+      }
+
+      const measurement = getMeasuredVirtualItem(
+        virtualizer.measurementsCache,
+        pendingInitialAnchor.index
+      );
+
+      if (!measurement) {
+        return false;
+      }
+
+      const expectedOffset = getScrollOffsetForItem({
+        align: pendingInitialAnchor.align ?? "start",
+        item: measurement,
+        offset: pendingInitialAnchor.offset ?? 0,
+        scrollHeight: virtualizer.getTotalSize(),
+        viewportHeight: scrollElementRef.current.clientHeight,
+      });
+
+      if (
+        Math.abs((virtualizer.scrollOffset ?? 0) - expectedOffset) <=
+        INDEX_ANCHOR_SETTLE_EPSILON
+      ) {
+        pendingInitialAnchorRef.current = null;
+        return true;
+      }
+
+      scrollToIndex(pendingInitialAnchor.index, {
+        align: pendingInitialAnchor.align,
+        offset: pendingInitialAnchor.offset,
+        smooth: false,
+      });
+      return false;
+    }, [getDistanceFromBottom, scrollToBottom, scrollToIndex, virtualizer]);
+
+    /** Notifies consumers once the fresh transcript anchor is visibly ready. */
     const notifyInitialAnchorSettled = useCallback(() => {
-      if (hasNotifiedInitialAnchor.current) {
+      if (hasNotifiedInitialAnchorRef.current) {
         return;
       }
 
-      hasNotifiedInitialAnchor.current = true;
+      hasNotifiedInitialAnchorRef.current = true;
       requestAnimationFrame(() => {
         onInitialAnchorSettled?.();
       });
     }, [onInitialAnchorSettled]);
 
-    /** Finalizes one pending bottom scroll and notifies any waiting initial anchor. */
-    const settlePendingBottomScroll = useCallback(() => {
-      hasPendingBottomSettleRef.current = false;
-
-      if (!hasPendingInitialBottomAnchorRef.current) {
-        return;
-      }
-
-      hasPendingInitialBottomAnchorRef.current = false;
-      notifyInitialAnchorSettled();
-    }, [notifyInitialAnchorSettled]);
-
-    /** Measures the current distance from the live bottom edge. */
-    const measureDistanceFromBottom = useCallback((offset?: number) => {
-      if (!listRef.current) {
-        return Number.POSITIVE_INFINITY;
-      }
-
-      return Math.max(
-        0,
-        listRef.current.scrollSize -
-          (offset ?? listRef.current.scrollOffset) -
-          listRef.current.viewportSize
-      );
-    }, []);
-
-    /** Synchronizes the exact-bottom state from the current measured geometry. */
-    const syncBottomState = useCallback(
-      (offset?: number) => {
-        const distanceFromBottom = measureDistanceFromBottom(offset);
-        const atBottom = isAtConversationBottom(distanceFromBottom);
-
-        isAtBottomRef.current = atBottom;
-
-        if (!hasPendingBottomSettleRef.current || atBottom) {
-          isBottomPinnedRef.current = followLatest && atBottom;
-        }
-
-        setIsAtBottom(atBottom);
-
-        if (atBottom) {
-          settlePendingBottomScroll();
-        }
-
-        return atBottom;
-      },
-      [followLatest, measureDistanceFromBottom, settlePendingBottomScroll]
-    );
-
-    /** Scrolls the list to the latest item and pins future viewport resizes. */
-    const scrollToBottom = useCallback(
-      (smooth = true) => {
-        if (!listRef.current || childCount === 0) {
-          return;
-        }
-
-        hasPendingBottomSettleRef.current = true;
-        isBottomPinnedRef.current = followLatest;
-        listRef.current.scrollToIndex(childCount - 1, {
-          align: "end",
-          smooth,
-        });
-        requestAnimationFrame(() => {
-          syncBottomState();
-        });
-      },
-      [childCount, followLatest, syncBottomState]
-    );
-
-    /** Scrolls to one item index without enabling bottom pinning. */
-    const scrollToIndex = useCallback(
-      (index: number, options?: ScrollToIndexOpts) => {
-        if (!listRef.current) {
-          return;
-        }
-
-        hasPendingBottomSettleRef.current = false;
-        hasPendingInitialBottomAnchorRef.current = false;
-        isBottomPinnedRef.current = false;
-        listRef.current.scrollToIndex(index, options);
-      },
-      []
-    );
-
-    /** Finalizes one pending exact index anchor after measurement catches up. */
-    const settlePendingIndexAnchor = useCallback(() => {
-      const anchor = pendingInitialIndexAnchorRef.current;
-
-      if (!(anchor && listRef.current)) {
-        return true;
-      }
-
-      const expectedOffset = getIndexAnchorOffset({
-        anchor,
-        itemOffset: listRef.current.getItemOffset(anchor.index),
-      });
-
-      if (expectedOffset === null) {
-        pendingInitialIndexAnchorRef.current = null;
-        notifyInitialAnchorSettled();
-        return true;
-      }
+    /** Applies the first anchor after the scroll container becomes measurable. */
+    useLayoutEffect(() => {
+      const container = scrollElementRef.current;
 
       if (
-        isIndexAnchorSettled({
-          actualOffset: listRef.current.scrollOffset,
-          expectedOffset,
-        })
-      ) {
-        pendingInitialIndexAnchorRef.current = null;
-        notifyInitialAnchorSettled();
-        return true;
-      }
-
-      requestAnimationFrame(() => {
-        scrollToIndex(anchor.index, {
-          align: anchor.align,
-          offset: anchor.offset,
-        });
-      });
-      return false;
-    }, [notifyInitialAnchorSettled, scrollToIndex]);
-
-    /** Applies the first anchor only after the list has measurable geometry. */
-    const applyInitialAnchor = useCallback(() => {
-      if (
-        hasInitialAnchor.current ||
-        !listRef.current ||
-        childCount === 0 ||
-        containerHeight === 0 ||
-        listRef.current.viewportSize === 0
+        hasInitialAnchorRef.current ||
+        !container ||
+        items.length === 0 ||
+        container.clientHeight === 0 ||
+        virtualizer.scrollRect?.height === 0
       ) {
         return;
       }
 
-      hasInitialAnchor.current = true;
+      hasInitialAnchorRef.current = true;
+      pendingInitialAnchorRef.current = initialAnchor;
 
       if (initialAnchor.kind === "bottom") {
-        hasPendingInitialBottomAnchorRef.current = true;
         scrollToBottom(false);
         return;
       }
 
-      pendingInitialIndexAnchorRef.current = initialAnchor;
       scrollToIndex(initialAnchor.index, {
         align: initialAnchor.align,
         offset: initialAnchor.offset,
-      });
-      requestAnimationFrame(() => {
-        settlePendingIndexAnchor();
+        smooth: false,
       });
     }, [
-      childCount,
-      containerHeight,
       initialAnchor,
-      settlePendingIndexAnchor,
+      items.length,
       scrollToBottom,
       scrollToIndex,
+      virtualizer.scrollRect?.height,
     ]);
 
+    /** Keeps the initial anchor honest while measured item sizes settle. */
     useLayoutEffect(() => {
-      if (!containerRef.current) {
+      if (!hasInitialAnchorRef.current) {
         return;
       }
 
-      const node = containerRef.current;
-      setContainerHeight(node.getBoundingClientRect().height);
-      setMeasurementVersion((version) => version + 1);
-
-      if (typeof ResizeObserver === "undefined") {
+      if (!maybeSettleInitialAnchor()) {
         return;
       }
 
-      const observer = new ResizeObserver(([entry]) => {
-        if (!entry) {
-          return;
-        }
+      notifyInitialAnchorSettled();
+    });
 
-        setContainerHeight(entry.contentRect.height);
-        setMeasurementVersion((version) => version + 1);
-      });
-      observer.observe(node);
-
-      return () => {
-        observer.disconnect();
-      };
-    }, []);
-
+    /** Re-pins the latest edge when the viewport grows while followLatest is armed. */
     useLayoutEffect(() => {
-      if (measurementVersion === 0) {
+      const containerHeight = virtualizer.scrollRect?.height ?? 0;
+
+      if (previousContainerHeightRef.current === containerHeight) {
         return;
       }
 
-      applyInitialAnchor();
-      settlePendingIndexAnchor();
-    }, [applyInitialAnchor, measurementVersion, settlePendingIndexAnchor]);
+      previousContainerHeightRef.current = containerHeight;
 
-    useLayoutEffect(() => {
-      if (previousContainerHeight.current === containerHeight) {
-        return;
-      }
-
-      previousContainerHeight.current = containerHeight;
-
-      if (
-        !(followLatest && hasInitialAnchor.current && isBottomPinnedRef.current)
-      ) {
-        settlePendingIndexAnchor();
-        return;
-      }
-
-      scrollToBottom(false);
-    }, [
-      containerHeight,
-      followLatest,
-      scrollToBottom,
-      settlePendingIndexAnchor,
-    ]);
-
-    useLayoutEffect(() => {
-      if (previousChildCount.current === childCount) {
-        return;
-      }
-
-      previousChildCount.current = childCount;
-
-      if (
-        !(followLatest && hasInitialAnchor.current && isBottomPinnedRef.current)
-      ) {
-        settlePendingIndexAnchor();
-        return;
-      }
-
-      scrollToBottom(false);
-    }, [childCount, followLatest, scrollToBottom, settlePendingIndexAnchor]);
-
-    useLayoutEffect(() => {
       if (
         !(
           followLatest &&
-          (isAtBottomRef.current || hasPendingBottomSettleRef.current)
+          hasInitialAnchorRef.current &&
+          isBottomPinnedRef.current
         )
       ) {
-        isBottomPinnedRef.current = false;
         return;
       }
 
-      isBottomPinnedRef.current = true;
-    }, [followLatest]);
+      scrollToBottom(false);
+    }, [followLatest, scrollToBottom, virtualizer.scrollRect?.height]);
 
-    const handleScroll = useCallback(
-      (offset: number) => {
-        if (listRef.current) {
-          syncBottomState(offset);
+    /** Re-pins the latest edge when new rows land while followLatest is armed. */
+    useLayoutEffect(() => {
+      if (previousItemCountRef.current === items.length) {
+        return;
+      }
+
+      previousItemCountRef.current = items.length;
+
+      if (
+        !(
+          followLatest &&
+          hasInitialAnchorRef.current &&
+          isBottomPinnedRef.current
+        )
+      ) {
+        return;
+      }
+
+      scrollToBottom(false);
+    }, [followLatest, items.length, scrollToBottom]);
+
+    /** Tracks offset and settle callbacks through the virtualizer's public change hook. */
+    useLayoutEffect(() => {
+      syncBottomState();
+    });
+
+    const handleChange = useCallback(
+      (sync: boolean) => {
+        const offset = virtualizer.scrollOffset ?? 0;
+
+        syncBottomState();
+        onScroll?.(offset);
+
+        if (sync) {
+          return;
         }
 
-        onScroll?.(offset);
+        if (maybeSettleInitialAnchor()) {
+          notifyInitialAnchorSettled();
+        }
+
+        onScrollEnd?.();
       },
-      [onScroll, syncBottomState]
+      [
+        maybeSettleInitialAnchor,
+        notifyInitialAnchorSettled,
+        onScroll,
+        onScrollEnd,
+        syncBottomState,
+        virtualizer.scrollOffset,
+      ]
     );
 
-    /** Retries bottom alignment until the exact bottom anchor has truly settled. */
-    const handleScrollEnd = useCallback(() => {
-      const atBottom = syncBottomState();
-
-      if (hasPendingBottomSettleRef.current && !atBottom && childCount > 0) {
-        requestAnimationFrame(() => {
-          scrollToBottom(false);
-        });
-        return;
-      }
-
-      if (!settlePendingIndexAnchor()) {
-        return;
-      }
-
-      onScrollEnd?.();
-    }, [
-      childCount,
-      onScrollEnd,
-      scrollToBottom,
-      settlePendingIndexAnchor,
-      syncBottomState,
-    ]);
+    useLayoutEffect(() => {
+      handleChange(virtualizer.isScrolling);
+    });
 
     const contextValue = useMemo(
       () => ({
         isAtBottom,
         scrollButtonAriaLabel,
-        scrollButtonAction: scrollButtonAction ?? scrollToBottom,
+        scrollButtonAction:
+          scrollButtonAction ??
+          (() => {
+            scrollToBottom();
+          }),
       }),
       [isAtBottom, scrollButtonAction, scrollButtonAriaLabel, scrollToBottom]
     );
@@ -432,34 +501,61 @@ export const VirtualConversation = memo(
       scrollRef,
       () => ({
         findItemIndex: (offset: number) =>
-          listRef.current?.findItemIndex(offset) ?? 0,
-        getDistanceFromBottom: () => measureDistanceFromBottom(),
+          virtualizer.getVirtualItemForOffset(offset)?.index ?? 0,
+        getDistanceFromBottom,
         getItemOffset: (index: number) =>
-          listRef.current?.getItemOffset(index) ?? 0,
+          getMeasuredVirtualItem(virtualizer.measurementsCache, index)?.start ??
+          0,
         getItemSize: (index: number) =>
-          listRef.current?.getItemSize(index) ?? 0,
-        getScrollOffset: () => listRef.current?.scrollOffset ?? 0,
-        getViewportSize: () => listRef.current?.viewportSize ?? 0,
-        scrollToIndex,
-        scrollToBottom,
+          getMeasuredVirtualItem(virtualizer.measurementsCache, index)?.size ??
+          0,
+        getScrollOffset: () => virtualizer.scrollOffset ?? 0,
+        getViewportSize: () => virtualizer.scrollRect?.height ?? 0,
         isAtBottom: () => isAtBottomRef.current,
+        scrollToBottom,
+        scrollToIndex,
       }),
-      [measureDistanceFromBottom, scrollToIndex, scrollToBottom]
+      [getDistanceFromBottom, scrollToBottom, scrollToIndex, virtualizer]
     );
 
     return (
       <VirtualConversationContext.Provider value={contextValue}>
-        <div className="relative flex-1 overflow-hidden" ref={containerRef}>
-          <VList
-            className={cn("scrollbar-hide size-full", className)}
-            onScroll={handleScroll}
-            onScrollEnd={handleScrollEnd}
-            ref={listRef}
-            shift={shift}
+        <div className="relative flex-1 overflow-hidden">
+          <div
+            className={cn(
+              "scrollbar-hide size-full overflow-y-auto",
+              className
+            )}
+            ref={setScrollElementRef}
             {...props}
           >
-            {children}
-          </VList>
+            <div
+              style={{
+                height: virtualizer.getTotalSize(),
+                position: "relative",
+                width: "100%",
+              }}
+            >
+              <div
+                style={{
+                  transform: `translateY(${paddingTop}px)`,
+                  width: "100%",
+                }}
+              >
+                {virtualItems.map((virtualItem) => (
+                  <div
+                    data-index={virtualItem.index}
+                    key={virtualItem.key}
+                    ref={virtualizer.measureElement}
+                    style={{ width: "100%" }}
+                  >
+                    {items[virtualItem.index]}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
           <VirtualConversationScrollButton
             className={cn(!!hideScrollButton && "hidden")}
           />
@@ -510,7 +606,11 @@ export const VirtualConversationPlaceholder = memo(
     <div
       className={cn("relative flex-1 overflow-hidden", className)}
       {...props}
-    />
+    >
+      <div className="flex size-full items-center justify-center text-muted-foreground">
+        <Spinner className="size-5" />
+      </div>
+    </div>
   )
 );
 VirtualConversationPlaceholder.displayName = "VirtualConversationPlaceholder";

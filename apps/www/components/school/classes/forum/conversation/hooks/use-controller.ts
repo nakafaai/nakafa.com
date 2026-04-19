@@ -1,10 +1,7 @@
 import { useReducedMotion, useTimeout } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type {
-  VirtualConversationAnchor,
-  VirtualConversationHandle,
-} from "@repo/design-system/types/virtual";
+import type { VirtualConversationHandle } from "@repo/design-system/types/virtual";
 import { useConvex } from "convex/react";
 import {
   type RefObject,
@@ -23,16 +20,12 @@ import { useUnread } from "@/components/school/classes/forum/conversation/hooks/
 import { useView } from "@/components/school/classes/forum/conversation/hooks/use-view";
 import type {
   Forum,
+  ForumPost,
   VirtualItem,
 } from "@/components/school/classes/forum/conversation/types";
-import {
-  createFocusedTimelineState,
-  createFocusedWindowArgs,
-} from "@/components/school/classes/forum/conversation/utils/focused";
-import { goToLatestEdge } from "@/components/school/classes/forum/conversation/utils/latest";
+import { createFocusedWindowArgs } from "@/components/school/classes/forum/conversation/utils/focused";
 import { isForumPostVisible } from "@/components/school/classes/forum/conversation/utils/post-target";
 import {
-  captureConversationView,
   createForumConversationMode,
   type ForumConversationMode,
 } from "@/components/school/classes/forum/conversation/utils/view";
@@ -49,25 +42,51 @@ interface ForumScrollValue {
 interface UseControllerResult {
   acknowledgeUnreadCue: () => void;
   canGoBack: boolean;
+  containerRef: RefObject<HTMLDivElement | null>;
   forumScrollValue: ForumScrollValue;
   goBack: () => void;
   handleScroll: (offset: number) => void;
-  handleScrollEnd: () => void;
-  handleVirtualAnchorReady: () => void;
   highlightedPostId: Id<"schoolClassForumPosts"> | null;
-  initialAnchor: VirtualConversationAnchor;
   isAtBottom: boolean;
   isAtLatestEdge: boolean;
   isConversationRevealed: boolean;
   isInitialLoading: boolean;
-  isPrepending: boolean;
   items: VirtualItem[];
+  registerPostElement: (
+    postId: Id<"schoolClassForumPosts">,
+    element: HTMLDivElement | null
+  ) => void;
   scrollRef: RefObject<VirtualConversationHandle | null>;
   scrollToLatest: () => void;
   timelineSessionVersion: number;
 }
 
-/** Owns the forum conversation state machine and exposes a thin render-facing API. */
+/** Creates one direct focused timeline state from an around-window result. */
+function createFocusedTimelineState({
+  aroundResult,
+}: {
+  aroundResult: {
+    hasMoreAfter: boolean;
+    hasMoreBefore: boolean;
+    newestPostId: Id<"schoolClassForumPosts">;
+    oldestPostId: Id<"schoolClassForumPosts">;
+    posts: ForumPost[];
+  };
+}) {
+  const isAtLatestEdge = !aroundResult.hasMoreAfter;
+
+  return {
+    hasMoreAfter: aroundResult.hasMoreAfter,
+    hasMoreBefore: aroundResult.hasMoreBefore,
+    isAtLatestEdge,
+    isJumpMode: !isAtLatestEdge,
+    newestPostId: aroundResult.newestPostId,
+    oldestPostId: aroundResult.oldestPostId,
+    posts: aroundResult.posts,
+  };
+}
+
+/** Owns the forum conversation orchestration and exposes a render-facing API. */
 export function useController({
   forum,
   forumId,
@@ -126,50 +145,21 @@ export function useController({
     isInitialLoading,
     posts,
   });
-  const { dateToIndex, headerIndex, items, postIdToIndex, unreadIndex } =
-    useItems({
-      forum,
-      isDetachedMode: !isAtLatestEdge,
-      posts,
-      unreadCue,
-    });
+  const { items, postIdToIndex } = useItems({
+    forum,
+    isDetachedMode: !isAtLatestEdge,
+    posts,
+    unreadCue,
+  });
   const latestItemsRef = useRef(items);
   latestItemsRef.current = items;
-  const oldestLoadedPostId = posts[0]?._id ?? null;
   const lastPostId = posts.at(-1)?._id;
   const newestLoadedPostId = lastPostId ?? null;
-  const {
-    captureCurrentConversationView,
-    initialAnchor,
-    latestConversationView,
-    persistConversationView,
-    restoreConversationViewLocally,
-  } = useView({
-    conversationIntent,
-    dateToIndex,
+  const oldestLoadedPostId = posts[0]?._id ?? null;
+  const { latestConversationView, persistConversationView } = useView({
     forumId,
-    headerIndex,
-    items,
-    postIdToIndex,
-    preferBottom: pendingLatestSessionRef.current,
     saveConversationView,
     savedConversationView,
-    scrollRef,
-    unreadIndex,
-  });
-  const {
-    canGoBack,
-    clearJumpHistory,
-    pruneReachedBackHistory,
-    pushCurrentViewToBackStack,
-    takeBackView,
-  } = useHistory({
-    captureCurrentConversationView,
-    dateToIndex,
-    headerIndex,
-    latestConversationView,
-    postIdToIndex,
-    unreadIndex,
   });
   const { cancelPendingMarkRead, flushMarkRead, scheduleMarkRead } = useRead({
     forumId,
@@ -180,14 +170,14 @@ export function useController({
       setHighlightedPostId(null);
     }, FORUM_JUMP_HIGHLIGHT_DURATION);
 
-  /** Clears any transient jump highlight that should not survive navigation changes. */
+  /** Clears any transient jump highlight that should not survive nav changes. */
   const clearJumpHighlight = useCallback(() => {
     pendingJumpHighlightPostIdRef.current = null;
     clearJumpHighlightTimeout();
     setHighlightedPostId(null);
   }, [clearJumpHighlightTimeout]);
 
-  /** Queues one post to highlight after the explicit jump visibly lands. */
+  /** Queues one post for temporary highlight after the jump visibly settles. */
   const queueJumpHighlight = useCallback(
     (postId: Id<"schoolClassForumPosts">) => {
       clearJumpHighlightTimeout();
@@ -197,46 +187,20 @@ export function useController({
     [clearJumpHighlightTimeout]
   );
 
-  /** Activates the queued jump highlight only once the target row is actually visible. */
-  const maybeActivateJumpHighlight = useCallback(() => {
-    const postId = pendingJumpHighlightPostIdRef.current;
-    const handle = scrollRef.current;
-
-    if (!(postId && handle)) {
-      return;
-    }
-
-    const index = postIdToIndex.get(postId);
-
-    if (index === undefined) {
-      return;
-    }
-
-    if (!isForumPostVisible({ handle, index })) {
-      return;
-    }
-
-    pendingJumpHighlightPostIdRef.current = null;
-    clearJumpHighlightTimeout();
-    setHighlightedPostId(postId);
-    startJumpHighlightTimeout();
-  }, [clearJumpHighlightTimeout, postIdToIndex, startJumpHighlightTimeout]);
-
   const {
-    clearScrollCommand,
+    captureCurrentConversationView,
+    containerRef,
     handleScroll,
-    handleScrollEnd,
-    handleVirtualAnchorReady,
     isAtBottom,
     isConversationRevealed,
-    isPrepending,
     markPendingBottomPersistence,
+    registerPostElement,
     resetPendingBottomPersistence,
     resetScrollState,
-    scheduleScrollCommand,
+    scrollToBottom,
+    scrollToPost,
   } = useScroll({
     cancelPendingMarkRead,
-    captureCurrentConversationView,
     conversationIntent,
     flushMarkRead,
     hasMoreAfter,
@@ -251,60 +215,102 @@ export function useController({
     loadOlderPosts,
     newestLoadedPostId,
     oldestLoadedPostId,
-    onNavigationSettled: maybeActivateJumpHighlight,
+    onNavigationSettled: () => {
+      const postId = pendingJumpHighlightPostIdRef.current;
+
+      if (!postId) {
+        return;
+      }
+
+      const container = containerRef.current;
+      const index = postIdToIndex.get(postId);
+
+      if (!(container && index !== undefined)) {
+        return;
+      }
+
+      const element = container.querySelector<HTMLDivElement>(
+        `[data-forum-post-id="${postId}"]`
+      );
+
+      if (!(element && isForumPostVisible({ container, element }))) {
+        return;
+      }
+
+      pendingJumpHighlightPostIdRef.current = null;
+      clearJumpHighlightTimeout();
+      setHighlightedPostId(postId);
+      startJumpHighlightTimeout();
+    },
     pendingLatestSessionRef,
     persistConversationView,
     postIdToIndex,
-    pruneReachedBackHistory,
     scheduleMarkRead,
     scrollRef,
     timelineSessionVersion,
-    unreadIndex,
+    unreadPostId: unreadCue?.postId ?? null,
   });
+  const {
+    canGoBack,
+    clearJumpHistory,
+    pruneReachedBackHistory,
+    pushCurrentViewToBackStack,
+    takeBackView,
+  } = useHistory({
+    captureCurrentConversationView,
+    latestConversationView,
+    postIdToIndex,
+  });
+
+  /** Keeps jump-back history in sync with the current visible transcript. */
+  const handleTranscriptScroll = useCallback(
+    (offset: number) => {
+      handleScroll(offset);
+      pruneReachedBackHistory(captureCurrentConversationView());
+    },
+    [captureCurrentConversationView, handleScroll, pruneReachedBackHistory]
+  );
 
   /** Invalidates any stale unloaded jump request before a new intent takes over. */
   const cancelPendingJumpRequest = useCallback(() => {
     jumpRequestIdRef.current += 1;
   }, []);
 
-  /** Starts one unloaded jump request and returns the token used to accept its result. */
+  /** Starts one unloaded jump request and returns the token used to accept it. */
   const beginPendingJumpRequest = useCallback(() => {
-    const nextJumpRequestId = jumpRequestIdRef.current + 1;
+    const requestId = jumpRequestIdRef.current + 1;
 
-    jumpRequestIdRef.current = nextJumpRequestId;
-    return nextJumpRequestId;
+    jumpRequestIdRef.current = requestId;
+    return requestId;
   }, []);
 
-  /** Clears transient jump flow state before another navigation intent takes over. */
+  /** Clears transient jump-flow state before another navigation takes over. */
   const resetDetachedFlow = useCallback(() => {
     cancelPendingJumpRequest();
     clearJumpHighlight();
     pendingLatestSessionRef.current = false;
     resetPendingBottomPersistence();
-    clearScrollCommand();
   }, [
     cancelPendingJumpRequest,
     clearJumpHighlight,
-    clearScrollCommand,
     resetPendingBottomPersistence,
   ]);
 
-  /** Loads one focused around-post timeline and swaps the transcript when it resolves. */
+  /** Loads one focused around-post window and swaps the transcript when ready. */
   const requestFocusedTimeline = useCallback(
     async ({
       onRejected,
       postId,
-      targetKind,
       nextIntent,
     }: {
       onRejected: () => void;
       postId: Id<"schoolClassForumPosts">;
-      targetKind: "jump" | "restore";
       nextIntent: ForumConversationMode;
     }) => {
       const requestId = beginPendingJumpRequest();
 
       setConversationIntent(nextIntent);
+
       try {
         const aroundResult = await convex.query(
           api.classes.forums.queries.around.getForumPostsAround,
@@ -321,7 +327,6 @@ export function useController({
         replaceWithFocusedTimeline(
           createFocusedTimelineState({
             aroundResult,
-            targetKind,
           })
         );
       } catch {
@@ -337,32 +342,32 @@ export function useController({
 
   /** Returns the conversation to the live latest edge. */
   const showLatestEdge = useCallback(() => {
-    goToLatestEdge({
-      cancelPendingJumpRequest,
-      clearScrollCommand,
-      isAtLatestEdge,
-      markPendingBottomPersistence,
-      pendingLatestSessionRef,
-      scrollRef,
-      showLatestPosts,
-      smooth: shouldAnimateNavigation,
-      showLiveConversation: () => {
-        setConversationIntent({ kind: "live" });
-      },
-    });
+    cancelPendingJumpRequest();
+    markPendingBottomPersistence();
+    clearJumpHighlight();
+
+    if (isAtLatestEdge) {
+      pendingLatestSessionRef.current = false;
+      scrollToBottom({ smooth: shouldAnimateNavigation });
+      return;
+    }
+
+    pendingLatestSessionRef.current = true;
+    showLatestPosts();
+    setConversationIntent({ kind: "live" });
   }, [
     cancelPendingJumpRequest,
-    clearScrollCommand,
+    clearJumpHighlight,
     isAtLatestEdge,
     markPendingBottomPersistence,
+    scrollToBottom,
     shouldAnimateNavigation,
     showLatestPosts,
   ]);
 
-  /** Opens a post directly or switches the conversation into jump mode. */
+  /** Opens a post directly or switches the transcript into focused jump mode. */
   const jumpToPostId = useCallback(
     (postId: Id<"schoolClassForumPosts">) => {
-      const index = postIdToIndex.get(postId);
       const nextView = {
         kind: "post",
         offset: 0,
@@ -375,16 +380,12 @@ export function useController({
       resetDetachedFlow();
       queueJumpHighlight(postId);
 
-      if (index !== undefined) {
-        scheduleScrollCommand({
+      if (
+        scrollToPost(postId, {
           align: "center",
-          kind: "post",
-          postId,
           smooth: shouldAnimateNavigation,
-        });
-        requestAnimationFrame(() => {
-          maybeActivateJumpHighlight();
-        });
+        })
+      ) {
         return;
       }
 
@@ -394,21 +395,18 @@ export function useController({
           setConversationIntent({ kind: "live" });
         },
         postId,
-        targetKind: "jump",
         nextIntent: { kind: "jump", postId },
       });
     },
     [
       clearJumpHighlight,
       latestConversationView,
-      maybeActivateJumpHighlight,
       persistConversationView,
-      postIdToIndex,
       pushCurrentViewToBackStack,
       queueJumpHighlight,
       requestFocusedTimeline,
       resetDetachedFlow,
-      scheduleScrollCommand,
+      scrollToPost,
       shouldAnimateNavigation,
     ]
   );
@@ -416,10 +414,8 @@ export function useController({
   /** Returns the conversation to the live latest-post edge. */
   const scrollToLatest = useCallback(() => {
     clearJumpHistory();
-    clearJumpHighlight();
-
     showLatestEdge();
-  }, [clearJumpHighlight, clearJumpHistory, showLatestEdge]);
+  }, [clearJumpHistory, showLatestEdge]);
 
   /** Returns the conversation to the most recent transient pre-jump position. */
   const goBack = useCallback(() => {
@@ -430,7 +426,6 @@ export function useController({
     }
 
     if (view.kind === "bottom") {
-      clearJumpHighlight();
       showLatestEdge();
       return;
     }
@@ -438,12 +433,13 @@ export function useController({
     resetDetachedFlow();
 
     if (
-      restoreConversationViewLocally(view, { smooth: shouldAnimateNavigation })
+      scrollToPost(view.postId, {
+        align: "start",
+        offset: view.offset,
+        smooth: shouldAnimateNavigation,
+      })
     ) {
-      return;
-    }
-
-    if (view.postId === null) {
+      latestConversationView.current = view;
       persistConversationView(view);
       return;
     }
@@ -454,16 +450,14 @@ export function useController({
         persistConversationView(view);
       },
       postId: view.postId,
-      targetKind: "restore",
       nextIntent: { kind: "restore", postId: view.postId, view },
     });
   }, [
-    clearJumpHighlight,
     latestConversationView,
     persistConversationView,
     requestFocusedTimeline,
     resetDetachedFlow,
-    restoreConversationViewLocally,
+    scrollToPost,
     shouldAnimateNavigation,
     showLatestEdge,
     takeBackView,
@@ -474,13 +468,16 @@ export function useController({
     [jumpToPostId, scrollToLatest]
   );
 
-  /** Persists the latest fallback snapshot when the conversation hides. */
+  /** Keeps jump-back history in sync with the currently visible transcript view. */
+  useLayoutEffect(() => {
+    const currentView = captureCurrentConversationView();
+    pruneReachedBackHistory(currentView);
+  }, [captureCurrentConversationView, pruneReachedBackHistory]);
+
+  /** Persists the latest transcript snapshot when the conversation unmounts. */
   useLayoutEffect(
     () => () => {
-      const latestView = captureConversationView({
-        items: latestItemsRef.current,
-        scrollRef,
-      });
+      const latestView = captureCurrentConversationView();
 
       if (latestView) {
         latestConversationView.current = latestView;
@@ -497,6 +494,7 @@ export function useController({
     },
     [
       cancelPendingJumpRequest,
+      captureCurrentConversationView,
       clearJumpHighlight,
       clearJumpHistory,
       latestConversationView,
@@ -508,19 +506,17 @@ export function useController({
   return {
     acknowledgeUnreadCue,
     canGoBack,
+    containerRef,
     forumScrollValue,
     goBack,
-    handleScroll,
-    handleScrollEnd,
-    handleVirtualAnchorReady,
+    handleScroll: handleTranscriptScroll,
     highlightedPostId,
-    initialAnchor,
     isAtBottom,
     isAtLatestEdge,
     isConversationRevealed,
     isInitialLoading,
-    isPrepending,
     items,
+    registerPostElement,
     scrollRef,
     scrollToLatest,
     timelineSessionVersion,

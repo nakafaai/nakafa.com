@@ -30,32 +30,29 @@ describe("forum store", () => {
 
   it("saves semantic conversation snapshots by value", () => {
     const store = createForumStore(classId);
-    const headerView = {
-      kind: "header",
+    const firstView = {
+      kind: "post",
       offset: 12,
       postId,
     } satisfies ForumConversationView;
 
-    store.getState().saveConversationView(forumAId, headerView);
-    store.getState().saveConversationView(forumAId, { ...headerView });
+    store.getState().saveConversationView(forumAId, firstView);
+    store.getState().saveConversationView(forumAId, { ...firstView });
     store.getState().saveConversationView(forumAId, {
-      kind: "date",
-      date: 1_744_775_200_000,
+      kind: "post",
       offset: 12,
       postId,
     });
 
     store.getState().saveConversationView(forumAId, {
-      kind: "date",
-      date: 1_744_775_200_000,
-      offset: 12,
+      kind: "post",
+      offset: 24,
       postId,
     });
 
     expect(store.getState().savedConversationViews[forumAId]).toEqual({
-      kind: "date",
-      date: 1_744_775_200_000,
-      offset: 12,
+      kind: "post",
+      offset: 24,
       postId,
     });
   });
@@ -84,5 +81,166 @@ describe("forum store", () => {
     expect(store.getState().savedConversationViews[forumAId]).toEqual({
       kind: "bottom",
     });
+  });
+
+  it("migrates legacy persisted snapshots into the bottom-or-post model", () => {
+    sessionStorage.setItem(
+      `forum-ui:${classId}`,
+      JSON.stringify({
+        state: {
+          savedConversationViews: {
+            [forumAId]: {
+              kind: "date",
+              date: 1_744_775_200_000,
+              offset: 18,
+              postId,
+            },
+            [forumBId]: {
+              kind: "bottom",
+            },
+          },
+        },
+        version: 1,
+      })
+    );
+
+    const store = createForumStore(classId);
+
+    expect(store.getState().savedConversationViews).toEqual({
+      [forumAId]: {
+        kind: "post",
+        offset: 18,
+        postId,
+      },
+      [forumBId]: {
+        kind: "bottom",
+      },
+    });
+  });
+
+  it("drops invalid legacy snapshots and preserves modern persisted state", () => {
+    sessionStorage.setItem(
+      `forum-ui:${classId}`,
+      JSON.stringify({
+        state: {
+          savedConversationViews: {
+            forum_invalid: null,
+            [forumAId]: {
+              kind: "header",
+              offset: 12,
+              postId: null,
+            },
+            [forumBId]: {
+              kind: "post",
+              offset: 6,
+              postId,
+            },
+          },
+        },
+        version: 1,
+      })
+    );
+
+    const migratedStore = createForumStore(classId);
+
+    expect(migratedStore.getState().savedConversationViews).toEqual({
+      [forumBId]: {
+        kind: "post",
+        offset: 6,
+        postId,
+      },
+    });
+
+    sessionStorage.setItem(
+      `forum-ui:${classId}`,
+      JSON.stringify({
+        state: {
+          savedConversationViews: {
+            [forumAId]: {
+              kind: "bottom",
+            },
+          },
+        },
+        version: 2,
+      })
+    );
+
+    const modernStore = createForumStore(classId);
+
+    expect(modernStore.getState().savedConversationViews).toEqual({
+      [forumAId]: {
+        kind: "bottom",
+      },
+    });
+
+    sessionStorage.setItem(
+      `forum-ui:${classId}`,
+      JSON.stringify({
+        state: {
+          savedConversationViews: {
+            [forumBId]: {
+              kind: "bottom",
+            },
+          },
+        },
+        version: 3,
+      })
+    );
+
+    const newerStore = createForumStore(classId);
+
+    expect(newerStore.getState().savedConversationViews).toEqual({
+      [forumBId]: {
+        kind: "bottom",
+      },
+    });
+  });
+
+  it("falls back missing legacy offsets to zero and tolerates empty persisted maps", () => {
+    sessionStorage.setItem(
+      `forum-ui:${classId}`,
+      JSON.stringify({
+        state: {
+          savedConversationViews: {
+            [forumAId]: {
+              kind: "post",
+              postId,
+            },
+            [forumBId]: {
+              kind: "unread",
+              postId,
+            },
+          },
+        },
+        version: 1,
+      })
+    );
+
+    const migratedStore = createForumStore(classId);
+
+    expect(migratedStore.getState().savedConversationViews).toEqual({
+      [forumAId]: {
+        kind: "post",
+        offset: 0,
+        postId,
+      },
+      [forumBId]: {
+        kind: "post",
+        offset: 0,
+        postId,
+      },
+    });
+
+    sessionStorage.setItem(
+      `forum-ui:${classId}`,
+      JSON.stringify({
+        state: {},
+        version: 1,
+      })
+    );
+
+    const emptyStore = createForumStore(classId);
+
+    expect(emptyStore.getState().savedConversationViews).toEqual({});
   });
 });

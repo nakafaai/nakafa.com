@@ -1,31 +1,17 @@
-import type { VirtualConversationHandle } from "@repo/design-system/types/virtual";
-
 const FORUM_POST_VISIBILITY_TOLERANCE = 24;
 
-/** Returns whether any part of one post row is currently visible in the viewport. */
+/** Returns whether any part of one post row is currently visible in the transcript. */
 export function isForumPostVisible({
-  handle,
-  index,
+  container,
+  element,
 }: {
-  handle: Pick<
-    VirtualConversationHandle,
-    "getItemOffset" | "getItemSize" | "getScrollOffset" | "getViewportSize"
-  >;
-  index: number;
+  container: HTMLDivElement;
+  element: HTMLDivElement;
 }) {
-  const scrollOffset = handle.getScrollOffset();
-  const viewportSize = handle.getViewportSize();
+  const containerRect = container.getBoundingClientRect();
+  const elementRect = element.getBoundingClientRect();
+  const viewportStart = containerRect.top + FORUM_POST_VISIBILITY_TOLERANCE;
+  const viewportEnd = containerRect.bottom - FORUM_POST_VISIBILITY_TOLERANCE;
 
-  if (viewportSize <= 0) {
-    return false;
-  }
-
-  const itemOffset = handle.getItemOffset(index);
-  const itemSize = handle.getItemSize(index);
-  const viewportStart = scrollOffset + FORUM_POST_VISIBILITY_TOLERANCE;
-  const viewportEnd =
-    scrollOffset + viewportSize - FORUM_POST_VISIBILITY_TOLERANCE;
-  const itemEnd = itemOffset + itemSize;
-
-  return itemEnd > viewportStart && itemOffset < viewportEnd;
+  return elementRect.bottom > viewportStart && elementRect.top < viewportEnd;
 }

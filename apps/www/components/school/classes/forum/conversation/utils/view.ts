@@ -1,33 +1,26 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type {
-  VirtualConversationAnchor,
-  VirtualConversationHandle,
-} from "@repo/design-system/types/virtual";
-import type { RefObject } from "react";
-import type { VirtualItem } from "@/components/school/classes/forum/conversation/types";
 import type { ForumConversationView } from "@/lib/store/forum";
 
-export type RestorableConversationView = Exclude<
+export type RestorableConversationView = Extract<
   ForumConversationView,
-  { kind: "bottom" }
+  { kind: "post" }
 >;
 
-type RestoreConversationAnchor = Extract<
-  VirtualConversationAnchor,
-  { kind: "index" }
->;
-
-type ResolvedConversationViewPosition =
+export type ForumConversationMode =
   | {
-      kind: "bottom";
+      kind: "jump";
+      postId: Id<"schoolClassForumPosts">;
     }
   | {
-      index: number;
-      kind: "item";
-      offset: number;
+      kind: "live";
+    }
+  | {
+      kind: "restore";
+      postId: Id<"schoolClassForumPosts">;
+      view: RestorableConversationView;
     };
 
-/** Compares two saved forum conversation views by value. */
+/** Compares two persisted conversation views by value. */
 export function areConversationViewsEqual(
   left: ForumConversationView | undefined | null,
   right: ForumConversationView | undefined | null
@@ -44,212 +37,19 @@ export function areConversationViewsEqual(
     return left.kind === right.kind;
   }
 
-  if (left.kind === "date" && right.kind === "date") {
-    return (
-      left.date === right.date &&
-      left.postId === right.postId &&
-      left.offset === right.offset
-    );
-  }
-
   return left.postId === right.postId && left.offset === right.offset;
 }
 
-export type ForumConversationMode =
-  | {
-      kind: "jump";
-      postId: Id<"schoolClassForumPosts">;
-    }
-  | {
-      kind: "live";
-    }
-  | {
-      kind: "restore";
-      postId: Id<"schoolClassForumPosts"> | null;
-      view: RestorableConversationView;
-    };
-
-/** Finds the first post id after one virtual item index. */
-function findNextPostId(
-  items: VirtualItem[],
-  startIndex: number
-): Id<"schoolClassForumPosts"> | null {
-  for (let index = startIndex + 1; index < items.length; index += 1) {
-    const item = items[index];
-
-    if (item?.type === "post") {
-      return item.post._id;
-    }
-  }
-
-  return null;
-}
-
-/** Resolves the primary post id used to bootstrap restore data windows. */
-function getRestoreTargetPostId(view: RestorableConversationView) {
-  return view.postId;
-}
-
-/** Resolves one saved semantic view back into the current virtual item index. */
-function resolveConversationViewIndex({
-  dateToIndex,
-  headerIndex,
-  postIdToIndex,
-  unreadIndex,
-  view,
-}: {
-  dateToIndex: Map<number, number>;
-  headerIndex: number | null;
-  postIdToIndex: Map<Id<"schoolClassForumPosts">, number>;
-  unreadIndex: number | null;
-  view: RestorableConversationView;
-}) {
-  if (view.kind === "header") {
-    return headerIndex;
-  }
-
-  if (view.kind === "date") {
-    return dateToIndex.get(view.date) ?? postIdToIndex.get(view.postId) ?? null;
-  }
-
-  if (view.kind === "unread") {
-    return unreadIndex ?? postIdToIndex.get(view.postId) ?? null;
-  }
-
-  return postIdToIndex.get(view.postId) ?? null;
-}
-
-/** Resolves one semantic conversation view into an ordered viewport position. */
-function resolveConversationViewPosition({
-  dateToIndex,
-  headerIndex,
-  postIdToIndex,
-  unreadIndex,
-  view,
-}: {
-  dateToIndex: Map<number, number>;
-  headerIndex: number | null;
-  postIdToIndex: Map<Id<"schoolClassForumPosts">, number>;
-  unreadIndex: number | null;
-  view: ForumConversationView;
-}): ResolvedConversationViewPosition | null {
-  if (view.kind === "bottom") {
-    return { kind: "bottom" };
-  }
-
-  const index = resolveConversationViewIndex({
-    dateToIndex,
-    headerIndex,
-    postIdToIndex,
-    unreadIndex,
-    view,
-  });
-
-  if (index === null || index === undefined) {
-    return null;
-  }
-
-  return {
-    index,
-    kind: "item",
-    offset: view.offset,
-  };
-}
-
-/** Returns whether the current semantic viewport has reached or passed a target view. */
-export function isConversationViewAtOrAfter({
-  currentView,
-  dateToIndex,
-  headerIndex,
-  postIdToIndex,
-  targetView,
-  unreadIndex,
-}: {
-  currentView: ForumConversationView;
-  dateToIndex: Map<number, number>;
-  headerIndex: number | null;
-  postIdToIndex: Map<Id<"schoolClassForumPosts">, number>;
-  targetView: ForumConversationView;
-  unreadIndex: number | null;
-}) {
-  const currentPosition = resolveConversationViewPosition({
-    dateToIndex,
-    headerIndex,
-    postIdToIndex,
-    unreadIndex,
-    view: currentView,
-  });
-  const targetPosition = resolveConversationViewPosition({
-    dateToIndex,
-    headerIndex,
-    postIdToIndex,
-    unreadIndex,
-    view: targetView,
-  });
-
-  if (!(currentPosition && targetPosition)) {
-    return false;
-  }
-
-  if (currentPosition.kind === "bottom") {
-    return true;
-  }
-
-  if (targetPosition.kind === "bottom") {
-    return false;
-  }
-
-  if (currentPosition.index !== targetPosition.index) {
-    return currentPosition.index > targetPosition.index;
-  }
-
-  return currentPosition.offset >= targetPosition.offset;
-}
-
-/** Resolves one saved semantic view into a precise local restore anchor. */
-export function createRestoreConversationAnchor({
-  dateToIndex,
-  headerIndex,
-  postIdToIndex,
-  unreadIndex,
-  view,
-}: {
-  dateToIndex: Map<number, number>;
-  headerIndex: number | null;
-  postIdToIndex: Map<Id<"schoolClassForumPosts">, number>;
-  unreadIndex: number | null;
-  view: RestorableConversationView;
-}): RestoreConversationAnchor | null {
-  const index = resolveConversationViewIndex({
-    dateToIndex,
-    headerIndex,
-    postIdToIndex,
-    unreadIndex,
-    view,
-  });
-
-  if (index === undefined || index === null) {
-    return null;
-  }
-
-  return {
-    kind: "index",
-    index,
-    align: "start",
-    offset: view.offset,
-  };
-}
-
-/** Chooses the fresh-mount conversation mode from one saved view snapshot. */
+/** Chooses the first conversation mode for a fresh mount from one saved view. */
 export function createForumConversationMode({
   restoreView,
 }: {
   restoreView: ForumConversationView | null;
 }): ForumConversationMode {
-  if (restoreView && restoreView.kind !== "bottom") {
+  if (restoreView?.kind === "post") {
     return {
       kind: "restore",
-      postId: getRestoreTargetPostId(restoreView),
+      postId: restoreView.postId,
       view: restoreView,
     };
   }
@@ -257,67 +57,22 @@ export function createForumConversationMode({
   return { kind: "live" };
 }
 
-/** Resolves the first virtual list anchor for a fresh conversation mount. */
-export function createInitialConversationAnchor({
-  dateToIndex,
+/** Chooses the first persisted conversation view for one newly mounted transcript. */
+export function createInitialConversationView({
   existingView,
-  headerIndex,
   mode,
-  postIdToIndex,
-  unreadIndex,
+  preferBottom,
+  unreadPostId,
 }: {
-  dateToIndex: Map<number, number>;
   existingView: ForumConversationView | null;
-  headerIndex: number | null;
   mode: ForumConversationMode;
-  postIdToIndex: Map<Id<"schoolClassForumPosts">, number>;
-  unreadIndex: number | null;
-}): VirtualConversationAnchor {
-  if (mode.kind !== "live") {
-    if (mode.kind === "restore") {
-      return (
-        createRestoreConversationAnchor({
-          dateToIndex,
-          headerIndex,
-          postIdToIndex,
-          unreadIndex,
-          view: mode.view,
-        }) ?? { kind: "bottom" }
-      );
-    }
-
-    const index = postIdToIndex.get(mode.postId);
-
-    if (index === undefined || index === null) {
-      return { kind: "bottom" };
-    }
-
-    return { kind: "index", index, align: "center" };
-  }
-
-  if (existingView?.kind === "bottom") {
+  preferBottom: boolean;
+  unreadPostId: Id<"schoolClassForumPosts"> | null;
+}): ForumConversationView {
+  if (preferBottom) {
     return { kind: "bottom" };
   }
 
-  if (unreadIndex !== null) {
-    return { kind: "index", index: unreadIndex, align: "center" };
-  }
-
-  return { kind: "bottom" };
-}
-
-/** Creates the first fallback snapshot for a newly mounted conversation. */
-export function createInitialConversationView({
-  existingView,
-  items,
-  mode,
-  unreadIndex,
-}: {
-  existingView: ForumConversationView | null;
-  items: VirtualItem[];
-  mode: ForumConversationMode;
-  unreadIndex: number | null;
-}): ForumConversationView | null {
   if (mode.kind === "restore") {
     return mode.view;
   }
@@ -334,179 +89,45 @@ export function createInitialConversationView({
     return { kind: "bottom" };
   }
 
-  if (unreadIndex === null) {
-    return { kind: "bottom" };
-  }
-
-  const unreadPost = items
-    .slice(unreadIndex)
-    .find((item) => item.type === "post");
-
-  if (!unreadPost || unreadPost.type !== "post") {
-    return { kind: "bottom" };
-  }
-
-  return {
-    kind: "unread",
-    offset: 0,
-    postId: unreadPost.post._id,
-  };
-}
-
-/** Finds the measured item that currently starts the visible viewport. */
-function findVisibleItemIndexAtOffset({
-  itemCount,
-  getItemOffset,
-  offset,
-  startIndex,
-}: {
-  itemCount: number;
-  getItemOffset: (index: number) => number;
-  offset: number;
-  startIndex: number;
-}) {
-  if (itemCount === 0) {
-    return null;
-  }
-
-  let index = Math.min(startIndex, itemCount - 1);
-
-  while (index > 0 && getItemOffset(index) > offset) {
-    index -= 1;
-  }
-
-  while (index < itemCount - 1 && getItemOffset(index + 1) <= offset) {
-    index += 1;
-  }
-
-  return index;
-}
-
-/** Captures one session-restorable view from the virtualized viewport. */
-function createConversationViewAtIndex({
-  currentOffset,
-  handle,
-  index,
-  items,
-}: {
-  currentOffset: number;
-  handle: VirtualConversationHandle;
-  index: number;
-  items: VirtualItem[];
-}): ForumConversationView | null {
-  const item = items[index];
-
-  if (!item) {
-    return null;
-  }
-
-  const offset = Math.max(0, currentOffset - handle.getItemOffset(index));
-
-  if (item.type === "header") {
-    return {
-      kind: "header",
-      offset,
-      postId: findNextPostId(items, index),
-    };
-  }
-
-  if (item.type === "date") {
-    const postId = findNextPostId(items, index);
-
-    if (!postId) {
-      return null;
-    }
-
-    return {
-      kind: "date",
-      date: item.date,
-      offset,
-      postId,
-    };
-  }
-
-  if (item.type === "unread") {
-    const postId = findNextPostId(items, index);
-
-    if (!postId) {
-      return null;
-    }
-
-    return {
-      kind: "unread",
-      offset,
-      postId,
-    };
-  }
-
-  if (item.type === "post") {
+  if (unreadPostId) {
     return {
       kind: "post",
-      postId: item.post._id,
-      offset,
+      offset: 0,
+      postId: unreadPostId,
     };
   }
 
-  return null;
+  return { kind: "bottom" };
 }
 
-/** Captures one session-restorable view from the virtualized viewport. */
-export function captureConversationView({
-  items,
-  offset,
-  scrollRef,
+/** Returns whether the current persisted viewport has reached or passed a target view. */
+export function isConversationViewAtOrAfter({
+  currentView,
+  postIdToIndex,
+  targetView,
 }: {
-  items: VirtualItem[];
-  offset?: number;
-  scrollRef: RefObject<VirtualConversationHandle | null>;
-}): ForumConversationView | null {
-  const handle = scrollRef.current;
-
-  if (!handle) {
-    return null;
+  currentView: ForumConversationView;
+  postIdToIndex: Map<Id<"schoolClassForumPosts">, number>;
+  targetView: ForumConversationView;
+}) {
+  if (currentView.kind === "bottom") {
+    return true;
   }
 
-  if (handle.isAtBottom()) {
-    return { kind: "bottom" };
+  if (targetView.kind === "bottom") {
+    return false;
   }
 
-  const currentOffset = offset ?? handle.getScrollOffset();
-  const visibleIndex = findVisibleItemIndexAtOffset({
-    itemCount: items.length,
-    getItemOffset: handle.getItemOffset,
-    offset: currentOffset,
-    startIndex: handle.findItemIndex(currentOffset),
-  });
+  const currentIndex = postIdToIndex.get(currentView.postId);
+  const targetIndex = postIdToIndex.get(targetView.postId);
 
-  if (visibleIndex === null) {
-    return null;
+  if (currentIndex === undefined || targetIndex === undefined) {
+    return false;
   }
 
-  for (let index = visibleIndex; index < items.length; index += 1) {
-    const view = createConversationViewAtIndex({
-      currentOffset,
-      handle,
-      index,
-      items,
-    });
-
-    if (view) {
-      return view;
-    }
+  if (currentIndex !== targetIndex) {
+    return currentIndex > targetIndex;
   }
 
-  for (let index = visibleIndex - 1; index >= 0; index -= 1) {
-    const view = createConversationViewAtIndex({
-      currentOffset,
-      handle,
-      index,
-      items,
-    });
-
-    if (view) {
-      return view;
-    }
-  }
-
-  return null;
+  return currentView.offset >= targetView.offset;
 }

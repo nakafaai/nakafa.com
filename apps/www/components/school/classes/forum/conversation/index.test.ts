@@ -3,10 +3,6 @@ import { act, createElement, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ForumPostConversation } from "@/components/school/classes/forum/conversation/index";
-import type {
-  Forum,
-  VirtualItem,
-} from "@/components/school/classes/forum/conversation/types";
 
 const mocks = vi.hoisted(() => ({
   useController: vi.fn(),
@@ -19,14 +15,22 @@ vi.mock("next-intl", () => ({
 vi.mock("@repo/design-system/components/ui/virtual-conversation", () => ({
   VirtualConversation: ({
     children,
+    estimateSize,
     floatingContent,
   }: {
     children: ReactNode;
+    estimateSize?: (index: number) => number;
     floatingContent?: ReactNode;
   }) =>
     createElement(
       "div",
-      { "data-testid": "virtual-conversation" },
+      {
+        "data-estimate-date": estimateSize?.(1),
+        "data-estimate-empty": estimateSize?.(99),
+        "data-estimate-header": estimateSize?.(0),
+        "data-estimate-post": estimateSize?.(3),
+        "data-testid": "virtual-conversation",
+      },
       floatingContent,
       children
     ),
@@ -50,10 +54,17 @@ vi.mock("@/components/school/classes/forum/conversation/header", () => ({
 }));
 
 vi.mock("@/components/school/classes/forum/conversation/item", () => ({
-  ForumPostItem: ({ isJumpHighlighted }: { isJumpHighlighted: boolean }) =>
+  ForumPostItem: ({
+    isJumpHighlighted,
+    rowRef,
+  }: {
+    isJumpHighlighted: boolean;
+    rowRef?: (element: HTMLDivElement | null) => void;
+  }) =>
     createElement("div", {
       "data-jump-highlighted": String(isJumpHighlighted),
       "data-testid": "forum-post-item",
+      ref: rowRef,
     }),
 }));
 
@@ -71,71 +82,42 @@ vi.mock("@/components/school/classes/forum/conversation/separators", () => ({
 const forumId = "forum_1" as Id<"schoolClassForums">;
 const currentUserId = "user_1" as Id<"users">;
 
-/** Creates one minimal controller result for conversation render tests. */
 function createControllerResult(overrides?: {
   canGoBack?: boolean;
   highlightedPostId?: Id<"schoolClassForumPosts"> | null;
   isAtBottom?: boolean;
   isConversationRevealed?: boolean;
   isInitialLoading?: boolean;
-  items?: VirtualItem[];
+  items?: any[];
+  registerPostElement?: (
+    postId: Id<"schoolClassForumPosts">,
+    element: HTMLDivElement | null
+  ) => void;
 }) {
   return {
     acknowledgeUnreadCue: vi.fn(),
     canGoBack: overrides?.canGoBack ?? false,
+    containerRef: { current: null },
     forumScrollValue: {
       jumpToPostId: vi.fn(),
       scrollToLatest: vi.fn(),
     },
     goBack: vi.fn(),
     handleScroll: vi.fn(),
-    handleScrollEnd: vi.fn(),
-    handleVirtualAnchorReady: vi.fn(),
     highlightedPostId: overrides?.highlightedPostId ?? null,
-    initialAnchor: { kind: "bottom" as const },
     isAtBottom: overrides?.isAtBottom ?? false,
     isAtLatestEdge: true,
     isConversationRevealed: overrides?.isConversationRevealed ?? false,
     isInitialLoading: overrides?.isInitialLoading ?? false,
-    isPrepending: false,
     items: overrides?.items ?? [],
+    registerPostElement: overrides?.registerPostElement ?? vi.fn(),
     scrollRef: { current: null },
     scrollToLatest: vi.fn(),
     timelineSessionVersion: 0,
   };
 }
 
-/** Creates one minimal forum object for render gating tests. */
-function createForum(): Forum {
-  return {
-    _creationTime: Date.UTC(2026, 3, 20, 10, 0, 0),
-    _id: forumId,
-    body: "Forum body",
-    classId: "class_1" as Id<"schoolClasses">,
-    createdBy: currentUserId,
-    isPinned: false,
-    lastPostAt: Date.UTC(2026, 3, 20, 10, 0, 0),
-    lastPostBy: currentUserId,
-    myReactions: [],
-    nextPostSequence: 2,
-    postCount: 1,
-    reactionCounts: [],
-    reactionUsers: [],
-    schoolId: "school_1" as Id<"schools">,
-    status: "open",
-    tag: "general",
-    title: "Forum title",
-    updatedAt: Date.UTC(2026, 3, 20, 10, 0, 0),
-    user: null,
-  } satisfies Forum;
-}
-
-/** Renders the conversation once and returns the mounted DOM container. */
-function renderConversation({
-  forum,
-}: {
-  forum: ReturnType<typeof createForum> | undefined;
-}) {
+function renderConversation({ forum }: { forum: any }) {
   const container = document.createElement("div");
   document.body.append(container);
   const root = createRoot(container);
@@ -163,7 +145,7 @@ describe("conversation/index", () => {
       createControllerResult({ isInitialLoading: true })
     );
 
-    const { container, root } = renderConversation({ forum: createForum() });
+    const { container, root } = renderConversation({ forum: { _id: forumId } });
 
     expect(
       container.querySelector(
@@ -194,16 +176,13 @@ describe("conversation/index", () => {
     container.remove();
   });
 
-  it("keeps the real conversation shell hidden until the controller reveals it", () => {
+  it("keeps the shell hidden until the controller reveals it", () => {
     mocks.useController.mockReturnValue(
       createControllerResult({ isConversationRevealed: false })
     );
 
-    const { container, root } = renderConversation({ forum: createForum() });
+    const { container, root } = renderConversation({ forum: { _id: forumId } });
 
-    expect(
-      container.querySelector('[data-testid="virtual-conversation"]')
-    ).not.toBeNull();
     expect(container.firstElementChild?.className).toContain("invisible");
 
     act(() => {
@@ -212,34 +191,18 @@ describe("conversation/index", () => {
     container.remove();
   });
 
-  it("reveals the real conversation shell once the controller is ready", () => {
-    mocks.useController.mockReturnValue(
-      createControllerResult({ isConversationRevealed: true })
-    );
-
-    const { container, root } = renderConversation({ forum: createForum() });
-
-    expect(
-      container.querySelector('[data-testid="virtual-conversation"]')
-    ).not.toBeNull();
-    expect(container.firstElementChild?.className).not.toContain("invisible");
-
-    act(() => {
-      root.unmount();
-    });
-    container.remove();
-  });
-
-  it("renders jump actions and each semantic conversation item", () => {
+  it("renders jump actions, estimate sizes, and row ref registration", () => {
     const highlightedPostId = "post_1" as Id<"schoolClassForumPosts">;
+    const registerPostElement = vi.fn();
 
     mocks.useController.mockReturnValue(
       createControllerResult({
         canGoBack: true,
         highlightedPostId,
         isConversationRevealed: true,
+        registerPostElement,
         items: [
-          { forum: createForum(), type: "header" },
+          { forum: { _id: forumId }, type: "header" },
           { date: Date.UTC(2026, 3, 20, 0, 0, 0), type: "date" },
           { count: 2, status: "new", type: "unread" },
           {
@@ -248,12 +211,15 @@ describe("conversation/index", () => {
             post: { _id: highlightedPostId },
             showContinuationTime: false,
             type: "post",
-          } as VirtualItem,
+          },
         ],
       })
     );
 
-    const { container, root } = renderConversation({ forum: createForum() });
+    const { container, root } = renderConversation({ forum: { _id: forumId } });
+    const transcript = container.querySelector(
+      '[data-testid="virtual-conversation"]'
+    );
 
     expect(container.querySelector('[data-testid="jump-bar"]')).not.toBeNull();
     expect(
@@ -273,6 +239,11 @@ describe("conversation/index", () => {
         .querySelector('[data-testid="forum-post-item"]')
         ?.getAttribute("data-jump-highlighted")
     ).toBe("true");
+    expect(transcript?.getAttribute("data-estimate-header")).toBe("120");
+    expect(transcript?.getAttribute("data-estimate-date")).toBe("48");
+    expect(transcript?.getAttribute("data-estimate-post")).toBe("160");
+    expect(transcript?.getAttribute("data-estimate-empty")).toBe("120");
+    expect(registerPostElement).toHaveBeenCalled();
 
     act(() => {
       root.unmount();

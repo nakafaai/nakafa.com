@@ -37,20 +37,14 @@ function isBackTarget(view: ForumConversationView | null) {
  */
 export function useHistory({
   captureCurrentConversationView,
-  dateToIndex,
-  headerIndex,
   latestConversationView,
   postIdToIndex,
-  unreadIndex,
 }: {
   captureCurrentConversationView: (
     offset?: number
   ) => ForumConversationView | null;
-  dateToIndex: Map<number, number>;
-  headerIndex: number | null;
   latestConversationView: RefObject<ForumConversationView | null>;
   postIdToIndex: Map<Id<"schoolClassForumPosts">, number>;
-  unreadIndex: number | null;
 }): UseHistoryResult {
   const [canGoBack, setCanGoBack] = useState(false);
   const backStackRef = useRef<BackStack>(clearBackStack());
@@ -83,11 +77,8 @@ export function useHistory({
             targetView &&
             isConversationViewAtOrAfter({
               currentView,
-              dateToIndex,
-              headerIndex,
               postIdToIndex,
               targetView,
-              unreadIndex,
             })
           )
         ) {
@@ -103,7 +94,7 @@ export function useHistory({
 
       applyBackStack(nextBackStack);
     },
-    [applyBackStack, dateToIndex, headerIndex, postIdToIndex, unreadIndex]
+    [applyBackStack, postIdToIndex]
   );
 
   /** Pushes the current semantic viewport so the next jump can come back here. */

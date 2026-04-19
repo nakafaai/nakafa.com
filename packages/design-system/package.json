@@ -30,6 +30,7 @@
     "@shikijs/transformers": "^4.0.2",
     "@tabler/icons-react": "^3.41.1",
     "@tailwindcss/postcss": "^4.2.2",
+    "@tanstack/react-virtual": "^3.13.24",
     "@types/mdx": "^2.0.13",
     "ai": "^6.0.167",
     "class-variance-authority": "^0.7.1",
