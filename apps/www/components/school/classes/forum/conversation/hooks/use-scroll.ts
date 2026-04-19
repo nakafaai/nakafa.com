@@ -33,7 +33,6 @@ interface UseScrollResult {
   handleScroll: (offset: number) => void;
   handleScrollEnd: () => void;
   handleVirtualAnchorReady: () => void;
-  initialAnchorSettledRef: RefObject<boolean>;
   isAtBottom: boolean;
   isConversationRevealed: boolean;
   isPrepending: boolean;
@@ -41,6 +40,11 @@ interface UseScrollResult {
   resetPendingBottomPersistence: () => void;
   resetScrollState: () => void;
   scheduleScrollCommand: (command: ScrollCommand | null) => void;
+}
+
+interface PrependState {
+  sessionVersion: number;
+  startCount: number | null;
 }
 
 /** Returns whether the live transcript is close enough to bottom for read-state UX. */
@@ -54,6 +58,22 @@ function isNearReadStateBottom(
   return (
     handle.isAtBottom() ||
     handle.getDistanceFromBottom() <= FORUM_READ_STATE_NEAR_BOTTOM_THRESHOLD
+  );
+}
+
+/** Returns whether one older-page request still needs reverse-scroll shifting. */
+function shouldKeepOlderPrependShift({
+  isLoadingOlder,
+  itemsLength,
+  prependStartCount,
+}: {
+  isLoadingOlder: boolean;
+  itemsLength: number;
+  prependStartCount: number | null;
+}) {
+  return (
+    prependStartCount !== null &&
+    (isLoadingOlder || itemsLength > prependStartCount)
   );
 }
 
@@ -134,11 +154,26 @@ export function useScroll({
 
   const [isAtBottom, setIsAtBottom] = useState(false);
   const [isConversationRevealed, setIsConversationRevealed] = useState(false);
-  const [isPrepending, setIsPrepending] = useState(false);
+  const [prependState, setPrependState] = useState<PrependState>(() => ({
+    sessionVersion: timelineSessionVersion,
+    startCount: null,
+  }));
   const [scrollCommand, setScrollCommand] = useState<ScrollCommand | null>(
     null
   );
   const previousLastPostId = usePrevious(lastPostId);
+  const prependStartCount =
+    prependState.sessionVersion === timelineSessionVersion
+      ? prependState.startCount
+      : null;
+
+  const hasPrependedOlderItems =
+    prependStartCount !== null && items.length > prependStartCount;
+  const isPrepending = shouldKeepOlderPrependShift({
+    isLoadingOlder,
+    itemsLength: items.length,
+    prependStartCount,
+  });
 
   /** Resets transient scroll refs whenever one semantic transcript session remounts. */
   const resetTimelineSessionState = useCallback(() => {
@@ -198,11 +233,20 @@ export function useScroll({
       }
 
       lastRequestedOlderBoundaryRef.current = boundaryPostId;
-      setIsPrepending(true);
+      setPrependState({
+        sessionVersion: timelineSessionVersion,
+        startCount: items.length,
+      });
       loadOlderPosts();
       return true;
     },
-    [hasMoreBefore, isLoadingOlder, loadOlderPosts]
+    [
+      hasMoreBefore,
+      isLoadingOlder,
+      items.length,
+      loadOlderPosts,
+      timelineSessionVersion,
+    ]
   );
 
   /** Requests one newer page for the current newest loaded boundary exactly once. */
@@ -225,45 +269,6 @@ export function useScroll({
     },
     [hasMoreAfter, isLoadingNewer, loadNewerPosts]
   );
-
-  /** Continues loading history while the viewport remains parked on one edge. */
-  const maybeContinueBoundaryPrefetch = useCallback(() => {
-    if (!(initialAnchorSettledRef.current && !pendingPostTargetRef.current)) {
-      return;
-    }
-
-    const handle = scrollRef.current;
-
-    if (!handle) {
-      return;
-    }
-
-    const viewportSize = handle.getViewportSize();
-
-    if (viewportSize <= 0) {
-      return;
-    }
-
-    const prefetchDistance = getForumPrefetchDistance(viewportSize);
-
-    if (
-      handle.getScrollOffset() <= prefetchDistance &&
-      requestOlderBoundary(oldestLoadedPostId)
-    ) {
-      return;
-    }
-
-    if (handle.getDistanceFromBottom() <= prefetchDistance) {
-      requestNewerBoundary(newestLoadedPostId);
-    }
-  }, [
-    newestLoadedPostId,
-    oldestLoadedPostId,
-    pendingPostTargetRef,
-    requestNewerBoundary,
-    requestOlderBoundary,
-    scrollRef,
-  ]);
 
   /** Syncs the controller's bottom flag only when its meaning actually changes. */
   const syncBottomState = useCallback((nextIsAtBottom: boolean) => {
@@ -453,11 +458,9 @@ export function useScroll({
 
     pruneReachedBackHistory(currentView);
     persistConversationView(currentView);
-    maybeContinueBoundaryPrefetch();
   }, [
     captureCurrentConversationView,
     finalizeConversationReady,
-    maybeContinueBoundaryPrefetch,
     maybePersistBottomConversationView,
     persistConversationView,
     pruneReachedBackHistory,
@@ -465,11 +468,6 @@ export function useScroll({
     settlePendingPostTarget,
     syncBottomState,
   ]);
-
-  /** Continues edge paging while the viewport stays parked near one history boundary. */
-  useEffect(() => {
-    maybeContinueBoundaryPrefetch();
-  }, [maybeContinueBoundaryPrefetch]);
 
   /** Flushes read-state immediately when a new latest post arrives at the live bottom. */
   useEffect(() => {
@@ -501,12 +499,24 @@ export function useScroll({
     scrollRef,
   ]);
 
-  /** Clears the prepend shift flag after one older-page request finishes. */
+  /** Drops reverse-scroll shift once the prepended page has fully landed. */
   useEffect(() => {
-    if (isPrepending && !isLoadingOlder) {
-      setIsPrepending(false);
+    if (
+      !(prependStartCount !== null && !isLoadingOlder && hasPrependedOlderItems)
+    ) {
+      return;
     }
-  }, [isLoadingOlder, isPrepending]);
+
+    setPrependState({
+      sessionVersion: timelineSessionVersion,
+      startCount: null,
+    });
+  }, [
+    hasPrependedOlderItems,
+    isLoadingOlder,
+    prependStartCount,
+    timelineSessionVersion,
+  ]);
 
   /** Marks the next latest-edge command so bottom persistence can land naturally. */
   const markPendingBottomPersistence = useCallback(() => {
@@ -535,15 +545,18 @@ export function useScroll({
     previousScrollOffsetRef.current = 0;
     lastRequestedOlderBoundaryRef.current = null;
     lastRequestedNewerBoundaryRef.current = null;
+    setPrependState({
+      sessionVersion: timelineSessionVersion,
+      startCount: null,
+    });
     setScrollCommand(null);
-  }, []);
+  }, [timelineSessionVersion]);
 
   return {
     clearScrollCommand,
     handleScroll,
     handleScrollEnd,
     handleVirtualAnchorReady,
-    initialAnchorSettledRef,
     isAtBottom,
     isConversationRevealed,
     isPrepending,

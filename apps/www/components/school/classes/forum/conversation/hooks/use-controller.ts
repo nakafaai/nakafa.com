@@ -8,7 +8,6 @@ import { useConvex } from "convex/react";
 import {
   type RefObject,
   useCallback,
-  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -183,7 +182,6 @@ export function useController({
     handleScroll,
     handleScrollEnd,
     handleVirtualAnchorReady,
-    initialAnchorSettledRef,
     isAtBottom,
     isConversationRevealed,
     isPrepending,
@@ -308,14 +306,6 @@ export function useController({
       latestConversationView.current = nextView;
       persistConversationView(nextView);
       resetDetachedFlow();
-      registerPendingPostTarget(
-        createPendingPostTarget({
-          align: "center",
-          postId,
-          reason:
-            index === undefined ? "jump-session" : "in-session-post-command",
-        })
-      );
 
       if (index !== undefined) {
         scheduleScrollCommand({
@@ -325,6 +315,14 @@ export function useController({
         });
         return;
       }
+
+      registerPendingPostTarget(
+        createPendingPostTarget({
+          align: "center",
+          postId,
+          reason: "jump-session",
+        })
+      );
 
       requestFocusedTimeline({
         onRejected: () => {
@@ -440,26 +438,6 @@ export function useController({
     () => ({ jumpToPostId, scrollToLatest }),
     [jumpToPostId, scrollToLatest]
   );
-
-  useEffect(() => {
-    if (
-      !(
-        initialAnchorSettledRef.current &&
-        !hasPendingPostTarget &&
-        isAtLatestEdge &&
-        conversationIntent.kind !== "live"
-      )
-    ) {
-      return;
-    }
-
-    setConversationIntent({ kind: "live" });
-  }, [
-    conversationIntent.kind,
-    hasPendingPostTarget,
-    initialAnchorSettledRef,
-    isAtLatestEdge,
-  ]);
 
   /** Persists the latest fallback snapshot when the conversation hides. */
   useLayoutEffect(

@@ -4,14 +4,14 @@ import { ArrowDown02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
-import type {
-  VirtualConversationAnchor,
-  VirtualConversationHandle,
-} from "@repo/design-system/types/virtual";
 import {
   getIndexAnchorOffset,
   isIndexAnchorSettled,
 } from "@repo/design-system/lib/virtual-anchor";
+import type {
+  VirtualConversationAnchor,
+  VirtualConversationHandle,
+} from "@repo/design-system/types/virtual";
 import {
   Children,
   type ComponentProps,
