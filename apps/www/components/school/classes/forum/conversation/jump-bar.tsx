@@ -10,34 +10,40 @@ import { memo } from "react";
 /** Renders the contextual jump actions for going back or returning to latest. */
 export const JumpBar = memo(
   ({
-    canGoBack,
     onBack,
     onLatest,
+    showBack,
+    showLatest,
   }: {
-    canGoBack: boolean;
     onBack: () => void;
     onLatest: () => void;
+    showBack: boolean;
+    showLatest: boolean;
   }) => {
     const t = useTranslations("Common");
 
-    if (!canGoBack) {
+    if (!(showBack || showLatest)) {
       return null;
     }
 
     return (
       <div className="absolute right-0 bottom-4 left-0 z-10 flex justify-center">
         <ButtonGroup>
-          <Button onClick={onBack} size="sm" variant="outline">
-            {t("back")}
-          </Button>
-          <Button
-            aria-label={t("back-to-latest")}
-            onClick={onLatest}
-            size="icon-sm"
-            variant="outline"
-          >
-            <HugeIcons icon={ArrowDown02Icon} />
-          </Button>
+          {showBack ? (
+            <Button onClick={onBack} variant="outline">
+              {t("back")}
+            </Button>
+          ) : null}
+          {showLatest ? (
+            <Button
+              aria-label={t("back-to-latest")}
+              onClick={onLatest}
+              size="icon"
+              variant="outline"
+            >
+              <HugeIcons icon={ArrowDown02Icon} />
+            </Button>
+          ) : null}
         </ButtonGroup>
       </div>
     );

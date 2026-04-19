@@ -2,6 +2,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { describe, expect, it } from "vitest";
 import {
   createInitialTimelineSessionState,
+  isTimelineSessionLoading,
   replaceTimelineSession,
   type TimelineState,
   updateTimelineWithinSession,
@@ -27,6 +28,11 @@ function createTimelineState(
 }
 
 describe("forum timeline session", () => {
+  it("treats a missing timeline as still loading", () => {
+    expect(isTimelineSessionLoading(null)).toBe(true);
+    expect(isTimelineSessionLoading(createTimelineState())).toBe(false);
+  });
+
   it("starts with one empty timeline session", () => {
     expect(createInitialTimelineSessionState()).toEqual({
       sessionVersion: 0,

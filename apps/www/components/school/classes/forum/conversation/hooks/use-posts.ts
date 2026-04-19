@@ -11,6 +11,7 @@ import {
 } from "@/components/school/classes/forum/conversation/utils/focused";
 import {
   createInitialTimelineSessionState,
+  isTimelineSessionLoading,
   replaceTimelineSession,
   type TimelineState,
   updateTimelineWithinSession,
@@ -422,9 +423,7 @@ export function useForumPosts({
     return true;
   }, [liveHasMoreBefore, livePosts, liveStatus]);
 
-  const isInitialLoading =
-    timeline === null &&
-    (mode.kind === "live" ? liveStatus === "LoadingFirstPage" : true);
+  const isInitialLoading = isTimelineSessionLoading(timeline);
 
   return {
     hasMoreAfter: timeline?.hasMoreAfter ?? false,

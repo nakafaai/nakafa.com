@@ -17,6 +17,16 @@ type RestoreConversationAnchor = Extract<
   { kind: "index" }
 >;
 
+type ResolvedConversationViewPosition =
+  | {
+      kind: "bottom";
+    }
+  | {
+      index: number;
+      kind: "item";
+      offset: number;
+    };
+
 /** Compares two saved forum conversation views by value. */
 export function areConversationViewsEqual(
   left: ForumConversationView | undefined | null,
@@ -107,6 +117,93 @@ function resolveConversationViewIndex({
   }
 
   return postIdToIndex.get(view.postId) ?? null;
+}
+
+/** Resolves one semantic conversation view into an ordered viewport position. */
+function resolveConversationViewPosition({
+  dateToIndex,
+  headerIndex,
+  postIdToIndex,
+  unreadIndex,
+  view,
+}: {
+  dateToIndex: Map<number, number>;
+  headerIndex: number | null;
+  postIdToIndex: Map<Id<"schoolClassForumPosts">, number>;
+  unreadIndex: number | null;
+  view: ForumConversationView;
+}): ResolvedConversationViewPosition | null {
+  if (view.kind === "bottom") {
+    return { kind: "bottom" };
+  }
+
+  const index = resolveConversationViewIndex({
+    dateToIndex,
+    headerIndex,
+    postIdToIndex,
+    unreadIndex,
+    view,
+  });
+
+  if (index === null || index === undefined) {
+    return null;
+  }
+
+  return {
+    index,
+    kind: "item",
+    offset: view.offset,
+  };
+}
+
+/** Returns whether the current semantic viewport has reached or passed a target view. */
+export function isConversationViewAtOrAfter({
+  currentView,
+  dateToIndex,
+  headerIndex,
+  postIdToIndex,
+  targetView,
+  unreadIndex,
+}: {
+  currentView: ForumConversationView;
+  dateToIndex: Map<number, number>;
+  headerIndex: number | null;
+  postIdToIndex: Map<Id<"schoolClassForumPosts">, number>;
+  targetView: ForumConversationView;
+  unreadIndex: number | null;
+}) {
+  const currentPosition = resolveConversationViewPosition({
+    dateToIndex,
+    headerIndex,
+    postIdToIndex,
+    unreadIndex,
+    view: currentView,
+  });
+  const targetPosition = resolveConversationViewPosition({
+    dateToIndex,
+    headerIndex,
+    postIdToIndex,
+    unreadIndex,
+    view: targetView,
+  });
+
+  if (!(currentPosition && targetPosition)) {
+    return false;
+  }
+
+  if (currentPosition.kind === "bottom") {
+    return true;
+  }
+
+  if (targetPosition.kind === "bottom") {
+    return false;
+  }
+
+  if (currentPosition.index !== targetPosition.index) {
+    return currentPosition.index > targetPosition.index;
+  }
+
+  return currentPosition.offset >= targetPosition.offset;
 }
 
 /** Resolves one saved semantic view into a precise local restore anchor. */

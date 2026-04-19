@@ -18,6 +18,11 @@ export interface TimelineSessionState {
   timeline: TimelineState | null;
 }
 
+/** Returns whether the conversation is still waiting for its first timeline. */
+export function isTimelineSessionLoading(timeline: TimelineState | null) {
+  return timeline === null;
+}
+
 /** Creates one empty transcript-session wrapper before any data is available. */
 export function createInitialTimelineSessionState(): TimelineSessionState {
   return {

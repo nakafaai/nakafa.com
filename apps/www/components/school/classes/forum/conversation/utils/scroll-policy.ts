@@ -15,3 +15,23 @@ export function getForumPrefetchDistance(viewportSize: number) {
     FORUM_PREFETCH_DISTANCE_MAX
   );
 }
+
+/** Returns whether one history edge can request another page for its boundary. */
+export function shouldRequestHistoryBoundary({
+  boundaryPostId,
+  hasMore,
+  isLoading,
+  lastRequestedBoundaryPostId,
+}: {
+  boundaryPostId: string | null;
+  hasMore: boolean;
+  isLoading: boolean;
+  lastRequestedBoundaryPostId: string | null;
+}) {
+  return (
+    boundaryPostId !== null &&
+    hasMore &&
+    !isLoading &&
+    lastRequestedBoundaryPostId !== boundaryPostId
+  );
+}

@@ -8,6 +8,7 @@ import {
   createInitialConversationAnchor,
   createInitialConversationView,
   createRestoreConversationAnchor,
+  isConversationViewAtOrAfter,
 } from "@/components/school/classes/forum/conversation/utils/view";
 import type { ForumConversationView } from "@/lib/store/forum";
 
@@ -140,6 +141,53 @@ describe("forum conversation view state", () => {
         { kind: "date", date: dateKey, offset: 4, postId: postAId },
         { kind: "date", date: dateKey, offset: 5, postId: postAId }
       )
+    ).toBe(false);
+  });
+
+  it("compares semantic viewport order for back-history expiry", () => {
+    const lookup = createLookup();
+
+    expect(
+      isConversationViewAtOrAfter({
+        ...lookup,
+        currentView: { kind: "bottom" },
+        targetView: { kind: "post", offset: 4, postId: postAId },
+      })
+    ).toBe(true);
+
+    expect(
+      isConversationViewAtOrAfter({
+        ...lookup,
+        currentView: { kind: "post", offset: 8, postId: postBId },
+        targetView: { kind: "post", offset: 4, postId: postAId },
+      })
+    ).toBe(true);
+
+    expect(
+      isConversationViewAtOrAfter({
+        ...lookup,
+        currentView: { kind: "post", offset: 2, postId: postAId },
+        targetView: { kind: "post", offset: 4, postId: postAId },
+      })
+    ).toBe(false);
+
+    expect(
+      isConversationViewAtOrAfter({
+        ...lookup,
+        currentView: { kind: "post", offset: 4, postId: postAId },
+        targetView: { kind: "bottom" },
+      })
+    ).toBe(false);
+
+    expect(
+      isConversationViewAtOrAfter({
+        dateToIndex: new Map(),
+        currentView: { kind: "post", offset: 4, postId: postAId },
+        headerIndex: null,
+        postIdToIndex: new Map(),
+        targetView: { kind: "post", offset: 4, postId: postAId },
+        unreadIndex: null,
+      })
     ).toBe(false);
   });
 

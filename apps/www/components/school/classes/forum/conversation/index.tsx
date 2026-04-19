@@ -5,6 +5,7 @@ import {
   VirtualConversation,
   VirtualConversationPlaceholder,
 } from "@repo/design-system/components/ui/virtual-conversation";
+import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
 import { ForumHeader } from "@/components/school/classes/forum/conversation/header";
@@ -40,7 +41,9 @@ export const ForumPostConversation = memo(
       handleVirtualAnchorReady,
       hasPendingPostTarget,
       initialAnchor,
+      isAtBottom,
       isAtLatestEdge,
+      isConversationRevealed,
       isInitialLoading,
       isPrepending,
       items,
@@ -56,16 +59,25 @@ export const ForumPostConversation = memo(
       return <VirtualConversationPlaceholder />;
     }
 
+    const showJumpBack = canGoBack && !hasPendingPostTarget;
+    const showJumpLatest = showJumpBack && !(isAtLatestEdge && isAtBottom);
+
     return (
       <ForumScrollProvider value={forumScrollValue}>
-        <div className="relative flex size-full flex-col overflow-hidden">
+        <div
+          className={cn(
+            "relative flex size-full flex-col overflow-hidden",
+            !isConversationRevealed && "invisible"
+          )}
+        >
           <VirtualConversation
             floatingContent={
-              canGoBack && !hasPendingPostTarget ? (
+              showJumpBack ? (
                 <JumpBar
-                  canGoBack={canGoBack}
                   onBack={goBack}
                   onLatest={scrollToLatest}
+                  showBack={showJumpBack}
+                  showLatest={showJumpLatest}
                 />
               ) : null
             }

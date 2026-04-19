@@ -27,6 +27,7 @@ import type {
 import {
   type BackStack,
   clearBackStack,
+  peekBackView,
   popBackView,
   pushBackView,
 } from "@/components/school/classes/forum/conversation/utils/back-stack";
@@ -44,7 +45,10 @@ import {
   type ScrollCommand,
   shouldPersistBottomConversationView,
 } from "@/components/school/classes/forum/conversation/utils/scroll-command";
-import { getForumPrefetchDistance } from "@/components/school/classes/forum/conversation/utils/scroll-policy";
+import {
+  getForumPrefetchDistance,
+  shouldRequestHistoryBoundary,
+} from "@/components/school/classes/forum/conversation/utils/scroll-policy";
 import {
   captureConversationView,
   createForumConversationMode,
@@ -52,6 +56,7 @@ import {
   createInitialConversationView,
   createRestoreConversationAnchor,
   type ForumConversationMode,
+  isConversationViewAtOrAfter,
   type RestorableConversationView,
 } from "@/components/school/classes/forum/conversation/utils/view";
 import { useForum, useForumStoreApi } from "@/lib/context/use-forum";
@@ -73,7 +78,9 @@ interface UseControllerResult {
   handleVirtualAnchorReady: () => void;
   hasPendingPostTarget: boolean;
   initialAnchor: VirtualConversationAnchor;
+  isAtBottom: boolean;
   isAtLatestEdge: boolean;
+  isConversationRevealed: boolean;
   isInitialLoading: boolean;
   isPrepending: boolean;
   items: VirtualItem[];
@@ -166,18 +173,22 @@ export function useController({
   const previousTimelineSessionVersionRef = useRef(timelineSessionVersion);
 
   const scrollRef = useRef<VirtualConversationHandle>(null);
+  const [isAtBottom, setIsAtBottom] = useState(false);
+  const [isConversationRevealed, setIsConversationRevealed] = useState(false);
   const [isPrepending, setIsPrepending] = useState(false);
   const previousScrollOffsetRef = useRef(0);
-  const wasInBottomPrefetchZoneRef = useRef(false);
-  const wasInTopPrefetchZoneRef = useRef(false);
+  const lastRequestedNewerBoundaryRef =
+    useRef<Id<"schoolClassForumPosts"> | null>(null);
+  const lastRequestedOlderBoundaryRef =
+    useRef<Id<"schoolClassForumPosts"> | null>(null);
 
   /** Resets transient scroll refs whenever one semantic transcript session remounts. */
   function resetTimelineSessionState() {
     initialAnchorSettledRef.current = false;
     persistBottomOnArrivalRef.current = pendingLatestSessionRef.current;
     previousScrollOffsetRef.current = 0;
-    wasInTopPrefetchZoneRef.current = false;
-    wasInBottomPrefetchZoneRef.current = false;
+    lastRequestedOlderBoundaryRef.current = null;
+    lastRequestedNewerBoundaryRef.current = null;
   }
 
   if (previousTimelineSessionVersionRef.current !== timelineSessionVersion) {
@@ -198,7 +209,9 @@ export function useController({
           unreadIndex,
         });
 
+  const oldestLoadedPostId = posts[0]?._id ?? null;
   const lastPostId = posts.at(-1)?._id;
+  const newestLoadedPostId = lastPostId ?? null;
   const previousLastPostId = usePrevious(lastPostId);
   const { cancelPendingMarkRead, flushMarkRead, scheduleMarkRead } = useRead({
     forumId,
@@ -257,6 +270,133 @@ export function useController({
   const clearJumpHistory = useCallback(() => {
     applyBackStack(clearBackStack());
   }, [applyBackStack]);
+
+  /** Drops any back targets the current viewport has already reached or passed. */
+  const pruneReachedBackHistory = useCallback(
+    (currentView: ForumConversationView | null) => {
+      if (!currentView) {
+        return;
+      }
+
+      let nextBackStack = backStackRef.current;
+
+      while (true) {
+        const targetView = peekBackView(nextBackStack);
+
+        if (
+          !(
+            targetView &&
+            isConversationViewAtOrAfter({
+              currentView,
+              dateToIndex,
+              headerIndex,
+              postIdToIndex,
+              targetView,
+              unreadIndex,
+            })
+          )
+        ) {
+          break;
+        }
+
+        nextBackStack = popBackView(nextBackStack).backStack;
+      }
+
+      if (nextBackStack === backStackRef.current) {
+        return;
+      }
+
+      applyBackStack(nextBackStack);
+    },
+    [applyBackStack, dateToIndex, headerIndex, postIdToIndex, unreadIndex]
+  );
+
+  /** Requests one older page for the current oldest loaded boundary exactly once. */
+  const requestOlderBoundary = useCallback(
+    (boundaryPostId: Id<"schoolClassForumPosts"> | null) => {
+      if (
+        !shouldRequestHistoryBoundary({
+          boundaryPostId,
+          hasMore: hasMoreBefore,
+          isLoading: isLoadingOlder,
+          lastRequestedBoundaryPostId: lastRequestedOlderBoundaryRef.current,
+        })
+      ) {
+        return false;
+      }
+
+      lastRequestedOlderBoundaryRef.current = boundaryPostId;
+      setIsPrepending(true);
+      loadOlderPosts();
+      return true;
+    },
+    [hasMoreBefore, isLoadingOlder, loadOlderPosts]
+  );
+
+  /** Requests one newer page for the current newest loaded boundary exactly once. */
+  const requestNewerBoundary = useCallback(
+    (boundaryPostId: Id<"schoolClassForumPosts"> | null) => {
+      if (
+        !shouldRequestHistoryBoundary({
+          boundaryPostId,
+          hasMore: hasMoreAfter,
+          isLoading: isLoadingNewer,
+          lastRequestedBoundaryPostId: lastRequestedNewerBoundaryRef.current,
+        })
+      ) {
+        return false;
+      }
+
+      lastRequestedNewerBoundaryRef.current = boundaryPostId;
+      loadNewerPosts();
+      return true;
+    },
+    [hasMoreAfter, isLoadingNewer, loadNewerPosts]
+  );
+
+  /** Continues loading history while the viewport remains parked on one edge. */
+  const maybeContinueBoundaryPrefetch = useCallback(() => {
+    if (!(initialAnchorSettledRef.current && !pendingPostTargetRef.current)) {
+      return;
+    }
+
+    const handle = scrollRef.current;
+
+    if (!handle) {
+      return;
+    }
+
+    const viewportSize = handle.getViewportSize();
+
+    if (viewportSize <= 0) {
+      return;
+    }
+
+    const prefetchDistance = getForumPrefetchDistance(viewportSize);
+
+    if (
+      handle.getScrollOffset() <= prefetchDistance &&
+      requestOlderBoundary(oldestLoadedPostId)
+    ) {
+      return;
+    }
+
+    if (handle.getDistanceFromBottom() <= prefetchDistance) {
+      requestNewerBoundary(newestLoadedPostId);
+    }
+  }, [
+    newestLoadedPostId,
+    oldestLoadedPostId,
+    requestNewerBoundary,
+    requestOlderBoundary,
+  ]);
+
+  /** Syncs the controller's bottom flag only when its meaning actually changes. */
+  const syncBottomState = useCallback((nextIsAtBottom: boolean) => {
+    setIsAtBottom((currentIsAtBottom) =>
+      currentIsAtBottom === nextIsAtBottom ? currentIsAtBottom : nextIsAtBottom
+    );
+  }, []);
 
   /** Pushes the current viewport snapshot so the next reply jump can return here. */
   const pushCurrentViewToBackStack = useCallback(() => {
@@ -623,18 +763,25 @@ export function useController({
   /** Marks the thread as read only while the live edge remains visible. */
   const handleScroll = useCallback(
     (offset: number) => {
+      const handle = scrollRef.current;
+      const atBottom = handle?.isAtBottom() ?? false;
+
+      syncBottomState(atBottom);
+
       if (pendingPostTargetRef.current) {
         previousScrollOffsetRef.current = offset;
         return;
       }
 
+      let currentView: ForumConversationView | null = null;
+
       if (initialAnchorSettledRef.current) {
-        captureCurrentConversationView(offset);
+        currentView = captureCurrentConversationView(offset);
+        pruneReachedBackHistory(currentView);
       }
 
-      const handle = scrollRef.current;
-      const atBottom = handle?.isAtBottom() ?? false;
       const isNearReadBottom = isNearReadStateBottom(handle);
+
       maybePersistBottomConversationView(atBottom);
 
       if (!(initialAnchorSettledRef.current && handle)) {
@@ -650,30 +797,15 @@ export function useController({
       const isNearTop = offset <= prefetchDistance;
       const isNearPrefetchBottom =
         handle.getDistanceFromBottom() <= prefetchDistance;
-      const shouldLoadOlder =
-        hasMoreBefore &&
-        !isLoadingOlder &&
-        isMovingUp &&
-        isNearTop &&
-        !wasInTopPrefetchZoneRef.current;
-      const shouldLoadNewer =
-        hasMoreAfter &&
-        !isLoadingNewer &&
-        isMovingDown &&
-        isNearPrefetchBottom &&
-        !wasInBottomPrefetchZoneRef.current;
 
       previousScrollOffsetRef.current = offset;
-      wasInTopPrefetchZoneRef.current = isNearTop;
-      wasInBottomPrefetchZoneRef.current = isNearPrefetchBottom;
 
-      if (shouldLoadOlder) {
-        setIsPrepending(true);
-        loadOlderPosts();
+      if (isNearTop && isMovingUp) {
+        requestOlderBoundary(oldestLoadedPostId);
       }
 
-      if (shouldLoadNewer) {
-        loadNewerPosts();
+      if (isNearPrefetchBottom && isMovingDown) {
+        requestNewerBoundary(newestLoadedPostId);
       }
 
       if (!(isNearReadBottom && isAtLatestEdge)) {
@@ -686,16 +818,16 @@ export function useController({
     [
       cancelPendingMarkRead,
       captureCurrentConversationView,
-      hasMoreAfter,
-      hasMoreBefore,
       isAtLatestEdge,
-      isLoadingNewer,
-      isLoadingOlder,
       lastPostId,
-      loadNewerPosts,
-      loadOlderPosts,
       maybePersistBottomConversationView,
+      newestLoadedPostId,
+      oldestLoadedPostId,
+      pruneReachedBackHistory,
+      requestNewerBoundary,
+      requestOlderBoundary,
       scheduleMarkRead,
+      syncBottomState,
     ]
   );
 
@@ -724,10 +856,12 @@ export function useController({
     const isNearReadBottom = scrollRef.current
       ? isNearReadStateBottom(scrollRef.current)
       : initialView?.kind === "bottom";
+    const atBottom =
+      scrollRef.current?.isAtBottom() ?? initialView?.kind === "bottom";
 
     previousScrollOffsetRef.current = scrollRef.current?.getScrollOffset() ?? 0;
-    wasInTopPrefetchZoneRef.current = false;
-    wasInBottomPrefetchZoneRef.current = false;
+    syncBottomState(atBottom);
+    setIsConversationRevealed(true);
 
     if (!(isNearReadBottom && isAtLatestEdge)) {
       pendingLatestSessionRef.current = false;
@@ -746,6 +880,7 @@ export function useController({
     lastPostId,
     persistConversationView,
     scheduleMarkRead,
+    syncBottomState,
     unreadIndex,
   ]);
 
@@ -760,6 +895,10 @@ export function useController({
 
   /** Saves the latest fallback snapshot when scrolling settles or the route hides. */
   const handleScrollEnd = useCallback(() => {
+    const atBottom = scrollRef.current?.isAtBottom() ?? false;
+
+    syncBottomState(atBottom);
+
     if (!settlePendingPostTarget()) {
       return;
     }
@@ -769,21 +908,24 @@ export function useController({
       return;
     }
 
-    if (
-      maybePersistBottomConversationView(
-        scrollRef.current?.isAtBottom() ?? false
-      )
-    ) {
+    if (maybePersistBottomConversationView(atBottom)) {
       return;
     }
 
-    persistConversationView(captureCurrentConversationView());
+    const currentView = captureCurrentConversationView();
+
+    pruneReachedBackHistory(currentView);
+    persistConversationView(currentView);
+    maybeContinueBoundaryPrefetch();
   }, [
     captureCurrentConversationView,
     finalizeConversationReady,
     maybePersistBottomConversationView,
+    maybeContinueBoundaryPrefetch,
     persistConversationView,
+    pruneReachedBackHistory,
     settlePendingPostTarget,
+    syncBottomState,
   ]);
 
   /** Persists the latest fallback snapshot when the conversation hides. */
@@ -809,12 +951,16 @@ export function useController({
       pendingLatestSessionRef.current = false;
       persistBottomOnArrivalRef.current = false;
       previousScrollOffsetRef.current = 0;
-      wasInTopPrefetchZoneRef.current = false;
-      wasInBottomPrefetchZoneRef.current = false;
+      lastRequestedOlderBoundaryRef.current = null;
+      lastRequestedNewerBoundaryRef.current = null;
       setScrollCommand(null);
     },
     [cancelPendingJumpRequest, clearJumpHistory, persistConversationView]
   );
+
+  useEffect(() => {
+    maybeContinueBoundaryPrefetch();
+  }, [maybeContinueBoundaryPrefetch]);
 
   useEffect(() => {
     if (
@@ -854,7 +1000,9 @@ export function useController({
     handleVirtualAnchorReady,
     hasPendingPostTarget,
     initialAnchor,
+    isAtBottom,
     isAtLatestEdge,
+    isConversationRevealed,
     isInitialLoading,
     isPrepending,
     items,
