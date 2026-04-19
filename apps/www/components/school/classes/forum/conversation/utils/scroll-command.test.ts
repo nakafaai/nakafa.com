@@ -24,6 +24,7 @@ describe("forum conversation scroll command", () => {
       kind: "post",
       offset: 12,
       postId,
+      smooth: true,
     } satisfies ScrollCommand;
 
     expect(
@@ -43,6 +44,7 @@ describe("forum conversation scroll command", () => {
       index: 7,
       kind: "post",
       offset: 12,
+      smooth: true,
     });
   });
 

@@ -5,6 +5,7 @@ export interface ScrollCommand {
   kind: "post";
   offset?: number;
   postId: Id<"schoolClassForumPosts">;
+  smooth?: boolean;
 }
 
 interface ResolvedScrollCommand {
@@ -12,6 +13,7 @@ interface ResolvedScrollCommand {
   index: number;
   kind: "post";
   offset?: number;
+  smooth?: boolean;
 }
 
 /** Resolves one reactive scroll command only when the viewport has enough data to execute it. */
@@ -37,6 +39,7 @@ export function resolveScrollCommand({
     index,
     kind: "post",
     offset: command.offset,
+    smooth: command.smooth,
   };
 }
 

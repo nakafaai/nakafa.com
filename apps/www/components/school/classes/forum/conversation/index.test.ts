@@ -50,8 +50,11 @@ vi.mock("@/components/school/classes/forum/conversation/header", () => ({
 }));
 
 vi.mock("@/components/school/classes/forum/conversation/item", () => ({
-  ForumPostItem: () =>
-    createElement("div", { "data-testid": "forum-post-item" }),
+  ForumPostItem: ({ isJumpHighlighted }: { isJumpHighlighted: boolean }) =>
+    createElement("div", {
+      "data-jump-highlighted": String(isJumpHighlighted),
+      "data-testid": "forum-post-item",
+    }),
 }));
 
 vi.mock("@/components/school/classes/forum/conversation/jump-bar", () => ({
@@ -71,7 +74,7 @@ const currentUserId = "user_1" as Id<"users">;
 /** Creates one minimal controller result for conversation render tests. */
 function createControllerResult(overrides?: {
   canGoBack?: boolean;
-  hasPendingPostTarget?: boolean;
+  highlightedPostId?: Id<"schoolClassForumPosts"> | null;
   isAtBottom?: boolean;
   isConversationRevealed?: boolean;
   isInitialLoading?: boolean;
@@ -88,7 +91,7 @@ function createControllerResult(overrides?: {
     handleScroll: vi.fn(),
     handleScrollEnd: vi.fn(),
     handleVirtualAnchorReady: vi.fn(),
-    hasPendingPostTarget: overrides?.hasPendingPostTarget ?? false,
+    highlightedPostId: overrides?.highlightedPostId ?? null,
     initialAnchor: { kind: "bottom" as const },
     isAtBottom: overrides?.isAtBottom ?? false,
     isAtLatestEdge: true,
@@ -228,10 +231,12 @@ describe("conversation/index", () => {
   });
 
   it("renders jump actions and each semantic conversation item", () => {
+    const highlightedPostId = "post_1" as Id<"schoolClassForumPosts">;
+
     mocks.useController.mockReturnValue(
       createControllerResult({
         canGoBack: true,
-        hasPendingPostTarget: false,
+        highlightedPostId,
         isConversationRevealed: true,
         items: [
           { forum: createForum(), type: "header" },
@@ -240,7 +245,7 @@ describe("conversation/index", () => {
           {
             isFirstInGroup: true,
             isLastInGroup: true,
-            post: { _id: "post_1" as Id<"schoolClassForumPosts"> },
+            post: { _id: highlightedPostId },
             showContinuationTime: false,
             type: "post",
           } as VirtualItem,
@@ -263,6 +268,11 @@ describe("conversation/index", () => {
     expect(
       container.querySelector('[data-testid="forum-post-item"]')
     ).not.toBeNull();
+    expect(
+      container
+        .querySelector('[data-testid="forum-post-item"]')
+        ?.getAttribute("data-jump-highlighted")
+    ).toBe("true");
 
     act(() => {
       root.unmount();

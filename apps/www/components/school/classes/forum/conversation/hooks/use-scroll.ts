@@ -10,14 +10,15 @@ import {
   useState,
 } from "react";
 import type { VirtualItem } from "@/components/school/classes/forum/conversation/types";
-import type { PendingPostTarget } from "@/components/school/classes/forum/conversation/utils/post-target";
 import {
   resolveScrollCommand,
   type ScrollCommand,
   shouldPersistBottomConversationView,
 } from "@/components/school/classes/forum/conversation/utils/scroll-command";
 import {
+  type ForumHistoryBoundaryIntent,
   getForumPrefetchDistance,
+  getNextForumHistoryBoundaryIntent,
   shouldRequestHistoryBoundary,
 } from "@/components/school/classes/forum/conversation/utils/scroll-policy";
 import {
@@ -44,7 +45,7 @@ interface UseScrollResult {
 
 interface PrependState {
   sessionVersion: number;
-  startCount: number | null;
+  startCount: number;
 }
 
 /** Returns whether the live transcript is close enough to bottom for read-state UX. */
@@ -99,14 +100,13 @@ export function useScroll({
   loadOlderPosts,
   newestLoadedPostId,
   oldestLoadedPostId,
+  onNavigationSettled,
   pendingLatestSessionRef,
-  pendingPostTargetRef,
   persistConversationView,
   postIdToIndex,
   pruneReachedBackHistory,
   scheduleMarkRead,
   scrollRef,
-  settlePendingPostTarget,
   timelineSessionVersion,
   unreadIndex,
 }: {
@@ -130,8 +130,8 @@ export function useScroll({
   loadOlderPosts: () => void;
   newestLoadedPostId: Id<"schoolClassForumPosts"> | null;
   oldestLoadedPostId: Id<"schoolClassForumPosts"> | null;
+  onNavigationSettled?: () => void;
   pendingLatestSessionRef: RefObject<boolean>;
-  pendingPostTargetRef: RefObject<PendingPostTarget | null>;
   persistConversationView: (view?: ForumConversationView | null) => void;
   postIdToIndex: Map<Id<"schoolClassForumPosts">, number>;
   pruneReachedBackHistory: (currentView: ForumConversationView | null) => void;
@@ -139,7 +139,6 @@ export function useScroll({
     lastReadPostId: Id<"schoolClassForumPosts"> | undefined
   ) => void;
   scrollRef: RefObject<VirtualConversationHandle | null>;
-  settlePendingPostTarget: () => boolean;
   timelineSessionVersion: number;
   unreadIndex: number | null;
 }): UseScrollResult {
@@ -150,20 +149,22 @@ export function useScroll({
     useRef<Id<"schoolClassForumPosts"> | null>(null);
   const lastRequestedOlderBoundaryRef =
     useRef<Id<"schoolClassForumPosts"> | null>(null);
+  const historyBoundaryIntentRef = useRef<ForumHistoryBoundaryIntent>(null);
   const previousScrollOffsetRef = useRef(0);
 
   const [isAtBottom, setIsAtBottom] = useState(false);
-  const [isConversationRevealed, setIsConversationRevealed] = useState(false);
-  const [prependState, setPrependState] = useState<PrependState>(() => ({
-    sessionVersion: timelineSessionVersion,
-    startCount: null,
-  }));
+  const [revealedSessionVersion, setRevealedSessionVersion] = useState<
+    number | null
+  >(null);
+  const [prependState, setPrependState] = useState<PrependState | null>(null);
   const [scrollCommand, setScrollCommand] = useState<ScrollCommand | null>(
     null
   );
   const previousLastPostId = usePrevious(lastPostId);
+  const isConversationRevealed =
+    revealedSessionVersion === timelineSessionVersion;
   const prependStartCount =
-    prependState.sessionVersion === timelineSessionVersion
+    prependState?.sessionVersion === timelineSessionVersion
       ? prependState.startCount
       : null;
 
@@ -182,6 +183,7 @@ export function useScroll({
     previousScrollOffsetRef.current = 0;
     lastRequestedOlderBoundaryRef.current = null;
     lastRequestedNewerBoundaryRef.current = null;
+    historyBoundaryIntentRef.current = null;
   }, [pendingLatestSessionRef]);
 
   if (previousTimelineSessionVersionRef.current !== timelineSessionVersion) {
@@ -270,6 +272,56 @@ export function useScroll({
     [hasMoreAfter, isLoadingNewer, loadNewerPosts]
   );
 
+  /** Continues one user-armed history edge while the viewport remains parked there. */
+  const maybeContinueArmedBoundaryPrefetch = useCallback(() => {
+    if (!initialAnchorSettledRef.current) {
+      return false;
+    }
+
+    const handle = scrollRef.current;
+
+    if (!handle) {
+      return false;
+    }
+
+    const viewportSize = handle.getViewportSize();
+
+    if (viewportSize <= 0) {
+      return false;
+    }
+
+    const prefetchDistance = getForumPrefetchDistance(viewportSize);
+    const intent = historyBoundaryIntentRef.current;
+
+    if (!intent) {
+      return false;
+    }
+
+    if (intent === "older") {
+      if (!hasMoreBefore || handle.getScrollOffset() > prefetchDistance) {
+        historyBoundaryIntentRef.current = null;
+        return false;
+      }
+
+      return requestOlderBoundary(oldestLoadedPostId);
+    }
+
+    if (!hasMoreAfter || handle.getDistanceFromBottom() > prefetchDistance) {
+      historyBoundaryIntentRef.current = null;
+      return false;
+    }
+
+    return requestNewerBoundary(newestLoadedPostId);
+  }, [
+    hasMoreAfter,
+    hasMoreBefore,
+    newestLoadedPostId,
+    oldestLoadedPostId,
+    requestNewerBoundary,
+    requestOlderBoundary,
+    scrollRef,
+  ]);
+
   /** Syncs the controller's bottom flag only when its meaning actually changes. */
   const syncBottomState = useCallback((nextIsAtBottom: boolean) => {
     setIsAtBottom((currentIsAtBottom) =>
@@ -307,7 +359,7 @@ export function useScroll({
 
     previousScrollOffsetRef.current = scrollRef.current?.getScrollOffset() ?? 0;
     syncBottomState(atBottom);
-    setIsConversationRevealed(true);
+    setRevealedSessionVersion(timelineSessionVersion);
 
     if (!(isNearBottom && isAtLatestEdge)) {
       pendingLatestSessionRef.current = false;
@@ -330,6 +382,7 @@ export function useScroll({
     scheduleMarkRead,
     scrollRef,
     syncBottomState,
+    timelineSessionVersion,
     unreadIndex,
   ]);
 
@@ -348,6 +401,7 @@ export function useScroll({
       scrollRef.current?.scrollToIndex(resolvedScrollCommand.index, {
         align: resolvedScrollCommand.align,
         offset: resolvedScrollCommand.offset,
+        smooth: resolvedScrollCommand.smooth,
       });
     });
     setScrollCommand(null);
@@ -360,11 +414,6 @@ export function useScroll({
       const atBottom = handle?.isAtBottom() ?? false;
 
       syncBottomState(atBottom);
-
-      if (pendingPostTargetRef.current) {
-        previousScrollOffsetRef.current = offset;
-        return;
-      }
 
       let currentView: ForumConversationView | null = null;
 
@@ -390,6 +439,13 @@ export function useScroll({
       const isNearTop = offset <= prefetchDistance;
       const isNearPrefetchBottom =
         handle.getDistanceFromBottom() <= prefetchDistance;
+      historyBoundaryIntentRef.current = getNextForumHistoryBoundaryIntent({
+        currentIntent: historyBoundaryIntentRef.current,
+        isMovingDown,
+        isMovingUp,
+        isNearBottom: isNearPrefetchBottom,
+        isNearTop,
+      });
 
       previousScrollOffsetRef.current = offset;
 
@@ -416,7 +472,6 @@ export function useScroll({
       maybePersistBottomConversationView,
       newestLoadedPostId,
       oldestLoadedPostId,
-      pendingPostTargetRef,
       pruneReachedBackHistory,
       requestNewerBoundary,
       requestOlderBoundary,
@@ -426,14 +481,11 @@ export function useScroll({
     ]
   );
 
-  /** Waits for any pending jump target before the conversation can settle. */
+  /** Finalizes the fresh conversation session once the virtual anchor has settled. */
   const handleVirtualAnchorReady = useCallback(() => {
-    if (!settlePendingPostTarget()) {
-      return;
-    }
-
     finalizeConversationReady();
-  }, [finalizeConversationReady, settlePendingPostTarget]);
+    onNavigationSettled?.();
+  }, [finalizeConversationReady, onNavigationSettled]);
 
   /** Saves the latest fallback snapshot when scrolling settles between gestures. */
   const handleScrollEnd = useCallback(() => {
@@ -441,16 +493,14 @@ export function useScroll({
 
     syncBottomState(atBottom);
 
-    if (!settlePendingPostTarget()) {
-      return;
-    }
-
     if (!initialAnchorSettledRef.current) {
       finalizeConversationReady();
+      onNavigationSettled?.();
       return;
     }
 
     if (maybePersistBottomConversationView(atBottom)) {
+      onNavigationSettled?.();
       return;
     }
 
@@ -458,14 +508,17 @@ export function useScroll({
 
     pruneReachedBackHistory(currentView);
     persistConversationView(currentView);
+    maybeContinueArmedBoundaryPrefetch();
+    onNavigationSettled?.();
   }, [
     captureCurrentConversationView,
     finalizeConversationReady,
+    maybeContinueArmedBoundaryPrefetch,
     maybePersistBottomConversationView,
+    onNavigationSettled,
     persistConversationView,
     pruneReachedBackHistory,
     scrollRef,
-    settlePendingPostTarget,
     syncBottomState,
   ]);
 
@@ -499,6 +552,15 @@ export function useScroll({
     scrollRef,
   ]);
 
+  /** Continues edge paging after older/newer data lands while the user stays parked there. */
+  useEffect(() => {
+    if (isLoadingOlder || isLoadingNewer) {
+      return;
+    }
+
+    maybeContinueArmedBoundaryPrefetch();
+  }, [isLoadingNewer, isLoadingOlder, maybeContinueArmedBoundaryPrefetch]);
+
   /** Drops reverse-scroll shift once the prepended page has fully landed. */
   useEffect(() => {
     if (
@@ -507,16 +569,8 @@ export function useScroll({
       return;
     }
 
-    setPrependState({
-      sessionVersion: timelineSessionVersion,
-      startCount: null,
-    });
-  }, [
-    hasPrependedOlderItems,
-    isLoadingOlder,
-    prependStartCount,
-    timelineSessionVersion,
-  ]);
+    setPrependState(null);
+  }, [hasPrependedOlderItems, isLoadingOlder, prependStartCount]);
 
   /** Marks the next latest-edge command so bottom persistence can land naturally. */
   const markPendingBottomPersistence = useCallback(() => {
@@ -542,15 +596,14 @@ export function useScroll({
   const resetScrollState = useCallback(() => {
     initialAnchorSettledRef.current = false;
     persistBottomOnArrivalRef.current = false;
+    historyBoundaryIntentRef.current = null;
     previousScrollOffsetRef.current = 0;
     lastRequestedOlderBoundaryRef.current = null;
     lastRequestedNewerBoundaryRef.current = null;
-    setPrependState({
-      sessionVersion: timelineSessionVersion,
-      startCount: null,
-    });
+    setRevealedSessionVersion(null);
+    setPrependState(null);
     setScrollCommand(null);
-  }, [timelineSessionVersion]);
+  }, []);
 
   return {
     clearScrollCommand,

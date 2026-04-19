@@ -436,6 +436,8 @@ export const VirtualConversation = memo(
         getDistanceFromBottom: () => measureDistanceFromBottom(),
         getItemOffset: (index: number) =>
           listRef.current?.getItemOffset(index) ?? 0,
+        getItemSize: (index: number) =>
+          listRef.current?.getItemSize(index) ?? 0,
         getScrollOffset: () => listRef.current?.scrollOffset ?? 0,
         getViewportSize: () => listRef.current?.viewportSize ?? 0,
         scrollToIndex,

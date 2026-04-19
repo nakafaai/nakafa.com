@@ -1,3 +1,4 @@
+import { useReducedMotion, useTimeout } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type {
@@ -18,7 +19,6 @@ import { useItems } from "@/components/school/classes/forum/conversation/hooks/u
 import { usePosts } from "@/components/school/classes/forum/conversation/hooks/use-posts";
 import { useRead } from "@/components/school/classes/forum/conversation/hooks/use-read";
 import { useScroll } from "@/components/school/classes/forum/conversation/hooks/use-scroll";
-import { useTarget } from "@/components/school/classes/forum/conversation/hooks/use-target";
 import { useUnread } from "@/components/school/classes/forum/conversation/hooks/use-unread";
 import { useView } from "@/components/school/classes/forum/conversation/hooks/use-view";
 import type {
@@ -30,7 +30,7 @@ import {
   createFocusedWindowArgs,
 } from "@/components/school/classes/forum/conversation/utils/focused";
 import { goToLatestEdge } from "@/components/school/classes/forum/conversation/utils/latest";
-import { createPendingPostTarget } from "@/components/school/classes/forum/conversation/utils/post-target";
+import { isForumPostVisible } from "@/components/school/classes/forum/conversation/utils/post-target";
 import {
   captureConversationView,
   createForumConversationMode,
@@ -38,6 +38,8 @@ import {
 } from "@/components/school/classes/forum/conversation/utils/view";
 import { useForum, useForumStoreApi } from "@/lib/context/use-forum";
 import type { ForumConversationView } from "@/lib/store/forum";
+
+const FORUM_JUMP_HIGHLIGHT_DURATION = 1600;
 
 interface ForumScrollValue {
   jumpToPostId: (postId: Id<"schoolClassForumPosts">) => void;
@@ -52,7 +54,7 @@ interface UseControllerResult {
   handleScroll: (offset: number) => void;
   handleScrollEnd: () => void;
   handleVirtualAnchorReady: () => void;
-  hasPendingPostTarget: boolean;
+  highlightedPostId: Id<"schoolClassForumPosts"> | null;
   initialAnchor: VirtualConversationAnchor;
   isAtBottom: boolean;
   isAtLatestEdge: boolean;
@@ -74,6 +76,7 @@ export function useController({
   forumId: Id<"schoolClassForums">;
 }): UseControllerResult {
   const convex = useConvex();
+  const prefersReducedMotion = useReducedMotion();
   const forumStore = useForumStoreApi();
   const saveConversationView = useForum((state) => state.saveConversationView);
   const savedConversationView =
@@ -85,8 +88,12 @@ export function useController({
       })
     );
   const jumpRequestIdRef = useRef(0);
+  const pendingJumpHighlightPostIdRef =
+    useRef<Id<"schoolClassForumPosts"> | null>(null);
   const pendingLatestSessionRef = useRef(false);
   const scrollRef = useRef<VirtualConversationHandle>(null);
+  const [highlightedPostId, setHighlightedPostId] =
+    useState<Id<"schoolClassForumPosts"> | null>(null);
   const {
     hasMoreAfter,
     hasMoreBefore,
@@ -151,16 +158,6 @@ export function useController({
     unreadIndex,
   });
   const {
-    clearPendingPostTarget,
-    hasPendingPostTarget,
-    pendingPostTargetRef,
-    registerPendingPostTarget,
-    settlePendingPostTarget,
-  } = useTarget({
-    postIdToIndex,
-    scrollRef,
-  });
-  const {
     canGoBack,
     clearJumpHistory,
     pruneReachedBackHistory,
@@ -177,6 +174,54 @@ export function useController({
   const { cancelPendingMarkRead, flushMarkRead, scheduleMarkRead } = useRead({
     forumId,
   });
+  const shouldAnimateNavigation = !prefersReducedMotion;
+  const { clear: clearJumpHighlightTimeout, start: startJumpHighlightTimeout } =
+    useTimeout(() => {
+      setHighlightedPostId(null);
+    }, FORUM_JUMP_HIGHLIGHT_DURATION);
+
+  /** Clears any transient jump highlight that should not survive navigation changes. */
+  const clearJumpHighlight = useCallback(() => {
+    pendingJumpHighlightPostIdRef.current = null;
+    clearJumpHighlightTimeout();
+    setHighlightedPostId(null);
+  }, [clearJumpHighlightTimeout]);
+
+  /** Queues one post to highlight after the explicit jump visibly lands. */
+  const queueJumpHighlight = useCallback(
+    (postId: Id<"schoolClassForumPosts">) => {
+      clearJumpHighlightTimeout();
+      pendingJumpHighlightPostIdRef.current = postId;
+      setHighlightedPostId(null);
+    },
+    [clearJumpHighlightTimeout]
+  );
+
+  /** Activates the queued jump highlight only once the target row is actually visible. */
+  const maybeActivateJumpHighlight = useCallback(() => {
+    const postId = pendingJumpHighlightPostIdRef.current;
+    const handle = scrollRef.current;
+
+    if (!(postId && handle)) {
+      return;
+    }
+
+    const index = postIdToIndex.get(postId);
+
+    if (index === undefined) {
+      return;
+    }
+
+    if (!isForumPostVisible({ handle, index })) {
+      return;
+    }
+
+    pendingJumpHighlightPostIdRef.current = null;
+    clearJumpHighlightTimeout();
+    setHighlightedPostId(postId);
+    startJumpHighlightTimeout();
+  }, [clearJumpHighlightTimeout, postIdToIndex, startJumpHighlightTimeout]);
+
   const {
     clearScrollCommand,
     handleScroll,
@@ -206,14 +251,13 @@ export function useController({
     loadOlderPosts,
     newestLoadedPostId,
     oldestLoadedPostId,
+    onNavigationSettled: maybeActivateJumpHighlight,
     pendingLatestSessionRef,
-    pendingPostTargetRef,
     persistConversationView,
     postIdToIndex,
     pruneReachedBackHistory,
     scheduleMarkRead,
     scrollRef,
-    settlePendingPostTarget,
     timelineSessionVersion,
     unreadIndex,
   });
@@ -234,20 +278,20 @@ export function useController({
   /** Clears transient jump flow state before another navigation intent takes over. */
   const resetDetachedFlow = useCallback(() => {
     cancelPendingJumpRequest();
-    clearPendingPostTarget();
+    clearJumpHighlight();
     pendingLatestSessionRef.current = false;
     resetPendingBottomPersistence();
     clearScrollCommand();
   }, [
     cancelPendingJumpRequest,
-    clearPendingPostTarget,
+    clearJumpHighlight,
     clearScrollCommand,
     resetPendingBottomPersistence,
   ]);
 
   /** Loads one focused around-post timeline and swaps the transcript when it resolves. */
   const requestFocusedTimeline = useCallback(
-    ({
+    async ({
       onRejected,
       postId,
       targetKind,
@@ -261,36 +305,59 @@ export function useController({
       const requestId = beginPendingJumpRequest();
 
       setConversationIntent(nextIntent);
-      convex
-        .query(
+      try {
+        const aroundResult = await convex.query(
           api.classes.forums.queries.around.getForumPostsAround,
           createFocusedWindowArgs({
             forumId,
             targetPostId: postId,
           })
-        )
-        .then((aroundResult) => {
-          if (jumpRequestIdRef.current !== requestId) {
-            return;
-          }
+        );
 
-          replaceWithFocusedTimeline(
-            createFocusedTimelineState({
-              aroundResult,
-              targetKind,
-            })
-          );
-        })
-        .catch(() => {
-          if (jumpRequestIdRef.current !== requestId) {
-            return;
-          }
+        if (jumpRequestIdRef.current !== requestId) {
+          return;
+        }
 
-          onRejected();
-        });
+        replaceWithFocusedTimeline(
+          createFocusedTimelineState({
+            aroundResult,
+            targetKind,
+          })
+        );
+      } catch {
+        if (jumpRequestIdRef.current !== requestId) {
+          return;
+        }
+
+        onRejected();
+      }
     },
     [beginPendingJumpRequest, convex, forumId, replaceWithFocusedTimeline]
   );
+
+  /** Returns the conversation to the live latest edge. */
+  const showLatestEdge = useCallback(() => {
+    goToLatestEdge({
+      cancelPendingJumpRequest,
+      clearScrollCommand,
+      isAtLatestEdge,
+      markPendingBottomPersistence,
+      pendingLatestSessionRef,
+      scrollRef,
+      showLatestPosts,
+      smooth: shouldAnimateNavigation,
+      showLiveConversation: () => {
+        setConversationIntent({ kind: "live" });
+      },
+    });
+  }, [
+    cancelPendingJumpRequest,
+    clearScrollCommand,
+    isAtLatestEdge,
+    markPendingBottomPersistence,
+    shouldAnimateNavigation,
+    showLatestPosts,
+  ]);
 
   /** Opens a post directly or switches the conversation into jump mode. */
   const jumpToPostId = useCallback(
@@ -306,27 +373,24 @@ export function useController({
       latestConversationView.current = nextView;
       persistConversationView(nextView);
       resetDetachedFlow();
+      queueJumpHighlight(postId);
 
       if (index !== undefined) {
         scheduleScrollCommand({
           align: "center",
           kind: "post",
           postId,
+          smooth: shouldAnimateNavigation,
+        });
+        requestAnimationFrame(() => {
+          maybeActivateJumpHighlight();
         });
         return;
       }
 
-      registerPendingPostTarget(
-        createPendingPostTarget({
-          align: "center",
-          postId,
-          reason: "jump-session",
-        })
-      );
-
       requestFocusedTimeline({
         onRejected: () => {
-          clearPendingPostTarget();
+          clearJumpHighlight();
           setConversationIntent({ kind: "live" });
         },
         postId,
@@ -335,44 +399,27 @@ export function useController({
       });
     },
     [
-      clearPendingPostTarget,
+      clearJumpHighlight,
       latestConversationView,
+      maybeActivateJumpHighlight,
       persistConversationView,
       postIdToIndex,
       pushCurrentViewToBackStack,
-      registerPendingPostTarget,
+      queueJumpHighlight,
       requestFocusedTimeline,
       resetDetachedFlow,
       scheduleScrollCommand,
+      shouldAnimateNavigation,
     ]
   );
 
   /** Returns the conversation to the live latest-post edge. */
   const scrollToLatest = useCallback(() => {
     clearJumpHistory();
+    clearJumpHighlight();
 
-    goToLatestEdge({
-      cancelPendingJumpRequest,
-      clearPendingPostTarget,
-      clearScrollCommand,
-      isAtLatestEdge,
-      markPendingBottomPersistence,
-      pendingLatestSessionRef,
-      scrollRef,
-      showLatestPosts,
-      showLiveConversation: () => {
-        setConversationIntent({ kind: "live" });
-      },
-    });
-  }, [
-    cancelPendingJumpRequest,
-    clearPendingPostTarget,
-    clearJumpHistory,
-    clearScrollCommand,
-    isAtLatestEdge,
-    markPendingBottomPersistence,
-    showLatestPosts,
-  ]);
+    showLatestEdge();
+  }, [clearJumpHighlight, clearJumpHistory, showLatestEdge]);
 
   /** Returns the conversation to the most recent transient pre-jump position. */
   const goBack = useCallback(() => {
@@ -383,25 +430,16 @@ export function useController({
     }
 
     if (view.kind === "bottom") {
-      goToLatestEdge({
-        cancelPendingJumpRequest,
-        clearPendingPostTarget,
-        clearScrollCommand,
-        isAtLatestEdge,
-        markPendingBottomPersistence,
-        pendingLatestSessionRef,
-        scrollRef,
-        showLatestPosts,
-        showLiveConversation: () => {
-          setConversationIntent({ kind: "live" });
-        },
-      });
+      clearJumpHighlight();
+      showLatestEdge();
       return;
     }
 
     resetDetachedFlow();
 
-    if (restoreConversationViewLocally(view)) {
+    if (
+      restoreConversationViewLocally(view, { smooth: shouldAnimateNavigation })
+    ) {
       return;
     }
 
@@ -420,17 +458,14 @@ export function useController({
       nextIntent: { kind: "restore", postId: view.postId, view },
     });
   }, [
-    cancelPendingJumpRequest,
-    clearPendingPostTarget,
-    clearScrollCommand,
-    isAtLatestEdge,
+    clearJumpHighlight,
     latestConversationView,
-    markPendingBottomPersistence,
     persistConversationView,
     requestFocusedTimeline,
     resetDetachedFlow,
     restoreConversationViewLocally,
-    showLatestPosts,
+    shouldAnimateNavigation,
+    showLatestEdge,
     takeBackView,
   ]);
 
@@ -442,12 +477,10 @@ export function useController({
   /** Persists the latest fallback snapshot when the conversation hides. */
   useLayoutEffect(
     () => () => {
-      const latestView = pendingPostTargetRef.current
-        ? null
-        : captureConversationView({
-            items: latestItemsRef.current,
-            scrollRef,
-          });
+      const latestView = captureConversationView({
+        items: latestItemsRef.current,
+        scrollRef,
+      });
 
       if (latestView) {
         latestConversationView.current = latestView;
@@ -458,16 +491,15 @@ export function useController({
 
       clearJumpHistory();
       cancelPendingJumpRequest();
-      clearPendingPostTarget();
+      clearJumpHighlight();
       pendingLatestSessionRef.current = false;
       resetScrollState();
     },
     [
       cancelPendingJumpRequest,
+      clearJumpHighlight,
       clearJumpHistory,
-      clearPendingPostTarget,
       latestConversationView,
-      pendingPostTargetRef,
       persistConversationView,
       resetScrollState,
     ]
@@ -481,7 +513,7 @@ export function useController({
     handleScroll,
     handleScrollEnd,
     handleVirtualAnchorReady,
-    hasPendingPostTarget,
+    highlightedPostId,
     initialAnchor,
     isAtBottom,
     isAtLatestEdge,

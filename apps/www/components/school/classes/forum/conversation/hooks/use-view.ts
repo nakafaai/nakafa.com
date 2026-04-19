@@ -21,7 +21,10 @@ interface UseViewResult {
   initialAnchor: VirtualConversationAnchor;
   latestConversationView: RefObject<ForumConversationView | null>;
   persistConversationView: (view?: ForumConversationView | null) => void;
-  restoreConversationViewLocally: (view: RestorableConversationView) => boolean;
+  restoreConversationViewLocally: (
+    view: RestorableConversationView,
+    options?: { smooth?: boolean }
+  ) => boolean;
 }
 
 /**
@@ -104,7 +107,7 @@ export function useView({
 
   /** Restores one saved semantic view immediately when its anchor is already loaded. */
   const restoreConversationViewLocally = useCallback(
-    (view: RestorableConversationView) => {
+    (view: RestorableConversationView, options?: { smooth?: boolean }) => {
       const anchor = createRestoreConversationAnchor({
         dateToIndex,
         headerIndex,
@@ -123,6 +126,7 @@ export function useView({
         scrollRef.current?.scrollToIndex(anchor.index, {
           align: anchor.align,
           offset: anchor.offset,
+          smooth: options?.smooth,
         });
       });
       return true;

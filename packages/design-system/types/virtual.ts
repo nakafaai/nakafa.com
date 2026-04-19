@@ -5,10 +5,11 @@ export interface VirtualConversationHandle {
   findItemIndex: (offset: number) => number;
   getDistanceFromBottom: () => number;
   getItemOffset: (index: number) => number;
+  getItemSize: (index: number) => number;
   getScrollOffset: () => number;
   getViewportSize: () => number;
   isAtBottom: () => boolean;
-  scrollToBottom: () => void;
+  scrollToBottom: (smooth?: boolean) => void;
   scrollToIndex: (index: number, options?: ScrollToIndexOpts) => void;
 }
 

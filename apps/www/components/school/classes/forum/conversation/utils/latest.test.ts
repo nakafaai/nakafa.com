@@ -2,10 +2,12 @@ import { describe, expect, it, vi } from "vitest";
 import { goToLatestEdge } from "@/components/school/classes/forum/conversation/utils/latest";
 
 /** Creates one minimal latest-edge dependency set for command tests. */
-function createOptions(overrides?: { isAtLatestEdge?: boolean }) {
+function createOptions(overrides?: {
+  isAtLatestEdge?: boolean;
+  smooth?: boolean;
+}) {
   return {
     cancelPendingJumpRequest: vi.fn(),
-    clearPendingPostTarget: vi.fn(),
     clearScrollCommand: vi.fn(),
     isAtLatestEdge: overrides?.isAtLatestEdge ?? false,
     markPendingBottomPersistence: vi.fn(),
@@ -17,6 +19,7 @@ function createOptions(overrides?: { isAtLatestEdge?: boolean }) {
     },
     showLatestPosts: vi.fn(),
     showLiveConversation: vi.fn(),
+    smooth: overrides?.smooth ?? true,
   };
 }
 
@@ -28,9 +31,8 @@ describe("conversation/utils/latest", () => {
 
     expect(options.markPendingBottomPersistence).toHaveBeenCalledTimes(1);
     expect(options.cancelPendingJumpRequest).toHaveBeenCalledTimes(1);
-    expect(options.clearPendingPostTarget).toHaveBeenCalledTimes(1);
     expect(options.pendingLatestSessionRef.current).toBe(false);
-    expect(options.scrollRef.current.scrollToBottom).toHaveBeenCalledTimes(1);
+    expect(options.scrollRef.current.scrollToBottom).toHaveBeenCalledWith(true);
     expect(options.clearScrollCommand).not.toHaveBeenCalled();
     expect(options.showLiveConversation).not.toHaveBeenCalled();
     expect(options.showLatestPosts).not.toHaveBeenCalled();
@@ -43,7 +45,6 @@ describe("conversation/utils/latest", () => {
 
     expect(options.markPendingBottomPersistence).toHaveBeenCalledTimes(1);
     expect(options.cancelPendingJumpRequest).toHaveBeenCalledTimes(1);
-    expect(options.clearPendingPostTarget).toHaveBeenCalledTimes(1);
     expect(options.pendingLatestSessionRef.current).toBe(true);
     expect(options.clearScrollCommand).toHaveBeenCalledTimes(1);
     expect(options.showLiveConversation).toHaveBeenCalledTimes(1);

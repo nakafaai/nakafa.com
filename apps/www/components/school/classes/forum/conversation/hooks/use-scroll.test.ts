@@ -5,7 +5,6 @@ import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { useScroll } from "@/components/school/classes/forum/conversation/hooks/use-scroll";
 import type { VirtualItem } from "@/components/school/classes/forum/conversation/types";
-import type { PendingPostTarget } from "@/components/school/classes/forum/conversation/utils/post-target";
 import type { ForumConversationView } from "@/lib/store/forum";
 
 type UseScrollProps = Parameters<typeof useScroll>[0];
@@ -14,6 +13,7 @@ type UseScrollResultValue = ReturnType<typeof useScroll>;
 interface MutableScrollState {
   atBottom: boolean;
   distanceFromBottom: number;
+  itemSize: number;
   offset: number;
   viewportSize: number;
 }
@@ -37,6 +37,7 @@ function createScrollHandle(overrides?: Partial<MutableScrollState>): {
   const state: MutableScrollState = {
     atBottom: overrides?.atBottom ?? false,
     distanceFromBottom: overrides?.distanceFromBottom ?? 1200,
+    itemSize: overrides?.itemSize ?? 80,
     offset: overrides?.offset ?? 0,
     viewportSize: overrides?.viewportSize ?? 800,
   };
@@ -46,6 +47,7 @@ function createScrollHandle(overrides?: Partial<MutableScrollState>): {
       findItemIndex: vi.fn(() => 0),
       getDistanceFromBottom: vi.fn(() => state.distanceFromBottom),
       getItemOffset: vi.fn(() => 0),
+      getItemSize: vi.fn(() => state.itemSize),
       getScrollOffset: vi.fn(() => state.offset),
       getViewportSize: vi.fn(() => state.viewportSize),
       isAtBottom: vi.fn(() => state.atBottom),
@@ -157,18 +159,16 @@ function createUseScrollProps(
     loadNewerPosts: overrides.loadNewerPosts ?? vi.fn(),
     loadOlderPosts: overrides.loadOlderPosts ?? vi.fn(),
     newestLoadedPostId: overrides.newestLoadedPostId ?? newestLoadedPostId,
+    onNavigationSettled: overrides.onNavigationSettled ?? vi.fn(),
     oldestLoadedPostId: overrides.oldestLoadedPostId ?? oldestLoadedPostId,
     pendingLatestSessionRef: overrides.pendingLatestSessionRef ?? {
       current: false,
     },
-    pendingPostTargetRef: overrides.pendingPostTargetRef ?? { current: null },
     persistConversationView: overrides.persistConversationView ?? vi.fn(),
     postIdToIndex: overrides.postIdToIndex ?? createPostIndex(items),
     pruneReachedBackHistory: overrides.pruneReachedBackHistory ?? vi.fn(),
     scheduleMarkRead: overrides.scheduleMarkRead ?? vi.fn(),
     scrollRef: overrides.scrollRef ?? { current: null },
-    settlePendingPostTarget:
-      overrides.settlePendingPostTarget ?? vi.fn(() => true),
     timelineSessionVersion: overrides.timelineSessionVersion ?? 0,
     unreadIndex: overrides.unreadIndex ?? null,
   };
@@ -228,7 +228,7 @@ describe("use-scroll", () => {
     vi.unstubAllGlobals();
   });
 
-  it("does not auto-chain older paging after one prepend settles near the top", () => {
+  it("continues older paging while the user stays parked near the top edge", () => {
     const initialItems = [createPostItem("post_1"), createPostItem("post_2")];
     const prependedItems = [createPostItem("post_0"), ...initialItems];
     const { handle, state } = createScrollHandle({ offset: 700 });
@@ -274,12 +274,155 @@ describe("use-scroll", () => {
     });
 
     expect(rendered.result().isPrepending).toBe(false);
+    expect(loadOlderPosts).toHaveBeenCalledTimes(2);
+
+    act(() => {
+      rendered.result().handleScrollEnd();
+    });
+
+    expect(loadOlderPosts).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps or clears older edge continuation based on follow-up scroll intent", () => {
+    const { handle, state } = createScrollHandle({ offset: 700 });
+    const loadOlderPosts = vi.fn();
+    const rendered = renderUseScroll(
+      createUseScrollProps({
+        loadOlderPosts,
+        scrollRef: { current: handle },
+      })
+    );
+
+    act(() => {
+      rendered.result().handleVirtualAnchorReady();
+    });
+
+    state.offset = 500;
+
+    act(() => {
+      rendered.result().handleScroll(500);
+    });
+
+    expect(loadOlderPosts).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      rendered.result().handleScroll(500);
+    });
+
+    expect(loadOlderPosts).toHaveBeenCalledTimes(1);
+
+    state.viewportSize = 0;
 
     act(() => {
       rendered.result().handleScrollEnd();
     });
 
     expect(loadOlderPosts).toHaveBeenCalledTimes(1);
+
+    state.viewportSize = 800;
+    state.offset = 520;
+
+    act(() => {
+      rendered.result().handleScroll(520);
+      rendered.result().handleScrollEnd();
+    });
+
+    expect(loadOlderPosts).toHaveBeenCalledTimes(1);
+  });
+
+  it("continues newer paging while the user stays parked near the bottom edge", () => {
+    const initialItems = [createPostItem("post_1"), createPostItem("post_2")];
+    const appendedItems = [...initialItems, createPostItem("post_3")];
+    const { handle, state } = createScrollHandle({
+      distanceFromBottom: 700,
+      offset: 100,
+    });
+    const loadNewerPosts = vi.fn();
+    const initialProps = createUseScrollProps({
+      hasMoreAfter: true,
+      items: initialItems,
+      loadNewerPosts,
+      newestLoadedPostId:
+        initialItems[1]?.type === "post" ? initialItems[1].post._id : null,
+      postIdToIndex: createPostIndex(initialItems),
+      scrollRef: { current: handle },
+    });
+    const rendered = renderUseScroll(initialProps);
+
+    act(() => {
+      rendered.result().handleVirtualAnchorReady();
+    });
+
+    state.distanceFromBottom = 100;
+    state.offset = 200;
+
+    act(() => {
+      rendered.result().handleScroll(200);
+    });
+
+    expect(loadNewerPosts).toHaveBeenCalledTimes(1);
+
+    rendered.render({
+      ...initialProps,
+      isLoadingNewer: true,
+    });
+
+    rendered.render({
+      ...initialProps,
+      isLoadingNewer: false,
+      items: appendedItems,
+      newestLoadedPostId:
+        appendedItems[2]?.type === "post" ? appendedItems[2].post._id : null,
+      postIdToIndex: createPostIndex(appendedItems),
+    });
+
+    expect(loadNewerPosts).toHaveBeenCalledTimes(2);
+
+    state.offset = 180;
+
+    act(() => {
+      rendered.result().handleScroll(180);
+      rendered.result().handleScrollEnd();
+    });
+
+    expect(loadNewerPosts).toHaveBeenCalledTimes(2);
+  });
+
+  it("clears armed newer continuation once the user scrolls away from the bottom edge", () => {
+    const { handle, state } = createScrollHandle({
+      distanceFromBottom: 100,
+      offset: 100,
+    });
+    const loadNewerPosts = vi.fn();
+    const rendered = renderUseScroll(
+      createUseScrollProps({
+        hasMoreAfter: true,
+        loadNewerPosts,
+        scrollRef: { current: handle },
+      })
+    );
+
+    act(() => {
+      rendered.result().handleVirtualAnchorReady();
+    });
+
+    state.offset = 200;
+
+    act(() => {
+      rendered.result().handleScroll(200);
+    });
+
+    expect(loadNewerPosts).toHaveBeenCalledTimes(1);
+
+    state.distanceFromBottom = 100;
+    state.offset = 180;
+
+    act(() => {
+      rendered.result().handleScroll(180);
+      rendered.result().handleScrollEnd();
+    });
+
+    expect(loadNewerPosts).toHaveBeenCalledTimes(1);
   });
 
   it("restarts one session cleanly and reuses the initial-view fallback", () => {
@@ -324,6 +467,8 @@ describe("use-scroll", () => {
         timelineSessionVersion: 1,
       })
     );
+
+    expect(rendered.result().isConversationRevealed).toBe(false);
 
     act(() => {
       rendered.result().handleScrollEnd();
@@ -387,6 +532,7 @@ describe("use-scroll", () => {
     expect(handle.scrollToIndex).toHaveBeenCalledWith(1, {
       align: "center",
       offset: undefined,
+      smooth: undefined,
     });
 
     act(() => {
@@ -400,9 +546,6 @@ describe("use-scroll", () => {
     const cancelPendingMarkRead = vi.fn();
     const loadNewerPosts = vi.fn();
     const loadOlderPosts = vi.fn();
-    const pendingPostTargetRef: { current: PendingPostTarget | null } = {
-      current: null,
-    };
     const scheduleMarkRead = vi.fn();
     const { handle, state } = createScrollHandle({
       distanceFromBottom: 800,
@@ -415,7 +558,6 @@ describe("use-scroll", () => {
         hasMoreBefore: false,
         loadNewerPosts,
         loadOlderPosts,
-        pendingPostTargetRef,
         scheduleMarkRead,
         scrollRef: { current: handle },
       })
@@ -438,23 +580,6 @@ describe("use-scroll", () => {
     });
 
     expect(loadOlderPosts).not.toHaveBeenCalled();
-
-    pendingPostTargetRef.current = {
-      align: "center",
-      attemptsRemaining: 1,
-      postId: "post_1" as Id<"schoolClassForumPosts">,
-      reason: "jump-session",
-    };
-
-    state.offset = 450;
-
-    act(() => {
-      rendered.result().handleScroll(450);
-    });
-
-    expect(loadOlderPosts).not.toHaveBeenCalled();
-
-    pendingPostTargetRef.current = null;
     state.distanceFromBottom = 40;
     state.offset = 750;
 
@@ -501,22 +626,25 @@ describe("use-scroll", () => {
     expect(cancelPendingMarkRead).toHaveBeenCalled();
   });
 
-  it("returns early when pending targets still need more settling", () => {
-    const persistConversationView = vi.fn();
-    const settlePendingPostTarget = vi.fn(() => false);
+  it("notifies the controller only after navigation settles", () => {
+    const onNavigationSettled = vi.fn();
     const rendered = renderUseScroll(
       createUseScrollProps({
-        persistConversationView,
-        settlePendingPostTarget,
+        onNavigationSettled,
       })
     );
 
     act(() => {
       rendered.result().handleVirtualAnchorReady();
+    });
+
+    expect(onNavigationSettled).toHaveBeenCalledTimes(1);
+
+    act(() => {
       rendered.result().handleScrollEnd();
     });
 
-    expect(persistConversationView).not.toHaveBeenCalled();
+    expect(onNavigationSettled).toHaveBeenCalledTimes(2);
   });
 
   it("flushes read state only for a fresh latest post near the live bottom", () => {

@@ -40,7 +40,7 @@ export const ForumPostConversation = memo(
       handleScroll,
       handleScrollEnd,
       handleVirtualAnchorReady,
-      hasPendingPostTarget,
+      highlightedPostId,
       initialAnchor,
       isAtBottom,
       isAtLatestEdge,
@@ -60,7 +60,7 @@ export const ForumPostConversation = memo(
       return <VirtualConversationPlaceholder />;
     }
 
-    const showJumpBack = canGoBack && !hasPendingPostTarget;
+    const showJumpBack = canGoBack;
     const showJumpLatest = showJumpBack && !(isAtLatestEdge && isAtBottom);
 
     return (
@@ -83,7 +83,7 @@ export const ForumPostConversation = memo(
               ) : null
             }
             followLatest={isAtLatestEdge}
-            hideScrollButton={canGoBack || hasPendingPostTarget}
+            hideScrollButton={canGoBack}
             initialAnchor={initialAnchor}
             key={timelineSessionVersion}
             onInitialAnchorSettled={handleVirtualAnchorReady}
@@ -119,6 +119,7 @@ export const ForumPostConversation = memo(
                 <ForumPostItem
                   currentUserId={currentUserId}
                   isFirstInGroup={item.isFirstInGroup}
+                  isJumpHighlighted={highlightedPostId === item.post._id}
                   isLastInGroup={item.isLastInGroup}
                   key={item.post._id}
                   post={item.post}

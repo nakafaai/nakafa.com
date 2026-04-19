@@ -5,7 +5,6 @@ type LatestScrollHandle = Pick<VirtualConversationHandle, "scrollToBottom">;
 
 interface GoToLatestEdgeOptions {
   cancelPendingJumpRequest: () => void;
-  clearPendingPostTarget: () => void;
   clearScrollCommand: () => void;
   isAtLatestEdge: boolean;
   markPendingBottomPersistence: () => void;
@@ -13,6 +12,7 @@ interface GoToLatestEdgeOptions {
   scrollRef: RefObject<LatestScrollHandle | null>;
   showLatestPosts: () => void;
   showLiveConversation: () => void;
+  smooth: boolean;
 }
 
 /**
@@ -21,7 +21,6 @@ interface GoToLatestEdgeOptions {
  */
 export function goToLatestEdge({
   cancelPendingJumpRequest,
-  clearPendingPostTarget,
   clearScrollCommand,
   isAtLatestEdge,
   markPendingBottomPersistence,
@@ -29,14 +28,14 @@ export function goToLatestEdge({
   scrollRef,
   showLatestPosts,
   showLiveConversation,
+  smooth,
 }: GoToLatestEdgeOptions) {
   markPendingBottomPersistence();
   cancelPendingJumpRequest();
-  clearPendingPostTarget();
 
   if (isAtLatestEdge) {
     pendingLatestSessionRef.current = false;
-    scrollRef.current?.scrollToBottom();
+    scrollRef.current?.scrollToBottom(smooth);
     return;
   }
 

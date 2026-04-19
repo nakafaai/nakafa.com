@@ -60,12 +60,14 @@ export const ForumPostItem = memo(
   ({
     post,
     isFirstInGroup,
+    isJumpHighlighted,
     isLastInGroup,
     showContinuationTime,
     currentUserId,
   }: {
     post: ForumPost;
     isFirstInGroup: boolean;
+    isJumpHighlighted: boolean;
     isLastInGroup: boolean;
     showContinuationTime: boolean;
     currentUserId: Id<"users">;
@@ -87,7 +89,8 @@ export const ForumPostItem = memo(
           isFirstInGroup === true && "mt-3",
           isLastInGroup === true && "mb-3",
           isReplyToMe === true && "border-primary bg-primary/10",
-          isReplyTo === true && "border-secondary bg-secondary/10"
+          isReplyTo === true && "border-secondary bg-secondary/10",
+          isJumpHighlighted === true && "border-secondary bg-secondary/10"
         )}
         id={post._id}
       >
