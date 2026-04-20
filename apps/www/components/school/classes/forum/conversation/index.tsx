@@ -55,7 +55,7 @@ function ConversationBody() {
 
   return (
     <div className="flex size-full flex-col overflow-hidden">
-      <div className="relative min-h-0 flex-1">
+      <div className="relative min-h-0 flex-1 overflow-hidden">
         <ForumConversationTranscript />
         <JumpBar showBack={showJumpBack} showLatest={showJumpLatest} />
       </div>

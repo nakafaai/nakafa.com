@@ -401,6 +401,25 @@ describe("conversation/transcript", () => {
     expect(virtualizerMock.scrollToOffset).toHaveBeenCalledWith(136);
   });
 
+  it("pins the scroll element to the transcript shell instead of sizing it from content height", () => {
+    const items = createItems(["post_1", "post_2"]);
+    virtualizerMock.measurements = createMeasurements(items, [0, 60, 160]);
+
+    const { container } = renderTranscript(
+      createValue({
+        items,
+      })
+    );
+
+    const transcript = container.querySelector(
+      '[data-testid="virtual-conversation"]'
+    );
+
+    expect(transcript?.getAttribute("class")).toContain("absolute");
+    expect(transcript?.getAttribute("class")).toContain("inset-0");
+    expect(transcript?.getAttribute("class")).toContain("overflow-y-auto");
+  });
+
   it("wraps measured rows in a flow-root container so post margins stay inside the virtual item", () => {
     const items = createItems(["post_1", "post_2"]);
     virtualizerMock.measurements = createMeasurements(items, [0, 60, 160]);

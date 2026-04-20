@@ -181,10 +181,15 @@ describe("conversation/index", () => {
     mocks.conversation = createConversationModelResult();
 
     const { container, root } = renderConversation({ forum: { _id: forumId } });
+    const transcript = container.querySelector(
+      '[data-testid="virtual-conversation"]'
+    );
+    const transcriptShell = transcript?.parentElement;
 
-    expect(
-      container.querySelector('[data-testid="virtual-conversation"]')
-    ).not.toBeNull();
+    expect(transcript).not.toBeNull();
+    expect(transcriptShell?.getAttribute("class")).toContain("relative");
+    expect(transcriptShell?.getAttribute("class")).toContain("flex-1");
+    expect(transcriptShell?.getAttribute("class")).toContain("overflow-hidden");
     expect(
       container.querySelector('[data-testid="forum-input"]')
     ).not.toBeNull();

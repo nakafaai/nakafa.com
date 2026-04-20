@@ -111,7 +111,7 @@ export function ForumConversationTranscript() {
 
   return (
     <div
-      className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+      className="absolute inset-0 overflow-y-auto overscroll-contain"
       data-testid="virtual-conversation"
       ref={scrollElementRef}
     >
