@@ -52,7 +52,6 @@ interface UseScrollResult {
   handleScroll: (offset: number) => void;
   initialAnchor: VirtualConversationAnchor | null;
   isAtBottom: boolean;
-  isConversationRevealed: boolean;
   isPostVisible: (postId: Id<"schoolClassForumPosts">) => boolean;
   markPendingBottomPersistence: () => void;
   resetPendingBottomPersistence: () => void;
@@ -64,7 +63,7 @@ interface UseScrollResult {
   ) => boolean;
 }
 
-/** Owns DOM-based forum transcript scrolling, anchoring, paging, and reveal timing. */
+/** Owns DOM-based forum transcript scrolling, anchoring, paging, and settle timing. */
 export function useScroll({
   cancelPendingMarkRead,
   conversationIntent,
@@ -132,11 +131,7 @@ export function useScroll({
   const lastRequestedOlderBoundaryRef =
     useRef<Id<"schoolClassForumPosts"> | null>(null);
   const [isAtBottom, setIsAtBottom] = useState(false);
-  const [revealedSessionVersion, setRevealedSessionVersion] = useState<
-    number | null
-  >(null);
   const previousLastPostId = usePrevious(lastPostId);
-  const isConversationRevealed = revealedSessionVersion !== null;
   const preferBottomInitialAnchor = pendingLatestSessionRef.current;
   const pendingInitialRestore = useMemo(() => {
     if (initialSessionVersionRef.current === timelineSessionVersion) {
@@ -443,7 +438,6 @@ export function useScroll({
 
     previousScrollOffsetRef.current = container.scrollTop;
     syncBottomState(container);
-    setRevealedSessionVersion(timelineSessionVersion);
 
     if (isNearReadStateBottom(container) && isAtLatestEdge) {
       scheduleMarkRead(lastPostId);
@@ -634,7 +628,6 @@ export function useScroll({
     pendingOlderAnchorRef.current = null;
     previousScrollOffsetRef.current = 0;
     pendingBottomPersistenceRef.current = false;
-    setRevealedSessionVersion(null);
   }, []);
 
   return {
@@ -645,7 +638,6 @@ export function useScroll({
     initialAnchor: pendingInitialRestore?.anchor ?? null,
     isPostVisible,
     isAtBottom,
-    isConversationRevealed,
     markPendingBottomPersistence,
     resetPendingBottomPersistence,
     resetScrollState,

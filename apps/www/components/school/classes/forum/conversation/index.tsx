@@ -5,7 +5,6 @@ import {
   VirtualConversation,
   VirtualConversationPlaceholder,
 } from "@repo/design-system/components/ui/virtual-conversation";
-import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
 import { ForumHeader } from "@/components/school/classes/forum/conversation/header";
@@ -43,7 +42,6 @@ export const ForumPostConversation = memo(
       initialAnchor,
       isAtBottom,
       isAtLatestEdge,
-      isConversationRevealed,
       isInitialLoading,
       items,
       containerRef,
@@ -64,12 +62,7 @@ export const ForumPostConversation = memo(
 
     return (
       <ForumScrollProvider value={forumScrollValue}>
-        <div
-          className={cn(
-            "relative flex size-full flex-col overflow-hidden",
-            !isConversationRevealed && "invisible"
-          )}
-        >
+        <div className="relative flex size-full flex-col overflow-hidden">
           <VirtualConversation
             containerRef={containerRef}
             estimateSize={(index) => {

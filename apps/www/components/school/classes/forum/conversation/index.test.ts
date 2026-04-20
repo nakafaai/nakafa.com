@@ -79,7 +79,6 @@ function createControllerResult(overrides?: {
   canGoBack?: boolean;
   highlightedPostId?: Id<"schoolClassForumPosts"> | null;
   isAtBottom?: boolean;
-  isConversationRevealed?: boolean;
   isInitialLoading?: boolean;
   items?: any[];
 }) {
@@ -98,7 +97,6 @@ function createControllerResult(overrides?: {
     initialAnchor: null,
     isAtBottom: overrides?.isAtBottom ?? false,
     isAtLatestEdge: true,
-    isConversationRevealed: overrides?.isConversationRevealed ?? false,
     isInitialLoading: overrides?.isInitialLoading ?? false,
     items: overrides?.items ?? [],
     scrollRef: { current: null },
@@ -166,14 +164,15 @@ describe("conversation/index", () => {
     container.remove();
   });
 
-  it("keeps the shell hidden until the controller reveals it", () => {
-    mocks.useController.mockReturnValue(
-      createControllerResult({ isConversationRevealed: false })
-    );
+  it("keeps the shell rendered before any anchor settle callback runs", () => {
+    mocks.useController.mockReturnValue(createControllerResult());
 
     const { container, root } = renderConversation({ forum: { _id: forumId } });
 
-    expect(container.firstElementChild?.className).toContain("invisible");
+    expect(container.firstElementChild?.className).not.toContain("invisible");
+    expect(
+      container.querySelector('[data-testid="virtual-conversation"]')
+    ).not.toBeNull();
 
     act(() => {
       root.unmount();
@@ -188,7 +187,6 @@ describe("conversation/index", () => {
       createControllerResult({
         canGoBack: true,
         highlightedPostId,
-        isConversationRevealed: true,
         items: [
           { forum: { _id: forumId }, type: "header" },
           { date: Date.UTC(2026, 3, 20, 0, 0, 0), type: "date" },

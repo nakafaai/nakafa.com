@@ -65,7 +65,6 @@ interface UseControllerResult {
   initialAnchor: VirtualConversationAnchor | null;
   isAtBottom: boolean;
   isAtLatestEdge: boolean;
-  isConversationRevealed: boolean;
   isInitialLoading: boolean;
   items: VirtualItem[];
   scrollRef: RefObject<VirtualConversationHandle | null>;
@@ -245,7 +244,6 @@ export function useController({
     initialAnchor,
     isPostVisible,
     isAtBottom,
-    isConversationRevealed,
     markPendingBottomPersistence,
     resetPendingBottomPersistence,
     resetScrollState,
@@ -576,7 +574,6 @@ export function useController({
     initialAnchor,
     isAtBottom,
     isAtLatestEdge,
-    isConversationRevealed,
     isInitialLoading,
     items,
     scrollRef,

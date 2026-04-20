@@ -329,7 +329,7 @@ describe("use-scroll", () => {
     vi.restoreAllMocks();
   });
 
-  it("waits for the initial bottom anchor to settle before revealing the transcript", () => {
+  it("persists the initial bottom anchor once it settles", () => {
     const persistConversationView = vi.fn();
     const rendered = renderUseScroll(
       createUseScrollProps({
@@ -342,13 +342,11 @@ describe("use-scroll", () => {
     );
 
     expect(rendered.result().initialAnchor).toEqual({ kind: "bottom" });
-    expect(rendered.result().isConversationRevealed).toBe(false);
 
     act(() => {
       rendered.result().handleInitialAnchorSettled();
     });
 
-    expect(rendered.result().isConversationRevealed).toBe(true);
     expect(persistConversationView).toHaveBeenCalledWith({ kind: "bottom" });
 
     act(() => {
@@ -641,7 +639,7 @@ describe("use-scroll", () => {
     vi.useRealTimers();
   });
 
-  it("keeps the transcript visible when the transcript session changes", () => {
+  it("restarts settled-scroll work cleanly when the transcript session changes", () => {
     vi.useFakeTimers();
     const persistConversationView = vi.fn();
     const initialProps = createUseScrollProps({ persistConversationView });
@@ -662,7 +660,7 @@ describe("use-scroll", () => {
       vi.advanceTimersByTime(100);
     });
 
-    expect(rendered.result().isConversationRevealed).toBe(true);
+    expect(persistConversationView).toHaveBeenCalledWith({ kind: "bottom" });
     vi.useRealTimers();
   });
 
@@ -1016,7 +1014,7 @@ describe("use-scroll", () => {
     vi.useRealTimers();
   });
 
-  it("reveals the transcript even when the initial target cannot be restored", () => {
+  it("skips the initial anchor when the target post is unavailable", () => {
     const rendered = renderUseScroll(
       createUseScrollProps({
         conversationIntent: {
@@ -1029,10 +1027,9 @@ describe("use-scroll", () => {
     );
 
     expect(rendered.result().initialAnchor).toBeNull();
-    expect(rendered.result().isConversationRevealed).toBe(true);
   });
 
-  it("reveals the transcript without persisting a snapshot when no fallback view exists", () => {
+  it("does not persist a snapshot when no fallback view exists", () => {
     const persistConversationView = vi.fn();
     const rendered = renderUseScroll(
       createUseScrollProps({
@@ -1054,7 +1051,6 @@ describe("use-scroll", () => {
       rendered.result().handleInitialAnchorSettled();
     });
 
-    expect(rendered.result().isConversationRevealed).toBe(true);
     expect(persistConversationView).not.toHaveBeenCalled();
   });
 
@@ -1076,7 +1072,6 @@ describe("use-scroll", () => {
       rendered.result().handleInitialAnchorSettled();
     });
 
-    expect(rendered.result().isConversationRevealed).toBe(false);
     expect(persistConversationView).not.toHaveBeenCalled();
   });
 
@@ -1216,6 +1211,6 @@ describe("use-scroll", () => {
       rendered.result().resetScrollState();
     });
 
-    expect(rendered.result().isConversationRevealed).toBe(false);
+    expect(rendered.result().scrollToBottom()).toBe(true);
   });
 });
