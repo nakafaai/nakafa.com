@@ -42,6 +42,7 @@ interface PendingInitialRestore {
 
 interface ScrollToPostOptions {
   align?: "center" | "start";
+  offset?: number;
   smooth?: boolean;
 }
 
@@ -167,6 +168,7 @@ export function useScroll({
         align: conversationIntent.kind === "jump" ? "center" : "start",
         index,
         kind: "index",
+        offset: view.offset,
       },
       view,
     } satisfies PendingInitialRestore;
@@ -237,6 +239,7 @@ export function useScroll({
       return (
         scrollRef.current?.scrollToIndex(index, {
           align: options?.align,
+          offset: options?.offset,
           smooth: options?.smooth,
         }) ?? false
       );
@@ -301,6 +304,7 @@ export function useScroll({
 
     return {
       kind: "post",
+      offset: anchor.offset,
       postId: anchor.postId,
     } satisfies ForumConversationView;
   }, [getVisiblePostAnchor]);

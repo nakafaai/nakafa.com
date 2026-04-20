@@ -5,12 +5,16 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
+import {
+  getAlignedScrollOffset,
+  getMeasuredVirtualItem,
+} from "@repo/design-system/lib/virtual-conversation";
 import type {
   VirtualConversationAnchor,
   VirtualConversationHandle,
   VirtualScrollToIndexOptions,
 } from "@repo/design-system/types/virtual";
-import { useVirtualizer, type VirtualItem } from "@tanstack/react-virtual";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   Children,
   type ComponentProps,
@@ -57,57 +61,6 @@ function useVirtualConversation() {
   }
 
   return context;
-}
-
-/** Returns one absolute measurement for the given item index, if known. */
-function getMeasuredVirtualItem(
-  measurements: VirtualItem[],
-  index: number
-): VirtualItem | null {
-  return measurements[index] ?? null;
-}
-
-/** Resolves one target scroll offset for the requested item alignment. */
-function getScrollOffsetForItem({
-  item,
-  offset,
-  scrollHeight,
-  viewportHeight,
-  align,
-}: {
-  item: VirtualItem;
-  offset: number;
-  scrollHeight: number;
-  viewportHeight: number;
-  align: NonNullable<VirtualScrollToIndexOptions["align"]>;
-}) {
-  const maxScrollTop = Math.max(0, scrollHeight - viewportHeight);
-  let scrollTop = item.start - offset;
-
-  if (align === "center") {
-    scrollTop = item.start - (viewportHeight - item.size) / 2 + offset;
-  }
-
-  if (align === "end") {
-    scrollTop = item.end - viewportHeight + offset;
-  }
-
-  if (align === "auto") {
-    const itemTop = item.start;
-    const itemBottom = item.end;
-    const currentTop = 0;
-    const currentBottom = viewportHeight;
-
-    if (itemTop >= currentTop && itemBottom <= currentBottom) {
-      scrollTop = item.start - offset;
-    } else if (itemTop < currentTop) {
-      scrollTop = item.start - offset;
-    } else {
-      scrollTop = item.end - viewportHeight + offset;
-    }
-  }
-
-  return Math.min(Math.max(0, scrollTop), maxScrollTop);
 }
 
 export type VirtualConversationProps = Omit<
@@ -190,6 +143,76 @@ export const VirtualConversation = memo(
       estimateSize: estimateSize ?? (() => DEFAULT_ESTIMATED_ITEM_SIZE),
       getItemKey: (index) => itemKeys[index] ?? index,
       getScrollElement: () => scrollElementRef.current,
+      onChange: (instance, sync) => {
+        syncBottomState();
+
+        const nextScrollState = {
+          isScrolling: sync,
+          offset: instance.scrollOffset ?? 0,
+        };
+        const previousScrollState = lastNotifiedScrollRef.current;
+
+        if (
+          previousScrollState?.isScrolling !== nextScrollState.isScrolling ||
+          previousScrollState.offset !== nextScrollState.offset
+        ) {
+          lastNotifiedScrollRef.current = nextScrollState;
+          onScroll?.(nextScrollState.offset);
+
+          if (!nextScrollState.isScrolling) {
+            onScrollEnd?.();
+          }
+        }
+
+        if (!hasInitialAnchorRef.current) {
+          return;
+        }
+
+        const pendingInitialAnchor = pendingInitialAnchorRef.current;
+
+        if (!pendingInitialAnchor) {
+          return;
+        }
+
+        if (pendingInitialAnchor.kind === "bottom") {
+          if (isAtConversationBottom(getDistanceFromBottom())) {
+            pendingInitialAnchorRef.current = null;
+            notifyInitialAnchorSettled();
+            return;
+          }
+
+          if (!sync) {
+            scrollToBottom(false);
+          }
+
+          return;
+        }
+
+        const targetOffset = resolveIndexScrollOffset(
+          pendingInitialAnchor.index,
+          pendingInitialAnchor.align,
+          pendingInitialAnchor.offset
+        );
+
+        if (targetOffset === null) {
+          return;
+        }
+
+        if (
+          Math.abs((instance.scrollOffset ?? 0) - targetOffset) <=
+          INDEX_ANCHOR_SETTLE_EPSILON
+        ) {
+          pendingInitialAnchorRef.current = null;
+          notifyInitialAnchorSettled();
+          return;
+        }
+
+        if (!sync) {
+          instance.scrollToOffset(targetOffset, {
+            behavior: "auto",
+          });
+        }
+      },
       overscan,
       useAnimationFrameWithResizeObserver: false,
       useScrollendEvent: false,
@@ -203,10 +226,7 @@ export const VirtualConversation = memo(
       item.start < (instance.scrollOffset ?? 0);
     const virtualItems = virtualizer.getVirtualItems();
     const paddingTop = virtualItems[0]?.start ?? 0;
-    const scrollOffset = virtualizer.scrollOffset ?? 0;
     const totalSize = virtualizer.getTotalSize();
-    const viewportHeight = virtualizer.scrollRect?.height ?? 0;
-    const geometryVersion = `${scrollOffset}:${totalSize}:${viewportHeight}`;
     /** Writes both the internal and forwarded scroll container refs. */
     const setScrollElementRef = useCallback(
       (node: HTMLDivElement | null) => {
@@ -253,16 +273,48 @@ export const VirtualConversation = memo(
       return atBottom;
     }, [followLatest, getDistanceFromBottom]);
 
+    /** Resolves one absolute scroll offset for an item index using TanStack's alignment helpers. */
+    const resolveIndexScrollOffset = useCallback(
+      (
+        index: number,
+        align: VirtualScrollToIndexOptions["align"],
+        offset = 0
+      ) => {
+        const container = scrollElementRef.current;
+
+        if (!container) {
+          return null;
+        }
+
+        const offsetInfo = virtualizer.getOffsetForIndex(
+          index,
+          align ?? "start"
+        );
+
+        if (!offsetInfo) {
+          return null;
+        }
+
+        const [virtualOffset, resolvedAlign] = offsetInfo;
+
+        return getAlignedScrollOffset({
+          align: resolvedAlign,
+          offset,
+          totalSize: virtualizer.getTotalSize(),
+          viewportHeight: container.clientHeight,
+          virtualOffset,
+        });
+      },
+      [virtualizer]
+    );
+
     /** Scrolls to one item index using measured TanStack offsets plus local offset. */
     const scrollToIndex = useCallback(
       (index: number, options?: VirtualScrollToIndexOptions) => {
-        const measurement = getMeasuredVirtualItem(
-          virtualizer.measurementsCache,
-          index
-        );
-        const container = scrollElementRef.current;
+        hasPendingBottomSettleRef.current = false;
+        isBottomPinnedRef.current = false;
 
-        if (!(measurement && container)) {
+        if ((options?.offset ?? 0) === 0) {
           virtualizer.scrollToIndex(index, {
             align: options?.align,
             behavior: options?.smooth ? "smooth" : "auto",
@@ -270,26 +322,33 @@ export const VirtualConversation = memo(
           return true;
         }
 
-        hasPendingBottomSettleRef.current = false;
-        isBottomPinnedRef.current = false;
-        virtualizer.scrollToOffset(
-          getScrollOffsetForItem({
-            align: options?.align ?? "start",
-            item: measurement,
-            offset: options?.offset ?? 0,
-            scrollHeight: virtualizer.getTotalSize(),
-            viewportHeight: container.clientHeight,
-          }),
-          { behavior: options?.smooth ? "smooth" : "auto" }
+        const targetOffset = resolveIndexScrollOffset(
+          index,
+          options?.align,
+          options?.offset
         );
+
+        if (targetOffset === null) {
+          virtualizer.scrollToIndex(index, {
+            align: options?.align,
+            behavior: options?.smooth ? "smooth" : "auto",
+          });
+          return true;
+        }
+
+        virtualizer.scrollToOffset(targetOffset, {
+          behavior: options?.smooth ? "smooth" : "auto",
+        });
         return true;
       },
-      [virtualizer]
+      [resolveIndexScrollOffset, virtualizer]
     );
 
     /** Scrolls to one absolute offset using TanStack's public scroll API. */
     const scrollToOffset = useCallback(
       (offset: number, smooth = false) => {
+        hasPendingBottomSettleRef.current = false;
+        isBottomPinnedRef.current = false;
         virtualizer.scrollToOffset(offset, {
           behavior: smooth ? "smooth" : "auto",
         });
@@ -315,57 +374,6 @@ export const VirtualConversation = memo(
       },
       [followLatest, items.length, virtualizer]
     );
-
-    /** Finalizes the first anchor once it has visibly landed. */
-    const maybeSettleInitialAnchor = useCallback(() => {
-      const pendingInitialAnchor = pendingInitialAnchorRef.current;
-
-      if (!(pendingInitialAnchor && scrollElementRef.current)) {
-        return true;
-      }
-
-      if (pendingInitialAnchor.kind === "bottom") {
-        if (!isAtConversationBottom(getDistanceFromBottom())) {
-          scrollToBottom(false);
-          return false;
-        }
-
-        pendingInitialAnchorRef.current = null;
-        return true;
-      }
-
-      const measurement = getMeasuredVirtualItem(
-        virtualizer.measurementsCache,
-        pendingInitialAnchor.index
-      );
-
-      if (!measurement) {
-        return false;
-      }
-
-      const expectedOffset = getScrollOffsetForItem({
-        align: pendingInitialAnchor.align ?? "start",
-        item: measurement,
-        offset: pendingInitialAnchor.offset ?? 0,
-        scrollHeight: virtualizer.getTotalSize(),
-        viewportHeight: scrollElementRef.current.clientHeight,
-      });
-
-      if (
-        Math.abs((virtualizer.scrollOffset ?? 0) - expectedOffset) <=
-        INDEX_ANCHOR_SETTLE_EPSILON
-      ) {
-        pendingInitialAnchorRef.current = null;
-        return true;
-      }
-
-      scrollToIndex(pendingInitialAnchor.index, {
-        align: pendingInitialAnchor.align,
-        offset: pendingInitialAnchor.offset,
-        smooth: false,
-      });
-      return false;
-    }, [getDistanceFromBottom, scrollToBottom, scrollToIndex, virtualizer]);
 
     /** Notifies consumers once the fresh transcript anchor is visibly ready. */
     const notifyInitialAnchorSettled = useCallback(() => {
@@ -421,23 +429,6 @@ export const VirtualConversation = memo(
       virtualizer.scrollRect?.height,
     ]);
 
-    /** Keeps the initial anchor honest while measured item sizes settle. */
-    useLayoutEffect(() => {
-      if (geometryVersion === "") {
-        return;
-      }
-
-      if (!hasInitialAnchorRef.current) {
-        return;
-      }
-
-      if (!maybeSettleInitialAnchor()) {
-        return;
-      }
-
-      notifyInitialAnchorSettled();
-    }, [geometryVersion, maybeSettleInitialAnchor, notifyInitialAnchorSettled]);
-
     /** Re-pins the latest edge when the viewport grows while followLatest is armed. */
     useLayoutEffect(() => {
       const containerHeight = virtualizer.scrollRect?.height ?? 0;
@@ -481,38 +472,6 @@ export const VirtualConversation = memo(
 
       scrollToBottom(false);
     }, [followLatest, items.length, scrollToBottom]);
-
-    /** Keeps the live-bottom state in sync with measured geometry. */
-    useLayoutEffect(() => {
-      if (geometryVersion === "") {
-        return;
-      }
-
-      syncBottomState();
-    }, [geometryVersion, syncBottomState]);
-
-    /** Emits scroll callbacks only when the virtualizer's scroll state actually changes. */
-    useLayoutEffect(() => {
-      const nextScrollState = {
-        isScrolling: virtualizer.isScrolling,
-        offset: scrollOffset,
-      };
-      const previousScrollState = lastNotifiedScrollRef.current;
-
-      if (
-        previousScrollState?.isScrolling === nextScrollState.isScrolling &&
-        previousScrollState.offset === nextScrollState.offset
-      ) {
-        return;
-      }
-
-      lastNotifiedScrollRef.current = nextScrollState;
-      onScroll?.(nextScrollState.offset);
-
-      if (!nextScrollState.isScrolling) {
-        onScrollEnd?.();
-      }
-    }, [onScroll, onScrollEnd, scrollOffset, virtualizer.isScrolling]);
 
     const contextValue = useMemo(
       () => ({

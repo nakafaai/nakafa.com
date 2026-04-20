@@ -10,6 +10,14 @@ import {
 const postAId = "post_a" as Id<"schoolClassForumPosts">;
 const postBId = "post_b" as Id<"schoolClassForumPosts">;
 
+function createPostView(postId: Id<"schoolClassForumPosts">, offset = 0) {
+  return {
+    kind: "post",
+    offset,
+    postId,
+  } as const;
+}
+
 describe("forum conversation view state", () => {
   it("falls back to live mode when no restorable snapshot exists", () => {
     expect(createForumConversationMode({ restoreView: null })).toEqual({
@@ -22,10 +30,7 @@ describe("forum conversation view state", () => {
   });
 
   it("uses restore mode only for saved post snapshots", () => {
-    const restoreView = {
-      kind: "post",
-      postId: postAId,
-    } as const;
+    const restoreView = createPostView(postAId, 24);
 
     expect(createForumConversationMode({ restoreView })).toEqual({
       kind: "restore",
@@ -41,30 +46,34 @@ describe("forum conversation view state", () => {
 
     expect(
       areConversationViewsEqual(
-        { kind: "post", postId: postAId },
-        { kind: "post", postId: postAId }
+        createPostView(postAId, 0),
+        createPostView(postAId, 0)
       )
     ).toBe(true);
 
     expect(
       areConversationViewsEqual(
-        { kind: "post", postId: postAId },
-        { kind: "post", postId: postBId }
+        createPostView(postAId, 0),
+        createPostView(postBId, 0)
       )
     ).toBe(false);
 
     expect(
       areConversationViewsEqual(
-        { kind: "bottom" },
-        { kind: "post", postId: postAId }
+        createPostView(postAId, 0),
+        createPostView(postAId, 12)
       )
+    ).toBe(false);
+
+    expect(
+      areConversationViewsEqual({ kind: "bottom" }, createPostView(postAId, 0))
     ).toBe(false);
   });
 
   it("chooses the first conversation view from mode, unread, and bottom intent", () => {
     expect(
       createInitialConversationView({
-        existingView: { kind: "post", postId: postAId },
+        existingView: createPostView(postAId, 18),
         mode: { kind: "live" },
         preferBottom: true,
         unreadPostId: postBId,
@@ -77,12 +86,12 @@ describe("forum conversation view state", () => {
         mode: {
           kind: "restore",
           postId: postAId,
-          view: { kind: "post", postId: postAId },
+          view: createPostView(postAId, 24),
         },
         preferBottom: false,
         unreadPostId: null,
       })
-    ).toEqual({ kind: "post", postId: postAId });
+    ).toEqual(createPostView(postAId, 24));
 
     expect(
       createInitialConversationView({
@@ -91,7 +100,7 @@ describe("forum conversation view state", () => {
         preferBottom: false,
         unreadPostId: null,
       })
-    ).toEqual({ kind: "post", postId: postBId });
+    ).toEqual(createPostView(postBId, 0));
 
     expect(
       createInitialConversationView({
@@ -109,7 +118,7 @@ describe("forum conversation view state", () => {
         preferBottom: false,
         unreadPostId: postAId,
       })
-    ).toEqual({ kind: "post", postId: postAId });
+    ).toEqual(createPostView(postAId, 0));
   });
 
   it("compares viewport order for back-history expiry", () => {
@@ -122,29 +131,29 @@ describe("forum conversation view state", () => {
       isConversationViewAtOrAfter({
         currentView: { kind: "bottom" },
         postIdToIndex,
-        targetView: { kind: "post", postId: postAId },
+        targetView: createPostView(postAId, 0),
       })
     ).toBe(true);
 
     expect(
       isConversationViewAtOrAfter({
-        currentView: { kind: "post", postId: postBId },
+        currentView: createPostView(postBId, 0),
         postIdToIndex,
-        targetView: { kind: "post", postId: postAId },
+        targetView: createPostView(postAId, 0),
       })
     ).toBe(true);
 
     expect(
       isConversationViewAtOrAfter({
-        currentView: { kind: "post", postId: postAId },
+        currentView: createPostView(postAId, 12),
         postIdToIndex,
-        targetView: { kind: "post", postId: postAId },
+        targetView: createPostView(postAId, 0),
       })
     ).toBe(true);
 
     expect(
       isConversationViewAtOrAfter({
-        currentView: { kind: "post", postId: postAId },
+        currentView: createPostView(postAId, 0),
         postIdToIndex,
         targetView: { kind: "bottom" },
       })
@@ -152,9 +161,17 @@ describe("forum conversation view state", () => {
 
     expect(
       isConversationViewAtOrAfter({
-        currentView: { kind: "post", postId: postAId },
+        currentView: createPostView(postAId, 0),
         postIdToIndex: new Map(),
-        targetView: { kind: "post", postId: postAId },
+        targetView: createPostView(postAId, 0),
+      })
+    ).toBe(false);
+
+    expect(
+      isConversationViewAtOrAfter({
+        currentView: createPostView(postAId, 0),
+        postIdToIndex,
+        targetView: createPostView(postAId, 12),
       })
     ).toBe(false);
   });

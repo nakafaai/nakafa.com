@@ -10,6 +10,17 @@ const forumAId = "forum_a" as Id<"schoolClassForums">;
 const forumBId = "forum_b" as Id<"schoolClassForums">;
 const postId = "post_1" as Id<"schoolClassForumPosts">;
 
+function createPostView(
+  currentPostId: Id<"schoolClassForumPosts">,
+  offset = 0
+) {
+  return {
+    kind: "post",
+    offset,
+    postId: currentPostId,
+  } satisfies ForumConversationView;
+}
+
 describe("forum store", () => {
   beforeEach(() => {
     sessionStorage.clear();
@@ -30,25 +41,23 @@ describe("forum store", () => {
 
   it("saves semantic conversation snapshots by value", () => {
     const store = createForumStore(classId);
-    const firstView = {
-      kind: "post",
-      postId,
-    } satisfies ForumConversationView;
+    const firstView = createPostView(postId, 0);
 
     store.getState().saveConversationView(forumAId, firstView);
     store.getState().saveConversationView(forumAId, { ...firstView });
-    store.getState().saveConversationView(forumAId, {
-      kind: "post",
-      postId,
-    });
+    store.getState().saveConversationView(forumAId, createPostView(postId, 0));
+    store.getState().saveConversationView(forumAId, createPostView(postId, 24));
 
-    store.getState().saveConversationView(forumAId, {
-      kind: "post",
-      postId: "post_2" as Id<"schoolClassForumPosts">,
-    });
+    store
+      .getState()
+      .saveConversationView(
+        forumAId,
+        createPostView("post_2" as Id<"schoolClassForumPosts">, 12)
+      );
 
     expect(store.getState().savedConversationViews[forumAId]).toEqual({
       kind: "post",
+      offset: 12,
       postId: "post_2",
     });
   });
@@ -105,6 +114,7 @@ describe("forum store", () => {
     expect(store.getState().savedConversationViews).toEqual({
       [forumAId]: {
         kind: "post",
+        offset: 18,
         postId,
       },
       [forumBId]: {
@@ -127,6 +137,7 @@ describe("forum store", () => {
             },
             [forumBId]: {
               kind: "post",
+              offset: 0,
               postId,
             },
           },
@@ -140,6 +151,7 @@ describe("forum store", () => {
     expect(migratedStore.getState().savedConversationViews).toEqual({
       [forumBId]: {
         kind: "post",
+        offset: 0,
         postId,
       },
     });
@@ -187,6 +199,24 @@ describe("forum store", () => {
         kind: "bottom",
       },
     });
+
+    sessionStorage.setItem(
+      `forum-ui:${classId}`,
+      JSON.stringify({
+        state: {
+          savedConversationViews: {
+            [forumBId]: createPostView(postId, 32),
+          },
+        },
+        version: 4,
+      })
+    );
+
+    const latestStore = createForumStore(classId);
+
+    expect(latestStore.getState().savedConversationViews).toEqual({
+      [forumBId]: createPostView(postId, 32),
+    });
   });
 
   it("migrates legacy post snapshots without offsets and tolerates empty persisted maps", () => {
@@ -214,10 +244,12 @@ describe("forum store", () => {
     expect(migratedStore.getState().savedConversationViews).toEqual({
       [forumAId]: {
         kind: "post",
+        offset: 0,
         postId,
       },
       [forumBId]: {
         kind: "post",
+        offset: 0,
         postId,
       },
     });
@@ -233,5 +265,19 @@ describe("forum store", () => {
     const emptyStore = createForumStore(classId);
 
     expect(emptyStore.getState().savedConversationViews).toEqual({});
+  });
+
+  it("ignores invalid persisted payloads during migration", () => {
+    sessionStorage.setItem(
+      `forum-ui:${classId}`,
+      JSON.stringify({
+        state: null,
+        version: 1,
+      })
+    );
+
+    const store = createForumStore(classId);
+
+    expect(store.getState().savedConversationViews).toEqual({});
   });
 });

@@ -32,6 +32,7 @@ export type ForumConversationView =
     }
   | {
       kind: "post";
+      offset: number;
       postId: Id<"schoolClassForumPosts">;
     };
 
@@ -58,6 +59,7 @@ function migrateConversationView(
   if (value.kind === "post" && typeof value.postId === "string") {
     return {
       kind: "post",
+      offset: typeof value.offset === "number" ? value.offset : 0,
       postId: value.postId as Id<"schoolClassForumPosts">,
     };
   }
@@ -70,6 +72,7 @@ function migrateConversationView(
   ) {
     return {
       kind: "post",
+      offset: typeof value.offset === "number" ? value.offset : 0,
       postId: value.postId as Id<"schoolClassForumPosts">,
     };
   }
@@ -141,7 +144,7 @@ export const createForumStore = (classId: string) =>
       {
         migrate: (persistedState, version) => {
           if (
-            version >= 3 ||
+            version >= 4 ||
             !persistedState ||
             typeof persistedState !== "object"
           ) {
@@ -174,7 +177,7 @@ export const createForumStore = (classId: string) =>
           savedConversationViews: state.savedConversationViews,
         }),
         storage: createJSONStorage(() => sessionStorage),
-        version: 3,
+        version: 4,
       }
     )
   );

@@ -432,6 +432,7 @@ export function useController({
     (postId: Id<"schoolClassForumPosts">) => {
       const nextView = {
         kind: "post",
+        offset: 0,
         postId,
       } satisfies ForumConversationView;
 

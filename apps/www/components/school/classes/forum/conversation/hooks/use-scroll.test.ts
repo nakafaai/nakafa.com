@@ -12,6 +12,14 @@ const forumId = "forum_1" as Id<"schoolClassForums">;
 type UseScrollProps = Parameters<typeof useScroll>[0];
 type UseScrollResultValue = ReturnType<typeof useScroll>;
 
+function createPostView(postId: Id<"schoolClassForumPosts">, offset = 0) {
+  return {
+    kind: "post",
+    offset,
+    postId,
+  } as const;
+}
+
 function createPostItem(id: string): VirtualItem {
   return {
     isFirstInGroup: true,
@@ -282,6 +290,7 @@ function renderUseScroll(
                 currentResult.initialAnchor.align === "center"
                   ? "center"
                   : "start",
+              offset: currentResult.initialAnchor.offset,
               smooth: false,
             });
           }
@@ -362,16 +371,10 @@ describe("use-scroll", () => {
         conversationIntent: {
           kind: "restore",
           postId: "post_2" as Id<"schoolClassForumPosts">,
-          view: {
-            kind: "post",
-            postId: "post_2" as Id<"schoolClassForumPosts">,
-          },
+          view: createPostView("post_2" as Id<"schoolClassForumPosts">, 24),
         },
         latestConversationView: {
-          current: {
-            kind: "post",
-            postId: "post_2" as Id<"schoolClassForumPosts">,
-          },
+          current: createPostView("post_2" as Id<"schoolClassForumPosts">, 24),
         },
       }),
       { settleInitialAnchor: false }
@@ -381,6 +384,7 @@ describe("use-scroll", () => {
       align: "start",
       index: 1,
       kind: "index",
+      offset: 24,
     });
   });
 
@@ -399,6 +403,7 @@ describe("use-scroll", () => {
       align: "center",
       index: 1,
       kind: "index",
+      offset: 0,
     });
   });
 
@@ -428,8 +433,7 @@ describe("use-scroll", () => {
     );
 
     expect(rendered.result().captureCurrentConversationView()).toEqual({
-      kind: "post",
-      postId: "post_1",
+      ...createPostView("post_1" as Id<"schoolClassForumPosts">, 20),
     });
   });
 
@@ -441,8 +445,7 @@ describe("use-scroll", () => {
     );
 
     expect(rendered.result().captureCurrentConversationView()).toEqual({
-      kind: "post",
-      postId: "post_1",
+      ...createPostView("post_1" as Id<"schoolClassForumPosts">, 20),
     });
   });
 
@@ -490,8 +493,7 @@ describe("use-scroll", () => {
     );
 
     expect(rendered.result().captureCurrentConversationView()).toEqual({
-      kind: "post",
-      postId: "post_1",
+      ...createPostView("post_1" as Id<"schoolClassForumPosts">, 20),
     });
   });
 
