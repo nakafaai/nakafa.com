@@ -1,65 +1,83 @@
 "use client";
 
 import type { RefObject } from "react";
-import { useCallback, useRef } from "react";
+import { useCallback, useEffectEvent, useRef } from "react";
+import type { VirtualizerHandle } from "virtua";
+import { getConversationBottomDistance } from "@/components/school/classes/forum/conversation/utils/transcript";
 
-const TRANSCRIPT_BOTTOM_EPSILON = 2;
+type ScrollBehavior = "auto" | "smooth";
 
 interface UseTranscriptBottomResult {
-  isAtTranscriptBottom: () => boolean;
-  isBottomPinnedRef: RefObject<boolean>;
-  pendingBottomPersistenceRef: RefObject<boolean>;
-  pendingBottomPinRef: RefObject<boolean>;
-  resetBottom: () => void;
-  syncBottom: () => boolean;
+  armBottomPin: () => void;
+  isBottomPinArmed: () => boolean;
+  resetBottomPin: () => void;
+  scrollToBottom: (behavior: ScrollBehavior) => void;
+  syncBottomState: () => boolean;
 }
 
-/** Owns explicit bottom pinning state without coupling it to DOM or virtualizer refs. */
+/** Owns explicit bottom pinning without coupling it to transcript history or view restore. */
 export function useTranscriptBottom({
-  getDistanceFromBottom,
-  handleBottomChange,
+  getMetrics,
+  handleBottomStateChange,
+  handleRef,
+  scrollElementRef,
 }: {
-  getDistanceFromBottom: () => number;
-  handleBottomChange: (nextIsAtBottom: boolean) => void;
+  getMetrics: () => {
+    scrollHeight: number;
+    scrollOffset: number;
+    viewportHeight: number;
+  };
+  handleBottomStateChange: (nextIsAtBottom: boolean) => void;
+  handleRef: RefObject<VirtualizerHandle | null>;
+  scrollElementRef: RefObject<HTMLDivElement | null>;
 }): UseTranscriptBottomResult {
-  const pendingBottomPersistenceRef = useRef(false);
   const pendingBottomPinRef = useRef(false);
-  const isBottomPinnedRef = useRef(false);
 
-  const isAtTranscriptBottom = useCallback(
-    () => getDistanceFromBottom() <= TRANSCRIPT_BOTTOM_EPSILON,
-    [getDistanceFromBottom]
-  );
-
-  const syncBottom = useCallback(() => {
-    const atBottom = isAtTranscriptBottom();
-
-    if (atBottom) {
-      if (pendingBottomPinRef.current) {
-        pendingBottomPinRef.current = false;
-        isBottomPinnedRef.current = true;
-      }
-    } else {
-      pendingBottomPinRef.current = false;
-      isBottomPinnedRef.current = false;
-    }
-
-    handleBottomChange(atBottom);
-    return atBottom;
-  }, [handleBottomChange, isAtTranscriptBottom]);
-
-  const resetBottom = useCallback(() => {
-    pendingBottomPersistenceRef.current = false;
-    pendingBottomPinRef.current = false;
-    isBottomPinnedRef.current = false;
+  /** Arms one explicit bottom-pin request for the next live append or latest jump. */
+  const armBottomPin = useCallback(() => {
+    pendingBottomPinRef.current = true;
   }, []);
 
+  /** Clears any pending bottom-pin request. */
+  const resetBottomPin = useCallback(() => {
+    pendingBottomPinRef.current = false;
+  }, []);
+
+  /** Returns whether the transcript still owes one explicit bottom pin. */
+  const isBottomPinArmed = useCallback(() => pendingBottomPinRef.current, []);
+
+  /** Scrolls the transcript shell to the real DOM bottom or the Virtua fallback size. */
+  const scrollToBottom = useEffectEvent((behavior: ScrollBehavior) => {
+    const scrollElement = scrollElementRef.current;
+
+    if (scrollElement) {
+      scrollElement.scrollTo({
+        behavior,
+        top: scrollElement.scrollHeight,
+      });
+      return;
+    }
+
+    handleRef.current?.scrollTo(handleRef.current.scrollSize);
+  });
+
+  /** Synchronizes the latest bottom state into selector context and clears stale bottom pins. */
+  const syncBottomState = useEffectEvent(() => {
+    const isAtBottom = getConversationBottomDistance(getMetrics()) <= 1;
+
+    if (isAtBottom) {
+      resetBottomPin();
+    }
+
+    handleBottomStateChange(isAtBottom);
+    return isAtBottom;
+  });
+
   return {
-    isAtTranscriptBottom,
-    isBottomPinnedRef,
-    pendingBottomPersistenceRef,
-    pendingBottomPinRef,
-    resetBottom,
-    syncBottom,
+    armBottomPin,
+    isBottomPinArmed,
+    resetBottomPin,
+    scrollToBottom,
+    syncBottomState,
   };
 }

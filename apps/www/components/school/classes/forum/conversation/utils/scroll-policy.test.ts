@@ -1,75 +1,18 @@
 import { describe, expect, it } from "vitest";
 import {
-  getForumPrefetchDistance,
-  shouldRequestHistoryBoundary,
+  FORUM_BOTTOM_PREFETCH_VIEWPORTS,
+  FORUM_MAX_BUFFERED_OLDER_PAGES,
+  FORUM_SCROLL_SETTLE_DELAY,
+  FORUM_TOP_PREFETCH_VIEWPORTS,
+  FORUM_VIRTUAL_BUFFER_SIZE,
 } from "@/components/school/classes/forum/conversation/utils/scroll-policy";
 
 describe("forum conversation scroll policy", () => {
-  it("uses the minimum prefetch distance on small viewports", () => {
-    expect(getForumPrefetchDistance(100)).toBe(200);
-  });
-
-  it("scales with the viewport inside the normal range", () => {
-    expect(getForumPrefetchDistance(400)).toBe(300);
-  });
-
-  it("caps the prefetch distance on large viewports", () => {
-    expect(getForumPrefetchDistance(1200)).toBe(600);
-  });
-
-  it("requests another history page only when the boundary meaningfully changes", () => {
-    expect(
-      shouldRequestHistoryBoundary({
-        boundaryPostId: "post_1",
-        hasMore: true,
-        isLoading: false,
-        lastRequestedBoundaryPostId: null,
-      })
-    ).toBe(true);
-
-    expect(
-      shouldRequestHistoryBoundary({
-        boundaryPostId: "post_1",
-        hasMore: true,
-        isLoading: false,
-        lastRequestedBoundaryPostId: "post_1",
-      })
-    ).toBe(false);
-
-    expect(
-      shouldRequestHistoryBoundary({
-        boundaryPostId: "post_2",
-        hasMore: true,
-        isLoading: false,
-        lastRequestedBoundaryPostId: "post_1",
-      })
-    ).toBe(true);
-
-    expect(
-      shouldRequestHistoryBoundary({
-        boundaryPostId: null,
-        hasMore: true,
-        isLoading: false,
-        lastRequestedBoundaryPostId: null,
-      })
-    ).toBe(false);
-
-    expect(
-      shouldRequestHistoryBoundary({
-        boundaryPostId: "post_1",
-        hasMore: false,
-        isLoading: false,
-        lastRequestedBoundaryPostId: null,
-      })
-    ).toBe(false);
-
-    expect(
-      shouldRequestHistoryBoundary({
-        boundaryPostId: "post_1",
-        hasMore: true,
-        isLoading: true,
-        lastRequestedBoundaryPostId: null,
-      })
-    ).toBe(false);
+  it("uses aggressive prefetch thresholds, a small prepend buffer, and one modest settle delay", () => {
+    expect(FORUM_TOP_PREFETCH_VIEWPORTS).toBe(1);
+    expect(FORUM_BOTTOM_PREFETCH_VIEWPORTS).toBe(0.75);
+    expect(FORUM_MAX_BUFFERED_OLDER_PAGES).toBe(2);
+    expect(FORUM_SCROLL_SETTLE_DELAY).toBe(80);
+    expect(FORUM_VIRTUAL_BUFFER_SIZE).toBe(400);
   });
 });

@@ -11,7 +11,7 @@ import {
   createForumConversationMode,
   type ForumConversationMode,
 } from "@/components/school/classes/forum/conversation/utils/view";
-import { useForum, useForumStoreApi } from "@/lib/context/use-forum";
+import { useForum } from "@/lib/context/use-forum";
 
 /** Owns the high-level forum conversation model without owning DOM or virtualizer state. */
 export function useConversationModel({
@@ -22,10 +22,10 @@ export function useConversationModel({
   forumId: Id<"schoolClassForums">;
 }) {
   const prefersReducedMotion = useReducedMotion();
-  const forumStore = useForumStoreApi();
   const saveConversationView = useForum((state) => state.saveConversationView);
-  const savedConversationView =
-    forumStore.getState().savedConversationViews[forumId] ?? null;
+  const savedConversationView = useForum(
+    (state) => state.savedConversationViews[forumId] ?? null
+  );
   const [mode, setMode] = useState<ForumConversationMode>(() =>
     createForumConversationMode({
       restoreView: savedConversationView,
@@ -36,8 +36,11 @@ export function useConversationModel({
     null
   );
   const {
+    canPrefetchOlderPosts,
+    hasBufferedOlderPosts,
     hasMoreAfter,
     hasMoreBefore,
+    hasPendingLatestPosts,
     isAtLatestEdge,
     isInitialLoading,
     isLoadingNewer,
@@ -47,6 +50,7 @@ export function useConversationModel({
     posts,
     replaceWithFocusedTimeline,
     showLatestPosts,
+    transcriptVariant,
     timelineSessionVersion,
   } = useConversationTimeline({
     forumId,
@@ -98,11 +102,13 @@ export function useConversationModel({
     setMode,
     shouldAnimateNavigation: !prefersReducedMotion,
     showLatestPosts,
+    transcriptVariant,
   });
   const lastPostId = posts.at(-1)?._id;
 
   return {
     acknowledgeUnreadCue,
+    canPrefetchOlderPosts,
     canGoBack,
     cancelPendingMarkRead,
     command,
@@ -112,8 +118,10 @@ export function useConversationModel({
     handleCommandResult,
     handleHighlightVisiblePost,
     handleSettledView,
+    hasBufferedOlderPosts,
     hasMoreAfter,
     hasMoreBefore,
+    hasPendingLatestPosts,
     highlightedPostId,
     isAtBottom,
     isAtLatestEdge,
@@ -131,6 +139,7 @@ export function useConversationModel({
     postIdToIndex,
     scheduleMarkRead,
     scrollToLatest,
+    transcriptVariant,
     timelineSessionVersion,
     unreadPostId: unreadCue?.postId ?? null,
   };

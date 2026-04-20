@@ -12,6 +12,12 @@ export interface ConversationTimeline {
   posts: ForumPost[];
 }
 
+export interface OlderPrefetchPage {
+  hasMoreBefore: boolean;
+  oldestPostId: Id<"schoolClassForumPosts"> | null;
+  posts: ForumPost[];
+}
+
 /** Creates the reactive live timeline from the latest paginated query window. */
 export function createLiveTimeline(
   posts: ForumPost[],
@@ -94,27 +100,15 @@ export function appendUniquePosts(current: ForumPost[], incoming: ForumPost[]) {
   };
 }
 
-/** Keeps a focused timeline fresh when live posts update underneath it. */
-export function syncFocusedTimelineWithLivePosts({
+/** Refreshes already loaded focused posts without changing the frozen history boundaries. */
+export function refreshFocusedTimeline({
   current,
-  liveHasMoreBefore,
   livePosts,
 }: {
   current: ConversationTimeline;
-  liveHasMoreBefore: boolean;
   livePosts: ForumPost[];
 }) {
-  if (current.posts.length === 0) {
-    if (!current.isAtLatestEdge) {
-      return current;
-    }
-
-    return createLiveTimeline(livePosts, liveHasMoreBefore);
-  }
-
-  const nextPosts = current.isAtLatestEdge
-    ? appendUniquePosts(current.posts, livePosts)
-    : replaceMatchingPosts(current.posts, livePosts);
+  const nextPosts = replaceMatchingPosts(current.posts, livePosts);
 
   if (!nextPosts.changed) {
     return current;
@@ -122,10 +116,131 @@ export function syncFocusedTimelineWithLivePosts({
 
   return {
     ...current,
-    hasMoreAfter: current.isAtLatestEdge ? false : current.hasMoreAfter,
-    isJumpMode: current.isAtLatestEdge ? false : current.isJumpMode,
-    newestPostId: nextPosts.posts.at(-1)?._id ?? null,
-    oldestPostId: nextPosts.posts[0]?._id ?? null,
     posts: nextPosts.posts,
   };
+}
+
+/** Keeps one live rendered transcript aligned to newer live posts without auto-prepending fetched history. */
+export function syncLiveRenderedPosts({
+  current,
+  incoming,
+}: {
+  current: ForumPost[];
+  incoming: ForumPost[];
+}) {
+  if (current.length === 0) {
+    return {
+      changed: incoming.length > 0,
+      posts: incoming,
+    };
+  }
+
+  if (incoming.length < current.length) {
+    return {
+      changed: true,
+      posts: incoming,
+    };
+  }
+
+  const currentOldestPostId = current[0]?._id;
+  const currentNewestPostId = current.at(-1)?._id;
+  const oldestIndex = incoming.findIndex(
+    (post) => post._id === currentOldestPostId
+  );
+  const newestIndex = incoming.findIndex(
+    (post) => post._id === currentNewestPostId
+  );
+
+  if (oldestIndex === -1 || newestIndex === -1 || oldestIndex > newestIndex) {
+    return {
+      changed: true,
+      posts: incoming,
+    };
+  }
+
+  const replacedPosts = replaceMatchingPosts(current, incoming);
+  const appendedPosts = incoming.slice(newestIndex + 1);
+  const nextPosts = appendUniquePosts(replacedPosts.posts, appendedPosts);
+
+  if (
+    !(replacedPosts.changed || appendedPosts.length > 0 || nextPosts.changed)
+  ) {
+    return {
+      changed: false,
+      posts: current,
+    };
+  }
+
+  return {
+    changed: true,
+    posts: nextPosts.posts,
+  };
+}
+
+/** Derives buffered older pages that have been fetched but should not be prepended yet. */
+export function createOlderPrefetchPages({
+  fetchedPosts,
+  hasMoreBefore,
+  maxPages,
+  pageSize,
+  renderedPosts,
+}: {
+  fetchedPosts: ForumPost[];
+  hasMoreBefore: boolean;
+  maxPages: number;
+  pageSize: number;
+  renderedPosts: ForumPost[];
+}) {
+  if (fetchedPosts.length === 0 || renderedPosts.length === 0) {
+    return [] satisfies OlderPrefetchPage[];
+  }
+
+  const renderedOldestPostId = renderedPosts[0]?._id;
+  const oldestRenderedIndex = fetchedPosts.findIndex(
+    (post) => post._id === renderedOldestPostId
+  );
+
+  if (oldestRenderedIndex <= 0) {
+    return [] satisfies OlderPrefetchPage[];
+  }
+
+  const bufferedOlderPosts = fetchedPosts.slice(0, oldestRenderedIndex);
+  const pages: OlderPrefetchPage[] = [];
+
+  for (
+    let startIndex = 0;
+    startIndex < bufferedOlderPosts.length;
+    startIndex += pageSize
+  ) {
+    const posts = bufferedOlderPosts.slice(startIndex, startIndex + pageSize);
+
+    if (posts.length === 0) {
+      continue;
+    }
+
+    pages.push({
+      hasMoreBefore,
+      oldestPostId: posts[0]?._id ?? null,
+      posts,
+    });
+  }
+
+  return [...pages].reverse().slice(0, maxPages);
+}
+
+/** Returns the next older boundary id that should be prefetched into the local queue. */
+export function getOlderPrefetchBoundaryPostId({
+  bufferedPages,
+  renderedPosts,
+}: {
+  bufferedPages: OlderPrefetchPage[];
+  renderedPosts: ForumPost[];
+}) {
+  const oldestBufferedPage = bufferedPages.at(-1);
+
+  if (oldestBufferedPage?.oldestPostId) {
+    return oldestBufferedPage.oldestPostId;
+  }
+
+  return renderedPosts[0]?._id ?? null;
 }

@@ -1,46 +1,69 @@
 "use client";
 
+import { useDebouncedCallback } from "@mantine/hooks";
 import type { RefObject } from "react";
-import { useCallback, useRef } from "react";
-import { areConversationViewsEqual } from "@/components/school/classes/forum/conversation/utils/view";
+import { useEffectEvent } from "react";
+import { FORUM_SCROLL_SETTLE_DELAY } from "@/components/school/classes/forum/conversation/utils/scroll-policy";
+import {
+  captureVisibleConversationDomAnchor,
+  getConversationBottomDistance,
+} from "@/components/school/classes/forum/conversation/utils/transcript";
 import type { ForumConversationView } from "@/lib/store/forum";
 
 interface UseTranscriptSettledResult {
-  latestViewRef: RefObject<ForumConversationView | null>;
-  reportSettled: (view: ForumConversationView) => void;
+  persistSettledView: () => void;
+  reportScrollSettled: ReturnType<typeof useDebouncedCallback>;
 }
 
-/** Owns the latest semantic view snapshot and de-duplicates settled persistence writes. */
+/** Owns semantic settled-view capture for one transcript shell. */
 export function useTranscriptSettled({
+  getMetrics,
   handleSettledView,
-  latestConversationView,
+  scrollElementRef,
 }: {
+  getMetrics: () => {
+    scrollHeight: number;
+    scrollOffset: number;
+    viewportHeight: number;
+  };
   handleSettledView: (view: ForumConversationView) => void;
-  latestConversationView: ForumConversationView | null;
+  scrollElementRef: RefObject<HTMLDivElement | null>;
 }): UseTranscriptSettledResult {
-  const latestViewRef = useRef<ForumConversationView | null>(
-    latestConversationView
-  );
-  const lastSettledViewRef = useRef<ForumConversationView | null>(
-    latestConversationView
-  );
+  /** Persists the current semantic transcript view once scrolling has settled. */
+  const persistSettledView = useEffectEvent(() => {
+    const scrollElement = scrollElementRef.current;
 
-  const reportSettled = useCallback(
-    (view: ForumConversationView) => {
-      latestViewRef.current = view;
+    if (!scrollElement) {
+      return;
+    }
 
-      if (areConversationViewsEqual(lastSettledViewRef.current, view)) {
-        return;
-      }
+    if (getConversationBottomDistance(getMetrics()) <= 1) {
+      handleSettledView({ kind: "bottom" });
+      return;
+    }
 
-      lastSettledViewRef.current = view;
-      handleSettledView(view);
-    },
-    [handleSettledView]
-  );
+    const anchor = captureVisibleConversationDomAnchor({
+      scrollElement,
+    });
+
+    if (!anchor) {
+      return;
+    }
+
+    handleSettledView({
+      kind: "post",
+      offset: anchor.topWithinScrollRoot,
+      postId: anchor.postId,
+    } satisfies ForumConversationView);
+  });
+
+  /** Debounces settled-view persistence until the current scroll interaction calms down. */
+  const reportScrollSettled = useDebouncedCallback(() => {
+    persistSettledView();
+  }, FORUM_SCROLL_SETTLE_DELAY);
 
   return {
-    latestViewRef,
-    reportSettled,
+    persistSettledView,
+    reportScrollSettled,
   };
 }

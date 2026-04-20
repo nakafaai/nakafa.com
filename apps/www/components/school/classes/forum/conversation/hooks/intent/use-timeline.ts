@@ -7,28 +7,40 @@ import {
   createFocusedWindowArgs,
   FORUM_CONVERSATION_WINDOW,
 } from "@/components/school/classes/forum/conversation/utils/focused";
+import { FORUM_MAX_BUFFERED_OLDER_PAGES } from "@/components/school/classes/forum/conversation/utils/scroll-policy";
 import {
   appendUniquePosts,
   type ConversationTimeline,
   createLiveTimeline,
+  createOlderPrefetchPages,
+  getOlderPrefetchBoundaryPostId,
+  type OlderPrefetchPage,
   prependUniquePosts,
-  syncFocusedTimelineWithLivePosts,
+  refreshFocusedTimeline,
+  syncLiveRenderedPosts,
 } from "@/components/school/classes/forum/conversation/utils/timeline";
 import type { ForumConversationMode } from "@/components/school/classes/forum/conversation/utils/view";
+import type { ForumPost } from "@/lib/store/forum";
+
+type OlderLoadResult = "committed" | "noop" | "prefetched";
 
 interface UseConversationTimelineResult {
+  canPrefetchOlderPosts: boolean;
+  hasBufferedOlderPosts: boolean;
   hasMoreAfter: boolean;
   hasMoreBefore: boolean;
+  hasPendingLatestPosts: boolean;
   isAtLatestEdge: boolean;
   isInitialLoading: boolean;
   isLoadingNewer: boolean;
   isLoadingOlder: boolean;
   loadNewerPosts: () => void;
-  loadOlderPosts: () => void;
+  loadOlderPosts: () => OlderLoadResult;
   posts: ConversationTimeline["posts"];
   replaceWithFocusedTimeline: (timeline: ConversationTimeline) => void;
   showLatestPosts: () => boolean;
   timelineSessionVersion: number;
+  transcriptVariant: "focused" | "live";
 }
 
 /** Keeps one forum transcript aligned to either the live feed or a focused timeline window. */
@@ -49,12 +61,14 @@ export function useConversationTimeline({
     { initialNumItems: FORUM_CONVERSATION_WINDOW }
   );
   const livePosts = useMemo(() => [...liveResults].reverse(), [liveResults]);
+  const liveLatestPostId = livePosts.at(-1)?._id ?? null;
   const liveHasMoreBefore =
     liveStatus === "CanLoadMore" || liveStatus === "LoadingMore";
-  const liveTimeline = useMemo(
-    () => createLiveTimeline(livePosts, liveHasMoreBefore),
-    [liveHasMoreBefore, livePosts]
-  );
+  const [renderedLivePosts, setRenderedLivePosts] =
+    useState<ForumPost[]>(livePosts);
+  const [focusedOlderPages, setFocusedOlderPages] = useState<
+    OlderPrefetchPage[]
+  >([]);
   const [focusedTimeline, setFocusedTimeline] =
     useState<ConversationTimeline | null>(null);
   const [olderRequestPostId, setOlderRequestPostId] =
@@ -73,11 +87,51 @@ export function useConversationTimeline({
         })
       : "skip"
   );
+  const bufferedLiveOlderPages = useMemo(
+    () =>
+      createOlderPrefetchPages({
+        fetchedPosts: livePosts,
+        hasMoreBefore: liveHasMoreBefore,
+        maxPages: FORUM_MAX_BUFFERED_OLDER_PAGES,
+        pageSize: FORUM_CONVERSATION_WINDOW,
+        renderedPosts: renderedLivePosts,
+      }),
+    [liveHasMoreBefore, livePosts, renderedLivePosts]
+  );
+  const liveTimeline = useMemo(
+    () =>
+      createLiveTimeline(
+        renderedLivePosts,
+        liveHasMoreBefore || bufferedLiveOlderPages.length > 0
+      ),
+    [bufferedLiveOlderPages.length, liveHasMoreBefore, renderedLivePosts]
+  );
+
+  useEffect(() => {
+    if (liveStatus === "LoadingFirstPage") {
+      return;
+    }
+
+    setRenderedLivePosts((currentPosts) => {
+      const nextPosts =
+        currentPosts.length === 0
+          ? {
+              changed: livePosts.length > 0,
+              posts: livePosts,
+            }
+          : syncLiveRenderedPosts({
+              current: currentPosts,
+              incoming: livePosts,
+            });
+
+      return nextPosts.changed ? nextPosts.posts : currentPosts;
+    });
+  }, [livePosts, liveStatus]);
+
   const timeline = useMemo(() => {
     if (focusedTimeline) {
-      return syncFocusedTimelineWithLivePosts({
+      return refreshFocusedTimeline({
         current: focusedTimeline,
-        liveHasMoreBefore,
         livePosts,
       });
     }
@@ -100,7 +154,6 @@ export function useConversationTimeline({
     return liveTimeline;
   }, [
     focusedTimeline,
-    liveHasMoreBefore,
     livePosts,
     liveStatus,
     liveTimeline,
@@ -111,6 +164,7 @@ export function useConversationTimeline({
   /** Replaces the mounted transcript with a focused detached window. */
   const replaceWithFocusedTimeline = useCallback(
     (nextTimeline: ConversationTimeline) => {
+      setFocusedOlderPages([]);
       setOlderRequestPostId(null);
       setNewerRequestPostId(null);
       setFocusedTimeline(nextTimeline);
@@ -124,6 +178,7 @@ export function useConversationTimeline({
       return;
     }
 
+    setFocusedOlderPages([]);
     setFocusedTimeline(timeline);
   }, [focusedTimeline, mode.kind, timeline]);
 
@@ -143,32 +198,27 @@ export function useConversationTimeline({
       return;
     }
 
-    setFocusedTimeline((currentTimeline) => {
-      const current = currentTimeline ?? timeline;
+    setFocusedOlderPages((currentPages) => {
+      const expectedBoundaryPostId = getOlderPrefetchBoundaryPostId({
+        bufferedPages: currentPages,
+        renderedPosts: focusedTimeline?.posts ?? timeline?.posts ?? [],
+      });
 
-      if (!(current && current.oldestPostId === olderRequestPostId)) {
-        return currentTimeline;
+      if (expectedBoundaryPostId !== olderRequestPostId) {
+        return currentPages;
       }
 
-      const nextPosts = prependUniquePosts(current.posts, olderData.posts);
-
-      if (!nextPosts.changed) {
-        return {
-          ...current,
+      return [
+        ...currentPages,
+        {
           hasMoreBefore: olderData.hasMore,
-          oldestPostId: olderData.oldestPostId ?? current.oldestPostId,
-        };
-      }
-
-      return {
-        ...current,
-        hasMoreBefore: olderData.hasMore,
-        oldestPostId: olderData.oldestPostId ?? current.oldestPostId,
-        posts: nextPosts.posts,
-      };
+          oldestPostId: olderData.oldestPostId,
+          posts: olderData.posts,
+        },
+      ];
     });
     setOlderRequestPostId(null);
-  }, [olderData, olderRequestPostId, timeline]);
+  }, [focusedTimeline?.posts, olderData, olderRequestPostId, timeline?.posts]);
 
   const newerData = useQuery(
     api.classes.forums.queries.newer.getForumPostsNewer,
@@ -209,27 +259,84 @@ export function useConversationTimeline({
   }, [newerData, newerRequestPostId, timeline]);
 
   /** Loads older history above the active transcript window. */
-  const loadOlderPosts = useCallback(() => {
+  const loadOlderPosts = useCallback((): OlderLoadResult => {
     if (focusedTimeline === null) {
-      if (liveStatus === "CanLoadMore") {
-        loadMore(FORUM_CONVERSATION_WINDOW);
+      const nextBufferedPage = bufferedLiveOlderPages[0];
+
+      if (nextBufferedPage) {
+        setRenderedLivePosts(
+          (currentPosts) =>
+            prependUniquePosts(currentPosts, nextBufferedPage.posts).posts
+        );
+        return "committed";
       }
 
-      return;
+      if (
+        bufferedLiveOlderPages.length < FORUM_MAX_BUFFERED_OLDER_PAGES &&
+        liveStatus === "CanLoadMore"
+      ) {
+        loadMore(FORUM_CONVERSATION_WINDOW);
+        return "prefetched";
+      }
+
+      return "noop";
     }
 
-    setOlderRequestPostId((currentRequestPostId) => {
-      if (currentRequestPostId) {
-        return currentRequestPostId;
-      }
+    const nextBufferedPage = focusedOlderPages[0];
 
-      if (!(focusedTimeline.hasMoreBefore && focusedTimeline.oldestPostId)) {
-        return null;
-      }
+    if (nextBufferedPage) {
+      setFocusedOlderPages((currentPages) => currentPages.slice(1));
+      setFocusedTimeline((currentTimeline) => {
+        const current = currentTimeline ?? timeline;
 
-      return focusedTimeline.oldestPostId;
+        if (!current) {
+          return currentTimeline;
+        }
+
+        const nextPosts = prependUniquePosts(
+          current.posts,
+          nextBufferedPage.posts
+        );
+
+        return {
+          ...current,
+          hasMoreBefore:
+            focusedOlderPages.length > 1 || nextBufferedPage.hasMoreBefore,
+          oldestPostId: nextBufferedPage.oldestPostId ?? current.oldestPostId,
+          posts: nextPosts.posts,
+        };
+      });
+      return "committed";
+    }
+
+    if (
+      olderRequestPostId !== null ||
+      focusedOlderPages.length >= FORUM_MAX_BUFFERED_OLDER_PAGES ||
+      !focusedTimeline.hasMoreBefore
+    ) {
+      return "noop";
+    }
+
+    const boundaryPostId = getOlderPrefetchBoundaryPostId({
+      bufferedPages: focusedOlderPages,
+      renderedPosts: focusedTimeline.posts,
     });
-  }, [focusedTimeline, liveStatus, loadMore]);
+
+    if (!boundaryPostId) {
+      return "noop";
+    }
+
+    setOlderRequestPostId(boundaryPostId);
+    return "prefetched";
+  }, [
+    bufferedLiveOlderPages,
+    focusedOlderPages,
+    focusedTimeline,
+    liveStatus,
+    loadMore,
+    olderRequestPostId,
+    timeline,
+  ]);
 
   /** Loads newer history below one focused transcript window. */
   const loadNewerPosts = useCallback(() => {
@@ -256,8 +363,10 @@ export function useConversationTimeline({
       return false;
     }
 
+    setFocusedOlderPages([]);
     setOlderRequestPostId(null);
     setNewerRequestPostId(null);
+    setRenderedLivePosts(livePosts);
 
     if (focusedTimeline !== null) {
       setFocusedTimeline(null);
@@ -265,11 +374,33 @@ export function useConversationTimeline({
     }
 
     return true;
-  }, [focusedTimeline, liveStatus]);
+  }, [focusedTimeline, livePosts, liveStatus]);
+
+  const transcriptVariant =
+    focusedTimeline === null && mode.kind === "live" ? "live" : "focused";
+  const hasBufferedOlderPosts =
+    focusedTimeline === null
+      ? bufferedLiveOlderPages.length > 0
+      : focusedOlderPages.length > 0;
+  const canPrefetchOlderPosts =
+    focusedTimeline === null
+      ? bufferedLiveOlderPages.length < FORUM_MAX_BUFFERED_OLDER_PAGES &&
+        liveStatus === "CanLoadMore"
+      : olderRequestPostId === null &&
+        focusedOlderPages.length < FORUM_MAX_BUFFERED_OLDER_PAGES &&
+        (focusedTimeline?.hasMoreBefore ?? false);
+  const hasPendingLatestPosts =
+    transcriptVariant === "focused" &&
+    timeline !== null &&
+    liveLatestPostId !== null &&
+    timeline.newestPostId !== liveLatestPostId;
 
   return {
+    canPrefetchOlderPosts,
+    hasBufferedOlderPosts,
     hasMoreAfter: timeline?.hasMoreAfter ?? false,
-    hasMoreBefore: timeline?.hasMoreBefore ?? false,
+    hasMoreBefore: (timeline?.hasMoreBefore ?? false) || hasBufferedOlderPosts,
+    hasPendingLatestPosts,
     isAtLatestEdge: timeline?.isAtLatestEdge ?? false,
     isInitialLoading: timeline === null,
     isLoadingNewer: newerRequestPostId !== null,
@@ -283,5 +414,6 @@ export function useConversationTimeline({
     replaceWithFocusedTimeline,
     showLatestPosts,
     timelineSessionVersion,
+    transcriptVariant,
   };
 }

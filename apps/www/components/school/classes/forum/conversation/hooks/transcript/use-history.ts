@@ -1,164 +1,156 @@
 "use client";
 
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { RefObject } from "react";
-import { useCallback, useRef } from "react";
+import {
+  useCallback,
+  useEffectEvent,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import type { VirtualItem } from "@/components/school/classes/forum/conversation/types";
 import {
-  getForumPrefetchDistance,
-  shouldRequestHistoryBoundary,
+  FORUM_BOTTOM_PREFETCH_VIEWPORTS,
+  FORUM_TOP_PREFETCH_VIEWPORTS,
 } from "@/components/school/classes/forum/conversation/utils/scroll-policy";
 import {
-  captureVisibleConversationAnchor,
+  getConversationBottomDistance,
   getLoadedPostBoundaries,
 } from "@/components/school/classes/forum/conversation/utils/transcript";
 
 interface UseTranscriptHistoryResult {
-  maybeRequestHistory: (scrollOffset: number) => void;
-  pendingOlderAnchorRef: RefObject<{
-    offset: number;
-    postId: Id<"schoolClassForumPosts">;
-  } | null>;
-  previousScrollOffsetRef: RefObject<number>;
-  resetHistoryState: () => void;
+  resetHistory: () => void;
+  shift: boolean;
+  syncHistoryWindow: () => void;
 }
 
-interface HistoryOptions {
-  getDistanceFromBottom: () => number;
-  getScrollMetrics: () => {
-    scrollOffset: number;
-    viewportBottom: number;
-    viewportHeight: number;
-  };
-  hasMoreAfter: boolean;
-  hasMoreBefore: boolean;
-  isLoadingNewer: boolean;
-  isLoadingOlder: boolean;
-  items: VirtualItem[];
-  loadNewerPosts: () => void;
-  loadOlderPosts: () => void;
-  virtualItems: Array<{
-    end: number;
-    index: number;
-    key: bigint | number | string;
-    start: number;
-  }>;
-}
-
-/** Owns history boundary requests and prepend anchor preservation state. */
+/** Owns top and bottom history prefetch windows for one mounted transcript shell. */
 export function useTranscriptHistory({
-  getDistanceFromBottom,
-  getScrollMetrics,
+  canPrefetchOlderPosts,
+  getMetrics,
+  hasBufferedOlderPosts,
   hasMoreAfter,
   hasMoreBefore,
   isLoadingNewer,
-  isLoadingOlder,
   items,
   loadNewerPosts,
   loadOlderPosts,
-  virtualItems,
-}: HistoryOptions): UseTranscriptHistoryResult {
-  const pendingOlderAnchorRef = useRef<{
-    offset: number;
-    postId: Id<"schoolClassForumPosts">;
-  } | null>(null);
-  const lastRequestedNewerBoundaryRef =
-    useRef<Id<"schoolClassForumPosts"> | null>(null);
-  const lastRequestedOlderBoundaryRef =
-    useRef<Id<"schoolClassForumPosts"> | null>(null);
-  const previousScrollOffsetRef = useRef(0);
+}: {
+  canPrefetchOlderPosts: boolean;
+  getMetrics: () => {
+    scrollHeight: number;
+    scrollOffset: number;
+    viewportHeight: number;
+  };
+  hasBufferedOlderPosts: boolean;
+  hasMoreAfter: boolean;
+  hasMoreBefore: boolean;
+  isLoadingNewer: boolean;
+  items: VirtualItem[];
+  loadNewerPosts: () => void;
+  loadOlderPosts: () => "committed" | "noop" | "prefetched";
+}): UseTranscriptHistoryResult {
+  const [pendingPrependBoundary, setPendingPrependBoundary] =
+    useState<Id<"schoolClassForumPosts"> | null>(null);
+  const newestBoundaryRef = useRef<Id<"schoolClassForumPosts"> | null>(null);
+  const oldestBoundaryRef = useRef<Id<"schoolClassForumPosts"> | null>(null);
 
-  const requestOlderBoundary = useCallback(
-    (boundaryPostId: Id<"schoolClassForumPosts"> | null) => {
-      if (
-        !shouldRequestHistoryBoundary({
-          boundaryPostId,
-          hasMore: hasMoreBefore,
-          isLoading: isLoadingOlder,
-          lastRequestedBoundaryPostId: lastRequestedOlderBoundaryRef.current,
-        })
-      ) {
-        return;
-      }
-
-      const { scrollOffset, viewportBottom } = getScrollMetrics();
-
-      lastRequestedOlderBoundaryRef.current = boundaryPostId;
-      pendingOlderAnchorRef.current = captureVisibleConversationAnchor({
-        items,
-        scrollOffset,
-        viewportBottom,
-        virtualItems,
-      });
-      loadOlderPosts();
-    },
-    [
-      getScrollMetrics,
-      hasMoreBefore,
-      isLoadingOlder,
-      items,
-      loadOlderPosts,
-      virtualItems,
-    ]
-  );
-
-  const requestNewerBoundary = useCallback(
-    (boundaryPostId: Id<"schoolClassForumPosts"> | null) => {
-      if (
-        !shouldRequestHistoryBoundary({
-          boundaryPostId,
-          hasMore: hasMoreAfter,
-          isLoading: isLoadingNewer,
-          lastRequestedBoundaryPostId: lastRequestedNewerBoundaryRef.current,
-        })
-      ) {
-        return;
-      }
-
-      lastRequestedNewerBoundaryRef.current = boundaryPostId;
-      loadNewerPosts();
-    },
-    [hasMoreAfter, isLoadingNewer, loadNewerPosts]
-  );
-
-  const maybeRequestHistory = useCallback(
-    (scrollOffset: number) => {
-      const { viewportHeight } = getScrollMetrics();
-      const prefetchDistance = getForumPrefetchDistance(viewportHeight);
-      const isMovingUp = scrollOffset < previousScrollOffsetRef.current;
-      const isMovingDown = scrollOffset > previousScrollOffsetRef.current;
-      const isNearTop = scrollOffset <= prefetchDistance;
-      const isNearBottom = getDistanceFromBottom() <= prefetchDistance;
-      const { newestPostId, oldestPostId } = getLoadedPostBoundaries(items);
-
-      if (isNearTop && isMovingUp) {
-        requestOlderBoundary(oldestPostId);
-      }
-
-      if (isNearBottom && isMovingDown) {
-        requestNewerBoundary(newestPostId);
-      }
-    },
-    [
-      getDistanceFromBottom,
-      getScrollMetrics,
-      items,
-      requestNewerBoundary,
-      requestOlderBoundary,
-    ]
-  );
-
-  const resetHistoryState = useCallback(() => {
-    pendingOlderAnchorRef.current = null;
-    lastRequestedOlderBoundaryRef.current = null;
-    lastRequestedNewerBoundaryRef.current = null;
-    previousScrollOffsetRef.current = 0;
+  /** Clears boundary guards and any pending serialized prepend commit. */
+  const resetHistory = useCallback(() => {
+    newestBoundaryRef.current = null;
+    oldestBoundaryRef.current = null;
+    setPendingPrependBoundary(null);
   }, []);
 
+  /** Loads more history once the viewport enters the configured prefetch bands. */
+  const syncHistoryWindow = useEffectEvent(() => {
+    if (pendingPrependBoundary) {
+      return;
+    }
+
+    const metrics = getMetrics();
+
+    if (metrics.viewportHeight === 0) {
+      return;
+    }
+
+    const { newestPostId, oldestPostId } = getLoadedPostBoundaries(items);
+    const isInBottomZone =
+      getConversationBottomDistance(metrics) <=
+      metrics.viewportHeight * FORUM_BOTTOM_PREFETCH_VIEWPORTS;
+    const isInTopZone =
+      metrics.scrollOffset <=
+      metrics.viewportHeight * FORUM_TOP_PREFETCH_VIEWPORTS;
+
+    if (!isInBottomZone) {
+      newestBoundaryRef.current = null;
+    }
+
+    if (!isInTopZone) {
+      oldestBoundaryRef.current = null;
+    }
+
+    if (isInTopZone && hasMoreBefore && oldestPostId) {
+      if (hasBufferedOlderPosts) {
+        setPendingPrependBoundary((current) => current ?? oldestPostId);
+        return;
+      }
+
+      if (canPrefetchOlderPosts && oldestBoundaryRef.current !== oldestPostId) {
+        oldestBoundaryRef.current = oldestPostId;
+        loadOlderPosts();
+        return;
+      }
+    }
+
+    if (
+      isInBottomZone &&
+      hasMoreAfter &&
+      newestPostId &&
+      !isLoadingNewer &&
+      newestBoundaryRef.current !== newestPostId
+    ) {
+      newestBoundaryRef.current = newestPostId;
+      loadNewerPosts();
+    }
+  });
+
+  useLayoutEffect(() => {
+    if (!(pendingPrependBoundary && items.length > 0)) {
+      return;
+    }
+
+    const result = loadOlderPosts();
+
+    if (result === "committed") {
+      return;
+    }
+
+    setPendingPrependBoundary(null);
+  }, [items.length, loadOlderPosts, pendingPrependBoundary]);
+
+  useLayoutEffect(() => {
+    if (
+      !(
+        pendingPrependBoundary &&
+        getLoadedPostBoundaries(items).oldestPostId !== pendingPrependBoundary
+      )
+    ) {
+      return;
+    }
+
+    const frameId = requestAnimationFrame(() => {
+      setPendingPrependBoundary(null);
+    });
+
+    return () => {
+      cancelAnimationFrame(frameId);
+    };
+  }, [items, pendingPrependBoundary]);
+
   return {
-    maybeRequestHistory,
-    pendingOlderAnchorRef,
-    previousScrollOffsetRef,
-    resetHistoryState,
+    resetHistory,
+    shift: pendingPrependBoundary !== null,
+    syncHistoryWindow,
   };
 }

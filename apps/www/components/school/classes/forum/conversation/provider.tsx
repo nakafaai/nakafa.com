@@ -14,12 +14,17 @@ import type {
 import type { ForumConversationMode } from "@/components/school/classes/forum/conversation/utils/view";
 import type { ForumConversationView } from "@/lib/store/forum";
 
-interface ConversationState {
+type ConversationOlderLoadResult = "committed" | "noop" | "prefetched";
+
+export interface ConversationState {
   canGoBack: boolean;
+  canPrefetchOlderPosts: boolean;
   command: ConversationTranscriptCommand | null;
   forum: Forum | undefined;
+  hasBufferedOlderPosts: boolean;
   hasMoreAfter: boolean;
   hasMoreBefore: boolean;
+  hasPendingLatestPosts: boolean;
   highlightedPostId: Id<"schoolClassForumPosts"> | null;
   isAtBottom: boolean;
   isAtLatestEdge: boolean;
@@ -33,10 +38,11 @@ interface ConversationState {
   pendingHighlightPostId: Id<"schoolClassForumPosts"> | null;
   postIdToIndex: Map<Id<"schoolClassForumPosts">, number>;
   timelineSessionVersion: number;
+  transcriptVariant: "focused" | "live";
   unreadPostId: Id<"schoolClassForumPosts"> | null;
 }
 
-interface ConversationActions {
+export interface ConversationActions {
   acknowledgeUnreadCue: () => void;
   cancelPendingMarkRead: () => void;
   flushMarkRead: (
@@ -49,19 +55,19 @@ interface ConversationActions {
   handleSettledView: (view: ForumConversationView) => void;
   jumpToPostId: (postId: Id<"schoolClassForumPosts">) => void;
   loadNewerPosts: () => void;
-  loadOlderPosts: () => void;
+  loadOlderPosts: () => ConversationOlderLoadResult;
   scheduleMarkRead: (
     lastReadPostId: Id<"schoolClassForumPosts"> | undefined
   ) => void;
   scrollToLatest: () => void;
 }
 
-interface ConversationMeta {
+export interface ConversationMeta {
   currentUserId: Id<"users">;
   forumId: Id<"schoolClassForums">;
 }
 
-interface ConversationValue {
+export interface ConversationValue {
   actions: ConversationActions;
   meta: ConversationMeta;
   state: ConversationState;
@@ -91,10 +97,13 @@ export function ConversationProvider({
   const state = useMemo<ConversationState>(
     () => ({
       canGoBack: model.canGoBack,
+      canPrefetchOlderPosts: model.canPrefetchOlderPosts,
       command: model.command,
       forum,
+      hasBufferedOlderPosts: model.hasBufferedOlderPosts,
       hasMoreAfter: model.hasMoreAfter,
       hasMoreBefore: model.hasMoreBefore,
+      hasPendingLatestPosts: model.hasPendingLatestPosts,
       highlightedPostId: model.highlightedPostId,
       isAtBottom: model.isAtBottom,
       isAtLatestEdge: model.isAtLatestEdge,
@@ -108,14 +117,18 @@ export function ConversationProvider({
       pendingHighlightPostId: model.pendingHighlightPostId,
       postIdToIndex: model.postIdToIndex,
       timelineSessionVersion: model.timelineSessionVersion,
+      transcriptVariant: model.transcriptVariant,
       unreadPostId: model.unreadPostId,
     }),
     [
       forum,
       model.canGoBack,
+      model.canPrefetchOlderPosts,
       model.command,
+      model.hasBufferedOlderPosts,
       model.hasMoreAfter,
       model.hasMoreBefore,
+      model.hasPendingLatestPosts,
       model.highlightedPostId,
       model.isAtBottom,
       model.isAtLatestEdge,
@@ -129,6 +142,7 @@ export function ConversationProvider({
       model.pendingHighlightPostId,
       model.postIdToIndex,
       model.timelineSessionVersion,
+      model.transcriptVariant,
       model.unreadPostId,
     ]
   );
@@ -183,6 +197,21 @@ export function ConversationProvider({
     [actions, meta, state]
   );
 
+  return (
+    <ConversationContextProvider value={value}>
+      {children}
+    </ConversationContextProvider>
+  );
+}
+
+/** Provides one fully built conversation value for feature-local fixtures and tests. */
+export function ConversationContextProvider({
+  children,
+  value,
+}: {
+  children: ReactNode;
+  value: ConversationValue;
+}) {
   return (
     <ConversationContext.Provider value={value}>
       {children}

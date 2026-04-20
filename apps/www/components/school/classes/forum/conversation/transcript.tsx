@@ -2,147 +2,57 @@
 
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { cn } from "@repo/design-system/lib/utils";
 import { memo } from "react";
+import { Virtualizer } from "virtua";
 import { ForumHeader } from "@/components/school/classes/forum/conversation/header";
-import { useTranscriptLifecycle } from "@/components/school/classes/forum/conversation/hooks/transcript/use-lifecycle";
-import { useTranscriptVirtualizer } from "@/components/school/classes/forum/conversation/hooks/transcript/use-virtualizer";
+import { useTranscript } from "@/components/school/classes/forum/conversation/hooks/transcript/use-transcript";
 import { ForumPostItem } from "@/components/school/classes/forum/conversation/item";
-import { useConversation } from "@/components/school/classes/forum/conversation/provider";
 import {
   DateSeparator,
   UnreadSeparator,
 } from "@/components/school/classes/forum/conversation/separators";
 import type { VirtualItem } from "@/components/school/classes/forum/conversation/types";
+import { FORUM_VIRTUAL_BUFFER_SIZE } from "@/components/school/classes/forum/conversation/utils/scroll-policy";
+import { getConversationItemKey } from "@/components/school/classes/forum/conversation/utils/transcript";
 
-/** Renders one local TanStack-first transcript with feature-owned scroll policy. */
+/** Renders the forum transcript with feature-local Virtua ownership. */
 export function ForumConversationTranscript() {
-  const command = useConversation((value) => value.state.command);
-  const hasMoreAfter = useConversation((value) => value.state.hasMoreAfter);
-  const hasMoreBefore = useConversation((value) => value.state.hasMoreBefore);
-  const highlightedPostId = useConversation(
-    (value) => value.state.highlightedPostId
-  );
-  const isAtLatestEdge = useConversation((value) => value.state.isAtLatestEdge);
-  const isLoadingNewer = useConversation((value) => value.state.isLoadingNewer);
-  const isLoadingOlder = useConversation((value) => value.state.isLoadingOlder);
-  const items = useConversation((value) => value.state.items);
-  const lastPostId = useConversation((value) => value.state.lastPostId);
-  const latestConversationView = useConversation(
-    (value) => value.state.latestConversationView
-  );
-  const mode = useConversation((value) => value.state.mode);
-  const pendingHighlightPostId = useConversation(
-    (value) => value.state.pendingHighlightPostId
-  );
-  const postIdToIndex = useConversation((value) => value.state.postIdToIndex);
-  const timelineSessionVersion = useConversation(
-    (value) => value.state.timelineSessionVersion
-  );
-  const unreadPostId = useConversation((value) => value.state.unreadPostId);
-  const cancelPendingMarkRead = useConversation(
-    (value) => value.actions.cancelPendingMarkRead
-  );
-  const flushMarkRead = useConversation((value) => value.actions.flushMarkRead);
-  const handleBottomStateChange = useConversation(
-    (value) => value.actions.handleBottomStateChange
-  );
-  const handleCommandResult = useConversation(
-    (value) => value.actions.handleCommandResult
-  );
-  const handleHighlightVisiblePost = useConversation(
-    (value) => value.actions.handleHighlightVisiblePost
-  );
-  const handleSettledView = useConversation(
-    (value) => value.actions.handleSettledView
-  );
-  const loadNewerPosts = useConversation(
-    (value) => value.actions.loadNewerPosts
-  );
-  const loadOlderPosts = useConversation(
-    (value) => value.actions.loadOlderPosts
-  );
-  const scheduleMarkRead = useConversation(
-    (value) => value.actions.scheduleMarkRead
-  );
-
   const {
-    measureElement,
-    runtime,
-    scrollElementRef,
-    totalSize,
-    translateY,
-    virtualItems,
-  } = useTranscriptVirtualizer({
-    cancelPendingMarkRead,
-    handleBottomStateChange,
-    handleHighlightVisiblePost,
-    handleSettledView,
-    hasMoreAfter,
-    hasMoreBefore,
-    isAtLatestEdge,
-    isLoadingNewer,
-    isLoadingOlder,
+    handleRef,
+    handleScroll,
+    handleScrollEnd,
     highlightedPostId,
     items,
-    lastPostId,
-    latestConversationView,
-    loadNewerPosts,
-    loadOlderPosts,
-    pendingHighlightPostId,
-    postIdToIndex,
-    scheduleMarkRead,
-  });
-
-  useTranscriptLifecycle({
-    cancelPendingMarkRead,
-    command,
-    flushMarkRead,
-    handleCommandResult,
-    isAtLatestEdge,
-    isLoadingOlder,
-    items,
-    lastPostId,
-    latestConversationView,
-    mode,
-    runtime,
-    timelineSessionVersion,
-    unreadPostId,
-  });
+    scrollElementRef,
+    setScrollElementRef,
+    shift,
+  } = useTranscript();
 
   return (
     <div
       className="absolute inset-0 overflow-y-auto overscroll-contain"
       data-testid="virtual-conversation"
-      ref={scrollElementRef}
+      ref={setScrollElementRef}
+      style={{ overflowAnchor: "none" }}
     >
-      <div className="relative w-full" style={{ height: `${totalSize}px` }}>
-        <div
-          className="w-full"
-          style={{ transform: `translateY(${translateY}px)` }}
-        >
-          {virtualItems.map((virtualItem) => {
-            const item = items[virtualItem.index];
-
-            if (!item) {
-              return null;
-            }
-
-            return (
-              <div
-                className="flow-root w-full"
-                data-index={virtualItem.index}
-                key={virtualItem.key}
-                ref={measureElement}
-              >
-                <TranscriptRow
-                  highlightedPostId={highlightedPostId}
-                  item={item}
-                />
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      <Virtualizer
+        bufferSize={FORUM_VIRTUAL_BUFFER_SIZE}
+        data={items}
+        onScroll={handleScroll}
+        onScrollEnd={handleScrollEnd}
+        ref={handleRef}
+        scrollRef={scrollElementRef}
+        shift={shift}
+      >
+        {(item) => (
+          <TranscriptRow
+            highlightedPostId={highlightedPostId}
+            item={item}
+            key={getConversationItemKey(item)}
+          />
+        )}
+      </Virtualizer>
     </div>
   );
 }
@@ -160,7 +70,7 @@ export const ForumConversationTranscriptPlaceholder = memo(() => (
 ForumConversationTranscriptPlaceholder.displayName =
   "ForumConversationTranscriptPlaceholder";
 
-/** Renders one semantic transcript row inside the mounted virtual window. */
+/** Renders one semantic transcript row inside one measured Virtua item. */
 const TranscriptRow = memo(
   ({
     highlightedPostId,
@@ -182,13 +92,21 @@ const TranscriptRow = memo(
     }
 
     return (
-      <ForumPostItem
-        isFirstInGroup={item.isFirstInGroup}
-        isJumpHighlighted={highlightedPostId === item.post._id}
-        isLastInGroup={item.isLastInGroup}
-        post={item.post}
-        showContinuationTime={item.showContinuationTime}
-      />
+      <div
+        className={cn(
+          "flow-root w-full",
+          item.isFirstInGroup && "pt-3",
+          item.isLastInGroup && "pb-3"
+        )}
+        data-post-id={item.post._id}
+      >
+        <ForumPostItem
+          isFirstInGroup={item.isFirstInGroup}
+          isJumpHighlighted={highlightedPostId === item.post._id}
+          post={item.post}
+          showContinuationTime={item.showContinuationTime}
+        />
+      </div>
     );
   }
 );

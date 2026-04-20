@@ -57,13 +57,11 @@ export const ForumPostItem = memo(
     post,
     isFirstInGroup,
     isJumpHighlighted,
-    isLastInGroup,
     showContinuationTime,
   }: {
     post: ForumPost;
     isFirstInGroup: boolean;
     isJumpHighlighted: boolean;
-    isLastInGroup: boolean;
     showContinuationTime: boolean;
   }) => {
     const t = useTranslations("Common");
@@ -81,8 +79,6 @@ export const ForumPostItem = memo(
       <div
         className={cn(
           "group relative flex items-start gap-3 border-l-2 border-l-transparent px-4 py-1 transition-colors ease-out hover:bg-accent/20",
-          isFirstInGroup === true && "mt-3",
-          isLastInGroup === true && "mb-3",
           isReplyToMe === true && "border-primary bg-primary/10",
           isReplyTo === true && "border-secondary bg-secondary/10",
           isJumpHighlighted === true && "border-secondary bg-secondary/10"

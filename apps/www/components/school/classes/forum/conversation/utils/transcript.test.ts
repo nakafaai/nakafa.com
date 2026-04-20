@@ -6,13 +6,22 @@ import type {
   VirtualItem,
 } from "@/components/school/classes/forum/conversation/types";
 import {
+  captureVisibleConversationDomAnchor,
+  findConversationPostRow,
+  getConversationBottomDistance,
   getConversationItemKey,
-  measureConversationItemSize,
+  getConversationRowTopWithinScrollRoot,
+  getConversationScrollMetrics,
+  getLoadedPostBoundaries,
+  isConversationPostVisibleInDom,
+  needsConversationDomAnchorCorrection,
+  reconcileConversationDomAnchor,
 } from "@/components/school/classes/forum/conversation/utils/transcript";
 
 const forumId = "forum_1" as Id<"schoolClassForums">;
 const userId = "user_1" as Id<"users">;
 
+/** Creates one minimal forum shape for transcript semantics tests. */
 function createForum(): Forum {
   const createdTime = Date.UTC(2026, 3, 20, 10, 0, 0);
 
@@ -39,6 +48,7 @@ function createForum(): Forum {
   } satisfies Forum;
 }
 
+/** Creates one minimal forum post shape for transcript utility tests. */
 function createPost(id: string): ForumPost {
   const createdTime = Date.UTC(2026, 3, 20, 10, 0, 0);
 
@@ -65,70 +75,319 @@ function createPost(id: string): ForumPost {
   } satisfies ForumPost;
 }
 
+/** Mocks one element rect with the minimum DOMRect shape our helpers need. */
+function createRect({
+  bottom,
+  height,
+  top,
+}: {
+  bottom: number;
+  height: number;
+  top: number;
+}) {
+  return {
+    bottom,
+    height,
+    left: 0,
+    right: 320,
+    top,
+    width: 320,
+    x: 0,
+    y: top,
+    toJSON: () => "",
+  };
+}
+
 describe("conversation/utils/transcript", () => {
-  it("keeps one post key stable when the transcript prepends older items", () => {
-    const postItem = {
-      isFirstInGroup: true,
-      isLastInGroup: true,
-      post: createPost("post_2"),
-      showContinuationTime: false,
-      type: "post",
-    } satisfies VirtualItem;
-
-    expect(getConversationItemKey(postItem)).toBe("post:post_2");
-    expect(getConversationItemKey(postItem)).toBe("post:post_2");
-  });
-
-  it("keeps semantic keys stable for non-post transcript rows", () => {
+  it("keeps semantic row keys stable for every transcript item type", () => {
     const forumItem = {
       forum: createForum(),
       type: "header",
-    } satisfies VirtualItem;
-    const unreadItem = {
-      count: 3,
-      postId: "post_2" as Id<"schoolClassForumPosts">,
-      status: "history",
-      type: "unread",
     } satisfies VirtualItem;
     const dateItem = {
       date: Date.UTC(2026, 3, 20),
       type: "date",
     } satisfies VirtualItem;
+    const unreadItem = {
+      count: 2,
+      postId: "post_unread" as Id<"schoolClassForumPosts">,
+      status: "history",
+      type: "unread",
+    } satisfies VirtualItem;
+    const postItem = {
+      isFirstInGroup: true,
+      isLastInGroup: true,
+      post: createPost("post_visible"),
+      showContinuationTime: false,
+      type: "post",
+    } satisfies VirtualItem;
 
     expect(getConversationItemKey(forumItem)).toBe("header");
-    expect(getConversationItemKey(unreadItem)).toBe("unread:post_2");
     expect(getConversationItemKey(dateItem)).toBe(
       `date:${Date.UTC(2026, 3, 20)}`
     );
+    expect(getConversationItemKey(unreadItem)).toBe("unread:post_unread");
+    expect(getConversationItemKey(postItem)).toBe("post:post_visible");
   });
 
-  it("keeps fractional precision from ResizeObserver measurements", () => {
-    const element = document.createElement("div");
-    const resizeEntry: ResizeObserverEntry = {
-      borderBoxSize: [{ blockSize: 88.5, inlineSize: 0 }],
-      contentBoxSize: [{ blockSize: 88.5, inlineSize: 0 }],
-      contentRect: new DOMRectReadOnly(0, 0, 0, 88.5),
-      devicePixelContentBoxSize: [{ blockSize: 88.5, inlineSize: 0 }],
-      target: element,
-    };
+  it("returns the current oldest and newest loaded post ids", () => {
+    const items = [
+      { forum: createForum(), type: "header" },
+      {
+        isFirstInGroup: true,
+        isLastInGroup: false,
+        post: createPost("post_oldest"),
+        showContinuationTime: false,
+        type: "post",
+      },
+      {
+        date: Date.UTC(2026, 3, 20),
+        type: "date",
+      },
+      {
+        isFirstInGroup: false,
+        isLastInGroup: true,
+        post: createPost("post_newest"),
+        showContinuationTime: true,
+        type: "post",
+      },
+    ] satisfies VirtualItem[];
 
-    expect(measureConversationItemSize(element, resizeEntry)).toBe(88.5);
+    expect(getLoadedPostBoundaries(items)).toEqual({
+      newestPostId: "post_newest",
+      oldestPostId: "post_oldest",
+    });
   });
 
-  it("falls back to getBoundingClientRect when ResizeObserver data is absent", () => {
-    const element = document.createElement("div");
-    vi.spyOn(element, "getBoundingClientRect").mockReturnValue({
-      bottom: 42.25,
-      height: 42.25,
-      left: 0,
-      right: 0,
-      top: 0,
-      width: 0,
-      x: 0,
-      y: 0,
-      toJSON: () => "",
+  it("prefers DOM scroll metrics and falls back to the virtualizer handle", () => {
+    const scrollElement = document.createElement("div");
+    Object.defineProperties(scrollElement, {
+      clientHeight: { configurable: true, value: 360 },
+      scrollHeight: { configurable: true, value: 1440 },
+      scrollTop: { configurable: true, value: 180 },
     });
 
-    expect(measureConversationItemSize(element, undefined)).toBe(42.25);
+    expect(
+      getConversationScrollMetrics({
+        handle: {
+          scrollOffset: 40,
+          scrollSize: 420,
+          viewportSize: 120,
+        },
+        scrollElement,
+      })
+    ).toEqual({
+      scrollHeight: 1440,
+      scrollOffset: 180,
+      viewportHeight: 360,
+    });
+
+    expect(
+      getConversationScrollMetrics({
+        handle: {
+          scrollOffset: 40,
+          scrollSize: 420,
+          viewportSize: 120,
+        },
+        scrollElement: null,
+      })
+    ).toEqual({
+      scrollHeight: 420,
+      scrollOffset: 40,
+      viewportHeight: 120,
+    });
+  });
+
+  it("captures the first visible rendered post as a DOM anchor", () => {
+    const scrollElement = document.createElement("div");
+    const hiddenPost = document.createElement("div");
+    const visiblePost = document.createElement("div");
+    const belowViewportPost = document.createElement("div");
+
+    hiddenPost.dataset.postId = "post_hidden";
+    visiblePost.dataset.postId = "post_visible";
+    belowViewportPost.dataset.postId = "post_below";
+
+    scrollElement.append(hiddenPost, visiblePost, belowViewportPost);
+
+    vi.spyOn(scrollElement, "getBoundingClientRect").mockReturnValue(
+      createRect({
+        bottom: 400,
+        height: 400,
+        top: 0,
+      })
+    );
+    vi.spyOn(hiddenPost, "getBoundingClientRect").mockReturnValue(
+      createRect({
+        bottom: -8,
+        height: 72,
+        top: -80,
+      })
+    );
+    vi.spyOn(visiblePost, "getBoundingClientRect").mockReturnValue(
+      createRect({
+        bottom: 180,
+        height: 80,
+        top: 100,
+      })
+    );
+    vi.spyOn(belowViewportPost, "getBoundingClientRect").mockReturnValue(
+      createRect({
+        bottom: 520,
+        height: 80,
+        top: 440,
+      })
+    );
+
+    expect(
+      captureVisibleConversationDomAnchor({
+        scrollElement,
+      })
+    ).toEqual({
+      postId: "post_visible",
+      topWithinScrollRoot: 100,
+    });
+  });
+
+  it("finds one rendered post row and resolves its top within the scroll root", () => {
+    const scrollElement = document.createElement("div");
+    const postRow = document.createElement("div");
+
+    postRow.dataset.postId = "post_visible";
+    scrollElement.append(postRow);
+
+    vi.spyOn(scrollElement, "getBoundingClientRect").mockReturnValue(
+      createRect({
+        bottom: 420,
+        height: 420,
+        top: 20,
+      })
+    );
+    vi.spyOn(postRow, "getBoundingClientRect").mockReturnValue(
+      createRect({
+        bottom: 200,
+        height: 80,
+        top: 120,
+      })
+    );
+
+    expect(
+      findConversationPostRow({
+        postId: "post_visible" as Id<"schoolClassForumPosts">,
+        scrollElement,
+      })
+    ).toBe(postRow);
+    expect(
+      getConversationRowTopWithinScrollRoot({
+        element: postRow,
+        scrollElement,
+      })
+    ).toBe(100);
+  });
+
+  it("reconciles one DOM anchor by adjusting scrollTop until it settles", () => {
+    const scrollElement = document.createElement("div");
+    const postRow = document.createElement("div");
+
+    postRow.dataset.postId = "post_visible";
+    scrollElement.append(postRow);
+    scrollElement.scrollTop = 120;
+
+    vi.spyOn(scrollElement, "getBoundingClientRect").mockReturnValue(
+      createRect({
+        bottom: 420,
+        height: 420,
+        top: 20,
+      })
+    );
+    vi.spyOn(postRow, "getBoundingClientRect")
+      .mockReturnValueOnce(
+        createRect({
+          bottom: 250,
+          height: 80,
+          top: 150,
+        })
+      )
+      .mockReturnValueOnce(
+        createRect({
+          bottom: 200,
+          height: 80,
+          top: 100,
+        })
+      );
+
+    expect(
+      reconcileConversationDomAnchor({
+        anchor: {
+          postId: "post_visible" as Id<"schoolClassForumPosts">,
+          topWithinScrollRoot: 80,
+        },
+        scrollElement,
+      })
+    ).toBe("pending");
+    expect(scrollElement.scrollTop).toBe(170);
+    expect(
+      reconcileConversationDomAnchor({
+        anchor: {
+          postId: "post_visible" as Id<"schoolClassForumPosts">,
+          topWithinScrollRoot: 80,
+        },
+        scrollElement,
+      })
+    ).toBe("settled");
+  });
+
+  it("checks rendered post visibility and bottom distance without virtual offsets", () => {
+    const scrollElement = document.createElement("div");
+    const visiblePost = document.createElement("div");
+    const hiddenPost = document.createElement("div");
+
+    visiblePost.dataset.postId = "post_visible";
+    hiddenPost.dataset.postId = "post_hidden";
+    scrollElement.append(visiblePost, hiddenPost);
+
+    vi.spyOn(scrollElement, "getBoundingClientRect").mockReturnValue(
+      createRect({
+        bottom: 400,
+        height: 400,
+        top: 0,
+      })
+    );
+    vi.spyOn(visiblePost, "getBoundingClientRect").mockReturnValue(
+      createRect({
+        bottom: 180,
+        height: 80,
+        top: 100,
+      })
+    );
+    vi.spyOn(hiddenPost, "getBoundingClientRect").mockReturnValue(
+      createRect({
+        bottom: 520,
+        height: 80,
+        top: 440,
+      })
+    );
+
+    expect(
+      isConversationPostVisibleInDom({
+        postId: "post_visible" as Id<"schoolClassForumPosts">,
+        scrollElement,
+      })
+    ).toBe(true);
+    expect(
+      isConversationPostVisibleInDom({
+        postId: "post_hidden" as Id<"schoolClassForumPosts">,
+        scrollElement,
+      })
+    ).toBe(false);
+    expect(
+      getConversationBottomDistance({
+        scrollHeight: 1200,
+        scrollOffset: 600,
+        viewportHeight: 300,
+      })
+    ).toBe(300);
+    expect(needsConversationDomAnchorCorrection(0.5)).toBe(false);
+    expect(needsConversationDomAnchorCorrection(4)).toBe(true);
   });
 });

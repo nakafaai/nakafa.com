@@ -27,6 +27,7 @@ export function useConversationNavigation({
   setMode,
   shouldAnimateNavigation,
   showLatestPosts,
+  transcriptVariant,
   replaceWithFocusedTimeline,
 }: {
   forumId: Id<"schoolClassForums">;
@@ -41,6 +42,7 @@ export function useConversationNavigation({
   setMode: (mode: ForumConversationMode) => void;
   shouldAnimateNavigation: boolean;
   showLatestPosts: () => boolean;
+  transcriptVariant: "focused" | "live";
 }) {
   const [command, setCommand] = useState<ConversationTranscriptCommand | null>(
     null
@@ -75,6 +77,10 @@ export function useConversationNavigation({
 
   commandRef.current = command;
 
+  useLayoutEffect(() => {
+    latestConversationViewRef.current = savedConversationView;
+  }, [savedConversationView]);
+
   const createCommandId = useCallback(() => {
     commandIdRef.current += 1;
     return commandIdRef.current;
@@ -103,15 +109,13 @@ export function useConversationNavigation({
       smooth: shouldAnimateNavigation,
     });
 
-    if (isAtLatestEdge) {
+    if (transcriptVariant === "live" && isAtLatestEdge) {
       return;
     }
 
-    if (!showLatestPosts()) {
-      return;
+    if (showLatestPosts()) {
+      setMode({ kind: "live" });
     }
-
-    setMode({ kind: "live" });
   }, [
     cancelPendingJumpRequest,
     clearJumpHighlight,
@@ -120,6 +124,7 @@ export function useConversationNavigation({
     setMode,
     shouldAnimateNavigation,
     showLatestPosts,
+    transcriptVariant,
   ]);
 
   const jumpToPostId = useCallback(
