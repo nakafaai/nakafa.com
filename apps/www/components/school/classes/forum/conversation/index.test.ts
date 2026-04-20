@@ -54,17 +54,10 @@ vi.mock("@/components/school/classes/forum/conversation/header", () => ({
 }));
 
 vi.mock("@/components/school/classes/forum/conversation/item", () => ({
-  ForumPostItem: ({
-    isJumpHighlighted,
-    rowRef,
-  }: {
-    isJumpHighlighted: boolean;
-    rowRef?: (element: HTMLDivElement | null) => void;
-  }) =>
+  ForumPostItem: ({ isJumpHighlighted }: { isJumpHighlighted: boolean }) =>
     createElement("div", {
       "data-jump-highlighted": String(isJumpHighlighted),
       "data-testid": "forum-post-item",
-      ref: rowRef,
     }),
 }));
 
@@ -89,10 +82,6 @@ function createControllerResult(overrides?: {
   isConversationRevealed?: boolean;
   isInitialLoading?: boolean;
   items?: any[];
-  registerPostElement?: (
-    postId: Id<"schoolClassForumPosts">,
-    element: HTMLDivElement | null
-  ) => void;
 }) {
   return {
     acknowledgeUnreadCue: vi.fn(),
@@ -104,13 +93,14 @@ function createControllerResult(overrides?: {
     },
     goBack: vi.fn(),
     handleScroll: vi.fn(),
+    handleInitialAnchorSettled: vi.fn(),
     highlightedPostId: overrides?.highlightedPostId ?? null,
+    initialAnchor: null,
     isAtBottom: overrides?.isAtBottom ?? false,
     isAtLatestEdge: true,
     isConversationRevealed: overrides?.isConversationRevealed ?? false,
     isInitialLoading: overrides?.isInitialLoading ?? false,
     items: overrides?.items ?? [],
-    registerPostElement: overrides?.registerPostElement ?? vi.fn(),
     scrollRef: { current: null },
     scrollToLatest: vi.fn(),
     timelineSessionVersion: 0,
@@ -191,16 +181,14 @@ describe("conversation/index", () => {
     container.remove();
   });
 
-  it("renders jump actions, estimate sizes, and row ref registration", () => {
+  it("renders jump actions and estimate sizes", () => {
     const highlightedPostId = "post_1" as Id<"schoolClassForumPosts">;
-    const registerPostElement = vi.fn();
 
     mocks.useController.mockReturnValue(
       createControllerResult({
         canGoBack: true,
         highlightedPostId,
         isConversationRevealed: true,
-        registerPostElement,
         items: [
           { forum: { _id: forumId }, type: "header" },
           { date: Date.UTC(2026, 3, 20, 0, 0, 0), type: "date" },
@@ -243,7 +231,6 @@ describe("conversation/index", () => {
     expect(transcript?.getAttribute("data-estimate-date")).toBe("48");
     expect(transcript?.getAttribute("data-estimate-post")).toBe("160");
     expect(transcript?.getAttribute("data-estimate-empty")).toBe("120");
-    expect(registerPostElement).toHaveBeenCalled();
 
     act(() => {
       root.unmount();

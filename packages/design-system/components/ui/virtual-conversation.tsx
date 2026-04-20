@@ -120,7 +120,7 @@ export type VirtualConversationProps = Omit<
   floatingContent?: ReactNode;
   followLatest?: boolean;
   hideScrollButton?: boolean;
-  initialAnchor?: VirtualConversationAnchor;
+  initialAnchor?: VirtualConversationAnchor | null;
   onInitialAnchorSettled?: () => void;
   onScroll?: (offset: number) => void;
   onScrollEnd?: () => void;
@@ -140,7 +140,7 @@ export const VirtualConversation = memo(
     floatingContent,
     followLatest = true,
     hideScrollButton = false,
-    initialAnchor = { kind: "bottom" },
+    initialAnchor = null,
     onInitialAnchorSettled,
     onScroll,
     onScrollEnd,
@@ -173,13 +173,17 @@ export const VirtualConversation = memo(
     );
     const hasInitialAnchorRef = useRef(false);
     const hasNotifiedInitialAnchorRef = useRef(false);
-    const isAtBottomRef = useRef(initialAnchor.kind === "bottom");
-    const isBottomPinnedRef = useRef(initialAnchor.kind === "bottom");
+    const isAtBottomRef = useRef(initialAnchor?.kind === "bottom");
+    const isBottomPinnedRef = useRef(initialAnchor?.kind === "bottom");
     const hasPendingBottomSettleRef = useRef(false);
+    const lastNotifiedScrollRef = useRef<{
+      isScrolling: boolean;
+      offset: number;
+    } | null>(null);
     const previousContainerHeightRef = useRef(0);
     const previousItemCountRef = useRef(items.length);
     const [isAtBottom, setIsAtBottom] = useState(
-      initialAnchor.kind === "bottom"
+      initialAnchor?.kind === "bottom"
     );
     const virtualizer = useVirtualizer<HTMLDivElement, HTMLDivElement>({
       count: items.length,
@@ -199,6 +203,10 @@ export const VirtualConversation = memo(
       item.start < (instance.scrollOffset ?? 0);
     const virtualItems = virtualizer.getVirtualItems();
     const paddingTop = virtualItems[0]?.start ?? 0;
+    const scrollOffset = virtualizer.scrollOffset ?? 0;
+    const totalSize = virtualizer.getTotalSize();
+    const viewportHeight = virtualizer.scrollRect?.height ?? 0;
+    const geometryVersion = `${scrollOffset}:${totalSize}:${viewportHeight}`;
     /** Writes both the internal and forwarded scroll container refs. */
     const setScrollElementRef = useCallback(
       (node: HTMLDivElement | null) => {
@@ -255,7 +263,11 @@ export const VirtualConversation = memo(
         const container = scrollElementRef.current;
 
         if (!(measurement && container)) {
-          return false;
+          virtualizer.scrollToIndex(index, {
+            align: options?.align,
+            behavior: options?.smooth ? "smooth" : "auto",
+          });
+          return true;
         }
 
         hasPendingBottomSettleRef.current = false;
@@ -270,6 +282,17 @@ export const VirtualConversation = memo(
           }),
           { behavior: options?.smooth ? "smooth" : "auto" }
         );
+        return true;
+      },
+      [virtualizer]
+    );
+
+    /** Scrolls to one absolute offset using TanStack's public scroll API. */
+    const scrollToOffset = useCallback(
+      (offset: number, smooth = false) => {
+        virtualizer.scrollToOffset(offset, {
+          behavior: smooth ? "smooth" : "auto",
+        });
         return true;
       },
       [virtualizer]
@@ -373,6 +396,12 @@ export const VirtualConversation = memo(
       hasInitialAnchorRef.current = true;
       pendingInitialAnchorRef.current = initialAnchor;
 
+      if (!initialAnchor) {
+        hasInitialAnchorRef.current = true;
+        notifyInitialAnchorSettled();
+        return;
+      }
+
       if (initialAnchor.kind === "bottom") {
         scrollToBottom(false);
         return;
@@ -386,6 +415,7 @@ export const VirtualConversation = memo(
     }, [
       initialAnchor,
       items.length,
+      notifyInitialAnchorSettled,
       scrollToBottom,
       scrollToIndex,
       virtualizer.scrollRect?.height,
@@ -393,6 +423,10 @@ export const VirtualConversation = memo(
 
     /** Keeps the initial anchor honest while measured item sizes settle. */
     useLayoutEffect(() => {
+      if (geometryVersion === "") {
+        return;
+      }
+
       if (!hasInitialAnchorRef.current) {
         return;
       }
@@ -402,7 +436,7 @@ export const VirtualConversation = memo(
       }
 
       notifyInitialAnchorSettled();
-    });
+    }, [geometryVersion, maybeSettleInitialAnchor, notifyInitialAnchorSettled]);
 
     /** Re-pins the latest edge when the viewport grows while followLatest is armed. */
     useLayoutEffect(() => {
@@ -448,41 +482,37 @@ export const VirtualConversation = memo(
       scrollToBottom(false);
     }, [followLatest, items.length, scrollToBottom]);
 
-    /** Tracks offset and settle callbacks through the virtualizer's public change hook. */
+    /** Keeps the live-bottom state in sync with measured geometry. */
     useLayoutEffect(() => {
+      if (geometryVersion === "") {
+        return;
+      }
+
       syncBottomState();
-    });
+    }, [geometryVersion, syncBottomState]);
 
-    const handleChange = useCallback(
-      (sync: boolean) => {
-        const offset = virtualizer.scrollOffset ?? 0;
-
-        syncBottomState();
-        onScroll?.(offset);
-
-        if (sync) {
-          return;
-        }
-
-        if (maybeSettleInitialAnchor()) {
-          notifyInitialAnchorSettled();
-        }
-
-        onScrollEnd?.();
-      },
-      [
-        maybeSettleInitialAnchor,
-        notifyInitialAnchorSettled,
-        onScroll,
-        onScrollEnd,
-        syncBottomState,
-        virtualizer.scrollOffset,
-      ]
-    );
-
+    /** Emits scroll callbacks only when the virtualizer's scroll state actually changes. */
     useLayoutEffect(() => {
-      handleChange(virtualizer.isScrolling);
-    });
+      const nextScrollState = {
+        isScrolling: virtualizer.isScrolling,
+        offset: scrollOffset,
+      };
+      const previousScrollState = lastNotifiedScrollRef.current;
+
+      if (
+        previousScrollState?.isScrolling === nextScrollState.isScrolling &&
+        previousScrollState.offset === nextScrollState.offset
+      ) {
+        return;
+      }
+
+      lastNotifiedScrollRef.current = nextScrollState;
+      onScroll?.(nextScrollState.offset);
+
+      if (!nextScrollState.isScrolling) {
+        onScrollEnd?.();
+      }
+    }, [onScroll, onScrollEnd, scrollOffset, virtualizer.isScrolling]);
 
     const contextValue = useMemo(
       () => ({
@@ -514,8 +544,15 @@ export const VirtualConversation = memo(
         isAtBottom: () => isAtBottomRef.current,
         scrollToBottom,
         scrollToIndex,
+        scrollToOffset,
       }),
-      [getDistanceFromBottom, scrollToBottom, scrollToIndex, virtualizer]
+      [
+        getDistanceFromBottom,
+        scrollToBottom,
+        scrollToIndex,
+        scrollToOffset,
+        virtualizer,
+      ]
     );
 
     return (
@@ -531,7 +568,7 @@ export const VirtualConversation = memo(
           >
             <div
               style={{
-                height: virtualizer.getTotalSize(),
+                height: totalSize,
                 position: "relative",
                 width: "100%",
               }}
@@ -547,7 +584,7 @@ export const VirtualConversation = memo(
                     data-index={virtualItem.index}
                     key={virtualItem.key}
                     ref={virtualizer.measureElement}
-                    style={{ width: "100%" }}
+                    style={{ display: "flow-root", width: "100%" }}
                   >
                     {items[virtualItem.index]}
                   </div>

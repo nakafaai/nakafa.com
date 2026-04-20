@@ -1,4 +1,5 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { VirtualConversationHandle } from "@repo/design-system/types/virtual";
 import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -71,7 +72,10 @@ function createUseScrollProps(
     loadOlderPosts: overrides?.loadOlderPosts ?? vi.fn(),
     newestLoadedPostId: overrides?.newestLoadedPostId ?? newestLoadedPostId,
     oldestLoadedPostId: overrides?.oldestLoadedPostId ?? oldestLoadedPostId,
-    onNavigationSettled: overrides?.onNavigationSettled ?? vi.fn(),
+    onHighlightVisiblePost: overrides?.onHighlightVisiblePost ?? vi.fn(),
+    pendingHighlightPostIdRef: overrides?.pendingHighlightPostIdRef ?? {
+      current: null,
+    },
     pendingLatestSessionRef: overrides?.pendingLatestSessionRef ?? {
       current: false,
     },
@@ -121,27 +125,95 @@ function configureContainer(
   });
 }
 
-function configurePostElement(
-  node: HTMLDivElement,
+function getItemOffset(
+  items: VirtualItem[],
   topByPostId: Map<string, number>,
-  postId: string,
-  height = 80
+  index: number,
+  scrollTop: number
 ) {
-  Object.defineProperty(node, "offsetHeight", {
-    configurable: true,
-    value: height,
-  });
-  Object.defineProperty(node, "getBoundingClientRect", {
-    configurable: true,
-    value: () => {
-      const top = topByPostId.get(postId) ?? 20;
+  const item = items[index];
 
-      return { bottom: 100 + top + height, top: 100 + top };
-    },
-  });
+  if (!item) {
+    return 0;
+  }
+
+  if (item.type !== "post") {
+    return scrollTop;
+  }
+
+  return scrollTop + (topByPostId.get(item.post._id) ?? 20 + index * 140);
 }
 
-function renderUseScroll(initialProps: UseScrollProps) {
+function getItemSize(items: VirtualItem[], index: number) {
+  return items[index]?.type === "post" ? 80 : 0;
+}
+
+function createVirtualHandle({
+  items,
+  scrollState,
+  topByPostId,
+}: {
+  items: VirtualItem[];
+  scrollState: { scrollTop: number };
+  topByPostId: Map<string, number>;
+}): VirtualConversationHandle {
+  return {
+    findItemIndex: (offset) => {
+      for (let index = 0; index < items.length; index += 1) {
+        const itemStart = getItemOffset(
+          items,
+          topByPostId,
+          index,
+          scrollState.scrollTop
+        );
+        const itemEnd = itemStart + getItemSize(items, index);
+
+        if (itemEnd > offset) {
+          return index;
+        }
+      }
+
+      return Math.max(0, items.length - 1);
+    },
+    getDistanceFromBottom: () =>
+      Math.max(0, 1200 - 400 - scrollState.scrollTop),
+    getItemOffset: (index) =>
+      getItemOffset(items, topByPostId, index, scrollState.scrollTop),
+    getItemSize: (index) => getItemSize(items, index),
+    getScrollOffset: () => scrollState.scrollTop,
+    getViewportSize: () => 400,
+    isAtBottom: () => scrollState.scrollTop >= 800,
+    scrollToBottom: (_smooth) => {
+      scrollState.scrollTop = 800;
+      return true;
+    },
+    scrollToIndex: (index, options) => {
+      const itemStart = getItemOffset(
+        items,
+        topByPostId,
+        index,
+        scrollState.scrollTop
+      );
+      const itemSize = getItemSize(items, index);
+      const offset = options?.offset ?? 0;
+
+      scrollState.scrollTop =
+        options?.align === "center"
+          ? itemStart - (400 - itemSize) / 2 + offset
+          : itemStart - offset;
+      return true;
+    },
+    scrollToOffset: (offset, _smooth) => {
+      scrollState.scrollTop = offset;
+      return true;
+    },
+  };
+}
+
+function renderUseScroll(
+  initialProps: UseScrollProps,
+  options?: { settleInitialAnchor?: boolean }
+) {
   const container = document.createElement("div");
   document.body.append(container);
   const root = createRoot(container);
@@ -151,46 +223,75 @@ function renderUseScroll(initialProps: UseScrollProps) {
     ["post_2", 160],
     ["post_3", 300],
   ]);
+  let currentProps = initialProps;
   let result: UseScrollResultValue | null = null;
 
   function TestComponent(props: UseScrollProps) {
     result = useScroll(props);
 
-    return createElement(
-      "div",
-      {
-        ref: (node: HTMLDivElement | null) => {
-          if (result?.containerRef) {
-            result.containerRef.current = node;
-          }
-
-          if (node) {
-            configureContainer(node, scrollState);
-          }
-        },
-      },
-      props.items.map((item) => {
-        if (item.type !== "post") {
-          return null;
+    return createElement("div", {
+      ref: (node: HTMLDivElement | null) => {
+        if (result?.containerRef) {
+          result.containerRef.current = node;
         }
 
-        return createElement("div", {
-          key: item.post._id,
-          ref: (node: HTMLDivElement | null) => {
-            result?.registerPostElement(item.post._id, node);
+        if (node) {
+          configureContainer(node, scrollState);
 
-            if (node) {
-              configurePostElement(node, topByPostId, item.post._id);
-            }
-          },
-        });
-      })
-    );
+          if (!props.scrollRef.current) {
+            props.scrollRef.current = createVirtualHandle({
+              items: props.items,
+              scrollState,
+              topByPostId,
+            });
+          }
+        }
+      },
+    });
   }
 
   const render = (props: UseScrollProps) => {
+    currentProps = props;
+
     act(() => {
       root.render(createElement(TestComponent, props));
+    });
+
+    if (
+      options?.settleInitialAnchor === false ||
+      !result ||
+      props.items.length === 0
+    ) {
+      return;
+    }
+
+    const currentResult = result;
+
+    if (currentResult.initialAnchor) {
+      act(() => {
+        if (currentResult.initialAnchor?.kind === "bottom") {
+          currentResult.scrollToBottom({ smooth: false });
+        }
+
+        if (currentResult.initialAnchor?.kind === "index") {
+          const item = props.items[currentResult.initialAnchor.index];
+
+          if (item?.type === "post") {
+            currentResult.scrollToPost(item.post._id, {
+              align:
+                currentResult.initialAnchor.align === "center"
+                  ? "center"
+                  : "start",
+              offset: currentResult.initialAnchor.offset,
+              smooth: false,
+            });
+          }
+        }
+      });
+    }
+
+    act(() => {
+      currentResult.handleInitialAnchorSettled();
     });
   };
 
@@ -214,6 +315,7 @@ function renderUseScroll(initialProps: UseScrollProps) {
 
       return result;
     },
+    scrollRef: () => currentProps.scrollRef,
     scrollState,
     topByPostId,
   };
@@ -228,7 +330,7 @@ describe("use-scroll", () => {
     vi.restoreAllMocks();
   });
 
-  it("reveals the transcript and persists the initial bottom view", () => {
+  it("waits for the initial bottom anchor to settle before revealing the transcript", () => {
     const persistConversationView = vi.fn();
     const rendered = renderUseScroll(
       createUseScrollProps({
@@ -236,11 +338,87 @@ describe("use-scroll", () => {
         latestConversationView: { current: { kind: "bottom" } },
         pendingLatestSessionRef: { current: true },
         persistConversationView,
-      })
+      }),
+      { settleInitialAnchor: false }
     );
+
+    expect(rendered.result().initialAnchor).toEqual({ kind: "bottom" });
+    expect(rendered.result().isConversationRevealed).toBe(false);
+
+    act(() => {
+      rendered.result().handleInitialAnchorSettled();
+    });
 
     expect(rendered.result().isConversationRevealed).toBe(true);
     expect(persistConversationView).toHaveBeenCalledWith({ kind: "bottom" });
+
+    act(() => {
+      rendered.result().handleInitialAnchorSettled();
+    });
+
+    expect(persistConversationView).toHaveBeenCalledTimes(1);
+  });
+
+  it("builds a start-aligned initial anchor for saved post restores", () => {
+    const rendered = renderUseScroll(
+      createUseScrollProps({
+        conversationIntent: {
+          kind: "restore",
+          postId: "post_2" as Id<"schoolClassForumPosts">,
+          view: {
+            kind: "post",
+            offset: 24,
+            postId: "post_2" as Id<"schoolClassForumPosts">,
+          },
+        },
+        latestConversationView: {
+          current: {
+            kind: "post",
+            offset: 24,
+            postId: "post_2" as Id<"schoolClassForumPosts">,
+          },
+        },
+      }),
+      { settleInitialAnchor: false }
+    );
+
+    expect(rendered.result().initialAnchor).toEqual({
+      align: "start",
+      index: 1,
+      kind: "index",
+      offset: 24,
+    });
+  });
+
+  it("builds a center-aligned initial anchor for fresh jump sessions", () => {
+    const rendered = renderUseScroll(
+      createUseScrollProps({
+        conversationIntent: {
+          kind: "jump",
+          postId: "post_2" as Id<"schoolClassForumPosts">,
+        },
+      }),
+      { settleInitialAnchor: false }
+    );
+
+    expect(rendered.result().initialAnchor).toEqual({
+      align: "center",
+      index: 1,
+      kind: "index",
+      offset: 0,
+    });
+  });
+
+  it("builds a bottom initial anchor when the latest edge should be restored", () => {
+    const rendered = renderUseScroll(
+      createUseScrollProps({
+        latestConversationView: { current: { kind: "bottom" } },
+        pendingLatestSessionRef: { current: true },
+      }),
+      { settleInitialAnchor: false }
+    );
+
+    expect(rendered.result().initialAnchor).toEqual({ kind: "bottom" });
   });
 
   it("ignores non-post transcript items when tracking visible post order", () => {
@@ -277,6 +455,83 @@ describe("use-scroll", () => {
     });
   });
 
+  it("reports whether a registered post row is currently visible", () => {
+    const rendered = renderUseScroll(createUseScrollProps());
+
+    expect(
+      rendered.result().isPostVisible("post_1" as Id<"schoolClassForumPosts">)
+    ).toBe(true);
+
+    rendered.result().containerRef.current = null;
+
+    expect(
+      rendered.result().isPostVisible("post_1" as Id<"schoolClassForumPosts">)
+    ).toBe(false);
+
+    expect(
+      rendered.result().isPostVisible("missing" as Id<"schoolClassForumPosts">)
+    ).toBe(false);
+  });
+
+  it("skips visible non-post items when resolving the current post anchor", () => {
+    const rendered = renderUseScroll(
+      createUseScrollProps({
+        items: [
+          { date: Date.UTC(2026, 3, 20, 0, 0, 0), type: "date" } as VirtualItem,
+          createPostItem("post_1"),
+        ],
+        postIdToIndex: new Map([["post_1" as Id<"schoolClassForumPosts">, 1]]),
+        scrollRef: {
+          current: {
+            findItemIndex: vi.fn(() => 0),
+            getDistanceFromBottom: vi.fn(() => 200),
+            getItemOffset: vi.fn((index: number) => (index === 0 ? 0 : 20)),
+            getItemSize: vi.fn((index: number) => (index === 0 ? 10 : 80)),
+            getScrollOffset: vi.fn(() => 0),
+            getViewportSize: vi.fn(() => 400),
+            isAtBottom: vi.fn(() => false),
+            scrollToBottom: vi.fn(() => true),
+            scrollToIndex: vi.fn(() => true),
+            scrollToOffset: vi.fn(() => true),
+          },
+        },
+      })
+    );
+
+    expect(rendered.result().captureCurrentConversationView()).toEqual({
+      kind: "post",
+      offset: 20,
+      postId: "post_1",
+    });
+  });
+
+  it("returns null when the virtual handle reaches the end without a visible post", () => {
+    const rendered = renderUseScroll(
+      createUseScrollProps({
+        items: [
+          { date: Date.UTC(2026, 3, 20, 0, 0, 0), type: "date" } as VirtualItem,
+        ],
+        postIdToIndex: new Map(),
+        scrollRef: {
+          current: {
+            findItemIndex: vi.fn(() => 0),
+            getDistanceFromBottom: vi.fn(() => 200),
+            getItemOffset: vi.fn(() => 0),
+            getItemSize: vi.fn(() => 0),
+            getScrollOffset: vi.fn(() => 0),
+            getViewportSize: vi.fn(() => 400),
+            isAtBottom: vi.fn(() => false),
+            scrollToBottom: vi.fn(() => true),
+            scrollToIndex: vi.fn(() => true),
+            scrollToOffset: vi.fn(() => true),
+          },
+        },
+      })
+    );
+
+    expect(rendered.result().captureCurrentConversationView()).toBeNull();
+  });
+
   it("falls back to virtual scroll when a loaded target row is not mounted", () => {
     const scrollToIndex = vi.fn(() => true);
     const rendered = renderUseScroll(
@@ -293,6 +548,7 @@ describe("use-scroll", () => {
             isAtBottom: vi.fn(() => false),
             scrollToBottom: vi.fn(() => true),
             scrollToIndex,
+            scrollToOffset: vi.fn(() => true),
           },
         },
       })
@@ -393,7 +649,7 @@ describe("use-scroll", () => {
     vi.useRealTimers();
   });
 
-  it("drops stale settled-scroll work when the transcript session changes", () => {
+  it("keeps the transcript visible when the transcript session changes", () => {
     vi.useFakeTimers();
     const persistConversationView = vi.fn();
     const initialProps = createUseScrollProps({ persistConversationView });
@@ -414,7 +670,7 @@ describe("use-scroll", () => {
       vi.advanceTimersByTime(100);
     });
 
-    expect(rendered.result().isConversationRevealed).toBe(false);
+    expect(rendered.result().isConversationRevealed).toBe(true);
     vi.useRealTimers();
   });
 
@@ -466,11 +722,67 @@ describe("use-scroll", () => {
     expect(rendered.scrollState.scrollTop).toBe(800);
   });
 
+  it("uses the virtual handle for bottom scrolling when available", () => {
+    const scrollToBottom = vi.fn(() => true);
+    const rendered = renderUseScroll(
+      createUseScrollProps({
+        scrollRef: {
+          current: {
+            findItemIndex: vi.fn(() => 0),
+            getDistanceFromBottom: vi.fn(() => 0),
+            getItemOffset: vi.fn(() => 0),
+            getItemSize: vi.fn(() => 80),
+            getScrollOffset: vi.fn(() => 0),
+            getViewportSize: vi.fn(() => 400),
+            isAtBottom: vi.fn(() => false),
+            scrollToBottom,
+            scrollToIndex: vi.fn(() => true),
+            scrollToOffset: vi.fn(() => true),
+          },
+        },
+      })
+    );
+
+    expect(rendered.result().scrollToBottom({ smooth: false })).toBe(true);
+    expect(scrollToBottom).toHaveBeenCalledWith(false);
+  });
+
   it("scrolls to bottom with auto behavior by default", () => {
     const rendered = renderUseScroll(createUseScrollProps());
 
     expect(rendered.result().scrollToBottom()).toBe(true);
     expect(rendered.scrollState.scrollTop).toBe(800);
+  });
+
+  it("scrolls to bottom with explicit auto behavior when smooth is false", () => {
+    const rendered = renderUseScroll(createUseScrollProps());
+
+    expect(rendered.result().scrollToBottom({ smooth: false })).toBe(true);
+    expect(rendered.scrollState.scrollTop).toBe(800);
+  });
+
+  it("falls back to container scrolling when the virtual bottom handle declines", () => {
+    const rendered = renderUseScroll(
+      createUseScrollProps({
+        scrollRef: {
+          current: {
+            findItemIndex: vi.fn(() => 0),
+            getDistanceFromBottom: vi.fn(() => 0),
+            getItemOffset: vi.fn(() => 0),
+            getItemSize: vi.fn(() => 80),
+            getScrollOffset: vi.fn(() => 0),
+            getViewportSize: vi.fn(() => 400),
+            isAtBottom: vi.fn(() => false),
+            scrollToBottom: vi.fn(() => false),
+            scrollToIndex: vi.fn(() => true),
+            scrollToOffset: vi.fn(() => true),
+          },
+        },
+      })
+    );
+
+    expect(rendered.result().scrollToBottom({ smooth: true })).toBe(true);
+    expect(rendered.scrollState.scrollTop).toBe(1200);
   });
 
   it("scrolls directly to a visible post using default start alignment", () => {
@@ -505,6 +817,20 @@ describe("use-scroll", () => {
     const rendered = renderUseScroll(
       createUseScrollProps({
         postIdToIndex: new Map([["post_3" as Id<"schoolClassForumPosts">, 2]]),
+        scrollRef: {
+          current: {
+            findItemIndex: vi.fn(() => 0),
+            getDistanceFromBottom: vi.fn(() => 0),
+            getItemOffset: vi.fn(() => 0),
+            getItemSize: vi.fn(() => 80),
+            getScrollOffset: vi.fn(() => 0),
+            getViewportSize: vi.fn(() => 400),
+            isAtBottom: vi.fn(() => false),
+            scrollToBottom: vi.fn(() => true),
+            scrollToIndex: vi.fn(() => false),
+            scrollToOffset: vi.fn(() => true),
+          },
+        },
       })
     );
 
@@ -512,6 +838,24 @@ describe("use-scroll", () => {
 
     expect(
       rendered.result().scrollToPost("post_3" as Id<"schoolClassForumPosts">)
+    ).toBe(false);
+  });
+
+  it("returns false when a requested post id does not exist in the virtual items", () => {
+    const rendered = renderUseScroll(createUseScrollProps());
+
+    expect(
+      rendered.result().scrollToPost("missing" as Id<"schoolClassForumPosts">)
+    ).toBe(false);
+  });
+
+  it("returns false when a requested post exists but the virtual handle is gone", () => {
+    const rendered = renderUseScroll(createUseScrollProps());
+
+    rendered.scrollRef().current = null;
+
+    expect(
+      rendered.result().scrollToPost("post_1" as Id<"schoolClassForumPosts">)
     ).toBe(false);
   });
 
@@ -531,6 +875,19 @@ describe("use-scroll", () => {
         unreadPostId: "post_1" as Id<"schoolClassForumPosts">,
       })
     );
+
+    expect(rendered.result().captureCurrentConversationView()).toBeNull();
+  });
+
+  it("returns null when no virtual handle is available for capture", () => {
+    const rendered = renderUseScroll(
+      createUseScrollProps({
+        scrollRef: { current: null },
+      })
+    );
+
+    rendered.scrollRef().current = null;
+    rendered.scrollState.scrollTop = 100;
 
     expect(rendered.result().captureCurrentConversationView()).toBeNull();
   });
@@ -603,13 +960,11 @@ describe("use-scroll", () => {
 
   it("persists a bottom snapshot after an explicit latest-edge landing", () => {
     vi.useFakeTimers();
-    const onNavigationSettled = vi.fn();
     const persistConversationView = vi.fn();
     const scheduleMarkRead = vi.fn();
     const rendered = renderUseScroll(
       createUseScrollProps({
         isAtLatestEdge: true,
-        onNavigationSettled,
         persistConversationView,
         scheduleMarkRead,
       })
@@ -624,9 +979,28 @@ describe("use-scroll", () => {
     });
 
     expect(persistConversationView).toHaveBeenCalledWith({ kind: "bottom" });
-    expect(onNavigationSettled).toHaveBeenCalled();
     expect(scheduleMarkRead).toHaveBeenCalled();
     vi.useRealTimers();
+  });
+
+  it("notifies when a pending highlight target becomes visible", () => {
+    const onHighlightVisiblePost = vi.fn();
+    const rendered = renderUseScroll(
+      createUseScrollProps({
+        onHighlightVisiblePost,
+        pendingHighlightPostIdRef: {
+          current: "post_1" as Id<"schoolClassForumPosts">,
+        },
+      })
+    );
+
+    act(() => {
+      rendered.result().handleScroll(0);
+    });
+
+    expect(onHighlightVisiblePost).toHaveBeenCalledWith(
+      "post_1" as Id<"schoolClassForumPosts">
+    );
   });
 
   it("schedules read state when scroll settling ends at the live bottom", () => {
@@ -650,7 +1024,7 @@ describe("use-scroll", () => {
     vi.useRealTimers();
   });
 
-  it("keeps the transcript hidden when the initial target cannot be restored yet", () => {
+  it("reveals the transcript even when the initial target cannot be restored", () => {
     const rendered = renderUseScroll(
       createUseScrollProps({
         conversationIntent: {
@@ -662,7 +1036,56 @@ describe("use-scroll", () => {
       })
     );
 
+    expect(rendered.result().initialAnchor).toBeNull();
+    expect(rendered.result().isConversationRevealed).toBe(true);
+  });
+
+  it("reveals the transcript without persisting a snapshot when no fallback view exists", () => {
+    const persistConversationView = vi.fn();
+    const rendered = renderUseScroll(
+      createUseScrollProps({
+        conversationIntent: {
+          kind: "jump",
+          postId: "post_3" as Id<"schoolClassForumPosts">,
+        },
+        latestConversationView: { current: null },
+        persistConversationView,
+        postIdToIndex: new Map(),
+      }),
+      { settleInitialAnchor: false }
+    );
+
+    rendered.topByPostId.set("post_1", -220);
+    rendered.topByPostId.set("post_2", 500);
+
+    act(() => {
+      rendered.result().handleInitialAnchorSettled();
+    });
+
+    expect(rendered.result().isConversationRevealed).toBe(true);
+    expect(persistConversationView).not.toHaveBeenCalled();
+  });
+
+  it("does nothing when the initial anchor settles after the transcript container disappears", () => {
+    const persistConversationView = vi.fn();
+    const rendered = renderUseScroll(
+      createUseScrollProps({
+        isAtLatestEdge: true,
+        latestConversationView: { current: { kind: "bottom" } },
+        pendingLatestSessionRef: { current: true },
+        persistConversationView,
+      }),
+      { settleInitialAnchor: false }
+    );
+
+    rendered.result().containerRef.current = null;
+
+    act(() => {
+      rendered.result().handleInitialAnchorSettled();
+    });
+
     expect(rendered.result().isConversationRevealed).toBe(false);
+    expect(persistConversationView).not.toHaveBeenCalled();
   });
 
   it("flushes read state when a new latest post arrives near bottom", () => {
@@ -780,11 +1203,11 @@ describe("use-scroll", () => {
     rendered.render(
       createUseScrollProps({
         isLoadingOlder: false,
-        items: [
-          createPostItem("post_0"),
-          createPostItem("post_1"),
-          createPostItem("post_2"),
-        ],
+        items: [createPostItem("post_0"), createPostItem("post_2")],
+        postIdToIndex: new Map([
+          ["post_0" as Id<"schoolClassForumPosts">, 0],
+          ["post_2" as Id<"schoolClassForumPosts">, 1],
+        ]),
         loadOlderPosts,
       })
     );

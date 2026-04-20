@@ -19,6 +19,7 @@ export interface VirtualConversationHandle {
     index: number,
     options?: VirtualScrollToIndexOptions
   ) => boolean;
+  scrollToOffset: (offset: number, smooth?: boolean) => boolean;
 }
 
 /** Describes the initial semantic anchor for one virtual conversation session. */

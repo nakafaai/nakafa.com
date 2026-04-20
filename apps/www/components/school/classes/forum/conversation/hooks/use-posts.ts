@@ -7,13 +7,7 @@ import {
   createFocusedWindowArgs,
   FORUM_CONVERSATION_WINDOW,
 } from "@/components/school/classes/forum/conversation/utils/focused";
-import {
-  createInitialTimelineSessionState,
-  isTimelineSessionLoading,
-  replaceTimelineSession,
-  type TimelineState,
-  updateTimelineWithinSession,
-} from "@/components/school/classes/forum/conversation/utils/session";
+import type { TimelineState } from "@/components/school/classes/forum/conversation/utils/session";
 import type { ForumConversationMode } from "@/components/school/classes/forum/conversation/utils/view";
 import type { ForumPost } from "@/lib/store/forum";
 
@@ -87,11 +81,8 @@ function appendUniquePosts(current: ForumPost[], incoming: ForumPost[]) {
   };
 }
 
-/**
- * Syncs the detached or connected timeline with the reactive latest page while
- * preserving already loaded history and avoiding hard source swaps.
- */
-function syncTimelineWithLivePosts({
+/** Syncs one focused timeline window with fresher reactive live posts. */
+function syncFocusedTimelineWithLivePosts({
   current,
   liveHasMoreBefore,
   livePosts,
@@ -126,10 +117,7 @@ function syncTimelineWithLivePosts({
   };
 }
 
-/**
- * Keeps one client-side transcript session synchronized with live, restore, and
- * paginated history updates while exposing an imperative focused-window replace.
- */
+/** Keeps one forum transcript aligned to either the reactive live feed or one focused window. */
 export function useForumPosts({
   forumId,
   mode,
@@ -137,7 +125,11 @@ export function useForumPosts({
   forumId: Id<"schoolClassForums">;
   mode: ForumConversationMode;
 }) {
-  const { results: liveResults, status: liveStatus } = usePaginatedQuery(
+  const {
+    loadMore,
+    results: liveResults,
+    status: liveStatus,
+  } = usePaginatedQuery(
     api.classes.forums.queries.feed.getForumPosts,
     { forumId },
     { initialNumItems: FORUM_CONVERSATION_WINDOW }
@@ -145,136 +137,79 @@ export function useForumPosts({
   const livePosts = useMemo(() => [...liveResults].reverse(), [liveResults]);
   const liveHasMoreBefore =
     liveStatus === "CanLoadMore" || liveStatus === "LoadingMore";
-
-  const [timelineSession, setTimelineSession] = useState(
-    createInitialTimelineSessionState
+  const liveTimeline = useMemo(
+    () => createLiveTimelineState(livePosts, liveHasMoreBefore),
+    [liveHasMoreBefore, livePosts]
   );
-  const [shouldPromoteToLatest, setShouldPromoteToLatest] = useState(false);
+  const [focusedTimeline, setFocusedTimeline] = useState<TimelineState | null>(
+    null
+  );
   const [olderRequestPostId, setOlderRequestPostId] =
     useState<Id<"schoolClassForumPosts"> | null>(null);
   const [newerRequestPostId, setNewerRequestPostId] =
     useState<Id<"schoolClassForumPosts"> | null>(null);
-
-  const timeline = timelineSession.timeline;
-  const restoreTargetPostId = mode.kind === "restore" ? mode.postId : null;
+  const [timelineSessionVersion, setTimelineSessionVersion] = useState(0);
   const shouldLoadRestoreFocusedWindow =
-    timeline === null &&
-    mode.kind === "restore" &&
-    restoreTargetPostId !== null;
+    mode.kind === "restore" && focusedTimeline === null;
   const restoreFocusedWindow = useQuery(
     api.classes.forums.queries.around.getForumPostsAround,
     shouldLoadRestoreFocusedWindow
       ? createFocusedWindowArgs({
           forumId,
-          targetPostId: restoreTargetPostId,
+          targetPostId: mode.postId,
         })
       : "skip"
   );
-
-  /** Replaces the mounted transcript session with one focused detached window. */
-  const replaceWithFocusedTimeline = useCallback((timeline: TimelineState) => {
-    setShouldPromoteToLatest(false);
-    setOlderRequestPostId(null);
-    setNewerRequestPostId(null);
-    setTimelineSession((current) => replaceTimelineSession(current, timeline));
-  }, []);
-
-  useEffect(() => {
-    setTimelineSession((current) => {
-      if (current.timeline === null) {
-        if (mode.kind !== "live" || liveStatus === "LoadingFirstPage") {
-          return current;
-        }
-
-        return updateTimelineWithinSession(current, () =>
-          createLiveTimelineState(livePosts, liveHasMoreBefore)
-        );
-      }
-
-      return updateTimelineWithinSession(current, (timeline) => {
-        if (!timeline) {
-          return timeline;
-        }
-
-        return syncTimelineWithLivePosts({
-          current: timeline,
-          liveHasMoreBefore,
-          livePosts,
-        });
+  const timeline = useMemo(() => {
+    if (focusedTimeline) {
+      return syncFocusedTimelineWithLivePosts({
+        current: focusedTimeline,
+        liveHasMoreBefore,
+        livePosts,
       });
-    });
-  }, [liveHasMoreBefore, livePosts, liveStatus, mode.kind]);
-
-  useEffect(() => {
-    if (!(shouldPromoteToLatest && liveStatus !== "LoadingFirstPage")) {
-      return;
     }
 
-    setTimelineSession((current) => {
-      if (current.timeline?.isAtLatestEdge) {
-        return updateTimelineWithinSession(current, (timeline) => {
-          if (!timeline) {
-            return timeline;
-          }
-
-          return syncTimelineWithLivePosts({
-            current: { ...timeline, hasMoreAfter: false, isJumpMode: false },
-            liveHasMoreBefore,
-            livePosts,
-          });
-        });
+    if (mode.kind === "restore") {
+      if (restoreFocusedWindow === undefined) {
+        return null;
       }
 
-      return replaceTimelineSession(
-        current,
-        createLiveTimelineState(livePosts, liveHasMoreBefore)
-      );
-    });
-    setShouldPromoteToLatest(false);
-  }, [shouldPromoteToLatest, liveHasMoreBefore, livePosts, liveStatus]);
-
-  useEffect(() => {
-    if (
-      !(
-        timeline === null &&
-        mode.kind === "restore" &&
-        restoreTargetPostId === null
-      )
-    ) {
-      return;
+      return createFocusedTimelineState({
+        aroundResult: restoreFocusedWindow,
+        targetKind: "restore",
+      });
     }
 
     if (liveStatus === "LoadingFirstPage") {
-      return;
+      return null;
     }
 
-    replaceWithFocusedTimeline(
-      createLiveTimelineState(livePosts, liveHasMoreBefore)
-    );
+    return liveTimeline;
   }, [
+    focusedTimeline,
     liveHasMoreBefore,
     livePosts,
     liveStatus,
+    liveTimeline,
     mode.kind,
-    restoreTargetPostId,
-    replaceWithFocusedTimeline,
-    timeline,
+    restoreFocusedWindow,
   ]);
 
+  /** Replaces the mounted transcript with one focused detached window. */
+  const replaceWithFocusedTimeline = useCallback((timeline: TimelineState) => {
+    setOlderRequestPostId(null);
+    setNewerRequestPostId(null);
+    setFocusedTimeline(timeline);
+    setTimelineSessionVersion((current) => current + 1);
+  }, []);
+
   useEffect(() => {
-    if (
-      !(timeline === null && mode.kind === "restore" && restoreFocusedWindow)
-    ) {
+    if (!(mode.kind === "restore" && focusedTimeline === null && timeline)) {
       return;
     }
 
-    replaceWithFocusedTimeline(
-      createFocusedTimelineState({
-        aroundResult: restoreFocusedWindow,
-        targetKind: "restore",
-      })
-    );
-  }, [mode.kind, replaceWithFocusedTimeline, restoreFocusedWindow, timeline]);
+    setFocusedTimeline(timeline);
+  }, [focusedTimeline, mode.kind, timeline]);
 
   const olderData = useQuery(
     api.classes.forums.queries.older.getForumPostsOlder,
@@ -292,32 +227,32 @@ export function useForumPosts({
       return;
     }
 
-    setTimelineSession((current) =>
-      updateTimelineWithinSession(current, (timeline) => {
-        if (!(timeline && timeline.oldestPostId === olderRequestPostId)) {
-          return timeline;
-        }
+    setFocusedTimeline((currentTimeline) => {
+      const current = currentTimeline ?? timeline;
 
-        const nextPosts = prependUniquePosts(timeline.posts, olderData.posts);
+      if (!(current && current.oldestPostId === olderRequestPostId)) {
+        return currentTimeline;
+      }
 
-        if (!nextPosts.changed) {
-          return {
-            ...timeline,
-            hasMoreBefore: olderData.hasMore,
-            oldestPostId: olderData.oldestPostId ?? timeline.oldestPostId,
-          };
-        }
+      const nextPosts = prependUniquePosts(current.posts, olderData.posts);
 
+      if (!nextPosts.changed) {
         return {
-          ...timeline,
+          ...current,
           hasMoreBefore: olderData.hasMore,
-          oldestPostId: olderData.oldestPostId ?? timeline.oldestPostId,
-          posts: nextPosts.posts,
+          oldestPostId: olderData.oldestPostId ?? current.oldestPostId,
         };
-      })
-    );
+      }
+
+      return {
+        ...current,
+        hasMoreBefore: olderData.hasMore,
+        oldestPostId: olderData.oldestPostId ?? current.oldestPostId,
+        posts: nextPosts.posts,
+      };
+    });
     setOlderRequestPostId(null);
-  }, [olderData, olderRequestPostId]);
+  }, [olderData, olderRequestPostId, timeline]);
 
   const newerData = useQuery(
     api.classes.forums.queries.newer.getForumPostsNewer,
@@ -335,108 +270,104 @@ export function useForumPosts({
       return;
     }
 
-    setTimelineSession((current) =>
-      updateTimelineWithinSession(current, (timeline) => {
-        if (!(timeline && timeline.newestPostId === newerRequestPostId)) {
-          return timeline;
-        }
+    setFocusedTimeline((currentTimeline) => {
+      const current = currentTimeline ?? timeline;
 
-        const nextPosts = appendUniquePosts(timeline.posts, newerData.posts);
-        const isAtLatestEdge = !newerData.hasMore;
+      if (!(current && current.newestPostId === newerRequestPostId)) {
+        return currentTimeline;
+      }
 
-        return {
-          ...timeline,
-          hasMoreAfter: newerData.hasMore,
-          isAtLatestEdge,
-          isJumpMode: isAtLatestEdge ? false : timeline.isJumpMode,
-          newestPostId: newerData.newestPostId ?? timeline.newestPostId,
-          posts: nextPosts.posts,
-        };
-      })
-    );
+      const nextPosts = appendUniquePosts(current.posts, newerData.posts);
+      const isAtLatestEdge = !newerData.hasMore;
+
+      return {
+        ...current,
+        hasMoreAfter: newerData.hasMore,
+        isAtLatestEdge,
+        isJumpMode: isAtLatestEdge ? false : current.isJumpMode,
+        newestPostId: newerData.newestPostId ?? current.newestPostId,
+        posts: nextPosts.posts,
+      };
+    });
     setNewerRequestPostId(null);
-  }, [newerData, newerRequestPostId]);
+  }, [newerData, newerRequestPostId, timeline]);
 
-  /** Loads older history above the current transcript window. */
+  /** Loads older history above the active transcript window. */
   const loadOlderPosts = useCallback(() => {
+    if (focusedTimeline === null) {
+      if (liveStatus === "CanLoadMore") {
+        loadMore(FORUM_CONVERSATION_WINDOW);
+      }
+
+      return;
+    }
+
     setOlderRequestPostId((currentRequestPostId) => {
       if (currentRequestPostId) {
         return currentRequestPostId;
       }
 
-      if (!(timeline?.hasMoreBefore && timeline.oldestPostId)) {
+      if (!(focusedTimeline.hasMoreBefore && focusedTimeline.oldestPostId)) {
         return null;
       }
 
-      return timeline.oldestPostId;
+      return focusedTimeline.oldestPostId;
     });
-  }, [timeline]);
+  }, [focusedTimeline, liveStatus, loadMore]);
 
-  /** Loads newer history below the current transcript window. */
+  /** Loads newer history below one focused transcript window. */
   const loadNewerPosts = useCallback(() => {
+    if (!focusedTimeline) {
+      return;
+    }
+
     setNewerRequestPostId((currentRequestPostId) => {
       if (currentRequestPostId) {
         return currentRequestPostId;
       }
 
-      if (!(timeline?.hasMoreAfter && timeline.newestPostId)) {
+      if (!(focusedTimeline.hasMoreAfter && focusedTimeline.newestPostId)) {
         return null;
       }
 
-      return timeline.newestPostId;
+      return focusedTimeline.newestPostId;
     });
-  }, [timeline]);
+  }, [focusedTimeline]);
 
   /** Promotes the transcript back to the reactive live latest window. */
   const showLatestPosts = useCallback(() => {
     if (liveStatus === "LoadingFirstPage") {
-      setShouldPromoteToLatest(true);
       return false;
     }
 
-    setShouldPromoteToLatest(false);
     setOlderRequestPostId(null);
     setNewerRequestPostId(null);
-    setTimelineSession((current) => {
-      if (current.timeline?.isAtLatestEdge) {
-        return updateTimelineWithinSession(current, (timeline) => {
-          if (!timeline) {
-            return timeline;
-          }
 
-          return syncTimelineWithLivePosts({
-            current: { ...timeline, hasMoreAfter: false, isJumpMode: false },
-            liveHasMoreBefore,
-            livePosts,
-          });
-        });
-      }
-
-      return replaceTimelineSession(
-        current,
-        createLiveTimelineState(livePosts, liveHasMoreBefore)
-      );
-    });
+    if (focusedTimeline !== null) {
+      setFocusedTimeline(null);
+      setTimelineSessionVersion((current) => current + 1);
+    }
 
     return true;
-  }, [liveHasMoreBefore, livePosts, liveStatus]);
-
-  const isInitialLoading = isTimelineSessionLoading(timeline);
+  }, [focusedTimeline, liveStatus]);
 
   return {
     hasMoreAfter: timeline?.hasMoreAfter ?? false,
     hasMoreBefore: timeline?.hasMoreBefore ?? false,
     isAtLatestEdge: timeline?.isAtLatestEdge ?? false,
-    isInitialLoading,
+    isInitialLoading: timeline === null,
     isJumpMode: timeline?.isJumpMode ?? false,
     isLoadingNewer: newerRequestPostId !== null,
-    isLoadingOlder: olderRequestPostId !== null,
+    isLoadingOlder:
+      focusedTimeline === null
+        ? liveStatus === "LoadingMore"
+        : olderRequestPostId !== null,
     loadNewerPosts,
     loadOlderPosts,
     posts: timeline?.posts ?? [],
     replaceWithFocusedTimeline,
     showLatestPosts,
-    timelineSessionVersion: timelineSession.sessionVersion,
+    timelineSessionVersion,
   };
 }
 

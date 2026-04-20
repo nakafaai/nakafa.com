@@ -45,7 +45,7 @@ import { useMutation } from "convex/react";
 import { format } from "date-fns";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
-import { Activity, memo, type Ref, useTransition } from "react";
+import { Activity, memo, useTransition } from "react";
 import type { ForumPost } from "@/components/school/classes/forum/conversation/types";
 import { useForum } from "@/lib/context/use-forum";
 import { useForumScroll } from "@/lib/context/use-forum-scroll";
@@ -62,7 +62,6 @@ export const ForumPostItem = memo(
     isFirstInGroup,
     isJumpHighlighted,
     isLastInGroup,
-    rowRef,
     showContinuationTime,
     currentUserId,
   }: {
@@ -70,7 +69,6 @@ export const ForumPostItem = memo(
     isFirstInGroup: boolean;
     isJumpHighlighted: boolean;
     isLastInGroup: boolean;
-    rowRef?: Ref<HTMLDivElement>;
     showContinuationTime: boolean;
     currentUserId: Id<"users">;
   }) => {
@@ -94,9 +92,7 @@ export const ForumPostItem = memo(
           isReplyTo === true && "border-secondary bg-secondary/10",
           isJumpHighlighted === true && "border-secondary bg-secondary/10"
         )}
-        data-forum-post-id={post._id}
         id={post._id}
-        ref={rowRef}
       >
         <PostItemActions post={post} />
 

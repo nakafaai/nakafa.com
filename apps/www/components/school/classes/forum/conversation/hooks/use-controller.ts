@@ -1,7 +1,10 @@
 import { useReducedMotion, useTimeout } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { VirtualConversationHandle } from "@repo/design-system/types/virtual";
+import type {
+  VirtualConversationAnchor,
+  VirtualConversationHandle,
+} from "@repo/design-system/types/virtual";
 import { useConvex } from "convex/react";
 import {
   type RefObject,
@@ -11,28 +14,47 @@ import {
   useRef,
   useState,
 } from "react";
-import { useHistory } from "@/components/school/classes/forum/conversation/hooks/use-history";
 import { useItems } from "@/components/school/classes/forum/conversation/hooks/use-items";
 import { usePosts } from "@/components/school/classes/forum/conversation/hooks/use-posts";
 import { useRead } from "@/components/school/classes/forum/conversation/hooks/use-read";
 import { useScroll } from "@/components/school/classes/forum/conversation/hooks/use-scroll";
 import { useUnread } from "@/components/school/classes/forum/conversation/hooks/use-unread";
-import { useView } from "@/components/school/classes/forum/conversation/hooks/use-view";
 import type {
   Forum,
-  ForumPost,
   VirtualItem,
 } from "@/components/school/classes/forum/conversation/types";
-import { createFocusedWindowArgs } from "@/components/school/classes/forum/conversation/utils/focused";
-import { isForumPostVisible } from "@/components/school/classes/forum/conversation/utils/post-target";
+import {
+  clearBackStack,
+  peekBackView,
+  popBackView,
+  pushBackView,
+} from "@/components/school/classes/forum/conversation/utils/back-stack";
+import {
+  createFocusedTimelineState,
+  createFocusedWindowArgs,
+} from "@/components/school/classes/forum/conversation/utils/focused";
 import {
   createForumConversationMode,
   type ForumConversationMode,
+  isConversationViewAtOrAfter,
 } from "@/components/school/classes/forum/conversation/utils/view";
 import { useForum, useForumStoreApi } from "@/lib/context/use-forum";
 import type { ForumConversationView } from "@/lib/store/forum";
 
 const FORUM_JUMP_HIGHLIGHT_DURATION = 1600;
+
+/** Returns whether one semantic conversation view is safe to keep as jump-back history. */
+function isBackTarget(view: ForumConversationView | null) {
+  if (!view) {
+    return false;
+  }
+
+  if (view.kind === "bottom") {
+    return true;
+  }
+
+  return view.postId !== null;
+}
 
 interface ForumScrollValue {
   jumpToPostId: (postId: Id<"schoolClassForumPosts">) => void;
@@ -45,45 +67,18 @@ interface UseControllerResult {
   containerRef: RefObject<HTMLDivElement | null>;
   forumScrollValue: ForumScrollValue;
   goBack: () => void;
+  handleInitialAnchorSettled: () => void;
   handleScroll: (offset: number) => void;
   highlightedPostId: Id<"schoolClassForumPosts"> | null;
+  initialAnchor: VirtualConversationAnchor | null;
   isAtBottom: boolean;
   isAtLatestEdge: boolean;
   isConversationRevealed: boolean;
   isInitialLoading: boolean;
   items: VirtualItem[];
-  registerPostElement: (
-    postId: Id<"schoolClassForumPosts">,
-    element: HTMLDivElement | null
-  ) => void;
   scrollRef: RefObject<VirtualConversationHandle | null>;
   scrollToLatest: () => void;
   timelineSessionVersion: number;
-}
-
-/** Creates one direct focused timeline state from an around-window result. */
-function createFocusedTimelineState({
-  aroundResult,
-}: {
-  aroundResult: {
-    hasMoreAfter: boolean;
-    hasMoreBefore: boolean;
-    newestPostId: Id<"schoolClassForumPosts">;
-    oldestPostId: Id<"schoolClassForumPosts">;
-    posts: ForumPost[];
-  };
-}) {
-  const isAtLatestEdge = !aroundResult.hasMoreAfter;
-
-  return {
-    hasMoreAfter: aroundResult.hasMoreAfter,
-    hasMoreBefore: aroundResult.hasMoreBefore,
-    isAtLatestEdge,
-    isJumpMode: !isAtLatestEdge,
-    newestPostId: aroundResult.newestPostId,
-    oldestPostId: aroundResult.oldestPostId,
-    posts: aroundResult.posts,
-  };
 }
 
 /** Owns the forum conversation orchestration and exposes a render-facing API. */
@@ -113,6 +108,8 @@ export function useController({
   const scrollRef = useRef<VirtualConversationHandle>(null);
   const [highlightedPostId, setHighlightedPostId] =
     useState<Id<"schoolClassForumPosts"> | null>(null);
+  const [canGoBack, setCanGoBack] = useState(false);
+  const backStackRef = useRef<ForumConversationView[]>(clearBackStack());
   const {
     hasMoreAfter,
     hasMoreBefore,
@@ -151,16 +148,77 @@ export function useController({
     posts,
     unreadCue,
   });
-  const latestItemsRef = useRef(items);
-  latestItemsRef.current = items;
   const lastPostId = posts.at(-1)?._id;
   const newestLoadedPostId = lastPostId ?? null;
   const oldestLoadedPostId = posts[0]?._id ?? null;
-  const { latestConversationView, persistConversationView } = useView({
-    forumId,
-    saveConversationView,
-    savedConversationView,
-  });
+  const latestConversationView = useRef<ForumConversationView | null>(
+    savedConversationView
+  );
+  const persistConversationView = useCallback(
+    (view?: ForumConversationView | null) => {
+      const nextView = view ?? latestConversationView.current;
+
+      if (!nextView) {
+        return;
+      }
+
+      latestConversationView.current = nextView;
+      saveConversationView(forumId, nextView);
+    },
+    [forumId, saveConversationView]
+  );
+  const applyBackStack = useCallback((backStack: ForumConversationView[]) => {
+    backStackRef.current = backStack;
+    setCanGoBack(backStack.length > 0);
+  }, []);
+  const clearJumpHistory = useCallback(() => {
+    applyBackStack(clearBackStack());
+  }, [applyBackStack]);
+  const pruneReachedBackHistory = useCallback(
+    (currentView: ForumConversationView | null) => {
+      if (!currentView) {
+        return;
+      }
+
+      let nextBackStack = backStackRef.current;
+
+      while (true) {
+        const targetView = peekBackView(nextBackStack);
+
+        if (
+          !(
+            targetView &&
+            isConversationViewAtOrAfter({
+              currentView,
+              postIdToIndex,
+              targetView,
+            })
+          )
+        ) {
+          break;
+        }
+
+        nextBackStack = popBackView(nextBackStack).backStack;
+      }
+
+      if (nextBackStack === backStackRef.current) {
+        return;
+      }
+
+      applyBackStack(nextBackStack);
+    },
+    [applyBackStack, postIdToIndex]
+  );
+  const takeBackView = useCallback(() => {
+    const { backStack, view } = popBackView(backStackRef.current);
+
+    if (!(view && isBackTarget(view))) {
+      return null;
+    }
+
+    applyBackStack(backStack);
+    return view;
+  }, [applyBackStack]);
   const { cancelPendingMarkRead, flushMarkRead, scheduleMarkRead } = useRead({
     forumId,
   });
@@ -191,10 +249,12 @@ export function useController({
     captureCurrentConversationView,
     containerRef,
     handleScroll,
+    handleInitialAnchorSettled,
+    initialAnchor,
+    isPostVisible,
     isAtBottom,
     isConversationRevealed,
     markPendingBottomPersistence,
-    registerPostElement,
     resetPendingBottomPersistence,
     resetScrollState,
     scrollToBottom,
@@ -215,33 +275,13 @@ export function useController({
     loadOlderPosts,
     newestLoadedPostId,
     oldestLoadedPostId,
-    onNavigationSettled: () => {
-      const postId = pendingJumpHighlightPostIdRef.current;
-
-      if (!postId) {
-        return;
-      }
-
-      const container = containerRef.current;
-      const index = postIdToIndex.get(postId);
-
-      if (!(container && index !== undefined)) {
-        return;
-      }
-
-      const element = container.querySelector<HTMLDivElement>(
-        `[data-forum-post-id="${postId}"]`
-      );
-
-      if (!(element && isForumPostVisible({ container, element }))) {
-        return;
-      }
-
+    onHighlightVisiblePost: (postId) => {
       pendingJumpHighlightPostIdRef.current = null;
       clearJumpHighlightTimeout();
       setHighlightedPostId(postId);
       startJumpHighlightTimeout();
     },
+    pendingHighlightPostIdRef: pendingJumpHighlightPostIdRef,
     pendingLatestSessionRef,
     persistConversationView,
     postIdToIndex,
@@ -250,18 +290,39 @@ export function useController({
     timelineSessionVersion,
     unreadPostId: unreadCue?.postId ?? null,
   });
-  const {
-    canGoBack,
-    clearJumpHistory,
-    pruneReachedBackHistory,
-    pushCurrentViewToBackStack,
-    takeBackView,
-  } = useHistory({
-    captureCurrentConversationView,
-    latestConversationView,
-    postIdToIndex,
-  });
 
+  /** Highlights one jump target immediately when it is already visible. */
+  const highlightVisibleJumpTarget = useCallback(
+    (postId: Id<"schoolClassForumPosts">) => {
+      if (!isPostVisible(postId)) {
+        return false;
+      }
+
+      pendingJumpHighlightPostIdRef.current = null;
+      clearJumpHighlightTimeout();
+      setHighlightedPostId(postId);
+      startJumpHighlightTimeout();
+      return true;
+    },
+    [clearJumpHighlightTimeout, isPostVisible, startJumpHighlightTimeout]
+  );
+
+  /** Pushes the current semantic viewport so a detached jump can return here. */
+  const pushCurrentViewToBackStack = useCallback(() => {
+    const currentView =
+      captureCurrentConversationView() ?? latestConversationView.current;
+
+    if (!(currentView && isBackTarget(currentView))) {
+      return;
+    }
+
+    applyBackStack(
+      pushBackView({
+        backStack: backStackRef.current,
+        view: currentView,
+      })
+    );
+  }, [applyBackStack, captureCurrentConversationView]);
   /** Keeps jump-back history in sync with the current visible transcript. */
   const handleTranscriptScroll = useCallback(
     (offset: number) => {
@@ -305,7 +366,7 @@ export function useController({
     }: {
       onRejected: () => void;
       postId: Id<"schoolClassForumPosts">;
-      nextIntent: ForumConversationMode;
+      nextIntent: Extract<ForumConversationMode, { kind: "jump" | "restore" }>;
     }) => {
       const requestId = beginPendingJumpRequest();
 
@@ -324,9 +385,14 @@ export function useController({
           return;
         }
 
+        if (nextIntent.kind === "jump") {
+          pushCurrentViewToBackStack();
+        }
+
         replaceWithFocusedTimeline(
           createFocusedTimelineState({
             aroundResult,
+            targetKind: nextIntent.kind,
           })
         );
       } catch {
@@ -337,7 +403,13 @@ export function useController({
         onRejected();
       }
     },
-    [beginPendingJumpRequest, convex, forumId, replaceWithFocusedTimeline]
+    [
+      beginPendingJumpRequest,
+      convex,
+      forumId,
+      pushCurrentViewToBackStack,
+      replaceWithFocusedTimeline,
+    ]
   );
 
   /** Returns the conversation to the live latest edge. */
@@ -374,7 +446,6 @@ export function useController({
         postId,
       } satisfies ForumConversationView;
 
-      pushCurrentViewToBackStack();
       latestConversationView.current = nextView;
       persistConversationView(nextView);
       resetDetachedFlow();
@@ -386,6 +457,9 @@ export function useController({
           smooth: shouldAnimateNavigation,
         })
       ) {
+        requestAnimationFrame(() => {
+          highlightVisibleJumpTarget(postId);
+        });
         return;
       }
 
@@ -400,9 +474,8 @@ export function useController({
     },
     [
       clearJumpHighlight,
-      latestConversationView,
+      highlightVisibleJumpTarget,
       persistConversationView,
-      pushCurrentViewToBackStack,
       queueJumpHighlight,
       requestFocusedTimeline,
       resetDetachedFlow,
@@ -453,7 +526,6 @@ export function useController({
       nextIntent: { kind: "restore", postId: view.postId, view },
     });
   }, [
-    latestConversationView,
     persistConversationView,
     requestFocusedTimeline,
     resetDetachedFlow,
@@ -497,7 +569,6 @@ export function useController({
       captureCurrentConversationView,
       clearJumpHighlight,
       clearJumpHistory,
-      latestConversationView,
       persistConversationView,
       resetScrollState,
     ]
@@ -510,13 +581,14 @@ export function useController({
     forumScrollValue,
     goBack,
     handleScroll: handleTranscriptScroll,
+    handleInitialAnchorSettled,
     highlightedPostId,
+    initialAnchor,
     isAtBottom,
     isAtLatestEdge,
     isConversationRevealed,
     isInitialLoading,
     items,
-    registerPostElement,
     scrollRef,
     scrollToLatest,
     timelineSessionVersion,

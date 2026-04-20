@@ -38,14 +38,15 @@ export const ForumPostConversation = memo(
       forumScrollValue,
       goBack,
       handleScroll,
+      handleInitialAnchorSettled,
       highlightedPostId,
+      initialAnchor,
       isAtBottom,
       isAtLatestEdge,
       isConversationRevealed,
       isInitialLoading,
       items,
       containerRef,
-      registerPostElement,
       scrollRef,
       scrollToLatest,
       timelineSessionVersion,
@@ -99,7 +100,9 @@ export const ForumPostConversation = memo(
               ) : null
             }
             hideScrollButton={canGoBack}
+            initialAnchor={initialAnchor}
             key={timelineSessionVersion}
+            onInitialAnchorSettled={handleInitialAnchorSettled}
             onScroll={handleScroll}
             scrollButtonAction={scrollToLatest}
             scrollButtonAriaLabel={t("back-to-latest")}
@@ -134,9 +137,6 @@ export const ForumPostConversation = memo(
                   isLastInGroup={item.isLastInGroup}
                   key={item.post._id}
                   post={item.post}
-                  rowRef={(element) => {
-                    registerPostElement(item.post._id, element);
-                  }}
                   showContinuationTime={item.showContinuationTime}
                 />
               );

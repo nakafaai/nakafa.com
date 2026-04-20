@@ -1,6 +1,9 @@
 import { useDebouncedCallback, usePrevious } from "@mantine/hooks";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { VirtualConversationHandle } from "@repo/design-system/types/virtual";
+import type {
+  VirtualConversationAnchor,
+  VirtualConversationHandle,
+} from "@repo/design-system/types/virtual";
 import {
   type RefObject,
   useCallback,
@@ -15,10 +18,7 @@ import {
   shouldRequestHistoryBoundary,
 } from "@/components/school/classes/forum/conversation/utils/scroll-policy";
 import {
-  clampScrollTop,
-  findVisiblePostAnchor,
   getDistanceFromBottom,
-  getScrollTopForPost,
   isAtTranscriptBottom,
   isNearReadStateBottom,
 } from "@/components/school/classes/forum/conversation/utils/transcript-scroll";
@@ -31,9 +31,13 @@ import type { ForumConversationView } from "@/lib/store/forum";
 const FORUM_SCROLL_SETTLE_DELAY = 80;
 
 interface PendingOlderAnchor {
-  itemCount: number;
+  offset: number;
   postId: Id<"schoolClassForumPosts">;
-  top: number;
+}
+
+interface PendingInitialRestore {
+  anchor: VirtualConversationAnchor;
+  view: ForumConversationView;
 }
 
 interface ScrollToPostOptions {
@@ -45,14 +49,13 @@ interface ScrollToPostOptions {
 interface UseScrollResult {
   captureCurrentConversationView: () => ForumConversationView | null;
   containerRef: RefObject<HTMLDivElement | null>;
+  handleInitialAnchorSettled: () => void;
   handleScroll: (offset: number) => void;
+  initialAnchor: VirtualConversationAnchor | null;
   isAtBottom: boolean;
   isConversationRevealed: boolean;
+  isPostVisible: (postId: Id<"schoolClassForumPosts">) => boolean;
   markPendingBottomPersistence: () => void;
-  registerPostElement: (
-    postId: Id<"schoolClassForumPosts">,
-    element: HTMLDivElement | null
-  ) => void;
   resetPendingBottomPersistence: () => void;
   resetScrollState: () => void;
   scrollToBottom: (options?: { smooth?: boolean }) => boolean;
@@ -79,8 +82,9 @@ export function useScroll({
   loadOlderPosts,
   newestLoadedPostId,
   oldestLoadedPostId,
-  onNavigationSettled,
+  onHighlightVisiblePost,
   pendingLatestSessionRef,
+  pendingHighlightPostIdRef,
   persistConversationView,
   postIdToIndex,
   scheduleMarkRead,
@@ -105,7 +109,8 @@ export function useScroll({
   loadOlderPosts: () => void;
   newestLoadedPostId: Id<"schoolClassForumPosts"> | null;
   oldestLoadedPostId: Id<"schoolClassForumPosts"> | null;
-  onNavigationSettled?: () => void;
+  onHighlightVisiblePost?: (postId: Id<"schoolClassForumPosts">) => void;
+  pendingHighlightPostIdRef: RefObject<Id<"schoolClassForumPosts"> | null>;
   pendingLatestSessionRef: RefObject<boolean>;
   persistConversationView: (view?: ForumConversationView | null) => void;
   postIdToIndex: Map<Id<"schoolClassForumPosts">, number>;
@@ -117,11 +122,9 @@ export function useScroll({
   unreadPostId: Id<"schoolClassForumPosts"> | null;
 }): UseScrollResult {
   const containerRef = useRef<HTMLDivElement>(null);
-  const postElementsRef = useRef(
-    new Map<Id<"schoolClassForumPosts">, HTMLDivElement>()
-  );
   const initialSessionVersionRef = useRef<number | null>(null);
   const pendingBottomPersistenceRef = useRef(false);
+  const pendingInitialRestoreRef = useRef<PendingInitialRestore | null>(null);
   const pendingOlderAnchorRef = useRef<PendingOlderAnchor | null>(null);
   const previousTimelineSessionVersionRef = useRef(timelineSessionVersion);
   const previousScrollOffsetRef = useRef(0);
@@ -134,15 +137,56 @@ export function useScroll({
     number | null
   >(null);
   const previousLastPostId = usePrevious(lastPostId);
-  const isConversationRevealed =
-    revealedSessionVersion === timelineSessionVersion;
-  const orderedPostIds = useMemo(
-    () =>
-      items.flatMap((item) =>
-        item.type === "post" ? ([item.post._id] as const) : []
-      ),
-    [items]
-  );
+  const isConversationRevealed = revealedSessionVersion !== null;
+  const preferBottomInitialAnchor = pendingLatestSessionRef.current;
+  const pendingInitialRestore = useMemo(() => {
+    if (initialSessionVersionRef.current === timelineSessionVersion) {
+      return null;
+    }
+
+    if (items.length === 0) {
+      return null;
+    }
+
+    const view = createInitialConversationView({
+      existingView: latestConversationView.current,
+      mode: conversationIntent,
+      preferBottom: preferBottomInitialAnchor,
+      unreadPostId,
+    });
+
+    if (view.kind === "bottom") {
+      return {
+        anchor: { kind: "bottom" },
+        view,
+      } satisfies PendingInitialRestore;
+    }
+
+    const index = postIdToIndex.get(view.postId);
+
+    if (index === undefined) {
+      return null;
+    }
+
+    return {
+      anchor: {
+        align: conversationIntent.kind === "jump" ? "center" : "start",
+        index,
+        kind: "index",
+        offset: view.offset,
+      },
+      view,
+    } satisfies PendingInitialRestore;
+  }, [
+    conversationIntent,
+    items.length,
+    latestConversationView,
+    postIdToIndex,
+    preferBottomInitialAnchor,
+    timelineSessionVersion,
+    unreadPostId,
+  ]);
+  pendingInitialRestoreRef.current = pendingInitialRestore;
 
   /** Resets transient scroll refs whenever one transcript session changes. */
   const resetTimelineSessionState = useCallback(() => {
@@ -159,84 +203,91 @@ export function useScroll({
     resetTimelineSessionState();
   }
 
-  /** Stores or clears the DOM node for one rendered forum post row. */
-  const registerPostElement = useCallback(
-    (postId: Id<"schoolClassForumPosts">, element: HTMLDivElement | null) => {
-      if (!element) {
-        postElementsRef.current.delete(postId);
-        return;
-      }
-
-      postElementsRef.current.set(postId, element);
-    },
-    []
-  );
-
-  /** Scrolls the transcript container to one absolute scrollTop. */
-  const scrollContainerTo = useCallback(
-    (container: HTMLDivElement, scrollTop: number, smooth: boolean) => {
-      container.scrollTo({
-        top: clampScrollTop(container, scrollTop),
-        behavior: smooth ? "smooth" : "auto",
-      });
-      return true;
-    },
-    []
-  );
-
   /** Scrolls the transcript to the latest bottom edge. */
   const scrollToBottom = useCallback(
     (options?: { smooth?: boolean }) => {
+      const smooth = options?.smooth === true;
       const container = containerRef.current;
 
       if (!container) {
         return false;
       }
 
-      return scrollContainerTo(
-        container,
-        container.scrollHeight,
-        options?.smooth ?? false
-      );
+      const virtualHandle = scrollRef.current;
+
+      if (virtualHandle?.scrollToBottom(smooth)) {
+        return true;
+      }
+
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: smooth ? "smooth" : "auto",
+      });
+      return true;
     },
-    [scrollContainerTo]
+    [scrollRef]
   );
 
   /** Scrolls the transcript so one post row lands at the desired alignment. */
   const scrollToPost = useCallback(
     (postId: Id<"schoolClassForumPosts">, options?: ScrollToPostOptions) => {
-      const container = containerRef.current;
-      const element = postElementsRef.current.get(postId);
-
-      if (!(container && element)) {
-        const index = postIdToIndex.get(postId);
-
-        if (index === undefined) {
-          return false;
-        }
-
-        return (
-          scrollRef.current?.scrollToIndex(index, {
-            align: options?.align,
-            offset: options?.offset,
-            smooth: options?.smooth,
-          }) ?? false
-        );
+      if (!containerRef.current) {
+        return false;
       }
 
-      const align = options?.align ?? "start";
-      const offset = options?.offset ?? 0;
-      const scrollTop = getScrollTopForPost({
-        align,
-        container,
-        element,
-        offset,
-      });
+      const index = postIdToIndex.get(postId);
 
-      return scrollContainerTo(container, scrollTop, options?.smooth ?? false);
+      if (index === undefined) {
+        return false;
+      }
+
+      return (
+        scrollRef.current?.scrollToIndex(index, {
+          align: options?.align,
+          offset: options?.offset,
+          smooth: options?.smooth,
+        }) ?? false
+      );
     },
-    [postIdToIndex, scrollContainerTo, scrollRef]
+    [postIdToIndex, scrollRef]
   );
+
+  /** Finds the first visible post item at or after the current visible range start. */
+  const getVisiblePostAnchor = useCallback(() => {
+    const virtualHandle = scrollRef.current;
+
+    if (!virtualHandle) {
+      return null;
+    }
+
+    const scrollOffset = virtualHandle.getScrollOffset();
+    const viewportBottom = scrollOffset + virtualHandle.getViewportSize();
+
+    for (
+      let index = virtualHandle.findItemIndex(scrollOffset);
+      index < items.length;
+      index += 1
+    ) {
+      const item = items[index];
+      const itemStart = virtualHandle.getItemOffset(index);
+      const itemEnd = itemStart + virtualHandle.getItemSize(index);
+
+      if (itemStart >= viewportBottom) {
+        return null;
+      }
+
+      if (!(item?.type === "post" && itemEnd > scrollOffset)) {
+        continue;
+      }
+
+      return {
+        offset: itemStart - scrollOffset,
+        postId: item.post._id,
+      };
+    }
+
+    return null;
+  }, [items, scrollRef]);
 
   /** Captures the current transcript viewport into a persisted conversation view. */
   const captureCurrentConversationView = useCallback(() => {
@@ -250,11 +301,7 @@ export function useScroll({
       return { kind: "bottom" } satisfies ForumConversationView;
     }
 
-    const anchor = findVisiblePostAnchor({
-      container,
-      orderedPostIds,
-      postElements: postElementsRef.current,
-    });
+    const anchor = getVisiblePostAnchor();
 
     if (!anchor) {
       return null;
@@ -262,10 +309,31 @@ export function useScroll({
 
     return {
       kind: "post",
-      offset: anchor.top,
+      offset: anchor.offset,
       postId: anchor.postId,
     } satisfies ForumConversationView;
-  }, [orderedPostIds]);
+  }, [getVisiblePostAnchor]);
+
+  /** Returns whether one registered post row is currently visible. */
+  const isPostVisible = useCallback(
+    (postId: Id<"schoolClassForumPosts">) => {
+      const container = containerRef.current;
+      const index = postIdToIndex.get(postId);
+      const virtualHandle = scrollRef.current;
+
+      if (!(container && virtualHandle && index !== undefined)) {
+        return false;
+      }
+
+      const scrollOffset = virtualHandle.getScrollOffset();
+      const viewportBottom = scrollOffset + virtualHandle.getViewportSize();
+      const itemStart = virtualHandle.getItemOffset(index);
+      const itemEnd = itemStart + virtualHandle.getItemSize(index);
+
+      return itemStart < viewportBottom && itemEnd > scrollOffset;
+    },
+    [postIdToIndex, scrollRef]
+  );
 
   /** Syncs the bottom flag only when its meaning actually changes. */
   const syncBottomState = useCallback((container: HTMLDivElement) => {
@@ -305,6 +373,17 @@ export function useScroll({
     timelineSessionVersion,
   ]);
 
+  /** Emits the pending highlight post once it is both mounted and visible. */
+  const maybeHighlightVisiblePost = useCallback(() => {
+    const postId = pendingHighlightPostIdRef.current;
+
+    if (!(postId && isPostVisible(postId))) {
+      return;
+    }
+
+    onHighlightVisiblePost?.(postId);
+  }, [isPostVisible, onHighlightVisiblePost, pendingHighlightPostIdRef]);
+
   /** Saves the current semantic viewport once scrolling has visibly settled. */
   const handleScrollSettled = useDebouncedCallback(() => {
     const container = containerRef.current;
@@ -320,7 +399,7 @@ export function useScroll({
     }
 
     if (maybePersistBottomConversationView()) {
-      onNavigationSettled?.();
+      maybeHighlightVisiblePost();
       return;
     }
 
@@ -331,7 +410,7 @@ export function useScroll({
     }
 
     persistConversationView(currentView);
-    onNavigationSettled?.();
+    maybeHighlightVisiblePost();
 
     if (atBottom && isAtLatestEdge) {
       scheduleMarkRead(lastPostId);
@@ -341,15 +420,60 @@ export function useScroll({
     cancelPendingMarkRead();
   }, FORUM_SCROLL_SETTLE_DELAY);
 
+  /** Finalizes one fresh transcript session after its initial anchor settles. */
+  const handleInitialAnchorSettled = useCallback(() => {
+    if (initialSessionVersionRef.current === timelineSessionVersion) {
+      return;
+    }
+
+    const pendingInitialRestore = pendingInitialRestoreRef.current;
+    const container = containerRef.current;
+
+    if (!container) {
+      return;
+    }
+
+    const nextView =
+      pendingInitialRestore?.view ??
+      captureCurrentConversationView() ??
+      latestConversationView.current;
+
+    initialSessionVersionRef.current = timelineSessionVersion;
+
+    if (nextView) {
+      latestConversationView.current = nextView;
+      persistConversationView(nextView);
+    }
+
+    previousScrollOffsetRef.current = container.scrollTop;
+    syncBottomState(container);
+    setRevealedSessionVersion(timelineSessionVersion);
+
+    if (isNearReadStateBottom(container) && isAtLatestEdge) {
+      scheduleMarkRead(lastPostId);
+    } else {
+      cancelPendingMarkRead();
+    }
+
+    pendingLatestSessionRef.current = false;
+    maybeHighlightVisiblePost();
+  }, [
+    cancelPendingMarkRead,
+    captureCurrentConversationView,
+    isAtLatestEdge,
+    lastPostId,
+    latestConversationView,
+    maybeHighlightVisiblePost,
+    pendingLatestSessionRef,
+    persistConversationView,
+    scheduleMarkRead,
+    syncBottomState,
+    timelineSessionVersion,
+  ]);
+
   /** Requests one older page exactly once for the current oldest boundary. */
   const requestOlderBoundary = useCallback(
-    ({
-      boundaryPostId,
-      container,
-    }: {
-      boundaryPostId: Id<"schoolClassForumPosts"> | null;
-      container: HTMLDivElement;
-    }) => {
+    (boundaryPostId: Id<"schoolClassForumPosts"> | null) => {
       if (
         !shouldRequestHistoryBoundary({
           boundaryPostId,
@@ -361,24 +485,25 @@ export function useScroll({
         return false;
       }
 
-      const anchor = findVisiblePostAnchor({
-        container,
-        orderedPostIds,
-        postElements: postElementsRef.current,
-      });
+      const anchor = captureCurrentConversationView();
 
       lastRequestedOlderBoundaryRef.current = boundaryPostId;
-      pendingOlderAnchorRef.current = anchor
-        ? {
-            itemCount: orderedPostIds.length,
-            postId: anchor.postId,
-            top: anchor.top,
-          }
-        : null;
+      pendingOlderAnchorRef.current =
+        anchor?.kind === "post"
+          ? {
+              offset: anchor.offset,
+              postId: anchor.postId,
+            }
+          : null;
       loadOlderPosts();
       return true;
     },
-    [hasMoreBefore, isLoadingOlder, loadOlderPosts, orderedPostIds]
+    [
+      captureCurrentConversationView,
+      hasMoreBefore,
+      isLoadingOlder,
+      loadOlderPosts,
+    ]
   );
 
   /** Requests one newer page exactly once for the current newest boundary. */
@@ -424,7 +549,7 @@ export function useScroll({
       previousScrollOffsetRef.current = offset;
 
       if (isNearTop && isMovingUp) {
-        requestOlderBoundary({ boundaryPostId: oldestLoadedPostId, container });
+        requestOlderBoundary(oldestLoadedPostId);
       }
 
       if (isNearPrefetchBottom && isMovingDown) {
@@ -452,70 +577,6 @@ export function useScroll({
       syncBottomState,
     ]
   );
-
-  /** Finalizes one fresh transcript session once rows and the container are mounted. */
-  useLayoutEffect(() => {
-    if (initialSessionVersionRef.current === timelineSessionVersion) {
-      return;
-    }
-
-    const container = containerRef.current;
-
-    if (!(container && items.length > 0)) {
-      return;
-    }
-
-    const initialView = createInitialConversationView({
-      existingView: latestConversationView.current,
-      mode: conversationIntent,
-      preferBottom: pendingLatestSessionRef.current,
-      unreadPostId,
-    });
-    const didRestore =
-      initialView.kind === "bottom"
-        ? scrollToBottom({ smooth: false })
-        : scrollToPost(initialView.postId, {
-            align: conversationIntent.kind === "jump" ? "center" : "start",
-            offset: initialView.offset,
-            smooth: false,
-          });
-
-    if (!didRestore) {
-      return;
-    }
-
-    initialSessionVersionRef.current = timelineSessionVersion;
-    latestConversationView.current = initialView;
-    persistConversationView(initialView);
-    previousScrollOffsetRef.current = container.scrollTop;
-    syncBottomState(container);
-    setRevealedSessionVersion(timelineSessionVersion);
-
-    if (isNearReadStateBottom(container) && isAtLatestEdge) {
-      scheduleMarkRead(lastPostId);
-    } else {
-      cancelPendingMarkRead();
-    }
-
-    pendingLatestSessionRef.current = false;
-    onNavigationSettled?.();
-  }, [
-    cancelPendingMarkRead,
-    conversationIntent,
-    isAtLatestEdge,
-    items.length,
-    lastPostId,
-    latestConversationView,
-    onNavigationSettled,
-    pendingLatestSessionRef,
-    persistConversationView,
-    scheduleMarkRead,
-    scrollToBottom,
-    scrollToPost,
-    syncBottomState,
-    timelineSessionVersion,
-    unreadPostId,
-  ]);
 
   /** Flushes read-state immediately when a new latest post arrives at the live bottom. */
   useLayoutEffect(() => {
@@ -556,24 +617,19 @@ export function useScroll({
     }
 
     pendingOlderAnchorRef.current = null;
+    const index = postIdToIndex.get(pendingOlderAnchor.postId);
+    const virtualHandle = scrollRef.current;
 
-    if (orderedPostIds.length <= pendingOlderAnchor.itemCount) {
+    if (!(virtualHandle && index !== undefined)) {
       return;
     }
 
-    const container = containerRef.current;
-    const element = postElementsRef.current.get(pendingOlderAnchor.postId);
-
-    if (!(container && element)) {
-      return;
-    }
-
-    const nextTop =
-      element.getBoundingClientRect().top -
-      container.getBoundingClientRect().top;
-    container.scrollTop += nextTop - pendingOlderAnchor.top;
-    previousScrollOffsetRef.current = container.scrollTop;
-  }, [isLoadingOlder, orderedPostIds.length]);
+    virtualHandle.scrollToOffset(
+      virtualHandle.getItemOffset(index) - pendingOlderAnchor.offset,
+      false
+    );
+    previousScrollOffsetRef.current = virtualHandle.getScrollOffset();
+  }, [isLoadingOlder, postIdToIndex, scrollRef]);
 
   /** Arms bottom persistence for the next explicit latest-edge landing. */
   const markPendingBottomPersistence = useCallback(() => {
@@ -600,10 +656,12 @@ export function useScroll({
     captureCurrentConversationView,
     containerRef,
     handleScroll,
+    handleInitialAnchorSettled,
+    initialAnchor: pendingInitialRestore?.anchor ?? null,
+    isPostVisible,
     isAtBottom,
     isConversationRevealed,
     markPendingBottomPersistence,
-    registerPostElement,
     resetPendingBottomPersistence,
     resetScrollState,
     scrollToBottom,
