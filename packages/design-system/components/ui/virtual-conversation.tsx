@@ -217,13 +217,6 @@ export const VirtualConversation = memo(
       useAnimationFrameWithResizeObserver: false,
       useScrollendEvent: false,
     });
-    virtualizer.shouldAdjustScrollPositionOnItemSizeChange = (
-      item,
-      _delta,
-      instance
-    ) =>
-      instance.scrollDirection === "backward" &&
-      item.start < (instance.scrollOffset ?? 0);
     const virtualItems = virtualizer.getVirtualItems();
     const paddingTop = virtualItems[0]?.start ?? 0;
     const totalSize = virtualizer.getTotalSize();
@@ -499,6 +492,10 @@ export const VirtualConversation = memo(
           getMeasuredVirtualItem(virtualizer.measurementsCache, index)?.size ??
           0,
         getScrollOffset: () => virtualizer.scrollOffset ?? 0,
+        getScrollOffsetForIndex: (
+          index: number,
+          align: VirtualScrollToIndexOptions["align"] = "start"
+        ) => virtualizer.getOffsetForIndex(index, align)?.[0] ?? null,
         getViewportSize: () => virtualizer.scrollRect?.height ?? 0,
         isAtBottom: () => isAtBottomRef.current,
         scrollToBottom,

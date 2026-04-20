@@ -9,6 +9,7 @@ import { useConvex } from "convex/react";
 import {
   type RefObject,
   useCallback,
+  useEffectEvent,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -535,32 +536,30 @@ export function useController({
     pruneReachedBackHistory(currentView);
   }, [captureCurrentConversationView, pruneReachedBackHistory]);
 
-  /** Persists the latest transcript snapshot when the conversation unmounts. */
+  /** Persists and clears transcript state only when the controller truly unmounts. */
+  const handleControllerUnmount = useEffectEvent(() => {
+    const latestView = captureCurrentConversationView();
+
+    if (latestView) {
+      latestConversationView.current = latestView;
+      persistConversationView(latestView);
+    } else {
+      persistConversationView();
+    }
+
+    clearJumpHistory();
+    cancelPendingJumpRequest();
+    clearJumpHighlight();
+    pendingLatestSessionRef.current = false;
+    resetScrollState();
+  });
+
+  /** Runs the final controller cleanup exactly once for the mounted conversation. */
   useLayoutEffect(
     () => () => {
-      const latestView = captureCurrentConversationView();
-
-      if (latestView) {
-        latestConversationView.current = latestView;
-        persistConversationView(latestView);
-      } else {
-        persistConversationView();
-      }
-
-      clearJumpHistory();
-      cancelPendingJumpRequest();
-      clearJumpHighlight();
-      pendingLatestSessionRef.current = false;
-      resetScrollState();
+      handleControllerUnmount();
     },
-    [
-      cancelPendingJumpRequest,
-      captureCurrentConversationView,
-      clearJumpHighlight,
-      clearJumpHistory,
-      persistConversationView,
-      resetScrollState,
-    ]
+    []
   );
 
   return {

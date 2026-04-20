@@ -607,11 +607,16 @@ export function useScroll({
       return;
     }
 
-    virtualHandle.scrollToOffset(
-      virtualHandle.getItemOffset(index) - pendingOlderAnchor.offset,
-      false
+    const anchorScrollOffset =
+      virtualHandle.getScrollOffsetForIndex(index, "start") ??
+      virtualHandle.getItemOffset(index);
+    const restoredScrollOffset = Math.max(
+      0,
+      anchorScrollOffset - pendingOlderAnchor.offset
     );
-    previousScrollOffsetRef.current = virtualHandle.getScrollOffset();
+
+    virtualHandle.scrollToOffset(restoredScrollOffset, false);
+    previousScrollOffsetRef.current = restoredScrollOffset;
   }, [isLoadingOlder, postIdToIndex, scrollRef]);
 
   /** Arms bottom persistence for the next explicit latest-edge landing. */

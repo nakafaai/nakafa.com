@@ -157,16 +157,18 @@ function getItemSize(items: VirtualItem[], index: number) {
 }
 
 function createVirtualHandle({
-  items,
+  getItems,
   scrollState,
   topByPostId,
 }: {
-  items: VirtualItem[];
+  getItems: () => VirtualItem[];
   scrollState: { scrollTop: number };
   topByPostId: Map<string, number>;
 }): VirtualConversationHandle {
   return {
     findItemIndex: (offset) => {
+      const items = getItems();
+
       for (let index = 0; index < items.length; index += 1) {
         const itemStart = getItemOffset(
           items,
@@ -186,9 +188,29 @@ function createVirtualHandle({
     getDistanceFromBottom: () =>
       Math.max(0, 1200 - 400 - scrollState.scrollTop),
     getItemOffset: (index) =>
-      getItemOffset(items, topByPostId, index, scrollState.scrollTop),
-    getItemSize: (index) => getItemSize(items, index),
+      getItemOffset(getItems(), topByPostId, index, scrollState.scrollTop),
+    getItemSize: (index) => getItemSize(getItems(), index),
     getScrollOffset: () => scrollState.scrollTop,
+    getScrollOffsetForIndex: (index, align = "start") => {
+      const items = getItems();
+      const itemStart = getItemOffset(
+        items,
+        topByPostId,
+        index,
+        scrollState.scrollTop
+      );
+      const itemSize = getItemSize(items, index);
+
+      if (align === "center") {
+        return itemStart - (400 - itemSize) / 2;
+      }
+
+      if (align === "end") {
+        return itemStart - (400 - itemSize);
+      }
+
+      return itemStart;
+    },
     getViewportSize: () => 400,
     isAtBottom: () => scrollState.scrollTop >= 800,
     scrollToBottom: (_smooth) => {
@@ -196,6 +218,7 @@ function createVirtualHandle({
       return true;
     },
     scrollToIndex: (index, options) => {
+      const items = getItems();
       const itemStart = getItemOffset(
         items,
         topByPostId,
@@ -226,6 +249,7 @@ function renderUseScroll(
   document.body.append(container);
   const root = createRoot(container);
   const scrollState = { scrollTop: 0 };
+  const stableScrollRef = initialProps.scrollRef;
   const topByPostId = new Map<string, number>([
     ["post_1", 20],
     ["post_2", 160],
@@ -248,7 +272,7 @@ function renderUseScroll(
 
           if (!props.scrollRef.current) {
             props.scrollRef.current = createVirtualHandle({
-              items: props.items,
+              getItems: () => currentProps.items,
               scrollState,
               topByPostId,
             });
@@ -259,16 +283,19 @@ function renderUseScroll(
   }
 
   const render = (props: UseScrollProps) => {
-    currentProps = props;
+    currentProps = {
+      ...props,
+      scrollRef: stableScrollRef,
+    };
 
     act(() => {
-      root.render(createElement(TestComponent, props));
+      root.render(createElement(TestComponent, currentProps));
     });
 
     if (
       options?.settleInitialAnchor === false ||
       !result ||
-      props.items.length === 0
+      currentProps.items.length === 0
     ) {
       return;
     }
@@ -282,7 +309,7 @@ function renderUseScroll(
         }
 
         if (currentResult.initialAnchor?.kind === "index") {
-          const item = props.items[currentResult.initialAnchor.index];
+          const item = currentProps.items[currentResult.initialAnchor.index];
 
           if (item?.type === "post") {
             currentResult.scrollToPost(item.post._id, {
@@ -482,6 +509,7 @@ describe("use-scroll", () => {
             getItemOffset: vi.fn((index: number) => (index === 0 ? 0 : 20)),
             getItemSize: vi.fn((index: number) => (index === 0 ? 10 : 80)),
             getScrollOffset: vi.fn(() => 0),
+            getScrollOffsetForIndex: vi.fn(() => 0),
             getViewportSize: vi.fn(() => 400),
             isAtBottom: vi.fn(() => false),
             scrollToBottom: vi.fn(() => true),
@@ -511,6 +539,7 @@ describe("use-scroll", () => {
             getItemOffset: vi.fn(() => 0),
             getItemSize: vi.fn(() => 0),
             getScrollOffset: vi.fn(() => 0),
+            getScrollOffsetForIndex: vi.fn(() => 0),
             getViewportSize: vi.fn(() => 400),
             isAtBottom: vi.fn(() => false),
             scrollToBottom: vi.fn(() => true),
@@ -536,6 +565,7 @@ describe("use-scroll", () => {
             getItemOffset: vi.fn(() => 0),
             getItemSize: vi.fn(() => 80),
             getScrollOffset: vi.fn(() => 0),
+            getScrollOffsetForIndex: vi.fn(() => 0),
             getViewportSize: vi.fn(() => 400),
             isAtBottom: vi.fn(() => false),
             scrollToBottom: vi.fn(() => true),
@@ -563,13 +593,15 @@ describe("use-scroll", () => {
       })
     );
 
+    rendered.scrollState.scrollTop = 0;
+
     act(() => {
       rendered.result().handleScroll(0);
     });
 
     expect(loadOlderPosts).toHaveBeenCalledTimes(1);
 
-    rendered.topByPostId.set("post_1", 60);
+    rendered.topByPostId.set("post_1", 160);
 
     rendered.render(
       createUseScrollProps({
@@ -583,14 +615,70 @@ describe("use-scroll", () => {
         isLoadingOlder: false,
         items: [
           createPostItem("post_0"),
+          createPostItem("post_1"),
           createPostItem("post_2"),
-          createPostItem("post_3"),
         ],
         loadOlderPosts,
       })
     );
 
-    expect(rendered.scrollState.scrollTop).toBe(20);
+    expect(rendered.scrollState.scrollTop).toBe(140);
+  });
+
+  it("restores prepended history from the resolved index offset when the anchor row is not mounted", () => {
+    const loadOlderPosts = vi.fn();
+    const rendered = renderUseScroll(
+      createUseScrollProps({
+        loadOlderPosts,
+        unreadPostId: "post_1" as Id<"schoolClassForumPosts">,
+      })
+    );
+
+    rendered.scrollState.scrollTop = 0;
+
+    act(() => {
+      rendered.result().handleScroll(0);
+    });
+
+    const scrollHandle = rendered.scrollRef().current;
+
+    if (!scrollHandle) {
+      throw new Error("Expected virtual scroll handle to exist.");
+    }
+
+    rendered.topByPostId.set("post_1", 160);
+
+    scrollHandle.getItemOffset = vi.fn((index: number) =>
+      index === 1 ? 0 : 20 + index * 140
+    );
+    scrollHandle.getScrollOffsetForIndex = vi.fn((index: number) =>
+      index === 1 ? 160 : 20 + index * 140
+    );
+
+    rendered.render(
+      createUseScrollProps({
+        isLoadingOlder: true,
+        loadOlderPosts,
+      })
+    );
+
+    rendered.render(
+      createUseScrollProps({
+        isLoadingOlder: false,
+        items: [
+          createPostItem("post_0"),
+          createPostItem("post_1"),
+          createPostItem("post_2"),
+        ],
+        loadOlderPosts,
+      })
+    );
+
+    expect(scrollHandle.getScrollOffsetForIndex).toHaveBeenCalledWith(
+      1,
+      "start"
+    );
+    expect(rendered.scrollState.scrollTop).toBe(140);
   });
 
   it("persists the settled view after scroll ends", () => {
@@ -725,6 +813,7 @@ describe("use-scroll", () => {
             getItemOffset: vi.fn(() => 0),
             getItemSize: vi.fn(() => 80),
             getScrollOffset: vi.fn(() => 0),
+            getScrollOffsetForIndex: vi.fn(() => 0),
             getViewportSize: vi.fn(() => 400),
             isAtBottom: vi.fn(() => false),
             scrollToBottom,
@@ -763,6 +852,7 @@ describe("use-scroll", () => {
             getItemOffset: vi.fn(() => 0),
             getItemSize: vi.fn(() => 80),
             getScrollOffset: vi.fn(() => 0),
+            getScrollOffsetForIndex: vi.fn(() => 0),
             getViewportSize: vi.fn(() => 400),
             isAtBottom: vi.fn(() => false),
             scrollToBottom: vi.fn(() => false),
@@ -816,6 +906,7 @@ describe("use-scroll", () => {
             getItemOffset: vi.fn(() => 0),
             getItemSize: vi.fn(() => 80),
             getScrollOffset: vi.fn(() => 0),
+            getScrollOffsetForIndex: vi.fn(() => 0),
             getViewportSize: vi.fn(() => 400),
             isAtBottom: vi.fn(() => false),
             scrollToBottom: vi.fn(() => true),
