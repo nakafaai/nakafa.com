@@ -2,10 +2,7 @@ const FORUM_PREFETCH_DISTANCE_RATIO = 0.75;
 const FORUM_PREFETCH_DISTANCE_MIN = 200;
 const FORUM_PREFETCH_DISTANCE_MAX = 600;
 
-/**
- * Derive one viewport-relative prefetch distance so history loads before the
- * user hits a hard edge on either side of the conversation.
- */
+/** Derives the prefetch distance for loading more history near transcript edges. */
 export function getForumPrefetchDistance(viewportSize: number) {
   return Math.min(
     Math.max(

@@ -53,10 +53,7 @@ function getLiveUnreadCue({
   return { count, postId };
 }
 
-/**
- * Owns the session-scoped unread cue so the separator stays stable while one
- * conversation remains open, then resets naturally on the next session.
- */
+/** Owns the session-scoped unread cue for one mounted conversation session. */
 export function useUnread({
   baselineLatestPostId,
   isDetachedMode,

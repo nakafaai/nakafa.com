@@ -1,5 +1,5 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { TimelineState } from "@/components/school/classes/forum/conversation/utils/session";
+import type { ConversationTimeline } from "@/components/school/classes/forum/conversation/utils/timeline";
 import type { ForumConversationMode } from "@/components/school/classes/forum/conversation/utils/view";
 import type { ForumPost } from "@/lib/store/forum";
 
@@ -41,7 +41,7 @@ export function createFocusedTimelineState({
 }: {
   aroundResult: FocusedForumWindowResult;
   targetKind: FocusedTimelineKind;
-}): TimelineState {
+}): ConversationTimeline {
   const isAtLatestEdge = !aroundResult.hasMoreAfter;
 
   return {

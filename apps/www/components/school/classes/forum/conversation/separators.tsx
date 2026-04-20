@@ -7,6 +7,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { memo } from "react";
 import { getLocale } from "@/lib/utils/date";
 
+/** Renders the calendar separator between transcript day groups. */
 export const DateSeparator = memo(({ date }: { date: number }) => {
   const locale = useLocale();
 
@@ -22,6 +23,7 @@ export const DateSeparator = memo(({ date }: { date: number }) => {
 });
 DateSeparator.displayName = "DateSeparator";
 
+/** Renders the unread marker that anchors live or historical unread state. */
 export const UnreadSeparator = memo(
   ({ count, status }: { count: number; status: "history" | "new" }) => {
     const t = useTranslations("Common");

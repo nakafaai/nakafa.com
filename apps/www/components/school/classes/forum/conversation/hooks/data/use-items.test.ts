@@ -4,9 +4,9 @@ import { createRoot } from "react-dom/client";
 import { describe, expect, it } from "vitest";
 import {
   buildVirtualItems,
-  useVirtualItems,
-} from "@/components/school/classes/forum/conversation/hooks/use-items";
-import type { UnreadCue } from "@/components/school/classes/forum/conversation/hooks/use-unread";
+  useItems,
+} from "@/components/school/classes/forum/conversation/hooks/data/use-items";
+import type { UnreadCue } from "@/components/school/classes/forum/conversation/hooks/data/use-unread";
 import type {
   Forum,
   ForumPost,
@@ -185,7 +185,7 @@ describe("use-items grouping", () => {
     let result: ReturnType<typeof buildVirtualItems> | null = null;
 
     function TestComponent() {
-      result = useVirtualItems({
+      result = useItems({
         forum,
         isDetachedMode: false,
         posts,
@@ -286,7 +286,7 @@ describe("use-items grouping", () => {
     let result: ReturnType<typeof buildVirtualItems> | null = null;
 
     function TestComponent() {
-      result = useVirtualItems({
+      result = useItems({
         forum: undefined,
         isDetachedMode: true,
         posts,
@@ -338,7 +338,7 @@ describe("use-items grouping", () => {
         id: "post_3",
       }),
     ];
-    let result: ReturnType<typeof useVirtualItems> | null = null;
+    let result: ReturnType<typeof useItems> | null = null;
     const unreadCue = {
       count: 2,
       postId: posts[0]._id,
@@ -346,7 +346,7 @@ describe("use-items grouping", () => {
     } satisfies UnreadCue;
 
     function TestComponent() {
-      result = useVirtualItems({
+      result = useItems({
         forum: undefined,
         isDetachedMode: false,
         posts,

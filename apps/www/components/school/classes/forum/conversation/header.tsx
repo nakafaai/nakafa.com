@@ -40,6 +40,7 @@ import type { Forum } from "@/components/school/classes/forum/conversation/types
 import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";
 
+/** Renders the forum starter card at the top of the transcript. */
 export const ForumHeader = memo(({ forum }: { forum: Forum }) => {
   const t = useTranslations("Common");
   const locale = useLocale();

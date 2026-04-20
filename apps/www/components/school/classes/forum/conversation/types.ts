@@ -1,6 +1,10 @@
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { UserData } from "@repo/backend/convex/lib/helpers/user";
-import type { ForumPost, ReactionWithUsers } from "@/lib/store/forum";
+import type {
+  ForumConversationView,
+  ForumPost,
+  ReactionWithUsers,
+} from "@/lib/store/forum";
 
 // Re-export ForumPost for convenience
 export type { ForumPost } from "@/lib/store/forum";
@@ -16,7 +20,12 @@ export type Forum = Doc<"schoolClassForums"> & {
 export type VirtualItem =
   | { type: "header"; forum: Forum }
   | { type: "date"; date: number }
-  | { type: "unread"; count: number; status: "history" | "new" }
+  | {
+      type: "unread";
+      count: number;
+      postId: Id<"schoolClassForumPosts">;
+      status: "history" | "new";
+    }
   | {
       type: "post";
       post: ForumPost;
@@ -24,3 +33,27 @@ export type VirtualItem =
       isLastInGroup: boolean;
       showContinuationTime: boolean;
     };
+
+export type ConversationTranscriptCommand =
+  | {
+      id: number;
+      kind: "jump";
+      postId: Id<"schoolClassForumPosts">;
+      smooth: boolean;
+    }
+  | {
+      id: number;
+      kind: "latest";
+      smooth: boolean;
+    }
+  | {
+      id: number;
+      kind: "restore";
+      smooth: boolean;
+      view: Extract<ForumConversationView, { kind: "post" }>;
+    };
+
+export interface ConversationTranscriptCommandResult {
+  id: number;
+  status: "missing" | "scrolled";
+}

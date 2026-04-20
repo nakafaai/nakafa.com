@@ -1,6 +1,6 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useMemo } from "react";
-import type { UnreadCue } from "@/components/school/classes/forum/conversation/hooks/use-unread";
+import type { UnreadCue } from "@/components/school/classes/forum/conversation/hooks/data/use-unread";
 import type {
   Forum,
   ForumPost,
@@ -54,6 +54,7 @@ export function buildVirtualItems({
       result.push({
         type: "unread",
         count: unreadCue.count,
+        postId: unreadCue.postId,
         status: unreadCue.status,
       });
       nextUnreadIndex = result.length - 1;
@@ -89,14 +90,8 @@ export function buildVirtualItems({
   };
 }
 
-/**
- * Builds virtual list items from posts with:
- * - Forum header
- * - Date separators
- * - Unread separator
- * - Post items with grouping
- */
-export function useVirtualItems({
+/** Memoizes the semantic transcript items for the current post window. */
+export function useItems({
   forum,
   posts,
   isDetachedMode,
@@ -127,5 +122,3 @@ export function useVirtualItems({
     unreadIndex,
   };
 }
-
-export { useVirtualItems as useItems };

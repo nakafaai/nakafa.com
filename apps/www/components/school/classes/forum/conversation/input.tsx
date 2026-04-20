@@ -64,44 +64,38 @@ import {
 } from "react";
 import { toast } from "sonner";
 import * as z from "zod/mini";
+import { useConversation } from "@/components/school/classes/forum/conversation/provider";
 import { useForum } from "@/lib/context/use-forum";
-import { useForumScroll } from "@/lib/context/use-forum-scroll";
 
-/**
- * Handle forum message submission, attachment upload/finalization, and reply
- * state cleanup for the active conversation.
- */
-export const ForumPostInput = memo(
-  ({
-    acknowledgeUnreadCue,
-    forumId,
-  }: {
-    acknowledgeUnreadCue: () => void;
-    forumId: Id<"schoolClassForums">;
-  }) => {
-    const t = useTranslations("School.Classes");
-    const replyTo = useForum((f) => f.replyTo);
-    const setReplyTo = useForum((f) => f.setReplyTo);
-    const scrollToLatest = useForumScroll((state) => state.scrollToLatest);
+/** Handles forum post submission, uploads, and reply cleanup for the transcript. */
+export function ForumPostInput() {
+  const t = useTranslations("School.Classes");
+  const replyTo = useForum((f) => f.replyTo);
+  const setReplyTo = useForum((f) => f.setReplyTo);
+  const acknowledgeUnreadCue = useConversation(
+    (value) => value.actions.acknowledgeUnreadCue
+  );
+  const scrollToLatest = useConversation(
+    (value) => value.actions.scrollToLatest
+  );
+  const forumId = useConversation((value) => value.meta.forumId);
 
-    const textareaRef = useRef<ComponentRef<typeof InputGroupTextarea>>(null);
-    const generateUploadUrl = useMutation(
-      api.classes.forums.mutations.uploads.generateUploadUrl
-    );
-    const discardForumUploads = useMutation(
-      api.classes.forums.mutations.uploads.discardForumUploads
-    );
-    const saveForumUpload = useMutation(
-      api.classes.forums.mutations.uploads.saveForumUpload
-    );
-    const createPost = useMutation(
-      api.classes.forums.mutations.posts.createForumPost
-    );
+  const textareaRef = useRef<ComponentRef<typeof InputGroupTextarea>>(null);
+  const generateUploadUrl = useMutation(
+    api.classes.forums.mutations.uploads.generateUploadUrl
+  );
+  const discardForumUploads = useMutation(
+    api.classes.forums.mutations.uploads.discardForumUploads
+  );
+  const saveForumUpload = useMutation(
+    api.classes.forums.mutations.uploads.saveForumUpload
+  );
+  const createPost = useMutation(
+    api.classes.forums.mutations.posts.createForumPost
+  );
 
-    const [
-      { files },
-      { removeFile, clearFiles, openFileDialog, getInputProps },
-    ] = useFileUpload({
+  const [{ files }, { removeFile, clearFiles, openFileDialog, getInputProps }] =
+    useFileUpload({
       multiple: true,
       accept: "image/*,.pdf,.doc,.docx,.txt",
       maxSize: MAX_FORUM_ATTACHMENT_BYTES,
@@ -113,258 +107,253 @@ export const ForumPostInput = memo(
       },
     });
 
-    const [isEmojiPickerOpen, emojiPicker] = useDisclosure(false);
-    const os = useOs();
-    const isMobile = os === "ios" || os === "android";
+  const [isEmojiPickerOpen, emojiPicker] = useDisclosure(false);
+  const os = useOs();
+  const isMobile = os === "ios" || os === "android";
 
-    useEffect(() => {
-      if (replyTo) {
-        textareaRef.current?.focus();
+  useEffect(() => {
+    if (replyTo) {
+      textareaRef.current?.focus();
+    }
+  }, [replyTo]);
+
+  const uploadFile = useCallback(
+    async (file: File) => {
+      const { uploadId, uploadUrl } = await generateUploadUrl({ forumId });
+
+      try {
+        const { storageId } = await ky
+          .post(uploadUrl, {
+            headers: { "Content-Type": file.type },
+            body: file,
+          })
+          .json<{ storageId: Id<"_storage"> }>();
+
+        await saveForumUpload({
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          storageId,
+          uploadId,
+        });
+
+        return uploadId;
+      } catch (error) {
+        await discardForumUploads({ uploadIds: [uploadId] }).catch(
+          (cleanupError) => {
+            captureException(cleanupError, {
+              source: "forum-upload-discard-single",
+            });
+            return null;
+          }
+        );
+        throw error;
       }
-    }, [replyTo]);
+    },
+    [discardForumUploads, forumId, generateUploadUrl, saveForumUpload]
+  );
 
-    const uploadFile = useCallback(
-      async (file: File) => {
-        const { uploadId, uploadUrl } = await generateUploadUrl({ forumId });
+  const form = useForm({
+    defaultValues: { body: "" },
+    validators: {
+      onSubmit: z.object({
+        body: z.string(),
+      }),
+    },
+    onSubmit: async ({ value }) => {
+      const hasBody = value.body.trim().length > 0;
+      const hasAttachments = files.length > 0;
 
-        try {
-          const { storageId } = await ky
-            .post(uploadUrl, {
-              headers: { "Content-Type": file.type },
-              body: file,
-            })
-            .json<{ storageId: Id<"_storage"> }>();
+      if (!(hasBody || hasAttachments)) {
+        return;
+      }
 
-          await saveForumUpload({
-            name: file.name,
-            size: file.size,
-            type: file.type,
-            storageId,
-            uploadId,
-          });
+      const attachmentUploadIds: Id<"schoolClassForumPendingUploads">[] = [];
 
-          return uploadId;
-        } catch (error) {
-          await discardForumUploads({ uploadIds: [uploadId] }).catch(
+      try {
+        for (const fileWithPreview of files) {
+          if (!(fileWithPreview.file instanceof File)) {
+            continue;
+          }
+
+          attachmentUploadIds.push(await uploadFile(fileWithPreview.file));
+        }
+
+        await createPost({
+          attachmentUploadIds:
+            attachmentUploadIds.length > 0 ? attachmentUploadIds : undefined,
+          forumId,
+          body: value.body,
+          parentId: replyTo?.postId,
+        });
+
+        acknowledgeUnreadCue();
+        form.reset();
+        clearFiles();
+        setReplyTo(null);
+
+        requestAnimationFrame(() => {
+          textareaRef.current?.focus();
+          scrollToLatest();
+        });
+      } catch (error) {
+        if (attachmentUploadIds.length > 0) {
+          await discardForumUploads({ uploadIds: attachmentUploadIds }).catch(
             (cleanupError) => {
               captureException(cleanupError, {
-                source: "forum-upload-discard-single",
+                source: "forum-upload-discard-batch",
               });
               return null;
             }
           );
-          throw error;
-        }
-      },
-      [discardForumUploads, forumId, generateUploadUrl, saveForumUpload]
-    );
-
-    const form = useForm({
-      defaultValues: { body: "" },
-      validators: {
-        onSubmit: z.object({
-          body: z.string(),
-        }),
-      },
-      onSubmit: async ({ value }) => {
-        const hasBody = value.body.trim().length > 0;
-        const hasAttachments = files.length > 0;
-
-        if (!(hasBody || hasAttachments)) {
-          return;
         }
 
-        const attachmentUploadIds: Id<"schoolClassForumPendingUploads">[] = [];
+        captureException(error, {
+          source: "forum-post-submit",
+        });
 
-        try {
-          for (const fileWithPreview of files) {
-            if (!(fileWithPreview.file instanceof File)) {
-              continue;
+        toast.error(t("create-post-failed"));
+
+        requestAnimationFrame(() => {
+          textareaRef.current?.focus();
+        });
+      }
+    },
+  });
+
+  return (
+    <form
+      className="grid shrink-0 px-2 pb-2"
+      onSubmit={(e) => {
+        e.preventDefault();
+        form.handleSubmit();
+      }}
+    >
+      <ReplyIndicator />
+      <AttachmentPreviews
+        files={files}
+        hasReplyTo={!!replyTo}
+        onRemove={removeFile}
+      />
+
+      <input className="hidden" {...getInputProps()} />
+
+      <form.Field name="body">
+        {(field) => (
+          <form.Subscribe
+            selector={(state) =>
+              [state.isSubmitting, state.values.body] as const
             }
+          >
+            {([isSubmitting, body]) => {
+              const canSubmit = body.trim().length > 0 || files.length > 0;
+              const submitDisabled = isSubmitting || !canSubmit;
+              return (
+                <InputGroup
+                  className={cn(
+                    (!!replyTo || files.length > 0) && "rounded-t-none"
+                  )}
+                >
+                  <InputGroupAddon align="inline-start">
+                    <InputAttachments
+                      disabled={isSubmitting}
+                      onOpenFiles={openFileDialog}
+                    />
+                  </InputGroupAddon>
+                  <InputGroupTextarea
+                    aria-label={t("send-message-placeholder")}
+                    autoFocus
+                    className="scrollbar-hide max-h-36 min-h-0"
+                    name={field.name}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.nativeEvent.isComposing) {
+                        return;
+                      }
 
-            attachmentUploadIds.push(await uploadFile(fileWithPreview.file));
-          }
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
 
-          await createPost({
-            attachmentUploadIds:
-              attachmentUploadIds.length > 0 ? attachmentUploadIds : undefined,
-            forumId,
-            body: value.body,
-            parentId: replyTo?.postId,
-          });
-
-          acknowledgeUnreadCue();
-          form.reset();
-          clearFiles();
-          setReplyTo(null);
-
-          requestAnimationFrame(() => {
-            textareaRef.current?.focus();
-            scrollToLatest();
-          });
-        } catch (error) {
-          if (attachmentUploadIds.length > 0) {
-            await discardForumUploads({ uploadIds: attachmentUploadIds }).catch(
-              (cleanupError) => {
-                captureException(cleanupError, {
-                  source: "forum-upload-discard-batch",
-                });
-                return null;
-              }
-            );
-          }
-
-          captureException(error, {
-            source: "forum-post-submit",
-          });
-
-          toast.error(t("create-post-failed"));
-
-          requestAnimationFrame(() => {
-            textareaRef.current?.focus();
-          });
-        }
-      },
-    });
-
-    return (
-      <form
-        className="grid shrink-0 px-2 pb-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          form.handleSubmit();
-        }}
-      >
-        <ReplyIndicator />
-        <AttachmentPreviews
-          files={files}
-          hasReplyTo={!!replyTo}
-          onRemove={removeFile}
-        />
-
-        <input className="hidden" {...getInputProps()} />
-
-        <form.Field name="body">
-          {(field) => (
-            <form.Subscribe
-              selector={(state) =>
-                [state.isSubmitting, state.values.body] as const
-              }
-            >
-              {([isSubmitting, body]) => {
-                const canSubmit = body.trim().length > 0 || files.length > 0;
-                const submitDisabled = isSubmitting || !canSubmit;
-                return (
-                  <InputGroup
-                    className={cn(
-                      (!!replyTo || files.length > 0) && "rounded-t-none"
-                    )}
-                  >
-                    <InputGroupAddon align="inline-start">
-                      <InputAttachments
-                        disabled={isSubmitting}
-                        onOpenFiles={openFileDialog}
-                      />
-                    </InputGroupAddon>
-                    <InputGroupTextarea
-                      aria-label={t("send-message-placeholder")}
-                      autoFocus
-                      className="scrollbar-hide max-h-36 min-h-0"
-                      name={field.name}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.nativeEvent.isComposing) {
+                        if (submitDisabled) {
                           return;
                         }
 
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-
-                          if (submitDisabled) {
-                            return;
-                          }
-
-                          form.handleSubmit();
+                        form.handleSubmit();
+                      }
+                    }}
+                    placeholder={t("send-message-placeholder")}
+                    readOnly={isSubmitting}
+                    ref={textareaRef}
+                    value={field.state.value}
+                  />
+                  <InputGroupAddon align="inline-end">
+                    <Popover
+                      onOpenChange={(open) => {
+                        if (open) {
+                          emojiPicker.open();
+                          return;
                         }
-                      }}
-                      placeholder={t("send-message-placeholder")}
-                      readOnly={isSubmitting}
-                      ref={textareaRef}
-                      value={field.state.value}
-                    />
-                    <InputGroupAddon align="inline-end">
-                      <Popover
-                        onOpenChange={(open) => {
-                          if (open) {
-                            emojiPicker.open();
-                            return;
-                          }
 
-                          emojiPicker.close();
-                        }}
-                        open={isEmojiPickerOpen}
-                      >
-                        <PopoverTrigger asChild>
-                          <InputGroupButton
-                            aria-label={t("emoji")}
-                            disabled={isSubmitting}
-                            size="icon"
-                            type="button"
-                            variant="ghost"
-                          >
-                            <Activity mode={isMobile ? "hidden" : "visible"}>
-                              <Spinner
-                                icon={WinkIcon}
-                                isLoading={isSubmitting}
-                              />
-                            </Activity>
-                            <Activity mode={isMobile ? "visible" : "hidden"}>
-                              <HugeIcons icon={WinkIcon} />
-                            </Activity>
-                            <span className="sr-only">{t("emoji")}</span>
-                          </InputGroupButton>
-                        </PopoverTrigger>
-                        <PopoverContent align="end" className="w-fit p-0">
-                          <EmojiPicker
-                            className="h-80"
-                            onEmojiSelect={({ emoji }) => {
-                              field.handleChange(field.state.value + emoji);
-                              emojiPicker.close();
-                              textareaRef.current?.focus();
-                            }}
-                          >
-                            <EmojiPickerSearch />
-                            <EmojiPickerContent />
-                            <EmojiPickerFooter />
-                          </EmojiPicker>
-                        </PopoverContent>
-                      </Popover>
-                      <Activity mode={isMobile ? "visible" : "hidden"}>
+                        emojiPicker.close();
+                      }}
+                      open={isEmojiPickerOpen}
+                    >
+                      <PopoverTrigger asChild>
                         <InputGroupButton
-                          disabled={submitDisabled}
+                          aria-label={t("emoji")}
+                          disabled={isSubmitting}
                           size="icon"
-                          type="submit"
-                          variant="default"
+                          type="button"
+                          variant="ghost"
                         >
-                          <Spinner
-                            icon={ArrowUp01Icon}
-                            isLoading={isSubmitting}
-                          />
-                          <span className="sr-only">{t("submit")}</span>
+                          <Activity mode={isMobile ? "hidden" : "visible"}>
+                            <Spinner icon={WinkIcon} isLoading={isSubmitting} />
+                          </Activity>
+                          <Activity mode={isMobile ? "visible" : "hidden"}>
+                            <HugeIcons icon={WinkIcon} />
+                          </Activity>
+                          <span className="sr-only">{t("emoji")}</span>
                         </InputGroupButton>
-                      </Activity>
-                    </InputGroupAddon>
-                  </InputGroup>
-                );
-              }}
-            </form.Subscribe>
-          )}
-        </form.Field>
-      </form>
-    );
-  }
-);
-ForumPostInput.displayName = "ForumPostInput";
+                      </PopoverTrigger>
+                      <PopoverContent align="end" className="w-fit p-0">
+                        <EmojiPicker
+                          className="h-80"
+                          onEmojiSelect={({ emoji }) => {
+                            field.handleChange(field.state.value + emoji);
+                            emojiPicker.close();
+                            textareaRef.current?.focus();
+                          }}
+                        >
+                          <EmojiPickerSearch />
+                          <EmojiPickerContent />
+                          <EmojiPickerFooter />
+                        </EmojiPicker>
+                      </PopoverContent>
+                    </Popover>
+                    <Activity mode={isMobile ? "visible" : "hidden"}>
+                      <InputGroupButton
+                        disabled={submitDisabled}
+                        size="icon"
+                        type="submit"
+                        variant="default"
+                      >
+                        <Spinner
+                          icon={ArrowUp01Icon}
+                          isLoading={isSubmitting}
+                        />
+                        <span className="sr-only">{t("submit")}</span>
+                      </InputGroupButton>
+                    </Activity>
+                  </InputGroupAddon>
+                </InputGroup>
+              );
+            }}
+          </form.Subscribe>
+        )}
+      </form.Field>
+    </form>
+  );
+}
 
 const AttachmentPreviews = memo(
   ({

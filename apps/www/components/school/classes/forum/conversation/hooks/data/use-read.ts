@@ -5,10 +5,8 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useMutation } from "convex/react";
 import { useCallback, useRef } from "react";
 
-/**
- * Encapsulate forum read-state writes behind explicit event handlers.
- */
-export function useMarkRead({ forumId }: { forumId: Id<"schoolClassForums"> }) {
+/** Encapsulates forum read-state writes behind explicit event handlers. */
+export function useRead({ forumId }: { forumId: Id<"schoolClassForums"> }) {
   const markRead = useMutation(
     api.classes.forums.mutations.readState.markForumRead
   );
@@ -85,5 +83,3 @@ export function useMarkRead({ forumId }: { forumId: Id<"schoolClassForums"> }) {
     scheduleMarkRead,
   };
 }
-
-export { useMarkRead as useRead };

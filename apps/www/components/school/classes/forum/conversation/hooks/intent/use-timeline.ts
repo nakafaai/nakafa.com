@@ -7,124 +7,38 @@ import {
   createFocusedWindowArgs,
   FORUM_CONVERSATION_WINDOW,
 } from "@/components/school/classes/forum/conversation/utils/focused";
-import type { TimelineState } from "@/components/school/classes/forum/conversation/utils/session";
+import {
+  appendUniquePosts,
+  type ConversationTimeline,
+  createLiveTimeline,
+  prependUniquePosts,
+  syncFocusedTimelineWithLivePosts,
+} from "@/components/school/classes/forum/conversation/utils/timeline";
 import type { ForumConversationMode } from "@/components/school/classes/forum/conversation/utils/view";
-import type { ForumPost } from "@/lib/store/forum";
 
-/** Creates one live-edge timeline from the reactive latest page. */
-function createLiveTimelineState(
-  posts: ForumPost[],
-  hasMoreBefore: boolean
-): TimelineState {
-  return {
-    hasMoreAfter: false,
-    hasMoreBefore,
-    isAtLatestEdge: true,
-    isJumpMode: false,
-    newestPostId: posts.at(-1)?._id ?? null,
-    oldestPostId: posts[0]?._id ?? null,
-    posts,
-  };
+interface UseConversationTimelineResult {
+  hasMoreAfter: boolean;
+  hasMoreBefore: boolean;
+  isAtLatestEdge: boolean;
+  isInitialLoading: boolean;
+  isLoadingNewer: boolean;
+  isLoadingOlder: boolean;
+  loadNewerPosts: () => void;
+  loadOlderPosts: () => void;
+  posts: ConversationTimeline["posts"];
+  replaceWithFocusedTimeline: (timeline: ConversationTimeline) => void;
+  showLatestPosts: () => boolean;
+  timelineSessionVersion: number;
 }
 
-/** Replaces matching posts in one timeline with fresher copies from another list. */
-function replaceMatchingPosts(current: ForumPost[], incoming: ForumPost[]) {
-  if (incoming.length === 0 || current.length === 0) {
-    return { changed: false, posts: current };
-  }
-
-  const incomingById = new Map(incoming.map((post) => [post._id, post]));
-  let changed = false;
-  const posts = current.map((post) => {
-    const nextPost = incomingById.get(post._id);
-
-    if (!nextPost || nextPost === post) {
-      return post;
-    }
-
-    changed = true;
-    return nextPost;
-  });
-
-  return { changed, posts };
-}
-
-/** Prepends older posts without duplicating ids already present in the window. */
-function prependUniquePosts(current: ForumPost[], incoming: ForumPost[]) {
-  const { changed, posts } = replaceMatchingPosts(current, incoming);
-  const existingIds = new Set(posts.map((post) => post._id));
-  const prepended = incoming.filter((post) => !existingIds.has(post._id));
-
-  if (prepended.length === 0) {
-    return { changed, posts };
-  }
-
-  return {
-    changed: true,
-    posts: [...prepended, ...posts],
-  };
-}
-
-/** Appends newer posts without duplicating ids already present in the window. */
-function appendUniquePosts(current: ForumPost[], incoming: ForumPost[]) {
-  const { changed, posts } = replaceMatchingPosts(current, incoming);
-  const existingIds = new Set(posts.map((post) => post._id));
-  const appended = incoming.filter((post) => !existingIds.has(post._id));
-
-  if (appended.length === 0) {
-    return { changed, posts };
-  }
-
-  return {
-    changed: true,
-    posts: [...posts, ...appended],
-  };
-}
-
-/** Syncs one focused timeline window with fresher reactive live posts. */
-function syncFocusedTimelineWithLivePosts({
-  current,
-  liveHasMoreBefore,
-  livePosts,
-}: {
-  current: TimelineState;
-  liveHasMoreBefore: boolean;
-  livePosts: ForumPost[];
-}) {
-  if (current.posts.length === 0) {
-    if (!current.isAtLatestEdge) {
-      return current;
-    }
-
-    return createLiveTimelineState(livePosts, liveHasMoreBefore);
-  }
-
-  const nextPosts = current.isAtLatestEdge
-    ? appendUniquePosts(current.posts, livePosts)
-    : replaceMatchingPosts(current.posts, livePosts);
-
-  if (!nextPosts.changed) {
-    return current;
-  }
-
-  return {
-    ...current,
-    hasMoreAfter: current.isAtLatestEdge ? false : current.hasMoreAfter,
-    isJumpMode: current.isAtLatestEdge ? false : current.isJumpMode,
-    newestPostId: nextPosts.posts.at(-1)?._id ?? null,
-    oldestPostId: nextPosts.posts[0]?._id ?? null,
-    posts: nextPosts.posts,
-  };
-}
-
-/** Keeps one forum transcript aligned to either the reactive live feed or one focused window. */
-export function useForumPosts({
+/** Keeps one forum transcript aligned to either the live feed or a focused timeline window. */
+export function useConversationTimeline({
   forumId,
   mode,
 }: {
   forumId: Id<"schoolClassForums">;
   mode: ForumConversationMode;
-}) {
+}): UseConversationTimelineResult {
   const {
     loadMore,
     results: liveResults,
@@ -138,12 +52,11 @@ export function useForumPosts({
   const liveHasMoreBefore =
     liveStatus === "CanLoadMore" || liveStatus === "LoadingMore";
   const liveTimeline = useMemo(
-    () => createLiveTimelineState(livePosts, liveHasMoreBefore),
+    () => createLiveTimeline(livePosts, liveHasMoreBefore),
     [liveHasMoreBefore, livePosts]
   );
-  const [focusedTimeline, setFocusedTimeline] = useState<TimelineState | null>(
-    null
-  );
+  const [focusedTimeline, setFocusedTimeline] =
+    useState<ConversationTimeline | null>(null);
   const [olderRequestPostId, setOlderRequestPostId] =
     useState<Id<"schoolClassForumPosts"> | null>(null);
   const [newerRequestPostId, setNewerRequestPostId] =
@@ -195,13 +108,16 @@ export function useForumPosts({
     restoreFocusedWindow,
   ]);
 
-  /** Replaces the mounted transcript with one focused detached window. */
-  const replaceWithFocusedTimeline = useCallback((timeline: TimelineState) => {
-    setOlderRequestPostId(null);
-    setNewerRequestPostId(null);
-    setFocusedTimeline(timeline);
-    setTimelineSessionVersion((current) => current + 1);
-  }, []);
+  /** Replaces the mounted transcript with a focused detached window. */
+  const replaceWithFocusedTimeline = useCallback(
+    (nextTimeline: ConversationTimeline) => {
+      setOlderRequestPostId(null);
+      setNewerRequestPostId(null);
+      setFocusedTimeline(nextTimeline);
+      setTimelineSessionVersion((current) => current + 1);
+    },
+    []
+  );
 
   useEffect(() => {
     if (!(mode.kind === "restore" && focusedTimeline === null && timeline)) {
@@ -334,7 +250,7 @@ export function useForumPosts({
     });
   }, [focusedTimeline]);
 
-  /** Promotes the transcript back to the reactive live latest window. */
+  /** Promotes the transcript back to the reactive latest live window. */
   const showLatestPosts = useCallback(() => {
     if (liveStatus === "LoadingFirstPage") {
       return false;
@@ -356,7 +272,6 @@ export function useForumPosts({
     hasMoreBefore: timeline?.hasMoreBefore ?? false,
     isAtLatestEdge: timeline?.isAtLatestEdge ?? false,
     isInitialLoading: timeline === null,
-    isJumpMode: timeline?.isJumpMode ?? false,
     isLoadingNewer: newerRequestPostId !== null,
     isLoadingOlder:
       focusedTimeline === null
@@ -370,5 +285,3 @@ export function useForumPosts({
     timelineSessionVersion,
   };
 }
-
-export { useForumPosts as usePosts };

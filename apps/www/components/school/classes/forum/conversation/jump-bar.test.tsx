@@ -3,8 +3,23 @@ import { createRoot } from "react-dom/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { JumpBar } from "@/components/school/classes/forum/conversation/jump-bar";
 
+const conversationMock = vi.hoisted(() => ({
+  value: {
+    actions: {
+      goBack: vi.fn(),
+      scrollToLatest: vi.fn(),
+    },
+  },
+}));
+
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
+}));
+
+vi.mock("@/components/school/classes/forum/conversation/provider", () => ({
+  useConversation: (
+    selector: (value: typeof conversationMock.value) => unknown
+  ) => selector(conversationMock.value),
 }));
 
 /** Renders the jump bar once and returns the mounted DOM container. */
@@ -20,14 +35,7 @@ function renderJumpBar({
   const root = createRoot(container);
 
   act(() => {
-    root.render(
-      <JumpBar
-        onBack={vi.fn()}
-        onLatest={vi.fn()}
-        showBack={showBack}
-        showLatest={showLatest}
-      />
-    );
+    root.render(<JumpBar showBack={showBack} showLatest={showLatest} />);
   });
 
   return { container, root };
@@ -36,6 +44,8 @@ function renderJumpBar({
 describe("conversation/jump-bar", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    conversationMock.value.actions.goBack.mockReset();
+    conversationMock.value.actions.scrollToLatest.mockReset();
   });
 
   it("renders nothing when neither action is meaningful", () => {

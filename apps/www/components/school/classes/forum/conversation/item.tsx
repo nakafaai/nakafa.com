@@ -8,7 +8,6 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { PostAttachment } from "@repo/backend/convex/classes/forums/utils/posts";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
@@ -46,16 +45,13 @@ import { format } from "date-fns";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, memo, useTransition } from "react";
+import { useConversation } from "@/components/school/classes/forum/conversation/provider";
 import type { ForumPost } from "@/components/school/classes/forum/conversation/types";
 import { useForum } from "@/lib/context/use-forum";
-import { useForumScroll } from "@/lib/context/use-forum-scroll";
 import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";
 
-/**
- * Render one forum post row, including reply/thread context, attachments, and
- * reaction controls.
- */
+/** Renders one forum post row with reply, attachment, and reaction controls. */
 export const ForumPostItem = memo(
   ({
     post,
@@ -63,17 +59,16 @@ export const ForumPostItem = memo(
     isJumpHighlighted,
     isLastInGroup,
     showContinuationTime,
-    currentUserId,
   }: {
     post: ForumPost;
     isFirstInGroup: boolean;
     isJumpHighlighted: boolean;
     isLastInGroup: boolean;
     showContinuationTime: boolean;
-    currentUserId: Id<"users">;
   }) => {
     const t = useTranslations("Common");
     const locale = useLocale();
+    const currentUserId = useConversation((value) => value.meta.currentUserId);
 
     const replyTo = useForum((f) => f.replyTo);
     const isReplyTo = replyTo?.postId === post._id;
@@ -297,7 +292,7 @@ PostAttachments.displayName = "PostAttachments";
  */
 const PostReplyIndicator = memo(({ post }: { post: ForumPost }) => {
   const { parentId, replyToUser, replyToBody } = post;
-  const jumpToPostId = useForumScroll((state) => state.jumpToPostId);
+  const jumpToPostId = useConversation((value) => value.actions.jumpToPostId);
 
   if (!(parentId && replyToUser)) {
     return null;

@@ -1,107 +1,119 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { act, createElement, type ReactNode } from "react";
+import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ForumPostConversation } from "@/components/school/classes/forum/conversation/index";
 
 const mocks = vi.hoisted(() => ({
-  useController: vi.fn(),
+  conversation: null as null | {
+    actions: Record<string, unknown>;
+    meta: Record<string, unknown>;
+    state: {
+      canGoBack: boolean;
+      forum: { _id: Id<"schoolClassForums"> } | undefined;
+      isAtBottom: boolean;
+      isAtLatestEdge: boolean;
+      isInitialLoading: boolean;
+      items: Array<{ type: string }>;
+    };
+  },
 }));
 
-vi.mock("next-intl", () => ({
-  useTranslations: () => (key: string) => key,
-}));
-
-vi.mock("@repo/design-system/components/ui/virtual-conversation", () => ({
-  VirtualConversation: ({
+vi.mock("@/components/school/classes/forum/conversation/provider", () => ({
+  ConversationProvider: ({
     children,
-    estimateSize,
-    floatingContent,
+    forum,
   }: {
-    children: ReactNode;
-    estimateSize?: (index: number) => number;
-    floatingContent?: ReactNode;
-  }) =>
-    createElement(
-      "div",
-      {
-        "data-estimate-date": estimateSize?.(1),
-        "data-estimate-empty": estimateSize?.(99),
-        "data-estimate-header": estimateSize?.(0),
-        "data-estimate-post": estimateSize?.(3),
-        "data-testid": "virtual-conversation",
+    children: React.ReactNode;
+    forum: { _id: Id<"schoolClassForums"> } | undefined;
+  }) => {
+    if (!mocks.conversation) {
+      throw new Error("Expected mocked conversation state.");
+    }
+
+    mocks.conversation = {
+      ...mocks.conversation,
+      state: {
+        ...mocks.conversation.state,
+        forum,
       },
-      floatingContent,
-      children
-    ),
-  VirtualConversationPlaceholder: () =>
-    createElement("div", { "data-testid": "virtual-conversation-placeholder" }),
+    };
+
+    return createElement("div", null, children);
+  },
+  useConversation: (
+    selector: (value: NonNullable<typeof mocks.conversation>) => unknown
+  ) => {
+    if (!mocks.conversation) {
+      throw new Error("Expected mocked conversation state.");
+    }
+
+    return selector(mocks.conversation);
+  },
 }));
 
-vi.mock(
-  "@/components/school/classes/forum/conversation/hooks/use-controller",
-  () => ({
-    useController: mocks.useController,
-  })
-);
+vi.mock("@/components/school/classes/forum/conversation/transcript", () => ({
+  ForumConversationTranscript: () =>
+    createElement("div", {
+      "data-testid": "virtual-conversation",
+    }),
+  ForumConversationTranscriptPlaceholder: () =>
+    createElement("div", {
+      "data-testid": "virtual-conversation-placeholder",
+    }),
+}));
 
 vi.mock("@/components/school/classes/forum/conversation/input", () => ({
   ForumPostInput: () => createElement("div", { "data-testid": "forum-input" }),
 }));
 
-vi.mock("@/components/school/classes/forum/conversation/header", () => ({
-  ForumHeader: () => createElement("div", { "data-testid": "forum-header" }),
-}));
-
-vi.mock("@/components/school/classes/forum/conversation/item", () => ({
-  ForumPostItem: ({ isJumpHighlighted }: { isJumpHighlighted: boolean }) =>
-    createElement("div", {
-      "data-jump-highlighted": String(isJumpHighlighted),
-      "data-testid": "forum-post-item",
-    }),
-}));
-
 vi.mock("@/components/school/classes/forum/conversation/jump-bar", () => ({
-  JumpBar: () => createElement("div", { "data-testid": "jump-bar" }),
-}));
+  JumpBar: ({
+    showBack,
+    showLatest,
+  }: {
+    showBack: boolean;
+    showLatest: boolean;
+  }) => {
+    if (!(showBack || showLatest)) {
+      return null;
+    }
 
-vi.mock("@/components/school/classes/forum/conversation/separators", () => ({
-  DateSeparator: () =>
-    createElement("div", { "data-testid": "date-separator" }),
-  UnreadSeparator: () =>
-    createElement("div", { "data-testid": "unread-separator" }),
+    return createElement("div", {
+      "data-show-back": String(showBack),
+      "data-show-latest": String(showLatest),
+      "data-testid": "jump-bar",
+    });
+  },
 }));
 
 const forumId = "forum_1" as Id<"schoolClassForums">;
 const currentUserId = "user_1" as Id<"users">;
 
-function createControllerResult(overrides?: {
+function createConversationModelResult(overrides?: {
   canGoBack?: boolean;
-  highlightedPostId?: Id<"schoolClassForumPosts"> | null;
   isAtBottom?: boolean;
+  isAtLatestEdge?: boolean;
   isInitialLoading?: boolean;
-  items?: any[];
+  items?: Array<{ type: string }>;
 }) {
   return {
-    acknowledgeUnreadCue: vi.fn(),
-    canGoBack: overrides?.canGoBack ?? false,
-    containerRef: { current: null },
-    forumScrollValue: {
-      jumpToPostId: vi.fn(),
+    actions: {
+      goBack: vi.fn(),
       scrollToLatest: vi.fn(),
     },
-    goBack: vi.fn(),
-    handleScroll: vi.fn(),
-    handleInitialAnchorSettled: vi.fn(),
-    highlightedPostId: overrides?.highlightedPostId ?? null,
-    initialAnchor: null,
-    isAtBottom: overrides?.isAtBottom ?? false,
-    isAtLatestEdge: true,
-    isInitialLoading: overrides?.isInitialLoading ?? false,
-    items: overrides?.items ?? [],
-    scrollRef: { current: null },
-    scrollToLatest: vi.fn(),
-    timelineSessionVersion: 0,
+    meta: {
+      currentUserId,
+      forumId,
+    },
+    state: {
+      canGoBack: overrides?.canGoBack ?? false,
+      forum: { _id: forumId },
+      isAtBottom: overrides?.isAtBottom ?? false,
+      isAtLatestEdge: overrides?.isAtLatestEdge ?? true,
+      isInitialLoading: overrides?.isInitialLoading ?? false,
+      items: overrides?.items ?? [],
+    },
   };
 }
 
@@ -126,12 +138,13 @@ function renderConversation({ forum }: { forum: any }) {
 describe("conversation/index", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.conversation = null;
   });
 
   it("shows the placeholder while the transcript is still loading", () => {
-    mocks.useController.mockReturnValue(
-      createControllerResult({ isInitialLoading: true })
-    );
+    mocks.conversation = createConversationModelResult({
+      isInitialLoading: true,
+    });
 
     const { container, root } = renderConversation({ forum: { _id: forumId } });
 
@@ -148,7 +161,7 @@ describe("conversation/index", () => {
   });
 
   it("shows the placeholder while the forum metadata is missing", () => {
-    mocks.useController.mockReturnValue(createControllerResult());
+    mocks.conversation = createConversationModelResult();
 
     const { container, root } = renderConversation({ forum: undefined });
 
@@ -164,12 +177,39 @@ describe("conversation/index", () => {
     container.remove();
   });
 
-  it("keeps the shell rendered before any anchor settle callback runs", () => {
-    mocks.useController.mockReturnValue(createControllerResult());
+  it("renders the transcript shell and input once the conversation is ready", () => {
+    mocks.conversation = createConversationModelResult();
 
     const { container, root } = renderConversation({ forum: { _id: forumId } });
 
-    expect(container.firstElementChild?.className).not.toContain("invisible");
+    expect(
+      container.querySelector('[data-testid="virtual-conversation"]')
+    ).not.toBeNull();
+    expect(
+      container.querySelector('[data-testid="forum-input"]')
+    ).not.toBeNull();
+
+    act(() => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
+  it("shows both jump actions while detached with back-stack history", () => {
+    mocks.conversation = createConversationModelResult({
+      canGoBack: true,
+      isAtBottom: false,
+      isAtLatestEdge: false,
+      items: [{ type: "post" }],
+    });
+
+    const { container, root } = renderConversation({ forum: { _id: forumId } });
+
+    const jumpBar = container.querySelector('[data-testid="jump-bar"]');
+
+    expect(jumpBar).not.toBeNull();
+    expect(jumpBar?.getAttribute("data-show-back")).toBe("true");
+    expect(jumpBar?.getAttribute("data-show-latest")).toBe("true");
     expect(
       container.querySelector('[data-testid="virtual-conversation"]')
     ).not.toBeNull();
@@ -180,55 +220,39 @@ describe("conversation/index", () => {
     container.remove();
   });
 
-  it("renders jump actions and estimate sizes", () => {
-    const highlightedPostId = "post_1" as Id<"schoolClassForumPosts">;
-
-    mocks.useController.mockReturnValue(
-      createControllerResult({
-        canGoBack: true,
-        highlightedPostId,
-        items: [
-          { forum: { _id: forumId }, type: "header" },
-          { date: Date.UTC(2026, 3, 20, 0, 0, 0), type: "date" },
-          { count: 2, status: "new", type: "unread" },
-          {
-            isFirstInGroup: true,
-            isLastInGroup: true,
-            post: { _id: highlightedPostId },
-            showContinuationTime: false,
-            type: "post",
-          },
-        ],
-      })
-    );
+  it("shows only the latest action while detached without back-stack history", () => {
+    mocks.conversation = createConversationModelResult({
+      canGoBack: false,
+      isAtBottom: false,
+      isAtLatestEdge: true,
+      items: [{ type: "post" }],
+    });
 
     const { container, root } = renderConversation({ forum: { _id: forumId } });
-    const transcript = container.querySelector(
-      '[data-testid="virtual-conversation"]'
-    );
 
-    expect(container.querySelector('[data-testid="jump-bar"]')).not.toBeNull();
-    expect(
-      container.querySelector('[data-testid="forum-header"]')
-    ).not.toBeNull();
-    expect(
-      container.querySelector('[data-testid="date-separator"]')
-    ).not.toBeNull();
-    expect(
-      container.querySelector('[data-testid="unread-separator"]')
-    ).not.toBeNull();
-    expect(
-      container.querySelector('[data-testid="forum-post-item"]')
-    ).not.toBeNull();
-    expect(
-      container
-        .querySelector('[data-testid="forum-post-item"]')
-        ?.getAttribute("data-jump-highlighted")
-    ).toBe("true");
-    expect(transcript?.getAttribute("data-estimate-header")).toBe("120");
-    expect(transcript?.getAttribute("data-estimate-date")).toBe("48");
-    expect(transcript?.getAttribute("data-estimate-post")).toBe("160");
-    expect(transcript?.getAttribute("data-estimate-empty")).toBe("120");
+    const jumpBar = container.querySelector('[data-testid="jump-bar"]');
+
+    expect(jumpBar).not.toBeNull();
+    expect(jumpBar?.getAttribute("data-show-back")).toBe("false");
+    expect(jumpBar?.getAttribute("data-show-latest")).toBe("true");
+
+    act(() => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
+  it("hides jump controls once the conversation is already at latest bottom", () => {
+    mocks.conversation = createConversationModelResult({
+      canGoBack: true,
+      isAtBottom: true,
+      isAtLatestEdge: true,
+      items: [{ type: "post" }],
+    });
+
+    const { container, root } = renderConversation({ forum: { _id: forumId } });
+
+    expect(container.querySelector('[data-testid="jump-bar"]')).toBeNull();
 
     act(() => {
       root.unmount();

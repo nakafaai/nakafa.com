@@ -2,7 +2,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { describe, expect, it } from "vitest";
-import { useUnread } from "@/components/school/classes/forum/conversation/hooks/use-unread";
+import { useUnread } from "@/components/school/classes/forum/conversation/hooks/data/use-unread";
 import type { ForumPost } from "@/components/school/classes/forum/conversation/types";
 
 type UnreadHookResult = ReturnType<typeof useUnread>;

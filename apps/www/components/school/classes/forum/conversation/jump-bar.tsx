@@ -6,21 +6,16 @@ import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
+import { useConversation } from "@/components/school/classes/forum/conversation/provider";
 
 /** Renders the contextual jump actions for going back or returning to latest. */
 export const JumpBar = memo(
-  ({
-    onBack,
-    onLatest,
-    showBack,
-    showLatest,
-  }: {
-    onBack: () => void;
-    onLatest: () => void;
-    showBack: boolean;
-    showLatest: boolean;
-  }) => {
+  ({ showBack, showLatest }: { showBack: boolean; showLatest: boolean }) => {
     const t = useTranslations("Common");
+    const goBack = useConversation((value) => value.actions.goBack);
+    const scrollToLatest = useConversation(
+      (value) => value.actions.scrollToLatest
+    );
 
     if (!(showBack || showLatest)) {
       return null;
@@ -30,14 +25,14 @@ export const JumpBar = memo(
       <div className="absolute right-0 bottom-4 left-0 z-10 flex justify-center">
         <ButtonGroup>
           {showBack ? (
-            <Button onClick={onBack} variant="outline">
+            <Button onClick={goBack} variant="outline">
               {t("back")}
             </Button>
           ) : null}
           {showLatest ? (
             <Button
               aria-label={t("back-to-latest")}
-              onClick={onLatest}
+              onClick={scrollToLatest}
               size="icon"
               variant="outline"
             >
