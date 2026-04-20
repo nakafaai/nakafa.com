@@ -1,5 +1,3 @@
-"use client";
-
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";

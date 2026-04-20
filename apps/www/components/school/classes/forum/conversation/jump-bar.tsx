@@ -1,5 +1,3 @@
-"use client";
-
 import { ArrowDown02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";

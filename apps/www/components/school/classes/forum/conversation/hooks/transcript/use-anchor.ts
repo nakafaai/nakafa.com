@@ -1,5 +1,3 @@
-"use client";
-
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { RefObject } from "react";
 import { useCallback, useEffectEvent, useRef } from "react";

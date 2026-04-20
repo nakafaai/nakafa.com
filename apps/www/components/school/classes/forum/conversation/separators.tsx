@@ -1,5 +1,3 @@
-"use client";
-
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { cn } from "@repo/design-system/lib/utils";
 import { format } from "date-fns";

@@ -1,5 +1,4 @@
-"use client";
-
+import type { RefObject } from "react";
 import { useCallback, useRef, useState } from "react";
 import type { VirtualizerHandle } from "virtua";
 import { getConversationScrollMetrics } from "@/components/school/classes/forum/conversation/utils/transcript";
@@ -10,9 +9,9 @@ interface UseTranscriptShellResult {
     scrollOffset: number;
     viewportHeight: number;
   };
-  handleRef: React.RefObject<VirtualizerHandle | null>;
+  handleRef: RefObject<VirtualizerHandle | null>;
   scrollElement: HTMLDivElement | null;
-  scrollElementRef: React.RefObject<HTMLDivElement | null>;
+  scrollElementRef: RefObject<HTMLDivElement | null>;
   setScrollElementRef: (element: HTMLDivElement | null) => void;
 }
 

@@ -1,5 +1,3 @@
-"use client";
-
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useCallback, useEffectEvent, useLayoutEffect, useRef } from "react";
 import type { ConversationTranscriptCommand } from "@/components/school/classes/forum/conversation/types";

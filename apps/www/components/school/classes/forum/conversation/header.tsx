@@ -1,5 +1,3 @@
-"use client";
-
 import { WinkIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";

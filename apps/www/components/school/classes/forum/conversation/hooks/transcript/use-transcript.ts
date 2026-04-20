@@ -1,5 +1,3 @@
-"use client";
-
 import { usePrevious } from "@mantine/hooks";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { type RefObject, useCallback, useLayoutEffect } from "react";

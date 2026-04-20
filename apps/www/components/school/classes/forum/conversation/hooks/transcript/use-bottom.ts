@@ -1,5 +1,3 @@
-"use client";
-
 import type { RefObject } from "react";
 import { useCallback, useEffectEvent, useRef } from "react";
 import type { VirtualizerHandle } from "virtua";

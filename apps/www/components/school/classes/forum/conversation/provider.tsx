@@ -1,5 +1,3 @@
-"use client";
-
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
@@ -16,7 +14,7 @@ import type { ForumConversationView } from "@/lib/store/forum";
 
 type ConversationOlderLoadResult = "committed" | "noop" | "prefetched";
 
-export interface ConversationState {
+interface ConversationState {
   canGoBack: boolean;
   canPrefetchOlderPosts: boolean;
   command: ConversationTranscriptCommand | null;
@@ -42,7 +40,7 @@ export interface ConversationState {
   unreadPostId: Id<"schoolClassForumPosts"> | null;
 }
 
-export interface ConversationActions {
+interface ConversationActions {
   acknowledgeUnreadCue: () => void;
   cancelPendingMarkRead: () => void;
   flushMarkRead: (
@@ -62,12 +60,12 @@ export interface ConversationActions {
   scrollToLatest: () => void;
 }
 
-export interface ConversationMeta {
+interface ConversationMeta {
   currentUserId: Id<"users">;
   forumId: Id<"schoolClassForums">;
 }
 
-export interface ConversationValue {
+interface ConversationValue {
   actions: ConversationActions;
   meta: ConversationMeta;
   state: ConversationState;
@@ -197,21 +195,6 @@ export function ConversationProvider({
     [actions, meta, state]
   );
 
-  return (
-    <ConversationContextProvider value={value}>
-      {children}
-    </ConversationContextProvider>
-  );
-}
-
-/** Provides one fully built conversation value for feature-local fixtures and tests. */
-export function ConversationContextProvider({
-  children,
-  value,
-}: {
-  children: ReactNode;
-  value: ConversationValue;
-}) {
   return (
     <ConversationContext.Provider value={value}>
       {children}
