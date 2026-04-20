@@ -14,7 +14,6 @@ const postBId = "post_b" as Id<"schoolClassForumPosts">;
 /** Creates one forum conversation view for back-stack tests. */
 function createView(overrides?: {
   kind?: ForumConversationView["kind"];
-  offset?: number;
   postId?: Id<"schoolClassForumPosts">;
 }): ForumConversationView {
   if (overrides?.kind === "bottom") {
@@ -23,7 +22,6 @@ function createView(overrides?: {
 
   return {
     kind: overrides?.kind ?? "post",
-    offset: overrides?.offset ?? 0,
     postId: overrides?.postId ?? postAId,
   } as ForumConversationView;
 }

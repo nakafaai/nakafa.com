@@ -45,15 +45,7 @@ const FORUM_JUMP_HIGHLIGHT_DURATION = 1600;
 
 /** Returns whether one semantic conversation view is safe to keep as jump-back history. */
 function isBackTarget(view: ForumConversationView | null) {
-  if (!view) {
-    return false;
-  }
-
-  if (view.kind === "bottom") {
-    return true;
-  }
-
-  return view.postId !== null;
+  return view !== null;
 }
 
 interface ForumScrollValue {
@@ -442,7 +434,6 @@ export function useController({
     (postId: Id<"schoolClassForumPosts">) => {
       const nextView = {
         kind: "post",
-        offset: 0,
         postId,
       } satisfies ForumConversationView;
 
@@ -508,7 +499,6 @@ export function useController({
     if (
       scrollToPost(view.postId, {
         align: "start",
-        offset: view.offset,
         smooth: shouldAnimateNavigation,
       })
     ) {

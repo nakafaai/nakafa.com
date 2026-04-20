@@ -37,7 +37,7 @@ export function areConversationViewsEqual(
     return left.kind === right.kind;
   }
 
-  return left.postId === right.postId && left.offset === right.offset;
+  return left.postId === right.postId;
 }
 
 /** Chooses the first conversation mode for a fresh mount from one saved view. */
@@ -80,7 +80,6 @@ export function createInitialConversationView({
   if (mode.kind === "jump") {
     return {
       kind: "post",
-      offset: 0,
       postId: mode.postId,
     };
   }
@@ -92,7 +91,6 @@ export function createInitialConversationView({
   if (unreadPostId) {
     return {
       kind: "post",
-      offset: 0,
       postId: unreadPostId,
     };
   }
@@ -126,8 +124,8 @@ export function isConversationViewAtOrAfter({
   }
 
   if (currentIndex !== targetIndex) {
-    return currentIndex > targetIndex;
+    return currentIndex >= targetIndex;
   }
 
-  return currentView.offset >= targetView.offset;
+  return true;
 }

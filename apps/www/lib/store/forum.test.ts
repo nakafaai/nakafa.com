@@ -32,7 +32,6 @@ describe("forum store", () => {
     const store = createForumStore(classId);
     const firstView = {
       kind: "post",
-      offset: 12,
       postId,
     } satisfies ForumConversationView;
 
@@ -40,20 +39,17 @@ describe("forum store", () => {
     store.getState().saveConversationView(forumAId, { ...firstView });
     store.getState().saveConversationView(forumAId, {
       kind: "post",
-      offset: 12,
       postId,
     });
 
     store.getState().saveConversationView(forumAId, {
       kind: "post",
-      offset: 24,
-      postId,
+      postId: "post_2" as Id<"schoolClassForumPosts">,
     });
 
     expect(store.getState().savedConversationViews[forumAId]).toEqual({
       kind: "post",
-      offset: 24,
-      postId,
+      postId: "post_2",
     });
   });
 
@@ -109,7 +105,6 @@ describe("forum store", () => {
     expect(store.getState().savedConversationViews).toEqual({
       [forumAId]: {
         kind: "post",
-        offset: 18,
         postId,
       },
       [forumBId]: {
@@ -132,7 +127,6 @@ describe("forum store", () => {
             },
             [forumBId]: {
               kind: "post",
-              offset: 6,
               postId,
             },
           },
@@ -146,7 +140,6 @@ describe("forum store", () => {
     expect(migratedStore.getState().savedConversationViews).toEqual({
       [forumBId]: {
         kind: "post",
-        offset: 6,
         postId,
       },
     });
@@ -196,7 +189,7 @@ describe("forum store", () => {
     });
   });
 
-  it("falls back missing legacy offsets to zero and tolerates empty persisted maps", () => {
+  it("migrates legacy post snapshots without offsets and tolerates empty persisted maps", () => {
     sessionStorage.setItem(
       `forum-ui:${classId}`,
       JSON.stringify({
@@ -221,12 +214,10 @@ describe("forum store", () => {
     expect(migratedStore.getState().savedConversationViews).toEqual({
       [forumAId]: {
         kind: "post",
-        offset: 0,
         postId,
       },
       [forumBId]: {
         kind: "post",
-        offset: 0,
         postId,
       },
     });

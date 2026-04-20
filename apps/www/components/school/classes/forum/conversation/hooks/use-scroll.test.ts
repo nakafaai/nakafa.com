@@ -282,7 +282,6 @@ function renderUseScroll(
                 currentResult.initialAnchor.align === "center"
                   ? "center"
                   : "start",
-              offset: currentResult.initialAnchor.offset,
               smooth: false,
             });
           }
@@ -367,14 +366,12 @@ describe("use-scroll", () => {
           postId: "post_2" as Id<"schoolClassForumPosts">,
           view: {
             kind: "post",
-            offset: 24,
             postId: "post_2" as Id<"schoolClassForumPosts">,
           },
         },
         latestConversationView: {
           current: {
             kind: "post",
-            offset: 24,
             postId: "post_2" as Id<"schoolClassForumPosts">,
           },
         },
@@ -386,7 +383,6 @@ describe("use-scroll", () => {
       align: "start",
       index: 1,
       kind: "index",
-      offset: 24,
     });
   });
 
@@ -405,7 +401,6 @@ describe("use-scroll", () => {
       align: "center",
       index: 1,
       kind: "index",
-      offset: 0,
     });
   });
 
@@ -436,7 +431,6 @@ describe("use-scroll", () => {
 
     expect(rendered.result().captureCurrentConversationView()).toEqual({
       kind: "post",
-      offset: 20,
       postId: "post_1",
     });
   });
@@ -450,7 +444,6 @@ describe("use-scroll", () => {
 
     expect(rendered.result().captureCurrentConversationView()).toEqual({
       kind: "post",
-      offset: 20,
       postId: "post_1",
     });
   });
@@ -500,7 +493,6 @@ describe("use-scroll", () => {
 
     expect(rendered.result().captureCurrentConversationView()).toEqual({
       kind: "post",
-      offset: 20,
       postId: "post_1",
     });
   });

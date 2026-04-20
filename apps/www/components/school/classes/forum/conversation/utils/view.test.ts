@@ -24,7 +24,6 @@ describe("forum conversation view state", () => {
   it("uses restore mode only for saved post snapshots", () => {
     const restoreView = {
       kind: "post",
-      offset: -8,
       postId: postAId,
     } as const;
 
@@ -42,22 +41,22 @@ describe("forum conversation view state", () => {
 
     expect(
       areConversationViewsEqual(
-        { kind: "post", offset: 4, postId: postAId },
-        { kind: "post", offset: 4, postId: postAId }
+        { kind: "post", postId: postAId },
+        { kind: "post", postId: postAId }
       )
     ).toBe(true);
 
     expect(
       areConversationViewsEqual(
-        { kind: "post", offset: 4, postId: postAId },
-        { kind: "post", offset: 5, postId: postAId }
+        { kind: "post", postId: postAId },
+        { kind: "post", postId: postBId }
       )
     ).toBe(false);
 
     expect(
       areConversationViewsEqual(
         { kind: "bottom" },
-        { kind: "post", offset: 0, postId: postAId }
+        { kind: "post", postId: postAId }
       )
     ).toBe(false);
   });
@@ -65,7 +64,7 @@ describe("forum conversation view state", () => {
   it("chooses the first conversation view from mode, unread, and bottom intent", () => {
     expect(
       createInitialConversationView({
-        existingView: { kind: "post", offset: 4, postId: postAId },
+        existingView: { kind: "post", postId: postAId },
         mode: { kind: "live" },
         preferBottom: true,
         unreadPostId: postBId,
@@ -78,12 +77,12 @@ describe("forum conversation view state", () => {
         mode: {
           kind: "restore",
           postId: postAId,
-          view: { kind: "post", offset: -6, postId: postAId },
+          view: { kind: "post", postId: postAId },
         },
         preferBottom: false,
         unreadPostId: null,
       })
-    ).toEqual({ kind: "post", offset: -6, postId: postAId });
+    ).toEqual({ kind: "post", postId: postAId });
 
     expect(
       createInitialConversationView({
@@ -92,7 +91,7 @@ describe("forum conversation view state", () => {
         preferBottom: false,
         unreadPostId: null,
       })
-    ).toEqual({ kind: "post", offset: 0, postId: postBId });
+    ).toEqual({ kind: "post", postId: postBId });
 
     expect(
       createInitialConversationView({
@@ -110,7 +109,7 @@ describe("forum conversation view state", () => {
         preferBottom: false,
         unreadPostId: postAId,
       })
-    ).toEqual({ kind: "post", offset: 0, postId: postAId });
+    ).toEqual({ kind: "post", postId: postAId });
   });
 
   it("compares viewport order for back-history expiry", () => {
@@ -123,29 +122,29 @@ describe("forum conversation view state", () => {
       isConversationViewAtOrAfter({
         currentView: { kind: "bottom" },
         postIdToIndex,
-        targetView: { kind: "post", offset: 0, postId: postAId },
+        targetView: { kind: "post", postId: postAId },
       })
     ).toBe(true);
 
     expect(
       isConversationViewAtOrAfter({
-        currentView: { kind: "post", offset: 8, postId: postBId },
+        currentView: { kind: "post", postId: postBId },
         postIdToIndex,
-        targetView: { kind: "post", offset: 4, postId: postAId },
+        targetView: { kind: "post", postId: postAId },
       })
     ).toBe(true);
 
     expect(
       isConversationViewAtOrAfter({
-        currentView: { kind: "post", offset: 2, postId: postAId },
+        currentView: { kind: "post", postId: postAId },
         postIdToIndex,
-        targetView: { kind: "post", offset: 4, postId: postAId },
+        targetView: { kind: "post", postId: postAId },
       })
-    ).toBe(false);
+    ).toBe(true);
 
     expect(
       isConversationViewAtOrAfter({
-        currentView: { kind: "post", offset: 0, postId: postAId },
+        currentView: { kind: "post", postId: postAId },
         postIdToIndex,
         targetView: { kind: "bottom" },
       })
@@ -153,9 +152,9 @@ describe("forum conversation view state", () => {
 
     expect(
       isConversationViewAtOrAfter({
-        currentView: { kind: "post", offset: 0, postId: postAId },
+        currentView: { kind: "post", postId: postAId },
         postIdToIndex: new Map(),
-        targetView: { kind: "post", offset: 0, postId: postAId },
+        targetView: { kind: "post", postId: postAId },
       })
     ).toBe(false);
   });
