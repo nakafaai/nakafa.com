@@ -2,7 +2,6 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ForumPostConversation } from "@/components/school/classes/forum/conversation/index";
 import type { Forum } from "@/components/school/classes/forum/conversation/types";
 
 type ConversationForum = Forum | undefined;
@@ -47,6 +46,10 @@ const conversationState = vi.hoisted(() => ({
   },
 }));
 
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => key,
+}));
+
 vi.mock("@/components/school/classes/forum/conversation/provider", () => ({
   ConversationProvider: ({
     children,
@@ -72,11 +75,17 @@ vi.mock("@/components/school/classes/forum/conversation/transcript", () => ({
     createElement("div", {
       "data-testid": "virtual-conversation",
     }),
-  ForumConversationTranscriptPlaceholder: () =>
-    createElement("div", {
-      "data-testid": "virtual-conversation-placeholder",
-    }),
 }));
+
+vi.mock(
+  "@/components/school/classes/forum/conversation/transcript/rows",
+  () => ({
+    ForumConversationTranscriptPlaceholder: () =>
+      createElement("div", {
+        "data-testid": "virtual-conversation-placeholder",
+      }),
+  })
+);
 
 vi.mock("@/components/school/classes/forum/conversation/input", () => ({
   ForumPostInput: () => createElement("div", { "data-testid": "forum-input" }),
@@ -101,6 +110,10 @@ vi.mock("@/components/school/classes/forum/conversation/jump-bar", () => ({
     });
   },
 }));
+
+const { ForumPostConversation } = await import(
+  "@/components/school/classes/forum/conversation/index"
+);
 
 const forumId = "forum_1" as Id<"schoolClassForums">;
 const currentUserId = "user_1" as Id<"users">;

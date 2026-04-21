@@ -1,5 +1,5 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { ForumPost } from "@/components/school/classes/forum/conversation/store/forum";
+import type { ForumPost } from "@/components/school/classes/forum/conversation/models";
 
 /** Represents one mounted transcript window and its current paging boundaries. */
 export interface ConversationTimeline {
@@ -157,13 +157,9 @@ export function createOlderPrefetchPages({
   ) {
     const posts = bufferedOlderPosts.slice(startIndex, startIndex + pageSize);
 
-    if (posts.length === 0) {
-      continue;
-    }
-
     pages.push({
       hasMoreBefore,
-      oldestPostId: posts[0]?._id ?? null,
+      oldestPostId: posts[0]._id,
       posts,
     });
   }

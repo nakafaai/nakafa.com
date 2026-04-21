@@ -1,5 +1,5 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { ForumPost } from "@/components/school/classes/forum/conversation/store/forum";
+import type { ForumPost } from "@/components/school/classes/forum/conversation/models";
 import type { ConversationTimeline } from "@/components/school/classes/forum/conversation/utils/timeline";
 import type { ForumConversationMode } from "@/components/school/classes/forum/conversation/utils/view";
 

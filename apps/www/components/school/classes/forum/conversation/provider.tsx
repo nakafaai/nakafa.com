@@ -8,20 +8,33 @@ import { createContext, useContextSelector } from "use-context-selector";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import { useForum } from "@/components/school/classes/forum/conversation/context/use-forum";
-import type { ForumConversationView } from "@/components/school/classes/forum/conversation/store/forum";
-import {
-  type ConversationRuntimeStore,
-  createConversationStore,
-} from "@/components/school/classes/forum/conversation/store/runtime";
 import type {
-  Forum,
+  ForumConversationView,
   ForumPost,
-} from "@/components/school/classes/forum/conversation/types";
+} from "@/components/school/classes/forum/conversation/models";
+import { createConversationStore } from "@/components/school/classes/forum/conversation/store/runtime";
+import type { ConversationRuntimeStore } from "@/components/school/classes/forum/conversation/store/runtime/types";
+import type { Forum } from "@/components/school/classes/forum/conversation/types";
 import { FORUM_CONVERSATION_WINDOW } from "@/components/school/classes/forum/conversation/utils/focused";
 
 type ConversationStoreApi = ReturnType<typeof createConversationStore>;
 
 const ConversationContext = createContext<ConversationStoreApi | null>(null);
+
+/** Mounts one prebuilt conversation store instance into context. */
+export function ConversationStoreProvider({
+  children,
+  store,
+}: {
+  children: ReactNode;
+  store: ConversationStoreApi;
+}) {
+  return (
+    <ConversationContext.Provider value={store}>
+      {children}
+    </ConversationContext.Provider>
+  );
+}
 
 /** Provides one forum-scoped conversation runtime store and syncs external data into it. */
 export function ConversationProvider({
@@ -54,7 +67,7 @@ export function ConversationProvider({
   const livePosts = useMemo(() => [...liveResults].reverse(), [liveResults]);
   const liveHasMoreBefore =
     liveStatus === "CanLoadMore" || liveStatus === "LoadingMore";
-  const depsRef = useRef({
+  const deps = {
     fetchAround: async (
       postId: Id<"schoolClassForumPosts">
     ): Promise<{
@@ -90,36 +103,10 @@ export function ConversationProvider({
     },
     saveConversationView: (view: ForumConversationView) =>
       saveConversationView(forumId, view),
-  });
-
-  depsRef.current = {
-    fetchAround: async (postId) =>
-      convex.query(api.classes.forums.queries.around.getForumPostsAround, {
-        forumId,
-        limit: FORUM_CONVERSATION_WINDOW,
-        targetPostId: postId,
-      }),
-    fetchNewer: async (postId) =>
-      convex.query(api.classes.forums.queries.newer.getForumPostsNewer, {
-        afterPostId: postId,
-        forumId,
-        limit: FORUM_CONVERSATION_WINDOW,
-      }),
-    fetchOlder: async (postId) =>
-      convex.query(api.classes.forums.queries.older.getForumPostsOlder, {
-        beforePostId: postId,
-        forumId,
-        limit: FORUM_CONVERSATION_WINDOW,
-      }),
-    loadLiveOlder: () => {
-      if (liveStatus !== "CanLoadMore") {
-        return;
-      }
-
-      loadMore(FORUM_CONVERSATION_WINDOW);
-    },
-    saveConversationView: (view) => saveConversationView(forumId, view),
   };
+  const depsRef = useRef(deps);
+
+  depsRef.current = deps;
 
   const [store] = useState(() =>
     createConversationStore({
@@ -149,9 +136,9 @@ export function ConversationProvider({
   }, [liveHasMoreBefore, livePosts, store]);
 
   return (
-    <ConversationContext.Provider value={store}>
+    <ConversationStoreProvider store={store}>
       {children}
-    </ConversationContext.Provider>
+    </ConversationStoreProvider>
   );
 }
 

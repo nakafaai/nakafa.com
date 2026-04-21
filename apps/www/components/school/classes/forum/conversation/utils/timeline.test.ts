@@ -1,11 +1,14 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { describe, expect, it } from "vitest";
-import type { ForumPost } from "@/components/school/classes/forum/conversation/types";
+import type { ForumPost } from "@/components/school/classes/forum/conversation/models";
 import {
+  appendUniquePosts,
   createLiveTimeline,
   createOlderPrefetchPages,
   getOlderPrefetchBoundaryPostId,
+  prependUniquePosts,
   refreshFocusedTimeline,
+  replaceMatchingPosts,
 } from "@/components/school/classes/forum/conversation/utils/timeline";
 
 const forumId = "forum_1" as Id<"schoolClassForums">;
@@ -63,6 +66,25 @@ describe("conversation/utils/timeline", () => {
         livePosts: liveTimeline.posts,
       })
     ).toEqual(focusedTimeline);
+
+    expect(
+      refreshFocusedTimeline({
+        current: focusedTimeline,
+        livePosts: focusedTimeline.posts,
+      })
+    ).toBe(focusedTimeline);
+  });
+
+  it("creates live timelines with explicit null boundaries when no posts are loaded yet", () => {
+    expect(createLiveTimeline([], false)).toEqual({
+      hasMoreAfter: false,
+      hasMoreBefore: false,
+      isAtLatestEdge: true,
+      isJumpMode: false,
+      newestPostId: null,
+      oldestPostId: null,
+      posts: [],
+    });
   });
 
   it("derives older buffered pages in nearest-first commit order", () => {
@@ -126,5 +148,73 @@ describe("conversation/utils/timeline", () => {
         renderedPosts,
       })
     ).toBe("post_5");
+
+    expect(
+      getOlderPrefetchBoundaryPostId({
+        bufferedPages: [],
+        renderedPosts: [],
+      })
+    ).toBeNull();
+  });
+
+  it("replaces matching posts and appends or prepends only unique ids", () => {
+    const currentPosts = [createPost("post_1", 1), createPost("post_2", 2)];
+    const refreshedPost = {
+      ...createPost("post_2", 2),
+      body: "post_2_updated",
+    };
+
+    expect(
+      replaceMatchingPosts(currentPosts, [
+        refreshedPost,
+        createPost("post_9", 9),
+      ])
+    ).toEqual({
+      changed: true,
+      posts: [currentPosts[0], refreshedPost],
+    });
+
+    expect(prependUniquePosts(currentPosts, [createPost("post_0", 0)])).toEqual(
+      {
+        changed: true,
+        posts: [createPost("post_0", 0), ...currentPosts],
+      }
+    );
+    expect(prependUniquePosts(currentPosts, [currentPosts[0]])).toEqual({
+      changed: false,
+      posts: currentPosts,
+    });
+
+    expect(appendUniquePosts(currentPosts, [createPost("post_3", 3)])).toEqual({
+      changed: true,
+      posts: [...currentPosts, createPost("post_3", 3)],
+    });
+
+    expect(appendUniquePosts([], [])).toEqual({
+      changed: false,
+      posts: [],
+    });
+  });
+
+  it("returns empty older prefetch pages when nothing older is buffered", () => {
+    expect(
+      createOlderPrefetchPages({
+        fetchedPosts: [],
+        hasMoreBefore: true,
+        maxPages: 2,
+        pageSize: 2,
+        renderedPosts: [createPost("post_1", 1)],
+      })
+    ).toEqual([]);
+
+    expect(
+      createOlderPrefetchPages({
+        fetchedPosts: [createPost("post_1", 1), createPost("post_2", 2)],
+        hasMoreBefore: true,
+        maxPages: 2,
+        pageSize: 2,
+        renderedPosts: [createPost("post_1", 1), createPost("post_2", 2)],
+      })
+    ).toEqual([]);
   });
 });

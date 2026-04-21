@@ -2,14 +2,13 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  ForumConversationTranscript,
-  ForumConversationTranscriptPlaceholder,
-} from "@/components/school/classes/forum/conversation/transcript";
+import type { ForumPost } from "@/components/school/classes/forum/conversation/models";
+import { ForumConversationTranscript } from "@/components/school/classes/forum/conversation/transcript";
+import * as transcriptEffects from "@/components/school/classes/forum/conversation/transcript/effects";
+import { ForumConversationTranscriptPlaceholder } from "@/components/school/classes/forum/conversation/transcript/rows";
 import type {
   ConversationTranscriptCommand,
   Forum,
-  ForumPost,
   VirtualItem,
 } from "@/components/school/classes/forum/conversation/types";
 
@@ -42,6 +41,8 @@ const virtualizerState = vi.hoisted(() => ({
   onScroll: undefined as ((offset: number) => void) | undefined,
 }));
 
+const markForumReadMock = vi.hoisted(() => vi.fn(() => Promise.resolve()));
+
 vi.mock("@mantine/hooks", () => ({
   useDebouncedCallback: <Args extends unknown[]>(
     callback: (...args: Args) => void
@@ -53,7 +54,7 @@ vi.mock("@mantine/hooks", () => ({
 }));
 
 vi.mock("convex/react", () => ({
-  useMutation: () => vi.fn(() => Promise.resolve()),
+  useMutation: () => markForumReadMock,
 }));
 
 vi.mock("virtua", () => ({
@@ -195,6 +196,34 @@ function render(element: React.ReactNode) {
   return container;
 }
 
+/** Mounts one transcript root and lets tests rerender it without losing refs. */
+function renderWithRoot(element: React.ReactNode) {
+  const container = document.createElement("div");
+  const root = createRoot(container);
+
+  document.body.append(container);
+
+  const rerender = (nextElement: React.ReactNode) => {
+    act(() => {
+      root.render(nextElement);
+    });
+  };
+
+  rerender(element);
+
+  mountedRoots.push(() => {
+    act(() => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
+  return {
+    container,
+    rerender,
+  };
+}
+
 /** Flushes every queued animation frame used by transcript settle retries. */
 function flushAnimationFrames() {
   while (animationFrames.length > 0) {
@@ -261,6 +290,7 @@ beforeEach(() => {
   conversationState.scrollRequest = null;
   conversationState.timelineSessionVersion = 0;
   conversationState.transcriptVariant = "live";
+  markForumReadMock.mockClear();
   virtualizerState.lastShift = undefined;
   virtualizerState.onScroll = undefined;
 
@@ -441,5 +471,59 @@ describe("conversation/transcript", () => {
 
     expect(conversationState.loadOlderPosts).toHaveBeenCalled();
     expect(virtualizerState.lastShift).toBe(true);
+  });
+
+  it("does not mark the same latest post as read twice", async () => {
+    const post = createPost("post_latest");
+
+    conversationState.items = [
+      {
+        isFirstInGroup: true,
+        isLastInGroup: true,
+        post,
+        showContinuationTime: false,
+        type: "post",
+      },
+    ];
+    conversationState.isAtLatestEdge = true;
+    conversationState.lastPostId = post._id;
+    conversationState.scrollRequest = {
+      id: 1,
+      kind: "latest",
+      smooth: false,
+    } satisfies ConversationTranscriptCommand;
+
+    render(<ForumConversationTranscript />);
+
+    act(() => {
+      flushAnimationFrames();
+    });
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    act(() => {
+      virtualizerState.onScroll?.(0);
+    });
+
+    expect(markForumReadMock).toHaveBeenCalledTimes(1);
+    expect(markForumReadMock).toHaveBeenCalledWith({
+      forumId,
+      lastReadPostId: post._id,
+    });
+  });
+
+  it("resets transient viewport state when the timeline session version changes", () => {
+    const resetTranscriptViewportStateSpy = vi.spyOn(
+      transcriptEffects,
+      "resetTranscriptViewportState"
+    );
+
+    const rendered = renderWithRoot(<ForumConversationTranscript />);
+
+    conversationState.timelineSessionVersion = 1;
+    rendered.rerender(<ForumConversationTranscript />);
+
+    expect(resetTranscriptViewportStateSpy).toHaveBeenCalledTimes(1);
   });
 });

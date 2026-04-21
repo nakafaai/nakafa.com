@@ -1,7 +1,7 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { ForumPost } from "@/components/school/classes/forum/conversation/models";
 import type {
   Forum,
-  ForumPost,
   VirtualItem,
 } from "@/components/school/classes/forum/conversation/types";
 
@@ -49,7 +49,7 @@ export function buildVirtualItems({
       items.push({ type: "date", date: post._creationTime });
     }
 
-    if (!isDetachedMode && unreadCue?.postId === post._id) {
+    if (!isDetachedMode && unreadCue && unreadCue.postId === post._id) {
       items.push({
         type: "unread",
         count: unreadCue.count,

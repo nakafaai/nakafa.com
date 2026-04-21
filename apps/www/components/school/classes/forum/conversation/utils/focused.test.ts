@@ -1,6 +1,6 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { describe, expect, it } from "vitest";
-import type { ForumPost } from "@/components/school/classes/forum/conversation/store/forum";
+import type { ForumPost } from "@/components/school/classes/forum/conversation/models";
 import {
   createFocusedTimelineState,
   createFocusedWindowArgs,

@@ -1,4 +1,4 @@
-import type { ForumConversationView } from "@/components/school/classes/forum/conversation/store/forum";
+import type { ForumConversationView } from "@/components/school/classes/forum/conversation/models";
 import { areConversationViewsEqual } from "@/components/school/classes/forum/conversation/utils/view";
 
 const MAX_BACK_STACK_SIZE = 5;

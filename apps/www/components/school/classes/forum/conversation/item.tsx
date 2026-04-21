@@ -1,51 +1,20 @@
-import {
-  ArrowTurnBackwardIcon,
-  ArrowTurnForwardIcon,
-  FileIcon,
-  WinkIcon,
-} from "@hugeicons/core-free-icons";
-import { useDisclosure } from "@mantine/hooks";
-import { api } from "@repo/backend/convex/_generated/api";
-import type { PostAttachment } from "@repo/backend/convex/classes/forums/utils/posts";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@repo/design-system/components/ui/avatar";
-import { Button } from "@repo/design-system/components/ui/button";
-import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
-import {
-  EmojiPicker,
-  EmojiPickerContent,
-  EmojiPickerFooter,
-  EmojiPickerSearch,
-} from "@repo/design-system/components/ui/emoji-picker";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@repo/design-system/components/ui/hover-card";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@repo/design-system/components/ui/popover";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@repo/design-system/components/ui/tooltip";
-import { cn, formatFileSize } from "@repo/design-system/lib/utils";
-import { useMutation } from "convex/react";
+import { cn } from "@repo/design-system/lib/utils";
 import { format } from "date-fns";
-import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
-import { Activity, memo, useTransition } from "react";
+import { Activity, memo } from "react";
 import { useForum } from "@/components/school/classes/forum/conversation/context/use-forum";
+import { PostItemActions } from "@/components/school/classes/forum/conversation/item/actions";
+import { PostAttachments } from "@/components/school/classes/forum/conversation/item/attachments";
+import { PostReactions } from "@/components/school/classes/forum/conversation/item/reactions";
+import { PostReplyIndicator } from "@/components/school/classes/forum/conversation/item/reply-indicator";
+import type { ForumPost } from "@/components/school/classes/forum/conversation/models";
 import { useConversation } from "@/components/school/classes/forum/conversation/provider";
-import type { ForumPost } from "@/components/school/classes/forum/conversation/types";
 import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";
 
@@ -65,12 +34,10 @@ export const ForumPostItem = memo(
     const t = useTranslations("Common");
     const locale = useLocale();
     const currentUserId = useConversation((state) => state.currentUserId);
-
-    const replyTo = useForum((f) => f.replyTo);
-    const isReplyTo = replyTo?.postId === post._id;
+    const replyTo = useForum((state) => state.replyTo);
     const userName = post.user?.name ?? t("anonymous");
     const userImage = post.user?.image ?? "";
-
+    const isReplyTo = replyTo?.postId === post._id;
     const isReplyToMe = post.replyToUserId === currentUserId;
 
     return (
@@ -104,7 +71,9 @@ export const ForumPostItem = memo(
               locale: getLocale(locale),
             })}
           >
-            {format(post._creationTime, "HH:mm", { locale: getLocale(locale) })}
+            {format(post._creationTime, "HH:mm", {
+              locale: getLocale(locale),
+            })}
           </time>
         </div>
 
@@ -146,260 +115,3 @@ export const ForumPostItem = memo(
   }
 );
 ForumPostItem.displayName = "ForumPostItem";
-
-/** Renders the current reaction chips and toggles for one post. */
-const PostReactions = memo(({ post }: { post: ForumPost }) => {
-  const t = useTranslations("Common");
-
-  const [isPending, startTransition] = useTransition();
-  const toggleReaction = useMutation(
-    api.classes.forums.mutations.reactions.togglePostReaction
-  );
-
-  const handleToggleReaction = (emoji: string) => {
-    startTransition(async () => {
-      await toggleReaction({ postId: post._id, emoji });
-    });
-  };
-
-  if (post.reactionUsers.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="flex flex-wrap items-center gap-1">
-      {post.reactionUsers.map(({ emoji, count, reactors }) => {
-        const isMyReaction = post.myReactions.includes(emoji);
-        const moreCount = count - reactors.length;
-
-        return (
-          <HoverCard key={emoji}>
-            <HoverCardTrigger asChild>
-              <Button
-                disabled={isPending}
-                onClick={() => handleToggleReaction(emoji)}
-                size="sm"
-                variant={isMyReaction === true ? "default-outline" : "outline"}
-              >
-                {emoji}
-                <span className="tracking-tight">{count}</span>
-              </Button>
-            </HoverCardTrigger>
-            <HoverCardContent
-              align="center"
-              className="w-auto max-w-64"
-              side="top"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-3xl">{emoji}</span>
-                <p className="line-clamp-2 text-sm leading-tight">
-                  {moreCount > 0
-                    ? t("reacted-by-more", {
-                        names: reactors.join(", "),
-                        count: moreCount,
-                      })
-                    : t("reacted-by", { names: reactors.join(", ") })}
-                </p>
-              </div>
-            </HoverCardContent>
-          </HoverCard>
-        );
-      })}
-    </div>
-  );
-});
-PostReactions.displayName = "PostReactions";
-
-/**
- * Split forum attachments into image previews and file links while tolerating
- * storage URLs that are temporarily unavailable.
- */
-const PostAttachments = memo(
-  ({ attachments }: { attachments: PostAttachment[] }) => {
-    if (attachments.length === 0) {
-      return null;
-    }
-
-    const images = attachments.filter((a) => a.mimeType.startsWith("image/"));
-    const files = attachments.filter((a) => !a.mimeType.startsWith("image/"));
-
-    return (
-      <div className="flex flex-col gap-1">
-        {images.map((attachment) => {
-          if (!attachment.url) {
-            return null;
-          }
-
-          return (
-            <a
-              className="group/image relative block h-40 w-full max-w-xs overflow-hidden rounded-sm border bg-muted sm:h-48"
-              href={attachment.url}
-              key={attachment._id}
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              <Image
-                alt={attachment.name}
-                className="object-cover transition-transform ease-out group-hover/image:scale-105"
-                fill
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                src={attachment.url}
-              />
-            </a>
-          );
-        })}
-
-        <div className="flex flex-wrap gap-1">
-          {files.map((attachment) => (
-            <a
-              className="group/file flex items-center gap-2 rounded-sm border bg-background p-2 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
-              href={attachment.url ?? "#"}
-              key={attachment._id}
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              <div className="flex size-8 items-center justify-center rounded-sm bg-muted">
-                <HugeIcons
-                  className="size-4 text-muted-foreground"
-                  icon={FileIcon}
-                />
-              </div>
-              <div className="flex min-w-0 flex-col">
-                <span className="max-w-30 truncate font-medium text-xs">
-                  {attachment.name}
-                </span>
-                <span className="text-[10px] text-muted-foreground group-hover/file:text-accent-foreground">
-                  {formatFileSize(attachment.size)}
-                </span>
-              </div>
-            </a>
-          ))}
-        </div>
-      </div>
-    );
-  }
-);
-PostAttachments.displayName = "PostAttachments";
-
-/**
- * Link one reply preview back to its parent post, loading jump mode when the
- * parent is outside the current window.
- */
-const PostReplyIndicator = memo(({ post }: { post: ForumPost }) => {
-  const { parentId, replyToUser, replyToBody } = post;
-  const jumpToPostId = useConversation((state) => state.jumpToPostId);
-
-  if (!(parentId && replyToUser)) {
-    return null;
-  }
-
-  const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    jumpToPostId(parentId);
-  };
-
-  return (
-    <button
-      className="flex min-w-0 cursor-pointer items-center gap-1 text-left text-muted-foreground text-xs transition-colors ease-out hover:text-foreground"
-      onClick={handleClick}
-      type="button"
-    >
-      <HugeIcons className="size-3 shrink-0" icon={ArrowTurnForwardIcon} />
-      <span className="max-w-32 shrink-0 truncate text-primary">
-        {replyToUser.name}
-      </span>
-      <Activity mode={replyToBody ? "visible" : "hidden"}>
-        <span className="min-w-0 flex-1 truncate">{replyToBody}</span>
-      </Activity>
-    </button>
-  );
-});
-PostReplyIndicator.displayName = "PostReplyIndicator";
-
-/**
- * Keep post-level quick actions grouped together so reply and reaction updates
- * stay close to the post they mutate.
- */
-const PostItemActions = memo(({ post }: { post: ForumPost }) => {
-  const t = useTranslations("Common");
-  const setReplyTo = useForum((f) => f.setReplyTo);
-
-  const userName = post.user?.name ?? t("anonymous");
-
-  const [isReactionPickerOpen, reactionPicker] = useDisclosure(false);
-  const [isPending, startTransition] = useTransition();
-
-  const toggleReaction = useMutation(
-    api.classes.forums.mutations.reactions.togglePostReaction
-  );
-
-  const handleToggleReaction = (emoji: string) => {
-    startTransition(async () => {
-      await toggleReaction({ postId: post._id, emoji });
-    });
-  };
-
-  return (
-    <ButtonGroup
-      className={cn(
-        "absolute -top-4 right-4 z-1 opacity-0 shadow-xs transition-opacity ease-out group-hover:opacity-100",
-        isReactionPickerOpen && "opacity-100"
-      )}
-    >
-      <Popover
-        onOpenChange={(open) => {
-          if (open) {
-            reactionPicker.open();
-            return;
-          }
-
-          reactionPicker.close();
-        }}
-        open={isReactionPickerOpen}
-      >
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <PopoverTrigger asChild>
-                <Button disabled={isPending} size="icon" variant="outline">
-                  <HugeIcons icon={WinkIcon} />
-                  <span className="sr-only">{t("reaction")}</span>
-                </Button>
-              </PopoverTrigger>
-            }
-          />
-          <TooltipContent side="top">{t("reaction")}</TooltipContent>
-        </Tooltip>
-        <PopoverContent align="end" className="w-fit p-0">
-          <EmojiPicker
-            className="h-80"
-            onEmojiSelect={({ emoji }) => {
-              handleToggleReaction(emoji);
-              reactionPicker.close();
-            }}
-          >
-            <EmojiPickerSearch />
-            <EmojiPickerContent />
-            <EmojiPickerFooter />
-          </EmojiPicker>
-        </PopoverContent>
-      </Popover>
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              onClick={() => setReplyTo({ postId: post._id, userName })}
-              size="icon"
-              variant="outline"
-            >
-              <HugeIcons icon={ArrowTurnBackwardIcon} />
-              <span className="sr-only">{t("reply")}</span>
-            </Button>
-          }
-        />
-        <TooltipContent side="top">{t("reply")}</TooltipContent>
-      </Tooltip>
-    </ButtonGroup>
-  );
-});
-PostItemActions.displayName = "PostItemActions";

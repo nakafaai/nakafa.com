@@ -1,8 +1,8 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { describe, expect, it, vi } from "vitest";
+import type { ForumPost } from "@/components/school/classes/forum/conversation/models";
 import type {
   Forum,
-  ForumPost,
   VirtualItem,
 } from "@/components/school/classes/forum/conversation/types";
 import {
@@ -249,6 +249,53 @@ describe("conversation/utils/transcript", () => {
     });
   });
 
+  it("returns null when no rendered post is visible inside the scroll root", () => {
+    const scrollElement = document.createElement("div");
+    const hiddenPost = document.createElement("div");
+    const anonymousRow = document.createElement("div");
+    const belowViewportPost = document.createElement("div");
+
+    hiddenPost.dataset.postId = "post_hidden";
+    anonymousRow.setAttribute("data-post-id", "");
+    belowViewportPost.dataset.postId = "post_below";
+    scrollElement.append(hiddenPost, anonymousRow, belowViewportPost);
+
+    vi.spyOn(scrollElement, "getBoundingClientRect").mockReturnValue(
+      createRect({
+        bottom: 400,
+        height: 400,
+        top: 0,
+      })
+    );
+    vi.spyOn(hiddenPost, "getBoundingClientRect").mockReturnValue(
+      createRect({
+        bottom: -8,
+        height: 72,
+        top: -80,
+      })
+    );
+    vi.spyOn(anonymousRow, "getBoundingClientRect").mockReturnValue(
+      createRect({
+        bottom: 80,
+        height: 40,
+        top: 40,
+      })
+    );
+    vi.spyOn(belowViewportPost, "getBoundingClientRect").mockReturnValue(
+      createRect({
+        bottom: 520,
+        height: 80,
+        top: 440,
+      })
+    );
+
+    expect(
+      captureVisibleConversationDomAnchor({
+        scrollElement,
+      })
+    ).toBeNull();
+  });
+
   it("finds one rendered post row and resolves its top within the scroll root", () => {
     const scrollElement = document.createElement("div");
     const postRow = document.createElement("div");
@@ -283,6 +330,23 @@ describe("conversation/utils/transcript", () => {
         scrollElement,
       })
     ).toBe(100);
+  });
+
+  it("returns null when the requested rendered post row does not exist", () => {
+    const scrollElement = document.createElement("div");
+
+    expect(
+      findConversationPostRow({
+        postId: "post_missing" as Id<"schoolClassForumPosts">,
+        scrollElement,
+      })
+    ).toBeNull();
+    expect(
+      isConversationPostVisibleInDom({
+        postId: "post_missing" as Id<"schoolClassForumPosts">,
+        scrollElement,
+      })
+    ).toBe(false);
   });
 
   it("reconciles one DOM anchor by adjusting scrollTop until it settles", () => {
@@ -337,6 +401,20 @@ describe("conversation/utils/transcript", () => {
     ).toBe("settled");
   });
 
+  it("reports one missing restore anchor when the rendered target row is absent", () => {
+    const scrollElement = document.createElement("div");
+
+    expect(
+      reconcileConversationDomAnchor({
+        anchor: {
+          postId: "post_missing" as Id<"schoolClassForumPosts">,
+          topWithinScrollRoot: 80,
+        },
+        scrollElement,
+      })
+    ).toBe("missing");
+  });
+
   it("checks rendered post visibility and bottom distance without virtual offsets", () => {
     const scrollElement = document.createElement("div");
     const visiblePost = document.createElement("div");
@@ -387,6 +465,17 @@ describe("conversation/utils/transcript", () => {
         viewportHeight: 300,
       })
     ).toBe(300);
+    expect(
+      getConversationScrollMetrics({
+        handle: null,
+        scrollElement: null,
+      })
+    ).toEqual({
+      scrollHeight: 0,
+      scrollOffset: 0,
+      viewportHeight: 0,
+    });
+    expect(needsConversationDomAnchorCorrection(-1)).toBe(false);
     expect(needsConversationDomAnchorCorrection(0.5)).toBe(false);
     expect(needsConversationDomAnchorCorrection(4)).toBe(true);
   });

@@ -21,13 +21,18 @@ export const JumpBar = memo(
       <div className="absolute right-0 bottom-4 left-0 z-10 flex justify-center">
         <ButtonGroup>
           {showBack ? (
-            <Button onClick={goBack} variant="outline">
+            <Button
+              data-testid="conversation-back-button"
+              onClick={goBack}
+              variant="outline"
+            >
               {t("back")}
             </Button>
           ) : null}
           {showLatest ? (
             <Button
               aria-label={t("back-to-latest")}
+              data-testid="conversation-latest-button"
               onClick={scrollToLatest}
               size="icon"
               variant="outline"

@@ -1,5 +1,5 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { ForumConversationView } from "@/components/school/classes/forum/conversation/store/forum";
+import type { ForumConversationView } from "@/components/school/classes/forum/conversation/models";
 
 export type RestorableConversationView = Extract<
   ForumConversationView,

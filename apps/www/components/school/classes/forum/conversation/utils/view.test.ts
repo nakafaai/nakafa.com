@@ -40,6 +40,8 @@ describe("forum conversation view state", () => {
   });
 
   it("compares conversation views by value", () => {
+    expect(areConversationViewsEqual(null, null)).toBe(true);
+    expect(areConversationViewsEqual(null, undefined)).toBe(false);
     expect(
       areConversationViewsEqual({ kind: "bottom" }, { kind: "bottom" })
     ).toBe(true);
@@ -106,6 +108,14 @@ describe("forum conversation view state", () => {
         unreadPostId: postAId,
       })
     ).toEqual(createPostView(postAId, 0));
+
+    expect(
+      createInitialConversationView({
+        existingView: null,
+        mode: { kind: "live" },
+        unreadPostId: null,
+      })
+    ).toEqual({ kind: "bottom" });
   });
 
   it("compares semantic transcript views in visual order", () => {
@@ -148,11 +158,27 @@ describe("forum conversation view state", () => {
 
     expect(
       compareConversationViews({
+        leftView: { kind: "bottom" },
+        postIdToIndex,
+        rightView: { kind: "bottom" },
+      })
+    ).toBe(0);
+
+    expect(
+      compareConversationViews({
         leftView: createPostView(postAId, 0),
         postIdToIndex: new Map(),
         rightView: createPostView(postAId, 0),
       })
     ).toBeNull();
+
+    expect(
+      compareConversationViews({
+        leftView: createPostView(postAId, 0),
+        postIdToIndex,
+        rightView: createPostView(postAId, 0),
+      })
+    ).toBe(0);
 
     expect(
       compareConversationViews({

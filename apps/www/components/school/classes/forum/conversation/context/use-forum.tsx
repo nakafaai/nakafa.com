@@ -5,11 +5,11 @@ import { createContext, useContextSelector } from "use-context-selector";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import {
-  createForumStore,
-  type ForumStore,
-} from "@/components/school/classes/forum/conversation/store/forum";
+  createForumSessionStore,
+  type ForumSessionStore,
+} from "@/components/school/classes/forum/conversation/store/session";
 
-type ForumStoreApi = ReturnType<typeof createForumStore>;
+type ForumStoreApi = ReturnType<typeof createForumSessionStore>;
 
 export const ForumContext = createContext<ForumStoreApi | null>(null);
 
@@ -21,7 +21,7 @@ export function ForumContextProvider({
   children?: ReactNode;
   classId: string;
 }) {
-  const [store] = useState(() => createForumStore(classId));
+  const [store] = useState(() => createForumSessionStore(classId));
 
   return (
     <ForumContext.Provider value={store}>{children}</ForumContext.Provider>
@@ -42,7 +42,7 @@ export function useForumStoreApi() {
 }
 
 /** Reads one selected slice from the forum store. */
-export function useForum<T>(selector: (state: ForumStore) => T): T {
+export function useForum<T>(selector: (state: ForumSessionStore) => T): T {
   const ctx = useForumStoreApi();
   return useStore(ctx, useShallow(selector));
 }
