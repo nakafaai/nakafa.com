@@ -1,9 +1,14 @@
+import type { ForumConversationView } from "@/components/school/classes/forum/conversation/store/forum";
 import { areConversationViewsEqual } from "@/components/school/classes/forum/conversation/utils/view";
-import type { ForumConversationView } from "@/lib/store/forum";
 
 const MAX_BACK_STACK_SIZE = 5;
 
-export type BackStack = ForumConversationView[];
+export interface BackStackEntry {
+  dismissWhen: "at-or-after-origin" | "at-or-before-origin" | "exact-origin";
+  originView: ForumConversationView;
+}
+
+export type BackStack = BackStackEntry[];
 
 /** Returns one empty transient back stack. */
 export function clearBackStack(): BackStack {
@@ -18,18 +23,22 @@ export function peekBackView(backStack: BackStack) {
 /** Pushes one new back destination while bounding stack growth. */
 export function pushBackView({
   backStack,
-  view,
+  entry,
 }: {
   backStack: BackStack;
-  view: ForumConversationView;
+  entry: BackStackEntry;
 }): BackStack {
-  const lastView = peekBackView(backStack);
+  const lastEntry = peekBackView(backStack);
 
-  if (lastView && areConversationViewsEqual(lastView, view)) {
+  if (
+    lastEntry &&
+    lastEntry.dismissWhen === entry.dismissWhen &&
+    areConversationViewsEqual(lastEntry.originView, entry.originView)
+  ) {
     return backStack;
   }
 
-  const nextBackStack = [...backStack, view];
+  const nextBackStack = [...backStack, entry];
 
   if (nextBackStack.length <= MAX_BACK_STACK_SIZE) {
     return nextBackStack;
@@ -40,17 +49,17 @@ export function pushBackView({
 
 /** Pops the latest back destination and returns both the view and next stack. */
 export function popBackView(backStack: BackStack) {
-  const view = peekBackView(backStack);
+  const entry = peekBackView(backStack);
 
-  if (!view) {
+  if (!entry) {
     return {
       backStack,
-      view: null,
+      entry: null,
     };
   }
 
   return {
     backStack: backStack.slice(0, -1),
-    view,
+    entry,
   };
 }

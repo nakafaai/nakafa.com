@@ -6,7 +6,6 @@ import {
   createOlderPrefetchPages,
   getOlderPrefetchBoundaryPostId,
   refreshFocusedTimeline,
-  syncLiveRenderedPosts,
 } from "@/components/school/classes/forum/conversation/utils/timeline";
 
 const forumId = "forum_1" as Id<"schoolClassForums">;
@@ -64,31 +63,6 @@ describe("conversation/utils/timeline", () => {
         livePosts: liveTimeline.posts,
       })
     ).toEqual(focusedTimeline);
-  });
-
-  it("syncs one live rendered timeline with appended live posts without auto-prepending fetched history", () => {
-    const current = [createPost("post_3", 3), createPost("post_4", 4)];
-    const incoming = [
-      createPost("post_1", 1),
-      createPost("post_2", 2),
-      createPost("post_3", 3),
-      createPost("post_4", 4),
-      createPost("post_5", 5),
-    ];
-
-    expect(
-      syncLiveRenderedPosts({
-        current,
-        incoming,
-      })
-    ).toEqual({
-      changed: true,
-      posts: [
-        createPost("post_3", 3),
-        createPost("post_4", 4),
-        createPost("post_5", 5),
-      ],
-    });
   });
 
   it("derives older buffered pages in nearest-first commit order", () => {

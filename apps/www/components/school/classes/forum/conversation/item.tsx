@@ -43,9 +43,9 @@ import { format } from "date-fns";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, memo, useTransition } from "react";
+import { useForum } from "@/components/school/classes/forum/conversation/context/use-forum";
 import { useConversation } from "@/components/school/classes/forum/conversation/provider";
 import type { ForumPost } from "@/components/school/classes/forum/conversation/types";
-import { useForum } from "@/lib/context/use-forum";
 import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";
 
@@ -64,7 +64,7 @@ export const ForumPostItem = memo(
   }) => {
     const t = useTranslations("Common");
     const locale = useLocale();
-    const currentUserId = useConversation((value) => value.meta.currentUserId);
+    const currentUserId = useConversation((state) => state.currentUserId);
 
     const replyTo = useForum((f) => f.replyTo);
     const isReplyTo = replyTo?.postId === post._id;
@@ -147,6 +147,7 @@ export const ForumPostItem = memo(
 );
 ForumPostItem.displayName = "ForumPostItem";
 
+/** Renders the current reaction chips and toggles for one post. */
 const PostReactions = memo(({ post }: { post: ForumPost }) => {
   const t = useTranslations("Common");
 
@@ -286,7 +287,7 @@ PostAttachments.displayName = "PostAttachments";
  */
 const PostReplyIndicator = memo(({ post }: { post: ForumPost }) => {
   const { parentId, replyToUser, replyToBody } = post;
-  const jumpToPostId = useConversation((value) => value.actions.jumpToPostId);
+  const jumpToPostId = useConversation((state) => state.jumpToPostId);
 
   if (!(parentId && replyToUser)) {
     return null;

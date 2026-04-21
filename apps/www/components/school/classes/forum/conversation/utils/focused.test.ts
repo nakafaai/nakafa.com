@@ -1,11 +1,11 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { describe, expect, it } from "vitest";
+import type { ForumPost } from "@/components/school/classes/forum/conversation/store/forum";
 import {
   createFocusedTimelineState,
   createFocusedWindowArgs,
   FORUM_CONVERSATION_WINDOW,
 } from "@/components/school/classes/forum/conversation/utils/focused";
-import type { ForumPost } from "@/lib/store/forum";
 
 const forumId = "forum_1" as Id<"schoolClassForums">;
 const oldestPostId = "post_oldest" as Id<"schoolClassForumPosts">;

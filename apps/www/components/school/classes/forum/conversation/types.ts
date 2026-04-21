@@ -4,10 +4,10 @@ import type {
   ForumConversationView,
   ForumPost,
   ReactionWithUsers,
-} from "@/lib/store/forum";
+} from "@/components/school/classes/forum/conversation/store/forum";
 
 // Re-export ForumPost for convenience
-export type { ForumPost } from "@/lib/store/forum";
+export type { ForumPost } from "@/components/school/classes/forum/conversation/store/forum";
 
 /** Represents one forum thread header enriched with user and reaction state. */
 export type Forum = Doc<"schoolClassForums"> & {

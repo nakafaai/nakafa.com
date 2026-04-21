@@ -1,81 +1,29 @@
+import { useReducedMotion } from "@mantine/hooks";
+import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { useConvex, usePaginatedQuery } from "convex/react";
 import type { ReactNode } from "react";
-import { useMemo } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
-import { useConversationModel } from "@/components/school/classes/forum/conversation/hooks/intent/use-model";
+import { useStore } from "zustand";
+import { useShallow } from "zustand/react/shallow";
+import { useForum } from "@/components/school/classes/forum/conversation/context/use-forum";
+import type { ForumConversationView } from "@/components/school/classes/forum/conversation/store/forum";
+import {
+  type ConversationRuntimeStore,
+  createConversationStore,
+} from "@/components/school/classes/forum/conversation/store/runtime";
 import type {
-  ConversationTranscriptCommand,
-  ConversationTranscriptCommandResult,
   Forum,
-  VirtualItem,
+  ForumPost,
 } from "@/components/school/classes/forum/conversation/types";
-import type { ForumConversationMode } from "@/components/school/classes/forum/conversation/utils/view";
-import type { ForumConversationView } from "@/lib/store/forum";
+import { FORUM_CONVERSATION_WINDOW } from "@/components/school/classes/forum/conversation/utils/focused";
 
-type ConversationOlderLoadResult = "committed" | "noop" | "prefetched";
+type ConversationStoreApi = ReturnType<typeof createConversationStore>;
 
-interface ConversationState {
-  canGoBack: boolean;
-  canPrefetchOlderPosts: boolean;
-  command: ConversationTranscriptCommand | null;
-  forum: Forum | undefined;
-  hasBufferedOlderPosts: boolean;
-  hasMoreAfter: boolean;
-  hasMoreBefore: boolean;
-  hasPendingLatestPosts: boolean;
-  highlightedPostId: Id<"schoolClassForumPosts"> | null;
-  isAtBottom: boolean;
-  isAtLatestEdge: boolean;
-  isInitialLoading: boolean;
-  isLoadingNewer: boolean;
-  isLoadingOlder: boolean;
-  items: VirtualItem[];
-  lastPostId: Id<"schoolClassForumPosts"> | undefined;
-  latestConversationView: ForumConversationView | null;
-  mode: ForumConversationMode;
-  pendingHighlightPostId: Id<"schoolClassForumPosts"> | null;
-  postIdToIndex: Map<Id<"schoolClassForumPosts">, number>;
-  timelineSessionVersion: number;
-  transcriptVariant: "focused" | "live";
-  unreadPostId: Id<"schoolClassForumPosts"> | null;
-}
+const ConversationContext = createContext<ConversationStoreApi | null>(null);
 
-interface ConversationActions {
-  acknowledgeUnreadCue: () => void;
-  cancelPendingMarkRead: () => void;
-  flushMarkRead: (
-    lastReadPostId: Id<"schoolClassForumPosts"> | undefined
-  ) => void;
-  goBack: () => void;
-  handleBottomStateChange: (nextIsAtBottom: boolean) => void;
-  handleCommandResult: (result: ConversationTranscriptCommandResult) => void;
-  handleHighlightVisiblePost: (postId: Id<"schoolClassForumPosts">) => void;
-  handleSettledView: (view: ForumConversationView) => void;
-  jumpToPostId: (postId: Id<"schoolClassForumPosts">) => void;
-  loadNewerPosts: () => void;
-  loadOlderPosts: () => ConversationOlderLoadResult;
-  scheduleMarkRead: (
-    lastReadPostId: Id<"schoolClassForumPosts"> | undefined
-  ) => void;
-  scrollToLatest: () => void;
-}
-
-interface ConversationMeta {
-  currentUserId: Id<"users">;
-  forumId: Id<"schoolClassForums">;
-}
-
-interface ConversationValue {
-  actions: ConversationActions;
-  meta: ConversationMeta;
-  state: ConversationState;
-}
-
-const ConversationContext = createContext<ConversationValue | undefined>(
-  undefined
-);
-
-/** Provides one forum conversation model as dependency-injected state, actions, and meta. */
+/** Provides one forum-scoped conversation runtime store and syncs external data into it. */
 export function ConversationProvider({
   children,
   currentUserId,
@@ -87,132 +35,137 @@ export function ConversationProvider({
   forum: Forum | undefined;
   forumId: Id<"schoolClassForums">;
 }) {
-  const model = useConversationModel({
-    forum,
-    forumId,
+  const convex = useConvex();
+  const prefersReducedMotion = useReducedMotion();
+  const isForumHydrated = useForum((state) => state.isHydrated);
+  const saveConversationView = useForum((state) => state.saveConversationView);
+  const savedConversationView = useForum(
+    (state) => state.savedConversationViews[forumId] ?? null
+  );
+  const {
+    loadMore,
+    results: liveResults,
+    status: liveStatus,
+  } = usePaginatedQuery(
+    api.classes.forums.queries.feed.getForumPosts,
+    { forumId },
+    { initialNumItems: 25 }
+  );
+  const livePosts = useMemo(() => [...liveResults].reverse(), [liveResults]);
+  const liveHasMoreBefore =
+    liveStatus === "CanLoadMore" || liveStatus === "LoadingMore";
+  const depsRef = useRef({
+    fetchAround: async (
+      postId: Id<"schoolClassForumPosts">
+    ): Promise<{
+      hasMoreAfter: boolean;
+      hasMoreBefore: boolean;
+      newestPostId: Id<"schoolClassForumPosts"> | null;
+      oldestPostId: Id<"schoolClassForumPosts"> | null;
+      posts: ForumPost[];
+    }> =>
+      convex.query(api.classes.forums.queries.around.getForumPostsAround, {
+        forumId,
+        limit: FORUM_CONVERSATION_WINDOW,
+        targetPostId: postId,
+      }),
+    fetchNewer: async (postId: Id<"schoolClassForumPosts">) =>
+      convex.query(api.classes.forums.queries.newer.getForumPostsNewer, {
+        afterPostId: postId,
+        forumId,
+        limit: FORUM_CONVERSATION_WINDOW,
+      }),
+    fetchOlder: async (postId: Id<"schoolClassForumPosts">) =>
+      convex.query(api.classes.forums.queries.older.getForumPostsOlder, {
+        beforePostId: postId,
+        forumId,
+        limit: FORUM_CONVERSATION_WINDOW,
+      }),
+    loadLiveOlder: () => {
+      if (liveStatus !== "CanLoadMore") {
+        return;
+      }
+
+      loadMore(FORUM_CONVERSATION_WINDOW);
+    },
+    saveConversationView: (view: ForumConversationView) =>
+      saveConversationView(forumId, view),
   });
 
-  const state = useMemo<ConversationState>(
-    () => ({
-      canGoBack: model.canGoBack,
-      canPrefetchOlderPosts: model.canPrefetchOlderPosts,
-      command: model.command,
-      forum,
-      hasBufferedOlderPosts: model.hasBufferedOlderPosts,
-      hasMoreAfter: model.hasMoreAfter,
-      hasMoreBefore: model.hasMoreBefore,
-      hasPendingLatestPosts: model.hasPendingLatestPosts,
-      highlightedPostId: model.highlightedPostId,
-      isAtBottom: model.isAtBottom,
-      isAtLatestEdge: model.isAtLatestEdge,
-      isInitialLoading: model.isInitialLoading,
-      isLoadingNewer: model.isLoadingNewer,
-      isLoadingOlder: model.isLoadingOlder,
-      items: model.items,
-      lastPostId: model.lastPostId,
-      latestConversationView: model.latestConversationView,
-      mode: model.mode,
-      pendingHighlightPostId: model.pendingHighlightPostId,
-      postIdToIndex: model.postIdToIndex,
-      timelineSessionVersion: model.timelineSessionVersion,
-      transcriptVariant: model.transcriptVariant,
-      unreadPostId: model.unreadPostId,
-    }),
-    [
-      forum,
-      model.canGoBack,
-      model.canPrefetchOlderPosts,
-      model.command,
-      model.hasBufferedOlderPosts,
-      model.hasMoreAfter,
-      model.hasMoreBefore,
-      model.hasPendingLatestPosts,
-      model.highlightedPostId,
-      model.isAtBottom,
-      model.isAtLatestEdge,
-      model.isInitialLoading,
-      model.isLoadingNewer,
-      model.isLoadingOlder,
-      model.items,
-      model.lastPostId,
-      model.latestConversationView,
-      model.mode,
-      model.pendingHighlightPostId,
-      model.postIdToIndex,
-      model.timelineSessionVersion,
-      model.transcriptVariant,
-      model.unreadPostId,
-    ]
-  );
+  depsRef.current = {
+    fetchAround: async (postId) =>
+      convex.query(api.classes.forums.queries.around.getForumPostsAround, {
+        forumId,
+        limit: FORUM_CONVERSATION_WINDOW,
+        targetPostId: postId,
+      }),
+    fetchNewer: async (postId) =>
+      convex.query(api.classes.forums.queries.newer.getForumPostsNewer, {
+        afterPostId: postId,
+        forumId,
+        limit: FORUM_CONVERSATION_WINDOW,
+      }),
+    fetchOlder: async (postId) =>
+      convex.query(api.classes.forums.queries.older.getForumPostsOlder, {
+        beforePostId: postId,
+        forumId,
+        limit: FORUM_CONVERSATION_WINDOW,
+      }),
+    loadLiveOlder: () => {
+      if (liveStatus !== "CanLoadMore") {
+        return;
+      }
 
-  const actions = useMemo<ConversationActions>(
-    () => ({
-      acknowledgeUnreadCue: model.acknowledgeUnreadCue,
-      cancelPendingMarkRead: model.cancelPendingMarkRead,
-      flushMarkRead: model.flushMarkRead,
-      goBack: model.goBack,
-      handleBottomStateChange: model.handleBottomStateChange,
-      handleCommandResult: model.handleCommandResult,
-      handleHighlightVisiblePost: model.handleHighlightVisiblePost,
-      handleSettledView: model.handleSettledView,
-      jumpToPostId: model.jumpToPostId,
-      loadNewerPosts: model.loadNewerPosts,
-      loadOlderPosts: model.loadOlderPosts,
-      scheduleMarkRead: model.scheduleMarkRead,
-      scrollToLatest: model.scrollToLatest,
-    }),
-    [
-      model.acknowledgeUnreadCue,
-      model.cancelPendingMarkRead,
-      model.flushMarkRead,
-      model.goBack,
-      model.handleBottomStateChange,
-      model.handleCommandResult,
-      model.handleHighlightVisiblePost,
-      model.handleSettledView,
-      model.jumpToPostId,
-      model.loadNewerPosts,
-      model.loadOlderPosts,
-      model.scheduleMarkRead,
-      model.scrollToLatest,
-    ]
-  );
+      loadMore(FORUM_CONVERSATION_WINDOW);
+    },
+    saveConversationView: (view) => saveConversationView(forumId, view),
+  };
 
-  const meta = useMemo<ConversationMeta>(
-    () => ({
+  const [store] = useState(() =>
+    createConversationStore({
       currentUserId,
       forumId,
-    }),
-    [currentUserId, forumId]
+      getDeps: () => depsRef.current,
+      prefersReducedMotion,
+    })
   );
 
-  const value = useMemo(
-    () => ({
-      actions,
-      meta,
-      state,
-    }),
-    [actions, meta, state]
-  );
+  useLayoutEffect(() => {
+    store.getState().syncForum(forum);
+  }, [forum, store]);
+
+  useLayoutEffect(() => {
+    store.getState().syncForumStore({
+      isHydrated: isForumHydrated,
+      savedConversationView,
+    });
+  }, [isForumHydrated, savedConversationView, store]);
+
+  useLayoutEffect(() => {
+    store.getState().syncLiveWindow({
+      hasMoreBefore: liveHasMoreBefore,
+      posts: livePosts,
+    });
+  }, [liveHasMoreBefore, livePosts, store]);
 
   return (
-    <ConversationContext.Provider value={value}>
+    <ConversationContext.Provider value={store}>
       {children}
     </ConversationContext.Provider>
   );
 }
 
-/** Reads one selected value from the active forum conversation provider. */
+/** Reads one selected slice from the active conversation runtime store. */
 export function useConversation<T>(
-  selector: (value: ConversationValue) => T
-): T {
-  const value = useContextSelector(ConversationContext, (context) => context);
+  selector: (state: ConversationRuntimeStore) => T
+) {
+  const store = useContextSelector(ConversationContext, (context) => context);
 
-  if (!value) {
+  if (!store) {
     throw new Error(
       "useConversation must be used within a ConversationProvider"
     );
   }
 
-  return selector(value);
+  return useStore(store, useShallow(selector));
 }

@@ -3,12 +3,17 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
   createForumStore,
   type ForumConversationView,
-} from "@/lib/store/forum";
+} from "@/components/school/classes/forum/conversation/store/forum";
 
 const classId = "class_1";
 const forumAId = "forum_a" as Id<"schoolClassForums">;
 const forumBId = "forum_b" as Id<"schoolClassForums">;
 const postId = "post_1" as Id<"schoolClassForumPosts">;
+
+async function flushHydration() {
+  await Promise.resolve();
+  await Promise.resolve();
+}
 
 function createPostView(
   currentPostId: Id<"schoolClassForumPosts">,
@@ -21,13 +26,14 @@ function createPostView(
   } satisfies ForumConversationView;
 }
 
-describe("forum store", () => {
+describe("conversation/store/forum", () => {
   beforeEach(() => {
     sessionStorage.clear();
   });
 
-  it("increments session versions per forum independently", () => {
+  it("increments session versions per forum independently", async () => {
     const store = createForumStore(classId);
+    await flushHydration();
 
     store.getState().restartConversationSession(forumAId);
     store.getState().restartConversationSession(forumAId);
@@ -39,8 +45,39 @@ describe("forum store", () => {
     });
   });
 
-  it("saves semantic conversation snapshots by value", () => {
+  it("marks persisted hydration complete after the storage snapshot is merged", async () => {
     const store = createForumStore(classId);
+
+    await flushHydration();
+
+    expect(store.getState().isHydrated).toBe(true);
+  });
+
+  it("hydrates saved conversation views from session storage", async () => {
+    sessionStorage.setItem(
+      `forum-ui:${classId}`,
+      JSON.stringify({
+        state: {
+          savedConversationViews: {
+            [forumAId]: createPostView(postId, 24),
+          },
+        },
+        version: 7,
+      })
+    );
+
+    const store = createForumStore(classId);
+    await flushHydration();
+
+    expect(store.getState().savedConversationViews).toEqual({
+      [forumAId]: createPostView(postId, 24),
+    });
+    expect(store.getState().isHydrated).toBe(true);
+  });
+
+  it("saves semantic conversation snapshots by value", async () => {
+    const store = createForumStore(classId);
+    await flushHydration();
     const firstView = createPostView(postId, 0);
 
     store.getState().saveConversationView(forumAId, firstView);
@@ -62,8 +99,9 @@ describe("forum store", () => {
     });
   });
 
-  it("treats identical bottom snapshots as the same view", () => {
+  it("treats identical bottom snapshots as the same view", async () => {
     const store = createForumStore(classId);
+    await flushHydration();
 
     store.getState().saveConversationView(forumAId, { kind: "bottom" });
     store.getState().saveConversationView(forumAId, { kind: "bottom" });
@@ -73,8 +111,9 @@ describe("forum store", () => {
     });
   });
 
-  it("clears transient reply state without touching snapshots or sessions", () => {
+  it("clears transient reply state without touching snapshots or sessions", async () => {
     const store = createForumStore(classId);
+    await flushHydration();
 
     store.getState().setReplyTo({ postId, userName: "Nabil" });
     store.getState().restartConversationSession(forumAId);
@@ -88,7 +127,7 @@ describe("forum store", () => {
     });
   });
 
-  it("migrates legacy persisted snapshots into the bottom-or-post model", () => {
+  it("resets saved conversation views from older persisted versions once", async () => {
     sessionStorage.setItem(
       `forum-ui:${classId}`,
       JSON.stringify({
@@ -110,20 +149,12 @@ describe("forum store", () => {
     );
 
     const store = createForumStore(classId);
+    await flushHydration();
 
-    expect(store.getState().savedConversationViews).toEqual({
-      [forumAId]: {
-        kind: "post",
-        offset: 18,
-        postId,
-      },
-      [forumBId]: {
-        kind: "bottom",
-      },
-    });
+    expect(store.getState().savedConversationViews).toEqual({});
   });
 
-  it("drops invalid legacy snapshots and preserves modern persisted state", () => {
+  it("clears persisted snapshots from every pre-reset version", async () => {
     sessionStorage.setItem(
       `forum-ui:${classId}`,
       JSON.stringify({
@@ -147,14 +178,9 @@ describe("forum store", () => {
     );
 
     const migratedStore = createForumStore(classId);
+    await flushHydration();
 
-    expect(migratedStore.getState().savedConversationViews).toEqual({
-      [forumBId]: {
-        kind: "post",
-        offset: 0,
-        postId,
-      },
-    });
+    expect(migratedStore.getState().savedConversationViews).toEqual({});
 
     sessionStorage.setItem(
       `forum-ui:${classId}`,
@@ -171,12 +197,9 @@ describe("forum store", () => {
     );
 
     const modernStore = createForumStore(classId);
+    await flushHydration();
 
-    expect(modernStore.getState().savedConversationViews).toEqual({
-      [forumAId]: {
-        kind: "bottom",
-      },
-    });
+    expect(modernStore.getState().savedConversationViews).toEqual({});
 
     sessionStorage.setItem(
       `forum-ui:${classId}`,
@@ -193,12 +216,9 @@ describe("forum store", () => {
     );
 
     const newerStore = createForumStore(classId);
+    await flushHydration();
 
-    expect(newerStore.getState().savedConversationViews).toEqual({
-      [forumBId]: {
-        kind: "bottom",
-      },
-    });
+    expect(newerStore.getState().savedConversationViews).toEqual({});
 
     sessionStorage.setItem(
       `forum-ui:${classId}`,
@@ -208,18 +228,34 @@ describe("forum store", () => {
             [forumBId]: createPostView(postId, 32),
           },
         },
-        version: 4,
+        version: 5,
       })
     );
 
     const latestStore = createForumStore(classId);
+    await flushHydration();
 
-    expect(latestStore.getState().savedConversationViews).toEqual({
-      [forumBId]: createPostView(postId, 32),
-    });
+    expect(latestStore.getState().savedConversationViews).toEqual({});
+
+    sessionStorage.setItem(
+      `forum-ui:${classId}`,
+      JSON.stringify({
+        state: {
+          savedConversationViews: {
+            [forumBId]: createPostView(postId, 48),
+          },
+        },
+        version: 6,
+      })
+    );
+
+    const previousStore = createForumStore(classId);
+    await flushHydration();
+
+    expect(previousStore.getState().savedConversationViews).toEqual({});
   });
 
-  it("migrates legacy post snapshots without offsets and tolerates empty persisted maps", () => {
+  it("tolerates empty persisted maps from older versions", async () => {
     sessionStorage.setItem(
       `forum-ui:${classId}`,
       JSON.stringify({
@@ -240,19 +276,9 @@ describe("forum store", () => {
     );
 
     const migratedStore = createForumStore(classId);
+    await flushHydration();
 
-    expect(migratedStore.getState().savedConversationViews).toEqual({
-      [forumAId]: {
-        kind: "post",
-        offset: 0,
-        postId,
-      },
-      [forumBId]: {
-        kind: "post",
-        offset: 0,
-        postId,
-      },
-    });
+    expect(migratedStore.getState().savedConversationViews).toEqual({});
 
     sessionStorage.setItem(
       `forum-ui:${classId}`,
@@ -263,11 +289,12 @@ describe("forum store", () => {
     );
 
     const emptyStore = createForumStore(classId);
+    await flushHydration();
 
     expect(emptyStore.getState().savedConversationViews).toEqual({});
   });
 
-  it("ignores invalid persisted payloads during migration", () => {
+  it("ignores invalid persisted payloads during migration", async () => {
     sessionStorage.setItem(
       `forum-ui:${classId}`,
       JSON.stringify({
@@ -277,6 +304,7 @@ describe("forum store", () => {
     );
 
     const store = createForumStore(classId);
+    await flushHydration();
 
     expect(store.getState().savedConversationViews).toEqual({});
   });

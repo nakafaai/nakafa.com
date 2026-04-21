@@ -1,5 +1,5 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { ForumPost } from "@/lib/store/forum";
+import type { ForumPost } from "@/components/school/classes/forum/conversation/store/forum";
 
 /** Represents one mounted transcript window and its current paging boundaries. */
 export interface ConversationTimeline {
@@ -116,63 +116,6 @@ export function refreshFocusedTimeline({
 
   return {
     ...current,
-    posts: nextPosts.posts,
-  };
-}
-
-/** Keeps one live rendered transcript aligned to newer live posts without auto-prepending fetched history. */
-export function syncLiveRenderedPosts({
-  current,
-  incoming,
-}: {
-  current: ForumPost[];
-  incoming: ForumPost[];
-}) {
-  if (current.length === 0) {
-    return {
-      changed: incoming.length > 0,
-      posts: incoming,
-    };
-  }
-
-  if (incoming.length < current.length) {
-    return {
-      changed: true,
-      posts: incoming,
-    };
-  }
-
-  const currentOldestPostId = current[0]?._id;
-  const currentNewestPostId = current.at(-1)?._id;
-  const oldestIndex = incoming.findIndex(
-    (post) => post._id === currentOldestPostId
-  );
-  const newestIndex = incoming.findIndex(
-    (post) => post._id === currentNewestPostId
-  );
-
-  if (oldestIndex === -1 || newestIndex === -1 || oldestIndex > newestIndex) {
-    return {
-      changed: true,
-      posts: incoming,
-    };
-  }
-
-  const replacedPosts = replaceMatchingPosts(current, incoming);
-  const appendedPosts = incoming.slice(newestIndex + 1);
-  const nextPosts = appendUniquePosts(replacedPosts.posts, appendedPosts);
-
-  if (
-    !(replacedPosts.changed || appendedPosts.length > 0 || nextPosts.changed)
-  ) {
-    return {
-      changed: false,
-      posts: current,
-    };
-  }
-
-  return {
-    changed: true,
     posts: nextPosts.posts,
   };
 }

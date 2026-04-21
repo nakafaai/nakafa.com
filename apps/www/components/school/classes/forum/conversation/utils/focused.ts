@@ -1,7 +1,7 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { ForumPost } from "@/components/school/classes/forum/conversation/store/forum";
 import type { ConversationTimeline } from "@/components/school/classes/forum/conversation/utils/timeline";
 import type { ForumConversationMode } from "@/components/school/classes/forum/conversation/utils/view";
-import type { ForumPost } from "@/lib/store/forum";
 
 /** Keep jump, restore, and live windows aligned to one transcript-sized batch. */
 export const FORUM_CONVERSATION_WINDOW = 25;

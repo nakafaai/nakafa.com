@@ -10,10 +10,8 @@ import { useConversation } from "@/components/school/classes/forum/conversation/
 export const JumpBar = memo(
   ({ showBack, showLatest }: { showBack: boolean; showLatest: boolean }) => {
     const t = useTranslations("Common");
-    const goBack = useConversation((value) => value.actions.goBack);
-    const scrollToLatest = useConversation(
-      (value) => value.actions.scrollToLatest
-    );
+    const goBack = useConversation((state) => state.goBack);
+    const scrollToLatest = useConversation((state) => state.scrollToLatest);
 
     if (!(showBack || showLatest)) {
       return null;

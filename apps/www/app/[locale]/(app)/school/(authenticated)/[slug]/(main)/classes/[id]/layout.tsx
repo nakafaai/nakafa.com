@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { Suspense } from "react";
+import { ForumContextProvider } from "@/components/school/classes/forum/conversation/context/use-forum";
 import { SchoolClassesHeaderInfo } from "@/components/school/classes/info";
 import { SchoolClassesJoinForm } from "@/components/school/classes/join-form";
 import { SchoolClassesTabs } from "@/components/school/classes/tabs";
 import { SchoolClassesWorkspaceShell } from "@/components/school/classes/workspace-shell";
 import { ClassContextProvider } from "@/lib/context/use-class";
-import { ForumContextProvider } from "@/lib/context/use-forum";
 import { getClassRouteSnapshot } from "@/lib/school/server";
 
 /** Bind the resolved class route snapshot to the class subtree. */

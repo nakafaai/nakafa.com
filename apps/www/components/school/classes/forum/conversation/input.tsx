@@ -62,8 +62,8 @@ import {
 } from "react";
 import { toast } from "sonner";
 import * as z from "zod/mini";
+import { useForum } from "@/components/school/classes/forum/conversation/context/use-forum";
 import { useConversation } from "@/components/school/classes/forum/conversation/provider";
-import { useForum } from "@/lib/context/use-forum";
 
 /** Handles forum post submission, uploads, and reply cleanup for the transcript. */
 export function ForumPostInput() {
@@ -71,12 +71,10 @@ export function ForumPostInput() {
   const replyTo = useForum((f) => f.replyTo);
   const setReplyTo = useForum((f) => f.setReplyTo);
   const acknowledgeUnreadCue = useConversation(
-    (value) => value.actions.acknowledgeUnreadCue
+    (state) => state.acknowledgeUnreadCue
   );
-  const scrollToLatest = useConversation(
-    (value) => value.actions.scrollToLatest
-  );
-  const forumId = useConversation((value) => value.meta.forumId);
+  const scrollToLatest = useConversation((state) => state.scrollToLatest);
+  const forumId = useConversation((state) => state.forumId);
 
   const textareaRef = useRef<ComponentRef<typeof InputGroupTextarea>>(null);
   const generateUploadUrl = useMutation(
@@ -353,6 +351,7 @@ export function ForumPostInput() {
   );
 }
 
+/** Renders the local attachment preview strip above the forum input. */
 const AttachmentPreviews = memo(
   ({
     files,
@@ -432,6 +431,7 @@ const AttachmentPreviews = memo(
 );
 AttachmentPreviews.displayName = "AttachmentPreviews";
 
+/** Renders the attachment trigger menu while keeping input actions compact. */
 const InputAttachments = memo(
   ({
     onOpenFiles,
@@ -467,6 +467,7 @@ const InputAttachments = memo(
 );
 InputAttachments.displayName = "InputAttachments";
 
+/** Renders the active reply target bar above the forum input. */
 const ReplyIndicator = memo(() => {
   const t = useTranslations("Common");
   const replyTo = useForum((f) => f.replyTo);

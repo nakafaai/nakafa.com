@@ -4,12 +4,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { JumpBar } from "@/components/school/classes/forum/conversation/jump-bar";
 
 const conversationMock = vi.hoisted(() => ({
-  value: {
-    actions: {
-      goBack: vi.fn(),
-      scrollToLatest: vi.fn(),
-    },
-  },
+  goBack: vi.fn(),
+  scrollToLatest: vi.fn(),
 }));
 
 vi.mock("next-intl", () => ({
@@ -17,12 +13,11 @@ vi.mock("next-intl", () => ({
 }));
 
 vi.mock("@/components/school/classes/forum/conversation/provider", () => ({
-  useConversation: (
-    selector: (value: typeof conversationMock.value) => unknown
-  ) => selector(conversationMock.value),
+  useConversation: (selector: (value: typeof conversationMock) => unknown) =>
+    selector(conversationMock),
 }));
 
-/** Renders the jump bar once and returns the mounted DOM container. */
+/** Mounts the jump bar once and returns the detached DOM container. */
 function renderJumpBar({
   showBack,
   showLatest,
@@ -44,8 +39,8 @@ function renderJumpBar({
 describe("conversation/jump-bar", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    conversationMock.value.actions.goBack.mockReset();
-    conversationMock.value.actions.scrollToLatest.mockReset();
+    conversationMock.goBack.mockReset();
+    conversationMock.scrollToLatest.mockReset();
   });
 
   it("renders nothing when neither action is meaningful", () => {

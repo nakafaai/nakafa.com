@@ -8,10 +8,10 @@ import { useQuery } from "convex/react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { SchoolClassesDetailPanel } from "@/components/school/classes/detail-panel";
+import { useForum } from "@/components/school/classes/forum/conversation/context/use-forum";
 import { SchoolClassesForumPanelContent } from "@/components/school/classes/forum/panel-content";
 import { SchoolClassesForumPanelError } from "@/components/school/classes/forum/panel-error";
 import { SchoolClassesForumPanelInfo } from "@/components/school/classes/forum/panel-info";
-import { useForum } from "@/lib/context/use-forum";
 
 /**
  * Render the active forum conversation inside the reusable class detail slot,

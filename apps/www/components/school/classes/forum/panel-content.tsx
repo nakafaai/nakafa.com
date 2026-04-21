@@ -3,8 +3,8 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { memo } from "react";
 import { ForumPostConversation } from "@/components/school/classes/forum/conversation";
+import { useForum } from "@/components/school/classes/forum/conversation/context/use-forum";
 import type { Forum } from "@/components/school/classes/forum/conversation/types";
-import { useForum } from "@/lib/context/use-forum";
 import { useUser } from "@/lib/context/use-user";
 
 export const SchoolClassesForumPanelContent = memo(

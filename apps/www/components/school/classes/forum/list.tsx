@@ -21,8 +21,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import { Activity, useTransition } from "react";
 import { getTagIcon } from "@/components/school/classes/_data/tag";
+import { useForum } from "@/components/school/classes/forum/conversation/context/use-forum";
 import { useClass } from "@/lib/context/use-class";
-import { useForum } from "@/lib/context/use-forum";
 import { searchParsers } from "@/lib/nuqs/search";
 import { getLocale } from "@/lib/utils/date";
 

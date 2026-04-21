@@ -42,46 +42,9 @@ interface PersistedForumState {
   >;
 }
 
-/** Normalizes one legacy persisted conversation view into the new bottom-or-post model. */
-function migrateConversationView(
-  view: unknown
-): ForumConversationView | undefined {
-  if (!view || typeof view !== "object") {
-    return;
-  }
-
-  const value = view as Record<string, unknown>;
-
-  if (value.kind === "bottom") {
-    return { kind: "bottom" };
-  }
-
-  if (value.kind === "post" && typeof value.postId === "string") {
-    return {
-      kind: "post",
-      offset: typeof value.offset === "number" ? value.offset : 0,
-      postId: value.postId as Id<"schoolClassForumPosts">,
-    };
-  }
-
-  if (
-    (value.kind === "header" ||
-      value.kind === "date" ||
-      value.kind === "unread") &&
-    typeof value.postId === "string"
-  ) {
-    return {
-      kind: "post",
-      offset: typeof value.offset === "number" ? value.offset : 0,
-      postId: value.postId as Id<"schoolClassForumPosts">,
-    };
-  }
-
-  return;
-}
-
 interface State {
   conversationSessionVersions: Partial<Record<Id<"schoolClassForums">, number>>;
+  isHydrated: boolean;
   replyTo: ReplyTo | null;
   savedConversationViews: Partial<
     Record<Id<"schoolClassForums">, ForumConversationView>
@@ -102,6 +65,7 @@ export type ForumStore = State & Actions;
 
 const initialState: State = {
   conversationSessionVersions: {},
+  isHydrated: false,
   savedConversationViews: {},
   replyTo: null,
 };
@@ -110,74 +74,82 @@ const initialState: State = {
  * Creates one class-scoped forum UI store with transient interaction state and
  * session-backed conversation snapshots for real remounts.
  */
-export const createForumStore = (classId: string) =>
-  createStore<ForumStore>()(
+export const createForumStore = (classId: string) => {
+  let syncHydrationState: ((isHydrated: boolean) => void) | null = null;
+
+  const store = createStore<ForumStore>()(
     persist(
-      immer((set, get) => ({
-        ...initialState,
-
-        clearTransientConversationState: () =>
-          set({
-            replyTo: initialState.replyTo,
-          }),
-
-        setReplyTo: (replyTo) => set({ replyTo }),
-
-        restartConversationSession: (forumId) =>
+      immer((set, get) => {
+        syncHydrationState = (isHydrated) => {
           set((state) => {
-            state.conversationSessionVersions[forumId] =
-              (state.conversationSessionVersions[forumId] ?? 0) + 1;
-          }),
-
-        saveConversationView: (forumId, view) => {
-          const savedView = get().savedConversationViews[forumId];
-
-          if (areConversationViewsEqual(savedView, view)) {
-            return;
-          }
-
-          set((state) => {
-            state.savedConversationViews[forumId] = view;
+            state.isHydrated = isHydrated;
           });
-        },
-      })),
+        };
+
+        return {
+          ...initialState,
+
+          clearTransientConversationState: () =>
+            set({
+              replyTo: initialState.replyTo,
+            }),
+
+          setReplyTo: (replyTo) => set({ replyTo }),
+
+          restartConversationSession: (forumId) =>
+            set((state) => {
+              state.conversationSessionVersions[forumId] =
+                (state.conversationSessionVersions[forumId] ?? 0) + 1;
+            }),
+
+          saveConversationView: (forumId, view) => {
+            const savedView = get().savedConversationViews[forumId];
+
+            if (areConversationViewsEqual(savedView, view)) {
+              return;
+            }
+
+            set((state) => {
+              state.savedConversationViews[forumId] = view;
+            });
+          },
+        };
+      }),
       {
         migrate: (persistedState, version) => {
           if (
-            version >= 4 ||
+            version >= 7 ||
             !persistedState ||
             typeof persistedState !== "object"
           ) {
             return persistedState as PersistedForumState;
           }
 
-          const savedConversationViews =
-            (persistedState as PersistedForumState).savedConversationViews ??
-            {};
-          const nextViews: PersistedForumState["savedConversationViews"] = {};
-
-          for (const [forumId, view] of Object.entries(
-            savedConversationViews
-          )) {
-            const nextView = migrateConversationView(view);
-
-            if (!nextView) {
-              continue;
-            }
-
-            nextViews[forumId as Id<"schoolClassForums">] = nextView;
-          }
-
           return {
-            savedConversationViews: nextViews,
+            // Reset one time so stale transcript anchors from earlier runtime
+            // iterations cannot keep restoring the user to the wrong message.
+            savedConversationViews: {},
           } satisfies PersistedForumState;
         },
         name: `forum-ui:${classId}`,
+        onRehydrateStorage: () => () => {
+          syncHydrationState?.(true);
+        },
         partialize: (state): PersistedForumState => ({
           savedConversationViews: state.savedConversationViews,
         }),
         storage: createJSONStorage(() => sessionStorage),
-        version: 4,
+        version: 7,
       }
     )
   );
+
+  if (store.persist.hasHydrated()) {
+    store.setState((state) => ({
+      ...state,
+      isHydrated: true,
+    }));
+  }
+
+  return store;
+};

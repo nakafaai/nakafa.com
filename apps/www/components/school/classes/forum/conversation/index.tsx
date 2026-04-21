@@ -38,16 +38,14 @@ ForumPostConversation.displayName = "ForumPostConversation";
 
 /** Selects shell-level conversation state for the transcript layout. */
 function ConversationBody() {
-  const forum = useConversation((value) => value.state.forum);
+  const forum = useConversation((state) => state.forum);
   const hasPendingLatestPosts = useConversation(
-    (value) => value.state.hasPendingLatestPosts
+    (state) => state.hasPendingLatestPosts
   );
-  const isAtBottom = useConversation((value) => value.state.isAtBottom);
-  const isAtLatestEdge = useConversation((value) => value.state.isAtLatestEdge);
-  const isInitialLoading = useConversation(
-    (value) => value.state.isInitialLoading
-  );
-  const canGoBack = useConversation((value) => value.state.canGoBack);
+  const isAtBottom = useConversation((state) => state.isAtBottom);
+  const isAtLatestEdge = useConversation((state) => state.isAtLatestEdge);
+  const isInitialLoading = useConversation((state) => state.isInitialLoading);
+  const canGoBack = useConversation((state) => state.canGoBack);
 
   if (isInitialLoading || !forum) {
     return <ForumConversationTranscriptPlaceholder />;

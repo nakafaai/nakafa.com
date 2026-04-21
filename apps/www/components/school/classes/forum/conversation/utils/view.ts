@@ -1,5 +1,5 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { ForumConversationView } from "@/lib/store/forum";
+import type { ForumConversationView } from "@/components/school/classes/forum/conversation/store/forum";
 
 export type RestorableConversationView = Extract<
   ForumConversationView,
@@ -61,18 +61,12 @@ export function createForumConversationMode({
 export function createInitialConversationView({
   existingView,
   mode,
-  preferBottom,
   unreadPostId,
 }: {
   existingView: ForumConversationView | null;
   mode: ForumConversationMode;
-  preferBottom: boolean;
   unreadPostId: Id<"schoolClassForumPosts"> | null;
 }): ForumConversationView {
-  if (preferBottom) {
-    return { kind: "bottom" };
-  }
-
   if (mode.kind === "restore") {
     return mode.view;
   }
@@ -100,34 +94,38 @@ export function createInitialConversationView({
   return { kind: "bottom" };
 }
 
-/** Returns whether the current persisted viewport has reached or passed a target view. */
-export function isConversationViewAtOrAfter({
-  currentView,
+/** Compares two semantic transcript views in visual scroll order. */
+export function compareConversationViews({
+  leftView,
   postIdToIndex,
-  targetView,
+  rightView,
 }: {
-  currentView: ForumConversationView;
+  leftView: ForumConversationView;
   postIdToIndex: Map<Id<"schoolClassForumPosts">, number>;
-  targetView: ForumConversationView;
+  rightView: ForumConversationView;
 }) {
-  if (currentView.kind === "bottom") {
-    return true;
+  if (leftView.kind === "bottom") {
+    return rightView.kind === "bottom" ? 0 : 1;
   }
 
-  if (targetView.kind === "bottom") {
-    return false;
+  if (rightView.kind === "bottom") {
+    return -1;
   }
 
-  const currentIndex = postIdToIndex.get(currentView.postId);
-  const targetIndex = postIdToIndex.get(targetView.postId);
+  const leftIndex = postIdToIndex.get(leftView.postId);
+  const rightIndex = postIdToIndex.get(rightView.postId);
 
-  if (currentIndex === undefined || targetIndex === undefined) {
-    return false;
+  if (leftIndex === undefined || rightIndex === undefined) {
+    return null;
   }
 
-  if (currentIndex !== targetIndex) {
-    return currentIndex > targetIndex;
+  if (leftIndex !== rightIndex) {
+    return leftIndex < rightIndex ? -1 : 1;
   }
 
-  return currentView.offset >= targetView.offset;
+  if (leftView.offset === rightView.offset) {
+    return 0;
+  }
+
+  return leftView.offset < rightView.offset ? -1 : 1;
 }

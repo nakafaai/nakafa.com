@@ -4,7 +4,10 @@ import { type ReactNode, useState } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
-import { createForumStore, type ForumStore } from "@/lib/store/forum";
+import {
+  createForumStore,
+  type ForumStore,
+} from "@/components/school/classes/forum/conversation/store/forum";
 
 type ForumStoreApi = ReturnType<typeof createForumStore>;
 
@@ -15,7 +18,7 @@ export function ForumContextProvider({
   children,
   classId,
 }: {
-  children: ReactNode;
+  children?: ReactNode;
   classId: string;
 }) {
   const [store] = useState(() => createForumStore(classId));

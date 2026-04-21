@@ -2,9 +2,9 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { describe, expect, it } from "vitest";
 import {
   areConversationViewsEqual,
+  compareConversationViews,
   createForumConversationMode,
   createInitialConversationView,
-  isConversationViewAtOrAfter,
 } from "@/components/school/classes/forum/conversation/utils/view";
 
 const postAId = "post_a" as Id<"schoolClassForumPosts">;
@@ -70,16 +70,7 @@ describe("forum conversation view state", () => {
     ).toBe(false);
   });
 
-  it("chooses the first conversation view from mode, unread, and bottom intent", () => {
-    expect(
-      createInitialConversationView({
-        existingView: createPostView(postAId, 18),
-        mode: { kind: "live" },
-        preferBottom: true,
-        unreadPostId: postBId,
-      })
-    ).toEqual({ kind: "bottom" });
-
+  it("chooses the first conversation view from mode, unread, and saved bottom state", () => {
     expect(
       createInitialConversationView({
         existingView: null,
@@ -88,7 +79,6 @@ describe("forum conversation view state", () => {
           postId: postAId,
           view: createPostView(postAId, 24),
         },
-        preferBottom: false,
         unreadPostId: null,
       })
     ).toEqual(createPostView(postAId, 24));
@@ -97,7 +87,6 @@ describe("forum conversation view state", () => {
       createInitialConversationView({
         existingView: null,
         mode: { kind: "jump", postId: postBId },
-        preferBottom: false,
         unreadPostId: null,
       })
     ).toEqual(createPostView(postBId, 0));
@@ -106,7 +95,6 @@ describe("forum conversation view state", () => {
       createInitialConversationView({
         existingView: { kind: "bottom" },
         mode: { kind: "live" },
-        preferBottom: false,
         unreadPostId: null,
       })
     ).toEqual({ kind: "bottom" });
@@ -115,64 +103,63 @@ describe("forum conversation view state", () => {
       createInitialConversationView({
         existingView: null,
         mode: { kind: "live" },
-        preferBottom: false,
         unreadPostId: postAId,
       })
     ).toEqual(createPostView(postAId, 0));
   });
 
-  it("compares viewport order for back-history expiry", () => {
+  it("compares semantic transcript views in visual order", () => {
     const postIdToIndex = new Map([
       [postAId, 1],
       [postBId, 2],
     ]);
 
     expect(
-      isConversationViewAtOrAfter({
-        currentView: { kind: "bottom" },
+      compareConversationViews({
+        leftView: { kind: "bottom" },
         postIdToIndex,
-        targetView: createPostView(postAId, 0),
+        rightView: createPostView(postAId, 0),
       })
-    ).toBe(true);
+    ).toBe(1);
 
     expect(
-      isConversationViewAtOrAfter({
-        currentView: createPostView(postBId, 0),
+      compareConversationViews({
+        leftView: createPostView(postAId, 0),
         postIdToIndex,
-        targetView: createPostView(postAId, 0),
+        rightView: { kind: "bottom" },
       })
-    ).toBe(true);
+    ).toBe(-1);
 
     expect(
-      isConversationViewAtOrAfter({
-        currentView: createPostView(postAId, 12),
+      compareConversationViews({
+        leftView: createPostView(postBId, 0),
         postIdToIndex,
-        targetView: createPostView(postAId, 0),
+        rightView: createPostView(postAId, 0),
       })
-    ).toBe(true);
+    ).toBe(1);
 
     expect(
-      isConversationViewAtOrAfter({
-        currentView: createPostView(postAId, 0),
+      compareConversationViews({
+        leftView: createPostView(postAId, 12),
         postIdToIndex,
-        targetView: { kind: "bottom" },
+        rightView: createPostView(postAId, 0),
       })
-    ).toBe(false);
+    ).toBe(1);
 
     expect(
-      isConversationViewAtOrAfter({
-        currentView: createPostView(postAId, 0),
+      compareConversationViews({
+        leftView: createPostView(postAId, 0),
         postIdToIndex: new Map(),
-        targetView: createPostView(postAId, 0),
+        rightView: createPostView(postAId, 0),
       })
-    ).toBe(false);
+    ).toBeNull();
 
     expect(
-      isConversationViewAtOrAfter({
-        currentView: createPostView(postAId, 0),
+      compareConversationViews({
+        leftView: createPostView(postAId, 0),
         postIdToIndex,
-        targetView: createPostView(postAId, 12),
+        rightView: createPostView(postAId, 12),
       })
-    ).toBe(false);
+    ).toBe(-1);
   });
 });
