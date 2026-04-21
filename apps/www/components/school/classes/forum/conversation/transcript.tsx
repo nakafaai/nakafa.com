@@ -84,9 +84,10 @@ export function ForumConversationTranscript() {
   const bottomBoundaryPostIdRef = useRef<Id<"schoolClassForumPosts"> | null>(
     null
   );
-  const bottomPinRef = useRef<null | { attempts: number; requestId: number }>(
-    null
-  );
+  const bottomPinRef = useRef<null | {
+    attempts: number;
+    requestId: number | null;
+  }>(null);
   const pendingAnchorRef = useRef<Extract<
     ForumConversationView,
     { kind: "post" }
@@ -238,14 +239,19 @@ export function ForumConversationTranscript() {
     const distance = getConversationBottomDistance(getMetrics());
 
     if (distance <= 1) {
-      bottomPinRef.current = null;
-      clearScrollRequest(pin.requestId);
+      if (pin.requestId !== null) {
+        clearScrollRequest(pin.requestId);
+        pin.requestId = null;
+      }
+      pin.attempts = 0;
       return false;
     }
 
     if (pin.attempts >= FORUM_BOTTOM_PIN_RETRIES) {
+      if (pin.requestId !== null) {
+        clearScrollRequest(pin.requestId);
+      }
       bottomPinRef.current = null;
-      clearScrollRequest(pin.requestId);
       return false;
     }
 
@@ -324,11 +330,11 @@ export function ForumConversationTranscript() {
     syncHighlightVisibility();
 
     if (settleAnchor()) {
-      return;
+      return true;
     }
 
     if (continueBottomPin()) {
-      return;
+      return true;
     }
 
     syncHistoryWindow();
@@ -337,10 +343,11 @@ export function ForumConversationTranscript() {
     if (isNowAtBottom && isAtLatestEdge && lastPostId) {
       scheduleMarkRead(lastPostId);
       scheduleMarkRead.flush();
-      return;
+      return false;
     }
 
     scheduleMarkRead.cancel();
+    return false;
   }, [
     continueBottomPin,
     isAtLatestEdge,
@@ -360,9 +367,9 @@ export function ForumConversationTranscript() {
 
     const runSettleFrame = () => {
       settleFrameIdRef.current = null;
-      settleTranscript();
+      const needsAnotherFrame = settleTranscript();
 
-      if (!(bottomPinRef.current || pendingAnchorRef.current)) {
+      if (!needsAnotherFrame) {
         return;
       }
 
@@ -374,6 +381,13 @@ export function ForumConversationTranscript() {
 
   const handleScroll = useCallback(() => {
     const isNowAtBottom = syncBottomState();
+
+    if (
+      bottomPinRef.current &&
+      !(transcriptVariant === "live" && isAtLatestEdge && isNowAtBottom)
+    ) {
+      bottomPinRef.current = null;
+    }
 
     if (isNowAtBottom && isAtLatestEdge && lastPostId) {
       scheduleMarkRead(lastPostId);
@@ -390,6 +404,7 @@ export function ForumConversationTranscript() {
     syncBottomState,
     syncHighlightVisibility,
     syncHistoryWindow,
+    transcriptVariant,
   ]);
 
   useLayoutEffect(() => {
@@ -562,7 +577,7 @@ export function ForumConversationTranscript() {
         onScrollEnd={settleTranscript}
         ref={handleRef}
         scrollRef={scrollElementRef}
-        shift={transcriptVariant === "live" || shiftBoundaryPostId !== null}
+        shift={shiftBoundaryPostId !== null}
       >
         {(item) => (
           <TranscriptRow

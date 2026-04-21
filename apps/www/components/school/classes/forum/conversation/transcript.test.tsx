@@ -37,6 +37,11 @@ const conversationState = vi.hoisted(() => ({
   transcriptVariant: "live" as const,
 }));
 
+const virtualizerState = vi.hoisted(() => ({
+  lastShift: undefined as boolean | undefined,
+  onScroll: undefined as ((offset: number) => void) | undefined,
+}));
+
 vi.mock("@mantine/hooks", () => ({
   useDebouncedCallback: <Args extends unknown[]>(
     callback: (...args: Args) => void
@@ -55,15 +60,23 @@ vi.mock("virtua", () => ({
   Virtualizer: ({
     children,
     data,
+    onScroll,
+    shift,
   }: {
     children: (item: VirtualItem, index: number) => React.ReactNode;
     data: VirtualItem[];
-  }) =>
-    createElement(
+    onScroll?: (offset: number) => void;
+    shift?: boolean;
+  }) => {
+    virtualizerState.lastShift = shift;
+    virtualizerState.onScroll = onScroll;
+
+    return createElement(
       "div",
       { "data-testid": "virtua-virtualizer" },
       data.map((item, index) => children(item, index))
-    ),
+    );
+  },
 }));
 
 vi.mock("@/components/school/classes/forum/conversation/provider", () => ({
@@ -248,6 +261,8 @@ beforeEach(() => {
   conversationState.scrollRequest = null;
   conversationState.timelineSessionVersion = 0;
   conversationState.transcriptVariant = "live";
+  virtualizerState.lastShift = undefined;
+  virtualizerState.onScroll = undefined;
 
   vi.stubGlobal("cancelAnimationFrame", vi.fn());
   vi.stubGlobal(
@@ -377,5 +392,54 @@ describe("conversation/transcript", () => {
     expect(conversationState.handleSettledView).toHaveBeenCalledWith({
       kind: "bottom",
     });
+  });
+
+  it("keeps Virtua shift disabled during ordinary live rendering", () => {
+    conversationState.items = [
+      {
+        isFirstInGroup: true,
+        isLastInGroup: true,
+        post: createPost("post_live"),
+        showContinuationTime: false,
+        type: "post",
+      },
+    ];
+    conversationState.isAtLatestEdge = true;
+
+    render(<ForumConversationTranscript />);
+
+    expect(virtualizerState.lastShift).toBe(false);
+  });
+
+  it("enables Virtua shift only while prepending older history", () => {
+    conversationState.hasMoreBefore = true;
+    conversationState.items = [
+      {
+        isFirstInGroup: true,
+        isLastInGroup: true,
+        post: createPost("post_oldest"),
+        showContinuationTime: false,
+        type: "post",
+      },
+    ];
+    conversationState.loadOlderPosts.mockReturnValue(true);
+
+    const container = render(<ForumConversationTranscript />);
+    const scrollElement = container.querySelector(
+      '[data-testid="virtual-conversation"]'
+    ) as HTMLDivElement;
+
+    Object.defineProperty(scrollElement, "scrollTop", {
+      configurable: true,
+      value: 0,
+      writable: true,
+    });
+
+    act(() => {
+      virtualizerState.onScroll?.(0);
+    });
+
+    expect(conversationState.loadOlderPosts).toHaveBeenCalled();
+    expect(virtualizerState.lastShift).toBe(true);
   });
 });
