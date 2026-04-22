@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useMemo } from "react";
+import { type ReactNode, useLayoutEffect, useState } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
@@ -14,8 +14,29 @@ type SessionStoreApi = ReturnType<typeof createSessionStore>;
 const SessionContext = createContext<SessionStoreApi | null>(null);
 
 /** Provides one class-scoped session store instance. */
-export function SessionProvider({ children }: { children?: ReactNode }) {
-  const store = useMemo(() => createSessionStore(), []);
+export function SessionProvider({
+  children,
+  classId,
+}: {
+  children?: ReactNode;
+  classId: string;
+}) {
+  const [store] = useState(() => createSessionStore(classId));
+
+  useLayoutEffect(() => {
+    if (store.persist.hasHydrated()) {
+      store.getState().setHydrated(true);
+      return;
+    }
+
+    const unsubscribe = store.persist.onFinishHydration(() => {
+      store.getState().setHydrated(true);
+    });
+
+    store.persist.rehydrate();
+
+    return unsubscribe;
+  }, [store]);
 
   return (
     <SessionContext.Provider value={store}>{children}</SessionContext.Provider>

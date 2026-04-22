@@ -12,7 +12,6 @@ interface DataValue {
 }
 
 const DataContext = createContext<DataValue | null>(null);
-const missingData = Symbol("missing conversation data");
 
 /** Provides one forum-scoped immutable data snapshot. */
 export function DataProvider({
@@ -27,13 +26,11 @@ export function DataProvider({
 
 /** Reads one selected value from immutable forum conversation data. */
 export function useData<T>(selector: (state: DataValue) => T) {
-  const selected = useContextSelector(DataContext, (value) =>
-    value ? selector(value) : missingData
-  );
+  return useContextSelector(DataContext, (value) => {
+    if (!value) {
+      throw new Error("useData must be used within a ConversationProvider");
+    }
 
-  if (selected === missingData) {
-    throw new Error("useData must be used within a ConversationProvider");
-  }
-
-  return selected;
+    return selector(value);
+  });
 }

@@ -1,5 +1,6 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { memo, type ReactNode, useMemo, useState } from "react";
+import { ControlsProvider } from "@/components/school/classes/forum/conversation/context/use-controls";
 import { DataProvider } from "@/components/school/classes/forum/conversation/context/use-data";
 import { ViewportProvider } from "@/components/school/classes/forum/conversation/context/use-viewport";
 import type { Forum } from "@/components/school/classes/forum/conversation/data/entities";
@@ -30,7 +31,9 @@ export const ConversationProvider = memo(
 
     return (
       <DataProvider value={data}>
-        <ViewportProvider store={viewportStore}>{children}</ViewportProvider>
+        <ViewportProvider store={viewportStore}>
+          <ControlsProvider>{children}</ControlsProvider>
+        </ViewportProvider>
       </DataProvider>
     );
   }

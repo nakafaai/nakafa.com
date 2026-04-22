@@ -2,283 +2,495 @@
 
 import { useReducedMotion } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
-import { useMutation, useQueries } from "convex/react";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { useConvex, useMutation, useQueries } from "convex/react";
 import {
   memo,
   useCallback,
   useEffect,
+  useEffectEvent,
   useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
-import { Virtualizer, type VirtualizerHandle } from "virtua";
+import type { VirtualizerHandle } from "virtua";
+import { useControls } from "@/components/school/classes/forum/conversation/context/use-controls";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
+import { useSession } from "@/components/school/classes/forum/conversation/context/use-session";
 import { useViewport } from "@/components/school/classes/forum/conversation/context/use-viewport";
 import {
   createConversationRows,
-  createTranscriptPage,
   createTranscriptQueryRequests,
   FORUM_BOTTOM_THRESHOLD,
-  FORUM_PAGE_SIZE,
   FORUM_TOP_LOAD_THRESHOLD,
-  FORUM_VIRTUAL_BUFFER,
-  getForumPostsPageResult,
-  getLatestTranscriptPageResult,
+  flattenConversationPosts,
+  getForumPostsWindowResult,
+  getLastConversationPostId,
+  type TranscriptWindow,
 } from "@/components/school/classes/forum/conversation/data/pages";
-import { TranscriptRow } from "@/components/school/classes/forum/conversation/transcript-row";
+import { getConversationBottomDistance } from "@/components/school/classes/forum/conversation/data/settled-view";
+import type { ConversationView } from "@/components/school/classes/forum/conversation/data/view";
+import {
+  canExecuteConversationScrollRequest,
+  settleConversationRestore,
+} from "@/components/school/classes/forum/conversation/utils/restore";
+import {
+  type ConversationScrollRequest,
+  commitConversationView,
+  executeConversationScrollRequest,
+  getCurrentConversationView as readCurrentConversationView,
+  scrollConversationToBottom,
+  syncConversationViewport,
+} from "@/components/school/classes/forum/conversation/utils/scroll";
+import {
+  buildConversationRestore,
+  getConversationJumpRestore,
+  getNextNewerConversationWindow,
+  getNextOlderConversationWindow,
+  hasLoadedConversationWindow,
+} from "@/components/school/classes/forum/conversation/utils/windows";
+import { ConversationVirtualizer } from "@/components/school/classes/forum/conversation/virtualizer";
 
-/** Renders a minimal Convex-first transcript backed by reactive page queries. */
 export const ForumConversationTranscript = memo(() => {
+  const convex = useConvex();
   const forum = useData((state) => state.forum);
   const forumId = useData((state) => state.forumId);
-  const latestRequest = useViewport((state) => state.latestRequest);
+  const { registerControls } = useControls();
+  const isHydrated = useSession((state) => state.isHydrated);
+  const saveView = useSession((state) => state.saveConversationView);
+  const savedView = useSession(
+    (state) => state.savedConversationViews[forumId] ?? null
+  );
+  const backOrigin = useViewport((state) => state.backOrigin);
+  const clearBackOrigin = useViewport((state) => state.clearBackOrigin);
+  const isAtBottom = useViewport((state) => state.isAtBottom);
+  const mode = useViewport((state) => state.mode);
+  const setBackOrigin = useViewport((state) => state.setBackOrigin);
+  const setMode = useViewport((state) => state.setMode);
   const updateViewport = useViewport((state) => state.updateViewport);
   const prefersReducedMotion = useReducedMotion();
   const markForumRead = useMutation(
     api.classes.forums.mutations.readState.markForumRead
   );
-  const [pages, setPages] = useState(() => [createTranscriptPage(null)]);
-  const [isPrependingHistory, setIsPrependingHistory] = useState(false);
+  const [queryError, setQueryError] = useState<Error | null>(null);
+  const [windows, setWindows] = useState<TranscriptWindow[]>([]);
+  const [newerWindowId, setNewerWindowId] = useState<string | null>(null);
+  const [olderWindowId, setOlderWindowId] = useState<string | null>(null);
+  const [scrollRequest, setScrollRequest] =
+    useState<ConversationScrollRequest | null>(null);
+  const activeRestoreRef = useRef<ConversationScrollRequest | null>(null);
   const didBootstrapRef = useRef(false);
   const handleRef = useRef<VirtualizerHandle | null>(null);
-  const isAtBottomRef = useRef(true);
-  const isScrollToLatestPendingRef = useRef(false);
   const lastMarkedPostIdRef = useRef<string | null>(null);
-  const previousLastPostIdRef = useRef<string | null>(null);
+  const lastPostIdRef = useRef<string | null>(null);
+  const restoreRequestIdRef = useRef(0);
+  const correctionCountRef = useRef(0);
   const scrollElementRef = useRef<HTMLDivElement | null>(null);
+  const settledViewRef = useRef<ConversationView | null>(null);
   const queryRequests = useMemo(
-    () => createTranscriptQueryRequests(pages, forumId, FORUM_PAGE_SIZE),
-    [forumId, pages]
+    () => createTranscriptQueryRequests(windows),
+    [windows]
   );
   const queryResults = useQueries(queryRequests);
-  const rows = useMemo(
-    () => createConversationRows(pages, queryResults, !!forum),
-    [forum, pages, queryResults]
+  const posts = useMemo(
+    () => flattenConversationPosts(windows, queryResults),
+    [queryResults, windows]
   );
-  const lastPostId = useMemo(() => {
-    for (let index = rows.length - 1; index >= 0; index -= 1) {
-      const row = rows[index];
+  const hasLoadedWindow = useMemo(
+    () =>
+      windows.some((window) =>
+        getForumPostsWindowResult(queryResults[window.id])
+      ),
+    [queryResults, windows]
+  );
+  const isWaitingForOlderWindow = useMemo(
+    () =>
+      !!(
+        olderWindowId &&
+        !hasLoadedConversationWindow({
+          queryResults,
+          windowId: olderWindowId,
+        })
+      ),
+    [olderWindowId, queryResults]
+  );
+  const rows = useMemo(
+    () => createConversationRows({ forum, posts }),
+    [forum, posts]
+  );
+  const lastPostId = useMemo(() => getLastConversationPostId(posts), [posts]);
 
-      if (row?.type === "post") {
-        return row.post._id;
-      }
-    }
+  const throwQueryError = useCallback((error: unknown) => {
+    setQueryError(
+      error instanceof Error
+        ? error
+        : new Error(String(error ?? "Unknown error"))
+    );
+  }, []);
 
-    return null;
-  }, [rows]);
-
-  const scrollToLatest = useCallback(
-    (smooth: boolean) => {
-      if (rows.length === 0) {
+  const markLastPostRead = useCallback(
+    (postId: Id<"schoolClassForumPosts">) => {
+      if (lastMarkedPostIdRef.current === postId) {
         return;
       }
-
-      handleRef.current?.scrollToIndex(rows.length - 1, {
-        align: "end",
-        smooth,
-      });
+      lastMarkedPostIdRef.current = postId;
+      markForumRead({ forumId, lastReadPostId: postId }).catch(() => undefined);
     },
+    [forumId, markForumRead]
+  );
+
+  const syncViewportState = useCallback(
+    () =>
+      syncConversationViewport({
+        handle: handleRef.current,
+        threshold: FORUM_BOTTOM_THRESHOLD,
+        updateViewport,
+      }),
+    [updateViewport]
+  );
+
+  const getCurrentConversationView = useCallback(
+    () =>
+      readCurrentConversationView({
+        handle: handleRef.current,
+        hasLoadedWindow,
+        rows,
+        settledView: settledViewRef.current,
+      }),
+    [hasLoadedWindow, rows]
+  );
+
+  const commitSettledView = useCallback(() => {
+    commitConversationView({
+      backOrigin,
+      clearBackOrigin,
+      forumId,
+      handle: handleRef.current,
+      hasLoadedWindow,
+      lastPostId,
+      markLastPostRead,
+      rows,
+      saveConversationView: saveView,
+      settledViewRef,
+    });
+  }, [
+    backOrigin,
+    clearBackOrigin,
+    forumId,
+    hasLoadedWindow,
+    lastPostId,
+    markLastPostRead,
+    rows,
+    saveView,
+  ]);
+
+  const scrollToBottom = useCallback(
+    (smooth: boolean) =>
+      scrollConversationToBottom({
+        handle: handleRef.current,
+        rowsLength: rows.length,
+        smooth,
+      }),
     [rows.length]
   );
 
-  const syncViewportState = useCallback(() => {
-    const scrollElement = scrollElementRef.current;
-
-    if (!scrollElement) {
+  const settleRestore = useEffectEvent(() => {
+    const request = activeRestoreRef.current;
+    if (!request) {
+      syncViewportState();
+      commitSettledView();
       return;
     }
-
-    const bottomDistance = Math.max(
-      0,
-      scrollElement.scrollHeight -
-        scrollElement.clientHeight -
-        scrollElement.scrollTop
-    );
-    const isAtBottom = bottomDistance <= FORUM_BOTTOM_THRESHOLD;
-
-    isAtBottomRef.current = isAtBottom;
-
-    if (isAtBottom) {
-      isScrollToLatestPendingRef.current = false;
-    }
-
-    updateViewport({
-      hasPendingLatestPosts: isAtBottom ? false : undefined,
-      isAtBottom,
+    syncViewportState();
+    const nextRestore = settleConversationRestore({
+      correctionCount: correctionCountRef.current,
+      handle: handleRef.current,
+      request,
+      rows,
     });
-  }, [updateViewport]);
-
-  const prependOlderPage = useCallback(() => {
-    if (isPrependingHistory) {
+    if (!nextRestore.settled) {
+      correctionCountRef.current = nextRestore.correctionCount;
+      requestAnimationFrame(() => {
+        settleRestore();
+      });
       return;
     }
+    activeRestoreRef.current = null;
+    correctionCountRef.current = 0;
+    commitSettledView();
+  });
 
-    const oldestPage = pages[0];
-
-    if (!oldestPage) {
+  const pinLatestPost = useEffectEvent(() => {
+    if (!scrollToBottom(false)) {
       return;
     }
+    requestAnimationFrame(() => {
+      syncViewportState();
+      commitSettledView();
+    });
+  });
 
-    const oldestResult = getForumPostsPageResult(queryResults[oldestPage.id]);
-    const nextCursor = oldestPage.endCursor ?? oldestResult?.continueCursor;
+  const restoreConversation = useCallback(
+    async ({
+      exact,
+      smooth,
+      view,
+    }: {
+      exact: boolean;
+      smooth: boolean;
+      view: ConversationView;
+    }) => {
+      restoreRequestIdRef.current += 1;
+      const requestId = restoreRequestIdRef.current;
+      try {
+        const nextConversation = await buildConversationRestore({
+          forumId,
+          resolveAnchor: (postId) =>
+            convex.query(api.classes.forums.queries.pages.getForumPostAnchor, {
+              forumId,
+              postId,
+            }),
+          view,
+        });
+        if (restoreRequestIdRef.current !== requestId) {
+          return;
+        }
+        setMode(nextConversation.mode);
+        activeRestoreRef.current = null;
+        setNewerWindowId(null);
+        setOlderWindowId(null);
+        correctionCountRef.current = 0;
+        setWindows(nextConversation.windows);
+        setScrollRequest({ exact, smooth, view });
+      } catch (error) {
+        if (restoreRequestIdRef.current !== requestId) {
+          return;
+        }
+        throwQueryError(error);
+      }
+    },
+    [convex, forumId, setMode, throwQueryError]
+  );
 
-    if (!(oldestResult && nextCursor && !oldestResult.isDone)) {
+  const goToLatest = useCallback(() => {
+    updateViewport({ hasPendingLatestPosts: false });
+    restoreConversation({
+      exact: false,
+      smooth: !prefersReducedMotion,
+      view: { kind: "bottom" },
+    });
+  }, [prefersReducedMotion, restoreConversation, updateViewport]);
+
+  const goBack = useCallback(() => {
+    if (!backOrigin) {
       return;
     }
+    restoreConversation({
+      exact: backOrigin.kind === "post",
+      smooth: !prefersReducedMotion,
+      view: backOrigin,
+    });
+  }, [backOrigin, prefersReducedMotion, restoreConversation]);
 
-    setIsPrependingHistory(true);
-    setPages((currentPages) => [
-      createTranscriptPage(nextCursor),
-      ...currentPages,
-    ]);
-  }, [isPrependingHistory, pages, queryResults]);
+  const goToPost = useCallback(
+    (postId: Id<"schoolClassForumPosts">) => {
+      const jumpRestore = getConversationJumpRestore({
+        backOrigin,
+        currentView: getCurrentConversationView(),
+        jumpTargetPostId: postId,
+      });
+      if (!jumpRestore) {
+        return;
+      }
+      if (jumpRestore.captureBackOrigin) {
+        setBackOrigin(jumpRestore.captureBackOrigin);
+      }
+      restoreConversation({
+        exact: jumpRestore.request.exact,
+        smooth: !prefersReducedMotion,
+        view: jumpRestore.request.view,
+      });
+    },
+    [
+      backOrigin,
+      getCurrentConversationView,
+      prefersReducedMotion,
+      restoreConversation,
+      setBackOrigin,
+    ]
+  );
+
+  const prependOlderWindow = useCallback(() => {
+    if (isWaitingForOlderWindow) {
+      return;
+    }
+    const nextWindow = getNextOlderConversationWindow({
+      forumId,
+      queryResults,
+      windows,
+    });
+    if (!nextWindow) {
+      return;
+    }
+    setOlderWindowId(nextWindow.id);
+    setWindows((currentWindows) => [nextWindow, ...currentWindows]);
+  }, [forumId, isWaitingForOlderWindow, queryResults, windows]);
+
+  const appendNewerWindow = useCallback(() => {
+    if (
+      mode !== "focused" ||
+      (newerWindowId &&
+        !hasLoadedConversationWindow({
+          queryResults,
+          windowId: newerWindowId,
+        }))
+    ) {
+      return;
+    }
+    const nextWindow = getNextNewerConversationWindow({
+      forumId,
+      mode,
+      queryResults,
+      windows,
+    });
+    if (!nextWindow) {
+      return;
+    }
+    setNewerWindowId(nextWindow.id);
+    setWindows((currentWindows) => [...currentWindows, nextWindow]);
+  }, [forumId, mode, newerWindowId, queryResults, windows]);
 
   const handleScroll = useCallback(() => {
-    const scrollElement = scrollElementRef.current;
-
-    if (!scrollElement) {
+    const handle = handleRef.current;
+    if (!handle) {
       return;
     }
-
-    if (scrollElement.scrollTop <= FORUM_TOP_LOAD_THRESHOLD) {
-      prependOlderPage();
+    if (activeRestoreRef.current) {
+      syncViewportState();
+      return;
+    }
+    if (handle.scrollOffset <= FORUM_TOP_LOAD_THRESHOLD) {
+      prependOlderWindow();
+    }
+    if (
+      mode === "focused" &&
+      getConversationBottomDistance(handle) <= FORUM_TOP_LOAD_THRESHOLD
+    ) {
+      appendNewerWindow();
     }
 
     syncViewportState();
-  }, [prependOlderPage, syncViewportState]);
+  }, [appendNewerWindow, mode, prependOlderWindow, syncViewportState]);
 
   useEffect(() => {
-    setPages((currentPages) => {
-      const nextPages = currentPages.map((page) => {
-        const result = getForumPostsPageResult(queryResults[page.id]);
-
-        if (!(result && !page.endCursor && result.continueCursor)) {
-          return page;
-        }
-
-        return {
-          ...page,
-          endCursor: result.continueCursor,
-        };
-      });
-
-      const didChange = nextPages.some(
-        (page, index) => page.endCursor !== currentPages[index]?.endCursor
-      );
-
-      return didChange ? nextPages : currentPages;
-    });
-  }, [queryResults]);
-
-  useEffect(() => {
-    if (!isPrependingHistory) {
+    if (!(forum && isHydrated) || didBootstrapRef.current) {
       return;
     }
-
-    const oldestPage = pages[0];
-    const oldestResult = oldestPage
-      ? getForumPostsPageResult(queryResults[oldestPage.id])
-      : null;
-
-    if (!oldestResult) {
-      return;
-    }
-
-    setIsPrependingHistory(false);
-  }, [isPrependingHistory, pages, queryResults]);
-
-  useLayoutEffect(() => {
-    if (didBootstrapRef.current || rows.length === 0) {
-      return;
-    }
-
     didBootstrapRef.current = true;
-    scrollToLatest(false);
-    requestAnimationFrame(syncViewportState);
-  }, [rows.length, scrollToLatest, syncViewportState]);
+    clearBackOrigin();
+    restoreConversation({
+      exact: savedView?.kind === "post",
+      smooth: false,
+      view: savedView ?? { kind: "bottom" },
+    });
+  }, [clearBackOrigin, forum, isHydrated, restoreConversation, savedView]);
 
   useLayoutEffect(() => {
-    if (!(latestRequest > 0 && rows.length > 0)) {
+    registerControls({ goBack, goToLatest, goToPost });
+  }, [goBack, goToLatest, goToPost, registerControls]);
+
+  useLayoutEffect(() => {
+    if (!scrollRequest) {
       return;
     }
-
-    isScrollToLatestPendingRef.current = true;
-    scrollToLatest(!prefersReducedMotion);
-    requestAnimationFrame(syncViewportState);
-  }, [
-    latestRequest,
-    prefersReducedMotion,
-    rows.length,
-    scrollToLatest,
-    syncViewportState,
-  ]);
+    let cancelled = false;
+    const executeRequest = () => {
+      if (cancelled) {
+        return;
+      }
+      // Virtua measures `viewportSize` through ResizeObserver, so an initial
+      // restore must wait until that first measurement exists before scrolling.
+      if (
+        !canExecuteConversationScrollRequest({
+          handle: handleRef.current,
+          request: scrollRequest,
+          rows,
+        })
+      ) {
+        requestAnimationFrame(executeRequest);
+        return;
+      }
+      if (
+        !executeConversationScrollRequest({
+          handle: handleRef.current,
+          request: scrollRequest,
+          rows,
+          scrollToBottom,
+        })
+      ) {
+        requestAnimationFrame(executeRequest);
+        return;
+      }
+      activeRestoreRef.current = scrollRequest;
+      correctionCountRef.current = 0;
+      setScrollRequest(null);
+      // Keep visible motion to one pass. Any late resize correction after that
+      // is forced to an instant follow-up settle instead of another animation.
+      if (scrollRequest.exact || !scrollRequest.smooth) {
+        requestAnimationFrame(() => {
+          settleRestore();
+        });
+      }
+    };
+    executeRequest();
+    return () => {
+      cancelled = true;
+    };
+  }, [rows, scrollRequest, scrollToBottom]);
 
   useLayoutEffect(() => {
-    const previousLastPostId = previousLastPostIdRef.current;
-
-    previousLastPostIdRef.current = lastPostId;
-
+    const previousLastPostId = lastPostIdRef.current;
+    lastPostIdRef.current = lastPostId;
     if (
       !(previousLastPostId && lastPostId && previousLastPostId !== lastPostId)
     ) {
       return;
     }
-
-    if (isAtBottomRef.current || isScrollToLatestPendingRef.current) {
-      scrollToLatest(false);
-      requestAnimationFrame(syncViewportState);
+    if (mode === "live" && isAtBottom) {
+      updateViewport({ hasPendingLatestPosts: false });
+      pinLatestPost();
       return;
     }
-
     updateViewport({ hasPendingLatestPosts: true });
-  }, [lastPostId, scrollToLatest, syncViewportState, updateViewport]);
+  }, [isAtBottom, lastPostId, mode, updateViewport]);
 
-  useEffect(() => {
-    if (!(isAtBottomRef.current && lastPostId)) {
-      return;
-    }
+  if (queryError) {
+    throw queryError;
+  }
 
-    if (lastMarkedPostIdRef.current === lastPostId) {
-      return;
-    }
-
-    lastMarkedPostIdRef.current = lastPostId;
-    markForumRead({
-      forumId,
-      lastReadPostId: lastPostId,
-    }).catch(() => undefined);
-  }, [forumId, lastPostId, markForumRead]);
-
-  const latestPageResult = getLatestTranscriptPageResult(pages, queryResults);
-
-  if (!(forum && latestPageResult)) {
+  if (!forum) {
     return null;
   }
 
   return (
-    <div
-      className="absolute inset-0 overflow-y-auto overscroll-contain"
-      ref={scrollElementRef}
-    >
-      <Virtualizer
-        bufferSize={FORUM_VIRTUAL_BUFFER}
-        data={rows}
-        onScroll={handleScroll}
-        ref={handleRef}
-        scrollRef={scrollElementRef}
-        shift={isPrependingHistory}
-      >
-        {(row, index) => (
-          <TranscriptRow
-            key={row.type === "header" ? forum._id : row.post._id}
-            nextRow={rows[index + 1]}
-            previousRow={rows[index - 1]}
-            row={row}
-          />
-        )}
-      </Virtualizer>
-    </div>
+    <ConversationVirtualizer
+      forumId={forum._id}
+      handleRef={handleRef}
+      isWaitingForOlderWindow={isWaitingForOlderWindow}
+      onScroll={handleScroll}
+      onScrollEnd={() => {
+        if (activeRestoreRef.current) {
+          settleRestore();
+          return;
+        }
+
+        syncViewportState();
+        commitSettledView();
+      }}
+      rows={rows}
+      scrollElementRef={scrollElementRef}
+    />
   );
 });
 ForumConversationTranscript.displayName = "ForumConversationTranscript";

@@ -30,9 +30,9 @@ import {
 } from "react";
 import { toast } from "sonner";
 import * as z from "zod/mini";
+import { useControls } from "@/components/school/classes/forum/conversation/context/use-controls";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
 import { useSession } from "@/components/school/classes/forum/conversation/context/use-session";
-import { useViewport } from "@/components/school/classes/forum/conversation/context/use-viewport";
 import { AttachmentPreviews } from "@/components/school/classes/forum/conversation/input/attachment-previews";
 import { InputAttachments } from "@/components/school/classes/forum/conversation/input/attachments-trigger";
 import { EmojiButton } from "@/components/school/classes/forum/conversation/input/emoji-button";
@@ -43,7 +43,7 @@ export const ForumPostInput = memo(() => {
   const t = useTranslations("School.Classes");
   const replyTo = useSession((state) => state.replyTo);
   const setReplyTo = useSession((state) => state.setReplyTo);
-  const scrollToLatest = useViewport((state) => state.scrollToLatest);
+  const { goToLatest } = useControls();
   const forumId = useData((state) => state.forumId);
   const textareaRef = useRef<ComponentRef<typeof InputGroupTextarea>>(null);
   const generateUploadUrl = useMutation(
@@ -156,7 +156,7 @@ export const ForumPostInput = memo(() => {
 
         requestAnimationFrame(() => {
           textareaRef.current?.focus();
-          scrollToLatest();
+          goToLatest();
         });
       } catch (error) {
         if (attachmentUploadIds.length > 0) {
@@ -224,7 +224,12 @@ export const ForumPostInput = memo(() => {
                   <InputGroupTextarea
                     aria-label={t("send-message-placeholder")}
                     autoFocus
-                    className="scrollbar-hide max-h-36 min-h-0"
+                    className="scrollbar-hide max-h-36 min-h-0 py-2"
+                    // `Textarea` wraps `react-textarea-autosize`, so explicit row
+                    // bounds keep the composer compact instead of inheriting the
+                    // base textarea's larger `min-h-16`.
+                    maxRows={6}
+                    minRows={1}
                     name={field.name}
                     onChange={(event) => field.handleChange(event.target.value)}
                     onKeyDown={(event) => {

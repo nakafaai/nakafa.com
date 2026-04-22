@@ -9,11 +9,14 @@ import { ForumConversationTranscript } from "@/components/school/classes/forum/c
 /** Renders the live transcript viewport with one simple latest button. */
 export const ForumConversationViewport = memo(() => {
   const forum = useData((state) => state.forum);
+  const backOrigin = useViewport((state) => state.backOrigin);
   const hasPendingLatestPosts = useViewport(
     (state) => state.hasPendingLatestPosts
   );
   const isAtBottom = useViewport((state) => state.isAtBottom);
-  const shouldShowJumpBar = hasPendingLatestPosts || !isAtBottom;
+  const mode = useViewport((state) => state.mode);
+  const shouldShowJumpBar =
+    !!backOrigin || hasPendingLatestPosts || mode === "focused" || !isAtBottom;
 
   if (!forum) {
     return null;

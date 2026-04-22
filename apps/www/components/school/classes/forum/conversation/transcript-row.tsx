@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
 import type { ConversationRow } from "@/components/school/classes/forum/conversation/data/pages";
+import { ConversationDateSeparator } from "@/components/school/classes/forum/conversation/date-separator";
 import { ForumHeader } from "@/components/school/classes/forum/conversation/header";
 import { ForumPostItem } from "@/components/school/classes/forum/conversation/item";
 
@@ -18,6 +19,10 @@ export const TranscriptRow = memo(function TranscriptRow({
 
   if (row.type === "header") {
     return forum ? <ForumHeader /> : null;
+  }
+
+  if (row.type === "date") {
+    return <ConversationDateSeparator value={row.value} />;
   }
 
   const previousPost = previousRow?.type === "post" ? previousRow.post : null;

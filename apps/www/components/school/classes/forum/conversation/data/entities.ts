@@ -7,7 +7,7 @@ export type Forum = NonNullable<
 >;
 
 export type ForumPost = FunctionReturnType<
-  typeof api.classes.forums.queries.pages.getForumPostsPage
+  typeof api.classes.forums.queries.pages.getForumPostsWindow
 >["page"][number];
 
 export interface ReplyTo {

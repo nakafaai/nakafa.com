@@ -77,7 +77,7 @@ async function ClassRouteBoundary({
 
   return (
     <ClassContextProvider value={value}>
-      <SessionProvider key={classId}>
+      <SessionProvider classId={classId} key={classId}>
         <SchoolClassesWorkspaceShell panel={panel}>
           <SchoolClassesHeaderInfo />
           <SchoolClassesTabs />

@@ -45,6 +45,7 @@ export const ForumPostItem = memo(
           isReplyToMe === true && "border-primary bg-primary/10",
           isReplyTo === true && "border-secondary bg-secondary/10"
         )}
+        data-post-id={post._id}
         id={post._id}
       >
         <PostItemActions post={post} />
