@@ -41,8 +41,12 @@ export function createTranscriptPage(cursor: string | null): TranscriptPage {
 export function getForumPostsPageResult(
   value: Error | ForumPostsPageResult | undefined
 ) {
-  if (!value || value instanceof Error) {
+  if (!value) {
     return null;
+  }
+
+  if (value instanceof Error) {
+    throw value;
   }
 
   return value;
